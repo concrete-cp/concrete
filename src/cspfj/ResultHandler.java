@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import cspfj.problem.Variable;
-import cspfj.solver.Solver;
 
 public class ResultHandler {
 
@@ -144,9 +143,25 @@ public class ResultHandler {
             unknown++;
         }
     }
+    
+    
 
     public enum Result {
         SAT, UNSAT, UNKNOWN
+    }
+
+
+
+    public final int getSat() {
+        return sat;
+    }
+
+    public final int getUnknown() {
+        return unknown;
+    }
+
+    public final int getUnsat() {
+        return unsat;
     }
 
 }

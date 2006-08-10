@@ -30,8 +30,8 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
+import cspfj.TabuManager;
 import cspfj.constraint.Constraint;
-import cspfj.solver.TabuManager;
 import cspfj.util.TieManager;
 
 /**

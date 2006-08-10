@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package cspfj.solver;
+package cspfj;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -26,7 +26,6 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import cspfj.ResultHandler;
 import cspfj.constraint.Constraint;
 import cspfj.exception.FailedGenerationException;
 import cspfj.exception.MaxBacktracksExceededException;
@@ -34,8 +33,6 @@ import cspfj.exception.OutOfTimeException;
 import cspfj.problem.Problem;
 import cspfj.problem.ProblemGenerator;
 import cspfj.problem.Variable;
-import cspfj.problem.XMLGenerator;
-import cspfj.problem.XMLGenerator.XMLVersion;
 import cspfj.util.TieManager;
 import cspfj.filter.AC3;
 
@@ -65,12 +62,6 @@ public final class MinConflictsSolver extends AbstractSolver {
 
         randomWalk = 1F / problem.getMaxDomainSize();
 
-    }
-
-    public MinConflictsSolver(final String problemName, XMLVersion version,
-            ResultHandler resultHandler) throws FailedGenerationException {
-        this(Problem.load(new XMLGenerator(problemName, version)),
-                resultHandler);
     }
 
     public MinConflictsSolver(final ProblemGenerator generator,

@@ -19,28 +19,24 @@
 
 package cspfj.constraint;
 
+import cspfj.constraint.AbstractConstraint;
 import cspfj.exception.FailedGenerationException;
-import cspfj.problem.Relation;
 import cspfj.problem.Variable;
 
 public final class ExtensionConstraint extends AbstractConstraint {
 
 	private final float tightness;
 
-	public ExtensionConstraint(final Variable[] scope, final Relation relation)
+	public ExtensionConstraint(final Variable[] scope, final boolean supports, final int[][] tuples)
 			throws FailedGenerationException {
 		super(scope);
 
-		if (scope.length != relation.getArity()) {
-			throw new FailedGenerationException("Inconsistent arity");
-		}
+		initMatrix(!supports);
 
-		initMatrix(!relation.isSupports());
-
-		final float tight = (float) relation.getNbTuples()
+		final float tight = (float) tuples.length
 				/ (scope[0].getDomainSize() * scope[1].getDomainSize());
 
-		if (relation.isSupports()) {
+		if (supports) {
 			tightness = tight;
 		} else {
 			tightness = 1 - tight;
@@ -48,12 +44,12 @@ public final class ExtensionConstraint extends AbstractConstraint {
 
 		int[] indexes = new int[arity];
 
-		for (int[] tuple : relation.getTuples()) {
+		for (int[] tuple : tuples) {
 			for (int i = 0; i < tuple.length; i++) {
 				indexes[i] = scope[i].index(tuple[i]);
 			}
 
-			matrix[matrixIndex(indexes)] = relation.isSupports();
+			matrix[matrixIndex(indexes)] = supports;
 
 		}
 

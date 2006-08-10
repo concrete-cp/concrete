@@ -17,13 +17,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package cspfj.solver;
+package cspfj;
 
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import cspfj.ResultHandler;
 import cspfj.exception.FailedGenerationException;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.exception.OutOfTimeException;
@@ -33,8 +32,6 @@ import cspfj.filter.SAC;
 import cspfj.problem.ProblemGenerator;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
-import cspfj.problem.XMLGenerator;
-import cspfj.problem.XMLGenerator.XMLVersion;
 
 public final class MACSolver extends AbstractSolver {
 
@@ -58,12 +55,6 @@ public final class MACSolver extends AbstractSolver {
     public void enableNoGoods(final int maxSize) {
         // noGoodManager = new NoGoodManager(problem.getNbVariables(), 2);
         maxNoGoodSize = maxSize;
-    }
-
-    public MACSolver(final String problemName, XMLVersion version,
-            ResultHandler resultHandler) throws FailedGenerationException {
-        this(Problem.load(new XMLGenerator(problemName, version)),
-                resultHandler);
     }
 
     public MACSolver(final ProblemGenerator generator,

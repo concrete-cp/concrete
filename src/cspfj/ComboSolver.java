@@ -17,13 +17,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package cspfj.solver;
+package cspfj;
 
 import java.io.IOException;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import cspfj.ResultHandler;
 import cspfj.constraint.Constraint;
 import cspfj.exception.FailedGenerationException;
 import cspfj.exception.MaxBacktracksExceededException;
@@ -31,8 +30,6 @@ import cspfj.exception.OutOfTimeException;
 import cspfj.filter.SAC;
 import cspfj.problem.Problem;
 import cspfj.problem.ProblemGenerator;
-import cspfj.problem.XMLGenerator;
-import cspfj.problem.XMLGenerator.XMLVersion;
 
 public class ComboSolver extends AbstractSolver {
 
@@ -53,12 +50,6 @@ public class ComboSolver extends AbstractSolver {
         // noGoodManager = macSolver.getNoGoodManager();
         mCSolver = new MinConflictsSolver(prob, resultHandler);
 
-    }
-
-    public ComboSolver(final String problemName, XMLVersion version,
-            ResultHandler resultHandler) throws FailedGenerationException {
-        this(Problem.load(new XMLGenerator(problemName, version)),
-                resultHandler);
     }
 
     public ComboSolver(final ProblemGenerator generator,

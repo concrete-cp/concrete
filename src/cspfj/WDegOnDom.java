@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package cspfj.solver;
+package cspfj;
 
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
