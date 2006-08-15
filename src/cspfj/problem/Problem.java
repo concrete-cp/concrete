@@ -23,9 +23,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import cspfj.constraint.AbstractConstraint;
+import cspfj.constraint.Constraint;
 import cspfj.constraint.Constraint;
 import cspfj.exception.FailedGenerationException;
 
@@ -54,7 +55,7 @@ public final class Problem {
             throws FailedGenerationException {
         final Problem problem = new Problem();
         Variable.resetVId();
-        AbstractConstraint.resetCId();
+        Constraint.resetCId();
 
         logger.fine("Generating");
         generator.generate();
@@ -329,7 +330,9 @@ public final class Problem {
                 break;
             }
         }
-        logger.fine(nbNoGoods + " nogoods");
+        if (logger.isLoggable(Level.FINE)) {
+            logger.fine(nbNoGoods + " nogoods");
+        }
         return nbNoGoods;
     }
 

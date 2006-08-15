@@ -19,12 +19,14 @@
 
 package cspfj.filter;
 
+import java.util.Arrays;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import cspfj.constraint.Arc;
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
-import cspfj.util.Arc;
 import cspfj.util.Maximier;
 
 /**
@@ -58,7 +60,7 @@ public final class AC3 implements Filter {
 
     public boolean reduceAll(final int level) {
         clearQueue();
-        addAll();
+        addAll(this.queue, this.inQueue);
         return reduce(level);
 
     }
@@ -68,25 +70,26 @@ public final class AC3 implements Filter {
             return true;
         }
         clearQueue();
-        addNeighbours(variable);
+        addNeighbours(variable, this.queue, this.inQueue);
+
         return reduce(level);
     }
 
     private boolean reduce(final int level) {
-        logger.finer("Filtering...");
-
+        final Maximier<Arc> queue = this.queue;
+        final boolean[][] inQueue = this.inQueue;
         while (!queue.isEmpty()) {
-            final Arc arc = pullQueue();
-
-            // logger.finest("Revising variable " + variable + "("
-            // + variable.getDomainSize() + ")");
+            final Arc arc = pullArc(queue, inQueue);
 
             boolean revised = false;
 
-            logger.finest(arc.getVariable() + ", " + arc.getConstraint());
+            if (logger.isLoggable(Level.FINEST)) {
+                logger.finest(arc.getVariable() + ", " + arc.getConstraint()
+                        + " (" + queue.size() + " arcs restants)");
+            }
             if (arc.revise(level)) {
 
-                if (arc.getVariable().getDomainSize() < 1) {
+                if (arc.getVariable().getDomainSize() <= 0) {
                     arc.getConstraint().increaseWeight();
                     return false;
                 }
@@ -95,7 +98,7 @@ public final class AC3 implements Filter {
             }
 
             if (revised) {
-                addNeighbours(arc.getVariable());
+                addNeighbours(arc.getVariable(), queue, inQueue);
 
             }
 
@@ -107,23 +110,18 @@ public final class AC3 implements Filter {
 
     private void clearQueue() {
         for (boolean[] i : inQueue) {
-            for (int j = 0; j < i.length; j++) {
-                i[j] = false;
-            }
+            Arrays.fill(i, false);
         }
         queue.clear();
     }
 
-    private void addAll() {
+    private void addAll(final Maximier<Arc> queue, final boolean[][] inQueue) {
         boolean change = false;
 
         for (Constraint c : problem.getConstraints()) {
             for (Arc a : c.getArcs()) {
-//                logger.finest("Adding " + a);
-                if (addInQueue(a)) {
+                if (addInQueue(a, queue, inQueue)) {
                     change = true;
-                } else {
-//                    logger.finest("Not added !");
                 }
             }
         }
@@ -132,13 +130,15 @@ public final class AC3 implements Filter {
         }
     }
 
-    private Arc pullQueue() {
+    private static Arc pullArc(final Maximier<Arc> queue,
+            final boolean[][] inQueue) {
         final Arc arc = queue.pull();
         inQueue[arc.getCId()][arc.getPosition()] = false;
         return arc;
     }
 
-    private boolean addInQueue(final Arc arc) {
+    private static boolean addInQueue(final Arc arc, final Maximier<Arc> queue,
+            final boolean[][] inQueue) {
         if (arc.getVariable().getDomainSize() <= 1) {
             return false;
         }
@@ -150,14 +150,15 @@ public final class AC3 implements Filter {
         return true;
     }
 
-    private void addNeighbours(final Variable variable) {
+    private static void addNeighbours(final Variable variable,
+            final Maximier<Arc> queue, final boolean[][] inQueue) {
         boolean change = false;
         for (Constraint c : variable.getInvolvingConstraints()) {
             for (Arc a : c.getArcs()) {
                 if (a.getVariable() == variable) {
                     continue;
                 }
-                if (addInQueue(a)) {
+                if (addInQueue(a, queue, inQueue)) {
                     change = true;
                 }
             }

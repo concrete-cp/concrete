@@ -30,23 +30,28 @@ public final class DomainIterator implements Iterator<Integer> {
     public DomainIterator(Variable variable) {
         super();
         this.variable = variable;
-        currentIndex = variable.getFirstPresentIndex();
+        currentIndex = -1;
     }
 
     public void reset() {
-        
 
     }
 
     public boolean hasNext() {
-        return currentIndex != -1;
+        if (currentIndex == -1) {
+            return variable.getFirstPresentIndex() >= 0;
+        }
+        return variable.getNext(currentIndex) >= 0;
+
     }
 
     public Integer next() {
-        final int index = currentIndex;
-        currentIndex = variable.getNext(index);
-
-        return index;
+        if (currentIndex == -1) {
+            currentIndex = variable.getFirstPresentIndex();
+        } else {
+            currentIndex = variable.getNext(currentIndex);
+        }
+        return currentIndex;
     }
 
     public void remove() {

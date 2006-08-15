@@ -31,7 +31,7 @@ public interface Solver {
 
     Map<Variable, Integer> getSolution();
 
-    int getSolutionIndex(final int vId);
+//    int getSolutionIndex(final int vId);
 
     int getSolutionValue(final int vId);
 

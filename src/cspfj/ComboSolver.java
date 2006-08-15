@@ -66,9 +66,9 @@ public class ComboSolver extends AbstractSolver {
         long prepro = chronometer.getRemainingTimeNano();
 
         try {
-//            if (!new SAC(problem, macSolver.getMaxNoGoodSize(), chronometer, macSolver.getFilter())
-//                    .reduceAll(0)) {
-            if (!macSolver.getFilter().reduceAll(0)) {
+            if (!new SAC(problem, macSolver.getMaxNoGoodSize(), chronometer, macSolver.getFilter())
+                    .reduceAll(0)) {
+//            if (!macSolver.getFilter().reduceAll(0)) {
                 chronometer.validateChrono();
                 return false;
             }
@@ -78,8 +78,8 @@ public class ComboSolver extends AbstractSolver {
         }
         checkExpiration();
         prepro -= chronometer.getRemainingTimeNano();
-//        prepro /= problem.getMaxDomainSize();
-        prepro *=Math.sqrt(problem.getNbVariables());
+        prepro /= problem.getMaxDomainSize();
+//        prepro *=Math.sqrt(problem.getNbVariables());
         if (prepro < 1e9) {
             prepro = 1000000000L;
         }

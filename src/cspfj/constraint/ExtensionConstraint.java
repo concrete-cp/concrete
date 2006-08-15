@@ -19,11 +19,10 @@
 
 package cspfj.constraint;
 
-import cspfj.constraint.AbstractConstraint;
 import cspfj.exception.FailedGenerationException;
 import cspfj.problem.Variable;
 
-public final class ExtensionConstraint extends AbstractConstraint {
+public final class ExtensionConstraint extends Constraint {
 
 	private final float tightness;
 

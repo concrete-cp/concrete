@@ -19,55 +19,51 @@
 
 package cspfj;
 
+import java.util.Random;
+
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
+import cspfj.util.TieManager;
 
 public final class WDegOnDom {
 
-	private final Problem problem;
+    private final Problem problem;
 
-	public WDegOnDom(final Problem prob) {
-		super();
-		problem = prob;
+    private final Random random;
 
-	}
+    private final static TieManager<Variable, Float> tieManager = new TieManager<Variable, Float>(
+            null, 0F);
 
-	public Variable selectVariable() {
+    public WDegOnDom(final Problem prob, final Random random) {
+        super();
+        problem = prob;
+        this.random = random;
 
-		float best = 0;
-		Variable bestVariable = null;
-		for (Variable v : problem.getVariables()) {
-			if (v.isAssigned()) {
-				continue;
-			}
+    }
 
-			
+    public Variable selectVariable() {
+        final TieManager<Variable, Float> tieManager = WDegOnDom.tieManager;
+        tieManager.clear();
 
-			final float est;
+        for (Variable v : problem.getVariables()) {
+            if (v.isAssigned()) {
+                continue;
+            }
 
-			if (v.getDomainSize() == 1) { // || !v.isSelectable()) {
-				est = 0;
-			} else {
-				float count = 0;
-				for (Constraint c : v.getInvolvingConstraints()) {
-					count += c.getFreedomDegree() * c.getWeight();
+            if (v.getDomainSize() == 1) { // || !v.isSelectable()) {
+                tieManager.newValue(v, 0F, random);
+            } else {
 
-				}
 
-				est = count / v.getDomainSize();
-			}
-			if (bestVariable == null || est > best) {
-				best = est;
-				bestVariable = v;
+                tieManager.newValue(v, -v.getWDeg() / v.getDomainSize(), random);
+            }
 
-			}
-
-			// System.out.print(est);
-			// System.out.print(" ");
-		}
-		// System.out.println("Selected : " + bestVariable + "(" + best + ")");
-		return bestVariable;
-	}
+            // System.out.print(est);
+            // System.out.print(" ");
+        }
+        // System.out.println("Selected : " + bestVariable + "(" + best + ")");
+        return tieManager.getBestValue();
+    }
 
 }

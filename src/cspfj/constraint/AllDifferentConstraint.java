@@ -19,22 +19,37 @@
 
 package cspfj.constraint;
 
-import java.util.Arrays;
-import java.util.Set;
 import java.util.TreeSet;
+import java.util.logging.Logger;
 
 import cspfj.problem.Variable;
 
-public final class AllDifferentConstraint extends AbstractConstraint {
+public final class AllDifferentConstraint extends Constraint {
 
-    private final static Set<Integer> union = new TreeSet<Integer>();;
+    private final static TreeSet<Integer> union = new TreeSet<Integer>();;
 
-    private final Integer[] constants;
+    // private final Integer[] constants;
+
+    private final static Logger logger = Logger
+            .getLogger("cspfj.constraint.AllDifferentConstraint");
+
+    // private boolean removedConstants = false;
 
     public AllDifferentConstraint(final Variable[] scope,
             final Integer[] constants) {
         super(scope);
-        this.constants = constants;
+        // this.constants = constants;
+        for (Variable variable : scope) {
+            for (int index : variable) {
+                final int value = variable.getDomain()[index];
+                for (int constant : constants) {
+                    // union.add(value);
+                    if (constant == value) {
+                        variable.remove(index, 0);
+                    }
+                }
+            }
+        }
 
     }
 
@@ -45,35 +60,39 @@ public final class AllDifferentConstraint extends AbstractConstraint {
     @Override
     public boolean check() {
         union.clear();
-        for (int i : constants) {
-            union.add(i);
-        }
+        // for (int i : constants) {
+        // union.add(i);
+        // }
 
-        for (int i : tuple) {
-            if (union.contains(i)) {
+        for (int i = 0; i < arity; i++) {
+            final int index = getInvolvedVariables()[i].getDomain()[tuple[i]];
+            if (union.contains(index)) {
                 return false;
             }
-            union.add(i);
+            union.add(index);
         }
         return true;
     }
 
-    public boolean revise(final Variable variable, final int level) {
+    public boolean revise(final int position, final int level) {
+        final Variable variable = getInvolvedVariables()[position];
         assert !variable.isAssigned();
+
+        final TreeSet<Integer> union = AllDifferentConstraint.union;
 
         union.clear();
 
         boolean revised = false;
 
-        for (Variable checkedVariable : getInvolvedVariables()) {
+        for (int checkPos = arity; --checkPos >= 0;) {
+            final Variable checkedVariable = getInvolvedVariables()[checkPos];
             for (int i : checkedVariable) {
 
                 union.add(checkedVariable.getDomain()[i]);
 
             }
 
-            if (variable != checkedVariable
-                    && checkedVariable.getDomainSize() == 1) {
+            if (position != checkPos && checkedVariable.getDomainSize() == 1) {
                 final int index = variable
                         .index(checkedVariable.getDomain()[checkedVariable
                                 .getFirstPresentIndex()]);
@@ -84,20 +103,12 @@ public final class AllDifferentConstraint extends AbstractConstraint {
             }
         }
 
-        for (int value : constants) {
-            union.add(value);
-            final int index = variable.index(value);
-            if (variable.isPresent(index)) {
-                variable.remove(index, level);
-                revised = true;
-            }
-        }
-
-        if (union.size() < this.getInvolvedVariables().length) {
+        if (union.size() < arity) {
             variable.empty(level);
             return true;
         }
 
+        logger.finest("done : " + revised);
         return revised;
     }
 
@@ -116,10 +127,4 @@ public final class AllDifferentConstraint extends AbstractConstraint {
     public boolean useTupleCache() {
         return false;
     }
-
-    @Override
-    public String toString() {
-        return super.toString() + " " + Arrays.toString(constants);
-    }
-
 }

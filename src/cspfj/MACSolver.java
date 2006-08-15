@@ -48,7 +48,7 @@ public final class MACSolver extends AbstractSolver {
     public MACSolver(Problem prob, ResultHandler resultHandler) {
         super(prob, resultHandler);
         filter = new AC3(problem);
-        heuristic = new WDegOnDom(prob);
+        heuristic = new WDegOnDom(prob, new Random(0));
 
     }
 
@@ -135,7 +135,7 @@ public final class MACSolver extends AbstractSolver {
         setMaxDuration(maxDuration);
 
         try {
-//            if (!new SAC(problem, maxNoGoodSize, chronometer).reduceAll(0)) {
+//            if (!new SAC(problem, maxNoGoodSize, chronometer, filter).reduceAll(0)) {
                  if (!getFilter().reduceAll(0)) {
                 chronometer.validateChrono();
                 return false;

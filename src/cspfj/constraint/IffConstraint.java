@@ -21,7 +21,7 @@ package cspfj.constraint;
 
 import cspfj.problem.Variable;
 
-public final class IffConstraint extends AbstractConstraint {
+public final class IffConstraint extends Constraint {
 
     final private int indexI;
 

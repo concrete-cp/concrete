@@ -18,6 +18,7 @@
  */
 package cspfj.filter;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import cspfj.exception.OutOfTimeException;
@@ -27,9 +28,9 @@ import cspfj.util.Chronometer;
 
 /**
  * @author Julien VION
- *
+ * 
  */
-public class SAC extends AbstractFilter {
+public class SAC implements Filter {
 
     private final Filter filter;
 
@@ -39,69 +40,88 @@ public class SAC extends AbstractFilter {
 
     private final Chronometer chronometer;
 
+    private final Problem problem;
+
+    // private final boolean[] inQueue;
+
+    // private final Maximier<Variable> queue;
+
     public SAC(Problem problem, int maxNoGoodSize, Chronometer chronometer,
             Filter filter) {
-        super(problem);
+        super();
         this.filter = filter;
         this.maxNoGoodSize = maxNoGoodSize;
         this.chronometer = chronometer;
+        this.problem = problem;
+        // queue = new Maximier<Variable>(new
+        // Variable[problem.getNbVariables()]);
+        // inQueue = new boolean[problem.getNbVariables()];
     }
 
     private boolean reduce(final int level) throws OutOfTimeException {
         logger.info("SAC");
+
+        final Filter filter = this.filter;
+
         if (!filter.reduceAll(level)) {
             return false;
         }
 
-        boolean changed;
+        final Problem problem = this.problem;
 
-        do {
-            changed = false;
-            addAll();
-            logger.fine("NEW TURN !!");
-            while (!isQueueEmpty()) {
+        //
+        // boolean changed;
+        //
+        // do {
+        // changed = false;
+        // addAll();
+        // logger.fine("NEW TURN !!");
+        // while (!queue.isEmpty()) {
+        for (Variable variable : problem.getVariables()) {
 
-                final Variable variable = pullVariable();
-                if (variable.getDomainSize() <= 1) {
-                    continue;
+            if (variable.getDomainSize() <= 1) {
+                continue;
+            }
+
+            for (int i : variable) {
+                if (logger.isLoggable(Level.FINE)) {
+                    logger.fine(variable + " <- " + i);
                 }
-                logger.fine(variable + "(" + queueSize() + " left)");
-                for (int i : variable) {
+                chronometer.checkExpiration();
+                boolean changedGraph = false;
+                variable.assign(i, problem);
+                problem.setLevelVariables(level, variable.getId());
 
-                    chronometer.checkExpiration();
+                if (filter.reduceAfter(level + 1, variable)) {
 
-                    boolean changedValue = false;
-
-                    variable.assign(i, problem);
-                    problem.setLevelVariables(level, variable.getId());
-                    if (filter.reduceAfter(level + 1, variable)) {
-
-                        if (problem.addNoGoods(maxNoGoodSize) > 0) {
-                            changed = changedValue = true;
-
-                        }
-                        variable.unassign(problem);
-
-                    } else {
-                        logger.fine("Removing");
-                        variable.unassign(problem);
-                        variable.remove(i, level);
-                        changedValue = true;
-
+                    if (problem.addNoGoods(maxNoGoodSize) > 0) {
+                        // changed = true;
+                        changedGraph = true;
                     }
+
+                    variable.unassign(problem);
                     problem.restore(level + 1);
 
-                    if (changedValue
-                            && (variable.getDomainSize() < 1 || !filter
-                                    .reduceAfter(level, variable))) {
+                } else {
+
+                    variable.unassign(problem);
+                    problem.restore(level + 1);
+
+                    variable.remove(i, level);
+                    if (variable.getDomainSize() <= 0) {
                         return false;
                     }
-
+                    changedGraph = true;
                 }
 
+                if (changedGraph && !filter.reduceAfter(level, variable)) {
+                    return false;
+                }
             }
-            problem.setLevelVariables(level, -1);
-        } while (changed);
+
+        }
+        problem.setLevelVariables(level, -1);
+        // } while (changed);
 
         return true;
 
@@ -116,7 +136,41 @@ public class SAC extends AbstractFilter {
     }
 
     public boolean reduceAll(final int level) throws OutOfTimeException {
-        clearQueue();
+        // clearQueue();
         return reduce(level);
     }
+
+    // private boolean addInQueue(final Variable variable) {
+    // if (variable.getDomainSize() > 1 && !inQueue[variable.getId()]) {
+    // queue.add(variable);
+    // inQueue[variable.getId()] = true;
+    // return true;
+    // }
+    // return false;
+    // }
+    //
+    // private void clearQueue() {
+    // queue.clear();
+    // Arrays.fill(inQueue, false);
+    // }
+    //
+    // private Variable pullVariable() {
+    // final Variable variable = queue.pull();
+    // inQueue[variable.getId()] = false;
+    // return variable;
+    // }
+    //
+    // private void addVariables(final Variable[] variables) {
+    // boolean change = false;
+    // for (Variable v : variables) {
+    // change |= addInQueue(v);
+    // }
+    // if (change) {
+    // queue.sort();
+    // }
+    // }
+    //
+    // private void addAll() {
+    // addVariables(problem.getVariables());
+    // }
 }

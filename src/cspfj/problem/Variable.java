@@ -100,7 +100,8 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
 
     private static final Logger logger = Logger.getLogger("cspfj.Variable");
 
-    private static final TieManager tieManager = new TieManager();
+    private static final TieManager<Integer, Integer> tieManager = new TieManager<Integer, Integer>(
+            -1, Integer.MAX_VALUE);
 
     // private final DomainIterator iterator;
 
@@ -198,7 +199,8 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
      * @throws NotInDomainException
      */
     public int index(final int value) {
-        for (int i = 0; i < domain.length; i++) {
+        final int[] domain = this.domain;
+        for (int i = domain.length; --i >= 0;) {
             if (domain[i] == value) {
                 return i;
             }
@@ -232,7 +234,7 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
             // System.out.println("seeking in "+c);
             if (c.revise(this, level)) {
                 revised = c;
-                if (getDomainSize() < 1) {
+                if (getDomainSize() <= 0) {
                     break;
                 }
             }
@@ -266,7 +268,7 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
     public int selectIndex() {
         assert domainSize > 0;
 
-        // return firstValidIndex ;
+        final int[] order = this.order;
 
         for (int i = 0; i < order.length; i++) {
             if (isPresent(order[i])) {
@@ -313,7 +315,10 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
 
         // boolean restored = false;
 
-        for (int i = 0; i < removed.length; i++) {
+        final int[] removed = this.removed;
+        final int[] prevAbsents = this.prevAbsents;
+
+        for (int i = lastAbsentIndex; i >= 0; i = prevAbsents[i]) {
             if (removed[i] >= level) {
                 restore(i);
             }
@@ -323,6 +328,11 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
     }
 
     public void restore(final int index) {
+        assert !isPresent(index);
+
+        final int[] removed = this.removed;
+        final int[] prevAbsents = this.prevAbsents;
+
         // add to the list of present elements
         domainSize++;
         removed[index] = -1;
@@ -464,13 +474,33 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
     // return -1;
     // }
 
+    public float getWDeg() {
+        float count = 0;
+        if (involvingConstraints == null) {
+            return 1;
+        }
+
+        for (Constraint c : involvingConstraints) {
+            count += c.getFreedomDegree() * c.getWeight();
+        }
+        return count;
+    }
+
     public int compareTo(final Variable arg0) {
-        return domainSize == arg0.getDomainSize() ? id - arg0.getId()
-                : domainSize - arg0.getDomainSize();
+        final int compare = domainSize - arg0.getDomainSize();
+
+        if (compare == 0) {
+            final float compareDeg = arg0.getWDeg() - getWDeg();
+            if (compareDeg == 0) {
+                return id - arg0.getId();
+            }
+            return compareDeg > 0 ? 1 : -1;
+        }
+        return compare;
     }
 
     public void makeSingleton(final int value, final int level) {
-        for (int i = firstPresentIndex; i < domain.length; i++) {
+        for (int i : this) {
             if (domain[i] != value) {
                 remove(i, level);
             }
@@ -532,8 +562,10 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
             return bestIndex;
         }
 
+        final int[] order = this.order;
+
         tieManager.clear();
-        for (int i = 0; i < domain.length; i++) {
+        for (int i = domain.length; --i >= 0;) {
             if (order[i] != Integer.MAX_VALUE
                     && (order[i] < aspiration || !tabuManager.isTabu(this, i))) {
 
@@ -557,13 +589,17 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
             return assignedIndex;
         }
 
+        final TieManager<Integer, Integer> tieManager = Variable.tieManager;
+        final int[] removed = this.removed;
+        final Constraint[] involvingConstraints = this.involvingConstraints;
+
         tieManager.clear();
 
-        for (int i = 0; i < domain.length; i++) {
+        for (int i = domain.length; --i >= 0;) {
             if (removed[i] >= 0) {
                 continue;
             }
-//            logger.finest(this + " " + i);
+            // logger.finest(this + " " + i);
             assignedIndex = i;
 
             int indexConflicts = 0;
@@ -588,19 +624,24 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
 
     public void updateNbConflicts(final Random random) {
 
-        nbConflicts = 0;
+        int nbConflicts = 0;
 
         for (Constraint c : involvingConstraints) {
             if (!c.checkFirstWith(this, assignedIndex)) {
                 nbConflicts += c.getWeight();
             }
         }
+        this.nbConflicts = nbConflicts;
 
         final int oldIndex = assignedIndex;
+        final TieManager<Integer, Integer> tieManager = Variable.tieManager;
+        final int[] removed = this.removed;
+        final int[] order = this.order;
+        final Constraint[] involvingConstraints = this.involvingConstraints;
 
         tieManager.clear();
 
-        for (int i = 0; i < domain.length; i++) {
+        for (int i = domain.length; --i >= 0;) {
             if (removed[i] >= 0 || i == oldIndex) {
                 order[i] = Integer.MAX_VALUE;
                 continue;
@@ -671,9 +712,9 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
     public int getLastAbsent() {
         return lastAbsentIndex;
     }
-    
+
     public int getPrevAbsent(final int index) {
-        return prevAbsents[index] ;
+        return prevAbsents[index];
     }
 
     public int getLastPresent() {

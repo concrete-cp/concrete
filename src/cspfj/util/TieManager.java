@@ -21,34 +21,41 @@ package cspfj.util;
 
 import java.util.Random;
 
-public final class TieManager {
+public final class TieManager<V, E extends Comparable<E>> {
 
-    private int bestValue;
+    private V bestValue;
 
-    private int bestEvaluation;
+    private final V noValue;
+
+    private final E maxEvaluation;
+
+    private E bestEvaluation;
 
     private int nbTies;
 
-    public TieManager() {
+    public TieManager(V noValue, E maxValue) {
         super();
+        this.maxEvaluation = maxValue;
+        this.noValue = noValue;
         clear();
     }
 
     public void clear() {
-        bestValue = -1;
-        bestEvaluation = Integer.MAX_VALUE;
+        bestValue = noValue;
+        bestEvaluation = maxEvaluation;
         nbTies = 1;
     }
 
-    public boolean newValue(final int value, final int evaluation,
+    public boolean newValue(final V value, final E evaluation,
             final Random random) {
-        if (evaluation == this.bestEvaluation
-                && random.nextFloat() * nbTies++ < 1) {
+        final int compare = evaluation.compareTo(this.bestEvaluation);
+
+        if (compare == 0 && random.nextFloat() * nbTies++ < 1) {
             this.bestValue = value;
             return true;
         }
 
-        if (evaluation < this.bestEvaluation) {
+        if (compare < 0) {
             nbTies = 1;
             this.bestValue = value;
             this.bestEvaluation = evaluation;
@@ -58,11 +65,11 @@ public final class TieManager {
         return false;
     }
 
-    public int getBestValue() {
+    public V getBestValue() {
         return bestValue;
     }
 
-    public int getBestEvaluation() {
+    public E getBestEvaluation() {
         return bestEvaluation;
     }
 

@@ -63,18 +63,18 @@ public abstract class AbstractSolver implements Solver {
      * 
      * @see cspfj.Solver#getSolutionIndex(int)
      */
-    public final int getSolutionIndex(final int vId) {
+    public final int getSolutionValue(final int vId) {
         return getSolution().get(problem.getVariable(vId));
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see cspfj.Solver#getSolutionValue(int)
-     */
-    public final int getSolutionValue(final int vId) {
-        return problem.getVariable(vId).getDomain()[getSolutionIndex(vId)];
-    }
+//    /*
+//     * (non-Javadoc)
+//     * 
+//     * @see cspfj.Solver#getSolutionValue(int)
+//     */
+//    public final int getSolutionValue(final int vId) {
+//        return problem.getVariable(vId).getDomain()[getSolutionIndex(vId)];
+//    }
 
     public int getNbAssignments() {
         return nbAssignments;

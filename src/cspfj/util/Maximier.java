@@ -20,6 +20,7 @@
 package cspfj.util;
 
 import java.util.AbstractSet;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -45,6 +46,7 @@ public final class Maximier<T extends Comparable<T>> extends AbstractSet<T> {
 
     @Override
     public boolean add(final T arg0) {
+        final T[] content = this.content;
         if (size >= content.length) {
             return false;
         }
@@ -75,10 +77,10 @@ public final class Maximier<T extends Comparable<T>> extends AbstractSet<T> {
         if (rightChild(index) != null) {
             sort(rightChildIndex(index));
         }
-        reorganize(index);
+        reorganize(index, content);
     }
 
-    private void reorganize(final int index) {
+    private void reorganize(final int index, final T[] content) {
         int max = index;
         if (leftChild(index) != null
                 && content[index].compareTo(leftChild(index)) > 0) {
@@ -93,7 +95,7 @@ public final class Maximier<T extends Comparable<T>> extends AbstractSet<T> {
             final T cont = content[index];
             content[index] = content[max];
             content[max] = cont;
-            reorganize(max);
+            reorganize(max, content);
         }
 
     }
@@ -102,14 +104,12 @@ public final class Maximier<T extends Comparable<T>> extends AbstractSet<T> {
         if (isEmpty()) {
             throw new NoSuchElementException();
         }
-
-        final T max = content[0];
-        delete(0);
         size--;
-        return max;
+
+        return delete(0, content);
     }
 
-    private T delete(final int index) {
+    private T delete(final int index, final T[] content) {
         final T cont = content[index];
         if (rightChild(index) == null && leftChild(index) == null) {
             content[index] = null;
@@ -118,24 +118,24 @@ public final class Maximier<T extends Comparable<T>> extends AbstractSet<T> {
             }
 
         } else if (rightChild(index) == null) {
-            content[index] = delete(leftChildIndex(index));
+            content[index] = delete(leftChildIndex(index), content);
         } else if (leftChild(index) == null) {
-            content[index] = delete(rightChildIndex(index));
+            content[index] = delete(rightChildIndex(index), content);
         } else if (leftChild(index).compareTo(rightChild(index)) < 0) {
-            content[index] = delete(leftChildIndex(index));
+            content[index] = delete(leftChildIndex(index), content);
         } else {
-            content[index] = delete(rightChildIndex(index));
+            content[index] = delete(rightChildIndex(index), content);
         }
         return cont;
 
     }
 
     private static int leftChildIndex(final int index) {
-        return index * 2 + 1;
+        return (index << 1) + 1;
     }
 
     private static int rightChildIndex(final int index) {
-        return index * 2 + 2;
+        return (index << 1) + 2;
     }
 
     private T leftChild(final int index) {
@@ -155,9 +155,7 @@ public final class Maximier<T extends Comparable<T>> extends AbstractSet<T> {
 
     @Override
     public void clear() {
-        for (int i = 0; i < content.length; i++) {
-            content[i] = null;
-        }
+        Arrays.fill(content, null);
         firstAbsent = 0;
         size = 0;
     }
@@ -168,28 +166,29 @@ public final class Maximier<T extends Comparable<T>> extends AbstractSet<T> {
         return null;
     }
 
-    public boolean contains(final T arg0) {
-        if (isEmpty()) {
-            return false;
-        }
-        return contains(arg0, 0);
-    }
-
-    private boolean contains(final T arg0, final int index) {
-        if (content[index].compareTo(arg0) == 0) {
-            return true;
-        }
-        if (content[index].compareTo(arg0) < 0) {
-            return false;
-        }
-        if (leftChild(index) != null && contains(arg0, leftChildIndex(index))) {
-            return true;
-        }
-        if (rightChild(index) != null && contains(arg0, rightChildIndex(index))) {
-            return true;
-        }
-        return false;
-    }
+    // public boolean contains(final T arg0) {
+    // if (isEmpty()) {
+    // return false;
+    // }
+    // return contains(arg0, 0);
+    // }
+    //
+    // private boolean contains(final T arg0, final int index) {
+    // if (content[index].compareTo(arg0) == 0) {
+    // return true;
+    // }
+    // if (content[index].compareTo(arg0) < 0) {
+    // return false;
+    // }
+    // if (leftChild(index) != null && contains(arg0, leftChildIndex(index))) {
+    // return true;
+    // }
+    // if (rightChild(index) != null && contains(arg0, rightChildIndex(index)))
+    // {
+    // return true;
+    // }
+    // return false;
+    // }
 
     // public static void main(final String[] args) {
     // final Maximier<Integer> m = new Maximier<Integer>(new Integer[1000000],

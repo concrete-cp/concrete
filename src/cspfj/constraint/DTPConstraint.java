@@ -21,7 +21,7 @@ package cspfj.constraint;
 
 import cspfj.problem.Variable;
 
-public final class DTPConstraint extends AbstractConstraint {
+public final class DTPConstraint extends Constraint {
 
     final private int duration0;
 

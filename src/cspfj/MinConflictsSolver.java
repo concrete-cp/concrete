@@ -76,7 +76,7 @@ public final class MinConflictsSolver extends AbstractSolver {
         // final int[] assignments = new int[problem.getNbVariables()];
 
         for (Variable v : problem.getVariables()) {
-            if (v.getDomainSize() < 1) {
+            if (v.getDomainSize() <= 0) {
                 v.restoreLevel(1);
             }
         }
@@ -138,7 +138,8 @@ public final class MinConflictsSolver extends AbstractSolver {
 
         int bestEver = Integer.MAX_VALUE;
 
-        final TieManager tieManager = new TieManager();
+        final TieManager<Integer, Integer> tieManager = new TieManager<Integer, Integer>(
+                -1, Integer.MAX_VALUE);
 
         while (nbConflicts > 0) {
             if (nbConflicts < bestEver) {
