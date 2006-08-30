@@ -88,6 +88,8 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
 
     private final int[] order;
 
+    private final double[] valueHeuristic;
+
     private int firstPresentIndex;
 
     private int lastPresentIndex;
@@ -128,6 +130,9 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
         lastPresentIndex = domain.length - 1;
         lastAbsentIndex = -1;
         order = new int[domain.length];
+        valueHeuristic = new double[domain.length];
+
+        Arrays.fill(valueHeuristic, Double.MAX_VALUE / 2);
 
         this.name = name;
 
@@ -404,6 +409,13 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
 
         prevAbsents[index] = lastAbsentIndex;
         lastAbsentIndex = index;
+
+        if (level == 0) {
+            for (Constraint c : involvingConstraints) {
+                c.freeLast(this, index);
+            }
+        }
+
     }
 
     /**
@@ -413,18 +425,22 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
         return id;
     }
 
-    private final static SortedMap<Integer, Integer> supports = new TreeMap<Integer, Integer>();
+    private final static SortedMap<Double, Integer> supports = new TreeMap<Double, Integer>();
+
+    private static double poisson(final double moy, final Random random) {
+        return -moy * Math.log(random.nextDouble());
+    }
 
     public void orderIndexes(final Random random) {
 
         supports.clear();
-
+        final double[] valueHeuristic = this.valueHeuristic;
         logger.finer("Counting supports");
         for (int i : this) {
 
-            int r;
+            double r;
             do {
-                r = random.nextInt();
+                r = poisson(valueHeuristic[i], random);
             } while (supports.containsKey(r));
 
             supports.put(r, i);
@@ -433,12 +449,17 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
 
         logger.finer("Ordering");
 
+        final int[] order = this.order;
         int o = 0;
 
         for (int i : supports.values()) {
             order[o++] = i;
         }
 
+    }
+
+    public void setValueHeuristic(final int index, final double value) {
+        valueHeuristic[index] = value;
     }
 
     public int getNbSupports(final int index) {
@@ -500,6 +521,7 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
     }
 
     public void makeSingleton(final int value, final int level) {
+        final int[] domain = this.domain;
         for (int i : this) {
             if (domain[i] != value) {
                 remove(i, level);

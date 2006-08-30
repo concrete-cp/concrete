@@ -63,9 +63,10 @@ public final class AllDifferentConstraint extends Constraint {
         // for (int i : constants) {
         // union.add(i);
         // }
-
-        for (int i = 0; i < arity; i++) {
-            final int index = getInvolvedVariables()[i].getDomain()[tuple[i]];
+        final Variable[] involvedVariables = getInvolvedVariables();
+        final int[] tuple = this.tuple ;
+        for (int i = getArity(); --i >= 0;) {
+            final int index = involvedVariables[i].getDomain()[tuple[i]];
             if (union.contains(index)) {
                 return false;
             }
@@ -84,7 +85,7 @@ public final class AllDifferentConstraint extends Constraint {
 
         boolean revised = false;
 
-        for (int checkPos = arity; --checkPos >= 0;) {
+        for (int checkPos = getArity(); --checkPos >= 0;) {
             final Variable checkedVariable = getInvolvedVariables()[checkPos];
             for (int i : checkedVariable) {
 
@@ -103,7 +104,7 @@ public final class AllDifferentConstraint extends Constraint {
             }
         }
 
-        if (union.size() < arity) {
+        if (union.size() < getArity()) {
             variable.empty(level);
             return true;
         }

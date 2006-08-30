@@ -43,28 +43,35 @@ public final class IffConstraint extends Constraint {
 
     @Override
     public boolean check() {
-        // return true ;
-        return equiv(getInvolvedVariables()[0].getDomain()[tuple[0]] == valueI,
-                getInvolvedVariables()[1].getDomain()[tuple[1]] == valueV);
-    }
+        if (!super.check()) {
+            return false;
+        }
 
-    private static boolean equiv(final boolean a, final boolean b) {
-        return (!a || b) && (!b || a);
+        final boolean check = (getInvolvedVariables()[0].getDomain()[tuple[0]] == valueI) == (getInvolvedVariables()[1]
+                .getDomain()[tuple[1]] == valueV);
+
+        if (!check) {
+            removeTuple(tuple);
+        }
+        return check;
     }
 
     @Override
-    public boolean revise(final Variable var1, final int level) {
-        final Variable var2;
+    public boolean revise(final int posVar1, final int level) {
+        final Variable var1 = getInvolvedVariables()[posVar1];
+        
+        final int posVar2 = 1-posVar1 ;
+        final Variable var2 = getInvolvedVariables()[posVar2];
+
+        
         final int value1;
         final int index1;
         final int index2;
-        if (getPosition(var1) == 0) {
-            var2 = getInvolvedVariables()[1];
+        if (posVar1 == 0) {
             value1 = valueI;
             index1 = indexI;
             index2 = indexV;
         } else {
-            var2 = getInvolvedVariables()[0];
             value1 = valueV;
             index1 = indexV;
             index2 = indexI;
@@ -73,12 +80,8 @@ public final class IffConstraint extends Constraint {
         boolean revised = false;
 
         if (var2.getDomainSize() == 1 && var2.getFirstPresentIndex() == index2) {
-            for (int i : var1) {
-                if (var1.getDomain()[i] != value1) {
-                    var1.remove(i, level);
-                    revised = true;
-                }
-            }
+            var1.makeSingleton(value1, level);
+            revised = true;
         }
 
         if (!var2.isPresent(index2) && var1.isPresent(index1)) {

@@ -41,14 +41,14 @@ public final class ExtensionConstraint extends Constraint {
 			tightness = 1 - tight;
 		}
 
-		int[] indexes = new int[arity];
+		int[] indexes = new int[getArity()];
 
 		for (int[] tuple : tuples) {
 			for (int i = 0; i < tuple.length; i++) {
 				indexes[i] = scope[i].index(tuple[i]);
 			}
 
-			matrix[matrixIndex(indexes)] = supports;
+			setMatrixIndex(indexes, supports) ;
 
 		}
 

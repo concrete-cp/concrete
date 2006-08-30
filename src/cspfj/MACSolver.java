@@ -43,7 +43,7 @@ public final class MACSolver extends AbstractSolver {
 
     // private NoGoodManager noGoodManager = null;
 
-    private int maxNoGoodSize;
+    //private int maxNoGoodSize;
 
     public MACSolver(Problem prob, ResultHandler resultHandler) {
         super(prob, resultHandler);
@@ -52,10 +52,10 @@ public final class MACSolver extends AbstractSolver {
 
     }
 
-    public void enableNoGoods(final int maxSize) {
-        // noGoodManager = new NoGoodManager(problem.getNbVariables(), 2);
-        maxNoGoodSize = maxSize;
-    }
+//    public void enableNoGoods(final int maxSize) {
+//        // noGoodManager = new NoGoodManager(problem.getNbVariables(), 2);
+//        maxNoGoodSize = maxSize;
+//    }
 
     public MACSolver(final ProblemGenerator generator,
             ResultHandler resultHandler) throws FailedGenerationException {
@@ -131,7 +131,7 @@ public final class MACSolver extends AbstractSolver {
         boolean result;
 
         System.gc();
-        enableNoGoods(2);
+        //enableNoGoods(2);
         setMaxDuration(maxDuration);
 
         try {
@@ -179,7 +179,7 @@ public final class MACSolver extends AbstractSolver {
     }
 
     public int addNoGoods() {
-        return problem.addNoGoods(maxNoGoodSize);
+        return problem.addNoGoods();
     }
 
     //
@@ -246,8 +246,8 @@ public final class MACSolver extends AbstractSolver {
         return filter;
     }
 
-    public int getMaxNoGoodSize() {
-        return maxNoGoodSize;
-    }
+//    public int getMaxNoGoodSize() {
+//        return maxNoGoodSize;
+//    }
 
 }

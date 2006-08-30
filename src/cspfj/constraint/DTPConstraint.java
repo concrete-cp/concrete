@@ -37,9 +37,19 @@ public final class DTPConstraint extends Constraint {
 
     @Override
     public boolean check() {
+        if (!super.check()) {
+            return false;
+        }
         final int value0 = getInvolvedVariables()[0].getDomain()[tuple[0]];
         final int value1 = getInvolvedVariables()[1].getDomain()[tuple[1]];
-        return value0 + duration0 < value1 || value1 + duration1 < value0;
+        
+        final boolean result = value0 + duration0 < value1 || value1 + duration1 < value0;
+        
+        if (!result) {
+            removeTuple(tuple) ;
+        }
+        
+        return result ;
     }
 
     @Override

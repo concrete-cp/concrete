@@ -26,6 +26,8 @@ public final class Arc implements Comparable<Arc> {
 
     private final int cId;
 
+    //private final int id ;
+    
     private final Variable variable;
 
     private final int position;
@@ -35,6 +37,7 @@ public final class Arc implements Comparable<Arc> {
         this.cId = constraint.getId();
         this.position = position;
         this.variable = constraint.getInvolvedVariables()[position];
+        //this.id = this.cId*maxArity+position ;
     }
 
     public Variable getVariable() {

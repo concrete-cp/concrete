@@ -43,9 +43,9 @@ public final class Problem {
 
     private int[] levelVariables;
 
-    final private List<Variable> scope = new ArrayList<Variable>();
+    final private static ArrayList<Variable> scope = new ArrayList<Variable>();
 
-    final private List<Integer> tuple = new ArrayList<Integer>();
+    final private static ArrayList<Integer> tuple = new ArrayList<Integer>();
 
     private boolean[] isPastVariable;
 
@@ -238,6 +238,8 @@ public final class Problem {
 
         Constraint constraint = null;
 
+        final List<Variable> scope = Problem.scope;
+
         for (Constraint c : scope.get(0).getInvolvingConstraints()) {
             if (c.getArity() != scope.size()) {
                 continue;
@@ -274,25 +276,27 @@ public final class Problem {
         return constraint.removeTuple(scope, tuple);
     }
 
-    public int addNoGoods(final int maxNoGoodSize) {
+    public int addNoGoods() {
         int nbNoGoods = 0;
 
-        if (maxNoGoodSize < 2 || levelVariables[0] < 0) {
+        final int[] levelVariables = this.levelVariables;
+
+        if (levelVariables[0] < 0) {
             return 0;
         }
 
-        for (int i = 0; i < isPastVariable.length; i++) {
-            isPastVariable[i] = false;
-        }
+        final List<Variable> scope = Problem.scope;
+        final List<Integer> tuple = Problem.tuple;
+        final boolean[] isPastVariable = this.isPastVariable;
 
-        scope.clear();
+        Arrays.fill(isPastVariable, false);
+        //scope.clear();
         tuple.clear();
 
         scope.add(0, variables[levelVariables[0]]);
         tuple.add(0, variables[levelVariables[0]].getFirstPresentIndex());
 
-        for (int level = 1; level < levelVariables.length
-                && level < maxNoGoodSize; level++) {
+        for (int level = 1; level < levelVariables.length; level++) {
 
             isPastVariable[levelVariables[level - 1]] = true;
 
@@ -306,16 +310,14 @@ public final class Problem {
 
                 scope.set(level, fv);
                 // logger.fine(fv.toString()) ;
-                for (int lostIndex = fv.getLastAbsent(); lostIndex != -1; lostIndex = fv
+                for (int lostIndex = fv.getLastAbsent(); lostIndex >= 0; lostIndex = fv
                         .getPrevAbsent(lostIndex)) {
-                    if (fv.getRemovedLevel(lostIndex) != level) {
-                        continue;
-                    }
+                    if (fv.getRemovedLevel(lostIndex) == level) {
+                        tuple.set(level, lostIndex);
 
-                    tuple.set(level, lostIndex);
-
-                    if (addNoGood()) {
-                        nbNoGoods++;
+                        if (addNoGood()) {
+                            nbNoGoods++;
+                        }
                     }
 
                 }
@@ -333,6 +335,7 @@ public final class Problem {
         if (logger.isLoggable(Level.FINE)) {
             logger.fine(nbNoGoods + " nogoods");
         }
+        scope.clear() ;
         return nbNoGoods;
     }
 

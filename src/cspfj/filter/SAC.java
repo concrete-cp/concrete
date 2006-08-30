@@ -34,7 +34,7 @@ public class SAC implements Filter {
 
     private final Filter filter;
 
-    private final int maxNoGoodSize;
+    // private final int maxNoGoodSize;
 
     private final static Logger logger = Logger.getLogger("cspfj.filter.SAC");
 
@@ -46,11 +46,10 @@ public class SAC implements Filter {
 
     // private final Maximier<Variable> queue;
 
-    public SAC(Problem problem, int maxNoGoodSize, Chronometer chronometer,
-            Filter filter) {
+    public SAC(Problem problem, Chronometer chronometer, Filter filter) {
         super();
         this.filter = filter;
-        this.maxNoGoodSize = maxNoGoodSize;
+        // this.maxNoGoodSize = maxNoGoodSize;
         this.chronometer = chronometer;
         this.problem = problem;
         // queue = new Maximier<Variable>(new
@@ -59,15 +58,26 @@ public class SAC implements Filter {
     }
 
     private boolean reduce(final int level) throws OutOfTimeException {
-        logger.info("SAC");
+        final Problem problem = this.problem;
+
+        if (logger.isLoggable(Level.INFO)) {
+            int cpt = 0;
+            for (Variable variable : problem.getVariables()) {
+                if (variable.getDomainSize() > 1) {
+                    cpt++;
+                }
+            }
+
+            logger.info("SAC : " + cpt + " future variables / "
+                    + problem.getNbVariables());
+
+        }
 
         final Filter filter = this.filter;
 
         if (!filter.reduceAll(level)) {
             return false;
         }
-
-        final Problem problem = this.problem;
 
         //
         // boolean changed;
@@ -83,10 +93,17 @@ public class SAC implements Filter {
                 continue;
             }
 
+            if (logger.isLoggable(Level.INFO)) {
+                logger.info(variable.toString());
+
+            }
+
             for (int i : variable) {
+
                 if (logger.isLoggable(Level.FINE)) {
                     logger.fine(variable + " <- " + i);
                 }
+
                 chronometer.checkExpiration();
                 boolean changedGraph = false;
                 variable.assign(i, problem);
@@ -94,16 +111,16 @@ public class SAC implements Filter {
 
                 if (filter.reduceAfter(level + 1, variable)) {
 
-                    if (problem.addNoGoods(maxNoGoodSize) > 0) {
+                    if (problem.addNoGoods() > 0) {
                         // changed = true;
                         changedGraph = true;
                     }
-
+                    setValueHeuristic(variable, i);
                     variable.unassign(problem);
                     problem.restore(level + 1);
 
                 } else {
-
+                    setValueHeuristic(variable, i);
                     variable.unassign(problem);
                     problem.restore(level + 1);
 
@@ -125,6 +142,16 @@ public class SAC implements Filter {
 
         return true;
 
+    }
+
+    private void setValueHeuristic(final Variable variable, final int index) {
+        double space = 0;
+        for (Variable v : problem.getVariables()) {
+            if (v != variable) {
+                space += Math.log(v.getDomainSize());
+            }
+        }
+        variable.setValueHeuristic(index, space);
     }
 
     public boolean reduceAfter(final int level, final Variable variable)

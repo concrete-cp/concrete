@@ -31,9 +31,9 @@ public abstract class Constraint {
 
     private final Arc[] arcs;
 
-    protected final int[][][] last;
+    private final int[][][] last;
 
-    protected final boolean[][] lastCheck;
+    private final boolean[][] lastCheck;
 
     private static int cId = 0;
 
@@ -43,7 +43,7 @@ public abstract class Constraint {
 
     private int weight = 1;
 
-    protected final int arity;
+    private final int arity;
 
     private final boolean tupleCache;
 
@@ -52,7 +52,7 @@ public abstract class Constraint {
     private static final Logger logger = Logger
             .getLogger("cspjf.constraints.AbstractConstraint");
 
-    protected boolean[] matrix = null;
+    private boolean[] matrix = null;
 
     private final int[] realTuple;
 
@@ -126,11 +126,11 @@ public abstract class Constraint {
     // return sb.toString();
     // }
 
-    public int getId() {
+    public final int getId() {
         return id;
     }
 
-    public static void resetCId() {
+    public final static void resetCId() {
         cId = 0;
     }
 
@@ -170,7 +170,7 @@ public abstract class Constraint {
     // return revised;
     // }
 
-    public boolean revise(final Variable variable, final int level) {
+    public final boolean revise(final Variable variable, final int level) {
         return revise(getPosition(variable), level);
     }
 
@@ -246,8 +246,7 @@ public abstract class Constraint {
         return findValidTuple(getPosition(variable), index);
     }
 
-    private final boolean findValidTuple(final int variablePosition,
-            final int index) {
+    private boolean findValidTuple(final int variablePosition, final int index) {
         assert this.isInvolving(involvedVariables[variablePosition]);
 
         final int[] lastTuple;
@@ -312,19 +311,19 @@ public abstract class Constraint {
         return nbTuples;
     }
 
-    public void increaseWeight() {
+    public final void increaseWeight() {
         weight++;
     }
 
-    public int getWeight() {
+    public final int getWeight() {
         return weight;
     }
 
-    public void setWeight(final int weight) {
+    public final void setWeight(final int weight) {
         this.weight = weight;
     }
 
-    public float getFreedomDegree() {
+    public final float getFreedomDegree() {
         int count = -1;
         for (Variable v : involvedVariables) {
             if (v.getDomainSize() > 1) {
@@ -334,21 +333,21 @@ public abstract class Constraint {
         return Math.max((float) count / (arity - 1), 0);
     }
 
-    public static void resetChecks() {
+    public static final void resetChecks() {
         checks = 0;
     }
 
-    public static long getNbChecks() {
+    public static final long getNbChecks() {
         return checks;
     }
 
-    public boolean checkFirst() {
+    public final boolean checkFirst() {
         return checkFirstWith(involvedVariables[0], involvedVariables[0]
                 .getFirstPresentIndex());
 
     }
 
-    public boolean checkFirstWith(final Variable variable, final int index) {
+    public final boolean checkFirstWith(final Variable variable, final int index) {
 
         final int variablePosition = getPosition(variable);
         setFirstTuple(variablePosition, index);
@@ -413,12 +412,12 @@ public abstract class Constraint {
             nbValues *= v.getDomain().length;
         }
 
-        matrix = new boolean[nbValues];
+        final boolean[] matrix = this.matrix = new boolean[nbValues];
 
         Arrays.fill(matrix, initialState);
     }
 
-    protected int matrixIndex(final int[] tuple) {
+    private final int matrixIndex(final int[] tuple) {
         final Variable[] involvedVariables = this.involvedVariables;
         int index = 0;
         for (int i = arity; --i >= 0;) {
@@ -431,7 +430,7 @@ public abstract class Constraint {
         return index;
     }
 
-    public boolean removeTuple(final List<Variable> scope,
+    public final boolean removeTuple(final List<Variable> scope,
             final List<Integer> tuple) {
 
         final int[] realTuple = this.realTuple;
@@ -450,7 +449,7 @@ public abstract class Constraint {
 
     }
 
-    public boolean removeTuple(final int[] tuple) {
+    public final boolean removeTuple(final int[] tuple) {
 
         if (this.matrix == null) {
             initMatrix(true);
@@ -474,8 +473,17 @@ public abstract class Constraint {
         return false;
     }
 
+    public final void setMatrixIndex(final int[] indexes, final boolean value) {
+        matrix[matrixIndex(indexes)] = value;
+    }
+
     public final Arc[] getArcs() {
         return arcs;
+    }
+
+    public void freeLast(final Variable variable, final int index) {
+        final int position = getPosition(variable);
+        last[position][index] = null;
     }
 
 }

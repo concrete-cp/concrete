@@ -21,7 +21,6 @@ package cspfj;
 
 import java.util.Random;
 
-import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.TieManager;
@@ -44,7 +43,6 @@ public final class WDegOnDom {
 
     public Variable selectVariable() {
         final TieManager<Variable, Float> tieManager = WDegOnDom.tieManager;
-        tieManager.clear();
 
         for (Variable v : problem.getVariables()) {
             if (v.isAssigned()) {
@@ -55,15 +53,19 @@ public final class WDegOnDom {
                 tieManager.newValue(v, 0F, random);
             } else {
 
-
-                tieManager.newValue(v, -v.getWDeg() / v.getDomainSize(), random);
+                tieManager
+                        .newValue(v, -v.getWDeg() / v.getDomainSize(), random);
             }
 
             // System.out.print(est);
             // System.out.print(" ");
         }
         // System.out.println("Selected : " + bestVariable + "(" + best + ")");
-        return tieManager.getBestValue();
+
+        final Variable bestVariable = tieManager.getBestValue();
+        tieManager.clear();
+
+        return bestVariable;
     }
 
 }

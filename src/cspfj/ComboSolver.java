@@ -46,7 +46,7 @@ public class ComboSolver extends AbstractSolver {
         super(prob, resultHandler);
 
         macSolver = new MACSolver(prob, resultHandler);
-        macSolver.enableNoGoods(2);
+        //macSolver.enableNoGoods(2);
         // noGoodManager = macSolver.getNoGoodManager();
         mCSolver = new MinConflictsSolver(prob, resultHandler);
 
@@ -66,7 +66,7 @@ public class ComboSolver extends AbstractSolver {
         long prepro = chronometer.getRemainingTimeNano();
 
         try {
-            if (!new SAC(problem, macSolver.getMaxNoGoodSize(), chronometer, macSolver.getFilter())
+            if (!new SAC(problem, chronometer, macSolver.getFilter())
                     .reduceAll(0)) {
 //            if (!macSolver.getFilter().reduceAll(0)) {
                 chronometer.validateChrono();
