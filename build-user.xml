@@ -10,6 +10,6 @@
         </javac>
 </target>
 
-<target depends="clean,buildCspfj" name="makeCspfj">
+<target depends="clean,buildCspfj" name="cspfj">
         <jar destfile="cspfj.jar" basedir="bin" manifest="cspfj.manifest" index="true"/>
 </target>
