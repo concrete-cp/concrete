@@ -9,6 +9,8 @@
     <property name="CSP4J.location" value="/home/scand1sk/workspace/CSP4J"/>
     <path id="project.classpath">
         <pathelement location="bin"/>
+        <pathelement location="${CSP4J.location}/lib/options.jar"/>
+        <pathelement location="${CSP4J.location}/lib/jel.jar"/>
     </path>
     <target name="init">
         <mkdir dir="bin"/>
@@ -19,8 +21,28 @@
     <target depends="init" name="build">
         <echo message="${ant.project.name}: ${ant.file}"/>
         <javac destdir="bin">
+            <src path="lib"/>
             <src path="src"/>
             <classpath refid="project.classpath"/>
         </javac>
+    </target>
+	
+    <target name="Sudoku">
+        <java classname="sudoku.Sudoku" failonerror="true" fork="yes">
+            <env key="LD_LIBRARY_PATH" value="/usr/lib/jvm/java-1.5.0-sun-1.5.0.06/jre/lib/amd64/server:/usr/lib/jvm/java-1.5.0-sun-1.5.0.06/jre/lib/amd64:/usr/lib/jvm/java-1.5.0-sun-1.5.0.06/jre/../lib/amd64:bin"/>
+            <arg value="-s"/>
+            <arg value="Benchs/3doku.txt"/>
+            <classpath refid="project.classpath"/>
+        </java>
+    </target>
+    <target name="Maximier">
+        <java classname="cspfj.util.Maximier" failonerror="true" fork="yes">
+            <classpath refid="project.classpath"/>
+        </java>
+    </target>
+    <target name="Cspfj">
+        <java classname="cspfj.Cspfj" failonerror="true" fork="yes">
+            <classpath refid="project.classpath"/>
+        </java>
     </target>
 </project>

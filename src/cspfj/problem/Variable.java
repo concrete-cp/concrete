@@ -316,8 +316,6 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
     public void restoreLevel(final int level) {
         assert !isAssigned();
 
-        assert level >= 0;
-
         // boolean restored = false;
 
         final int[] removed = this.removed;

@@ -28,7 +28,6 @@ import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.Chronometer;
-import cspfj.filter.SAC.SPACE ;
 
 public abstract class AbstractSolver implements Solver {
 
@@ -46,7 +45,6 @@ public abstract class AbstractSolver implements Solver {
 
     private final ResultHandler resultHandler;
 
-	private SPACE space = SPACE.NONE ;
     // private final static Logger logger =
     // Logger.getLogger("cspfj.solver.AbstractSolver") ;
 
@@ -137,12 +135,4 @@ public abstract class AbstractSolver implements Solver {
         resultHandler.solution(solution, nbConflicts);
     }
 
-	public final void setUseSpace(SPACE space) {
-		this.space = space ;
-	}
-	
-	protected final SPACE useSpace() {
-		return space ;
-	}
-	
 }

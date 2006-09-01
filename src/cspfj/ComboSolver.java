@@ -27,195 +27,183 @@ import cspfj.constraint.Constraint;
 import cspfj.exception.FailedGenerationException;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.exception.OutOfTimeException;
-import cspfj.filter.Filter;
 import cspfj.filter.SAC;
 import cspfj.problem.Problem;
 import cspfj.problem.ProblemGenerator;
 
 public class ComboSolver extends AbstractSolver {
 
-	private final MinConflictsSolver mCSolver;
+    private final MinConflictsSolver mCSolver;
 
-	private final MACSolver macSolver;
+    private final MACSolver macSolver;
 
-	private final static Logger logger = Logger
-			.getLogger("cspfj.solver.ComboSolver");
+    private final static Logger logger = Logger
+            .getLogger("cspfj.solver.ComboSolver");
 
-	// private final NoGoodManager noGoodManager;
+    // private final NoGoodManager noGoodManager;
 
-	public ComboSolver(Problem prob, ResultHandler resultHandler) {
-		super(prob, resultHandler);
+    public ComboSolver(Problem prob, ResultHandler resultHandler) {
+        super(prob, resultHandler);
 
-		macSolver = new MACSolver(prob, resultHandler);
-		// macSolver.enableNoGoods(2);
-		// noGoodManager = macSolver.getNoGoodManager();
-		mCSolver = new MinConflictsSolver(prob, resultHandler);
+        macSolver = new MACSolver(prob, resultHandler);
+        //macSolver.enableNoGoods(2);
+        // noGoodManager = macSolver.getNoGoodManager();
+        mCSolver = new MinConflictsSolver(prob, resultHandler);
 
-	}
+    }
 
-	public ComboSolver(final ProblemGenerator generator,
-			ResultHandler resultHandler) throws FailedGenerationException {
-		this(Problem.load(generator), resultHandler);
-	}
+    public ComboSolver(final ProblemGenerator generator,
+            ResultHandler resultHandler) throws FailedGenerationException {
+        this(Problem.load(generator), resultHandler);
+    }
 
-	public boolean run(final int maxDuration) throws OutOfTimeException,
-			IOException {
-		System.gc();
+    public boolean run(final int maxDuration) throws OutOfTimeException,
+            IOException {
+        System.gc();
 
-		chronometer.setMaxDuration(maxDuration);
+        chronometer.setMaxDuration(maxDuration);
 
-		long prepro = chronometer.getRemainingTimeNano();
+        long prepro = chronometer.getRemainingTimeNano();
 
-		try {
-			final Filter preprocessor;
-			switch (useSpace()) {
-			case FULL:
-				preprocessor = new SAC(problem, chronometer, macSolver
-						.getFilter(), true);
-				break;
-			
-			case WEAK:
-				preprocessor = new SAC(problem, chronometer, macSolver
-						.getFilter(), false);
-				break;
-				
-			default:
-				preprocessor = macSolver.getFilter();
-			}
+        try {
+            if (!new SAC(problem, chronometer, macSolver.getFilter())
+                    .reduceAll(0)) {
+//            if (!macSolver.getFilter().reduceAll(0)) {
+                chronometer.validateChrono();
+                return false;
+            }
+        } catch (OutOfTimeException e) {
+            chronometer.validateChrono();
+            throw e;
+        }
+        checkExpiration();
+        prepro -= chronometer.getRemainingTimeNano();
+        prepro /= problem.getMaxDomainSize();
+//        prepro *=Math.sqrt(problem.getNbVariables());
+        if (prepro < 1e9) {
+            prepro = 1000000000L;
+        }
 
-			if (!preprocessor.reduceAll(0)) {
-				chronometer.validateChrono();
-				return false;
-			}
-		} catch (OutOfTimeException e) {
-			chronometer.validateChrono();
-			throw e;
-		}
-		
-		prepro -= chronometer.getRemainingTimeNano();
-		prepro /= problem.getMaxDomainSize();
-		// prepro *=Math.sqrt(problem.getNbVariables());
-		if (prepro < 1e9) {
-			prepro = 1000000000L;
-		}
 
-		final Random random = MinConflictsSolver.getRandom();
+        final Random random = MinConflictsSolver.getRandom();
 
-		long localMinimumTime = chronometer.getRemainingTimeNano();
-		if (minConflicts(1, chronometer.getRemainingTime())) {
-			return true;
-		}
-		checkExpiration();
+        long localMinimumTime = chronometer.getRemainingTimeNano();
+        if (minConflicts(1, chronometer.getRemainingTime())) {
+            return true;
+        }
+        checkExpiration();
 
-		localMinimumTime -= chronometer.getRemainingTimeNano();
-		localMinimumTime *= 5;
-		if (localMinimumTime < 1e9) {
-			localMinimumTime = 1000000000L;
-		}
+        localMinimumTime -= chronometer.getRemainingTimeNano();
+        localMinimumTime *= 5;
+        if (localMinimumTime < 1e9) {
+            localMinimumTime = 1000000000L;
+        }
 
-		boolean alt = false;
+        
 
-		do {
-			prepro *= 1.5;
+        boolean alt = false;
 
-			if (mac(-1, Math.min(chronometer.getRemainingTime(), Math
-					.round(prepro / 1e9f)), random)) {
-				return getSolution().size() > 0;
-			}
+        do {
+            prepro *= 1.5;
 
-			checkExpiration();
+            if (mac(-1, Math.min(chronometer.getRemainingTime(), Math
+                    .round(prepro / 1e9f)), random)) {
+                return getSolution().size() > 0;
+            }
 
-			if (alt) {
-				for (Constraint c : problem.getConstraints()) {
-					c.setWeight(1);
-				}
-			}
-			localMinimumTime *= 1.5;
-			if (minConflicts(-1, Math.min(chronometer.getRemainingTime(), Math
-					.round(localMinimumTime / 1e9f)))) {
-				return true;
-			}
+            checkExpiration();
 
-			checkExpiration();
+            if (alt) {
+                for (Constraint c : problem.getConstraints()) {
+                    c.setWeight(1);
+                }
+            }
+            localMinimumTime *= 1.5;
+            if (minConflicts(-1, Math.min(chronometer.getRemainingTime(), Math
+                    .round(localMinimumTime / 1e9f)))) {
+                return true;
+            }
 
-			alt ^= true;
-		} while (true);
+            checkExpiration();
 
-	}
+            alt ^= true;
+        } while (true);
 
-	private final boolean mac(final int maxBT, final int duration,
-			final Random random) {
-		logger.fine("Initializing value orders");
-		problem.setValueOrders(random);
+    }
 
-		logger.info("MAC (" + duration + "s)");
-		macSolver.setMaxBacktracks(maxBT);
-		macSolver.setMaxDuration(duration);
-		try {
-			if (macSolver.mac(0, null)) {
-				// logger.info(macSolver.getSolution().toString());
-				setSolution(macSolver.getSolution());
-			}
-			chronometer.validateChrono();
-			return true;
-		} catch (MaxBacktracksExceededException e) {
-			// Continue
-		} catch (OutOfTimeException e) {
-			// Continue
-		} catch (OutOfMemoryError e) {
-			chronometer.validateChrono();
-			throw e;
-		}
+    private final boolean mac(final int maxBT, final int duration,
+            final Random random) {
+        logger.fine("Initializing value orders");
+        problem.setValueOrders(random);
 
-		final int ng = macSolver.addNoGoods();
+        logger.info("MAC (" + duration + "s)");
+        macSolver.setMaxBacktracks(maxBT);
+        macSolver.setMaxDuration(duration);
+        try {
+            if (macSolver.mac(0, null)) {
+                // logger.info(macSolver.getSolution().toString());
+                setSolution(macSolver.getSolution());
+            }
+            chronometer.validateChrono();
+            return true;
+        } catch (MaxBacktracksExceededException e) {
+            // Continue
+        } catch (OutOfTimeException e) {
+            // Continue
+        } catch (OutOfMemoryError e) {
+            chronometer.validateChrono();
+            throw e;
+        }
 
-		logger.info(ng + " noGoods");
+        final int ng = macSolver.addNoGoods();
 
-		return false;
-	}
+        logger.info(ng + " noGoods");
 
-	private final boolean minConflicts(final int maxLM, final int duration)
-			throws IOException {
-		logger.info("Local (" + duration + "s)");
+        return false;
+    }
 
-		mCSolver.setMaxBacktracks(maxLM);
-		mCSolver.setMaxDuration(duration);
+    private final boolean minConflicts(final int maxLM, final int duration)
+            throws IOException {
+        logger.info("Local (" + duration + "s)");
 
-		try {
+        mCSolver.setMaxBacktracks(maxLM);
+        mCSolver.setMaxDuration(duration);
 
-			mCSolver.minConflicts();
+        try {
 
-			setSolution(mCSolver.getSolution());
-			chronometer.validateChrono();
-			return true;
-		} catch (MaxBacktracksExceededException e) {
+            mCSolver.minConflicts();
 
-		} catch (OutOfTimeException e) {
+            setSolution(mCSolver.getSolution());
+            chronometer.validateChrono();
+            return true;
+        } catch (MaxBacktracksExceededException e) {
 
-		} catch (OutOfMemoryError e) {
-			chronometer.validateChrono();
-			throw e;
-		} catch (IOException e) {
-			chronometer.validateChrono();
-			throw e;
-		}
-		problem.restoreAll();
+        } catch (OutOfTimeException e) {
 
-		return false;
-	}
+        } catch (OutOfMemoryError e) {
+            chronometer.validateChrono();
+            throw e;
+        } catch (IOException e) {
+            chronometer.validateChrono();
+            throw e;
+        }
+        problem.restoreAll();
 
-	@Override
-	public int getNbAssignments() {
-		return macSolver.getNbAssignments() + mCSolver.getNbAssignments();
-	}
+        return false;
+    }
 
-	public void checkExpiration() throws OutOfTimeException {
-		try {
-			chronometer.checkExpiration();
-		} catch (OutOfTimeException e) {
-			chronometer.validateChrono();
-			throw e;
-		}
-	}
+    @Override
+    public int getNbAssignments() {
+        return macSolver.getNbAssignments() + mCSolver.getNbAssignments();
+    }
+
+    public void checkExpiration() throws OutOfTimeException {
+        try {
+            chronometer.checkExpiration();
+        } catch (OutOfTimeException e) {
+            chronometer.validateChrono();
+            throw e;
+        }
+    }
 
 }

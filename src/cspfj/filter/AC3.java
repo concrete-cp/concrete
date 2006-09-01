@@ -20,6 +20,8 @@
 package cspfj.filter;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,18 +43,18 @@ public final class AC3 implements Filter {
 
     private final Maximier<Arc> queue;
 
-    private final boolean[][] inQueue;
+    private final Map<Integer, boolean[]> inQueue;
 
     public AC3(final Problem problem) {
         super();
         this.problem = problem;
 
-        inQueue = new boolean[problem.getNbConstraints()][];
+        inQueue = new HashMap<Integer, boolean[]>(problem.getNbConstraints());
 
         int size = 0;
-        for (int i = 0; i < problem.getNbConstraints(); i++) {
-            size += problem.getConstraints()[i].getArity();
-            inQueue[i] = new boolean[problem.getConstraints()[i].getArity()];
+        for (int i : problem.getConstraintIDs()) {
+            size += problem.getConstraint(i).getArity();
+            inQueue.put(i, new boolean[problem.getConstraint(i).getArity()]);
         }
 
         queue = new Maximier<Arc>(new Arc[size]);
@@ -77,7 +79,7 @@ public final class AC3 implements Filter {
 
     private boolean reduce(final int level) {
         final Maximier<Arc> queue = this.queue;
-        final boolean[][] inQueue = this.inQueue;
+        final Map<Integer, boolean[]> inQueue = this.inQueue;
         while (!queue.isEmpty()) {
             final Arc arc = pullArc(queue, inQueue);
 
@@ -109,13 +111,13 @@ public final class AC3 implements Filter {
     }
 
     private void clearQueue() {
-        for (boolean[] i : inQueue) {
+        for (boolean[] i : inQueue.values()) {
             Arrays.fill(i, false);
         }
         queue.clear();
     }
 
-    private void addAll(final Maximier<Arc> queue, final boolean[][] inQueue) {
+    private void addAll(final Maximier<Arc> queue, final Map<Integer, boolean[]> inQueue) {
         boolean change = false;
 
         for (Constraint c : problem.getConstraints()) {
@@ -131,27 +133,27 @@ public final class AC3 implements Filter {
     }
 
     private static Arc pullArc(final Maximier<Arc> queue,
-            final boolean[][] inQueue) {
+            final Map<Integer, boolean[]> inQueue) {
         final Arc arc = queue.pull();
-        inQueue[arc.getCId()][arc.getPosition()] = false;
+        inQueue.get(arc.getCId())[arc.getPosition()] = false;
         return arc;
     }
 
     private static boolean addInQueue(final Arc arc, final Maximier<Arc> queue,
-            final boolean[][] inQueue) {
+            final Map<Integer, boolean[]> inQueue) {
         if (arc.getVariable().getDomainSize() <= 1) {
             return false;
         }
-        if (inQueue[arc.getCId()][arc.getPosition()]) {
+        if (inQueue.get(arc.getCId())[arc.getPosition()]) {
             return false;
         }
         queue.add(arc);
-        inQueue[arc.getCId()][arc.getPosition()] = true;
+        inQueue.get(arc.getCId())[arc.getPosition()] = true;
         return true;
     }
 
     private static void addNeighbours(final Variable variable,
-            final Maximier<Arc> queue, final boolean[][] inQueue) {
+            final Maximier<Arc> queue, final Map<Integer, boolean[]> inQueue) {
         boolean change = false;
         for (Constraint c : variable.getInvolvingConstraints()) {
             for (Arc a : c.getArcs()) {

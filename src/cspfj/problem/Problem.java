@@ -21,7 +21,10 @@ package cspfj.problem;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,7 +36,7 @@ import cspfj.exception.FailedGenerationException;
 public final class Problem {
     private Variable[] variables;
 
-    private Constraint[] constraints;
+    private Map<Integer, Constraint> constraints;
 
     private int nbFutureVariables;
 
@@ -50,6 +53,17 @@ public final class Problem {
     private boolean[] isPastVariable;
 
     private int maxArity;
+
+    public Problem() {
+        super();
+    }
+
+    public Problem(Variable[] variables, Constraint[] constraints) {
+        this();
+        setVariables(variables);
+        setConstraints(constraints);
+        updateInvolvingConstraints();
+    }
 
     public static Problem load(final ProblemGenerator generator)
             throws FailedGenerationException {
@@ -108,9 +122,9 @@ public final class Problem {
     }
 
     private void setConstraints(final Constraint[] cons) {
-        this.constraints = new Constraint[cons.length];
+        this.constraints = new HashMap<Integer, Constraint>(cons.length);
         for (Constraint c : cons) {
-            this.constraints[c.getId()] = c;
+            this.constraints.put(c.getId(), c);
             if (c.getArity() > maxArity) {
                 maxArity += c.getArity();
             }
@@ -127,7 +141,7 @@ public final class Problem {
             invConstraints.add(v.getId(), new ArrayList<Constraint>());
         }
 
-        for (Constraint c : constraints) {
+        for (Constraint c : getConstraints()) {
             for (Variable v : c.getInvolvedVariables()) {
                 invConstraints.get(v.getId()).add(c);
             }
@@ -147,7 +161,7 @@ public final class Problem {
     }
 
     public int getNbConstraints() {
-        return constraints.length;
+        return constraints.size();
     }
 
     public Variable[] getVariables() {
@@ -158,8 +172,16 @@ public final class Problem {
         return variables[vId];
     }
 
-    public Constraint[] getConstraints() {
-        return constraints;
+    public Collection<Constraint> getConstraints() {
+        return constraints.values();
+    }
+
+    public Collection<Integer> getConstraintIDs() {
+        return constraints.keySet();
+    }
+
+    public Constraint getConstraint(final int c) {
+        return constraints.get(c);
     }
 
     public void increaseFutureVariables() {
@@ -222,7 +244,7 @@ public final class Problem {
             sb.append(Arrays.toString(v.getCurrentDomain()));
             sb.append('\n');
         }
-        for (Constraint c : constraints) {
+        for (Constraint c : getConstraints()) {
             sb.append(c.toString());
             sb.append('\n');
         }
@@ -290,7 +312,7 @@ public final class Problem {
         final boolean[] isPastVariable = this.isPastVariable;
 
         Arrays.fill(isPastVariable, false);
-        //scope.clear();
+        // scope.clear();
         tuple.clear();
 
         scope.add(0, variables[levelVariables[0]]);
@@ -335,7 +357,7 @@ public final class Problem {
         if (logger.isLoggable(Level.FINE)) {
             logger.fine(nbNoGoods + " nogoods");
         }
-        scope.clear() ;
+        scope.clear();
         return nbNoGoods;
     }
 
@@ -346,6 +368,17 @@ public final class Problem {
 
     public final int getMaxArity() {
         return maxArity;
+    }
+
+    public void restoreValues() {
+
+        for (Variable v : variables) {
+            if (v.isAssigned()) {
+                v.unassign(this);
+            }
+            v.restoreLevel(-1);
+        }
+
     }
 
 }

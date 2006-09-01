@@ -19,13 +19,14 @@
 
 package cspfj;
 
+import java.util.Comparator;
 import java.util.Random;
 
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.TieManager;
 
-public final class WDegOnDom {
+public final class WDegOnDom implements Comparator<Variable> {
 
     private final Problem problem;
 
@@ -33,6 +34,10 @@ public final class WDegOnDom {
 
     private final static TieManager<Variable, Float> tieManager = new TieManager<Variable, Float>(
             null, 0F);
+
+    public WDegOnDom(final Problem prob) {
+        this(prob, new Random(0));
+    }
 
     public WDegOnDom(final Problem prob, final Random random) {
         super();
@@ -66,6 +71,15 @@ public final class WDegOnDom {
         tieManager.clear();
 
         return bestVariable;
+    }
+
+    public int compare(final Variable variable0, final Variable variable1) {
+        final float result = -variable0.getWDeg() / variable0.getDomainSize()
+                + variable1.getWDeg() / variable1.getDomainSize();
+        if (result == 0) {
+            return variable0.getId() - variable1.getId();
+        }
+        return result > 0 ? 1 : -1;
     }
 
 }

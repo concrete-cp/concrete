@@ -19,6 +19,7 @@
 
 package cspfj.constraint;
 
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
@@ -26,7 +27,7 @@ import cspfj.problem.Variable;
 
 public final class AllDifferentConstraint extends Constraint {
 
-    private final static TreeSet<Integer> union = new TreeSet<Integer>();;
+    private final static Set<Integer> union = new TreeSet<Integer>();;
 
     // private final Integer[] constants;
 
@@ -35,26 +36,8 @@ public final class AllDifferentConstraint extends Constraint {
 
     // private boolean removedConstants = false;
 
-    public AllDifferentConstraint(final Variable[] scope,
-            final Integer[] constants) {
-        super(scope);
-        // this.constants = constants;
-        for (Variable variable : scope) {
-            for (int index : variable) {
-                final int value = variable.getDomain()[index];
-                for (int constant : constants) {
-                    // union.add(value);
-                    if (constant == value) {
-                        variable.remove(index, 0);
-                    }
-                }
-            }
-        }
-
-    }
-
     public AllDifferentConstraint(final Variable[] scope) {
-        this(scope, new Integer[0]);
+        super(scope);
     }
 
     @Override
@@ -64,7 +47,7 @@ public final class AllDifferentConstraint extends Constraint {
         // union.add(i);
         // }
         final Variable[] involvedVariables = getInvolvedVariables();
-        final int[] tuple = this.tuple ;
+        final int[] tuple = this.tuple;
         for (int i = getArity(); --i >= 0;) {
             final int index = involvedVariables[i].getDomain()[tuple[i]];
             if (union.contains(index)) {
@@ -79,7 +62,7 @@ public final class AllDifferentConstraint extends Constraint {
         final Variable variable = getInvolvedVariables()[position];
         assert !variable.isAssigned();
 
-        final TreeSet<Integer> union = AllDifferentConstraint.union;
+        final Set<Integer> union = AllDifferentConstraint.union;
 
         union.clear();
 
@@ -100,12 +83,14 @@ public final class AllDifferentConstraint extends Constraint {
                 if (index >= 0 && variable.isPresent(index)) {
                     variable.remove(index, level);
                     revised = true;
+                    setActive(true);
                 }
             }
         }
 
         if (union.size() < getArity()) {
             variable.empty(level);
+            setActive(true);
             return true;
         }
 
