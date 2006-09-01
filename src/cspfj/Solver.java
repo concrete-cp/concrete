@@ -23,23 +23,24 @@ import java.io.IOException;
 import java.util.Map;
 
 import cspfj.exception.OutOfTimeException;
+import cspfj.filter.SAC.SPACE;
 import cspfj.problem.Variable;
 
 public interface Solver {
 
-    boolean run(final int maxDuration) throws OutOfTimeException, IOException;
+	boolean run(final int maxDuration) throws OutOfTimeException, IOException;
 
-    Map<Variable, Integer> getSolution();
+	Map<Variable, Integer> getSolution();
 
-//    int getSolutionIndex(final int vId);
+	// int getSolutionIndex(final int vId);
 
-    int getSolutionValue(final int vId);
+	int getSolutionValue(final int vId);
 
-    float getUserTime();
+	float getUserTime();
 
-    int getNbAssignments();
+	int getNbAssignments();
 
-    void setMaxBacktracks(final int maxBacktracks);
-    
-    // void checkExpiration() throws OutOfTimeException ;
+	void setMaxBacktracks(final int maxBacktracks);
+
+	void setUseSpace(final SPACE space);
 }
