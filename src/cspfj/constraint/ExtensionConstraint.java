@@ -24,72 +24,75 @@ import cspfj.problem.Variable;
 
 public final class ExtensionConstraint extends Constraint {
 
-	private final float tightness;
+    private final float tightness;
 
-	public ExtensionConstraint(final Variable[] scope, final boolean supports, final int[][] tuples)
-			throws FailedGenerationException {
-		super(scope);
+    private final boolean supports;
 
-		initMatrix(!supports);
+    private final int[][] tuples;
 
-		final float tight = (float) tuples.length
-				/ (scope[0].getDomainSize() * scope[1].getDomainSize());
+    public ExtensionConstraint(final Variable[] scope, final boolean supports,
+            final int[][] tuples) throws FailedGenerationException {
+        super(scope);
 
-		if (supports) {
-			tightness = tight;
-		} else {
-			tightness = 1 - tight;
-		}
+        this.supports = supports;
+        this.tuples = tuples;
 
-		int[] indexes = new int[getArity()];
+        final float tight = (float) tuples.length
+                / (scope[0].getDomainSize() * scope[1].getDomainSize());
 
-		for (int[] tuple : tuples) {
-			for (int i = 0; i < tuple.length; i++) {
-				indexes[i] = scope[i].index(tuple[i]);
-			}
+        if (supports) {
+            tightness = tight;
+        } else {
+            tightness = 1 - tight;
+        }
 
-			setMatrixIndex(indexes, supports) ;
+        initMatrix();
+    }
 
-		}
 
-	}
+    public ExtensionConstraint(final Variable[] scope) {
+        super(scope);
 
-	public ExtensionConstraint(final Variable[] scope) {
-		super(scope);
-
-        initMatrix(true);
+        this.tuples = new int[0][] ;
+        
+        this.supports = false ;
 
         tightness = 1;
+        
+        initMatrix(true);
+    }
+    
+    private void initMatrix() {
+        initMatrix(!supports);
 
-	}
+        final int[] indexes = new int[getArity()];
+
+        for (int[] tuple : tuples) {
+            for (int i = 0; i < tuple.length; i++) {
+                indexes[i] = getInvolvedVariables()[i].index(tuple[i]);
+            }
+
+            setMatrixIndex(indexes, supports);
+        }
+        // }
+
+    }
 
 
+    public boolean useTupleCache() {
+        return true;
+    }
 
-	public boolean useTupleCache() {
-		return true;
-	}
+    public float getTightness() {
+        return tightness;
+    }
 
-	public float getTightness() {
-		return tightness;
-	}
 
-	// public final int getNbTuples(final Variable variable, final int index) {
-	// int nbTuples = 0;
-	// if (getPosition(variable) == 0) {
-	// for (int i = 0; i < getInvolvedVariables()[1].getDomain().length; i++) {
-	// if (matrix[index][i]) {
-	// nbTuples++;
-	// }
-	// }
-	// } else {
-	// for (int i = 0; i < getInvolvedVariables()[0].getDomain().length; i++) {
-	// if (matrix[i][index]) {
-	// nbTuples++;
-	// }
-	// }
-	// }
-	// return nbTuples;
-	// }
+    @Override
+    public void clearMatrix() {
+        initMatrix() ;
+    }
+
 
 
 }

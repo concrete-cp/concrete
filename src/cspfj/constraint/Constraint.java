@@ -416,7 +416,7 @@ public abstract class Constraint {
             nbValues *= v.getDomain().length;
         }
 
-        final boolean[] matrix = this.matrix = new boolean[nbValues];
+        matrix = new boolean[nbValues];
 
         Arrays.fill(matrix, initialState);
     }
@@ -513,6 +513,11 @@ public abstract class Constraint {
                 freeLast(v, i);
             }
         }
+
+    }
+
+    public void clearMatrix() {
+        matrix = null;
 
     }
 

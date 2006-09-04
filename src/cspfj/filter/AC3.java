@@ -52,9 +52,9 @@ public final class AC3 implements Filter {
         inQueue = new HashMap<Integer, boolean[]>(problem.getNbConstraints());
 
         int size = 0;
-        for (int i : problem.getConstraintIDs()) {
-            size += problem.getConstraint(i).getArity();
-            inQueue.put(i, new boolean[problem.getConstraint(i).getArity()]);
+        for (Constraint c : problem.getConstraints()) {
+            size += c.getArity();
+            inQueue.put(c.getId(), new boolean[c.getArity()]);
         }
 
         queue = new Maximier<Arc>(new Arc[size]);

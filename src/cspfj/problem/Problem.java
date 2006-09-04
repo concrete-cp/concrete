@@ -26,17 +26,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
-import cspfj.constraint.Constraint;
 import cspfj.exception.FailedGenerationException;
 
 public final class Problem {
-    private Variable[] variables;
+    private Map<Integer, Variable> variables;
+
+    private Variable[] variableArray;
 
     private Map<Integer, Constraint> constraints;
+
+    private Constraint[] constraintArray;
 
     private int nbFutureVariables;
 
@@ -50,7 +55,7 @@ public final class Problem {
 
     final private static ArrayList<Integer> tuple = new ArrayList<Integer>();
 
-    private boolean[] isPastVariable;
+    final private static Set<Integer> pastVariables = new TreeSet<Integer>();
 
     private int maxArity;
 
@@ -58,7 +63,7 @@ public final class Problem {
         super();
     }
 
-    public Problem(Variable[] variables, Constraint[] constraints) {
+    public Problem(Collection<Variable> variables, Collection<Constraint> constraints) {
         this();
         setVariables(variables);
         setConstraints(constraints);
@@ -97,36 +102,39 @@ public final class Problem {
         return nbFutureVariables;
     }
 
-    private void setVariables(final Variable[] vars) {
+    private void setVariables(final Collection<Variable> vars) {
 
-        this.variables = new Variable[vars.length];
+        this.variables = new HashMap<Integer, Variable>(vars.size());
+
+        this.variableArray = vars.toArray(new Variable[vars.size()]);
 
         maxDomainSize = 0;
 
         for (Variable var : vars) {
-            variables[var.getId()] = var;
+            variables.put(var.getId(), var);
             if (var.getDomain().length > maxDomainSize) {
                 maxDomainSize = var.getDomain().length;
             }
         }
 
-        nbFutureVariables = vars.length;
+        nbFutureVariables = vars.size();
 
         levelVariables = new int[getNbVariables()];
         for (int i = 0; i < getNbVariables(); i++) {
             levelVariables[i] = -1;
         }
 
-        isPastVariable = new boolean[getNbVariables()];
-
     }
 
-    private void setConstraints(final Constraint[] cons) {
-        this.constraints = new HashMap<Integer, Constraint>(cons.length);
+    private void setConstraints(final Collection<Constraint> cons) {
+        this.constraints = new HashMap<Integer, Constraint>(cons.size());
+
+        this.constraintArray = cons.toArray(new Constraint[cons.size()]);
+
         for (Constraint c : cons) {
             this.constraints.put(c.getId(), c);
             if (c.getArity() > maxArity) {
-                maxArity += c.getArity();
+                maxArity = c.getArity();
             }
         }
 
@@ -134,11 +142,11 @@ public final class Problem {
     }
 
     private void updateInvolvingConstraints() {
-        final List<List<Constraint>> invConstraints = new ArrayList<List<Constraint>>(
-                variables.length);
+        final Map<Integer, List<Constraint>> invConstraints = new HashMap<Integer, List<Constraint>>(
+                variables.size());
 
-        for (Variable v : variables) {
-            invConstraints.add(v.getId(), new ArrayList<Constraint>());
+        for (Variable v : getVariables()) {
+            invConstraints.put(v.getId(), new ArrayList<Constraint>());
         }
 
         for (Constraint c : getConstraints()) {
@@ -147,7 +155,7 @@ public final class Problem {
             }
         }
 
-        for (Variable v : variables) {
+        for (Variable v : getVariables()) {
 
             v.setInvolvingConstraints(invConstraints.get(v.getId()).toArray(
                     new Constraint[invConstraints.get(v.getId()).size()]));
@@ -157,31 +165,35 @@ public final class Problem {
     }
 
     public int getNbVariables() {
-        return variables.length;
+        return variables.size();
     }
 
     public int getNbConstraints() {
         return constraints.size();
     }
 
-    public Variable[] getVariables() {
-        return variables;
+    public Constraint[] getConstraints() {
+        return constraintArray;
     }
+
+//    public Collection<Integer> getConstraintIDs() {
+//        return constraints.keySet();
+//    }
+
+    public Constraint getConstraint(final int cId) {
+        return constraints.get(cId);
+    }
+
+    public Variable[] getVariables() {
+        return variableArray;
+    }
+
+//    public Collection<Integer> getVariableIDs() {
+//        return variables.keySet();
+//    }
 
     public Variable getVariable(final int vId) {
-        return variables[vId];
-    }
-
-    public Collection<Constraint> getConstraints() {
-        return constraints.values();
-    }
-
-    public Collection<Integer> getConstraintIDs() {
-        return constraints.keySet();
-    }
-
-    public Constraint getConstraint(final int c) {
-        return constraints.get(c);
+        return variables.get(vId);
     }
 
     public void increaseFutureVariables() {
@@ -196,7 +208,7 @@ public final class Problem {
         // for (int i = 0; i < resetConstraint.length; i++) {
         // resetConstraint[i] = false;
         // }
-        for (Variable v : variables) {
+        for (Variable v : getVariables()) {
             if (!v.isAssigned()) {
                 v.restoreLevel(level);
             }
@@ -213,13 +225,13 @@ public final class Problem {
 
     }
 
-    public void restoreAll() {
-        for (Variable v : variables) {
+    public void restoreAll(final int level) {
+        for (Variable v : getVariables()) {
             if (v.isAssigned()) {
                 v.unassign(this);
             }
 
-            v.restoreLevel(1);
+            v.restoreLevel(level);
 
         }
         // for (AbstractConstraint c : constraints) {
@@ -229,7 +241,7 @@ public final class Problem {
 
     public void setValueOrders(final Random random) {
         // logger.info("Initializing value orders");
-        for (Variable v : variables) {
+        for (Variable v : getVariables()) {
             v.orderIndexes(random);
         }
 
@@ -238,7 +250,7 @@ public final class Problem {
     @Override
     public String toString() {
         final StringBuffer sb = new StringBuffer();
-        for (Variable v : variables) {
+        for (Variable v : getVariables()) {
             sb.append(v.toString());
             sb.append(" : ");
             sb.append(Arrays.toString(v.getCurrentDomain()));
@@ -309,24 +321,23 @@ public final class Problem {
 
         final List<Variable> scope = Problem.scope;
         final List<Integer> tuple = Problem.tuple;
-        final boolean[] isPastVariable = this.isPastVariable;
+        final Set<Integer> pastVariables = Problem.pastVariables;
 
-        Arrays.fill(isPastVariable, false);
         // scope.clear();
         tuple.clear();
 
-        scope.add(0, variables[levelVariables[0]]);
-        tuple.add(0, variables[levelVariables[0]].getFirstPresentIndex());
+        scope.add(0, getVariable(levelVariables[0]));
+        tuple.add(0, getVariable(levelVariables[0]).getFirstPresentIndex());
 
         for (int level = 1; level < levelVariables.length; level++) {
 
-            isPastVariable[levelVariables[level - 1]] = true;
+            pastVariables.add(levelVariables[level - 1]);
 
             scope.add(level, null);
             tuple.add(level, null);
 
-            for (Variable fv : variables) {
-                if (isPastVariable[fv.getId()]) {
+            for (Variable fv : getVariables()) {
+                if (pastVariables.contains(fv.getId())) {
                     continue;
                 }
 
@@ -347,8 +358,8 @@ public final class Problem {
             }
 
             if (levelVariables[level] >= 0) {
-                scope.set(level, variables[levelVariables[level]]);
-                tuple.set(level, variables[levelVariables[level]]
+                scope.set(level, getVariable(levelVariables[level]));
+                tuple.set(level, getVariable(levelVariables[level])
                         .getFirstPresentIndex());
             } else {
                 break;
@@ -358,27 +369,23 @@ public final class Problem {
             logger.fine(nbNoGoods + " nogoods");
         }
         scope.clear();
+        pastVariables.clear();
         return nbNoGoods;
     }
 
-    public void setLevelVariables(final int level, final int i) {
-        levelVariables[level] = i;
+    public void setLevelVariables(final int level, final int vId) {
+        levelVariables[level] = vId;
 
     }
 
-    public final int getMaxArity() {
+    public int getMaxArity() {
         return maxArity;
     }
-
-    public void restoreValues() {
-
-        for (Variable v : variables) {
-            if (v.isAssigned()) {
-                v.unassign(this);
-            }
-            v.restoreLevel(-1);
+    
+    public void clearNoGoods() {
+        for (Constraint c : getConstraints()) {
+            c.clearMatrix() ;
         }
-
     }
 
 }

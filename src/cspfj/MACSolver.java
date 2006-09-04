@@ -35,107 +35,107 @@ import cspfj.problem.Variable;
 
 public final class MACSolver extends AbstractSolver {
 
-	private final Filter filter;
+    private final Filter filter;
 
-	private final WDegOnDom heuristic;
+    private final WDegOnDom heuristic;
 
-	private static final Logger logger = Logger.getLogger("cspfj.MACSolver");
+    private static final Logger logger = Logger.getLogger("cspfj.MACSolver");
 
-	// private NoGoodManager noGoodManager = null;
+    // private NoGoodManager noGoodManager = null;
 
-	// private int maxNoGoodSize;
+    // private int maxNoGoodSize;
 
-	public MACSolver(Problem prob, ResultHandler resultHandler) {
-		super(prob, resultHandler);
-		filter = new AC3(problem);
-		heuristic = new WDegOnDom(prob, new Random(0));
+    public MACSolver(Problem prob, ResultHandler resultHandler) {
+        super(prob, resultHandler);
+        filter = new AC3(problem);
+        heuristic = new WDegOnDom(prob, new Random(0));
 
-	}
+    }
 
-	// public void enableNoGoods(final int maxSize) {
-	// // noGoodManager = new NoGoodManager(problem.getNbVariables(), 2);
-	// maxNoGoodSize = maxSize;
-	// }
+    // public void enableNoGoods(final int maxSize) {
+    // // noGoodManager = new NoGoodManager(problem.getNbVariables(), 2);
+    // maxNoGoodSize = maxSize;
+    // }
 
-	public MACSolver(final ProblemGenerator generator,
-			ResultHandler resultHandler) throws FailedGenerationException {
-		this(Problem.load(generator), resultHandler);
-	}
+    public MACSolver(final ProblemGenerator generator,
+            ResultHandler resultHandler) throws FailedGenerationException {
+        this(Problem.load(generator), resultHandler);
+    }
 
-	public boolean mac(final int level, final Variable lastModifiedVariable)
-			throws MaxBacktracksExceededException, OutOfTimeException {
-		if (problem.getNbFutureVariables() == 0) {
+    public boolean mac(final int level, final Variable lastModifiedVariable)
+            throws MaxBacktracksExceededException, OutOfTimeException {
+        if (problem.getNbFutureVariables() == 0) {
 
-			return true;
-		}
+            return true;
+        }
 
-		chronometer.checkExpiration();
+        chronometer.checkExpiration();
 
-		if (!filter.reduceAfter(level, lastModifiedVariable)) {
-			return false;
-		}
+        if (!filter.reduceAfter(level, lastModifiedVariable)) {
+            return false;
+        }
 
-		final Variable selectedVariable = heuristic.selectVariable();
+        final Variable selectedVariable = heuristic.selectVariable();
 
-		final int selectedIndex = selectedVariable.selectIndex();
+        final int selectedIndex = selectedVariable.selectIndex();
 
-		// final int selectedIndex = selectedVariable.getFirstPresentIndex();
+        // final int selectedIndex = selectedVariable.getFirstPresentIndex();
 
-		final int domainSizeBefore = selectedVariable.getDomainSize();
+        final int domainSizeBefore = selectedVariable.getDomainSize();
 
-		if (logger.isLoggable(Level.FINE)) {
-			logger.fine(level + " : " + selectedVariable + " <- "
-					+ selectedVariable.getDomain()[selectedIndex] + "("
-					+ getNbBacktracks() + "/" + getMaxBacktracks() + ")");
-		}
+        if (logger.isLoggable(Level.FINE)) {
+            logger.fine(level + " : " + selectedVariable + " <- "
+                    + selectedVariable.getDomain()[selectedIndex] + "("
+                    + getNbBacktracks() + "/" + getMaxBacktracks() + ")");
+        }
 
-		selectedVariable.assign(selectedIndex, problem);
+        selectedVariable.assign(selectedIndex, problem);
 
-		problem.setLevelVariables(level, selectedVariable.getId());
+        problem.setLevelVariables(level, selectedVariable.getId());
 
-		incrementNbAssignments();
+        incrementNbAssignments();
 
-		// removeNoGoods(level);
+        // removeNoGoods(level);
 
-		if (mac(level + 1, domainSizeBefore > 1 ? selectedVariable : null)) {
-			addSolutionElement(selectedVariable, selectedIndex);
-			return true;
-		}
+        if (mac(level + 1, domainSizeBefore > 1 ? selectedVariable : null)) {
+            addSolutionElement(selectedVariable, selectedIndex);
+            return true;
+        }
 
-		checkBacktracks();
+        checkBacktracks();
 
-		// problem.increaseWeights();
-		selectedVariable.unassign(problem);
-		problem.restore(level + 1);
+        // problem.increaseWeights();
+        selectedVariable.unassign(problem);
+        problem.restore(level + 1);
 
-		problem.setLevelVariables(level, -1);
+        problem.setLevelVariables(level, -1);
 
-		if (selectedVariable.getDomainSize() <= 1) {
-			return false;
-		}
-		// System.out.println(level + " : " + selectedVariable + " /= "
-		// + selectedVariable.getDomain()[selectedIndex]);
-		selectedVariable.remove(selectedIndex, level);
+        if (selectedVariable.getDomainSize() <= 1) {
+            return false;
+        }
+        // System.out.println(level + " : " + selectedVariable + " /= "
+        // + selectedVariable.getDomain()[selectedIndex]);
+        selectedVariable.remove(selectedIndex, level);
 
-		return mac(level, selectedVariable);
+        return mac(level, selectedVariable);
 
-	}
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see cspfj.Solver#run(int)
-	 */
-	public boolean run(final int maxDuration) throws OutOfTimeException {
-		int maxBT = problem.getNbVariables();
-		boolean result;
+    /*
+     * (non-Javadoc)
+     * 
+     * @see cspfj.Solver#run(int)
+     */
+    public boolean run(final int maxDuration) throws OutOfTimeException {
+        int maxBT = problem.getNbVariables();
+        boolean result;
 
-		System.gc();
-		// enableNoGoods(2);
-		setMaxDuration(maxDuration);
+        System.gc();
+        // enableNoGoods(2);
+        setMaxDuration(maxDuration);
 
-		try {
-			final Filter preprocessor;
+        try {
+final Filter preprocessor;
 			switch (useSpace()) {
 			case FULL:
 				preprocessor = new SAC(problem, chronometer, getFilter(), true);
@@ -153,114 +153,114 @@ public final class MACSolver extends AbstractSolver {
 				chronometer.validateChrono();
 				return false;
 			}
-		} catch (OutOfTimeException e) {
-			chronometer.validateChrono();
-			throw e;
-		}
+        } catch (OutOfTimeException e) {
+            chronometer.validateChrono();
+            throw e;
+        }
 
-		logger.fine("Initializing value orders");
+        logger.fine("Initializing value orders");
 
-		//
-		// logger.fine("ok!") ;
+        //
+        // logger.fine("ok!") ;
 
-		final Random random = new Random(0);
-		do {
-			problem.setValueOrders(random);
-			// System.out.print("run ! ");
-			try {
-				setMaxBacktracks(maxBT);
-				result = mac(0, null);
-				break;
-			} catch (MaxBacktracksExceededException e) {
-				// On continue...
-			} catch (OutOfTimeException e) {
-				chronometer.validateChrono();
-				throw e;
-			} catch (OutOfMemoryError e) {
-				chronometer.validateChrono();
-				throw e;
-			}
+        final Random random = new Random(0);
+        do {
+            problem.setValueOrders(random);
+            // System.out.print("run ! ");
+            try {
+                setMaxBacktracks(maxBT);
+                result = mac(0, null);
+                break;
+            } catch (MaxBacktracksExceededException e) {
+                // On continue...
+            } catch (OutOfTimeException e) {
+                chronometer.validateChrono();
+                throw e;
+            } catch (OutOfMemoryError e) {
+                chronometer.validateChrono();
+                throw e;
+            }
 
-			maxBT *= 1.5;
-			addNoGoods();
-			problem.restoreAll();
-		} while (true);
+            maxBT *= 1.5;
+            addNoGoods();
+            problem.restoreAll(1);
+        } while (true);
 
-		chronometer.validateChrono();
-		return result;
+        chronometer.validateChrono();
+        return result;
 
-	}
+    }
 
-	public int addNoGoods() {
-		return problem.addNoGoods();
-	}
+    public int addNoGoods() {
+        return problem.addNoGoods();
+    }
 
-	//
-	// private void removeNoGoods(final int level) {
-	//
-	// logger.info("removing noGoods");
-	//
-	// final Variable scope[] = new Variable[level + 1];
-	// final int[] tuple = new int[level + 1];
-	//
-	// for (int l = 0; l <= level; l++) {
-	// scope[l] = problem.getVariable(levelVariables[l]);
-	// tuple[l] = problem.getVariable(levelVariables[l])
-	// .getFirstPresentIndex();
-	// }
-	//
-	// for (int[] couple : noGoodManager.removable(scope, tuple)) {
-	// if (problem.getVariable(couple[0]).isPresent(couple[1])) {
-	// problem.getVariable(couple[0]).remove(couple[1], level);
-	// logger.info(couple[0] + " /= " + couple[1]);
-	// }
-	// }
-	//
-	// } // private void removeNoGoods(final int level) { // final Variable
+    //
+    // private void removeNoGoods(final int level) {
+    //
+    // logger.info("removing noGoods");
+    //
+    // final Variable scope[] = new Variable[level + 1];
+    // final int[] tuple = new int[level + 1];
+    //
+    // for (int l = 0; l <= level; l++) {
+    // scope[l] = problem.getVariable(levelVariables[l]);
+    // tuple[l] = problem.getVariable(levelVariables[l])
+    // .getFirstPresentIndex();
+    // }
+    //
+    // for (int[] couple : noGoodManager.removable(scope, tuple)) {
+    // if (problem.getVariable(couple[0]).isPresent(couple[1])) {
+    // problem.getVariable(couple[0]).remove(couple[1], level);
+    // logger.info(couple[0] + " /= " + couple[1]);
+    // }
+    // }
+    //
+    // } // private void removeNoGoods(final int level) { // final Variable
 
-	// scope[] = new Variable[level + 1];
-	// final int[] tuple = new int[level + 1];
-	//
-	// for (int l = 0; l <= level; l++) {
-	// scope[l] = problem.getVariable(levelVariables[l]);
-	// tuple[l] = problem.getVariable(levelVariables[l])
-	// .getFirstPresentIndex();
-	// }
-	//
-	// final int[] noGood = noGoodManager.createNoGood(scope, tuple);
-	//
-	// for (Variable v : problem.getVariables()) {
-	// if (noGood[v.getId()] >= 0) {
-	// continue;
-	// }
-	//
-	// for (int i = v.getFirstPresentIndex(); i < v.getDomain().length; i++) {
-	// if (!v.isPresent(i)) {
-	// continue;
-	// }
-	//
-	// noGood[v.getId()] = i;
-	//
-	// if (noGoodManager.isNoGood(noGood)) {
-	// v.remove(i, level);
-	// }
-	// }
-	//
-	// noGood[v.getId()] = -1;
-	// }
-	//
-	// }
+    // scope[] = new Variable[level + 1];
+    // final int[] tuple = new int[level + 1];
+    //
+    // for (int l = 0; l <= level; l++) {
+    // scope[l] = problem.getVariable(levelVariables[l]);
+    // tuple[l] = problem.getVariable(levelVariables[l])
+    // .getFirstPresentIndex();
+    // }
+    //
+    // final int[] noGood = noGoodManager.createNoGood(scope, tuple);
+    //
+    // for (Variable v : problem.getVariables()) {
+    // if (noGood[v.getId()] >= 0) {
+    // continue;
+    // }
+    //
+    // for (int i = v.getFirstPresentIndex(); i < v.getDomain().length; i++) {
+    // if (!v.isPresent(i)) {
+    // continue;
+    // }
+    //
+    // noGood[v.getId()] = i;
+    //
+    // if (noGoodManager.isNoGood(noGood)) {
+    // v.remove(i, level);
+    // }
+    // }
+    //
+    // noGood[v.getId()] = -1;
+    // }
+    //
+    // }
 
-	// public NoGoodManager getNoGoodManager() {
-	// return noGoodManager;
-	// }
+    // public NoGoodManager getNoGoodManager() {
+    // return noGoodManager;
+    // }
 
-	public Filter getFilter() {
-		return filter;
-	}
+    public Filter getFilter() {
+        return filter;
+    }
 
-	// public int getMaxNoGoodSize() {
-	// return maxNoGoodSize;
-	// }
+    // public int getMaxNoGoodSize() {
+    // return maxNoGoodSize;
+    // }
 
 }
