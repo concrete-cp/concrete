@@ -19,15 +19,17 @@
 
 package cspfj.problem;
 
+import java.util.Collection;
+
 import cspfj.constraint.Constraint;
 import cspfj.exception.FailedGenerationException;
 
 public interface ProblemGenerator {
 	 void generate() throws FailedGenerationException ;
 	
-	 Variable[] getVariables() ;
+	 Collection<Variable> getVariables() ;
 	
-	 Constraint[] getConstraints() ;
+	 Collection<Constraint> getConstraints() ;
      
      
 }
