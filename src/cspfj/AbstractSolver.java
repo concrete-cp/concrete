@@ -34,7 +34,7 @@ public abstract class AbstractSolver implements Solver {
 
     protected final Problem problem;
 
-    protected Chronometer chronometer;
+    protected final Chronometer chronometer;
 
     private int nbAssignments;
 

@@ -485,20 +485,6 @@ public abstract class Constraint {
         return arcs;
     }
 
-    public void freeLast(final int position, final int index) {
-        if (!tupleCache) {
-            return;
-        }
-        last[position][index] = null;
-    }
-
-    public void freeLast(final Variable variable, final int index) {
-        if (!tupleCache) {
-            return;
-        }
-        freeLast(getPosition(variable), index);
-    }
-
     public final boolean isActive() {
         return active;
     }
@@ -507,18 +493,8 @@ public abstract class Constraint {
         this.active = active;
     }
 
-    public void freeAll() {
-        for (int v = arity; --v >= 0;) {
-            for (int i = involvedVariables[v].getDomain().length; --i >= 0;) {
-                freeLast(v, i);
-            }
-        }
-
-    }
-
     public void clearMatrix() {
         matrix = null;
-
     }
 
 }

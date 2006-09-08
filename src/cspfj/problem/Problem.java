@@ -63,7 +63,8 @@ public final class Problem {
         super();
     }
 
-    public Problem(Collection<Variable> variables, Collection<Constraint> constraints) {
+    public Problem(Collection<Variable> variables,
+            Collection<Constraint> constraints) {
         this();
         setVariables(variables);
         setConstraints(constraints);
@@ -176,9 +177,9 @@ public final class Problem {
         return constraintArray;
     }
 
-//    public Collection<Integer> getConstraintIDs() {
-//        return constraints.keySet();
-//    }
+    // public Collection<Integer> getConstraintIDs() {
+    // return constraints.keySet();
+    // }
 
     public Constraint getConstraint(final int cId) {
         return constraints.get(cId);
@@ -188,9 +189,9 @@ public final class Problem {
         return variableArray;
     }
 
-//    public Collection<Integer> getVariableIDs() {
-//        return variables.keySet();
-//    }
+    // public Collection<Integer> getVariableIDs() {
+    // return variables.keySet();
+    // }
 
     public Variable getVariable(final int vId) {
         return variables.get(vId);
@@ -330,7 +331,7 @@ public final class Problem {
         tuple.add(0, getVariable(levelVariables[0]).getFirstPresentIndex());
 
         for (int level = 1; level < levelVariables.length; level++) {
-
+//logger.fine("checking " + getVariable(levelVariables[level-1]));
             pastVariables.add(levelVariables[level - 1]);
 
             scope.add(level, null);
@@ -378,13 +379,20 @@ public final class Problem {
 
     }
 
+    public int[] getLevelVariables(final int minLevel) {
+        final int[] variables = new int[levelVariables.length - minLevel];
+        System.arraycopy(levelVariables, minLevel, variables, 0,
+                variables.length);
+        return variables;
+    }
+
     public int getMaxArity() {
         return maxArity;
     }
-    
+
     public void clearNoGoods() {
         for (Constraint c : getConstraints()) {
-            c.clearMatrix() ;
+            c.clearMatrix();
         }
     }
 

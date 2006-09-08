@@ -29,6 +29,7 @@ import cspfj.exception.OutOfTimeException;
 import cspfj.filter.AC3;
 import cspfj.filter.Filter;
 import cspfj.filter.SAC;
+import cspfj.heuristic.WDegOnDom;
 import cspfj.problem.ProblemGenerator;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
@@ -135,24 +136,24 @@ public final class MACSolver extends AbstractSolver {
         setMaxDuration(maxDuration);
 
         try {
-final Filter preprocessor;
-			switch (useSpace()) {
-			case FULL:
-				preprocessor = new SAC(problem, chronometer, getFilter(), true);
-				break;
+            final Filter preprocessor;
+            switch (useSpace()) {
+            case FULL:
+                preprocessor = new SAC(problem, chronometer, getFilter(), true);
+                break;
 
-			case WEAK:
-				preprocessor = new SAC(problem, chronometer, getFilter(), false);
-				break;
+            case WEAK:
+                preprocessor = new SAC(problem, chronometer, getFilter(), false);
+                break;
 
-			default:
+            default:
 
-				preprocessor = getFilter();
-			}
-			if (!preprocessor.reduceAll(0)) {
-				chronometer.validateChrono();
-				return false;
-			}
+                preprocessor = getFilter();
+            }
+            if (!preprocessor.reduceAll(0)) {
+                chronometer.validateChrono();
+                return false;
+            }
         } catch (OutOfTimeException e) {
             chronometer.validateChrono();
             throw e;

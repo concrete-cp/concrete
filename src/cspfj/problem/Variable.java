@@ -408,11 +408,11 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
         prevAbsents[index] = lastAbsentIndex;
         lastAbsentIndex = index;
 
-        if (level == 0) {
-            for (Constraint c : involvingConstraints) {
-                c.freeLast(this, index);
-            }
-        }
+//        if (level == 0) {
+//            for (Constraint c : involvingConstraints) {
+//                c.freeLast(this, index);
+//            }
+//        }
 
     }
 
@@ -505,6 +505,18 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
         return count;
     }
 
+    public float getDDeg() {
+        float count = 0;
+        if (involvingConstraints == null) {
+            return 1;
+        }
+
+        for (Constraint c : involvingConstraints) {
+            count += c.getFreedomDegree() ;
+        }
+        return count;
+    }
+    
     public int compareTo(final Variable arg0) {
         final int compare = domainSize - arg0.getDomainSize();
 
@@ -525,6 +537,15 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
                 remove(i, level);
             }
         }
+    }
+    
+    public void makeSingletonIndex(final int sol, final int level) {
+        for (int i : this) {
+            if (i != sol) {
+                remove(i, level);
+            }
+        }
+        
     }
 
     public void empty(final int level) {
@@ -778,4 +799,8 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
         sb.append(Arrays.toString(prevAbsents)).append('\n');
         return sb.toString();
     }
+
+
+
+
 }
