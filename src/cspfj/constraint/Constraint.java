@@ -20,6 +20,7 @@
 package cspfj.constraint;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -101,19 +102,17 @@ public abstract class Constraint {
 
     public abstract boolean useTupleCache();
 
-    public final boolean isInvolving(final Variable variable) {
+    public final boolean isInvolved(final Variable variable) {
         return getPosition(variable) >= 0;
     }
 
     public final int getPosition(final Variable variable) {
-        int rValue = -1;
         for (int i = 0; i < arity; i++) {
             if (involvedVariables[i] == variable) {
-                rValue = i;
-                break;
+                return i;
             }
         }
-        return rValue;
+        return -1;
     }
 
     public final Variable[] getInvolvedVariables() {
@@ -251,7 +250,7 @@ public abstract class Constraint {
     }
 
     private boolean findValidTuple(final int variablePosition, final int index) {
-        assert this.isInvolving(involvedVariables[variablePosition]);
+        assert this.isInvolved(involvedVariables[variablePosition]);
 
         final int[] lastTuple;
 
@@ -295,7 +294,7 @@ public abstract class Constraint {
     }
 
     public int getNbTuples(final Variable variable, final int index) {
-        assert this.isInvolving(variable);
+        assert this.isInvolved(variable);
 
         if (logger.isLoggable(Level.FINER)) {
             logger.finer("Counting tuples : " + this + ", " + variable + ", "
@@ -397,26 +396,28 @@ public abstract class Constraint {
     // return check();
     // }
 
-    public final boolean isInvolved(final Variable variable) {
-        for (Variable v : getInvolvedVariables()) {
-            if (v == variable) {
-                return true;
-            }
-        }
-        return false;
-    }
+    // public final boolean isInvolved(final Variable variable) {
+    // for (Variable v : getInvolvedVariables()) {
+    // if (v == variable) {
+    // return true;
+    // }
+    // }
+    // return false;
+    // }
 
     public final int getArity() {
         return arity;
     }
 
     protected final void initMatrix(final boolean initialState) {
-        int nbValues = 1;
-        for (Variable v : involvedVariables) {
-            nbValues *= v.getDomain().length;
-        }
 
-        matrix = new boolean[nbValues];
+        if (!haveMatrix()) {
+            int nbValues = 1;
+            for (Variable v : involvedVariables) {
+                nbValues *= v.getDomain().length;
+            }
+            matrix = new boolean[nbValues];
+        }
 
         Arrays.fill(matrix, initialState);
     }
@@ -495,6 +496,72 @@ public abstract class Constraint {
 
     public void clearMatrix() {
         matrix = null;
+    }
+
+    public final static Constraint findConstraint(
+            final Collection<Variable> scope,
+            final Collection<Constraint> constraints) {
+        final int arity = scope.size();
+        for (Constraint c : constraints) {
+            if (c.getArity() != arity) {
+                continue;
+            }
+            boolean valid = true;
+            for (Variable variable : c.getInvolvedVariables()) {
+                if (!scope.contains(variable)) {
+                    valid = false;
+                    break;
+                }
+            }
+
+            if (valid) {
+                return c;
+            }
+        }
+        return null;
+    }
+
+    public final boolean haveMatrix() {
+        return matrix != null;
+    }
+
+    public void intersect(final Variable[] scope, final boolean supports,
+            final int[][] tuples) {
+        final int[] order = new int[arity];
+        for (int i = arity; --i >= 0;) {
+            for (int j = arity; --j > 0;) {
+                if (scope[i] == getInvolvedVariables()[j]) {
+                    order[i] = j;
+                    break;
+                }
+            }
+        }
+
+        final int[] realTuple = new int[arity];
+
+        final boolean[] oldMatrix;
+
+        if (haveMatrix()) {
+            oldMatrix = matrix.clone();
+        } else {
+            oldMatrix = null;
+        }
+
+        initMatrix(!supports);
+        final boolean[] matrix = this.matrix;
+        for (int[] tuple : tuples) {
+            for (int i = arity; --i >= 0;) {
+                realTuple[i] = tuple[order[i]];
+            }
+            matrix[matrixIndex(realTuple)] = supports;
+        }
+
+        if (oldMatrix != null) {
+            for (int i = matrix.length; --i >= 0;) {
+                matrix[i] &= oldMatrix[i];
+            }
+        }
+
     }
 
 }

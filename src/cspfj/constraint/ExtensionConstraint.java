@@ -63,18 +63,19 @@ public final class ExtensionConstraint extends Constraint {
     }
     
     private void initMatrix() {
-        initMatrix(!supports);
+        super.clearMatrix();
 
-        final int[] indexes = new int[getArity()];
-
-        for (int[] tuple : tuples) {
-            for (int i = 0; i < tuple.length; i++) {
-                indexes[i] = getInvolvedVariables()[i].index(tuple[i]);
-            }
-
-            setMatrixIndex(indexes, supports);
-        }
-        // }
+        intersect(getInvolvedVariables(), supports, tuples);
+//        final int[] indexes = new int[getArity()];
+//
+//        for (int[] tuple : tuples) {
+//            for (int i = 0; i < tuple.length; i++) {
+//                indexes[i] = getInvolvedVariables()[i].index(tuple[i]);
+//            }
+//
+//            setMatrixIndex(indexes, supports);
+//        }
+//        // }
 
     }
 

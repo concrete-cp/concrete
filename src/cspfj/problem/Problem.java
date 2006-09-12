@@ -271,27 +271,10 @@ public final class Problem {
 
     public boolean addNoGood() {
 
-        Constraint constraint = null;
-
         final List<Variable> scope = Problem.scope;
 
-        for (Constraint c : scope.get(0).getInvolvingConstraints()) {
-            if (c.getArity() != scope.size()) {
-                continue;
-            }
-            boolean valid = true;
-            for (Variable variable : scope) {
-                if (!c.isInvolved(variable)) {
-                    valid = false;
-                    break;
-                }
-            }
-
-            if (valid) {
-                constraint = c;
-                break;
-            }
-        }
+        final Constraint constraint = Constraint.findConstraint(scope, Arrays
+                .asList(scope.get(0).getInvolvingConstraints()));
 
         if (constraint == null) {
             return false;
@@ -331,7 +314,7 @@ public final class Problem {
         tuple.add(0, getVariable(levelVariables[0]).getFirstPresentIndex());
 
         for (int level = 1; level < levelVariables.length; level++) {
-//logger.fine("checking " + getVariable(levelVariables[level-1]));
+            // logger.fine("checking " + getVariable(levelVariables[level-1]));
             pastVariables.add(levelVariables[level - 1]);
 
             scope.add(level, null);

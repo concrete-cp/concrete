@@ -30,138 +30,138 @@ import cspfj.problem.Variable;
 
 public class ResultHandler {
 
-    protected final OutputStreamWriter writer;
+	protected final OutputStreamWriter writer;
 
-    protected Solver solver;
+	protected Solver solver;
 
-    protected long totalLoad = 0;
+	protected long totalLoad = 0;
 
-    protected float totalSolve = 0;
+	protected float totalSolve = 0;
 
-    protected int sat = 0;
+	protected int sat = 0;
 
-    protected int unsat = 0;
+	protected int unsat = 0;
 
-    protected int unknown = 0;
+	protected int unknown = 0;
 
-    protected boolean displaySolutions;
+	protected boolean displaySolutions;
 
-    private static final Logger logger = Logger
-            .getLogger("cspfj.AbstractResultWriter");
+	private static final Logger logger = Logger
+			.getLogger("cspfj.AbstractResultWriter");
 
-    protected int bestConflicts = Integer.MAX_VALUE;
+	protected int bestConflicts = Integer.MAX_VALUE;
 
-    public ResultHandler(final boolean displaySolutions) {
-        this.writer = new OutputStreamWriter(System.out);
-        this.displaySolutions = displaySolutions;
-    }
+	public ResultHandler(final boolean displaySolutions) {
+		this.writer = new OutputStreamWriter(System.out);
+		this.displaySolutions = displaySolutions;
+	}
 
-    public ResultHandler(String fileName, final boolean displaySolutions)
-            throws IOException {
-        this.writer = new FileWriter(fileName);
-        this.displaySolutions = displaySolutions;
-    }
+	public ResultHandler(String fileName, final boolean displaySolutions)
+			throws IOException {
+		this.writer = new FileWriter(fileName);
+		this.displaySolutions = displaySolutions;
+	}
 
-    public void problem(final String name) throws IOException {
-        logger.info("loading : " + name);
-    }
+	public void problem(final String name) throws IOException {
+		logger.info("loading : " + name);
+	}
 
-    public void load(final Solver solver, final long load) throws IOException {
-        this.solver = solver;
+	public void load(final Solver solver, final long load) throws IOException {
+		this.solver = solver;
 
-        totalLoad += load;
+		totalLoad += load;
 
-        logger.info("loaded in " + (load / 1.0e9F) + " s");
+		logger.info("loaded in " + (load / 1.0e9F) + " s");
 
-    }
+	}
 
-    public boolean solution(final Map<Variable, Integer> solution,
-            final int nbConflicts) throws IOException {
-        return solution(solution, nbConflicts, false);
-    }
+	public boolean solution(final Map<Variable, Integer> solution,
+			final int nbConflicts) throws IOException {
+		return solution(solution, nbConflicts, false);
+	}
 
-    public boolean solution(final Map<Variable, Integer> solution,
-            final int nbConflicts, final boolean forced) throws IOException {
-        if (forced || displaySolutions && nbConflicts < bestConflicts) {
-            bestConflicts = nbConflicts;
-            logger.info(solution.toString() + "(" + nbConflicts + ")");
-            return true ;
-        }
-        return false ;
-    }
+	public boolean solution(final Map<Variable, Integer> solution,
+			final int nbConflicts, final boolean forced) throws IOException {
+		if (forced || displaySolutions && nbConflicts < bestConflicts) {
+			bestConflicts = nbConflicts;
+			logger.info(solution.toString() + "(" + nbConflicts + ")");
+			return true;
+		}
+		return false;
+	}
 
-    public void fail(final Class solver, final Throwable thrown, final long load)
-            throws IOException {
-        logger.warning(thrown.toString());
-        logger.warning(Arrays.toString(thrown.getStackTrace()));
-        if (thrown.getCause() != null) {
-            logger.warning(thrown.getCause().toString());
-            logger.warning(Arrays.toString(thrown.getCause().getStackTrace()));
-        }
-        unknown++;
+	public void fail(final Class solver, final Throwable thrown, final long load)
+			throws IOException {
+		logger.warning(thrown.toString());
+		logger.warning(Arrays.toString(thrown.getStackTrace()));
+		if (thrown.getCause() != null) {
+			logger.warning(thrown.getCause().toString());
+			logger.warning(Arrays.toString(thrown.getCause().getStackTrace()));
+		}
+		unknown++;
 
-    }
+	}
 
-    public void result(final Result result, final Throwable thrown,
-            final long ccks) throws IOException {
-        increment(result);
+	public void result(final Result result, final Throwable thrown,
+			final long ccks) throws IOException {
+		increment(result);
 
-        totalSolve += solver.getUserTime();
+		totalSolve += solver.getUserTime();
 
-        if (thrown != null) {
-            logger.warning(thrown.toString());
-        }
+		if (thrown != null) {
+			logger.warning(thrown.toString());
+		}
 
-        logger.info(result.toString() + " - " + solver.getUserTime() + " s - "
-                + ccks + " ccks - " + solver.getNbAssignments() + " assgn");
+		logger.info(result.toString() + " - " + solver.getUserTime() + " s - "
+				+ ccks + " ccks - " + solver.getNbAssignments() + " assgn");
 
-    }
+	}
 
-    public void result(final Result result, final long ccks) throws IOException {
-        result(result, null, ccks);
-    }
+	public void result(final Result result, final long ccks) throws IOException {
+		result(result, null, ccks);
+	}
 
-    public void close() throws IOException {
-        logger.info("Total : " + (totalLoad / 1.0e9F) + " s loading and "
-                + totalSolve + " s solving");
-        logger.info("SAT : " + sat + ", UNSAT : " + unsat + ", UNKNOWN : "
-                + unknown);
-        writer.close();
-    }
+	public void close() throws IOException {
+		logger.info("Total : " + (totalLoad / 1.0e9F) + " s loading and "
+				+ totalSolve + " s solving");
+		logger.info("SAT : " + sat + ", UNSAT : " + unsat + ", UNKNOWN : "
+				+ unknown);
+		writer.close();
+	}
 
-    private void increment(final Result result) {
-        switch (result) {
-        case SAT:
-            sat++;
-            break;
+	private void increment(final Result result) {
+		switch (result) {
+		case SAT:
+			sat++;
+			break;
 
-        case UNSAT:
-            unsat++;
-            break;
+		case UNSAT:
+			unsat++;
+			break;
 
-        default:
-            unknown++;
-        }
-    }
-    
-    
+		default:
+			unknown++;
+		}
+	}
 
-    public enum Result {
-        SAT, UNSAT, UNKNOWN
-    }
+	public void statistics(final String name, final String value) {
+		logger.info(name + " : " + value);
+	}
 
+	public enum Result {
+		SAT, UNSAT, UNKNOWN
+	}
 
+	public final int getSat() {
+		return sat;
+	}
 
-    public final int getSat() {
-        return sat;
-    }
+	public final int getUnknown() {
+		return unknown;
+	}
 
-    public final int getUnknown() {
-        return unknown;
-    }
-
-    public final int getUnsat() {
-        return unsat;
-    }
+	public final int getUnsat() {
+		return unsat;
+	}
 
 }
