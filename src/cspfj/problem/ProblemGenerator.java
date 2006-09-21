@@ -31,5 +31,5 @@ public interface ProblemGenerator {
 	
 	 Collection<Constraint> getConstraints() ;
      
-     
+     String getName() ;
 }

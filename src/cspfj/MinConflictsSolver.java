@@ -294,12 +294,12 @@ public final class MinConflictsSolver extends AbstractSolver {
 		try {
 			final Filter preprocessor;
 			switch (useSpace()) {
-			case FULL:
+			case BRANCH:
 				preprocessor = new SAC(problem, chronometer, new AC3(problem),
 						true);
 				break;
 
-			case WEAK:
+			case CLASSIC:
 				preprocessor = new SAC(problem, chronometer, new AC3(problem),
 						false);
 				break;

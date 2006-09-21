@@ -69,12 +69,12 @@ public class ComboSolver extends AbstractSolver {
         try {
 			final Filter preprocessor;
 			switch (useSpace()) {
-			case FULL:
+			case BRANCH:
 				preprocessor = new SAC(problem, chronometer, macSolver
 						.getFilter(), true);
 				break;
 			
-			case WEAK:
+			case CLASSIC:
 				preprocessor = new SAC(problem, chronometer, macSolver
 						.getFilter(), false);
 				break;

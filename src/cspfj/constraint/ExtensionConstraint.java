@@ -20,80 +20,87 @@
 package cspfj.constraint;
 
 import cspfj.exception.FailedGenerationException;
+import cspfj.exception.MatrixTooBigException;
 import cspfj.problem.Variable;
 
 public final class ExtensionConstraint extends Constraint {
 
-    private final float tightness;
+	private final float tightness;
 
-    private final boolean supports;
+	private final boolean supports;
 
-    private final int[][] tuples;
+	private final int[][] tuples;
 
-    public ExtensionConstraint(final Variable[] scope, final boolean supports,
-            final int[][] tuples) throws FailedGenerationException {
-        super(scope);
+	public ExtensionConstraint(final Variable[] scope, final boolean supports,
+			final int[][] tuples) throws FailedGenerationException {
+		super(scope);
 
-        this.supports = supports;
-        this.tuples = tuples;
+		this.supports = supports;
+		this.tuples = tuples;
 
-        final float tight = (float) tuples.length
-                / (scope[0].getDomainSize() * scope[1].getDomainSize());
+		final float tight = (float) tuples.length
+				/ (scope[0].getDomainSize() * scope[1].getDomainSize());
 
-        if (supports) {
-            tightness = tight;
-        } else {
-            tightness = 1 - tight;
-        }
+		if (supports) {
+			tightness = tight;
+		} else {
+			tightness = 1 - tight;
+		}
 
-        initMatrix();
-    }
+		initMatrix();
+	}
 
+	public ExtensionConstraint(final Variable[] scope)
+			throws FailedGenerationException {
+		super(scope);
 
-    public ExtensionConstraint(final Variable[] scope) {
-        super(scope);
+		this.tuples = new int[0][];
 
-        this.tuples = new int[0][] ;
-        
-        this.supports = false ;
+		this.supports = false;
 
-        tightness = 1;
-        
-        initMatrix(true);
-    }
-    
-    private void initMatrix() {
-        super.clearMatrix();
+		tightness = 1;
 
-        intersect(getInvolvedVariables(), supports, tuples);
-//        final int[] indexes = new int[getArity()];
-//
-//        for (int[] tuple : tuples) {
-//            for (int i = 0; i < tuple.length; i++) {
-//                indexes[i] = getInvolvedVariables()[i].index(tuple[i]);
-//            }
-//
-//            setMatrixIndex(indexes, supports);
-//        }
-//        // }
+		try {
+			initMatrix(true);
+		} catch (MatrixTooBigException e) {
+			throw new FailedGenerationException("Matrix too big");
+		}
 
-    }
+	}
 
+	private void initMatrix() throws FailedGenerationException {
+		super.clearMatrix();
 
-    public boolean useTupleCache() {
-        return true;
-    }
+		intersect(getInvolvedVariables(), supports, tuples);
+		// final int[] indexes = new int[getArity()];
+		//
+		// for (int[] tuple : tuples) {
+		// for (int i = 0; i < tuple.length; i++) {
+		// indexes[i] = getInvolvedVariables()[i].index(tuple[i]);
+		// }
+		//
+		// setMatrixIndex(indexes, supports);
+		// }
+		// // }
 
-    public float getTightness() {
-        return tightness;
-    }
+	}
 
+	public boolean useTupleCache() {
+		return true;
+	}
 
-    @Override
-    public void clearMatrix() {
-        initMatrix() ;
-    }
+	public float getTightness() {
+		return tightness;
+	}
 
-
+	@Override
+	public void clearMatrix() {
+		try {
+			initMatrix();
+		} catch (FailedGenerationException e) {
+			// Should not happen !
+			e.printStackTrace();
+		}
+	}
 
 }

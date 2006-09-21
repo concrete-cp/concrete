@@ -138,11 +138,11 @@ public final class MACSolver extends AbstractSolver {
         try {
             final Filter preprocessor;
             switch (useSpace()) {
-            case FULL:
+            case BRANCH:
                 preprocessor = new SAC(problem, chronometer, getFilter(), true);
                 break;
 
-            case WEAK:
+            case CLASSIC:
                 preprocessor = new SAC(problem, chronometer, getFilter(), false);
                 break;
 
