@@ -415,15 +415,16 @@ public abstract class Constraint {
 			throws MatrixTooBigException {
 
 		if (!haveMatrix()) {
-			int nbValues = 1;
+			long nbValues = 1;
 			for (Variable v : involvedVariables) {
 				nbValues *= v.getDomain().length;
+				if (nbValues > Integer.MAX_VALUE) {
+					throw new MatrixTooBigException();
+				}
 			}
-			if (nbValues < 0) {
-				throw new MatrixTooBigException();
-			}
+
 			try {
-				matrix = new boolean[nbValues];
+				matrix = new boolean[(int)nbValues];
 			} catch (OutOfMemoryError e) {
 				throw new MatrixTooBigException();
 			}
@@ -579,5 +580,4 @@ public abstract class Constraint {
 		}
 
 	}
-
 }

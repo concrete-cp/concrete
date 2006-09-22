@@ -92,7 +92,7 @@ public class ResultHandler {
 
 	public void fail(final Class solver, final String problem,
 			final Throwable thrown, final long load) throws IOException {
-		logger.warning(thrown.toString() + " " + problem);
+		logger.warning(thrown.toString() + " (" + problem + ")");
 		logger.warning(Arrays.toString(thrown.getStackTrace()));
 		if (thrown.getCause() != null) {
 			logger.warning(thrown.getCause().toString());
