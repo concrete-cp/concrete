@@ -34,9 +34,9 @@ public abstract class Constraint {
 
 	private final Arc[] arcs;
 
-	private final int[][][] last;
+	protected final int[][][] last;
 
-	private final boolean[][] lastCheck;
+	protected final boolean[][] lastCheck;
 
 	private static int cId = 0;
 
@@ -55,11 +55,11 @@ public abstract class Constraint {
 	private static final Logger logger = Logger
 			.getLogger("cspjf.constraints.AbstractConstraint");
 
-	private boolean[] matrix = null;
-
 	private final int[] realTuple;
 
 	private boolean active;
+
+	protected final MatrixManager matrix;
 
 	// private final boolean[] recentlyRemoved;
 
@@ -90,6 +90,8 @@ public abstract class Constraint {
 		}
 		active = false;
 		// initLast();
+
+		matrix = new MatrixManager(scope, tuple);
 	}
 
 	// public final void initLast() {
@@ -153,7 +155,7 @@ public abstract class Constraint {
 
 	public boolean check() {
 		checks++;
-		return matrix == null || matrix[matrixIndex(tuple)];
+		return matrix.isTrue(tuple);
 	}
 
 	// public boolean revise(final int level) {
@@ -234,7 +236,7 @@ public abstract class Constraint {
 		return false;
 	}
 
-	private boolean controlTuplePresence(final int position) {
+	protected boolean controlTuplePresence(final int position) {
 		final int[] tuple = this.tuple;
 		final Variable[] involvedVariables = this.involvedVariables;
 		for (int i = arity; --i >= 0;) {
@@ -251,7 +253,7 @@ public abstract class Constraint {
 		return findValidTuple(getPosition(variable), index);
 	}
 
-	private boolean findValidTuple(final int variablePosition, final int index) {
+	protected boolean findValidTuple(final int variablePosition, final int index) {
 		assert this.isInvolved(involvedVariables[variablePosition]);
 
 		final int[] lastTuple;
@@ -411,42 +413,7 @@ public abstract class Constraint {
 		return arity;
 	}
 
-	protected final void initMatrix(final boolean initialState)
-			throws MatrixTooBigException {
-
-		if (!haveMatrix()) {
-			long nbValues = 1;
-			for (Variable v : involvedVariables) {
-				nbValues *= v.getDomain().length;
-				if (nbValues > Integer.MAX_VALUE) {
-					throw new MatrixTooBigException();
-				}
-			}
-
-			try {
-				matrix = new boolean[(int)nbValues];
-			} catch (OutOfMemoryError e) {
-				throw new MatrixTooBigException();
-			}
-		}
-
-		Arrays.fill(matrix, initialState);
-	}
-
-	private final int matrixIndex(final int[] tuple) {
-		final Variable[] involvedVariables = this.involvedVariables;
-		int index = 0;
-		for (int i = arity; --i >= 0;) {
-			int skip = 1;
-			for (int j = i; --j >= 0;) {
-				skip *= involvedVariables[j].getDomain().length;
-			}
-			index += skip * tuple[i];
-		}
-		return index;
-	}
-
-	public final boolean removeTuple(final List<Variable> scope,
+	public boolean removeTuple(final List<Variable> scope,
 			final List<Integer> tuple) {
 
 		final int[] realTuple = this.realTuple;
@@ -461,41 +428,20 @@ public abstract class Constraint {
 			}
 		}
 
-		return removeTuple(realTuple);
-
-	}
-
-	public final boolean removeTuple(final int[] tuple) {
-
-		if (this.matrix == null) {
-			try {
-				initMatrix(true);
-			} catch (MatrixTooBigException e) {
-				return false;
-			}
-
-		}
-		final boolean[] matrix = this.matrix;
-		final int matrixIndex = matrixIndex(tuple);
-
-		if (matrix[matrixIndex]) {
-			matrix[matrixIndex] = false;
-
+		if (matrix.removeTuple(realTuple)) {
 			if (useTupleCache()) {
-				for (int p = arity; --p >= 0;) {
-					if (Arrays.equals(tuple, last[p][tuple[p]])) {
-						lastCheck[p][tuple[p]] = false;
 
+				for (int p = arity; --p >= 0;) {
+					if (Arrays.equals(realTuple, last[p][realTuple[p]])) {
+						lastCheck[p][realTuple[p]] = false;
 					}
 				}
 			}
 			return true;
 		}
-		return false;
-	}
 
-	public final void setMatrixIndex(final int[] indexes, final boolean value) {
-		matrix[matrixIndex(indexes)] = value;
+		return false;
+
 	}
 
 	public final Arc[] getArcs() {
@@ -508,10 +454,6 @@ public abstract class Constraint {
 
 	public final void setActive(final boolean active) {
 		this.active = active;
-	}
-
-	public void clearMatrix() {
-		matrix = null;
 	}
 
 	public final static Constraint findConstraint(
@@ -537,47 +479,25 @@ public abstract class Constraint {
 		return null;
 	}
 
-	public final boolean haveMatrix() {
-		return matrix != null;
-	}
-
-	public void intersect(final Variable[] scope, final boolean supports,
-			final int[][] tuples) throws FailedGenerationException {
-
-		final boolean[] matrix;
-
-		if (this.matrix == null) {
-			matrix = null;
-		} else {
-			matrix = this.matrix.clone();
-		}
-
+	public void intersect(final Variable[] scope, final boolean supports, final int[][] tuples)
+			throws FailedGenerationException {
 		try {
-			initMatrix(!supports);
+			matrix.intersect(scope, scope, supports, tuples);
 		} catch (MatrixTooBigException e) {
-			throw new FailedGenerationException("Matrix too big");
-		}
-
-		for (int[] tuple : tuples) {
-			final int[] realTuple = this.realTuple;
-			final Variable[] involvedVariables = this.involvedVariables;
-
-			for (int i = arity; --i >= 0;) {
-				for (int j = arity; --j >= 0;) {
-					if (scope[i] == involvedVariables[j]) {
-						realTuple[j] = scope[i].index(tuple[i]);
-						break;
-					}
-				}
-			}
-			this.matrix[matrixIndex(realTuple)] = supports;
-		}
-
-		if (matrix != null) {
-			for (int i = matrix.length; --i >= 0;) {
-				this.matrix[i] &= matrix[i];
-			}
+			throw new FailedGenerationException(e.toString());
 		}
 
 	}
+
+	// public void clearNoGoods() {
+	// matrix.clear();
+	// }
+
+	// public final boolean haveMatrix() {
+	// return matrix != null;
+	// }
+
+	// public void clearMatrix() {
+	// matrix.clear();
+	// }
 }

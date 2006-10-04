@@ -47,7 +47,17 @@ public final class ExtensionConstraint extends Constraint {
 			tightness = 1 - tight;
 		}
 
-		initMatrix();
+		// try {
+		// matrix.init(true);
+		// } catch (MatrixTooBigException e) {
+		// throw new FailedGenerationException("Matrix too big");
+		// }
+		try {
+			matrix.intersect(getInvolvedVariables(), getInvolvedVariables(),
+					supports, tuples);
+		} catch (MatrixTooBigException e) {
+			throw new FailedGenerationException(e.toString());
+		}
 	}
 
 	public ExtensionConstraint(final Variable[] scope)
@@ -60,28 +70,18 @@ public final class ExtensionConstraint extends Constraint {
 
 		tightness = 1;
 
+		// try {
+		// matrix.init(true);
+		// } catch (MatrixTooBigException e) {
+		// throw new FailedGenerationException("Matrix too big");
+		// }
+
 		try {
-			initMatrix(true);
+			matrix.intersect(getInvolvedVariables(), getInvolvedVariables(),
+					supports, tuples);
 		} catch (MatrixTooBigException e) {
-			throw new FailedGenerationException("Matrix too big");
+			throw new FailedGenerationException(e.toString());
 		}
-
-	}
-
-	private void initMatrix() throws FailedGenerationException {
-		super.clearMatrix();
-
-		intersect(getInvolvedVariables(), supports, tuples);
-		// final int[] indexes = new int[getArity()];
-		//
-		// for (int[] tuple : tuples) {
-		// for (int i = 0; i < tuple.length; i++) {
-		// indexes[i] = getInvolvedVariables()[i].index(tuple[i]);
-		// }
-		//
-		// setMatrixIndex(indexes, supports);
-		// }
-		// // }
 
 	}
 
@@ -93,14 +93,33 @@ public final class ExtensionConstraint extends Constraint {
 		return tightness;
 	}
 
-	@Override
-	public void clearMatrix() {
-		try {
-			initMatrix();
-		} catch (FailedGenerationException e) {
-			// Should not happen !
-			e.printStackTrace();
-		}
-	}
+	protected boolean findValidTuple(final int variablePosition, final int index) {
+		assert this.isInvolved(getInvolvedVariables()[variablePosition]);
 
+		final int[] lastTuple = last[variablePosition][index];
+
+		if (lastTuple != null && lastCheck[variablePosition][index]) {
+			System.arraycopy(lastTuple, 0, tuple, 0, getArity());
+
+			if (controlTuplePresence(variablePosition)) {
+				// System.out.print("c") ;
+				return true;
+			}
+
+		}
+
+		if (matrix.findTuple(variablePosition, index)) {
+			for (int position = getArity(); --position >= 0;) {
+				final int value = tuple[position];
+				if (last[position][value] == null) {
+					last[position][value] = new int[getArity()];
+				}
+				System.arraycopy(tuple, 0, last[position][value], 0, getArity());
+				lastCheck[position][value] = true;
+			}
+			return true;
+		}
+		return false;
+
+	}
 }

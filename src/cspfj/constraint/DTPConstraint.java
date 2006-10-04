@@ -46,7 +46,7 @@ public final class DTPConstraint extends Constraint {
         final boolean result = value0 + duration0 < value1 || value1 + duration1 < value0;
         
         if (!result) {
-            removeTuple(tuple) ;
+            matrix.removeTuple(tuple) ;
         }
         
         return result ;

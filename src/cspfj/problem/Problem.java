@@ -378,11 +378,11 @@ public final class Problem {
 		return maxArity;
 	}
 
-	public void clearNoGoods() {
-		for (Constraint c : getConstraints()) {
-			c.clearMatrix();
-		}
-	}
+//	public void clearNoGoods() {
+//		for (Constraint c : getConstraints()) {
+//			c.clearNoGoods();
+//		}
+//	}
 
 	public static Problem activeProblem(final Problem problem) {
 		return activeProblem(problem, 0);
