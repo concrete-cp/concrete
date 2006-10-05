@@ -20,24 +20,20 @@ package cspfj.filter;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedSet;
-import java.util.Stack;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import cspfj.exception.OutOfTimeException;
 import cspfj.heuristic.DDegOnDom;
-import cspfj.heuristic.Heuristic;
+import cspfj.heuristic.VariableHeuristic;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.Chronometer;
-import cspfj.util.Maximier;
 
 /**
  * @author Julien VION
@@ -63,7 +59,7 @@ public class SAC implements Filter {
 
 	private final Map<Integer, SortedSet<Integer>> indexQueues;
 
-	private final Heuristic heuristic;
+	private final VariableHeuristic heuristic;
 
 	public SAC(Problem problem, Chronometer chronometer, Filter filter,
 			boolean branch) {

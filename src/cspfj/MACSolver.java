@@ -29,6 +29,9 @@ import cspfj.exception.OutOfTimeException;
 import cspfj.filter.AC3;
 import cspfj.filter.Filter;
 import cspfj.filter.SAC;
+import cspfj.heuristic.Heuristic;
+import cspfj.heuristic.Lexico;
+import cspfj.heuristic.Pair;
 import cspfj.heuristic.WDegOnDom;
 import cspfj.problem.ProblemGenerator;
 import cspfj.problem.Problem;
@@ -38,7 +41,7 @@ public final class MACSolver extends AbstractSolver {
 
     private final Filter filter;
 
-    private final WDegOnDom heuristic;
+    private final Heuristic heuristic;
 
     private static final Logger logger = Logger.getLogger("cspfj.MACSolver");
 
@@ -49,7 +52,7 @@ public final class MACSolver extends AbstractSolver {
     public MACSolver(Problem prob, ResultHandler resultHandler) {
         super(prob, resultHandler);
         filter = new AC3(problem);
-        heuristic = new WDegOnDom(prob, new Random(0));
+        heuristic = new Heuristic(new WDegOnDom(prob), new Lexico(prob));
 
     }
 
@@ -76,9 +79,11 @@ public final class MACSolver extends AbstractSolver {
             return false;
         }
 
-        final Variable selectedVariable = heuristic.selectVariable();
+        final Pair pair = heuristic.selectPair() ;
+        
+        final Variable selectedVariable = pair.getVariable();
 
-        final int selectedIndex = selectedVariable.selectIndex();
+        final int selectedIndex = pair.getValue();
 
         // final int selectedIndex = selectedVariable.getFirstPresentIndex();
 
@@ -166,7 +171,6 @@ public final class MACSolver extends AbstractSolver {
 
         final Random random = new Random(0);
         do {
-            problem.setValueOrders(random);
             // System.out.print("run ! ");
             try {
                 setMaxBacktracks(maxBT);

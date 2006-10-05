@@ -245,14 +245,6 @@ public final class Problem {
 		// }
 	}
 
-	public void setValueOrders(final Random random) {
-		// logger.info("Initializing value orders");
-		for (Variable v : getVariables()) {
-			v.orderIndexes(random);
-		}
-
-	}
-
 	@Override
 	public String toString() {
 		final StringBuffer sb = new StringBuffer();

@@ -2,7 +2,6 @@ package cspfj.constraint;
 
 import java.util.Arrays;
 
-import cspfj.exception.FailedGenerationException;
 import cspfj.exception.MatrixTooBigException;
 import cspfj.problem.Variable;
 import cspfj.util.BooleanArray;

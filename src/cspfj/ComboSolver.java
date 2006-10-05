@@ -148,9 +148,6 @@ public class ComboSolver extends AbstractSolver {
 
     private final boolean mac(final int maxBT, final int duration,
             final Random random) {
-        logger.fine("Initializing value orders");
-        problem.setValueOrders(random);
-
         logger.info("MAC (" + duration + "s)");
         macSolver.setMaxBacktracks(maxBT);
         macSolver.setMaxDuration(duration);
