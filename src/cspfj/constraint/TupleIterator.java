@@ -17,15 +17,15 @@ public class TupleIterator {
 
 	private final MatrixManager matrix;
 
-	int[] mask;
+	private int[] mask;
 
-	int[] domain;
+	private int[] domain;
 
-	int currentPart;
+	private int currentPart;
 
-	int currentPosition;
+	private int currentPosition;
 
-	int current;
+	private int current;
 
 	public TupleIterator(final Constraint constraint, final int[] tuple) {
 		super();
@@ -143,26 +143,26 @@ public class TupleIterator {
 
 	}
 
-	public static void main(String[] args) {
-		int[] current = new int[] { 0x00000000 };
-
-		System.out.println(BooleanArray.toString(current));
-
-		int currentPosition = -1;
-
-		for (int currentPart = 0; currentPart < current.length; currentPart++) {
-
-			while (current[currentPart] != 0) {
-				currentPosition++;
-				while ((current[currentPart] & BooleanArray.MASKS[0]) == 0) {
-					currentPosition++;
-					current[currentPart] <<= 1;
-				}
-
-				current[currentPart] <<= 1;
-				System.out.print(currentPosition + " ");
-
-			}
-		}
-	}
+//	public static void main(String[] args) {
+//		int[] current = new int[] { 0x00000000 };
+//
+//		System.out.println(BooleanArray.toString(current));
+//
+//		int currentPosition = -1;
+//
+//		for (int currentPart = 0; currentPart < current.length; currentPart++) {
+//
+//			while (current[currentPart] != 0) {
+//				currentPosition++;
+//				while ((current[currentPart] & BooleanArray.MASKS[0]) == 0) {
+//					currentPosition++;
+//					current[currentPart] <<= 1;
+//				}
+//
+//				current[currentPart] <<= 1;
+//				System.out.print(currentPosition + " ");
+//
+//			}
+//		}
+//	}
 }

@@ -24,4 +24,13 @@ public abstract class AbstractVariableHeuristic implements VariableHeuristic {
 
 		return bestVariable;
 	}
+    
+    public final int compare(final Variable variable1, final Variable variable2) {
+        final float result = getScore(variable2) - getScore(variable1);
+        if (result == 0) {
+            return variable1.getId() - variable2.getId();
+        }
+
+        return result > 0 ? 1 : -1;
+    }
 }

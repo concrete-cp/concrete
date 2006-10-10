@@ -3,7 +3,6 @@ package cspfj.heuristic;
 import cspfj.problem.Variable;
 
 public interface ValueHeuristic {
-	void init(Variable variable);
 	int selectIndex(Variable variable) ;
-	
+    float getScore(final Variable variable, final int index) ;
 }

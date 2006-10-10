@@ -6,4 +6,5 @@ import cspfj.problem.Variable;
 
 public interface VariableHeuristic extends Comparator<Variable> {
 	Variable selectVariable() ;
+    float getScore(Variable variable);
 }
