@@ -58,12 +58,15 @@ public final class Problem {
 	final private static Set<Integer> pastVariables = new TreeSet<Integer>();
 
 	private int maxArity;
-	
-	final private String name ;
+
+	final private String name;
+
+	private boolean useNoGoods;
 
 	public Problem(String name) {
 		super();
-		this.name = name ;
+		this.name = name;
+		this.useNoGoods = true;
 	}
 
 	public Problem(Collection<Variable> variables,
@@ -292,6 +295,9 @@ public final class Problem {
 	}
 
 	public int addNoGoods() {
+		if (!useNoGoods) {
+			return 0;
+		}
 		int nbNoGoods = 0;
 
 		final int[] levelVariables = this.levelVariables;
@@ -370,11 +376,11 @@ public final class Problem {
 		return maxArity;
 	}
 
-//	public void clearNoGoods() {
-//		for (Constraint c : getConstraints()) {
-//			c.clearNoGoods();
-//		}
-//	}
+	// public void clearNoGoods() {
+	// for (Constraint c : getConstraints()) {
+	// c.clearNoGoods();
+	// }
+	// }
 
 	public static Problem activeProblem(final Problem problem) {
 		return activeProblem(problem, 0);
@@ -420,8 +426,13 @@ public final class Problem {
 		return new Problem(activeVariables, constraints, problem.getName());
 
 	}
-	
+
 	public String getName() {
-		return name ;
+		return name;
+	}
+
+	public void setUseNoGoods(boolean b) {
+		this.useNoGoods = b;
+
 	}
 }
