@@ -29,10 +29,12 @@ import cspfj.exception.OutOfTimeException;
 import cspfj.filter.AC3;
 import cspfj.filter.Filter;
 import cspfj.filter.SAC;
+import cspfj.heuristic.CrossHeuristic;
 import cspfj.heuristic.Heuristic;
-import cspfj.heuristic.Lexico;
-import cspfj.heuristic.Pair;
+import cspfj.heuristic.JW;
+import cspfj.heuristic.WDegOnDomBySupports;
 import cspfj.heuristic.WDegOnDom;
+import cspfj.heuristic.Pair;
 import cspfj.problem.ProblemGenerator;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
@@ -52,8 +54,9 @@ public final class MACSolver extends AbstractSolver {
     public MACSolver(Problem prob, ResultHandler resultHandler) {
         super(prob, resultHandler);
         filter = new AC3(problem);
-        heuristic = new Heuristic(new WDegOnDom(prob), new Lexico(prob));
-
+//        heuristic = new WDegOnDomBySupports(prob);
+        heuristic = new CrossHeuristic(new WDegOnDom(prob), new JW(prob));
+        setMaxBacktracks(problem.getNbVariables());
     }
 
     // public void enableNoGoods(final int maxSize) {
@@ -133,7 +136,7 @@ public final class MACSolver extends AbstractSolver {
      * @see cspfj.Solver#run(int)
      */
     public boolean run(final int maxDuration) throws OutOfTimeException {
-        int maxBT = problem.getNbVariables();
+        int maxBT = getMaxBacktracks();
         boolean result;
 
         System.gc();

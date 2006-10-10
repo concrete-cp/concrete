@@ -17,7 +17,7 @@ public final class MatrixManager {
 
 	private final int arity;
 
-	private final int[] tuple;
+	//private final int[] tuple;
 
 	private final Variable[] variables;
 
@@ -29,7 +29,7 @@ public final class MatrixManager {
 			domainSize[i] = scope[i].getDomain().length;
 		}
 
-		this.tuple = tuple;
+		//this.tuple = tuple;
 
 	}
 
@@ -48,7 +48,7 @@ public final class MatrixManager {
 
 	public void init(final boolean initialState) throws MatrixTooBigException {
 		// assert !active;
-		if (domainSize.length == 2) {
+		if (arity == 2) {
 
 			matrix2D = new int[2][][];
 
@@ -56,7 +56,7 @@ public final class MatrixManager {
 				matrix2D[i] = new int[domainSize[i]][BooleanArray
 						.booleanArraySize(domainSize[1 - i])];
 				for (int[] array : matrix2D[i]) {
-					BooleanArray.initBooleanArray(array, initialState);
+					BooleanArray.initBooleanArray(array, domainSize[1 - i], initialState);
 				}
 			}
 
@@ -200,76 +200,8 @@ public final class MatrixManager {
 		return active;
 	}
 
-	private void setFirstTuple(final int variablePosition, final int index) {
-		for (int position = arity; --position >= 0;) {
-			if (position == variablePosition) {
-				tuple[position] = index;
-			} else {
-				tuple[position] = variables[position].getFirstPresentIndex();
-			}
-		}
-
-	}
-
-	private boolean setNextTuple(final int fixedVariablePosition) {
-		final int[] tuple = this.tuple;
-		final Variable[] involvedVariables = this.variables;
-		for (int i = arity; --i >= 0;) {
-			if (i == fixedVariablePosition) {
-				continue;
-			}
-
-			final int index = involvedVariables[i].getNext(tuple[i]);
-
-			if (index < 0) {
-				tuple[i] = involvedVariables[i].getFirstPresentIndex();
-			} else {
-				tuple[i] = index;
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public boolean findTuple(final int variablePosition, final int index) {
-
-		if (arity == 2) {
-			
-			final int[] mask = matrix2D[variablePosition][index];
-
-			final int[] domain = variables[1 - variablePosition]
-					.getBooleanDomain();
-
-			assert !variables[1 - variablePosition].reinitBooleanDomain() : BooleanArray.toString(domain);
-			assert mask.length == domain.length;
-
-			final int valid = BooleanArray.leftMostCommonIndex(mask, domain);
-			// System.err.println(valid);
-			if (0 <= valid
-					&& valid < variables[1 - variablePosition].getDomain().length) {
-				tuple[variablePosition] = index;
-				tuple[1 - variablePosition] = valid;
-				return true;
-			}
-			return false;
-			
-		} else {
-			
-			setFirstTuple(variablePosition, index);
-			if (!active) {
-				return true;
-			}
-
-			while (!isTrue(tuple)) {
-				if (!setNextTuple(variablePosition)) {
-					return false;
-				}
-			}
-
-			return true;
-
-		}
-
-	}
+    public int[] get2D(final int variablePosition, final int index) {
+        return matrix2D[variablePosition][index];
+    }
 
 }

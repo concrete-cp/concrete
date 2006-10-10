@@ -5,30 +5,30 @@ import cspfj.problem.Variable;
 
 public abstract class AbstractValueHeuristic implements ValueHeuristic {
 
-	final protected Variable[] variables;
+    final protected Variable[] variables;
 
-	public AbstractValueHeuristic(Problem problem) {
-		variables = problem.getVariables();
+    public AbstractValueHeuristic(Problem problem) {
+        variables = problem.getVariables();
+    }
 
-		for (Variable variable : variables) {
-			init(variable);
-		}
-	}
+    /**
+     * @return Le prochain index à assigner
+     */
+    public int selectIndex(final Variable variable) {
+        int bestValue = -1;
 
-	/**
-	 * @return Le prochain index à assigner
-	 */
-	public int selectIndex(final Variable variable) {
-//		assert domainSize > 0;
-//
-//		final int[] order = this.order;
-//
-//		for (int i = 0; i < order.length; i++) {
-//			if (isPresent(order[i])) {
-//				return order[i];
-//			}
-//		}
-		return -1;
-	}
+        for (int i : variable) {
+            if (bestValue < 0 || compare(variable, i, bestValue) < 0) {
+                bestValue = i;
+            }
+        }
 
+        return bestValue;
+    }
+
+    public final int compare(final Variable variable, final int index1,
+            final int index2) {
+        return getScore(variable, index1) - getScore(variable, index2) > 0 ? 1
+                : -1;
+    }
 }

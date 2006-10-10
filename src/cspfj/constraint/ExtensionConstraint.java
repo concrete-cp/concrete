@@ -93,33 +93,33 @@ public final class ExtensionConstraint extends Constraint {
 		return tightness;
 	}
 
-	protected boolean findValidTuple(final int variablePosition, final int index) {
-		assert this.isInvolved(getInvolvedVariables()[variablePosition]);
-
-		final int[] lastTuple = last[variablePosition][index];
-
-		if (lastTuple != null && lastCheck[variablePosition][index]) {
-			System.arraycopy(lastTuple, 0, tuple, 0, getArity());
-
-			if (controlTuplePresence(variablePosition)) {
-				// System.out.print("c") ;
-				return true;
-			}
-
-		}
-
-		if (matrix.findTuple(variablePosition, index)) {
-			for (int position = getArity(); --position >= 0;) {
-				final int value = tuple[position];
-				if (last[position][value] == null) {
-					last[position][value] = new int[getArity()];
-				}
-				System.arraycopy(tuple, 0, last[position][value], 0, getArity());
-				lastCheck[position][value] = true;
-			}
-			return true;
-		}
-		return false;
-
-	}
+//	protected boolean findValidTuple(final int variablePosition, final int index) {
+//		assert this.isInvolved(getInvolvedVariables()[variablePosition]);
+//
+//		final int[] lastTuple = last[variablePosition][index];
+//
+//		if (lastTuple != null && lastCheck[variablePosition][index]) {
+//			System.arraycopy(lastTuple, 0, tuple, 0, getArity());
+//
+//			if (controlTuplePresence(variablePosition)) {
+//				// System.out.print("c") ;
+//				return true;
+//			}
+//
+//		}
+//
+//		if (matrix.findTuple(variablePosition, index)) {
+//			for (int position = getArity(); --position >= 0;) {
+//				final int value = tuple[position];
+//				if (last[position][value] == null) {
+//					last[position][value] = new int[getArity()];
+//				}
+//				System.arraycopy(tuple, 0, last[position][value], 0, getArity());
+//				lastCheck[position][value] = true;
+//			}
+//			return true;
+//		}
+//		return false;
+//
+//	}
 }
