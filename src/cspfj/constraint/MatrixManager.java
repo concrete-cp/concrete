@@ -17,19 +17,32 @@ public final class MatrixManager {
 
 	private final int arity;
 
-	//private final int[] tuple;
+	private final int[] tuple;
 
 	private final Variable[] variables;
 
+	private int variablePosition;
+
+	private int[] mask;
+
+	private int[] domain;
+
+	private int currentPart;
+
+	private int currentPosition;
+
+	private int current;
+
 	public MatrixManager(Variable[] scope, int[] tuple) {
+		super();
+
 		variables = scope;
 		domainSize = new int[scope.length];
 		arity = scope.length;
 		for (int i = scope.length; --i >= 0;) {
 			domainSize[i] = scope[i].getDomain().length;
 		}
-
-		//this.tuple = tuple;
+		this.tuple = tuple;
 
 	}
 
@@ -56,7 +69,8 @@ public final class MatrixManager {
 				matrix2D[i] = new int[domainSize[i]][BooleanArray
 						.booleanArraySize(domainSize[1 - i])];
 				for (int[] array : matrix2D[i]) {
-					BooleanArray.initBooleanArray(array, domainSize[1 - i], initialState);
+					BooleanArray.initBooleanArray(array, domainSize[1 - i],
+							initialState);
 				}
 			}
 
@@ -101,23 +115,20 @@ public final class MatrixManager {
 	}
 
 	public boolean set(final int[] tuple, final boolean status) {
-		if (domainSize.length == 2) {
+		if (arity == 2) {
 			BooleanArray.set(matrix2D[0][tuple[0]], tuple[1], status);
 			return BooleanArray.set(matrix2D[1][tuple[1]], tuple[0], status);
 
-		} else {
-
-			final boolean[] matrix = this.generalMatrix;
-			final int matrixIndex = matrixIndex(tuple);
-
-			if (matrix[matrixIndex] == status) {
-				return false;
-			} else {
-				matrix[matrixIndex] ^= true;
-				return true;
-			}
-
 		}
+		final boolean[] matrix = this.generalMatrix;
+		final int matrixIndex = matrixIndex(tuple);
+
+		if (matrix[matrixIndex] == status) {
+			return false;
+		}
+		matrix[matrixIndex] ^= true;
+		return true;
+
 	}
 
 	public void clear() {
@@ -132,9 +143,10 @@ public final class MatrixManager {
 		}
 		if (tuple.length == 2) {
 			return BooleanArray.isTrue(matrix2D[0][tuple[0]], tuple[1]);
-		} else {
-			return generalMatrix[matrixIndex(tuple)];
 		}
+
+		return generalMatrix[matrixIndex(tuple)];
+
 	}
 
 	public void intersect(final Variable[] scope,
@@ -160,12 +172,16 @@ public final class MatrixManager {
 
 		init(!supports);
 
+		final int[] realTuple = this.tuple;
 		if (scope == constraintScope) {
 			for (int[] tuple : tuples) {
-				set(tuple, supports);
+				for (int i = arity; --i >= 0;) {
+					realTuple[i] = scope[i].index(tuple[i]) ;
+				}
+				set(realTuple, supports);
 			}
 		} else {
-			final int[] realTuple = new int[arity];
+			
 			for (int[] tuple : tuples) {
 				// final Variable[] involvedVariables = this.involvedVariables;
 
@@ -200,8 +216,114 @@ public final class MatrixManager {
 		return active;
 	}
 
-    public int[] get2D(final int variablePosition, final int index) {
-        return matrix2D[variablePosition][index];
-    }
+	public boolean setFirstTuple(final int variablePosition, final int index) {
+		this.variablePosition = variablePosition;
 
+		if (isActive() && arity == 2) {
+			tuple[variablePosition] = index;
+
+			mask = matrix2D[variablePosition][index];
+			domain = variables[1 - variablePosition].getBooleanDomain();
+			currentPart = -1;
+			current = 0;
+
+			return next();
+
+		}
+		for (int position = arity; --position >= 0;) {
+			if (position == variablePosition) {
+				tuple[position] = index;
+			} else {
+				tuple[position] = variables[position].getFirstPresentIndex();
+			}
+		}
+
+		if (!isTrue(tuple)) {
+			return next();
+		}
+
+		return true;
+
+	}
+
+	public boolean next() {
+		if (isActive() && arity == 2) {
+			int currentPosition = this.currentPosition ;
+			int current = this.current;
+			int currentPart = this.currentPart;
+
+			int[] mask = this.mask;
+			int[] domain = this.domain;
+
+			while (current == 0) {
+				currentPart++;
+
+				if (currentPart >= mask.length) {
+					return false;
+				}
+
+				current = mask[currentPart] & domain[currentPart];
+				// System.err.println(Integer.toBinaryString(current));
+				currentPosition = -1;
+			}
+
+			
+			currentPosition ++ ;
+			// System.err.print(Integer.toBinaryString(current)) ;
+
+			int mask0 = BooleanArray.MASKS[0];
+
+			while ((current & mask0) == 0) {
+				currentPosition++;
+				current <<= 1;
+			}
+
+			current <<= 1;
+
+			this.currentPart = currentPart;
+			this.current = current;
+			this.currentPosition = currentPosition;
+
+			tuple[1 - variablePosition] = currentPart * Integer.SIZE
+					+ currentPosition;
+			// System.err.println(" - " + tuple[1 - variablePosition]) ;
+			//System.err.println(Integer.toBinaryString(current) + " " + currentPart + " " + currentPosition);
+			return true;
+		}
+
+		if (!setNextTuple()) {
+			return false;
+		}
+
+		while (!isTrue(tuple)) {
+			if (!next()) {
+				return false;
+			}
+		}
+
+		return true;
+
+	}
+
+	private boolean setNextTuple() {
+		final int[] tuple = this.tuple;
+
+		final Variable[] involvedVariables = this.variables;
+		for (int i = arity; --i >= 0;) {
+			if (i == variablePosition) {
+				continue;
+			}
+
+			final int index = involvedVariables[i].getNext(tuple[i]);
+
+			if (index < 0) {
+				tuple[i] = involvedVariables[i].getFirstPresentIndex();
+			} else {
+				tuple[i] = index;
+				return true;
+			}
+		}
+		return false;
+
+	}
 }

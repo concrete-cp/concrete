@@ -61,8 +61,6 @@ public abstract class Constraint {
 
     protected final MatrixManager matrix;
 
-    private final TupleIterator tupleIterator;
-
     // private final boolean[] recentlyRemoved;
 
     protected Constraint(final Variable[] scope) {
@@ -94,8 +92,6 @@ public abstract class Constraint {
         // initLast();
 
         matrix = new MatrixManager(scope, tuple);
-
-        this.tupleIterator = new TupleIterator(this, tuple);
     }
 
     // public final void initLast() {
@@ -282,14 +278,13 @@ public abstract class Constraint {
 
         }
         
-        final TupleIterator tupleIterator = this.tupleIterator;
-
-        if (!tupleIterator.setFirstTuple(variablePosition, index)) {
+        if (!matrix.setFirstTuple(variablePosition, index)) {
         	return false ;
         }
+        
+        //System.err.println(index+", "+ variablePosition+" : " + Arrays.toString(tuple));
 
         do {
-            System.arraycopy(tuple, 0, this.tuple, 0, arity);
             if (check()) {
                 if (tupleCache) {
                     for (int position = arity; --position >= 0;) {
@@ -304,7 +299,7 @@ public abstract class Constraint {
                 }
                 return true;
             }
-        } while(tupleIterator.next());
+        } while(matrix.next());
 
         return false;
 
