@@ -36,4 +36,5 @@ public interface Filter {
     
     boolean reduceAfter(int level, Variable variable) throws OutOfTimeException ;
     
+    int getNbNoGoods() ;
 }

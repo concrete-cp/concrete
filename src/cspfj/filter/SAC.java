@@ -60,6 +60,8 @@ public class SAC implements Filter {
 	private final Map<Integer, SortedSet<Integer>> indexQueues;
 
 	private final VariableHeuristic heuristic;
+	
+	private int nbNoGoods = 0 ;
 
 	public SAC(Problem problem, Chronometer chronometer, Filter filter,
 			boolean branch) {
@@ -153,7 +155,10 @@ public class SAC implements Filter {
 					reduceToSolution(level);
 					return true;
 				}
-				if (problem.addNoGoods() > 0) {
+				
+				final int nbNg = problem.addNoGoods() ;
+				nbNoGoods += nbNg ;
+				if (nbNg > 0) {
 					changedGraph = true;
 				}
 				problem.restoreAll(level + 1);
@@ -296,6 +301,10 @@ public class SAC implements Filter {
 		// problem.setLevelVariables(level, -1);
 
 		return false;
+	}
+
+	public int getNbNoGoods() {
+		return nbNoGoods;
 	}
 
 }

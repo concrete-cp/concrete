@@ -170,4 +170,8 @@ public final class AC3 implements Filter {
         }
     }
 
+	public int getNbNoGoods() {
+		return 0;
+	}
+
 }
