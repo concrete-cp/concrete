@@ -117,7 +117,8 @@ public final class AC3 implements Filter {
         queue.clear();
     }
 
-    private void addAll(final Maximier<Arc> queue, final Map<Integer, boolean[]> inQueue) {
+    private void addAll(final Maximier<Arc> queue,
+            final Map<Integer, boolean[]> inQueue) {
         boolean change = false;
 
         for (Constraint c : problem.getConstraints()) {
@@ -170,8 +171,12 @@ public final class AC3 implements Filter {
         }
     }
 
-	public int getNbNoGoods() {
-		return 0;
-	}
+    public int getNbNoGoods() {
+        return 0;
+    }
+
+    public int getNbSub() {
+        return 0;
+    }
 
 }

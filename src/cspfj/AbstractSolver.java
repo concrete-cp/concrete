@@ -145,4 +145,7 @@ public abstract class AbstractSolver implements Solver {
 		return space ;
 	}
 	
+	protected final void statistics(String name, Object value) {
+		resultHandler.statistics(name, value.toString());
+	}
 }

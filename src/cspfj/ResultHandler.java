@@ -23,7 +23,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import cspfj.problem.Variable;
@@ -46,6 +48,8 @@ public class ResultHandler {
 
 	protected boolean displaySolutions;
 
+	protected final Map<String, String> statistics;
+
 	private static final Logger logger = Logger
 			.getLogger("cspfj.AbstractResultWriter");
 
@@ -54,12 +58,14 @@ public class ResultHandler {
 	public ResultHandler(final boolean displaySolutions) {
 		this.writer = new OutputStreamWriter(System.out);
 		this.displaySolutions = displaySolutions;
+		this.statistics = new TreeMap<String, String>();
 	}
 
 	public ResultHandler(String fileName, final boolean displaySolutions)
 			throws IOException {
 		this.writer = new FileWriter(fileName);
 		this.displaySolutions = displaySolutions;
+		this.statistics = new TreeMap<String, String>();
 	}
 
 	public void problem(final String name) throws IOException {
@@ -102,8 +108,8 @@ public class ResultHandler {
 
 	}
 
-	public void result(final Result result, final Throwable thrown,
-			final long ccks) throws IOException {
+	public void result(final Result result, final Throwable thrown)
+			throws IOException {
 		increment(result);
 
 		totalSolve += solver.getUserTime();
@@ -112,13 +118,10 @@ public class ResultHandler {
 			logger.warning(thrown.toString());
 		}
 
-		logger.info(result.toString() + " - " + solver.getUserTime() + " s - "
-				+ ccks + " ccks - " + solver.getNbAssignments() + " assgn");
-
 	}
 
-	public void result(final Result result, final long ccks) throws IOException {
-		result(result, null, ccks);
+	public void result(final Result result) throws IOException {
+		result(result, null);
 	}
 
 	public void close() throws IOException {
@@ -144,8 +147,9 @@ public class ResultHandler {
 		}
 	}
 
-	public void statistics(final String name, final String value) {
+	public void statistics(final String name, final Object value) {
 		logger.info(name + " : " + value);
+		statistics.put(name, value.toString());
 	}
 
 	public enum Result {

@@ -49,7 +49,7 @@ public final class JW extends AbstractValueHeuristic {
                             if (j != position) {
                                 score[i] += Math
                                         .pow(
-                                                5,
+                                                2,
                                                 -1
                                                         - supports
                                                                 .get(c
