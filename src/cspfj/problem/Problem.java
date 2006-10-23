@@ -163,12 +163,13 @@ public final class Problem {
 		}
 
 		for (Variable v : getVariables()) {
-
 			v.setInvolvingConstraints(invConstraints.get(v.getId()).toArray(
 					new Constraint[invConstraints.get(v.getId()).size()]));
 		}
 
-		// setValueOrders() ;
+		for (Constraint c : getConstraints()) {
+			c.initNbSupports();
+		}
 	}
 
 	public int getNbVariables() {
@@ -314,7 +315,7 @@ public final class Problem {
 		tuple.clear();
 
 		scope.add(0, getVariable(levelVariables[0]));
-		tuple.add(0, getVariable(levelVariables[0]).getFirstPresentIndex());
+		tuple.add(0, getVariable(levelVariables[0]).getFirst());
 
 		for (int level = 1; level < levelVariables.length; level++) {
 			// logger.fine("checking " + getVariable(levelVariables[level-1]));
@@ -347,7 +348,7 @@ public final class Problem {
 			if (levelVariables[level] >= 0) {
 				scope.set(level, getVariable(levelVariables[level]));
 				tuple.set(level, getVariable(levelVariables[level])
-						.getFirstPresentIndex());
+						.getFirst());
 			} else {
 				break;
 			}

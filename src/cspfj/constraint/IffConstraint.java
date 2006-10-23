@@ -79,7 +79,7 @@ public final class IffConstraint extends Constraint {
 
         boolean revised = false;
 
-        if (var2.getDomainSize() == 1 && var2.getFirstPresentIndex() == index2) {
+        if (var2.getDomainSize() == 1 && var2.getFirst() == index2) {
             var1.makeSingleton(value1, level);
             revised = true;
         }

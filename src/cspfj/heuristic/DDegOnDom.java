@@ -13,4 +13,8 @@ public final class DDegOnDom extends AbstractVariableHeuristic {
         return variable.getDDeg() / variable.getDomainSize();
     }
 
+	public void compute() {
+		// Nothing to do
+	}
+
 }

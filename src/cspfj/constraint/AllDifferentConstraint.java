@@ -27,90 +27,91 @@ import cspfj.problem.Variable;
 
 public final class AllDifferentConstraint extends Constraint {
 
-    private final static Set<Integer> union = new TreeSet<Integer>();;
+	private final static Set<Integer> union = new TreeSet<Integer>();;
 
-    // private final Integer[] constants;
+	// private final Integer[] constants;
 
-    private final static Logger logger = Logger
-            .getLogger("cspfj.constraint.AllDifferentConstraint");
+	private final static Logger logger = Logger
+			.getLogger("cspfj.constraint.AllDifferentConstraint");
 
-    // private boolean removedConstants = false;
+	// private boolean removedConstants = false;
 
-    public AllDifferentConstraint(final Variable[] scope) {
-        super(scope);
-    }
+	public AllDifferentConstraint(final Variable[] scope) {
+		super(scope);
+	}
 
-    @Override
-    public boolean check() {
-        union.clear();
-        // for (int i : constants) {
-        // union.add(i);
-        // }
-        final Variable[] involvedVariables = getInvolvedVariables();
-        final int[] tuple = this.tuple;
-        for (int i = getArity(); --i >= 0;) {
-            final int index = involvedVariables[i].getDomain()[tuple[i]];
-            if (union.contains(index)) {
-                return false;
-            }
-            union.add(index);
-        }
-        return true;
-    }
+	@Override
+	public boolean check() {
+		union.clear();
+		// for (int i : constants) {
+		// union.add(i);
+		// }
+		final Variable[] involvedVariables = getInvolvedVariables();
+		final int[] tuple = this.tuple;
+		for (int i = getArity(); --i >= 0;) {
+			final int index = involvedVariables[i].getDomain()[tuple[i]];
+			if (union.contains(index)) {
+				return false;
+			}
+			union.add(index);
+		}
+		return true;
+	}
 
-    public boolean revise(final int position, final int level) {
-        final Variable variable = getInvolvedVariables()[position];
-        assert !variable.isAssigned();
+	public boolean revise(final int position, final int level) {
+		final Variable variable = getInvolvedVariables()[position];
+		assert !variable.isAssigned();
 
-        final Set<Integer> union = AllDifferentConstraint.union;
+		final Set<Integer> union = AllDifferentConstraint.union;
 
-        union.clear();
+		union.clear();
 
-        boolean revised = false;
+		boolean revised = false;
 
-        for (int checkPos = getArity(); --checkPos >= 0;) {
-            final Variable checkedVariable = getInvolvedVariables()[checkPos];
-            for (int i : checkedVariable) {
+		for (int checkPos = getArity(); --checkPos >= 0;) {
+			final Variable checkedVariable = getInvolvedVariables()[checkPos];
+			for (int i = checkedVariable.getFirst(); i >= 0; i = checkedVariable
+					.getNext(i)) {
 
-                union.add(checkedVariable.getDomain()[i]);
+				union.add(checkedVariable.getDomain()[i]);
 
-            }
+			}
 
-            if (position != checkPos && checkedVariable.getDomainSize() == 1) {
-                final int index = variable
-                        .index(checkedVariable.getDomain()[checkedVariable
-                                .getFirstPresentIndex()]);
-                if (index >= 0 && variable.isPresent(index)) {
-                    variable.remove(index, level);
-                    revised = true;
-                    setActive(true);
-                }
-            }
-        }
+			if (position != checkPos && checkedVariable.getDomainSize() == 1) {
+				final int index = variable
+						.index(checkedVariable.getDomain()[checkedVariable
+								.getFirst()]);
+				if (index >= 0 && variable.isPresent(index)) {
+					variable.remove(index, level);
+					revised = true;
+					setActive(true);
+				}
+			}
+		}
 
-        if (union.size() < getArity()) {
-            variable.empty(level);
-            setActive(true);
-            return true;
-        }
+		if (union.size() < getArity()) {
+			variable.empty(level);
+			setActive(true);
+			return true;
+		}
 
-        logger.finest("done : " + revised);
-        return revised;
-    }
+		logger.finest("done : " + revised);
+		return revised;
+	}
 
-    public int getNbTuples(final Variable variable, final int index) {
-        int nbTuples = 1;
-        for (Variable v : this.getInvolvedVariables()) {
-            if (v == variable) {
-                continue;
+	protected int nbTuples(final Variable variable, final int index) {
+		int nbTuples = 1;
+		for (Variable v : this.getInvolvedVariables()) {
+			if (v == variable) {
+				continue;
 
-            }
-            nbTuples *= v.getDomainSize();
-        }
-        return nbTuples;
-    }
+			}
+			nbTuples *= v.getDomainSize();
+		}
+		return nbTuples;
+	}
 
-    public boolean useTupleCache() {
-        return false;
-    }
+	public boolean useTupleCache() {
+		return false;
+	}
 }

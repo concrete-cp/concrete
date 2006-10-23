@@ -21,14 +21,12 @@ package cspfj.problem;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.logging.Logger;
 
 import cspfj.TabuManager;
 import cspfj.constraint.Constraint;
@@ -39,7 +37,7 @@ import cspfj.util.TieManager;
  * @author scand1sk
  * 
  */
-public final class Variable implements Comparable<Variable>, Iterable<Integer> {
+public final class Variable implements Comparable<Variable> {
     /**
      * Contraintes impliquant la variable.
      */
@@ -101,11 +99,13 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
 
     private int lastAbsentIndex;
 
+    
+    
     // private boolean selectable = true;
 
     private final String name;
 
-    private static final Logger logger = Logger.getLogger("cspfj.Variable");
+//    private static final Logger logger = Logger.getLogger("cspfj.Variable");
 
     private static final TieManager<Integer, Integer> tieManager = new TieManager<Integer, Integer>(
             -1, Integer.MAX_VALUE);
@@ -466,7 +466,7 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
         int nbSupports = 0;
         for (Constraint c : involvingConstraints) {
             if (c.getArity() <= 3) {
-                nbSupports += c.getNbTuples(this, index);
+                nbSupports += c.getNbSupports(this, index);
             }
         }
         return nbSupports;
@@ -480,7 +480,7 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
         return domain;
     }
 
-    public int getFirstPresentIndex() {
+    public int getFirst() {
         return isAssigned() ? assignedIndex : firstPresentIndex;
 
     }
@@ -534,7 +534,7 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
 
     public void makeSingleton(final int value, final int level) {
         final int[] domain = this.domain;
-        for (int i : this) {
+        for (int i = getFirst() ; i >=0 ; i = getNext(i)) {
             if (domain[i] != value) {
                 remove(i, level);
             }
@@ -542,7 +542,7 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
     }
 
     public void makeSingletonIndex(final int sol, final int level) {
-        for (int i : this) {
+        for (int i = getFirst() ; i >=0 ; i = getNext(i)) {
             if (i != sol) {
                 remove(i, level);
             }
@@ -553,7 +553,7 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
     public void empty(final int level) {
 
         if (getDomainSize() > 0) {
-            for (int i : this) {
+            for (int i = getFirst() ; i >=0 ; i = getNext(i)) {
 
                 remove(i, level);
 
@@ -565,7 +565,7 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
     public Integer[] getCurrentDomain() {
         final List<Integer> values = new ArrayList<Integer>();
 
-        for (int i : this) {
+        for (int i = getFirst() ; i >=0 ; i = getNext(i)) {
             values.add(domain[i]);
         }
 
@@ -764,11 +764,6 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
         return lastPresentIndex;
     }
 
-    public Iterator<Integer> iterator() {
-
-        return new DomainIterator(this);
-    }
-
     // public static void main(String[] args) {
     // final Variable v = new Variable(new int[] { 1, 2, 3, 4, 5 });
     // System.out.println(v.displayState());
@@ -789,7 +784,7 @@ public final class Variable implements Comparable<Variable>, Iterable<Integer> {
         StringBuffer sb = new StringBuffer();
         sb.append(Arrays.toString(domain)).append('\n');
         sb.append(Arrays.toString(removed)).append('\n');
-        for (int i : this) {
+        for (int i = getFirst() ; i >=0 ; i = getNext(i)) {
             sb.append(i).append(' ');
         }
         sb.append('\n');

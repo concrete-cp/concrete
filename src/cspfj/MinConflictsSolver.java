@@ -37,6 +37,7 @@ import cspfj.util.TieManager;
 import cspfj.filter.AC3;
 import cspfj.filter.Filter;
 import cspfj.filter.SAC;
+import cspfj.heuristic.Heuristic;
 
 public final class MinConflictsSolver extends AbstractSolver {
 
@@ -53,7 +54,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 
     private final float randomWalk;
 
-    public MinConflictsSolver(Problem prob, ResultHandler resultHandler) {
+    public MinConflictsSolver(Problem prob, ResultHandler resultHandler, Heuristic heuristic) {
         super(prob, resultHandler);
         toUpdate = new boolean[prob.getNbVariables()];
         for (int i = 0; i < toUpdate.length; i++) {
@@ -64,11 +65,6 @@ public final class MinConflictsSolver extends AbstractSolver {
 
         randomWalk = 1F / problem.getMaxDomainSize();
 
-    }
-
-    public MinConflictsSolver(final ProblemGenerator generator,
-            ResultHandler resultHandler) throws FailedGenerationException {
-        this(Problem.load(generator), resultHandler);
     }
 
     private void init() {
@@ -148,7 +144,7 @@ public final class MinConflictsSolver extends AbstractSolver {
                 bestEver = nbConflicts;
                 final Map<Variable, Integer> solution = new HashMap<Variable, Integer>();
                 for (Variable v : problem.getVariables()) {
-                    solution.put(v, v.getDomain()[v.getFirstPresentIndex()]);
+                    solution.put(v, v.getDomain()[v.getFirst()]);
                 }
                 solution(solution, nbConflicts);
             }
@@ -177,7 +173,7 @@ public final class MinConflictsSolver extends AbstractSolver {
                 final Variable variable = problem.getVariable(random
                         .nextInt(problem.getNbVariables()));
 
-                final int oldIndex = variable.getFirstPresentIndex();
+                final int oldIndex = variable.getFirst();
 
                 variable.unassign(problem);
 
@@ -274,7 +270,7 @@ public final class MinConflictsSolver extends AbstractSolver {
         }
 
         for (Variable v : problem.getVariables()) {
-            addSolutionElement(v, v.getFirstPresentIndex());
+            addSolutionElement(v, v.getFirst());
         }
 
         assert realConflicts() == 0 : getSolution() + " -> " + realConflicts()

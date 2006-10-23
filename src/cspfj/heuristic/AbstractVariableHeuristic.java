@@ -15,13 +15,21 @@ public abstract class AbstractVariableHeuristic implements VariableHeuristic {
 		Variable bestVariable = null;
 
 		for (Variable v : variables) {
-			if (!v.isAssigned()
-					&& (bestVariable == null || (v.getDomainSize() != 1 && compare(
-							v, bestVariable) < 0))) {
+			if (v.getDomainSize() > 1
+					&& (bestVariable == null || compare(
+							v, bestVariable) < 0)) {
 				bestVariable = v;
 			}
 		}
 
+		if (bestVariable == null) {
+			for (Variable v: variables) {
+				if (!v.isAssigned()) {
+					return v;
+				}
+			}
+		}
+		
 		return bestVariable;
 	}
     

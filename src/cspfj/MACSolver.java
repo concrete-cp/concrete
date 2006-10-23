@@ -19,7 +19,6 @@
 
 package cspfj;
 
-import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,7 +31,7 @@ import cspfj.filter.Filter;
 import cspfj.filter.SAC;
 import cspfj.heuristic.CrossHeuristic;
 import cspfj.heuristic.Heuristic;
-import cspfj.heuristic.Lexico;
+import cspfj.heuristic.JWs;
 import cspfj.heuristic.WDegOnDom;
 import cspfj.heuristic.Pair;
 import cspfj.problem.ProblemGenerator;
@@ -51,11 +50,11 @@ public final class MACSolver extends AbstractSolver {
 
     // private int maxNoGoodSize;
 
-    public MACSolver(Problem prob, ResultHandler resultHandler) {
+    public MACSolver(Problem prob, ResultHandler resultHandler, Heuristic heuristic) {
         super(prob, resultHandler);
         filter = new AC3(problem);
         // heuristic = new WDegOnDomBySupports(prob);
-        heuristic = new CrossHeuristic(new WDegOnDom(prob), new Lexico(prob));
+        this.heuristic = heuristic ;
         setMaxBacktracks(problem.getNbVariables());
     }
 
@@ -63,11 +62,6 @@ public final class MACSolver extends AbstractSolver {
     // // noGoodManager = new NoGoodManager(problem.getNbVariables(), 2);
     // maxNoGoodSize = maxSize;
     // }
-
-    public MACSolver(final ProblemGenerator generator,
-            ResultHandler resultHandler) throws FailedGenerationException {
-        this(Problem.load(generator), resultHandler);
-    }
 
     public boolean mac(final int level, final Variable lastModifiedVariable)
             throws MaxBacktracksExceededException, OutOfTimeException {
@@ -182,8 +176,8 @@ public final class MACSolver extends AbstractSolver {
             throw e;
         }
 
-        logger.fine("Initializing value orders");
-
+        
+        heuristic.compute() ;
         //
         // logger.fine("ok!") ;
 

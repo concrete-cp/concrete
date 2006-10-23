@@ -19,13 +19,9 @@
 
 package cspfj.filter;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import cspfj.constraint.Arc;
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
@@ -37,27 +33,32 @@ import cspfj.util.Maximier;
  */
 public final class AC3 implements Filter {
 
-    private static final Logger logger = Logger.getLogger("cspfj.AC3");
+    //private static final Logger logger = Logger.getLogger("cspfj.AC3");
 
     private final Problem problem;
 
-    private final Maximier<Arc> queue;
+    private final Maximier<Variable> queue;
 
-    private final Map<Integer, boolean[]> inQueue;
+    private final Map<Integer, Boolean> inQueue;
+
+    // private final Map<Integer, boolean[]> inQueue;
 
     public AC3(final Problem problem) {
         super();
         this.problem = problem;
 
-        inQueue = new HashMap<Integer, boolean[]>(problem.getNbConstraints());
+        // inQueue = new HashMap<Integer,
+        // boolean[]>(problem.getNbConstraints());
 
-        int size = 0;
-        for (Constraint c : problem.getConstraints()) {
-            size += c.getArity();
-            inQueue.put(c.getId(), new boolean[c.getArity()]);
-        }
+        // int size = 0;
+        // for (Constraint c : problem.getConstraints()) {
+        // size += c.getArity();
+        // inQueue.put(c.getId(), new boolean[c.getArity()]);
+        // }
 
-        queue = new Maximier<Arc>(new Arc[size]);
+        inQueue = new HashMap<Integer, Boolean>(problem.getNbVariables());
+
+        queue = new Maximier<Variable>(new Variable[problem.getNbVariables()]);
     }
 
     public boolean reduceAll(final int level) {
@@ -78,29 +79,26 @@ public final class AC3 implements Filter {
     }
 
     private boolean reduce(final int level) {
-        final Maximier<Arc> queue = this.queue;
-        final Map<Integer, boolean[]> inQueue = this.inQueue;
+        final Maximier<Variable> queue = this.queue;
+        final Map<Integer, Boolean> inQueue = this.inQueue;
         while (!queue.isEmpty()) {
-            final Arc arc = pullArc(queue, inQueue);
+            final Variable variable = pullVariable(queue, inQueue);
 
             boolean revised = false;
 
-            if (logger.isLoggable(Level.FINEST)) {
-                logger.finest(arc.getVariable() + ", " + arc.getConstraint()
-                        + " (" + queue.size() + " arcs restants)");
-            }
-            if (arc.revise(level)) {
+            for (Constraint c : variable.getInvolvingConstraints()) {
+                if (c.revise(variable, level)) {
 
-                if (arc.getVariable().getDomainSize() <= 0) {
-                    arc.getConstraint().increaseWeight();
-                    return false;
+                    if (variable.getDomainSize() <= 0) {
+                        c.increaseWeight();
+                        return false;
+                    }
+
+                    revised = true;
                 }
-
-                revised = true;
             }
-
             if (revised) {
-                addNeighbours(arc.getVariable(), queue, inQueue);
+                addNeighbours(variable, queue, inQueue);
 
             }
 
@@ -111,21 +109,19 @@ public final class AC3 implements Filter {
     }
 
     private void clearQueue() {
-        for (boolean[] i : inQueue.values()) {
-            Arrays.fill(i, false);
+        for (Variable v : problem.getVariables()) {
+            inQueue.put(v.getId(), false);
         }
         queue.clear();
     }
 
-    private void addAll(final Maximier<Arc> queue,
-            final Map<Integer, boolean[]> inQueue) {
+    private void addAll(final Maximier<Variable> queue,
+            final Map<Integer, Boolean> inQueue) {
         boolean change = false;
 
-        for (Constraint c : problem.getConstraints()) {
-            for (Arc a : c.getArcs()) {
-                if (addInQueue(a, queue, inQueue)) {
-                    change = true;
-                }
+        for (Variable v : problem.getVariables()) {
+            if (addInQueue(v, queue, inQueue)) {
+                change = true;
             }
         }
         if (change) {
@@ -133,38 +129,34 @@ public final class AC3 implements Filter {
         }
     }
 
-    private static Arc pullArc(final Maximier<Arc> queue,
-            final Map<Integer, boolean[]> inQueue) {
-        final Arc arc = queue.pull();
-        inQueue.get(arc.getCId())[arc.getPosition()] = false;
-        return arc;
+    private static Variable pullVariable(final Maximier<Variable> queue,
+            final Map<Integer, Boolean> inQueue) {
+        final Variable variable = queue.pull();
+        inQueue.put(variable.getId(), false);
+        return variable;
     }
 
-    private static boolean addInQueue(final Arc arc, final Maximier<Arc> queue,
-            final Map<Integer, boolean[]> inQueue) {
-        if (arc.getVariable().getDomainSize() <= 1) {
+    private static boolean addInQueue(final Variable variable,
+            final Maximier<Variable> queue, final Map<Integer, Boolean> inQueue) {
+        if (variable.getDomainSize() <= 1) {
             return false;
         }
-        if (inQueue.get(arc.getCId())[arc.getPosition()]) {
+        if (inQueue.get(variable.getId())) {
             return false;
         }
-        queue.add(arc);
-        inQueue.get(arc.getCId())[arc.getPosition()] = true;
+        queue.add(variable);
+        inQueue.put(variable.getId(), true);
         return true;
     }
 
     private static void addNeighbours(final Variable variable,
-            final Maximier<Arc> queue, final Map<Integer, boolean[]> inQueue) {
+            final Maximier<Variable> queue, final Map<Integer, Boolean> inQueue) {
         boolean change = false;
-        for (Constraint c : variable.getInvolvingConstraints()) {
-            for (Arc a : c.getArcs()) {
-                if (a.getVariable() == variable) {
-                    continue;
-                }
-                if (addInQueue(a, queue, inQueue)) {
-                    change = true;
-                }
+        for (Variable n : variable.getNeighbours()) {
+            if (addInQueue(n, queue, inQueue)) {
+                change = true;
             }
+
         }
         if (change) {
             queue.sort();
