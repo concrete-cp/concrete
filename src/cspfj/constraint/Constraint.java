@@ -227,16 +227,16 @@ public abstract class Constraint {
 
 		assert !variable.isAssigned();
 
-		int size = 1;
-		for (int i = arity; --i >= 0;) {
-			if (i != position) {
-				size *= involvedVariables[i].getDomainSize();
-			}
-		}
-
-		if (size > nbMaxConflicts[position]) {
-			return false;
-		}
+//		int size = 1;
+//		for (int i = arity; --i >= 0;) {
+//			if (i != position) {
+//				size *= involvedVariables[i].getDomainSize();
+//			}
+//		}
+//
+//		if (size > nbMaxConflicts[position]) {
+//			return false;
+//		}
 
 		boolean revised = false;
 

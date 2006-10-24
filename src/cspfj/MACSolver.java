@@ -23,18 +23,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
-import cspfj.exception.FailedGenerationException;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.exception.OutOfTimeException;
 import cspfj.filter.AC3;
 import cspfj.filter.Filter;
 import cspfj.filter.SAC;
-import cspfj.heuristic.CrossHeuristic;
 import cspfj.heuristic.Heuristic;
-import cspfj.heuristic.JWs;
-import cspfj.heuristic.WDegOnDom;
 import cspfj.heuristic.Pair;
-import cspfj.problem.ProblemGenerator;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -170,6 +165,9 @@ public final class MACSolver extends AbstractSolver {
             statistics("prepro-nogoods", preprocessor.getNbNoGoods());
             statistics("prepro-cpu", chronometer.getCurrentChrono() - start);
             statistics("prepro-ccks", Constraint.getNbChecks());
+            if (preprocessor instanceof SAC) {
+            	statistics("prepro-singletontests", ((SAC)preprocessor).getNbSingletonTests());
+            }
 
         } catch (OutOfTimeException e) {
             chronometer.validateChrono();

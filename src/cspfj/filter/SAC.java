@@ -60,6 +60,8 @@ public class SAC implements Filter {
 
 	private int nbSub = 0;
 
+	private int nbSingletonTests = 0;
+
 	public SAC(Problem problem, Chronometer chronometer, Filter filter,
 			boolean branch) {
 		super();
@@ -86,8 +88,7 @@ public class SAC implements Filter {
 	private final void fillQueue() {
 		final SortedSet<Pair> queue = this.queue;
 		for (Variable variable : problem.getVariables()) {
-			for (int i = variable.getFirst(); i >= 0; i = variable
-					.getNext(i)) {
+			for (int i = variable.getFirst(); i >= 0; i = variable.getNext(i)) {
 				queue.add(new Pair(variable, i));
 			}
 		}
@@ -160,7 +161,7 @@ public class SAC implements Filter {
 
 			variable.assign(index, problem);
 			problem.setLevelVariables(level, variable.getId());
-
+			nbSingletonTests++;
 			if (filter.reduceAfter(level + 1, variable)) {
 				// final Map<Variable, int[]> domains = new HashMap<Variable,
 				// int[]>();
@@ -178,9 +179,9 @@ public class SAC implements Filter {
 
 				final int nbNg = problem.addNoGoods();
 				nbNoGoods += nbNg;
-				if (nbNg > 0) {
-					changedGraph = true;
-				}
+				// if (nbNg > 0) {
+				// changedGraph = true;
+				// }
 
 				problem.restoreAll(level + 1);
 			} else {
@@ -213,8 +214,7 @@ public class SAC implements Filter {
 			final Map<Integer, Map<Variable, int[]>> substitutes,
 			final int level) throws OutOfTimeException {
 		boolean changedGraph = false;
-		for (int i = variable.getFirst(); i >= 0; i = variable
-				.getNext(i)) {
+		for (int i = variable.getFirst(); i >= 0; i = variable.getNext(i)) {
 			for (int substitute : substitutes.keySet()) {
 				if (substitute == i) {
 					continue;
@@ -329,6 +329,8 @@ public class SAC implements Filter {
 
 		// incrementNbAssignments();
 
+		nbSingletonTests++ ;
+		
 		if (buildBranch(level + 1, selectedPair)) {
 			return true;
 		}
@@ -347,6 +349,10 @@ public class SAC implements Filter {
 
 	public int getNbSub() {
 		return nbSub;
+	}
+	
+	public int getNbSingletonTests() {
+		return nbSingletonTests;
 	}
 
 }
