@@ -19,13 +19,9 @@
 
 package cspfj.filter;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
-import cspfj.util.Maximier;
 
 /**
  * @author scand1sk
@@ -33,142 +29,153 @@ import cspfj.util.Maximier;
  */
 public final class AC3 implements Filter {
 
-    //private static final Logger logger = Logger.getLogger("cspfj.AC3");
+	// private static final Logger logger = Logger.getLogger("cspfj.AC3");
 
-    private final Problem problem;
+	private final Problem problem;
 
-    private final Maximier<Variable> queue;
+	// private final Maximier<Variable> queue;
 
-    private final Map<Integer, Boolean> inQueue;
+	private final boolean[] inQueue;
 
-    // private final Map<Integer, boolean[]> inQueue;
+	private int queueSize = 0;
 
-    public AC3(final Problem problem) {
-        super();
-        this.problem = problem;
+	// private final Map<Integer, boolean[]> inQueue;
 
-        // inQueue = new HashMap<Integer,
-        // boolean[]>(problem.getNbConstraints());
+	public AC3(final Problem problem) {
+		super();
+		this.problem = problem;
 
-        // int size = 0;
-        // for (Constraint c : problem.getConstraints()) {
-        // size += c.getArity();
-        // inQueue.put(c.getId(), new boolean[c.getArity()]);
-        // }
+		// inQueue = new HashMap<Integer,
+		// boolean[]>(problem.getNbConstraints());
 
-        inQueue = new HashMap<Integer, Boolean>(problem.getNbVariables());
+		// int size = 0;
+		// for (Constraint c : problem.getConstraints()) {
+		// size += c.getArity();
+		// inQueue.put(c.getId(), new boolean[c.getArity()]);
+		// }
 
-        queue = new Maximier<Variable>(new Variable[problem.getNbVariables()]);
-    }
+		int maxId = -1;
 
-    public boolean reduceAll(final int level) {
-        clearQueue();
-        addAll(this.queue, this.inQueue);
-        return reduce(level);
+		for (Variable v : problem.getVariables()) {
+			if (v.getId() > maxId) {
+				maxId = v.getId();
+			}
+		}
 
-    }
+		inQueue = new boolean[maxId + 1];
 
-    public boolean reduceAfter(final int level, final Variable variable) {
-        if (variable == null) {
-            return true;
-        }
-        clearQueue();
-        addNeighbours(variable, this.queue, this.inQueue);
+		// queue = new Maximier<Variable>(new
+		// Variable[problem.getNbVariables()]);
+	}
 
-        return reduce(level);
-    }
+	public boolean reduceAll(final int level) {
+		clearQueue();
+		addAll();
+		return reduce(level);
 
-    private boolean reduce(final int level) {
-        final Maximier<Variable> queue = this.queue;
-        final Map<Integer, Boolean> inQueue = this.inQueue;
-        while (!queue.isEmpty()) {
-            final Variable variable = pullVariable(queue, inQueue);
+	}
 
-            boolean revised = false;
+	public boolean reduceAfter(final int level, final Variable variable) {
+		if (variable == null) {
+			return true;
+		}
+		clearQueue();
+		addNeighbours(variable);
 
-            for (Constraint c : variable.getInvolvingConstraints()) {
-                if (c.revise(variable, level)) {
+		return reduce(level);
+	}
 
-                    if (variable.getDomainSize() <= 0) {
-                        c.increaseWeight();
-                        return false;
-                    }
+	private boolean reduce(final int level) {
+		while (queueSize > 0) {
+			// System.err.println(queueSize);
+			final Variable variable = pullVariable();
 
-                    revised = true;
-                }
-            }
-            if (revised) {
-                addNeighbours(variable, queue, inQueue);
+			boolean revised = false;
 
-            }
+			for (Constraint c : variable.getInvolvingConstraints()) {
+				if (c.revise(variable, level)) {
 
-        }
+					if (variable.getDomainSize() <= 0) {
+						c.increaseWeight();
+						return false;
+					}
 
-        return true;
+					revised = true;
+				}
+			}
+			if (revised) {
+				addNeighbours(variable);
 
-    }
+			}
 
-    private void clearQueue() {
-        for (Variable v : problem.getVariables()) {
-            inQueue.put(v.getId(), false);
-        }
-        queue.clear();
-    }
+		}
 
-    private void addAll(final Maximier<Variable> queue,
-            final Map<Integer, Boolean> inQueue) {
-        boolean change = false;
+		return true;
 
-        for (Variable v : problem.getVariables()) {
-            if (addInQueue(v, queue, inQueue)) {
-                change = true;
-            }
-        }
-        if (change) {
-            queue.sort();
-        }
-    }
+	}
 
-    private static Variable pullVariable(final Maximier<Variable> queue,
-            final Map<Integer, Boolean> inQueue) {
-        final Variable variable = queue.pull();
-        inQueue.put(variable.getId(), false);
-        return variable;
-    }
+	private void clearQueue() {
+		final boolean[] inQueue = this.inQueue;
+		for (int i = inQueue.length; --i >= 0;) {
+			inQueue[i] = false;
+		}
+		queueSize = 0;
+		// queue.clear();
+	}
 
-    private static boolean addInQueue(final Variable variable,
-            final Maximier<Variable> queue, final Map<Integer, Boolean> inQueue) {
-        if (variable.getDomainSize() <= 1) {
-            return false;
-        }
-        if (inQueue.get(variable.getId())) {
-            return false;
-        }
-        queue.add(variable);
-        inQueue.put(variable.getId(), true);
-        return true;
-    }
+	private void addAll() {
 
-    private static void addNeighbours(final Variable variable,
-            final Maximier<Variable> queue, final Map<Integer, Boolean> inQueue) {
-        boolean change = false;
-        for (Variable n : variable.getNeighbours()) {
-            if (addInQueue(n, queue, inQueue)) {
-                change = true;
-            }
+		for (Variable v : problem.getVariables()) {
+			addInQueue(v);
 
-        }
-        if (change) {
-            queue.sort();
-        }
-    }
+		}
 
-    public int getNbNoGoods() {
-        return 0;
-    }
+	}
 
-    public int getNbSub() {
-        return 0;
-    }
+	private Variable pullVariable() {
+		// final Variable variable = queue.pull();
+
+		Variable variable = null;
+
+		final boolean[] inQueue = this.inQueue;
+
+		final Problem problem = this.problem;
+
+		for (int i = inQueue.length; --i >= 0;) {
+			if (inQueue[i]
+					&& (variable == null || problem.getVariable(i)
+							.getDomainSize() < variable.getDomainSize())) {
+				variable = problem.getVariable(i);
+			}
+		}
+
+		inQueue[variable.getId()] = false;
+		queueSize--;
+		return variable;
+	}
+
+	private void addInQueue(final Variable variable) {
+		if (variable.getDomainSize() > 1 && !inQueue[variable.getId()]) {
+			inQueue[variable.getId()] = true;
+			queueSize++;
+		}
+
+	}
+
+	private void addNeighbours(final Variable variable) {
+		for (Variable n : variable.getNeighbours()) {
+			addInQueue(n);
+
+		}
+
+	}
+
+	public int getNbNoGoods() {
+		return 0;
+	}
+
+	public int getNbSub() {
+		return 0;
+	}
 
 }
