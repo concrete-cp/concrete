@@ -19,6 +19,8 @@
 
 package cspfj.filter;
 
+import java.util.Arrays;
+
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
@@ -115,26 +117,17 @@ public final class AC3 implements Filter {
 	}
 
 	private void clearQueue() {
-		final boolean[] inQueue = this.inQueue;
-		for (int i = inQueue.length; --i >= 0;) {
-			inQueue[i] = false;
-		}
+		Arrays.fill(inQueue, false);
 		queueSize = 0;
-		// queue.clear();
 	}
 
 	private void addAll() {
-
 		for (Variable v : problem.getVariables()) {
 			addInQueue(v);
-
 		}
-
 	}
 
 	private Variable pullVariable() {
-		// final Variable variable = queue.pull();
-
 		Variable variable = null;
 
 		final boolean[] inQueue = this.inQueue;
@@ -159,15 +152,12 @@ public final class AC3 implements Filter {
 			inQueue[variable.getId()] = true;
 			queueSize++;
 		}
-
 	}
 
 	private void addNeighbours(final Variable variable) {
 		for (Variable n : variable.getNeighbours()) {
 			addInQueue(n);
-
 		}
-
 	}
 
 	public int getNbNoGoods() {
