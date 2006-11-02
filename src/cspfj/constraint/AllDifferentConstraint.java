@@ -19,41 +19,56 @@
 
 package cspfj.constraint;
 
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.logging.Logger;
+import java.util.Arrays;
+import java.util.List;
 
 import cspfj.problem.Variable;
 
 public final class AllDifferentConstraint extends Constraint {
 
-	private final static Set<Integer> union = new TreeSet<Integer>();;
+	private final boolean[] union;
+
+	private final int min;
 
 	// private final Integer[] constants;
 
-	private final static Logger logger = Logger
-			.getLogger("cspfj.constraint.AllDifferentConstraint");
+//	private final static Logger logger = Logger
+//			.getLogger("cspfj.constraint.AllDifferentConstraint");
 
 	// private boolean removedConstants = false;
 
 	public AllDifferentConstraint(final Variable[] scope) {
 		super(scope);
+
+		int minVal = Integer.MAX_VALUE;
+		int maxVal = Integer.MIN_VALUE;
+		for (Variable v : scope) {
+			for (int i : v.getDomain()) {
+				if (i > maxVal) {
+					maxVal = i;
+				}
+				if (i < minVal) {
+					minVal = i;
+				}
+			}
+		}
+		union = new boolean[maxVal - minVal + 1];
+		min = minVal;
 	}
 
 	@Override
 	public boolean check() {
-		union.clear();
-		// for (int i : constants) {
-		// union.add(i);
-		// }
+		final boolean[] union = this.union;
+		Arrays.fill(union, false);
+		final int min = this.min ;
 		final Variable[] involvedVariables = getInvolvedVariables();
 		final int[] tuple = this.tuple;
 		for (int i = getArity(); --i >= 0;) {
 			final int index = involvedVariables[i].getDomain()[tuple[i]];
-			if (union.contains(index)) {
+			if (union[index - min]) {
 				return false;
 			}
-			union.add(index);
+			union[index - min] = true;
 		}
 		return true;
 	}
@@ -62,9 +77,11 @@ public final class AllDifferentConstraint extends Constraint {
 		final Variable variable = getInvolvedVariables()[position];
 		assert !variable.isAssigned();
 
-		final Set<Integer> union = AllDifferentConstraint.union;
-
-		union.clear();
+		final boolean[] union = this.union;
+		final int min = this.min ;
+		
+		Arrays.fill(union, false);
+		int nbVal = 0;
 
 		boolean revised = false;
 
@@ -73,7 +90,10 @@ public final class AllDifferentConstraint extends Constraint {
 			for (int i = checkedVariable.getFirst(); i >= 0; i = checkedVariable
 					.getNext(i)) {
 
-				union.add(checkedVariable.getDomain()[i]);
+				if (!union[checkedVariable.getDomain()[i] - min]) {
+					union[checkedVariable.getDomain()[i] - min] = true;
+					nbVal++;
+				}
 
 			}
 
@@ -89,29 +109,32 @@ public final class AllDifferentConstraint extends Constraint {
 			}
 		}
 
-		if (union.size() < getArity()) {
+		if (nbVal < getArity()) {
 			variable.empty(level);
 			setActive(true);
 			return true;
 		}
 
-		logger.finest("done : " + revised);
 		return revised;
 	}
 
-	protected int nbTuples(final Variable variable, final int index) {
-		int nbTuples = 1;
-		for (Variable v : this.getInvolvedVariables()) {
-			if (v == variable) {
-				continue;
-
-			}
-			nbTuples *= v.getDomainSize();
-		}
-		return nbTuples;
-	}
+//	@Override
+//	public int nbTuples(final int variablePosition, final int index) {
+//		int nbTuples = 1;
+//		for (int i = getArity(); --i >= 0;) {
+//			if (i != variablePosition) {
+//				nbTuples *= getInvolvedVariables()[i].getDomainSize()-1;
+//			}
+//		}
+//		return nbTuples;
+//	}
 
 	public boolean useTupleCache() {
 		return false;
 	}
+	
+    public boolean removeTuple(final List<Variable> scope,
+            final List<Integer> tuple) {
+        return false;
+    }
 }

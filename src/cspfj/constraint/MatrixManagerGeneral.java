@@ -35,7 +35,6 @@ public class MatrixManagerGeneral extends MatrixManager {
 
 	@Override
 	public void init(final boolean initialState) throws MatrixTooBigException {
-		super.init(initialState);
 		BigInteger nbValues = BigInteger.ONE;
 		for (int size : domainSize) {
 			nbValues = nbValues.multiply(BigInteger.valueOf(size));
@@ -50,6 +49,8 @@ public class MatrixManagerGeneral extends MatrixManager {
 			throw new MatrixTooBigException();
 		}
 
+		super.init(initialState);
+		
 		Arrays.fill(matrix, initialState);
 	}
 

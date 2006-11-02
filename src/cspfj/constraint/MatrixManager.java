@@ -31,9 +31,9 @@ public abstract class MatrixManager {
 			final int[] tuple) {
 		if (scope.length == 2) {
 			return new MatrixManager2D(scope, tuple);
-		} else {
-			return new MatrixManagerGeneral(scope, tuple);
 		}
+		return new MatrixManagerGeneral(scope, tuple);
+
 	}
 
 	public void init(final boolean initialState) throws MatrixTooBigException {

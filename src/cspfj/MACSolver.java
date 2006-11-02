@@ -161,10 +161,18 @@ public final class MACSolver extends AbstractSolver {
             }
             
             statistics("prepro-removed", removed) ;
-            statistics("prepro-subs", preprocessor.getNbSub()) ;
+//            statistics("prepro-subs", preprocessor.getNbSub()) ;
             statistics("prepro-nogoods", preprocessor.getNbNoGoods());
             statistics("prepro-cpu", chronometer.getCurrentChrono() - start);
             statistics("prepro-ccks", Constraint.getNbChecks());
+            statistics("prepro-nbpresencechecks", Constraint.getNbPresenceChecks());
+            
+            
+            statistics("prepro-nbeffectiverevisions", Constraint.getNbEffectiveRevisions());
+            statistics("prepro-nbuselessrevisions", Constraint.getNbUselessRevisions());
+            statistics("prepro-nbskippedrevisions", Constraint.getNbSkippedRevisions());
+            
+            
             if (preprocessor instanceof SAC) {
             	statistics("prepro-singletontests", ((SAC)preprocessor).getNbSingletonTests());
             }
