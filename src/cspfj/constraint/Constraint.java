@@ -58,7 +58,7 @@ public abstract class Constraint {
 
     private static int nbUselessRevisions = 0;
 
-    private static int nbSkippedRevisions = 0;
+//    private static int nbSkippedRevisions = 0;
 
     // private static final Logger logger = Logger
     // .getLogger("cspfj.constraints.Constraint");
@@ -267,10 +267,10 @@ public abstract class Constraint {
 
         assert !variable.isAssigned();
 
-        if (skipRevision(position)) {
-            nbSkippedRevisions++;
-            return false;
-        }
+//        if (skipRevision(position)) {
+//            nbSkippedRevisions++;
+//            return false;
+//        }
 
         boolean revised = false;
 
@@ -615,9 +615,9 @@ public abstract class Constraint {
         return nbEffectiveRevisions;
     }
 
-    public static final int getNbSkippedRevisions() {
-        return nbSkippedRevisions;
-    }
+//    public static final int getNbSkippedRevisions() {
+//        return nbSkippedRevisions;
+//    }
 
     public static final int getNbUselessRevisions() {
         return nbUselessRevisions;

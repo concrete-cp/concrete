@@ -20,7 +20,6 @@
 package cspfj.filter;
 
 import java.util.Arrays;
-import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
@@ -32,7 +31,7 @@ import cspfj.problem.Variable;
  */
 public final class AC3 implements Filter {
 
-     private static final Logger logger = Logger.getLogger("cspfj.AC3");
+     //private static final Logger logger = Logger.getLogger("cspfj.AC3");
 
     private final Problem problem;
 

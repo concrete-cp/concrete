@@ -170,7 +170,7 @@ public final class MACSolver extends AbstractSolver {
             
             statistics("prepro-nbeffectiverevisions", Constraint.getNbEffectiveRevisions());
             statistics("prepro-nbuselessrevisions", Constraint.getNbUselessRevisions());
-            statistics("prepro-nbskippedrevisions", Constraint.getNbSkippedRevisions());
+//            statistics("prepro-nbskippedrevisions", Constraint.getNbSkippedRevisions());
             
             
             if (preprocessor instanceof SAC) {
