@@ -23,6 +23,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import cspfj.exception.OutOfTimeException;
+import cspfj.heuristic.VariableHeuristic;
+import cspfj.heuristic.WDegOnDom;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.Chronometer;
@@ -63,7 +65,7 @@ public final class SAC implements Filter {
 
 	private int selectedIndex;
 
-	//private final VariableHeuristic heuristic;
+	private final VariableHeuristic heuristic;
 
 	public SAC(Problem problem, Chronometer chronometer, Filter filter,
 			boolean branch) {
@@ -80,8 +82,9 @@ public final class SAC implements Filter {
 			queue[v.getId()] = new boolean[v.getDomain().length];
 		}
 
-//		heuristic = new WDegOnDom(problem);
+		heuristic = new WDegOnDom(problem);
 
+		staticVOrder = new Variable[problem.getNbVariables()];
 		// indexQueues = new HashMap<Integer, SortedSet<Integer>>();
 		// for (Variable variable : problem.getVariables()) {
 		// final SortedSet<Integer> indexQueue = new TreeSet<Integer>();
@@ -154,9 +157,12 @@ public final class SAC implements Filter {
 			nbSingletonTests++;
 			if (filter.reduceAfter(level + 1, variable)) {
 
-				if (branch && buildBranch(level + 1, null)) {
-					reduceToSolution(level);
-					return true;
+				if (branch) {
+					computeOrder();
+					if (buildBranch(level + 1, null)) {
+						reduceToSolution(level);
+						return true;
+					}
 				}
 
 				final int nbNg = problem.addNoGoods();
@@ -257,6 +263,25 @@ public final class SAC implements Filter {
 		NONE, CLASSIC, BRANCH
 	}
 
+	private final Variable[] staticVOrder;
+
+	private void computeOrder() {
+		final Variable[] staticVOrder = this.staticVOrder;
+		final boolean[] vQueue = this.vQueue;
+		Arrays.fill(staticVOrder, null);
+		int cpt = 0;
+		for (Variable v : problem.getVariables()) {
+			if (vQueue[v.getId()]) {
+				staticVOrder[cpt++] = v;
+			}
+		}
+
+		Arrays.sort(staticVOrder, heuristic);
+		
+//		System.out.println(Arrays.toString(staticVOrder));
+
+	}
+
 	private boolean buildBranch(final int level, final Variable lastVariable)
 			throws OutOfTimeException {
 		if (problem.getNbFutureVariables() == 0) {
@@ -285,29 +310,31 @@ public final class SAC implements Filter {
 		// }
 		// }
 
-//		for (Variable v : problem.getVariables()) {
-//			if (vQueue[v.getId()] && !v.isAssigned()) {
-//				final int index = getRemainingIndex(v);
-//				if (index >= 0) {
-//					variable = v;
-//					selectedIndex = index;
-//					break;
-//				}
-//			}
-//		}
-		
-		for (int v = vQueue.length ; --v >=0;) {
-			if (vQueue[v]) {
-				final Variable var = problem.getVariable(v) ;
-				if (!var.isAssigned()) {
-					final int index = getRemainingIndex(var) ;
-					if (index >= 0) {
-						variable = var;
-						selectedIndex = index;
-						break;
-					}
+		// for (Variable v : problem.getVariables()) {
+		// if (vQueue[v.getId()] && !v.isAssigned()) {
+		// final int index = getRemainingIndex(v);
+		// if (index >= 0) {
+		// variable = v;
+		// selectedIndex = index;
+		// break;
+		// }
+		// }
+		// }
+
+		for (Variable var : staticVOrder) {
+			if (var == null) {
+				return false;
+			}
+
+			if (!var.isAssigned()) {
+				final int index = getRemainingIndex(var);
+				if (index >= 0) {
+					variable = var;
+					selectedIndex = index;
+					break;
 				}
 			}
+
 		}
 
 		if (variable == null) {
