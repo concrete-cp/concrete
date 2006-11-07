@@ -85,6 +85,13 @@ public final class SAC implements Filter {
 		heuristic = new WDegOnDom(problem);
 
 		staticVOrder = new Variable[problem.getNbVariables()];
+
+		Arrays.fill(staticVOrder, null);
+
+		int cpt = 0;
+		for (Variable v : problem.getVariables()) {
+			staticVOrder[cpt++] = v;
+		}
 		// indexQueues = new HashMap<Integer, SortedSet<Integer>>();
 		// for (Variable variable : problem.getVariables()) {
 		// final SortedSet<Integer> indexQueue = new TreeSet<Integer>();
@@ -157,16 +164,17 @@ public final class SAC implements Filter {
 			nbSingletonTests++;
 			if (filter.reduceAfter(level + 1, variable)) {
 
-				if (branch) {
-					computeOrder();
-					if (buildBranch(level + 1, null)) {
-						reduceToSolution(level);
-						return true;
-					}
+				if (branch && buildBranch(level + 1)) {
+					reduceToSolution(level);
+					return true;
 				}
 
 				final int nbNg = problem.addNoGoods();
 				nbNoGoods += nbNg;
+
+				for (int l = level + 1; l < problem.getNbVariables(); l++) {
+					problem.setLevelVariables(l, -1);
+				}
 
 				problem.restoreAll(level + 1);
 			} else {
@@ -180,9 +188,6 @@ public final class SAC implements Filter {
 				}
 			}
 
-			for (int l = level; l < problem.getNbVariables(); l++) {
-				problem.setLevelVariables(l, -1);
-			}
 			// setValueHeuristic(variable, index);
 
 			if (changedGraph && !filter.reduceAfter(level, variable)) {
@@ -265,113 +270,60 @@ public final class SAC implements Filter {
 
 	private final Variable[] staticVOrder;
 
-	private void computeOrder() {
-		final Variable[] staticVOrder = this.staticVOrder;
-		final boolean[] vQueue = this.vQueue;
-		Arrays.fill(staticVOrder, null);
-		int cpt = 0;
-		for (Variable v : problem.getVariables()) {
-			if (vQueue[v.getId()]) {
-				staticVOrder[cpt++] = v;
-			}
-		}
-
-		Arrays.sort(staticVOrder, heuristic);
-		
-//		System.out.println(Arrays.toString(staticVOrder));
-
-	}
-
-	private boolean buildBranch(final int level, final Variable lastVariable)
-			throws OutOfTimeException {
-		if (problem.getNbFutureVariables() == 0) {
-			return true;
-		}
+	private boolean buildBranch(final int level) throws OutOfTimeException {
 
 		chronometer.checkExpiration();
 
-		if (lastVariable != null && !filter.reduceAfter(level, lastVariable)) {
-			queue[lastVariable.getId()][selectedIndex] = true;
-			return false;
-		}
-
-		Variable variable = null;
-
+		final Variable[] staticVOrder = this.staticVOrder;
 		final boolean[] vQueue = this.vQueue;
 
-		// for (Variable v : problem.getVariables()) {
-		// if (!v.isAssigned() && vQueue[v.getId()]
-		// && (variable == null || heuristic.compare(v, variable) < 0)) {
-		// final int index = getRemainingIndex(v);
-		// if (index >= 0) {
-		// variable = v;
-		// selectedIndex = index;
-		// }
-		// }
-		// }
+		Arrays.sort(staticVOrder, heuristic);
 
-		// for (Variable v : problem.getVariables()) {
-		// if (vQueue[v.getId()] && !v.isAssigned()) {
-		// final int index = getRemainingIndex(v);
-		// if (index >= 0) {
-		// variable = v;
-		// selectedIndex = index;
-		// break;
-		// }
-		// }
-		// }
+		int l = level;
 
-		for (Variable var : staticVOrder) {
-			if (var == null) {
+		while (problem.getNbFutureVariables() > 0) {
+			Variable variable;
+			int index;
+			int cpt = 0 ;
+			do {
+				do {
+					if (cpt >= staticVOrder.length) { 
+						return false ;
+					}
+					variable = staticVOrder[cpt++];
+				} while (!vQueue[variable.getId()] || variable.isAssigned()) ;
+				
+				index = getRemainingIndex(variable);
+			} while (index < 0);
+
+			if (logger.isLoggable(Level.FINE)) {
+				logger.fine(l + " : " + variable + " ("
+						+ variable.getDomainSize() + ") <- "
+						+ variable.getDomain()[index]);
+			}
+
+			// queue.remove(selectedPair);
+			// assert !queue.contains(selectedPair);
+
+			variable.assign(index, problem);
+
+			problem.setLevelVariables(l++, variable.getId());
+
+			nbSingletonTests++;
+
+			if (!filter.reduceAfter(l, variable)) {
+				selectedVariable = variable;
+				selectedIndex = index;
+				for (int k = l; --k >= level;) {
+					problem.setLevelVariables(k, -1);
+				}
 				return false;
 			}
 
-			if (!var.isAssigned()) {
-				final int index = getRemainingIndex(var);
-				if (index >= 0) {
-					variable = var;
-					selectedIndex = index;
-					break;
-				}
-			}
-
+			queue[variable.getId()][index] = false;
 		}
 
-		if (variable == null) {
-			return false;
-		}
-
-		selectedVariable = variable;
-
-		queue[variable.getId()][selectedIndex] = false;
-
-		// queue.remove(selectedPair);
-		// assert !queue.contains(selectedPair);
-
-		if (logger.isLoggable(Level.FINE)) {
-			logger.fine(level + " : " + variable + " ("
-					+ variable.getDomainSize() + ") <- "
-					+ variable.getDomain()[selectedIndex]);
-		}
-
-		variable.assign(selectedIndex, problem);
-
-		problem.setLevelVariables(level, variable.getId());
-
-		// incrementNbAssignments();
-
-		nbSingletonTests++;
-
-		if (buildBranch(level + 1, variable)) {
-			return true;
-		}
-
-		// selectedVariable.unassign(problem);
-		// problem.restore(level + 1);
-		//
-		// problem.setLevelVariables(level, -1);
-
-		return false;
+		return true;
 	}
 
 	private int getRemainingIndex(final Variable variable) {

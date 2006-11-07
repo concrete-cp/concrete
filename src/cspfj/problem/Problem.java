@@ -255,8 +255,6 @@ public final class Problem {
             v.restoreLevel(level);
 
         }
-
-        assert getNbFutureVariables() == getNbVariables();
         // for (AbstractConstraint c : constraints) {
         // c.initLast();
         // }

@@ -7,25 +7,29 @@ import cspfj.problem.Variable;
 import cspfj.constraint.Constraint;
 import cspfj.constraint.MatrixManager;
 
-public class JW extends AbstractValueHeuristic {
+public class JW extends AbstractStaticValueHeuristic {
 
-	final private float[][] scores;
+	final private float scores[][];
 
-	final private Constraint[] constraints;
-	
 	final private static Logger logger = Logger.getLogger("cspfj.heuristic.JW");
 
+	final private Constraint[] constraints ;
+	
 	public JW(Problem problem) {
 		super(problem);
-		constraints = problem.getConstraints();
+		
+		this.constraints = problem.getConstraints();
+		
 		scores = new float[problem.getMaxVId() + 1][];
+
 		for (Variable v : problem.getVariables()) {
 			scores[v.getId()] = new float[v.getDomain().length];
 		}
 	}
 
 	public final void compute() {
-		logger.info("Computing JW") ;
+		logger.info("Computing JW");
+
 		for (Constraint c : constraints) {
 			for (Variable v : c.getInvolvedVariables()) {
 				final float[] score = scores[v.getId()];
@@ -73,6 +77,7 @@ public class JW extends AbstractValueHeuristic {
 			}
 		}
 
+		super.compute();
 	}
 
 	protected static double w(int supports) {
@@ -82,5 +87,5 @@ public class JW extends AbstractValueHeuristic {
 	public final float getScore(final Variable variable, final int index) {
 		return scores[variable.getId()][index];
 	}
-	
+
 }

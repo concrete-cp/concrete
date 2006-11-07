@@ -32,13 +32,16 @@ public class ProdHeuristic implements Heuristic {
 	}
 
 	public int compare(final Variable variable1, final Variable variable2) {
-		final int int1 = valueHeuristic.selectIndex(variable1);
-		final int int2 = valueHeuristic.selectIndex(variable2);
+
+		final VariableHeuristic variableHeuristic = this.variableHeuristic;
+		final ValueHeuristic valueHeuristic = this.valueHeuristic;
 
 		final double result = variableHeuristic.getScore(variable1)
-				* valueHeuristic.getScore(variable1, int1)
+				* valueHeuristic.getScore(variable1, valueHeuristic
+						.selectIndex(variable1))
 				- variableHeuristic.getScore(variable2)
-				* valueHeuristic.getScore(variable2, int2);
+				* valueHeuristic.getScore(variable2, valueHeuristic
+						.selectIndex(variable2));
 
 		// final double result = wdegOnDom.getScore(variable1)
 		// - wdegOnDom.getScore(variable2)
