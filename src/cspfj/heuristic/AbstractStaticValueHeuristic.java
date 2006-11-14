@@ -25,18 +25,20 @@ public abstract class AbstractStaticValueHeuristic extends
 		for (Variable v : variables) {
 			final int[] ord = new int[v.getDomain().length];
 			order[v.getId()] = ord;
+			
 			for (int i = ord.length; --i >= 0;) {
 				ord[i] = i;
 			}
 
 			for (int i = ord.length; --i >= 0;) {
-				for (int j = i - 1; --j >= 0;) {
+				for (int j = i ; --j >= 0;) {
+					//System.out.println(i+":"+getScore(v, ord[i]) + " " + j+":"+getScore(v, ord[j])) ;
 					if (getScore(v, ord[i]) < getScore(v, ord[j])) {
 						swtch(ord, i, j);
 					}
 				}
 			}
-//			System.out.println(v + " : " + Arrays.toString(ord));
+			//System.out.println(v + " : " + Arrays.toString(ord));
 		}
 	}
 
@@ -47,7 +49,7 @@ public abstract class AbstractStaticValueHeuristic extends
 	}
 
 	@Override
-	public int selectIndex(Variable variable) {
+	public int selectIndex(final Variable variable) {
 		final int[] ord = order[variable.getId()];
 		for (int i = ord.length; --i >= 0;) {
 			if (variable.isPresent(ord[i])) {

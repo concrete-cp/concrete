@@ -69,8 +69,8 @@ public class JW extends AbstractStaticValueHeuristic {
 						} while (matrix.next());
 					}
 					score[i] += tot;
-					// System.err.println(c + " : " + v + ", " + i + " : "
-					// + tot);
+//					 System.err.println(c + " : " + v + ", " + i + " : "
+//					 + tot);
 				}
 				// System.out.println("=" + score[i]);
 
