@@ -28,7 +28,6 @@ import java.util.TreeSet;
 
 import cspfj.TabuManager;
 import cspfj.constraint.Constraint;
-import cspfj.heuristic.MaxS;
 import cspfj.util.BooleanArray;
 import cspfj.util.TieManager;
 
@@ -152,19 +151,19 @@ public final class Variable implements Comparable<Variable> {
 		this.originalPrev = new int[domain.length];
 		this.prevAbsents = new int[domain.length];
 
-//		final int[] initialOrder = new int[domain.length];
-//
-//		for (int i = domain.length; --i >= 0;) {
-//			initialOrder[i] = i;
-//		}
-//		reOrder(initialOrder);
+		final int[] initialOrder = new int[domain.length];
+
+		for (int i = domain.length; --i >= 0;) {
+			initialOrder[i] = i;
+		}
+		reOrder(initialOrder);
 
 		// Arrays.fill(prevAbsents, -1);
 
 		// iterator = new DomainIterator(this);
 	}
 
-	public void reOrder(int[] order) {
+	public void reOrder(final int[] order) {
 		firstPresentIndex = order[order.length - 1];
 		lastPresentIndex = order[0];
 		for (int i = order.length; --i > 0;) {
@@ -181,7 +180,11 @@ public final class Variable implements Comparable<Variable> {
 			}
 		}
 		// Arrays.fill(prevAbsents, -1);
-
+//
+//		for (int i = getFirst() ; i!=-1;i=getNext(i))  {
+//			System.out.print(i+" ");
+//		}
+//		System.out.println() ;
 	}
 
 	/**
@@ -814,7 +817,7 @@ public final class Variable implements Comparable<Variable> {
 	// }
 
 	public String displayState() {
-		StringBuffer sb = new StringBuffer();
+		final StringBuffer sb = new StringBuffer();
 		sb.append(Arrays.toString(domain)).append('\n');
 		sb.append(Arrays.toString(removed)).append('\n');
 		for (int i = getFirst(); i >= 0; i = getNext(i)) {
@@ -857,45 +860,45 @@ public final class Variable implements Comparable<Variable> {
 	//
 	// }
 
-	public static void main(String[] args) {
-		Variable variable = new Variable(new int[] { 1, 2, 3, 4, 5 });
-
-		variable.reOrder(new int[] { 2, 1, 0, 4, 3 });
-
-		for (int i = variable.getFirst(); i != -1; i = variable.getNext(i)) {
-			System.out.print(i + " ");
-		}
-		System.out.println();
-
-		// System.out.println(variable.firstPresentIndex);
-		// System.out.println(Arrays.toString(variable.next));
-		// System.out.println(variable.lastPresentIndex);
-		// System.out.println(Arrays.toString(variable.prev));
-
-		variable.remove(4, 0);
-
-		for (int i = variable.getFirst(); i != -1; i = variable.getNext(i)) {
-			System.out.print(i + " ");
-		}
-		System.out.println();
-
-		// System.out.println(variable.firstPresentIndex);
-		// System.out.println(Arrays.toString(variable.next));
-		// System.out.println(variable.lastPresentIndex);
-		// System.out.println(Arrays.toString(variable.prev));
-
-		variable.reOrder(new int[] { 0, 1, 2, 3, 4 });
-
-		for (int i = variable.getFirst(); i != -1; i = variable.getNext(i)) {
-			System.out.print(i + " ");
-		}
-		System.out.println();
-
-		// System.out.println(variable.firstPresentIndex);
-		// System.out.println(Arrays.toString(variable.next));
-		// System.out.println(variable.lastPresentIndex);
-		// System.out.println(Arrays.toString(variable.prev));
-
-	}
+//	public static void main(String[] args) {
+//		Variable variable = new Variable(new int[] { 1, 2, 3, 4, 5 });
+//
+//		variable.reOrder(new int[] { 2, 1, 0, 4, 3 });
+//
+//		for (int i = variable.getFirst(); i != -1; i = variable.getNext(i)) {
+//			System.out.print(i + " ");
+//		}
+//		System.out.println();
+//
+//		// System.out.println(variable.firstPresentIndex);
+//		// System.out.println(Arrays.toString(variable.next));
+//		// System.out.println(variable.lastPresentIndex);
+//		// System.out.println(Arrays.toString(variable.prev));
+//
+//		variable.remove(4, 0);
+//
+//		for (int i = variable.getFirst(); i != -1; i = variable.getNext(i)) {
+//			System.out.print(i + " ");
+//		}
+//		System.out.println();
+//
+//		// System.out.println(variable.firstPresentIndex);
+//		// System.out.println(Arrays.toString(variable.next));
+//		// System.out.println(variable.lastPresentIndex);
+//		// System.out.println(Arrays.toString(variable.prev));
+//
+//		variable.reOrder(new int[] { 0, 1, 2, 3, 4 });
+//
+//		for (int i = variable.getFirst(); i != -1; i = variable.getNext(i)) {
+//			System.out.print(i + " ");
+//		}
+//		System.out.println();
+//
+//		// System.out.println(variable.firstPresentIndex);
+//		// System.out.println(Arrays.toString(variable.next));
+//		// System.out.println(variable.lastPresentIndex);
+//		// System.out.println(Arrays.toString(variable.prev));
+//
+//	}
 
 }

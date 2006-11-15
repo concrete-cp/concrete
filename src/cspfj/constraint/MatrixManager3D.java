@@ -25,7 +25,7 @@ public class MatrixManager3D extends MatrixManager {
 		try {
 			matrix = new boolean[domainSize[0]][domainSize[1]][domainSize[2]];
 		} catch (OutOfMemoryError e) {
-			throw new MatrixTooBigException();
+			throw new MatrixTooBigException(e);
 		}
 
 		super.init(initialState);

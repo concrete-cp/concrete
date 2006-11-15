@@ -6,8 +6,6 @@
  */
 package cspfj.heuristic;
 
-import java.util.Arrays;
-
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -38,7 +36,9 @@ public abstract class AbstractStaticValueHeuristic extends
 					}
 				}
 			}
-			//System.out.println(v + " : " + Arrays.toString(ord));
+			
+//			System.out.println("Reordering " + v + " with " + this.getClass());
+			
 			v.reOrder(ord);
 		}
 		

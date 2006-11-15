@@ -44,7 +44,7 @@ public class MatrixManagerGeneral extends MatrixManager {
 		try {
 			matrix = new boolean[nbValues.intValue()];
 		} catch (OutOfMemoryError e) {
-			throw new MatrixTooBigException();
+			throw new MatrixTooBigException(e);
 		}
 
 		super.init(initialState);
