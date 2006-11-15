@@ -9,10 +9,6 @@ public final class Lexico extends AbstractValueHeuristic {
         super(problem);
     }
 
-    public int selectIndex(final Variable variable) {
-        return variable.getFirst();
-    }
-
     public float getScore(final Variable var, final int index) {
         return index;
     }

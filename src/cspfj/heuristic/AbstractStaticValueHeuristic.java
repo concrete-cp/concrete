@@ -14,17 +14,17 @@ import cspfj.problem.Variable;
 public abstract class AbstractStaticValueHeuristic extends
 		AbstractValueHeuristic {
 
-	private int[][] order;
+	//private int[][] order;
 
 	public AbstractStaticValueHeuristic(Problem problem) {
 		super(problem);
-		order = new int[problem.getMaxVId() + 1][];
+		//order = new int[problem.getMaxVId() + 1][];
 	}
 
 	public void compute() {
 		for (Variable v : variables) {
 			final int[] ord = new int[v.getDomain().length];
-			order[v.getId()] = ord;
+			//order[v.getId()] = ord;
 			
 			for (int i = ord.length; --i >= 0;) {
 				ord[i] = i;
@@ -39,7 +39,10 @@ public abstract class AbstractStaticValueHeuristic extends
 				}
 			}
 			//System.out.println(v + " : " + Arrays.toString(ord));
+			v.reOrder(ord);
 		}
+		
+		
 	}
 
 	private static void swtch(final int[] table, final int i, final int j) {
@@ -49,14 +52,16 @@ public abstract class AbstractStaticValueHeuristic extends
 	}
 
 	@Override
+	
 	public int selectIndex(final Variable variable) {
-		final int[] ord = order[variable.getId()];
-		for (int i = ord.length; --i >= 0;) {
-			if (variable.isPresent(ord[i])) {
-				return ord[i];
-			}
-		}
-		return -1;
+		return variable.getFirst();
+//		final int[] ord = order[variable.getId()];
+//		for (int i = ord.length; --i >= 0;) {
+//			if (variable.isPresent(ord[i])) {
+//				return ord[i];
+//			}
+//		}
+//		return -1;
 	}
 
 }

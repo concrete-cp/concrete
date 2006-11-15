@@ -12,8 +12,6 @@ public class MatrixManagerGeneral extends MatrixManager {
 
 	private boolean[] matrix = null;
 
-	private int variablePosition;
-
 	public MatrixManagerGeneral(Variable[] scope, int[] tuple) {
 		super(scope, tuple);
 		arity = scope.length;
@@ -50,7 +48,7 @@ public class MatrixManagerGeneral extends MatrixManager {
 		}
 
 		super.init(initialState);
-		
+
 		Arrays.fill(matrix, initialState);
 	}
 
@@ -88,59 +86,5 @@ public class MatrixManagerGeneral extends MatrixManager {
 				this.matrix[i] &= matrix[i];
 			}
 		}
-	}
-
-	@Override
-	public boolean setFirstTuple(final int variablePosition, final int index) {
-		for (int position = arity; --position >= 0;) {
-			if (position == variablePosition) {
-				tuple[position] = index;
-			} else {
-				tuple[position] = variables[position].getFirst();
-			}
-		}
-
-		if (!isTrue(tuple)) {
-			return next();
-		}
-
-		return true;
-	}
-
-	@Override
-	public boolean next() {
-		if (!setNextTuple()) {
-			return false;
-		}
-
-		while (!isTrue(tuple)) {
-			if (!next()) {
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	private boolean setNextTuple() {
-		final int[] tuple = this.tuple;
-
-		final Variable[] involvedVariables = this.variables;
-		for (int i = arity; --i >= 0;) {
-			if (i == variablePosition) {
-				continue;
-			}
-
-			final int index = involvedVariables[i].getNext(tuple[i]);
-
-			if (index < 0) {
-				tuple[i] = involvedVariables[i].getFirst();
-			} else {
-				tuple[i] = index;
-				return true;
-			}
-		}
-		return false;
-
 	}
 }

@@ -32,6 +32,7 @@ import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
 import cspfj.exception.FailedGenerationException;
+import cspfj.heuristic.MaxS;
 
 public final class Problem {
     private Map<Integer, Variable> variables;
@@ -183,6 +184,9 @@ public final class Problem {
         for (Constraint c : getConstraints()) {
             c.initNbSupports();
         }
+        
+        new MaxS(this).compute() ;
+        
     }
 
     public int getNbVariables() {

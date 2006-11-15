@@ -8,8 +8,6 @@ public final class MatrixManager2D extends MatrixManager {
 
 	private final int[][][] matrix2D;
 
-	private int variablePosition;
-
 	private int[] mask;
 
 	private int[] domain;

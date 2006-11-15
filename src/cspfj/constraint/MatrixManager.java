@@ -13,6 +13,10 @@ public abstract class MatrixManager {
 	protected final int[] tuple;
 
 	protected final Variable[] variables;
+	
+	private final int arity ;
+	
+	protected int variablePosition ;
 
 	public MatrixManager(Variable[] scope, int[] tuple) {
 		super();
@@ -24,16 +28,23 @@ public abstract class MatrixManager {
 			domainSize[i] = scope[i].getDomain().length;
 		}
 		this.tuple = tuple;
+		
+		this.arity = scope.length;
 
 	}
 
 	public static MatrixManager factory(final Variable[] scope,
 			final int[] tuple) {
-		if (scope.length == 2) {
+		switch (scope.length) {
+		case 2:
 			return new MatrixManager2D(scope, tuple);
-		}
-		return new MatrixManagerGeneral(scope, tuple);
 
+		case 3:
+			return new MatrixManager3D(scope, tuple);
+			
+		default:
+			return new MatrixManagerGeneral(scope, tuple);	
+		}
 	}
 
 	public void init(final boolean initialState) throws MatrixTooBigException {
@@ -106,9 +117,53 @@ public abstract class MatrixManager {
 		return active;
 	}
 
-	public abstract boolean setFirstTuple(final int variablePosition,
-			final int index);
+	public boolean setFirstTuple(final int variablePosition, final int index) {
+		this.variablePosition = variablePosition ;
+		for (int position = arity; --position >= 0;) {
+			if (position == variablePosition) {
+				tuple[position] = index;
+			} else {
+				tuple[position] = variables[position].getFirst();
+			}
+		}
 
-	public abstract boolean next();
+		if (!isTrue(tuple)) {
+			return next();
+		}
+
+		return true;
+	}
+	
+	public boolean next() {
+		do {
+			if (!setNextTuple()) {
+				return false;
+			}
+		} while (!isTrue(tuple));
+
+		return true;
+	}
+
+	private boolean setNextTuple() {
+		final int[] tuple = this.tuple;
+
+		final Variable[] involvedVariables = this.variables;
+		for (int i = arity; --i >= 0;) {
+			if (i == variablePosition) {
+				continue;
+			}
+
+			final int index = involvedVariables[i].getNext(tuple[i]);
+
+			if (index < 0) {
+				tuple[i] = involvedVariables[i].getFirst();
+			} else {
+				tuple[i] = index;
+				return true;
+			}
+		}
+		return false;
+
+	}
 
 }
