@@ -2,15 +2,15 @@ package cspfj.heuristic;
 
 import cspfj.problem.Problem;
 
-public final class JWs extends JW {
+public final class MaxI extends JW {
 
-	public JWs(Problem problem) {
+	public MaxI(Problem problem) {
 		super(problem);
 	}
 
 	@Override
 	protected double w(final int supports) {
-		return -supports;
+		return supports;
 	}
 
 }

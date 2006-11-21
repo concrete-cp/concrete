@@ -10,7 +10,7 @@ public final class Lexico extends AbstractStaticValueHeuristic {
     }
 
     public double getScore(final Variable var, final int index) {
-        return index;
+        return -index;
     }
 
 }
