@@ -9,12 +9,7 @@ public final class DDegOnDom extends AbstractVariableHeuristic {
 		super(problem);
 	}
 
-	public float getScore(final Variable variable) {
+	public double getScore(final Variable variable) {
         return variable.getDDeg() / variable.getDomainSize();
     }
-
-	public void compute() {
-		// Nothing to do
-	}
-
 }

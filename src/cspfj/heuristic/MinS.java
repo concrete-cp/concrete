@@ -9,7 +9,7 @@ public class MinS extends AbstractStaticValueHeuristic {
 		super(problem);
 	}
 
-	public float getScore(final Variable variable, final int index) {
+	public double getScore(final Variable variable, final int index) {
 		return -variable.getNbSupports(index);
 	}
 

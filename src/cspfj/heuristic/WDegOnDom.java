@@ -27,12 +27,8 @@ public final class WDegOnDom extends AbstractVariableHeuristic {
 		super(problem);
 	}
 
-	public float getScore(final Variable variable) {
+	public double getScore(final Variable variable) {
         return variable.getWDeg() / variable.getDomainSize() ;
     }
-	
-	public void compute() {
-		// Nothing to do 
-	}
 
 }

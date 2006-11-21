@@ -13,8 +13,8 @@ public class Rand extends AbstractStaticValueHeuristic {
 		super(problem);
 	}
 
-	public float getScore(final Variable variable, final int index) {
-		return random.nextFloat();
+	public double getScore(final Variable variable, final int index) {
+		return random.nextDouble();
 	}
 
 }

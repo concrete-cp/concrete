@@ -25,7 +25,7 @@ import cspfj.problem.Variable;
 
 public final class ExtensionConstraint extends Constraint {
 
-    private final float tightness;
+    private final double tightness;
 
     private final boolean supports;
 
@@ -38,7 +38,7 @@ public final class ExtensionConstraint extends Constraint {
         this.supports = supports;
         this.tuples = tuples;
 
-        final float tight = (float) tuples.length
+        final double tight = (double) tuples.length
                 / (scope[0].getDomainSize() * scope[1].getDomainSize());
 
         if (supports) {
@@ -89,7 +89,7 @@ public final class ExtensionConstraint extends Constraint {
         return true;
     }
 
-    public float getTightness() {
+    public double getTightness() {
         return tightness;
     }
 

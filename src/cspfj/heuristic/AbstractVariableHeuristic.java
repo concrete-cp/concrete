@@ -39,9 +39,9 @@ public abstract class AbstractVariableHeuristic implements VariableHeuristic {
 		if (variable2 == null) {
 			return -1;
 		}
-		final float result = getScore(variable2) - getScore(variable1);
+		final double result = getScore(variable2) - getScore(variable1);
 		if (result == 0) {
-			return variable1.getId() - variable2.getId();
+			return 0 ;//variable1.getId() - variable2.getId();
 		}
 
 		return result > 0 ? 1 : -1;

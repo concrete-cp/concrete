@@ -9,7 +9,7 @@ public final class JWs extends JW {
 	}
 
 	@Override
-	protected static double w(final int supports) {
+	protected double w(final int supports) {
 		return -supports;
 	}
 

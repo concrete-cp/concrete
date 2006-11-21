@@ -18,14 +18,13 @@ public final class CrossHeuristic implements Heuristic {
         this.valueHeuristic = valueHeuristic;
     }
 
-    public Pair selectPair() {
+    public int selectPair() {
         final Variable bestVariable = variableHeuristic.selectVariable() ;
-        return new Pair(bestVariable, valueHeuristic.selectIndex(bestVariable));
+        return Pair.pair(bestVariable, valueHeuristic.selectIndex(bestVariable));
     }
     
     public void compute() {
     	logger.fine("Initializing heuristics");
-    	variableHeuristic.compute() ;
     	valueHeuristic.compute() ;
     }
     

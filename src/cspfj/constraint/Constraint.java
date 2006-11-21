@@ -444,14 +444,14 @@ public abstract class Constraint {
         this.weight = weight;
     }
 
-    public final float getFreedomDegree() {
-        int count = -1;
+    public final double getFreedomDegree() {
+        double count = -1;
         for (Variable v : involvedVariables) {
             if (v.getDomainSize() > 1) {
                 count++;
             }
         }
-        return Math.max((float) count / (arity - 1), 0);
+        return Math.max(count / (arity - 1), 0);
     }
 
     public static final void resetChecks() {

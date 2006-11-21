@@ -21,7 +21,7 @@ public final class WdJW implements Heuristic {
 
 	final private Map<Constraint, Integer> weights;
 
-	final private Map<Variable, float[]> scores;
+	final private Map<Variable, double[]> scores;
 
 	final private Map<Constraint, int[][]> nbSupports;
 
@@ -32,7 +32,7 @@ public final class WdJW implements Heuristic {
 		constraints = problem.getConstraints();
 		domainSizes = new HashMap<Variable, Integer>();
 		weights = new HashMap<Constraint, Integer>();
-		scores = new HashMap<Variable, float[]>();
+		scores = new HashMap<Variable, double[]>();
 		recompute = new TreeSet<Variable>();
 		nbSupports = new HashMap<Constraint, int[][]>();
 
@@ -50,7 +50,7 @@ public final class WdJW implements Heuristic {
 		}
 
 		for (Variable v : variables) {
-			scores.put(v, new float[v.getDomain().length]);
+			scores.put(v, new double[v.getDomain().length]);
 		}
 
 	}
@@ -59,7 +59,7 @@ public final class WdJW implements Heuristic {
 		// nope
 	}
 
-	private float getScore(final Variable variable, final int index) {
+	private double getScore(final Variable variable, final int index) {
 		double tot = Math.pow(2, -variable.getDomainSize());
 		for (Constraint c : variable.getInvolvingConstraints()) {
 			final int position = c.getPosition(variable);
@@ -85,7 +85,7 @@ public final class WdJW implements Heuristic {
 				}
 			} while (matrix.next());
 		}
-		return (float) tot;
+		return tot;
 	}
 
 	private void recompute() {
@@ -140,18 +140,18 @@ public final class WdJW implements Heuristic {
 		recompute.clear();
 	}
 
-	public Pair selectPair() {
+	public int selectPair() {
 		recompute();
 		Variable bestVariable = null;
 		int bestValue = -1;
-		float bestScore = 0;
+		double bestScore = 0;
 
 		for (Variable v : variables) {
 			if (v.getDomainSize() <= 1) {
 				continue;
 			}
 			for (int i = v.getFirst(); i >= 0; i = v.getNext(i)) {
-				final float score = scores.get(v)[i];
+				final double score = scores.get(v)[i];
 				if (bestValue < 0 || score > bestScore) {
 					bestVariable = v;
 					bestValue = i;
@@ -163,11 +163,11 @@ public final class WdJW implements Heuristic {
 		if (bestVariable == null) {
 			for (Variable v : variables) {
 				if (!v.isAssigned()) {
-					return new Pair(v, v.getFirst());
+					return Pair.pair(v, v.getFirst());
 				}
 			}
 		}
 
-		return new Pair(bestVariable, bestValue);
+		return Pair.pair(bestVariable, bestValue);
 	}
 }

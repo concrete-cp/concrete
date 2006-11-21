@@ -20,7 +20,6 @@
 package cspfj.problem;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -57,19 +56,17 @@ public final class Variable implements Comparable<Variable> {
 	 */
 	private final int[] removed;
 
-	private final int[] next;
+	private ChainedDomain chain;
 
-	private final int[] prev;
-
-	private final int[] originalNext;
-
-	private final int[] originalPrev;
+	private final ChainedDomain heuristicChain;
 
 	private final int[] prevAbsents;
 
 	private final int[] booleanDomain;
 
 	private final int[] beforeAssignDomain;
+
+	private final int[] order;
 
 	/**
 	 * Taille actuelle du domaine.
@@ -92,14 +89,6 @@ public final class Variable implements Comparable<Variable> {
 	 * Pour générer l'ID.
 	 */
 	private static int nbV = 0;
-
-	private final int[] order;
-
-	// private final double[] valueHeuristic;
-
-	private int firstPresentIndex;
-
-	private int lastPresentIndex;
 
 	private int lastAbsentIndex;
 
@@ -138,53 +127,30 @@ public final class Variable implements Comparable<Variable> {
 		id = nbV++;
 
 		lastAbsentIndex = -1;
-		order = new int[domain.length];
+
 		// valueHeuristic = new double[domain.length];
 
 		// Arrays.fill(valueHeuristic, Double.MAX_VALUE / 2);
 
 		this.name = name;
 
-		this.next = new int[domain.length];
-		this.prev = new int[domain.length];
-		this.originalNext = new int[domain.length];
-		this.originalPrev = new int[domain.length];
-		this.prevAbsents = new int[domain.length];
+		order = new int[domain.length];
 
-		final int[] initialOrder = new int[domain.length];
+		chain = new ChainedDomain(domain.length);
 
+		final int[] order = new int[domain.length];
 		for (int i = domain.length; --i >= 0;) {
-			initialOrder[i] = i;
+			order[i] = i;
 		}
-		reOrder(initialOrder);
+		chain.reOrder(order, removed);
+
+		this.heuristicChain = new ChainedDomain(domain.length);
+
+		this.prevAbsents = new int[domain.length];
 
 		// Arrays.fill(prevAbsents, -1);
 
 		// iterator = new DomainIterator(this);
-	}
-
-	public void reOrder(final int[] order) {
-		firstPresentIndex = order[order.length - 1];
-		lastPresentIndex = order[0];
-		for (int i = order.length; --i > 0;) {
-			originalNext[order[i]] = order[i - 1];
-			originalPrev[order[i - 1]] = order[i];
-		}
-		originalPrev[firstPresentIndex] = originalNext[lastPresentIndex] = -1;
-		System.arraycopy(originalNext, 0, next, 0, next.length);
-		System.arraycopy(originalPrev, 0, prev, 0, prev.length);
-
-		for (int i = removed.length; --i >= 0;) {
-			if (removed[i] >= 0) {
-				removeChain(i);
-			}
-		}
-		// Arrays.fill(prevAbsents, -1);
-//
-//		for (int i = getFirst() ; i!=-1;i=getNext(i))  {
-//			System.out.print(i+" ");
-//		}
-//		System.out.println() ;
 	}
 
 	/**
@@ -201,6 +167,14 @@ public final class Variable implements Comparable<Variable> {
 		}
 		return name;
 
+	}
+
+	public void reOrder(final int[] order) {
+		chain.reOrder(order, removed);
+	}
+
+	public void reOrderHeuristic(final int[] order) {
+		heuristicChain.reOrder(order, removed);
 	}
 
 	/**
@@ -368,33 +342,9 @@ public final class Variable implements Comparable<Variable> {
 		domainSize++;
 		removed[index] = -1;
 		BooleanArray.set(booleanDomain, index, true);
-		int next = -1;
-		for (int i = originalNext[index]; next == -1 && i != -1; i = originalNext[i]) {
-			if (removed[i] == -1) {
-				next = i;
-			}
-		}
 
-		int prev = -1;
-		for (int i = originalPrev[index]; prev == -1 && i != -1; i = originalPrev[i]) {
-			if (removed[i] == -1) {
-				prev = i;
-			}
-		}
-
-		this.prev[index] = prev;
-		this.next[index] = next;
-
-		if (prev == -1) {
-			firstPresentIndex = index;
-		} else {
-			this.next[prev] = index;
-		}
-		if (next == -1) {
-			lastPresentIndex = index;
-		} else {
-			this.prev[next] = index;
-		}
+		chain.restore(index, removed);
+		heuristicChain.restore(index, removed);
 
 		// remove from the list of absent elements
 
@@ -424,28 +374,8 @@ public final class Variable implements Comparable<Variable> {
 
 		domainSize--;
 
-		removeChain(index);
-		// if (level == 0) {
-		// for (Constraint c : involvingConstraints) {
-		// c.freeLast(this, index);
-		// }
-		// }
-
-	}
-
-	private void removeChain(final int index) {
-		final int next = this.next[index];
-		final int prev = this.prev[index];
-		if (prev == -1) {
-			firstPresentIndex = next;
-		} else {
-			this.next[prev] = next;
-		}
-		if (next == -1) {
-			lastPresentIndex = prev;
-		} else {
-			this.prev[next] = prev;
-		}
+		chain.remove(index);
+		heuristicChain.remove(index);
 
 		prevAbsents[index] = lastAbsentIndex;
 		lastAbsentIndex = index;
@@ -516,8 +446,11 @@ public final class Variable implements Comparable<Variable> {
 	}
 
 	public int getFirst() {
-		return assigned ? assignedIndex : firstPresentIndex;
+		return assigned ? assignedIndex : chain.getFirst();
+	}
 
+	public int getFirstHeuristic() {
+		return heuristicChain.getFirst();
 	}
 
 	// public int getNextPresentIndex(final int index) {
@@ -530,8 +463,8 @@ public final class Variable implements Comparable<Variable> {
 	// return -1;
 	// }
 
-	public float getWDeg() {
-		float count = 0;
+	public double getWDeg() {
+		double count = 0;
 		if (involvingConstraints == null) {
 			return 1;
 		}
@@ -542,8 +475,8 @@ public final class Variable implements Comparable<Variable> {
 		return count;
 	}
 
-	public float getDDeg() {
-		float count = 0;
+	public double getDDeg() {
+		double count = 0;
 		if (involvingConstraints == null) {
 			return 1;
 		}
@@ -558,7 +491,7 @@ public final class Variable implements Comparable<Variable> {
 		final int compare = domainSize - arg0.getDomainSize();
 
 		if (compare == 0) {
-			final float compareDeg = arg0.getWDeg() - getWDeg();
+			final double compareDeg = arg0.getWDeg() - getWDeg();
 			if (compareDeg == 0) {
 				return id - arg0.getId();
 			}
@@ -764,14 +697,14 @@ public final class Variable implements Comparable<Variable> {
 		}
 
 		if (isPresent(index)) {
-			return next[index];
+			return chain.getNext(index);
 		}
 
-		if (index < firstPresentIndex) {
-			return firstPresentIndex;
+		if (index < chain.getFirst()) {
+			return chain.getFirst();
 		}
 
-		if (index >= lastPresentIndex) {
+		if (index >= chain.getLast()) {
 			return -1;
 		}
 
@@ -784,9 +717,9 @@ public final class Variable implements Comparable<Variable> {
 
 	}
 
-	public int getPrev(final int index) {
-		return prev[index];
-	}
+	// public int getPrev(final int index) {
+	// return prev[index];
+	// }
 
 	public int getLastAbsent() {
 		return lastAbsentIndex;
@@ -796,9 +729,9 @@ public final class Variable implements Comparable<Variable> {
 		return prevAbsents[index];
 	}
 
-	public int getLastPresent() {
-		return lastPresentIndex;
-	}
+	// public int getLastPresent() {
+	// return lastPresentIndex;
+	// }
 
 	// public static void main(String[] args) {
 	// final Variable v = new Variable(new int[] { 1, 2, 3, 4, 5 });
@@ -816,22 +749,22 @@ public final class Variable implements Comparable<Variable> {
 	// System.out.println(v.displayState());
 	// }
 
-	public String displayState() {
-		final StringBuffer sb = new StringBuffer();
-		sb.append(Arrays.toString(domain)).append('\n');
-		sb.append(Arrays.toString(removed)).append('\n');
-		for (int i = getFirst(); i >= 0; i = getNext(i)) {
-			sb.append(i).append(' ');
-		}
-		sb.append('\n');
-		sb.append(firstPresentIndex).append('\n');
-		sb.append(Arrays.toString(next)).append('\n');
-		sb.append(lastPresentIndex).append('\n');
-		sb.append(Arrays.toString(prev)).append('\n');
-		sb.append(lastAbsentIndex).append('\n');
-		sb.append(Arrays.toString(prevAbsents)).append('\n');
-		return sb.toString();
-	}
+	// public String displayState() {
+	// final StringBuffer sb = new StringBuffer();
+	// sb.append(Arrays.toString(domain)).append('\n');
+	// sb.append(Arrays.toString(removed)).append('\n');
+	// for (int i = getFirst(); i >= 0; i = getNext(i)) {
+	// sb.append(i).append(' ');
+	// }
+	// sb.append('\n');
+	// sb.append(firstPresentIndex).append('\n');
+	// sb.append(Arrays.toString(next)).append('\n');
+	// sb.append(lastPresentIndex).append('\n');
+	// sb.append(Arrays.toString(prev)).append('\n');
+	// sb.append(lastAbsentIndex).append('\n');
+	// sb.append(Arrays.toString(prevAbsents)).append('\n');
+	// return sb.toString();
+	// }
 
 	public int[] getBooleanDomain() {
 		return booleanDomain;
@@ -852,53 +785,53 @@ public final class Variable implements Comparable<Variable> {
 		return change;
 	}
 
-	//
-	// public void setNbRemovals(final int nbRemovals) {
-	// for (Constraint c : involvingConstraints) {
-	// c.setNbRemovals(this, nbRemovals);
-	// }
-	//
-	// }
+	public void heuristicToOrder() {
+		chain = heuristicChain.clone();
+	}
 
-//	public static void main(String[] args) {
-//		Variable variable = new Variable(new int[] { 1, 2, 3, 4, 5 });
-//
-//		variable.reOrder(new int[] { 2, 1, 0, 4, 3 });
-//
-//		for (int i = variable.getFirst(); i != -1; i = variable.getNext(i)) {
-//			System.out.print(i + " ");
-//		}
-//		System.out.println();
-//
-//		// System.out.println(variable.firstPresentIndex);
-//		// System.out.println(Arrays.toString(variable.next));
-//		// System.out.println(variable.lastPresentIndex);
-//		// System.out.println(Arrays.toString(variable.prev));
-//
-//		variable.remove(4, 0);
-//
-//		for (int i = variable.getFirst(); i != -1; i = variable.getNext(i)) {
-//			System.out.print(i + " ");
-//		}
-//		System.out.println();
-//
-//		// System.out.println(variable.firstPresentIndex);
-//		// System.out.println(Arrays.toString(variable.next));
-//		// System.out.println(variable.lastPresentIndex);
-//		// System.out.println(Arrays.toString(variable.prev));
-//
-//		variable.reOrder(new int[] { 0, 1, 2, 3, 4 });
-//
-//		for (int i = variable.getFirst(); i != -1; i = variable.getNext(i)) {
-//			System.out.print(i + " ");
-//		}
-//		System.out.println();
-//
-//		// System.out.println(variable.firstPresentIndex);
-//		// System.out.println(Arrays.toString(variable.next));
-//		// System.out.println(variable.lastPresentIndex);
-//		// System.out.println(Arrays.toString(variable.prev));
-//
-//	}
+	public int getNextHeuristic(int i) {
+		return heuristicChain.getNext(i);
+	}
+
+	// public static void main(String[] args) {
+	// Variable variable = new Variable(new int[] { 1, 2, 3, 4, 5 });
+	//
+	// variable.reOrder(new int[] { 2, 1, 0, 4, 3 });
+	//
+	// for (int i = variable.getFirst(); i != -1; i = variable.getNext(i)) {
+	// System.out.print(i + " ");
+	// }
+	// System.out.println();
+	//
+	// // System.out.println(variable.firstPresentIndex);
+	// // System.out.println(Arrays.toString(variable.next));
+	// // System.out.println(variable.lastPresentIndex);
+	// // System.out.println(Arrays.toString(variable.prev));
+	//
+	// variable.remove(4, 0);
+	//
+	// for (int i = variable.getFirst(); i != -1; i = variable.getNext(i)) {
+	// System.out.print(i + " ");
+	// }
+	// System.out.println();
+	//
+	// // System.out.println(variable.firstPresentIndex);
+	// // System.out.println(Arrays.toString(variable.next));
+	// // System.out.println(variable.lastPresentIndex);
+	// // System.out.println(Arrays.toString(variable.prev));
+	//
+	// variable.reOrder(new int[] { 0, 1, 2, 3, 4 });
+	//
+	// for (int i = variable.getFirst(); i != -1; i = variable.getNext(i)) {
+	// System.out.print(i + " ");
+	// }
+	// System.out.println();
+	//
+	// // System.out.println(variable.firstPresentIndex);
+	// // System.out.println(Arrays.toString(variable.next));
+	// // System.out.println(variable.lastPresentIndex);
+	// // System.out.println(Arrays.toString(variable.prev));
+	//
+	// }
 
 }

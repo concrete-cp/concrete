@@ -51,6 +51,7 @@ public final class MACSolver extends AbstractSolver {
         // heuristic = new WDegOnDomBySupports(prob);
         this.heuristic = heuristic ;
         setMaxBacktracks(problem.getNbVariables());
+        Pair.setProblem(prob);
     }
 
     // public void enableNoGoods(final int maxSize) {
@@ -71,11 +72,11 @@ public final class MACSolver extends AbstractSolver {
             return false;
         }
 
-        final Pair pair = heuristic.selectPair();
+        final int pair = heuristic.selectPair();
 
-        final Variable selectedVariable = pair.getVariable();
+        final Variable selectedVariable = Pair.variable(pair);
 
-        final int selectedIndex = pair.getValue();
+        final int selectedIndex = Pair.index(pair);
 
         // final int selectedIndex = selectedVariable.getFirstPresentIndex();
 
@@ -184,6 +185,7 @@ public final class MACSolver extends AbstractSolver {
 
         
         heuristic.compute() ;
+
         //
         // logger.fine("ok!") ;
 

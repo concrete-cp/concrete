@@ -18,7 +18,7 @@ public class ProdHeuristic implements Heuristic {
 		this.variables = problem.getVariables();
 	}
 
-	public Pair selectPair() {
+	public int selectPair() {
 		Variable bestVariable = null;
 		for (Variable v : variables) {
 			if (!v.isAssigned()
@@ -28,7 +28,7 @@ public class ProdHeuristic implements Heuristic {
 			}
 		}
 
-		return new Pair(bestVariable, valueHeuristic.selectIndex(bestVariable));
+		return Pair.pair(bestVariable, valueHeuristic.selectIndex(bestVariable));
 	}
 
 	public int compare(final Variable variable1, final Variable variable2) {
@@ -55,7 +55,6 @@ public class ProdHeuristic implements Heuristic {
 	}
 
 	public void compute() {
-		variableHeuristic.compute();
 		valueHeuristic.compute();
 	}
 }
