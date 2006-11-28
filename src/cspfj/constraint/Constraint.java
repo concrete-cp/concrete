@@ -111,7 +111,7 @@ public abstract class Constraint {
         try {
             matrix.init(true);
         } catch (MatrixTooBigException e) {
-
+        	matrix.clear();
         }
 
         nbMaxConflicts = new int[arity];

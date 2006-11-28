@@ -185,7 +185,7 @@ public final class MACSolver extends AbstractSolver {
 
         
         heuristic.compute() ;
-
+        
         //
         // logger.fine("ok!") ;
 
