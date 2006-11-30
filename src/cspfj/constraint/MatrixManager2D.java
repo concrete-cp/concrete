@@ -86,11 +86,11 @@ public final class MatrixManager2D extends MatrixManager {
 			currentPart = -1;
 			current = 0;
 			return next();
-		} else {
-			current = tuple[1 - variablePosition] = variables[1 - variablePosition]
-					.getFirst();
-			return true;
 		}
+
+		current = tuple[1 - variablePosition] = variables[1 - variablePosition]
+				.getFirst();
+		return true;
 
 	}
 
@@ -118,7 +118,7 @@ public final class MatrixManager2D extends MatrixManager {
 			if (currentPart >= mask.length) {
 				return false;
 			}
-			//System.err.print("-");
+			// System.err.print("-");
 			current = mask[currentPart] & domain[currentPart];
 			// System.err.println(Integer.toBinaryString(current));
 			currentPosition = -1;
@@ -143,8 +143,8 @@ public final class MatrixManager2D extends MatrixManager {
 		tuple[1 - variablePosition] = currentPart * Integer.SIZE
 				+ currentPosition;
 		// System.err.println(" - " + tuple[1 - variablePosition]) ;
-//		 System.err.println(Integer.toBinaryString(current) + " " +
-//		 currentPart + " " + currentPosition);
+		// System.err.println(Integer.toBinaryString(current) + " " +
+		// currentPart + " " + currentPosition);
 		return true;
 	}
 

@@ -162,6 +162,8 @@ public final class Variable implements Comparable<Variable> {
 
 	@Override
 	public String toString() {
+		// return "X"+id+Arrays.toString(removed);
+
 		if (name == null) {
 			return "X" + id;
 		}
@@ -294,6 +296,11 @@ public final class Variable implements Comparable<Variable> {
 		BooleanArray.setSingle(booleanDomain, index);
 		assert !reinitBooleanDomain();
 		problem.decreaseFutureVariables();
+
+		for (Constraint c : involvingConstraints) {
+			assert c.findValidTuple(this, index) : c + " is not valid !";
+			assert c.check() : c + "is not valid !";
+		}
 	}
 
 	/**
@@ -430,9 +437,7 @@ public final class Variable implements Comparable<Variable> {
 	public int getNbSupports(final int index) {
 		int nbSupports = 0;
 		for (Constraint c : involvingConstraints) {
-			if (c.getArity() <= 3) {
-				nbSupports += c.getNbSupports(this, index);
-			}
+			nbSupports += c.getNbSupports(this, index);
 		}
 		return nbSupports;
 	}
@@ -446,10 +451,14 @@ public final class Variable implements Comparable<Variable> {
 	}
 
 	public int getFirst() {
+		if (!assigned) {
+			assert isPresent(chain.getFirst());
+		}
 		return assigned ? assignedIndex : chain.getFirst();
 	}
 
 	public int getFirstHeuristic() {
+		assert isPresent(heuristicChain.getFirst());
 		return heuristicChain.getFirst();
 	}
 

@@ -23,38 +23,45 @@ import cspfj.problem.Variable;
 
 public final class DTPConstraint extends Constraint {
 
-    final private int duration0;
+	final private int duration0;
 
-    final private int duration1;
+	final private int duration1;
 
-    public DTPConstraint(final Variable[] scope, final int duration0,
-            final int duration1) {
-        super(scope);
-        // System.out.println(scope[0] + "="+i +" <=> "+scope[1]+"="+v);
-        this.duration0 = duration0;
-        this.duration1 = duration1;
-    }
+	public DTPConstraint(final Variable[] scope, final int duration0,
+			final int duration1) {
+		super(scope);
+		// System.out.println(scope[0] + "="+i +" <=> "+scope[1]+"="+v);
+		this.duration0 = duration0;
+		this.duration1 = duration1;
+	}
 
-    @Override
-    public boolean check() {
-        if (!super.check()) {
-            return false;
-        }
-        final int value0 = getInvolvedVariables()[0].getDomain()[tuple[0]];
-        final int value1 = getInvolvedVariables()[1].getDomain()[tuple[1]];
-        
-        final boolean result = value0 + duration0 < value1 || value1 + duration1 < value0;
-        
-        if (!result) {
-            matrix.removeTuple(tuple) ;
-        }
-        
-        return result ;
-    }
+	@Override
+	public boolean check() {
+		if (!super.check()) {
+			return false;
+		}
+		final int value0 = getInvolvedVariables()[0].getDomain()[tuple[0]];
+		final int value1 = getInvolvedVariables()[1].getDomain()[tuple[1]];
 
-    @Override
-    public boolean useTupleCache() {
-        return true;
-    }
+		final boolean result = (value0 + duration0 < value1
+				|| value1 + duration1 < value0);
+
+		if (matrix.isActive() && !result) {
+			matrix.removeTuple(tuple);
+		}
+
+		return result;
+	}
+
+	@Override
+	public boolean useTupleCache() {
+		return true;
+	}
+
+	public String toString() {
+		return "C" + getId() + " (" + getInvolvedVariables()[0] + ":"
+				+ duration0 + ", " + getInvolvedVariables()[1] + ":"
+				+ duration1 + ")";
+	}
 
 }

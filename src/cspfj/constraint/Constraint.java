@@ -75,7 +75,7 @@ public abstract class Constraint {
 
     private final int size;
 
-    private final boolean removals[];
+//    private final boolean removals[];
 
     protected Constraint(final Variable[] scope) {
         involvedVariables = scope;
@@ -83,7 +83,7 @@ public abstract class Constraint {
 
         tuple = new int[arity];
         realTuple = new int[arity];
-        removals = new boolean[arity];
+//        removals = new boolean[arity];
         // recentlyRemoved = new boolean[arity];
         id = cId++;
         tupleCache = useTupleCache();
@@ -136,7 +136,7 @@ public abstract class Constraint {
     // }
 
     public void initNbSupports() {
-        for (int i = arity; --i >= 0;) {
+       for (int i = arity; --i >= 0;) {
             final int domainSize = involvedVariables[i].getDomain().length;
             nbSupports[i] = new int[domainSize];
             nbMaxConflicts[i] = 0;
@@ -241,21 +241,21 @@ public abstract class Constraint {
             return true;
         }
 
-//        return false ;
+        return false ;
         
-        final boolean[] removals = this.removals;
-
-        if (!removals[position]) {
-            return false;
-        }
-
-        for (int i = arity; --i >= 0;) {
-            if (i != position && removals[i]) {
-                return false;
-            }
-        }
-
-        return true;
+//        final boolean[] removals = this.removals;
+//
+//        if (!removals[position]) {
+//            return false;
+//        }
+//
+//        for (int i = arity; --i >= 0;) {
+//            if (i != position && removals[i]) {
+//                return false;
+//            }
+//        }
+////
+//        return true;
     }
 
     public final boolean revise(final Variable variable, final int level) {
@@ -268,7 +268,7 @@ public abstract class Constraint {
         assert !variable.isAssigned();
 
 //        if (skipRevision(position)) {
-//            nbSkippedRevisions++;
+////            nbSkippedRevisions++;
 //            return false;
 //        }
 
@@ -371,8 +371,8 @@ public abstract class Constraint {
             return false;
         }
 
-        // System.err.println(index+", "+ variablePosition+" : " +
-        // Arrays.toString(tuple));
+//         System.err.println(index+", "+ variablePosition+" : " +
+//         Arrays.toString(tuple));
 
         do {
             if (check()) {
@@ -627,19 +627,19 @@ public abstract class Constraint {
     // return removalsCounter[position] ;
     // }
 
-    public boolean getRemovals(final Variable variable) {
-        return removals[getPosition(variable)];
-    }
-
-    public void fillRemovals(final boolean removal) {
-        Arrays.fill(removals, removal);
-
-    }
-
-    public void setRemovals(final Variable variable, final boolean removal) {
-        removals[getPosition(variable)] = removal;
-
-    }
+//    public boolean getRemovals(final Variable variable) {
+//        return removals[getPosition(variable)];
+//    }
+//
+//    public void fillRemovals(final boolean removal) {
+//        Arrays.fill(removals, removal);
+//
+//    }
+//
+//    public void setRemovals(final Variable variable, final boolean removal) {
+//        removals[getPosition(variable)] = removal;
+//
+//    }
 
     // public void setNbRemovals(Variable variable, int i) {
     // nbRecentRemovals[getPosition(variable)] = i;

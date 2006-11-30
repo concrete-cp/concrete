@@ -209,6 +209,7 @@ public final class MACSolver extends AbstractSolver {
             maxBT *= 1.5;
             addNoGoods();
             problem.restoreAll(1);
+            new AC3(problem).reduceAll(0);
         } while (true);
 
         chronometer.validateChrono();
