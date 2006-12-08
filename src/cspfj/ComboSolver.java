@@ -20,7 +20,6 @@
 package cspfj;
 
 import java.io.IOException;
-import java.util.Random;
 import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
@@ -94,7 +93,7 @@ public class ComboSolver extends AbstractSolver {
 			prepro = 1000000000L;
 		}
 
-		final Random random = MinConflictsSolver.getRandom();
+		//final Random random = MinConflictsSolver.getRandom();
 
 		long localMinimumTime = chronometer.getRemainingTimeNano();
 		if (minConflicts(1, chronometer.getRemainingTime())) {

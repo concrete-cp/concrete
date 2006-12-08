@@ -9,8 +9,8 @@ public class Rand extends AbstractStaticValueHeuristic {
 
 	private final static Random random = new Random();
 	
-	public Rand(Problem problem) {
-		super(problem);
+	public Rand(Problem problem, boolean failFirst) {
+		super(problem, failFirst);
 	}
 
 	public double getScore(final Variable variable, final int index) {

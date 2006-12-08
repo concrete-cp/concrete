@@ -19,9 +19,12 @@ public abstract class AbstractStaticValueHeuristic extends
 	private final static Logger logger = Logger
 			.getLogger("cspfj.heuristic.AbstractStaticValueHeuristic");
 
-	public AbstractStaticValueHeuristic(Problem problem) {
+	private final boolean failFirst ;
+	
+	public AbstractStaticValueHeuristic(Problem problem, boolean failFirst) {
 		super(problem);
 		order = new int[problem.getMaxVId() + 1][];
+		this.failFirst = failFirst ;
 	}
 
 	public int[] getOrder(final Variable variable) {
@@ -52,14 +55,14 @@ public abstract class AbstractStaticValueHeuristic extends
 
 			sort(variable, ord, 0, ord.length - 1);
 
-			variable.reOrderHeuristic(ord);
-//
-//			 System.out.print(variable + " : ");
-//			 for (int i = ord.length; --i >= 0;) {
-//			 System.out.print(ord[i] + "(" + getScore(variable, ord[i])
-//			 + ") ");
-//			 }
-//			 System.out.println();
+			variable.reOrder(ord);
+			//
+			// System.out.print(variable + " : ");
+			// for (int i = ord.length; --i >= 0;) {
+			// System.out.print(ord[i] + "(" + getScore(variable, ord[i])
+			// + ") ");
+			// }
+			// System.out.println();
 
 		}
 	}
@@ -72,7 +75,11 @@ public abstract class AbstractStaticValueHeuristic extends
 
 	@Override
 	public int selectIndex(final Variable variable) {
-		return variable.getFirstHeuristic();
+		if (failFirst) {
+			return variable.getLast() ;
+		} else {
+			return variable.getFirst();
+		}
 		// final int[] ord = order[variable.getId()];
 		// for (int i = ord.length; --i >= 0;) {
 		// if (variable.isPresent(ord[i])) {
@@ -85,7 +92,7 @@ public abstract class AbstractStaticValueHeuristic extends
 	private final void sort(final Variable variable, final int[] ord,
 			final int left, final int right) {
 		if (right > left) {
-			//final int pivotIndex = left;
+			// final int pivotIndex = left;
 			final int newIndex = partition(variable, ord, left, right);
 			sort(variable, ord, left, newIndex - 1);
 			sort(variable, ord, newIndex + 1, right);
@@ -97,7 +104,7 @@ public abstract class AbstractStaticValueHeuristic extends
 		final double pivotScore = getScore(variable, ord[left]);
 		swap(ord, left, right);
 		int storeIndex = left;
-		for (int i = left; i < right;i++) {
+		for (int i = left; i < right; i++) {
 			if (getScore(variable, ord[i]) <= pivotScore) {
 				swap(ord, storeIndex, i);
 				storeIndex++;

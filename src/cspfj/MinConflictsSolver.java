@@ -27,11 +27,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
-import cspfj.exception.FailedGenerationException;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.exception.OutOfTimeException;
 import cspfj.problem.Problem;
-import cspfj.problem.ProblemGenerator;
 import cspfj.problem.Variable;
 import cspfj.util.TieManager;
 import cspfj.filter.AC3;

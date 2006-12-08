@@ -56,9 +56,9 @@ public final class Variable implements Comparable<Variable> {
 	 */
 	private final int[] removed;
 
-	private ChainedDomain chain;
+	private final ChainedDomain chain;
 
-	private final ChainedDomain heuristicChain;
+//	private final ChainedDomain heuristicChain;
 
 	private final int[] prevAbsents;
 
@@ -144,7 +144,7 @@ public final class Variable implements Comparable<Variable> {
 		}
 		chain.reOrder(order, removed);
 
-		this.heuristicChain = new ChainedDomain(domain.length);
+//		this.heuristicChain = new ChainedDomain(domain.length);
 
 		this.prevAbsents = new int[domain.length];
 
@@ -162,8 +162,6 @@ public final class Variable implements Comparable<Variable> {
 
 	@Override
 	public String toString() {
-		// return "X"+id+Arrays.toString(removed);
-
 		if (name == null) {
 			return "X" + id;
 		}
@@ -175,9 +173,9 @@ public final class Variable implements Comparable<Variable> {
 		chain.reOrder(order, removed);
 	}
 
-	public void reOrderHeuristic(final int[] order) {
-		heuristicChain.reOrder(order, removed);
-	}
+//	public void reOrderHeuristic(final int[] order) {
+//		heuristicChain.reOrder(order, removed);
+//	}
 
 	/**
 	 * @param constraints
@@ -351,7 +349,7 @@ public final class Variable implements Comparable<Variable> {
 		BooleanArray.set(booleanDomain, index, true);
 
 		chain.restore(index, removed);
-		heuristicChain.restore(index, removed);
+//		heuristicChain.restore(index, removed);
 
 		// remove from the list of absent elements
 
@@ -382,7 +380,7 @@ public final class Variable implements Comparable<Variable> {
 		domainSize--;
 
 		chain.remove(index);
-		heuristicChain.remove(index);
+//		heuristicChain.remove(index);
 
 		prevAbsents[index] = lastAbsentIndex;
 		lastAbsentIndex = index;
@@ -451,16 +449,21 @@ public final class Variable implements Comparable<Variable> {
 	}
 
 	public int getFirst() {
-		if (!assigned) {
+		if (assigned) {return assignedIndex ;
+		} 
 			assert isPresent(chain.getFirst());
-		}
-		return assigned ? assignedIndex : chain.getFirst();
+			return chain.getFirst();
+		
+
 	}
 
-	public int getFirstHeuristic() {
-		assert isPresent(heuristicChain.getFirst());
-		return heuristicChain.getFirst();
+	
+	public int getLast() {
+		return assigned ? assignedIndex : chain.getLast();
 	}
+//	public int getFirstHeuristic() {
+//		return heuristicChain.getFirst();
+//	}
 
 	// public int getNextPresentIndex(final int index) {
 	// for (int i = index + 1; i < domain.length; i++) {
@@ -794,13 +797,15 @@ public final class Variable implements Comparable<Variable> {
 		return change;
 	}
 
-	public void heuristicToOrder() {
-		chain = heuristicChain.clone();
-	}
 
-	public int getNextHeuristic(int i) {
-		return heuristicChain.getNext(i);
-	}
+
+//	public void heuristicToOrder() {
+//		chain = heuristicChain.clone();
+//	}
+//
+//	public int getNextHeuristic(int i) {
+//		return heuristicChain.getNext(i);
+//	}
 
 	// public static void main(String[] args) {
 	// Variable variable = new Variable(new int[] { 1, 2, 3, 4, 5 });

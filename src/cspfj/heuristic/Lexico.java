@@ -5,8 +5,8 @@ import cspfj.problem.Variable;
 
 public final class Lexico extends AbstractStaticValueHeuristic {
 
-    public Lexico(Problem problem) {
-        super(problem);
+    public Lexico(Problem problem, boolean failFirst) {
+        super(problem, failFirst);
     }
 
     public double getScore(final Variable var, final int index) {

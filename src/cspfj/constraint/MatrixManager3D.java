@@ -1,6 +1,5 @@
 package cspfj.constraint;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 
 import cspfj.exception.MatrixTooBigException;
@@ -12,7 +11,7 @@ public class MatrixManager3D extends MatrixManager {
 
 	private boolean[][][] matrix = null;
 
-	private int variablePosition;
+//	private int variablePosition;
 
 	public MatrixManager3D(Variable[] scope, int[] tuple) {
 		super(scope, tuple);

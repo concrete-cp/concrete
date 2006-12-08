@@ -2,10 +2,10 @@ package cspfj.heuristic;
 
 import cspfj.problem.Problem;
 
-public final class MinI extends JW {
+public final class Inverse extends JW {
 
-	public MinI(Problem problem) {
-		super(problem);
+	public Inverse(Problem problem, boolean failFirst) {
+		super(problem, failFirst);
 	}
 
 	@Override

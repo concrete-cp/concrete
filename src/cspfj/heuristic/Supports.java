@@ -3,10 +3,10 @@ package cspfj.heuristic;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
-public class MaxS extends AbstractStaticValueHeuristic {
+public class Supports extends AbstractStaticValueHeuristic {
 
-	public MaxS(Problem problem) {
-		super(problem);
+	public Supports(Problem problem, boolean failFirst) {
+		super(problem, failFirst);
 	}
 
 	public double getScore(final Variable variable, final int index) {

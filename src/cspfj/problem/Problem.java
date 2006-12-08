@@ -33,7 +33,7 @@ import java.util.logging.Logger;
 import cspfj.constraint.Constraint;
 import cspfj.exception.FailedGenerationException;
 import cspfj.heuristic.AbstractStaticValueHeuristic;
-import cspfj.heuristic.MaxS;
+import cspfj.heuristic.Supports;
 
 public final class Problem {
     private Map<Integer, Variable> variables;
@@ -186,11 +186,11 @@ public final class Problem {
             c.initNbSupports();
         }
         
-        final AbstractStaticValueHeuristic maxS = new MaxS(this);
+        final AbstractStaticValueHeuristic maxS = new Supports(this, false);
         maxS.compute() ;
-        for (Variable v: getVariables()) {
-        	v.heuristicToOrder();
-        }
+//        for (Variable v: getVariables()) {
+//        	v.heuristicToOrder();
+//        }
     }
 
     public int getNbVariables() {

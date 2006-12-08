@@ -1,7 +1,5 @@
 package cspfj.heuristic;
 
-import java.util.logging.Logger;
-
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.constraint.Constraint;
@@ -11,12 +9,13 @@ public class JW extends AbstractStaticValueHeuristic {
 
 	final private double scores[][];
 
-	final private static Logger logger = Logger.getLogger("cspfj.heuristic.JW");
+	// final private static Logger logger =
+	// Logger.getLogger("cspfj.heuristic.JW");
 
 	final private Problem problem;
 
-	public JW(Problem problem) {
-		super(problem);
+	public JW(Problem problem, boolean failFirst) {
+		super(problem, failFirst);
 
 		this.problem = problem;
 
