@@ -43,6 +43,8 @@ public abstract class AbstractSolver implements Solver {
     private int maxBacktracks;
 
     private int nbBacktracks;
+    
+    private int nbSolutions =0;
 
     private final ResultHandler resultHandler;
 
@@ -147,5 +149,13 @@ public abstract class AbstractSolver implements Solver {
 	
 	protected final void statistics(String name, Object value) {
 		resultHandler.statistics(name, value.toString());
+	}
+	
+	public final int getNbSolutions() {
+		return nbSolutions ;
+	}
+	
+	protected final void incrementNbSolutions() {
+		nbSolutions++ ;
 	}
 }

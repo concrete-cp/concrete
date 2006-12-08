@@ -41,4 +41,6 @@ public interface Solver {
 	void setMaxBacktracks(final int maxBacktracks);
 
 	void setUseSpace(final SPACE space);
+
+	int getNbSolutions();
 }
