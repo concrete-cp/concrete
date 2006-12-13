@@ -164,14 +164,17 @@ public final class SAC implements Filter {
 			nbSingletonTests++;
 			if (filter.reduceAfter(level + 1, variable)) {
 
-				if (branch && buildBranch(level + 1)) {
-					reduceToSolution(level);
-					return true;
+				if (branch) {
+					buildBranch(level + 1);
+//					reduceToSolution(level);
+//					return true;
 				}
 
 				final int nbNg = problem.addNoGoods();
 				nbNoGoods += nbNg;
 
+				changedGraph = nbNg > 0;
+				
 				for (int l = level + 1; l < problem.getNbVariables(); l++) {
 					problem.setLevelVariables(l, -1);
 				}

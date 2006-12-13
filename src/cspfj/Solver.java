@@ -28,7 +28,7 @@ import cspfj.problem.Variable;
 
 public interface Solver {
 
-    boolean run(final int maxDuration) throws OutOfTimeException, IOException;
+    boolean run(final long maxDuration) throws OutOfTimeException, IOException;
 
     Map<Variable, Integer> getSolution();
 

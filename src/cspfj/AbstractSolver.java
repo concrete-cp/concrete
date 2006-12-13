@@ -113,8 +113,8 @@ public abstract class AbstractSolver implements Solver {
         }
     }
 
-    public void setMaxDuration(final int maxDuration) {
-        chronometer.setMaxDuration(maxDuration);
+    public void setMaxDurationNano(final long maxDuration) {
+        chronometer.setMaxDurationNano(maxDuration);
     }
 
     public float getUserTime() {

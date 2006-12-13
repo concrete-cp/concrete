@@ -41,6 +41,8 @@ public final class MACSolver extends AbstractSolver {
 
 	private static final Logger logger = Logger.getLogger("cspfj.MACSolver");
 
+	private boolean allSolutions = false;
+
 	// private NoGoodManager noGoodManager = null;
 
 	// private int maxNoGoodSize;
@@ -64,13 +66,13 @@ public final class MACSolver extends AbstractSolver {
 			throws MaxBacktracksExceededException, OutOfTimeException {
 		if (problem.getNbFutureVariables() == 0) {
 			if (getNbSolutions() < 1) {
-				for (Variable v: problem.getVariables()) {
-					addSolutionElement(v, v.getFirst()) ;
-//					logger.fine(v+" "+v.getFirst());
+				for (Variable v : problem.getVariables()) {
+					addSolutionElement(v, v.getFirst());
+					// logger.fine(v+" "+v.getFirst());
 				}
 			}
 			incrementNbSolutions();
-			return false;
+			return !allSolutions;
 		}
 
 		chronometer.checkExpiration();
@@ -132,13 +134,12 @@ public final class MACSolver extends AbstractSolver {
 	 * 
 	 * @see cspfj.Solver#run(int)
 	 */
-	public boolean run(final int maxDuration) throws OutOfTimeException {
-		int maxBT = -1;//getMaxBacktracks();
-		boolean result;
+	public boolean run(final long maxDuration) throws OutOfTimeException {
+		int maxBT = allSolutions ? -1 : getMaxBacktracks();
 
 		System.gc();
 		// enableNoGoods(2);
-		setMaxDuration(maxDuration);
+		setMaxDurationNano(maxDuration);
 
 		try {
 			final Filter preprocessor;
@@ -203,7 +204,7 @@ public final class MACSolver extends AbstractSolver {
 			// System.out.print("run ! ");
 			try {
 				setMaxBacktracks(maxBT);
-				result = mac(0, null);
+				mac(0, null);
 				break;
 			} catch (MaxBacktracksExceededException e) {
 				// On continue...
@@ -293,6 +294,10 @@ public final class MACSolver extends AbstractSolver {
 
 	public Filter getFilter() {
 		return filter;
+	}
+
+	public void setAllSolutions(boolean allSolutions) {
+		this.allSolutions = allSolutions;
 	}
 
 	// public int getMaxNoGoodSize() {

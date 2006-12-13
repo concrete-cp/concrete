@@ -63,6 +63,7 @@ public abstract class MatrixManager {
 			try {
 				init(true);
 			} catch (MatrixTooBigException e) {
+				clear();
 				return false;
 			}
 

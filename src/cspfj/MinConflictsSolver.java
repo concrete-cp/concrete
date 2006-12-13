@@ -276,14 +276,14 @@ public final class MinConflictsSolver extends AbstractSolver {
 
     }
 
-    public boolean run(final int maxDuration) throws OutOfTimeException,
+    public boolean run(final long maxDuration) throws OutOfTimeException,
             IOException {
         int localBT = (int) Math.sqrt(problem.getNbVariables()
                 * problem.getMaxDomainSize());
         boolean resolved = false;
         System.gc();
 
-        setMaxDuration(maxDuration);
+        setMaxDurationNano(maxDuration);
 
 		try {
 			final Filter preprocessor;

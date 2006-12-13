@@ -64,10 +64,10 @@ public class Chronometer {
         totalTime = getCurrentChronoNano();
     }
 
-    public final void setMaxDuration(final int maxDuration) {
+    public final void setMaxDurationNano(final long maxDuration) {
         startChrono();
         if (maxDuration >= 0) {
-            this.maxTime = getCurrentChronoNano() + (maxDuration * 1000000000L);
+            this.maxTime = getCurrentChronoNano() + maxDuration ;
         } else {
             maxTime = -1;
         }

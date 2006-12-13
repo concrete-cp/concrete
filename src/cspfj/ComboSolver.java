@@ -52,11 +52,11 @@ public class ComboSolver extends AbstractSolver {
 
 	}
 
-	public boolean run(final int maxDuration) throws OutOfTimeException,
+	public boolean run(final long maxDuration) throws OutOfTimeException,
 			IOException {
 		System.gc();
 
-		chronometer.setMaxDuration(maxDuration);
+		chronometer.setMaxDurationNano(maxDuration);
 
 		long prepro = chronometer.getRemainingTimeNano();
 
@@ -87,13 +87,23 @@ public class ComboSolver extends AbstractSolver {
 		}
 		checkExpiration();
 		prepro -= chronometer.getRemainingTimeNano();
-		prepro /= problem.getMaxDomainSize();
-		// prepro *=Math.sqrt(problem.getNbVariables());
-		if (prepro < 1e9) {
-			prepro = 1000000000L;
+
+		switch (useSpace()) {
+		case NONE:
+			prepro *= problem.getNbVariables();
+			break;
+
+		default:
+			prepro /= problem.getMaxDomainSize();
 		}
 
-		//final Random random = MinConflictsSolver.getRandom();
+		if (prepro < 1e8) {
+			prepro = 100000000L;
+		}
+
+		logger.info("prepro : " + prepro);
+
+		// final Random random = MinConflictsSolver.getRandom();
 
 		long localMinimumTime = chronometer.getRemainingTimeNano();
 		if (minConflicts(1, chronometer.getRemainingTime())) {
@@ -102,9 +112,13 @@ public class ComboSolver extends AbstractSolver {
 		checkExpiration();
 
 		localMinimumTime -= chronometer.getRemainingTimeNano();
+
+		logger.info("local : " + localMinimumTime);
+
 		localMinimumTime *= 5;
-		if (localMinimumTime < 1e9) {
-			localMinimumTime = 1000000000L;
+
+		if (localMinimumTime < 1e8) {
+			localMinimumTime = 100000000L;
 		}
 
 		boolean alt = false;
@@ -112,8 +126,16 @@ public class ComboSolver extends AbstractSolver {
 		do {
 			prepro *= 1.5;
 
-			if (mac(-1, Math.min(chronometer.getRemainingTime(), Math
-					.round(prepro / 1e9f)))) {
+			final long macDuration;
+
+			if (chronometer.getRemainingTimeNano() < 0) {
+				macDuration = prepro;
+			} else {
+				macDuration = Math.min(chronometer.getRemainingTimeNano(),
+						prepro);
+			}
+
+			if (mac(-1, macDuration)) {
 				return getSolution().size() > 0;
 			}
 
@@ -125,8 +147,17 @@ public class ComboSolver extends AbstractSolver {
 				}
 			}
 			localMinimumTime *= 1.5;
-			if (minConflicts(-1, Math.min(chronometer.getRemainingTime(), Math
-					.round(localMinimumTime / 1e9f)))) {
+			
+			final long localDuration ;
+			
+			if (chronometer.getRemainingTimeNano() < 0) {
+				localDuration = prepro;
+			} else {
+				localDuration = Math.min(chronometer.getRemainingTimeNano(),
+						localMinimumTime);
+			}
+			
+			if (minConflicts(-1, localDuration)) {
 				return true;
 			}
 
@@ -137,10 +168,10 @@ public class ComboSolver extends AbstractSolver {
 
 	}
 
-	private final boolean mac(final int maxBT, final int duration) {
+	private final boolean mac(final int maxBT, final long duration) {
 		logger.info("MAC (" + duration + "s)");
 		macSolver.setMaxBacktracks(maxBT);
-		macSolver.setMaxDuration(duration);
+		macSolver.setMaxDurationNano(duration);
 		try {
 			if (macSolver.mac(0, null)) {
 				// logger.info(macSolver.getSolution().toString());
@@ -164,12 +195,12 @@ public class ComboSolver extends AbstractSolver {
 		return false;
 	}
 
-	private final boolean minConflicts(final int maxLM, final int duration)
+	private final boolean minConflicts(final int maxLM, final long duration)
 			throws IOException {
 		logger.info("Local (" + duration + "s)");
 
 		mCSolver.setMaxBacktracks(maxLM);
-		mCSolver.setMaxDuration(duration);
+		mCSolver.setMaxDurationNano(duration);
 
 		try {
 
