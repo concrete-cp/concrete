@@ -144,7 +144,7 @@ public final class MinConflictsSolver extends AbstractSolver {
                 for (Variable v : problem.getVariables()) {
                     solution.put(v, v.getDomain()[v.getFirst()]);
                 }
-                solution(solution, nbConflicts);
+                solution(solution, problem.getNbConstraints()-nbConflicts);
             }
 
             if (logger.isLoggable(Level.FINE)) {

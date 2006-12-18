@@ -81,8 +81,8 @@ public class ResultHandler {
 	}
 
 	public boolean solution(final Map<Variable, Integer> solution,
-			final int nbConflicts) throws IOException {
-		return solution(solution, nbConflicts, false);
+			final int nbSatisfied) throws IOException {
+		return solution(solution, nbSatisfied, false);
 	}
 
 	public boolean solution(final Map<Variable, Integer> solution,
