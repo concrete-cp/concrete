@@ -64,7 +64,7 @@ public final class WfsJW implements Heuristic {
 		return (double) tot;
 	}
 
-	public int selectPair() {
+	public long selectPair() {
 		Variable bestVariable = null;
 		int bestValue = -1;
 		double bestScore = 0;

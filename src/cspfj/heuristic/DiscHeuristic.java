@@ -18,7 +18,7 @@ public class DiscHeuristic implements Heuristic {
 		this.variables = problem.getVariables();
 	}
 
-	public int selectPair() {
+	public long selectPair() {
 		Variable bestVariable = null;
 		double bestIndexScore = Double.NEGATIVE_INFINITY;
 

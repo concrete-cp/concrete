@@ -18,15 +18,15 @@ public abstract class Pair {
 		Pair.problem = problem;
 	}
 
-	public static int pair(final Variable variable, final int index) {
+	public static long pair(final Variable variable, final int index) {
 		return variable.getId() * maxV + index;
 	}
 
-	public static Variable variable(final int pair) {
-		return problem.getVariable(pair / maxV);
+	public static Variable variable(final long pair) {
+		return problem.getVariable((int)(pair / maxV));
 	}
 
-	public static int index(final int pair) {
-		return pair % maxV;
+	public static int index(final long pair) {
+		return (int)(pair % maxV);
 	}
 }

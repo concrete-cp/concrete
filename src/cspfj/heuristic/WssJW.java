@@ -124,7 +124,7 @@ public final class WssJW implements Heuristic {
 		recompute.clear();
 	}
 
-	public int selectPair() {
+	public long selectPair() {
 		recompute();
 		Variable bestVariable = null;
 		int bestValue = -1;

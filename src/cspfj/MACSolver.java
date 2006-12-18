@@ -81,7 +81,7 @@ public final class MACSolver extends AbstractSolver {
 			return false;
 		}
 
-		final int pair = heuristic.selectPair();
+		final long pair = heuristic.selectPair();
 
 		final Variable selectedVariable = Pair.variable(pair);
 

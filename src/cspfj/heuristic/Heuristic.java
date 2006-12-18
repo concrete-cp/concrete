@@ -1,7 +1,7 @@
 package cspfj.heuristic;
 
 public interface Heuristic {
-	int selectPair();
+	long selectPair();
 
 	void compute();
 }

@@ -18,7 +18,7 @@ public class ProdHeuristic implements Heuristic {
 		this.variables = problem.getVariables();
 	}
 
-	public int selectPair() {
+	public long selectPair() {
 		Variable bestVariable = null;
 		for (Variable v : variables) {
 			if (!v.isAssigned()
