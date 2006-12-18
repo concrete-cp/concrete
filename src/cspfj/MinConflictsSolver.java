@@ -39,251 +39,254 @@ import cspfj.heuristic.Heuristic;
 
 public final class MinConflictsSolver extends AbstractSolver {
 
-    private final static Random random = new Random(0);
+	private final static Random random = new Random(0);
 
-    private int nbConflicts;
+	private int nbConflicts;
 
-    private final static Logger logger = Logger
-            .getLogger("cspfj.solver.MinConflictsSolver");
+	private final static Logger logger = Logger
+			.getLogger("cspfj.solver.MinConflictsSolver");
 
-    private final boolean[] toUpdate;
+	private final boolean[] toUpdate;
 
-    private final TabuManager tabuManager;
+	private final TabuManager tabuManager;
 
-    private final float randomWalk;
+	private final float randomWalk;
 
-    public MinConflictsSolver(Problem prob, ResultHandler resultHandler, Heuristic heuristic) {
-        super(prob, resultHandler);
-        toUpdate = new boolean[prob.getNbVariables()];
-        for (int i = 0; i < toUpdate.length; i++) {
-            toUpdate[i] = false;
-        }
+	public MinConflictsSolver(Problem prob, ResultHandler resultHandler,
+			Heuristic heuristic) {
+		super(prob, resultHandler);
+		toUpdate = new boolean[prob.getNbVariables()];
+		for (int i = 0; i < toUpdate.length; i++) {
+			toUpdate[i] = false;
+		}
 
-        tabuManager = new TabuManager(problem, 15);
+		tabuManager = new TabuManager(problem, 15);
 
-        randomWalk = 1F / problem.getMaxDomainSize();
+		randomWalk = 1F / problem.getMaxDomainSize();
 
-    }
+	}
 
-    private void init() {
+	private void init() {
 
-        logger.fine("Initializing...");
+		logger.fine("Initializing...");
 
-        // final int[] assignments = new int[problem.getNbVariables()];
+		// final int[] assignments = new int[problem.getNbVariables()];
 
-        for (Variable v : problem.getVariables()) {
-            if (v.getDomainSize() <= 0) {
-                v.restoreLevel(1);
-            }
-        }
+		for (Variable v : problem.getVariables()) {
+			if (v.getDomainSize() <= 0) {
+				v.restoreLevel(1);
+			}
+		}
 
-        for (Variable v : problem.getVariables()) {
-            final int index = v.getBestInitialIndex(random);
+		for (Variable v : problem.getVariables()) {
+			final int index = v.getBestInitialIndex(random);
 
-            if (v.isAssigned()) {
-                v.unassign(problem);
-            }
+			if (v.isAssigned()) {
+				v.unassign(problem);
+			}
 
-            v.restoreLevel(1);
+			v.restoreLevel(1);
 
-            if (logger.isLoggable(Level.FINE)) {
-                logger.fine(v.toString() + " (" + v.getDomainSize() + ") <- "
-                        + index);
-            }
-            v.assign(index, problem);
-        }
+			if (logger.isLoggable(Level.FINE)) {
+				logger.fine(v.toString() + " (" + v.getDomainSize() + ") <- "
+						+ index);
+			}
+			v.assign(index, problem);
+		}
 
-        nbConflicts = weightedConflicts();
+		nbConflicts = weightedConflicts();
 
-        for (Variable v : problem.getVariables()) {
-            v.updateNbConflicts(random);
-        }
+		for (Variable v : problem.getVariables()) {
+			v.updateNbConflicts(random);
+		}
 
-    }
+	}
 
-    private int realConflicts() {
-        int realConflicts = 0;
+	private int realConflicts() {
+		int realConflicts = 0;
 
-        for (Constraint c : problem.getConstraints()) {
-            if (!c.checkFirst()) {
-                realConflicts++;
-            }
-        }
+		for (Constraint c : problem.getConstraints()) {
+			if (!c.checkFirst()) {
+				realConflicts++;
+			}
+		}
 
-        return realConflicts;
-    }
+		return realConflicts;
+	}
 
-    private int weightedConflicts() {
-        int weightedConflicts = 0;
+	private int weightedConflicts() {
+		int weightedConflicts = 0;
 
-        for (Constraint c : problem.getConstraints()) {
-            if (!c.checkFirst()) {
-                weightedConflicts += c.getWeight();
-            }
-        }
+		for (Constraint c : problem.getConstraints()) {
+			if (!c.checkFirst()) {
+				weightedConflicts += c.getWeight();
+			}
+		}
 
-        return weightedConflicts;
-    }
+		return weightedConflicts;
+	}
 
-    public void minConflicts() throws MaxBacktracksExceededException,
-            OutOfTimeException, IOException {
+	public void minConflicts() throws MaxBacktracksExceededException,
+			OutOfTimeException, IOException {
 
-        init();
+		init();
 
-        logger.fine("Searching...");
+		logger.fine("Searching...");
 
-        int bestEver = Integer.MAX_VALUE;
+		int bestEver = Integer.MAX_VALUE;
 
-        final TieManager<Integer, Integer> tieManager = new TieManager<Integer, Integer>(
-                -1, Integer.MAX_VALUE);
+		final TieManager<Integer, Integer> tieManager = new TieManager<Integer, Integer>(
+				-1, Integer.MAX_VALUE);
 
-        while (nbConflicts > 0) {
-            if (nbConflicts < bestEver) {
-                bestEver = nbConflicts;
-                final Map<Variable, Integer> solution = new HashMap<Variable, Integer>();
-                for (Variable v : problem.getVariables()) {
-                    solution.put(v, v.getDomain()[v.getFirst()]);
-                }
-                solution(solution, problem.getNbConstraints()-nbConflicts);
-            }
+		while (nbConflicts > 0) {
+			if (nbConflicts < bestEver) {
+				bestEver = nbConflicts;
+				final Map<Variable, Integer> solution = new HashMap<Variable, Integer>();
+				for (Variable v : problem.getVariables()) {
+					solution.put(v, v.getDomain()[v.getFirst()]);
+				}
+				solution(solution,  problem.getNbConstraints() -nbConflicts);
+				//incrementNbSolutions();
+			}
+
+			if (logger.isLoggable(Level.FINE)) {
+				final int realConflicts = realConflicts();
+
+				logger.fine(nbConflicts + " conflicts " + "(real = "
+						+ realConflicts + ", " + getNbBacktracks() + "/"
+						+ getMaxBacktracks() + ")");
+
+			}
+			assert realConflicts() <= nbConflicts;
+
+			try {
+				chronometer.checkExpiration();
+			} catch (OutOfTimeException e) {
+				if (getNbBacktracks() >= 1) {
+					throw e;
+				}
+			}
+
+			if (random.nextFloat() < randomWalk) {
+				// checkBacktracks();
 
-            if (logger.isLoggable(Level.FINE)) {
-                final int realConflicts = realConflicts();
-
-                logger.fine(nbConflicts + " conflicts " + "(real = "
-                        + realConflicts + ", " + getNbBacktracks() + "/"
-                        + getMaxBacktracks() + ")");
-
-            }
-            assert realConflicts() <= nbConflicts;
-
-            try {
-                chronometer.checkExpiration();
-            } catch (OutOfTimeException e) {
-                if (getNbBacktracks() >= 1) {
-                    throw e;
-                }
-            }
-
-            if (random.nextFloat() < randomWalk) {
-                // checkBacktracks();
+				final Variable variable = problem.getVariable(random
+						.nextInt(problem.getNbVariables()));
+
+				final int oldIndex = variable.getFirst();
 
-                final Variable variable = problem.getVariable(random
-                        .nextInt(problem.getNbVariables()));
+				variable.unassign(problem);
+
+				final int index = variable.assignRandomPresentIndex(random,
+						problem);
 
-                final int oldIndex = variable.getFirst();
+				if (oldIndex != index) {
+					nbConflicts += variable.getImprovment(index);
 
-                variable.unassign(problem);
+					variable.updateNbConflicts(random);
+					for (Variable n : variable.getNeighbours()) {
+						n.updateNbConflicts(random);
+					}
+				}
+				assert nbConflicts == weightedConflicts() : nbConflicts + "/="
+						+ weightedConflicts();
 
-                final int index = variable.assignRandomPresentIndex(random,
-                        problem);
+			} else {
 
-                if (oldIndex != index) {
-                    nbConflicts += variable.getImprovment(index);
+				Variable bestVariable = null;
 
-                    variable.updateNbConflicts(random);
-                    for (Variable n : variable.getNeighbours()) {
-                        n.updateNbConflicts(random);
-                    }
-                }
-                assert nbConflicts == weightedConflicts() : nbConflicts + "/="
-                        + weightedConflicts();
+				tieManager.clear();
 
-            } else {
+				int bestImp = tieManager.getBestEvaluation();
 
-                Variable bestVariable = null;
+				for (Variable v : problem.getVariables()) {
 
-                tieManager.clear();
+					if (v.getNbConflicts() <= -bestImp) {
+						continue;
+					}
 
-                int bestImp = tieManager.getBestEvaluation();
+					final int index = v.bestImprovment(tabuManager, random,
+							bestEver - nbConflicts);
+					if (index < 0) {
+						continue;
+					}
 
-                for (Variable v : problem.getVariables()) {
+					if (tieManager.newValue(index, v.getImprovment(index),
+							random)) {
+						bestVariable = v;
+						bestImp = tieManager.getBestEvaluation();
+					}
 
-                    if (v.getNbConflicts() <= -bestImp) {
-                        continue;
-                    }
+				}
 
-                    final int index = v.bestImprovment(tabuManager, random,
-                            bestEver - nbConflicts);
-                    if (index < 0) {
-                        continue;
-                    }
+				if (tieManager.getBestValue() < 0) {
+					logger.fine("Cleaning tabu list");
+					tabuManager.clean();
+					checkBacktracks();
+					continue;
+				}
 
-                    if (tieManager.newValue(index, v.getImprovment(index),
-                            random)) {
-                        bestVariable = v;
-                        bestImp = tieManager.getBestEvaluation();
-                    }
+				tabuManager.push(bestVariable, tieManager.getBestValue());
 
-                }
+				bestVariable.unassign(problem);
+				bestVariable.assign(tieManager.getBestValue(), problem);
 
-                if (tieManager.getBestValue() < 0) {
-                    logger.fine("Cleaning tabu list");
-                    tabuManager.clean();
-                    checkBacktracks();
-                    continue;
-                }
+				nbConflicts += bestImp;
 
-                tabuManager.push(bestVariable, tieManager.getBestValue());
+				if (bestImp >= 0) {
+					// Minimum local
+					checkBacktracks();
+					for (Constraint c : problem.getConstraints()) {
+						if (!c.checkFirst()) {
+							nbConflicts++;
+							c.increaseWeight();
+							for (Variable v : c.getInvolvedVariables()) {
+								toUpdate[v.getId()] = true;
+							}
+						}
+					}
 
-                bestVariable.unassign(problem);
-                bestVariable.assign(tieManager.getBestValue(), problem);
+				}
 
-                nbConflicts += bestImp;
+				toUpdate[bestVariable.getId()] = true;
+				for (Variable n : bestVariable.getNeighbours()) {
+					toUpdate[n.getId()] = true;
+				}
 
-                if (bestImp >= 0) {
-                    // Minimum local
-                    checkBacktracks();
-                    for (Constraint c : problem.getConstraints()) {
-                        if (!c.checkFirst()) {
-                            nbConflicts++;
-                            c.increaseWeight();
-                            for (Variable v : c.getInvolvedVariables()) {
-                                toUpdate[v.getId()] = true;
-                            }
-                        }
-                    }
+				for (int i = 0; i < problem.getNbVariables(); i++) {
+					if (toUpdate[i]) {
+						problem.getVariable(i).updateNbConflicts(random);
+						toUpdate[i] = false;
+					}
+				}
 
-                }
+				assert nbConflicts == weightedConflicts() : nbConflicts + "/="
+						+ weightedConflicts();
 
-                toUpdate[bestVariable.getId()] = true;
-                for (Variable n : bestVariable.getNeighbours()) {
-                    toUpdate[n.getId()] = true;
-                }
+			}
 
-                for (int i = 0; i < problem.getNbVariables(); i++) {
-                    if (toUpdate[i]) {
-                        problem.getVariable(i).updateNbConflicts(random);
-                        toUpdate[i] = false;
-                    }
-                }
+			incrementNbAssignments();
 
-                assert nbConflicts == weightedConflicts() : nbConflicts + "/="
-                        + weightedConflicts();
+		}
 
-            }
+		for (Variable v : problem.getVariables()) {
+			addSolutionElement(v, v.getFirst());
+		}
 
-            incrementNbAssignments();
+		incrementNbSolutions();
+		assert realConflicts() == 0 : getSolution() + " -> " + realConflicts()
+				+ " conflicts ! (" + weightedConflicts() + " wc)";
 
-        }
+	}
 
-        for (Variable v : problem.getVariables()) {
-            addSolutionElement(v, v.getFirst());
-        }
+	public boolean run(final long maxDuration) throws OutOfTimeException,
+			IOException {
+		int localBT = (int) Math.sqrt(problem.getNbVariables()
+				* problem.getMaxDomainSize());
+		boolean resolved = false;
+		System.gc();
 
-        assert realConflicts() == 0 : getSolution() + " -> " + realConflicts()
-                + " conflicts ! (" + weightedConflicts() + " wc)";
-
-    }
-
-    public boolean run(final long maxDuration) throws OutOfTimeException,
-            IOException {
-        int localBT = (int) Math.sqrt(problem.getNbVariables()
-                * problem.getMaxDomainSize());
-        boolean resolved = false;
-        System.gc();
-
-        setMaxDurationNano(maxDuration);
+		setMaxDurationNano(maxDuration);
 
 		try {
 			final Filter preprocessor;
@@ -310,36 +313,36 @@ public final class MinConflictsSolver extends AbstractSolver {
 			throw e;
 		}
 
-        do {
-            setMaxBacktracks(localBT);
-            try {
-                minConflicts();
-                resolved = true;
-            } catch (MaxBacktracksExceededException e) {
-                problem.restoreAll(1);
-            } catch (OutOfTimeException e) {
-                chronometer.validateChrono();
-                throw e;
-            } catch (OutOfMemoryError e) {
-                chronometer.validateChrono();
-                throw e;
-            } catch (IOException e) {
-                chronometer.validateChrono();
-                throw e;
-            }
+		do {
+			setMaxBacktracks(localBT);
+			try {
+				minConflicts();
+				resolved = true;
+			} catch (MaxBacktracksExceededException e) {
+				problem.restoreAll(1);
+			} catch (OutOfTimeException e) {
+				chronometer.validateChrono();
+				throw e;
+			} catch (OutOfMemoryError e) {
+				chronometer.validateChrono();
+				throw e;
+			} catch (IOException e) {
+				chronometer.validateChrono();
+				throw e;
+			}
 
-            for (Constraint c : problem.getConstraints()) {
-                c.setWeight(Math.max(1, (int) Math.sqrt(c.getWeight())));
-            }
-            localBT *= 1.2;
-        } while (!resolved);
+			for (Constraint c : problem.getConstraints()) {
+				c.setWeight(Math.max(1, (int) Math.sqrt(c.getWeight())));
+			}
+			localBT *= 1.2;
+		} while (!resolved);
 
-        chronometer.validateChrono();
-        return true;
+		chronometer.validateChrono();
+		return true;
 
-    }
+	}
 
-    public static Random getRandom() {
-        return random;
-    }
+	public static Random getRandom() {
+		return random;
+	}
 }

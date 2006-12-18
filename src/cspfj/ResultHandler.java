@@ -52,7 +52,7 @@ public class ResultHandler {
 	private static final Logger logger = Logger
 			.getLogger("cspfj.AbstractResultWriter");
 
-	protected int bestConflicts = Integer.MAX_VALUE;
+	protected int bestSatisfied = 0;
 
 	public ResultHandler(final boolean displaySolutions) {
 		this.writer = new OutputStreamWriter(System.out);
@@ -86,10 +86,10 @@ public class ResultHandler {
 	}
 
 	public boolean solution(final Map<Variable, Integer> solution,
-			final int nbConflicts, final boolean forced) throws IOException {
-		if (forced || displaySolutions && nbConflicts < bestConflicts) {
-			bestConflicts = nbConflicts;
-			logger.info(solution.toString() + "(" + nbConflicts + ")");
+			final int nbSatisfied, final boolean forced) throws IOException {
+		if (forced || displaySolutions && nbSatisfied > bestSatisfied) {
+			bestSatisfied = nbSatisfied;
+			logger.info(solution.toString() + "(" + nbSatisfied + ")");
 			return true;
 		}
 		return false;
