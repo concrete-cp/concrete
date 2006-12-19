@@ -85,7 +85,11 @@ public final class MACSolver extends AbstractSolver {
 
 		final Variable selectedVariable = Pair.variable(pair);
 
+		assert selectedVariable.getDomainSize() > 0;
+
 		final int selectedIndex = Pair.index(pair);
+
+		assert selectedVariable.isPresent(selectedIndex);
 
 		// final int selectedIndex = selectedVariable.getFirstPresentIndex();
 
@@ -167,6 +171,7 @@ public final class MACSolver extends AbstractSolver {
 
 			for (Variable v : problem.getVariables()) {
 				removed += v.getDomain().length - v.getDomainSize();
+
 			}
 
 			statistics("prepro-removed", removed);
@@ -196,11 +201,16 @@ public final class MACSolver extends AbstractSolver {
 
 		heuristic.compute();
 
+		final Filter filter = getFilter() ;
+		
 		//
 		// logger.fine("ok!") ;
 
 		// final Random random = new Random(0);
 		do {
+			for (Variable v : problem.getVariables()) {
+				assert v.getDomainSize() > 0;
+			}
 			// System.out.print("run ! ");
 			try {
 				setMaxBacktracks(maxBT);
@@ -219,7 +229,10 @@ public final class MACSolver extends AbstractSolver {
 			maxBT *= 1.5;
 			addNoGoods();
 			problem.restoreAll(1);
-			new AC3(problem).reduceAll(0);
+			if (!filter.reduceAll(0)) {
+				chronometer.validateChrono();
+				return false;
+			}
 		} while (true);
 
 		chronometer.validateChrono();
