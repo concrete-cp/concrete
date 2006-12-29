@@ -267,10 +267,10 @@ public abstract class Constraint {
 
         assert !variable.isAssigned();
 
-//        if (skipRevision(position)) {
-////            nbSkippedRevisions++;
-//            return false;
-//        }
+        if (skipRevision(position)) {
+//            nbSkippedRevisions++;
+            return false;
+        }
 
         boolean revised = false;
 

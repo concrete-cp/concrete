@@ -295,10 +295,10 @@ public final class Variable implements Comparable<Variable> {
 		assert !reinitBooleanDomain();
 		problem.decreaseFutureVariables();
 
-//		for (Constraint c : involvingConstraints) {
-//			assert c.findValidTuple(this, index) : c + " is not valid !\n" + problem;
-//			assert c.check() : c + "is not valid !";
-//		}
+		for (Constraint c : involvingConstraints) {
+			assert c.findValidTuple(this, index) : c + " is not valid !\n" + problem;
+			assert c.check() : c + "is not valid !";
+		}
 	}
 
 	/**
