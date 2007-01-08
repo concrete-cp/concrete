@@ -1,24 +1,16 @@
-package cspfj.problem;
+package cspfj.util;
 
-public final class ChainedDomain implements Cloneable {
-	private final int[] next0;
+public final class OrderedChain extends AbstractChain implements Cloneable {
+	private int[] next0;
 
-	private final int[] prev0;
+	private int[] prev0;
 
-	private final int[] next;
-
-	private final int[] prev;
-
-	private int firstPresentIndex;
-
-	private int lastPresentIndex;
-
-	public ChainedDomain(int length) {
-		this.next = new int[length];
-		this.prev = new int[length];
+	public OrderedChain(int length) {
+		super(length);
 
 		this.next0 = new int[length];
 		this.prev0 = new int[length];
+
 	}
 
 	public void reOrder(final int[] order, final int[] removed) {
@@ -86,38 +78,15 @@ public final class ChainedDomain implements Cloneable {
 		}
 	}
 
-	public int getFirst() {
-		return firstPresentIndex;
-	}
+	public OrderedChain clone() {
 
-	public int getLast() {
-		return lastPresentIndex;
-	}
+		final OrderedChain clone = (OrderedChain) super.clone();
 
-	public int getNext(final int index) {
-		return next[index];
-	}
-
-	public ChainedDomain clone() {
-		final int length = next.length;
-		final ChainedDomain clone = new ChainedDomain(length);
-
-		clone.firstPresentIndex = firstPresentIndex;
-		clone.lastPresentIndex = lastPresentIndex;
-		System.arraycopy(next, 0, clone.next, 0, length);
-		System.arraycopy(prev, 0, clone.prev, 0, length);
-		System.arraycopy(next0, 0, clone.next0, 0, length);
-		System.arraycopy(prev0, 0, clone.prev0, 0, length);
+		clone.next0 = next0.clone();
+		clone.prev0 = prev0.clone();
 
 		return clone;
 
 	}
-	//	
-	// final int length = next.length;
-	// final ChainedDomain domain = new ChainedDomain(length);
-	//
-	// domain.firstPresentIndex = firstPresentIndex;
-
-	// return domain;
-	// }
+	
 }

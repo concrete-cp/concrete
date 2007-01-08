@@ -279,9 +279,10 @@ public final class Problem {
         }
         for (Constraint c : getConstraints()) {
             sb.append(c.toString());
-            sb.append('\n');
+            sb.append(' ');
         }
-
+        sb.append('\n');
+        
         return sb.toString();
     }
 
@@ -376,6 +377,9 @@ public final class Problem {
         }
         scope.clear();
         pastVariables.clear();
+        for (Constraint c: getConstraints()) {
+            c.initNbSupports();
+        }
         return nbNoGoods;
     }
 

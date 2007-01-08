@@ -32,7 +32,7 @@ import cspfj.exception.OutOfTimeException;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.TieManager;
-import cspfj.filter.AC3;
+import cspfj.filter.AC3_R;
 import cspfj.filter.Filter;
 import cspfj.filter.SAC;
 import cspfj.heuristic.Heuristic;
@@ -292,17 +292,17 @@ public final class MinConflictsSolver extends AbstractSolver {
 			final Filter preprocessor;
 			switch (useSpace()) {
 			case BRANCH:
-				preprocessor = new SAC(problem, chronometer, new AC3(problem),
+				preprocessor = new SAC(problem, chronometer, new AC3_R(problem),
 						true);
 				break;
 
 			case CLASSIC:
-				preprocessor = new SAC(problem, chronometer, new AC3(problem),
+				preprocessor = new SAC(problem, chronometer, new AC3_R(problem),
 						false);
 				break;
 
 			default:
-				preprocessor = new AC3(problem);
+				preprocessor = new AC3_R(problem);
 			}
 			if (!preprocessor.reduceAll(0)) {
 				chronometer.validateChrono();

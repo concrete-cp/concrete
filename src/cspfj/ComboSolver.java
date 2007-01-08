@@ -42,10 +42,10 @@ public class ComboSolver extends AbstractSolver {
 	// private final NoGoodManager noGoodManager;
 
 	public ComboSolver(Problem prob, ResultHandler resultHandler,
-			Heuristic heuristic) {
+			Heuristic heuristic, boolean reverse) {
 		super(prob, resultHandler);
 
-		macSolver = new MACSolver(prob, resultHandler, heuristic);
+		macSolver = new MACSolver(prob, resultHandler, heuristic, reverse);
 		// macSolver.enableNoGoods(2);
 		// noGoodManager = macSolver.getNoGoodManager();
 		mCSolver = new MinConflictsSolver(prob, resultHandler, null);

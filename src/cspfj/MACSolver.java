@@ -25,7 +25,8 @@ import java.util.logging.Logger;
 import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.exception.OutOfTimeException;
-import cspfj.filter.AC3;
+import cspfj.filter.AC3_P;
+import cspfj.filter.AC3_R;
 import cspfj.filter.Filter;
 import cspfj.filter.SAC;
 import cspfj.heuristic.Heuristic;
@@ -48,9 +49,9 @@ public final class MACSolver extends AbstractSolver {
 	// private int maxNoGoodSize;
 
 	public MACSolver(Problem prob, ResultHandler resultHandler,
-			Heuristic heuristic) {
+			Heuristic heuristic, boolean reverse) {
 		super(prob, resultHandler);
-		filter = new AC3(problem);
+		filter = reverse?new AC3_R(problem):new AC3_P(problem);
 		// heuristic = new WDegOnDomBySupports(prob);
 		this.heuristic = heuristic;
 		setMaxBacktracks(problem.getNbVariables());
@@ -114,8 +115,6 @@ public final class MACSolver extends AbstractSolver {
 			return true;
 		}
 
-		checkBacktracks();
-
 		// problem.increaseWeights();
 		selectedVariable.unassign(problem);
 		problem.restore(level + 1);
@@ -128,6 +127,8 @@ public final class MACSolver extends AbstractSolver {
 		// System.out.println(level + " : " + selectedVariable + " /= "
 		// + selectedVariable.getDomain()[selectedIndex]);
 		selectedVariable.remove(selectedIndex, level);
+
+		checkBacktracks();
 
 		return mac(level, selectedVariable);
 
@@ -186,8 +187,8 @@ public final class MACSolver extends AbstractSolver {
 					.getNbEffectiveRevisions());
 			statistics("prepro-nbuselessrevisions", Constraint
 					.getNbUselessRevisions());
-			// statistics("prepro-nbskippedrevisions",
-			// Constraint.getNbSkippedRevisions());
+//			statistics("prepro-nbskippedrevisions", Constraint
+//					.getNbSkippedRevisions());
 
 			if (preprocessor instanceof SAC) {
 				statistics("prepro-singletontests", ((SAC) preprocessor)
@@ -201,8 +202,8 @@ public final class MACSolver extends AbstractSolver {
 
 		heuristic.compute();
 
-		final Filter filter = getFilter() ;
-		
+		final Filter filter = getFilter();
+
 		//
 		// logger.fine("ok!") ;
 

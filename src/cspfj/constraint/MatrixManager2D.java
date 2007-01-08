@@ -6,146 +6,154 @@ import cspfj.util.BooleanArray;
 
 public final class MatrixManager2D extends MatrixManager {
 
-	private final int[][][] matrix2D;
+    private int[][][] matrix2D;
 
-	private int[] mask;
+    private int[] mask;
 
-	private int[] domain;
+    private int[] domain;
 
-	private int currentPart;
+    private int currentPart;
 
-	private int currentPosition;
+    private int currentPosition;
 
-	private int current;
+    private int current;
 
-	public MatrixManager2D(Variable[] scope, int[] tuple) {
-		super(scope, tuple);
-		matrix2D = new int[2][][];
-	}
+    public MatrixManager2D(Variable[] scope, int[] tuple) {
+        super(scope, tuple);
+    }
 
-	public void init(final boolean initialState) throws MatrixTooBigException {
-		super.init(initialState);
-		final int[] domainSize = this.domainSize;
-		final int[][][] matrix2D = this.matrix2D;
-		for (int i = 2; --i >= 0;) {
-			matrix2D[i] = new int[domainSize[i]][BooleanArray
-					.booleanArraySize(domainSize[1 - i])];
-			for (int[] array : matrix2D[i]) {
-				BooleanArray.initBooleanArray(array, domainSize[1 - i],
-						initialState);
-			}
-		}
+    public void init(final boolean initialState) throws MatrixTooBigException {
+        super.init(initialState);
+        final int[] domainSize = this.domainSize;
 
-	}
+        final int maxDomainSize = Math.max(domainSize[0], domainSize[1]);
 
-	@Override
-	public boolean set(final int[] tuple, final boolean status) {
-		BooleanArray.set(matrix2D[0][tuple[0]], tuple[1], status);
-		return BooleanArray.set(matrix2D[1][tuple[1]], tuple[0], status);
-	}
+        final int[][][] matrix = new int[2][maxDomainSize][];
 
-	@Override
-	public boolean isTrue(final int[] tuple) {
-		return super.isTrue(tuple)
-				|| BooleanArray.isTrue(matrix2D[0][tuple[0]], tuple[1]);
-	}
+        for (int i = 2; --i >= 0;) {
+            for (int j = maxDomainSize; --j >= 0;) {
 
-	public void intersect(final Variable[] scope,
-			final Variable[] constraintScope, final boolean supports,
-			final int[][] tuples) throws MatrixTooBigException {
+                matrix[i][j] = new int[BooleanArray
+                        .booleanArraySize(domainSize[1 - i])];
 
-		final int[][][] matrix2D;
-		if (isActive()) {
-			matrix2D = this.matrix2D.clone();
-		} else {
-			matrix2D = null;
-		}
+                BooleanArray.initBooleanArray(matrix[i][j], domainSize[1 - i],
+                        initialState);
 
-		generate(scope, constraintScope, supports, tuples, 2);
+            }
+        }
 
-		if (matrix2D != null) {
-			for (int i = 2; --i >= 0;) {
-				for (int j = matrix2D[1 - i].length; --j >= 0;) {
-					for (int k = matrix2D[1 - i][j].length; --k >= 0;) {
-						this.matrix2D[1 - i][j][k] &= matrix2D[1 - i][j][k];
-					}
-				}
-			}
-		}
+        matrix2D = matrix;
 
-	}
+    }
 
-	@Override
-	public boolean setFirstTuple(final int variablePosition, final int index) {
-		this.variablePosition = variablePosition;
-		tuple[variablePosition] = index;
+    @Override
+    public boolean set(final int[] tuple, final boolean status) {
+        BooleanArray.set(matrix2D[0][tuple[0]], tuple[1], status);
+        return BooleanArray.set(matrix2D[1][tuple[1]], tuple[0], status);
+    }
 
-		if (isActive()) {
-			mask = matrix2D[variablePosition][index];
-			domain = variables[1 - variablePosition].getBooleanDomain();
-			currentPart = -1;
-			current = 0;
-			return next();
-		}
+    @Override
+    public boolean isTrue(final int[] tuple) {
+        return super.isTrue(tuple)
+                || BooleanArray.isTrue(matrix2D[0][tuple[0]], tuple[1]);
+    }
 
-		current = tuple[1 - variablePosition] = variables[1 - variablePosition]
-				.getFirst();
-		return true;
+    public void intersect(final Variable[] scope,
+            final Variable[] constraintScope, final boolean supports,
+            final int[][] tuples) throws MatrixTooBigException {
 
-	}
+        final int[][][] matrix2D;
+        if (isActive()) {
+            matrix2D = this.matrix2D.clone();
+        } else {
+            matrix2D = null;
+        }
 
-	@Override
-	public boolean next() {
-		if (!isActive()) {
-			current = tuple[1 - variablePosition] = variables[1 - variablePosition]
-					.getNext(current);
-			if (current < 0) {
-				return false;
-			}
-			return true;
-		}
+        generate(scope, constraintScope, supports, tuples, 2);
 
-		int currentPosition = this.currentPosition;
-		int current = this.current;
-		int currentPart = this.currentPart;
+        if (matrix2D != null) {
+            for (int i = 2; --i >= 0;) {
+                for (int j = matrix2D[1 - i].length; --j >= 0;) {
+                    for (int k = matrix2D[1 - i][j].length; --k >= 0;) {
+                        this.matrix2D[1 - i][j][k] &= matrix2D[1 - i][j][k];
+                    }
+                }
+            }
+        }
 
-		final int[] mask = this.mask;
-		final int[] domain = this.domain;
+    }
 
-		while (current == 0) {
-			currentPart++;
+    @Override
+    public boolean setFirstTuple(final int variablePosition, final int index) {
+        this.variablePosition = variablePosition;
+        tuple[variablePosition] = index;
 
-			if (currentPart >= mask.length) {
-				return false;
-			}
-			// System.err.print("-");
-			current = mask[currentPart] & domain[currentPart];
-			// System.err.println(Integer.toBinaryString(current));
-			currentPosition = -1;
-		}
+        if (isActive()) {
+            mask = matrix2D[variablePosition][index];
+            domain = variables[1 - variablePosition].getBooleanDomain();
+            currentPart = -1;
+            current = 0;
+            return next();
+        }
 
-		currentPosition++;
-		// System.err.print(Integer.toBinaryString(current)) ;
+        current = tuple[1 - variablePosition] = variables[1 - variablePosition]
+                .getFirst();
+        return true;
 
-		final int mask0 = BooleanArray.MASKS[0];
+    }
 
-		while ((current & mask0) == 0) {
-			currentPosition++;
-			current <<= 1;
-		}
+    @Override
+    public boolean next() {
+        if (!isActive()) {
+            current = tuple[1 - variablePosition] = variables[1 - variablePosition]
+                    .getNext(current);
+            if (current < 0) {
+                return false;
+            }
+            return true;
+        }
 
-		current <<= 1;
+        int currentPosition = this.currentPosition;
+        int current = this.current;
+        int currentPart = this.currentPart;
 
-		this.currentPart = currentPart;
-		this.current = current;
-		this.currentPosition = currentPosition;
+        final int[] mask = this.mask;
+        final int[] domain = this.domain;
 
-		tuple[1 - variablePosition] = currentPart * Integer.SIZE
-				+ currentPosition;
-		// System.err.println(" - " + tuple[1 - variablePosition]) ;
-		// System.err.println(Integer.toBinaryString(current) + " " +
-		// currentPart + " " + currentPosition);
-		return true;
-	}
+        while (current == 0) {
+            currentPart++;
+
+            if (currentPart >= mask.length) {
+                return false;
+            }
+            // System.err.print("-");
+            current = mask[currentPart] & domain[currentPart];
+            // System.err.println(Integer.toBinaryString(current));
+            currentPosition = -1;
+        }
+
+        currentPosition++;
+        // System.err.print(Integer.toBinaryString(current)) ;
+
+        final int mask0 = BooleanArray.MASKS[0];
+
+        while ((current & mask0) == 0) {
+            currentPosition++;
+            current <<= 1;
+        }
+
+        current <<= 1;
+
+        this.currentPart = currentPart;
+        this.current = current;
+        this.currentPosition = currentPosition;
+
+        tuple[1 - variablePosition] = currentPart * Integer.SIZE
+                + currentPosition;
+        // System.err.println(" - " + tuple[1 - variablePosition]) ;
+        // System.err.println(Integer.toBinaryString(current) + " " +
+        // currentPart + " " + currentPosition);
+        return true;
+    }
 
 }
