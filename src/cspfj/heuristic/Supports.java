@@ -13,4 +13,7 @@ public class Supports extends AbstractStaticValueHeuristic {
 		return variable.getNbSupports(index);
 	}
 
+	public String toString() {
+		return (isFailFirst() ? "min" : "max") + "-supports";
+	}
 }

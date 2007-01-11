@@ -13,4 +13,7 @@ public final class Inverse extends JW {
 		return -supports;
 	}
 
+	public String toString() {
+		return (isFailFirst() ? "min" : "max") + "-inverse";
+	}
 }

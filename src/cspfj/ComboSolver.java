@@ -1,30 +1,9 @@
-/**
- * CSPFJ - CSP solving API for Java
- * Copyright (C) 2006 Julien VION
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- */
-
 package cspfj;
 
 import java.io.IOException;
 import java.util.logging.Logger;
 
-import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
-import cspfj.exception.OutOfTimeException;
 import cspfj.filter.Filter;
 import cspfj.filter.SAC;
 import cspfj.heuristic.Heuristic;
@@ -44,134 +23,64 @@ public class ComboSolver extends AbstractSolver {
 	public ComboSolver(Problem prob, ResultHandler resultHandler,
 			Heuristic heuristic, boolean reverse) {
 		super(prob, resultHandler);
-
 		macSolver = new MACSolver(prob, resultHandler, heuristic, reverse);
-		// macSolver.enableNoGoods(2);
-		// noGoodManager = macSolver.getNoGoodManager();
-		mCSolver = new MinConflictsSolver(prob, resultHandler, null);
+		mCSolver = new MinConflictsSolver(prob, resultHandler, null, reverse);
 
 	}
 
-	public boolean run(final long maxDuration) throws OutOfTimeException,
-			IOException {
+	public boolean run() throws IOException {
 		System.gc();
 
-		chronometer.setMaxDurationNano(maxDuration);
-
-		long prepro = chronometer.getRemainingTimeNano();
-
-		try {
-			final Filter preprocessor;
-			switch (useSpace()) {
-			case BRANCH:
-				preprocessor = new SAC(problem, chronometer, macSolver
-						.getFilter(), true);
-				break;
-
-			case CLASSIC:
-				preprocessor = new SAC(problem, chronometer, macSolver
-						.getFilter(), false);
-				break;
-
-			default:
-				preprocessor = macSolver.getFilter();
-			}
-
-			if (!preprocessor.reduceAll(0)) {
-				chronometer.validateChrono();
-				return false;
-			}
-		} catch (OutOfTimeException e) {
-			chronometer.validateChrono();
-			throw e;
-		}
-		checkExpiration();
-		prepro -= chronometer.getRemainingTimeNano();
-
+		final Filter preprocessor;
 		switch (useSpace()) {
-		case NONE:
-			prepro *= problem.getNbVariables();
+		case BRANCH:
+			preprocessor = new SAC(problem, macSolver.getFilter(), true);
+			break;
+
+		case CLASSIC:
+			preprocessor = new SAC(problem, macSolver.getFilter(), false);
 			break;
 
 		default:
-			prepro /= problem.getMaxDomainSize();
+			preprocessor = macSolver.getFilter();
 		}
 
-		if (prepro < 1e8) {
-			prepro = 100000000L;
+		if (!preprocessor.reduceAll(0)) {
+			chronometer.validateChrono();
+			return false;
 		}
 
-		logger.info("prepro : " + prepro);
+		int maxBT = problem.getNbVariables();
+		int localBT = (int) Math.sqrt(problem.getNbVariables()
+				* problem.getMaxDomainSize());
 
-		// final Random random = MinConflictsSolver.getRandom();
-
-		long localMinimumTime = chronometer.getRemainingTimeNano();
-		if (minConflicts(1, chronometer.getRemainingTime())) {
-			return true;
-		}
-		checkExpiration();
-
-		localMinimumTime -= chronometer.getRemainingTimeNano();
-
-		logger.info("local : " + localMinimumTime);
-
-		localMinimumTime *= 5;
-
-		if (localMinimumTime < 1e8) {
-			localMinimumTime = 100000000L;
-		}
-
-		boolean alt = false;
+		// boolean alt = false;
 
 		do {
-			prepro *= 1.5;
-
-			final long macDuration;
-
-			if (chronometer.getRemainingTimeNano() < 0) {
-				macDuration = prepro;
-			} else {
-				macDuration = Math.min(chronometer.getRemainingTimeNano(),
-						prepro);
-			}
-
-			if (mac(-1, macDuration)) {
+			if (mac(maxBT)) {
 				return getSolution().size() > 0;
 			}
 
-			checkExpiration();
+			// if (alt) {
+			// for (Constraint c : problem.getConstraints()) {
+			// c.setWeight(1);
+			// }
+			// }
 
-			if (alt) {
-				for (Constraint c : problem.getConstraints()) {
-					c.setWeight(1);
-				}
-			}
-			localMinimumTime *= 1.5;
-			
-			final long localDuration ;
-			
-			if (chronometer.getRemainingTimeNano() < 0) {
-				localDuration = prepro;
-			} else {
-				localDuration = Math.min(chronometer.getRemainingTimeNano(),
-						localMinimumTime);
-			}
-			
-			if (minConflicts(-1, localDuration)) {
+			if (minConflicts(localBT)) {
 				return true;
 			}
 
-			checkExpiration();
+			maxBT *= 1.5;
+			localBT *= 1.5;
 
-			alt ^= true;
 		} while (true);
 
 	}
 
-	private final boolean mac(final int maxBT, final long duration) {
-		logger.info("MAC (" + duration + "s)");
+	private final boolean mac(final int maxBT) {
 		macSolver.setMaxBacktracks(maxBT);
-		macSolver.setMaxDurationNano(duration);
+
 		try {
 			if (macSolver.mac(0, null)) {
 				// logger.info(macSolver.getSolution().toString());
@@ -180,8 +89,6 @@ public class ComboSolver extends AbstractSolver {
 			chronometer.validateChrono();
 			return true;
 		} catch (MaxBacktracksExceededException e) {
-			// Continue
-		} catch (OutOfTimeException e) {
 			// Continue
 		} catch (OutOfMemoryError e) {
 			chronometer.validateChrono();
@@ -195,12 +102,8 @@ public class ComboSolver extends AbstractSolver {
 		return false;
 	}
 
-	private final boolean minConflicts(final int maxLM, final long duration)
-			throws IOException {
-		logger.info("Local (" + duration + "s)");
-
+	private final boolean minConflicts(final int maxLM) throws IOException {
 		mCSolver.setMaxBacktracks(maxLM);
-		mCSolver.setMaxDurationNano(duration);
 
 		try {
 
@@ -210,8 +113,6 @@ public class ComboSolver extends AbstractSolver {
 			chronometer.validateChrono();
 			return true;
 		} catch (MaxBacktracksExceededException e) {
-
-		} catch (OutOfTimeException e) {
 
 		} catch (OutOfMemoryError e) {
 			chronometer.validateChrono();
@@ -229,14 +130,17 @@ public class ComboSolver extends AbstractSolver {
 	public int getNbAssignments() {
 		return macSolver.getNbAssignments() + mCSolver.getNbAssignments();
 	}
+	
+	public String getXMLConfig() {
+		final StringBuffer sb = new StringBuffer() ;
+		
+		sb.append("\t\t\t<macSolver>\n").append(macSolver.getXMLConfig()).append("\t\t\t</macSolver>\n") ;
+		sb.append("\t\t\t<mcSolver>\n").append(mCSolver.getXMLConfig()).append("\t\t\t</mcSolver>\n") ;
+		sb.append("\t\t\t<space>").append(useSpace()).append("</space>\n");
 
-	public void checkExpiration() throws OutOfTimeException {
-		try {
-			chronometer.checkExpiration();
-		} catch (OutOfTimeException e) {
-			chronometer.validateChrono();
-			throw e;
-		}
+		return sb.toString();
 	}
+	
+	
 
 }

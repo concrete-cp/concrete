@@ -175,5 +175,9 @@ public class JW extends AbstractStaticValueHeuristic {
 	public final double getScore(final Variable variable, final int index) {
 		return scores[variable.getId()][index];
 	}
+	
+	public String toString() {
+		return (isFailFirst() ? "min" : "max") + "-JW";
+	}
 
 }

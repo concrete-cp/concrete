@@ -57,4 +57,8 @@ public class ProdHeuristic implements Heuristic {
 	public void compute() {
 		valueHeuristic.compute();
 	}
+	
+    public String toString() {
+    	return variableHeuristic + " * " + valueHeuristic ;
+    }
 }

@@ -114,4 +114,7 @@ public abstract class AbstractStaticValueHeuristic extends
 		return storeIndex;
 	}
 
+	public final boolean isFailFirst() {
+		return failFirst ;
+	}
 }

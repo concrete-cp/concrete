@@ -22,12 +22,10 @@ import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import cspfj.exception.OutOfTimeException;
 import cspfj.heuristic.VariableHeuristic;
 import cspfj.heuristic.WDegOnDom;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
-import cspfj.util.Chronometer;
 
 /**
  * @author Julien VION
@@ -40,8 +38,6 @@ public final class SAC implements Filter {
 	// private final int maxNoGoodSize;
 
 	private final static Logger logger = Logger.getLogger("cspfj.filter.SAC");
-
-	private final Chronometer chronometer;
 
 	private final Problem problem;
 
@@ -67,12 +63,10 @@ public final class SAC implements Filter {
 
 	private final VariableHeuristic heuristic;
 
-	public SAC(Problem problem, Chronometer chronometer, Filter filter,
-			boolean branch) {
+	public SAC(Problem problem, Filter filter, boolean branch) {
 		super();
 		this.filter = filter;
 		// this.maxNoGoodSize = maxNoGoodSize;
-		this.chronometer = chronometer;
 		this.problem = problem;
 		this.branch = branch;
 
@@ -135,7 +129,7 @@ public final class SAC implements Filter {
 		return false;
 	}
 
-	private boolean reduce(final int level) throws OutOfTimeException {
+	private boolean reduce(final int level) {
 		final Problem problem = this.problem;
 
 		logger.info("SAC");
@@ -166,15 +160,15 @@ public final class SAC implements Filter {
 
 				if (branch) {
 					buildBranch(level + 1);
-//					reduceToSolution(level);
-//					return true;
+					// reduceToSolution(level);
+					// return true;
 				}
 
 				final int nbNg = problem.addNoGoods();
 				nbNoGoods += nbNg;
 
 				changedGraph = nbNg > 0;
-				
+
 				for (int l = level + 1; l < problem.getNbVariables(); l++) {
 					problem.setLevelVariables(l, -1);
 				}
@@ -254,15 +248,14 @@ public final class SAC implements Filter {
 		}
 	}
 
-	public boolean reduceAfter(final int level, final Variable variable)
-			throws OutOfTimeException {
+	public boolean reduceAfter(final int level, final Variable variable) {
 		if (variable == null) {
 			return true;
 		}
 		return reduceAll(level);
 	}
 
-	public boolean reduceAll(final int level) throws OutOfTimeException {
+	public boolean reduceAll(final int level) {
 		// clearQueue();
 		return reduce(level);
 	}
@@ -273,10 +266,7 @@ public final class SAC implements Filter {
 
 	private final Variable[] staticVOrder;
 
-	private boolean buildBranch(final int level) throws OutOfTimeException {
-
-		chronometer.checkExpiration();
-
+	private boolean buildBranch(final int level) {
 		final Variable[] staticVOrder = this.staticVOrder;
 		final boolean[] vQueue = this.vQueue;
 
@@ -287,15 +277,15 @@ public final class SAC implements Filter {
 		while (problem.getNbFutureVariables() > 0) {
 			Variable variable;
 			int index;
-			int cpt = 0 ;
+			int cpt = 0;
 			do {
 				do {
-					if (cpt >= staticVOrder.length) { 
-						return false ;
+					if (cpt >= staticVOrder.length) {
+						return false;
 					}
 					variable = staticVOrder[cpt++];
-				} while (!vQueue[variable.getId()] || variable.isAssigned()) ;
-				
+				} while (!vQueue[variable.getId()] || variable.isAssigned());
+
 				index = getRemainingIndex(variable);
 			} while (index < 0);
 
@@ -351,5 +341,8 @@ public final class SAC implements Filter {
 	public int getNbSingletonTests() {
 		return nbSingletonTests;
 	}
-
+	
+    public String toString() {
+    	return "SAC-" + (branch?'3':'1') ;
+    }
 }

@@ -21,56 +21,51 @@ package cspfj.util;
 
 import java.util.Random;
 
-public final class TieManager<V, E extends Comparable<E>> {
+public final class TieManager {
 
-    private V bestValue;
+	private int bestValue;
 
-    private final V noValue;
+	private int bestEvaluation;
 
-    private final E maxEvaluation;
+	private int nbTies;
 
-    private E bestEvaluation;
+	private final Random random;
 
-    private int nbTies;
+	public TieManager(Random random) {
+		super();
 
-    public TieManager(V noValue, E maxValue) {
-        super();
-        this.maxEvaluation = maxValue;
-        this.noValue = noValue;
-        clear();
-    }
+		this.random = random;
+		clear();
+	}
 
-    public void clear() {
-        bestValue = noValue;
-        bestEvaluation = maxEvaluation;
-        nbTies = 1;
-    }
+	public void clear() {
+		bestValue = -1;
+		bestEvaluation = Integer.MAX_VALUE;
+		nbTies = 1;
+	}
 
-    public boolean newValue(final V value, final E evaluation,
-            final Random random) {
-        final int compare = evaluation.compareTo(this.bestEvaluation);
+	public boolean newValue(final int value, final int evaluation) {
+		if (evaluation == bestEvaluation && random.nextFloat() * nbTies++ < 1) {
+			this.bestValue = value;
+			return true;
+		}
 
-        if (compare == 0 && random.nextFloat() * nbTies++ < 1) {
-            this.bestValue = value;
-            return true;
-        }
+		if (evaluation < bestEvaluation) {
+			nbTies = 1;
+			this.bestValue = value;
+			this.bestEvaluation = evaluation;
+			return true;
+		}
 
-        if (compare < 0) {
-            nbTies = 1;
-            this.bestValue = value;
-            this.bestEvaluation = evaluation;
-            return true;
-        }
+		return false;
+	}
 
-        return false;
-    }
+	public int getBestValue() {
+		return bestValue;
+	}
 
-    public V getBestValue() {
-        return bestValue;
-    }
-
-    public E getBestEvaluation() {
-        return bestEvaluation;
-    }
+	public int getBestEvaluation() {
+		return bestEvaluation;
+	}
 
 }

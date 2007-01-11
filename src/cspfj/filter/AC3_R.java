@@ -201,4 +201,7 @@ public final class AC3_R implements Filter {
         return true;
     }
 
+    public String toString() {
+    	return "AC3rm-reverse" ;
+    }
 }

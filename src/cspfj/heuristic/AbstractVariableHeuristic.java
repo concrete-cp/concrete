@@ -46,4 +46,8 @@ public abstract class AbstractVariableHeuristic implements VariableHeuristic {
 
 		return result > 0 ? 1 : -1;
 	}
+	
+	public String toString() {
+		return "min-" ;
+	}
 }

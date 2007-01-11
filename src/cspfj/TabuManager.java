@@ -74,4 +74,8 @@ public final class TabuManager {
         }
         head = 0 ;
     }
+    
+    public int getSize() {
+    	return size ;
+    }
 }

@@ -106,15 +106,10 @@ public final class AC3_P implements Filter {
             // System.err.println(queueSize);
             final Variable variable = pullVariable();
 
-            // boolean revised = false;
-
             for (Constraint c : variable.getInvolvingConstraints()) {
 
-//                boolean shouldBeSkipped = false;
 
                 if (!c.getRemovals(variable)) {
-//                    shouldBeSkipped = true;
-//                    Constraint.incrementNbSkippedRevisions(c.getArity());
                     continue;
                 }
 
@@ -123,8 +118,6 @@ public final class AC3_P implements Filter {
 
 
                     if (!y.isAssigned() && c.revise(i, level)) {
-//                        assert !shouldBeSkipped;
-
                         if (y.getDomainSize() <= 0) {
                             c.increaseWeight();
                             return false;
@@ -138,13 +131,9 @@ public final class AC3_P implements Filter {
                             }
                         }
                     }
-                    // else {
-                    // c.setRemovals(y, false);
-                    // }
                 }
 
                 c.fillRemovals(false);
-                // c.setRemovals(variable, false);
             }
 
         }
@@ -208,6 +197,9 @@ public final class AC3_P implements Filter {
         return 0;
     }
 
+    public String toString() {
+    	return "AC3rm" ;
+    }
     // public int getNbSub() {
     // return 0;
     // }

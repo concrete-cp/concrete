@@ -19,10 +19,8 @@
 
 package cspfj.util;
 
-import cspfj.exception.OutOfTimeException;
-
-public class Chronometer {
-    private long maxTime;
+public final class Chronometer {
+//    private long maxTime;
 
     private long startTime;
 
@@ -30,50 +28,50 @@ public class Chronometer {
     
     public Chronometer() {
         super();
-        maxTime = -1 ;
+//        maxTime = -1 ;
     }
 
-    public final int getRemainingTime() {
-        return Math.round(getRemainingTimeNano() / 1e9f);
-    }
+//    public final int getRemainingTime() {
+//        return Math.round(getRemainingTimeNano() / 1e9f);
+//    }
 
-    public final long getRemainingTimeNano() {
-        return maxTime - getCurrentChronoNano();
-    }
-    
+//    public final long getRemainingTimeNano() {
+//        return maxTime - getCurrentChronoNano();
+//    }
+//    
+//
+//    public void checkExpiration() throws OutOfTimeException {
+//        if (maxTime >= 0 && getCurrentChronoNano() > maxTime) {
+//            throw new OutOfTimeException();
+//        }
+//    }
 
-    public void checkExpiration() throws OutOfTimeException {
-        if (maxTime >= 0 && getCurrentChronoNano() > maxTime) {
-            throw new OutOfTimeException();
-        }
-    }
-
-    private void startChrono() {
+    public void startChrono() {
         startTime = CpuMonitor.getCpuTimeNano();
     }
 
-    public final long getCurrentChronoNano() {
+    public long getCurrentChronoNano() {
         return CpuMonitor.getCpuTimeNano() - startTime;
     }
 
-    public final float getCurrentChrono() {
+    public float getCurrentChrono() {
         return getCurrentChronoNano() / 1.0e9F;
     }
 
-    public final void validateChrono() {
+    public void validateChrono() {
         totalTime = getCurrentChronoNano();
     }
 
-    public final void setMaxDurationNano(final long maxDuration) {
-        startChrono();
-        if (maxDuration >= 0) {
-            this.maxTime = getCurrentChronoNano() + maxDuration ;
-        } else {
-            maxTime = -1;
-        }
-    }
+//    public final void setMaxDurationNano(final long maxDuration) {
+//        startChrono();
+//        if (maxDuration >= 0) {
+//            this.maxTime = getCurrentChronoNano() + maxDuration ;
+//        } else {
+//            maxTime = -1;
+//        }
+//    }
 
-    public final float getUserTime() {
+    public float getUserTime() {
         return totalTime / 1.0e9F;
     }
 }

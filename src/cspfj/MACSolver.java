@@ -24,7 +24,6 @@ import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
-import cspfj.exception.OutOfTimeException;
 import cspfj.filter.AC3_P;
 import cspfj.filter.AC3_R;
 import cspfj.filter.Filter;
@@ -51,7 +50,7 @@ public final class MACSolver extends AbstractSolver {
 	public MACSolver(Problem prob, ResultHandler resultHandler,
 			Heuristic heuristic, boolean reverse) {
 		super(prob, resultHandler);
-		filter = reverse?new AC3_R(problem):new AC3_P(problem);
+		filter = reverse ? new AC3_R(problem) : new AC3_P(problem);
 		// heuristic = new WDegOnDomBySupports(prob);
 		this.heuristic = heuristic;
 		setMaxBacktracks(problem.getNbVariables());
@@ -64,7 +63,7 @@ public final class MACSolver extends AbstractSolver {
 	// }
 
 	public boolean mac(final int level, final Variable lastModifiedVariable)
-			throws MaxBacktracksExceededException, OutOfTimeException {
+			throws MaxBacktracksExceededException {
 		if (problem.getNbFutureVariables() == 0) {
 			if (getNbSolutions() < 1) {
 				for (Variable v : problem.getVariables()) {
@@ -76,7 +75,7 @@ public final class MACSolver extends AbstractSolver {
 			return !allSolutions;
 		}
 
-		chronometer.checkExpiration();
+		// chronometer.checkExpiration();
 
 		if (!filter.reduceAfter(level, lastModifiedVariable)) {
 			return false;
@@ -139,65 +138,58 @@ public final class MACSolver extends AbstractSolver {
 	 * 
 	 * @see cspfj.Solver#run(int)
 	 */
-	public boolean run(final long maxDuration) throws OutOfTimeException {
+	public boolean run() {
 		int maxBT = allSolutions ? -1 : getMaxBacktracks();
 
 		System.gc();
 		// enableNoGoods(2);
-		setMaxDurationNano(maxDuration);
+		chronometer.startChrono();
+		
+		final Filter preprocessor;
+		switch (useSpace()) {
+		case BRANCH:
+			preprocessor = new SAC(problem, getFilter(), true);
+			break;
 
-		try {
-			final Filter preprocessor;
-			switch (useSpace()) {
-			case BRANCH:
-				preprocessor = new SAC(problem, chronometer, getFilter(), true);
-				break;
+		case CLASSIC:
+			preprocessor = new SAC(problem, getFilter(), false);
+			break;
 
-			case CLASSIC:
-				preprocessor = new SAC(problem, chronometer, getFilter(), false);
-				break;
+		default:
 
-			default:
+			preprocessor = getFilter();
+		}
 
-				preprocessor = getFilter();
-			}
-
-			final float start = chronometer.getCurrentChrono();
-			if (!preprocessor.reduceAll(0)) {
-				chronometer.validateChrono();
-				return false;
-			}
-
-			int removed = 0;
-
-			for (Variable v : problem.getVariables()) {
-				removed += v.getDomain().length - v.getDomainSize();
-
-			}
-
-			statistics("prepro-removed", removed);
-			// statistics("prepro-subs", preprocessor.getNbSub()) ;
-			statistics("prepro-nogoods", preprocessor.getNbNoGoods());
-			statistics("prepro-cpu", chronometer.getCurrentChrono() - start);
-			statistics("prepro-ccks", Constraint.getNbChecks());
-			statistics("prepro-nbpresencechecks", Constraint
-					.getNbPresenceChecks());
-
-			statistics("prepro-nbeffectiverevisions", Constraint
-					.getNbEffectiveRevisions());
-			statistics("prepro-nbuselessrevisions", Constraint
-					.getNbUselessRevisions());
-//			statistics("prepro-nbskippedrevisions", Constraint
-//					.getNbSkippedRevisions());
-
-			if (preprocessor instanceof SAC) {
-				statistics("prepro-singletontests", ((SAC) preprocessor)
-						.getNbSingletonTests());
-			}
-
-		} catch (OutOfTimeException e) {
+		final float start = chronometer.getCurrentChrono();
+		if (!preprocessor.reduceAll(0)) {
 			chronometer.validateChrono();
-			throw e;
+			return false;
+		}
+
+		int removed = 0;
+
+		for (Variable v : problem.getVariables()) {
+			removed += v.getDomain().length - v.getDomainSize();
+
+		}
+
+		statistics("prepro-removed", removed);
+		// statistics("prepro-subs", preprocessor.getNbSub()) ;
+		statistics("prepro-nogoods", preprocessor.getNbNoGoods());
+		statistics("prepro-cpu", chronometer.getCurrentChrono() - start);
+		statistics("prepro-ccks", Constraint.getNbChecks());
+		statistics("prepro-nbpresencechecks", Constraint.getNbPresenceChecks());
+
+		statistics("prepro-nbeffectiverevisions", Constraint
+				.getNbEffectiveRevisions());
+		statistics("prepro-nbuselessrevisions", Constraint
+				.getNbUselessRevisions());
+		// statistics("prepro-nbskippedrevisions", Constraint
+		// .getNbSkippedRevisions());
+
+		if (preprocessor instanceof SAC) {
+			statistics("prepro-singletontests", ((SAC) preprocessor)
+					.getNbSingletonTests());
 		}
 
 		heuristic.compute();
@@ -219,9 +211,6 @@ public final class MACSolver extends AbstractSolver {
 				break;
 			} catch (MaxBacktracksExceededException e) {
 				// On continue...
-			} catch (OutOfTimeException e) {
-				chronometer.validateChrono();
-				throw e;
 			} catch (OutOfMemoryError e) {
 				chronometer.validateChrono();
 				throw e;
@@ -314,6 +303,21 @@ public final class MACSolver extends AbstractSolver {
 		this.allSolutions = allSolutions;
 	}
 
+	public String getXMLConfig() {
+		final StringBuffer sb = new StringBuffer() ;
+
+		sb.append("\t\t\t<solver>").append(this).append("</solver>\n") ;
+		sb.append("\t\t\t<filter>").append(filter).append("</filter>\n") ;
+		sb.append("\t\t\t<heuristic>").append(heuristic).append("</heuristic>\n");
+		sb.append("\t\t\t<space>").append(useSpace()).append("</space>\n");
+		sb.append("\t\t\t<allSolutions>").append(allSolutions).append("</allSolutions>\n") ;
+
+		return sb.toString();
+	}
+	
+	public String toString() {
+		return "MAC" ;
+	}
 	// public int getMaxNoGoodSize() {
 	// return maxNoGoodSize;
 	// }

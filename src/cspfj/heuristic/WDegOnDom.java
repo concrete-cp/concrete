@@ -30,5 +30,8 @@ public final class WDegOnDom extends AbstractVariableHeuristic {
 	public double getScore(final Variable variable) {
         return variable.getWDeg() / variable.getDomainSize() ;
     }
-
+	
+	public String toString() {
+		return "max-wdeg/dom";
+	}
 }

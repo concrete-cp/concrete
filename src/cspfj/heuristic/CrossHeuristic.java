@@ -28,4 +28,7 @@ public final class CrossHeuristic implements Heuristic {
     	valueHeuristic.compute() ;
     }
     
+    public String toString() {
+    	return "Crossed " + variableHeuristic + ", " + valueHeuristic ;
+    }
 }

@@ -19,7 +19,6 @@
 
 package cspfj.filter;
 
-import cspfj.exception.OutOfTimeException;
 import cspfj.problem.Variable;
 
 /**
@@ -32,9 +31,9 @@ public interface Filter {
      * @param level Le niveau en cours
      * @return False ssi un domaine a été vidé
      */
-    boolean reduceAll(int level) throws OutOfTimeException;
+    boolean reduceAll(int level) ;
     
-    boolean reduceAfter(int level, Variable variable) throws OutOfTimeException ;
+    boolean reduceAfter(int level, Variable variable) ;
     
     int getNbNoGoods() ;
 

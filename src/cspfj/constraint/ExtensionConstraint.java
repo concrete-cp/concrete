@@ -96,24 +96,18 @@ public final class ExtensionConstraint extends Constraint {
     protected boolean findValidTuple(final int variablePosition, final int index) {
         assert this.isInvolved(getInvolvedVariables()[variablePosition]);
 
-        final int[] lastTuple;
-        
-        final int arity = getArity() ;
 
-        lastTuple = last[variablePosition][index];
-
-        if (lastTuple != null && lastCheck[variablePosition][index]) {
-            System.arraycopy(lastTuple, 0, tuple, 0, arity);
-
-            if (controlTuplePresence(variablePosition)) {
+        if (lastCheck[variablePosition][index]) {
+            if (controlTuplePresence(last[variablePosition][index], variablePosition)) {
                 return true;
             }
-
         }
 
         if (!matrix.setFirstTuple(variablePosition, index)) {
             return false;
         }
+
+        final int arity = getArity() ;
 
         for (int position = arity; --position >= 0;) {
             final int value = tuple[position];

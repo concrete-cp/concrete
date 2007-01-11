@@ -22,13 +22,12 @@ package cspfj;
 import java.io.IOException;
 import java.util.Map;
 
-import cspfj.exception.OutOfTimeException;
 import cspfj.filter.SAC.SPACE;
 import cspfj.problem.Variable;
 
 public interface Solver {
 
-    boolean run(final long maxDuration) throws OutOfTimeException, IOException;
+    boolean run() throws IOException;
 
     Map<Variable, Integer> getSolution();
 
@@ -43,4 +42,6 @@ public interface Solver {
 	void setUseSpace(final SPACE space);
 
 	int getNbSolutions();
+
+	String getXMLConfig();
 }
