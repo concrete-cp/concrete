@@ -3,7 +3,7 @@ package cspfj.constraint;
 import cspfj.exception.MatrixTooBigException;
 import cspfj.problem.Variable;
 
-public class MatrixManagerList extends MatrixManager {
+public class MatrixManagerList extends AbstractMatrixManager {
 
     private final int[][][] listOfSupports ;
     

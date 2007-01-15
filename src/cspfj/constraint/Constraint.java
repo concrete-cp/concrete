@@ -70,7 +70,7 @@ public abstract class Constraint {
 
 	private boolean active;
 
-	protected final MatrixManager matrix;
+	protected final AbstractMatrixManager matrix;
 
 	private final int[][] nbSupports;
 
@@ -81,7 +81,7 @@ public abstract class Constraint {
 	private final boolean removals[];
 
 	private boolean changedConstraint = true;
-
+	
 	protected Constraint(final Variable[] scope) {
 		involvedVariables = scope;
 		arity = involvedVariables.length;
@@ -124,7 +124,7 @@ public abstract class Constraint {
 		active = false;
 		// initLast();
 
-		matrix = MatrixManager.factory(scope, tuple);
+		matrix = AbstractMatrixManager.factory(scope, tuple);
 
 		try {
 			matrix.init(true);
@@ -133,7 +133,7 @@ public abstract class Constraint {
 		}
 
 		nbMaxConflicts = new int[arity];
-		nbSupports = new int[arity][];
+		nbSupports = new int[arity][maxDomain];
 
 		int size = 1;
 		for (Variable v : involvedVariables) {
@@ -161,7 +161,6 @@ public abstract class Constraint {
 		}
 		for (int i = arity; --i >= 0;) {
 			final int domainSize = involvedVariables[i].getDomain().length;
-			nbSupports[i] = new int[domainSize];
 			nbMaxConflicts[i] = 0;
 
 			for (int j = domainSize; --j >= 0;) {
@@ -409,15 +408,15 @@ public abstract class Constraint {
 	protected boolean findValidTuple(final int variablePosition, final int index) {
 		assert this.isInvolved(involvedVariables[variablePosition]);
 
-		if (tupleCache && lastCheck[variablePosition][index]) {
-			if (controlTuplePresence(last[variablePosition][index],
-					variablePosition)) {
-				// System.out.print("c") ;
-				return true;
-			}
+		if (tupleCache
+				&& lastCheck[variablePosition][index]
+				&& controlTuplePresence(last[variablePosition][index],
+						variablePosition)) {
+			// System.out.print("c") ;
+			return true;
 		}
 
-		final MatrixManager matrix = this.matrix;
+		final AbstractMatrixManager matrix = this.matrix;
 
 		if (!matrix.setFirstTuple(variablePosition, index)) {
 			return false;
@@ -538,32 +537,36 @@ public abstract class Constraint {
 	public final boolean checkFirstWith(final int variablePosition,
 			final int index) {
 
-		final int[][] myLast = last[variablePosition];
-		final boolean[] myLastCheck = lastCheck[variablePosition];
-		final int[] tuple = this.tuple;
-		
-		setFirstTuple(variablePosition, index);
-		if (Arrays.equals(tuple, myLast[index])) {
-			assert check() == myLastCheck[index] : Arrays.toString(tuple)
-					+ " = " + Arrays.toString(last[variablePosition][index])
-					+ ", " + check() + " /= " + myLast[index];
-			return myLastCheck[index];
+		if (tupleCache) {
+
+			final int[][] myLast = last[variablePosition];
+			final boolean[] myLastCheck = lastCheck[variablePosition];
+			final int[] tuple = this.tuple;
+
+			setFirstTuple(variablePosition, index);
+			if (Arrays.equals(tuple, myLast[index])) {
+				assert check() == myLastCheck[index] : Arrays.toString(tuple)
+						+ " = "
+						+ Arrays.toString(last[variablePosition][index]) + ", "
+						+ check() + " /= " + myLast[index];
+				return myLastCheck[index];
+			}
+			final boolean result = check();
+
+			// if (tupleCache) {
+			// for (int position = arity; --position >= 0;) {
+
+			final int i = tuple[variablePosition];
+			// if (last[position][i] == null) {
+			// last[position][i] = new int[arity];
+			// }
+			System.arraycopy(tuple, 0, myLast[i], 0, arity);
+			myLastCheck[i] = result;
+			return result;
+		} else {
+			return check();
 		}
 
-		final boolean result = check();
-
-		// if (tupleCache) {
-		// for (int position = arity; --position >= 0;) {
-
-		final int i = tuple[variablePosition];
-		// if (last[position][i] == null) {
-		// last[position][i] = new int[arity];
-		// }
-		System.arraycopy(tuple, 0, myLast[i], 0, arity);
-		myLastCheck[i] = result;
-		// }
-
-		return result;
 	}
 
 	//
@@ -669,7 +672,7 @@ public abstract class Constraint {
 
 	}
 
-	public MatrixManager getMatrix() {
+	public AbstractMatrixManager getMatrix() {
 		return matrix;
 	}
 
@@ -743,8 +746,8 @@ public abstract class Constraint {
 	// public void clearMatrix() {
 	// matrix.clear();
 	// }
-	public boolean equals(Constraint c) {
-		return id == c.getId();
+	public boolean equalsConstraint(final Constraint constraint) {
+		return id == constraint.getId();
 	}
 
 }

@@ -2,7 +2,7 @@ package cspfj.filter;
 
 import java.util.Arrays;
 
-public class ArcQueue {
+public final class ArcQueue {
     private int size;
 
     private int[] arcs;
@@ -20,7 +20,7 @@ public class ArcQueue {
         Arrays.fill(inQueue, false) ;
     }
     
-    public void add(int arc) {
+    public void add(final int arc) {
         if (!inQueue[arc]) {
             inQueue[arc] = true ;
             arcs[size++] = arc;
@@ -31,7 +31,7 @@ public class ArcQueue {
         return size > 0 ;
     }
     
-    public int getArc(int i) {
+    public int getArc(final int i) {
         return arcs[i] ;
     }
     
@@ -40,6 +40,7 @@ public class ArcQueue {
     }
     
     public void fill() {
+    	final int[] arcs = this.arcs;
         for (int i = arcs.length; --i >= 0;) {
             arcs[i] = i;
         }

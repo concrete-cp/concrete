@@ -25,100 +25,103 @@ import cspfj.problem.Variable;
 
 public final class ExtensionConstraint extends Constraint {
 
-    private final double tightness;
+	private final double tightness;
 
-    private final boolean supports;
+	private final boolean supports;
 
-    private final int[][] tuples;
+	private final int[][] tuples;
 
-    public ExtensionConstraint(final Variable[] scope, final boolean supports,
-            final int[][] tuples) throws FailedGenerationException {
-        super(scope);
+	public ExtensionConstraint(final Variable[] scope, final boolean supports,
+			final int[][] tuples) throws FailedGenerationException {
+		super(scope);
 
-        this.supports = supports;
-        this.tuples = tuples;
+		this.supports = supports;
+		this.tuples = tuples;
 
-        final double tight = (double) tuples.length
-                / (scope[0].getDomainSize() * scope[1].getDomainSize());
+		final double tight = (double) tuples.length
+				/ (scope[0].getDomainSize() * scope[1].getDomainSize());
 
-        if (supports) {
-            tightness = tight;
-        } else {
-            tightness = 1 - tight;
-        }
+		if (supports) {
+			tightness = tight;
+		} else {
+			tightness = 1 - tight;
+		}
 
-        // try {
-        // matrix.init(true);
-        // } catch (MatrixTooBigException e) {
-        // throw new FailedGenerationException("Matrix too big");
-        // }
-        try {
-            matrix.intersect(getInvolvedVariables(), getInvolvedVariables(),
-                    supports, tuples);
-        } catch (MatrixTooBigException e) {
-            throw new FailedGenerationException(e.toString());
-        }
-    }
+		// try {
+		// matrix.init(true);
+		// } catch (MatrixTooBigException e) {
+		// throw new FailedGenerationException("Matrix too big");
+		// }
+		try {
+			matrix.intersect(getInvolvedVariables(), getInvolvedVariables(),
+					supports, tuples);
+		} catch (MatrixTooBigException e) {
+			throw new FailedGenerationException(e.toString());
+		}
+	}
 
-    public ExtensionConstraint(final Variable[] scope)
-            throws FailedGenerationException {
-        super(scope);
+	public ExtensionConstraint(final Variable[] scope)
+			throws FailedGenerationException {
+		super(scope);
 
-        this.tuples = new int[0][];
+		this.tuples = new int[0][];
 
-        this.supports = false;
+		this.supports = false;
 
-        tightness = 1;
+		tightness = 1;
 
-        // try {
-        // matrix.init(true);
-        // } catch (MatrixTooBigException e) {
-        // throw new FailedGenerationException("Matrix too big");
-        // }
+		// try {
+		// matrix.init(true);
+		// } catch (MatrixTooBigException e) {
+		// throw new FailedGenerationException("Matrix too big");
+		// }
 
-        try {
-            matrix.intersect(getInvolvedVariables(), getInvolvedVariables(),
-                    supports, tuples);
-        } catch (MatrixTooBigException e) {
-            throw new FailedGenerationException(e.toString());
-        }
+		try {
+			matrix.intersect(getInvolvedVariables(), getInvolvedVariables(),
+					supports, tuples);
+		} catch (MatrixTooBigException e) {
+			throw new FailedGenerationException(e.toString());
+		}
 
-    }
+	}
 
-    public boolean useTupleCache() {
-        return true;
-    }
+	public boolean useTupleCache() {
+		return true;
+	}
 
-    public double getTightness() {
-        return tightness;
-    }
+	public double getTightness() {
+		return tightness;
+	}
 
-    protected boolean findValidTuple(final int variablePosition, final int index) {
-        assert this.isInvolved(getInvolvedVariables()[variablePosition]);
+	protected boolean findValidTuple(final int variablePosition, final int index) {
+		assert this.isInvolved(getInvolvedVariables()[variablePosition]);
 
+		if (lastCheck[variablePosition][index]
+				&& controlTuplePresence(last[variablePosition][index],
+						variablePosition)) {
+			return true;
 
-        if (lastCheck[variablePosition][index]) {
-            if (controlTuplePresence(last[variablePosition][index], variablePosition)) {
-                return true;
-            }
-        }
+		}
 
-        if (!matrix.setFirstTuple(variablePosition, index)) {
-            return false;
-        }
+		if (!matrix.setFirstTuple(variablePosition, index)) {
+			return false;
+		}
 
-        final int arity = getArity() ;
+		final int arity = getArity();
+		final int[] tuple = this.tuple;
+		final int[][][] last = this.last;
+		final boolean[][] lastCheck = this.lastCheck;
 
-        for (int position = arity; --position >= 0;) {
-            final int value = tuple[position];
-            if (last[position][value] == null) {
-                last[position][value] = new int[arity];
-            }
-            System.arraycopy(tuple, 0, last[position][value], 0, arity);
-            lastCheck[position][value] = true;
-        }
+		for (int position = arity; --position >= 0;) {
+			final int value = tuple[position];
+			// if (last[position][value] == null) {
+			// last[position][value] = new int[arity];
+			// }
+			System.arraycopy(tuple, 0, last[position][value], 0, arity);
+			lastCheck[position][value] = true;
+		}
 
-        return true;
+		return true;
 
-    }
+	}
 }

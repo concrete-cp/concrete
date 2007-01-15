@@ -26,7 +26,7 @@ public final class FailedGenerationException extends Exception {
      */
     private static final long serialVersionUID = 1L;
 
-    public FailedGenerationException(String s) {
+    public FailedGenerationException(final String s) {
 		super(s);
 	}
 }

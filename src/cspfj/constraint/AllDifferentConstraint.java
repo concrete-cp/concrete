@@ -64,11 +64,11 @@ public final class AllDifferentConstraint extends Constraint {
 		final Variable[] involvedVariables = getInvolvedVariables();
 		final int[] tuple = this.tuple;
 		for (int i = getArity(); --i >= 0;) {
-			final int index = involvedVariables[i].getDomain()[tuple[i]];
-			if (union[index - min]) {
+			final int value = involvedVariables[i].getDomain()[tuple[i]];
+			if (union[value - min]) {
 				return false;
 			}
-			union[index - min] = true;
+			union[value - min] = true;
 		}
 		return true;
 	}

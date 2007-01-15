@@ -52,9 +52,9 @@ public final class Problem {
 
     private int[] levelVariables;
 
-    final private static ArrayList<Variable> scope = new ArrayList<Variable>();
+    final private static List<Variable> scope = new ArrayList<Variable>();
 
-    final private static ArrayList<Integer> tuple = new ArrayList<Integer>();
+    final private static List<Integer> tuple = new ArrayList<Integer>();
 
     final private static Set<Integer> pastVariables = new TreeSet<Integer>();
 

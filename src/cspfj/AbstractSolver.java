@@ -135,7 +135,7 @@ public abstract class AbstractSolver implements Solver {
         resultHandler.solution(solution, nbConflicts);
     }
 
-	public final void setUseSpace(SPACE space) {
+	public final void setUseSpace(final SPACE space) {
 		this.space = space ;
 	}
 	
@@ -143,7 +143,7 @@ public abstract class AbstractSolver implements Solver {
 		return space ;
 	}
 	
-	protected final void statistics(String name, Object value) {
+	protected final void statistics(final String name, final Object value) {
 		resultHandler.statistics(name, value.toString());
 	}
 	

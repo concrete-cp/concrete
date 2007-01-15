@@ -34,12 +34,12 @@ public abstract class AbstractStaticValueHeuristic extends
 
 	public void compute() {
 		logger.info("Reordering values with " + this.getClass());
-		for (Variable variable : variables) {
+		final int[] ord = new int[problem.getMaxDomainSize()] ;
+		for (Variable variable : problem.getVariables()) {
 
-			final int[] ord = new int[variable.getDomain().length];
 			// order[variable.getId()] = ord;
 
-			for (int i = ord.length; --i >= 0;) {
+			for (int i = variable.getDomain().length; --i >= 0;) {
 				ord[i] = i;
 			}
 
@@ -53,7 +53,7 @@ public abstract class AbstractStaticValueHeuristic extends
 			// }
 			// }
 
-			sort(variable, ord, 0, ord.length - 1);
+			sort(variable, ord, 0, variable.getDomain().length - 1);
 
 			variable.reOrder(ord);
 			//

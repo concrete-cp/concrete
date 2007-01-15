@@ -5,7 +5,7 @@ import java.util.Arrays;
 import cspfj.exception.MatrixTooBigException;
 import cspfj.problem.Variable;
 
-public class MatrixManager3D extends MatrixManager {
+public class MatrixManager3D extends AbstractMatrixManager {
 
 	private final int arity;
 

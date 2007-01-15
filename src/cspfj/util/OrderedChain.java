@@ -14,9 +14,9 @@ public final class OrderedChain extends AbstractChain implements Cloneable {
 	}
 
 	public void reOrder(final int[] order, final int[] removed) {
-		firstPresentIndex = order[order.length - 1];
+		firstPresentIndex = order[length - 1];
 		lastPresentIndex = order[0];
-		for (int i = order.length; --i > 0;) {
+		for (int i = length; --i > 0;) {
 			next[order[i]] = order[i - 1];
 			prev[order[i - 1]] = order[i];
 		}
@@ -78,7 +78,7 @@ public final class OrderedChain extends AbstractChain implements Cloneable {
 		}
 	}
 
-	public OrderedChain clone() {
+	public OrderedChain clone() throws CloneNotSupportedException {
 
 		final OrderedChain clone = (OrderedChain) super.clone();
 

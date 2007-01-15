@@ -5,10 +5,10 @@ import cspfj.problem.Variable;
 
 public abstract class AbstractValueHeuristic implements ValueHeuristic {
 
-	final protected Variable[] variables;
+	final protected Problem problem;
 
 	public AbstractValueHeuristic(Problem problem) {
-		variables = problem.getVariables();
+		this.problem = problem;
 	}
 
 	/**

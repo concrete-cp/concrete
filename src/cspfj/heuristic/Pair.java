@@ -3,7 +3,7 @@ package cspfj.heuristic;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
-public abstract class Pair {
+public class Pair {
 
 	private static int maxV;
 

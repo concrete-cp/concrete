@@ -24,7 +24,7 @@ public class ComboSolver extends AbstractSolver {
 			Heuristic heuristic, boolean reverse) {
 		super(prob, resultHandler);
 		macSolver = new MACSolver(prob, resultHandler, heuristic, reverse);
-		mCSolver = new MinConflictsSolver(prob, resultHandler, null, reverse);
+		mCSolver = new MinConflictsSolver(prob, resultHandler, reverse);
 
 	}
 
@@ -71,6 +71,8 @@ public class ComboSolver extends AbstractSolver {
 				return true;
 			}
 
+			problem.restoreAll(1);
+			
 			maxBT *= 1.5;
 			localBT *= 1.5;
 
@@ -121,7 +123,7 @@ public class ComboSolver extends AbstractSolver {
 			chronometer.validateChrono();
 			throw e;
 		}
-		problem.restoreAll(1);
+		
 
 		return false;
 	}
@@ -130,17 +132,17 @@ public class ComboSolver extends AbstractSolver {
 	public int getNbAssignments() {
 		return macSolver.getNbAssignments() + mCSolver.getNbAssignments();
 	}
-	
+
 	public String getXMLConfig() {
-		final StringBuffer sb = new StringBuffer() ;
-		
-		sb.append("\t\t\t<macSolver>\n").append(macSolver.getXMLConfig()).append("\t\t\t</macSolver>\n") ;
-		sb.append("\t\t\t<mcSolver>\n").append(mCSolver.getXMLConfig()).append("\t\t\t</mcSolver>\n") ;
-		sb.append("\t\t\t<space>").append(useSpace()).append("</space>\n");
+		final StringBuffer sb = new StringBuffer(150);
+
+		sb.append("\t\t\t<macSolver>\n").append(macSolver.getXMLConfig())
+				.append("\t\t\t</macSolver>\n\t\t\t<mcSolver>\n").append(
+						mCSolver.getXMLConfig()).append(
+						"\t\t\t</mcSolver>\n\t\t\t<space>").append(useSpace())
+				.append("</space>\n");
 
 		return sb.toString();
 	}
-	
-	
 
 }

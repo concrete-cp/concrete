@@ -5,7 +5,7 @@ import java.util.Arrays;
 import cspfj.exception.MatrixTooBigException;
 import cspfj.problem.Variable;
 
-public abstract class MatrixManager {
+public abstract class AbstractMatrixManager {
 	protected final int[] domainSize;
 
 	private boolean active = false;
@@ -18,7 +18,7 @@ public abstract class MatrixManager {
 	
 	protected int variablePosition ;
 
-	public MatrixManager(Variable[] scope, int[] tuple) {
+	public AbstractMatrixManager(Variable[] scope, int[] tuple) {
 		super();
 
 		variables = scope;
@@ -33,7 +33,7 @@ public abstract class MatrixManager {
 
 	}
 
-	public static MatrixManager factory(final Variable[] scope,
+	public static AbstractMatrixManager factory(final Variable[] scope,
 			final int[] tuple) {
 		switch (scope.length) {
 		case 2:

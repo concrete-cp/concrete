@@ -3,7 +3,7 @@ package cspfj.heuristic;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.constraint.Constraint;
-import cspfj.constraint.MatrixManager;
+import cspfj.constraint.AbstractMatrixManager;
 
 public class JW extends AbstractStaticValueHeuristic {
 
@@ -19,15 +19,11 @@ public class JW extends AbstractStaticValueHeuristic {
 
 		this.problem = problem;
 
-		scores = new double[problem.getMaxVId() + 1][];
-
-		for (Variable v : problem.getVariables()) {
-			scores[v.getId()] = new double[v.getDomain().length];
-		}
+		scores = new double[problem.getMaxVId() + 1][problem.getMaxDomainSize()];
 	}
 
 	public final void compute() {
-		for (Variable v : variables) {
+		for (Variable v : problem.getVariables()) {
 			final double[] score = scores[v.getId()];
 
 			for (int i = v.getFirst(); i >= 0; i = v.getNext(i)) {
@@ -50,7 +46,7 @@ public class JW extends AbstractStaticValueHeuristic {
 					double tot = w(1 + c.getNbSupports(v, i));
 
 					if (c.getArity() <= Constraint.MAX_ARITY) {
-						final MatrixManager matrix = c.getMatrix();
+						final AbstractMatrixManager matrix = c.getMatrix();
 						matrix.setFirstTuple(position, i);
 
 						do {
@@ -124,7 +120,7 @@ public class JW extends AbstractStaticValueHeuristic {
 					double tot = pow2[c.getNbSupports(v, i)];
 
 					if (c.getArity() <= Constraint.MAX_ARITY) {
-						final MatrixManager matrix = c.getMatrix();
+						final AbstractMatrixManager matrix = c.getMatrix();
 						matrix.setFirstTuple(position, i);
 
 						do {

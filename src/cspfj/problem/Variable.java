@@ -107,7 +107,7 @@ public final class Variable implements Comparable<Variable> {
 		this(dom, null);
 	}
 
-	public static void setTieManager(TieManager tm) {
+	public static void setTieManager(final TieManager tm) {
 		tieManager = tm;
 	}
 
@@ -279,7 +279,7 @@ public final class Variable implements Comparable<Variable> {
 	 * @return True si l'index est absent
 	 */
 	public boolean isPresent(final int index) {
-		return assignedIndex == index || (!assigned && removed[index] == -1);
+		return assigned ? assignedIndex == index : removed[index] < 0;
 	}
 
 	/**
@@ -310,7 +310,7 @@ public final class Variable implements Comparable<Variable> {
 		for (Constraint c : involvingConstraints) {
 			for (Variable n : c.getInvolvedVariables()) {
 				if (n != this) {
-					n.removeConflicts(c);
+					n.removeConflicts(c, c.getPosition(n));
 				}
 			}
 		}
@@ -318,7 +318,7 @@ public final class Variable implements Comparable<Variable> {
 		for (Constraint c : involvingConstraints) {
 			for (Variable n : c.getInvolvedVariables()) {
 				if (n != this) {
-					n.addConflicts(c);
+					n.addConflicts(c, c.getPosition(n));
 				}
 			}
 		}
@@ -329,7 +329,11 @@ public final class Variable implements Comparable<Variable> {
 		assigned = true;
 	}
 
-	public boolean checkIndexValidity(int index) {
+	public void resetAssign() {
+		assigned = false;
+	}
+
+	public boolean checkIndexValidity(final int index) {
 		for (Constraint c : involvingConstraints) {
 			if (!c.findValidTuple(this, index)) {
 				return false;
@@ -344,7 +348,7 @@ public final class Variable implements Comparable<Variable> {
 	 */
 	public void unassign(final Problem problem) {
 		assert assigned;
-		assignedIndex = -1;
+		// assignedIndex = -1;
 		assigned = false;
 		problem.increaseFutureVariables();
 		System.arraycopy(beforeAssignDomain, 0, booleanDomain, 0,
@@ -605,6 +609,7 @@ public final class Variable implements Comparable<Variable> {
 
 	public int bestImprovment(final TabuManager tabuManager,
 			final int aspiration) {
+		final int bestIndex = this.bestIndex;
 		if (bestIndex >= 0 && !tabuManager.isTabu(this, bestIndex)) {
 			return bestIndex;
 		}
@@ -622,7 +627,7 @@ public final class Variable implements Comparable<Variable> {
 			}
 		}
 
-		bestIndex = tieManager.getBestValue();
+		this.bestIndex = tieManager.getBestValue();
 		// bestImp = tieManager.getBestEvaluation();
 		return bestIndex;
 	}
@@ -655,7 +660,7 @@ public final class Variable implements Comparable<Variable> {
 
 			for (Constraint c : involvingConstraints) {
 
-				if (c.useTupleCache() && !c.findValidTuple(this, i)) {
+				if (!c.findValidTuple(this, i)) {
 					indexConflicts += c.getWeight();
 				}
 
@@ -672,11 +677,7 @@ public final class Variable implements Comparable<Variable> {
 		return bestIndex;
 	}
 
-	public void removeConflicts(final Constraint c) {
-		removeConflicts(c, c.getPosition(this));
-	}
-
-	public void removeConflicts(final Constraint c, final int position) {
+	public void removeConflicts(final Constraint constraint, final int position) {
 
 		// int nbConflicts = 0;
 
@@ -686,8 +687,8 @@ public final class Variable implements Comparable<Variable> {
 		// }
 		final int[] order = this.order;
 		for (int i = domain.length; --i >= 0;) {
-			if (!c.checkFirstWith(position, i)) {
-				order[i] -= c.getWeight();
+			if (!constraint.checkFirstWith(position, i)) {
+				order[i] -= constraint.getWeight();
 
 			}
 			assert order[i] >= 0;
@@ -695,11 +696,7 @@ public final class Variable implements Comparable<Variable> {
 
 	}
 
-	public void addConflicts(final Constraint c) {
-		addConflicts(c, c.getPosition(this));
-	}
-
-	public void addConflicts(final Constraint c, final int position) {
+	public void addConflicts(final Constraint constraint, final int position) {
 
 		final int oldIndex = assignedIndex;
 		final TieManager tieManager = Variable.tieManager;
@@ -717,8 +714,8 @@ public final class Variable implements Comparable<Variable> {
 
 			assignedIndex = i;
 
-			if (!c.checkFirstWith(position, i)) {
-				order[i] += c.getWeight();
+			if (!constraint.checkFirstWith(position, i)) {
+				order[i] += constraint.getWeight();
 			}
 
 			tieManager.newValue(i, order[i]);
@@ -735,17 +732,17 @@ public final class Variable implements Comparable<Variable> {
 		Arrays.fill(order, 0);
 
 		for (Constraint c : involvingConstraints) {
-			addConflicts(c);
+			addConflicts(c, c.getPosition(this));
 		}
 
 	}
-	
+
 	public int getConflicts(final int index) {
-		return order[index] ;
+		return order[index];
 	}
-	
+
 	public int getCurrentConflicts() {
-		return order[assignedIndex] ;
+		return order[assignedIndex];
 	}
 
 	// public int getNbConflicts() {
@@ -856,7 +853,7 @@ public final class Variable implements Comparable<Variable> {
 		return change;
 	}
 
-	public int getPrev(int index) {
+	public int getPrev(final int index) {
 		return chain.getPrev(index);
 	}
 

@@ -169,11 +169,11 @@ public final class AC3_R implements Filter {
     // // }
     // }
 
-    private void addNeighbours(Variable variable, Constraint involvingConstraint) {
+    private void addNeighbours(final Variable variable, final Constraint constraint) {
         final ArcQueue[] queue = this.queue;
-        for (Variable neighbour : involvingConstraint.getInvolvedVariables()) {
+        for (Variable neighbour : constraint.getInvolvedVariables()) {
             if (neighbour != variable && !neighbour.isAssigned()) {
-                queue[neighbour.getId()].add(involvingConstraint
+                queue[neighbour.getId()].add(constraint
                         .getPositionInVariable(neighbour));
             }
         }

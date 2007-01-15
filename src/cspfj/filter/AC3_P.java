@@ -180,7 +180,7 @@ public final class AC3_P implements Filter {
         return bestVariable;
     }
 
-    private void addInQueue(int vId) {
+    private void addInQueue(final int vId) {
         if (!inQueue[vId]) {
             inQueue[vId] = true;
             queueSize++;

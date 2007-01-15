@@ -144,7 +144,7 @@ public final class MACSolver extends AbstractSolver {
 		System.gc();
 		// enableNoGoods(2);
 		chronometer.startChrono();
-		
+
 		final Filter preprocessor;
 		switch (useSpace()) {
 		case BRANCH:
@@ -299,24 +299,25 @@ public final class MACSolver extends AbstractSolver {
 		return filter;
 	}
 
-	public void setAllSolutions(boolean allSolutions) {
+	public void setAllSolutions(final boolean allSolutions) {
 		this.allSolutions = allSolutions;
 	}
 
 	public String getXMLConfig() {
-		final StringBuffer sb = new StringBuffer() ;
+		final StringBuffer sb = new StringBuffer(180);
 
-		sb.append("\t\t\t<solver>").append(this).append("</solver>\n") ;
-		sb.append("\t\t\t<filter>").append(filter).append("</filter>\n") ;
-		sb.append("\t\t\t<heuristic>").append(heuristic).append("</heuristic>\n");
-		sb.append("\t\t\t<space>").append(useSpace()).append("</space>\n");
-		sb.append("\t\t\t<allSolutions>").append(allSolutions).append("</allSolutions>\n") ;
+		sb.append("\t\t\t<solver>").append(this).append(
+				"</solver>\n\t\t\t<filter>").append(filter).append(
+				"</filter>\n\t\t\t<heuristic>").append(heuristic).append(
+				"</heuristic>\n\t\t\t<space>").append(useSpace()).append(
+				"</space>\n\t\t\t<allSolutions>").append(allSolutions).append(
+				"</allSolutions>\n");
 
 		return sb.toString();
 	}
-	
+
 	public String toString() {
-		return "MAC" ;
+		return "MAC";
 	}
 	// public int getMaxNoGoodSize() {
 	// return maxNoGoodSize;
