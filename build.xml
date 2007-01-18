@@ -4,7 +4,7 @@
               Any modifications will be overwritten.
               Please edit build-user.xml instead.
 -->
-<project basedir="." default="build" name="CSP4J">
+<project basedir="." default="cspfj" name="CSP4J">
     &buildfile;
     <property name="CSP4J.location" value="."/>
     <path id="project.classpath">

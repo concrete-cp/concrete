@@ -35,19 +35,14 @@ import cspfj.filter.AC3_P;
 import cspfj.filter.AC3_R;
 import cspfj.filter.Filter;
 import cspfj.filter.SAC;
-import cspfj.heuristic.Heuristic;
 import cspfj.heuristic.Pair;
 
 public final class MinConflictsSolver extends AbstractSolver {
 
 	private final static Random random = new Random(0);
 
-	// private int nbConflicts;
-
 	private final static Logger logger = Logger
 			.getLogger("cspfj.solver.MinConflictsSolver");
-
-	// private final boolean[] toUpdate;
 
 	private final TabuManager tabuManager;
 
@@ -63,10 +58,8 @@ public final class MinConflictsSolver extends AbstractSolver {
 			boolean reverse) {
 		super(prob, resultHandler);
 		filter = reverse ? new AC3_R(problem) : new AC3_P(problem);
-		// toUpdate = new boolean[prob.getMaxVId() + 1];
-		// Arrays.fill(toUpdate, false);
 
-		tabuManager = new TabuManager(problem, 15);
+		tabuManager = new TabuManager(problem, 10);
 
 		rWProba = 1F / problem.getMaxDomainSize();
 
@@ -117,7 +110,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 
 		final int index = variable.getBestInitialIndex();
 
-		variable.restoreLevel(1);
+		//variable.restoreLevel(1);
 
 		if (FINE) {
 			logger.fine(variable.toString() + " (" + variable.getDomainSize()
@@ -164,7 +157,6 @@ public final class MinConflictsSolver extends AbstractSolver {
 
 		for (Variable v : problem.getVariables()) {
 			if (v.getCurrentConflicts() <= -bestImp) {
-				// logger.info("zap");
 				continue;
 			}
 
@@ -239,8 +231,6 @@ public final class MinConflictsSolver extends AbstractSolver {
 	public void minConflicts() throws MaxBacktracksExceededException,
 			IOException {
 
-		// final Logger logger = MinConflictsSolver.logger;
-		// final Random random = MinConflictsSolver.random;
 		final Problem problem = this.problem;
 		final float randomWalk = this.rWProba;
 
@@ -258,16 +248,15 @@ public final class MinConflictsSolver extends AbstractSolver {
 			if (nbConflicts < bestEver) {
 				bestEver = nbConflicts;
 				solution(nbConflicts);
-				// incrementNbSolutions();
 			}
 
 			if (FINE) {
 				logger.fine(nbConflicts + " conflicts " + "(real = "
 						+ realConflicts() + ", " + getNbBacktracks() + "/"
 						+ getMaxBacktracks() + ")");
-
 			}
-			assert realConflicts() <= nbConflicts;
+
+            assert realConflicts() <= nbConflicts;
 
 			if (random.nextFloat() < randomWalk) {
 				nbConflicts += randomWalk();
@@ -276,7 +265,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 			}
 
 			assert nbConflicts == weightedConflicts() : nbConflicts + "/="
-					+ weightedConflicts();
+					+ weightedConflicts() + " (real = " + realConflicts()+")" ;
 			incrementNbAssignments();
 
 		}
@@ -288,6 +277,8 @@ public final class MinConflictsSolver extends AbstractSolver {
 		incrementNbSolutions();
 		assert realConflicts() == 0 : getSolution() + " -> " + realConflicts()
 				+ " conflicts ! (" + weightedConflicts() + " wc)";
+        
+        logger.info(Variable.conflictsCount + " cf counts");
 
 	}
 
@@ -331,7 +322,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 			}
 
 			for (Constraint c : problem.getConstraints()) {
-				c.setWeight(Math.max(1, (int) Math.sqrt(c.getWeight())));
+				c.setWeight(1);//Math.max(1, (int) Math.sqrt(c.getWeight())));
 			}
 			localBT *= 1.5;
 		} while (!resolved);

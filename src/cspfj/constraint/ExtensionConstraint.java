@@ -23,7 +23,7 @@ import cspfj.exception.FailedGenerationException;
 import cspfj.exception.MatrixTooBigException;
 import cspfj.problem.Variable;
 
-public final class ExtensionConstraint extends Constraint {
+public class ExtensionConstraint extends Constraint {
 
 	private final double tightness;
 

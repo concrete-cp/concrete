@@ -1,13 +1,13 @@
 package cspfj;
 
 import java.io.IOException;
-import java.util.logging.Logger;
 
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.Filter;
 import cspfj.filter.SAC;
 import cspfj.heuristic.Heuristic;
 import cspfj.problem.Problem;
+import cspfj.problem.Variable;
 
 public class ComboSolver extends AbstractSolver {
 
@@ -15,8 +15,8 @@ public class ComboSolver extends AbstractSolver {
 
 	private final MACSolver macSolver;
 
-	private final static Logger logger = Logger
-			.getLogger("cspfj.solver.ComboSolver");
+//	private final static Logger logger = Logger
+//			.getLogger("cspfj.solver.ComboSolver");
 
 	// private final NoGoodManager noGoodManager;
 
@@ -58,9 +58,10 @@ public class ComboSolver extends AbstractSolver {
 
 		do {
 			if (mac(maxBT)) {
-				return getSolution().size() > 0;
+				return getNbSolutions() > 0;
 			}
 
+            problem.restoreAll(1);
 			// if (alt) {
 			// for (Constraint c : problem.getConstraints()) {
 			// c.setWeight(1);
@@ -71,10 +72,14 @@ public class ComboSolver extends AbstractSolver {
 				return true;
 			}
 
+            for (Variable v: problem.getVariables()) {
+                v.resetAssign() ;
+            }
+            
 			problem.restoreAll(1);
 			
 			maxBT *= 1.5;
-			localBT *= 1.5;
+			localBT *= 1.7;
 
 		} while (true);
 
@@ -97,9 +102,7 @@ public class ComboSolver extends AbstractSolver {
 			throw e;
 		}
 
-		final int ng = macSolver.addNoGoods();
-
-		logger.info(ng + " noGoods");
+		macSolver.addNoGoods();
 
 		return false;
 	}

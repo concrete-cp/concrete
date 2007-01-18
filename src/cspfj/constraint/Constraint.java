@@ -81,7 +81,7 @@ public abstract class Constraint {
 	private final boolean removals[];
 
 	private boolean changedConstraint = true;
-	
+
 	protected Constraint(final Variable[] scope) {
 		involvedVariables = scope;
 		arity = involvedVariables.length;
@@ -495,15 +495,15 @@ public abstract class Constraint {
 	}
 
 	public final void increaseWeightAndUpdate() {
-		final Variable[] involvedVariables = this.involvedVariables;
-		for (int p = arity; --p >= 0;) {
-			involvedVariables[p].removeConflicts(this, p);
-		}
+//		final Variable[] involvedVariables = this.involvedVariables;
+//		for (int p = arity; --p >= 0;) {
+//			involvedVariables[p].removeConflicts(this, p);
+//		}
 
 		increaseWeight();
 
 		for (int p = arity; --p >= 0;) {
-			involvedVariables[p].addConflicts(this, p);
+			involvedVariables[p].updateBestIndex();
 		}
 	}
 
@@ -536,14 +536,15 @@ public abstract class Constraint {
 
 	public final boolean checkFirstWith(final int variablePosition,
 			final int index) {
-
+		setFirstTuple(variablePosition, index);
+		
 		if (tupleCache) {
 
 			final int[][] myLast = last[variablePosition];
 			final boolean[] myLastCheck = lastCheck[variablePosition];
 			final int[] tuple = this.tuple;
 
-			setFirstTuple(variablePosition, index);
+			
 			if (Arrays.equals(tuple, myLast[index])) {
 				assert check() == myLastCheck[index] : Arrays.toString(tuple)
 						+ " = "
@@ -642,20 +643,9 @@ public abstract class Constraint {
 	public final static Constraint findConstraint(
 			final Collection<Variable> scope,
 			final Collection<Constraint> constraints) {
-		final int arity = scope.size();
+		final Variable[] variables = scope.toArray(new Variable[scope.size()]);
 		for (Constraint c : constraints) {
-			if (c.getArity() != arity) {
-				continue;
-			}
-			boolean valid = true;
-			for (Variable variable : c.getInvolvedVariables()) {
-				if (!scope.contains(variable)) {
-					valid = false;
-					break;
-				}
-			}
-
-			if (valid) {
+			if (c.hasSetOfVariablesEqualTo(variables)) {
 				return c;
 			}
 		}
@@ -665,7 +655,7 @@ public abstract class Constraint {
 	public void intersect(final Variable[] scope, final boolean supports,
 			final int[][] tuples) throws FailedGenerationException {
 		try {
-			matrix.intersect(scope, scope, supports, tuples);
+			matrix.intersect(scope, this.involvedVariables, supports, tuples);
 		} catch (MatrixTooBigException e) {
 			throw new FailedGenerationException(e.toString());
 		}
@@ -750,4 +740,31 @@ public abstract class Constraint {
 		return id == constraint.getId();
 	}
 
+	/**
+	 * Determines if the given set of variables corresponds to the set of
+	 * variables involved in the constraint.
+	 * 
+	 * @param variables
+	 *            a given set of variables
+	 * @return <code> true </code> iff the given set of variables corresponds to
+	 *         the set of variables involved in the constraint
+	 */
+	public boolean hasSetOfVariablesEqualTo(final Variable[] variables) {
+		if (arity != variables.length) {
+			return false;
+		}
+		for (int i = involvedVariables.length; --i >= 0;) {
+			boolean found = false;
+			for (int j = variables.length; --j >= 0;) {
+				if (involvedVariables[i] == variables[j]) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				return false;
+			}
+		}
+		return true;
+	}
 }

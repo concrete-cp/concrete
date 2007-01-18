@@ -239,14 +239,14 @@ public final class SAC implements Filter {
 	// return true;
 	// }
 
-	private void reduceToSolution(final int level) {
-		for (Variable v : problem.getVariables()) {
-			final int sol = v.getFirst();
-			v.unassign(problem);
-			v.restoreLevel(level + 1);
-			v.makeSingletonIndex(sol, level);
-		}
-	}
+//	private void reduceToSolution(final int level) {
+//		for (Variable v : problem.getVariables()) {
+//			final int sol = v.getFirst();
+//			v.unassign(problem);
+//			v.restoreLevel(level + 1);
+//			v.makeSingletonIndex(sol, level);
+//		}
+//	}
 
 	public boolean reduceAfter(final int level, final Variable variable) {
 		if (variable == null) {

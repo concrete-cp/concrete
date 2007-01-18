@@ -22,13 +22,13 @@ package cspfj;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-//import java.util.logging.Logger;
+// import java.util.logging.Logger;
 
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.Chronometer;
-import cspfj.filter.SAC.SPACE ;
+import cspfj.filter.SAC.SPACE;
 
 public abstract class AbstractSolver implements Solver {
 
@@ -43,12 +43,13 @@ public abstract class AbstractSolver implements Solver {
     private int maxBacktracks;
 
     private int nbBacktracks;
-    
-    private int nbSolutions =0;
+
+    private int nbSolutions = 0;
 
     private final ResultHandler resultHandler;
 
-	private SPACE space = SPACE.NONE ;
+    private SPACE space = SPACE.NONE;
+
     // private final static Logger logger =
     // Logger.getLogger("cspfj.solver.AbstractSolver") ;
 
@@ -71,14 +72,14 @@ public abstract class AbstractSolver implements Solver {
         return getSolution().get(problem.getVariable(vId));
     }
 
-//    /*
-//     * (non-Javadoc)
-//     * 
-//     * @see cspfj.Solver#getSolutionValue(int)
-//     */
-//    public final int getSolutionValue(final int vId) {
-//        return problem.getVariable(vId).getDomain()[getSolutionIndex(vId)];
-//    }
+    // /*
+    // * (non-Javadoc)
+    // *
+    // * @see cspfj.Solver#getSolutionValue(int)
+    // */
+    // public final int getSolutionValue(final int vId) {
+    // return problem.getVariable(vId).getDomain()[getSolutionIndex(vId)];
+    // }
 
     public int getNbAssignments() {
         return nbAssignments;
@@ -128,6 +129,7 @@ public abstract class AbstractSolver implements Solver {
     protected final void setSolution(final Map<Variable, Integer> solution) {
         this.solution.clear();
         this.solution.putAll(solution);
+        nbSolutions = 1;
     }
 
     protected void solution(final Map<Variable, Integer> solution,
@@ -135,23 +137,23 @@ public abstract class AbstractSolver implements Solver {
         resultHandler.solution(solution, nbConflicts);
     }
 
-	public final void setUseSpace(final SPACE space) {
-		this.space = space ;
-	}
-	
-	protected final SPACE useSpace() {
-		return space ;
-	}
-	
-	protected final void statistics(final String name, final Object value) {
-		resultHandler.statistics(name, value.toString());
-	}
-	
-	public final int getNbSolutions() {
-		return nbSolutions ;
-	}
-	
-	protected final void incrementNbSolutions() {
-		nbSolutions++ ;
-	}
+    public final void setUseSpace(final SPACE space) {
+        this.space = space;
+    }
+
+    protected final SPACE useSpace() {
+        return space;
+    }
+
+    protected final void statistics(final String name, final Object value) {
+        resultHandler.statistics(name, value.toString());
+    }
+
+    public final int getNbSolutions() {
+        return nbSolutions;
+    }
+
+    protected final void incrementNbSolutions() {
+        nbSolutions++;
+    }
 }
