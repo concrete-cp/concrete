@@ -260,6 +260,9 @@ public abstract class Constraint {
 	// }
 
 	public final boolean skipRevision(final int position) {
+		if (arity > MAX_ARITY) {
+			return false ;
+		}
 		int size = 1;
 		for (int i = arity; --i >= 0;) {
 			if (i != position) {
@@ -273,21 +276,21 @@ public abstract class Constraint {
 			return true;
 		}
 
-		// return false;
-
-		final boolean[] removals = this.removals;
-
-		if (!removals[position]) {
-			return false;
-		}
-
-		for (int i = arity; --i >= 0;) {
-			if (i != position && removals[i]) {
-				return false;
-			}
-		}
-		//
-		return true;
+		 return false;
+//
+//		final boolean[] removals = this.removals;
+//
+//		if (!removals[position]) {
+//			return false;
+//		}
+//
+//		for (int i = arity; --i >= 0;) {
+//			if (i != position && removals[i]) {
+//				return false;
+//			}
+//		}
+//		//
+//		return true;
 	}
 
 	public final boolean revise(final Variable variable, final int level) {
