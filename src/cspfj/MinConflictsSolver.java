@@ -57,13 +57,17 @@ public final class MinConflictsSolver extends AbstractSolver {
 	public MinConflictsSolver(Problem prob, ResultHandler resultHandler,
 			boolean reverse) {
 		super(prob, resultHandler);
-		filter = reverse ? new AC3_R(problem) : new AC3_P(problem);
 
+		max = resultHandler.displaySolutions;
+
+		if (max) {
+			filter = reverse ? new AC3_R(problem) : new AC3_P(problem);
+		} else {
+			filter = null;
+		}
 		tabuManager = new TabuManager(problem, 10);
 
 		rWProba = 1F / problem.getMaxDomainSize();
-
-		max = resultHandler.displaySolutions;
 
 		Variable.setTieManager(new TieManager(random));
 
@@ -110,7 +114,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 
 		final int index = variable.getBestInitialIndex();
 
-		//variable.restoreLevel(1);
+		// variable.restoreLevel(1);
 
 		if (FINE) {
 			logger.fine(variable.toString() + " (" + variable.getDomainSize()
@@ -256,7 +260,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 						+ getMaxBacktracks() + ")");
 			}
 
-            assert realConflicts() <= nbConflicts;
+			assert realConflicts() <= nbConflicts;
 
 			if (random.nextFloat() < randomWalk) {
 				nbConflicts += randomWalk();
@@ -265,7 +269,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 			}
 
 			assert nbConflicts == weightedConflicts() : nbConflicts + "/="
-					+ weightedConflicts() + " (real = " + realConflicts()+")" ;
+					+ weightedConflicts() + " (real = " + realConflicts() + ")";
 			incrementNbAssignments();
 
 		}
@@ -277,8 +281,8 @@ public final class MinConflictsSolver extends AbstractSolver {
 		incrementNbSolutions();
 		assert realConflicts() == 0 : getSolution() + " -> " + realConflicts()
 				+ " conflicts ! (" + weightedConflicts() + " wc)";
-        
-        logger.info(Variable.conflictsCount + " cf counts");
+
+		logger.info(Variable.conflictsCount + " cf counts");
 
 	}
 
@@ -288,22 +292,24 @@ public final class MinConflictsSolver extends AbstractSolver {
 		System.gc();
 		chronometer.startChrono();
 
-		final Filter preprocessor;
-		switch (useSpace()) {
-		case BRANCH:
-			preprocessor = new SAC(problem, filter, true);
-			break;
+		if (!max) {
+			final Filter preprocessor;
+			switch (useSpace()) {
+			case BRANCH:
+				preprocessor = new SAC(problem, filter, true);
+				break;
 
-		case CLASSIC:
-			preprocessor = new SAC(problem, filter, false);
-			break;
+			case CLASSIC:
+				preprocessor = new SAC(problem, filter, false);
+				break;
 
-		default:
-			preprocessor = filter;
-		}
-		if (!preprocessor.reduceAll(0)) {
-			chronometer.validateChrono();
-			return false;
+			default:
+				preprocessor = filter;
+			}
+			if (!preprocessor.reduceAll(0)) {
+				chronometer.validateChrono();
+				return false;
+			}
 		}
 
 		do {
@@ -322,7 +328,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 			}
 
 			for (Constraint c : problem.getConstraints()) {
-				c.setWeight(1);//Math.max(1, (int) Math.sqrt(c.getWeight())));
+				c.setWeight(1);// Math.max(1, (int) Math.sqrt(c.getWeight())));
 			}
 			localBT *= 1.5;
 		} while (!resolved);
