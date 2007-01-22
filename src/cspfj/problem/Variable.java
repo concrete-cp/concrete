@@ -528,6 +528,7 @@ public final class Variable implements Comparable<Variable> {
         if (assigned) {
             return assignedIndex;
         }
+		
 
         final TieManager tieManager = Variable.tieManager;
         final int[] removed = this.removed;
@@ -545,6 +546,9 @@ public final class Variable implements Comparable<Variable> {
             int indexConflicts = 0;
 
             for (Constraint c : constraints) {
+				if (c.getArity() > Constraint.MAX_ARITY) {
+					continue ;
+				}
 
                 if (!c.findValidTuple(this, i)) {
                     indexConflicts += c.getWeight();
