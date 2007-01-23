@@ -22,6 +22,7 @@ package cspfj.constraint;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Logger;
 // import java.util.logging.Logger;
 
 import cspfj.exception.FailedGenerationException;
@@ -47,7 +48,7 @@ public abstract class Constraint {
 
 	protected final int[] tuple;
 
-	private int weight = 1;
+	private float weight = 1;
 
 	private final int arity;
 
@@ -63,8 +64,8 @@ public abstract class Constraint {
 
 	// private static int nbSkippedRevisions = 0;
 
-	// private static final Logger logger = Logger
-	// .getLogger("cspfj.constraints.Constraint");
+	private static final Logger logger = Logger
+			.getLogger("cspfj.constraints.Constraint");
 
 	private final int[] realTuple;
 
@@ -126,11 +127,12 @@ public abstract class Constraint {
 
 		matrix = AbstractMatrixManager.factory(scope, tuple);
 
-		try {
-			matrix.init(true);
-		} catch (MatrixTooBigException e) {
-			matrix.clear();
-		}
+//		try {
+//			matrix.init(true);
+//		} catch (MatrixTooBigException e) {
+//			logger.warning("Not enough memory to create Matrix Cache");
+//			matrix.clear();
+//		}
 
 		nbMaxConflicts = new int[arity];
 		nbSupports = new int[arity][maxDomain];
@@ -261,7 +263,7 @@ public abstract class Constraint {
 
 	public final boolean skipRevision(final int position) {
 		if (arity > MAX_ARITY) {
-			return false ;
+			return false;
 		}
 		int size = 1;
 		for (int i = arity; --i >= 0;) {
@@ -276,21 +278,21 @@ public abstract class Constraint {
 			return true;
 		}
 
-		 return false;
-//
-//		final boolean[] removals = this.removals;
-//
-//		if (!removals[position]) {
-//			return false;
-//		}
-//
-//		for (int i = arity; --i >= 0;) {
-//			if (i != position && removals[i]) {
-//				return false;
-//			}
-//		}
-//		//
-//		return true;
+		return false;
+		//
+		// final boolean[] removals = this.removals;
+		//
+		// if (!removals[position]) {
+		// return false;
+		// }
+		//
+		// for (int i = arity; --i >= 0;) {
+		// if (i != position && removals[i]) {
+		// return false;
+		// }
+		// }
+		// //
+		// return true;
 	}
 
 	public final boolean revise(final Variable variable, final int level) {
@@ -493,28 +495,28 @@ public abstract class Constraint {
 		return size - nbSupports[variable.getId()][index];
 	}
 
-	public final void increaseWeight() {
-		weight++;
+	public final void increaseWeight(final float increment) {
+		weight += increment;
 	}
 
-	public final void increaseWeightAndUpdate() {
-//		final Variable[] involvedVariables = this.involvedVariables;
-//		for (int p = arity; --p >= 0;) {
-//			involvedVariables[p].removeConflicts(this, p);
-//		}
+	public final void increaseWeightAndUpdate(final float increment) {
+		// final Variable[] involvedVariables = this.involvedVariables;
+		// for (int p = arity; --p >= 0;) {
+		// involvedVariables[p].removeConflicts(this, p);
+		// }
 
-		increaseWeight();
+		increaseWeight(increment);
 
 		for (int p = arity; --p >= 0;) {
 			involvedVariables[p].updateBestIndex();
 		}
 	}
 
-	public final int getWeight() {
+	public final float getWeight() {
 		return weight;
 	}
 
-	public final void setWeight(final int weight) {
+	public final void setWeight(final float weight) {
 		this.weight = weight;
 	}
 
@@ -540,14 +542,13 @@ public abstract class Constraint {
 	public final boolean checkFirstWith(final int variablePosition,
 			final int index) {
 		setFirstTuple(variablePosition, index);
-		
+
 		if (tupleCache) {
 
 			final int[][] myLast = last[variablePosition];
 			final boolean[] myLastCheck = lastCheck[variablePosition];
 			final int[] tuple = this.tuple;
 
-			
 			if (Arrays.equals(tuple, myLast[index])) {
 				assert check() == myLastCheck[index] : Arrays.toString(tuple)
 						+ " = "

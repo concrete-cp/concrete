@@ -1,7 +1,9 @@
 package cspfj;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
+import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.Filter;
 import cspfj.filter.SAC;
@@ -15,8 +17,8 @@ public class ComboSolver extends AbstractSolver {
 
 	private final MACSolver macSolver;
 
-//	private final static Logger logger = Logger
-//			.getLogger("cspfj.solver.ComboSolver");
+	private final static Logger logger = Logger
+			.getLogger("cspfj.solver.ComboSolver");
 
 	// private final NoGoodManager noGoodManager;
 
@@ -50,36 +52,56 @@ public class ComboSolver extends AbstractSolver {
 			return false;
 		}
 
-		int maxBT = problem.getNbVariables();
-		int localBT = (int) Math.sqrt(problem.getNbVariables()
-				* problem.getMaxDomainSize());
+		// final int localBT = (int) (-500 + 8.25 * problem.getMaxDomainSize()
+		// * problem.getNbVariables() + 0.24 * Math.pow(problem
+		// .getMaxDomainSize()
+		// * problem.getNbVariables(), 2));
+
+		final int localBT = Math.max((int) (-50000 + 10000 * Math.log(problem
+				.getMaxDomainSize()
+				* problem.getNbVariables())), 5000);
+
+		int maxBT = 100 * localBT * problem.getNbVariables()
+				/ (problem.getNbConstraints() * problem.getMaxDomainSize());
+
+		float maxTries = 1;
 
 		// boolean alt = false;
 
 		do {
+			logger.info("MC with " + (int) Math.floor(maxTries) + " x "
+					+ localBT + " flips");
+			float localTime = -chronometer.getCurrentChrono();
+			for (int i = (int) Math.floor(maxTries); --i >= 0;) {
+				if (minConflicts(localBT)) {
+					return true;
+				}
+
+				for (Variable v : problem.getVariables()) {
+					v.resetAssign();
+				}
+
+				problem.restoreAll(1);
+			}
+			localTime += chronometer.getCurrentChrono();
+			logger.info("Took " + localTime + " s ("
+					+ (localBT * (int) Math.floor(maxTries) / localTime)
+					+ " flips per second)");
+
+			logger.info("MAC with " + maxBT + " bt");
+			float macTime = -chronometer.getCurrentChrono();
 			if (mac(maxBT)) {
 				return getNbSolutions() > 0;
 			}
 
-            problem.restoreAll(1);
-			// if (alt) {
-			// for (Constraint c : problem.getConstraints()) {
-			// c.setWeight(1);
-			// }
-			// }
-
-			if (minConflicts(localBT)) {
-				return true;
-			}
-
-            for (Variable v: problem.getVariables()) {
-                v.resetAssign() ;
-            }
-            
 			problem.restoreAll(1);
-			
-			maxBT *= 1.5;
-			localBT *= 1.7;
+			macTime += chronometer.getCurrentChrono();
+
+			logger.info("Took " + macTime + " s (" + (maxBT / macTime)
+					+ " bt per second)");
+
+			maxTries *= 1.5 ;
+			maxBT *= 1.5 * localTime/macTime ;
 
 		} while (true);
 
@@ -101,6 +123,7 @@ public class ComboSolver extends AbstractSolver {
 			chronometer.validateChrono();
 			throw e;
 		}
+		logger.info("Max constraint weight : " + problem.getMaxWeight());
 
 		macSolver.addNoGoods();
 
@@ -126,7 +149,11 @@ public class ComboSolver extends AbstractSolver {
 			chronometer.validateChrono();
 			throw e;
 		}
-		
+
+		// for (Constraint c: problem.getConstraints()) {
+		// c.setWeight(c.getWeight() / problem.getNbConstraints());
+		// }
+		logger.info("Max constraint weight : " + problem.getMaxWeight());
 
 		return false;
 	}

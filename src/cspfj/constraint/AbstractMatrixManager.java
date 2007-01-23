@@ -1,6 +1,7 @@
 package cspfj.constraint;
 
 import java.util.Arrays;
+import java.util.logging.Logger;
 
 import cspfj.exception.MatrixTooBigException;
 import cspfj.problem.Variable;
@@ -13,10 +14,13 @@ public abstract class AbstractMatrixManager {
 	protected final int[] tuple;
 
 	protected final Variable[] variables;
-	
-	private final int arity ;
-	
-	protected int variablePosition ;
+
+	private final int arity;
+
+	protected int variablePosition;
+
+	private final static Logger logger = Logger
+			.getLogger("cspfj.constraint.AbstractMatrixManager");
 
 	public AbstractMatrixManager(Variable[] scope, int[] tuple) {
 		super();
@@ -28,7 +32,7 @@ public abstract class AbstractMatrixManager {
 			domainSize[i] = scope[i].getDomain().length;
 		}
 		this.tuple = tuple;
-		
+
 		this.arity = scope.length;
 
 	}
@@ -41,9 +45,9 @@ public abstract class AbstractMatrixManager {
 
 		case 3:
 			return new MatrixManager3D(scope, tuple);
-			
+
 		default:
-			return new MatrixManagerGeneral(scope, tuple);	
+			return new MatrixManagerGeneral(scope, tuple);
 		}
 	}
 
@@ -63,6 +67,7 @@ public abstract class AbstractMatrixManager {
 			try {
 				init(true);
 			} catch (MatrixTooBigException e) {
+				logger.warning("Not enough memory to init Matrix");
 				clear();
 				return false;
 			}
@@ -119,7 +124,7 @@ public abstract class AbstractMatrixManager {
 	}
 
 	public boolean setFirstTuple(final int variablePosition, final int index) {
-		this.variablePosition = variablePosition ;
+		this.variablePosition = variablePosition;
 		for (int position = arity; --position >= 0;) {
 			if (position == variablePosition) {
 				tuple[position] = index;
@@ -134,7 +139,7 @@ public abstract class AbstractMatrixManager {
 
 		return true;
 	}
-	
+
 	public boolean next() {
 		do {
 			if (!setNextTuple()) {

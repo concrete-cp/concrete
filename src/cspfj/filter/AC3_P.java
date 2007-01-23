@@ -118,7 +118,7 @@ public final class AC3_P implements Filter {
 					if (!y.isAssigned() && !skipRevision(c, i)
 							&& c.revise(i, level)) {
 						if (y.getDomainSize() <= 0) {
-							c.increaseWeight();
+							c.increaseWeight(1);
 							return false;
 						}
 

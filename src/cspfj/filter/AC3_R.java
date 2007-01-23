@@ -102,7 +102,7 @@ public final class AC3_R implements Filter {
 
                 if (constraint.revise(variable, level)) {
                     if (variable.getDomainSize() <= 0) {
-                        constraint.increaseWeight();
+                        constraint.increaseWeight(1);
                         return false;
                     }
                     lastRevisedConstraint = cId;
