@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,6 +32,7 @@ import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
+import cspfj.util.RandomOrder;
 import cspfj.util.TieManager;
 import cspfj.filter.AC3_P;
 import cspfj.filter.AC3_R;
@@ -122,16 +125,27 @@ public final class MinConflictsSolver extends AbstractSolver {
 		}
 		variable.firstAssign(index);
 
+		final Set<Variable> randomOrder = new TreeSet<Variable>(
+				new RandomOrder<Variable>(random));
+
 		for (Variable n : variable.getNeighbours()) {
-			init(n);
+			randomOrder.add(n);
+		}
+
+		for (Variable v : randomOrder) {
+			init(v);
 		}
 	}
 
 	private void init() {
-
-		init(problem.getVariables()[random.nextInt(problem.getNbVariables())]);
+		final Set<Variable> randomOrder = new TreeSet<Variable>(
+				new RandomOrder<Variable>(random));
 
 		for (Variable v : problem.getVariables()) {
+			randomOrder.add(v);
+		}
+
+		for (Variable v : randomOrder) {
 			init(v);
 		}
 
@@ -186,8 +200,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 
 	}
 
-	private int localMinimum(final int nbConflicts)
-			throws MaxBacktracksExceededException {
+	private int localMinimum() {
 		int improvment = 0;
 
 		if (FINE) {
@@ -197,22 +210,20 @@ public final class MinConflictsSolver extends AbstractSolver {
 		for (Constraint c : problem.getConstraints()) {
 			if (!c.checkFirst()) {
 				improvment++;
-				c.increaseWeightAndUpdate(1F / nbConflicts);
+				c.increaseWeightAndUpdate();
 			}
 		}
 
 		return improvment;
 	}
 
-	private int bestWalk(final TieManager tieManager, final int aspiration,
-			final int nbConflicts) throws MaxBacktracksExceededException {
+	private int bestWalk(final TieManager tieManager, final int aspiration) {
 
 		final long pair = findBest(tieManager, aspiration);
 
 		if (pair < 0) {
 			logger.fine("Cleaning tabu list");
 			tabuManager.clean();
-			checkBacktracks();
 			return 0;
 		}
 
@@ -220,19 +231,21 @@ public final class MinConflictsSolver extends AbstractSolver {
 
 		final int bestIndex = Pair.index(pair);
 
+		int improvment = 0;
+
 		if (bestVariable.getImprovment(bestIndex) >= 0) {
-			return localMinimum(nbConflicts);
+			return localMinimum();
 		}
 
 		tabuManager.push(bestVariable, bestIndex);
 
-		final int improvment = bestVariable.getImprovment(bestIndex);
+		improvment += bestVariable.getImprovment(bestIndex);
 
 		if (FINE) {
 			logger.fine(bestVariable + " <- " + tieManager.getBestValue());
 		}
 		bestVariable.reAssign(bestIndex);
-
+		incrementNbAssignments();
 		return improvment;
 	}
 
@@ -269,13 +282,12 @@ public final class MinConflictsSolver extends AbstractSolver {
 			// if (random.nextFloat() < randomWalk) {
 			// nbConflicts += randomWalk();
 			// } else {
-			nbConflicts += bestWalk(tieManager, bestEver - nbConflicts,
-					nbConflicts);
+			nbConflicts += bestWalk(tieManager, bestEver - nbConflicts);
 			// }
 
 			assert nbConflicts == weightedConflicts() : nbConflicts + "/="
 					+ weightedConflicts() + " (real = " + realConflicts() + ")";
-			incrementNbAssignments();
+
 			checkBacktracks();
 
 		}
@@ -293,10 +305,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 	}
 
 	public boolean run() throws IOException {
-		final int localBT = (int) (-500 + 8.25 * problem.getMaxDomainSize()
-				* problem.getNbVariables() + 0.24 * Math.pow(problem
-				.getMaxDomainSize()
-				* problem.getNbVariables(), 2));
+		final int localBT = problem.getMaxFlips();
 		boolean resolved = false;
 		System.gc();
 		chronometer.startChrono();
@@ -336,10 +345,15 @@ public final class MinConflictsSolver extends AbstractSolver {
 				chronometer.validateChrono();
 				throw e;
 			}
-
+			// if (true) {
+			// logger.info(problem.toString());
+			// chronometer.validateChrono();
+			// throw new IOException();
+			// }
 			for (Constraint c : problem.getConstraints()) {
 				c.setWeight(1);// Math.max(1, (int) Math.log(c.getWeight())));
 			}
+
 			// localBT *= 1.5;
 		} while (!resolved);
 

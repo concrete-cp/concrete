@@ -48,7 +48,7 @@ public abstract class Constraint {
 
 	protected final int[] tuple;
 
-	private float weight = 1;
+	private int weight = 1;
 
 	private final int arity;
 
@@ -127,12 +127,12 @@ public abstract class Constraint {
 
 		matrix = AbstractMatrixManager.factory(scope, tuple);
 
-//		try {
-//			matrix.init(true);
-//		} catch (MatrixTooBigException e) {
-//			logger.warning("Not enough memory to create Matrix Cache");
-//			matrix.clear();
-//		}
+		// try {
+		// matrix.init(true);
+		// } catch (MatrixTooBigException e) {
+		// logger.warning("Not enough memory to create Matrix Cache");
+		// matrix.clear();
+		// }
 
 		nbMaxConflicts = new int[arity];
 		nbSupports = new int[arity][maxDomain];
@@ -495,28 +495,28 @@ public abstract class Constraint {
 		return size - nbSupports[variable.getId()][index];
 	}
 
-	public final void increaseWeight(final float increment) {
-		weight += increment;
+	public final void increaseWeight() {
+		weight++;
 	}
 
-	public final void increaseWeightAndUpdate(final float increment) {
+	public final void increaseWeightAndUpdate() {
 		// final Variable[] involvedVariables = this.involvedVariables;
 		// for (int p = arity; --p >= 0;) {
 		// involvedVariables[p].removeConflicts(this, p);
 		// }
 
-		increaseWeight(increment);
+		increaseWeight();
 
 		for (int p = arity; --p >= 0;) {
 			involvedVariables[p].updateBestIndex();
 		}
 	}
 
-	public final float getWeight() {
+	public final int getWeight() {
 		return weight;
 	}
 
-	public final void setWeight(final float weight) {
+	public final void setWeight(final int weight) {
 		this.weight = weight;
 	}
 

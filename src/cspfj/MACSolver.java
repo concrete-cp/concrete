@@ -53,7 +53,8 @@ public final class MACSolver extends AbstractSolver {
 		filter = reverse ? new AC3_R(problem) : new AC3_P(problem);
 		// heuristic = new WDegOnDomBySupports(prob);
 		this.heuristic = heuristic;
-		setMaxBacktracks(problem.getNbVariables());
+
+		setMaxBacktracks(problem.getMaxBacktracks());
 		Pair.setProblem(prob);
 	}
 

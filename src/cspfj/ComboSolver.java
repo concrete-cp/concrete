@@ -57,16 +57,13 @@ public class ComboSolver extends AbstractSolver {
 		// .getMaxDomainSize()
 		// * problem.getNbVariables(), 2));
 
-		final int localBT = Math.max((int) (-50000 + 10000 * Math.log(problem
-				.getMaxDomainSize()
-				* problem.getNbVariables())), 5000);
+		final int localBT = problem.getMaxFlips();
 
-		int maxBT = 100 * localBT * problem.getNbVariables()
-				/ (problem.getNbConstraints() * problem.getMaxDomainSize());
-
+		int maxBT = problem.getMaxBacktracks();
+		
 		float maxTries = 1;
 
-		// boolean alt = false;
+//		 boolean alt = false;
 
 		do {
 			logger.info("MC with " + (int) Math.floor(maxTries) + " x "
@@ -100,9 +97,17 @@ public class ComboSolver extends AbstractSolver {
 			logger.info("Took " + macTime + " s (" + (maxBT / macTime)
 					+ " bt per second)");
 
-			maxTries *= 1.5 ;
-			maxBT *= 1.5 * localTime/macTime ;
+			maxTries *= 1.5;
+			maxBT *= 1.5 * localTime / macTime;
 
+//			alt ^= true ;
+//			
+//			if (!alt) {
+				for (Constraint c : problem.getConstraints()) {
+					c.setWeight(1);// Math.max(1, (int) Math.log(c.getWeight())));
+				}
+//			}
+			
 		} while (true);
 
 	}

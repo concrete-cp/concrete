@@ -26,11 +26,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
+import cspfj.constraint.Weight;
 import cspfj.exception.FailedGenerationException;
 import cspfj.heuristic.AbstractStaticValueHeuristic;
 import cspfj.heuristic.Supports;
@@ -277,9 +279,15 @@ public final class Problem {
 			sb.append(Arrays.toString(v.getCurrentDomain()));
 			sb.append('\n');
 		}
-		for (Constraint c : getConstraints()) {
+
+		final SortedSet<Constraint> set = new TreeSet<Constraint>(new Weight(
+				false));
+
+		set.addAll(constraints.values());
+
+		for (Constraint c : set) {
 			sb.append(c.toString());
-			sb.append(' ');
+			sb.append(" (").append(c.getWeight()).append(")\n");
 		}
 		sb.append('\n');
 
@@ -476,5 +484,28 @@ public final class Problem {
 			}
 		}
 		return maxWeight;
+	}
+
+	public int getND() {
+		int nd = 0;
+		for (Variable v : getVariables()) {
+			nd += v.getDomainSize();
+		}
+		return nd;
+	}
+
+	public int getMaxFlips() {
+		final int nd = getND();
+//		return 8 * nd + (int)(.24 * nd * nd);
+		// return 5*nd;
+		 return Math.max((int) (-40000 + 10000 * Math.log(nd)), 10000);
+	}
+
+	public int getMaxBacktracks() {
+		final int meanDomainSize = getND() / getNbVariables();
+
+		final int localBT = getMaxFlips();
+
+		return (int) (localBT * (100F * getNbVariables()) / (getNbConstraints() * meanDomainSize));
 	}
 }

@@ -480,7 +480,7 @@ public final class Variable implements Comparable<Variable> {
     private int bestIndex;
 
     public int bestImprovment(final TabuManager tabuManager,
-            final int aspiration) {
+            final float aspiration) {
         final int bestIndex = this.bestIndex;
         if (bestIndex >= 0 && !tabuManager.isTabu(this, bestIndex)) {
             return bestIndex;
