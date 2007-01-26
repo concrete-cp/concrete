@@ -54,7 +54,7 @@ public final class MACSolver extends AbstractSolver {
 		// heuristic = new WDegOnDomBySupports(prob);
 		this.heuristic = heuristic;
 
-		setMaxBacktracks(problem.getMaxBacktracks());
+		
 		Pair.setProblem(prob);
 	}
 
@@ -140,7 +140,6 @@ public final class MACSolver extends AbstractSolver {
 	 * @see cspfj.Solver#run(int)
 	 */
 	public boolean run() {
-		int maxBT = allSolutions ? -1 : getMaxBacktracks();
 
 		System.gc();
 		// enableNoGoods(2);
@@ -194,6 +193,8 @@ public final class MACSolver extends AbstractSolver {
 		}
 
 		heuristic.compute();
+		
+		int maxBT = allSolutions ? -1 : problem.getMaxBacktracks();
 
 		final Filter filter = getFilter();
 
@@ -205,10 +206,14 @@ public final class MACSolver extends AbstractSolver {
 			for (Variable v : problem.getVariables()) {
 				assert v.getDomainSize() > 0;
 			}
+
+			logger.info("MAC with " + maxBT + " bt");
+			float macTime = -chronometer.getCurrentChrono();
 			// System.out.print("run ! ");
 			try {
 				setMaxBacktracks(maxBT);
 				mac(0, null);
+
 				break;
 			} catch (MaxBacktracksExceededException e) {
 				// On continue...
@@ -216,7 +221,10 @@ public final class MACSolver extends AbstractSolver {
 				chronometer.validateChrono();
 				throw e;
 			}
-
+			macTime += chronometer.getCurrentChrono();
+			logger
+					.info("Took " + macTime + "s (" + (maxBT / macTime)
+							+ " bps)");
 			maxBT *= 1.5;
 			addNoGoods();
 			problem.restoreAll(1);

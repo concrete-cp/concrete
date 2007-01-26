@@ -69,6 +69,7 @@ public class ComboSolver extends AbstractSolver {
 			logger.info("MC with " + (int) Math.floor(maxTries) + " x "
 					+ localBT + " flips");
 			float localTime = -chronometer.getCurrentChrono();
+			int assign = -this.getNbAssignments();
 			for (int i = (int) Math.floor(maxTries); --i >= 0;) {
 				if (minConflicts(localBT)) {
 					return true;
@@ -81,11 +82,13 @@ public class ComboSolver extends AbstractSolver {
 				problem.restoreAll(1);
 			}
 			localTime += chronometer.getCurrentChrono();
+			assign +=getNbAssignments() ;
 			logger.info("Took " + localTime + " s ("
 					+ (localBT * (int) Math.floor(maxTries) / localTime)
-					+ " flips per second)");
+					+ " flips per second), "+assign + " assignments made");
 
 			logger.info("MAC with " + maxBT + " bt");
+			assign = -getNbAssignments();
 			float macTime = -chronometer.getCurrentChrono();
 			if (mac(maxBT)) {
 				return getNbSolutions() > 0;
@@ -93,9 +96,9 @@ public class ComboSolver extends AbstractSolver {
 
 			problem.restoreAll(1);
 			macTime += chronometer.getCurrentChrono();
-
+assign += getNbAssignments();
 			logger.info("Took " + macTime + " s (" + (maxBT / macTime)
-					+ " bt per second)");
+					+ " bt per second), " + assign + " assignments made");
 
 			maxTries *= 1.5;
 			maxBT *= 1.5 * localTime / macTime;
