@@ -101,7 +101,7 @@ assign += getNbAssignments();
 					+ " bt per second), " + assign + " assignments made");
 
 			maxTries *= 1.5;
-			maxBT *= 1.5 * localTime / macTime;
+			maxBT *= 2.25 * localTime / macTime;
 
 //			alt ^= true ;
 //			
