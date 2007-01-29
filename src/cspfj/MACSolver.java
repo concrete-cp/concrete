@@ -54,7 +54,7 @@ public final class MACSolver extends AbstractSolver {
 		// heuristic = new WDegOnDomBySupports(prob);
 		this.heuristic = heuristic;
 
-		
+		logger.info(filter.getClass().toString());
 		Pair.setProblem(prob);
 	}
 

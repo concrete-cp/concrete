@@ -345,11 +345,11 @@ public final class MinConflictsSolver extends AbstractSolver {
 				chronometer.validateChrono();
 				throw e;
 			}
-			// if (true) {
-			// logger.info(problem.toString());
-			// chronometer.validateChrono();
-			// throw new IOException();
-			// }
+			 if (true) {
+			 logger.info(problem.toString());
+			 chronometer.validateChrono();
+			 throw new IOException();
+			 }
 			for (Constraint c : problem.getConstraints()) {
 				c.setWeight(1);// Math.max(1, (int) Math.log(c.getWeight())));
 			}
