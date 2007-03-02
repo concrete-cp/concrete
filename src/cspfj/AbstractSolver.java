@@ -118,7 +118,7 @@ public abstract class AbstractSolver implements Solver {
         return chronometer.getUserTime();
     }
 
-    protected final int getMaxBacktracks() {
+    public final int getMaxBacktracks() {
         return maxBacktracks;
     }
 

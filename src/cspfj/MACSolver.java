@@ -139,7 +139,7 @@ public final class MACSolver extends AbstractSolver {
 	 * 
 	 * @see cspfj.Solver#run(int)
 	 */
-	public boolean run() {
+	public boolean runSolver() {
 
 		System.gc();
 		// enableNoGoods(2);

@@ -304,7 +304,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 
 	}
 
-	public boolean run() throws IOException {
+	public boolean runSolver() throws IOException {
 		final int localBT = problem.getMaxFlips();
 		boolean resolved = false;
 		System.gc();

@@ -27,7 +27,7 @@ import cspfj.problem.Variable;
 
 public interface Solver {
 
-    boolean run() throws IOException;
+    boolean runSolver() throws IOException;
 
     Map<Variable, Integer> getSolution();
 
@@ -42,6 +42,8 @@ public interface Solver {
 	void setUseSpace(final SPACE space);
 
 	int getNbSolutions();
+    
+    int getMaxBacktracks();
 
 	String getXMLConfig();
 }
