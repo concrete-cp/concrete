@@ -1,7 +1,9 @@
 package cspfj.heuristic;
 
+import cspfj.problem.Problem;
+
 public interface Heuristic {
-	long selectPair();
+	long selectPair(Problem problem);
 
 	void compute();
 }

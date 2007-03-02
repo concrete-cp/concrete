@@ -1,5 +1,7 @@
 package cspfj.util;
 
+import java.util.Arrays;
+
 public class BooleanArray {
 	public final static int[] MASKS;
 
@@ -23,9 +25,7 @@ public class BooleanArray {
 
 	public static void initBooleanArray(final int[] array, final int size,
 			final boolean fill) {
-		for (int i = array.length; --i >= 0;) {
-			array[i] = fill ? 0xFFFFFFFF : 0;
-		}
+		Arrays.fill(array, fill ? 0xFFFFFFFF : 0);
 		array[array.length - 1] <<= Integer.SIZE - (size % Integer.SIZE);
 	}
 
@@ -37,7 +37,7 @@ public class BooleanArray {
 			final boolean status) {
 
 		int part = array[position / Integer.SIZE];
-		final int i = Integer.bitCount(part);
+		final int oldPart = part;
 
 		if (status) {
 			part |= MASKS[position % Integer.SIZE];
@@ -47,7 +47,7 @@ public class BooleanArray {
 		}
 
 		array[position / Integer.SIZE] = part;
-		return Integer.bitCount(part) != i;
+		return part != oldPart;
 	}
 
 	public static boolean isTrue(final int[] array, final int position) {
@@ -82,9 +82,8 @@ public class BooleanArray {
 	}
 
 	public static void setSingle(final int[] booleanDomain, final int index) {
-		initBooleanArray(booleanDomain, 0, false);
+		Arrays.fill(booleanDomain, 0);
 		set(booleanDomain, index, true);
-
 	}
 
 	public static int getPart(final int i) {

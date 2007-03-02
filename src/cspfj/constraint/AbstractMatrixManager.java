@@ -6,14 +6,14 @@ import java.util.logging.Logger;
 import cspfj.exception.MatrixTooBigException;
 import cspfj.problem.Variable;
 
-public abstract class AbstractMatrixManager {
+public abstract class AbstractMatrixManager implements Cloneable {
 	protected final int[] domainSize;
 
 	private boolean active = false;
 
-	protected final int[] tuple;
+	protected int[] tuple;
 
-	protected final Variable[] variables;
+	protected Variable[] variables;
 
 	private final int arity;
 
@@ -172,4 +172,17 @@ public abstract class AbstractMatrixManager {
 
 	}
 
+	public AbstractMatrixManager deepCopy(Variable[] variables, int[] tuple)
+			throws CloneNotSupportedException {
+		final AbstractMatrixManager matrix = this.clone();
+		matrix.tuple = tuple;
+		matrix.variables = variables;
+		return matrix;
+	}
+
+	public AbstractMatrixManager clone() throws CloneNotSupportedException {
+		final AbstractMatrixManager matrix = (AbstractMatrixManager) super
+				.clone();
+		return matrix;
+	}
 }

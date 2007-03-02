@@ -16,6 +16,8 @@ public class ComboSolver extends AbstractSolver {
     private final MinConflictsSolver mCSolver;
 
     private final MACSolver macSolver;
+	
+	private final Heuristic heuristic ;
 
     private final static Logger logger = Logger
             .getLogger("cspfj.solver.ComboSolver");
@@ -27,6 +29,7 @@ public class ComboSolver extends AbstractSolver {
         super(prob, resultHandler);
         macSolver = new MACSolver(prob, resultHandler, heuristic, reverse);
         mCSolver = new MinConflictsSolver(prob, resultHandler, reverse);
+		this.heuristic = heuristic ;
 
     }
 
@@ -57,6 +60,8 @@ public class ComboSolver extends AbstractSolver {
         // .getMaxDomainSize()
         // * problem.getNbVariables(), 2));
 
+		heuristic.compute();
+		
         final int localBT = problem.getMaxFlips();
 
         int maxBT = problem.getMaxBacktracks();

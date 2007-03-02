@@ -55,7 +55,7 @@ public final class MACSolver extends AbstractSolver {
 		this.heuristic = heuristic;
 
 		logger.info(filter.getClass().toString());
-		Pair.setProblem(prob);
+		
 	}
 
 	// public void enableNoGoods(final int maxSize) {
@@ -65,6 +65,8 @@ public final class MACSolver extends AbstractSolver {
 
 	public boolean mac(final int level, final Variable lastModifiedVariable)
 			throws MaxBacktracksExceededException {
+		final Problem problem = this.problem ;
+		
 		if (problem.getNbFutureVariables() == 0) {
 			if (getNbSolutions() < 1) {
 				for (Variable v : problem.getVariables()) {
@@ -82,13 +84,13 @@ public final class MACSolver extends AbstractSolver {
 			return false;
 		}
 
-		final long pair = heuristic.selectPair();
+		final long pair = heuristic.selectPair(problem);
 
-		final Variable selectedVariable = Pair.variable(pair);
+		final Variable selectedVariable = Pair.variable(pair, problem);
 
 		assert selectedVariable.getDomainSize() > 0;
 
-		final int selectedIndex = Pair.index(pair);
+		final int selectedIndex = Pair.index(pair, problem);
 
 		assert selectedVariable.isPresent(selectedIndex);
 

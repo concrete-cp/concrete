@@ -1,17 +1,10 @@
 package cspfj.heuristic;
 
-import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
 public abstract class AbstractVariableHeuristic implements VariableHeuristic {
 
-	final protected Variable[] variables;
-
-	public AbstractVariableHeuristic(Problem problem) {
-		variables = problem.getVariables();
-	}
-
-	public Variable selectVariable() {
+	public Variable selectVariable(final Variable[] variables) {
 		Variable bestVariable = null;
 
 		for (Variable v : variables) {

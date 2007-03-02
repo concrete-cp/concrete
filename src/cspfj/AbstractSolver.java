@@ -156,4 +156,9 @@ public abstract class AbstractSolver implements Solver {
     protected final void incrementNbSolutions() {
         nbSolutions++;
     }
+
+	protected final ResultHandler getResultHandler() {
+		return resultHandler;
+	}
+	
 }

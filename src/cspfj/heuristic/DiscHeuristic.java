@@ -5,24 +5,21 @@ import cspfj.problem.Variable;
 
 public class DiscHeuristic implements Heuristic {
 
-	private final Variable[] variables;
-
 	private final VariableHeuristic variableHeuristic;
 
 	private final ValueHeuristic valueHeuristic;
 
-	public DiscHeuristic(Problem problem, VariableHeuristic variableHeuristic,
+	public DiscHeuristic(VariableHeuristic variableHeuristic,
 			ValueHeuristic valueHeuristic) {
 		this.variableHeuristic = variableHeuristic;
 		this.valueHeuristic = valueHeuristic;
-		this.variables = problem.getVariables();
 	}
 
-	public long selectPair() {
+	public long selectPair(Problem problem) {
 		Variable bestVariable = null;
 		double bestIndexScore = Double.NEGATIVE_INFINITY;
 
-		for (Variable v : variables) {
+		for (Variable v : problem.getVariables()) {
 			if (v.getDomainSize() <= 1) {
 				continue;
 			}
@@ -49,7 +46,7 @@ public class DiscHeuristic implements Heuristic {
 		}
 
 		if (bestVariable == null) {
-			for (Variable v : variables) {
+			for (Variable v : problem.getVariables()) {
 				if (!v.isAssigned()) {
 					bestVariable = v;
 					break;
@@ -57,7 +54,7 @@ public class DiscHeuristic implements Heuristic {
 			}
 		}
 
-		return Pair.pair(bestVariable, valueHeuristic.selectIndex(bestVariable));
+		return Pair.pair(bestVariable, valueHeuristic.selectIndex(bestVariable), problem);
 	}
 
 	public void compute() {

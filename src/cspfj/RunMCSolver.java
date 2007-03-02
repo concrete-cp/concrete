@@ -8,7 +8,7 @@ import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.problem.Problem;
 import cspfj.util.Chronometer;
 
-public class RunMCSolver extends RunSolverAbstract {
+public class RunMCSolver extends AbstractRunSolver {
 
     private final MinConflictsSolver mCSolver;
 
@@ -18,7 +18,7 @@ public class RunMCSolver extends RunSolverAbstract {
     public RunMCSolver(final Problem problem,
             final ResultHandler resultHandler, final boolean reverse,
             final Chronometer chronometer) {
-        super(problem, resultHandler, reverse, chronometer);
+        super(problem, chronometer);
         mCSolver = new MinConflictsSolver(problem, resultHandler, reverse) ;
         setSolver(mCSolver);
         mCSolver.setMaxBacktracks(problem.getMaxFlips());
@@ -27,7 +27,7 @@ public class RunMCSolver extends RunSolverAbstract {
 
     @Override
     protected boolean launch(int factor) throws IOException {
-
+		logger.info("MC with " + factor +" x "+mCSolver.getMaxBacktracks()+ " flips");
         for (int i = factor; --i >= 0;) {
 
             try {

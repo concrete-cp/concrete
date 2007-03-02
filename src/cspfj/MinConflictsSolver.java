@@ -69,13 +69,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 			filter = reverse ? new AC3_R(problem) : new AC3_P(problem);
 		}
 		tabuManager = new TabuManager(problem, 10);
-
-		// rWProba = 1F / problem.getMaxDomainSize();
-
-		Variable.setTieManager(new TieManager(random));
-
-		Pair.setProblem(prob);
-
+	
 	}
 
 	private int realConflicts() {
@@ -110,12 +104,12 @@ public final class MinConflictsSolver extends AbstractSolver {
 		solution(solution, problem.getNbConstraints() - nbConflicts);
 	}
 
-	private void init(final Variable variable) {
+	private void init(final Variable variable, final TieManager tieManager) {
 		if (variable.isAssigned()) {
 			return;
 		}
 
-		final int index = variable.getBestInitialIndex();
+		final int index = variable.getBestInitialIndex(tieManager);
 
 		// variable.restoreLevel(1);
 
@@ -133,11 +127,11 @@ public final class MinConflictsSolver extends AbstractSolver {
 		}
 
 		for (Variable v : randomOrder) {
-			init(v);
+			init(v, tieManager);
 		}
 	}
 
-	private void init() {
+	private void init(final TieManager tieManager) {
 		final Set<Variable> randomOrder = new TreeSet<Variable>(
 				new RandomOrder<Variable>(random));
 
@@ -146,11 +140,11 @@ public final class MinConflictsSolver extends AbstractSolver {
 		}
 
 		for (Variable v : randomOrder) {
-			init(v);
+			init(v, tieManager);
 		}
 
 		for (Variable v : problem.getVariables()) {
-			v.initNbConflicts();
+			v.initNbConflicts(tieManager);
 		}
 	}
 
@@ -169,7 +163,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 	// return improvment;
 	// }
 
-	private long findBest(final TieManager tieManager, final int aspiration) {
+	private long findBest(final TieManager tieManager, final TieManager tieManager2, final int aspiration) {
 		Variable bestVariable = null;
 
 		tieManager.clear();
@@ -181,7 +175,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 				continue;
 			}
 
-			final int index = v.bestImprovment(tabuManager, aspiration);
+			final int index = v.bestImprovment(tabuManager, aspiration, tieManager2);
 			if (index < 0) {
 				continue;
 			}
@@ -196,11 +190,11 @@ public final class MinConflictsSolver extends AbstractSolver {
 		if (bestVariable == null) {
 			return -1;
 		}
-		return Pair.pair(bestVariable, tieManager.getBestValue());
+		return Pair.pair(bestVariable, tieManager.getBestValue(), problem);
 
 	}
 
-	private int localMinimum() {
+	private int localMinimum(final TieManager tieManager) {
 		int improvment = 0;
 
 		if (FINE) {
@@ -210,16 +204,16 @@ public final class MinConflictsSolver extends AbstractSolver {
 		for (Constraint c : problem.getConstraints()) {
 			if (!c.checkFirst()) {
 				improvment++;
-				c.increaseWeightAndUpdate();
+				c.increaseWeightAndUpdate(tieManager);
 			}
 		}
 
 		return improvment;
 	}
 
-	private int bestWalk(final TieManager tieManager, final int aspiration) {
+	private int bestWalk(final TieManager tieManager, final TieManager tieManager2, final int aspiration) {
 
-		final long pair = findBest(tieManager, aspiration);
+		final long pair = findBest(tieManager, tieManager2, aspiration);
 
 		if (pair < 0) {
 			logger.fine("Cleaning tabu list");
@@ -227,14 +221,14 @@ public final class MinConflictsSolver extends AbstractSolver {
 			return 0;
 		}
 
-		final Variable bestVariable = Pair.variable(pair);
+		final Variable bestVariable = Pair.variable(pair, problem);
 
-		final int bestIndex = Pair.index(pair);
+		final int bestIndex = Pair.index(pair, problem);
 
 		int improvment = 0;
 
 		if (bestVariable.getImprovment(bestIndex) >= 0) {
-			return localMinimum();
+			return localMinimum(tieManager2);
 		}
 
 		tabuManager.push(bestVariable, bestIndex);
@@ -244,7 +238,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 		if (FINE) {
 			logger.fine(bestVariable + " <- " + tieManager.getBestValue());
 		}
-		bestVariable.reAssign(bestIndex);
+		bestVariable.reAssign(bestIndex, tieManager2);
 		incrementNbAssignments();
 		return improvment;
 	}
@@ -255,7 +249,9 @@ public final class MinConflictsSolver extends AbstractSolver {
 		final Problem problem = this.problem;
 		// final float randomWalk = this.rWProba;
 
-		init();
+		final TieManager tieManager = new TieManager(random);
+		
+		init(tieManager);
 
 		int nbConflicts = weightedConflicts();
 
@@ -263,7 +259,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 
 		int bestEver = Integer.MAX_VALUE;
 
-		final TieManager tieManager = new TieManager(random);
+		final TieManager tieManager2 = new TieManager(random);
 
 		while (nbConflicts > 0) {
 			if (nbConflicts < bestEver) {
@@ -282,7 +278,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 			// if (random.nextFloat() < randomWalk) {
 			// nbConflicts += randomWalk();
 			// } else {
-			nbConflicts += bestWalk(tieManager, bestEver - nbConflicts);
+			nbConflicts += bestWalk(tieManager, tieManager2, bestEver - nbConflicts);
 			// }
 
 			assert nbConflicts == weightedConflicts() : nbConflicts + "/="
@@ -299,8 +295,6 @@ public final class MinConflictsSolver extends AbstractSolver {
 		incrementNbSolutions();
 		assert realConflicts() == 0 : getSolution() + " -> " + realConflicts()
 				+ " conflicts ! (" + weightedConflicts() + " wc)";
-
-		logger.info(Variable.conflictsCount + " cf counts");
 
 	}
 
@@ -345,11 +339,11 @@ public final class MinConflictsSolver extends AbstractSolver {
 				chronometer.validateChrono();
 				throw e;
 			}
-			 if (true) {
-			 logger.info(problem.toString());
-			 chronometer.validateChrono();
-			 throw new IOException();
-			 }
+//			 if (true) {
+//			 logger.info(problem.toString());
+//			 chronometer.validateChrono();
+//			 throw new IOException();
+//			 }
 			for (Constraint c : problem.getConstraints()) {
 				c.setWeight(1);// Math.max(1, (int) Math.log(c.getWeight())));
 			}

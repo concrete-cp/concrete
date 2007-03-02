@@ -11,58 +11,84 @@ import cspfj.problem.Problem;
 
 public class ComboSolver2 extends AbstractSolver {
 
-    final RunMCSolver mCSolver;
+	final private Heuristic heuristic;
 
-    final private static Logger logger = Logger.getLogger("cspfj.ComboSolver2");
+	final private boolean reverse;
 
-    public ComboSolver2(Problem prob, ResultHandler resultHandler,
-            Heuristic heuristic, boolean reverse) {
-        super(prob, resultHandler);
-        mCSolver = new RunMCSolver(prob, resultHandler, reverse,
-                chronometer);
+	final private static Logger logger = Logger.getLogger("cspfj.ComboSolver2");
 
-    }
+	public ComboSolver2(Problem prob, ResultHandler resultHandler,
+			Heuristic heuristic, boolean reverse) {
+		super(prob, resultHandler);
 
-    public String getXMLConfig() {
-        final StringBuffer sb = new StringBuffer(150);
+		this.reverse = reverse;
 
-        // sb.append("\t\t\t<macSolver>\n").append(macSolver.getXMLConfig())
-        // .append("\t\t\t</macSolver>\n") ;
+		this.heuristic = heuristic;
+	}
 
-        sb.append("\t\t\t<mcSolver>\n").append(mCSolver.getXMLConfig()).append(
-                "\t\t\t</mcSolver>\n\t\t\t<space>").append(useSpace()).append(
-                "</space>\n");
+	public String getXMLConfig() {
+		final StringBuffer sb = new StringBuffer(150);
 
-        return sb.toString();
-    }
+		// sb.append("\t\t\t<macSolver>\n").append(macSolver.getXMLConfig())
+		// .append("\t\t\t</macSolver>\n") ;
 
-    public synchronized boolean runSolver() throws IOException {
-        System.gc();
+		// sb.append("\t\t\t<mcSolver>\n").append(mCSolver.getXMLConfig()).append(
+		// "\t\t\t</mcSolver>\n") ;
+		//		
+		sb.append("\t\t\t<space>").append(useSpace()).append("</space>\n");
 
-        final Filter preprocessor;
-        switch (useSpace()) {
-        case BRANCH:
-            preprocessor = new SAC(problem, new AC3_P(problem), true);
-            break;
+		return sb.toString();
+	}
 
-        case CLASSIC:
-            preprocessor = new SAC(problem, new AC3_P(problem), false);
-            break;
+	public synchronized boolean runSolver() {
+		System.gc();
 
-        default:
-            preprocessor = new AC3_P(problem);
-        }
+		final Filter preprocessor;
+		switch (useSpace()) {
+		case BRANCH:
+			preprocessor = new SAC(problem, new AC3_P(problem), true);
+			break;
 
-        if (!preprocessor.reduceAll(0)) {
-            chronometer.validateChrono();
-            return false;
-        }
+		case CLASSIC:
+			preprocessor = new SAC(problem, new AC3_P(problem), false);
+			break;
 
-        mCSolver.start();
+		default:
+			preprocessor = new AC3_P(problem);
+		}
 
-        final boolean result = mCSolver.getResult();
-        this.setSolution(mCSolver.getSolution());
-        return result ;
-    }
+		if (!preprocessor.reduceAll(0)) {
+			chronometer.validateChrono();
+			return false;
+		}
+		heuristic.compute();
+
+//		RunMACSolver macSolver = null;
+//		try {
+//			macSolver = new RunMACSolver(problem.clone(), getResultHandler(),
+//					heuristic, reverse, chronometer);
+//		} catch (CloneNotSupportedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+
+		RunMCSolver mCSolver=null;
+//		try {
+			mCSolver = new RunMCSolver(problem,
+					getResultHandler(), reverse, chronometer);
+//		} catch (CloneNotSupportedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+
+//		macSolver.start();
+		mCSolver.start();
+
+		final boolean result = mCSolver.getResult();
+		chronometer.validateChrono();
+		this.setSolution(mCSolver.getSolution());
+
+		return result;
+	}
 
 }

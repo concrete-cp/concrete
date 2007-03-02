@@ -5,22 +5,19 @@ import cspfj.problem.Variable;
 
 public class ProdHeuristic implements Heuristic {
 
-	private final Variable[] variables;
-
 	private final VariableHeuristic variableHeuristic;
 
 	private final ValueHeuristic valueHeuristic;
 
-	public ProdHeuristic(Problem problem, VariableHeuristic variableHeuristic,
+	public ProdHeuristic(VariableHeuristic variableHeuristic,
 			ValueHeuristic valueHeuristic) {
 		this.variableHeuristic = variableHeuristic;
 		this.valueHeuristic = valueHeuristic;
-		this.variables = problem.getVariables();
 	}
 
-	public long selectPair() {
+	public long selectPair(Problem problem) {
 		Variable bestVariable = null;
-		for (Variable v : variables) {
+		for (Variable v : problem.getVariables()) {
 			if (!v.isAssigned()
 					&& (bestVariable == null || (v.getDomainSize() != 1 && compare(
 							v, bestVariable) > 0))) {
@@ -28,7 +25,7 @@ public class ProdHeuristic implements Heuristic {
 			}
 		}
 
-		return Pair.pair(bestVariable, valueHeuristic.selectIndex(bestVariable));
+		return Pair.pair(bestVariable, valueHeuristic.selectIndex(bestVariable), problem);
 	}
 
 	public int compare(final Variable variable1, final Variable variable2) {

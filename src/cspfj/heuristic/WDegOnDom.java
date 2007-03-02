@@ -23,10 +23,6 @@ import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
 public final class WDegOnDom extends AbstractVariableHeuristic {
-    public WDegOnDom(Problem problem) {
-		super(problem);
-	}
-
 	public double getScore(final Variable variable) {
         return variable.getWDeg() / variable.getDomainSize() ;
     }

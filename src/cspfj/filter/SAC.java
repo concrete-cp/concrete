@@ -76,7 +76,7 @@ public final class SAC implements Filter {
 			queue[v.getId()] = new boolean[v.getDomain().length];
 		}
 
-		heuristic = new WDegOnDom(problem);
+		heuristic = new WDegOnDom();
 
 		staticVOrder = new Variable[problem.getNbVariables()];
 
