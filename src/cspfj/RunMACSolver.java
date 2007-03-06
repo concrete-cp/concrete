@@ -1,5 +1,6 @@
 package cspfj;
 
+import java.util.Map;
 import java.util.logging.Logger;
 
 import cspfj.exception.MaxBacktracksExceededException;
@@ -17,12 +18,11 @@ public class RunMACSolver extends AbstractRunSolver {
 
 	public RunMACSolver(final Problem problem,
 			final ResultHandler resultHandler, final Heuristic heuristic,
-			final boolean reverse, final Chronometer chronometer) {
-		super(problem, chronometer);
+			final boolean reverse, final SolutionHandler solutionHandler) {
+		super(problem, solutionHandler);
 		macSolver = new MACSolver(problem, resultHandler, heuristic, reverse);
 		setSolver(macSolver);
 		bt = problem.getMaxBacktracks();
-
 	}
 
 	@Override
@@ -31,6 +31,11 @@ public class RunMACSolver extends AbstractRunSolver {
 		macSolver.setMaxBacktracks(factor * bt);
 
 		logger.info("MAC with " + macSolver.getMaxBacktracks()+" bt");
+		final Map<Integer, Integer> weights = getSolutionHandler().getWeights() ;
+		for (int cid: weights.keySet()) {
+//			getProblem().getConstraint(cid).increaseWeight(weights.get(cid)) ;
+		}
+		weights.clear() ;
 		
 		try {
 			
@@ -41,6 +46,11 @@ public class RunMACSolver extends AbstractRunSolver {
 
 		}
 
+//        macSolver.addNoGoods();
+        getProblem().restoreAll(1);
+//        if (!macSolver.getFilter().reduceAll(0)) {
+//            return true;
+//        }
 		return false;
 	}
 

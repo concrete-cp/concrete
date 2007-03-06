@@ -1,11 +1,9 @@
 package cspfj;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.logging.Logger;
 
 import cspfj.problem.Problem;
-import cspfj.problem.Variable;
 import cspfj.util.Chronometer;
 
 public abstract class AbstractRunSolver extends Thread {
@@ -19,14 +17,15 @@ public abstract class AbstractRunSolver extends Thread {
 
 	final private Chronometer chronometer;
 
-	private boolean solved = false;
+	final private SolutionHandler solutionHandler ;
+	
 
-	private boolean result;
 
 	protected AbstractRunSolver(final Problem problem,
-			final Chronometer chronometer) {
+			final SolutionHandler solutionHandler) {
 		this.problem = problem;
-		this.chronometer = chronometer;
+		this.chronometer = new Chronometer();
+		this.solutionHandler = solutionHandler;
 
 	}
 
@@ -35,6 +34,7 @@ public abstract class AbstractRunSolver extends Thread {
 	}
 
 	public synchronized void run() {
+		chronometer.startChrono();
 		try {
 			float maxTries = 1;
 
@@ -44,17 +44,16 @@ public abstract class AbstractRunSolver extends Thread {
 				int assign = -solver.getNbAssignments();
 
 				if (launch((int) Math.floor(maxTries))) {
-					solved = true;
-					result = solver.getNbSolutions()>0;
-					notifyAll();
+					logger.info("Result from " + solver + " !");
+					if (solver.getNbSolutions()>0) {
+						solutionHandler.setSolution(solver.getSolution()) ;
+					} else {
+						solutionHandler.setSolution(null);
+					}
+					chronometer.validateChrono();
 					return;
 				}
 
-				for (Variable v : problem.getVariables()) {
-					v.resetAssign();
-				}
-
-				problem.restoreAll(1);
 
 				localTime += chronometer.getCurrentChrono();
 				assign += solver.getNbAssignments();
@@ -78,27 +77,19 @@ public abstract class AbstractRunSolver extends Thread {
 
 	protected abstract boolean launch(final int factor) throws IOException;
 
-	public synchronized boolean getResult() {
-		while (!solved) {
-			try {
-				wait();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		return result;
-	}
-
-	public synchronized Map<Variable, Integer> getSolution() {
-		return solver.getSolution();
-	}
-
 	public String getXMLConfig() {
 		return solver.getXMLConfig();
 	}
 
 	protected Problem getProblem() {
 		return problem;
+	}
+	
+	protected SolutionHandler getSolutionHandler() {
+		return solutionHandler;
+	}
+	
+	public float getUserTime() {
+		return chronometer.getCurrentChrono();
 	}
 }

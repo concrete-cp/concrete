@@ -181,8 +181,6 @@ public abstract class AbstractMatrixManager implements Cloneable {
 	}
 
 	public AbstractMatrixManager clone() throws CloneNotSupportedException {
-		final AbstractMatrixManager matrix = (AbstractMatrixManager) super
-				.clone();
-		return matrix;
+		return (AbstractMatrixManager) super.clone();
 	}
 }

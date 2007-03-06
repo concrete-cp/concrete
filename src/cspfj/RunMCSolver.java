@@ -10,46 +10,53 @@ import cspfj.util.Chronometer;
 
 public class RunMCSolver extends AbstractRunSolver {
 
-    private final MinConflictsSolver mCSolver;
+	private final MinConflictsSolver mCSolver;
 
-    final private static Logger logger = Logger
-            .getLogger("cspfj.RunMinConflictsSolver");
+	final private static Logger logger = Logger
+			.getLogger("cspfj.RunMinConflictsSolver");
 
-    public RunMCSolver(final Problem problem,
-            final ResultHandler resultHandler, final boolean reverse,
-            final Chronometer chronometer) {
-        super(problem, chronometer);
-        mCSolver = new MinConflictsSolver(problem, resultHandler, reverse) ;
-        setSolver(mCSolver);
-        mCSolver.setMaxBacktracks(problem.getMaxFlips());
-        
-    }
+	final private int maxFlips;
 
-    @Override
-    protected boolean launch(int factor) throws IOException {
-		logger.info("MC with " + factor +" x "+mCSolver.getMaxBacktracks()+ " flips");
-        for (int i = factor; --i >= 0;) {
+	public RunMCSolver(final Problem problem,
+			final ResultHandler resultHandler, final boolean reverse,
+			final SolutionHandler solutionHandler) {
+		super(problem, solutionHandler);
+		mCSolver = new MinConflictsSolver(problem, resultHandler, reverse);
+		setSolver(mCSolver);
+		maxFlips = problem.getMaxFlips();
+		
+	}
 
-            try {
+	@Override
+	protected boolean launch(int factor) throws IOException {
+		logger.info("MC with " + factor + " x " + maxFlips + " flips");
+		for (int i = factor; --i >= 0;) {
+			for (Constraint c : getProblem().getConstraints()) {
+				c.setWeight(Math.max(1, c.getWeight()
+						/ getProblem().getNbConstraints()));
+			}
 
-                mCSolver.minConflicts();
+			mCSolver.setMaxBacktracks(maxFlips);
+			try {
 
-                return true;
-            } catch (MaxBacktracksExceededException e) {
+				mCSolver.minConflicts();
 
-            }
+				return true;
 
-            for (Constraint c : getProblem().getConstraints()) {
-                c.setWeight(c.getWeight() / getProblem().getNbConstraints());
-            }
-            logger.info("Max constraint weight : "
-                    + getProblem().getMaxWeight());
+			} catch (MaxBacktracksExceededException e) {
+				getProblem().restoreAll(1);
+			}
 
-            return false;
-        }
+			logger.info("Max constraint weight : "
+					+ getProblem().getMaxWeight());
+		}
 
-        // TODO Auto-generated method stub
-        return false;
-    }
+		for (Constraint c : getProblem().getConstraints()) {
+			getSolutionHandler().addWeight(c.getId(), c.getWeight());
+
+		}
+
+		return false;
+	}
 
 }

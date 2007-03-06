@@ -497,17 +497,18 @@ public final class Problem implements Cloneable {
 
 	public int getMaxFlips() {
 		final int nd = getND();
-		// return 8 * nd + (int)(.24 * nd * nd);
+//		return 8 * nd + (int)(.4 * nd * nd);
 		// return 5*nd;
 		return Math.max((int) (-50000 + 10000 * Math.log(nd)), 10000);
 	}
 
 	public int getMaxBacktracks() {
-		final int meanDomainSize = getND() / getNbVariables();
-
-		final int localBT = getMaxFlips();
-
-		return (int) (localBT * (100F * getNbVariables()) / (getNbConstraints() * meanDomainSize));
+//		final int meanDomainSize = getND() / getNbVariables();
+//
+//		final int localBT = getMaxFlips();
+//
+//		return (int) (localBT * (100F * getNbVariables()) / (getNbConstraints() * meanDomainSize));
+		return getNbConstraints() ;
 	}
 
 	public Problem clone() throws CloneNotSupportedException {

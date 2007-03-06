@@ -1,6 +1,6 @@
 package cspfj;
 
-import java.io.IOException;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import cspfj.filter.AC3_P;
@@ -8,6 +8,7 @@ import cspfj.filter.Filter;
 import cspfj.filter.SAC;
 import cspfj.heuristic.Heuristic;
 import cspfj.problem.Problem;
+import cspfj.problem.Variable;
 
 public class ComboSolver2 extends AbstractSolver {
 
@@ -42,7 +43,7 @@ public class ComboSolver2 extends AbstractSolver {
 
 	public synchronized boolean runSolver() {
 		System.gc();
-
+		chronometer.startChrono();
 		final Filter preprocessor;
 		switch (useSpace()) {
 		case BRANCH:
@@ -63,32 +64,49 @@ public class ComboSolver2 extends AbstractSolver {
 		}
 		heuristic.compute();
 
-//		RunMACSolver macSolver = null;
-//		try {
-//			macSolver = new RunMACSolver(problem.clone(), getResultHandler(),
-//					heuristic, reverse, chronometer);
-//		} catch (CloneNotSupportedException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+		final SolutionHandler solutionHandler = new SolutionHandler();
 
-		RunMCSolver mCSolver=null;
-//		try {
-			mCSolver = new RunMCSolver(problem,
-					getResultHandler(), reverse, chronometer);
-//		} catch (CloneNotSupportedException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-
-//		macSolver.start();
+		RunMACSolver macSolver = null;
+		// try {
+		macSolver = new RunMACSolver(problem, getResultHandler(), heuristic,
+				reverse, solutionHandler);
+		// } catch (CloneNotSupportedException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
+		statistics("prepro-cpu", chronometer.getCurrentChrono());
+		RunMCSolver mCSolver = null;
+		try {
+			mCSolver = new RunMCSolver(problem.clone(), getResultHandler(),
+					reverse, solutionHandler);
+		} catch (CloneNotSupportedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+//		mCSolver.setPriority(Thread.MIN_PRIORITY);
+//		macSolver.setPriority(Thread.MAX_PRIORITY);
+		macSolver.start();
 		mCSolver.start();
 
-		final boolean result = mCSolver.getResult();
+		Map<Variable, Integer> solution = null;
+		try {
+			solution = solutionHandler.getSolution();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		chronometer.validateChrono();
-		this.setSolution(mCSolver.getSolution());
+		
+		statistics("mac-cpu", macSolver.getUserTime()) ;
+		statistics("mc-cpu", mCSolver.getUserTime());
+		
+		if (solution == null) {
+			return false;
+		} else {
+			this.setSolution(solution);
 
-		return result;
+			return true;
+		}
 	}
 
 }

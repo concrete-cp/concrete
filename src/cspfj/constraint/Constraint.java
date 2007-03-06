@@ -500,6 +500,10 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		weight++;
 	}
 
+	public final void increaseWeight(int weight) {
+		this.weight += weight;
+	}
+
 	public final void increaseWeightAndUpdate(final TieManager tieManager) {
 		// final Variable[] involvedVariables = this.involvedVariables;
 		// for (int p = arity; --p >= 0;) {
@@ -554,7 +558,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 				assert check() == myLastCheck[index] : Arrays.toString(tuple)
 						+ " = "
 						+ Arrays.toString(last[variablePosition][index]) + ", "
-						+ check() + " /= " + myLast[index];
+						+ " (" + this + ", " + matrix + ")";
 				return myLastCheck[index];
 			}
 			final boolean result = check();
@@ -780,6 +784,8 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 			throws CloneNotSupportedException {
 		final Constraint constraint = this.clone();
 
+		constraint.involvedVariables = new Variable[arity];
+
 		for (int i = arity; --i >= 0;) {
 			for (Variable v : variables) {
 				if (v.equals(involvedVariables[i])) {
@@ -802,13 +808,11 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		constraint.tuple = new int[arity];
 		constraint.realTuple = new int[arity];
 		constraint.removals = new boolean[arity];
-		
-		constraint.involvedVariables = new Variable[arity] ;
-		
-		// constraint.positionInVariable fixe 
+
+		// constraint.positionInVariable fixe
 		// constraint.nbMaxConflicts fixe
 		// constraint.nbSupports fixe
-		
+
 		int maxDomain = 0;
 		for (int i = arity; --i >= 0;) {
 			if (involvedVariables[i].getDomain().length > maxDomain) {

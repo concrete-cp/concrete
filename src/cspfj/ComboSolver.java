@@ -1,191 +1,208 @@
 package cspfj;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
-import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.Filter;
 import cspfj.filter.SAC;
 import cspfj.heuristic.Heuristic;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
+import cspfj.constraint.Constraint;
 
 public class ComboSolver extends AbstractSolver {
 
-    private final MinConflictsSolver mCSolver;
+	private final MinConflictsSolver mCSolver;
 
-    private final MACSolver macSolver;
-	
-	private final Heuristic heuristic ;
+	private final MACSolver macSolver;
 
-    private final static Logger logger = Logger
-            .getLogger("cspfj.solver.ComboSolver");
+	private final Heuristic heuristic;
 
-    // private final NoGoodManager noGoodManager;
+	private final static Logger logger = Logger
+			.getLogger("cspfj.solver.ComboSolver");
 
-    public ComboSolver(Problem prob, ResultHandler resultHandler,
-            Heuristic heuristic, boolean reverse) {
-        super(prob, resultHandler);
-        macSolver = new MACSolver(prob, resultHandler, heuristic, reverse);
-        mCSolver = new MinConflictsSolver(prob, resultHandler, reverse);
-		this.heuristic = heuristic ;
+	private float localTime = -1;
 
-    }
+	// private final NoGoodManager noGoodManager;
 
-    public boolean runSolver() throws IOException {
-        System.gc();
+	public ComboSolver(Problem prob, ResultHandler resultHandler,
+			Heuristic heuristic, boolean reverse) {
+		super(prob, resultHandler);
+		macSolver = new MACSolver(prob, resultHandler, heuristic, reverse);
+		mCSolver = new MinConflictsSolver(prob, resultHandler, reverse);
+		this.heuristic = heuristic;
 
-        final Filter preprocessor;
-        switch (useSpace()) {
-        case BRANCH:
-            preprocessor = new SAC(problem, macSolver.getFilter(), true);
-            break;
+	}
 
-        case CLASSIC:
-            preprocessor = new SAC(problem, macSolver.getFilter(), false);
-            break;
+	public boolean runSolver() throws IOException {
+		System.gc();
 
-        default:
-            preprocessor = macSolver.getFilter();
-        }
+		final Filter preprocessor;
+		switch (useSpace()) {
+		case BRANCH:
+			preprocessor = new SAC(problem, macSolver.getFilter(), true);
+			break;
 
-        if (!preprocessor.reduceAll(0)) {
-            chronometer.validateChrono();
-            return false;
-        }
+		case CLASSIC:
+			preprocessor = new SAC(problem, macSolver.getFilter(), false);
+			break;
 
-        // final int localBT = (int) (-500 + 8.25 * problem.getMaxDomainSize()
-        // * problem.getNbVariables() + 0.24 * Math.pow(problem
-        // .getMaxDomainSize()
-        // * problem.getNbVariables(), 2));
+		default:
+			preprocessor = macSolver.getFilter();
+		}
+
+		if (!preprocessor.reduceAll(0)) {
+			chronometer.validateChrono();
+			return false;
+		}
+
+		// final int localBT = (int) (-500 + 8.25 * problem.getMaxDomainSize()
+		// * problem.getNbVariables() + 0.24 * Math.pow(problem
+		// .getMaxDomainSize()
+		// * problem.getNbVariables(), 2));
 
 		heuristic.compute();
-		
-        final int localBT = problem.getMaxFlips();
 
-        int maxBT = problem.getMaxBacktracks();
+		final int localBT = problem.getMaxFlips();
 
-        float maxTries = 1;
+		int maxBT = problem.getMaxBacktracks();
 
-        // boolean alt = false;
+		final float endLocalTime = chronometer.getCurrentChrono() + localTime;
+		logger.info("It is " + chronometer.getCurrentChrono()
+				+ ", local search until " + endLocalTime);
+		// boolean alt = false;
 
-        do {
-            logger.info("MC with " + (int) Math.floor(maxTries) + " x "
-                    + localBT + " flips");
-            float localTime = -chronometer.getCurrentChrono();
-            int assign = -this.getNbAssignments();
-            for (int i = (int) Math.floor(maxTries); --i >= 0;) {
-                if (minConflicts(localBT)) {
-                    return true;
-                }
+		final Map<Integer, Integer> weights = new HashMap<Integer, Integer>();
 
-                for (Variable v : problem.getVariables()) {
-                    v.resetAssign();
-                }
+		while (chronometer.getCurrentChrono() < endLocalTime) {
+			logger.info(localBT + " flips");
+			float localTime = -chronometer.getCurrentChrono();
+			int assign = -this.getNbAssignments();
 
-                problem.restoreAll(1);
-            }
-            localTime += chronometer.getCurrentChrono();
-            assign += getNbAssignments();
-            logger.info("Took " + localTime + " s ("
-                    + (localBT * (int) Math.floor(maxTries) / localTime)
-                    + " flips per second), " + assign + " assignments made");
+			if (minConflicts(localBT)) {
+				return true;
+			}
 
-            logger.info("MAC with " + maxBT + " bt");
-            assign = -getNbAssignments();
-            float macTime = -chronometer.getCurrentChrono();
-            if (mac(maxBT)) {
-                return getNbSolutions() > 0;
-            }
+			for (Variable v : problem.getVariables()) {
+				v.resetAssign();
+			}
 
-            problem.restoreAll(1);
-            macTime += chronometer.getCurrentChrono();
-            assign += getNbAssignments();
-            logger.info("Took " + macTime + " s (" + (maxBT / macTime)
-                    + " bt per second), " + assign + " assignments made");
+			problem.restoreAll(1);
 
-            maxTries *= 1.5;
-            maxBT *= 2.25 * localTime / macTime;
+			localTime += chronometer.getCurrentChrono();
+			assign += getNbAssignments();
+			logger.info("Took " + localTime + " s (" + (localBT / localTime)
+					+ " flips per second), " + assign + " assignments made");
 
-            // alt ^= true ;
-            //			
-            // if (!alt) {
-            for (Constraint c : problem.getConstraints()) {
-                c.setWeight(1);// Math.max(1, (int) Math.log(c.getWeight())));
-            }
-            // }
+			 int maxWeight = 0 ;
+			
+			for (Constraint c : problem.getConstraints()) {
+				final int cid = c.getId();
+				final int weight;
+				if (weights.containsKey(cid)) {
+					weight = weights.get(cid) + c.getWeight();
+				} else {
+					weight = c.getWeight();
+				}
+				if (weight > maxWeight) { maxWeight = weight ; }
+				weights.put(cid, weight);
+				c.setWeight(1);
+			}
+			logger.info("Global max weight : " + maxWeight) ;
+		}
 
-        } while (true);
+		do {
+			logger.info("MAC with " + maxBT + " bt");
+			int assign = -getNbAssignments();
+			float macTime = -chronometer.getCurrentChrono();
+			if (mac(maxBT)) {
+				return getNbSolutions() > 0;
+			}
 
-    }
+			problem.restoreAll(1);
+			macTime += chronometer.getCurrentChrono();
+			assign += getNbAssignments();
+			logger.info("Took " + macTime + " s (" + (maxBT / macTime)
+					+ " bt per second), " + assign + " assignments made");
 
-    private final boolean mac(final int maxBT) {
-        macSolver.setMaxBacktracks(maxBT);
+			maxBT *= 1.5;
+		} while (true);
 
-        try {
-            if (macSolver.mac(0, null)) {
-                // logger.info(macSolver.getSolution().toString());
-                setSolution(macSolver.getSolution());
-            }
-            chronometer.validateChrono();
-            return true;
-        } catch (MaxBacktracksExceededException e) {
-            // Continue
-        } catch (OutOfMemoryError e) {
-            chronometer.validateChrono();
-            throw e;
-        }
-        logger.info("Max constraint weight : " + problem.getMaxWeight());
+	}
 
-        macSolver.addNoGoods();
+	private final boolean mac(final int maxBT) {
+		macSolver.setMaxBacktracks(maxBT);
 
-        return false;
-    }
+		try {
+			if (macSolver.mac(0, null)) {
+				// logger.info(macSolver.getSolution().toString());
+				setSolution(macSolver.getSolution());
+			}
+			chronometer.validateChrono();
+			return true;
+		} catch (MaxBacktracksExceededException e) {
+			// Continue
+		} catch (OutOfMemoryError e) {
+			chronometer.validateChrono();
+			throw e;
+		}
+		logger.info("Max constraint weight : " + problem.getMaxWeight());
 
-    private final boolean minConflicts(final int maxLM) throws IOException {
-        mCSolver.setMaxBacktracks(maxLM);
+		macSolver.addNoGoods();
 
-        try {
+		return false;
+	}
 
-            mCSolver.minConflicts();
+	private final boolean minConflicts(final int maxLM) throws IOException {
+		mCSolver.setMaxBacktracks(maxLM);
 
-            setSolution(mCSolver.getSolution());
-            chronometer.validateChrono();
-            return true;
-        } catch (MaxBacktracksExceededException e) {
+		try {
 
-        } catch (OutOfMemoryError e) {
-            chronometer.validateChrono();
-            throw e;
-        } catch (IOException e) {
-            chronometer.validateChrono();
-            throw e;
-        }
+			mCSolver.minConflicts();
 
-        // for (Constraint c: problem.getConstraints()) {
-        // c.setWeight(c.getWeight() / problem.getNbConstraints());
-        // }
-        logger.info("Max constraint weight : " + problem.getMaxWeight());
+			setSolution(mCSolver.getSolution());
+			chronometer.validateChrono();
+			return true;
+		} catch (MaxBacktracksExceededException e) {
 
-        return false;
-    }
+		} catch (OutOfMemoryError e) {
+			chronometer.validateChrono();
+			throw e;
+		} catch (IOException e) {
+			chronometer.validateChrono();
+			throw e;
+		}
 
-    @Override
-    public int getNbAssignments() {
-        return macSolver.getNbAssignments() + mCSolver.getNbAssignments();
-    }
+		// for (Constraint c: problem.getConstraints()) {
+		// c.setWeight(c.getWeight() / problem.getNbConstraints());
+		// }
+		logger.info("Max constraint weight : " + problem.getMaxWeight());
 
-    public String getXMLConfig() {
-        final StringBuffer sb = new StringBuffer(150);
+		return false;
+	}
 
-        sb.append("\t\t\t<macSolver>\n").append(macSolver.getXMLConfig())
-                .append("\t\t\t</macSolver>\n\t\t\t<mcSolver>\n").append(
-                        mCSolver.getXMLConfig()).append(
-                        "\t\t\t</mcSolver>\n\t\t\t<space>").append(useSpace())
-                .append("</space>\n");
+	@Override
+	public int getNbAssignments() {
+		return macSolver.getNbAssignments() + mCSolver.getNbAssignments();
+	}
 
-        return sb.toString();
-    }
+	public String getXMLConfig() {
+		final StringBuffer sb = new StringBuffer(150);
+
+		sb.append("\t\t\t<macSolver>\n").append(macSolver.getXMLConfig())
+				.append("\t\t\t</macSolver>\n\t\t\t<mcSolver>\n").append(
+						mCSolver.getXMLConfig()).append(
+						"\t\t\t</mcSolver>\n\t\t\t<space>").append(useSpace())
+				.append("</space>\n");
+
+		return sb.toString();
+	}
+
+	public void setLocalTime(final float time) {
+		this.localTime = time;
+	}
 
 }
