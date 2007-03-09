@@ -478,7 +478,7 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 	public int bestImprovment(final TabuManager tabuManager,
 			final float aspiration, final TieManager tieManager) {
 		final int bestIndex = this.bestIndex;
-		if (bestIndex >= 0 && !tabuManager.isTabu(this, bestIndex)) {
+		if (bestIndex >= 0 && !tabuManager.isTabu(id, bestIndex)) {
 			return bestIndex;
 		}
 
@@ -489,7 +489,7 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 			}
 
 			final int conflicts = getConflicts(i);
-			if (conflicts < aspiration || !tabuManager.isTabu(this, i)) {
+			if (conflicts < aspiration || !tabuManager.isTabu(id, i)) {
 				tieManager.newValue(i, conflicts);
 			}
 		}

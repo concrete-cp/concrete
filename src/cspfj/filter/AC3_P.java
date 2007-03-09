@@ -84,7 +84,7 @@ public final class AC3_P implements Filter {
 		return reduce(level);
 	}
 
-	private boolean skipRevision(Constraint constraint, int variablePosition) {
+	private boolean skipRevision(final Constraint constraint, final int variablePosition) {
 		if (!constraint.getRemovals(variablePosition)) {
 			return false;
 		}

@@ -19,63 +19,62 @@
 
 package cspfj;
 
+import java.util.Arrays;
+
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
 public final class TabuManager {
-    private boolean[][] tabus;
+	private boolean[][] tabus;
 
-    private int[] t1;
+	private int[] t1;
 
-    private int[] t2;
+	private int[] t2;
 
-    private int head;
+	private int head;
 
-    private final int size;
+	private final int size;
 
-    public TabuManager(final Problem problem, final int size) {
-        this.size = size;
-        if (size < 1) {
-            return;
-        }
-        tabus = new boolean[problem.getNbVariables()][problem
-                .getMaxDomainSize()];
-        t1 = new int[size];
-        t2 = new int[size];
-    }
+	public TabuManager(final Problem problem, final int size) {
+		this.size = size;
+		if (size < 1) {
+			return;
+		}
+		tabus = new boolean[problem.getNbVariables()][problem
+				.getMaxDomainSize()];
+		t1 = new int[size];
+		t2 = new int[size];
+		clean();
+	}
 
-    public void push(final Variable variable, final int index) {
-        // assert tabus[variable.getId()][index] != true : variable + " " +
-        // index + " already tabu";
+	public void push(final int vid, final int index) {
+		// assert tabus[variable.getId()][index] != true : variable + " " +
+		// index + " already tabu";
 
-        tabus[t1[head]][t2[head]] = false;
-        tabus[variable.getId()][index] = true;
+		tabus[t1[head]][t2[head]] = false;
+		tabus[vid][index] = true;
 
-        t1[head] = variable.getId();
-        t2[head] = index;
-        head = (head + 1) % size;
+		t1[head] = vid;
+		t2[head] = index;
+		head = (head + 1) % size;
 
-        // System.out.println( variable + " " + index + " tabu");
-    }
+		// System.out.println( variable + " " + index + " tabu");
+	}
 
-    public boolean isTabu(final Variable variable, final int index) {
-        return tabus != null && tabus[variable.getId()][index];
-    }
+	public boolean isTabu(final int vid, final int index) {
+		return tabus != null && tabus[vid][index];
+	}
 
-    public void clean() {
-        for (int i = 0; i < tabus.length; i++) {
-            for (int j = 0; j < tabus[i].length; j++) {
-                tabus[i][j] = false;
-            }
-        }
-        for (int i = 0; i < t1.length; i++) {
-            t1[i] = 0;
-            t2[i] = 0;
-        }
-        head = 0 ;
-    }
-    
-    public int getSize() {
-    	return size ;
-    }
+	public void clean() {
+		for (boolean[] tabu : tabus) {
+			Arrays.fill(tabu, false);
+		}
+		Arrays.fill(t1, 0);
+		Arrays.fill(t2, 0);
+		head = 0;
+	}
+
+	public int getSize() {
+		return size;
+	}
 }

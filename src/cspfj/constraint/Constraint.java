@@ -551,15 +551,16 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		if (tupleCache) {
 
 			final int[][] myLast = last[variablePosition];
-			final boolean[] myLastCheck = lastCheck[variablePosition];
 			final int[] tuple = this.tuple;
 
 			if (Arrays.equals(tuple, myLast[index])) {
-				assert check() == myLastCheck[index] : Arrays.toString(tuple)
+				assert check() == lastCheck[variablePosition][index] : Arrays
+						.toString(tuple)
 						+ " = "
-						+ Arrays.toString(last[variablePosition][index]) + ", "
+						+ Arrays.toString(last[variablePosition][index])
+						+ ", "
 						+ " (" + this + ", " + matrix + ")";
-				return myLastCheck[index];
+				return lastCheck[variablePosition][index];
 			}
 			final boolean result = check();
 
@@ -571,7 +572,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 			// last[position][i] = new int[arity];
 			// }
 			System.arraycopy(tuple, 0, myLast[i], 0, arity);
-			myLastCheck[i] = result;
+			lastCheck[variablePosition][i] = result;
 			return result;
 		}
 		return check();

@@ -346,7 +346,8 @@ public final class Problem implements Cloneable {
 		scope.add(0, getVariable(levelVariables[0]));
 		tuple.add(0, getVariable(levelVariables[0]).getFirst());
 
-		for (int level = 1; level < levelVariables.length; level++) {
+		for (int level = 1; level < levelVariables.length
+				&& level < getMaxArity(); level++) {
 			// logger.fine("checking " + getVariable(levelVariables[level-1]));
 			pastVariables.add(levelVariables[level - 1]);
 
@@ -397,6 +398,10 @@ public final class Problem implements Cloneable {
 
 	}
 
+	public int getLevelVariable(final int level) {
+		return levelVariables[level];
+	}
+	
 	public int[] getLevelVariables(final int minLevel) {
 		final int[] variables = new int[levelVariables.length - minLevel];
 		System.arraycopy(levelVariables, minLevel, variables, 0,
@@ -497,18 +502,19 @@ public final class Problem implements Cloneable {
 
 	public int getMaxFlips() {
 		final int nd = getND();
-//		return 8 * nd + (int)(.4 * nd * nd);
+		// return 8 * nd + (int)(.4 * nd * nd);
 		// return 5*nd;
 		return Math.max((int) (-50000 + 10000 * Math.log(nd)), 10000);
 	}
 
 	public int getMaxBacktracks() {
-//		final int meanDomainSize = getND() / getNbVariables();
-//
-//		final int localBT = getMaxFlips();
-//
-//		return (int) (localBT * (100F * getNbVariables()) / (getNbConstraints() * meanDomainSize));
-		return getNbConstraints() ;
+		// final int meanDomainSize = getND() / getNbVariables();
+		//
+		// final int localBT = getMaxFlips();
+		//
+		// return (int) (localBT * (100F * getNbVariables()) /
+		// (getNbConstraints() * meanDomainSize));
+		return getNbConstraints();
 	}
 
 	public Problem clone() throws CloneNotSupportedException {
@@ -519,16 +525,16 @@ public final class Problem implements Cloneable {
 		problem.tuple = new ArrayList<Integer>();
 
 		problem.pastVariables = new TreeSet<Integer>();
-		
-		problem.variables = null ;
-		
-		problem.variableArray = null ;
-		
-		problem.constraints = null ;
-		
-		problem.constraintArray = null ;
-		
-		problem.levelVariables = null ;
+
+		problem.variables = null;
+
+		problem.variableArray = null;
+
+		problem.constraints = null;
+
+		problem.constraintArray = null;
+
+		problem.levelVariables = null;
 
 		final Collection<Variable> variables = new ArrayList<Variable>(this
 				.getNbVariables());

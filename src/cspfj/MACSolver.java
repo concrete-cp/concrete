@@ -28,6 +28,7 @@ import cspfj.filter.AC3_P;
 import cspfj.filter.AC3_R;
 import cspfj.filter.Filter;
 import cspfj.filter.SAC;
+import cspfj.filter.SAC.SPACE;
 import cspfj.heuristic.Heuristic;
 import cspfj.heuristic.Pair;
 import cspfj.problem.Problem;
@@ -43,6 +44,8 @@ public final class MACSolver extends AbstractSolver {
 
 	private boolean allSolutions = false;
 
+	private final Filter sac;
+
 	// private NoGoodManager noGoodManager = null;
 
 	// private int maxNoGoodSize;
@@ -54,8 +57,10 @@ public final class MACSolver extends AbstractSolver {
 		// heuristic = new WDegOnDomBySupports(prob);
 		this.heuristic = heuristic;
 
+		sac = new SAC(problem, filter, true);
+
 		logger.info(filter.getClass().toString());
-		
+
 	}
 
 	// public void enableNoGoods(final int maxSize) {
@@ -65,8 +70,13 @@ public final class MACSolver extends AbstractSolver {
 
 	public boolean mac(final int level, final Variable lastModifiedVariable)
 			throws MaxBacktracksExceededException {
-		final Problem problem = this.problem ;
-		
+		return mac(level, lastModifiedVariable, true);
+	}
+
+	public boolean mac(final int level, final Variable lastModifiedVariable,
+			final boolean positive) throws MaxBacktracksExceededException {
+		final Problem problem = this.problem;
+
 		if (problem.getNbFutureVariables() == 0) {
 			if (getNbSolutions() < 1) {
 				for (Variable v : problem.getVariables()) {
@@ -78,10 +88,15 @@ public final class MACSolver extends AbstractSolver {
 			return !allSolutions;
 		}
 
-		// chronometer.checkExpiration();
-
-		if (!filter.reduceAfter(level, lastModifiedVariable)) {
-			return false;
+		if (positive && level < problem.getMaxArity()
+				&& useSpace() == SPACE.BRANCH) {
+			if (!sac.reduceAfter(level, lastModifiedVariable)) {
+				return false;
+			}
+		} else {
+			if (!filter.reduceAfter(level, lastModifiedVariable)) {
+				return false;
+			}
 		}
 
 		final long pair = heuristic.selectPair(problem);
@@ -112,7 +127,7 @@ public final class MACSolver extends AbstractSolver {
 
 		// removeNoGoods(level);
 
-		if (mac(level + 1, domainSizeBefore > 1 ? selectedVariable : null)) {
+		if (mac(level + 1, domainSizeBefore > 1 ? selectedVariable : null, true)) {
 			addSolutionElement(selectedVariable, selectedIndex);
 			return true;
 		}
@@ -132,7 +147,7 @@ public final class MACSolver extends AbstractSolver {
 
 		checkBacktracks();
 
-		return mac(level, selectedVariable);
+		return mac(level, selectedVariable, false);
 
 	}
 
@@ -195,7 +210,7 @@ public final class MACSolver extends AbstractSolver {
 		}
 
 		heuristic.compute();
-		
+
 		int maxBT = allSolutions ? -1 : problem.getMaxBacktracks();
 
 		final Filter filter = getFilter();

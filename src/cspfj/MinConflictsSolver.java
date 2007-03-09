@@ -20,6 +20,7 @@
 package cspfj;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -29,6 +30,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
+import cspfj.constraint.Weight;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
@@ -42,331 +44,346 @@ import cspfj.heuristic.Pair;
 
 public final class MinConflictsSolver extends AbstractSolver {
 
-    private final static Random random = new Random(0);
+	private final static Random random = new Random(0);
 
-    private final static Logger logger = Logger
-            .getLogger("cspfj.solver.MinConflictsSolver");
+	private final static Logger logger = Logger
+			.getLogger("cspfj.solver.MinConflictsSolver");
 
-    private final TabuManager tabuManager;
+	private final TabuManager tabuManager;
 
-    private final boolean max;
+	private final boolean max;
 
-    private final static boolean FINE = logger.isLoggable(Level.FINE);
-
-    public MinConflictsSolver(Problem prob, ResultHandler resultHandler,
-            boolean reverse) {
-        super(prob, resultHandler);
-
-        max = resultHandler.displaySolutions;
+	private final static boolean FINE = logger.isLoggable(Level.FINE);
+
+	public MinConflictsSolver(Problem prob, ResultHandler resultHandler,
+			boolean reverse) {
+		super(prob, resultHandler);
+
+		max = resultHandler.displaySolutions;
 
-        tabuManager = new TabuManager(problem, 10);
+		tabuManager = new TabuManager(problem, 10);
 
-    }
+	}
 
-    private int realConflicts() {
-        int realConflicts = 0;
+	private int realConflicts() {
+		int realConflicts = 0;
 
-        for (Constraint c : problem.getConstraints()) {
-            if (!c.checkFirst()) {
-                realConflicts++;
-            }
-        }
-
-        return realConflicts;
-    }
+		for (Constraint c : problem.getConstraints()) {
+			if (!c.checkFirst()) {
+				realConflicts++;
+			}
+		}
+
+		return realConflicts;
+	}
 
-    private int weightedConflicts() {
-        int weightedConflicts = 0;
-
-        for (Constraint c : problem.getConstraints()) {
-            if (!c.checkFirst()) {
-                weightedConflicts += c.getWeight();
-            }
-        }
-
-        return weightedConflicts;
-    }
+	private int weightedConflicts() {
+		int weightedConflicts = 0;
+
+		for (Constraint c : problem.getConstraints()) {
+			if (!c.checkFirst()) {
+				weightedConflicts += c.getWeight();
+			}
+		}
+
+		return weightedConflicts;
+	}
 
-    private void solution(final int nbConflicts) throws IOException {
-        final Map<Variable, Integer> solution = new HashMap<Variable, Integer>();
-        for (Variable v : problem.getVariables()) {
-            solution.put(v, v.getDomain()[v.getFirst()]);
-        }
-        solution(solution, problem.getNbConstraints() - nbConflicts);
-    }
+	private void solution(final int nbConflicts) throws IOException {
+		final Map<Variable, Integer> solution = new HashMap<Variable, Integer>();
+		for (Variable v : problem.getVariables()) {
+			solution.put(v, v.getDomain()[v.getFirst()]);
+		}
+		solution(solution, problem.getNbConstraints() - nbConflicts);
+	}
 
-    private void init(final Variable variable, final TieManager tieManager) {
-        if (variable.isAssigned()) {
-            return;
-        }
-
-        final int index = variable.getBestInitialIndex(tieManager);
+	private void init(final Variable variable, final TieManager tieManager) {
+		if (variable.isAssigned()) {
+			return;
+		}
+
+		final int index = variable.getBestInitialIndex(tieManager);
 
-        // variable.restoreLevel(1);
-
-        if (FINE) {
-            logger.fine(variable.toString() + " (" + variable.getDomainSize()
-                    + ") <- " + index);
-        }
-        variable.firstAssign(index);
+		// variable.restoreLevel(1);
+
+		if (FINE) {
+			logger.fine(variable.toString() + " (" + variable.getDomainSize()
+					+ ") <- " + index);
+		}
+		variable.firstAssign(index);
 
-        final Set<Variable> randomOrder = new TreeSet<Variable>(
-                new RandomOrder<Variable>(random));
+		final Set<Variable> randomOrder = new TreeSet<Variable>(
+				new RandomOrder<Variable>(random));
 
-        for (Variable n : variable.getNeighbours()) {
-            randomOrder.add(n);
-        }
+		for (Variable n : variable.getNeighbours()) {
+			randomOrder.add(n);
+		}
 
-        for (Variable v : randomOrder) {
-            init(v, tieManager);
-        }
-    }
+		for (Variable v : randomOrder) {
+			init(v, tieManager);
+		}
+	}
 
-    private void init(final TieManager tieManager) {
-        final Set<Variable> randomOrder = new TreeSet<Variable>(
-                new RandomOrder<Variable>(random));
+	private void init(final TieManager tieManager) {
+		final Set<Variable> randomOrder = new TreeSet<Variable>(
+				new RandomOrder<Variable>(random));
 
-        for (Variable v : problem.getVariables()) {
-            randomOrder.add(v);
-        }
+		for (Variable v : problem.getVariables()) {
+			randomOrder.add(v);
+		}
 
-        for (Variable v : randomOrder) {
-            init(v, tieManager);
-        }
+		for (Variable v : randomOrder) {
+			init(v, tieManager);
+		}
 
-        for (Variable v : problem.getVariables()) {
-            v.initNbConflicts(tieManager);
-        }
-    }
+		for (Variable v : problem.getVariables()) {
+			v.initNbConflicts(tieManager);
+		}
+	}
 
-    // private int randomWalk() {
-    // final Variable variable = problem.getVariable(random.nextInt(problem
-    // .getNbVariables()));
-    //
-    // final int index = variable.getRandomPresentIndex(random);
-    //
-    // final int improvment = variable.getImprovment(index);
-    //
-    // variable.reAssign(index);
-    // if (FINE) {
-    // logger.fine(variable + " <- " + index);
-    // }
-    // return improvment;
-    // }
+	// private int randomWalk() {
+	// final Variable variable = problem.getVariable(random.nextInt(problem
+	// .getNbVariables()));
+	//
+	// final int index = variable.getRandomPresentIndex(random);
+	//
+	// final int improvment = variable.getImprovment(index);
+	//
+	// variable.reAssign(index);
+	// if (FINE) {
+	// logger.fine(variable + " <- " + index);
+	// }
+	// return improvment;
+	// }
 
-    private long findBest(final TieManager tieManager,
-            final TieManager tieManager2, final int aspiration) {
-        Variable bestVariable = null;
+	private long findBest(final TieManager tieManager,
+			final TieManager tieManager2, final int aspiration) {
+		Variable bestVariable = null;
 
-        tieManager.clear();
+		tieManager.clear();
 
-        int bestImp = tieManager.getBestEvaluation();
+		int bestImp = tieManager.getBestEvaluation();
 
-        for (Variable v : problem.getVariables()) {
-            if (v.getCurrentConflicts() <= -bestImp) {
-                continue;
-            }
+		for (Variable v : problem.getVariables()) {
+			if (v.getCurrentConflicts() <= -bestImp) {
+				continue;
+			}
 
-            final int index = v.bestImprovment(tabuManager, aspiration,
-                    tieManager2);
-            if (index < 0) {
-                continue;
-            }
+			final int index = v.bestImprovment(tabuManager, aspiration,
+					tieManager2);
+			if (index < 0) {
+				continue;
+			}
 
-            if (tieManager.newValue(index, v.getImprovment(index))) {
-                bestVariable = v;
-                bestImp = tieManager.getBestEvaluation();
-            }
+			if (tieManager.newValue(index, v.getImprovment(index))) {
+				bestVariable = v;
+				bestImp = tieManager.getBestEvaluation();
+			}
 
-        }
+		}
 
-        if (bestVariable == null) {
-            return -1;
-        }
-        return Pair.pair(bestVariable, tieManager.getBestValue(), problem);
+		if (bestVariable == null) {
+			return -1;
+		}
+		return Pair.pair(bestVariable, tieManager.getBestValue(), problem);
 
-    }
+	}
 
-    private int localMinimum(final TieManager tieManager) {
-        int improvment = 0;
+	private int localMinimum(final TieManager tieManager) {
+		int improvment = 0;
 
-        if (FINE) {
-            logger.fine("Local Minimum");
-        }
+		if (FINE) {
+			logger.fine("Local Minimum");
+		}
 
-        for (Constraint c : problem.getConstraints()) {
-            if (!c.checkFirst()) {
-                improvment++;
-                c.increaseWeightAndUpdate(tieManager);
-            }
-        }
+		for (Constraint c : problem.getConstraints()) {
+			if (!c.checkFirst()) {
+				improvment++;
+				c.increaseWeightAndUpdate(tieManager);
+			}
+		}
 
-        return improvment;
-    }
+		return improvment;
+	}
 
-    private int bestWalk(final TieManager tieManager,
-            final TieManager tieManager2, final int aspiration) {
+	private int bestWalk(final TieManager tieManager,
+			final TieManager tieManager2, final int aspiration) {
 
-        final long pair = findBest(tieManager, tieManager2, aspiration);
+		final long pair = findBest(tieManager, tieManager2, aspiration);
 
-        if (pair < 0) {
-            logger.fine("Cleaning tabu list");
-            tabuManager.clean();
-            return 0;
-        }
+		if (pair < 0) {
+			logger.fine("Cleaning tabu list");
+			tabuManager.clean();
+			return 0;
+		}
 
-        final Variable bestVariable = Pair.variable(pair, problem);
+		final int bestVariableId = Pair.variableId(pair, problem);
+		final Variable bestVariable = problem.getVariable(bestVariableId);
 
-        final int bestIndex = Pair.index(pair, problem);
+		final int bestIndex = Pair.index(pair, problem);
 
-        int improvment = 0;
+		int improvment = 0;
 
-        if (bestVariable.getImprovment(bestIndex) >= 0) {
-            return localMinimum(tieManager2);
-        }
+		if (bestVariable.getImprovment(bestIndex) >= 0) {
+			return localMinimum(tieManager2);
+		}
 
-        tabuManager.push(bestVariable, bestIndex);
+		tabuManager.push(bestVariableId, bestIndex);
 
-        improvment += bestVariable.getImprovment(bestIndex);
+		improvment += bestVariable.getImprovment(bestIndex);
 
-        if (FINE) {
-            logger.fine(bestVariable + " <- " + tieManager.getBestValue());
-        }
-        bestVariable.reAssign(bestIndex, tieManager2);
-        incrementNbAssignments();
-        return improvment;
-    }
-
-    public void minConflicts() throws MaxBacktracksExceededException,
-            IOException {
-
-        final Problem problem = this.problem;
-        // final float randomWalk = this.rWProba;
-
-        final TieManager tieManager = new TieManager(random);
-
-        init(tieManager);
-
-        int nbConflicts = weightedConflicts();
-
-        logger.fine("Searching...");
-
-        int bestEver = Integer.MAX_VALUE;
-
-        final TieManager tieManager2 = new TieManager(random);
-
-        while (nbConflicts > 0) {
-            if (nbConflicts < bestEver) {
-                bestEver = nbConflicts;
-                solution(nbConflicts);
-            }
-
-            if (FINE) {
-                logger.fine(nbConflicts + " conflicts " + "(real = "
-                        + realConflicts() + ", " + getNbBacktracks() + "/"
-                        + getMaxBacktracks() + ")");
-            }
-
-            assert realConflicts() <= nbConflicts;
-
-            // if (random.nextFloat() < randomWalk) {
-            // nbConflicts += randomWalk();
-            // } else {
-            nbConflicts += bestWalk(tieManager, tieManager2, bestEver
-                    - nbConflicts);
-            // }
-
-            assert nbConflicts == weightedConflicts() : nbConflicts + "/="
-                    + weightedConflicts() + " (real = " + realConflicts() + ")";
-
-            checkBacktracks();
-
-        }
-
-        for (Variable v : problem.getVariables()) {
-            addSolutionElement(v, v.getFirst());
-        }
-
-        incrementNbSolutions();
-        assert realConflicts() == 0 : getSolution() + " -> " + realConflicts()
-                + " conflicts ! (" + weightedConflicts() + " wc)";
-
-    }
-
-    public boolean runSolver() throws IOException {
-        final int localBT = problem.getMaxFlips();
-        boolean resolved = false;
-        System.gc();
-        chronometer.startChrono();
-
-        final Filter filter = new AC3_P(problem);
-
-        if (!max) {
-            final Filter preprocessor;
-            switch (useSpace()) {
-            case BRANCH:
-                preprocessor = new SAC(problem, filter, true);
-                break;
-
-            case CLASSIC:
-                preprocessor = new SAC(problem, filter, false);
-                break;
-
-            default:
-                preprocessor = filter;
-            }
-            if (!preprocessor.reduceAll(0)) {
-                chronometer.validateChrono();
-                return false;
-            }
-        }
-
-        do {
-            setMaxBacktracks(localBT);
-            logger.info("Run with " + localBT + " flips");
-            try {
-                minConflicts();
-                resolved = true;
-            } catch (MaxBacktracksExceededException e) {
-                problem.restoreAll(1);
-            } catch (OutOfMemoryError e) {
-                chronometer.validateChrono();
-                throw e;
-            } catch (IOException e) {
-                chronometer.validateChrono();
-                throw e;
-            }
-            // if (true) {
-            // logger.info(problem.toString());
-            // chronometer.validateChrono();
-            // throw new IOException();
-            // }
-            for (Constraint c : problem.getConstraints()) {
-                c.setWeight(Math.max(1,c.getWeight() / problem.getNbConstraints()));
-            }
-            // localBT *= 1.5;
-        } while (!resolved);
-
-        chronometer.validateChrono();
-        return true;
-
-    }
-
-    public static Random getRandom() {
-        return random;
-    }
-
-    public String getXMLConfig() {
-        final StringBuffer sb = new StringBuffer(200);
-
-        sb.append("\t\t\t<solver>").append(this).append(
-                "</solver>\n\t\t\t<tabu>").append(tabuManager.getSize()).append(
-                "</tabu>\n\t\t\t<maxCSP>").append(max).append("</maxCSP>\n");
-        // "</filter>\n\t\t\t<randomWalk>").append(rWProba).append(
-        return sb.toString();
-    }
-
-    public String toString() {
-        return "min-conflicts";
-    }
+		if (FINE) {
+			logger.fine(bestVariable + " <- " + tieManager.getBestValue());
+		}
+		bestVariable.reAssign(bestIndex, tieManager2);
+		incrementNbAssignments();
+		return improvment;
+	}
+
+	public void minConflicts() throws MaxBacktracksExceededException,
+			IOException {
+
+		final Problem problem = this.problem;
+		// final float randomWalk = this.rWProba;
+
+		final TieManager tieManager = new TieManager(random);
+
+		init(tieManager);
+
+		int nbConflicts = weightedConflicts();
+
+		logger.fine("Searching...");
+
+		int bestEver = Integer.MAX_VALUE;
+
+		final TieManager tieManager2 = new TieManager(random);
+
+		while (nbConflicts > 0) {
+			if (nbConflicts < bestEver) {
+				bestEver = nbConflicts;
+				solution(nbConflicts);
+			}
+
+			if (FINE) {
+				logger.fine(nbConflicts + " conflicts " + "(real = "
+						+ realConflicts() + ", " + getNbBacktracks() + "/"
+						+ getMaxBacktracks() + ")");
+			}
+
+			assert realConflicts() <= nbConflicts;
+
+			// if (random.nextFloat() < randomWalk) {
+			// nbConflicts += randomWalk();
+			// } else {
+			nbConflicts += bestWalk(tieManager, tieManager2, bestEver
+					- nbConflicts);
+			// }
+
+			assert nbConflicts == weightedConflicts() : nbConflicts + "/="
+					+ weightedConflicts() + " (real = " + realConflicts() + ")";
+
+			checkBacktracks();
+
+		}
+
+		for (Variable v : problem.getVariables()) {
+			addSolutionElement(v, v.getFirst());
+		}
+
+		incrementNbSolutions();
+		assert realConflicts() == 0 : getSolution() + " -> " + realConflicts()
+				+ " conflicts ! (" + weightedConflicts() + " wc)";
+
+	}
+
+	public boolean runSolver() throws IOException {
+		final int localBT = problem.getMaxFlips();
+		boolean resolved = false;
+		System.gc();
+		chronometer.startChrono();
+
+		final Filter filter = new AC3_P(problem);
+
+		if (!max) {
+			final Filter preprocessor;
+			switch (useSpace()) {
+			case BRANCH:
+				preprocessor = new SAC(problem, filter, true);
+				break;
+
+			case CLASSIC:
+				preprocessor = new SAC(problem, filter, false);
+				break;
+
+			default:
+				preprocessor = filter;
+			}
+			if (!preprocessor.reduceAll(0)) {
+				chronometer.validateChrono();
+				return false;
+			}
+		}
+
+		do {
+			setMaxBacktracks(localBT);
+			logger.info("Run with " + localBT + " flips");
+			float localTime = -chronometer.getCurrentChrono();
+			try {
+				minConflicts();
+				resolved = true;
+			} catch (MaxBacktracksExceededException e) {
+				problem.restoreAll(1);
+			} catch (OutOfMemoryError e) {
+				chronometer.validateChrono();
+				throw e;
+			} catch (IOException e) {
+				chronometer.validateChrono();
+				throw e;
+			}
+			localTime += chronometer.getCurrentChrono();
+			// if (true) {
+			// logger.info(problem.toString());
+			// chronometer.validateChrono();
+			// throw new IOException();
+			// }
+			
+//			final Set<Constraint> set = new TreeSet<Constraint>(new Weight(false)) ;
+//			set.addAll(Arrays.asList(problem.getConstraints()));
+			
+			final StringBuffer sb = new StringBuffer() ;
+			for (Constraint c : problem.getConstraints()) {
+				sb.append(c).append(':').append(c.getWeight()).append('\n');
+				c.setWeight(Math.max(1, c.getWeight()
+						/ problem.getNbConstraints()));
+			}
+			logger.info(sb.toString());
+			logger.info("Took " + localTime + " s (" + (localBT / localTime)
+					+ " flips per second), " + getNbAssignments()
+					+ " assignments made");
+			// localBT *= 1.5;
+		} while (!resolved);
+
+		chronometer.validateChrono();
+		return true;
+
+	}
+
+	public static Random getRandom() {
+		return random;
+	}
+
+	public String getXMLConfig() {
+		final StringBuffer sb = new StringBuffer(200);
+
+		sb.append("\t\t\t<solver>").append(this).append(
+				"</solver>\n\t\t\t<tabu>").append(tabuManager.getSize())
+				.append("</tabu>\n\t\t\t<maxCSP>").append(max).append(
+						"</maxCSP>\n");
+		// "</filter>\n\t\t\t<randomWalk>").append(rWProba).append(
+		return sb.toString();
+	}
+
+	public String toString() {
+		return "min-conflicts";
+	}
 }

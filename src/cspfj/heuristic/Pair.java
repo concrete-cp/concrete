@@ -23,7 +23,11 @@ public class Pair {
 	}
 
 	public static Variable variable(final long pair, final Problem problem) {
-		return problem.getVariable((int)(pair / problem.getMaxDomainSize()));
+		return problem.getVariable(variableId(pair, problem));
+	}
+	
+	public static int variableId(final long pair, final Problem problem) {
+		return (int)(pair / problem.getMaxDomainSize()) ;
 	}
 
 	public static int index(final long pair, final Problem problem) {

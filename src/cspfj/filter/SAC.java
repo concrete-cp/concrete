@@ -99,9 +99,20 @@ public final class SAC implements Filter {
 
 	private void fillQueue() {
 		final boolean[][] queue = this.queue;
-		Arrays.fill(vQueue, true);
 		for (Variable variable : problem.getVariables()) {
-			Arrays.fill(queue[variable.getId()], true);
+			final int id = variable.getId();
+			if (variable.getDomainSize() > 1) {
+				vQueue[id] = true;
+				Arrays.fill(queue[id], false);
+				for (int i = variable.getFirst(); i != -1; i = variable
+						.getNext(i)) {
+					queue[id][i] = true;
+				}
+
+			} else {
+				vQueue[id] = false;
+			}
+
 		}
 	}
 
@@ -159,9 +170,10 @@ public final class SAC implements Filter {
 			if (filter.reduceAfter(level + 1, variable)) {
 
 				if (branch) {
-					buildBranch(level + 1);
-					// reduceToSolution(level);
-					// return true;
+					if (buildBranch(level + 1)) {
+						reduceToSolution(level);
+						return true;
+					}
 				}
 
 				final int nbNg = problem.addNoGoods();
@@ -169,13 +181,15 @@ public final class SAC implements Filter {
 
 				changedGraph = nbNg > 0;
 
-				for (int l = level + 1; l < problem.getNbVariables(); l++) {
-					problem.setLevelVariables(l, -1);
-				}
+				// for (int l = level + 1; l < problem.getNbVariables(); l++) {
+				// problem.setLevelVariables(l, -1);
+				// }
 
-				problem.restoreAll(level + 1);
+				variable.unassign(problem);
+				problem.restore(level + 1);
 			} else {
-				problem.restoreAll(level + 1);
+				variable.unassign(problem);
+				problem.restore(level + 1);
 
 				variable.remove(index, level);
 				changedGraph = true;
@@ -239,14 +253,14 @@ public final class SAC implements Filter {
 	// return true;
 	// }
 
-//	private void reduceToSolution(final int level) {
-//		for (Variable v : problem.getVariables()) {
-//			final int sol = v.getFirst();
-//			v.unassign(problem);
-//			v.restoreLevel(level + 1);
-//			v.makeSingletonIndex(sol, level);
-//		}
-//	}
+	private void reduceToSolution(final int level) {
+		for (Variable v : problem.getVariables()) {
+			final int sol = v.getFirst();
+			v.unassign(problem);
+			v.restoreLevel(level + 1);
+			v.makeSingletonIndex(sol, level);
+		}
+	}
 
 	public boolean reduceAfter(final int level, final Variable variable) {
 		if (variable == null) {
@@ -281,10 +295,15 @@ public final class SAC implements Filter {
 			do {
 				do {
 					if (cpt >= staticVOrder.length) {
+						for (int k = l; --k >= level;) {
+							problem.getVariable(problem.getLevelVariable(k))
+									.unassign(problem);
+							problem.setLevelVariables(k, -1);
+						}
 						return false;
 					}
 					variable = staticVOrder[cpt++];
-				} while (!vQueue[variable.getId()] || variable.isAssigned());
+				} while (!vQueue[variable.getId()]);
 
 				index = getRemainingIndex(variable);
 			} while (index < 0);
@@ -308,6 +327,8 @@ public final class SAC implements Filter {
 				selectedVariable = variable;
 				selectedIndex = index;
 				for (int k = l; --k >= level;) {
+					problem.getVariable(problem.getLevelVariable(k)).unassign(
+							problem);
 					problem.setLevelVariables(k, -1);
 				}
 				return false;
@@ -320,13 +341,14 @@ public final class SAC implements Filter {
 	}
 
 	private int getRemainingIndex(final Variable variable) {
-		final boolean[] iQueue = queue[variable.getId()];
+		final int vid = variable.getId();
+		final boolean[] iQueue = queue[vid];
 		for (int i = iQueue.length; --i >= 0;) {
 			if (iQueue[i] && variable.isPresent(i)) {
 				return i;
 			}
 		}
-
+		vQueue[vid] = false;
 		return -1;
 	}
 
@@ -341,8 +363,8 @@ public final class SAC implements Filter {
 	public int getNbSingletonTests() {
 		return nbSingletonTests;
 	}
-	
-    public String toString() {
-    	return "SAC-" + (branch?'3':'1') ;
-    }
+
+	public String toString() {
+		return "SAC-" + (branch ? '3' : '1');
+	}
 }
