@@ -36,6 +36,8 @@ public final class AC3_R implements Filter {
     private final Problem problem;
 
     private final ArcQueue[] queue;
+    
+    private boolean doneSomething ;
 
     public AC3_R(final Problem problem) {
         super();
@@ -74,6 +76,7 @@ public final class AC3_R implements Filter {
     }
 
     private boolean reduce(final int level) {
+    	doneSomething = false ;
         final ArcQueue[] queue = this.queue;
 
         while (true) {
@@ -101,6 +104,7 @@ public final class AC3_R implements Filter {
                 final Constraint constraint = involvingConstraints[cId];
 
                 if (constraint.revise(variable, level)) {
+                	doneSomething = true;
                     if (variable.getDomainSize() <= 0) {
                         constraint.increaseWeight();
                         return false;
@@ -204,4 +208,8 @@ public final class AC3_R implements Filter {
     public String toString() {
     	return "AC3rm-reverse" ;
     }
+
+	public boolean hasDoneSomething() {
+		return doneSomething;
+	}
 }

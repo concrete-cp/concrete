@@ -41,6 +41,8 @@ public final class AC3_P implements Filter {
 
 	private int queueSize = 0;
 
+	private boolean doneSomething;
+
 	// private final Map<Integer, boolean[]> inQueue;
 
 	public AC3_P(final Problem problem) {
@@ -80,11 +82,11 @@ public final class AC3_P implements Filter {
 		// addNeighbours(variable);
 
 		// variable.setNbRemovals(1) ;
-
 		return reduce(level);
 	}
 
-	private boolean skipRevision(final Constraint constraint, final int variablePosition) {
+	private boolean skipRevision(final Constraint constraint,
+			final int variablePosition) {
 		if (!constraint.getRemovals(variablePosition)) {
 			return false;
 		}
@@ -100,6 +102,7 @@ public final class AC3_P implements Filter {
 	}
 
 	private boolean reduce(final int level) {
+		doneSomething = false;
 		// logger.fine("AC...");
 		while (queueSize > 0) {
 			// logger.fine(""+queueSize);
@@ -117,6 +120,7 @@ public final class AC3_P implements Filter {
 
 					if (!y.isAssigned() && !skipRevision(c, i)
 							&& c.revise(i, level)) {
+						doneSomething = true;
 						if (y.getDomainSize() <= 0) {
 							c.increaseWeight();
 							return false;
@@ -198,6 +202,10 @@ public final class AC3_P implements Filter {
 
 	public String toString() {
 		return "AC3rm";
+	}
+
+	public boolean hasDoneSomething() {
+		return doneSomething;
 	}
 	// public int getNbSub() {
 	// return 0;

@@ -37,5 +37,6 @@ public interface Filter {
     
     int getNbNoGoods() ;
 
+    boolean hasDoneSomething();
 //    int getNbSub();
 }

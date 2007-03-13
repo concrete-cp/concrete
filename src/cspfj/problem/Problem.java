@@ -556,4 +556,12 @@ public final class Problem implements Cloneable {
 		problem.updateInvolvingConstraints();
 		return problem;
 	}
+	
+	public boolean activateMatrixes() {
+		boolean activated = true ;
+		for (Constraint c: getConstraints()) {
+			activated &= c.activateMatrix() ;
+		}
+		return activated ;
+	}
 }

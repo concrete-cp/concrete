@@ -148,6 +148,21 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		positionInVariable = new int[arity];
 	}
 
+
+	public boolean activateMatrix() {
+		if (matrix.isActive()) {
+			return true ;
+		}
+		boolean activated = false;
+		try {
+			matrix.init(true);
+			activated = true;
+		} catch (MatrixTooBigException e) {
+			logger.warning("Could not init matrix for " + this);
+		}
+		return activated;
+
+	}
 	// public final void initLast() {
 	//
 	// for (int[] l : last) {
@@ -360,6 +375,28 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		}
 
 		return revised;
+	}
+
+	public void setFirstTuple() {
+		for (int position = arity; --position >= 0;) {
+			tuple[position] = involvedVariables[position].getFirst();
+		}
+	}
+
+	public boolean setNextTuple() {
+		final int[] tuple = this.tuple;
+		final Variable[] involvedVariables = this.involvedVariables;
+		for (int i = arity; --i >= 0;) {
+			final int index = involvedVariables[i].getNext(tuple[i]);
+
+			if (index < 0) {
+				tuple[i] = involvedVariables[i].getFirst();
+			} else {
+				tuple[i] = index;
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public void setFirstTuple(final int variablePosition, final int index) {

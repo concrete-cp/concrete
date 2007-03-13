@@ -63,6 +63,8 @@ public final class SAC implements Filter {
 
 	private final VariableHeuristic heuristic;
 
+	private boolean doneSomething;
+
 	public SAC(Problem problem, Filter filter, boolean branch) {
 		super();
 		this.filter = filter;
@@ -86,6 +88,7 @@ public final class SAC implements Filter {
 		for (Variable v : problem.getVariables()) {
 			staticVOrder[cpt++] = v;
 		}
+
 		// indexQueues = new HashMap<Integer, SortedSet<Integer>>();
 		// for (Variable variable : problem.getVariables()) {
 		// final SortedSet<Integer> indexQueue = new TreeSet<Integer>();
@@ -142,6 +145,7 @@ public final class SAC implements Filter {
 
 	private boolean reduce(final int level) {
 		final Problem problem = this.problem;
+		doneSomething = false;
 
 		logger.info("SAC");
 
@@ -169,11 +173,9 @@ public final class SAC implements Filter {
 			nbSingletonTests++;
 			if (filter.reduceAfter(level + 1, variable)) {
 
-				if (branch) {
-					if (buildBranch(level + 1)) {
-						reduceToSolution(level);
-						return true;
-					}
+				if (branch && buildBranch(level + 1)) {
+					reduceToSolution(level);
+					return true;
 				}
 
 				final int nbNg = problem.addNoGoods();
@@ -198,7 +200,7 @@ public final class SAC implements Filter {
 					return false;
 				}
 			}
-
+			doneSomething |= changedGraph;
 			// setValueHeuristic(variable, index);
 
 			if (changedGraph && !filter.reduceAfter(level, variable)) {
@@ -366,5 +368,9 @@ public final class SAC implements Filter {
 
 	public String toString() {
 		return "SAC-" + (branch ? '3' : '1');
+	}
+
+	public boolean hasDoneSomething() {
+		return doneSomething ;
 	}
 }
