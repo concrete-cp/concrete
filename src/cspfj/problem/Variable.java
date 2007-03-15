@@ -26,7 +26,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
-import cspfj.TabuManager;
 import cspfj.constraint.Constraint;
 import cspfj.util.BooleanArray;
 import cspfj.util.OrderedChain;
@@ -475,27 +474,8 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 
 	private int bestIndex;
 
-	public int bestImprovment(final TabuManager tabuManager,
-			final float aspiration, final TieManager tieManager) {
-		final int bestIndex = this.bestIndex;
-		if (bestIndex >= 0 && !tabuManager.isTabu(id, bestIndex)) {
-			return bestIndex;
-		}
-
-		tieManager.clear();
-		for (int i = domain.length; --i >= 0;) {
-			if (removed[i] >= 0) {
-				continue;
-			}
-
-			final int conflicts = getConflicts(i);
-			if (conflicts < aspiration || !tabuManager.isTabu(id, i)) {
-				tieManager.newValue(i, conflicts);
-			}
-		}
-
-		this.bestIndex = tieManager.getBestValue();
-		return this.bestIndex;
+	public int bestImprovment() {
+		return bestIndex;
 	}
 
 	public int getImprovment(final int index) {
@@ -567,8 +547,8 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 		for (int i = domain.length; --i >= 0;) {
 			assignedIndex = i;
 
-			conflicts[constraintPosition][i] = !constraint.checkFirstWith(
-					position, i);
+			conflicts[constraintPosition][i] = constraint.checkFirstWith(
+					position, i) ^ true;
 
 		}
 
@@ -634,7 +614,8 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 
 	public void updateBestIndex(final TieManager tieManager) {
 		tieManager.clear();
-
+		final int[] removed = this.removed;
+		final int[] nbConflicts = this.nbConflicts;
 		for (int i = domain.length; --i >= 0;) {
 			if (removed[i] >= 0) {
 				continue;
@@ -645,6 +626,26 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 			tieManager.newValue(i, nbc);
 		}
 		bestIndex = tieManager.getBestValue();
+	}
+
+	public void updateBestIndexAfter(final Constraint constraint,
+			final TieManager tieManager) {
+		tieManager.clear();
+		final int[] removed = this.removed;
+		final int[] nbConflicts = this.nbConflicts;
+		final boolean[] conflicts = this.conflicts[constraint
+				.getPositionInVariable(this)];
+
+		for (int i = domain.length; --i >= 0;) {
+			if (removed[i] >= 0) {
+				continue;
+			}
+			if (conflicts[i]) {
+				nbConflicts[i]++;
+			}
+			tieManager.newValue(i, nbConflicts[i]);
+			bestIndex = tieManager.getBestValue();
+		}
 	}
 
 	public Variable clone() throws CloneNotSupportedException {

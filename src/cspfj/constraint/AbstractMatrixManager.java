@@ -75,7 +75,6 @@ public abstract class AbstractMatrixManager implements Cloneable {
 		}
 
 		if (set(tuple, false)) {
-			logger.fine("Removed " + Arrays.toString(tuple) + " from " + Arrays.toString(variables));
 			return true;
 		}
 		return false;

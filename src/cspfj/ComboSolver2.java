@@ -78,13 +78,13 @@ public class ComboSolver2 extends AbstractSolver {
 		RunMCSolver mCSolver = null;
 		try {
 			mCSolver = new RunMCSolver(problem.clone(), getResultHandler(),
-					reverse, solutionHandler);
+					solutionHandler);
 		} catch (CloneNotSupportedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-//		mCSolver.setPriority(Thread.MIN_PRIORITY);
-//		macSolver.setPriority(Thread.MAX_PRIORITY);
+		// mCSolver.setPriority(Thread.MIN_PRIORITY);
+		// macSolver.setPriority(Thread.MAX_PRIORITY);
 		macSolver.start();
 		mCSolver.start();
 
@@ -96,10 +96,10 @@ public class ComboSolver2 extends AbstractSolver {
 			e.printStackTrace();
 		}
 		chronometer.validateChrono();
-		
-		statistics("mac-cpu", macSolver.getUserTime()) ;
+
+		statistics("mac-cpu", macSolver.getUserTime());
 		statistics("mc-cpu", mCSolver.getUserTime());
-		
+
 		if (solution == null) {
 			return false;
 		} else {

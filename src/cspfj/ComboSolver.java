@@ -32,7 +32,7 @@ public class ComboSolver extends AbstractSolver {
 			Heuristic heuristic, boolean reverse) {
 		super(prob, resultHandler);
 		macSolver = new MACSolver(prob, resultHandler, heuristic, reverse);
-		mCSolver = new MinConflictsSolver(prob, resultHandler, reverse);
+		mCSolver = new MinConflictsSolver(prob, resultHandler);
 		this.heuristic = heuristic;
 
 	}

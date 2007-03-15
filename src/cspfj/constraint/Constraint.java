@@ -550,7 +550,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		increaseWeight();
 
 		for (int p = arity; --p >= 0;) {
-			involvedVariables[p].updateBestIndex(tieManager);
+			involvedVariables[p].updateBestIndexAfter(this, tieManager);
 		}
 	}
 

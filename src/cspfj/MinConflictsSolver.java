@@ -30,17 +30,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
-import cspfj.constraint.Weight;
 import cspfj.exception.MaxBacktracksExceededException;
+import cspfj.filter.AC3_P;
+import cspfj.filter.Filter;
+import cspfj.filter.SAC;
+import cspfj.heuristic.Pair;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.RandomOrder;
 import cspfj.util.TieManager;
-import cspfj.filter.AC3_P;
-import cspfj.filter.AC3_R;
-import cspfj.filter.Filter;
-import cspfj.filter.SAC;
-import cspfj.heuristic.Pair;
 
 public final class MinConflictsSolver extends AbstractSolver {
 
@@ -49,19 +47,26 @@ public final class MinConflictsSolver extends AbstractSolver {
 	private final static Logger logger = Logger
 			.getLogger("cspfj.solver.MinConflictsSolver");
 
-	private final TabuManager tabuManager;
+	// private final TabuManager tabuManager;
 
 	private final boolean max;
 
 	private final static boolean FINE = logger.isLoggable(Level.FINE);
 
-	public MinConflictsSolver(Problem prob, ResultHandler resultHandler,
-			boolean reverse) {
+	private final int[] flipCounter;
+
+	private final TieManager tieManager;
+
+	public MinConflictsSolver(Problem prob, ResultHandler resultHandler) {
 		super(prob, resultHandler);
 
 		max = resultHandler.displaySolutions;
 
-		tabuManager = new TabuManager(problem, 10);
+		// tabuManager = new TabuManager(problem, 10);
+
+		flipCounter = new int[prob.getMaxVId() + 1];
+		Arrays.fill(flipCounter, 0);
+		tieManager = new TieManager(random);
 
 	}
 
@@ -97,7 +102,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 		solution(solution, problem.getNbConstraints() - nbConflicts);
 	}
 
-	private void init(final Variable variable, final TieManager tieManager) {
+	private void init(final Variable variable) {
 		if (variable.isAssigned()) {
 			return;
 		}
@@ -120,11 +125,11 @@ public final class MinConflictsSolver extends AbstractSolver {
 		}
 
 		for (Variable v : randomOrder) {
-			init(v, tieManager);
+			init(v);
 		}
 	}
 
-	private void init(final TieManager tieManager) {
+	private void init() {
 		final Set<Variable> randomOrder = new TreeSet<Variable>(
 				new RandomOrder<Variable>(random));
 
@@ -133,7 +138,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 		}
 
 		for (Variable v : randomOrder) {
-			init(v, tieManager);
+			init(v);
 		}
 
 		for (Variable v : problem.getVariables()) {
@@ -156,8 +161,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 	// return improvment;
 	// }
 
-	private long findBest(final TieManager tieManager,
-			final TieManager tieManager2, final int aspiration) {
+	private long findBest(final TieManager tieManager) {
 		Variable bestVariable = null;
 
 		tieManager.clear();
@@ -169,8 +173,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 				continue;
 			}
 
-			final int index = v.bestImprovment(tabuManager, aspiration,
-					tieManager2);
+			final int index = v.bestImprovment();
 			if (index < 0) {
 				continue;
 			}
@@ -185,11 +188,12 @@ public final class MinConflictsSolver extends AbstractSolver {
 		if (bestVariable == null) {
 			return -1;
 		}
+		flipCounter[bestVariable.getId()]++;
 		return Pair.pair(bestVariable, tieManager.getBestValue(), problem);
 
 	}
 
-	private int localMinimum(final TieManager tieManager) {
+	private int localMinimum() {
 		int improvment = 0;
 
 		if (FINE) {
@@ -206,16 +210,15 @@ public final class MinConflictsSolver extends AbstractSolver {
 		return improvment;
 	}
 
-	private int bestWalk(final TieManager tieManager,
-			final TieManager tieManager2, final int aspiration) {
+	private int bestWalk(final TieManager tieManager) {
 
-		final long pair = findBest(tieManager, tieManager2, aspiration);
+		final long pair = findBest(tieManager);
 
-		if (pair < 0) {
-			logger.fine("Cleaning tabu list");
-			tabuManager.clean();
-			return 0;
-		}
+		// if (pair < 0) {
+		// logger.fine("Cleaning tabu list");
+		// tabuManager.clean();
+		// return 0;
+		// }
 
 		final int bestVariableId = Pair.variableId(pair, problem);
 		final Variable bestVariable = problem.getVariable(bestVariableId);
@@ -225,17 +228,17 @@ public final class MinConflictsSolver extends AbstractSolver {
 		int improvment = 0;
 
 		if (bestVariable.getImprovment(bestIndex) >= 0) {
-			return localMinimum(tieManager2);
+			return localMinimum();
 		}
 
-		tabuManager.push(bestVariableId, bestIndex);
+		// tabuManager.push(bestVariableId, bestIndex);
 
 		improvment += bestVariable.getImprovment(bestIndex);
 
 		if (FINE) {
-			logger.fine(bestVariable + " <- " + tieManager.getBestValue());
+			logger.fine(bestVariable + " <- " + bestIndex);
 		}
-		bestVariable.reAssign(bestIndex, tieManager2);
+		bestVariable.reAssign(bestIndex, tieManager);
 		incrementNbAssignments();
 		return improvment;
 	}
@@ -246,17 +249,13 @@ public final class MinConflictsSolver extends AbstractSolver {
 		final Problem problem = this.problem;
 		// final float randomWalk = this.rWProba;
 
-		final TieManager tieManager = new TieManager(random);
-
-		init(tieManager);
+		init();
 
 		int nbConflicts = weightedConflicts();
 
 		logger.fine("Searching...");
 
 		int bestEver = Integer.MAX_VALUE;
-
-		final TieManager tieManager2 = new TieManager(random);
 
 		while (nbConflicts > 0) {
 			if (nbConflicts < bestEver) {
@@ -275,8 +274,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 			// if (random.nextFloat() < randomWalk) {
 			// nbConflicts += randomWalk();
 			// } else {
-			nbConflicts += bestWalk(tieManager, tieManager2, bestEver
-					- nbConflicts);
+			nbConflicts += bestWalk(tieManager);
 			// }
 
 			assert nbConflicts == weightedConflicts() : nbConflicts + "/="
@@ -327,6 +325,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 		do {
 			setMaxBacktracks(localBT);
 			logger.info("Run with " + localBT + " flips");
+			final int nbAssign = getNbAssignments();
 			float localTime = -chronometer.getCurrentChrono();
 			try {
 				minConflicts();
@@ -346,22 +345,31 @@ public final class MinConflictsSolver extends AbstractSolver {
 			// chronometer.validateChrono();
 			// throw new IOException();
 			// }
-			
-//			final Set<Constraint> set = new TreeSet<Constraint>(new Weight(false)) ;
-//			set.addAll(Arrays.asList(problem.getConstraints()));
-			
-			final StringBuffer sb = new StringBuffer() ;
-			for (Constraint c : problem.getConstraints()) {
-				sb.append(c).append(':').append(c.getWeight()).append('\n');
-				c.setWeight(Math.max(1, c.getWeight()
-						/ problem.getNbConstraints()));
-			}
-			logger.info(sb.toString());
+
+			// final Set<Constraint> set = new TreeSet<Constraint>(new
+			// Weight(false)) ;
+			// set.addAll(Arrays.asList(problem.getConstraints()));
+
+			// final StringBuffer sb = new StringBuffer();
+			 for (Constraint c : problem.getConstraints()) {
+//			 sb.append(c).append(':').append(c.getWeight()).append('\n');
+			 c.setWeight(Math.max(1, c.getWeight()
+			 / problem.getNbConstraints()));
+			 }
+			// logger.info(sb.toString());
 			logger.info("Took " + localTime + " s (" + (localBT / localTime)
-					+ " flips per second), " + getNbAssignments()
+					+ " flips per second), " + (getNbAssignments() - nbAssign)
 					+ " assignments made");
 			// localBT *= 1.5;
 		} while (!resolved);
+
+		// for (Variable v : problem.getVariables()) {
+		// int w = 0;
+		// for (Constraint c : v.getInvolvingConstraints()) {
+		// w += c.getWeight();
+		// }
+		// logger.info(v + " : " + w + ", " + flipCounter[v.getId()]);
+		// }
 
 		chronometer.validateChrono();
 		return true;
@@ -376,9 +384,8 @@ public final class MinConflictsSolver extends AbstractSolver {
 		final StringBuffer sb = new StringBuffer(200);
 
 		sb.append("\t\t\t<solver>").append(this).append(
-				"</solver>\n\t\t\t<tabu>").append(tabuManager.getSize())
-				.append("</tabu>\n\t\t\t<maxCSP>").append(max).append(
-						"</maxCSP>\n");
+				"</solver>\n\t\t\t<tabu>").append("</tabu>\n\t\t\t<maxCSP>")
+				.append(max).append("</maxCSP>\n");
 		// "</filter>\n\t\t\t<randomWalk>").append(rWProba).append(
 		return sb.toString();
 	}

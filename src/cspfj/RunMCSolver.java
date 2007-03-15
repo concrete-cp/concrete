@@ -18,13 +18,13 @@ public class RunMCSolver extends AbstractRunSolver {
 	final private int maxFlips;
 
 	public RunMCSolver(final Problem problem,
-			final ResultHandler resultHandler, final boolean reverse,
+			final ResultHandler resultHandler,
 			final SolutionHandler solutionHandler) {
 		super(problem, solutionHandler);
-		mCSolver = new MinConflictsSolver(problem, resultHandler, reverse);
+		mCSolver = new MinConflictsSolver(problem, resultHandler);
 		setSolver(mCSolver);
 		maxFlips = problem.getMaxFlips();
-		
+
 	}
 
 	@Override
