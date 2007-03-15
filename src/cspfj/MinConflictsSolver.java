@@ -295,7 +295,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 	}
 
 	public boolean runSolver() throws IOException {
-		final int localBT = problem.getMaxFlips();
+		final int localBT = 55000;//problem.getMaxFlips();
 		boolean resolved = false;
 		System.gc();
 		chronometer.startChrono();
@@ -350,26 +350,30 @@ public final class MinConflictsSolver extends AbstractSolver {
 			// Weight(false)) ;
 			// set.addAll(Arrays.asList(problem.getConstraints()));
 
-			// final StringBuffer sb = new StringBuffer();
-			 for (Constraint c : problem.getConstraints()) {
-//			 sb.append(c).append(':').append(c.getWeight()).append('\n');
-			 c.setWeight(Math.max(1, c.getWeight()
-			 / problem.getNbConstraints()));
-			 }
-			// logger.info(sb.toString());
+			final StringBuffer sb = new StringBuffer();
+
+			for (Variable v : problem.getVariables()) {
+				int w = 0;
+				for (Constraint c : v.getInvolvingConstraints()) {
+					w += c.getWeight();
+				}
+				sb.append(v).append(" : ").append(w).append(", ").append(
+						flipCounter[v.getId()]).append('\n');
+			}
+
+			sb.append('\n');
+
+			for (Constraint c : problem.getConstraints()) {
+				sb.append(c).append(" : ").append(c.getWeight()).append('\n');
+				c.setWeight(Math.max(1, c.getWeight()
+						/ problem.getNbConstraints()));
+			}
+			logger.info(sb.toString());
 			logger.info("Took " + localTime + " s (" + (localBT / localTime)
 					+ " flips per second), " + (getNbAssignments() - nbAssign)
 					+ " assignments made");
 			// localBT *= 1.5;
 		} while (!resolved);
-
-		// for (Variable v : problem.getVariables()) {
-		// int w = 0;
-		// for (Constraint c : v.getInvolvingConstraints()) {
-		// w += c.getWeight();
-		// }
-		// logger.info(v + " : " + w + ", " + flipCounter[v.getId()]);
-		// }
 
 		chronometer.validateChrono();
 		return true;
@@ -384,8 +388,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 		final StringBuffer sb = new StringBuffer(200);
 
 		sb.append("\t\t\t<solver>").append(this).append(
-				"</solver>\n\t\t\t<tabu>").append("</tabu>\n\t\t\t<maxCSP>")
-				.append(max).append("</maxCSP>\n");
+				"</solver>\n\t\t\t<maxCSP>").append(max).append("</maxCSP>\n");
 		// "</filter>\n\t\t\t<randomWalk>").append(rWProba).append(
 		return sb.toString();
 	}
