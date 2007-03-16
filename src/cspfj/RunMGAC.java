@@ -8,19 +8,19 @@ import cspfj.heuristic.Heuristic;
 import cspfj.problem.Problem;
 import cspfj.util.Chronometer;
 
-public class RunMACSolver extends AbstractRunSolver {
+public class RunMGAC extends AbstractRunSolver {
 
-	private final MACSolver macSolver;
+	private final MGAC macSolver;
 
 	final private static Logger logger = Logger.getLogger("cspfj.RunMACSolver");
 
 	final private int bt;
 
-	public RunMACSolver(final Problem problem,
+	public RunMGAC(final Problem problem,
 			final ResultHandler resultHandler, final Heuristic heuristic,
 			final boolean reverse, final SolutionHandler solutionHandler) {
 		super(problem, solutionHandler);
-		macSolver = new MACSolver(problem, resultHandler, heuristic, reverse);
+		macSolver = new MGAC(problem, resultHandler, heuristic, reverse);
 		setSolver(macSolver);
 		bt = problem.getMaxBacktracks();
 	}

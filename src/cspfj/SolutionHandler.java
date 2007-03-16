@@ -12,17 +12,21 @@ public final class SolutionHandler {
 
 	private final Map<Integer, Integer> weights = new HashMap<Integer, Integer>();
 
-	public synchronized Map<Variable, Integer> getSolution() throws InterruptedException {
+	public Map<Variable, Integer> getSolution() throws InterruptedException {
 		while (!result) {
-			wait();
+			synchronized (this) {
+				wait();
+			}
 		}
 		return solution;
 	}
 
-	public synchronized void setSolution(final Map<Variable, Integer> solution) {
+	public void setSolution(final Map<Variable, Integer> solution) {
 		result = true;
 		this.solution = solution;
-		notifyAll();
+		synchronized (this) {
+			notifyAll();
+		}
 	}
 
 	public void addWeight(final int cid, final int weight) {

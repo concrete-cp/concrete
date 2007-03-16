@@ -26,6 +26,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
+import cspfj.WCManager;
 import cspfj.constraint.Constraint;
 import cspfj.util.BooleanArray;
 import cspfj.util.OrderedChain;
@@ -66,9 +67,6 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 
 	private int[] beforeAssignDomain;
 
-	private boolean[][] conflicts;
-
-	private int[] nbConflicts;
 
 	/**
 	 * Taille actuelle du domaine.
@@ -94,6 +92,7 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 
 	private final String name;
 
+	
 	// private static final Logger logger = Logger.getLogger("cspfj.Variable");
 
 	public Variable(final int[] dom) {
@@ -130,7 +129,7 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 
 		absents = new UnOrderedChain(domain.length);
 
-		nbConflicts = new int[domain.length];
+
 	}
 
 	/**
@@ -176,8 +175,6 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 		for (int i = constraints.length; --i >= 0;) {
 			constraints[i].setPositionInVariable(this, i);
 		}
-
-		conflicts = new boolean[constraints.length][domain.length];
 	}
 
 	/**
@@ -247,21 +244,7 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 
 	}
 
-	/**
-	 * @param index
-	 *            La valeur à assigner
-	 */
-	public void reAssign(final int index, final TieManager tieManager) {
-		assignedIndex = index;
-		for (Constraint c : constraints) {
-			for (Variable n : c.getInvolvedVariables()) {
-				if (n != this) {
-					n.updateConflicts(c, c.getPosition(n));
-					n.updateBestIndex(tieManager);
-				}
-			}
-		}
-	}
+
 
 	public void firstAssign(final int index) {
 		assignedIndex = index;
@@ -472,99 +455,9 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 		return index;
 	}
 
-	private int bestIndex;
 
-	public int bestImprovment() {
-		return bestIndex;
-	}
 
-	public int getImprovment(final int index) {
-		return getConflicts(index) - getConflicts(assignedIndex);
-	}
-
-	private int nbConflicts(final int index) {
-		assert index < domain.length : index + " >= " + domain.length;
-		int conflicts = 0;
-		for (int i = constraints.length; --i >= 0;) {
-			if (this.conflicts[i][index]) {
-				conflicts += constraints[i].getWeight();
-			}
-		}
-		return conflicts;
-	}
-
-	private int getConflicts(final int index) {
-		return nbConflicts[index];
-	}
-
-	public int getBestInitialIndex(final TieManager tieManager) {
-		if (assigned) {
-			return assignedIndex;
-		}
-
-		final int[] removed = this.removed;
-		final Constraint[] constraints = this.constraints;
-
-		tieManager.clear();
-		assigned = true;
-		for (int i = domain.length; --i >= 0;) {
-			if (removed[i] >= 0) {
-				continue;
-			}
-
-			assignedIndex = i;
-
-			int indexConflicts = 0;
-
-			for (Constraint c : constraints) {
-				if (c.getArity() > Constraint.MAX_ARITY) {
-					continue;
-				}
-
-				if (!c.findValidTuple(this, i)) {
-					indexConflicts += c.getWeight();
-				}
-
-			}
-
-			tieManager.newValue(i, indexConflicts);
-
-		}
-
-		assignedIndex = -1;
-		assigned = false;
-
-		bestIndex = tieManager.getBestValue();
-		return bestIndex;
-	}
-
-	public void updateConflicts(final Constraint constraint, final int position) {
-
-		final int oldIndex = assignedIndex;
-
-		final int constraintPosition = constraint.getPositionInVariable(this);
-
-		for (int i = domain.length; --i >= 0;) {
-			assignedIndex = i;
-
-			conflicts[constraintPosition][i] = constraint.checkFirstWith(
-					position, i) ^ true;
-
-		}
-
-		assignedIndex = oldIndex;
-	}
-
-	public void initNbConflicts(final TieManager tieManager) {
-		for (Constraint c : constraints) {
-			updateConflicts(c, c.getPosition(this));
-		}
-		updateBestIndex(tieManager);
-	}
-
-	public int getCurrentConflicts() {
-		return getConflicts(assignedIndex);
-	}
+	
 
 	public int getRemovedLevel(final int index) {
 		return removed[index];
@@ -612,41 +505,6 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 		return chain.getPrev(index);
 	}
 
-	public void updateBestIndex(final TieManager tieManager) {
-		tieManager.clear();
-		final int[] removed = this.removed;
-		final int[] nbConflicts = this.nbConflicts;
-		for (int i = domain.length; --i >= 0;) {
-			if (removed[i] >= 0) {
-				continue;
-			}
-			final int nbc = nbConflicts(i);
-			nbConflicts[i] = nbc;
-
-			tieManager.newValue(i, nbc);
-		}
-		bestIndex = tieManager.getBestValue();
-	}
-
-	public void updateBestIndexAfter(final Constraint constraint,
-			final TieManager tieManager) {
-		tieManager.clear();
-		final int[] removed = this.removed;
-		final int[] nbConflicts = this.nbConflicts;
-		final boolean[] conflicts = this.conflicts[constraint
-				.getPositionInVariable(this)];
-
-		for (int i = domain.length; --i >= 0;) {
-			if (removed[i] >= 0) {
-				continue;
-			}
-			if (conflicts[i]) {
-				nbConflicts[i]++;
-			}
-			tieManager.newValue(i, nbConflicts[i]);
-			bestIndex = tieManager.getBestValue();
-		}
-	}
 
 	public Variable clone() throws CloneNotSupportedException {
 		final Variable variable = (Variable) super.clone();
@@ -660,9 +518,13 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 
 		variable.absents = absents.clone();
 
-		variable.nbConflicts = nbConflicts.clone();
-
 		return variable;
 	}
+	
+	public void reAssign(final int index) {
+		assignedIndex = index ;
+	}
+	
+
 
 }

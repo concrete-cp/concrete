@@ -10,7 +10,7 @@ import cspfj.heuristic.Heuristic;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
-public class ComboSolver2 extends AbstractSolver {
+public class Combo2 extends AbstractSolver {
 
 	final private Heuristic heuristic;
 
@@ -18,7 +18,7 @@ public class ComboSolver2 extends AbstractSolver {
 
 	final private static Logger logger = Logger.getLogger("cspfj.ComboSolver2");
 
-	public ComboSolver2(Problem prob, ResultHandler resultHandler,
+	public Combo2(Problem prob, ResultHandler resultHandler,
 			Heuristic heuristic, boolean reverse) {
 		super(prob, resultHandler);
 
@@ -66,18 +66,18 @@ public class ComboSolver2 extends AbstractSolver {
 
 		final SolutionHandler solutionHandler = new SolutionHandler();
 
-		RunMACSolver macSolver = null;
+		RunMGAC macSolver = null;
 		// try {
-		macSolver = new RunMACSolver(problem, getResultHandler(), heuristic,
+		macSolver = new RunMGAC(problem, getResultHandler(), heuristic,
 				reverse, solutionHandler);
 		// } catch (CloneNotSupportedException e) {
 		// // TODO Auto-generated catch block
 		// e.printStackTrace();
 		// }
 		statistics("prepro-cpu", chronometer.getCurrentChrono());
-		RunMCSolver mCSolver = null;
+		RunWMC mCSolver = null;
 		try {
-			mCSolver = new RunMCSolver(problem.clone(), getResultHandler(),
+			mCSolver = new RunWMC(problem.clone(), getResultHandler(),
 					solutionHandler);
 		} catch (CloneNotSupportedException e) {
 			// TODO Auto-generated catch block
@@ -102,11 +102,10 @@ public class ComboSolver2 extends AbstractSolver {
 
 		if (solution == null) {
 			return false;
-		} else {
-			this.setSolution(solution);
-
-			return true;
 		}
+		this.setSolution(solution);
+		return true;
+
 	}
 
 }

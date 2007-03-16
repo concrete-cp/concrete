@@ -62,7 +62,7 @@ public abstract class AbstractRunSolver extends Thread {
 								+ localTime
 								+ " s ("
 								+ (solver.getMaxBacktracks()
-										* (int) Math.floor(maxTries) / localTime)
+										/ localTime)
 								+ " flips per second), " + assign
 								+ " assignments made");
 

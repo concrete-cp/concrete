@@ -34,7 +34,7 @@ import cspfj.heuristic.Pair;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
-public final class MACSolver extends AbstractSolver {
+public final class MGAC extends AbstractSolver {
 
 	private final Filter filter;
 
@@ -50,7 +50,7 @@ public final class MACSolver extends AbstractSolver {
 
 	// private int maxNoGoodSize;
 
-	public MACSolver(Problem prob, ResultHandler resultHandler,
+	public MGAC(Problem prob, ResultHandler resultHandler,
 			Heuristic heuristic, boolean reverse) {
 		super(prob, resultHandler);
 		filter = reverse ? new AC3_R(problem) : new AC3_P(problem);

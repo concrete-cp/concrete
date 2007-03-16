@@ -13,11 +13,11 @@ import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.constraint.Constraint;
 
-public class ComboSolver extends AbstractSolver {
+public class Combo extends AbstractSolver {
 
-	private final MinConflictsSolver mCSolver;
+	private final WMC mCSolver;
 
-	private final MACSolver macSolver;
+	private final MGAC macSolver;
 
 	private final Heuristic heuristic;
 
@@ -28,11 +28,11 @@ public class ComboSolver extends AbstractSolver {
 
 	// private final NoGoodManager noGoodManager;
 
-	public ComboSolver(Problem prob, ResultHandler resultHandler,
+	public Combo(Problem prob, ResultHandler resultHandler,
 			Heuristic heuristic, boolean reverse) {
 		super(prob, resultHandler);
-		macSolver = new MACSolver(prob, resultHandler, heuristic, reverse);
-		mCSolver = new MinConflictsSolver(prob, resultHandler);
+		macSolver = new MGAC(prob, resultHandler, heuristic, reverse);
+		mCSolver = new WMC(prob, resultHandler);
 		this.heuristic = heuristic;
 
 	}

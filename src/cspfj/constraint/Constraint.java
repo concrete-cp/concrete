@@ -541,18 +541,18 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		this.weight += weight;
 	}
 
-	public final void increaseWeightAndUpdate(final TieManager tieManager) {
-		// final Variable[] involvedVariables = this.involvedVariables;
-		// for (int p = arity; --p >= 0;) {
-		// involvedVariables[p].removeConflicts(this, p);
-		// }
-
-		increaseWeight();
-
-		for (int p = arity; --p >= 0;) {
-			involvedVariables[p].updateBestIndexAfter(this, tieManager);
-		}
-	}
+//	public final void increaseWeightAndUpdate(final TieManager tieManager) {
+//		// final Variable[] involvedVariables = this.involvedVariables;
+//		// for (int p = arity; --p >= 0;) {
+//		// involvedVariables[p].removeConflicts(this, p);
+//		// }
+//
+//		increaseWeight();
+//
+//		for (int p = arity; --p >= 0;) {
+//			involvedVariables[p].updateBestIndexAfter(this, tieManager);
+//		}
+//	}
 
 	public final int getWeight() {
 		return weight;

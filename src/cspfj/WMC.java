@@ -34,13 +34,12 @@ import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.AC3_P;
 import cspfj.filter.Filter;
 import cspfj.filter.SAC;
-import cspfj.heuristic.Pair;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.RandomOrder;
 import cspfj.util.TieManager;
 
-public final class MinConflictsSolver extends AbstractSolver {
+public final class WMC extends AbstractSolver {
 
 	private final static Random random = new Random(0);
 
@@ -57,7 +56,9 @@ public final class MinConflictsSolver extends AbstractSolver {
 
 	private final TieManager tieManager;
 
-	public MinConflictsSolver(Problem prob, ResultHandler resultHandler) {
+	private final WCManager[] wcManagers;
+
+	public WMC(Problem prob, ResultHandler resultHandler) {
 		super(prob, resultHandler);
 
 		max = resultHandler.displaySolutions;
@@ -67,6 +68,11 @@ public final class MinConflictsSolver extends AbstractSolver {
 		flipCounter = new int[prob.getMaxVId() + 1];
 		Arrays.fill(flipCounter, 0);
 		tieManager = new TieManager(random);
+
+		wcManagers = new WCManager[prob.getMaxVId() + 1];
+		for (Variable v : prob.getVariables()) {
+			wcManagers[v.getId()] = new WCManager(v, tieManager);
+		}
 
 	}
 
@@ -102,12 +108,14 @@ public final class MinConflictsSolver extends AbstractSolver {
 		solution(solution, problem.getNbConstraints() - nbConflicts);
 	}
 
-	private void init(final Variable variable) {
+	private void init(final WCManager wcManager) {
+		final Variable variable = wcManager.getVariable();
+
 		if (variable.isAssigned()) {
 			return;
 		}
 
-		final int index = variable.getBestInitialIndex(tieManager);
+		final int index = wcManager.getBestInitialIndex();
 
 		// variable.restoreLevel(1);
 
@@ -117,32 +125,28 @@ public final class MinConflictsSolver extends AbstractSolver {
 		}
 		variable.firstAssign(index);
 
-		final Set<Variable> randomOrder = new TreeSet<Variable>(
-				new RandomOrder<Variable>(random));
+		final Set<WCManager> randomOrder = new TreeSet<WCManager>(
+				new RandomOrder<WCManager>(random));
 
 		for (Variable n : variable.getNeighbours()) {
-			randomOrder.add(n);
+			randomOrder.add(wcManagers[n.getId()]);
 		}
 
-		for (Variable v : randomOrder) {
-			init(v);
+		for (WCManager wcm : randomOrder) {
+			init(wcm);
 		}
 	}
 
 	private void init() {
-		final Set<Variable> randomOrder = new TreeSet<Variable>(
-				new RandomOrder<Variable>(random));
+		final Set<WCManager> randomOrder = new TreeSet<WCManager>(
+				new RandomOrder<WCManager>(random));
 
 		for (Variable v : problem.getVariables()) {
-			randomOrder.add(v);
+			randomOrder.add(wcManagers[v.getId()]);
 		}
 
-		for (Variable v : randomOrder) {
+		for (WCManager v : randomOrder) {
 			init(v);
-		}
-
-		for (Variable v : problem.getVariables()) {
-			v.initNbConflicts(tieManager);
 		}
 	}
 
@@ -161,35 +165,31 @@ public final class MinConflictsSolver extends AbstractSolver {
 	// return improvment;
 	// }
 
-	private long findBest(final TieManager tieManager) {
+	private Variable findBest() {
 		Variable bestVariable = null;
-
+		final TieManager tieManager = this.tieManager;
 		tieManager.clear();
 
 		int bestImp = tieManager.getBestEvaluation();
 
 		for (Variable v : problem.getVariables()) {
-			if (v.getCurrentConflicts() <= -bestImp) {
+			final int vId = v.getId() ;
+			final WCManager wc = wcManagers[vId];
+			if (wc.getCurrentConflicts() <= -bestImp) {
 				continue;
 			}
 
-			final int index = v.bestImprovment();
-			if (index < 0) {
-				continue;
-			}
-
-			if (tieManager.newValue(index, v.getImprovment(index))) {
+			final int imp = wc.getBestImprovment();
+			if (tieManager.newValue(imp)) {
 				bestVariable = v;
-				bestImp = tieManager.getBestEvaluation();
+				bestImp = imp;
 			}
 
 		}
 
-		if (bestVariable == null) {
-			return -1;
-		}
+		
 		flipCounter[bestVariable.getId()]++;
-		return Pair.pair(bestVariable, tieManager.getBestValue(), problem);
+		return bestVariable;
 
 	}
 
@@ -203,42 +203,38 @@ public final class MinConflictsSolver extends AbstractSolver {
 		for (Constraint c : problem.getConstraints()) {
 			if (!c.checkFirst()) {
 				improvment++;
-				c.increaseWeightAndUpdate(tieManager);
+				c.increaseWeight();
+				for (Variable v : c.getInvolvedVariables()) {
+					wcManagers[v.getId()].updateAfterIncrement(c);
+				}
 			}
 		}
 
 		return improvment;
 	}
 
-	private int bestWalk(final TieManager tieManager) {
-
-		final long pair = findBest(tieManager);
-
-		// if (pair < 0) {
-		// logger.fine("Cleaning tabu list");
-		// tabuManager.clean();
-		// return 0;
-		// }
-
-		final int bestVariableId = Pair.variableId(pair, problem);
-		final Variable bestVariable = problem.getVariable(bestVariableId);
-
-		final int bestIndex = Pair.index(pair, problem);
+	private int bestWalk() {
+		final Variable bestVariable = findBest();
+		final WCManager wc = wcManagers[bestVariable.getId()];
+		
+		final int bestIndex = wc.getBestIndex();
 
 		int improvment = 0;
 
-		if (bestVariable.getImprovment(bestIndex) >= 0) {
+		
+
+		if (wc.getBestImprovment() >= 0) {
 			return localMinimum();
 		}
 
 		// tabuManager.push(bestVariableId, bestIndex);
 
-		improvment += bestVariable.getImprovment(bestIndex);
+		improvment += wc.getBestImprovment();
 
 		if (FINE) {
 			logger.fine(bestVariable + " <- " + bestIndex);
 		}
-		bestVariable.reAssign(bestIndex, tieManager);
+		reAssign(bestVariable, bestIndex);
 		incrementNbAssignments();
 		return improvment;
 	}
@@ -274,7 +270,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 			// if (random.nextFloat() < randomWalk) {
 			// nbConflicts += randomWalk();
 			// } else {
-			nbConflicts += bestWalk(tieManager);
+			nbConflicts += bestWalk();
 			// }
 
 			assert nbConflicts == weightedConflicts() : nbConflicts + "/="
@@ -295,7 +291,7 @@ public final class MinConflictsSolver extends AbstractSolver {
 	}
 
 	public boolean runSolver() throws IOException {
-		final int localBT = 55000;//problem.getMaxFlips();
+		final int localBT = problem.getMaxFlips();
 		boolean resolved = false;
 		System.gc();
 		chronometer.startChrono();
@@ -350,28 +346,34 @@ public final class MinConflictsSolver extends AbstractSolver {
 			// Weight(false)) ;
 			// set.addAll(Arrays.asList(problem.getConstraints()));
 
-			final StringBuffer sb = new StringBuffer();
+			if (logger.isLoggable(Level.INFO)) {
+				final StringBuffer sb = new StringBuffer();
 
-			for (Variable v : problem.getVariables()) {
-				int w = 0;
-				for (Constraint c : v.getInvolvingConstraints()) {
-					w += c.getWeight();
+				for (Variable v : problem.getVariables()) {
+					int w = 0;
+					for (Constraint c : v.getInvolvingConstraints()) {
+						w += c.getWeight();
+					}
+					sb.append(v).append(" : ").append(w).append(", ").append(
+							flipCounter[v.getId()]).append('\n');
 				}
-				sb.append(v).append(" : ").append(w).append(", ").append(
-						flipCounter[v.getId()]).append('\n');
-			}
 
-			sb.append('\n');
+				sb.append('\n');
 
-			for (Constraint c : problem.getConstraints()) {
-				sb.append(c).append(" : ").append(c.getWeight()).append('\n');
-				c.setWeight(Math.max(1, c.getWeight()
-						/ problem.getNbConstraints()));
+				for (Constraint c : problem.getConstraints()) {
+					sb.append(c).append(" : ").append(c.getWeight()).append(
+							'\n');
+					c.setWeight(Math.max(1, c.getWeight()
+							/ problem.getNbConstraints()));
+				}
+				logger.info(sb.toString());
+				logger
+						.info("Took " + localTime + " s ("
+								+ (localBT / localTime)
+								+ " flips per second), "
+								+ (getNbAssignments() - nbAssign)
+								+ " assignments made");
 			}
-			logger.info(sb.toString());
-			logger.info("Took " + localTime + " s (" + (localBT / localTime)
-					+ " flips per second), " + (getNbAssignments() - nbAssign)
-					+ " assignments made");
 			// localBT *= 1.5;
 		} while (!resolved);
 
@@ -395,5 +397,16 @@ public final class MinConflictsSolver extends AbstractSolver {
 
 	public String toString() {
 		return "min-conflicts";
+	}
+
+	public void reAssign(final Variable variable, final int index) {
+		variable.reAssign(index);
+		for (Constraint c : variable.getInvolvingConstraints()) {
+			for (Variable n : c.getInvolvedVariables()) {
+				if (n != variable) {
+					wcManagers[n.getId()].update(c);
+				}
+			}
+		}
 	}
 }
