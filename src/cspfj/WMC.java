@@ -94,15 +94,9 @@ public final class WMC extends AbstractLocalSolver {
 
 		final int bestIndex = wcm.getBestIndex();
 
-		int improvment = 0;
-
 		if (wcm.getBestImprovment() >= 0) {
-			improvment += localMinimum();
+			return localMinimum();
 		}
-
-		// tabuManager.push(bestVariableId, bestIndex);
-
-		improvment += wcm.getImprovment(bestIndex);
 
 		if (FINER) {
 			logger.finer(bestVariable + " <- " + bestIndex);
@@ -110,7 +104,7 @@ public final class WMC extends AbstractLocalSolver {
 		reAssign(wcm, bestIndex);
 		incrementNbAssignments();
 		checkBacktracks();
-		return improvment;
+		return wcm.getBestImprovment();
 	}
 
 	public void minConflicts() throws MaxBacktracksExceededException,
