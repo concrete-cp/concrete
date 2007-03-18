@@ -22,143 +22,145 @@ package cspfj;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-// import java.util.logging.Logger;
+import java.util.logging.Logger;
 
 import cspfj.exception.MaxBacktracksExceededException;
+import cspfj.filter.SAC.SPACE;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.Chronometer;
-import cspfj.filter.SAC.SPACE;
 
 public abstract class AbstractSolver implements Solver {
 
-    protected final Problem problem;
+	protected final Problem problem;
 
-    protected final Chronometer chronometer;
+	protected final Chronometer chronometer;
 
-    private int nbAssignments;
+	private int nbAssignments;
 
-    private final Map<Variable, Integer> solution;
+	private final Map<Variable, Integer> solution;
 
-    private int maxBacktracks;
+	private int maxBacktracks;
 
-    private int nbBacktracks;
+	private int nbBacktracks;
 
-    private int nbSolutions = 0;
+	private int nbSolutions = 0;
 
-    private final ResultHandler resultHandler;
+	private final ResultHandler resultHandler;
 
-    private SPACE space = SPACE.NONE;
+	private SPACE space = SPACE.NONE;
 
-    // private final static Logger logger =
-    // Logger.getLogger("cspfj.solver.AbstractSolver") ;
+	 private final static Logger logger =
+	 Logger.getLogger("cspfj.solver.AbstractSolver") ;
 
-    public AbstractSolver(Problem prob, ResultHandler resultHandler) {
-        super();
-        problem = prob;
-        nbAssignments = 0;
-        solution = new HashMap<Variable, Integer>();
+	public AbstractSolver(Problem prob, ResultHandler resultHandler) {
+		super();
+		problem = prob;
+		nbAssignments = 0;
+		solution = new HashMap<Variable, Integer>();
 
-        chronometer = new Chronometer();
-        this.resultHandler = resultHandler;
-    }
+		chronometer = new Chronometer();
+		this.resultHandler = resultHandler;
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see cspfj.Solver#getSolutionIndex(int)
-     */
-    public final int getSolutionValue(final int vId) {
-        return getSolution().get(problem.getVariable(vId));
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see cspfj.Solver#getSolutionIndex(int)
+	 */
+	public final int getSolutionValue(final int vId) {
+		return getSolution().get(problem.getVariable(vId));
+	}
 
-    // /*
-    // * (non-Javadoc)
-    // *
-    // * @see cspfj.Solver#getSolutionValue(int)
-    // */
-    // public final int getSolutionValue(final int vId) {
-    // return problem.getVariable(vId).getDomain()[getSolutionIndex(vId)];
-    // }
+	// /*
+	// * (non-Javadoc)
+	// *
+	// * @see cspfj.Solver#getSolutionValue(int)
+	// */
+	// public final int getSolutionValue(final int vId) {
+	// return problem.getVariable(vId).getDomain()[getSolutionIndex(vId)];
+	// }
 
-    public int getNbAssignments() {
-        return nbAssignments;
-    }
+	public int getNbAssignments() {
+		return nbAssignments;
+	}
 
-    protected final void incrementNbAssignments() {
-        nbAssignments++;
-    }
+	protected final void incrementNbAssignments() {
+		nbAssignments++;
+	}
 
-    protected final void addSolutionElement(final Variable variable,
-            final int index) {
-        solution.put(variable, variable.getDomain()[index]);
-    }
+	protected final void addSolutionElement(final Variable variable,
+			final int index) {
+		solution.put(variable, variable.getDomain()[index]);
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see cspfj.Solver#getSolution()
-     */
-    public final Map<Variable, Integer> getSolution() {
-        return solution;
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see cspfj.Solver#getSolution()
+	 */
+	public final Map<Variable, Integer> getSolution() {
+		return solution;
+	}
 
-    public final void setMaxBacktracks(final int maxBacktracks) {
-        this.maxBacktracks = maxBacktracks;
-        this.nbBacktracks = 0;
-    }
+	public final void setMaxBacktracks(final int maxBacktracks) {
+		this.maxBacktracks = maxBacktracks;
+		this.nbBacktracks = 0;
+	}
 
-    public final void checkBacktracks() throws MaxBacktracksExceededException {
-        if (++nbBacktracks >= maxBacktracks && maxBacktracks >= 0) {
-            throw new MaxBacktracksExceededException();
-        }
-    }
+	public final void checkBacktracks() throws MaxBacktracksExceededException {
+		if (++nbBacktracks >= maxBacktracks && maxBacktracks >= 0) {
+			throw new MaxBacktracksExceededException();
+		}
+	}
 
-    public float getUserTime() {
-        return chronometer.getUserTime();
-    }
+	public float getUserTime() {
+		return chronometer.getUserTime();
+	}
 
-    public final int getMaxBacktracks() {
-        return maxBacktracks;
-    }
+	public final int getMaxBacktracks() {
+		return maxBacktracks;
+	}
 
-    protected final int getNbBacktracks() {
-        return nbBacktracks;
-    }
+	protected final int getNbBacktracks() {
+		return nbBacktracks;
+	}
 
-    protected final void setSolution(final Map<Variable, Integer> solution) {
-        this.solution.clear();
-        this.solution.putAll(solution);
-        nbSolutions = 1;
-    }
+	protected final void setSolution(final Map<Variable, Integer> solution) {
+		this.solution.clear();
+		this.solution.putAll(solution);
+		nbSolutions = 1;
+	}
 
-    protected void solution(final Map<Variable, Integer> solution,
-            final int nbConflicts) throws IOException {
-        resultHandler.solution(solution, nbConflicts);
-    }
+	protected void solution(final Map<Variable, Integer> solution,
+			final int nbConflicts) throws IOException {
+		if (resultHandler.solution(solution, nbConflicts)) {
+			logger.info("At " + chronometer.getCurrentChrono());
+		}
+	}
 
-    public final void setUseSpace(final SPACE space) {
-        this.space = space;
-    }
+	public final void setUseSpace(final SPACE space) {
+		this.space = space;
+	}
 
-    protected final SPACE useSpace() {
-        return space;
-    }
+	protected final SPACE useSpace() {
+		return space;
+	}
 
-    protected final void statistics(final String name, final Object value) {
-        resultHandler.statistics(name, value.toString());
-    }
+	protected final void statistics(final String name, final Object value) {
+		resultHandler.statistics(name, value.toString());
+	}
 
-    public final int getNbSolutions() {
-        return nbSolutions;
-    }
+	public final int getNbSolutions() {
+		return nbSolutions;
+	}
 
-    protected final void incrementNbSolutions() {
-        nbSolutions++;
-    }
+	protected final void incrementNbSolutions() {
+		nbSolutions++;
+	}
 
 	protected final ResultHandler getResultHandler() {
 		return resultHandler;
 	}
-	
+
 }

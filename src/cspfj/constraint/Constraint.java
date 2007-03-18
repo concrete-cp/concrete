@@ -208,7 +208,11 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	}
 
 	public final int getPositionInVariable(final Variable variable) {
-		return positionInVariable[getPosition(variable)];
+		return getPositionInVariable(getPosition(variable));
+	}
+	
+	public final int getPositionInVariable(final int position) {
+		return positionInVariable[position];
 	}
 
 	public final void setPositionInVariable(final Variable variable,

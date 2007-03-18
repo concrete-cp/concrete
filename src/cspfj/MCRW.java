@@ -22,18 +22,20 @@ package cspfj;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.TieManager;
 
-public final class WMC extends AbstractLocalSolver {
+public final class MCRW extends AbstractLocalSolver {
 
 	private final static Logger logger = Logger.getLogger("cspfj.WMC");
 
-	public WMC(Problem prob, ResultHandler resultHandler) {
+	private final float randomWalk;
+
+	public MCRW(Problem prob, ResultHandler resultHandler) {
 		super(prob, resultHandler);
+		randomWalk = .02F;
 
 	}
 
@@ -64,45 +66,17 @@ public final class WMC extends AbstractLocalSolver {
 
 	}
 
-	private int localMinimum() {
-		int improvment = 0;
-
-		if (FINER) {
-			logger.finer("Local Minimum");
-		}
-		final WCManager[] wcManagers = this.wcManagers;
-		boolean changed = false;
-		do {
-			for (Constraint c : problem.getConstraints()) {
-				if (!c.checkFirst()) {
-					improvment++;
-					c.increaseWeight();
-					for (int pos = c.getInvolvedVariables().length; --pos >= 0;) {
-						changed |= wcManagers[c.getInvolvedVariables()[pos]
-								.getId()].updateAfterIncrement(c, pos);
-					}
-				}
-			}
-		} while (!changed);
-
-		return improvment;
-	}
-
 	private int bestWalk() throws MaxBacktracksExceededException {
 		final Variable bestVariable = findBest();
 		final WCManager wcm = wcManagers[bestVariable.getId()];
 
 		final int bestIndex = wcm.getBestIndex();
 
-		int improvment = 0;
-
-		if (wcm.getBestImprovment() >= 0) {
-			improvment += localMinimum();
+		if (wcm.getBestIndex() == bestVariable.getFirst()) {
+			return 0;
 		}
 
-		// tabuManager.push(bestVariableId, bestIndex);
-
-		improvment += wcm.getImprovment(bestIndex);
+		final int improvment = wcm.getBestImprovment();
 
 		if (FINER) {
 			logger.finer(bestVariable + " <- " + bestIndex);
@@ -111,6 +85,32 @@ public final class WMC extends AbstractLocalSolver {
 		incrementNbAssignments();
 		checkBacktracks();
 		return improvment;
+	}
+
+	private int randomWalk() throws MaxBacktracksExceededException {
+		final Variable variable = problem.getVariables()[getRandom().nextInt(
+				problem.getNbVariables())];
+
+		int index;
+
+		do {
+			index = getRandom().nextInt(variable.getDomain().length);
+		} while (variable.getRemovedLevel(index) >= 0);
+
+		if (index == variable.getFirst()) {
+			return 0;
+		}
+
+		final WCManager wcm = wcManagers[variable.getId()];
+
+		final int improvment = wcm.getImprovment(index);
+
+		reAssign(wcm, index);
+
+		incrementNbAssignments();
+		checkBacktracks();
+		return improvment;
+
 	}
 
 	public void minConflicts() throws MaxBacktracksExceededException,
@@ -141,14 +141,16 @@ public final class WMC extends AbstractLocalSolver {
 
 			assert realConflicts() <= nbConflicts;
 
-			// if (random.nextFloat() < randomWalk) {
-			// nbConflicts += randomWalk();
-			// } else {
-			nbConflicts += bestWalk();
-			// }
+			if (getRandom().nextFloat() < randomWalk) {
+				nbConflicts += randomWalk();
+			} else {
+				nbConflicts += bestWalk();
+			}
 
 			assert nbConflicts == weightedConflicts() : nbConflicts + "/="
 					+ weightedConflicts() + " (real = " + realConflicts() + ")";
+
+			
 
 		}
 

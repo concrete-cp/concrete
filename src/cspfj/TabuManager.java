@@ -22,14 +22,13 @@ package cspfj;
 import java.util.Arrays;
 
 import cspfj.problem.Problem;
-import cspfj.problem.Variable;
 
 public final class TabuManager {
-	private boolean[][] tabus;
+	private final boolean[][] tabus;
 
-	private int[] t1;
+	private final int[] t1;
 
-	private int[] t2;
+	private final int[] t2;
 
 	private int head;
 
@@ -37,9 +36,6 @@ public final class TabuManager {
 
 	public TabuManager(final Problem problem, final int size) {
 		this.size = size;
-		if (size < 1) {
-			return;
-		}
 		tabus = new boolean[problem.getNbVariables()][problem
 				.getMaxDomainSize()];
 		t1 = new int[size];
@@ -62,7 +58,7 @@ public final class TabuManager {
 	}
 
 	public boolean isTabu(final int vid, final int index) {
-		return tabus != null && tabus[vid][index];
+		return tabus[vid][index];
 	}
 
 	public void clean() {
