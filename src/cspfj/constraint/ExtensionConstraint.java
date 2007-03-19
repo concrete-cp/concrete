@@ -93,7 +93,7 @@ public class ExtensionConstraint extends Constraint {
 		return tightness;
 	}
 
-	protected boolean findValidTuple(final int variablePosition, final int index) {
+	public boolean findValidTuple(final int variablePosition, final int index) {
 		assert this.isInvolved(getInvolvedVariables()[variablePosition]);
 
 		if (lastCheck[variablePosition][index]

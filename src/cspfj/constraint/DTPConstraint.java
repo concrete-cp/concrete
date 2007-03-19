@@ -47,7 +47,7 @@ public final class DTPConstraint extends Constraint {
 				|| value1 + duration1 < value0);
 
 		if (matrix.isActive() && !result) {
-			matrix.removeTuple(tuple);
+			matrix.removeTuple();
 		}
 
 		return result;

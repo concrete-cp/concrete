@@ -51,7 +51,7 @@ public final class IffConstraint extends Constraint {
                 .getDomain()[tuple[1]] == valueV);
 
         if (!check) {
-            matrix.removeTuple(tuple);
+            matrix.removeTuple();
         }
         return check;
     }

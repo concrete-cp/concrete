@@ -48,7 +48,7 @@ public final class MCRW extends AbstractLocalSolver {
 
 		for (Variable v : problem.getVariables()) {
 			final int vId = v.getId();
-			final WCManager wcm = wcManagers[vId];
+			final ConflictsManager wcm = wcManagers[vId];
 			if (wcm.getCurrentConflicts() <= -bestImp) {
 				continue;
 			}
@@ -61,21 +61,20 @@ public final class MCRW extends AbstractLocalSolver {
 
 		}
 
-		flipped(bestVariable);
 		return bestVariable;
 
 	}
 
 	private int bestWalk() throws MaxBacktracksExceededException {
 		final Variable bestVariable = findBest();
-		final WCManager wcm = wcManagers[bestVariable.getId()];
+		final ConflictsManager wcm = wcManagers[bestVariable.getId()];
 
 		final int bestIndex = wcm.getBestIndex();
 
 		if (wcm.getBestIndex() == bestVariable.getFirst()) {
 			return 0;
 		}
-
+		flipped(bestVariable);
 		final int improvment = wcm.getBestImprovment();
 
 		if (FINER) {
@@ -100,8 +99,8 @@ public final class MCRW extends AbstractLocalSolver {
 		if (index == variable.getFirst()) {
 			return 0;
 		}
-
-		final WCManager wcm = wcManagers[variable.getId()];
+		flipped(variable);
+		final ConflictsManager wcm = wcManagers[variable.getId()];
 
 		final int improvment = wcm.getImprovment(index);
 

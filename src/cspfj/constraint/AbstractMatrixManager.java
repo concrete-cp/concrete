@@ -61,7 +61,7 @@ public abstract class AbstractMatrixManager implements Cloneable {
 
 	public abstract boolean set(final int[] tuple, final boolean status);
 
-	public boolean removeTuple(final int[] tuple) {
+	public boolean removeTuple() {
 
 		if (!active) {
 			try {

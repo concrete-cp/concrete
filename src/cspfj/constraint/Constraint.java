@@ -23,12 +23,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
-// import java.util.logging.Logger;
 
 import cspfj.exception.FailedGenerationException;
 import cspfj.exception.MatrixTooBigException;
 import cspfj.problem.Variable;
-import cspfj.util.TieManager;
 
 public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	private Variable[] involvedVariables;
@@ -36,8 +34,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	private int[] positionInVariable;
 
 	public final static int MAX_ARITY = 4;
-
-	// private final Arc[] arcs;
 
 	protected int[][][] last;
 
@@ -63,12 +59,10 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 	private static int nbUselessRevisions = 0;
 
-	// private static int nbSkippedRevisions = 0;
-
 	private static final Logger logger = Logger
 			.getLogger("cspfj.constraints.Constraint");
 
-	private int[] realTuple;
+	private TupleManager tupleManager ;
 
 	private boolean active;
 
@@ -89,7 +83,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		arity = involvedVariables.length;
 
 		tuple = new int[arity];
-		realTuple = new int[arity];
+		
 		removals = new boolean[arity];
 		id = cId++;
 		tupleCache = useTupleCache();
@@ -109,31 +103,15 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 				}
 			}
 			lastCheck = new boolean[arity][maxDomain];
-			// for (int i = arity; --i >= 0;) {
-			// last[i] = new int[involvedVariables[i].getDomain().length][];
-			// lastCheck[i] = new
-			// boolean[involvedVariables[i].getDomain().length];
-			// }
-
 		} else {
 			last = null;
 			lastCheck = null;
 		}
-		// arcs = new Arc[arity];
-		// for (int i = 0; i < arity; i++) {
-		// arcs[i] = new Arc(this, i);
-		// }
+
+		
 		active = false;
-		// initLast();
 
 		matrix = AbstractMatrixManager.factory(scope, tuple);
-
-		// try {
-		// matrix.init(true);
-		// } catch (MatrixTooBigException e) {
-		// logger.warning("Not enough memory to create Matrix Cache");
-		// matrix.clear();
-		// }
 
 		nbMaxConflicts = new int[arity];
 		nbSupports = new int[arity][maxDomain];
@@ -146,6 +124,8 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		this.size = size;
 
 		positionInVariable = new int[arity];
+		
+		tupleManager = new TupleManager(this, tuple) ;
 	}
 
 
@@ -163,15 +143,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		return activated;
 
 	}
-	// public final void initLast() {
-	//
-	// for (int[] l : last) {
-	// for (int i = 0; i < l.length; i++) {
-	// l[i] = 0;
-	// }
-	// }
-	//
-	// }
 
 	public void initNbSupports() {
 		if (!changedConstraint) {
@@ -215,9 +186,9 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		return positionInVariable[position];
 	}
 
-	public final void setPositionInVariable(final Variable variable,
-			final int position) {
-		positionInVariable[getPosition(variable)] = position;
+	public final void setPositionInVariable(final int positionInConstraint,
+			final int positionInVariable) {
+		this.positionInVariable[positionInConstraint] = positionInVariable;
 	}
 
 	public final int[] getTuple() {
@@ -228,15 +199,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		return involvedVariables;
 	}
 
-	// public String toString() {
-	// StringBuffer sb = new StringBuffer();
-	// for (boolean[] line : matrix) {
-	// sb.append(Arrays.toString(line));
-	// sb.append('\n');
-	// }
-	// return sb.toString();
-	// }
-
 	public final int getId() {
 		return id;
 	}
@@ -244,15 +206,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	public final static void resetCId() {
 		cId = 0;
 	}
-
-	// public int getWeight() {
-	// return weight;
-	// }
-	//
-	// public void increaseWeight() {
-	// //System.out.println("Increasing "+this);
-	// this.weight++;
-	// }
 
 	public String toString() {
 		return "C" + id + " " + Arrays.toString(involvedVariables);
@@ -262,24 +215,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		checks++;
 		return matrix.isTrue(tuple);
 	}
-
-	// public boolean revise(final int level) {
-	// boolean revised = false;
-	// for (Variable v : involvedVariables) {
-	// // System.out.println("revising " + v);
-	// assert v.getDomainSize() > 0 : v + " is empty !";
-	//
-	// if (v.getDomainSize() > 1 && revise(v, level)) {
-	// if (v.getDomainSize() < 1) {
-	// increaseWeight();
-	// return true;
-	// }
-	// revised = true;
-	// }
-	// }
-	//
-	// return revised;
-	// }
 
 	public final boolean skipRevision(final int position) {
 		if (arity > MAX_ARITY) {
@@ -315,9 +250,9 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		// return true;
 	}
 
-	public final boolean revise(final Variable variable, final int level) {
-		return revise(getPosition(variable), level);
-	}
+//	public final boolean revise(final Variable variable, final int level) {
+//		return revise(getPosition(variable), level);
+//	}
 
 	public boolean revise(final int position, final int level) {
 		final Variable variable = involvedVariables[position];
@@ -350,21 +285,11 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 				// if (shouldBeSkipped) {
 				// logger.finer("removing " + index + " from " + variable);
 
-				// final int toRemove = index;
-				// index = variable.getPrev(index);
-
 				variable.remove(index, level);
 
 				revised = true;
 				active = true;
-				//
-				// if (index < 0) {
-				// index = variable.getFirst();
-				//
-				// if (index < 0) {
-				// break;
-				// }
-				// }
+
 			}
 
 		}
@@ -381,62 +306,10 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		return revised;
 	}
 
-	public void setFirstTuple() {
-		for (int position = arity; --position >= 0;) {
-			tuple[position] = involvedVariables[position].getFirst();
-		}
-	}
-
-	public boolean setNextTuple() {
-		final int[] tuple = this.tuple;
-		final Variable[] involvedVariables = this.involvedVariables;
-		for (int i = arity; --i >= 0;) {
-			final int index = involvedVariables[i].getNext(tuple[i]);
-
-			if (index < 0) {
-				tuple[i] = involvedVariables[i].getFirst();
-			} else {
-				tuple[i] = index;
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public void setFirstTuple(final int variablePosition, final int index) {
-		for (int position = arity; --position >= 0;) {
-			if (position == variablePosition) {
-				tuple[position] = index;
-			} else {
-				tuple[position] = involvedVariables[position].getFirst();
-			}
-		}
-
-	}
-
-	public boolean setNextTuple(final int fixedVariablePosition) {
-		final int[] tuple = this.tuple;
-		final Variable[] involvedVariables = this.involvedVariables;
-		for (int i = arity; --i >= 0;) {
-			if (i == fixedVariablePosition) {
-				continue;
-			}
-
-			final int index = involvedVariables[i].getNext(tuple[i]);
-
-			if (index < 0) {
-				tuple[i] = involvedVariables[i].getFirst();
-			} else {
-				tuple[i] = index;
-				return true;
-			}
-		}
-		return false;
-	}
+	
 
 	protected boolean controlTuplePresence(final int[] tuple, final int position) {
 		nbPresenceChecks++;
-		// final int[] tuple = this.tuple;
 		final Variable[] involvedVariables = this.involvedVariables;
 		for (int i = arity; --i >= 0;) {
 			if (i != position && !involvedVariables[i].isPresent(tuple[i])) {
@@ -448,18 +321,17 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 	}
 
-	public final boolean findValidTuple(final Variable variable, final int index) {
-		return findValidTuple(getPosition(variable), index);
-	}
+//	public final boolean findValidTuple(final Variable variable, final int index) {
+//		return findValidTuple(getPosition(variable), index);
+//	}
 
-	protected boolean findValidTuple(final int variablePosition, final int index) {
+	public boolean findValidTuple(final int variablePosition, final int index) {
 		assert this.isInvolved(involvedVariables[variablePosition]);
 
 		if (tupleCache
 				&& lastCheck[variablePosition][index]
 				&& controlTuplePresence(last[variablePosition][index],
 						variablePosition)) {
-			// System.out.print("c") ;
 			return true;
 		}
 
@@ -475,18 +347,11 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		final boolean tupleCache = this.tupleCache;
 		final int[][][] last = this.last;
 
-		// System.err.println(index+", "+ variablePosition+" : " +
-		// Arrays.toString(tuple));
-
 		do {
 			if (check()) {
 				if (tupleCache) {
 					for (int position = arity; --position >= 0;) {
 						final int value = tuple[position];
-
-						// if (myLast[value] == null) {
-						// myLast[value] = new int[arity];
-						// }
 						System.arraycopy(tuple, 0, last[position][value], 0,
 								arity);
 						lastCheck[position][value] = true;
@@ -501,11 +366,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	}
 
 	public int nbTuples(final int variablePosition, final int index) {
-		// if (logger.isLoggable(Level.FINER)) {
-		// logger.finer("Counting tuples : " + this + ", "
-		// + involvedVariables[variablePosition] + ", " + index);
-		// }
-
 		if (arity > MAX_ARITY) {
 			return 0;
 		}
@@ -545,19 +405,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		this.weight += weight;
 	}
 
-//	public final void increaseWeightAndUpdate(final TieManager tieManager) {
-//		// final Variable[] involvedVariables = this.involvedVariables;
-//		// for (int p = arity; --p >= 0;) {
-//		// involvedVariables[p].removeConflicts(this, p);
-//		// }
-//
-//		increaseWeight();
-//
-//		for (int p = arity; --p >= 0;) {
-//			involvedVariables[p].updateBestIndexAfter(this, tieManager);
-//		}
-//	}
-
 	public final int getWeight() {
 		return weight;
 	}
@@ -587,7 +434,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 	public final boolean checkFirstWith(final int variablePosition,
 			final int index) {
-		setFirstTuple(variablePosition, index);
+		tupleManager.setFirstTuple(variablePosition, index);
 
 		if (tupleCache) {
 
@@ -605,13 +452,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 			}
 			final boolean result = check();
 
-			// if (tupleCache) {
-			// for (int position = arity; --position >= 0;) {
-
 			final int i = tuple[variablePosition];
-			// if (last[position][i] == null) {
-			// last[position][i] = new int[arity];
-			// }
 			System.arraycopy(tuple, 0, myLast[i], 0, arity);
 			lastCheck[variablePosition][i] = result;
 			return result;
@@ -620,53 +461,21 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 	}
 
-	//
-	// public boolean checkFirstWith(final Variable variable, final int index) {
-	// for (int i = 0; i < involvedVariables.length; i++) {
-	// final Variable involvedVariable = involvedVariables[i];
-	// if (variable.equals(involvedVariable)) {
-	// tuple[i] = index;
-	// } else {
-	// tuple[i] = involvedVariable.getFirstPresentIndex();
-	// }
-	// }
-	// return check();
-	// }
-
-	// public final boolean isInvolved(final Variable variable) {
-	// for (Variable v : getInvolvedVariables()) {
-	// if (v == variable) {
-	// return true;
-	// }
-	// }
-	// return false;
-	// }
-
 	public final int getArity() {
 		return arity;
 	}
 
 	public boolean removeTuple(final List<Variable> scope,
-			final List<Integer> tuple) {
+			final List<Integer> scrambledTuple) {
 
-		final int[] realTuple = this.realTuple;
-		final Variable[] involvedVariables = this.involvedVariables;
+		tupleManager.setRealTuple(scope, scrambledTuple);
 
-		for (int i = arity; --i >= 0;) {
-			for (int j = arity; --j >= 0;) {
-				if (scope.get(i) == involvedVariables[j]) {
-					realTuple[j] = tuple.get(i);
-					break;
-				}
-			}
-		}
-
-		if (matrix.removeTuple(realTuple)) {
+		if (matrix.removeTuple()) {
 			if (useTupleCache()) {
 
 				for (int p = arity; --p >= 0;) {
-					if (Arrays.equals(realTuple, last[p][realTuple[p]])) {
-						lastCheck[p][realTuple[p]] = false;
+					if (Arrays.equals(tuple, last[p][tuple[p]])) {
+						lastCheck[p][tuple[p]] = false;
 					}
 				}
 			}
@@ -677,10 +486,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		return false;
 
 	}
-
-	// public final Arc[] getArcs() {
-	// return arcs;
-	// }
 
 	public final boolean isActive() {
 		return active;
@@ -693,9 +498,8 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	public final static Constraint findConstraint(
 			final Collection<Variable> scope,
 			final Collection<Constraint> constraints) {
-		final Variable[] variables = scope.toArray(new Variable[scope.size()]);
 		for (Constraint c : constraints) {
-			if (c.hasSetOfVariablesEqualTo(variables)) {
+			if (c.hasSetOfVariablesEqualTo(scope)) {
 				return c;
 			}
 		}
@@ -724,14 +528,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		return nbEffectiveRevisions;
 	}
 
-	// public static final int getNbSkippedRevisions() {
-	// return nbSkippedRevisions;
-	// }
-
-	// public static final void incrementNbSkippedRevisions(int nbSR) {
-	// nbSkippedRevisions += nbSR;
-	// }
-
 	public static final int getNbUselessRevisions() {
 		return nbUselessRevisions;
 	}
@@ -740,52 +536,22 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		checks = nbPresenceChecks = nbEffectiveRevisions = nbUselessRevisions = 0;
 	}
 
-	// public final int getRemovalCounter(final int position) {
-	// return removalsCounter[position] ;
-	// }
-
 	public boolean getRemovals(final int variablePosition) {
 		return removals[variablePosition];
 	}
 
-	//    
-	public boolean getRemovals(final Variable variable) {
-		return removals[getPosition(variable)];
-	}
-
-	//
 	public void fillRemovals(final boolean removal) {
 		Arrays.fill(removals, removal);
-
 	}
 
-	//
 	public void setRemovals(final int variablePosition, final boolean removal) {
 		removals[variablePosition] = removal;
-
 	}
+//
+//	public void setRemovals(final Variable variable, final boolean removal) {
+//		setRemovals(getPosition(variable), removal);
+//	}
 
-	public void setRemovals(final Variable variable, final boolean removal) {
-		setRemovals(getPosition(variable), removal);
-
-	}
-
-	// public void setNbRemovals(Variable variable, int i) {
-	// nbRecentRemovals[getPosition(variable)] = i;
-	//
-	// }
-
-	// public void clearNoGoods() {
-	// matrix.clear();
-	// }
-
-	// public final boolean haveMatrix() {
-	// return matrix != null;
-	// }
-
-	// public void clearMatrix() {
-	// matrix.clear();
-	// }
 	public boolean equalsConstraint(final Constraint constraint) {
 		return id == constraint.getId();
 	}
@@ -799,14 +565,14 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	 * @return <code> true </code> iff the given set of variables corresponds to
 	 *         the set of variables involved in the constraint
 	 */
-	public boolean hasSetOfVariablesEqualTo(final Variable[] variables) {
-		if (arity != variables.length) {
+	public boolean hasSetOfVariablesEqualTo(final Collection<Variable> variables) {
+		if (arity != variables.size()) {
 			return false;
 		}
 		for (int i = involvedVariables.length; --i >= 0;) {
 			boolean found = false;
-			for (int j = variables.length; --j >= 0;) {
-				if (involvedVariables[i] == variables[j]) {
+			for (Variable v: variables) {
+				if (involvedVariables[i] == v) {
 					found = true;
 					break;
 				}
@@ -848,13 +614,15 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		final Constraint constraint = (Constraint) super.clone();
 
 		constraint.tuple = new int[arity];
-		constraint.realTuple = new int[arity];
+		
 		constraint.removals = new boolean[arity];
 
 		// constraint.positionInVariable fixe
 		// constraint.nbMaxConflicts fixe
 		// constraint.nbSupports fixe
 
+		constraint.tupleManager = new TupleManager(this, tuple);
+		
 		int maxDomain = 0;
 		for (int i = arity; --i >= 0;) {
 			if (involvedVariables[i].getDomain().length > maxDomain) {
@@ -874,4 +642,16 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		}
 		return constraint;
 	}
+
+
+	public void setFirstTuple() {
+		tupleManager.setFirstTuple();
+	}
+
+
+	public boolean setNextTuple() {
+		return tupleManager.setNextTuple();
+	}
+	
+	
 }

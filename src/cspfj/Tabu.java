@@ -37,7 +37,7 @@ public final class Tabu extends AbstractLocalSolver {
 
 	public Tabu(Problem prob, ResultHandler resultHandler) {
 		super(prob, resultHandler);
-		tabuManager = new TabuManager(prob, 25);
+		tabuManager = new TabuManager(prob, 20);
 		tieManager = new TieManager(getRandom());
 	}
 
@@ -50,7 +50,7 @@ public final class Tabu extends AbstractLocalSolver {
 
 		for (Variable v : problem.getVariables()) {
 			final int vId = v.getId();
-			final WCManager wcm = wcManagers[vId];
+			final ConflictsManager wcm = wcManagers[vId];
 			if (wcm.getCurrentConflicts() <= -bestImp) {
 				continue;
 			}
@@ -71,7 +71,7 @@ public final class Tabu extends AbstractLocalSolver {
 
 		final int bestVariableId = bestVariable.getId();
 
-		final WCManager wcm = wcManagers[bestVariableId];
+		final ConflictsManager wcm = wcManagers[bestVariableId];
 
 		final int bestIndex = tieManager.getBestValue();
 

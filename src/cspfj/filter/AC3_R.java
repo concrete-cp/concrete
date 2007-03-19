@@ -19,8 +19,6 @@
 
 package cspfj.filter;
 
-import java.util.logging.Logger;
-
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
@@ -31,7 +29,7 @@ import cspfj.problem.Variable;
  */
 public final class AC3_R implements Filter {
 
-    private static final Logger logger = Logger.getLogger("cspfj.AC3");
+    //private static final Logger logger = Logger.getLogger("cspfj.AC3");
 
     private final Problem problem;
 
@@ -83,7 +81,7 @@ public final class AC3_R implements Filter {
             final Variable variable = pullVariable();
 
             if (variable == null) {
-                assert checkAC();
+//                assert checkAC();
                 return true;
             }
 
@@ -103,7 +101,7 @@ public final class AC3_R implements Filter {
 
                 final Constraint constraint = involvingConstraints[cId];
 
-                if (constraint.revise(variable, level)) {
+                if (constraint.revise(constraint.getPosition(variable), level)) {
                 	doneSomething = true;
                     if (variable.getDomainSize() <= 0) {
                         constraint.increaseWeight();
@@ -187,23 +185,23 @@ public final class AC3_R implements Filter {
         return 0;
     }
 
-    private boolean checkAC() {
-        for (Variable v : problem.getVariables()) {
-            for (int index = v.getFirst(); index >= 0; index = v.getNext(index)) {
-                for (Constraint c : v.getInvolvingConstraints()) {
-                    if (!c.findValidTuple(v, index)) {
-                        logger.severe("Could not find support for " + v + ", "
-                                + v.getDomain()[index] + " in " + c);
-                        logger.severe(problem.toString());
-                        return false;
-                    }
-                    // problem;
-                    // assert c.check() : c + "is not valid !";
-                }
-            }
-        }
-        return true;
-    }
+//    private boolean checkAC() {
+//        for (Variable v : problem.getVariables()) {
+//            for (int index = v.getFirst(); index >= 0; index = v.getNext(index)) {
+//                for (Constraint c : v.getInvolvingConstraints()) {
+//                    if (!c.findValidTuple(v, index)) {
+//                        logger.severe("Could not find support for " + v + ", "
+//                                + v.getDomain()[index] + " in " + c);
+//                        logger.severe(problem.toString());
+//                        return false;
+//                    }
+//                    // problem;
+//                    // assert c.check() : c + "is not valid !";
+//                }
+//            }
+//        }
+//        return true;
+//    }
 
     public String toString() {
     	return "AC3rm-reverse" ;

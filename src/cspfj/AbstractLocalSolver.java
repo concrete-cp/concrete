@@ -35,7 +35,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 
 	final private boolean max;
 
-	final protected WCManager[] wcManagers;
+	final protected ConflictsManager[] wcManagers;
 
 	public AbstractLocalSolver(Problem prob, ResultHandler resultHandler) {
 		super(prob, resultHandler);
@@ -48,9 +48,9 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		Arrays.fill(flipCounter, 0);
 		tieManager = new TieManager(random);
 
-		wcManagers = new WCManager[prob.getMaxVId() + 1];
+		wcManagers = new ConflictsManager[prob.getMaxVId() + 1];
 		for (Variable v : prob.getVariables()) {
-			wcManagers[v.getId()] = new WCManager(v, tieManager);
+			wcManagers[v.getId()] = new ConflictsManager(v, tieManager);
 		}
 
 	}
@@ -92,7 +92,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		
 	}
 
-	private void init(final WCManager wcManager) {
+	private void init(final ConflictsManager wcManager) {
 		final Variable variable = wcManager.getVariable();
 
 		if (variable.isAssigned()) {
@@ -106,31 +106,31 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 					+ ") <- " + variable.getFirst());
 		}
 
-		final Set<WCManager> randomOrder = new TreeSet<WCManager>(
-				new RandomOrder<WCManager>(random));
+		final Set<ConflictsManager> randomOrder = new TreeSet<ConflictsManager>(
+				new RandomOrder<ConflictsManager>(random));
 
 		for (Variable n : variable.getNeighbours()) {
 			randomOrder.add(wcManagers[n.getId()]);
 		}
 
-		for (WCManager wcm : randomOrder) {
+		for (ConflictsManager wcm : randomOrder) {
 			init(wcm);
 		}
 	}
 
 	protected void init() {
-		final Set<WCManager> randomOrder = new TreeSet<WCManager>(
-				new RandomOrder<WCManager>(random));
+		final Set<ConflictsManager> randomOrder = new TreeSet<ConflictsManager>(
+				new RandomOrder<ConflictsManager>(random));
 
 		for (Variable v : problem.getVariables()) {
 			randomOrder.add(wcManagers[v.getId()]);
 		}
 
-		for (WCManager v : randomOrder) {
+		for (ConflictsManager v : randomOrder) {
 			init(v);
 		}
 
-		for (WCManager wcm : randomOrder) {
+		for (ConflictsManager wcm : randomOrder) {
 			wcm.initNbConflicts();
 		}
 	}
@@ -250,7 +250,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		return "min-conflicts";
 	}
 
-	protected void reAssign(final WCManager wmc, final int index) {
+	protected void reAssign(final ConflictsManager wmc, final int index) {
 		wmc.reAssign(index);
 		final Variable variable = wmc.getVariable();
 		for (Constraint c : variable.getInvolvingConstraints()) {

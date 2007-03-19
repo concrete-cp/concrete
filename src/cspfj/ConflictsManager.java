@@ -12,7 +12,7 @@ import cspfj.constraint.Constraint;
 import cspfj.problem.Variable;
 import cspfj.util.TieManager;
 
-public final class WCManager {
+public final class ConflictsManager {
 
 	private final Variable variable;
 
@@ -28,15 +28,13 @@ public final class WCManager {
 
 	private final Constraint[] constraints;
 
-	private final int[] position;
-
 	private final boolean[][] check;
 
 	private int currentConflicts;
 
 	private int assignedIndex;
 
-	public WCManager(final Variable variable, final TieManager tieManager) {
+	public ConflictsManager(final Variable variable, final TieManager tieManager) {
 		super();
 		this.variable = variable;
 		vid = variable.getId();
@@ -44,10 +42,7 @@ public final class WCManager {
 		this.constraints = variable.getInvolvingConstraints();
 		this.tieManager = tieManager;
 		nbConflicts = new int[variable.getDomain().length];
-		position = new int[constraints.length];
-		for (int i = position.length; --i >= 0;) {
-			position[i] = constraints[i].getPosition(variable);
-		}
+
 		check = new boolean[constraints.length][domain.length];
 		assignedIndex = variable.getFirst();
 	}
@@ -68,28 +63,11 @@ public final class WCManager {
 		return nbConflicts[index] - currentConflicts;
 	}
 
-	// private int nbConflicts(final int index) {
-	// assert index < domain.length : index + " >= " + domain.length;
-	// final Constraint[] constraints = this.constraints;
-	// final int[] position = this.position;
-	// int conflicts = 0;
-	// for (int i = constraints.length; --i >= 0;) {
-	// if (!constraints[i].checkFirstWith(position[i], index)) {
-	// conflicts += constraints[i].getWeight();
-	// }
-	// }
-	// return conflicts;
-	// }
-
-	// private int getConflicts(final int index) {
-	// return nbConflicts[index];
-	// }
-
 	public void assignBestInitialIndex() {
 		if (variable.isAssigned()) {
 			bestIndex = assignedIndex;
 		} else {
-
+			final TieManager tieManager = this.tieManager;
 			final Constraint[] constraints = this.constraints;
 
 			tieManager.clear();
@@ -105,13 +83,15 @@ public final class WCManager {
 
 				int indexConflicts = 0;
 
-				for (Constraint c : constraints) {
-					if (c.getArity() > Constraint.MAX_ARITY) {
+				for (int c = constraints.length; --c >= 0;) {
+					final Constraint constraint = constraints[c];
+					if (constraint.getArity() > Constraint.MAX_ARITY) {
 						continue;
 					}
 
-					if (!c.findValidTuple(variable, i)) {
-						indexConflicts += c.getWeight();
+					if (!constraint.findValidTuple(variable
+							.getPositionInConstraint(c), i)) {
+						indexConflicts += constraint.getWeight();
 					}
 
 				}
@@ -164,8 +144,10 @@ public final class WCManager {
 		final int[] nbConflicts = this.nbConflicts;
 		final Variable variable = this.variable;
 
-		final int c = constraint.getPositionInVariable(variable);
-		final int position = this.position[c];// constraint.getPosition(variable);
+		final int position = constraint.getPosition(variable);
+
+		final int c = constraint.getPositionInVariable(position);
+
 		for (int i = domain.length; --i >= 0;) {
 			if (variable.getRemovedLevel(i) >= 0) {
 				continue;
@@ -187,7 +169,8 @@ public final class WCManager {
 		currentConflicts = nbConflicts[assignedIndex];
 	}
 
-	public boolean updateAfterIncrement(final Constraint constraint, final int pos) {
+	public boolean updateAfterIncrement(final Constraint constraint,
+			final int pos) {
 		final TieManager tieManager = this.tieManager;
 		tieManager.clear();
 
@@ -206,7 +189,7 @@ public final class WCManager {
 			}
 			tieManager.newValue(i, nbConflicts[i]);
 		}
-		final boolean changed = (bestIndex==tieManager.getBestValue());
+		final boolean changed = (bestIndex == tieManager.getBestValue());
 		bestIndex = tieManager.getBestValue();
 		currentConflicts = nbConflicts[assignedIndex];
 		return changed;
@@ -240,21 +223,5 @@ public final class WCManager {
 		assignedIndex = index;
 		currentConflicts = nbConflicts[index];
 	}
-
-	// /**
-	// * @param index
-	// * La valeur à assigner
-	// */
-	// public void reAssign(final int index, final TieManager tieManager) {
-	// variable.reAssign(index);
-	// for (Constraint c : variable.getInvolvingConstraints()) {
-	// for (Variable n : c.getInvolvedVariables()) {
-	// if (n != variable) {
-	// n.updateConflicts(c, c.getPosition(n));
-	// n.updateBestIndex(tieManager);
-	// }
-	// }
-	// }
-	// }
 
 }

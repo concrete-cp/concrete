@@ -21,16 +21,13 @@ package cspfj.problem;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
 
-import cspfj.WCManager;
 import cspfj.constraint.Constraint;
 import cspfj.util.BooleanArray;
 import cspfj.util.OrderedChain;
-import cspfj.util.TieManager;
 import cspfj.util.UnOrderedChain;
 
 /**
@@ -67,7 +64,6 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 
 	private int[] beforeAssignDomain;
 
-
 	/**
 	 * Taille actuelle du domaine.
 	 */
@@ -92,6 +88,7 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 
 	private final String name;
 
+	private int[] positionInConstraint ;
 	
 	// private static final Logger logger = Logger.getLogger("cspfj.Variable");
 
@@ -128,8 +125,6 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 		chain.reOrder(order, removed);
 
 		absents = new UnOrderedChain(domain.length);
-
-
 	}
 
 	/**
@@ -172,9 +167,15 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 
 		this.neighbours = neighb.toArray(new Variable[neighb.size()]);
 
+		positionInConstraint = new int[constraints.length] ;
 		for (int i = constraints.length; --i >= 0;) {
-			constraints[i].setPositionInVariable(this, i);
+			positionInConstraint[i] = constraints[i].getPosition(this);
+			constraints[i].setPositionInVariable(positionInConstraint[i], i);
 		}
+		
+		
+		
+
 	}
 
 	/**
@@ -244,8 +245,6 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 
 	}
 
-
-
 	public void firstAssign(final int index) {
 		assignedIndex = index;
 		assigned = true;
@@ -256,8 +255,8 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 	}
 
 	public boolean checkIndexValidity(final int index) {
-		for (Constraint c : constraints) {
-			if (!c.findValidTuple(this, index)) {
+		for (int c = constraints.length ; --c>=0;) {
+			if (!constraints[c].findValidTuple(positionInConstraint[c], index)) {
 				return false;
 			}
 		}
@@ -352,7 +351,7 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 		if (assigned) {
 			return assignedIndex;
 		}
-		assert isPresent(chain.getFirst());
+		// assert isPresent(chain.getFirst());
 		return chain.getFirst();
 
 	}
@@ -421,43 +420,24 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 	}
 
 	public void empty(final int level) {
-
-		if (getDomainSize() > 0) {
-			for (int i = getFirst(); i >= 0; i = getNext(i)) {
-
-				remove(i, level);
-
-			}
+		for (int i = getFirst(); i >= 0; i = getNext(i)) {
+			remove(i, level);
 		}
-
 	}
 
-	public Integer[] getCurrentDomain() {
-		final List<Integer> values = new ArrayList<Integer>();
+	public Collection<Integer> getCurrentDomain() {
+		final Collection<Integer> values = new ArrayList<Integer>();
 
 		for (int i = getFirst(); i >= 0; i = getNext(i)) {
 			values.add(domain[i]);
 		}
 
-		return values.toArray(new Integer[values.size()]);
+		return values;
 	}
 
 	public String getName() {
 		return name;
 	}
-
-	public int getRandomPresentIndex(final Random random) {
-		int index;
-		do {
-			index = random.nextInt(domain.length);
-		} while (removed[index] >= 0);
-
-		return index;
-	}
-
-
-
-	
 
 	public int getRemovedLevel(final int index) {
 		return removed[index];
@@ -505,7 +485,6 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 		return chain.getPrev(index);
 	}
 
-
 	public Variable clone() throws CloneNotSupportedException {
 		final Variable variable = (Variable) super.clone();
 
@@ -520,11 +499,12 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 
 		return variable;
 	}
-	
+
 	public void reAssign(final int index) {
-		assignedIndex = index ;
+		assignedIndex = index;
 	}
-	
 
-
+	public int getPositionInConstraint(final int constraint) {
+		return positionInConstraint[constraint] ;
+	}
 }

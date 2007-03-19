@@ -109,34 +109,42 @@ public final class AC3_P implements Filter {
 			// System.err.println(queueSize);
 			final Variable variable = pullVariable();
 
-			for (Constraint c : variable.getInvolvingConstraints()) {
+			final Constraint[] constraints = variable.getInvolvingConstraints();
 
-				if (!c.getRemovals(variable)) {
+			for (int c = constraints.length; --c >= 0;) {
+
+				final Constraint constraint = constraints[c];
+
+				if (!constraint
+						.getRemovals(variable.getPositionInConstraint(c))) {
 					continue;
 				}
 
-				for (int i = c.getArity(); --i >= 0;) {
-					final Variable y = c.getInvolvedVariables()[i];
+				for (int i = constraint.getArity(); --i >= 0;) {
+					final Variable y = constraint.getInvolvedVariables()[i];
 
-					if (!y.isAssigned() && !skipRevision(c, i)
-							&& c.revise(i, level)) {
+					if (!y.isAssigned() && !skipRevision(constraint, i)
+							&& constraint.revise(i, level)) {
 						doneSomething = true;
 						if (y.getDomainSize() <= 0) {
-							c.increaseWeight();
+							constraint.increaseWeight();
 							return false;
 						}
 
 						addInQueue(y.getId());
 
-						for (Constraint cp : y.getInvolvingConstraints()) {
-							if (cp != c) {
-								cp.setRemovals(y, true);
+						for (int cp = y.getInvolvingConstraints().length; --cp >= 0;) {
+							final Constraint constraintP = y
+									.getInvolvingConstraints()[cp];
+							if (constraintP != constraint) {
+								constraintP.setRemovals(y
+										.getPositionInConstraint(cp), true);
 							}
 						}
 					}
 				}
 
-				c.fillRemovals(false);
+				constraint.fillRemovals(false);
 			}
 
 		}

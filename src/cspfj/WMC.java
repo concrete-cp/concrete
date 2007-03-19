@@ -46,7 +46,7 @@ public final class WMC extends AbstractLocalSolver {
 
 		for (Variable v : problem.getVariables()) {
 			final int vId = v.getId();
-			final WCManager wcm = wcManagers[vId];
+			final ConflictsManager wcm = wcManagers[vId];
 			if (wcm.getCurrentConflicts() <= -bestImp) {
 				continue;
 			}
@@ -59,7 +59,6 @@ public final class WMC extends AbstractLocalSolver {
 
 		}
 
-		flipped(bestVariable);
 		return bestVariable;
 
 	}
@@ -70,7 +69,7 @@ public final class WMC extends AbstractLocalSolver {
 		if (FINER) {
 			logger.finer("Local Minimum");
 		}
-		final WCManager[] wcManagers = this.wcManagers;
+		final ConflictsManager[] wcManagers = this.wcManagers;
 		boolean changed = false;
 		do {
 			for (Constraint c : problem.getConstraints()) {
@@ -90,7 +89,7 @@ public final class WMC extends AbstractLocalSolver {
 
 	private int bestWalk() throws MaxBacktracksExceededException {
 		final Variable bestVariable = findBest();
-		final WCManager wcm = wcManagers[bestVariable.getId()];
+		final ConflictsManager wcm = wcManagers[bestVariable.getId()];
 
 		final int imp = wcm.getBestImprovment();
 		
@@ -101,6 +100,7 @@ public final class WMC extends AbstractLocalSolver {
 		if (FINER) {
 			logger.finer(bestVariable + " <- " + wcm.getBestIndex());
 		}
+		flipped(bestVariable);
 		reAssign(wcm, wcm.getBestIndex());
 		incrementNbAssignments();
 		checkBacktracks();
@@ -143,7 +143,7 @@ public final class WMC extends AbstractLocalSolver {
 
 			assert nbConflicts == weightedConflicts() : nbConflicts + "/="
 					+ weightedConflicts() + " (real = " + realConflicts() + ")";
-
+			
 		}
 
 		for (Variable v : problem.getVariables()) {

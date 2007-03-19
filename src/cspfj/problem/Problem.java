@@ -274,10 +274,8 @@ public final class Problem implements Cloneable {
 	public String toString() {
 		final StringBuffer sb = new StringBuffer();
 		for (Variable v : getVariables()) {
-			sb.append(v.toString());
-			sb.append(" : ");
-			sb.append(Arrays.toString(v.getCurrentDomain()));
-			sb.append('\n');
+			sb.append(v).append(" : ").append(v.getCurrentDomain())
+					.append('\n');
 		}
 
 		final SortedSet<Constraint> set = new TreeSet<Constraint>(new Weight(
@@ -401,7 +399,7 @@ public final class Problem implements Cloneable {
 	public int getLevelVariable(final int level) {
 		return levelVariables[level];
 	}
-	
+
 	public int[] getLevelVariables(final int minLevel) {
 		final int[] variables = new int[levelVariables.length - minLevel];
 		System.arraycopy(levelVariables, minLevel, variables, 0,
@@ -504,7 +502,7 @@ public final class Problem implements Cloneable {
 		final int nd = getND();
 		// return 8 * nd + (int)(.4 * nd * nd);
 		// return 5*nd;
-		return Math.max((int) (-50000 + 15000 * Math.log(nd)), 10000);
+		return Math.max((int) (-50000 + 10000 * Math.log(nd)), 10000);
 	}
 
 	public int getMaxBacktracks() {
@@ -556,12 +554,12 @@ public final class Problem implements Cloneable {
 		problem.updateInvolvingConstraints();
 		return problem;
 	}
-	
+
 	public boolean activateMatrixes() {
-		boolean activated = true ;
-		for (Constraint c: getConstraints()) {
-			activated &= c.activateMatrix() ;
+		boolean activated = true;
+		for (Constraint c : getConstraints()) {
+			activated &= c.activateMatrix();
 		}
-		return activated ;
+		return activated;
 	}
 }
