@@ -139,7 +139,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 			IOException;
 
 	public boolean runSolver() throws IOException {
-		final int localBT = 100000;// problem.getMaxFlips();
+		final int localBT = problem.getMaxFlips();
 		boolean resolved = false;
 		System.gc();
 		chronometer.startChrono();

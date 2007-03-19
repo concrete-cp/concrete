@@ -92,19 +92,19 @@ public final class WMC extends AbstractLocalSolver {
 		final Variable bestVariable = findBest();
 		final WCManager wcm = wcManagers[bestVariable.getId()];
 
-		final int bestIndex = wcm.getBestIndex();
-
-		if (wcm.getBestImprovment() >= 0) {
+		final int imp = wcm.getBestImprovment();
+		
+		if (imp >= 0) {
 			return localMinimum();
 		}
 
 		if (FINER) {
-			logger.finer(bestVariable + " <- " + bestIndex);
+			logger.finer(bestVariable + " <- " + wcm.getBestIndex());
 		}
-		reAssign(wcm, bestIndex);
+		reAssign(wcm, wcm.getBestIndex());
 		incrementNbAssignments();
 		checkBacktracks();
-		return wcm.getBestImprovment();
+		return imp;
 	}
 
 	public void minConflicts() throws MaxBacktracksExceededException,
