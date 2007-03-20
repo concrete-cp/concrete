@@ -155,4 +155,8 @@ public final class WMC extends AbstractLocalSolver {
 				+ " conflicts ! (" + weightedConflicts() + " wc)";
 
 	}
+	
+	public String toString(){
+		return "weighted min-conflicts";
+	}
 }

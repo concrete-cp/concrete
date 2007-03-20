@@ -103,11 +103,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 				}
 			}
 			lastCheck = new boolean[arity][maxDomain];
-		} else {
-			last = null;
-			lastCheck = null;
-		}
-
+		} 
 		
 		active = false;
 
@@ -584,11 +580,11 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		return true;
 	}
 
-	public int compareTo(Constraint c) {
-		return c.getId() - id;
+	public int compareTo(final Constraint constraint) {
+		return constraint.getId() - id;
 	}
 
-	public Constraint deepCopy(Collection<Variable> variables)
+	public Constraint deepCopy(final Collection<Variable> variables)
 			throws CloneNotSupportedException {
 		final Constraint constraint = this.clone();
 
@@ -598,7 +594,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 			for (Variable v : variables) {
 				if (v.equals(involvedVariables[i])) {
 					constraint.involvedVariables[i] = v;
-					assert constraint.getPosition(v) == i;
 					break;
 				}
 			}
@@ -621,7 +616,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		// constraint.nbMaxConflicts fixe
 		// constraint.nbSupports fixe
 
-		constraint.tupleManager = new TupleManager(this, tuple);
+		constraint.tupleManager = new TupleManager(this, constraint.tuple);
 		
 		int maxDomain = 0;
 		for (int i = arity; --i >= 0;) {
@@ -640,6 +635,8 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 			constraint.lastCheck = new boolean[arity][maxDomain];
 
 		}
+		
+		constraint.positionInVariable = new int[arity];
 		return constraint;
 	}
 

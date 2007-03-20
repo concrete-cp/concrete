@@ -169,13 +169,17 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 
 		positionInConstraint = new int[constraints.length] ;
 		for (int i = constraints.length; --i >= 0;) {
-			positionInConstraint[i] = constraints[i].getPosition(this);
-			constraints[i].setPositionInVariable(positionInConstraint[i], i);
+			updatePositionInConstraint(i);
 		}
 		
 		
 		
 
+	}
+	
+	public void updatePositionInConstraint(final int constraintPosition) {
+		positionInConstraint[constraintPosition] = constraints[constraintPosition].getPosition(this);
+		constraints[constraintPosition].setPositionInVariable(positionInConstraint[constraintPosition], constraintPosition);
 	}
 
 	/**

@@ -44,6 +44,8 @@ public class ResultHandler {
 	protected int unsat = 0;
 
 	protected int unknown = 0;
+	
+	protected int totalNodes = 0 ;
 
 	protected boolean displaySolutions;
 
@@ -112,6 +114,7 @@ public class ResultHandler {
 		increment(result);
 
 		totalSolve += solver.getUserTime();
+		totalNodes += solver.getNbAssignments();
 
 		if (thrown != null) {
 			logger.warning(thrown.toString());

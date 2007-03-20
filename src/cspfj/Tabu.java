@@ -36,8 +36,12 @@ public final class Tabu extends AbstractLocalSolver {
 	private final TieManager tieManager;
 
 	public Tabu(Problem prob, ResultHandler resultHandler) {
+		this(prob, resultHandler, 20);
+	}
+	
+	public Tabu(Problem prob, ResultHandler resultHandler, int tabuSize) {
 		super(prob, resultHandler);
-		tabuManager = new TabuManager(prob, 20);
+		tabuManager = new TabuManager(prob, tabuSize);
 		tieManager = new TieManager(getRandom());
 	}
 
@@ -134,6 +138,10 @@ public final class Tabu extends AbstractLocalSolver {
 		assert realConflicts() == 0 : getSolution() + " -> " + realConflicts()
 				+ " conflicts ! (" + weightedConflicts() + " wc)";
 
+	}
+	
+	public String toString() {
+		return "tabu min-conflicts" ;
 	}
 
 }

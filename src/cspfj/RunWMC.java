@@ -6,7 +6,6 @@ import java.util.logging.Logger;
 import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.problem.Problem;
-import cspfj.util.Chronometer;
 
 public class RunWMC extends AbstractRunSolver {
 
@@ -28,7 +27,7 @@ public class RunWMC extends AbstractRunSolver {
 	}
 
 	@Override
-	protected boolean launch(int factor) throws IOException {
+	protected boolean launch(final int factor) throws IOException {
 		logger.info("MC with " + maxFlips + " flips");
 
 		for (Constraint c : getProblem().getConstraints()) {

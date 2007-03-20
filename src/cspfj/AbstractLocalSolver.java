@@ -246,10 +246,6 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		return sb.toString();
 	}
 
-	public String toString() {
-		return "min-conflicts";
-	}
-
 	protected void reAssign(final ConflictsManager wmc, final int index) {
 		wmc.reAssign(index);
 		final Variable variable = wmc.getVariable();

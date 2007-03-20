@@ -343,7 +343,7 @@ public final class MGAC extends AbstractSolver {
 	}
 
 	public String toString() {
-		return "MAC";
+		return "maintain generalized arc consistency";
 	}
 	// public int getMaxNoGoodSize() {
 	// return maxNoGoodSize;

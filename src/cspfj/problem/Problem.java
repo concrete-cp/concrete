@@ -524,15 +524,15 @@ public final class Problem implements Cloneable {
 
 		problem.pastVariables = new TreeSet<Integer>();
 
-		problem.variables = null;
-
-		problem.variableArray = null;
-
-		problem.constraints = null;
-
-		problem.constraintArray = null;
-
-		problem.levelVariables = null;
+//		problem.variables = null;
+//
+//		problem.variableArray = null;
+//
+//		problem.constraints = null;
+//
+//		problem.constraintArray = null;
+//
+//		problem.levelVariables = null;
 
 		final Collection<Variable> variables = new ArrayList<Variable>(this
 				.getNbVariables());

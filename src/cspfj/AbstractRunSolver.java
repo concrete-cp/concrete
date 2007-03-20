@@ -17,9 +17,9 @@ public abstract class AbstractRunSolver extends Thread {
 
 	final private Chronometer chronometer;
 
-	final private SolutionHandler solutionHandler ;
-	
+	final private SolutionHandler solutionHandler;
 
+	private boolean end = false;
 
 	protected AbstractRunSolver(final Problem problem,
 			final SolutionHandler solutionHandler) {
@@ -33,7 +33,7 @@ public abstract class AbstractRunSolver extends Thread {
 		this.solver = solver;
 	}
 
-	public synchronized void run() {
+	public void run() {
 		chronometer.startChrono();
 		try {
 			float maxTries = 1;
@@ -45,8 +45,8 @@ public abstract class AbstractRunSolver extends Thread {
 
 				if (launch((int) Math.floor(maxTries))) {
 					logger.info("Result from " + solver + " !");
-					if (solver.getNbSolutions()>0) {
-						solutionHandler.setSolution(solver.getSolution()) ;
+					if (solver.getNbSolutions() > 0) {
+						solutionHandler.setSolution(solver.getSolution());
 					} else {
 						solutionHandler.setSolution(null);
 					}
@@ -54,21 +54,17 @@ public abstract class AbstractRunSolver extends Thread {
 					return;
 				}
 
-
 				localTime += chronometer.getCurrentChrono();
 				assign += solver.getNbAssignments();
 				logger
-						.info("Took "
-								+ localTime
-								+ " s ("
-								+ (solver.getMaxBacktracks()
-										/ localTime)
+						.info("Took " + localTime + " s ("
+								+ (solver.getMaxBacktracks() / localTime)
 								+ " flips per second), " + assign
 								+ " assignments made");
 
 				maxTries *= 1.5;
 
-			} while (true);
+			} while (!end);
 		} catch (IOException e) {
 
 		}
@@ -84,12 +80,16 @@ public abstract class AbstractRunSolver extends Thread {
 	protected Problem getProblem() {
 		return problem;
 	}
-	
+
 	protected SolutionHandler getSolutionHandler() {
 		return solutionHandler;
 	}
-	
+
 	public float getUserTime() {
 		return chronometer.getCurrentChrono();
+	}
+
+	public void end() {
+		end = true;
 	}
 }

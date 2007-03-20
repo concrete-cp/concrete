@@ -34,8 +34,12 @@ public final class MCRW extends AbstractLocalSolver {
 	private final float randomWalk;
 
 	public MCRW(Problem prob, ResultHandler resultHandler) {
+		this(prob, resultHandler, .02F);
+	}
+
+	public MCRW(Problem prob, ResultHandler resultHandler, float randomWalk) {
 		super(prob, resultHandler);
-		randomWalk = .02F;
+		this.randomWalk = randomWalk;
 
 	}
 
@@ -149,8 +153,6 @@ public final class MCRW extends AbstractLocalSolver {
 			assert nbConflicts == weightedConflicts() : nbConflicts + "/="
 					+ weightedConflicts() + " (real = " + realConflicts() + ")";
 
-			
-
 		}
 
 		for (Variable v : problem.getVariables()) {
@@ -161,5 +163,9 @@ public final class MCRW extends AbstractLocalSolver {
 		assert realConflicts() == 0 : getSolution() + " -> " + realConflicts()
 				+ " conflicts ! (" + weightedConflicts() + " wc)";
 
+	}
+
+	public String toString() {
+		return "min-conflicts-random-walk";
 	}
 }

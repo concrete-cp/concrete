@@ -1,7 +1,6 @@
 package cspfj;
 
 import java.util.Map;
-import java.util.logging.Logger;
 
 import cspfj.filter.AC3_P;
 import cspfj.filter.Filter;
@@ -16,7 +15,8 @@ public class Combo2 extends AbstractSolver {
 
 	final private boolean reverse;
 
-	final private static Logger logger = Logger.getLogger("cspfj.ComboSolver2");
+	// final private static Logger logger =
+	// Logger.getLogger("cspfj.ComboSolver2");
 
 	public Combo2(Problem prob, ResultHandler resultHandler,
 			Heuristic heuristic, boolean reverse) {
@@ -67,25 +67,24 @@ public class Combo2 extends AbstractSolver {
 		final SolutionHandler solutionHandler = new SolutionHandler();
 
 		RunMGAC macSolver = null;
-		// try {
-		macSolver = new RunMGAC(problem, getResultHandler(), heuristic,
-				reverse, solutionHandler);
-		// } catch (CloneNotSupportedException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// }
+		try {
+			macSolver = new RunMGAC(problem, getResultHandler(),
+					heuristic, reverse, solutionHandler);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		statistics("prepro-cpu", chronometer.getCurrentChrono());
 		RunWMC mCSolver = null;
 		try {
-			mCSolver = new RunWMC(problem.clone(), getResultHandler(),
-					solutionHandler);
-		} catch (CloneNotSupportedException e) {
+			mCSolver = new RunWMC(problem.clone(), getResultHandler(), solutionHandler);
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		// mCSolver.setPriority(Thread.MIN_PRIORITY);
 		// macSolver.setPriority(Thread.MAX_PRIORITY);
-		macSolver.start();
+//		macSolver.start();
 		mCSolver.start();
 
 		Map<Variable, Integer> solution = null;
@@ -99,6 +98,9 @@ public class Combo2 extends AbstractSolver {
 
 		statistics("mac-cpu", macSolver.getUserTime());
 		statistics("mc-cpu", mCSolver.getUserTime());
+
+		macSolver.end();
+		mCSolver.end();
 
 		if (solution == null) {
 			return false;
