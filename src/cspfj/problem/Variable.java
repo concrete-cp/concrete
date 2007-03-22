@@ -157,6 +157,7 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 		final Set<Variable> neighb = new TreeSet<Variable>();
 
 		for (Constraint c : constraints) {
+			assert c.isInvolved(this);
 			for (Variable v : c.getInvolvedVariables()) {
 				if (v == this) {
 					continue;

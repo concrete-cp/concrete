@@ -250,9 +250,11 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		wmc.reAssign(index);
 		final Variable variable = wmc.getVariable();
 		for (Constraint c : variable.getInvolvingConstraints()) {
-			for (Variable n : c.getInvolvedVariables()) {
-				if (n != variable) {
-					wcManagers[n.getId()].update(c);
+			final Variable[] involvedVariables = c.getInvolvedVariables();
+			for (int n = involvedVariables.length ; --n >=0;){
+				final  Variable neighbour = involvedVariables[n] ;
+				if (neighbour != variable) {
+					wcManagers[neighbour.getId()].update(c, n);
 				}
 			}
 		}

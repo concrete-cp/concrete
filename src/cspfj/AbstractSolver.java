@@ -163,4 +163,7 @@ public abstract class AbstractSolver implements Solver {
 		return resultHandler;
 	}
 
+	public final Problem getProblem() {
+		return problem ;
+	}
 }

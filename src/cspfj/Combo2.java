@@ -41,7 +41,7 @@ public class Combo2 extends AbstractSolver {
 		return sb.toString();
 	}
 
-	public synchronized boolean runSolver() {
+	public boolean runSolver() {
 		System.gc();
 		chronometer.startChrono();
 		final Filter preprocessor;
@@ -84,7 +84,7 @@ public class Combo2 extends AbstractSolver {
 		}
 		// mCSolver.setPriority(Thread.MIN_PRIORITY);
 		// macSolver.setPriority(Thread.MAX_PRIORITY);
-//		macSolver.start();
+		macSolver.start();
 		mCSolver.start();
 
 		Map<Variable, Integer> solution = null;

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import cspfj.filter.SAC.SPACE;
+import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
 public interface Solver {
@@ -46,4 +47,6 @@ public interface Solver {
     int getMaxBacktracks();
 
 	String getXMLConfig();
+	
+	Problem getProblem() ;
 }

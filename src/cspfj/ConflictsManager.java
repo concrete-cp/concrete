@@ -138,29 +138,33 @@ public final class ConflictsManager {
 		return currentConflicts;
 	}
 
-	public void update(final Constraint constraint) {
+	public void update(final Constraint constraint, final int variablePos) {
 		final TieManager tieManager = this.tieManager;
 		tieManager.clear();
 		final int[] nbConflicts = this.nbConflicts;
 		final Variable variable = this.variable;
 
-		final int position = constraint.getPosition(variable);
+		//final int position = constraint.getPosition(variable);
 
-		final int c = constraint.getPositionInVariable(position);
+		
+		
+		final int constraintPos = constraint.getPositionInVariable(variablePos);
 
+		assert variable.getInvolvingConstraints()[constraintPos] == constraint ;
+		
 		for (int i = domain.length; --i >= 0;) {
 			if (variable.getRemovedLevel(i) >= 0) {
 				continue;
 			}
 
-			final boolean check = constraint.checkFirstWith(position, i);
-			if (check != this.check[c][i]) {
+			final boolean check = constraint.checkFirstWith(variablePos, i);
+			if (check != this.check[constraintPos][i]) {
 				if (check) {
 					nbConflicts[i] -= constraint.getWeight();
 				} else {
 					nbConflicts[i] += constraint.getWeight();
 				}
-				this.check[c][i] ^= true;
+				this.check[constraintPos][i] ^= true;
 			}
 
 			tieManager.newValue(i, nbConflicts[i]);
@@ -176,7 +180,10 @@ public final class ConflictsManager {
 
 		final int[] nbConflicts = this.nbConflicts;
 		final Variable variable = this.variable;
-
+		assert constraint.getPosition(variable) == pos ;
+		assert variable.getInvolvingConstraints()[constraint.getPositionInVariable(pos)] == constraint; 
+		
+		
 		final boolean[] check = this.check[constraint
 				.getPositionInVariable(pos)];
 

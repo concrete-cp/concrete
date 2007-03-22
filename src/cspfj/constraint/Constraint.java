@@ -171,6 +171,8 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 				return i;
 			}
 		}
+		
+		assert false ;
 		return -1;
 	}
 
@@ -397,7 +399,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		weight++;
 	}
 
-	public final void increaseWeight(int weight) {
+	public final void increaseWeight(final int weight) {
 		this.weight += weight;
 	}
 
@@ -616,7 +618,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		// constraint.nbMaxConflicts fixe
 		// constraint.nbSupports fixe
 
-		constraint.tupleManager = new TupleManager(this, constraint.tuple);
+		constraint.tupleManager = new TupleManager(constraint, constraint.tuple);
 		
 		int maxDomain = 0;
 		for (int i = arity; --i >= 0;) {
@@ -649,6 +651,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	public boolean setNextTuple() {
 		return tupleManager.setNextTuple();
 	}
-	
+
 	
 }
