@@ -89,7 +89,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 			solution.put(v, v.getDomain()[v.getFirst()]);
 		}
 		solution(solution, problem.getNbConstraints() - nbConflicts);
-		
+
 	}
 
 	private void init(final ConflictsManager wcManager) {
@@ -199,7 +199,10 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 			if (logger.isLoggable(Level.FINE)) {
 				final StringBuffer sb = new StringBuffer();
 
-				for (Variable v : problem.getVariables()) {
+				for (int i = 0 ; i <= problem.getMaxVId();i++) {
+					final Variable v = problem.getVariable(i) ;
+					if (v==null) { continue ;}
+				
 					int w = 0;
 					for (Constraint c : v.getInvolvingConstraints()) {
 						w += c.getWeight();
@@ -251,8 +254,8 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		final Variable variable = wmc.getVariable();
 		for (Constraint c : variable.getInvolvingConstraints()) {
 			final Variable[] involvedVariables = c.getInvolvedVariables();
-			for (int n = involvedVariables.length ; --n >=0;){
-				final  Variable neighbour = involvedVariables[n] ;
+			for (int n = involvedVariables.length; --n >= 0;) {
+				final Variable neighbour = involvedVariables[n];
 				if (neighbour != variable) {
 					wcManagers[neighbour.getId()].update(c, n);
 				}

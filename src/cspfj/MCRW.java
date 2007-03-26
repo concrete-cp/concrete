@@ -74,11 +74,13 @@ public final class MCRW extends AbstractLocalSolver {
 		final ConflictsManager wcm = wcManagers[bestVariable.getId()];
 
 		final int bestIndex = wcm.getBestIndex();
-
+		
 		if (wcm.getBestIndex() == bestVariable.getFirst()) {
 			return 0;
 		}
+		
 		flipped(bestVariable);
+		
 		final int improvment = wcm.getBestImprovment();
 
 		if (FINER) {

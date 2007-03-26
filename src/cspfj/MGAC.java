@@ -61,6 +61,8 @@ public final class MGAC extends AbstractSolver {
 
 		logger.info(filter.getClass().toString());
 
+		setMaxBacktracks(prob.getMaxBacktracks());
+		
 	}
 
 	// public void enableNoGoods(final int maxSize) {
@@ -211,7 +213,7 @@ public final class MGAC extends AbstractSolver {
 
 		heuristic.compute();
 
-		int maxBT = allSolutions ? -1 : problem.getMaxBacktracks();
+		int maxBT = allSolutions ? -1 : getMaxBacktracks();
 
 		final Filter filter = getFilter();
 
