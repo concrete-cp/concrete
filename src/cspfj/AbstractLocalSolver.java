@@ -36,6 +36,10 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 	final private boolean max;
 
 	final protected ConflictsManager[] wcManagers;
+	
+	private Variable bestVariable ;
+	
+	private int bestImp ;
 
 	public AbstractLocalSolver(Problem prob, ResultHandler resultHandler) {
 		super(prob, resultHandler);
@@ -133,6 +137,8 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		for (ConflictsManager wcm : randomOrder) {
 			wcm.initNbConflicts();
 		}
+		
+		initBestVariable(); 
 	}
 
 	public abstract void minConflicts() throws MaxBacktracksExceededException,
@@ -249,15 +255,19 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		return sb.toString();
 	}
 
-	protected void reAssign(final ConflictsManager wmc, final int index) {
-		wmc.reAssign(index);
-		final Variable variable = wmc.getVariable();
+	protected void reAssign(final ConflictsManager vcm, final int index) {
+		vcm.reAssign(index);
+		final Variable variable = vcm.getVariable();
+		bestVariable = variable ;
+		bestImp = vcm.getBestImprovment();
 		for (Constraint c : variable.getInvolvingConstraints()) {
 			final Variable[] involvedVariables = c.getInvolvedVariables();
 			for (int n = involvedVariables.length; --n >= 0;) {
 				final Variable neighbour = involvedVariables[n];
-				if (neighbour != variable) {
-					wcManagers[neighbour.getId()].update(c, n);
+				if (neighbour.equals(variable)) {
+					final ConflictsManager ncm = wcManagers[neighbour.getId()];
+					ncm.update(c, n);
+					updateBestVariable(ncm);
 				}
 			}
 		}
@@ -271,4 +281,26 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		flipCounter[variable.getId()]++;
 	}
 
+	protected Variable getBestVariable() {
+		return bestVariable ;
+	}
+	
+	protected int getBestImp(){
+		return bestImp ;
+	}
+	
+	protected void updateBestVariable(final ConflictsManager vcm) {
+		if (vcm.getBestImprovment() < bestImp) {
+			bestVariable = vcm.getVariable() ;
+			bestImp = vcm.getBestImprovment();
+		}
+	}
+	
+	protected void initBestVariable() {
+		bestVariable = wcManagers[0].getVariable() ;
+		bestImp = wcManagers[0].getBestImprovment();
+		for (ConflictsManager vcm: wcManagers) {
+			updateBestVariable(vcm);
+		}
+	}
 }
