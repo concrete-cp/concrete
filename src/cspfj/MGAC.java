@@ -27,7 +27,6 @@ import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.AC3_P;
 import cspfj.filter.AC3_R;
 import cspfj.filter.Filter;
-import cspfj.filter.SAC;
 import cspfj.heuristic.Heuristic;
 import cspfj.heuristic.Pair;
 import cspfj.problem.Problem;
@@ -43,7 +42,7 @@ public final class MGAC extends AbstractSolver {
 
 	private boolean allSolutions = false;
 
-	private final Filter sac;
+//	private final Filter sac;
 
 	// private NoGoodManager noGoodManager = null;
 
@@ -56,7 +55,7 @@ public final class MGAC extends AbstractSolver {
 		// heuristic = new WDegOnDomBySupports(prob);
 		this.heuristic = heuristic;
 
-		sac = new SAC(problem, filter, true);
+//		sac = new SAC(problem, filter, true);
 
 		logger.info(filter.getClass().toString());
 
@@ -190,9 +189,9 @@ public final class MGAC extends AbstractSolver {
 		// statistics("prepro-nbskippedrevisions", Constraint
 		// .getNbSkippedRevisions());
 
-		if (true) {
-			return true ;
-		}
+//		if (true) {
+//			return true ;
+//		}
 
 		heuristic.compute();
 
