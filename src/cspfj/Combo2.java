@@ -44,21 +44,8 @@ public class Combo2 extends AbstractSolver {
 	public boolean runSolver() {
 		System.gc();
 		chronometer.startChrono();
-		final Filter preprocessor;
-		switch (useSpace()) {
-		case BRANCH:
-			preprocessor = new SAC(problem, new AC3_P(problem), true);
-			break;
-
-		case CLASSIC:
-			preprocessor = new SAC(problem, new AC3_P(problem), false);
-			break;
-
-		default:
-			preprocessor = new AC3_P(problem);
-		}
-
-		if (!preprocessor.reduceAll(0)) {
+		
+		if (!preprocess(new AC3_P(problem))) {
 			chronometer.validateChrono();
 			return false;
 		}

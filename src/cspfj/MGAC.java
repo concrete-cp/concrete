@@ -28,7 +28,6 @@ import cspfj.filter.AC3_P;
 import cspfj.filter.AC3_R;
 import cspfj.filter.Filter;
 import cspfj.filter.SAC;
-import cspfj.filter.SAC.SPACE;
 import cspfj.heuristic.Heuristic;
 import cspfj.heuristic.Pair;
 import cspfj.problem.Problem;
@@ -90,16 +89,16 @@ public final class MGAC extends AbstractSolver {
 			return !allSolutions;
 		}
 
-		if (positive && level < problem.getMaxArity()
-				&& useSpace() == SPACE.BRANCH) {
-			if (!sac.reduceAfter(level, lastModifiedVariable)) {
-				return false;
-			}
-		} else {
+//		if (positive && level < problem.getMaxArity()
+//				&& useSpace() == SPACE.BRANCH) {
+//			if (!sac.reduceAfter(level, lastModifiedVariable)) {
+//				return false;
+//			}
+//		} else {
 			if (!filter.reduceAfter(level, lastModifiedVariable)) {
 				return false;
 			}
-		}
+//		}
 
 		final long pair = heuristic.selectPair(problem);
 
@@ -164,23 +163,8 @@ public final class MGAC extends AbstractSolver {
 		// enableNoGoods(2);
 		chronometer.startChrono();
 
-		final Filter preprocessor;
-		switch (useSpace()) {
-		case BRANCH:
-			preprocessor = new SAC(problem, getFilter(), true);
-			break;
-
-		case CLASSIC:
-			preprocessor = new SAC(problem, getFilter(), false);
-			break;
-
-		default:
-
-			preprocessor = getFilter();
-		}
-
 		final float start = chronometer.getCurrentChrono();
-		if (!preprocessor.reduceAll(0)) {
+		if (!preprocess(getFilter())) {
 			chronometer.validateChrono();
 			return false;
 		}
@@ -194,7 +178,7 @@ public final class MGAC extends AbstractSolver {
 
 		statistics("prepro-removed", removed);
 		// statistics("prepro-subs", preprocessor.getNbSub()) ;
-		statistics("prepro-nogoods", preprocessor.getNbNoGoods());
+		
 		statistics("prepro-cpu", chronometer.getCurrentChrono() - start);
 		statistics("prepro-ccks", Constraint.getNbChecks());
 		statistics("prepro-nbpresencechecks", Constraint.getNbPresenceChecks());
@@ -206,9 +190,8 @@ public final class MGAC extends AbstractSolver {
 		// statistics("prepro-nbskippedrevisions", Constraint
 		// .getNbSkippedRevisions());
 
-		if (preprocessor instanceof SAC) {
-			statistics("prepro-singletontests", ((SAC) preprocessor)
-					.getNbSingletonTests());
+		if (true) {
+			return true ;
 		}
 
 		heuristic.compute();

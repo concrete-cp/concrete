@@ -71,7 +71,7 @@ public final class Tabu extends AbstractLocalSolver {
 
 		}
 
-		flipped(bestVariable);
+		bestVariable.increaseWeight(1);
 
 		final int bestVariableId = bestVariable.getId();
 

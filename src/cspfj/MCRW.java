@@ -79,7 +79,7 @@ public final class MCRW extends AbstractLocalSolver {
 			return 0;
 		}
 		
-		flipped(bestVariable);
+		bestVariable.increaseWeight(1);
 		
 		final int improvment = wcm.getBestImprovment();
 
@@ -105,7 +105,7 @@ public final class MCRW extends AbstractLocalSolver {
 		if (index == variable.getFirst()) {
 			return 0;
 		}
-		flipped(variable);
+		variable.increaseWeight(1);
 		final ConflictsManager wcm = wcManagers[variable.getId()];
 
 		final int improvment = wcm.getImprovment(index);

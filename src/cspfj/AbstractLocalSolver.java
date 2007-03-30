@@ -29,7 +29,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 
 	protected static final boolean FINER = logger.isLoggable(Level.FINER);
 
-	private final int[] flipCounter;
+//	private final int[] flipCounter;
 
 	private final TieManager tieManager;
 
@@ -48,8 +48,8 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 
 		// tabuManager = new TabuManager(problem, 10);
 
-		flipCounter = new int[prob.getMaxVId() + 1];
-		Arrays.fill(flipCounter, 0);
+//		flipCounter = new int[prob.getMaxVId() + 1];
+//		Arrays.fill(flipCounter, 0);
 		tieManager = new TieManager(random);
 
 		wcManagers = new ConflictsManager[prob.getMaxVId() + 1];
@@ -145,30 +145,12 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 			IOException;
 
 	public boolean runSolver() throws IOException {
-		final int localBT = problem.getMaxFlips();
+		final int localBT = getMaxFlips();
 		boolean resolved = false;
 		System.gc();
 		chronometer.startChrono();
-		if (!max) {
-			final Filter filter = new AC3_P(problem);
-
-			final Filter preprocessor;
-			switch (useSpace()) {
-			case BRANCH:
-				preprocessor = new SAC(problem, filter, true);
-				break;
-
-			case CLASSIC:
-				preprocessor = new SAC(problem, filter, false);
-				break;
-
-			default:
-				preprocessor = filter;
-			}
-			if (!preprocessor.reduceAll(0)) {
-				chronometer.validateChrono();
-				return false;
-			}
+		if (!max && !preprocess(new AC3_P(problem))) {
+			return false ;
 		}
 		// int nbTries = 0;
 		do {
@@ -203,29 +185,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 			// set.addAll(Arrays.asList(problem.getConstraints()));
 
 			if (logger.isLoggable(Level.FINE)) {
-				final StringBuffer sb = new StringBuffer();
-
-				for (int i = 0 ; i <= problem.getMaxVId();i++) {
-					final Variable v = problem.getVariable(i) ;
-					if (v==null) { continue ;}
-				
-					int w = 0;
-					for (Constraint c : v.getInvolvingConstraints()) {
-						w += c.getWeight();
-					}
-					sb.append(v).append(" : ").append(w).append(", ").append(
-							flipCounter[v.getId()]).append('\n');
-				}
-
-				sb.append('\n');
-
-				for (Constraint c : problem.getConstraints()) {
-					sb.append(c).append(" : ").append(c.getWeight()).append(
-							'\n');
-
-				}
-				logger.fine(sb.toString());
-
+				logger.fine(weightStats());
 			}
 			logger.info("Took " + localTime + " s (" + (localBT / localTime)
 					+ " flips per second), " + (getNbAssignments() - nbAssign)
@@ -246,6 +206,33 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 
 	}
 
+	public String weightStats() {
+		final StringBuffer sb = new StringBuffer();
+
+		for (int i = 0; i <= problem.getMaxVId(); i++) {
+			final Variable v = problem.getVariable(i);
+			if (v == null) {
+				continue;
+			}
+
+			int w = 0;
+			for (Constraint c : v.getInvolvingConstraints()) {
+				w += c.getWeight();
+			}
+			sb.append(v).append(" : ").append(w).append(", ").append(
+					v.getWeight()).append('\n');
+		}
+
+		sb.append('\n');
+
+		for (Constraint c : problem.getConstraints()) {
+			sb.append(c).append(" : ").append(c.getWeight()).append('\n');
+
+		}
+
+		return sb.toString();
+	}
+
 	public String getXMLConfig() {
 		final StringBuffer sb = new StringBuffer(200);
 
@@ -264,7 +251,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 			final Variable[] involvedVariables = c.getInvolvedVariables();
 			for (int n = involvedVariables.length; --n >= 0;) {
 				final Variable neighbour = involvedVariables[n];
-				if (neighbour.equals(variable)) {
+				if (!neighbour.equals(variable)) {
 					final ConflictsManager ncm = wcManagers[neighbour.getId()];
 					ncm.update(c, n);
 					updateBestVariable(ncm);
@@ -277,9 +264,10 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		return tieManager;
 	}
 
-	protected void flipped(final Variable variable) {
-		flipCounter[variable.getId()]++;
+	protected int getMaxFlips() {
+		return problem.getMaxFlips();
 	}
+	
 
 	protected Variable getBestVariable() {
 		return bestVariable ;

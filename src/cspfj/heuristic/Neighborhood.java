@@ -19,11 +19,25 @@
 
 package cspfj.heuristic;
 
+import cspfj.constraint.Constraint;
 import cspfj.problem.Variable;
 
-public final class WDegOnDom extends AbstractVariableHeuristic {
+public final class Neighborhood extends AbstractVariableHeuristic {
 	public double getScore(final Variable variable) {
-		return variable.getWDeg() / variable.getDomainSize();
+		// double score = 0;
+		// for (Constraint c : variable.getInvolvingConstraints()) {
+		// double constraintScore = 0;
+		// for (Variable v : c.getInvolvedVariables()) {
+		// if (v != variable) {
+		// constraintScore += c.getWeight()
+		// * (v.getDomain().length - v.getDomainSize());
+		// }
+		// }
+		// score += constraintScore; // Math.pow(constraintScore, 1 /
+		// // c.getArity());
+		// }
+		return variable.getWDeg() * (variable.getDomain().length-
+				 variable.getDomainSize());
 	}
 
 	public String toString() {

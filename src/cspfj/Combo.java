@@ -1,21 +1,16 @@
 package cspfj;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Logger;
 
 import cspfj.exception.MaxBacktracksExceededException;
-import cspfj.filter.Filter;
-import cspfj.filter.SAC;
 import cspfj.heuristic.Heuristic;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
-import cspfj.constraint.Constraint;
 
 public class Combo extends AbstractSolver {
 
-	private final WMC mCSolver;
+	private final AbstractLocalSolver mCSolver;
 
 	private final MGAC macSolver;
 
@@ -40,23 +35,8 @@ public class Combo extends AbstractSolver {
 	public boolean runSolver() throws IOException {
 		System.gc();
 
-		final Filter preprocessor;
-		switch (useSpace()) {
-		case BRANCH:
-			preprocessor = new SAC(problem, macSolver.getFilter(), true);
-			break;
-
-		case CLASSIC:
-			preprocessor = new SAC(problem, macSolver.getFilter(), false);
-			break;
-
-		default:
-			preprocessor = macSolver.getFilter();
-		}
-
-		if (!preprocessor.reduceAll(0)) {
-			chronometer.validateChrono();
-			return false;
+		if (!preprocess(macSolver.getFilter())) {
+			return false ;
 		}
 
 		// final int localBT = (int) (-500 + 8.25 * problem.getMaxDomainSize()
@@ -66,7 +46,7 @@ public class Combo extends AbstractSolver {
 
 		heuristic.compute();
 
-		final int localBT = problem.getMaxFlips();
+		final int localBT = mCSolver.getMaxFlips();
 
 		int maxBT = problem.getMaxBacktracks();
 
@@ -75,7 +55,7 @@ public class Combo extends AbstractSolver {
 				+ ", local search until " + endLocalTime);
 		// boolean alt = false;
 
-		final Map<Integer, Integer> weights = new HashMap<Integer, Integer>();
+//		final Map<Integer, Integer> weights = new HashMap<Integer, Integer>();
 
 		while (chronometer.getCurrentChrono() < endLocalTime) {
 			logger.info(localBT + " flips");
@@ -97,28 +77,33 @@ public class Combo extends AbstractSolver {
 			logger.info("Took " + localTime + " s (" + (localBT / localTime)
 					+ " flips per second), " + assign + " assignments made");
 
-			 int maxWeight = 0 ;
-			
-			for (Constraint c : problem.getConstraints()) {
-				final int cid = c.getId();
-				final int weight;
-				if (weights.containsKey(cid)) {
-					weight = weights.get(cid) + c.getWeight();
-				} else {
-					weight = c.getWeight();
-				}
-				if (weight > maxWeight) { maxWeight = weight ; }
-				weights.put(cid, weight);
-				c.setWeight(1);
-			}
-			logger.info("Global max weight : " + maxWeight) ;
+//			 int maxWeight = 0 ;
+//			
+//			for (Constraint c : problem.getConstraints()) {
+//				final int cid = c.getId();
+//				final int weight;
+//				if (weights.containsKey(cid)) {
+//					weight = weights.get(cid) + c.getWeight();
+//				} else {
+//					weight = c.getWeight();
+//				}
+//				if (weight > maxWeight) { maxWeight = weight ; }
+//				weights.put(cid, weight);
+//				c.setWeight(1);
+//			}
+//			logger.info("Global max weight : " + maxWeight) ;
 		}
+
+		statistics("local-assign", mCSolver.getNbAssignments());
+		
+		
 
 		do {
 			logger.info("MAC with " + maxBT + " bt");
 			int assign = -getNbAssignments();
 			float macTime = -chronometer.getCurrentChrono();
 			if (mac(maxBT)) {
+				statistics("mac-assign", macSolver.getNbAssignments());
 				return getNbSolutions() > 0;
 			}
 

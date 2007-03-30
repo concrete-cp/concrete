@@ -21,12 +21,12 @@ package cspfj.heuristic;
 
 import cspfj.problem.Variable;
 
-public final class WDegOnDom extends AbstractVariableHeuristic {
+public final class FlipWDegOnDom extends AbstractVariableHeuristic {
 	public double getScore(final Variable variable) {
-		return variable.getWDeg() / variable.getDomainSize();
+		return variable.getWeight()*variable.getWDeg() / variable.getDomainSize();
 	}
 
 	public String toString() {
-		return "max-wdeg/dom";
+		return "max-flip.wdeg/dom";
 	}
 }

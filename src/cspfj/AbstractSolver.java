@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import cspfj.exception.MaxBacktracksExceededException;
+import cspfj.filter.Filter;
+import cspfj.filter.SAC;
 import cspfj.filter.SAC.SPACE;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
@@ -50,8 +52,8 @@ public abstract class AbstractSolver implements Solver {
 
 	private SPACE space = SPACE.NONE;
 
-	 private final static Logger logger =
-	 Logger.getLogger("cspfj.solver.AbstractSolver") ;
+	private final static Logger logger = Logger
+			.getLogger("cspfj.solver.AbstractSolver");
 
 	public AbstractSolver(Problem prob, ResultHandler resultHandler) {
 		super();
@@ -143,7 +145,7 @@ public abstract class AbstractSolver implements Solver {
 		this.space = space;
 	}
 
-	protected final SPACE useSpace() {
+	 public final SPACE useSpace() {
 		return space;
 	}
 
@@ -164,6 +166,41 @@ public abstract class AbstractSolver implements Solver {
 	}
 
 	public final Problem getProblem() {
-		return problem ;
+		return problem;
+	}
+
+	public final boolean preprocess(final Filter filter) {
+		final Filter preprocessor;
+		final boolean sac;
+		switch (space) {
+		case BRANCH:
+			preprocessor = new SAC(problem, filter, true);
+			sac = true;
+			break;
+
+		case CLASSIC:
+			preprocessor = new SAC(problem, filter, false);
+			sac = true;
+			break;
+
+		default:
+			sac = false;
+			preprocessor = filter;
+		}
+
+		final boolean consistent = preprocessor.reduceAll(0);
+
+		statistics("prepro-nogoods", preprocessor.getNbNoGoods());
+
+		if (sac) {
+			statistics("prepro-singletontests", ((SAC) preprocessor)
+					.getNbSingletonTests());
+		}
+
+		if (!consistent) {
+			chronometer.validateChrono();
+			return false;
+		}
+		return true;
 	}
 }

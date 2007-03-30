@@ -108,7 +108,7 @@ public final class WMC extends AbstractLocalSolver {
 		if (FINER) {
 			logger.finer(bestVariable + " <- " + wcm.getBestIndex());
 		}
-		flipped(bestVariable);
+		bestVariable.increaseWeight(1);
 		reAssign(wcm, wcm.getBestIndex());
 		incrementNbAssignments();
 		checkBacktracks();
@@ -166,5 +166,9 @@ public final class WMC extends AbstractLocalSolver {
 
 	public String toString() {
 		return "weighted min-conflicts";
+	}
+	
+	public int getMaxFlips() {
+		return super.getMaxFlips()/10;
 	}
 }

@@ -88,8 +88,10 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 
 	private final String name;
 
-	private int[] positionInConstraint ;
-	
+	private int[] positionInConstraint;
+
+	private double weight;
+
 	// private static final Logger logger = Logger.getLogger("cspfj.Variable");
 
 	public Variable(final int[] dom) {
@@ -125,6 +127,8 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 		chain.reOrder(order, removed);
 
 		absents = new UnOrderedChain(domain.length);
+
+		weight = 1;
 	}
 
 	/**
@@ -168,19 +172,18 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 
 		this.neighbours = neighb.toArray(new Variable[neighb.size()]);
 
-		positionInConstraint = new int[constraints.length] ;
+		positionInConstraint = new int[constraints.length];
 		for (int i = constraints.length; --i >= 0;) {
 			updatePositionInConstraint(i);
 		}
-		
-		
-		
 
 	}
-	
+
 	public void updatePositionInConstraint(final int constraintPosition) {
-		positionInConstraint[constraintPosition] = constraints[constraintPosition].getPosition(this);
-		constraints[constraintPosition].setPositionInVariable(positionInConstraint[constraintPosition], constraintPosition);
+		positionInConstraint[constraintPosition] = constraints[constraintPosition]
+				.getPosition(this);
+		constraints[constraintPosition].setPositionInVariable(
+				positionInConstraint[constraintPosition], constraintPosition);
 	}
 
 	/**
@@ -260,7 +263,7 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 	}
 
 	public boolean checkIndexValidity(final int index) {
-		for (int c = constraints.length ; --c>=0;) {
+		for (int c = constraints.length; --c >= 0;) {
 			if (!constraints[c].findValidTuple(positionInConstraint[c], index)) {
 				return false;
 			}
@@ -510,6 +513,14 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 	}
 
 	public int getPositionInConstraint(final int constraint) {
-		return positionInConstraint[constraint] ;
+		return positionInConstraint[constraint];
+	}
+
+	public void increaseWeight(final double i) {
+		weight += i;
+	}
+
+	public double getWeight() {
+		return weight;
 	}
 }
