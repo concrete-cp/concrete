@@ -34,12 +34,12 @@ public final class MCRW extends AbstractLocalSolver {
 	private final float randomWalk;
 
 	public MCRW(Problem prob, ResultHandler resultHandler) {
-		this(prob, resultHandler, .02F);
+		this(prob, resultHandler, -1);
 	}
 
 	public MCRW(Problem prob, ResultHandler resultHandler, float randomWalk) {
 		super(prob, resultHandler);
-		this.randomWalk = randomWalk;
+		this.randomWalk = randomWalk < 0 ? .02F : randomWalk;
 
 	}
 
@@ -74,13 +74,13 @@ public final class MCRW extends AbstractLocalSolver {
 		final ConflictsManager wcm = wcManagers[bestVariable.getId()];
 
 		final int bestIndex = wcm.getBestIndex();
-		
+
 		if (wcm.getBestIndex() == bestVariable.getFirst()) {
 			return 0;
 		}
-		
+
 		bestVariable.increaseWeight(1);
-		
+
 		final int improvment = wcm.getBestImprovment();
 
 		if (FINER) {

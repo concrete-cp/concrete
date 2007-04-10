@@ -7,6 +7,7 @@
 package cspfj;
 
 import java.util.Arrays;
+import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
 import cspfj.problem.Variable;
@@ -33,6 +34,8 @@ public final class ConflictsManager {
 	private int currentConflicts;
 
 	private int assignedIndex;
+
+	private final static Logger logger = Logger.getLogger("ConflictsManager");
 
 	public ConflictsManager(final Variable variable, final TieManager tieManager) {
 		super();
@@ -144,14 +147,12 @@ public final class ConflictsManager {
 		final int[] nbConflicts = this.nbConflicts;
 		final Variable variable = this.variable;
 
-		//final int position = constraint.getPosition(variable);
+		// final int position = constraint.getPosition(variable);
 
-		
-		
 		final int constraintPos = constraint.getPositionInVariable(variablePos);
 
-		assert variable.getInvolvingConstraints()[constraintPos] == constraint ;
-		
+		assert variable.getInvolvingConstraints()[constraintPos] == constraint;
+
 		for (int i = domain.length; --i >= 0;) {
 			if (variable.getRemovedLevel(i) >= 0) {
 				continue;
@@ -180,10 +181,10 @@ public final class ConflictsManager {
 
 		final int[] nbConflicts = this.nbConflicts;
 		final Variable variable = this.variable;
-		assert constraint.getPosition(variable) == pos ;
-		assert variable.getInvolvingConstraints()[constraint.getPositionInVariable(pos)] == constraint; 
-		
-		
+		assert constraint.getPosition(variable) == pos;
+		assert variable.getInvolvingConstraints()[constraint
+				.getPositionInVariable(pos)] == constraint;
+
 		final boolean[] check = this.check[constraint
 				.getPositionInVariable(pos)];
 
@@ -202,8 +203,11 @@ public final class ConflictsManager {
 		return changed;
 	}
 
-	public int getBestIndex(final TabuManager tabuManager) {
-		if (!tabuManager.isTabu(vid, bestIndex)) {
+	public int getBestIndex(final TabuManager tabuManager, final int aspiration) {
+		final int limit = currentConflicts - aspiration;
+
+		if (!tabuManager.isTabu(vid, bestIndex)
+				|| nbConflicts[bestIndex] < limit) {
 			return bestIndex;
 		}
 
@@ -217,7 +221,7 @@ public final class ConflictsManager {
 			if (variable.getRemovedLevel(i) >= 0) {
 				continue;
 			}
-			if (!tabuManager.isTabu(vid, i)) {
+			if (!tabuManager.isTabu(vid, i) || nbConflicts[i] < limit) {
 				tieManager.newValue(i, nbConflicts[i]);
 			}
 		}

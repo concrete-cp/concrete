@@ -36,16 +36,18 @@ public final class Tabu extends AbstractLocalSolver {
 	private final TieManager tieManager;
 
 	public Tabu(Problem prob, ResultHandler resultHandler) {
-		this(prob, resultHandler, 20);
+		this(prob, resultHandler, -1);
 	}
-	
+
 	public Tabu(Problem prob, ResultHandler resultHandler, int tabuSize) {
 		super(prob, resultHandler);
-		tabuManager = new TabuManager(prob, tabuSize);
+		tabuManager = tabuSize < 0 ? new TabuManager(prob, 20)
+				: new TabuManager(prob, tabuSize);
+
 		tieManager = new TieManager(getRandom());
 	}
 
-	private int bestWalk() {
+	private int bestWalk(final int aspiration) {
 		Variable bestVariable = null;
 		final TieManager tieManager = this.tieManager;
 		tieManager.clear();
@@ -55,11 +57,12 @@ public final class Tabu extends AbstractLocalSolver {
 		for (Variable v : problem.getVariables()) {
 			final int vId = v.getId();
 			final ConflictsManager wcm = wcManagers[vId];
-			if (wcm.getCurrentConflicts() <= -bestImp) {
-				continue;
-			}
-
-			final int bestIndex = wcm.getBestIndex(tabuManager);
+//			if (wcm.getCurrentConflicts() <= -bestImp) {
+//				continue;
+//			}
+			if (aspiration != 0){
+			logger.warning(aspiration+"");}
+			final int bestIndex = wcm.getBestIndex(tabuManager, aspiration);
 			if (bestIndex >= 0) {
 				final int imp = wcm.getImprovment(bestIndex);
 
@@ -85,7 +88,7 @@ public final class Tabu extends AbstractLocalSolver {
 			logger.finer(bestVariable + " <- " + bestIndex);
 		}
 		reAssign(wcm, bestIndex);
-		incrementNbAssignments();
+
 		return bestImp;
 	}
 
@@ -120,12 +123,12 @@ public final class Tabu extends AbstractLocalSolver {
 			// if (random.nextFloat() < randomWalk) {
 			// nbConflicts += randomWalk();
 			// } else {
-			nbConflicts += bestWalk();
+			nbConflicts += bestWalk(nbConflicts - bestEver);
 			// }
 
 			assert nbConflicts == weightedConflicts() : nbConflicts + "/="
 					+ weightedConflicts() + " (real = " + realConflicts() + ")";
-
+			incrementNbAssignments();
 			checkBacktracks();
 
 		}
@@ -139,9 +142,9 @@ public final class Tabu extends AbstractLocalSolver {
 				+ " conflicts ! (" + weightedConflicts() + " wc)";
 
 	}
-	
+
 	public String toString() {
-		return "tabu min-conflicts" ;
+		return "tabu min-conflicts";
 	}
 
 }

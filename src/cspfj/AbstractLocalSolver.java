@@ -1,7 +1,6 @@
 package cspfj;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -13,8 +12,6 @@ import java.util.logging.Logger;
 import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.AC3_P;
-import cspfj.filter.Filter;
-import cspfj.filter.SAC;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.RandomOrder;
@@ -41,6 +38,10 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 	
 	private int bestImp ;
 
+	public static void setSeed(long seed) {
+		random.setSeed(seed);
+	}
+	
 	public AbstractLocalSolver(Problem prob, ResultHandler resultHandler) {
 		super(prob, resultHandler);
 
@@ -152,11 +153,11 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		if (!max && !preprocess(new AC3_P(problem))) {
 			return false ;
 		}
-		// int nbTries = 0;
+		 int nbTries = 0;
 		do {
-			// if (nbTries++ > 50) {
-			// System.exit(0);
-			// }
+			 if (nbTries++ > 0) {
+			 System.exit(0);
+			 }
 			setMaxBacktracks(localBT);
 			logger.info("Run with " + localBT + " flips");
 			final int nbAssign = getNbAssignments();
@@ -254,10 +255,10 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 				if (!neighbour.equals(variable)) {
 					final ConflictsManager ncm = wcManagers[neighbour.getId()];
 					ncm.update(c, n);
-					updateBestVariable(ncm);
 				}
 			}
 		}
+		initBestVariable() ;
 	}
 
 	protected TieManager getTieManager() {
@@ -265,7 +266,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 	}
 
 	protected int getMaxFlips() {
-		return problem.getMaxFlips();
+		return 100000;//problem.getMaxFlips();
 	}
 	
 
@@ -277,18 +278,23 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		return bestImp ;
 	}
 	
-	protected void updateBestVariable(final ConflictsManager vcm) {
-		if (vcm.getBestImprovment() < bestImp) {
-			bestVariable = vcm.getVariable() ;
-			bestImp = vcm.getBestImprovment();
-		}
-	}
+//	protected void updateBestVariable(final ConflictsManager vcm) {
+//		if (vcm.getBestImprovment() < bestImp) {
+//			bestVariable = vcm.getVariable() ;
+//			bestImp = vcm.getBestImprovment();
+//		}
+//	}
 	
 	protected void initBestVariable() {
 		bestVariable = wcManagers[0].getVariable() ;
 		bestImp = wcManagers[0].getBestImprovment();
+		final TieManager tieManager = this.tieManager;
+		tieManager.clear();
 		for (ConflictsManager vcm: wcManagers) {
-			updateBestVariable(vcm);
+			if(tieManager.newValue(vcm.getBestImprovment())) {
+				bestVariable = vcm.getVariable() ;
+				bestImp = vcm.getBestImprovment();
+			}
 		}
 	}
 }

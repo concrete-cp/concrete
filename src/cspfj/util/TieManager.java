@@ -58,7 +58,7 @@ public final class TieManager {
 		}
 
 		if (evaluation < bestEvaluation) {
-			nbTies = 1;
+			nbTies = 2;
 			this.bestEvaluation = evaluation;
 			return true;
 		}
