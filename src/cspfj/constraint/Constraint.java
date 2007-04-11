@@ -338,6 +338,8 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		if (!matrix.setFirstTuple(variablePosition, index)) {
 			return false;
 		}
+		
+		
 
 		final boolean[][] lastCheck = this.lastCheck;
 		final int arity = this.arity;

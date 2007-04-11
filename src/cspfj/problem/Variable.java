@@ -523,4 +523,8 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 	public double getWeight() {
 		return weight;
 	}
+	
+	public void assignBoolean(final int index) {
+		BooleanArray.setSingle(booleanDomain, index);
+	}
 }

@@ -24,50 +24,57 @@ import java.util.Arrays;
 import cspfj.problem.Problem;
 
 public final class TabuManager {
-	private final boolean[][] tabus;
+	private final int[][] tabus;
 
-	private final int[] t1;
+	// private final int[] t1;
+	//
+	// private final int[] t2;
 
-	private final int[] t2;
-
-	private int head;
+	// private int head;
 
 	private final int size;
 
 	public TabuManager(final Problem problem, final int size) {
 		this.size = size;
-		tabus = new boolean[problem.getNbVariables()][problem
-				.getMaxDomainSize()];
-		t1 = new int[size];
-		t2 = new int[size];
-		clean();
+		tabus = new int[problem.getNbVariables()][problem.getMaxDomainSize()];
+		// t1 = new int[size];
+		// t2 = new int[size];
+//		System.out.println(size);
+		 clean();
 	}
 
-	public void push(final int vid, final int index) {
+	public void push(final int vid, final int index, final int nbIt) {
 		// assert tabus[variable.getId()][index] != true : variable + " " +
 		// index + " already tabu";
 
-		tabus[t1[head]][t2[head]] = false;
-		tabus[vid][index] = true;
-
-		t1[head] = vid;
-		t2[head] = index;
-		head = (head + 1) % size;
+		// tabus[t1[head]][t2[head]] = false;
+		// tabus[vid][index] = true;
+		//
+		// t1[head] = vid;
+		// t2[head] = index;
+		// head = (head + 1) % size;
+		tabus[vid][index] = nbIt + size;
 
 		// System.out.println( variable + " " + index + " tabu");
 	}
 
-	public boolean isTabu(final int vid, final int index) {
-		return tabus[vid][index];
+	public boolean isTabu(final int vid, final int index, final int nbIt) {
+		return tabus[vid][index] >= nbIt;
 	}
 
+	// public void clean() {
+	// for (boolean[] tabu : tabus) {
+	// Arrays.fill(tabu, false);
+	// }
+	// Arrays.fill(t1, 0);
+	// Arrays.fill(t2, 0);
+	// head = 0;
+	// }
+	
 	public void clean() {
-		for (boolean[] tabu : tabus) {
-			Arrays.fill(tabu, false);
+		for (int[] tabu:tabus) {
+			Arrays.fill(tabu, -1);
 		}
-		Arrays.fill(t1, 0);
-		Arrays.fill(t2, 0);
-		head = 0;
 	}
 
 	public int getSize() {

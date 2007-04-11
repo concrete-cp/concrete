@@ -31,10 +31,12 @@ import cspfj.util.TieManager;
 public final class WMC extends AbstractLocalSolver {
 
 	private final static Logger logger = Logger.getLogger("cspfj.WMC");
+	
+	private final TieManager tieManager ;
 
 	public WMC(Problem prob, ResultHandler resultHandler) {
 		super(prob, resultHandler);
-
+		tieManager = new TieManager(getRandom());
 	}
 
 	// private Variable findBest() {
@@ -87,21 +89,43 @@ public final class WMC extends AbstractLocalSolver {
 			}
 		} while (!changed);
 
-		initBestVariable() ;
+//		initBestVariable() ;
 		
 		return improvment;
 	}
 
 	private int bestWalk() throws MaxBacktracksExceededException {
 
-		final int imp = getBestImp();
+		Variable bestVariable = null;
+		final TieManager tieManager = this.tieManager;
+		tieManager.clear();
+
+		for (Variable v : problem.getVariables()) {
+			final int vId = v.getId();
+			final ConflictsManager wcm = wcManagers[vId];
+			// if (wcm.getCurrentConflicts() <= -bestImp) {
+			// continue;
+			// }
+			final int bestIndex = wcm.getBestIndex();
+			if (bestIndex >= 0) {
+				final int imp = wcm.getImprovment(bestIndex);
+
+				if (tieManager.newValue(bestIndex, imp)) {
+					bestVariable = v;
+					//bestImp = imp;
+				}
+			}
+
+		}
+		
+		final ConflictsManager wcm = wcManagers[bestVariable.getId()];
+		
+		final int bestIndex = tieManager.getBestValue();
+		
+		final int imp = wcm.getImprovment(bestIndex);
 		if (imp >= 0) {
 			return localMinimum();
 		}
-
-		final Variable bestVariable = getBestVariable();
-
-		final ConflictsManager wcm = wcManagers[bestVariable.getId()];
 
 		// final int imp = wcm.getBestImprovment();
 
@@ -168,7 +192,7 @@ public final class WMC extends AbstractLocalSolver {
 		return "weighted min-conflicts";
 	}
 	
-	public int getMaxFlips() {
-		return super.getMaxFlips()/10;
-	}
+//	public int getMaxFlips() {
+//		return super.getMaxFlips()/10;
+//	}
 }

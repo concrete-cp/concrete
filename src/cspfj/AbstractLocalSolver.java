@@ -26,22 +26,22 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 
 	protected static final boolean FINER = logger.isLoggable(Level.FINER);
 
-//	private final int[] flipCounter;
+	// private final int[] flipCounter;
 
 	private final TieManager tieManager;
 
 	final private boolean max;
 
 	final protected ConflictsManager[] wcManagers;
-	
-	private Variable bestVariable ;
-	
-	private int bestImp ;
 
-	public static void setSeed(long seed) {
+	// private Variable bestVariable ;
+	//	
+	// private int bestImp ;
+
+	public static void setSeed(final long seed) {
 		random.setSeed(seed);
 	}
-	
+
 	public AbstractLocalSolver(Problem prob, ResultHandler resultHandler) {
 		super(prob, resultHandler);
 
@@ -49,8 +49,8 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 
 		// tabuManager = new TabuManager(problem, 10);
 
-//		flipCounter = new int[prob.getMaxVId() + 1];
-//		Arrays.fill(flipCounter, 0);
+		// flipCounter = new int[prob.getMaxVId() + 1];
+		// Arrays.fill(flipCounter, 0);
 		tieManager = new TieManager(random);
 
 		wcManagers = new ConflictsManager[prob.getMaxVId() + 1];
@@ -138,8 +138,8 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		for (ConflictsManager wcm : randomOrder) {
 			wcm.initNbConflicts();
 		}
-		
-		initBestVariable(); 
+
+		// initBestVariable();
 	}
 
 	public abstract void minConflicts() throws MaxBacktracksExceededException,
@@ -151,13 +151,13 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		System.gc();
 		chronometer.startChrono();
 		if (!max && !preprocess(new AC3_P(problem))) {
-			return false ;
+			return false;
 		}
-		 int nbTries = 0;
+		int nbTries = 0;
 		do {
-			 if (nbTries++ > 0) {
-			 System.exit(0);
-			 }
+			if (nbTries++ > 0) {
+				System.exit(0);
+			}
 			setMaxBacktracks(localBT);
 			logger.info("Run with " + localBT + " flips");
 			final int nbAssign = getNbAssignments();
@@ -246,19 +246,18 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 	protected void reAssign(final ConflictsManager vcm, final int index) {
 		vcm.reAssign(index);
 		final Variable variable = vcm.getVariable();
-		bestVariable = variable ;
-		bestImp = vcm.getBestImprovment();
+		// bestVariable = variable ;
+		// bestImp = vcm.getBestImprovment();
 		for (Constraint c : variable.getInvolvingConstraints()) {
 			final Variable[] involvedVariables = c.getInvolvedVariables();
 			for (int n = involvedVariables.length; --n >= 0;) {
 				final Variable neighbour = involvedVariables[n];
 				if (!neighbour.equals(variable)) {
-					final ConflictsManager ncm = wcManagers[neighbour.getId()];
-					ncm.update(c, n);
+					wcManagers[neighbour.getId()].update(c, n);
 				}
 			}
 		}
-		initBestVariable() ;
+		// initBestVariable() ;
 	}
 
 	protected TieManager getTieManager() {
@@ -266,35 +265,34 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 	}
 
 	protected int getMaxFlips() {
-		return 100000;//problem.getMaxFlips();
+		return 100000;// problem.getMaxFlips();
 	}
-	
 
-	protected Variable getBestVariable() {
-		return bestVariable ;
-	}
-	
-	protected int getBestImp(){
-		return bestImp ;
-	}
-	
-//	protected void updateBestVariable(final ConflictsManager vcm) {
-//		if (vcm.getBestImprovment() < bestImp) {
-//			bestVariable = vcm.getVariable() ;
-//			bestImp = vcm.getBestImprovment();
-//		}
-//	}
-	
-	protected void initBestVariable() {
-		bestVariable = wcManagers[0].getVariable() ;
-		bestImp = wcManagers[0].getBestImprovment();
-		final TieManager tieManager = this.tieManager;
-		tieManager.clear();
-		for (ConflictsManager vcm: wcManagers) {
-			if(tieManager.newValue(vcm.getBestImprovment())) {
-				bestVariable = vcm.getVariable() ;
-				bestImp = vcm.getBestImprovment();
-			}
-		}
-	}
+	// protected Variable getBestVariable() {
+	// return bestVariable ;
+	// }
+	//	
+	// protected int getBestImp(){
+	// return bestImp ;
+	// }
+
+	// protected void updateBestVariable(final ConflictsManager vcm) {
+	// if (vcm.getBestImprovment() < bestImp) {
+	// bestVariable = vcm.getVariable() ;
+	// bestImp = vcm.getBestImprovment();
+	// }
+	// }
+
+	// protected void initBestVariable() {
+	// bestVariable = wcManagers[0].getVariable() ;
+	// bestImp = wcManagers[0].getBestImprovment();
+	// final TieManager tieManager = this.tieManager;
+	// tieManager.clear();
+	// for (ConflictsManager vcm: wcManagers) {
+	// if(tieManager.newValue(vcm.getBestImprovment())) {
+	// bestVariable = vcm.getVariable() ;
+	// bestImp = vcm.getBestImprovment();
+	// }
+	// }
+	// }
 }

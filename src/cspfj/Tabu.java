@@ -41,9 +41,7 @@ public final class Tabu extends AbstractLocalSolver {
 
 	public Tabu(Problem prob, ResultHandler resultHandler, int tabuSize) {
 		super(prob, resultHandler);
-		tabuManager = tabuSize < 0 ? new TabuManager(prob, 20)
-				: new TabuManager(prob, tabuSize);
-
+		tabuManager = new TabuManager(prob, tabuSize < 0 ? 20 : tabuSize);
 		tieManager = new TieManager(getRandom());
 	}
 
@@ -52,25 +50,34 @@ public final class Tabu extends AbstractLocalSolver {
 		final TieManager tieManager = this.tieManager;
 		tieManager.clear();
 
-		int bestImp = tieManager.getBestEvaluation();
-
+		// int bestImp = tieManager.getBestEvaluation();
+		final int nbIt = getNbBacktracks();
 		for (Variable v : problem.getVariables()) {
 			final int vId = v.getId();
 			final ConflictsManager wcm = wcManagers[vId];
-//			if (wcm.getCurrentConflicts() <= -bestImp) {
-//				continue;
-//			}
-			if (aspiration != 0){
-			logger.warning(aspiration+"");}
-			final int bestIndex = wcm.getBestIndex(tabuManager, aspiration);
-			if (bestIndex >= 0) {
-				final int imp = wcm.getImprovment(bestIndex);
+			// if (wcm.getCurrentConflicts() <= -bestImp) {
+			// continue;
+			// }
 
-				if (tieManager.newValue(bestIndex, imp)) {
+			for (int i = v.getDomain().length; --i >= 0;) {
+				if (v.getRemovedLevel(i) < 0
+						&& (!tabuManager.isTabu(vId, i, nbIt) || wcm
+								.getImprovment(i) < -aspiration)
+						&& tieManager.newValue(i, wcm.getImprovment(i))) {
 					bestVariable = v;
-					bestImp = imp;
 				}
 			}
+
+			// final int bestIndex = wcm.getBestIndex(tabuManager, aspiration,
+			// getNbBacktracks());
+			// if (bestIndex >= 0) {
+			// final int imp = wcm.getImprovment(bestIndex);
+			//
+			// if (tieManager.newValue(bestIndex, imp)) {
+			// bestVariable = v;
+			// // bestImp = imp;
+			// }
+			// }
 
 		}
 
@@ -82,7 +89,11 @@ public final class Tabu extends AbstractLocalSolver {
 
 		final int bestIndex = tieManager.getBestValue();
 
-		tabuManager.push(bestVariableId, bestIndex);
+		final int bestImp = wcm.getImprovment(bestIndex);
+
+		// tabuManager.push(bestVariableId, bestIndex, getNbBacktracks());
+		tabuManager.push(bestVariableId, bestVariable.getFirst(),
+				getNbBacktracks());
 
 		if (FINER) {
 			logger.finer(bestVariable + " <- " + bestIndex);

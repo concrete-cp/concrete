@@ -82,18 +82,17 @@ public final class ConflictsManager {
 					continue;
 				}
 
-				variable.firstAssign(i);
+				variable.assignBoolean(i);
 
 				int indexConflicts = 0;
 
 				for (int c = constraints.length; --c >= 0;) {
 					final Constraint constraint = constraints[c];
-					if (constraint.getArity() > Constraint.MAX_ARITY) {
-						continue;
-					}
 
-					if (!constraint.findValidTuple(variable
-							.getPositionInConstraint(c), i)) {
+					if (constraint.getArity() <= Constraint.MAX_ARITY
+							&& !constraint.findValidTuple(variable
+									.getPositionInConstraint(c), i)) {
+//						logger.warning("No tuple found");
 						indexConflicts += constraint.getWeight();
 					}
 
@@ -103,7 +102,7 @@ public final class ConflictsManager {
 
 			}
 
-			variable.resetAssign();
+			// variable.resetAssign();
 
 			bestIndex = assignedIndex = tieManager.getBestValue();
 
@@ -197,16 +196,20 @@ public final class ConflictsManager {
 			}
 			tieManager.newValue(i, nbConflicts[i]);
 		}
-		final boolean changed = (bestIndex == tieManager.getBestValue());
+		if (bestIndex == tieManager.getBestValue()) {
+			return false;
+		}
 		bestIndex = tieManager.getBestValue();
 		currentConflicts = nbConflicts[assignedIndex];
-		return changed;
+		return true;
 	}
 
-	public int getBestIndex(final TabuManager tabuManager, final int aspiration) {
+	public int getBestIndex(final TabuManager tabuManager,
+			final int aspiration, final int nbIt) {
 		final int limit = currentConflicts - aspiration;
+		final int vid = this.vid;
 
-		if (!tabuManager.isTabu(vid, bestIndex)
+		if (!tabuManager.isTabu(vid, bestIndex, nbIt)
 				|| nbConflicts[bestIndex] < limit) {
 			return bestIndex;
 		}
@@ -218,10 +221,8 @@ public final class ConflictsManager {
 		final Variable variable = this.variable;
 
 		for (int i = domain.length; --i >= 0;) {
-			if (variable.getRemovedLevel(i) >= 0) {
-				continue;
-			}
-			if (!tabuManager.isTabu(vid, i) || nbConflicts[i] < limit) {
+			if (variable.getRemovedLevel(i) < 0
+					&& (!tabuManager.isTabu(vid, i, nbIt) || nbConflicts[i] < limit)) {
 				tieManager.newValue(i, nbConflicts[i]);
 			}
 		}

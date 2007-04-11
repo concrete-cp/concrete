@@ -45,16 +45,16 @@ public final class TieManager {
 	}
 
 	public boolean newValue(final int value, final int evaluation) {
-		final boolean newBest = newValue(evaluation) ;
-		if (newBest) {
-			this.bestValue = value ;
+		if (newValue(evaluation)) {
+			this.bestValue = value;
+			return true ;
 		}
-		return newBest;
+		return false;
 	}
-	
+
 	public boolean newValue(final int evaluation) {
-		if (evaluation == bestEvaluation && random.nextFloat() * nbTies++ < 1) {
-			return true;
+		if (evaluation == bestEvaluation) {
+			return random.nextFloat() * nbTies++ < 1;
 		}
 
 		if (evaluation < bestEvaluation) {

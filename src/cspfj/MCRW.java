@@ -48,19 +48,19 @@ public final class MCRW extends AbstractLocalSolver {
 		final TieManager tieManager = getTieManager();
 		tieManager.clear();
 
-		int bestImp = tieManager.getBestEvaluation();
+//		int bestImp = tieManager.getBestEvaluation();
 
 		for (Variable v : problem.getVariables()) {
 			final int vId = v.getId();
 			final ConflictsManager wcm = wcManagers[vId];
-			if (wcm.getCurrentConflicts() <= -bestImp) {
-				continue;
-			}
+//			if (wcm.getCurrentConflicts() <= -bestImp) {
+//				continue;
+//			}
 
 			final int imp = wcm.getBestImprovment();
 			if (tieManager.newValue(imp)) {
 				bestVariable = v;
-				bestImp = imp;
+//				bestImp = imp;
 			}
 
 		}
@@ -68,9 +68,17 @@ public final class MCRW extends AbstractLocalSolver {
 		return bestVariable;
 
 	}
+	
+	private Variable conflicting() {
+		ConflictsManager wcm ;
+		do {
+			wcm = wcManagers[getRandom().nextInt(wcManagers.length)] ;
+		} while (wcm.getCurrentConflicts() == 0);
+		return wcm.getVariable();
+	}
 
 	private int bestWalk() throws MaxBacktracksExceededException {
-		final Variable bestVariable = findBest();
+		final Variable bestVariable = conflicting() ;//findBest();
 		final ConflictsManager wcm = wcManagers[bestVariable.getId()];
 
 		final int bestIndex = wcm.getBestIndex();
