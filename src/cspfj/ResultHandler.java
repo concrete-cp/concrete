@@ -50,11 +50,11 @@ public class ResultHandler {
 	protected boolean displaySolutions;
 
 	protected final Map<String, String> statistics;
-
+	
 	private static final Logger logger = Logger
 			.getLogger("cspfj.AbstractResultWriter");
 
-	protected int bestSatisfied = 0;
+	private int bestSatisfied = 0;
 
 	public ResultHandler(final boolean displaySolutions) {
 		this.writer = new OutputStreamWriter(System.out);
@@ -170,4 +170,8 @@ public class ResultHandler {
 		return unsat;
 	}
 
+	public final int getBestSatisfied() {
+		return bestSatisfied;
+	}
+	
 }

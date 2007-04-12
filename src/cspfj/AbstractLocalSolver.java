@@ -58,6 +58,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 			wcManagers[v.getId()] = new ConflictsManager(v, tieManager);
 		}
 
+		setMaxBacktracks(getMaxFlips());
 	}
 
 	public static Random getRandom() {
@@ -146,7 +147,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 			IOException;
 
 	public boolean runSolver() throws IOException {
-		final int localBT = getMaxFlips();
+		final int localBT = getMaxBacktracks();
 		boolean resolved = false;
 		System.gc();
 		chronometer.startChrono();
@@ -156,7 +157,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		int nbTries = 0;
 		do {
 			if (nbTries++ > 0) {
-				System.exit(0);
+				return false;
 			}
 			setMaxBacktracks(localBT);
 			logger.info("Run with " + localBT + " flips");
