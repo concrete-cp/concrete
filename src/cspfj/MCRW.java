@@ -39,46 +39,51 @@ public final class MCRW extends AbstractLocalSolver {
 
 	public MCRW(Problem prob, ResultHandler resultHandler, float randomWalk) {
 		super(prob, resultHandler);
-		this.randomWalk = randomWalk < 0 ? .02F : randomWalk;
+		this.randomWalk = randomWalk < 0 ? .03F : randomWalk;
 
 	}
 
-	private Variable findBest() {
-		Variable bestVariable = null;
+	// private Variable findBest() {
+	// Variable bestVariable = null;
+	// final TieManager tieManager = getTieManager();
+	// tieManager.clear();
+	//
+	// // int bestImp = tieManager.getBestEvaluation();
+	//
+	// for (Variable v : problem.getVariables()) {
+	// final int vId = v.getId();
+	// final ConflictsManager wcm = wcManagers[vId];
+	// // if (wcm.getCurrentConflicts() <= -bestImp) {
+	// // continue;
+	// // }
+	//
+	// final int imp = wcm.getBestImprovment();
+	// if (tieManager.newValue(imp)) {
+	// bestVariable = v;
+	// // bestImp = imp;
+	// }
+	//
+	// }
+	//
+	// return bestVariable;
+	//
+	// }
+	//	
+	private Variable conflicting() {
 		final TieManager tieManager = getTieManager();
 		tieManager.clear();
-
-//		int bestImp = tieManager.getBestEvaluation();
-
-		for (Variable v : problem.getVariables()) {
-			final int vId = v.getId();
-			final ConflictsManager wcm = wcManagers[vId];
-//			if (wcm.getCurrentConflicts() <= -bestImp) {
-//				continue;
-//			}
-
-			final int imp = wcm.getBestImprovment();
-			if (tieManager.newValue(imp)) {
-				bestVariable = v;
-//				bestImp = imp;
+		Variable variable = null;
+		for (ConflictsManager cm : wcManagers) {
+			if (cm.getCurrentConflicts() > 0 && tieManager.newValue(0)) {
+				variable = cm.getVariable();
 			}
-
 		}
 
-		return bestVariable;
-
-	}
-	
-	private Variable conflicting() {
-		ConflictsManager wcm ;
-		do {
-			wcm = wcManagers[getRandom().nextInt(wcManagers.length)] ;
-		} while (wcm.getCurrentConflicts() == 0);
-		return wcm.getVariable();
+		return variable;
 	}
 
 	private int bestWalk() throws MaxBacktracksExceededException {
-		final Variable bestVariable = conflicting() ;//findBest();
+		final Variable bestVariable = conflicting();// findBest();
 		final ConflictsManager wcm = wcManagers[bestVariable.getId()];
 
 		final int bestIndex = wcm.getBestIndex();

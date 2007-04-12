@@ -236,4 +236,8 @@ public final class ConflictsManager {
 		currentConflicts = nbConflicts[index];
 	}
 
+	public int getAssignedIndex() {
+		return assignedIndex;
+	}
+
 }
