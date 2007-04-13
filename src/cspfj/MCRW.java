@@ -74,7 +74,7 @@ public final class MCRW extends AbstractLocalSolver {
 		tieManager.clear();
 		Variable variable = null;
 		for (ConflictsManager cm : wcManagers) {
-			if (cm.getCurrentConflicts() > 0 && tieManager.newValue(0)) {
+			if (cm.isCritic() && tieManager.newValue(0)) {
 				variable = cm.getVariable();
 			}
 		}
@@ -89,6 +89,7 @@ public final class MCRW extends AbstractLocalSolver {
 		final int bestIndex = wcm.getBestIndex();
 
 		if (wcm.getBestIndex() == bestVariable.getFirst()) {
+			wcm.shuffleBest() ;
 			return 0;
 		}
 
@@ -106,8 +107,8 @@ public final class MCRW extends AbstractLocalSolver {
 	}
 
 	private int randomWalk() throws MaxBacktracksExceededException {
-		final Variable variable = problem.getVariables()[getRandom().nextInt(
-				problem.getNbVariables())];
+		final Variable variable = conflicting() ;//problem.getVariables()[getRandom().nextInt(
+				//problem.getNbVariables())];
 
 		int index;
 
@@ -151,12 +152,9 @@ public final class MCRW extends AbstractLocalSolver {
 				solution(nbConflicts);
 			}
 
-			if (FINER) {
-				logger.finer(nbConflicts + " conflicts " + "(real = "
-						+ realConflicts() + ", " + getNbBacktracks() + "/"
-						+ getMaxBacktracks() + ")");
-			}
 
+
+			final int oldConflicts = nbConflicts ;
 			assert realConflicts() <= nbConflicts;
 
 			if (getRandom().nextFloat() < randomWalk) {
@@ -165,6 +163,12 @@ public final class MCRW extends AbstractLocalSolver {
 				nbConflicts += bestWalk();
 			}
 
+			if (FINER && nbConflicts != oldConflicts) {
+				logger.finer(nbConflicts + " conflicts " + "(real = "
+						+ realConflicts() + ", " + getNbBacktracks() + "/"
+						+ getMaxBacktracks() + ")");
+			}
+			
 			assert nbConflicts == weightedConflicts() : nbConflicts + "/="
 					+ weightedConflicts() + " (real = " + realConflicts() + ")";
 

@@ -20,6 +20,7 @@
 package cspfj;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 import cspfj.exception.MaxBacktracksExceededException;
@@ -41,7 +42,7 @@ public final class Tabu extends AbstractLocalSolver {
 
 	public Tabu(Problem prob, ResultHandler resultHandler, int tabuSize) {
 		super(prob, resultHandler);
-		tabuManager = new TabuManager(prob, tabuSize < 0 ? 20 : tabuSize);
+		tabuManager = new TabuManager(prob, tabuSize < 0 ? 75 : tabuSize);
 		tieManager = new TieManager(getRandom());
 	}
 
@@ -52,19 +53,23 @@ public final class Tabu extends AbstractLocalSolver {
 
 		// int bestImp = tieManager.getBestEvaluation();
 		final int nbIt = getNbBacktracks();
-		for (Variable v : problem.getVariables()) {
-			final int vId = v.getId();
-			final ConflictsManager wcm = wcManagers[vId];
-			// if (wcm.getCurrentConflicts() <= -bestImp) {
-			// continue;
-			// }
+		for (ConflictsManager vcm : wcManagers) {
+			Variable variable = vcm.getVariable() ;
+			if (!vcm.isCritic()) {
+				continue;
+			}
 
-			for (int i = v.getDomain().length; --i >= 0;) {
-				if (v.getRemovedLevel(i) < 0
-						&& (!tabuManager.isTabu(vId, i, nbIt) || wcm
+			assert vcm.getCurrentConflicts() > 0 : vcm.getVariable() + " : "
+					+ vcm.getCurrentConflicts()
+					+ Arrays.toString(vcm.criticConstraints);
+
+			final int vId = variable.getId();
+			for (int i = variable.getDomain().length; --i >= 0;) {
+				if (variable.getRemovedLevel(i) < 0
+						&& (!tabuManager.isTabu(vId, i, nbIt) || vcm
 								.getImprovment(i) < -aspiration)
-						&& tieManager.newValue(i, wcm.getImprovment(i))) {
-					bestVariable = v;
+						&& tieManager.newValue(i, vcm.getImprovment(i))) {
+					bestVariable = variable;
 				}
 			}
 
@@ -155,7 +160,7 @@ public final class Tabu extends AbstractLocalSolver {
 	}
 
 	public String toString() {
-		return "tabu min-conflicts";
+		return "tabu min-conflicts - " + tabuManager.getSize();
 	}
 
 }

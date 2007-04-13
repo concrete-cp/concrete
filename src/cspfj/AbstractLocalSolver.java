@@ -154,11 +154,11 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		if (!max && !preprocess(new AC3_P(problem))) {
 			return false;
 		}
-		int nbTries = 0;
+//		int nbTries = 0;
 		do {
-			if (nbTries++ > 0) {
-				return false;
-			}
+//			if (nbTries++ > 0) {
+//				return false;
+//			}
 			setMaxBacktracks(localBT);
 			logger.info("Run with " + localBT + " flips");
 			final int nbAssign = getNbAssignments();
@@ -247,14 +247,16 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 	protected void reAssign(final ConflictsManager vcm, final int index) {
 		vcm.reAssign(index);
 		final Variable variable = vcm.getVariable();
+		final int vId = variable.getId();
 		// bestVariable = variable ;
 		// bestImp = vcm.getBestImprovment();
 		for (Constraint c : variable.getInvolvingConstraints()) {
 			final Variable[] involvedVariables = c.getInvolvedVariables();
 			for (int n = involvedVariables.length; --n >= 0;) {
 				final Variable neighbour = involvedVariables[n];
-				if (!neighbour.equals(variable)) {
-					wcManagers[neighbour.getId()].update(c, n);
+				final int nId = neighbour.getId() ;
+				if (nId != vId) {
+					wcManagers[nId].update(c, n);
 				}
 			}
 		}
@@ -266,7 +268,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 	}
 
 	protected int getMaxFlips() {
-		return 100000;// problem.getMaxFlips();
+		return  problem.getMaxFlips();
 	}
 
 	// protected Variable getBestVariable() {

@@ -35,7 +35,11 @@ public final class ConflictsManager {
 
 	private int assignedIndex;
 
-	private final static Logger logger = Logger.getLogger("ConflictsManager");
+	//private final static Logger logger = Logger.getLogger("ConflictsManager");
+
+	private boolean critic;
+
+	public final boolean[] criticConstraints;
 
 	public ConflictsManager(final Variable variable, final TieManager tieManager) {
 		super();
@@ -47,6 +51,7 @@ public final class ConflictsManager {
 		nbConflicts = new int[variable.getDomain().length];
 
 		check = new boolean[constraints.length][domain.length];
+		criticConstraints = new boolean[constraints.length];
 		assignedIndex = variable.getFirst();
 	}
 
@@ -92,7 +97,7 @@ public final class ConflictsManager {
 					if (constraint.getArity() <= Constraint.MAX_ARITY
 							&& !constraint.findValidTuple(variable
 									.getPositionInConstraint(c), i)) {
-//						logger.warning("No tuple found");
+						// logger.warning("No tuple found");
 						indexConflicts += constraint.getWeight();
 					}
 
@@ -118,10 +123,11 @@ public final class ConflictsManager {
 		final Constraint[] constraints = this.constraints;
 		final Variable variable = this.variable;
 		final int domain = this.domain.length;
+
 		for (int c = constraints.length; --c >= 0;) {
+			final boolean[] check = this.check[c];
 			final Constraint constraint = constraints[c];
 			final int position = constraint.getPosition(variable);
-			final boolean[] check = this.check[c];
 			for (int i = domain; --i >= 0;) {
 				if (variable.getRemovedLevel(i) >= 0) {
 					continue;
@@ -134,6 +140,34 @@ public final class ConflictsManager {
 			}
 		}
 		currentConflicts = nbConflicts[assignedIndex];
+		initCritic() ;
+	}
+	
+	private final void initCritic() {
+		critic = false;
+		final boolean[] criticConstraints = this.criticConstraints;
+		for (int c = constraints.length; --c >= 0;) {
+			if (criticConstraints[c] = critic(c)) {
+				critic = true;
+				assert currentConflicts > 0;
+				break;
+			}
+		}
+	}
+
+	private boolean critic(int constraintPos) {
+		final boolean[] check = this.check[constraintPos];
+		final boolean currentCheck = check[assignedIndex];
+		if (currentCheck) {
+			return false;
+		}
+		for (int i = domain.length; --i >= 0;) {
+			if (check[i]) {
+				assert currentConflicts > 0;
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public int getCurrentConflicts() {
@@ -158,7 +192,7 @@ public final class ConflictsManager {
 			}
 
 			final boolean check = constraint.checkFirstWith(variablePos, i);
-			if (check != this.check[constraintPos][i]) {
+			if (check ^ this.check[constraintPos][i]) {
 				if (check) {
 					nbConflicts[i] -= constraint.getWeight();
 				} else {
@@ -171,10 +205,31 @@ public final class ConflictsManager {
 		}
 		bestIndex = tieManager.getBestValue();
 		currentConflicts = nbConflicts[assignedIndex];
+
+		//updateCritic(constraintPos);
+		initCritic() ;
+	}
+
+	private void updateCritic(int constraintPos) {
+		final boolean wasCritic = criticConstraints[constraintPos];
+		assert wasCritic ? critic : true;
+		if (criticConstraints[constraintPos] = critic(constraintPos)) {
+			critic = true;
+		} else if (wasCritic) {
+			critic = false;
+			for (int c = criticConstraints.length; --c >= 0;) {
+				if (criticConstraints[c]) {
+					critic = true;
+					break;
+				}
+			}
+		}
+
 	}
 
 	public boolean updateAfterIncrement(final Constraint constraint,
 			final int pos) {
+		
 		final TieManager tieManager = this.tieManager;
 		tieManager.clear();
 
@@ -186,7 +241,7 @@ public final class ConflictsManager {
 
 		final boolean[] check = this.check[constraint
 				.getPositionInVariable(pos)];
-
+		assert !check[assignedIndex];
 		for (int i = domain.length; --i >= 0;) {
 			if (variable.getRemovedLevel(i) >= 0) {
 				continue;
@@ -196,11 +251,11 @@ public final class ConflictsManager {
 			}
 			tieManager.newValue(i, nbConflicts[i]);
 		}
+		currentConflicts = nbConflicts[assignedIndex];
 		if (bestIndex == tieManager.getBestValue()) {
 			return false;
 		}
 		bestIndex = tieManager.getBestValue();
-		currentConflicts = nbConflicts[assignedIndex];
 		return true;
 	}
 
@@ -234,10 +289,26 @@ public final class ConflictsManager {
 		variable.reAssign(index);
 		assignedIndex = index;
 		currentConflicts = nbConflicts[index];
+		initCritic() ;
 	}
 
 	public int getAssignedIndex() {
 		return assignedIndex;
 	}
 
+	public boolean isCritic() {
+		return critic;
+	}
+
+	public void shuffleBest() {
+		final TieManager tieManager = this.tieManager;
+		tieManager.clear() ;
+		for (int i = domain.length; --i >= 0;) {
+			if (variable.getRemovedLevel(i) < 0) {
+				tieManager.newValue(i, nbConflicts[i]);
+			}
+		}
+
+		bestIndex = tieManager.getBestValue();
+	}
 }
