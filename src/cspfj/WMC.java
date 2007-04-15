@@ -31,8 +31,8 @@ import cspfj.util.TieManager;
 public final class WMC extends AbstractLocalSolver {
 
 	private final static Logger logger = Logger.getLogger("cspfj.WMC");
-
-	private final TieManager tieManager;
+	
+	private final TieManager tieManager ;
 
 	public WMC(Problem prob, ResultHandler resultHandler) {
 		super(prob, resultHandler);
@@ -65,7 +65,7 @@ public final class WMC extends AbstractLocalSolver {
 	//
 	// }
 
-	private int localMinimum() {
+	private int localMinimum() throws MaxBacktracksExceededException {
 		int improvment = 0;
 
 		if (FINER) {
@@ -87,10 +87,12 @@ public final class WMC extends AbstractLocalSolver {
 					}
 				}
 			}
+			incrementNbAssignments();
+			checkBacktracks();
 		} while (!changed);
 
-		// initBestVariable() ;
-
+//		initBestVariable() ;
+		
 		return improvment;
 	}
 
@@ -106,27 +108,25 @@ public final class WMC extends AbstractLocalSolver {
 			// if (wcm.getCurrentConflicts() <= -bestImp) {
 			// continue;
 			// }
-//			if (!wcm.isCritic()) {
-//				continue;
-//			}
 			final int bestIndex = wcm.getBestIndex();
 			if (bestIndex >= 0) {
 				final int imp = wcm.getImprovment(bestIndex);
 
 				if (tieManager.newValue(bestIndex, imp)) {
 					bestVariable = v;
-					// bestImp = imp;
+					//bestImp = imp;
 				}
 			}
 
 		}
-
+		
 		final ConflictsManager wcm = wcManagers[bestVariable.getId()];
-
+		
 		final int bestIndex = tieManager.getBestValue();
-
+		
 		final int imp = wcm.getImprovment(bestIndex);
 		if (imp >= 0) {
+
 			return localMinimum();
 		}
 
@@ -179,6 +179,7 @@ public final class WMC extends AbstractLocalSolver {
 			assert nbConflicts == weightedConflicts() : nbConflicts + "/="
 					+ weightedConflicts() + " (real = " + realConflicts() + ")";
 
+
 		}
 
 		for (Variable v : problem.getVariables()) {
@@ -194,8 +195,8 @@ public final class WMC extends AbstractLocalSolver {
 	public String toString() {
 		return "weighted min-conflicts";
 	}
-
-	public int getMaxFlips() {
-		return super.getMaxFlips() / 10;
-	}
+	
+//	public int getMaxFlips() {
+//		return super.getMaxFlips()/10;
+//	}
 }
