@@ -34,12 +34,18 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 
 	final protected ConflictsManager[] wcManagers;
 
+	private int maxTries = -1;
+
 	// private Variable bestVariable ;
 	//	
 	// private int bestImp ;
 
 	public static void setSeed(final long seed) {
 		random.setSeed(seed);
+	}
+
+	public void setMaxTries(final int tries) {
+		this.maxTries = tries;
 	}
 
 	public AbstractLocalSolver(Problem prob, ResultHandler resultHandler) {
@@ -58,7 +64,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 			wcManagers[v.getId()] = new ConflictsManager(v, tieManager);
 		}
 
-		setMaxBacktracks(100000);
+		setMaxBacktracks(prob.getMaxFlips());
 	}
 
 	public static Random getRandom() {
@@ -154,11 +160,11 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		if (!max && !preprocess(new AC3_P(problem))) {
 			return false;
 		}
-		// int nbTries = 0;
+		int nbTries = 0;
 		do {
-			// if (nbTries++ > 0) {
-			// return false;
-			// }
+			if (maxTries > 0 && nbTries++ >= maxTries) {
+				return false;
+			}
 			setMaxBacktracks(localBT);
 			logger.info("Run with " + localBT + " flips");
 			final int nbAssign = getNbAssignments();
@@ -192,10 +198,9 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 			logger.info("Took " + localTime + " s (" + (localBT / localTime)
 					+ " flips per second), " + (getNbAssignments() - nbAssign)
 					+ " assignments made");
-
 			for (Constraint c : problem.getConstraints()) {
-				c.setWeight(1);//Math.max(1, (int) Math.log(c.getWeight())));
-				// / problem.getNbConstraints()));
+				c.setWeight(1);//Math.max(1, c.getWeight()
+				 // / problem.getNbConstraints()));
 			}
 
 			for (Variable v : problem.getVariables()) {

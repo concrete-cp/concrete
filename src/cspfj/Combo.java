@@ -46,7 +46,7 @@ public class Combo extends AbstractSolver {
 
 		heuristic.compute();
 
-		final int localBT = mCSolver.getMaxFlips();
+		final int localBT = problem.getMaxFlips();
 
 		int maxBT = problem.getMaxBacktracks();
 

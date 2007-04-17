@@ -78,6 +78,14 @@ public final class MCRW extends AbstractLocalSolver {
 				variable = cm.getVariable();
 			}
 		}
+		if (variable == null) {
+			//logger.warning("No critic variable");
+			for (ConflictsManager cm : wcManagers) {
+				if (tieManager.newValue(0)) {
+					variable = cm.getVariable();
+				}
+			}
+		}
 
 		return variable;
 	}
@@ -154,7 +162,7 @@ public final class MCRW extends AbstractLocalSolver {
 
 
 
-			final int oldConflicts = nbConflicts ;
+			//final int oldConflicts = nbConflicts ;
 			assert realConflicts() <= nbConflicts;
 
 			if (getRandom().nextFloat() < randomWalk) {
@@ -163,7 +171,7 @@ public final class MCRW extends AbstractLocalSolver {
 				nbConflicts += bestWalk();
 			}
 
-			if (FINER && nbConflicts != oldConflicts) {
+			if (FINER) {
 				logger.finer(nbConflicts + " conflicts " + "(real = "
 						+ realConflicts() + ", " + getNbBacktracks() + "/"
 						+ getMaxBacktracks() + ")");

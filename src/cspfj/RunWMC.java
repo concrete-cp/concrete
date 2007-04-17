@@ -22,7 +22,7 @@ public class RunWMC extends AbstractRunSolver {
 		super(problem, solutionHandler);
 		mCSolver = new WMC(problem, resultHandler);
 		setSolver(mCSolver);
-		maxFlips = mCSolver.getMaxFlips();
+		maxFlips = problem.getMaxFlips();
 
 	}
 

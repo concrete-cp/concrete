@@ -206,7 +206,7 @@ public final class ConflictsManager {
 		bestIndex = tieManager.getBestValue();
 		currentConflicts = nbConflicts[assignedIndex];
 
-//		updateCritic(constraintPos);
+		//updateCritic(constraintPos);
 		initCritic() ;
 	}
 

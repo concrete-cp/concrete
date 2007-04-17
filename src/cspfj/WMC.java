@@ -31,13 +31,15 @@ import cspfj.util.TieManager;
 public final class WMC extends AbstractLocalSolver {
 
 	private final static Logger logger = Logger.getLogger("cspfj.WMC");
-	
-	private final TieManager tieManager ;
+
+	// final List<Integer> nbc = new ArrayList<Integer>(500);
+	// final List<Integer> nbrc = new ArrayList<Integer>(500);
+
+	private final TieManager tieManager;
 
 	public WMC(Problem prob, ResultHandler resultHandler) {
 		super(prob, resultHandler);
 		tieManager = new TieManager(getRandom());
-//		setMaxBacktracks(200000);
 	}
 
 	// private Variable findBest() {
@@ -66,79 +68,79 @@ public final class WMC extends AbstractLocalSolver {
 	//
 	// }
 
-	private int localMinimum() throws MaxBacktracksExceededException {
+	private int localMinimum() {
 		int improvment = 0;
 
-		if (FINER) {
-			logger.finer("Local Minimum");
-		}
+		// if (FINER) {
+		logger.finer("Local Minimum");
+		// }
 		final ConflictsManager[] wcManagers = this.wcManagers;
 		boolean changed = false;
-		do {
-			for (Constraint c : problem.getConstraints()) {
-				if (!c.checkFirst()) {
-					improvment++;
-					c.increaseWeight();
-					final Variable[] involvedVariables = c
-							.getInvolvedVariables();
-					for (int pos = involvedVariables.length; --pos >= 0;) {
-						changed |= wcManagers[involvedVariables[pos].getId()]
-								.updateAfterIncrement(c, pos);
+		// do {
+		for (Constraint c : problem.getConstraints()) {
+			if (!c.checkFirst()) {
+				improvment++;
+				c.increaseWeight();
+				final Variable[] involvedVariables = c.getInvolvedVariables();
+				for (int pos = involvedVariables.length; --pos >= 0;) {
+					changed |= wcManagers[involvedVariables[pos].getId()]
+							.updateAfterIncrement(c, pos);
 
-					}
 				}
 			}
-			incrementNbAssignments();
-			checkBacktracks();
-		} while (!changed);
+		}
+		// incrementNbAssignments();
+		// checkBacktracks();
+		// nbc.add(weightedConflicts());
+		// nbrc.add(realConflicts());
+		// } while (!changed);
 
-//		initBestVariable() ;
-		
+		// initBestVariable() ;
+
 		return improvment;
 	}
 
 	private int bestWalk() throws MaxBacktracksExceededException {
 
-		Variable bestVariable = null;
+		ConflictsManager bestCM = null;
 		final TieManager tieManager = this.tieManager;
 		tieManager.clear();
 
-		for (Variable v : problem.getVariables()) {
-			final int vId = v.getId();
-			final ConflictsManager wcm = wcManagers[vId];
-			if (!wcm.isCritic()) { continue ;}
-			// if (wcm.getCurrentConflicts() <= -bestImp) {
+		for (ConflictsManager wcm : wcManagers) {
+			if (wcm.getCurrentConflicts() == 0) {
+				continue;
+			}
+			// if (!wcm.isCritic()) {
 			// continue;
 			// }
 			final int bestIndex = wcm.getBestIndex();
 			if (bestIndex >= 0) {
-				final int imp = wcm.getImprovment(bestIndex);
-
-				if (tieManager.newValue(bestIndex, imp)) {
-					bestVariable = v;
-					//bestImp = imp;
+				if (tieManager
+						.newValue(bestIndex, wcm.getImprovment(bestIndex))) {
+					bestCM = wcm;
+					// bestImp = imp;
 				}
 			}
 
 		}
-		
-		final ConflictsManager wcm = wcManagers[bestVariable.getId()];
-		
-		final int bestIndex = tieManager.getBestValue();
-		
-		final int imp = wcm.getImprovment(bestIndex);
-		if (imp >= 0) {
 
-			return localMinimum();
+		final int bestIndex = tieManager.getBestValue();
+
+		int imp = bestCM.getImprovment(bestIndex);
+		// logger.finer("Proposed " + bestIndex + " <- " + bestCM.getVariable()
+		// + " ("+imp+")");
+		if (imp >= 0) {
+			imp = localMinimum();
+			imp += bestCM.getImprovment(bestIndex);
 		}
 
 		// final int imp = wcm.getBestImprovment();
 
 		if (FINER) {
-			logger.finer(bestVariable + " <- " + wcm.getBestIndex());
+			logger.finer(bestCM.getVariable() + " <- " + bestCM.getBestIndex());
 		}
-		bestVariable.increaseWeight(1);
-		reAssign(wcm, wcm.getBestIndex());
+		bestCM.getVariable().increaseWeight(1);
+		reAssign(bestCM, bestIndex);
 		incrementNbAssignments();
 		checkBacktracks();
 		return imp;
@@ -159,6 +161,8 @@ public final class WMC extends AbstractLocalSolver {
 		int bestEver = nbConflicts;
 
 		while (nbConflicts > 0) {
+			// nbc.add(nbConflicts);
+			// nbrc.add(realConflicts());
 			if (nbConflicts < bestEver) {
 				bestEver = nbConflicts;
 				solution(nbConflicts);
@@ -181,12 +185,15 @@ public final class WMC extends AbstractLocalSolver {
 			assert nbConflicts == weightedConflicts() : nbConflicts + "/="
 					+ weightedConflicts() + " (real = " + realConflicts() + ")";
 
-
 		}
 
 		for (Variable v : problem.getVariables()) {
 			addSolutionElement(v, v.getFirst());
 		}
+
+		// for (int i=0 ; i < nbc.size() ; i++) {
+		// System.out.println(i+" "+nbc.get(i)+" "+nbrc.get(i));
+		// }
 
 		incrementNbSolutions();
 		assert realConflicts() == 0 : getSolution() + " -> " + realConflicts()
@@ -197,4 +204,8 @@ public final class WMC extends AbstractLocalSolver {
 	public String toString() {
 		return "weighted min-conflicts";
 	}
+
+	// public int getMaxFlips() {
+	// return super.getMaxFlips()/10;
+	// }
 }
