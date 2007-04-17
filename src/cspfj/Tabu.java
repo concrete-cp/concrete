@@ -42,7 +42,7 @@ public final class Tabu extends AbstractLocalSolver {
 
 	public Tabu(Problem prob, ResultHandler resultHandler, int tabuSize) {
 		super(prob, resultHandler);
-		tabuManager = new TabuManager(prob, tabuSize < 0 ? 75 : tabuSize);
+		tabuManager = new TabuManager(prob, tabuSize < 0 ? 30 : tabuSize);
 		tieManager = new TieManager(getRandom());
 	}
 

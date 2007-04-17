@@ -37,6 +37,7 @@ public final class WMC extends AbstractLocalSolver {
 	public WMC(Problem prob, ResultHandler resultHandler) {
 		super(prob, resultHandler);
 		tieManager = new TieManager(getRandom());
+//		setMaxBacktracks(200000);
 	}
 
 	// private Variable findBest() {
@@ -105,6 +106,7 @@ public final class WMC extends AbstractLocalSolver {
 		for (Variable v : problem.getVariables()) {
 			final int vId = v.getId();
 			final ConflictsManager wcm = wcManagers[vId];
+			if (!wcm.isCritic()) { continue ;}
 			// if (wcm.getCurrentConflicts() <= -bestImp) {
 			// continue;
 			// }
@@ -195,8 +197,4 @@ public final class WMC extends AbstractLocalSolver {
 	public String toString() {
 		return "weighted min-conflicts";
 	}
-	
-//	public int getMaxFlips() {
-//		return super.getMaxFlips()/10;
-//	}
 }

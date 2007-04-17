@@ -58,7 +58,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 			wcManagers[v.getId()] = new ConflictsManager(v, tieManager);
 		}
 
-		setMaxBacktracks(getMaxFlips());
+		setMaxBacktracks(100000);
 	}
 
 	public static Random getRandom() {
@@ -154,11 +154,11 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		if (!max && !preprocess(new AC3_P(problem))) {
 			return false;
 		}
-//		int nbTries = 0;
+		// int nbTries = 0;
 		do {
-//			if (nbTries++ > 0) {
-//				return false;
-//			}
+			// if (nbTries++ > 0) {
+			// return false;
+			// }
 			setMaxBacktracks(localBT);
 			logger.info("Run with " + localBT + " flips");
 			final int nbAssign = getNbAssignments();
@@ -192,8 +192,9 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 			logger.info("Took " + localTime + " s (" + (localBT / localTime)
 					+ " flips per second), " + (getNbAssignments() - nbAssign)
 					+ " assignments made");
+
 			for (Constraint c : problem.getConstraints()) {
-				c.setWeight(1);// Math.max(1, c.getWeight()
+				c.setWeight(1);//Math.max(1, (int) Math.log(c.getWeight())));
 				// / problem.getNbConstraints()));
 			}
 
@@ -236,12 +237,13 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 	}
 
 	public String getXMLConfig() {
-		final StringBuffer sb = new StringBuffer(200);
-
-		sb.append("\t\t\t<solver>").append(this).append(
-				"</solver>\n\t\t\t<maxCSP>").append(max).append("</maxCSP>\n");
+		return new StringBuffer(200).append("\t\t\t<solver>").append(this)
+				.append("</solver>\n\t\t\t<maxCSP>").append(max).append(
+						"</maxCSP>\n\t\t\t<maxIterations>").append(
+						getMaxBacktracks()).append("</maxIterations>\n")
+				.toString();
 		// "</filter>\n\t\t\t<randomWalk>").append(rWProba).append(
-		return sb.toString();
+
 	}
 
 	protected void reAssign(final ConflictsManager vcm, final int index) {
@@ -254,7 +256,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 			final Variable[] involvedVariables = c.getInvolvedVariables();
 			for (int n = involvedVariables.length; --n >= 0;) {
 				final Variable neighbour = involvedVariables[n];
-				final int nId = neighbour.getId() ;
+				final int nId = neighbour.getId();
 				if (nId != vId) {
 					wcManagers[nId].update(c, n);
 				}
@@ -265,10 +267,6 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 
 	protected TieManager getTieManager() {
 		return tieManager;
-	}
-
-	protected int getMaxFlips() {
-		return  problem.getMaxFlips();
 	}
 
 	// protected Variable getBestVariable() {

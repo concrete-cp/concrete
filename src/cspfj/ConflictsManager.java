@@ -206,14 +206,15 @@ public final class ConflictsManager {
 		bestIndex = tieManager.getBestValue();
 		currentConflicts = nbConflicts[assignedIndex];
 
-		//updateCritic(constraintPos);
+//		updateCritic(constraintPos);
 		initCritic() ;
 	}
 
 	private void updateCritic(int constraintPos) {
 		final boolean wasCritic = criticConstraints[constraintPos];
 		assert wasCritic ? critic : true;
-		if (criticConstraints[constraintPos] = critic(constraintPos)) {
+		criticConstraints[constraintPos] = critic(constraintPos) ;
+		if (criticConstraints[constraintPos]) {
 			critic = true;
 		} else if (wasCritic) {
 			critic = false;

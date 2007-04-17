@@ -39,7 +39,7 @@ public final class MCRW extends AbstractLocalSolver {
 
 	public MCRW(Problem prob, ResultHandler resultHandler, float randomWalk) {
 		super(prob, resultHandler);
-		this.randomWalk = randomWalk < 0 ? .03F : randomWalk;
+		this.randomWalk = randomWalk < 0 ? .04F : randomWalk;
 
 	}
 
