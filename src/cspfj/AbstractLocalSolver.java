@@ -64,7 +64,9 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 			wcManagers[v.getId()] = new ConflictsManager(v, tieManager);
 		}
 
-		setMaxBacktracks(prob.getMaxFlips());
+
+		setMaxBacktracks(50000);//prob.getMaxFlips());
+
 	}
 
 	public static Random getRandom() {
