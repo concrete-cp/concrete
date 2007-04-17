@@ -76,24 +76,27 @@ public final class WMC extends AbstractLocalSolver {
 		// }
 		final ConflictsManager[] wcManagers = this.wcManagers;
 		boolean changed = false;
-		// do {
-		for (Constraint c : problem.getConstraints()) {
-			if (!c.checkFirst()) {
-				improvment++;
-				c.increaseWeight();
-				final Variable[] involvedVariables = c.getInvolvedVariables();
-				for (int pos = involvedVariables.length; --pos >= 0;) {
-					changed |= wcManagers[involvedVariables[pos].getId()]
-							.updateAfterIncrement(c, pos);
+		do {
+			for (Constraint c : problem.getConstraints()) {
+				if (!c.checkFirst()) {
+					improvment++;
+					c.increaseWeight();
+					final Variable[] involvedVariables = c
+							.getInvolvedVariables();
+					for (int pos = involvedVariables.length; --pos >= 0;) {
+						final ConflictsManager cm = wcManagers[involvedVariables[pos]
+								.getId()];
+						cm.updateAfterIncrement(c, pos);
+						changed |= cm.getBestImprovment() <0;
 
+					}
 				}
 			}
-		}
-		// incrementNbAssignments();
-		// checkBacktracks();
-		// nbc.add(weightedConflicts());
-		// nbrc.add(realConflicts());
-		// } while (!changed);
+			// incrementNbAssignments();
+			// checkBacktracks();
+			// nbc.add(weightedConflicts());
+			// nbrc.add(realConflicts());
+		} while (!changed);
 
 		// initBestVariable() ;
 
@@ -114,33 +117,28 @@ public final class WMC extends AbstractLocalSolver {
 			// continue;
 			// }
 			final int bestIndex = wcm.getBestIndex();
-			if (bestIndex >= 0) {
-				if (tieManager
-						.newValue(bestIndex, wcm.getImprovment(bestIndex))) {
-					bestCM = wcm;
-					// bestImp = imp;
-				}
+			if (bestIndex >= 0
+					&& tieManager.newValue(bestIndex, wcm
+							.getImprovment(bestIndex))) {
+				bestCM = wcm;
+				// bestImp = imp;
+
 			}
 
 		}
 
-		final int bestIndex = tieManager.getBestValue();
-
-		int imp = bestCM.getImprovment(bestIndex);
+		final int imp = tieManager.getBestEvaluation();
 		// logger.finer("Proposed " + bestIndex + " <- " + bestCM.getVariable()
 		// + " ("+imp+")");
 		if (imp >= 0) {
-			imp = localMinimum();
-			imp += bestCM.getImprovment(bestIndex);
+			return localMinimum();
 		}
-
-		// final int imp = wcm.getBestImprovment();
 
 		if (FINER) {
 			logger.finer(bestCM.getVariable() + " <- " + bestCM.getBestIndex());
 		}
 		bestCM.getVariable().increaseWeight(1);
-		reAssign(bestCM, bestIndex);
+		reAssign(bestCM, tieManager.getBestValue());
 		incrementNbAssignments();
 		checkBacktracks();
 		return imp;

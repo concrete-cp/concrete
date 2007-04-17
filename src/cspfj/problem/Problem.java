@@ -502,7 +502,7 @@ public final class Problem implements Cloneable {
 		final int nd = getND();
 		// return 8 * nd + (int)(.4 * nd * nd);
 		// return 5*nd;
-		return Math.max((int) (-50000 + 15000 * Math.log(nd)), 10000);
+		return Math.max((int) (-50000 + 10000 * Math.log(nd)), 10000);
 	}
 
 	public int getMaxBacktracks() {
