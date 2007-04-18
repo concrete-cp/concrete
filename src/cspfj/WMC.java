@@ -42,7 +42,7 @@ public final class WMC extends AbstractLocalSolver {
 	public WMC(Problem prob, ResultHandler resultHandler) {
 		super(prob, resultHandler);
 		tieManager = new TieManager(getRandom());
-		setMaxBacktracks(1500);
+		setMaxBacktracks(2000);
 	}
 
 	// private Variable findBest() {
@@ -71,7 +71,7 @@ public final class WMC extends AbstractLocalSolver {
 	//
 	// }
 
-	private int localMinimum() {
+	private int localMinimum() throws MaxBacktracksExceededException {
 		int improvment = 0;
 
 		// if (FINER) {
@@ -96,7 +96,7 @@ public final class WMC extends AbstractLocalSolver {
 				}
 			}
 			// incrementNbAssignments();
-			// checkBacktracks();
+			checkBacktracks();
 			// nbc.add(weightedConflicts());
 			// nbrc.add(realConflicts());
 			nbLM++;
