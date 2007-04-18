@@ -64,7 +64,6 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 			wcManagers[v.getId()] = new ConflictsManager(v, tieManager);
 		}
 
-
 		setMaxBacktracks(150000);
 
 	}
@@ -164,7 +163,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		}
 		int nbTries = 0;
 		do {
-			if (maxTries > 0 && nbTries++ >= maxTries) {
+			if (nbTries++ >= maxTries && maxTries > 0) {
 				return false;
 			}
 			setMaxBacktracks(localBT);
@@ -201,8 +200,8 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 					+ " flips per second), " + (getNbAssignments() - nbAssign)
 					+ " assignments made");
 			for (Constraint c : problem.getConstraints()) {
-				c.setWeight(1);//Math.max(1, c.getWeight()
-				 // / problem.getNbConstraints()));
+				c.setWeight(1);// Math.max(1, c.getWeight()
+				// / problem.getNbConstraints()));
 			}
 
 			for (Variable v : problem.getVariables()) {

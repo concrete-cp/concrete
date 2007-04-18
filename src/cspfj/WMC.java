@@ -35,6 +35,8 @@ public final class WMC extends AbstractLocalSolver {
 	// final List<Integer> nbc = new ArrayList<Integer>(500);
 	// final List<Integer> nbrc = new ArrayList<Integer>(500);
 
+	private int nbLM =0;
+	
 	private final TieManager tieManager;
 
 	public WMC(Problem prob, ResultHandler resultHandler) {
@@ -97,6 +99,7 @@ public final class WMC extends AbstractLocalSolver {
 			// checkBacktracks();
 			// nbc.add(weightedConflicts());
 			// nbrc.add(realConflicts());
+			nbLM++;
 		} while (!changed);
 
 		// initBestVariable() ;
@@ -197,7 +200,7 @@ public final class WMC extends AbstractLocalSolver {
 		incrementNbSolutions();
 		assert realConflicts() == 0 : getSolution() + " -> " + realConflicts()
 				+ " conflicts ! (" + weightedConflicts() + " wc)";
-
+		statistics("local-minima", nbLM);
 	}
 
 	public String toString() {
