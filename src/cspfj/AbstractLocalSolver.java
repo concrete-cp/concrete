@@ -65,7 +65,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		}
 
 
-		setMaxBacktracks(prob.getMaxFlips()/10);
+		setMaxBacktracks(150000);
 
 	}
 
