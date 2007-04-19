@@ -46,9 +46,9 @@ public class Combo extends AbstractSolver {
 
 		heuristic.compute();
 
-		final int localBT = problem.getMaxFlips();
+		final int localBT = 2000;
 
-		int maxBT = problem.getMaxBacktracks();
+		int maxBT = localBT/10;
 
 		final float endLocalTime = chronometer.getCurrentChrono() + localTime;
 		logger.info("It is " + chronometer.getCurrentChrono()
