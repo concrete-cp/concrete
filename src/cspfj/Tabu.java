@@ -54,7 +54,7 @@ public final class Tabu extends AbstractLocalSolver {
 		// int bestImp = tieManager.getBestEvaluation();
 		final int nbIt = getNbBacktracks();
 		for (ConflictsManager vcm : wcManagers) {
-			Variable variable = vcm.getVariable() ;
+			Variable variable = vcm.getVariable();
 			if (!vcm.isCritic()) {
 				continue;
 			}
@@ -84,6 +84,22 @@ public final class Tabu extends AbstractLocalSolver {
 			// }
 			// }
 
+		}
+
+		if (bestVariable == null) {
+			for (ConflictsManager vcm : wcManagers) {
+				Variable variable = vcm.getVariable();
+
+				final int vId = variable.getId();
+				for (int i = variable.getDomain().length; --i >= 0;) {
+					if (variable.getRemovedLevel(i) < 0
+							&& (!tabuManager.isTabu(vId, i, nbIt) || vcm
+									.getImprovment(i) < -aspiration)
+							&& tieManager.newValue(i, vcm.getImprovment(i))) {
+						bestVariable = variable;
+					}
+				}
+			}
 		}
 
 		bestVariable.increaseWeight(1);
