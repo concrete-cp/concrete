@@ -36,7 +36,7 @@ public class Combo extends AbstractSolver {
 		System.gc();
 
 		if (!preprocess(macSolver.getFilter())) {
-			return false ;
+			return false;
 		}
 
 		// final int localBT = (int) (-500 + 8.25 * problem.getMaxDomainSize()
@@ -48,59 +48,39 @@ public class Combo extends AbstractSolver {
 
 		final int localBT = 2000;
 
-		int maxBT = localBT/10;
+		int maxBT = localBT / 10;
 
-		final float endLocalTime = chronometer.getCurrentChrono() + localTime;
-		logger.info("It is " + chronometer.getCurrentChrono()
-				+ ", local search until " + endLocalTime);
+		float maxTries = 1;
 		// boolean alt = false;
 
-//		final Map<Integer, Integer> weights = new HashMap<Integer, Integer>();
-
-		while (chronometer.getCurrentChrono() < endLocalTime) {
-			logger.info(localBT + " flips");
-			float localTime = -chronometer.getCurrentChrono();
-			int assign = -this.getNbAssignments();
-
-			if (minConflicts(localBT)) {
-				return true;
-			}
-
-			for (Variable v : problem.getVariables()) {
-				v.resetAssign();
-			}
-
-			problem.restoreAll(1);
-
-			localTime += chronometer.getCurrentChrono();
-			assign += getNbAssignments();
-			logger.info("Took " + localTime + " s (" + (localBT / localTime)
-					+ " flips per second), " + assign + " assignments made");
-
-//			 int maxWeight = 0 ;
-//			
-//			for (Constraint c : problem.getConstraints()) {
-//				final int cid = c.getId();
-//				final int weight;
-//				if (weights.containsKey(cid)) {
-//					weight = weights.get(cid) + c.getWeight();
-//				} else {
-//					weight = c.getWeight();
-//				}
-//				if (weight > maxWeight) { maxWeight = weight ; }
-//				weights.put(cid, weight);
-//				c.setWeight(1);
-//			}
-//			logger.info("Global max weight : " + maxWeight) ;
-		}
-
-		statistics("local-assign", mCSolver.getNbAssignments());
-		
-		
+		// final Map<Integer, Integer> weights = new HashMap<Integer,
+		// Integer>();
 
 		do {
+			float localTime = -chronometer.getCurrentChrono();
+			for (int i = (int)Math.floor(maxTries); --i >= 0;) {
+				logger.info(localBT + " flips");
+
+				int assign = -this.getNbAssignments();
+
+				if (minConflicts(localBT)) {
+					return true;
+				}
+
+				for (Variable v : problem.getVariables()) {
+					v.resetAssign();
+				}
+
+				problem.restoreAll(1);
+
+				assign += getNbAssignments();
+				
+			}
+			localTime += chronometer.getCurrentChrono();
+			logger.info("Took " + localTime + " s");
+			
 			logger.info("MAC with " + maxBT + " bt");
-			int assign = -getNbAssignments();
+
 			float macTime = -chronometer.getCurrentChrono();
 			if (mac(maxBT)) {
 				statistics("mac-assign", macSolver.getNbAssignments());
@@ -109,11 +89,9 @@ public class Combo extends AbstractSolver {
 
 			problem.restoreAll(1);
 			macTime += chronometer.getCurrentChrono();
-			assign += getNbAssignments();
-			logger.info("Took " + macTime + " s (" + (maxBT / macTime)
-					+ " bt per second), " + assign + " assignments made");
 
-			maxBT *= 1.5;
+			maxTries *= 1.5;
+			maxBT *= 1.5 * localTime / macTime;
 		} while (true);
 
 	}
