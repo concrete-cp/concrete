@@ -36,12 +36,12 @@ public final class Tabu extends AbstractLocalSolver {
 
 	private final TieManager tieManager;
 
-	public Tabu(Problem prob, ResultHandler resultHandler) {
-		this(prob, resultHandler, -1);
+	public Tabu(Problem prob, ResultHandler resultHandler, boolean max) {
+		this(prob, resultHandler, -1, max);
 	}
 
-	public Tabu(Problem prob, ResultHandler resultHandler, int tabuSize) {
-		super(prob, resultHandler);
+	public Tabu(Problem prob, ResultHandler resultHandler, int tabuSize, boolean max) {
+		super(prob, resultHandler, max);
 		tabuManager = new TabuManager(prob, tabuSize < 0 ? 30 : tabuSize);
 		tieManager = new TieManager(getRandom());
 	}
@@ -54,7 +54,7 @@ public final class Tabu extends AbstractLocalSolver {
 		// int bestImp = tieManager.getBestEvaluation();
 		final int nbIt = getNbBacktracks();
 		for (ConflictsManager vcm : wcManagers) {
-			Variable variable = vcm.getVariable();
+			Variable variable = vcm.getVariable() ;
 			if (!vcm.isCritic()) {
 				continue;
 			}
@@ -84,22 +84,6 @@ public final class Tabu extends AbstractLocalSolver {
 			// }
 			// }
 
-		}
-
-		if (bestVariable == null) {
-			for (ConflictsManager vcm : wcManagers) {
-				Variable variable = vcm.getVariable();
-
-				final int vId = variable.getId();
-				for (int i = variable.getDomain().length; --i >= 0;) {
-					if (variable.getRemovedLevel(i) < 0
-							&& (!tabuManager.isTabu(vId, i, nbIt) || vcm
-									.getImprovment(i) < -aspiration)
-							&& tieManager.newValue(i, vcm.getImprovment(i))) {
-						bestVariable = variable;
-					}
-				}
-			}
 		}
 
 		bestVariable.increaseWeight(1);

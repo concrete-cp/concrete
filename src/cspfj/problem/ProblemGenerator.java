@@ -30,6 +30,4 @@ public interface ProblemGenerator {
 	 Collection<Variable> getVariables() ;
 	
 	 Collection<Constraint> getConstraints() ;
-     
-     String getName() ;
 }

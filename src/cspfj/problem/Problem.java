@@ -62,7 +62,7 @@ public final class Problem implements Cloneable {
 
 	private int maxArity;
 
-	final private String name;
+	private String name;
 
 	private boolean useNoGoods;
 
@@ -70,15 +70,14 @@ public final class Problem implements Cloneable {
 
 	private int maxCId;
 
-	public Problem(String name) {
+	public Problem() {
 		super();
-		this.name = name;
 		this.useNoGoods = true;
 	}
 
 	public Problem(Collection<Variable> variables,
 			Collection<Constraint> constraints, String name) {
-		this(name);
+		this();
 		setVariables(variables);
 		setConstraints(constraints);
 		updateInvolvingConstraints();
@@ -86,7 +85,7 @@ public final class Problem implements Cloneable {
 
 	public static Problem load(final ProblemGenerator generator)
 			throws FailedGenerationException {
-		final Problem problem = new Problem(generator.getName());
+		final Problem problem = new Problem();
 		Variable.resetVId();
 		Constraint.resetCId();
 
@@ -466,9 +465,12 @@ public final class Problem implements Cloneable {
 		return name;
 	}
 
+	public void setName(final String name) {
+		this.name = name;
+	}
+
 	public void setUseNoGoods(final boolean b) {
 		this.useNoGoods = b;
-
 	}
 
 	public int getMaxVId() {
@@ -524,15 +526,15 @@ public final class Problem implements Cloneable {
 
 		problem.pastVariables = new TreeSet<Integer>();
 
-//		problem.variables = null;
-//
-//		problem.variableArray = null;
-//
-//		problem.constraints = null;
-//
-//		problem.constraintArray = null;
-//
-//		problem.levelVariables = null;
+		// problem.variables = null;
+		//
+		// problem.variableArray = null;
+		//
+		// problem.constraints = null;
+		//
+		// problem.constraintArray = null;
+		//
+		// problem.levelVariables = null;
 
 		final Collection<Variable> variables = new ArrayList<Variable>(this
 				.getNbVariables());

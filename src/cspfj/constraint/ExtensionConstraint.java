@@ -59,6 +59,10 @@ public class ExtensionConstraint extends Constraint {
 			throw new FailedGenerationException(e.toString());
 		}
 	}
+	
+	public boolean check() {
+		return true ;
+	}
 
 	public ExtensionConstraint(final Variable[] scope)
 			throws FailedGenerationException {

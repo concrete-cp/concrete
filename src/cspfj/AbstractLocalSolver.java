@@ -48,10 +48,10 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		this.maxTries = tries;
 	}
 
-	public AbstractLocalSolver(Problem prob, ResultHandler resultHandler) {
+	public AbstractLocalSolver(Problem prob, ResultHandler resultHandler, final boolean max) {
 		super(prob, resultHandler);
 
-		max = resultHandler.displaySolutions;
+		this.max = max;
 
 		// tabuManager = new TabuManager(problem, 10);
 

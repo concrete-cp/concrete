@@ -136,7 +136,7 @@ public abstract class AbstractSolver implements Solver {
 
 	protected void solution(final Map<Variable, Integer> solution,
 			final int nbConflicts) throws IOException {
-		if (resultHandler.solution(solution, nbConflicts)) {
+		if (resultHandler.solution(solution, nbConflicts, false)) {
 			logger.info("At " + chronometer.getCurrentChrono());
 		}
 	}

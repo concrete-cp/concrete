@@ -23,79 +23,68 @@ import cspfj.problem.Variable;
 
 public final class IffConstraint extends Constraint {
 
-    final private int indexI;
+	final private int indexI;
 
-    final private int indexV;
+	final private int indexV;
 
-    final private int valueI;
+	final private int valueI;
 
-    final private int valueV;
+	final private int valueV;
 
-    public IffConstraint(final Variable[] scope, final int i, final int v) {
-        super(scope);
-        // System.out.println(scope[0] + "="+i +" <=> "+scope[1]+"="+v);
-        this.valueI = i;
-        this.indexI = getInvolvedVariables()[0].index(i);
-        this.valueV = v;
-        this.indexV = getInvolvedVariables()[1].index(v);
+	public IffConstraint(final Variable[] scope, final int i, final int v) {
+		super(scope);
+		// System.out.println(scope[0] + "="+i +" <=> "+scope[1]+"="+v);
+		this.valueI = i;
+		this.indexI = getInvolvedVariables()[0].index(i);
+		this.valueV = v;
+		this.indexV = getInvolvedVariables()[1].index(v);
 
-    }
+	}
 
-    @Override
-    public boolean check() {
-        if (!super.check()) {
-            return false;
-        }
+	@Override
+	public boolean check() {
+		return (getInvolvedVariables()[0].getDomain()[tuple[0]] == valueI) == (getInvolvedVariables()[1]
+				.getDomain()[tuple[1]] == valueV);
+	}
 
-        final boolean check = (getInvolvedVariables()[0].getDomain()[tuple[0]] == valueI) == (getInvolvedVariables()[1]
-                .getDomain()[tuple[1]] == valueV);
+	@Override
+	public boolean revise(final int posVar1, final int level) {
+		final Variable var1 = getInvolvedVariables()[posVar1];
 
-        if (!check) {
-            matrix.removeTuple();
-        }
-        return check;
-    }
+		final int posVar2 = 1 - posVar1;
+		final Variable var2 = getInvolvedVariables()[posVar2];
 
-    @Override
-    public boolean revise(final int posVar1, final int level) {
-        final Variable var1 = getInvolvedVariables()[posVar1];
-        
-        final int posVar2 = 1-posVar1 ;
-        final Variable var2 = getInvolvedVariables()[posVar2];
+		final int value1;
+		final int index1;
+		final int index2;
+		if (posVar1 == 0) {
+			value1 = valueI;
+			index1 = indexI;
+			index2 = indexV;
+		} else {
+			value1 = valueV;
+			index1 = indexV;
+			index2 = indexI;
+		}
 
-        
-        final int value1;
-        final int index1;
-        final int index2;
-        if (posVar1 == 0) {
-            value1 = valueI;
-            index1 = indexI;
-            index2 = indexV;
-        } else {
-            value1 = valueV;
-            index1 = indexV;
-            index2 = indexI;
-        }
+		boolean revised = false;
 
-        boolean revised = false;
-        
+		if (var2.getDomainSize() == 1 && var2.getFirst() == index2) {
+			revised = true;
+			var1.makeSingleton(value1, level);
+		}
 
-        if (var2.getDomainSize() == 1 && var2.getFirst() == index2) {
-            revised = true ;
-            var1.makeSingleton(value1, level);
-        }
+		if (!var2.isPresent(index2) && var1.isPresent(index1)) {
+			revised = true;
+			var1.remove(index1, level);
+		}
+		return revised;
 
-        if (!var2.isPresent(index2) && var1.isPresent(index1)) {
-            revised = true ;
-            var1.remove(index1, level);
-        }
-        return revised;
+	}
 
-    }
-
-    @Override
-    public boolean useTupleCache() {
-        return false;
-    }
+	@Override
+	public boolean useTupleCache() {
+		return false;
+	}
 
 }

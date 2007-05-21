@@ -16,4 +16,8 @@ public final class Lexico extends AbstractStaticValueHeuristic {
 	public String toString() {
 		return (isFailFirst() ? "min" : "max") + "-lexico";
 	}
+	
+	public void myCompute() {
+		// Nothing to do...
+	}
 }

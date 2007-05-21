@@ -35,12 +35,12 @@ public final class WMC extends AbstractLocalSolver {
 	// final List<Integer> nbc = new ArrayList<Integer>(500);
 	// final List<Integer> nbrc = new ArrayList<Integer>(500);
 
-	private int nbLM = 0;
-
+	private int nbLM =0;
+	
 	private final TieManager tieManager;
 
-	public WMC(Problem prob, ResultHandler resultHandler) {
-		super(prob, resultHandler);
+	public WMC(Problem prob, ResultHandler resultHandler, boolean max) {
+		super(prob, resultHandler, max);
 		tieManager = new TieManager(getRandom());
 		setMaxBacktracks(2000);
 	}
@@ -114,30 +114,21 @@ public final class WMC extends AbstractLocalSolver {
 		tieManager.clear();
 
 		for (ConflictsManager wcm : wcManagers) {
-			// if (wcm.getCurrentConflicts() == 0) {
-			// continue;
-			// }
-			if (!wcm.isCritic()) {
+			if (wcm.getCurrentConflicts() == 0) {
 				continue;
 			}
+			// if (!wcm.isCritic()) {
+			// continue;
+			// }
 			final int bestIndex = wcm.getBestIndex();
 			if (bestIndex >= 0
 					&& tieManager.newValue(bestIndex, wcm
 							.getImprovment(bestIndex))) {
 				bestCM = wcm;
+				// bestImp = imp;
+
 			}
 
-		}
-
-		if (bestCM == null) {
-			for (ConflictsManager wcm : wcManagers) {
-				final int bestIndex = wcm.getBestIndex();
-				if (bestIndex >= 0
-						&& tieManager.newValue(bestIndex, wcm
-								.getImprovment(bestIndex))) {
-					bestCM = wcm;
-				}
-			}
 		}
 
 		final int imp = tieManager.getBestEvaluation();

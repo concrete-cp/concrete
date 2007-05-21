@@ -16,5 +16,8 @@ public class Rand extends AbstractStaticValueHeuristic {
 	public double getScore(final Variable variable, final int index) {
 		return random.nextDouble();
 	}
-
+	
+	public void myCompute() {
+		// Nothing to do...
+	}
 }

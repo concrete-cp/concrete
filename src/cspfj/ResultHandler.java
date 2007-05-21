@@ -19,9 +19,7 @@
 
 package cspfj;
 
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
@@ -31,7 +29,6 @@ import cspfj.problem.Variable;
 
 public class ResultHandler {
 
-	protected final OutputStreamWriter writer;
 
 	protected Solver solver;
 
@@ -47,8 +44,6 @@ public class ResultHandler {
 	
 	protected int totalNodes = 0 ;
 
-	protected boolean displaySolutions;
-
 	protected final Map<String, String> statistics;
 	
 	private static final Logger logger = Logger
@@ -56,16 +51,7 @@ public class ResultHandler {
 
 	private int bestSatisfied = 0;
 
-	public ResultHandler(final boolean displaySolutions) {
-		this.writer = new OutputStreamWriter(System.out);
-		this.displaySolutions = displaySolutions;
-		this.statistics = new TreeMap<String, String>();
-	}
-
-	public ResultHandler(String fileName, final boolean displaySolutions)
-			throws IOException {
-		this.writer = new FileWriter(fileName);
-		this.displaySolutions = displaySolutions;
+	public ResultHandler() {
 		this.statistics = new TreeMap<String, String>();
 	}
 
@@ -82,19 +68,16 @@ public class ResultHandler {
 
 	}
 
-	public boolean solution(final Map<Variable, Integer> solution,
-			final int nbSatisfied) throws IOException {
-		return solution(solution, nbSatisfied, false);
-	}
 
 	public boolean solution(final Map<Variable, Integer> solution,
-			final int nbSatisfied, final boolean forced) throws IOException {
-		if (forced || displaySolutions && nbSatisfied > bestSatisfied) {
+			final int nbSatisfied, final boolean force) throws IOException {
+		if (nbSatisfied > bestSatisfied) {
 			bestSatisfied = nbSatisfied;
 			logger.info(solution.toString() + "(" + nbSatisfied + ")");
-			return true;
+			return true ;
 		}
-		return false;
+		return false ;
+		
 	}
 
 	public void fail(final Class solver, final String problem,
@@ -131,7 +114,6 @@ public class ResultHandler {
 				+ totalSolve + " s solving");
 		logger.info("SAT : " + sat + ", UNSAT : " + unsat + ", UNKNOWN : "
 				+ unknown);
-		writer.close();
 	}
 
 	private void increment(final Result result) {

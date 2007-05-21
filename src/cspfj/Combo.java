@@ -19,15 +19,13 @@ public class Combo extends AbstractSolver {
 	private final static Logger logger = Logger
 			.getLogger("cspfj.solver.ComboSolver");
 
-	private float localTime = -1;
-
 	// private final NoGoodManager noGoodManager;
 
 	public Combo(Problem prob, ResultHandler resultHandler,
 			Heuristic heuristic, boolean reverse) {
 		super(prob, resultHandler);
 		macSolver = new MGAC(prob, resultHandler, heuristic, reverse);
-		mCSolver = new WMC(prob, resultHandler);
+		mCSolver = new WMC(prob, resultHandler, false);
 		this.heuristic = heuristic;
 
 	}
@@ -58,7 +56,7 @@ public class Combo extends AbstractSolver {
 
 		do {
 			float localTime = -chronometer.getCurrentChrono();
-			for (int i = (int)Math.floor(maxTries); --i >= 0;) {
+			for (int i = (int) Math.floor(maxTries); --i >= 0;) {
 				logger.info(localBT + " flips");
 
 				int assign = -this.getNbAssignments();
@@ -74,11 +72,11 @@ public class Combo extends AbstractSolver {
 				problem.restoreAll(1);
 
 				assign += getNbAssignments();
-				
+
 			}
 			localTime += chronometer.getCurrentChrono();
 			logger.info("Took " + localTime + " s");
-			
+
 			logger.info("MAC with " + maxBT + " bt");
 
 			float macTime = -chronometer.getCurrentChrono();
@@ -114,7 +112,7 @@ public class Combo extends AbstractSolver {
 		}
 		logger.info("Max constraint weight : " + problem.getMaxWeight());
 
-		macSolver.addNoGoods();
+		//macSolver.addNoGoods();
 
 		return false;
 	}
@@ -163,9 +161,4 @@ public class Combo extends AbstractSolver {
 
 		return sb.toString();
 	}
-
-	public void setLocalTime(final float time) {
-		this.localTime = time;
-	}
-
 }

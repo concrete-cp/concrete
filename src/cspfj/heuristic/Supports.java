@@ -16,4 +16,8 @@ public class Supports extends AbstractStaticValueHeuristic {
 	public String toString() {
 		return (isFailFirst() ? "min" : "max") + "-supports";
 	}
+	
+	public void myCompute() {
+		// Nothing to do...
+	}
 }

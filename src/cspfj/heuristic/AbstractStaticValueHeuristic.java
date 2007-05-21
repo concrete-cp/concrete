@@ -32,8 +32,9 @@ public abstract class AbstractStaticValueHeuristic extends
 
 	}
 
-	public void compute() {
+	public final void compute() {
 		logger.info("Reordering values with " + this.getClass());
+		myCompute() ;
 		final int[] ord = new int[problem.getMaxDomainSize()] ;
 		for (Variable variable : problem.getVariables()) {
 
@@ -63,9 +64,16 @@ public abstract class AbstractStaticValueHeuristic extends
 			// + ") ");
 			// }
 			// System.out.println();
-
+//			final StringBuffer sb = new StringBuffer() ;
+//			for (int i : ord) {
+//				sb.append(variable.getDomain()[i]+" "+getScore(variable,i)+"\n");
+//			}
+//			logger.finer(variable.toString()+"\n"+sb);
 		}
+
 	}
+	
+	public abstract void myCompute() ;
 
 	private static void swap(final int[] table, final int i, final int j) {
 		final int temp = table[i];

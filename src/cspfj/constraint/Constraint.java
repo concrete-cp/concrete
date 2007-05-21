@@ -62,7 +62,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	private static final Logger logger = Logger
 			.getLogger("cspfj.constraints.Constraint");
 
-	private TupleManager tupleManager ;
+	private TupleManager tupleManager;
 
 	private boolean active;
 
@@ -83,7 +83,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		arity = involvedVariables.length;
 
 		tuple = new int[arity];
-		
+
 		removals = new boolean[arity];
 		id = cId++;
 		tupleCache = useTupleCache();
@@ -103,8 +103,8 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 				}
 			}
 			lastCheck = new boolean[arity][maxDomain];
-		} 
-		
+		}
+
 		active = false;
 
 		matrix = AbstractMatrixManager.factory(scope, tuple);
@@ -120,14 +120,13 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		this.size = size;
 
 		positionInVariable = new int[arity];
-		
-		tupleManager = new TupleManager(this, tuple) ;
-	}
 
+		tupleManager = new TupleManager(this, tuple);
+	}
 
 	public boolean activateMatrix() {
 		if (matrix.isActive()) {
-			return true ;
+			return true;
 		}
 		boolean activated = false;
 		try {
@@ -159,7 +158,13 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		changedConstraint = false;
 	}
 
-	public abstract boolean useTupleCache();
+	public boolean useTupleCache() {
+		return true;
+	}
+
+	public int getValue(final int position) {
+		return involvedVariables[position].getDomain()[tuple[position]];
+	}
 
 	public final boolean isInvolved(final Variable variable) {
 		return getPosition(variable) >= 0;
@@ -171,15 +176,15 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 				return i;
 			}
 		}
-		
-		assert false ;
+
+		assert false;
 		return -1;
 	}
 
 	public final int getPositionInVariable(final Variable variable) {
 		return getPositionInVariable(getPosition(variable));
 	}
-	
+
 	public final int getPositionInVariable(final int position) {
 		return positionInVariable[position];
 	}
@@ -209,10 +214,19 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		return "C" + id + " " + Arrays.toString(involvedVariables);
 	}
 
-	public boolean check() {
+	private boolean chk() {
 		checks++;
-		return matrix.isTrue(tuple);
+		if (!matrix.isTrue(tuple)) {
+			return false;
+		}
+		final boolean result = check();
+		if (matrix.isActive() && !result) {
+			matrix.removeTuple();
+		}
+		return result;
 	}
+
+	public abstract boolean check();
 
 	public final boolean skipRevision(final int position) {
 		if (arity > MAX_ARITY) {
@@ -248,9 +262,9 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		// return true;
 	}
 
-//	public final boolean revise(final Variable variable, final int level) {
-//		return revise(getPosition(variable), level);
-//	}
+	// public final boolean revise(final Variable variable, final int level) {
+	// return revise(getPosition(variable), level);
+	// }
 
 	public boolean revise(final int position, final int level) {
 		final Variable variable = involvedVariables[position];
@@ -304,8 +318,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		return revised;
 	}
 
-	
-
 	protected boolean controlTuplePresence(final int[] tuple, final int position) {
 		nbPresenceChecks++;
 		final Variable[] involvedVariables = this.involvedVariables;
@@ -319,9 +331,10 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 	}
 
-//	public final boolean findValidTuple(final Variable variable, final int index) {
-//		return findValidTuple(getPosition(variable), index);
-//	}
+	// public final boolean findValidTuple(final Variable variable, final int
+	// index) {
+	// return findValidTuple(getPosition(variable), index);
+	// }
 
 	public boolean findValidTuple(final int variablePosition, final int index) {
 		assert this.isInvolved(involvedVariables[variablePosition]);
@@ -338,8 +351,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		if (!matrix.setFirstTuple(variablePosition, index)) {
 			return false;
 		}
-		
-		
 
 		final boolean[][] lastCheck = this.lastCheck;
 		final int arity = this.arity;
@@ -348,7 +359,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		final int[][][] last = this.last;
 
 		do {
-			if (check()) {
+			if (chk()) {
 				if (tupleCache) {
 					for (int position = arity; --position >= 0;) {
 						final int value = tuple[position];
@@ -377,7 +388,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		int nbTuples = 0;
 
 		do {
-			if (check()) {
+			if (chk()) {
 				nbTuples++;
 			}
 		} while (matrix.next());
@@ -442,7 +453,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 			final int[] tuple = this.tuple;
 
 			if (Arrays.equals(tuple, myLast[index])) {
-				assert check() == lastCheck[variablePosition][index] : Arrays
+				assert chk() == lastCheck[variablePosition][index] : Arrays
 						.toString(tuple)
 						+ " = "
 						+ Arrays.toString(last[variablePosition][index])
@@ -450,14 +461,14 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 						+ " (" + this + ", " + matrix + ")";
 				return lastCheck[variablePosition][index];
 			}
-			final boolean result = check();
+			final boolean result = chk();
 
 			final int i = tuple[variablePosition];
 			System.arraycopy(tuple, 0, myLast[i], 0, arity);
 			lastCheck[variablePosition][i] = result;
 			return result;
 		}
-		return check();
+		return chk();
 
 	}
 
@@ -547,10 +558,11 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	public void setRemovals(final int variablePosition, final boolean removal) {
 		removals[variablePosition] = removal;
 	}
-//
-//	public void setRemovals(final Variable variable, final boolean removal) {
-//		setRemovals(getPosition(variable), removal);
-//	}
+
+	//
+	// public void setRemovals(final Variable variable, final boolean removal) {
+	// setRemovals(getPosition(variable), removal);
+	// }
 
 	public boolean equalsConstraint(final Constraint constraint) {
 		return id == constraint.getId();
@@ -571,7 +583,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		}
 		for (int i = involvedVariables.length; --i >= 0;) {
 			boolean found = false;
-			for (Variable v: variables) {
+			for (Variable v : variables) {
 				if (involvedVariables[i] == v) {
 					found = true;
 					break;
@@ -613,7 +625,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		final Constraint constraint = (Constraint) super.clone();
 
 		constraint.tuple = new int[arity];
-		
+
 		constraint.removals = new boolean[arity];
 
 		// constraint.positionInVariable fixe
@@ -621,7 +633,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		// constraint.nbSupports fixe
 
 		constraint.tupleManager = new TupleManager(constraint, constraint.tuple);
-		
+
 		int maxDomain = 0;
 		for (int i = arity; --i >= 0;) {
 			if (involvedVariables[i].getDomain().length > maxDomain) {
@@ -639,20 +651,17 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 			constraint.lastCheck = new boolean[arity][maxDomain];
 
 		}
-		
+
 		constraint.positionInVariable = new int[arity];
 		return constraint;
 	}
-
 
 	public void setFirstTuple() {
 		tupleManager.setFirstTuple();
 	}
 
-
 	public boolean setNextTuple() {
 		return tupleManager.setNextTuple();
 	}
 
-	
 }

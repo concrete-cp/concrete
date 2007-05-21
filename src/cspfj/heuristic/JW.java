@@ -22,7 +22,7 @@ public class JW extends AbstractStaticValueHeuristic {
 		scores = new double[problem.getMaxVId() + 1][problem.getMaxDomainSize()];
 	}
 
-	public final void compute() {
+	public final void myCompute() {
 		for (Variable v : problem.getVariables()) {
 			final double[] score = scores[v.getId()];
 
@@ -77,8 +77,6 @@ public class JW extends AbstractStaticValueHeuristic {
 
 			}
 		}
-
-		super.compute();
 		// for (Variable v: variables) {
 		// System.out.print(v+" : ");
 		// for (int i = v.getFirstHeuristic(); i >= 0; i =

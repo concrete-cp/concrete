@@ -27,8 +27,11 @@ import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.AC3_P;
 import cspfj.filter.AC3_R;
 import cspfj.filter.Filter;
+import cspfj.heuristic.DiscHeuristic;
 import cspfj.heuristic.Heuristic;
+import cspfj.heuristic.Inverse;
 import cspfj.heuristic.Pair;
+import cspfj.heuristic.WDegOnDom;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -42,25 +45,34 @@ public final class MGAC extends AbstractSolver {
 
 	private boolean allSolutions = false;
 
-//	private final Filter sac;
+	// private final Filter sac;
 
 	// private NoGoodManager noGoodManager = null;
 
 	// private int maxNoGoodSize;
 
-	public MGAC(Problem prob, ResultHandler resultHandler,
-			Heuristic heuristic, boolean reverse) {
+	public MGAC(Problem prob) {
+		this(prob, new ResultHandler());
+	}
+	
+	public MGAC(Problem prob, ResultHandler resultHandler) {
+		this(prob, resultHandler, new DiscHeuristic(new WDegOnDom(),
+				new Inverse(prob, false)), false);
+	}
+
+	public MGAC(Problem prob, ResultHandler resultHandler, Heuristic heuristic,
+			boolean reverse) {
 		super(prob, resultHandler);
 		filter = reverse ? new AC3_R(problem) : new AC3_P(problem);
 		// heuristic = new WDegOnDomBySupports(prob);
 		this.heuristic = heuristic;
 
-//		sac = new SAC(problem, filter, true);
+		// sac = new SAC(problem, filter, true);
 
 		logger.info(filter.getClass().toString());
 
 		setMaxBacktracks(prob.getMaxBacktracks());
-		
+
 	}
 
 	// public void enableNoGoods(final int maxSize) {
@@ -88,16 +100,16 @@ public final class MGAC extends AbstractSolver {
 			return !allSolutions;
 		}
 
-//		if (positive && level < problem.getMaxArity()
-//				&& useSpace() == SPACE.BRANCH) {
-//			if (!sac.reduceAfter(level, lastModifiedVariable)) {
-//				return false;
-//			}
-//		} else {
-			if (!filter.reduceAfter(level, lastModifiedVariable)) {
-				return false;
-			}
-//		}
+		// if (positive && level < problem.getMaxArity()
+		// && useSpace() == SPACE.BRANCH) {
+		// if (!sac.reduceAfter(level, lastModifiedVariable)) {
+		// return false;
+		// }
+		// } else {
+		if (!filter.reduceAfter(level, lastModifiedVariable)) {
+			return false;
+		}
+		// }
 
 		final long pair = heuristic.selectPair(problem);
 
@@ -177,8 +189,9 @@ public final class MGAC extends AbstractSolver {
 
 		statistics("prepro-removed", removed);
 		// statistics("prepro-subs", preprocessor.getNbSub()) ;
-		
-		statistics("prepro-cpu", chronometer.getCurrentChrono() - start);
+
+		final float preproCpu = chronometer.getCurrentChrono();
+		statistics("prepro-cpu",  preproCpu - start);
 		statistics("prepro-ccks", Constraint.getNbChecks());
 		statistics("prepro-nbpresencechecks", Constraint.getNbPresenceChecks());
 
@@ -189,12 +202,16 @@ public final class MGAC extends AbstractSolver {
 		// statistics("prepro-nbskippedrevisions", Constraint
 		// .getNbSkippedRevisions());
 
-//		if (true) {
-//			return true ;
-//		}
+		// if (true) {
+		// return true ;
+		// }
 
+		
 		heuristic.compute();
 
+		final float heuristicCpu = chronometer.getCurrentChrono();
+		statistics ("heuristic-cpu", heuristicCpu-start);
+		
 		int maxBT = allSolutions ? -1 : getMaxBacktracks();
 
 		final Filter filter = getFilter();
@@ -214,7 +231,7 @@ public final class MGAC extends AbstractSolver {
 			try {
 				setMaxBacktracks(maxBT);
 				mac(0, null);
-
+				
 				break;
 			} catch (MaxBacktracksExceededException e) {
 				// On continue...
@@ -234,7 +251,7 @@ public final class MGAC extends AbstractSolver {
 				return false;
 			}
 		} while (true);
-
+		statistics("search-cpu", chronometer.getCurrentChrono()-heuristicCpu);
 		chronometer.validateChrono();
 
 		return getNbSolutions() > 0;
