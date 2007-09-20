@@ -32,7 +32,7 @@ public final class IffConstraint extends Constraint {
 	final private int valueV;
 
 	public IffConstraint(final Variable[] scope, final int i, final int v) {
-		super(scope);
+		super(scope, false);
 		// System.out.println(scope[0] + "="+i +" <=> "+scope[1]+"="+v);
 		this.valueI = i;
 		this.indexI = getInvolvedVariables()[0].index(i);
@@ -81,10 +81,4 @@ public final class IffConstraint extends Constraint {
 		return revised;
 
 	}
-
-	@Override
-	public boolean useTupleCache() {
-		return false;
-	}
-
 }

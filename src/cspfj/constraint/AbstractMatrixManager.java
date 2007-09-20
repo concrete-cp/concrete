@@ -9,8 +9,6 @@ import cspfj.problem.Variable;
 public abstract class AbstractMatrixManager implements Cloneable {
 	protected final int[] domainSize;
 
-	private boolean active = false;
-
 	protected int[] tuple;
 
 	protected Variable[] variables;
@@ -51,38 +49,23 @@ public abstract class AbstractMatrixManager implements Cloneable {
 		}
 	}
 
-	public void init(final boolean initialState) throws MatrixTooBigException {
-		active = true;
-	}
-
-	public void clear() {
-		active = false;
-	}
+	public abstract void init(final boolean supports)
+			throws MatrixTooBigException;
 
 	public abstract boolean set(final int[] tuple, final boolean status);
 
 	public boolean removeTuple() {
-
-		if (!active) {
-			try {
-				init(true);
-			} catch (MatrixTooBigException e) {
-				logger.warning("Not enough memory to init Matrix");
-				clear();
-				return false;
-			}
-
-		}
-
 		if (set(tuple, false)) {
 			return true;
 		}
 		return false;
 	}
 
-	public boolean isTrue(final int[] tuple) {
-		return !active;
+	public boolean hasSupport(final int position, final int index) {
+		return setFirstTuple(position, index);
 	}
+	
+	public abstract boolean isTrue(final int[] tuple) ;
 
 	public abstract void intersect(final Variable[] scope,
 			final Variable[] constraintScope, final boolean supports,
@@ -117,10 +100,6 @@ public abstract class AbstractMatrixManager implements Cloneable {
 				set(realTuple, supports);
 			}
 		}
-	}
-
-	public boolean isActive() {
-		return active;
 	}
 
 	public boolean setFirstTuple(final int variablePosition, final int index) {
@@ -182,5 +161,9 @@ public abstract class AbstractMatrixManager implements Cloneable {
 
 	public AbstractMatrixManager clone() throws CloneNotSupportedException {
 		return (AbstractMatrixManager) super.clone();
+	}
+	
+	public boolean check() {
+		return isTrue(tuple);
 	}
 }

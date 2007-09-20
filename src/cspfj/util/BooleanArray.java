@@ -7,7 +7,7 @@ public class BooleanArray {
 
 	static {
 		MASKS = new int[Integer.SIZE];
-		for (int i = 0; i < MASKS.length; i++) {
+		for (int i = MASKS.length; --i >= 0;) {
 			MASKS[i] = 0x1 << (Integer.SIZE - i - 1);
 		}
 	}

@@ -24,8 +24,7 @@ import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
-import cspfj.filter.AC3_P;
-import cspfj.filter.AC3_R;
+import cspfj.filter.AC3;
 import cspfj.filter.Filter;
 import cspfj.heuristic.DiscHeuristic;
 import cspfj.heuristic.Heuristic;
@@ -45,29 +44,19 @@ public final class MGAC extends AbstractSolver {
 
 	private boolean allSolutions = false;
 
-	// private final Filter sac;
-
-	// private NoGoodManager noGoodManager = null;
-
-	// private int maxNoGoodSize;
-
 	public MGAC(Problem prob) {
 		this(prob, new ResultHandler());
 	}
-	
+
 	public MGAC(Problem prob, ResultHandler resultHandler) {
 		this(prob, resultHandler, new DiscHeuristic(new WDegOnDom(),
-				new Inverse(prob, false)), false);
+				new Inverse(prob, false)));
 	}
 
-	public MGAC(Problem prob, ResultHandler resultHandler, Heuristic heuristic,
-			boolean reverse) {
+	public MGAC(Problem prob, ResultHandler resultHandler, Heuristic heuristic) {
 		super(prob, resultHandler);
-		filter = reverse ? new AC3_R(problem) : new AC3_P(problem);
-		// heuristic = new WDegOnDomBySupports(prob);
+		filter = new AC3(problem);
 		this.heuristic = heuristic;
-
-		// sac = new SAC(problem, filter, true);
 
 		logger.info(filter.getClass().toString());
 
@@ -75,17 +64,12 @@ public final class MGAC extends AbstractSolver {
 
 	}
 
-	// public void enableNoGoods(final int maxSize) {
-	// // noGoodManager = new NoGoodManager(problem.getNbVariables(), 2);
-	// maxNoGoodSize = maxSize;
-	// }
-
-	public boolean mac(final int level, final Variable lastModifiedVariable)
+	public boolean mac(final int level, final Variable modifiedVariable)
 			throws MaxBacktracksExceededException {
-		return mac(level, lastModifiedVariable, true);
+		return mac(level, modifiedVariable, true);
 	}
 
-	public boolean mac(final int level, final Variable lastModifiedVariable,
+	public boolean mac(final int level, final Variable modifiedVariable,
 			final boolean positive) throws MaxBacktracksExceededException {
 		final Problem problem = this.problem;
 
@@ -93,23 +77,15 @@ public final class MGAC extends AbstractSolver {
 			if (getNbSolutions() < 1) {
 				for (Variable v : problem.getVariables()) {
 					addSolutionElement(v, v.getFirst());
-					// logger.fine(v+" "+v.getFirst());
 				}
 			}
 			incrementNbSolutions();
 			return !allSolutions;
 		}
 
-		// if (positive && level < problem.getMaxArity()
-		// && useSpace() == SPACE.BRANCH) {
-		// if (!sac.reduceAfter(level, lastModifiedVariable)) {
-		// return false;
-		// }
-		// } else {
-		if (!filter.reduceAfter(level, lastModifiedVariable)) {
+		if (!filter.reduceAfter(level, modifiedVariable)) {
 			return false;
 		}
-		// }
 
 		final long pair = heuristic.selectPair(problem);
 
@@ -120,8 +96,6 @@ public final class MGAC extends AbstractSolver {
 		final int selectedIndex = Pair.index(pair, problem);
 
 		assert selectedVariable.isPresent(selectedIndex);
-
-		// final int selectedIndex = selectedVariable.getFirstPresentIndex();
 
 		final int domainSizeBefore = selectedVariable.getDomainSize();
 
@@ -137,14 +111,11 @@ public final class MGAC extends AbstractSolver {
 
 		incrementNbAssignments();
 
-		// removeNoGoods(level);
-
 		if (mac(level + 1, domainSizeBefore > 1 ? selectedVariable : null, true)) {
 			addSolutionElement(selectedVariable, selectedIndex);
 			return true;
 		}
 
-		// problem.increaseWeights();
 		selectedVariable.unassign(problem);
 		problem.restore(level + 1);
 
@@ -153,8 +124,6 @@ public final class MGAC extends AbstractSolver {
 		if (selectedVariable.getDomainSize() <= 1) {
 			return false;
 		}
-		// System.out.println(level + " : " + selectedVariable + " /= "
-		// + selectedVariable.getDomain()[selectedIndex]);
 		selectedVariable.remove(selectedIndex, level);
 
 		checkBacktracks();
@@ -171,7 +140,6 @@ public final class MGAC extends AbstractSolver {
 	public boolean runSolver() {
 
 		System.gc();
-		// enableNoGoods(2);
 		chronometer.startChrono();
 
 		final float start = chronometer.getCurrentChrono();
@@ -191,7 +159,7 @@ public final class MGAC extends AbstractSolver {
 		// statistics("prepro-subs", preprocessor.getNbSub()) ;
 
 		final float preproCpu = chronometer.getCurrentChrono();
-		statistics("prepro-cpu",  preproCpu - start);
+		statistics("prepro-cpu", preproCpu - start);
 		statistics("prepro-ccks", Constraint.getNbChecks());
 		statistics("prepro-nbpresencechecks", Constraint.getNbPresenceChecks());
 
@@ -206,12 +174,11 @@ public final class MGAC extends AbstractSolver {
 		// return true ;
 		// }
 
-		
 		heuristic.compute();
 
 		final float heuristicCpu = chronometer.getCurrentChrono();
-		statistics ("heuristic-cpu", heuristicCpu-start);
-		
+		statistics("heuristic-cpu", heuristicCpu - start);
+
 		int maxBT = allSolutions ? -1 : getMaxBacktracks();
 
 		final Filter filter = getFilter();
@@ -231,7 +198,7 @@ public final class MGAC extends AbstractSolver {
 			try {
 				setMaxBacktracks(maxBT);
 				mac(0, null);
-				
+
 				break;
 			} catch (MaxBacktracksExceededException e) {
 				// On continue...
@@ -251,7 +218,7 @@ public final class MGAC extends AbstractSolver {
 				return false;
 			}
 		} while (true);
-		statistics("search-cpu", chronometer.getCurrentChrono()-heuristicCpu);
+		statistics("search-cpu", chronometer.getCurrentChrono() - heuristicCpu);
 		chronometer.validateChrono();
 
 		return getNbSolutions() > 0;
@@ -261,66 +228,6 @@ public final class MGAC extends AbstractSolver {
 	public int addNoGoods() {
 		return problem.addNoGoods();
 	}
-
-	//
-	// private void removeNoGoods(final int level) {
-	//
-	// logger.info("removing noGoods");
-	//
-	// final Variable scope[] = new Variable[level + 1];
-	// final int[] tuple = new int[level + 1];
-	//
-	// for (int l = 0; l <= level; l++) {
-	// scope[l] = problem.getVariable(levelVariables[l]);
-	// tuple[l] = problem.getVariable(levelVariables[l])
-	// .getFirstPresentIndex();
-	// }
-	//
-	// for (int[] couple : noGoodManager.removable(scope, tuple)) {
-	// if (problem.getVariable(couple[0]).isPresent(couple[1])) {
-	// problem.getVariable(couple[0]).remove(couple[1], level);
-	// logger.info(couple[0] + " /= " + couple[1]);
-	// }
-	// }
-	//
-	// } // private void removeNoGoods(final int level) { // final Variable
-
-	// scope[] = new Variable[level + 1];
-	// final int[] tuple = new int[level + 1];
-	//
-	// for (int l = 0; l <= level; l++) {
-	// scope[l] = problem.getVariable(levelVariables[l]);
-	// tuple[l] = problem.getVariable(levelVariables[l])
-	// .getFirstPresentIndex();
-	// }
-	//
-	// final int[] noGood = noGoodManager.createNoGood(scope, tuple);
-	//
-	// for (Variable v : problem.getVariables()) {
-	// if (noGood[v.getId()] >= 0) {
-	// continue;
-	// }
-	//
-	// for (int i = v.getFirstPresentIndex(); i < v.getDomain().length; i++) {
-	// if (!v.isPresent(i)) {
-	// continue;
-	// }
-	//
-	// noGood[v.getId()] = i;
-	//
-	// if (noGoodManager.isNoGood(noGood)) {
-	// v.remove(i, level);
-	// }
-	// }
-	//
-	// noGood[v.getId()] = -1;
-	// }
-	//
-	// }
-
-	// public NoGoodManager getNoGoodManager() {
-	// return noGoodManager;
-	// }
 
 	public Filter getFilter() {
 		return filter;
@@ -346,8 +253,5 @@ public final class MGAC extends AbstractSolver {
 	public String toString() {
 		return "maintain generalized arc consistency";
 	}
-	// public int getMaxNoGoodSize() {
-	// return maxNoGoodSize;
-	// }
 
 }

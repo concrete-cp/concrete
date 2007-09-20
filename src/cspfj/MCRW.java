@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.logging.Logger;
 
 import cspfj.exception.MaxBacktracksExceededException;
+import cspfj.problem.ConflictsManager;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.TieManager;
@@ -43,32 +44,6 @@ public final class MCRW extends AbstractLocalSolver {
 
 	}
 
-	// private Variable findBest() {
-	// Variable bestVariable = null;
-	// final TieManager tieManager = getTieManager();
-	// tieManager.clear();
-	//
-	// // int bestImp = tieManager.getBestEvaluation();
-	//
-	// for (Variable v : problem.getVariables()) {
-	// final int vId = v.getId();
-	// final ConflictsManager wcm = wcManagers[vId];
-	// // if (wcm.getCurrentConflicts() <= -bestImp) {
-	// // continue;
-	// // }
-	//
-	// final int imp = wcm.getBestImprovment();
-	// if (tieManager.newValue(imp)) {
-	// bestVariable = v;
-	// // bestImp = imp;
-	// }
-	//
-	// }
-	//
-	// return bestVariable;
-	//
-	// }
-	//	
 	private Variable conflicting() {
 		final TieManager tieManager = getTieManager();
 		tieManager.clear();
@@ -101,7 +76,7 @@ public final class MCRW extends AbstractLocalSolver {
 			return 0;
 		}
 
-		bestVariable.increaseWeight(1);
+		//bestVariable.increaseWeight(1);
 
 		final int improvment = wcm.getBestImprovment();
 
@@ -127,7 +102,7 @@ public final class MCRW extends AbstractLocalSolver {
 		if (index == variable.getFirst()) {
 			return 0;
 		}
-		variable.increaseWeight(1);
+		//variable.increaseWeight(1);
 		final ConflictsManager wcm = wcManagers[variable.getId()];
 
 		final int improvment = wcm.getImprovment(index);

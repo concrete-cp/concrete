@@ -32,6 +32,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
+import cspfj.constraint.ExtensionConstraint;
 import cspfj.constraint.Weight;
 import cspfj.exception.FailedGenerationException;
 import cspfj.heuristic.Supports;
@@ -57,8 +58,6 @@ public final class Problem implements Cloneable {
 	private List<Variable> scope = new ArrayList<Variable>();
 
 	private List<Integer> tuple = new ArrayList<Integer>();
-
-	private Set<Integer> pastVariables = new TreeSet<Integer>();
 
 	private int maxArity;
 
@@ -89,15 +88,20 @@ public final class Problem implements Cloneable {
 		Variable.resetVId();
 		Constraint.resetCId();
 
-		logger.fine("Generating");
+		logger.info("Generating");
 		generator.generate();
 
-		logger.fine("Setting Variables");
+		logger.info("Setting Variables");
 		problem.setVariables(generator.getVariables());
-		logger.fine("Setting Constraints");
-		problem.setConstraints(generator.getConstraints());
 
-		logger.fine("Updating InvolvingConstraints");
+		logger.info("Converting to extension");
+		final Collection<Constraint> constraints = convertExtension(generator
+				.getConstraints());
+
+		logger.info("Setting Constraints");
+		problem.setConstraints(constraints);
+
+		logger.info("Updating InvolvingConstraints");
 		problem.updateInvolvingConstraints();
 
 		// for (Constraint c :
@@ -106,7 +110,7 @@ public final class Problem implements Cloneable {
 		// System.out.println(c);
 		// }
 
-		logger.fine("Done");
+		logger.info("Done");
 		return problem;
 
 	}
@@ -183,9 +187,9 @@ public final class Problem implements Cloneable {
 					.toArray(new Constraint[involvingConstraints.size()]));
 		}
 
-		for (Constraint c : getConstraints()) {
-			c.initNbSupports();
-		}
+		// for (Constraint c : getConstraints()) {
+		// c.initNbSupports();
+		// }
 
 		final ValueHeuristic maxS = new Supports(this, false);
 		maxS.compute();
@@ -296,31 +300,6 @@ public final class Problem implements Cloneable {
 		return maxDomainSize;
 	}
 
-	public boolean addNoGood() {
-
-		final List<Variable> scope = this.scope;
-
-		final Constraint constraint = Constraint.findConstraint(scope, Arrays
-				.asList(scope.get(0).getInvolvingConstraints()));
-
-		if (constraint == null) {
-			return false;
-			// constraint = new ExtensionConstraint(scope
-			// .toArray(new Variable[scope.size()]));
-			// final Constraint[] newConstraints = new
-			// Constraint[constraints.length + 1];
-			// System.arraycopy(constraints, 0, newConstraints, 1,
-			// constraints.length);
-			// newConstraints[0] = constraint;
-			// constraints = newConstraints;
-			// updateInvolvingConstraints();
-			// logger.fine("Creating constraint " + constraint + " ("
-			// + constraints.length + " constraints)");
-		}
-
-		return constraint.removeTuple(scope, tuple);
-	}
-
 	public int addNoGoods() {
 		if (!useNoGoods) {
 			return 0;
@@ -335,9 +314,6 @@ public final class Problem implements Cloneable {
 
 		final List<Variable> scope = this.scope;
 		final List<Integer> tuple = this.tuple;
-		final Set<Integer> pastVariables = this.pastVariables;
-
-		// scope.clear();
 		tuple.clear();
 
 		scope.add(0, getVariable(levelVariables[0]));
@@ -346,35 +322,55 @@ public final class Problem implements Cloneable {
 		for (int level = 1; level < levelVariables.length
 				&& level < getMaxArity(); level++) {
 			// logger.fine("checking " + getVariable(levelVariables[level-1]));
-			pastVariables.add(levelVariables[level - 1]);
-
 			scope.add(level, null);
-			tuple.add(level, null);
 
 			for (Variable fv : getVariables()) {
-				if (pastVariables.contains(fv.getId())) {
+				if (scope.contains(fv)) {
 					continue;
 				}
 
 				scope.set(level, fv);
-				// logger.fine(fv.toString()) ;
+				final ExtensionConstraint constraint;
+				try {
+					constraint = (ExtensionConstraint) Constraint
+							.findConstraint(scope, scope.get(0)
+									.getInvolvingConstraints());
+				} catch (ClassCastException e) {
+					continue;
+				}
+
+				if (constraint == null) {
+					continue;
+				}
+
+				final int[] realTuple = constraint.getTuple();
+				int currentV = -1;
+				for (int i = level + 1; --i >= 0;) {
+					if (constraint.getInvolvedVariables()[i] == fv) {
+						currentV = i;
+					} else {
+						realTuple[i] = tuple.get(scope.indexOf(constraint
+								.getInvolvedVariables()[i]));
+					}
+				}
+
 				for (int lostIndex = fv.getLastAbsent(); lostIndex >= 0; lostIndex = fv
 						.getPrevAbsent(lostIndex)) {
 					if (fv.getRemovedLevel(lostIndex) == level) {
-						tuple.set(level, lostIndex);
+						realTuple[currentV] = lostIndex;
 
-						if (addNoGood()) {
+						if (constraint.removeTuple()) {
+							logger.fine(scope + tuple.toString());
 							nbNoGoods++;
 						}
 					}
 
 				}
-
 			}
 
 			if (levelVariables[level] >= 0) {
 				scope.set(level, getVariable(levelVariables[level]));
-				tuple.set(level, getVariable(levelVariables[level]).getFirst());
+				tuple.add(getVariable(levelVariables[level]).getFirst());
 			} else {
 				break;
 			}
@@ -383,10 +379,6 @@ public final class Problem implements Cloneable {
 			logger.fine(nbNoGoods + " nogoods");
 		}
 		scope.clear();
-		pastVariables.clear();
-		for (Constraint c : getConstraints()) {
-			c.initNbSupports();
-		}
 		return nbNoGoods;
 	}
 
@@ -524,8 +516,6 @@ public final class Problem implements Cloneable {
 
 		problem.tuple = new ArrayList<Integer>();
 
-		problem.pastVariables = new TreeSet<Integer>();
-
 		// problem.variables = null;
 		//
 		// problem.variableArray = null;
@@ -557,11 +547,36 @@ public final class Problem implements Cloneable {
 		return problem;
 	}
 
-	public boolean activateMatrixes() {
-		boolean activated = true;
-		for (Constraint c : getConstraints()) {
-			activated &= c.activateMatrix();
+	public static Collection<Constraint> convertExtension(
+			final Collection<Constraint> constraints)
+			throws FailedGenerationException {
+		// for (Constraint c : constraints) {
+		// c.initNbSupports();
+		// }
+		// return constraints;
+
+		final Collection<Constraint> extConstraints = new ArrayList<Constraint>();
+
+		boolean outOfMemory = false;
+
+		for (Constraint c : constraints) {
+			if (c instanceof ExtensionConstraint) {
+				extConstraints.add(c);
+			} else if (outOfMemory) {
+				c.initNbSupports();
+				extConstraints.add(c);
+			} else {
+				try {
+					extConstraints.add(new ExtensionConstraint(c));
+				} catch (OutOfMemoryError e) {
+					outOfMemory = true;
+					logger.info("Could not convert " + c + " to extension");
+					c.initNbSupports();
+					extConstraints.add(c);
+				}
+			}
 		}
-		return activated;
+
+		return extConstraints;
 	}
 }

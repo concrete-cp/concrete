@@ -2,7 +2,7 @@ package cspfj;
 
 import java.util.Map;
 
-import cspfj.filter.AC3_P;
+import cspfj.filter.AC3;
 import cspfj.filter.Filter;
 import cspfj.filter.SAC;
 import cspfj.heuristic.Heuristic;
@@ -13,16 +13,12 @@ public class Combo2 extends AbstractSolver {
 
 	final private Heuristic heuristic;
 
-	final private boolean reverse;
-
 	// final private static Logger logger =
 	// Logger.getLogger("cspfj.ComboSolver2");
 
 	public Combo2(Problem prob, ResultHandler resultHandler,
-			Heuristic heuristic, boolean reverse) {
+			Heuristic heuristic) {
 		super(prob, resultHandler);
-
-		this.reverse = reverse;
 
 		this.heuristic = heuristic;
 	}
@@ -45,7 +41,7 @@ public class Combo2 extends AbstractSolver {
 		System.gc();
 		chronometer.startChrono();
 		
-		if (!preprocess(new AC3_P(problem))) {
+		if (!preprocess(new AC3(problem))) {
 			chronometer.validateChrono();
 			return false;
 		}
@@ -56,7 +52,7 @@ public class Combo2 extends AbstractSolver {
 		RunMGAC macSolver = null;
 		try {
 			macSolver = new RunMGAC(problem, getResultHandler(),
-					heuristic, reverse, solutionHandler);
+					heuristic, solutionHandler);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

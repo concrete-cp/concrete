@@ -51,8 +51,8 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 	private final int[] domain;
 
 	/**
-	 * Éléments supprimés du domaine (-1 : présent, n : élément supprimé au
-	 * niveau n)
+	 * Éléments supprimés du domaine (-1 : présent, n : élément supprimé
+	 * au niveau n)
 	 */
 	private int[] removed;
 
@@ -90,9 +90,7 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 
 	private int[] positionInConstraint;
 
-	private double weight;
-
-	// private static final Logger logger = Logger.getLogger("cspfj.Variable");
+	//private static final Logger logger = Logger.getLogger("cspfj.Variable");
 
 	public Variable(final int[] dom) {
 		this(dom, null);
@@ -127,8 +125,6 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 		chain.reOrder(order, removed);
 
 		absents = new UnOrderedChain(domain.length);
-
-		weight = 1;
 	}
 
 	/**
@@ -141,7 +137,7 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 	@Override
 	public String toString() {
 		if (name == null) {
-			return "X" + id;
+			return "X" + (id);
 		}
 		return name;
 
@@ -262,7 +258,7 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 		assigned = false;
 	}
 
-	public boolean checkIndexValidity(final int index) {
+	private boolean checkIndexValidity(final int index) {
 		for (int c = constraints.length; --c >= 0;) {
 			if (!constraints[c].findValidTuple(positionInConstraint[c], index)) {
 				return false;
@@ -324,6 +320,7 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 		assert !assigned;
 		assert isPresent(index);
 		removed[index] = level;
+
 		BooleanArray.set(booleanDomain, index, false);
 
 		domainSize--;
@@ -516,14 +513,6 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 		return positionInConstraint[constraint];
 	}
 
-	public void increaseWeight(final double i) {
-		weight += i;
-	}
-
-	public double getWeight() {
-		return weight;
-	}
-	
 	public void assignBoolean(final int index) {
 		BooleanArray.setSingle(booleanDomain, index);
 	}

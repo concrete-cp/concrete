@@ -192,6 +192,7 @@ public final class SAC implements Filter {
 			} else {
 				variable.unassign(problem);
 				problem.restore(level + 1);
+				logger.fine("Removing " + variable + ", " + index);
 
 				variable.remove(index, level);
 				changedGraph = true;
@@ -203,8 +204,11 @@ public final class SAC implements Filter {
 			doneSomething |= changedGraph;
 			// setValueHeuristic(variable, index);
 
-			if (changedGraph && !filter.reduceAfter(level, variable)) {
-				return false;
+			if (changedGraph) {
+				if (!filter.reduceAfter(level, variable)) {
+					return false;
+				}
+				fillQueue();
 			}
 
 		}
@@ -371,6 +375,6 @@ public final class SAC implements Filter {
 	}
 
 	public boolean hasDoneSomething() {
-		return doneSomething ;
+		return doneSomething;
 	}
 }

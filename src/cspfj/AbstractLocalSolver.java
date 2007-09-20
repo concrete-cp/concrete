@@ -11,7 +11,8 @@ import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
-import cspfj.filter.AC3_P;
+import cspfj.filter.AC3;
+import cspfj.problem.ConflictsManager;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.RandomOrder;
@@ -26,7 +27,6 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 
 	protected static final boolean FINER = logger.isLoggable(Level.FINER);
 
-	// private final int[] flipCounter;
 
 	private final TieManager tieManager;
 
@@ -36,9 +36,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 
 	private int maxTries = -1;
 
-	// private Variable bestVariable ;
-	//	
-	// private int bestImp ;
+
 
 	public static void setSeed(final long seed) {
 		random.setSeed(seed);
@@ -48,15 +46,13 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		this.maxTries = tries;
 	}
 
-	public AbstractLocalSolver(Problem prob, ResultHandler resultHandler, final boolean max) {
+	public AbstractLocalSolver(Problem prob, ResultHandler resultHandler,
+			final boolean max) {
 		super(prob, resultHandler);
 
 		this.max = max;
 
-		// tabuManager = new TabuManager(problem, 10);
 
-		// flipCounter = new int[prob.getMaxVId() + 1];
-		// Arrays.fill(flipCounter, 0);
 		tieManager = new TieManager(random);
 
 		wcManagers = new ConflictsManager[prob.getMaxVId() + 1];
@@ -147,7 +143,6 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 			wcm.initNbConflicts();
 		}
 
-		// initBestVariable();
 	}
 
 	public abstract void minConflicts() throws MaxBacktracksExceededException,
@@ -158,7 +153,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		boolean resolved = false;
 		System.gc();
 		chronometer.startChrono();
-		if (!max && !preprocess(new AC3_P(problem))) {
+		if (!max && !preprocess(new AC3(problem))) {
 			return false;
 		}
 		int nbTries = 0;
@@ -183,19 +178,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 				throw e;
 			}
 			localTime += chronometer.getCurrentChrono();
-			// if (true) {
-			// logger.info(problem.toString());
-			// chronometer.validateChrono();
-			// throw new IOException();
-			// }
 
-			// final Set<Constraint> set = new TreeSet<Constraint>(new
-			// Weight(false)) ;
-			// set.addAll(Arrays.asList(problem.getConstraints()));
-
-			if (logger.isLoggable(Level.FINE)) {
-				logger.fine(weightStats());
-			}
 			logger.info("Took " + localTime + " s (" + (localBT / localTime)
 					+ " flips per second), " + (getNbAssignments() - nbAssign)
 					+ " assignments made");
@@ -207,39 +190,12 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 			for (Variable v : problem.getVariables()) {
 				v.resetAssign();
 			}
-			// localBT *= 1.5;
+
 		} while (!resolved);
 
 		chronometer.validateChrono();
 		return true;
 
-	}
-
-	public String weightStats() {
-		final StringBuffer sb = new StringBuffer();
-
-		for (int i = 0; i <= problem.getMaxVId(); i++) {
-			final Variable v = problem.getVariable(i);
-			if (v == null) {
-				continue;
-			}
-
-			int w = 0;
-			for (Constraint c : v.getInvolvingConstraints()) {
-				w += c.getWeight();
-			}
-			sb.append(v).append(" : ").append(w).append(", ").append(
-					v.getWeight()).append('\n');
-		}
-
-		sb.append('\n');
-
-		for (Constraint c : problem.getConstraints()) {
-			sb.append(c).append(" : ").append(c.getWeight()).append('\n');
-
-		}
-
-		return sb.toString();
 	}
 
 	public String getXMLConfig() {
@@ -248,16 +204,12 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 						"</maxCSP>\n\t\t\t<maxIterations>").append(
 						getMaxBacktracks()).append("</maxIterations>\n")
 				.toString();
-		// "</filter>\n\t\t\t<randomWalk>").append(rWProba).append(
-
 	}
 
 	protected void reAssign(final ConflictsManager vcm, final int index) {
 		vcm.reAssign(index);
 		final Variable variable = vcm.getVariable();
 		final int vId = variable.getId();
-		// bestVariable = variable ;
-		// bestImp = vcm.getBestImprovment();
 		for (Constraint c : variable.getInvolvingConstraints()) {
 			final Variable[] involvedVariables = c.getInvolvedVariables();
 			for (int n = involvedVariables.length; --n >= 0;) {
@@ -268,38 +220,11 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 				}
 			}
 		}
-		// initBestVariable() ;
 	}
 
 	protected TieManager getTieManager() {
 		return tieManager;
 	}
 
-	// protected Variable getBestVariable() {
-	// return bestVariable ;
-	// }
-	//	
-	// protected int getBestImp(){
-	// return bestImp ;
-	// }
 
-	// protected void updateBestVariable(final ConflictsManager vcm) {
-	// if (vcm.getBestImprovment() < bestImp) {
-	// bestVariable = vcm.getVariable() ;
-	// bestImp = vcm.getBestImprovment();
-	// }
-	// }
-
-	// protected void initBestVariable() {
-	// bestVariable = wcManagers[0].getVariable() ;
-	// bestImp = wcManagers[0].getBestImprovment();
-	// final TieManager tieManager = this.tieManager;
-	// tieManager.clear();
-	// for (ConflictsManager vcm: wcManagers) {
-	// if(tieManager.newValue(vcm.getBestImprovment())) {
-	// bestVariable = vcm.getVariable() ;
-	// bestImp = vcm.getBestImprovment();
-	// }
-	// }
-	// }
 }

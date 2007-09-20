@@ -15,11 +15,10 @@ public class RunMGAC extends AbstractRunSolver {
 
 	final private int bt;
 
-	public RunMGAC(final Problem problem,
-			final ResultHandler resultHandler, final Heuristic heuristic,
-			final boolean reverse, final SolutionHandler solutionHandler) {
+	public RunMGAC(final Problem problem, final ResultHandler resultHandler,
+			final Heuristic heuristic, final SolutionHandler solutionHandler) {
 		super(problem, solutionHandler);
-		macSolver = new MGAC(problem, resultHandler, heuristic, reverse);
+		macSolver = new MGAC(problem, resultHandler, heuristic);
 		setSolver(macSolver);
 		bt = problem.getMaxBacktracks();
 	}
@@ -29,15 +28,15 @@ public class RunMGAC extends AbstractRunSolver {
 
 		macSolver.setMaxBacktracks(factor * bt);
 
-		logger.info("MAC with " + macSolver.getMaxBacktracks()+" bt");
-		final Map<Integer, Integer> weights = getSolutionHandler().getWeights() ;
-		for (int cid: weights.keySet()) {
-			getProblem().getConstraint(cid).increaseWeight(weights.get(cid)) ;
+		logger.info("MAC with " + macSolver.getMaxBacktracks() + " bt");
+		final Map<Integer, Integer> weights = getSolutionHandler().getWeights();
+		for (int cid : weights.keySet()) {
+			getProblem().getConstraint(cid).increaseWeight(weights.get(cid));
 		}
-		weights.clear() ;
-		
+		weights.clear();
+
 		try {
-			
+
 			macSolver.mac(0, null);
 
 			return true;
@@ -45,11 +44,11 @@ public class RunMGAC extends AbstractRunSolver {
 
 		}
 
-        macSolver.addNoGoods();
-        getProblem().restoreAll(1);
-        if (!macSolver.getFilter().reduceAll(0)) {
-            return true;
-        }
+		macSolver.addNoGoods();
+		getProblem().restoreAll(1);
+		if (!macSolver.getFilter().reduceAll(0)) {
+			return true;
+		}
 		return false;
 	}
 

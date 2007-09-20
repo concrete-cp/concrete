@@ -29,39 +29,18 @@ import cspfj.problem.Variable;
  * @author scand1sk
  * 
  */
-public final class AC3_P implements Filter {
-
-	// private static final Logger logger = Logger.getLogger("cspfj.AC3");
-
+public final class AC3 implements Filter {
 	private final Problem problem;
-
-	// private final Maximier<Variable> queue;
 
 	private final boolean[] inQueue;
 
 	private int queueSize = 0;
 
-	private boolean doneSomething;
-
-	// private final Map<Integer, boolean[]> inQueue;
-
-	public AC3_P(final Problem problem) {
+	public AC3(final Problem problem) {
 		super();
 		this.problem = problem;
 
-		// inQueue = new HashMap<Integer,
-		// boolean[]>(problem.getNbConstraints());
-
-		// int size = 0;
-		// for (Constraint c : problem.getConstraints()) {
-		// size += c.getArity();
-		// inQueue.put(c.getId(), new boolean[c.getArity()]);
-		// }
-
 		inQueue = new boolean[problem.getMaxVId() + 1];
-
-		// queue = new Maximier<Variable>(new
-		// Variable[problem.getNbVariables()]);
 	}
 
 	public boolean reduceAll(final int level) {
@@ -79,9 +58,6 @@ public final class AC3_P implements Filter {
 
 		addInQueue(variable.getId());
 
-		// addNeighbours(variable);
-
-		// variable.setNbRemovals(1) ;
 		return reduce(level);
 	}
 
@@ -102,11 +78,7 @@ public final class AC3_P implements Filter {
 	}
 
 	private boolean reduce(final int level) {
-		doneSomething = false;
-		// logger.fine("AC...");
 		while (queueSize > 0) {
-			// logger.fine(""+queueSize);
-			// System.err.println(queueSize);
 			final Variable variable = pullVariable();
 
 			final Constraint[] constraints = variable.getInvolvingConstraints();
@@ -125,7 +97,6 @@ public final class AC3_P implements Filter {
 
 					if (!y.isAssigned() && !skipRevision(constraint, i)
 							&& constraint.revise(i, level)) {
-						doneSomething = true;
 						if (y.getDomainSize() <= 0) {
 							constraint.increaseWeight();
 							return false;
@@ -198,12 +169,6 @@ public final class AC3_P implements Filter {
 		}
 	}
 
-	// private void addNeighbours(final Variable variable) {
-	// for (Variable n : variable.getNeighbours()) {
-	// addInQueue(n);
-	// }
-	// }
-
 	public int getNbNoGoods() {
 		return 0;
 	}
@@ -211,12 +176,5 @@ public final class AC3_P implements Filter {
 	public String toString() {
 		return "AC3rm";
 	}
-
-	public boolean hasDoneSomething() {
-		return doneSomething;
-	}
-	// public int getNbSub() {
-	// return 0;
-	// }
 
 }

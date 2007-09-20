@@ -20,7 +20,6 @@ public class MatrixManagerList extends AbstractMatrixManager {
 
     @Override
     public void init(final boolean initialState) throws MatrixTooBigException {
-        super.init(initialState);
         supports = !initialState ;
     }
     
@@ -49,5 +48,11 @@ public class MatrixManagerList extends AbstractMatrixManager {
         // TODO Auto-generated method stub
         return false;
     }
+
+	@Override
+	public boolean isTrue(int[] tuple) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
 }

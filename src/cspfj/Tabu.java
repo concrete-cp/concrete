@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.logging.Logger;
 
 import cspfj.exception.MaxBacktracksExceededException;
+import cspfj.problem.ConflictsManager;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.TieManager;
@@ -54,7 +55,7 @@ public final class Tabu extends AbstractLocalSolver {
 		// int bestImp = tieManager.getBestEvaluation();
 		final int nbIt = getNbBacktracks();
 		for (ConflictsManager vcm : wcManagers) {
-			Variable variable = vcm.getVariable() ;
+			
 			if (!vcm.isCritic()) {
 				continue;
 			}
@@ -63,6 +64,8 @@ public final class Tabu extends AbstractLocalSolver {
 					+ vcm.getCurrentConflicts()
 					+ Arrays.toString(vcm.criticConstraints);
 
+			final Variable variable = vcm.getVariable() ;
+			
 			final int vId = variable.getId();
 			for (int i = variable.getDomain().length; --i >= 0;) {
 				if (variable.getRemovedLevel(i) < 0
@@ -72,21 +75,11 @@ public final class Tabu extends AbstractLocalSolver {
 					bestVariable = variable;
 				}
 			}
-
-			// final int bestIndex = wcm.getBestIndex(tabuManager, aspiration,
-			// getNbBacktracks());
-			// if (bestIndex >= 0) {
-			// final int imp = wcm.getImprovment(bestIndex);
-			//
-			// if (tieManager.newValue(bestIndex, imp)) {
-			// bestVariable = v;
-			// // bestImp = imp;
-			// }
-			// }
-
 		}
 
-		bestVariable.increaseWeight(1);
+		if (bestVariable == null) {
+			return 0;
+		}
 
 		final int bestVariableId = bestVariable.getId();
 
@@ -96,7 +89,6 @@ public final class Tabu extends AbstractLocalSolver {
 
 		final int bestImp = wcm.getImprovment(bestIndex);
 
-		// tabuManager.push(bestVariableId, bestIndex, getNbBacktracks());
 		tabuManager.push(bestVariableId, bestVariable.getFirst(),
 				getNbBacktracks());
 

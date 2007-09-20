@@ -4,13 +4,12 @@
  * To change the template for this generated file go to
  * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
-package cspfj;
+package cspfj.problem;
 
 import java.util.Arrays;
-import java.util.logging.Logger;
 
+import cspfj.TabuManager;
 import cspfj.constraint.Constraint;
-import cspfj.problem.Variable;
 import cspfj.util.TieManager;
 
 public final class ConflictsManager {
@@ -143,7 +142,7 @@ public final class ConflictsManager {
 		initCritic() ;
 	}
 	
-	private final void initCritic() {
+	private void initCritic() {
 		critic = false;
 		final boolean[] criticConstraints = this.criticConstraints;
 		for (int c = constraints.length; --c >= 0;) {
@@ -155,7 +154,7 @@ public final class ConflictsManager {
 		}
 	}
 
-	private boolean critic(int constraintPos) {
+	private boolean critic(final int constraintPos) {
 		final boolean[] check = this.check[constraintPos];
 		final boolean currentCheck = check[assignedIndex];
 		if (currentCheck) {

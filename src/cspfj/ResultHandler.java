@@ -57,6 +57,8 @@ public class ResultHandler {
 
 	public void problem(final String name) throws IOException {
 		logger.info("loading : " + name);
+		statistics.clear() ;
+		bestSatisfied = 0 ;
 	}
 
 	public void load(final Solver solver, final long load) throws IOException {
@@ -102,6 +104,8 @@ public class ResultHandler {
 		if (thrown != null) {
 			logger.warning(thrown.toString());
 		}
+		
+		solver=null;
 
 	}
 

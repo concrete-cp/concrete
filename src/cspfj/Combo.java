@@ -22,9 +22,9 @@ public class Combo extends AbstractSolver {
 	// private final NoGoodManager noGoodManager;
 
 	public Combo(Problem prob, ResultHandler resultHandler,
-			Heuristic heuristic, boolean reverse) {
+			Heuristic heuristic) {
 		super(prob, resultHandler);
-		macSolver = new MGAC(prob, resultHandler, heuristic, reverse);
+		macSolver = new MGAC(prob, resultHandler, heuristic);
 		mCSolver = new WMC(prob, resultHandler, false);
 		this.heuristic = heuristic;
 

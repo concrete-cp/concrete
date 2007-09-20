@@ -30,15 +30,11 @@ public final class AllDifferentConstraint extends Constraint {
 
 	private final int min;
 
-	// private final Integer[] constants;
-
 //	private final static Logger logger = Logger
 //			.getLogger("cspfj.constraint.AllDifferentConstraint");
 
-	// private boolean removedConstants = false;
-
 	public AllDifferentConstraint(final Variable[] scope) {
-		super(scope);
+		super(scope, false);
 
 		int minVal = Integer.MAX_VALUE;
 		int maxVal = Integer.MIN_VALUE;
@@ -128,10 +124,6 @@ public final class AllDifferentConstraint extends Constraint {
 //		}
 //		return nbTuples;
 //	}
-
-	public boolean useTupleCache() {
-		return false;
-	}
 	
     public boolean removeTuple(final List<Variable> scope,
             final List<Integer> tuple) {

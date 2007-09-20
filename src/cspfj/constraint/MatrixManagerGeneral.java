@@ -47,8 +47,6 @@ public class MatrixManagerGeneral extends AbstractMatrixManager {
 			throw new MatrixTooBigException(e);
 		}
 
-		super.init(initialState);
-
 		Arrays.fill(matrix, initialState);
 	}
 
@@ -65,19 +63,14 @@ public class MatrixManagerGeneral extends AbstractMatrixManager {
 	}
 
 	public boolean isTrue(final int[] tuple) {
-		return super.isTrue(tuple) || matrix[matrixIndex(tuple)];
+		return matrix[matrixIndex(tuple)];
 	}
 
 	public void intersect(final Variable[] scope,
 			final Variable[] constraintScope, final boolean supports,
 			final int[][] tuples) throws MatrixTooBigException {
 
-		final boolean[] matrix;
-		if (isActive()) {
-			matrix = this.matrix.clone();
-		} else {
-			matrix = null;
-		}
+		final boolean[] matrix = this.matrix.clone();
 
 		generate(scope, constraintScope, supports, tuples, arity);
 

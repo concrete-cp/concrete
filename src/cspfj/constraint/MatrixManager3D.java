@@ -27,8 +27,6 @@ public class MatrixManager3D extends AbstractMatrixManager {
 			throw new MatrixTooBigException(e);
 		}
 
-		super.init(initialState);
-
 		for (boolean [][] matrix2: matrix) {
 			for (boolean[] matrix1: matrix2) {
 				Arrays.fill(matrix1, initialState);		
@@ -50,19 +48,14 @@ public class MatrixManager3D extends AbstractMatrixManager {
 	}
 
 	public boolean isTrue(final int[] tuple) {
-		return super.isTrue(tuple) || matrix[tuple[0]][tuple[1]][tuple[2]];
+		return matrix[tuple[0]][tuple[1]][tuple[2]];
 	}
 
 	public void intersect(final Variable[] scope,
 			final Variable[] constraintScope, final boolean supports,
 			final int[][] tuples) throws MatrixTooBigException {
 
-		final boolean[][][] matrix;
-		if (isActive()) {
-			matrix = this.matrix.clone();
-		} else {
-			matrix = null;
-		}
+		final boolean[][][] matrix = this.matrix.clone();
 
 		generate(scope, constraintScope, supports, tuples, arity);
 

@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
+import cspfj.problem.ConflictsManager;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.TieManager;
@@ -141,7 +142,7 @@ public final class WMC extends AbstractLocalSolver {
 		if (FINER) {
 			logger.finer(bestCM.getVariable() + " <- " + bestCM.getBestIndex());
 		}
-		bestCM.getVariable().increaseWeight(1);
+		//bestCM.getVariable().increaseWeight(1);
 		reAssign(bestCM, tieManager.getBestValue());
 		incrementNbAssignments();
 		checkBacktracks();

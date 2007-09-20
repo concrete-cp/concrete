@@ -23,7 +23,6 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 	}
 
 	public void init(final boolean initialState) throws MatrixTooBigException {
-		super.init(initialState);
 		final int[] domainSize = this.domainSize;
 
 		final int maxDomainSize = Math.max(domainSize[0], domainSize[1]);
@@ -54,20 +53,14 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 
 	@Override
 	public boolean isTrue(final int[] tuple) {
-		return super.isTrue(tuple)
-				|| BooleanArray.isTrue(matrix2D[0][tuple[0]], tuple[1]);
+		return BooleanArray.isTrue(matrix2D[0][tuple[0]], tuple[1]);
 	}
 
 	public void intersect(final Variable[] scope,
 			final Variable[] constraintScope, final boolean supports,
 			final int[][] tuples) throws MatrixTooBigException {
 
-		final int[][][] matrix2D;
-		if (isActive()) {
-			matrix2D = this.matrix2D.clone();
-		} else {
-			matrix2D = null;
-		}
+		final int[][][] matrix2D = this.matrix2D.clone();
 
 		generate(scope, constraintScope, supports, tuples, 2);
 
@@ -82,37 +75,31 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 		}
 
 	}
+	
+	public boolean hasSupport(final int variablePosition, final int index) {
+		final int[] mask = matrix2D[variablePosition][index] ;
+		for (int part = 0 ; part < mask.length ; part++) {
+			if ((mask[part] & domain[part]) != 0) {
+				return true ;
+			}
+		}
+		return false ;
+	}
 
 	@Override
 	public boolean setFirstTuple(final int variablePosition, final int index) {
 		this.variablePosition = variablePosition;
 		tuple[variablePosition] = index;
 
-		if (isActive()) {
-			mask = matrix2D[variablePosition][index];
-			domain = variables[1 - variablePosition].getBooleanDomain();
-			currentPart = -1;
-			current = 0;
-			return next();
-		}
-
-		current = tuple[1 - variablePosition] = variables[1 - variablePosition]
-				.getFirst();
-		return true;
-
+		mask = matrix2D[variablePosition][index];
+		domain = variables[1 - variablePosition].getBooleanDomain();
+		currentPart = -1;
+		current = 0;
+		return next();
 	}
 
 	@Override
 	public boolean next() {
-		if (!isActive()) {
-			current = tuple[1 - variablePosition] = variables[1 - variablePosition]
-					.getNext(current);
-			if (current < 0) {
-				return false;
-			}
-			return true;
-		}
-
 		int currentPosition = this.currentPosition;
 		int current = this.current;
 		int currentPart = this.currentPart;
@@ -175,7 +162,7 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 	}
 
 	public String toString() {
-		return "MatrixManager2D-" + (isActive() ? "active" : "inactive") + "-" + matrix2D;
+		return "MatrixManager2D-" + matrix2D;
 	}
 
 }

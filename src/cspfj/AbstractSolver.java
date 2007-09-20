@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import cspfj.exception.MaxBacktracksExceededException;
+import cspfj.filter.CDC;
 import cspfj.filter.Filter;
 import cspfj.filter.SAC;
 import cspfj.filter.SAC.SPACE;
@@ -171,20 +172,17 @@ public abstract class AbstractSolver implements Solver {
 
 	public final boolean preprocess(final Filter filter) {
 		final Filter preprocessor;
-		final boolean sac;
+		
 		switch (space) {
 		case BRANCH:
 			preprocessor = new SAC(problem, filter, true);
-			sac = true;
 			break;
 
 		case CLASSIC:
-			preprocessor = new SAC(problem, filter, false);
-			sac = true;
+			preprocessor = new CDC(problem, filter);
 			break;
 
 		default:
-			sac = false;
 			preprocessor = filter;
 		}
 
@@ -192,8 +190,11 @@ public abstract class AbstractSolver implements Solver {
 
 		statistics("prepro-nogoods", preprocessor.getNbNoGoods());
 
-		if (sac) {
+		if (SPACE.BRANCH.equals(space)) {
 			statistics("prepro-singletontests", ((SAC) preprocessor)
+					.getNbSingletonTests());
+		} else if (SPACE.CLASSIC.equals(space)) {
+			statistics("prepro-singletontests", ((CDC) preprocessor)
 					.getNbSingletonTests());
 		}
 
