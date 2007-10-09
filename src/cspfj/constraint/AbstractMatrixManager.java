@@ -41,9 +41,6 @@ public abstract class AbstractMatrixManager implements Cloneable {
 		case 2:
 			return new MatrixManager2D(scope, tuple);
 
-		case 3:
-			return new MatrixManager3D(scope, tuple);
-
 		default:
 			return new MatrixManagerGeneral(scope, tuple);
 		}

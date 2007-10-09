@@ -36,10 +36,9 @@ public final class DTPConstraint extends Constraint {
 
 	@Override
 	public boolean check() {
-		final int value0 = getValue(0);
-		final int value1 = getValue(1);
+		final int difference = getValue(0) - getValue(1);
 
-		return (value0 + duration0 <= value1 || value1 + duration1 <= value0);
+		return (difference >= duration1 || -difference >= duration0);
 	}
 
 	public String toString() {

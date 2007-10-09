@@ -31,7 +31,7 @@ public class ExtensionConstraint extends Constraint {
 
 	private final double tightness;
 
-	protected AbstractMatrixManager matrix;
+	private AbstractMatrixManager matrix;
 
 	public ExtensionConstraint(final Variable[] scope, final boolean supports,
 			final int[][] tuples) throws FailedGenerationException {
@@ -52,12 +52,8 @@ public class ExtensionConstraint extends Constraint {
 		} catch (MatrixTooBigException e) {
 			throw new FailedGenerationException("Matrix too big");
 		}
-		try {
-			matrix.intersect(getInvolvedVariables(), getInvolvedVariables(),
-					supports, tuples);
-		} catch (MatrixTooBigException e) {
-			throw new FailedGenerationException(e.toString());
-		}
+
+		intersect(getInvolvedVariables(), supports, tuples);
 	}
 
 	public ExtensionConstraint(final Constraint constraint)
@@ -73,13 +69,13 @@ public class ExtensionConstraint extends Constraint {
 		}
 
 		long tuples = getSize();
-		
+
 		for (int p = getArity(); --p >= 0;) {
 			Arrays.fill(nbInitConflicts[p], 0);
 		}
-		
+
 		Arrays.fill(nbMaxConflicts, 0);
-		
+
 		constraint.setFirstTuple();
 
 		do {
@@ -151,7 +147,7 @@ public class ExtensionConstraint extends Constraint {
 			final List<Integer> scrambledTuple) {
 
 		tupleManager.setRealTuple(scope, scrambledTuple);
-		
+
 		if (matrix.removeTuple()) {
 			for (int p = getArity(); --p >= 0;) {
 				if (Arrays.equals(tuple, last[p][tuple[p]])) {
@@ -168,19 +164,20 @@ public class ExtensionConstraint extends Constraint {
 		return false;
 
 	}
-	
-	public boolean removeTuple() {
-		return matrix.removeTuple() ;
-	}
-	
 
-	public void intersect(final Variable[] scope, final boolean supports,
+	public boolean removeTuple() {
+		return matrix.removeTuple();
+	}
+
+	public final void intersect(final Variable[] scope, final boolean supports,
 			final int[][] tuples) throws FailedGenerationException {
 		try {
 			matrix.intersect(scope, getInvolvedVariables(), supports, tuples);
 		} catch (MatrixTooBigException e) {
 			throw new FailedGenerationException(e.toString());
 		}
+		
+		initNbSupports();
 
 	}
 

@@ -55,9 +55,8 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	protected static final Logger logger = Logger
 			.getLogger("cspfj.constraints.Constraint");
 
-	
-	private final boolean tupleCache ;
-	
+	private final boolean tupleCache;
+
 	protected TupleManager tupleManager;
 
 	protected final long[][] nbInitConflicts;
@@ -75,7 +74,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	protected Constraint(final Variable[] scope) {
 		this(scope, true);
 	}
-	
+
 	protected Constraint(final Variable[] scope, final boolean tupleCache) {
 		involvedVariables = scope;
 		arity = involvedVariables.length;
@@ -91,7 +90,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 				maxDomain = involvedVariables[i].getDomain().length;
 			}
 		}
-		
+
 		this.tupleCache = tupleCache;
 
 		if (tupleCache) {
@@ -117,19 +116,31 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	}
 
 	public void initNbSupports() {
+		// logger.info("Counting " + this +" supports");
 		final long size = size();
 		for (int p = arity; --p >= 0;) {
 			initSize[p] = size / involvedVariables[p].getDomainSize();
 		}
 
 		logger.fine("Counting supports");
-		for (int p = arity; --p >= 0;) {
-			for (int i = involvedVariables[p].getDomainSize(); --i >= 0;) {
-				nbInitConflicts[p][i] = initSize[p] - nbTuples(p, i);
-				nbMaxConflicts[p] = Math.max(nbMaxConflicts[p],
-						nbInitConflicts[p][i]);
-			}
+
+		tupleManager.setFirstTuple();
+		
+		Arrays.fill(nbMaxConflicts, 0) ;
+		for (int p = arity; --p>=0;){
+			Arrays.fill(nbInitConflicts[p], 0);
 		}
+		do {
+			if (!chk()) {
+				for (int p = arity; --p >= 0;) {
+					final long i = ++nbInitConflicts[p][tuple[p]];
+					if (i > nbMaxConflicts[p]) {
+						nbMaxConflicts[p] = i;
+					}
+				}
+			}
+		} while (tupleManager.setNextTuple());
+
 	}
 
 	public int getValue(final int position) {
@@ -204,12 +215,10 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		return size;
 	}
 
-
 	public boolean revise(final int position, final int level) {
 		final Variable variable = involvedVariables[position];
 
 		assert !variable.isAssigned();
-
 
 		boolean revised = false;
 
@@ -368,8 +377,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	}
 
 	public final static Constraint findConstraint(
-			final Collection<Variable> scope,
-			final Constraint[] constraints) {
+			final Collection<Variable> scope, final Constraint[] constraints) {
 		for (Constraint c : constraints) {
 			if (c.hasSetOfVariablesEqualTo(scope)) {
 				return c;
@@ -493,7 +501,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		constraint.positionInVariable = new int[arity];
 		return constraint;
 	}
-
 
 	public void setFirstTuple() {
 		tupleManager.setFirstTuple();
