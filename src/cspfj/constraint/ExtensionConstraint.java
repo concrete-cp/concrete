@@ -45,7 +45,7 @@ public class ExtensionConstraint extends Constraint {
 			tightness = 1 - tight;
 		}
 
-		matrix = AbstractMatrixManager.factory(scope, tuple);
+		matrix = AbstractMatrixManager.factory(scope, tuple, last);
 
 		try {
 			matrix.init(true);
@@ -60,7 +60,7 @@ public class ExtensionConstraint extends Constraint {
 			throws FailedGenerationException {
 		super(constraint.getInvolvedVariables());
 
-		matrix = AbstractMatrixManager.factory(getInvolvedVariables(), tuple);
+		matrix = AbstractMatrixManager.factory(getInvolvedVariables(), tuple, last);
 
 		try {
 			matrix.init(true);
@@ -112,7 +112,7 @@ public class ExtensionConstraint extends Constraint {
 			nbMaxConflicts[p] = 0;
 		}
 
-		matrix = AbstractMatrixManager.factory(scope, tuple);
+		matrix = AbstractMatrixManager.factory(scope, tuple, last);
 
 		try {
 			matrix.init(true);
@@ -133,7 +133,7 @@ public class ExtensionConstraint extends Constraint {
 
 		}
 
-		if (!matrix.setFirstTuple(variablePosition, index)) {
+		if (!matrix.hasSupport(variablePosition, index)) {
 			return false;
 		}
 
@@ -176,7 +176,7 @@ public class ExtensionConstraint extends Constraint {
 		} catch (MatrixTooBigException e) {
 			throw new FailedGenerationException(e.toString());
 		}
-		
+
 		initNbSupports();
 
 	}
@@ -193,4 +193,13 @@ public class ExtensionConstraint extends Constraint {
 				constraint.tuple);
 		return constraint;
 	}
+
+	protected boolean controlResidue(final int position, final int index) {
+		return matrix.controlResidue(position, index) ;
+	}
+
+	protected void updateResidues() {
+		matrix.updateResidues() ;
+	}
+
 }

@@ -7,15 +7,10 @@ import cspfj.exception.MatrixTooBigException;
 import cspfj.problem.Variable;
 
 public class MatrixManagerGeneral extends AbstractMatrixManager {
-
-	private final int arity;
-
 	private boolean[] matrix = null;
 
-	public MatrixManagerGeneral(Variable[] scope, int[] tuple) {
-		super(scope, tuple);
-		arity = scope.length;
-
+	public MatrixManagerGeneral(Variable[] scope, int[] tuple, int[][][] last) {
+		super(scope, tuple, last);
 	}
 
 	private int matrixIndex(final int[] tuple) {

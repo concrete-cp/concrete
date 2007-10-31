@@ -28,27 +28,12 @@ import cspfj.problem.Variable;
  * 
  */
 public final class FC implements Filter {
+
 	public FC(final Problem problem) {
 		super();
 	}
 
 	public boolean reduceAll(final int level) {
-		return true;
-	}
-
-	private boolean skipRevision(final Constraint constraint,
-			final int variablePosition) {
-		if (!constraint.getRemovals(variablePosition)) {
-			return false;
-		}
-
-		for (int y = constraint.getArity(); --y >= 0;) {
-			if (y != variablePosition && constraint.getRemovals(y)) {
-				return false;
-			}
-
-		}
-
 		return true;
 	}
 
@@ -59,38 +44,22 @@ public final class FC implements Filter {
 
 			final Constraint constraint = constraints[c];
 
-			if (!constraint.getRemovals(variable.getPositionInConstraint(c))) {
-				continue;
-			}
-
 			for (int i = constraint.getArity(); --i >= 0;) {
 				final Variable y = constraint.getInvolvedVariables()[i];
 
-				if (!y.isAssigned() && !skipRevision(constraint, i)
-						&& constraint.revise(i, level)) {
+				if (!y.isAssigned() && constraint.revise(i, level)) {
 					if (y.getDomainSize() <= 0) {
 						constraint.increaseWeight();
 						return false;
 					}
 
-					for (int cp = y.getInvolvingConstraints().length; --cp >= 0;) {
-						final Constraint constraintP = y
-								.getInvolvingConstraints()[cp];
-						if (constraintP != constraint) {
-							constraintP.setRemovals(y
-									.getPositionInConstraint(cp), true);
-						}
-					}
 				}
 			}
 
-			constraint.fillRemovals(false);
 		}
 		return true;
 
 	}
-
-	
 
 	public int getNbNoGoods() {
 		return 0;

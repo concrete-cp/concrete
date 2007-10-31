@@ -46,7 +46,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 	private static long checks = 0;
 
-	private static long nbPresenceChecks = 0;
+	protected static long nbPresenceChecks = 0;
 
 	private static int nbEffectiveRevisions = 0;
 
@@ -67,8 +67,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 	private final long size;
 
-	private boolean removals[];
-
 	private boolean active;
 
 	protected Constraint(final Variable[] scope) {
@@ -81,7 +79,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 		tuple = new int[arity];
 
-		removals = new boolean[arity];
+
 		id = cId++;
 
 		int maxDomain = 0;
@@ -405,17 +403,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		checks = nbPresenceChecks = nbEffectiveRevisions = nbUselessRevisions = 0;
 	}
 
-	public boolean getRemovals(final int variablePosition) {
-		return removals[variablePosition];
-	}
 
-	public void fillRemovals(final boolean removal) {
-		Arrays.fill(removals, removal);
-	}
-
-	public void setRemovals(final int variablePosition, final boolean removal) {
-		removals[variablePosition] = removal;
-	}
 
 	public boolean equalsConstraint(final Constraint constraint) {
 		return id == constraint.getId();
@@ -475,8 +463,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		final Constraint constraint = (Constraint) super.clone();
 
 		constraint.tuple = new int[arity];
-
-		constraint.removals = new boolean[arity];
 
 		// constraint.positionInVariable fixe
 		// constraint.nbMaxConflicts fixe

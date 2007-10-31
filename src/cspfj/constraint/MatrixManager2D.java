@@ -10,7 +10,7 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 
 	private int[] mask;
 
-	private int[] domain;
+	// private int[] domain;
 
 	private int currentPart;
 
@@ -18,8 +18,8 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 
 	private int current;
 
-	public MatrixManager2D(Variable[] scope, int[] tuple) {
-		super(scope, tuple);
+	public MatrixManager2D(Variable[] scope, int[] tuple, int[][][] last) {
+		super(scope, tuple, last);
 	}
 
 	public void init(final boolean initialState) throws MatrixTooBigException {
@@ -75,15 +75,19 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 		}
 
 	}
-	
+
 	public boolean hasSupport(final int variablePosition, final int index) {
-		final int[] mask = matrix2D[variablePosition][index] ;
-		for (int part = 0 ; part < mask.length ; part++) {
+		final int[] mask = matrix2D[variablePosition][index];
+		final int[] domain = variables[1 - variablePosition].getBooleanDomain();
+		for (int part = 0; part < mask.length; part++) {
 			if ((mask[part] & domain[part]) != 0) {
-				return true ;
+				tuple[variablePosition] = index;
+				this.variablePosition=variablePosition;
+				currentPart = part;
+				return true;
 			}
 		}
-		return false ;
+		return false;
 	}
 
 	@Override
@@ -92,7 +96,6 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 		tuple[variablePosition] = index;
 
 		mask = matrix2D[variablePosition][index];
-		domain = variables[1 - variablePosition].getBooleanDomain();
 		currentPart = -1;
 		current = 0;
 		return next();
@@ -105,7 +108,7 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 		int currentPart = this.currentPart;
 
 		final int[] mask = this.mask;
-		final int[] domain = this.domain;
+		final int[] domain = variables[1 - variablePosition].getBooleanDomain();
 
 		while (current == 0) {
 			currentPart++;
@@ -165,4 +168,18 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 		return "MatrixManager2D-" + matrix2D;
 	}
 
+	protected void updateResidues() {
+		last[variablePosition][tuple[variablePosition]][0] = currentPart;
+	}
+
+	protected boolean controlResidue(final int position, final int index) {
+		final int part = last[position][index][0];
+
+		if (part != -1
+				&& (matrix2D[position][index][part] & variables[1 - position]
+						.getBooleanDomain()[part]) != 0) {
+			return true;
+		}
+		return false;
+	}
 }

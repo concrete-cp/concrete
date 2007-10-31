@@ -13,14 +13,16 @@ public abstract class AbstractMatrixManager implements Cloneable {
 
 	protected Variable[] variables;
 
-	private final int arity;
+	protected final int arity;
 
 	protected int variablePosition;
 
+	protected int[][][] last;
+	
 	private final static Logger logger = Logger
 			.getLogger("cspfj.constraint.AbstractMatrixManager");
 
-	public AbstractMatrixManager(Variable[] scope, int[] tuple) {
+	public AbstractMatrixManager(Variable[] scope, int[] tuple, int[][][] last) {
 		super();
 
 		variables = scope;
@@ -32,17 +34,19 @@ public abstract class AbstractMatrixManager implements Cloneable {
 		this.tuple = tuple;
 
 		this.arity = scope.length;
+		
+		this.last = last ;
 
 	}
 
 	public static AbstractMatrixManager factory(final Variable[] scope,
-			final int[] tuple) {
+			final int[] tuple, final int[][][] last) {
 		switch (scope.length) {
 		case 2:
-			return new MatrixManager2D(scope, tuple);
+			return new MatrixManager2D(scope, tuple, last);
 
 		default:
-			return new MatrixManagerGeneral(scope, tuple);
+			return new MatrixManagerGeneral(scope, tuple, last);
 		}
 	}
 
@@ -107,8 +111,8 @@ public abstract class AbstractMatrixManager implements Cloneable {
 			} else {
 				tuple[position] = variables[position].getFirst();
 			}
-		}
-
+		}	
+		
 		if (!isTrue(tuple)) {
 			return next();
 		}
@@ -162,5 +166,32 @@ public abstract class AbstractMatrixManager implements Cloneable {
 	
 	public boolean check() {
 		return isTrue(tuple);
+	}
+	
+	protected boolean controlResidue(final int position, final int index) {
+		if (last[position][index][0] != -1
+				&& controlTuplePresence(last[position][index], position)) {
+			return true;
+		}
+		return false;
+	}
+	
+	protected void updateResidues() {
+		for (int position = arity; --position >= 0;) {
+			final int value = tuple[position];
+			System.arraycopy(tuple, 0, last[position][value], 0, arity);
+		}
+	}
+	
+	protected boolean controlTuplePresence(final int[] tuple, final int position) {
+		Constraint.nbPresenceChecks++;
+		final Variable[] involvedVariables = this.variables;
+		for (int i = arity; --i >= 0;) {
+			if (i != position && !involvedVariables[i].isPresent(tuple[i])) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 }

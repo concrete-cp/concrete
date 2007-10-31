@@ -6,14 +6,11 @@ import cspfj.problem.Variable;
 public class MatrixManagerList extends AbstractMatrixManager {
 
     private final int[][][] listOfSupports ;
-    
-    private final int arity ;
-    
+
     private boolean supports ;
     
-    public MatrixManagerList(Variable[] scope, int[] tuple) {
-        super(scope, tuple);
-        arity = scope.length ;
+    public MatrixManagerList(Variable[] scope, int[] tuple, int[][][] last) {
+        super(scope, tuple, last);
         this.listOfSupports= new int[arity][][];
 
     }

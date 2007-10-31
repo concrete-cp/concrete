@@ -36,11 +36,18 @@ public final class AC3 implements Filter {
 
 	private int queueSize = 0;
 
+	private boolean removals[][];
+
 	public AC3(final Problem problem) {
 		super();
 		this.problem = problem;
 
 		inQueue = new boolean[problem.getMaxVId() + 1];
+
+		removals = new boolean[problem.getMaxCId()+1][];
+		for (Constraint c : problem.getConstraints()) {
+			removals[c.getId()] = new boolean[c.getArity()];
+		}
 	}
 
 	public boolean reduceAll(final int level) {
@@ -63,12 +70,12 @@ public final class AC3 implements Filter {
 
 	private boolean skipRevision(final Constraint constraint,
 			final int variablePosition) {
-		if (!constraint.getRemovals(variablePosition)) {
+		if (!removals[constraint.getId()][variablePosition]) {
 			return false;
 		}
 
 		for (int y = constraint.getArity(); --y >= 0;) {
-			if (y != variablePosition && constraint.getRemovals(y)) {
+			if (y != variablePosition && removals[constraint.getId()][y]) {
 				return false;
 			}
 
@@ -87,8 +94,8 @@ public final class AC3 implements Filter {
 
 				final Constraint constraint = constraints[c];
 
-				if (!constraint
-						.getRemovals(variable.getPositionInConstraint(c))) {
+				if (!removals[constraint.getId()][variable
+						.getPositionInConstraint(c)]) {
 					continue;
 				}
 
@@ -108,14 +115,14 @@ public final class AC3 implements Filter {
 							final Constraint constraintP = y
 									.getInvolvingConstraints()[cp];
 							if (constraintP != constraint) {
-								constraintP.setRemovals(y
-										.getPositionInConstraint(cp), true);
+								removals[constraintP.getId()][y
+										.getPositionInConstraint(cp)] = true;
 							}
 						}
 					}
 				}
 
-				constraint.fillRemovals(false);
+				Arrays.fill(removals[constraint.getId()], false);
 			}
 
 		}
@@ -128,7 +135,7 @@ public final class AC3 implements Filter {
 		Arrays.fill(inQueue, false);
 		queueSize = 0;
 		for (Constraint c : problem.getConstraints()) {
-			c.fillRemovals(true);
+			Arrays.fill(removals[c.getId()], true);
 		}
 	}
 
@@ -176,5 +183,4 @@ public final class AC3 implements Filter {
 	public String toString() {
 		return "AC3rm";
 	}
-
 }
