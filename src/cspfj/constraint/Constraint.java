@@ -339,14 +339,17 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		this.weight = weight;
 	}
 
-	public final double getFreedomDegree() {
-		double count = -1;
+	public final boolean isBound() {
+		boolean bound = false ;
 		for (Variable v : involvedVariables) {
 			if (v.getDomainSize() > 1) {
-				count++;
+				if (bound) {
+					return true ;
+				}
+				bound = true ;
 			}
 		}
-		return Math.max(count / (arity - 1), 0);
+		return false;
 	}
 
 	public static final long getNbChecks() {

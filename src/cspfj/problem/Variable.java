@@ -22,8 +22,8 @@ package cspfj.problem;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 import cspfj.constraint.Constraint;
 import cspfj.util.BooleanArray;
@@ -34,7 +34,7 @@ import cspfj.util.UnOrderedChain;
  * @author scand1sk
  * 
  */
-public final class Variable implements Comparable<Variable>, Cloneable {
+public final class Variable implements Cloneable {
 	/**
 	 * Contraintes impliquant la variable.
 	 */
@@ -51,8 +51,8 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 	private final int[] domain;
 
 	/**
-	 * Éléments supprimés du domaine (-1 : présent, n : élément supprimé
-	 * au niveau n)
+	 * Éléments supprimés du domaine (-1 : présent, n : élément supprimé au
+	 * niveau n)
 	 */
 	private int[] removed;
 
@@ -90,7 +90,7 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 
 	private int[] positionInConstraint;
 
-	//private static final Logger logger = Logger.getLogger("cspfj.Variable");
+	// private static final Logger logger = Logger.getLogger("cspfj.Variable");
 
 	public Variable(final int[] dom) {
 		this(dom, null);
@@ -154,7 +154,7 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 	public void setInvolvingConstraints(final Constraint[] constraints) {
 		this.constraints = constraints;
 
-		final Set<Variable> neighb = new TreeSet<Variable>();
+		final Set<Variable> neighb = new HashSet<Variable>();
 
 		for (Constraint c : constraints) {
 			assert c.isInvolved(this);
@@ -367,39 +367,24 @@ public final class Variable implements Comparable<Variable>, Cloneable {
 
 	public double getWDeg() {
 		double count = 0;
-		if (constraints == null) {
-			return 1;
-		}
 
 		for (Constraint c : constraints) {
-			count += c.getFreedomDegree() * c.getWeight();
+			if (c.isBound()) {
+				count += c.getWeight();
+			}
 		}
 		return count;
 	}
 
 	public double getDDeg() {
 		double count = 0;
-		if (constraints == null) {
-			return 1;
-		}
 
 		for (Constraint c : constraints) {
-			count += c.getFreedomDegree();
+			if (c.isBound()) {
+				count++;
+			}
 		}
 		return count;
-	}
-
-	public int compareTo(final Variable arg0) {
-		final int compare = domainSize - arg0.getDomainSize();
-
-		if (compare == 0) {
-			final double compareDeg = arg0.getWDeg() - getWDeg();
-			if (compareDeg == 0) {
-				return id - arg0.getId();
-			}
-			return compareDeg > 0 ? 1 : -1;
-		}
-		return compare;
 	}
 
 	public boolean equals(final Variable variable) {
