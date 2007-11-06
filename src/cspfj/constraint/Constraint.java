@@ -79,7 +79,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 		tuple = new int[arity];
 
-
 		id = cId++;
 
 		int maxDomain = 0;
@@ -123,9 +122,9 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		logger.fine("Counting supports");
 
 		tupleManager.setFirstTuple();
-		
-		Arrays.fill(nbMaxConflicts, 0) ;
-		for (int p = arity; --p>=0;){
+
+		Arrays.fill(nbMaxConflicts, 0);
+		for (int p = arity; --p >= 0;) {
 			Arrays.fill(nbInitConflicts[p], 0);
 		}
 		do {
@@ -338,13 +337,13 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	}
 
 	public final boolean isBound() {
-		boolean bound = false ;
+		boolean bound = false;
 		for (Variable v : involvedVariables) {
 			if (v.getDomainSize() > 1) {
 				if (bound) {
-					return true ;
+					return true;
 				}
-				bound = true ;
+				bound = true;
 			}
 		}
 		return false;
@@ -379,8 +378,26 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 	public final static Constraint findConstraint(
 			final Collection<Variable> scope, final Constraint[] constraints) {
+		return findConstraint(scope.toArray(new Variable[scope.size()]), scope
+				.size(), constraints);
+
+	}
+
+	public final static Constraint findConstraint(final Variable[] scope,
+			int level, final Constraint[] constraints) {
+
 		for (Constraint c : constraints) {
-			if (c.hasSetOfVariablesEqualTo(scope)) {
+			if (c.getArity() != level) {
+				continue;
+			}
+			boolean ok = true;
+			for (int i = level; --i>=0;) {
+				if (!c.isInvolved(scope[i])) {
+					ok = false;
+					break;
+				}
+			}
+			if (ok) {
 				return c;
 			}
 		}
@@ -402,8 +419,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	public static final void clearStats() {
 		checks = nbPresenceChecks = nbEffectiveRevisions = nbUselessRevisions = 0;
 	}
-
-
 
 	public boolean equalsConstraint(final Constraint constraint) {
 		return id == constraint.getId();

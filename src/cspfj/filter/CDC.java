@@ -121,7 +121,9 @@ public final class CDC implements Filter {
 			}
 			v = next(v, variables.length);
 		} while (v != mark);
-
+		logger.info("Total : " + Problem.noGoodTime);
+		logger.info("Find Constraint : " + Problem.findConstraintTime);
+		logger.info("Remove Tuples : " + Problem.removeTupleTime);
 		return true;
 
 	}
