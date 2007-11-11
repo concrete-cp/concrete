@@ -74,11 +74,11 @@ public final class CDC implements Filter {
 		do {
 			final Variable variable = variables[v];
 
-			boolean changedGraph = false;
-			
 			for (int index = variable.getFirst(); index >= 0; index = variable
 					.getNext(index)) {
 
+				boolean changedGraph = false;
+				
 				if (!variable.isPresent(index)) {
 					continue;
 				}
@@ -89,7 +89,7 @@ public final class CDC implements Filter {
 				}
 
 				variable.assign(index, problem);
-				problem.setLevelVariables(level, variable.getId());
+				problem.setLevelVariables(level, variable);
 				nbSingletonTests++;
 				if (filter.reduceAfter(level + 1, variable)) {
 					final int nbNg = problem.addNoGoods();
@@ -121,9 +121,9 @@ public final class CDC implements Filter {
 			}
 			v = next(v, variables.length);
 		} while (v != mark);
-		logger.info("Total : " + Problem.noGoodTime);
-		logger.info("Find Constraint : " + Problem.findConstraintTime);
-		logger.info("Remove Tuples : " + Problem.removeTupleTime);
+//		logger.info("Total : " + Problem.noGoodTime);
+//		logger.info("Find Constraint : " + Problem.findConstraintTime);
+//		logger.info("Remove Tuples : " + Problem.removeTupleTime);
 		return true;
 
 	}

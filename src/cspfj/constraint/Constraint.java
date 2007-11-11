@@ -48,9 +48,9 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 	protected static long nbPresenceChecks = 0;
 
-	private static int nbEffectiveRevisions = 0;
+	public static int nbEffectiveRevisions = 0;
 
-	private static int nbUselessRevisions = 0;
+	public static int nbUselessRevisions = 0;
 
 	protected static final Logger logger = Logger
 			.getLogger("cspfj.constraints.Constraint");
@@ -155,7 +155,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 			}
 		}
 
-		assert false;
 		return -1;
 	}
 
@@ -199,7 +198,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 	public abstract boolean check();
 
-	private final int getOtherSize(final int position) {
+	public final int getOtherSize(final int position) {
 		if (arity > MAX_ARITY) {
 			return -1;
 		}
@@ -316,8 +315,13 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 				- nbInitConflicts[position][index];
 	}
 
-	public final long getNbConflicts(final Variable variable, final int index) {
-		return nbInitConflicts[variable.getId()][index];
+	public final long getNbInitConflicts(final int position, final int index) {
+		return nbInitConflicts[position][index];
+	}
+	
+	
+	public final long getNbMaxConflicts(final int position) {
+		return nbMaxConflicts[position];
 	}
 
 	public final void increaseWeight() {

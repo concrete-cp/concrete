@@ -19,7 +19,6 @@
 
 package cspfj.problem;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -55,11 +54,7 @@ public final class Problem implements Cloneable {
 
 	private int maxDomainSize;
 
-	private int[] levelVariables;
-
-	private List<Variable> scope = new ArrayList<Variable>();
-
-	private List<Integer> tuple = new ArrayList<Integer>();
+	private Variable[] levelVariables;
 
 	private int maxArity;
 
@@ -143,8 +138,8 @@ public final class Problem implements Cloneable {
 
 		nbFutureVariables = vars.size();
 
-		levelVariables = new int[getNbVariables()];
-		Arrays.fill(levelVariables, -1);
+		levelVariables = new Variable[getNbVariables()];
+		Arrays.fill(levelVariables, null);
 
 	}
 
@@ -302,9 +297,11 @@ public final class Problem implements Cloneable {
 		return maxDomainSize;
 	}
 
-	public static float noGoodTime = 0;
-	public static float findConstraintTime = 0;
-	public static float removeTupleTime = 0;
+	// public static float noGoodTime = 0;
+	//
+	// public static float findConstraintTime = 0;
+	//
+	// public static float removeTupleTime = 0;
 
 	private static <E> int arrayContains(E[] array, int end, E elt) {
 		for (int i = end; --i >= 0;) {
@@ -324,43 +321,48 @@ public final class Problem implements Cloneable {
 
 		int nbNoGoods = 0;
 
-		final int[] levelVariables = this.levelVariables;
+		final Variable[] levelVariables = this.levelVariables;
 
-		if (levelVariables[0] < 0) {
+		if (levelVariables[0] == null) {
 			return 0;
 		}
 
 		final Variable[] scope = new Variable[levelVariables.length];
 		final int[] tuple = new int[levelVariables.length];
 
-		scope[0] = getVariable(levelVariables[0]);
+		scope[0] = levelVariables[0];
 		tuple[0] = scope[0].getFirst();
 
 		for (int level = 1; level < levelVariables.length
 				&& level < getMaxArity(); level++) {
-			// logger.fine("checking " + getVariable(levelVariables[level-1]));
-			for (Variable fv : getVariables()) {
-				if (arrayContains(scope, level, fv) < 0) {
+
+			for (Variable fv : variableArray) {
+				// logger.fine("checking " +
+				// getVariable(levelVariables[level-1]));
+
+				if (arrayContains(scope, level, fv) >= 0) {
 					continue;
 				}
 
-//				final float startFindConstraint = CpuMonitor.getCpuTime();
+				// final float startFindConstraint = CpuMonitor.getCpuTime();
 				scope[level] = fv;
 				final ExtensionConstraint constraint;
 				try {
 					constraint = (ExtensionConstraint) Constraint
-							.findConstraint(scope, level+1, scope[0]
+							.findConstraint(scope, level + 1, scope[0]
 									.getInvolvingConstraints());
 				} catch (ClassCastException e) {
+					// findConstraintTime += CpuMonitor.getCpuTime()
+					// - startFindConstraint;
 					continue;
 				}
-
+				// findConstraintTime += CpuMonitor.getCpuTime()
+				// - startFindConstraint;
 				if (constraint == null) {
 					continue;
 				}
 
-//				findConstraintTime += CpuMonitor.getCpuTime()
-//						- startFindConstraint;
+				// logger.info(Arrays.toString(scope) + " -> " + constraint);
 
 				final int[] realTuple = constraint.getTuple();
 				int currentV = -1;
@@ -368,11 +370,12 @@ public final class Problem implements Cloneable {
 					if (constraint.getInvolvedVariables()[i] == fv) {
 						currentV = i;
 					} else {
-						realTuple[i] = tuple[arrayContains(scope, level+1, constraint.getInvolvedVariables()[i])];
+						realTuple[i] = tuple[arrayContains(scope, level + 1,
+								constraint.getInvolvedVariables()[i])];
 					}
 				}
 
-//				final float startRemoveTuple = CpuMonitor.getCpuTime();
+				// final float startRemoveTuple = CpuMonitor.getCpuTime();
 				for (int lostIndex = fv.getLastAbsent(); lostIndex >= 0; lostIndex = fv
 						.getPrevAbsent(lostIndex)) {
 					if (fv.getRemovedLevel(lostIndex) == level) {
@@ -385,17 +388,18 @@ public final class Problem implements Cloneable {
 					}
 
 				}
-//				removeTupleTime += CpuMonitor.getCpuTime() - startRemoveTuple;
+				// removeTupleTime += CpuMonitor.getCpuTime() -
+				// startRemoveTuple;
 			}
 
-			if (levelVariables[level] >= 0) {
-				scope[level]= getVariable(levelVariables[level]);
-				tuple[level]= getVariable(levelVariables[level]).getFirst();
+			if (levelVariables[level] != null) {
+				scope[level] = levelVariables[level];
+				tuple[level] = levelVariables[level].getFirst();
 			} else {
 				break;
 			}
 		}
-		noGoodTime += CpuMonitor.getCpuTime() - startNoGood;
+		// noGoodTime += CpuMonitor.getCpuTime() - startNoGood;
 		if (logger.isLoggable(Level.FINE)) {
 			logger.fine(nbNoGoods + " nogoods");
 		}
@@ -403,12 +407,12 @@ public final class Problem implements Cloneable {
 		return nbNoGoods;
 	}
 
-	public void setLevelVariables(final int level, final int vId) {
-		levelVariables[level] = vId;
+	public void setLevelVariables(final int level, final Variable variable) {
+		levelVariables[level] = variable;
 
 	}
 
-	public int getLevelVariable(final int level) {
+	public Variable getLevelVariable(final int level) {
 		return levelVariables[level];
 	}
 
@@ -532,11 +536,6 @@ public final class Problem implements Cloneable {
 
 	public Problem clone() throws CloneNotSupportedException {
 		final Problem problem = (Problem) super.clone();
-
-		problem.scope = new ArrayList<Variable>();
-
-		problem.tuple = new ArrayList<Integer>();
-
 		// problem.variables = null;
 		//
 		// problem.variableArray = null;

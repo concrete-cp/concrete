@@ -169,7 +169,7 @@ public final class SAC implements Filter {
 			}
 
 			variable.assign(index, problem);
-			problem.setLevelVariables(level, variable.getId());
+			problem.setLevelVariables(level, variable);
 			nbSingletonTests++;
 			if (filter.reduceAfter(level + 1, variable)) {
 
@@ -302,9 +302,8 @@ public final class SAC implements Filter {
 				do {
 					if (cpt >= staticVOrder.length) {
 						for (int k = l; --k >= level;) {
-							problem.getVariable(problem.getLevelVariable(k))
-									.unassign(problem);
-							problem.setLevelVariables(k, -1);
+							problem.getLevelVariable(k).unassign(problem);
+							problem.setLevelVariables(k, null);
 						}
 						return false;
 					}
@@ -325,7 +324,7 @@ public final class SAC implements Filter {
 
 			variable.assign(index, problem);
 
-			problem.setLevelVariables(l++, variable.getId());
+			problem.setLevelVariables(l++, variable);
 
 			nbSingletonTests++;
 
@@ -333,9 +332,8 @@ public final class SAC implements Filter {
 				selectedVariable = variable;
 				selectedIndex = index;
 				for (int k = l; --k >= level;) {
-					problem.getVariable(problem.getLevelVariable(k)).unassign(
-							problem);
-					problem.setLevelVariables(k, -1);
+					problem.getLevelVariable(k).unassign(problem);
+					problem.setLevelVariables(k, null);
 				}
 				return false;
 			}

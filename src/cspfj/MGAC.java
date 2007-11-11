@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
-import cspfj.filter.AC3;
+import cspfj.filter.BC;
 import cspfj.filter.Filter;
 import cspfj.heuristic.DiscHeuristic;
 import cspfj.heuristic.Heuristic;
@@ -55,7 +55,8 @@ public final class MGAC extends AbstractSolver {
 
 	public MGAC(Problem prob, ResultHandler resultHandler, Heuristic heuristic) {
 		super(prob, resultHandler);
-		filter = new AC3(problem);
+		//filter = new B3C(problem, new BC(problem));
+		filter = new BC(problem);
 		this.heuristic = heuristic;
 
 		logger.info(filter.getClass().toString());
@@ -107,7 +108,7 @@ public final class MGAC extends AbstractSolver {
 
 		selectedVariable.assign(selectedIndex, problem);
 
-		problem.setLevelVariables(level, selectedVariable.getId());
+		problem.setLevelVariables(level, selectedVariable);
 
 		incrementNbAssignments();
 
@@ -119,7 +120,7 @@ public final class MGAC extends AbstractSolver {
 		selectedVariable.unassign(problem);
 		problem.restore(level + 1);
 
-		problem.setLevelVariables(level, -1);
+		problem.setLevelVariables(level, null);
 
 		if (selectedVariable.getDomainSize() <= 1) {
 			return false;

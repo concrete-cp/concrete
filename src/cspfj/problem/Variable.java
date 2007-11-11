@@ -51,8 +51,8 @@ public final class Variable implements Cloneable {
 	private final int[] domain;
 
 	/**
-	 * Éléments supprimés du domaine (-1 : présent, n : élément supprimé au
-	 * niveau n)
+	 * Éléments supprimés du domaine (-1 : présent, n : élément supprimé
+	 * au niveau n)
 	 */
 	private int[] removed;
 
@@ -137,9 +137,9 @@ public final class Variable implements Cloneable {
 	@Override
 	public String toString() {
 		if (name == null) {
-			return "X" + (id);
+			return "X" + (id) + "[" + getDomainSize() + "]";
 		}
-		return name;
+		return name + "[" + getDomainSize() + "]";
 
 	}
 
