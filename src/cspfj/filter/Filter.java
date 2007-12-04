@@ -36,4 +36,6 @@ public interface Filter {
     boolean reduceAfter(int level, Variable variable) ;
     
     int getNbNoGoods() ;
+    
+
 }

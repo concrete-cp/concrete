@@ -31,96 +31,26 @@ import cspfj.problem.Variable;
  * @author Julien VION
  * 
  */
-public final class SAC extends AbstractSAC {
+public final class SACPart implements Filter {
 
-	private final static Logger logger = Logger.getLogger("cspfj.filter.SAC");
+	private final Filter filter;
 
-	private final boolean branch;
+	private final static Logger logger = Logger.getLogger("cspfj.filter.SACPart");
 
-	private final boolean[][] queue;
+	private final Problem problem;
 
-	private final boolean[] vQueue;
-
-	private int nbNoGoods = 0;
-
-	private Variable selectedVariable;
-
-	private int selectedIndex;
-
-	private final VariableHeuristic heuristic;
+	private int nbSingletonTests = 0;
 
 	private boolean doneSomething;
 
-	private final Variable[] staticVOrder;
-
-	public SAC(Problem problem, Filter filter, boolean branch) {
-		super(problem, filter);
-		this.branch = branch;
-
-		queue = new boolean[problem.getMaxVId() + 1][];
-		vQueue = new boolean[problem.getMaxVId() + 1];
-		for (Variable v : problem.getVariables()) {
-			queue[v.getId()] = new boolean[v.getDomain().length];
-		}
-
-		heuristic = new WDegOnDom();
-
-		staticVOrder = new Variable[problem.getNbVariables()];
-
-		Arrays.fill(staticVOrder, null);
-
-		int cpt = 0;
-		for (Variable v : problem.getVariables()) {
-			staticVOrder[cpt++] = v;
-		}
+	public SACPart(Problem problem, Filter filter) {
+		super();
+		this.filter = filter;
+		this.problem = problem;
 	}
 
-	private void fillQueue() {
-		final boolean[][] queue = this.queue;
-		for (Variable variable : problem.getVariables()) {
-			final int id = variable.getId();
-			if (variable.getDomainSize() > 1) {
-				vQueue[id] = true;
-				Arrays.fill(queue[id], false);
-				for (int i = variable.getFirst(); i != -1; i = variable
-						.getNext(i)) {
-					queue[id][i] = true;
-				}
 
-			} else {
-				vQueue[id] = false;
-			}
-
-		}
-	}
-
-	private boolean pull() {
-		if (selectedVariable != null
-				&& queue[selectedVariable.getId()][selectedIndex]) {
-			queue[selectedVariable.getId()][selectedIndex] = false;
-			return true;
-		}
-
-		final boolean[] vQueue = this.vQueue;
-
-		for (Variable v : problem.getVariables()) {
-			if (vQueue[v.getId()]) {
-				final int index = getRemainingIndex(v);
-				if (index >= 0) {
-					selectedVariable = v;
-					selectedIndex = index;
-					queue[v.getId()][index] = false;
-					return true;
-				}
-				vQueue[v.getId()] = false;
-			}
-		}
-		return false;
-	}
-	
-
-
-	protected boolean reduce(final int level) {
+	private boolean reduce(final int level) {
 		final Problem problem = this.problem;
 		doneSomething = false;
 
@@ -132,12 +62,23 @@ public final class SAC extends AbstractSAC {
 			return false;
 		}
 
-		fillQueue();
+		Variable marker ;
+		for (Variable v : problem.getVariables()) {
+			if (v.getDomainSize()>1) {
+				marker = v;
+				break ;
+			}
+		}
 
-		while (pull()) {
-			final Variable variable = selectedVariable;
-			final int index = selectedIndex;
+		final Variable[] variables = problem.getVariables();
 
+		int mark = 0;
+
+		int v = 0;
+
+		do {
+			final Variable variable = variables[v];
+			
 			boolean changedGraph = false;
 
 			if (logger.isLoggable(Level.FINE)) {
@@ -146,7 +87,7 @@ public final class SAC extends AbstractSAC {
 			}
 
 			variable.assign(index, problem);
-			problem.setLevelVariables(level, variable);
+			problem.setLevelVariables(level, variable.getId());
 			nbSingletonTests++;
 			if (filter.reduceAfter(level + 1, variable)) {
 
@@ -245,6 +186,18 @@ public final class SAC extends AbstractSAC {
 		}
 	}
 
+	public boolean reduceAfter(final int level, final Variable variable) {
+		if (variable == null) {
+			return true;
+		}
+		return reduceAll(level);
+	}
+
+	public boolean reduceAll(final int level) {
+		// clearQueue();
+		return reduce(level);
+	}
+
 	public enum SPACE {
 		NONE, CLASSIC, BRANCH
 	}
@@ -265,8 +218,9 @@ public final class SAC extends AbstractSAC {
 				do {
 					if (cpt >= staticVOrder.length) {
 						for (int k = l; --k >= level;) {
-							problem.getLevelVariable(k).unassign(problem);
-							problem.setLevelVariables(k, null);
+							problem.getVariable(problem.getLevelVariable(k))
+									.unassign(problem);
+							problem.setLevelVariables(k, -1);
 						}
 						return false;
 					}
@@ -287,7 +241,7 @@ public final class SAC extends AbstractSAC {
 
 			variable.assign(index, problem);
 
-			problem.setLevelVariables(l++, variable);
+			problem.setLevelVariables(l++, variable.getId());
 
 			nbSingletonTests++;
 
@@ -295,8 +249,9 @@ public final class SAC extends AbstractSAC {
 				selectedVariable = variable;
 				selectedIndex = index;
 				for (int k = l; --k >= level;) {
-					problem.getLevelVariable(k).unassign(problem);
-					problem.setLevelVariables(k, null);
+					problem.getVariable(problem.getLevelVariable(k)).unassign(
+							problem);
+					problem.setLevelVariables(k, -1);
 				}
 				return false;
 			}
@@ -323,18 +278,19 @@ public final class SAC extends AbstractSAC {
 		return nbNoGoods;
 	}
 
+	// public int getNbSub() {
+	// return nbSub;
+	// }
+
+	public int getNbSingletonTests() {
+		return nbSingletonTests;
+	}
+
 	public String toString() {
 		return "SAC-" + (branch ? '3' : '1');
 	}
 
 	public boolean hasDoneSomething() {
 		return doneSomething;
-	}
-
-
-
-	@Override
-	protected boolean singletonTest(Variable variable, int level) {
-		throw new UnsupportedOperationException();
 	}
 }

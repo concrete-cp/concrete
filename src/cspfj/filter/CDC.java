@@ -53,7 +53,7 @@ public final class CDC extends AbstractSAC {
 			}
 
 			variable.assign(index, problem);
-			problem.setLevelVariables(level, variable.getId());
+			problem.setLevelVariables(level, variable);
 			nbSingletonTests++;
 			if (filter.reduceAfter(level + 1, variable)) {
 				final int nbNg = problem.addNoGoods();

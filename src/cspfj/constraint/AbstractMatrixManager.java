@@ -1,7 +1,6 @@
 package cspfj.constraint;
 
 import java.util.Arrays;
-import java.util.logging.Logger;
 
 import cspfj.exception.MatrixTooBigException;
 import cspfj.problem.Variable;
@@ -19,9 +18,6 @@ public abstract class AbstractMatrixManager implements Cloneable {
 
 	protected int[][][] last;
 	
-	private final static Logger logger = Logger
-			.getLogger("cspfj.constraint.AbstractMatrixManager");
-
 	public AbstractMatrixManager(Variable[] scope, int[] tuple, int[][][] last) {
 		super();
 
