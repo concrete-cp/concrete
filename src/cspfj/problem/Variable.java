@@ -77,14 +77,14 @@ public final class Variable implements Cloneable {
 	private boolean assigned;
 
 	/**
-	 * ID de la variable.
-	 */
-	private final int id;
-
-	/**
 	 * Pour générer l'ID.
 	 */
 	private static int nbV = 0;
+
+	/**
+	 * ID de la variable.
+	 */
+	private final int id;
 
 	private final String name;
 
@@ -114,7 +114,11 @@ public final class Variable implements Cloneable {
 		assigned = false;
 		id = nbV++;
 
-		this.name = name;
+		if (name == null) {
+			this.name = "X" + id;
+		} else {
+			this.name = name;
+		}
 
 		chain = new OrderedChain(domain.length);
 
@@ -136,11 +140,7 @@ public final class Variable implements Cloneable {
 
 	@Override
 	public String toString() {
-		if (name == null) {
-			return "X" + (id) + "[" + getDomainSize() + "]";
-		}
 		return name + "[" + getDomainSize() + "]";
-
 	}
 
 	public void reOrder(final int[] order) {

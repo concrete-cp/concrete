@@ -34,8 +34,8 @@ public class ExtensionConstraint extends Constraint {
 	private AbstractMatrixManager matrix;
 
 	public ExtensionConstraint(final Variable[] scope, final boolean supports,
-			final int[][] tuples) throws FailedGenerationException {
-		super(scope);
+			final int[][] tuples, String name) throws FailedGenerationException {
+		super(scope, name);
 
 		final double tight = (double) tuples.length / getSize();
 
@@ -94,10 +94,6 @@ public class ExtensionConstraint extends Constraint {
 		tightness = 1 - (tuples / getSize());
 	}
 
-	public boolean check() {
-		return matrix.check();
-	}
-
 	public ExtensionConstraint(final Variable[] scope)
 			throws FailedGenerationException {
 		super(scope);
@@ -119,6 +115,10 @@ public class ExtensionConstraint extends Constraint {
 		} catch (MatrixTooBigException e) {
 			throw new FailedGenerationException("Matrix too big");
 		}
+	}
+	
+	public boolean check() {
+		return matrix.check();
 	}
 
 	public double getTightness() {

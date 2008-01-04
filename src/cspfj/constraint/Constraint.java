@@ -69,11 +69,22 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 	private boolean active;
 
+	private final String name;
+
 	protected Constraint(final Variable[] scope) {
-		this(scope, true);
+		this(scope, true, null);
+	}
+
+	protected Constraint(final Variable[] scope, final String name) {
+		this(scope, true, name);
 	}
 
 	protected Constraint(final Variable[] scope, final boolean tupleCache) {
+		this(scope, tupleCache, null);
+	}
+
+	protected Constraint(final Variable[] scope, final boolean tupleCache,
+			final String name) {
 		involvedVariables = scope;
 		arity = involvedVariables.length;
 
@@ -110,6 +121,12 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		positionInVariable = new int[arity];
 
 		tupleManager = new TupleManager(this, tuple);
+
+		if (name == null) {
+			this.name = "C" + id;
+		} else {
+			this.name = name;
+		}
 	}
 
 	public void initNbSupports() {
@@ -188,7 +205,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	}
 
 	public String toString() {
-		return "C" + id + " " + Arrays.toString(involvedVariables);
+		return name + " " + Arrays.toString(involvedVariables);
 	}
 
 	private boolean chk() {
@@ -318,8 +335,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	public final long getNbInitConflicts(final int position, final int index) {
 		return nbInitConflicts[position][index];
 	}
-	
-	
+
 	public final long getNbMaxConflicts(final int position) {
 		return nbMaxConflicts[position];
 	}
@@ -395,7 +411,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 				continue;
 			}
 			boolean ok = true;
-			for (int i = level; --i>=0;) {
+			for (int i = level; --i >= 0;) {
 				if (!c.isInvolved(scope[i])) {
 					ok = false;
 					break;

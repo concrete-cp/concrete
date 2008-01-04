@@ -105,7 +105,7 @@ public class ResultHandler {
 			logger.warning(thrown.toString());
 		}
 		
-		solver=null;
+		//solver=null;
 
 	}
 
