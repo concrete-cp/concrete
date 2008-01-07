@@ -19,7 +19,6 @@
 
 package cspfj.heuristic;
 
-import cspfj.constraint.Constraint;
 import cspfj.problem.Variable;
 
 public final class Neighborhood extends AbstractVariableHeuristic {
