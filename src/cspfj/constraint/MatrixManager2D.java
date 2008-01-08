@@ -82,7 +82,7 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 		for (int part = 0; part < mask.length; part++) {
 			if ((mask[part] & domain[part]) != 0) {
 				tuple[variablePosition] = index;
-				this.variablePosition=variablePosition;
+				this.variablePosition = variablePosition;
 				currentPart = part;
 				return true;
 			}

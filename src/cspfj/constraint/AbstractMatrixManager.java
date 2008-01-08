@@ -17,7 +17,7 @@ public abstract class AbstractMatrixManager implements Cloneable {
 	protected int variablePosition;
 
 	protected int[][][] last;
-	
+
 	public AbstractMatrixManager(Variable[] scope, int[] tuple, int[][][] last) {
 		super();
 
@@ -30,8 +30,8 @@ public abstract class AbstractMatrixManager implements Cloneable {
 		this.tuple = tuple;
 
 		this.arity = scope.length;
-		
-		this.last = last ;
+
+		this.last = last;
 
 	}
 
@@ -61,8 +61,8 @@ public abstract class AbstractMatrixManager implements Cloneable {
 	public boolean hasSupport(final int position, final int index) {
 		return setFirstTuple(position, index);
 	}
-	
-	public abstract boolean isTrue(final int[] tuple) ;
+
+	public abstract boolean isTrue(final int[] tuple);
 
 	public abstract void intersect(final Variable[] scope,
 			final Variable[] constraintScope, final boolean supports,
@@ -70,7 +70,8 @@ public abstract class AbstractMatrixManager implements Cloneable {
 
 	protected void generate(final Variable[] scope,
 			final Variable[] constraintScope, final boolean supports,
-			final int[][] tuples, final int arity) throws MatrixTooBigException {
+			final int[][] tuples, final int arity)
+			throws MatrixTooBigException {
 		init(!supports);
 
 		final int[] realTuple = this.tuple;
@@ -107,8 +108,8 @@ public abstract class AbstractMatrixManager implements Cloneable {
 			} else {
 				tuple[position] = variables[position].getFirst();
 			}
-		}	
-		
+		}
+
 		if (!isTrue(tuple)) {
 			return next();
 		}
@@ -159,11 +160,11 @@ public abstract class AbstractMatrixManager implements Cloneable {
 	public AbstractMatrixManager clone() throws CloneNotSupportedException {
 		return (AbstractMatrixManager) super.clone();
 	}
-	
+
 	public boolean check() {
 		return isTrue(tuple);
 	}
-	
+
 	protected boolean controlResidue(final int position, final int index) {
 		if (last[position][index][0] != -1
 				&& controlTuplePresence(last[position][index], position)) {
@@ -171,14 +172,14 @@ public abstract class AbstractMatrixManager implements Cloneable {
 		}
 		return false;
 	}
-	
+
 	protected void updateResidues() {
 		for (int position = arity; --position >= 0;) {
 			final int value = tuple[position];
 			System.arraycopy(tuple, 0, last[position][value], 0, arity);
 		}
 	}
-	
+
 	protected boolean controlTuplePresence(final int[] tuple, final int position) {
 		Constraint.nbPresenceChecks++;
 		final Variable[] involvedVariables = this.variables;

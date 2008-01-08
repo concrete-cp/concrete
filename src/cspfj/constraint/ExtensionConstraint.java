@@ -34,7 +34,8 @@ public class ExtensionConstraint extends Constraint {
 	private AbstractMatrixManager matrix;
 
 	public ExtensionConstraint(final Variable[] scope, final boolean supports,
-			final int[][] tuples, String name) throws FailedGenerationException {
+			final int[][] tuples, String name)
+			throws FailedGenerationException {
 		super(scope, name);
 
 		final double tight = (double) tuples.length / getSize();
@@ -60,7 +61,8 @@ public class ExtensionConstraint extends Constraint {
 			throws FailedGenerationException {
 		super(constraint.getInvolvedVariables());
 
-		matrix = AbstractMatrixManager.factory(getInvolvedVariables(), tuple, last);
+		matrix = AbstractMatrixManager.factory(getInvolvedVariables(), tuple,
+				last);
 
 		try {
 			matrix.init(true);
@@ -116,7 +118,7 @@ public class ExtensionConstraint extends Constraint {
 			throw new FailedGenerationException("Matrix too big");
 		}
 	}
-	
+
 	public boolean check() {
 		return matrix.check();
 	}
@@ -195,11 +197,11 @@ public class ExtensionConstraint extends Constraint {
 	}
 
 	protected boolean controlResidue(final int position, final int index) {
-		return matrix.controlResidue(position, index) ;
+		return matrix.controlResidue(position, index);
 	}
 
 	protected void updateResidues() {
-		matrix.updateResidues() ;
+		matrix.updateResidues();
 	}
 
 }

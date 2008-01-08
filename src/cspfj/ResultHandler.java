@@ -29,7 +29,6 @@ import cspfj.problem.Variable;
 
 public class ResultHandler {
 
-
 	protected Solver solver;
 
 	protected long totalLoad = 0;
@@ -41,11 +40,11 @@ public class ResultHandler {
 	protected int unsat = 0;
 
 	protected int unknown = 0;
-	
-	protected int totalNodes = 0 ;
+
+	protected int totalNodes = 0;
 
 	protected final Map<String, String> statistics;
-	
+
 	private static final Logger logger = Logger
 			.getLogger("cspfj.AbstractResultWriter");
 
@@ -57,8 +56,8 @@ public class ResultHandler {
 
 	public void problem(final String name) throws IOException {
 		logger.info("loading : " + name);
-		statistics.clear() ;
-		bestSatisfied = 0 ;
+		statistics.clear();
+		bestSatisfied = 0;
 	}
 
 	public void load(final Solver solver, final long load) throws IOException {
@@ -70,16 +69,15 @@ public class ResultHandler {
 
 	}
 
-
 	public boolean solution(final Map<Variable, Integer> solution,
 			final int nbSatisfied, final boolean force) throws IOException {
 		if (nbSatisfied > bestSatisfied) {
 			bestSatisfied = nbSatisfied;
 			logger.info(solution.toString() + "(" + nbSatisfied + ")");
-			return true ;
+			return true;
 		}
-		return false ;
-		
+		return false;
+
 	}
 
 	public void fail(final Class solver, final String problem,
@@ -104,13 +102,17 @@ public class ResultHandler {
 		if (thrown != null) {
 			logger.warning(thrown.toString());
 		}
-		
-		//solver=null;
+
+		// solver=null;
 
 	}
 
 	public void result(final Result result) throws IOException {
 		result(result, null);
+	}
+
+	public void nextProblem() throws IOException {
+
 	}
 
 	public void close() throws IOException {
@@ -159,5 +161,5 @@ public class ResultHandler {
 	public final int getBestSatisfied() {
 		return bestSatisfied;
 	}
-	
+
 }
