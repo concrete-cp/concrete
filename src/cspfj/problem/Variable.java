@@ -387,10 +387,6 @@ public final class Variable implements Cloneable {
 		return count;
 	}
 
-	public boolean equals(final Variable variable) {
-		return variable.getId() == id;
-	}
-
 	public void makeSingleton(final int value, final int level) {
 		final int[] domain = this.domain;
 		for (int i = getFirst(); i >= 0; i = getNext(i)) {

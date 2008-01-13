@@ -40,7 +40,7 @@ public interface Solver {
 
 	void setMaxBacktracks(final int maxBacktracks);
 
-	void setUseSpace(final SPACE space);
+	void setUsePrepro(final SPACE space);
 
 	int getNbSolutions();
     

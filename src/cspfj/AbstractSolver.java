@@ -143,7 +143,7 @@ public abstract class AbstractSolver implements Solver {
 		}
 	}
 
-	public final void setUseSpace(final SPACE space) {
+	public final void setUsePrepro(final SPACE space) {
 		this.space = space;
 	}
 

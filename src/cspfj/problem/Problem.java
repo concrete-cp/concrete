@@ -346,23 +346,14 @@ public final class Problem implements Cloneable {
 
 				// final float startFindConstraint = CpuMonitor.getCpuTime();
 				scope[level] = fv;
-				final ExtensionConstraint constraint;
-				try {
-					constraint = (ExtensionConstraint) Constraint
-							.findConstraint(scope, level + 1, scope[0]
-									.getInvolvingConstraints());
-				} catch (ClassCastException e) {
-					// findConstraintTime += CpuMonitor.getCpuTime()
-					// - startFindConstraint;
-					continue;
-				}
-				// findConstraintTime += CpuMonitor.getCpuTime()
-				// - startFindConstraint;
-				if (constraint == null) {
-					continue;
-				}
 
-				// logger.info(Arrays.toString(scope) + " -> " + constraint);
+				final Constraint cons = Constraint.findConstraint(scope,
+						level + 1, scope[0].getInvolvingConstraints());
+
+				if (cons == null || !(cons instanceof ExtensionConstraint)) {
+					continue;
+				}
+				final ExtensionConstraint constraint = (ExtensionConstraint) cons;
 
 				final int[] realTuple = constraint.getTuple();
 				int currentV = -1;

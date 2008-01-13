@@ -396,22 +396,21 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		this.active = active;
 	}
 
-	public final static Constraint findConstraint(
-			final Collection<Variable> scope, final Constraint[] constraints) {
-		return findConstraint(scope.toArray(new Variable[scope.size()]), scope
-				.size(), constraints);
-
+	public final static Constraint findConstraint(final Variable[] scope,
+			final Collection<Constraint> constraints) {
+		return findConstraint(scope, scope.length, constraints
+				.toArray(new Constraint[constraints.size()]));
 	}
 
 	public final static Constraint findConstraint(final Variable[] scope,
-			int level, final Constraint[] constraints) {
+			final int stopScope, final Constraint[] constraints) {
 
 		for (Constraint c : constraints) {
-			if (c.getArity() != level) {
+			if (c.getArity() != stopScope) {
 				continue;
 			}
 			boolean ok = true;
-			for (int i = level; --i >= 0;) {
+			for (int i = stopScope; --i >= 0;) {
 				if (!c.isInvolved(scope[i])) {
 					ok = false;
 					break;
@@ -484,7 +483,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 		for (int i = arity; --i >= 0;) {
 			for (Variable v : variables) {
-				if (v.equals(involvedVariables[i])) {
+				if (v == involvedVariables[i]) {
 					constraint.involvedVariables[i] = v;
 					break;
 				}
