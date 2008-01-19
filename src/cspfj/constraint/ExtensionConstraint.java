@@ -34,8 +34,7 @@ public class ExtensionConstraint extends Constraint {
 	private AbstractMatrixManager matrix;
 
 	public ExtensionConstraint(final Variable[] scope, final boolean supports,
-			final int[][] tuples, String name)
-			throws FailedGenerationException {
+			final int[][] tuples, String name) throws FailedGenerationException {
 		super(scope, name);
 
 		final double tight = (double) tuples.length / getSize();
@@ -54,7 +53,7 @@ public class ExtensionConstraint extends Constraint {
 			throw new FailedGenerationException("Matrix too big");
 		}
 
-		intersect(getInvolvedVariables(), supports, tuples);
+		intersect(supports, tuples);
 	}
 
 	public ExtensionConstraint(final Constraint constraint)
@@ -171,10 +170,10 @@ public class ExtensionConstraint extends Constraint {
 		return matrix.removeTuple();
 	}
 
-	public final void intersect(final Variable[] scope, final boolean supports,
-			final int[][] tuples) throws FailedGenerationException {
+	public final void intersect(final boolean supports, final int[][] tuples)
+			throws FailedGenerationException {
 		try {
-			matrix.intersect(scope, getInvolvedVariables(), supports, tuples);
+			matrix.intersect(getInvolvedVariables(), supports, tuples);
 		} catch (MatrixTooBigException e) {
 			throw new FailedGenerationException(e.toString());
 		}

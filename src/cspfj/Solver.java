@@ -22,7 +22,7 @@ package cspfj;
 import java.io.IOException;
 import java.util.Map;
 
-import cspfj.filter.SAC.SPACE;
+import cspfj.filter.Filter;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -40,7 +40,7 @@ public interface Solver {
 
 	void setMaxBacktracks(final int maxBacktracks);
 
-	void setUsePrepro(final SPACE space);
+	void setUsePrepro(final Class<? extends Filter> filter);
 
 	int getNbSolutions();
     
@@ -49,4 +49,6 @@ public interface Solver {
 	String getXMLConfig();
 	
 	Problem getProblem() ;
+	
+	Map<String, Object> getStatistics();
 }

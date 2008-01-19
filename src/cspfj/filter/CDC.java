@@ -18,6 +18,7 @@
  */
 package cspfj.filter;
 
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -75,7 +76,11 @@ public final class CDC extends AbstractSAC {
 		return changedGraph;
 	}
 
-
+	public Map<String, Object> getStatistics() {
+		final Map<String, Object> statistics = super.getStatistics();
+		statistics.put("CDC-nogoods", nbNoGoods);
+		return statistics;
+	}
 
 	public int getNbNoGoods() {
 		return nbNoGoods;

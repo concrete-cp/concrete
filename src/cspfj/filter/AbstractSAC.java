@@ -6,18 +6,23 @@
  */
 package cspfj.filter;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
-public abstract class AbstractSAC implements Filter {
+public abstract class AbstractSAC implements BackedFilter {
 
 	protected final Filter filter;
+
 	protected final Problem problem;
+
 	protected int nbSingletonTests = 0;
-	
-	private static final Logger logger = Logger.getLogger(AbstractSAC.class.toString());
+
+	private static final Logger logger = Logger.getLogger(AbstractSAC.class
+			.toString());
 
 	public AbstractSAC(Problem problem, Filter filter) {
 		super();
@@ -33,7 +38,7 @@ public abstract class AbstractSAC implements Filter {
 	}
 
 	protected abstract boolean singletonTest(Variable variable, int level);
-	
+
 	protected boolean reduce(final int level) {
 		final Problem problem = this.problem;
 
@@ -68,15 +73,21 @@ public abstract class AbstractSAC implements Filter {
 		return true;
 
 	}
-	
+
 	public boolean reduceAll(final int level) {
 		return reduce(level);
 	}
 
-	public int getNbSingletonTests() {
-		return nbSingletonTests;
+	public Map<String, Object> getStatistics() {
+		final Map<String, Object> statistics = new HashMap<String, Object>();
+		statistics.put("SAC-nbsingletontests", nbSingletonTests);
+		for (String key : filter.getStatistics().keySet()) {
+			statistics.put("SAC-backend-" + key, filter.getStatistics()
+					.get(key));
+		}
+		return statistics;
 	}
-	
+
 	public static int next(final int i, final int length) {
 		if (i < length - 1) {
 			return i + 1;

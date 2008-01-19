@@ -161,7 +161,7 @@ public final class MCRW extends AbstractLocalSolver {
 			addSolutionElement(v, v.getFirst());
 		}
 
-		incrementNbSolutions();
+		solution();
 		assert realConflicts() == 0 : getSolution() + " -> " + realConflicts()
 				+ " conflicts ! (" + weightedConflicts() + " wc)";
 

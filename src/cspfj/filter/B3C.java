@@ -18,6 +18,8 @@
  */
 package cspfj.filter;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,15 +30,13 @@ import cspfj.problem.Variable;
  * @author Julien VION
  * 
  */
-public final class B3C implements Filter {
+public final class B3C implements BackedFilter {
 
 	private final Filter filter;
 
 	private final static Logger logger = Logger.getLogger("cspfj.filter.CDC");
 
 	private final Problem problem;
-
-	private int nbNoGoods = 0;
 
 	private int nbSingletonTests = 0;
 
@@ -182,15 +182,17 @@ public final class B3C implements Filter {
 		return reduce(level);
 	}
 
-	public int getNbNoGoods() {
-		return nbNoGoods;
-	}
-
-	public int getNbSingletonTests() {
-		return nbSingletonTests;
-	}
-
 	public String toString() {
 		return "3B";
+	}
+
+	public Map<String, Object> getStatistics() {
+		final Map<String, Object> statistics = new HashMap<String, Object>();
+		statistics.put("3B-singletonTests", nbSingletonTests);
+		for (String key : filter.getStatistics().keySet()) {
+			statistics.put("3B-backend-" + key, filter.getStatistics()
+					.get(key));
+		}
+		return statistics;
 	}
 }

@@ -145,7 +145,7 @@ public final class Tabu extends AbstractLocalSolver {
 			addSolutionElement(v, v.getFirst());
 		}
 
-		incrementNbSolutions();
+		solution();
 		assert realConflicts() == 0 : getSolution() + " -> " + realConflicts()
 				+ " conflicts ! (" + weightedConflicts() + " wc)";
 

@@ -48,14 +48,12 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 	protected static long nbPresenceChecks = 0;
 
-	public static int nbEffectiveRevisions = 0;
 
-	public static int nbUselessRevisions = 0;
 
 	protected static final Logger logger = Logger
 			.getLogger("cspfj.constraints.Constraint");
 
-	private final boolean tupleCache;
+	private boolean tupleCache;
 
 	protected TupleManager tupleManager;
 
@@ -129,6 +127,15 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		}
 	}
 
+	public void removeTupleCache() {
+		tupleCache = false;
+		last = null;
+	}
+	
+	public boolean isCachingTuples() {
+		return tupleCache;
+	}
+	
 	public void initNbSupports() {
 		// logger.info("Counting " + this +" supports");
 		final long size = size();
@@ -136,7 +143,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 			initSize[p] = size / involvedVariables[p].getDomainSize();
 		}
 
-		logger.fine("Counting supports");
+//		logger.fine("Counting supports");
 
 		tupleManager.setFirstTuple();
 
@@ -262,12 +269,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 			}
 
-		}
-
-		if (revised) {
-			nbEffectiveRevisions++;
-		} else {
-			nbUselessRevisions++;
 		}
 
 		return revised;
@@ -427,16 +428,9 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		return nbPresenceChecks;
 	}
 
-	public static final int getNbEffectiveRevisions() {
-		return nbEffectiveRevisions;
-	}
-
-	public static final int getNbUselessRevisions() {
-		return nbUselessRevisions;
-	}
 
 	public static final void clearStats() {
-		checks = nbPresenceChecks = nbEffectiveRevisions = nbUselessRevisions = 0;
+		checks = nbPresenceChecks = 0;
 	}
 
 	public boolean equalsConstraint(final Constraint constraint) {
@@ -564,5 +558,9 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 				System.arraycopy(tuple, 0, last[position][value], 0, arity);
 			}
 		}
+	}
+	
+	public String getName() {
+		return name;
 	}
 }

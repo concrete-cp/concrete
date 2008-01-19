@@ -37,6 +37,7 @@ import cspfj.constraint.Weight;
 import cspfj.exception.FailedGenerationException;
 import cspfj.heuristic.Supports;
 import cspfj.heuristic.ValueHeuristic;
+import cspfj.util.Chronometer;
 import cspfj.util.CpuMonitor;
 
 public final class Problem implements Cloneable {
@@ -81,6 +82,11 @@ public final class Problem implements Cloneable {
 
 	public static Problem load(final ProblemGenerator generator)
 			throws FailedGenerationException {
+		return load(generator, -1);
+	}
+
+	public static Problem load(final ProblemGenerator generator,
+			final int seconds) throws FailedGenerationException {
 		final Problem problem = new Problem();
 		Variable.resetVId();
 		Constraint.resetCId();
@@ -93,7 +99,7 @@ public final class Problem implements Cloneable {
 
 		logger.info("Converting to extension");
 		final Collection<Constraint> constraints = convertExtension(generator
-				.getConstraints());
+				.getConstraints(), seconds);
 
 		logger.info("Setting Constraints");
 		problem.setConstraints(constraints);
@@ -522,7 +528,7 @@ public final class Problem implements Cloneable {
 		//
 		// return (int) (localBT * (100F * getNbVariables()) /
 		// (getNbConstraints() * meanDomainSize));
-		return getNbConstraints();
+		return Math.max(10, getNbVariables() / 10);
 	}
 
 	public Problem clone() throws CloneNotSupportedException {
@@ -559,26 +565,31 @@ public final class Problem implements Cloneable {
 	}
 
 	public static Collection<Constraint> convertExtension(
-			final Collection<Constraint> constraints)
+			final Collection<Constraint> constraints, final int seconds)
 			throws FailedGenerationException {
 		// for (Constraint c : constraints) {
 		// c.initNbSupports();
 		// }
 		// return constraints;
 
+		final float start = -CpuMonitor.getCpuTime();
+
 		final Collection<Constraint> extConstraints = new ArrayList<Constraint>();
 
 		boolean outOfMemory = false;
-
+		int done = 0;
 		for (Constraint c : constraints) {
 			if (c instanceof ExtensionConstraint) {
 				extConstraints.add(c);
-			} else if (outOfMemory) {
+			} else if ((seconds >= 0 && CpuMonitor.getCpuTime() + start > seconds)
+					|| outOfMemory) {
 				c.initNbSupports();
 				extConstraints.add(c);
 			} else {
 				try {
 					extConstraints.add(new ExtensionConstraint(c));
+					logger.finer("Converted " + c + ", "
+							+ (constraints.size() - ++done) + " remaining");
 				} catch (OutOfMemoryError e) {
 					outOfMemory = true;
 					logger.info("Could not convert " + c + " to extension");
@@ -586,6 +597,7 @@ public final class Problem implements Cloneable {
 					extConstraints.add(c);
 				}
 			}
+
 		}
 
 		return extConstraints;

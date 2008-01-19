@@ -43,15 +43,18 @@ public class ResultHandler {
 
 	protected int totalNodes = 0;
 
-	protected final Map<String, String> statistics;
+	protected final Map<String, Object> statistics;
 
 	private static final Logger logger = Logger
 			.getLogger("cspfj.AbstractResultWriter");
 
 	private int bestSatisfied = 0;
+	
+	private final boolean receiveSolutions; 
 
-	public ResultHandler() {
-		this.statistics = new TreeMap<String, String>();
+	public ResultHandler(final boolean receiveSolutions) {
+		this.statistics = new TreeMap<String, Object>();
+		this.receiveSolutions = receiveSolutions; 
 	}
 
 	public void problem(final String name) throws IOException {
@@ -71,6 +74,9 @@ public class ResultHandler {
 
 	public boolean solution(final Map<Variable, Integer> solution,
 			final int nbSatisfied, final boolean force) throws IOException {
+		if (!receiveSolutions && !force) {
+			return false ;
+		}
 		if (nbSatisfied > bestSatisfied) {
 			bestSatisfied = nbSatisfied;
 			logger.info(solution.toString() + "(" + nbSatisfied + ")");
@@ -137,9 +143,14 @@ public class ResultHandler {
 		}
 	}
 
+	public void allStatistics(final Map<String, Object> statistics) {
+		logger.info(statistics.toString());
+		this.statistics.putAll(statistics);
+	}
+	
 	public void statistics(final String name, final Object value) {
 		logger.info(name + " : " + value);
-		statistics.put(name, value.toString());
+		statistics.put(name, value);
 	}
 
 	public enum Result {
@@ -161,5 +172,10 @@ public class ResultHandler {
 	public final int getBestSatisfied() {
 		return bestSatisfied;
 	}
+	
+	public final boolean isReceiveSolutions() {
+		return receiveSolutions;
+	}
+
 
 }

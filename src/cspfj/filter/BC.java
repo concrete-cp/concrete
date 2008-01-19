@@ -20,6 +20,8 @@
 package cspfj.filter;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
@@ -35,6 +37,9 @@ public final class BC implements Filter {
 	private final boolean[] inQueue;
 
 	private int queueSize = 0;
+	
+	private int nbEffectiveRevisions = 0 ;
+	private int nbUselessRevisions = 0 ;
 
 	public BC(final Problem problem) {
 		super();
@@ -200,11 +205,18 @@ public final class BC implements Filter {
 		}
 
 		if (revised) {
-			Constraint.nbEffectiveRevisions++;
+			nbEffectiveRevisions++;
 		} else {
-			Constraint.nbUselessRevisions++;
+			nbUselessRevisions++;
 		}
 
 		return revised;
+	}
+	
+	public Map<String, Object> getStatistics() {
+		final Map<String, Object> statistics = new HashMap<String, Object>();
+		statistics.put("2b-effective-revisions", nbEffectiveRevisions);
+		statistics.put("2b-useless-revisions", nbUselessRevisions);
+		return statistics;
 	}
 }

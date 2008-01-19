@@ -20,12 +20,16 @@
 package cspfj;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import cspfj.constraint.AbstractMatrixManager;
+import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.AbstractSAC;
+import cspfj.filter.BackedFilter;
 import cspfj.filter.CDC;
 import cspfj.filter.Filter;
 import cspfj.filter.SAC;
@@ -52,10 +56,12 @@ public abstract class AbstractSolver implements Solver {
 
 	private final ResultHandler resultHandler;
 
-	private SPACE space = SPACE.NONE;
+	private Class<? extends Filter> preprocessor = null;
 
 	private final static Logger logger = Logger
 			.getLogger("cspfj.solver.AbstractSolver");
+
+	protected final Map<String, Object> statistics;
 
 	public AbstractSolver(Problem prob, ResultHandler resultHandler) {
 		super();
@@ -65,6 +71,7 @@ public abstract class AbstractSolver implements Solver {
 
 		chronometer = new Chronometer();
 		this.resultHandler = resultHandler;
+		this.statistics = new HashMap<String, Object>();
 	}
 
 	/*
@@ -143,24 +150,28 @@ public abstract class AbstractSolver implements Solver {
 		}
 	}
 
-	public final void setUsePrepro(final SPACE space) {
-		this.space = space;
+	public final void setUsePrepro(final Class<? extends Filter> prepro) {
+		this.preprocessor = prepro;
 	}
 
-	 public final SPACE useSpace() {
-		return space;
-	}
-
-	protected final void statistics(final String name, final Object value) {
-		resultHandler.statistics(name, value.toString());
+	public final Class<? extends Filter> getPreprocessor() {
+		return preprocessor;
 	}
 
 	public final int getNbSolutions() {
 		return nbSolutions;
 	}
 
-	protected final void incrementNbSolutions() {
+	protected final void solution() throws IOException {
 		nbSolutions++;
+		if (resultHandler.isReceiveSolutions()) {
+			final Map<Variable, Integer> solution = new HashMap<Variable, Integer>();
+			for (Variable v : problem.getVariables()) {
+				solution.put(v, v.getDomain()[v.getFirst()]);
+			}
+
+			resultHandler.solution(solution, problem.getNbConstraints(), false);
+		}
 	}
 
 	protected final ResultHandler getResultHandler() {
@@ -171,38 +182,61 @@ public abstract class AbstractSolver implements Solver {
 		return problem;
 	}
 
-	public final boolean preprocess(final Filter filter) {
+	public final boolean preprocess(final Filter filter)
+			throws InstantiationException, IllegalAccessException,
+			InvocationTargetException, NoSuchMethodException {
+
 		final Filter preprocessor;
-		
-		switch (space) {
-		case BRANCH:
-			preprocessor = new SAC(problem, filter, true);
-			break;
-
-		case CLASSIC:
-			preprocessor = new CDC(problem, filter);
-			break;
-
-		default:
+		if (this.preprocessor == null) {
 			preprocessor = filter;
+		} else if (BackedFilter.class.isAssignableFrom(this.preprocessor)) {
+			preprocessor = this.preprocessor.getConstructor(
+					new Class[] { Problem.class, Filter.class }).newInstance(
+					new Object[] { problem, filter });
+		} else {
+			preprocessor = this.preprocessor.getConstructor(
+					new Class[] { Problem.class }).newInstance(
+					new Object[] { problem });
 		}
 
+		final float start = chronometer.getCurrentChrono();
 		final boolean consistent = preprocessor.reduceAll(0);
+		final float preproCpu = chronometer.getCurrentChrono();
 
-		statistics("prepro-nogoods", preprocessor.getNbNoGoods());
+		statistics.putAll(preprocessor.getStatistics());
 
-		if (SPACE.BRANCH.equals(space)) {
-			statistics("prepro-singletontests", ((SAC) preprocessor)
-					.getNbSingletonTests());
-		} else if (SPACE.CLASSIC.equals(space)) {
-			statistics("prepro-singletontests", ((AbstractSAC) preprocessor)
-					.getNbSingletonTests());
+		int removed = 0;
+
+		for (Variable v : problem.getVariables()) {
+			removed += v.getDomain().length - v.getDomainSize();
+
 		}
+		statistics.put("prepro-removed", removed);
+		// statistics("prepro-subs", preprocessor.getNbSub()) ;
+
+		statistics.put("prepro-cpu", preproCpu - start);
+		statistics.put("prepro-ccks", Constraint.getNbChecks());
+		statistics.put("prepro-presenceccks", Constraint.getNbPresenceChecks());
+		statistics.put("prepro-matrix-ccks", AbstractMatrixManager.getChecks());
+		statistics.put("prepro-matrix-presenceccks", AbstractMatrixManager
+				.getPresenceChecks());
+
+		// if (SPACE.BRANCH.equals(space)) {
+		// statistics("prepro-singletontests", ((SAC) preprocessor)
+		// .getNbSingletonTests());
+		// } else if (SPACE.CLASSIC.equals(space)) {
+		// statistics("prepro-singletontests", ((AbstractSAC) preprocessor)
+		// .getNbSingletonTests());
+		// }
 
 		if (!consistent) {
 			chronometer.validateChrono();
 			return false;
 		}
 		return true;
+	}
+
+	public Map<String, Object> getStatistics() {
+		return statistics;
 	}
 }

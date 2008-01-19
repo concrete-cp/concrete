@@ -1,7 +1,5 @@
 package cspfj.constraint;
 
-import java.util.Arrays;
-
 import cspfj.exception.MatrixTooBigException;
 import cspfj.problem.Variable;
 
@@ -17,6 +15,10 @@ public abstract class AbstractMatrixManager implements Cloneable {
 	protected int variablePosition;
 
 	protected int[][][] last;
+
+	protected static long checks = 0;
+	
+	protected static long presenceChecks = 0;
 
 	public AbstractMatrixManager(Variable[] scope, int[] tuple, int[][][] last) {
 		super();
@@ -65,39 +67,37 @@ public abstract class AbstractMatrixManager implements Cloneable {
 	public abstract boolean isTrue(final int[] tuple);
 
 	public abstract void intersect(final Variable[] scope,
-			final Variable[] constraintScope, final boolean supports,
-			final int[][] tuples) throws MatrixTooBigException;
+			final boolean supports, final int[][] tuples)
+			throws MatrixTooBigException;
 
-	protected void generate(final Variable[] scope,
-			final Variable[] constraintScope, final boolean supports,
-			final int[][] tuples, final int arity)
-			throws MatrixTooBigException {
+	protected void generate(final Variable[] scope, final boolean supports,
+			final int[][] tuples, final int arity) throws MatrixTooBigException {
 		init(!supports);
-
+		//
 		final int[] realTuple = this.tuple;
-		if (Arrays.equals(scope, constraintScope)) {
-			for (int[] tuple : tuples) {
-				for (int i = arity; --i >= 0;) {
-					realTuple[i] = scope[i].index(tuple[i]);
-				}
-				set(realTuple, supports);
+		// if (Arrays.equals(scope, constraintScope)) {
+		for (int[] tuple : tuples) {
+			for (int i = arity; --i >= 0;) {
+				realTuple[i] = scope[i].index(tuple[i]);
 			}
-		} else {
-
-			for (int[] tuple : tuples) {
-				// final Variable[] involvedVariables = this.involvedVariables;
-
-				for (int i = arity; --i >= 0;) {
-					for (int j = arity; --j >= 0;) {
-						if (scope[i] == constraintScope[j]) {
-							realTuple[j] = scope[i].index(tuple[i]);
-							break;
-						}
-					}
-				}
-				set(realTuple, supports);
-			}
+			set(realTuple, supports);
 		}
+		// } else {
+		//
+		// for (int[] tuple : tuples) {
+		// // final Variable[] involvedVariables = this.involvedVariables;
+		//
+		// for (int i = arity; --i >= 0;) {
+		// for (int j = arity; --j >= 0;) {
+		// if (scope[i] == constraintScope[j]) {
+		// realTuple[j] = scope[i].index(tuple[i]);
+		// break;
+		// }
+		// }
+		// }
+		// set(realTuple, supports);
+		// }
+		// }
 	}
 
 	public boolean setFirstTuple(final int variablePosition, final int index) {
@@ -110,7 +110,7 @@ public abstract class AbstractMatrixManager implements Cloneable {
 			}
 		}
 
-		if (!isTrue(tuple)) {
+		if (!check()) {
 			return next();
 		}
 
@@ -149,8 +149,8 @@ public abstract class AbstractMatrixManager implements Cloneable {
 
 	}
 
-	public AbstractMatrixManager deepCopy(Variable[] variables, int[] tuple)
-			throws CloneNotSupportedException {
+	public AbstractMatrixManager deepCopy(final Variable[] variables,
+			final int[] tuple) throws CloneNotSupportedException {
 		final AbstractMatrixManager matrix = this.clone();
 		matrix.tuple = tuple;
 		matrix.variables = variables;
@@ -161,16 +161,11 @@ public abstract class AbstractMatrixManager implements Cloneable {
 		return (AbstractMatrixManager) super.clone();
 	}
 
-	public boolean check() {
-		return isTrue(tuple);
-	}
+	public abstract boolean check() ;
 
 	protected boolean controlResidue(final int position, final int index) {
-		if (last[position][index][0] != -1
-				&& controlTuplePresence(last[position][index], position)) {
-			return true;
-		}
-		return false;
+		return last[position][index][0] != -1
+				&& controlTuplePresence(last[position][index], position);
 	}
 
 	protected void updateResidues() {
@@ -181,7 +176,7 @@ public abstract class AbstractMatrixManager implements Cloneable {
 	}
 
 	protected boolean controlTuplePresence(final int[] tuple, final int position) {
-		Constraint.nbPresenceChecks++;
+		presenceChecks++;
 		final Variable[] involvedVariables = this.variables;
 		for (int i = arity; --i >= 0;) {
 			if (i != position && !involvedVariables[i].isPresent(tuple[i])) {
@@ -190,5 +185,13 @@ public abstract class AbstractMatrixManager implements Cloneable {
 		}
 
 		return true;
+	}
+
+	public static long getChecks() {
+		return checks;
+	}
+
+	public static long getPresenceChecks() {
+		return presenceChecks;
 	}
 }

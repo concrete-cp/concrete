@@ -20,6 +20,8 @@
 package cspfj.filter;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
@@ -38,13 +40,17 @@ public final class AC3 implements Filter {
 
 	private boolean removals[][];
 
+	public int nbEffectiveRevisions = 0;
+
+	public int nbUselessRevisions = 0;
+
 	public AC3(final Problem problem) {
 		super();
 		this.problem = problem;
 
 		inQueue = new boolean[problem.getMaxVId() + 1];
 
-		removals = new boolean[problem.getMaxCId()+1][];
+		removals = new boolean[problem.getMaxCId() + 1][];
 		for (Constraint c : problem.getConstraints()) {
 			removals[c.getId()] = new boolean[c.getArity()];
 		}
@@ -102,22 +108,27 @@ public final class AC3 implements Filter {
 				for (int i = constraint.getArity(); --i >= 0;) {
 					final Variable y = constraint.getInvolvedVariables()[i];
 
-					if (!y.isAssigned() && !skipRevision(constraint, i)
-							&& constraint.revise(i, level)) {
-						if (y.getDomainSize() <= 0) {
-							constraint.increaseWeight();
-							return false;
-						}
+					if (!y.isAssigned() && !skipRevision(constraint, i)) {
+						if (constraint.revise(i, level)) {
 
-						addInQueue(y.getId());
-
-						for (int cp = y.getInvolvingConstraints().length; --cp >= 0;) {
-							final Constraint constraintP = y
-									.getInvolvingConstraints()[cp];
-							if (constraintP != constraint) {
-								removals[constraintP.getId()][y
-										.getPositionInConstraint(cp)] = true;
+							nbEffectiveRevisions++;
+							if (y.getDomainSize() <= 0) {
+								constraint.increaseWeight();
+								return false;
 							}
+
+							addInQueue(y.getId());
+
+							for (int cp = y.getInvolvingConstraints().length; --cp >= 0;) {
+								final Constraint constraintP = y
+										.getInvolvingConstraints()[cp];
+								if (constraintP != constraint) {
+									removals[constraintP.getId()][y
+											.getPositionInConstraint(cp)] = true;
+								}
+							}
+						} else {
+							nbUselessRevisions++;
 						}
 					}
 				}
@@ -176,11 +187,14 @@ public final class AC3 implements Filter {
 		}
 	}
 
-	public int getNbNoGoods() {
-		return 0;
-	}
-
 	public String toString() {
 		return "AC3rm";
+	}
+
+	public Map<String, Object> getStatistics() {
+		final Map<String, Object> statistics = new HashMap<String, Object>();
+		statistics.put("ac3-effective-revisions", nbEffectiveRevisions);
+		statistics.put("ac3-useless-revisions", nbUselessRevisions);
+		return statistics;
 	}
 }

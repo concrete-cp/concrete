@@ -55,14 +55,20 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 	public boolean isTrue(final int[] tuple) {
 		return BooleanArray.isTrue(matrix2D[0][tuple[0]], tuple[1]);
 	}
+	
+	@Override
+	public boolean check() {
+		checks++;
+		return BooleanArray.isTrue(matrix2D[0][tuple[0]], tuple[1]);
+	}
+	
 
-	public void intersect(final Variable[] scope,
-			final Variable[] constraintScope, final boolean supports,
+	public void intersect(final Variable[] scope, final boolean supports,
 			final int[][] tuples) throws MatrixTooBigException {
 
 		final int[][][] matrix2D = this.matrix2D.clone();
 
-		generate(scope, constraintScope, supports, tuples, 2);
+		generate(scope, supports, tuples, 2);
 
 		if (matrix2D != null) {
 			for (int i = 2; --i >= 0;) {
@@ -80,6 +86,7 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 		final int[] mask = matrix2D[variablePosition][index];
 		final int[] domain = variables[1 - variablePosition].getBooleanDomain();
 		for (int part = 0; part < mask.length; part++) {
+			checks++;
 			if ((mask[part] & domain[part]) != 0) {
 				tuple[variablePosition] = index;
 				this.variablePosition = variablePosition;
@@ -117,22 +124,23 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 				return false;
 			}
 			// System.err.print("-");
+			checks++;
 			current = mask[currentPart] & domain[currentPart];
 			// System.err.println(Integer.toBinaryString(current));
 			currentPosition = -1;
 		}
 
-		currentPosition++;
+		// currentPosition++;
 		// System.err.print(Integer.toBinaryString(current)) ;
 
-		final int mask0 = BooleanArray.MASKS[0];
+		// final int mask0 = BooleanArray.MASKS[0];
 
-		while ((current & mask0) == 0) {
-			currentPosition++;
-			current <<= 1;
-		}
+		final int rotate = Integer.numberOfLeadingZeros(current) + 1;
 
-		current <<= 1;
+		currentPosition += rotate;
+		current <<= rotate;
+
+		// current <<= 1;
 
 		this.currentPart = currentPart;
 		this.current = current;
@@ -174,12 +182,9 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 
 	protected boolean controlResidue(final int position, final int index) {
 		final int part = last[position][index][0];
-
-		if (part != -1
+		presenceChecks++;
+		return part != -1
 				&& (matrix2D[position][index][part] & variables[1 - position]
-						.getBooleanDomain()[part]) != 0) {
-			return true;
-		}
-		return false;
+						.getBooleanDomain()[part]) != 0;
 	}
 }

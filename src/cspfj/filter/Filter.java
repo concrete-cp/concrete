@@ -19,6 +19,8 @@
 
 package cspfj.filter;
 
+import java.util.Map;
+
 import cspfj.problem.Variable;
 
 /**
@@ -29,13 +31,12 @@ public interface Filter {
 
     /**
      * @param level Le niveau en cours
-     * @return False ssi un domaine a Ã©tÃ© vidÃ©
+     * @return False ssi un domaine a été vidé
      */
     boolean reduceAll(int level) ;
     
     boolean reduceAfter(int level, Variable variable) ;
     
-    int getNbNoGoods() ;
-    
+    Map<String, Object> getStatistics();
 
 }

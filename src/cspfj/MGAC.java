@@ -19,10 +19,12 @@
 
 package cspfj;
 
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.security.InvalidParameterException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.AC3;
 import cspfj.filter.Filter;
@@ -44,19 +46,20 @@ public final class MGAC extends AbstractSolver {
 
 	private boolean allSolutions = false;
 
-	public MGAC(Problem prob) {
-		this(prob, new ResultHandler());
-	}
-
 	public MGAC(Problem prob, ResultHandler resultHandler) {
 		this(prob, resultHandler, new DiscHeuristic(new WDegOnDom(),
 				new Inverse(prob, false)));
 	}
 
 	public MGAC(Problem prob, ResultHandler resultHandler, Heuristic heuristic) {
+		this(prob, resultHandler, heuristic, new AC3(prob));
+	}
+
+	public MGAC(Problem prob, ResultHandler resultHandler, Heuristic heuristic,
+			Filter filter) {
 		super(prob, resultHandler);
-		//filter = new B3C(problem, new BC(problem));
-		filter = new AC3(problem);
+		// filter = new B3C(problem, new BC(problem));
+		this.filter = filter;
 		this.heuristic = heuristic;
 
 		logger.info(filter.getClass().toString());
@@ -66,12 +69,13 @@ public final class MGAC extends AbstractSolver {
 	}
 
 	public boolean mac(final int level, final Variable modifiedVariable)
-			throws MaxBacktracksExceededException {
+			throws MaxBacktracksExceededException, IOException {
 		return mac(level, modifiedVariable, true);
 	}
 
 	public boolean mac(final int level, final Variable modifiedVariable,
-			final boolean positive) throws MaxBacktracksExceededException {
+			final boolean positive) throws MaxBacktracksExceededException,
+			IOException {
 		final Problem problem = this.problem;
 
 		if (problem.getNbFutureVariables() == 0) {
@@ -80,7 +84,8 @@ public final class MGAC extends AbstractSolver {
 					addSolutionElement(v, v.getFirst());
 				}
 			}
-			incrementNbSolutions();
+
+			solution();
 			return !allSolutions;
 		}
 
@@ -138,36 +143,26 @@ public final class MGAC extends AbstractSolver {
 	 * 
 	 * @see cspfj.Solver#run(int)
 	 */
-	public boolean runSolver() {
+	public boolean runSolver() throws IOException {
 
 		System.gc();
 		chronometer.startChrono();
 
-		final float start = chronometer.getCurrentChrono();
-		if (!preprocess(getFilter())) {
-			chronometer.validateChrono();
-			return false;
+		try {
+			if (!preprocess(getFilter())) {
+				chronometer.validateChrono();
+				return false;
+			}
+		} catch (InstantiationException e1) {
+			throw new InvalidParameterException(e1.toString());
+		} catch (IllegalAccessException e1) {
+			throw new InvalidParameterException(e1.toString());
+		} catch (InvocationTargetException e1) {
+			throw new InvalidParameterException(e1.toString());
+		} catch (NoSuchMethodException e1) {
+			throw new InvalidParameterException(e1.toString());
 		}
 
-		int removed = 0;
-
-		for (Variable v : problem.getVariables()) {
-			removed += v.getDomain().length - v.getDomainSize();
-
-		}
-
-		statistics("prepro-removed", removed);
-		// statistics("prepro-subs", preprocessor.getNbSub()) ;
-
-		final float preproCpu = chronometer.getCurrentChrono();
-		statistics("prepro-cpu", preproCpu - start);
-		statistics("prepro-ccks", Constraint.getNbChecks());
-		statistics("prepro-nbpresencechecks", Constraint.getNbPresenceChecks());
-
-		statistics("prepro-nbeffectiverevisions", Constraint
-				.getNbEffectiveRevisions());
-		statistics("prepro-nbuselessrevisions", Constraint
-				.getNbUselessRevisions());
 		// statistics("prepro-nbskippedrevisions", Constraint
 		// .getNbSkippedRevisions());
 
@@ -175,10 +170,10 @@ public final class MGAC extends AbstractSolver {
 		// return true ;
 		// }
 
+		final float start = chronometer.getCurrentChrono();
 		heuristic.compute();
-
 		final float heuristicCpu = chronometer.getCurrentChrono();
-		statistics("heuristic-cpu", heuristicCpu - start);
+		statistics.put("heuristic-cpu", heuristicCpu - start);
 
 		int maxBT = allSolutions ? -1 : getMaxBacktracks();
 
@@ -206,6 +201,9 @@ public final class MGAC extends AbstractSolver {
 			} catch (OutOfMemoryError e) {
 				chronometer.validateChrono();
 				throw e;
+			} catch (IOException e) {
+				chronometer.validateChrono();
+				throw e;
 			}
 			macTime += chronometer.getCurrentChrono();
 			logger
@@ -219,8 +217,11 @@ public final class MGAC extends AbstractSolver {
 				return false;
 			}
 		} while (true);
-		statistics("search-cpu", chronometer.getCurrentChrono() - heuristicCpu);
 		chronometer.validateChrono();
+		statistics.put("search-cpu", chronometer.getCurrentChrono()
+				- heuristicCpu);
+
+		statistics.putAll(filter.getStatistics());
 
 		return getNbSolutions() > 0;
 
@@ -244,9 +245,9 @@ public final class MGAC extends AbstractSolver {
 		sb.append("\t\t\t<solver>").append(this).append(
 				"</solver>\n\t\t\t<filter>").append(filter).append(
 				"</filter>\n\t\t\t<heuristic>").append(heuristic).append(
-				"</heuristic>\n\t\t\t<space>").append(useSpace()).append(
-				"</space>\n\t\t\t<allSolutions>").append(allSolutions).append(
-				"</allSolutions>\n");
+				"</heuristic>\n\t\t\t<prepro>").append(getPreprocessor())
+				.append("</prepro>\n\t\t\t<allSolutions>").append(allSolutions)
+				.append("</allSolutions>\n");
 
 		return sb.toString();
 	}

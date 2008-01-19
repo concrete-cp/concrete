@@ -57,17 +57,24 @@ public class MatrixManagerGeneral extends AbstractMatrixManager {
 		return true;
 	}
 
+	@Override
 	public boolean isTrue(final int[] tuple) {
 		return matrix[matrixIndex(tuple)];
 	}
 
-	public void intersect(final Variable[] scope,
-			final Variable[] constraintScope, final boolean supports,
+	@Override
+	public boolean check() {
+		checks++;
+		return matrix[matrixIndex(tuple)];
+	}
+
+	@Override
+	public void intersect(final Variable[] scope, final boolean supports,
 			final int[][] tuples) throws MatrixTooBigException {
 
 		final boolean[] matrix = this.matrix.clone();
 
-		generate(scope, constraintScope, supports, tuples, arity);
+		generate(scope, supports, tuples, arity);
 
 		if (matrix != null) {
 			for (int i = matrix.length; --i >= 0;) {

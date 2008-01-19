@@ -53,6 +53,10 @@ public final class SAC extends AbstractSAC {
 
 	private final Variable[] staticVOrder;
 
+	public SAC(Problem problem, Filter filter) {
+		this(problem, filter, false);
+	}
+	
 	public SAC(Problem problem, Filter filter, boolean branch) {
 		super(problem, filter);
 		this.branch = branch;

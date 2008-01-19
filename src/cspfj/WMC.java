@@ -198,10 +198,10 @@ public final class WMC extends AbstractLocalSolver {
 		// System.out.println(i+" "+nbc.get(i)+" "+nbrc.get(i));
 		// }
 
-		incrementNbSolutions();
+		solution();
 		assert realConflicts() == 0 : getSolution() + " -> " + realConflicts()
 				+ " conflicts ! (" + weightedConflicts() + " wc)";
-		statistics("local-minima", nbLM);
+		statistics.put("local-minima", nbLM);
 	}
 
 	public String toString() {

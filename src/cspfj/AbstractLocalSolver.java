@@ -1,6 +1,8 @@
 package cspfj;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.security.InvalidParameterException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -27,7 +29,6 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 
 	protected static final boolean FINER = logger.isLoggable(Level.FINER);
 
-
 	private final TieManager tieManager;
 
 	final private boolean max;
@@ -35,8 +36,6 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 	final protected ConflictsManager[] wcManagers;
 
 	private int maxTries = -1;
-
-
 
 	public static void setSeed(final long seed) {
 		random.setSeed(seed);
@@ -51,7 +50,6 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		super(prob, resultHandler);
 
 		this.max = max;
-
 
 		tieManager = new TieManager(random);
 
@@ -153,8 +151,18 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		boolean resolved = false;
 		System.gc();
 		chronometer.startChrono();
-		if (!max && !preprocess(new AC3(problem))) {
-			return false;
+		try {
+			if (!max && !preprocess(new AC3(problem))) {
+				return false;
+			}
+		} catch (InstantiationException e1) {
+			throw new InvalidParameterException(e1.toString());
+		} catch (IllegalAccessException e1) {
+			throw new InvalidParameterException(e1.toString());
+		} catch (InvocationTargetException e1) {
+			throw new InvalidParameterException(e1.toString());
+		} catch (NoSuchMethodException e1) {
+			throw new InvalidParameterException(e1.toString());
 		}
 		int nbTries = 0;
 		do {
@@ -225,6 +233,5 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 	protected TieManager getTieManager() {
 		return tieManager;
 	}
-
 
 }

@@ -1,6 +1,8 @@
 package cspfj;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.security.InvalidParameterException;
 import java.util.logging.Logger;
 
 import cspfj.exception.MaxBacktracksExceededException;
@@ -33,8 +35,18 @@ public class Combo extends AbstractSolver {
 	public boolean runSolver() throws IOException {
 		System.gc();
 
-		if (!preprocess(macSolver.getFilter())) {
-			return false;
+		try {
+			if (!preprocess(macSolver.getFilter())) {
+				return false;
+			}
+		} catch (InstantiationException e) {
+			throw new InvalidParameterException(e.toString());
+		} catch (IllegalAccessException e) {
+			throw new InvalidParameterException(e.toString());
+		} catch (InvocationTargetException e) {
+			throw new InvalidParameterException(e.toString());
+		} catch (NoSuchMethodException e) {
+			throw new InvalidParameterException(e.toString());
 		}
 
 		// final int localBT = (int) (-500 + 8.25 * problem.getMaxDomainSize()
@@ -81,7 +93,7 @@ public class Combo extends AbstractSolver {
 
 			float macTime = -chronometer.getCurrentChrono();
 			if (mac(maxBT)) {
-				statistics("mac-assign", macSolver.getNbAssignments());
+				statistics.put("mac-assign", macSolver.getNbAssignments());
 				return getNbSolutions() > 0;
 			}
 
@@ -94,7 +106,7 @@ public class Combo extends AbstractSolver {
 
 	}
 
-	private final boolean mac(final int maxBT) {
+	private final boolean mac(final int maxBT) throws IOException {
 		macSolver.setMaxBacktracks(maxBT);
 
 		try {
@@ -107,6 +119,9 @@ public class Combo extends AbstractSolver {
 		} catch (MaxBacktracksExceededException e) {
 			// Continue
 		} catch (OutOfMemoryError e) {
+			chronometer.validateChrono();
+			throw e;
+		} catch (IOException e) {
 			chronometer.validateChrono();
 			throw e;
 		}
@@ -156,8 +171,8 @@ public class Combo extends AbstractSolver {
 		sb.append("\t\t\t<macSolver>\n").append(macSolver.getXMLConfig())
 				.append("\t\t\t</macSolver>\n\t\t\t<mcSolver>\n").append(
 						mCSolver.getXMLConfig()).append(
-						"\t\t\t</mcSolver>\n\t\t\t<space>").append(useSpace())
-				.append("</space>\n");
+						"\t\t\t</mcSolver>\n\t\t\t<prepro>").append(getPreprocessor())
+				.append("</prepro>\n");
 
 		return sb.toString();
 	}
