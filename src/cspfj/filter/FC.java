@@ -19,6 +19,9 @@
 
 package cspfj.filter;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
@@ -28,6 +31,9 @@ import cspfj.problem.Variable;
  * 
  */
 public final class FC implements Filter {
+	public int nbEffectiveRevisions = 0;
+
+	public int nbUselessRevisions = 0;
 
 	public FC(final Problem problem) {
 		super();
@@ -38,6 +44,12 @@ public final class FC implements Filter {
 	}
 
 	public boolean reduceAfter(final int level, final Variable variable) {
+		if (variable == null) {
+			return true;
+		}
+		if (variable.getDomainSize()==0) {
+			return false;
+		}
 		final Constraint[] constraints = variable.getInvolvingConstraints();
 
 		for (int c = constraints.length; --c >= 0;) {
@@ -47,10 +59,15 @@ public final class FC implements Filter {
 			for (int i = constraint.getArity(); --i >= 0;) {
 				final Variable y = constraint.getInvolvedVariables()[i];
 
-				if (!y.isAssigned() && constraint.revise(i, level)) {
-					if (y.getDomainSize() <= 0) {
-						constraint.increaseWeight();
-						return false;
+				if (!y.isAssigned()) {
+					if (constraint.revise(i, level)) {
+						nbEffectiveRevisions++;
+						if (y.getDomainSize() <= 0) {
+							constraint.increaseWeight();
+							return false;
+						}
+					} else {
+						nbUselessRevisions++;
 					}
 
 				}
@@ -61,12 +78,15 @@ public final class FC implements Filter {
 
 	}
 
-	public int getNbNoGoods() {
-		return 0;
-	}
-
 	public String toString() {
 		return "FC";
+	}
+
+	public Map<String, Object> getStatistics() {
+		final Map<String, Object> statistics = new HashMap<String, Object>();
+		statistics.put("fc-effective-revisions", nbEffectiveRevisions);
+		statistics.put("fc-useless-revisions", nbUselessRevisions);
+		return statistics;
 	}
 
 }

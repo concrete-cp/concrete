@@ -370,7 +370,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		return false;
 	}
 
-	public static final long getNbChecks() {
+	public static final long getChecks() {
 		return checks;
 	}
 
@@ -424,7 +424,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		return null;
 	}
 
-	public static final long getNbPresenceChecks() {
+	public static final long getPresenceChecks() {
 		return nbPresenceChecks;
 	}
 

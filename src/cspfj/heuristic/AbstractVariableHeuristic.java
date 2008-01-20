@@ -26,12 +26,12 @@ public abstract class AbstractVariableHeuristic implements VariableHeuristic {
 	}
 
 	public final int compare(final Variable variable1, final Variable variable2) {
-		if (variable1 == null) {
-			return 1;
-		}
-		if (variable2 == null) {
-			return -1;
-		}
+//		if (variable1 == null) {
+//			return 1;
+//		}
+//		if (variable2 == null) {
+//			return -1;
+//		}
 		final double result = getScore(variable2) - getScore(variable1);
 		if (result == 0) {
 			return 0 ;//variable1.getId() - variable2.getId();
@@ -39,8 +39,5 @@ public abstract class AbstractVariableHeuristic implements VariableHeuristic {
 
 		return result > 0 ? 1 : -1;
 	}
-	
-	public String toString() {
-		return "min-" ;
-	}
+
 }

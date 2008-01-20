@@ -215,8 +215,8 @@ public abstract class AbstractSolver implements Solver {
 		// statistics("prepro-subs", preprocessor.getNbSub()) ;
 
 		statistics.put("prepro-cpu", preproCpu - start);
-		statistics.put("prepro-ccks", Constraint.getNbChecks());
-		statistics.put("prepro-presenceccks", Constraint.getNbPresenceChecks());
+		statistics.put("prepro-constraint-ccks", Constraint.getChecks());
+		statistics.put("prepro-constraint-presenceccks", Constraint.getPresenceChecks());
 		statistics.put("prepro-matrix-ccks", AbstractMatrixManager.getChecks());
 		statistics.put("prepro-matrix-presenceccks", AbstractMatrixManager
 				.getPresenceChecks());

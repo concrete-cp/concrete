@@ -25,14 +25,14 @@ import cspfj.problem.Variable;
  * @author Julien VION
  * 
  */
-public final class SACPart extends AbstractSAC {
+public final class B3CPart extends AbstractSAC {
 
 	// private final static Logger logger =
 	// Logger.getLogger("cspfj.filter.CDC");
 
 	private final static double PARTS = 10;
 
-	public SACPart(Problem problem, Filter filter) {
+	public B3CPart(Problem problem, Filter filter) {
 		super(problem, filter);
 	}
 

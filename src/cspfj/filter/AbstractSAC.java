@@ -6,10 +6,14 @@
  */
 package cspfj.filter;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import cspfj.heuristic.Dom;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -21,6 +25,10 @@ public abstract class AbstractSAC implements BackedFilter {
 
 	protected int nbSingletonTests = 0;
 
+	private final Variable[] variables;
+
+	private final Comparator<Variable> heuristic;
+	
 	private static final Logger logger = Logger.getLogger(AbstractSAC.class
 			.toString());
 
@@ -28,6 +36,8 @@ public abstract class AbstractSAC implements BackedFilter {
 		super();
 		this.filter = filter;
 		this.problem = problem;
+		this.variables = problem.getVariables().clone();
+		heuristic = new Dom();
 	}
 
 	public boolean reduceAfter(final int level, final Variable variable) {
@@ -39,16 +49,54 @@ public abstract class AbstractSAC implements BackedFilter {
 
 	protected abstract boolean singletonTest(Variable variable, int level);
 
-	protected boolean reduce(final int level) {
-		final Problem problem = this.problem;
+	protected boolean check(Variable variable, int index, int level) {
+		if (logger.isLoggable(Level.FINE)) {
+			logger.fine(level + " : " + variable + " <- "
+					+ variable.getDomain()[index] + "(" + index + ")");
+		}
 
+		variable.assign(index, problem);
+		problem.setLevelVariables(level, variable);
+		nbSingletonTests++;
+		final boolean singletonTest = filter.reduceAfter(level + 1, variable);
+		variable.unassign(problem);
+		problem.restore(level + 1);
+
+		if (!singletonTest) {
+			logger.fine("Removing " + variable + ", " + index);
+
+			variable.remove(index, level);
+			return true;
+		}
+
+		return false;
+	}
+	
+	protected boolean reduce(final int level) {
 		final Filter filter = this.filter;
 
 		if (!filter.reduceAll(level)) {
 			return false;
 		}
-
-		final Variable[] variables = problem.getVariables();
+		final Variable[] variables = this.variables;
+		Arrays.sort(variables, heuristic);
+//		System.out.println(Arrays.toString(variables));
+//		// Tri à bulles
+//		for (int i = 0; i < variables.length; i++) {
+//			boolean changed = false;
+//			for (int j = variables.length; --j > i;) {
+//				if (variables[j].getDomainSize() < variables[j - 1]
+//						.getDomainSize()) {
+//					final Variable temp = variables[j];
+//					variables[j] = variables[j - 1];
+//					variables[j - 1] = temp;
+//					changed = true;
+//				}
+//			}
+//			if (!changed) {
+//				break;
+//			}
+//		}
 
 		int mark = 0;
 
@@ -56,8 +104,7 @@ public abstract class AbstractSAC implements BackedFilter {
 
 		do {
 			final Variable variable = variables[v];
-
-			if (singletonTest(variable, level)) {
+			if (variable.getDomainSize() > 1 && singletonTest(variable, level)) {
 				if (variable.getDomainSize() <= 0) {
 					return false;
 				}
