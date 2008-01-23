@@ -49,7 +49,7 @@ public abstract class AbstractSAC implements BackedFilter {
 
 	protected abstract boolean singletonTest(Variable variable, int level);
 
-	protected boolean check(Variable variable, int index, int level) {
+	protected boolean check(final Variable variable, final int index, final int level) {
 		if (logger.isLoggable(Level.FINE)) {
 			logger.fine(level + " : " + variable + " <- "
 					+ variable.getDomain()[index] + "(" + index + ")");

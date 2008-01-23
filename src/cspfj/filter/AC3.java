@@ -40,9 +40,9 @@ public final class AC3 implements Filter {
 
 	private boolean removals[][];
 
-	public int nbEffectiveRevisions = 0;
+	public int effectiveRevisions = 0;
 
-	public int nbUselessRevisions = 0;
+	public int uselessRevisions = 0;
 
 	public AC3(final Problem problem) {
 		super();
@@ -111,7 +111,7 @@ public final class AC3 implements Filter {
 					if (!y.isAssigned() && !skipRevision(constraint, i)) {
 						if (constraint.revise(i, level)) {
 
-							nbEffectiveRevisions++;
+							effectiveRevisions++;
 							if (y.getDomainSize() <= 0) {
 								constraint.increaseWeight();
 								return false;
@@ -128,7 +128,7 @@ public final class AC3 implements Filter {
 								}
 							}
 						} else {
-							nbUselessRevisions++;
+							uselessRevisions++;
 						}
 					}
 				}
@@ -188,13 +188,13 @@ public final class AC3 implements Filter {
 	}
 
 	public String toString() {
-		return "AC3rm";
+		return "GAC3rm";
 	}
 
 	public Map<String, Object> getStatistics() {
 		final Map<String, Object> statistics = new HashMap<String, Object>();
-		statistics.put("ac3-effective-revisions", nbEffectiveRevisions);
-		statistics.put("ac3-useless-revisions", nbUselessRevisions);
+		statistics.put("gac3-effective-revisions", effectiveRevisions);
+		statistics.put("gac3-useless-revisions", uselessRevisions);
 		return statistics;
 	}
 }

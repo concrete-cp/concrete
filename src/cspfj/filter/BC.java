@@ -38,8 +38,8 @@ public final class BC implements Filter {
 
 	private int queueSize = 0;
 	
-	private int nbEffectiveRevisions = 0 ;
-	private int nbUselessRevisions = 0 ;
+	private int effectiveRevisions = 0 ;
+	private int uselessRevisions = 0 ;
 
 	public BC(final Problem problem) {
 		super();
@@ -205,9 +205,9 @@ public final class BC implements Filter {
 		}
 
 		if (revised) {
-			nbEffectiveRevisions++;
+			effectiveRevisions++;
 		} else {
-			nbUselessRevisions++;
+			uselessRevisions++;
 		}
 
 		return revised;
@@ -215,8 +215,8 @@ public final class BC implements Filter {
 	
 	public Map<String, Object> getStatistics() {
 		final Map<String, Object> statistics = new HashMap<String, Object>();
-		statistics.put("2b-effective-revisions", nbEffectiveRevisions);
-		statistics.put("2b-useless-revisions", nbUselessRevisions);
+		statistics.put("2b-effective-revisions", effectiveRevisions);
+		statistics.put("2b-useless-revisions", uselessRevisions);
 		return statistics;
 	}
 }

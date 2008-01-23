@@ -45,7 +45,9 @@ public class ExtensionConstraint extends Constraint {
 			tightness = 1 - tight;
 		}
 
-		matrix = AbstractMatrixManager.factory(scope, tuple, last);
+		matrix = AbstractMatrixManager.factory(scope);
+		matrix.setTuple(tuple);
+		matrix.setLast(last);
 
 		try {
 			matrix.init(true);
@@ -60,9 +62,10 @@ public class ExtensionConstraint extends Constraint {
 			throws FailedGenerationException {
 		super(constraint.getInvolvedVariables());
 
-		matrix = AbstractMatrixManager.factory(getInvolvedVariables(), tuple,
-				last);
-
+		matrix = AbstractMatrixManager.factory(getInvolvedVariables());
+		matrix.setTuple(tuple);
+		matrix.setLast(last);
+		
 		try {
 			matrix.init(true);
 		} catch (MatrixTooBigException e) {
@@ -109,8 +112,10 @@ public class ExtensionConstraint extends Constraint {
 			nbMaxConflicts[p] = 0;
 		}
 
-		matrix = AbstractMatrixManager.factory(scope, tuple, last);
-
+		matrix = AbstractMatrixManager.factory(scope);
+		matrix.setTuple(tuple);
+		matrix.setLast(last);
+		
 		try {
 			matrix.init(true);
 		} catch (MatrixTooBigException e) {

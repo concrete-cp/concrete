@@ -18,8 +18,8 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 
 	private int current;
 
-	public MatrixManager2D(Variable[] scope, int[] tuple, int[][][] last) {
-		super(scope, tuple, last);
+	public MatrixManager2D(Variable[] scope) {
+		super(scope);
 	}
 
 	public void init(final boolean initialState) throws MatrixTooBigException {

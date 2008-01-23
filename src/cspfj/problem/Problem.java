@@ -37,7 +37,6 @@ import cspfj.constraint.Weight;
 import cspfj.exception.FailedGenerationException;
 import cspfj.heuristic.Supports;
 import cspfj.heuristic.ValueHeuristic;
-import cspfj.util.Chronometer;
 import cspfj.util.CpuMonitor;
 
 public final class Problem implements Cloneable {

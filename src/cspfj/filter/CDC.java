@@ -39,7 +39,7 @@ public final class CDC extends AbstractSAC {
 		super(problem, filter);
 	}
 
-	protected boolean singletonTest(Variable variable, int level) {
+	protected boolean singletonTest(final Variable variable, final int level) {
 		boolean changedGraph = false;
 		for (int index = variable.getFirst(); index >= 0; index = variable
 				.getNext(index)) {

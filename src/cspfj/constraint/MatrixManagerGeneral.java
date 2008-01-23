@@ -9,8 +9,8 @@ import cspfj.problem.Variable;
 public class MatrixManagerGeneral extends AbstractMatrixManager {
 	private boolean[] matrix = null;
 
-	public MatrixManagerGeneral(Variable[] scope, int[] tuple, int[][][] last) {
-		super(scope, tuple, last);
+	public MatrixManagerGeneral(Variable[] scope) {
+		super(scope);
 	}
 
 	private int matrixIndex(final int[] tuple) {

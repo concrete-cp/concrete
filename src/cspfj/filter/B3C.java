@@ -1,3 +1,4 @@
+
 /**
  * CSPFJ - CSP solving API for Java
  * Copyright (C) 2006 Julien VION
@@ -20,8 +21,6 @@ package cspfj.filter;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
@@ -32,13 +31,13 @@ import cspfj.problem.Variable;
  */
 public final class B3C extends AbstractSAC {
 
-	private final static Logger logger = Logger.getLogger("cspfj.filter.CDC");
+	//private final static Logger logger = Logger.getLogger("cspfj.filter.CDC");
 
 	public B3C(Problem problem, Filter filter) {
 		super(problem, filter);
 	}
 
-	protected boolean singletonTest(Variable variable, int level) {
+	protected boolean singletonTest(final Variable variable, final int level) {
 		boolean changed = false;
 		for (int index = variable.getFirst(); index >= 0; index = variable
 				.getNext(index)) {

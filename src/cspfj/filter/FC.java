@@ -31,9 +31,9 @@ import cspfj.problem.Variable;
  * 
  */
 public final class FC implements Filter {
-	public int nbEffectiveRevisions = 0;
+	public int effectiveRevisions = 0;
 
-	public int nbUselessRevisions = 0;
+	public int uselessRevisions = 0;
 
 	public FC(final Problem problem) {
 		super();
@@ -61,13 +61,13 @@ public final class FC implements Filter {
 
 				if (!y.isAssigned()) {
 					if (constraint.revise(i, level)) {
-						nbEffectiveRevisions++;
+						effectiveRevisions++;
 						if (y.getDomainSize() <= 0) {
 							constraint.increaseWeight();
 							return false;
 						}
 					} else {
-						nbUselessRevisions++;
+						uselessRevisions++;
 					}
 
 				}
@@ -84,8 +84,8 @@ public final class FC implements Filter {
 
 	public Map<String, Object> getStatistics() {
 		final Map<String, Object> statistics = new HashMap<String, Object>();
-		statistics.put("fc-effective-revisions", nbEffectiveRevisions);
-		statistics.put("fc-useless-revisions", nbUselessRevisions);
+		statistics.put("fc-effective-revisions", effectiveRevisions);
+		statistics.put("fc-useless-revisions", uselessRevisions);
 		return statistics;
 	}
 

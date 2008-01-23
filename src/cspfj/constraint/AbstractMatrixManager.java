@@ -20,7 +20,7 @@ public abstract class AbstractMatrixManager implements Cloneable {
 	
 	protected static long presenceChecks = 0;
 
-	public AbstractMatrixManager(Variable[] scope, int[] tuple, int[][][] last) {
+	public AbstractMatrixManager(Variable[] scope) {
 		super();
 
 		variables = scope;
@@ -29,22 +29,25 @@ public abstract class AbstractMatrixManager implements Cloneable {
 		for (int i = scope.length; --i >= 0;) {
 			domainSize[i] = scope[i].getDomain().length;
 		}
-		this.tuple = tuple;
-
 		this.arity = scope.length;
-
-		this.last = last;
-
 	}
+	
+	public void setTuple(int[] tuple) {
+		this.tuple = tuple ;
+	}
+	
+	public void setLast(int[][][] last) {
+		this.last = last ;
+	}
+	
 
-	public static AbstractMatrixManager factory(final Variable[] scope,
-			final int[] tuple, final int[][][] last) {
+	public static AbstractMatrixManager factory(final Variable[] scope) {
 		switch (scope.length) {
 		case 2:
-			return new MatrixManager2D(scope, tuple, last);
+			return new MatrixManager2D(scope);
 
 		default:
-			return new MatrixManagerGeneral(scope, tuple, last);
+			return new MatrixManagerGeneral(scope);
 		}
 	}
 
