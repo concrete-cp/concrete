@@ -1,6 +1,5 @@
 package cspfj.constraint;
 
-import cspfj.exception.MatrixTooBigException;
 import cspfj.problem.Variable;
 
 public abstract class AbstractMatrixManager implements Cloneable {
@@ -17,10 +16,12 @@ public abstract class AbstractMatrixManager implements Cloneable {
 	protected int[][][] last;
 
 	protected static long checks = 0;
-	
+
 	protected static long presenceChecks = 0;
 
-	public AbstractMatrixManager(Variable[] scope) {
+	private Matrix matrix;
+
+	public AbstractMatrixManager(Variable[] scope, Matrix matrix) {
 		super();
 
 		variables = scope;
@@ -30,31 +31,35 @@ public abstract class AbstractMatrixManager implements Cloneable {
 			domainSize[i] = scope[i].getDomain().length;
 		}
 		this.arity = scope.length;
-	}
-	
-	public void setTuple(int[] tuple) {
-		this.tuple = tuple ;
-	}
-	
-	public void setLast(int[][][] last) {
-		this.last = last ;
-	}
-	
 
-	public static AbstractMatrixManager factory(final Variable[] scope) {
-		switch (scope.length) {
-		case 2:
-			return new MatrixManager2D(scope);
+		this.matrix = matrix;
+	}
 
-		default:
-			return new MatrixManagerGeneral(scope);
+	public void setTuple(final int[] tuple) {
+		this.tuple = tuple;
+	}
+
+	public void setLast(final int[][][] last) {
+		this.last = last;
+	}
+
+	public static AbstractMatrixManager factory(final Variable[] scope,
+			final Matrix matrix) {
+		if (matrix instanceof Matrix2D) {
+			return new MatrixManager2D(scope, (Matrix2D) matrix);
 		}
+		return new MatrixManagerGeneral(scope, matrix);
+
 	}
 
-	public abstract void init(final boolean supports)
-			throws MatrixTooBigException;
 
-	public abstract boolean set(final int[] tuple, final boolean status);
+	public boolean set(final int[] tuple, final boolean status) {
+		if (matrix.check(tuple) == status) {
+			return false;
+		}
+		matrix.set(tuple, status);
+		return true;
+	}
 
 	public boolean removeTuple() {
 		if (set(tuple, false)) {
@@ -67,41 +72,43 @@ public abstract class AbstractMatrixManager implements Cloneable {
 		return setFirstTuple(position, index);
 	}
 
-	public abstract boolean isTrue(final int[] tuple);
-
-	public abstract void intersect(final Variable[] scope,
-			final boolean supports, final int[][] tuples)
-			throws MatrixTooBigException;
-
-	protected void generate(final Variable[] scope, final boolean supports,
-			final int[][] tuples, final int arity) throws MatrixTooBigException {
-		init(!supports);
-		//
-		final int[] realTuple = this.tuple;
-		// if (Arrays.equals(scope, constraintScope)) {
-		for (int[] tuple : tuples) {
-			for (int i = arity; --i >= 0;) {
-				realTuple[i] = scope[i].index(tuple[i]);
-			}
-			set(realTuple, supports);
-		}
-		// } else {
-		//
-		// for (int[] tuple : tuples) {
-		// // final Variable[] involvedVariables = this.involvedVariables;
-		//
-		// for (int i = arity; --i >= 0;) {
-		// for (int j = arity; --j >= 0;) {
-		// if (scope[i] == constraintScope[j]) {
-		// realTuple[j] = scope[i].index(tuple[i]);
-		// break;
-		// }
-		// }
-		// }
-		// set(realTuple, supports);
-		// }
-		// }
+	public boolean isTrue(final int[] tuple) {
+		return matrix.check(tuple);
 	}
+
+//	public abstract void intersect(final Variable[] scope,
+//			final boolean supports, final int[][] tuples)
+//			throws MatrixTooBigException;
+
+//	protected void generate(final Variable[] scope, final boolean supports,
+//			final int[][] tuples, final int arity) throws MatrixTooBigException {
+//		init(!supports);
+//		//
+//		final int[] realTuple = this.tuple;
+//		// if (Arrays.equals(scope, constraintScope)) {
+//		for (int[] tuple : tuples) {
+//			for (int i = arity; --i >= 0;) {
+//				realTuple[i] = scope[i].index(tuple[i]);
+//			}
+//			set(realTuple, supports);
+//		}
+//		// } else {
+//		//
+//		// for (int[] tuple : tuples) {
+//		// // final Variable[] involvedVariables = this.involvedVariables;
+//		//
+//		// for (int i = arity; --i >= 0;) {
+//		// for (int j = arity; --j >= 0;) {
+//		// if (scope[i] == constraintScope[j]) {
+//		// realTuple[j] = scope[i].index(tuple[i]);
+//		// break;
+//		// }
+//		// }
+//		// }
+//		// set(realTuple, supports);
+//		// }
+//		// }
+//	}
 
 	public boolean setFirstTuple(final int variablePosition, final int index) {
 		this.variablePosition = variablePosition;
@@ -164,7 +171,9 @@ public abstract class AbstractMatrixManager implements Cloneable {
 		return (AbstractMatrixManager) super.clone();
 	}
 
-	public abstract boolean check() ;
+	public boolean check() {
+		return matrix.check(tuple);
+	}
 
 	protected boolean controlResidue(final int position, final int index) {
 		return last[position][index][0] != -1

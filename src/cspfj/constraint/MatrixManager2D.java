@@ -6,7 +6,7 @@ import cspfj.util.BooleanArray;
 
 public final class MatrixManager2D extends AbstractMatrixManager {
 
-	private int[][][] matrix2D;
+	private Matrix2D matrix;
 
 	private int[] mask;
 
@@ -18,72 +18,33 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 
 	private int current;
 
-	public MatrixManager2D(Variable[] scope) {
-		super(scope);
+	public MatrixManager2D(Variable[] scope, Matrix2D matrix) {
+		super(scope, matrix);
+
+		this.matrix = matrix;
 	}
 
-	public void init(final boolean initialState) throws MatrixTooBigException {
-		final int[] domainSize = this.domainSize;
-
-		final int maxDomainSize = Math.max(domainSize[0], domainSize[1]);
-
-		final int[][][] matrix = new int[2][maxDomainSize][];
-
-		for (int i = 2; --i >= 0;) {
-			for (int j = maxDomainSize; --j >= 0;) {
-
-				matrix[i][j] = new int[BooleanArray
-						.booleanArraySize(domainSize[1 - i])];
-
-				BooleanArray.initBooleanArray(matrix[i][j], domainSize[1 - i],
-						initialState);
-
-			}
-		}
-
-		matrix2D = matrix;
-
-	}
-
-	@Override
-	public boolean set(final int[] tuple, final boolean status) {
-		BooleanArray.set(matrix2D[0][tuple[0]], tuple[1], status);
-		return BooleanArray.set(matrix2D[1][tuple[1]], tuple[0], status);
-	}
-
-	@Override
-	public boolean isTrue(final int[] tuple) {
-		return BooleanArray.isTrue(matrix2D[0][tuple[0]], tuple[1]);
-	}
-	
-	@Override
-	public boolean check() {
-		checks++;
-		return BooleanArray.isTrue(matrix2D[0][tuple[0]], tuple[1]);
-	}
-	
-
-	public void intersect(final Variable[] scope, final boolean supports,
-			final int[][] tuples) throws MatrixTooBigException {
-
-		final int[][][] matrix2D = this.matrix2D.clone();
-
-		generate(scope, supports, tuples, 2);
-
-		if (matrix2D != null) {
-			for (int i = 2; --i >= 0;) {
-				for (int j = matrix2D[1 - i].length; --j >= 0;) {
-					for (int k = matrix2D[1 - i][j].length; --k >= 0;) {
-						this.matrix2D[1 - i][j][k] &= matrix2D[1 - i][j][k];
-					}
-				}
-			}
-		}
-
-	}
+//	public void intersect(final Variable[] scope, final boolean supports,
+//			final int[][] tuples) throws MatrixTooBigException {
+//
+//		final Matrix2D matrix2D = this.matrix.clone();
+//
+//		generate(scope, supports, tuples, 2);
+//
+////		if (matrix2D != null) {
+////			for (int i = 2; --i >= 0;) {
+////				for (int j = matrix2D[1 - i].length; --j >= 0;) {
+////					for (int k = matrix2D[1 - i][j].length; --k >= 0;) {
+////						this.matrix2D[1 - i][j][k] &= matrix2D[1 - i][j][k];
+////					}
+////				}
+////			}
+////		}
+//
+//	}
 
 	public boolean hasSupport(final int variablePosition, final int index) {
-		final int[] mask = matrix2D[variablePosition][index];
+		final int[] mask = matrix.getBooleanArray(variablePosition, index);
 		final int[] domain = variables[1 - variablePosition].getBooleanDomain();
 		for (int part = 0; part < mask.length; part++) {
 			checks++;
@@ -102,7 +63,7 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 		this.variablePosition = variablePosition;
 		tuple[variablePosition] = index;
 
-		mask = matrix2D[variablePosition][index];
+		mask = matrix.getBooleanArray(variablePosition, index);
 		currentPart = -1;
 		current = 0;
 		return next();
@@ -157,23 +118,15 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 	public MatrixManager2D clone() throws CloneNotSupportedException {
 		final MatrixManager2D matrix = (MatrixManager2D) super.clone();
 
-		final int maxDomainSize = Math.max(domainSize[0], domainSize[1]);
-
-		if (matrix2D != null) {
-			matrix.matrix2D = new int[2][maxDomainSize][];
-
-			for (int i = 2; --i >= 0;) {
-				for (int j = maxDomainSize; --j >= 0;) {
-					matrix.matrix2D[i][j] = matrix2D[i][j].clone();
-				}
-			}
-		}
-
+		matrix.matrix = this.matrix.clone();
+		
+		matrix.mask = mask.clone();
+		
 		return matrix;
 	}
 
 	public String toString() {
-		return "MatrixManager2D-" + matrix2D;
+		return "MatrixManager2D-" + matrix;
 	}
 
 	protected void updateResidues() {
@@ -184,7 +137,7 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 		final int part = last[position][index][0];
 		presenceChecks++;
 		return part != -1
-				&& (matrix2D[position][index][part] & variables[1 - position]
+				&& (matrix.getBooleanArray(position, index)[part] & variables[1 - position]
 						.getBooleanDomain()[part]) != 0;
 	}
 }

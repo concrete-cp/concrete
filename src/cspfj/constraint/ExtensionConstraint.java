@@ -23,113 +23,95 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import cspfj.exception.FailedGenerationException;
-import cspfj.exception.MatrixTooBigException;
 import cspfj.problem.Variable;
 
 public class ExtensionConstraint extends Constraint {
 
-	private final double tightness;
+//	private final double tightness;
 
 	private AbstractMatrixManager matrix;
 
-	public ExtensionConstraint(final Variable[] scope, final boolean supports,
-			final int[][] tuples, String name) throws FailedGenerationException {
+	public ExtensionConstraint(final Variable[] scope, final Matrix matrix,
+			String name)  {
 		super(scope, name);
 
-		final double tight = (double) tuples.length / getSize();
-
-		if (supports) {
-			tightness = tight;
-		} else {
-			tightness = 1 - tight;
-		}
-
-		matrix = AbstractMatrixManager.factory(scope);
-		matrix.setTuple(tuple);
-		matrix.setLast(last);
-
-		try {
-			matrix.init(true);
-		} catch (MatrixTooBigException e) {
-			throw new FailedGenerationException("Matrix too big");
-		}
-
-		intersect(supports, tuples);
+		this.matrix = AbstractMatrixManager.factory(scope, matrix);
+		this.matrix.setTuple(tuple);
+		this.matrix.setLast(last);
 	}
 
-	public ExtensionConstraint(final Constraint constraint)
-			throws FailedGenerationException {
-		super(constraint.getInvolvedVariables());
-
-		matrix = AbstractMatrixManager.factory(getInvolvedVariables());
-		matrix.setTuple(tuple);
-		matrix.setLast(last);
-		
-		try {
-			matrix.init(true);
-		} catch (MatrixTooBigException e) {
-			throw new FailedGenerationException("Matrix too big");
-		}
-
-		long tuples = getSize();
-
-		for (int p = getArity(); --p >= 0;) {
-			Arrays.fill(nbInitConflicts[p], 0);
-		}
-
-		Arrays.fill(nbMaxConflicts, 0);
-
-		constraint.setFirstTuple();
-
-		do {
-			if (!constraint.check()) {
-				System.arraycopy(constraint.tuple, 0, tuple, 0, getArity());
-				matrix.removeTuple();
-				tuples--;
-				for (int p = getArity(); --p >= 0;) {
-					if (++nbInitConflicts[p][tuple[p]] > nbMaxConflicts[p]) {
-						nbMaxConflicts[p] = nbInitConflicts[p][tuple[p]];
-					}
-				}
-			}
-		} while (constraint.setNextTuple());
-
-		tightness = 1 - (tuples / getSize());
-	}
-
-	public ExtensionConstraint(final Variable[] scope)
-			throws FailedGenerationException {
-		super(scope);
-
-		tightness = 1;
-		for (int p = getArity(); --p >= 0;) {
-			final int domainSize = getInvolvedVariables()[p].getDomain().length;
-
-			for (int i = domainSize; --i >= 0;) {
-				nbInitConflicts[p][i] = 0;
-			}
-			nbMaxConflicts[p] = 0;
-		}
-
-		matrix = AbstractMatrixManager.factory(scope);
-		matrix.setTuple(tuple);
-		matrix.setLast(last);
-		
-		try {
-			matrix.init(true);
-		} catch (MatrixTooBigException e) {
-			throw new FailedGenerationException("Matrix too big");
-		}
-	}
+//	public ExtensionConstraint(final Constraint constraint)
+//			throws FailedGenerationException {
+//		super(constraint.getInvolvedVariables());
+//
+//		matrix = AbstractMatrixManager.factory(getInvolvedVariables());
+//		matrix.setTuple(tuple);
+//		matrix.setLast(last);
+//
+//		try {
+//			matrix.init(true);
+//		} catch (MatrixTooBigException e) {
+//			throw new FailedGenerationException("Matrix too big");
+//		}
+//
+//		long tuples = getSize();
+//
+//		for (int p = getArity(); --p >= 0;) {
+//			Arrays.fill(nbInitConflicts[p], 0);
+//		}
+//
+//		Arrays.fill(nbMaxConflicts, 0);
+//
+//		constraint.setFirstTuple();
+//
+//		do {
+//			if (!constraint.check()) {
+//				System.arraycopy(constraint.tuple, 0, tuple, 0, getArity());
+//				matrix.removeTuple();
+//				tuples--;
+//				for (int p = getArity(); --p >= 0;) {
+//					if (++nbInitConflicts[p][tuple[p]] > nbMaxConflicts[p]) {
+//						nbMaxConflicts[p] = nbInitConflicts[p][tuple[p]];
+//					}
+//				}
+//			}
+//		} while (constraint.setNextTuple());
+//
+//		tightness = 1 - (tuples / getSize());
+//	}
+//
+//	public ExtensionConstraint(final Variable[] scope)
+//			throws FailedGenerationException {
+//		super(scope);
+//
+//		tightness = 1;
+//		for (int p = getArity(); --p >= 0;) {
+//			final int domainSize = getInvolvedVariables()[p].getDomain().length;
+//
+//			for (int i = domainSize; --i >= 0;) {
+//				nbInitConflicts[p][i] = 0;
+//			}
+//			nbMaxConflicts[p] = 0;
+//		}
+//
+//		matrix = AbstractMatrixManager.factory(scope);
+//		matrix.setTuple(tuple);
+//		matrix.setLast(last);
+//
+//		try {
+//			matrix.init(true);
+//		} catch (MatrixTooBigException e) {
+//			throw new FailedGenerationException("Matrix too big");
+//		}
+//	}
 
 	public boolean check() {
 		return matrix.check();
 	}
 
-	public double getTightness() {
-		return tightness;
-	}
+//	public double getTightness() {
+//		return tightness;
+//	}
 
 	public boolean findValidTuple(final int variablePosition, final int index) {
 		assert this.isInvolved(getInvolvedVariables()[variablePosition]);
@@ -175,17 +157,17 @@ public class ExtensionConstraint extends Constraint {
 		return matrix.removeTuple();
 	}
 
-	public final void intersect(final boolean supports, final int[][] tuples)
-			throws FailedGenerationException {
-		try {
-			matrix.intersect(getInvolvedVariables(), supports, tuples);
-		} catch (MatrixTooBigException e) {
-			throw new FailedGenerationException(e.toString());
-		}
-
-		initNbSupports();
-
-	}
+//	public final void intersect(final boolean supports, final int[][] tuples)
+//			throws FailedGenerationException {
+//		try {
+//			matrix.intersect(getInvolvedVariables(), supports, tuples);
+//		} catch (MatrixTooBigException e) {
+//			throw new FailedGenerationException(e.toString());
+//		}
+//
+//		initNbSupports();
+//
+//	}
 
 	public AbstractMatrixManager getMatrix() {
 		return matrix;

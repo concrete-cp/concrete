@@ -37,7 +37,6 @@ import cspfj.constraint.Weight;
 import cspfj.exception.FailedGenerationException;
 import cspfj.heuristic.Supports;
 import cspfj.heuristic.ValueHeuristic;
-import cspfj.util.CpuMonitor;
 
 public final class Problem implements Cloneable {
 	private Map<Integer, Variable> variables;
@@ -68,12 +67,13 @@ public final class Problem implements Cloneable {
 
 	public Problem() {
 		super();
-		this.useNoGoods = true;
+		this.useNoGoods = false;//true;
 	}
 
 	public Problem(Collection<Variable> variables,
 			Collection<Constraint> constraints, String name) {
 		this();
+		this.name = name;
 		setVariables(variables);
 		setConstraints(constraints);
 		updateInvolvingConstraints();
@@ -81,11 +81,6 @@ public final class Problem implements Cloneable {
 
 	public static Problem load(final ProblemGenerator generator)
 			throws FailedGenerationException {
-		return load(generator, -1);
-	}
-
-	public static Problem load(final ProblemGenerator generator,
-			final int seconds) throws FailedGenerationException {
 		final Problem problem = new Problem();
 		Variable.resetVId();
 		Constraint.resetCId();
@@ -96,12 +91,16 @@ public final class Problem implements Cloneable {
 		logger.info("Setting Variables");
 		problem.setVariables(generator.getVariables());
 
-		logger.info("Converting to extension");
-		final Collection<Constraint> constraints = convertExtension(generator
-				.getConstraints(), seconds);
+		// logger.info("Converting to extension");
+		// final Collection<Constraint> constraints = convertExtension(generator
+		// .getConstraints(), seconds);
 
+		for (Constraint c: generator.getConstraints()) {
+			c.initNbSupports();
+		}
+		
 		logger.info("Setting Constraints");
-		problem.setConstraints(constraints);
+		problem.setConstraints(generator.getConstraints());
 
 		logger.info("Updating InvolvingConstraints");
 		problem.updateInvolvingConstraints();
@@ -322,7 +321,7 @@ public final class Problem implements Cloneable {
 			return 0;
 		}
 
-		final float startNoGood = CpuMonitor.getCpuTime();
+//		final float startNoGood = CpuMonitor.getCpuTime();
 
 		int nbNoGoods = 0;
 
@@ -563,42 +562,43 @@ public final class Problem implements Cloneable {
 		return problem;
 	}
 
-	public static Collection<Constraint> convertExtension(
-			final Collection<Constraint> constraints, final int seconds)
-			throws FailedGenerationException {
-		// for (Constraint c : constraints) {
-		// c.initNbSupports();
-		// }
-		// return constraints;
-
-		final float start = -CpuMonitor.getCpuTime();
-
-		final Collection<Constraint> extConstraints = new ArrayList<Constraint>();
-
-		boolean outOfMemory = false;
-		int done = 0;
-		for (Constraint c : constraints) {
-			if (c instanceof ExtensionConstraint) {
-				extConstraints.add(c);
-			} else if ((seconds >= 0 && CpuMonitor.getCpuTime() + start > seconds)
-					|| outOfMemory) {
-				c.initNbSupports();
-				extConstraints.add(c);
-			} else {
-				try {
-					extConstraints.add(new ExtensionConstraint(c));
-					logger.finer("Converted " + c + ", "
-							+ (constraints.size() - ++done) + " remaining");
-				} catch (OutOfMemoryError e) {
-					outOfMemory = true;
-					logger.info("Could not convert " + c + " to extension");
-					c.initNbSupports();
-					extConstraints.add(c);
-				}
-			}
-
-		}
-
-		return extConstraints;
-	}
+	// public static Collection<Constraint> convertExtension(
+	// final Collection<Constraint> constraints, final int seconds)
+	// throws FailedGenerationException {
+	// // for (Constraint c : constraints) {
+	// // c.initNbSupports();
+	// // }
+	// // return constraints;
+	//
+	// final float start = -CpuMonitor.getCpuTime();
+	//
+	// final Collection<Constraint> extConstraints = new
+	// ArrayList<Constraint>();
+	//
+	// boolean outOfMemory = false;
+	// int done = 0;
+	// for (Constraint c : constraints) {
+	// if (c instanceof ExtensionConstraint) {
+	// extConstraints.add(c);
+	// } else if ((seconds >= 0 && CpuMonitor.getCpuTime() + start > seconds)
+	// || outOfMemory) {
+	// c.initNbSupports();
+	// extConstraints.add(c);
+	// } else {
+	// try {
+	// extConstraints.add(new ExtensionConstraint(c));
+	// logger.finer("Converted " + c + ", "
+	// + (constraints.size() - ++done) + " remaining");
+	// } catch (OutOfMemoryError e) {
+	// outOfMemory = true;
+	// logger.info("Could not convert " + c + " to extension");
+	// c.initNbSupports();
+	// extConstraints.add(c);
+	// }
+	// }
+	//
+	// }
+	//
+	// return extConstraints;
+	// }
 }
