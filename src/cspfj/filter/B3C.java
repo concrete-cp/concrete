@@ -80,7 +80,7 @@ public final class B3C extends AbstractSAC {
 	}
 
 	public String toString() {
-		return "3B";
+		return "3B w/ " + filter;
 	}
 
 	public Map<String, Object> getStatistics() {
@@ -91,5 +91,11 @@ public final class B3C extends AbstractSAC {
 					.put("3B-backend-" + key, filter.getStatistics().get(key));
 		}
 		return statistics;
+	}
+
+	@Override
+	public void setParameter(int parameter) {
+		// TODO Auto-generated method stub
+		
 	}
 }

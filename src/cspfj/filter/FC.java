@@ -89,4 +89,10 @@ public final class FC implements Filter {
 		return statistics;
 	}
 
+	@Override
+	public void setParameter(int parameter) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

@@ -341,4 +341,10 @@ public final class SAC extends AbstractSAC {
 	protected boolean singletonTest(Variable variable, int level) {
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public void setParameter(int parameter) {
+		// TODO Auto-generated method stub
+		
+	}
 }

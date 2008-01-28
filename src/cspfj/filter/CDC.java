@@ -87,6 +87,12 @@ public final class CDC extends AbstractSAC {
 	}
 
 	public String toString() {
-		return "CDC";
+		return "CDC w/ " + filter;
+	}
+
+	@Override
+	public void setParameter(int parameter) {
+		// TODO Auto-generated method stub
+		
 	}
 }

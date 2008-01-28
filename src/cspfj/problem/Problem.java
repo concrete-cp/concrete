@@ -37,6 +37,7 @@ import cspfj.constraint.Weight;
 import cspfj.exception.FailedGenerationException;
 import cspfj.heuristic.Supports;
 import cspfj.heuristic.ValueHeuristic;
+import cspfj.util.CpuMonitor;
 
 public final class Problem implements Cloneable {
 	private Map<Integer, Variable> variables;
@@ -67,7 +68,7 @@ public final class Problem implements Cloneable {
 
 	public Problem() {
 		super();
-		this.useNoGoods = false;//true;
+		this.useNoGoods = true;// true;
 	}
 
 	public Problem(Collection<Variable> variables,
@@ -79,8 +80,8 @@ public final class Problem implements Cloneable {
 		updateInvolvingConstraints();
 	}
 
-	public static Problem load(final ProblemGenerator generator)
-			throws FailedGenerationException {
+	public static Problem load(final ProblemGenerator generator,
+			final int expCountSupports) throws FailedGenerationException {
 		final Problem problem = new Problem();
 		Variable.resetVId();
 		Constraint.resetCId();
@@ -94,11 +95,13 @@ public final class Problem implements Cloneable {
 		// logger.info("Converting to extension");
 		// final Collection<Constraint> constraints = convertExtension(generator
 		// .getConstraints(), seconds);
+		logger.info("Counting supports");
+		final float start = CpuMonitor.getCpuTime();
+		for (Constraint c : generator.getConstraints()) {
+			c.initNbSupports(start + expCountSupports);
 
-		for (Constraint c: generator.getConstraints()) {
-			c.initNbSupports();
 		}
-		
+
 		logger.info("Setting Constraints");
 		problem.setConstraints(generator.getConstraints());
 
@@ -155,6 +158,19 @@ public final class Problem implements Cloneable {
 		maxCId = 0;
 
 		for (Constraint c : cons) {
+//			if (c.getArity() == 1) {
+//				final Variable variable = c.getInvolvedVariables()[0];
+//				final int[] tuple = c.getTuple();
+//				for (int i = variable.getFirst(); i >= 0; i = variable
+//						.getNext(i)) {
+//					tuple[0] = i;
+//					if (!c.check()) {
+//						variable.remove(i, 0);
+//					}
+//
+//				}
+//				continue ;
+//			}
 			this.constraints.put(c.getId(), c);
 			if (c.getArity() > maxArity) {
 				maxArity = c.getArity();
@@ -321,7 +337,7 @@ public final class Problem implements Cloneable {
 			return 0;
 		}
 
-//		final float startNoGood = CpuMonitor.getCpuTime();
+		// final float startNoGood = CpuMonitor.getCpuTime();
 
 		int nbNoGoods = 0;
 
@@ -526,7 +542,7 @@ public final class Problem implements Cloneable {
 		//
 		// return (int) (localBT * (100F * getNbVariables()) /
 		// (getNbConstraints() * meanDomainSize));
-		return Math.max(10, getNbVariables() / 10);
+		return Math.max(10, maxDomainSize / 10);
 	}
 
 	public Problem clone() throws CloneNotSupportedException {

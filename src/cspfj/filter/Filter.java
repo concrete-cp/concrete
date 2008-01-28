@@ -38,5 +38,7 @@ public interface Filter {
     boolean reduceAfter(int level, Variable variable) ;
     
     Map<String, Object> getStatistics();
+    
+    void setParameter(int parameter);
 
 }

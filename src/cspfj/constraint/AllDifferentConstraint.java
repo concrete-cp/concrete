@@ -33,8 +33,8 @@ public final class AllDifferentConstraint extends Constraint {
 //	private final static Logger logger = Logger
 //			.getLogger("cspfj.constraint.AllDifferentConstraint");
 
-	public AllDifferentConstraint(final Variable[] scope) {
-		super(scope, false);
+	public AllDifferentConstraint(final Variable[] scope, final String name) {
+		super(scope, false, name);
 
 		int minVal = Integer.MAX_VALUE;
 		int maxVal = Integer.MIN_VALUE;

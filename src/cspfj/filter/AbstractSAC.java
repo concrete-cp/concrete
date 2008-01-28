@@ -139,7 +139,7 @@ public abstract class AbstractSAC implements BackedFilter {
 		if (i < length - 1) {
 			return i + 1;
 		}
-		logger.info("Tour !");
+		logger.fine("Tour !");
 		return 0;
 	}
 

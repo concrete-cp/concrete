@@ -245,7 +245,7 @@ public final class Variable implements Cloneable {
 		assert !reinitBooleanDomain();
 		problem.decreaseFutureVariables();
 
-		assert checkIndexValidity(index);
+		assert checkIndexValidity(index):"Tried to assign an invalid index";
 
 	}
 
@@ -336,10 +336,14 @@ public final class Variable implements Cloneable {
 		return id;
 	}
 
-	public int getNbSupports(final int index) {
-		int nbSupports = 0;
+	public long getNbSupports(final int index) {
+		long nbSupports = 0;
 		for (Constraint c : constraints) {
-			nbSupports += c.getNbSupports(this, index);
+			final long nbSup = c.getNbSupports(this, index);
+			if (nbSup <= 0) {
+				return -1;
+			}
+			nbSupports += nbSup;
 		}
 		return nbSupports;
 	}

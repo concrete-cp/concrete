@@ -37,9 +37,10 @@ public final class BC implements Filter {
 	private final boolean[] inQueue;
 
 	private int queueSize = 0;
-	
-	private int effectiveRevisions = 0 ;
-	private int uselessRevisions = 0 ;
+
+	private int effectiveRevisions = 0;
+
+	private int uselessRevisions = 0;
 
 	public BC(final Problem problem) {
 		super();
@@ -150,7 +151,9 @@ public final class BC implements Filter {
 	public boolean check(final Constraint constraint, final Variable variable,
 			final int position, final int index, final int othersSize,
 			final int level) {
-		if (othersSize > constraint.getNbInitConflicts(position, index)) {
+		final long initConflicts = constraint.getNbInitConflicts(position,
+				index);
+		if (initConflicts >= 0 && othersSize > initConflicts) {
 			return false;
 		}
 		if (!constraint.findValidTuple(position, index)) {
@@ -178,7 +181,8 @@ public final class BC implements Filter {
 
 		final int othersSize = constraint.getOtherSize(position);
 
-		if (othersSize > constraint.getNbMaxConflicts(position)) {
+		final long maxConflicts = constraint.getNbMaxConflicts(position);
+		if (maxConflicts >= 0 && othersSize > maxConflicts) {
 			return false;
 		}
 
@@ -212,11 +216,17 @@ public final class BC implements Filter {
 
 		return revised;
 	}
-	
+
 	public Map<String, Object> getStatistics() {
 		final Map<String, Object> statistics = new HashMap<String, Object>();
 		statistics.put("2b-effective-revisions", effectiveRevisions);
 		statistics.put("2b-useless-revisions", uselessRevisions);
 		return statistics;
+	}
+
+	@Override
+	public void setParameter(int parameter) {
+		// TODO Auto-generated method stub
+		
 	}
 }

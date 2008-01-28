@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.logging.Logger;
 
 import cspfj.problem.Variable;
+import cspfj.util.CpuMonitor;
 
 public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	private Variable[] involvedVariables;
@@ -48,8 +49,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 	protected static long nbPresenceChecks = 0;
 
-
-
 	protected static final Logger logger = Logger
 			.getLogger("cspfj.constraints.Constraint");
 
@@ -69,6 +68,8 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 	private final String name;
 
+	private boolean conflictCounts = false;
+	
 	protected Constraint(final Variable[] scope) {
 		this(scope, true, null);
 	}
@@ -83,7 +84,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 	protected Constraint(final Variable[] scope, final boolean tupleCache,
 			final String name) {
-		involvedVariables = scope;
+		involvedVariables = scope.clone();
 		arity = involvedVariables.length;
 
 		tuple = new int[arity];
@@ -131,19 +132,20 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		tupleCache = false;
 		last = null;
 	}
-	
+
 	public boolean isCachingTuples() {
 		return tupleCache;
 	}
-	
-	public void initNbSupports() {
+
+	public void initNbSupports(final float time) {
 		// logger.info("Counting " + this +" supports");
+
 		final long size = size();
 		for (int p = arity; --p >= 0;) {
 			initSize[p] = size / involvedVariables[p].getDomainSize();
 		}
 
-//		logger.fine("Counting supports");
+		// logger.fine("Counting supports");
 
 		tupleManager.setFirstTuple();
 
@@ -160,7 +162,11 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 					}
 				}
 			}
+			if (CpuMonitor.getCpuTime() > time) {
+				return;
+			}
 		} while (tupleManager.setNextTuple());
+		conflictCounts = true;
 
 	}
 
@@ -235,6 +241,10 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		return size;
 	}
 
+	public boolean skipRevision(final int position) {
+		return conflictCounts && getOtherSize(position) > nbMaxConflicts[position];
+	}
+	
 	public boolean revise(final int position, final int level) {
 		final Variable variable = involvedVariables[position];
 
@@ -246,19 +256,15 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		// + Arrays.toString(variable.getCurrentDomain()) + " against "
 		// + this);
 
-		final int othersSize = getOtherSize(position);
-
-		if (othersSize > nbMaxConflicts[position]) {
-			return false;
-		}
+		
 
 		for (int index = variable.getFirst(); index >= 0; index = variable
 				.getNext(index)) {
 
 			// logger.finer("Checking (" + variable + ", " + index + ")");
-			if (othersSize > nbInitConflicts[position][index]) {
-				continue;
-			}
+//			if (conflictCounts && othersSize > nbInitConflicts[position][index]) {
+//				continue;
+//			}
 			if (!findValidTuple(position, index)) {
 				// logger.finer("removing " + index + " from " + variable);
 
@@ -329,15 +335,24 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	}
 
 	public final long getNbSupports(final int position, final int index) {
+		if (!conflictCounts) {
+			return -1;
+		}
 		return (size / involvedVariables[position].getDomain().length)
 				- nbInitConflicts[position][index];
 	}
 
 	public final long getNbInitConflicts(final int position, final int index) {
+		if (!conflictCounts) {
+			return -1;
+		}
 		return nbInitConflicts[position][index];
 	}
 
 	public final long getNbMaxConflicts(final int position) {
+		if (!conflictCounts) {
+			return -1;
+		}
 		return nbMaxConflicts[position];
 	}
 
@@ -427,7 +442,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	public static final long getPresenceChecks() {
 		return nbPresenceChecks;
 	}
-
 
 	public static final void clearStats() {
 		checks = nbPresenceChecks = 0;
@@ -559,7 +573,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 			}
 		}
 	}
-	
+
 	public String getName() {
 		return name;
 	}

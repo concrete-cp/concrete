@@ -2,8 +2,6 @@ package cspfj.heuristic;
 
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
-import cspfj.constraint.Constraint;
-import cspfj.constraint.AbstractMatrixManager;
 
 public class JW extends AbstractStaticValueHeuristic {
 

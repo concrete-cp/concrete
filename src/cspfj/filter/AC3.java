@@ -76,7 +76,8 @@ public final class AC3 implements Filter {
 
 	private boolean skipRevision(final Constraint constraint,
 			final int variablePosition) {
-		if (!removals[constraint.getId()][variablePosition]) {
+		if (!removals[constraint.getId()][variablePosition]
+				|| constraint.getArity() == 1) {
 			return false;
 		}
 
@@ -99,16 +100,19 @@ public final class AC3 implements Filter {
 			for (int c = constraints.length; --c >= 0;) {
 
 				final Constraint constraint = constraints[c];
-
-				if (!removals[constraint.getId()][variable
-						.getPositionInConstraint(c)]) {
+				final int position = variable.getPositionInConstraint(c);
+				if (!removals[constraint.getId()][position]) {
 					continue;
 				}
 
 				for (int i = constraint.getArity(); --i >= 0;) {
+					// if (i == position) {
+					// continue;
+					// }
 					final Variable y = constraint.getInvolvedVariables()[i];
 
-					if (!y.isAssigned() && !skipRevision(constraint, i)) {
+					if (!y.isAssigned() && !skipRevision(constraint, i)
+							&& !constraint.skipRevision(i)) {
 						if (constraint.revise(i, level)) {
 
 							effectiveRevisions++;
@@ -196,5 +200,11 @@ public final class AC3 implements Filter {
 		statistics.put("gac3-effective-revisions", effectiveRevisions);
 		statistics.put("gac3-useless-revisions", uselessRevisions);
 		return statistics;
+	}
+
+	@Override
+	public void setParameter(int parameter) {
+		// TODO Auto-generated method stub
+		
 	}
 }

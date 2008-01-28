@@ -5,11 +5,11 @@ import java.util.Arrays;
 
 import cspfj.exception.MatrixTooBigException;
 
-public class MatrixGeneral implements Matrix {
+public class MatrixGeneral implements Matrix, Cloneable {
 
-	public final int[] sizes;
+	public int[] skip;
 
-	public final boolean[] matrix;
+	public boolean[] matrix;
 
 	public MatrixGeneral(int[] sizes, boolean initialState)
 			throws MatrixTooBigException {
@@ -20,9 +20,17 @@ public class MatrixGeneral implements Matrix {
 				throw new MatrixTooBigException();
 			}
 		}
-		this.sizes = sizes;
+
 		matrix = new boolean[nbValues.intValue()];
 		Arrays.fill(matrix, initialState);
+
+		skip = new int[sizes.length];
+		skip[0] = 1;
+		for (int i = 1; i < sizes.length; i++) {
+			skip[i] = skip[i - 1] * sizes[i - 1];
+		}
+
+		// System.out.println(Arrays.toString(skip));
 	}
 
 	@Override
@@ -36,16 +44,20 @@ public class MatrixGeneral implements Matrix {
 	}
 
 	private int matrixIndex(final int[] tuple) {
-		final int[] domainSize = this.sizes;
+		final int[] skip = this.skip;
 		int index = 0;
-		for (int i = domainSize.length; --i >= 0;) {
-			int skip = 1;
-			for (int j = i; --j >= 0;) {
-				skip *= domainSize[j];
-			}
-			index += skip * tuple[i];
+		for (int i = skip.length; --i >= 0;) {
+			index += skip[i] * tuple[i];
 		}
 		return index;
+	}
+
+	public MatrixGeneral clone() throws CloneNotSupportedException {
+		final MatrixGeneral matrix = (MatrixGeneral) super.clone();
+		matrix.skip = skip.clone();
+		matrix.matrix = this.matrix.clone();
+		return matrix;
+
 	}
 
 }

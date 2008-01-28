@@ -2,15 +2,10 @@ package cspfj.constraint;
 
 import cspfj.util.BooleanArray;
 
-public class Matrix2D implements Matrix {
-	private final int[][][] matrix;
-
-	private final int x, y;
+public class Matrix2D implements Matrix, Cloneable {
+	private int[][][] matrix;
 
 	public Matrix2D(int x, int y, boolean initialState) {
-		this.x = x;
-		this.y = y;
-
 		matrix = new int[2][][];
 
 		final int[] xArray = new int[BooleanArray.booleanArraySize(x)];
@@ -31,8 +26,6 @@ public class Matrix2D implements Matrix {
 
 	}
 
-	
-	
 	@Override
 	public boolean check(final int[] tuple) {
 		return BooleanArray.isTrue(matrix[0][tuple[0]], tuple[1]);
@@ -48,22 +41,27 @@ public class Matrix2D implements Matrix {
 		return matrix[position][index];
 	}
 
-	public Matrix2D clone() {
-		try {
-			return (Matrix2D) super.clone();
-		} catch (CloneNotSupportedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	public Matrix2D clone() throws CloneNotSupportedException {
+		final Matrix2D matrix2d = (Matrix2D) super.clone();
+
+		matrix2d.matrix = new int[2][][];
+		for (int i = 2; --i >= 0;) {
+			matrix2d.matrix[i] = new int[matrix[i].length][];
+			for (int j = matrix2d.matrix[i].length; --j >= 0;) {
+				matrix2d.matrix[i][j] = matrix[i][j].clone();
+			}
 		}
-		return null;
+
+		return matrix2d;
+
 	}
 
 	public String toString() {
 		final StringBuilder stb = new StringBuilder();
 		final int[] tuple = new int[2];
-		for (int i = 0; i < x; i++) {
+		for (int i = 0; i < matrix[0].length; i++) {
 			tuple[0] = i;
-			for (int j = 0; j < y; j++) {
+			for (int j = 0; j < matrix[1].length; j++) {
 				tuple[1] = j;
 				stb.append(check(tuple) ? 1 : 0);
 			}

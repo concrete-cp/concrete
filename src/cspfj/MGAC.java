@@ -70,12 +70,6 @@ public final class MGAC extends AbstractSolver {
 
 	public boolean mac(final int level, final Variable modifiedVariable)
 			throws MaxBacktracksExceededException, IOException {
-		return mac(level, modifiedVariable, true);
-	}
-
-	public boolean mac(final int level, final Variable modifiedVariable,
-			final boolean positive) throws MaxBacktracksExceededException,
-			IOException {
 		final Problem problem = this.problem;
 
 		if (problem.getNbFutureVariables() == 0) {
@@ -117,7 +111,7 @@ public final class MGAC extends AbstractSolver {
 
 		incrementNbAssignments();
 
-		if (mac(level + 1, domainSizeBefore > 1 ? selectedVariable : null, true)) {
+		if (mac(level + 1, domainSizeBefore > 1 ? selectedVariable : null)) {
 			addSolutionElement(selectedVariable, selectedIndex);
 			return true;
 		}
@@ -134,7 +128,7 @@ public final class MGAC extends AbstractSolver {
 
 		checkBacktracks();
 
-		return mac(level, selectedVariable, false);
+		return mac(level, selectedVariable);
 
 	}
 

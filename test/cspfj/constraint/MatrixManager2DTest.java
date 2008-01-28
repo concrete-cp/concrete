@@ -3,7 +3,6 @@ package cspfj.constraint;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 
@@ -20,13 +19,18 @@ public class MatrixManager2DTest {
 
 	@Before
 	public void setUp() throws Exception {
-		final int[] dom = new int[] { 1, 2, 3 };
-		final Variable v1 = new Variable(dom, "v1");
-		final Variable v2 = new Variable(dom, "v2");
+		final int[] dom1 = new int[] { 1, 2, 3 };
+		final Variable var1 = new Variable(dom1, "v1");
+		final int[] dom2 = new int[] { 1, 2, 3, 4 };
+		final Variable var2 = new Variable(dom2, "v2");
 		tuple = new int[2];
-		matrix = new MatrixManager2D(new Variable[] { v1, v2 }, tuple, null);
-		matrix.generate(new Variable[] { v1, v2 }, true, new int[][] {
-				{ 1, 1 }, { 1, 3 } }, 2);
+
+		final Matrix2D matrix2d = new Matrix2D(3, 4, false);
+		matrix2d.set(new int[] { 0, 0 }, true);
+		matrix2d.set(new int[] { 0, 2 }, true);
+
+		matrix = new MatrixManager2D(new Variable[] { var1, var2 }, matrix2d);
+		matrix.setTuple(tuple);
 	}
 
 	@Test
@@ -37,6 +41,7 @@ public class MatrixManager2DTest {
 		assertTrue("(1,0)", matrix.hasSupport(1, 0));
 		assertFalse("(1,1)", matrix.hasSupport(1, 1));
 		assertTrue("(1,2)", matrix.hasSupport(1, 2));
+		assertFalse("(1,3)", matrix.hasSupport(1, 3));
 	}
 
 	@Test
@@ -46,24 +51,22 @@ public class MatrixManager2DTest {
 		assertSame("First tuple of (0,0)", tuple[1], 0);
 
 		assertFalse("(0,1)", matrix.setFirstTuple(0, 1));
-		
+
 		tuple[0] = -1;
 		assertTrue("(1,2)", matrix.setFirstTuple(1, 2));
 		assertSame("First tuple of (1,2)", tuple[0], 0);
-		
-		
 
 	}
 
 	@Test
 	public void testNext() {
-		tuple[1]= -1;
+		tuple[1] = -1;
 		assertTrue("(0,0)", matrix.setFirstTuple(0, 0));
 		assertSame("First support of (0,0)", tuple[1], 0);
-		
+
 		assertTrue("next", matrix.next());
 		assertSame("Second support of (0,0)", tuple[1], 2);
-		
+
 		assertFalse("end", matrix.next());
 	}
 

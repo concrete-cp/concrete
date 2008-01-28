@@ -24,24 +24,24 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 		this.matrix = matrix;
 	}
 
-//	public void intersect(final Variable[] scope, final boolean supports,
-//			final int[][] tuples) throws MatrixTooBigException {
-//
-//		final Matrix2D matrix2D = this.matrix.clone();
-//
-//		generate(scope, supports, tuples, 2);
-//
-////		if (matrix2D != null) {
-////			for (int i = 2; --i >= 0;) {
-////				for (int j = matrix2D[1 - i].length; --j >= 0;) {
-////					for (int k = matrix2D[1 - i][j].length; --k >= 0;) {
-////						this.matrix2D[1 - i][j][k] &= matrix2D[1 - i][j][k];
-////					}
-////				}
-////			}
-////		}
-//
-//	}
+	// public void intersect(final Variable[] scope, final boolean supports,
+	// final int[][] tuples) throws MatrixTooBigException {
+	//
+	// final Matrix2D matrix2D = this.matrix.clone();
+	//
+	// generate(scope, supports, tuples, 2);
+	//
+	// // if (matrix2D != null) {
+	// // for (int i = 2; --i >= 0;) {
+	// // for (int j = matrix2D[1 - i].length; --j >= 0;) {
+	// // for (int k = matrix2D[1 - i][j].length; --k >= 0;) {
+	// // this.matrix2D[1 - i][j][k] &= matrix2D[1 - i][j][k];
+	// // }
+	// // }
+	// // }
+	// // }
+	//
+	// }
 
 	public boolean hasSupport(final int variablePosition, final int index) {
 		final int[] mask = matrix.getBooleanArray(variablePosition, index);
@@ -119,9 +119,9 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 		final MatrixManager2D matrix = (MatrixManager2D) super.clone();
 
 		matrix.matrix = this.matrix.clone();
-		
+
 		matrix.mask = mask.clone();
-		
+
 		return matrix;
 	}
 
@@ -139,5 +139,9 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 		return part != -1
 				&& (matrix.getBooleanArray(position, index)[part] & variables[1 - position]
 						.getBooleanDomain()[part]) != 0;
+	}
+
+	protected Matrix unshareMatrix() {
+		return matrix = (Matrix2D) super.unshareMatrix();
 	}
 }
