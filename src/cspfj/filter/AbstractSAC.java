@@ -142,5 +142,11 @@ public abstract class AbstractSAC implements BackedFilter {
 		logger.fine("Tour !");
 		return 0;
 	}
+	
+	@Override
+	public boolean ensureAC() {
+		return filter.ensureAC();
+	}
+
 
 }

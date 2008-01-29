@@ -41,4 +41,5 @@ public interface Filter {
     
     void setParameter(int parameter);
 
+    boolean ensureAC();
 }

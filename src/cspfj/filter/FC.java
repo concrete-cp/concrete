@@ -95,4 +95,9 @@ public final class FC implements Filter {
 		
 	}
 
+	@Override
+	public boolean ensureAC() {
+		return false;
+	}
+
 }

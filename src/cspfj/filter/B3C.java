@@ -95,7 +95,8 @@ public final class B3C extends AbstractSAC {
 
 	@Override
 	public void setParameter(int parameter) {
-		// TODO Auto-generated method stub
+		// No parameter
 		
 	}
+
 }

@@ -31,29 +31,24 @@ import cspfj.problem.Variable;
  * @author scand1sk
  * 
  */
-public final class AC3 implements Filter {
+public final class BCPart implements Filter {
 	private final Problem problem;
 
 	private final boolean[] inQueue;
 
 	private int queueSize = 0;
 
-	private boolean removals[][];
+	private int effectiveRevisions = 0;
 
-	public int effectiveRevisions = 0;
+	private int uselessRevisions = 0;
 
-	public int uselessRevisions = 0;
+	private int parts = 10;
 
-	public AC3(final Problem problem) {
+	public BCPart(final Problem problem) {
 		super();
 		this.problem = problem;
 
 		inQueue = new boolean[problem.getMaxVId() + 1];
-
-		removals = new boolean[problem.getMaxCId() + 1][];
-		for (Constraint c : problem.getConstraints()) {
-			removals[c.getId()] = new boolean[c.getArity()];
-		}
 	}
 
 	public boolean reduceAll(final int level) {
@@ -74,23 +69,6 @@ public final class AC3 implements Filter {
 		return reduce(level);
 	}
 
-	private boolean skipRevision(final Constraint constraint,
-			final int variablePosition) {
-		if (!removals[constraint.getId()][variablePosition]
-				|| constraint.getArity() == 1) {
-			return false;
-		}
-
-		for (int y = constraint.getArity(); --y >= 0;) {
-			if (y != variablePosition && removals[constraint.getId()][y]) {
-				return false;
-			}
-
-		}
-
-		return true;
-	}
-
 	private boolean reduce(final int level) {
 		while (queueSize > 0) {
 			final Variable variable = pullVariable();
@@ -100,44 +78,25 @@ public final class AC3 implements Filter {
 			for (int c = constraints.length; --c >= 0;) {
 
 				final Constraint constraint = constraints[c];
-				final int position = variable.getPositionInConstraint(c);
-				if (!removals[constraint.getId()][position]) {
-					continue;
-				}
 
 				for (int i = constraint.getArity(); --i >= 0;) {
-					// if (i == position) {
-					// continue;
-					// }
 					final Variable y = constraint.getInvolvedVariables()[i];
 
-					if (!y.isAssigned() && !skipRevision(constraint, i)
-							&& !constraint.skipRevision(i)) {
-						if (constraint.revise(i, level)) {
+					final int limit = (int) Math.ceil((double) y
+							.getDomainSize()
+							/ parts);
 
-							effectiveRevisions++;
-							if (y.getDomainSize() <= 0) {
-								constraint.increaseWeight();
-								return false;
-							}
-
-							addInQueue(y.getId());
-
-							for (int cp = y.getInvolvingConstraints().length; --cp >= 0;) {
-								final Constraint constraintP = y
-										.getInvolvingConstraints()[cp];
-								if (constraintP != constraint) {
-									removals[constraintP.getId()][y
-											.getPositionInConstraint(cp)] = true;
-								}
-							}
-						} else {
-							uselessRevisions++;
+					if (!y.isAssigned()
+							&& revise(constraint, i, level) >= limit) {
+						if (y.getDomainSize() <= 0) {
+							constraint.increaseWeight();
+							return false;
 						}
+
+						addInQueue(y.getId());
 					}
 				}
 
-				Arrays.fill(removals[constraint.getId()], false);
 			}
 
 		}
@@ -149,9 +108,6 @@ public final class AC3 implements Filter {
 	private void clearQueue() {
 		Arrays.fill(inQueue, false);
 		queueSize = 0;
-		for (Constraint c : problem.getConstraints()) {
-			Arrays.fill(removals[c.getId()], true);
-		}
 	}
 
 	private void addAll() {
@@ -191,25 +147,97 @@ public final class AC3 implements Filter {
 		}
 	}
 
+	public int getNbNoGoods() {
+		return 0;
+	}
+
 	public String toString() {
-		return "GAC3rm";
+		return "2Brm";
+	}
+
+	public boolean check(final Constraint constraint, final Variable variable,
+			final int position, final int index, final int othersSize,
+			final int level) {
+		final long initConflicts = constraint.getNbInitConflicts(position,
+				index);
+		if (initConflicts >= 0 && othersSize > initConflicts) {
+			return false;
+		}
+		if (!constraint.findValidTuple(position, index)) {
+			// logger.finer("removing " + index + " from " + variable);
+
+			variable.remove(index, level);
+			constraint.setActive(true);
+			return true;
+
+		}
+		return false;
+	}
+
+	public int revise(final Constraint constraint, final int position,
+			final int level) {
+		final Variable variable = constraint.getInvolvedVariables()[position];
+
+		assert !variable.isAssigned();
+
+		// logger.finer("Revising " + variable + " "
+		// + Arrays.toString(variable.getCurrentDomain()) + " against "
+		// + this);
+
+		final int othersSize = constraint.getOtherSize(position);
+
+		final long maxConflicts = constraint.getNbMaxConflicts(position);
+		if (maxConflicts >= 0 && othersSize > maxConflicts) {
+			return 0;
+		}
+		int removed = 0;
+
+		for (int index = variable.getFirst(); index >= 0; index = variable
+				.getNext(index)) {
+
+			// logger.finer("Checking (" + variable + ", " + index + ")");
+			if (!check(constraint, variable, position, index, othersSize, level)) {
+				break;
+			} else {
+				removed++;
+			}
+
+		}
+
+		for (int index = variable.getLast(); index >= 0; index = variable
+				.getPrev(index)) {
+			if (!check(constraint, variable, position, index, othersSize, level)) {
+				break;
+			} else {
+				removed++;
+			}
+
+		}
+
+		if (removed > 0) {
+			effectiveRevisions++;
+		} else {
+			uselessRevisions++;
+		}
+
+		return removed;
 	}
 
 	public Map<String, Object> getStatistics() {
 		final Map<String, Object> statistics = new HashMap<String, Object>();
-		statistics.put("gac3-effective-revisions", effectiveRevisions);
-		statistics.put("gac3-useless-revisions", uselessRevisions);
+		statistics.put("2b-effective-revisions", effectiveRevisions);
+		statistics.put("2b-useless-revisions", uselessRevisions);
 		return statistics;
 	}
 
 	@Override
-	public void setParameter(final int parameter) {
-		// No parameter
-		
+	public void setParameter(int parameter) {
+		// TODO Auto-generated method stub
+
 	}
 
 	@Override
 	public boolean ensureAC() {
-		return true;
+		return false;
 	}
 }

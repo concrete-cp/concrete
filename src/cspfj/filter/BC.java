@@ -229,4 +229,9 @@ public final class BC implements Filter {
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	public boolean ensureAC() {
+		return true;
+	}
 }

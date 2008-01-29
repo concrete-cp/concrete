@@ -105,7 +105,16 @@ public final class MGAC extends AbstractSolver {
 					+ getNbBacktracks() + "/" + getMaxBacktracks() + ")");
 		}
 
-		selectedVariable.assign(selectedIndex, problem);
+		if (filter.ensureAC()) {
+			selectedVariable.assign(selectedIndex, problem);
+		} else if (!selectedVariable.assignNotAC(selectedIndex, problem)) {
+			selectedVariable.unassign(problem);
+			selectedVariable.remove(selectedIndex, level);
+
+			checkBacktracks();
+
+			return mac(level, selectedVariable);
+		}
 
 		problem.setLevelVariables(level, selectedVariable);
 

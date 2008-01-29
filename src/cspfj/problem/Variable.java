@@ -229,11 +229,7 @@ public final class Variable implements Cloneable {
 		return assigned ? assignedIndex == index : removed[index] < 0;
 	}
 
-	/**
-	 * @param index
-	 *            La valeur à assigner
-	 */
-	public void assign(final int index, final Problem problem) {
+	private void assgn(final int index, final Problem problem) {
 		assert !assigned;
 		assert isPresent(index);
 
@@ -244,9 +240,21 @@ public final class Variable implements Cloneable {
 		BooleanArray.setSingle(booleanDomain, index);
 		assert !reinitBooleanDomain();
 		problem.decreaseFutureVariables();
+	}
 
-		assert checkIndexValidity(index):"Tried to assign an invalid index";
+	/**
+	 * @param index
+	 *            La valeur à assigner
+	 */
+	public void assign(final int index, final Problem problem) {
+		assgn(index, problem);
+		assert checkIndexValidity(index) : "Tried to assign an invalid index";
 
+	}
+
+	public boolean assignNotAC(final int index, final Problem problem) {
+		assgn(index, problem);
+		return checkIndexValidity(index);
 	}
 
 	public void firstAssign(final int index) {
