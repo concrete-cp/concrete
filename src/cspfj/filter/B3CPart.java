@@ -70,32 +70,62 @@ public final class B3CPart extends AbstractSAC {
 		return changedGraph;
 	}
 
+	/**
+	 * Méthode qui traite une tranche.
+	 * 
+	 * @param variable
+	 *            la variable à traiter
+	 * @param level
+	 *            niveau de l'arbre en cours
+	 * 
+	 * @param partSize
+	 *            la taille de la tranche (nombre de valeurs)
+	 * @param start
+	 *            vrai si on traite la tranche inférieure, faux pour traiter la
+	 *            tranche supérieure
+	 * @return vrai si la tranche a été supprimée
+	 */
 	private boolean testPart(final Variable variable, final int level,
 			final double partSize, final boolean start) {
 
-		if (variable.getDomainSize() > partSize) {
+		if (variable.getDomainSize() > partSize) { // Pas de travail s'il n'y a
+			// qu'une tranche
+
+			/*
+			 * On supprime toutes les valeurs en dehors de la tranche. On peut
+			 * parcourir toutes les valeurs d'un domaine (en fait ce sont les
+			 * index) en utilisant les méthodes du type : for (int i =
+			 * variable.getFirst() ; i != 0 ; i = variable.getNext(i)) {}, ou
+			 * dans le sens inverse avec getLast() et getPrev().
+			 */
 			int i = start ? variable.getFirst() : variable.getLast();
 			int j = 0;
+			
+			// On ne fait rien pour les valeurs dans la tranche en cours...
 			while (i >= 0 && j < partSize) {
 				i = start ? variable.getNext(i) : variable.getPrev(i);
 				j++;
 			}
+			
+			// Et on supprime le reste...
 			while (i >= 0) {
 				variable.remove(i, level + 1);
 				i = start ? variable.getNext(i) : variable.getPrev(i);
 			}
 		}
 
-		// logger.info(variable.getCurrentDomain().toString());
-
+		// Appel au filtre "sous-jacent" (AC, 2B...)
 		final boolean test = filter.reduceAfter(level + 1, variable);
 
+		// Restauration des valeurs supprimées (valeurs hors de la tranche et
+		// valeurs supprimées par le filtre)
 		problem.restore(level + 1);
 
-		if (!test) {
-			// logger.info("Cutting...");
+		if (!test) { // Si le filtre a détecté une inconsistance...
 			int i = start ? variable.getFirst() : variable.getLast();
 			int j = 0;
+			// On supprime définitivement (au niveau en cours) les valeurs de la
+			// tranche
 			while (i >= 0 && j < partSize) {
 				variable.remove(i, level);
 				i = start ? variable.getNext(i) : variable.getPrev(i);
