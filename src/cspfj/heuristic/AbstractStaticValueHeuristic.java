@@ -6,6 +6,9 @@
  */
 package cspfj.heuristic;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.logging.Logger;
 
 import cspfj.problem.Problem;
@@ -35,15 +38,18 @@ public abstract class AbstractStaticValueHeuristic extends
 	public final void compute() {
 		logger.info("Reordering values with " + this.getClass());
 		myCompute() ;
-		final int[] ord = new int[problem.getMaxDomainSize()] ;
+		
+		final Integer[] orig = new Integer[problem.getMaxDomainSize()] ;
+		for (int i = orig.length; --i >= 0;) {
+			orig[i] = i;
+		}
+
+		
 		for (Variable variable : problem.getVariables()) {
 
 			// order[variable.getId()] = ord;
-
-			for (int i = variable.getDomain().length; --i >= 0;) {
-				ord[i] = i;
-			}
-
+			final Integer[] ord = new Integer[variable.getDomain().length] ;
+			System.arraycopy(orig, 0, ord, 0, ord.length);
 			// for (int i = ord.length; --i >= 0;) {
 			// for (int j = i; --j >= 0;) {
 			// // System.out.println(i+":"+getScore(v, ord[i]) + " " +
@@ -54,7 +60,9 @@ public abstract class AbstractStaticValueHeuristic extends
 			// }
 			// }
 
-			sort(variable, ord, 0, variable.getDomain().length - 1);
+//			sort(variable, ord, 0, variable.getDomain().length - 1);
+
+			Arrays.sort(ord, new Sorter(variable));
 
 			variable.reOrder(ord);
 			//
@@ -124,5 +132,20 @@ public abstract class AbstractStaticValueHeuristic extends
 
 	public final boolean isFailFirst() {
 		return failFirst ;
+	}
+	
+	private final class Sorter implements Comparator<Integer> {
+
+		private final Variable variable;
+		
+		public Sorter(Variable variable) {
+			this.variable = variable;
+		}
+		
+		@Override
+		public int compare(Integer arg0, Integer arg1) {
+			return Double.compare(getScore(variable, arg0), getScore(variable, arg1));
+		}
+		
 	}
 }

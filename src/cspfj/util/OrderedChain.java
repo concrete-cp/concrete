@@ -13,7 +13,7 @@ public final class OrderedChain extends AbstractChain implements Cloneable {
 
 	}
 
-	public void reOrder(final int[] order, final int[] removed) {
+	public void reOrder(final Integer[] order, final int[] removed) {
 		firstPresentIndex = order[length - 1];
 		lastPresentIndex = order[0];
 		for (int i = length; --i > 0;) {

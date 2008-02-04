@@ -122,7 +122,7 @@ public final class Variable implements Cloneable {
 
 		chain = new OrderedChain(domain.length);
 
-		final int[] order = new int[domain.length];
+		final Integer[] order = new Integer[domain.length];
 		for (int i = domain.length; --i >= 0;) {
 			order[i] = i;
 		}
@@ -143,7 +143,7 @@ public final class Variable implements Cloneable {
 		return name + "[" + getDomainSize() + "]";
 	}
 
-	public void reOrder(final int[] order) {
+	public void reOrder(final Integer[] order) {
 		chain.reOrder(order, removed);
 	}
 
