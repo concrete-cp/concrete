@@ -14,7 +14,7 @@ public class Combo extends AbstractSolver {
 
 	private final AbstractLocalSolver mCSolver;
 
-	private final MGAC macSolver;
+	private final MGACRec macSolver;
 
 	private final Heuristic heuristic;
 
@@ -26,7 +26,7 @@ public class Combo extends AbstractSolver {
 	public Combo(Problem prob, ResultHandler resultHandler,
 			Heuristic heuristic) {
 		super(prob, resultHandler);
-		macSolver = new MGAC(prob, resultHandler, heuristic);
+		macSolver = new MGACRec(prob, resultHandler, heuristic);
 		mCSolver = new WMC(prob, resultHandler, false);
 		this.heuristic = heuristic;
 

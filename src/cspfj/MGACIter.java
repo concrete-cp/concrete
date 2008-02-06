@@ -48,7 +48,7 @@ public final class MGACIter extends AbstractSolver {
 
 	private boolean allSolutions = false;
 
-	private final Deque<Variable> stack;
+	private int level;
 
 	public MGACIter(Problem prob, ResultHandler resultHandler) {
 		this(prob, resultHandler, new DiscHeuristic(new WDegOnDom(),
@@ -70,15 +70,12 @@ public final class MGACIter extends AbstractSolver {
 		logger.info(filter.getClass().toString());
 
 		setMaxBacktracks(prob.getMaxBacktracks());
-
-		stack = new ArrayDeque<Variable>();
-
 	}
 
 	public boolean mac() throws MaxBacktracksExceededException, IOException {
 		final Problem problem = this.problem;
 
-		int level = 0;
+		level = 0;
 
 		Variable selectedVariable = null;
 		int selectedIndex = -1;
@@ -91,15 +88,26 @@ public final class MGACIter extends AbstractSolver {
 				}
 
 				solution();
-				if (!allSolutions) {
+				if (allSolutions) {
+					selectedVariable = backtrack();
+					if (level < 0) {
+						break;
+					}
+				} else {
 					break;
 				}
 			}
 
 			if (selectedVariable != null
 					&& !filter.reduceAfter(level, selectedVariable)) {
-				level = backtrack(selectedVariable, problem, selectedIndex,
-						level);
+				if (level == 0) {
+					break;
+				}
+				selectedVariable = backtrack();
+				if (level < 0) {
+					break;
+				}
+				continue;
 			}
 
 			final long pair = heuristic.selectPair(problem);
@@ -112,8 +120,6 @@ public final class MGACIter extends AbstractSolver {
 
 			assert selectedVariable.isPresent(selectedIndex);
 
-			final int domainSizeBefore = selectedVariable.getDomainSize();
-
 			if (logger.isLoggable(Level.FINE)) {
 				logger.fine(level + " : " + selectedVariable + " <- "
 						+ selectedVariable.getDomain()[selectedIndex] + "("
@@ -123,8 +129,9 @@ public final class MGACIter extends AbstractSolver {
 			if (filter.ensureAC()) {
 				selectedVariable.assign(selectedIndex, problem);
 			} else if (!selectedVariable.assignNotAC(selectedIndex, problem)) {
-
-				return false;// mac(level, selectedVariable);
+				selectedVariable.unassign(problem);
+				selectedVariable.remove(selectedIndex, level);
+				continue;
 			}
 
 			problem.setLevelVariables(level, selectedVariable);
@@ -132,35 +139,27 @@ public final class MGACIter extends AbstractSolver {
 			incrementNbAssignments();
 			level++;
 
-			// if (mac(level + 1, domainSizeBefore > 1 ? selectedVariable :
-			// null)) {
-			// addSolutionElement(selectedVariable, selectedIndex);
-			// return true;
-			// }
-
-			selectedVariable.unassign(problem);
-			problem.restore(level + 1);
-
-			problem.setLevelVariables(level, null);
-
-			if (selectedVariable.getDomainSize() <= 1) {
-				return false;
-			}
-			selectedVariable.remove(selectedIndex, level);
-
-			checkBacktracks();
 		} while (true);
-		return false;// mac(level, selectedVariable);
+		return getNbSolutions() > 0;
 
 	}
 
-	private int backtrack(Variable variable, Problem problem, int index,
-			int level) throws MaxBacktracksExceededException {
-		variable.unassign(problem);
-		variable.remove(index, level);
+	public Variable backtrack() throws MaxBacktracksExceededException {
+		Variable selectedVariable;
 
+		do {
+			if (level < problem.getNbVariables()) {
+				problem.setLevelVariables(level, null);
+			}
+			selectedVariable = problem.getLevelVariable(--level);
+			final int index = selectedVariable.getFirst();
+			selectedVariable.unassign(problem);
+			problem.restore(level + 1);
+			selectedVariable.remove(index, level);
+
+		} while (selectedVariable.getDomainSize() < 1 && level >= 0);
 		checkBacktracks();
-		return 0;
+		return selectedVariable;
 	}
 
 	/*
@@ -278,7 +277,7 @@ public final class MGACIter extends AbstractSolver {
 	}
 
 	public String toString() {
-		return "maintain generalized arc consistency";
+		return "maintain generalized arc consistency - iterative";
 	}
 
 }

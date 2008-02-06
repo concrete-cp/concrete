@@ -36,7 +36,7 @@ import cspfj.heuristic.WDegOnDom;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
-public final class MGAC extends AbstractSolver {
+public final class MGACRec extends AbstractSolver {
 
 	private final Filter filter;
 
@@ -46,16 +46,16 @@ public final class MGAC extends AbstractSolver {
 
 	private boolean allSolutions = false;
 
-	public MGAC(Problem prob, ResultHandler resultHandler) {
+	public MGACRec(Problem prob, ResultHandler resultHandler) {
 		this(prob, resultHandler, new DiscHeuristic(new WDegOnDom(),
 				new Inverse(prob, false)));
 	}
 
-	public MGAC(Problem prob, ResultHandler resultHandler, Heuristic heuristic) {
+	public MGACRec(Problem prob, ResultHandler resultHandler, Heuristic heuristic) {
 		this(prob, resultHandler, heuristic, new AC3(prob));
 	}
 
-	public MGAC(Problem prob, ResultHandler resultHandler, Heuristic heuristic,
+	public MGACRec(Problem prob, ResultHandler resultHandler, Heuristic heuristic,
 			Filter filter) {
 		super(prob, resultHandler);
 		// filter = new B3C(problem, new BC(problem));
@@ -256,7 +256,7 @@ public final class MGAC extends AbstractSolver {
 	}
 
 	public String toString() {
-		return "maintain generalized arc consistency";
+		return "maintain generalized arc consistency - recursive";
 	}
 
 }
