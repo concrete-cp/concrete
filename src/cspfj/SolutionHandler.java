@@ -10,7 +10,7 @@ public final class SolutionHandler {
 
 	private boolean result = false;
 
-	private final Map<Integer, Integer> weights = new HashMap<Integer, Integer>();
+	private final Map<Integer, Double> weights = new HashMap<Integer, Double>();
 
 	public Map<Variable, Integer> getSolution() throws InterruptedException {
 		while (!result) {
@@ -29,7 +29,7 @@ public final class SolutionHandler {
 		}
 	}
 
-	public void addWeight(final int cid, final int weight) {
+	public void addWeight(final int cid, final double weight) {
 		if (weights.containsKey(cid)) {
 			weights.put(cid, weights.get(cid) + weight);
 		} else {
@@ -37,7 +37,7 @@ public final class SolutionHandler {
 		}
 	}
 
-	public Map<Integer, Integer> getWeights() {
+	public Map<Integer, Double> getWeights() {
 		return weights;
 	}
 

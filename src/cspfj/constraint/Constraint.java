@@ -41,7 +41,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 	protected int[] tuple;
 
-	private int weight = 1;
+	private double weight = 1;
 
 	private final int arity;
 
@@ -364,11 +364,11 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		this.weight += weight;
 	}
 
-	public final int getWeight() {
+	public final double getWeight() {
 		return weight;
 	}
 
-	public final void setWeight(final int weight) {
+	public final void setWeight(final double weight) {
 		this.weight = weight;
 	}
 

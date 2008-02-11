@@ -509,8 +509,8 @@ public final class Problem implements Cloneable {
 		return maxCId;
 	}
 
-	public float getMaxWeight() {
-		float maxWeight = 0;
+	public double getMaxWeight() {
+		double maxWeight = 0;
 
 		for (Constraint c : getConstraints()) {
 			if (c.getWeight() > maxWeight) {
