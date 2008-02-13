@@ -71,19 +71,19 @@ public final class B3CPart extends AbstractSAC {
 	}
 
 	/**
-	 * Méthode qui traite une tranche.
+	 * Mï¿½thode qui traite une tranche.
 	 * 
 	 * @param variable
-	 *            la variable à traiter
+	 *            la variable ï¿½ traiter
 	 * @param level
 	 *            niveau de l'arbre en cours
 	 * 
 	 * @param partSize
 	 *            la taille de la tranche (nombre de valeurs)
 	 * @param start
-	 *            vrai si on traite la tranche inférieure, faux pour traiter la
-	 *            tranche supérieure
-	 * @return vrai si la tranche a été supprimée
+	 *            vrai si on traite la tranche infï¿½rieure, faux pour traiter la
+	 *            tranche supï¿½rieure
+	 * @return vrai si la tranche a ï¿½tï¿½ supprimï¿½e
 	 */
 	private boolean testPart(final Variable variable, final int level,
 			final double partSize, final boolean start) {
@@ -94,19 +94,19 @@ public final class B3CPart extends AbstractSAC {
 			/*
 			 * On supprime toutes les valeurs en dehors de la tranche. On peut
 			 * parcourir toutes les valeurs d'un domaine (en fait ce sont les
-			 * index) en utilisant les méthodes du type : for (int i =
+			 * index) en utilisant les mï¿½thodes du type : for (int i =
 			 * variable.getFirst() ; i != 0 ; i = variable.getNext(i)) {}, ou
 			 * dans le sens inverse avec getLast() et getPrev().
 			 */
 			int i = start ? variable.getFirst() : variable.getLast();
 			int j = 0;
-			
+
 			// On ne fait rien pour les valeurs dans la tranche en cours...
 			while (i >= 0 && j < partSize) {
 				i = start ? variable.getNext(i) : variable.getPrev(i);
 				j++;
 			}
-			
+
 			// Et on supprime le reste...
 			while (i >= 0) {
 				variable.remove(i, level + 1);
@@ -117,14 +117,14 @@ public final class B3CPart extends AbstractSAC {
 		// Appel au filtre "sous-jacent" (AC, 2B...)
 		final boolean test = filter.reduceAfter(level + 1, variable);
 
-		// Restauration des valeurs supprimées (valeurs hors de la tranche et
-		// valeurs supprimées par le filtre)
+		// Restauration des valeurs supprimï¿½es (valeurs hors de la tranche et
+		// valeurs supprimï¿½es par le filtre)
 		problem.restore(level + 1);
 
-		if (!test) { // Si le filtre a détecté une inconsistance...
+		if (!test) { // Si le filtre a dï¿½tectï¿½ une inconsistance...
 			int i = start ? variable.getFirst() : variable.getLast();
 			int j = 0;
-			// On supprime définitivement (au niveau en cours) les valeurs de la
+			// On supprime dï¿½finitivement (au niveau en cours) les valeurs de la
 			// tranche
 			while (i >= 0 && j < partSize) {
 				variable.remove(i, level);
@@ -138,7 +138,7 @@ public final class B3CPart extends AbstractSAC {
 	}
 
 	public String toString() {
-		return "3B-parts w/ " + filter;
+		return "3B-parts-" + parts + " w/ " + filter;
 	}
 
 	@Override
