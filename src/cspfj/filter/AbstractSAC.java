@@ -37,7 +37,7 @@ public abstract class AbstractSAC implements BackedFilter {
 		this.filter = filter;
 		this.problem = problem;
 		this.variables = problem.getVariables().clone();
-		heuristic = new Dom();
+		heuristic = new Dom(problem);
 	}
 
 	public boolean reduceAfter(final int level, final Variable variable) {
@@ -111,7 +111,7 @@ public abstract class AbstractSAC implements BackedFilter {
 				if (!filter.reduceAfter(level, variable)) {
 					return false;
 				}
-				mark = v;
+//				mark = v;
 			}
 
 			v = next(v, variables.length);

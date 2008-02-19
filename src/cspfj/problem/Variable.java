@@ -22,8 +22,6 @@ package cspfj.problem;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 import cspfj.constraint.Constraint;
 import cspfj.util.BooleanArray;
@@ -39,11 +37,6 @@ public final class Variable implements Cloneable {
 	 * Contraintes impliquant la variable.
 	 */
 	private Constraint constraints[];
-
-	/**
-	 * Liste des variables voisines.
-	 */
-	private Variable[] neighbours;
 
 	/**
 	 * Domaine de la variable (ensemble de valeurs).
@@ -154,20 +147,6 @@ public final class Variable implements Cloneable {
 	public void setInvolvingConstraints(final Constraint[] constraints) {
 		this.constraints = constraints;
 
-		final Set<Variable> neighb = new HashSet<Variable>();
-
-		for (Constraint c : constraints) {
-			assert c.isInvolved(this);
-			for (Variable v : c.getInvolvedVariables()) {
-				if (v == this) {
-					continue;
-				}
-				neighb.add(v);
-			}
-		}
-
-		this.neighbours = neighb.toArray(new Variable[neighb.size()]);
-
 		positionInConstraint = new int[constraints.length];
 		for (int i = constraints.length; --i >= 0;) {
 			updatePositionInConstraint(i);
@@ -211,13 +190,6 @@ public final class Variable implements Cloneable {
 	 */
 	public boolean isAssigned() {
 		return assigned;
-	}
-
-	/**
-	 * @return Liste des variables voisines.
-	 */
-	public Variable[] getNeighbours() {
-		return neighbours;
 	}
 
 	/**
@@ -377,27 +349,6 @@ public final class Variable implements Cloneable {
 		return assigned ? assignedIndex : chain.getLast();
 	}
 
-	public double getWDeg() {
-		double count = 0;
-
-		for (Constraint c : constraints) {
-			if (c.isBound()) {
-				count += c.getWeight();
-			}
-		}
-		return count;
-	}
-
-	public double getDDeg() {
-		double count = 0;
-
-		for (Constraint c : constraints) {
-			if (c.isBound()) {
-				count++;
-			}
-		}
-		return count;
-	}
 
 	public void makeSingleton(final int value, final int level) {
 		final int[] domain = this.domain;

@@ -22,19 +22,24 @@ package cspfj;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidParameterException;
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.text.NumberFormat;
+import java.util.Arrays;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import cspfj.constraint.Constraint;
+import cspfj.constraint.Weight;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.AC3;
 import cspfj.filter.Filter;
-import cspfj.heuristic.DiscHeuristic;
+import cspfj.heuristic.CrossHeuristic;
 import cspfj.heuristic.Heuristic;
-import cspfj.heuristic.Inverse;
+import cspfj.heuristic.Lexico;
 import cspfj.heuristic.Pair;
 import cspfj.heuristic.WDegOnDom;
+import cspfj.heuristic.WeightHeuristic;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -51,13 +56,13 @@ public final class MGACIter extends AbstractSolver {
 	private int level;
 
 	public MGACIter(Problem prob, ResultHandler resultHandler) {
-		this(prob, resultHandler, new DiscHeuristic(new WDegOnDom(),
-				new Inverse(prob, false)));
+		this(prob, resultHandler, new CrossHeuristic(new WDegOnDom(prob),
+				new Lexico(prob, false)));
 	}
 
 	public MGACIter(Problem prob, ResultHandler resultHandler,
 			Heuristic heuristic) {
-		this(prob, resultHandler, heuristic, new AC3(prob));
+		this(prob, resultHandler, heuristic, new AC3(prob, heuristic.getVariableHeuristic()));
 	}
 
 	public MGACIter(Problem prob, ResultHandler resultHandler,
@@ -196,6 +201,14 @@ public final class MGACIter extends AbstractSolver {
 
 		final float start = chronometer.getCurrentChrono();
 		heuristic.compute();
+		
+//		for (Variable v:problem.getVariables()) {
+//			for (int i = v.getFirst() ; i >=0 ; i=v.getNext(i)) {
+//				System.out.print(i+"-");
+//			}
+//			System.out.println();
+//		}
+		
 		final float heuristicCpu = chronometer.getCurrentChrono();
 		statistics.put("heuristic-cpu", heuristicCpu - start);
 
@@ -233,7 +246,10 @@ public final class MGACIter extends AbstractSolver {
 			logger
 					.info("Took " + macTime + "s (" + (maxBT / macTime)
 							+ " bps)");
+
+			// logger.info(constraintRepartition());
 			maxBT *= 1.5;
+
 			addNoGoods();
 			problem.restoreAll(1);
 			if (!filter.reduceAll(0)) {
@@ -249,6 +265,24 @@ public final class MGACIter extends AbstractSolver {
 
 		return getNbSolutions() > 0;
 
+	}
+
+	private String constraintRepartition() {
+		final WeightHeuristic wvh = (WeightHeuristic) heuristic;
+		final SortedSet<Constraint> sortedConstraint = new TreeSet<Constraint>(
+				new Weight(false, wvh));
+		sortedConstraint.addAll(Arrays.asList(problem.getConstraints()));
+
+		final StringBuilder stb = new StringBuilder();
+		final NumberFormat format = NumberFormat.getInstance();
+		format.setMaximumFractionDigits(2);
+		double total = 0;
+		for (Constraint c : sortedConstraint) {
+			stb.append(c.getName() + "(" + format.format(wvh.getWeight(c)) + ") ");
+			total += wvh.getWeight(c);
+		}
+		stb.append(" - Total = " + total);
+		return stb.toString();
 	}
 
 	public int addNoGoods() {

@@ -41,8 +41,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 	protected int[] tuple;
 
-	private double weight = 1;
-
 	private final int arity;
 
 	private static long checks = 0;
@@ -354,22 +352,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 			return -1;
 		}
 		return nbMaxConflicts[position];
-	}
-
-	public final void increaseWeight() {
-		weight++;
-	}
-
-	public final void increaseWeight(final int weight) {
-		this.weight += weight;
-	}
-
-	public final double getWeight() {
-		return weight;
-	}
-
-	public final void setWeight(final double weight) {
-		this.weight = weight;
 	}
 
 	public final boolean isBound() {

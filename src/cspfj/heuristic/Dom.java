@@ -19,9 +19,15 @@
 
 package cspfj.heuristic;
 
+import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
 public final class Dom extends AbstractVariableHeuristic {
+	
+	public Dom(Problem problem) {
+		super(problem);
+	}
+	
 	public double getScore(final Variable variable) {
 		return -variable.getDomainSize();
 	}
@@ -29,4 +35,5 @@ public final class Dom extends AbstractVariableHeuristic {
 	public String toString() {
 		return "min-dom";
 	}
+
 }

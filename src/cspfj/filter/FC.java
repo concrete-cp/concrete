@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import cspfj.constraint.Constraint;
+import cspfj.heuristic.VariableHeuristic;
+import cspfj.heuristic.WeightHeuristic;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -35,8 +37,12 @@ public final class FC implements Filter {
 
 	public int uselessRevisions = 0;
 
-	public FC(final Problem problem) {
+	private final WeightHeuristic wvh;
+
+	public FC(final Problem problem, final VariableHeuristic heuristic) {
 		super();
+		wvh = (heuristic instanceof WeightHeuristic) ? (WeightHeuristic) heuristic
+				: null;
 	}
 
 	public boolean reduceAll(final int level) {
@@ -63,7 +69,9 @@ public final class FC implements Filter {
 					if (constraint.revise(i, level)) {
 						effectiveRevisions++;
 						if (y.getDomainSize() <= 0) {
-							constraint.increaseWeight();
+							if (wvh != null) {
+								wvh.treatConflictConstraint(constraint);
+							}
 							return false;
 						}
 					} else {

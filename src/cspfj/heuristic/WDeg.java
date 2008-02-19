@@ -19,27 +19,45 @@
 
 package cspfj.heuristic;
 
+import cspfj.constraint.Constraint;
+import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
-public final class Neighborhood extends AbstractVariableHeuristic {
+public final class WDeg extends AbstractVariableHeuristic implements WeightHeuristic {
+	private final double[] weights;
+
+	public WDeg(Problem problem) {
+		super(problem);
+
+		weights = new double[problem.getMaxCId() + 1];
+	}
+
 	public double getScore(final Variable variable) {
-		// double score = 0;
-		// for (Constraint c : variable.getInvolvingConstraints()) {
-		// double constraintScore = 0;
-		// for (Variable v : c.getInvolvedVariables()) {
-		// if (v != variable) {
-		// constraintScore += c.getWeight()
-		// * (v.getDomain().length - v.getDomainSize());
-		// }
-		// }
-		// score += constraintScore; // Math.pow(constraintScore, 1 /
-		// // c.getArity());
-		// }
-		return variable.getWDeg() * (variable.getDomain().length-
-				 variable.getDomainSize());
+		return wDeg(variable);
+	}
+
+	private double wDeg(final Variable variable) {
+		double count = 0;
+
+		for (Constraint c : variable.getInvolvingConstraints()) {
+			if (c.isBound()) {
+				count += weights[c.getId()];
+			}
+		}
+		return count;
+	}
+
+	@Override
+	public void treatConflictConstraint(final Constraint constraint) {
+		weights[constraint.getId()]++;
 	}
 
 	public String toString() {
-		return "max-wdeg/dom";
+		return "max-wdeg";
+	}
+
+	@Override
+	public double getWeight(final Constraint constraint) {
+		return weights[constraint.getId()];
 	}
 }

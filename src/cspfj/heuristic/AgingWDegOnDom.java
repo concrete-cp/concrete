@@ -19,19 +19,32 @@
 
 package cspfj.heuristic;
 
+import java.util.logging.Logger;
+
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
-public final class WDegOnDom extends AbstractVariableHeuristic implements
+public final class AgingWDegOnDom extends AbstractVariableHeuristic implements
 		WeightHeuristic {
 
 	private final double[] weights;
 
-	public WDegOnDom(Problem problem) {
+	private final double factor;
+
+	private int nbUpdates = 0;
+
+	private final static int AGING_TIME = 100;
+
+	private static final Logger logger = Logger.getLogger(AgingWDegOnDom.class
+			.toString());
+
+	public AgingWDegOnDom(Problem problem) {
 		super(problem);
 
 		weights = new double[problem.getMaxCId() + 1];
+		factor = Math.pow(1 - (1d / problem.getNbConstraints()), AGING_TIME);
+		logger.info(Double.toString(factor));
 	}
 
 	public double getScore(final Variable variable) {
@@ -52,6 +65,12 @@ public final class WDegOnDom extends AbstractVariableHeuristic implements
 	@Override
 	public void treatConflictConstraint(final Constraint constraint) {
 		weights[constraint.getId()]++;
+		if (nbUpdates++ % AGING_TIME == 0) {
+			for (Constraint c : problem.getConstraints()) {
+				weights[c.getId()] *= factor;
+			}
+		}
+
 	}
 
 	@Override
@@ -60,6 +79,6 @@ public final class WDegOnDom extends AbstractVariableHeuristic implements
 	}
 
 	public String toString() {
-		return "max-wdeg/dom";
+		return "max-wdeg/dom with aging weights";
 	}
 }

@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import cspfj.constraint.Constraint;
+import cspfj.heuristic.VariableHeuristic;
+import cspfj.heuristic.WeightHeuristic;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -44,11 +46,16 @@ public final class BCPart implements Filter {
 
 	private int parts = 10;
 
-	public BCPart(final Problem problem) {
+	private WeightHeuristic wvh;
+
+	public BCPart(final Problem problem, VariableHeuristic heuristic) {
 		super();
 		this.problem = problem;
 
 		inQueue = new boolean[problem.getMaxVId() + 1];
+
+		wvh = (heuristic instanceof WeightHeuristic) ? (WeightHeuristic) heuristic
+				: null;
 	}
 
 	public boolean reduceAll(final int level) {
@@ -89,7 +96,9 @@ public final class BCPart implements Filter {
 					if (!y.isAssigned()
 							&& revise(constraint, i, level) >= limit) {
 						if (y.getDomainSize() <= 0) {
-							constraint.increaseWeight();
+							if (wvh != null) {
+								wvh.treatConflictConstraint(constraint);
+							}
 							return false;
 						}
 

@@ -58,4 +58,9 @@ public class ProdHeuristic implements Heuristic {
     public String toString() {
     	return variableHeuristic + " * " + valueHeuristic ;
     }
+
+	@Override
+	public VariableHeuristic getVariableHeuristic() {
+		return variableHeuristic;
+	}
 }

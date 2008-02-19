@@ -30,7 +30,7 @@ import cspfj.filter.AC3;
 import cspfj.filter.Filter;
 import cspfj.heuristic.DiscHeuristic;
 import cspfj.heuristic.Heuristic;
-import cspfj.heuristic.Inverse;
+import cspfj.heuristic.Lexico;
 import cspfj.heuristic.Pair;
 import cspfj.heuristic.WDegOnDom;
 import cspfj.problem.Problem;
@@ -47,16 +47,18 @@ public final class MGACRec extends AbstractSolver {
 	private boolean allSolutions = false;
 
 	public MGACRec(Problem prob, ResultHandler resultHandler) {
-		this(prob, resultHandler, new DiscHeuristic(new WDegOnDom(),
-				new Inverse(prob, false)));
+		this(prob, resultHandler, new DiscHeuristic(new WDegOnDom(prob),
+				new Lexico(prob, false)));
 	}
 
-	public MGACRec(Problem prob, ResultHandler resultHandler, Heuristic heuristic) {
-		this(prob, resultHandler, heuristic, new AC3(prob));
+	public MGACRec(Problem prob, ResultHandler resultHandler,
+			Heuristic heuristic) {
+		this(prob, resultHandler, heuristic, new AC3(prob, heuristic
+				.getVariableHeuristic()));
 	}
 
-	public MGACRec(Problem prob, ResultHandler resultHandler, Heuristic heuristic,
-			Filter filter) {
+	public MGACRec(Problem prob, ResultHandler resultHandler,
+			Heuristic heuristic, Filter filter) {
 		super(prob, resultHandler);
 		// filter = new B3C(problem, new BC(problem));
 		this.filter = filter;

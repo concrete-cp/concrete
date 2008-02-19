@@ -2,12 +2,19 @@ package cspfj.heuristic;
 
 import java.util.Random;
 
+import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
 public abstract class AbstractVariableHeuristic implements VariableHeuristic {
 
 	private final static Random random = new Random();
-	
+
+	protected final Problem problem;
+
+	public AbstractVariableHeuristic(final Problem problem) {
+		this.problem = problem;
+	}
+
 	public Variable selectVariable(final Variable[] variables) {
 		Variable bestVariable = null;
 
@@ -38,7 +45,7 @@ public abstract class AbstractVariableHeuristic implements VariableHeuristic {
 		// }
 		return Double.compare(getScore(variable1), getScore(variable2));
 	}
-	
+
 	protected static double poisson(final double moy) {
 		return -moy * Math.log(random.nextDouble());
 	}

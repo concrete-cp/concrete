@@ -60,7 +60,10 @@ public class DiscHeuristic implements Heuristic {
 	public void compute() {
 		valueHeuristic.compute();
 	}
-	
+	@Override
+	public VariableHeuristic getVariableHeuristic() {
+		return variableHeuristic;
+	}
     public String toString() {
     	return "Discriminated " + variableHeuristic + ", " + valueHeuristic ;
     }

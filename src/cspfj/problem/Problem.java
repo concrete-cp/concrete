@@ -26,17 +26,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
 import cspfj.constraint.ExtensionConstraint;
-import cspfj.constraint.Weight;
 import cspfj.exception.FailedGenerationException;
 import cspfj.heuristic.Supports;
 import cspfj.heuristic.ValueHeuristic;
+import cspfj.heuristic.WeightHeuristic;
 import cspfj.util.CpuMonitor;
 
 public final class Problem implements Cloneable {
@@ -158,19 +157,19 @@ public final class Problem implements Cloneable {
 		maxCId = 0;
 
 		for (Constraint c : cons) {
-//			if (c.getArity() == 1) {
-//				final Variable variable = c.getInvolvedVariables()[0];
-//				final int[] tuple = c.getTuple();
-//				for (int i = variable.getFirst(); i >= 0; i = variable
-//						.getNext(i)) {
-//					tuple[0] = i;
-//					if (!c.check()) {
-//						variable.remove(i, 0);
-//					}
-//
-//				}
-//				continue ;
-//			}
+			// if (c.getArity() == 1) {
+			// final Variable variable = c.getInvolvedVariables()[0];
+			// final int[] tuple = c.getTuple();
+			// for (int i = variable.getFirst(); i >= 0; i = variable
+			// .getNext(i)) {
+			// tuple[0] = i;
+			// if (!c.check()) {
+			// variable.remove(i, 0);
+			// }
+			//
+			// }
+			// continue ;
+			// }
 			this.constraints.put(c.getId(), c);
 			if (c.getArity() > maxArity) {
 				maxArity = c.getArity();
@@ -208,8 +207,10 @@ public final class Problem implements Cloneable {
 		// c.initNbSupports();
 		// }
 
-		final ValueHeuristic maxS = new Supports(this, false);
-		maxS.compute();
+		// final ValueHeuristic maxS = new Supports(this, false);
+		// maxS.compute();
+
+
 		// for (Variable v: getVariables()) {
 		// v.heuristicToOrder();
 		// }
@@ -298,15 +299,8 @@ public final class Problem implements Cloneable {
 					.append('\n');
 		}
 
-		final SortedSet<Constraint> set = new TreeSet<Constraint>(new Weight(
-				false));
-
-		set.addAll(constraints.values());
-
-		for (Constraint c : set) {
+		for (Constraint c : constraintArray) {
 			sb.append(c.toString());
-			sb.append(' ').append(c.getWeight()).append('\n');
-			// sb.append(c.getWeight()).append("\n");
 		}
 		sb.append('\n');
 
@@ -323,7 +317,8 @@ public final class Problem implements Cloneable {
 	//
 	// public static float removeTupleTime = 0;
 
-	private static <E> int arrayContains(E[] array, int end, E elt) {
+	private static <E> int arrayContains(final E[] array, final int end,
+			final E elt) {
 		for (int i = end; --i >= 0;) {
 			if (array[i] == elt) {
 				return i;
@@ -370,7 +365,7 @@ public final class Problem implements Cloneable {
 				final Constraint cons = Constraint.findConstraint(scope,
 						level + 1, scope[0].getInvolvingConstraints());
 
-				if (cons == null || !(cons instanceof ExtensionConstraint)) {
+				if (!(cons instanceof ExtensionConstraint)) {
 					continue;
 				}
 				final ExtensionConstraint constraint = (ExtensionConstraint) cons;
@@ -403,11 +398,11 @@ public final class Problem implements Cloneable {
 				// startRemoveTuple;
 			}
 
-			if (levelVariables[level] != null) {
+			if (levelVariables[level] == null) {
+				break;
+			} else {
 				scope[level] = levelVariables[level];
 				tuple[level] = levelVariables[level].getFirst();
-			} else {
-				break;
 			}
 		}
 		// noGoodTime += CpuMonitor.getCpuTime() - startNoGood;
@@ -444,12 +439,13 @@ public final class Problem implements Cloneable {
 	// }
 	// }
 
-	public static Problem activeProblem(final Problem problem) {
-		return activeProblem(problem, 0);
+	public static Problem activeProblem(final Problem problem,
+			final WeightHeuristic wvh) {
+		return activeProblem(problem, 0, wvh);
 	}
 
 	public static Problem activeProblem(final Problem problem,
-			final int additionalConstraints) {
+			final int additionalConstraints, final WeightHeuristic wvh) {
 		final Collection<Constraint> constraints = new ArrayList<Constraint>();
 
 		final Collection<Constraint> otherConstraints = new ArrayList<Constraint>();
@@ -472,7 +468,7 @@ public final class Problem implements Cloneable {
 		final Constraint[] sortedConstraints = otherConstraints
 				.toArray(new Constraint[otherConstraints.size()]);
 
-		Arrays.sort(sortedConstraints, new cspfj.constraint.Weight(true));
+		Arrays.sort(sortedConstraints, new cspfj.constraint.Weight(true, wvh));
 
 		int i = additionalConstraints;
 		for (Constraint c : sortedConstraints) {
@@ -507,17 +503,6 @@ public final class Problem implements Cloneable {
 
 	public int getMaxCId() {
 		return maxCId;
-	}
-
-	public double getMaxWeight() {
-		double maxWeight = 0;
-
-		for (Constraint c : getConstraints()) {
-			if (c.getWeight() > maxWeight) {
-				maxWeight = c.getWeight();
-			}
-		}
-		return maxWeight;
 	}
 
 	public int getND() {

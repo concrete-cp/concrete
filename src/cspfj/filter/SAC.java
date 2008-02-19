@@ -67,7 +67,7 @@ public final class SAC extends AbstractSAC {
 			queue[v.getId()] = new boolean[v.getDomain().length];
 		}
 
-		heuristic = new WDegOnDom();
+		heuristic = new WDegOnDom(problem);
 
 		staticVOrder = new Variable[problem.getNbVariables()];
 

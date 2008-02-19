@@ -5,18 +5,18 @@ import cspfj.problem.Variable;
 
 public final class Lexico extends AbstractStaticValueHeuristic {
 
-    public Lexico(Problem problem, boolean failFirst) {
-        super(problem, failFirst);
-    }
+	public Lexico(Problem problem, boolean failFirst) {
+		super(problem, failFirst);
+	}
 
-    public double getScore(final Variable var, final int index) {
-        return -index;
-    }
+	public double getScore(final Variable var, final int index) {
+		return (isFailFirst() ? -1 : 1) * index;
+	}
 
 	public String toString() {
 		return (isFailFirst() ? "min" : "max") + "-lexico";
 	}
-	
+
 	public void myCompute() {
 		// Nothing to do...
 	}

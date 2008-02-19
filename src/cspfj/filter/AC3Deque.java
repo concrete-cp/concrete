@@ -19,7 +19,9 @@
 
 package cspfj.filter;
 
+import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,12 +35,12 @@ import cspfj.problem.Variable;
  * @author scand1sk
  * 
  */
-public final class AC3 implements Filter {
+public final class AC3Deque implements Filter {
 	private final Problem problem;
 
 	private final boolean[] inQueue;
 
-	private int queueSize = 0;
+	private final Deque<Variable> queue;
 
 	private boolean removals[][];
 
@@ -46,9 +48,9 @@ public final class AC3 implements Filter {
 
 	public int uselessRevisions = 0;
 
-	private WeightHeuristic wvh;
+	private final WeightHeuristic wvh;
 
-	public AC3(final Problem problem, final VariableHeuristic heuristic) {
+	public AC3Deque(final Problem problem, final VariableHeuristic heuristic) {
 		super();
 		this.problem = problem;
 
@@ -58,7 +60,8 @@ public final class AC3 implements Filter {
 		for (Constraint c : problem.getConstraints()) {
 			removals[c.getId()] = new boolean[c.getArity()];
 		}
-		
+		queue = new ArrayDeque<Variable>(problem.getNbVariables());
+
 		wvh = (heuristic instanceof WeightHeuristic) ? (WeightHeuristic) heuristic
 				: null;
 	}
@@ -76,7 +79,7 @@ public final class AC3 implements Filter {
 		}
 		clearQueue();
 
-		addInQueue(variable.getId());
+		addInQueue(variable);
 
 		return reduce(level);
 	}
@@ -99,7 +102,7 @@ public final class AC3 implements Filter {
 	}
 
 	private boolean reduce(final int level) {
-		while (queueSize > 0) {
+		while (!queue.isEmpty()) {
 			final Variable variable = pullVariable();
 
 			final Constraint[] constraints = variable.getInvolvingConstraints();
@@ -127,10 +130,11 @@ public final class AC3 implements Filter {
 								if (wvh != null) {
 									wvh.treatConflictConstraint(constraint);
 								}
+								// constraint.increaseWeight();
 								return false;
 							}
 
-							addInQueue(y.getId());
+							addInQueue(y);
 
 							for (int cp = y.getInvolvingConstraints().length; --cp >= 0;) {
 								final Constraint constraintP = y
@@ -157,7 +161,7 @@ public final class AC3 implements Filter {
 
 	private void clearQueue() {
 		Arrays.fill(inQueue, false);
-		queueSize = 0;
+		queue.clear();
 		for (Constraint c : problem.getConstraints()) {
 			Arrays.fill(removals[c.getId()], true);
 		}
@@ -165,43 +169,26 @@ public final class AC3 implements Filter {
 
 	private void addAll() {
 		for (Variable v : problem.getVariables()) {
-			addInQueue(v.getId());
+			addInQueue(v);
 		}
 	}
 
 	private Variable pullVariable() {
-		Variable bestVariable = null;
-		int bestValue = Integer.MAX_VALUE;
-
-		final boolean[] inQueue = this.inQueue;
-
-		final Problem problem = this.problem;
-
-		for (int i = inQueue.length; --i >= 0;) {
-			if (inQueue[i]) {
-				final Variable variable = problem.getVariable(i);
-				final int domainSize = variable.getDomainSize();
-				if (domainSize < bestValue) {
-					bestVariable = variable;
-					bestValue = domainSize;
-				}
-			}
-		}
-
-		inQueue[bestVariable.getId()] = false;
-		queueSize--;
-		return bestVariable;
+		final Variable variable = queue.removeFirst();
+		inQueue[variable.getId()] = false;
+		return variable;
 	}
 
-	private void addInQueue(final int vId) {
+	private void addInQueue(final Variable variable) {
+		final int vId = variable.getId();
 		if (!inQueue[vId]) {
 			inQueue[vId] = true;
-			queueSize++;
+			queue.addFirst(variable);
 		}
 	}
 
 	public String toString() {
-		return "GAC3rm";
+		return "GAC3rm-FIFO";
 	}
 
 	public Map<String, Object> getStatistics() {
@@ -214,7 +201,7 @@ public final class AC3 implements Filter {
 	@Override
 	public void setParameter(final int parameter) {
 		// No parameter
-		
+
 	}
 
 	@Override
