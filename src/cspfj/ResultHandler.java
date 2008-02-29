@@ -49,15 +49,15 @@ public class ResultHandler {
 			.getLogger("cspfj.AbstractResultWriter");
 
 	private int bestSatisfied = 0;
-	
-	private final boolean receiveSolutions; 
+
+	private final boolean receiveSolutions;
 
 	public ResultHandler(final boolean receiveSolutions) {
 		this.statistics = new TreeMap<String, Object>();
-		this.receiveSolutions = receiveSolutions; 
+		this.receiveSolutions = receiveSolutions;
 	}
 
-	public void problem(final String name) throws IOException {
+	public void problem(final String name, final byte[] md5) throws IOException {
 		logger.info("loading : " + name);
 		statistics.clear();
 		bestSatisfied = 0;
@@ -75,7 +75,7 @@ public class ResultHandler {
 	public boolean solution(final Map<Variable, Integer> solution,
 			final int nbSatisfied, final boolean force) throws IOException {
 		if (!receiveSolutions && !force) {
-			return false ;
+			return false;
 		}
 		if (nbSatisfied > bestSatisfied) {
 			bestSatisfied = nbSatisfied;
@@ -86,8 +86,9 @@ public class ResultHandler {
 
 	}
 
-	public void fail(final Class solver, final String problem,
-			final Throwable thrown, final long load) throws IOException {
+	public void fail(final Class<? extends Solver> solver,
+			final String problem, final Throwable thrown, final long load)
+			throws IOException {
 		logger.warning(thrown.toString() + " (" + problem + ")");
 		logger.warning(Arrays.toString(thrown.getStackTrace()));
 		if (thrown.getCause() != null) {
@@ -147,7 +148,7 @@ public class ResultHandler {
 		logger.info(statistics.toString());
 		this.statistics.putAll(statistics);
 	}
-	
+
 	public void statistics(final String name, final Object value) {
 		logger.info(name + " : " + value);
 		statistics.put(name, value);
@@ -172,10 +173,9 @@ public class ResultHandler {
 	public final int getBestSatisfied() {
 		return bestSatisfied;
 	}
-	
+
 	public final boolean isReceiveSolutions() {
 		return receiveSolutions;
 	}
-
 
 }
