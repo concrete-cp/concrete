@@ -125,7 +125,7 @@ public class Combo extends AbstractSolver {
 			chronometer.validateChrono();
 			throw e;
 		}
-		logger.info("Max constraint weight : " + problem.getMaxWeight());
+		//logger.info("Max constraint weight : " + problem.getMaxWeight());
 
 		//macSolver.addNoGoods();
 
@@ -155,7 +155,7 @@ public class Combo extends AbstractSolver {
 		// for (Constraint c: problem.getConstraints()) {
 		// c.setWeight(c.getWeight() / problem.getNbConstraints());
 		// }
-		logger.info("Max constraint weight : " + problem.getMaxWeight());
+		//logger.info("Max constraint weight : " + problem.getMaxWeight());
 
 		return false;
 	}

@@ -84,7 +84,7 @@ public final class WMC extends AbstractLocalSolver {
 			for (Constraint c : problem.getConstraints()) {
 				if (!c.checkFirst()) {
 					improvment++;
-					c.increaseWeight();
+					increaseWeight(c);
 					final Variable[] involvedVariables = c
 							.getInvolvedVariables();
 					for (int pos = involvedVariables.length; --pos >= 0;) {
@@ -157,7 +157,7 @@ public final class WMC extends AbstractLocalSolver {
 
 		init();
 
-		int nbConflicts = weightedConflicts();
+		int nbConflicts = (int)weightedConflicts();
 
 		logger.fine("Searching...");
 

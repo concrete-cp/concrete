@@ -8,6 +8,7 @@ package cspfj.problem;
 
 import java.util.Arrays;
 
+import cspfj.LocalSolver;
 import cspfj.TabuManager;
 import cspfj.constraint.Constraint;
 import cspfj.util.TieManager;
@@ -39,8 +40,10 @@ public final class ConflictsManager {
 	private boolean critic;
 
 	public final boolean[] criticConstraints;
+	
+	private final LocalSolver solver;
 
-	public ConflictsManager(final Variable variable, final TieManager tieManager) {
+	public ConflictsManager(final Variable variable, final TieManager tieManager, final LocalSolver solver) {
 		super();
 		this.variable = variable;
 		vid = variable.getId();
@@ -52,6 +55,7 @@ public final class ConflictsManager {
 		check = new boolean[constraints.length][domain.length];
 		criticConstraints = new boolean[constraints.length];
 		assignedIndex = variable.getFirst();
+		this.solver = solver;
 	}
 
 	public Variable getVariable() {
@@ -97,7 +101,7 @@ public final class ConflictsManager {
 							&& !constraint.findValidTuple(variable
 									.getPositionInConstraint(c), i)) {
 						// logger.warning("No tuple found");
-						indexConflicts += constraint.getWeight();
+						indexConflicts += solver.getWeight(constraint);
 					}
 
 				}
@@ -134,7 +138,7 @@ public final class ConflictsManager {
 
 				check[i] = constraint.checkFirstWith(position, i);
 				if (!check[i]) {
-					nbConflicts[i] += constraint.getWeight();
+					nbConflicts[i] += solver.getWeight(constraint);
 				}
 			}
 		}
@@ -193,9 +197,9 @@ public final class ConflictsManager {
 			final boolean check = constraint.checkFirstWith(variablePos, i);
 			if (check ^ this.check[constraintPos][i]) {
 				if (check) {
-					nbConflicts[i] -= constraint.getWeight();
+					nbConflicts[i] -= solver.getWeight(constraint);
 				} else {
-					nbConflicts[i] += constraint.getWeight();
+					nbConflicts[i] += solver.getWeight(constraint);
 				}
 				this.check[constraintPos][i] ^= true;
 			}

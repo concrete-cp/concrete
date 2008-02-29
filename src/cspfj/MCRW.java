@@ -123,7 +123,7 @@ public final class MCRW extends AbstractLocalSolver {
 
 		init();
 
-		int nbConflicts = weightedConflicts();
+		int nbConflicts = (int)weightedConflicts();
 
 		logger.fine("Searching...");
 

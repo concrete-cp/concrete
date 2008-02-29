@@ -69,7 +69,6 @@ public class ResultHandler {
 		totalLoad += load;
 
 		logger.info("loaded in " + (load / 1.0e9F) + " s");
-
 	}
 
 	public boolean solution(final Map<Variable, Integer> solution,

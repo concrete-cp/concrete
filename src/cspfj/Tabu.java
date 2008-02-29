@@ -108,7 +108,7 @@ public final class Tabu extends AbstractLocalSolver {
 
 		init();
 		tabuManager.clean();
-		int nbConflicts = weightedConflicts();
+		int nbConflicts = (int)weightedConflicts();
 
 		logger.fine("Searching...");
 

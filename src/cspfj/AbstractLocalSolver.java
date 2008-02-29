@@ -3,7 +3,9 @@ package cspfj;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidParameterException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -20,7 +22,7 @@ import cspfj.problem.Variable;
 import cspfj.util.RandomOrder;
 import cspfj.util.TieManager;
 
-public abstract class AbstractLocalSolver extends AbstractSolver {
+public abstract class AbstractLocalSolver extends AbstractSolver implements LocalSolver {
 
 	final private static Random random = new Random(0);
 
@@ -36,6 +38,8 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 	final protected ConflictsManager[] wcManagers;
 
 	private int maxTries = -1;
+	
+	private final double[] weights ;
 
 	public static void setSeed(final long seed) {
 		random.setSeed(seed);
@@ -55,11 +59,13 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 
 		wcManagers = new ConflictsManager[prob.getMaxVId() + 1];
 		for (Variable v : prob.getVariables()) {
-			wcManagers[v.getId()] = new ConflictsManager(v, tieManager);
+			wcManagers[v.getId()] = new ConflictsManager(v, tieManager, this);
 		}
 
 		setMaxBacktracks(150000);
 
+		weights = new double[problem.getMaxCId()] ;
+		Arrays.fill(weights, 1);
 	}
 
 	public static Random getRandom() {
@@ -78,18 +84,26 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		return realConflicts;
 	}
 
-	protected int weightedConflicts() {
-		int weightedConflicts = 0;
+	 protected double weightedConflicts() {
+		double weightedConflicts = 0;
 
 		for (Constraint c : problem.getConstraints()) {
 			if (!c.checkFirst()) {
-				weightedConflicts += c.getWeight();
+				weightedConflicts += weights[c.getId()];
 			}
 		}
 
 		return weightedConflicts;
 	}
 
+	 public void increaseWeight(Constraint c) {
+		 weights[c.getId()]++;
+	 }
+	 
+	 public double getWeight(Constraint c) {
+		 return weights[c.getId()];
+	 }
+	
 	protected void solution(final int nbConflicts) throws IOException {
 		final Map<Variable, Integer> solution = new HashMap<Variable, Integer>();
 		for (Variable v : problem.getVariables()) {
@@ -98,6 +112,8 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		solution(solution, problem.getNbConstraints() - nbConflicts);
 
 	}
+	
+	
 
 	private void init(final ConflictsManager wcManager) {
 		final Variable variable = wcManager.getVariable();
@@ -116,8 +132,18 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		final Set<ConflictsManager> randomOrder = new TreeSet<ConflictsManager>(
 				new RandomOrder<ConflictsManager>(random));
 
-		for (Variable n : variable.getNeighbours()) {
-			randomOrder.add(wcManagers[n.getId()]);
+		final Set<Variable> neighbours = new HashSet<Variable>();
+
+		for (Constraint c : variable.getInvolvingConstraints()) {
+			for (Variable v : c.getInvolvedVariables()) {
+				neighbours.add(v);
+			}
+		}
+
+		for (Variable n : neighbours) {
+			if (n != variable) {
+				randomOrder.add(wcManagers[n.getId()]);
+			}
 		}
 
 		for (ConflictsManager wcm : randomOrder) {
@@ -152,7 +178,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 		System.gc();
 		chronometer.startChrono();
 		try {
-			if (!max && !preprocess(new AC3(problem))) {
+			if (!max && !preprocess(new AC3(problem, null))) {
 				return false;
 			}
 		} catch (InstantiationException e1) {
@@ -190,10 +216,10 @@ public abstract class AbstractLocalSolver extends AbstractSolver {
 			logger.info("Took " + localTime + " s (" + (localBT / localTime)
 					+ " flips per second), " + (getNbAssignments() - nbAssign)
 					+ " assignments made");
-			for (Constraint c : problem.getConstraints()) {
-				c.setWeight(1);// Math.max(1, c.getWeight()
-				// / problem.getNbConstraints()));
-			}
+//			for (Constraint c : problem.getConstraints()) {
+//				c.setWeight(1);// Math.max(1, c.getWeight()
+//				// / problem.getNbConstraints()));
+//			}
 
 			for (Variable v : problem.getVariables()) {
 				v.resetAssign();

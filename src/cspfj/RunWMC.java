@@ -30,10 +30,10 @@ public class RunWMC extends AbstractRunSolver {
 	protected boolean launch(final int factor) throws IOException {
 		logger.info("MC with " + maxFlips + " flips");
 
-		for (Constraint c : getProblem().getConstraints()) {
-			c.setWeight(Math.max(1, c.getWeight()
-					/ getProblem().getNbConstraints()));
-		}
+//		for (Constraint c : getProblem().getConstraints()) {
+//			c.setWeight(Math.max(1, c.getWeight()
+//					/ getProblem().getNbConstraints()));
+//		}
 
 		mCSolver.setMaxBacktracks(maxFlips);
 		try {
@@ -46,12 +46,12 @@ public class RunWMC extends AbstractRunSolver {
 			getProblem().restoreAll(1);
 		}
 
-		logger.info("Max constraint weight : " + getProblem().getMaxWeight());
-
-		for (Constraint c : getProblem().getConstraints()) {
-			getSolutionHandler().addWeight(c.getId(), c.getWeight());
-
-		}
+//		logger.info("Max constraint weight : " + getProblem().getMaxWeight());
+//
+//		for (Constraint c : getProblem().getConstraints()) {
+//			getSolutionHandler().addWeight(c.getId(), c.getWeight());
+//
+//		}
 
 		return false;
 	}
