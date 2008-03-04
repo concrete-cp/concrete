@@ -57,7 +57,7 @@ public class ResultHandler {
 		this.receiveSolutions = receiveSolutions;
 	}
 
-	public void problem(final String name, final byte[] md5) throws IOException {
+	public void problem(final String name) throws IOException {
 		logger.info("loading : " + name);
 		statistics.clear();
 		bestSatisfied = 0;
@@ -82,19 +82,6 @@ public class ResultHandler {
 			return true;
 		}
 		return false;
-
-	}
-
-	public void fail(final Class<? extends Solver> solver,
-			final String problem, final Throwable thrown, final long load)
-			throws IOException {
-		logger.warning(thrown.toString() + " (" + problem + ")");
-		logger.warning(Arrays.toString(thrown.getStackTrace()));
-		if (thrown.getCause() != null) {
-			logger.warning(thrown.getCause().toString());
-			logger.warning(Arrays.toString(thrown.getCause().getStackTrace()));
-		}
-		unknown++;
 
 	}
 
