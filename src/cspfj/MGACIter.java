@@ -22,15 +22,9 @@ package cspfj;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidParameterException;
-import java.text.NumberFormat;
-import java.util.Arrays;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import cspfj.constraint.Constraint;
-import cspfj.constraint.Weight;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.AC3;
 import cspfj.filter.Filter;
@@ -39,7 +33,6 @@ import cspfj.heuristic.Heuristic;
 import cspfj.heuristic.Lexico;
 import cspfj.heuristic.Pair;
 import cspfj.heuristic.WDegOnDom;
-import cspfj.heuristic.WeightHeuristic;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -267,23 +260,23 @@ public final class MGACIter extends AbstractSolver {
 
 	}
 
-	private String constraintRepartition() {
-		final WeightHeuristic wvh = (WeightHeuristic) heuristic;
-		final SortedSet<Constraint> sortedConstraint = new TreeSet<Constraint>(
-				new Weight(false, wvh));
-		sortedConstraint.addAll(Arrays.asList(problem.getConstraints()));
-
-		final StringBuilder stb = new StringBuilder();
-		final NumberFormat format = NumberFormat.getInstance();
-		format.setMaximumFractionDigits(2);
-		double total = 0;
-		for (Constraint c : sortedConstraint) {
-			stb.append(c.getName() + "(" + format.format(wvh.getWeight(c)) + ") ");
-			total += wvh.getWeight(c);
-		}
-		stb.append(" - Total = " + total);
-		return stb.toString();
-	}
+//	private String constraintRepartition() {
+//		final WeightHeuristic wvh = (WeightHeuristic) heuristic;
+//		final SortedSet<Constraint> sortedConstraint = new TreeSet<Constraint>(
+//				new Weight(false, wvh));
+//		sortedConstraint.addAll(Arrays.asList(problem.getConstraints()));
+//
+//		final StringBuilder stb = new StringBuilder();
+//		final NumberFormat format = NumberFormat.getInstance();
+//		format.setMaximumFractionDigits(2);
+//		double total = 0;
+//		for (Constraint c : sortedConstraint) {
+//			stb.append(c.getName() + "(" + format.format(wvh.getWeight(c)) + ") ");
+//			total += wvh.getWeight(c);
+//		}
+//		stb.append(" - Total = " + total);
+//		return stb.toString();
+//	}
 
 	public int addNoGoods() {
 		return problem.addNoGoods();

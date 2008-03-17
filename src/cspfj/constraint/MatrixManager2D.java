@@ -1,8 +1,6 @@
 package cspfj.constraint;
 
-import cspfj.exception.MatrixTooBigException;
 import cspfj.problem.Variable;
-import cspfj.util.BooleanArray;
 
 public final class MatrixManager2D extends AbstractMatrixManager {
 
