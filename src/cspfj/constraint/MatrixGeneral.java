@@ -3,25 +3,19 @@ package cspfj.constraint;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import cspfj.exception.MatrixTooBigException;
-
 public class MatrixGeneral implements Matrix, Cloneable {
 
 	public int[] skip;
 
 	public boolean[] matrix;
 
-	public MatrixGeneral(int[] sizes, boolean initialState)
-			throws MatrixTooBigException {
-		BigInteger nbValues = BigInteger.ONE;
+	public MatrixGeneral(int[] sizes, boolean initialState) {
+		int nbValues = 1;
 		for (int size : sizes) {
-			nbValues = nbValues.multiply(BigInteger.valueOf(size));
-			if (nbValues.compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) > 0) {
-				throw new MatrixTooBigException();
-			}
+			nbValues *= size;
 		}
 
-		matrix = new boolean[nbValues.intValue()];
+		matrix = new boolean[nbValues];
 		Arrays.fill(matrix, initialState);
 
 		skip = new int[sizes.length];
@@ -36,6 +30,17 @@ public class MatrixGeneral implements Matrix, Cloneable {
 	@Override
 	public boolean check(final int[] tuple) {
 		return matrix[matrixIndex(tuple)];
+	}
+
+	public static boolean usable(final int[] sizes) {
+		BigInteger nbValues = BigInteger.ONE;
+		for (int size : sizes) {
+			nbValues = nbValues.multiply(BigInteger.valueOf(size));
+			if (nbValues.compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) > 0) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	@Override
