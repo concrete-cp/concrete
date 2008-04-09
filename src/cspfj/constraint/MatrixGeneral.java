@@ -9,6 +9,9 @@ public class MatrixGeneral implements Matrix, Cloneable {
 
 	public boolean[] matrix;
 
+	private final static BigInteger MAX_VALUE = BigInteger
+			.valueOf(Integer.MAX_VALUE);
+
 	public MatrixGeneral(int[] sizes, boolean initialState) {
 		int nbValues = 1;
 		for (int size : sizes) {
@@ -34,9 +37,10 @@ public class MatrixGeneral implements Matrix, Cloneable {
 
 	public static boolean usable(final int[] sizes) {
 		BigInteger nbValues = BigInteger.ONE;
+
 		for (int size : sizes) {
 			nbValues = nbValues.multiply(BigInteger.valueOf(size));
-			if (nbValues.compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) > 0) {
+			if (nbValues.compareTo(MAX_VALUE) > 0) {
 				return false;
 			}
 		}

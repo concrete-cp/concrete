@@ -88,9 +88,10 @@ public class ResultHandler {
 			throws IOException {
 		increment(result);
 
-		totalSolve += solver.getUserTime();
-		totalNodes += solver.getNbAssignments();
-
+		if (solver != null) {
+			totalSolve += solver.getUserTime();
+			totalNodes += solver.getNbAssignments();
+		}
 		if (thrown != null) {
 			logger.warning(thrown.toString());
 		}

@@ -20,6 +20,7 @@
 package cspfj.problem;
 
 import java.util.Collection;
+import java.util.List;
 
 import cspfj.constraint.Constraint;
 import cspfj.exception.FailedGenerationException;
@@ -27,7 +28,7 @@ import cspfj.exception.FailedGenerationException;
 public interface ProblemGenerator {
 	 void generate() throws FailedGenerationException ;
 	
-	 Collection<Variable> getVariables() ;
+	 List<Variable> getVariables() ;
 	
 	 Collection<Constraint> getConstraints() ;
 }
