@@ -155,7 +155,7 @@ public final class MGACIter extends AbstractSolver {
 			problem.restore(level + 1);
 			selectedVariable.remove(index, level);
 
-		} while (selectedVariable.getDomainSize() < 1 && level >= 0);
+		} while (selectedVariable.getDomainSize() < 1 && level > 0);
 		checkBacktracks();
 		return selectedVariable;
 	}
