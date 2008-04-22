@@ -201,9 +201,8 @@ public final class BC implements Filter {
 			// logger.finer("Checking (" + variable + ", " + index + ")");
 			if (!check(constraint, variable, position, index, othersSize, level)) {
 				break;
-			} else {
-				revised = true;
 			}
+			revised = true;
 
 		}
 
@@ -211,9 +210,8 @@ public final class BC implements Filter {
 				.getPrev(index)) {
 			if (!check(constraint, variable, position, index, othersSize, level)) {
 				break;
-			} else {
-				revised = true;
 			}
+			revised = true;
 
 		}
 

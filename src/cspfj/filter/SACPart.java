@@ -51,7 +51,7 @@ public class SACPart extends AbstractSAC {
 			initialDomain[j] = i;
 		}
 
-		for (int part = (int) parts; --part >= 0;) {
+		for (int part = parts; --part >= 0;) {
 			final int partFirst = (int) (part * partSize);
 			final int partLast = (int) ((part + 1) * partSize) - 1;
 

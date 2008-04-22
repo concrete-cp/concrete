@@ -3,7 +3,6 @@ package cspfj;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.problem.Problem;
 

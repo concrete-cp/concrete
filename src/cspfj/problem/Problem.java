@@ -33,8 +33,6 @@ import java.util.logging.Logger;
 import cspfj.constraint.Constraint;
 import cspfj.constraint.ExtensionConstraint;
 import cspfj.exception.FailedGenerationException;
-import cspfj.heuristic.Supports;
-import cspfj.heuristic.ValueHeuristic;
 import cspfj.heuristic.WeightHeuristic;
 import cspfj.util.CpuMonitor;
 

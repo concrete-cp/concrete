@@ -60,11 +60,7 @@ public abstract class AbstractStaticValueHeuristic extends
 
 	@Override
 	public int selectIndex(final Variable variable) {
-		if (failFirst) {
-			return variable.getLast();
-		} else {
-			return variable.getFirst();
-		}
+		return failFirst ? variable.getLast() : variable.getFirst();
 	}
 
 	public final boolean isFailFirst() {
