@@ -29,7 +29,7 @@ public final class DTPConstraint extends Constraint {
 
 	public DTPConstraint(final Variable[] scope, final int duration0,
 			final int duration1) {
-		super(scope);
+		super(scope, false);
 		this.duration0 = duration0;
 		this.duration1 = duration1;
 	}
@@ -38,7 +38,7 @@ public final class DTPConstraint extends Constraint {
 	public boolean check() {
 		final int difference = getValue(0) - getValue(1);
 
-		return (difference >= duration1 || -difference >= duration0);
+		return (difference <= duration0 || -difference <= duration1);
 	}
 
 	public String toString() {
