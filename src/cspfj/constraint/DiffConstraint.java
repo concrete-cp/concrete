@@ -25,10 +25,17 @@ public final class DiffConstraint extends Constraint {
 
 	final private int constant;
 
+	final private boolean ordered;
+
 	public DiffConstraint(final Variable[] scope, final int constant) {
+		this(scope, constant, true);
+	}
+
+	public DiffConstraint(final Variable[] scope, final int constant,
+			final boolean ordered) {
 		super(scope);
 		this.constant = constant;
-
+		this.ordered = ordered;
 	}
 
 	@Override
@@ -44,10 +51,15 @@ public final class DiffConstraint extends Constraint {
 		boolean deleted = false;
 
 		if (position == 0) {
-			int v1max = v1.getDomain()[v1.getFirst()];
-			for (int i = v1.getFirst(); i != -1; i = v1.getNext(i)) {
-				if (v1.getDomain()[i] > v1max) {
-					v1max = v1.getDomain()[i];
+			int v1max;
+			if (ordered) {
+				v1max = v1.getDomain()[v1.getLast()];
+			} else {
+				v1max = v1.getDomain()[v1.getFirst()];
+				for (int i = v1.getFirst(); i != -1; i = v1.getNext(i)) {
+					if (v1.getDomain()[i] > v1max) {
+						v1max = v1.getDomain()[i];
+					}
 				}
 			}
 
@@ -58,10 +70,12 @@ public final class DiffConstraint extends Constraint {
 				}
 			}
 		} else {
-			int v0min = v0.getDomain()[v0.getFirst()];
-			for (int i = v0.getFirst(); i != -1; i = v0.getNext(i)) {
-				if (v0.getDomain()[i] < v0min) {
-					v0min = v1.getDomain()[i];
+			int v0min= v0.getDomain()[v0.getFirst()];
+			if (!ordered) {
+				for (int i = v0.getFirst(); i != -1; i = v0.getNext(i)) {
+					if (v0.getDomain()[i] < v0min) {
+						v0min = v1.getDomain()[i];
+					}
 				}
 			}
 

@@ -64,7 +64,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements Loca
 
 		setMaxBacktracks(150000);
 
-		weights = new double[problem.getMaxCId()] ;
+		weights = new double[problem.getMaxCId()+1] ;
 		Arrays.fill(weights, 1);
 	}
 

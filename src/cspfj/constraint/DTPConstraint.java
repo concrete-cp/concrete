@@ -23,28 +23,90 @@ import cspfj.problem.Variable;
 
 public final class DTPConstraint extends Constraint {
 
-	final private int duration0;
+	final private int[] duration;
 
-	final private int duration1;
-
+	final private boolean ordered;
+	
 	public DTPConstraint(final Variable[] scope, final int duration0,
 			final int duration1) {
+		this(scope, duration0, duration1, true);
+	}
+	
+	public DTPConstraint(final Variable[] scope, final int duration0,
+			final int duration1, final boolean ordered) {
 		super(scope, false);
-		this.duration0 = duration0;
-		this.duration1 = duration1;
+		this.duration = new int[] { duration0, duration1 };
+		this.ordered = ordered;
 	}
 
 	@Override
 	public boolean check() {
 		final int difference = getValue(0) - getValue(1);
 
-		return (difference <= duration0 || -difference <= duration1);
+		return (difference <= duration[0] || -difference <= duration[1]);
 	}
 
 	public String toString() {
 		return "C" + getId() + " (" + getInvolvedVariables()[0] + ":"
-				+ duration0 + ", " + getInvolvedVariables()[1] + ":"
-				+ duration1 + ")";
+				+ duration[0] + ", " + getInvolvedVariables()[1] + ":"
+				+ duration[1] + ")";
 	}
 
+	@Override
+	public boolean revise(final int position, final int level) {
+		final Variable variable = getInvolvedVariables()[position];
+		final Variable otherVariable = getInvolvedVariables()[1 - position];
+
+		final int highBound;
+		final int lowBound;
+
+		if (ordered) {
+
+			highBound = otherVariable.getDomain()[otherVariable.getLast()]
+					+ duration[position];
+
+			lowBound = otherVariable.getDomain()[otherVariable.getFirst()]
+					- duration[1 - position];
+
+		} else {
+			int otherMin = otherVariable.getDomain()[otherVariable.getFirst()];
+			int otherMax = otherMin;
+
+			// final StringBuilder stb = new StringBuilder();
+
+			for (int i = otherVariable.getFirst(); i >= 0; i = otherVariable
+					.getNext(i)) {
+				final int value = otherVariable.getDomain()[i];
+				if (value < otherMin) {
+					otherMin = value;
+				}
+				if (value > otherMax) {
+					otherMax = value;
+				}
+
+				// stb.append(value).append("-");
+			}
+
+			// assert otherMax == otherVariable.getDomain()[otherVariable
+			// .getLast()] : stb;
+			// assert otherMin == otherVariable.getDomain()[otherVariable
+			// .getFirst()] : stb;
+
+			highBound = otherMax + duration[position];
+			lowBound = otherMin - duration[1 - position];
+		}
+
+		boolean filtered = false;
+
+		for (int i = variable.getFirst(); i >= 0; i = variable.getNext(i)) {
+			final int value = variable.getDomain()[i];
+			if (value > highBound && value < lowBound) {
+				variable.remove(i, level);
+				filtered = true;
+			} 
+		}
+
+
+		return filtered;
+	}
 }
