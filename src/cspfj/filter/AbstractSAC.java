@@ -50,8 +50,8 @@ public abstract class AbstractSAC implements BackedFilter {
 	protected abstract boolean singletonTest(Variable variable, int level);
 
 	protected boolean check(final Variable variable, final int index, final int level) {
-		if (logger.isLoggable(Level.FINE)) {
-			logger.fine(level + " : " + variable + " <- "
+		if (logger.isLoggable(Level.FINER)) {
+			logger.finer(level + " : " + variable + " <- "
 					+ variable.getDomain()[index] + "(" + index + ")");
 		}
 
@@ -63,7 +63,7 @@ public abstract class AbstractSAC implements BackedFilter {
 		problem.restore(level + 1);
 
 		if (!singletonTest) {
-			logger.fine("Removing " + variable + ", " + index);
+			logger.finer("Removing " + variable + ", " + index);
 
 			variable.remove(index, level);
 			return true;

@@ -29,7 +29,7 @@ public final class DTPConstraint extends Constraint {
 	
 	public DTPConstraint(final Variable[] scope, final int duration0,
 			final int duration1) {
-		this(scope, duration0, duration1, true);
+		this(scope, duration0, duration1, false);
 	}
 	
 	public DTPConstraint(final Variable[] scope, final int duration0,

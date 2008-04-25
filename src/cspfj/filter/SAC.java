@@ -153,20 +153,20 @@ public final class SAC extends AbstractSAC {
 			problem.setLevelVariables(level, variable);
 			nbSingletonTests++;
 			if (filter.reduceAfter(level + 1, variable)) {
-
-				if (branch && buildBranch(level + 1)) {
-					reduceToSolution(level);
-					return true;
-				}
-
-				final int nbNg = problem.addNoGoods();
-				nbNoGoods += nbNg;
-
-				changedGraph = nbNg > 0;
-
-				// for (int l = level + 1; l < problem.getNbVariables(); l++) {
-				// problem.setLevelVariables(l, -1);
-				// }
+//
+//				if (branch && buildBranch(level + 1)) {
+//					reduceToSolution(level);
+//					return true;
+//				}
+//
+//				final int nbNg = problem.addNoGoods();
+//				nbNoGoods += nbNg;
+//
+//				changedGraph = nbNg > 0;
+//
+//				// for (int l = level + 1; l < problem.getNbVariables(); l++) {
+//				// problem.setLevelVariables(l, -1);
+//				// }
 
 				variable.unassign(problem);
 				problem.restore(level + 1);

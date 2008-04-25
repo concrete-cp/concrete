@@ -28,7 +28,7 @@ public final class DiffConstraint extends Constraint {
 	final private boolean ordered;
 
 	public DiffConstraint(final Variable[] scope, final int constant) {
-		this(scope, constant, true);
+		this(scope, constant, false);
 	}
 
 	public DiffConstraint(final Variable[] scope, final int constant,
@@ -51,12 +51,9 @@ public final class DiffConstraint extends Constraint {
 		boolean deleted = false;
 
 		if (position == 0) {
-			int v1max;
-			if (ordered) {
-				v1max = v1.getDomain()[v1.getLast()];
-			} else {
-				v1max = v1.getDomain()[v1.getFirst()];
-				for (int i = v1.getFirst(); i != -1; i = v1.getNext(i)) {
+			int v1max = v1.getDomain()[v1.getLast()];
+			if (!ordered) {
+				for (int i = v1.getLast(); i != -1; i = v1.getPrev(i)) {
 					if (v1.getDomain()[i] > v1max) {
 						v1max = v1.getDomain()[i];
 					}

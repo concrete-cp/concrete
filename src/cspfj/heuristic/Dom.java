@@ -29,7 +29,7 @@ public final class Dom extends AbstractVariableHeuristic {
 	}
 	
 	public double getScore(final Variable variable) {
-		return -variable.getDomainSize();
+		return variable.getDomainSize();
 	}
 
 	public String toString() {
