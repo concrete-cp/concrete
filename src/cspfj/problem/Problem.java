@@ -35,6 +35,7 @@ import cspfj.constraint.ExtensionConstraint;
 import cspfj.exception.FailedGenerationException;
 import cspfj.heuristic.WeightHeuristic;
 import cspfj.util.CpuMonitor;
+import cspfj.util.Waker;
 
 public final class Problem implements Cloneable {
 	private Map<Integer, Variable> variables;
@@ -92,12 +93,16 @@ public final class Problem implements Cloneable {
 		// logger.info("Converting to extension");
 		// final Collection<Constraint> constraints = convertExtension(generator
 		// .getConstraints(), seconds);
-		logger.info("Counting supports");
-		final float start = CpuMonitor.getCpuTime();
-		for (Constraint c : generator.getConstraints()) {
-			c.initNbSupports(start + expCountSupports);
 
+		logger.info("Counting supports (" + expCountSupports + ")");
+		
+		Thread.interrupted();
+		final Waker waker = new Waker(Thread.currentThread(), expCountSupports * 1000);
+		waker.start();
+		for (Constraint c : generator.getConstraints()) {
+			c.initNbSupports();
 		}
+		waker.interrupt();
 
 		logger.info("Setting Constraints");
 		problem.setConstraints(generator.getConstraints());
@@ -207,7 +212,6 @@ public final class Problem implements Cloneable {
 
 		// final ValueHeuristic maxS = new Supports(this, false);
 		// maxS.compute();
-
 
 		// for (Variable v: getVariables()) {
 		// v.heuristicToOrder();

@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.logging.Logger;
 
 import cspfj.problem.Variable;
-import cspfj.util.CpuMonitor;
 
 public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	private Variable[] involvedVariables;
@@ -67,7 +66,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	private final String name;
 
 	private boolean conflictCounts = false;
-	
+
 	protected Constraint(final Variable[] scope) {
 		this(scope, true, null);
 	}
@@ -135,8 +134,8 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		return tupleCache;
 	}
 
-	public void initNbSupports(final float time) {
-		// logger.info("Counting " + this +" supports");
+	public void initNbSupports() {
+		logger.fine("Counting " + this + " supports");
 
 		final long size = size();
 		for (int p = arity; --p >= 0;) {
@@ -145,25 +144,33 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 		// logger.fine("Counting supports");
 
-		tupleManager.setFirstTuple();
-
 		Arrays.fill(nbMaxConflicts, 0);
 		for (int p = arity; --p >= 0;) {
 			Arrays.fill(nbInitConflicts[p], 0);
 		}
+		tupleManager.setFirstTuple();
 		do {
-			if (!chk()) {
-				for (int p = arity; --p >= 0;) {
-					final long i = ++nbInitConflicts[p][tuple[p]];
-					if (i > nbMaxConflicts[p]) {
-						nbMaxConflicts[p] = i;
-					}
-				}
-			}
-			if (CpuMonitor.getCpuTime() > time) {
+			if (Thread.interrupted()) {
+				logger.info("Interrupted");
 				return;
 			}
+			if (!chk()) {
+				for (int p = arity; --p >= 0;) {
+					nbInitConflicts[p][tuple[p]]++;
+				}
+			}
 		} while (tupleManager.setNextTuple());
+		for (int p = arity; --p >= 0;) {
+			final Variable variable = involvedVariables[p];
+			long max = 0;
+			final long[] nbInitConflicts = this.nbInitConflicts[p];
+			for (int i = variable.getFirst(); i != -1; i = variable.getNext(i)) {
+				if (max < nbInitConflicts[i]) {
+					max = nbInitConflicts[i];
+				}
+			}
+			nbMaxConflicts[p] = max;
+		}
 		conflictCounts = true;
 
 	}
@@ -240,9 +247,10 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	}
 
 	public boolean skipRevision(final int position) {
-		return conflictCounts && getOtherSize(position) > nbMaxConflicts[position];
+		return conflictCounts
+				&& getOtherSize(position) > nbMaxConflicts[position];
 	}
-	
+
 	public boolean revise(final int position, final int level) {
 		final Variable variable = involvedVariables[position];
 
@@ -254,15 +262,14 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		// + Arrays.toString(variable.getCurrentDomain()) + " against "
 		// + this);
 
-		
-
 		for (int index = variable.getFirst(); index >= 0; index = variable
 				.getNext(index)) {
 
 			// logger.finer("Checking (" + variable + ", " + index + ")");
-//			if (conflictCounts && othersSize > nbInitConflicts[position][index]) {
-//				continue;
-//			}
+			// if (conflictCounts && othersSize >
+			// nbInitConflicts[position][index]) {
+			// continue;
+			// }
 			if (!findValidTuple(position, index)) {
 				// logger.finer("removing " + index + " from " + variable);
 

@@ -113,6 +113,10 @@ public final class AllDifferentConstraint extends Constraint {
 
 		return revised;
 	}
+	
+//	public void initNbSupports() {
+//		return;
+//	}
 
 //	@Override
 //	public int nbTuples(final int variablePosition, final int index) {
