@@ -189,6 +189,8 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements Loca
 			throw new InvalidParameterException(e1.toString());
 		} catch (NoSuchMethodException e1) {
 			throw new InvalidParameterException(e1.toString());
+		} catch (InterruptedException e) {
+			// No problem...
 		}
 		int nbTries = 0;
 		do {

@@ -33,6 +33,7 @@ import cspfj.filter.Filter;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.Chronometer;
+import cspfj.util.Waker;
 
 public abstract class AbstractSolver implements Solver {
 
@@ -53,6 +54,8 @@ public abstract class AbstractSolver implements Solver {
 	private final ResultHandler resultHandler;
 
 	private Class<? extends Filter> preprocessor = null;
+
+	private int preproExpiration = -1;
 
 	private final static Logger logger = Logger
 			.getLogger("cspfj.solver.AbstractSolver");
@@ -150,6 +153,10 @@ public abstract class AbstractSolver implements Solver {
 		this.preprocessor = prepro;
 	}
 
+	public final void setPreproExp(final int time) {
+		this.preproExpiration = time;
+	}
+
 	public final Class<? extends Filter> getPreprocessor() {
 		return preprocessor;
 	}
@@ -180,7 +187,10 @@ public abstract class AbstractSolver implements Solver {
 
 	public final boolean preprocess(final Filter filter)
 			throws InstantiationException, IllegalAccessException,
-			InvocationTargetException, NoSuchMethodException {
+			InvocationTargetException, NoSuchMethodException,
+			InterruptedException {
+
+		logger.info("Preprocessing (" + preproExpiration + ")");
 
 		final Filter preprocessor;
 		if (this.preprocessor == null) {
@@ -195,41 +205,56 @@ public abstract class AbstractSolver implements Solver {
 					new Object[] { problem });
 		}
 
+		Thread.interrupted();
+		final Waker waker = new Waker(Thread.currentThread(),
+				preproExpiration * 1000);
+		waker.start();
 		final float start = chronometer.getCurrentChrono();
-		final boolean consistent = preprocessor.reduceAll(0);
-		final float preproCpu = chronometer.getCurrentChrono();
+		boolean consistent;
+		try {
+			consistent = preprocessor.reduceAll(0);
+		} catch (InterruptedException e) {
+			logger.warning("Interrupted preprocessing");
+			consistent = true;
+			throw e;
+		} finally {
+			final float preproCpu = chronometer.getCurrentChrono();
+			waker.interrupt();
 
-		statistics.putAll(preprocessor.getStatistics());
+			statistics.putAll(preprocessor.getStatistics());
 
-		int removed = 0;
+			int removed = 0;
 
-		for (Variable v : problem.getVariables()) {
-			removed += v.getDomain().length - v.getDomainSize();
+			for (Variable v : problem.getVariables()) {
+				removed += v.getDomain().length - v.getDomainSize();
 
+			}
+			statistics.put("prepro-removed", removed);
+			// statistics("prepro-subs", preprocessor.getNbSub()) ;
+
+			statistics.put("prepro-cpu", preproCpu - start);
+			statistics.put("prepro-constraint-ccks", Constraint.getChecks());
+			statistics.put("prepro-constraint-presenceccks", Constraint
+					.getPresenceChecks());
+			statistics.put("prepro-matrix-ccks", AbstractMatrixManager
+					.getChecks());
+			statistics.put("prepro-matrix-presenceccks", AbstractMatrixManager
+					.getPresenceChecks());
+
+			// if (SPACE.BRANCH.equals(space)) {
+			// statistics("prepro-singletontests", ((SAC) preprocessor)
+			// .getNbSingletonTests());
+			// } else if (SPACE.CLASSIC.equals(space)) {
+			// statistics("prepro-singletontests", ((AbstractSAC) preprocessor)
+			// .getNbSingletonTests());
+			// }
 		}
-		statistics.put("prepro-removed", removed);
-		// statistics("prepro-subs", preprocessor.getNbSub()) ;
-
-		statistics.put("prepro-cpu", preproCpu - start);
-		statistics.put("prepro-constraint-ccks", Constraint.getChecks());
-		statistics.put("prepro-constraint-presenceccks", Constraint.getPresenceChecks());
-		statistics.put("prepro-matrix-ccks", AbstractMatrixManager.getChecks());
-		statistics.put("prepro-matrix-presenceccks", AbstractMatrixManager
-				.getPresenceChecks());
-
-		// if (SPACE.BRANCH.equals(space)) {
-		// statistics("prepro-singletontests", ((SAC) preprocessor)
-		// .getNbSingletonTests());
-		// } else if (SPACE.CLASSIC.equals(space)) {
-		// statistics("prepro-singletontests", ((AbstractSAC) preprocessor)
-		// .getNbSingletonTests());
-		// }
-
 		if (!consistent) {
 			chronometer.validateChrono();
 			return false;
 		}
 		return true;
+
 	}
 
 	public Map<String, Object> getStatistics() {

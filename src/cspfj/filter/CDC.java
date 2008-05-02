@@ -39,17 +39,20 @@ public final class CDC extends AbstractSAC {
 		super(problem, filter);
 	}
 
-	protected boolean singletonTest(final Variable variable, final int level) {
+	protected boolean singletonTest(final Variable variable, final int level)
+			throws InterruptedException {
 		boolean changedGraph = false;
 		for (int index = variable.getFirst(); index >= 0; index = variable
 				.getNext(index)) {
-
+			if (Thread.interrupted()) {
+				throw new InterruptedException();
+			}
 			if (!variable.isPresent(index)) {
 				continue;
 			}
 
-			if (logger.isLoggable(Level.FINE)) {
-				logger.fine(level + " : " + variable + " <- "
+			if (logger.isLoggable(Level.FINER)) {
+				logger.finer(level + " : " + variable + " <- "
 						+ variable.getDomain()[index] + "(" + index + ")");
 			}
 
@@ -93,6 +96,6 @@ public final class CDC extends AbstractSAC {
 	@Override
 	public void setParameter(int parameter) {
 		// TODO Auto-generated method stub
-		
+
 	}
 }

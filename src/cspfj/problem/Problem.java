@@ -95,12 +95,17 @@ public final class Problem implements Cloneable {
 		// .getConstraints(), seconds);
 
 		logger.info("Counting supports (" + expCountSupports + ")");
-		
+
 		Thread.interrupted();
-		final Waker waker = new Waker(Thread.currentThread(), expCountSupports * 1000);
+		final Waker waker = new Waker(Thread.currentThread(),
+				expCountSupports * 1000);
 		waker.start();
 		for (Constraint c : generator.getConstraints()) {
-			c.initNbSupports();
+			try {
+				c.initNbSupports();
+			} catch (InterruptedException e) {
+				break;
+			}
 		}
 		waker.interrupt();
 
@@ -402,14 +407,14 @@ public final class Problem implements Cloneable {
 
 			if (levelVariables[level] == null) {
 				break;
-			} else {
-				scope[level] = levelVariables[level];
-				tuple[level] = levelVariables[level].getFirst();
 			}
+			scope[level] = levelVariables[level];
+			tuple[level] = levelVariables[level].getFirst();
+
 		}
 		// noGoodTime += CpuMonitor.getCpuTime() - startNoGood;
-		if (logger.isLoggable(Level.FINE)) {
-			logger.fine(nbNoGoods + " nogoods");
+		if (logger.isLoggable(Level.FINER)) {
+			logger.finer(nbNoGoods + " nogoods");
 		}
 
 		return nbNoGoods;

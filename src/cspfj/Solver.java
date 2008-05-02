@@ -52,4 +52,6 @@ public interface Solver {
 	Problem getProblem() ;
 	
 	Map<String, Object> getStatistics();
+
+	void setPreproExp(int time);
 }

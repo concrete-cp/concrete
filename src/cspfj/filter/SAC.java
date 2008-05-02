@@ -56,7 +56,7 @@ public final class SAC extends AbstractSAC {
 	public SAC(Problem problem, Filter filter) {
 		this(problem, filter, false);
 	}
-	
+
 	public SAC(Problem problem, Filter filter, boolean branch) {
 		super(problem, filter);
 		this.branch = branch;
@@ -121,10 +121,8 @@ public final class SAC extends AbstractSAC {
 		}
 		return false;
 	}
-	
 
-
-	protected boolean reduce(final int level) {
+	protected boolean reduce(final int level) throws InterruptedException {
 		final Problem problem = this.problem;
 		doneSomething = false;
 
@@ -153,20 +151,21 @@ public final class SAC extends AbstractSAC {
 			problem.setLevelVariables(level, variable);
 			nbSingletonTests++;
 			if (filter.reduceAfter(level + 1, variable)) {
-//
-//				if (branch && buildBranch(level + 1)) {
-//					reduceToSolution(level);
-//					return true;
-//				}
-//
-//				final int nbNg = problem.addNoGoods();
-//				nbNoGoods += nbNg;
-//
-//				changedGraph = nbNg > 0;
-//
-//				// for (int l = level + 1; l < problem.getNbVariables(); l++) {
-//				// problem.setLevelVariables(l, -1);
-//				// }
+				//
+				// if (branch && buildBranch(level + 1)) {
+				// reduceToSolution(level);
+				// return true;
+				// }
+				//
+				// final int nbNg = problem.addNoGoods();
+				// nbNoGoods += nbNg;
+				//
+				// changedGraph = nbNg > 0;
+				//
+				// // for (int l = level + 1; l < problem.getNbVariables(); l++)
+				// {
+				// // problem.setLevelVariables(l, -1);
+				// // }
 
 				variable.unassign(problem);
 				problem.restore(level + 1);
@@ -335,8 +334,6 @@ public final class SAC extends AbstractSAC {
 		return doneSomething;
 	}
 
-
-
 	@Override
 	protected boolean singletonTest(Variable variable, int level) {
 		throw new UnsupportedOperationException();
@@ -345,6 +342,6 @@ public final class SAC extends AbstractSAC {
 	@Override
 	public void setParameter(int parameter) {
 		// TODO Auto-generated method stub
-		
+
 	}
 }

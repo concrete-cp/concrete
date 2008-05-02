@@ -153,8 +153,10 @@ public final class MGACRec extends AbstractSolver {
 		System.gc();
 		chronometer.startChrono();
 
+		final Filter filter = getFilter();
+
 		try {
-			if (!preprocess(getFilter())) {
+			if (!preprocess(filter)) {
 				chronometer.validateChrono();
 				return false;
 			}
@@ -166,6 +168,15 @@ public final class MGACRec extends AbstractSolver {
 			throw new InvalidParameterException(e1.toString());
 		} catch (NoSuchMethodException e1) {
 			throw new InvalidParameterException(e1.toString());
+		} catch (InterruptedException e) {
+			try {
+				if (!filter.reduceAll(0)) {
+					chronometer.validateChrono();
+					return false;
+				}
+			} catch (InterruptedException e1) {
+				throw new IllegalArgumentException("Unexpected interruption");
+			}
 		}
 
 		// statistics("prepro-nbskippedrevisions", Constraint
@@ -181,8 +192,6 @@ public final class MGACRec extends AbstractSolver {
 		statistics.put("heuristic-cpu", heuristicCpu - start);
 
 		int maxBT = allSolutions ? -1 : getMaxBacktracks();
-
-		final Filter filter = getFilter();
 
 		//
 		// logger.fine("ok!") ;
@@ -217,9 +226,14 @@ public final class MGACRec extends AbstractSolver {
 			maxBT *= 1.5;
 			addNoGoods();
 			problem.restoreAll(1);
-			if (!filter.reduceAll(0)) {
-				chronometer.validateChrono();
-				return false;
+			try {
+				if (!filter.reduceAll(0)) {
+					chronometer.validateChrono();
+					return false;
+				}
+			} catch (InterruptedException e) {
+				throw new IllegalArgumentException(
+						"Filter was unexpectingly interrupted !");
 			}
 		} while (true);
 		chronometer.validateChrono();

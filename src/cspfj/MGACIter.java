@@ -55,7 +55,8 @@ public final class MGACIter extends AbstractSolver {
 
 	public MGACIter(Problem prob, ResultHandler resultHandler,
 			Heuristic heuristic) {
-		this(prob, resultHandler, heuristic, new AC3(prob, heuristic.getVariableHeuristic()));
+		this(prob, resultHandler, heuristic, new AC3(prob, heuristic
+				.getVariableHeuristic()));
 	}
 
 	public MGACIter(Problem prob, ResultHandler resultHandler,
@@ -170,8 +171,10 @@ public final class MGACIter extends AbstractSolver {
 		System.gc();
 		chronometer.startChrono();
 
+		final Filter filter = getFilter();
+
 		try {
-			if (!preprocess(getFilter())) {
+			if (!preprocess(filter)) {
 				chronometer.validateChrono();
 				return false;
 			}
@@ -183,6 +186,15 @@ public final class MGACIter extends AbstractSolver {
 			throw new InvalidParameterException(e1.toString());
 		} catch (NoSuchMethodException e1) {
 			throw new InvalidParameterException(e1.toString());
+		} catch (InterruptedException e) {
+			try {
+				if (!filter.reduceAll(0)) {
+					chronometer.validateChrono();
+					return false;
+				}
+			} catch (InterruptedException e1) {
+				throw new IllegalArgumentException("Unexpected interruption");
+			}
 		}
 
 		// statistics("prepro-nbskippedrevisions", Constraint
@@ -194,20 +206,18 @@ public final class MGACIter extends AbstractSolver {
 
 		final float start = chronometer.getCurrentChrono();
 		heuristic.compute();
-		
-//		for (Variable v:problem.getVariables()) {
-//			for (int i = v.getFirst() ; i >=0 ; i=v.getNext(i)) {
-//				System.out.print(i+"-");
-//			}
-//			System.out.println();
-//		}
-		
+
+		// for (Variable v:problem.getVariables()) {
+		// for (int i = v.getFirst() ; i >=0 ; i=v.getNext(i)) {
+		// System.out.print(i+"-");
+		// }
+		// System.out.println();
+		// }
+
 		final float heuristicCpu = chronometer.getCurrentChrono();
 		statistics.put("heuristic-cpu", heuristicCpu - start);
 
 		int maxBT = allSolutions ? -1 : getMaxBacktracks();
-
-		final Filter filter = getFilter();
 
 		//
 		// logger.fine("ok!") ;
@@ -245,9 +255,14 @@ public final class MGACIter extends AbstractSolver {
 
 			addNoGoods();
 			problem.restoreAll(1);
-			if (!filter.reduceAll(0)) {
-				chronometer.validateChrono();
-				return false;
+			try {
+				if (!filter.reduceAll(0)) {
+					chronometer.validateChrono();
+					return false;
+				}
+			} catch (InterruptedException e) {
+				throw new IllegalArgumentException(
+						"Filter was unexpectingly interrupted !");
 			}
 		} while (true);
 		chronometer.validateChrono();
@@ -260,23 +275,23 @@ public final class MGACIter extends AbstractSolver {
 
 	}
 
-//	private String constraintRepartition() {
-//		final WeightHeuristic wvh = (WeightHeuristic) heuristic;
-//		final SortedSet<Constraint> sortedConstraint = new TreeSet<Constraint>(
-//				new Weight(false, wvh));
-//		sortedConstraint.addAll(Arrays.asList(problem.getConstraints()));
-//
-//		final StringBuilder stb = new StringBuilder();
-//		final NumberFormat format = NumberFormat.getInstance();
-//		format.setMaximumFractionDigits(2);
-//		double total = 0;
-//		for (Constraint c : sortedConstraint) {
-//			stb.append(c.getName() + "(" + format.format(wvh.getWeight(c)) + ") ");
-//			total += wvh.getWeight(c);
-//		}
-//		stb.append(" - Total = " + total);
-//		return stb.toString();
-//	}
+	// private String constraintRepartition() {
+	// final WeightHeuristic wvh = (WeightHeuristic) heuristic;
+	// final SortedSet<Constraint> sortedConstraint = new TreeSet<Constraint>(
+	// new Weight(false, wvh));
+	// sortedConstraint.addAll(Arrays.asList(problem.getConstraints()));
+	//
+	// final StringBuilder stb = new StringBuilder();
+	// final NumberFormat format = NumberFormat.getInstance();
+	// format.setMaximumFractionDigits(2);
+	// double total = 0;
+	// for (Constraint c : sortedConstraint) {
+	// stb.append(c.getName() + "(" + format.format(wvh.getWeight(c)) + ") ");
+	// total += wvh.getWeight(c);
+	// }
+	// stb.append(" - Total = " + total);
+	// return stb.toString();
+	// }
 
 	public int addNoGoods() {
 		return problem.addNoGoods();

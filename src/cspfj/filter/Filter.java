@@ -31,9 +31,9 @@ public interface Filter {
 
     /**
      * @param level Le niveau en cours
-     * @return False ssi un domaine a été vidé
+     * @return False ssi un domaine a ï¿½tï¿½ vidï¿½
      */
-    boolean reduceAll(int level) ;
+    boolean reduceAll(int level) throws InterruptedException ;
     
     boolean reduceAfter(int level, Variable variable) ;
     

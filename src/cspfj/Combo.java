@@ -47,6 +47,15 @@ public class Combo extends AbstractSolver {
 			throw new InvalidParameterException(e.toString());
 		} catch (NoSuchMethodException e) {
 			throw new InvalidParameterException(e.toString());
+		} catch (InterruptedException e) {
+			try {
+				if (!macSolver.getFilter().reduceAll(0)) {
+					chronometer.validateChrono();
+					return false;
+				}
+			} catch (InterruptedException e1) {
+				throw new IllegalArgumentException("Unexpected interruption");
+			}
 		}
 
 		// final int localBT = (int) (-500 + 8.25 * problem.getMaxDomainSize()

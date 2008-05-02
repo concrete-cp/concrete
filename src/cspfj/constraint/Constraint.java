@@ -134,7 +134,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		return tupleCache;
 	}
 
-	public void initNbSupports() {
+	public void initNbSupports() throws InterruptedException {
 		logger.fine("Counting " + this + " supports");
 
 		final long size = size();
@@ -152,7 +152,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		do {
 			if (Thread.interrupted()) {
 				logger.info("Interrupted");
-				return;
+				throw new InterruptedException();
 			}
 			if (!chk()) {
 				for (int p = arity; --p >= 0;) {
@@ -172,7 +172,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 			nbMaxConflicts[p] = max;
 		}
 		conflictCounts = true;
-
 	}
 
 	public int getValue(final int position) {

@@ -1,4 +1,3 @@
-
 /**
  * CSPFJ - CSP solving API for Java
  * Copyright (C) 2006 Julien VION
@@ -31,7 +30,8 @@ import cspfj.problem.Variable;
  */
 public final class B3C extends AbstractSAC {
 
-	//private final static Logger logger = Logger.getLogger("cspfj.filter.CDC");
+	// private final static Logger logger =
+	// Logger.getLogger("cspfj.filter.CDC");
 
 	public B3C(Problem problem, Filter filter) {
 		super(problem, filter);
@@ -66,16 +66,19 @@ public final class B3C extends AbstractSAC {
 		return changed;
 	}
 
-
-
 	public boolean reduceAfter(final int level, final Variable variable) {
 		if (variable == null) {
 			return true;
 		}
-		return reduceAll(level);
+		try {
+			return reduceAll(level);
+		} catch (InterruptedException e) {
+			throw new IllegalArgumentException(
+					"Filter was unexpectingly interrupted !");
+		}
 	}
 
-	public boolean reduceAll(final int level) {
+	public boolean reduceAll(final int level) throws InterruptedException {
 		return reduce(level);
 	}
 
@@ -96,7 +99,7 @@ public final class B3C extends AbstractSAC {
 	@Override
 	public void setParameter(int parameter) {
 		// No parameter
-		
+
 	}
 
 }

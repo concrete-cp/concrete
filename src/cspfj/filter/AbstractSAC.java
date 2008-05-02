@@ -28,7 +28,7 @@ public abstract class AbstractSAC implements BackedFilter {
 	private final Variable[] variables;
 
 	private final Comparator<Variable> heuristic;
-	
+
 	private static final Logger logger = Logger.getLogger(AbstractSAC.class
 			.toString());
 
@@ -44,14 +44,21 @@ public abstract class AbstractSAC implements BackedFilter {
 		if (variable == null) {
 			return true;
 		}
-		return reduceAll(level);
+		try {
+			return reduceAll(level);
+		} catch (InterruptedException e) {
+			throw new IllegalArgumentException(
+					"Filter was unexpectingly interrupted !");
+		}
 	}
 
-	protected abstract boolean singletonTest(Variable variable, int level);
+	protected abstract boolean singletonTest(Variable variable, int level)
+			throws InterruptedException;
 
-	protected boolean check(final Variable variable, final int index, final int level) {
-		if (logger.isLoggable(Level.FINER)) {
-			logger.finer(level + " : " + variable + " <- "
+	protected boolean check(final Variable variable, final int index,
+			final int level) {
+		if (logger.isLoggable(Level.FINEST)) {
+			logger.finest(level + " : " + variable + " <- "
 					+ variable.getDomain()[index] + "(" + index + ")");
 		}
 
@@ -71,8 +78,8 @@ public abstract class AbstractSAC implements BackedFilter {
 
 		return false;
 	}
-	
-	protected boolean reduce(final int level) {
+
+	protected boolean reduce(final int level) throws InterruptedException {
 		final Filter filter = this.filter;
 
 		if (!filter.reduceAll(level)) {
@@ -80,23 +87,23 @@ public abstract class AbstractSAC implements BackedFilter {
 		}
 		final Variable[] variables = this.variables;
 		Arrays.sort(variables, heuristic);
-//		System.out.println(Arrays.toString(variables));
-//		// Tri à bulles
-//		for (int i = 0; i < variables.length; i++) {
-//			boolean changed = false;
-//			for (int j = variables.length; --j > i;) {
-//				if (variables[j].getDomainSize() < variables[j - 1]
-//						.getDomainSize()) {
-//					final Variable temp = variables[j];
-//					variables[j] = variables[j - 1];
-//					variables[j - 1] = temp;
-//					changed = true;
-//				}
-//			}
-//			if (!changed) {
-//				break;
-//			}
-//		}
+		// System.out.println(Arrays.toString(variables));
+		// // Tri à bulles
+		// for (int i = 0; i < variables.length; i++) {
+		// boolean changed = false;
+		// for (int j = variables.length; --j > i;) {
+		// if (variables[j].getDomainSize() < variables[j - 1]
+		// .getDomainSize()) {
+		// final Variable temp = variables[j];
+		// variables[j] = variables[j - 1];
+		// variables[j - 1] = temp;
+		// changed = true;
+		// }
+		// }
+		// if (!changed) {
+		// break;
+		// }
+		// }
 
 		int mark = 0;
 
@@ -104,6 +111,9 @@ public abstract class AbstractSAC implements BackedFilter {
 
 		do {
 			final Variable variable = variables[v];
+			if (logger.isLoggable(Level.FINE)) {
+				logger.fine(variable.toString());
+			}
 			if (variable.getDomainSize() > 1 && singletonTest(variable, level)) {
 				if (variable.getDomainSize() <= 0) {
 					return false;
@@ -111,7 +121,7 @@ public abstract class AbstractSAC implements BackedFilter {
 				if (!filter.reduceAfter(level, variable)) {
 					return false;
 				}
-//				mark = v;
+				// mark = v;
 			}
 
 			v = next(v, variables.length);
@@ -121,7 +131,7 @@ public abstract class AbstractSAC implements BackedFilter {
 
 	}
 
-	public boolean reduceAll(final int level) {
+	public boolean reduceAll(final int level) throws InterruptedException {
 		return reduce(level);
 	}
 
@@ -142,11 +152,10 @@ public abstract class AbstractSAC implements BackedFilter {
 		logger.fine("Tour !");
 		return 0;
 	}
-	
+
 	@Override
 	public boolean ensureAC() {
 		return filter.ensureAC();
 	}
-
 
 }
