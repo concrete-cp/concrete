@@ -136,7 +136,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 	public void initNbSupports() throws InterruptedException {
 		logger.fine("Counting " + this + " supports");
-
+		conflictCounts = false;
 		final long size = size();
 		for (int p = arity; --p >= 0;) {
 			initSize[p] = size / involvedVariables[p].getDomainSize();
