@@ -4,9 +4,8 @@
 
 <target depends="init" name="buildCspfj">
         <echo message="${ant.project.name}: ${ant.file}"/>
-        <javac destdir="bin" optimize="on" target="1.5">
+        <javac destdir="bin" optimize="on">
             <src path="src/cspfj"/>
-            <classpath refid="project.classpath"/>
         </javac>
 </target>
 
