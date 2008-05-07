@@ -299,21 +299,55 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 	public boolean findValidTuple(final int variablePosition, final int index) {
 		assert this.isInvolved(involvedVariables[variablePosition]);
 
-		if (controlResidue(variablePosition, index)) {
+		final boolean residue = tupleCache
+				&& last[variablePosition][index][0] != -1;
+
+		if (residue
+				&& controlTuplePresence(last[variablePosition][index],
+						variablePosition)) {
 			return true;
 		}
 
-		tupleManager.setFirstTuple(variablePosition, index);
+		if (residue) {
+			tupleManager.setTuple(last[variablePosition][index]);
+		} else {
+			tupleManager.setFirstTuple(variablePosition, index);
 
-		do {
+		}
+
+		if (controlTuplePresence(tuple, variablePosition) && chk()) {
+			updateResidues();
+			return true;
+		}
+		
+		while (tupleManager.setNextTuple(variablePosition)) {
 			if (chk()) {
 				updateResidues();
 				return true;
 			}
-		} while (tupleManager.setNextTuple(variablePosition));
+		}
+		
+		 if (residue) {
+			tupleManager.setTuple(last[variablePosition][index]);
+			while (tupleManager.setPrevTuple(variablePosition)) {
+				if (chk()) {
+					updateResidues();
+					return true;
+				}
+			}
+		}
 
 		return false;
 
+	}
+
+	private void updateResidues() {
+		if (tupleCache) {
+			for (int position = arity; --position >= 0;) {
+				System.arraycopy(tuple, 0, last[position][tuple[position]], 0,
+						arity);
+			}
+		}
 	}
 
 	public int nbTuples(final int variablePosition, final int index) {
@@ -545,24 +579,11 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		return size;
 	}
 
-	protected boolean controlResidue(final int position, final int index) {
-		if (tupleCache && last[position][index][0] != -1
-				&& controlTuplePresence(last[position][index], position)) {
-			return true;
-		}
-		return false;
-	}
-
-	protected void updateResidues() {
-		if (tupleCache) {
-			for (int position = arity; --position >= 0;) {
-				final int value = tuple[position];
-				System.arraycopy(tuple, 0, last[position][value], 0, arity);
-			}
-		}
-	}
-
 	public String getName() {
 		return name;
+	}
+
+	public String getType() {
+		return this.getClass().getSimpleName();
 	}
 }

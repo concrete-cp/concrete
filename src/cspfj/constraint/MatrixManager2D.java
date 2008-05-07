@@ -16,30 +16,19 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 
 	private int current;
 
+	protected int[][][] last;
+
 	public MatrixManager2D(Variable[] scope, Matrix2D matrix) {
 		super(scope, matrix);
 
 		this.matrix = matrix;
 	}
 
-	// public void intersect(final Variable[] scope, final boolean supports,
-	// final int[][] tuples) throws MatrixTooBigException {
-	//
-	// final Matrix2D matrix2D = this.matrix.clone();
-	//
-	// generate(scope, supports, tuples, 2);
-	//
-	// // if (matrix2D != null) {
-	// // for (int i = 2; --i >= 0;) {
-	// // for (int j = matrix2D[1 - i].length; --j >= 0;) {
-	// // for (int k = matrix2D[1 - i][j].length; --k >= 0;) {
-	// // this.matrix2D[1 - i][j][k] &= matrix2D[1 - i][j][k];
-	// // }
-	// // }
-	// // }
-	// // }
-	//
-	// }
+
+
+	public void setLast(final int[][][] last) {
+		this.last = last;
+	}
 
 	public boolean hasSupport(final int variablePosition, final int index) {
 		final int[] mask = matrix.getBooleanArray(variablePosition, index);
@@ -56,7 +45,6 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 		return false;
 	}
 
-	@Override
 	public boolean setFirstTuple(final int variablePosition, final int index) {
 		this.variablePosition = variablePosition;
 		tuple[variablePosition] = index;
@@ -67,7 +55,6 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 		return next();
 	}
 
-	@Override
 	public boolean next() {
 		int currentPosition = this.currentPosition;
 		int current = this.current;

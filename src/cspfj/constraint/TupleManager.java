@@ -82,7 +82,10 @@ public class TupleManager {
 				continue;
 			}
 
-			final int index = involvedVariables[i].getNext(tuple[i]);
+			int index = involvedVariables[i].getNext(tuple[i]) ;
+			while (index >= 0 && !involvedVariables[i].isPresent(index)) {
+				index = involvedVariables[i].getNext(index);
+			} 
 
 			if (index < 0) {
 				tuple[i] = involvedVariables[i].getFirst();
@@ -92,5 +95,32 @@ public class TupleManager {
 			}
 		}
 		return false;
+	}
+	
+	public void setTuple(int[] tuple) {
+		System.arraycopy(tuple, 0, this.tuple, 0, arity);
+	}
+	
+	public boolean setPrevTuple(final int fixedVariablePosition) {
+		final int[] tuple = this.tuple;
+		final Variable[] involvedVariables = constraint.getInvolvedVariables();
+		for (int i = arity; --i >= 0;) {
+			if (i == fixedVariablePosition) {
+				continue;
+			}
+
+			int index = involvedVariables[i].getPrev(tuple[i]) ;
+			while (index >= 0 && !involvedVariables[i].isPresent(index)) {
+				index = involvedVariables[i].getPrev(index);
+			} 
+
+			if (index < 0) {
+				tuple[i] = involvedVariables[i].getLast();
+			} else {
+				tuple[i] = index;
+				return true;
+			}
+		}
+		return false;		
 	}
 }

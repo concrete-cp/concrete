@@ -27,107 +27,53 @@ import cspfj.problem.Variable;
 
 public class ExtensionConstraint extends Constraint {
 
-//	private final double tightness;
+	// private final double tightness;
 
 	private AbstractMatrixManager matrix;
 
+	private final MatrixManager2D matrix2d;
+
 	public ExtensionConstraint(final Variable[] scope, final Matrix matrix,
-			String name)  {
+			String name) {
 		super(scope, name);
 
 		this.matrix = AbstractMatrixManager.factory(scope, matrix);
 		this.matrix.setTuple(tuple);
-		this.matrix.setLast(last);
-	}
 
-//	public ExtensionConstraint(final Constraint constraint)
-//			throws FailedGenerationException {
-//		super(constraint.getInvolvedVariables());
-//
-//		matrix = AbstractMatrixManager.factory(getInvolvedVariables());
-//		matrix.setTuple(tuple);
-//		matrix.setLast(last);
-//
-//		try {
-//			matrix.init(true);
-//		} catch (MatrixTooBigException e) {
-//			throw new FailedGenerationException("Matrix too big");
-//		}
-//
-//		long tuples = getSize();
-//
-//		for (int p = getArity(); --p >= 0;) {
-//			Arrays.fill(nbInitConflicts[p], 0);
-//		}
-//
-//		Arrays.fill(nbMaxConflicts, 0);
-//
-//		constraint.setFirstTuple();
-//
-//		do {
-//			if (!constraint.check()) {
-//				System.arraycopy(constraint.tuple, 0, tuple, 0, getArity());
-//				matrix.removeTuple();
-//				tuples--;
-//				for (int p = getArity(); --p >= 0;) {
-//					if (++nbInitConflicts[p][tuple[p]] > nbMaxConflicts[p]) {
-//						nbMaxConflicts[p] = nbInitConflicts[p][tuple[p]];
-//					}
-//				}
-//			}
-//		} while (constraint.setNextTuple());
-//
-//		tightness = 1 - (tuples / getSize());
-//	}
-//
-//	public ExtensionConstraint(final Variable[] scope)
-//			throws FailedGenerationException {
-//		super(scope);
-//
-//		tightness = 1;
-//		for (int p = getArity(); --p >= 0;) {
-//			final int domainSize = getInvolvedVariables()[p].getDomain().length;
-//
-//			for (int i = domainSize; --i >= 0;) {
-//				nbInitConflicts[p][i] = 0;
-//			}
-//			nbMaxConflicts[p] = 0;
-//		}
-//
-//		matrix = AbstractMatrixManager.factory(scope);
-//		matrix.setTuple(tuple);
-//		matrix.setLast(last);
-//
-//		try {
-//			matrix.init(true);
-//		} catch (MatrixTooBigException e) {
-//			throw new FailedGenerationException("Matrix too big");
-//		}
-//	}
+		if (this.matrix instanceof MatrixManager2D) {
+			this.matrix2d = (MatrixManager2D) this.matrix;
+			this.matrix2d.setLast(last);
+		} else {
+			matrix2d = null;
+		}
+	}
 
 	public boolean check() {
 		return matrix.check();
 	}
 
-//	public double getTightness() {
-//		return tightness;
-//	}
+	// public double getTightness() {
+	// return tightness;
+	// }
 
 	public boolean findValidTuple(final int variablePosition, final int index) {
 		assert this.isInvolved(getInvolvedVariables()[variablePosition]);
 
-		if (controlResidue(variablePosition, index)) {
+		if (matrix2d != null) {
+			if (matrix2d.controlResidue(variablePosition, index)) {
+				return true;
+			}
+
+			if (!matrix2d.hasSupport(variablePosition, index)) {
+				return false;
+			}
+
+			matrix2d.updateResidues();
+
 			return true;
-
 		}
 
-		if (!matrix.hasSupport(variablePosition, index)) {
-			return false;
-		}
-
-		updateResidues();
-
-		return true;
+		return super.findValidTuple(variablePosition, index);
 
 	}
 
@@ -157,18 +103,6 @@ public class ExtensionConstraint extends Constraint {
 		return matrix.removeTuple();
 	}
 
-//	public final void intersect(final boolean supports, final int[][] tuples)
-//			throws FailedGenerationException {
-//		try {
-//			matrix.intersect(getInvolvedVariables(), supports, tuples);
-//		} catch (MatrixTooBigException e) {
-//			throw new FailedGenerationException(e.toString());
-//		}
-//
-//		initNbSupports();
-//
-//	}
-
 	public AbstractMatrixManager getMatrix() {
 		return matrix;
 	}
@@ -181,13 +115,8 @@ public class ExtensionConstraint extends Constraint {
 				constraint.tuple);
 		return constraint;
 	}
-
-	protected boolean controlResidue(final int position, final int index) {
-		return matrix.controlResidue(position, index);
+	
+	public String getType() {
+		return super.getType() + " w/ " + matrix.getType();
 	}
-
-	protected void updateResidues() {
-		matrix.updateResidues();
-	}
-
 }
