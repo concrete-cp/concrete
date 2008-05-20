@@ -168,7 +168,7 @@ public final class WMC extends AbstractLocalSolver {
 			// nbrc.add(realConflicts());
 			if (nbConflicts < bestEver) {
 				bestEver = nbConflicts;
-				solution(nbConflicts);
+				solution(realConflicts());
 			}
 
 			if (FINER) {

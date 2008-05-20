@@ -24,6 +24,12 @@ public class DiscHeuristic implements Heuristic {
 				continue;
 			}
 
+			if (bestVariable == null) {
+				bestVariable = v;
+				bestIndexScore = Double.NEGATIVE_INFINITY;
+				continue;
+			}
+			
 			final int compare = variableHeuristic.compare(v, bestVariable);
 
 			if (compare < 0) {

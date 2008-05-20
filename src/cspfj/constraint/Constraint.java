@@ -142,6 +142,11 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 			initSize[p] = size / involvedVariables[p].getDomainSize();
 		}
 
+		
+		if (Thread.interrupted()) {
+			logger.info("Interrupted");
+			throw new InterruptedException();
+		}
 		// logger.fine("Counting supports");
 
 		Arrays.fill(nbMaxConflicts, 0);

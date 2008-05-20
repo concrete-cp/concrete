@@ -34,7 +34,6 @@ import cspfj.constraint.Constraint;
 import cspfj.constraint.ExtensionConstraint;
 import cspfj.exception.FailedGenerationException;
 import cspfj.heuristic.WeightHeuristic;
-import cspfj.util.CpuMonitor;
 import cspfj.util.Waker;
 
 public final class Problem implements Cloneable {
@@ -76,6 +75,11 @@ public final class Problem implements Cloneable {
 		setVariables(variables);
 		setConstraints(constraints);
 		updateInvolvingConstraints();
+	}
+
+	public static Problem load(final ProblemGenerator generator)
+			throws FailedGenerationException {
+		return load(generator, -1);
 	}
 
 	public static Problem load(final ProblemGenerator generator,
