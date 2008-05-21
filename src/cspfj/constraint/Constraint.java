@@ -67,6 +67,8 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 	private boolean conflictCounts = false;
 
+	private final int[] startTuple;
+
 	protected Constraint(final Variable[] scope) {
 		this(scope, true, null);
 	}
@@ -85,6 +87,8 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		arity = involvedVariables.length;
 
 		tuple = new int[arity];
+
+		startTuple = new int[arity];
 
 		id = cId++;
 
@@ -231,6 +235,7 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 	private boolean chk() {
 		checks++;
+		// logger.info(this + " : " + Arrays.toString(tuple));
 		return check();
 	}
 
@@ -254,6 +259,8 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 				&& getOtherSize(position) > nbMaxConflicts[position];
 	}
 
+	private final static boolean FIND2 = false;
+
 	public boolean revise(final int position, final int level) {
 		final Variable variable = involvedVariables[position];
 
@@ -273,7 +280,11 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 			// nbInitConflicts[position][index]) {
 			// continue;
 			// }
-			if (!findValidTuple(position, index)) {
+
+			final boolean found = FIND2 ? findValidTuple2(position,
+					index) : findValidTuple(position, index);
+
+			if (!found) {
 				// logger.finer("removing " + index + " from " + variable);
 
 				variable.remove(index, level);
@@ -300,6 +311,96 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 		return true;
 	}
 
+	public boolean findValidTuple2(final int variablePosition, final int index) {
+		assert this.isInvolved(involvedVariables[variablePosition]);
+
+		// final long size = size()
+		// / involvedVariables[variablePosition].getDomainSize();
+
+		final boolean residue = tupleCache
+				&& last[variablePosition][index][0] != -1;
+
+		if (residue
+				&& controlTuplePresence(last[variablePosition][index],
+						variablePosition)) {
+			return true;
+		}
+
+
+		// final List<int[]> checkedAfter = new ArrayList<int[]>();
+
+		final boolean twoWays;
+
+		if (residue
+				&& tupleManager.setTupleAfter(last[variablePosition][index],
+						variablePosition)) {
+			System.arraycopy(tuple, 0, startTuple, 0, arity);
+			twoWays = true;
+		} else {
+			tupleManager.setFirstTuple(variablePosition, index);
+			twoWays = false;
+		}
+
+
+
+		do {
+			// checkedAfter.add(tuple.clone());
+
+			if (chk()) {
+				updateResidues();
+				return true;
+			}
+
+		} while (tupleManager.setNextTuple(variablePosition));
+
+		// final List<int[]> checkedBefore = new ArrayList<int[]>();
+
+		if (twoWays) {
+			tupleManager.setTuple(startTuple);
+			while (tupleManager.setPrevTuple(variablePosition)) {
+				// checkedBefore.add(tuple.clone());
+				if (chk()) {
+					updateResidues();
+					return true;
+				}
+			}
+		}
+
+
+		// assert (checkedAfter.size() + checkedBefore.size()) == size :
+		// "checked "
+		// + viewDomains()
+		// + " ("
+		// + size
+		// + ", fixed = "
+		// + variablePosition
+		// + ") : "
+		// + Arrays.toString(last[variablePosition][index])
+		// + " / "
+		// + viewTuples(checkedAfter)
+		// + " / "
+		// + viewTuples(checkedBefore);
+
+		return false;
+
+	}
+
+	// private String viewTuples(final List<int[]> tuples) {
+	// final StringBuilder stb = new StringBuilder("{ ");
+	// for (int[] tuple : tuples) {
+	// stb.append(Arrays.toString(tuple)).append(", ");
+	// }
+	// return stb.append(" }(").append(tuples.size()).append(")").toString();
+	// }
+	//
+	// private String viewDomains() {
+	// final StringBuilder stb = new StringBuilder("{ ");
+	// for (Variable v : involvedVariables) {
+	// stb.append(v.getCurrentDomain()).append(", ");
+	// }
+	// return stb.append(" }").toString();
+	// }
+
 	public boolean findValidTuple(final int variablePosition, final int index) {
 		assert this.isInvolved(involvedVariables[variablePosition]);
 
@@ -314,17 +415,12 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 
 		tupleManager.setFirstTuple(variablePosition, index);
 
-		if (controlTuplePresence(tuple, variablePosition) && chk()) {
-			updateResidues();
-			return true;
-		}
-
-		while (tupleManager.setNextTuple(variablePosition)) {
+		do {
 			if (chk()) {
 				updateResidues();
 				return true;
 			}
-		}
+		} while (tupleManager.setNextTuple(variablePosition));
 
 		return false;
 

@@ -12,7 +12,7 @@ public class TupleList implements Matrix, Cloneable {
 
 	private final BigInteger factor;
 
-	public TupleList(int[] sizes, boolean initialContent) {
+	public TupleList(final int[] sizes, final boolean initialContent) {
 		this.initialContent = initialContent;
 		list = new HashSet<BigInteger>();
 		// System.out.println(supports);
@@ -65,7 +65,7 @@ public class TupleList implements Matrix, Cloneable {
 	public TupleList clone() throws CloneNotSupportedException {
 		final TupleList list = (TupleList) super.clone();
 
-		// list.list = new HashSet<Integer>(this.list);
+		list.list = new HashSet<BigInteger>(this.list);
 
 		return list;
 	}

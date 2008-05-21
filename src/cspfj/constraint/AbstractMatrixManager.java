@@ -12,10 +12,6 @@ public abstract class AbstractMatrixManager implements Cloneable {
 	protected int variablePosition;
 
 
-	protected static long checks = 0;
-
-	protected static long presenceChecks = 0;
-
 	private Matrix matrix;
 
 	private boolean shared = true;
@@ -129,16 +125,8 @@ public abstract class AbstractMatrixManager implements Cloneable {
 	}
 
 	public boolean check() {
-		checks++;
+		//checks++;
 		return matrix.check(tuple);
-	}
-
-	public static long getChecks() {
-		return checks;
-	}
-
-	public static long getPresenceChecks() {
-		return presenceChecks;
 	}
 
 	private void firstT() {

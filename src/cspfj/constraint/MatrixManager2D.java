@@ -17,6 +17,11 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 	private int current;
 
 	protected int[][][] last;
+	
+	private static long checks = 0;
+
+	private static long presenceChecks = 0;
+
 
 	public MatrixManager2D(Variable[] scope, Matrix2D matrix) {
 		super(scope, matrix);
@@ -25,7 +30,18 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 	}
 
 
+	public static long getChecks() {
+		return checks;
+	}
 
+	public static long getPresenceChecks() {
+		return presenceChecks;
+	}
+
+	public static final void clearStats() {
+		checks = presenceChecks = 0;
+	}
+	
 	public void setLast(final int[][][] last) {
 		this.last = last;
 	}

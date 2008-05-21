@@ -6,11 +6,12 @@
  */
 package cspfj.constraint;
 
+import java.util.Arrays;
 import java.util.List;
 
 import cspfj.problem.Variable;
 
-public class TupleManager {
+public final class TupleManager {
 
 	private final Constraint constraint;
 
@@ -18,7 +19,7 @@ public class TupleManager {
 
 	private final int arity;
 
-	public TupleManager(Constraint constraint, int[] tuple) {
+	public TupleManager(final Constraint constraint, final int[] tuple) {
 		super();
 		this.constraint = constraint;
 		this.tuple = tuple;
@@ -68,7 +69,8 @@ public class TupleManager {
 			if (position == variablePosition) {
 				tuple[position] = index;
 			} else {
-				tuple[position] = constraint.getInvolvedVariables()[position].getFirst();
+				tuple[position] = constraint.getInvolvedVariables()[position]
+						.getFirst();
 			}
 		}
 
@@ -82,10 +84,7 @@ public class TupleManager {
 				continue;
 			}
 
-			int index = involvedVariables[i].getNext(tuple[i]) ;
-			while (index >= 0 && !involvedVariables[i].isPresent(index)) {
-				index = involvedVariables[i].getNext(index);
-			} 
+			final int index = involvedVariables[i].getNext(tuple[i]);
 
 			if (index < 0) {
 				tuple[i] = involvedVariables[i].getFirst();
@@ -96,11 +95,75 @@ public class TupleManager {
 		}
 		return false;
 	}
-	
-	public void setTuple(int[] tuple) {
-		System.arraycopy(tuple, 0, this.tuple, 0, arity);
+
+	public void setTuple(final int[] tpl) {
+		System.arraycopy(tpl, 0, tuple, 0, arity);
+		assert allPresent();
 	}
-	
+
+	private boolean allPresent() {
+		for (int i = arity; --i >= 0;) {
+			if (!constraint.getInvolvedVariables()[i].isPresent(tuple[i])) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public boolean setTupleAfter(final int[] tpl, final int fixed) {
+		final int[] tuple = this.tuple;
+		// System.arraycopy(tpl, 0, tuple, 0, arity);
+
+		tuple[fixed] = tpl[fixed];
+
+		final Variable[] involvedVariables = constraint.getInvolvedVariables();
+		int changed = arity;
+
+		for (int pos = 0; pos < arity; pos++) {
+			if (pos == fixed) {
+				continue;
+			}
+			if (changed == arity) {
+				tuple[pos] = tpl[pos];
+			}
+			
+			final Variable variable = involvedVariables[pos];
+			
+			if (pos > changed) {
+				tuple[pos] = variable.getFirst();
+			} else {
+				
+				int index = tuple[pos];
+				
+				while (index >= 0
+						&& !variable.isPresent(index)) {
+					changed = pos;
+					index = variable.getNext(index);
+				}
+
+				if (index < 0) {
+					pos--;
+					if (pos == fixed) {
+						pos--;
+					}
+					if (pos < 0) {
+						return false;
+					}
+					tuple[pos] = variable.getNext(tuple[pos]);
+					changed = pos;
+					pos--;
+				} else {
+					tuple[pos] = index;
+				}
+			}
+		}
+
+		assert allPresent() : Arrays.toString(tpl) + " -> "
+				+ Arrays.toString(tuple);
+
+		return true;
+	}
+
 	public boolean setPrevTuple(final int fixedVariablePosition) {
 		final int[] tuple = this.tuple;
 		final Variable[] involvedVariables = constraint.getInvolvedVariables();
@@ -109,10 +172,7 @@ public class TupleManager {
 				continue;
 			}
 
-			int index = involvedVariables[i].getPrev(tuple[i]) ;
-			while (index >= 0 && !involvedVariables[i].isPresent(index)) {
-				index = involvedVariables[i].getPrev(index);
-			} 
+			final int index = involvedVariables[i].getPrev(tuple[i]);
 
 			if (index < 0) {
 				tuple[i] = involvedVariables[i].getLast();
@@ -121,6 +181,7 @@ public class TupleManager {
 				return true;
 			}
 		}
-		return false;		
+		return false;
 	}
+
 }

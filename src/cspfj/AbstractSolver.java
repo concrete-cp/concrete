@@ -25,8 +25,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import cspfj.constraint.AbstractMatrixManager;
 import cspfj.constraint.Constraint;
+import cspfj.constraint.MatrixManager2D;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.BackedFilter;
 import cspfj.filter.Filter;
@@ -236,9 +236,9 @@ public abstract class AbstractSolver implements Solver {
 			statistics.put("prepro-constraint-ccks", Constraint.getChecks());
 			statistics.put("prepro-constraint-presenceccks", Constraint
 					.getPresenceChecks());
-			statistics.put("prepro-matrix-ccks", AbstractMatrixManager
+			statistics.put("prepro-matrix2d-ccks", MatrixManager2D
 					.getChecks());
-			statistics.put("prepro-matrix-presenceccks", AbstractMatrixManager
+			statistics.put("prepro-matrix2d-presenceccks", MatrixManager2D
 					.getPresenceChecks());
 
 			// if (SPACE.BRANCH.equals(space)) {

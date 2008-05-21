@@ -12,7 +12,7 @@ public abstract class AbstractChain implements Cloneable {
 
 	protected final int length;
 
-	public AbstractChain(int length) {
+	public AbstractChain(final int length) {
 		super();
 		next = new int[length];
 		prev = new int[length];

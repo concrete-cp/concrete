@@ -1,7 +1,7 @@
 package cspfj.util;
 
 public final class UnOrderedChain extends AbstractChain implements Cloneable {
-	public UnOrderedChain(int length) {
+	public UnOrderedChain(final int length) {
 		super(length);
 	}
 

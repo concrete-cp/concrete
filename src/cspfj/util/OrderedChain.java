@@ -5,7 +5,7 @@ public final class OrderedChain extends AbstractChain implements Cloneable {
 
 	private int[] prev0;
 
-	public OrderedChain(int length) {
+	public OrderedChain(final int length) {
 		super(length);
 
 		this.next0 = new int[length];
