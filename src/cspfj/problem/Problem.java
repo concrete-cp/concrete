@@ -100,18 +100,20 @@ public final class Problem implements Cloneable {
 
 		logger.info("Counting supports (" + expCountSupports + ")");
 
-		Thread.interrupted();
-		final Waker waker = new Waker(Thread.currentThread(),
-				expCountSupports * 1000);
-		waker.start();
-		for (Constraint c : generator.getConstraints()) {
-			try {
-				c.initNbSupports();
-			} catch (InterruptedException e) {
-				break;
+		if (expCountSupports != 0) {
+			Thread.interrupted();
+			final Waker waker = new Waker(Thread.currentThread(),
+					expCountSupports * 1000);
+			waker.start();
+			for (Constraint c : generator.getConstraints()) {
+				try {
+					c.initNbSupports();
+				} catch (InterruptedException e) {
+					break;
+				}
 			}
+			waker.interrupt();
 		}
-		waker.interrupt();
 
 		logger.info("Setting Constraints");
 		problem.setConstraints(generator.getConstraints());

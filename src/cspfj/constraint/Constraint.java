@@ -142,7 +142,6 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 			initSize[p] = size / involvedVariables[p].getDomainSize();
 		}
 
-		
 		if (Thread.interrupted()) {
 			logger.info("Interrupted");
 			throw new InterruptedException();
@@ -313,32 +312,17 @@ public abstract class Constraint implements Comparable<Constraint>, Cloneable {
 			return true;
 		}
 
-		if (residue) {
-			tupleManager.setTuple(last[variablePosition][index]);
-		} else {
-			tupleManager.setFirstTuple(variablePosition, index);
-
-		}
+		tupleManager.setFirstTuple(variablePosition, index);
 
 		if (controlTuplePresence(tuple, variablePosition) && chk()) {
 			updateResidues();
 			return true;
 		}
-		
+
 		while (tupleManager.setNextTuple(variablePosition)) {
 			if (chk()) {
 				updateResidues();
 				return true;
-			}
-		}
-		
-		 if (residue) {
-			tupleManager.setTuple(last[variablePosition][index]);
-			while (tupleManager.setPrevTuple(variablePosition)) {
-				if (chk()) {
-					updateResidues();
-					return true;
-				}
 			}
 		}
 
