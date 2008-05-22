@@ -21,7 +21,7 @@ package cspfj.constraint;
 
 import cspfj.problem.Variable;
 
-public final class DiffConstraint extends Constraint {
+public final class DiffConstraint extends AbstractConstraint {
 
 	final private int constant;
 
@@ -44,9 +44,9 @@ public final class DiffConstraint extends Constraint {
 		return getValue(0) - getValue(1) <= constant;
 	}
 
-	public boolean revise(int position, int level) {
-		final Variable v0 = getInvolvedVariables()[0];
-		final Variable v1 = getInvolvedVariables()[1];
+	public boolean revise(final int position, final int level) {
+		final Variable v0 = getVariable(0);
+		final Variable v1 = getVariable(1);
 
 		boolean deleted = false;
 

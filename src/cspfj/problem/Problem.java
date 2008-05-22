@@ -30,6 +30,7 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.Constraint;
 import cspfj.constraint.ExtensionConstraint;
 import cspfj.exception.FailedGenerationException;
@@ -86,7 +87,7 @@ public final class Problem implements Cloneable {
 			final int expCountSupports) throws FailedGenerationException {
 		final Problem problem = new Problem();
 		Variable.resetVId();
-		Constraint.resetCId();
+		AbstractConstraint.resetCId();
 
 		logger.info("Generating");
 		generator.generate();
@@ -163,14 +164,14 @@ public final class Problem implements Cloneable {
 
 	}
 
-	private void setConstraints(final Collection<Constraint> cons) {
-		this.constraints = new HashMap<Integer, Constraint>(cons.size());
+	private void setConstraints(final Collection<Constraint> constraints2) {
+		this.constraints = new HashMap<Integer, Constraint>(constraints2.size());
 
-		this.constraintArray = cons.toArray(new Constraint[cons.size()]);
+		this.constraintArray = constraints2.toArray(new AbstractConstraint[constraints2.size()]);
 
 		maxCId = 0;
 
-		for (Constraint c : cons) {
+		for (Constraint c : constraints2) {
 			// if (c.getArity() == 1) {
 			// final Variable variable = c.getInvolvedVariables()[0];
 			// final int[] tuple = c.getTuple();
@@ -205,7 +206,7 @@ public final class Problem implements Cloneable {
 		}
 
 		for (Constraint c : getConstraints()) {
-			for (Variable v : c.getInvolvedVariables()) {
+			for (Variable v : c.getScope()) {
 				invConstraints.get(v.getId()).add(c);
 			}
 		}
@@ -375,7 +376,7 @@ public final class Problem implements Cloneable {
 				// final float startFindConstraint = CpuMonitor.getCpuTime();
 				scope[level] = fv;
 
-				final Constraint cons = Constraint.findConstraint(scope,
+				final Constraint cons = AbstractConstraint.findConstraint(scope,
 						level + 1, scope[0].getInvolvingConstraints());
 
 				if (!(cons instanceof ExtensionConstraint)) {
@@ -386,11 +387,11 @@ public final class Problem implements Cloneable {
 				final int[] realTuple = constraint.getTuple();
 				int currentV = -1;
 				for (int i = level + 1; --i >= 0;) {
-					if (constraint.getInvolvedVariables()[i] == fv) {
+					if (constraint.getVariable(i) == fv) {
 						currentV = i;
 					} else {
 						realTuple[i] = tuple[arrayContains(scope, level + 1,
-								constraint.getInvolvedVariables()[i])];
+								constraint.getVariable(i))];
 					}
 				}
 
@@ -468,7 +469,7 @@ public final class Problem implements Cloneable {
 		for (Constraint c : problem.getConstraints()) {
 			if (c.isActive()) {
 				constraints.add(c);
-				for (Variable v : c.getInvolvedVariables()) {
+				for (Variable v : c.getScope()) {
 					activeVariables.add(v);
 				}
 				c.setActive(false);
@@ -478,8 +479,8 @@ public final class Problem implements Cloneable {
 
 		}
 
-		final Constraint[] sortedConstraints = otherConstraints
-				.toArray(new Constraint[otherConstraints.size()]);
+		final AbstractConstraint[] sortedConstraints = otherConstraints
+				.toArray(new AbstractConstraint[otherConstraints.size()]);
 
 		Arrays.sort(sortedConstraints, new cspfj.constraint.Weight(true, wvh));
 
@@ -489,7 +490,7 @@ public final class Problem implements Cloneable {
 				break;
 			}
 			constraints.add(c);
-			for (Variable v : c.getInvolvedVariables()) {
+			for (Variable v : c.getScope()) {
 				activeVariables.add(v);
 			}
 		}

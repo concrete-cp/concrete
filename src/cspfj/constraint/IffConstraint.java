@@ -21,7 +21,7 @@ package cspfj.constraint;
 
 import cspfj.problem.Variable;
 
-public final class IffConstraint extends Constraint {
+public final class IffConstraint extends AbstractConstraint {
 
 	final private int indexI;
 
@@ -35,24 +35,24 @@ public final class IffConstraint extends Constraint {
 		super(scope, false);
 		// System.out.println(scope[0] + "="+i +" <=> "+scope[1]+"="+v);
 		this.valueI = i;
-		this.indexI = getInvolvedVariables()[0].index(i);
+		this.indexI = getVariable(0).index(i);
 		this.valueV = v;
-		this.indexV = getInvolvedVariables()[1].index(v);
+		this.indexV = getVariable(1).index(v);
 
 	}
 
 	@Override
 	public boolean check() {
-		return (getInvolvedVariables()[0].getDomain()[tuple[0]] == valueI) == (getInvolvedVariables()[1]
-				.getDomain()[tuple[1]] == valueV);
+		return (getVariable(0).getDomain()[tuple[0]] == valueI) == (getVariable(
+				1).getDomain()[tuple[1]] == valueV);
 	}
 
 	@Override
 	public boolean revise(final int posVar1, final int level) {
-		final Variable var1 = getInvolvedVariables()[posVar1];
+		final Variable var1 = getVariable(posVar1);
 
 		final int posVar2 = 1 - posVar1;
-		final Variable var2 = getInvolvedVariables()[posVar2];
+		final Variable var2 = getVariable(posVar2);
 
 		final int value1;
 		final int index1;

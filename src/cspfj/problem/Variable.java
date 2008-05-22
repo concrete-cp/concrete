@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
+import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.Constraint;
 import cspfj.util.BooleanArray;
 import cspfj.util.OrderedChain;
@@ -44,8 +45,8 @@ public final class Variable implements Cloneable {
 	private final int[] domain;
 
 	/**
-	 * Éléments supprimés du domaine (-1 : présent, n : élément supprimé
-	 * au niveau n)
+	 * Éléments supprimés du domaine (-1 : présent, n : élément supprimé au
+	 * niveau n)
 	 */
 	private int[] removed;
 
@@ -141,14 +142,14 @@ public final class Variable implements Cloneable {
 	}
 
 	/**
-	 * @param constraints
+	 * @param constraints2
 	 *            Liste des contraintes impliquant la variable
 	 */
-	public void setInvolvingConstraints(final Constraint[] constraints) {
-		this.constraints = constraints;
+	public void setInvolvingConstraints(final Constraint[] constraints2) {
+		this.constraints = constraints2;
 
-		positionInConstraint = new int[constraints.length];
-		for (int i = constraints.length; --i >= 0;) {
+		positionInConstraint = new int[constraints2.length];
+		for (int i = constraints2.length; --i >= 0;) {
 			updatePositionInConstraint(i);
 		}
 
@@ -348,7 +349,6 @@ public final class Variable implements Cloneable {
 	public int getLast() {
 		return assigned ? assignedIndex : chain.getLast();
 	}
-
 
 	public void makeSingleton(final int value, final int level) {
 		final int[] domain = this.domain;

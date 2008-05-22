@@ -21,7 +21,7 @@ package cspfj.constraint;
 
 import cspfj.problem.Variable;
 
-public final class DTPConstraint extends Constraint {
+public final class DTPConstraint extends AbstractConstraint {
 
 	final private int[] duration;
 
@@ -47,15 +47,15 @@ public final class DTPConstraint extends Constraint {
 	}
 
 	public String toString() {
-		return "C" + getId() + " (" + getInvolvedVariables()[0] + ":"
-				+ duration[0] + ", " + getInvolvedVariables()[1] + ":"
+		return "C" + getId() + " (" + getVariable(0) + ":"
+				+ duration[0] + ", " + getVariable(1) + ":"
 				+ duration[1] + ")";
 	}
 
 	@Override
 	public boolean revise(final int position, final int level) {
-		final Variable variable = getInvolvedVariables()[position];
-		final Variable otherVariable = getInvolvedVariables()[1 - position];
+		final Variable variable = getVariable(position);
+		final Variable otherVariable = getVariable(1 - position);
 
 		final int highBound;
 		final int lowBound;
@@ -72,8 +72,6 @@ public final class DTPConstraint extends Constraint {
 			int otherMin = otherVariable.getDomain()[otherVariable.getFirst()];
 			int otherMax = otherMin;
 
-			// final StringBuilder stb = new StringBuilder();
-
 			for (int i = otherVariable.getFirst(); i >= 0; i = otherVariable
 					.getNext(i)) {
 				final int value = otherVariable.getDomain()[i];
@@ -84,13 +82,7 @@ public final class DTPConstraint extends Constraint {
 					otherMax = value;
 				}
 
-				// stb.append(value).append("-");
 			}
-
-			// assert otherMax == otherVariable.getDomain()[otherVariable
-			// .getLast()] : stb;
-			// assert otherMin == otherVariable.getDomain()[otherVariable
-			// .getFirst()] : stb;
 
 			highBound = otherMax + duration[position];
 			lowBound = otherMin - duration[1 - position];

@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.Constraint;
 import cspfj.heuristic.VariableHeuristic;
 import cspfj.heuristic.WeightHeuristic;
@@ -85,7 +86,7 @@ public final class BC implements Filter {
 				final Constraint constraint = constraints[c];
 
 				for (int i = constraint.getArity(); --i >= 0;) {
-					final Variable y = constraint.getInvolvedVariables()[i];
+					final Variable y = constraint.getVariable(i);
 
 					if (!y.isAssigned() && revise(constraint, i, level)) {
 						if (y.getDomainSize() <= 0) {
@@ -178,7 +179,7 @@ public final class BC implements Filter {
 
 	public boolean revise(final Constraint constraint, final int position,
 			final int level) {
-		final Variable variable = constraint.getInvolvedVariables()[position];
+		final Variable variable = constraint.getVariable(position);
 
 		assert !variable.isAssigned();
 

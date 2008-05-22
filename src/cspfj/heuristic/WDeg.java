@@ -19,6 +19,7 @@
 
 package cspfj.heuristic;
 
+import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
@@ -57,7 +58,7 @@ public final class WDeg extends AbstractVariableHeuristic implements WeightHeuri
 	}
 
 	@Override
-	public double getWeight(final Constraint constraint) {
+	public double getWeight(final AbstractConstraint constraint) {
 		return weights[constraint.getId()];
 	}
 }

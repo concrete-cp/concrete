@@ -243,8 +243,6 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		return check();
 	}
 
-	public abstract boolean check();
-
 	public final int getOtherSize(final int position) {
 		if (arity > MAX_ARITY) {
 			return -1;
@@ -439,29 +437,11 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		}
 	}
 
-	public int nbTuples(final int variablePosition, final int index) {
-		if (arity > MAX_ARITY) {
-			return 0;
-		}
-
-		tupleManager.setFirstTuple(variablePosition, index);
-
-		int nbTuples = 0;
-
-		do {
-			if (chk()) {
-				nbTuples++;
-			}
-		} while (tupleManager.setNextTuple(variablePosition));
-
-		return nbTuples;
-	}
-
 	public final long getNbSupports(final Variable variable, final int index) {
 		return getNbSupports(getPosition(variable), index);
 	}
 
-	public final long getNbSupports(final int position, final int index) {
+	private long getNbSupports(final int position, final int index) {
 		if (!conflictCounts) {
 			return -1;
 		}

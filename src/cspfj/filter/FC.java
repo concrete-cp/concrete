@@ -53,7 +53,7 @@ public final class FC implements Filter {
 		if (variable == null) {
 			return true;
 		}
-		if (variable.getDomainSize()==0) {
+		if (variable.getDomainSize() == 0) {
 			return false;
 		}
 		final Constraint[] constraints = variable.getInvolvingConstraints();
@@ -63,7 +63,7 @@ public final class FC implements Filter {
 			final Constraint constraint = constraints[c];
 
 			for (int i = constraint.getArity(); --i >= 0;) {
-				final Variable y = constraint.getInvolvedVariables()[i];
+				final Variable y = constraint.getVariable(i);
 
 				if (!y.isAssigned()) {
 					if (constraint.revise(i, level)) {
@@ -100,7 +100,7 @@ public final class FC implements Filter {
 	@Override
 	public void setParameter(int parameter) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override

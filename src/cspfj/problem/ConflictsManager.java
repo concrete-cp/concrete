@@ -10,6 +10,7 @@ import java.util.Arrays;
 
 import cspfj.LocalSolver;
 import cspfj.TabuManager;
+import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.Constraint;
 import cspfj.util.TieManager;
 
@@ -97,7 +98,7 @@ public final class ConflictsManager {
 				for (int c = constraints.length; --c >= 0;) {
 					final Constraint constraint = constraints[c];
 
-					if (constraint.getArity() <= Constraint.MAX_ARITY
+					if (constraint.getArity() <= AbstractConstraint.MAX_ARITY
 							&& !constraint.findValidTuple(variable
 									.getPositionInConstraint(c), i)) {
 						// logger.warning("No tuple found");
@@ -177,7 +178,7 @@ public final class ConflictsManager {
 		return currentConflicts;
 	}
 
-	public void update(final Constraint constraint, final int variablePos) {
+	public void update(final Constraint c, final int variablePos) {
 		final TieManager tieManager = this.tieManager;
 		tieManager.clear();
 		final int[] nbConflicts = this.nbConflicts;
@@ -185,21 +186,21 @@ public final class ConflictsManager {
 
 		// final int position = constraint.getPosition(variable);
 
-		final int constraintPos = constraint.getPositionInVariable(variablePos);
+		final int constraintPos = c.getPositionInVariable(variablePos);
 
-		assert variable.getInvolvingConstraints()[constraintPos] == constraint;
+		assert variable.getInvolvingConstraints()[constraintPos] == c;
 
 		for (int i = domain.length; --i >= 0;) {
 			if (variable.getRemovedLevel(i) >= 0) {
 				continue;
 			}
 
-			final boolean check = constraint.checkFirstWith(variablePos, i);
+			final boolean check = c.checkFirstWith(variablePos, i);
 			if (check ^ this.check[constraintPos][i]) {
 				if (check) {
-					nbConflicts[i] -= solver.getWeight(constraint);
+					nbConflicts[i] -= solver.getWeight(c);
 				} else {
-					nbConflicts[i] += solver.getWeight(constraint);
+					nbConflicts[i] += solver.getWeight(c);
 				}
 				this.check[constraintPos][i] ^= true;
 			}
@@ -231,7 +232,7 @@ public final class ConflictsManager {
 
 	}
 
-	public boolean updateAfterIncrement(final Constraint constraint,
+	public boolean updateAfterIncrement(final Constraint c,
 			final int pos) {
 		
 		final TieManager tieManager = this.tieManager;
@@ -239,11 +240,11 @@ public final class ConflictsManager {
 
 		final int[] nbConflicts = this.nbConflicts;
 		final Variable variable = this.variable;
-		assert constraint.getPosition(variable) == pos;
-		assert variable.getInvolvingConstraints()[constraint
-				.getPositionInVariable(pos)] == constraint;
+		assert c.getPosition(variable) == pos;
+		assert variable.getInvolvingConstraints()[c
+				.getPositionInVariable(pos)] == c;
 
-		final boolean[] check = this.check[constraint
+		final boolean[] check = this.check[c
 				.getPositionInVariable(pos)];
 		assert !check[assignedIndex];
 		for (int i = domain.length; --i >= 0;) {

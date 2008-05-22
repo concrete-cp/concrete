@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.Constraint;
 import cspfj.heuristic.VariableHeuristic;
 import cspfj.heuristic.WeightHeuristic;
@@ -116,7 +117,7 @@ public final class AC3 implements Filter {
 					// if (i == position) {
 					// continue;
 					// }
-					final Variable y = constraint.getInvolvedVariables()[i];
+					final Variable y = constraint.getVariable(i);
 
 					if (!y.isAssigned() && !skipRevision(constraint, i)
 							&& !constraint.skipRevision(i)) {
@@ -131,10 +132,12 @@ public final class AC3 implements Filter {
 							}
 
 							addInQueue(y.getId());
+							
+							final Constraint[] involvingConstraints = y.getInvolvingConstraints();
+							
 
-							for (int cp = y.getInvolvingConstraints().length; --cp >= 0;) {
-								final Constraint constraintP = y
-										.getInvolvingConstraints()[cp];
+							for (int cp = involvingConstraints.length; --cp >= 0;) {
+								final Constraint constraintP = involvingConstraints[cp];
 								if (constraintP != constraint) {
 									removals[constraintP.getId()][y
 											.getPositionInConstraint(cp)] = true;
