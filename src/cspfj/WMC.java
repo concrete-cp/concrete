@@ -85,10 +85,9 @@ public final class WMC extends AbstractLocalSolver {
 				if (!c.checkFirst()) {
 					improvment++;
 					increaseWeight(c);
-					final Variable[] involvedVariables = c
-							.getInvolvedVariables();
-					for (int pos = involvedVariables.length; --pos >= 0;) {
-						final ConflictsManager cm = wcManagers[involvedVariables[pos]
+
+					for (int pos = c.getArity(); --pos >= 0;) {
+						final ConflictsManager cm = wcManagers[c.getVariable(pos)
 								.getId()];
 						cm.updateAfterIncrement(c, pos);
 						changed |= cm.getBestImprovment() < 0;

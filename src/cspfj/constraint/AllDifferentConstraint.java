@@ -24,7 +24,7 @@ import java.util.List;
 
 import cspfj.problem.Variable;
 
-public final class AllDifferentConstraint extends Constraint {
+public final class AllDifferentConstraint extends AbstractConstraint {
 
 	private final boolean[] union;
 
@@ -57,10 +57,10 @@ public final class AllDifferentConstraint extends Constraint {
 		final boolean[] union = this.union;
 		Arrays.fill(union, false);
 		final int min = this.min ;
-		final Variable[] involvedVariables = getInvolvedVariables();
+
 		final int[] tuple = this.tuple;
 		for (int i = getArity(); --i >= 0;) {
-			final int value = involvedVariables[i].getDomain()[tuple[i]];
+			final int value = getVariable(i).getDomain()[tuple[i]];
 			if (union[value - min]) {
 				return false;
 			}
@@ -70,7 +70,7 @@ public final class AllDifferentConstraint extends Constraint {
 	}
 
 	public boolean revise(final int position, final int level) {
-		final Variable variable = getInvolvedVariables()[position];
+		final Variable variable = getVariable(position);
 		assert !variable.isAssigned();
 
 		final boolean[] union = this.union;
@@ -82,7 +82,7 @@ public final class AllDifferentConstraint extends Constraint {
 		boolean revised = false;
 
 		for (int checkPos = getArity(); --checkPos >= 0;) {
-			final Variable checkedVariable = getInvolvedVariables()[checkPos];
+			final Variable checkedVariable = getVariable(checkPos);
 			for (int i = checkedVariable.getFirst(); i >= 0; i = checkedVariable
 					.getNext(i)) {
 

@@ -22,7 +22,8 @@ import cspfj.problem.Variable;
 import cspfj.util.RandomOrder;
 import cspfj.util.TieManager;
 
-public abstract class AbstractLocalSolver extends AbstractSolver implements LocalSolver {
+public abstract class AbstractLocalSolver extends AbstractSolver implements
+		LocalSolver {
 
 	final private static Random random = new Random(0);
 
@@ -38,8 +39,8 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements Loca
 	final protected ConflictsManager[] wcManagers;
 
 	private int maxTries = -1;
-	
-	private final double[] weights ;
+
+	private final double[] weights;
 
 	public static void setSeed(final long seed) {
 		random.setSeed(seed);
@@ -49,8 +50,8 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements Loca
 		this.maxTries = tries;
 	}
 
-	public AbstractLocalSolver(Problem prob, ResultHandler resultHandler,
-			final boolean max) {
+	public AbstractLocalSolver(final Problem prob,
+			final ResultHandler resultHandler, final boolean max) {
 		super(prob, resultHandler);
 
 		this.max = max;
@@ -64,7 +65,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements Loca
 
 		setMaxBacktracks(150000);
 
-		weights = new double[problem.getMaxCId()+1] ;
+		weights = new double[problem.getMaxCId() + 1];
 		Arrays.fill(weights, 1);
 	}
 
@@ -84,7 +85,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements Loca
 		return realConflicts;
 	}
 
-	 protected double weightedConflicts() {
+	protected double weightedConflicts() {
 		double weightedConflicts = 0;
 
 		for (Constraint c : problem.getConstraints()) {
@@ -96,14 +97,14 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements Loca
 		return weightedConflicts;
 	}
 
-	 public void increaseWeight(Constraint c) {
-		 weights[c.getId()]++;
-	 }
-	 
-	 public double getWeight(Constraint c) {
-		 return weights[c.getId()];
-	 }
-	
+	public void increaseWeight(final Constraint c) {
+		weights[c.getId()]++;
+	}
+
+	public double getWeight(final Constraint c) {
+		return weights[c.getId()];
+	}
+
 	protected void solution(final int nbConflicts) throws IOException {
 		final Map<Variable, Integer> solution = new HashMap<Variable, Integer>();
 		for (Variable v : problem.getVariables()) {
@@ -112,8 +113,6 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements Loca
 		solution(solution, problem.getNbConstraints() - nbConflicts);
 
 	}
-	
-	
 
 	private void init(final ConflictsManager wcManager) {
 		final Variable variable = wcManager.getVariable();
@@ -135,7 +134,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements Loca
 		final Set<Variable> neighbours = new HashSet<Variable>();
 
 		for (Constraint c : variable.getInvolvingConstraints()) {
-			for (Variable v : c.getInvolvedVariables()) {
+			for (Variable v : c.getScope()) {
 				neighbours.add(v);
 			}
 		}
@@ -218,10 +217,10 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements Loca
 			logger.info("Took " + localTime + " s (" + (localBT / localTime)
 					+ " flips per second), " + (getNbAssignments() - nbAssign)
 					+ " assignments made");
-//			for (Constraint c : problem.getConstraints()) {
-//				c.setWeight(1);// Math.max(1, c.getWeight()
-//				// / problem.getNbConstraints()));
-//			}
+			// for (Constraint c : problem.getConstraints()) {
+			// c.setWeight(1);// Math.max(1, c.getWeight()
+			// // / problem.getNbConstraints()));
+			// }
 
 			for (Variable v : problem.getVariables()) {
 				v.resetAssign();
@@ -247,7 +246,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements Loca
 		final Variable variable = vcm.getVariable();
 		final int vId = variable.getId();
 		for (Constraint c : variable.getInvolvingConstraints()) {
-			final Variable[] involvedVariables = c.getInvolvedVariables();
+			final Variable[] involvedVariables = c.getScope();
 			for (int n = involvedVariables.length; --n >= 0;) {
 				final Variable neighbour = involvedVariables[n];
 				final int nId = neighbour.getId();
