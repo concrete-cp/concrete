@@ -53,4 +53,6 @@ public interface Constraint {
 	int[] getTuple();
 
 	String getType();
+	
+	boolean check();
 }
