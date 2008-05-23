@@ -19,33 +19,18 @@
 
 package cspfj.constraint;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 import cspfj.problem.Variable;
 
-public class ExtensionConstraintGeneral extends AbstractConstraint implements ExtensionConstraint {
+public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
 
-	// private final double tightness;
+	public ExtensionConstraintGeneral(final Variable[] scope,
+			final Matrix matrix, String name) {
+		super(scope, new MatrixManagerGeneral(scope, matrix), name);
 
-	private MatrixManagerGeneral matrix;
-
-	public ExtensionConstraintGeneral(final Variable[] scope, final Matrix matrix,
-			String name) {
-		super(scope, name);
-
-		this.matrix = new MatrixManagerGeneral(scope, matrix);
-		this.matrix.setTuple(tuple);
 	}
 
-	public boolean check() {
-		return matrix.check();
-	}
-
-	// public double getTightness() {
-	// return tightness;
-	// }
 
 	public boolean findValidTuple(final int variablePosition, final int index) {
 		assert this.isInvolved(getVariable(variablePosition));
@@ -54,45 +39,16 @@ public class ExtensionConstraintGeneral extends AbstractConstraint implements Ex
 
 	}
 
-	public boolean removeTuple(final List<Variable> scope,
-			final List<Integer> scrambledTuple) {
-
-		tupleManager.setRealTuple(scope, scrambledTuple);
-
-		if (matrix.removeTuple()) {
-			for (int p = getArity(); --p >= 0;) {
-				if (Arrays.equals(tuple, last[p][tuple[p]])) {
-					Arrays.fill(last[p][tuple[p]], -1);
-				}
-
-				if (++nbInitConflicts[p][tuple[p]] > nbMaxConflicts[p]) {
-					nbMaxConflicts[p] = nbInitConflicts[p][tuple[p]];
-				}
-			}
-			return true;
-		}
-
-		return false;
-
-	}
-
-	public boolean removeTuple() {
-		return matrix.removeTuple();
-	}
-
-	public AbstractMatrixManager getMatrix() {
-		return matrix;
-	}
-
-	public ExtensionConstraintGeneral deepCopy(final Collection<Variable> variables)
+	public ExtensionConstraintGeneral deepCopy(
+			final Collection<Variable> variables)
 			throws CloneNotSupportedException {
 		final ExtensionConstraintGeneral constraint = (ExtensionConstraintGeneral) super
 				.deepCopy(variables);
-		constraint.matrix = (MatrixManagerGeneral) matrix.deepCopy(constraint.getScope(),
+		constraint.matrix = matrix.deepCopy(constraint.getScope(),
 				constraint.tuple);
 		return constraint;
 	}
-	
+
 	public String getType() {
 		return super.getType() + " w/ " + matrix.getType();
 	}

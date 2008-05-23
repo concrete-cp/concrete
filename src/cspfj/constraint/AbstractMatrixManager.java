@@ -35,15 +35,6 @@ public abstract class AbstractMatrixManager implements Cloneable {
 	public void setTuple(final int[] tuple) {
 		this.tuple = tuple;
 	}
-	
-	public static AbstractMatrixManager factory(final Variable[] scope,
-			final Matrix matrix) {
-		if (matrix instanceof Matrix2D) {
-			return new MatrixManager2D(scope, (Matrix2D) matrix);
-		}
-		return new MatrixManagerGeneral(scope, matrix);
-
-	}
 
 	public boolean set(final int[] tuple, final boolean status) {
 		if (matrix.check(tuple) == status) {

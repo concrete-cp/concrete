@@ -19,29 +19,25 @@
 
 package cspfj.constraint;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 import cspfj.problem.Variable;
 
-public class ExtensionConstraint2D extends AbstractConstraint implements ExtensionConstraint {
+public class ExtensionConstraint2D extends AbstractExtensionConstraint {
 
 	// private final double tightness;
 
-	private MatrixManager2D matrix;
+	protected MatrixManager2D matrix;
 
 	public ExtensionConstraint2D(final Variable[] scope, final Matrix2D matrix,
 			final String name) {
-		super(scope, name);
+		super(scope, new MatrixManager2D(scope, matrix), name);
 
-		this.matrix = new MatrixManager2D(scope, matrix);
-		this.matrix.setTuple(tuple);
+		this.matrix = (MatrixManager2D) super.matrix;
+		this.matrix.setLast(last);
 	}
 
-	public boolean check() {
-		return matrix.check();
-	}
+
 
 	// public double getTightness() {
 	// return tightness;
@@ -63,35 +59,7 @@ public class ExtensionConstraint2D extends AbstractConstraint implements Extensi
 		return true;
 	}
 
-	public boolean removeTuple(final List<Variable> scope,
-			final List<Integer> scrambledTuple) {
 
-		tupleManager.setRealTuple(scope, scrambledTuple);
-
-		if (matrix.removeTuple()) {
-			for (int p = getArity(); --p >= 0;) {
-				if (Arrays.equals(tuple, last[p][tuple[p]])) {
-					Arrays.fill(last[p][tuple[p]], -1);
-				}
-
-				if (++nbInitConflicts[p][tuple[p]] > nbMaxConflicts[p]) {
-					nbMaxConflicts[p] = nbInitConflicts[p][tuple[p]];
-				}
-			}
-			return true;
-		}
-
-		return false;
-
-	}
-
-	public boolean removeTuple() {
-		return matrix.removeTuple();
-	}
-
-	public AbstractMatrixManager getMatrix() {
-		return matrix;
-	}
 
 	public ExtensionConstraint2D deepCopy(final Collection<Variable> variables)
 			throws CloneNotSupportedException {
