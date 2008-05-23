@@ -75,7 +75,7 @@ public final class AgingWDegOnDom extends AbstractVariableHeuristic implements
 	}
 
 	@Override
-	public double getWeight(final AbstractConstraint constraint) {
+	public double getWeight(final Constraint constraint) {
 		return weights[constraint.getId()];
 	}
 

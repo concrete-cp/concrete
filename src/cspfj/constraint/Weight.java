@@ -4,7 +4,7 @@ import java.util.Comparator;
 
 import cspfj.heuristic.WeightHeuristic;
 
-public final class Weight implements Comparator<AbstractConstraint> {
+public final class Weight implements Comparator<Constraint> {
 
 	final private boolean reverse;
 
@@ -16,7 +16,7 @@ public final class Weight implements Comparator<AbstractConstraint> {
 		this.wvh = wvh;
 	}
 
-	public int compare(final AbstractConstraint arg0, final AbstractConstraint arg1) {
+	public int compare(final Constraint arg0, final Constraint arg1) {
 		final int compare = Double.compare(wvh.getWeight(arg0), wvh
 				.getWeight(arg1));
 

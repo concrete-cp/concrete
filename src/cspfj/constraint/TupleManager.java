@@ -13,13 +13,13 @@ import cspfj.problem.Variable;
 
 public final class TupleManager {
 
-	private final AbstractConstraint constraint;
+	private final Constraint constraint;
 
 	private final int[] tuple;
 
 	private final int arity;
 
-	public TupleManager(final AbstractConstraint constraint, final int[] tuple) {
+	public TupleManager(final Constraint constraint, final int[] tuple) {
 		super();
 		this.constraint = constraint;
 		this.tuple = tuple;

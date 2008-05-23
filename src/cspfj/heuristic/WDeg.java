@@ -58,7 +58,7 @@ public final class WDeg extends AbstractVariableHeuristic implements WeightHeuri
 	}
 
 	@Override
-	public double getWeight(final AbstractConstraint constraint) {
+	public double getWeight(final Constraint constraint) {
 		return weights[constraint.getId()];
 	}
 }

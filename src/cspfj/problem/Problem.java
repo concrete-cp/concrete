@@ -167,7 +167,7 @@ public final class Problem implements Cloneable {
 	private void setConstraints(final Collection<Constraint> constraints2) {
 		this.constraints = new HashMap<Integer, Constraint>(constraints2.size());
 
-		this.constraintArray = constraints2.toArray(new AbstractConstraint[constraints2.size()]);
+		this.constraintArray = constraints2.toArray(new Constraint[constraints2.size()]);
 
 		maxCId = 0;
 
@@ -479,8 +479,8 @@ public final class Problem implements Cloneable {
 
 		}
 
-		final AbstractConstraint[] sortedConstraints = otherConstraints
-				.toArray(new AbstractConstraint[otherConstraints.size()]);
+		final Constraint[] sortedConstraints = otherConstraints
+				.toArray(new Constraint[otherConstraints.size()]);
 
 		Arrays.sort(sortedConstraints, new cspfj.constraint.Weight(true, wvh));
 

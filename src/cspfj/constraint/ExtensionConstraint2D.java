@@ -93,7 +93,7 @@ public class ExtensionConstraint2D extends AbstractConstraint implements Extensi
 		return matrix;
 	}
 
-	public AbstractConstraint deepCopy(final Collection<Variable> variables)
+	public ExtensionConstraint2D deepCopy(final Collection<Variable> variables)
 			throws CloneNotSupportedException {
 		final ExtensionConstraint2D constraint = (ExtensionConstraint2D) super
 				.deepCopy(variables);
