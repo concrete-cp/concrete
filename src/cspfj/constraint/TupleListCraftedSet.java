@@ -1,10 +1,10 @@
 package cspfj.constraint;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 
 public class TupleListCraftedSet implements Matrix, Cloneable {
@@ -65,7 +65,7 @@ public class TupleListCraftedSet implements Matrix, Cloneable {
 		} else {
 			Collection<int[]> localList = list.get(hash(tuple));
 			if (localList == null) {
-				localList = new ArrayList<int[]>();
+				localList = new LinkedList<int[]>();
 				list.put(hash(tuple), localList);
 			}
 			if (!contains(tuple, localList)) {
