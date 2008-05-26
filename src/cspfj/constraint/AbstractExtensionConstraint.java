@@ -6,9 +6,6 @@
  */
 package cspfj.constraint;
 
-import java.util.Arrays;
-import java.util.List;
-
 import cspfj.problem.Variable;
 
 public abstract class AbstractExtensionConstraint extends AbstractConstraint
