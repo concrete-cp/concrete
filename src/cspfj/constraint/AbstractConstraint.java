@@ -261,8 +261,6 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 				&& getOtherSize(position) > nbMaxConflicts[position];
 	}
 
-	private final static boolean FIND2 = false;
-
 	public boolean revise(final int position, final int level) {
 		final Variable variable = involvedVariables[position];
 
@@ -283,10 +281,7 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 			// continue;
 			// }
 
-			final boolean found = FIND2 ? findValidTuple2(position,
-					index) : findValidTuple(position, index);
-
-			if (!found) {
+			if (!findValidTuple(position, index)) {
 				// logger.finer("removing " + index + " from " + variable);
 
 				variable.remove(index, level);
@@ -404,6 +399,10 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 	// }
 
 	public boolean findValidTuple(final int variablePosition, final int index) {
+		return findValidTuple2(variablePosition, index);
+	}
+	
+	public boolean findValidTuple1(final int variablePosition, final int index) {
 		assert this.isInvolved(involvedVariables[variablePosition]);
 
 		final boolean residue = tupleCache

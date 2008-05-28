@@ -21,13 +21,13 @@ public class MatrixGeneral implements Matrix, Cloneable {
 		matrix = new boolean[nbValues];
 		Arrays.fill(matrix, initialState);
 
-		skip = new int[sizes.length];
-		skip[0] = 1;
-		for (int i = 1; i < sizes.length; i++) {
-			skip[i] = skip[i - 1] * sizes[i - 1];
+		skip = new int[sizes.length - 1];
+		skip[0] = sizes[0];
+		for (int i = 1; i < skip.length; i++) {
+			skip[i] = skip[i - 1] * sizes[i];
 		}
 
-		// System.out.println(Arrays.toString(skip));
+//		System.out.println(Arrays.toString(skip));
 	}
 
 	@Override
@@ -54,9 +54,9 @@ public class MatrixGeneral implements Matrix, Cloneable {
 
 	private int matrixIndex(final int[] tuple) {
 		final int[] skip = this.skip;
-		int index = 0;
+		int index = tuple[0];
 		for (int i = skip.length; --i >= 0;) {
-			index += skip[i] * tuple[i];
+			index += skip[i] * tuple[i + 1];
 		}
 		return index;
 	}

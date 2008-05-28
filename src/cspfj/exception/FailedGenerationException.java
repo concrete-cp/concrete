@@ -29,4 +29,8 @@ public final class FailedGenerationException extends Exception {
     public FailedGenerationException(final String s) {
 		super(s);
 	}
+    
+    public FailedGenerationException(final Exception e) {
+    	super(e.toString());
+    }
 }

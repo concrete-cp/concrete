@@ -19,23 +19,78 @@
 
 package cspfj.constraint;
 
+import java.util.Arrays;
 import java.util.Collection;
 
 import cspfj.problem.Variable;
 
 public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
 
+	private final TupleListSorted sorted;
+
+	public ExtensionConstraintGeneral(final Variable[] scope,
+			final Matrix matrix) {
+		super(scope, new MatrixManagerGeneral(scope, matrix));
+
+		if (matrix instanceof TupleListSorted) {
+			final TupleListSorted sorted = (TupleListSorted) matrix;
+
+			if (sorted.getInitialContent() == false) {
+				this.sorted = sorted;
+			} else {
+				this.sorted = null;
+			}
+
+		} else {
+			sorted = null;
+		}
+	}
+
 	public ExtensionConstraintGeneral(final Variable[] scope,
 			final Matrix matrix, String name) {
 		super(scope, new MatrixManagerGeneral(scope, matrix), name);
+		if (matrix instanceof TupleListSorted) {
+			final TupleListSorted sorted = (TupleListSorted) matrix;
 
+			if (sorted.getInitialContent() == false) {
+				this.sorted = sorted;
+			} else {
+				this.sorted = null;
+			}
+
+		} else {
+			sorted = null;
+		}
 	}
 
+	@Override
+	public boolean findValidTuple(int variablePosition, int index) {
+		if (sorted == null) {
+			return super.findValidTuple(variablePosition, index);
+		}
 
-	public boolean findValidTuple(final int variablePosition, final int index) {
-		assert this.isInvolved(getVariable(variablePosition));
+		final boolean residue = last[variablePosition][index][0] != -1;
 
-		return super.findValidTuple(variablePosition, index);
+		if (residue
+				&& controlTuplePresence(last[variablePosition][index],
+						variablePosition)) {
+			return true;
+		}
+
+		tuple[variablePosition] = index;
+		
+		int[] currentAllowedTuple = sorted.first();
+		
+		while (currentAllowedTuple != null
+				&& tupleManager.setTupleAfter(currentAllowedTuple,
+						variablePosition)) {
+			if (Arrays.equals(currentAllowedTuple, tuple)) {
+				return true;
+			}
+			currentAllowedTuple = sorted.higher(tuple);
+		}
+
+		return false;
 
 	}
 

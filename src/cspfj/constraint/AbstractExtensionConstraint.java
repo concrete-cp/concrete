@@ -13,6 +13,12 @@ public abstract class AbstractExtensionConstraint extends AbstractConstraint
 
 	protected AbstractMatrixManager matrix;
 
+	public AbstractExtensionConstraint(Variable[] scope, AbstractMatrixManager matrix) {
+		super(scope);
+		this.matrix = matrix;
+		matrix.setTuple(tuple);
+	}
+	
 	public AbstractExtensionConstraint(Variable[] scope, AbstractMatrixManager matrix, String name) {
 		super(scope, name);
 		this.matrix = matrix;

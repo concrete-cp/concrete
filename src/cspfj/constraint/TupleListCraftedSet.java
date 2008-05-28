@@ -1,24 +1,27 @@
 package cspfj.constraint;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
-public class TupleListCraftedSet implements Matrix, Cloneable {
+public class TupleListCraftedSet implements Matrix, Cloneable, Iterable<int[]> {
 
 	// private Map<Long, Collection<int[]>> list;
 
 	private final boolean initialContent;
 
-	private final Cell[] hashTable;
+	private Cell[] hashTable;
 
-	// //private int size;
+	private int size;
 
 	public static int collisions = 0;
 
 	public static int tuples = 0;
-	
-	private final int hashTableSize ;
+
+	private int hashTableSize;
 
 	private final static int[] primes55 = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29,
 			31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101,
@@ -26,14 +29,18 @@ public class TupleListCraftedSet implements Matrix, Cloneable {
 			173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233, 239,
 			241, 251, 257 };
 
-	public TupleListCraftedSet(final int[] sizes, final boolean initialContent,
-			final int nbTuples) {
+	public TupleListCraftedSet(final boolean initialContent) {
+		this(initialContent, 12);
+	}
+
+	public TupleListCraftedSet(final boolean initialContent, final int nbTuples) {
 		this.initialContent = initialContent;
 		// list = new HashMap<Long, Collection<int[]>>();
-		// this.size = 0;
-		hashTableSize = firstPrimeAfter(nbTuples*4/3);
+		this.size = 0;
+		hashTableSize = firstPrimeAfter(nbTuples * 4 / 3);
 		hashTable = new Cell[hashTableSize];
-		
+//		System.out.println("Hashtable of " + hashTableSize + " buckets");
+
 	}
 
 	private static int firstPrimeAfter(int value) {
@@ -46,11 +53,7 @@ public class TupleListCraftedSet implements Matrix, Cloneable {
 	private static boolean isPrime(int value) {
 		for (int prime : primes55) {
 			if (value % prime == 0) {
-				if (value == prime) {
-					return true;
-				} else {
-					return false;
-				}
+				return value == prime;
 			}
 		}
 
@@ -66,19 +69,23 @@ public class TupleListCraftedSet implements Matrix, Cloneable {
 
 	}
 
-	private static int hash(final int[] tuple) {
+	private static int hash(final int[] tuple, int prime) {
 		int hash = -2128831035;
 		for (int i : tuple) {
 			hash *= 16777619;
 			hash ^= i;
 
 		}
-		return hash<0?(-hash)^0x1:hash;
+		hash %= prime;
+		return Math.abs(hash);
+		//		
+		// long res = (hash & 0x7fffffff) | (hash & 0x80000000l);
+		// return (int)(res % prime);
 	}
 
 	@Override
 	public boolean check(final int[] tuple) {
-		final Cell cell = hashTable[hash(tuple) % hashTableSize];
+		final Cell cell = hashTable[hash(tuple, hashTableSize)];
 		return cell == null ? initialContent : cell.contains(tuple)
 				^ initialContent;
 	}
@@ -86,24 +93,54 @@ public class TupleListCraftedSet implements Matrix, Cloneable {
 	@Override
 	public void set(final int[] tuple, final boolean status) {
 		if (status == initialContent) {
-			hashTable[hash(tuple) % hashTableSize] = hashTable[hash(tuple)
-					% hashTableSize].remove(tuple);
+			final int position = hash(tuple, hashTableSize);
+			hashTable[position] = hashTable[position].remove(tuple);
 		} else {
-			Cell cell = hashTable[hash(tuple) % hashTableSize];
-			if (cell == null) {
-				cell = new Cell(tuple.clone());
-				tuples++;
-				// size++;
-			} else {
-//				if (!cell.contains(tuple)) {
-					cell = cell.add(tuple.clone());
-					// size++;
-					tuples++;
-					collisions++;
-//				}
-			}
-			hashTable[hash(tuple) % hashTableSize] = cell;
+			add(tuple);
 		}
+	}
+
+	private void add(final int[] tuple) {
+		if (size >= hashTable.length) {
+			expand();
+		}
+		final int position = hash(tuple, hashTableSize);
+		
+		final int[] inserted = tuple.clone();
+		
+		Cell cell = hashTable[position];
+		if (cell == null) {
+			cell = new Cell(inserted);
+			tuples++;
+			size++;
+		} else {
+			cell = cell.add(inserted);
+			size++;
+			tuples++;
+			collisions++;
+		}
+		hashTable[position] = cell;
+	}
+
+	private void expand() {
+		final int newTableSize = (hashTable.length * 3 + 1) / 2;
+		System.out.println("Expanding from " + hashTableSize + " to "
+				+ newTableSize);
+		final Cell[] newTable = new Cell[newTableSize];
+		for (int[] t : this) {
+			final int position = hash(t, newTableSize);
+			Cell cell = newTable[position];
+			if (cell == null) {
+				cell = new Cell(t);
+
+			} else {
+				cell = cell.add(t);
+
+			}
+			newTable[position] = cell;
+		}
+		hashTable = newTable;
+		hashTableSize = newTableSize;
 	}
 
 	public TupleListCraftedSet clone() throws CloneNotSupportedException {
@@ -112,6 +149,55 @@ public class TupleListCraftedSet implements Matrix, Cloneable {
 		// list.list = new HashSet<BigInteger>(this.list);
 
 		return list;
+	}
+
+	@Override
+	public Iterator<int[]> iterator() {
+		return new HashSetIterator();
+	}
+
+	private class HashSetIterator implements Iterator<int[]> {
+
+		private int pos;
+		private Cell cell;
+
+		public HashSetIterator() {
+			pos = 0;
+			cell = null;
+			for (pos = 0; pos < hashTableSize; pos++) {
+				if (hashTable[pos] != null) {
+					cell = hashTable[pos];
+					break;
+				}
+			}
+		}
+
+		@Override
+		public boolean hasNext() {
+			return pos < hashTableSize;
+		}
+
+		@Override
+		public int[] next() {
+			final int[] tuple = cell.tuple;
+			cell = cell.next;
+
+			if (cell == null) {
+				for (pos++; pos < hashTableSize; pos++) {
+					if (hashTable[pos] != null) {
+						cell = hashTable[pos];
+						break;
+					}
+				}
+			}
+			return tuple;
+		}
+
+		@Override
+		public void remove() {
+			throw new IllegalArgumentException();
+		}
+
 	}
 
 	private static class Cell {
@@ -162,8 +248,8 @@ public class TupleListCraftedSet implements Matrix, Cloneable {
 		for (int i = 0; i < 30; i++) {
 			for (int j = 0; j < 20; j++) {
 				for (int k = 0; k < 20; k++) {
-					final int key = hash(new int[] { i, j, k })
-							% firstPrimeAfter((int) (20 * 20 * 30));
+					final int key = hash(new int[] { i, j, k },
+							firstPrimeAfter(20 * 20 * 30));
 					if (!hashs.containsKey(key)) {
 						hashs.put(key, 1);
 					} else {
@@ -204,9 +290,11 @@ public class TupleListCraftedSet implements Matrix, Cloneable {
 		cell = cell.remove(new int[] { 6, 6, 6 });
 		System.out.println(cell);
 
-		System.out.println(Integer.toBinaryString(-2128831035>>31));
-		int i = (int) 2166136261l;
-		System.out.println(i>>31);
+		int j = -2128831035;
+		System.out.println(Integer.toBinaryString(j));
+		long i = (j & 0x000000007fffffff) | 0x80000000l;
+		System.out.println(Long.toBinaryString(i));
+		System.out.println(i);
 	}
 
 }
