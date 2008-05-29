@@ -13,14 +13,16 @@ public abstract class AbstractExtensionConstraint extends AbstractConstraint
 
 	protected AbstractMatrixManager matrix;
 
-	public AbstractExtensionConstraint(Variable[] scope, AbstractMatrixManager matrix) {
-		super(scope);
+	public AbstractExtensionConstraint(Variable[] scope,
+			AbstractMatrixManager matrix, boolean tupleCache) {
+		super(scope, tupleCache);
 		this.matrix = matrix;
 		matrix.setTuple(tuple);
 	}
-	
-	public AbstractExtensionConstraint(Variable[] scope, AbstractMatrixManager matrix, String name) {
-		super(scope, name);
+
+	public AbstractExtensionConstraint(Variable[] scope,
+			AbstractMatrixManager matrix, String name, boolean tupleCache) {
+		super(scope, tupleCache, name);
 		this.matrix = matrix;
 		matrix.setTuple(tuple);
 	}
@@ -30,12 +32,11 @@ public abstract class AbstractExtensionConstraint extends AbstractConstraint
 		return matrix;
 	}
 
-
 	@Override
 	public boolean removeTuple() {
 		return matrix.removeTuple();
 	}
-	
+
 	@Override
 	public boolean check() {
 		return matrix.check();

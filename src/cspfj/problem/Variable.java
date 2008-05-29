@@ -221,7 +221,7 @@ public final class Variable implements Cloneable {
 	 */
 	public void assign(final int index, final Problem problem) {
 		assgn(index, problem);
-		assert checkIndexValidity(index) : "Tried to assign an invalid index";
+		//assert checkIndexValidity(index) : "Tried to assign an invalid index";
 
 	}
 
@@ -383,6 +383,16 @@ public final class Variable implements Cloneable {
 
 		return values;
 	}
+	
+	public Collection<Integer> getCurrentDomainIndexes() {
+		final Collection<Integer> values = new ArrayList<Integer>();
+
+		for (int i = getFirst(); i >= 0; i = getNext(i)) {
+			values.add(i);
+		}
+
+		return values;
+	}
 
 	public String getName() {
 		return name;
@@ -394,10 +404,11 @@ public final class Variable implements Cloneable {
 
 	public int getNext(final int index) {
 		if (assigned) {
-			if (index != assignedIndex) {
-				return assignedIndex;
+			int i = chain.getNext(index);
+			while (i >= 0 && i != assignedIndex) {
+				i = chain.getNext(i);
 			}
-			return -1;
+			return i;
 		}
 
 		return chain.getNext(index);

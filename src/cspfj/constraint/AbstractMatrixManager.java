@@ -167,4 +167,8 @@ public abstract class AbstractMatrixManager implements Cloneable {
 	public String getType() {
 		return this.getClass().getSimpleName() + " w/ " + matrix.getClass().getSimpleName();
 	}
+
+	public Matrix getMatrix() {
+		return matrix;
+	}
 }

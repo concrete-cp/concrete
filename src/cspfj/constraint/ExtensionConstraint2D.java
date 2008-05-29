@@ -31,7 +31,7 @@ public class ExtensionConstraint2D extends AbstractExtensionConstraint {
 
 	public ExtensionConstraint2D(final Variable[] scope, final Matrix2D matrix,
 			final String name) {
-		super(scope, new MatrixManager2D(scope, matrix), name);
+		super(scope, new MatrixManager2D(scope, matrix), name, true);
 
 		this.matrix = (MatrixManager2D) super.matrix;
 		this.matrix.setLast(last);

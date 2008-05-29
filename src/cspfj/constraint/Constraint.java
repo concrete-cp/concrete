@@ -40,6 +40,8 @@ public interface Constraint {
 
 	boolean skipRevision(int i);
 
+	boolean[] revise(int level);
+	
 	boolean revise(int i, int level);
 
 	int getOtherSize(int position);
@@ -55,4 +57,6 @@ public interface Constraint {
 	String getType();
 	
 	boolean check();
+
+	void restoreLevel(int level);
 }

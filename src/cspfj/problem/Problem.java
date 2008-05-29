@@ -274,6 +274,8 @@ public final class Problem implements Cloneable {
 		// for (int i = 0; i < resetConstraint.length; i++) {
 		// resetConstraint[i] = false;
 		// }
+		logger.fine("Restoring to " + level);
+		
 		for (Variable v : getVariables()) {
 			if (!v.isAssigned()) {
 				v.restoreLevel(level);
@@ -288,10 +290,16 @@ public final class Problem implements Cloneable {
 			// }
 			// }
 		}
+		
+		for (Constraint c: getConstraints()) {
+			c.restoreLevel(level);
+		}
 
 	}
 
 	public void restoreAll(final int level) {
+		logger.fine("Restoring all to " + level);
+		
 		for (Variable v : getVariables()) {
 			if (v.isAssigned()) {
 				v.unassign(this);
@@ -303,6 +311,9 @@ public final class Problem implements Cloneable {
 		// for (AbstractConstraint c : constraints) {
 		// c.initLast();
 		// }
+		for (Constraint c: getConstraints()) {
+			c.restoreLevel(level);
+		}
 	}
 
 	@Override

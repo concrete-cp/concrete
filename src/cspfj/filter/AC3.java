@@ -20,10 +20,11 @@
 package cspfj.filter;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
-import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.Constraint;
 import cspfj.heuristic.VariableHeuristic;
 import cspfj.heuristic.WeightHeuristic;
@@ -47,6 +48,9 @@ public final class AC3 implements Filter {
 
 	public int uselessRevisions = 0;
 
+	private static final Logger logger = Logger.getLogger(Filter.class
+			.getSimpleName());
+
 	private WeightHeuristic wvh;
 
 	public AC3(final Problem problem, final VariableHeuristic heuristic) {
@@ -59,7 +63,7 @@ public final class AC3 implements Filter {
 		for (Constraint c : problem.getConstraints()) {
 			removals[c.getId()] = new boolean[c.getArity()];
 		}
-		
+
 		wvh = (heuristic instanceof WeightHeuristic) ? (WeightHeuristic) heuristic
 				: null;
 	}
@@ -100,6 +104,7 @@ public final class AC3 implements Filter {
 	}
 
 	private boolean reduce(final int level) {
+		logger.fine("Reducing");
 		while (queueSize > 0) {
 			final Variable variable = pullVariable();
 
@@ -108,22 +113,56 @@ public final class AC3 implements Filter {
 			for (int c = constraints.length; --c >= 0;) {
 
 				final Constraint constraint = constraints[c];
+
 				final int position = variable.getPositionInConstraint(c);
 				if (!removals[constraint.getId()][position]) {
 					continue;
 				}
 
-				for (int i = constraint.getArity(); --i >= 0;) {
-					// if (i == position) {
-					// continue;
-					// }
-					final Variable y = constraint.getVariable(i);
+				final boolean[] revised = constraint.revise(level);
 
-					if (!y.isAssigned() && !skipRevision(constraint, i)
-							&& !constraint.skipRevision(i)) {
-						if (constraint.revise(i, level)) {
+				if (revised == null) {
 
-							effectiveRevisions++;
+					for (int i = constraint.getArity(); --i >= 0;) {
+						// if (i == position) {
+						// continue;
+						// }
+						final Variable y = constraint.getVariable(i);
+
+						if (!y.isAssigned() && !skipRevision(constraint, i)
+								&& !constraint.skipRevision(i)) {
+							if (constraint.revise(i, level)) {
+
+								effectiveRevisions++;
+								if (y.getDomainSize() <= 0) {
+									if (wvh != null) {
+										wvh.treatConflictConstraint(constraint);
+									}
+									return false;
+								}
+
+								addInQueue(y.getId());
+
+								final Constraint[] involvingConstraints = y
+										.getInvolvingConstraints();
+
+								for (int cp = involvingConstraints.length; --cp >= 0;) {
+									final Constraint constraintP = involvingConstraints[cp];
+									if (constraintP != constraint) {
+										removals[constraintP.getId()][y
+												.getPositionInConstraint(cp)] = true;
+									}
+								}
+							} else {
+								uselessRevisions++;
+							}
+						}
+					}
+				} else {
+					for (int i = constraint.getArity(); --i >= 0;) {
+						if (revised[i]) {
+							final Variable y = constraint.getVariable(i);
+
 							if (y.getDomainSize() <= 0) {
 								if (wvh != null) {
 									wvh.treatConflictConstraint(constraint);
@@ -132,9 +171,8 @@ public final class AC3 implements Filter {
 							}
 
 							addInQueue(y.getId());
-							
-							final Constraint[] involvingConstraints = y.getInvolvingConstraints();
-							
+							final Constraint[] involvingConstraints = y
+									.getInvolvingConstraints();
 
 							for (int cp = involvingConstraints.length; --cp >= 0;) {
 								final Constraint constraintP = involvingConstraints[cp];
@@ -143,10 +181,9 @@ public final class AC3 implements Filter {
 											.getPositionInConstraint(cp)] = true;
 								}
 							}
-						} else {
-							uselessRevisions++;
 						}
 					}
+
 				}
 
 				Arrays.fill(removals[constraint.getId()], false);
@@ -217,7 +254,7 @@ public final class AC3 implements Filter {
 	@Override
 	public void setParameter(final int parameter) {
 		// No parameter
-		
+
 	}
 
 	@Override

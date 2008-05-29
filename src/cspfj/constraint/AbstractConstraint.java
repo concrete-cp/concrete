@@ -65,7 +65,7 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 
 	private final String name;
 
-	private boolean conflictCounts = false;
+	protected boolean conflictCounts = false;
 
 	private final int[] startTuple;
 
@@ -261,6 +261,10 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 				&& getOtherSize(position) > nbMaxConflicts[position];
 	}
 
+	public boolean[] revise(final int level) {
+		return null;
+	}
+	
 	public boolean revise(final int position, final int level) {
 		final Variable variable = involvedVariables[position];
 
@@ -427,7 +431,7 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 
 	}
 
-	private void updateResidues() {
+	protected void updateResidues() {
 		if (tupleCache) {
 			for (int position = arity; --position >= 0;) {
 				System.arraycopy(tuple, 0, last[position][tuple[position]], 0,
@@ -649,5 +653,9 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 
 	public String getType() {
 		return this.getClass().getSimpleName();
+	}
+	
+	public void restoreLevel(final int level) {
+		// Nothing here
 	}
 }

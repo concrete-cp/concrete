@@ -31,7 +31,7 @@ public class TupleManagerTest {
 		final Variable v2 = new Variable(dom);
 		final Variable v3 = new Variable(dom);
 
-		final Constraint constraint = new AllDifferentConstraint(
+		final AbstractConstraint constraint = new AllDifferentConstraint(
 				new Variable[] { v1, v2, v3 }, "allDiff");
 
 		tupleManager = new TupleManager(constraint, constraint.getTuple());
@@ -48,15 +48,13 @@ public class TupleManagerTest {
 		tupleManager.setFirstTuple();
 		assertFalse(tupleManager.setPrevTuple(1));
 
-		tupleManager.setTuple(new int[] { 2, 2, 2 });
+		tupleManager.setTupleAfter(new int[] { 2, 2, 2 }, 0);
 		for (int i = 10; --i >= 0;) {
 			assertTrue(tupleManager.setNextTuple(0));
 		}
-		System.out.println(Arrays.toString(tuple));
 		for (int i = 10; --i >= 0;) {
 			assertTrue(tupleManager.setPrevTuple(0));
 		}
-		System.out.println(Arrays.toString(tuple));
 		assertTrue(Arrays.equals(tuple, new int[] { 2, 2, 2 }));
 	}
 
