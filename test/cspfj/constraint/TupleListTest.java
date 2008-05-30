@@ -20,7 +20,6 @@ public class TupleListTest {
 
 	@Before
 	public void setUp() throws Exception {
-		tls = new MatrixGeneral(new int[] { 6, 6, 6 }, false);
 		tls = new TupleListDynamic(3, 10);
 		tls.set(new int[] { 2, 2, 2 }, true);
 		tls.set(new int[] { 2, 3, 3 }, true);
@@ -28,7 +27,6 @@ public class TupleListTest {
 		tls.set(new int[] { 2, 1, 1 }, true);
 
 		tlc = new MatrixGeneral(new int[] { 6, 6, 6 }, true);
-		tlc = new TupleListDynamic(3, 10);
 		tlc.set(new int[] { 2, 2, 2 }, false);
 		tlc.set(new int[] { 2, 3, 3 }, false);
 		tlc.set(new int[] { 4, 2, 1 }, false);
