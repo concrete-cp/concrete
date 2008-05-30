@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
-import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.Constraint;
 import cspfj.util.BooleanArray;
 import cspfj.util.OrderedChain;

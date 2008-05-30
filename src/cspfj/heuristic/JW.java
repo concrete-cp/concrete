@@ -10,12 +10,10 @@ public class JW extends AbstractStaticValueHeuristic {
 	// final private static Logger logger =
 	// Logger.getLogger("cspfj.heuristic.JW");
 
-	final private Problem problem;
-
 	public JW(Problem problem, boolean failFirst) {
 		super(problem, failFirst);
 
-		this.problem = problem;
+//		this.problem = problem;
 
 		scores = new double[problem.getMaxVId() + 1][problem.getMaxDomainSize()];
 	}

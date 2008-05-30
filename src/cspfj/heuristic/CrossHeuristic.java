@@ -1,7 +1,5 @@
 package cspfj.heuristic;
 
-import java.util.logging.Logger;
-
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -11,7 +9,7 @@ public final class CrossHeuristic implements Heuristic {
 
     private final ValueHeuristic valueHeuristic;
     
-    private final static Logger logger = Logger.getLogger("cspfj.CrossHeuristic");
+//    private final static Logger logger = Logger.getLogger("cspfj.CrossHeuristic");
 
     public CrossHeuristic(VariableHeuristic variableHeuristic,
             ValueHeuristic valueHeuristic) {
@@ -25,7 +23,7 @@ public final class CrossHeuristic implements Heuristic {
     }
     
     public void compute() {
-    	logger.fine("Initializing heuristics");
+//    	logger.fine("Initializing heuristics");
     	valueHeuristic.compute() ;
     }
 	@Override

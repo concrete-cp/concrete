@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.Constraint;
 import cspfj.heuristic.VariableHeuristic;
 import cspfj.heuristic.WeightHeuristic;

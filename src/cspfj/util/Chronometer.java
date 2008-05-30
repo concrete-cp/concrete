@@ -25,11 +25,7 @@ public final class Chronometer {
     private long startTime;
 
     private long totalTime;
-    
-    public Chronometer() {
-        super();
-//        maxTime = -1 ;
-    }
+
 
 //    public final int getRemainingTime() {
 //        return Math.round(getRemainingTimeNano() / 1e9f);

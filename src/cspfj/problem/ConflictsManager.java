@@ -214,23 +214,23 @@ public final class ConflictsManager {
 		initCritic() ;
 	}
 
-	private void updateCritic(int constraintPos) {
-		final boolean wasCritic = criticConstraints[constraintPos];
-		assert wasCritic ? critic : true;
-		criticConstraints[constraintPos] = critic(constraintPos) ;
-		if (criticConstraints[constraintPos]) {
-			critic = true;
-		} else if (wasCritic) {
-			critic = false;
-			for (int c = criticConstraints.length; --c >= 0;) {
-				if (criticConstraints[c]) {
-					critic = true;
-					break;
-				}
-			}
-		}
-
-	}
+//	private void updateCritic(int constraintPos) {
+//		final boolean wasCritic = criticConstraints[constraintPos];
+//		assert wasCritic ? critic : true;
+//		criticConstraints[constraintPos] = critic(constraintPos) ;
+//		if (criticConstraints[constraintPos]) {
+//			critic = true;
+//		} else if (wasCritic) {
+//			critic = false;
+//			for (int c = criticConstraints.length; --c >= 0;) {
+//				if (criticConstraints[c]) {
+//					critic = true;
+//					break;
+//				}
+//			}
+//		}
+//
+//	}
 
 	public boolean updateAfterIncrement(final Constraint c,
 			final int pos) {

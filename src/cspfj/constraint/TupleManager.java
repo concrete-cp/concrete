@@ -142,7 +142,7 @@ public final class TupleManager {
 					if (pos < 0) {
 						return false;
 					}
-					tuple[pos] = variable.getNext(tuple[pos]);
+					tuple[pos] = constraint.getVariable(pos).getNext(tuple[pos]);
 					changed = pos;
 					pos--;
 				} else {

@@ -312,7 +312,7 @@ public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
 			super.initNbSupports();
 			return;
 		}
-		logger.fine("Counting " + this + " supports");
+//		logger.fine("Counting " + this + " supports");
 		conflictCounts = false;
 		final long size = size();
 		for (int p = getArity(); --p >= 0;) {

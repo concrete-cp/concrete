@@ -76,7 +76,7 @@ public final class WMC extends AbstractLocalSolver {
 		int improvment = 0;
 
 		// if (FINER) {
-		logger.finer("Local Minimum");
+//		logger.finer("Local Minimum");
 		// }
 		final ConflictsManager[] wcManagers = this.wcManagers;
 		boolean changed = false;

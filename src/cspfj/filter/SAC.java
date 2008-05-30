@@ -22,8 +22,6 @@ import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import cspfj.heuristic.VariableHeuristic;
-import cspfj.heuristic.WDegOnDom;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -41,13 +39,13 @@ public final class SAC extends AbstractSAC {
 
 	private final boolean[] vQueue;
 
-	private int nbNoGoods = 0;
+//	private int nbNoGoods = 0;
 
 	private Variable selectedVariable;
 
 	private int selectedIndex;
 
-	private final VariableHeuristic heuristic;
+//	private final VariableHeuristic heuristic;
 
 	private boolean doneSomething;
 
@@ -67,7 +65,7 @@ public final class SAC extends AbstractSAC {
 			queue[v.getId()] = new boolean[v.getDomain().length];
 		}
 
-		heuristic = new WDegOnDom(problem);
+//		heuristic = new WDegOnDom(problem);
 
 		staticVOrder = new Variable[problem.getNbVariables()];
 
@@ -239,76 +237,76 @@ public final class SAC extends AbstractSAC {
 	// return true;
 	// }
 
-	private void reduceToSolution(final int level) {
-		for (Variable v : problem.getVariables()) {
-			final int sol = v.getFirst();
-			v.unassign(problem);
-			v.restoreLevel(level + 1);
-			v.makeSingletonIndex(sol, level);
-		}
-	}
+//	private void reduceToSolution(final int level) {
+//		for (Variable v : problem.getVariables()) {
+//			final int sol = v.getFirst();
+//			v.unassign(problem);
+//			v.restoreLevel(level + 1);
+//			v.makeSingletonIndex(sol, level);
+//		}
+//	}
 
 	public enum SPACE {
 		NONE, CLASSIC, BRANCH
 	}
 
-	private boolean buildBranch(final int level) {
-		final Variable[] staticVOrder = this.staticVOrder;
-		final boolean[] vQueue = this.vQueue;
-
-		Arrays.sort(staticVOrder, heuristic);
-
-		int l = level;
-
-		while (problem.getNbFutureVariables() > 0) {
-			Variable variable;
-			int index;
-			int cpt = 0;
-			do {
-				do {
-					if (cpt >= staticVOrder.length) {
-						for (int k = l; --k >= level;) {
-							problem.getLevelVariable(k).unassign(problem);
-							problem.setLevelVariables(k, null);
-						}
-						return false;
-					}
-					variable = staticVOrder[cpt++];
-				} while (!vQueue[variable.getId()]);
-
-				index = getRemainingIndex(variable);
-			} while (index < 0);
-
-			if (logger.isLoggable(Level.FINE)) {
-				logger.fine(l + " : " + variable + " ("
-						+ variable.getDomainSize() + ") <- "
-						+ variable.getDomain()[index]);
-			}
-
-			// queue.remove(selectedPair);
-			// assert !queue.contains(selectedPair);
-
-			variable.assign(index, problem);
-
-			problem.setLevelVariables(l++, variable);
-
-			nbSingletonTests++;
-
-			if (!filter.reduceAfter(l, variable)) {
-				selectedVariable = variable;
-				selectedIndex = index;
-				for (int k = l; --k >= level;) {
-					problem.getLevelVariable(k).unassign(problem);
-					problem.setLevelVariables(k, null);
-				}
-				return false;
-			}
-
-			queue[variable.getId()][index] = false;
-		}
-
-		return true;
-	}
+//	private boolean buildBranch(final int level) {
+//		final Variable[] staticVOrder = this.staticVOrder;
+//		final boolean[] vQueue = this.vQueue;
+//
+//		Arrays.sort(staticVOrder, heuristic);
+//
+//		int l = level;
+//
+//		while (problem.getNbFutureVariables() > 0) {
+//			Variable variable;
+//			int index;
+//			int cpt = 0;
+//			do {
+//				do {
+//					if (cpt >= staticVOrder.length) {
+//						for (int k = l; --k >= level;) {
+//							problem.getLevelVariable(k).unassign(problem);
+//							problem.setLevelVariables(k, null);
+//						}
+//						return false;
+//					}
+//					variable = staticVOrder[cpt++];
+//				} while (!vQueue[variable.getId()]);
+//
+//				index = getRemainingIndex(variable);
+//			} while (index < 0);
+//
+//			if (logger.isLoggable(Level.FINE)) {
+//				logger.fine(l + " : " + variable + " ("
+//						+ variable.getDomainSize() + ") <- "
+//						+ variable.getDomain()[index]);
+//			}
+//
+//			// queue.remove(selectedPair);
+//			// assert !queue.contains(selectedPair);
+//
+//			variable.assign(index, problem);
+//
+//			problem.setLevelVariables(l++, variable);
+//
+//			nbSingletonTests++;
+//
+//			if (!filter.reduceAfter(l, variable)) {
+//				selectedVariable = variable;
+//				selectedIndex = index;
+//				for (int k = l; --k >= level;) {
+//					problem.getLevelVariable(k).unassign(problem);
+//					problem.setLevelVariables(k, null);
+//				}
+//				return false;
+//			}
+//
+//			queue[variable.getId()][index] = false;
+//		}
+//
+//		return true;
+//	}
 
 	private int getRemainingIndex(final Variable variable) {
 		final int vid = variable.getId();
@@ -323,7 +321,7 @@ public final class SAC extends AbstractSAC {
 	}
 
 	public int getNbNoGoods() {
-		return nbNoGoods;
+		return 0;
 	}
 
 	public String toString() {

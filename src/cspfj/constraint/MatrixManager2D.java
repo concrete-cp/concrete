@@ -16,7 +16,7 @@ public final class MatrixManager2D extends AbstractMatrixManager {
 
 	private int current;
 
-	protected int[][][] last;
+	private int[][][] last;
 	
 	private static long checks = 0;
 

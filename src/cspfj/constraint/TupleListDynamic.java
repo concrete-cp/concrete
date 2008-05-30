@@ -64,10 +64,10 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 
 	@Override
 	public void set(final int[] tuple, final boolean status) {
-		if (status == false) {
-			remove(tuple);
-		} else {
+		if (status) {
 			add(tuple.clone());
+		} else {
+			remove(tuple);
 		}
 	}
 
@@ -181,7 +181,7 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 			} else {
 				prev = current;
 				current = next[current];
-				
+
 			}
 			return tuples[current];
 		}
@@ -224,12 +224,12 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 
 			next[current] = oldFirstRemoved;
 			removed[level] = current;
-			
+
 			if (oldFirstRemoved < 0) {
 				removedLast[level] = current;
 			}
 			current = prev;
-			
+
 		}
 
 	}
@@ -279,44 +279,44 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 	//
 	// }
 
-	public static void main(String[] args) {
-		final TupleListDynamic tuples = new TupleListDynamic(3, 10);
-
-		tuples.add(new int[] { 0, 4, 1 });
-		tuples.add(new int[] { 0, 1, 1 });
-		tuples.add(new int[] { 0, 0, 2 });
-		tuples.add(new int[] { 0, 3, 1 });
-		tuples.add(new int[] { 1, 0, 1 });
-		tuples.add(new int[] { 0, 0, 4 });
-		tuples.add(new int[] { 0, 2, 1 });
-
-		final LLIterator itr1 = tuples.iterator();
-		while (itr1.hasNext()) {
-			final int[] tuple = itr1.next();
-			if (tuple[1] != 3)
-				itr1.remove(0);
-		}
-
-		// tuples.addAll(t2);
-		//	
-		final LLIterator itr = tuples.iterator();
-		while (itr.hasNext()) {
-			final int[] tuple = itr.next();
-			System.out.print(Arrays.toString(tuple));
-		}
-
-		System.out.println();
-
-		tuples.restore(0);
-		final LLIterator itr2 = tuples.iterator();
-		while (itr2.hasNext()) {
-			final int[] tuple = itr2.next();
-			System.out.print(Arrays.toString(tuple));
-		}
-		System.out.println();
-
-		//	
-		System.out.println(Arrays.toString(tuples.tuples[tuples.first]));
-	}
+	// public static void main(String[] args) {
+	// final TupleListDynamic tuples = new TupleListDynamic(3, 10);
+	//
+	// tuples.add(new int[] { 0, 4, 1 });
+	// tuples.add(new int[] { 0, 1, 1 });
+	// tuples.add(new int[] { 0, 0, 2 });
+	// tuples.add(new int[] { 0, 3, 1 });
+	// tuples.add(new int[] { 1, 0, 1 });
+	// tuples.add(new int[] { 0, 0, 4 });
+	// tuples.add(new int[] { 0, 2, 1 });
+	//
+	// final LLIterator itr1 = tuples.iterator();
+	// while (itr1.hasNext()) {
+	// final int[] tuple = itr1.next();
+	// if (tuple[1] != 3)
+	// itr1.remove(0);
+	// }
+	//
+	// // tuples.addAll(t2);
+	// //
+	// final LLIterator itr = tuples.iterator();
+	// while (itr.hasNext()) {
+	// final int[] tuple = itr.next();
+	// System.out.print(Arrays.toString(tuple));
+	// }
+	//
+	// System.out.println();
+	//
+	// tuples.restore(0);
+	// final LLIterator itr2 = tuples.iterator();
+	// while (itr2.hasNext()) {
+	// final int[] tuple = itr2.next();
+	// System.out.print(Arrays.toString(tuple));
+	// }
+	// System.out.println();
+	//
+	// //
+	// System.out.println(Arrays.toString(tuples.tuples[tuples.first]));
+	// }
 
 }

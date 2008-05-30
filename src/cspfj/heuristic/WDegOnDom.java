@@ -19,7 +19,6 @@
 
 package cspfj.heuristic;
 
-import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;

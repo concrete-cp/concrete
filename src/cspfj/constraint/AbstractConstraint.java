@@ -139,7 +139,7 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 	}
 
 	public void initNbSupports() throws InterruptedException {
-		logger.fine("Counting " + this + " supports");
+//		logger.fine("Counting " + this + " supports");
 		conflictCounts = false;
 		final long size = size();
 		for (int p = arity; --p >= 0;) {

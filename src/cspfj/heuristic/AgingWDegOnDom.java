@@ -21,7 +21,6 @@ package cspfj.heuristic;
 
 import java.util.logging.Logger;
 
-import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
