@@ -7,12 +7,12 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 	private int first;
 	private int last;
 
-	private final int[][] tuples;
-	private final int[] next;
-	private final int[] prev;
+	private int[][] tuples;
+	private int[] next;
+	private int[] prev;
 
-	private final int[] removed;
-	private final int[] removedLast;
+	private int[] removed;
+	private int[] removedLast;
 
 	private int size;
 
@@ -23,10 +23,21 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 		next = new int[nbTuples];
 		Arrays.fill(next, -1);
 		prev = next.clone();
-
 		removed = new int[arity];
 		Arrays.fill(removed, -1);
 		removedLast = removed.clone();
+
+	}
+
+	private void expandRemoved(final int newLength) {
+		final int[] newRemoved = new int[newLength];
+		System.arraycopy(removed, 0, newRemoved, 0, removed.length);
+
+		final int[] newRemovedLast = new int[newLength];
+		System.arraycopy(removedLast, 0, newRemovedLast, 0, removedLast.length);
+
+		removed = newRemoved;
+		removedLast = newRemovedLast;
 	}
 
 	@Override
@@ -39,14 +50,12 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 	}
 
 	public void restore(final int level) {
-		for (int i = level; i < removed.length && removed[i] >= 0; i++) {
-			addAll(removed[level], removedLast[level]);
-			removedLast[level] = removed[level] = -1;
+		for (int i = level; i < removed.length; i++) {
+			if (removed[i] >= 0) {
+				addAll(removed[level], removedLast[level]);
+				removedLast[level] = removed[level] = -1;
+			}
 		}
-
-	}
-
-	public void save(final int[] tuple, final int level) {
 
 	}
 
@@ -71,8 +80,8 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 			first = index;
 
 		} else {
-			next[last] = index;
-			prev[index] = last;
+			next[this.last] = index;
+			prev[index] = this.last;
 		}
 		this.last = last;
 	}
@@ -125,12 +134,15 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 	public TupleListDynamic clone() throws CloneNotSupportedException {
 		final TupleListDynamic list = (TupleListDynamic) super.clone();
 
-		// for (int i = tuples.length; --i >= 0;) {
-		// System.arraycopy(tuples[i], 0, list.tuples[i], 0, tuples[i].length);
-		// }
-		System.arraycopy(next, 0, list.next, 0, next.length);
-		System.arraycopy(prev, 0, list.prev, 0, prev.length);
-		System.arraycopy(removed, 0, list.removed, 0, removed.length);
+		list.tuples = new int[tuples.length][];
+		for (int i = tuples.length; --i >= 0;) {
+			list.tuples[i] = tuples[i].clone();
+		}
+
+		list.next = next.clone();
+		list.prev = prev.clone();
+		list.removed = removed.clone();
+		list.removedLast = removedLast.clone();
 
 		return list;
 	}
@@ -147,6 +159,16 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 			stb.append(Arrays.toString(tuple)).append(",");
 		}
 		return stb.toString();
+	}
+
+	public int count() {
+		int count = 0;
+		final LLIterator itr = iterator();
+		while (itr.hasNext()) {
+			count++;
+			itr.next();
+		}
+		return count;
 	}
 
 	int call = 0;
@@ -181,16 +203,9 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 
 		}
 
-		public int count(int index) {
-			if (index == -1) {
-				return 0;
-			}
-			return 1 + count(next[index]);
-		}
-
 		public void remove(final int level) {
-			System.out.print(call++ + " : ");
-			final int count = count(first);
+			// System.out.print(call++ + " : ");
+			final int count = count();
 
 			final int toDelete;
 			if (current == -1) {
@@ -198,10 +213,10 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 			} else {
 				toDelete = prev[current];
 			}
-			
-			assert next[toDelete]==current;
 
-			System.out.println(toDelete);
+			assert next[toDelete] == current;
+
+			// System.out.println(toDelete);
 			if (prev[toDelete] < 0) {
 				first = next[toDelete];
 			} else {
@@ -213,7 +228,11 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 				prev[next[toDelete]] = prev[toDelete];
 			}
 
-			assert count(first) == count - 1 : count + "->" + count(first);
+			assert count() == count - 1 : count + "->" + count();
+
+			if (level >= removed.length) {
+				expandRemoved(level + 1);
+			}
 
 			final int secondRemoved = removed[level];
 			removed[level] = toDelete;

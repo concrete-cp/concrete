@@ -143,12 +143,12 @@ public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
 		if (dynamic == null) {
 			return null;
 		}
+		logger.fine("Revising "+this);
 		int toFind = 0;
 		for (int i = getArity(); --i >= 0;) {
 			Arrays.fill(found[i], true);
 
 			if (!getVariable(i).isAssigned()) {
-
 				for (int index = getVariable(i).getFirst(); index >= 0; index = getVariable(
 						i).getNext(index)) {
 					found[i][index] = false;
