@@ -21,6 +21,7 @@ package cspfj.constraint;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.logging.Logger;
 
 import cspfj.constraint.TupleListDynamic.LLIterator;
 import cspfj.exception.FailedGenerationException;
@@ -31,6 +32,9 @@ public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
 	private final TupleListDynamic dynamic;
 
 	private final boolean[][] found;
+
+	private final static Logger logger = Logger
+			.getLogger(ExtensionConstraintGeneral.class.getSimpleName());
 
 	private static Matrix mayNeedClone(final Matrix matrix)
 			throws FailedGenerationException {
@@ -131,7 +135,7 @@ public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
 	public void restoreLevel(final int level) {
 		if (dynamic != null) {
 			dynamic.restore(level);
-//			assert dynamic.noRemaining(this);
+			// assert dynamic.noRemaining(this);
 		}
 	}
 
@@ -143,7 +147,7 @@ public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
 		if (dynamic == null) {
 			return null;
 		}
-		logger.fine("Revising "+this);
+		// logger.fine("Revising "+this);
 		int toFind = 0;
 		for (int i = getArity(); --i >= 0;) {
 			Arrays.fill(found[i], true);
@@ -158,23 +162,23 @@ public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
 		}
 
 		final boolean[] revised = new boolean[getArity()];
-		
+
 		final LLIterator itr = dynamic.iterator();
 
 		while (itr.hasNext()) {
 			final int[] tuple = itr.next();
 			//
 
-//			boolean skip = false;
-//			for (int i = getArity(); --i >= 0;) {
-//				if (found[i][tuple[i]]) {
-//					skip = true;
-//					break;
-//				}
-//			}
-//			if (skip) {
-//				continue;
-//			}
+			// boolean skip = false;
+			// for (int i = getArity(); --i >= 0;) {
+			// if (found[i][tuple[i]]) {
+			// skip = true;
+			// break;
+			// }
+			// }
+			// if (skip) {
+			// continue;
+			// }
 			// if (found[tuple[position]]) {
 			// continue;
 			// }
@@ -233,61 +237,61 @@ public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
 		return true;
 	}
 
-//	@Override
-//	public boolean revise(final int position, final int level) {
-//		if (dynamic == null) {
-//			return super.revise(position, level);
-//		}
-//		final Variable variable = getVariable(position);
-//		assert !variable.isAssigned();
-//		final boolean[] found = this.found[0];
-//
-//		Arrays.fill(found, true);
-//
-//		int toFind = 0;
-//		for (int index = variable.getFirst(); index >= 0; index = variable
-//				.getNext(index)) {
-//			found[index] = false;
-//			toFind++;
-//		}
-//
-//		final LLIterator itr = dynamic.iterator();
-//
-//		while (itr.hasNext()) {
-//			final int[] tuple = itr.next();
-//
-//			if (found[tuple[position]]) {
-//				continue;
-//			}
-//			if (controlTuplePresence(tuple, position)) {
-//				found[tuple[position]] = true;
-//				if (--toFind == 0) {
-//					return false;
-//				}
-//			} else {
-//				itr.remove(level);
-//			}
-//		}
-//
-//		boolean revised = false;
-//
-//		for (int index = variable.getFirst(); index >= 0; index = variable
-//				.getNext(index)) {
-//
-//			if (!found[index]) {
-//				// logger.finer("removing " + index + " from " + variable);
-//
-//				variable.remove(index, level);
-//
-//				revised = true;
-//				setActive(true);
-//
-//			}
-//
-//		}
-//
-//		return revised;
-//	}
+	// @Override
+	// public boolean revise(final int position, final int level) {
+	// if (dynamic == null) {
+	// return super.revise(position, level);
+	// }
+	// final Variable variable = getVariable(position);
+	// assert !variable.isAssigned();
+	// final boolean[] found = this.found[0];
+	//
+	// Arrays.fill(found, true);
+	//
+	// int toFind = 0;
+	// for (int index = variable.getFirst(); index >= 0; index = variable
+	// .getNext(index)) {
+	// found[index] = false;
+	// toFind++;
+	// }
+	//
+	// final LLIterator itr = dynamic.iterator();
+	//
+	// while (itr.hasNext()) {
+	// final int[] tuple = itr.next();
+	//
+	// if (found[tuple[position]]) {
+	// continue;
+	// }
+	// if (controlTuplePresence(tuple, position)) {
+	// found[tuple[position]] = true;
+	// if (--toFind == 0) {
+	// return false;
+	// }
+	// } else {
+	// itr.remove(level);
+	// }
+	// }
+	//
+	// boolean revised = false;
+	//
+	// for (int index = variable.getFirst(); index >= 0; index = variable
+	// .getNext(index)) {
+	//
+	// if (!found[index]) {
+	// // logger.finer("removing " + index + " from " + variable);
+	//
+	// variable.remove(index, level);
+	//
+	// revised = true;
+	// setActive(true);
+	//
+	// }
+	//
+	// }
+	//
+	// return revised;
+	// }
 
 	public ExtensionConstraintGeneral deepCopy(
 			final Collection<Variable> variables)
@@ -316,7 +320,7 @@ public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
 		}
 
 		if (Thread.interrupted()) {
-			logger.info("Interrupted");
+			logger.fine("Interrupted");
 			throw new InterruptedException();
 		}
 		// logger.fine("Counting supports");
@@ -328,7 +332,7 @@ public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
 
 		for (int[] tuple : dynamic) {
 			if (Thread.interrupted()) {
-				logger.info("Interrupted");
+				logger.fine("Interrupted");
 				throw new InterruptedException();
 			}
 			for (int p = getArity(); --p >= 0;) {

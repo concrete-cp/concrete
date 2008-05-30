@@ -30,10 +30,13 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 	}
 
 	private void expandRemoved(final int newLength) {
+		
 		final int[] newRemoved = new int[newLength];
+		Arrays.fill(newRemoved, -1);
 		System.arraycopy(removed, 0, newRemoved, 0, removed.length);
 
-		final int[] newRemovedLast = new int[newLength];
+		final int[] newRemovedLast = newRemoved.clone();
+
 		System.arraycopy(removedLast, 0, newRemovedLast, 0, removedLast.length);
 
 		removed = newRemoved;
@@ -50,10 +53,10 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 	}
 
 	public void restore(final int level) {
-		for (int i = level; i < removed.length; i++) {
+		for (int i = removed.length; --i >=level;) {
 			if (removed[i] >= 0) {
-				addAll(removed[level], removedLast[level]);
-				removedLast[level] = removed[level] = -1;
+				addAll(removed[i], removedLast[i]);
+				removedLast[i] = removed[i] = -1;
 			}
 		}
 
@@ -171,8 +174,6 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 		return count;
 	}
 
-	int call = 0;
-
 	public class LLIterator implements Iterator<int[]> {
 
 		private int current;
@@ -205,7 +206,7 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 
 		public void remove(final int level) {
 			// System.out.print(call++ + " : ");
-			final int count = count();
+			//final int count = count();
 
 			final int toDelete;
 			if (current == -1) {
@@ -228,7 +229,7 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 				prev[next[toDelete]] = prev[toDelete];
 			}
 
-			assert count() == count - 1 : count + "->" + count();
+			//assert count() == count - 1 : count + "->" + count();
 
 			if (level >= removed.length) {
 				expandRemoved(level + 1);

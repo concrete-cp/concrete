@@ -46,7 +46,7 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 
 	protected static long nbPresenceChecks = 0;
 
-	protected static final Logger logger = Logger
+	private static final Logger logger = Logger
 			.getLogger("cspfj.constraints.Constraint");
 
 	private boolean tupleCache;
