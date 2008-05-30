@@ -167,7 +167,8 @@ public final class Problem implements Cloneable {
 	private void setConstraints(final Collection<Constraint> constraints2) {
 		this.constraints = new HashMap<Integer, Constraint>(constraints2.size());
 
-		this.constraintArray = constraints2.toArray(new Constraint[constraints2.size()]);
+		this.constraintArray = constraints2.toArray(new Constraint[constraints2
+				.size()]);
 
 		maxCId = 0;
 
@@ -275,10 +276,12 @@ public final class Problem implements Cloneable {
 		// resetConstraint[i] = false;
 		// }
 		logger.fine("Restoring to " + level);
-		
+
 		for (Variable v : getVariables()) {
 			if (!v.isAssigned()) {
+
 				v.restoreLevel(level);
+
 			}
 
 			// if (v.restore(level)) {
@@ -290,8 +293,7 @@ public final class Problem implements Cloneable {
 			// }
 			// }
 		}
-		
-		for (Constraint c: getConstraints()) {
+		for (Constraint c : getConstraints()) {
 			c.restoreLevel(level);
 		}
 
@@ -299,20 +301,24 @@ public final class Problem implements Cloneable {
 
 	public void restoreAll(final int level) {
 		logger.fine("Restoring all to " + level);
-		
+
 		for (Variable v : getVariables()) {
 			if (v.isAssigned()) {
 				v.unassign(this);
 			}
 
-			v.restoreLevel(level);
+			for (int i = level; i < getNbVariables(); i++) {
+				v.restoreLevel(i);
+			}
 
 		}
 		// for (AbstractConstraint c : constraints) {
 		// c.initLast();
 		// }
-		for (Constraint c: getConstraints()) {
-			c.restoreLevel(level);
+		for (int i = level; i < getNbVariables(); i++) {
+			for (Constraint c : getConstraints()) {
+				c.restoreLevel(i);
+			}
 		}
 	}
 
@@ -387,8 +393,8 @@ public final class Problem implements Cloneable {
 				// final float startFindConstraint = CpuMonitor.getCpuTime();
 				scope[level] = fv;
 
-				final Constraint cons = AbstractConstraint.findConstraint(scope,
-						level + 1, scope[0].getInvolvingConstraints());
+				final Constraint cons = AbstractConstraint.findConstraint(
+						scope, level + 1, scope[0].getInvolvingConstraints());
 
 				if (!(cons instanceof ExtensionConstraint)) {
 					continue;

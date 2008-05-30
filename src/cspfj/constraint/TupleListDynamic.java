@@ -5,11 +5,11 @@ import java.util.Iterator;
 
 public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 	private int first;
-	private int last;
+	// private int last;
 
 	private int[][] tuples;
 	private int[] next;
-	private int[] prev;
+	// private int[] prev;
 
 	private int[] removed;
 	private int[] removedLast;
@@ -18,11 +18,11 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 
 	public TupleListDynamic(final int arity, final int nbTuples) {
 		size = 0;
-		first = last = -1;
+		first = -1;
 		tuples = new int[nbTuples][arity];
 		next = new int[nbTuples];
 		Arrays.fill(next, -1);
-		prev = next.clone();
+		// prev = next.clone();
 		removed = new int[arity];
 		Arrays.fill(removed, -1);
 		removedLast = removed.clone();
@@ -30,7 +30,7 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 	}
 
 	private void expandRemoved(final int newLength) {
-		
+
 		final int[] newRemoved = new int[newLength];
 		Arrays.fill(newRemoved, -1);
 		System.arraycopy(removed, 0, newRemoved, 0, removed.length);
@@ -53,12 +53,12 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 	}
 
 	public void restore(final int level) {
-		for (int i = removed.length; --i >=level;) {
-			if (removed[i] >= 0) {
-				addAll(removed[i], removedLast[i]);
-				removedLast[i] = removed[i] = -1;
-			}
+		// for (int i = removed.length; --i >= level;) {
+		if (level < removed.length && removed[level] >= 0) {
+			addAll(removed[level], removedLast[level]);
+			removedLast[level] = removed[level] = -1;
 		}
+		// }
 
 	}
 
@@ -79,14 +79,9 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 
 	public void addAll(final int index, final int last) {
 
-		if (first == -1) {
-			first = index;
+		next[last] = first;
+		first = index;
 
-		} else {
-			next[this.last] = index;
-			prev[index] = this.last;
-		}
-		this.last = last;
 	}
 
 	// public int last(final int index) {
@@ -97,21 +92,8 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 	// }
 
 	public void addCell(final int index) {
-		if (last == -1) {
-			first = last = index;
-			next[index] = -1;
-			prev[index] = -1;
-		} else {
-			add(last, index);
-			last = index;
-		}
-
-	}
-
-	public void add(final int last, final int index) {
-		next[last] = index;
-		prev[index] = last;
-		next[index] = -1;
+		next[index] = first;
+		first = index;
 	}
 
 	public boolean contains(final int[] tuple) {
@@ -143,7 +125,7 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 		}
 
 		list.next = next.clone();
-		list.prev = prev.clone();
+		// list.prev = prev.clone();
 		list.removed = removed.clone();
 		list.removedLast = removedLast.clone();
 
@@ -178,72 +160,76 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 
 		private int current;
 
+		private int prev;
+
 		public LLIterator() {
-			current = first;
+			current = -1;
+			prev = -1;
 			// assert first != null;
 			// assert last != null;
 		}
 
 		@Override
 		public boolean hasNext() {
-
-			return current >= 0;
+			return (current < 0) ? (first != -1) : (next[current] != -1);
 		}
 
 		@Override
 		public int[] next() {
-			final int[] tuple = tuples[current];
-
-			current = next[current];
-
-			return tuple;
+			if (current < 0) {
+				current = first;
+			} else {
+				prev = current;
+				current = next[current];
+				
+			}
+			return tuples[current];
 		}
 
 		@Override
 		public void remove() {
-
+			remove(0);
 		}
 
 		public void remove(final int level) {
 			// System.out.print(call++ + " : ");
-			//final int count = count();
+			// final int count = count();
 
-			final int toDelete;
-			if (current == -1) {
-				toDelete = last;
-			} else {
-				toDelete = prev[current];
-			}
-
-			assert next[toDelete] == current;
+			// final int toDelete;
+			// if (current == -1) {
+			// toDelete = last;
+			// } else {
+			// toDelete = prev;
+			// }
 
 			// System.out.println(toDelete);
-			if (prev[toDelete] < 0) {
-				first = next[toDelete];
+			// if (prev[toDelete] < 0) {
+			// first = next[toDelete];
+			// } else {
+			// next[prev[toDelete]] = next[toDelete];
+			// }
+			if (prev < 0) {
+				first = next[current];
 			} else {
-				next[prev[toDelete]] = next[toDelete];
-			}
-			if (next[toDelete] < 0) {
-				last = prev[toDelete];
-			} else {
-				prev[next[toDelete]] = prev[toDelete];
+				next[prev] = next[current];
 			}
 
-			//assert count() == count - 1 : count + "->" + count();
+			// assert count() == count - 1 : count + "->" + count();
 
 			if (level >= removed.length) {
 				expandRemoved(level + 1);
 			}
 
-			final int secondRemoved = removed[level];
-			removed[level] = toDelete;
-			next[toDelete] = secondRemoved;
-			if (secondRemoved < 0) {
-				removedLast[level] = toDelete;
-			} else {
-				prev[secondRemoved] = toDelete;
+			final int oldFirstRemoved = removed[level];
+
+			next[current] = oldFirstRemoved;
+			removed[level] = current;
+			
+			if (oldFirstRemoved < 0) {
+				removedLast[level] = current;
 			}
-			prev[toDelete] = -1;
+			current = prev;
+			
 		}
 
 	}
@@ -331,7 +317,6 @@ public class TupleListDynamic implements Matrix, Cloneable, Iterable<int[]> {
 
 		//	
 		System.out.println(Arrays.toString(tuples.tuples[tuples.first]));
-		System.out.println(Arrays.toString(tuples.tuples[tuples.last]));
 	}
 
 }

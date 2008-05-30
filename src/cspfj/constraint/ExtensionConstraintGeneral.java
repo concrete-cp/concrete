@@ -148,7 +148,7 @@ public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
 			return null;
 		}
 		// logger.fine("Revising "+this);
-		int toFind = 0;
+//		int toFind = 0;
 		for (int i = getArity(); --i >= 0;) {
 			Arrays.fill(found[i], true);
 
@@ -156,7 +156,7 @@ public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
 				for (int index = getVariable(i).getFirst(); index >= 0; index = getVariable(
 						i).getNext(index)) {
 					found[i][index] = false;
-					toFind++;
+//					toFind++;
 				}
 			}
 		}
@@ -184,12 +184,12 @@ public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
 			// }
 			if (controlTuplePresence(tuple)) {
 				for (int i = getArity(); --i >= 0;) {
-					if (!found[i][tuple[i]]) {
-						if (--toFind == 0) {
-							return revised;
-						}
+//					if (!found[i][tuple[i]]) {
+//						if (--toFind == 0) {
+//							return revised;
+//						}
 						found[i][tuple[i]] = true;
-					}
+//					}
 
 				}
 			} else {
