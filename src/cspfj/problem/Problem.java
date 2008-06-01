@@ -294,7 +294,7 @@ public final class Problem implements Cloneable {
 			// }
 		}
 		for (Constraint c : getConstraints()) {
-			c.restoreLevel(level);
+			c.restore(level);
 		}
 
 	}
@@ -317,7 +317,7 @@ public final class Problem implements Cloneable {
 		// }
 		for (int i = level; i < getNbVariables(); i++) {
 			for (Constraint c : getConstraints()) {
-				c.restoreLevel(i);
+				c.restore(i);
 			}
 		}
 	}
@@ -437,8 +437,8 @@ public final class Problem implements Cloneable {
 
 		}
 		// noGoodTime += CpuMonitor.getCpuTime() - startNoGood;
-		if (logger.isLoggable(Level.FINER)) {
-			logger.finer(nbNoGoods + " nogoods");
+		if (logger.isLoggable(Level.INFO)) {
+			logger.info(nbNoGoods + " nogoods");
 		}
 
 		return nbNoGoods;

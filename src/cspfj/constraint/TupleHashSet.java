@@ -2,7 +2,7 @@ package cspfj.constraint;
 
 import java.util.Iterator;
 
-public class TupleListCraftedSet implements Matrix, Cloneable, Iterable<int[]> {
+public class TupleHashSet implements Matrix, Cloneable, Iterable<int[]> {
 
 	// private Map<Long, Collection<int[]>> list;
 
@@ -10,11 +10,11 @@ public class TupleListCraftedSet implements Matrix, Cloneable, Iterable<int[]> {
 
 	private final TupleSet set;
 
-	public TupleListCraftedSet(final boolean initialContent) {
+	public TupleHashSet(final boolean initialContent) {
 		this(initialContent, 12);
 	}
 
-	public TupleListCraftedSet(final boolean initialContent, final int nbTuples) {
+	public TupleHashSet(final boolean initialContent, final int nbTuples) {
 		this.initialContent = initialContent;
 		// list = new HashMap<Long, Collection<int[]>>();
 		set = new TupleSet(nbTuples);
@@ -39,8 +39,8 @@ public class TupleListCraftedSet implements Matrix, Cloneable, Iterable<int[]> {
 		}
 	}
 
-	public TupleListCraftedSet clone() throws CloneNotSupportedException {
-		final TupleListCraftedSet list = (TupleListCraftedSet) super.clone();
+	public TupleHashSet clone() throws CloneNotSupportedException {
+		final TupleHashSet list = (TupleHashSet) super.clone();
 
 		// list.list = new HashSet<BigInteger>(this.list);
 

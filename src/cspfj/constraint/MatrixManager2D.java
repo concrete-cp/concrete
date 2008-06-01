@@ -2,7 +2,7 @@ package cspfj.constraint;
 
 import cspfj.problem.Variable;
 
-public final class MatrixManager2D extends AbstractMatrixManager {
+public final class MatrixManager2D extends MatrixManager {
 
 	private Matrix2D matrix;
 

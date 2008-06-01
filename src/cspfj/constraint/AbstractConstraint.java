@@ -26,8 +26,6 @@ import java.util.logging.Logger;
 import cspfj.problem.Variable;
 
 public abstract class AbstractConstraint implements Cloneable, Constraint {
-	private Variable[] involvedVariables;
-
 	private int[] positionInVariable;
 
 	public final static int MAX_ARITY = 4;
@@ -35,6 +33,8 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 	protected int[][][] last;
 
 	private static int cId = 0;
+
+	private Variable[] involvedVariables;
 
 	private final int id;
 
@@ -655,7 +655,7 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		return this.getClass().getSimpleName();
 	}
 	
-	public void restoreLevel(final int level) {
+	public void restore(final int level) {
 		// Nothing here
 	}
 }

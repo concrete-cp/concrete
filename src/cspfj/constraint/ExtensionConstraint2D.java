@@ -69,8 +69,4 @@ public class ExtensionConstraint2D extends AbstractExtensionConstraint {
 				.getScope(), constraint.tuple);
 		return constraint;
 	}
-
-	public String getType() {
-		return super.getType() + " w/ " + matrix.getType();
-	}
 }

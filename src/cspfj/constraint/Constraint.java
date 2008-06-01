@@ -58,5 +58,5 @@ public interface Constraint {
 	
 	boolean check();
 
-	void restoreLevel(int level);
+	void restore(int level);
 }

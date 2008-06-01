@@ -11,24 +11,24 @@ import cspfj.problem.Variable;
 public abstract class AbstractExtensionConstraint extends AbstractConstraint
 		implements ExtensionConstraint {
 
-	protected AbstractMatrixManager matrix;
+	protected MatrixManager matrix;
 
 	public AbstractExtensionConstraint(Variable[] scope,
-			AbstractMatrixManager matrix, boolean tupleCache) {
+			MatrixManager matrix, boolean tupleCache) {
 		super(scope, tupleCache);
 		this.matrix = matrix;
 		matrix.setTuple(tuple);
 	}
 
 	public AbstractExtensionConstraint(Variable[] scope,
-			AbstractMatrixManager matrix, String name, boolean tupleCache) {
+			MatrixManager matrix, String name, boolean tupleCache) {
 		super(scope, tupleCache, name);
 		this.matrix = matrix;
 		matrix.setTuple(tuple);
 	}
 
 	@Override
-	public AbstractMatrixManager getMatrix() {
+	public MatrixManager getMatrix() {
 		return matrix;
 	}
 
@@ -40,5 +40,9 @@ public abstract class AbstractExtensionConstraint extends AbstractConstraint
 	@Override
 	public boolean check() {
 		return matrix.check();
+	}
+	
+	public String getType() {
+		return super.getType() + " w/ " + matrix.getType();
 	}
 }

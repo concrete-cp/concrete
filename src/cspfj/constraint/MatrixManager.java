@@ -2,7 +2,7 @@ package cspfj.constraint;
 
 import cspfj.problem.Variable;
 
-public abstract class AbstractMatrixManager implements Cloneable {
+public class MatrixManager implements Cloneable {
 	protected final int[] domainSize;
 
 	protected Variable[] variables;
@@ -18,7 +18,7 @@ public abstract class AbstractMatrixManager implements Cloneable {
 
 	protected int[] tuple;
 
-	public AbstractMatrixManager(Variable[] scope, Matrix matrix) {
+	public MatrixManager(Variable[] scope, Matrix matrix) {
 		super();
 
 		variables = scope;
@@ -103,16 +103,16 @@ public abstract class AbstractMatrixManager implements Cloneable {
 //
 //	}
 
-	public AbstractMatrixManager deepCopy(final Variable[] variables,
+	public MatrixManager deepCopy(final Variable[] variables,
 			final int[] tuple) throws CloneNotSupportedException {
-		final AbstractMatrixManager matrix = this.clone();
+		final MatrixManager matrix = this.clone();
 		matrix.tuple = tuple;
 		matrix.variables = variables;
 		return matrix;
 	}
 
-	public AbstractMatrixManager clone() throws CloneNotSupportedException {
-		return (AbstractMatrixManager) super.clone();
+	public MatrixManager clone() throws CloneNotSupportedException {
+		return (MatrixManager) super.clone();
 	}
 
 	public boolean check() {
