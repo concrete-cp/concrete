@@ -20,7 +20,7 @@ public class TupleListTest {
 
 	@Before
 	public void setUp() throws Exception {
-		tls = new TupleListDynamic(3, 10);
+		tls = new TupleArray();
 		tls.set(new int[] { 2, 2, 2 }, true);
 		tls.set(new int[] { 2, 3, 3 }, true);
 		tls.set(new int[] { 4, 2, 1 }, true);
