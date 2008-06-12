@@ -101,11 +101,11 @@ public final class MGACRec extends AbstractSolver {
 
 		final int domainSizeBefore = selectedVariable.getDomainSize();
 
-		if (logger.isLoggable(Level.FINE)) {
+		//if (logger.isLoggable(Level.FINE)) {
 			logger.fine(level + " : " + selectedVariable + " <- "
 					+ selectedVariable.getDomain()[selectedIndex] + "("
 					+ getNbBacktracks() + "/" + getMaxBacktracks() + ")");
-		}
+		//}
 
 		if (filter.ensureAC()) {
 			selectedVariable.assign(selectedIndex, problem);

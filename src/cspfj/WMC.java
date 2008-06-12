@@ -138,9 +138,9 @@ public final class WMC extends AbstractLocalSolver {
 			return localMinimum();
 		}
 
-		if (FINER) {
+//		if (FINER) {
 			logger.finer(bestCM.getVariable() + " <- " + bestCM.getBestIndex());
-		}
+//		}
 		//bestCM.getVariable().increaseWeight(1);
 		reAssign(bestCM, tieManager.getBestValue());
 		incrementNbAssignments();
@@ -170,11 +170,11 @@ public final class WMC extends AbstractLocalSolver {
 				solution(realConflicts());
 			}
 
-			if (FINER) {
+//			if (FINER) {
 				logger.finer(nbConflicts + " conflicts " + "(real = "
 						+ realConflicts() + ", " + getNbBacktracks() + "/"
 						+ getMaxBacktracks() + ")");
-			}
+//			}
 
 			assert realConflicts() <= nbConflicts;
 

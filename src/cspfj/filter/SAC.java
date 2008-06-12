@@ -140,10 +140,10 @@ public final class SAC extends AbstractSAC {
 
 			boolean changedGraph = false;
 
-			if (logger.isLoggable(Level.FINE)) {
+			//if (logger.isLoggable(Level.FINE)) {
 				logger.fine(level + " : " + variable + " <- "
 						+ variable.getDomain()[index]);
-			}
+			//}
 
 			variable.assign(index, problem);
 			problem.setLevelVariables(level, variable);

@@ -57,10 +57,10 @@ public abstract class AbstractSAC implements BackedFilter {
 
 	protected boolean check(final Variable variable, final int index,
 			final int level) {
-		if (logger.isLoggable(Level.FINEST)) {
+		//if (logger.isLoggable(Level.FINEST)) {
 			logger.finest(level + " : " + variable + " <- "
 					+ variable.getDomain()[index] + "(" + index + ")");
-		}
+		//}
 
 		variable.assign(index, problem);
 		problem.setLevelVariables(level, variable);
@@ -111,9 +111,9 @@ public abstract class AbstractSAC implements BackedFilter {
 
 		do {
 			final Variable variable = variables[v];
-			if (logger.isLoggable(Level.FINE)) {
+			//if (logger.isLoggable(Level.FINE)) {
 				logger.fine(variable.toString());
-			}
+			//}
 			if (variable.getDomainSize() > 1 && singletonTest(variable, level)) {
 				if (variable.getDomainSize() <= 0) {
 					return false;

@@ -80,9 +80,9 @@ public final class MCRW extends AbstractLocalSolver {
 
 		final int improvment = wcm.getBestImprovment();
 
-		if (FINER) {
+//		if (FINER) {
 			logger.finer(bestVariable + " <- " + bestIndex);
-		}
+//		}
 		reAssign(wcm, bestIndex);
 		incrementNbAssignments();
 		checkBacktracks();
@@ -146,11 +146,11 @@ public final class MCRW extends AbstractLocalSolver {
 				nbConflicts += bestWalk();
 			}
 
-			if (FINER) {
+//			if (FINER) {
 				logger.finer(nbConflicts + " conflicts " + "(real = "
 						+ realConflicts() + ", " + getNbBacktracks() + "/"
 						+ getMaxBacktracks() + ")");
-			}
+//			}
 			
 			assert nbConflicts == weightedConflicts() : nbConflicts + "/="
 					+ weightedConflicts() + " (real = " + realConflicts() + ")";

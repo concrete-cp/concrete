@@ -119,11 +119,11 @@ public final class MGACIter extends AbstractSolver {
 
 			assert selectedVariable.isPresent(selectedIndex);
 
-			if (logger.isLoggable(Level.FINE)) {
+			//if (logger.isLoggable(Level.FINE)) {
 				logger.fine(level + " : " + selectedVariable + " <- "
 						+ selectedVariable.getDomain()[selectedIndex] + "("
 						+ getNbBacktracks() + "/" + getMaxBacktracks() + ")");
-			}
+			//}
 
 			if (filter.ensureAC()) {
 				selectedVariable.assign(selectedIndex, problem);

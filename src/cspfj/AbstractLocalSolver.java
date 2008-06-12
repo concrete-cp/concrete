@@ -30,7 +30,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
 	final private static Logger logger = Logger
 			.getLogger("cspfj.AbstractLocalSolver");
 
-	protected static final boolean FINER = logger.isLoggable(Level.FINER);
+	//protected static final boolean FINER = logger.isLoggable(Level.FINER);
 
 	private final TieManager tieManager;
 
@@ -123,10 +123,10 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
 
 		wcManager.assignBestInitialIndex();
 
-		if (FINER) {
+		//if (FINER) {
 			logger.finer(variable.toString() + " (" + variable.getDomainSize()
 					+ ") <- " + variable.getFirst());
-		}
+		//}
 
 		final Set<ConflictsManager> randomOrder = new TreeSet<ConflictsManager>(
 				new RandomOrder<ConflictsManager>(random));

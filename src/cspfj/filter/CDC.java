@@ -51,10 +51,10 @@ public final class CDC extends AbstractSAC {
 				continue;
 			}
 
-			if (logger.isLoggable(Level.FINER)) {
+			//if (logger.isLoggable(Level.FINER)) {
 				logger.finer(level + " : " + variable + " <- "
 						+ variable.getDomain()[index] + "(" + index + ")");
-			}
+			//}
 
 			variable.assign(index, problem);
 			problem.setLevelVariables(level, variable);

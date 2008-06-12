@@ -437,9 +437,9 @@ public final class Problem implements Cloneable {
 
 		}
 		// noGoodTime += CpuMonitor.getCpuTime() - startNoGood;
-		if (logger.isLoggable(Level.INFO)) {
+		//if (logger.isLoggable(Level.INFO)) {
 			logger.info(nbNoGoods + " nogoods");
-		}
+		//}
 
 		return nbNoGoods;
 	}
