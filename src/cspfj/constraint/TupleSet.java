@@ -4,7 +4,7 @@ import java.util.AbstractSet;
 import java.util.Arrays;
 import java.util.Iterator;
 
-public class TupleSet extends AbstractSet<int[]> {
+public class TupleSet extends AbstractSet<int[]> implements Cloneable {
 
 	// private Map<Long, Collection<int[]>> list;
 
@@ -80,7 +80,11 @@ public class TupleSet extends AbstractSet<int[]> {
 	}
 
 	public void removeTuple(final int[] tuple) {
-		hashTable[hash(tuple, hashTableSize)].remove(tuple);
+		final Cell cell = hashTable[hash(tuple, hashTableSize)];
+		if (cell == null) {
+			return ;
+		}
+		cell.remove(tuple);
 
 	}
 
@@ -220,5 +224,10 @@ public class TupleSet extends AbstractSet<int[]> {
 	@Override
 	public int size() {
 		return size;
+	}
+	
+	public TupleSet clone() throws CloneNotSupportedException {
+		final TupleSet ts = (TupleSet)super.clone();
+		return ts;
 	}
 }

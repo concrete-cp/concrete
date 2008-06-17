@@ -51,6 +51,10 @@ public class ResultHandler {
 
 	private final boolean receiveSolutions;
 
+	public ResultHandler() {
+		this(false);
+	}
+
 	public ResultHandler(final boolean receiveSolutions) {
 		this.statistics = new TreeMap<String, Object>();
 		this.receiveSolutions = receiveSolutions;

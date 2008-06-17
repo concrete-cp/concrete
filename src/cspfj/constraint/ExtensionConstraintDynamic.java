@@ -37,14 +37,14 @@ public class ExtensionConstraintDynamic extends AbstractExtensionConstraint {
 			.getLogger(ExtensionConstraintDynamic.class.getSimpleName());
 
 	public ExtensionConstraintDynamic(final Variable[] scope,
-			final TupleArray matrix) throws FailedGenerationException {
+			final TupleHashSet matrix) throws FailedGenerationException {
 		super(scope, new MatrixManagerDynamic(scope, matrix), false);
 		this.dynamic = (MatrixManagerDynamic) this.matrix;
 		found = initFound();
 	}
 
 	public ExtensionConstraintDynamic(final Variable[] scope,
-			final TupleArray matrix, final String name)
+			final TupleHashSet matrix, final String name)
 			throws FailedGenerationException {
 		super(scope, new MatrixManagerDynamic(scope, matrix), name, false);
 		this.dynamic = (MatrixManagerDynamic) this.matrix;
@@ -123,11 +123,11 @@ public class ExtensionConstraintDynamic extends AbstractExtensionConstraint {
 	}
 
 	private boolean controlTuplePresence(final int[] tuple) {
-//		if (tuple.length != getArity()) {
-//			return false;
-//		}
+		if (tuple.length != getArity()) {
+			return false;
+		}
 		for (int i = getArity(); --i >= 0;) {
-			if (!getVariable(i).isPresent(tuple[i])) {
+			if (tuple == null || !getVariable(i).isPresent(tuple[i])) {
 				return false;
 			}
 		}
@@ -143,8 +143,6 @@ public class ExtensionConstraintDynamic extends AbstractExtensionConstraint {
 				constraint.tuple);
 		return constraint;
 	}
-
-
 
 	public void initNbSupports() throws InterruptedException {
 		// logger.fine("Counting " + this + " supports");

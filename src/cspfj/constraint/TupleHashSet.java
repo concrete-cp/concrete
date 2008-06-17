@@ -1,6 +1,9 @@
 package cspfj.constraint;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
 public class TupleHashSet implements Matrix, Cloneable, Iterable<int[]> {
 
@@ -8,43 +11,67 @@ public class TupleHashSet implements Matrix, Cloneable, Iterable<int[]> {
 
 	private final boolean initialContent;
 
-	private final TupleSet set;
+	private TupleSet set;
+
+	private List<int[]> list;
 
 	public TupleHashSet(final boolean initialContent) {
 		this(initialContent, 12);
+
 	}
 
 	public TupleHashSet(final boolean initialContent, final int nbTuples) {
 		this.initialContent = initialContent;
 		// list = new HashMap<Long, Collection<int[]>>();
 		set = new TupleSet(nbTuples);
-	
-//		System.out.println("Hashtable of " + hashTableSize + " buckets");
+		list = new ArrayList<int[]>();
+
+		// System.out.println("Hashtable of " + hashTableSize + " buckets");
 
 	}
 
-
+	public boolean getInitialContent() {
+		return initialContent;
+	}
+	
 	@Override
 	public boolean check(final int[] tuple) {
-		return set.containsTuple(tuple)
-				^ initialContent;
+		return set.containsTuple(tuple) ^ initialContent;
 	}
 
 	@Override
 	public void set(final int[] tuple, final boolean status) {
 		if (status == initialContent) {
 			set.removeTuple(tuple);
+			for (int i = list.size(); --i >= 0;) {
+				if (Arrays.equals(list.get(i), tuple)) {
+					list.set(i, null);
+				}
+			}
 		} else {
-			set.add(tuple.clone());
+			final int[] clone = tuple.clone();
+			set.add(clone);
+			list.add(clone);
 		}
 	}
 
+	public int[] getTuple(final int index) {
+		return list.get(index);
+	}
+
+	public int getNbTuples() {
+		return list.size();
+	}
+
 	public TupleHashSet clone() throws CloneNotSupportedException {
-		final TupleHashSet list = (TupleHashSet) super.clone();
+		final TupleHashSet ths = (TupleHashSet) super.clone();
+
+		ths.list = new ArrayList<int[]>(list);
+		ths.set = (TupleSet) set.clone();
 
 		// list.list = new HashSet<BigInteger>(this.list);
 
-		return list;
+		return ths;
 	}
 
 	@Override

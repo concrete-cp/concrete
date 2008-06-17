@@ -20,7 +20,7 @@ public class TupleListTest {
 
 	@Before
 	public void setUp() throws Exception {
-		tls = new TupleArray();
+		tls = new TupleHashSet(false);
 		tls.set(new int[] { 2, 2, 2 }, true);
 		tls.set(new int[] { 2, 3, 3 }, true);
 		tls.set(new int[] { 4, 2, 1 }, true);

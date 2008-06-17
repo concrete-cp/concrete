@@ -26,16 +26,17 @@ public final class DTPConstraint extends AbstractConstraint {
 	final private int[] duration;
 
 	final private boolean ordered;
-	
+
 	public DTPConstraint(final Variable[] scope, final int duration0,
 			final int duration1) {
 		this(scope, duration0, duration1, false);
 	}
-	
+
 	public DTPConstraint(final Variable[] scope, final int duration0,
 			final int duration1, final boolean ordered) {
 		super(scope, false);
 		this.duration = new int[] { duration0, duration1 };
+		// System.out.println(this);
 		this.ordered = ordered;
 	}
 
@@ -43,13 +44,12 @@ public final class DTPConstraint extends AbstractConstraint {
 	public boolean check() {
 		final int difference = getValue(0) - getValue(1);
 
-		return (difference <= duration[0] || -difference <= duration[1]);
+		return (-difference >= duration[0] || difference >= duration[1]);
 	}
 
 	public String toString() {
-		return "C" + getId() + " (" + getVariable(0) + ":"
-				+ duration[0] + ", " + getVariable(1) + ":"
-				+ duration[1] + ")";
+		return "C" + getId() + " (" + getVariable(0) + ":" + duration[0] + ", "
+				+ getVariable(1) + ":" + duration[1] + ")";
 	}
 
 	@Override
@@ -63,10 +63,10 @@ public final class DTPConstraint extends AbstractConstraint {
 		if (ordered) {
 
 			highBound = otherVariable.getDomain()[otherVariable.getLast()]
-					+ duration[position];
+					- duration[position];
 
 			lowBound = otherVariable.getDomain()[otherVariable.getFirst()]
-					- duration[1 - position];
+					+ duration[1 - position];
 
 		} else {
 			int otherMin = otherVariable.getDomain()[otherVariable.getFirst()];
@@ -84,8 +84,8 @@ public final class DTPConstraint extends AbstractConstraint {
 
 			}
 
-			highBound = otherMax + duration[position];
-			lowBound = otherMin - duration[1 - position];
+			highBound = otherMax - duration[position];
+			lowBound = otherMin + duration[1 - position];
 		}
 
 		boolean filtered = false;
@@ -95,9 +95,8 @@ public final class DTPConstraint extends AbstractConstraint {
 			if (value > highBound && value < lowBound) {
 				variable.remove(i, level);
 				filtered = true;
-			} 
+			}
 		}
-
 
 		return filtered;
 	}

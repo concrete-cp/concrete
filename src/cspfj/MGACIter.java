@@ -48,19 +48,23 @@ public final class MGACIter extends AbstractSolver {
 
 	private int level;
 
-	public MGACIter(Problem prob, ResultHandler resultHandler) {
+	public MGACIter(final Problem prob) {
+		this(prob, new ResultHandler());
+	}
+	
+	public MGACIter(final Problem prob, final ResultHandler resultHandler) {
 		this(prob, resultHandler, new CrossHeuristic(new WDegOnDom(prob),
 				new Lexico(prob, false)));
 	}
 
-	public MGACIter(Problem prob, ResultHandler resultHandler,
-			Heuristic heuristic) {
+	public MGACIter(final Problem prob, final ResultHandler resultHandler,
+			final Heuristic heuristic) {
 		this(prob, resultHandler, heuristic, new AC3(prob, heuristic
 				.getVariableHeuristic()));
 	}
 
-	public MGACIter(Problem prob, ResultHandler resultHandler,
-			Heuristic heuristic, Filter filter) {
+	public MGACIter(final Problem prob, final ResultHandler resultHandler,
+			final Heuristic heuristic, final Filter filter) {
 		super(prob, resultHandler);
 		// filter = new B3C(problem, new BC(problem));
 		this.filter = filter;

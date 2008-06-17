@@ -40,6 +40,8 @@ public final class WMC extends AbstractLocalSolver {
 	
 	private final TieManager tieManager;
 
+	private int bestEver=Integer.MAX_VALUE;
+	
 	public WMC(Problem prob, ResultHandler resultHandler, boolean max) {
 		super(prob, resultHandler, max);
 		tieManager = new TieManager(getRandom());
@@ -159,8 +161,6 @@ public final class WMC extends AbstractLocalSolver {
 		int nbConflicts = (int)weightedConflicts();
 
 		logger.fine("Searching...");
-
-		int bestEver = nbConflicts;
 
 		while (nbConflicts > 0) {
 			// nbc.add(nbConflicts);

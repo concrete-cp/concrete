@@ -36,7 +36,9 @@ public final class Tabu extends AbstractLocalSolver {
 	private final TabuManager tabuManager;
 
 	private final TieManager tieManager;
-
+	
+	private int bestEver=Integer.MAX_VALUE;
+	
 	public Tabu(Problem prob, ResultHandler resultHandler, boolean max) {
 		this(prob, resultHandler, -1, max);
 	}
@@ -111,8 +113,6 @@ public final class Tabu extends AbstractLocalSolver {
 		int nbConflicts = (int)weightedConflicts();
 
 		logger.fine("Searching...");
-
-		int bestEver = nbConflicts;
 
 		while (nbConflicts > 0) {
 			if (nbConflicts < bestEver) {

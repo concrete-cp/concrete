@@ -3,12 +3,13 @@ package cspfj.constraint;
 import java.util.Arrays;
 import java.util.Iterator;
 
+import cspfj.exception.FailedGenerationException;
 import cspfj.problem.Variable;
 
 public class MatrixManagerDynamic extends MatrixManager implements
 		Iterable<int[]> {
 
-	private final TupleArray tld;
+	private  TupleHashSet tld;
 
 	private int first;
 
@@ -17,7 +18,7 @@ public class MatrixManagerDynamic extends MatrixManager implements
 	private int[] removed;
 	private int[] removedLast;
 
-	public MatrixManagerDynamic(final Variable[] scope, final TupleArray matrix) {
+	public MatrixManagerDynamic(final Variable[] scope, final TupleHashSet matrix) {
 		super(scope, matrix);
 		this.tld = matrix;
 		first = -1;
@@ -29,7 +30,8 @@ public class MatrixManagerDynamic extends MatrixManager implements
 		removedLast = removed.clone();
 
 		for (int i = tld.getNbTuples(); --i >= 0;) {
-			if (tld.getTuple(i) != null && tld.getTuple(i).length == scope.length) {
+			if (tld.getTuple(i) != null
+					&& tld.getTuple(i).length == scope.length) {
 				addCell(i);
 			}
 		}
@@ -165,32 +167,41 @@ public class MatrixManagerDynamic extends MatrixManager implements
 		}
 
 	}
+	
+	protected Matrix unshareMatrix() {
+		tld = (TupleHashSet) super.unshareMatrix();
+		return tld;
+	}
 
-	public static void main(String[] args) {
-		final TupleArray ta = new TupleArray();
+	public static void main(String[] args) throws FailedGenerationException {
+		final TupleHashSet ta = new TupleHashSet(false);
+		ta.set(new int[] { 0, 0, 0 }, true);
 		ta.set(new int[] { 1, 1, 1 }, true);
 		ta.set(new int[] { 2, 2, 2 }, true);
-		ta.set(new int[] { 3, 3, 3 }, true);
 
-		final int[] dom = new int[] { 1, 2, 3 };
+		final int[] dom = new int[] { 0, 1, 2 };
 
 		final Variable[] scope = { new Variable(dom), new Variable(dom),
 				new Variable(dom) };
 
-		final MatrixManagerDynamic mm = new MatrixManagerDynamic(scope, ta);
+		final ExtensionConstraintDynamic constraint = new ExtensionConstraintDynamic(
+				scope, ta);
 
-		for (int[] t:mm) {
-			System.out.print(Arrays.toString(t));
+		constraint.revise(0);
+
+		for (Variable v : scope) {
+			System.out.println(v.getCurrentDomain());
 		}
+
 		System.out.println();
-		
-		ta.set(new int[] {2,2,2}, false);
-		
-		for (int[] t:mm) {
-			System.out.print(Arrays.toString(t));
+		System.arraycopy(new int[] { 1, 1, 1 }, 0, constraint.getTuple(), 0, 3);
+
+		constraint.removeTuple();
+
+		constraint.revise(0);
+
+		for (Variable v : scope) {
+			System.out.println(v.getCurrentDomain());
 		}
-		System.out.println();
-		
-		
 	}
 }

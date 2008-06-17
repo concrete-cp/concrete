@@ -220,7 +220,8 @@ public final class Variable implements Cloneable {
 	 */
 	public void assign(final int index, final Problem problem) {
 		assgn(index, problem);
-		//assert checkIndexValidity(index) : "Tried to assign an invalid index";
+		// assert checkIndexValidity(index) : "Tried to assign an invalid
+		// index";
 
 	}
 
@@ -382,7 +383,7 @@ public final class Variable implements Cloneable {
 
 		return values;
 	}
-	
+
 	public Collection<Integer> getCurrentDomainIndexes() {
 		final Collection<Integer> values = new ArrayList<Integer>();
 
