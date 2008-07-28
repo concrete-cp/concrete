@@ -31,13 +31,13 @@ public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
 
 	public ExtensionConstraintGeneral(final Variable[] scope,
 			final Matrix matrix) throws FailedGenerationException {
-		super(scope, new MatrixManager(scope, matrix), true);
+		super(scope, new MatrixManager(scope, matrix));
 	}
 
 	public ExtensionConstraintGeneral(final Variable[] scope,
 			final Matrix matrix, final String name)
 			throws FailedGenerationException {
-		super(scope, new MatrixManager(scope, matrix), name, true);
+		super(scope, new MatrixManager(scope, matrix), name);
 	}
 
 	public ExtensionConstraintGeneral deepCopy(
@@ -48,6 +48,11 @@ public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
 		constraint.matrix = matrix.deepCopy(constraint.getScope(),
 				constraint.tuple);
 		return constraint;
+	}
+
+	@Override
+	public boolean isSlow() {
+		return true;
 	}
 
 }

@@ -26,7 +26,7 @@ import cspfj.problem.Variable;
 public final class WDegOnDom extends AbstractVariableHeuristic implements
 		WeightHeuristic {
 
-	private final double[] weights;
+	private double[] weights;
 
 	public WDegOnDom(Problem problem) {
 		super(problem);
@@ -42,7 +42,7 @@ public final class WDegOnDom extends AbstractVariableHeuristic implements
 		double count = 0;
 
 		for (Constraint c : variable.getInvolvingConstraints()) {
-			if (c.isBound()) {
+			if (c.getId() < weights.length && c.isBound()) {
 				count += weights[c.getId()];
 			}
 		}
@@ -51,6 +51,11 @@ public final class WDegOnDom extends AbstractVariableHeuristic implements
 
 	@Override
 	public void treatConflictConstraint(final Constraint constraint) {
+		if (constraint.getId() >= weights.length) {
+			final double[] newWeights = new double[problem.getMaxCId()];
+			System.arraycopy(weights, 0, newWeights, 0, weights.length);
+			this.weights = newWeights;
+		}
 		weights[constraint.getId()]++;
 	}
 

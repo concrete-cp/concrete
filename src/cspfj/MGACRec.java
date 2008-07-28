@@ -107,16 +107,16 @@ public final class MGACRec extends AbstractSolver {
 					+ getNbBacktracks() + "/" + getMaxBacktracks() + ")");
 		//}
 
-		if (filter.ensureAC()) {
+//		if (filter.ensureAC()) {
 			selectedVariable.assign(selectedIndex, problem);
-		} else if (!selectedVariable.assignNotAC(selectedIndex, problem)) {
-			selectedVariable.unassign(problem);
-			selectedVariable.remove(selectedIndex, level);
-
-			checkBacktracks();
-
-			return mac(level, selectedVariable);
-		}
+//		} else if (!selectedVariable.assignNotAC(selectedIndex, problem)) {
+//			selectedVariable.unassign(problem);
+//			selectedVariable.remove(selectedIndex, level);
+//
+//			checkBacktracks();
+//
+//			return mac(level, selectedVariable);
+//		}
 
 		problem.setLevelVariables(level, selectedVariable);
 

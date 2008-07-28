@@ -30,15 +30,11 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 
 	public final static int MAX_ARITY = 4;
 
-	protected int[][][] last;
-
 	private static int cId = 0;
 
 	private Variable[] involvedVariables;
 
 	private final int id;
-
-	protected int[] tuple;
 
 	private final int arity;
 
@@ -48,10 +44,6 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 
 	private static final Logger logger = Logger
 			.getLogger("cspfj.constraints.Constraint");
-
-	private boolean tupleCache;
-
-	protected TupleManager tupleManager;
 
 	protected final long[][] nbInitConflicts;
 
@@ -67,50 +59,26 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 
 	protected boolean conflictCounts = false;
 
-	private final int[] startTuple;
+	protected int[] tuple;
+
+	protected TupleManager tupleManager;
 
 	public AbstractConstraint(final Variable[] scope) {
-		this(scope, true, null);
+		this(scope, null);
 	}
 
 	public AbstractConstraint(final Variable[] scope, final String name) {
-		this(scope, true, name);
-	}
-
-	public AbstractConstraint(final Variable[] scope, final boolean tupleCache) {
-		this(scope, tupleCache, null);
-	}
-
-	public AbstractConstraint(final Variable[] scope, final boolean tupleCache,
-			final String name) {
 		involvedVariables = scope.clone();
 		arity = involvedVariables.length;
-
-		tuple = new int[arity];
-
-		startTuple = new int[arity];
-
 		id = cId++;
+		tuple = new int[getArity()];
 
-		int maxDomain = 0;
+		tupleManager = new TupleManager(this, tuple);
+
+		nbInitConflicts = new long[arity][];
 		for (int i = arity; --i >= 0;) {
-			if (involvedVariables[i].getDomain().length > maxDomain) {
-				maxDomain = involvedVariables[i].getDomain().length;
-			}
+			nbInitConflicts[i] = new long[scope[i].getDomain().length];
 		}
-
-		this.tupleCache = tupleCache;
-
-		if (tupleCache) {
-			last = new int[arity][maxDomain][arity];
-			for (int i = arity; --i >= 0;) {
-				for (int j = maxDomain; --j >= 0;) {
-					Arrays.fill(last[i][j], -1);
-				}
-			}
-		}
-
-		nbInitConflicts = new long[arity][maxDomain];
 		nbMaxConflicts = new long[arity];
 		initSize = new long[arity];
 
@@ -120,8 +88,6 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 
 		positionInVariable = new int[arity];
 
-		tupleManager = new TupleManager(this, tuple);
-
 		if (name == null) {
 			this.name = "C" + id;
 		} else {
@@ -129,17 +95,8 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		}
 	}
 
-	public void removeTupleCache() {
-		tupleCache = false;
-		last = null;
-	}
-
-	public boolean isCachingTuples() {
-		return tupleCache;
-	}
-
 	public void initNbSupports() throws InterruptedException {
-//		logger.fine("Counting " + this + " supports");
+		// logger.fine("Counting " + this + " supports");
 		conflictCounts = false;
 		final long size = size();
 		for (int p = arity; --p >= 0;) {
@@ -156,6 +113,7 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		for (int p = arity; --p >= 0;) {
 			Arrays.fill(nbInitConflicts[p], 0);
 		}
+
 		tupleManager.setFirstTuple();
 		do {
 			if (Thread.interrupted()) {
@@ -224,7 +182,7 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 	public final Variable[] getScope() {
 		return involvedVariables;
 	}
-	
+
 	public final int getId() {
 		return id;
 	}
@@ -237,67 +195,29 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		return name + " " + Arrays.toString(involvedVariables);
 	}
 
-	private boolean chk() {
+	protected boolean chk() {
 		checks++;
 		// logger.info(this + " : " + Arrays.toString(tuple));
 		return check();
 	}
 
 	public final int getOtherSize(final int position) {
-		if (arity > MAX_ARITY) {
-			return -1;
-		}
 		int size = 1;
 		for (int i = arity; --i >= 0;) {
 			if (i != position) {
-				size *= involvedVariables[i].getDomainSize();
+				final int dSize = involvedVariables[i].getDomainSize();
+				if (size > Integer.MAX_VALUE / dSize) {
+					return Integer.MAX_VALUE;
+				}
+				size *= dSize;
 			}
 		}
 		return size;
 	}
 
-	public boolean skipRevision(final int position) {
+	public boolean supportCondition(final int position) {
 		return conflictCounts
 				&& getOtherSize(position) > nbMaxConflicts[position];
-	}
-
-	public boolean[] revise(final int level) {
-		return null;
-	}
-	
-	public boolean revise(final int position, final int level) {
-		final Variable variable = involvedVariables[position];
-
-		assert !variable.isAssigned();
-
-		boolean revised = false;
-
-		// logger.finer("Revising " + variable + " "
-		// + Arrays.toString(variable.getCurrentDomain()) + " against "
-		// + this);
-
-		for (int index = variable.getFirst(); index >= 0; index = variable
-				.getNext(index)) {
-
-			// logger.finer("Checking (" + variable + ", " + index + ")");
-			// if (conflictCounts && othersSize >
-			// nbInitConflicts[position][index]) {
-			// continue;
-			// }
-
-			if (!findValidTuple(position, index)) {
-				// logger.finer("removing " + index + " from " + variable);
-
-				variable.remove(index, level);
-
-				revised = true;
-				active = true;
-
-			}
-
-		}
-
-		return revised;
 	}
 
 	protected boolean controlTuplePresence(final int[] tuple, final int position) {
@@ -310,134 +230,6 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		}
 
 		return true;
-	}
-
-	public boolean findValidTuple2(final int variablePosition, final int index) {
-		assert this.isInvolved(involvedVariables[variablePosition]);
-
-		// final long size = size()
-		// / involvedVariables[variablePosition].getDomainSize();
-
-		final boolean residue = tupleCache
-				&& last[variablePosition][index][0] != -1;
-
-		if (residue
-				&& controlTuplePresence(last[variablePosition][index],
-						variablePosition)) {
-			return true;
-		}
-
-
-		// final List<int[]> checkedAfter = new ArrayList<int[]>();
-
-		final boolean twoWays;
-
-		if (residue
-				&& tupleManager.setTupleAfter(last[variablePosition][index],
-						variablePosition)) {
-			System.arraycopy(tuple, 0, startTuple, 0, arity);
-			twoWays = true;
-		} else {
-			tupleManager.setFirstTuple(variablePosition, index);
-			twoWays = false;
-		}
-
-
-
-		do {
-			// checkedAfter.add(tuple.clone());
-
-			if (chk()) {
-				updateResidues();
-				return true;
-			}
-
-		} while (tupleManager.setNextTuple(variablePosition));
-
-		// final List<int[]> checkedBefore = new ArrayList<int[]>();
-
-		if (twoWays) {
-			tupleManager.setTuple(startTuple);
-			while (tupleManager.setPrevTuple(variablePosition)) {
-				// checkedBefore.add(tuple.clone());
-				if (chk()) {
-					updateResidues();
-					return true;
-				}
-			}
-		}
-
-
-		// assert (checkedAfter.size() + checkedBefore.size()) == size :
-		// "checked "
-		// + viewDomains()
-		// + " ("
-		// + size
-		// + ", fixed = "
-		// + variablePosition
-		// + ") : "
-		// + Arrays.toString(last[variablePosition][index])
-		// + " / "
-		// + viewTuples(checkedAfter)
-		// + " / "
-		// + viewTuples(checkedBefore);
-
-		return false;
-
-	}
-
-	// private String viewTuples(final List<int[]> tuples) {
-	// final StringBuilder stb = new StringBuilder("{ ");
-	// for (int[] tuple : tuples) {
-	// stb.append(Arrays.toString(tuple)).append(", ");
-	// }
-	// return stb.append(" }(").append(tuples.size()).append(")").toString();
-	// }
-	//
-	// private String viewDomains() {
-	// final StringBuilder stb = new StringBuilder("{ ");
-	// for (Variable v : involvedVariables) {
-	// stb.append(v.getCurrentDomain()).append(", ");
-	// }
-	// return stb.append(" }").toString();
-	// }
-
-	public boolean findValidTuple(final int variablePosition, final int index) {
-		return findValidTuple2(variablePosition, index);
-	}
-	
-	public boolean findValidTuple1(final int variablePosition, final int index) {
-		assert this.isInvolved(involvedVariables[variablePosition]);
-
-		final boolean residue = tupleCache
-				&& last[variablePosition][index][0] != -1;
-
-		if (residue
-				&& controlTuplePresence(last[variablePosition][index],
-						variablePosition)) {
-			return true;
-		}
-
-		tupleManager.setFirstTuple(variablePosition, index);
-
-		do {
-			if (chk()) {
-				updateResidues();
-				return true;
-			}
-		} while (tupleManager.setNextTuple(variablePosition));
-
-		return false;
-
-	}
-
-	protected void updateResidues() {
-		if (tupleCache) {
-			for (int position = arity; --position >= 0;) {
-				System.arraycopy(tuple, 0, last[position][tuple[position]], 0,
-						arity);
-			}
-		}
 	}
 
 	public final long getNbSupports(final Variable variable, final int index) {
@@ -479,6 +271,11 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		return false;
 	}
 
+	public boolean revise(final int level, final boolean[] revised,
+			final boolean[] removals) {
+		return revise(level, revised);
+	}
+
 	public static final long getChecks() {
 		return checks;
 	}
@@ -506,32 +303,6 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		this.active = active;
 	}
 
-	public final static Constraint findConstraint(final Variable[] scope,
-			final Collection<AbstractConstraint> constraints) {
-		return findConstraint(scope, scope.length, constraints
-				.toArray(new AbstractConstraint[constraints.size()]));
-	}
-
-	public final static Constraint findConstraint(final Variable[] scope,
-			final int stopScope, final Constraint[] constraints) {
-
-		for (Constraint c : constraints) {
-			if (c.getArity() != stopScope) {
-				continue;
-			}
-			boolean ok = true;
-			for (int i = stopScope; --i >= 0;) {
-				if (!c.isInvolved(scope[i])) {
-					ok = false;
-					break;
-				}
-			}
-			if (ok) {
-				return c;
-			}
-		}
-		return null;
-	}
 
 	public static final long getPresenceChecks() {
 		return nbPresenceChecks;
@@ -541,8 +312,11 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		checks = nbPresenceChecks = 0;
 	}
 
-	public boolean equalsConstraint(final AbstractConstraint constraint) {
-		return id == constraint.getId();
+	public boolean equals(final Object object) {
+		if (!(object instanceof Constraint)) {
+			return false;
+		}
+		return id == ((Constraint) object).getId();
 	}
 
 	/**
@@ -554,19 +328,12 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 	 * @return <code> true </code> iff the given set of variables corresponds to
 	 *         the set of variables involved in the constraint
 	 */
-	public boolean hasSetOfVariablesEqualTo(final Collection<Variable> variables) {
+	public boolean isScope(final Collection<Variable> variables) {
 		if (arity != variables.size()) {
 			return false;
 		}
 		for (int i = involvedVariables.length; --i >= 0;) {
-			boolean found = false;
-			for (Variable v : variables) {
-				if (involvedVariables[i] == v) {
-					found = true;
-					break;
-				}
-			}
-			if (!found) {
+			if (!variables.contains(involvedVariables[i])) {
 				return false;
 			}
 		}
@@ -592,7 +359,8 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 	}
 
 	public AbstractConstraint clone() throws CloneNotSupportedException {
-		final AbstractConstraint constraint = (AbstractConstraint) super.clone();
+		final AbstractConstraint constraint = (AbstractConstraint) super
+				.clone();
 
 		constraint.tuple = new int[arity];
 
@@ -608,31 +376,8 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 				maxDomain = involvedVariables[i].getDomain().length;
 			}
 		}
-
-		if (tupleCache) {
-			constraint.last = new int[arity][maxDomain][arity];
-			for (int i = arity; --i >= 0;) {
-				for (int j = maxDomain; --j >= 0;) {
-					Arrays.fill(constraint.last[i][j], -1);
-				}
-			}
-
-		}
-
 		constraint.positionInVariable = new int[arity];
 		return constraint;
-	}
-
-	public void setFirstTuple() {
-		tupleManager.setFirstTuple();
-	}
-
-	public boolean setNextTuple() {
-		return tupleManager.setNextTuple();
-	}
-
-	public boolean storeNoGoods() {
-		return false;
 	}
 
 	public long getSize() {
@@ -654,8 +399,12 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 	public String getType() {
 		return this.getClass().getSimpleName();
 	}
-	
+
 	public void restore(final int level) {
 		// Nothing here
+	}
+
+	public int hashCode() {
+		return id;
 	}
 }

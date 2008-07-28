@@ -67,6 +67,7 @@ public final class TupleManager {
 				tuple[position] = index;
 			} else {
 				tuple[position] = constraint.getVariable(position).getFirst();
+				assert tuple[position] >= 0;
 			}
 		}
 
@@ -108,45 +109,52 @@ public final class TupleManager {
 
 	public boolean setTupleAfter(final int[] tpl, final int fixed) {
 		final int[] tuple = this.tuple;
-		// System.arraycopy(tpl, 0, tuple, 0, arity);
+		System.arraycopy(tpl, 0, tuple, 0, arity);
 
-		tuple[fixed] = tpl[fixed];
+		// tuple[fixed] = tpl[fixed];
 		int changed = arity;
-
-		for (int pos = 0; pos < arity; pos++) {
+		int pos = 0;
+		while (pos < arity) {
 			if (pos == fixed) {
+				pos++;
 				continue;
 			}
-			if (changed == arity) {
-				tuple[pos] = tpl[pos];
-			}
+			// if (changed == arity) {
+			// tuple[pos] = tpl[pos];
+			// }
 
 			final Variable variable = constraint.getVariable(pos);
 
 			if (pos > changed) {
-				tuple[pos] = variable.getFirst();
+				tuple[pos++] = variable.getFirst();
 			} else {
 
 				int index = tuple[pos];
 
-				while (index >= 0 && !variable.isPresent(index)) {
-					changed = pos;
-					index = variable.getNext(index);
-				}
-
-				if (index < 0) {
-					pos--;
-					if (pos == fixed) {
-						pos--;
-					}
-					if (pos < 0) {
-						return false;
-					}
-					tuple[pos] = constraint.getVariable(pos).getNext(tuple[pos]);
-					changed = pos;
-					pos--;
+				if (variable.isPresent(index)) {
+					pos++;
 				} else {
-					tuple[pos] = index;
+					changed = pos;
+					do {
+						index = variable.getNext(index);
+					} while (index >= 0 && !variable.isPresent(index));
+
+					if (index < 0) {
+						do {
+							pos--;
+							if (pos == fixed) {
+								pos--;
+							}
+							if (pos < 0) {
+								return false;
+							}
+							tuple[pos] = constraint.getVariable(pos).getNext(
+									tuple[pos]);
+						} while (tuple[pos] < 0);
+						changed = pos;
+					} else {
+						tuple[pos++]=index;
+					}
 				}
 			}
 		}

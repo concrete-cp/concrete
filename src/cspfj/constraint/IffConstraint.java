@@ -21,7 +21,7 @@ package cspfj.constraint;
 
 import cspfj.problem.Variable;
 
-public final class IffConstraint extends AbstractConstraint {
+public final class IffConstraint extends AbstractPVRConstraint {
 
 	final private int indexI;
 
@@ -32,7 +32,7 @@ public final class IffConstraint extends AbstractConstraint {
 	final private int valueV;
 
 	public IffConstraint(final Variable[] scope, final int i, final int v) {
-		super(scope, false);
+		super(scope);
 		// System.out.println(scope[0] + "="+i +" <=> "+scope[1]+"="+v);
 		this.valueI = i;
 		this.indexI = getVariable(0).index(i);
@@ -80,5 +80,10 @@ public final class IffConstraint extends AbstractConstraint {
 		}
 		return revised;
 
+	}
+
+	@Override
+	public boolean isSlow() {
+		return false;
 	}
 }

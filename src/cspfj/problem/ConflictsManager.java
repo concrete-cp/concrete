@@ -98,9 +98,7 @@ public final class ConflictsManager {
 				for (int c = constraints.length; --c >= 0;) {
 					final Constraint constraint = constraints[c];
 
-					if (constraint.getArity() <= AbstractConstraint.MAX_ARITY
-							&& !constraint.findValidTuple(variable
-									.getPositionInConstraint(c), i)) {
+					if (!constraint.checkFirst()) {
 						// logger.warning("No tuple found");
 						indexConflicts += solver.getWeight(constraint);
 					}

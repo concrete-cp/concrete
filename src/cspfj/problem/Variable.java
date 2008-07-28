@@ -225,10 +225,10 @@ public final class Variable implements Cloneable {
 
 	}
 
-	public boolean assignNotAC(final int index, final Problem problem) {
-		assgn(index, problem);
-		return checkIndexValidity(index);
-	}
+//	public boolean assignNotAC(final int index, final Problem problem) {
+//		assgn(index, problem);
+//		return checkIndexValidity(index);
+//	}
 
 	public void firstAssign(final int index) {
 		assignedIndex = index;
@@ -239,14 +239,14 @@ public final class Variable implements Cloneable {
 		assigned = false;
 	}
 
-	private boolean checkIndexValidity(final int index) {
-		for (int c = constraints.length; --c >= 0;) {
-			if (!constraints[c].findValidTuple(positionInConstraint[c], index)) {
-				return false;
-			}
-		}
-		return true;
-	}
+//	private boolean checkIndexValidity(final int index) {
+//		for (int c = constraints.length; --c >= 0;) {
+//			if (!constraints[c].findValidTuple(positionInConstraint[c], index)) {
+//				return false;
+//			}
+//		}
+//		return true;
+//	}
 
 	/**
 	 * @param level

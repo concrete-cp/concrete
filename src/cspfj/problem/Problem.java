@@ -27,26 +27,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.Constraint;
-import cspfj.constraint.ExtensionConstraint;
+import cspfj.constraint.DynamicConstraint;
 import cspfj.exception.FailedGenerationException;
 import cspfj.heuristic.WeightHeuristic;
 import cspfj.util.Waker;
 
 public final class Problem implements Cloneable {
-	private Map<Integer, Variable> variables;
+	// private Map<Integer, Variable> variables;
 
 	private Variable[] variableArray;
+
+	private int nbVariables = 0;
 
 	private Map<Integer, Constraint> constraints;
 
 	private Constraint[] constraintArray;
 
-	private int nbFutureVariables;
+	private int nbFutureVariables = 0;
 
 	private final static Logger logger = Logger.getLogger("cspfj.Problem");
 
@@ -139,16 +140,15 @@ public final class Problem implements Cloneable {
 
 	private void setVariables(final Collection<Variable> vars) {
 
-		this.variables = new HashMap<Integer, Variable>(vars.size());
+		// this.variables = new HashMap<Integer, Variable>(vars.size());
 
-		this.variableArray = vars.toArray(new Variable[vars.size()]);
+		// this.variableArray = vars.toArray(new Variable[vars.size()]);
 
 		maxDomainSize = 0;
 
 		maxVId = 0;
 
 		for (Variable var : vars) {
-			variables.put(var.getId(), var);
 			if (var.getDomain().length > maxDomainSize) {
 				maxDomainSize = var.getDomain().length;
 			}
@@ -157,7 +157,12 @@ public final class Problem implements Cloneable {
 			}
 		}
 
-		nbFutureVariables = vars.size();
+		this.variableArray = new Variable[maxVId + 1];
+		for (Variable var : vars) {
+			variableArray[var.getId()] = var;
+		}
+
+		nbFutureVariables = nbVariables = vars.size();
 
 		levelVariables = new Variable[getNbVariables()];
 		Arrays.fill(levelVariables, null);
@@ -200,7 +205,7 @@ public final class Problem implements Cloneable {
 
 	public void updateInvolvingConstraints() {
 		final Map<Integer, List<Constraint>> invConstraints = new HashMap<Integer, List<Constraint>>(
-				variables.size());
+				variableArray.length);
 
 		for (Variable v : getVariables()) {
 			invConstraints.put(v.getId(), new ArrayList<Constraint>());
@@ -232,7 +237,7 @@ public final class Problem implements Cloneable {
 	}
 
 	public int getNbVariables() {
-		return variables.size();
+		return nbVariables;
 	}
 
 	public int getNbConstraints() {
@@ -260,7 +265,7 @@ public final class Problem implements Cloneable {
 	// }
 
 	public Variable getVariable(final int vId) {
-		return variables.get(vId);
+		return variableArray[vId];
 	}
 
 	public void increaseFutureVariables() {
@@ -275,7 +280,7 @@ public final class Problem implements Cloneable {
 		// for (int i = 0; i < resetConstraint.length; i++) {
 		// resetConstraint[i] = false;
 		// }
-//		logger.fine("Restoring to " + level);
+		// logger.fine("Restoring to " + level);
 
 		for (Variable v : getVariables()) {
 			if (!v.isAssigned()) {
@@ -300,7 +305,7 @@ public final class Problem implements Cloneable {
 	}
 
 	public void restoreAll(final int level) {
-//		logger.fine("Restoring all to " + level);
+		// logger.fine("Restoring all to " + level);
 
 		for (Variable v : getVariables()) {
 			if (v.isAssigned()) {
@@ -357,6 +362,28 @@ public final class Problem implements Cloneable {
 		}
 		return -1;
 	}
+	
+
+	private final static DynamicConstraint findDynamicConstraint(
+			final Variable[] scope, final int stopScope) {
+
+		for (Constraint c : scope[0].getInvolvingConstraints()) {
+			if (c.getArity() != stopScope || !(c instanceof DynamicConstraint)) {
+				continue;
+			}
+			boolean ok = true;
+			for (int i = stopScope; --i >= 0;) {
+				if (!c.isInvolved(scope[i])) {
+					ok = false;
+					break;
+				}
+			}
+			if (ok) {
+				return (DynamicConstraint) c;
+			}
+		}
+		return null;
+	}
 
 	public int addNoGoods() {
 		if (!useNoGoods) {
@@ -380,8 +407,8 @@ public final class Problem implements Cloneable {
 		tuple[0] = scope[0].getFirst();
 
 		for (int level = 1; level < levelVariables.length
-				&& level < getMaxArity(); level++) {
-
+				&& levelVariables[level] != null; level++) {
+			final int[] realTuple = new int[level + 1];
 			for (Variable fv : variableArray) {
 				// logger.fine("checking " +
 				// getVariable(levelVariables[level-1]));
@@ -393,15 +420,38 @@ public final class Problem implements Cloneable {
 				// final float startFindConstraint = CpuMonitor.getCpuTime();
 				scope[level] = fv;
 
-				final Constraint cons = AbstractConstraint.findConstraint(
-						scope, level + 1, scope[0].getInvolvingConstraints());
+				DynamicConstraint constraint = 
+						findDynamicConstraint(scope, level + 1);
 
-				if (!(cons instanceof ExtensionConstraint)) {
+				if (constraint == null) {
 					continue;
+//					final Variable[] constraintScope = new Variable[level + 1];
+//					System.arraycopy(scope, 0, constraintScope, 0,
+//							constraintScope.length);
+//
+//					if (level == 1) {
+//						final Matrix2D matrix = new Matrix2D(scope[0]
+//								.getDomain().length,
+//								scope[1].getDomain().length, true);
+//						constraint = new ExtensionConstraint2D(constraintScope,
+//								matrix);
+//					} else {
+//						final Matrix matrix = new TupleHashSet(true);
+//						try {
+//							constraint = new ExtensionConstraintGeneral(
+//									constraintScope, matrix);
+//						} catch (FailedGenerationException e) {
+//							continue;
+//						}
+//					}
+//					final Collection<Constraint> curCons = new ArrayList<Constraint>(
+//							constraints.values());
+//					curCons.add(constraint);
+//					setConstraints(curCons);
+//					updateInvolvingConstraints();
+//					logger.info(getNbConstraints() + " constraints, " + getMaxArity() + " max arity");
 				}
-				final ExtensionConstraint constraint = (ExtensionConstraint) cons;
 
-				final int[] realTuple = constraint.getTuple();
 				int currentV = -1;
 				for (int i = level + 1; --i >= 0;) {
 					if (constraint.getVariable(i) == fv) {
@@ -418,7 +468,7 @@ public final class Problem implements Cloneable {
 					if (fv.getRemovedLevel(lostIndex) == level) {
 						realTuple[currentV] = lostIndex;
 
-						if (constraint.removeTuple()) {
+						if (constraint.removeTuple(realTuple)) {
 							// logger.fine(scope + tuple.toString());
 							nbNoGoods++;
 						}
@@ -429,17 +479,14 @@ public final class Problem implements Cloneable {
 				// startRemoveTuple;
 			}
 
-			if (levelVariables[level] == null) {
-				break;
-			}
 			scope[level] = levelVariables[level];
 			tuple[level] = levelVariables[level].getFirst();
 
 		}
 		// noGoodTime += CpuMonitor.getCpuTime() - startNoGood;
-		//if (logger.isLoggable(Level.INFO)) {
-			logger.info(nbNoGoods + " nogoods");
-		//}
+		// if (logger.isLoggable(Level.INFO)) {
+		logger.info(nbNoGoods + " nogoods");
+		// }
 
 		return nbNoGoods;
 	}

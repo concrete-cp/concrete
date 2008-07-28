@@ -129,13 +129,13 @@ public final class MGACIter extends AbstractSolver {
 						+ getNbBacktracks() + "/" + getMaxBacktracks() + ")");
 			//}
 
-			if (filter.ensureAC()) {
+//			if (filter.ensureAC()) {
 				selectedVariable.assign(selectedIndex, problem);
-			} else if (!selectedVariable.assignNotAC(selectedIndex, problem)) {
-				selectedVariable.unassign(problem);
-				selectedVariable.remove(selectedIndex, level);
-				continue;
-			}
+//			} else if (!selectedVariable.assignNotAC(selectedIndex, problem)) {
+//				selectedVariable.unassign(problem);
+//				selectedVariable.remove(selectedIndex, level);
+//				continue;
+//			}
 
 			problem.setLevelVariables(level, selectedVariable);
 

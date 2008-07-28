@@ -21,7 +21,7 @@ package cspfj.constraint;
 
 import cspfj.problem.Variable;
 
-public final class DTPConstraint extends AbstractConstraint {
+public final class DTPConstraint extends AbstractPVRConstraint {
 
 	final private int[] duration;
 
@@ -34,7 +34,7 @@ public final class DTPConstraint extends AbstractConstraint {
 
 	public DTPConstraint(final Variable[] scope, final int duration0,
 			final int duration1, final boolean ordered) {
-		super(scope, false);
+		super(scope);
 		this.duration = new int[] { duration0, duration1 };
 		// System.out.println(this);
 		this.ordered = ordered;
@@ -99,5 +99,10 @@ public final class DTPConstraint extends AbstractConstraint {
 		}
 
 		return filtered;
+	}
+
+	@Override
+	public boolean isSlow() {
+		return false;
 	}
 }

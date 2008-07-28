@@ -21,7 +21,7 @@ package cspfj.constraint;
 
 import cspfj.problem.Variable;
 
-public final class DiffConstraint extends AbstractConstraint {
+public final class DiffConstraint extends AbstractPVRConstraint {
 
 	final private int constant;
 
@@ -84,6 +84,11 @@ public final class DiffConstraint extends AbstractConstraint {
 			}
 		}
 		return deleted;
+	}
+
+	@Override
+	public boolean isSlow() {
+		return false;
 	}
 
 	// public String toString() {

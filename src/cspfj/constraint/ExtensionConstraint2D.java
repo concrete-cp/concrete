@@ -29,15 +29,20 @@ public class ExtensionConstraint2D extends AbstractExtensionConstraint {
 
 	protected MatrixManager2D matrix;
 
-	public ExtensionConstraint2D(final Variable[] scope, final Matrix2D matrix,
-			final String name) {
-		super(scope, new MatrixManager2D(scope, matrix), name, true);
+	public ExtensionConstraint2D(final Variable[] scope, final Matrix2D matrix) {
+		super(scope, new MatrixManager2D(scope, matrix));
 
 		this.matrix = (MatrixManager2D) super.matrix;
 		this.matrix.setLast(last);
 	}
 
+	public ExtensionConstraint2D(final Variable[] scope, final Matrix2D matrix,
+			final String name) {
+		super(scope, new MatrixManager2D(scope, matrix), name);
 
+		this.matrix = (MatrixManager2D) super.matrix;
+		this.matrix.setLast(last);
+	}
 
 	// public double getTightness() {
 	// return tightness;
@@ -59,8 +64,6 @@ public class ExtensionConstraint2D extends AbstractExtensionConstraint {
 		return true;
 	}
 
-
-
 	public ExtensionConstraint2D deepCopy(final Collection<Variable> variables)
 			throws CloneNotSupportedException {
 		final ExtensionConstraint2D constraint = (ExtensionConstraint2D) super
@@ -68,5 +71,10 @@ public class ExtensionConstraint2D extends AbstractExtensionConstraint {
 		constraint.matrix = (MatrixManager2D) matrix.deepCopy(constraint
 				.getScope(), constraint.tuple);
 		return constraint;
+	}
+
+	@Override
+	public boolean isSlow() {
+		return false;
 	}
 }

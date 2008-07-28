@@ -8,21 +8,20 @@ package cspfj.constraint;
 
 import cspfj.problem.Variable;
 
-public abstract class AbstractExtensionConstraint extends AbstractConstraint
-		implements ExtensionConstraint {
+public abstract class AbstractExtensionConstraint extends AbstractAC3Constraint
+		implements ExtensionConstraint, DynamicConstraint {
 
 	protected MatrixManager matrix;
 
-	public AbstractExtensionConstraint(Variable[] scope,
-			MatrixManager matrix, boolean tupleCache) {
-		super(scope, tupleCache);
+	public AbstractExtensionConstraint(Variable[] scope, MatrixManager matrix) {
+		super(scope);
 		this.matrix = matrix;
 		matrix.setTuple(tuple);
 	}
 
-	public AbstractExtensionConstraint(Variable[] scope,
-			MatrixManager matrix, String name, boolean tupleCache) {
-		super(scope, tupleCache, name);
+	public AbstractExtensionConstraint(Variable[] scope, MatrixManager matrix,
+			String name) {
+		super(scope, name);
 		this.matrix = matrix;
 		matrix.setTuple(tuple);
 	}
@@ -33,15 +32,15 @@ public abstract class AbstractExtensionConstraint extends AbstractConstraint
 	}
 
 	@Override
-	public boolean removeTuple() {
-		return matrix.removeTuple();
+	public boolean removeTuple(int[] tuple) {
+		return matrix.removeTuple(tuple);
 	}
 
 	@Override
 	public boolean check() {
 		return matrix.check();
 	}
-	
+
 	public String getType() {
 		return super.getType() + " w/ " + matrix.getType();
 	}

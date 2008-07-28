@@ -1,7 +1,7 @@
 package cspfj.filter;
 
 import java.util.Arrays;
-import java.util.BitSet;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -12,15 +12,17 @@ import cspfj.heuristic.VariableHeuristic;
 import cspfj.heuristic.WeightHeuristic;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
+import cspfj.util.Heap;
 
 /**
  * @author scand1sk
  * 
  */
-public final class AC3 implements Filter {
+public final class AC3Heap implements Filter {
 	private final Problem problem;
 
-	private final BitSet inQueue;
+	private final boolean[] inQueue;
+	private Heap<Variable> queue;
 
 	private boolean removals[][];
 
@@ -28,23 +30,33 @@ public final class AC3 implements Filter {
 
 	public int uselessRevisions = 0;
 
+	private final boolean[] revised;
+
 	private static final Logger logger = Logger.getLogger(Filter.class
 			.getSimpleName());
 
 	private WeightHeuristic wvh;
 
-	public AC3(final Problem problem, final VariableHeuristic heuristic) {
+	public AC3Heap(final Problem problem, final VariableHeuristic heuristic) {
 		super();
 		this.problem = problem;
 
-		inQueue = new BitSet(problem.getMaxVId() + 1);
-
+		inQueue = new boolean[problem.getMaxVId() + 1];
+		queue = new Heap<Variable>(new Comparator<Variable>() {
+			@Override
+			public int compare(Variable arg0, Variable arg1) {
+				return arg0.getDomainSize() - arg1.getDomainSize();
+			}
+		}, new Variable[problem.getNbVariables()]);
 		wvh = (heuristic instanceof WeightHeuristic) ? (WeightHeuristic) heuristic
 				: null;
+
+		revised = new boolean[problem.getMaxArity()];
 
 	}
 
 	public boolean reduceAll(final int level) {
+		queue.clear();
 		addAll();
 		return reduce(level);
 
@@ -54,18 +66,20 @@ public final class AC3 implements Filter {
 		if (variable == null) {
 			return true;
 		}
-		for (int i = inQueue.nextSetBit(0); i >= 0; i = inQueue
-				.nextSetBit(i + 1)) {
-			for (Constraint c : problem.getVariable(i)
-					.getInvolvingConstraints()) {
-				Arrays.fill(removals[c.getId()], false);
+		for (int i = inQueue.length; --i >= 0;) {
+			if (inQueue[i]) {
+				for (Constraint c : problem.getVariable(i)
+						.getInvolvingConstraints()) {
+					Arrays.fill(removals[c.getId()], false);
+				}
+				inQueue[i] = false;
 			}
 		}
 
-		inQueue.clear();
+		queue.clear();
 
-		inQueue.set(variable.getId());
-
+		inQueue[variable.getId()] = true;
+		queue.add(variable);
 		final Constraint[] involving = variable.getInvolvingConstraints();
 
 		for (int cp = involving.length; --cp >= 0;) {
@@ -79,12 +93,16 @@ public final class AC3 implements Filter {
 
 	private boolean reduce(final int level) {
 		logger.fine("Reducing");
-		final BitSet inQueue = this.inQueue;
 
-		final boolean[] revised = new boolean[problem.getMaxArity()];
+		final Heap<Variable> queue = this.queue;
+		final boolean[] inQueue = this.inQueue;
 
-		while (!inQueue.isEmpty()) {
-			final Variable variable = pullVariable();
+		final boolean[] revised = this.revised;
+		final boolean[][] removals = this.removals;
+
+		while (!queue.isEmpty()) {
+			final Variable variable = queue.pollFirst();
+			inQueue[variable.getId()] = false;
 
 			final Constraint[] constraints = variable.getInvolvingConstraints();
 
@@ -93,10 +111,11 @@ public final class AC3 implements Filter {
 
 				final int position = variable.getPositionInConstraint(c);
 
-				final boolean[] removals = this.removals[constraint.getId()];
+				final boolean[] constraintRemovals = removals[constraint
+						.getId()];
 
-				if (!removals[position]) {
-					Arrays.fill(removals, false);
+				if (!constraintRemovals[position]) {
+					Arrays.fill(constraintRemovals, false);
 					continue;
 				}
 
@@ -105,7 +124,7 @@ public final class AC3 implements Filter {
 					if (wvh != null) {
 						wvh.treatConflictConstraint(constraint);
 					}
-					Arrays.fill(removals, false);
+					Arrays.fill(constraintRemovals, false);
 					return false;
 				}
 
@@ -117,14 +136,17 @@ public final class AC3 implements Filter {
 					}
 					atLeastOne = true;
 					final Variable y = constraint.getVariable(i);
-					inQueue.set(y.getId());
+					if (!inQueue[y.getId()]) {
+						inQueue[y.getId()] = true;
+						queue.add(y);
+					}
 					final Constraint[] involvingConstraints = y
 							.getInvolvingConstraints();
 
 					for (int cp = involvingConstraints.length; --cp >= 0;) {
 						final Constraint constraintP = involvingConstraints[cp];
 						if (constraintP != constraint) {
-							this.removals[constraintP.getId()][y
+							removals[constraintP.getId()][y
 									.getPositionInConstraint(cp)] = true;
 						}
 
@@ -137,7 +159,7 @@ public final class AC3 implements Filter {
 					uselessRevisions++;
 				}
 				Arrays.fill(revised, false);
-				Arrays.fill(removals, false);
+				Arrays.fill(constraintRemovals, false);
 
 			}
 
@@ -149,7 +171,8 @@ public final class AC3 implements Filter {
 
 	private void addAll() {
 		for (Variable v : problem.getVariables()) {
-			inQueue.set(v.getId());
+			inQueue[v.getId()] = true;
+			queue.add(v);
 		}
 		if (removals == null || removals.length < problem.getMaxCId() + 1) {
 			removals = new boolean[problem.getMaxCId() + 1][];
@@ -164,28 +187,6 @@ public final class AC3 implements Filter {
 		for (Constraint c : problem.getConstraints()) {
 			Arrays.fill(removals[c.getId()], true);
 		}
-	}
-
-	private Variable pullVariable() {
-		Variable bestVariable = null;
-		int bestValue = Integer.MAX_VALUE;
-
-		final BitSet inQueue = this.inQueue;
-
-		final Problem problem = this.problem;
-
-		for (int i = inQueue.nextSetBit(0); i >= 0; i = inQueue
-				.nextSetBit(i + 1)) {
-			final Variable variable = problem.getVariable(i);
-			final int domainSize = variable.getDomainSize();
-			if (domainSize < bestValue) {
-				bestVariable = variable;
-				bestValue = domainSize;
-			}
-		}
-
-		inQueue.clear(bestVariable.getId());
-		return bestVariable;
 	}
 
 	public String toString() {

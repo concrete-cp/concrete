@@ -20,6 +20,7 @@
 package cspfj.constraint;
 
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.logging.Logger;
 
@@ -27,35 +28,36 @@ import cspfj.constraint.MatrixManagerDynamic.LLIterator;
 import cspfj.exception.FailedGenerationException;
 import cspfj.problem.Variable;
 
-public class ExtensionConstraintDynamic extends AbstractExtensionConstraint {
+public class ExtensionConstraintDynamic extends AbstractConstraint implements
+		DynamicConstraint {
 
 	private final MatrixManagerDynamic dynamic;
 
-	private final boolean[][] found;
+	private final BitSet[] found;
 
 	private final static Logger logger = Logger
 			.getLogger(ExtensionConstraintDynamic.class.getSimpleName());
 
 	public ExtensionConstraintDynamic(final Variable[] scope,
 			final TupleHashSet matrix) throws FailedGenerationException {
-		super(scope, new MatrixManagerDynamic(scope, matrix), false);
-		this.dynamic = (MatrixManagerDynamic) this.matrix;
+		super(scope);
+		this.dynamic = new MatrixManagerDynamic(scope, matrix);
 		found = initFound();
 	}
 
 	public ExtensionConstraintDynamic(final Variable[] scope,
 			final TupleHashSet matrix, final String name)
 			throws FailedGenerationException {
-		super(scope, new MatrixManagerDynamic(scope, matrix), name, false);
-		this.dynamic = (MatrixManagerDynamic) this.matrix;
+		super(scope, name);
+		this.dynamic = new MatrixManagerDynamic(scope, matrix);
 		found = initFound();
 	}
 
-	private boolean[][] initFound() {
+	private BitSet[] initFound() {
 
-		final boolean[][] found = new boolean[getArity()][];
+		final BitSet[] found = new BitSet[getArity()];
 		for (int i = getArity(); --i >= 0;) {
-			found[i] = new boolean[getVariable(i).getDomain().length];
+			found[i] = new BitSet(getVariable(i).getDomain().length);
 		}
 		return found;
 	}
@@ -64,31 +66,31 @@ public class ExtensionConstraintDynamic extends AbstractExtensionConstraint {
 		dynamic.restore(level);
 	}
 
-	public boolean[] revise(final int level) {
+	public boolean revise(final int level, final boolean[] revised) {
 		// logger.fine("Revising "+this);
 		// int toFind = 0;
 		for (int i = getArity(); --i >= 0;) {
-			Arrays.fill(found[i], true);
+			found[i].set(0, getVariable(i).getDomain().length);
 
 			if (!getVariable(i).isAssigned()) {
 				for (int index = getVariable(i).getFirst(); index >= 0; index = getVariable(
 						i).getNext(index)) {
-					found[i][index] = false;
+					found[i].clear(index);
 					// toFind++;
 				}
 			}
 		}
 
-		final boolean[] revised = new boolean[getArity()];
-
 		final LLIterator itr = dynamic.iterator();
 
 		while (itr.hasNext()) {
 			final int[] tuple = itr.next();
-
+			if (tuple == null) {
+				continue;
+			}
 			if (controlTuplePresence(tuple)) {
 				for (int i = getArity(); --i >= 0;) {
-					found[i][tuple[i]] = true;
+					found[i].set(tuple[i]);
 				}
 			} else {
 				itr.remove(level);
@@ -99,11 +101,11 @@ public class ExtensionConstraintDynamic extends AbstractExtensionConstraint {
 			final Variable variable = getVariable(i);
 
 			boolean rev = false;
-			final boolean[] found = this.found[i];
+			final BitSet found = this.found[i];
 			for (int index = variable.getFirst(); index >= 0; index = variable
 					.getNext(index)) {
 
-				if (!found[index]) {
+				if (!found.get(index)) {
 					// logger.finer("removing " + index + " from " + variable);
 
 					variable.remove(index, level);
@@ -114,12 +116,15 @@ public class ExtensionConstraintDynamic extends AbstractExtensionConstraint {
 
 			}
 			if (rev) {
+				if (variable.getDomainSize() <= 0) {
+					return false;
+				}
 				revised[i] = true;
 				setActive(true);
 			}
 		}
 
-		return revised;
+		return true;
 	}
 
 	private boolean controlTuplePresence(final int[] tuple) {
@@ -139,8 +144,8 @@ public class ExtensionConstraintDynamic extends AbstractExtensionConstraint {
 			throws CloneNotSupportedException {
 		final ExtensionConstraintDynamic constraint = (ExtensionConstraintDynamic) super
 				.deepCopy(variables);
-		constraint.matrix = matrix.deepCopy(constraint.getScope(),
-				constraint.tuple);
+		// constraint.matrix = matrix.deepCopy(constraint.getScope(),
+		// constraint.tuple);
 		return constraint;
 	}
 
@@ -185,5 +190,20 @@ public class ExtensionConstraintDynamic extends AbstractExtensionConstraint {
 			nbMaxConflicts[p] = max;
 		}
 		conflictCounts = true;
+	}
+
+	@Override
+	public boolean isSlow() {
+		return true;
+	}
+
+	@Override
+	public boolean check() {
+		return dynamic.check();
+	}
+
+	@Override
+	public boolean removeTuple(int[] tuple) {
+		return dynamic.removeTuple(tuple);
 	}
 }

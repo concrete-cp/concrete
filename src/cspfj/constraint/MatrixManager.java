@@ -47,7 +47,7 @@ public class MatrixManager implements Cloneable {
 		return true;
 	}
 
-	public boolean removeTuple() {
+	public boolean removeTuple(int[] tuple) {
 		if (set(tuple, false)) {
 			return true;
 		}

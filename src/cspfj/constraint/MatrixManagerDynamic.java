@@ -173,35 +173,35 @@ public class MatrixManagerDynamic extends MatrixManager implements
 		return tld;
 	}
 
-	public static void main(String[] args) throws FailedGenerationException {
-		final TupleHashSet ta = new TupleHashSet(false);
-		ta.set(new int[] { 0, 0, 0 }, true);
-		ta.set(new int[] { 1, 1, 1 }, true);
-		ta.set(new int[] { 2, 2, 2 }, true);
-
-		final int[] dom = new int[] { 0, 1, 2 };
-
-		final Variable[] scope = { new Variable(dom), new Variable(dom),
-				new Variable(dom) };
-
-		final ExtensionConstraintDynamic constraint = new ExtensionConstraintDynamic(
-				scope, ta);
-
-		constraint.revise(0);
-
-		for (Variable v : scope) {
-			System.out.println(v.getCurrentDomain());
-		}
-
-		System.out.println();
-		System.arraycopy(new int[] { 1, 1, 1 }, 0, constraint.getTuple(), 0, 3);
-
-		constraint.removeTuple();
-
-		constraint.revise(0);
-
-		for (Variable v : scope) {
-			System.out.println(v.getCurrentDomain());
-		}
-	}
+//	public static void main(String[] args) throws FailedGenerationException {
+//		final TupleHashSet ta = new TupleHashSet(false);
+//		ta.set(new int[] { 0, 0, 0 }, true);
+//		ta.set(new int[] { 1, 1, 1 }, true);
+//		ta.set(new int[] { 2, 2, 2 }, true);
+//
+//		final int[] dom = new int[] { 0, 1, 2 };
+//
+//		final Variable[] scope = { new Variable(dom), new Variable(dom),
+//				new Variable(dom) };
+//
+//		final ExtensionConstraintDynamic constraint = new ExtensionConstraintDynamic(
+//				scope, ta);
+//
+//		constraint.revise(0);
+//
+//		for (Variable v : scope) {
+//			System.out.println(v.getCurrentDomain());
+//		}
+//
+//		System.out.println();
+//		System.arraycopy(new int[] { 1, 1, 1 }, 0, constraint.getTuple(), 0, 3);
+//
+//		constraint.removeTuple();
+//
+//		constraint.revise(0);
+//
+//		for (Variable v : scope) {
+//			System.out.println(v.getCurrentDomain());
+//		}
+//	}
 }

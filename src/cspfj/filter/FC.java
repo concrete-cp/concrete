@@ -19,6 +19,8 @@
 
 package cspfj.filter;
 
+import java.util.Arrays;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,6 +51,8 @@ public final class FC implements Filter {
 		return true;
 	}
 
+	final private BitSet revised = new BitSet();
+
 	public boolean reduceAfter(final int level, final Variable variable) {
 		if (variable == null) {
 			return true;
@@ -56,32 +60,20 @@ public final class FC implements Filter {
 		if (variable.getDomainSize() == 0) {
 			return false;
 		}
+
 		final Constraint[] constraints = variable.getInvolvingConstraints();
 
 		for (int c = constraints.length; --c >= 0;) {
-
 			final Constraint constraint = constraints[c];
 
-			for (int i = constraint.getArity(); --i >= 0;) {
-				final Variable y = constraint.getVariable(i);
-
-				if (!y.isAssigned()) {
-					if (constraint.revise(i, level)) {
-						effectiveRevisions++;
-						if (y.getDomainSize() <= 0) {
-							if (wvh != null) {
-								wvh.treatConflictConstraint(constraint);
-							}
-							return false;
-						}
-					} else {
-						uselessRevisions++;
-					}
-
+			if (!constraint.revise(level, revised)) {
+				if (wvh != null) {
+					wvh.treatConflictConstraint(constraint);
 				}
+				return false;
 			}
-
 		}
+
 		return true;
 
 	}

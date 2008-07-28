@@ -1,6 +1,7 @@
 package cspfj.constraint;
 
 import java.util.Collection;
+import java.util.Set;
 
 import cspfj.problem.Variable;
 
@@ -34,17 +35,13 @@ public interface Constraint {
 
 	void initNbSupports() throws InterruptedException;
 
-	boolean findValidTuple(int i, int index);
-
 	long getNbSupports(Variable variable, int index);
 
-	boolean skipRevision(int i);
+	// boolean skipRevision(int i);
 
-	boolean[] revise(int level);
-	
-	boolean revise(int i, int level);
+	boolean revise(int level, boolean[] revised);
 
-	int getOtherSize(int position);
+//	int getOtherSize(int position);
 
 	long getNbMaxConflicts(int position);
 
@@ -52,11 +49,15 @@ public interface Constraint {
 
 	boolean isBound();
 
-	int[] getTuple();
-
 	String getType();
 	
 	boolean check();
 
 	void restore(int level);
+
+	boolean isSlow();
+	
+	long getSize();
+
+	//boolean findValidTuple(int position, int index);
 }
