@@ -102,29 +102,41 @@ public final class AC3WSlowQueue implements Filter {
 		return reduce(level);
 	}
 
-	private boolean skipRevision(final Constraint constraint,
-			final int variablePosition) {
-		if (!removals[constraint.getId()][variablePosition]
-				|| constraint.getArity() == 1) {
-			return false;
-		}
-
-		for (int y = constraint.getArity(); --y >= 0;) {
-			if (y != variablePosition && removals[constraint.getId()][y]) {
-				return false;
-			}
-
-		}
-
-		return true;
-	}
-
 	private boolean reduce(final int level) {
 		logger.fine("Reducing");
 		final boolean[] revised = new boolean[problem.getMaxArity()];
 
 		while (!varQueue.isEmpty() || !slowQueue.isEmpty()) {
-			if (!varQueue.isEmpty()) {
+			if (varQueue.isEmpty()) {
+				final Constraint constraint = pullConstraint();
+
+				if (!revise(constraint, level, revised, true)) {
+					if (wvh != null) {
+						wvh.treatConflictConstraint(constraint);
+					}
+					return false;
+				}
+
+				for (int i = constraint.getArity(); --i >= 0;) {
+					if (revised[i]) {
+						final Variable y = constraint.getVariable(i);
+						addInQueue(y);
+						final Constraint[] involvingConstraints = y
+								.getInvolvingConstraints();
+
+						for (int cp = involvingConstraints.length; --cp >= 0;) {
+							final Constraint constraintP = involvingConstraints[cp];
+							if (constraintP != constraint) {
+								removals[constraintP.getId()][y
+										.getPositionInConstraint(cp)] = true;
+							}
+						}
+					}
+				}
+
+				Arrays.fill(removals[constraint.getId()], false);
+
+			} else {
 				final Variable variable = pullVariable();
 
 				final Constraint[] constraints = variable
@@ -138,7 +150,7 @@ public final class AC3WSlowQueue implements Filter {
 						continue;
 					}
 
-					if (!revise(constraint, level, false)) {
+					if (!revise(constraint, level, revised, false)) {
 						if (wvh != null) {
 							wvh.treatConflictConstraint(constraint);
 						}
@@ -165,35 +177,6 @@ public final class AC3WSlowQueue implements Filter {
 					Arrays.fill(removals[constraint.getId()], false);
 
 				}
-			} else {
-				final Constraint constraint = pullConstraint();
-
-				if (!revise(constraint, level, true)) {
-					if (wvh != null) {
-						wvh.treatConflictConstraint(constraint);
-					}
-					return false;
-				}
-
-				for (int i = constraint.getArity(); --i >= 0;) {
-					if (revised[i]) {
-						final Variable y = constraint.getVariable(i);
-						addInQueue(y);
-						final Constraint[] involvingConstraints = y
-								.getInvolvingConstraints();
-
-						for (int cp = involvingConstraints.length; --cp >= 0;) {
-							final Constraint constraintP = involvingConstraints[cp];
-							if (constraintP != constraint) {
-								removals[constraintP.getId()][y
-										.getPositionInConstraint(cp)] = true;
-							}
-						}
-					}
-				}
-
-				Arrays.fill(removals[constraint.getId()], false);
-
 			}
 
 		}
@@ -203,13 +186,12 @@ public final class AC3WSlowQueue implements Filter {
 	}
 
 	private boolean revise(Constraint constraint, int level,
-			final boolean[] revised, final boolean[] removals,
-			final boolean slow) {
+			final boolean[] revised, final boolean slow) {
 		if (!slow && constraint.isSlow()) {
 			addInQueue(constraint);
 			return true;
 		}
-		return constraint.revise(level, revised, removals);
+		return constraint.revise(level, revised);
 	}
 
 	private void clearQueue() {

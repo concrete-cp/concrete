@@ -67,7 +67,7 @@ public final class DiffConstraint extends AbstractPVRConstraint {
 				}
 			}
 		} else {
-			int v0min= v0.getDomain()[v0.getFirst()];
+			int v0min = v0.getDomain()[v0.getFirst()];
 			if (!ordered) {
 				for (int i = v0.getFirst(); i != -1; i = v0.getNext(i)) {
 					if (v0.getDomain()[i] < v0min) {

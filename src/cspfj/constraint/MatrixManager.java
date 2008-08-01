@@ -158,7 +158,7 @@ public class MatrixManager implements Cloneable {
 			
 		} catch (CloneNotSupportedException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+
 		}
 		shared = false;
 		return matrix;

@@ -1,7 +1,6 @@
 package cspfj.constraint;
 
 import java.util.Collection;
-import java.util.Set;
 
 import cspfj.problem.Variable;
 

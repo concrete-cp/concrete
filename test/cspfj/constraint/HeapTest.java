@@ -1,5 +1,7 @@
 package cspfj.constraint;
 
+import static org.junit.Assert.assertTrue;
+
 import java.util.Comparator;
 import java.util.Random;
 
@@ -7,11 +9,11 @@ import org.junit.Test;
 
 import cspfj.util.Heap;
 
-public class MaximierTest {
+public class HeapTest {
 
 	@Test
 	public void test() {
-		Heap<Integer> maximier = new Heap<Integer>(new IntegerComparator(),
+		final Heap<Integer> maximier = new Heap<Integer>(new IntegerComparator(),
 				new Integer[100]);
 
 		final Random random = new Random();
@@ -20,12 +22,12 @@ public class MaximierTest {
 			maximier.add(random.nextInt(1000));
 		}
 
-		System.out.println(maximier);
-
+		int last = maximier.peekFirst();
 		while (!maximier.isEmpty()) {
-			System.out.print(maximier.pull() + " ");
+			final int current = maximier.pollFirst();
+			assertTrue(current >= last);
+			last = current;
 		}
-		System.out.println();
 
 	}
 

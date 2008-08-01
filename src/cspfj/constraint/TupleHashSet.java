@@ -1,5 +1,6 @@
 package cspfj.constraint;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -33,7 +34,7 @@ public class TupleHashSet implements Matrix, Cloneable, Iterable<int[]> {
 	public boolean getInitialContent() {
 		return initialContent;
 	}
-	
+
 	@Override
 	public boolean check(final int[] tuple) {
 		return set.containsTuple(tuple) ^ initialContent;
@@ -72,6 +73,17 @@ public class TupleHashSet implements Matrix, Cloneable, Iterable<int[]> {
 		// list.list = new HashSet<BigInteger>(this.list);
 
 		return ths;
+	}
+
+	public static boolean isBetterThanMatrix(final int[] sizes,
+			final int nbTuples) {
+		BigInteger size = BigInteger.ONE;
+		for (int s : sizes) {
+			size = size.multiply(BigInteger.valueOf(s));
+		}
+
+		return size.compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) >= 0
+				|| (4 * nbTuples < size.intValue());
 	}
 
 	@Override

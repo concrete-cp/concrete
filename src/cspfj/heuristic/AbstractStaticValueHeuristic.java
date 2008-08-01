@@ -71,7 +71,7 @@ public abstract class AbstractStaticValueHeuristic extends
 
 		private final Variable variable;
 
-		public Sorter(Variable variable) {
+		public Sorter(final Variable variable) {
 			this.variable = variable;
 		}
 

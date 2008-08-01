@@ -22,15 +22,13 @@ package cspfj.constraint;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
 
 import cspfj.problem.Variable;
 import cspfj.util.Heap;
 
 public final class AllDifferentConstraint extends AbstractConstraint {
 
-	private final BitSet union;
+	private final static BitSet union = new BitSet();
 
 	private final int min;
 
@@ -48,13 +46,13 @@ public final class AllDifferentConstraint extends AbstractConstraint {
 				}
 			}
 		}
-		union = new BitSet();
+
 		min = minVal;
 	}
 
 	@Override
 	public boolean check() {
-		final BitSet union = this.union;
+		final BitSet union = AllDifferentConstraint.union;
 		union.clear();
 		final int min = this.min;
 

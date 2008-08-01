@@ -26,11 +26,11 @@ public final class FailedGenerationException extends Exception {
      */
     private static final long serialVersionUID = 1L;
 
-    public FailedGenerationException(final String s) {
-		super(s);
+    public FailedGenerationException(final String string) {
+		super(string);
 	}
     
-    public FailedGenerationException(final Exception e) {
-    	super(e.toString());
+    public FailedGenerationException(final Exception exception) {
+    	super(exception);
     }
 }

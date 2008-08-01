@@ -89,10 +89,10 @@ public final class WMC extends AbstractLocalSolver {
 					increaseWeight(c);
 
 					for (int pos = c.getArity(); --pos >= 0;) {
-						final ConflictsManager cm = wcManagers[c.getVariable(pos)
+						final ConflictsManager cfm = wcManagers[c.getVariable(pos)
 								.getId()];
-						cm.updateAfterIncrement(c, pos);
-						changed |= cm.getBestImprovment() < 0;
+						cfm.updateAfterIncrement(c, pos);
+						changed |= cfm.getBestImprovment() < 0;
 
 					}
 				}

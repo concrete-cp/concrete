@@ -19,6 +19,8 @@
 
 package cspfj.heuristic;
 
+import java.util.Arrays;
+
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
@@ -26,10 +28,11 @@ import cspfj.problem.Variable;
 public final class WDeg extends AbstractVariableHeuristic implements WeightHeuristic {
 	private final double[] weights;
 
-	public WDeg(Problem problem) {
+	public WDeg(final Problem problem) {
 		super(problem);
 
 		weights = new double[problem.getMaxCId() + 1];
+		Arrays.fill(weights, 1);
 	}
 
 	public double getScore(final Variable variable) {

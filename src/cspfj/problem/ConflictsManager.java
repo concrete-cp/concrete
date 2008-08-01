@@ -10,7 +10,6 @@ import java.util.Arrays;
 
 import cspfj.LocalSolver;
 import cspfj.TabuManager;
-import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.Constraint;
 import cspfj.util.TieManager;
 

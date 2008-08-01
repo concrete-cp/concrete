@@ -25,6 +25,7 @@ public class TupleSet extends AbstractSet<int[]> implements Cloneable {
 			241, 251, 257 };
 
 	public TupleSet(final int nbTuples) {
+		super();
 		// list = new HashMap<Long, Collection<int[]>>();
 		this.size = 0;
 		hashTableSize = firstPrimeAfter(nbTuples * 4 / 3);

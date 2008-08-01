@@ -85,10 +85,10 @@ public final class Heap<T> extends AbstractCollection<T> {
 		return null;
 	}
 
-	private void swap(int a, int b) {
-		final T tmp = content[a];
-		content[a] = content[b];
-		content[b] = tmp;
+	private void swap(final int int0, final int int1) {
+		final T tmp = content[int0];
+		content[int0] = content[int1];
+		content[int1] = tmp;
 	}
 
 	private void siftDown(final int start) {

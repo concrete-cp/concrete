@@ -73,4 +73,9 @@ public class DiscHeuristic implements Heuristic {
     public String toString() {
     	return "Discriminated " + variableHeuristic + ", " + valueHeuristic ;
     }
+
+	@Override
+	public ValueHeuristic getValueHeuristic() {
+		return valueHeuristic;
+	}
 }

@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import cspfj.constraint.Constraint;
+import cspfj.heuristic.WValue;
 import cspfj.util.BooleanArray;
 import cspfj.util.OrderedChain;
 import cspfj.util.UnOrderedChain;
@@ -83,6 +84,8 @@ public final class Variable implements Cloneable {
 
 	private int[] positionInConstraint;
 
+	private int[] weights;
+
 	// private static final Logger logger = Logger.getLogger("cspfj.Variable");
 
 	public Variable(final int[] dom) {
@@ -122,6 +125,10 @@ public final class Variable implements Cloneable {
 		chain.reOrder(order, removed);
 
 		absents = new UnOrderedChain(domain.length);
+	}
+
+	public void attachWeights(int[] weights) {
+		this.weights = weights;
 	}
 
 	/**
@@ -225,10 +232,10 @@ public final class Variable implements Cloneable {
 
 	}
 
-//	public boolean assignNotAC(final int index, final Problem problem) {
-//		assgn(index, problem);
-//		return checkIndexValidity(index);
-//	}
+	// public boolean assignNotAC(final int index, final Problem problem) {
+	// assgn(index, problem);
+	// return checkIndexValidity(index);
+	// }
 
 	public void firstAssign(final int index) {
 		assignedIndex = index;
@@ -239,14 +246,14 @@ public final class Variable implements Cloneable {
 		assigned = false;
 	}
 
-//	private boolean checkIndexValidity(final int index) {
-//		for (int c = constraints.length; --c >= 0;) {
-//			if (!constraints[c].findValidTuple(positionInConstraint[c], index)) {
-//				return false;
-//			}
-//		}
-//		return true;
-//	}
+	// private boolean checkIndexValidity(final int index) {
+	// for (int c = constraints.length; --c >= 0;) {
+	// if (!constraints[c].findValidTuple(positionInConstraint[c], index)) {
+	// return false;
+	// }
+	// }
+	// return true;
+	// }
 
 	/**
 	 * @param level
@@ -308,6 +315,14 @@ public final class Variable implements Cloneable {
 
 		chain.remove(index);
 		absents.add(index);
+
+		if (weights != null) {
+			weights[index]++;
+		}
+	}
+
+	public int getWeight(final int index) {
+		return weights[index];
 	}
 
 	/**

@@ -22,7 +22,6 @@ package cspfj;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidParameterException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import cspfj.exception.MaxBacktracksExceededException;
@@ -33,6 +32,7 @@ import cspfj.heuristic.Heuristic;
 import cspfj.heuristic.Lexico;
 import cspfj.heuristic.Pair;
 import cspfj.heuristic.WDegOnDom;
+import cspfj.heuristic.WValue;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -51,7 +51,7 @@ public final class MGACIter extends AbstractSolver {
 	public MGACIter(final Problem prob) {
 		this(prob, new ResultHandler());
 	}
-	
+
 	public MGACIter(final Problem prob, final ResultHandler resultHandler) {
 		this(prob, resultHandler, new CrossHeuristic(new WDegOnDom(prob),
 				new Lexico(prob, false)));
@@ -123,19 +123,20 @@ public final class MGACIter extends AbstractSolver {
 
 			assert selectedVariable.isPresent(selectedIndex);
 
-			//if (logger.isLoggable(Level.FINE)) {
-				logger.fine(level + " : " + selectedVariable + " <- "
-						+ selectedVariable.getDomain()[selectedIndex] + "("
-						+ getNbBacktracks() + "/" + getMaxBacktracks() + ")");
-			//}
+			// if (logger.isLoggable(Level.FINE)) {
+			logger.fine(level + " : " + selectedVariable + " <- "
+					+ selectedVariable.getDomain()[selectedIndex] + "("
+					+ getNbBacktracks() + "/" + getMaxBacktracks() + ")");
+			// }
 
-//			if (filter.ensureAC()) {
-				selectedVariable.assign(selectedIndex, problem);
-//			} else if (!selectedVariable.assignNotAC(selectedIndex, problem)) {
-//				selectedVariable.unassign(problem);
-//				selectedVariable.remove(selectedIndex, level);
-//				continue;
-//			}
+			// if (filter.ensureAC()) {
+			selectedVariable.assign(selectedIndex, problem);
+			// } else if (!selectedVariable.assignNotAC(selectedIndex, problem))
+			// {
+			// selectedVariable.unassign(problem);
+			// selectedVariable.remove(selectedIndex, level);
+			// continue;
+			// }
 
 			problem.setLevelVariables(level, selectedVariable);
 

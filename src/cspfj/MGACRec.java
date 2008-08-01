@@ -22,7 +22,6 @@ package cspfj;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidParameterException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import cspfj.exception.MaxBacktracksExceededException;
@@ -46,19 +45,19 @@ public final class MGACRec extends AbstractSolver {
 
 	private boolean allSolutions = false;
 
-	public MGACRec(Problem prob, ResultHandler resultHandler) {
+	public MGACRec(final Problem prob, final ResultHandler resultHandler) {
 		this(prob, resultHandler, new DiscHeuristic(new WDegOnDom(prob),
 				new Lexico(prob, false)));
 	}
 
-	public MGACRec(Problem prob, ResultHandler resultHandler,
-			Heuristic heuristic) {
+	public MGACRec(final Problem prob, final ResultHandler resultHandler,
+			final Heuristic heuristic) {
 		this(prob, resultHandler, heuristic, new AC3(prob, heuristic
 				.getVariableHeuristic()));
 	}
 
-	public MGACRec(Problem prob, ResultHandler resultHandler,
-			Heuristic heuristic, Filter filter) {
+	public MGACRec(final Problem prob, final ResultHandler resultHandler,
+			final Heuristic heuristic, final Filter filter) {
 		super(prob, resultHandler);
 		// filter = new B3C(problem, new BC(problem));
 		this.filter = filter;

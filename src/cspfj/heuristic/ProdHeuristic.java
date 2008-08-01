@@ -63,4 +63,9 @@ public class ProdHeuristic implements Heuristic {
 	public VariableHeuristic getVariableHeuristic() {
 		return variableHeuristic;
 	}
+
+	@Override
+	public ValueHeuristic getValueHeuristic() {
+		return valueHeuristic;
+	}
 }

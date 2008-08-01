@@ -78,7 +78,7 @@ public final class AC3 implements Filter {
 	}
 
 	private boolean reduce(final int level) {
-		logger.fine("Reducing");
+		logger.finer("Reducing");
 		final BitSet inQueue = this.inQueue;
 
 		final boolean[] revised = new boolean[problem.getMaxArity()];

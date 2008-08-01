@@ -7,7 +7,7 @@ public abstract class AbstractValueHeuristic implements ValueHeuristic {
 
 	final protected Problem problem;
 
-	public AbstractValueHeuristic(Problem problem) {
+	public AbstractValueHeuristic(final Problem problem) {
 		this.problem = problem;
 	}
 
@@ -15,20 +15,23 @@ public abstract class AbstractValueHeuristic implements ValueHeuristic {
 	 * @return Le prochain index à assigner
 	 */
 	public int selectIndex(final Variable variable) {
-		int bestValue = -1;
 
-		for (int i = variable.getFirst(); i >= 0; i = variable
+		int bestValue = variable.getFirst();
+		if (bestValue < 0) {
+			return -1;
+		}
+
+		double bestScore = getScore(variable, bestValue);
+
+		for (int i = variable.getNext(bestValue); i >= 0; i = variable
 				.getNext(i)) {
-			if (bestValue < 0 || compare(variable, i, bestValue) > 0) {
+			final double score = getScore(variable, i);
+			if (Double.compare(getScore(variable, i), bestScore) > 0) {
 				bestValue = i;
+				bestScore = score;
 			}
 		}
 
 		return bestValue;
-	}
-
-	public final int compare(final Variable variable, final int index1,
-			final int index2) {
-		return getScore(variable, index1) > getScore(variable, index2) ? 1 : -1;
 	}
 }
