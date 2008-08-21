@@ -3,12 +3,14 @@ package cspfj.util;
 import java.util.Arrays;
 
 public class BooleanArray {
-	public final static int[] MASKS;
+	private final static int[] MASKS;
 
+	private final static int SIZE=Integer.SIZE;
+	
 	static {
-		MASKS = new int[Integer.SIZE];
+		MASKS = new int[SIZE];
 		for (int i = MASKS.length; --i >= 0;) {
-			MASKS[i] = 0x1 << (Integer.SIZE - i - 1);
+			MASKS[i] = 0x1 << (SIZE - i - 1);
 		}
 	}
 
@@ -26,47 +28,34 @@ public class BooleanArray {
 	public static void initBooleanArray(final int[] array, final int size,
 			final boolean fill) {
 		Arrays.fill(array, fill ? 0xFFFFFFFF : 0);
-		array[array.length - 1] <<= Integer.SIZE - (size % Integer.SIZE);
+		array[array.length - 1] <<= SIZE - (size % SIZE);
 	}
 
 	public static int booleanArraySize(final int size) {
-		return size / Integer.SIZE + ((size % Integer.SIZE) > 0 ? 1 : 0);
+		return size / SIZE + ((size % SIZE) > 0 ? 1 : 0);
 	}
 
 	public static boolean set(final int[] array, final int position,
 			final boolean status) {
 
-		int part = array[position / Integer.SIZE];
+		int part = array[position / SIZE];
 		final int oldPart = part;
 
 		if (status) {
-			part |= MASKS[position % Integer.SIZE];
+			part |= MASKS[position % SIZE];
 		} else {
-			part &= ~MASKS[position % Integer.SIZE];
+			part &= ~MASKS[position % SIZE];
 
 		}
 
-		array[position / Integer.SIZE] = part;
+		array[position / SIZE] = part;
 		return part != oldPart;
 	}
 
 	public static boolean isTrue(final int[] array, final int position) {
-		return (array[position / Integer.SIZE] & MASKS[position % Integer.SIZE]) != 0;
+		return (array[position / SIZE] & MASKS[position % SIZE]) != 0;
 	}
 
-	public static int leftMostCommonIndex(final int[] mask, final int[] domain) {
-		for (int i = 0; i < mask.length; i++) {
-			final int valid = mask[i] & domain[i];
-			// System.err.println(Integer.toBinaryString(mask[i]) + " & "
-			// + Integer.toBinaryString(domain[i]) + " = "
-			// + Integer.numberOfLeadingZeros(valid));
-			if (valid != 0) {
-				return Integer.SIZE * i + Integer.numberOfLeadingZeros(valid);
-			}
-
-		}
-		return -1;
-	}
 
 	public static String toString(final int[] array) {
 		final StringBuffer sb = new StringBuffer();

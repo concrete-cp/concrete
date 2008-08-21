@@ -23,25 +23,27 @@ import java.util.Collection;
 
 import cspfj.problem.Variable;
 
-public class ExtensionConstraint2D extends AbstractExtensionConstraint {
+public class ExtensionConstraint2D extends AbstractPVRConstraint implements
+		ExtensionConstraint, DynamicConstraint {
 
 	// private final double tightness;
 
 	protected MatrixManager2D matrix;
 
-	public ExtensionConstraint2D(final Variable[] scope, final Matrix2D matrix) {
-		super(scope, new MatrixManager2D(scope, matrix));
+	public ExtensionConstraint2D(final Variable[] scope, final Matrix2D matrix,
+			final boolean shared) {
+		super(scope);
 
-		this.matrix = (MatrixManager2D) super.matrix;
-		this.matrix.setLast(last);
+		this.matrix = new MatrixManager2D(scope, matrix, shared);
+		this.matrix.setTuple(tuple);
 	}
 
 	public ExtensionConstraint2D(final Variable[] scope, final Matrix2D matrix,
-			final String name) {
-		super(scope, new MatrixManager2D(scope, matrix), name);
+			final String name, final boolean shared) {
+		super(scope, name);
 
-		this.matrix = (MatrixManager2D) super.matrix;
-		this.matrix.setLast(last);
+		this.matrix = new MatrixManager2D(scope, matrix, shared);
+		this.matrix.setTuple(tuple);
 	}
 
 	// public double getTightness() {
@@ -51,17 +53,45 @@ public class ExtensionConstraint2D extends AbstractExtensionConstraint {
 	public boolean findValidTuple(final int variablePosition, final int index) {
 		assert this.isInvolved(getVariable(variablePosition));
 
-		if (matrix.controlResidue(variablePosition, index)) {
-			return true;
+		return matrix.hasSupport(variablePosition, index);
+	}
+
+	public boolean revise(final int position, final int level) {
+		final Variable variable = getVariable(position);
+
+		assert !variable.isAssigned();
+
+		boolean revised = false;
+
+		for (int index = variable.getFirst(); index >= 0; index = variable
+				.getNext(index)) {
+
+			if (!findValidTuple(position, index)) {
+
+				variable.remove(index, level);
+				revised = true;
+				setActive(true);
+
+			}
+
 		}
 
-		if (!matrix.hasSupport(variablePosition, index)) {
-			return false;
-		}
+		return revised;
+	}
 
-		matrix.updateResidues();
+	@Override
+	public MatrixManager getMatrix() {
+		return matrix;
+	}
 
-		return true;
+	@Override
+	public boolean removeTuple(int[] tuple) {
+		return matrix.removeTuple(tuple);
+	}
+
+	@Override
+	public boolean check() {
+		return matrix.check();
 	}
 
 	public ExtensionConstraint2D deepCopy(final Collection<Variable> variables)

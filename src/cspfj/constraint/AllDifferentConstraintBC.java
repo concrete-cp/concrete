@@ -27,7 +27,7 @@ import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
 import cspfj.util.Heap;
 
-public final class AllDifferentConstraint extends AbstractConstraint {
+public final class AllDifferentConstraintBC extends AbstractConstraint {
 
 	private final static BitSet union = new BitSet();
 
@@ -53,7 +53,7 @@ public final class AllDifferentConstraint extends AbstractConstraint {
 	// private final static Logger logger = Logger
 	// .getLogger("cspfj.constraint.AllDifferentConstraint");
 
-	public AllDifferentConstraint(final Variable[] scope, final String name) {
+	public AllDifferentConstraintBC(final Variable[] scope, final String name) {
 		super(scope, name);
 
 		int minVal = Integer.MAX_VALUE;
@@ -70,7 +70,7 @@ public final class AllDifferentConstraint extends AbstractConstraint {
 
 	@Override
 	public boolean check() {
-		final BitSet union = AllDifferentConstraint.union;
+		final BitSet union = AllDifferentConstraintBC.union;
 		union.clear();
 		final int min = this.min;
 
@@ -94,7 +94,6 @@ public final class AllDifferentConstraint extends AbstractConstraint {
 			}
 			final int value = refVar.getDomain()[refVar.getFirst()];
 
-			
 			for (int checkPos = getArity(); --checkPos >= 0;) {
 				if (checkPos == position) {
 					continue;
@@ -102,7 +101,6 @@ public final class AllDifferentConstraint extends AbstractConstraint {
 				final Variable checkedVariable = getVariable(checkPos);
 
 				final int index = checkedVariable.index(value);
-				
 				if (index >= 0 && checkedVariable.isPresent(index)) {
 					if (checkedVariable.getDomainSize() == 1) {
 						return false;
@@ -112,7 +110,7 @@ public final class AllDifferentConstraint extends AbstractConstraint {
 				}
 			}
 		}
-		for (int i = getArity() ; --i>=0;) {
+		for (int i = getArity(); --i >= 0;) {
 			if (revised[i]) {
 				revisionHandler.revised(this, getVariable(i));
 			}
@@ -124,20 +122,22 @@ public final class AllDifferentConstraint extends AbstractConstraint {
 
 		int highest = Integer.MIN_VALUE;
 		for (int i = getArity(); --i >= 0;) {
-			final Variable variable = getVariable(i);
-			final Interval itv = new Interval(variable, i);
+			final Interval itv = new Interval(getVariable(i), i);
 			domains[i] = itv;
 			if (itv.getMax() > highest) {
 				highest = itv.getMax();
 			}
+
 		}
 
 		Arrays.sort(domains, minComparator);
 
-		int minPointer = 0;
 		final int lowest = domains[0].getMin();
 
-		// final Map<Integer, Integer> match = new HashMap<Integer, Integer>();
+		int minPointer = 0;
+
+		// final int[] match = new int[highest - lowest + 1];
+		// Arrays.fill(match, -1);
 
 		for (int j = lowest; j <= highest
 				&& (!queue.isEmpty() || minPointer < domains.length); j++) {
@@ -155,9 +155,10 @@ public final class AllDifferentConstraint extends AbstractConstraint {
 				return false;
 			}
 			// else {
-			// match.put(j, itv.getPosition());
+			// match[j - lowest] = itv.getPosition();
 			// }
 		}
+
 		return true;
 	}
 
@@ -202,24 +203,21 @@ public final class AllDifferentConstraint extends AbstractConstraint {
 	}
 
 	public static void main(String[] args) {
-		// final Variable[] variables = { new Variable(new int[] { 3, 4 }),
-		// new Variable(new int[] { 7 }),
-		// new Variable(new int[] { 2, 3, 4, 5 }),
-		// new Variable(new int[] { 2, 3, 4, 5, 6, 7 }),
-		// new Variable(new int[] { 1, 2, 3 }),
-		// new Variable(new int[] { 3, 4 })
-		//
-		// };
-		final Variable[] variables = { new Variable(new int[] { 1, 3 }),
-				new Variable(new int[] { 1, 3 }),
-				new Variable(new int[] { 1, 3 }) };
-		final Constraint allDiff = new AllDifferentConstraint(variables, "");
+		final Variable[] variables = { new Variable(new int[] { 3, 4 }),
+				new Variable(new int[] { 7 }),
+				new Variable(new int[] { 2, 3, 4, 5 }),
+				new Variable(new int[] { 2, 3, 4, 5, 6, 7 }),
+				new Variable(new int[] { 1, 2, 3 }),
+				new Variable(new int[] { 3, 4 })
+
+		};
+		final Constraint allDiff = new AllDifferentConstraintBC(variables, "");
 
 		System.out.println(allDiff.revise(0, new RevisionHandler() {
 			@Override
 			public void revised(Constraint constraint, Variable variable) {
 				// TODO Auto-generated method stub
-				
+
 			}
 		}));
 

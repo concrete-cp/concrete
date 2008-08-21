@@ -175,6 +175,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
 		boolean resolved = false;
 		System.gc();
 		chronometer.startChrono();
+
 		try {
 			if (!max && !preprocess(new AC3(problem, null))) {
 				return false;
@@ -190,6 +191,8 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
 		} catch (InterruptedException e) {
 			// No problem...
 		}
+		final float start = chronometer.getCurrentChrono();
+		
 		int nbTries = 0;
 		do {
 			if (nbTries++ >= maxTries && maxTries > 0) {
@@ -226,10 +229,15 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
 			}
 
 		} while (!resolved);
-
-		chronometer.validateChrono();
+		final float searchCpu = chronometer.getCurrentChrono() - start;
+		statistics.put("search-cpu", searchCpu);
+		
 		return true;
 
+	}
+	
+	public void collectStatistics(){
+		chronometer.validateChrono();
 	}
 
 	public String getXMLConfig() {

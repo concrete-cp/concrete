@@ -27,7 +27,7 @@ import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
 public interface Solver {
-	String VERSION = "0.2";
+	String VERSION = "0.3";
 	
     boolean runSolver() throws IOException;
 
@@ -54,4 +54,6 @@ public interface Solver {
 	Map<String, Object> getStatistics();
 
 	void setPreproExp(int time);
+	
+	void collectStatistics();
 }

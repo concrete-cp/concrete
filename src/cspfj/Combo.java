@@ -23,8 +23,7 @@ public class Combo extends AbstractSolver {
 
 	// private final NoGoodManager noGoodManager;
 
-	public Combo(Problem prob, ResultHandler resultHandler,
-			Heuristic heuristic) {
+	public Combo(Problem prob, ResultHandler resultHandler, Heuristic heuristic) {
 		super(prob, resultHandler);
 		macSolver = new MGACRec(prob, resultHandler, heuristic);
 		mCSolver = new WMC(prob, resultHandler, false);
@@ -115,6 +114,10 @@ public class Combo extends AbstractSolver {
 
 	}
 
+	public synchronized void collectStatistics() {
+		chronometer.validateChrono();
+	}
+
 	private final boolean mac(final int maxBT) throws IOException {
 		macSolver.setMaxBacktracks(maxBT);
 
@@ -134,9 +137,9 @@ public class Combo extends AbstractSolver {
 			chronometer.validateChrono();
 			throw e;
 		}
-		//logger.info("Max constraint weight : " + problem.getMaxWeight());
+		// logger.info("Max constraint weight : " + problem.getMaxWeight());
 
-		//macSolver.addNoGoods();
+		// macSolver.addNoGoods();
 
 		return false;
 	}
@@ -164,7 +167,7 @@ public class Combo extends AbstractSolver {
 		// for (Constraint c: problem.getConstraints()) {
 		// c.setWeight(c.getWeight() / problem.getNbConstraints());
 		// }
-		//logger.info("Max constraint weight : " + problem.getMaxWeight());
+		// logger.info("Max constraint weight : " + problem.getMaxWeight());
 
 		return false;
 	}
@@ -180,8 +183,8 @@ public class Combo extends AbstractSolver {
 		sb.append("\t\t\t<macSolver>\n").append(macSolver.getXMLConfig())
 				.append("\t\t\t</macSolver>\n\t\t\t<mcSolver>\n").append(
 						mCSolver.getXMLConfig()).append(
-						"\t\t\t</mcSolver>\n\t\t\t<prepro>").append(getPreprocessor())
-				.append("</prepro>\n");
+						"\t\t\t</mcSolver>\n\t\t\t<prepro>").append(
+						getPreprocessor()).append("</prepro>\n");
 
 		return sb.toString();
 	}

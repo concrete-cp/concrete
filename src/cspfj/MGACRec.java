@@ -22,8 +22,10 @@ package cspfj;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidParameterException;
+import java.util.Set;
 import java.util.logging.Logger;
 
+import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.AC3;
 import cspfj.filter.Filter;
@@ -223,30 +225,38 @@ public final class MGACRec extends AbstractSolver {
 					.info("Took " + macTime + "s (" + (maxBT / macTime)
 							+ " bps)");
 			maxBT *= 1.5;
-			addNoGoods();
+			final Set<Constraint> modifiedConstraints = problem.addNoGoods(false);
 			problem.restoreAll(1);
+
+			Thread.interrupted();
+			try {
+				logger.info("Updating nb supports");
+				for (Constraint c : modifiedConstraints) {
+					c.initNbSupports();
+				}
+			} catch (InterruptedException e) {
+
+			}
 			try {
 				if (!filter.reduceAll(0)) {
-					chronometer.validateChrono();
-					return false;
+					break;
 				}
 			} catch (InterruptedException e) {
 				throw new IllegalArgumentException(
 						"Filter was unexpectingly interrupted !");
 			}
 		} while (true);
-		chronometer.validateChrono();
+
 		statistics.put("search-cpu", chronometer.getCurrentChrono()
 				- heuristicCpu);
-
-		statistics.putAll(filter.getStatistics());
 
 		return getNbSolutions() > 0;
 
 	}
-
-	public int addNoGoods() {
-		return problem.addNoGoods();
+	
+	public synchronized void collectStatistics() {
+		chronometer.validateChrono();
+		statistics.putAll(filter.getStatistics());
 	}
 
 	public Filter getFilter() {

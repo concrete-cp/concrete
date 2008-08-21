@@ -8,27 +8,29 @@ public final class MatrixManager2D extends MatrixManager {
 
 	private int[] mask;
 
-	// private int[] domain;
+	private final int[][] last;
 
-	private int currentPart;
-
-	private int currentPosition;
-
-	private int current;
-
-	private int[][][] last;
-	
 	private static long checks = 0;
 
 	private static long presenceChecks = 0;
 
-
-	public MatrixManager2D(Variable[] scope, Matrix2D matrix) {
-		super(scope, matrix);
+	public MatrixManager2D(Variable[] scope, Matrix2D matrix,
+			final boolean shared) {
+		super(scope, matrix, shared);
 
 		this.matrix = matrix;
-	}
 
+		int length = Math.max(scope[0].getDomain().length,
+				scope[1].getDomain().length);
+
+		if (length > 3 * Integer.SIZE) {
+			last = new int[2][Math.max(scope[0].getDomain().length, scope[1]
+					.getDomain().length)];
+		} else {
+			last = null;
+		}
+
+	}
 
 	public static long getChecks() {
 		return checks;
@@ -41,79 +43,39 @@ public final class MatrixManager2D extends MatrixManager {
 	public static final void clearStats() {
 		checks = presenceChecks = 0;
 	}
-	
-	public void setLast(final int[][][] last) {
-		this.last = last;
-	}
 
 	public boolean hasSupport(final int variablePosition, final int index) {
+		return last == null ? hasSupportNR(variablePosition, index)
+				: hasSupportR(variablePosition, index);
+	}
+
+	private boolean hasSupportR(final int variablePosition, final int index) {
+		if (controlResidue(variablePosition, index)) {
+			return true;
+		}
+
 		final int[] mask = matrix.getBooleanArray(variablePosition, index);
 		final int[] domain = variables[1 - variablePosition].getBooleanDomain();
-		for (int part = 0; part < mask.length; part++) {
+		for (int part = mask.length; --part >= 0;) {
 			checks++;
 			if ((mask[part] & domain[part]) != 0) {
-				tuple[variablePosition] = index;
-				this.variablePosition = variablePosition;
-				currentPart = part;
+				last[variablePosition][index] = part;
 				return true;
 			}
 		}
 		return false;
 	}
-
-	public boolean setFirstTuple(final int variablePosition, final int index) {
-		this.variablePosition = variablePosition;
-		tuple[variablePosition] = index;
-
-		mask = matrix.getBooleanArray(variablePosition, index);
-		currentPart = -1;
-		current = 0;
-		return next();
-	}
-
-	public boolean next() {
-		int currentPosition = this.currentPosition;
-		int current = this.current;
-		int currentPart = this.currentPart;
-
-		final int[] mask = this.mask;
+	
+	private boolean hasSupportNR(final int variablePosition, final int index) {
+		final int[] mask = matrix.getBooleanArray(variablePosition, index);
 		final int[] domain = variables[1 - variablePosition].getBooleanDomain();
-
-		while (current == 0) {
-			currentPart++;
-
-			if (currentPart >= mask.length) {
-				return false;
-			}
-			// System.err.print("-");
+		for (int part = mask.length; --part >= 0;) {
 			checks++;
-			current = mask[currentPart] & domain[currentPart];
-			// System.err.println(Integer.toBinaryString(current));
-			currentPosition = -1;
+			if ((mask[part] & domain[part]) != 0) {
+				return true;
+			}
 		}
-
-		// currentPosition++;
-		// System.err.print(Integer.toBinaryString(current)) ;
-
-		// final int mask0 = BooleanArray.MASKS[0];
-
-		final int rotate = Integer.numberOfLeadingZeros(current) + 1;
-
-		currentPosition += rotate;
-		current <<= rotate;
-
-		// current <<= 1;
-
-		this.currentPart = currentPart;
-		this.current = current;
-		this.currentPosition = currentPosition;
-
-		tuple[1 - variablePosition] = currentPart * Integer.SIZE
-				+ currentPosition;
-		// System.err.println(" - " + tuple[1 - variablePosition]) ;
-		// System.err.println(Integer.toBinaryString(current) + " " +
-		// currentPart + " " + currentPosition);
-		return true;
+		return false;
 	}
 
 	public MatrixManager2D clone() throws CloneNotSupportedException {
@@ -130,12 +92,8 @@ public final class MatrixManager2D extends MatrixManager {
 		return "MatrixManager2D-" + matrix;
 	}
 
-	protected void updateResidues() {
-		last[variablePosition][tuple[variablePosition]][0] = currentPart;
-	}
-
-	protected boolean controlResidue(final int position, final int index) {
-		final int part = last[position][index][0];
+	private boolean controlResidue(final int position, final int index) {
+		final int part = last[position][index];
 		presenceChecks++;
 		return part != -1
 				&& (matrix.getBooleanArray(position, index)[part] & variables[1 - position]

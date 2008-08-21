@@ -20,9 +20,13 @@
 package cspfj;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
+import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import cspfj.constraint.AbstractConstraint;
@@ -57,10 +61,12 @@ public abstract class AbstractSolver implements Solver {
 
 	private int preproExpiration = -1;
 
-	private final static Logger logger = Logger
-			.getLogger("cspfj.solver.AbstractSolver");
+	private final static Logger logger = Logger.getLogger(AbstractSolver.class
+			.getName());
 
 	protected final Map<String, Object> statistics;
+
+	public static final Map<String, String> parameters = new HashMap<String, String>();
 
 	public AbstractSolver(Problem prob, ResultHandler resultHandler) {
 		super();
@@ -218,7 +224,7 @@ public abstract class AbstractSolver implements Solver {
 			consistent = true;
 			throw e;
 		} finally {
-			final float preproCpu = chronometer.getCurrentChrono();
+			final float preproCpu = chronometer.getCurrentChrono() - start;
 			waker.interrupt();
 
 			statistics.putAll(preprocessor.getStatistics());
@@ -232,12 +238,12 @@ public abstract class AbstractSolver implements Solver {
 			statistics.put("prepro-removed", removed);
 			// statistics("prepro-subs", preprocessor.getNbSub()) ;
 
-			statistics.put("prepro-cpu", preproCpu - start);
-			statistics.put("prepro-constraint-ccks", AbstractConstraint.getChecks());
+			statistics.put("prepro-cpu", preproCpu);
+			statistics.put("prepro-constraint-ccks", AbstractConstraint
+					.getChecks());
 			statistics.put("prepro-constraint-presenceccks", AbstractConstraint
 					.getPresenceChecks());
-			statistics.put("prepro-matrix2d-ccks", MatrixManager2D
-					.getChecks());
+			statistics.put("prepro-matrix2d-ccks", MatrixManager2D.getChecks());
 			statistics.put("prepro-matrix2d-presenceccks", MatrixManager2D
 					.getPresenceChecks());
 
@@ -259,5 +265,37 @@ public abstract class AbstractSolver implements Solver {
 
 	public Map<String, Object> getStatistics() {
 		return statistics;
+	}
+
+	public static void parameter(final String name, final String value) {
+		parameters.put(name, value);
+	}
+
+	public String getXMLConfig() {
+		final StringBuilder stb = new StringBuilder();
+
+		final OperatingSystemMXBean omxb = ManagementFactory
+				.getOperatingSystemMXBean();
+		stb.append("\t\t\t<os arch=\"").append(omxb.getArch()).append(
+				"\" version=\"").append(omxb.getVersion()).append("\">")
+				.append(omxb.getName()).append("</os>\n");
+
+		final RuntimeMXBean rmxb = ManagementFactory.getRuntimeMXBean();
+		stb.append("\t\t\t<vm vendor=\"").append(rmxb.getVmVendor()).append(
+				"\" version=\"").append(rmxb.getVmVersion()).append(
+				"\" name=\"").append(rmxb.getName()).append("\">").append(
+				rmxb.getVmName()).append("</vm>\n");
+
+		if (!parameters.isEmpty()) {
+			stb.append("\t\t\t<parameters>\n");
+			for (Entry<String, String> p : parameters.entrySet()) {
+				stb.append("\t\t\t\t<p name=\"").append(p.getKey()).append(
+						"\">").append(p.getValue()).append("</p>\n");
+			}
+			stb.append("\t\t\t</parameters>\n");
+
+		}
+
+		return stb.toString();
 	}
 }

@@ -22,8 +22,10 @@ package cspfj;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidParameterException;
+import java.util.Set;
 import java.util.logging.Logger;
 
+import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.AC3;
 import cspfj.filter.Filter;
@@ -32,7 +34,6 @@ import cspfj.heuristic.Heuristic;
 import cspfj.heuristic.Lexico;
 import cspfj.heuristic.Pair;
 import cspfj.heuristic.WDegOnDom;
-import cspfj.heuristic.WValue;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -42,7 +43,8 @@ public final class MGACIter extends AbstractSolver {
 
 	private final Heuristic heuristic;
 
-	private static final Logger logger = Logger.getLogger("cspfj.MACSolver");
+	private static final Logger logger = Logger.getLogger(MGACIter.class
+			.getName());
 
 	private boolean allSolutions = false;
 
@@ -258,26 +260,45 @@ public final class MGACIter extends AbstractSolver {
 			// logger.info(constraintRepartition());
 			maxBT *= 1.5;
 
-			addNoGoods();
+			final Set<Constraint> modifiedConstraints = problem
+					.addNoGoods(false);
 			problem.restoreAll(1);
+
+			if (!modifiedConstraints.isEmpty()) {
+				Thread.interrupted();
+				try {
+					logger.info("Updating nb supports");
+					for (Constraint c : modifiedConstraints) {
+						c.initNbSupports();
+					}
+				} catch (InterruptedException e) {
+
+				}
+			}
 			try {
 				if (!filter.reduceAll(0)) {
-					chronometer.validateChrono();
-					return false;
+					break;
 				}
 			} catch (InterruptedException e) {
 				throw new IllegalArgumentException(
 						"Filter was unexpectingly interrupted !");
 			}
 		} while (true);
-		chronometer.validateChrono();
-		statistics.put("search-cpu", chronometer.getCurrentChrono()
-				- heuristicCpu);
 
-		statistics.putAll(filter.getStatistics());
+		final float searchCpu = chronometer.getCurrentChrono() - heuristicCpu;
+		statistics.put("search-cpu", searchCpu);
+
+		if (searchCpu > 0) {
+			statistics.put("search-nps", getNbAssignments() / searchCpu);
+		}
 
 		return getNbSolutions() > 0;
 
+	}
+
+	public synchronized void collectStatistics() {
+		chronometer.validateChrono();
+		statistics.putAll(filter.getStatistics());
 	}
 
 	// private String constraintRepartition() {
@@ -298,10 +319,6 @@ public final class MGACIter extends AbstractSolver {
 	// return stb.toString();
 	// }
 
-	public int addNoGoods() {
-		return problem.addNoGoods();
-	}
-
 	public Filter getFilter() {
 		return filter;
 	}
@@ -311,7 +328,7 @@ public final class MGACIter extends AbstractSolver {
 	}
 
 	public String getXMLConfig() {
-		final StringBuffer sb = new StringBuffer(180);
+		final StringBuffer sb = new StringBuffer(super.getXMLConfig());
 
 		sb.append("\t\t\t<solver>").append(this).append(
 				"</solver>\n\t\t\t<filter>").append(filter).append(

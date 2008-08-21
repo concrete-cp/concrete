@@ -40,46 +40,57 @@ public final class DiffConstraint extends AbstractPVRConstraint {
 
 	@Override
 	public boolean check() {
-
-		return getValue(0) - getValue(1) <= constant;
+		return getValue(1) - getValue(0) >= constant;
 	}
 
 	public boolean revise(final int position, final int level) {
 		final Variable v0 = getVariable(0);
 		final Variable v1 = getVariable(1);
 
+		final int[] d0 = v0.getDomain();
+		final int[] d1 = v1.getDomain();
+		
+		
 		boolean deleted = false;
 
 		if (position == 0) {
-			int v1max = v1.getDomain()[v1.getLast()];
+			int v1max = d1[v1.getLast()];
 			if (!ordered) {
-				for (int i = v1.getLast(); i != -1; i = v1.getPrev(i)) {
-					if (v1.getDomain()[i] > v1max) {
-						v1max = v1.getDomain()[i];
+				for (int i = v1.getPrev(v1.getLast()); i != -1; i = v1.getPrev(i)) {
+					if (d1[i] > v1max) {
+						v1max = d1[i];
 					}
 				}
 			}
+			
+			v1max -= constant;
 
-			for (int i = v0.getFirst(); i != -1; i = v0.getNext(i)) {
-				if (v0.getDomain()[i] - constant > v1max) {
+			for (int i = v0.getLast(); i != -1; i = v0.getPrev(i)) {
+				if (d0[i] > v1max) {
 					v0.remove(i, level);
 					deleted = true;
+				} else if (ordered) {
+					break;
 				}
 			}
 		} else {
-			int v0min = v0.getDomain()[v0.getFirst()];
+			int v0min = d0[v0.getFirst()];
 			if (!ordered) {
-				for (int i = v0.getFirst(); i != -1; i = v0.getNext(i)) {
-					if (v0.getDomain()[i] < v0min) {
-						v0min = v1.getDomain()[i];
+				for (int i = v0.getNext(v0.getFirst()); i != -1; i = v0.getNext(i)) {
+					if (d0[i] < v0min) {
+						v0min = d0[i];
 					}
 				}
 			}
+			
+			v0min += constant;
 
 			for (int i = v1.getFirst(); i != -1; i = v1.getNext(i)) {
-				if (v1.getDomain()[i] + constant < v0min) {
+				if (d1[i] < v0min) {
 					v1.remove(i, level);
 					deleted = true;
+				} else if (ordered) {
+					break;
 				}
 			}
 		}
@@ -91,6 +102,10 @@ public final class DiffConstraint extends AbstractPVRConstraint {
 		return false;
 	}
 
+	@Override
+	public void initNbSupports() throws InterruptedException {
+		
+	}
 	// public String toString() {
 	// return "C" + getId() + " (" + getInvolvedVariables()[0] + ":"
 	// + duration0 + ", " + getInvolvedVariables()[1] + ":"

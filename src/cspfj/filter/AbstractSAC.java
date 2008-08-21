@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import cspfj.heuristic.Dom;
@@ -56,10 +57,10 @@ public abstract class AbstractSAC implements BackedFilter {
 
 	protected boolean check(final Variable variable, final int index,
 			final int level) {
-		//if (logger.isLoggable(Level.FINEST)) {
-			logger.finest(level + " : " + variable + " <- "
-					+ variable.getDomain()[index] + "(" + index + ")");
-		//}
+		// if (logger.isLoggable(Level.FINEST)) {
+		logger.finest(level + " : " + variable + " <- "
+				+ variable.getDomain()[index] + "(" + index + ")");
+		// }
 
 		variable.assign(index, problem);
 		problem.setLevelVariables(level, variable);
@@ -110,9 +111,9 @@ public abstract class AbstractSAC implements BackedFilter {
 
 		do {
 			final Variable variable = variables[v];
-			//if (logger.isLoggable(Level.FINE)) {
-				logger.fine(variable.toString());
-			//}
+			// if (logger.isLoggable(Level.FINE)) {
+			logger.info(variable.toString());
+			// }
 			if (variable.getDomainSize() > 1 && singletonTest(variable, level)) {
 				if (variable.getDomainSize() <= 0) {
 					return false;
@@ -120,10 +121,11 @@ public abstract class AbstractSAC implements BackedFilter {
 				if (!filter.reduceAfter(level, variable)) {
 					return false;
 				}
-				// mark = v;
+				mark = v;
 			}
-
-			v = next(v, variables.length);
+			if (++v >= variables.length) {
+				v = 0;
+			} 
 		} while (v != mark);
 
 		return true;
@@ -137,19 +139,10 @@ public abstract class AbstractSAC implements BackedFilter {
 	public Map<String, Object> getStatistics() {
 		final Map<String, Object> statistics = new HashMap<String, Object>();
 		statistics.put("SAC-nbsingletontests", nbSingletonTests);
-		for (String key : filter.getStatistics().keySet()) {
-			statistics.put("SAC-backend-" + key, filter.getStatistics()
-					.get(key));
+		for (Entry<String, Object> stat : filter.getStatistics().entrySet()) {
+			statistics.put("SAC-backend-" + stat.getKey(), stat.getValue());
 		}
 		return statistics;
-	}
-
-	public static int next(final int i, final int length) {
-		if (i < length - 1) {
-			return i + 1;
-		}
-		logger.fine("Tour !");
-		return 0;
 	}
 
 	@Override

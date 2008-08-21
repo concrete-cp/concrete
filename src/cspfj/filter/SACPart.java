@@ -100,10 +100,4 @@ public class SACPart extends AbstractSAC {
 		return "SAC-parts w/ " + filter;
 	}
 
-	@Override
-	public void setParameter(final int parameter) {
-		parts = parameter;
-		
-	}
-
 }

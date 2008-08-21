@@ -18,10 +18,8 @@
  */
 package cspfj.filter;
 
-import java.util.Map;
 import java.util.logging.Logger;
 
-import cspfj.AbstractSolver;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -29,32 +27,12 @@ import cspfj.problem.Variable;
  * @author Julien VION
  * 
  */
-public final class CDC extends AbstractSAC {
+public final class SAC1 extends AbstractSAC {
 
-	private final static Logger logger = Logger.getLogger(CDC.class.getName());
+	private final static Logger logger = Logger.getLogger(SAC1.class.getName());
 
-	private final boolean addConstraints;
-
-	private int addedConstraints = 0;
-
-	public CDC(Problem problem, Filter filter) {
+	public SAC1(Problem problem, Filter filter) {
 		super(problem, filter);
-		addConstraints = AbstractSolver.parameters
-				.containsKey("cdc.addConstraints")
-				&& Boolean.valueOf(AbstractSolver.parameters
-						.get("cdc.addConstraints"));
-	}
-
-	@Override
-	protected boolean reduce(int level) throws InterruptedException {
-		final int nbC = problem.getNbConstraints();
-		final boolean result;
-		try {
-			result = super.reduce(level);
-		} finally {
-			addedConstraints += problem.getNbConstraints() - nbC;
-		}
-		return result;
 	}
 
 	protected boolean singletonTest(final Variable variable, final int level)
@@ -77,17 +55,11 @@ public final class CDC extends AbstractSAC {
 			variable.assign(index, problem);
 			problem.setLevelVariables(level, variable);
 			nbSingletonTests++;
-			if (filter.reduceAfter(level + 1, variable)) {
-				final int initNg = problem.getNbNoGoods();
+			final boolean consistent = filter.reduceAfter(level + 1, variable);
+			variable.unassign(problem);
+			problem.restore(level + 1);
 
-				problem.addNoGoods(addConstraints);
-
-				changedGraph = problem.getNbNoGoods() > initNg;
-				variable.unassign(problem);
-				problem.restore(level + 1);
-			} else {
-				variable.unassign(problem);
-				problem.restore(level + 1);
+			if (!consistent) {
 				logger.fine("Removing " + variable + ", " + index);
 
 				variable.remove(index, level);
@@ -97,14 +69,7 @@ public final class CDC extends AbstractSAC {
 		return changedGraph;
 	}
 
-	public Map<String, Object> getStatistics() {
-		final Map<String, Object> statistics = super.getStatistics();
-		statistics.put("CDC-nogoods", problem.getNbNoGoods());
-		statistics.put("CDC-added-constraints", addedConstraints);
-		return statistics;
-	}
-
 	public String toString() {
-		return (addConstraints ? "C" : "") + "DC w/ " + filter;
+		return "SAC-1 w/ " + filter;
 	}
 }

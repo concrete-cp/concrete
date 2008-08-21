@@ -9,16 +9,13 @@ public class MatrixManager implements Cloneable {
 
 	protected final int arity;
 
-	protected int variablePosition;
-
-
 	private Matrix matrix;
 
-	private boolean shared = true;
+	private boolean shared ;
 
 	protected int[] tuple;
 
-	public MatrixManager(Variable[] scope, Matrix matrix) {
+	public MatrixManager(Variable[] scope, Matrix matrix, final boolean shared) {
 		super();
 
 		variables = scope;
@@ -30,6 +27,9 @@ public class MatrixManager implements Cloneable {
 		this.arity = scope.length;
 
 		this.matrix = matrix;
+
+		this.shared = shared;
+
 	}
 
 	public void setTuple(final int[] tuple) {
@@ -54,57 +54,58 @@ public class MatrixManager implements Cloneable {
 		return false;
 	}
 
-//	public boolean hasSupport(final int position, final int index) {
-//		return setFirstTuple(position, index);
-//	}
+	// public boolean hasSupport(final int position, final int index) {
+	// return setFirstTuple(position, index);
+	// }
 
 	public boolean isTrue(final int[] tuple) {
 		return matrix.check(tuple);
 	}
 
-//	public boolean setFirstTuple(final int variablePosition, final int index) {
-//		this.variablePosition = variablePosition;
-//		for (int position = arity; --position >= 0;) {
-//			if (position == variablePosition) {
-//				tuple[position] = index;
-//			} else {
-//				tuple[position] = variables[position].getFirst();
-//			}
-//		}
-//
-//		if (!check()) {
-//			return next();
-//		}
-//
-//		return true;
-//	}
+	// public boolean setFirstTuple(final int variablePosition, final int index)
+	// {
+	// this.variablePosition = variablePosition;
+	// for (int position = arity; --position >= 0;) {
+	// if (position == variablePosition) {
+	// tuple[position] = index;
+	// } else {
+	// tuple[position] = variables[position].getFirst();
+	// }
+	// }
+	//
+	// if (!check()) {
+	// return next();
+	// }
+	//
+	// return true;
+	// }
 
-//
-//
-//	private boolean setNextTuple() {
-//		final int[] tuple = this.tuple;
-//
-//		final Variable[] involvedVariables = this.variables;
-//		for (int i = arity; --i >= 0;) {
-//			if (i == variablePosition) {
-//				continue;
-//			}
-//
-//			final int index = involvedVariables[i].getNext(tuple[i]);
-//
-//			if (index < 0) {
-//				tuple[i] = involvedVariables[i].getFirst();
-//			} else {
-//				tuple[i] = index;
-//				return true;
-//			}
-//		}
-//		return false;
-//
-//	}
+	//
+	//
+	// private boolean setNextTuple() {
+	// final int[] tuple = this.tuple;
+	//
+	// final Variable[] involvedVariables = this.variables;
+	// for (int i = arity; --i >= 0;) {
+	// if (i == variablePosition) {
+	// continue;
+	// }
+	//
+	// final int index = involvedVariables[i].getNext(tuple[i]);
+	//
+	// if (index < 0) {
+	// tuple[i] = involvedVariables[i].getFirst();
+	// } else {
+	// tuple[i] = index;
+	// return true;
+	// }
+	// }
+	// return false;
+	//
+	// }
 
-	public MatrixManager deepCopy(final Variable[] variables,
-			final int[] tuple) throws CloneNotSupportedException {
+	public MatrixManager deepCopy(final Variable[] variables, final int[] tuple)
+			throws CloneNotSupportedException {
 		final MatrixManager matrix = this.clone();
 		matrix.tuple = tuple;
 		matrix.variables = variables;
@@ -116,7 +117,7 @@ public class MatrixManager implements Cloneable {
 	}
 
 	public boolean check() {
-		//checks++;
+		// checks++;
 		return matrix.check(tuple);
 	}
 
@@ -151,11 +152,11 @@ public class MatrixManager implements Cloneable {
 		} while (nextT());
 
 	}
-	
+
 	protected Matrix unshareMatrix() {
 		try {
 			matrix = matrix.clone();
-			
+
 		} catch (CloneNotSupportedException e) {
 			// TODO Auto-generated catch block
 
@@ -163,9 +164,10 @@ public class MatrixManager implements Cloneable {
 		shared = false;
 		return matrix;
 	}
-	
+
 	public String getType() {
-		return this.getClass().getSimpleName() + " w/ " + matrix.getClass().getSimpleName();
+		return this.getClass().getSimpleName() + " w/ "
+				+ matrix.getClass().getSimpleName();
 	}
 
 	public Matrix getMatrix() {

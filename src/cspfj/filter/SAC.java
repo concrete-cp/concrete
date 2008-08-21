@@ -336,9 +336,4 @@ public final class SAC extends AbstractSAC {
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
-	public void setParameter(int parameter) {
-		// TODO Auto-generated method stub
-
-	}
 }

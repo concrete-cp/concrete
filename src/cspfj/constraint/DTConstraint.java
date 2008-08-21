@@ -21,18 +21,18 @@ package cspfj.constraint;
 
 import cspfj.problem.Variable;
 
-public final class DTPConstraint extends AbstractPVRConstraint {
+public final class DTConstraint extends AbstractPVRConstraint {
 
 	final private int[] duration;
 
 	final private boolean ordered;
 
-	public DTPConstraint(final Variable[] scope, final int duration0,
+	public DTConstraint(final Variable[] scope, final int duration0,
 			final int duration1) {
 		this(scope, duration0, duration1, false);
 	}
 
-	public DTPConstraint(final Variable[] scope, final int duration0,
+	public DTConstraint(final Variable[] scope, final int duration0,
 			final int duration1, final boolean ordered) {
 		super(scope);
 		this.duration = new int[] { duration0, duration1 };
@@ -57,24 +57,27 @@ public final class DTPConstraint extends AbstractPVRConstraint {
 		final Variable variable = getVariable(position);
 		final Variable otherVariable = getVariable(1 - position);
 
-		final int highBound;
-		final int lowBound;
+		final int[] domain = variable.getDomain();
+
+		final int[] otherDomain = otherVariable.getDomain();
+
+		final int lBound;
+		final int hBound;
 
 		if (ordered) {
 
-			highBound = otherVariable.getDomain()[otherVariable.getLast()]
-					- duration[position];
+			lBound = otherDomain[otherVariable.getLast()] - duration[position];
 
-			lowBound = otherVariable.getDomain()[otherVariable.getFirst()]
+			hBound = otherDomain[otherVariable.getFirst()]
 					+ duration[1 - position];
 
 		} else {
-			int otherMin = otherVariable.getDomain()[otherVariable.getFirst()];
+			int otherMin = otherDomain[otherVariable.getFirst()];
 			int otherMax = otherMin;
 
 			for (int i = otherVariable.getFirst(); i >= 0; i = otherVariable
 					.getNext(i)) {
-				final int value = otherVariable.getDomain()[i];
+				final int value = otherDomain[i];
 				if (value < otherMin) {
 					otherMin = value;
 				}
@@ -84,21 +87,44 @@ public final class DTPConstraint extends AbstractPVRConstraint {
 
 			}
 
-			highBound = otherMax - duration[position];
-			lowBound = otherMin + duration[1 - position];
+			lBound = otherMax - duration[position];
+			hBound = otherMin + duration[1 - position];
+		}
+
+		if (lBound >= hBound) {
+			return false;
 		}
 
 		boolean filtered = false;
 
-		for (int i = variable.getFirst(); i >= 0; i = variable.getNext(i)) {
-			final int value = variable.getDomain()[i];
-			if (value > highBound && value < lowBound) {
+		if (ordered) {
+			int i = variable.getFirst();
+			while (i >= 0 && domain[i] <= lBound) {
+				i = variable.getNext(i);
+			}
+			if (i >= 0 && domain[i] < hBound) {
 				variable.remove(i, level);
 				filtered = true;
+				i = variable.getNext(i);
+			}
+			while (i >= 0 && domain[i] < hBound) {
+				variable.remove(i, level);
+				i = variable.getNext(i);
+			}
+		} else {
+			for (int i = variable.getFirst(); i >= 0; i = variable.getNext(i)) {
+				if (domain[i] > lBound && domain[i] < hBound) {
+					variable.remove(i, level);
+					filtered = true;
+				}
 			}
 		}
-
 		return filtered;
+	}
+
+	@Override
+	public void initNbSupports() throws InterruptedException {
+		
 	}
 
 	@Override

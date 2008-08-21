@@ -3,13 +3,12 @@ package cspfj.constraint;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import cspfj.exception.FailedGenerationException;
 import cspfj.problem.Variable;
 
 public class MatrixManagerDynamic extends MatrixManager implements
 		Iterable<int[]> {
 
-	private  TupleHashSet tld;
+	private TupleHashSet tld;
 
 	private int first;
 
@@ -18,8 +17,9 @@ public class MatrixManagerDynamic extends MatrixManager implements
 	private int[] removed;
 	private int[] removedLast;
 
-	public MatrixManagerDynamic(final Variable[] scope, final TupleHashSet matrix) {
-		super(scope, matrix);
+	public MatrixManagerDynamic(final Variable[] scope,
+			final TupleHashSet matrix, final boolean shared) {
+		super(scope, matrix, shared);
 		this.tld = matrix;
 		first = -1;
 		next = new int[tld.getNbTuples()];
@@ -167,41 +167,42 @@ public class MatrixManagerDynamic extends MatrixManager implements
 		}
 
 	}
-	
+
 	protected Matrix unshareMatrix() {
 		tld = (TupleHashSet) super.unshareMatrix();
 		return tld;
 	}
 
-//	public static void main(String[] args) throws FailedGenerationException {
-//		final TupleHashSet ta = new TupleHashSet(false);
-//		ta.set(new int[] { 0, 0, 0 }, true);
-//		ta.set(new int[] { 1, 1, 1 }, true);
-//		ta.set(new int[] { 2, 2, 2 }, true);
-//
-//		final int[] dom = new int[] { 0, 1, 2 };
-//
-//		final Variable[] scope = { new Variable(dom), new Variable(dom),
-//				new Variable(dom) };
-//
-//		final ExtensionConstraintDynamic constraint = new ExtensionConstraintDynamic(
-//				scope, ta);
-//
-//		constraint.revise(0);
-//
-//		for (Variable v : scope) {
-//			System.out.println(v.getCurrentDomain());
-//		}
-//
-//		System.out.println();
-//		System.arraycopy(new int[] { 1, 1, 1 }, 0, constraint.getTuple(), 0, 3);
-//
-//		constraint.removeTuple();
-//
-//		constraint.revise(0);
-//
-//		for (Variable v : scope) {
-//			System.out.println(v.getCurrentDomain());
-//		}
-//	}
+	// public static void main(String[] args) throws FailedGenerationException {
+	// final TupleHashSet ta = new TupleHashSet(false);
+	// ta.set(new int[] { 0, 0, 0 }, true);
+	// ta.set(new int[] { 1, 1, 1 }, true);
+	// ta.set(new int[] { 2, 2, 2 }, true);
+	//
+	// final int[] dom = new int[] { 0, 1, 2 };
+	//
+	// final Variable[] scope = { new Variable(dom), new Variable(dom),
+	// new Variable(dom) };
+	//
+	// final ExtensionConstraintDynamic constraint = new
+	// ExtensionConstraintDynamic(
+	// scope, ta);
+	//
+	// constraint.revise(0);
+	//
+	// for (Variable v : scope) {
+	// System.out.println(v.getCurrentDomain());
+	// }
+	//
+	// System.out.println();
+	// System.arraycopy(new int[] { 1, 1, 1 }, 0, constraint.getTuple(), 0, 3);
+	//
+	// constraint.removeTuple();
+	//
+	// constraint.revise(0);
+	//
+	// for (Variable v : scope) {
+	// System.out.println(v.getCurrentDomain());
+	// }
+	// }
 }

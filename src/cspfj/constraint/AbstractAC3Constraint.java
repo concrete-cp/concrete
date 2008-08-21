@@ -1,7 +1,5 @@
 package cspfj.constraint;
 
-import java.util.Arrays;
-
 import cspfj.problem.Variable;
 
 public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
@@ -19,23 +17,15 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 
 		startTuple = new int[getArity()];
 
-		int maxDomain = 0;
-		for (int i = getArity(); --i >= 0;) {
+		int maxDomain = getVariable(getArity()-1).getDomain().length;
+		for (int i = getArity()-1; --i >= 0;) {
 			if (getVariable(i).getDomain().length > maxDomain) {
 				maxDomain = getVariable(i).getDomain().length;
 			}
 		}
-
-		last = new int[getArity()][maxDomain][getArity()];
-		for (int i = getArity(); --i >= 0;) {
-			for (int j = maxDomain; --j >= 0;) {
-				Arrays.fill(last[i][j], -1);
-			}
-		}
+		
+		last = new int[getArity()][maxDomain][];
 	}
-
-
-
 
 	public boolean revise(final int position, final int level) {
 		final Variable variable = getVariable(position);
@@ -161,9 +151,8 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 	private boolean findValidTuple1(final int variablePosition, final int index) {
 		assert this.isInvolved(getVariable(variablePosition));
 		assert index >= 0;
-		final boolean residue = last[variablePosition][index][0] != -1;
 
-		if (residue
+		if (last[variablePosition][index] != null
 				&& controlTuplePresence(last[variablePosition][index],
 						variablePosition)) {
 			return true;
@@ -183,11 +172,10 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 	}
 
 	protected void updateResidues() {
+		final int[] residue = tuple.clone();
 		for (int position = getArity(); --position >= 0;) {
-			System.arraycopy(tuple, 0, last[position][tuple[position]], 0,
-					getArity());
+			last[position][residue[position]] = residue;
 		}
-
 	}
 
 	public void removeTupleCache() {

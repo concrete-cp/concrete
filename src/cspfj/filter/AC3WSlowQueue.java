@@ -1,15 +1,15 @@
 package cspfj.filter;
 
+import java.util.ArrayDeque;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
 import cspfj.heuristic.VariableHeuristic;
-import cspfj.heuristic.WeightHeuristic;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.Heap;
@@ -21,17 +21,13 @@ import cspfj.util.Heap;
 public final class AC3WSlowQueue implements Filter {
 	private final Problem problem;
 
-	private final BitSet inQueue;
-
-	private final Heap<Constraint> slowQueue;
-
-	// private int queueSize = 0;
-
-	private final BitSet cstInQueue;
-
+	private final boolean[] inQueue;
 	private final Heap<Variable> varQueue;
 
-	private boolean removals[][];
+	private final boolean[] cstInQueue;
+	private final Deque<Constraint> slowQueue;
+
+	// private int queueSize = 0;
 
 	public int effectiveRevisions = 0;
 
@@ -40,47 +36,22 @@ public final class AC3WSlowQueue implements Filter {
 	private static final Logger logger = Logger.getLogger(Filter.class
 			.getSimpleName());
 
-	private WeightHeuristic wvh;
-
 	public AC3WSlowQueue(final Problem problem,
 			final VariableHeuristic heuristic) {
 		super();
 		this.problem = problem;
 
-		inQueue = new BitSet(problem.getMaxVId() + 1);
-		cstInQueue = new BitSet();
-		removals = new boolean[problem.getMaxCId() + 1][];
-		int nbSlowCst = 0;
-		for (Constraint c : problem.getConstraints()) {
-			removals[c.getId()] = new boolean[c.getArity()];
-			if (c.isSlow()) {
-				nbSlowCst++;
-			}
-		}
+		inQueue = new boolean[problem.getMaxVId() + 1];
 
-		slowQueue = new Heap<Constraint>(new Comparator<Constraint>() {
-			@Override
-			public int compare(Constraint arg0, Constraint arg1) {
-				return -Double.compare(size(arg0), size(arg1));
-			}
+		cstInQueue = new boolean[problem.getMaxCId() + 1];
 
-			private double size(Constraint arg0) {
-				double size = 0;
-				for (int i = arg0.getArity(); --i >= 0;) {
-					size += Math.log(arg0.getVariable(i).getDomainSize());
-				}
-				return size;
-			}
-		}, new Constraint[nbSlowCst]);
+		slowQueue = new ArrayDeque<Constraint>();
 		varQueue = new Heap<Variable>(new Comparator<Variable>() {
 			@Override
 			public int compare(Variable arg0, Variable arg1) {
 				return arg0.getDomainSize() - arg1.getDomainSize();
 			}
 		}, new Variable[problem.getNbVariables()]);
-
-		wvh = (heuristic instanceof WeightHeuristic) ? (WeightHeuristic) heuristic
-				: null;
 
 	}
 
@@ -97,47 +68,50 @@ public final class AC3WSlowQueue implements Filter {
 		}
 		clearQueue();
 
-		addInQueue(variable);
+		inQueue[variable.getId()] = true;
+		varQueue.add(variable);
 
 		return reduce(level);
 	}
 
+	private RevisionHandler revisator = new RevisionHandler() {
+		public void revised(final Constraint constraint, final Variable variable) {
+			if (!inQueue[variable.getId()]) {
+				inQueue[variable.getId()] = true;
+				varQueue.add(variable);
+			}
+			final Constraint[] involvingConstraints = variable
+					.getInvolvingConstraints();
+
+			for (int cp = involvingConstraints.length; --cp >= 0;) {
+				final Constraint constraintP = involvingConstraints[cp];
+				if (constraintP != constraint) {
+					constraintP.setRemovals(variable
+							.getPositionInConstraint(cp), true);
+				}
+
+			}
+		}
+	};
+
 	private boolean reduce(final int level) {
 		logger.fine("Reducing");
-		final boolean[] revised = new boolean[problem.getMaxArity()];
 
 		while (!varQueue.isEmpty() || !slowQueue.isEmpty()) {
 			if (varQueue.isEmpty()) {
-				final Constraint constraint = pullConstraint();
+				final Constraint constraint = slowQueue.pollFirst();
+				cstInQueue[constraint.getId()] = false;
 
-				if (!revise(constraint, level, revised, true)) {
-					if (wvh != null) {
-						wvh.treatConflictConstraint(constraint);
-					}
+				if (!revise(constraint, level, true)) {
+					constraint.incWeight();
 					return false;
 				}
 
-				for (int i = constraint.getArity(); --i >= 0;) {
-					if (revised[i]) {
-						final Variable y = constraint.getVariable(i);
-						addInQueue(y);
-						final Constraint[] involvingConstraints = y
-								.getInvolvingConstraints();
-
-						for (int cp = involvingConstraints.length; --cp >= 0;) {
-							final Constraint constraintP = involvingConstraints[cp];
-							if (constraintP != constraint) {
-								removals[constraintP.getId()][y
-										.getPositionInConstraint(cp)] = true;
-							}
-						}
-					}
-				}
-
-				Arrays.fill(removals[constraint.getId()], false);
+				constraint.fillRemovals(false);
 
 			} else {
-				final Variable variable = pullVariable();
+				Variable variable = varQueue.pollFirst();
+				inQueue[variable.getId()] = false;
 
 				final Constraint[] constraints = variable
 						.getInvolvingConstraints();
@@ -146,35 +120,16 @@ public final class AC3WSlowQueue implements Filter {
 					final Constraint constraint = constraints[c];
 
 					final int position = variable.getPositionInConstraint(c);
-					if (!removals[constraint.getId()][position]) {
+					if (!constraint.getRemovals(position)) {
 						continue;
 					}
 
-					if (!revise(constraint, level, revised, false)) {
-						if (wvh != null) {
-							wvh.treatConflictConstraint(constraint);
-						}
+					if (!revise(constraint, level, false)) {
+						constraint.incWeight();
 						return false;
 					}
 
-					for (int i = constraint.getArity(); --i >= 0;) {
-						if (revised[i]) {
-							final Variable y = constraint.getVariable(i);
-							addInQueue(y);
-							final Constraint[] involvingConstraints = y
-									.getInvolvingConstraints();
-
-							for (int cp = involvingConstraints.length; --cp >= 0;) {
-								final Constraint constraintP = involvingConstraints[cp];
-								if (constraintP != constraint) {
-									removals[constraintP.getId()][y
-											.getPositionInConstraint(cp)] = true;
-								}
-							}
-						}
-					}
-
-					Arrays.fill(removals[constraint.getId()], false);
+					constraint.fillRemovals(false);
 
 				}
 			}
@@ -185,78 +140,38 @@ public final class AC3WSlowQueue implements Filter {
 
 	}
 
-	private boolean revise(Constraint constraint, int level,
-			final boolean[] revised, final boolean slow) {
+	private boolean revise(Constraint constraint, int level, final boolean slow) {
 		if (!slow && constraint.isSlow()) {
-			addInQueue(constraint);
+			if (!cstInQueue[constraint.getId()]) {
+				cstInQueue[constraint.getId()] = true;
+				slowQueue.add(constraint);
+			}
 			return true;
 		}
-		return constraint.revise(level, revised);
+		return constraint.revise(level, revisator);
 	}
 
 	private void clearQueue() {
 		varQueue.clear();
-		inQueue.clear();
+		Arrays.fill(inQueue, false);
+
 		// queueSize = 0;
 		for (Constraint c : problem.getConstraints()) {
-			Arrays.fill(removals[c.getId()], true);
+			c.fillRemovals(true);
 		}
 		slowQueue.clear();
-		cstInQueue.clear();
+		Arrays.fill(cstInQueue, false);
 	}
 
 	private void addAll() {
 		for (Variable v : problem.getVariables()) {
-			addInQueue(v);
+			inQueue[v.getId()] = true;
+			varQueue.add(v);
 		}
 	}
 
-	private Variable pullVariable() {
-		// Variable bestVariable = null;
-		// int bestValue = Integer.MAX_VALUE;
-		//
-		// final boolean[] inQueue = this.inQueue;
-		//
-		// final Problem problem = this.problem;
-		//
-		// for (int i = inQueue.length; --i >= 0;) {
-		// if (inQueue[i]) {
-		// final Variable variable = problem.getVariable(i);
-		// final int domainSize = variable.getDomainSize();
-		// if (domainSize < bestValue) {
-		// bestVariable = variable;
-		// bestValue = domainSize;
-		// }
-		// }
-		// }
-		//
-		Variable bestVariable = varQueue.pollFirst();
-		inQueue.clear(bestVariable.getId());
-		// queueSize--;
-		return bestVariable;
-	}
 
-	private Constraint pullConstraint() {
-		Constraint bestConstraint = slowQueue.pollFirst();
-		cstInQueue.clear(bestConstraint.getId());
-		return bestConstraint;
-	}
 
-	private void addInQueue(final Constraint cst) {
-		if (!cstInQueue.get(cst.getId())) {
-			cstInQueue.set(cst.getId());
-			slowQueue.add(cst);
-		}
-	}
-
-	private void addInQueue(final Variable var) {
-		if (!inQueue.get(var.getId())) {
-			inQueue.set(var.getId());
-			// inQueue.set(var.getId());
-			varQueue.add(var);
-			// queueSize++;
-		}
-	}
 
 	public String toString() {
 		return "GAC3rm";
@@ -269,11 +184,6 @@ public final class AC3WSlowQueue implements Filter {
 		return statistics;
 	}
 
-	@Override
-	public void setParameter(final int parameter) {
-		// No parameter
-
-	}
 
 	@Override
 	public boolean ensureAC() {

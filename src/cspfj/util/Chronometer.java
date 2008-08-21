@@ -19,12 +19,23 @@
 
 package cspfj.util;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
+
 public final class Chronometer {
 //    private long maxTime;
+    private final static ThreadMXBean threadMXBean ;
 
+    static {
+        threadMXBean = ManagementFactory.getThreadMXBean()  ;
+        threadMXBean.setThreadCpuTimeEnabled(true) ;
+    }
+    
     private long startTime;
 
     private long totalTime;
+    
+    private long threadId ;
 
 
 //    public final int getRemainingTime() {
@@ -43,12 +54,15 @@ public final class Chronometer {
 //    }
 
     public void startChrono() {
-        startTime = CpuMonitor.getCpuTimeNano();
+        startTime = threadMXBean.getCurrentThreadUserTime();
+        threadId = Thread.currentThread().getId();
     }
 
     public long getCurrentChronoNano() {
-        return CpuMonitor.getCpuTimeNano() - startTime;
+        return threadMXBean.getThreadCpuTime(threadId) - startTime;
     }
+    
+    
 
     public float getCurrentChrono() {
         return getCurrentChronoNano() / 1.0e9F;
@@ -69,5 +83,9 @@ public final class Chronometer {
 
     public float getUserTime() {
         return totalTime / 1.0e9F;
+    }
+    
+    public long getUserTimeNano() {
+        return totalTime;
     }
 }

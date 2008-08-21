@@ -20,6 +20,7 @@ package cspfj.filter;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
@@ -89,17 +90,11 @@ public final class B3C extends AbstractSAC {
 	public Map<String, Object> getStatistics() {
 		final Map<String, Object> statistics = new HashMap<String, Object>();
 		statistics.put("3B-singletonTests", nbSingletonTests);
-		for (String key : filter.getStatistics().keySet()) {
+		for (Entry<String,Object> stat : filter.getStatistics().entrySet()) {
 			statistics
-					.put("3B-backend-" + key, filter.getStatistics().get(key));
+					.put("3B-backend-" + stat.getKey(), stat.getValue());
 		}
 		return statistics;
-	}
-
-	@Override
-	public void setParameter(int parameter) {
-		// No parameter
-
 	}
 
 }

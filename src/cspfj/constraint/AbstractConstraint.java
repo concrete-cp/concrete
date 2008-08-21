@@ -23,20 +23,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.logging.Logger;
 
+import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
 
 public abstract class AbstractConstraint implements Cloneable, Constraint {
-	private int[] positionInVariable;
-
-	public final static int MAX_ARITY = 4;
-
 	private static int cId = 0;
-
-	private Variable[] involvedVariables;
-
-	private final int id;
-
-	private final int arity;
 
 	private static long checks = 0;
 
@@ -45,23 +36,43 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 	private static final Logger logger = Logger
 			.getLogger("cspfj.constraints.Constraint");
 
-	protected final long[][] nbInitConflicts;
+	public static final long getPresenceChecks() {
+		return nbPresenceChecks;
+	}
 
-	protected final long[] initSize;
+	public static final void clearStats() {
+		checks = nbPresenceChecks = 0;
+	}
 
-	protected final long[] nbMaxConflicts;
+	public static final long getChecks() {
+		return checks;
+	}
 
-	private final long size;
+	private int[] positionInVariable;
+
+	private Variable[] involvedVariables;
+
+	private final int id;
+
+	private final int arity;
+
+	protected long[][] nbInitConflicts;
+
+	protected long[] nbMaxConflicts;
+
+	private final long initSize;
 
 	private boolean active;
 
 	private final String name;
 
-	protected boolean conflictCounts = false;
-
 	protected int[] tuple;
 
 	protected TupleManager tupleManager;
+
+	private int weight = 1;
+
+	private final boolean[] removals;
 
 	public AbstractConstraint(final Variable[] scope) {
 		this(scope, null);
@@ -71,18 +82,11 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		involvedVariables = scope.clone();
 		arity = involvedVariables.length;
 		id = cId++;
-		tuple = new int[getArity()];
+		tuple = new int[arity];
 
 		tupleManager = new TupleManager(this, tuple);
 
-		nbInitConflicts = new long[arity][];
-		for (int i = arity; --i >= 0;) {
-			nbInitConflicts[i] = new long[scope[i].getDomain().length];
-		}
-		nbMaxConflicts = new long[arity];
-		initSize = new long[arity];
-
-		size = size();
+		initSize = currentSize();
 
 		active = false;
 
@@ -93,21 +97,49 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		} else {
 			this.name = name;
 		}
+
+		removals = new boolean[arity];
+	}
+
+	public boolean getRemovals(int position) {
+		return removals[position];
+	}
+
+	public void setRemovals(int position, boolean value) {
+		removals[position] = value;
+	}
+
+	public void fillRemovals(final boolean value) {
+		Arrays.fill(removals, value);
+	}
+
+	@Override
+	public int getWeight() {
+		return weight;
+	}
+
+	@Override
+	public void incWeight() {
+		weight++;
+	}
+
+	@Override
+	public void setWeight(final int weight) {
+		this.weight = weight;
 	}
 
 	public void initNbSupports() throws InterruptedException {
-		// logger.fine("Counting " + this + " supports");
-		conflictCounts = false;
-		final long size = size();
-		for (int p = arity; --p >= 0;) {
-			initSize[p] = size / involvedVariables[p].getDomainSize();
-		}
+		logger.fine("Counting " + this + " supports");
 
-		if (Thread.interrupted()) {
-			logger.info("Interrupted");
-			throw new InterruptedException();
+		final long[][] nbInitConflicts = new long[arity][];
+		for (int i = arity; --i >= 0;) {
+			nbInitConflicts[i] = new long[getScope()[i].getDomain().length];
 		}
-		// logger.fine("Counting supports");
+		final long[] nbMaxConflicts = new long[arity];
+
+		if (currentSize() < 0) {
+			return;
+		}
 
 		Arrays.fill(nbMaxConflicts, 0);
 		for (int p = arity; --p >= 0;) {
@@ -129,15 +161,16 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		for (int p = arity; --p >= 0;) {
 			final Variable variable = involvedVariables[p];
 			long max = 0;
-			final long[] nbInitConflicts = this.nbInitConflicts[p];
+			final long[] hereConflicts = nbInitConflicts[p];
 			for (int i = variable.getFirst(); i != -1; i = variable.getNext(i)) {
-				if (max < nbInitConflicts[i]) {
-					max = nbInitConflicts[i];
+				if (max < hereConflicts[i]) {
+					max = hereConflicts[i];
 				}
 			}
 			nbMaxConflicts[p] = max;
 		}
-		conflictCounts = true;
+		this.nbInitConflicts = nbInitConflicts;
+		this.nbMaxConflicts = nbMaxConflicts;
 	}
 
 	public int getValue(final int position) {
@@ -201,13 +234,13 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		return check();
 	}
 
-	public final int getOtherSize(final int position) {
+	private final int getOtherSize(final int position) {
 		int size = 1;
 		for (int i = arity; --i >= 0;) {
 			if (i != position) {
 				final int dSize = involvedVariables[i].getDomainSize();
 				if (size > Integer.MAX_VALUE / dSize) {
-					return Integer.MAX_VALUE;
+					return -1;
 				}
 				size *= dSize;
 			}
@@ -216,7 +249,7 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 	}
 
 	public boolean supportCondition(final int position) {
-		return conflictCounts
+		return nbMaxConflicts != null
 				&& getOtherSize(position) > nbMaxConflicts[position];
 	}
 
@@ -237,22 +270,22 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 	}
 
 	private long getNbSupports(final int position, final int index) {
-		if (!conflictCounts) {
+		if (nbInitConflicts == null) {
 			return -1;
 		}
-		return (size / involvedVariables[position].getDomain().length)
+		return (initSize / involvedVariables[position].getDomain().length)
 				- nbInitConflicts[position][index];
 	}
 
 	public final long getNbInitConflicts(final int position, final int index) {
-		if (!conflictCounts) {
+		if (nbInitConflicts == null) {
 			return -1;
 		}
 		return nbInitConflicts[position][index];
 	}
 
 	public final long getNbMaxConflicts(final int position) {
-		if (!conflictCounts) {
+		if (nbMaxConflicts == null) {
 			return -1;
 		}
 		return nbMaxConflicts[position];
@@ -271,13 +304,9 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		return false;
 	}
 
-	public boolean revise(final int level, final boolean[] revised,
+	public boolean revise(final int level, final RevisionHandler revisator,
 			final boolean[] removals) {
-		return revise(level, revised);
-	}
-
-	public static final long getChecks() {
-		return checks;
+		return revise(level, revisator);
 	}
 
 	public final boolean checkFirst() {
@@ -301,15 +330,6 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 
 	public final void setActive(final boolean active) {
 		this.active = active;
-	}
-
-
-	public static final long getPresenceChecks() {
-		return nbPresenceChecks;
-	}
-
-	public static final void clearStats() {
-		checks = nbPresenceChecks = 0;
 	}
 
 	public boolean equals(final Object object) {
@@ -380,13 +400,16 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		return constraint;
 	}
 
-	public long getSize() {
-		return size;
+	public long getInitSize() {
+		return initSize;
 	}
 
-	protected final long size() {
+	protected final long currentSize() {
 		long size = 1;
 		for (Variable v : involvedVariables) {
+			if (size > Integer.MAX_VALUE / v.getDomainSize()) {
+				return -1;
+			}
 			size *= v.getDomainSize();
 		}
 		return size;

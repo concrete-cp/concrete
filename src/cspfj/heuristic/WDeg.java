@@ -19,20 +19,17 @@
 
 package cspfj.heuristic;
 
-import java.util.Arrays;
-
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
-public final class WDeg extends AbstractVariableHeuristic implements WeightHeuristic {
-	private final double[] weights;
+public final class WDeg extends AbstractVariableHeuristic {
 
 	public WDeg(final Problem problem) {
 		super(problem);
-
-		weights = new double[problem.getMaxCId() + 1];
-		Arrays.fill(weights, 1);
+		for (Constraint c : problem.getConstraints()) {
+			c.setWeight(1);
+		}
 	}
 
 	public double getScore(final Variable variable) {
@@ -44,23 +41,14 @@ public final class WDeg extends AbstractVariableHeuristic implements WeightHeuri
 
 		for (Constraint c : variable.getInvolvingConstraints()) {
 			if (c.isBound()) {
-				count += weights[c.getId()];
+				count += c.getWeight();
 			}
 		}
 		return count;
-	}
-
-	@Override
-	public void treatConflictConstraint(final Constraint constraint) {
-		weights[constraint.getId()]++;
 	}
 
 	public String toString() {
 		return "max-wdeg";
 	}
 
-	@Override
-	public double getWeight(final Constraint constraint) {
-		return weights[constraint.getId()];
-	}
 }

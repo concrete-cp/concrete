@@ -25,10 +25,7 @@ import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
-public final class AgingWDegOnDom extends AbstractVariableHeuristic implements
-		WeightHeuristic {
-
-	private final double[] weights;
+public final class AgingWDegOnDom extends AbstractVariableHeuristic {
 
 	private final double factor;
 
@@ -42,7 +39,6 @@ public final class AgingWDegOnDom extends AbstractVariableHeuristic implements
 	public AgingWDegOnDom(Problem problem) {
 		super(problem);
 
-		weights = new double[problem.getMaxCId() + 1];
 		factor = Math.pow(1 - (1d / problem.getNbConstraints()), AGING_TIME);
 		logger.info(Double.toString(factor));
 	}
@@ -56,26 +52,10 @@ public final class AgingWDegOnDom extends AbstractVariableHeuristic implements
 
 		for (Constraint c : variable.getInvolvingConstraints()) {
 			if (c.isBound()) {
-				count += weights[c.getId()];
+				count += c.getWeight();
 			}
 		}
 		return count;
-	}
-
-	@Override
-	public void treatConflictConstraint(final Constraint constraint) {
-		weights[constraint.getId()]++;
-		if (nbUpdates++ % AGING_TIME == 0) {
-			for (Constraint c : problem.getConstraints()) {
-				weights[c.getId()] *= factor;
-			}
-		}
-
-	}
-
-	@Override
-	public double getWeight(final Constraint constraint) {
-		return weights[constraint.getId()];
 	}
 
 	public String toString() {

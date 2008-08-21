@@ -26,6 +26,7 @@ import java.util.logging.Logger;
 
 import cspfj.constraint.MatrixManagerDynamic.LLIterator;
 import cspfj.exception.FailedGenerationException;
+import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
 
 public class ExtensionConstraintDynamic extends AbstractConstraint implements
@@ -39,17 +40,17 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 			.getLogger(ExtensionConstraintDynamic.class.getSimpleName());
 
 	public ExtensionConstraintDynamic(final Variable[] scope,
-			final TupleHashSet matrix) throws FailedGenerationException {
+			final TupleHashSet matrix, final boolean shared) throws FailedGenerationException {
 		super(scope);
-		this.dynamic = new MatrixManagerDynamic(scope, matrix);
+		this.dynamic = new MatrixManagerDynamic(scope, matrix, shared);
 		found = initFound();
 	}
 
 	public ExtensionConstraintDynamic(final Variable[] scope,
-			final TupleHashSet matrix, final String name)
+			final TupleHashSet matrix, final String name, final boolean shared)
 			throws FailedGenerationException {
 		super(scope, name);
-		this.dynamic = new MatrixManagerDynamic(scope, matrix);
+		this.dynamic = new MatrixManagerDynamic(scope, matrix, shared);
 		found = initFound();
 	}
 
@@ -66,7 +67,7 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 		dynamic.restore(level);
 	}
 
-	public boolean revise(final int level, final boolean[] revised) {
+	public boolean revise(final int level, final RevisionHandler revisator) {
 		// logger.fine("Revising "+this);
 		// int toFind = 0;
 		for (int i = getArity(); --i >= 0;) {
@@ -119,7 +120,7 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 				if (variable.getDomainSize() <= 0) {
 					return false;
 				}
-				revised[i] = true;
+				revisator.revised(this, variable);
 				setActive(true);
 			}
 		}
@@ -151,21 +152,23 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 
 	public void initNbSupports() throws InterruptedException {
 		// logger.fine("Counting " + this + " supports");
-		conflictCounts = false;
-		final long size = size();
-		for (int p = getArity(); --p >= 0;) {
-			initSize[p] = size / getVariable(p).getDomainSize();
-		}
 
-		if (Thread.interrupted()) {
-			logger.fine("Interrupted");
-			throw new InterruptedException();
+		final long[][] nbInitConflicts = new long[getArity()][];
+		for (int i = getArity(); --i >= 0;) {
+			nbInitConflicts[i] = new long[getScope()[i].getDomain().length];
 		}
-		// logger.fine("Counting supports");
+		final long[] nbMaxConflicts = new long[getArity()];
+
+		
+		final long size = currentSize();
+		if (size < 0) {
+			return;
+		}
 
 		Arrays.fill(nbMaxConflicts, 0);
 		for (int p = getArity(); --p >= 0;) {
-			Arrays.fill(nbInitConflicts[p], initSize[p]);
+			Arrays.fill(nbInitConflicts[p], size
+					/ getVariable(p).getDomainSize());
 		}
 
 		for (int[] tuple : dynamic) {
@@ -181,15 +184,16 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 		for (int p = getArity(); --p >= 0;) {
 			final Variable variable = getVariable(p);
 			long max = 0;
-			final long[] nbInitConflicts = this.nbInitConflicts[p];
+			final long[] hereConflicts = nbInitConflicts[p];
 			for (int i = variable.getFirst(); i != -1; i = variable.getNext(i)) {
-				if (max < nbInitConflicts[i]) {
-					max = nbInitConflicts[i];
+				if (max < hereConflicts[i]) {
+					max = hereConflicts[i];
 				}
 			}
 			nbMaxConflicts[p] = max;
 		}
-		conflictCounts = true;
+		this.nbInitConflicts = nbInitConflicts;
+		this.nbMaxConflicts = nbMaxConflicts;
 	}
 
 	@Override

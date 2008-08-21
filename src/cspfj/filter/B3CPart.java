@@ -20,6 +20,7 @@ package cspfj.filter;
 
 import java.util.logging.Logger;
 
+import cspfj.AbstractSolver;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -32,13 +33,18 @@ public final class B3CPart extends AbstractSAC {
 	// private final static Logger logger =
 	// Logger.getLogger("cspfj.filter.CDC");
 
-	private int parts = 10;
+	private final int parts ;
 
 	private static final Logger logger = Logger.getLogger(AbstractSAC.class
 			.toString());
 
 	public B3CPart(Problem problem, Filter filter) {
 		super(problem, filter);
+		if (AbstractSolver.parameters.containsKey("parts")) {
+			parts = Integer.valueOf(AbstractSolver.parameters.get("parts"));
+		} else {
+			parts = 10;
+		}
 	}
 
 	protected boolean singletonTest(final Variable variable, final int level) {
@@ -139,11 +145,6 @@ public final class B3CPart extends AbstractSAC {
 
 	public String toString() {
 		return "3B-parts-" + parts + " w/ " + filter;
-	}
-
-	@Override
-	public void setParameter(int parameter) {
-		this.parts = parameter;
 	}
 
 }
