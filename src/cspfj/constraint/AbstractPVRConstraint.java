@@ -40,15 +40,15 @@ public abstract class AbstractPVRConstraint extends AbstractConstraint {
 		// return getRemovals(variablePosition);
 		//		
 		
-		return false;
+//		return false;
 //		
-//		for (int y = getArity(); --y >= 0;) {
-//			if (y == variablePosition ^ getRemovals(y)) {
-//				return false;
-//			}
-//		}
-//
-//		return true;
+		for (int y = getArity(); --y >= 0;) {
+			if (y == variablePosition ^ getRemovals(y)) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 }

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import cspfj.constraint.AbstractPVRConstraint;
 import cspfj.constraint.Constraint;
 import cspfj.heuristic.VariableHeuristic;
 import cspfj.problem.Problem;
@@ -59,7 +60,7 @@ public final class AC3CF implements Filter {
 		if (variable == null) {
 			return true;
 		}
-		while(!queue.isEmpty()) {
+		while (!queue.isEmpty()) {
 			queue.pollFirst().fillRemovals(false);
 		}
 		Arrays.fill(cstInQueue, false);
@@ -111,13 +112,30 @@ public final class AC3CF implements Filter {
 				constraint.incWeight();
 				return false;
 			}
-			
+
 			constraint.fillRemovals(false);
 
 		}
 
+		assert control(level);
+
 		return true;
 
+	}
+
+	private boolean control(int level) {
+		for (Constraint c : problem.getConstraints()) {
+			if (!(c instanceof AbstractPVRConstraint)) {
+				continue;
+			}
+			for (int i = c.getArity(); --i >= 0;) {
+				if (!c.getVariable(i).isAssigned()
+						&& ((AbstractPVRConstraint) c).revise(i, level)) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	public String toString() {
