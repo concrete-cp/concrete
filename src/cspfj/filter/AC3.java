@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import cspfj.constraint.AbstractPVRConstraint;
 import cspfj.constraint.Constraint;
 import cspfj.heuristic.VariableHeuristic;
 import cspfj.problem.Problem;
@@ -45,9 +46,10 @@ public final class AC3 implements Filter {
 		}
 		for (int i = inQueue.nextSetBit(0); i >= 0; i = inQueue
 				.nextSetBit(i + 1)) {
-			for (Constraint c : problem.getVariable(i)
-					.getInvolvingConstraints()) {
-				c.fillRemovals(false);
+			final Variable v = problem.getVariable(i);
+			final Constraint[] involved = v.getInvolvingConstraints();
+			for (int j = involved.length; --j >= 0;) {
+				involved[j].setRemovals(v.getPositionInConstraint(j), false);
 			}
 		}
 
@@ -98,10 +100,10 @@ public final class AC3 implements Filter {
 
 				final int position = variable.getPositionInConstraint(c);
 
-				if (!constraint.getRemovals(position)) {
-					constraint.fillRemovals(false);
-					continue;
-				}
+//				if (!constraint.getRemovals(position)) {
+//					constraint.fillRemovals(false);
+//					continue;
+//				}
 
 				if (!constraint.revise(level, revisator)) {
 					effectiveRevisions++;
@@ -116,6 +118,8 @@ public final class AC3 implements Filter {
 
 		}
 
+		assert control(level);
+
 		return true;
 
 	}
@@ -128,6 +132,21 @@ public final class AC3 implements Filter {
 		for (Constraint c : problem.getConstraints()) {
 			c.fillRemovals(true);
 		}
+	}
+
+	private boolean control(int level) {
+		for (Constraint c : problem.getConstraints()) {
+			if (!(c instanceof AbstractPVRConstraint)) {
+				continue;
+			}
+			for (int i = c.getArity(); --i >= 0;) {
+				if (!c.getVariable(i).isAssigned()
+						&& ((AbstractPVRConstraint) c).revise(i, level)) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	private Variable pullVariable() {

@@ -5,7 +5,6 @@ import cspfj.problem.Variable;
 
 public abstract class AbstractPVRConstraint extends AbstractConstraint {
 
-
 	public AbstractPVRConstraint(final Variable[] scope) {
 		super(scope);
 		// removals = new boolean[getArity()];
@@ -22,8 +21,8 @@ public abstract class AbstractPVRConstraint extends AbstractConstraint {
 	public boolean revise(final int level, final RevisionHandler revisator) {
 		for (int i = getArity(); --i >= 0;) {
 			final Variable variable = getVariable(i);
-			if (!variable.isAssigned() && !supportCondition(i) && !skipRevision(i)
-					&& revise(i, level)) {
+			if (!variable.isAssigned() && !supportCondition(i)
+					&& !skipRevision(i) && revise(i, level)) {
 				if (variable.getDomainSize() <= 0) {
 					return false;
 				}
@@ -38,13 +37,18 @@ public abstract class AbstractPVRConstraint extends AbstractConstraint {
 		// return false;
 		// }
 
-		for (int y = getArity(); --y >= 0;) {
-			if (y == variablePosition ^ getRemovals(y)) {
-				return false;
-			}
-		}
-
-		return true;
+		// return getRemovals(variablePosition);
+		//		
+		
+		return false;
+//		
+//		for (int y = getArity(); --y >= 0;) {
+//			if (y == variablePosition ^ getRemovals(y)) {
+//				return false;
+//			}
+//		}
+//
+//		return true;
 	}
 
 }

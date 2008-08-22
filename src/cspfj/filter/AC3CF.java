@@ -2,7 +2,6 @@ package cspfj.filter;
 
 import java.util.ArrayDeque;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,7 +11,6 @@ import cspfj.constraint.Constraint;
 import cspfj.heuristic.VariableHeuristic;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
-import cspfj.util.Heap;
 
 /**
  * @author scand1sk
@@ -42,9 +40,6 @@ public final class AC3CF implements Filter {
 
 		queue = new ArrayDeque<Constraint>(problem.getNbConstraints());
 
-		for (Constraint c : problem.getConstraints()) {
-			c.fillRemovals(true);
-		}
 		// queue = new ArrayDeque<Constraint>();
 	}
 
@@ -52,21 +47,30 @@ public final class AC3CF implements Filter {
 		queue.clear();
 		queue.addAll(problem.getConstraintsAsCollection());
 		Arrays.fill(cstInQueue, true);
+
+		for (Constraint c : problem.getConstraints()) {
+			c.fillRemovals(true);
+		}
+
 		return reduce(level);
 	}
-
 
 	public boolean reduceAfter(final int level, final Variable variable) {
 		if (variable == null) {
 			return true;
 		}
-		queue.clear();
+		while(!queue.isEmpty()) {
+			queue.pollFirst().fillRemovals(false);
+		}
 		Arrays.fill(cstInQueue, false);
 
-		for (Constraint c : variable.getInvolvingConstraints()) {
+		final Constraint[] involving = variable.getInvolvingConstraints();
+
+		for (int i = involving.length; --i >= 0;) {
+			final Constraint c = involving[i];
 			cstInQueue[c.getId()] = true;
 			queue.add(c);
-
+			c.setRemovals(variable.getPositionInConstraint(i), true);
 		}
 		return reduce(level);
 	}
@@ -75,12 +79,17 @@ public final class AC3CF implements Filter {
 
 		@Override
 		public void revised(Constraint constraint, Variable variable) {
-			for (Constraint c : variable.getInvolvingConstraints()) {
+			final Constraint[] involving = variable.getInvolvingConstraints();
+
+			for (int i = involving.length; --i >= 0;) {
+				final Constraint c = involving[i];
+
 				if (c != constraint) {
 					if (!cstInQueue[c.getId()]) {
 						cstInQueue[c.getId()] = true;
 						queue.add(c);
 					}
+					c.setRemovals(variable.getPositionInConstraint(i), true);
 				}
 			}
 		}
@@ -102,16 +111,14 @@ public final class AC3CF implements Filter {
 				constraint.incWeight();
 				return false;
 			}
+			
+			constraint.fillRemovals(false);
 
 		}
 
 		return true;
 
 	}
-
-
-
-
 
 	public String toString() {
 		return "GAC3rm-constraint";
