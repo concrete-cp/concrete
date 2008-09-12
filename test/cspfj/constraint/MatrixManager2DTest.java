@@ -29,7 +29,7 @@ public class MatrixManager2DTest {
 		matrix2d.set(new int[] { 0, 0 }, true);
 		matrix2d.set(new int[] { 0, 2 }, true);
 
-		matrix = new MatrixManager2D(new Variable[] { var1, var2 }, matrix2d);
+		matrix = new MatrixManager2D(new Variable[] { var1, var2 }, matrix2d, false);
 		matrix.setTuple(tuple);
 	}
 

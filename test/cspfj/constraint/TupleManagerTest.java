@@ -14,6 +14,7 @@ import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 
+import cspfj.constraint.semantic.AllDifferentConstraint;
 import cspfj.problem.Variable;
 
 public class TupleManagerTest {

@@ -17,8 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package cspfj.constraint;
+package cspfj.constraint.semantic;
 
+import cspfj.constraint.AbstractPVRConstraint;
 import cspfj.problem.Variable;
 
 public final class IffConstraint extends AbstractPVRConstraint {

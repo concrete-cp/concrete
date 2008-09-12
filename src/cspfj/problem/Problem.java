@@ -28,18 +28,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
-import cspfj.constraint.ExtensionConstraint2D;
 import cspfj.constraint.ExtensionConstraintGeneral;
 import cspfj.constraint.Matrix;
-import cspfj.constraint.Matrix2D;
 import cspfj.constraint.TupleHashSet;
+import cspfj.constraint.semantic.RCConstraint;
 import cspfj.exception.FailedGenerationException;
 import cspfj.util.Waker;
 
@@ -467,11 +465,12 @@ public final class Problem implements Cloneable {
 							constraintScope.length);
 
 					if (level == 1) {
-						final Matrix2D matrix = new Matrix2D(scope[0]
-								.getDomain().length,
-								scope[1].getDomain().length, true);
-						constraint = new ExtensionConstraint2D(constraintScope,
-								matrix, false);
+//						final Matrix2D matrix = new Matrix2D(scope[0]
+//								.getDomain().length,
+//								scope[1].getDomain().length, true);
+//						constraint = new ExtensionConstraint2D(constraintScope,
+//								matrix, false);
+						constraint = new RCConstraint(constraintScope);
 					} else {
 						final Matrix matrix = new TupleHashSet(true);
 						try {

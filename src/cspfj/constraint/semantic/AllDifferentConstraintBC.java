@@ -17,12 +17,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package cspfj.constraint;
+package cspfj.constraint.semantic;
 
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Comparator;
 
+import cspfj.constraint.AbstractConstraint;
+import cspfj.constraint.Constraint;
 import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
 import cspfj.util.Heap;
