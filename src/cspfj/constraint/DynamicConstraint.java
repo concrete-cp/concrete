@@ -1,5 +1,5 @@
 package cspfj.constraint;
 
 public interface DynamicConstraint extends Constraint {
-	boolean removeTuple(int[] tuple);
+	int removeTuple(int[] tuple);
 }

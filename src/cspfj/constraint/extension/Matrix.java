@@ -1,4 +1,4 @@
-package cspfj.constraint;
+package cspfj.constraint.extension;
 
 public interface Matrix extends Cloneable {
 

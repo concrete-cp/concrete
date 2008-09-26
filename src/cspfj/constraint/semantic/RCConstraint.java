@@ -1,8 +1,9 @@
 package cspfj.constraint.semantic;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.BitSet;
+import java.util.Collection;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -18,7 +19,7 @@ public class RCConstraint extends AbstractConstraint implements
 
 	private final Interval[] sortedIntervals;
 
-	private final Map<Integer, SortedSet<Integer>> pending;
+	private final BitSet v1Validated;
 
 	public RCConstraint(Variable[] scope) {
 		super(scope);
@@ -26,9 +27,8 @@ public class RCConstraint extends AbstractConstraint implements
 		intervals = initIntervals(scope);
 		sortedIntervals = intervals.clone();
 
-		pending = new HashMap<Integer, SortedSet<Integer>>(
-				scope[0].getDomain().length);
-
+		v1Validated = new BitSet(scope[1].getDomain().length);
+		init(scope);
 	}
 
 	public RCConstraint(Variable[] scope, String name) {
@@ -37,9 +37,16 @@ public class RCConstraint extends AbstractConstraint implements
 		intervals = initIntervals(scope);
 		sortedIntervals = intervals.clone();
 
-		pending = new HashMap<Integer, SortedSet<Integer>>(
-				scope[0].getDomain().length);
+		v1Validated = new BitSet(scope[1].getDomain().length);
+		init(scope);
+	}
 
+	private void init(Variable[] scope) {
+		nbInitConflicts = new long[getArity()][];
+		nbMaxConflicts = new long[getArity()];
+		for (int i = getArity(); --i >= 0;) {
+			nbInitConflicts[i] = new long[scope[i].getDomain().length];
+		}
 	}
 
 	private static Interval[] initIntervals(final Variable[] scope) {
@@ -52,15 +59,21 @@ public class RCConstraint extends AbstractConstraint implements
 	}
 
 	@Override
-	public boolean removeTuple(int[] tuple) {
-		final int removed = intervals[tuple[0]].remove(tuple[1]);
+	public int removeTuple(int[] tuple) {
+		final Collection<Integer> removed = intervals[tuple[0]]
+				.remove(tuple[1]);
 
-		if (removed > 0) {
+		if (removed != null) {
 			Arrays.sort(sortedIntervals);
-			System.out.println(Arrays.toString(sortedIntervals));
-			return true;
+
+			for (int i : removed) {
+				tuple[1] = i;
+				addConflict(tuple);
+			}
+
+			return removed.size();
 		}
-		return false;
+		return 0;
 
 	}
 
@@ -76,80 +89,147 @@ public class RCConstraint extends AbstractConstraint implements
 
 	@Override
 	public boolean revise(int level, RevisionHandler revisator) {
+
 		final Variable v0 = getVariable(0);
 		final Variable v1 = getVariable(1);
 
-		boolean v0revised = false;
-
-		int yLB = -1;
-		int yUB = -1;
-
-		int itvPointer = 0;
-		boolean[] validated = new boolean[v0.getDomain().length];
-
-		for (int i = v1.getFirst(); i >= 0; i = v1.getNext(i)) {
-			while (itvPointer < sortedIntervals.length
-					&& sortedIntervals[itvPointer].lb < i) {
-				itvPointer++;
-			}
-			
+		// Support condition
+		if (v1.getDomainSize() > nbMaxConflicts[0]
+				&& v0.getDomainSize() > nbMaxConflicts[1]) {
+			return true;
 		}
 
-		for (int i0 = v0.getFirst(); i0 >= 0; i0 = v0.getNext(i0)) {
-			boolean found = false;
-			final Interval itv = intervals[i0];
+		v1Validated.clear();
 
-			for (int i1 = itv.lb; i1 <= itv.ub; i1++) {
-				if (v1.isPresent(i1)) {
-					found = true;
-					break;
+		int itv = 0;
+
+		boolean revised = false;
+
+		for (int i = v1.getFirst(); i >= 0 && itv < sortedIntervals.length; i = v1
+				.getNext(i)) {
+			for (; itv < sortedIntervals.length && sortedIntervals[itv].lb <= i; itv++) {
+				final Interval currentItv = sortedIntervals[itv];
+				if (v0.isPresent(currentItv.index0)) {
+					if (i <= currentItv.ub) {
+						v1Validated.set(currentItv.lb, currentItv.ub + 1);
+					} else {
+						v0.remove(currentItv.index0, level);
+						if (v0.getDomainSize() == 0) {
+							return false;
+						}
+						revised = true;
+					}
 				}
-			}
-			if (found) {
-				if (yLB > itv.lb) {
-					yLB = itv.lb;
-				}
-				if (yUB < 0 || yUB < itv.ub) {
-					yUB = itv.ub;
-				}
-			} else {
-				v0.remove(i0, level);
 			}
 		}
-
-		if (v0revised) {
-			if (v0.getDomainSize() < 1) {
-				return false;
-			}
+		
+		if (v1Validated.isEmpty()) {
+			return false;
+		}
+		
+		if (revised) {
 			revisator.revised(this, v0);
 		}
 
-		boolean v1revised = false;
-
-		for (int i1 = v1.getFirst(); i1 >= 0 && i1 < yLB; i1 = v1.getNext(i1)) {
-			v1.remove(i1, level);
-			v1revised = true;
-		}
-		for (int i1 = v1.getLast(); i1 >= 0 && i1 > yUB; i1 = v1.getPrev(i1)) {
-			v1.remove(i1, level);
-			v1revised = true;
-		}
-
-		if (v1revised) {
-			if (v1.getDomainSize() < 1) {
-				return false;
+		revised = false;
+		final int end = v1.getLast();
+		for (int i = v1.getFirst(); i >= 0 && i <= end;) {
+			if (v1Validated.get(i)) {
+				i = v1Validated.nextClearBit(i);
+			} else {
+				if (v1.isPresent(i)) {
+					v1.remove(i, level);
+					if (v1.getDomainSize() == 0) {
+						return false;
+					}
+					revised = true;
+				}
+				i = v1.getNextPresent(i);
 			}
+		}
+
+		if (revised) {
 			revisator.revised(this, v1);
 		}
 
 		return true;
 	}
 
+	// private static boolean intersect(Variable v, BitSet validated, int level)
+	// {
+	// boolean changed = false;
+	//
+	// int i = v.getFirst();
+	//
+	// while (i >= 0) {
+	//
+	// final int j = validated.nextClearBit(i);
+	// if (i == j && v.isPresent(j)) {
+	// v.remove(i, level);
+	// changed = true;
+	// } else if (j >= v.getDomain().length) {
+	// break;
+	// } else if (v.isPresent(j)) {
+	// v.remove(j, level);
+	// changed = true;
+	// }
+	// i = v.getNext(j);
+	//
+	// }
+	// return changed;
+	// }
+
+	private static boolean intersect(Variable v, BitSet validated, int level) {
+		boolean changed = false;
+		final int end = v.getLast();
+		for (int i = v.getFirst(); i >= 0 && i <= end;) {
+			if (validated.get(i)) {
+				i = validated.nextClearBit(i);
+			} else {
+				if (v.isPresent(i)) {
+					v.remove(i, level);
+					changed = true;
+				}
+				i = v.getNextPresent(i);
+			}
+		}
+		return changed;
+	}
+
+	// private static boolean intersect(Variable v, BitSet validated, int level)
+	// {
+	// boolean changed = false;
+	// for (int i = v.getFirst(); i >= 0; i = v.getNext(i)) {
+	// if (!validated.get(i)) {
+	//
+	// v.remove(i, level);
+	// changed = true;
+	//
+	// }
+	// }
+	// return changed;
+	// }
+
+	// private static boolean intersect(Variable v, BitSet validated, int level)
+	// {
+	// boolean changed = false;
+	// final int end = v.getLast();
+	// for (int i = validated.nextClearBit(0); i <= end; i = validated
+	// .nextClearBit(i + 1)) {
+	// if (v.isPresent(i)) {
+	// v.remove(i, level);
+	// changed = true;
+	// }
+	// }
+	// return changed;
+	// }
+
 	private static class Interval implements Comparable<Interval> {
 		private int lb;
 		private int ub;
 		private final int index0;
 		private SortedSet<Integer> pending;
+		private static final Collection<Integer> removed = new ArrayList<Integer>();
 
 		public Interval(int lb, int ub, int index0) {
 			this.lb = lb;
@@ -157,53 +237,51 @@ public class RCConstraint extends AbstractConstraint implements
 			this.index0 = index0;
 		}
 
-		public int incLb() {
-			int removed = 0;
-			lb++;
-			removed++;
+		public void incLb() {
+			removed.add(lb++);
 
 			if (pending != null) {
 				while (!pending.isEmpty() && pending.first() < lb) {
 					pending.remove(pending.first());
 				}
 				while (!pending.isEmpty() && pending.first() == lb) {
-					lb++;
-					removed++;
+					removed.add(lb++);
 					pending.remove(pending.first());
 				}
 			}
-			return removed;
 		}
 
-		public int decUb() {
-			int removed = 0;
-			ub--;
-			removed++;
+		public void decUb() {
+			removed.add(ub--);
 
 			if (pending != null) {
 				while (!pending.isEmpty() && pending.last() > ub) {
 					pending.remove(pending.last());
 				}
 				while (!pending.isEmpty() && pending.last() == ub) {
-					ub--;
-					removed++;
+					removed.add(ub--);
 					pending.remove(pending.last());
 				}
 			}
-			return removed;
 		}
 
-		public int remove(int value) {
-			int removed = 0;
+		public Collection<Integer> remove(final int value) {
+			removed.clear();
 			if (value == lb) {
-				removed += incLb();
+
+				incLb();
+
 			} else if (value == ub) {
-				removed += decUb();
+
+				decUb();
+
 			} else if (lb < value && value < ub) {
+
 				if (pending == null) {
 					pending = new TreeSet<Integer>();
 				}
 				pending.add(value);
+
 			}
 			return removed;
 		}
@@ -212,14 +290,14 @@ public class RCConstraint extends AbstractConstraint implements
 			return lb <= value && value <= ub;
 		}
 
-		@Override
-		public int compareTo(Interval arg0) {
-			return lb - arg0.lb;
-		}
-
 		public String toString() {
 			return index0 + ": [" + lb + ", " + ub + "]";
 		}
 
+		@Override
+		public int compareTo(Interval arg0) {
+			return lb - arg0.lb;
+		}
 	}
+
 }

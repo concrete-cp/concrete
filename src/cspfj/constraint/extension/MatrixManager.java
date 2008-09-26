@@ -1,4 +1,4 @@
-package cspfj.constraint;
+package cspfj.constraint.extension;
 
 import cspfj.problem.Variable;
 
@@ -48,10 +48,7 @@ public class MatrixManager implements Cloneable {
 	}
 
 	public boolean removeTuple(int[] tuple) {
-		if (set(tuple, false)) {
-			return true;
-		}
-		return false;
+		return set(tuple, false);
 	}
 
 	// public boolean hasSupport(final int position, final int index) {

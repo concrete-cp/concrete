@@ -4,11 +4,12 @@
  * To change the template for this generated file go to
  * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
-package cspfj.constraint;
+package cspfj.constraint.extension;
 
 import java.util.Arrays;
 import java.util.List;
 
+import cspfj.constraint.Constraint;
 import cspfj.problem.Variable;
 
 public final class TupleManager {

@@ -24,7 +24,6 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import cspfj.constraint.Constraint;
-import cspfj.heuristic.WValue;
 import cspfj.util.BooleanArray;
 import cspfj.util.OrderedChain;
 import cspfj.util.UnOrderedChain;
@@ -399,16 +398,6 @@ public final class Variable implements Cloneable {
 		return values;
 	}
 
-	public Collection<Integer> getCurrentDomainIndexes() {
-		final Collection<Integer> values = new ArrayList<Integer>();
-
-		for (int i = getFirst(); i >= 0; i = getNext(i)) {
-			values.add(i);
-		}
-
-		return values;
-	}
-
 	public String getName() {
 		return name;
 	}
@@ -425,6 +414,7 @@ public final class Variable implements Cloneable {
 			}
 			return i;
 		}
+		
 
 		return chain.getNext(index);
 	}
@@ -485,5 +475,13 @@ public final class Variable implements Cloneable {
 
 	public void assignBoolean(final int index) {
 		BooleanArray.setSingle(booleanDomain, index);
+	}
+
+	public int getNextPresent(int i) {
+		int j = getNext(i);
+		while (j >= 0 && !isPresent(j)) {
+			j = getNext(j);
+		}
+		return j;
 	}
 }

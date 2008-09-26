@@ -17,10 +17,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package cspfj.constraint;
+package cspfj.constraint.extension;
 
 import java.util.Collection;
 
+import cspfj.constraint.AbstractPVRConstraint;
+import cspfj.constraint.DynamicConstraint;
 import cspfj.problem.Variable;
 
 public class ExtensionConstraint2D extends AbstractPVRConstraint implements
@@ -32,12 +34,26 @@ public class ExtensionConstraint2D extends AbstractPVRConstraint implements
 
 	public ExtensionConstraint2D(final Variable[] scope, final Matrix2D matrix,
 			final boolean shared) {
-		super(scope);
+		this(scope, matrix, shared, false);
+	}
+	
+	public ExtensionConstraint2D(Variable[] scope, Matrix2D matrix,
+			boolean shared, boolean emptyMatrix) {
 
+		super(scope);
 		this.matrix = new MatrixManager2D(scope, matrix, shared);
 		this.matrix.setTuple(tuple);
-	}
 
+		if (emptyMatrix) {
+			nbInitConflicts = new long[getArity()][];
+			nbMaxConflicts = new long[getArity()];
+			for (int i = getArity(); --i >= 0;) {
+				nbInitConflicts[i] = new long[scope[i].getDomain().length];
+			}
+		}
+
+	}
+	
 	public ExtensionConstraint2D(final Variable[] scope, final Matrix2D matrix,
 			final String name, final boolean shared) {
 		super(scope, name);
@@ -46,9 +62,6 @@ public class ExtensionConstraint2D extends AbstractPVRConstraint implements
 		this.matrix.setTuple(tuple);
 	}
 
-	// public double getTightness() {
-	// return tightness;
-	// }
 
 	public boolean findValidTuple(final int variablePosition, final int index) {
 		assert this.isInvolved(getVariable(variablePosition));
@@ -85,8 +98,12 @@ public class ExtensionConstraint2D extends AbstractPVRConstraint implements
 	}
 
 	@Override
-	public boolean removeTuple(int[] tuple) {
-		return matrix.removeTuple(tuple);
+	public int removeTuple(int[] tuple) {
+		if (matrix.removeTuple(tuple)) {
+			addConflict(tuple);
+			return 1;
+		}
+		return 0;
 	}
 
 	@Override

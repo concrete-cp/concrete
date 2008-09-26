@@ -24,7 +24,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,9 +33,9 @@ import java.util.logging.Logger;
 import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
-import cspfj.constraint.ExtensionConstraintGeneral;
-import cspfj.constraint.Matrix;
-import cspfj.constraint.TupleHashSet;
+import cspfj.constraint.extension.ExtensionConstraintGeneral;
+import cspfj.constraint.extension.Matrix;
+import cspfj.constraint.extension.TupleHashSet;
 import cspfj.constraint.semantic.RCConstraint;
 import cspfj.exception.FailedGenerationException;
 import cspfj.util.Waker;
@@ -115,15 +114,16 @@ public final class Problem implements Cloneable {
 					expCountSupports * 1000);
 			waker.start();
 
-			final Constraint[] sorted= generator.getConstraints().toArray(new Constraint[generator.getConstraints().size()]);
-			
+			final Constraint[] sorted = generator.getConstraints().toArray(
+					new Constraint[generator.getConstraints().size()]);
+
 			Arrays.sort(sorted, new Comparator<Constraint>() {
 				@Override
 				public int compare(Constraint o1, Constraint o2) {
 					return Double.compare(o1.getInitSize(), o2.getInitSize());
 				}
 			});
-			
+
 			for (Constraint c : sorted) {
 				try {
 					c.initNbSupports();
@@ -405,11 +405,9 @@ public final class Problem implements Cloneable {
 		return null;
 	}
 
-	public Set<Constraint> addNoGoods(final boolean addConstraints) {
-		final Set<Constraint> modifiedConstraints = new HashSet<Constraint>();
-
+	public boolean addNoGoods(final boolean addConstraints) {
 		if (!useNoGoods) {
-			return modifiedConstraints;
+			return false;
 		}
 
 		// final float startNoGood = CpuMonitor.getCpuTime();
@@ -419,7 +417,7 @@ public final class Problem implements Cloneable {
 		final Variable[] levelVariables = this.levelVariables;
 
 		if (levelVariables[0] == null) {
-			return modifiedConstraints;
+			return false;
 		}
 
 		final Variable[] scope = new Variable[levelVariables.length];
@@ -427,6 +425,9 @@ public final class Problem implements Cloneable {
 
 		scope[0] = levelVariables[0];
 		tuple[0] = scope[0].getFirst();
+
+		boolean modified = false;
+		final Collection<Constraint> addedConstraints = new ArrayList<Constraint>();
 
 		for (int level = 1; level < levelVariables.length; level++) {
 			final int[] realTuple = new int[level + 1];
@@ -453,34 +454,37 @@ public final class Problem implements Cloneable {
 					if (!addConstraints) {
 						continue;
 					}
-					while (firstLost >= 0 && fv.getRemovedLevel(firstLost) != level) {
+					while (firstLost >= 0
+							&& fv.getRemovedLevel(firstLost) != level) {
 						firstLost = fv.getPrevAbsent(firstLost);
 					}
 					if (firstLost < 0) {
 						continue;
 					}
-					
+
 					final Variable[] constraintScope = new Variable[level + 1];
 					System.arraycopy(scope, 0, constraintScope, 0,
 							constraintScope.length);
 
 					if (level == 1) {
-//						final Matrix2D matrix = new Matrix2D(scope[0]
-//								.getDomain().length,
-//								scope[1].getDomain().length, true);
-//						constraint = new ExtensionConstraint2D(constraintScope,
-//								matrix, false);
-						constraint = new RCConstraint(constraintScope);
+						// final Matrix2D matrix = new Matrix2D(scope[0]
+						// .getDomain().length,
+						// scope[1].getDomain().length, true);
+						// constraint = new
+						// ExtensionConstraint2D(constraintScope,
+						// matrix, false, true);
+
+						 constraint = new RCConstraint(constraintScope);
+
+						addedConstraints.add(constraint);
+
 					} else {
 						final Matrix matrix = new TupleHashSet(true);
-						try {
-							constraint = new ExtensionConstraintGeneral(
-									constraintScope, matrix, false);
-						} catch (FailedGenerationException e) {
-							logger.info("Could not generate constraint over "
-									+ Arrays.toString(constraintScope));
-							continue;
-						}
+
+						constraint = new ExtensionConstraintGeneral(
+								constraintScope, matrix, false, true);
+
+						addedConstraints.add(constraint);
 					}
 
 				}
@@ -495,22 +499,20 @@ public final class Problem implements Cloneable {
 					}
 				}
 
-				// final float startRemoveTuple = CpuMonitor.getCpuTime();
 				for (int lostIndex = firstLost; lostIndex >= 0; lostIndex = fv
 						.getPrevAbsent(lostIndex)) {
 					if (fv.getRemovedLevel(lostIndex) == level) {
 						realTuple[currentV] = lostIndex;
 
-						if (constraint.removeTuple(realTuple)) {
-							// logger.fine(scope + tuple.toString());
-							nbNoGoods++;
-							modifiedConstraints.add(constraint);
+						final int newNogoods = constraint
+								.removeTuple(realTuple);
+						if (newNogoods > 0) {
+							nbNoGoods += newNogoods;
+							modified = true;
 						}
 					}
 
 				}
-				// removeTupleTime += CpuMonitor.getCpuTime() -
-				// startRemoveTuple;
 			}
 
 			if (levelVariables[level] == null) {
@@ -522,30 +524,25 @@ public final class Problem implements Cloneable {
 
 		}
 
-		// noGoodTime += CpuMonitor.getCpuTime() - startNoGood;
-		// if (logger.isLoggable(Level.INFO)) {
-		if (modifiedConstraints.size() > 0) {
+		if (modified) {
 			logger.fine(nbNoGoods + " nogoods");
 		}
-		// }
-		final Collection<Constraint> curCons = new ArrayList<Constraint>(
-				constraints.values());
 
-		boolean added = false;
-		for (Constraint c : modifiedConstraints) {
-			if (!curCons.contains(c)) {
+		if (!addedConstraints.isEmpty()) {
+			final Collection<Constraint> curCons = new ArrayList<Constraint>(
+					constraints.values());
+
+			for (Constraint c : addedConstraints) {
 				curCons.add(c);
-				added = true;
 			}
-		}
-		if (added) {
+
 			setConstraints(curCons);
 			updateInvolvingConstraints();
 			logger.info(getNbConstraints() + " constraints, " + getMaxArity()
 					+ " max arity");
 		}
 
-		return modifiedConstraints;
+		return modified;
 	}
 
 	public int getNbNoGoods() {

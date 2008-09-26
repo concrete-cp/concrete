@@ -102,22 +102,22 @@ public final class MGACRec extends AbstractSolver {
 
 		final int domainSizeBefore = selectedVariable.getDomainSize();
 
-		//if (logger.isLoggable(Level.FINE)) {
-			logger.fine(level + " : " + selectedVariable + " <- "
-					+ selectedVariable.getDomain()[selectedIndex] + "("
-					+ getNbBacktracks() + "/" + getMaxBacktracks() + ")");
-		//}
+		// if (logger.isLoggable(Level.FINE)) {
+		logger.fine(level + " : " + selectedVariable + " <- "
+				+ selectedVariable.getDomain()[selectedIndex] + "("
+				+ getNbBacktracks() + "/" + getMaxBacktracks() + ")");
+		// }
 
-//		if (filter.ensureAC()) {
-			selectedVariable.assign(selectedIndex, problem);
-//		} else if (!selectedVariable.assignNotAC(selectedIndex, problem)) {
-//			selectedVariable.unassign(problem);
-//			selectedVariable.remove(selectedIndex, level);
-//
-//			checkBacktracks();
-//
-//			return mac(level, selectedVariable);
-//		}
+		// if (filter.ensureAC()) {
+		selectedVariable.assign(selectedIndex, problem);
+		// } else if (!selectedVariable.assignNotAC(selectedIndex, problem)) {
+		// selectedVariable.unassign(problem);
+		// selectedVariable.remove(selectedIndex, level);
+		//
+		// checkBacktracks();
+		//
+		// return mac(level, selectedVariable);
+		// }
 
 		problem.setLevelVariables(level, selectedVariable);
 
@@ -225,18 +225,9 @@ public final class MGACRec extends AbstractSolver {
 					.info("Took " + macTime + "s (" + (maxBT / macTime)
 							+ " bps)");
 			maxBT *= 1.5;
-			final Set<Constraint> modifiedConstraints = problem.addNoGoods(false);
+			problem.addNoGoods(false);
 			problem.restoreAll(1);
 
-			Thread.interrupted();
-			try {
-				logger.info("Updating nb supports");
-				for (Constraint c : modifiedConstraints) {
-					c.initNbSupports();
-				}
-			} catch (InterruptedException e) {
-
-			}
 			try {
 				if (!filter.reduceAll(0)) {
 					break;
@@ -253,7 +244,7 @@ public final class MGACRec extends AbstractSolver {
 		return getNbSolutions() > 0;
 
 	}
-	
+
 	public synchronized void collectStatistics() {
 		chronometer.validateChrono();
 		statistics.putAll(filter.getStatistics());

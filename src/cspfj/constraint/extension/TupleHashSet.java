@@ -1,4 +1,4 @@
-package cspfj.constraint;
+package cspfj.constraint.extension;
 
 import java.math.BigInteger;
 import java.util.ArrayList;

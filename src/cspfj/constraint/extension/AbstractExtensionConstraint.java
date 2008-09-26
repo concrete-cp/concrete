@@ -4,8 +4,10 @@
  * To change the template for this generated file go to
  * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
-package cspfj.constraint;
+package cspfj.constraint.extension;
 
+import cspfj.constraint.AbstractAC3Constraint;
+import cspfj.constraint.DynamicConstraint;
 import cspfj.problem.Variable;
 
 public abstract class AbstractExtensionConstraint extends AbstractAC3Constraint
@@ -32,8 +34,12 @@ public abstract class AbstractExtensionConstraint extends AbstractAC3Constraint
 	}
 
 	@Override
-	public boolean removeTuple(int[] tuple) {
-		return matrix.removeTuple(tuple);
+	public int removeTuple(int[] tuple) {
+		if (matrix.removeTuple(tuple)) {
+			addConflict(tuple);
+			return 1;
+		}
+		return 0;
 	}
 
 	@Override

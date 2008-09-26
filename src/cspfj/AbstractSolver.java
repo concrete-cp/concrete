@@ -30,7 +30,7 @@ import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import cspfj.constraint.AbstractConstraint;
-import cspfj.constraint.MatrixManager2D;
+import cspfj.constraint.extension.MatrixManager2D;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.BackedFilter;
 import cspfj.filter.Filter;

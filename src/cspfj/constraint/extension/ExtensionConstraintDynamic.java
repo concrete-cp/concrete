@@ -17,14 +17,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package cspfj.constraint;
+package cspfj.constraint.extension;
 
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.logging.Logger;
 
-import cspfj.constraint.MatrixManagerDynamic.LLIterator;
+import cspfj.constraint.AbstractConstraint;
+import cspfj.constraint.DynamicConstraint;
+import cspfj.constraint.extension.MatrixManagerDynamic.LLIterator;
 import cspfj.exception.FailedGenerationException;
 import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
@@ -40,7 +42,8 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 			.getLogger(ExtensionConstraintDynamic.class.getSimpleName());
 
 	public ExtensionConstraintDynamic(final Variable[] scope,
-			final TupleHashSet matrix, final boolean shared) throws FailedGenerationException {
+			final TupleHashSet matrix, final boolean shared)
+			throws FailedGenerationException {
 		super(scope);
 		this.dynamic = new MatrixManagerDynamic(scope, matrix, shared);
 		found = initFound();
@@ -159,7 +162,6 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 		}
 		final long[] nbMaxConflicts = new long[getArity()];
 
-		
 		final long size = currentSize();
 		if (size < 0) {
 			return;
@@ -207,7 +209,11 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 	}
 
 	@Override
-	public boolean removeTuple(int[] tuple) {
-		return dynamic.removeTuple(tuple);
+	public int removeTuple(int[] tuple) {
+		if (dynamic.removeTuple(tuple)) {
+			addConflict(tuple);
+			return 1;
+		}
+		return 0;
 	}
 }

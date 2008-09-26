@@ -17,12 +17,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package cspfj.constraint;
+package cspfj.constraint.extension;
 
 import java.util.Arrays;
 import java.util.Collection;
 
-import cspfj.exception.FailedGenerationException;
 import cspfj.problem.Variable;
 
 public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
@@ -31,15 +30,25 @@ public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
 	// .getLogger(ExtensionConstraintGeneral.class.getSimpleName());
 
 	public ExtensionConstraintGeneral(final Variable[] scope,
-			final Matrix matrix, final boolean shared)
-			throws FailedGenerationException {
-		super(scope, new MatrixManager(scope, matrix, shared));
+			final Matrix matrix, final boolean shared) {
+		this(scope, matrix, shared, false);
 	}
 
 	public ExtensionConstraintGeneral(final Variable[] scope,
-			final Matrix matrix, final String name, final boolean shared)
-			throws FailedGenerationException {
+			final Matrix matrix, final String name, final boolean shared) {
 		super(scope, new MatrixManager(scope, matrix, shared), name);
+	}
+
+	public ExtensionConstraintGeneral(Variable[] scope, Matrix matrix,
+			boolean shared, boolean emptyMatrix) {
+		super(scope, new MatrixManager(scope, matrix, shared));
+		if (emptyMatrix) {
+			nbInitConflicts = new long[getArity()][];
+			nbMaxConflicts = new long[getArity()];
+			for (int i = getArity(); --i >= 0;) {
+				nbInitConflicts[i] = new long[scope[i].getDomain().length];
+			}
+		}
 	}
 
 	public ExtensionConstraintGeneral deepCopy(

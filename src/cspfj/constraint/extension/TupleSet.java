@@ -1,4 +1,4 @@
-package cspfj.constraint;
+package cspfj.constraint.extension;
 
 import java.util.AbstractSet;
 import java.util.Arrays;

@@ -19,9 +19,11 @@
 package cspfj.filter;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import cspfj.AbstractSolver;
+import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -78,11 +80,11 @@ public final class CDC extends AbstractSAC {
 			problem.setLevelVariables(level, variable);
 			nbSingletonTests++;
 			if (filter.reduceAfter(level + 1, variable)) {
-				final int initNg = problem.getNbNoGoods();
 
-				problem.addNoGoods(addConstraints);
+				if (problem.addNoGoods(addConstraints)) {
+					changedGraph = true;
+				}
 
-				changedGraph = problem.getNbNoGoods() > initNg;
 				variable.unassign(problem);
 				problem.restore(level + 1);
 			} else {

@@ -100,10 +100,10 @@ public final class AC3 implements Filter {
 
 				final int position = variable.getPositionInConstraint(c);
 
-//				if (!constraint.getRemovals(position)) {
-//					constraint.fillRemovals(false);
-//					continue;
-//				}
+				// if (!constraint.getRemovals(position)) {
+				// constraint.fillRemovals(false);
+				// continue;
+				// }
 
 				if (!constraint.revise(level, revisator)) {
 					effectiveRevisions++;
@@ -134,14 +134,34 @@ public final class AC3 implements Filter {
 		}
 	}
 
+	private boolean revised;
+
 	private boolean control(int level) {
-		for (Constraint c : problem.getConstraints()) {
-			if (!(c instanceof AbstractPVRConstraint)) {
-				continue;
+
+		final RevisionHandler revisator = new RevisionHandler() {
+
+			@Override
+			public void revised(Constraint constraint, Variable variable) {
+				revised = true;
+
 			}
-			for (int i = c.getArity(); --i >= 0;) {
-				if (!c.getVariable(i).isAssigned()
-						&& ((AbstractPVRConstraint) c).revise(i, level)) {
+
+		};
+
+		revised = false;
+
+		for (Constraint c : problem.getConstraints()) {
+
+			if (c instanceof AbstractPVRConstraint) {
+				for (int i = c.getArity(); --i >= 0;) {
+					if (!c.getVariable(i).isAssigned()
+							&& ((AbstractPVRConstraint) c).revise(i, level)) {
+						return false;
+					}
+				}
+			} else {
+				c.revise(level, revisator);
+				if (revised) {
 					return false;
 				}
 			}

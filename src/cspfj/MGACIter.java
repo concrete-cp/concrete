@@ -260,21 +260,9 @@ public final class MGACIter extends AbstractSolver {
 			// logger.info(constraintRepartition());
 			maxBT *= 1.5;
 
-			final Set<Constraint> modifiedConstraints = problem
-					.addNoGoods(false);
+			problem.addNoGoods(false);
 			problem.restoreAll(1);
 
-			if (!modifiedConstraints.isEmpty()) {
-				Thread.interrupted();
-				try {
-					logger.info("Updating nb supports");
-					for (Constraint c : modifiedConstraints) {
-						c.initNbSupports();
-					}
-				} catch (InterruptedException e) {
-
-				}
-			}
 			try {
 				if (!filter.reduceAll(0)) {
 					break;

@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.logging.Logger;
 
+import cspfj.constraint.extension.TupleManager;
 import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
 
@@ -429,5 +430,16 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 
 	public int hashCode() {
 		return id;
+	}
+
+	public void addConflict(int[] tuple) {
+		if (nbInitConflicts == null) {
+			return;
+		}
+		for (int p = arity; --p >= 0;) {
+			if (nbInitConflicts[p][tuple[p]]++ == nbMaxConflicts[p]) {
+				nbMaxConflicts[p]++;
+			}
+		}
 	}
 }
