@@ -260,7 +260,7 @@ public final class MGACIter extends AbstractSolver {
 			// logger.info(constraintRepartition());
 			maxBT *= 1.5;
 
-			problem.addNoGoods(false);
+			problem.addNoGoods(Problem.LearnMethod.NONE);
 			problem.restoreAll(1);
 
 			try {

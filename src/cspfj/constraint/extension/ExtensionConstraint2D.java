@@ -20,6 +20,7 @@
 package cspfj.constraint.extension;
 
 import java.util.Collection;
+import java.util.List;
 
 import cspfj.constraint.AbstractPVRConstraint;
 import cspfj.constraint.DynamicConstraint;
@@ -36,7 +37,7 @@ public class ExtensionConstraint2D extends AbstractPVRConstraint implements
 			final boolean shared) {
 		this(scope, matrix, shared, false);
 	}
-	
+
 	public ExtensionConstraint2D(Variable[] scope, Matrix2D matrix,
 			boolean shared, boolean emptyMatrix) {
 
@@ -53,7 +54,7 @@ public class ExtensionConstraint2D extends AbstractPVRConstraint implements
 		}
 
 	}
-	
+
 	public ExtensionConstraint2D(final Variable[] scope, final Matrix2D matrix,
 			final String name, final boolean shared) {
 		super(scope, name);
@@ -61,7 +62,6 @@ public class ExtensionConstraint2D extends AbstractPVRConstraint implements
 		this.matrix = new MatrixManager2D(scope, matrix, shared);
 		this.matrix.setTuple(tuple);
 	}
-
 
 	public boolean findValidTuple(final int variablePosition, final int index) {
 		assert this.isInvolved(getVariable(variablePosition));
@@ -118,6 +118,19 @@ public class ExtensionConstraint2D extends AbstractPVRConstraint implements
 		constraint.matrix = (MatrixManager2D) matrix.deepCopy(constraint
 				.getScope(), constraint.tuple);
 		return constraint;
+	}
+
+	@Override
+	public int removeTuples(int[] fixed, int mobile, int[] values) {
+		int removed = 0;
+		for (int i : values) {
+			fixed[mobile] = i;
+			if (removeTuple(fixed) > 0
+					&& getVariable(mobile).getRemovedLevel(i) > 0) {
+				removed++;
+			}
+		}
+		return removed;
 	}
 
 	@Override

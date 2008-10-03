@@ -83,7 +83,7 @@ public final class Variable implements Cloneable {
 
 	private int[] positionInConstraint;
 
-	private int[] weights;
+//	private int[] weights;
 
 	// private static final Logger logger = Logger.getLogger("cspfj.Variable");
 
@@ -126,9 +126,9 @@ public final class Variable implements Cloneable {
 		absents = new UnOrderedChain(domain.length);
 	}
 
-	public void attachWeights(int[] weights) {
-		this.weights = weights;
-	}
+//	public void attachWeights(int[] weights) {
+//		this.weights = weights;
+//	}
 
 	/**
 	 * Réinitialise le générateur d'ID (pour charger un nouveau problème).
@@ -315,14 +315,14 @@ public final class Variable implements Cloneable {
 		chain.remove(index);
 		absents.add(index);
 
-		if (weights != null) {
-			weights[index]++;
-		}
+//		if (weights != null) {
+//			weights[index]++;
+//		}
 	}
 
-	public int getWeight(final int index) {
-		return weights[index];
-	}
+//	public int getWeight(final int index) {
+//		return weights[index];
+//	}
 
 	/**
 	 * @return L'ID de la variable
@@ -427,6 +427,14 @@ public final class Variable implements Cloneable {
 		return absents.getPrev(index);
 	}
 
+	public int getFirstAbsent() {
+		return absents.getFirst();
+	}
+	
+	public int getNextAbsent(final int index) {
+		return absents.getNext(index);
+	}
+	
 	public int[] getBooleanDomain() {
 		return booleanDomain;
 	}

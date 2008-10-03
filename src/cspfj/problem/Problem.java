@@ -33,8 +33,10 @@ import java.util.logging.Logger;
 import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
+import cspfj.constraint.extension.ExtensionConstraint2D;
 import cspfj.constraint.extension.ExtensionConstraintGeneral;
 import cspfj.constraint.extension.Matrix;
+import cspfj.constraint.extension.Matrix2D;
 import cspfj.constraint.extension.TupleHashSet;
 import cspfj.constraint.semantic.RCConstraint;
 import cspfj.exception.FailedGenerationException;
@@ -70,6 +72,8 @@ public final class Problem implements Cloneable {
 	private int maxCId;
 
 	private int nbNoGoods = 0;
+
+	private int[] lost;
 
 	public Problem() {
 		super();
@@ -173,6 +177,7 @@ public final class Problem implements Cloneable {
 				maxVId = var.getId();
 			}
 		}
+		lost = new int[maxDomainSize - 1];
 
 		this.variableArray = new Variable[maxVId + 1];
 		for (Variable var : vars) {
@@ -374,26 +379,48 @@ public final class Problem implements Cloneable {
 	//
 	// public static float removeTupleTime = 0;
 
-	private static <E> int arrayContains(final E[] array, final int end,
-			final E elt) {
-		for (int i = end; --i >= 0;) {
-			if (array[i] == elt) {
-				return i;
-			}
-		}
-		return -1;
-	}
+	// private static <E> int arrayContains(final E[] array, final int end,
+	// final E elt) {
+	// for (int i = end; --i >= 0;) {
+	// if (array[i] == elt) {
+	// return i;
+	// }
+	// }
+	// return -1;
+	// }
+	//
+	// private final static DynamicConstraint findDynamicConstraint(
+	// final Variable[] scope, final int stopScope) {
+	//
+	// for (Constraint c : scope[0].getInvolvingConstraints()) {
+	// if (c.getArity() != stopScope || !(c instanceof DynamicConstraint)) {
+	// continue;
+	// }
+	// boolean ok = true;
+	// for (int i = stopScope; --i >= 1;) {
+	// if (!c.isInvolved(scope[i])) {
+	// ok = false;
+	// break;
+	// }
+	// }
+	// if (ok) {
+	// return (DynamicConstraint) c;
+	// }
+	// }
+	// return null;
+	// }
 
 	private final static DynamicConstraint findDynamicConstraint(
-			final Variable[] scope, final int stopScope) {
+			final Set<Variable> scope, final Variable additionalConstraint) {
 
-		for (Constraint c : scope[0].getInvolvingConstraints()) {
-			if (c.getArity() != stopScope || !(c instanceof DynamicConstraint)) {
+		for (Constraint c : additionalConstraint.getInvolvingConstraints()) {
+			if (c.getArity() != scope.size() + 1
+					|| !(c instanceof DynamicConstraint)) {
 				continue;
 			}
 			boolean ok = true;
-			for (int i = stopScope; --i >= 1;) {
-				if (!c.isInvolved(scope[i])) {
+			for (Variable v : c.getScope()) {
+				if (v != additionalConstraint && !scope.contains(v)) {
 					ok = false;
 					break;
 				}
@@ -405,26 +432,199 @@ public final class Problem implements Cloneable {
 		return null;
 	}
 
-	public boolean addNoGoods(final boolean addConstraints) {
+	// public boolean addNoGoods(final boolean addConstraints) {
+	// if (!useNoGoods) {
+	// return false;
+	// }
+	//
+	// final Variable[] levelVariables = this.levelVariables;
+	//
+	// if (levelVariables[0] == null) {
+	// return false;
+	// }
+	//
+	// final Variable[] scope = new Variable[levelVariables.length];
+	// final int[] tuple = new int[levelVariables.length];
+	//
+	// scope[0] = levelVariables[0];
+	// tuple[0] = scope[0].getFirst();
+	//
+	// boolean modified = false;
+	// final Collection<Constraint> addedConstraints = new
+	// ArrayList<Constraint>();
+	//
+	// for (int level = 1; level < levelVariables.length; level++) {
+	// final int[] realTuple = new int[level + 1];
+	// for (Variable fv : variableArray) {
+	// // logger.fine("checking " +
+	// // getVariable(levelVariables[level-1]));
+	//
+	// if (arrayContains(scope, level, fv) >= 0) {
+	// continue;
+	// }
+	// scope[level] = fv;
+	//
+	// int firstLost = fv.getLastAbsent();
+	// while (firstLost >= 0 && fv.getRemovedLevel(firstLost) != level) {
+	// firstLost = fv.getPrevAbsent(firstLost);
+	// }
+	// if (firstLost < 0) {
+	// continue;
+	// }
+	//
+	// DynamicConstraint constraint = findDynamicConstraint(scope,
+	// level + 1);
+	//
+	// if (constraint == null) {
+	// if (!addConstraints) {
+	// continue;
+	// }
+	//
+	// final Variable[] constraintScope = Arrays.copyOfRange(
+	// scope, 0, level + 1);
+	//
+	// if (level == 1) {
+	// // final Matrix2D matrix = new Matrix2D(scope[0]
+	// // .getDomain().length,
+	// // scope[1].getDomain().length, true);
+	// // constraint = new
+	// // ExtensionConstraint2D(constraintScope,
+	// // matrix, false, true);
+	//
+	// constraint = new RCConstraint(constraintScope);
+	//
+	// addedConstraints.add(constraint);
+	//
+	// } else {
+	// final Matrix matrix = new TupleHashSet(true);
+	//
+	// constraint = new ExtensionConstraintGeneral(
+	// constraintScope, matrix, false, true);
+	//
+	// addedConstraints.add(constraint);
+	// }
+	//
+	// }
+	//
+	// int currentV = -1;
+	// for (int i = level + 1; --i >= 0;) {
+	// if (constraint.getVariable(i) == fv) {
+	// currentV = i;
+	// } else {
+	// realTuple[i] = tuple[arrayContains(scope, level + 1,
+	// constraint.getVariable(i))];
+	// }
+	// }
+	//
+	// int nbLost = 0;
+	//
+	// for (int lostIndex = firstLost; lostIndex >= 0; lostIndex = fv
+	// .getPrevAbsent(lostIndex)) {
+	// if (fv.getRemovedLevel(lostIndex) == level) {
+	// lost[nbLost++] = lostIndex;
+	// }
+	//
+	// }
+	//
+	// if (nbLost > 0) {
+	// final int newNogoods = constraint.removeTuples(realTuple,
+	// currentV, Arrays.copyOfRange(lost, 0, nbLost));
+	// if (newNogoods > 0) {
+	// nbNoGoods += newNogoods;
+	// modified = true;
+	// }
+	// }
+	//
+	// }
+	//
+	// if (levelVariables[level] == null) {
+	// break;
+	//
+	// }
+	// scope[level] = levelVariables[level];
+	// tuple[level] = levelVariables[level].getFirst();
+	//
+	// }
+	//
+	// if (modified) {
+	// logger.fine(nbNoGoods + " nogoods");
+	//
+	// if (!addedConstraints.isEmpty()) {
+	// final Collection<Constraint> curCons = new ArrayList<Constraint>(
+	// constraints.values());
+	//
+	// for (Constraint c : addedConstraints) {
+	// curCons.add(c);
+	// }
+	//
+	// setConstraints(curCons);
+	// updateInvolvingConstraints();
+	// logger.info(getNbConstraints() + " constraints, "
+	// + getMaxArity() + " max arity");
+	// }
+	// }
+	// return modified;
+	// }
+
+	private final HashMap<Variable, Integer> scope = new HashMap<Variable, Integer>();
+
+	private final DynamicConstraint learnConstraint(final Set<Variable> scope,
+			final Variable fv, final LearnMethod addConstraints) {
+		final DynamicConstraint constraint = findDynamicConstraint(scope, fv);
+
+		if (constraint == null) {
+			if (addConstraints == LearnMethod.NONE) {
+				return null;
+			}
+
+			final int level = scope.size();
+			final Variable[] constraintScope = scope
+					.toArray(new Variable[level + 1]);
+			constraintScope[level] = fv;
+
+			if (level == 1) {
+
+				if (addConstraints == LearnMethod.RC) {
+					return new RCConstraint(constraintScope);
+				}
+
+				final Matrix2D matrix = new Matrix2D(constraintScope[0]
+						.getDomain().length,
+						constraintScope[1].getDomain().length, true);
+				return new ExtensionConstraint2D(constraintScope, matrix,
+						false, true);
+
+			}
+
+			if (addConstraints == LearnMethod.EXTENSION) {
+
+				final Matrix matrix = new TupleHashSet(true);
+
+				return new ExtensionConstraintGeneral(constraintScope, matrix,
+						false, true);
+
+			}
+
+		}
+		return constraint;
+	}
+
+	public boolean addNoGoods(final LearnMethod addConstraints) {
 		if (!useNoGoods) {
 			return false;
 		}
 
-		// final float startNoGood = CpuMonitor.getCpuTime();
-
-		// int nbNoGoods = 0;
-
 		final Variable[] levelVariables = this.levelVariables;
+		final int[] lost = this.lost;
+		final Map<Variable, Integer> scope = this.scope;
 
 		if (levelVariables[0] == null) {
 			return false;
 		}
 
-		final Variable[] scope = new Variable[levelVariables.length];
-		final int[] tuple = new int[levelVariables.length];
+		scope.clear();
 
-		scope[0] = levelVariables[0];
-		tuple[0] = scope[0].getFirst();
+		scope.put(levelVariables[0], levelVariables[0].getFirst());
 
 		boolean modified = false;
 		final Collection<Constraint> addedConstraints = new ArrayList<Constraint>();
@@ -435,113 +635,87 @@ public final class Problem implements Cloneable {
 				// logger.fine("checking " +
 				// getVariable(levelVariables[level-1]));
 
-				if (arrayContains(scope, level, fv) >= 0) {
+				if (scope.containsKey(fv)) {
 					continue;
 				}
 
 				int firstLost = fv.getLastAbsent();
+				while (firstLost >= 0 && fv.getRemovedLevel(firstLost) != level) {
+					firstLost = fv.getPrevAbsent(firstLost);
+				}
 				if (firstLost < 0) {
 					continue;
 				}
 
-				// final float startFindConstraint = CpuMonitor.getCpuTime();
-				scope[level] = fv;
-
-				DynamicConstraint constraint = findDynamicConstraint(scope,
-						level + 1);
+				final DynamicConstraint constraint = learnConstraint(scope
+						.keySet(), fv, addConstraints);
 
 				if (constraint == null) {
-					if (!addConstraints) {
-						continue;
-					}
-					while (firstLost >= 0
-							&& fv.getRemovedLevel(firstLost) != level) {
-						firstLost = fv.getPrevAbsent(firstLost);
-					}
-					if (firstLost < 0) {
-						continue;
-					}
-
-					final Variable[] constraintScope = new Variable[level + 1];
-					System.arraycopy(scope, 0, constraintScope, 0,
-							constraintScope.length);
-
-					if (level == 1) {
-						// final Matrix2D matrix = new Matrix2D(scope[0]
-						// .getDomain().length,
-						// scope[1].getDomain().length, true);
-						// constraint = new
-						// ExtensionConstraint2D(constraintScope,
-						// matrix, false, true);
-
-						 constraint = new RCConstraint(constraintScope);
-
-						addedConstraints.add(constraint);
-
-					} else {
-						final Matrix matrix = new TupleHashSet(true);
-
-						constraint = new ExtensionConstraintGeneral(
-								constraintScope, matrix, false, true);
-
-						addedConstraints.add(constraint);
-					}
-
+					continue;
 				}
+
+				final boolean newConstraint = constraint.getId() > getMaxCId();
 
 				int currentV = -1;
 				for (int i = level + 1; --i >= 0;) {
-					if (constraint.getVariable(i) == fv) {
+					final Variable var = constraint.getVariable(i);
+					if (var == fv) {
 						currentV = i;
 					} else {
-						realTuple[i] = tuple[arrayContains(scope, level + 1,
-								constraint.getVariable(i))];
+						realTuple[i] = scope.get(var);
 					}
 				}
+
+				int nbLost = 0;
 
 				for (int lostIndex = firstLost; lostIndex >= 0; lostIndex = fv
 						.getPrevAbsent(lostIndex)) {
-					if (fv.getRemovedLevel(lostIndex) == level) {
-						realTuple[currentV] = lostIndex;
-
-						final int newNogoods = constraint
-								.removeTuple(realTuple);
-						if (newNogoods > 0) {
-							nbNoGoods += newNogoods;
-							modified = true;
-						}
+					if (fv.getRemovedLevel(lostIndex) <= level) {
+						lost[nbLost++] = lostIndex;
 					}
 
 				}
+
+				if (nbLost == 0) {
+					continue;
+				}
+				final int newNogoods = constraint.removeTuples(realTuple,
+						currentV, Arrays.copyOfRange(lost, 0, nbLost));
+				if (newNogoods == 0) {
+					continue;
+				}
+				nbNoGoods += newNogoods;
+				modified = true;
+				if (newConstraint) {
+					logger.fine("Added " + constraint);
+					addedConstraints.add(constraint);
+				}
+
 			}
 
 			if (levelVariables[level] == null) {
 				break;
-
 			}
-			scope[level] = levelVariables[level];
-			tuple[level] = levelVariables[level].getFirst();
+			scope.put(levelVariables[level], levelVariables[level].getFirst());
 
 		}
 
 		if (modified) {
 			logger.fine(nbNoGoods + " nogoods");
-		}
 
-		if (!addedConstraints.isEmpty()) {
-			final Collection<Constraint> curCons = new ArrayList<Constraint>(
-					constraints.values());
+			if (!addedConstraints.isEmpty()) {
+				final Collection<Constraint> curCons = new ArrayList<Constraint>(
+						constraints.values());
 
-			for (Constraint c : addedConstraints) {
-				curCons.add(c);
+				for (Constraint c : addedConstraints) {
+					curCons.add(c);
+				}
+
+				setConstraints(curCons);
+				updateInvolvingConstraints();
+				logger.info(getNbConstraints() + " constraints");
 			}
-
-			setConstraints(curCons);
-			updateInvolvingConstraints();
-			logger.info(getNbConstraints() + " constraints, " + getMaxArity()
-					+ " max arity");
 		}
-
 		return modified;
 	}
 
@@ -568,12 +742,6 @@ public final class Problem implements Cloneable {
 	public int getMaxArity() {
 		return maxArity;
 	}
-
-	// public void clearNoGoods() {
-	// for (Constraint c : getConstraints()) {
-	// c.clearNoGoods();
-	// }
-	// }
 
 	public static Problem activeProblem(final Problem problem) {
 		return activeProblem(problem, 0);
@@ -737,4 +905,22 @@ public final class Problem implements Cloneable {
 	//
 	// return extConstraints;
 	// }
+	public static enum LearnMethod {
+		NONE, EXTENSION, RC, BIN
+	}
+
+	public static void main(String[] args) {
+		int[] t = { 1, 3, 5 };
+		int n = t.length;
+		for (int i = 1; i < n; i++) {
+			swap(t, i, n - 1 - i);
+		}
+		System.out.print(Arrays.toString(t));
+	}
+
+	private static void swap(int[] t, int a, int b) {
+		int tmp = t[a];
+		t[a] = t[b];
+		t[b] = tmp;
+	}
 }

@@ -22,6 +22,7 @@ package cspfj.constraint.extension;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
+import java.util.List;
 import java.util.logging.Logger;
 
 import cspfj.constraint.AbstractConstraint;
@@ -215,5 +216,15 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 			return 1;
 		}
 		return 0;
+	}
+	
+	@Override
+	public int removeTuples(int[] fixed, int mobile, int[] values) {
+		int removed = 0;
+		for (int i : values) {
+			fixed[mobile] = i;
+			removed += removeTuple(fixed);
+		}
+		return removed;
 	}
 }

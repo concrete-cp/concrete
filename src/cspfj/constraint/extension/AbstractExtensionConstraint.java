@@ -6,6 +6,8 @@
  */
 package cspfj.constraint.extension;
 
+import java.util.List;
+
 import cspfj.constraint.AbstractAC3Constraint;
 import cspfj.constraint.DynamicConstraint;
 import cspfj.problem.Variable;
@@ -49,5 +51,15 @@ public abstract class AbstractExtensionConstraint extends AbstractAC3Constraint
 
 	public String getType() {
 		return super.getType() + " w/ " + matrix.getType();
+	}
+
+	@Override
+	public int removeTuples(int[] fixed, int mobile, int[] values) {
+		int removed = 0;
+		for (int i : values) {
+			fixed[mobile] = i;
+			removed += removeTuple(fixed);
+		}
+		return removed;
 	}
 }

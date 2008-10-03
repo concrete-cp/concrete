@@ -225,7 +225,7 @@ public final class MGACRec extends AbstractSolver {
 					.info("Took " + macTime + "s (" + (maxBT / macTime)
 							+ " bps)");
 			maxBT *= 1.5;
-			problem.addNoGoods(false);
+			problem.addNoGoods(Problem.LearnMethod.NONE);
 			problem.restoreAll(1);
 
 			try {

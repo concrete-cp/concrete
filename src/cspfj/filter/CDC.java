@@ -19,11 +19,11 @@
 package cspfj.filter;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import cspfj.AbstractSolver;
 import cspfj.constraint.Constraint;
+import cspfj.constraint.semantic.RCConstraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -35,16 +35,16 @@ public final class CDC extends AbstractSAC {
 
 	private final static Logger logger = Logger.getLogger(CDC.class.getName());
 
-	private final boolean addConstraints;
+	private final Problem.LearnMethod addConstraints;
 
 	private int addedConstraints = 0;
 
 	public CDC(Problem problem, Filter filter) {
 		super(problem, filter);
 		addConstraints = AbstractSolver.parameters
-				.containsKey("cdc.addConstraints")
-				&& Boolean.valueOf(AbstractSolver.parameters
-						.get("cdc.addConstraints"));
+				.containsKey("cdc.addConstraints") ? Problem.LearnMethod
+				.valueOf(AbstractSolver.parameters.get("cdc.addConstraints"))
+				: Problem.LearnMethod.NONE;
 	}
 
 	@Override
@@ -56,6 +56,11 @@ public final class CDC extends AbstractSAC {
 		} finally {
 			addedConstraints += problem.getNbConstraints() - nbC;
 		}
+		// for (Constraint c : problem.getConstraints()) {
+		// if (c instanceof RCConstraint) {
+		// ((RCConstraint) c).flushPending();
+		// }
+		// }
 		return result;
 	}
 
@@ -107,6 +112,6 @@ public final class CDC extends AbstractSAC {
 	}
 
 	public String toString() {
-		return (addConstraints ? "C" : "") + "DC w/ " + filter;
+		return "DC w/ " + filter + " L " + addConstraints;
 	}
 }
