@@ -22,7 +22,9 @@ package cspfj.problem;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
+import cspfj.constraint.AbstractAC3Constraint;
 import cspfj.constraint.Constraint;
 import cspfj.util.BooleanArray;
 import cspfj.util.OrderedChain;
@@ -36,7 +38,9 @@ public final class Variable implements Cloneable {
 	/**
 	 * Contraintes impliquant la variable.
 	 */
-	private Constraint constraints[];
+	private Constraint[] constraints;
+
+	private AbstractAC3Constraint[] eventConstraints;
 
 	/**
 	 * Domaine de la variable (ensemble de valeurs).
@@ -83,7 +87,7 @@ public final class Variable implements Cloneable {
 
 	private int[] positionInConstraint;
 
-//	private int[] weights;
+	// private int[] weights;
 
 	// private static final Logger logger = Logger.getLogger("cspfj.Variable");
 
@@ -126,9 +130,9 @@ public final class Variable implements Cloneable {
 		absents = new UnOrderedChain(domain.length);
 	}
 
-//	public void attachWeights(int[] weights) {
-//		this.weights = weights;
-//	}
+	// public void attachWeights(int[] weights) {
+	// this.weights = weights;
+	// }
 
 	/**
 	 * Réinitialise le générateur d'ID (pour charger un nouveau problème).
@@ -153,6 +157,17 @@ public final class Variable implements Cloneable {
 	public void setInvolvingConstraints(final Constraint[] constraints2) {
 		this.constraints = constraints2;
 
+		if (AbstractAC3Constraint.useValueRemovalEvents) {
+			for (int i = constraints2.length; --i >= 0;) {
+				if (constraints2[i] instanceof AbstractAC3Constraint) {
+					if (eventConstraints == null) {
+						eventConstraints = new AbstractAC3Constraint[constraints2.length];
+					}
+					eventConstraints[i] = (AbstractAC3Constraint) constraints2[i];
+				}
+			}
+
+		}
 		positionInConstraint = new int[constraints2.length];
 		for (int i = constraints2.length; --i >= 0;) {
 			updatePositionInConstraint(i);
@@ -315,14 +330,22 @@ public final class Variable implements Cloneable {
 		chain.remove(index);
 		absents.add(index);
 
-//		if (weights != null) {
-//			weights[index]++;
-//		}
+		if (eventConstraints != null) {
+			for (int i = eventConstraints.length; --i >= 0;) {
+				if (eventConstraints[i] != null) {
+					eventConstraints[i].deleted(getPositionInConstraint(i),
+							index);
+				}
+			}
+		}
+		// if (weights != null) {
+		// weights[index]++;
+		// }
 	}
 
-//	public int getWeight(final int index) {
-//		return weights[index];
-//	}
+	// public int getWeight(final int index) {
+	// return weights[index];
+	// }
 
 	/**
 	 * @return L'ID de la variable
@@ -414,7 +437,6 @@ public final class Variable implements Cloneable {
 			}
 			return i;
 		}
-		
 
 		return chain.getNext(index);
 	}
@@ -430,11 +452,11 @@ public final class Variable implements Cloneable {
 	public int getFirstAbsent() {
 		return absents.getFirst();
 	}
-	
+
 	public int getNextAbsent(final int index) {
 		return absents.getNext(index);
 	}
-	
+
 	public int[] getBooleanDomain() {
 		return booleanDomain;
 	}

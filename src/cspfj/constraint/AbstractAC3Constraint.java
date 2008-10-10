@@ -1,5 +1,11 @@
 package cspfj.constraint;
 
+import java.util.AbstractCollection;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
+
+import cspfj.AbstractSolver;
 import cspfj.problem.Variable;
 
 public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
@@ -8,23 +14,36 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 
 	private final int[] startTuple;
 
+	private Collection<int[]>[][] watches;
+
+	private Collection<Integer>[] propagate;
+
+	public static boolean useValueRemovalEvents;
+
 	public AbstractAC3Constraint(Variable[] scope) {
 		this(scope, null);
+		useValueRemovalEvents = AbstractSolver.parameters
+				.containsKey("ac.events");
 	}
 
 	public AbstractAC3Constraint(Variable[] scope, String name) {
 		super(scope);
-
+		useValueRemovalEvents = AbstractSolver.parameters
+				.containsKey("ac.events");
 		startTuple = new int[getArity()];
 
-		int maxDomain = getVariable(getArity()-1).getDomain().length;
-		for (int i = getArity()-1; --i >= 0;) {
+		int maxDomain = getVariable(getArity() - 1).getDomain().length;
+		for (int i = getArity() - 1; --i >= 0;) {
 			if (getVariable(i).getDomain().length > maxDomain) {
 				maxDomain = getVariable(i).getDomain().length;
 			}
 		}
-		
+
 		last = new int[getArity()][maxDomain][];
+		if (useValueRemovalEvents) {
+			watches = new Watches[getArity()][maxDomain];
+			propagate = new FixedIntList[getArity()];
+		}
 	}
 
 	public boolean revise(final int position, final int level) {
@@ -38,6 +57,30 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 		// + Arrays.toString(variable.getCurrentDomain()) + " against "
 		// + this);
 
+		if (useValueRemovalEvents) {
+			for (int index : propagate[position]) {
+
+				// logger.finer("Checking (" + variable + ", " + index + ")");
+				// if (conflictCounts && othersSize >
+				// nbInitConflicts[position][index]) {
+				// continue;
+				// }
+
+				if (variable.isPresent(index)
+						&& !simpleFindValidTuple(position, index)) {
+					// logger.finer("removing " + index + " from " + variable);
+
+					variable.remove(index, level);
+
+					revised = true;
+					setActive(true);
+
+				}
+
+			}
+			propagate[position].clear();
+			return revised;
+		}
 		for (int index = variable.getFirst(); index >= 0; index = variable
 				.getNext(index)) {
 
@@ -171,15 +214,41 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 
 	}
 
+	private boolean simpleFindValidTuple(final int variablePosition,
+			final int index) {
+		tupleManager.setFirstTuple(variablePosition, index);
+
+		do {
+			if (chk()) {
+				updateResidues();
+				return true;
+			}
+		} while (tupleManager.setNextTuple(variablePosition));
+
+		return false;
+	}
+
 	protected void updateResidues() {
 		final int[] residue = tuple.clone();
 		for (int position = getArity(); --position >= 0;) {
+			if (useValueRemovalEvents) {
+				if (watches[position][residue[position]] == null) {
+					watches[position][residue[position]] = new Watches();
+				} else {
+					final int[] oldResidue = last[position][residue[position]];
+					watches[position][residue[position]].remove(oldResidue);
+				}
+				watches[position][residue[position]].add(residue);
+			}
 			last[position][residue[position]] = residue;
+
 		}
 	}
 
 	public void removeTupleCache() {
 		last = null;
+		watches = null;
+		propagate = null;
 	}
 
 	@Override
@@ -188,4 +257,69 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 		return false;
 	}
 
+	public void deleted(int position, int index) {
+		if (!useValueRemovalEvents || watches[position][index] == null) {
+			return;
+		}
+		for (int[] residue : watches[position][index]) {
+			for (int p = getArity(); --p >= 0;) {
+				propagate[p].add(residue[p]);
+			}
+		}
+
+	}
+
+	private static class Watches extends LinkedList<int[]> {
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 3669590222285240545L;
+
+	}
+
+	private static class FixedIntList extends AbstractCollection<Integer> {
+
+		private final int[] contents;
+		private int size;
+
+		public FixedIntList(int size) {
+			contents = new int[size];
+			size = 0;
+		}
+
+		@Override
+		public Iterator<Integer> iterator() {
+			return new Iterator<Integer>() {
+				private int position = 0;
+
+				@Override
+				public boolean hasNext() {
+					return position < size;
+				}
+
+				@Override
+				public Integer next() {
+					return contents[position++];
+				}
+
+				@Override
+				public void remove() {
+					throw new UnsupportedOperationException();
+				}
+
+			};
+		}
+
+		@Override
+		public int size() {
+			return size;
+		}
+
+		@Override
+		public void clear() {
+			size = 0;
+		}
+
+	}
 }

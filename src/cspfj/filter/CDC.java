@@ -35,16 +35,15 @@ public final class CDC extends AbstractSAC {
 
 	private final static Logger logger = Logger.getLogger(CDC.class.getName());
 
-	private final Problem.LearnMethod addConstraints;
+	private final static Problem.LearnMethod addConstraints = AbstractSolver.parameters
+			.containsKey("cdc.addConstraints") ? Problem.LearnMethod
+			.valueOf(AbstractSolver.parameters.get("cdc.addConstraints"))
+			: Problem.LearnMethod.NONE;
 
 	private int addedConstraints = 0;
 
 	public CDC(Problem problem, Filter filter) {
 		super(problem, filter);
-		addConstraints = AbstractSolver.parameters
-				.containsKey("cdc.addConstraints") ? Problem.LearnMethod
-				.valueOf(AbstractSolver.parameters.get("cdc.addConstraints"))
-				: Problem.LearnMethod.NONE;
 	}
 
 	@Override

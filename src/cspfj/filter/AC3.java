@@ -98,9 +98,7 @@ public final class AC3 implements Filter {
 			for (int c = constraints.length; --c >= 0;) {
 				final Constraint constraint = constraints[c];
 
-				final int position = variable.getPositionInConstraint(c);
-
-				// if (!constraint.getRemovals(position)) {
+				// if (!constraint.getRemovals(variable.getPositionInConstraint(c))) {
 				// constraint.fillRemovals(false);
 				// continue;
 				// }
