@@ -22,7 +22,6 @@ package cspfj.problem;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 import cspfj.constraint.AbstractAC3Constraint;
 import cspfj.constraint.Constraint;
@@ -157,17 +156,19 @@ public final class Variable implements Cloneable {
 	public void setInvolvingConstraints(final Constraint[] constraints2) {
 		this.constraints = constraints2;
 
-		if (AbstractAC3Constraint.useValueRemovalEvents) {
-			for (int i = constraints2.length; --i >= 0;) {
-				if (constraints2[i] instanceof AbstractAC3Constraint) {
-					if (eventConstraints == null) {
-						eventConstraints = new AbstractAC3Constraint[constraints2.length];
-					}
-					eventConstraints[i] = (AbstractAC3Constraint) constraints2[i];
+		for (int i = constraints2.length; --i >= 0;) {
+			if (constraints2[i] instanceof AbstractAC3Constraint) {
+				final AbstractAC3Constraint c = (AbstractAC3Constraint) constraints2[i];
+				if (!c.listen()) {
+					continue;
 				}
+				if (eventConstraints == null) {
+					eventConstraints = new AbstractAC3Constraint[constraints2.length];
+				}
+				eventConstraints[i] = c;
 			}
-
 		}
+
 		positionInConstraint = new int[constraints2.length];
 		for (int i = constraints2.length; --i >= 0;) {
 			updatePositionInConstraint(i);
@@ -226,6 +227,19 @@ public final class Variable implements Cloneable {
 		assert !assigned;
 		assert isPresent(index);
 
+		if (eventConstraints != null) {
+			for (int i = getFirst(); i >= 0; i = getNext(i)) {
+				if (i != index) {
+					for (int c = eventConstraints.length; --c >= 0;) {
+						if (eventConstraints[c] != null) {
+							eventConstraints[c].deleted(
+									getPositionInConstraint(c), i);
+						}
+					}
+				}
+			}
+		}
+
 		assignedIndex = index;
 		assigned = true;
 		System.arraycopy(booleanDomain, 0, beforeAssignDomain, 0,
@@ -233,6 +247,7 @@ public final class Variable implements Cloneable {
 		BooleanArray.setSingle(booleanDomain, index);
 		assert !reinitBooleanDomain();
 		problem.decreaseFutureVariables();
+
 	}
 
 	/**

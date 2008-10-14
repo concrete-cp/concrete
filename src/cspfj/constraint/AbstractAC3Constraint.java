@@ -1,9 +1,7 @@
 package cspfj.constraint;
 
-import java.util.AbstractCollection;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.HashSet;
+import java.util.logging.Logger;
 
 import cspfj.AbstractSolver;
 import cspfj.problem.Variable;
@@ -14,22 +12,19 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 
 	private final int[] startTuple;
 
-	private Collection<int[]>[][] watches;
+	private Watches[][] watches;
 
-	private Collection<Integer>[] propagate;
+	private static final Logger logger = Logger
+			.getLogger(AbstractAC3Constraint.class.getSimpleName());
 
-	public static boolean useValueRemovalEvents;
+	private static int watchListSize = 0;
 
 	public AbstractAC3Constraint(Variable[] scope) {
 		this(scope, null);
-		useValueRemovalEvents = AbstractSolver.parameters
-				.containsKey("ac.events");
 	}
 
 	public AbstractAC3Constraint(Variable[] scope, String name) {
 		super(scope);
-		useValueRemovalEvents = AbstractSolver.parameters
-				.containsKey("ac.events");
 		startTuple = new int[getArity()];
 
 		int maxDomain = getVariable(getArity() - 1).getDomain().length;
@@ -39,10 +34,17 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 			}
 		}
 
-		last = new int[getArity()][maxDomain][];
-		if (useValueRemovalEvents) {
+		if (AbstractSolver.parameters.containsKey("ac.events")) {
 			watches = new Watches[getArity()][maxDomain];
-			propagate = new FixedIntList[getArity()];
+
+			for (int p = getArity(); --p >= 0;) {
+				final Variable var = scope[p];
+				for (int i = var.getFirst(); i >= 0; i = var.getNext(i)) {
+					watches[p][i] = new Watches();
+				}
+			}
+		} else {
+			last = new int[getArity()][maxDomain][];
 		}
 	}
 
@@ -57,8 +59,9 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 		// + Arrays.toString(variable.getCurrentDomain()) + " against "
 		// + this);
 
-		if (useValueRemovalEvents) {
-			for (int index : propagate[position]) {
+		if (watches != null) {
+			for (int index = variable.getFirst(); index >= 0; index = variable
+					.getNext(index)) {
 
 				// logger.finer("Checking (" + variable + ", " + index + ")");
 				// if (conflictCounts && othersSize >
@@ -66,7 +69,7 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 				// continue;
 				// }
 
-				if (variable.isPresent(index)
+				if (watches[position][index].isEmpty()
 						&& !simpleFindValidTuple(position, index)) {
 					// logger.finer("removing " + index + " from " + variable);
 
@@ -78,7 +81,6 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 				}
 
 			}
-			propagate[position].clear();
 			return revised;
 		}
 		for (int index = variable.getFirst(); index >= 0; index = variable
@@ -229,26 +231,25 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 	}
 
 	protected void updateResidues() {
-		final int[] residue = tuple.clone();
-		for (int position = getArity(); --position >= 0;) {
-			if (useValueRemovalEvents) {
-				if (watches[position][residue[position]] == null) {
-					watches[position][residue[position]] = new Watches();
-				} else {
-					final int[] oldResidue = last[position][residue[position]];
-					watches[position][residue[position]].remove(oldResidue);
-				}
+		if (watches != null) {
+			final int[] residue = tuple.clone();
+			for (int position = getArity(); --position >= 0;) {
 				watches[position][residue[position]].add(residue);
+				if (watches[position][residue[position]].size() > watchListSize) {
+					logger.info(Integer.toString(++watchListSize));
+				}
 			}
-			last[position][residue[position]] = residue;
-
+		} else if (last != null) {
+			final int[] residue = tuple.clone();
+			for (int position = getArity(); --position >= 0;) {
+				last[position][residue[position]] = residue;
+			}
 		}
 	}
 
 	public void removeTupleCache() {
 		last = null;
 		watches = null;
-		propagate = null;
 	}
 
 	@Override
@@ -257,19 +258,60 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 		return false;
 	}
 
+	// @Override
+	// public void restore(int level) {
+	// for (int p = getArity(); --p >= 0;) {
+	// final Variable var = getVariable(p);
+	// for (int i = var.getFirst(); i >= 0; i = var.getNext(i)) {
+	// final Watches watches = this.watches[p][i];
+	// if (watches.isToCheck()) {
+	// int[] validResidue = null;
+	//
+	// for (int[] residue : watches) {
+	// if (controlTuplePresence(residue, p)) {
+	// validResidue = residue;
+	// break;
+	// }
+	// }
+	//
+	// watches.clear();
+	// if (validResidue != null) {
+	// for (int p2 = getArity(); --p2 >= 0;) {
+	// this.watches[p2][validResidue[p2]]
+	// .add(validResidue);
+	// }
+	// }
+	// watches.setToCheck(false);
+	// }
+	// }
+	// }
+	// }
+
+	@Override
+	public boolean check() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 	public void deleted(int position, int index) {
-		if (!useValueRemovalEvents || watches[position][index] == null) {
+		if (watches == null) {
 			return;
 		}
 		for (int[] residue : watches[position][index]) {
 			for (int p = getArity(); --p >= 0;) {
-				propagate[p].add(residue[p]);
+				if (p != position) {
+					watches[p][residue[p]].remove(residue);
+				}
 			}
 		}
-
+		watches[position][index].clear(); // setToCheck(true);
 	}
 
-	private static class Watches extends LinkedList<int[]> {
+	public boolean listen() {
+		return watches != null;
+	}
+
+	private static class Watches extends HashSet<int[]> {
 
 		/**
 		 * 
@@ -278,48 +320,4 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 
 	}
 
-	private static class FixedIntList extends AbstractCollection<Integer> {
-
-		private final int[] contents;
-		private int size;
-
-		public FixedIntList(int size) {
-			contents = new int[size];
-			size = 0;
-		}
-
-		@Override
-		public Iterator<Integer> iterator() {
-			return new Iterator<Integer>() {
-				private int position = 0;
-
-				@Override
-				public boolean hasNext() {
-					return position < size;
-				}
-
-				@Override
-				public Integer next() {
-					return contents[position++];
-				}
-
-				@Override
-				public void remove() {
-					throw new UnsupportedOperationException();
-				}
-
-			};
-		}
-
-		@Override
-		public int size() {
-			return size;
-		}
-
-		@Override
-		public void clear() {
-			size = 0;
-		}
-
-	}
 }
