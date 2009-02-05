@@ -12,6 +12,10 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
+import cspfj.constraint.extension.Matrix;
+import cspfj.constraint.extension.MatrixGeneral;
+import cspfj.constraint.extension.TupleHashSet;
+
 public class TupleListTest {
 
 	Matrix tls;

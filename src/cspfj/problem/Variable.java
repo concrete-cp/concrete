@@ -22,9 +22,10 @@ package cspfj.problem;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
-import cspfj.constraint.AbstractAC3Constraint;
 import cspfj.constraint.Constraint;
+import cspfj.constraint.DynamicConstraint;
 import cspfj.util.BooleanArray;
 import cspfj.util.OrderedChain;
 import cspfj.util.UnOrderedChain;
@@ -39,7 +40,7 @@ public final class Variable implements Cloneable {
 	 */
 	private Constraint[] constraints;
 
-	private AbstractAC3Constraint[] eventConstraints;
+	private DynamicConstraint[] dynamicConstraints;
 
 	/**
 	 * Domaine de la variable (ensemble de valeurs).
@@ -155,19 +156,15 @@ public final class Variable implements Cloneable {
 	 */
 	public void setInvolvingConstraints(final Constraint[] constraints2) {
 		this.constraints = constraints2;
-
-		for (int i = constraints2.length; --i >= 0;) {
-			if (constraints2[i] instanceof AbstractAC3Constraint) {
-				final AbstractAC3Constraint c = (AbstractAC3Constraint) constraints2[i];
-				if (!c.listen()) {
-					continue;
-				}
-				if (eventConstraints == null) {
-					eventConstraints = new AbstractAC3Constraint[constraints2.length];
-				}
-				eventConstraints[i] = c;
+		final List<DynamicConstraint> dynamicConstraints = new ArrayList<DynamicConstraint>();
+		for (Constraint c : constraints2) {
+			if (c instanceof DynamicConstraint) {
+				dynamicConstraints.add((DynamicConstraint) c);
 			}
 		}
+
+		this.dynamicConstraints = dynamicConstraints
+				.toArray(new DynamicConstraint[dynamicConstraints.size()]);
 
 		positionInConstraint = new int[constraints2.length];
 		for (int i = constraints2.length; --i >= 0;) {
@@ -226,19 +223,6 @@ public final class Variable implements Cloneable {
 	private void assgn(final int index, final Problem problem) {
 		assert !assigned;
 		assert isPresent(index);
-
-		if (eventConstraints != null) {
-			for (int i = getFirst(); i >= 0; i = getNext(i)) {
-				if (i != index) {
-					for (int c = eventConstraints.length; --c >= 0;) {
-						if (eventConstraints[c] != null) {
-							eventConstraints[c].deleted(
-									getPositionInConstraint(c), i);
-						}
-					}
-				}
-			}
-		}
 
 		assignedIndex = index;
 		assigned = true;
@@ -345,14 +329,6 @@ public final class Variable implements Cloneable {
 		chain.remove(index);
 		absents.add(index);
 
-		if (eventConstraints != null) {
-			for (int i = eventConstraints.length; --i >= 0;) {
-				if (eventConstraints[i] != null) {
-					eventConstraints[i].deleted(getPositionInConstraint(i),
-							index);
-				}
-			}
-		}
 		// if (weights != null) {
 		// weights[index]++;
 		// }
@@ -385,6 +361,10 @@ public final class Variable implements Cloneable {
 		return constraints;
 	}
 
+	public DynamicConstraint[] getDynamicConstraints() {
+		return dynamicConstraints;
+	}
+	
 	public int[] getDomain() {
 		return domain;
 	}

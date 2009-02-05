@@ -98,12 +98,12 @@ public class ExtensionConstraint2D extends AbstractPVRConstraint implements
 	}
 
 	@Override
-	public int removeTuple(int[] tuple) {
+	public boolean removeTuple(int[] tuple) {
 		if (matrix.removeTuple(tuple)) {
 			addConflict(tuple);
-			return 1;
+			return true;
 		}
-		return 0;
+		return false;
 	}
 
 	@Override
@@ -121,15 +121,14 @@ public class ExtensionConstraint2D extends AbstractPVRConstraint implements
 	}
 
 	@Override
-	public int removeTuples(int[] fixed, int mobile, int[] values) {
+	public int removeTuples(int[] base) {
 		int removed = 0;
-		for (int i : values) {
-			fixed[mobile] = i;
-			if (removeTuple(fixed) > 0
-					&& getVariable(mobile).getRemovedLevel(i) > 0) {
+		tupleManager.setFirstTuple(base);
+		do {
+			if (removeTuple(this.tuple)) {
 				removed++;
 			}
-		}
+		} while (tupleManager.setNextTuple(base));
 		return removed;
 	}
 

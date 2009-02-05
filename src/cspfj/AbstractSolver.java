@@ -26,6 +26,7 @@ import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
 import java.util.Map.Entry;
 import java.util.logging.Logger;
 
@@ -212,9 +213,14 @@ public abstract class AbstractSolver implements Solver {
 		}
 
 		Thread.interrupted();
-		final Waker waker = new Waker(Thread.currentThread(),
-				preproExpiration * 1000);
-		waker.start();
+
+		final Timer waker = new Timer();
+
+		if (preproExpiration >= 0) {
+			waker.schedule(new Waker(Thread.currentThread()),
+					preproExpiration * 1000);
+		}
+
 		final float start = chronometer.getCurrentChrono();
 		boolean consistent;
 		try {
@@ -225,7 +231,7 @@ public abstract class AbstractSolver implements Solver {
 			throw e;
 		} finally {
 			final float preproCpu = chronometer.getCurrentChrono() - start;
-			waker.interrupt();
+			waker.cancel();
 
 			statistics.putAll(preprocessor.getStatistics());
 

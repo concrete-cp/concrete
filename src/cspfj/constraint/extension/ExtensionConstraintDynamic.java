@@ -22,7 +22,7 @@ package cspfj.constraint.extension;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
-import java.util.List;
+import java.util.Iterator;
 import java.util.logging.Logger;
 
 import cspfj.constraint.AbstractConstraint;
@@ -210,20 +210,33 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 	}
 
 	@Override
-	public int removeTuple(int[] tuple) {
+	public boolean removeTuple(int[] tuple) {
 		if (dynamic.removeTuple(tuple)) {
 			addConflict(tuple);
-			return 1;
+			return true;
 		}
-		return 0;
+		return false;
 	}
-	
+
+	private static boolean match(int[] tuple, int[] base) {
+		assert tuple.length == base.length;
+		for (int i = tuple.length; --i >= 0;) {
+			if (base[i] >= 0 && base[i] != tuple[i]) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	@Override
-	public int removeTuples(int[] fixed, int mobile, int[] values) {
+	public int removeTuples(int[] base) {
 		int removed = 0;
-		for (int i : values) {
-			fixed[mobile] = i;
-			removed += removeTuple(fixed);
+		for (final Iterator<int[]> itr = dynamic.iterator(); itr.hasNext();) {
+			final int[] currentTuple = itr.next();
+			if (match(currentTuple, base)) {
+				itr.remove();
+				removed++;
+			}
 		}
 		return removed;
 	}

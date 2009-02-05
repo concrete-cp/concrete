@@ -9,6 +9,8 @@ import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 
+import cspfj.constraint.extension.Matrix2D;
+import cspfj.constraint.extension.MatrixManager2D;
 import cspfj.problem.Variable;
 
 public class MatrixManager2DTest {
@@ -42,32 +44,6 @@ public class MatrixManager2DTest {
 		assertFalse("(1,1)", matrix.hasSupport(1, 1));
 		assertTrue("(1,2)", matrix.hasSupport(1, 2));
 		assertFalse("(1,3)", matrix.hasSupport(1, 3));
-	}
-
-	@Test
-	public void testSetFirstTuple() {
-		tuple[1] = -1;
-		assertTrue("(0,0)", matrix.setFirstTuple(0, 0));
-		assertSame("First tuple of (0,0)", tuple[1], 0);
-
-		assertFalse("(0,1)", matrix.setFirstTuple(0, 1));
-
-		tuple[0] = -1;
-		assertTrue("(1,2)", matrix.setFirstTuple(1, 2));
-		assertSame("First tuple of (1,2)", tuple[0], 0);
-
-	}
-
-	@Test
-	public void testNext() {
-		tuple[1] = -1;
-		assertTrue("(0,0)", matrix.setFirstTuple(0, 0));
-		assertSame("First support of (0,0)", tuple[1], 0);
-
-		assertTrue("next", matrix.next());
-		assertSame("Second support of (0,0)", tuple[1], 2);
-
-		assertFalse("end", matrix.next());
 	}
 
 	@Test

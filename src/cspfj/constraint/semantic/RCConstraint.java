@@ -58,7 +58,7 @@ public class RCConstraint extends AbstractConstraint implements
 	}
 
 	@Override
-	public int removeTuple(int[] tuple) {
+	public boolean removeTuple(int[] tuple) {
 		// final Collection<Integer> removed = intervals[tuple[0]]
 		// .remove(tuple[1]);
 		//
@@ -79,67 +79,23 @@ public class RCConstraint extends AbstractConstraint implements
 
 			addConflict(tuple);
 
-			return 1;
+			return true;
 		}
-		return 0;
+		return false;
 	}
 
 	@Override
-	public int removeTuples(int[] fixed, int mobile, int[] values) {
+	public int removeTuples(int[] base) {
 		int removed = 0;
-		if (mobile == 0) {
-			for (int i : values) {
-				if (intervals[i].remove(fixed[1])) {
-					if (getVariable(mobile).getRemovedLevel(i) > 0) {
-						removed++;
-					}
-					fixed[0] = i;
-					addConflict(fixed);
-				}
-			}
-			if (removed > 0) {
-				sortIntervals();
-			}
 
-		} else {
-			assert mobile == 1;
-			Arrays.sort(values);
-
-			final Interval itv = intervals[fixed[0]];
-
-			int current = 0;
-			if (values[current] < itv.lb) {
-				current = Arrays.binarySearch(values, itv.lb);
+		tupleManager.setFirstTuple(base);
+		do {
+			if (removeTuple(this.tuple)) {
+				removed++;
 			}
-			if (current >= 0) {
-				while (current < values.length && values[current] == itv.lb) {
-					fixed[1] = itv.lb++;
-					if (getVariable(mobile).getRemovedLevel(values[current]) > 0) {
-						removed++;
-					}
-					addConflict(fixed);
-					current++;
-				}
-			}
-			if (removed > 0) {
-				sortIntervals();
-			}
-			current = values.length - 1;
-			if (values[current] > itv.ub) {
-				current = Arrays.binarySearch(values, itv.ub);
-			}
-			while (current >= 0 && values[current] == itv.ub) {
-				fixed[1] = itv.ub--;
-				if (getVariable(mobile).getRemovedLevel(values[current]) > 0) {
-					removed++;
-				}
-				addConflict(fixed);
-				current--;
-			}
-
-		}
-
+		} while (tupleManager.setNextTuple(base));
 		return removed;
+
 	}
 
 	@Override

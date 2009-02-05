@@ -27,20 +27,6 @@ public final class TupleManager {
 		arity = constraint.getArity();
 	}
 
-	public void setRealTuple(final List<Variable> scope,
-			final List<Integer> tuple) {
-		final int[] realTuple = this.tuple;
-
-		for (int i = arity; --i >= 0;) {
-			for (int j = arity; --j >= 0;) {
-				if (scope.get(i) == constraint.getVariable(j)) {
-					realTuple[j] = tuple.get(i);
-					break;
-				}
-			}
-		}
-	}
-
 	public void setFirstTuple() {
 		for (int position = arity; --position >= 0;) {
 			tuple[position] = constraint.getVariable(position).getFirst();
@@ -84,6 +70,36 @@ public final class TupleManager {
 
 			final int index = constraint.getVariable(i).getNext(tuple[i]);
 
+			if (index < 0) {
+				tuple[i] = constraint.getVariable(i).getFirst();
+			} else {
+				tuple[i] = index;
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public void setFirstTuple(final int[] base) {
+		for (int position = arity; --position >= 0;) {
+			if (base[position] >= 0) {
+				tuple[position] = base[position];
+				assert constraint.getVariable(position).isPresent(tuple[position]);
+			} else {
+				tuple[position] = constraint.getVariable(position).getFirst();
+				assert tuple[position] >= 0;
+			}
+		}
+	}
+	
+	public boolean setNextTuple(final int[] base) {
+		for (int i = arity;--i>=0;) {
+			if (base[i] >=0) {
+				continue;
+			}
+			
+			final int index = constraint.getVariable(i).getNext(tuple[i]);
+			
 			if (index < 0) {
 				tuple[i] = constraint.getVariable(i).getFirst();
 			} else {
@@ -142,10 +158,9 @@ public final class TupleManager {
 
 					if (index < 0) {
 						do {
-							pos--;
-							if (pos == fixed) {
+							do {
 								pos--;
-							}
+							} while (pos == fixed);
 							if (pos < 0) {
 								return false;
 							}
@@ -154,7 +169,7 @@ public final class TupleManager {
 						} while (tuple[pos] < 0);
 						changed = pos;
 					} else {
-						tuple[pos++]=index;
+						tuple[pos++] = index;
 					}
 				}
 			}

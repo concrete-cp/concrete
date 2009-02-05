@@ -1,6 +1,7 @@
 package cspfj.constraint;
 
 import java.util.Collection;
+import java.util.Set;
 
 import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
@@ -18,6 +19,8 @@ public interface Constraint {
 
 	Variable[] getScope();
 
+	Set<Variable> getScopeSet();
+	
 	int getPositionInVariable(final int variablePosition);
 
 	int getPosition(final Variable variable);

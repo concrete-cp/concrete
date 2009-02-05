@@ -24,9 +24,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Timer;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
@@ -73,8 +75,6 @@ public final class Problem implements Cloneable {
 
 	private int nbNoGoods = 0;
 
-	private int[] lost;
-
 	public Problem() {
 		super();
 		this.useNoGoods = true;// true;
@@ -112,30 +112,31 @@ public final class Problem implements Cloneable {
 
 		logger.info("Counting supports (" + expCountSupports + ")");
 
-		if (expCountSupports != 0) {
-			Thread.interrupted();
-			final Waker waker = new Waker(Thread.currentThread(),
+		Thread.interrupted();
+		final Timer waker = new Timer();
+		if (expCountSupports >= 0) {
+			waker.schedule(new Waker(Thread.currentThread()),
 					expCountSupports * 1000);
-			waker.start();
+		}
 
-			final Constraint[] sorted = generator.getConstraints().toArray(
-					new Constraint[generator.getConstraints().size()]);
+		final Constraint[] sorted = generator.getConstraints().toArray(
+				new Constraint[generator.getConstraints().size()]);
 
-			Arrays.sort(sorted, new Comparator<Constraint>() {
-				@Override
-				public int compare(Constraint o1, Constraint o2) {
-					return Double.compare(o1.getInitSize(), o2.getInitSize());
-				}
-			});
-
-			for (Constraint c : sorted) {
-				try {
-					c.initNbSupports();
-				} catch (InterruptedException e) {
-					break;
-				}
+		Arrays.sort(sorted, new Comparator<Constraint>() {
+			@Override
+			public int compare(Constraint o1, Constraint o2) {
+				return Double.compare(o1.getInitSize(), o2.getInitSize());
 			}
-			waker.interrupt();
+		});
+
+		try {
+			for (Constraint c : sorted) {
+				c.initNbSupports();
+			}
+		} catch (InterruptedException e) {
+			// Continue...
+		} finally {
+			waker.cancel();
 		}
 
 		logger.info("Setting Constraints");
@@ -177,7 +178,6 @@ public final class Problem implements Cloneable {
 				maxVId = var.getId();
 			}
 		}
-		lost = new int[maxDomainSize - 1];
 
 		this.variableArray = new Variable[maxVId + 1];
 		for (Variable var : vars) {
@@ -411,22 +411,22 @@ public final class Problem implements Cloneable {
 	// }
 
 	private final static DynamicConstraint findDynamicConstraint(
-			final Set<Variable> scope, final Variable additionalConstraint) {
+			final Set<Variable> scope) {
 
-		for (Constraint c : additionalConstraint.getInvolvingConstraints()) {
-			if (c.getArity() != scope.size() + 1
-					|| !(c instanceof DynamicConstraint)) {
+		for (DynamicConstraint c : scope.iterator().next()
+				.getDynamicConstraints()) {
+			if (c.getArity() < scope.size()) {
 				continue;
 			}
-			boolean ok = true;
-			for (Variable v : c.getScope()) {
-				if (v != additionalConstraint && !scope.contains(v)) {
-					ok = false;
-					break;
-				}
-			}
-			if (ok) {
-				return (DynamicConstraint) c;
+			// boolean ok = true;
+			// for (Variable v : scope) {
+			// if (!c.getScopeSet().contains(v)) {
+			// ok = false;
+			// break;
+			// }
+			// }
+			if (c.getScopeSet().containsAll(scope)) {
+				return c;
 			}
 		}
 		return null;
@@ -566,47 +566,66 @@ public final class Problem implements Cloneable {
 	// return modified;
 	// }
 
-	private final HashMap<Variable, Integer> scope = new HashMap<Variable, Integer>();
+	// private final HashMap<Variable, Integer> scope = new HashMap<Variable,
+	// Integer>();
 
 	private final DynamicConstraint learnConstraint(final Set<Variable> scope,
-			final Variable fv, final LearnMethod addConstraints) {
-		final DynamicConstraint constraint = findDynamicConstraint(scope, fv);
+			final LearnMethod addConstraints) {
+		final DynamicConstraint constraint = findDynamicConstraint(scope);
 
-		if (constraint == null) {
-			if (addConstraints == LearnMethod.NONE) {
-				return null;
+		if (constraint != null) {
+			return constraint;
+		}
+
+		if (addConstraints == LearnMethod.NONE) {
+			return null;
+		}
+
+		final int level = scope.size();
+		final Variable[] constraintScope = scope.toArray(new Variable[level]);
+
+		if (level == 2) {
+
+			if (addConstraints == LearnMethod.RC) {
+				return new RCConstraint(constraintScope);
 			}
 
-			final int level = scope.size();
-			final Variable[] constraintScope = scope
-					.toArray(new Variable[level + 1]);
-			constraintScope[level] = fv;
-
-			if (level == 1) {
-
-				if (addConstraints == LearnMethod.RC) {
-					return new RCConstraint(constraintScope);
-				}
-
-				final Matrix2D matrix = new Matrix2D(constraintScope[0]
-						.getDomain().length,
-						constraintScope[1].getDomain().length, true);
-				return new ExtensionConstraint2D(constraintScope, matrix,
-						false, true);
-
-			}
-
-			if (addConstraints == LearnMethod.EXTENSION) {
-
-				final Matrix matrix = new TupleHashSet(true);
-
-				return new ExtensionConstraintGeneral(constraintScope, matrix,
-						false, true);
-
-			}
+			final Matrix2D matrix = new Matrix2D(
+					constraintScope[0].getDomain().length, constraintScope[1]
+							.getDomain().length, true);
+			return new ExtensionConstraint2D(constraintScope, matrix, false,
+					true);
 
 		}
-		return constraint;
+
+		if (addConstraints == LearnMethod.EXTENSION) {
+
+			final Matrix matrix = new TupleHashSet(true);
+
+			return new ExtensionConstraintGeneral(constraintScope, matrix,
+					false, true);
+
+		}
+		return null;
+	}
+
+	private static int[] makeBase(Variable[] scope, int level, int[] values,
+			Constraint constraint) {
+		int[] tuple = new int[constraint.getArity()];
+
+		Arrays.fill(tuple, -1);
+
+		for (int i = constraint.getArity(); --i >= 0;) {
+			final Variable var = constraint.getVariable(i);
+			for (int j = level; --j >= 0;) {
+				if (scope[j] == var) {
+					tuple[i] = values[j];
+					break;
+				}
+			}
+		}
+
+		return tuple;
 	}
 
 	public boolean addNoGoods(final LearnMethod addConstraints) {
@@ -615,27 +634,30 @@ public final class Problem implements Cloneable {
 		}
 
 		final Variable[] levelVariables = this.levelVariables;
-		final int[] lost = this.lost;
-		final Map<Variable, Integer> scope = this.scope;
+		final int[] fullTuple = new int[getNbVariables()];
 
 		if (levelVariables[0] == null) {
 			return false;
 		}
 
-		scope.clear();
-
-		scope.put(levelVariables[0], levelVariables[0].getFirst());
+		final Set<Variable> scopeSet = new HashSet<Variable>(getNbVariables(),
+				1);
+		scopeSet.add(levelVariables[0]);
+		fullTuple[0] = levelVariables[0].getFirst();
 
 		boolean modified = false;
 		final Collection<Constraint> addedConstraints = new ArrayList<Constraint>();
 
 		for (int level = 1; level < levelVariables.length; level++) {
-			final int[] realTuple = new int[level + 1];
+			final int[] tuple = Arrays.copyOf(fullTuple, level + 1);
+			final Variable[] scopeArray = Arrays.copyOf(levelVariables,
+					level + 1);
+
 			for (Variable fv : variableArray) {
 				// logger.fine("checking " +
 				// getVariable(levelVariables[level-1]));
 
-				if (scope.containsKey(fv)) {
+				if (scopeSet.contains(fv)) {
 					continue;
 				}
 
@@ -647,8 +669,12 @@ public final class Problem implements Cloneable {
 					continue;
 				}
 
-				final DynamicConstraint constraint = learnConstraint(scope
-						.keySet(), fv, addConstraints);
+				scopeSet.add(fv);
+
+				final DynamicConstraint constraint = learnConstraint(scopeSet,
+						addConstraints);
+
+				scopeSet.remove(fv);
 
 				if (constraint == null) {
 					continue;
@@ -656,31 +682,10 @@ public final class Problem implements Cloneable {
 
 				final boolean newConstraint = constraint.getId() > getMaxCId();
 
-				int currentV = -1;
-				for (int i = level + 1; --i >= 0;) {
-					final Variable var = constraint.getVariable(i);
-					if (var == fv) {
-						currentV = i;
-					} else {
-						realTuple[i] = scope.get(var);
-					}
-				}
+				scopeArray[level] = fv;
 
-				int nbLost = 0;
-
-				for (int lostIndex = firstLost; lostIndex >= 0; lostIndex = fv
-						.getPrevAbsent(lostIndex)) {
-					if (fv.getRemovedLevel(lostIndex) <= level) {
-						lost[nbLost++] = lostIndex;
-					}
-
-				}
-
-				if (nbLost == 0) {
-					continue;
-				}
-				final int newNogoods = constraint.removeTuples(realTuple,
-						currentV, Arrays.copyOfRange(lost, 0, nbLost));
+				final int newNogoods = constraint.removeTuples(makeBase(
+						scopeArray, level + 1, tuple, constraint));
 				if (newNogoods == 0) {
 					continue;
 				}
@@ -696,7 +701,8 @@ public final class Problem implements Cloneable {
 			if (levelVariables[level] == null) {
 				break;
 			}
-			scope.put(levelVariables[level], levelVariables[level].getFirst());
+			scopeSet.add(levelVariables[level]);
+			fullTuple[level] = levelVariables[level].getFirst();
 
 		}
 

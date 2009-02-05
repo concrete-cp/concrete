@@ -1,8 +1,8 @@
 package cspfj.constraint.extension;
 
-import cspfj.constraint.Constraint;
+import cspfj.constraint.DynamicConstraint;
 
 
-public interface ExtensionConstraint extends Constraint {
+public interface ExtensionConstraint extends DynamicConstraint {
 	MatrixManager getMatrix();
 }

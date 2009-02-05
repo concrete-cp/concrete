@@ -22,10 +22,8 @@ package cspfj;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidParameterException;
-import java.util.Set;
 import java.util.logging.Logger;
 
-import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.AC3;
 import cspfj.filter.Filter;
@@ -85,6 +83,15 @@ public final class MGACIter extends AbstractSolver {
 		Variable selectedVariable = null;
 		int selectedIndex = -1;
 		do {
+			for (Variable v: problem.getVariables()) {
+				if (!v.isAssigned() && v.getDomainSize()==1) {
+					logger.fine(level + " : " + v + " <- "
+							+ v.getDomain()[v.getFirst()] + "("
+							+ getNbBacktracks() + "/" + getMaxBacktracks() + ")");
+					v.assign(v.getFirst(), problem);
+					problem.setLevelVariables(level++, v);
+				}
+			}
 			if (problem.getNbFutureVariables() == 0) {
 				if (getNbSolutions() < 1) {
 					for (Variable v : problem.getVariables()) {

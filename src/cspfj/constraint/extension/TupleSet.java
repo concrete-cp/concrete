@@ -12,9 +12,9 @@ public class TupleSet extends AbstractSet<int[]> implements Cloneable {
 
 	private int size;
 
-	public static int collisions = 0;
+	static int collisions = 0;
 
-	public static int tuples = 0;
+	static int tuples = 0;
 
 	private int hashTableSize;
 

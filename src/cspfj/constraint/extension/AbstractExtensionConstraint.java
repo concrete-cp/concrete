@@ -6,14 +6,11 @@
  */
 package cspfj.constraint.extension;
 
-import java.util.List;
-
 import cspfj.constraint.AbstractAC3Constraint;
-import cspfj.constraint.DynamicConstraint;
 import cspfj.problem.Variable;
 
 public abstract class AbstractExtensionConstraint extends AbstractAC3Constraint
-		implements ExtensionConstraint, DynamicConstraint {
+		implements ExtensionConstraint {
 
 	protected MatrixManager matrix;
 
@@ -36,12 +33,12 @@ public abstract class AbstractExtensionConstraint extends AbstractAC3Constraint
 	}
 
 	@Override
-	public int removeTuple(int[] tuple) {
+	public boolean removeTuple(int[] tuple) {
 		if (matrix.removeTuple(tuple)) {
 			addConflict(tuple);
-			return 1;
+			return true;
 		}
-		return 0;
+		return false;
 	}
 
 	@Override
@@ -54,12 +51,14 @@ public abstract class AbstractExtensionConstraint extends AbstractAC3Constraint
 	}
 
 	@Override
-	public int removeTuples(int[] fixed, int mobile, int[] values) {
+	public int removeTuples(int[] base) {
 		int removed = 0;
-		for (int i : values) {
-			fixed[mobile] = i;
-			removed += removeTuple(fixed);
-		}
+		tupleManager.setFirstTuple(base);
+		do {
+			if (removeTuple(this.tuple)) {
+				removed++;
+			}
+		} while (tupleManager.setNextTuple(base));
 		return removed;
 	}
 }

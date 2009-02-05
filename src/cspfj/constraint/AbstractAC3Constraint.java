@@ -1,9 +1,7 @@
 package cspfj.constraint;
 
-import java.util.HashSet;
 import java.util.logging.Logger;
 
-import cspfj.AbstractSolver;
 import cspfj.problem.Variable;
 
 public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
@@ -12,12 +10,8 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 
 	private final int[] startTuple;
 
-	private Watches[][] watches;
-
 	private static final Logger logger = Logger
 			.getLogger(AbstractAC3Constraint.class.getSimpleName());
-
-	private static int watchListSize = 0;
 
 	public AbstractAC3Constraint(Variable[] scope) {
 		this(scope, null);
@@ -34,18 +28,7 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 			}
 		}
 
-		if (AbstractSolver.parameters.containsKey("ac.events")) {
-			watches = new Watches[getArity()][maxDomain];
-
-			for (int p = getArity(); --p >= 0;) {
-				final Variable var = scope[p];
-				for (int i = var.getFirst(); i >= 0; i = var.getNext(i)) {
-					watches[p][i] = new Watches();
-				}
-			}
-		} else {
-			last = new int[getArity()][maxDomain][];
-		}
+		last = new int[getArity()][maxDomain][];
 	}
 
 	public boolean revise(final int position, final int level) {
@@ -59,30 +42,6 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 		// + Arrays.toString(variable.getCurrentDomain()) + " against "
 		// + this);
 
-		if (watches != null) {
-			for (int index = variable.getFirst(); index >= 0; index = variable
-					.getNext(index)) {
-
-				// logger.finer("Checking (" + variable + ", " + index + ")");
-				// if (conflictCounts && othersSize >
-				// nbInitConflicts[position][index]) {
-				// continue;
-				// }
-
-				if (watches[position][index].isEmpty()
-						&& !simpleFindValidTuple(position, index)) {
-					// logger.finer("removing " + index + " from " + variable);
-
-					variable.remove(index, level);
-
-					revised = true;
-					setActive(true);
-
-				}
-
-			}
-			return revised;
-		}
 		for (int index = variable.getFirst(); index >= 0; index = variable
 				.getNext(index)) {
 
@@ -231,15 +190,7 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 	}
 
 	protected void updateResidues() {
-		if (watches != null) {
-			final int[] residue = tuple.clone();
-			for (int position = getArity(); --position >= 0;) {
-				watches[position][residue[position]].add(residue);
-				if (watches[position][residue[position]].size() > watchListSize) {
-					logger.info(Integer.toString(++watchListSize));
-				}
-			}
-		} else if (last != null) {
+		if (last != null) {
 			final int[] residue = tuple.clone();
 			for (int position = getArity(); --position >= 0;) {
 				last[position][residue[position]] = residue;
@@ -249,7 +200,6 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 
 	public void removeTupleCache() {
 		last = null;
-		watches = null;
 	}
 
 	@Override
@@ -292,32 +242,4 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 		// TODO Auto-generated method stub
 		return false;
 	}
-
-	public void deleted(int position, int index) {
-		if (watches == null) {
-			return;
-		}
-		for (int[] residue : watches[position][index]) {
-			for (int p = getArity(); --p >= 0;) {
-				if (p != position) {
-					watches[p][residue[p]].remove(residue);
-				}
-			}
-		}
-		watches[position][index].clear(); // setToCheck(true);
-	}
-
-	public boolean listen() {
-		return watches != null;
-	}
-
-	private static class Watches extends HashSet<int[]> {
-
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 3669590222285240545L;
-
-	}
-
 }

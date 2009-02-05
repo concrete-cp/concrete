@@ -21,6 +21,8 @@ package cspfj.constraint;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import cspfj.constraint.extension.TupleManager;
@@ -32,7 +34,7 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 
 	private static long checks = 0;
 
-	protected static long nbPresenceChecks = 0;
+	private static long nbPresenceChecks = 0;
 
 	private static final Logger logger = Logger
 			.getLogger("cspfj.constraints.Constraint");
@@ -51,7 +53,9 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 
 	private int[] positionInVariable;
 
-	private Variable[] involvedVariables;
+	private Variable[] scope;
+
+	private Set<Variable> scopeSet;
 
 	private final int id;
 
@@ -80,8 +84,12 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 	}
 
 	public AbstractConstraint(final Variable[] scope, final String name) {
-		involvedVariables = scope.clone();
-		arity = involvedVariables.length;
+		this.scope = scope.clone();
+		scopeSet = new HashSet<Variable>(scope.length, 1);
+		for (Variable v : scope) {
+			scopeSet.add(v);
+		}
+		arity = scope.length;
 		id = cId++;
 		tuple = new int[arity];
 
@@ -160,7 +168,7 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 			}
 		} while (tupleManager.setNextTuple());
 		for (int p = arity; --p >= 0;) {
-			final Variable variable = involvedVariables[p];
+			final Variable variable = scope[p];
 			long max = 0;
 			final long[] hereConflicts = nbInitConflicts[p];
 			for (int i = variable.getFirst(); i != -1; i = variable.getNext(i)) {
@@ -175,7 +183,7 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 	}
 
 	public int getValue(final int position) {
-		return involvedVariables[position].getDomain()[tuple[position]];
+		return scope[position].getDomain()[tuple[position]];
 	}
 
 	public final boolean isInvolved(final Variable variable) {
@@ -184,7 +192,7 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 
 	public final int getPosition(final Variable variable) {
 		for (int i = arity; --i >= 0;) {
-			if (involvedVariables[i] == variable) {
+			if (scope[i] == variable) {
 				return i;
 			}
 		}
@@ -210,11 +218,15 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 	}
 
 	public final Variable getVariable(final int position) {
-		return involvedVariables[position];
+		return scope[position];
 	}
 
 	public final Variable[] getScope() {
-		return involvedVariables;
+		return scope;
+	}
+
+	public final Set<Variable> getScopeSet() {
+		return scopeSet;
 	}
 
 	public final int getId() {
@@ -226,7 +238,7 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 	}
 
 	public String toString() {
-		return name + " " + Arrays.toString(involvedVariables);
+		return name + " " + Arrays.toString(scope);
 	}
 
 	protected boolean chk() {
@@ -239,7 +251,7 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		int size = 1;
 		for (int i = arity; --i >= 0;) {
 			if (i != position) {
-				final int dSize = involvedVariables[i].getDomainSize();
+				final int dSize = scope[i].getDomainSize();
 				if (size > Integer.MAX_VALUE / dSize) {
 					return -1;
 				}
@@ -256,7 +268,7 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 
 	protected boolean controlTuplePresence(final int[] tuple, final int position) {
 		nbPresenceChecks++;
-		final Variable[] involvedVariables = this.involvedVariables;
+		final Variable[] involvedVariables = this.scope;
 		for (int i = arity; --i >= 0;) {
 			if (i != position && !involvedVariables[i].isPresent(tuple[i])) {
 				return false;
@@ -274,7 +286,7 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		if (nbInitConflicts == null) {
 			return -1;
 		}
-		return (initSize / involvedVariables[position].getDomain().length)
+		return (initSize / scope[position].getDomain().length)
 				- nbInitConflicts[position][index];
 	}
 
@@ -294,7 +306,7 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 
 	public final boolean isBound() {
 		boolean bound = false;
-		for (Variable v : involvedVariables) {
+		for (Variable v : scope) {
 			if (v.getDomainSize() > 1) {
 				if (bound) {
 					return true;
@@ -340,37 +352,16 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		return id == ((Constraint) object).getId();
 	}
 
-	/**
-	 * Determines if the given set of variables corresponds to the set of
-	 * variables involved in the constraint.
-	 * 
-	 * @param variables
-	 *            a given set of variables
-	 * @return <code> true </code> iff the given set of variables corresponds to
-	 *         the set of variables involved in the constraint
-	 */
-	public boolean isScope(final Collection<Variable> variables) {
-		if (arity != variables.size()) {
-			return false;
-		}
-		for (int i = involvedVariables.length; --i >= 0;) {
-			if (!variables.contains(involvedVariables[i])) {
-				return false;
-			}
-		}
-		return true;
-	}
-
 	public AbstractConstraint deepCopy(final Collection<Variable> variables)
 			throws CloneNotSupportedException {
 		final AbstractConstraint constraint = this.clone();
 
-		constraint.involvedVariables = new Variable[arity];
+		constraint.scope = new Variable[arity];
 
 		for (int i = arity; --i >= 0;) {
 			for (Variable v : variables) {
-				if (v == involvedVariables[i]) {
-					constraint.involvedVariables[i] = v;
+				if (v == scope[i]) {
+					constraint.scope[i] = v;
 					break;
 				}
 			}
@@ -393,8 +384,8 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 
 		int maxDomain = 0;
 		for (int i = arity; --i >= 0;) {
-			if (involvedVariables[i].getDomain().length > maxDomain) {
-				maxDomain = involvedVariables[i].getDomain().length;
+			if (scope[i].getDomain().length > maxDomain) {
+				maxDomain = scope[i].getDomain().length;
 			}
 		}
 		constraint.positionInVariable = new int[arity];
@@ -407,7 +398,7 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 
 	protected final long currentSize() {
 		long size = 1;
-		for (Variable v : involvedVariables) {
+		for (Variable v : scope) {
 			if (size > Integer.MAX_VALUE / v.getDomainSize()) {
 				return -1;
 			}
