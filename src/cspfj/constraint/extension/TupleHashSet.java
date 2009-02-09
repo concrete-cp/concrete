@@ -47,6 +47,7 @@ public class TupleHashSet implements Matrix, Cloneable, Iterable<int[]> {
 			for (int i = list.size(); --i >= 0;) {
 				if (Arrays.equals(list.get(i), tuple)) {
 					list.set(i, null);
+					break;
 				}
 			}
 		} else {

@@ -42,6 +42,8 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 	private final static Logger logger = Logger
 			.getLogger(ExtensionConstraintDynamic.class.getSimpleName());
 
+	public static boolean quick = false;
+
 	public ExtensionConstraintDynamic(final Variable[] scope,
 			final TupleHashSet matrix, final boolean shared)
 			throws FailedGenerationException {
@@ -73,17 +75,17 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 
 	public boolean revise(final int level, final RevisionHandler revisator) {
 		// logger.fine("Revising "+this);
-		// int toFind = 0;
+		int toFind = 0;
 		for (int i = getArity(); --i >= 0;) {
 			found[i].set(0, getVariable(i).getDomain().length);
 
-			if (!getVariable(i).isAssigned()) {
-				for (int index = getVariable(i).getFirst(); index >= 0; index = getVariable(
-						i).getNext(index)) {
-					found[i].clear(index);
-					// toFind++;
-				}
+			// if (!getVariable(i).isAssigned()) {
+			for (int index = getVariable(i).getFirst(); index >= 0; index = getVariable(
+					i).getNext(index)) {
+				found[i].clear(index);
+				toFind++;
 			}
+			// }
 		}
 
 		final LLIterator itr = dynamic.iterator();
@@ -95,9 +97,16 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 			}
 			if (controlTuplePresence(tuple)) {
 				for (int i = getArity(); --i >= 0;) {
-					found[i].set(tuple[i]);
+					if (!quick || !found[i].get(tuple[i])) {
+						found[i].set(tuple[i]);
+						toFind--;
+					}
+
 				}
-			} else {
+				if (quick && toFind <= 0) {
+					break;
+				}
+			} else if (!quick) {
 				itr.remove(level);
 			}
 		}

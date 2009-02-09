@@ -81,12 +81,27 @@ public class TupleSet extends AbstractSet<int[]> implements Cloneable {
 	}
 
 	public void removeTuple(final int[] tuple) {
-		final Cell cell = hashTable[hash(tuple, hashTableSize)];
+		final int position = hash(tuple, hashTableSize);
+		final Cell cell = hashTable[position];
 		if (cell == null) {
-			return ;
+			return;
 		}
-		cell.remove(tuple);
+		int count = cell.count();
+		hashTable[position] = cell.remove(tuple);
+		if (hashTable[position] == null || hashTable[position].count() < count) {
+			size--;
+		}
 
+	}
+
+	@Override
+	public boolean contains(Object o) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean remove(Object o) {
+		throw new UnsupportedOperationException();
 	}
 
 	public boolean add(final int[] tuple) {
@@ -144,7 +159,7 @@ public class TupleSet extends AbstractSet<int[]> implements Cloneable {
 		public HashSetIterator() {
 			pos = 0;
 			cell = null;
-			for (pos = 0; pos < hashTableSize; pos++) {
+			for (; pos < hashTableSize; pos++) {
 				if (hashTable[pos] != null) {
 					cell = hashTable[pos];
 					break;
@@ -162,20 +177,15 @@ public class TupleSet extends AbstractSet<int[]> implements Cloneable {
 			final int[] tuple = cell.tuple;
 			cell = cell.next;
 
-			if (cell == null) {
-				for (pos++; pos < hashTableSize; pos++) {
-					if (hashTable[pos] != null) {
-						cell = hashTable[pos];
-						break;
-					}
-				}
+			while (cell == null && ++pos < hashTableSize) {
+				cell = hashTable[pos];
 			}
 			return tuple;
 		}
 
 		@Override
 		public void remove() {
-			throw new IllegalArgumentException();
+			throw new UnsupportedOperationException();
 		}
 
 	}
@@ -209,7 +219,9 @@ public class TupleSet extends AbstractSet<int[]> implements Cloneable {
 			if (Arrays.equals(this.tuple, tuple)) {
 				return next;
 			}
-			next = next.remove(tuple);
+			if (next != null) {
+				next = next.remove(tuple);
+			}
 			return this;
 		}
 
@@ -220,15 +232,22 @@ public class TupleSet extends AbstractSet<int[]> implements Cloneable {
 			return next.toString() + "," + Arrays.toString(tuple);
 		}
 
+		public int count() {
+			if (next == null) {
+				return 1;
+			}
+			return 1 + next.count();
+		}
+
 	}
 
 	@Override
 	public int size() {
 		return size;
 	}
-	
+
 	public TupleSet clone() throws CloneNotSupportedException {
-		final TupleSet ts = (TupleSet)super.clone();
+		final TupleSet ts = (TupleSet) super.clone();
 		return ts;
 	}
 }

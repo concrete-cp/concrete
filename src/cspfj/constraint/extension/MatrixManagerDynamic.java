@@ -24,7 +24,7 @@ public class MatrixManagerDynamic extends MatrixManager implements
 		first = -1;
 		next = new int[tld.getNbTuples()];
 		Arrays.fill(next, -1);
-		// prev = next.clone();
+
 		removed = new int[arity];
 		Arrays.fill(removed, -1);
 		removedLast = removed.clone();
@@ -40,25 +40,24 @@ public class MatrixManagerDynamic extends MatrixManager implements
 
 	private void expandRemoved(final int newLength) {
 
-		final int[] newRemoved = new int[newLength];
-		Arrays.fill(newRemoved, -1);
-		System.arraycopy(removed, 0, newRemoved, 0, removed.length);
+		final int[] newRemoved = Arrays.copyOf(removed, newLength);
+		Arrays.fill(newRemoved, removed.length, newRemoved.length, -1);
 
-		final int[] newRemovedLast = newRemoved.clone();
-
-		System.arraycopy(removedLast, 0, newRemovedLast, 0, removedLast.length);
+		final int[] newRemovedLast = Arrays.copyOf(removedLast, newLength);
+		Arrays.fill(newRemovedLast, removedLast.length, newRemovedLast.length,
+				-1);
 
 		removed = newRemoved;
 		removedLast = newRemovedLast;
 	}
 
 	public void restore(final int level) {
-		// for (int i = removed.length; --i >= level;) {
-		if (level < removed.length && removed[level] >= 0) {
-			addAll(removed[level], removedLast[level]);
-			removedLast[level] = removed[level] = -1;
+		for (int i = removed.length; --i >= level;) {
+			if (removed[i] >= 0) {
+				addAll(removed[i], removedLast[i]);
+				removedLast[i] = removed[i] = -1;
+			}
 		}
-		// }
 
 	}
 
@@ -149,19 +148,17 @@ public class MatrixManagerDynamic extends MatrixManager implements
 			}
 
 			// assert count() == count - 1 : count + "->" + count();
-
 			if (level >= removed.length) {
 				expandRemoved(level + 1);
 			}
 
-			final int oldFirstRemoved = removed[level];
-
-			next[current] = oldFirstRemoved;
-			removed[level] = current;
-
-			if (oldFirstRemoved < 0) {
+			if (removed[level] < 0) {
 				removedLast[level] = current;
 			}
+
+			next[current] = removed[level];
+			removed[level] = current;
+
 			current = prev;
 
 		}

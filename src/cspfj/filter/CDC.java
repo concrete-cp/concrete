@@ -22,8 +22,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import cspfj.AbstractSolver;
-import cspfj.constraint.Constraint;
-import cspfj.constraint.semantic.RCConstraint;
+import cspfj.constraint.extension.ExtensionConstraintDynamic;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -49,12 +48,14 @@ public final class CDC extends AbstractSAC {
 	@Override
 	protected boolean reduce(int level) throws InterruptedException {
 		final int nbC = problem.getNbConstraints();
+		ExtensionConstraintDynamic.quick = true;
 		final boolean result;
 		try {
 			result = super.reduce(level);
 		} finally {
 			addedConstraints += problem.getNbConstraints() - nbC;
 		}
+		ExtensionConstraintDynamic.quick = false;
 		// for (Constraint c : problem.getConstraints()) {
 		// if (c instanceof RCConstraint) {
 		// ((RCConstraint) c).flushPending();
