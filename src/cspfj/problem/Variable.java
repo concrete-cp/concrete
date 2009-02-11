@@ -49,21 +49,16 @@ public final class Variable implements Cloneable {
 	 * Éléments supprimés du domaine (-1 : présent, n : élément supprimé au
 	 * niveau n)
 	 */
-	// private int[] removed;
+	private int[] removed;
+
 	private long[] booleanDomain;
 
-	private long[][] history;
+	private long[] beforeAssignDomain;
 
 	/**
 	 * Taille actuelle du domaine.
 	 */
 	private int domainSize;
-
-	private int[] domainSizeHistory;
-
-	private int currentLevel;
-
-	private long[] savedLevels;
 
 	/**
 	 * Variable assignée ?
@@ -103,17 +98,15 @@ public final class Variable implements Cloneable {
 	public Variable(final int[] dom, String name) {
 		this.domain = dom.clone();
 		domainSize = domain.length;
-		// this.removed = new int[domain.length];
-		// Arrays.fill(removed, -1);
+		this.removed = new int[domain.length];
+		Arrays.fill(removed, -1);
 
-		history = new long[1][BitVector.nbWords(domainSize)];
-		domainSizeHistory = new int[1];
 		booleanDomain = BitVector.newBitVector(domainSize, true);
-		currentLevel = 0;
+		beforeAssignDomain = booleanDomain.clone();
 		this.assignedIndex = -1;
 		assigned = false;
 		id = nbV++;
-		savedLevels = BitVector.newBitVector(1, false);
+		// savedLevels = BitVector.newBitVector(1, false);
 		if (name == null) {
 			this.name = "X" + id;
 		} else {
@@ -219,31 +212,11 @@ public final class Variable implements Cloneable {
 
 		assignedIndex = index;
 		assigned = true;
-		save(level);
+		System.arraycopy(booleanDomain, 0, beforeAssignDomain, 0,
+				booleanDomain.length);
 		BitVector.setSingle(booleanDomain, index);
+		assert !reinitBooleanDomain();
 		problem.decreaseFutureVariables();
-	}
-
-	private void save(int level) {
-		if (level <= currentLevel) {
-			return;
-		}
-		final int oldLevel = currentLevel;
-		if (oldLevel>= history.length) {
-			history = Arrays.copyOf(history, oldLevel + 1);
-			history[oldLevel] = booleanDomain.clone();
-			domainSizeHistory = Arrays.copyOf(domainSizeHistory, oldLevel+ 1);
-			savedLevels = Arrays.copyOf(savedLevels, BitVector
-					.nbWords(oldLevel+ 1));
-		} else if (history[oldLevel] == null) {
-			history[oldLevel] = booleanDomain.clone();
-		} else {
-			System.arraycopy(booleanDomain, 0, history[oldLevel], 0,
-					booleanDomain.length);
-		}
-		domainSizeHistory[oldLevel] = domainSize;
-		BitVector.set(savedLevels, oldLevel);
-		currentLevel = level;
 	}
 
 	// public boolean assignNotAC(final int index, final Problem problem) {
@@ -277,6 +250,8 @@ public final class Variable implements Cloneable {
 		assert assigned;
 		assigned = false;
 		problem.increaseFutureVariables();
+		System.arraycopy(beforeAssignDomain, 0, booleanDomain, 0,
+				booleanDomain.length);
 	}
 
 	/**
@@ -286,22 +261,24 @@ public final class Variable implements Cloneable {
 	 */
 	public void restore(final int level) {
 		assert !assigned;
-		final int levelToRestore = BitVector.prevSetBit(savedLevels, level + 1);
-		if (levelToRestore >= 0) {
-			BitVector.clear(savedLevels, level+1, 64 * savedLevels.length);
-			System.arraycopy(history[levelToRestore], 0, booleanDomain, 0,
-					booleanDomain.length);
-			domainSize = domainSizeHistory[levelToRestore];
+
+		assert level > 0;
+		final int[] removed = this.removed;
+
+		for (int i = getLastAbsent(); i >= 0; i = getPrevAbsent(i)) {
+			if (removed[i] >= level) {
+				restoreIndex(i);
+			}
 		}
-		currentLevel = level;
+		// currentLevel = level;
 	}
 
-	// private void restore(final int index) {
-	// assert !isPresent(index);
-	// domainSize++;
-	// removed[index] = -1;
-	// BitVector.set(booleanDomain, index);
-	// }
+	private void restoreIndex(final int index) {
+		assert !isPresent(index);
+		domainSize++;
+		removed[index] = -1;
+		BitVector.set(booleanDomain, index, true);
+	}
 
 	/**
 	 * @param index
@@ -313,9 +290,7 @@ public final class Variable implements Cloneable {
 		assert !assigned;
 		assert isPresent(index);
 
-		save(level);
-
-		// removed[index] = level;
+		removed[index] = level;
 		BitVector.clear(booleanDomain, index);
 		domainSize--;
 	}
@@ -352,13 +327,14 @@ public final class Variable implements Cloneable {
 	}
 
 	public int getFirst() {
-		return assigned ? assignedIndex : BitVector
-				.nextSetBit(booleanDomain, 0);
+
+		return BitVector.nextSetBit(booleanDomain, 0);
+
 	}
 
 	public int getLast() {
-		return assigned ? assignedIndex : BitVector.prevSetBit(booleanDomain,
-				domain.length);
+
+		return BitVector.prevSetBit(booleanDomain, domain.length);
 	}
 
 	public void empty(final int level) {
@@ -385,16 +361,9 @@ public final class Variable implements Cloneable {
 	// return removed[index];
 	// }
 
-	public long[] getDomainAtLevel(final int level) {
-		final int levelToRestore = BitVector.nextSetBit(savedLevels, level);
-		if (levelToRestore < 0) {
-			return null;
-		}
-		return history[levelToRestore];
-	}
-
 	public int getNext(final int index) {
 		return BitVector.nextSetBit(booleanDomain, index + 1);
+
 	}
 
 	public int getPrev(final int index) {
@@ -403,20 +372,40 @@ public final class Variable implements Cloneable {
 
 	public int getLastAbsent() {
 		return BitVector.prevClearBit(booleanDomain, domain.length);
+
 	}
 
 	public int getPrevAbsent(final int index) {
 		return BitVector.prevClearBit(booleanDomain, index);
+
 	}
 
 	public long[] getBitDomain() {
+
 		return booleanDomain;
+	}
+
+	public boolean reinitBooleanDomain() {
+		boolean change = false;
+		if (assigned) {
+			for (int i = removed.length; --i >= 0;) {
+				change |= BitVector.set(booleanDomain, i, i == assignedIndex);
+			}
+		} else {
+			for (int i = removed.length; --i >= 0;) {
+				change |= BitVector.set(booleanDomain, i, removed[i] < 0);
+			}
+		}
+		return change;
 	}
 
 	public Variable clone() throws CloneNotSupportedException {
 		final Variable variable = (Variable) super.clone();
 
 		variable.booleanDomain = booleanDomain.clone();
+
+		variable.beforeAssignDomain = booleanDomain.clone();
+
 		return variable;
 	}
 
@@ -426,6 +415,10 @@ public final class Variable implements Cloneable {
 
 	public int getPositionInConstraint(final int constraint) {
 		return positionInConstraint[constraint];
+	}
+
+	public void assignBoolean(final int index) {
+		BitVector.setSingle(booleanDomain, index);
 	}
 
 	public int getNextPresent(int i) {
