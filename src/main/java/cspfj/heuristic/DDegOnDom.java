@@ -20,7 +20,7 @@ public final class DDegOnDom extends AbstractVariableHeuristic {
 		double count = 0;
 
 		for (Constraint c : variable.getInvolvingConstraints()) {
-			if (c.isBound()) {
+			if (c.isBound(variable)) {
 				count++;
 			}
 		}

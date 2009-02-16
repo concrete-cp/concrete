@@ -328,7 +328,7 @@ public final class Variable implements Cloneable {
 	}
 
 	public int[] getCurrentDomain() {
-		return domain.current();
+		return domain.currentValues();
 	}
 
 	public String getName() {
@@ -391,19 +391,19 @@ public final class Variable implements Cloneable {
 		return positionInConstraint[constraint];
 	}
 
-	public void push() {
-		domain.push();
+	public void setLevel(int level) {
+		domain.setLevel(level);
 	}
 
-	public void pop() {
-		domain.pop();
+	public void restoreLevel(int level) {
+		domain.restoreLevel(level);
 	}
 
 	public void reset(Problem problem) {
 		if (isAssigned()) {
 			unassign(problem);
 		}
-		domain.reset();
+		domain.restoreLevel(0);
 	}
 
 	public boolean isPresent(int index) {

@@ -151,15 +151,8 @@ public class MatrixManager implements Cloneable {
 	}
 
 	protected Matrix unshareMatrix() {
-		try {
-			matrix = matrix.clone();
-
-		} catch (CloneNotSupportedException e) {
-			// TODO Auto-generated catch block
-
-		}
 		shared = false;
-		return matrix;
+		return matrix = matrix.clone();
 	}
 
 	public String getType() {

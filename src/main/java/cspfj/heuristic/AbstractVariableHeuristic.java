@@ -7,7 +7,7 @@ import cspfj.problem.Variable;
 
 public abstract class AbstractVariableHeuristic implements VariableHeuristic {
 
-	private final static Random random = new Random();
+	private final static Random random = new Random(0);
 
 	protected final Problem problem;
 
@@ -16,19 +16,22 @@ public abstract class AbstractVariableHeuristic implements VariableHeuristic {
 	}
 
 	public Variable selectVariable(final Variable[] variables) {
+		int ties = 1;
 		Variable bestVariable = null;
-
-		for (Variable v : variables) {
-			if (v.getDomainSize() > 1
-					&& (bestVariable == null || compare(v, bestVariable) > 0)) {
-				bestVariable = v;
+		int i = variables.length;
+		while (--i >= 0) {
+			if (!variables[i].isAssigned()) {
+				bestVariable = variables[i];
+				break;
 			}
 		}
 
-		if (bestVariable == null) {
-			for (Variable v : variables) {
-				if (!v.isAssigned()) {
-					return v;
+		while (--i >= 0) {
+			if (variables[i].getDomainSize() > 1) {
+				final int comp = compare(variables[i], bestVariable);
+				if (comp > 0 || (comp == 0 && ++ties * random.nextFloat() > 1)) {
+					bestVariable = variables[i];
+					ties = 1;
 				}
 			}
 		}

@@ -51,7 +51,7 @@ public interface Constraint {
 
 	long getNbInitConflicts(final int position, final int index);
 
-	boolean isBound();
+	boolean isBound(Variable variable);
 
 	String getType();
 

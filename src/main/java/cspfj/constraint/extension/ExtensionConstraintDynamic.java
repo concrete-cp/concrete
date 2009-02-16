@@ -20,7 +20,6 @@
 package cspfj.constraint.extension;
 
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.logging.Logger;
@@ -31,6 +30,8 @@ import cspfj.constraint.extension.MatrixManagerDynamic.LLIterator;
 import cspfj.exception.FailedGenerationException;
 import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
+import cspfj.util.BitVector;
+import cspfj.util.BitVector;
 import cspfj.util.LargeBitVector;
 
 public class ExtensionConstraintDynamic extends AbstractConstraint implements
@@ -38,7 +39,7 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 
 	private final MatrixManagerDynamic dynamic;
 
-	private final long[][] found;
+	private final BitVector[] found;
 
 	private final static Logger logger = Logger
 			.getLogger(ExtensionConstraintDynamic.class.getSimpleName());
@@ -61,12 +62,12 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 		found = initFound();
 	}
 
-	private long[][] initFound() {
+	private BitVector[] initFound() {
 
-		final long[][] found = new long[getArity()][];
+		final BitVector[] found = new BitVector[getArity()];
 		for (int i = getArity(); --i >= 0;) {
-			found[i] = LargeBitVector.newBitVector(getVariable(i).getDomain()
-					.maxSize(), false);
+			found[i] = BitVector.factory(getVariable(i).getDomain().maxSize(),
+					false);
 		}
 		return found;
 	}
@@ -79,13 +80,12 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 		// logger.fine("Revising "+this);
 		int toFind = 0;
 		for (int i = getArity(); --i >= 0;) {
-			LargeBitVector
-					.fill(found[i], getVariable(i).getDomain().maxSize(), true);
+			found[i].fill(true);
 
 			// if (!getVariable(i).isAssigned()) {
 			for (int index = getVariable(i).getFirst(); index >= 0; index = getVariable(
 					i).getNext(index)) {
-				LargeBitVector.clear(found[i], index);
+				found[i].clear(index);
 				toFind++;
 			}
 			// }
@@ -100,8 +100,8 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 			}
 			if (controlTuplePresence(tuple)) {
 				for (int i = getArity(); --i >= 0;) {
-					if (!quick || !LargeBitVector.get(found[i], tuple[i])) {
-						LargeBitVector.set(found[i], tuple[i]);
+					if (!quick || !found[i].get(tuple[i])) {
+						found[i].set(tuple[i]);
 						toFind--;
 					}
 
@@ -118,11 +118,11 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 			final Variable variable = getVariable(i);
 
 			boolean rev = false;
-			final long[] found = this.found[i];
+			final BitVector found = this.found[i];
 			for (int index = variable.getFirst(); index >= 0; index = variable
 					.getNext(index)) {
 
-				if (!LargeBitVector.get(found, index)) {
+				if (!found.get(index)) {
 					// logger.finer("removing " + index + " from " + variable);
 
 					variable.remove(index, level);

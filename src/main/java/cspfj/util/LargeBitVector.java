@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import cspfj.problem.IntIterator;
 
-public class LargeBitVector extends AbstractBitVector {
+public class LargeBitVector extends BitVector {
 	private final static int ADDRESS_BITS_PER_WORD = 6;
 
 	// Taille d'un long (64=2^6)
@@ -15,15 +15,16 @@ public class LargeBitVector extends AbstractBitVector {
 	private long[] words;
 
 	public LargeBitVector(final int size, final boolean fill) {
+		super(size);
 		words = new long[nbWords(size)];
-		fill(size, fill);
+		fill(fill);
 	}
 
 	public static int word(final int bit) {
 		return bit >> ADDRESS_BITS_PER_WORD;
 	}
 
-	public void fill(final int size, final boolean fill) {
+	public void fill(final boolean fill) {
 		Arrays.fill(words, fill ? MASK : 0);
 		words[words.length - 1] >>>= -size;
 	}
@@ -97,6 +98,17 @@ public class LargeBitVector extends AbstractBitVector {
 			word = ~words[position];
 		}
 		return (1 + position) * SIZE - Long.numberOfLeadingZeros(word) - 1;
+	}
+
+	@Override
+	public BitVector exclusive(BitVector bv) {
+		final LargeBitVector bitVector = (LargeBitVector) bv.clone();
+		int i = words.length - 1;
+		bitVector.words[i] = (bitVector.words[i] ^ words[i]) & (MASK >>> -size);
+		while (--i >= 0) {
+			bitVector.words[i] ^= words[i];
+		}
+		return bitVector;
 	}
 
 	public void setSingle(final int index) {
@@ -198,6 +210,10 @@ public class LargeBitVector extends AbstractBitVector {
 		}
 
 		return -1;
+	}
+
+	public int realSize() {
+		return words.length;
 	}
 
 }

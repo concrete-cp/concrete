@@ -2,12 +2,12 @@ package cspfj.util;
 
 import cspfj.problem.IntIterator;
 
-public class SmallBitVector extends AbstractBitVector {
+public class SmallBitVector extends BitVector {
 
 	private long word;
 
 	public SmallBitVector(final int size, final boolean fill) {
-		super();
+		super(size);
 		word = fill ? MASK >>> -size : 0;
 	}
 
@@ -98,7 +98,7 @@ public class SmallBitVector extends AbstractBitVector {
 	}
 
 	@Override
-	public void fill(int size, boolean fill) {
+	public void fill(boolean fill) {
 		word = fill ? (MASK >>> -size) : 0;
 	}
 
@@ -108,5 +108,15 @@ public class SmallBitVector extends AbstractBitVector {
 
 	public int intersects(BitVector bv) {
 		return intersects(bv, 0) ? 0 : -1;
+	}
+	
+	public int realSize() {
+		return 1;
+	}
+	
+	public BitVector exclusive(BitVector bv) {
+		final SmallBitVector bitVector = (SmallBitVector) bv.clone();
+		bitVector.word = (bitVector.word ^ this.word) & (MASK >>> -size);
+		return bitVector;
 	}
 }

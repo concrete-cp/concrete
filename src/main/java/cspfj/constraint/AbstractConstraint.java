@@ -304,14 +304,10 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		return nbMaxConflicts[position];
 	}
 
-	public final boolean isBound() {
-		boolean bound = false;
+	public final boolean isBound(Variable variable) {
 		for (Variable v : scope) {
-			if (v.getDomainSize() > 1) {
-				if (bound) {
-					return true;
-				}
-				bound = true;
+			if (v != variable && v.getDomainSize() > 1) {
+				return true;
 			}
 		}
 		return false;

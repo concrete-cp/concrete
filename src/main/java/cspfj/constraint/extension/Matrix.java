@@ -6,5 +6,5 @@ public interface Matrix extends Cloneable {
 
 	boolean check(int[] tuple);
 
-	Matrix clone() throws CloneNotSupportedException;
+	Matrix clone();
 }

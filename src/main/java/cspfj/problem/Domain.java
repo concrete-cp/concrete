@@ -1,5 +1,7 @@
 package cspfj.problem;
 
+import cspfj.util.BitVector;
+
 public interface Domain {
 	int first();
 	int last();
@@ -15,9 +17,10 @@ public interface Domain {
 	void setSingle(int index);
 	void remove(int index);
 	IntIterator iterator();
-	int[] current();
+	int[] currentValues();
 	Domain clone();
-	void pop();
-	void push();
-	void reset();
+	void setLevel(int level);
+	void restoreLevel(int level);
+	BitVector getAtLevel(int level);
+	BitVector currentIndexes();
 }

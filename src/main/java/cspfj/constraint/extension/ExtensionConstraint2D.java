@@ -23,7 +23,7 @@ import java.util.Collection;
 
 import cspfj.constraint.AbstractPVRConstraint;
 import cspfj.constraint.DynamicConstraint;
-import cspfj.problem.IntIterator;
+import cspfj.problem.Domain;
 import cspfj.problem.Variable;
 
 public class ExtensionConstraint2D extends AbstractPVRConstraint implements
@@ -71,16 +71,15 @@ public class ExtensionConstraint2D extends AbstractPVRConstraint implements
 
 	public boolean revise(final int position, final int level) {
 		final Variable variable = getVariable(position);
-
+		final Domain domain = variable.getDomain();
 		assert !variable.isAssigned();
 
 		boolean revised = false;
 
-		// for (int index = variable.getFirst(); index >= 0; index = variable
-		// .getNext(index)) {
+		for (int index = domain.first(); index >= 0; index = domain.next(index)) {
 
-		for (IntIterator itr = variable.iterator(); itr.hasNext();) {
-			final int index = itr.next();
+			// for (IntIterator itr = variable.iterator(); itr.hasNext();) {
+			// final int index = itr.next();
 			if (!findValidTuple(position, index)) {
 
 				variable.remove(index, level);

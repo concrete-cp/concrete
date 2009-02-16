@@ -1,10 +1,7 @@
 package cspfj.constraint.extension;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 
 public class TupleHashSet implements Matrix, Cloneable, Iterable<int[]> {
 
@@ -13,8 +10,6 @@ public class TupleHashSet implements Matrix, Cloneable, Iterable<int[]> {
 	private final boolean initialContent;
 
 	private TupleSet set;
-
-	private List<int[]> list;
 
 	public TupleHashSet(final boolean initialContent) {
 		this(initialContent, 12);
@@ -25,7 +20,6 @@ public class TupleHashSet implements Matrix, Cloneable, Iterable<int[]> {
 		this.initialContent = initialContent;
 		// list = new HashMap<Long, Collection<int[]>>();
 		set = new TupleSet(nbTuples);
-		list = new ArrayList<int[]>();
 
 		// System.out.println("Hashtable of " + hashTableSize + " buckets");
 
@@ -44,32 +38,24 @@ public class TupleHashSet implements Matrix, Cloneable, Iterable<int[]> {
 	public void set(final int[] tuple, final boolean status) {
 		if (status == initialContent) {
 			set.removeTuple(tuple);
-			for (int i = list.size(); --i >= 0;) {
-				if (Arrays.equals(list.get(i), tuple)) {
-					list.set(i, null);
-					break;
-				}
-			}
 		} else {
-			final int[] clone = tuple.clone();
-			set.add(clone);
-			list.add(clone);
+			set.add(tuple.clone());
 		}
 	}
 
-	public int[] getTuple(final int index) {
-		return list.get(index);
-	}
-
 	public int getNbTuples() {
-		return list.size();
+		return set.size();
 	}
 
-	public TupleHashSet clone() throws CloneNotSupportedException {
-		final TupleHashSet ths = (TupleHashSet) super.clone();
+	public TupleHashSet clone() {
+		TupleHashSet ths;
+		try {
+			ths = (TupleHashSet) super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new IllegalStateException(e);
+		}
 
-		ths.list = new ArrayList<int[]>(list);
-		ths.set = (TupleSet) set.clone();
+		ths.set = set.clone();
 
 		// list.list = new HashSet<BigInteger>(this.list);
 

@@ -1,6 +1,6 @@
 package cspfj.constraint.extension;
 
-import cspfj.util.AbstractBitVector;
+import cspfj.util.BitVector;
 import cspfj.util.BitVector;
 import cspfj.util.LargeBitVector;
 
@@ -12,13 +12,13 @@ public class Matrix2D implements Matrix, Cloneable {
 
 		xMatrix = new BitVector[x];
 		for (int i = xMatrix.length; --i >= 0;) {
-			xMatrix[i] = AbstractBitVector.factory(y, initialState);
+			xMatrix[i] = BitVector.factory(y, initialState);
 		}
 
 		yMatrix = new BitVector[y];
 
 		for (int i = yMatrix.length; --i >= 0;) {
-			yMatrix[i] = AbstractBitVector.factory(x, initialState);
+			yMatrix[i] = BitVector.factory(x, initialState);
 		}
 
 	}

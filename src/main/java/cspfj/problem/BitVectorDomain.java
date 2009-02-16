@@ -17,8 +17,6 @@ public class BitVectorDomain implements Domain {
 	private BitVector[] bvHistory;
 	private int[] dsHistory;
 
-	private int level;
-
 	public BitVectorDomain(int[] domain) {
 		if (domain.length > 64) {
 			bvDomain = new LargeBitVector(domain.length, true);
@@ -116,7 +114,7 @@ public class BitVectorDomain implements Domain {
 	}
 
 	@Override
-	public int[] current() {
+	public int[] currentValues() {
 		final int[] values = new int[size];
 
 		for (int i = first(), j = 0; i >= 0; i = next(i), j++) {
@@ -150,24 +148,34 @@ public class BitVectorDomain implements Domain {
 		return domain.length;
 	}
 
-	public void push() {
-		if (level >= bvHistory.length) {
-			bvHistory = Arrays.copyOf(bvHistory, level + 1);
-			dsHistory = Arrays.copyOf(dsHistory, level + 1);
+	private int currentLevel = 0;
+
+	public void setLevel(int level) {
+		assert level > currentLevel;
+		if (currentLevel >= bvHistory.length) {
+			bvHistory = Arrays.copyOf(bvHistory, currentLevel + 1);
+			dsHistory = Arrays.copyOf(dsHistory, currentLevel + 1);
+			bvHistory[currentLevel] = bvDomain.clone();
+		} else {
+			bvDomain.copyTo(bvHistory[currentLevel]);
 		}
-		bvDomain.copyTo(bvHistory[level]);
-		dsHistory[level++] = size;
-
+		dsHistory[currentLevel] = size;
+		currentLevel = level;
 	}
 
-	public void pop() {
-		bvHistory[--level].copyTo(bvDomain);
-		size = dsHistory[level];
+	public void restoreLevel(int level) {
+		if (level < currentLevel) {
+			bvHistory[level].copyTo(bvDomain);
+			size = dsHistory[level];
+			currentLevel = level;
+		}
 	}
 
-	public void reset() {
-		bvDomain = bvHistory[0];
-		size = dsHistory[0];
-		level = 0;
+	public BitVector getAtLevel(int level) {
+		return bvHistory[Math.min(level, currentLevel)];
+	}
+
+	public BitVector currentIndexes() {
+		return bvDomain;
 	}
 }

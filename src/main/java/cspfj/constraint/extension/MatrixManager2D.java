@@ -1,6 +1,7 @@
 package cspfj.constraint.extension;
 
 import cspfj.problem.Variable;
+import cspfj.util.BitVector;
 
 public final class MatrixManager2D extends MatrixManager {
 
@@ -23,9 +24,9 @@ public final class MatrixManager2D extends MatrixManager {
 		int length = Math.max(scope[0].getDomain().maxSize(), scope[1]
 				.getDomain().maxSize());
 
-		if (length > 3 * Integer.SIZE) {
-			last = new int[2][Math.max(scope[0].getDomain().maxSize(), scope[1]
-					.getDomain().maxSize())];
+		if (length > 3 * Long.SIZE) {
+			last = new int[][] { new int[scope[0].getDomain().maxSize()],
+					new int[scope[1].getDomain().maxSize()] };
 		} else {
 			last = null;
 		}
@@ -54,22 +55,24 @@ public final class MatrixManager2D extends MatrixManager {
 			return true;
 		}
 
-		final long[] mask = matrix.getBitVector(variablePosition, index);
-		final long[] domain = variables[1 - variablePosition].getBitDomain();
-		for (int part = mask.length; --part >= 0;) {
-			checks++;
-			if ((mask[part] & domain[part]) != 0) {
-				last[variablePosition][index] = part;
-				return true;
-			}
+		final BitVector matrixBV = matrix.getBitVector(variablePosition, index);
+		final int intersection = matrixBV
+				.intersects(variables[1 - variablePosition].getBitDomain());
+
+		if (intersection >= 0) {
+			checks += 1 + intersection;
+			last[variablePosition][index] = intersection;
+			return true;
 		}
+
+		checks += matrixBV.realSize();
 		return false;
 	}
 
 	private boolean hasSupportNR(final int variablePosition, final int index) {
 		checks++;
 		return matrix.getBitVector(variablePosition, index).intersects(
-				variables[1 - variablePosition].getBitDomain(), 0) >= 0;
+				variables[1 - variablePosition].getBitDomain()) >= 0;
 	}
 
 	public MatrixManager2D clone() throws CloneNotSupportedException {
@@ -90,8 +93,8 @@ public final class MatrixManager2D extends MatrixManager {
 		final int part = last[position][index];
 		presenceChecks++;
 		return part != -1
-				&& (matrix.getBitVector(position, index)[part] & variables[1 - position]
-						.getBitDomain()[part]) != 0;
+				&& matrix.getBitVector(position, index).intersects(
+						variables[1 - position].getBitDomain(), part);
 	}
 
 	protected Matrix unshareMatrix() {

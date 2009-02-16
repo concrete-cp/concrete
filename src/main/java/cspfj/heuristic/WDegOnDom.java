@@ -27,10 +27,6 @@ public final class WDegOnDom extends AbstractVariableHeuristic {
 
 	public WDegOnDom(final Problem problem) {
 		super(problem);
-
-		for (Constraint c : problem.getConstraints()) {
-			c.setWeight(1);
-		}
 	}
 
 	public double getScore(final Variable variable) {
@@ -41,7 +37,7 @@ public final class WDegOnDom extends AbstractVariableHeuristic {
 		double count = 0;
 
 		for (Constraint c : variable.getInvolvingConstraints()) {
-			if (c.isBound()) {
+			if (c.isBound(variable)) {
 				count += c.getWeight();
 			}
 		}

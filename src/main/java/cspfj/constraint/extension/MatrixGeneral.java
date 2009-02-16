@@ -61,8 +61,13 @@ public class MatrixGeneral implements Matrix, Cloneable {
 		return index;
 	}
 
-	public MatrixGeneral clone() throws CloneNotSupportedException {
-		final MatrixGeneral matrix = (MatrixGeneral) super.clone();
+	public MatrixGeneral clone() {
+		MatrixGeneral matrix;
+		try {
+			matrix = (MatrixGeneral) super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new IllegalStateException(e);
+		}
 		matrix.skip = skip.clone();
 		matrix.matrix = this.matrix.clone();
 		return matrix;

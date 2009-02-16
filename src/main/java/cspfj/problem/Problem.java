@@ -42,6 +42,7 @@ import cspfj.constraint.extension.Matrix2D;
 import cspfj.constraint.extension.TupleHashSet;
 import cspfj.constraint.semantic.RCConstraint;
 import cspfj.exception.FailedGenerationException;
+import cspfj.util.BitVector;
 import cspfj.util.Waker;
 
 public final class Problem implements Cloneable {
@@ -298,15 +299,15 @@ public final class Problem implements Cloneable {
 		nbFutureVariables--;
 	}
 
-	public void push() {
+	public void setLevel(int level) {
 		for (Variable v : variableArray) {
-			v.push();
+			v.setLevel(level);
 		}
 	}
 
-	public void pop() {
+	public void restoreLevel(int level) {
 		for (Variable v : variableArray) {
-			v.pop();
+			v.restoreLevel(level);
 		}
 	}
 
@@ -429,7 +430,7 @@ public final class Problem implements Cloneable {
 
 		for (DynamicConstraint c : scope.iterator().next()
 				.getDynamicConstraints()) {
-			if (c.getArity() < scope.size()) {
+			if (c.getArity() != scope.size()) {
 				continue;
 			}
 			// boolean ok = true;
@@ -604,15 +605,14 @@ public final class Problem implements Cloneable {
 				return new RCConstraint(constraintScope);
 			}
 
-			final Matrix2D matrix = new Matrix2D(
-					constraintScope[0].getDomain().maxSize(), constraintScope[1]
-							.getDomain().maxSize(), true);
+			final Matrix2D matrix = new Matrix2D(constraintScope[0].getDomain()
+					.maxSize(), constraintScope[1].getDomain().maxSize(), true);
 			return new ExtensionConstraint2D(constraintScope, matrix, false,
 					true);
 
 		}
 
-		if (addConstraints == LearnMethod.EXTENSION) {
+		if (addConstraints == LearnMethod.EXT) {
 
 			final Matrix matrix = new TupleHashSet(true);
 
@@ -648,24 +648,39 @@ public final class Problem implements Cloneable {
 		}
 
 		final Variable[] levelVariables = this.levelVariables;
-		final int[] fullTuple = new int[getNbVariables()];
 
 		if (levelVariables[0] == null) {
 			return false;
 		}
 
+		int startLevel = levelVariables.length;
+		while (--startLevel >= 0) {
+			if (levelVariables[startLevel] != null) {
+				break;
+			}
+		}
+		startLevel++;
+
+		int[] tuple = new int[startLevel + 1];
+
 		final Set<Variable> scopeSet = new HashSet<Variable>(getNbVariables(),
 				1);
-		scopeSet.add(levelVariables[0]);
-		fullTuple[0] = levelVariables[0].getFirst();
+		for (int i = startLevel; --i >= 0;) {
+			scopeSet.add(levelVariables[i]);
+			tuple[i] = levelVariables[i].getFirst();
+		}
 
 		boolean modified = false;
 		final Collection<Constraint> addedConstraints = new ArrayList<Constraint>();
 
-		for (int level = 1; level < levelVariables.length; level++) {
-			final int[] tuple = Arrays.copyOf(fullTuple, level + 1);
+		for (int level = startLevel + 1; --level >= 1;) {
+			// Nothing to remove on first level 
+			scopeSet.remove(levelVariables[level]);
 			final Variable[] scopeArray = Arrays.copyOf(levelVariables,
 					level + 1);
+			tuple = Arrays.copyOf(tuple, level + 1);
+
+			restoreLevel(level);
 
 			for (Variable fv : variableArray) {
 				// logger.fine("checking " +
@@ -675,8 +690,9 @@ public final class Problem implements Cloneable {
 					continue;
 				}
 
-				final long[] domain = fv.getDomainAtLevel(level);
-				if (domain == null) {
+				final BitVector changes = fv.getDomain().getAtLevel(level - 1)
+						.exclusive(fv.getDomain().currentIndexes());
+				if (changes.nextSetBit(0) < 0) {
 					continue;
 				}
 
@@ -691,35 +707,30 @@ public final class Problem implements Cloneable {
 					continue;
 				}
 
-				final boolean newConstraint = constraint.getId() > getMaxCId();
-
 				scopeArray[level] = fv;
-
-				final int newNogoods = 0;
-				// constraint.removeTuples(makeBase(
-				// scopeArray, level + 1, tuple, constraint));
+				fv.restoreLevel(level - 1);
+				int newNogoods = 0;
+				for (int i = changes.nextSetBit(0); i >= 0; i = changes
+						.nextSetBit(i + 1)) {
+					tuple[level] = i;
+					newNogoods += constraint.removeTuples(makeBase(scopeArray,
+							level + 1, tuple, constraint));
+				}
 				if (newNogoods == 0) {
 					continue;
 				}
 				nbNoGoods += newNogoods;
 				modified = true;
-				if (newConstraint) {
-					logger.fine("Added " + constraint);
+				if (constraint.getId() > getMaxCId()) {
+					logger.info("Added " + constraint);
 					addedConstraints.add(constraint);
 				}
 
 			}
-
-			if (levelVariables[level] == null) {
-				break;
-			}
-			scopeSet.add(levelVariables[level]);
-			fullTuple[level] = levelVariables[level].getFirst();
-
 		}
 
 		if (modified) {
-			logger.fine(nbNoGoods + " nogoods");
+			logger.info(nbNoGoods + " nogoods");
 
 			if (!addedConstraints.isEmpty()) {
 				final Collection<Constraint> curCons = new ArrayList<Constraint>(
@@ -924,7 +935,7 @@ public final class Problem implements Cloneable {
 	// return extConstraints;
 	// }
 	public static enum LearnMethod {
-		NONE, EXTENSION, RC, BIN
+		NONE, EXT, RC, BIN
 	}
 
 	public static void main(String[] args) {

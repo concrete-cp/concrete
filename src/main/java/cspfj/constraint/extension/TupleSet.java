@@ -3,12 +3,13 @@ package cspfj.constraint.extension;
 import java.util.AbstractSet;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
 public class TupleSet extends AbstractSet<int[]> implements Cloneable {
 
 	// private Map<Long, Collection<int[]>> list;
 
-	private Cell[] hashTable;
+	private List<int[]>[] hashTable;
 
 	private int size;
 
@@ -61,18 +62,22 @@ public class TupleSet extends AbstractSet<int[]> implements Cloneable {
 
 	}
 
-	private static int hash(final int[] tuple, final int prime) {
-		int hash = -2128831035;
-		for (int i : tuple) {
-			hash *= 16777619;
-			hash ^= i;
+	// private static int hash(final int[] tuple, final int prime) {
+	// int hash = -2128831035;
+	// for (int i : tuple) {
+	// hash *= 16777619;
+	// hash ^= i;
+	//
+	// }
+	// hash %= prime;
+	// return Math.abs(hash);
+	// //
+	// // long res = (hash & 0x7fffffff) | (hash & 0x80000000l);
+	// // return (int)(res % prime);
+	// }
 
-		}
-		hash %= prime;
-		return Math.abs(hash);
-		//		
-		// long res = (hash & 0x7fffffff) | (hash & 0x80000000l);
-		// return (int)(res % prime);
+	private static int hash(final int[] tuple, final int prime) {
+		return Arrays.hashCode(tuple) & (prime - 1);
 	}
 
 	public boolean containsTuple(final int[] tuple) {
@@ -246,8 +251,11 @@ public class TupleSet extends AbstractSet<int[]> implements Cloneable {
 		return size;
 	}
 
-	public TupleSet clone() throws CloneNotSupportedException {
-		final TupleSet ts = (TupleSet) super.clone();
-		return ts;
+	public TupleSet clone() {
+		try {
+			return (TupleSet) super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new IllegalStateException(e);
+		}
 	}
 }

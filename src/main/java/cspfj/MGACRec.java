@@ -46,6 +46,11 @@ public final class MGACRec extends AbstractSolver {
 	private static final Logger logger = Logger.getLogger("cspfj.MACSolver");
 
 	private boolean allSolutions = false;
+	
+	private final static Problem.LearnMethod addConstraints = AbstractSolver.parameters
+	.containsKey("mgac.addConstraints") ? Problem.LearnMethod
+	.valueOf(AbstractSolver.parameters.get("mgac.addConstraints"))
+	: Problem.LearnMethod.NONE;
 
 	public MGACRec(final Problem prob, final ResultHandler resultHandler) {
 		this(prob, resultHandler, new DiscHeuristic(new WDegOnDom(prob),
@@ -109,8 +114,8 @@ public final class MGACRec extends AbstractSolver {
 		// }
 
 		// if (filter.ensureAC()) {
-		problem.push();
-		
+		problem.setLevel(level + 1);
+
 		selectedVariable.assign(selectedIndex, problem);
 		// } else if (!selectedVariable.assignNotAC(selectedIndex, problem)) {
 		// selectedVariable.unassign(problem);
@@ -131,7 +136,7 @@ public final class MGACRec extends AbstractSolver {
 		}
 
 		selectedVariable.unassign(problem);
-		problem.pop();
+		problem.restoreLevel(level);
 
 		problem.setLevelVariables(level, null);
 
@@ -141,7 +146,7 @@ public final class MGACRec extends AbstractSolver {
 		if (selectedVariable.getDomainSize() <= 1) {
 			return false;
 		}
-		selectedVariable.remove(selectedIndex,0);
+		selectedVariable.remove(selectedIndex, 0);
 
 		checkBacktracks();
 
@@ -230,7 +235,7 @@ public final class MGACRec extends AbstractSolver {
 					.info("Took " + macTime + "s (" + (maxBT / macTime)
 							+ " bps)");
 			maxBT *= 1.5;
-			// problem.addNoGoods(Problem.LearnMethod.NONE);
+			problem.addNoGoods(addConstraints);
 			problem.reset();
 
 			try {
