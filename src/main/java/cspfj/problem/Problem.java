@@ -760,6 +760,10 @@ public final class Problem implements Cloneable {
 	public Variable getLevelVariable(final int level) {
 		return levelVariables[level];
 	}
+	
+	public void clearLevelVariables() {
+		Arrays.fill(levelVariables, null);
+	}
 
 	public int[] getLevelVariables(final int minLevel) {
 		final int[] variables = new int[levelVariables.length - minLevel];
@@ -952,4 +956,5 @@ public final class Problem implements Cloneable {
 		t[a] = t[b];
 		t[b] = tmp;
 	}
+
 }

@@ -214,10 +214,12 @@ public final class MGACRec extends AbstractSolver {
 			}
 
 			logger.info("MAC with " + maxBT + " bt");
+			setMaxBacktracks(maxBT);
+			problem.clearLevelVariables();
 			float macTime = -chronometer.getCurrentChrono();
 			// System.out.print("run ! ");
 			try {
-				setMaxBacktracks(maxBT);
+
 				mac(0, null);
 
 				break;
