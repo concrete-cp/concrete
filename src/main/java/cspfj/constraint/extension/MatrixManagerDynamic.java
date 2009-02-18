@@ -17,6 +17,7 @@ public class MatrixManagerDynamic extends MatrixManager implements
 	private int[] next;
 
 	private int[] removed;
+
 	private int[] removedLast;
 
 	public MatrixManagerDynamic(final Variable[] scope, final TupleSet matrix,
@@ -119,7 +120,9 @@ public class MatrixManagerDynamic extends MatrixManager implements
 
 		private int current = first;
 
-		private int prev = first;
+		private int lastReturned = -1;
+
+		private int lastReturnedPrev = -1;
 
 		@Override
 		public boolean hasNext() {
@@ -128,9 +131,10 @@ public class MatrixManagerDynamic extends MatrixManager implements
 
 		@Override
 		public int[] next() {
-			prev = current;
+			lastReturnedPrev = lastReturned;
+			lastReturned = current;
 			current = next[current];
-			return tupleList[prev];
+			return tupleList[lastReturned];
 		}
 
 		@Override
@@ -139,13 +143,12 @@ public class MatrixManagerDynamic extends MatrixManager implements
 		}
 
 		public void remove(final int level) {
-			if (prev < 0) {
-				first = next[current];
+			if (lastReturned == first) {
+				first = next[lastReturned];
 			} else {
-				next[prev] = next[current];
+				next[lastReturnedPrev] = next[lastReturned];
 			}
 
-			// assert count() == count - 1 : count + "->" + count();
 			if (level >= removed.length) {
 				expandRemoved(level + 1);
 			}
@@ -154,18 +157,12 @@ public class MatrixManagerDynamic extends MatrixManager implements
 				removedLast[level] = current;
 			}
 
-			next[current] = removed[level];
-			removed[level] = current;
+			next[lastReturned] = removed[level];
+			removed[level] = lastReturned;
 
-			current = prev;
-
+			lastReturned = -1;
 		}
 
-	}
-
-	protected Matrix unshareMatrix() {
-		tupleSet = (TupleSet) super.unshareMatrix();
-		return tupleSet;
 	}
 
 	// public static void main(String[] args) throws FailedGenerationException {
