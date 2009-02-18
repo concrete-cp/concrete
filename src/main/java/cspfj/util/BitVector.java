@@ -1,6 +1,5 @@
 package cspfj.util;
 
-import cspfj.problem.IntIterator;
 
 public abstract class BitVector implements Cloneable {
 	protected final static int ADDRESS_BITS_PER_WORD = 6;
@@ -68,8 +67,6 @@ public abstract class BitVector implements Cloneable {
 	public abstract void setSingle(final int index);
 
 	public abstract void clearFrom(final int from);
-
-	public abstract IntIterator iterator();
 
 	public abstract void copyTo(BitVector bV);
 

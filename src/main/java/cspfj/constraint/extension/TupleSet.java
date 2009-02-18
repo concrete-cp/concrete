@@ -1,15 +1,16 @@
 package cspfj.constraint.extension;
 
-import java.util.AbstractSet;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 
-public class TupleSet extends AbstractSet<int[]> implements Cloneable {
+public class TupleSet implements Matrix, Cloneable, Iterable<int[]> {
 
 	// private Map<Long, Collection<int[]>> list;
 
-	private List<int[]>[] hashTable;
+	private int[][][] hashTable;
+
+	private int[] sizes;
 
 	private int size;
 
@@ -19,136 +20,140 @@ public class TupleSet extends AbstractSet<int[]> implements Cloneable {
 
 	private int hashTableSize;
 
-	private final static int[] primes55 = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29,
-			31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101,
-			103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167,
-			173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233, 239,
-			241, 251, 257 };
+	private final boolean initialContent;
 
-	public TupleSet(final int nbTuples) {
+	public TupleSet(final int nbTuples, boolean initialContent) {
 		super();
 		// list = new HashMap<Long, Collection<int[]>>();
 		this.size = 0;
 		hashTableSize = firstPrimeAfter(nbTuples * 4 / 3);
-		hashTable = new Cell[hashTableSize];
+		hashTable = new int[hashTableSize][][];
+		sizes = new int[hashTableSize];
+		this.initialContent = initialContent;
 		// System.out.println("Hashtable of " + hashTableSize + " buckets");
 
 	}
 
+	// private static int firstPrimeAfter(final int value) {
+	// int test = value;
+	// while (!isPrime(test)) {
+	// test++;
+	// }
+	// return test;
+	// }
+
+	public TupleSet(boolean initialContent) {
+		this(16, initialContent);
+	}
+
 	private static int firstPrimeAfter(final int value) {
-		int test = value;
-		while (!isPrime(test)) {
-			test++;
+		int test = 1;
+		while (test < value) {
+			test <<= 1;
 		}
 		return test;
 	}
 
-	private static boolean isPrime(final int value) {
-		for (int prime : primes55) {
-			if (value % prime == 0) {
-				return value == prime;
-			}
+	private static int hash(final int[] tuple, final int length) {
+		final int prime = 16777619;
+		int hash = 0x811c9dc5;
+
+		for (int i : tuple) {
+			hash *= prime;
+			hash ^= i;
 		}
 
-		final int maxtest = value / 4;
+		return hash & (length - 1);
 
-		for (int i = 259; i < maxtest; i += 2) {
-			if (value % i == 0) {
-				return false;
-			}
-		}
-
-		return true;
-
-	}
-
-	// private static int hash(final int[] tuple, final int prime) {
-	// int hash = -2128831035;
-	// for (int i : tuple) {
-	// hash *= 16777619;
-	// hash ^= i;
-	//
-	// }
-	// hash %= prime;
-	// return Math.abs(hash);
-	// //
-	// // long res = (hash & 0x7fffffff) | (hash & 0x80000000l);
-	// // return (int)(res % prime);
-	// }
-
-	private static int hash(final int[] tuple, final int prime) {
-		return Arrays.hashCode(tuple) & (prime - 1);
 	}
 
 	public boolean containsTuple(final int[] tuple) {
-		final Cell cell = hashTable[hash(tuple, hashTableSize)];
-		return cell == null ? false : cell.contains(tuple);
+		final int hash = hash(tuple, hashTableSize);
+		final int[][] subList = hashTable[hash];
+		if (subList == null) {
+			return false;
+		}
+		return index(subList, sizes[hash], tuple) >= 0;
+	}
+
+	private static int index(int[][] list, int size, int[] tuple) {
+		for (int i = size; --i >= 0;) {
+			if (Arrays.equals(list[i], tuple)) {
+				return i;
+			}
+		}
+		return -1;
 	}
 
 	public void removeTuple(final int[] tuple) {
-		final int position = hash(tuple, hashTableSize);
-		final Cell cell = hashTable[position];
-		if (cell == null) {
+		final int hash = hash(tuple, hashTableSize);
+		final int[][] subList = hashTable[hash];
+
+		if (sizes[hash] == 0) {
 			return;
 		}
-		int count = cell.count();
-		hashTable[position] = cell.remove(tuple);
-		if (hashTable[position] == null || hashTable[position].count() < count) {
-			size--;
+
+		final int index = index(subList, sizes[hash], tuple);
+		if (index < 0) {
+			return;
 		}
-
+		int numMoved = sizes[hash] - index - 1;
+		if (numMoved > 0)
+			System.arraycopy(subList, index + 1, subList, index, numMoved);
+		size--;
+		sizes[hash]--;
 	}
 
-	@Override
-	public boolean contains(Object o) {
-		throw new UnsupportedOperationException();
+	private static void ensureCapacity(int[][][] hashTable, int position,
+			int minCapacity) {
+		int oldCapacity = hashTable[position].length;
+		if (minCapacity > oldCapacity) {
+			int newCapacity = (oldCapacity * 3) / 2 + 1;
+			if (newCapacity < minCapacity)
+				newCapacity = minCapacity;
+			// minCapacity is usually close to size, so this is a win:
+			hashTable[position] = Arrays.copyOf(hashTable[position],
+					newCapacity);
+		}
 	}
 
-	@Override
-	public boolean remove(Object o) {
-		throw new UnsupportedOperationException();
-	}
-
-	public boolean add(final int[] tuple) {
+	public void add(final int[] tuple) {
 		if (size >= hashTable.length) {
 			expand();
 		}
-		final int position = hash(tuple, hashTableSize);
+		final int hash = hash(tuple, hashTableSize);
 
-		Cell cell = hashTable[position];
-		if (cell == null) {
-			cell = new Cell(tuple);
-			tuples++;
-			size++;
+		if (hashTable[hash] == null) {
+			hashTable[hash] = new int[3][];
 		} else {
-			cell = cell.add(tuple);
-			size++;
-			tuples++;
 			collisions++;
 		}
-		hashTable[position] = cell;
-		return true;
+
+		ensureCapacity(hashTable, hash, sizes[hash] + 1);
+
+		hashTable[hash][sizes[hash]++] = tuple;
+		size++;
+		tuples++;
 	}
 
 	private void expand() {
 		final int newTableSize = (hashTable.length * 3 + 1) / 2;
 		// System.out.println("Expanding from " + hashTableSize + " to "
 		// + newTableSize);
-		final Cell[] newTable = new Cell[newTableSize];
+		final int[][][] newTable = new int[newTableSize][][];
+		final int[] newSizes = new int[newTableSize];
 		for (int[] t : this) {
-			final int position = hash(t, newTableSize);
-			Cell cell = newTable[position];
-			if (cell == null) {
-				cell = new Cell(t);
-
-			} else {
-				cell = cell.add(t);
-
+			final int hash = hash(t, newTableSize);
+			if (newTable[hash] == null) {
+				newTable[hash] = new int[3][];
 			}
-			newTable[position] = cell;
+
+			ensureCapacity(newTable, hash, newSizes[hash] + 1);
+			newTable[hash][newSizes[hash]++] = t;
 		}
 		hashTable = newTable;
 		hashTableSize = newTableSize;
+		sizes = newSizes;
 	}
 
 	@Override
@@ -159,16 +164,13 @@ public class TupleSet extends AbstractSet<int[]> implements Cloneable {
 	private class HashSetIterator implements Iterator<int[]> {
 
 		private int pos;
-		private Cell cell;
+		private int subPos;
 
 		public HashSetIterator() {
 			pos = 0;
-			cell = null;
-			for (; pos < hashTableSize; pos++) {
-				if (hashTable[pos] != null) {
-					cell = hashTable[pos];
-					break;
-				}
+			subPos = 0;
+			while (pos < hashTableSize && sizes[pos] <= 0) {
+				pos++;
 			}
 		}
 
@@ -179,11 +181,13 @@ public class TupleSet extends AbstractSet<int[]> implements Cloneable {
 
 		@Override
 		public int[] next() {
-			final int[] tuple = cell.tuple;
-			cell = cell.next;
-
-			while (cell == null && ++pos < hashTableSize) {
-				cell = hashTable[pos];
+			final int[] tuple = hashTable[pos][subPos];
+			subPos++;
+			if (subPos >= sizes[pos]) {
+				subPos = 0;
+				do {
+					pos++;
+				} while (pos < hashTableSize && sizes[pos] <= 0);
 			}
 			return tuple;
 		}
@@ -195,67 +199,50 @@ public class TupleSet extends AbstractSet<int[]> implements Cloneable {
 
 	}
 
-	private static class Cell {
-		private final int[] tuple;
-		private Cell next;
-
-		public Cell(final int[] tuple) {
-			this.tuple = tuple;
-			this.next = null;
-		}
-
-		public Cell add(final int[] tuple) {
-			final Cell cell = new Cell(tuple);
-			cell.next = this;
-			return cell;
-		}
-
-		public boolean contains(final int[] tuple) {
-			if (Arrays.equals(this.tuple, tuple)) {
-				return true;
-			}
-			if (next == null) {
-				return false;
-			}
-			return next.contains(tuple);
-		}
-
-		public Cell remove(final int[] tuple) {
-			if (Arrays.equals(this.tuple, tuple)) {
-				return next;
-			}
-			if (next != null) {
-				next = next.remove(tuple);
-			}
-			return this;
-		}
-
-		public String toString() {
-			if (next == null) {
-				return Arrays.toString(tuple);
-			}
-			return next.toString() + "," + Arrays.toString(tuple);
-		}
-
-		public int count() {
-			if (next == null) {
-				return 1;
-			}
-			return 1 + next.count();
-		}
-
-	}
-
-	@Override
 	public int size() {
 		return size;
 	}
 
 	public TupleSet clone() {
 		try {
-			return (TupleSet) super.clone();
+			final TupleSet clone = (TupleSet) super.clone();
+			clone.sizes = this.sizes.clone();
+			clone.hashTable = new int[hashTableSize][][];
+			for (int i = hashTableSize; --i >= 0;) {
+				clone.hashTable[i] = hashTable[i].clone();
+			}
+			return clone;
 		} catch (CloneNotSupportedException e) {
-			throw new IllegalStateException(e);
+			throw new InternalError(e.toString());
 		}
+	}
+
+	@Override
+	public boolean check(int[] tuple) {
+		return containsTuple(tuple) ^ initialContent;
+	}
+
+	@Override
+	public void set(int[] tuple, boolean status) {
+		if (status == initialContent) {
+			removeTuple(tuple);
+		} else {
+			add(tuple.clone());
+		}
+	}
+
+	public static boolean isBetterThanMatrix(final int[] sizes,
+			final int nbTuples) {
+		BigInteger size = BigInteger.ONE;
+		for (int s : sizes) {
+			size = size.multiply(BigInteger.valueOf(s));
+		}
+
+		return size.compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) >= 0
+				|| (4 * nbTuples < size.intValue());
+	}
+
+	public boolean getInitialContent() {
+		return initialContent;
 	}
 }

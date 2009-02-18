@@ -23,13 +23,13 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Comparator;
 
-import cspfj.constraint.AbstractConstraint;
+import cspfj.constraint.Constraint;
 import cspfj.constraint.Constraint;
 import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
 import cspfj.util.Heap;
 
-public final class AllDifferentConstraintBC extends AbstractConstraint {
+public final class AllDifferentConstraintBC extends Constraint {
 
 	private final static BitSet union = new BitSet();
 

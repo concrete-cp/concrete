@@ -2,8 +2,6 @@ package cspfj.util;
 
 import java.util.Arrays;
 
-import cspfj.problem.IntIterator;
-
 public class LargeBitVector extends BitVector {
 	private final static int ADDRESS_BITS_PER_WORD = 6;
 
@@ -132,54 +130,6 @@ public class LargeBitVector extends BitVector {
 
 	public int hashCode() {
 		return Arrays.hashCode(words);
-	}
-
-	public IntIterator iterator() {
-		return new BVIterator();
-	}
-
-	public class BVIterator implements IntIterator {
-		private int position;
-		private long currentShift;
-		private int current;
-
-		public BVIterator() {
-			position = 0;
-			currentShift = words[0];
-			while (currentShift == 0 && position < words.length - 1) {
-				currentShift = words[++position];
-			}
-
-			if (currentShift == 0) {
-				current = -1;
-			} else {
-				current = position * SIZE
-						+ Long.numberOfTrailingZeros(words[0]);
-				currentShift >>= current + 1;
-			}
-		}
-
-		public boolean hasNext() {
-			return current >= 0;
-		}
-
-		public int next() {
-			final int ret = current;
-
-			while (currentShift == 0 && position < words.length - 1) {
-				currentShift = words[++position];
-				current = position * SIZE - 1;
-			}
-			if (currentShift == 0) {
-				current = -1;
-			} else {
-				final int next = Long.numberOfTrailingZeros(currentShift) + 1;
-				current += next;
-				currentShift >>= next;
-			}
-			return ret;
-		}
-
 	}
 
 	@Override

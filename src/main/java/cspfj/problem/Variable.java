@@ -323,10 +323,6 @@ public final class Variable implements Cloneable {
 		return domain.last();
 	}
 
-	public IntIterator iterator() {
-		return domain.iterator();
-	}
-
 	public int[] getCurrentDomain() {
 		return domain.currentValues();
 	}

@@ -201,12 +201,6 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 		last = null;
 	}
 
-	@Override
-	public boolean isSlow() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
 	// @Override
 	// public void restore(int level) {
 	// for (int p = getArity(); --p >= 0;) {

@@ -59,8 +59,6 @@ public interface Constraint {
 
 	void restore(int level);
 
-	boolean isSlow();
-
 	long getInitSize();
 
 	int getWeight();

@@ -133,8 +133,4 @@ public class ExtensionConstraint2D extends AbstractPVRConstraint implements
 		return removed;
 	}
 
-	@Override
-	public boolean isSlow() {
-		return false;
-	}
 }

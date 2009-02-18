@@ -1,6 +1,5 @@
 package cspfj.util;
 
-import cspfj.problem.IntIterator;
 
 public class SmallBitVector extends BitVector {
 
@@ -55,41 +54,6 @@ public class SmallBitVector extends BitVector {
 
 	public int hashCode() {
 		return (int) (word ^ (word >>> 32));
-	}
-
-	public IntIterator iterator() {
-		return new SBVIterator();
-	}
-
-	public class SBVIterator implements IntIterator {
-		private long currentShift;
-		private int current;
-
-		public SBVIterator() {
-			if (word == 0) {
-				current = -1;
-			} else {
-				current = Long.numberOfTrailingZeros(word);
-				currentShift = word >> (current + 1);
-			}
-		}
-
-		public boolean hasNext() {
-			return current >= 0;
-		}
-
-		public int next() {
-			final int ret = current;
-			if (currentShift == 0) {
-				current = -1;
-			} else {
-				final int next = Long.numberOfTrailingZeros(currentShift) + 1;
-				current += next;
-				currentShift >>= next;
-			}
-			return ret;
-		}
-
 	}
 
 	@Override

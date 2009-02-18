@@ -39,7 +39,7 @@ import cspfj.constraint.extension.ExtensionConstraint2D;
 import cspfj.constraint.extension.ExtensionConstraintGeneral;
 import cspfj.constraint.extension.Matrix;
 import cspfj.constraint.extension.Matrix2D;
-import cspfj.constraint.extension.TupleHashSet;
+import cspfj.constraint.extension.TupleSet;
 import cspfj.constraint.semantic.RCConstraint;
 import cspfj.exception.FailedGenerationException;
 import cspfj.util.BitVector;
@@ -372,8 +372,8 @@ public final class Problem implements Cloneable {
 	public String toString() {
 		final StringBuffer sb = new StringBuffer();
 		for (Variable v : getVariables()) {
-			sb.append(v).append(" : ").append(v.getCurrentDomain())
-					.append('\n');
+			sb.append(v).append(" : ").append(
+					Arrays.toString(v.getCurrentDomain())).append('\n');
 		}
 
 		for (Constraint c : constraintArray) {
@@ -614,7 +614,7 @@ public final class Problem implements Cloneable {
 
 		if (addConstraints == LearnMethod.EXT) {
 
-			final Matrix matrix = new TupleHashSet(true);
+			final Matrix matrix = new TupleSet(true);
 
 			return new ExtensionConstraintGeneral(constraintScope, matrix,
 					false, true);
@@ -674,7 +674,7 @@ public final class Problem implements Cloneable {
 		final Collection<Constraint> addedConstraints = new ArrayList<Constraint>();
 
 		for (int level = startLevel + 1; --level >= 1;) {
-			// Nothing to remove on first level 
+			// Nothing to remove on first level
 			scopeSet.remove(levelVariables[level]);
 			final Variable[] scopeArray = Arrays.copyOf(levelVariables,
 					level + 1);
@@ -760,7 +760,7 @@ public final class Problem implements Cloneable {
 	public Variable getLevelVariable(final int level) {
 		return levelVariables[level];
 	}
-	
+
 	public void clearLevelVariables() {
 		Arrays.fill(levelVariables, null);
 	}

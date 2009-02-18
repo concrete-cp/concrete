@@ -3,12 +3,12 @@ package cspfj.constraint.semantic;
 import java.util.Arrays;
 import java.util.BitSet;
 
-import cspfj.constraint.AbstractConstraint;
+import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
 import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
 
-public class RCConstraint extends AbstractConstraint implements
+public class RCConstraint extends Constraint implements
 		DynamicConstraint {
 
 	private final Interval[] intervals;

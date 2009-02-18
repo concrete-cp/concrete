@@ -62,13 +62,8 @@ public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
 	}
 
 	@Override
-	public boolean isSlow() {
-		return true;
-	}
-
-	@Override
 	public void initNbSupports() throws InterruptedException {
-		if (matrix.getMatrix() instanceof TupleHashSet) {
+		if (matrix.getMatrix() instanceof TupleSet) {
 			final long[][] nbInitConflicts = new long[getArity()][];
 			for (int i = getArity(); --i >= 0;) {
 				nbInitConflicts[i] = new long[getScope()[i].getDomain().maxSize()];
@@ -80,7 +75,7 @@ public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
 				return;
 			}
 
-			final TupleHashSet matrix = (TupleHashSet) this.matrix.getMatrix();
+			final TupleSet matrix = (TupleSet) this.matrix.getMatrix();
 			final boolean initialContent = matrix.getInitialContent();
 
 			Arrays.fill(nbMaxConflicts, 0);

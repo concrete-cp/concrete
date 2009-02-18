@@ -8,7 +8,9 @@ import cspfj.problem.Variable;
 public class MatrixManagerDynamic extends MatrixManager implements
 		Iterable<int[]> {
 
-	private TupleHashSet tld;
+	private TupleSet tupleSet;
+
+	private int[][] tupleList;
 
 	private int first;
 
@@ -17,21 +19,26 @@ public class MatrixManagerDynamic extends MatrixManager implements
 	private int[] removed;
 	private int[] removedLast;
 
-	public MatrixManagerDynamic(final Variable[] scope,
-			final TupleHashSet matrix, final boolean shared) {
+	public MatrixManagerDynamic(final Variable[] scope, final TupleSet matrix,
+			final boolean shared) {
 		super(scope, matrix, shared);
-		this.tld = matrix;
+		this.tupleSet = matrix;
+		tupleList = new int[matrix.size()][];
+
+		int i = 0;
+		for (Iterator<int[]> itr = matrix.iterator(); itr.hasNext(); i++) {
+			tupleList[i] = itr.next();
+		}
 		first = -1;
-		next = new int[tld.getNbTuples()];
+		next = new int[tupleSet.size()];
 		Arrays.fill(next, -1);
 
 		removed = new int[arity];
 		Arrays.fill(removed, -1);
 		removedLast = removed.clone();
 
-		for (int i = tld.getNbTuples(); --i >= 0;) {
-			if (tld.getTuple(i) != null
-					&& tld.getTuple(i).length == scope.length) {
+		for (i = tupleList.length; --i >= 0;) {
+			if (tupleList[i] != null && tupleList[i].length == scope.length) {
 				addCell(i);
 			}
 		}
@@ -41,11 +48,12 @@ public class MatrixManagerDynamic extends MatrixManager implements
 	private void expandRemoved(final int newLength) {
 
 		final int[] newRemoved = Arrays.copyOf(removed, newLength);
-		Arrays.fill(newRemoved, removed.length, newRemoved.length, -1);
+		// Arrays.fill(newRemoved, removed.length, newRemoved.length, -1);
 
 		final int[] newRemovedLast = Arrays.copyOf(removedLast, newLength);
-		Arrays.fill(newRemovedLast, removedLast.length, newRemovedLast.length,
-				-1);
+		// Arrays.fill(newRemovedLast, removedLast.length,
+		// newRemovedLast.length,
+		// -1);
 
 		removed = newRemoved;
 		removedLast = newRemovedLast;
@@ -109,30 +117,20 @@ public class MatrixManagerDynamic extends MatrixManager implements
 
 	public class LLIterator implements Iterator<int[]> {
 
-		private int current;
+		private int current = first;
 
-		private int prev;
-
-		public LLIterator() {
-			current = -1;
-			prev = -1;
-		}
+		private int prev = first;
 
 		@Override
 		public boolean hasNext() {
-			return (current < 0) ? (first != -1) : (next[current] != -1);
+			return current >= 0;
 		}
 
 		@Override
 		public int[] next() {
-			if (current < 0) {
-				current = first;
-			} else {
-				prev = current;
-				current = next[current];
-
-			}
-			return tld.getTuple(current);
+			prev = current;
+			current = next[current];
+			return tupleList[prev];
 		}
 
 		@Override
@@ -166,8 +164,8 @@ public class MatrixManagerDynamic extends MatrixManager implements
 	}
 
 	protected Matrix unshareMatrix() {
-		tld = (TupleHashSet) super.unshareMatrix();
-		return tld;
+		tupleSet = (TupleSet) super.unshareMatrix();
+		return tupleSet;
 	}
 
 	// public static void main(String[] args) throws FailedGenerationException {

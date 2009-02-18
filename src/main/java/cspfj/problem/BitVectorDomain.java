@@ -109,11 +109,6 @@ public class BitVectorDomain implements Domain {
 	}
 
 	@Override
-	public IntIterator iterator() {
-		return bvDomain.iterator();
-	}
-
-	@Override
 	public int[] currentValues() {
 		final int[] values = new int[size];
 

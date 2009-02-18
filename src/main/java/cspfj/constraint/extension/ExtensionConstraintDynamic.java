@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.logging.Logger;
 
 import cspfj.constraint.AbstractConstraint;
+import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
 import cspfj.constraint.extension.MatrixManagerDynamic.LLIterator;
 import cspfj.exception.FailedGenerationException;
@@ -47,7 +48,7 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 	public static boolean quick = false;
 
 	public ExtensionConstraintDynamic(final Variable[] scope,
-			final TupleHashSet matrix, final boolean shared)
+			final TupleSet matrix, final boolean shared)
 			throws FailedGenerationException {
 		super(scope);
 		this.dynamic = new MatrixManagerDynamic(scope, matrix, shared);
@@ -55,7 +56,7 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 	}
 
 	public ExtensionConstraintDynamic(final Variable[] scope,
-			final TupleHashSet matrix, final String name, final boolean shared)
+			final TupleSet matrix, final String name, final boolean shared)
 			throws FailedGenerationException {
 		super(scope, name);
 		this.dynamic = new MatrixManagerDynamic(scope, matrix, shared);
@@ -119,19 +120,12 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 
 			boolean rev = false;
 			final BitVector found = this.found[i];
-			for (int index = variable.getFirst(); index >= 0; index = variable
-					.getNext(index)) {
-
-				if (!found.get(index)) {
-					// logger.finer("removing " + index + " from " + variable);
-
-					variable.remove(index, level);
-
-					rev = true;
-
-				}
-
+			for (int index = found.lastClearBit(); index >= 0; index = found
+					.prevClearBit(index)) {
+				variable.remove(index, level);
+				rev = true;
 			}
+			
 			if (rev) {
 				if (variable.getDomainSize() <= 0) {
 					return false;
@@ -209,11 +203,6 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 		}
 		this.nbInitConflicts = nbInitConflicts;
 		this.nbMaxConflicts = nbMaxConflicts;
-	}
-
-	@Override
-	public boolean isSlow() {
-		return true;
 	}
 
 	@Override

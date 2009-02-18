@@ -16,7 +16,6 @@ public interface Domain {
 	boolean present(int index);
 	void setSingle(int index);
 	void remove(int index);
-	IntIterator iterator();
 	int[] currentValues();
 	Domain clone();
 	void setLevel(int level);
