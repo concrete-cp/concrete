@@ -22,6 +22,8 @@ package cspfj;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidParameterException;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import cspfj.exception.MaxBacktracksExceededException;
@@ -46,7 +48,12 @@ public final class MGACIter extends AbstractSolver {
 
 	private boolean allSolutions = false;
 
-	private int level;
+	private final static Problem.LearnMethod addConstraints = AbstractSolver.parameters
+			.containsKey("mgac.addConstraints") ? Problem.LearnMethod
+			.valueOf(AbstractSolver.parameters.get("mgac.addConstraints"))
+			: Problem.LearnMethod.NONE;
+
+	// private int level;
 
 	public MGACIter(final Problem prob) {
 		this(prob, new ResultHandler());
@@ -78,20 +85,20 @@ public final class MGACIter extends AbstractSolver {
 	public boolean mac() throws MaxBacktracksExceededException, IOException {
 		final Problem problem = this.problem;
 
-		level = 0;
+		// level = 0;
 
 		Variable selectedVariable = null;
 		int selectedIndex = -1;
 		do {
-//			for (Variable v: problem.getVariables()) {
-//				if (!v.isAssigned() && v.getDomainSize()==1) {
-//					logger.fine(level + " : " + v + " <- "
-//							+ v.getDomain()[v.getFirst()] + "("
-//							+ getNbBacktracks() + "/" + getMaxBacktracks() + ")");
-//					v.assign(v.getFirst(), level, problem);
-//					problem.setLevelVariables(level++, v);
-//				}
-//			}
+			// for (Variable v: problem.getVariables()) {
+			// if (!v.isAssigned() && v.getDomainSize()==1) {
+			// logger.fine(level + " : " + v + " <- "
+			// + v.getDomain()[v.getFirst()] + "("
+			// + getNbBacktracks() + "/" + getMaxBacktracks() + ")");
+			// v.assign(v.getFirst(), level, problem);
+			// problem.setLevelVariables(level++, v);
+			// }
+			// }
 			if (problem.getNbFutureVariables() == 0) {
 				if (getNbSolutions() < 1) {
 					for (Variable v : problem.getVariables()) {
@@ -102,7 +109,7 @@ public final class MGACIter extends AbstractSolver {
 				solution();
 				if (allSolutions) {
 					selectedVariable = backtrack();
-					if (level < 0) {
+					if (problem.getCurrentLevel() < 0) {
 						break;
 					}
 				} else {
@@ -111,12 +118,12 @@ public final class MGACIter extends AbstractSolver {
 			}
 
 			if (selectedVariable != null
-					&& !filter.reduceAfter(level, selectedVariable)) {
-				if (level == 0) {
+					&& !filter.reduceAfter(selectedVariable)) {
+				if (problem.getCurrentLevel() == 0) {
 					break;
 				}
 				selectedVariable = backtrack();
-				if (level < 0) {
+				if (problem.getCurrentLevel() < 0) {
 					break;
 				}
 				continue;
@@ -132,16 +139,15 @@ public final class MGACIter extends AbstractSolver {
 
 			assert selectedVariable.isPresent(selectedIndex);
 
-			logger.fine(level + " : " + selectedVariable + " <- "
-					+ selectedVariable.getDomain()[selectedIndex] + "("
+			logger.fine(problem.getCurrentLevel() + " : " + selectedVariable
+					+ " <- "
+					+ selectedVariable.getDomain().value(selectedIndex) + "("
 					+ getNbBacktracks() + "/" + getMaxBacktracks() + ")");
 
-			selectedVariable.assign(selectedIndex, level+1, problem);
-
-			problem.setLevelVariables(level, selectedVariable);
-
+			problem.setLevelVariables(selectedVariable);
+			problem.push();
+			selectedVariable.assign(selectedIndex, problem);
 			incrementNbAssignments();
-			level++;
 
 		} while (true);
 		return getNbSolutions() > 0;
@@ -152,15 +158,17 @@ public final class MGACIter extends AbstractSolver {
 		Variable selectedVariable;
 
 		do {
-			level--;
-			selectedVariable = problem.getLevelVariable(level);
+			selectedVariable = problem.getLastLevelVariable();
 			final int index = selectedVariable.getFirst();
 			selectedVariable.unassign(problem);
-			problem.restore(level);
-			logger.finer(level + " : " + selectedVariable + " /= " + selectedVariable.getDomain()[index]);
-			selectedVariable.remove(index, level);
+			problem.pop();
 
-		} while (selectedVariable.getDomainSize() < 1 && level > 0);
+			logger.finer(problem.getCurrentLevel() + " : " + selectedVariable
+					+ " /= " + selectedVariable.getDomain().value(index));
+			selectedVariable.remove(index);
+
+		} while (selectedVariable.getDomainSize() < 1
+				&& problem.getCurrentLevel() > 0);
 		checkBacktracks();
 		return selectedVariable;
 	}
@@ -192,7 +200,7 @@ public final class MGACIter extends AbstractSolver {
 			throw new InvalidParameterException(e1.toString());
 		} catch (InterruptedException e) {
 			try {
-				if (!filter.reduceAll(0)) {
+				if (!filter.reduceAll()) {
 					chronometer.validateChrono();
 					return false;
 				}
@@ -256,12 +264,12 @@ public final class MGACIter extends AbstractSolver {
 
 			// logger.info(constraintRepartition());
 			maxBT *= 1.5;
-
-			problem.addNoGoods(Problem.LearnMethod.NONE);
-			problem.restoreAll(1);
+			final Map<Variable[], List<int[]>> ngs = problem.noGoods();
+			problem.reset();
+			problem.noGoodsToConstraints(ngs, addConstraints);
 
 			try {
-				if (!filter.reduceAll(0)) {
+				if (!filter.reduceAll()) {
 					break;
 				}
 			} catch (InterruptedException e) {

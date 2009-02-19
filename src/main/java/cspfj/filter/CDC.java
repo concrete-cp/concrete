@@ -18,6 +18,7 @@
  */
 package cspfj.filter;
 
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -46,12 +47,12 @@ public final class CDC extends AbstractSAC {
 	}
 
 	@Override
-	protected boolean reduce(int level) throws InterruptedException {
+	protected boolean reduce() throws InterruptedException {
 		final int nbC = problem.getNbConstraints();
 		ExtensionConstraintDynamic.quick = true;
 		final boolean result;
 		try {
-			result = super.reduce(level);
+			result = super.reduce();
 		} finally {
 			addedConstraints += problem.getNbConstraints() - nbC;
 		}
@@ -64,7 +65,7 @@ public final class CDC extends AbstractSAC {
 		return result;
 	}
 
-	protected boolean singletonTest(final Variable variable, final int level)
+	protected boolean singletonTest(final Variable variable)
 			throws InterruptedException {
 		boolean changedGraph = false;
 		for (int index = variable.getFirst(); index >= 0; index = variable
@@ -77,30 +78,36 @@ public final class CDC extends AbstractSAC {
 			}
 
 			// if (logger.isLoggable(Level.FINER)) {
-			logger.finer(level + " : " + variable + " <- "
-					+ variable.getDomain()[index] + "(" + index + ")");
+			logger.fine(variable + " <- " + variable.getDomain().value(index)
+					+ "(" + index + ")");
 			// }
-
+			
+			problem.setLevelVariables(variable);
+			problem.push();
 			variable.assign(index, problem);
-			problem.setLevelVariables(level, variable);
+			
 			nbSingletonTests++;
-			if (filter.reduceAfter(level + 1, variable)) {
 
-				if (problem.addNoGoods(addConstraints)) {
-					changedGraph = true;
-				}
+			if (filter.reduceAfter(variable)) {
+
+				final Map<Variable[], List<int[]>> noGoods = problem.noGoods();
+
+				// logger.info(noGoods.toString());
 
 				variable.unassign(problem);
-				problem.restore(level + 1);
+				problem.pop();
+				
+				changedGraph = problem.noGoodsToConstraints(noGoods, addConstraints);
 			} else {
 				variable.unassign(problem);
-				problem.restore(level + 1);
+				problem.pop();
 				logger.fine("Removing " + variable + ", " + index);
 
-				variable.remove(index, level);
+				variable.remove(index);
 				changedGraph = true;
 			}
 		}
+		problem.setLevelVariables(null);
 		return changedGraph;
 	}
 

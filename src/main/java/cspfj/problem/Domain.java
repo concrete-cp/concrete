@@ -21,5 +21,5 @@ public interface Domain {
 	void setLevel(int level);
 	void restoreLevel(int level);
 	BitVector getAtLevel(int level);
-	BitVector currentIndexes();
+	int[] allValues();
 }

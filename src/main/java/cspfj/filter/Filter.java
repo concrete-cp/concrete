@@ -33,9 +33,9 @@ public interface Filter {
      * @param level Le niveau en cours
      * @return False ssi un domaine a �t� vid�
      */
-    boolean reduceAll(int level) throws InterruptedException ;
+    boolean reduceAll() throws InterruptedException ;
     
-    boolean reduceAfter(int level, Variable variable) ;
+    boolean reduceAfter(Variable variable) ;
     
     Map<String, Object> getStatistics();
 

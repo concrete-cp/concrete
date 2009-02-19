@@ -69,7 +69,7 @@ public class ExtensionConstraint2D extends AbstractPVRConstraint implements
 		return matrix.hasSupport(variablePosition, index);
 	}
 
-	public boolean revise(final int position, final int level) {
+	public boolean revise(final int position) {
 		final Variable variable = getVariable(position);
 		final Domain domain = variable.getDomain();
 		assert !variable.isAssigned();
@@ -82,7 +82,7 @@ public class ExtensionConstraint2D extends AbstractPVRConstraint implements
 			// final int index = itr.next();
 			if (!findValidTuple(position, index)) {
 
-				variable.remove(index, level);
+				variable.remove(index);
 				revised = true;
 				setActive(true);
 
@@ -133,4 +133,8 @@ public class ExtensionConstraint2D extends AbstractPVRConstraint implements
 		return removed;
 	}
 
+	@Override
+	public boolean positive() {
+		return true;
+	}
 }

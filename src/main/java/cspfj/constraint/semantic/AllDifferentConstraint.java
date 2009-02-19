@@ -19,38 +19,16 @@
 
 package cspfj.constraint.semantic;
 
-import java.util.Arrays;
 import java.util.BitSet;
-import java.util.Comparator;
 
-import cspfj.constraint.AbstractConstraint;
-import cspfj.constraint.Constraint;
-import cspfj.filter.RevisionHandler;
+import cspfj.constraint.AbstractPVRConstraint;
 import cspfj.problem.Variable;
-import cspfj.util.Heap;
 
-public final class AllDifferentConstraint extends AbstractConstraint {
+public final class AllDifferentConstraint extends AbstractPVRConstraint {
 
-	private final static BitSet union = new BitSet();
+	private final BitSet union;
 
-	private final int min;
-
-	private final Heap<Interval> queue = new Heap<Interval>(
-			new Comparator<Interval>() {
-				@Override
-				public int compare(Interval arg0, Interval arg1) {
-					return arg0.getMax() - arg1.getMax();
-				}
-			}, new Interval[getArity()]);
-
-	private final Interval[] domains = new Interval[getArity()];
-
-	private final Comparator<Interval> minComparator = new Comparator<Interval>() {
-		@Override
-		public int compare(Interval arg0, Interval arg1) {
-			return arg0.getMin() - arg1.getMin();
-		}
-	};
+	private int offset;
 
 	// private final static Logger logger = Logger
 	// .getLogger("cspfj.constraint.AllDifferentConstraint");
@@ -58,172 +36,74 @@ public final class AllDifferentConstraint extends AbstractConstraint {
 	public AllDifferentConstraint(final Variable[] scope, final String name) {
 		super(scope, name);
 
-		int minVal = Integer.MAX_VALUE;
+		offset = Integer.MAX_VALUE;
 		for (Variable v : scope) {
-			for (int i : v.getDomain()) {
-				if (i < minVal) {
-					minVal = i;
-				}
+			for (int i : v.getDomain().allValues()) {
+				offset = Math.min(i, offset);
 			}
 		}
-
-		min = minVal;
+		union = new BitSet();
 	}
 
 	@Override
 	public boolean check() {
-		final BitSet union = AllDifferentConstraint.union;
+		final BitSet union = this.union;
 		union.clear();
-		final int min = this.min;
+		final int offset = this.offset;
 
 		final int[] tuple = this.tuple;
 		for (int i = getArity(); --i >= 0;) {
-			final int value = getVariable(i).getDomain()[tuple[i]];
-			if (union.get(value - min)) {
+			final int value = getVariable(i).getDomain().value(tuple[i]);
+			if (union.get(value - offset)) {
 				return false;
 			}
-			union.set(value - min);
-		}
-		return true;
-	}
-
-	public boolean revise(final int level, final RevisionHandler revisionHandler) {
-		final boolean[] revised = new boolean[getArity()];
-		for (int position = getArity(); --position >= 0;) {
-			final Variable refVar = getVariable(position);
-			if (refVar.getDomainSize() > 1) {
-				continue;
-			}
-			final int value = refVar.getDomain()[refVar.getFirst()];
-
-			
-			for (int checkPos = getArity(); --checkPos >= 0;) {
-				if (checkPos == position) {
-					continue;
-				}
-				final Variable checkedVariable = getVariable(checkPos);
-
-				final int index = checkedVariable.index(value);
-				
-				if (index >= 0 && checkedVariable.isPresent(index)) {
-					if (checkedVariable.getDomainSize() == 1) {
-						return false;
-					}
-					checkedVariable.remove(index, level);
-					revised[checkPos] = true;
-				}
-			}
-		}
-		for (int i = getArity() ; --i>=0;) {
-			if (revised[i]) {
-				revisionHandler.revised(this, getVariable(i));
-			}
-		}
-
-		final Heap<Interval> queue = this.queue;
-		queue.clear();
-		final Interval[] domains = this.domains;
-
-		int highest = Integer.MIN_VALUE;
-		for (int i = getArity(); --i >= 0;) {
-			final Variable variable = getVariable(i);
-			final Interval itv = new Interval(variable, i);
-			domains[i] = itv;
-			if (itv.getMax() > highest) {
-				highest = itv.getMax();
-			}
-		}
-
-		Arrays.sort(domains, minComparator);
-
-		int minPointer = 0;
-		final int lowest = domains[0].getMin();
-
-		// final Map<Integer, Integer> match = new HashMap<Integer, Integer>();
-
-		for (int j = lowest; j <= highest
-				&& (!queue.isEmpty() || minPointer < domains.length); j++) {
-			if (queue.isEmpty() && j < domains[minPointer].getMin()) {
-				j = domains[minPointer].getMin();
-			}
-			while (minPointer < domains.length
-					&& domains[minPointer].getMin() <= j) {
-				queue.add(domains[minPointer++]);
-			}
-
-			final Interval itv = queue.pollFirst();
-
-			if (j > itv.getMax()) {
-				return false;
-			}
-			// else {
-			// match.put(j, itv.getPosition());
-			// }
+			union.set(value - offset);
 		}
 		return true;
 	}
 
 	@Override
-	public boolean isSlow() {
-		return true;
-	}
+	public boolean revise(final int position) {
+		final Variable variable = getVariable(position);
+		assert !variable.isAssigned();
 
-	private static class Interval {
-		private final int min;
+		final BitSet union = this.union;
+		final int min = this.offset;
 
-		private final int max;
+		union.clear();
+		boolean revised = false;
 
-		private final int position;
+		for (int checkPos = getArity(); --checkPos >= 0;) {
+			final Variable checkedVariable = getVariable(checkPos);
 
-		public Interval(final Variable variable, final int position) {
-			min = variable.getDomain()[variable.getFirst()];
-			max = variable.getDomain()[variable.getLast()];
-			this.position = position;
-		}
+			for (int i = checkedVariable.getFirst(); i >= 0; i = checkedVariable
+					.getNext(i)) {
 
-		public int getMin() {
-			return min;
-		}
+				union.set(checkedVariable.getDomain().value(i) - min);
 
-		public int getMax() {
-			return max;
-		}
-
-		public int getPosition() {
-			return position;
-		}
-
-		public String toString() {
-			return "[" + min + ", " + max + "]";
-		}
-	}
-
-	@Override
-	public void initNbSupports() throws InterruptedException {
-		
-	}
-
-	public static void main(String[] args) {
-		// final Variable[] variables = { new Variable(new int[] { 3, 4 }),
-		// new Variable(new int[] { 7 }),
-		// new Variable(new int[] { 2, 3, 4, 5 }),
-		// new Variable(new int[] { 2, 3, 4, 5, 6, 7 }),
-		// new Variable(new int[] { 1, 2, 3 }),
-		// new Variable(new int[] { 3, 4 })
-		//
-		// };
-		final Variable[] variables = { new Variable(new int[] { 1, 3 }),
-				new Variable(new int[] { 1, 3 }),
-				new Variable(new int[] { 1, 3 }) };
-		final Constraint allDiff = new AllDifferentConstraint(variables, "");
-
-		System.out.println(allDiff.revise(0, new RevisionHandler() {
-			@Override
-			public void revised(Constraint constraint, Variable variable) {
-				// TODO Auto-generated method stub
-				
 			}
-		}));
 
+			if (position != checkPos && checkedVariable.getDomainSize() == 1) {
+				final int index = variable.getDomain().index(
+						checkedVariable.getDomain().value(
+								checkedVariable.getFirst()));
+				if (index >= 0 && variable.isPresent(index)) {
+					variable.remove(index);
+					revised = true;
+					setActive(true);
+				}
+			}
+		}
+
+		if (union.cardinality() < getArity()) {
+			setActive(true);
+			for (int i = variable.getFirst(); i >= 0; i = variable.getNext(i)) {
+				variable.remove(i);
+			}
+			return true;
+		}
+
+		return revised;
 	}
+
 }

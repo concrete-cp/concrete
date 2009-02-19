@@ -124,4 +124,9 @@ public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
 		}
 	}
 
+
+	@Override
+	public boolean positive() {
+		return false;
+	}
 }

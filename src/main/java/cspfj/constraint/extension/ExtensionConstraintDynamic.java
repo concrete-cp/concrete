@@ -25,15 +25,11 @@ import java.util.Iterator;
 import java.util.logging.Logger;
 
 import cspfj.constraint.AbstractConstraint;
-import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
-import cspfj.constraint.extension.MatrixManagerDynamic.LLIterator;
 import cspfj.exception.FailedGenerationException;
 import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
 import cspfj.util.BitVector;
-import cspfj.util.BitVector;
-import cspfj.util.LargeBitVector;
 
 public class ExtensionConstraintDynamic extends AbstractConstraint implements
 		DynamicConstraint {
@@ -73,26 +69,30 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 		return found;
 	}
 
+	public void setLevel(final int level) {
+		dynamic.setLevel(level);
+	}
+
 	public void restore(final int level) {
 		dynamic.restore(level);
 	}
 
-	public boolean revise(final int level, final RevisionHandler revisator) {
+	public boolean revise(final RevisionHandler revisator) {
 		// logger.fine("Revising "+this);
 		int toFind = 0;
 		for (int i = getArity(); --i >= 0;) {
 			found[i].fill(true);
 
-			// if (!getVariable(i).isAssigned()) {
-			for (int index = getVariable(i).getFirst(); index >= 0; index = getVariable(
-					i).getNext(index)) {
-				found[i].clear(index);
-				toFind++;
+			if (!getVariable(i).isAssigned()) {
+				for (int index = getVariable(i).getFirst(); index >= 0; index = getVariable(
+						i).getNext(index)) {
+					found[i].clear(index);
+					toFind++;
+				}
 			}
-			// }
 		}
 
-		final LLIterator itr = dynamic.iterator();
+		final Iterator<int[]> itr = dynamic.iterator();
 
 		while (itr.hasNext()) {
 			final int[] tuple = itr.next();
@@ -111,7 +111,7 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 					break;
 				}
 			} else if (!quick) {
-				itr.remove(level);
+				itr.remove();
 			}
 		}
 
@@ -122,10 +122,10 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 			final BitVector found = this.found[i];
 			for (int index = found.lastClearBit(); index >= 0; index = found
 					.prevClearBit(index)) {
-				variable.remove(index, level);
+				variable.remove(index);
 				rev = true;
 			}
-			
+
 			if (rev) {
 				if (variable.getDomainSize() <= 0) {
 					return false;
@@ -240,5 +240,10 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 			}
 		}
 		return removed;
+	}
+	
+	@Override
+	public boolean positive() {
+		return true;
 	}
 }

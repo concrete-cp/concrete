@@ -35,7 +35,7 @@ public final class SAC1 extends AbstractSAC {
 		super(problem, filter);
 	}
 
-	protected boolean singletonTest(final Variable variable, final int level)
+	protected boolean singletonTest(final Variable variable)
 			throws InterruptedException {
 		boolean changedGraph = false;
 		for (int index = variable.getFirst(); index >= 0; index = variable
@@ -48,21 +48,22 @@ public final class SAC1 extends AbstractSAC {
 			}
 
 			// if (logger.isLoggable(Level.FINER)) {
-			logger.finer(level + " : " + variable + " <- "
-					+ variable.getDomain()[index] + "(" + index + ")");
+			logger.finer(variable + " <- " + variable.getDomain().index(index)
+					+ "(" + index + ")");
 			// }
 
+			problem.push();
 			variable.assign(index, problem);
-			problem.setLevelVariables(level, variable);
+			problem.setLevelVariables(variable);
 			nbSingletonTests++;
-			final boolean consistent = filter.reduceAfter(level + 1, variable);
+			final boolean consistent = filter.reduceAfter(variable);
 			variable.unassign(problem);
-			problem.restore(level + 1);
+			problem.pop();
 
 			if (!consistent) {
 				logger.fine("Removing " + variable + ", " + index);
 
-				variable.remove(index, level);
+				variable.remove(index);
 				changedGraph = true;
 			}
 		}

@@ -224,7 +224,7 @@ public abstract class AbstractSolver implements Solver {
 		final float start = chronometer.getCurrentChrono();
 		boolean consistent;
 		try {
-			consistent = preprocessor.reduceAll(0);
+			consistent = preprocessor.reduceAll();
 		} catch (InterruptedException e) {
 			logger.warning("Interrupted preprocessing");
 			consistent = true;

@@ -48,25 +48,27 @@ public class MatrixManagerDynamic extends MatrixManager implements
 
 	private void expandRemoved(final int newLength) {
 
-		final int[] newRemoved = Arrays.copyOf(removed, newLength);
-		// Arrays.fill(newRemoved, removed.length, newRemoved.length, -1);
+		int oldLength = removed.length;
+		removed = Arrays.copyOf(removed, newLength);
+		Arrays.fill(removed, oldLength, removed.length, -1);
 
-		final int[] newRemovedLast = Arrays.copyOf(removedLast, newLength);
-		// Arrays.fill(newRemovedLast, removedLast.length,
-		// newRemovedLast.length,
-		// -1);
+		removedLast = Arrays.copyOf(removedLast, newLength);
+	}
 
-		removed = newRemoved;
-		removedLast = newRemovedLast;
+	private int currentLevel;
+
+	public void setLevel(int level) {
+		currentLevel = level;
 	}
 
 	public void restore(final int level) {
-		for (int i = removed.length; --i >= level;) {
+		for (int i = removed.length; --i > level;) {
 			if (removed[i] >= 0) {
 				addAll(removed[i], removedLast[i]);
-				removedLast[i] = removed[i] = -1;
+				removed[i] = -1;
 			}
 		}
+		currentLevel = level;
 
 	}
 
@@ -97,16 +99,6 @@ public class MatrixManagerDynamic extends MatrixManager implements
 
 	}
 
-	public void remove(final int[] tuple) {
-		final Iterator<int[]> itr = this.iterator();
-		while (itr.hasNext()) {
-			if (Arrays.equals(itr.next(), tuple)) {
-				itr.remove();
-				break;
-			}
-		}
-	}
-
 	public String toString() {
 		final StringBuilder stb = new StringBuilder();
 
@@ -118,83 +110,60 @@ public class MatrixManagerDynamic extends MatrixManager implements
 
 	public class LLIterator implements Iterator<int[]> {
 
-		private int current = first;
+		private int current = -1;
 
-		private int lastReturned = -1;
+		private int prev = -1;
 
-		private int lastReturnedPrev = -1;
+		private int nextOne = first;
 
 		@Override
 		public boolean hasNext() {
-			return current >= 0;
+			return nextOne >= 0;
 		}
 
 		@Override
 		public int[] next() {
-			lastReturnedPrev = lastReturned;
-			lastReturned = current;
-			current = next[current];
-			return tupleList[lastReturned];
+
+			prev = current;
+			current = nextOne;
+
+			if (current >= 0) {
+				nextOne = next[current];
+			}
+
+			return tupleList[current];
 		}
 
 		@Override
 		public void remove() {
-			remove(0);
+			remove(currentLevel);
 		}
 
-		public void remove(final int level) {
-			if (lastReturned == first) {
-				first = next[lastReturned];
+		private void remove(final int level) {
+			if (prev < 0) {
+				first = nextOne;
 			} else {
-				next[lastReturnedPrev] = next[lastReturned];
+				next[prev] = nextOne;
 			}
+
+			// assert count() == count - 1 : count + "->" + count();
 
 			if (level >= removed.length) {
 				expandRemoved(level + 1);
 			}
 
-			if (removed[level] < 0) {
+			final int oldFirstRemoved = removed[level];
+
+			next[current] = oldFirstRemoved;
+			removed[level] = current;
+
+			if (oldFirstRemoved < 0) {
 				removedLast[level] = current;
 			}
+			current = prev;
 
-			next[lastReturned] = removed[level];
-			removed[level] = lastReturned;
-
-			lastReturned = -1;
 		}
 
 	}
 
-	// public static void main(String[] args) throws FailedGenerationException {
-	// final TupleHashSet ta = new TupleHashSet(false);
-	// ta.set(new int[] { 0, 0, 0 }, true);
-	// ta.set(new int[] { 1, 1, 1 }, true);
-	// ta.set(new int[] { 2, 2, 2 }, true);
-	//
-	// final int[] dom = new int[] { 0, 1, 2 };
-	//
-	// final Variable[] scope = { new Variable(dom), new Variable(dom),
-	// new Variable(dom) };
-	//
-	// final ExtensionConstraintDynamic constraint = new
-	// ExtensionConstraintDynamic(
-	// scope, ta);
-	//
-	// constraint.revise(0);
-	//
-	// for (Variable v : scope) {
-	// System.out.println(v.getCurrentDomain());
-	// }
-	//
-	// System.out.println();
-	// System.arraycopy(new int[] { 1, 1, 1 }, 0, constraint.getTuple(), 0, 3);
-	//
-	// constraint.removeTuple();
-	//
-	// constraint.revise(0);
-	//
-	// for (Variable v : scope) {
-	// System.out.println(v.getCurrentDomain());
-	// }
-	// }
 }

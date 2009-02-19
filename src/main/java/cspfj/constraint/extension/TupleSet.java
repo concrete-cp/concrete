@@ -85,23 +85,24 @@ public class TupleSet implements Matrix, Cloneable, Iterable<int[]> {
 		return -1;
 	}
 
-	public void removeTuple(final int[] tuple) {
+	public boolean removeTuple(final int[] tuple) {
 		final int hash = hash(tuple, hashTableSize);
 		final int[][] subList = hashTable[hash];
 
 		if (sizes[hash] == 0) {
-			return;
+			return false;
 		}
 
 		final int index = index(subList, sizes[hash], tuple);
 		if (index < 0) {
-			return;
+			return false;
 		}
 		int numMoved = sizes[hash] - index - 1;
 		if (numMoved > 0)
 			System.arraycopy(subList, index + 1, subList, index, numMoved);
 		size--;
 		sizes[hash]--;
+		return true;
 	}
 
 	private static void ensureCapacity(int[][][] hashTable, int position,

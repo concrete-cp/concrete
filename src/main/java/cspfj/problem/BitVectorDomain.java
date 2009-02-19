@@ -167,10 +167,15 @@ public class BitVectorDomain implements Domain {
 	}
 
 	public BitVector getAtLevel(int level) {
-		return bvHistory[Math.min(level, currentLevel)];
+		if (level < currentLevel) {
+			return bvHistory[level];
+		}
+
+		return bvDomain;
 	}
 
-	public BitVector currentIndexes() {
-		return bvDomain;
+	@Override
+	public int[] allValues() {
+		return domain;
 	}
 }

@@ -22,10 +22,10 @@ package cspfj;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidParameterException;
-import java.util.Set;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
-import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.AC3;
 import cspfj.filter.Filter;
@@ -46,11 +46,11 @@ public final class MGACRec extends AbstractSolver {
 	private static final Logger logger = Logger.getLogger("cspfj.MACSolver");
 
 	private boolean allSolutions = false;
-	
+
 	private final static Problem.LearnMethod addConstraints = AbstractSolver.parameters
-	.containsKey("mgac.addConstraints") ? Problem.LearnMethod
-	.valueOf(AbstractSolver.parameters.get("mgac.addConstraints"))
-	: Problem.LearnMethod.NONE;
+			.containsKey("mgac.addConstraints") ? Problem.LearnMethod
+			.valueOf(AbstractSolver.parameters.get("mgac.addConstraints"))
+			: Problem.LearnMethod.NONE;
 
 	public MGACRec(final Problem prob, final ResultHandler resultHandler) {
 		this(prob, resultHandler, new DiscHeuristic(new WDegOnDom(prob),
@@ -76,7 +76,7 @@ public final class MGACRec extends AbstractSolver {
 
 	}
 
-	public boolean mac(final int level, final Variable modifiedVariable)
+	public boolean mac(final Variable modifiedVariable)
 			throws MaxBacktracksExceededException, IOException {
 		final Problem problem = this.problem;
 
@@ -91,7 +91,7 @@ public final class MGACRec extends AbstractSolver {
 			return !allSolutions;
 		}
 
-		if (!filter.reduceAfter(level, modifiedVariable)) {
+		if (!filter.reduceAfter(modifiedVariable)) {
 			return false;
 		}
 
@@ -108,13 +108,15 @@ public final class MGACRec extends AbstractSolver {
 		final int domainSizeBefore = selectedVariable.getDomainSize();
 
 		// if (logger.isLoggable(Level.FINE)) {
-		logger.fine(level + " : " + selectedVariable + " <- "
-				+ selectedVariable.getValue(selectedIndex) + " ("
+		logger.fine(problem.getCurrentLevel() + " : " + selectedVariable
+				+ " <- " + selectedVariable.getValue(selectedIndex) + " ("
 				+ getNbBacktracks() + "/" + getMaxBacktracks() + ")");
 		// }
 
+		problem.setLevelVariables(selectedVariable);
+
 		// if (filter.ensureAC()) {
-		problem.setLevel(level + 1);
+		problem.push();
 
 		selectedVariable.assign(selectedIndex, problem);
 		// } else if (!selectedVariable.assignNotAC(selectedIndex, problem)) {
@@ -126,31 +128,29 @@ public final class MGACRec extends AbstractSolver {
 		// return mac(level, selectedVariable);
 		// }
 
-		problem.setLevelVariables(level, selectedVariable);
-
 		incrementNbAssignments();
 
-		if (mac(level + 1, domainSizeBefore > 1 ? selectedVariable : null)) {
+		if (mac(domainSizeBefore > 1 ? selectedVariable : null)) {
 			addSolutionElement(selectedVariable, selectedIndex);
 			return true;
 		}
 
 		selectedVariable.unassign(problem);
-		problem.restoreLevel(level);
+		problem.pop();
 
-		problem.setLevelVariables(level, null);
+		problem.setLevelVariables(null);
 
-		logger.finer(level + " : " + selectedVariable + " /= "
-				+ selectedVariable.getValue(selectedIndex));
+		logger.finer(problem.getCurrentLevel() + " : " + selectedVariable
+				+ " /= " + selectedVariable.getValue(selectedIndex));
 
 		if (selectedVariable.getDomainSize() <= 1) {
 			return false;
 		}
-		selectedVariable.remove(selectedIndex, 0);
+		selectedVariable.remove(selectedIndex);
 
 		checkBacktracks();
 
-		return mac(level, selectedVariable);
+		return mac(selectedVariable);
 
 	}
 
@@ -181,7 +181,7 @@ public final class MGACRec extends AbstractSolver {
 			throw new InvalidParameterException(e1.toString());
 		} catch (InterruptedException e) {
 			try {
-				if (!filter.reduceAll(0)) {
+				if (!filter.reduceAll()) {
 					chronometer.validateChrono();
 					return false;
 				}
@@ -220,7 +220,7 @@ public final class MGACRec extends AbstractSolver {
 			// System.out.print("run ! ");
 			try {
 
-				mac(0, null);
+				mac(null);
 
 				break;
 			} catch (MaxBacktracksExceededException e) {
@@ -237,11 +237,12 @@ public final class MGACRec extends AbstractSolver {
 					.info("Took " + macTime + "s (" + (maxBT / macTime)
 							+ " bps)");
 			maxBT *= 1.5;
-			problem.addNoGoods(addConstraints);
+			final Map<Variable[], List<int[]>> ngs = problem.noGoods();
 			problem.reset();
-
+			problem.noGoodsToConstraints(ngs, addConstraints);
+			
 			try {
-				if (!filter.reduceAll(0)) {
+				if (!filter.reduceAll()) {
 					break;
 				}
 			} catch (InterruptedException e) {

@@ -313,9 +313,9 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		return false;
 	}
 
-	public boolean revise(final int level, final RevisionHandler revisator,
+	public boolean revise(final RevisionHandler revisator,
 			final boolean[] removals) {
-		return revise(level, revisator);
+		return revise(revisator);
 	}
 
 	public final boolean checkFirst() {
@@ -406,6 +406,10 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 	}
 
 	public void restore(final int level) {
+		// Nothing here
+	}
+	
+	public void setLevel(final int level) {
 		// Nothing here
 	}
 

@@ -40,49 +40,25 @@ public abstract class AbstractSAC implements BackedFilter {
 		heuristic = new Dom(problem);
 	}
 
-	public boolean reduceAfter(final int level, final Variable variable) {
+	public boolean reduceAfter(final Variable variable) {
 		if (variable == null) {
 			return true;
 		}
 		try {
-			return reduceAll(level);
+			return reduceAll();
 		} catch (InterruptedException e) {
 			throw new IllegalArgumentException(
 					"Filter was unexpectingly interrupted !");
 		}
 	}
 
-	protected abstract boolean singletonTest(Variable variable, int level)
+	protected abstract boolean singletonTest(Variable variable)
 			throws InterruptedException;
 
-	protected boolean check(final Variable variable, final int index,
-			final int level) {
-		// if (logger.isLoggable(Level.FINEST)) {
-		logger.finest(level + " : " + variable + " <- "
-				+ variable.getDomain()[index] + "(" + index + ")");
-		// }
-
-		variable.assign(index, problem);
-		problem.setLevelVariables(level, variable);
-		nbSingletonTests++;
-		final boolean singletonTest = filter.reduceAfter(level + 1, variable);
-		variable.unassign(problem);
-		problem.restore(level + 1);
-
-		if (!singletonTest) {
-			logger.finer("Removing " + variable + ", " + index);
-
-			variable.remove(index, level);
-			return true;
-		}
-
-		return false;
-	}
-
-	protected boolean reduce(final int level) throws InterruptedException {
+	protected boolean reduce() throws InterruptedException {
 		final Filter filter = this.filter;
 
-		if (!filter.reduceAll(level)) {
+		if (!filter.reduceAll()) {
 			return false;
 		}
 		final Variable[] variables = this.variables;
@@ -114,26 +90,26 @@ public abstract class AbstractSAC implements BackedFilter {
 			// if (logger.isLoggable(Level.FINE)) {
 			logger.info(variable.toString());
 			// }
-			if (variable.getDomainSize() > 1 && singletonTest(variable, level)) {
+			if (variable.getDomainSize() > 1 && singletonTest(variable)) {
 				if (variable.getDomainSize() <= 0) {
 					return false;
 				}
-				if (!filter.reduceAfter(level, variable)) {
+				if (!filter.reduceAfter(variable)) {
 					return false;
 				}
 				mark = v;
 			}
 			if (++v >= variables.length) {
 				v = 0;
-			} 
+			}
 		} while (v != mark);
 
 		return true;
 
 	}
 
-	public boolean reduceAll(final int level) throws InterruptedException {
-		return reduce(level);
+	public boolean reduceAll() throws InterruptedException {
+		return reduce();
 	}
 
 	public Map<String, Object> getStatistics() {

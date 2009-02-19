@@ -144,6 +144,10 @@ public class ResultHandler {
 		statistics.put(name, value);
 	}
 
+	public Object getStatistic(final String name) {
+		return statistics.get(name);
+	}
+
 	public enum Result {
 		SAT, UNSAT, UNKNOWN
 	}

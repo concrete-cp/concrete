@@ -30,7 +30,7 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 		last = new int[getArity()][maxDomain][];
 	}
 
-	public boolean revise(final int position, final int level) {
+	public boolean revise(final int position) {
 		final Variable variable = getVariable(position);
 
 		assert !variable.isAssigned();
@@ -53,7 +53,7 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 			if (!findValidTuple(position, index)) {
 				// logger.finer("removing " + index + " from " + variable);
 
-				variable.remove(index, level);
+				variable.remove(index);
 
 				revised = true;
 				setActive(true);

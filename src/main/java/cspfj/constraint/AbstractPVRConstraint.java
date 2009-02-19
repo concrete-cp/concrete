@@ -15,14 +15,14 @@ public abstract class AbstractPVRConstraint extends AbstractConstraint {
 
 	}
 
-	public abstract boolean revise(final int position, final int level);
+	public abstract boolean revise(final int position);
 
 	@Override
-	public boolean revise(final int level, final RevisionHandler revisator) {
+	public boolean revise(final RevisionHandler revisator) {
 		for (int i = getArity(); --i >= 0;) {
 			final Variable variable = getVariable(i);
 			if (!variable.isAssigned() && !supportCondition(i)
-					&& !skipRevision(i) && revise(i, level)) {
+					&& !skipRevision(i) && revise(i)) {
 				if (variable.getDomainSize() <= 0) {
 					return false;
 				}

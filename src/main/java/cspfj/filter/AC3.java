@@ -34,13 +34,13 @@ public final class AC3 implements Filter {
 		inQueue = new BitSet(problem.getMaxVId() + 1);
 	}
 
-	public boolean reduceAll(final int level) {
+	public boolean reduceAll() {
 		addAll();
-		return reduce(level);
+		return reduce();
 
 	}
 
-	public boolean reduceAfter(final int level, final Variable variable) {
+	public boolean reduceAfter(final Variable variable) {
 		if (variable == null) {
 			return true;
 		}
@@ -65,7 +65,7 @@ public final class AC3 implements Filter {
 
 		}
 
-		return reduce(level);
+		return reduce();
 	}
 
 	private RevisionHandler revisator = new RevisionHandler() {
@@ -85,7 +85,7 @@ public final class AC3 implements Filter {
 		}
 	};
 
-	private boolean reduce(final int level) {
+	private boolean reduce() {
 		logger.finer("Reducing");
 		final BitSet inQueue = this.inQueue;
 		final RevisionHandler revisator = this.revisator;
@@ -103,7 +103,7 @@ public final class AC3 implements Filter {
 				// continue;
 				// }
 
-				if (!constraint.revise(level, revisator)) {
+				if (!constraint.revise(revisator)) {
 					effectiveRevisions++;
 					constraint.incWeight();
 					constraint.fillRemovals(false);
@@ -116,7 +116,7 @@ public final class AC3 implements Filter {
 
 		}
 
-		assert control(level);
+		assert control();
 
 		return true;
 
@@ -134,7 +134,7 @@ public final class AC3 implements Filter {
 
 	private boolean revised;
 
-	private boolean control(int level) {
+	private boolean control() {
 
 		final RevisionHandler revisator = new RevisionHandler() {
 
@@ -153,10 +153,10 @@ public final class AC3 implements Filter {
 			if (c instanceof AbstractPVRConstraint) {
 				for (int i = c.getArity(); --i >= 0;) {
 					assert c.getVariable(i).isAssigned()
-						|| !((AbstractPVRConstraint) c).revise(i, level);
+						|| !((AbstractPVRConstraint) c).revise(i);
 				}
 			} else {
-				c.revise(level, revisator);
+				c.revise(revisator);
 				assert !revised;
 			}
 		}

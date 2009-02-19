@@ -214,8 +214,8 @@ public final class Variable implements Cloneable {
 	 * @param level
 	 *            Le niveau en cours
 	 */
-	public void remove(final int index, int level) {
-		assert !assigned;
+	public void remove(final int index) {
+		assert !assigned : "Trying to remove a value from an assigned variable";
 		assert domain.present(index);
 
 		domain.remove(index);

@@ -43,7 +43,7 @@ public interface Constraint {
 
 	// boolean skipRevision(int i);
 
-	boolean revise(final int level, final RevisionHandler revisator);
+	boolean revise(final RevisionHandler revisator);
 
 	// int getOtherSize(int position);
 
@@ -57,6 +57,8 @@ public interface Constraint {
 
 	boolean check();
 
+	void setLevel(int level);
+	
 	void restore(int level);
 
 	long getInitSize();
