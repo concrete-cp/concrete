@@ -156,7 +156,9 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 
 		for (int i = getArity(); --i >= 0;) {
 			final Variable variable = getVariable(i);
-
+			if (variable.isAssigned()) {
+				continue;
+			}
 			boolean rev = false;
 			final BitVector found = this.found[i];
 			for (int index = found.lastClearBit(); index >= 0; index = found
