@@ -62,7 +62,7 @@ public abstract class AbstractSAC implements BackedFilter {
 			return false;
 		}
 		final Variable[] variables = this.variables;
-		Arrays.sort(variables, heuristic);
+		//Arrays.sort(variables, heuristic);
 		// System.out.println(Arrays.toString(variables));
 		// // Tri à bulles
 		// for (int i = 0; i < variables.length; i++) {

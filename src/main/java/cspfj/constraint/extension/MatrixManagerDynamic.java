@@ -139,7 +139,9 @@ public class MatrixManagerDynamic extends MatrixManager implements
 			remove(currentLevel);
 		}
 
-		private void remove(final int level) {
+		
+		
+		public void remove(final int level) {
 			if (prev < 0) {
 				first = nextOne;
 			} else {

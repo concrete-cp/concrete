@@ -20,6 +20,7 @@
 package cspfj;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Logger;
@@ -97,7 +98,11 @@ public class ResultHandler {
 			totalNodes += solver.getNbAssignments();
 		}
 		if (thrown != null) {
-			logger.warning(thrown.toString());
+			final StringBuilder stb = new StringBuilder(thrown.toString());
+			for (StackTraceElement e:thrown.getStackTrace()) {
+				stb.append('\n').append(e);
+			}
+			logger.warning(stb.toString());
 		}
 
 		// solver=null;

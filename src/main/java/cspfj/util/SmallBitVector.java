@@ -1,6 +1,5 @@
 package cspfj.util;
 
-
 public class SmallBitVector extends BitVector {
 
 	private long word;
@@ -73,14 +72,20 @@ public class SmallBitVector extends BitVector {
 	public int intersects(BitVector bv) {
 		return intersects(bv, 0) ? 0 : -1;
 	}
-	
+
 	public int realSize() {
 		return 1;
 	}
-	
+
 	public BitVector exclusive(BitVector bv) {
-		final SmallBitVector bitVector = (SmallBitVector) bv.clone();
-		bitVector.word = (bitVector.word ^ this.word) & (MASK >>> -size);
+		final SmallBitVector bitVector = new SmallBitVector(bv.size, false);
+		bitVector.word = (((SmallBitVector) bv).word ^ this.word)
+				& (MASK >>> -size);
 		return bitVector;
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return word == 0L;
 	}
 }

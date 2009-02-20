@@ -84,10 +84,8 @@ public final class TupleManager {
 		for (int position = arity; --position >= 0;) {
 			if (base[position] >= 0) {
 				tuple[position] = base[position];
-				assert constraint.getVariable(position).isPresent(tuple[position]);
 			} else {
-				tuple[position] = constraint.getVariable(position).getFirst();
-				assert tuple[position] >= 0;
+				tuple[position] = 0;
 			}
 		}
 	}
@@ -98,10 +96,10 @@ public final class TupleManager {
 				continue;
 			}
 			
-			final int index = constraint.getVariable(i).getNext(tuple[i]);
+			final int index = tuple[i] +1 ;
 			
-			if (index < 0) {
-				tuple[i] = constraint.getVariable(i).getFirst();
+			if (index >= constraint.getVariable(i).getDomain().maxSize()) {
+				tuple[i] = 0;
 			} else {
 				tuple[i] = index;
 				return true;

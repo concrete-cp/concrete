@@ -437,48 +437,75 @@ public final class Problem implements Cloneable {
 		return tuple;
 	}
 
+	private static int makeBase(Variable[] scope, int[] values,
+			Constraint constraint, int[] base) {
+		assert scope.length == values.length;
+
+		Arrays.fill(base, -1);
+
+		final Variable seek = scope[scope.length - 1];
+		int positionInConstraint = -1;
+
+		for (int i = constraint.getArity(); --i >= 0;) {
+			final Variable var = constraint.getVariable(i);
+			if (var == seek) {
+				positionInConstraint = i;
+				continue;
+			}
+			for (int j = scope.length - 1; --j >= 0;) {
+				if (scope[j] == var) {
+					base[i] = values[j];
+					break;
+				}
+			}
+
+		}
+
+		return positionInConstraint;
+	}
+
 	public int getCurrentLevel() {
 		return currentLevel;
 	}
 
-	public Map<Variable[], List<int[]>> noGoods() {
+	public boolean noGoods(LearnMethod learnMethod) {
 		if (!useNoGoods) {
-			return null;
+			return false;
 		}
 
 		final Variable[] levelVariables = this.levelVariables;
 
 		if (levelVariables[0] == null) {
-			return null;
+			return false;
 		}
 
-		final Map<Variable[], List<int[]>> noGoods = new HashMap<Variable[], List<int[]>>();
+		// final Map<Variable[], List<int[]>> noGoods = new HashMap<Variable[],
+		// List<int[]>>();
 
-		int startLevel = levelVariables.length;
-		while (--startLevel >= 0) {
-			if (levelVariables[startLevel] != null) {
-				break;
-			}
-		}
-		startLevel++;
+		int startLevel = 0;
+		for (; startLevel < levelVariables.length
+				&& levelVariables[startLevel] != null; startLevel++)
+			;
 
 		int[] tuple = new int[startLevel + 1];
 
-		final Set<Variable> scopeSet = new HashSet<Variable>(getNbVariables(),
-				1);
+		final Set<Variable> scopeSet = new HashSet<Variable>(startLevel);
 		for (int i = startLevel; --i >= 0;) {
 			scopeSet.add(levelVariables[i]);
 			tuple[i] = levelVariables[i].getFirst();
 		}
+
+		boolean modified = false;
+		final Collection<Constraint> addedConstraints = new ArrayList<Constraint>();
 
 		for (int level = startLevel + 1; --level >= 1;) {
 			// Note : Nothing to remove on first level
 			scopeSet.remove(levelVariables[level]);
 			final Variable[] scopeArray = Arrays.copyOf(levelVariables,
 					level + 1);
-			tuple = Arrays.copyOf(tuple, level + 1);
-
 			// restoreLevel(level);
+
+			tuple = Arrays.copyOf(tuple, level + 1);
 
 			for (Variable fv : variableArray) {
 
@@ -491,24 +518,58 @@ public final class Problem implements Cloneable {
 
 				final BitVector changes = fv.getDomain().getAtLevel(level - 1)
 						.exclusive(fv.getDomain().getAtLevel(level));
-				if (changes.nextSetBit(0) < 0) {
+				if (changes.isEmpty()) {
 					continue;
 				}
 
-				final List<int[]> ngs = new ArrayList<int[]>();
-				scopeArray[level] = fv;
+				scopeSet.add(fv);
+				final DynamicConstraint constraint = learnConstraint(scopeSet,
+						learnMethod);
+				scopeSet.remove(fv);
 
-				for (int i = changes.nextSetBit(0); i >= 0; i = changes
-						.nextSetBit(i + 1)) {
-					tuple[level] = i;
-					ngs.add(tuple.clone());
+				if (constraint == null) {
+					continue;
 				}
 
-				noGoods.put(scopeArray.clone(), ngs);
+				scopeArray[level] = fv;
+
+				final int[] base = new int[constraint.getArity()];
+				final int varPos = makeBase(scopeArray, tuple, constraint, base);
+
+				int newNogoods = 0;
+				for (int i = changes.nextSetBit(0); i >= 0; i = changes
+						.nextSetBit(i + 1)) {
+					base[varPos] = i;
+					newNogoods += constraint.removeTuples(base);
+
+				}
+				if (newNogoods > 0) {
+					nbNoGoods += newNogoods;
+					modified = true;
+					if (constraint.getId() > getMaxCId()) {
+						logger.info("Added " + constraint);
+						addedConstraints.add(constraint);
+					}
+				}
 			}
 		}
+		if (modified) {
+			logger.info(nbNoGoods + " nogoods");
 
-		return noGoods;
+			if (!addedConstraints.isEmpty()) {
+				final Collection<Constraint> curCons = new ArrayList<Constraint>(
+						constraints.values());
+
+				for (Constraint c : addedConstraints) {
+					curCons.add(c);
+				}
+
+				setConstraints(curCons);
+				updateInvolvingConstraints();
+				logger.info(getNbConstraints() + " constraints");
+			}
+		}
+		return modified;
 	}
 
 	public boolean noGoodsToConstraints(Map<Variable[], List<int[]>> noGoods,
@@ -571,6 +632,7 @@ public final class Problem implements Cloneable {
 	}
 
 	public void setLevelVariables(final Variable variable) {
+		assert (currentLevel + 1 >= levelVariables.length || levelVariables[currentLevel + 1] == null);
 		levelVariables[currentLevel] = variable;
 
 	}
@@ -717,62 +779,8 @@ public final class Problem implements Cloneable {
 		return problem;
 	}
 
-	// public static Collection<Constraint> convertExtension(
-	// final Collection<Constraint> constraints, final int seconds)
-	// throws FailedGenerationException {
-	// // for (Constraint c : constraints) {
-	// // c.initNbSupports();
-	// // }
-	// // return constraints;
-	//
-	// final float start = -CpuMonitor.getCpuTime();
-	//
-	// final Collection<Constraint> extConstraints = new
-	// ArrayList<Constraint>();
-	//
-	// boolean outOfMemory = false;
-	// int done = 0;
-	// for (Constraint c : constraints) {
-	// if (c instanceof ExtensionConstraint) {
-	// extConstraints.add(c);
-	// } else if ((seconds >= 0 && CpuMonitor.getCpuTime() + start > seconds)
-	// || outOfMemory) {
-	// c.initNbSupports();
-	// extConstraints.add(c);
-	// } else {
-	// try {
-	// extConstraints.add(new ExtensionConstraint(c));
-	// logger.finer("Converted " + c + ", "
-	// + (constraints.size() - ++done) + " remaining");
-	// } catch (OutOfMemoryError e) {
-	// outOfMemory = true;
-	// logger.info("Could not convert " + c + " to extension");
-	// c.initNbSupports();
-	// extConstraints.add(c);
-	// }
-	// }
-	//
-	// }
-	//
-	// return extConstraints;
-	// }
 	public static enum LearnMethod {
 		NONE, EXT, RC, BIN
-	}
-
-	public static void main(String[] args) {
-		int[] t = { 1, 3, 5 };
-		int n = t.length;
-		for (int i = 1; i < n; i++) {
-			swap(t, i, n - 1 - i);
-		}
-		System.out.print(Arrays.toString(t));
-	}
-
-	private static void swap(int[] t, int a, int b) {
-		int tmp = t[a];
-		t[a] = t[b];
-		t[b] = tmp;
 	}
 
 	public Variable getLastLevelVariable() {

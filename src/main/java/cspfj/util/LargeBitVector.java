@@ -100,11 +100,12 @@ public class LargeBitVector extends BitVector {
 
 	@Override
 	public BitVector exclusive(BitVector bv) {
-		final LargeBitVector bitVector = (LargeBitVector) bv.clone();
+		final LargeBitVector bitVector = new LargeBitVector(bv.size, false);
+		final LargeBitVector source = (LargeBitVector) bv;
 		int i = words.length - 1;
-		bitVector.words[i] = (bitVector.words[i] ^ words[i]) & (MASK >>> -size);
+		bitVector.words[i] = (source.words[i] ^ words[i]) & (MASK >>> -size);
 		while (--i >= 0) {
-			bitVector.words[i] ^= words[i];
+			source.words[i] ^= words[i];
 		}
 		return bitVector;
 	}
@@ -164,6 +165,16 @@ public class LargeBitVector extends BitVector {
 
 	public int realSize() {
 		return words.length;
+	}
+
+	@Override
+	public boolean isEmpty() {
+		for (long l : words) {
+			if (l != 0L) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 }

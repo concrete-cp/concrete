@@ -237,10 +237,11 @@ public final class MGACRec extends AbstractSolver {
 					.info("Took " + macTime + "s (" + (maxBT / macTime)
 							+ " bps)");
 			maxBT *= 1.5;
-			final Map<Variable[], List<int[]>> ngs = problem.noGoods();
+			// final Map<Variable[], List<int[]>> ngs = problem.noGoods();
+			problem.noGoods(addConstraints);
 			problem.reset();
-			problem.noGoodsToConstraints(ngs, addConstraints);
-			
+			// problem.noGoodsToConstraints(ngs, addConstraints);
+
 			try {
 				if (!filter.reduceAll()) {
 					break;

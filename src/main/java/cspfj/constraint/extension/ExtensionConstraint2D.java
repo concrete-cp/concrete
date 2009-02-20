@@ -123,14 +123,10 @@ public class ExtensionConstraint2D extends AbstractPVRConstraint implements
 
 	@Override
 	public int removeTuples(int[] base) {
-		int removed = 0;
-		tupleManager.setFirstTuple(base);
-		do {
-			if (removeTuple(this.tuple)) {
-				removed++;
-			}
-		} while (tupleManager.setNextTuple(base));
-		return removed;
+		if (removeTuple(base)) {
+			return 1;
+		}
+		return 0;
 	}
 
 	@Override

@@ -90,14 +90,14 @@ public final class CDC extends AbstractSAC {
 
 			if (filter.reduceAfter(variable)) {
 
-				final Map<Variable[], List<int[]>> noGoods = problem.noGoods();
-
+//				final Map<Variable[], List<int[]>> noGoods = problem.noGoods();
+				changedGraph = problem.noGoods(addConstraints) | changedGraph;
 				// logger.info(noGoods.toString());
 
 				variable.unassign(problem);
 				problem.pop();
 				
-				changedGraph = problem.noGoodsToConstraints(noGoods, addConstraints);
+//				changedGraph = problem.noGoodsToConstraints(noGoods, addConstraints);
 			} else {
 				variable.unassign(problem);
 				problem.pop();

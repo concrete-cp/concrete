@@ -24,6 +24,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidParameterException;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import cspfj.exception.MaxBacktracksExceededException;
@@ -109,7 +110,7 @@ public final class MGACIter extends AbstractSolver {
 				solution();
 				if (allSolutions) {
 					selectedVariable = backtrack();
-					if (problem.getCurrentLevel() < 0) {
+					if (selectedVariable.getDomainSize() <= 0) {
 						break;
 					}
 				} else {
@@ -123,7 +124,7 @@ public final class MGACIter extends AbstractSolver {
 					break;
 				}
 				selectedVariable = backtrack();
-				if (problem.getCurrentLevel() < 0) {
+				if (selectedVariable.getDomainSize() <= 0) {
 					break;
 				}
 				continue;
@@ -156,19 +157,19 @@ public final class MGACIter extends AbstractSolver {
 
 	public Variable backtrack() throws MaxBacktracksExceededException {
 		Variable selectedVariable;
-
+		int index;
 		do {
 			selectedVariable = problem.getLastLevelVariable();
-			final int index = selectedVariable.getFirst();
+			index = selectedVariable.getFirst();
 			selectedVariable.unassign(problem);
 			problem.pop();
-
-			logger.finer(problem.getCurrentLevel() + " : " + selectedVariable
-					+ " /= " + selectedVariable.getDomain().value(index));
-			selectedVariable.remove(index);
-
-		} while (selectedVariable.getDomainSize() < 1
+			problem.setLevelVariables(null);
+		} while (selectedVariable.getDomainSize() <= 1
 				&& problem.getCurrentLevel() > 0);
+
+		logger.finer(problem.getCurrentLevel() + " : " + selectedVariable
+				+ " /= " + selectedVariable.getDomain().value(index));
+		selectedVariable.remove(index);
 		checkBacktracks();
 		return selectedVariable;
 	}
@@ -179,7 +180,8 @@ public final class MGACIter extends AbstractSolver {
 	 * @see cspfj.Solver#run(int)
 	 */
 	public boolean runSolver() throws IOException {
-
+//		Logger.getLogger("").setLevel(Level.WARNING);
+//		Logger.getLogger("").getHandlers()[0].setLevel(Level.WARNING);
 		System.gc();
 		chronometer.startChrono();
 
@@ -212,9 +214,9 @@ public final class MGACIter extends AbstractSolver {
 		// statistics("prepro-nbskippedrevisions", Constraint
 		// .getNbSkippedRevisions());
 
-		// if (true) {
-		// return true ;
-		// }
+//		if (true) {
+//			return false;
+//		}
 
 		final float start = chronometer.getCurrentChrono();
 		heuristic.compute();
@@ -239,12 +241,13 @@ public final class MGACIter extends AbstractSolver {
 			for (Variable v : problem.getVariables()) {
 				assert v.getDomainSize() > 0;
 			}
-
+			setMaxBacktracks(maxBT);
+			problem.clearLevelVariables();
 			logger.info("MAC with " + maxBT + " bt");
 			float macTime = -chronometer.getCurrentChrono();
 			// System.out.print("run ! ");
 			try {
-				setMaxBacktracks(maxBT);
+
 				mac();
 
 				break;
@@ -264,9 +267,10 @@ public final class MGACIter extends AbstractSolver {
 
 			// logger.info(constraintRepartition());
 			maxBT *= 1.5;
-			final Map<Variable[], List<int[]>> ngs = problem.noGoods();
+			// final Map<Variable[], List<int[]>> ngs = problem.noGoods();
+			problem.noGoods(addConstraints);
 			problem.reset();
-			problem.noGoodsToConstraints(ngs, addConstraints);
+			// problem.noGoodsToConstraints(ngs, addConstraints);
 
 			try {
 				if (!filter.reduceAll()) {
