@@ -1,6 +1,7 @@
 package cspfj.constraint.extension;
 
 import java.math.BigInteger;
+import java.util.AbstractSet;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -87,22 +88,26 @@ public class TupleSet implements Matrix, Cloneable, Iterable<int[]> {
 
 	public boolean removeTuple(final int[] tuple) {
 		final int hash = hash(tuple, hashTableSize);
-		final int[][] subList = hashTable[hash];
 
 		if (sizes[hash] == 0) {
 			return false;
 		}
 
-		final int index = index(subList, sizes[hash], tuple);
+		final int index = index(hashTable[hash], sizes[hash], tuple);
 		if (index < 0) {
 			return false;
 		}
+		remove(hash, index);
+		return true;
+	}
+
+	private void remove(int hash, int index) {
 		int numMoved = sizes[hash] - index - 1;
 		if (numMoved > 0)
-			System.arraycopy(subList, index + 1, subList, index, numMoved);
+			System.arraycopy(hashTable[hash], index + 1, hashTable[hash],
+					index, numMoved);
 		size--;
 		sizes[hash]--;
-		return true;
 	}
 
 	private static void ensureCapacity(int[][][] hashTable, int position,
@@ -165,11 +170,18 @@ public class TupleSet implements Matrix, Cloneable, Iterable<int[]> {
 	private class HashSetIterator implements Iterator<int[]> {
 
 		private int pos;
+
+		private int lastPos;
+
 		private int subPos;
+
+		private int lastSubPos;
 
 		public HashSetIterator() {
 			pos = 0;
+			lastPos = 0;
 			subPos = 0;
+			lastSubPos = -1;
 			while (pos < hashTableSize && sizes[pos] <= 0) {
 				pos++;
 			}
@@ -183,7 +195,8 @@ public class TupleSet implements Matrix, Cloneable, Iterable<int[]> {
 		@Override
 		public int[] next() {
 			final int[] tuple = hashTable[pos][subPos];
-			subPos++;
+			lastSubPos = subPos++;
+			lastPos = pos;
 			if (subPos >= sizes[pos]) {
 				subPos = 0;
 				do {
@@ -195,7 +208,11 @@ public class TupleSet implements Matrix, Cloneable, Iterable<int[]> {
 
 		@Override
 		public void remove() {
-			throw new UnsupportedOperationException();
+			if (lastSubPos < 0) {
+				throw new IllegalStateException();
+			}
+			TupleSet.this.remove(lastPos, lastSubPos);
+			lastSubPos = -1;
 		}
 
 	}
@@ -205,17 +222,20 @@ public class TupleSet implements Matrix, Cloneable, Iterable<int[]> {
 	}
 
 	public TupleSet clone() {
+		final TupleSet clone;
 		try {
-			final TupleSet clone = (TupleSet) super.clone();
-			clone.sizes = this.sizes.clone();
-			clone.hashTable = new int[hashTableSize][][];
-			for (int i = hashTableSize; --i >= 0;) {
-				clone.hashTable[i] = hashTable[i].clone();
-			}
-			return clone;
+			clone = (TupleSet) super.clone();
 		} catch (CloneNotSupportedException e) {
 			throw new InternalError(e.toString());
 		}
+		clone.sizes = this.sizes.clone();
+		clone.hashTable = new int[hashTableSize][][];
+		for (int i = hashTableSize; --i >= 0;) {
+			if (hashTable[i] != null) {
+				clone.hashTable[i] = hashTable[i].clone();
+			}
+		}
+		return clone;
 	}
 
 	@Override

@@ -27,7 +27,7 @@ import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
 public interface Solver {
-	String VERSION = "0.4";
+	String VERSION = "0.5";
 	
     boolean runSolver() throws IOException;
 

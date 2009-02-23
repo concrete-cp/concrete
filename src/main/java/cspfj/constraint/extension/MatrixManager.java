@@ -151,6 +151,9 @@ public class MatrixManager implements Cloneable {
 	}
 
 	protected Matrix unshareMatrix() {
+		if (!shared) {
+			return matrix;
+		}
 		shared = false;
 		return matrix = matrix.clone();
 	}

@@ -91,6 +91,7 @@ public final class AC3 implements Filter {
 		final RevisionHandler revisator = this.revisator;
 
 		while (!inQueue.isEmpty()) {
+//			logger.fine(""+inQueue.cardinality());
 			final Variable variable = pullVariable();
 
 			final Constraint[] constraints = variable.getInvolvingConstraints();

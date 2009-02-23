@@ -20,6 +20,8 @@ public class MatrixManagerDynamic extends MatrixManager implements
 
 	private int[] removedLast;
 
+	private int stingRemoved;
+
 	public MatrixManagerDynamic(final Variable[] scope, final TupleSet matrix,
 			final boolean shared) {
 		super(scope, matrix, shared);
@@ -89,6 +91,14 @@ public class MatrixManagerDynamic extends MatrixManager implements
 		return new LLIterator();
 	}
 
+	public Iterator<int[]> hsIterator() {
+		return tupleSet.iterator();
+	}
+
+	public Matrix unshareMatrix() {
+		return tupleSet = (TupleSet)super.unshareMatrix();
+	}
+	
 	public MatrixManagerDynamic clone() throws CloneNotSupportedException {
 		final MatrixManagerDynamic list = (MatrixManagerDynamic) super.clone();
 		list.next = next.clone();
@@ -108,17 +118,32 @@ public class MatrixManagerDynamic extends MatrixManager implements
 		return stb.toString();
 	}
 
+	public boolean removeTuple(int[] tuple) {
+		if (super.removeTuple(tuple)) {
+			stingRemoved = currentLevel;
+			return true;
+		}
+		return false;
+	}
+
 	public class LLIterator implements Iterator<int[]> {
 
 		private int current = -1;
 
 		private int prev = -1;
 
-		private int nextOne = first;
+		private int nextOne;
+
+		public LLIterator() {
+			nextOne = first;
+		}
 
 		@Override
 		public boolean hasNext() {
-			return nextOne >= 0;
+			if (nextOne < 0) {
+				return false;
+			}
+			return true;
 		}
 
 		@Override
@@ -131,6 +156,10 @@ public class MatrixManagerDynamic extends MatrixManager implements
 				nextOne = next[current];
 			}
 
+			// if (!tupleSet.check(tupleList[current])) {
+			// return next();
+			// }
+
 			return tupleList[current];
 		}
 
@@ -139,8 +168,6 @@ public class MatrixManagerDynamic extends MatrixManager implements
 			remove(currentLevel);
 		}
 
-		
-		
 		public void remove(final int level) {
 			if (prev < 0) {
 				first = nextOne;
@@ -148,20 +175,35 @@ public class MatrixManagerDynamic extends MatrixManager implements
 				next[prev] = nextOne;
 			}
 
-			// assert count() == count - 1 : count + "->" + count();
+			if (level >= 0) {
 
-			if (level >= removed.length) {
-				expandRemoved(level + 1);
+				// assert count() == count - 1 : count + "->" + count();
+
+				if (level >= removed.length) {
+					expandRemoved(level + 1);
+				}
+
+				final int oldFirstRemoved = removed[level];
+
+				next[current] = oldFirstRemoved;
+				removed[level] = current;
+
+				if (oldFirstRemoved < 0) {
+					removedLast[level] = current;
+				}
+			}
+			current = prev;
+		}
+
+		public void promote() {
+			if (prev < 0) {
+				return;
 			}
 
-			final int oldFirstRemoved = removed[level];
+			next[prev] = nextOne;
+			next[current] = first;
+			first = current;
 
-			next[current] = oldFirstRemoved;
-			removed[level] = current;
-
-			if (oldFirstRemoved < 0) {
-				removedLast[level] = current;
-			}
 			current = prev;
 
 		}
