@@ -191,7 +191,7 @@ public final class Problem implements Cloneable {
 
 	}
 
-	private void setConstraints(final Collection<Constraint> constraints2) {
+	public void setConstraints(final Collection<Constraint> constraints2) {
 		this.constraints = new HashMap<Integer, Constraint>(constraints2.size());
 
 		this.constraintArray = constraints2.toArray(new Constraint[constraints2
@@ -378,7 +378,7 @@ public final class Problem implements Cloneable {
 		return null;
 	}
 
-	private final DynamicConstraint learnConstraint(final Set<Variable> scope,
+	public final DynamicConstraint learnConstraint(final Set<Variable> scope,
 			final LearnMethod addConstraints) {
 		final DynamicConstraint constraint = findDynamicConstraint(scope);
 
@@ -437,7 +437,7 @@ public final class Problem implements Cloneable {
 		return tuple;
 	}
 
-	private static int makeBase(Variable[] scope, int[] values,
+	public static int makeBase(Variable[] scope, int[] values,
 			Constraint constraint, int[] base) {
 		assert scope.length == values.length;
 

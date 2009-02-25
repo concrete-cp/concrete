@@ -203,13 +203,11 @@ public abstract class AbstractSolver implements Solver {
 		if (this.preprocessor == null) {
 			preprocessor = filter;
 		} else if (BackedFilter.class.isAssignableFrom(this.preprocessor)) {
-			preprocessor = this.preprocessor.getConstructor(
-					new Class[] { Problem.class, Filter.class }).newInstance(
-					new Object[] { problem, filter });
+			preprocessor = this.preprocessor.getConstructor(Problem.class,
+					Filter.class).newInstance(problem, filter);
 		} else {
-			preprocessor = this.preprocessor.getConstructor(
-					new Class[] { Problem.class }).newInstance(
-					new Object[] { problem });
+			preprocessor = this.preprocessor.getConstructor(Problem.class)
+					.newInstance(problem);
 		}
 
 		Thread.interrupted();

@@ -79,4 +79,6 @@ public abstract class BitVector implements Cloneable {
 	public abstract BitVector exclusive(BitVector bv);
 	
 	public abstract boolean isEmpty();
+	
+	public abstract void setAllBut(final int index);
 }

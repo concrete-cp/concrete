@@ -197,7 +197,7 @@ public final class MGACIter extends AbstractSolver {
 		} catch (IllegalAccessException e1) {
 			throw new InvalidParameterException(e1.toString());
 		} catch (InvocationTargetException e1) {
-			throw new InvalidParameterException(e1.toString());
+			throw new IllegalStateException(e1);
 		} catch (NoSuchMethodException e1) {
 			throw new InvalidParameterException(e1.toString());
 		} catch (InterruptedException e) {

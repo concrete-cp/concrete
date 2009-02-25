@@ -108,7 +108,6 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 				toFind.set(index);
 				nbToFind++;
 			}
-
 		}
 
 		for (final LLIterator itr = dynamic.iterator(); itr.hasNext();) {

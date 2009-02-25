@@ -41,6 +41,20 @@ public class LargeBitVector extends BitVector {
 		return (words[word(position)] |= 1L << position) != old;
 	}
 
+	public void setAllBut(final int index) {
+		final int position = word(index);
+
+		words[words.length - 1] = MASK >>> -size;
+		for (int i = words.length - 1; --i >= 0;) {
+			if (i == position) {
+				words[i] |= ~(1L << position);
+			} else {
+				words[i] = MASK;
+			}
+		}
+
+	}
+
 	public boolean get(final int position) {
 		return (words[word(position)] & (1L << position)) != 0;
 	}

@@ -84,6 +84,10 @@ public class SmallBitVector extends BitVector {
 		return bitVector;
 	}
 
+	public void setAllBut(int index) {
+		word |= ~(1L << index) & (MASK >>> -size);
+	}
+	
 	@Override
 	public boolean isEmpty() {
 		return word == 0L;

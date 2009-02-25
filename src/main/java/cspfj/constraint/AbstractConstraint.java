@@ -313,11 +313,6 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		return false;
 	}
 
-	public boolean revise(final RevisionHandler revisator,
-			final boolean[] removals) {
-		return revise(revisator);
-	}
-
 	public final boolean checkFirst() {
 		tupleManager.setFirstTuple();
 		return chk();

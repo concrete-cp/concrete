@@ -1,5 +1,6 @@
 package cspfj.filter;
 
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -15,10 +16,12 @@ import cspfj.util.BitVector;
  * @author scand1sk
  * 
  */
-public final class AC3 implements Filter {
+public final class AC3Arc implements Filter {
 	private final Problem problem;
 
-	private final BitVector inQueue;
+	private final BitVector variableInQueue;
+
+	private final BitVector[] perConstraintInQueue;
 
 	public int effectiveRevisions = 0;
 
@@ -27,15 +30,30 @@ public final class AC3 implements Filter {
 	private static final Logger logger = Logger.getLogger(Filter.class
 			.getSimpleName());
 
-	public AC3(final Problem problem, final VariableHeuristic heuristic) {
+	public AC3Arc(final Problem problem) {
 		super();
 		this.problem = problem;
 
-		inQueue = BitVector.factory(problem.getMaxVId() + 1, false);
+		variableInQueue = BitVector.factory(problem.getMaxVId() + 1, false);
+		perConstraintInQueue = new BitVector[problem.getMaxCId() + 1];
+
+		for (Constraint c : problem.getConstraints()) {
+			perConstraintInQueue[c.getId()] = BitVector.factory(c.getArity(),
+					false);
+		}
+
+		for (Constraint c : problem.getConstraints()) {
+			c.fillRemovals(true);
+		}
+
 	}
 
 	public boolean reduceAll() {
-		addAll();
+		variableInQueue.fill(true);
+
+		for (Constraint c : problem.getConstraints()) {
+			perConstraintInQueue[c.getId()].fill(true);
+		}
 		return reduce();
 
 	}
@@ -44,25 +62,15 @@ public final class AC3 implements Filter {
 		if (variable == null) {
 			return true;
 		}
-		for (int i = inQueue.nextSetBit(0); i >= 0; i = inQueue
-				.nextSetBit(i + 1)) {
-			final Variable v = problem.getVariable(i);
-			final Constraint[] involved = v.getInvolvingConstraints();
-			for (int j = involved.length; --j >= 0;) {
-				involved[j].setRemovals(v.getPositionInConstraint(j), false);
+
+		for (Constraint c : variable.getInvolvingConstraints()) {
+			for (int p = c.getArity(); --p >= 0;) {
+				if (c.getVariable(p) == variable) {
+					continue;
+				}
+				variableInQueue.set(c.getVariable(p).getId());
+				perConstraintInQueue[c.getId()].set(p);
 			}
-		}
-
-		inQueue.fill(false);
-
-		inQueue.set(variable.getId());
-
-		final Constraint[] involving = variable.getInvolvingConstraints();
-
-		for (int cp = involving.length; --cp >= 0;) {
-			involving[cp].setRemovals(variable.getPositionInConstraint(cp),
-					true);
-
 		}
 
 		return reduce();
@@ -70,26 +78,37 @@ public final class AC3 implements Filter {
 
 	private RevisionHandler revisator = new RevisionHandler() {
 		public void revised(final Constraint constraint, final Variable variable) {
-			inQueue.set(variable.getId());
-			final Constraint[] involvingConstraints = variable
-					.getInvolvingConstraints();
 
-			for (int cp = involvingConstraints.length; --cp >= 0;) {
-				final Constraint constraintP = involvingConstraints[cp];
-				if (constraintP != constraint) {
-					constraintP.setRemovals(variable
-							.getPositionInConstraint(cp), true);
+			for (Constraint c : variable.getInvolvingConstraints()) {
+				if (c == constraint) {
+					continue;
 				}
-
+				for (int p = c.getArity(); --p >= 0;) {
+					if (c.getVariable(p) == variable) {
+						continue;
+					}
+					variableInQueue.set(c.getVariable(p).getId());
+					perConstraintInQueue[c.getId()].set(p);
+				}
 			}
+
 		}
 	};
 
+	public boolean reduce(BitVector variableInQueue,
+			BitVector[] perConstraintInQueue) {
+		variableInQueue.copyTo(this.variableInQueue);
+		for (Constraint c : problem.getConstraints()) {
+			perConstraintInQueue[c.getId()].copyTo(this.perConstraintInQueue[c
+					.getId()]);
+		}
+		return reduce();
+	}
+
 	private boolean reduce() {
 		logger.finer("Reducing");
-		final BitVector inQueue = this.inQueue;
 
-		while (!inQueue.isEmpty()) {
+		while (!variableInQueue.isEmpty()) {
 			if (!reduceOnce(pullVariable())) {
 				return false;
 			}
@@ -100,40 +119,36 @@ public final class AC3 implements Filter {
 		return true;
 
 	}
-	
-	public boolean reduceOnce(Variable variable) {
 
+	public boolean reduceOnce(Variable variable) {
 		final Constraint[] constraints = variable.getInvolvingConstraints();
 		final RevisionHandler revisator = this.revisator;
 
 		for (int c = constraints.length; --c >= 0;) {
 			final Constraint constraint = constraints[c];
-
-			// if (!constraint.getRemovals(variable.getPositionInConstraint(c))) {
-			// constraint.fillRemovals(false);
-			// continue;
-			// }
-
-			if (!constraint.revise(revisator)) {
-				effectiveRevisions++;
-				constraint.incWeight();
-				constraint.fillRemovals(false);
-				return false;
+			if (!perConstraintInQueue[constraint.getId()].clear(variable
+					.getPositionInConstraint(c))) {
+				continue;
 			}
-
-			constraint.fillRemovals(false);
-
+			effectiveRevisions++;
+			if (((AbstractPVRConstraint) constraints[c]).revise(variable
+					.getPositionInConstraint(c))) {
+				if (variable.getDomainSize() <= 0) {
+					constraints[c].incWeight();
+					clear();
+					return false;
+				}
+				revisator.revised(constraint, variable);
+			}
 		}
+
 		return true;
 	}
 
-	private void addAll() {
-		for (Variable v : problem.getVariables()) {
-			inQueue.set(v.getId());
-		}
-
+	private void clear() {
+		variableInQueue.fill(false);
 		for (Constraint c : problem.getConstraints()) {
-			c.fillRemovals(true);
+			perConstraintInQueue[c.getId()].fill(false);
 		}
 	}
 
@@ -158,7 +173,7 @@ public final class AC3 implements Filter {
 			if (c instanceof AbstractPVRConstraint) {
 				for (int i = c.getArity(); --i >= 0;) {
 					assert c.getVariable(i).isAssigned()
-						|| !((AbstractPVRConstraint) c).revise(i);
+							|| !((AbstractPVRConstraint) c).revise(i);
 				}
 			} else {
 				c.revise(revisator);
@@ -172,7 +187,7 @@ public final class AC3 implements Filter {
 		Variable bestVariable = null;
 		int bestValue = Integer.MAX_VALUE;
 
-		final BitVector inQueue = this.inQueue;
+		final BitVector inQueue = this.variableInQueue;
 
 		final Problem problem = this.problem;
 
@@ -191,7 +206,7 @@ public final class AC3 implements Filter {
 	}
 
 	public String toString() {
-		return "GAC3rm";
+		return "GAC3rm/Arc";
 	}
 
 	public Map<String, Object> getStatistics() {
