@@ -18,13 +18,20 @@
  */
 package cspfj.filter;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import cspfj.AbstractSolver;
+import cspfj.constraint.Constraint;
+import cspfj.constraint.DynamicConstraint;
 import cspfj.constraint.extension.ExtensionConstraintDynamic;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
+import cspfj.util.BitVector;
 
 /**
  * @author Julien VION
@@ -40,9 +47,14 @@ public final class CDC extends AbstractSAC {
 			: Problem.LearnMethod.NONE;
 
 	private int addedConstraints = 0;
+	
+	private final Variable[] variables;
+	
+	private int nbNoGoods;
 
 	public CDC(Problem problem, Filter filter) {
 		super(problem, filter);
+		this.variables = problem.getVariables();
 	}
 
 	@Override
@@ -90,7 +102,7 @@ public final class CDC extends AbstractSAC {
 			if (filter.reduceAfter(variable)) {
 
 //				final Map<Variable[], List<int[]>> noGoods = problem.noGoods();
-				changedGraph = problem.noGoods(addConstraints) | changedGraph;
+				changedGraph = noGoods(variable) | changedGraph;
 				// logger.info(noGoods.toString());
 
 				variable.unassign(problem);
@@ -110,9 +122,87 @@ public final class CDC extends AbstractSAC {
 		return changedGraph;
 	}
 
+	public boolean noGoods(Variable firstVariable) {
+		int[] tuple = new int[2];
+
+		final Set<Variable> scopeSet = new HashSet<Variable>(2);
+
+		scopeSet.add(firstVariable);
+		tuple[0] = firstVariable.getFirst();
+		final Variable[] scopeArray = new Variable[] { firstVariable, null };
+
+		boolean modified = false;
+		final Collection<Constraint> addedConstraints = new ArrayList<Constraint>();
+
+		for (Variable fv : variables) {
+
+			// logger.fine("checking " +
+			// getVariable(levelVariables[level-1]));
+
+			if (fv == firstVariable) {
+				continue;
+			}
+
+			final BitVector changes = fv.getDomain().getAtLevel(0).exclusive(
+					fv.getDomain().getAtLevel(1));
+			if (changes.isEmpty()) {
+				continue;
+			}
+
+			scopeSet.add(fv);
+			final DynamicConstraint constraint = problem.learnConstraint(
+					scopeSet, addConstraints);
+			scopeSet.remove(fv);
+
+			if (constraint == null) {
+				continue;
+			}
+
+			scopeArray[1] = fv;
+
+			final int[] base = new int[2];
+			final int varPos = Problem.makeBase(scopeArray, tuple, constraint,
+					base);
+
+			int newNogoods = 0;
+			for (int i = changes.nextSetBit(0); i >= 0; i = changes
+					.nextSetBit(i + 1)) {
+				base[varPos] = i;
+				newNogoods += constraint.removeTuples(base);
+
+			}
+			if (newNogoods > 0) {
+				nbNoGoods += newNogoods;
+				modified = true;
+				if (constraint.getId() > problem.getMaxCId()) {
+					logger.info("Added " + constraint);
+					addedConstraints.add(constraint);
+				}
+			}
+		}
+
+		if (modified) {
+			logger.info(nbNoGoods + " nogoods");
+
+			if (!addedConstraints.isEmpty()) {
+				final Collection<Constraint> curCons = new ArrayList<Constraint>(
+						problem.getConstraintsAsCollection());
+
+				for (Constraint c : addedConstraints) {
+					curCons.add(c);
+				}
+
+				problem.setConstraints(curCons);
+				problem.updateInvolvingConstraints();
+				logger.info(problem.getNbConstraints() + " constraints");
+			}
+		}
+		return modified;
+	}
+	
 	public Map<String, Object> getStatistics() {
 		final Map<String, Object> statistics = super.getStatistics();
-		statistics.put("CDC-nogoods", problem.getNbNoGoods());
+		statistics.put("CDC-nogoods", nbNoGoods);
 		statistics.put("CDC-added-constraints", addedConstraints);
 		return statistics;
 	}

@@ -20,6 +20,7 @@
 package cspfj.constraint.semantic;
 
 import cspfj.constraint.AbstractPVRConstraint;
+import cspfj.problem.Domain;
 import cspfj.problem.Variable;
 
 public final class DTConstraint extends AbstractPVRConstraint {
@@ -54,31 +55,31 @@ public final class DTConstraint extends AbstractPVRConstraint {
 	}
 
 	@Override
-	public boolean revise(final int position, final int level) {
+	public boolean revise(final int position) {
 		final Variable variable = getVariable(position);
 		final Variable otherVariable = getVariable(1 - position);
 
-		final int[] domain = variable.getDomain();
+		final Domain domain = variable.getDomain();
 
-		final int[] otherDomain = otherVariable.getDomain();
+		final Domain otherDomain = otherVariable.getDomain();
 
 		final int lBound;
 		final int hBound;
 
 		if (ordered) {
 
-			lBound = otherDomain[otherVariable.getLast()] - duration[position];
+			lBound = otherDomain.value(otherDomain.last()) - duration[position];
 
-			hBound = otherDomain[otherVariable.getFirst()]
+			hBound = otherDomain.value(otherDomain.first())
 					+ duration[1 - position];
 
 		} else {
-			int otherMin = otherDomain[otherVariable.getFirst()];
+			int otherMin = otherDomain.value(otherDomain.first());
 			int otherMax = otherMin;
 
 			for (int i = otherVariable.getFirst(); i >= 0; i = otherVariable
 					.getNext(i)) {
-				final int value = otherDomain[i];
+				final int value = otherDomain.value(i);
 				if (value < otherMin) {
 					otherMin = value;
 				}
@@ -100,22 +101,22 @@ public final class DTConstraint extends AbstractPVRConstraint {
 
 		if (ordered) {
 			int i = variable.getFirst();
-			while (i >= 0 && domain[i] <= lBound) {
+			while (i >= 0 && domain.value(i) <= lBound) {
 				i = variable.getNext(i);
 			}
-			if (i >= 0 && domain[i] < hBound) {
-				variable.remove(i, level);
+			if (i >= 0 && domain.value(i) < hBound) {
+				variable.remove(i);
 				filtered = true;
 				i = variable.getNext(i);
 			}
-			while (i >= 0 && domain[i] < hBound) {
-				variable.remove(i, level);
+			while (i >= 0 && domain.value(i) < hBound) {
+				variable.remove(i);
 				i = variable.getNext(i);
 			}
 		} else {
 			for (int i = variable.getFirst(); i >= 0; i = variable.getNext(i)) {
-				if (domain[i] > lBound && domain[i] < hBound) {
-					variable.remove(i, level);
+				if (domain.value(i) > lBound && domain.value(i) < hBound) {
+					variable.remove(i);
 					filtered = true;
 				}
 			}
@@ -125,11 +126,6 @@ public final class DTConstraint extends AbstractPVRConstraint {
 
 	@Override
 	public void initNbSupports() throws InterruptedException {
-		
-	}
 
-	@Override
-	public boolean isSlow() {
-		return false;
 	}
 }

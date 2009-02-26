@@ -77,13 +77,14 @@ public class LargeBitVector extends BitVector {
 	}
 
 	public int prevSetBit(final int start) {
-		int position = word(start);
-		final int wordsInUse = words.length;
-		if (position >= wordsInUse) {
-			return start;
-		}
 
-		long word = words[position] & ~(MASK << start);
+		final int wordsInUse = words.length;
+		int position = Math.min(wordsInUse - 1, word(start));
+
+		long word = words[position];
+		if (position == word(start)) {
+			word &= ~(MASK << start);
+		}
 
 		while (word == 0) {
 			if (--position < 0) {
@@ -95,13 +96,13 @@ public class LargeBitVector extends BitVector {
 	}
 
 	public int prevClearBit(final int start) {
-		int position = word(start);
 		final int wordsInUse = words.length;
-		if (position >= wordsInUse) {
-			return start;
-		}
+		int position = Math.min(wordsInUse - 1, word(start));
 
-		long word = ~(words[position] | (MASK << start));
+		long word = ~words[position];
+		if (position == word(start)) {
+			word &= ~(MASK << start);
+		}
 
 		while (word == 0) {
 			if (--position < 0) {

@@ -100,16 +100,14 @@ public final class AC3 implements Filter {
 		return true;
 
 	}
-	
+
 	public boolean reduceOnce(Variable variable) {
 
-		final Constraint[] constraints = variable.getInvolvingConstraints();
 		final RevisionHandler revisator = this.revisator;
 
-		for (int c = constraints.length; --c >= 0;) {
-			final Constraint constraint = constraints[c];
-
-			// if (!constraint.getRemovals(variable.getPositionInConstraint(c))) {
+		for (Constraint constraint : variable.getInvolvingConstraints()) {
+			// if (!constraint.getRemovals(variable.getPositionInConstraint(c)))
+			// {
 			// constraint.fillRemovals(false);
 			// continue;
 			// }
@@ -158,7 +156,7 @@ public final class AC3 implements Filter {
 			if (c instanceof AbstractPVRConstraint) {
 				for (int i = c.getArity(); --i >= 0;) {
 					assert c.getVariable(i).isAssigned()
-						|| !((AbstractPVRConstraint) c).revise(i);
+							|| !((AbstractPVRConstraint) c).revise(i);
 				}
 			} else {
 				c.revise(revisator);

@@ -37,7 +37,7 @@ public interface Filter {
     
     boolean reduceAfter(Variable variable) ;
     
-    boolean reduceOnce(Variable variable);
+    //boolean reduceOnce(Variable variable);
     
     Map<String, Object> getStatistics();
 

@@ -20,6 +20,7 @@
 package cspfj.constraint.semantic;
 
 import cspfj.constraint.AbstractPVRConstraint;
+import cspfj.problem.Domain;
 import cspfj.problem.Variable;
 
 public final class DiffConstraint extends AbstractPVRConstraint {
@@ -44,51 +45,52 @@ public final class DiffConstraint extends AbstractPVRConstraint {
 		return getValue(1) - getValue(0) >= constant;
 	}
 
-	public boolean revise(final int position, final int level) {
+	public boolean revise(final int position) {
 		final Variable v0 = getVariable(0);
 		final Variable v1 = getVariable(1);
 
-		final int[] d0 = v0.getDomain();
-		final int[] d1 = v1.getDomain();
-		
-		
+		final Domain d0 = v0.getDomain();
+		final Domain d1 = v1.getDomain();
+
 		boolean deleted = false;
 
 		if (position == 0) {
-			int v1max = d1[v1.getLast()];
+			int v1max = d1.value(d1.last());
 			if (!ordered) {
-				for (int i = v1.getPrev(v1.getLast()); i != -1; i = v1.getPrev(i)) {
-					if (d1[i] > v1max) {
-						v1max = d1[i];
+				for (int i = v1.getPrev(v1.getLast()); i != -1; i = v1
+						.getPrev(i)) {
+					if (d1.value(i) > v1max) {
+						v1max = d1.value(i);
 					}
 				}
 			}
-			
+
 			v1max -= constant;
 
 			for (int i = v0.getLast(); i != -1; i = v0.getPrev(i)) {
-				if (d0[i] > v1max) {
-					v0.remove(i, level);
+				if (d0.value(i) > v1max) {
+					v0.remove(i);
 					deleted = true;
 				} else if (ordered) {
 					break;
 				}
 			}
 		} else {
-			int v0min = d0[v0.getFirst()];
+			int v0min = d0.value(d0.first());
 			if (!ordered) {
-				for (int i = v0.getNext(v0.getFirst()); i != -1; i = v0.getNext(i)) {
-					if (d0[i] < v0min) {
-						v0min = d0[i];
+				for (int i = v0.getNext(v0.getFirst()); i != -1; i = v0
+						.getNext(i)) {
+					if (d0.value(i) < v0min) {
+						v0min = d0.value(i);
 					}
 				}
 			}
-			
+
 			v0min += constant;
 
 			for (int i = v1.getFirst(); i != -1; i = v1.getNext(i)) {
-				if (d1[i] < v0min) {
-					v1.remove(i, level);
+				if (d1.value(i) < v0min) {
+					v1.remove(i);
 					deleted = true;
 				} else if (ordered) {
 					break;
@@ -99,13 +101,8 @@ public final class DiffConstraint extends AbstractPVRConstraint {
 	}
 
 	@Override
-	public boolean isSlow() {
-		return false;
-	}
-
-	@Override
 	public void initNbSupports() throws InterruptedException {
-		
+
 	}
 	// public String toString() {
 	// return "C" + getId() + " (" + getInvolvedVariables()[0] + ":"
