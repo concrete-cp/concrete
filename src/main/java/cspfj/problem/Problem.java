@@ -369,8 +369,9 @@ public final class Problem implements Cloneable {
 
 		for (DynamicConstraint c : scope.iterator().next()
 				.getDynamicConstraints()) {
-			if ((c.getArity() == scope.size() || (c.getArity() > scope.size() && c
-					.positive()))
+			if (c.getArity() == scope.size() 
+//					|| (c.getArity() > scope.size() && c
+//					.positive()))
 					&& c.getScopeSet().containsAll(scope)) {
 				return c;
 			}

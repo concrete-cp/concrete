@@ -11,17 +11,17 @@ import cspfj.util.LargeBitVector.IntIterator;
 
 public class BitVectorTest {
 
-	private long[] bitVector;
+	private LargeBitVector bitVector;
 
 	@Before
 	public void setUp() {
-		bitVector = LargeBitVector.newBitVector(125, false);
+		bitVector = new LargeBitVector(125, false);
 	}
 
 	@Test
 	public void testInitBooleanArray() {
-		LargeBitVector.fill(bitVector, 125, true);
-		assertEquals(Long.bitCount(bitVector[0]), 64);
+		bitVector.fill(true);
+		assertEquals(bitVector.bitCount(), 64);
 		assertTrue(LargeBitVector.get(bitVector, 64));
 		assertTrue(LargeBitVector.get(bitVector, 65));
 		assertTrue(LargeBitVector.get(bitVector, 124));

@@ -3,12 +3,12 @@ package cspfj.constraint.semantic;
 import java.util.Arrays;
 import java.util.BitSet;
 
-import cspfj.constraint.Constraint;
+import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.DynamicConstraint;
 import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
 
-public class RCConstraint extends Constraint implements
+public class RCConstraint extends AbstractConstraint implements
 		DynamicConstraint {
 
 	private final Interval[] intervals;
@@ -43,14 +43,15 @@ public class RCConstraint extends Constraint implements
 		nbInitConflicts = new long[getArity()][];
 		nbMaxConflicts = new long[getArity()];
 		for (int i = getArity(); --i >= 0;) {
-			nbInitConflicts[i] = new long[scope[i].getDomain().length];
+			nbInitConflicts[i] = new long[scope[i].getDomain().maxSize()];
 		}
 		sortIntervals();
 	}
 
 	private static Interval[] initIntervals(final Variable[] scope) {
-		final Interval[] intervals = new Interval[scope[0].getDomain().length];
-		final int ub = scope[1].getDomain().length - 1;
+		final Interval[] intervals = new Interval[scope[0].getDomain()
+				.getAtLevel(0).lastSetBit() + 1];
+		final int ub = scope[1].getDomain().getAtLevel(0).lastSetBit();
 		for (int i = intervals.length; --i >= 0;) {
 			intervals[i] = new Interval(0, ub, i);
 		}
@@ -86,16 +87,10 @@ public class RCConstraint extends Constraint implements
 
 	@Override
 	public int removeTuples(int[] base) {
-		int removed = 0;
-
-		tupleManager.setFirstTuple(base);
-		do {
-			if (removeTuple(this.tuple)) {
-				removed++;
-			}
-		} while (tupleManager.setNextTuple(base));
-		return removed;
-
+		if (removeTuple(base)) {
+			return 1;
+		}
+		return 0;
 	}
 
 	@Override
@@ -104,12 +99,7 @@ public class RCConstraint extends Constraint implements
 	}
 
 	@Override
-	public boolean isSlow() {
-		return false;
-	}
-
-	@Override
-	public boolean revise(int level, RevisionHandler revisator) {
+	public boolean revise(RevisionHandler revisator) {
 
 		final Variable v0 = getVariable(0);
 		final Variable v1 = getVariable(1);
@@ -140,7 +130,7 @@ public class RCConstraint extends Constraint implements
 				if (i <= currentItv.ub) {
 					v1Validated.set(currentItv.lb, currentItv.ub + 1);
 				} else {
-					v0.remove(currentItv.index0, level);
+					v0.remove(currentItv.index0);
 					if (v0.getDomainSize() == 0) {
 						return false;
 					}
@@ -165,13 +155,13 @@ public class RCConstraint extends Constraint implements
 				i = v1Validated.nextClearBit(i);
 			} else {
 				if (v1.isPresent(i)) {
-					v1.remove(i, level);
+					v1.remove(i);
 					if (v1.getDomainSize() == 0) {
 						return false;
 					}
 					revised = true;
 				}
-				i = v1.getNextPresent(i);
+				i = v1.getNext(i);
 			}
 		}
 
@@ -187,6 +177,14 @@ public class RCConstraint extends Constraint implements
 		for (int i = position.length; --i >= 0;) {
 			position[i] = Arrays.binarySearch(sortedIntervals, intervals[i]);
 		}
+	}
+
+	public String toString() {
+		int ub = 0;
+		for (Interval i : intervals) {
+			ub = Math.max(ub, i.ub);
+		}
+		return super.toString() + "[" + intervals.length + "," + ub + "]";
 	}
 
 	// public void flushPending() {
@@ -436,5 +434,10 @@ public class RCConstraint extends Constraint implements
 			}
 			return c;
 		}
+	}
+
+	@Override
+	public boolean positive() {
+		return false;
 	}
 }
