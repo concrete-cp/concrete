@@ -15,302 +15,301 @@ import cspfj.util.TieManager;
 
 public final class ConflictsManager {
 
-	private final Variable variable;
+    private final Variable variable;
 
-	private final int vid;
+    private final int vid;
 
-	private int bestIndex;
+    private int bestIndex;
 
-	private final TieManager tieManager;
+    private final TieManager tieManager;
 
-	private final int[] nbConflicts;
+    private final int[] nbConflicts;
 
-	private final int[] domain;
+    private final Domain domain;
 
-	private final Constraint[] constraints;
+    private final Constraint[] constraints;
 
-	private final boolean[][] check;
+    private final boolean[][] check;
 
-	private int currentConflicts;
+    private int currentConflicts;
 
-	private int assignedIndex;
+    private int assignedIndex;
 
-	//private final static Logger logger = Logger.getLogger("ConflictsManager");
+    // private final static Logger logger =
+    // Logger.getLogger("ConflictsManager");
 
-	private boolean critic;
+    private boolean critic;
 
-	public final boolean[] criticConstraints;
-	
-	private final LocalSolver solver;
+    public final boolean[] criticConstraints;
 
-	public ConflictsManager(final Variable variable, final TieManager tieManager, final LocalSolver solver) {
-		super();
-		this.variable = variable;
-		vid = variable.getId();
-		this.domain = variable.getDomain();
-		this.constraints = variable.getInvolvingConstraints();
-		this.tieManager = tieManager;
-		nbConflicts = new int[variable.getDomain().length];
+    private final LocalSolver solver;
 
-		check = new boolean[constraints.length][domain.length];
-		criticConstraints = new boolean[constraints.length];
-		assignedIndex = variable.getFirst();
-		this.solver = solver;
-	}
+    public ConflictsManager(final Variable variable,
+            final TieManager tieManager, final LocalSolver solver) {
+        super();
+        this.variable = variable;
+        vid = variable.getId();
+        this.domain = variable.getDomain();
+        this.constraints = variable.getInvolvingConstraints();
+        this.tieManager = tieManager;
+        nbConflicts = new int[variable.getDomain().maxSize()];
 
-	public Variable getVariable() {
-		return variable;
-	}
+        check = new boolean[constraints.length][domain.maxSize()];
+        criticConstraints = new boolean[constraints.length];
+        assignedIndex = variable.getFirst();
+        this.solver = solver;
+    }
 
-	public int getBestIndex() {
-		return bestIndex;
-	}
+    public Variable getVariable() {
+        return variable;
+    }
 
-	public int getBestImprovment() {
-		return getImprovment(bestIndex);
-	}
+    public int getBestIndex() {
+        return bestIndex;
+    }
 
-	public int getImprovment(final int index) {
-		return nbConflicts[index] - currentConflicts;
-	}
+    public int getBestImprovment() {
+        return getImprovment(bestIndex);
+    }
 
-	public void assignBestInitialIndex() {
-		if (variable.isAssigned()) {
-			bestIndex = assignedIndex;
-		} else {
-			final TieManager tieManager = this.tieManager;
-			final Constraint[] constraints = this.constraints;
+    public int getImprovment(final int index) {
+        return nbConflicts[index] - currentConflicts;
+    }
 
-			tieManager.clear();
+    public void assignBestInitialIndex() {
+        if (variable.isAssigned()) {
+            bestIndex = assignedIndex;
+        } else {
+            final TieManager tieManager = this.tieManager;
+            final Constraint[] constraints = this.constraints;
 
-			final Variable variable = this.variable;
+            tieManager.clear();
 
-			for (int i = domain.length; --i >= 0;) {
-				if (variable.getRemovedLevel(i) >= 0) {
-					continue;
-				}
+            final Variable variable = this.variable;
 
-				variable.assignBoolean(i);
+            for (int i = domain.length; --i >= 0;) {
+                if (variable.getRemovedLevel(i) >= 0) {
+                    continue;
+                }
 
-				int indexConflicts = 0;
+                variable.assignBoolean(i);
 
-				for (int c = constraints.length; --c >= 0;) {
-					final Constraint constraint = constraints[c];
+                int indexConflicts = 0;
 
-					if (!constraint.checkFirst()) {
-						// logger.warning("No tuple found");
-						indexConflicts += solver.getWeight(constraint);
-					}
+                for (int c = constraints.length; --c >= 0;) {
+                    final Constraint constraint = constraints[c];
 
-				}
+                    if (!constraint.checkFirst()) {
+                        // logger.warning("No tuple found");
+                        indexConflicts += solver.getWeight(constraint);
+                    }
 
-				tieManager.newValue(i, indexConflicts);
+                }
 
-			}
+                tieManager.newValue(i, indexConflicts);
 
-			// variable.resetAssign();
+            }
 
-			bestIndex = assignedIndex = tieManager.getBestValue();
+            // variable.resetAssign();
 
-			variable.firstAssign(bestIndex);
-		}
-		currentConflicts = nbConflicts[bestIndex];
+            bestIndex = assignedIndex = tieManager.getBestValue();
 
-	}
+            variable.firstAssign(bestIndex);
+        }
+        currentConflicts = nbConflicts[bestIndex];
 
-	public void initNbConflicts() {
-		final int[] nbConflicts = this.nbConflicts;
-		Arrays.fill(nbConflicts, 0);
-		final Constraint[] constraints = this.constraints;
-		final Variable variable = this.variable;
-		final int domain = this.domain.length;
+    }
 
-		for (int c = constraints.length; --c >= 0;) {
-			final boolean[] check = this.check[c];
-			final Constraint constraint = constraints[c];
-			final int position = constraint.getPosition(variable);
-			for (int i = domain; --i >= 0;) {
-				if (variable.getRemovedLevel(i) >= 0) {
-					continue;
-				}
+    public void initNbConflicts() {
+        final int[] nbConflicts = this.nbConflicts;
+        Arrays.fill(nbConflicts, 0);
+        final Constraint[] constraints = this.constraints;
+        final Variable variable = this.variable;
+        final int domain = this.domain.length;
 
-				check[i] = constraint.checkFirstWith(position, i);
-				if (!check[i]) {
-					nbConflicts[i] += solver.getWeight(constraint);
-				}
-			}
-		}
-		currentConflicts = nbConflicts[assignedIndex];
-		initCritic() ;
-	}
-	
-	private void initCritic() {
-		critic = false;
-		final boolean[] criticConstraints = this.criticConstraints;
-		for (int c = constraints.length; --c >= 0;) {
-			if (criticConstraints[c] = critic(c)) {
-				critic = true;
-				assert currentConflicts > 0;
-				break;
-			}
-		}
-	}
+        for (int c = constraints.length; --c >= 0;) {
+            final boolean[] check = this.check[c];
+            final Constraint constraint = constraints[c];
+            final int position = constraint.getPosition(variable);
+            for (int i = domain; --i >= 0;) {
+                if (variable.getRemovedLevel(i) >= 0) {
+                    continue;
+                }
 
-	private boolean critic(final int constraintPos) {
-		final boolean[] check = this.check[constraintPos];
-		final boolean currentCheck = check[assignedIndex];
-		if (currentCheck) {
-			return false;
-		}
-		for (int i = domain.length; --i >= 0;) {
-			if (check[i]) {
-				assert currentConflicts > 0;
-				return true;
-			}
-		}
-		return false;
-	}
+                check[i] = constraint.checkFirstWith(position, i);
+                if (!check[i]) {
+                    nbConflicts[i] += solver.getWeight(constraint);
+                }
+            }
+        }
+        currentConflicts = nbConflicts[assignedIndex];
+        initCritic();
+    }
 
-	public int getCurrentConflicts() {
-		return currentConflicts;
-	}
+    private void initCritic() {
+        critic = false;
+        final boolean[] criticConstraints = this.criticConstraints;
+        for (int c = constraints.length; --c >= 0;) {
+            if (criticConstraints[c] = critic(c)) {
+                critic = true;
+                assert currentConflicts > 0;
+                break;
+            }
+        }
+    }
 
-	public void update(final Constraint c, final int variablePos) {
-		final TieManager tieManager = this.tieManager;
-		tieManager.clear();
-		final int[] nbConflicts = this.nbConflicts;
-		final Variable variable = this.variable;
+    private boolean critic(final int constraintPos) {
+        final boolean[] check = this.check[constraintPos];
+        final boolean currentCheck = check[assignedIndex];
+        if (currentCheck) {
+            return false;
+        }
+        for (int i = domain.length; --i >= 0;) {
+            if (check[i]) {
+                assert currentConflicts > 0;
+                return true;
+            }
+        }
+        return false;
+    }
 
-		// final int position = constraint.getPosition(variable);
+    public int getCurrentConflicts() {
+        return currentConflicts;
+    }
 
-		final int constraintPos = c.getPositionInVariable(variablePos);
+    public void update(final Constraint c, final int variablePos) {
+        final TieManager tieManager = this.tieManager;
+        tieManager.clear();
+        final int[] nbConflicts = this.nbConflicts;
+        final Variable variable = this.variable;
 
-		assert variable.getInvolvingConstraints()[constraintPos] == c;
+        // final int position = constraint.getPosition(variable);
 
-		for (int i = domain.length; --i >= 0;) {
-			if (variable.getRemovedLevel(i) >= 0) {
-				continue;
-			}
+        final int constraintPos = c.getPositionInVariable(variablePos);
 
-			final boolean check = c.checkFirstWith(variablePos, i);
-			if (check ^ this.check[constraintPos][i]) {
-				if (check) {
-					nbConflicts[i] -= solver.getWeight(c);
-				} else {
-					nbConflicts[i] += solver.getWeight(c);
-				}
-				this.check[constraintPos][i] ^= true;
-			}
+        assert variable.getInvolvingConstraints()[constraintPos] == c;
 
-			tieManager.newValue(i, nbConflicts[i]);
-		}
-		bestIndex = tieManager.getBestValue();
-		currentConflicts = nbConflicts[assignedIndex];
+        for (int i = domain.length; --i >= 0;) {
+            if (variable.getRemovedLevel(i) >= 0) {
+                continue;
+            }
 
-		//updateCritic(constraintPos);
-		initCritic() ;
-	}
+            final boolean check = c.checkFirstWith(variablePos, i);
+            if (check ^ this.check[constraintPos][i]) {
+                if (check) {
+                    nbConflicts[i] -= solver.getWeight(c);
+                } else {
+                    nbConflicts[i] += solver.getWeight(c);
+                }
+                this.check[constraintPos][i] ^= true;
+            }
 
-//	private void updateCritic(int constraintPos) {
-//		final boolean wasCritic = criticConstraints[constraintPos];
-//		assert wasCritic ? critic : true;
-//		criticConstraints[constraintPos] = critic(constraintPos) ;
-//		if (criticConstraints[constraintPos]) {
-//			critic = true;
-//		} else if (wasCritic) {
-//			critic = false;
-//			for (int c = criticConstraints.length; --c >= 0;) {
-//				if (criticConstraints[c]) {
-//					critic = true;
-//					break;
-//				}
-//			}
-//		}
-//
-//	}
+            tieManager.newValue(i, nbConflicts[i]);
+        }
+        bestIndex = tieManager.getBestValue();
+        currentConflicts = nbConflicts[assignedIndex];
 
-	public boolean updateAfterIncrement(final Constraint c,
-			final int pos) {
-		
-		final TieManager tieManager = this.tieManager;
-		tieManager.clear();
+        // updateCritic(constraintPos);
+        initCritic();
+    }
 
-		final int[] nbConflicts = this.nbConflicts;
-		final Variable variable = this.variable;
-		assert c.getPosition(variable) == pos;
-		assert variable.getInvolvingConstraints()[c
-				.getPositionInVariable(pos)] == c;
+    // private void updateCritic(int constraintPos) {
+    // final boolean wasCritic = criticConstraints[constraintPos];
+    // assert wasCritic ? critic : true;
+    // criticConstraints[constraintPos] = critic(constraintPos) ;
+    // if (criticConstraints[constraintPos]) {
+    // critic = true;
+    // } else if (wasCritic) {
+    // critic = false;
+    // for (int c = criticConstraints.length; --c >= 0;) {
+    // if (criticConstraints[c]) {
+    // critic = true;
+    // break;
+    // }
+    // }
+    // }
+    //
+    // }
 
-		final boolean[] check = this.check[c
-				.getPositionInVariable(pos)];
-		assert !check[assignedIndex];
-		for (int i = domain.length; --i >= 0;) {
-			if (variable.getRemovedLevel(i) >= 0) {
-				continue;
-			}
-			if (!check[i]) {
-				nbConflicts[i]++;
-			}
-			tieManager.newValue(i, nbConflicts[i]);
-		}
-		currentConflicts = nbConflicts[assignedIndex];
-		if (bestIndex == tieManager.getBestValue()) {
-			return false;
-		}
-		bestIndex = tieManager.getBestValue();
-		return true;
-	}
+    public boolean updateAfterIncrement(final Constraint c, final int pos) {
 
-	public int getBestIndex(final TabuManager tabuManager,
-			final int aspiration, final int nbIt) {
-		final int limit = currentConflicts - aspiration;
-		final int vid = this.vid;
+        final TieManager tieManager = this.tieManager;
+        tieManager.clear();
 
-		if (!tabuManager.isTabu(vid, bestIndex, nbIt)
-				|| nbConflicts[bestIndex] < limit) {
-			return bestIndex;
-		}
+        final int[] nbConflicts = this.nbConflicts;
+        final Variable variable = this.variable;
+        assert c.getPosition(variable) == pos;
+        assert variable.getInvolvingConstraints()[c.getPositionInVariable(pos)] == c;
 
-		final TieManager tieManager = this.tieManager;
-		tieManager.clear();
+        final boolean[] check = this.check[c.getPositionInVariable(pos)];
+        assert !check[assignedIndex];
+        for (int i = domain.length; --i >= 0;) {
+            if (variable.getRemovedLevel(i) >= 0) {
+                continue;
+            }
+            if (!check[i]) {
+                nbConflicts[i]++;
+            }
+            tieManager.newValue(i, nbConflicts[i]);
+        }
+        currentConflicts = nbConflicts[assignedIndex];
+        if (bestIndex == tieManager.getBestValue()) {
+            return false;
+        }
+        bestIndex = tieManager.getBestValue();
+        return true;
+    }
 
-		final int[] nbConflicts = this.nbConflicts;
-		final Variable variable = this.variable;
+    public int getBestIndex(final TabuManager tabuManager,
+            final int aspiration, final int nbIt) {
+        final int limit = currentConflicts - aspiration;
+        final int vid = this.vid;
 
-		for (int i = domain.length; --i >= 0;) {
-			if (variable.getRemovedLevel(i) < 0
-					&& (!tabuManager.isTabu(vid, i, nbIt) || nbConflicts[i] < limit)) {
-				tieManager.newValue(i, nbConflicts[i]);
-			}
-		}
+        if (!tabuManager.isTabu(vid, bestIndex, nbIt)
+                || nbConflicts[bestIndex] < limit) {
+            return bestIndex;
+        }
 
-		return tieManager.getBestValue();
-	}
+        final TieManager tieManager = this.tieManager;
+        tieManager.clear();
 
-	public void reAssign(final int index) {
-		variable.reAssign(index);
-		assignedIndex = index;
-		currentConflicts = nbConflicts[index];
-		initCritic() ;
-	}
+        final int[] nbConflicts = this.nbConflicts;
+        final Variable variable = this.variable;
 
-	public int getAssignedIndex() {
-		return assignedIndex;
-	}
+        for (int i = domain.length; --i >= 0;) {
+            if (variable.getRemovedLevel(i) < 0
+                    && (!tabuManager.isTabu(vid, i, nbIt) || nbConflicts[i] < limit)) {
+                tieManager.newValue(i, nbConflicts[i]);
+            }
+        }
 
-	public boolean isCritic() {
-		return critic;
-	}
+        return tieManager.getBestValue();
+    }
 
-	public void shuffleBest() {
-		final TieManager tieManager = this.tieManager;
-		tieManager.clear() ;
-		for (int i = domain.length; --i >= 0;) {
-			if (variable.getRemovedLevel(i) < 0) {
-				tieManager.newValue(i, nbConflicts[i]);
-			}
-		}
+    public void reAssign(final int index) {
+        variable.reAssign(index);
+        assignedIndex = index;
+        currentConflicts = nbConflicts[index];
+        initCritic();
+    }
 
-		bestIndex = tieManager.getBestValue();
-	}
+    public int getAssignedIndex() {
+        return assignedIndex;
+    }
+
+    public boolean isCritic() {
+        return critic;
+    }
+
+    public void shuffleBest() {
+        final TieManager tieManager = this.tieManager;
+        tieManager.clear();
+        for (int i = domain.length; --i >= 0;) {
+            if (variable.getRemovedLevel(i) < 0) {
+                tieManager.newValue(i, nbConflicts[i]);
+            }
+        }
+
+        bestIndex = tieManager.getBestValue();
+    }
 }
