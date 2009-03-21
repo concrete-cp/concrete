@@ -3,6 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>cspfj</groupId>
 	<artifactId>cspfj</artifactId>
+	<name>CSP4J</name>
 	<version>0.0.1-SNAPSHOT</version>
 
 	<dependencies>
@@ -13,6 +14,7 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	<url>http://cspfj.sourceforge.net/</url>
 	<build>
 		<plugins>
 			<plugin>
