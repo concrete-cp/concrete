@@ -21,6 +21,7 @@ package cspfj.filter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Logger;
 
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
@@ -30,71 +31,74 @@ import cspfj.problem.Variable;
  * 
  */
 public final class B3C extends AbstractSAC {
+    private final static Logger LOGGER = Logger.getLogger(B3C.class.getName());
 
-	// private final static Logger logger =
-	// Logger.getLogger("cspfj.filter.CDC");
+    // private final static Logger logger =
+    // Logger.getLogger("cspfj.filter.CDC");
 
-	public B3C(Problem problem, Filter filter) {
-		super(problem, filter);
-	}
+    public B3C(Problem problem, Filter filter) {
+        super(problem, filter);
+    }
 
-	protected boolean singletonTest(final Variable variable, final int level) {
-		boolean changed = false;
-		for (int index = variable.getFirst(); index >= 0; index = variable
-				.getNext(index)) {
-			if (!variable.isPresent(index)) {
-				continue;
-			}
-			if (check(variable, index, level)) {
-				changed = true;
-			} else {
-				break;
-			}
-		}
-		if (variable.getDomainSize() > 1) {
-			for (int index = variable.getLast(); index >= 0; index = variable
-					.getPrev(index)) {
-				if (!variable.isPresent(index)) {
-					continue;
-				}
-				if (check(variable, index, level)) {
-					changed = true;
-				} else {
-					break;
-				}
-			}
-		}
-		return changed;
-	}
+    @Override
+    protected boolean singletonTest(final Variable variable) {
+        boolean changed = false;
+        for (int index = variable.getFirst(); index >= 0; index = variable
+                .getNext(index)) {
+            if (!variable.isPresent(index)) {
+                continue;
+            }
+            if (check(variable, index)) {
+                changed = true;
+            } else {
+                break;
+            }
+        }
+        if (variable.getDomainSize() > 1) {
+            for (int index = variable.getLast(); index >= 0; index = variable
+                    .getPrev(index)) {
+                if (!variable.isPresent(index)) {
+                    continue;
+                }
+                if (check(variable, index)) {
+                    changed = true;
+                } else {
+                    break;
+                }
+            }
+        }
+        return changed;
+    }
 
-	public boolean reduceAfter(final int level, final Variable variable) {
-		if (variable == null) {
-			return true;
-		}
-		try {
-			return reduceAll(level);
-		} catch (InterruptedException e) {
-			throw new IllegalArgumentException(
-					"Filter was unexpectingly interrupted !");
-		}
-	}
+    private boolean check(Variable variable, int index) {
+        problem.push();
+        variable.assign(index, problem);
+        problem.setLevelVariables(variable);
+        nbSingletonTests++;
+        final boolean consistent = filter.reduceAfter(variable);
+        variable.unassign(problem);
+        problem.pop();
 
-	public boolean reduceAll(final int level) throws InterruptedException {
-		return reduce(level);
-	}
+        if (!consistent) {
+            LOGGER.fine("Removing " + variable + ", " + index);
 
-	public String toString() {
-		return "3B w/ " + filter;
-	}
+            variable.remove(index);
+            return true;
+        }
+        return false;
+    }
 
-	public Map<String, Object> getStatistics() {
-		final Map<String, Object> statistics = new HashMap<String, Object>();
-		statistics.put("3B-singletonTests", nbSingletonTests);
-		for (Entry<String,Object> stat : filter.getStatistics().entrySet()) {
-			statistics
-					.put("3B-backend-" + stat.getKey(), stat.getValue());
-		}
-		return statistics;
-	}
+    public String toString() {
+        return "3B w/ " + filter;
+    }
+
+    public Map<String, Object> getStatistics() {
+        final Map<String, Object> statistics = new HashMap<String, Object>();
+        statistics.put("3B-singletonTests", nbSingletonTests);
+        for (Entry<String, Object> stat : filter.getStatistics().entrySet()) {
+            statistics.put("3B-backend-" + stat.getKey(), stat.getValue());
+        }
+        return statistics;
+    }
 
 }

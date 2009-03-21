@@ -1,4 +1,4 @@
-package cspfj.constraint;
+package cspfj.constraint.extension;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;

@@ -7,73 +7,73 @@ import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
 
 public interface Constraint {
-	int getArity();
+    int getArity();
 
-	boolean isInvolved(final Variable variable);
+    boolean isInvolved(final Variable variable);
 
-	Variable getVariable(final int position);
+    Variable getVariable(final int position);
 
-	boolean checkFirst();
+    boolean checkFirst();
 
-	int getId();
+    int getId();
 
-	Variable[] getScope();
+    Variable[] getScope();
 
-	Set<Variable> getScopeSet();
-	
-	int getPositionInVariable(final int variablePosition);
+    Set<Variable> getScopeSet();
 
-	int getPosition(final Variable variable);
+    int getPositionInVariable(final int variablePosition);
 
-	boolean checkFirstWith(final int variablePos, final int index);
+    int getPosition(final Variable variable);
 
-	boolean isActive();
+    boolean checkFirstWith(final int variablePos, final int index);
 
-	void setActive(final boolean b);
+    boolean isActive();
 
-	void setPositionInVariable(final int variablePosition,
-			final int constraintPosition);
+    void setActive(final boolean b);
 
-	Constraint deepCopy(final Collection<Variable> variables)
-			throws CloneNotSupportedException;
+    void setPositionInVariable(final int variablePosition,
+            final int constraintPosition);
 
-	void initNbSupports() throws InterruptedException;
+    Constraint deepCopy(final Collection<Variable> variables)
+            throws CloneNotSupportedException;
 
-	long getNbSupports(final Variable variable, final int index);
+    void initNbSupports() throws InterruptedException;
 
-	// boolean skipRevision(int i);
+    long getNbSupports(final Variable variable, final int index);
 
-	boolean revise(final RevisionHandler revisator);
+    // boolean skipRevision(int i);
 
-	// int getOtherSize(int position);
+    boolean revise(final RevisionHandler revisator);
 
-	long getNbMaxConflicts(final int position);
+    // int getOtherSize(int position);
 
-	long getNbInitConflicts(final int position, final int index);
+    long getNbMaxConflicts(final int position);
 
-	boolean isBound(Variable variable);
+    long getNbInitConflicts(final int position, final int index);
 
-	String getType();
+    boolean isBound(Variable variable);
 
-	boolean check();
+    String getType();
 
-	void setLevel(int level);
-	
-	void restore(int level);
+    boolean check();
 
-	long getInitSize();
+    void setLevel(int level);
 
-	int getWeight();
+    void restore(int level);
 
-	void incWeight();
+    long getInitSize();
 
-	void setWeight(final int weight);
+    int getWeight();
 
-	boolean getRemovals(int position);
+    void incWeight();
 
-	void setRemovals(int position, boolean value);
+    void setWeight(final int weight);
 
-	void fillRemovals(final boolean value);
+    boolean getRemovals(int position);
 
-	// boolean findValidTuple(int position, int index);
+    void setRemovals(int position, boolean value);
+
+    void fillRemovals(final boolean value);
+
+    // boolean findValidTuple(int position, int index);
 }

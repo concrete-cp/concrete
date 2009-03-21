@@ -1,4 +1,4 @@
-package cspfj.constraint;
+package cspfj.util;
 
 import static org.junit.Assert.assertTrue;
 

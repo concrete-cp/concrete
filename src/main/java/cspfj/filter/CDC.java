@@ -47,9 +47,9 @@ public final class CDC extends AbstractSAC {
 			: Problem.LearnMethod.NONE;
 
 	private int addedConstraints = 0;
-
+	
 	private final Variable[] variables;
-
+	
 	private int nbNoGoods;
 
 	public CDC(Problem problem, Filter filter) {
@@ -92,26 +92,23 @@ public final class CDC extends AbstractSAC {
 			logger.fine(variable + " <- " + variable.getDomain().value(index)
 					+ "(" + index + ")");
 			// }
-
+			
 			problem.setLevelVariables(variable);
 			problem.push();
 			variable.assign(index, problem);
-
+			
 			nbSingletonTests++;
 
 			if (filter.reduceAfter(variable)) {
 
-				// final Map<Variable[], List<int[]>> noGoods =
-				// problem.noGoods();
-				// changedGraph =
-				noGoods(variable); // | changedGraph;
+//				final Map<Variable[], List<int[]>> noGoods = problem.noGoods();
+				changedGraph = noGoods(variable) | changedGraph;
 				// logger.info(noGoods.toString());
 
 				variable.unassign(problem);
 				problem.pop();
-
-				// changedGraph = problem.noGoodsToConstraints(noGoods,
-				// addConstraints);
+				
+//				changedGraph = problem.noGoodsToConstraints(noGoods, addConstraints);
 			} else {
 				variable.unassign(problem);
 				problem.pop();
@@ -202,7 +199,7 @@ public final class CDC extends AbstractSAC {
 		}
 		return modified;
 	}
-
+	
 	public Map<String, Object> getStatistics() {
 		final Map<String, Object> statistics = super.getStatistics();
 		statistics.put("CDC-nogoods", nbNoGoods);

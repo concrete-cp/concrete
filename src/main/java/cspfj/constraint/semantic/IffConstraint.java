@@ -24,67 +24,63 @@ import cspfj.problem.Variable;
 
 public final class IffConstraint extends AbstractPVRConstraint {
 
-	final private int indexI;
+    final private int indexI;
 
-	final private int indexV;
+    final private int indexV;
 
-	final private int valueI;
+    final private int valueI;
 
-	final private int valueV;
+    final private int valueV;
 
-	public IffConstraint(final Variable[] scope, final int i, final int v) {
-		super(scope);
-		// System.out.println(scope[0] + "="+i +" <=> "+scope[1]+"="+v);
-		this.valueI = i;
-		this.indexI = getVariable(0).index(i);
-		this.valueV = v;
-		this.indexV = getVariable(1).index(v);
+    public IffConstraint(final Variable[] scope, final int i, final int v) {
+        super(scope);
+        // System.out.println(scope[0] + "="+i +" <=> "+scope[1]+"="+v);
+        this.valueI = i;
+        this.indexI = getVariable(0).getDomain().index(i);
+        this.valueV = v;
+        this.indexV = getVariable(1).getDomain().index(v);
 
-	}
+    }
 
-	@Override
-	public boolean check() {
-		return (getVariable(0).getDomain()[tuple[0]] == valueI) == (getVariable(
-				1).getDomain()[tuple[1]] == valueV);
-	}
+    @Override
+    public boolean check() {
+        return (getVariable(0).getDomain().value(tuple[0]) == valueI) == (getVariable(
+                1).getDomain().value(tuple[1]) == valueV);
+    }
 
-	@Override
-	public boolean revise(final int posVar1, final int level) {
-		final Variable var1 = getVariable(posVar1);
+    @Override
+    public boolean revise(final int posVar1) {
+        final Variable var1 = getVariable(posVar1);
 
-		final int posVar2 = 1 - posVar1;
-		final Variable var2 = getVariable(posVar2);
+        final int posVar2 = 1 - posVar1;
+        final Variable var2 = getVariable(posVar2);
 
-		final int value1;
-		final int index1;
-		final int index2;
-		if (posVar1 == 0) {
-			value1 = valueI;
-			index1 = indexI;
-			index2 = indexV;
-		} else {
-			value1 = valueV;
-			index1 = indexV;
-			index2 = indexI;
-		}
+        final int value1;
+        final int index1;
+        final int index2;
+        if (posVar1 == 0) {
+            value1 = valueI;
+            index1 = indexI;
+            index2 = indexV;
+        } else {
+            value1 = valueV;
+            index1 = indexV;
+            index2 = indexI;
+        }
 
-		boolean revised = false;
+        boolean revised = false;
 
-		if (var2.getDomainSize() == 1 && var2.getFirst() == index2) {
-			revised = true;
-			var1.makeSingleton(value1, level);
-		}
+        if (var2.getDomainSize() == 1 && var2.getFirst() == index2) {
+            revised = true;
+            var1.makeSingleton(value1);
+        }
 
-		if (!var2.isPresent(index2) && var1.isPresent(index1)) {
-			revised = true;
-			var1.remove(index1, level);
-		}
-		return revised;
+        if (!var2.isPresent(index2) && var1.isPresent(index1)) {
+            revised = true;
+            var1.remove(index1);
+        }
+        return revised;
 
-	}
+    }
 
-	@Override
-	public boolean isSlow() {
-		return false;
-	}
 }
