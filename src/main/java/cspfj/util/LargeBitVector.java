@@ -2,7 +2,7 @@ package cspfj.util;
 
 import java.util.Arrays;
 
-public class LargeBitVector extends BitVector {
+public final class LargeBitVector extends BitVector {
 	private final static int ADDRESS_BITS_PER_WORD = 6;
 
 	// Taille d'un long (64=2^6)
