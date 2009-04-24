@@ -36,8 +36,8 @@ public final class B3C extends AbstractSAC {
     // private final static Logger logger =
     // Logger.getLogger("cspfj.filter.CDC");
 
-    public B3C(Problem problem, Filter filter) {
-        super(problem, filter);
+    public B3C(Problem problem) {
+        super(problem, new AC3(problem));
     }
 
     @Override
