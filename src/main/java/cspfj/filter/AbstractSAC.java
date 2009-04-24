@@ -14,9 +14,9 @@ import java.util.logging.Logger;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
-public abstract class AbstractSAC implements BackedFilter {
+public abstract class AbstractSAC implements Filter {
 
-    protected final Filter filter;
+    protected final AC3 filter;
 
     protected final Problem problem;
 
@@ -29,7 +29,7 @@ public abstract class AbstractSAC implements BackedFilter {
     private static final Logger logger = Logger.getLogger(AbstractSAC.class
             .toString());
 
-    public AbstractSAC(Problem problem, Filter filter) {
+    public AbstractSAC(Problem problem, AC3 filter) {
         super();
         this.filter = filter;
         this.problem = problem;
@@ -116,11 +116,6 @@ public abstract class AbstractSAC implements BackedFilter {
             statistics.put("SAC-backend-" + stat.getKey(), stat.getValue());
         }
         return statistics;
-    }
-
-    @Override
-    public boolean ensureAC() {
-        return filter.ensureAC();
     }
 
 }

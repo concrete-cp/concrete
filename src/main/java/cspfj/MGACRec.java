@@ -59,8 +59,7 @@ public final class MGACRec extends AbstractSolver {
 
 	public MGACRec(final Problem prob, final ResultHandler resultHandler,
 			final Heuristic heuristic) {
-		this(prob, resultHandler, heuristic, new AC3(prob, heuristic
-				.getVariableHeuristic()));
+		this(prob, resultHandler, heuristic, new AC3(prob));
 	}
 
 	public MGACRec(final Problem prob, final ResultHandler resultHandler,

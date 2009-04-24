@@ -65,7 +65,6 @@ public class ExtensionConstraint2D extends AbstractPVRConstraint implements
 
     public boolean findValidTuple(final int variablePosition, final int index) {
         assert this.isInvolved(getVariable(variablePosition));
-
         return matrix.hasSupport(variablePosition, index);
     }
 

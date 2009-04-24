@@ -21,6 +21,7 @@ package cspfj.filter;
 
 import java.util.Map;
 
+import cspfj.constraint.Constraint;
 import cspfj.problem.Variable;
 
 /**
@@ -36,10 +37,10 @@ public interface Filter {
     boolean reduceAll() throws InterruptedException ;
     
     boolean reduceAfter(Variable variable) ;
-    
+
     //boolean reduceOnce(Variable variable);
     
     Map<String, Object> getStatistics();
 
-    boolean ensureAC();
+    //boolean ensureAC();
 }

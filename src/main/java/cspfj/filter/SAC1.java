@@ -29,47 +29,47 @@ import cspfj.problem.Variable;
  */
 public final class SAC1 extends AbstractSAC {
 
-	private final static Logger logger = Logger.getLogger(SAC1.class.getName());
+    private final static Logger logger = Logger.getLogger(SAC1.class.getName());
 
-	public SAC1(Problem problem, Filter filter) {
-		super(problem, filter);
-	}
+    public SAC1(Problem problem, AC3 filter) {
+        super(problem, filter);
+    }
 
-	protected boolean singletonTest(final Variable variable)
-			throws InterruptedException {
-		boolean changedGraph = false;
-		for (int index = variable.getFirst(); index >= 0; index = variable
-				.getNext(index)) {
-			if (Thread.interrupted()) {
-				throw new InterruptedException();
-			}
-			if (!variable.isPresent(index)) {
-				continue;
-			}
+    protected boolean singletonTest(final Variable variable)
+            throws InterruptedException {
+        boolean changedGraph = false;
+        for (int index = variable.getFirst(); index >= 0; index = variable
+                .getNext(index)) {
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+            if (!variable.isPresent(index)) {
+                continue;
+            }
 
-			// if (logger.isLoggable(Level.FINER)) {
-			logger.finer(variable + " <- " + variable.getDomain().index(index)
-					+ "(" + index + ")");
-			// }
+            // if (logger.isLoggable(Level.FINER)) {
+            logger.finer(variable + " <- " + variable.getDomain().index(index)
+                    + "(" + index + ")");
+            // }
 
-			problem.push();
-			variable.assign(index, problem);
-			nbSingletonTests++;
-			final boolean consistent = filter.reduceAfter(variable);
-			variable.unassign(problem);
-			problem.pop();
+            problem.push();
+            variable.assign(index, problem);
+            nbSingletonTests++;
+            final boolean consistent = filter.reduceAfter(variable);
+            variable.unassign(problem);
+            problem.pop();
 
-			if (!consistent) {
-				logger.fine("Removing " + variable + ", " + index);
+            if (!consistent) {
+                logger.fine("Removing " + variable + ", " + index);
 
-				variable.remove(index);
-				changedGraph = true;
-			}
-		}
-		return changedGraph;
-	}
+                variable.remove(index);
+                changedGraph = true;
+            }
+        }
+        return changedGraph;
+    }
 
-	public String toString() {
-		return "SAC-1 w/ " + filter;
-	}
+    public String toString() {
+        return "SAC-1 w/ " + filter;
+    }
 }
