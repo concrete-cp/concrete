@@ -21,14 +21,13 @@ package cspfj;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.regex.Matcher;
 
 import cspfj.filter.Filter;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
 public interface Solver {
-	String VERSION = "0.5";
-	
     boolean runSolver() throws IOException;
 
     Map<Variable, Integer> getSolution();
@@ -39,21 +38,21 @@ public interface Solver {
 
     int getNbAssignments();
 
-	void setMaxBacktracks(final int maxBacktracks);
+    void setMaxBacktracks(final int maxBacktracks);
 
-	void setUsePrepro(final Class<? extends Filter> filter);
+    void setUsePrepro(final Class<? extends Filter> filter);
 
-	int getNbSolutions();
-    
+    int getNbSolutions();
+
     int getMaxBacktracks();
 
-	String getXMLConfig();
-	
-	Problem getProblem() ;
-	
-	Map<String, Object> getStatistics();
+    String getXMLConfig();
 
-	void setPreproExp(int time);
-	
-	void collectStatistics();
+    Problem getProblem();
+
+    Map<String, Object> getStatistics();
+
+    void setPreproExp(int time);
+
+    void collectStatistics();
 }

@@ -20,15 +20,14 @@
 package cspfj;
 
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.lang.management.OperatingSystemMXBean;
-import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.Map.Entry;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.extension.MatrixManager2D;
@@ -40,7 +39,13 @@ import cspfj.util.Chronometer;
 import cspfj.util.Waker;
 
 public abstract class AbstractSolver implements Solver {
-
+    public static final String VERSION;
+    static {
+        Matcher matcher = Pattern.compile("Rev:\\ (\\d+)").matcher(
+                "$Rev$");
+        matcher.find();
+        VERSION = matcher.group(1);
+    }
     protected final Problem problem;
 
     protected final Chronometer chronometer;
@@ -274,26 +279,9 @@ public abstract class AbstractSolver implements Solver {
     public String getXMLConfig() {
         final StringBuilder stb = new StringBuilder();
 
-        final OperatingSystemMXBean omxb = ManagementFactory
-                .getOperatingSystemMXBean();
-        stb.append("\t\t\t<os arch=\"").append(omxb.getArch()).append(
-                "\" version=\"").append(omxb.getVersion()).append("\">")
-                .append(omxb.getName()).append("</os>\n");
-
-        final RuntimeMXBean rmxb = ManagementFactory.getRuntimeMXBean();
-        stb.append("\t\t\t<vm vendor=\"").append(rmxb.getVmVendor()).append(
-                "\" version=\"").append(rmxb.getVmVersion()).append(
-                "\" name=\"").append(rmxb.getName()).append("\">").append(
-                rmxb.getVmName()).append("</vm>\n");
-
-        if (!parameters.isEmpty()) {
-            stb.append("\t\t\t<parameters>\n");
-            for (Entry<String, String> p : parameters.entrySet()) {
-                stb.append("\t\t\t\t<p name=\"").append(p.getKey()).append(
-                        "\">").append(p.getValue()).append("</p>\n");
-            }
-            stb.append("\t\t\t</parameters>\n");
-
+        for (Entry<String, String> p : parameters.entrySet()) {
+            stb.append("\t\t\t<p name=\"").append(p.getKey()).append("\">")
+                    .append(p.getValue()).append("</p>\n");
         }
 
         return stb.toString();

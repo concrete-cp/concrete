@@ -324,16 +324,13 @@ public final class MGACIter extends AbstractSolver {
     }
 
     public String getXMLConfig() {
-        final StringBuffer sb = new StringBuffer(super.getXMLConfig());
+        return super.getXMLConfig() + "\t\t\t<solver>" + this
+                + "</solver>\n\t\t\t<filter>" + filter
+                + "</filter>\n\t\t\t<heuristic>" + heuristic
+                + "</heuristic>\n\t\t\t<prepro>" + getPreprocessor()
+                + "</prepro>\n\t\t\t<allSolutions>" + allSolutions
+                + "</allSolutions>\n";
 
-        sb.append("\t\t\t<solver>").append(this).append(
-                "</solver>\n\t\t\t<filter>").append(filter).append(
-                "</filter>\n\t\t\t<heuristic>").append(heuristic).append(
-                "</heuristic>\n\t\t\t<prepro>").append(getPreprocessor())
-                .append("</prepro>\n\t\t\t<allSolutions>").append(allSolutions)
-                .append("</allSolutions>\n");
-
-        return sb.toString();
     }
 
     public String toString() {
