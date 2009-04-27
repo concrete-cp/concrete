@@ -19,10 +19,14 @@
 package cspfj.filter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import cspfj.AbstractSolver;
@@ -36,9 +40,9 @@ import cspfj.util.BitVector;
  * @author Julien VION
  * 
  */
-public final class CDC extends AbstractSAC {
+public final class DC2 implements Filter {
 
-    private final static Logger logger = Logger.getLogger(CDC.class.getName());
+    private final static Logger logger = Logger.getLogger(DC2.class.getName());
 
     private final static Problem.LearnMethod addConstraints = AbstractSolver.parameters
             .containsKey("cdc.addConstraints") ? Problem.LearnMethod
@@ -51,18 +55,42 @@ public final class CDC extends AbstractSAC {
 
     private int nbNoGoods;
 
-    public CDC(Problem problem) {
-        super(problem, new AC3(problem));
+    private final List<DynamicConstraint> impliedConstraints;
+
+    private final int[] modVar;
+    private int[] modCons;
+
+    private int cnt;
+    protected final AC3 filter;
+
+    protected final Problem problem;
+
+    private int nbSingletonTests = 0;
+
+    public DC2(Problem problem) {
+        this.problem = problem;
+        this.filter = new AC3(problem);
         this.variables = problem.getVariables();
+        impliedConstraints = new ArrayList<DynamicConstraint>();
+        modCons = new int[problem.getMaxCId() + 1];
+        modVar = new int[problem.getMaxVId() + 1];
     }
 
     @Override
-    protected boolean reduce() throws InterruptedException {
+    public boolean reduceAll() throws InterruptedException {
         final int nbC = problem.getNbConstraints();
+
+        for (Constraint c : problem.getConstraints()) {
+            if (c.getArity() == 2
+                    && DynamicConstraint.class.isAssignableFrom(c.getClass())) {
+                impliedConstraints.add((DynamicConstraint) c);
+            }
+        }
+
         // ExtensionConstraintDynamic.quick = true;
         final boolean result;
         try {
-            result = super.reduce();
+            result = cdcReduce();
         } finally {
             addedConstraints += problem.getNbConstraints() - nbC;
         }
@@ -75,9 +103,57 @@ public final class CDC extends AbstractSAC {
         return result;
     }
 
+    private boolean cdcReduce() throws InterruptedException {
+        final AC3 filter = this.filter;
+
+        if (!filter.reduceAll()) {
+            return false;
+        }
+        final Variable[] variables = this.variables;
+
+        int mark = 0;
+
+        int v = 0;
+
+        final int[] domainSizes = new int[problem.getMaxVId() + 1];
+
+        do {
+            final Variable variable = variables[v];
+            // if (logger.isLoggable(Level.FINE)) {
+            logger.info(variable.toString());
+            // }
+            cnt++;
+            if (variable.getDomainSize() > 1 && singletonTest(variable)) {
+                if (variable.getDomainSize() <= 0) {
+                    return false;
+                }
+
+                for (Variable var : problem.getVariables()) {
+                    domainSizes[var.getId()] = var.getDomainSize();
+                }
+                if (!filter.reduceFrom(modVar, modCons, cnt - 1)) {
+                    return false;
+                }
+                for (Variable var : problem.getVariables()) {
+                    if (domainSizes[var.getId()] != var.getDomainSize()) {
+                        modVar[var.getId()] = cnt;
+                    }
+                }
+                mark = v;
+            }
+            if (++v >= variables.length) {
+                v = 0;
+            }
+        } while (v != mark);
+
+        return true;
+
+    }
+
     protected boolean singletonTest(final Variable variable)
             throws InterruptedException {
         boolean changedGraph = false;
+
         for (int index = variable.getFirst(); index >= 0; index = variable
                 .getNext(index)) {
             if (Thread.interrupted()) {
@@ -98,7 +174,28 @@ public final class CDC extends AbstractSAC {
 
             nbSingletonTests++;
 
-            if (filter.reduceAfter(variable)) {
+            final boolean sat;
+
+            if (cnt <= variables.length) {
+                sat = filter.reduceAfter(variable);
+            } else {
+                final Constraint[] involving = variable
+                        .getInvolvingConstraints();
+                for (int i = involving.length; --i >= 0;) {
+                    final Constraint c = involving[i];
+                    if (c.getArity() != 2) {
+                        continue;
+                    }
+                    c.fillRemovals(false);
+                    c.setRemovals(variable.getPositionInConstraint(i), true);
+                    c.revise(rh);
+                    c.setRemovals(variable.getPositionInConstraint(i), false);
+                }
+
+                sat = filter.reduceFrom(modVar, modCons, cnt
+                        - variables.length);
+            }
+            if (sat) {
 
                 // final Map<Variable[], List<int[]>> noGoods =
                 // problem.noGoods();
@@ -117,11 +214,19 @@ public final class CDC extends AbstractSAC {
 
                 variable.remove(index);
                 changedGraph = true;
+                modVar[variable.getId()] = cnt;
             }
         }
         problem.setLevelVariables(null);
         return changedGraph;
     }
+
+    private final RevisionHandler rh = new RevisionHandler() {
+        @Override
+        public void revised(Constraint constraint, Variable variable) {
+            //
+        }
+    };
 
     public boolean noGoods(Variable firstVariable) {
         int[] tuple = new int[2];
@@ -133,7 +238,7 @@ public final class CDC extends AbstractSAC {
         final Variable[] scopeArray = new Variable[] { firstVariable, null };
 
         boolean modified = false;
-        final Collection<Constraint> addedConstraints = new ArrayList<Constraint>();
+        final Collection<DynamicConstraint> addedConstraints = new ArrayList<DynamicConstraint>();
 
         for (Variable fv : variables) {
 
@@ -178,7 +283,14 @@ public final class CDC extends AbstractSAC {
                 if (constraint.getId() > problem.getMaxCId()) {
                     logger.info("Added " + constraint);
                     addedConstraints.add(constraint);
+                    modCons = Arrays.copyOf(modCons, constraint.getId() + 1);
                 }
+                // for (int i = constraint.getArity(); --i >= 0;) {
+                // lastModified[constraint.getVariable(i).getId()] = cnt;
+                // }
+                modCons[constraint.getId()] = cnt;
+                // lastModified[firstVariable.getId()] = cnt;
+                // lastModified[fv.getId()] = cnt;
             }
         }
 
@@ -195,6 +307,9 @@ public final class CDC extends AbstractSAC {
 
                 problem.setConstraints(curCons);
                 problem.updateInvolvingConstraints();
+
+                impliedConstraints.addAll(addedConstraints);
+
                 logger.info(problem.getNbConstraints() + " constraints");
             }
         }
@@ -202,7 +317,11 @@ public final class CDC extends AbstractSAC {
     }
 
     public Map<String, Object> getStatistics() {
-        final Map<String, Object> statistics = super.getStatistics();
+        final Map<String, Object> statistics = new HashMap<String, Object>();
+        statistics.put("CDC-nbsingletontests", nbSingletonTests);
+        for (Entry<String, Object> stat : filter.getStatistics().entrySet()) {
+            statistics.put("CDC-backend-" + stat.getKey(), stat.getValue());
+        }
         statistics.put("CDC-nogoods", nbNoGoods);
         statistics.put("CDC-added-constraints", addedConstraints);
         return statistics;
@@ -211,4 +330,18 @@ public final class CDC extends AbstractSAC {
     public String toString() {
         return "DC w/ " + filter + " L " + addConstraints;
     }
+
+    @Override
+    public boolean reduceAfter(final Variable variable) {
+        if (variable == null) {
+            return true;
+        }
+        try {
+            return reduceAll();
+        } catch (InterruptedException e) {
+            throw new IllegalStateException(
+                    "Filter was unexpectingly interrupted !", e);
+        }
+    }
+
 }

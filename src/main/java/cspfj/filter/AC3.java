@@ -47,6 +47,16 @@ public final class AC3 implements Filter {
 
         inQueue.fill(false);
 
+        for (Variable v : problem.getVariables()) {
+            if (lastModified[v.getId()] > cnt) {
+                inQueue.set(v.getId());
+                final Constraint[] involved = v.getInvolvingConstraints();
+                for (int j = involved.length; --j >= 0;) {
+                    involved[j].setRemovals(v.getPositionInConstraint(j), true);
+                }
+            }
+        }
+
         for (Constraint c : problem.getConstraints()) {
             if (reviseMe[c.getId()] > cnt) {
                 c.fillRemovals(true);
@@ -59,17 +69,7 @@ public final class AC3 implements Filter {
                 c.fillRemovals(false);
             }
         }
-
-        for (Variable v : problem.getVariables()) {
-            if (lastModified[v.getId()] > cnt) {
-                inQueue.set(v.getId());
-                final Constraint[] involved = v.getInvolvingConstraints();
-                for (int j = involved.length; --j >= 0;) {
-                    involved[j].setRemovals(v.getPositionInConstraint(j), true);
-                }
-            }
-        }
-
+        
         return reduce();
     }
 
