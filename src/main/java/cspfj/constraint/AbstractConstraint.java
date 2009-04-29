@@ -123,6 +123,10 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
         removals.fill(value);
     }
 
+    public boolean hasNoRemovals() {
+        return removals.isEmpty();
+    }
+    
     @Override
     public int getWeight() {
         return weight;

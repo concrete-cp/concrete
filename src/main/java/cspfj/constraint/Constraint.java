@@ -75,5 +75,7 @@ public interface Constraint {
 
     void fillRemovals(final boolean value);
 
+    boolean hasNoRemovals();
+
     // boolean findValidTuple(int position, int index);
 }
