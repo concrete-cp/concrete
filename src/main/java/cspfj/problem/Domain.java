@@ -29,8 +29,6 @@ public interface Domain {
 
     void remove(int index);
 
-    int[] currentValues();
-
     Domain clone();
 
     void setLevel(int level);

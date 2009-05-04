@@ -323,8 +323,14 @@ public final class Variable implements Cloneable {
         return domain.last();
     }
 
-    public int[] getCurrentDomain() {
-        return domain.currentValues();
+    public int[] getCurrentIndexes() {
+        final int[] indexes = new int[domain.size()];
+
+        for (int i = getFirst(), j = 0; i >= 0; i = getNext(i), j++) {
+            indexes[j] = i;
+        }
+
+        return indexes;
     }
 
     public String getName() {

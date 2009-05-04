@@ -3,7 +3,6 @@ package cspfj.problem;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -102,7 +101,6 @@ public class VariableTest {
 
     @Test
     public void testRestore() {
-        variable.setLevel(0);
         variable.remove(1);
         variable.setLevel(1);
         variable.remove(2);
@@ -110,7 +108,7 @@ public class VariableTest {
         variable.remove(3);
         assertFalse(variable.isPresent(1));
 
-        variable.restoreLevel(1);
+        variable.restoreLevel(0);
         assertTrue(variable.isPresent(3));
         assertTrue(variable.isPresent(2));
         assertFalse(variable.isPresent(1));
@@ -120,7 +118,7 @@ public class VariableTest {
         variable.restoreLevel(0);
         assertTrue(variable.isPresent(3));
         assertTrue(variable.isPresent(2));
-        assertTrue(variable.isPresent(1));
+        assertFalse(variable.isPresent(1));
     }
 
     @Test
@@ -143,15 +141,17 @@ public class VariableTest {
                 return Arrays.asList(variable);
             }
         });
-        variable.setLevel(1);
+
         variable.remove(0);
         variable.remove(1);
-        assertEquals(Arrays.asList(3, 4, 5, 6), variable.getCurrentDomain());
-        variable.setLevel(2);
+        assertArrayEquals(new int[] { 2, 3, 4, 5 }, variable
+                .getCurrentIndexes());
+        variable.setLevel(1);
         variable.assign(2, problem);
         variable.unassign(problem);
-        variable.restoreLevel(2);
-        assertEquals(Arrays.asList(3, 4, 5, 6), variable.getCurrentDomain());
+        variable.restoreLevel(0);
+        assertArrayEquals(new int[] { 2, 3, 4, 5 }, variable
+                .getCurrentIndexes());
     }
 
     @Test
@@ -169,10 +169,12 @@ public class VariableTest {
     }
 
     @Test
-    public void testGetCurrentDomain() {
-        assertEquals(Arrays.asList(1, 2, 3, 4, 5), variable.getCurrentDomain());
+    public void testGetCurrentIndexes() {
+        assertArrayEquals(new int[] { 0, 1, 2, 3, 4 }, variable
+                .getCurrentIndexes());
         variable.remove(1);
-        assertEquals(Arrays.asList(1, 3, 4, 5), variable.getCurrentDomain());
+        assertArrayEquals(new int[] { 0, 2, 3, 4 }, variable
+                .getCurrentIndexes());
     }
 
     @Test
@@ -184,7 +186,7 @@ public class VariableTest {
         variable.remove(3);
         assertFalse(variable.isPresent(1));
 
-        variable.restoreLevel(1);
+        variable.restoreLevel(0);
         assertTrue(variable.isPresent(3));
         assertTrue(variable.isPresent(2));
         assertFalse(variable.isPresent(1));
@@ -244,11 +246,11 @@ public class VariableTest {
         assertEquals(BitVector.factory(5, true), variable.getBitDomain());
     }
 
-    @Test
-    public void testClone() throws CloneNotSupportedException {
-        final Variable clone = variable.clone();
-        assertNotSame(clone, variable);
-        assertNotSame(clone.getBitDomain(), variable.getBitDomain());
-    }
+//    @Test
+//    public void testClone() throws CloneNotSupportedException {
+//        final Variable clone = variable.clone();
+//        assertNotSame(clone, variable);
+//        assertNotSame(clone.getBitDomain(), variable.getBitDomain());
+//    }
 
 }

@@ -49,7 +49,9 @@ import cspfj.util.Waker;
 public final class Problem implements Cloneable {
     // private Map<Integer, Variable> variables;
 
-    private Variable[] variableArray;
+    private Variable[] variableList;
+
+    private Variable[] variableMap;
 
     private int nbVariables = 0;
 
@@ -59,7 +61,8 @@ public final class Problem implements Cloneable {
 
     private int nbFutureVariables = 0;
 
-    private final static Logger logger = Logger.getLogger("cspfj.Problem");
+    private final static Logger LOGGER = Logger.getLogger(Problem.class
+            .getName());
 
     private int maxDomainSize;
 
@@ -104,13 +107,13 @@ public final class Problem implements Cloneable {
         Variable.resetVId();
         AbstractConstraint.resetCId();
 
-        logger.info("Generating");
+        LOGGER.info("Generating");
         generator.generate();
 
-        logger.info("Setting Variables");
+        LOGGER.info("Setting Variables");
         problem.setVariables(generator.getVariables());
 
-        logger.info("Counting supports (" + expCountSupports + ")");
+        LOGGER.info("Counting supports (" + expCountSupports + ")");
 
         Thread.interrupted();
         final Timer waker = new Timer();
@@ -139,10 +142,10 @@ public final class Problem implements Cloneable {
             waker.cancel();
         }
 
-        logger.info("Setting Constraints");
+        LOGGER.info("Setting Constraints");
         problem.setConstraints(generator.getConstraints());
 
-        logger.info("Updating InvolvingConstraints");
+        LOGGER.info("Updating InvolvingConstraints");
         problem.updateInvolvingConstraints();
 
         // for (Constraint c :
@@ -151,7 +154,7 @@ public final class Problem implements Cloneable {
         // System.out.println(c);
         // }
 
-        logger.info("Done");
+        LOGGER.info("Done");
         return problem;
 
     }
@@ -175,9 +178,12 @@ public final class Problem implements Cloneable {
             maxVId = Math.max(maxVId, var.getId());
         }
 
-        this.variableArray = new Variable[maxVId + 1];
+        this.variableMap = new Variable[maxVId + 1];
+        this.variableList = new Variable[vars.size()];
+        int listTail = 0;
         for (Variable var : vars) {
-            variableArray[var.getId()] = var;
+            variableMap[var.getId()] = var;
+            variableList[listTail++] = var;
         }
 
         nbFutureVariables = nbVariables = vars.size();
@@ -223,10 +229,12 @@ public final class Problem implements Cloneable {
 
     public void updateInvolvingConstraints() {
         final Map<Integer, List<Constraint>> invConstraints = new HashMap<Integer, List<Constraint>>(
-                variableArray.length);
+                variableList.length);
 
         for (Variable v : getVariables()) {
-            invConstraints.put(v.getId(), new ArrayList<Constraint>());
+            if (v != null) {
+                invConstraints.put(v.getId(), new ArrayList<Constraint>());
+            }
         }
 
         for (Constraint c : getConstraints()) {
@@ -236,10 +244,12 @@ public final class Problem implements Cloneable {
         }
 
         for (Variable v : getVariables()) {
-            final Collection<Constraint> involvingConstraints = invConstraints
-                    .get(v.getId());
-            v.setInvolvingConstraints(involvingConstraints
-                    .toArray(new Constraint[involvingConstraints.size()]));
+            if (v != null) {
+                final Collection<Constraint> involvingConstraints = invConstraints
+                        .get(v.getId());
+                v.setInvolvingConstraints(involvingConstraints
+                        .toArray(new Constraint[involvingConstraints.size()]));
+            }
         }
 
         // for (Constraint c : getConstraints()) {
@@ -279,7 +289,7 @@ public final class Problem implements Cloneable {
     }
 
     public Variable[] getVariables() {
-        return variableArray;
+        return variableList;
     }
 
     // public Collection<Integer> getVariableIDs() {
@@ -287,7 +297,7 @@ public final class Problem implements Cloneable {
     // }
 
     public Variable getVariable(final int vId) {
-        return variableArray[vId];
+        return variableMap[vId];
     }
 
     public void increaseFutureVariables() {
@@ -312,7 +322,7 @@ public final class Problem implements Cloneable {
 
     private void setLevel(int level) {
         // currentLevel = level;
-        for (Variable v : variableArray) {
+        for (Variable v : variableList) {
             v.setLevel(level);
         }
         for (Constraint c : constraintArray) {
@@ -322,7 +332,7 @@ public final class Problem implements Cloneable {
 
     private void restoreLevel(int level) {
         // currentLevel = level;
-        for (Variable v : variableArray) {
+        for (Variable v : variableList) {
             v.restoreLevel(level);
         }
         for (Constraint c : getConstraints()) {
@@ -332,7 +342,7 @@ public final class Problem implements Cloneable {
 
     public void reset() {
         currentLevel = 0;
-        for (Variable v : variableArray) {
+        for (Variable v : variableList) {
             v.reset(this);
         }
         for (Constraint c : getConstraints()) {
@@ -342,16 +352,15 @@ public final class Problem implements Cloneable {
 
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         for (Variable v : getVariables()) {
             sb.append(v).append(" : ").append(
-                    Arrays.toString(v.getCurrentDomain())).append('\n');
+                    Arrays.toString(v.getCurrentIndexes())).append('\n');
         }
 
         for (Constraint c : constraintArray) {
-            sb.append(c.toString());
+            sb.append(c.toString()).append('\n');
         }
-        sb.append('\n');
 
         return sb.toString();
     }
@@ -504,7 +513,7 @@ public final class Problem implements Cloneable {
 
             tuple = Arrays.copyOf(tuple, level + 1);
 
-            for (Variable fv : variableArray) {
+            for (Variable fv : variableList) {
 
                 // logger.fine("checking " +
                 // getVariable(levelVariables[level-1]));
@@ -544,14 +553,14 @@ public final class Problem implements Cloneable {
                     nbNoGoods += newNogoods;
                     modified = true;
                     if (constraint.getId() > getMaxCId()) {
-                        logger.info("Added " + constraint);
+                        LOGGER.info("Added " + constraint);
                         addedConstraints.add(constraint);
                     }
                 }
             }
         }
         if (modified) {
-            logger.info(nbNoGoods + " nogoods");
+            LOGGER.info(nbNoGoods + " nogoods");
 
             if (!addedConstraints.isEmpty()) {
                 final Collection<Constraint> curCons = new ArrayList<Constraint>(
@@ -563,7 +572,7 @@ public final class Problem implements Cloneable {
 
                 setConstraints(curCons);
                 updateInvolvingConstraints();
-                logger.info(getNbConstraints() + " constraints");
+                LOGGER.info(getNbConstraints() + " constraints");
             }
         }
         return modified;
@@ -599,14 +608,14 @@ public final class Problem implements Cloneable {
             nbNoGoods += newNogoods;
             modified = true;
             if (constraint.getId() > getMaxCId()) {
-                logger.info("Added " + constraint);
+                LOGGER.info("Added " + constraint);
                 addedConstraints.add(constraint);
             }
 
         }
 
         if (modified) {
-            logger.info(nbNoGoods + " nogoods");
+            LOGGER.info(nbNoGoods + " nogoods");
 
             if (!addedConstraints.isEmpty()) {
                 final Collection<Constraint> curCons = new ArrayList<Constraint>(
@@ -618,7 +627,7 @@ public final class Problem implements Cloneable {
 
                 setConstraints(curCons);
                 updateInvolvingConstraints();
-                logger.info(getNbConstraints() + " constraints");
+                LOGGER.info(getNbConstraints() + " constraints");
             }
         }
         return modified;
