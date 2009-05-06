@@ -29,19 +29,19 @@ public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
     // private final static Logger logger = Logger
     // .getLogger(ExtensionConstraintGeneral.class.getSimpleName());
 
-    public ExtensionConstraintGeneral(final Variable[] scope,
-            final Matrix matrix, final boolean shared) {
-        this(scope, matrix, shared, false);
+    public ExtensionConstraintGeneral(final Matrix matrix,
+            final boolean shared, final Variable... scope) {
+        this(matrix, shared, false, scope);
     }
 
-    public ExtensionConstraintGeneral(final Variable[] scope,
-            final Matrix matrix, final String name, final boolean shared) {
-        super(scope, new MatrixManager(scope, matrix, shared), name);
+    public ExtensionConstraintGeneral(final String name, final Matrix matrix,
+            final boolean shared, final Variable... scope) {
+        super(name, new MatrixManager(scope, matrix, shared), scope);
     }
 
-    public ExtensionConstraintGeneral(Variable[] scope, Matrix matrix,
-            boolean shared, boolean emptyMatrix) {
-        super(scope, new MatrixManager(scope, matrix, shared));
+    public ExtensionConstraintGeneral(Matrix matrix, boolean shared,
+            boolean emptyMatrix, Variable... scope) {
+        super(new MatrixManager(scope, matrix, shared), scope);
         if (emptyMatrix) {
             nbInitConflicts = new long[getArity()][];
             nbMaxConflicts = new long[getArity()];

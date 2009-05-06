@@ -416,8 +416,8 @@ public final class Problem implements Cloneable {
 
             final Matrix matrix = new TupleSet(true);
 
-            return new ExtensionConstraintGeneral(constraintScope, matrix,
-                    false, true);
+            return new ExtensionConstraintGeneral(matrix, false, true,
+                    constraintScope);
 
         }
         return null;
