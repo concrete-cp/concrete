@@ -79,11 +79,11 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 
     private final BitVector removals;
 
-    public AbstractConstraint(final Variable[] scope) {
-        this(scope, null);
+    public AbstractConstraint(final Variable... scope) {
+        this(null, scope);
     }
 
-    public AbstractConstraint(final Variable[] scope, final String name) {
+    public AbstractConstraint(final String name, final Variable... scope) {
         this.scope = scope.clone();
         scopeSet = new HashSet<Variable>(scope.length, 1);
         for (Variable v : scope) {
@@ -126,7 +126,7 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
     public boolean hasNoRemovals() {
         return removals.isEmpty();
     }
-    
+
     @Override
     public int getWeight() {
         return weight;

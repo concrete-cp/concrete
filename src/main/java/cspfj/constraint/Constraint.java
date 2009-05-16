@@ -43,6 +43,12 @@ public interface Constraint {
 
     // boolean skipRevision(int i);
 
+    /**
+     * The constraint propagator
+     * 
+     * @param revisator
+     * @return false iff an inconsistency has been detected
+     */
     boolean revise(final RevisionHandler revisator);
 
     // int getOtherSize(int position);

@@ -60,7 +60,7 @@ public abstract class BitVector implements Cloneable {
     public int lastSetBit() {
         return prevSetBit(size);
     }
-    
+
     public abstract int prevClearBit(final int start);
 
     public int lastClearBit() {
@@ -84,4 +84,6 @@ public abstract class BitVector implements Cloneable {
     public abstract boolean isEmpty();
 
     public abstract void setAllBut(final int index);
+
+    public abstract int cardinality();
 }

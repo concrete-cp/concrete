@@ -42,7 +42,7 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
     private final static Logger logger = Logger
             .getLogger(ExtensionConstraintDynamic.class.getSimpleName());
 
-   // public static boolean quick = false;
+    // public static boolean quick = false;
 
     public ExtensionConstraintDynamic(final Variable[] scope,
             final TupleSet matrix, final boolean shared)
@@ -55,7 +55,7 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
     public ExtensionConstraintDynamic(final Variable[] scope,
             final TupleSet matrix, final String name, final boolean shared)
             throws FailedGenerationException {
-        super(scope, name);
+        super(name, scope);
         this.dynamic = new MatrixManagerDynamic(scope, matrix, shared);
         toFind = initFound();
     }

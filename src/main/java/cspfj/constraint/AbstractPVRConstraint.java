@@ -11,10 +11,16 @@ public abstract class AbstractPVRConstraint extends AbstractConstraint {
     }
 
     public AbstractPVRConstraint(final Variable[] scope, final String name) {
-        super(scope, name);
+        super(name, scope);
 
     }
 
+    /**
+     * Try to filter values from variable getVariable(position)
+     * 
+     * @param position
+     * @return true iff any value has been removed
+     */
     public abstract boolean revise(final int position);
 
     @Override

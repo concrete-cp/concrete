@@ -35,8 +35,8 @@ public class TupleManagerTest {
         final Variable v2 = new Variable(dom);
         final Variable v3 = new Variable(dom);
 
-        final Constraint constraint = new AllDifferentConstraint(
-                new Variable[] { v1, v2, v3 }, "allDiff");
+        final Constraint constraint = new AllDifferentConstraint("allDiff",
+                new Variable[] { v1, v2, v3 });
 
         tupleManager = new TupleManager(constraint,
                 ((AbstractConstraint) constraint).getTuple());

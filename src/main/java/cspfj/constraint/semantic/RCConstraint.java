@@ -30,7 +30,7 @@ public class RCConstraint extends AbstractConstraint implements
     }
 
     public RCConstraint(Variable[] scope, String name) {
-        super(scope, name);
+        super(name, scope);
 
         intervals = initIntervals(scope);
         sortedIntervals = intervals.clone();

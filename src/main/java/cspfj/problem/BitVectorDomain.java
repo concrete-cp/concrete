@@ -108,8 +108,6 @@ public class BitVectorDomain implements Domain {
         bvDomain.clear(index);
     }
 
-    final long[] arrayDomain = new long[1];
-
     public BitVector getBitVector() {
         return bvDomain;
     }

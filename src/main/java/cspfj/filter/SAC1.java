@@ -31,8 +31,8 @@ public final class SAC1 extends AbstractSAC {
 
     private final static Logger logger = Logger.getLogger(SAC1.class.getName());
 
-    public SAC1(Problem problem, AC3 filter) {
-        super(problem, filter);
+    public SAC1(Problem problem) {
+        super(problem, new AC3(problem));
     }
 
     protected boolean singletonTest(final Variable variable)
