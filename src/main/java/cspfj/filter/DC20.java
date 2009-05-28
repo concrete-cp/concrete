@@ -184,13 +184,14 @@ public final class DC20 implements Filter {
                         continue;
                     }
                     c.fillRemovals(false);
-                    c.setRemovals(variable.getPositionInConstraint(i), true);
+                    final int positionInConstraint = variable
+                            .getPositionInConstraint(i);
+                    c.setRemovals(positionInConstraint, true);
                     c.revise(rh);
-                    c.setRemovals(variable.getPositionInConstraint(i), false);
+                    c.setRemovals(positionInConstraint, false);
                 }
 
-                sat = filter.reduceFrom(modVar, null, cnt
-                        - variables.length);
+                sat = filter.reduceFrom(modVar, null, cnt - variables.length);
             }
             if (sat) {
 

@@ -39,19 +39,10 @@ public abstract class AbstractPVRConstraint extends AbstractConstraint {
     }
 
     private boolean skipRevision(final int variablePosition) {
-        // if (!removals[variablePosition]) {
-        // return false;
-        // }
-
-        // return getRemovals(variablePosition);
-        //		
-
-        // return false;
-        //		
+//        if (true)
+//            return false;
+		
         for (int y = getArity(); --y >= 0;) {
-            // if (y == variablePosition ^ getRemovals(y)) {
-            // return false;
-            // }
             if (y != variablePosition && getRemovals(y)) {
                 return false;
             }
@@ -59,5 +50,4 @@ public abstract class AbstractPVRConstraint extends AbstractConstraint {
 
         return true;
     }
-
 }

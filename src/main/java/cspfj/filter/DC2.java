@@ -55,7 +55,7 @@ public final class DC2 implements Filter {
 
     private int nbNoGoods;
 
-    private final List<DynamicConstraint> impliedConstraints;
+    // private final List<DynamicConstraint> impliedConstraints;
 
     private final int[] modVar;
     private int[] modCons;
@@ -71,7 +71,7 @@ public final class DC2 implements Filter {
         this.problem = problem;
         this.filter = new AC3(problem);
         this.variables = problem.getVariables();
-        impliedConstraints = new ArrayList<DynamicConstraint>();
+        // impliedConstraints = new ArrayList<DynamicConstraint>();
         modCons = new int[problem.getMaxCId() + 1];
         modVar = new int[problem.getMaxVId() + 1];
     }
@@ -80,12 +80,12 @@ public final class DC2 implements Filter {
     public boolean reduceAll() throws InterruptedException {
         final int nbC = problem.getNbConstraints();
 
-        for (Constraint c : problem.getConstraints()) {
-            if (c.getArity() == 2
-                    && DynamicConstraint.class.isAssignableFrom(c.getClass())) {
-                impliedConstraints.add((DynamicConstraint) c);
-            }
-        }
+        // for (Constraint c : problem.getConstraints()) {
+        // if (c.getArity() == 2
+        // && DynamicConstraint.class.isAssignableFrom(c.getClass())) {
+        // impliedConstraints.add((DynamicConstraint) c);
+        // }
+        // }
 
         // ExtensionConstraintDynamic.quick = true;
         final boolean result;
@@ -134,6 +134,9 @@ public final class DC2 implements Filter {
                 if (!filter.reduceFrom(modVar, modCons, cnt - 1)) {
                     return false;
                 }
+                // if (!filter.reduceAll()) {
+                // return false;
+                // }
                 for (Variable var : problem.getVariables()) {
                     if (domainSizes[var.getId()] != var.getDomainSize()) {
                         modVar[var.getId()] = cnt;
@@ -181,19 +184,25 @@ public final class DC2 implements Filter {
             } else {
                 final Constraint[] involving = variable
                         .getInvolvingConstraints();
+
+                /*
+                 * Forward checking !
+                 */
                 for (int i = involving.length; --i >= 0;) {
                     final Constraint c = involving[i];
                     if (c.getArity() != 2) {
                         continue;
                     }
                     c.fillRemovals(false);
-                    c.setRemovals(variable.getPositionInConstraint(i), true);
+                    final int positionInConstraint = variable
+                            .getPositionInConstraint(i);
+                    c.setRemovals(positionInConstraint, true);
                     c.revise(rh);
-                    c.setRemovals(variable.getPositionInConstraint(i), false);
+                    c.setRemovals(positionInConstraint, false);
                 }
 
-                sat = filter.reduceFrom(modVar, modCons, cnt
-                        - variables.length);
+                sat = filter
+                        .reduceFrom(modVar, modCons, cnt - variables.length);
             }
             if (sat) {
 
@@ -285,12 +294,8 @@ public final class DC2 implements Filter {
                     addedConstraints.add(constraint);
                     modCons = Arrays.copyOf(modCons, constraint.getId() + 1);
                 }
-                // for (int i = constraint.getArity(); --i >= 0;) {
-                // lastModified[constraint.getVariable(i).getId()] = cnt;
-                // }
+
                 modCons[constraint.getId()] = cnt;
-                // lastModified[firstVariable.getId()] = cnt;
-                // lastModified[fv.getId()] = cnt;
             }
         }
 
@@ -308,7 +313,7 @@ public final class DC2 implements Filter {
                 problem.setConstraints(curCons);
                 problem.updateInvolvingConstraints();
 
-                impliedConstraints.addAll(addedConstraints);
+                // impliedConstraints.addAll(addedConstraints);
 
                 logger.info(problem.getNbConstraints() + " constraints");
             }

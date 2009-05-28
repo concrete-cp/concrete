@@ -1,5 +1,6 @@
 package cspfj.filter;
 
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -35,31 +36,25 @@ public final class AC3 implements Filter {
 
     }
 
-    public boolean reduceFrom(int[] lastModified, int[] reviseMe, int cnt) {
-        for (int i = inQueue.nextSetBit(0); i >= 0; i = inQueue
-                .nextSetBit(i + 1)) {
-            final Variable v = problem.getVariable(i);
-            final Constraint[] involved = v.getInvolvingConstraints();
-            for (int j = involved.length; --j >= 0;) {
-                involved[j].setRemovals(v.getPositionInConstraint(j), false);
-            }
-        }
-
-        inQueue.fill(false);
+    public boolean reduceFrom(int[] modVar, int[] modCons, int cnt) {
+        clean();
 
         for (Variable v : problem.getVariables()) {
-            if (lastModified[v.getId()] > cnt) {
+            if (modVar[v.getId()] > cnt) {
                 inQueue.set(v.getId());
                 final Constraint[] involved = v.getInvolvingConstraints();
                 for (int j = involved.length; --j >= 0;) {
+                    //involved[j].fillRemovals(true);
                     involved[j].setRemovals(v.getPositionInConstraint(j), true);
                 }
             }
         }
 
-        if (reviseMe != null) {
+        if (modCons != null) {
+            // final BitSet cons = new BitSet();
             for (Constraint c : problem.getConstraints()) {
-                if (reviseMe[c.getId()] > cnt) {
+                if (modCons[c.getId()] > cnt) {
+                    // cons.set(c.getId());
                     c.fillRemovals(true);
 
                     if (!c.revise(revisator)) {
@@ -70,25 +65,51 @@ public final class AC3 implements Filter {
                     c.fillRemovals(false);
                 }
             }
+
+            // for (int i = modCons.length; --i >= 0;) {
+            // assert modCons[i] <= cnt || cons.get(i);
+            // }
         }
 
         return reduce();
+    }
+
+    /**
+     * Cleans the variable queue and removals
+     */
+    private void clean() {
+        // for (int i = inQueue.nextSetBit(0); i >= 0; i = inQueue
+        // .nextSetBit(i + 1)) {
+        // final Variable v = problem.getVariable(i);
+        // final Constraint[] involving = v.getInvolvingConstraints();
+        // for (int j = involving.length; --j >= 0;) {
+        // involving[j].setRemovals(v.getPositionInConstraint(j), false);
+        // }
+        // }
+
+        for (Constraint c : problem.getConstraints()) {
+            c.fillRemovals(false);
+        }
+
+        inQueue.fill(false);
+
+        assert noRemovals();
+    }
+
+    private boolean noRemovals() {
+        for (Constraint c : problem.getConstraints()) {
+            if (!c.hasNoRemovals()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public boolean reduceAfter(final Variable variable) {
         if (variable == null) {
             return true;
         }
-        for (int i = inQueue.nextSetBit(0); i >= 0; i = inQueue
-                .nextSetBit(i + 1)) {
-            final Variable v = problem.getVariable(i);
-            final Constraint[] involved = v.getInvolvingConstraints();
-            for (int j = involved.length; --j >= 0;) {
-                involved[j].setRemovals(v.getPositionInConstraint(j), false);
-            }
-        }
-
-        inQueue.fill(false);
+        clean();
 
         inQueue.set(variable.getId());
 
@@ -144,7 +165,6 @@ public final class AC3 implements Filter {
         for (int c = involvingConstraints.length; --c >= 0;) {
             final Constraint constraint = involvingConstraints[c];
             if (constraint.hasNoRemovals()) {
-                // constraint.fillRemovals(false);
                 continue;
             }
 
