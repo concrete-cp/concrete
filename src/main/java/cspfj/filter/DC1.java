@@ -144,7 +144,7 @@ public final class DC1 extends AbstractSAC {
                 continue;
             }
 
-            final BitVector changes = fv.getDomain().getAtLevel(0).exclusive(
+            final BitVector changes = fv.getDomain().getAtLevel(0).xor(
                     fv.getDomain().getAtLevel(1));
             if (changes.isEmpty()) {
                 continue;

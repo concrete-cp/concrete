@@ -1,6 +1,5 @@
 package cspfj.util;
 
-
 public class SmallBitVector extends BitVector {
 
     private long word;
@@ -78,10 +77,23 @@ public class SmallBitVector extends BitVector {
         return 1;
     }
 
-    public BitVector exclusive(BitVector bv) {
-        final SmallBitVector bitVector = new SmallBitVector(bv.size, false);
+    public BitVector xor(BitVector bv) {
+        final SmallBitVector bitVector = new SmallBitVector(size, false);
         bitVector.word = (((SmallBitVector) bv).word ^ this.word)
                 & (MASK >>> -size);
+        return bitVector;
+    }
+    
+    public BitVector and(BitVector bv) {
+        final SmallBitVector bitVector = new SmallBitVector(size, false);
+        bitVector.word = (((SmallBitVector) bv).word & this.word)
+                & (MASK >>> -size);
+        return bitVector;
+    }
+
+    public BitVector inverse() {
+        final SmallBitVector bitVector = new SmallBitVector(size, false);
+        bitVector.word = ~this.word & (MASK >>> -size);
         return bitVector;
     }
 

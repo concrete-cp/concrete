@@ -38,13 +38,13 @@ public final class AC3 implements Filter {
 
     public boolean reduceFrom(int[] modVar, int[] modCons, int cnt) {
         clean();
-
+        logger.fine("reduce after " + cnt);
         for (Variable v : problem.getVariables()) {
             if (modVar[v.getId()] > cnt) {
                 inQueue.set(v.getId());
                 final Constraint[] involved = v.getInvolvingConstraints();
                 for (int j = involved.length; --j >= 0;) {
-                    //involved[j].fillRemovals(true);
+                    // involved[j].fillRemovals(true);
                     involved[j].setRemovals(v.getPositionInConstraint(j), true);
                 }
             }
@@ -210,7 +210,8 @@ public final class AC3 implements Filter {
             if (c instanceof AbstractPVRConstraint) {
                 for (int i = c.getArity(); --i >= 0;) {
                     if (!c.getVariable(i).isAssigned()) {
-                        assert !((AbstractPVRConstraint) c).revise(i);
+                        assert !((AbstractPVRConstraint) c).revise(i) : c
+                                + ", " + c.getVariable(i);
                     }
                 }
             } else {

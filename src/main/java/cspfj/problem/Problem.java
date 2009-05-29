@@ -443,9 +443,25 @@ public final class Problem implements Cloneable {
         return tuple;
     }
 
+    /**
+     * Sets the base array given as a parameter so that the values of base
+     * correspond to the values of the values array reordered such that they
+     * correspond to the variables of the scope of the constraint. Variables
+     * present in the scope of the constraint but not in the scope[] array
+     * result in a -1 value in the base[] array. Last variable of scope[] is
+     * ignored. Returns the position of the last variable of scope[] in the
+     * constraint's scope.
+     * 
+     * @param scope
+     * @param values
+     * @param constraint
+     * @param base
+     * @return
+     */
     public static int makeBase(Variable[] scope, int[] values,
             Constraint constraint, int[] base) {
         assert scope.length == values.length;
+        assert base.length == constraint.getArity();
 
         Arrays.fill(base, -1);
 
@@ -523,7 +539,7 @@ public final class Problem implements Cloneable {
                 }
 
                 final BitVector changes = fv.getDomain().getAtLevel(level - 1)
-                        .exclusive(fv.getDomain().getAtLevel(level));
+                        .xor(fv.getDomain().getAtLevel(level));
                 if (changes.isEmpty()) {
                     continue;
                 }

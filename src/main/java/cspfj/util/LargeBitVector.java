@@ -113,14 +113,39 @@ public final class LargeBitVector extends BitVector {
         return (1 + position) * SIZE - Long.numberOfLeadingZeros(word) - 1;
     }
 
+    
     @Override
-    public BitVector exclusive(BitVector bv) {
-        final LargeBitVector bitVector = new LargeBitVector(bv.size, false);
+    public BitVector xor(BitVector bv) {
+        final LargeBitVector bitVector = new LargeBitVector(size, false);
         final LargeBitVector source = (LargeBitVector) bv;
         int i = words.length - 1;
-        bitVector.words[i] = (source.words[i] ^ words[i]) & (MASK >>> -size);
+        bitVector.words[i] = (source.words[i] & words[i]) ^ (MASK >>> -size);
         while (--i >= 0) {
-            source.words[i] ^= words[i];
+            bitVector.words[i] = source.words[i] ^ words[i];
+        }
+        return bitVector;
+    }
+
+    
+    @Override
+    public BitVector and(BitVector bv) {
+        final LargeBitVector bitVector = new LargeBitVector(size, false);
+        final LargeBitVector source = (LargeBitVector) bv;
+        int i = words.length - 1;
+        bitVector.words[i] = (source.words[i] & words[i]) & (MASK >>> -size);
+        while (--i >= 0) {
+            bitVector.words[i] = source.words[i] & words[i];
+        }
+        return bitVector;
+    }
+
+    @Override
+    public BitVector inverse() {
+        final LargeBitVector bitVector = new LargeBitVector(size, false);
+        int i = words.length - 1;
+        bitVector.words[i] = ~words[i] & (MASK >>> -size);
+        while (--i >= 0) {
+            bitVector.words[i] = ~words[i];
         }
         return bitVector;
     }

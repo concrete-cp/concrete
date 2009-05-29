@@ -65,12 +65,16 @@ public final class DC20 implements Filter {
 
     private int nbSingletonTests = 0;
 
+    // private final int[][] allDomainSizes;
+
     public DC20(Problem problem) {
         this.problem = problem;
         this.filter = new AC3(problem);
         this.variables = problem.getVariables();
         impliedConstraints = new ArrayList<DynamicConstraint>();
         modVar = new int[problem.getMaxVId() + 1];
+        // allDomainSizes = new int[(2 + problem.getMaxVId())
+        // * problem.getMaxDomainSize()][1 + problem.getMaxVId()];
     }
 
     @Override
@@ -99,6 +103,10 @@ public final class DC20 implements Filter {
         // }
         return result;
     }
+
+    // private int stId(Variable variable, int value) {
+    // return variable.getId() * problem.getMaxDomainSize() + value;
+    // }
 
     private boolean cdcReduce() throws InterruptedException {
         final AC3 filter = this.filter;
@@ -183,12 +191,9 @@ public final class DC20 implements Filter {
                     if (c.getArity() != 2) {
                         continue;
                     }
-                    c.fillRemovals(false);
-                    final int positionInConstraint = variable
-                            .getPositionInConstraint(i);
-                    c.setRemovals(positionInConstraint, true);
+                    c.fillRemovals(true);
                     c.revise(rh);
-                    c.setRemovals(positionInConstraint, false);
+                    c.fillRemovals(false);
                 }
 
                 sat = filter.reduceFrom(modVar, null, cnt - variables.length);
@@ -227,42 +232,43 @@ public final class DC20 implements Filter {
     };
 
     public boolean noGoods(Variable firstVariable) {
+        assert firstVariable.getDomainSize() == 1;
+
         int[] tuple = new int[2];
-
         final Set<Variable> scopeSet = new HashSet<Variable>(2);
-
         scopeSet.add(firstVariable);
         tuple[0] = firstVariable.getFirst();
+
         final Variable[] scopeArray = new Variable[] { firstVariable, null };
 
         boolean modified = false;
         final Collection<DynamicConstraint> addedConstraints = new ArrayList<DynamicConstraint>();
 
-        for (Variable fv : variables) {
+        for (Variable v : variables) {
 
             // logger.fine("checking " +
             // getVariable(levelVariables[level-1]));
 
-            if (fv == firstVariable) {
+            if (v == firstVariable) {
                 continue;
             }
 
-            final BitVector changes = fv.getDomain().getAtLevel(0).exclusive(
-                    fv.getDomain().getAtLevel(1));
+            final BitVector changes = v.getDomain().getAtLevel(0).xor(
+                    v.getDomain().getAtLevel(1));
             if (changes.isEmpty()) {
                 continue;
             }
 
-            scopeSet.add(fv);
+            scopeSet.add(v);
             final DynamicConstraint constraint = problem.learnConstraint(
                     scopeSet, addConstraints);
-            scopeSet.remove(fv);
+            scopeSet.remove(v);
 
             if (constraint == null) {
                 continue;
             }
 
-            scopeArray[1] = fv;
+            scopeArray[1] = v;
 
             final int[] base = new int[constraint.getArity()];
             final int varPos = Problem.makeBase(scopeArray, tuple, constraint,
@@ -276,19 +282,17 @@ public final class DC20 implements Filter {
 
             }
             if (newNogoods > 0) {
+                logger.fine(constraint + " modified: modVar["
+                        + firstVariable.getId() + "] <- modVar[" + v.getId()
+                        + "] <- " + cnt);
                 nbNoGoods += newNogoods;
                 modified = true;
                 if (constraint.getId() > problem.getMaxCId()) {
                     logger.info("Added " + constraint);
                     addedConstraints.add(constraint);
                 }
-                // for (int i = constraint.getArity(); --i >= 0;) {
-                // lastModified[constraint.getVariable(i).getId()] = cnt;
-                // }
                 modVar[firstVariable.getId()] = cnt;
-                modVar[fv.getId()] = cnt;
-                // lastModified[firstVariable.getId()] = cnt;
-                // lastModified[fv.getId()] = cnt;
+                modVar[v.getId()] = cnt;
             }
         }
 

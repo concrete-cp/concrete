@@ -25,7 +25,6 @@ import java.util.Iterator;
 import java.util.logging.Logger;
 
 import cspfj.constraint.AbstractConstraint;
-import cspfj.constraint.DynamicConstraint;
 import cspfj.constraint.extension.MatrixManagerDynamic.LLIterator;
 import cspfj.exception.FailedGenerationException;
 import cspfj.filter.RevisionHandler;
@@ -33,7 +32,7 @@ import cspfj.problem.Variable;
 import cspfj.util.BitVector;
 
 public class ExtensionConstraintDynamic extends AbstractConstraint implements
-        DynamicConstraint {
+        ExtensionConstraint {
 
     private final MatrixManagerDynamic dynamic;
 
@@ -291,6 +290,11 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
             }
         }
         return removed;
+    }
+
+    @Override
+    public MatrixManager getMatrix() {
+        return dynamic;
     }
 
     // @Override

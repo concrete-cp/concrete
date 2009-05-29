@@ -193,12 +193,9 @@ public final class DC2 implements Filter {
                     if (c.getArity() != 2) {
                         continue;
                     }
-                    c.fillRemovals(false);
-                    final int positionInConstraint = variable
-                            .getPositionInConstraint(i);
-                    c.setRemovals(positionInConstraint, true);
+                    c.fillRemovals(true);
                     c.revise(rh);
-                    c.setRemovals(positionInConstraint, false);
+                    c.fillRemovals(false);
                 }
 
                 sat = filter
@@ -233,7 +230,7 @@ public final class DC2 implements Filter {
     private final RevisionHandler rh = new RevisionHandler() {
         @Override
         public void revised(Constraint constraint, Variable variable) {
-            //
+            logger.fine("FC w " + constraint + ", " + variable);
         }
     };
 
@@ -258,7 +255,7 @@ public final class DC2 implements Filter {
                 continue;
             }
 
-            final BitVector changes = fv.getDomain().getAtLevel(0).exclusive(
+            final BitVector changes = fv.getDomain().getAtLevel(0).xor(
                     fv.getDomain().getAtLevel(1));
             if (changes.isEmpty()) {
                 continue;

@@ -79,8 +79,12 @@ public abstract class BitVector implements Cloneable {
 
     public abstract int realSize();
 
-    public abstract BitVector exclusive(BitVector bv);
+    public abstract BitVector xor(BitVector bv);
 
+    public abstract BitVector and(BitVector bv);
+    
+    public abstract BitVector inverse();
+    
     public abstract boolean isEmpty();
 
     public abstract void setAllBut(final int index);
