@@ -51,7 +51,7 @@ public class ResultHandler {
     private static final Logger logger = Logger
             .getLogger("cspfj.AbstractResultWriter");
 
-    private int bestSatisfied = 0;
+    private int bestConflicts;
 
     private final boolean receiveSolutions;
 
@@ -67,7 +67,6 @@ public class ResultHandler {
     public void problem(final String name) throws IOException {
         logger.info("loading : " + name);
         statistics.clear();
-        bestSatisfied = 0;
     }
 
     public void load(final Solver solver, final long load) throws IOException {
@@ -78,6 +77,8 @@ public class ResultHandler {
         logger.info("loaded in " + (load / 1.0e9F) + " s");
 
         logger.info(constraintStats(solver.getProblem().getConstraints()));
+
+        bestConflicts = Integer.MAX_VALUE;
     }
 
     private String constraintStats(Constraint[] constraints) {
@@ -107,13 +108,13 @@ public class ResultHandler {
     }
 
     public boolean solution(final Map<Variable, Integer> solution,
-            final int nbSatisfied, final boolean force) throws IOException {
+            final int nbConflicts, final boolean force) throws IOException {
         if (!receiveSolutions && !force) {
             return false;
         }
-        if (nbSatisfied > bestSatisfied) {
-            bestSatisfied = nbSatisfied;
-            logger.info(solution.toString() + "(" + nbSatisfied + ")");
+        if (nbConflicts < bestConflicts) {
+            bestConflicts = nbConflicts;
+            logger.info(solution.toString() + "(" + nbConflicts + ")");
             return true;
         }
         return false;
@@ -200,8 +201,8 @@ public class ResultHandler {
         return unsat;
     }
 
-    public final int getBestSatisfied() {
-        return bestSatisfied;
+    public final int getBestConflicts() {
+        return bestConflicts;
     }
 
     public final boolean isReceiveSolutions() {
