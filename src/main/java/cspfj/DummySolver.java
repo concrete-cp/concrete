@@ -22,18 +22,8 @@ package cspfj;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidParameterException;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
 
-import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.AC3;
-import cspfj.filter.Filter;
-import cspfj.heuristic.DiscHeuristic;
-import cspfj.heuristic.Heuristic;
-import cspfj.heuristic.Lexico;
-import cspfj.heuristic.Pair;
-import cspfj.heuristic.WDegOnDom;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 

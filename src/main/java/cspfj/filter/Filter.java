@@ -21,7 +21,6 @@ package cspfj.filter;
 
 import java.util.Map;
 
-import cspfj.constraint.Constraint;
 import cspfj.problem.Variable;
 
 /**

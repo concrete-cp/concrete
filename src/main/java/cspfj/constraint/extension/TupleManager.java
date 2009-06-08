@@ -7,7 +7,6 @@
 package cspfj.constraint.extension;
 
 import java.util.Arrays;
-import java.util.List;
 
 import cspfj.constraint.Constraint;
 import cspfj.problem.Variable;

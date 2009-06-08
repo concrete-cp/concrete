@@ -21,7 +21,6 @@ package cspfj;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.regex.Matcher;
 
 import cspfj.filter.Filter;
 import cspfj.problem.Problem;

@@ -21,7 +21,6 @@ package cspfj.constraint.semantic;
 
 import cspfj.constraint.AbstractConstraint;
 import cspfj.filter.RevisionHandler;
-import cspfj.problem.Domain;
 import cspfj.problem.Variable;
 import cspfj.util.BitVector;
 
