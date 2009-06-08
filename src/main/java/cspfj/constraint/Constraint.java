@@ -13,7 +13,7 @@ public interface Constraint {
 
     Variable getVariable(final int position);
 
-    boolean checkFirst();
+    // boolean checkFirst();
 
     int getId();
 
@@ -25,7 +25,7 @@ public interface Constraint {
 
     int getPosition(final Variable variable);
 
-    boolean checkFirstWith(final int variablePos, final int index);
+    // boolean checkFirstWith(final int variablePos, final int index);
 
     boolean isActive();
 
@@ -63,6 +63,10 @@ public interface Constraint {
 
     boolean check();
 
+   // boolean check(int[] tuple);
+
+    int[] getTuple();
+    
     void setLevel(int level);
 
     void restore(int level);

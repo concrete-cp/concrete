@@ -317,17 +317,17 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
         }
         return false;
     }
-
-    public final boolean checkFirst() {
-        tupleManager.setFirstTuple();
-        return chk();
-    }
-
-    public final boolean checkFirstWith(final int variablePosition,
-            final int index) {
-        tupleManager.setFirstTuple(variablePosition, index);
-        return chk();
-    }
+//
+//    public final boolean check(int[] tuple) {
+//        System.arraycopy(tuple, 0, this.tuple, 0, arity);
+//        return chk();
+//    }
+//
+//    public final boolean checkFirstWith(final int variablePosition,
+//            final int index) {
+//        tupleManager.setFirstTuple(variablePosition, index);
+//        return chk();
+//    }
 
     public final int getArity() {
         return arity;
