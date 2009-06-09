@@ -30,8 +30,7 @@ import cspfj.problem.Variable;
 public interface Filter {
 
     /**
-     * @param level Le niveau en cours
-     * @return False ssi un domaine a �t� vid�
+     * @return false iff an inconsistency has been detected
      */
     boolean reduceAll() throws InterruptedException ;
     
