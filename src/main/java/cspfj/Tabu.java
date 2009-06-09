@@ -30,7 +30,7 @@ import cspfj.util.TieManager;
 
 public final class Tabu extends AbstractLocalSolver {
 
-    private final static Logger logger = Logger.getLogger("cspfj.Tabu");
+    private final static Logger LOGGER = Logger.getLogger(Tabu.class.getName());
 
     private final TabuManager tabuManager;
 
@@ -46,7 +46,7 @@ public final class Tabu extends AbstractLocalSolver {
             boolean max) {
         super(prob, resultHandler, max);
         tabuManager = new TabuManager(prob, tabuSize < 0 ? 30 : tabuSize);
-        tieManager = new TieManager(getRandom());
+        tieManager = new TieManager(RANDOM);
     }
 
     private int bestWalk(final int aspiration) {
@@ -56,7 +56,7 @@ public final class Tabu extends AbstractLocalSolver {
 
         // int bestImp = tieManager.getBestEvaluation();
         final int nbIt = getNbBacktracks();
-        for (LSVariable vcm : lsVariables.values()) {
+        for (LSVariable vcm : lsVariablesList) {
 
             // if (!vcm.isCritic()) {
             // continue;
@@ -70,7 +70,9 @@ public final class Tabu extends AbstractLocalSolver {
 
             final int vId = variable.getId();
             for (int i = variable.getFirst(); i >= 0; i = variable.getNext(i)) {
-                if ((!tabuManager.isTabu(vId, i, nbIt) || vcm.getImprovment(i) < -aspiration)
+                if (vcm.getAssignedIndex() != i
+                        && (!tabuManager.isTabu(vId, i, nbIt) || vcm
+                                .getImprovment(i) < -aspiration)
                         && tieManager.newValue(i, vcm.getImprovment(i))) {
                     bestVariable = vcm;
                 }
@@ -89,7 +91,7 @@ public final class Tabu extends AbstractLocalSolver {
                 .getAssignedIndex(), getNbBacktracks());
 
         // if (FINER) {
-        logger.finer(bestVariable + " <- " + bestIndex);
+        LOGGER.finer(bestVariable + " <- " + bestIndex);
         // }
         bestVariable.reAssign(bestIndex);
 
@@ -99,14 +101,14 @@ public final class Tabu extends AbstractLocalSolver {
     public void minConflicts() throws MaxBacktracksExceededException,
             IOException {
 
-        //final Problem problem = this.problem;
+        // final Problem problem = this.problem;
         // final float randomWalk = this.rWProba;
 
         init();
         tabuManager.clean();
         int nbConflicts = conflicts();
 
-        logger.fine("Searching...");
+        LOGGER.fine("Searching...");
 
         while (nbConflicts > 0) {
             if (nbConflicts < bestEver) {
@@ -115,12 +117,11 @@ public final class Tabu extends AbstractLocalSolver {
             }
 
             // if (FINER) {
-            logger.finer(nbConflicts + " conflicts " + "(real = "
-                    + realConflicts() + ", " + getNbBacktracks() + "/"
+            LOGGER.finer(nbConflicts + " conflicts, " + getNbBacktracks() + "/"
                     + getMaxBacktracks() + ")");
             // }
 
-            assert realConflicts() <= nbConflicts;
+           // assert realConflicts() <= nbConflicts;
 
             // if (random.nextFloat() < randomWalk) {
             // nbConflicts += randomWalk();
@@ -129,15 +130,16 @@ public final class Tabu extends AbstractLocalSolver {
             // }
 
             assert nbConflicts == conflicts() : nbConflicts + "/="
-                    + conflicts() + " (real = " + realConflicts() + ")";
+                    + conflicts();
             incrementNbAssignments();
             checkBacktracks();
 
         }
 
         solution(0);
-        assert realConflicts() == 0 : getSolution() + " -> " + realConflicts()
-                + " conflicts ! (" + conflicts() + " wc)";
+        // assert realConflicts() == 0 : getSolution() + " -> " +
+        // realConflicts()
+        // + " conflicts ! (" + conflicts() + " wc)";
 
     }
 

@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import cspfj.constraint.extension.TupleManager;
 import cspfj.problem.Variable;
@@ -32,12 +31,9 @@ import cspfj.util.BitVector;
 public abstract class AbstractConstraint implements Cloneable, Constraint {
     private static int cId = 0;
 
-    protected static long checks = 0;
+    private static long checks = 0;
 
     private static long nbPresenceChecks = 0;
-
-    private static final Logger logger = Logger
-            .getLogger("cspfj.constraints.Constraint");
 
     public static final long getPresenceChecks() {
         return nbPresenceChecks;
@@ -60,12 +56,6 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
     private final int id;
 
     private final int arity;
-
-    protected long[][] nbInitConflicts;
-
-    protected long[] nbMaxConflicts;
-
-    private final long initSize;
 
     private boolean active;
 
@@ -94,8 +84,6 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
         tuple = new int[arity];
 
         tupleManager = new TupleManager(this, tuple);
-
-        initSize = currentSize();
 
         active = false;
 
@@ -140,51 +128,6 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
     @Override
     public void setWeight(final int weight) {
         this.weight = weight;
-    }
-
-    public void initNbSupports() throws InterruptedException {
-        logger.fine("Counting " + this + " supports");
-
-        final long[][] nbInitConflicts = new long[arity][];
-        for (int i = arity; --i >= 0;) {
-            nbInitConflicts[i] = new long[getScope()[i].getDomain().maxSize()];
-        }
-        final long[] nbMaxConflicts = new long[arity];
-
-        if (currentSize() < 0) {
-            return;
-        }
-
-        Arrays.fill(nbMaxConflicts, 0);
-        for (int p = arity; --p >= 0;) {
-            Arrays.fill(nbInitConflicts[p], 0);
-        }
-
-        tupleManager.setFirstTuple();
-        do {
-            if (Thread.interrupted()) {
-                logger.info("Interrupted");
-                throw new InterruptedException();
-            }
-            if (!chk()) {
-                for (int p = arity; --p >= 0;) {
-                    nbInitConflicts[p][tuple[p]]++;
-                }
-            }
-        } while (tupleManager.setNextTuple());
-        for (int p = arity; --p >= 0;) {
-            final Variable variable = scope[p];
-            long max = 0;
-            final long[] hereConflicts = nbInitConflicts[p];
-            for (int i = variable.getFirst(); i != -1; i = variable.getNext(i)) {
-                if (max < hereConflicts[i]) {
-                    max = hereConflicts[i];
-                }
-            }
-            nbMaxConflicts[p] = max;
-        }
-        this.nbInitConflicts = nbInitConflicts;
-        this.nbMaxConflicts = nbMaxConflicts;
     }
 
     public int getValue(final int position) {
@@ -252,25 +195,6 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
         return check();
     }
 
-    private final long getOtherSize(final int position) {
-        long size = 1;
-        for (int i = arity; --i >= 0;) {
-            if (i != position) {
-                final int dSize = scope[i].getDomainSize();
-                if (size > Long.MAX_VALUE / dSize) {
-                    return -1;
-                }
-                size *= dSize;
-            }
-        }
-        return size;
-    }
-
-    public boolean supportCondition(final int position) {
-        return nbMaxConflicts != null
-                && getOtherSize(position) > nbMaxConflicts[position];
-    }
-
     protected boolean controlTuplePresence(final int[] tuple, final int position) {
         nbPresenceChecks++;
         final Variable[] involvedVariables = this.scope;
@@ -283,32 +207,6 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
         return true;
     }
 
-    public final long getNbSupports(final Variable variable, final int index) {
-        return getNbSupports(getPosition(variable), index);
-    }
-
-    private long getNbSupports(final int position, final int index) {
-        if (nbInitConflicts == null) {
-            return -1;
-        }
-        return (initSize / scope[position].getDomain().maxSize())
-                - nbInitConflicts[position][index];
-    }
-
-    public final long getNbInitConflicts(final int position, final int index) {
-        if (nbInitConflicts == null) {
-            return -1;
-        }
-        return nbInitConflicts[position][index];
-    }
-
-    public final long getNbMaxConflicts(final int position) {
-        if (nbMaxConflicts == null) {
-            return -1;
-        }
-        return nbMaxConflicts[position];
-    }
-
     public final boolean isBound(Variable variable) {
         for (Variable v : scope) {
             if (v != variable && v.getDomainSize() > 1) {
@@ -317,17 +215,18 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
         }
         return false;
     }
-//
-//    public final boolean check(int[] tuple) {
-//        System.arraycopy(tuple, 0, this.tuple, 0, arity);
-//        return chk();
-//    }
-//
-//    public final boolean checkFirstWith(final int variablePosition,
-//            final int index) {
-//        tupleManager.setFirstTuple(variablePosition, index);
-//        return chk();
-//    }
+
+    //
+    // public final boolean check(int[] tuple) {
+    // System.arraycopy(tuple, 0, this.tuple, 0, arity);
+    // return chk();
+    // }
+    //
+    // public final boolean checkFirstWith(final int variablePosition,
+    // final int index) {
+    // tupleManager.setFirstTuple(variablePosition, index);
+    // return chk();
+    // }
 
     public final int getArity() {
         return arity;
@@ -382,21 +281,6 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
         return constraint;
     }
 
-    public long getInitSize() {
-        return initSize;
-    }
-
-    protected final long currentSize() {
-        long size = 1;
-        for (Variable v : scope) {
-            if (size > Integer.MAX_VALUE / v.getDomainSize()) {
-                return -1;
-            }
-            size *= v.getDomainSize();
-        }
-        return size;
-    }
-
     public String getName() {
         return name;
     }
@@ -417,14 +301,4 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
         return id;
     }
 
-    public void addConflict(int[] tuple) {
-        if (nbInitConflicts == null) {
-            return;
-        }
-        for (int p = arity; --p >= 0;) {
-            if (nbInitConflicts[p][tuple[p]]++ == nbMaxConflicts[p]) {
-                nbMaxConflicts[p]++;
-            }
-        }
-    }
 }

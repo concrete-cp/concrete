@@ -27,8 +27,7 @@ public abstract class AbstractPVRConstraint extends AbstractConstraint {
     public boolean revise(final RevisionHandler revisator) {
         for (int i = getArity(); --i >= 0;) {
             final Variable variable = getVariable(i);
-            if (!variable.isAssigned() && !supportCondition(i)
-                    && !skipRevision(i) && revise(i)) {
+            if (!variable.isAssigned() && !skipRevision(i) && revise(i)) {
                 if (variable.getDomainSize() <= 0) {
                     return false;
                 }
@@ -39,9 +38,9 @@ public abstract class AbstractPVRConstraint extends AbstractConstraint {
     }
 
     private boolean skipRevision(final int variablePosition) {
-//        if (true)
-//            return false;
-		
+        // if (true)
+        // return false;
+
         for (int y = getArity(); --y >= 0;) {
             if (y != variablePosition && getRemovals(y)) {
                 return false;

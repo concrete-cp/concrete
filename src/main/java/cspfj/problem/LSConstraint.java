@@ -47,4 +47,8 @@ public class LSConstraint {
     public LSVariable[] getScope() {
         return scope;
     }
+
+    public String toString() {
+        return "ls-" + constraint.toString();
+    }
 }

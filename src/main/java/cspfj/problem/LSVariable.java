@@ -53,6 +53,7 @@ public final class LSVariable {
         check = new boolean[constraints.length][variable.getDomain().maxSize()];
         // criticConstraints = new boolean[constraints.length];
         assignedIndex = -1;
+        currentConflicts = -1;
     }
 
     public void setLSConstraints(Map<Constraint, LSConstraint> lsConstraints) {
@@ -75,6 +76,7 @@ public final class LSVariable {
     }
 
     public int getImprovment(final int index) {
+        assert currentConflicts >= 0;
         return nbConflicts[index] - currentConflicts;
     }
 
@@ -96,42 +98,37 @@ public final class LSVariable {
     }
 
     public void assignBestInitialIndex() {
-        if (variable.isAssigned()) {
-            bestIndex = assignedIndex;
-        } else {
-            final TieManager tieManager = this.tieManager;
-            final LSConstraint[] constraints = this.constraints;
 
-            tieManager.clear();
+        final TieManager tieManager = this.tieManager;
+        final LSConstraint[] constraints = this.constraints;
 
-            final Variable variable = this.variable;
+        tieManager.clear();
 
-            for (int i = variable.getFirst(); i >= 0; i = variable.getNext(i)) {
-                assignedIndex = i;
+        final Variable variable = this.variable;
 
-                int indexConflicts = 0;
+        for (int i = variable.getFirst(); i >= 0; i = variable.getNext(i)) {
+            assignedIndex = i;
 
-                for (int c = constraints.length; --c >= 0;) {
-                    final LSConstraint constraint = constraints[c];
+            int indexConflicts = 0;
 
-                    if (!skipCount(constraint) && !constraint.check()) {
-                        // logger.warning("No tuple found");
-                        indexConflicts++;// = solver.getWeight(constraint);
-                    }
+            for (int c = constraints.length; --c >= 0;) {
+                final LSConstraint constraint = constraints[c];
+
+                if (!skipCount(constraint) && !constraint.check()) {
+                    // logger.warning("No tuple found");
+                    indexConflicts++;// = solver.getWeight(constraint);
                 }
-
-                tieManager.newValue(i, indexConflicts);
-
             }
 
-            // variable.resetAssign();
+            tieManager.newValue(i, indexConflicts);
 
-            bestIndex = assignedIndex = tieManager.getBestValue();
-
-            // variable.firstAssign(bestIndex);
         }
-        currentConflicts = nbConflicts[bestIndex];
 
+        // variable.resetAssign();
+
+        bestIndex = assignedIndex = tieManager.getBestValue();
+
+        // variable.firstAssign(bestIndex);
     }
 
     private boolean skipCount(LSConstraint constraint) {
@@ -149,13 +146,13 @@ public final class LSVariable {
         Arrays.fill(nbConflicts, 0);
         final LSConstraint[] constraints = this.constraints;
         final Variable variable = this.variable;
-        final int domain = variable.getDomainSize();
 
         for (int c = constraints.length; --c >= 0;) {
             final boolean[] check = this.check[c];
             final LSConstraint constraint = constraints[c];
             final int position = constraint.getPosition(variable);
-            for (int i = domain; --i >= 0;) {
+            for (int i = variable.getFirst(); i >= 0; i = variable.getNext(i)) {
+
                 // if (variable.getRemovedLevel(i) >= 0) {
                 // continue;
                 // }
@@ -225,7 +222,7 @@ public final class LSVariable {
                 } else {
                     nbConflicts[i]++;// = solver.getWeight(c);
                 }
-                this.check[constraintPos][i] ^= true;
+                this.check[constraintPos][i] = check;
             }
 
             tieManager.newValue(i, nbConflicts[i]);

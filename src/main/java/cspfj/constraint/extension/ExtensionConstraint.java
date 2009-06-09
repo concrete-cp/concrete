@@ -4,5 +4,5 @@ import cspfj.constraint.DynamicConstraint;
 
 
 public interface ExtensionConstraint extends DynamicConstraint {
-	MatrixManager getMatrix();
+	MatrixManager getMatrixManager();
 }

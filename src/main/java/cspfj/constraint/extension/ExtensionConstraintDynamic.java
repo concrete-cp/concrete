@@ -19,10 +19,8 @@
 
 package cspfj.constraint.extension;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.logging.Logger;
 
 import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.extension.MatrixManagerDynamic.LLIterator;
@@ -38,8 +36,8 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 
     private final BitVector[] toFind;
 
-    private final static Logger logger = Logger
-            .getLogger(ExtensionConstraintDynamic.class.getSimpleName());
+//    private final static Logger logger = Logger
+//            .getLogger(ExtensionConstraintDynamic.class.getSimpleName());
 
     // public static boolean quick = false;
 
@@ -207,51 +205,6 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
         return constraint;
     }
 
-    public void initNbSupports() throws InterruptedException {
-        // logger.fine("Counting " + this + " supports");
-
-        final long[][] nbInitConflicts = new long[getArity()][];
-        for (int i = getArity(); --i >= 0;) {
-            nbInitConflicts[i] = new long[getScope()[i].getDomain().maxSize()];
-        }
-        final long[] nbMaxConflicts = new long[getArity()];
-
-        final long size = currentSize();
-        if (size < 0) {
-            return;
-        }
-
-        Arrays.fill(nbMaxConflicts, 0);
-        for (int p = getArity(); --p >= 0;) {
-            Arrays.fill(nbInitConflicts[p], size
-                    / getVariable(p).getDomainSize());
-        }
-
-        for (int[] tuple : dynamic) {
-            if (Thread.interrupted()) {
-                logger.fine("Interrupted");
-                throw new InterruptedException();
-            }
-            for (int p = getArity(); --p >= 0;) {
-                nbInitConflicts[p][tuple[p]]--;
-            }
-        }
-
-        for (int p = getArity(); --p >= 0;) {
-            final Variable variable = getVariable(p);
-            long max = 0;
-            final long[] hereConflicts = nbInitConflicts[p];
-            for (int i = variable.getFirst(); i != -1; i = variable.getNext(i)) {
-                if (max < hereConflicts[i]) {
-                    max = hereConflicts[i];
-                }
-            }
-            nbMaxConflicts[p] = max;
-        }
-        this.nbInitConflicts = nbInitConflicts;
-        this.nbMaxConflicts = nbMaxConflicts;
-    }
-
     @Override
     public boolean check() {
         return dynamic.check();
@@ -260,7 +213,7 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
     @Override
     public boolean removeTuple(int[] tuple) {
         if (dynamic.removeTuple(tuple)) {
-            addConflict(tuple);
+//            addConflict(tuple);
             return true;
         }
         return false;
@@ -293,7 +246,7 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
     }
 
     @Override
-    public MatrixManager getMatrix() {
+    public MatrixManager getMatrixManager() {
         return dynamic;
     }
 

@@ -24,6 +24,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidParameterException;
 import java.util.logging.Logger;
 
+import cspfj.constraint.Constraint;
+import cspfj.constraint.extension.ExtensionConstraint;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.AC3;
 import cspfj.filter.Filter;
@@ -180,6 +182,12 @@ public final class MGACIter extends AbstractSolver {
         // Logger.getLogger("").getHandlers()[0].setLevel(Level.WARNING);
         System.gc();
         chronometer.startChrono();
+
+        for (Constraint c : problem.getConstraints()) {
+            if (c instanceof ExtensionConstraint) {
+                ((ExtensionConstraint) c).getMatrixManager().countConflicts();
+            }
+        }
 
         final Filter filter = getFilter();
 

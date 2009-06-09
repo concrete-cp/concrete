@@ -32,23 +32,19 @@ import cspfj.problem.Variable;
 
 public class ResultHandler {
 
-    protected Solver solver;
+    public final static String TOTAL_LOAD = "total-load";
+    public final static String TOTAL_SOLVE = "total-solve";
+    public final static String TOTAL_NODES = "total-nodes";
+    public final static String SAT = "sat";
+    public final static String UNSAT = "unsat";
+    public final static String UNKNOWN = "unknown";
 
-    protected long totalLoad = 0;
+    private Solver solver;
 
-    protected float totalSolve = 0;
+    private final Map<String, Object> statistics;
+    private final Map<String, Object> globalStatistics;
 
-    protected int sat = 0;
-
-    protected int unsat = 0;
-
-    protected int unknown = 0;
-
-    protected int totalNodes = 0;
-
-    protected final Map<String, Object> statistics;
-
-    private static final Logger logger = Logger
+    private static final Logger LOGGER = Logger
             .getLogger("cspfj.AbstractResultWriter");
 
     private int bestConflicts;
@@ -61,22 +57,32 @@ public class ResultHandler {
 
     public ResultHandler(final boolean receiveSolutions) {
         this.statistics = new TreeMap<String, Object>();
+        this.globalStatistics = new TreeMap<String, Object>();
         this.receiveSolutions = receiveSolutions;
+        globalStatistics.put(TOTAL_LOAD, Long.valueOf(0));
+        globalStatistics.put(TOTAL_SOLVE, Float.valueOf(0));
+        globalStatistics.put(TOTAL_NODES, Long.valueOf(0));
+        globalStatistics.put(SAT, 0);
+        globalStatistics.put(UNSAT, 0);
+        globalStatistics.put(UNKNOWN, 0);
+
     }
 
     public void problem(final String name) throws IOException {
-        logger.info("loading : " + name);
+        LOGGER.info("loading : " + name);
         statistics.clear();
     }
 
     public void load(final Solver solver, final long load) throws IOException {
         this.solver = solver;
 
-        totalLoad += load;
+        globalStatistics.put(TOTAL_LOAD, (Long) globalStatistics
+                .get(TOTAL_LOAD)
+                + load);
 
-        logger.info("loaded in " + (load / 1.0e9F) + " s");
+        LOGGER.info("loaded in " + (load / 1.0e9F) + " s");
 
-        logger.info(constraintStats(solver.getProblem().getConstraints()));
+        LOGGER.info(constraintStats(solver.getProblem().getConstraints()));
 
         bestConflicts = Integer.MAX_VALUE;
     }
@@ -114,7 +120,7 @@ public class ResultHandler {
         }
         if (nbConflicts < bestConflicts) {
             bestConflicts = nbConflicts;
-            logger.info(solution.toString() + "(" + nbConflicts + ")");
+            LOGGER.info(solution.toString() + "(" + nbConflicts + ")");
             return true;
         }
         return false;
@@ -126,15 +132,19 @@ public class ResultHandler {
         increment(result);
 
         if (solver != null) {
-            totalSolve += solver.getUserTime();
-            totalNodes += solver.getNbAssignments();
+            globalStatistics.put(TOTAL_SOLVE, (Float) globalStatistics
+                    .get(TOTAL_SOLVE)
+                    + solver.getUserTime());
+            globalStatistics.put(TOTAL_NODES, (Long) globalStatistics
+                    .get(TOTAL_NODES)
+                    + solver.getNbAssignments());
         }
         if (thrown != null) {
             final StringBuilder stb = new StringBuilder(thrown.toString());
             for (StackTraceElement e : thrown.getStackTrace()) {
                 stb.append('\n').append(e);
             }
-            logger.warning(stb.toString());
+            LOGGER.warning(stb.toString());
         }
 
         // solver=null;
@@ -150,55 +160,56 @@ public class ResultHandler {
     }
 
     public void close() throws IOException {
-        logger.info("Total : " + (totalLoad / 1.0e9F) + " s loading and "
-                + totalSolve + " s solving");
-        logger.info("SAT : " + sat + ", UNSAT : " + unsat + ", UNKNOWN : "
-                + unknown);
+        LOGGER.info("Total : "
+                + ((Long) globalStatistics.get(TOTAL_LOAD) / 1.0e9F)
+                + " s loading and " + globalStatistics.get(TOTAL_SOLVE)
+                + " s solving");
+        LOGGER.info("SAT : " + globalStatistics.get(SAT) + ", UNSAT : "
+                + globalStatistics.get(UNSAT) + ", UNKNOWN : "
+                + globalStatistics.get(UNKNOWN));
     }
 
-    private void increment(final Result result) {
+    private final void increment(final Result result) {
         switch (result) {
         case SAT:
-            sat++;
+            globalStatistics.put(SAT, (Integer) globalStatistics.get(SAT) + 1);
             break;
 
         case UNSAT:
-            unsat++;
+            globalStatistics.put(UNSAT,
+                    (Integer) globalStatistics.get(UNSAT) + 1);
             break;
 
         default:
-            unknown++;
+            globalStatistics.put(UNKNOWN, (Integer) globalStatistics
+                    .get(UNKNOWN) + 1);
         }
     }
 
-    public void allStatistics(final Map<String, Object> statistics) {
-        logger.info(statistics.toString());
+    public final void allStatistics(final Map<String, Object> statistics) {
+        LOGGER.info(statistics.toString());
         this.statistics.putAll(statistics);
     }
 
-    public void statistics(final String name, final Object value) {
-        logger.info(name + " : " + value);
+    public final void statistics(final String name, final Object value) {
+        LOGGER.info(name + " : " + value);
         statistics.put(name, value);
     }
 
-    public Object getStatistic(final String name) {
+    public final Object getStatistic(final String name) {
         return statistics.get(name);
+    }
+
+    public final Map<String, Object> getStatistics() {
+        return statistics;
+    }
+
+    public final Object getGlobalStatistic(final String name) {
+        return globalStatistics.get(name);
     }
 
     public enum Result {
         SAT, UNSAT, UNKNOWN
-    }
-
-    public final int getSat() {
-        return sat;
-    }
-
-    public final int getUnknown() {
-        return unknown;
-    }
-
-    public final int getUnsat() {
-        return unsat;
     }
 
     public final int getBestConflicts() {
@@ -209,4 +220,7 @@ public class ResultHandler {
         return receiveSolutions;
     }
 
+    public final Solver getSolver() {
+        return solver;
+    }
 }

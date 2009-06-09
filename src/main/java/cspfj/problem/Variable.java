@@ -291,17 +291,17 @@ public final class Variable implements Cloneable {
         return id;
     }
 
-    public long getNbSupports(final int index) {
-        long nbSupports = 0;
-        for (Constraint c : constraints) {
-            final long nbSup = c.getNbSupports(this, index);
-            if (nbSup <= 0) {
-                return -1;
-            }
-            nbSupports += nbSup;
-        }
-        return nbSupports;
-    }
+//    public long getNbSupports(final int index) {
+//        long nbSupports = 0;
+//        for (Constraint c : constraints) {
+//            final long nbSup = c.getNbSupports(this, index);
+//            if (nbSup <= 0) {
+//                return -1;
+//            }
+//            nbSupports += nbSup;
+//        }
+//        return nbSupports;
+//    }
 
     public Constraint[] getInvolvingConstraints() {
         return constraints;

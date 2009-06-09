@@ -25,89 +25,85 @@ import cspfj.problem.Variable;
 
 public final class DiffConstraint extends AbstractPVRConstraint {
 
-	final private int constant;
+    final private int constant;
 
-	final private boolean ordered;
+    final private boolean ordered;
 
-	public DiffConstraint(final Variable[] scope, final int constant) {
-		this(scope, constant, false);
-	}
+    public DiffConstraint(final Variable[] scope, final int constant) {
+        this(scope, constant, false);
+    }
 
-	public DiffConstraint(final Variable[] scope, final int constant,
-			final boolean ordered) {
-		super(scope);
-		this.constant = constant;
-		this.ordered = ordered;
-	}
+    public DiffConstraint(final Variable[] scope, final int constant,
+            final boolean ordered) {
+        super(scope);
+        this.constant = constant;
+        this.ordered = ordered;
+    }
 
-	@Override
-	public boolean check() {
-		return getValue(1) - getValue(0) >= constant;
-	}
+    @Override
+    public boolean check() {
+        return getValue(1) - getValue(0) >= constant;
+    }
 
-	public boolean revise(final int position) {
-		final Variable v0 = getVariable(0);
-		final Variable v1 = getVariable(1);
+    public boolean revise(final int position) {
+        final Variable v0 = getVariable(0);
+        final Variable v1 = getVariable(1);
 
-		final Domain d0 = v0.getDomain();
-		final Domain d1 = v1.getDomain();
+        final Domain d0 = v0.getDomain();
+        final Domain d1 = v1.getDomain();
 
-		boolean deleted = false;
+        boolean deleted = false;
 
-		if (position == 0) {
-			int v1max = d1.value(d1.last());
-			if (!ordered) {
-				for (int i = v1.getPrev(v1.getLast()); i != -1; i = v1
-						.getPrev(i)) {
-					if (d1.value(i) > v1max) {
-						v1max = d1.value(i);
-					}
-				}
-			}
+        if (position == 0) {
+            int v1max = d1.value(d1.last());
+            if (!ordered) {
+                for (int i = v1.getPrev(v1.getLast()); i != -1; i = v1
+                        .getPrev(i)) {
+                    if (d1.value(i) > v1max) {
+                        v1max = d1.value(i);
+                    }
+                }
+            }
 
-			v1max -= constant;
+            v1max -= constant;
 
-			for (int i = v0.getLast(); i != -1; i = v0.getPrev(i)) {
-				if (d0.value(i) > v1max) {
-					v0.remove(i);
-					deleted = true;
-				} else if (ordered) {
-					break;
-				}
-			}
-		} else {
-			int v0min = d0.value(d0.first());
-			if (!ordered) {
-				for (int i = v0.getNext(v0.getFirst()); i != -1; i = v0
-						.getNext(i)) {
-					if (d0.value(i) < v0min) {
-						v0min = d0.value(i);
-					}
-				}
-			}
+            for (int i = v0.getLast(); i != -1; i = v0.getPrev(i)) {
+                if (d0.value(i) > v1max) {
+                    v0.remove(i);
+                    deleted = true;
+                } else if (ordered) {
+                    break;
+                }
+            }
+        } else {
+            int v0min = d0.value(d0.first());
+            if (!ordered) {
+                for (int i = v0.getNext(v0.getFirst()); i != -1; i = v0
+                        .getNext(i)) {
+                    if (d0.value(i) < v0min) {
+                        v0min = d0.value(i);
+                    }
+                }
+            }
 
-			v0min += constant;
+            v0min += constant;
 
-			for (int i = v1.getFirst(); i != -1; i = v1.getNext(i)) {
-				if (d1.value(i) < v0min) {
-					v1.remove(i);
-					deleted = true;
-				} else if (ordered) {
-					break;
-				}
-			}
-		}
-		return deleted;
-	}
+            for (int i = v1.getFirst(); i != -1; i = v1.getNext(i)) {
+                if (d1.value(i) < v0min) {
+                    v1.remove(i);
+                    deleted = true;
+                } else if (ordered) {
+                    break;
+                }
+            }
+        }
+        return deleted;
+    }
 
-	@Override
-	public void initNbSupports() throws InterruptedException {
-
-	}
-	// public String toString() {
-	// return "C" + getId() + " (" + getInvolvedVariables()[0] + ":"
-	// + duration0 + ", " + getInvolvedVariables()[1] + ":"
-	// + duration1 + ")";
-	// }
+    // public String toString() {
+    // return "C" + getId() + " (" + getInvolvedVariables()[0] + ":"
+    // + duration0 + ", " + getInvolvedVariables()[1] + ":"
+    // + duration1 + ")";
+    // }
 
 }

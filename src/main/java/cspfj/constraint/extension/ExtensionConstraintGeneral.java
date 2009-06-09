@@ -20,7 +20,6 @@
 package cspfj.constraint.extension;
 
 import java.util.Arrays;
-import java.util.Collection;
 
 import cspfj.problem.Variable;
 
@@ -29,100 +28,14 @@ public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
     // private final static Logger logger = Logger
     // .getLogger(ExtensionConstraintGeneral.class.getSimpleName());
 
-    public ExtensionConstraintGeneral(final Matrix matrix,
-            final boolean shared, final Variable... scope) {
-        this(matrix, shared, false, scope);
-    }
-
-    public ExtensionConstraintGeneral(final String name, final Matrix matrix,
-            final boolean shared, final Variable... scope) {
+    public ExtensionConstraintGeneral(String name, Matrix matrix,
+            boolean shared, Variable... scope) {
         super(name, new MatrixManager(scope, matrix, shared), scope);
     }
 
     public ExtensionConstraintGeneral(Matrix matrix, boolean shared,
-            boolean emptyMatrix, Variable... scope) {
+            Variable... scope) {
         super(new MatrixManager(scope, matrix, shared), scope);
-        if (emptyMatrix) {
-            nbInitConflicts = new long[getArity()][];
-            nbMaxConflicts = new long[getArity()];
-            for (int i = getArity(); --i >= 0;) {
-                nbInitConflicts[i] = new long[scope[i].getDomain().maxSize()];
-            }
-        }
-    }
-
-    public ExtensionConstraintGeneral deepCopy(
-            final Collection<Variable> variables)
-            throws CloneNotSupportedException {
-        final ExtensionConstraintGeneral constraint = (ExtensionConstraintGeneral) super
-                .deepCopy(variables);
-        constraint.matrix = matrix.deepCopy(constraint.getScope(),
-                constraint.tuple);
-        return constraint;
-    }
-
-    @Override
-    public void initNbSupports() throws InterruptedException {
-        if (matrix.getMatrix() instanceof TupleSet) {
-            final long[][] nbInitConflicts = new long[getArity()][];
-            for (int i = getArity(); --i >= 0;) {
-                nbInitConflicts[i] = new long[getScope()[i].getDomain()
-                        .maxSize()];
-            }
-            final long[] nbMaxConflicts = new long[getArity()];
-
-            final long size = currentSize();
-            if (size < 0) {
-                return;
-            }
-
-            final TupleSet matrix = (TupleSet) this.matrix.getMatrix();
-            final boolean initialContent = matrix.getInitialContent();
-
-            Arrays.fill(nbMaxConflicts, 0);
-            if (initialContent == false) {
-                for (int p = getArity(); --p >= 0;) {
-                    Arrays.fill(nbInitConflicts[p], size
-                            / getVariable(p).getDomainSize());
-                }
-            } else {
-                for (int p = getArity(); --p >= 0;) {
-                    Arrays.fill(nbInitConflicts[p], 0);
-                }
-            }
-
-            for (int[] tuple : matrix) {
-                if (Thread.interrupted()) {
-                    throw new InterruptedException();
-                }
-                if (initialContent == false) {
-                    for (int p = getArity(); --p >= 0;) {
-                        nbInitConflicts[p][tuple[p]]--;
-                    }
-                } else {
-                    for (int p = getArity(); --p >= 0;) {
-                        nbInitConflicts[p][tuple[p]]++;
-                    }
-                }
-            }
-
-            for (int p = getArity(); --p >= 0;) {
-                final Variable variable = getVariable(p);
-                long max = 0;
-                final long[] hereConflicts = nbInitConflicts[p];
-                for (int i = variable.getFirst(); i != -1; i = variable
-                        .getNext(i)) {
-                    if (max < hereConflicts[i]) {
-                        max = hereConflicts[i];
-                    }
-                }
-                nbMaxConflicts[p] = max;
-            }
-            this.nbInitConflicts = nbInitConflicts;
-            this.nbMaxConflicts = nbMaxConflicts;
-        } else {
-            super.initNbSupports();
-        }
     }
 
 }

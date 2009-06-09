@@ -25,7 +25,7 @@ import cspfj.util.TieManager;
 public abstract class AbstractLocalSolver extends AbstractSolver implements
         LocalSolver {
 
-    final private static Random random = new Random(0);
+    final public static Random RANDOM = new Random(0);
 
     final private static Logger logger = Logger
             .getLogger("cspfj.AbstractLocalSolver");
@@ -36,13 +36,14 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
 
     final private boolean max;
 
-    final protected Map<Variable, LSVariable> lsVariables;
+    // final protected Map<Variable, LSVariable> lsVariables;
+    final protected List<LSVariable> lsVariablesList;
     final protected Map<Constraint, LSConstraint> lsConstraints;
 
     private int maxTries = -1;
 
     public static void setSeed(final long seed) {
-        random.setSeed(seed);
+        RANDOM.setSeed(seed);
     }
 
     public void setMaxTries(final int tries) {
@@ -55,12 +56,15 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
 
         this.max = max;
 
-        tieManager = new TieManager(random);
+        tieManager = new TieManager(RANDOM);
 
-        lsVariables = new HashMap<Variable, LSVariable>(prob.getNbVariables());
-
+        final Map<Variable, LSVariable> lsVariables = new HashMap<Variable, LSVariable>(
+                prob.getNbVariables());
+        lsVariablesList = new ArrayList<LSVariable>(prob.getNbVariables());
         for (Variable v : prob.getVariables()) {
-            lsVariables.put(v, new LSVariable(v, tieManager));
+            final LSVariable lsv = new LSVariable(v, tieManager);
+            lsVariables.put(v, lsv);
+            lsVariablesList.add(lsv);
         }
 
         lsConstraints = new HashMap<Constraint, LSConstraint>(prob
@@ -69,28 +73,24 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
             lsConstraints.put(c, new LSConstraint(c, lsVariables));
         }
 
-        for (LSVariable v : lsVariables.values()) {
+        for (LSVariable v : lsVariablesList) {
             v.setLSConstraints(lsConstraints);
         }
 
         setMaxBacktracks(150000);
     }
 
-    public static Random getRandom() {
-        return random;
-    }
-
-    protected int realConflicts() {
-        int realConflicts = 0;
-
-        for (LSConstraint c : lsConstraints.values()) {
-            if (!c.check()) {
-                realConflicts++;
-            }
-        }
-
-        return realConflicts;
-    }
+//    protected int realConflicts() {
+//        int realConflicts = 0;
+//
+//        for (LSConstraint c : lsConstraints.values()) {
+//            if (!c.check()) {
+//                realConflicts++;
+//            }
+//        }
+//
+//        return realConflicts;
+//    }
 
     // protected double weightedConflicts() {
     // double weightedConflicts = 0;
@@ -124,13 +124,13 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
 
     protected void solution(final int nbConflicts) throws IOException {
         final Map<Variable, Integer> solution = new HashMap<Variable, Integer>();
-        for (LSVariable v : lsVariables.values()) {
+        for (LSVariable v : lsVariablesList) {
             solution.put(v.getVariable(), v.getVariable().getDomain().value(
                     v.getAssignedIndex()));
         }
         setSolution(solution);
         solution(solution, nbConflicts);
-        
+
     }
 
     private void init(final LSVariable variable) {
@@ -157,7 +157,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
         }
 
         final List<LSVariable> shuffle = new ArrayList<LSVariable>(neighbours);
-        Collections.shuffle(shuffle, random);
+        Collections.shuffle(shuffle, RANDOM);
 
         for (LSVariable wcm : shuffle) {
             init(wcm);
@@ -165,9 +165,9 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
     }
 
     protected void init() {
-        final List<LSVariable> shuffle = new ArrayList<LSVariable>(lsVariables
-                .values());
-        Collections.shuffle(shuffle, random);
+        final List<LSVariable> shuffle = new ArrayList<LSVariable>(
+                lsVariablesList);
+        Collections.shuffle(shuffle, RANDOM);
 
         for (LSVariable v : shuffle) {
             init(v);
@@ -236,7 +236,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
             // // / problem.getNbConstraints()));
             // }
 
-            for (LSVariable v : lsVariables.values()) {
+            for (LSVariable v : lsVariablesList) {
                 v.assign(-1);
             }
 

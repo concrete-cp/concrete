@@ -113,34 +113,34 @@ public final class Problem implements Cloneable {
         LOGGER.info("Setting Variables");
         problem.setVariables(generator.getVariables());
 
-        LOGGER.info("Counting supports (" + expCountSupports + ")");
-
-        Thread.interrupted();
-        final Timer waker = new Timer();
-        if (expCountSupports >= 0) {
-            waker.schedule(new Waker(Thread.currentThread()),
-                    expCountSupports * 1000);
-        }
-
-        final Constraint[] sorted = generator.getConstraints().toArray(
-                new Constraint[generator.getConstraints().size()]);
-
-        Arrays.sort(sorted, new Comparator<Constraint>() {
-            @Override
-            public int compare(Constraint o1, Constraint o2) {
-                return Double.compare(o1.getInitSize(), o2.getInitSize());
-            }
-        });
-
-        try {
-            for (Constraint c : sorted) {
-                c.initNbSupports();
-            }
-        } catch (InterruptedException e) {
-            // Continue...
-        } finally {
-            waker.cancel();
-        }
+        // LOGGER.info("Counting supports (" + expCountSupports + ")");
+        //
+        // Thread.interrupted();
+        // final Timer waker = new Timer();
+        // if (expCountSupports >= 0) {
+        // waker.schedule(new Waker(Thread.currentThread()),
+        // expCountSupports * 1000);
+        // }
+        //
+        // final Constraint[] sorted = generator.getConstraints().toArray(
+        // new Constraint[generator.getConstraints().size()]);
+        //
+        // Arrays.sort(sorted, new Comparator<Constraint>() {
+        // @Override
+        // public int compare(Constraint o1, Constraint o2) {
+        // return Double.compare(o1.getInitSize(), o2.getInitSize());
+        // }
+        // });
+        //
+        // try {
+        // for (Constraint c : sorted) {
+        // c.initNbSupports();
+        // }
+        // } catch (InterruptedException e) {
+        // // Continue...
+        // } finally {
+        // waker.cancel();
+        // }
 
         LOGGER.info("Setting Constraints");
         problem.setConstraints(generator.getConstraints());
@@ -407,8 +407,7 @@ public final class Problem implements Cloneable {
 
             final Matrix2D matrix = new Matrix2D(constraintScope[0].getDomain()
                     .maxSize(), constraintScope[1].getDomain().maxSize(), true);
-            return new ExtensionConstraint2D(constraintScope, matrix, false,
-                    true);
+            return new ExtensionConstraint2D(constraintScope, matrix, false);
 
         }
 
@@ -416,7 +415,7 @@ public final class Problem implements Cloneable {
 
             final Matrix matrix = new TupleSet(true);
 
-            return new ExtensionConstraintGeneral(matrix, false, true,
+            return new ExtensionConstraintGeneral(matrix, false,
                     constraintScope);
 
         }
