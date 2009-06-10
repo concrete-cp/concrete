@@ -4,7 +4,7 @@ import java.util.Map;
 
 import cspfj.constraint.Constraint;
 
-public class LSConstraint {
+public final class LSConstraint {
 
     private final Constraint constraint;
 

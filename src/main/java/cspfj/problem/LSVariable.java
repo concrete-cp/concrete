@@ -202,6 +202,9 @@ public final class LSVariable {
         final TieManager tieManager = this.tieManager;
         tieManager.clear();
         final int[] nbConflicts = this.nbConflicts;
+
+        assert c.getScope()[variablePos] == this;
+
         final Variable variable = this.variable;
 
         // final int position = constraint.getPosition(variable);
@@ -222,7 +225,7 @@ public final class LSVariable {
                 } else {
                     nbConflicts[i]++;// = solver.getWeight(c);
                 }
-                this.check[constraintPos][i] = check;
+                this.check[constraintPos][i] ^= true;
             }
 
             tieManager.newValue(i, nbConflicts[i]);

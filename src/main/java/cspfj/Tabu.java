@@ -85,7 +85,7 @@ public final class Tabu extends AbstractLocalSolver {
 
         final int bestIndex = tieManager.getBestValue();
 
-        final int bestImp = bestVariable.getImprovment(bestIndex);
+        final int bestImp = tieManager.getBestEvaluation();
 
         tabuManager.push(bestVariable.getVariable().getId(), bestVariable
                 .getAssignedIndex(), getNbBacktracks());
@@ -121,7 +121,7 @@ public final class Tabu extends AbstractLocalSolver {
                     + getMaxBacktracks() + ")");
             // }
 
-           // assert realConflicts() <= nbConflicts;
+            // assert realConflicts() <= nbConflicts;
 
             // if (random.nextFloat() < randomWalk) {
             // nbConflicts += randomWalk();
