@@ -3,10 +3,10 @@ package cspfj.problem;
 import java.util.Arrays;
 
 import cspfj.util.BitVector;
-import cspfj.util.LargeBitVector;
-import cspfj.util.SmallBitVector;
 
 public class BitVectorDomain implements Domain {
+
+    private final static int HISTORY_INCREMENT = 20;
 
     private BitVector bvDomain;
 
@@ -18,15 +18,15 @@ public class BitVectorDomain implements Domain {
     private int[] dsHistory;
 
     public BitVectorDomain(int[] domain) {
-        if (domain.length > 64) {
-            bvDomain = new LargeBitVector(domain.length, true);
-        } else {
-            bvDomain = new SmallBitVector(domain.length, true);
-        }
+        bvDomain = BitVector.factory(domain.length, true);
         this.domain = domain.clone();
         size = domain.length;
-        bvHistory = new BitVector[0];
-        dsHistory = new int[0];
+
+        bvHistory = new BitVector[HISTORY_INCREMENT];
+        for (int i = HISTORY_INCREMENT; --i >= 0;) {
+            bvHistory[i] = BitVector.factory(domain.length, true);
+        }
+        dsHistory = new int[HISTORY_INCREMENT];
     }
 
     @Override
@@ -135,12 +135,16 @@ public class BitVectorDomain implements Domain {
     public void setLevel(int level) {
         assert level > currentLevel;
         if (currentLevel >= bvHistory.length) {
-            bvHistory = Arrays.copyOf(bvHistory, currentLevel + 1);
-            dsHistory = Arrays.copyOf(dsHistory, currentLevel + 1);
-            bvHistory[currentLevel] = bvDomain.clone();
-        } else {
-            bvDomain.copyTo(bvHistory[currentLevel]);
+            bvHistory = Arrays.copyOf(bvHistory, currentLevel
+                    + HISTORY_INCREMENT);
+            dsHistory = Arrays.copyOf(dsHistory, currentLevel
+                    + HISTORY_INCREMENT);
+            for (int i = HISTORY_INCREMENT; --i >= 0;) {
+                bvHistory[currentLevel + i] = BitVector.factory(size, false);
+            }
         }
+        
+        bvDomain.copyTo(bvHistory[currentLevel]);
         dsHistory[currentLevel] = size;
         currentLevel = level;
     }

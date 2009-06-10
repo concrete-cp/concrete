@@ -2,7 +2,7 @@ package cspfj.problem;
 
 import cspfj.util.BitVector;
 
-public interface Domain {
+public interface Domain extends Cloneable {
     int first();
 
     int last();
@@ -29,8 +29,6 @@ public interface Domain {
 
     void remove(int index);
 
-    Domain clone();
-
     void setLevel(int level);
 
     void restoreLevel(int level);
@@ -38,4 +36,6 @@ public interface Domain {
     BitVector getAtLevel(int level);
 
     int[] allValues();
+
+    Domain clone();
 }

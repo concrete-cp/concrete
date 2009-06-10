@@ -46,7 +46,7 @@ public class MatrixManager implements Cloneable {
         this.tuple = tuple;
     }
 
-    public void countConflicts() {
+    private void countConflicts() {
         nbInitConflicts = nbConflicts();
         if (nbInitConflicts != null) {
             nbMaxConflicts = new long[arity];
@@ -153,8 +153,10 @@ public class MatrixManager implements Cloneable {
     }
 
     public boolean supportCondition(final int position) {
-        return nbMaxConflicts != null
-                && getOtherSize(position) > nbMaxConflicts[position];
+        if (nbMaxConflicts == null) {
+            countConflicts();
+        }
+        return getOtherSize(position) > nbMaxConflicts[position];
     }
 
     private final long getOtherSize(final int position) {
@@ -171,7 +173,7 @@ public class MatrixManager implements Cloneable {
         return size;
     }
 
-    public long[][] nbConflicts() {
+    private long[][] nbConflicts() {
         final long size = currentSize();
         if (size < 0) {
             return null;

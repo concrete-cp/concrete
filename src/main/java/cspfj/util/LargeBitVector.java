@@ -113,7 +113,6 @@ public final class LargeBitVector extends BitVector {
         return (1 + position) * SIZE - Long.numberOfLeadingZeros(word) - 1;
     }
 
-    
     @Override
     public BitVector xor(BitVector bv) {
         final LargeBitVector bitVector = new LargeBitVector(size, false);
@@ -126,7 +125,6 @@ public final class LargeBitVector extends BitVector {
         return bitVector;
     }
 
-    
     @Override
     public BitVector and(BitVector bv) {
         final LargeBitVector bitVector = new LargeBitVector(size, false);

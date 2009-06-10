@@ -184,7 +184,7 @@ public abstract class AbstractSolver implements Solver {
                 solution.put(v, v.getValue(v.getFirst()));
             }
 
-            resultHandler.solution(solution, problem.getNbConstraints(), false);
+            resultHandler.solution(solution, 0, false);
         }
     }
 

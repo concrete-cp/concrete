@@ -6,7 +6,6 @@
  */
 package cspfj.constraint.extension;
 
-import java.util.Arrays;
 import java.util.logging.Logger;
 
 import cspfj.constraint.AbstractAC3Constraint;

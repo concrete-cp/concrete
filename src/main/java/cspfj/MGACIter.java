@@ -25,10 +25,10 @@ import java.security.InvalidParameterException;
 import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
-import cspfj.constraint.extension.ExtensionConstraint;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.AC3;
 import cspfj.filter.Filter;
+import cspfj.filter.RevisionHandler;
 import cspfj.heuristic.CrossHeuristic;
 import cspfj.heuristic.Heuristic;
 import cspfj.heuristic.Lexico;
@@ -183,11 +183,22 @@ public final class MGACIter extends AbstractSolver {
         System.gc();
         chronometer.startChrono();
 
-        for (Constraint c : problem.getConstraints()) {
-            if (c instanceof ExtensionConstraint) {
-                ((ExtensionConstraint) c).getMatrixManager().countConflicts();
-            }
-        }
+        // for (Constraint c : problem.getConstraints()) {
+        // if (c instanceof ExtensionConstraint) {
+        // ((ExtensionConstraint) c).getMatrixManager().countConflicts();
+        // }
+        // }
+//        for (Constraint c : problem.getConstraints()) {
+//            if (c.getArity() == 1) {
+//                c.revise(new RevisionHandler() {
+//                    @Override
+//                    public void revised(Constraint constraint, Variable variable) {
+//                        // TODO Auto-generated method stub
+//                        
+//                    }
+//                });
+//            }
+//        }
 
         final Filter filter = getFilter();
 

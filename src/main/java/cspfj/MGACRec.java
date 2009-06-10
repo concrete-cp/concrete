@@ -163,11 +163,11 @@ public final class MGACRec extends AbstractSolver {
         System.gc();
         chronometer.startChrono();
         
-        for (Constraint c : problem.getConstraints()) {
-            if (c instanceof ExtensionConstraint) {
-                ((ExtensionConstraint) c).getMatrixManager().countConflicts();
-            }
-        }
+//        for (Constraint c : problem.getConstraints()) {
+//            if (c instanceof ExtensionConstraint) {
+//                ((ExtensionConstraint) c).getMatrixManager().countConflicts();
+//            }
+//        }
         final Filter filter = getFilter();
 
         try {

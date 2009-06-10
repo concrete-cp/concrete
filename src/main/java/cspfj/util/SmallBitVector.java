@@ -34,6 +34,9 @@ public class SmallBitVector extends BitVector {
     }
 
     public int nextSetBit(final int start) {
+        if (start >= Long.SIZE) {
+            return -1;
+        }
         final long next = word & (MASK << start);
         return next == 0 ? -1 : Long.numberOfTrailingZeros(next);
     }
@@ -83,7 +86,7 @@ public class SmallBitVector extends BitVector {
                 & (MASK >>> -size);
         return bitVector;
     }
-    
+
     public BitVector and(BitVector bv) {
         final SmallBitVector bitVector = new SmallBitVector(size, false);
         bitVector.word = (((SmallBitVector) bv).word & this.word)
@@ -110,4 +113,5 @@ public class SmallBitVector extends BitVector {
     public int cardinality() {
         return Long.bitCount(word);
     }
+    
 }

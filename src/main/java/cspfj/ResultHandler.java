@@ -82,8 +82,10 @@ public class ResultHandler {
 
         LOGGER.info("loaded in " + (load / 1.0e9F) + " s");
 
-        LOGGER.info(constraintStats(solver.getProblem().getConstraints()));
-
+        if (solver != null) {
+            LOGGER.info(constraintStats(solver.getProblem().getConstraints()));
+        }
+        
         bestConflicts = Integer.MAX_VALUE;
     }
 
