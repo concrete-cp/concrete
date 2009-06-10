@@ -140,7 +140,7 @@ public class BitVectorDomain implements Domain {
             dsHistory = Arrays.copyOf(dsHistory, currentLevel
                     + HISTORY_INCREMENT);
             for (int i = HISTORY_INCREMENT; --i >= 0;) {
-                bvHistory[currentLevel + i] = BitVector.factory(size, false);
+                bvHistory[currentLevel + i] = BitVector.factory(domain.length, false);
             }
         }
         
