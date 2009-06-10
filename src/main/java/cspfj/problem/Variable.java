@@ -26,39 +26,20 @@ import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
 import cspfj.util.BitVector;
 
-/**
- * @author scand1sk
- * 
- */
 public final class Variable implements Cloneable {
-    /**
-     * Contraintes impliquant la variable.
-     */
+
     private Constraint[] constraints;
 
     private DynamicConstraint[] dynamicConstraints;
 
-    /**
-     * Éléments supprimés du domaine (-1 : présent, n : élément supprimé au
-     * niveau n)
-     */
     // private int[] removed;
     private Domain domain;
 
-    /**
-     * Variable assignée ?
-     */
     // private int assignedIndex;
     private boolean assigned;
 
-    /**
-     * Pour générer l'ID.
-     */
     private static int nbV = 0;
 
-    /**
-     * ID de la variable.
-     */
     private final int id;
 
     private final String name;
@@ -75,9 +56,9 @@ public final class Variable implements Cloneable {
 
     /**
      * @param dom
-     *            Liste des éléments du domaine.
-     * @param p
-     *            Le problème lié.
+     *            Array representings the domain elements
+     * @param name
+     *            Name of the variable
      */
     public Variable(final int[] dom, String name) {
         this.domain = new BitVectorDomain(dom);
@@ -101,7 +82,7 @@ public final class Variable implements Cloneable {
     // }
 
     /**
-     * Réinitialise le générateur d'ID (pour charger un nouveau problème).
+     * Reinit ID generator (before loading a new problem).
      */
     public static void resetVId() {
         nbV = 0;
@@ -149,9 +130,6 @@ public final class Variable implements Cloneable {
         return domain.size();
     }
 
-    /**
-     * @return L'état (assignée ou non) de la variable
-     */
     public boolean isAssigned() {
         return assigned;
     }
@@ -179,10 +157,6 @@ public final class Variable implements Cloneable {
     // return true;
     // }
 
-    /**
-     * @param index
-     *            La valeur à assigner
-     */
     public void assign(final int index, final Problem problem) {
         assert !assigned;
         assert domain.present(index);
@@ -196,10 +170,6 @@ public final class Variable implements Cloneable {
         problem.decreaseFutureVariables();
     }
 
-    /**
-     * @param level
-     *            Le niveau en cours
-     */
     public void unassign(final Problem problem) {
         assert assigned;
         assigned = false;
@@ -208,12 +178,6 @@ public final class Variable implements Cloneable {
         // bitDomain.length);
     }
 
-    /**
-     * @param index
-     *            L'index à supprimer
-     * @param level
-     *            Le niveau en cours
-     */
     public void remove(final int index) {
         assert !assigned : "Trying to remove a value from an assigned variable";
         assert domain.present(index);
@@ -284,9 +248,6 @@ public final class Variable implements Cloneable {
     //
     // }
 
-    /**
-     * @return L'ID de la variable
-     */
     public int getId() {
         return id;
     }
