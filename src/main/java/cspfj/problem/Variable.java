@@ -82,7 +82,7 @@ public final class Variable implements Cloneable {
     // }
 
     /**
-     * Reinit ID generator (before loading a new problem).
+     * Reinit ID generator (before loading a new problem).
      */
     public static void resetVId() {
         nbV = 0;
@@ -204,11 +204,6 @@ public final class Variable implements Cloneable {
     // BitVector.set(savedLevels, saveTo);
     // }
 
-    // /**
-    // * @param level
-    // * Le niveau à restaurer
-    // * @return True si au moins une valeur a été restaurée
-    // */
     // public void restore(final int level) {
     // assert !assigned;
     //
