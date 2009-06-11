@@ -66,9 +66,8 @@ public class BitVectorDomain implements Domain {
 
     /**
      * @param value
-     *            La valeur dont on veut obtenir l'index
-     * @return L'index de la valeur donnée en paramètre
-     * @throws NotInDomainException
+     *            the value we seek the index for
+     * @return the index of the given value or -1 if it could not be found
      */
     public int index(final int value) {
         final int[] domain = this.domain;
@@ -83,8 +82,8 @@ public class BitVectorDomain implements Domain {
 
     /**
      * @param index
-     *            L'index à tester
-     * @return True si l'index est absent
+     *            index to test
+     * @return true iff index is present
      */
     @Override
     public boolean present(int index) {
@@ -140,10 +139,11 @@ public class BitVectorDomain implements Domain {
             dsHistory = Arrays.copyOf(dsHistory, currentLevel
                     + HISTORY_INCREMENT);
             for (int i = HISTORY_INCREMENT; --i >= 0;) {
-                bvHistory[currentLevel + i] = BitVector.factory(domain.length, false);
+                bvHistory[currentLevel + i] = BitVector.factory(domain.length,
+                        false);
             }
         }
-        
+
         bvDomain.copyTo(bvHistory[currentLevel]);
         dsHistory[currentLevel] = size;
         currentLevel = level;
