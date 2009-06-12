@@ -22,13 +22,11 @@ package cspfj.problem;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Timer;
 import java.util.TreeSet;
 import java.util.Map.Entry;
 import java.util.logging.Logger;
@@ -44,7 +42,6 @@ import cspfj.constraint.extension.TupleSet;
 import cspfj.constraint.semantic.RCConstraint;
 import cspfj.exception.FailedGenerationException;
 import cspfj.util.BitVector;
-import cspfj.util.Waker;
 
 public final class Problem implements Cloneable {
     // private Map<Integer, Variable> variables;

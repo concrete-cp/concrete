@@ -1,4 +1,6 @@
-package cspfj;
+package cspfj.ls;
+
+import cspfj.Solver;
 
 
 public interface LocalSolver extends Solver {

@@ -4,13 +4,13 @@
  * To change the template for this generated file go to
  * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
-package cspfj.problem;
+package cspfj.ls;
 
 import java.util.Arrays;
 import java.util.Map;
 
-import cspfj.TabuManager;
 import cspfj.constraint.Constraint;
+import cspfj.problem.Variable;
 import cspfj.util.TieManager;
 
 public final class LSVariable {

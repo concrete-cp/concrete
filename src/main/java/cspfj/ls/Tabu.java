@@ -17,13 +17,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package cspfj;
+package cspfj.ls;
 
 import java.io.IOException;
 import java.util.logging.Logger;
 
+import cspfj.ResultHandler;
 import cspfj.exception.MaxBacktracksExceededException;
-import cspfj.problem.LSVariable;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.TieManager;

@@ -1,8 +1,9 @@
-package cspfj.problem;
+package cspfj.ls;
 
 import java.util.Map;
 
 import cspfj.constraint.Constraint;
+import cspfj.problem.Variable;
 
 public final class LSConstraint {
 

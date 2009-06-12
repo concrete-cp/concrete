@@ -1,4 +1,4 @@
-package cspfj;
+package cspfj.ls;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -13,11 +13,11 @@ import java.util.Random;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import cspfj.AbstractSolver;
+import cspfj.ResultHandler;
 import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.AC3;
-import cspfj.problem.LSConstraint;
-import cspfj.problem.LSVariable;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.TieManager;
