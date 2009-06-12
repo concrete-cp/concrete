@@ -47,6 +47,7 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
         super(scope);
         this.dynamic = new MatrixManagerDynamic(scope, matrix, shared);
         toFind = initFound();
+        dynamic.setTuple(getTuple());
     }
 
     public ExtensionConstraintDynamic(final Variable[] scope,
@@ -55,6 +56,7 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
         super(name, scope);
         this.dynamic = new MatrixManagerDynamic(scope, matrix, shared);
         toFind = initFound();
+        dynamic.setTuple(getTuple());
     }
 
     private BitVector[] initFound() {

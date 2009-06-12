@@ -166,8 +166,7 @@ public final class DC2 implements Filter {
             }
 
             // if (logger.isLoggable(Level.FINER)) {
-            logger.fine(variable + " <- " + variable.getDomain().value(index)
-                    + "(" + index + ")");
+            logger.fine(variable + " <- " + variable.getDomain().value(index));
             // }
 
             problem.setLevelVariables(variable);

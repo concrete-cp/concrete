@@ -6,16 +6,14 @@
  */
 package cspfj.constraint.extension;
 
-import java.util.logging.Logger;
-
 import cspfj.constraint.AbstractAC3Constraint;
 import cspfj.problem.Variable;
 
 public abstract class AbstractExtensionConstraint extends AbstractAC3Constraint
         implements ExtensionConstraint {
 
-    private static final Logger LOGGER = Logger
-            .getLogger(AbstractExtensionConstraint.class.getName());
+//    private static final Logger LOGGER = Logger
+//            .getLogger(AbstractExtensionConstraint.class.getName());
 
     private MatrixManager matrixManager;
 
@@ -27,11 +25,11 @@ public abstract class AbstractExtensionConstraint extends AbstractAC3Constraint
 
     }
 
-    public AbstractExtensionConstraint(String name, MatrixManager matrix,
+    public AbstractExtensionConstraint(String name, MatrixManager matrixManager,
             Variable... scope) {
         super(name, scope);
-        this.matrixManager = matrix;
-        matrix.setTuple(tuple);
+        this.matrixManager = matrixManager;
+        matrixManager.setTuple(tuple);
     }
 
     @Override

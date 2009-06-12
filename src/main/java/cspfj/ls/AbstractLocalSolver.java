@@ -6,7 +6,7 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -57,7 +57,6 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
         this.max = max;
 
         tieManager = new TieManager(RANDOM);
-
         final Map<Variable, LSVariable> lsVariables = new HashMap<Variable, LSVariable>(
                 prob.getNbVariables());
         lsVariablesList = new ArrayList<LSVariable>(prob.getNbVariables());
@@ -77,20 +76,20 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
             v.setLSConstraints(lsConstraints);
         }
 
-        setMaxBacktracks(150000);
+        setMaxBacktracks(100000);
     }
 
-//    protected int realConflicts() {
-//        int realConflicts = 0;
-//
-//        for (LSConstraint c : lsConstraints.values()) {
-//            if (!c.check()) {
-//                realConflicts++;
-//            }
-//        }
-//
-//        return realConflicts;
-//    }
+    // protected int realConflicts() {
+    // int realConflicts = 0;
+    //
+    // for (LSConstraint c : lsConstraints.values()) {
+    // if (!c.check()) {
+    // realConflicts++;
+    // }
+    // }
+    //
+    // return realConflicts;
+    // }
 
     // protected double weightedConflicts() {
     // double weightedConflicts = 0;
@@ -114,11 +113,14 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
 
     protected int conflicts() {
         int conflicts = 0;
+        StringBuilder stb = new StringBuilder();
         for (LSConstraint c : lsConstraints.values()) {
             if (!c.check()) {
                 conflicts++;
+                stb.append(c.toString()).append(",");
             }
         }
+        logger.finer(stb.toString());
         return conflicts;
     }
 
@@ -141,12 +143,12 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
         variable.assignBestInitialIndex();
 
         // if (FINER) {
-        logger.finer(variable.toString() + " ("
-                + variable.getVariable().getDomainSize() + ") <- "
-                + variable.getAssignedIndex());
+        logger
+                .finer(variable.toString() + " <- "
+                        + variable.getAssignedIndex());
         // }
 
-        final Set<LSVariable> neighbours = new HashSet<LSVariable>();
+        final Set<LSVariable> neighbours = new LinkedHashSet<LSVariable>();
 
         for (LSConstraint c : variable.getLSConstraints()) {
             for (LSVariable v : c.getScope()) {
