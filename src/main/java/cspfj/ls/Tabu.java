@@ -56,11 +56,11 @@ public final class Tabu extends AbstractLocalSolver {
 
         // int bestImp = tieManager.getBestEvaluation();
         final int nbIt = getNbBacktracks();
-        for (LSVariable vcm : lsVariablesList) {
+        for (LSVariable vcm : getlsVariables()) {
 
-            // if (!vcm.isCritic()) {
-            // continue;
-            // }
+            if (!vcm.isCritic()) {
+                continue;
+            }
 
             // assert vcm.getCurrentConflicts() > 0 : vcm.getVariable() + " : "
             // + vcm.getCurrentConflicts()
@@ -69,14 +69,20 @@ public final class Tabu extends AbstractLocalSolver {
             final Variable variable = vcm.getVariable();
 
             final int vId = variable.getId();
-            for (int i = variable.getFirst(); i >= 0; i = variable.getNext(i)) {
-                if (vcm.getAssignedIndex() != i
+
+            final int assignedIndex = vcm.getAssignedIndex();
+
+            for (int i = variable.getLast() + 1; --i >= 0;) {
+
+                if (variable.isPresent(i)
+                        && i != assignedIndex
                         && (!tabuManager.isTabu(vId, i, nbIt) || vcm
                                 .getImprovment(i) < -aspiration)
                         && tieManager.newValue(i, vcm.getImprovment(i))) {
                     bestVariable = vcm;
                 }
             }
+
         }
 
         if (bestVariable == null) {

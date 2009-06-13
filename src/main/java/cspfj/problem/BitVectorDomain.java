@@ -17,11 +17,13 @@ public class BitVectorDomain implements Domain {
     private BitVector[] bvHistory;
     private int[] dsHistory;
 
+    private int last;
+
     public BitVectorDomain(int[] domain) {
         bvDomain = BitVector.factory(domain.length, true);
         this.domain = domain.clone();
         size = domain.length;
-
+        last = domain.length - 1;
         bvHistory = new BitVector[HISTORY_INCREMENT];
         for (int i = HISTORY_INCREMENT; --i >= 0;) {
             bvHistory[i] = BitVector.factory(domain.length, true);
@@ -41,7 +43,8 @@ public class BitVectorDomain implements Domain {
 
     @Override
     public int last() {
-        return bvDomain.prevSetBit(domain.length);
+        assert last == bvDomain.prevSetBit(domain.length);
+        return last;
     }
 
     @Override
@@ -94,6 +97,7 @@ public class BitVectorDomain implements Domain {
     public void setSingle(int index) {
         bvDomain.setSingle(index);
         size = 1;
+        last = index;
     }
 
     @Override
@@ -105,6 +109,9 @@ public class BitVectorDomain implements Domain {
     public void remove(int index) {
         size--;
         bvDomain.clear(index);
+        if (index == last) {
+            last = bvDomain.prevSetBit(domain.length);
+        }
     }
 
     public BitVector getBitVector() {
@@ -154,6 +161,7 @@ public class BitVectorDomain implements Domain {
             bvHistory[level].copyTo(bvDomain);
             size = dsHistory[level];
             currentLevel = level;
+            last = bvDomain.prevSetBit(domain.length);
         }
     }
 

@@ -19,8 +19,6 @@
 
 package cspfj.constraint.extension;
 
-import java.util.Arrays;
-
 import cspfj.problem.Variable;
 
 public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {

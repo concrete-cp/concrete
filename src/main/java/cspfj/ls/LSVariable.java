@@ -36,9 +36,9 @@ public final class LSVariable {
     // private final static Logger logger =
     // Logger.getLogger("ConflictsManager");
 
-    // private boolean critic;
-    //
-    // public final boolean[] criticConstraints;
+    private boolean critic;
+
+    public final boolean[] criticConstraints;
 
     // private final LocalSolver solver;
 
@@ -51,7 +51,7 @@ public final class LSVariable {
         nbConflicts = new int[variable.getDomain().maxSize()];
 
         check = new boolean[constraints.length][variable.getDomain().maxSize()];
-        // criticConstraints = new boolean[constraints.length];
+        criticConstraints = new boolean[constraints.length];
         assignedIndex = -1;
         currentConflicts = -1;
     }
@@ -95,6 +95,7 @@ public final class LSVariable {
             }
         }
 
+        initCritic();
     }
 
     public void assignBestInitialIndex() {
@@ -164,35 +165,35 @@ public final class LSVariable {
             }
         }
         currentConflicts = nbConflicts[assignedIndex];
-        // initCritic();
+        initCritic();
     }
 
-    // private void initCritic() {
-    // critic = false;
-    // final boolean[] criticConstraints = this.criticConstraints;
-    // for (int c = constraints.length; --c >= 0;) {
-    // if (criticConstraints[c] = critic(c)) {
-    // critic = true;
-    // assert currentConflicts > 0;
-    // break;
-    // }
-    // }
-    // }
-    //
-    // private boolean critic(final int constraintPos) {
-    // final boolean[] check = this.check[constraintPos];
-    // final boolean currentCheck = check[assignedIndex];
-    // if (currentCheck) {
-    // return false;
-    // }
-    // for (int i = domain.length; --i >= 0;) {
-    // if (check[i]) {
-    // assert currentConflicts > 0;
-    // return true;
-    // }
-    // }
-    // return false;
-    // }
+    private void initCritic() {
+        critic = false;
+        final boolean[] criticConstraints = this.criticConstraints;
+        for (int c = constraints.length; --c >= 0;) {
+            if (criticConstraints[c] = critic(c)) {
+                critic = true;
+                assert currentConflicts > 0;
+                break;
+            }
+        }
+    }
+
+    private boolean critic(final int constraintPos) {
+        final boolean[] check = this.check[constraintPos];
+        final boolean currentCheck = check[assignedIndex];
+        if (currentCheck) {
+            return false;
+        }
+        for (int i = variable.getLast() + 1; --i >= 0;) {
+            if (variable.isPresent(i) && check[i]) {
+                assert currentConflicts > 0;
+                return true;
+            }
+        }
+        return false;
+    }
 
     public int getCurrentConflicts() {
         return currentConflicts;
@@ -213,13 +214,13 @@ public final class LSVariable {
 
         assert getLSConstraints()[constraintPos] == c;
 
-        for (int i = variable.getFirst(); i >= 0; i = variable.getNext(i)) {
-            // if (variable.getRemovedLevel(i) >= 0) {
-            // continue;
-            // }
+        for (int i = variable.getLast() + 1; --i >= 0;) {
+            if (!variable.isPresent(i)) {
+                continue;
+            }
 
             final boolean check = c.checkWith(variablePos, i);
-            if (check ^ this.check[constraintPos][i]) {
+            if (check != this.check[constraintPos][i]) {
                 if (check) {
                     nbConflicts[i]--;// = solver.getWeight(c);
                 } else {
@@ -234,13 +235,13 @@ public final class LSVariable {
         currentConflicts = nbConflicts[assignedIndex];
 
         // updateCritic(constraintPos);
-        // initCritic();
+        initCritic();
     }
 
     // private void updateCritic(int constraintPos) {
     // final boolean wasCritic = criticConstraints[constraintPos];
     // assert wasCritic ? critic : true;
-    // criticConstraints[constraintPos] = critic(constraintPos) ;
+    // criticConstraints[constraintPos] = critic(constraintPos);
     // if (criticConstraints[constraintPos]) {
     // critic = true;
     // } else if (wasCritic) {
@@ -329,9 +330,9 @@ public final class LSVariable {
         return "ls-" + variable.toString();
     }
 
-    // public boolean isCritic() {
-    // return critic;
-    // }
+    public boolean isCritic() {
+        return critic;
+    }
     //
     // public void shuffleBest() {
     // final TieManager tieManager = this.tieManager;

@@ -31,9 +31,12 @@ public final class LSConstraint {
 
     public boolean checkWith(int variablePosition, int value) {
         for (int i = tuple.length; --i >= 0;) {
-            tuple[i] = scope[i].getAssignedIndex();
+            if (i == variablePosition) {
+                tuple[i] = value;
+            } else {
+                tuple[i] = scope[i].getAssignedIndex();
+            }
         }
-        tuple[variablePosition] = value;
         return constraint.check();
     }
 

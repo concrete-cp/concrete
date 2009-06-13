@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -37,8 +38,8 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
     final private boolean max;
 
     // final protected Map<Variable, LSVariable> lsVariables;
-    final protected List<LSVariable> lsVariablesList;
-    final protected Map<Constraint, LSConstraint> lsConstraints;
+    final private LSVariable[] lsVariables;
+    final private LSConstraint[] lsConstraints;
 
     private int maxTries = -1;
 
@@ -57,26 +58,30 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
         this.max = max;
 
         tieManager = new TieManager(RANDOM);
-        final Map<Variable, LSVariable> lsVariables = new HashMap<Variable, LSVariable>(
+        final Map<Variable, LSVariable> lsVariablesMap = new HashMap<Variable, LSVariable>(
                 prob.getNbVariables());
-        lsVariablesList = new ArrayList<LSVariable>(prob.getNbVariables());
-        for (Variable v : prob.getVariables()) {
-            final LSVariable lsv = new LSVariable(v, tieManager);
-            lsVariables.put(v, lsv);
-            lsVariablesList.add(lsv);
+        lsVariables = new LSVariable[prob.getNbVariables()];
+        for (int v = prob.getVariables().length; --v >= 0;) {
+            final LSVariable lsv = new LSVariable(prob.getVariables()[v],
+                    tieManager);
+            lsVariablesMap.put(lsv.getVariable(), lsv);
+            lsVariables[v] = lsv;
         }
 
-        lsConstraints = new HashMap<Constraint, LSConstraint>(prob
-                .getNbConstraints());
-        for (Constraint c : prob.getConstraints()) {
-            lsConstraints.put(c, new LSConstraint(c, lsVariables));
+        final Map<Constraint, LSConstraint> lsConstraintsMap = new HashMap<Constraint, LSConstraint>(
+                prob.getNbConstraints());
+        lsConstraints = new LSConstraint[prob.getNbConstraints()];
+        for (int c = prob.getConstraints().length; --c >= 0;) {
+            lsConstraints[c] = new LSConstraint(prob.getConstraints()[c],
+                    lsVariablesMap);
+            lsConstraintsMap.put(prob.getConstraints()[c], lsConstraints[c]);
         }
 
-        for (LSVariable v : lsVariablesList) {
-            v.setLSConstraints(lsConstraints);
+        for (LSVariable v : lsVariables) {
+            v.setLSConstraints(lsConstraintsMap);
         }
 
-        setMaxBacktracks(100000);
+        setMaxBacktracks(150000);
     }
 
     // protected int realConflicts() {
@@ -114,7 +119,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
     protected int conflicts() {
         int conflicts = 0;
         StringBuilder stb = new StringBuilder();
-        for (LSConstraint c : lsConstraints.values()) {
+        for (LSConstraint c : lsConstraints) {
             if (!c.check()) {
                 conflicts++;
                 stb.append(c.toString()).append(",");
@@ -126,7 +131,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
 
     protected void solution(final int nbConflicts) throws IOException {
         final Map<Variable, Integer> solution = new HashMap<Variable, Integer>();
-        for (LSVariable v : lsVariablesList) {
+        for (LSVariable v : lsVariables) {
             solution.put(v.getVariable(), v.getVariable().getDomain().value(
                     v.getAssignedIndex()));
         }
@@ -167,8 +172,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
     }
 
     protected void init() {
-        final List<LSVariable> shuffle = new ArrayList<LSVariable>(
-                lsVariablesList);
+        final List<LSVariable> shuffle = Arrays.asList(lsVariables.clone());
         Collections.shuffle(shuffle, RANDOM);
 
         for (LSVariable v : shuffle) {
@@ -179,6 +183,10 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
             v.initNbConflicts();
         }
 
+    }
+
+    public LSVariable[] getlsVariables() {
+        return lsVariables;
     }
 
     public abstract void minConflicts() throws MaxBacktracksExceededException,
@@ -238,7 +246,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
             // // / problem.getNbConstraints()));
             // }
 
-            for (LSVariable v : lsVariablesList) {
+            for (LSVariable v : lsVariables) {
                 v.assign(-1);
             }
 
