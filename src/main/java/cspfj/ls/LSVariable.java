@@ -91,6 +91,7 @@ public final class LSVariable {
             final LSVariable[] involvedVariables = c.getScope();
             for (int n = involvedVariables.length; --n >= 0;) {
                 final LSVariable neighbour = involvedVariables[n];
+                if (neighbour != this)
                 neighbour.update(c, n);
             }
         }
@@ -215,11 +216,15 @@ public final class LSVariable {
         assert getLSConstraints()[constraintPos] == c;
 
         for (int i = variable.getLast() + 1; --i >= 0;) {
+            //13%
             if (!variable.isPresent(i)) {
                 continue;
             }
 
+            //30%
             final boolean check = c.checkWith(variablePos, i);
+            
+            
             if (check != this.check[constraintPos][i]) {
                 if (check) {
                     nbConflicts[i]--;// = solver.getWeight(c);
@@ -229,12 +234,13 @@ public final class LSVariable {
                 this.check[constraintPos][i] ^= true;
             }
 
+            //22%
             tieManager.newValue(i, nbConflicts[i]);
         }
         bestIndex = tieManager.getBestValue();
         currentConflicts = nbConflicts[assignedIndex];
 
-        // updateCritic(constraintPos);
+        // 5%
         initCritic();
     }
 

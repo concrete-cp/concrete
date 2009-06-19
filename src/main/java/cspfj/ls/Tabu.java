@@ -97,7 +97,7 @@ public final class Tabu extends AbstractLocalSolver {
                 .getAssignedIndex(), getNbBacktracks());
 
         // if (FINER) {
-        LOGGER.finer(bestVariable + " <- " + bestIndex);
+        //LOGGER.finer(bestVariable + " <- " + bestIndex);
         // }
         bestVariable.reAssign(bestIndex);
 
@@ -123,8 +123,8 @@ public final class Tabu extends AbstractLocalSolver {
             }
 
             // if (FINER) {
-            LOGGER.finer(nbConflicts + " conflicts, " + getNbBacktracks() + "/"
-                    + getMaxBacktracks() + ")");
+//            LOGGER.finer(nbConflicts + " conflicts, " + getNbBacktracks() + "/"
+//                    + getMaxBacktracks() + ")");
             // }
 
             // assert realConflicts() <= nbConflicts;

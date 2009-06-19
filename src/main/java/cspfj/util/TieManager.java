@@ -23,55 +23,55 @@ import java.util.Random;
 
 public final class TieManager {
 
-	private int bestValue;
+    private int bestValue;
 
-	private int bestEvaluation;
+    private int bestEvaluation;
 
-	private int nbTies;
+    private int nbTies;
 
-	private final Random random;
+    private final Random random;
 
-	public TieManager(Random random) {
-		super();
+    public TieManager(Random random) {
+        super();
 
-		this.random = random;
-		clear();
-	}
+        this.random = random;
+        clear();
+    }
 
-	public void clear() {
-		bestValue = -1;
-		bestEvaluation = Integer.MAX_VALUE;
-		nbTies = 1;
-	}
+    public void clear() {
+        bestValue = -1;
+        bestEvaluation = Integer.MAX_VALUE;
+        nbTies = 1;
+    }
 
-	public boolean newValue(final int value, final int evaluation) {
-		if (newValue(evaluation)) {
-			this.bestValue = value;
-			return true ;
-		}
-		return false;
-	}
+    public boolean newValue(final int value, final int evaluation) {
+        if (newValue(evaluation)) {
+            this.bestValue = value;
+            return true;
+        }
+        return false;
+    }
 
-	public boolean newValue(final int evaluation) {
-		if (evaluation == bestEvaluation) {
-			return random.nextFloat() * nbTies++ < 1;
-		}
+    private boolean newValue(final int evaluation) {
+        if (evaluation == bestEvaluation) {
+            return random.nextFloat() * nbTies++ < 1;
+        }
 
-		if (evaluation < bestEvaluation) {
-			nbTies = 2;
-			this.bestEvaluation = evaluation;
-			return true;
-		}
+        if (evaluation < bestEvaluation) {
+            nbTies = 2;
+            this.bestEvaluation = evaluation;
+            return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	public int getBestValue() {
-		return bestValue;
-	}
+    public int getBestValue() {
+        return bestValue;
+    }
 
-	public int getBestEvaluation() {
-		return bestEvaluation;
-	}
+    public int getBestEvaluation() {
+        return bestEvaluation;
+    }
 
 }

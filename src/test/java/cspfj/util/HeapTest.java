@@ -22,9 +22,9 @@ public class HeapTest {
 			maximier.add(random.nextInt(1000));
 		}
 
-		int last = maximier.peekFirst();
+		int last = maximier.peek();
 		while (!maximier.isEmpty()) {
-			final int current = maximier.pollFirst();
+			final int current = maximier.poll();
 			assertTrue(current >= last);
 			last = current;
 		}

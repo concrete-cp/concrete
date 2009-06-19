@@ -19,113 +19,125 @@
 
 package cspfj.util;
 
-import java.util.AbstractCollection;
+import java.util.AbstractQueue;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public final class Heap<T> extends AbstractCollection<T> {
+public final class Heap<T extends Identified> extends AbstractQueue<T> {
 
-	private final T[] content;
+    private final T[] content;
 
-	private int size;
+    private final boolean[] inQueue;
 
-	private final Comparator<T> comparator;
+    private int size;
 
-	public Heap(final Comparator<T> comparator, final T[] content) {
-		super();
-		this.content = content;
-		this.comparator = comparator;
-		size = 0;
-	}
+    private final Comparator<T> comparator;
 
-	@Override
-	public int size() {
-		return size;
-	}
+    public Heap(final Comparator<T> comparator, final T[] values) {
+        super();
+        this.comparator = comparator;
+        this.inQueue = new boolean[values.length];
+        this.content = values.clone();
+        Arrays.fill(this.content, null);
+        size = 0;
+    }
 
-	@Override
-	public boolean add(final T arg0) {
-		content[size] = arg0;
-		siftUp(size++);
-		return true;
-	}
+    @Override
+    public int size() {
+        return size;
+    }
 
-	public T pollFirst() throws NoSuchElementException {
-		switch (size) {
-		case 0:
-			throw new NoSuchElementException();
-		case 1:
-			size--;
-			return content[0];
-		default:
-			final T max = content[0];
-			content[0] = content[--size];
-			siftDown(0);
-			return max;
-		}
-	}
+    @Override
+    public boolean offer(final T arg0) {
+        if (inQueue[arg0.getId()]) {
+            return false;
+        }
+        inQueue[arg0.getId()] = true;
+        content[size] = arg0;
+        siftUp(size++);
+        return true;
+    }
 
-	public T peekFirst() throws NoSuchElementException {
-		if (size == 0) {
-			throw new NoSuchElementException();
-		}
-		return content[0];
-	}
+    @Override
+    public T poll() throws NoSuchElementException {
+        switch (size) {
+        case 0:
+            throw new NoSuchElementException();
+        case 1:
+            size--;
+            inQueue[content[0].getId()] = false;
+            return content[0];
+        default:
+            final T max = content[0];
+            content[0] = content[--size];
+            siftDown(0);
+            inQueue[max.getId()] = false;
+            return max;
+        }
+    }
 
-	@Override
-	public void clear() {
-		size = 0;
-	}
+    @Override
+    public T peek() throws NoSuchElementException {
+        if (size == 0) {
+            throw new NoSuchElementException();
+        }
+        return content[0];
+    }
 
-	@Override
-	public Iterator<T> iterator() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public void clear() {
+        size = 0;
+        Arrays.fill(inQueue, false);
+    }
 
-	private void swap(final int int0, final int int1) {
-		final T tmp = content[int0];
-		content[int0] = content[int1];
-		content[int1] = tmp;
-	}
+    @Override
+    public Iterator<T> iterator() {
+        throw new UnsupportedOperationException();
+    }
 
-	private void siftDown(final int start) {
-		int root = start;
-		final int end = size - 1;
-		while ((root << 1) + 1 <= end) {
-			int child = (root << 1) + 1;
+    private void swap(final int int0, final int int1) {
+        final T tmp = content[int0];
+        content[int0] = content[int1];
+        content[int1] = tmp;
+    }
 
-			if (child < end
-					&& comparator.compare(content[child], content[child + 1]) > 0) {
-				child++;
-			}
-			if (comparator.compare(content[root], content[child]) > 0) {
-				swap(root, child);
-				root = child;
-			} else {
-				return;
-			}
-		}
-	}
+    private void siftDown(final int start) {
+        int root = start;
+        final int end = size - 1;
+        while ((root << 1) + 1 <= end) {
+            int child = (root << 1) + 1;
 
-	private void siftUp(final int start) {
-		int leaf = start;
-		while (leaf > 0) {
-			int parent = ((leaf - 1) >> 1);
+            if (child < end
+                    && comparator.compare(content[child], content[child + 1]) > 0) {
+                child++;
+            }
+            if (comparator.compare(content[root], content[child]) > 0) {
+                swap(root, child);
+                root = child;
+            } else {
+                return;
+            }
+        }
+    }
 
-			if (comparator.compare(content[parent], content[leaf]) > 0) {
-				swap(parent, leaf);
-				leaf = parent;
-			} else {
-				return;
-			}
-		}
-	}
+    private void siftUp(final int start) {
+        int leaf = start;
+        while (leaf > 0) {
+            int parent = ((leaf - 1) >> 1);
 
-	public String toString() {
-		return Arrays.toString(content);
-	}
+            if (comparator.compare(content[parent], content[leaf]) > 0) {
+                swap(parent, leaf);
+                leaf = parent;
+            } else {
+                return;
+            }
+        }
+    }
+
+    public String toString() {
+        return Arrays.toString(content);
+    }
 
 }
