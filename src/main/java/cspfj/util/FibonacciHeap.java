@@ -234,6 +234,8 @@ public class FibonacciHeap<T extends Identified> extends AbstractQueue<T> {
         final FibonacciHeapNode<T> z = minNode;
 
         if (z != null) {
+            assert realSmallest(minNode);
+
             int numKids = z.getDegree();
             FibonacciHeapNode<T> x = z.getChild();
             FibonacciHeapNode<T> tempRight;
@@ -274,6 +276,18 @@ public class FibonacciHeap<T extends Identified> extends AbstractQueue<T> {
         }
 
         return z;
+    }
+
+    private boolean realSmallest(FibonacciHeapNode<T> min) {
+
+        for (int i = inQueue.length; --i >= 0;) {
+            if (inQueue[i]
+                    && comparator.compare(map[i].getData(), min.getData()) < 0) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -459,7 +473,7 @@ public class FibonacciHeap<T extends Identified> extends AbstractQueue<T> {
                 if (comparator.compare(y.getData(), minNode.getData()) < 0) {
                     minNode = y;
                 }
-            } 
+            }
         }
     }
 
