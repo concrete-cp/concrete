@@ -1,14 +1,16 @@
 package cspfj.filter;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Queue;
 import java.util.logging.Logger;
 
 import cspfj.constraint.AbstractPVRConstraint;
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
-import cspfj.util.BitVector;
+import cspfj.util.FibonacciHeap;
 
 /**
  * @author scand1sk
@@ -17,7 +19,7 @@ import cspfj.util.BitVector;
 public final class AC3 implements Filter {
     private final Problem problem;
 
-    private final BitVector inQueue;
+    private final Queue<Variable> inQueue;
 
     private static final Logger logger = Logger.getLogger(Filter.class
             .getSimpleName());
@@ -26,7 +28,12 @@ public final class AC3 implements Filter {
         super();
         this.problem = problem;
 
-        inQueue = BitVector.factory(problem.getMaxVId() + 1, false);
+        inQueue = new FibonacciHeap<Variable>(new Comparator<Variable>() {
+            @Override
+            public int compare(Variable o1, Variable o2) {
+                return o1.getDomainSize() - o2.getDomainSize();
+            }
+        }, problem.getVariables());
     }
 
     public boolean reduceAll() {
@@ -40,7 +47,7 @@ public final class AC3 implements Filter {
         logger.fine("reduce after " + cnt);
         for (Variable v : problem.getVariables()) {
             if (modVar[v.getId()] > cnt) {
-                inQueue.set(v.getId());
+                inQueue.offer(v);
                 final Constraint[] involved = v.getInvolvingConstraints();
                 for (int j = involved.length; --j >= 0;) {
                     // involved[j].fillRemovals(true);
@@ -90,7 +97,7 @@ public final class AC3 implements Filter {
             c.fillRemovals(false);
         }
 
-        inQueue.fill(false);
+        inQueue.clear();
 
         assert noRemovals();
     }
@@ -110,7 +117,7 @@ public final class AC3 implements Filter {
         }
         clean();
 
-        inQueue.set(variable.getId());
+        inQueue.offer(variable);
 
         final Constraint[] involving = variable.getInvolvingConstraints();
 
@@ -125,7 +132,7 @@ public final class AC3 implements Filter {
 
     private RevisionHandler revisator = new RevisionHandler() {
         public void revised(final Constraint constraint, final Variable variable) {
-            inQueue.set(variable.getId());
+            inQueue.offer(variable);
             final Constraint[] involvingConstraints = variable
                     .getInvolvingConstraints();
 
@@ -142,10 +149,9 @@ public final class AC3 implements Filter {
 
     private boolean reduce() {
         logger.finer("Reducing");
-        final BitVector inQueue = this.inQueue;
 
         while (!inQueue.isEmpty()) {
-            if (!reduceOnce(pullVariable())) {
+            if (!reduceOnce(inQueue.poll())) {
                 return false;
             }
         }
@@ -181,7 +187,7 @@ public final class AC3 implements Filter {
 
     private void addAll() {
         for (Variable v : problem.getVariables()) {
-            inQueue.set(v.getId());
+            inQueue.offer(v);
         }
 
         for (Constraint c : problem.getConstraints()) {
@@ -220,28 +226,6 @@ public final class AC3 implements Filter {
 
         }
         return true;
-    }
-
-    private Variable pullVariable() {
-        Variable bestVariable = null;
-        int bestValue = Integer.MAX_VALUE;
-
-        final BitVector inQueue = this.inQueue;
-
-        final Problem problem = this.problem;
-
-        for (int i = inQueue.nextSetBit(0); i >= 0; i = inQueue
-                .nextSetBit(i + 1)) {
-            final Variable variable = problem.getVariable(i);
-            final int domainSize = variable.getDomainSize();
-            if (domainSize < bestValue) {
-                bestVariable = variable;
-                bestValue = domainSize;
-            }
-        }
-
-        inQueue.clear(bestVariable.getId());
-        return bestVariable;
     }
 
     public String toString() {
