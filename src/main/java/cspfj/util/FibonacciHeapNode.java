@@ -58,7 +58,7 @@ package cspfj.util;
  * 
  * @author Nathan Fiedler
  */
-public class FibonacciHeapNode<T> {
+public final class FibonacciHeapNode<T> {
     // ~ Instance fields
     // --------------------------------------------------------
 
@@ -112,14 +112,16 @@ public class FibonacciHeapNode<T> {
      */
     public FibonacciHeapNode(T data) {
         this.data = data;
+        setRight(this);
+        setLeft(this);
         clear();
     }
 
     public void clear() {
         mark = false;
         degree = 0;
-        setRight(this);
-        setLeft(this);
+        //setRight(this);
+        //setLeft(this);
         child = null;
         parent = null;
     }
@@ -150,41 +152,36 @@ public class FibonacciHeapNode<T> {
     public String toString() {
 
         StringBuilder buf = new StringBuilder();
-        buf.append("Node=[parent = ");
+        buf.append("Node=[");
+        if (getLeft() != null) {
+            buf.append(getLeft().data);
+        } else {
+            buf.append(" * ");
+        }
+        buf.append(" ← ").append(data).append(" → ");
+        if (getRight() != null) {
+            buf.append(getRight().data);
+        } else {
+            buf.append(" * ");
+        }
+
+        buf.append(", ↑: ");
 
         if (getParent() != null) {
             buf.append(getParent().data);
         } else {
-            buf.append("---");
+            buf.append(" * ");
         }
 
-        buf.append(", degree = ");
-        buf.append(Integer.toString(getDegree()));
-        buf.append(", right = ");
-
-        if (getRight() != null) {
-            buf.append(getRight().data);
-        } else {
-            buf.append("---");
-        }
-
-        buf.append(", left = ");
-
-        if (getLeft() != null) {
-            buf.append(getLeft().data);
-        } else {
-            buf.append("---");
-        }
-
-        buf.append(", child = ");
+        buf.append(", ↓: ");
 
         if (getChild() != null) {
             buf.append(getChild().data);
         } else {
-            buf.append("---");
+            buf.append(" * ");
         }
 
-        buf.append(']');
+        buf.append(" (").append(degree).append(")]");
 
         return buf.toString();
 
@@ -206,10 +203,14 @@ public class FibonacciHeapNode<T> {
         return right;
     }
 
-    public void setDegree(int degree) {
-        this.degree = degree;
+    public void incDegree() {
+        this.degree++;
     }
 
+    public void decDegree() {
+        degree--;
+    }
+    
     public int getDegree() {
         return degree;
     }

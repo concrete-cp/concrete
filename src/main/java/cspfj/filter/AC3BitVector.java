@@ -10,7 +10,7 @@ import cspfj.constraint.AbstractPVRConstraint;
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
-import cspfj.util.FibonacciHeap;
+import cspfj.util.BitVectorPriorityQueue;
 
 /**
  * @author scand1sk
@@ -28,7 +28,7 @@ public final class AC3BitVector implements Filter {
         super();
         this.problem = problem;
 
-        inQueue = new FibonacciHeap<Variable>(
+        inQueue = new BitVectorPriorityQueue<Variable>(
                 new Comparator<Variable>() {
                     @Override
                     public int compare(Variable o1, Variable o2) {

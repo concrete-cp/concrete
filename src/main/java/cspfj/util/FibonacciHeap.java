@@ -51,13 +51,9 @@
 package cspfj.util;
 
 import java.util.AbstractQueue;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Deque;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * This class implements a Fibonacci heap data structure. Much of the code in
@@ -85,7 +81,7 @@ import java.util.List;
  * 
  * @author Nathan Fiedler
  */
-public class FibonacciHeap<T extends Identified> extends AbstractQueue<T> {
+public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> {
     // ~ Static fields/initializers
     // ---------------------------------------------
 
@@ -111,6 +107,8 @@ public class FibonacciHeap<T extends Identified> extends AbstractQueue<T> {
 
     private final boolean[] inQueue;
 
+    private final FibonacciHeapNode<T>[] array;
+
     /**
      * Constructs a FibonacciHeap object that contains no elements.
      */
@@ -121,6 +119,11 @@ public class FibonacciHeap<T extends Identified> extends AbstractQueue<T> {
             map[v.getId()] = new FibonacciHeapNode<T>(v);
         }
         inQueue = new boolean[map.length];
+
+        final int arraySize = ((int) Math.floor(Math.log(values.length)
+                * ONE_OVER_LOG_PHI)) + 1;
+
+        array = (FibonacciHeapNode<T>[]) new FibonacciHeapNode[arraySize];
 
     }
 
@@ -157,8 +160,6 @@ public class FibonacciHeap<T extends Identified> extends AbstractQueue<T> {
      * 
      * @param x
      *            node to decrease the key of
-     * @param k
-     *            new key value for node x
      * 
      * @exception IllegalArgumentException
      *                Thrown if k is larger than x.key value.
@@ -187,8 +188,6 @@ public class FibonacciHeap<T extends Identified> extends AbstractQueue<T> {
      * 
      * @param node
      *            new node to insert into heap
-     * @param key
-     *            key value associated with data object
      */
     private void insert(FibonacciHeapNode<T> node) {
         // concatenate node into min list
@@ -203,6 +202,8 @@ public class FibonacciHeap<T extends Identified> extends AbstractQueue<T> {
             }
         } else {
             minNode = node;
+            node.setLeft(node);
+            node.setRight(node);
         }
 
         nNodes++;
@@ -210,12 +211,14 @@ public class FibonacciHeap<T extends Identified> extends AbstractQueue<T> {
 
     public boolean offer(T data) {
         final int id = data.getId();
-        map[id].clear();
+        final FibonacciHeapNode<T> node = map[id];
         if (inQueue[id]) {
-            decreaseKey(map[id]);
+            decreaseKey(node);
             return false;
         }
-        insert(map[id]);
+
+        node.clear();
+        insert(node);
         inQueue[id] = true;
         return true;
     }
@@ -274,7 +277,7 @@ public class FibonacciHeap<T extends Identified> extends AbstractQueue<T> {
             // decrement size of heap
             nNodes--;
         }
-
+        control(minNode, minNode);
         return z;
     }
 
@@ -302,53 +305,6 @@ public class FibonacciHeap<T extends Identified> extends AbstractQueue<T> {
      */
     public int size() {
         return nNodes;
-    }
-
-    /**
-     * Creates a String representation of this Fibonacci heap.
-     * 
-     * @return String of this.
-     */
-    public String toString() {
-        if (minNode == null) {
-            return "FibonacciHeap=[]";
-        }
-
-        // create a new stack and put root on it
-        final Deque<FibonacciHeapNode<T>> stack = new LinkedList<FibonacciHeapNode<T>>();
-        stack.push(minNode);
-
-        final StringBuilder buf = new StringBuilder(512);
-        buf.append("FibonacciHeap=[");
-
-        // do a simple breadth-first traversal on the tree
-        while (!stack.isEmpty()) {
-            FibonacciHeapNode<T> curr = stack.pop();
-            buf.append(curr);
-            buf.append(", ");
-
-            if (curr.getChild() != null) {
-                stack.push(curr.getChild());
-            }
-
-            final FibonacciHeapNode<T> start = curr;
-            curr = curr.getRight();
-
-            while (curr != start) {
-                buf.append(curr);
-                buf.append(", ");
-
-                if (curr.getChild() != null) {
-                    stack.push(curr.getChild());
-                }
-
-                curr = curr.getRight();
-            }
-        }
-
-        buf.append(']');
-
-        return buf.toString();
     }
 
     /**
@@ -381,16 +337,9 @@ public class FibonacciHeap<T extends Identified> extends AbstractQueue<T> {
     }
 
     private void consolidate() {
-        final int arraySize = ((int) Math.floor(Math.log(nNodes)
-                * ONE_OVER_LOG_PHI)) + 1;
-
-        final List<FibonacciHeapNode<T>> array = new ArrayList<FibonacciHeapNode<T>>(
-                arraySize);
-
         // Initialize degree array
-        for (int i = 0; i < arraySize; i++) {
-            array.add(null);
-        }
+        Arrays.fill(array, null);
+        int arraySize = 0;
 
         // Find the number of root nodes.
         int numRoots = 0;
@@ -414,7 +363,7 @@ public class FibonacciHeap<T extends Identified> extends AbstractQueue<T> {
 
             // ..and see if there's another of the same degree.
             for (;;) {
-                FibonacciHeapNode<T> y = array.get(d);
+                FibonacciHeapNode<T> y = array[d];
                 if (y == null) {
                     // Nope.
                     break;
@@ -430,15 +379,17 @@ public class FibonacciHeap<T extends Identified> extends AbstractQueue<T> {
 
                 // FibonacciHeapNode<T> y disappears from root list.
                 link(y, x);
+                assert y.getParent() == x;
 
                 // We've handled this degree, go to next one.
-                array.set(d, null);
+                array[d] = null;
                 d++;
             }
 
             // Save this node for later when we might encounter another
             // of the same degree.
-            array.set(d, x);
+            array[d] = x;
+            arraySize = Math.max(arraySize, d + 1);
 
             // Move forward through list.
             x = next;
@@ -450,7 +401,7 @@ public class FibonacciHeap<T extends Identified> extends AbstractQueue<T> {
         minNode = null;
 
         for (int i = 0; i < arraySize; i++) {
-            final FibonacciHeapNode<T> y = array.get(i);
+            final FibonacciHeapNode<T> y = array[i];
             if (y == null) {
                 continue;
             }
@@ -475,6 +426,7 @@ public class FibonacciHeap<T extends Identified> extends AbstractQueue<T> {
                 }
             }
         }
+        control(minNode, minNode);
     }
 
     /**
@@ -494,7 +446,7 @@ public class FibonacciHeap<T extends Identified> extends AbstractQueue<T> {
         // remove x from childlist of y and decrement degree[y]
         x.getLeft().setRight(x.getRight());
         x.getRight().setLeft(x.getLeft());
-        y.setDegree(y.getDegree() - 1);
+        y.decDegree();
 
         // reset y.child if necessary
         if (y.getChild() == x) {
@@ -550,7 +502,7 @@ public class FibonacciHeap<T extends Identified> extends AbstractQueue<T> {
         }
 
         // increase degree[x]
-        x.setDegree(x.getDegree() + 1);
+        x.incDegree();
 
         // set mark[y] false
         y.setMark(false);
@@ -573,6 +525,45 @@ public class FibonacciHeap<T extends Identified> extends AbstractQueue<T> {
         return min;
     }
 
-}
+    /**
+     * Creates a String representation of this Fibonacci heap.
+     * 
+     * @return String of this.
+     */
+    public String toString() {
+        if (minNode == null) {
+            return "empty";
+        }
+        return tree(minNode, minNode, 0);
+    }
 
-// FibonacciHeap
+    private void control(FibonacciHeapNode<T> current,
+            FibonacciHeapNode<T> start) {
+        if (current == null) {
+            return;
+        }
+        if (current.getChild() != null) {
+            assert current.getChild().getParent() == current;
+            control(current.getChild(), current.getChild());
+        }
+        if (current.getRight() != start) {
+            control(current.getRight(), start);
+        }
+    }
+
+    public String tree(FibonacciHeapNode<T> current,
+            FibonacciHeapNode<T> start, int depth) {
+        final StringBuilder stb = new StringBuilder();
+        for (int i = depth; --i >= 0;) {
+            stb.append("--");
+        }
+        stb.append(current.getData()).append("\n");
+        if (current.getChild() != null) {
+            stb.append(tree(current.getChild(), current.getChild(), depth + 1));
+        }
+        if (current.getRight() != start) {
+            stb.append(tree(current.getRight(), start, depth));
+        }
+        return stb.toString();
+    }
+}
