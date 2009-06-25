@@ -158,14 +158,14 @@ public final class FibonacciHeapNode<T> {
         } else {
             buf.append(" * ");
         }
-        buf.append(" ← ").append(data).append(" → ");
+        buf.append(" <- ").append(data).append(" -> ");
         if (getRight() != null) {
             buf.append(getRight().data);
         } else {
             buf.append(" * ");
         }
 
-        buf.append(", ↑: ");
+        buf.append(", ^: ");
 
         if (getParent() != null) {
             buf.append(getParent().data);
@@ -173,7 +173,7 @@ public final class FibonacciHeapNode<T> {
             buf.append(" * ");
         }
 
-        buf.append(", ↓: ");
+        buf.append(", v: ");
 
         if (getChild() != null) {
             buf.append(getChild().data);
