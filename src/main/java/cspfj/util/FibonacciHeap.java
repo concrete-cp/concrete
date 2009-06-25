@@ -336,12 +336,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
         }
     }
 
-    private void consolidate() {
-        // Initialize degree array
-        Arrays.fill(array, null);
-        int arraySize = 0;
-
-        // Find the number of root nodes.
+    private int nbRoots() {
         int numRoots = 0;
         FibonacciHeapNode<T> x = minNode;
 
@@ -354,6 +349,17 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
                 x = x.getRight();
             }
         }
+        return numRoots;
+    }
+
+    private void consolidate() {
+        // Initialize degree array
+        Arrays.fill(array, null);
+        int arraySize = 0;
+
+        // Find the number of root nodes.
+        int numRoots = nbRoots();
+        FibonacciHeapNode<T> x = minNode;
 
         // For each node in root list do...
         while (numRoots > 0) {
