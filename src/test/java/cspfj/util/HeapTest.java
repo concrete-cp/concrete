@@ -11,6 +11,8 @@ import cspfj.util.Heap;
 
 public class HeapTest {
 
+    private static int id = 0;
+
     @Test
     public void test() {
         final Heap<IdInteger> maximier = new Heap<IdInteger>(
@@ -31,7 +33,7 @@ public class HeapTest {
 
     }
 
-    private final static class IdIntegerComparator implements
+    private static class IdIntegerComparator implements
             Comparator<IdInteger> {
 
         @Override
@@ -45,13 +47,16 @@ public class HeapTest {
 
         final private int value;
 
+        final private int id;
+
         public IdInteger(final int value) {
             this.value = value;
+            this.id = HeapTest.id++;
         }
 
         @Override
         public int getId() {
-            return value;
+            return id;
         }
 
         @Override
