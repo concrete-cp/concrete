@@ -117,17 +117,20 @@ public final class FibonacciHeapNode<T> {
         clear();
     }
 
+    // ~ Methods
+    // ----------------------------------------------------------------
+    
+    /**
+     * Initializes parents and child information
+     */
     public void clear() {
         mark = false;
         degree = 0;
-        //setRight(this);
-        //setLeft(this);
+        // setRight(this);
+        // setLeft(this);
         child = null;
         parent = null;
     }
-
-    // ~ Methods
-    // ----------------------------------------------------------------
 
     /**
      * Obtain the data for this node.
@@ -136,19 +139,22 @@ public final class FibonacciHeapNode<T> {
         return data;
     }
 
+    /**
+     * Sets the parent node
+     * 
+     * @param parent
+     */
     public void setParent(FibonacciHeapNode<T> parent) {
         this.parent = parent;
     }
 
+    /**
+     * @return the parent node
+     */
     public FibonacciHeapNode<T> getParent() {
         return parent;
     }
 
-    /**
-     * Return the string representation of this object.
-     * 
-     * @return string representing this object
-     */
     public String toString() {
 
         StringBuilder buf = new StringBuilder();
@@ -187,48 +193,140 @@ public final class FibonacciHeapNode<T> {
 
     }
 
+    /**
+     * Sets the given node as the left neighbour of this node in the list
+     * 
+     * @param right
+     */
     public void setLeft(FibonacciHeapNode<T> left) {
         this.left = left;
     }
 
+    /**
+     * Returns the node to the left of this node
+     * 
+     * @return
+     */
     public FibonacciHeapNode<T> getLeft() {
         return left;
     }
 
+    /**
+     * Sets the given node as the right neighbour of this node in the list
+     * 
+     * @param right
+     */
     public void setRight(FibonacciHeapNode<T> right) {
         this.right = right;
     }
 
+    /**
+     * Returns the node to the right of this node
+     * 
+     * @return
+     */
     public FibonacciHeapNode<T> getRight() {
         return right;
     }
 
-    public void incDegree() {
-        this.degree++;
-    }
-
+    /**
+     * Decrease this node's degree (should be called after removing a child)
+     */
     public void decDegree() {
         degree--;
     }
-    
+
+    /**
+     * Retrieves the degree (number of childs) of this node
+     * 
+     * @return
+     */
     public int getDegree() {
         return degree;
     }
 
+    /**
+     * Sets the given child as the entry point in the new list of this node's
+     * childs
+     * 
+     * @param child
+     */
     public void setChild(FibonacciHeapNode<T> child) {
         this.child = child;
     }
 
+    /**
+     * Retrieves the child of this node
+     * 
+     * @return The child of this node
+     */
     public FibonacciHeapNode<T> getChild() {
         return child;
     }
 
+    /**
+     * Marks this node
+     * 
+     * @param mark
+     */
     public void setMark(boolean mark) {
         this.mark = mark;
     }
 
+    /**
+     * Checks whether this node is marked
+     * 
+     * @return
+     */
     public boolean isMark() {
         return mark;
+    }
+
+    /**
+     * Remove this node from the list it appears in
+     */
+    public void remove() {
+        left.setRight(right);
+        right.setLeft(left);
+    }
+
+    /**
+     * Adds x to the right of this node in the list
+     * 
+     * @param x
+     */
+    public void add(FibonacciHeapNode<T> x) {
+        x.left = this;
+        x.right = right;
+        right = x;
+        x.right.left = x;
+    }
+
+    /**
+     * Make node y a child of this node.
+     * <p>
+     * Running time: O(1) actual
+     * </p>
+     * 
+     * @param y
+     *            node to become child
+     */
+    public void link(FibonacciHeapNode<T> y) {
+        y.remove();
+
+        // make y a child of x
+        y.setParent(this);
+
+        if (child == null) {
+            child = y;
+            y.setRight(y);
+            y.setLeft(y);
+        } else {
+            child.add(y);
+        }
+
+        // increase degree[x]
+        degree++;
     }
 
 }

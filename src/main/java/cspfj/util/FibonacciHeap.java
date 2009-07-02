@@ -169,10 +169,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
     private void insert(FibonacciHeapNode<T> node) {
         // concatenate node into min list
         if (minNode != null) {
-            node.setLeft(minNode);
-            node.setRight(minNode.getRight());
-            minNode.setRight(node);
-            node.getRight().setLeft(node);
+            minNode.add(node);
 
             if (comparator.compare(node.getData(), minNode.getData()) < 0) {
                 minNode = node;
@@ -225,14 +222,10 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
                 tempRight = x.getRight();
 
                 // remove x from child list
-                x.getLeft().setRight(x.getRight());
-                x.getRight().setLeft(x.getLeft());
+                x.remove();
 
                 // add x to root list of heap
-                x.setLeft(minNode);
-                x.setRight(minNode.getRight());
-                minNode.setRight(x);
-                x.getRight().setLeft(x);
+                minNode.add(x);
 
                 // set parent[x] to null
                 x.setParent(null);
@@ -241,8 +234,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
             }
 
             // remove z from root list of heap
-            z.getLeft().setRight(z.getRight());
-            z.getRight().setLeft(z.getLeft());
+            z.remove();
 
             if (z == z.getRight()) {
                 minNode = null;
@@ -254,7 +246,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
             // decrement size of heap
             nNodes--;
         }
-        control(minNode, minNode);
+        assert control(minNode, minNode);
         return z;
     }
 
@@ -394,14 +386,10 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
                 minNode = y;
             } else {
                 // First remove node from root list.
-                y.getLeft().setRight(y.getRight());
-                y.getRight().setLeft(y.getLeft());
+                y.remove();
 
                 // Now add to root list, again.
-                y.setLeft(minNode);
-                y.setRight(minNode.getRight());
-                minNode.setRight(y);
-                y.getRight().setLeft(y);
+                minNode.add(y);
 
                 // Check if this is a new min.
                 if (comparator.compare(y.getData(), minNode.getData()) < 0) {
@@ -409,7 +397,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
                 }
             }
         }
-        control(minNode, minNode);
+        assert control(minNode, minNode);
     }
 
     /**
@@ -427,8 +415,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
      */
     private void cut(FibonacciHeapNode<T> x, FibonacciHeapNode<T> y) {
         // remove x from childlist of y and decrement degree[y]
-        x.getLeft().setRight(x.getRight());
-        x.getRight().setLeft(x.getLeft());
+        x.remove();
         y.decDegree();
 
         // reset y.child if necessary
@@ -441,10 +428,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
         }
 
         // add x to root list of heap
-        x.setLeft(minNode);
-        x.setRight(minNode.getRight());
-        minNode.setRight(x);
-        x.getRight().setLeft(x);
+        minNode.add(x);
 
         // set parent[x] to nil
         x.setParent(null);
@@ -466,28 +450,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
      *            node to become parent
      */
     private void link(FibonacciHeapNode<T> y, FibonacciHeapNode<T> x) {
-        // remove y from root list of heap
-        y.getLeft().setRight(y.getRight());
-        y.getRight().setLeft(y.getLeft());
-
-        // make y a child of x
-        y.setParent(x);
-
-        if (x.getChild() == null) {
-            x.setChild(y);
-            y.setRight(y);
-            y.setLeft(y);
-        } else {
-            y.setLeft(x.getChild());
-            y.setRight(x.getChild().getRight());
-            x.getChild().setRight(y);
-            y.getRight().setLeft(y);
-        }
-
-        // increase degree[x]
-        x.incDegree();
-
-        // set mark[y] false
+        x.link(y);
         y.setMark(false);
     }
 
@@ -520,18 +483,20 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
         return tree(minNode, minNode, 0);
     }
 
-    private void control(FibonacciHeapNode<T> current,
+    private boolean control(FibonacciHeapNode<T> current,
             FibonacciHeapNode<T> start) {
         if (current == null) {
-            return;
+            return true;
         }
-        if (current.getChild() != null) {
-            assert current.getChild().getParent() == current;
-            control(current.getChild(), current.getChild());
+        if (current.getChild() != null
+                && (current.getChild().getParent() != current || !control(
+                        current.getChild(), current.getChild()))) {
+            return false;
+
         }
-        if (current.getRight() != start) {
-            control(current.getRight(), start);
-        }
+
+        return current.getRight() == start
+                || control(current.getRight(), start);
     }
 
     public String tree(FibonacciHeapNode<T> current,
