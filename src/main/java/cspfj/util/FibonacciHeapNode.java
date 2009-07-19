@@ -1,54 +1,3 @@
-/* ==========================================
- * JGraphT : a free Java graph-theory library
- * ==========================================
- *
- * Project Info:  http://jgrapht.sourceforge.net/
- * Project Creator:  Barak Naveh (barak_naveh@users.sourceforge.net)
- *
- * (C) Copyright 2003-2007, by Barak Naveh and Contributors.
- *
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2.1 of the License, or
- * (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public
- * License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation,
- * Inc.,
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
- */
-/* --------------------------
- * FibonnaciHeapNode.java
- * --------------------------
- * (C) Copyright 1999-2007, by Nathan Fiedler and Contributors.
- *
- * Original Author:  Nathan Fiedler
- * Contributor(s):   John V. Sichi
- *
- * $Id: FibonacciHeapNode.java 568 2007-09-30 00:12:18Z perfecthash $
- *
- * Changes
- * -------
- * 03-Sept-2003 : Adapted from Nathan Fiedler (JVS);
- *
- *      Name    Date            Description
- *      ----    ----            -----------
- *      nf      08/31/97        Initial version
- *      nf      09/07/97        Removed FibHeapData interface
- *      nf      01/20/01        Added synchronization
- *      nf      01/21/01        Made Node an inner class
- *      nf      01/05/02        Added clear(), renamed empty() to
- *                              isEmpty(), and renamed printHeap()
- *                              to toString()
- *      nf      01/06/02        Removed all synchronization
- *      JVS     06/24/06        Generics
- *
- */
 package cspfj.util;
 
 /**
@@ -98,6 +47,8 @@ public final class FibonacciHeapNode<T> {
      */
     private int degree;
 
+    private int key;
+
     // ~ Constructors
     // -----------------------------------------------------------
 
@@ -112,14 +63,22 @@ public final class FibonacciHeapNode<T> {
      */
     public FibonacciHeapNode(T data) {
         this.data = data;
-        setRight(this);
-        setLeft(this);
+        right = this;
+        left = this;
         clear();
     }
 
     // ~ Methods
     // ----------------------------------------------------------------
-    
+
+    public int getKey() {
+        return key;
+    }
+
+    public void setKey(int key) {
+        this.key = key;
+    }
+
     /**
      * Initializes parents and child information
      */
@@ -157,15 +116,15 @@ public final class FibonacciHeapNode<T> {
 
     public String toString() {
 
-        StringBuilder buf = new StringBuilder();
+        final StringBuilder buf = new StringBuilder();
         buf.append("Node=[");
-        if (getLeft() != null) {
+        if (left != null) {
             buf.append(getLeft().data);
         } else {
             buf.append(" * ");
         }
         buf.append(" <- ").append(data).append(" -> ");
-        if (getRight() != null) {
+        if (right != null) {
             buf.append(getRight().data);
         } else {
             buf.append(" * ");
@@ -173,7 +132,7 @@ public final class FibonacciHeapNode<T> {
 
         buf.append(", ^: ");
 
-        if (getParent() != null) {
+        if (parent != null) {
             buf.append(getParent().data);
         } else {
             buf.append(" * ");
@@ -181,7 +140,7 @@ public final class FibonacciHeapNode<T> {
 
         buf.append(", v: ");
 
-        if (getChild() != null) {
+        if (child != null) {
             buf.append(getChild().data);
         } else {
             buf.append(" * ");
@@ -286,47 +245,115 @@ public final class FibonacciHeapNode<T> {
      * Remove this node from the list it appears in
      */
     public void remove() {
-        left.setRight(right);
-        right.setLeft(left);
+        left.right = right;
+        right.left = left;
     }
 
     /**
-     * Adds x to the right of this node in the list
+     * Adds x to the left of this node in the list
      * 
      * @param x
      */
     public void add(FibonacciHeapNode<T> x) {
-        x.left = this;
-        x.right = right;
-        right = x;
-        x.right.left = x;
+        x.right = this;
+        x.left = left;
+        left = x;
+        x.left.right = x;
     }
 
     /**
-     * Make node y a child of this node.
+     * Make this node a child of the given parent node. All linkages are
+     * updated, the degree of the parent is incremented, and mark is set to
+     * false.
+     * 
+     * @param parent
+     *            the new parent node.
+     */
+    public void link(FibonacciHeapNode<T> parent) {
+        // Note: putting this code here in Node makes it 7x faster
+        // because it doesn't have to use generated accessor methods,
+        // which add a lot of time when called millions of times.
+        // remove this from its circular list
+        left.right = right;
+        right.left = left;
+        // make this a child of x
+        this.parent = parent;
+        if (parent.child == null) {
+            parent.child = this;
+            right = this;
+            left = this;
+        } else {
+            left = parent.child;
+            right = parent.child.right;
+            parent.child.right = this;
+            right.left = this;
+        }
+        // increase degree[x]
+        parent.degree++;
+        // set mark false
+        mark = false;
+    }
+
+    /**
+     * Performs a cascading cut operation. Cuts this from its parent and then
+     * does the same for its parent, and so on up the tree.
+     * 
      * <p>
-     * Running time: O(1) actual
+     * <em>Running time: O(log n)</em>
      * </p>
      * 
-     * @param y
-     *            node to become child
+     * @param min
+     *            the minimum heap node, to which nodes will be added.
      */
-    public void link(FibonacciHeapNode<T> y) {
-        y.remove();
-
-        // make y a child of x
-        y.setParent(this);
-
-        if (child == null) {
-            child = y;
-            y.setRight(y);
-            y.setLeft(y);
-        } else {
-            child.add(y);
+    public void cascadingCut(FibonacciHeapNode<T> min) {
+        FibonacciHeapNode<T> z = parent;
+        // if there's a parent...
+        if (z != null) {
+            if (mark) {
+                // it's marked, cut it from parent
+                z.cut(this, min);
+                // cut its parent as well
+                z.cascadingCut(min);
+            } else {
+                // if y is unmarked, set it marked
+                mark = true;
+            }
         }
+    }
 
-        // increase degree[x]
-        degree++;
+    /**
+     * The reverse of the link operation: removes x from the child list of this
+     * node.
+     * 
+     * <p>
+     * <em>Running time: O(1)</em>
+     * </p>
+     * 
+     * @param x
+     *            child to be removed from this node's child list
+     * @param min
+     *            the minimum heap node, to which x is added.
+     */
+    public void cut(FibonacciHeapNode<T> x, FibonacciHeapNode<T> min) {
+        // remove x from childlist and decrement degree
+        x.left.right = x.right;
+        x.right.left = x.left;
+        degree--;
+        // reset child if necessary
+        if (degree == 0) {
+            child = null;
+        } else if (child == x) {
+            child = x.right;
+        }
+        // add x to root list of heap
+        x.right = min;
+        x.left = min.left;
+        min.left = x;
+        x.left.right = x;
+        // set parent[x] to nil
+        x.parent = null;
+        // set mark[x] to false
+        x.mark = false;
     }
 
 }

@@ -11,13 +11,12 @@ public class BitVectorPriorityQueue<T extends Identified> extends
 
     private final T[] values;
 
-    private final Comparator<T> comparator;
+    private final Key<T> key;
 
-    public BitVectorPriorityQueue(final Comparator<T> comparator,
-            final T[] values) {
+    public BitVectorPriorityQueue(final Key<T> key, final T[] values) {
         this.values = values;
         queue = BitVector.factory(values.length, false);
-        this.comparator = comparator;
+        this.key = key;
     }
 
     @Override
@@ -59,14 +58,14 @@ public class BitVectorPriorityQueue<T extends Identified> extends
 
     private int min() {
         int best = queue.nextSetBit(0);
-        T bestValue = values[best];
+        int bestKey = key.getKey(values[best]);
         for (int i = queue.nextSetBit(best + 1); i >= 0; i = queue
                 .nextSetBit(i + 1)) {
-            final T elt = values[i];
+            final int keyValue = key.getKey(values[i]);
 
-            if (comparator.compare(elt, bestValue) < 0) {
+            if (keyValue < bestKey) {
                 best = i;
-                bestValue = elt;
+                bestKey = keyValue;
             }
         }
 

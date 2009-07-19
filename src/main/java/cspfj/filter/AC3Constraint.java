@@ -16,26 +16,26 @@ import cspfj.util.Key;
  * @author scand1sk
  * 
  */
-public final class AC3 implements Filter {
+public final class AC3Constraint implements Filter {
     private final Problem problem;
 
-    private final Queue<Variable> inQueue;
+    private final Queue<Constraint> inQueue;
 
     private static final Logger logger = Logger.getLogger(Filter.class
             .getSimpleName());
 
     private int revisions = 0;
 
-    public AC3(final Problem problem) {
+    public AC3Constraint(final Problem problem) {
         super();
         this.problem = problem;
 
-        inQueue = new FibonacciHeap<Variable>(new Key<Variable>() {
+        inQueue = new FibonacciHeap<Constraint>(new Key<Constraint>() {
             @Override
-            public int getKey(Variable o1) {
-                return o1.getDomainSize();
+            public int getKey(Constraint o1) {
+                return o1.getEvaluation();
             }
-        }, problem.getVariables());
+        }, problem.getConstraints());
     }
 
     public boolean reduceAll() {
@@ -50,34 +50,22 @@ public final class AC3 implements Filter {
         logger.fine("reduce after " + cnt);
         for (Variable v : problem.getVariables()) {
             if (modVar[v.getId()] > cnt) {
-                inQueue.offer(v);
                 final Constraint[] involved = v.getInvolvingConstraints();
                 for (int j = involved.length; --j >= 0;) {
                     // involved[j].fillRemovals(true);
                     involved[j].setRemovals(v.getPositionInConstraint(j), true);
+                    inQueue.offer(involved[j]);
                 }
             }
         }
 
         if (modCons != null) {
-            // final BitSet cons = new BitSet();
             for (Constraint c : problem.getConstraints()) {
                 if (modCons[c.getId()] > cnt) {
-                    // cons.set(c.getId());
                     c.fillRemovals(true);
-
-                    if (!c.revise(revisator)) {
-                        c.incWeight();
-                        c.fillRemovals(false);
-                        return false;
-                    }
-                    c.fillRemovals(false);
+                    inQueue.offer(c);
                 }
             }
-
-            // for (int i = modCons.length; --i >= 0;) {
-            // assert modCons[i] <= cnt || cons.get(i);
-            // }
         }
 
         return reduce();
@@ -120,13 +108,12 @@ public final class AC3 implements Filter {
         }
         clean();
 
-        inQueue.offer(variable);
-
         final Constraint[] involving = variable.getInvolvingConstraints();
 
         for (int cp = involving.length; --cp >= 0;) {
             involving[cp].setRemovals(variable.getPositionInConstraint(cp),
                     true);
+            inQueue.offer(involving[cp]);
 
         }
 
@@ -135,7 +122,6 @@ public final class AC3 implements Filter {
 
     private RevisionHandler revisator = new RevisionHandler() {
         public void revised(final Constraint constraint, final Variable variable) {
-            inQueue.offer(variable);
             final Constraint[] involvingConstraints = variable
                     .getInvolvingConstraints();
 
@@ -144,6 +130,7 @@ public final class AC3 implements Filter {
                 if (constraintP != constraint) {
                     constraintP.setRemovals(variable
                             .getPositionInConstraint(cp), true);
+                    inQueue.offer(constraintP);
                 }
 
             }
@@ -152,29 +139,11 @@ public final class AC3 implements Filter {
 
     private boolean reduce() {
         logger.finer("Reducing");
+        final RevisionHandler revisator = this.revisator;
 
         while (!inQueue.isEmpty()) {
-            if (!reduceOnce(inQueue.poll())) {
-                return false;
-            }
-        }
+            final Constraint constraint = inQueue.poll();
 
-        assert control();
-
-        return true;
-
-    }
-
-    public boolean reduceOnce(Variable variable) {
-
-        final RevisionHandler revisator = this.revisator;
-        final Constraint[] involvingConstraints = variable
-                .getInvolvingConstraints();
-        for (int c = involvingConstraints.length; --c >= 0;) {
-            final Constraint constraint = involvingConstraints[c];
-            if (constraint.hasNoRemovals()) {
-                continue;
-            }
             revisions++;
             if (!constraint.revise(revisator)) {
                 constraint.incWeight();
@@ -183,18 +152,18 @@ public final class AC3 implements Filter {
             }
 
             constraint.fillRemovals(false);
-
         }
+
+        assert control();
+
         return true;
+
     }
 
     private void addAll() {
-        for (Variable v : problem.getVariables()) {
-            inQueue.offer(v);
-        }
-
         for (Constraint c : problem.getConstraints()) {
             c.fillRemovals(true);
+            inQueue.offer(c);
         }
     }
 

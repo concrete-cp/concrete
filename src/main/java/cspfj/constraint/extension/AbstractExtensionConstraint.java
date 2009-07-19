@@ -12,8 +12,8 @@ import cspfj.problem.Variable;
 public abstract class AbstractExtensionConstraint extends AbstractAC3Constraint
         implements ExtensionConstraint {
 
-//    private static final Logger LOGGER = Logger
-//            .getLogger(AbstractExtensionConstraint.class.getName());
+    // private static final Logger LOGGER = Logger
+    // .getLogger(AbstractExtensionConstraint.class.getName());
 
     private MatrixManager matrixManager;
 
@@ -25,8 +25,8 @@ public abstract class AbstractExtensionConstraint extends AbstractAC3Constraint
 
     }
 
-    public AbstractExtensionConstraint(String name, MatrixManager matrixManager,
-            Variable... scope) {
+    public AbstractExtensionConstraint(String name,
+            MatrixManager matrixManager, Variable... scope) {
         super(name, scope);
         this.matrixManager = matrixManager;
         matrixManager.setTuple(tuple);
@@ -104,4 +104,11 @@ public abstract class AbstractExtensionConstraint extends AbstractAC3Constraint
         return super.revise(position);
     }
 
+    public int getEvaluation() {
+        int size = 1;
+        for (int i = getArity(); --i >= 0;) {
+            size *= getVariable(i).getDomainSize();
+        }
+        return size;
+    }
 }

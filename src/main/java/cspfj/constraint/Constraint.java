@@ -5,8 +5,9 @@ import java.util.Set;
 
 import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
+import cspfj.util.Identified;
 
-public interface Constraint {
+public interface Constraint extends Identified {
     int getArity();
 
     boolean isInvolved(final Variable variable);
@@ -37,9 +38,9 @@ public interface Constraint {
     Constraint deepCopy(final Collection<Variable> variables)
             throws CloneNotSupportedException;
 
-    //void initNbSupports() throws InterruptedException;
+    // void initNbSupports() throws InterruptedException;
 
-    //long getNbSupports(final Variable variable, final int index);
+    // long getNbSupports(final Variable variable, final int index);
 
     // boolean skipRevision(int i);
 
@@ -53,9 +54,9 @@ public interface Constraint {
 
     // int getOtherSize(int position);
 
-    //long getNbMaxConflicts(final int position);
+    // long getNbMaxConflicts(final int position);
 
-    //long getNbInitConflicts(final int position, final int index);
+    // long getNbInitConflicts(final int position, final int index);
 
     boolean isBound(Variable variable);
 
@@ -63,15 +64,15 @@ public interface Constraint {
 
     boolean check();
 
-   // boolean check(int[] tuple);
+    // boolean check(int[] tuple);
 
     int[] getTuple();
-    
+
     void setLevel(int level);
 
     void restore(int level);
 
-    //long getInitSize();
+    // long getInitSize();
 
     int getWeight();
 
@@ -86,6 +87,8 @@ public interface Constraint {
     void fillRemovals(final boolean value);
 
     boolean hasNoRemovals();
+    
+    int getEvaluation();
 
     // boolean findValidTuple(int position, int index);
 }

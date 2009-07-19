@@ -36,8 +36,8 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 
     private final BitVector[] toFind;
 
-//    private final static Logger logger = Logger
-//            .getLogger(ExtensionConstraintDynamic.class.getSimpleName());
+    // private final static Logger logger = Logger
+    // .getLogger(ExtensionConstraintDynamic.class.getSimpleName());
 
     // public static boolean quick = false;
 
@@ -215,7 +215,7 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
     @Override
     public boolean removeTuple(int[] tuple) {
         if (dynamic.removeTuple(tuple)) {
-//            addConflict(tuple);
+            // addConflict(tuple);
             return true;
         }
         return false;
@@ -263,5 +263,8 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
     // } while (tupleManager.setNextTuple(base));
     // return removed;
     // }
+    public int getEvaluation() {
+        return dynamic.getSize();
+    }
 
 }

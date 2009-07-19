@@ -210,4 +210,7 @@ public class MatrixManagerDynamic extends MatrixManager implements
 
     }
 
+    public int getSize() {
+        return tupleSet.size();
+    }
 }

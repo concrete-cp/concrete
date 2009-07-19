@@ -59,11 +59,20 @@ public class ExtensionConstraint2D extends AbstractExtensionConstraint
         return constraint;
     }
 
-//    @Override
-//    public int removeTuples(int[] base) {
-//        if (removeTuple(base)) {
-//            return 1;
-//        }
-//        return 0;
-//    }
+    public int getEvaluation() {
+        int size = 0;
+        for (int i = 2; --i >= 0;) {
+            if (getRemovals(i)) {
+                size += getVariable(1 - i).getDomainSize();
+            }
+        }
+        return size;
+    }
+    // @Override
+    // public int removeTuples(int[] base) {
+    // if (removeTuple(base)) {
+    // return 1;
+    // }
+    // return 0;
+    // }
 }
