@@ -50,7 +50,7 @@ public interface Constraint extends Identified {
      * @param revisator
      * @return false iff an inconsistency has been detected
      */
-    boolean revise(final RevisionHandler revisator);
+    boolean revise(final RevisionHandler revisator, int reviseCount);
 
     // int getOtherSize(int position);
 
@@ -80,15 +80,15 @@ public interface Constraint extends Identified {
 
     void setWeight(final int weight);
 
-    boolean getRemovals(int position);
+    int getRemovals(int position);
 
-    void setRemovals(int position, boolean value);
+    void setRemovals(int position, int value);
 
-    void fillRemovals(final boolean value);
+    void fillRemovals(final int value);
 
-    boolean hasNoRemovals();
+    boolean hasNoRemovals(final int reviseCount);
     
-    int getEvaluation();
+    int getEvaluation(final int reviseCount);
 
     // boolean findValidTuple(int position, int index);
 }

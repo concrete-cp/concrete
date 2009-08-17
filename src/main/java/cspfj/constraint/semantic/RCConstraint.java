@@ -99,7 +99,7 @@ public class RCConstraint extends AbstractConstraint implements
     }
 
     @Override
-    public boolean revise(RevisionHandler revisator) {
+    public boolean revise(RevisionHandler revisator, int reviseCount) {
 
         final Variable v0 = getVariable(0);
         final Variable v1 = getVariable(1);

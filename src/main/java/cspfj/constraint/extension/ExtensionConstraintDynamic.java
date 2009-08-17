@@ -86,7 +86,7 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 
     }
 
-    public boolean revise(final RevisionHandler revisator) {
+    public boolean revise(final RevisionHandler revisator, int reviseCount) {
         return reviseSTR(revisator);
     }
 
@@ -263,7 +263,7 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
     // } while (tupleManager.setNextTuple(base));
     // return removed;
     // }
-    public int getEvaluation() {
+    public int getEvaluation(int reviseCount) {
         return dynamic.getSize();
     }
 

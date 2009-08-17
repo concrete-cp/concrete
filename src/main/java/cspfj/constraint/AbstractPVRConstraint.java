@@ -26,12 +26,12 @@ public abstract class AbstractPVRConstraint extends AbstractConstraint {
     public abstract boolean revise(final int position);
 
     @Override
-    public boolean revise(final RevisionHandler revisator) {
+    public boolean revise(final RevisionHandler revisator, int reviseCount) {
         for (int i = getArity(); --i >= 0;) {
             final Variable variable = getVariable(i);
             // assert (!variable.isAssigned() && skipRevision(i)) ? !revise(i)
             // : true : "Should not skip " + this + ", " + i;
-            if (!variable.isAssigned() && !skipRevision(i) && revise(i)) {
+            if (!variable.isAssigned() && !skipRevision(i, reviseCount) && revise(i)) {
                 if (variable.getDomainSize() <= 0) {
                     return false;
                 }
@@ -41,7 +41,7 @@ public abstract class AbstractPVRConstraint extends AbstractConstraint {
         return true;
     }
 
-    private boolean skipRevision(final int variablePosition) {
+    private boolean skipRevision(final int variablePosition, final int reviseCount) {
         // if (true)
         // return false;
         if (getArity() == 1) {
@@ -52,7 +52,7 @@ public abstract class AbstractPVRConstraint extends AbstractConstraint {
             return false;
         }
         for (int y = getArity(); --y >= 0;) {
-            if (y != variablePosition && getRemovals(y)) {
+            if (y != variablePosition && getRemovals(y) >= reviseCount) {
                 return false;
             }
         }

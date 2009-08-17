@@ -191,9 +191,9 @@ public final class DC2 implements Filter {
                     if (c.getArity() != 2) {
                         continue;
                     }
-                    c.fillRemovals(true);
-                    c.revise(rh);
-                    c.fillRemovals(false);
+
+                    c.revise(rh, -1);
+                    c.fillRemovals(-1);
                 }
 
                 sat = filter

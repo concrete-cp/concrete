@@ -37,365 +37,373 @@ import java.util.Set;
  * @author Nathan Fiedler
  */
 public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> {
-    /**
-     * The magic 45 comes from log base phi of Integer.MAX_VALUE, which is the
-     * most elements we will ever hold, and log base phi represents the largest
-     * degree of any root list node.
-     */
-    private static final int MAX_ARRAY_SIZE = 45;
+	/**
+	 * The magic 45 comes from log base phi of Integer.MAX_VALUE, which is the
+	 * most elements we will ever hold, and log base phi represents the largest
+	 * degree of any root list node.
+	 */
+	private static final int MAX_ARRAY_SIZE = 45;
 
-    private final FibonacciHeapNode<T>[] array = (FibonacciHeapNode<T>[]) new FibonacciHeapNode[MAX_ARRAY_SIZE];
+	private static final int MAP_INCREASE = 64;
 
-    /**
-     * Points to the minimum node in the heap.
-     */
-    private FibonacciHeapNode<T> minNode;
+	private final FibonacciHeapNode<T>[] array = (FibonacciHeapNode<T>[]) new FibonacciHeapNode[MAX_ARRAY_SIZE];
 
-    /**
-     * Number of nodes in the heap.
-     */
-    private int nNodes;
+	/**
+	 * Points to the minimum node in the heap.
+	 */
+	private FibonacciHeapNode<T> minNode;
 
-    private final FibonacciHeapNode<T>[] map;
+	/**
+	 * Number of nodes in the heap.
+	 */
+	private int nNodes;
 
-    private final boolean[] inQueue;
+	private FibonacciHeapNode<T>[] map;
 
-    private final Key<T> key;
+	private boolean[] inQueue;
 
-    /**
-     * Constructs a FibonacciHeap object that contains no elements.
-     */
-    public FibonacciHeap(final Key<T> key, final T[] values) {
-        this.key = key;
-        map = (FibonacciHeapNode<T>[]) new FibonacciHeapNode<?>[values.length];
-        for (T v : values) {
-            map[v.getId()] = new FibonacciHeapNode<T>(v);
-        }
-        inQueue = new boolean[map.length];
-    }
+	private final Key<T> key;
 
-    /**
-     * Tests if the Fibonacci heap is empty or not. Returns true if the heap is
-     * empty, false otherwise.
-     * 
-     * <p>
-     * Running time: O(1) actual
-     * </p>
-     * 
-     * @return true if the heap is empty, false otherwise
-     */
-    public boolean isEmpty() {
-        return minNode == null;
-    }
+	/**
+	 * Constructs a FibonacciHeap object that contains no elements.
+	 */
+	public FibonacciHeap(final Key<T> key) {
+		this.key = key;
+		map = (FibonacciHeapNode<T>[]) new FibonacciHeapNode<?>[MAP_INCREASE];
+		inQueue = new boolean[MAP_INCREASE];
+	}
 
-    /**
-     * Removes all elements from this heap.
-     */
-    public void clear() {
-        minNode = null;
-        nNodes = 0;
-        Arrays.fill(inQueue, false);
-    }
+	/**
+	 * Tests if the Fibonacci heap is empty or not. Returns true if the heap is
+	 * empty, false otherwise.
+	 * 
+	 * <p>
+	 * Running time: O(1) actual
+	 * </p>
+	 * 
+	 * @return true if the heap is empty, false otherwise
+	 */
+	public boolean isEmpty() {
+		return minNode == null;
+	}
 
-    /**
-     * Decreases the key value for a heap node, given the new value to take on.
-     * The structure of the heap may be changed and will not be consolidated.
-     * 
-     * <p>
-     * Running time: O(1) amortized
-     * </p>
-     * 
-     * @param x
-     *            node to decrease the key of
-     * 
-     * @exception IllegalArgumentException
-     *                Thrown if k is larger than x.key value.
-     */
-    private void decreaseKey(FibonacciHeapNode<T> x, boolean delete) {
-        final FibonacciHeapNode<T> y = x.getParent();
-        if (y != null && (delete || x.getKey() < y.getKey())) {
-            y.cut(x, minNode);
-            y.cascadingCut(minNode);
-        }
-        if (delete || x.getKey() < minNode.getKey()) {
-            minNode = x;
-        }
+	/**
+	 * Removes all elements from this heap.
+	 */
+	public void clear() {
+		minNode = null;
+		nNodes = 0;
+		Arrays.fill(inQueue, false);
+	}
 
-        assert control(minNode, minNode);
-    }
+	/**
+	 * Decreases the key value for a heap node, given the new value to take on.
+	 * The structure of the heap may be changed and will not be consolidated.
+	 * 
+	 * <p>
+	 * Running time: O(1) amortized
+	 * </p>
+	 * 
+	 * @param x
+	 *            node to decrease the key of
+	 * 
+	 * @exception IllegalArgumentException
+	 *                Thrown if k is larger than x.key value.
+	 */
+	private void decreaseKey(FibonacciHeapNode<T> x, boolean delete) {
+		final FibonacciHeapNode<T> y = x.getParent();
+		if (y != null && (delete || x.getKey() < y.getKey())) {
+			y.cut(x, minNode);
+			y.cascadingCut(minNode);
+		}
+		if (delete || x.getKey() < minNode.getKey()) {
+			minNode = x;
+		}
 
-    private void increaseKey(FibonacciHeapNode<T> x) {
-        decreaseKey(x, true);
-        removeMin();
-        x.clear();
-        insert(x);
-    }
+		assert control(minNode, minNode);
+	}
 
-    /**
-     * Inserts a new data element into the heap. No heap consolidation is
-     * performed at this time, the new node is simply inserted into the root
-     * list of this heap.
-     * 
-     * <p>
-     * Running time: O(1) actual
-     * </p>
-     * 
-     * @param node
-     *            new node to insert into heap
-     */
-    private void insert(FibonacciHeapNode<T> node) {
-        // concatenate node into min list
-        if (minNode != null) {
-            minNode.add(node);
+	private void increaseKey(FibonacciHeapNode<T> x) {
+		decreaseKey(x, true);
+		removeMin();
+		x.clear();
+		insert(x);
+	}
 
-            if (node.getKey() < minNode.getKey()) {
-                minNode = node;
-            }
-        } else {
-            minNode = node;
-            node.setLeft(node);
-            node.setRight(node);
-        }
+	/**
+	 * Inserts a new data element into the heap. No heap consolidation is
+	 * performed at this time, the new node is simply inserted into the root
+	 * list of this heap.
+	 * 
+	 * <p>
+	 * Running time: O(1) actual
+	 * </p>
+	 * 
+	 * @param node
+	 *            new node to insert into heap
+	 */
+	private void insert(FibonacciHeapNode<T> node) {
+		// concatenate node into min list
+		if (minNode != null) {
+			minNode.add(node);
 
-        nNodes++;
-    }
+			if (node.getKey() < minNode.getKey()) {
+				minNode = node;
+			}
+		} else {
+			minNode = node;
+			node.setLeft(node);
+			node.setRight(node);
+		}
 
-    public boolean offer(T data) {
-        final int id = data.getId();
-        final FibonacciHeapNode<T> node = map[id];
+		nNodes++;
+	}
 
-        final int oldKey = node.getKey();
-        final int newKey = key.getKey(data);
-        node.setKey(newKey);
+	public boolean offer(T data) {
+		final int id = data.getId();
 
-        if (inQueue[id]) {
-            if (newKey < oldKey) {
-                decreaseKey(node, false);
-                assert smallest(minNode);
-            } else if (newKey > oldKey) {
-                increaseKey(node);
-                assert smallest(minNode);
-            }
+		if (id >= map.length) {
+			map = Arrays.copyOf(map, id + MAP_INCREASE);
+			inQueue = Arrays.copyOf(inQueue, id + MAP_INCREASE);
+		}
+		FibonacciHeapNode<T> node = map[id];
+		if (node == null) {
+			node = new FibonacciHeapNode<T>(data);
+			map[id] = node;
+		}
 
-            return false;
-        }
+		final int oldKey = node.getKey();
+		final int newKey = key.getKey(data);
+		node.setKey(newKey);
 
-        node.clear();
-        insert(node);
-        inQueue[id] = true;
-        return true;
-    }
+		if (inQueue[id]) {
+			if (newKey < oldKey) {
+				decreaseKey(node, false);
+				assert smallest(minNode);
+			} else if (newKey > oldKey) {
+				increaseKey(node);
+				assert smallest(minNode);
+			}
 
-    /**
-     * Removes the smallest element from the heap. This will cause the trees in
-     * the heap to be consolidated, if necessary.
-     * 
-     * <p>
-     * Running time: O(log n) amortized
-     * </p>
-     * 
-     * @return node with the smallest key
-     */
-    private T removeMin() {
-        final FibonacciHeapNode<T> z = minNode;
+			return false;
+		}
 
-        if (z == null) {
-            return null;
-        }
+		node.clear();
+		insert(node);
+		inQueue[id] = true;
+		return true;
+	}
 
-        final FibonacciHeapNode<T> zChild = z.getChild();
+	/**
+	 * Removes the smallest element from the heap. This will cause the trees in
+	 * the heap to be consolidated, if necessary.
+	 * 
+	 * <p>
+	 * Running time: O(log n) amortized
+	 * </p>
+	 * 
+	 * @return node with the smallest key
+	 */
+	private T removeMin() {
+		final FibonacciHeapNode<T> z = minNode;
 
-        if (zChild != null) {
-            zChild.setParent(null);
-            // for each child of z do...
-            for (FibonacciHeapNode<T> x = zChild.getRight(); x != zChild; x = x
-                    .getRight()) {
-                // set parent[x] to null
-                x.setParent(null);
-            }
-            // merge the children into root list
+		if (z == null) {
+			return null;
+		}
 
-            final FibonacciHeapNode<T> minleft = minNode.getLeft();
-            final FibonacciHeapNode<T> zchildleft = zChild.getLeft();
-            minNode.setLeft(zchildleft);
-            zchildleft.setRight(minNode);
-            zChild.setLeft(minleft);
-            minleft.setRight(z.getChild());
-        }
-        // remove z from root list of heap
-        z.remove();
-        if (z == z.getRight()) {
-            minNode = null;
-        } else {
-            minNode = z.getRight();
-            consolidate();
-        }
-        // decrement size of heap
-        nNodes--;
+		final FibonacciHeapNode<T> zChild = z.getChild();
 
-        assert control(minNode, minNode);
-        return z.getData();
-    }
+		if (zChild != null) {
+			zChild.setParent(null);
+			// for each child of z do...
+			for (FibonacciHeapNode<T> x = zChild.getRight(); x != zChild; x = x
+					.getRight()) {
+				// set parent[x] to null
+				x.setParent(null);
+			}
+			// merge the children into root list
 
-    private boolean smallest(FibonacciHeapNode<T> min) {
+			final FibonacciHeapNode<T> minleft = minNode.getLeft();
+			final FibonacciHeapNode<T> zchildleft = zChild.getLeft();
+			minNode.setLeft(zchildleft);
+			zchildleft.setRight(minNode);
+			zChild.setLeft(minleft);
+			minleft.setRight(z.getChild());
+		}
+		// remove z from root list of heap
+		z.remove();
+		if (z == z.getRight()) {
+			minNode = null;
+		} else {
+			minNode = z.getRight();
+			consolidate();
+		}
+		// decrement size of heap
+		nNodes--;
 
-        for (int i = inQueue.length; --i >= 0;) {
-            if (inQueue[i] && map[i].getKey() < min.getKey()) {
-                return false;
-            }
-        }
+		assert control(minNode, minNode);
+		return z.getData();
+	}
 
-        return true;
-    }
+	private boolean smallest(FibonacciHeapNode<T> min) {
 
-    /**
-     * Returns the size of the heap which is measured in the number of elements
-     * contained in the heap.
-     * 
-     * <p>
-     * Running time: O(1) actual
-     * </p>
-     * 
-     * @return number of elements in the heap
-     */
-    public int size() {
-        return nNodes;
-    }
+		for (int i = inQueue.length; --i >= 0;) {
+			if (inQueue[i] && map[i].getKey() < min.getKey()) {
+				return false;
+			}
+		}
 
-    /**
-     * Consolidates the trees in the heap by joining trees of equal degree until
-     * there are no more trees of equal degree in the root list.
-     * 
-     * <p>
-     * <em>Running time: O(log n) amortized</em>
-     * </p>
-     */
-    private void consolidate() {
-        Arrays.fill(array, null);
+		return true;
+	}
 
-        // For each root list node look for others of the same degree.
-        FibonacciHeapNode<T> start = minNode;
-        FibonacciHeapNode<T> w = minNode;
-        do {
-            FibonacciHeapNode<T> x = w;
-            // Because x might be moved, save its sibling now.
-            FibonacciHeapNode<T> nextW = w.getRight();
-            int d = x.getDegree();
-            while (array[d] != null) {
-                // Make one of the nodes a child of the other.
-                FibonacciHeapNode<T> y = array[d];
-                if (x.getKey() > y.getKey()) {
-                    final FibonacciHeapNode<T> temp = y;
-                    y = x;
-                    x = temp;
-                }
-                if (y == start) {
-                    // Because removeMin() arbitrarily assigned the min
-                    // reference, we have to ensure we do not miss the
-                    // end of the root node list.
-                    start = start.getRight();
-                }
-                if (y == nextW) {
-                    // If we wrapped around we need to check for this case.
-                    nextW = nextW.getRight();
-                }
-                // Node y disappears from root list.
-                y.link(x);
-                // We've handled this degree, go to next one.
-                array[d] = null;
-                d++;
-            }
-            // Save this node for later when we might encounter another
-            // of the same degree.
-            array[d] = x;
-            // Move forward through list.
-            w = nextW;
-        } while (w != start);
+	/**
+	 * Returns the size of the heap which is measured in the number of elements
+	 * contained in the heap.
+	 * 
+	 * <p>
+	 * Running time: O(1) actual
+	 * </p>
+	 * 
+	 * @return number of elements in the heap
+	 */
+	public int size() {
+		return nNodes;
+	}
 
-        // The node considered to be min may have been changed above.
-        minNode = start;
-        // Find the minimum key again.
-        for (FibonacciHeapNode<T> a : array) {
-            if (a != null && a.getKey() < minNode.getKey()) {
-                minNode = a;
-            }
-        }
+	/**
+	 * Consolidates the trees in the heap by joining trees of equal degree until
+	 * there are no more trees of equal degree in the root list.
+	 * 
+	 * <p>
+	 * <em>Running time: O(log n) amortized</em>
+	 * </p>
+	 */
+	private void consolidate() {
+		Arrays.fill(array, null);
 
-        assert control(minNode, minNode);
-    }
+		// For each root list node look for others of the same degree.
+		FibonacciHeapNode<T> start = minNode;
+		FibonacciHeapNode<T> w = minNode;
+		do {
+			FibonacciHeapNode<T> x = w;
+			// Because x might be moved, save its sibling now.
+			FibonacciHeapNode<T> nextW = w.getRight();
+			int d = x.getDegree();
+			while (array[d] != null) {
+				// Make one of the nodes a child of the other.
+				FibonacciHeapNode<T> y = array[d];
+				if (x.getKey() > y.getKey()) {
+					final FibonacciHeapNode<T> temp = y;
+					y = x;
+					x = temp;
+				}
+				if (y == start) {
+					// Because removeMin() arbitrarily assigned the min
+					// reference, we have to ensure we do not miss the
+					// end of the root node list.
+					start = start.getRight();
+				}
+				if (y == nextW) {
+					// If we wrapped around we need to check for this case.
+					nextW = nextW.getRight();
+				}
+				// Node y disappears from root list.
+				y.link(x);
+				// We've handled this degree, go to next one.
+				array[d] = null;
+				d++;
+			}
+			// Save this node for later when we might encounter another
+			// of the same degree.
+			array[d] = x;
+			// Move forward through list.
+			w = nextW;
+		} while (w != start);
 
-    @Override
-    public Iterator<T> iterator() {
-        throw new UnsupportedOperationException();
-    }
+		// The node considered to be min may have been changed above.
+		minNode = start;
+		// Find the minimum key again.
+		for (FibonacciHeapNode<T> a : array) {
+			if (a != null && a.getKey() < minNode.getKey()) {
+				minNode = a;
+			}
+		}
 
-    @Override
-    public T peek() {
-        assert smallest(minNode);
-        return minNode.getData();
-    }
+		assert control(minNode, minNode);
+	}
 
-    @Override
-    public T poll() {
-        assert smallest(minNode);
-        final T min = removeMin();
-        inQueue[min.getId()] = false;
-        return min;
-    }
+	@Override
+	public Iterator<T> iterator() {
+		throw new UnsupportedOperationException();
+	}
 
-    /**
-     * Creates a String representation of this Fibonacci heap.
-     * 
-     * @return String of this.
-     */
-    public String toString() {
-        if (minNode == null) {
-            return "empty";
-        }
-        return tree(minNode, minNode, 0);
-    }
+	@Override
+	public T peek() {
+		assert smallest(minNode);
+		return minNode.getData();
+	}
 
-    private boolean control(FibonacciHeapNode<T> current,
-            FibonacciHeapNode<T> start) {
-        return control(current, start, new HashSet<FibonacciHeapNode<T>>(),
-                new HashSet<FibonacciHeapNode<T>>());
-    }
+	@Override
+	public T poll() {
+		assert smallest(minNode);
+		final T min = removeMin();
+		inQueue[min.getId()] = false;
+		return min;
+	}
 
-    private boolean control(FibonacciHeapNode<T> current,
-            FibonacciHeapNode<T> start, Set<FibonacciHeapNode<T>> loopControl,
-            Set<FibonacciHeapNode<T>> ancestorControl) {
-        if (current == null) {
-            return true;
-        }
-        assert !loopControl.contains(current);
-        assert !ancestorControl.contains(current);
-        loopControl.add(current);
-        if (current.getChild() != null) {
-            ancestorControl.add(current);
-            if (!control(current.getChild(), current.getChild(),
-                    new HashSet<FibonacciHeapNode<T>>(), ancestorControl)) {
-                return false;
-            }
-        }
+	/**
+	 * Creates a String representation of this Fibonacci heap.
+	 * 
+	 * @return String of this.
+	 */
+	public String toString() {
+		if (minNode == null) {
+			return "empty";
+		}
+		return tree(minNode, minNode, 0);
+	}
 
-        return current.getRight() == start
-                || control(current.getRight(), start, loopControl,
-                        ancestorControl);
-    }
+	private boolean control(FibonacciHeapNode<T> current,
+			FibonacciHeapNode<T> start) {
+		return control(current, start, new HashSet<FibonacciHeapNode<T>>(),
+				new HashSet<FibonacciHeapNode<T>>());
+	}
 
-    private String tree(FibonacciHeapNode<T> current,
-            FibonacciHeapNode<T> start, int depth) {
-        final StringBuilder stb = new StringBuilder();
-        for (int i = depth; --i >= 0;) {
-            stb.append("--");
-        }
-        stb.append(current.getData()).append("\n");
-        if (current.getChild() != null) {
-            stb.append(tree(current.getChild(), current.getChild(), depth + 1));
-        }
-        if (current.getRight() != start) {
-            stb.append(tree(current.getRight(), start, depth));
-        }
-        return stb.toString();
-    }
+	private boolean control(FibonacciHeapNode<T> current,
+			FibonacciHeapNode<T> start, Set<FibonacciHeapNode<T>> loopControl,
+			Set<FibonacciHeapNode<T>> ancestorControl) {
+		if (current == null) {
+			return true;
+		}
+		assert !loopControl.contains(current);
+		assert !ancestorControl.contains(current);
+		loopControl.add(current);
+		if (current.getChild() != null) {
+			ancestorControl.add(current);
+			if (!control(current.getChild(), current.getChild(),
+					new HashSet<FibonacciHeapNode<T>>(), ancestorControl)) {
+				return false;
+			}
+		}
+
+		return current.getRight() == start
+				|| control(current.getRight(), start, loopControl,
+						ancestorControl);
+	}
+
+	private String tree(FibonacciHeapNode<T> current,
+			FibonacciHeapNode<T> start, int depth) {
+		final StringBuilder stb = new StringBuilder();
+		for (int i = depth; --i >= 0;) {
+			stb.append("--");
+		}
+		stb.append(current.getData()).append("\n");
+		if (current.getChild() != null) {
+			stb.append(tree(current.getChild(), current.getChild(), depth + 1));
+		}
+		if (current.getRight() != start) {
+			stb.append(tree(current.getRight(), start, depth));
+		}
+		return stb.toString();
+	}
 }

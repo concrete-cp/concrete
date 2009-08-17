@@ -59,10 +59,10 @@ public class ExtensionConstraint2D extends AbstractExtensionConstraint
         return constraint;
     }
 
-    public int getEvaluation() {
+    public int getEvaluation(int reviseCount) {
         int size = 0;
         for (int i = 2; --i >= 0;) {
-            if (getRemovals(i)) {
+            if (getRemovals(i) >= reviseCount) {
                 size += getVariable(1 - i).getDomainSize();
             }
         }
