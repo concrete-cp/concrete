@@ -6,13 +6,14 @@
  *
  * Original Author:  Nathan Fiedler
  */
-package cspfj.util;
+package cspfj.priorityqueues;
 
 import java.util.AbstractQueue;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+
 
 /**
  * This class implements a Fibonacci heap data structure. Much of the code in
@@ -67,12 +68,12 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 	/**
 	 * Constructs a FibonacciHeap object that contains no elements.
 	 */
-	public FibonacciHeap(final Key<T> key) {
+	public FibonacciHeap(final Key<T> key, final int initSize) {
 		this.key = key;
 		map = (FibonacciHeapNode<T>[]) new FibonacciHeapNode<?>[MAP_INCREASE];
-		inQueue = new boolean[MAP_INCREASE];
+		inQueue = new boolean[initSize];
 	}
-
+	
 	/**
 	 * Tests if the Fibonacci heap is empty or not. Returns true if the heap is
 	 * empty, false otherwise.

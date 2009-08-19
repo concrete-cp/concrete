@@ -1,4 +1,4 @@
-package cspfj.util;
+package cspfj.priorityqueues;
 
 public interface Identified {
     int getId();

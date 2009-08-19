@@ -1,4 +1,4 @@
-package cspfj.util;
+package cspfj.priorityqueues;
 
 public interface Key<T> {
     int getKey(T object);

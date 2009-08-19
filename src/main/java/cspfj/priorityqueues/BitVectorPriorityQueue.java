@@ -1,8 +1,10 @@
-package cspfj.util;
+package cspfj.priorityqueues;
 
 import java.util.AbstractQueue;
 import java.util.Comparator;
 import java.util.Iterator;
+
+import cspfj.util.BitVector;
 
 public class BitVectorPriorityQueue<T extends Identified> extends
         AbstractQueue<T> {

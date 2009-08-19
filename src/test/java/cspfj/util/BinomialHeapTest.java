@@ -2,15 +2,16 @@ package cspfj.util;
 
 import static org.junit.Assert.assertTrue;
 
+import java.util.Queue;
 import java.util.Random;
 
 import org.junit.Test;
 
-import cspfj.priorityqueues.FibonacciHeap;
+import cspfj.priorityqueues.BinomialHeap;
 import cspfj.priorityqueues.Identified;
 import cspfj.priorityqueues.Key;
 
-public class FibonacciHeapTest {
+public class BinomialHeapTest {
 
 	private static int id = 0;
 
@@ -24,7 +25,7 @@ public class FibonacciHeapTest {
 			ints[i] = new IdInteger(RANDOM.nextInt(1000));
 		}
 
-		final FibonacciHeap<IdInteger> maximier = new FibonacciHeap<IdInteger>(
+		final Queue<IdInteger> maximier = new BinomialHeap<IdInteger>(
 				new Key<IdInteger>() {
 
 					@Override
@@ -32,10 +33,10 @@ public class FibonacciHeapTest {
 						return object.value;
 					}
 
-				}, 100);
+				});
 
 		for (int i = 0; i < 100; i++) {
-			maximier.add(ints[i]);
+			maximier.offer(ints[i]);
 		}
 
 		int last = maximier.peek().value;
@@ -55,12 +56,16 @@ public class FibonacciHeapTest {
 
 		public IdInteger(final int value) {
 			this.value = value;
-			this.id = FibonacciHeapTest.id++;
+			this.id = BinomialHeapTest.id++;
 		}
 
 		@Override
 		public int getId() {
 			return id;
+		}
+
+		public String toString() {
+			return Integer.toString(value);
 		}
 	}
 }

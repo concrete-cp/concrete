@@ -4,8 +4,8 @@ import java.util.Collection;
 import java.util.Set;
 
 import cspfj.filter.RevisionHandler;
+import cspfj.priorityqueues.Identified;
 import cspfj.problem.Variable;
-import cspfj.util.Identified;
 
 public interface Constraint extends Identified {
     int getArity();

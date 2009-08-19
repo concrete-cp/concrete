@@ -7,10 +7,10 @@ import java.util.logging.Logger;
 
 import cspfj.constraint.AbstractPVRConstraint;
 import cspfj.constraint.Constraint;
+import cspfj.priorityqueues.BinaryHeap;
+import cspfj.priorityqueues.Key;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
-import cspfj.util.FibonacciHeap;
-import cspfj.util.Key;
 
 /**
  * @author scand1sk
@@ -21,7 +21,7 @@ public final class AC3Constraint implements Filter {
 
 	private final Queue<Constraint> queue;
 
-	private static final Logger logger = Logger.getLogger(Filter.class
+	private static final Logger LOGGER = Logger.getLogger(Filter.class
 			.getSimpleName());
 
 	private int revisions = 0;
@@ -32,12 +32,12 @@ public final class AC3Constraint implements Filter {
 		super();
 		this.problem = problem;
 
-		queue = new FibonacciHeap<Constraint>(new Key<Constraint>() {
+		queue = new BinaryHeap<Constraint>(new Key<Constraint>() {
 			@Override
 			public int getKey(Constraint o1) {
 				return o1.getEvaluation(AC3Constraint.this.revisionCount);
 			}
-		});
+		}, problem.getNbConstraints());
 	}
 
 	public boolean reduceAll() {
@@ -50,7 +50,7 @@ public final class AC3Constraint implements Filter {
 	public boolean reduceFrom(int[] modVar, int[] modCons, int cnt) {
 		revisionCount++;
 		queue.clear();
-		logger.fine("reduce after " + cnt);
+		LOGGER.fine("reduce after " + cnt);
 		for (Variable v : problem.getVariables()) {
 			if (modVar[v.getId()] > cnt) {
 				final Constraint[] involved = v.getInvolvingConstraints();
@@ -111,7 +111,7 @@ public final class AC3Constraint implements Filter {
 	};
 
 	private boolean reduce() {
-		logger.finer("Reducing");
+		LOGGER.finer("Reducing");
 		final RevisionHandler revisator = this.revisator;
 
 		while (!queue.isEmpty()) {

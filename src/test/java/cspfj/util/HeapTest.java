@@ -2,67 +2,60 @@ package cspfj.util;
 
 import static org.junit.Assert.assertTrue;
 
-import java.util.Comparator;
 import java.util.Random;
 
 import org.junit.Test;
 
-import cspfj.util.Heap;
+import cspfj.priorityqueues.BinaryHeap;
+import cspfj.priorityqueues.Identified;
+import cspfj.priorityqueues.Key;
 
 public class HeapTest {
 
-    private static int id = 0;
+	private static int id = 0;
 
-    @Test
-    public void test() {
-        final Heap<IdInteger> maximier = new Heap<IdInteger>(
-                new IdIntegerComparator(), new IdInteger[100]);
+	@Test
+	public void test() {
+		final BinaryHeap<IdInteger> maximier = new BinaryHeap<IdInteger>(
+				new Key<IdInteger>() {
 
-        final Random random = new Random();
+					@Override
+					public int getKey(IdInteger object) {
+						return object.value;
+					}
 
-        for (int i = 0; i < 100; i++) {
-            maximier.add(new IdInteger(random.nextInt(1000)));
-        }
+				}, 100);
 
-        int last = maximier.peek().value;
-        while (!maximier.isEmpty()) {
-            final int current = maximier.poll().value;
-            assertTrue(current >= last);
-            last = current;
-        }
+		final Random random = new Random();
 
-    }
+		for (int i = 0; i < 100; i++) {
+			maximier.add(new IdInteger(random.nextInt(1000)));
+		}
 
-    private static class IdIntegerComparator implements
-            Comparator<IdInteger> {
+		int last = maximier.peek().value;
+		while (!maximier.isEmpty()) {
+			final int current = maximier.poll().value;
+			assertTrue(current >= last);
+			last = current;
+		}
 
-        @Override
-        public int compare(IdInteger o1, IdInteger o2) {
-            return o1.compareTo(o2);
-        }
+	}
 
-    }
+	private static class IdInteger implements Identified {
 
-    private static class IdInteger implements Identified, Comparable<IdInteger> {
+		final private int value;
 
-        final private int value;
+		final private int id;
 
-        final private int id;
+		public IdInteger(final int value) {
+			this.value = value;
+			this.id = HeapTest.id++;
+		}
 
-        public IdInteger(final int value) {
-            this.value = value;
-            this.id = HeapTest.id++;
-        }
+		@Override
+		public int getId() {
+			return id;
+		}
 
-        @Override
-        public int getId() {
-            return id;
-        }
-
-        @Override
-        public int compareTo(IdInteger o) {
-            return Integer.valueOf(value).compareTo(o.value);
-        }
-
-    }
+	}
 }

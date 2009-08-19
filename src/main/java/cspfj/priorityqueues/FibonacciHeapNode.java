@@ -1,4 +1,4 @@
-package cspfj.util;
+package cspfj.priorityqueues;
 
 /**
  * Implements a node of the Fibonacci heap. It holds the information necessary

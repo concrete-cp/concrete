@@ -24,8 +24,8 @@ import java.util.List;
 
 import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
+import cspfj.priorityqueues.Identified;
 import cspfj.util.BitVector;
-import cspfj.util.Identified;
 
 public final class Variable implements Cloneable, Identified {
 

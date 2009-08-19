@@ -7,10 +7,10 @@ import java.util.logging.Logger;
 
 import cspfj.constraint.AbstractPVRConstraint;
 import cspfj.constraint.Constraint;
+import cspfj.priorityqueues.FibonacciHeap;
+import cspfj.priorityqueues.Key;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
-import cspfj.util.FibonacciHeap;
-import cspfj.util.Key;
 
 /**
  * @author scand1sk
@@ -21,7 +21,7 @@ public final class AC3 implements Filter {
 
 	private final Queue<Variable> queue;
 
-	private static final Logger logger = Logger.getLogger(Filter.class
+	private static final Logger LOGGER = Logger.getLogger(Filter.class
 			.getSimpleName());
 
 	private int revisions = 0;
@@ -37,7 +37,7 @@ public final class AC3 implements Filter {
 			public int getKey(Variable o1) {
 				return o1.getDomainSize();
 			}
-		});
+		}, problem.getNbVariables());
 	}
 
 	public boolean reduceAll() {
@@ -50,7 +50,7 @@ public final class AC3 implements Filter {
 	public boolean reduceFrom(int[] modVar, int[] modCons, int cnt) {
 		reviseCount++;
 		queue.clear();
-		logger.fine("reduce after " + cnt);
+		LOGGER.fine("reduce after " + cnt);
 		for (Variable v : problem.getVariables()) {
 			if (modVar[v.getId()] > cnt) {
 				queue.offer(v);
@@ -118,7 +118,7 @@ public final class AC3 implements Filter {
 	};
 
 	private boolean reduce() {
-		logger.finer("Reducing");
+		LOGGER.finer("Reducing");
 
 		while (!queue.isEmpty()) {
 			if (!reduceOnce(queue.poll())) {
