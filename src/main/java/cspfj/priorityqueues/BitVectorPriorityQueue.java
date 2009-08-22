@@ -1,23 +1,21 @@
 package cspfj.priorityqueues;
 
 import java.util.AbstractQueue;
-import java.util.Comparator;
+import java.util.BitSet;
 import java.util.Iterator;
-
-import cspfj.util.BitVector;
 
 public class BitVectorPriorityQueue<T extends Identified> extends
         AbstractQueue<T> {
 
-    private final BitVector queue;
+    private final BitSet queue;
 
     private final T[] values;
 
     private final Key<T> key;
 
-    public BitVectorPriorityQueue(final Key<T> key, final T[] values) {
-        this.values = values;
-        queue = BitVector.factory(values.length, false);
+    public BitVectorPriorityQueue(final Key<T> key, final int initSize) {
+        this.values = (T[]) new Identified[initSize];
+        queue = new BitSet(initSize);
         this.key = key;
     }
 
@@ -38,7 +36,8 @@ public class BitVectorPriorityQueue<T extends Identified> extends
 
     @Override
     public boolean offer(T e) {
-        return queue.set(e.getId());
+        queue.set(e.getId());
+        return true;
     }
 
     @Override
@@ -48,7 +47,7 @@ public class BitVectorPriorityQueue<T extends Identified> extends
 
     @Override
     public void clear() {
-        queue.fill(false);
+        queue.clear();
     }
 
     @Override
