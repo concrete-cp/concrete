@@ -14,7 +14,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-
 /**
  * This class implements a Fibonacci heap data structure. Much of the code in
  * this class is based on the algorithms in the "Introduction to Algorithms"by
@@ -73,7 +72,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 		map = (FibonacciHeapNode<T>[]) new FibonacciHeapNode<?>[MAP_INCREASE];
 		inQueue = new boolean[initSize];
 	}
-	
+
 	/**
 	 * Tests if the Fibonacci heap is empty or not. Returns true if the heap is
 	 * empty, false otherwise.
@@ -107,23 +106,31 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 	 * 
 	 * @param x
 	 *            node to decrease the key of
-	 * 
+	 * @param delete
+	 *            set to true if the node is going to be deleted: it will be
+	 *            sifted up to the root (as if the new key was negative
+	 *            infinity) for easy deletion
 	 * @exception IllegalArgumentException
 	 *                Thrown if k is larger than x.key value.
 	 */
 	private void decreaseKey(FibonacciHeapNode<T> x, boolean delete) {
-		final FibonacciHeapNode<T> y = x.getParent();
-		if (y != null && (delete || x.getKey() < y.getKey())) {
+		final FibonacciHeapNode<T> y = x.parent;
+		if (y != null && (delete || x.key < y.key)) {
 			y.cut(x, minNode);
 			y.cascadingCut(minNode);
 		}
-		if (delete || x.getKey() < minNode.getKey()) {
+		if (delete || x.key < minNode.key) {
 			minNode = x;
 		}
 
 		assert control(minNode, minNode);
 	}
 
+	/**
+	 * Key increase is implemented as deletion and reinsertion of the node
+	 * 
+	 * @param x
+	 */
 	private void increaseKey(FibonacciHeapNode<T> x) {
 		decreaseKey(x, true);
 		removeMin();
@@ -148,13 +155,13 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 		if (minNode != null) {
 			minNode.add(node);
 
-			if (node.getKey() < minNode.getKey()) {
+			if (node.key < minNode.key) {
 				minNode = node;
 			}
 		} else {
 			minNode = node;
-			node.setLeft(node);
-			node.setRight(node);
+			node.left = node;
+			node.right = node;
 		}
 
 		nNodes++;
@@ -167,15 +174,16 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 			map = Arrays.copyOf(map, id + MAP_INCREASE);
 			inQueue = Arrays.copyOf(inQueue, id + MAP_INCREASE);
 		}
+
 		FibonacciHeapNode<T> node = map[id];
 		if (node == null) {
 			node = new FibonacciHeapNode<T>(data);
 			map[id] = node;
 		}
 
-		final int oldKey = node.getKey();
+		final int oldKey = node.key;
 		final int newKey = key.getKey(data);
-		node.setKey(newKey);
+		node.key = newKey;
 
 		if (inQueue[id]) {
 			if (newKey < oldKey) {
@@ -212,44 +220,43 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 			return null;
 		}
 
-		final FibonacciHeapNode<T> zChild = z.getChild();
+		final FibonacciHeapNode<T> zChild = z.child;
 
 		if (zChild != null) {
-			zChild.setParent(null);
+			zChild.parent = null;
 			// for each child of z do...
-			for (FibonacciHeapNode<T> x = zChild.getRight(); x != zChild; x = x
-					.getRight()) {
+			for (FibonacciHeapNode<T> x = zChild.right; x != zChild; x = x.right) {
 				// set parent[x] to null
-				x.setParent(null);
+				x.parent = null;
 			}
 			// merge the children into root list
 
-			final FibonacciHeapNode<T> minleft = minNode.getLeft();
-			final FibonacciHeapNode<T> zchildleft = zChild.getLeft();
-			minNode.setLeft(zchildleft);
-			zchildleft.setRight(minNode);
-			zChild.setLeft(minleft);
-			minleft.setRight(z.getChild());
+			final FibonacciHeapNode<T> minLeft = minNode.left;
+			final FibonacciHeapNode<T> zChildLeft = zChild.left;
+			minNode.left = zChildLeft;
+			zChildLeft.right = minNode;
+			zChild.left = minLeft;
+			minLeft.right = z.child;
 		}
 		// remove z from root list of heap
 		z.remove();
-		if (z == z.getRight()) {
+		if (z == z.right) {
 			minNode = null;
 		} else {
-			minNode = z.getRight();
+			minNode = z.right;
 			consolidate();
 		}
 		// decrement size of heap
 		nNodes--;
 
 		assert control(minNode, minNode);
-		return z.getData();
+		return z.data;
 	}
 
 	private boolean smallest(FibonacciHeapNode<T> min) {
 
 		for (int i = inQueue.length; --i >= 0;) {
-			if (inQueue[i] && map[i].getKey() < min.getKey()) {
+			if (inQueue[i] && map[i].key < min.key) {
 				return false;
 			}
 		}
@@ -288,25 +295,27 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 		do {
 			FibonacciHeapNode<T> x = w;
 			// Because x might be moved, save its sibling now.
-			FibonacciHeapNode<T> nextW = w.getRight();
-			int d = x.getDegree();
+			FibonacciHeapNode<T> nextW = w.right;
+			int d = x.degree;
 			while (array[d] != null) {
 				// Make one of the nodes a child of the other.
 				FibonacciHeapNode<T> y = array[d];
-				if (x.getKey() > y.getKey()) {
+				if (x.key > y.key) {
 					final FibonacciHeapNode<T> temp = y;
 					y = x;
 					x = temp;
 				}
 				if (y == start) {
-					// Because removeMin() arbitrarily assigned the min
-					// reference, we have to ensure we do not miss the
-					// end of the root node list.
-					start = start.getRight();
+					/**
+					 * Because removeMin() arbitrarily assigned the min
+					 * reference, we have to ensure we do not miss the end of
+					 * the root node list.
+					 */
+					start = start.right;
 				}
 				if (y == nextW) {
 					// If we wrapped around we need to check for this case.
-					nextW = nextW.getRight();
+					nextW = nextW.right;
 				}
 				// Node y disappears from root list.
 				y.link(x);
@@ -325,7 +334,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 		minNode = start;
 		// Find the minimum key again.
 		for (FibonacciHeapNode<T> a : array) {
-			if (a != null && a.getKey() < minNode.getKey()) {
+			if (a != null && a.key < minNode.key) {
 				minNode = a;
 			}
 		}
@@ -341,7 +350,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 	@Override
 	public T peek() {
 		assert smallest(minNode);
-		return minNode.getData();
+		return minNode.data;
 	}
 
 	@Override
@@ -379,17 +388,16 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 		assert !loopControl.contains(current);
 		assert !ancestorControl.contains(current);
 		loopControl.add(current);
-		if (current.getChild() != null) {
+		if (current.child != null) {
 			ancestorControl.add(current);
-			if (!control(current.getChild(), current.getChild(),
+			if (!control(current.child, current.child,
 					new HashSet<FibonacciHeapNode<T>>(), ancestorControl)) {
 				return false;
 			}
 		}
 
-		return current.getRight() == start
-				|| control(current.getRight(), start, loopControl,
-						ancestorControl);
+		return current.right == start
+				|| control(current.right, start, loopControl, ancestorControl);
 	}
 
 	private String tree(FibonacciHeapNode<T> current,
@@ -398,13 +406,245 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 		for (int i = depth; --i >= 0;) {
 			stb.append("--");
 		}
-		stb.append(current.getData()).append("\n");
-		if (current.getChild() != null) {
-			stb.append(tree(current.getChild(), current.getChild(), depth + 1));
+		stb.append(current.data).append("\n");
+		if (current.child != null) {
+			stb.append(tree(current.child, current.child, depth + 1));
 		}
-		if (current.getRight() != start) {
-			stb.append(tree(current.getRight(), start, depth));
+		if (current.right != start) {
+			stb.append(tree(current.right, start, depth));
 		}
 		return stb.toString();
+	}
+
+	/**
+	 * Implements a node of the Fibonacci heap. It holds the information
+	 * necessary for maintaining the structure of the heap. It also holds the
+	 * reference to the key value (which is used to determine the heap
+	 * structure).
+	 * 
+	 * @author Nathan Fiedler
+	 */
+	private static class FibonacciHeapNode<T> {
+		/**
+		 * Node data.
+		 */
+		private final T data;
+
+		/**
+		 * first child node
+		 */
+		private FibonacciHeapNode<T> child;
+
+		/**
+		 * left sibling node
+		 */
+		private FibonacciHeapNode<T> left;
+
+		/**
+		 * parent node
+		 */
+		private FibonacciHeapNode<T> parent;
+
+		/**
+		 * right sibling node
+		 */
+		private FibonacciHeapNode<T> right;
+
+		/**
+		 * true if this node has had a child removed since this node was added
+		 * to its parent
+		 */
+		private boolean mark;
+
+		/**
+		 * number of children of this node (does not count grandchildren)
+		 */
+		private int degree;
+
+		private int key;
+
+		/**
+		 * Default constructor. Initializes the right and left pointers, making
+		 * this a circular doubly-linked list.
+		 * 
+		 * @param data
+		 *            data for this node
+		 * @param key
+		 *            initial key for node
+		 */
+		public FibonacciHeapNode(T data) {
+			this.data = data;
+			right = this;
+			left = this;
+			clear();
+		}
+
+		/**
+		 * Initializes parents and child information
+		 */
+		public void clear() {
+			mark = false;
+			degree = 0;
+			// setRight(this);
+			// setLeft(this);
+			child = null;
+			parent = null;
+		}
+
+		/**
+		 * Remove this node from the list it appears in
+		 */
+		public void remove() {
+			left.right = right;
+			right.left = left;
+		}
+
+		/**
+		 * Adds x to the left of this node in the list
+		 * 
+		 * @param x
+		 */
+		public void add(FibonacciHeapNode<T> x) {
+			x.right = this;
+			x.left = left;
+			left = x;
+			x.left.right = x;
+		}
+
+		/**
+		 * Make this node a child of the given parent node. All linkages are
+		 * updated, the degree of the parent is incremented, and mark is set to
+		 * false.
+		 * 
+		 * @param parent
+		 *            the new parent node.
+		 */
+		public void link(FibonacciHeapNode<T> parent) {
+			/**
+			 * Note: putting this code here in Node makes it 7x faster because
+			 * it doesn't have to use generated accessor methods, which add a
+			 * lot of time when called millions of times.
+			 */
+
+			// Remove this from its circular list
+			left.right = right;
+			right.left = left;
+			// make this a child of x
+			this.parent = parent;
+			if (parent.child == null) {
+				parent.child = this;
+				right = this;
+				left = this;
+			} else {
+				left = parent.child;
+				right = parent.child.right;
+				parent.child.right = this;
+				right.left = this;
+			}
+			// increase degree[x]
+			parent.degree++;
+			// set mark false
+			mark = false;
+		}
+
+		/**
+		 * Performs a cascading cut operation. Cuts this from its parent and
+		 * then does the same for its parent, and so on up the tree.
+		 * 
+		 * <p>
+		 * <em>Running time: O(log n)</em>
+		 * </p>
+		 * 
+		 * @param min
+		 *            the minimum heap node, to which nodes will be added.
+		 */
+		public void cascadingCut(FibonacciHeapNode<T> min) {
+			FibonacciHeapNode<T> z = parent;
+			// if there's a parent...
+			if (z != null) {
+				if (mark) {
+					// it's marked, cut it from parent
+					z.cut(this, min);
+					// cut its parent as well
+					z.cascadingCut(min);
+				} else {
+					// if y is unmarked, set it marked
+					mark = true;
+				}
+			}
+		}
+
+		/**
+		 * The reverse of the link operation: removes x from the child list of
+		 * this node.
+		 * 
+		 * <p>
+		 * <em>Running time: O(1)</em>
+		 * </p>
+		 * 
+		 * @param x
+		 *            child to be removed from this node's child list
+		 * @param min
+		 *            the minimum heap node, to which x is added.
+		 */
+		public void cut(FibonacciHeapNode<T> x, FibonacciHeapNode<T> min) {
+			// remove x from childlist and decrement degree
+			x.left.right = x.right;
+			x.right.left = x.left;
+			degree--;
+			// reset child if necessary
+			if (degree == 0) {
+				child = null;
+			} else if (child == x) {
+				child = x.right;
+			}
+			// add x to root list of heap
+			x.right = min;
+			x.left = min.left;
+			min.left = x;
+			x.left.right = x;
+			// set parent[x] to nil
+			x.parent = null;
+			// set mark[x] to false
+			x.mark = false;
+		}
+
+		public String toString() {
+
+			final StringBuilder buf = new StringBuilder();
+			buf.append("Node=[");
+			if (left != null) {
+				buf.append(left.data);
+			} else {
+				buf.append(" * ");
+			}
+			buf.append(" <- ").append(data).append(" -> ");
+			if (right != null) {
+				buf.append(right.data);
+			} else {
+				buf.append(" * ");
+			}
+
+			buf.append(", ^: ");
+
+			if (parent != null) {
+				buf.append(parent.data);
+			} else {
+				buf.append(" * ");
+			}
+
+			buf.append(", v: ");
+
+			if (child != null) {
+				buf.append(child.data);
+			} else {
+				buf.append(" * ");
+			}
+
+			buf.append(" (").append(degree).append(")]");
+
+			return buf.toString();
+
+		}
 	}
 }

@@ -8,87 +8,102 @@ import cspfj.priorityqueues.Identified;
 import cspfj.problem.Variable;
 
 public interface Constraint extends Identified {
-    int getArity();
+	/**
+	 * @return the arity of the constraint (number of variables involved by the
+	 *         constraint)
+	 */
+	int getArity();
 
-    boolean isInvolved(final Variable variable);
+	/**
+	 * @param variable
+	 * @return true iff the given variable is involved by the constraint
+	 */
+	boolean isInvolved(final Variable variable);
 
-    Variable getVariable(final int position);
+	/**
+	 * @param position
+	 * @return the variable at the given position
+	 */
+	Variable getVariable(final int position);
 
-    // boolean checkFirst();
+	int getId();
 
-    int getId();
+	/**
+	 * @return the ordered scope of the constraint
+	 */
+	Variable[] getScope();
 
-    Variable[] getScope();
+	/**
+	 * @return the scope of the constraint as an unordered Set
+	 */
+	Set<Variable> getScopeSet();
 
-    Set<Variable> getScopeSet();
+	/**
+	 * @param variable
+	 * @return the position of the given variable. /!\ implementation in O(k)
+	 */
+	int getPosition(final Variable variable);
 
-    int getPositionInVariable(final int variablePosition);
+	/**
+	 * @return whether the constraint is active
+	 */
+	boolean isActive();
 
-    int getPosition(final Variable variable);
+	/**
+	 * Sets the activity of the constraint
+	 * 
+	 * @param b
+	 */
+	void setActive(final boolean b);
 
-    // boolean checkFirstWith(final int variablePos, final int index);
+	Constraint deepCopy(final Collection<Variable> variables)
+			throws CloneNotSupportedException;
 
-    boolean isActive();
+	/**
+	 * The constraint propagator
+	 * 
+	 * @param revisator
+	 * @return false iff an inconsistency has been detected
+	 */
+	boolean revise(final RevisionHandler revisator, int reviseCount);
 
-    void setActive(final boolean b);
+	/**
+	 * @param variable
+	 * @return true iff all variables involved by the constraint, except the
+	 *         given one, are not instanciated (domain size > 1)
+	 */
+	boolean isBound(Variable variable);
 
-    void setPositionInVariable(final int variablePosition,
-            final int constraintPosition);
+	/**
+	 * @return string description of the constraint
+	 */
+	String getType();
 
-    Constraint deepCopy(final Collection<Variable> variables)
-            throws CloneNotSupportedException;
+	/**
+	 * @return true iff the constraint is satisfied by the current values of the
+	 *         tuple associated to the constraint object (see getTuple(int[]))
+	 */
+	boolean check();
 
-    // void initNbSupports() throws InterruptedException;
+	int[] getTuple();
 
-    // long getNbSupports(final Variable variable, final int index);
+	void setLevel(int level);
 
-    // boolean skipRevision(int i);
+	void restore(int level);
 
-    /**
-     * The constraint propagator
-     * 
-     * @param revisator
-     * @return false iff an inconsistency has been detected
-     */
-    boolean revise(final RevisionHandler revisator, int reviseCount);
+	int getWeight();
 
-    // int getOtherSize(int position);
+	void incWeight();
 
-    // long getNbMaxConflicts(final int position);
+	void setWeight(final int weight);
 
-    // long getNbInitConflicts(final int position, final int index);
+	int getRemovals(int position);
 
-    boolean isBound(Variable variable);
+	void setRemovals(int position, int value);
 
-    String getType();
+	void fillRemovals(final int value);
 
-    boolean check();
+	boolean hasNoRemovals(final int reviseCount);
 
-    // boolean check(int[] tuple);
-
-    int[] getTuple();
-
-    void setLevel(int level);
-
-    void restore(int level);
-
-    // long getInitSize();
-
-    int getWeight();
-
-    void incWeight();
-
-    void setWeight(final int weight);
-
-    int getRemovals(int position);
-
-    void setRemovals(int position, int value);
-
-    void fillRemovals(final int value);
-
-    boolean hasNoRemovals(final int reviseCount);
-    
-    int getEvaluation(final int reviseCount);
-
-    // boolean findValidTuple(int position, int index);
+	int getEvaluation(final int reviseCount);
 }

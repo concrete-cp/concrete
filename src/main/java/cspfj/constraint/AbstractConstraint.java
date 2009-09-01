@@ -46,8 +46,6 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		return checks;
 	}
 
-	private int[] positionInVariable;
-
 	private Variable[] scope;
 
 	private Set<Variable> scopeSet;
@@ -85,8 +83,6 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		tupleManager = new TupleManager(this, tuple);
 
 		active = false;
-
-		positionInVariable = new int[arity];
 
 		if (name == null) {
 			this.name = "C" + id;
@@ -149,19 +145,6 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		}
 
 		return -1;
-	}
-
-	public final int getPositionInVariable(final Variable variable) {
-		return getPositionInVariable(getPosition(variable));
-	}
-
-	public final int getPositionInVariable(final int position) {
-		return positionInVariable[position];
-	}
-
-	public final void setPositionInVariable(final int positionInConstraint,
-			final int positionInVariable) {
-		this.positionInVariable[positionInConstraint] = positionInVariable;
 	}
 
 	public final int[] getTuple() {
@@ -279,8 +262,6 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		// constraint.nbSupports fixe
 
 		constraint.tupleManager = new TupleManager(constraint, constraint.tuple);
-
-		constraint.positionInVariable = new int[arity];
 		return constraint;
 	}
 

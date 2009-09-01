@@ -120,8 +120,8 @@ public final class Variable implements Cloneable, Identified {
     public void updatePositionInConstraint(final int constraintPosition) {
         positionInConstraint[constraintPosition] = constraints[constraintPosition]
                 .getPosition(this);
-        constraints[constraintPosition].setPositionInVariable(
-                positionInConstraint[constraintPosition], constraintPosition);
+//        constraints[constraintPosition].setPositionInVariable(
+//                positionInConstraint[constraintPosition], constraintPosition);
     }
 
     /**

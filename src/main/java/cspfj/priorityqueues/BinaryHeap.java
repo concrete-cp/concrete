@@ -24,6 +24,15 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+/**
+ * Simple array-based, auto-expandable binary heap implementation. Stores
+ * Identified objects. Each uniquely identified object can be present only once
+ * in the queue.
+ * 
+ * @author scand1sk
+ * 
+ * @param <T>
+ */
 public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
 
     private static final int ARRAY_INCREASE = 64;
