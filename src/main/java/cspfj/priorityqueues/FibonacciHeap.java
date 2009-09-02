@@ -2,7 +2,7 @@
  * --------------------------
  * FibonnaciHeap.java
  * --------------------------
- * (C) Copyright 1999-2008, by Nathan Fiedler and Contributors.
+ * (C) Copyright 1999-20089, by Julien Vion, Nathan Fiedler and Contributors.
  *
  * Original Author:  Nathan Fiedler
  */
@@ -44,8 +44,6 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 	 */
 	private static final int MAX_ARRAY_SIZE = 45;
 
-	private static final int MAP_INCREASE = 64;
-
 	private final FibonacciHeapNode<T>[] array = (FibonacciHeapNode<T>[]) new FibonacciHeapNode[MAX_ARRAY_SIZE];
 
 	/**
@@ -69,7 +67,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 	 */
 	public FibonacciHeap(final Key<T> key, final int initSize) {
 		this.key = key;
-		map = (FibonacciHeapNode<T>[]) new FibonacciHeapNode<?>[MAP_INCREASE];
+		map = (FibonacciHeapNode<T>[]) new FibonacciHeapNode<?>[10];
 		inQueue = new boolean[initSize];
 	}
 
@@ -94,6 +92,28 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 		minNode = null;
 		nNodes = 0;
 		Arrays.fill(inQueue, false);
+	}
+
+	/**
+	 * Increases the capacity of this instance, if necessary, to ensure that it
+	 * can hold at least the number of elements specified by the minimum
+	 * capacity argument.
+	 * 
+	 * @param minCapacity
+	 *            the desired minimum capacity
+	 */
+	private void ensureCapacity(int minCapacity) {
+		int oldCapacity = map.length;
+		assert inQueue.length == oldCapacity;
+		if (minCapacity > oldCapacity) {
+			int newCapacity = (oldCapacity * 3) / 2 + 1;
+			if (newCapacity < minCapacity) {
+				newCapacity = minCapacity;
+			}
+			// minCapacity is usually close to size, so this is a win:
+			map = Arrays.copyOf(map, newCapacity);
+			inQueue = Arrays.copyOf(inQueue, newCapacity);
+		}
 	}
 
 	/**
@@ -170,10 +190,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 	public boolean offer(T data) {
 		final int id = data.getId();
 
-		if (id >= map.length) {
-			map = Arrays.copyOf(map, id + MAP_INCREASE);
-			inQueue = Arrays.copyOf(inQueue, id + MAP_INCREASE);
-		}
+		ensureCapacity(id + 1);
 
 		FibonacciHeapNode<T> node = map[id];
 		if (node == null) {

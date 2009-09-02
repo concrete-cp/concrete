@@ -18,13 +18,14 @@ public final class LSConstraint {
 	public LSConstraint(Constraint c, Map<Variable, LSVariable> lsVariables) {
 		constraint = c;
 		scope = new LSVariable[c.getArity()];
+		positionInVariable = new int[c.getArity()];
 		for (int i = c.getArity(); --i >= 0;) {
 			final Variable var = c.getVariable(i);
 			scope[i] = lsVariables.get(var);
 			positionInVariable[i] = c.getPosition(var);
 		}
 		tuple = c.getTuple();
-		positionInVariable = new int[c.getArity()];
+
 
 	}
 
