@@ -24,11 +24,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidParameterException;
 import java.util.logging.Logger;
 
-import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.AC3;
 import cspfj.filter.Filter;
-import cspfj.filter.RevisionHandler;
 import cspfj.heuristic.CrossHeuristic;
 import cspfj.heuristic.Heuristic;
 import cspfj.heuristic.Lexico;

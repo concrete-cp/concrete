@@ -24,8 +24,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidParameterException;
 import java.util.logging.Logger;
 
-import cspfj.constraint.Constraint;
-import cspfj.constraint.extension.ExtensionConstraint;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.AC3;
 import cspfj.filter.Filter;

@@ -43,6 +43,10 @@ public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
 
 	private final Key<T> key;
 
+	public BinaryHeap(final Key<T> key) {
+		this(key, 10);
+	}
+
 	public BinaryHeap(final Key<T> key, final int initSize) {
 		super();
 		this.key = key;
@@ -63,10 +67,8 @@ public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
 		int oldCapacity = inQueue.length;
 		assert content.length == oldCapacity;
 		if (minCapacity > oldCapacity) {
-			int newCapacity = (oldCapacity * 3) / 2 + 1;
-			if (newCapacity < minCapacity) {
-				newCapacity = minCapacity;
-			}
+			final int newCapacity = Math.max(minCapacity,
+					(oldCapacity * 3) / 2 + 1);
 			// minCapacity is usually close to size, so this is a win:
 			inQueue = Arrays.copyOf(inQueue, newCapacity);
 			content = Arrays.copyOf(content, newCapacity);

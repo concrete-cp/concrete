@@ -7,7 +7,7 @@ import java.util.logging.Logger;
 
 import cspfj.constraint.AbstractPVRConstraint;
 import cspfj.constraint.Constraint;
-import cspfj.priorityqueues.BinaryHeap;
+import cspfj.priorityqueues.FibonacciHeap;
 import cspfj.priorityqueues.Key;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
@@ -32,7 +32,7 @@ public final class AC3Constraint implements Filter {
 		super();
 		this.problem = problem;
 
-		queue = new BinaryHeap<Constraint>(new Key<Constraint>() {
+		queue = new FibonacciHeap<Constraint>(new Key<Constraint>() {
 			@Override
 			public int getKey(Constraint o1) {
 				return o1.getEvaluation(AC3Constraint.this.revisionCount);
@@ -173,7 +173,7 @@ public final class AC3Constraint implements Filter {
 	}
 
 	public String toString() {
-		return "GAC3rm";
+		return "GAC3rm-constraint";
 	}
 
 	public Map<String, Object> getStatistics() {

@@ -2,30 +2,21 @@ package cspfj.util;
 
 import static org.junit.Assert.assertTrue;
 
-import java.util.Queue;
 import java.util.Random;
 
 import org.junit.Test;
 
-import cspfj.priorityqueues.BinomialHeap;
+import cspfj.priorityqueues.BinaryHeap;
 import cspfj.priorityqueues.Identified;
 import cspfj.priorityqueues.Key;
 
-public class BinomialHeapTest {
+public class BinaryHeapTest {
 
     private static int id = 0;
 
-    private static final Random RANDOM = new Random();
-
     @Test
     public void test() {
-
-        final IdInteger[] ints = new IdInteger[100];
-        for (int i = 0; i < ints.length; i++) {
-            ints[i] = new IdInteger(RANDOM.nextInt(1000));
-        }
-
-        final Queue<IdInteger> maximier = new BinomialHeap<IdInteger>(
+        final BinaryHeap<IdInteger> maximier = new BinaryHeap<IdInteger>(
                 new Key<IdInteger>() {
 
                     @Override
@@ -33,10 +24,12 @@ public class BinomialHeapTest {
                         return object.value;
                     }
 
-                }, 100);
+                }, 499999);
 
-        for (int i = 0; i < 100; i++) {
-            maximier.offer(ints[i]);
+        final Random random = new Random();
+
+        for (int i = 0; i < 500000; i++) {
+            maximier.offer(new IdInteger(random.nextInt(5000000)));
         }
 
         int last = maximier.peek().value;
@@ -56,7 +49,7 @@ public class BinomialHeapTest {
 
         public IdInteger(final int value) {
             this.value = value;
-            this.id = BinomialHeapTest.id++;
+            this.id = BinaryHeapTest.id++;
         }
 
         @Override
@@ -64,8 +57,5 @@ public class BinomialHeapTest {
             return id;
         }
 
-        public String toString() {
-            return Integer.toString(value);
-        }
     }
 }

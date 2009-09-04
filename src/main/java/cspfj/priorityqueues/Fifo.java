@@ -32,10 +32,8 @@ public class Fifo<T extends Identified> extends LinkedList<T> {
 	private void ensureCapacity(int minCapacity) {
 		int oldCapacity = inQueue.length;
 		if (minCapacity > oldCapacity) {
-			int newCapacity = (oldCapacity * 3) / 2 + 1;
-			if (newCapacity < minCapacity) {
-				newCapacity = minCapacity;
-			}
+			final int newCapacity = Math.max(minCapacity,
+					(oldCapacity * 3) / 2 + 1);
 			// minCapacity is usually close to size, so this is a win:
 			inQueue = Arrays.copyOf(inQueue, newCapacity);
 		}

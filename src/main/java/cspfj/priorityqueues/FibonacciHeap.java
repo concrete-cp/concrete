@@ -44,7 +44,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 	 */
 	private static final int MAX_ARRAY_SIZE = 45;
 
-	private final FibonacciHeapNode<T>[] array = (FibonacciHeapNode<T>[]) new FibonacciHeapNode[MAX_ARRAY_SIZE];
+	private final FibonacciHeapNode<T>[] array;
 
 	/**
 	 * Points to the minimum node in the heap.
@@ -58,17 +58,20 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 
 	private FibonacciHeapNode<T>[] map;
 
-	private boolean[] inQueue;
-
 	private final Key<T> key;
+
+	public FibonacciHeap(final Key<T> key) {
+		this(key, 10);
+	}
 
 	/**
 	 * Constructs a FibonacciHeap object that contains no elements.
 	 */
 	public FibonacciHeap(final Key<T> key, final int initSize) {
 		this.key = key;
-		map = (FibonacciHeapNode<T>[]) new FibonacciHeapNode<?>[10];
-		inQueue = new boolean[initSize];
+		map = (FibonacciHeapNode<T>[]) new FibonacciHeapNode<?>[initSize];
+		array = (FibonacciHeapNode<T>[]) new FibonacciHeapNode[MAX_ARRAY_SIZE];
+
 	}
 
 	/**
@@ -91,7 +94,11 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 	public void clear() {
 		minNode = null;
 		nNodes = 0;
-		Arrays.fill(inQueue, false);
+		for (FibonacciHeapNode<T> n : map) {
+			if (n != null) {
+				n.inQueue = false;
+			}
+		}
 	}
 
 	/**
@@ -104,15 +111,11 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 	 */
 	private void ensureCapacity(int minCapacity) {
 		int oldCapacity = map.length;
-		assert inQueue.length == oldCapacity;
 		if (minCapacity > oldCapacity) {
-			int newCapacity = (oldCapacity * 3) / 2 + 1;
-			if (newCapacity < minCapacity) {
-				newCapacity = minCapacity;
-			}
+			final int newCapacity = Math.max(minCapacity,
+					(oldCapacity * 3) / 2 + 1);
 			// minCapacity is usually close to size, so this is a win:
 			map = Arrays.copyOf(map, newCapacity);
-			inQueue = Arrays.copyOf(inQueue, newCapacity);
 		}
 	}
 
@@ -202,7 +205,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 		final int newKey = key.getKey(data);
 		node.key = newKey;
 
-		if (inQueue[id]) {
+		if (node.inQueue) {
 			if (newKey < oldKey) {
 				decreaseKey(node, false);
 				assert smallest(minNode);
@@ -216,7 +219,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 
 		node.clear();
 		insert(node);
-		inQueue[id] = true;
+		node.inQueue = true;
 		return true;
 	}
 
@@ -230,7 +233,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 	 * 
 	 * @return node with the smallest key
 	 */
-	private T removeMin() {
+	private FibonacciHeapNode<T> removeMin() {
 		final FibonacciHeapNode<T> z = minNode;
 
 		if (z == null) {
@@ -267,13 +270,13 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 		nNodes--;
 
 		assert control(minNode, minNode);
-		return z.data;
+		return z;
 	}
 
 	private boolean smallest(FibonacciHeapNode<T> min) {
 
-		for (int i = inQueue.length; --i >= 0;) {
-			if (inQueue[i] && map[i].key < min.key) {
+		for (FibonacciHeapNode<T> n : map) {
+			if (map != null && n.inQueue && n.key < min.key) {
 				return false;
 			}
 		}
@@ -373,21 +376,9 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 	@Override
 	public T poll() {
 		assert smallest(minNode);
-		final T min = removeMin();
-		inQueue[min.getId()] = false;
-		return min;
-	}
-
-	/**
-	 * Creates a String representation of this Fibonacci heap.
-	 * 
-	 * @return String of this.
-	 */
-	public String toString() {
-		if (minNode == null) {
-			return "empty";
-		}
-		return tree(minNode, minNode, 0);
+		final FibonacciHeapNode<T> min = removeMin();
+		min.inQueue = false;
+		return min.data;
 	}
 
 	private boolean control(FibonacciHeapNode<T> current,
@@ -417,20 +408,33 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 				|| control(current.right, start, loopControl, ancestorControl);
 	}
 
-	private String tree(FibonacciHeapNode<T> current,
-			FibonacciHeapNode<T> start, int depth) {
+	/**
+	 * Creates a String representation of this Fibonacci heap.
+	 * 
+	 * @return String of this.
+	 */
+	public String toString() {
+		if (minNode == null) {
+			return "empty";
+		}
 		final StringBuilder stb = new StringBuilder();
+		tree(stb, minNode, minNode, 0);
+		return stb.toString();
+	}
+
+	private static <T> void tree(StringBuilder stb,
+			FibonacciHeapNode<T> current, FibonacciHeapNode<T> start, int depth) {
+
 		for (int i = depth; --i >= 0;) {
 			stb.append("--");
 		}
 		stb.append(current.data).append("\n");
 		if (current.child != null) {
-			stb.append(tree(current.child, current.child, depth + 1));
+			tree(stb, current.child, current.child, depth + 1);
 		}
 		if (current.right != start) {
-			stb.append(tree(current.right, start, depth));
+			tree(stb, current.right, start, depth);
 		}
-		return stb.toString();
 	}
 
 	/**
@@ -479,6 +483,8 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 		private int degree;
 
 		private int key;
+
+		private boolean inQueue = false;
 
 		/**
 		 * Default constructor. Initializes the right and left pointers, making

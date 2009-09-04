@@ -1,4 +1,4 @@
-package cspfj.util;
+package cspfj.priorityqueues;
 
 import static org.junit.Assert.assertTrue;
 
@@ -6,17 +6,28 @@ import java.util.Random;
 
 import org.junit.Test;
 
-import cspfj.priorityqueues.BinaryHeap;
+import cspfj.priorityqueues.FibonacciHeap;
 import cspfj.priorityqueues.Identified;
 import cspfj.priorityqueues.Key;
 
-public class HeapTest {
+public class FibonacciHeapTest {
 
 	private static int id = 0;
 
+	private static final Random RANDOM = new Random();
+	private static final IdInteger[] INTS;
+
+	static {
+		INTS = new IdInteger[1000000];
+		for (int i = INTS.length; --i >= 0;) {
+			INTS[i] = new IdInteger(RANDOM.nextInt(5000000));
+		}
+	}
+
 	@Test
 	public void test() {
-		final BinaryHeap<IdInteger> maximier = new BinaryHeap<IdInteger>(
+
+		final FibonacciHeap<IdInteger> maximier = new FibonacciHeap<IdInteger>(
 				new Key<IdInteger>() {
 
 					@Override
@@ -24,12 +35,10 @@ public class HeapTest {
 						return object.value;
 					}
 
-				}, 100);
+				});
 
-		final Random random = new Random();
-
-		for (int i = 0; i < 100; i++) {
-			maximier.add(new IdInteger(random.nextInt(1000)));
+		for (IdInteger i : INTS) {
+			maximier.offer(i);
 		}
 
 		int last = maximier.peek().value;
@@ -49,13 +58,12 @@ public class HeapTest {
 
 		public IdInteger(final int value) {
 			this.value = value;
-			this.id = HeapTest.id++;
+			this.id = FibonacciHeapTest.id++;
 		}
 
 		@Override
 		public int getId() {
 			return id;
 		}
-
 	}
 }
