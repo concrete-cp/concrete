@@ -11,7 +11,7 @@ import java.util.LinkedList;
  * 
  * @param <T>
  */
-public class Fifo<T extends Identified> extends LinkedList<T> {
+public final class Fifo<T extends Identified> extends LinkedList<T> {
 
 	private static final long serialVersionUID = 1L;
 

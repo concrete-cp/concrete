@@ -4,7 +4,7 @@ import java.util.AbstractQueue;
 import java.util.Arrays;
 import java.util.Iterator;
 
-public class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
+public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
 
 	private final Key<T> key;
 
@@ -80,9 +80,9 @@ public class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
 		node.key = newKey;
 
 		if (node.inQueue) {
-			if (node.key < oldKey) {
+			if (newKey < oldKey) {
 				decreaseKey(node, false);
-			} else if (node.key > oldKey) {
+			} else if (newKey > oldKey) {
 				increaseKey(node);
 			}
 			return false;
@@ -114,14 +114,14 @@ public class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
 		assert root.parent == null;
 		trees[root.rank] = null;
 
-		BinomialHeapNode<T> tree = root.child;
-		while (tree != null) {
-			final BinomialHeapNode<T> next = tree.right;
-			tree.right = null;
-			tree.parent = null;
+		BinomialHeapNode<T> subTree = root.child;
+		while (subTree != null) {
+			final BinomialHeapNode<T> next = subTree.right;
+			subTree.right = null;
+			subTree.parent = null;
 
-			carryMerge(tree, tree.rank);
-			tree = next;
+			carryMerge(subTree, subTree.rank);
+			subTree = next;
 		}
 	}
 

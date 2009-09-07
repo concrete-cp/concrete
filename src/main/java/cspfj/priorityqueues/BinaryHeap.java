@@ -99,7 +99,7 @@ public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
 		case 0:
 			throw new NoSuchElementException();
 		case 1:
-			size--;
+			size = 0;
 			inQueue[content[0].getId()] = false;
 			return content[0];
 		default:
@@ -159,7 +159,7 @@ public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
 	private void siftUp(final int start) {
 		int leaf = start;
 		while (leaf > 0) {
-			int parent = ((leaf - 1) >> 1);
+			final int parent = ((leaf - 1) >> 1);
 
 			if (key.getKey(content[parent]) > key.getKey(content[leaf])) {
 				swap(parent, leaf);

@@ -445,7 +445,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 	 * 
 	 * @author Nathan Fiedler
 	 */
-	private static class FibonacciHeapNode<T> {
+	private final static class FibonacciHeapNode<T> {
 		/**
 		 * Node data.
 		 */

@@ -8,7 +8,7 @@ import java.util.Random;
 
 import org.junit.Test;
 
-public class BinomialHeapTest {
+public class SoftHeapTest {
 
 	private static int id = 0;
 
@@ -25,7 +25,7 @@ public class BinomialHeapTest {
 
 	@Test
 	public void test() {
-		final Queue<IdInteger> maximier = new BinomialHeap<IdInteger>(
+		final Queue<IdInteger> maximier = new SoftHeap<IdInteger>(
 				new Key<IdInteger>() {
 
 					@Override
@@ -34,7 +34,7 @@ public class BinomialHeapTest {
 					}
 
 				});
-		
+
 		assertEquals(maximier.size(), 0);
 		assertTrue(maximier.isEmpty());
 
@@ -43,13 +43,21 @@ public class BinomialHeapTest {
 		}
 		assertEquals(maximier.size(), INTS.length);
 
+		int errors = 0;
 		int last = maximier.peek().value;
 		while (!maximier.isEmpty()) {
 			final int current = maximier.poll().value;
-			assertTrue(current + " should be >= " + last, current >= last);
+			// System.out.println(current);
+			// assertTrue(current + " should be >= " + last, current >= last);
+			if (current < last) {
+				errors++;
+			}
 			last = current;
+
 		}
-		
+		System.out.println(errors + " errors (rate = " + (float) errors
+				/ INTS.length + ")");
+
 	}
 
 	private static class IdInteger implements Identified {
@@ -60,7 +68,7 @@ public class BinomialHeapTest {
 
 		public IdInteger(final int value) {
 			this.value = value;
-			this.id = BinomialHeapTest.id++;
+			this.id = SoftHeapTest.id++;
 		}
 
 		@Override

@@ -4,7 +4,7 @@ import java.util.AbstractQueue;
 import java.util.BitSet;
 import java.util.Iterator;
 
-public class BitVectorPriorityQueue<T extends Identified> extends
+public final class BitVectorPriorityQueue<T extends Identified> extends
 		AbstractQueue<T> {
 
 	private final BitSet queue;
