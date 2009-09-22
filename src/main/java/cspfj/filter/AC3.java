@@ -7,8 +7,8 @@ import java.util.logging.Logger;
 
 import cspfj.constraint.AbstractPVRConstraint;
 import cspfj.constraint.Constraint;
-import cspfj.priorityqueues.BinomialHeap;
 import cspfj.priorityqueues.Key;
+import cspfj.priorityqueues.SoftHeap;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -32,7 +32,7 @@ public final class AC3 implements Filter {
 		super();
 		this.problem = problem;
 
-		queue = new BinomialHeap<Variable>(new Key<Variable>() {
+		queue = new SoftHeap<Variable>(new Key<Variable>() {
 			@Override
 			public int getKey(Variable o1) {
 				return o1.getDomainSize();
@@ -198,7 +198,7 @@ public final class AC3 implements Filter {
 	}
 
 	public String toString() {
-		return "GAC3rm-variable";
+		return "GAC3rm-var-" + queue.getClass().getSimpleName();
 	}
 
 	public Map<String, Object> getStatistics() {

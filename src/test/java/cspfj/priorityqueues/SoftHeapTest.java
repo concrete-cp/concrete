@@ -19,7 +19,7 @@ public class SoftHeapTest {
 	static {
 		INTS = new IdInteger[500000];
 		for (int i = INTS.length; --i >= 0;) {
-			INTS[i] = new IdInteger(RANDOM.nextInt(5000000));
+			INTS[i] = new IdInteger(RANDOM.nextInt(10 * INTS.length));
 		}
 	}
 
