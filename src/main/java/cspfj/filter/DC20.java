@@ -300,15 +300,11 @@ public final class DC20 implements Filter {
 			logger.fine(nbNoGoods + " nogoods");
 
 			if (!addedConstraints.isEmpty()) {
-				final Collection<Constraint> curCons = new ArrayList<Constraint>(
-						problem.getConstraintsAsCollection());
-
 				for (Constraint c : addedConstraints) {
-					curCons.add(c);
+					problem.addConstraint(c);
 				}
 
-				problem.setConstraints(curCons);
-				problem.updateInvolvingConstraints();
+				problem.prepareConstraints();
 
 				impliedConstraints.addAll(addedConstraints);
 

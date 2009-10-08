@@ -26,8 +26,6 @@ public interface Constraint extends Identified {
 	 */
 	Variable getVariable(final int position);
 
-	int getId();
-
 	/**
 	 * @return the ordered scope of the constraint
 	 */

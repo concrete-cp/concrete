@@ -18,17 +18,16 @@ public class MatrixManager2DTest {
 
 	@Before
 	public void setUp() throws Exception {
-		final int[] dom1 = new int[] { 1, 2, 3 };
-		final Variable var1 = new Variable(dom1, "v1");
-		final int[] dom2 = new int[] { 1, 2, 3, 4 };
-		final Variable var2 = new Variable(dom2, "v2");
+		final Variable var1 = new Variable("v1", 1, 2, 3);
+		final Variable var2 = new Variable("v2", 1, 2, 3, 4);
 		tuple = new int[2];
 
 		final Matrix2D matrix2d = new Matrix2D(3, 4, false);
 		matrix2d.set(new int[] { 0, 0 }, true);
 		matrix2d.set(new int[] { 0, 2 }, true);
 
-		matrix = new MatrixManager2D(new Variable[] { var1, var2 }, matrix2d, false);
+		matrix = new MatrixManager2D(new Variable[] { var1, var2 }, matrix2d,
+				false);
 		matrix.setTuple(tuple);
 	}
 
