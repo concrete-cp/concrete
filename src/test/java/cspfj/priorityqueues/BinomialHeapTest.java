@@ -17,7 +17,7 @@ public class BinomialHeapTest {
 	private static final IdInteger[] INTS;
 
 	static {
-		INTS = new IdInteger[500000];
+		INTS = new IdInteger[100000];
 		for (int i = INTS.length; --i >= 0;) {
 			INTS[i] = new IdInteger(RANDOM.nextInt(5000000));
 		}
