@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<instance>
+<presentation name="?" maxConstraintArity="2" format="XCSP 2.0"/>
+
+<domains nbDomains="1">
+<domain name="D0" nbValues="5">1..5</domain>
+</domains>
+
+<variables nbVariables="25">
+<variable name="V0" domain="D0"/>
+<variable name="V1" domain="D0"/>
+<variable name="V2" domain="D0"/>
+<variable name="V3" domain="D0"/>
+<variable name="V4" domain="D0"/>
+<variable name="V5" domain="D0"/>
+<variable name="V6" domain="D0"/>
+<variable name="V7" domain="D0"/>
+<variable name="V8" domain="D0"/>
+<variable name="V9" domain="D0"/>
+<variable name="V10" domain="D0"/>
+<variable name="V11" domain="D0"/>
+<variable name="V12" domain="D0"/>
+<variable name="V13" domain="D0"/>
+<variable name="V14" domain="D0"/>
+<variable name="V15" domain="D0"/>
+<variable name="V16" domain="D0"/>
+<variable name="V17" domain="D0"/>
+<variable name="V18" domain="D0"/>
+<variable name="V19" domain="D0"/>
+<variable name="V20" domain="D0"/>
+<variable name="V21" domain="D0"/>
+<variable name="V22" domain="D0"/>
+<variable name="V23" domain="D0"/>
+<variable name="V24" domain="D0"/>
+</variables>
+
+<predicates nbPredicates="14">
+<predicate name="P0">
+  <parameters>int X0 int X1</parameters>
+  <expression> 
+    <functional>eq(X0,X1)</functional>
+  </expression>
+</predicate>
+<predicate name="P1">
+  <parameters>int X0 int X1</parameters>
+  <expression> 
+    <functional>eq(X0,X1)</functional>
+  </expression>
+</predicate>
+<predicate name="P2">
+  <parameters>int X0 int X1</parameters>
+  <expression> 
+    <functional>eq(X0,X1)</functional>
+  </expression>
+</predicate>
+<predicate name="P3">
+  <parameters>int X0 int X1</parameters>
+  <expression> 
+    <functional>eq(X0,X1)</functional>
+  </expression>
+</predicate>
+<predicate name="P4">
+  <parameters>int X0</parameters>
+  <expression> 
+    <functional>eq(X0,1)</functional>
+  </expression>
+</predicate>
+<predicate name="P5">
+  <parameters>int X0</parameters>
+  <expression> 
+    <functional>eq(X0,3)</functional>
+  </expression>
+</predicate>
+<predicate name="P6">
+  <parameters>int X0 int X1</parameters>
+  <expression> 
+    <functional>eq(X0,X1)</functional>
+  </expression>
+</predicate>
+<predicate name="P7">
+  <parameters>int X0 int X1</parameters>
+  <expression> 
+    <functional>eq(X0,X1)</functional>
+  </expression>
+</predicate>
+<predicate name="P8">
+  <parameters>int X0 int X1</parameters>
+  <expression> 
+    <functional>eq(X0,X1)</functional>
+  </expression>
+</predicate>
+<predicate name="P9">
+  <parameters>int X0 int X1</parameters>
+  <expression> 
+    <functional>eq(X0,X1)</functional>
+  </expression>
+</predicate>
+<predicate name="P10">
+  <parameters>int X0 int X1</parameters>
+  <expression> 
+    <functional>eq(X0,add(X1,1))</functional>
+  </expression>
+</predicate>
+<predicate name="P11">
+  <parameters>int X0 int X1</parameters>
+  <expression> 
+    <functional>or(eq(X0,sub(X1,1)),eq(X0,add(X1,1)))</functional>
+  </expression>
+</predicate>
+<predicate name="P12">
+  <parameters>int X0 int X1</parameters>
+  <expression> 
+    <functional>or(eq(X0,sub(X1,1)),eq(X0,add(X1,1)))</functional>
+  </expression>
+</predicate>
+<predicate name="P13">
+  <parameters>int X0 int X1</parameters>
+  <expression> 
+    <functional>or(eq(X0,sub(X1,1)),eq(X0,add(X1,1)))</functional>
+  </expression>
+</predicate>
+</predicates>
+
+<constraints nbConstraints="19">
+<constraint name="C0" arity="5" scope="V0 V1 V2 V3 V4" reference="global:allDifferent"/>
+<constraint name="C1" arity="5" scope="V5 V6 V7 V8 V9" reference="global:allDifferent"/>
+<constraint name="C2" arity="5" scope="V10 V11 V12 V13 V14" reference="global:allDifferent"/>
+<constraint name="C3" arity="5" scope="V15 V16 V17 V18 V19" reference="global:allDifferent"/>
+<constraint name="C4" arity="5" scope="V20 V21 V22 V23 V24" reference="global:allDifferent"/>
+<constraint name="C5" arity="2" scope="V10 V1" reference="P0">
+  <parameters>V10 V1</parameters>
+</constraint>
+<constraint name="C6" arity="2" scope="V11 V15" reference="P1">
+  <parameters>V11 V15</parameters>
+</constraint>
+<constraint name="C7" arity="2" scope="V12 V5" reference="P2">
+  <parameters>V12 V5</parameters>
+</constraint>
+<constraint name="C8" arity="2" scope="V13 V22" reference="P3">
+  <parameters>V13 V22</parameters>
+</constraint>
+<constraint name="C9" arity="1" scope="V14" reference="P4">
+  <parameters>V14</parameters>
+</constraint>
+<constraint name="C10" arity="1" scope="V24" reference="P5">
+  <parameters>V24</parameters>
+</constraint>
+<constraint name="C11" arity="2" scope="V7 V20" reference="P6">
+  <parameters>V7 V20</parameters>
+</constraint>
+<constraint name="C12" arity="2" scope="V0 V23" reference="P7">
+  <parameters>V0 V23</parameters>
+</constraint>
+<constraint name="C13" arity="2" scope="V9 V18" reference="P8">
+  <parameters>V9 V18</parameters>
+</constraint>
+<constraint name="C14" arity="2" scope="V6 V2" reference="P9">
+  <parameters>V6 V2</parameters>
+</constraint>
+<constraint name="C15" arity="2" scope="V0 V4" reference="P10">
+  <parameters>V0 V4</parameters>
+</constraint>
+<constraint name="C16" arity="2" scope="V17 V8" reference="P11">
+  <parameters>V17 V8</parameters>
+</constraint>
+<constraint name="C17" arity="2" scope="V19 V6" reference="P12">
+  <parameters>V19 V6</parameters>
+</constraint>
+<constraint name="C18" arity="2" scope="V14 V3" reference="P13">
+  <parameters>V14 V3</parameters>
+</constraint>
+</constraints>
+</instance>

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<instance>
+<presentation maxConstraintArity="2" format="XCSP 2.1" type="CSP"/>
+
+<domains nbDomains="1">
+<domain name="D0" nbValues="12">1..12</domain>
+</domains>
+
+<variables nbVariables="12">
+<variable name="V0" domain="D0"/>
+<variable name="V1" domain="D0"/>
+<variable name="V2" domain="D0"/>
+<variable name="V3" domain="D0"/>
+<variable name="V4" domain="D0"/>
+<variable name="V5" domain="D0"/>
+<variable name="V6" domain="D0"/>
+<variable name="V7" domain="D0"/>
+<variable name="V8" domain="D0"/>
+<variable name="V9" domain="D0"/>
+<variable name="V10" domain="D0"/>
+<variable name="V11" domain="D0"/>
+</variables>
+
+<relations nbRelations="11">
+<relation name="R0" arity="2" nbTuples="34" semantics="conflicts">1 1|1 2|2 1|2 2|2 3|3 2|3 3|3 4|4 3|4 4|4 5|5 4|5 5|5 6|6 5|6 6|6 7|7 6|7 7|7 8|8 7|8 8|8 9|9 8|9 9|9 10|10 9|10 10|10 11|11 10|11 11|11 12|12 11|12 12</relation>
+<relation name="R1" arity="2" nbTuples="32" semantics="conflicts">1 1|1 3|2 2|2 4|3 1|3 3|3 5|4 2|4 4|4 6|5 3|5 5|5 7|6 4|6 6|6 8|7 5|7 7|7 9|8 6|8 8|8 10|9 7|9 9|9 11|10 8|10 10|10 12|11 9|11 11|12 10|12 12</relation>
+<relation name="R2" arity="2" nbTuples="30" semantics="conflicts">1 1|1 4|2 2|2 5|3 3|3 6|4 1|4 4|4 7|5 2|5 5|5 8|6 3|6 6|6 9|7 4|7 7|7 10|8 5|8 8|8 11|9 6|9 9|9 12|10 7|10 10|11 8|11 11|12 9|12 12</relation>
+<relation name="R3" arity="2" nbTuples="28" semantics="conflicts">1 1|1 5|2 2|2 6|3 3|3 7|4 4|4 8|5 1|5 5|5 9|6 2|6 6|6 10|7 3|7 7|7 11|8 4|8 8|8 12|9 5|9 9|10 6|10 10|11 7|11 11|12 8|12 12</relation>
+<relation name="R4" arity="2" nbTuples="26" semantics="conflicts">1 1|1 6|2 2|2 7|3 3|3 8|4 4|4 9|5 5|5 10|6 1|6 6|6 11|7 2|7 7|7 12|8 3|8 8|9 4|9 9|10 5|10 10|11 6|11 11|12 7|12 12</relation>
+<relation name="R5" arity="2" nbTuples="24" semantics="conflicts">1 1|1 7|2 2|2 8|3 3|3 9|4 4|4 10|5 5|5 11|6 6|6 12|7 1|7 7|8 2|8 8|9 3|9 9|10 4|10 10|11 5|11 11|12 6|12 12</relation>
+<relation name="R6" arity="2" nbTuples="22" semantics="conflicts">1 1|1 8|2 2|2 9|3 3|3 10|4 4|4 11|5 5|5 12|6 6|7 7|8 1|8 8|9 2|9 9|10 3|10 10|11 4|11 11|12 5|12 12</relation>
+<relation name="R7" arity="2" nbTuples="20" semantics="conflicts">1 1|1 9|2 2|2 10|3 3|3 11|4 4|4 12|5 5|6 6|7 7|8 8|9 1|9 9|10 2|10 10|11 3|11 11|12 4|12 12</relation>
+<relation name="R8" arity="2" nbTuples="18" semantics="conflicts">1 1|1 10|2 2|2 11|3 3|3 12|4 4|5 5|6 6|7 7|8 8|9 9|10 1|10 10|11 2|11 11|12 3|12 12</relation>
+<relation name="R9" arity="2" nbTuples="16" semantics="conflicts">1 1|1 11|2 2|2 12|3 3|4 4|5 5|6 6|7 7|8 8|9 9|10 10|11 1|11 11|12 2|12 12</relation>
+<relation name="R10" arity="2" nbTuples="14" semantics="conflicts">1 1|1 12|2 2|3 3|4 4|5 5|6 6|7 7|8 8|9 9|10 10|11 11|12 1|12 12</relation>
+</relations>
+
+<constraints nbConstraints="66">
+<constraint name="C0" arity="2" scope="V0 V1" reference="R0"/>
+<constraint name="C1" arity="2" scope="V0 V2" reference="R1"/>
+<constraint name="C2" arity="2" scope="V0 V3" reference="R2"/>
+<constraint name="C3" arity="2" scope="V0 V4" reference="R3"/>
+<constraint name="C4" arity="2" scope="V0 V5" reference="R4"/>
+<constraint name="C5" arity="2" scope="V0 V6" reference="R5"/>
+<constraint name="C6" arity="2" scope="V0 V7" reference="R6"/>
+<constraint name="C7" arity="2" scope="V0 V8" reference="R7"/>
+<constraint name="C8" arity="2" scope="V0 V9" reference="R8"/>
+<constraint name="C9" arity="2" scope="V0 V10" reference="R9"/>
+<constraint name="C10" arity="2" scope="V0 V11" reference="R10"/>
+<constraint name="C11" arity="2" scope="V1 V2" reference="R0"/>
+<constraint name="C12" arity="2" scope="V1 V3" reference="R1"/>
+<constraint name="C13" arity="2" scope="V1 V4" reference="R2"/>
+<constraint name="C14" arity="2" scope="V1 V5" reference="R3"/>
+<constraint name="C15" arity="2" scope="V1 V6" reference="R4"/>
+<constraint name="C16" arity="2" scope="V1 V7" reference="R5"/>
+<constraint name="C17" arity="2" scope="V1 V8" reference="R6"/>
+<constraint name="C18" arity="2" scope="V1 V9" reference="R7"/>
+<constraint name="C19" arity="2" scope="V1 V10" reference="R8"/>
+<constraint name="C20" arity="2" scope="V1 V11" reference="R9"/>
+<constraint name="C21" arity="2" scope="V2 V3" reference="R0"/>
+<constraint name="C22" arity="2" scope="V2 V4" reference="R1"/>
+<constraint name="C23" arity="2" scope="V2 V5" reference="R2"/>
+<constraint name="C24" arity="2" scope="V2 V6" reference="R3"/>
+<constraint name="C25" arity="2" scope="V2 V7" reference="R4"/>
+<constraint name="C26" arity="2" scope="V2 V8" reference="R5"/>
+<constraint name="C27" arity="2" scope="V2 V9" reference="R6"/>
+<constraint name="C28" arity="2" scope="V2 V10" reference="R7"/>
+<constraint name="C29" arity="2" scope="V2 V11" reference="R8"/>
+<constraint name="C30" arity="2" scope="V3 V4" reference="R0"/>
+<constraint name="C31" arity="2" scope="V3 V5" reference="R1"/>
+<constraint name="C32" arity="2" scope="V3 V6" reference="R2"/>
+<constraint name="C33" arity="2" scope="V3 V7" reference="R3"/>
+<constraint name="C34" arity="2" scope="V3 V8" reference="R4"/>
+<constraint name="C35" arity="2" scope="V3 V9" reference="R5"/>
+<constraint name="C36" arity="2" scope="V3 V10" reference="R6"/>
+<constraint name="C37" arity="2" scope="V3 V11" reference="R7"/>
+<constraint name="C38" arity="2" scope="V4 V5" reference="R0"/>
+<constraint name="C39" arity="2" scope="V4 V6" reference="R1"/>
+<constraint name="C40" arity="2" scope="V4 V7" reference="R2"/>
+<constraint name="C41" arity="2" scope="V4 V8" reference="R3"/>
+<constraint name="C42" arity="2" scope="V4 V9" reference="R4"/>
+<constraint name="C43" arity="2" scope="V4 V10" reference="R5"/>
+<constraint name="C44" arity="2" scope="V4 V11" reference="R6"/>
+<constraint name="C45" arity="2" scope="V5 V6" reference="R0"/>
+<constraint name="C46" arity="2" scope="V5 V7" reference="R1"/>
+<constraint name="C47" arity="2" scope="V5 V8" reference="R2"/>
+<constraint name="C48" arity="2" scope="V5 V9" reference="R3"/>
+<constraint name="C49" arity="2" scope="V5 V10" reference="R4"/>
+<constraint name="C50" arity="2" scope="V5 V11" reference="R5"/>
+<constraint name="C51" arity="2" scope="V6 V7" reference="R0"/>
+<constraint name="C52" arity="2" scope="V6 V8" reference="R1"/>
+<constraint name="C53" arity="2" scope="V6 V9" reference="R2"/>
+<constraint name="C54" arity="2" scope="V6 V10" reference="R3"/>
+<constraint name="C55" arity="2" scope="V6 V11" reference="R4"/>
+<constraint name="C56" arity="2" scope="V7 V8" reference="R0"/>
+<constraint name="C57" arity="2" scope="V7 V9" reference="R1"/>
+<constraint name="C58" arity="2" scope="V7 V10" reference="R2"/>
+<constraint name="C59" arity="2" scope="V7 V11" reference="R3"/>
+<constraint name="C60" arity="2" scope="V8 V9" reference="R0"/>
+<constraint name="C61" arity="2" scope="V8 V10" reference="R1"/>
+<constraint name="C62" arity="2" scope="V8 V11" reference="R2"/>
+<constraint name="C63" arity="2" scope="V9 V10" reference="R0"/>
+<constraint name="C64" arity="2" scope="V9 V11" reference="R1"/>
+<constraint name="C65" arity="2" scope="V10 V11" reference="R0"/>
+</constraints>
+</instance>

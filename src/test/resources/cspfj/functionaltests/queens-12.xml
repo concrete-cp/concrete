@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<instance>
+<presentation maxConstraintArity="2" format="XCSP 2.1" type="CSP"/>
+
+<domains nbDomains="1">
+<domain name="D0" nbValues="12">1..12</domain>
+</domains>
+
+<variables nbVariables="12">
+<variable name="V0" domain="D0"/>
+<variable name="V1" domain="D0"/>
+<variable name="V2" domain="D0"/>
+<variable name="V3" domain="D0"/>
+<variable name="V4" domain="D0"/>
+<variable name="V5" domain="D0"/>
+<variable name="V6" domain="D0"/>
+<variable name="V7" domain="D0"/>
+<variable name="V8" domain="D0"/>
+<variable name="V9" domain="D0"/>
+<variable name="V10" domain="D0"/>
+<variable name="V11" domain="D0"/>
+</variables>
+
+<predicates nbPredicates="1">
+<predicate name="P0">
+  <parameters>int X0 int X1 int X2</parameters>
+   <expression> 
+    <functional>and(ne(X0,X1),ne(abs(sub(X0,X1)),X2))</functional>
+  </expression>
+</predicate>
+</predicates>
+
+<constraints nbConstraints="66">
+<constraint name="C0" arity="2" scope="V0 V1" reference="P0">
+  <parameters>V0 V1 1</parameters>
+</constraint>
+<constraint name="C1" arity="2" scope="V0 V2" reference="P0">
+  <parameters>V0 V2 2</parameters>
+</constraint>
+<constraint name="C2" arity="2" scope="V0 V3" reference="P0">
+  <parameters>V0 V3 3</parameters>
+</constraint>
+<constraint name="C3" arity="2" scope="V0 V4" reference="P0">
+  <parameters>V0 V4 4</parameters>
+</constraint>
+<constraint name="C4" arity="2" scope="V0 V5" reference="P0">
+  <parameters>V0 V5 5</parameters>
+</constraint>
+<constraint name="C5" arity="2" scope="V0 V6" reference="P0">
+  <parameters>V0 V6 6</parameters>
+</constraint>
+<constraint name="C6" arity="2" scope="V0 V7" reference="P0">
+  <parameters>V0 V7 7</parameters>
+</constraint>
+<constraint name="C7" arity="2" scope="V0 V8" reference="P0">
+  <parameters>V0 V8 8</parameters>
+</constraint>
+<constraint name="C8" arity="2" scope="V0 V9" reference="P0">
+  <parameters>V0 V9 9</parameters>
+</constraint>
+<constraint name="C9" arity="2" scope="V0 V10" reference="P0">
+  <parameters>V0 V10 10</parameters>
+</constraint>
+<constraint name="C10" arity="2" scope="V0 V11" reference="P0">
+  <parameters>V0 V11 11</parameters>
+</constraint>
+<constraint name="C11" arity="2" scope="V1 V2" reference="P0">
+  <parameters>V1 V2 1</parameters>
+</constraint>
+<constraint name="C12" arity="2" scope="V1 V3" reference="P0">
+  <parameters>V1 V3 2</parameters>
+</constraint>
+<constraint name="C13" arity="2" scope="V1 V4" reference="P0">
+  <parameters>V1 V4 3</parameters>
+</constraint>
+<constraint name="C14" arity="2" scope="V1 V5" reference="P0">
+  <parameters>V1 V5 4</parameters>
+</constraint>
+<constraint name="C15" arity="2" scope="V1 V6" reference="P0">
+  <parameters>V1 V6 5</parameters>
+</constraint>
+<constraint name="C16" arity="2" scope="V1 V7" reference="P0">
+  <parameters>V1 V7 6</parameters>
+</constraint>
+<constraint name="C17" arity="2" scope="V1 V8" reference="P0">
+  <parameters>V1 V8 7</parameters>
+</constraint>
+<constraint name="C18" arity="2" scope="V1 V9" reference="P0">
+  <parameters>V1 V9 8</parameters>
+</constraint>
+<constraint name="C19" arity="2" scope="V1 V10" reference="P0">
+  <parameters>V1 V10 9</parameters>
+</constraint>
+<constraint name="C20" arity="2" scope="V1 V11" reference="P0">
+  <parameters>V1 V11 10</parameters>
+</constraint>
+<constraint name="C21" arity="2" scope="V2 V3" reference="P0">
+  <parameters>V2 V3 1</parameters>
+</constraint>
+<constraint name="C22" arity="2" scope="V2 V4" reference="P0">
+  <parameters>V2 V4 2</parameters>
+</constraint>
+<constraint name="C23" arity="2" scope="V2 V5" reference="P0">
+  <parameters>V2 V5 3</parameters>
+</constraint>
+<constraint name="C24" arity="2" scope="V2 V6" reference="P0">
+  <parameters>V2 V6 4</parameters>
+</constraint>
+<constraint name="C25" arity="2" scope="V2 V7" reference="P0">
+  <parameters>V2 V7 5</parameters>
+</constraint>
+<constraint name="C26" arity="2" scope="V2 V8" reference="P0">
+  <parameters>V2 V8 6</parameters>
+</constraint>
+<constraint name="C27" arity="2" scope="V2 V9" reference="P0">
+  <parameters>V2 V9 7</parameters>
+</constraint>
+<constraint name="C28" arity="2" scope="V2 V10" reference="P0">
+  <parameters>V2 V10 8</parameters>
+</constraint>
+<constraint name="C29" arity="2" scope="V2 V11" reference="P0">
+  <parameters>V2 V11 9</parameters>
+</constraint>
+<constraint name="C30" arity="2" scope="V3 V4" reference="P0">
+  <parameters>V3 V4 1</parameters>
+</constraint>
+<constraint name="C31" arity="2" scope="V3 V5" reference="P0">
+  <parameters>V3 V5 2</parameters>
+</constraint>
+<constraint name="C32" arity="2" scope="V3 V6" reference="P0">
+  <parameters>V3 V6 3</parameters>
+</constraint>
+<constraint name="C33" arity="2" scope="V3 V7" reference="P0">
+  <parameters>V3 V7 4</parameters>
+</constraint>
+<constraint name="C34" arity="2" scope="V3 V8" reference="P0">
+  <parameters>V3 V8 5</parameters>
+</constraint>
+<constraint name="C35" arity="2" scope="V3 V9" reference="P0">
+  <parameters>V3 V9 6</parameters>
+</constraint>
+<constraint name="C36" arity="2" scope="V3 V10" reference="P0">
+  <parameters>V3 V10 7</parameters>
+</constraint>
+<constraint name="C37" arity="2" scope="V3 V11" reference="P0">
+  <parameters>V3 V11 8</parameters>
+</constraint>
+<constraint name="C38" arity="2" scope="V4 V5" reference="P0">
+  <parameters>V4 V5 1</parameters>
+</constraint>
+<constraint name="C39" arity="2" scope="V4 V6" reference="P0">
+  <parameters>V4 V6 2</parameters>
+</constraint>
+<constraint name="C40" arity="2" scope="V4 V7" reference="P0">
+  <parameters>V4 V7 3</parameters>
+</constraint>
+<constraint name="C41" arity="2" scope="V4 V8" reference="P0">
+  <parameters>V4 V8 4</parameters>
+</constraint>
+<constraint name="C42" arity="2" scope="V4 V9" reference="P0">
+  <parameters>V4 V9 5</parameters>
+</constraint>
+<constraint name="C43" arity="2" scope="V4 V10" reference="P0">
+  <parameters>V4 V10 6</parameters>
+</constraint>
+<constraint name="C44" arity="2" scope="V4 V11" reference="P0">
+  <parameters>V4 V11 7</parameters>
+</constraint>
+<constraint name="C45" arity="2" scope="V5 V6" reference="P0">
+  <parameters>V5 V6 1</parameters>
+</constraint>
+<constraint name="C46" arity="2" scope="V5 V7" reference="P0">
+  <parameters>V5 V7 2</parameters>
+</constraint>
+<constraint name="C47" arity="2" scope="V5 V8" reference="P0">
+  <parameters>V5 V8 3</parameters>
+</constraint>
+<constraint name="C48" arity="2" scope="V5 V9" reference="P0">
+  <parameters>V5 V9 4</parameters>
+</constraint>
+<constraint name="C49" arity="2" scope="V5 V10" reference="P0">
+  <parameters>V5 V10 5</parameters>
+</constraint>
+<constraint name="C50" arity="2" scope="V5 V11" reference="P0">
+  <parameters>V5 V11 6</parameters>
+</constraint>
+<constraint name="C51" arity="2" scope="V6 V7" reference="P0">
+  <parameters>V6 V7 1</parameters>
+</constraint>
+<constraint name="C52" arity="2" scope="V6 V8" reference="P0">
+  <parameters>V6 V8 2</parameters>
+</constraint>
+<constraint name="C53" arity="2" scope="V6 V9" reference="P0">
+  <parameters>V6 V9 3</parameters>
+</constraint>
+<constraint name="C54" arity="2" scope="V6 V10" reference="P0">
+  <parameters>V6 V10 4</parameters>
+</constraint>
+<constraint name="C55" arity="2" scope="V6 V11" reference="P0">
+  <parameters>V6 V11 5</parameters>
+</constraint>
+<constraint name="C56" arity="2" scope="V7 V8" reference="P0">
+  <parameters>V7 V8 1</parameters>
+</constraint>
+<constraint name="C57" arity="2" scope="V7 V9" reference="P0">
+  <parameters>V7 V9 2</parameters>
+</constraint>
+<constraint name="C58" arity="2" scope="V7 V10" reference="P0">
+  <parameters>V7 V10 3</parameters>
+</constraint>
+<constraint name="C59" arity="2" scope="V7 V11" reference="P0">
+  <parameters>V7 V11 4</parameters>
+</constraint>
+<constraint name="C60" arity="2" scope="V8 V9" reference="P0">
+  <parameters>V8 V9 1</parameters>
+</constraint>
+<constraint name="C61" arity="2" scope="V8 V10" reference="P0">
+  <parameters>V8 V10 2</parameters>
+</constraint>
+<constraint name="C62" arity="2" scope="V8 V11" reference="P0">
+  <parameters>V8 V11 3</parameters>
+</constraint>
+<constraint name="C63" arity="2" scope="V9 V10" reference="P0">
+  <parameters>V9 V10 1</parameters>
+</constraint>
+<constraint name="C64" arity="2" scope="V9 V11" reference="P0">
+  <parameters>V9 V11 2</parameters>
+</constraint>
+<constraint name="C65" arity="2" scope="V10 V11" reference="P0">
+  <parameters>V10 V11 1</parameters>
+</constraint>
+</constraints>
+</instance>
