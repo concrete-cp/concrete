@@ -26,7 +26,7 @@ public class RCConstraint extends AbstractConstraint implements
         sortedIntervals = intervals.clone();
         position = new int[intervals.length];
 
-        //init(scope);
+        // init(scope);
     }
 
     public RCConstraint(Variable[] scope, String name) {
@@ -36,17 +36,17 @@ public class RCConstraint extends AbstractConstraint implements
         sortedIntervals = intervals.clone();
         position = new int[intervals.length];
 
-        //init(scope);
+        // init(scope);
     }
 
-//    private void init(Variable[] scope) {
-//        nbInitConflicts = new long[getArity()][];
-//        nbMaxConflicts = new long[getArity()];
-//        for (int i = getArity(); --i >= 0;) {
-//            nbInitConflicts[i] = new long[scope[i].getDomain().maxSize()];
-//        }
-//        sortIntervals();
-//    }
+    // private void init(Variable[] scope) {
+    // nbInitConflicts = new long[getArity()][];
+    // nbMaxConflicts = new long[getArity()];
+    // for (int i = getArity(); --i >= 0;) {
+    // nbInitConflicts[i] = new long[scope[i].getDomain().maxSize()];
+    // }
+    // sortIntervals();
+    // }
 
     private static Interval[] initIntervals(final Variable[] scope) {
         final Interval[] intervals = new Interval[scope[0].getDomain()
@@ -78,7 +78,7 @@ public class RCConstraint extends AbstractConstraint implements
         if (intervals[tuple[0]].remove(tuple[1])) {
             sortIntervals();
 
-            //addConflict(tuple);
+            // addConflict(tuple);
 
             return true;
         }
@@ -105,10 +105,10 @@ public class RCConstraint extends AbstractConstraint implements
         final Variable v1 = getVariable(1);
 
         // Support condition
-//        if (v1.getDomainSize() > nbMaxConflicts[0]
-//                && v0.getDomainSize() > nbMaxConflicts[1]) {
-//            return true;
-//        }
+        // if (v1.getDomainSize() > nbMaxConflicts[0]
+        // && v0.getDomainSize() > nbMaxConflicts[1]) {
+        // return true;
+        // }
         final BitSet v1Validated = new BitSet(v1.getLast() + 1);
 
         int itv = 0;
@@ -424,6 +424,20 @@ public class RCConstraint extends AbstractConstraint implements
 
         public String toString() {
             return index0 + ": [" + lb + ", " + ub + "]";
+        }
+
+        @Override
+        public int hashCode() {
+            return 29791 + 961 * lb + 31 * ub + index0;
+        }
+
+        @Override
+        public boolean equals(Object arg0) {
+            if (!(arg0 instanceof Interval)) {
+                return false;
+            }
+            final Interval arg = (Interval) arg0;
+            return (arg.lb == lb && arg.ub == ub && arg.index0 == index0);
         }
 
         @Override
