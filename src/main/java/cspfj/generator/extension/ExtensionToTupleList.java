@@ -7,7 +7,6 @@ import java.util.Map;
 
 import cspfj.constraint.extension.Matrix;
 import cspfj.constraint.extension.TupleSet;
-import cspfj.functionaltests.DomainConverter;
 import cspom.extension.Extension;
 import cspom.variable.Domain;
 

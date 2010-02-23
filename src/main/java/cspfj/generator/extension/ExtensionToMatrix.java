@@ -8,7 +8,6 @@ import cspfj.constraint.extension.Matrix;
 import cspfj.constraint.extension.Matrix2D;
 import cspfj.constraint.extension.MatrixGeneral;
 import cspfj.constraint.extension.TupleSet;
-import cspfj.functionaltests.DomainConverter;
 import cspom.extension.Extension;
 import cspom.variable.Domain;
 

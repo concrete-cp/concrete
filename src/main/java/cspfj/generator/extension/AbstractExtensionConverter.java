@@ -1,6 +1,5 @@
 package cspfj.generator.extension;
 
-import cspfj.functionaltests.DomainConverter;
 import cspom.variable.Domain;
 
 public abstract class AbstractExtensionConverter implements ExtensionConverter {
