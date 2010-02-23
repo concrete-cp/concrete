@@ -31,7 +31,6 @@ import java.util.TreeSet;
 import java.util.Map.Entry;
 import java.util.logging.Logger;
 
-import cspfj.CspOM;
 import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
 import cspfj.constraint.extension.ExtensionConstraint2D;
@@ -40,9 +39,7 @@ import cspfj.constraint.extension.Matrix;
 import cspfj.constraint.extension.Matrix2D;
 import cspfj.constraint.extension.TupleSet;
 import cspfj.constraint.semantic.RCConstraint;
-import cspfj.exception.FailedGenerationException;
 import cspfj.util.BitVector;
-import cspom.CSPOM;
 
 public final class Problem implements Cloneable {
 	// private Map<Integer, Variable> variables;
@@ -87,9 +84,9 @@ public final class Problem implements Cloneable {
 		constraints = new ArrayList<Constraint>();
 	}
 
-	public static Problem load(CSPOM cspom) throws FailedGenerationException {
-		return CspOM.generate(cspom);
-	}
+//	public static Problem load(CSPOM cspom) throws FailedGenerationException {
+//		return CspOM.generate(cspom);
+//	}
 
 	public int getNbFutureVariables() {
 		return nbFutureVariables;
