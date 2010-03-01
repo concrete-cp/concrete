@@ -31,8 +31,6 @@ public interface Solver {
 
     Map<Variable, Integer> getSolution();
 
-    int getSolutionValue(final int vId);
-
     float getUserTime();
 
     int getNbAssignments();

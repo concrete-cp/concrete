@@ -16,51 +16,51 @@ import org.junit.Test;
 
 import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.Constraint;
-import cspfj.constraint.extension.TupleManager;
 import cspfj.constraint.semantic.AllDifferentConstraint;
 import cspfj.problem.Variable;
+import cspom.variable.CSPOMVariable;
 
 public class TupleManagerTest {
 
-    private TupleManager tupleManager;
+	private TupleManager tupleManager;
 
-    private int[] tuple;
+	private int[] tuple;
 
-    @Before
-    public void setUp() {
+	@Before
+	public void setUp() {
 
-        final int[] dom = new int[] { 1, 2, 3, 4, 5 };
+		final int[] dom = new int[] { 1, 2, 3, 4, 5 };
 
-        final Variable v1 = new Variable(dom);
-        final Variable v2 = new Variable(dom);
-        final Variable v3 = new Variable(dom);
+		final Variable v1 = new Variable(new CSPOMVariable(1, 5));
+		final Variable v2 = new Variable(new CSPOMVariable(1, 5));
+		final Variable v3 = new Variable(new CSPOMVariable(1, 5));
 
-        final Constraint constraint = new AllDifferentConstraint("allDiff",
-                new Variable[] { v1, v2, v3 });
+		final Constraint constraint = new AllDifferentConstraint("allDiff",
+				new Variable[] { v1, v2, v3 });
 
-        tupleManager = new TupleManager(constraint,
-                ((AbstractConstraint) constraint).getTuple());
+		tupleManager = new TupleManager(constraint,
+				((AbstractConstraint) constraint).getTuple());
 
-        tuple = tupleManager.getTuple();
+		tuple = tupleManager.getTuple();
 
-    }
+	}
 
-    @Test
-    public void testSetPrevTuple() {
-        tupleManager.setFirstTuple();
-        assertFalse(tupleManager.setPrevTuple(0));
+	@Test
+	public void testSetPrevTuple() {
+		tupleManager.setFirstTuple();
+		assertFalse(tupleManager.setPrevTuple(0));
 
-        tupleManager.setFirstTuple();
-        assertFalse(tupleManager.setPrevTuple(1));
+		tupleManager.setFirstTuple();
+		assertFalse(tupleManager.setPrevTuple(1));
 
-        tupleManager.setTupleAfter(new int[] { 2, 2, 2 }, 0);
-        for (int i = 10; --i >= 0;) {
-            assertTrue(tupleManager.setNextTuple(0));
-        }
-        for (int i = 10; --i >= 0;) {
-            assertTrue(tupleManager.setPrevTuple(0));
-        }
-        assertTrue(Arrays.equals(tuple, new int[] { 2, 2, 2 }));
-    }
+		tupleManager.setTupleAfter(new int[] { 2, 2, 2 }, 0);
+		for (int i = 10; --i >= 0;) {
+			assertTrue(tupleManager.setNextTuple(0));
+		}
+		for (int i = 10; --i >= 0;) {
+			assertTrue(tupleManager.setPrevTuple(0));
+		}
+		assertTrue(Arrays.equals(tuple, new int[] { 2, 2, 2 }));
+	}
 
 }

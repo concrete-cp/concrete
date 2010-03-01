@@ -15,7 +15,7 @@ public class DiscHeuristic implements Heuristic {
 		this.valueHeuristic = valueHeuristic;
 	}
 
-	public long selectPair(Problem problem) {
+	public Pair selectPair(Problem problem) {
 		Variable bestVariable = null;
 		double bestIndexScore = Double.NEGATIVE_INFINITY;
 
@@ -29,7 +29,7 @@ public class DiscHeuristic implements Heuristic {
 				bestIndexScore = Double.NEGATIVE_INFINITY;
 				continue;
 			}
-			
+
 			final int compare = variableHeuristic.compare(v, bestVariable);
 
 			if (compare < 0) {
@@ -43,7 +43,7 @@ public class DiscHeuristic implements Heuristic {
 				final double indexScore = valueHeuristic.getScore(v,
 						valueHeuristic.selectIndex(v));
 				if (indexScore > bestIndexScore) {
-//					System.out.print("disc! ");
+					// System.out.print("disc! ");
 					bestVariable = v;
 					bestIndexScore = indexScore;
 				}
@@ -60,19 +60,21 @@ public class DiscHeuristic implements Heuristic {
 			}
 		}
 
-		return Pair.pair(bestVariable, valueHeuristic.selectIndex(bestVariable), problem);
+		return new Pair(bestVariable, valueHeuristic.selectIndex(bestVariable));
 	}
 
 	public void compute() {
 		valueHeuristic.compute();
 	}
+
 	@Override
 	public VariableHeuristic getVariableHeuristic() {
 		return variableHeuristic;
 	}
-    public String toString() {
-    	return "Discriminated " + variableHeuristic + ", " + valueHeuristic ;
-    }
+
+	public String toString() {
+		return "Discriminated " + variableHeuristic + ", " + valueHeuristic;
+	}
 
 	@Override
 	public ValueHeuristic getValueHeuristic() {

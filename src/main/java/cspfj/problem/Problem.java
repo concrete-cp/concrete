@@ -22,6 +22,8 @@ package cspfj.problem;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -39,16 +41,17 @@ import cspfj.constraint.extension.Matrix;
 import cspfj.constraint.extension.Matrix2D;
 import cspfj.constraint.extension.TupleSet;
 import cspfj.constraint.semantic.RCConstraint;
+import cspfj.exception.FailedGenerationException;
 import cspfj.util.BitVector;
+import cspom.CSPOM;
+import cspom.variable.CSPOMVariable;
 
-public final class Problem implements Cloneable {
+public final class Problem {
 	// private Map<Integer, Variable> variables;
 
-	private List<Variable> expandableVariables;
+	private Map<CSPOMVariable, Variable> variables;
 
-	private Variable[] variableList;
-
-	private Variable[] variableMap;
+	private Variable[] variableArray;
 
 	private int nbVariables = 0;
 
@@ -79,21 +82,23 @@ public final class Problem implements Cloneable {
 
 	public Problem() {
 		super();
-		this.useNoGoods = true;// true;
-		expandableVariables = new ArrayList<Variable>();
+		this.useNoGoods = true;
+		variables = new HashMap<CSPOMVariable, Variable>();
 		constraints = new ArrayList<Constraint>();
 	}
 
-//	public static Problem load(CSPOM cspom) throws FailedGenerationException {
-//		return CspOM.generate(cspom);
-//	}
+	public static Problem load(CSPOM cspom) throws FailedGenerationException {
+		return ProblemGenerator.generate(cspom);
+	}
 
 	public int getNbFutureVariables() {
 		return nbFutureVariables;
 	}
 
-	public void addVariable(final Variable variable) {
-		expandableVariables.add(variable);
+	public Variable addVariable(final CSPOMVariable variable) {
+		final Variable var = new Variable(variable);
+		variables.put(variable, var);
+		return var;
 	}
 
 	public void addConstraint(final Constraint constraint) {
@@ -104,21 +109,15 @@ public final class Problem implements Cloneable {
 		maxDomainSize = 0;
 		maxVId = 0;
 
-		for (Variable var : expandableVariables) {
+		variableArray = variables.values().toArray(
+				new Variable[variables.size()]);
+
+		for (Variable var : variableArray) {
 			maxDomainSize = Math.max(maxDomainSize, var.getDomain().maxSize());
 			maxVId = Math.max(maxVId, var.getId());
 		}
 
-		variableList = expandableVariables
-				.toArray(new Variable[expandableVariables.size()]);
-
-		this.variableMap = new Variable[maxVId + 1];
-
-		for (Variable var : variableList) {
-			variableMap[var.getId()] = var;
-		}
-
-		nbFutureVariables = nbVariables = expandableVariables.size();
+		nbFutureVariables = nbVariables = variables.size();
 
 		levelVariables = new Variable[getNbVariables()];
 	}
@@ -127,22 +126,22 @@ public final class Problem implements Cloneable {
 		constraintArray = constraints
 				.toArray(new Constraint[constraints.size()]);
 
-		maxArity = 0;
-		for (Constraint c : constraints) {
-			maxArity = Math.max(maxArity, c.getArity());
-		}
+		maxArity = Collections.max(constraints, new Comparator<Constraint>() {
+			@Override
+			public int compare(Constraint o1, Constraint o2) {
+				return o1.getArity() - o2.getArity();
+			}
+		}).getArity();
 
-		updateInvolvingConstraints();
+		resetInvolvingConstraints();
 	}
 
-	public void updateInvolvingConstraints() {
+	public void resetInvolvingConstraints() {
 		final Map<Integer, List<Constraint>> invConstraints = new HashMap<Integer, List<Constraint>>(
-				variableList.length);
+				variableArray.length);
 
 		for (Variable v : getVariables()) {
-			if (v != null) {
-				invConstraints.put(v.getId(), new ArrayList<Constraint>());
-			}
+			invConstraints.put(v.getId(), new ArrayList<Constraint>());
 		}
 
 		for (Constraint c : getConstraints()) {
@@ -152,24 +151,11 @@ public final class Problem implements Cloneable {
 		}
 
 		for (Variable v : getVariables()) {
-			if (v != null) {
-				final Collection<Constraint> involvingConstraints = invConstraints
-						.get(v.getId());
-				v.setInvolvingConstraints(involvingConstraints
-						.toArray(new Constraint[involvingConstraints.size()]));
-			}
+			final Collection<Constraint> involvingConstraints = invConstraints
+					.get(v.getId());
+			v.setInvolvingConstraints(involvingConstraints
+					.toArray(new Constraint[involvingConstraints.size()]));
 		}
-
-		// for (Constraint c : getConstraints()) {
-		// c.initNbSupports();
-		// }
-
-		// final ValueHeuristic maxS = new Supports(this, false);
-		// maxS.compute();
-
-		// for (Variable v: getVariables()) {
-		// v.heuristicToOrder();
-		// }
 	}
 
 	public int getNbVariables() {
@@ -189,11 +175,7 @@ public final class Problem implements Cloneable {
 	}
 
 	public Variable[] getVariables() {
-		return variableList;
-	}
-
-	public Variable getVariable(final int vId) {
-		return variableMap[vId];
+		return variableArray;
 	}
 
 	public void increaseFutureVariables() {
@@ -218,7 +200,7 @@ public final class Problem implements Cloneable {
 
 	private void setLevel(int level) {
 		// currentLevel = level;
-		for (Variable v : variableList) {
+		for (Variable v : variableArray) {
 			v.setLevel(level);
 		}
 		for (Constraint c : constraintArray) {
@@ -228,7 +210,7 @@ public final class Problem implements Cloneable {
 
 	private void restoreLevel(int level) {
 		// currentLevel = level;
-		for (Variable v : variableList) {
+		for (Variable v : variableArray) {
 			v.restoreLevel(level);
 		}
 		for (Constraint c : getConstraints()) {
@@ -238,7 +220,7 @@ public final class Problem implements Cloneable {
 
 	public void reset() {
 		currentLevel = 0;
-		for (Variable v : variableList) {
+		for (Variable v : variableArray) {
 			v.reset(this);
 		}
 		for (Constraint c : getConstraints()) {
@@ -424,7 +406,7 @@ public final class Problem implements Cloneable {
 
 			tuple = Arrays.copyOf(tuple, level + 1);
 
-			for (Variable fv : variableList) {
+			for (Variable fv : variableArray) {
 
 				// logger.fine("checking " +
 				// getVariable(levelVariables[level-1]));
@@ -559,54 +541,55 @@ public final class Problem implements Cloneable {
 		return maxArity;
 	}
 
-	public static Problem activeProblem(final Problem problem) {
-		return activeProblem(problem, 0);
-	}
+	// public static Problem activeProblem(final Problem problem) {
+	// return activeProblem(problem, 0);
+	// }
 
-	public static Problem activeProblem(final Problem problem,
-			final int additionalConstraints) {
-		final Collection<Constraint> constraints = new ArrayList<Constraint>();
-
-		final Collection<Constraint> otherConstraints = new ArrayList<Constraint>();
-
-		final Set<Variable> activeVariables = new TreeSet<Variable>();
-
-		for (Constraint c : problem.getConstraints()) {
-			if (c.isActive()) {
-				constraints.add(c);
-				for (Variable v : c.getScope()) {
-					activeVariables.add(v);
-				}
-				c.setActive(false);
-			} else {
-				otherConstraints.add(c);
-			}
-
-		}
-
-		final Constraint[] sortedConstraints = otherConstraints
-				.toArray(new Constraint[otherConstraints.size()]);
-
-		Arrays.sort(sortedConstraints, new cspfj.constraint.Weight(true));
-
-		int i = additionalConstraints;
-		for (Constraint c : sortedConstraints) {
-			if (i-- <= 0) {
-				break;
-			}
-			constraints.add(c);
-			for (Variable v : c.getScope()) {
-				activeVariables.add(v);
-			}
-		}
-
-		Problem active = new Problem();
-		active.expandableVariables.addAll(activeVariables);
-		active.constraints.addAll(constraints);
-		active.prepareVariables();
-		active.prepareConstraints();
-		return active;
-	}
+	// public static Problem activeProblem(final Problem problem,
+	// final int additionalConstraints) {
+	// final Collection<Constraint> constraints = new ArrayList<Constraint>();
+	//
+	// final Collection<Constraint> otherConstraints = new
+	// ArrayList<Constraint>();
+	//
+	// final Set<Variable> activeVariables = new TreeSet<Variable>();
+	//
+	// for (Constraint c : problem.getConstraints()) {
+	// if (c.isActive()) {
+	// constraints.add(c);
+	// for (Variable v : c.getScope()) {
+	// activeVariables.add(v);
+	// }
+	// c.setActive(false);
+	// } else {
+	// otherConstraints.add(c);
+	// }
+	//
+	// }
+	//
+	// final Constraint[] sortedConstraints = otherConstraints
+	// .toArray(new Constraint[otherConstraints.size()]);
+	//
+	// Arrays.sort(sortedConstraints, new cspfj.constraint.Weight(true));
+	//
+	// int i = additionalConstraints;
+	// for (Constraint c : sortedConstraints) {
+	// if (i-- <= 0) {
+	// break;
+	// }
+	// constraints.add(c);
+	// for (Variable v : c.getScope()) {
+	// activeVariables.add(v);
+	// }
+	// }
+	//
+	// Problem active = new Problem();
+	// active.variables.addAll(activeVariables);
+	// active.constraints.addAll(constraints);
+	// active.prepareVariables();
+	// active.prepareConstraints();
+	// return active;
+	// }
 
 	public void setUseNoGoods(final boolean b) {
 		this.useNoGoods = b;
@@ -645,30 +628,30 @@ public final class Problem implements Cloneable {
 		return Math.max(10, maxDomainSize / 10);
 	}
 
-	public Problem clone() throws CloneNotSupportedException {
-		final Problem problem = (Problem) super.clone();
-		final List<Variable> variables = new ArrayList<Variable>(this
-				.getNbVariables());
-
-		for (Variable v : this.getVariables()) {
-			variables.add(v.clone());
-		}
-
-		problem.expandableVariables = variables;
-
-		final List<Constraint> constraints = new ArrayList<Constraint>(this
-				.getNbConstraints());
-
-		for (Constraint c : this.getConstraints()) {
-			constraints.add(c.deepCopy(variables));
-		}
-
-		problem.constraints = constraints;
-
-		problem.prepareVariables();
-		problem.prepareConstraints();
-		return problem;
-	}
+	// public Problem clone() throws CloneNotSupportedException {
+	// final Problem problem = (Problem) super.clone();
+	// final List<Variable> variables = new ArrayList<Variable>(this
+	// .getNbVariables());
+	//
+	// for (Variable v : this.getVariables()) {
+	// variables.add(v.clone());
+	// }
+	//
+	// problem.variables = variables;
+	//
+	// final List<Constraint> constraints = new ArrayList<Constraint>(this
+	// .getNbConstraints());
+	//
+	// for (Constraint c : this.getConstraints()) {
+	// constraints.add(c.deepCopy(variables));
+	// }
+	//
+	// problem.constraints = constraints;
+	//
+	// problem.prepareVariables();
+	// problem.prepareConstraints();
+	// return problem;
+	// }
 
 	public static enum LearnMethod {
 		NONE, EXT, RC, BIN

@@ -1,27 +1,25 @@
 package cspfj.heuristic;
 
-import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
 public class Pair {
 
-	private Pair() {
+	private final Variable variable;
+
+	private final int index;
+
+	public Pair(final Variable variable, final int index) {
 		super();
+		this.variable = variable;
+		this.index = index;
 	}
 
-	public static long pair(final Variable variable, final int index, final Problem problem) {
-		return variable.getId() * problem.getMaxDomainSize() + index;
+	public Variable getVariable() {
+		return variable;
 	}
 
-	public static Variable variable(final long pair, final Problem problem) {
-		return problem.getVariable(variableId(pair, problem));
-	}
-	
-	public static int variableId(final long pair, final Problem problem) {
-		return (int)(pair / problem.getMaxDomainSize()) ;
+	public int getIndex() {
+		return index;
 	}
 
-	public static int index(final long pair, final Problem problem) {
-		return (int)(pair % problem.getMaxDomainSize());
-	}
 }

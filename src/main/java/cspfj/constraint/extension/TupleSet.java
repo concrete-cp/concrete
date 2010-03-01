@@ -3,7 +3,7 @@ package cspfj.constraint.extension;
 import java.math.BigInteger;
 import java.util.Iterator;
 
-import cspom.extension.IntTupleSet;
+import cspfj.util.IntTupleSet;
 
 public class TupleSet implements Matrix, Cloneable, Iterable<int[]> {
 

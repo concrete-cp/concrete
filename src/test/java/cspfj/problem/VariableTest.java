@@ -5,17 +5,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-
 import org.junit.Before;
 import org.junit.Test;
 
-import cspfj.constraint.Constraint;
 import cspfj.exception.FailedGenerationException;
 import cspfj.util.BitVector;
+import cspom.variable.CSPOMVariable;
 
 public class VariableTest {
 
@@ -24,9 +19,8 @@ public class VariableTest {
 
 	@Before
 	public void setup() throws FailedGenerationException {
-		variable = new Variable(1, 2, 3, 4, 5);
 		problem = new Problem();
-		problem.addVariable(variable);
+		variable = problem.addVariable(new CSPOMVariable(1, 5));
 		problem.prepareVariables();
 		problem.prepareConstraints();
 	}
@@ -109,11 +103,10 @@ public class VariableTest {
 
 	@Test
 	public void testRestore2() throws FailedGenerationException {
-		final Variable variable = new Variable(1, 2, 3, 4, 5, 6);
 
 		final Problem problem = new Problem();
 
-		problem.addVariable(variable);
+		final Variable variable = problem.addVariable(new CSPOMVariable(1, 6));
 		problem.prepareVariables();
 
 		variable.remove(0);

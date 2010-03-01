@@ -15,7 +15,7 @@ public class ProdHeuristic implements Heuristic {
 		this.valueHeuristic = valueHeuristic;
 	}
 
-	public long selectPair(Problem problem) {
+	public Pair selectPair(Problem problem) {
 		Variable bestVariable = null;
 		for (Variable v : problem.getVariables()) {
 			if (!v.isAssigned()
@@ -25,7 +25,7 @@ public class ProdHeuristic implements Heuristic {
 			}
 		}
 
-		return Pair.pair(bestVariable, valueHeuristic.selectIndex(bestVariable), problem);
+		return new Pair(bestVariable, valueHeuristic.selectIndex(bestVariable));
 	}
 
 	public int compare(final Variable variable1, final Variable variable2) {
@@ -54,10 +54,10 @@ public class ProdHeuristic implements Heuristic {
 	public void compute() {
 		valueHeuristic.compute();
 	}
-	
-    public String toString() {
-    	return variableHeuristic + " * " + valueHeuristic ;
-    }
+
+	public String toString() {
+		return variableHeuristic + " * " + valueHeuristic;
+	}
 
 	@Override
 	public VariableHeuristic getVariableHeuristic() {

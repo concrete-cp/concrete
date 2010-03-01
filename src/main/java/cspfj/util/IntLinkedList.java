@@ -1,16 +1,14 @@
 package cspfj.util;
 
-public final class IntLinkedList {
+import java.util.AbstractList;
+
+public final class IntLinkedList extends AbstractList<Integer> {
 
 	private Entry head = null;
 
 	private Entry queue = null;
 
 	private int size = 0;
-
-	// public IntLinkedList() {
-	//
-	// }
 
 	public void add(int value) {
 		final Entry newValue = new Entry(value, head);
@@ -21,7 +19,7 @@ public final class IntLinkedList {
 		size++;
 	}
 
-	public void stick(IntLinkedList list) {
+	public void addAll(IntLinkedList list) {
 		if (list.head == null) {
 			return;
 		}
@@ -29,7 +27,7 @@ public final class IntLinkedList {
 		head = list.head;
 	}
 
-	public int getSize() {
+	public int size() {
 		return size;
 	}
 
@@ -44,7 +42,7 @@ public final class IntLinkedList {
 		}
 		return max;
 	}
-	
+
 	public void clear() {
 		head = null;
 		queue = null;
@@ -59,5 +57,10 @@ public final class IntLinkedList {
 			this.value = value;
 			this.next = next;
 		}
+	}
+
+	@Override
+	public Integer get(int index) {
+		throw new UnsupportedOperationException();
 	}
 }

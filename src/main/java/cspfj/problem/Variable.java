@@ -26,6 +26,7 @@ import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
 import cspfj.priorityqueues.Identified;
 import cspfj.util.BitVector;
+import cspom.variable.CSPOMVariable;
 
 public final class Variable implements Cloneable, Identified {
 
@@ -33,54 +34,24 @@ public final class Variable implements Cloneable, Identified {
 
 	private DynamicConstraint[] dynamicConstraints;
 
-	// private int[] removed;
 	private Domain domain;
 
-	// private int assignedIndex;
 	private boolean assigned;
 
 	private static int nbV = 0;
 
 	private final int id;
 
-	private final String name;
-
 	private int[] positionInConstraint;
 
-	// private int[] weights;
+	private final CSPOMVariable cspomVariable;
 
-	// private static final Logger logger = Logger.getLogger("cspfj.Variable");
+	public Variable(final CSPOMVariable cspomVariable) {
+		this.cspomVariable = cspomVariable;
 
-	public Variable(final int... dom) {
-		this(null, dom);
-	}
-
-	/**
-	 * @param dom
-	 *            Array representings the domain elements
-	 * @param name
-	 *            Name of the variable
-	 */
-	public Variable(String name, final int... dom) {
-		this.domain = new BitVectorDomain(dom);
-
-		// this.removed = new int[domain.length];
-		// Arrays.fill(removed, -1);
-
-		// this.assignedIndex = -1;
 		assigned = false;
 		id = nbV++;
-		// savedLevels = BitVector.newBitVector(1, false);
-		if (name == null) {
-			this.name = "X" + id;
-		} else {
-			this.name = name;
-		}
 	}
-
-	// public void attachWeights(int[] weights) {
-	// this.weights = weights;
-	// }
 
 	/**
 	 * Reinit ID generator (before loading a new problem).
@@ -91,7 +62,7 @@ public final class Variable implements Cloneable, Identified {
 
 	@Override
 	public String toString() {
-		return name + "[" + getDomainSize() + "]";
+		return cspomVariable.getName() + "[" + getDomainSize() + "]";
 	}
 
 	/**
@@ -120,14 +91,15 @@ public final class Variable implements Cloneable, Identified {
 	public void updatePositionInConstraint(final int constraintPosition) {
 		positionInConstraint[constraintPosition] = constraints[constraintPosition]
 				.getPosition(this);
-		// constraints[constraintPosition].setPositionInVariable(
-		// positionInConstraint[constraintPosition], constraintPosition);
 	}
 
 	/**
 	 * @return La taille du domaine
 	 */
 	public int getDomainSize() {
+		if (domain == null) {
+			return cspomVariable.getDomain().getValues().size();
+		}
 		return domain.size();
 	}
 
@@ -135,39 +107,13 @@ public final class Variable implements Cloneable, Identified {
 		return assigned;
 	}
 
-	// public boolean assignNotAC(final int index, final Problem problem) {
-	// assgn(index, problem);
-	// return checkIndexValidity(index);
-	// }
-
-	// public void firstAssign(final int index) {
-	// assignedIndex = index;
-	// assigned = true;
-	// }
-	//
-	// public void resetAssign() {
-	// assigned = false;
-	// }
-
-	// private boolean checkIndexValidity(final int index) {
-	// for (int c = constraints.length; --c >= 0;) {
-	// if (!constraints[c].findValidTuple(positionInConstraint[c], index)) {
-	// return false;
-	// }
-	// }
-	// return true;
-	// }
-
 	public void assign(final int index, final Problem problem) {
 		assert !assigned;
 		assert domain.present(index);
 
-		// assignedIndex = index;
 		assigned = true;
-
 		domain.setSingle(index);
 
-		// assert !reinitBooleanDomain();
 		problem.decreaseFutureVariables();
 	}
 
@@ -175,8 +121,6 @@ public final class Variable implements Cloneable, Identified {
 		assert assigned;
 		assigned = false;
 		problem.increaseFutureVariables();
-		// System.arraycopy(beforeAssignDomain, 0, bitDomain, 0,
-		// bitDomain.length);
 	}
 
 	public void remove(final int index) {
@@ -186,79 +130,9 @@ public final class Variable implements Cloneable, Identified {
 		domain.remove(index);
 	}
 
-	// private void pushLevel(int level) {
-	// int saveTo = level-1;
-	// if (saveTo >= history.length) {
-	// // Expand tables
-	// history = Arrays.copyOf(history, saveTo + 1);
-	// savedLevels = Arrays.copyOf(savedLevels, BitVector
-	// .nbWords(saveTo + 1));
-	//
-	// history[saveTo] = bitDomain.clone();
-	// } else if (history[saveTo] == null) {
-	// history[saveTo] = bitDomain.clone();
-	// } else {
-	// System.arraycopy(bitDomain, 0, history[saveTo], 0,
-	// bitDomain.length);
-	// }
-	//
-	// BitVector.set(savedLevels, saveTo);
-	// }
-
-	// public void restore(final int level) {
-	// assert !assigned;
-	//
-	// //assert level > 0;
-	// final int[] removed = this.removed;
-	//
-	// for (int i = getLastAbsent(); i >= 0; i = getPrevAbsent(i)) {
-	// if (removed[i] >= level) {
-	// assert !isPresent(i);
-	// domainSize++;
-	// removed[i] = -1;
-	// BitVector.set(bitDomain, i, true);
-	// }
-	// }
-	//
-	// // final long[] restored = popLevel(level);
-	// //
-	// // assert BitVector.equals(bitDomain, restored) : this + " : "
-	// // + BitVector.toString(bitDomain) + " / "
-	// // + BitVector.toString(restored) + " / " + historyTS();
-	//
-	// }
-
-	// private String historyTS() {
-	// final StringBuilder stb = new StringBuilder();
-	// for (int i = BitVector.nextSetBit(savedLevels, 0); i >= 0; i = BitVector
-	// .nextSetBit(savedLevels, i + 1)) {
-	// stb.append(i).append(": ").append(BitVector.toString(history[i])).append(" - ");
-	// }
-	// return stb.toString();
-	// }
-	//
-	// private long[] popLevel(int level) {
-	// final int levelToRestore = BitVector.prevSetBit(savedLevels, level + 1);
-	// BitVector.clearFrom(savedLevels, level);
-	// return history[levelToRestore];
-	//
-	// }
-
 	public int getId() {
 		return id;
 	}
-
-	// public long getNbSupports(final int index) {
-	// long nbSupports = 0;
-	// for (Constraint c : constraints) {
-	// final long nbSup = c.getNbSupports(this, index);
-	// if (nbSup <= 0) {
-	// return -1;
-	// }
-	// nbSupports += nbSup;
-	// }
-	// return nbSupports;
-	// }
 
 	public Constraint[] getInvolvingConstraints() {
 		return constraints;
@@ -290,14 +164,6 @@ public final class Variable implements Cloneable, Identified {
 		return indexes;
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	// public int getRemovedLevel(final int index) {
-	// return removed[index];
-	// }
-
 	public int getNext(final int index) {
 		return domain.next(index);
 	}
@@ -318,33 +184,13 @@ public final class Variable implements Cloneable, Identified {
 		return ((BitVectorDomain) domain).getBitVector();
 	}
 
-	// public boolean reinitBooleanDomain() {
-	// boolean change = false;
-	// if (assigned) {
-	// for (int i = removed.length; --i >= 0;) {
-	// change |= BitVector.set(bitDomain, i, i == assignedIndex);
-	// }
-	// } else {
-	// for (int i = removed.length; --i >= 0;) {
-	// change |= BitVector.set(bitDomain, i, removed[i] < 0);
-	// }
-	// }
-	// return change;
-	// }
-
 	public Variable clone() throws CloneNotSupportedException {
 		final Variable variable = (Variable) super.clone();
 
 		variable.domain = domain.clone();
 
-		// variable.beforeAssignDomain = bitDomain.clone();
-
 		return variable;
 	}
-
-	// public void reAssign(final int index) {
-	// assignedIndex = index;
-	// }
 
 	public int getPositionInConstraint(final int constraint) {
 		return positionInConstraint[constraint];
