@@ -29,7 +29,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.Map.Entry;
 import java.util.logging.Logger;
 
@@ -56,8 +55,6 @@ public final class Problem {
 	private int nbVariables = 0;
 
 	private List<Constraint> constraints;
-
-	private Constraint[] constraintArray;
 
 	private int nbFutureVariables = 0;
 
@@ -123,8 +120,8 @@ public final class Problem {
 	}
 
 	public void prepareConstraints() {
-		constraintArray = constraints
-				.toArray(new Constraint[constraints.size()]);
+//		constraintArray = constraints
+//				.toArray(new Constraint[constraints.size()]);
 
 		maxArity = Collections.max(constraints, new Comparator<Constraint>() {
 			@Override
@@ -166,11 +163,7 @@ public final class Problem {
 		return constraints.size();
 	}
 
-	public Constraint[] getConstraints() {
-		return constraintArray;
-	}
-
-	public Collection<Constraint> getConstraintsAsCollection() {
+	public List<Constraint> getConstraints() {
 		return constraints;
 	}
 
@@ -203,7 +196,7 @@ public final class Problem {
 		for (Variable v : variableArray) {
 			v.setLevel(level);
 		}
-		for (Constraint c : constraintArray) {
+		for (Constraint c : constraints) {
 			c.setLevel(level);
 		}
 	}
@@ -236,7 +229,7 @@ public final class Problem {
 					Arrays.toString(v.getCurrentIndexes())).append('\n');
 		}
 
-		for (Constraint c : constraintArray) {
+		for (Constraint c : constraints) {
 			sb.append(c.toString()).append('\n');
 		}
 
