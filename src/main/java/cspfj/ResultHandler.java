@@ -22,6 +22,7 @@ package cspfj;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Map.Entry;
@@ -89,9 +90,9 @@ public class ResultHandler {
         bestConflicts = Integer.MAX_VALUE;
     }
 
-    private String constraintStats(Constraint[] constraints) {
+    private String constraintStats(final List<Constraint> list) {
         final Map<String, Integer> constraintStats = new HashMap<String, Integer>();
-        for (Constraint c : constraints) {
+        for (Constraint c : list) {
             final Integer count = constraintStats.get(c.getType());
             if (count == null) {
                 constraintStats.put(c.getType(), 1);
