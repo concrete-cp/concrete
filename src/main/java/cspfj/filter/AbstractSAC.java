@@ -12,7 +12,7 @@ import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import cspfj.problem.Problem;
-import cspfj.problem.Variable;
+import cspfj.problem.IntVariable;
 
 public abstract class AbstractSAC implements Filter {
 
@@ -22,7 +22,7 @@ public abstract class AbstractSAC implements Filter {
 
     protected int nbSingletonTests = 0;
 
-    private final Variable[] variables;
+    private final IntVariable[] variables;
 
     // private final Comparator<Variable> heuristic;
 
@@ -37,7 +37,7 @@ public abstract class AbstractSAC implements Filter {
         // heuristic = new Dom(problem);
     }
 
-    public boolean reduceAfter(final Variable variable) {
+    public boolean reduceAfter(final IntVariable variable) {
         if (variable == null) {
             return true;
         }
@@ -49,7 +49,7 @@ public abstract class AbstractSAC implements Filter {
         }
     }
 
-    protected abstract boolean singletonTest(Variable variable)
+    protected abstract boolean singletonTest(IntVariable variable)
             throws InterruptedException;
 
     protected boolean reduce() throws InterruptedException {
@@ -58,7 +58,7 @@ public abstract class AbstractSAC implements Filter {
         if (!filter.reduceAll()) {
             return false;
         }
-        final Variable[] variables = this.variables;
+        final IntVariable[] variables = this.variables;
         // Arrays.sort(variables, heuristic);
         // System.out.println(Arrays.toString(variables));
         // // Tri à bulles
@@ -83,7 +83,7 @@ public abstract class AbstractSAC implements Filter {
         int v = 0;
 
         do {
-            final Variable variable = variables[v];
+            final IntVariable variable = variables[v];
             // if (logger.isLoggable(Level.FINE)) {
             logger.info(variable.toString());
             // }

@@ -34,7 +34,7 @@ import cspfj.constraint.extension.MatrixManager2D;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.Filter;
 import cspfj.problem.Problem;
-import cspfj.problem.Variable;
+import cspfj.problem.IntVariable;
 import cspfj.util.Chronometer;
 import cspfj.util.Waker;
 
@@ -52,7 +52,7 @@ public abstract class AbstractSolver implements Solver {
 
 	private int nbAssignments;
 
-	private final Map<Variable, Integer> solution;
+	private final Map<IntVariable, Integer> solution;
 
 	private int maxBacktracks;
 
@@ -77,7 +77,7 @@ public abstract class AbstractSolver implements Solver {
 		super();
 		problem = prob;
 		nbAssignments = 0;
-		solution = new HashMap<Variable, Integer>();
+		solution = new HashMap<IntVariable, Integer>();
 
 		chronometer = new Chronometer();
 		this.resultHandler = resultHandler;
@@ -92,7 +92,7 @@ public abstract class AbstractSolver implements Solver {
 		nbAssignments++;
 	}
 
-	protected final void addSolutionElement(final Variable variable,
+	protected final void addSolutionElement(final IntVariable variable,
 			final int index) {
 		solution.put(variable, variable.getValue(index));
 	}
@@ -102,7 +102,7 @@ public abstract class AbstractSolver implements Solver {
 	 * 
 	 * @see cspfj.Solver#getSolution()
 	 */
-	public final Map<Variable, Integer> getSolution() {
+	public final Map<IntVariable, Integer> getSolution() {
 		return solution;
 	}
 
@@ -129,13 +129,13 @@ public abstract class AbstractSolver implements Solver {
 		return nbBacktracks;
 	}
 
-	protected final void setSolution(final Map<Variable, Integer> solution) {
+	protected final void setSolution(final Map<IntVariable, Integer> solution) {
 		this.solution.clear();
 		this.solution.putAll(solution);
 		nbSolutions = 1;
 	}
 
-	protected void solution(final Map<Variable, Integer> solution,
+	protected void solution(final Map<IntVariable, Integer> solution,
 			final int nbConflicts) throws IOException {
 		if (resultHandler.solution(solution, nbConflicts, false)) {
 			logger.info("At " + chronometer.getCurrentChrono());
@@ -161,8 +161,8 @@ public abstract class AbstractSolver implements Solver {
 	protected final void solution() throws IOException {
 		nbSolutions++;
 		if (resultHandler.isReceiveSolutions()) {
-			final Map<Variable, Integer> solution = new HashMap<Variable, Integer>();
-			for (Variable v : problem.getVariables()) {
+			final Map<IntVariable, Integer> solution = new HashMap<IntVariable, Integer>();
+			for (IntVariable v : problem.getVariables()) {
 				solution.put(v, v.getValue(v.getFirst()));
 			}
 
@@ -218,7 +218,7 @@ public abstract class AbstractSolver implements Solver {
 
 			int removed = 0;
 
-			for (Variable v : problem.getVariables()) {
+			for (IntVariable v : problem.getVariables()) {
 				removed += v.getDomain().maxSize() - v.getDomainSize();
 
 			}

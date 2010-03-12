@@ -1,6 +1,6 @@
 package cspfj.constraint.extension;
 
-import cspfj.problem.Variable;
+import cspfj.problem.IntVariable;
 import cspfj.util.BitVector;
 
 public final class MatrixManager2D extends MatrixManager {
@@ -15,7 +15,7 @@ public final class MatrixManager2D extends MatrixManager {
 
     private static long presenceChecks = 0;
 
-    public MatrixManager2D(Variable[] scope, Matrix2D matrix,
+    public MatrixManager2D(IntVariable[] scope, Matrix2D matrix,
             final boolean shared) {
         super(scope, matrix, shared);
 

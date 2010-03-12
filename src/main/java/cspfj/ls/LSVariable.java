@@ -10,12 +10,12 @@ import java.util.Arrays;
 import java.util.Map;
 
 import cspfj.constraint.Constraint;
-import cspfj.problem.Variable;
+import cspfj.problem.IntVariable;
 import cspfj.util.TieManager;
 
 public final class LSVariable {
 
-    private final Variable variable;
+    private final IntVariable variable;
 
     private final int vid;
 
@@ -42,7 +42,7 @@ public final class LSVariable {
 
     // private final LocalSolver solver;
 
-    public LSVariable(final Variable variable, final TieManager tieManager) {
+    public LSVariable(final IntVariable variable, final TieManager tieManager) {
         super();
         this.variable = variable;
         vid = variable.getId();
@@ -63,7 +63,7 @@ public final class LSVariable {
         }
     }
 
-    public Variable getVariable() {
+    public IntVariable getVariable() {
         return variable;
     }
 
@@ -106,7 +106,7 @@ public final class LSVariable {
 
         tieManager.clear();
 
-        final Variable variable = this.variable;
+        final IntVariable variable = this.variable;
 
         for (int i = variable.getFirst(); i >= 0; i = variable.getNext(i)) {
             assignedIndex = i;
@@ -147,7 +147,7 @@ public final class LSVariable {
         final int[] nbConflicts = this.nbConflicts;
         Arrays.fill(nbConflicts, 0);
         final LSConstraint[] constraints = this.constraints;
-        final Variable variable = this.variable;
+        final IntVariable variable = this.variable;
 
         for (int c = constraints.length; --c >= 0;) {
             final boolean[] check = this.check[c];
@@ -207,7 +207,7 @@ public final class LSVariable {
 
         assert c.getScope()[variablePos] == this;
 
-        final Variable variable = this.variable;
+        final IntVariable variable = this.variable;
 
         // final int position = constraint.getPosition(variable);
 
@@ -306,7 +306,7 @@ public final class LSVariable {
         tieManager.clear();
 
         final int[] nbConflicts = this.nbConflicts;
-        final Variable variable = this.variable;
+        final IntVariable variable = this.variable;
 
         for (int i = variable.getFirst(); i >= 0; i = variable.getNext(i)) {
             if (!tabuManager.isTabu(vid, i, nbIt) || nbConflicts[i] < limit) {

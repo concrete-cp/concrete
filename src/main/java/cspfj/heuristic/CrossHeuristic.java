@@ -1,7 +1,7 @@
 package cspfj.heuristic;
 
 import cspfj.problem.Problem;
-import cspfj.problem.Variable;
+import cspfj.problem.IntVariable;
 
 public final class CrossHeuristic implements Heuristic {
 
@@ -19,7 +19,7 @@ public final class CrossHeuristic implements Heuristic {
 	}
 
 	public Pair selectPair(final Problem problem) {
-		final Variable bestVariable = variableHeuristic.selectVariable(problem
+		final IntVariable bestVariable = variableHeuristic.selectVariable(problem
 				.getVariables());
 		return new Pair(bestVariable, valueHeuristic.selectIndex(bestVariable));
 	}

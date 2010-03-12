@@ -1,7 +1,7 @@
 package cspfj.heuristic;
 
 import cspfj.problem.Problem;
-import cspfj.problem.Variable;
+import cspfj.problem.IntVariable;
 
 public class DiscHeuristic implements Heuristic {
 
@@ -16,10 +16,10 @@ public class DiscHeuristic implements Heuristic {
 	}
 
 	public Pair selectPair(Problem problem) {
-		Variable bestVariable = null;
+		IntVariable bestVariable = null;
 		double bestIndexScore = Double.NEGATIVE_INFINITY;
 
-		for (Variable v : problem.getVariables()) {
+		for (IntVariable v : problem.getVariables()) {
 			if (v.getDomainSize() <= 1) {
 				continue;
 			}
@@ -52,7 +52,7 @@ public class DiscHeuristic implements Heuristic {
 		}
 
 		if (bestVariable == null) {
-			for (Variable v : problem.getVariables()) {
+			for (IntVariable v : problem.getVariables()) {
 				if (!v.isAssigned()) {
 					bestVariable = v;
 					break;

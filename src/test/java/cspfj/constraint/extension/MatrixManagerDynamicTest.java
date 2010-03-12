@@ -12,7 +12,7 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
-import cspfj.problem.Variable;
+import cspfj.problem.IntVariable;
 import cspom.variable.CSPOMVariable;
 
 public class MatrixManagerDynamicTest {
@@ -27,8 +27,8 @@ public class MatrixManagerDynamicTest {
 		ta.set(new int[] { 1, 1 }, true);
 		ta.set(new int[] { 2, 2 }, true);
 
-		final Variable[] scope = { new Variable(new CSPOMVariable(0, 2)),
-				new Variable(new CSPOMVariable(0, 2)) };
+		final IntVariable[] scope = { new IntVariable(new CSPOMVariable(0, 2)),
+				new IntVariable(new CSPOMVariable(0, 2)) };
 
 		mmd = new MatrixManagerDynamic(scope, ta, false);
 		final Iterator<int[]> itr = mmd.iterator();

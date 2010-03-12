@@ -24,12 +24,12 @@ import java.util.Map;
 
 import cspfj.filter.Filter;
 import cspfj.problem.Problem;
-import cspfj.problem.Variable;
+import cspfj.problem.IntVariable;
 
 public interface Solver {
     boolean runSolver() throws IOException;
 
-    Map<Variable, Integer> getSolution();
+    Map<IntVariable, Integer> getSolution();
 
     float getUserTime();
 

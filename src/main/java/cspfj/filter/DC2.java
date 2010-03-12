@@ -32,7 +32,7 @@ import cspfj.AbstractSolver;
 import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
 import cspfj.problem.Problem;
-import cspfj.problem.Variable;
+import cspfj.problem.IntVariable;
 import cspfj.util.BitVector;
 
 /**
@@ -50,7 +50,7 @@ public final class DC2 implements Filter {
 
 	private int addedConstraints = 0;
 
-	private final Variable[] variables;
+	private final IntVariable[] variables;
 
 	private int nbNoGoods;
 
@@ -108,7 +108,7 @@ public final class DC2 implements Filter {
 		if (!filter.reduceAll()) {
 			return false;
 		}
-		final Variable[] variables = this.variables;
+		final IntVariable[] variables = this.variables;
 
 		int mark = 0;
 
@@ -117,7 +117,7 @@ public final class DC2 implements Filter {
 		final int[] domainSizes = new int[problem.getMaxVId() + 1];
 
 		do {
-			final Variable variable = variables[v];
+			final IntVariable variable = variables[v];
 			// if (logger.isLoggable(Level.FINE)) {
 			logger.info(variable.toString());
 			// }
@@ -127,7 +127,7 @@ public final class DC2 implements Filter {
 					return false;
 				}
 
-				for (Variable var : problem.getVariables()) {
+				for (IntVariable var : problem.getVariables()) {
 					domainSizes[var.getId()] = var.getDomainSize();
 				}
 				if (!filter.reduceFrom(modVar, modCons, cnt - 1)) {
@@ -136,7 +136,7 @@ public final class DC2 implements Filter {
 				// if (!filter.reduceAll()) {
 				// return false;
 				// }
-				for (Variable var : problem.getVariables()) {
+				for (IntVariable var : problem.getVariables()) {
 					if (domainSizes[var.getId()] != var.getDomainSize()) {
 						modVar[var.getId()] = cnt;
 					}
@@ -152,7 +152,7 @@ public final class DC2 implements Filter {
 
 	}
 
-	protected boolean singletonTest(final Variable variable)
+	protected boolean singletonTest(final IntVariable variable)
 			throws InterruptedException {
 		boolean changedGraph = false;
 
@@ -227,24 +227,24 @@ public final class DC2 implements Filter {
 
 	private final RevisionHandler rh = new RevisionHandler() {
 		@Override
-		public void revised(Constraint constraint, Variable variable) {
+		public void revised(Constraint constraint, IntVariable variable) {
 			logger.fine("FC w " + constraint + ", " + variable);
 		}
 	};
 
-	public boolean noGoods(Variable firstVariable) {
+	public boolean noGoods(IntVariable firstVariable) {
 		int[] tuple = new int[2];
 
-		final Set<Variable> scopeSet = new HashSet<Variable>(2);
+		final Set<IntVariable> scopeSet = new HashSet<IntVariable>(2);
 
 		scopeSet.add(firstVariable);
 		tuple[0] = firstVariable.getFirst();
-		final Variable[] scopeArray = new Variable[] { firstVariable, null };
+		final IntVariable[] scopeArray = new IntVariable[] { firstVariable, null };
 
 		boolean modified = false;
 		final Collection<DynamicConstraint> addedConstraints = new ArrayList<DynamicConstraint>();
 
-		for (Variable fv : variables) {
+		for (IntVariable fv : variables) {
 
 			// logger.fine("checking " +
 			// getVariable(levelVariables[level-1]));
@@ -326,7 +326,7 @@ public final class DC2 implements Filter {
 	}
 
 	@Override
-	public boolean reduceAfter(final Variable variable) {
+	public boolean reduceAfter(final IntVariable variable) {
 		if (variable == null) {
 			return true;
 		}

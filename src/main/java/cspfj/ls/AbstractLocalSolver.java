@@ -21,7 +21,7 @@ import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.AC3;
 import cspfj.problem.Problem;
-import cspfj.problem.Variable;
+import cspfj.problem.IntVariable;
 import cspfj.util.TieManager;
 
 public abstract class AbstractLocalSolver extends AbstractSolver implements
@@ -59,7 +59,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
 		this.max = max;
 
 		tieManager = new TieManager(RANDOM);
-		final Map<Variable, LSVariable> lsVariablesMap = new HashMap<Variable, LSVariable>(
+		final Map<IntVariable, LSVariable> lsVariablesMap = new HashMap<IntVariable, LSVariable>(
 				prob.getNbVariables());
 		lsVariables = new LSVariable[prob.getNbVariables()];
 		for (int v = prob.getVariables().length; --v >= 0;) {
@@ -134,7 +134,7 @@ public abstract class AbstractLocalSolver extends AbstractSolver implements
 	}
 
 	protected void solution(final int nbConflicts) throws IOException {
-		final Map<Variable, Integer> solution = new HashMap<Variable, Integer>();
+		final Map<IntVariable, Integer> solution = new HashMap<IntVariable, Integer>();
 		for (LSVariable v : lsVariables) {
 			solution.put(v.getVariable(), v.getVariable().getDomain().value(
 					v.getAssignedIndex()));

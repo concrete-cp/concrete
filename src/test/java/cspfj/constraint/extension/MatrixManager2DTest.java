@@ -8,7 +8,7 @@ import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 
-import cspfj.problem.Variable;
+import cspfj.problem.IntVariable;
 import cspom.variable.CSPOMVariable;
 
 public class MatrixManager2DTest {
@@ -19,15 +19,15 @@ public class MatrixManager2DTest {
 
 	@Before
 	public void setUp() throws Exception {
-		final Variable var1 = new Variable(new CSPOMVariable(1, 3));
-		final Variable var2 = new Variable(new CSPOMVariable(1, 4));
+		final IntVariable var1 = new IntVariable(new CSPOMVariable(1, 3));
+		final IntVariable var2 = new IntVariable(new CSPOMVariable(1, 4));
 		tuple = new int[2];
 
 		final Matrix2D matrix2d = new Matrix2D(3, 4, false);
 		matrix2d.set(new int[] { 0, 0 }, true);
 		matrix2d.set(new int[] { 0, 2 }, true);
 
-		matrix = new MatrixManager2D(new Variable[] { var1, var2 }, matrix2d,
+		matrix = new MatrixManager2D(new IntVariable[] { var1, var2 }, matrix2d,
 				false);
 		matrix.setTuple(tuple);
 	}

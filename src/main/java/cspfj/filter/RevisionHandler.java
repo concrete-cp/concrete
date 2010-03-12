@@ -1,7 +1,7 @@
 package cspfj.filter;
 
 import cspfj.constraint.Constraint;
-import cspfj.problem.Variable;
+import cspfj.problem.AbstractVariable;
 
 public interface RevisionHandler {
 	/**
@@ -11,5 +11,5 @@ public interface RevisionHandler {
 	 * @param constraint
 	 * @param variable
 	 */
-	void revised(final Constraint constraint, final Variable variable);
+	void revised(final Constraint constraint, final AbstractVariable variable);
 }

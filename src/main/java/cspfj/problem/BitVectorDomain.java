@@ -1,180 +1,186 @@
 package cspfj.problem;
 
+import java.util.List;
 import java.util.Arrays;
 
 import cspfj.util.BitVector;
+import cspfj.util.IntLinkedList;
 
-public class BitVectorDomain implements Domain {
+public final class BitVectorDomain implements IntDomain {
 
-    private final static int HISTORY_INCREMENT = 20;
+	private final static int HISTORY_INCREMENT = 20;
 
-    private BitVector bvDomain;
+	private BitVector bvDomain;
 
-    private int[] domain;
+	private int[] domain;
 
-    private int size;
+	private int size;
 
-    private BitVector[] bvHistory;
-    private int[] dsHistory;
+	private BitVector[] bvHistory;
+	private int[] dsHistory;
 
-    private int last;
+	private int last;
 
-    public BitVectorDomain(int[] domain) {
-        bvDomain = BitVector.factory(domain.length, true);
-        this.domain = domain.clone();
-        size = domain.length;
-        last = domain.length - 1;
-        bvHistory = new BitVector[HISTORY_INCREMENT];
-        for (int i = HISTORY_INCREMENT; --i >= 0;) {
-            bvHistory[i] = BitVector.factory(domain.length, true);
-        }
-        dsHistory = new int[HISTORY_INCREMENT];
-    }
+	public BitVectorDomain(final int... values) {
+		bvDomain = BitVector.factory(values.length, true);
+		this.domain = values.clone();
+		size = values.length;
+		last = values.length - 1;
+		bvHistory = new BitVector[HISTORY_INCREMENT];
+		for (int i = HISTORY_INCREMENT; --i >= 0;) {
+			bvHistory[i] = BitVector.factory(values.length, true);
+		}
+		dsHistory = new int[HISTORY_INCREMENT];
+	}
 
-    @Override
-    public int first() {
-        return bvDomain.nextSetBit(0);
-    }
+	public BitVectorDomain(final List<Integer> values) {
+		this(IntLinkedList.intListToArray(values));
+	}
 
-    @Override
-    public int size() {
-        return size;
-    }
+	@Override
+	public int first() {
+		return bvDomain.nextSetBit(0);
+	}
 
-    @Override
-    public int last() {
-        assert last == bvDomain.prevSetBit(domain.length);
-        return last;
-    }
+	@Override
+	public int size() {
+		return size;
+	}
 
-    @Override
-    public int lastAbsent() {
-        return bvDomain.prevClearBit(domain.length);
-    }
+	@Override
+	public int last() {
+		assert last == bvDomain.prevSetBit(domain.length);
+		return last;
+	}
 
-    @Override
-    public int next(int i) {
-        return bvDomain.nextSetBit(i + 1);
-    }
+	@Override
+	public int lastAbsent() {
+		return bvDomain.prevClearBit(domain.length);
+	}
 
-    @Override
-    public int prev(int i) {
-        return bvDomain.prevSetBit(i);
-    }
+	@Override
+	public int next(int i) {
+		return bvDomain.nextSetBit(i + 1);
+	}
 
-    @Override
-    public int prevAbsent(int i) {
-        return bvDomain.prevClearBit(i);
-    }
+	@Override
+	public int prev(int i) {
+		return bvDomain.prevSetBit(i);
+	}
 
-    /**
-     * @param value
-     *            the value we seek the index for
-     * @return the index of the given value or -1 if it could not be found
-     */
-    public int index(final int value) {
-        final int[] domain = this.domain;
-        for (int i = domain.length; --i >= 0;) {
-            if (domain[i] == value) {
-                return i;
-            }
-        }
+	@Override
+	public int prevAbsent(int i) {
+		return bvDomain.prevClearBit(i);
+	}
 
-        return -1;
-    }
+	/**
+	 * @param value
+	 *            the value we seek the index for
+	 * @return the index of the given value or -1 if it could not be found
+	 */
+	public int index(final int value) {
+		final int[] domain = this.domain;
+		for (int i = domain.length; --i >= 0;) {
+			if (domain[i] == value) {
+				return i;
+			}
+		}
 
-    /**
-     * @param index
-     *            index to test
-     * @return true iff index is present
-     */
-    @Override
-    public boolean present(int index) {
-        return bvDomain.get(index);
-    }
+		return -1;
+	}
 
-    @Override
-    public void setSingle(int index) {
-        bvDomain.setSingle(index);
-        size = 1;
-        last = index;
-    }
+	/**
+	 * @param index
+	 *            index to test
+	 * @return true iff index is present
+	 */
+	@Override
+	public boolean present(int index) {
+		return bvDomain.get(index);
+	}
 
-    @Override
-    public int value(int index) {
-        return domain[index];
-    }
+	@Override
+	public void setSingle(int index) {
+		bvDomain.setSingle(index);
+		size = 1;
+		last = index;
+	}
 
-    @Override
-    public void remove(int index) {
-        size--;
-        bvDomain.clear(index);
-        if (index == last) {
-            last = bvDomain.prevSetBit(domain.length);
-        }
-    }
+	@Override
+	public int value(int index) {
+		return domain[index];
+	}
 
-    public BitVector getBitVector() {
-        return bvDomain;
-    }
+	@Override
+	public void remove(int index) {
+		size--;
+		bvDomain.clear(index);
+		if (index == last) {
+			last = bvDomain.prevSetBit(domain.length);
+		}
+	}
 
-    public BitVectorDomain clone() {
-        final BitVectorDomain clone;
-        try {
-            clone = (BitVectorDomain) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new IllegalStateException(e);
-        }
-        clone.domain = domain.clone();
-        clone.bvHistory = bvHistory.clone();
-        clone.dsHistory = dsHistory.clone();
-        return clone;
-    }
+	public BitVector getBitVector() {
+		return bvDomain;
+	}
 
-    @Override
-    public int maxSize() {
-        return domain.length;
-    }
+	public BitVectorDomain clone() {
+		final BitVectorDomain clone;
+		try {
+			clone = (BitVectorDomain) super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new IllegalStateException(e);
+		}
+		clone.domain = domain.clone();
+		clone.bvHistory = bvHistory.clone();
+		clone.dsHistory = dsHistory.clone();
+		return clone;
+	}
 
-    private int currentLevel = 0;
+	@Override
+	public int maxSize() {
+		return domain.length;
+	}
 
-    public void setLevel(int level) {
-        assert level > currentLevel;
-        if (currentLevel >= bvHistory.length) {
-            bvHistory = Arrays.copyOf(bvHistory, currentLevel
-                    + HISTORY_INCREMENT);
-            dsHistory = Arrays.copyOf(dsHistory, currentLevel
-                    + HISTORY_INCREMENT);
-            for (int i = HISTORY_INCREMENT; --i >= 0;) {
-                bvHistory[currentLevel + i] = BitVector.factory(domain.length,
-                        false);
-            }
-        }
+	private int currentLevel = 0;
 
-        bvDomain.copyTo(bvHistory[currentLevel]);
-        dsHistory[currentLevel] = size;
-        currentLevel = level;
-    }
+	public void setLevel(int level) {
+		assert level > currentLevel;
+		if (currentLevel >= bvHistory.length) {
+			bvHistory = Arrays.copyOf(bvHistory, currentLevel
+					+ HISTORY_INCREMENT);
+			dsHistory = Arrays.copyOf(dsHistory, currentLevel
+					+ HISTORY_INCREMENT);
+			for (int i = HISTORY_INCREMENT; --i >= 0;) {
+				bvHistory[currentLevel + i] = BitVector.factory(domain.length,
+						false);
+			}
+		}
 
-    public void restoreLevel(int level) {
-        if (level < currentLevel) {
-            bvHistory[level].copyTo(bvDomain);
-            size = dsHistory[level];
-            currentLevel = level;
-            last = bvDomain.prevSetBit(domain.length);
-        }
-    }
+		bvDomain.copyTo(bvHistory[currentLevel]);
+		dsHistory[currentLevel] = size;
+		currentLevel = level;
+	}
 
-    public BitVector getAtLevel(int level) {
-        if (level < currentLevel) {
-            return bvHistory[level];
-        }
+	public void restoreLevel(int level) {
+		if (level < currentLevel) {
+			bvHistory[level].copyTo(bvDomain);
+			size = dsHistory[level];
+			currentLevel = level;
+			last = bvDomain.prevSetBit(domain.length);
+		}
+	}
 
-        return bvDomain;
-    }
+	public BitVector getAtLevel(int level) {
+		if (level < currentLevel) {
+			return bvHistory[level];
+		}
 
-    @Override
-    public int[] allValues() {
-        return domain;
-    }
+		return bvDomain;
+	}
+
+	@Override
+	public int[] allValues() {
+		return domain;
+	}
 }

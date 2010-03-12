@@ -2,7 +2,7 @@ package cspfj.problem;
 
 import cspfj.util.BitVector;
 
-public interface Domain extends Cloneable {
+public interface IntDomain extends Cloneable {
     int first();
 
     int last();
@@ -37,5 +37,5 @@ public interface Domain extends Cloneable {
 
     int[] allValues();
 
-    Domain clone();
+    IntDomain clone();
 }

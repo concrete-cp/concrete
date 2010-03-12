@@ -25,7 +25,7 @@ import java.util.logging.Logger;
 import cspfj.ResultHandler;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.problem.Problem;
-import cspfj.problem.Variable;
+import cspfj.problem.IntVariable;
 import cspfj.util.TieManager;
 
 public final class Tabu extends AbstractLocalSolver {
@@ -66,7 +66,7 @@ public final class Tabu extends AbstractLocalSolver {
             // + vcm.getCurrentConflicts()
             // + Arrays.toString(vcm.criticConstraints);
 
-            final Variable variable = vcm.getVariable();
+            final IntVariable variable = vcm.getVariable();
 
             final int vId = variable.getId();
 

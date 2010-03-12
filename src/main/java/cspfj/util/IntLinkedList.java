@@ -1,6 +1,8 @@
 package cspfj.util;
 
 import java.util.AbstractList;
+import java.util.List;
+import java.util.ListIterator;
 
 public final class IntLinkedList extends AbstractList<Integer> {
 
@@ -57,6 +59,15 @@ public final class IntLinkedList extends AbstractList<Integer> {
 			this.value = value;
 			this.next = next;
 		}
+	}
+
+	public static int[] intListToArray(final List<Integer> list) {
+		final int[] array = new int[list.size()];
+		for (final ListIterator<Integer> itr = list.listIterator(); itr
+				.hasNext();) {
+			array[itr.nextIndex()] = itr.next();
+		}
+		return array;
 	}
 
 	@Override

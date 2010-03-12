@@ -3,7 +3,7 @@ package cspfj.ls;
 import java.util.Map;
 
 import cspfj.constraint.Constraint;
-import cspfj.problem.Variable;
+import cspfj.problem.IntVariable;
 
 public final class LSConstraint {
 
@@ -15,12 +15,12 @@ public final class LSConstraint {
 
 	private int[] positionInVariable;
 
-	public LSConstraint(Constraint c, Map<Variable, LSVariable> lsVariables) {
+	public LSConstraint(Constraint c, Map<IntVariable, LSVariable> lsVariables) {
 		constraint = c;
 		scope = new LSVariable[c.getArity()];
 		positionInVariable = new int[c.getArity()];
 		for (int i = c.getArity(); --i >= 0;) {
-			final Variable var = c.getVariable(i);
+			final IntVariable var = c.getVariable(i);
 			scope[i] = lsVariables.get(var);
 			positionInVariable[i] = c.getPosition(var);
 		}
@@ -47,7 +47,7 @@ public final class LSConstraint {
 		return constraint.check();
 	}
 
-	public int getPosition(Variable variable) {
+	public int getPosition(IntVariable variable) {
 		return constraint.getPosition(variable);
 	}
 

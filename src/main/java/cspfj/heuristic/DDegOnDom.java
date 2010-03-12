@@ -2,7 +2,7 @@ package cspfj.heuristic;
 
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
-import cspfj.problem.Variable;
+import cspfj.problem.IntVariable;
 
 public final class DDegOnDom extends AbstractVariableHeuristic {
 
@@ -10,13 +10,13 @@ public final class DDegOnDom extends AbstractVariableHeuristic {
 		super(problem);
 	}
 
-	public double getScore(final Variable variable) {
+	public double getScore(final IntVariable variable) {
         return dDeg(variable) / variable.getDomainSize();
     }
 	
 
 
-	private double dDeg(final Variable variable) {
+	private double dDeg(final IntVariable variable) {
 		double count = 0;
 
 		for (Constraint c : variable.getInvolvingConstraints()) {

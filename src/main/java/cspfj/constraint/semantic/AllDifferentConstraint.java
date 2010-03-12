@@ -19,12 +19,12 @@
 
 package cspfj.constraint.semantic;
 
-import cspfj.constraint.AbstractConstraint;
+import cspfj.constraint.AbstractIntConstraint;
 import cspfj.filter.RevisionHandler;
-import cspfj.problem.Variable;
+import cspfj.problem.IntVariable;
 import cspfj.util.BitVector;
 
-public final class AllDifferentConstraint extends AbstractConstraint {
+public final class AllDifferentConstraint extends AbstractIntConstraint {
 
 	private final BitVector union;
 
@@ -35,12 +35,12 @@ public final class AllDifferentConstraint extends AbstractConstraint {
 	// private final static Logger logger = Logger
 	// .getLogger("cspfj.constraint.AllDifferentConstraint");
 
-	public AllDifferentConstraint(final String name, final Variable... scope) {
+	public AllDifferentConstraint(final String name, final IntVariable... scope) {
 		super(name, scope);
 
 		offset = Integer.MAX_VALUE;
 		int max = Integer.MIN_VALUE;
-		for (Variable v : scope) {
+		for (IntVariable v : scope) {
 			for (int i : v.getDomain().allValues()) {
 				offset = Math.min(i, offset);
 				max = Math.max(i, max);
@@ -85,7 +85,7 @@ public final class AllDifferentConstraint extends AbstractConstraint {
 			final int checkPos = queue.nextSetBit(0);
 			queue.clear(checkPos);
 
-			final Variable checkedVariable = getVariable(checkPos);
+			final IntVariable checkedVariable = getVariable(checkPos);
 			final int value = checkedVariable.getDomain().value(
 					checkedVariable.getFirst());
 
@@ -93,7 +93,7 @@ public final class AllDifferentConstraint extends AbstractConstraint {
 				if (remPos == checkPos) {
 					continue;
 				}
-				final Variable remVariable = getVariable(remPos);
+				final IntVariable remVariable = getVariable(remPos);
 				if (remVariable.isAssigned()) {
 					continue;
 				}
@@ -114,7 +114,7 @@ public final class AllDifferentConstraint extends AbstractConstraint {
 
 		union.fill(false);
 
-		for (Variable v : getScope()) {
+		for (IntVariable v : getScope()) {
 
 			for (int i = v.getFirst(); i >= 0; i = v.getNext(i)) {
 

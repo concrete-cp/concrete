@@ -21,7 +21,7 @@ package cspfj.filter;
 
 import java.util.Map;
 
-import cspfj.problem.Variable;
+import cspfj.problem.IntVariable;
 
 /**
  * @author scand1sk
@@ -34,7 +34,7 @@ public interface Filter {
      */
     boolean reduceAll() throws InterruptedException ;
     
-    boolean reduceAfter(Variable variable) ;
+    boolean reduceAfter(IntVariable variable) ;
 
     //boolean reduceOnce(Variable variable);
     

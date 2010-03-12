@@ -10,7 +10,7 @@ import cspfj.constraint.Constraint;
 import cspfj.priorityqueues.Key;
 import cspfj.priorityqueues.SoftHeap;
 import cspfj.problem.Problem;
-import cspfj.problem.Variable;
+import cspfj.problem.IntVariable;
 
 /**
  * @author scand1sk
@@ -19,7 +19,7 @@ import cspfj.problem.Variable;
 public final class AC3 implements Filter {
 	private final Problem problem;
 
-	private final Queue<Variable> queue;
+	private final Queue<IntVariable> queue;
 
 	private static final Logger LOGGER = Logger.getLogger(Filter.class
 			.getSimpleName());
@@ -32,9 +32,9 @@ public final class AC3 implements Filter {
 		super();
 		this.problem = problem;
 
-		queue = new SoftHeap<Variable>(new Key<Variable>() {
+		queue = new SoftHeap<IntVariable>(new Key<IntVariable>() {
 			@Override
-			public int getKey(Variable o1) {
+			public int getKey(IntVariable o1) {
 				return o1.getDomainSize();
 			}
 		}, problem.getNbVariables());
@@ -51,7 +51,7 @@ public final class AC3 implements Filter {
 		reviseCount++;
 		queue.clear();
 		LOGGER.fine("reduce after " + cnt);
-		for (Variable v : problem.getVariables()) {
+		for (IntVariable v : problem.getVariables()) {
 			if (modVar[v.getId()] > cnt) {
 				queue.offer(v);
 			}
@@ -80,7 +80,7 @@ public final class AC3 implements Filter {
 		return reduce();
 	}
 
-	public boolean reduceAfter(final Variable variable) {
+	public boolean reduceAfter(final IntVariable variable) {
 		reviseCount++;
 		if (variable == null) {
 			return true;
@@ -101,7 +101,7 @@ public final class AC3 implements Filter {
 	}
 
 	private RevisionHandler revisator = new RevisionHandler() {
-		public void revised(final Constraint constraint, final Variable variable) {
+		public void revised(final Constraint constraint, final IntVariable variable) {
 			queue.offer(variable);
 			final Constraint[] involvingConstraints = variable
 					.getInvolvingConstraints();
@@ -132,7 +132,7 @@ public final class AC3 implements Filter {
 
 	}
 
-	public boolean reduceOnce(Variable variable) {
+	public boolean reduceOnce(IntVariable variable) {
 
 		final RevisionHandler revisator = this.revisator;
 		final Constraint[] involvingConstraints = variable
@@ -155,7 +155,7 @@ public final class AC3 implements Filter {
 	}
 
 	private void addAll() {
-		for (Variable v : problem.getVariables()) {
+		for (IntVariable v : problem.getVariables()) {
 			queue.offer(v);
 		}
 
@@ -171,7 +171,7 @@ public final class AC3 implements Filter {
 		final RevisionHandler revisator = new RevisionHandler() {
 
 			@Override
-			public void revised(Constraint constraint, Variable variable) {
+			public void revised(Constraint constraint, IntVariable variable) {
 				revised = true;
 
 			}

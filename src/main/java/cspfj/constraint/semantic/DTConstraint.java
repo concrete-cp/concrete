@@ -20,8 +20,8 @@
 package cspfj.constraint.semantic;
 
 import cspfj.constraint.AbstractPVRConstraint;
-import cspfj.problem.Domain;
-import cspfj.problem.Variable;
+import cspfj.problem.IntDomain;
+import cspfj.problem.IntVariable;
 
 public final class DTConstraint extends AbstractPVRConstraint {
 
@@ -29,12 +29,12 @@ public final class DTConstraint extends AbstractPVRConstraint {
 
     final private boolean ordered;
 
-    public DTConstraint(final Variable[] scope, final int duration0,
+    public DTConstraint(final IntVariable[] scope, final int duration0,
             final int duration1) {
         this(scope, duration0, duration1, false);
     }
 
-    public DTConstraint(final Variable[] scope, final int duration0,
+    public DTConstraint(final IntVariable[] scope, final int duration0,
             final int duration1, final boolean ordered) {
         super(scope);
         this.duration = new int[] { duration0, duration1 };
@@ -56,12 +56,12 @@ public final class DTConstraint extends AbstractPVRConstraint {
 
     @Override
     public boolean revise(final int position) {
-        final Variable variable = getVariable(position);
-        final Variable otherVariable = getVariable(1 - position);
+        final IntVariable variable = getVariable(position);
+        final IntVariable otherVariable = getVariable(1 - position);
 
-        final Domain domain = variable.getDomain();
+        final IntDomain domain = variable.getDomain();
 
-        final Domain otherDomain = otherVariable.getDomain();
+        final IntDomain otherDomain = otherVariable.getDomain();
 
         final int lBound;
         final int hBound;

@@ -20,7 +20,7 @@
 package cspfj.heuristic;
 
 import cspfj.problem.Problem;
-import cspfj.problem.Variable;
+import cspfj.problem.IntVariable;
 
 public final class Dom extends AbstractVariableHeuristic {
 	
@@ -28,7 +28,7 @@ public final class Dom extends AbstractVariableHeuristic {
 		super(problem);
 	}
 	
-	public double getScore(final Variable variable) {
+	public double getScore(final IntVariable variable) {
 		return variable.getDomainSize();
 	}
 

@@ -15,7 +15,7 @@ import cspom.variable.CSPOMVariable;
 public class VariableTest {
 
 	Problem problem;
-	Variable variable;
+	IntVariable variable;
 
 	@Before
 	public void setup() throws FailedGenerationException {
@@ -106,7 +106,7 @@ public class VariableTest {
 
 		final Problem problem = new Problem();
 
-		final Variable variable = problem.addVariable(new CSPOMVariable(1, 6));
+		final IntVariable variable = problem.addVariable(new CSPOMVariable(1, 6));
 		problem.prepareVariables();
 
 		variable.remove(0);

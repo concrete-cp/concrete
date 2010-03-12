@@ -29,7 +29,7 @@ import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
-import cspfj.problem.Variable;
+import cspfj.problem.IntVariable;
 
 public class ResultHandler {
 
@@ -116,7 +116,7 @@ public class ResultHandler {
         return stb.toString();
     }
 
-    public boolean solution(final Map<Variable, Integer> solution,
+    public boolean solution(final Map<IntVariable, Integer> solution,
             final int nbConflicts, final boolean force) throws IOException {
         if (!receiveSolutions && !force) {
             return false;

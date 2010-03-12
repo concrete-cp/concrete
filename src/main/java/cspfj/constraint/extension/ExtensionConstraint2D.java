@@ -22,7 +22,7 @@ package cspfj.constraint.extension;
 import java.util.Collection;
 
 import cspfj.constraint.DynamicConstraint;
-import cspfj.problem.Variable;
+import cspfj.problem.IntVariable;
 
 public class ExtensionConstraint2D extends AbstractExtensionConstraint
         implements DynamicConstraint {
@@ -31,14 +31,14 @@ public class ExtensionConstraint2D extends AbstractExtensionConstraint
 
     protected MatrixManager2D matrix;
 
-    public ExtensionConstraint2D(final Variable[] scope, final Matrix2D matrix,
+    public ExtensionConstraint2D(final IntVariable[] scope, final Matrix2D matrix,
             final boolean shared) {
 
         super(new MatrixManager2D(scope, matrix, shared), scope);
         this.matrix = (MatrixManager2D) getMatrixManager();
     }
 
-    public ExtensionConstraint2D(final Variable[] scope, final Matrix2D matrix,
+    public ExtensionConstraint2D(final IntVariable[] scope, final Matrix2D matrix,
             final String name, final boolean shared) {
         super(name, new MatrixManager2D(scope, matrix, shared), scope);
 
@@ -50,7 +50,7 @@ public class ExtensionConstraint2D extends AbstractExtensionConstraint
         return matrix.hasSupport(variablePosition, index);
     }
 
-    public ExtensionConstraint2D deepCopy(final Collection<Variable> variables)
+    public ExtensionConstraint2D deepCopy(final Collection<IntVariable> variables)
             throws CloneNotSupportedException {
         final ExtensionConstraint2D constraint = (ExtensionConstraint2D) super
                 .deepCopy(variables);
