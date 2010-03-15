@@ -17,7 +17,7 @@ import org.junit.Test;
 import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.Constraint;
 import cspfj.constraint.semantic.AllDifferentConstraint;
-import cspfj.problem.IntVariable;
+import cspfj.problem.Variable;
 import cspom.variable.CSPOMVariable;
 
 public class TupleManagerTest {
@@ -31,12 +31,12 @@ public class TupleManagerTest {
 
 		final int[] dom = new int[] { 1, 2, 3, 4, 5 };
 
-		final IntVariable v1 = new IntVariable(new CSPOMVariable(1, 5));
-		final IntVariable v2 = new IntVariable(new CSPOMVariable(1, 5));
-		final IntVariable v3 = new IntVariable(new CSPOMVariable(1, 5));
+		final Variable v1 = new Variable(new CSPOMVariable(1, 5));
+		final Variable v2 = new Variable(new CSPOMVariable(1, 5));
+		final Variable v3 = new Variable(new CSPOMVariable(1, 5));
 
 		final Constraint constraint = new AllDifferentConstraint("allDiff",
-				new IntVariable[] { v1, v2, v3 });
+				new Variable[] { v1, v2, v3 });
 
 		tupleManager = new TupleManager(constraint,
 				((AbstractConstraint) constraint).getTuple());
