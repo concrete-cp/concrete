@@ -20,8 +20,8 @@
 package cspfj.constraint.semantic;
 
 import cspfj.constraint.AbstractPVRConstraint;
-import cspfj.problem.IntDomain;
-import cspfj.problem.IntVariable;
+import cspfj.problem.Domain;
+import cspfj.problem.Variable;
 
 public final class DiffConstraint extends AbstractPVRConstraint {
 
@@ -29,11 +29,11 @@ public final class DiffConstraint extends AbstractPVRConstraint {
 
     final private boolean ordered;
 
-    public DiffConstraint(final IntVariable[] scope, final int constant) {
+    public DiffConstraint(final Variable[] scope, final int constant) {
         this(scope, constant, false);
     }
 
-    public DiffConstraint(final IntVariable[] scope, final int constant,
+    public DiffConstraint(final Variable[] scope, final int constant,
             final boolean ordered) {
         super(scope);
         this.constant = constant;
@@ -46,11 +46,11 @@ public final class DiffConstraint extends AbstractPVRConstraint {
     }
 
     public boolean revise(final int position) {
-        final IntVariable v0 = getVariable(0);
-        final IntVariable v1 = getVariable(1);
+        final Variable v0 = getVariable(0);
+        final Variable v1 = getVariable(1);
 
-        final IntDomain d0 = v0.getDomain();
-        final IntDomain d1 = v1.getDomain();
+        final Domain d0 = v0.getDomain();
+        final Domain d1 = v1.getDomain();
 
         boolean deleted = false;
 

@@ -5,8 +5,7 @@ import java.util.Set;
 
 import cspfj.filter.RevisionHandler;
 import cspfj.priorityqueues.Identified;
-import cspfj.problem.AbstractVariable;
-import cspfj.problem.IntVariable;
+import cspfj.problem.Variable;
 
 public interface Constraint extends Identified {
 	/**
@@ -19,29 +18,29 @@ public interface Constraint extends Identified {
 	 * @param variable
 	 * @return true iff the given variable is involved by the constraint
 	 */
-	boolean isInvolved(final AbstractVariable variable);
+	boolean isInvolved(final Variable variable);
 
 	/**
 	 * @param position
 	 * @return the variable at the given position
 	 */
-	AbstractVariable getVariable(final int position);
+	Variable getVariable(final int position);
 
 	/**
 	 * @return the ordered scope of the constraint
 	 */
-	AbstractVariable[] getScope();
+	Variable[] getScope();
 
 	/**
 	 * @return the scope of the constraint as an unordered Set
 	 */
-	Set<AbstractVariable> getScopeSet();
+	Set<Variable> getScopeSet();
 
 	/**
 	 * @param variable
 	 * @return the position of the given variable. /!\ implementation in O(k)
 	 */
-	int getPosition(final AbstractVariable variable);
+	int getPosition(final Variable variable);
 
 	/**
 	 * @return whether the constraint is active
@@ -55,7 +54,7 @@ public interface Constraint extends Identified {
 	 */
 	void setActive(final boolean b);
 
-	Constraint deepCopy(final Collection<IntVariable> variables)
+	Constraint deepCopy(final Collection<Variable> variables)
 			throws CloneNotSupportedException;
 
 	/**
@@ -71,7 +70,7 @@ public interface Constraint extends Identified {
 	 * @return true iff all variables involved by the constraint, except the
 	 *         given one, are not instanciated (domain size > 1)
 	 */
-	boolean isBound(IntVariable variable);
+	boolean isBound(Variable variable);
 
 	/**
 	 * @return string description of the constraint

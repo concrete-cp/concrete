@@ -25,8 +25,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import cspfj.constraint.extension.TupleManager;
-import cspfj.problem.AbstractVariable;
-import cspfj.problem.IntVariable;
+import cspfj.problem.Variable;
 
 public abstract class AbstractConstraint implements Cloneable, Constraint {
 	private static int cId = 0;
@@ -47,9 +46,9 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		return checks;
 	}
 
-	private AbstractVariable[] scope;
+	private Variable[] scope;
 
-	private Set<AbstractVariable> scopeSet;
+	private Set<Variable> scopeSet;
 
 	private final int id;
 
@@ -61,24 +60,27 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 
 	protected int[] tuple;
 
+	protected TupleManager tupleManager;
+
 	private int weight = 1;
 
 	private final int[] removals;
 
-	public AbstractConstraint(final IntVariable... scope) {
+	public AbstractConstraint(final Variable... scope) {
 		this(null, scope);
 	}
 
-	public AbstractConstraint(final String name,
-			final AbstractVariable... scope) {
+	public AbstractConstraint(final String name, final Variable... scope) {
 		this.scope = scope.clone();
-		scopeSet = new HashSet<AbstractVariable>(scope.length, 1);
-		for (AbstractVariable v : scope) {
+		scopeSet = new HashSet<Variable>(scope.length, 1);
+		for (Variable v : scope) {
 			scopeSet.add(v);
 		}
 		arity = scope.length;
 		id = cId++;
 		tuple = new int[arity];
+
+		tupleManager = new TupleManager(this, tuple);
 
 		active = false;
 
@@ -131,11 +133,11 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		return scope[position].getValue(tuple[position]);
 	}
 
-	public final boolean isInvolved(final AbstractVariable variable) {
+	public final boolean isInvolved(final Variable variable) {
 		return getPosition(variable) >= 0;
 	}
 
-	public final int getPosition(final AbstractVariable variable) {
+	public final int getPosition(final Variable variable) {
 		for (int i = arity; --i >= 0;) {
 			if (scope[i] == variable) {
 				return i;
@@ -149,15 +151,15 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		return tuple;
 	}
 
-	public AbstractVariable getVariable(final int position) {
+	public final Variable getVariable(final int position) {
 		return scope[position];
 	}
 
-	public AbstractVariable[] getScope() {
+	public final Variable[] getScope() {
 		return scope;
 	}
 
-	public final Set<AbstractVariable> getScopeSet() {
+	public final Set<Variable> getScopeSet() {
 		return scopeSet;
 	}
 
@@ -181,7 +183,7 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 
 	protected boolean controlTuplePresence(final int[] tuple, final int position) {
 		nbPresenceChecks++;
-		final AbstractVariable[] involvedVariables = this.scope;
+		final Variable[] involvedVariables = this.scope;
 		for (int i = arity; --i >= 0;) {
 			if (i != position && !involvedVariables[i].isPresent(tuple[i])) {
 				return false;
@@ -191,8 +193,8 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		return true;
 	}
 
-	public final boolean isBound(IntVariable variable) {
-		for (AbstractVariable v : scope) {
+	public final boolean isBound(Variable variable) {
+		for (Variable v : scope) {
 			if (v != variable && v.getDomainSize() > 1) {
 				return true;
 			}
@@ -231,14 +233,14 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		return id == ((Constraint) object).getId();
 	}
 
-	public AbstractConstraint deepCopy(final Collection<IntVariable> variables)
+	public AbstractConstraint deepCopy(final Collection<Variable> variables)
 			throws CloneNotSupportedException {
 		final AbstractConstraint constraint = this.clone();
 
-		constraint.scope = new IntVariable[arity];
+		constraint.scope = new Variable[arity];
 
 		for (int i = arity; --i >= 0;) {
-			for (IntVariable v : variables) {
+			for (Variable v : variables) {
 				if (v == scope[i]) {
 					constraint.scope[i] = v;
 					break;
@@ -258,6 +260,8 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 		// constraint.positionInVariable fixe
 		// constraint.nbMaxConflicts fixe
 		// constraint.nbSupports fixe
+
+		constraint.tupleManager = new TupleManager(constraint, constraint.tuple);
 		return constraint;
 	}
 

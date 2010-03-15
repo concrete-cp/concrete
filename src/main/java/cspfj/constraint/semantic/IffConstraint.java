@@ -20,7 +20,7 @@
 package cspfj.constraint.semantic;
 
 import cspfj.constraint.AbstractPVRConstraint;
-import cspfj.problem.IntVariable;
+import cspfj.problem.Variable;
 
 public final class IffConstraint extends AbstractPVRConstraint {
 
@@ -32,7 +32,7 @@ public final class IffConstraint extends AbstractPVRConstraint {
 
     final private int valueV;
 
-    public IffConstraint(final IntVariable[] scope, final int i, final int v) {
+    public IffConstraint(final Variable[] scope, final int i, final int v) {
         super(scope);
         // System.out.println(scope[0] + "="+i +" <=> "+scope[1]+"="+v);
         this.valueI = i;
@@ -50,10 +50,10 @@ public final class IffConstraint extends AbstractPVRConstraint {
 
     @Override
     public boolean revise(final int posVar1) {
-        final IntVariable var1 = getVariable(posVar1);
+        final Variable var1 = getVariable(posVar1);
 
         final int posVar2 = 1 - posVar1;
-        final IntVariable var2 = getVariable(posVar2);
+        final Variable var2 = getVariable(posVar2);
 
         final int value1;
         final int index1;

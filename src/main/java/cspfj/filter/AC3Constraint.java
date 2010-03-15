@@ -10,7 +10,7 @@ import cspfj.constraint.Constraint;
 import cspfj.priorityqueues.Key;
 import cspfj.priorityqueues.SoftHeap;
 import cspfj.problem.Problem;
-import cspfj.problem.IntVariable;
+import cspfj.problem.Variable;
 
 /**
  * @author scand1sk
@@ -51,7 +51,7 @@ public final class AC3Constraint implements Filter {
 		revisionCount++;
 		queue.clear();
 		LOGGER.fine("reduce after " + cnt);
-		for (IntVariable v : problem.getVariables()) {
+		for (Variable v : problem.getVariables()) {
 			if (modVar[v.getId()] > cnt) {
 				final Constraint[] involved = v.getInvolvingConstraints();
 				for (int j = involved.length; --j >= 0;) {
@@ -74,7 +74,7 @@ public final class AC3Constraint implements Filter {
 		return reduce();
 	}
 
-	public boolean reduceAfter(final IntVariable variable) {
+	public boolean reduceAfter(final Variable variable) {
 		revisionCount++;
 		if (variable == null) {
 			return true;
@@ -94,7 +94,7 @@ public final class AC3Constraint implements Filter {
 	}
 
 	private RevisionHandler revisator = new RevisionHandler() {
-		public void revised(final Constraint constraint, final IntVariable variable) {
+		public void revised(final Constraint constraint, final Variable variable) {
 			final Constraint[] involvingConstraints = variable
 					.getInvolvingConstraints();
 
@@ -146,7 +146,7 @@ public final class AC3Constraint implements Filter {
 		final RevisionHandler revisator = new RevisionHandler() {
 
 			@Override
-			public void revised(Constraint constraint, IntVariable variable) {
+			public void revised(Constraint constraint, Variable variable) {
 				revised = true;
 
 			}

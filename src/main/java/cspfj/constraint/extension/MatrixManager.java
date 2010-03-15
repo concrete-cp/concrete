@@ -3,7 +3,7 @@ package cspfj.constraint.extension;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
-import cspfj.problem.IntVariable;
+import cspfj.problem.Variable;
 
 public class MatrixManager implements Cloneable {
     private static final Logger LOGGER = Logger.getLogger(MatrixManager.class
@@ -11,7 +11,7 @@ public class MatrixManager implements Cloneable {
 
     protected final int[] domainSize;
 
-    protected IntVariable[] variables;
+    protected Variable[] variables;
 
     protected final int arity;
 
@@ -25,7 +25,7 @@ public class MatrixManager implements Cloneable {
 
     private long[] nbMaxConflicts;
 
-    public MatrixManager(IntVariable[] scope, Matrix matrix, final boolean shared) {
+    public MatrixManager(Variable[] scope, Matrix matrix, final boolean shared) {
         super();
 
         variables = scope;
@@ -76,7 +76,7 @@ public class MatrixManager implements Cloneable {
         return matrix.check(tuple);
     }
 
-    public MatrixManager deepCopy(final IntVariable[] variables, final int[] tuple)
+    public MatrixManager deepCopy(final Variable[] variables, final int[] tuple)
             throws CloneNotSupportedException {
         final MatrixManager matrix = this.clone();
         matrix.tuple = tuple;
@@ -102,7 +102,7 @@ public class MatrixManager implements Cloneable {
     private boolean nextT() {
         final int[] tuple = this.tuple;
 
-        final IntVariable[] involvedVariables = this.variables;
+        final Variable[] involvedVariables = this.variables;
         for (int i = arity; --i >= 0;) {
             tuple[i]--;
 
@@ -233,7 +233,7 @@ public class MatrixManager implements Cloneable {
 
     protected final long currentSize() {
         long size = 1;
-        for (IntVariable v : variables) {
+        for (Variable v : variables) {
             if (size > Integer.MAX_VALUE / v.getDomainSize()) {
                 return -1;
             }

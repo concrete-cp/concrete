@@ -1,7 +1,7 @@
 package cspfj.heuristic;
 
 import cspfj.problem.Problem;
-import cspfj.problem.IntVariable;
+import cspfj.problem.Variable;
 
 public class ProdHeuristic implements Heuristic {
 
@@ -16,8 +16,8 @@ public class ProdHeuristic implements Heuristic {
 	}
 
 	public Pair selectPair(Problem problem) {
-		IntVariable bestVariable = null;
-		for (IntVariable v : problem.getVariables()) {
+		Variable bestVariable = null;
+		for (Variable v : problem.getVariables()) {
 			if (!v.isAssigned()
 					&& (bestVariable == null || (v.getDomainSize() != 1 && compare(
 							v, bestVariable) > 0))) {
@@ -28,7 +28,7 @@ public class ProdHeuristic implements Heuristic {
 		return new Pair(bestVariable, valueHeuristic.selectIndex(bestVariable));
 	}
 
-	public int compare(final IntVariable variable1, final IntVariable variable2) {
+	public int compare(final Variable variable1, final Variable variable2) {
 
 		final VariableHeuristic variableHeuristic = this.variableHeuristic;
 		final ValueHeuristic valueHeuristic = this.valueHeuristic;

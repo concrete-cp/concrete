@@ -1,9 +1,9 @@
 package cspfj.heuristic;
 
-import cspfj.problem.IntVariable;
+import cspfj.problem.Variable;
 
 public interface ValueHeuristic {
-	int selectIndex(IntVariable variable) ;
-    double getScore(final IntVariable variable, final int index) ;
+	int selectIndex(Variable variable) ;
+    double getScore(final Variable variable, final int index) ;
     void compute() ;
 }

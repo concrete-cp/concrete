@@ -33,7 +33,7 @@ import cspfj.heuristic.Lexico;
 import cspfj.heuristic.Pair;
 import cspfj.heuristic.WDegOnDom;
 import cspfj.problem.Problem;
-import cspfj.problem.IntVariable;
+import cspfj.problem.Variable;
 
 public final class MGACRec extends AbstractSolver {
 
@@ -73,13 +73,13 @@ public final class MGACRec extends AbstractSolver {
 
 	}
 
-	public boolean mac(final IntVariable modifiedVariable)
+	public boolean mac(final Variable modifiedVariable)
 			throws MaxBacktracksExceededException, IOException {
 		final Problem problem = this.problem;
 
 		if (problem.getNbFutureVariables() == 0) {
 			if (getNbSolutions() < 1) {
-				for (IntVariable v : problem.getVariables()) {
+				for (Variable v : problem.getVariables()) {
 					addSolutionElement(v, v.getFirst());
 				}
 			}
@@ -94,7 +94,7 @@ public final class MGACRec extends AbstractSolver {
 
 		final Pair pair = heuristic.selectPair(problem);
 
-		final IntVariable selectedVariable = pair.getVariable();
+		final Variable selectedVariable = pair.getVariable();
 
 		assert selectedVariable.getDomainSize() > 0;
 
@@ -211,7 +211,7 @@ public final class MGACRec extends AbstractSolver {
 
 		// final Random random = new Random(0);
 		do {
-			for (IntVariable v : problem.getVariables()) {
+			for (Variable v : problem.getVariables()) {
 				assert v.getDomainSize() > 0;
 			}
 

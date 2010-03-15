@@ -7,7 +7,7 @@
 package cspfj.constraint.extension;
 
 import cspfj.constraint.AbstractAC3Constraint;
-import cspfj.problem.IntVariable;
+import cspfj.problem.Variable;
 
 public abstract class AbstractExtensionConstraint extends AbstractAC3Constraint
         implements ExtensionConstraint {
@@ -18,7 +18,7 @@ public abstract class AbstractExtensionConstraint extends AbstractAC3Constraint
     private MatrixManager matrixManager;
 
     public AbstractExtensionConstraint(MatrixManager matrixManager,
-            IntVariable... scope) {
+            Variable... scope) {
         super(scope);
         this.matrixManager = matrixManager;
         matrixManager.setTuple(tuple);
@@ -26,7 +26,7 @@ public abstract class AbstractExtensionConstraint extends AbstractAC3Constraint
     }
 
     public AbstractExtensionConstraint(String name,
-            MatrixManager matrixManager, IntVariable... scope) {
+            MatrixManager matrixManager, Variable... scope) {
         super(name, scope);
         this.matrixManager = matrixManager;
         matrixManager.setTuple(tuple);

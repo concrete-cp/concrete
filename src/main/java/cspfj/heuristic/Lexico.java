@@ -1,6 +1,6 @@
 package cspfj.heuristic;
 
-import cspfj.problem.IntVariable;
+import cspfj.problem.Variable;
 
 public final class Lexico implements ValueHeuristic {
 
@@ -10,7 +10,7 @@ public final class Lexico implements ValueHeuristic {
 		this.reverse = reverse;
 	}
 
-	public double getScore(final IntVariable var, final int index) {
+	public double getScore(final Variable var, final int index) {
 		return reverse ? -index : index;
 	}
 
@@ -25,7 +25,7 @@ public final class Lexico implements ValueHeuristic {
 	}
 
 	@Override
-	public int selectIndex(IntVariable variable) {
+	public int selectIndex(Variable variable) {
 		return reverse ? variable.getLast() : variable.getFirst();
 	}
 }

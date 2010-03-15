@@ -49,9 +49,9 @@ import cspom.variable.CSPOMVariable;
 public final class Problem {
 	// private Map<Integer, Variable> variables;
 
-	private Map<CSPOMVariable, IntVariable> variables;
+	private Map<CSPOMVariable, Variable> variables;
 
-	private IntVariable[] variableArray;
+	private Variable[] variableArray;
 
 	private int nbVariables = 0;
 
@@ -64,7 +64,7 @@ public final class Problem {
 
 	private int maxDomainSize;
 
-	private IntVariable[] levelVariables;
+	private Variable[] levelVariables;
 
 	private int maxArity;
 
@@ -81,7 +81,7 @@ public final class Problem {
 	public Problem() {
 		super();
 		this.useNoGoods = true;
-		variables = new HashMap<CSPOMVariable, IntVariable>();
+		variables = new HashMap<CSPOMVariable, Variable>();
 		constraints = new ArrayList<Constraint>();
 	}
 
@@ -93,8 +93,8 @@ public final class Problem {
 		return nbFutureVariables;
 	}
 
-	public IntVariable addVariable(final CSPOMVariable variable) {
-		final IntVariable var = new IntVariable(variable);
+	public Variable addVariable(final CSPOMVariable variable) {
+		final Variable var = new Variable(variable);
 		variables.put(variable, var);
 		return var;
 	}
@@ -108,21 +108,21 @@ public final class Problem {
 		maxVId = 0;
 
 		variableArray = variables.values().toArray(
-				new IntVariable[variables.size()]);
+				new Variable[variables.size()]);
 
-		for (IntVariable var : variableArray) {
+		for (Variable var : variableArray) {
 			maxDomainSize = Math.max(maxDomainSize, var.getDomain().maxSize());
 			maxVId = Math.max(maxVId, var.getId());
 		}
 
 		nbFutureVariables = nbVariables = variables.size();
 
-		levelVariables = new IntVariable[getNbVariables()];
+		levelVariables = new Variable[getNbVariables()];
 	}
 
 	public void prepareConstraints() {
-//		constraintArray = constraints
-//				.toArray(new Constraint[constraints.size()]);
+		// constraintArray = constraints
+		// .toArray(new Constraint[constraints.size()]);
 
 		maxArity = Collections.max(constraints, new Comparator<Constraint>() {
 			@Override
@@ -138,17 +138,17 @@ public final class Problem {
 		final Map<Integer, List<Constraint>> invConstraints = new HashMap<Integer, List<Constraint>>(
 				variableArray.length);
 
-		for (IntVariable v : getVariables()) {
+		for (Variable v : getVariables()) {
 			invConstraints.put(v.getId(), new ArrayList<Constraint>());
 		}
 
 		for (Constraint c : getConstraints()) {
-			for (IntVariable v : c.getScope()) {
+			for (Variable v : c.getScope()) {
 				invConstraints.get(v.getId()).add(c);
 			}
 		}
 
-		for (IntVariable v : getVariables()) {
+		for (Variable v : getVariables()) {
 			final Collection<Constraint> involvingConstraints = invConstraints
 					.get(v.getId());
 			v.setInvolvingConstraints(involvingConstraints
@@ -168,7 +168,7 @@ public final class Problem {
 		return constraints;
 	}
 
-	public IntVariable[] getVariables() {
+	public Variable[] getVariables() {
 		return variableArray;
 	}
 
@@ -194,7 +194,7 @@ public final class Problem {
 
 	private void setLevel(int level) {
 		// currentLevel = level;
-		for (IntVariable v : variableArray) {
+		for (Variable v : variableArray) {
 			v.setLevel(level);
 		}
 		for (Constraint c : constraints) {
@@ -204,7 +204,7 @@ public final class Problem {
 
 	private void restoreLevel(int level) {
 		// currentLevel = level;
-		for (IntVariable v : variableArray) {
+		for (Variable v : variableArray) {
 			v.restoreLevel(level);
 		}
 		for (Constraint c : getConstraints()) {
@@ -214,7 +214,7 @@ public final class Problem {
 
 	public void reset() {
 		currentLevel = 0;
-		for (IntVariable v : variableArray) {
+		for (Variable v : variableArray) {
 			v.reset(this);
 		}
 		for (Constraint c : getConstraints()) {
@@ -225,7 +225,7 @@ public final class Problem {
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
-		for (IntVariable v : variables.values()) {
+		for (Variable v : variables.values()) {
 			sb.append(v).append(" : ").append(
 					Arrays.toString(v.getCurrentIndexes())).append('\n');
 		}
@@ -242,7 +242,7 @@ public final class Problem {
 	}
 
 	private final static DynamicConstraint findDynamicConstraint(
-			final Set<IntVariable> scope) {
+			final Set<Variable> scope) {
 
 		for (DynamicConstraint c : scope.iterator().next()
 				.getDynamicConstraints()) {
@@ -256,7 +256,7 @@ public final class Problem {
 		return null;
 	}
 
-	public final DynamicConstraint learnConstraint(final Set<IntVariable> scope,
+	public final DynamicConstraint learnConstraint(final Set<Variable> scope,
 			final LearnMethod addConstraints) {
 		final DynamicConstraint constraint = findDynamicConstraint(scope);
 
@@ -269,7 +269,7 @@ public final class Problem {
 		}
 
 		final int level = scope.size();
-		final IntVariable[] constraintScope = scope.toArray(new IntVariable[level]);
+		final Variable[] constraintScope = scope.toArray(new Variable[level]);
 
 		if (level == 2) {
 
@@ -294,7 +294,7 @@ public final class Problem {
 		return null;
 	}
 
-	private static int[] makeBase(IntVariable[] scope, int[] values,
+	private static int[] makeBase(Variable[] scope, int[] values,
 			Constraint constraint) {
 		assert scope.length == values.length;
 		int[] tuple = new int[constraint.getArity()];
@@ -302,7 +302,7 @@ public final class Problem {
 		Arrays.fill(tuple, -1);
 
 		for (int i = constraint.getArity(); --i >= 0;) {
-			final IntVariable var = constraint.getVariable(i);
+			final Variable var = constraint.getVariable(i);
 			for (int j = scope.length; --j >= 0;) {
 				if (scope[j] == var) {
 					tuple[i] = values[j];
@@ -329,18 +329,18 @@ public final class Problem {
 	 * @param base
 	 * @return
 	 */
-	public static int makeBase(IntVariable[] scope, int[] values,
+	public static int makeBase(Variable[] scope, int[] values,
 			Constraint constraint, int[] base) {
 		assert scope.length == values.length;
 		assert base.length == constraint.getArity();
 
 		Arrays.fill(base, -1);
 
-		final IntVariable seek = scope[scope.length - 1];
+		final Variable seek = scope[scope.length - 1];
 		int positionInConstraint = -1;
 
 		for (int i = constraint.getArity(); --i >= 0;) {
-			final IntVariable var = constraint.getVariable(i);
+			final Variable var = constraint.getVariable(i);
 			if (var == seek) {
 				positionInConstraint = i;
 				continue;
@@ -366,7 +366,7 @@ public final class Problem {
 			return false;
 		}
 
-		final IntVariable[] levelVariables = this.levelVariables;
+		final Variable[] levelVariables = this.levelVariables;
 
 		if (levelVariables[0] == null) {
 			return false;
@@ -382,7 +382,7 @@ public final class Problem {
 
 		int[] tuple = new int[startLevel + 1];
 
-		final Set<IntVariable> scopeSet = new HashSet<IntVariable>(startLevel);
+		final Set<Variable> scopeSet = new HashSet<Variable>(startLevel);
 		for (int i = startLevel; --i >= 0;) {
 			scopeSet.add(levelVariables[i]);
 			tuple[i] = levelVariables[i].getFirst();
@@ -394,13 +394,13 @@ public final class Problem {
 		for (int level = startLevel + 1; --level >= 1;) {
 			// Note : Nothing to remove on first level
 			scopeSet.remove(levelVariables[level]);
-			final IntVariable[] scopeArray = Arrays.copyOf(levelVariables,
+			final Variable[] scopeArray = Arrays.copyOf(levelVariables,
 					level + 1);
 			// restoreLevel(level);
 
 			tuple = Arrays.copyOf(tuple, level + 1);
 
-			for (IntVariable fv : variableArray) {
+			for (Variable fv : variableArray) {
 
 				// logger.fine("checking " +
 				// getVariable(levelVariables[level-1]));
@@ -458,7 +458,7 @@ public final class Problem {
 		return modified;
 	}
 
-	public boolean noGoodsToConstraints(Map<IntVariable[], List<int[]>> noGoods,
+	public boolean noGoodsToConstraints(Map<Variable[], List<int[]>> noGoods,
 			final LearnMethod learnMethod) {
 		if (noGoods == null) {
 			return false;
@@ -466,8 +466,8 @@ public final class Problem {
 		boolean modified = false;
 		final Collection<Constraint> addedConstraints = new ArrayList<Constraint>();
 
-		for (Entry<IntVariable[], List<int[]>> e : noGoods.entrySet()) {
-			final Set<IntVariable> scope = new HashSet<IntVariable>(Arrays.asList(e
+		for (Entry<Variable[], List<int[]>> e : noGoods.entrySet()) {
+			final Set<Variable> scope = new HashSet<Variable>(Arrays.asList(e
 					.getKey()));
 
 			final DynamicConstraint constraint = learnConstraint(scope,
@@ -510,13 +510,13 @@ public final class Problem {
 		return nbNoGoods;
 	}
 
-	public void setLevelVariables(final IntVariable variable) {
+	public void setLevelVariables(final Variable variable) {
 		assert (currentLevel + 1 >= levelVariables.length || levelVariables[currentLevel + 1] == null);
 		levelVariables[currentLevel] = variable;
 
 	}
 
-	public IntVariable getLevelVariable(final int level) {
+	public Variable getLevelVariable(final int level) {
 		return levelVariables[level];
 	}
 
@@ -599,7 +599,7 @@ public final class Problem {
 
 	public int getND() {
 		int nd = 0;
-		for (IntVariable v : getVariables()) {
+		for (Variable v : getVariables()) {
 			nd += v.getDomainSize();
 		}
 		return nd;
@@ -622,36 +622,15 @@ public final class Problem {
 		return Math.max(10, maxDomainSize / 10);
 	}
 
-	// public Problem clone() throws CloneNotSupportedException {
-	// final Problem problem = (Problem) super.clone();
-	// final List<Variable> variables = new ArrayList<Variable>(this
-	// .getNbVariables());
-	//
-	// for (Variable v : this.getVariables()) {
-	// variables.add(v.clone());
-	// }
-	//
-	// problem.variables = variables;
-	//
-	// final List<Constraint> constraints = new ArrayList<Constraint>(this
-	// .getNbConstraints());
-	//
-	// for (Constraint c : this.getConstraints()) {
-	// constraints.add(c.deepCopy(variables));
-	// }
-	//
-	// problem.constraints = constraints;
-	//
-	// problem.prepareVariables();
-	// problem.prepareConstraints();
-	// return problem;
-	// }
+	public Variable getSolverVariable(CSPOMVariable variable) {
+		return variables.get(variable);
+	}
 
 	public static enum LearnMethod {
 		NONE, EXT, RC, BIN
 	}
 
-	public IntVariable getLastLevelVariable() {
+	public Variable getLastLevelVariable() {
 		return levelVariables[currentLevel - 1];
 	}
 

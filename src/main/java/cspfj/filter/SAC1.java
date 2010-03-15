@@ -21,7 +21,7 @@ package cspfj.filter;
 import java.util.logging.Logger;
 
 import cspfj.problem.Problem;
-import cspfj.problem.IntVariable;
+import cspfj.problem.Variable;
 
 /**
  * @author Julien VION
@@ -35,7 +35,7 @@ public final class SAC1 extends AbstractSAC {
         super(problem, new AC3(problem));
     }
 
-    protected boolean singletonTest(final IntVariable variable)
+    protected boolean singletonTest(final Variable variable)
             throws InterruptedException {
         boolean changedGraph = false;
         for (int index = variable.getFirst(); index >= 0; index = variable

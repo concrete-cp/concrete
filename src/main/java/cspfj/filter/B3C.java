@@ -24,7 +24,7 @@ import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import cspfj.problem.Problem;
-import cspfj.problem.IntVariable;
+import cspfj.problem.Variable;
 
 /**
  * @author Julien VION
@@ -41,7 +41,7 @@ public final class B3C extends AbstractSAC {
     }
 
     @Override
-    protected boolean singletonTest(final IntVariable variable) {
+    protected boolean singletonTest(final Variable variable) {
         boolean changed = false;
         for (int index = variable.getFirst(); index >= 0; index = variable
                 .getNext(index)) {
@@ -70,7 +70,7 @@ public final class B3C extends AbstractSAC {
         return changed;
     }
 
-    private boolean check(IntVariable variable, int index) {
+    private boolean check(Variable variable, int index) {
         problem.push();
         variable.assign(index, problem);
         problem.setLevelVariables(variable);

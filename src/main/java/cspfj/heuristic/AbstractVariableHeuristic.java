@@ -3,7 +3,7 @@ package cspfj.heuristic;
 import java.util.Random;
 
 import cspfj.problem.Problem;
-import cspfj.problem.IntVariable;
+import cspfj.problem.Variable;
 
 public abstract class AbstractVariableHeuristic implements VariableHeuristic {
 
@@ -15,9 +15,9 @@ public abstract class AbstractVariableHeuristic implements VariableHeuristic {
         this.problem = problem;
     }
 
-    public IntVariable selectVariable(final IntVariable[] variables) {
+    public Variable selectVariable(final Variable[] variables) {
         int ties = 1;
-        IntVariable bestVariable = null;
+        Variable bestVariable = null;
         int i = variables.length;
         while (--i >= 0) {
             if (!variables[i].isAssigned()) {
@@ -39,7 +39,7 @@ public abstract class AbstractVariableHeuristic implements VariableHeuristic {
         return bestVariable;
     }
 
-    public final int compare(final IntVariable variable1, final IntVariable variable2) {
+    public final int compare(final Variable variable1, final Variable variable2) {
         // if (variable1 == null) {
         // return 1;
         // }

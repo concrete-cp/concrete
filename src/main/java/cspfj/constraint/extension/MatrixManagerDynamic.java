@@ -3,7 +3,7 @@ package cspfj.constraint.extension;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import cspfj.problem.IntVariable;
+import cspfj.problem.Variable;
 
 public class MatrixManagerDynamic extends MatrixManager implements
         Iterable<int[]> {
@@ -22,7 +22,7 @@ public class MatrixManagerDynamic extends MatrixManager implements
 
     // private int stingRemoved;
 
-    public MatrixManagerDynamic(final IntVariable[] scope, final TupleSet matrix,
+    public MatrixManagerDynamic(final Variable[] scope, final TupleSet matrix,
             final boolean shared) {
         super(scope, matrix, shared);
         this.tupleSet = matrix;

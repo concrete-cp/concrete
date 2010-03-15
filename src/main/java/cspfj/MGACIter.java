@@ -33,7 +33,7 @@ import cspfj.heuristic.Lexico;
 import cspfj.heuristic.Pair;
 import cspfj.heuristic.WDegOnDom;
 import cspfj.problem.Problem;
-import cspfj.problem.IntVariable;
+import cspfj.problem.Variable;
 
 public final class MGACIter extends AbstractSolver {
 
@@ -84,7 +84,7 @@ public final class MGACIter extends AbstractSolver {
 
 		// level = 0;
 
-		IntVariable selectedVariable = null;
+		Variable selectedVariable = null;
 		int selectedIndex = -1;
 		do {
 			// for (Variable v: problem.getVariables()) {
@@ -98,7 +98,7 @@ public final class MGACIter extends AbstractSolver {
 			// }
 			if (problem.getNbFutureVariables() == 0) {
 				if (getNbSolutions() < 1) {
-					for (IntVariable v : problem.getVariables()) {
+					for (Variable v : problem.getVariables()) {
 						addSolutionElement(v, v.getFirst());
 					}
 				}
@@ -151,8 +151,8 @@ public final class MGACIter extends AbstractSolver {
 
 	}
 
-	public IntVariable backtrack() throws MaxBacktracksExceededException {
-		IntVariable selectedVariable;
+	public Variable backtrack() throws MaxBacktracksExceededException {
+		Variable selectedVariable;
 		int index;
 		do {
 			selectedVariable = problem.getLastLevelVariable();
@@ -251,7 +251,7 @@ public final class MGACIter extends AbstractSolver {
 
 		// final Random random = new Random(0);
 		do {
-			for (IntVariable v : problem.getVariables()) {
+			for (Variable v : problem.getVariables()) {
 				assert v.getDomainSize() > 0;
 			}
 			setMaxBacktracks(maxBT);

@@ -1,246 +1,230 @@
 package cspfj.constraint;
 
-import cspfj.constraint.extension.TupleManager;
-import cspfj.problem.IntVariable;
+import cspfj.problem.Variable;
 
 public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 
-	protected int[][][] last;
+    protected int[][][] last;
 
-	private final int[] startTuple;
+    private final int[] startTuple;
 
-	protected TupleManager tupleManager;
+//    private static final Logger logger = Logger
+//            .getLogger(AbstractAC3Constraint.class.getSimpleName());
 
-	private final IntVariable[] intScope;
+    public AbstractAC3Constraint(Variable... scope) {
+        this(null, scope);
+    }
 
-	// private static final Logger logger = Logger
-	// .getLogger(AbstractAC3Constraint.class.getSimpleName());
+    public AbstractAC3Constraint(String name, Variable... scope) {
+        super(scope);
+        startTuple = new int[getArity()];
 
-	public AbstractAC3Constraint(IntVariable... scope) {
-		this(null, scope);
-	}
+        int maxDomain = getVariable(getArity() - 1).getDomain().maxSize();
+        for (int i = getArity() - 1; --i >= 0;) {
+            maxDomain = Math.max(maxDomain, getVariable(i).getDomain()
+                    .maxSize());
+        }
 
-	public AbstractAC3Constraint(String name, IntVariable... scope) {
-		super(scope);
-		this.intScope = scope;
-		startTuple = new int[getArity()];
+        last = new int[getArity()][maxDomain][];
+    }
 
-		int maxDomain = intScope[getArity() - 1].getDomain().maxSize();
-		for (int i = getArity() - 1; --i >= 0;) {
-			maxDomain = Math.max(maxDomain, intScope[i].getDomain().maxSize());
-		}
+    public boolean revise(final int position) {
+        final Variable variable = getVariable(position);
 
-		last = new int[getArity()][maxDomain][];
+        assert !variable.isAssigned();
 
-		tupleManager = new TupleManager(this, tuple);
+        boolean revised = false;
 
-	}
+        // logger.finer("Revising " + variable + " "
+        // + Arrays.toString(variable.getCurrentDomain()) + " against "
+        // + this);
 
-	public boolean revise(final int position) {
-		final IntVariable variable = intScope[position];
+        for (int index = variable.getFirst(); index >= 0; index = variable
+                .getNext(index)) {
 
-		assert !variable.isAssigned();
+            // logger.finer("Checking (" + variable + ", " + index + ")");
+            // if (conflictCounts && othersSize >
+            // nbInitConflicts[position][index]) {
+            // continue;
+            // }
 
-		boolean revised = false;
+            if (!findValidTuple(position, index)) {
+                // logger.finer("removing " + index + " from " + variable);
 
-		// logger.finer("Revising " + variable + " "
-		// + Arrays.toString(variable.getCurrentDomain()) + " against "
-		// + this);
+                variable.remove(index);
 
-		for (int index = variable.getFirst(); index >= 0; index = variable
-				.getNext(index)) {
+                revised = true;
+                setActive(true);
 
-			// logger.finer("Checking (" + variable + ", " + index + ")");
-			// if (conflictCounts && othersSize >
-			// nbInitConflicts[position][index]) {
-			// continue;
-			// }
+            }
 
-			if (!findValidTuple(position, index)) {
-				// logger.finer("removing " + index + " from " + variable);
+        }
 
-				variable.remove(index);
+        return revised;
+    }
 
-				revised = true;
-				setActive(true);
+    private boolean findValidTuple2(final int variablePosition, final int index) {
+        assert this.isInvolved(getVariable(variablePosition));
 
-			}
+        // final long size = size()
+        // / involvedVariables[variablePosition].getDomainSize();
 
-		}
+        final boolean residue = last[variablePosition][index][0] != -1;
 
-		return revised;
-	}
+        if (residue
+                && controlTuplePresence(last[variablePosition][index],
+                        variablePosition)) {
+            return true;
+        }
 
-	private boolean findValidTuple2(final int variablePosition, final int index) {
-		assert this.isInvolved(getVariable(variablePosition));
+        // final List<int[]> checkedAfter = new ArrayList<int[]>();
 
-		// final long size = size()
-		// / involvedVariables[variablePosition].getDomainSize();
+        final boolean twoWays = residue
+                && tupleManager.setTupleAfter(last[variablePosition][index],
+                        variablePosition);
+        if (twoWays) {
+            System.arraycopy(tuple, 0, startTuple, 0, getArity());
+        } else {
+            tupleManager.setFirstTuple(variablePosition, index);
+        }
 
-		final boolean residue = last[variablePosition][index][0] != -1;
+        do {
+            // checkedAfter.add(tuple.clone());
 
-		if (residue
-				&& controlTuplePresence(last[variablePosition][index],
-						variablePosition)) {
-			return true;
-		}
+            if (chk()) {
+                updateResidues();
+                return true;
+            }
 
-		// final List<int[]> checkedAfter = new ArrayList<int[]>();
+        } while (tupleManager.setNextTuple(variablePosition));
 
-		final boolean twoWays = residue
-				&& tupleManager.setTupleAfter(last[variablePosition][index],
-						variablePosition);
-		if (twoWays) {
-			System.arraycopy(tuple, 0, startTuple, 0, getArity());
-		} else {
-			tupleManager.setFirstTuple(variablePosition, index);
-		}
+        // final List<int[]> checkedBefore = new ArrayList<int[]>();
 
-		do {
-			// checkedAfter.add(tuple.clone());
+        if (twoWays) {
+            tupleManager.setTuple(startTuple);
+            while (tupleManager.setPrevTuple(variablePosition)) {
+                // checkedBefore.add(tuple.clone());
+                if (chk()) {
+                    updateResidues();
+                    return true;
+                }
+            }
+        }
 
-			if (chk()) {
-				updateResidues();
-				return true;
-			}
+        // assert (checkedAfter.size() + checkedBefore.size()) == size :
+        // "checked "
+        // + viewDomains()
+        // + " ("
+        // + size
+        // + ", fixed = "
+        // + variablePosition
+        // + ") : "
+        // + Arrays.toString(last[variablePosition][index])
+        // + " / "
+        // + viewTuples(checkedAfter)
+        // + " / "
+        // + viewTuples(checkedBefore);
 
-		} while (tupleManager.setNextTuple(variablePosition));
+        return false;
 
-		// final List<int[]> checkedBefore = new ArrayList<int[]>();
+    }
 
-		if (twoWays) {
-			tupleManager.setTuple(startTuple);
-			while (tupleManager.setPrevTuple(variablePosition)) {
-				// checkedBefore.add(tuple.clone());
-				if (chk()) {
-					updateResidues();
-					return true;
-				}
-			}
-		}
+    // private String viewTuples(final List<int[]> tuples) {
+    // final StringBuilder stb = new StringBuilder("{ ");
+    // for (int[] tuple : tuples) {
+    // stb.append(Arrays.toString(tuple)).append(", ");
+    // }
+    // return stb.append(" }(").append(tuples.size()).append(")").toString();
+    // }
+    //
+    // private String viewDomains() {
+    // final StringBuilder stb = new StringBuilder("{ ");
+    // for (Variable v : involvedVariables) {
+    // stb.append(v.getCurrentDomain()).append(", ");
+    // }
+    // return stb.append(" }").toString();
+    // }
 
-		// assert (checkedAfter.size() + checkedBefore.size()) == size :
-		// "checked "
-		// + viewDomains()
-		// + " ("
-		// + size
-		// + ", fixed = "
-		// + variablePosition
-		// + ") : "
-		// + Arrays.toString(last[variablePosition][index])
-		// + " / "
-		// + viewTuples(checkedAfter)
-		// + " / "
-		// + viewTuples(checkedBefore);
+    public boolean findValidTuple(final int variablePosition, final int index) {
+        return findValidTuple1(variablePosition, index);
+    }
 
-		return false;
+    private boolean findValidTuple1(final int variablePosition, final int index) {
+        assert this.isInvolved(getVariable(variablePosition));
+        assert index >= 0;
 
-	}
+        if (last[variablePosition][index] != null
+                && controlTuplePresence(last[variablePosition][index],
+                        variablePosition)) {
+            return true;
+        }
 
-	// private String viewTuples(final List<int[]> tuples) {
-	// final StringBuilder stb = new StringBuilder("{ ");
-	// for (int[] tuple : tuples) {
-	// stb.append(Arrays.toString(tuple)).append(", ");
-	// }
-	// return stb.append(" }(").append(tuples.size()).append(")").toString();
-	// }
-	//
-	// private String viewDomains() {
-	// final StringBuilder stb = new StringBuilder("{ ");
-	// for (Variable v : involvedVariables) {
-	// stb.append(v.getCurrentDomain()).append(", ");
-	// }
-	// return stb.append(" }").toString();
-	// }
+        tupleManager.setFirstTuple(variablePosition, index);
 
-	public boolean findValidTuple(final int variablePosition, final int index) {
-		return findValidTuple1(variablePosition, index);
-	}
+        do {
+            if (chk()) {
+                updateResidues();
+                return true;
+            }
+        } while (tupleManager.setNextTuple(variablePosition));
 
-	private boolean findValidTuple1(final int variablePosition, final int index) {
-		assert this.isInvolved(getVariable(variablePosition));
-		assert index >= 0;
+        return false;
 
-		if (last[variablePosition][index] != null
-				&& controlTuplePresence(last[variablePosition][index],
-						variablePosition)) {
-			return true;
-		}
+    }
 
-		tupleManager.setFirstTuple(variablePosition, index);
+    private boolean simpleFindValidTuple(final int variablePosition,
+            final int index) {
+        tupleManager.setFirstTuple(variablePosition, index);
 
-		do {
-			if (chk()) {
-				updateResidues();
-				return true;
-			}
-		} while (tupleManager.setNextTuple(variablePosition));
+        do {
+            if (chk()) {
+                updateResidues();
+                return true;
+            }
+        } while (tupleManager.setNextTuple(variablePosition));
 
-		return false;
+        return false;
+    }
 
-	}
+    protected void updateResidues() {
+        if (last != null) {
+            final int[] residue = tuple.clone();
+            for (int position = getArity(); --position >= 0;) {
+                last[position][residue[position]] = residue;
+            }
+        }
+    }
 
-	private boolean simpleFindValidTuple(final int variablePosition,
-			final int index) {
-		tupleManager.setFirstTuple(variablePosition, index);
+    public void removeTupleCache() {
+        last = null;
+    }
 
-		do {
-			if (chk()) {
-				updateResidues();
-				return true;
-			}
-		} while (tupleManager.setNextTuple(variablePosition));
-
-		return false;
-	}
-
-	protected void updateResidues() {
-		if (last != null) {
-			final int[] residue = tuple.clone();
-			for (int position = getArity(); --position >= 0;) {
-				last[position][residue[position]] = residue;
-			}
-		}
-	}
-
-	public void removeTupleCache() {
-		last = null;
-	}
-
-	public IntVariable getVariable(int position) {
-		return intScope[position];
-	}
-	
-	public IntVariable[] getScope() {
-		return intScope;
-	}
-
-	// @Override
-	// public void restore(int level) {
-	// for (int p = getArity(); --p >= 0;) {
-	// final Variable var = getVariable(p);
-	// for (int i = var.getFirst(); i >= 0; i = var.getNext(i)) {
-	// final Watches watches = this.watches[p][i];
-	// if (watches.isToCheck()) {
-	// int[] validResidue = null;
-	//
-	// for (int[] residue : watches) {
-	// if (controlTuplePresence(residue, p)) {
-	// validResidue = residue;
-	// break;
-	// }
-	// }
-	//
-	// watches.clear();
-	// if (validResidue != null) {
-	// for (int p2 = getArity(); --p2 >= 0;) {
-	// this.watches[p2][validResidue[p2]]
-	// .add(validResidue);
-	// }
-	// }
-	// watches.setToCheck(false);
-	// }
-	// }
-	// }
-	// }
+    // @Override
+    // public void restore(int level) {
+    // for (int p = getArity(); --p >= 0;) {
+    // final Variable var = getVariable(p);
+    // for (int i = var.getFirst(); i >= 0; i = var.getNext(i)) {
+    // final Watches watches = this.watches[p][i];
+    // if (watches.isToCheck()) {
+    // int[] validResidue = null;
+    //
+    // for (int[] residue : watches) {
+    // if (controlTuplePresence(residue, p)) {
+    // validResidue = residue;
+    // break;
+    // }
+    // }
+    //
+    // watches.clear();
+    // if (validResidue != null) {
+    // for (int p2 = getArity(); --p2 >= 0;) {
+    // this.watches[p2][validResidue[p2]]
+    // .add(validResidue);
+    // }
+    // }
+    // watches.setToCheck(false);
+    // }
+    // }
+    // }
+    // }
 }

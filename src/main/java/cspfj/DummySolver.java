@@ -25,7 +25,7 @@ import java.security.InvalidParameterException;
 
 import cspfj.filter.AC3;
 import cspfj.problem.Problem;
-import cspfj.problem.IntVariable;
+import cspfj.problem.Variable;
 
 public final class DummySolver extends AbstractSolver {
 
@@ -58,7 +58,7 @@ public final class DummySolver extends AbstractSolver {
             throw new IllegalArgumentException("Unexpected interruption");
         }
         chronometer.validateChrono();
-        for (IntVariable v : problem.getVariables()) {
+        for (Variable v : problem.getVariables()) {
             addSolutionElement(v, 0);
         }
         return true;

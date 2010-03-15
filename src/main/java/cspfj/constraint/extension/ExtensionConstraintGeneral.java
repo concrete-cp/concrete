@@ -19,7 +19,7 @@
 
 package cspfj.constraint.extension;
 
-import cspfj.problem.IntVariable;
+import cspfj.problem.Variable;
 
 public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
 
@@ -27,12 +27,12 @@ public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
     // .getLogger(ExtensionConstraintGeneral.class.getSimpleName());
 
     public ExtensionConstraintGeneral(String name, Matrix matrix,
-            boolean shared, IntVariable... scope) {
+            boolean shared, Variable... scope) {
         super(name, new MatrixManager(scope, matrix, shared), scope);
     }
 
     public ExtensionConstraintGeneral(Matrix matrix, boolean shared,
-            IntVariable... scope) {
+            Variable... scope) {
         super(new MatrixManager(scope, matrix, shared), scope);
     }
 

@@ -1,20 +1,20 @@
 package cspfj.heuristic;
 
-import cspfj.problem.IntVariable;
+import cspfj.problem.Variable;
 
 public class Pair {
 
-	private final IntVariable variable;
+	private final Variable variable;
 
 	private final int index;
 
-	public Pair(final IntVariable variable, final int index) {
+	public Pair(final Variable variable, final int index) {
 		super();
 		this.variable = variable;
 		this.index = index;
 	}
 
-	public IntVariable getVariable() {
+	public Variable getVariable() {
 		return variable;
 	}
 

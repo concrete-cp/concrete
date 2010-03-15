@@ -3,16 +3,16 @@ package cspfj;
 import java.util.HashMap;
 import java.util.Map;
 
-import cspfj.problem.IntVariable;
+import cspfj.problem.Variable;
 
 public final class SolutionHandler {
-	private Map<IntVariable, Integer> solution = null;
+	private Map<Variable, Integer> solution = null;
 
 	private boolean result = false;
 
 	private final Map<Integer, Double> weights = new HashMap<Integer, Double>();
 
-	public Map<IntVariable, Integer> getSolution() throws InterruptedException {
+	public Map<Variable, Integer> getSolution() throws InterruptedException {
 		while (!result) {
 			synchronized (this) {
 				wait();
@@ -21,7 +21,7 @@ public final class SolutionHandler {
 		return solution;
 	}
 
-	public void setSolution(final Map<IntVariable, Integer> solution) {
+	public void setSolution(final Map<Variable, Integer> solution) {
 		result = true;
 		this.solution = solution;
 		synchronized (this) {

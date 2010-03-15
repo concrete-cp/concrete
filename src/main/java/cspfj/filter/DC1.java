@@ -29,7 +29,7 @@ import cspfj.AbstractSolver;
 import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
 import cspfj.problem.Problem;
-import cspfj.problem.IntVariable;
+import cspfj.problem.Variable;
 import cspfj.util.BitVector;
 
 /**
@@ -47,7 +47,7 @@ public final class DC1 extends AbstractSAC {
 
     private int addedConstraints = 0;
 
-    private final IntVariable[] variables;
+    private final Variable[] variables;
 
     private int nbNoGoods;
 
@@ -75,7 +75,7 @@ public final class DC1 extends AbstractSAC {
         return result;
     }
 
-    protected boolean singletonTest(final IntVariable variable)
+    protected boolean singletonTest(final Variable variable)
             throws InterruptedException {
         boolean changedGraph = false;
         for (int index = variable.getFirst(); index >= 0; index = variable
@@ -123,19 +123,19 @@ public final class DC1 extends AbstractSAC {
         return changedGraph;
     }
 
-    public boolean noGoods(IntVariable firstVariable) {
+    public boolean noGoods(Variable firstVariable) {
         int[] tuple = new int[2];
 
-        final Set<IntVariable> scopeSet = new HashSet<IntVariable>(2);
+        final Set<Variable> scopeSet = new HashSet<Variable>(2);
 
         scopeSet.add(firstVariable);
         tuple[0] = firstVariable.getFirst();
-        final IntVariable[] scopeArray = new IntVariable[] { firstVariable, null };
+        final Variable[] scopeArray = new Variable[] { firstVariable, null };
 
         boolean modified = false;
         final Collection<Constraint> addedConstraints = new ArrayList<Constraint>();
 
-        for (IntVariable fv : variables) {
+        for (Variable fv : variables) {
 
             // logger.fine("checking " +
             // getVariable(levelVariables[level-1]));
