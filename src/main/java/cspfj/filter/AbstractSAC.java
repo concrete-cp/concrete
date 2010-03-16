@@ -1,9 +1,3 @@
-/*
- * Created on 4 déc. 07
- *
- * To change the template for this generated file go to
- * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
- */
 package cspfj.filter;
 
 import java.util.HashMap;
@@ -59,24 +53,6 @@ public abstract class AbstractSAC implements Filter {
             return false;
         }
         final Variable[] variables = this.variables;
-        // Arrays.sort(variables, heuristic);
-        // System.out.println(Arrays.toString(variables));
-        // // Tri à bulles
-        // for (int i = 0; i < variables.length; i++) {
-        // boolean changed = false;
-        // for (int j = variables.length; --j > i;) {
-        // if (variables[j].getDomainSize() < variables[j - 1]
-        // .getDomainSize()) {
-        // final Variable temp = variables[j];
-        // variables[j] = variables[j - 1];
-        // variables[j - 1] = temp;
-        // changed = true;
-        // }
-        // }
-        // if (!changed) {
-        // break;
-        // }
-        // }
 
         int mark = 0;
 
