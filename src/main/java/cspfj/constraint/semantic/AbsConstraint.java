@@ -1,9 +1,15 @@
 package cspfj.constraint.semantic;
 
+import java.util.ArrayList;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
 import cspfj.constraint.AbstractAC3Constraint;
 import cspfj.generator.ConstraintManager;
+import cspfj.problem.BitVectorDomain;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
+import cspfj.util.IntLinkedList;
 import cspom.constraint.CSPOMConstraint;
 
 public class AbsConstraint extends AbstractAC3Constraint {
@@ -23,6 +29,36 @@ public class AbsConstraint extends AbstractAC3Constraint {
 
 	public static boolean generate(final CSPOMConstraint constraint,
 			final Problem problem) {
-		return false;
+		final Variable v0 = problem
+				.getSolverVariable(constraint.getVariable(1));
+		final Variable result = problem.getSolverVariable(constraint
+				.getVariable(0));
+
+		if (v0.getDomain() == null) {
+
+			if (result.getDomain() == null) {
+				return false;
+			}
+
+			final SortedSet<Integer> values = new TreeSet<Integer>();
+			for (int i : result.getDomain().allValues()) {
+				values.add(i);
+				values.add(-i);
+			}
+			v0.setDomain(new BitVectorDomain(IntLinkedList
+					.intCollectionToArray(values)));
+
+		} else if (result.getDomain() == null) {
+
+			final SortedSet<Integer> values = new TreeSet<Integer>();
+			for (int i : result.getDomain().allValues()) {
+				values.add(Math.abs(i));
+			}
+			result.setDomain(new BitVectorDomain(IntLinkedList
+					.intCollectionToArray(values)));
+
+		}
+		problem.addConstraint(new AbsConstraint(result, v0));
+		return true;
 	}
 }
