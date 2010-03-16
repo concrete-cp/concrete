@@ -24,7 +24,7 @@ import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
 import cspfj.util.BitVector;
 
-public final class AllDifferentConstraint extends AbstractConstraint {
+public final class AllDifferent extends AbstractConstraint {
 
 	private final BitVector union;
 
@@ -35,7 +35,7 @@ public final class AllDifferentConstraint extends AbstractConstraint {
 	// private final static Logger logger = Logger
 	// .getLogger("cspfj.constraint.AllDifferentConstraint");
 
-	public AllDifferentConstraint(final String name, final Variable... scope) {
+	public AllDifferent(final String name, final Variable... scope) {
 		super(name, scope);
 
 		offset = Integer.MAX_VALUE;

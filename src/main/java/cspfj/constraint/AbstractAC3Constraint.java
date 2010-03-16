@@ -13,7 +13,7 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 	}
 
 	public AbstractAC3Constraint(String name, Variable... scope) {
-		super(scope);
+		super(name, scope);
 		startTuple = new int[getArity()];
 
 		int maxDomain = getVariable(getArity() - 1).getDomain().maxSize();

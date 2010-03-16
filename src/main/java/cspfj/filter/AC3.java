@@ -7,8 +7,7 @@ import java.util.logging.Logger;
 
 import cspfj.constraint.AbstractPVRConstraint;
 import cspfj.constraint.Constraint;
-import cspfj.priorityqueues.Key;
-import cspfj.priorityqueues.SoftHeap;
+import cspfj.priorityqueues.Fifo;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -32,12 +31,13 @@ public final class AC3 implements Filter {
 		super();
 		this.problem = problem;
 
-		queue = new SoftHeap<Variable>(new Key<Variable>() {
-			@Override
-			public int getKey(Variable o1) {
-				return o1.getDomainSize();
-			}
-		}, problem.getNbVariables());
+//		queue = new SoftHeap<Variable>(new Key<Variable>() {
+//			@Override
+//			public int getKey(Variable o1) {
+//				return o1.getDomainSize();
+//			}
+//		}, problem.getNbVariables());
+		queue = new Fifo<Variable>(problem.getNbVariables());
 	}
 
 	public boolean reduceAll() {

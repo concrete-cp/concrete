@@ -16,7 +16,7 @@ import org.junit.Test;
 
 import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.Constraint;
-import cspfj.constraint.semantic.AllDifferentConstraint;
+import cspfj.constraint.semantic.AllDifferent;
 import cspfj.problem.Variable;
 import cspom.variable.CSPOMVariable;
 
@@ -35,7 +35,7 @@ public class TupleManagerTest {
 		final Variable v2 = new Variable(new CSPOMVariable(1, 5));
 		final Variable v3 = new Variable(new CSPOMVariable(1, 5));
 
-		final Constraint constraint = new AllDifferentConstraint("allDiff",
+		final Constraint constraint = new AllDifferent("allDiff",
 				new Variable[] { v1, v2, v3 });
 
 		tupleManager = new TupleManager(constraint,

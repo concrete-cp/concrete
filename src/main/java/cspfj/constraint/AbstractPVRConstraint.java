@@ -12,7 +12,7 @@ public abstract class AbstractPVRConstraint extends AbstractConstraint {
         // removals = new boolean[getArity()];
     }
 
-    public AbstractPVRConstraint(final Variable[] scope, final String name) {
+    public AbstractPVRConstraint(final String name, final Variable[] scope) {
         super(name, scope);
 
     }
@@ -31,7 +31,8 @@ public abstract class AbstractPVRConstraint extends AbstractConstraint {
             final Variable variable = getVariable(i);
             // assert (!variable.isAssigned() && skipRevision(i)) ? !revise(i)
             // : true : "Should not skip " + this + ", " + i;
-            if (!variable.isAssigned() && !skipRevision(i, reviseCount) && revise(i)) {
+            if (!variable.isAssigned() && !skipRevision(i, reviseCount)
+                    && revise(i)) {
                 if (variable.getDomainSize() <= 0) {
                     return false;
                 }
@@ -41,7 +42,8 @@ public abstract class AbstractPVRConstraint extends AbstractConstraint {
         return true;
     }
 
-    private boolean skipRevision(final int variablePosition, final int reviseCount) {
+    private boolean skipRevision(final int variablePosition,
+            final int reviseCount) {
         // if (true)
         // return false;
         if (getArity() == 1) {
