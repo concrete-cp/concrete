@@ -6,14 +6,27 @@
  */
 package cspfj.constraint.extension;
 
+import java.util.List;
+import java.util.ListIterator;
+
 import cspfj.constraint.AbstractAC3Constraint;
+import cspfj.constraint.Constraint;
+import cspfj.exception.FailedGenerationException;
+import cspfj.generator.ConstraintManager;
+import cspfj.generator.ExtensionGenerator;
+import cspfj.problem.Domain;
+import cspfj.problem.Problem;
 import cspfj.problem.Variable;
+import cspom.constraint.CSPOMConstraint;
 
 public abstract class AbstractExtensionConstraint extends AbstractAC3Constraint
         implements ExtensionConstraint {
 
     // private static final Logger LOGGER = Logger
     // .getLogger(AbstractExtensionConstraint.class.getName());
+    static {
+        ConstraintManager.register("ext", AbstractExtensionConstraint.class);
+    }
 
     private MatrixManager matrixManager;
 
@@ -63,38 +76,6 @@ public abstract class AbstractExtensionConstraint extends AbstractAC3Constraint
         return removed;
     }
 
-    // public final long getNbSupports(final Variable variable, final int index)
-    // {
-    // return getNbSupports(getPosition(variable), index);
-    // }
-    //
-    // private long getNbSupports(final int position, final int index) {
-    // if (nbInitConflicts == null) {
-    // return -1;
-    // }
-    // return (initSize / getVariable(position).getDomain().maxSize())
-    // - nbInitConflicts[position][index];
-    // }
-    //
-    // public final long getNbInitConflicts(final int position, final int index)
-    // {
-    // if (nbInitConflicts == null) {
-    // return -1;
-    // }
-    // return nbInitConflicts[position][index];
-    // }
-    //
-    // public final long getNbMaxConflicts(final int position) {
-    // if (nbMaxConflicts == null) {
-    // return -1;
-    // }
-    // return nbMaxConflicts[position];
-    // }
-    //
-    // public long getInitSize() {
-    // return initSize;
-    // }
-
     public boolean revise(final int position) {
         if (matrixManager.supportCondition(position)) {
 
@@ -110,5 +91,39 @@ public abstract class AbstractExtensionConstraint extends AbstractAC3Constraint
             size *= getVariable(i).getDomainSize();
         }
         return size;
+    }
+
+    public static boolean generate(final CSPOMConstraint constraint,
+            final Problem problem) throws FailedGenerationException {
+
+        final Variable[] solverVariables = ConstraintManager
+                .getSolverVariables(constraint.getScope(), problem);
+
+        final Domain[] domains = new Domain[constraint.getArity()];
+        for (int i = constraint.getArity(); --i >= 0;) {
+            final Domain domain = solverVariables[i].getDomain();
+            if (domain == null) {
+                return false;
+            }
+            domains[i] = domain;
+        }
+
+        final cspom.extension.ExtensionConstraint<Number> extConstraint = (cspom.extension.ExtensionConstraint<Number>) constraint;
+        final Matrix matrix = ExtensionGenerator.generate(domains,
+                extConstraint.getRelation());
+
+        final Constraint generated;
+        if (matrix instanceof Matrix2D) {
+            generated = new ExtensionConstraint2D(solverVariables,
+                    (Matrix2D) matrix, true);
+        } else if (matrix instanceof TupleSet) {
+            generated = new ExtensionConstraintDynamic(solverVariables,
+                    (TupleSet) matrix, true);
+        } else {
+            generated = new ExtensionConstraintGeneral(matrix, true,
+                    solverVariables);
+        }
+        problem.addConstraint(generated);
+        return true;
     }
 }

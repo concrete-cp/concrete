@@ -1,6 +1,8 @@
 package cspfj.problem;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import cspfj.util.BitVector;
 
@@ -176,5 +178,24 @@ public class BitVectorDomain implements Domain {
     @Override
     public int[] allValues() {
         return domain;
+    }
+
+    private boolean checkedOrdered = false;
+    private boolean ordered;
+
+    @Override
+    public boolean isOrdered() {
+        if (checkedOrdered) {
+            return ordered;
+        }
+        checkedOrdered = true;
+        ordered = true;
+        for (int i = domain.length - 1; --i >= 0;) {
+            if (domain[i + 1] < domain[i]) {
+                ordered = false;
+                break;
+            }
+        }
+        return ordered;
     }
 }

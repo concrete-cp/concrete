@@ -37,7 +37,7 @@ public final class ReifiedConj extends AbstractAC3Constraint {
     public static boolean generate(final CSPOMConstraint constraint,
             final Problem problem) {
 
-        final List<Variable> scope = ConstraintManager.getSolverVariables(
+        final Variable[] scope = ConstraintManager.getSolverVariables(
                 constraint.getScope(), problem);
 
         for (Variable v : scope) {
@@ -45,8 +45,7 @@ public final class ReifiedConj extends AbstractAC3Constraint {
                 v.setDomain(new BitVectorDomain(0, 1));
             }
         }
-        problem.addConstraint(new ReifiedConj(scope.get(0), scope.get(1), scope
-                .get(2)));
+        problem.addConstraint(new ReifiedConj(scope[0], scope[1], scope[2]));
         return true;
     }
 

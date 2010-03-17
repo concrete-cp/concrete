@@ -50,16 +50,7 @@ public class TupleSet implements Matrix, Cloneable, Iterable<int[]> {
         empty = false;
     }
 
-    public static boolean isBetterThanMatrix(final int[] sizes,
-            final int nbTuples) {
-        BigInteger size = BigInteger.ONE;
-        for (int s : sizes) {
-            size = size.multiply(BigInteger.valueOf(s));
-        }
 
-        return size.compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) >= 0
-                || (4 * nbTuples < size.intValue());
-    }
 
     public boolean getInitialContent() {
         return initialContent;

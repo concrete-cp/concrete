@@ -7,12 +7,12 @@ public abstract class AbstractPVRConstraint extends AbstractConstraint {
 
     private boolean revised = false;
 
-    public AbstractPVRConstraint(final Variable[] scope) {
+    public AbstractPVRConstraint(final Variable... scope) {
         super(scope);
         // removals = new boolean[getArity()];
     }
 
-    public AbstractPVRConstraint(final String name, final Variable[] scope) {
+    public AbstractPVRConstraint(final String name, final Variable... scope) {
         super(name, scope);
 
     }

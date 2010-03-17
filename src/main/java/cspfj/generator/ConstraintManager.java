@@ -2,9 +2,9 @@ package cspfj.generator;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 import cspfj.constraint.Constraint;
@@ -62,12 +62,13 @@ public class ConstraintManager {
         }
     }
 
-    public static List<Variable> getSolverVariables(
-            List<CSPOMVariable> variables, Problem problem) {
-        final List<Variable> solverVariables = new ArrayList<Variable>(
-                variables.size());
-        for (CSPOMVariable v : variables) {
-            solverVariables.add(problem.getSolverVariable(v));
+    public static Variable[] getSolverVariables(List<CSPOMVariable> variables,
+            Problem problem) {
+        final Variable[] solverVariables = new Variable[variables.size()];
+        for (ListIterator<CSPOMVariable> itr = variables.listIterator(); itr
+                .hasNext();) {
+            solverVariables[itr.nextIndex()] = problem.getSolverVariable(itr
+                    .next());
         }
         return solverVariables;
     }

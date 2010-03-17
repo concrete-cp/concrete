@@ -19,115 +19,157 @@
 
 package cspfj.constraint.semantic;
 
+import java.util.LinkedList;
+
 import cspfj.constraint.AbstractConstraint;
 import cspfj.filter.RevisionHandler;
+import cspfj.generator.ConstraintManager;
+import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.BitVector;
+import cspom.constraint.CSPOMConstraint;
+import cspom.variable.CSPOMVariable;
 
 public final class AllDifferent extends AbstractConstraint {
 
-	private final BitVector union;
+    private final BitVector union;
 
-	private final BitVector queue;
+    private final BitVector queue;
 
-	private int offset;
+    private int offset;
 
-	// private final static Logger logger = Logger
-	// .getLogger("cspfj.constraint.AllDifferentConstraint");
+    static {
+        ConstraintManager.register("allDifferent", AllDifferent.class);
+    }
 
-	public AllDifferent(final String name, final Variable... scope) {
-		super(name, scope);
+    // private final static Logger logger = Logger
+    // .getLogger("cspfj.constraint.AllDifferentConstraint");
+    public AllDifferent(final Variable... scope) {
+        this(null, scope);
+    }
 
-		offset = Integer.MAX_VALUE;
-		int max = Integer.MIN_VALUE;
-		for (Variable v : scope) {
-			for (int i : v.getDomain().allValues()) {
-				offset = Math.min(i, offset);
-				max = Math.max(i, max);
-			}
-		}
-		union = BitVector.factory(max - offset + 1, false);
-		queue = BitVector.factory(getArity(), false);
-	}
+    public AllDifferent(final String name, final Variable... scope) {
+        super(name, scope);
 
-	@Override
-	public boolean check() {
-		final BitVector singletons = this.union;
-		singletons.fill(false);
-		final int offset = this.offset;
+        offset = Integer.MAX_VALUE;
+        int max = Integer.MIN_VALUE;
+        for (Variable v : scope) {
+            for (int i : v.getDomain().allValues()) {
+                offset = Math.min(i, offset);
+                max = Math.max(i, max);
+            }
+        }
+        union = BitVector.factory(max - offset + 1, false);
+        queue = BitVector.factory(getArity(), false);
+    }
 
-		final int[] tuple = this.tuple;
-		for (int i = getArity(); --i >= 0;) {
-			final int value = getVariable(i).getDomain().value(tuple[i]);
-			if (singletons.get(value - offset)) {
-				return false;
-			}
-			singletons.set(value - offset);
-		}
-		return true;
-	}
+    @Override
+    public boolean check() {
+        final BitVector singletons = this.union;
+        singletons.fill(false);
+        final int offset = this.offset;
 
-	@Override
-	public boolean revise(RevisionHandler revisator, int reviseCount) {
-		final BitVector union = this.union;
-		final int min = this.offset;
-		final BitVector queue = this.queue;
+        final int[] tuple = this.tuple;
+        for (int i = getArity(); --i >= 0;) {
+            final int value = getVariable(i).getDomain().value(tuple[i]);
+            if (singletons.get(value - offset)) {
+                return false;
+            }
+            singletons.set(value - offset);
+        }
+        return true;
+    }
 
-		queue.fill(false);
-		for (int pos = getArity(); --pos >= 0;) {
-			if (getRemovals(pos) >= reviseCount
-					&& getVariable(pos).getDomainSize() == 1) {
-				queue.set(pos);
-			}
-		}
+    @Override
+    public boolean revise(RevisionHandler revisator, int reviseCount) {
+        final BitVector union = this.union;
+        final int min = this.offset;
+        final BitVector queue = this.queue;
 
-		while (!queue.isEmpty()) {
-			final int checkPos = queue.nextSetBit(0);
-			queue.clear(checkPos);
+        queue.fill(false);
+        for (int pos = getArity(); --pos >= 0;) {
+            if (getRemovals(pos) >= reviseCount
+                    && getVariable(pos).getDomainSize() == 1) {
+                queue.set(pos);
+            }
+        }
 
-			final Variable checkedVariable = getVariable(checkPos);
-			final int value = checkedVariable.getDomain().value(
-					checkedVariable.getFirst());
+        while (!queue.isEmpty()) {
+            final int checkPos = queue.nextSetBit(0);
+            queue.clear(checkPos);
 
-			for (int remPos = getArity(); --remPos >= 0;) {
-				if (remPos == checkPos) {
-					continue;
-				}
-				final Variable remVariable = getVariable(remPos);
-				if (remVariable.isAssigned()) {
-					continue;
-				}
-				final int index = remVariable.getDomain().index(value);
-				if (index >= 0 && remVariable.isPresent(index)) {
-					remVariable.remove(index);
-					if (remVariable.getDomainSize() < 1) {
-						return false;
-					} else if (remVariable.getDomainSize() == 1) {
-						queue.set(remPos);
-					}
-					revisator.revised(this, remVariable);
-				}
+            final Variable checkedVariable = getVariable(checkPos);
+            final int value = checkedVariable.getDomain().value(
+                    checkedVariable.getFirst());
 
-			}
+            for (int remPos = getArity(); --remPos >= 0;) {
+                if (remPos == checkPos) {
+                    continue;
+                }
+                final Variable remVariable = getVariable(remPos);
+                if (remVariable.isAssigned()) {
+                    continue;
+                }
+                final int index = remVariable.getDomain().index(value);
+                if (index >= 0 && remVariable.isPresent(index)) {
+                    remVariable.remove(index);
+                    if (remVariable.getDomainSize() < 1) {
+                        return false;
+                    } else if (remVariable.getDomainSize() == 1) {
+                        queue.set(remPos);
+                    }
+                    revisator.revised(this, remVariable);
+                }
 
-		}
+            }
 
-		union.fill(false);
+        }
 
-		for (Variable v : getScope()) {
+        union.fill(false);
 
-			for (int i = v.getFirst(); i >= 0; i = v.getNext(i)) {
+        for (Variable v : getScope()) {
 
-				union.set(v.getDomain().value(i) - min);
+            for (int i = v.getFirst(); i >= 0; i = v.getNext(i)) {
 
-			}
-		}
+                union.set(v.getDomain().value(i) - min);
 
-		if (union.cardinality() < getArity()) {
-			setActive(true);
-			return false;
-		}
+            }
+        }
 
-		return true;
-	}
+        if (union.cardinality() < getArity()) {
+            setActive(true);
+            return false;
+        }
+
+        return true;
+    }
+
+    public static boolean generate(final CSPOMConstraint constraint,
+            final Problem problem) {
+
+        final LinkedList<CSPOMVariable> scope = new LinkedList<CSPOMVariable>(
+                constraint.getScope());
+        
+        final Variable reifiedVariable = problem
+                .getSolverVariable(scope.poll());
+
+        if (reifiedVariable.getDomain() == null
+                || reifiedVariable.getDomainSize() != 1
+                || reifiedVariable.getDomain().value(
+                        reifiedVariable.getDomain().first()) != 1) {
+            return false;
+        }
+
+        final Variable[] solverVariables = ConstraintManager
+                .getSolverVariables(scope, problem);
+
+        for (Variable v : solverVariables) {
+            if (v.getDomain() == null) {
+                return false;
+            }
+        }
+        problem.addConstraint(new AllDifferent(solverVariables));
+
+        return true;
+    }
 }

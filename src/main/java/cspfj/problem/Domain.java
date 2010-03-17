@@ -1,5 +1,7 @@
 package cspfj.problem;
 
+import java.util.Map;
+
 import cspfj.util.BitVector;
 
 public interface Domain extends Cloneable {
@@ -38,4 +40,6 @@ public interface Domain extends Cloneable {
     int[] allValues();
 
     Domain clone();
+    
+    boolean isOrdered();
 }
