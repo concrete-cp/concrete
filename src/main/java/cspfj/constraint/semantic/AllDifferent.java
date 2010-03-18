@@ -28,6 +28,7 @@ import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.BitVector;
 import cspom.constraint.CSPOMConstraint;
+import cspom.constraint.GeneralConstraint;
 import cspom.variable.CSPOMVariable;
 
 public final class AllDifferent extends AbstractConstraint {
@@ -147,21 +148,12 @@ public final class AllDifferent extends AbstractConstraint {
     public static boolean generate(final CSPOMConstraint constraint,
             final Problem problem) {
 
-        final LinkedList<CSPOMVariable> scope = new LinkedList<CSPOMVariable>(
-                constraint.getScope());
-        
-        final Variable reifiedVariable = problem
-                .getSolverVariable(scope.poll());
-
-        if (reifiedVariable.getDomain() == null
-                || reifiedVariable.getDomainSize() != 1
-                || reifiedVariable.getDomain().value(
-                        reifiedVariable.getDomain().first()) != 1) {
+        if (!(constraint instanceof GeneralConstraint)) {
             return false;
         }
 
         final Variable[] solverVariables = ConstraintManager
-                .getSolverVariables(scope, problem);
+                .getSolverVariables(constraint.getScope(), problem);
 
         for (Variable v : solverVariables) {
             if (v.getDomain() == null) {

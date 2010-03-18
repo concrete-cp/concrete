@@ -29,6 +29,7 @@ import cspfj.problem.Domain;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspom.constraint.CSPOMConstraint;
+import cspom.constraint.GeneralConstraint;
 import cspom.variable.CSPOMVariable;
 
 public final class Gt extends AbstractConstraint {
@@ -126,7 +127,7 @@ public final class Gt extends AbstractConstraint {
             }
             revisator.revised(this, getVariable(0));
         }
-        if (removeGt(max(1), 0)) {
+        if (removeGt(max(0), 1)) {
             if (getVariable(1).getDomainSize() == 0) {
                 return false;
             }
@@ -138,21 +139,12 @@ public final class Gt extends AbstractConstraint {
     public static boolean generate(final CSPOMConstraint constraint,
             final Problem problem) throws FailedGenerationException {
 
-        final LinkedList<CSPOMVariable> scope = new LinkedList<CSPOMVariable>(
-                constraint.getScope());
-
-        final Variable reifiedVariable = problem
-                .getSolverVariable(scope.poll());
-
-        if (reifiedVariable.getDomain() == null
-                || reifiedVariable.getDomainSize() != 1
-                || reifiedVariable.getDomain().value(
-                        reifiedVariable.getDomain().first()) != 1) {
+        if (!(constraint instanceof GeneralConstraint)) {
             return false;
         }
 
         final Variable[] solverVariables = ConstraintManager
-                .getSolverVariables(scope, problem);
+                .getSolverVariables(constraint.getScope(), problem);
 
         for (Variable v : solverVariables) {
             if (v.getDomain() == null) {

@@ -29,13 +29,12 @@ public final class Mul extends AbstractAC3Constraint {
 
     public static boolean generate(final CSPOMConstraint constraint,
             final Problem problem) {
-        final Variable result;
-        final Variable v0;
-        final Variable v1;
-
-        result = problem.getSolverVariable(constraint.getVariable(0));
-        v0 = problem.getSolverVariable(constraint.getVariable(1));
-        v1 = problem.getSolverVariable(constraint.getVariable(2));
+        final Variable result = problem.getSolverVariable(constraint
+                .getVariable(0));
+        final Variable v0 = problem
+                .getSolverVariable(constraint.getVariable(1));
+        final Variable v1 = problem
+                .getSolverVariable(constraint.getVariable(2));
 
         int nulls = 0;
         for (Variable v : Arrays.asList(result, v0, v1)) {

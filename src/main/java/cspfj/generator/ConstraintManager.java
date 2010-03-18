@@ -2,6 +2,8 @@ package cspfj.generator;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
@@ -16,50 +18,54 @@ import cspom.variable.CSPOMVariable;
 
 public class ConstraintManager {
 
-    private final static Map<String, Class<? extends Constraint>> KNOWN = new HashMap<String, Class<? extends Constraint>>();
-
-    public static Class<? extends Constraint> constraint(
-            CSPOMConstraint constraint) {
-        return KNOWN.get(constraint.getDescription());
-    }
+    private final static Map<String, Collection<Class<? extends Constraint>>> KNOWN = new HashMap<String, Collection<Class<? extends Constraint>>>();
 
     public static void register(final String description,
             final Class<? extends Constraint> clazz) {
-        if (KNOWN.containsKey(description)) {
-            throw new IllegalArgumentException(description
-                    + " is already registered");
+        Collection<Class<? extends Constraint>> known = KNOWN.get(description);
+        if (known == null) {
+            known = new ArrayList<Class<? extends Constraint>>();
+            KNOWN.put(description, known);
         }
-        KNOWN.put(description, clazz);
+        known.add(clazz);
     }
 
     public static boolean generate(CSPOMConstraint constraint, Problem problem)
             throws FailedGenerationException {
-        final Class<? extends Constraint> candidate = constraint(constraint);
+        final Collection<Class<? extends Constraint>> candidates = KNOWN
+                .get(constraint.getDescription());
 
-        if (candidate == null) {
+        if (candidates == null) {
             throw new FailedGenerationException("No candidate constraint for "
                     + constraint + " (" + constraint.getDescription() + ")");
         }
 
-        final Method generate;
-        try {
-            generate = candidate.getMethod("generate", CSPOMConstraint.class,
-                    Problem.class);
-        } catch (SecurityException e) {
-            throw new FailedGenerationException(e);
-        } catch (NoSuchMethodException e) {
-            throw new FailedGenerationException(e);
-        }
+        for (Class<? extends Constraint> candidate : candidates) {
 
-        try {
-            return (Boolean) generate.invoke(null, constraint, problem);
-        } catch (IllegalArgumentException e) {
-            throw new FailedGenerationException(e);
-        } catch (IllegalAccessException e) {
-            throw new FailedGenerationException(e);
-        } catch (InvocationTargetException e) {
-            throw new FailedGenerationException(e);
+            final Method generate;
+            try {
+                generate = candidate.getMethod("generate",
+                        CSPOMConstraint.class, Problem.class);
+            } catch (SecurityException e) {
+                throw new FailedGenerationException(e);
+            } catch (NoSuchMethodException e) {
+                throw new FailedGenerationException(e);
+            }
+
+            try {
+                if ((Boolean) generate.invoke(null, constraint, problem)) {
+                    return true;
+                }
+            } catch (IllegalArgumentException e) {
+                throw new FailedGenerationException(e);
+            } catch (IllegalAccessException e) {
+                throw new FailedGenerationException(e);
+            } catch (InvocationTargetException e) {
+                throw new FailedGenerationException(e);
+            }
+
         }
+        return false;
     }
 
     public static Variable[] getSolverVariables(List<CSPOMVariable> variables,

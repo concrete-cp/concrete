@@ -26,7 +26,7 @@ public abstract class AbstractPVRConstraint extends AbstractConstraint {
     public abstract boolean revise(final int position);
 
     @Override
-    public boolean revise(final RevisionHandler revisator, int reviseCount) {
+    public final boolean revise(final RevisionHandler revisator, int reviseCount) {
         for (int i = getArity(); --i >= 0;) {
             final Variable variable = getVariable(i);
             // assert (!variable.isAssigned() && skipRevision(i)) ? !revise(i)

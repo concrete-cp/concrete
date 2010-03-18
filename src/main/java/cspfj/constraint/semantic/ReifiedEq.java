@@ -11,7 +11,7 @@ import cspom.constraint.FunctionalConstraint;
 public final class ReifiedEq extends AbstractAC3Constraint {
 
     static {
-        ConstraintManager.register("ne", ReifiedEq.class);
+        ConstraintManager.register("eq", ReifiedEq.class);
     }
 
     public ReifiedEq(Variable result, Variable v0, Variable v1) {
@@ -20,11 +20,14 @@ public final class ReifiedEq extends AbstractAC3Constraint {
 
     @Override
     public boolean check() {
-        return getValue(0) == (getValue(1) != getValue(2) ? 1 : 0);
+        return getValue(0) == (getValue(1) == getValue(2) ? 1 : 0);
     }
 
     public static boolean generate(final CSPOMConstraint constraint,
             final Problem problem) {
+        if (!(constraint instanceof FunctionalConstraint)) {
+            return false;
+        }
         final FunctionalConstraint funcConstraint = (FunctionalConstraint) constraint;
         final Variable result = problem.getSolverVariable(funcConstraint
                 .getResultVariable());
@@ -46,7 +49,7 @@ public final class ReifiedEq extends AbstractAC3Constraint {
     }
 
     public String toString() {
-        return getVariable(0) + " = " + getVariable(1) + " /= "
+        return getVariable(0) + " = " + getVariable(1) + " == "
                 + getVariable(2);
     }
 }

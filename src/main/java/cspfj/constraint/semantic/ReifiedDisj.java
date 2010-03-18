@@ -1,7 +1,5 @@
 package cspfj.constraint.semantic;
 
-import java.util.List;
-
 import cspfj.constraint.AbstractAC3Constraint;
 import cspfj.generator.ConstraintManager;
 import cspfj.problem.BitVectorDomain;
@@ -9,6 +7,7 @@ import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.Arrays2;
 import cspom.constraint.CSPOMConstraint;
+import cspom.constraint.FunctionalConstraint;
 
 public final class ReifiedDisj extends AbstractAC3Constraint {
 
@@ -36,6 +35,9 @@ public final class ReifiedDisj extends AbstractAC3Constraint {
 
     public static boolean generate(final CSPOMConstraint constraint,
             final Problem problem) {
+        if (!(constraint instanceof FunctionalConstraint)) {
+            return false;
+        }
 
         final Variable[] scope = ConstraintManager.getSolverVariables(
                 constraint.getScope(), problem);

@@ -42,6 +42,7 @@ import cspfj.constraint.extension.TupleSet;
 import cspfj.constraint.semantic.RCConstraint;
 import cspfj.exception.FailedGenerationException;
 import cspfj.generator.ProblemGenerator;
+import cspfj.util.Arrays2;
 import cspfj.util.BitVector;
 import cspom.CSPOM;
 import cspom.variable.CSPOMVariable;
@@ -227,7 +228,7 @@ public final class Problem {
         final StringBuilder sb = new StringBuilder();
         for (Variable v : variables.values()) {
             sb.append(v).append(" : ").append(
-                    Arrays.toString(v.getCurrentValues())).append('\n');
+                    Arrays2.partialDisplay(v.getCurrentValues())).append('\n');
         }
 
         for (Constraint c : constraints) {
