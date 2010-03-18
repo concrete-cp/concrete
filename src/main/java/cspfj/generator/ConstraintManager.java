@@ -16,20 +16,20 @@ import cspom.variable.CSPOMVariable;
 
 public class ConstraintManager {
 
-    private final static Map<String, Class<? extends Constraint>> known = new HashMap<String, Class<? extends Constraint>>();
+    private final static Map<String, Class<? extends Constraint>> KNOWN = new HashMap<String, Class<? extends Constraint>>();
 
     public static Class<? extends Constraint> constraint(
             CSPOMConstraint constraint) {
-        return known.get(constraint.getDescription());
+        return KNOWN.get(constraint.getDescription());
     }
 
     public static void register(final String description,
             final Class<? extends Constraint> clazz) {
-        if (known.containsKey(description)) {
+        if (KNOWN.containsKey(description)) {
             throw new IllegalArgumentException(description
                     + " is already registered");
         }
-        known.put(description, clazz);
+        KNOWN.put(description, clazz);
     }
 
     public static boolean generate(CSPOMConstraint constraint, Problem problem)
