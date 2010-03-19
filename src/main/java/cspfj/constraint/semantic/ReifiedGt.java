@@ -91,4 +91,13 @@ public final class ReifiedGt extends AbstractAC3Constraint {
 
         return true;
     }
+
+    public String toString() {
+        if (strict) {
+            return getVariable(0) + " = " + getVariable(1) + " > "
+                    + getVariable(2);
+        }
+        return getVariable(0) + " = " + getVariable(1) + " >= "
+                + getVariable(2);
+    }
 }

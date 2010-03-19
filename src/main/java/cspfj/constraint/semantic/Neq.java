@@ -1,13 +1,14 @@
 package cspfj.constraint.semantic;
 
-import cspfj.constraint.AbstractAC3Constraint;
+import cspfj.constraint.AbstractPVRConstraint;
 import cspfj.generator.ConstraintManager;
+import cspfj.problem.Domain;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspom.constraint.CSPOMConstraint;
 import cspom.constraint.GeneralConstraint;
 
-public final class Neq extends AbstractAC3Constraint {
+public final class Neq extends AbstractPVRConstraint {
 
     static {
         ConstraintManager.register("ne", Neq.class);
@@ -20,6 +21,21 @@ public final class Neq extends AbstractAC3Constraint {
     @Override
     public boolean check() {
         return getValue(0) != getValue(1);
+    }
+
+    @Override
+    public boolean revise(int i) {
+        final Domain dom = getVariable(1 - i).getDomain();
+        if (dom.size() == 1) {
+            final int val = dom.value(dom.first());
+            final Domain otherDom = getVariable(i).getDomain();
+            final int index = otherDom.index(val);
+            if (index >= 0 && otherDom.present(index)) {
+                otherDom.remove(index);
+                return true;
+            }
+        }
+        return false;
     }
 
     public static boolean generate(final CSPOMConstraint constraint,
@@ -42,4 +58,5 @@ public final class Neq extends AbstractAC3Constraint {
     public String toString() {
         return getVariable(0) + " /= " + getVariable(1);
     }
+
 }

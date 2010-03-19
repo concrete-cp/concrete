@@ -227,8 +227,7 @@ public final class Problem {
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         for (Variable v : variables.values()) {
-            sb.append(v).append(" : ").append(
-                    Arrays2.partialDisplay(v.getCurrentValues())).append('\n');
+            sb.append(v).append(" : ").append(v.getDomain()).append('\n');
         }
 
         for (Constraint c : constraints) {

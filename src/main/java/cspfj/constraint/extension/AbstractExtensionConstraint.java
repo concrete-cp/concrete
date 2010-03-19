@@ -6,9 +6,6 @@
  */
 package cspfj.constraint.extension;
 
-import java.util.List;
-import java.util.ListIterator;
-
 import cspfj.constraint.AbstractAC3Constraint;
 import cspfj.constraint.Constraint;
 import cspfj.exception.FailedGenerationException;

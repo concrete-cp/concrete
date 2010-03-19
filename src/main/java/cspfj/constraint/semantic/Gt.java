@@ -19,8 +19,6 @@
 
 package cspfj.constraint.semantic;
 
-import java.util.LinkedList;
-
 import cspfj.constraint.AbstractConstraint;
 import cspfj.exception.FailedGenerationException;
 import cspfj.filter.RevisionHandler;
@@ -30,7 +28,6 @@ import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspom.constraint.CSPOMConstraint;
 import cspom.constraint.GeneralConstraint;
-import cspom.variable.CSPOMVariable;
 
 public final class Gt extends AbstractConstraint {
 
@@ -169,5 +166,12 @@ public final class Gt extends AbstractConstraint {
         }
 
         return true;
+    }
+
+    public String toString() {
+        if (strict) {
+            return getVariable(0) + " > " + getVariable(1);
+        }
+        return getVariable(0) + " >= " + getVariable(1);
     }
 }

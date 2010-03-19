@@ -4,142 +4,84 @@ import cspfj.problem.Variable;
 
 public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 
-	protected int[][][] last;
+    protected int[][][] last;
 
-	private final int[] startTuple;
+    public AbstractAC3Constraint(Variable... scope) {
+        this(null, scope);
+    }
 
-	public AbstractAC3Constraint(Variable... scope) {
-		this(null, scope);
-	}
+    public AbstractAC3Constraint(String name, Variable... scope) {
+        super(name, scope);
 
-	public AbstractAC3Constraint(String name, Variable... scope) {
-		super(name, scope);
-		startTuple = new int[getArity()];
+        last = new int[getArity()][][];
 
-		int maxDomain = getVariable(getArity() - 1).getDomain().maxSize();
-		for (int i = getArity() - 1; --i >= 0;) {
-			maxDomain = Math.max(maxDomain, getVariable(i).getDomain()
-					.maxSize());
-		}
+        for (int i = getArity(); --i >= 0;) {
+            last[i] = new int[getVariable(i).getDomain().maxSize()][];
+        }
+    }
 
-		last = new int[getArity()][maxDomain][];
-	}
+    @Override
+    public boolean revise(final int position) {
+        final Variable variable = getVariable(position);
 
-	public boolean revise(final int position) {
-		final Variable variable = getVariable(position);
+        assert !variable.isAssigned();
 
-		assert !variable.isAssigned();
+        boolean revised = false;
 
-		boolean revised = false;
+        for (int index = variable.getFirst(); index >= 0; index = variable
+                .getNext(index)) {
 
-		for (int index = variable.getFirst(); index >= 0; index = variable
-				.getNext(index)) {
+            if (!hasSupport(position, index)) {
+                variable.remove(index);
 
-			if (!findValidTuple(position, index)) {
-				variable.remove(index);
+                revised = true;
+                setActive(true);
 
-				revised = true;
-				setActive(true);
+            }
 
-			}
+        }
 
-		}
+        return revised;
+    }
 
-		return revised;
-	}
+    public boolean hasSupport(final int variablePosition, final int index) {
+        assert this.isInvolved(getVariable(variablePosition));
+        assert index >= 0;
 
-	private boolean findValidTuple2(final int variablePosition, final int index) {
-		assert this.isInvolved(getVariable(variablePosition));
+        if (last[variablePosition][index] != null
+                && controlTuplePresence(last[variablePosition][index],
+                        variablePosition)) {
+            return true;
+        }
+        if (findSupport(variablePosition, index)) {
+            updateResidues();
+            return true;
+        }
+        return false;
+    }
 
-		final boolean residue = last[variablePosition][index][0] != -1;
+    protected boolean findSupport(final int variablePosition, final int index) {
+        tupleManager.setFirstTuple(variablePosition, index);
 
-		if (residue
-				&& controlTuplePresence(last[variablePosition][index],
-						variablePosition)) {
-			return true;
-		}
+        do {
+            if (chk()) {
+                return true;
+            }
+        } while (tupleManager.setNextTuple(variablePosition));
 
-		final boolean twoWays = residue
-				&& tupleManager.setTupleAfter(last[variablePosition][index],
-						variablePosition);
-		if (twoWays) {
-			System.arraycopy(tuple, 0, startTuple, 0, getArity());
-		} else {
-			tupleManager.setFirstTuple(variablePosition, index);
-		}
+        return false;
+    }
 
-		do {
-			if (chk()) {
-				updateResidues();
-				return true;
-			}
+    protected void updateResidues() {
+        if (last != null) {
+            final int[] residue = tuple.clone();
+            for (int position = getArity(); --position >= 0;) {
+                last[position][residue[position]] = residue;
+            }
+        }
+    }
 
-		} while (tupleManager.setNextTuple(variablePosition));
-
-		if (twoWays) {
-			tupleManager.setTuple(startTuple);
-			while (tupleManager.setPrevTuple(variablePosition)) {
-				if (chk()) {
-					updateResidues();
-					return true;
-				}
-			}
-		}
-		return false;
-
-	}
-
-	public boolean findValidTuple(final int variablePosition, final int index) {
-		return findValidTuple1(variablePosition, index);
-	}
-
-	private boolean findValidTuple1(final int variablePosition, final int index) {
-		assert this.isInvolved(getVariable(variablePosition));
-		assert index >= 0;
-
-		if (last[variablePosition][index] != null
-				&& controlTuplePresence(last[variablePosition][index],
-						variablePosition)) {
-			return true;
-		}
-
-		tupleManager.setFirstTuple(variablePosition, index);
-
-		do {
-			if (chk()) {
-				updateResidues();
-				return true;
-			}
-		} while (tupleManager.setNextTuple(variablePosition));
-
-		return false;
-
-	}
-
-	private boolean simpleFindValidTuple(final int variablePosition,
-			final int index) {
-		tupleManager.setFirstTuple(variablePosition, index);
-
-		do {
-			if (chk()) {
-				updateResidues();
-				return true;
-			}
-		} while (tupleManager.setNextTuple(variablePosition));
-
-		return false;
-	}
-
-	protected void updateResidues() {
-		if (last != null) {
-			final int[] residue = tuple.clone();
-			for (int position = getArity(); --position >= 0;) {
-				last[position][residue[position]] = residue;
-			}
-		}
-	}
-
-	public void removeTupleCache() {
-		last = null;
-	}
+    public void removeTupleCache() {
+        last = null;
+    }
 }

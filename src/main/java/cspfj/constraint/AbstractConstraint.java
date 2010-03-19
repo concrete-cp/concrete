@@ -172,10 +172,6 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
         cId = 0;
     }
 
-    public String toString() {
-        return name + " " + Arrays.toString(scope);
-    }
-
     protected boolean chk() {
         checks++;
         // logger.info(this + " : " + Arrays.toString(tuple));

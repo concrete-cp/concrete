@@ -2,11 +2,14 @@ package cspfj.problem;
 
 import java.util.Arrays;
 
+import cspfj.util.Arrays2;
 import cspfj.util.BitVector;
 
 public class BitVectorDomain implements Domain {
 
-    private final static int HISTORY_INCREMENT = 20;
+    private static final int HISTORY_INCREMENT = 20;
+
+    private static final int DISPLAYED_VALUES = 5;
 
     private BitVector bvDomain;
 
@@ -18,6 +21,9 @@ public class BitVectorDomain implements Domain {
     private int[] dsHistory;
 
     private int last;
+
+    private boolean orderChecked = false;
+    private boolean ordered;
 
     public BitVectorDomain(int... domain) {
         bvDomain = BitVector.factory(domain.length, true);
@@ -74,6 +80,9 @@ public class BitVectorDomain implements Domain {
      */
     public int index(final int value) {
         final int[] domain = this.domain;
+        if (isOrdered()) {
+            return Arrays.binarySearch(domain, value);
+        }
         for (int i = domain.length; --i >= 0;) {
             if (domain[i] == value) {
                 return i;
@@ -178,22 +187,37 @@ public class BitVectorDomain implements Domain {
         return domain;
     }
 
-    private boolean checkedOrdered = false;
-    private boolean ordered;
-
     @Override
     public boolean isOrdered() {
-        if (checkedOrdered) {
-            return ordered;
-        }
-        checkedOrdered = true;
-        ordered = true;
-        for (int i = domain.length - 1; --i >= 0;) {
-            if (domain[i + 1] < domain[i]) {
-                ordered = false;
-                break;
+        if (!orderChecked) {
+            orderChecked = true;
+            ordered = true;
+            for (int i = domain.length - 1; --i >= 0;) {
+                if (domain[i + 1] < domain[i]) {
+                    ordered = false;
+                    break;
+                }
             }
         }
         return ordered;
+    }
+
+    public String toString() {
+        final StringBuilder stb = new StringBuilder();
+
+        stb.append("[");
+
+        for (int i = first(), max = DISPLAYED_VALUES;;) {
+            stb.append(value(i));
+            i = next(i);
+            if (i < 0) {
+                return stb.append("]").toString();
+            }
+            if (--max == 0) {
+                return stb.append("... (").append(size() - DISPLAYED_VALUES)
+                        .append(" more)]").toString();
+            }
+            stb.append(", ");
+        }
     }
 }
