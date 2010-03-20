@@ -1,6 +1,6 @@
 package cspfj.constraint.semantic;
 
-import cspfj.constraint.AbstractPVRConstraint;
+import cspfj.constraint.AbstractFastPVRConstraint;
 import cspfj.generator.ConstraintManager;
 import cspfj.problem.Domain;
 import cspfj.problem.Problem;
@@ -8,14 +8,30 @@ import cspfj.problem.Variable;
 import cspom.constraint.CSPOMConstraint;
 import cspom.constraint.GeneralConstraint;
 
-public final class Neq extends AbstractPVRConstraint {
+public final class Neq extends AbstractFastPVRConstraint {
 
     static {
         ConstraintManager.register("ne", Neq.class);
     }
 
+    /**
+     * Corresponding scope is reversed!
+     */
+    private final int[][] corresponding;
+
     public Neq(Variable v0, Variable v1) {
         super(v0, v1);
+        final Domain v0Dom = v0.getDomain();
+        final Domain v1Dom = v1.getDomain();
+        corresponding = new int[][] { new int[v1Dom.maxSize()],
+                new int[v0Dom.maxSize()] };
+
+        for (int i = v0Dom.first(); i >= 0; i = v0Dom.next(i)) {
+            corresponding[1][i] = v1Dom.index(v0Dom.value(i));
+        }
+        for (int i = v1Dom.first(); i >= 0; i = v1Dom.next(i)) {
+            corresponding[0][i] = v0Dom.index(v1Dom.value(i));
+        }
     }
 
     @Override
@@ -25,13 +41,12 @@ public final class Neq extends AbstractPVRConstraint {
 
     @Override
     public boolean revise(int i) {
-        final Domain dom = getVariable(1 - i).getDomain();
-        if (dom.size() == 1) {
-            final int val = dom.value(dom.first());
-            final Domain otherDom = getVariable(i).getDomain();
-            final int index = otherDom.index(val);
-            if (index >= 0 && otherDom.present(index)) {
-                otherDom.remove(index);
+        final Domain otherDom = getVariable(1 - i).getDomain();
+        if (otherDom.size() == 1) {
+            final Domain dom = getVariable(i).getDomain();
+            final int index = corresponding[i][otherDom.first()];
+            if (index >= 0 && dom.present(index)) {
+                dom.remove(index);
                 return true;
             }
         }
@@ -57,6 +72,10 @@ public final class Neq extends AbstractPVRConstraint {
 
     public String toString() {
         return getVariable(0) + " /= " + getVariable(1);
+    }
+
+    public int getEvaluation(int revise) {
+        return getArity();
     }
 
 }

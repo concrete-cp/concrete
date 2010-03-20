@@ -30,7 +30,7 @@ import cspfj.problem.Variable;
 public abstract class AbstractConstraint implements Cloneable, Constraint {
     private static int cId = 0;
 
-    private static long checks = 0;
+    protected static long checks = 0;
 
     private static long nbPresenceChecks = 0;
 
@@ -172,17 +172,11 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
         cId = 0;
     }
 
-    protected boolean chk() {
-        checks++;
-        // logger.info(this + " : " + Arrays.toString(tuple));
-        return check();
-    }
-
-    protected boolean controlTuplePresence(final int[] tuple, final int position) {
+    protected boolean controlTuplePresence(final int[] tuple) {
         nbPresenceChecks++;
         final Variable[] involvedVariables = this.scope;
         for (int i = arity; --i >= 0;) {
-            if (i != position && !involvedVariables[i].isPresent(tuple[i])) {
+            if (!involvedVariables[i].isPresent(tuple[i])) {
                 return false;
             }
         }

@@ -81,4 +81,9 @@ public final class Eq extends AbstractPVRConstraint {
     public String toString() {
         return getVariable(0) + " == " + getVariable(1);
     }
+
+    @Override
+    public int getEvaluation(int reviseCount) {
+        return getVariable(0).getDomainSize() + getVariable(1).getDomainSize();
+    }
 }

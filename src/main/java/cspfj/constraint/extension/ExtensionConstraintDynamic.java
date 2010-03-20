@@ -188,14 +188,14 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
         return true;
     }
 
-    private boolean controlTuplePresence(final int[] tuple) {
-        for (int i = tuple.length; --i >= 0;) {
-            if (!getVariable(i).isPresent(tuple[i])) {
-                return false;
-            }
-        }
-        return true;
-    }
+//    private boolean controlTuplePresence(final int[] tuple) {
+//        for (int i = tuple.length; --i >= 0;) {
+//            if (!getVariable(i).isPresent(tuple[i])) {
+//                return false;
+//            }
+//        }
+//        return true;
+//    }
 
     public ExtensionConstraintDynamic deepCopy(
             final Collection<Variable> variables)
@@ -264,7 +264,7 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
     // return removed;
     // }
     public int getEvaluation(int reviseCount) {
-        return dynamic.getSize();
+        return getArity() * dynamic.getSize();
     }
 
 }

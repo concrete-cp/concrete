@@ -83,9 +83,10 @@ public abstract class AbstractExtensionConstraint extends AbstractAC3Constraint
     }
 
     public int getEvaluation(int reviseCount) {
+
         int size = 1;
-        for (int i = getArity(); --i >= 0;) {
-            size *= getVariable(i).getDomainSize();
+        for (Variable v : getScope()) {
+            size *= v.getDomainSize();
         }
         return size;
     }

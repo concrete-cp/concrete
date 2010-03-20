@@ -23,8 +23,6 @@ public class ProblemGenerator {
             Class.forName("cspfj.constraint.semantic.Abs");
             Class.forName("cspfj.constraint.semantic.Gt");
             Class.forName("cspfj.constraint.semantic.ReifiedGt");
-            Class.forName("cspfj.constraint.semantic.ReifiedConj");
-            Class.forName("cspfj.constraint.semantic.ReifiedDisj");
             Class.forName("cspfj.constraint.semantic.Disj");
             Class.forName("cspfj.constraint.extension.AbstractExtensionConstraint");
             Class.forName("cspfj.constraint.semantic.AllDifferent");

@@ -66,7 +66,7 @@ public final class Variable implements Cloneable, Identified {
         if (domain == null) {
             return cspomVariable.getName() + " [?]";
         }
-        return cspomVariable.getName() + " [" + getDomainSize() + "]";
+        return cspomVariable.getName() + " " + domain;
     }
 
     /**

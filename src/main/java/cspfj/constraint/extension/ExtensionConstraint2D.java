@@ -60,13 +60,7 @@ public class ExtensionConstraint2D extends AbstractExtensionConstraint
     }
 
     public int getEvaluation(int reviseCount) {
-        int size = 0;
-        for (int i = 2; --i >= 0;) {
-            if (getRemovals(i) >= reviseCount) {
-                size += getVariable(1 - i).getDomainSize();
-            }
-        }
-        return size;
+        return super.getEvaluation(reviseCount) / 32;
     }
     // @Override
     // public int removeTuples(int[] base) {
