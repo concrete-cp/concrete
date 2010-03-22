@@ -158,7 +158,7 @@ public final class Disj extends AbstractConstraint {
              * 
              * <=>
              * 
-             * -a v b v c v d... a v -b a v -c a v -d ...
+             * (-a v b v c v d...) ^ (a v -b) ^ (a v -c) ^ (a v -d) ^ ...
              */
             final boolean[] reverses = new boolean[scope.length];
             reverses[0] = true;
