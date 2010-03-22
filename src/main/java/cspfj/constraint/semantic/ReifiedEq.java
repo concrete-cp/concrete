@@ -1,55 +1,48 @@
 package cspfj.constraint.semantic;
 
 import cspfj.constraint.AbstractAC3Constraint;
-import cspfj.generator.ConstraintManager;
-import cspfj.problem.BitVectorDomain;
-import cspfj.problem.Problem;
 import cspfj.problem.Variable;
-import cspom.constraint.CSPOMConstraint;
-import cspom.constraint.FunctionalConstraint;
+import cspfj.util.Arrays2;
 
 public final class ReifiedEq extends AbstractAC3Constraint {
 
-    static {
-        ConstraintManager.register("eq", ReifiedEq.class);
-    }
+	public ReifiedEq(Variable result, Variable... vars) {
+		super(Arrays2.addBefore(result, vars, new Variable[vars.length + 1]));
+	}
 
-    public ReifiedEq(Variable result, Variable v0, Variable v1) {
-        super(result, v0, v1);
-    }
+	@Override
+	public boolean check() {
+		return getValue(0) == allEqual();
+	}
 
-    @Override
-    public boolean check() {
-        return getValue(0) == (getValue(1) == getValue(2) ? 1 : 0);
-    }
+	private int allEqual() {
+		final int val = getValue(1);
+		for (int i = getArity(); --i >= 2;) {
+			if (getValue(i) != val) {
+				return 0;
+			}
+		}
+		return 1;
+	}
 
-    public static boolean generate(final CSPOMConstraint constraint,
-            final Problem problem) {
-        if (!(constraint instanceof FunctionalConstraint)) {
-            return false;
-        }
-        final FunctionalConstraint funcConstraint = (FunctionalConstraint) constraint;
-        final Variable result = problem.getSolverVariable(funcConstraint
-                .getResultVariable());
-        final Variable v0 = problem.getSolverVariable(funcConstraint
-                .getArguments()[0]);
-        if (v0.getDomain() == null) {
-            return false;
-        }
-        final Variable v1 = problem.getSolverVariable(funcConstraint
-                .getArguments()[1]);
-        if (v1.getDomain() == null) {
-            return false;
-        }
-        if (result.getDomain() == null) {
-            result.setDomain(new BitVectorDomain(0, 1));
-        }
-        problem.addConstraint(new ReifiedEq(result, v0, v1));
-        return true;
-    }
+	private String args() {
+		int iMax = getArity() - 1;
+		if (iMax == 0) {
+			return "()";
+		}
+		final StringBuilder stb = new StringBuilder();
+		stb.append('(');
+		for (int i = 1;; i++) {
+			stb.append(getVariable(i));
+			if (i == iMax) {
+				return stb.append(')').toString();
+			}
+			stb.append(", ");
+		}
 
-    public String toString() {
-        return getVariable(0) + " = " + getVariable(1) + " == "
-                + getVariable(2);
-    }
+	}
+
+	public String toString() {
+		return getVariable(0) + " = eq" + args();
+	}
 }

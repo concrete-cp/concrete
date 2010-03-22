@@ -1,4 +1,4 @@
-package cspfj.generator;
+package cspfj.generator.constraint;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -7,29 +7,72 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import cspfj.constraint.Constraint;
+import cspfj.constraint.extension.ExtensionConstraint2D;
+import cspfj.constraint.extension.ExtensionConstraintDynamic;
+import cspfj.constraint.extension.ExtensionConstraintGeneral;
 import cspfj.constraint.extension.Matrix;
 import cspfj.constraint.extension.Matrix2D;
 import cspfj.constraint.extension.MatrixGeneral;
 import cspfj.constraint.extension.TupleSet;
+import cspfj.exception.FailedGenerationException;
 import cspfj.problem.Domain;
+import cspfj.problem.Problem;
+import cspfj.problem.Variable;
+import cspom.constraint.CSPOMConstraint;
 import cspom.extension.Extension;
 
-public class ExtensionGenerator {
-	private final static Map<Signature, Matrix> GENERATED = new HashMap<Signature, Matrix>();
+public class ExtensionGenerator extends AbstractGenerator {
+	private final Map<Signature, Matrix> generated = new HashMap<Signature, Matrix>();
 
-	public static Matrix generate(Domain[] domains, Extension<Number> extension) {
+	public ExtensionGenerator(Problem problem) {
+		super(problem);
+	}
+
+	public Matrix generate(Domain[] domains, Extension<Number> extension) {
 		final Signature signature = new Signature(domains, extension);
-		Matrix matrix = GENERATED.get(signature);
+		Matrix matrix = generated.get(signature);
 		if (matrix == null) {
 			matrix = bestMatrix(extension, domains);
 			fillMatrix(domains, extension, matrix);
-			GENERATED.put(signature, matrix);
+			generated.put(signature, matrix);
 		}
 		return matrix;
 	}
-	
-	public static void clear() {
-		GENERATED.clear();
+
+	@Override
+	public boolean generate(CSPOMConstraint constraint)
+			throws FailedGenerationException {
+
+		final Variable[] solverVariables = getSolverVariables(constraint
+				.getScope());
+
+		final Domain[] domains = new Domain[constraint.getArity()];
+		for (int i = constraint.getArity(); --i >= 0;) {
+			final Domain domain = solverVariables[i].getDomain();
+			if (domain == null) {
+				return false;
+			}
+			domains[i] = domain;
+		}
+
+		final cspom.extension.ExtensionConstraint<Number> extConstraint = (cspom.extension.ExtensionConstraint<Number>) constraint;
+		final Matrix matrix = generate(domains, extConstraint.getRelation());
+
+		final Constraint generated;
+		if (matrix instanceof Matrix2D) {
+			generated = new ExtensionConstraint2D(solverVariables,
+					(Matrix2D) matrix, true);
+		} else if (matrix instanceof TupleSet) {
+			generated = new ExtensionConstraintDynamic(solverVariables,
+					(TupleSet) matrix, true);
+		} else {
+			generated = new ExtensionConstraintGeneral(matrix, true,
+					solverVariables);
+		}
+		addConstraint(generated);
+		return true;
+
 	}
 
 	private static class Signature {
@@ -117,4 +160,5 @@ public class ExtensionGenerator {
 		}
 
 	}
+
 }

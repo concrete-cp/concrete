@@ -1,19 +1,10 @@
 package cspfj.constraint.semantic;
 
 import cspfj.constraint.AbstractPVRConstraint;
-import cspfj.generator.ConstraintManager;
-import cspfj.problem.BitVectorDomain;
 import cspfj.problem.Domain;
-import cspfj.problem.Problem;
 import cspfj.problem.Variable;
-import cspom.constraint.CSPOMConstraint;
-import cspom.constraint.GeneralConstraint;
 
 public final class Eq extends AbstractPVRConstraint {
-
-    static {
-        ConstraintManager.register("eq", Eq.class);
-    }
 
     private final int[][] corresponding;
 
@@ -50,32 +41,6 @@ public final class Eq extends AbstractPVRConstraint {
             }
         }
         return change;
-    }
-
-    public static boolean generate(final CSPOMConstraint constraint,
-            final Problem problem) {
-        if (!(constraint instanceof GeneralConstraint)) {
-            return false;
-        }
-
-        final Variable[] scope = ConstraintManager.getSolverVariables(
-                constraint.getScope(), problem);
-        Variable notNull = null;
-        for (Variable v : scope) {
-            if (v.getDomain() != null) {
-                notNull = v;
-            }
-        }
-        if (notNull == null) {
-            return false;
-        }
-        for (Variable v : scope) {
-            if (v.getDomain() == null) {
-                v.setDomain(new BitVectorDomain(notNull.getDomain().allValues()));
-            }
-        }
-        problem.addConstraint(new Eq(scope[0], scope[1]));
-        return true;
     }
 
     public String toString() {
