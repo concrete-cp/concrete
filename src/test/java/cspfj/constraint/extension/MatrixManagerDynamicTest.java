@@ -12,6 +12,7 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
+import cspfj.problem.BitVectorDomain;
 import cspfj.problem.Variable;
 import cspom.variable.CSPOMVariable;
 
@@ -27,8 +28,9 @@ public class MatrixManagerDynamicTest {
 		ta.set(new int[] { 1, 1 }, true);
 		ta.set(new int[] { 2, 2 }, true);
 
-		final Variable[] scope = { new Variable(new CSPOMVariable(0, 2)),
-				new Variable(new CSPOMVariable(0, 2)) };
+		final Variable[] scope = {
+				new Variable("V0", new BitVectorDomain(0, 1, 2)),
+				new Variable("V1", new BitVectorDomain(0, 1, 2)) };
 
 		mmd = new MatrixManagerDynamic(scope, ta, false);
 		final Iterator<int[]> itr = mmd.iterator();

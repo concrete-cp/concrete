@@ -8,8 +8,8 @@ import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 
+import cspfj.problem.BitVectorDomain;
 import cspfj.problem.Variable;
-import cspom.variable.CSPOMVariable;
 
 public class MatrixManager2DTest {
 
@@ -19,8 +19,9 @@ public class MatrixManager2DTest {
 
 	@Before
 	public void setUp() throws Exception {
-		final Variable var1 = new Variable(new CSPOMVariable(1, 3));
-		final Variable var2 = new Variable(new CSPOMVariable(1, 4));
+		final Variable var1 = new Variable("V1", new BitVectorDomain(1, 2, 3));
+		final Variable var2 = new Variable("V2",
+				new BitVectorDomain(1, 2, 3, 4));
 		tuple = new int[2];
 
 		final Matrix2D matrix2d = new Matrix2D(3, 4, false);

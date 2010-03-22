@@ -1,45 +1,42 @@
 package cspfj.problem;
 
-import java.util.Map;
-
 import cspfj.util.BitVector;
 
 public interface Domain extends Cloneable {
-    int first();
+	int first();
 
-    int last();
+	int last();
 
-    int next(int i);
+	int next(int i);
 
-    int prev(int i);
+	int prev(int i);
 
-    int lastAbsent();
+	int lastAbsent();
 
-    int prevAbsent(int i);
+	int prevAbsent(int i);
 
-    int size();
+	int size();
 
-    int index(int value);
+	int index(int value);
 
-    int value(int index);
+	int value(int index);
 
-    int maxSize();
+	int maxSize();
 
-    boolean present(int index);
+	boolean present(int index);
 
-    void setSingle(int index);
+	void setSingle(int index);
 
-    void remove(int index);
+	void remove(int index);
 
-    void setLevel(int level);
+	void setLevel(int level);
 
-    void restoreLevel(int level);
+	void restoreLevel(int level);
 
-    BitVector getAtLevel(int level);
+	BitVector getAtLevel(int level);
 
-    int[] allValues();
+	int[] allValues();
 
-    Domain clone();
-    
-    boolean isOrdered();
+	Domain clone();
+
 }

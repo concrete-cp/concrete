@@ -17,8 +17,8 @@ import org.junit.Test;
 import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.Constraint;
 import cspfj.constraint.semantic.AllDifferent;
+import cspfj.problem.BitVectorDomain;
 import cspfj.problem.Variable;
-import cspom.variable.CSPOMVariable;
 
 public class TupleManagerTest {
 
@@ -31,9 +31,9 @@ public class TupleManagerTest {
 
 		final int[] dom = new int[] { 1, 2, 3, 4, 5 };
 
-		final Variable v1 = new Variable(new CSPOMVariable(1, 5));
-		final Variable v2 = new Variable(new CSPOMVariable(1, 5));
-		final Variable v3 = new Variable(new CSPOMVariable(1, 5));
+		final Variable v1 = new Variable("V1", new BitVectorDomain(dom));
+		final Variable v2 = new Variable("V2", new BitVectorDomain(dom));
+		final Variable v3 = new Variable("V3", new BitVectorDomain(dom));
 
 		final Constraint constraint = new AllDifferent("allDiff",
 				new Variable[] { v1, v2, v3 });

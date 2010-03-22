@@ -1,5 +1,7 @@
 package cspfj.generator.constraint;
 
+import java.util.Arrays;
+
 import cspfj.constraint.semantic.Disj;
 import cspfj.exception.FailedGenerationException;
 import cspfj.problem.BitVectorDomain;
@@ -27,40 +29,66 @@ public final class DisjGenerator extends AbstractGenerator {
 			}
 		}
 
-		if (constraint instanceof GeneralConstraint) {
+		if ("or".equals(constraint.getDescription())) {
+			if (constraint instanceof GeneralConstraint) {
 
-			addConstraint(new Disj(scope));
-			return true;
+				addConstraint(new Disj(scope));
 
-		} else if (constraint instanceof FunctionalConstraint) {
+			} else if (constraint instanceof FunctionalConstraint) {
 
-			/*
-			 * Reified disjunction is converted to CNF :
-			 * 
-			 * a = b v c v d...
-			 * 
-			 * <=>
-			 * 
-			 * (-a v b v c v d...) ^ (a v -b) ^ (a v -c) ^ (a v -d) ^ ...
-			 */
-			final boolean[] reverses = new boolean[scope.length];
-			reverses[0] = true;
-			addConstraint(new Disj(scope, reverses));
+				/*
+				 * Reified disjunction is converted to CNF :
+				 * 
+				 * a = b v c v d...
+				 * 
+				 * <=>
+				 * 
+				 * (-a v b v c v d...) ^ (a v -b) ^ (a v -c) ^ (a v -d) ^ ...
+				 */
+				final boolean[] reverses = new boolean[scope.length];
+				reverses[0] = true;
+				addConstraint(new Disj(scope, reverses));
 
-			final FunctionalConstraint fConstraint = (FunctionalConstraint) constraint;
-			final Variable result = getSolverVariable(fConstraint
-					.getResultVariable());
+				final FunctionalConstraint fConstraint = (FunctionalConstraint) constraint;
+				final Variable result = getSolverVariable(fConstraint
+						.getResultVariable());
 
-			for (CSPOMVariable v : fConstraint.getArguments()) {
-				addConstraint(new Disj(new Variable[] { result,
-						getSolverVariable(v) }, new boolean[] { false, true }));
+				for (CSPOMVariable v : fConstraint.getArguments()) {
+					addConstraint(new Disj(new Variable[] { result,
+							getSolverVariable(v) },
+							new boolean[] { false, true }));
+				}
+
+			} else {
+				throw new IllegalArgumentException(
+						"Unhandled constraint type for " + constraint);
+			}
+		} else if ("not".equals(constraint.getDescription())) {
+			if (!(constraint instanceof FunctionalConstraint)) {
+				throw new IllegalArgumentException(
+						"Unhandled constraint type for " + constraint);
 			}
 
-			return true;
+			final FunctionalConstraint fConstraint = (FunctionalConstraint) constraint;
+
+			if (fConstraint.getArguments().length != 1) {
+				throw new IllegalArgumentException(
+						"not must have only one argument, found "
+								+ Arrays.toString(fConstraint.getArguments()));
+			}
+			final Variable result = getSolverVariable(fConstraint
+					.getResultVariable());
+			final Variable arg = getSolverVariable(fConstraint.getArguments()[0]);
+
+			addConstraint(new Disj(result, arg));
+			addConstraint(new Disj(new Variable[] { result, arg },
+					new boolean[] { true, true }));
 
 		} else {
 			throw new IllegalArgumentException("Unhandled constraint type for "
 					+ constraint);
 		}
+
+		return true;
 	}
 }

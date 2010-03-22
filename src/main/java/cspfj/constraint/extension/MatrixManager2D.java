@@ -75,15 +75,15 @@ public final class MatrixManager2D extends MatrixManager {
                 variables[1 - variablePosition].getBitDomain()) >= 0;
     }
 
-    public MatrixManager2D clone() throws CloneNotSupportedException {
-        final MatrixManager2D matrix = (MatrixManager2D) super.clone();
-
-        matrix.matrix = this.matrix.clone();
-
-        matrix.mask = mask.clone();
-
-        return matrix;
-    }
+//    public MatrixManager2D clone() throws CloneNotSupportedException {
+//        final MatrixManager2D matrix = (MatrixManager2D) super.clone();
+//
+//        matrix.matrix = this.matrix.clone();
+//
+//        matrix.mask = mask.clone();
+//
+//        return matrix;
+//    }
 
     public String toString() {
         return "MatrixManager2D\n" + matrix;

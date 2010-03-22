@@ -2,13 +2,19 @@ package cspfj.generator;
 
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.List;
 
 import cspfj.exception.FailedGenerationException;
 import cspfj.generator.constraint.GeneratorManager;
+import cspfj.problem.BitVectorDomain;
+import cspfj.problem.Domain;
 import cspfj.problem.Problem;
+import cspfj.util.IntLinkedList;
 import cspom.CSPOM;
 import cspom.compiler.ProblemCompiler;
 import cspom.constraint.CSPOMConstraint;
+import cspom.variable.BooleanDomain;
+import cspom.variable.CSPOMDomain;
 import cspom.variable.CSPOMVariable;
 
 public class ProblemGenerator {
@@ -21,7 +27,7 @@ public class ProblemGenerator {
 		final Problem problem = new Problem();
 
 		for (CSPOMVariable v : cspom.getVariables()) {
-			problem.addVariable(v);
+			problem.addVariable(v.getName(), generateDomain(v.getDomain()));
 		}
 
 		final GeneratorManager gm = new GeneratorManager(problem);
@@ -48,5 +54,23 @@ public class ProblemGenerator {
 		problem.prepareVariables();
 		problem.prepareConstraints();
 		return problem;
+	}
+
+	public static Domain generateDomain(final CSPOMDomain<?> cspomDomain) {
+		if (cspomDomain == null) {
+			return null;
+		}
+		if (cspomDomain instanceof BooleanDomain) {
+			final BooleanDomain bD = (BooleanDomain) cspomDomain;
+			if (bD.isConstant()) {
+				if (bD.getBoolean()) {
+					return new BitVectorDomain(1);
+				}
+				return new BitVectorDomain(0);
+			}
+			return new BitVectorDomain(0, 1);
+		}
+		return new BitVectorDomain(IntLinkedList
+				.intListToArray((List<Integer>) cspomDomain.getValues()));
 	}
 }

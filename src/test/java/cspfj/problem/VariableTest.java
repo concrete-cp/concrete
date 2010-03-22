@@ -14,13 +14,14 @@ import cspom.variable.CSPOMVariable;
 
 public class VariableTest {
 
-	Problem problem;
-	Variable variable;
+	private Problem problem;
+	private Variable variable;
 
 	@Before
 	public void setup() throws FailedGenerationException {
 		problem = new Problem();
-		variable = problem.addVariable(new CSPOMVariable(1, 5));
+		variable = problem
+				.addVariable("V0", new BitVectorDomain(1, 2, 3, 4, 5));
 		problem.prepareVariables();
 		problem.prepareConstraints();
 	}
@@ -106,7 +107,8 @@ public class VariableTest {
 
 		final Problem problem = new Problem();
 
-		final Variable variable = problem.addVariable(new CSPOMVariable(1, 6));
+		final Variable variable = problem.addVariable("V1",
+				new BitVectorDomain(1, 2, 3, 4, 5, 6));
 		problem.prepareVariables();
 
 		variable.remove(0);

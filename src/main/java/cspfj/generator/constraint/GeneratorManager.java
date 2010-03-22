@@ -17,6 +17,7 @@ public class GeneratorManager {
 		register("sub", AddGenerator.class);
 		register("allDifferent", AllDifferentGenerator.class);
 		register("or", DisjGenerator.class);
+		register("not", DisjGenerator.class);
 		register("eq", EqGenerator.class);
 		register("ext", ExtensionGenerator.class);
 		register("gt", GtGenerator.class);

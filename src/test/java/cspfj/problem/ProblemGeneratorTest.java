@@ -8,13 +8,13 @@ import cspfj.exception.FailedGenerationException;
 import cspfj.filter.AC3;
 import cspfj.generator.ProblemGenerator;
 import cspom.CSPOM;
+import cspom.CSPParseException;
 import cspom.compiler.ProblemCompiler;
-import cspom.xcsp.XCSPParseException;
 
 public class ProblemGeneratorTest {
 
 	@Test
-	public void generateTest() throws XCSPParseException, IOException,
+	public void generateTest() throws CSPParseException, IOException,
 			FailedGenerationException, ClassNotFoundException {
 		final CSPOM cspom = CSPOM.load(ProblemGeneratorTest.class
 				.getResource("zebra.xml"));

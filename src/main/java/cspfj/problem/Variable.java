@@ -24,226 +24,224 @@ import java.util.List;
 
 import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
-import cspfj.generator.DomainGenerator;
 import cspfj.priorityqueues.Identified;
 import cspfj.util.BitVector;
-import cspom.variable.CSPOMVariable;
 
 public final class Variable implements Cloneable, Identified {
 
-    private Constraint[] constraints;
+	private Constraint[] constraints;
 
-    private DynamicConstraint[] dynamicConstraints;
+	private DynamicConstraint[] dynamicConstraints;
 
-    private Domain domain;
+	private Domain domain;
 
-    private boolean assigned;
+	private boolean assigned;
 
-    private static int nbV = 0;
+	private static int nbV = 0;
 
-    private final int id;
+	private final int id;
 
-    private int[] positionInConstraint;
+	private int[] positionInConstraint;
 
-    private final CSPOMVariable cspomVariable;
+	private String name;
 
-    public Variable(final CSPOMVariable cspomVariable) {
-        this.cspomVariable = cspomVariable;
-        domain = DomainGenerator.generate(cspomVariable.getDomain());
-        assigned = false;
-        id = nbV++;
-    }
+	public Variable(final String name, final Domain domain) {
+		this.domain = domain;
+		assigned = false;
+		id = nbV++;
+	}
 
-    /**
-     * Reinit ID generator (before loading a new problem).
-     */
-    public static void resetVId() {
-        nbV = 0;
-    }
+	/**
+	 * Reinit ID generator (before loading a new problem).
+	 */
+	public static void resetVId() {
+		nbV = 0;
+	}
 
-    @Override
-    public String toString() {
-        if (domain == null) {
-            return cspomVariable.getName() + " [?]";
-        }
-        return cspomVariable.getName() + " " + domain;
-    }
+	@Override
+	public String toString() {
+		if (domain == null) {
+			return name + " [?]";
+		}
+		return name + " " + domain;
+	}
 
-    /**
-     * @param constraints2
-     *            Liste des contraintes impliquant la variable
-     */
-    public void setInvolvingConstraints(final Constraint[] constraints2) {
-        this.constraints = constraints2;
-        final List<DynamicConstraint> dynamicConstraints = new ArrayList<DynamicConstraint>();
-        for (Constraint c : constraints2) {
-            if (c instanceof DynamicConstraint) {
-                dynamicConstraints.add((DynamicConstraint) c);
-            }
-        }
+	/**
+	 * @param constraints2
+	 *            Liste des contraintes impliquant la variable
+	 */
+	public void setInvolvingConstraints(final Constraint[] constraints2) {
+		this.constraints = constraints2;
+		final List<DynamicConstraint> dynamicConstraints = new ArrayList<DynamicConstraint>();
+		for (Constraint c : constraints2) {
+			if (c instanceof DynamicConstraint) {
+				dynamicConstraints.add((DynamicConstraint) c);
+			}
+		}
 
-        this.dynamicConstraints = dynamicConstraints
-                .toArray(new DynamicConstraint[dynamicConstraints.size()]);
+		this.dynamicConstraints = dynamicConstraints
+				.toArray(new DynamicConstraint[dynamicConstraints.size()]);
 
-        positionInConstraint = new int[constraints2.length];
-        for (int i = constraints2.length; --i >= 0;) {
-            updatePositionInConstraint(i);
-        }
+		positionInConstraint = new int[constraints2.length];
+		for (int i = constraints2.length; --i >= 0;) {
+			updatePositionInConstraint(i);
+		}
 
-    }
+	}
 
-    public void updatePositionInConstraint(final int constraintPosition) {
-        positionInConstraint[constraintPosition] = constraints[constraintPosition]
-                .getPosition(this);
-    }
+	public void updatePositionInConstraint(final int constraintPosition) {
+		positionInConstraint[constraintPosition] = constraints[constraintPosition]
+				.getPosition(this);
+	}
 
-    /**
-     * @return La taille du domaine
-     */
-    public int getDomainSize() {
-        if (domain == null) {
-            return cspomVariable.getDomain().getValues().size();
-        }
-        return domain.size();
-    }
+	/**
+	 * @return La taille du domaine
+	 */
+	public int getDomainSize() {
+		return domain.size();
+	}
 
-    public boolean isAssigned() {
-        return assigned;
-    }
+	public boolean isAssigned() {
+		return assigned;
+	}
 
-    public void assign(final int index, final Problem problem) {
-        assert !assigned;
-        assert domain.present(index);
+	public void assign(final int index, final Problem problem) {
+		assert !assigned;
+		assert domain.present(index);
 
-        assigned = true;
-        domain.setSingle(index);
+		assigned = true;
+		domain.setSingle(index);
 
-        problem.decreaseFutureVariables();
-    }
+		problem.decreaseFutureVariables();
+	}
 
-    public void unassign(final Problem problem) {
-        assert assigned;
-        assigned = false;
-        problem.increaseFutureVariables();
-    }
+	public void unassign(final Problem problem) {
+		assert assigned;
+		assigned = false;
+		problem.increaseFutureVariables();
+	}
 
-    public void remove(final int index) {
-        assert !assigned : "Trying to remove a value from an assigned variable";
-        assert domain.present(index);
+	public void remove(final int index) {
+		assert !assigned : "Trying to remove a value from an assigned variable";
+		assert domain.present(index);
 
-        domain.remove(index);
-    }
+		domain.remove(index);
+	}
 
-    public int getId() {
-        return id;
-    }
+	public int getId() {
+		return id;
+	}
 
-    public Constraint[] getInvolvingConstraints() {
-        return constraints;
-    }
+	public Constraint[] getInvolvingConstraints() {
+		return constraints;
+	}
 
-    public DynamicConstraint[] getDynamicConstraints() {
-        return dynamicConstraints;
-    }
+	public DynamicConstraint[] getDynamicConstraints() {
+		return dynamicConstraints;
+	}
 
-    public Domain getDomain() {
-        return domain;
-    }
+	public Domain getDomain() {
+		return domain;
+	}
 
-    public int getFirst() {
-        return domain.first();
-    }
+	public int getFirst() {
+		return domain.first();
+	}
 
-    public int getLast() {
-        return domain.last();
-    }
+	public int getLast() {
+		return domain.last();
+	}
 
-    public void setDomain(final Domain domain) {
-        this.domain = domain;
-    }
+	public void setDomain(final Domain domain) {
+		this.domain = domain;
+	}
 
-    public int[] getCurrentIndexes() {
-        if (domain == null) {
-            return null;
-        }
-        final int[] indexes = new int[domain.size()];
+	public int[] getCurrentIndexes() {
+		if (domain == null) {
+			return null;
+		}
+		final int[] indexes = new int[domain.size()];
 
-        for (int i = getFirst(), j = 0; i >= 0; i = getNext(i), j++) {
-            indexes[j] = i;
-        }
+		for (int i = getFirst(), j = 0; i >= 0; i = getNext(i), j++) {
+			indexes[j] = i;
+		}
 
-        return indexes;
-    }
+		return indexes;
+	}
 
-    public int[] getCurrentValues() {
-        if (domain == null) {
-            return null;
-        }
-        final int[] values = new int[domain.size()];
+	public int[] getCurrentValues() {
+		if (domain == null) {
+			return null;
+		}
+		final int[] values = new int[domain.size()];
 
-        for (int i = getFirst(), j = 0; i >= 0; i = getNext(i), j++) {
-            values[j] = domain.value(i);
-        }
+		for (int i = getFirst(), j = 0; i >= 0; i = getNext(i), j++) {
+			values[j] = domain.value(i);
+		}
 
-        return values;
-    }
+		return values;
+	}
 
-    public int getNext(final int index) {
-        return domain.next(index);
-    }
+	public int getNext(final int index) {
+		return domain.next(index);
+	}
 
-    public int getPrev(final int index) {
-        return domain.prev(index);
-    }
+	public int getPrev(final int index) {
+		return domain.prev(index);
+	}
 
-    public int getLastAbsent() {
-        return domain.lastAbsent();
-    }
+	public int getLastAbsent() {
+		return domain.lastAbsent();
+	}
 
-    public int getPrevAbsent(final int index) {
-        return domain.prevAbsent(index);
-    }
+	public int getPrevAbsent(final int index) {
+		return domain.prevAbsent(index);
+	}
 
-    public BitVector getBitDomain() {
-        return ((BitVectorDomain) domain).getBitVector();
-    }
+	public BitVector getBitDomain() {
+		return ((BitVectorDomain) domain).getBitVector();
+	}
 
-    public Variable clone() throws CloneNotSupportedException {
-        final Variable variable = (Variable) super.clone();
+	public Variable clone() throws CloneNotSupportedException {
+		final Variable variable = (Variable) super.clone();
 
-        variable.domain = domain.clone();
+		variable.domain = domain.clone();
 
-        return variable;
-    }
+		return variable;
+	}
 
-    public int getPositionInConstraint(final int constraint) {
-        return positionInConstraint[constraint];
-    }
+	public int getPositionInConstraint(final int constraint) {
+		return positionInConstraint[constraint];
+	}
 
-    public void setLevel(int level) {
-        domain.setLevel(level);
-    }
+	public void setLevel(int level) {
+		domain.setLevel(level);
+	}
 
-    public void restoreLevel(int level) {
-        domain.restoreLevel(level);
-    }
+	public void restoreLevel(int level) {
+		domain.restoreLevel(level);
+	}
 
-    public void reset(Problem problem) {
-        if (isAssigned()) {
-            unassign(problem);
-        }
-        domain.restoreLevel(0);
-    }
+	public void reset(Problem problem) {
+		if (isAssigned()) {
+			unassign(problem);
+		}
+		domain.restoreLevel(0);
+	}
 
-    public boolean isPresent(int index) {
-        return domain.present(index);
-    }
+	public boolean isPresent(int index) {
+		return domain.present(index);
+	}
 
-    public int getValue(int index) {
-        return domain.value(index);
-    }
+	public int getValue(int index) {
+		return domain.value(index);
+	}
 
-    public void makeSingleton(int value1) {
-        domain.setSingle(value1);
-    }
+	public void makeSingleton(int value1) {
+		domain.setSingle(value1);
+	}
+
+	public String getName() {
+		return name;
+	}
 }

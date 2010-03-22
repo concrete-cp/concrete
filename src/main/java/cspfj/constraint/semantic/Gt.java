@@ -28,12 +28,9 @@ public final class Gt extends AbstractConstraint {
 
 	final private boolean strict;
 
-	final private boolean ordered;
-
 	public Gt(final Variable v0, final Variable v1, final boolean strict) {
 		super(v0, v1);
 		this.strict = strict;
-		this.ordered = v0.getDomain().isOrdered() && v1.getDomain().isOrdered();
 	}
 
 	@Override
@@ -46,30 +43,12 @@ public final class Gt extends AbstractConstraint {
 
 	private int min(final int position) {
 		final Domain dom = getVariable(position).getDomain();
-		if (ordered) {
-			return dom.value(dom.first());
-		}
-		int min = Integer.MAX_VALUE;
-		for (int i = dom.first(); i >= 0; i = dom.next(i)) {
-			if (dom.value(i) < min) {
-				min = dom.value(i);
-			}
-		}
-		return min;
+		return dom.value(dom.first());
 	}
 
 	private int max(final int position) {
 		final Domain dom = getVariable(position).getDomain();
-		if (ordered) {
-			return dom.value(dom.last());
-		}
-		int max = Integer.MIN_VALUE;
-		for (int i = dom.first(); i >= 0; i = dom.next(i)) {
-			if (dom.value(i) > max) {
-				max = dom.value(i);
-			}
-		}
-		return max;
+		return dom.value(dom.last());
 	}
 
 	private boolean removeGt(final int value, final int position) {
@@ -80,7 +59,7 @@ public final class Gt extends AbstractConstraint {
 			if (dom.value(i) > value || !strict && dom.value(i) == value) {
 				dom.remove(i);
 				removed = true;
-			} else if (ordered) {
+			} else {
 				break;
 			}
 		}
@@ -96,7 +75,7 @@ public final class Gt extends AbstractConstraint {
 			if (dom.value(i) < value || !strict && dom.value(i) == value) {
 				dom.remove(i);
 				removed = true;
-			} else if (ordered) {
+			} else {
 				break;
 			}
 		}

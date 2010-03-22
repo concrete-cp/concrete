@@ -40,17 +40,10 @@ import cspfj.constraint.extension.Matrix;
 import cspfj.constraint.extension.Matrix2D;
 import cspfj.constraint.extension.TupleSet;
 import cspfj.constraint.semantic.RCConstraint;
-import cspfj.exception.FailedGenerationException;
-import cspfj.generator.ProblemGenerator;
-import cspfj.util.Arrays2;
 import cspfj.util.BitVector;
-import cspom.CSPOM;
-import cspom.variable.CSPOMVariable;
 
 public final class Problem {
-	// private Map<Integer, Variable> variables;
-
-	private Map<CSPOMVariable, Variable> variables;
+	private Map<String, Variable> variables;
 
 	private Variable[] variableArray;
 
@@ -82,21 +75,21 @@ public final class Problem {
 	public Problem() {
 		super();
 		this.useNoGoods = true;
-		variables = new HashMap<CSPOMVariable, Variable>();
+		variables = new HashMap<String, Variable>();
 		constraints = new ArrayList<Constraint>();
-	}
-
-	public static Problem load(CSPOM cspom) throws FailedGenerationException {
-		return ProblemGenerator.generate(cspom);
 	}
 
 	public int getNbFutureVariables() {
 		return nbFutureVariables;
 	}
 
-	public Variable addVariable(final CSPOMVariable variable) {
-		final Variable var = new Variable(variable);
-		variables.put(variable, var);
+	public Variable addVariable(final String name, final Domain domain) {
+		if (variables.containsKey(name)) {
+			throw new IllegalArgumentException("A variable named " + name
+					+ " already exists");
+		}
+		final Variable var = new Variable(name, domain);
+		variables.put(name, var);
 		return var;
 	}
 
@@ -572,8 +565,8 @@ public final class Problem {
 		return Math.max(10, maxDomainSize / 10);
 	}
 
-	public Variable getSolverVariable(CSPOMVariable variable) {
-		return variables.get(variable);
+	public Variable getVariable(String name) {
+		return variables.get(name);
 	}
 
 	public static enum LearnMethod {
