@@ -135,42 +135,30 @@ public final class Disj extends AbstractConstraint {
 
     public static boolean generate(final CSPOMConstraint constraint,
             final Problem problem) {
+        final Variable[] scope = ConstraintManager.getSolverVariables(
+                constraint.getScope(), problem);
+
+        for (Variable v : scope) {
+            if (v.getDomain() == null) {
+                v.setDomain(new BitVectorDomain(0, 1));
+            }
+        }
+        
         if (constraint instanceof GeneralConstraint) {
 
-            final Variable[] scope = ConstraintManager.getSolverVariables(
-                    constraint.getScope(), problem);
-
-            for (Variable v : scope) {
-                if (v.getDomain() == null) {
-                    v.setDomain(new BitVectorDomain(0, 1));
-                }
-            }
             problem.addConstraint(new Disj(scope));
             return true;
 
         } else if (constraint instanceof FunctionalConstraint) {
 
-            final Variable[] scope = ConstraintManager.getSolverVariables(
-                    constraint.getScope(), problem);
-
-            for (Variable v : scope) {
-                if (v.getDomain() == null) {
-                    v.setDomain(new BitVectorDomain(0, 1));
-                }
-            }
-
             /*
              * Reified disjunction is converted to CNF :
              * 
-             * a = b v c v d... 
+             * a = b v c v d...
              * 
              * <=>
              * 
-             * -a v b v c v d...
-             * a v -b
-             * a v -c
-             * a v -d
-             * ...
+             * -a v b v c v d... a v -b a v -c a v -d ...
              */
             final boolean[] reverses = new boolean[scope.length];
             reverses[0] = true;
