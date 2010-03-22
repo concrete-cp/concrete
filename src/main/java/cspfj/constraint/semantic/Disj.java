@@ -162,15 +162,15 @@ public final class Disj extends AbstractConstraint {
             /*
              * Reified disjunction is converted to CNF :
              * 
-             * a = b v c v d… 
+             * a = b v c v d... 
              * 
              * <=>
              * 
-             * ¬a v b v c v d…
-             * a v ¬b
-             * a v ¬c
-             * a v ¬d
-             * …
+             * -a v b v c v d...
+             * a v -b
+             * a v -c
+             * a v -d
+             * ...
              */
             final boolean[] reverses = new boolean[scope.length];
             reverses[0] = true;
