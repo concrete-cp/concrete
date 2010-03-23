@@ -22,6 +22,7 @@ package cspfj;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidParameterException;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import cspfj.exception.MaxBacktracksExceededException;
@@ -37,318 +38,297 @@ import cspfj.problem.Variable;
 
 public final class MGACIter extends AbstractSolver {
 
-	private final Filter filter;
+    private final Filter filter;
 
-	private final Heuristic heuristic;
+    private final Heuristic heuristic;
 
-	private static final Logger logger = Logger.getLogger(MGACIter.class
-			.getName());
+    private static final Logger logger = Logger.getLogger(MGACIter.class
+            .getName());
 
-	private boolean allSolutions = false;
+    private final static Problem.LearnMethod addConstraints = AbstractSolver.parameters
+            .containsKey("mgac.addConstraints") ? Problem.LearnMethod
+            .valueOf(AbstractSolver.parameters.get("mgac.addConstraints"))
+            : Problem.LearnMethod.NONE;
 
-	private final static Problem.LearnMethod addConstraints = AbstractSolver.parameters
-			.containsKey("mgac.addConstraints") ? Problem.LearnMethod
-			.valueOf(AbstractSolver.parameters.get("mgac.addConstraints"))
-			: Problem.LearnMethod.NONE;
+    // private int level;
 
-	// private int level;
+    public MGACIter(final Problem prob) {
+        this(prob, new ResultHandler());
+    }
 
-	public MGACIter(final Problem prob) {
-		this(prob, new ResultHandler());
-	}
+    public MGACIter(final Problem prob, final ResultHandler resultHandler) {
+        this(prob, resultHandler, new CrossHeuristic(new WDegOnDom(prob),
+                new Lexico(false)));
+    }
 
-	public MGACIter(final Problem prob, final ResultHandler resultHandler) {
-		this(prob, resultHandler, new CrossHeuristic(new WDegOnDom(prob),
-				new Lexico(false)));
-	}
+    public MGACIter(final Problem prob, final ResultHandler resultHandler,
+            final Heuristic heuristic) {
+        this(prob, resultHandler, heuristic, new AC3(prob));
+    }
 
-	public MGACIter(final Problem prob, final ResultHandler resultHandler,
-			final Heuristic heuristic) {
-		this(prob, resultHandler, heuristic, new AC3(prob));
-	}
+    public MGACIter(final Problem prob, final ResultHandler resultHandler,
+            final Heuristic heuristic, final Filter filter) {
+        super(prob, resultHandler);
+        // filter = new B3C(problem, new BC(problem));
+        this.filter = filter;
+        this.heuristic = heuristic;
 
-	public MGACIter(final Problem prob, final ResultHandler resultHandler,
-			final Heuristic heuristic, final Filter filter) {
-		super(prob, resultHandler);
-		// filter = new B3C(problem, new BC(problem));
-		this.filter = filter;
-		this.heuristic = heuristic;
+        logger.info(filter.getClass().toString());
 
-		logger.info(filter.getClass().toString());
+        setMaxBacktracks(prob.getMaxBacktracks());
+    }
 
-		setMaxBacktracks(prob.getMaxBacktracks());
-	}
+    public Map<Variable, Integer> mac() throws MaxBacktracksExceededException,
+            IOException {
+        final Problem problem = this.problem;
 
-	public boolean mac() throws MaxBacktracksExceededException, IOException {
-		final Problem problem = this.problem;
+        // level = 0;
 
-		// level = 0;
+        Variable selectedVariable = null;
+        int selectedIndex = -1;
+        do {
+            // for (Variable v: problem.getVariables()) {
+            // if (!v.isAssigned() && v.getDomainSize()==1) {
+            // logger.fine(level + " : " + v + " <- "
+            // + v.getDomain()[v.getFirst()] + "("
+            // + getNbBacktracks() + "/" + getMaxBacktracks() + ")");
+            // v.assign(v.getFirst(), level, problem);
+            // problem.setLevelVariables(level++, v);
+            // }
+            // }
+            if (problem.getNbFutureVariables() == 0) {
+                return solution();
+            }
 
-		Variable selectedVariable = null;
-		int selectedIndex = -1;
-		do {
-			// for (Variable v: problem.getVariables()) {
-			// if (!v.isAssigned() && v.getDomainSize()==1) {
-			// logger.fine(level + " : " + v + " <- "
-			// + v.getDomain()[v.getFirst()] + "("
-			// + getNbBacktracks() + "/" + getMaxBacktracks() + ")");
-			// v.assign(v.getFirst(), level, problem);
-			// problem.setLevelVariables(level++, v);
-			// }
-			// }
-			if (problem.getNbFutureVariables() == 0) {
-				if (getNbSolutions() < 1) {
-					for (Variable v : problem.getVariables()) {
-						addSolutionElement(v, v.getFirst());
-					}
-				}
+            if (selectedVariable != null
+                    && !filter.reduceAfter(selectedVariable)) {
+                if (problem.getCurrentLevel() == 0) {
+                    break;
+                }
+                selectedVariable = backtrack();
+                if (selectedVariable.getDomainSize() <= 0) {
+                    break;
+                }
+                continue;
+            }
 
-				solution();
-				if (allSolutions) {
-					selectedVariable = backtrack();
-					if (selectedVariable.getDomainSize() <= 0) {
-						break;
-					}
-				} else {
-					break;
-				}
-			}
+            final Pair pair = heuristic.selectPair(problem);
 
-			if (selectedVariable != null
-					&& !filter.reduceAfter(selectedVariable)) {
-				if (problem.getCurrentLevel() == 0) {
-					break;
-				}
-				selectedVariable = backtrack();
-				if (selectedVariable.getDomainSize() <= 0) {
-					break;
-				}
-				continue;
-			}
+            selectedVariable = pair.getVariable();
 
-			final Pair pair = heuristic.selectPair(problem);
+            assert selectedVariable.getDomainSize() > 0;
 
-			selectedVariable = pair.getVariable();
+            selectedIndex = pair.getIndex();
 
-			assert selectedVariable.getDomainSize() > 0;
+            assert selectedVariable.isPresent(selectedIndex);
 
-			selectedIndex = pair.getIndex();
+            logger.fine(problem.getCurrentLevel() + " : " + selectedVariable
+                    + " <- "
+                    + selectedVariable.getDomain().value(selectedIndex) + "("
+                    + getNbBacktracks() + "/" + getMaxBacktracks() + ")");
 
-			assert selectedVariable.isPresent(selectedIndex);
+            problem.setLevelVariables(selectedVariable);
+            problem.push();
+            selectedVariable.assign(selectedIndex, problem);
+            incrementNbAssignments();
 
-			logger.fine(problem.getCurrentLevel() + " : " + selectedVariable
-					+ " <- "
-					+ selectedVariable.getDomain().value(selectedIndex) + "("
-					+ getNbBacktracks() + "/" + getMaxBacktracks() + ")");
+        } while (true);
+        return null;
 
-			problem.setLevelVariables(selectedVariable);
-			problem.push();
-			selectedVariable.assign(selectedIndex, problem);
-			incrementNbAssignments();
+    }
 
-		} while (true);
-		return getNbSolutions() > 0;
+    public Variable backtrack() throws MaxBacktracksExceededException {
+        Variable selectedVariable;
+        int index;
+        do {
+            selectedVariable = problem.getLastLevelVariable();
+            index = selectedVariable.getFirst();
+            selectedVariable.unassign(problem);
+            problem.pop();
+            problem.setLevelVariables(null);
+        } while (selectedVariable.getDomainSize() <= 1
+                && problem.getCurrentLevel() > 0);
 
-	}
+        logger.finer(problem.getCurrentLevel() + " : " + selectedVariable
+                + " /= " + selectedVariable.getDomain().value(index));
+        selectedVariable.remove(index);
+        checkBacktracks();
+        return selectedVariable;
+    }
 
-	public Variable backtrack() throws MaxBacktracksExceededException {
-		Variable selectedVariable;
-		int index;
-		do {
-			selectedVariable = problem.getLastLevelVariable();
-			index = selectedVariable.getFirst();
-			selectedVariable.unassign(problem);
-			problem.pop();
-			problem.setLevelVariables(null);
-		} while (selectedVariable.getDomainSize() <= 1
-				&& problem.getCurrentLevel() > 0);
+    /*
+     * (non-Javadoc)
+     * 
+     * @see cspfj.Solver#run(int)
+     */
+    public Map<Variable, Integer> solve() throws IOException {
+        // Logger.getLogger("").setLevel(Level.WARNING);
+        // Logger.getLogger("").getHandlers()[0].setLevel(Level.WARNING);
+        System.gc();
+        chronometer.startChrono();
 
-		logger.finer(problem.getCurrentLevel() + " : " + selectedVariable
-				+ " /= " + selectedVariable.getDomain().value(index));
-		selectedVariable.remove(index);
-		checkBacktracks();
-		return selectedVariable;
-	}
+        // for (Constraint c : problem.getConstraints()) {
+        // if (c instanceof ExtensionConstraint) {
+        // ((ExtensionConstraint) c).getMatrixManager().countConflicts();
+        // }
+        // }
+        // for (Constraint c : problem.getConstraints()) {
+        // if (c.getArity() == 1) {
+        // c.revise(new RevisionHandler() {
+        // @Override
+        // public void revised(Constraint constraint, Variable variable) {
+        // // TODO Auto-generated method stub
+        //                        
+        // }
+        // });
+        // }
+        // }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see cspfj.Solver#run(int)
-	 */
-	public boolean runSolver() throws IOException {
-		// Logger.getLogger("").setLevel(Level.WARNING);
-		// Logger.getLogger("").getHandlers()[0].setLevel(Level.WARNING);
-		System.gc();
-		chronometer.startChrono();
+        final Filter filter = getFilter();
 
-		// for (Constraint c : problem.getConstraints()) {
-		// if (c instanceof ExtensionConstraint) {
-		// ((ExtensionConstraint) c).getMatrixManager().countConflicts();
-		// }
-		// }
-		// for (Constraint c : problem.getConstraints()) {
-		// if (c.getArity() == 1) {
-		// c.revise(new RevisionHandler() {
-		// @Override
-		// public void revised(Constraint constraint, Variable variable) {
-		// // TODO Auto-generated method stub
-		//                        
-		// }
-		// });
-		// }
-		// }
+        try {
+            if (!preprocess(filter)) {
+                chronometer.validateChrono();
+                return null;
+            }
+        } catch (InstantiationException e1) {
+            throw new InvalidParameterException(e1.toString());
+        } catch (IllegalAccessException e1) {
+            throw new InvalidParameterException(e1.toString());
+        } catch (InvocationTargetException e1) {
+            throw new IllegalStateException(e1);
+        } catch (NoSuchMethodException e1) {
+            throw new InvalidParameterException(e1.toString());
+        } catch (InterruptedException e) {
+            try {
+                if (!filter.reduceAll()) {
+                    chronometer.validateChrono();
+                    return null;
+                }
+            } catch (InterruptedException e1) {
+                throw new IllegalArgumentException("Unexpected interruption");
+            }
+        }
 
-		final Filter filter = getFilter();
+        // statistics("prepro-nbskippedrevisions", Constraint
+        // .getNbSkippedRevisions());
 
-		try {
-			if (!preprocess(filter)) {
-				chronometer.validateChrono();
-				return false;
-			}
-		} catch (InstantiationException e1) {
-			throw new InvalidParameterException(e1.toString());
-		} catch (IllegalAccessException e1) {
-			throw new InvalidParameterException(e1.toString());
-		} catch (InvocationTargetException e1) {
-			throw new IllegalStateException(e1);
-		} catch (NoSuchMethodException e1) {
-			throw new InvalidParameterException(e1.toString());
-		} catch (InterruptedException e) {
-			try {
-				if (!filter.reduceAll()) {
-					chronometer.validateChrono();
-					return false;
-				}
-			} catch (InterruptedException e1) {
-				throw new IllegalArgumentException("Unexpected interruption");
-			}
-		}
+        // if (true) {
+        // return false;
+        // }
 
-		// statistics("prepro-nbskippedrevisions", Constraint
-		// .getNbSkippedRevisions());
+        final float start = chronometer.getCurrentChrono();
+        heuristic.compute();
 
-		// if (true) {
-		// return false;
-		// }
+        // for (Variable v:problem.getVariables()) {
+        // for (int i = v.getFirst() ; i >=0 ; i=v.getNext(i)) {
+        // System.out.print(i+"-");
+        // }
+        // System.out.println();
+        // }
 
-		final float start = chronometer.getCurrentChrono();
-		heuristic.compute();
+        final float heuristicCpu = chronometer.getCurrentChrono();
+        statistics.put("heuristic-cpu", heuristicCpu - start);
 
-		// for (Variable v:problem.getVariables()) {
-		// for (int i = v.getFirst() ; i >=0 ; i=v.getNext(i)) {
-		// System.out.print(i+"-");
-		// }
-		// System.out.println();
-		// }
+        int maxBT = getMaxBacktracks();
 
-		final float heuristicCpu = chronometer.getCurrentChrono();
-		statistics.put("heuristic-cpu", heuristicCpu - start);
+        //
+        // logger.fine("ok!") ;
 
-		int maxBT = allSolutions ? -1 : getMaxBacktracks();
+        // final Random random = new Random(0);
+        Map<Variable, Integer> solution = null;
+        do {
+            for (Variable v : problem.getVariables()) {
+                assert v.getDomainSize() > 0;
+            }
+            setMaxBacktracks(maxBT);
+            problem.clearLevelVariables();
+            logger.info("MAC with " + maxBT + " bt");
+            float macTime = -chronometer.getCurrentChrono();
+            // System.out.print("run ! ");
+            try {
 
-		//
-		// logger.fine("ok!") ;
+                solution = mac();
 
-		// final Random random = new Random(0);
-		do {
-			for (Variable v : problem.getVariables()) {
-				assert v.getDomainSize() > 0;
-			}
-			setMaxBacktracks(maxBT);
-			problem.clearLevelVariables();
-			logger.info("MAC with " + maxBT + " bt");
-			float macTime = -chronometer.getCurrentChrono();
-			// System.out.print("run ! ");
-			try {
+                break;
+            } catch (MaxBacktracksExceededException e) {
+                // On continue...
+            } catch (OutOfMemoryError e) {
+                chronometer.validateChrono();
+                throw e;
+            } catch (IOException e) {
+                chronometer.validateChrono();
+                throw e;
+            }
+            macTime += chronometer.getCurrentChrono();
+            logger.info("Took " + macTime + "s (" + (maxBT / macTime) + " bps)");
 
-				mac();
+            // logger.info(constraintRepartition());
+            maxBT *= 1.5;
+            // final Map<Variable[], List<int[]>> ngs = problem.noGoods();
+            problem.noGoods(addConstraints);
+            problem.reset();
+            // problem.noGoodsToConstraints(ngs, addConstraints);
 
-				break;
-			} catch (MaxBacktracksExceededException e) {
-				// On continue...
-			} catch (OutOfMemoryError e) {
-				chronometer.validateChrono();
-				throw e;
-			} catch (IOException e) {
-				chronometer.validateChrono();
-				throw e;
-			}
-			macTime += chronometer.getCurrentChrono();
-			logger
-					.info("Took " + macTime + "s (" + (maxBT / macTime)
-							+ " bps)");
+            try {
+                if (!filter.reduceAll()) {
+                    break;
+                }
+            } catch (InterruptedException e) {
+                throw new IllegalArgumentException(
+                        "Filter was unexpectingly interrupted !");
+            }
+        } while (true);
 
-			// logger.info(constraintRepartition());
-			maxBT *= 1.5;
-			// final Map<Variable[], List<int[]>> ngs = problem.noGoods();
-			problem.noGoods(addConstraints);
-			problem.reset();
-			// problem.noGoodsToConstraints(ngs, addConstraints);
+        final float searchCpu = chronometer.getCurrentChrono() - heuristicCpu;
+        statistics.put("search-cpu", searchCpu);
 
-			try {
-				if (!filter.reduceAll()) {
-					break;
-				}
-			} catch (InterruptedException e) {
-				throw new IllegalArgumentException(
-						"Filter was unexpectingly interrupted !");
-			}
-		} while (true);
+        if (searchCpu > 0) {
+            statistics.put("search-nps", getNbAssignments() / searchCpu);
+        }
 
-		final float searchCpu = chronometer.getCurrentChrono() - heuristicCpu;
-		statistics.put("search-cpu", searchCpu);
+        return solution;
 
-		if (searchCpu > 0) {
-			statistics.put("search-nps", getNbAssignments() / searchCpu);
-		}
+    }
 
-		return getNbSolutions() > 0;
+    public synchronized void collectStatistics() {
+        chronometer.validateChrono();
+        statistics.putAll(filter.getStatistics());
+    }
 
-	}
+    // private String constraintRepartition() {
+    // final WeightHeuristic wvh = (WeightHeuristic) heuristic;
+    // final SortedSet<Constraint> sortedConstraint = new TreeSet<Constraint>(
+    // new Weight(false, wvh));
+    // sortedConstraint.addAll(Arrays.asList(problem.getConstraints()));
+    //
+    // final StringBuilder stb = new StringBuilder();
+    // final NumberFormat format = NumberFormat.getInstance();
+    // format.setMaximumFractionDigits(2);
+    // double total = 0;
+    // for (Constraint c : sortedConstraint) {
+    // stb.append(c.getName() + "(" + format.format(wvh.getWeight(c)) + ") ");
+    // total += wvh.getWeight(c);
+    // }
+    // stb.append(" - Total = " + total);
+    // return stb.toString();
+    // }
 
-	public synchronized void collectStatistics() {
-		chronometer.validateChrono();
-		statistics.putAll(filter.getStatistics());
-	}
+    public Filter getFilter() {
+        return filter;
+    }
 
-	// private String constraintRepartition() {
-	// final WeightHeuristic wvh = (WeightHeuristic) heuristic;
-	// final SortedSet<Constraint> sortedConstraint = new TreeSet<Constraint>(
-	// new Weight(false, wvh));
-	// sortedConstraint.addAll(Arrays.asList(problem.getConstraints()));
-	//
-	// final StringBuilder stb = new StringBuilder();
-	// final NumberFormat format = NumberFormat.getInstance();
-	// format.setMaximumFractionDigits(2);
-	// double total = 0;
-	// for (Constraint c : sortedConstraint) {
-	// stb.append(c.getName() + "(" + format.format(wvh.getWeight(c)) + ") ");
-	// total += wvh.getWeight(c);
-	// }
-	// stb.append(" - Total = " + total);
-	// return stb.toString();
-	// }
+    public String getXMLConfig() {
+        return super.getXMLConfig() + "\t\t\t<solver>" + this
+                + "</solver>\n\t\t\t<filter>" + filter
+                + "</filter>\n\t\t\t<heuristic>" + heuristic
+                + "</heuristic>\n\t\t\t<prepro>" + getPreprocessor()
+                + "</prepro>\n";
 
-	public Filter getFilter() {
-		return filter;
-	}
+    }
 
-	public void setAllSolutions(final boolean allSolutions) {
-		this.allSolutions = allSolutions;
-	}
-
-	public String getXMLConfig() {
-		return super.getXMLConfig() + "\t\t\t<solver>" + this
-				+ "</solver>\n\t\t\t<filter>" + filter
-				+ "</filter>\n\t\t\t<heuristic>" + heuristic
-				+ "</heuristic>\n\t\t\t<prepro>" + getPreprocessor()
-				+ "</prepro>\n\t\t\t<allSolutions>" + allSolutions
-				+ "</allSolutions>\n";
-
-	}
-
-	public String toString() {
-		return "maintain generalized arc consistency - iterative";
-	}
+    public String toString() {
+        return "maintain generalized arc consistency - iterative";
+    }
 
 }

@@ -13,94 +13,89 @@ import cspom.constraint.GeneralConstraint;
 
 public final class GtGenerator extends AbstractGenerator {
 
-	public GtGenerator(final Problem problem) {
-		super(problem);
-	}
+    public GtGenerator(final Problem problem) {
+        super(problem);
+    }
 
-	private Constraint generateGeneral(final CSPOMConstraint constraint)
-			throws FailedGenerationException {
-		final Variable[] solverVariables = getSolverVariables(constraint
-				.getScope());
+    private Constraint generateGeneral(final CSPOMConstraint constraint)
+            throws FailedGenerationException {
+        final Variable[] solverVariables = getSolverVariables(constraint
+                .getScope());
 
-		for (Variable v : solverVariables) {
-			if (v.getDomain() == null) {
-				return null;
-			}
-		}
+        if (nullVariable(solverVariables) != null) {
+            return null;
+        }
 
-		if ("gt".equals(constraint.getDescription())) {
-			return new Gt(solverVariables[0], solverVariables[1], true);
-		}
-		if ("ge".equals(constraint.getDescription())) {
-			return new Gt(solverVariables[0], solverVariables[1], false);
-		}
-		if ("lt".equals(constraint.getDescription())) {
-			return new Gt(solverVariables[1], solverVariables[0], true);
-		}
-		if ("le".equals(constraint.getDescription())) {
-			return new Gt(solverVariables[1], solverVariables[0], false);
-		}
+        if ("gt".equals(constraint.getDescription())) {
+            return new Gt(solverVariables[0], solverVariables[1], true);
+        }
+        if ("ge".equals(constraint.getDescription())) {
+            return new Gt(solverVariables[0], solverVariables[1], false);
+        }
+        if ("lt".equals(constraint.getDescription())) {
+            return new Gt(solverVariables[1], solverVariables[0], true);
+        }
+        if ("le".equals(constraint.getDescription())) {
+            return new Gt(solverVariables[1], solverVariables[0], false);
+        }
 
-		throw new FailedGenerationException("Unhandled constraint "
-				+ constraint);
-	}
+        throw new FailedGenerationException("Unhandled constraint "
+                + constraint);
+    }
 
-	private Constraint generateReified(final FunctionalConstraint constraint)
-			throws FailedGenerationException {
-		final Variable[] arguments = getSolverVariables(constraint
-				.getArguments());
-		if (arguments.length != 2) {
-			throw new FailedGenerationException(
-					"Comparison constraints must have exactly two arguments");
-		}
-		if (nullVariable(arguments) != null) {
-			return null;
-		}
+    private Constraint generateReified(final FunctionalConstraint constraint)
+            throws FailedGenerationException {
+        final Variable[] arguments = getSolverVariables(constraint
+                .getArguments());
+        if (arguments.length != 2) {
+            throw new FailedGenerationException(
+                    "Comparison constraints must have exactly two arguments");
+        }
+        if (nullVariable(arguments) != null) {
+            return null;
+        }
 
-		final Variable result = getSolverVariable(constraint
-				.getResultVariable());
+        final Variable result = getSolverVariable(constraint
+                .getResultVariable());
+        booleanDomain(result);
 
-		if (result.getDomain() == null) {
-			result.setDomain(new BitVectorDomain(0, 1));
-		}
+        if ("gt".equals(constraint.getDescription())) {
+            return new ReifiedGt(result, arguments[0], arguments[1], true);
+        }
+        if ("ge".equals(constraint.getDescription())) {
+            return new ReifiedGt(result, arguments[0], arguments[1], false);
+        }
+        if ("lt".equals(constraint.getDescription())) {
+            return new ReifiedGt(result, arguments[1], arguments[0], true);
+        }
+        if ("le".equals(constraint.getDescription())) {
+            return new ReifiedGt(result, arguments[1], arguments[0], false);
+        }
 
-		if ("gt".equals(constraint.getDescription())) {
-			return new ReifiedGt(result, arguments[0], arguments[1], true);
-		}
-		if ("ge".equals(constraint.getDescription())) {
-			return new ReifiedGt(result, arguments[0], arguments[1], false);
-		}
-		if ("lt".equals(constraint.getDescription())) {
-			return new ReifiedGt(result, arguments[1], arguments[0], true);
-		}
-		if ("le".equals(constraint.getDescription())) {
-			return new ReifiedGt(result, arguments[1], arguments[0], false);
-		}
+        throw new FailedGenerationException("Unhandled constraint "
+                + constraint);
 
-		throw new FailedGenerationException("Unhandled constraint "
-				+ constraint);
+    }
 
-	}
+    @Override
+    public boolean generate(final CSPOMConstraint constraint)
+            throws FailedGenerationException {
 
-	@Override
-	public boolean generate(final CSPOMConstraint constraint)
-			throws FailedGenerationException {
+        final Constraint generated;
+        if (constraint instanceof GeneralConstraint) {
+            generated = generateGeneral(constraint);
+        } else if (constraint instanceof FunctionalConstraint) {
+            generated = generateReified((FunctionalConstraint) constraint);
+        } else {
+            throw new IllegalArgumentException(constraint + " not supported");
+        }
 
-		final Constraint generated;
-		if (constraint instanceof GeneralConstraint) {
-			generated = generateGeneral(constraint);
-		} else if (constraint instanceof FunctionalConstraint) {
-			generated = generateReified((FunctionalConstraint) constraint);
-		} else {
-			throw new IllegalArgumentException(constraint + " not supported");
-		}
+        if (generated == null) {
+            return false;
+        }
 
-		if (generated == null) {
-			return false;
-		}
+        addConstraint(generated);
 
-		addConstraint(generated);
-
-		return true;
-	}
+        return true;
+    }
 }

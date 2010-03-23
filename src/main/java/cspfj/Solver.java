@@ -27,9 +27,7 @@ import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
 public interface Solver {
-    boolean runSolver() throws IOException;
-
-    Map<Variable, Integer> getSolution();
+    Map<Variable, Integer> solve() throws IOException;
 
     float getUserTime();
 
@@ -38,8 +36,6 @@ public interface Solver {
     void setMaxBacktracks(final int maxBacktracks);
 
     void setUsePrepro(final Class<? extends Filter> filter);
-
-    int getNbSolutions();
 
     int getMaxBacktracks();
 

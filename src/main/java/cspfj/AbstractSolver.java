@@ -39,233 +39,193 @@ import cspfj.util.Chronometer;
 import cspfj.util.Waker;
 
 public abstract class AbstractSolver implements Solver {
-	public static final String VERSION;
-	static {
-		Matcher matcher = Pattern.compile("Rev:\\ (\\d+)").matcher(
-				"$Rev$");
-		matcher.find();
-		VERSION = matcher.group(1);
-	}
-	protected final Problem problem;
+    public static final String VERSION;
+    static {
+        Matcher matcher = Pattern.compile("Rev:\\ (\\d+)").matcher(
+                "$Rev$");
+        matcher.find();
+        VERSION = matcher.group(1);
+    }
+    protected final Problem problem;
 
-	protected final Chronometer chronometer;
+    protected final Chronometer chronometer;
 
-	private int nbAssignments;
+    private int nbAssignments;
 
-	private final Map<Variable, Integer> solution;
+    private int maxBacktracks;
 
-	private int maxBacktracks;
+    private int nbBacktracks;
 
-	private int nbBacktracks;
+    private final ResultHandler resultHandler;
 
-	private int nbSolutions = 0;
+    private Class<? extends Filter> preprocessor = null;
 
-	private final ResultHandler resultHandler;
+    private int preproExpiration = -1;
 
-	private Class<? extends Filter> preprocessor = null;
+    private final static Logger logger = Logger.getLogger(AbstractSolver.class
+            .getName());
 
-	private int preproExpiration = -1;
+    protected final Map<String, Object> statistics;
 
-	private final static Logger logger = Logger.getLogger(AbstractSolver.class
-			.getName());
+    public static final Map<String, String> parameters = new HashMap<String, String>();
 
-	protected final Map<String, Object> statistics;
+    public AbstractSolver(Problem prob, ResultHandler resultHandler) {
+        super();
+        problem = prob;
+        nbAssignments = 0;
 
-	public static final Map<String, String> parameters = new HashMap<String, String>();
+        chronometer = new Chronometer();
+        this.resultHandler = resultHandler;
+        this.statistics = new HashMap<String, Object>();
+    }
 
-	public AbstractSolver(Problem prob, ResultHandler resultHandler) {
-		super();
-		problem = prob;
-		nbAssignments = 0;
-		solution = new HashMap<Variable, Integer>();
+    public int getNbAssignments() {
+        return nbAssignments;
+    }
 
-		chronometer = new Chronometer();
-		this.resultHandler = resultHandler;
-		this.statistics = new HashMap<String, Object>();
-	}
+    protected final void incrementNbAssignments() {
+        nbAssignments++;
+    }
 
-	public int getNbAssignments() {
-		return nbAssignments;
-	}
+    public final void setMaxBacktracks(final int maxBacktracks) {
+        this.maxBacktracks = maxBacktracks;
+        this.nbBacktracks = 0;
+    }
 
-	protected final void incrementNbAssignments() {
-		nbAssignments++;
-	}
+    public final void checkBacktracks() throws MaxBacktracksExceededException {
+        if (++nbBacktracks >= maxBacktracks && maxBacktracks >= 0) {
+            throw new MaxBacktracksExceededException();
+        }
+    }
 
-	protected final void addSolutionElement(final Variable variable,
-			final int index) {
-		solution.put(variable, variable.getValue(index));
-	}
+    public float getUserTime() {
+        return chronometer.getUserTime();
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see cspfj.Solver#getSolution()
-	 */
-	public final Map<Variable, Integer> getSolution() {
-		return solution;
-	}
+    public final int getMaxBacktracks() {
+        return maxBacktracks;
+    }
 
-	public final void setMaxBacktracks(final int maxBacktracks) {
-		this.maxBacktracks = maxBacktracks;
-		this.nbBacktracks = 0;
-	}
+    protected final int getNbBacktracks() {
+        return nbBacktracks;
+    }
 
-	public final void checkBacktracks() throws MaxBacktracksExceededException {
-		if (++nbBacktracks >= maxBacktracks && maxBacktracks >= 0) {
-			throw new MaxBacktracksExceededException();
-		}
-	}
+    public final void setUsePrepro(final Class<? extends Filter> prepro) {
+        this.preprocessor = prepro;
+    }
 
-	public float getUserTime() {
-		return chronometer.getUserTime();
-	}
+    public final void setPreproExp(final int time) {
+        this.preproExpiration = time;
+    }
 
-	public final int getMaxBacktracks() {
-		return maxBacktracks;
-	}
+    public final Class<? extends Filter> getPreprocessor() {
+        return preprocessor;
+    }
 
-	protected final int getNbBacktracks() {
-		return nbBacktracks;
-	}
+    protected final Map<Variable, Integer> solution() throws IOException {
+        final Map<Variable, Integer> solution = new HashMap<Variable, Integer>();
+        for (Variable v : problem.getVariables()) {
+            solution.put(v, v.getValue(v.getFirst()));
+        }
+        return solution;
+    }
 
-	protected final void setSolution(final Map<Variable, Integer> solution) {
-		this.solution.clear();
-		this.solution.putAll(solution);
-		nbSolutions = 1;
-	}
+    protected final ResultHandler getResultHandler() {
+        return resultHandler;
+    }
 
-	protected void solution(final Map<Variable, Integer> solution,
-			final int nbConflicts) throws IOException {
-		if (resultHandler.solution(solution, nbConflicts, false)) {
-			logger.info("At " + chronometer.getCurrentChrono());
-		}
-	}
+    public final Problem getProblem() {
+        return problem;
+    }
 
-	public final void setUsePrepro(final Class<? extends Filter> prepro) {
-		this.preprocessor = prepro;
-	}
+    public final boolean preprocess(final Filter filter)
+            throws InstantiationException, IllegalAccessException,
+            InvocationTargetException, NoSuchMethodException,
+            InterruptedException {
 
-	public final void setPreproExp(final int time) {
-		this.preproExpiration = time;
-	}
+        logger.info("Preprocessing (" + preproExpiration + ")");
 
-	public final Class<? extends Filter> getPreprocessor() {
-		return preprocessor;
-	}
+        final Filter preprocessor;
+        if (this.preprocessor == null) {
+            preprocessor = filter;
+        } else {
+            preprocessor = this.preprocessor.getConstructor(Problem.class)
+                    .newInstance(problem);
+        }
 
-	public final int getNbSolutions() {
-		return nbSolutions;
-	}
+        Thread.interrupted();
 
-	protected final void solution() throws IOException {
-		nbSolutions++;
-		if (resultHandler.isReceiveSolutions()) {
-			final Map<Variable, Integer> solution = new HashMap<Variable, Integer>();
-			for (Variable v : problem.getVariables()) {
-				solution.put(v, v.getValue(v.getFirst()));
-			}
+        final Timer waker = new Timer();
 
-			resultHandler.solution(solution, 0, false);
-		}
-	}
+        if (preproExpiration >= 0) {
+            waker.schedule(new Waker(Thread.currentThread()),
+                    preproExpiration * 1000);
+        }
 
-	protected final ResultHandler getResultHandler() {
-		return resultHandler;
-	}
+        final float start = chronometer.getCurrentChrono();
+        boolean consistent;
+        try {
+            consistent = preprocessor.reduceAll();
+        } catch (InterruptedException e) {
+            logger.warning("Interrupted preprocessing");
+            consistent = true;
+            throw e;
+        } finally {
+            final float preproCpu = chronometer.getCurrentChrono() - start;
+            waker.cancel();
 
-	public final Problem getProblem() {
-		return problem;
-	}
+            statistics.putAll(preprocessor.getStatistics());
 
-	public final boolean preprocess(final Filter filter)
-			throws InstantiationException, IllegalAccessException,
-			InvocationTargetException, NoSuchMethodException,
-			InterruptedException {
+            int removed = 0;
 
-		logger.info("Preprocessing (" + preproExpiration + ")");
+            for (Variable v : problem.getVariables()) {
+                removed += v.getDomain().maxSize() - v.getDomainSize();
 
-		final Filter preprocessor;
-		if (this.preprocessor == null) {
-			preprocessor = filter;
-		} else {
-			preprocessor = this.preprocessor.getConstructor(Problem.class)
-					.newInstance(problem);
-		}
+            }
+            statistics.put("prepro-removed", removed);
+            // statistics("prepro-subs", preprocessor.getNbSub()) ;
 
-		Thread.interrupted();
+            statistics.put("prepro-cpu", preproCpu);
+            statistics.put("prepro-constraint-ccks", AbstractConstraint
+                    .getChecks());
+            statistics.put("prepro-constraint-presenceccks", AbstractConstraint
+                    .getPresenceChecks());
+            statistics.put("prepro-matrix2d-ccks", MatrixManager2D.getChecks());
+            statistics.put("prepro-matrix2d-presenceccks", MatrixManager2D
+                    .getPresenceChecks());
 
-		final Timer waker = new Timer();
+            // if (SPACE.BRANCH.equals(space)) {
+            // statistics("prepro-singletontests", ((SAC) preprocessor)
+            // .getNbSingletonTests());
+            // } else if (SPACE.CLASSIC.equals(space)) {
+            // statistics("prepro-singletontests", ((AbstractSAC) preprocessor)
+            // .getNbSingletonTests());
+            // }
+        }
+        if (!consistent) {
+            chronometer.validateChrono();
+            return false;
+        }
+        return true;
 
-		if (preproExpiration >= 0) {
-			waker.schedule(new Waker(Thread.currentThread()),
-					preproExpiration * 1000);
-		}
+    }
 
-		final float start = chronometer.getCurrentChrono();
-		boolean consistent;
-		try {
-			consistent = preprocessor.reduceAll();
-		} catch (InterruptedException e) {
-			logger.warning("Interrupted preprocessing");
-			consistent = true;
-			throw e;
-		} finally {
-			final float preproCpu = chronometer.getCurrentChrono() - start;
-			waker.cancel();
+    public final Map<String, Object> getStatistics() {
+        return statistics;
+    }
 
-			statistics.putAll(preprocessor.getStatistics());
+    public static void parameter(final String name, final String value) {
+        parameters.put(name, value);
+    }
 
-			int removed = 0;
+    public String getXMLConfig() {
+        final StringBuilder stb = new StringBuilder();
 
-			for (Variable v : problem.getVariables()) {
-				removed += v.getDomain().maxSize() - v.getDomainSize();
+        for (Entry<String, String> p : parameters.entrySet()) {
+            stb.append("\t\t\t<p name=\"").append(p.getKey()).append("\">")
+                    .append(p.getValue()).append("</p>\n");
+        }
 
-			}
-			statistics.put("prepro-removed", removed);
-			// statistics("prepro-subs", preprocessor.getNbSub()) ;
-
-			statistics.put("prepro-cpu", preproCpu);
-			statistics.put("prepro-constraint-ccks", AbstractConstraint
-					.getChecks());
-			statistics.put("prepro-constraint-presenceccks", AbstractConstraint
-					.getPresenceChecks());
-			statistics.put("prepro-matrix2d-ccks", MatrixManager2D.getChecks());
-			statistics.put("prepro-matrix2d-presenceccks", MatrixManager2D
-					.getPresenceChecks());
-
-			// if (SPACE.BRANCH.equals(space)) {
-			// statistics("prepro-singletontests", ((SAC) preprocessor)
-			// .getNbSingletonTests());
-			// } else if (SPACE.CLASSIC.equals(space)) {
-			// statistics("prepro-singletontests", ((AbstractSAC) preprocessor)
-			// .getNbSingletonTests());
-			// }
-		}
-		if (!consistent) {
-			chronometer.validateChrono();
-			return false;
-		}
-		return true;
-
-	}
-
-	public Map<String, Object> getStatistics() {
-		return statistics;
-	}
-
-	public static void parameter(final String name, final String value) {
-		parameters.put(name, value);
-	}
-
-	public String getXMLConfig() {
-		final StringBuilder stb = new StringBuilder();
-
-		for (Entry<String, String> p : parameters.entrySet()) {
-			stb.append("\t\t\t<p name=\"").append(p.getKey()).append("\">")
-					.append(p.getValue()).append("</p>\n");
-		}
-
-		return stb.toString();
-	}
+        return stb.toString();
+    }
 }

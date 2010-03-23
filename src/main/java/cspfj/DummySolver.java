@@ -22,6 +22,8 @@ package cspfj;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidParameterException;
+import java.util.HashMap;
+import java.util.Map;
 
 import cspfj.filter.AC3;
 import cspfj.problem.Problem;
@@ -38,13 +40,13 @@ public final class DummySolver extends AbstractSolver {
      * 
      * @see cspfj.Solver#run(int)
      */
-    public boolean runSolver() throws IOException {
+    public Map<Variable, Integer> solve() throws IOException {
         System.gc();
         chronometer.startChrono();
         try {
             if (!preprocess(new AC3(problem))) {
                 chronometer.validateChrono();
-                return false;
+                return null;
             }
         } catch (InstantiationException e1) {
             throw new InvalidParameterException(e1.toString());
@@ -58,10 +60,8 @@ public final class DummySolver extends AbstractSolver {
             throw new IllegalArgumentException("Unexpected interruption");
         }
         chronometer.validateChrono();
-        for (Variable v : problem.getVariables()) {
-            addSolutionElement(v, 0);
-        }
-        return true;
+       
+        return new HashMap<Variable, Integer>();
     }
 
     public synchronized void collectStatistics() {

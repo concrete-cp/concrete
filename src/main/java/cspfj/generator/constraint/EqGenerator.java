@@ -13,65 +13,69 @@ import cspom.constraint.GeneralConstraint;
 
 public final class EqGenerator extends AbstractGenerator {
 
-	public EqGenerator(final Problem problem) {
-		super(problem);
-	}
+    public EqGenerator(final Problem problem) {
+        super(problem);
+    }
 
-	@Override
-	public boolean generate(final CSPOMConstraint constraint)
-			throws FailedGenerationException {
+    private Constraint generateGeneral(final CSPOMConstraint constraint) {
+        final Variable[] scope = getSolverVariables(constraint.getScope());
+        Variable notNull = notNull(scope);
+        if (notNull == null) {
+            return null;
+        }
+        for (Variable v : scope) {
+            if (v.getDomain() == null) {
+                v.setDomain(new BitVectorDomain(notNull.getDomain().allValues()));
+            }
+        }
+        return new Eq(scope[0], scope[1]);
+    }
 
-		final Constraint generated;
+    private Constraint generateReify(final FunctionalConstraint funcConstraint)
+            throws FailedGenerationException {
+        final Variable[] arguments = getSolverVariables(funcConstraint
+                .getArguments());
 
-		if (constraint instanceof GeneralConstraint) {
+        if (nullVariable(arguments) != null) {
+            return null;
+        }
 
-			final Variable[] scope = getSolverVariables(constraint.getScope());
-			Variable notNull = notNull(scope);
-			if (notNull == null) {
-				return false;
-			}
-			for (Variable v : scope) {
-				if (v.getDomain() == null) {
-					v.setDomain(new BitVectorDomain(notNull.getDomain()
-							.allValues()));
-				}
-			}
-			generated = new Eq(scope[0], scope[1]);
+        final Variable result = getSolverVariable(funcConstraint
+                .getResultVariable());
 
-		} else if (constraint instanceof FunctionalConstraint) {
+        booleanDomain(result);
 
-			final FunctionalConstraint funcConstraint = (FunctionalConstraint) constraint;
+        return new ReifiedEq(result, arguments);
 
-			final Variable[] arguments = getSolverVariables(funcConstraint
-					.getArguments());
+    }
 
-			if (nullVariable(arguments) != null) {
-				return false;
-			}
+    @Override
+    public boolean generate(final CSPOMConstraint constraint)
+            throws FailedGenerationException {
 
-			final Variable result = getSolverVariable(funcConstraint
-					.getResultVariable());
+        final Constraint generated;
 
-			if (result.getDomain() == null) {
-				result.setDomain(new BitVectorDomain(0, 1));
-			}
-			generated = new ReifiedEq(result, arguments);
+        if (constraint instanceof GeneralConstraint) {
+            generated = generateGeneral(constraint);
+        } else if (constraint instanceof FunctionalConstraint) {
+            generated = generateReify((FunctionalConstraint) constraint);
+        } else {
+            throw new FailedGenerationException(constraint + " not supported");
+        }
+        if (generated == null) {
+            return false;
+        }
+        addConstraint(generated);
+        return true;
+    }
 
-		} else {
-			throw new IllegalArgumentException(constraint + " not supported");
-		}
-
-		addConstraint(generated);
-		return true;
-	}
-
-	private static Variable notNull(final Variable[] variables) {
-		for (Variable v : variables) {
-			if (v.getDomain() != null) {
-				return v;
-			}
-		}
-		return null;
-	}
+    private static Variable notNull(final Variable[] variables) {
+        for (Variable v : variables) {
+            if (v.getDomain() != null) {
+                return v;
+            }
+        }
+        return null;
+    }
 
 }
