@@ -12,14 +12,14 @@ import cspfj.problem.Variable;
 import cspfj.util.IntLinkedList;
 import cspom.constraint.CSPOMConstraint;
 
-public class MulGenerator extends AbstractGenerator {
+public final class MulGenerator extends AbstractGenerator {
 
-	public MulGenerator(Problem problem) {
+	public MulGenerator(final Problem problem) {
 		super(problem);
 	}
 
 	@Override
-	public boolean generate(CSPOMConstraint constraint)
+	public boolean generate(final CSPOMConstraint constraint)
 			throws FailedGenerationException {
 		final Variable result = getSolverVariable(constraint.getVariable(0));
 		final Variable v0 = getSolverVariable(constraint.getVariable(1));

@@ -7,9 +7,9 @@ import cspfj.exception.FailedGenerationException;
 import cspfj.problem.Problem;
 import cspom.constraint.CSPOMConstraint;
 
-public class GeneratorManager {
+public final class GeneratorManager {
 
-	private final static Map<String, Class<? extends Generator>> KNOWN = new HashMap<String, Class<? extends Generator>>();
+	private static final Map<String, Class<? extends Generator>> KNOWN = new HashMap<String, Class<? extends Generator>>();
 
 	static {
 		register("abs", AbsGenerator.class);
@@ -31,7 +31,7 @@ public class GeneratorManager {
 	private final Problem problem;
 	private final Map<Class<? extends Generator>, Generator> generators;
 
-	public GeneratorManager(Problem problem) {
+	public GeneratorManager(final Problem problem) {
 		generators = new HashMap<Class<? extends Generator>, Generator>();
 		this.problem = problem;
 	}
@@ -43,7 +43,7 @@ public class GeneratorManager {
 
 	}
 
-	public boolean generate(CSPOMConstraint constraint)
+	public boolean generate(final CSPOMConstraint constraint)
 			throws FailedGenerationException {
 		final Class<? extends Generator> candidate = KNOWN.get(constraint
 				.getDescription());

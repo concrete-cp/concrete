@@ -17,7 +17,8 @@ public abstract class AbstractGenerator implements Generator {
 		this.problem = problem;
 	}
 
-	public Variable[] getSolverVariables(List<CSPOMVariable> variables) {
+	public final Variable[] getSolverVariables(
+			final List<CSPOMVariable> variables) {
 		final Variable[] solverVariables = new Variable[variables.size()];
 		for (ListIterator<CSPOMVariable> itr = variables.listIterator(); itr
 				.hasNext();) {
@@ -27,19 +28,19 @@ public abstract class AbstractGenerator implements Generator {
 		return solverVariables;
 	}
 
-	public Variable[] getSolverVariables(CSPOMVariable[] variables) {
+	public final Variable[] getSolverVariables(final CSPOMVariable[] variables) {
 		return getSolverVariables(Arrays.asList(variables));
 	}
 
-	public Variable getSolverVariable(CSPOMVariable variable) {
+	public final Variable getSolverVariable(final CSPOMVariable variable) {
 		return problem.getVariable(variable.getName());
 	}
 
-	public void addConstraint(Constraint constraint) {
+	public final void addConstraint(final Constraint constraint) {
 		problem.addConstraint(constraint);
 	}
 
-	public static Variable nullVariable(Variable[] array) {
+	public static Variable nullVariable(final Variable[] array) {
 		for (Variable v : array) {
 			if (v.getDomain() == null) {
 				return v;

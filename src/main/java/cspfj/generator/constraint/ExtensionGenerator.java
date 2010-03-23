@@ -22,14 +22,17 @@ import cspfj.problem.Variable;
 import cspom.constraint.CSPOMConstraint;
 import cspom.extension.Extension;
 
-public class ExtensionGenerator extends AbstractGenerator {
+public final class ExtensionGenerator extends AbstractGenerator {
+	private static final int TIGHTNESS_LIMIT = 4;
+	private static final int HASHCODE_BASE = 31;
 	private final Map<Signature, Matrix> generated = new HashMap<Signature, Matrix>();
 
-	public ExtensionGenerator(Problem problem) {
+	public ExtensionGenerator(final Problem problem) {
 		super(problem);
 	}
 
-	public Matrix generate(Domain[] domains, Extension<Number> extension) {
+	public Matrix generate(final Domain[] domains,
+			final Extension<Number> extension) {
 		final Signature signature = new Signature(domains, extension);
 		Matrix matrix = generated.get(signature);
 		if (matrix == null) {
@@ -41,7 +44,7 @@ public class ExtensionGenerator extends AbstractGenerator {
 	}
 
 	@Override
-	public boolean generate(CSPOMConstraint constraint)
+	public boolean generate(final CSPOMConstraint constraint)
 			throws FailedGenerationException {
 
 		final Variable[] solverVariables = getSolverVariables(constraint
@@ -59,18 +62,18 @@ public class ExtensionGenerator extends AbstractGenerator {
 		final cspom.extension.ExtensionConstraint<Number> extConstraint = (cspom.extension.ExtensionConstraint<Number>) constraint;
 		final Matrix matrix = generate(domains, extConstraint.getRelation());
 
-		final Constraint generated;
+		final Constraint gConstraint;
 		if (matrix instanceof Matrix2D) {
-			generated = new ExtensionConstraint2D(solverVariables,
+			gConstraint = new ExtensionConstraint2D(solverVariables,
 					(Matrix2D) matrix, true);
 		} else if (matrix instanceof TupleSet) {
-			generated = new ExtensionConstraintDynamic(solverVariables,
+			gConstraint = new ExtensionConstraintDynamic(solverVariables,
 					(TupleSet) matrix, true);
 		} else {
-			generated = new ExtensionConstraintGeneral(matrix, true,
+			gConstraint = new ExtensionConstraintGeneral(matrix, true,
 					solverVariables);
 		}
-		addConstraint(generated);
+		addConstraint(gConstraint);
 		return true;
 
 	}
@@ -87,11 +90,12 @@ public class ExtensionGenerator extends AbstractGenerator {
 
 		@Override
 		public int hashCode() {
-			return 31 * Arrays.deepHashCode(domains) + extension.hashCode();
+			return HASHCODE_BASE * Arrays.deepHashCode(domains)
+					+ extension.hashCode();
 		}
 
 		@Override
-		public boolean equals(Object obj) {
+		public boolean equals(final Object obj) {
 			if (!(obj instanceof Signature)) {
 				return false;
 			}
@@ -109,7 +113,7 @@ public class ExtensionGenerator extends AbstractGenerator {
 		}
 
 		return size.compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) >= 0
-				|| (4 * nbTuples < size.intValue());
+				|| (TIGHTNESS_LIMIT * nbTuples < size.intValue());
 	}
 
 	private static int[] sizes(final Domain[] domains) {
@@ -120,7 +124,7 @@ public class ExtensionGenerator extends AbstractGenerator {
 		return sizes;
 	}
 
-	private static Map<Number, Integer> indexMap(Domain domain) {
+	private static Map<Number, Integer> indexMap(final Domain domain) {
 		final Map<Number, Integer> map = new HashMap<Number, Integer>(domain
 				.size());
 		for (int i = domain.first(); i != -1; i = domain.next(i)) {

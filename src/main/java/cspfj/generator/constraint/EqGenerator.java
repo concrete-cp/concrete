@@ -11,14 +11,14 @@ import cspom.constraint.CSPOMConstraint;
 import cspom.constraint.FunctionalConstraint;
 import cspom.constraint.GeneralConstraint;
 
-public class EqGenerator extends AbstractGenerator {
+public final class EqGenerator extends AbstractGenerator {
 
-	public EqGenerator(Problem problem) {
+	public EqGenerator(final Problem problem) {
 		super(problem);
 	}
 
 	@Override
-	public boolean generate(CSPOMConstraint constraint)
+	public boolean generate(final CSPOMConstraint constraint)
 			throws FailedGenerationException {
 
 		final Constraint generated;
@@ -65,7 +65,7 @@ public class EqGenerator extends AbstractGenerator {
 		return true;
 	}
 
-	private static Variable notNull(Variable[] variables) {
+	private static Variable notNull(final Variable[] variables) {
 		for (Variable v : variables) {
 			if (v.getDomain() != null) {
 				return v;

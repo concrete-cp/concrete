@@ -14,12 +14,12 @@ import cspom.variable.CSPOMVariable;
 
 public final class DisjGenerator extends AbstractGenerator {
 
-	public DisjGenerator(Problem problem) {
+	public DisjGenerator(final Problem problem) {
 		super(problem);
 	}
 
 	@Override
-	public boolean generate(CSPOMConstraint constraint)
+	public boolean generate(final CSPOMConstraint constraint)
 			throws FailedGenerationException {
 		final Variable[] scope = getSolverVariables(constraint.getScope());
 
@@ -30,6 +30,7 @@ public final class DisjGenerator extends AbstractGenerator {
 		}
 
 		if ("or".equals(constraint.getDescription())) {
+			
 			if (constraint instanceof GeneralConstraint) {
 
 				addConstraint(new Disj(scope));
@@ -63,7 +64,14 @@ public final class DisjGenerator extends AbstractGenerator {
 				throw new IllegalArgumentException(
 						"Unhandled constraint type for " + constraint);
 			}
+			
 		} else if ("not".equals(constraint.getDescription())) {
+			
+			/*
+			 * Negation is converted to CNF :
+			 * 
+			 * a = -b <=> (a v b) ^ (-a v -b) 
+			 */
 			if (!(constraint instanceof FunctionalConstraint)) {
 				throw new IllegalArgumentException(
 						"Unhandled constraint type for " + constraint);

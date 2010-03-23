@@ -7,14 +7,14 @@ import cspfj.problem.Variable;
 import cspom.constraint.CSPOMConstraint;
 import cspom.constraint.GeneralConstraint;
 
-public class AllDifferentGenerator extends AbstractGenerator {
+public final class AllDifferentGenerator extends AbstractGenerator {
 
-	public AllDifferentGenerator(Problem problem) {
+	public AllDifferentGenerator(final Problem problem) {
 		super(problem);
 	}
 
 	@Override
-	public boolean generate(CSPOMConstraint constraint)
+	public boolean generate(final CSPOMConstraint constraint)
 			throws FailedGenerationException {
 
 		if (!(constraint instanceof GeneralConstraint)) {
