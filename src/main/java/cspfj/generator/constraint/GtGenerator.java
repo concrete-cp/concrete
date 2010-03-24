@@ -4,7 +4,6 @@ import cspfj.constraint.Constraint;
 import cspfj.constraint.semantic.Gt;
 import cspfj.constraint.semantic.ReifiedGt;
 import cspfj.exception.FailedGenerationException;
-import cspfj.problem.BitVectorDomain;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspom.constraint.CSPOMConstraint;

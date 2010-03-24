@@ -17,9 +17,12 @@ import cspom.variable.BooleanDomain;
 import cspom.variable.CSPOMDomain;
 import cspom.variable.CSPOMVariable;
 
-public class ProblemGenerator {
+public final class ProblemGenerator {
 
-	public static Problem generate(CSPOM cspom)
+	private ProblemGenerator() {
+	}
+
+	public static Problem generate(final CSPOM cspom)
 			throws FailedGenerationException {
 
 		new ProblemCompiler(cspom).compile();

@@ -24,7 +24,7 @@ import cspfj.problem.Variable;
 
 public final class ReifiedGt extends AbstractAC3Constraint {
 
-	final private boolean strict;
+	private final boolean strict;
 
 	public ReifiedGt(final Variable result, final Variable v0,
 			final Variable v1, final boolean strict) {

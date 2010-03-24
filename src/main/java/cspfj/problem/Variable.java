@@ -43,12 +43,13 @@ public final class Variable implements Cloneable, Identified {
 
 	private int[] positionInConstraint;
 
-	private String name;
+	private final String name;
 
 	public Variable(final String name, final Domain domain) {
 		this.domain = domain;
 		assigned = false;
 		id = nbV++;
+		this.name = name;
 	}
 
 	/**
