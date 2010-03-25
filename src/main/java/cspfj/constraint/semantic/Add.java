@@ -6,7 +6,7 @@ import cspfj.problem.Variable;
 
 public final class Add extends AbstractAC3Constraint {
 
-	public Add(Variable result, Variable v0, Variable v1) {
+	public Add(final Variable result, final Variable v0, final Variable v1) {
 		super(result, v0, v1);
 	}
 
@@ -82,7 +82,7 @@ public final class Add extends AbstractAC3Constraint {
 	}
 
 	@Override
-	public int getEvaluation(int rev) {
+	public int getEvaluation(final int rev) {
 		final int d0 = getVariable(0).getDomainSize();
 		final int d1 = getVariable(1).getDomainSize();
 		final int d2 = getVariable(2).getDomainSize();

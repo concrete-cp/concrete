@@ -7,7 +7,7 @@ import cspfj.problem.Variable;
 
 public abstract class AbstractVariableHeuristic implements VariableHeuristic {
 
-    private final static Random random = new Random(0);
+    private static final Random RAND = new Random(0);
 
     protected final Problem problem;
 
@@ -15,23 +15,35 @@ public abstract class AbstractVariableHeuristic implements VariableHeuristic {
         this.problem = problem;
     }
 
-    public Variable selectVariable(final Variable[] variables) {
+    public final Variable selectVariable(final Variable[] variables) {
         int ties = 1;
         Variable bestVariable = null;
-        int i = variables.length;
-        while (--i >= 0) {
-            if (!variables[i].isAssigned()) {
-                bestVariable = variables[i];
-                break;
+        double bestScore = Double.MIN_VALUE;
+        // int i = variables.length;
+        // while (--i >= 0) {
+        // if (!variables[i].isAssigned()) {
+        // bestVariable = variables[i];
+        // bestScore = getScore(bestVariable);
+        // break;
+        // }
+        // }
+
+        for (Variable v : variables) {
+            if (v.getDomainSize() > 1) {
+                final double score = getScore(v);
+                final int comp = Double.compare(score, bestScore);
+                if (comp > 0 || (comp == 0 && ++ties * RAND.nextFloat() > 1)) {
+                    bestVariable = v;
+                    bestScore = score;
+                    ties = 1;
+                }
             }
         }
 
-        while (--i >= 0) {
-            if (variables[i].getDomainSize() > 1) {
-                final int comp = compare(variables[i], bestVariable);
-                if (comp > 0 || (comp == 0 && ++ties * random.nextFloat() > 1)) {
-                    bestVariable = variables[i];
-                    ties = 1;
+        if (bestVariable == null) {
+            for (Variable v : variables) {
+                if (!v.isAssigned()) {
+                    return v;
                 }
             }
         }
@@ -50,7 +62,7 @@ public abstract class AbstractVariableHeuristic implements VariableHeuristic {
     }
 
     private static double poisson(final double moy) {
-        return -moy * Math.log(random.nextDouble());
+        return -moy * Math.log(RAND.nextDouble());
     }
 
 }

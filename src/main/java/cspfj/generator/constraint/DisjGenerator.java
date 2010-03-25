@@ -1,10 +1,10 @@
 package cspfj.generator.constraint;
 
+import java.security.InvalidParameterException;
 import java.util.Arrays;
 
 import cspfj.constraint.semantic.Disj;
 import cspfj.exception.FailedGenerationException;
-import cspfj.problem.BitVectorDomain;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspom.constraint.CSPOMConstraint;
@@ -19,7 +19,7 @@ public final class DisjGenerator extends AbstractGenerator {
     }
 
     private void generateReify(final Variable[] scope,
-            final FunctionalConstraint constraint) {
+            final FunctionalConstraint<?> constraint) {
         /*
          * Reified disjunction is converted to CNF :
          * 
@@ -29,7 +29,15 @@ public final class DisjGenerator extends AbstractGenerator {
          * 
          * (-a v b v c v d...) ^ (a v -b) ^ (a v -c) ^ (a v -d) ^ ...
          */
+        final boolean[] parameters = parseParameters(constraint.getParameters());
+        if (parameters != null && parameters.length != scope.length - 1) {
+            throw new InvalidParameterException(
+                    "Incorrect number of parameters");
+        }
         final boolean[] reverses = new boolean[scope.length];
+        if (parameters != null) {
+            System.arraycopy(parameters, 0, reverses, 1, parameters.length);
+        }
         reverses[0] = true;
         addConstraint(new Disj(scope, reverses));
 
@@ -42,7 +50,7 @@ public final class DisjGenerator extends AbstractGenerator {
         }
     }
 
-    private void generateNeg(final FunctionalConstraint constraint)
+    private void generateNeg(final FunctionalConstraint<?> constraint)
             throws FailedGenerationException {
         /*
          * Negation is converted to CNF :
@@ -65,7 +73,7 @@ public final class DisjGenerator extends AbstractGenerator {
     }
 
     @Override
-    public boolean generate(final CSPOMConstraint constraint)
+    public boolean generate(final CSPOMConstraint<?> constraint)
             throws FailedGenerationException {
         final Variable[] scope = getSolverVariables(constraint.getScope());
 
@@ -75,10 +83,11 @@ public final class DisjGenerator extends AbstractGenerator {
 
         if ("or".equals(constraint.getDescription())) {
 
-            if (constraint instanceof GeneralConstraint) {
-                addConstraint(new Disj(scope));
-            } else if (constraint instanceof FunctionalConstraint) {
-                generateReify(scope, (FunctionalConstraint) constraint);
+            if (constraint instanceof GeneralConstraint<?>) {
+                addConstraint(new Disj(scope, parseParameters(constraint
+                        .getParameters())));
+            } else if (constraint instanceof FunctionalConstraint<?>) {
+                generateReify(scope, (FunctionalConstraint<?>) constraint);
             } else {
                 throw new IllegalArgumentException(
                         "Unhandled constraint type for " + constraint);
@@ -86,11 +95,11 @@ public final class DisjGenerator extends AbstractGenerator {
 
         } else if ("not".equals(constraint.getDescription())) {
 
-            if (!(constraint instanceof FunctionalConstraint)) {
+            if (!(constraint instanceof FunctionalConstraint<?>)) {
                 throw new FailedGenerationException(
                         "Unhandled constraint type for " + constraint);
             }
-            generateNeg((FunctionalConstraint) constraint);
+            generateNeg((FunctionalConstraint<?>) constraint);
 
         } else {
             throw new IllegalArgumentException("Unhandled constraint type for "
@@ -98,5 +107,17 @@ public final class DisjGenerator extends AbstractGenerator {
         }
 
         return true;
+    }
+
+    private static boolean[] parseParameters(final String parameters) {
+        if (parameters == null) {
+            return null;
+        }
+        final String[] params = parameters.split(",");
+        final boolean[] reverses = new boolean[params.length];
+        for (int i = params.length; --i >= 0;) {
+            reverses[i] = Integer.parseInt(params[i].trim()) > 0;
+        }
+        return reverses;
     }
 }

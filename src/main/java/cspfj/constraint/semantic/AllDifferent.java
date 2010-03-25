@@ -73,7 +73,7 @@ public final class AllDifferent extends AbstractConstraint {
 	}
 
 	@Override
-	public boolean revise(RevisionHandler revisator, int reviseCount) {
+	public boolean revise(final RevisionHandler revisator, final int reviseCount) {
 		final BitVector union = this.union;
 		final int min = this.offset;
 		final BitVector queue = this.queue;

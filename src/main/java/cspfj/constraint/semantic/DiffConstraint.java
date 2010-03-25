@@ -25,9 +25,9 @@ import cspfj.problem.Variable;
 
 public final class DiffConstraint extends AbstractPVRConstraint {
 
-    final private int constant;
+    private final int constant;
 
-    final private boolean ordered;
+    private final boolean ordered;
 
     public DiffConstraint(final Variable[] scope, final int constant) {
         this(scope, constant, false);
