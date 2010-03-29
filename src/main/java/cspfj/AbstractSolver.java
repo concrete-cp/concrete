@@ -48,7 +48,7 @@ public abstract class AbstractSolver implements Solver {
     }
     protected final Problem problem;
 
-    protected final Chronometer chronometer;
+    private final Chronometer chronometer;
 
     private int nbAssignments;
 
@@ -227,5 +227,17 @@ public abstract class AbstractSolver implements Solver {
         }
 
         return stb.toString();
+    }
+
+    public final void startChrono() {
+        chronometer.startChrono();
+    }
+
+    public final float getCurrentChrono() {
+        return chronometer.getCurrentChrono();
+    }
+
+    public final void validateChrono() {
+        chronometer.validateChrono();
     }
 }

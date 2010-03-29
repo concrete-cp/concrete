@@ -202,6 +202,7 @@ public final class BitVectorDomain implements Domain {
                     return bvHistory[l];
                 }
             }
+            return BitVector.factory(domain.length, true);
         }
 
         return bvDomain;

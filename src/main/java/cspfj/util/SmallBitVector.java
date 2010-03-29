@@ -1,12 +1,16 @@
 package cspfj.util;
 
-public class SmallBitVector extends BitVector {
+public final class SmallBitVector extends BitVector {
 
     private long word;
 
     public SmallBitVector(final int size, final boolean fill) {
         super(size);
-        word = fill ? MASK >>> -size : 0;
+        if (fill) {
+            word = MASK >>> -size;
+        } else {
+            word = 0;
+        }
     }
 
     public boolean clear(final int position) {
@@ -46,11 +50,11 @@ public class SmallBitVector extends BitVector {
         set(index);
     }
 
-    public void clearFrom(int from) {
+    public void clearFrom(final int from) {
         word &= ~(MASK << from);
     }
 
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         return ((SmallBitVector) o).word == word;
     }
 
@@ -59,20 +63,20 @@ public class SmallBitVector extends BitVector {
     }
 
     @Override
-    public void copyTo(BitVector bv) {
+    public void copyTo(final BitVector bv) {
         ((SmallBitVector) bv).word = word;
     }
 
     @Override
-    public void fill(boolean fill) {
+    public void fill(final boolean fill) {
         word = fill ? (MASK >>> -size) : 0;
     }
 
-    public boolean intersects(BitVector bv, int position) {
+    public boolean intersects(final BitVector bv, final int position) {
         return (((SmallBitVector) bv).word & word) != 0;
     }
 
-    public int intersects(BitVector bv) {
+    public int intersects(final BitVector bv) {
         return intersects(bv, 0) ? 0 : -1;
     }
 
@@ -80,14 +84,14 @@ public class SmallBitVector extends BitVector {
         return 1;
     }
 
-    public BitVector xor(BitVector bv) {
+    public BitVector xor(final BitVector bv) {
         final SmallBitVector bitVector = new SmallBitVector(size, false);
         bitVector.word = (((SmallBitVector) bv).word ^ this.word)
                 & (MASK >>> -size);
         return bitVector;
     }
 
-    public BitVector and(BitVector bv) {
+    public BitVector and(final BitVector bv) {
         final SmallBitVector bitVector = new SmallBitVector(size, false);
         bitVector.word = (((SmallBitVector) bv).word & this.word)
                 & (MASK >>> -size);
@@ -100,7 +104,7 @@ public class SmallBitVector extends BitVector {
         return bitVector;
     }
 
-    public void setAllBut(int index) {
+    public void setAllBut(final int index) {
         word |= ~(1L << index) & (MASK >>> -size);
     }
 
@@ -113,5 +117,5 @@ public class SmallBitVector extends BitVector {
     public int cardinality() {
         return Long.bitCount(word);
     }
-    
+
 }

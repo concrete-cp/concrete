@@ -42,10 +42,10 @@ public final class DummySolver extends AbstractSolver {
      */
     public Map<Variable, Integer> solve() throws IOException {
         System.gc();
-        chronometer.startChrono();
+        startChrono();
         try {
             if (!preprocess(new AC3(problem))) {
-                chronometer.validateChrono();
+                validateChrono();
                 return null;
             }
         } catch (InstantiationException e1) {
@@ -59,13 +59,13 @@ public final class DummySolver extends AbstractSolver {
         } catch (InterruptedException e) {
             throw new IllegalArgumentException("Unexpected interruption");
         }
-        chronometer.validateChrono();
-       
+        validateChrono();
+
         return new HashMap<Variable, Integer>();
     }
 
     public synchronized void collectStatistics() {
-        chronometer.validateChrono();
+        validateChrono();
     }
 
     public String getXMLConfig() {

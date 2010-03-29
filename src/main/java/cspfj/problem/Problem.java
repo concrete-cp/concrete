@@ -25,22 +25,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.Map.Entry;
-import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
-import cspfj.constraint.DynamicConstraint;
-import cspfj.constraint.extension.ExtensionConstraint2D;
-import cspfj.constraint.extension.ExtensionConstraintGeneral;
-import cspfj.constraint.extension.Matrix;
-import cspfj.constraint.extension.Matrix2D;
-import cspfj.constraint.extension.TupleSet;
-import cspfj.constraint.semantic.RCConstraint;
-import cspfj.util.BitVector;
 
 public final class Problem {
     private Map<String, Variable> variables;
@@ -51,36 +39,22 @@ public final class Problem {
 
     private List<Constraint> constraints;
 
-    private int nbFutureVariables = 0;
-
-    private final static Logger LOGGER = Logger.getLogger(Problem.class
-            .getName());
-
     private int maxDomainSize;
 
     private Variable[] levelVariables;
 
     private int maxArity;
 
-    private boolean useNoGoods;
-
     private int maxVId;
 
     private int maxCId;
-
-    private int nbNoGoods = 0;
 
     private int currentLevel;
 
     public Problem() {
         super();
-        this.useNoGoods = true;
         variables = new HashMap<String, Variable>();
         constraints = new ArrayList<Constraint>();
-    }
-
-    public int getNbFutureVariables() {
-        return nbFutureVariables;
     }
 
     public Variable addVariable(final String name, final Domain domain) {
@@ -109,9 +83,9 @@ public final class Problem {
             maxVId = Math.max(maxVId, var.getId());
         }
 
-        nbFutureVariables = nbVariables = variables.size();
+        nbVariables = variables.size();
 
-        levelVariables = new Variable[getNbVariables()];
+        levelVariables = new Variable[nbVariables];
     }
 
     public void prepareConstraints() {
@@ -120,7 +94,7 @@ public final class Problem {
 
         maxArity = Collections.max(constraints, new Comparator<Constraint>() {
             @Override
-            public int compare(Constraint o1, Constraint o2) {
+            public int compare(final Constraint o1, final Constraint o2) {
                 return o1.getArity() - o2.getArity();
             }
         }).getArity();
@@ -166,14 +140,6 @@ public final class Problem {
         return variableArray;
     }
 
-    public void increaseFutureVariables() {
-        nbFutureVariables++;
-    }
-
-    public void decreaseFutureVariables() {
-        nbFutureVariables--;
-    }
-
     public void push() {
         currentLevel++;
         setLevel(currentLevel);
@@ -186,7 +152,7 @@ public final class Problem {
 
     }
 
-    private void setLevel(int level) {
+    private void setLevel(final int level) {
         // currentLevel = level;
         for (Variable v : variableArray) {
             v.setLevel(level);
@@ -196,7 +162,7 @@ public final class Problem {
         }
     }
 
-    private void restoreLevel(int level) {
+    private void restoreLevel(final int level) {
         // currentLevel = level;
         for (Variable v : variableArray) {
             v.restoreLevel(level);
@@ -209,7 +175,7 @@ public final class Problem {
     public void reset() {
         currentLevel = 0;
         for (Variable v : variableArray) {
-            v.reset(this);
+            v.reset();
         }
         for (Constraint c : getConstraints()) {
             c.restore(0);
@@ -234,277 +200,11 @@ public final class Problem {
         return maxDomainSize;
     }
 
-    private final static DynamicConstraint findDynamicConstraint(
-            final Set<Variable> scope) {
-
-        for (DynamicConstraint c : scope.iterator().next()
-                .getDynamicConstraints()) {
-            if (c.getArity() == scope.size()
-            // || (c.getArity() > scope.size() && c
-            // .positive()))
-                    && c.getScopeSet().containsAll(scope)) {
-                return c;
-            }
-        }
-        return null;
-    }
-
-    public final DynamicConstraint learnConstraint(final Set<Variable> scope,
-            final LearnMethod addConstraints) {
-        final DynamicConstraint constraint = findDynamicConstraint(scope);
-
-        if (constraint != null) {
-            return constraint;
-        }
-
-        if (addConstraints == LearnMethod.NONE) {
-            return null;
-        }
-
-        final int level = scope.size();
-        final Variable[] constraintScope = scope.toArray(new Variable[level]);
-
-        if (level == 2) {
-
-            if (addConstraints == LearnMethod.RC) {
-                return new RCConstraint(constraintScope);
-            }
-
-            final Matrix2D matrix = new Matrix2D(constraintScope[0].getDomain()
-                    .maxSize(), constraintScope[1].getDomain().maxSize(), true);
-            return new ExtensionConstraint2D(constraintScope, matrix, false);
-
-        }
-
-        if (addConstraints == LearnMethod.EXT) {
-
-            final Matrix matrix = new TupleSet(true);
-
-            return new ExtensionConstraintGeneral(matrix, false,
-                    constraintScope);
-
-        }
-        return null;
-    }
-
-    private static int[] makeBase(Variable[] scope, int[] values,
-            Constraint constraint) {
-        assert scope.length == values.length;
-        int[] tuple = new int[constraint.getArity()];
-
-        Arrays.fill(tuple, -1);
-
-        for (int i = constraint.getArity(); --i >= 0;) {
-            final Variable var = constraint.getVariable(i);
-            for (int j = scope.length; --j >= 0;) {
-                if (scope[j] == var) {
-                    tuple[i] = values[j];
-                    break;
-                }
-            }
-        }
-
-        return tuple;
-    }
-
-    /**
-     * Sets the base array given as a parameter so that the values of base
-     * correspond to the values of the values array reordered such that they
-     * correspond to the variables of the scope of the constraint. Variables
-     * present in the scope of the constraint but not in the scope[] array
-     * result in a -1 value in the base[] array. Last variable of scope[] is
-     * ignored. Returns the position of the last variable of scope[] in the
-     * constraint's scope.
-     * 
-     * @param scope
-     * @param values
-     * @param constraint
-     * @param base
-     * @return
-     */
-    public static int makeBase(Variable[] scope, int[] values,
-            Constraint constraint, int[] base) {
-        assert scope.length == values.length;
-        assert base.length == constraint.getArity();
-
-        Arrays.fill(base, -1);
-
-        final Variable seek = scope[scope.length - 1];
-        int positionInConstraint = -1;
-
-        for (int i = constraint.getArity(); --i >= 0;) {
-            final Variable var = constraint.getVariable(i);
-            if (var == seek) {
-                positionInConstraint = i;
-                continue;
-            }
-            for (int j = scope.length - 1; --j >= 0;) {
-                if (scope[j] == var) {
-                    base[i] = values[j];
-                    break;
-                }
-            }
-
-        }
-
-        return positionInConstraint;
-    }
-
     public int getCurrentLevel() {
         return currentLevel;
     }
 
-    public boolean noGoods(LearnMethod learnMethod) {
-        if (!useNoGoods) {
-            return false;
-        }
-
-        final Variable[] levelVariables = this.levelVariables;
-
-        if (levelVariables[0] == null) {
-            return false;
-        }
-
-        // final Map<Variable[], List<int[]>> noGoods = new HashMap<Variable[],
-        // List<int[]>>();
-
-        int startLevel = 0;
-        while (startLevel < levelVariables.length
-                && levelVariables[startLevel] != null) {
-            startLevel++;
-        }
-
-        int[] tuple = new int[startLevel + 1];
-
-        final Set<Variable> scopeSet = new HashSet<Variable>(startLevel);
-        for (int i = startLevel; --i >= 0;) {
-            scopeSet.add(levelVariables[i]);
-            tuple[i] = levelVariables[i].getFirst();
-        }
-
-        boolean modified = false;
-        final Collection<Constraint> addedConstraints = new ArrayList<Constraint>();
-
-        for (int level = startLevel + 1; --level >= 1;) {
-            // Note : Nothing to remove on first level
-            scopeSet.remove(levelVariables[level]);
-            final Variable[] scopeArray = Arrays.copyOf(levelVariables,
-                    level + 1);
-            // restoreLevel(level);
-
-            tuple = Arrays.copyOf(tuple, level + 1);
-
-            for (Variable fv : variableArray) {
-
-                // logger.fine("checking " +
-                // getVariable(levelVariables[level-1]));
-
-                if (scopeSet.contains(fv)) {
-                    continue;
-                }
-
-                final BitVector changes = fv.getDomain().getAtLevel(level - 1)
-                        .xor(fv.getDomain().getAtLevel(level));
-                if (changes.isEmpty()) {
-                    continue;
-                }
-
-                scopeSet.add(fv);
-                final DynamicConstraint constraint = learnConstraint(scopeSet,
-                        learnMethod);
-                scopeSet.remove(fv);
-
-                if (constraint == null) {
-                    continue;
-                }
-
-                scopeArray[level] = fv;
-
-                final int[] base = new int[constraint.getArity()];
-                final int varPos = makeBase(scopeArray, tuple, constraint, base);
-
-                int newNogoods = 0;
-                for (int i = changes.nextSetBit(0); i >= 0; i = changes
-                        .nextSetBit(i + 1)) {
-                    base[varPos] = i;
-                    newNogoods += constraint.removeTuples(base);
-
-                }
-                if (newNogoods > 0) {
-                    nbNoGoods += newNogoods;
-                    modified = true;
-                    if (constraint.getId() > getMaxCId()) {
-                        LOGGER.info("Added " + constraint);
-                        addedConstraints.add(constraint);
-                    }
-                }
-            }
-        }
-        if (modified) {
-            LOGGER.info(nbNoGoods + " nogoods");
-
-            if (!addedConstraints.isEmpty()) {
-                constraints.addAll(addedConstraints);
-                prepareConstraints();
-                LOGGER.info(getNbConstraints() + " constraints");
-            }
-        }
-        return modified;
-    }
-
-    public boolean noGoodsToConstraints(Map<Variable[], List<int[]>> noGoods,
-            final LearnMethod learnMethod) {
-        if (noGoods == null) {
-            return false;
-        }
-        boolean modified = false;
-        final Collection<Constraint> addedConstraints = new ArrayList<Constraint>();
-
-        for (Entry<Variable[], List<int[]>> e : noGoods.entrySet()) {
-            final Set<Variable> scope = new HashSet<Variable>(Arrays.asList(e
-                    .getKey()));
-
-            final DynamicConstraint constraint = learnConstraint(scope,
-                    learnMethod);
-
-            if (constraint == null) {
-                continue;
-            }
-
-            int newNogoods = 0;
-            for (int[] tuple : e.getValue()) {
-                newNogoods += constraint.removeTuples(makeBase(e.getKey(),
-                        tuple, constraint));
-            }
-            if (newNogoods == 0) {
-                continue;
-            }
-            nbNoGoods += newNogoods;
-            modified = true;
-            if (constraint.getId() > getMaxCId()) {
-                LOGGER.info("Added " + constraint);
-                addedConstraints.add(constraint);
-            }
-
-        }
-
-        if (modified) {
-            LOGGER.info(nbNoGoods + " nogoods");
-
-            if (!addedConstraints.isEmpty()) {
-                constraints.addAll(addedConstraints);
-                prepareConstraints();
-                LOGGER.info(getNbConstraints() + " constraints");
-            }
-        }
-        return modified;
-    }
-
-    public int getNbNoGoods() {
-        return nbNoGoods;
-    }
-
-    public void setLevelVariables(final Variable variable) {
+    public void setCurrentLevelVariable(final Variable variable) {
         assert (currentLevel + 1 >= levelVariables.length || levelVariables[currentLevel + 1] == null);
         levelVariables[currentLevel] = variable;
 
@@ -518,19 +218,12 @@ public final class Problem {
         Arrays.fill(levelVariables, null);
     }
 
-    public int[] getLevelVariables(final int minLevel) {
-        final int[] variables = new int[levelVariables.length - minLevel];
-        System.arraycopy(levelVariables, minLevel, variables, 0,
-                variables.length);
-        return variables;
+    public Variable[] getLevelVariablesTo(final int length) {
+        return Arrays.copyOf(levelVariables, length);
     }
 
     public int getMaxArity() {
         return maxArity;
-    }
-
-    public void setUseNoGoods(final boolean b) {
-        this.useNoGoods = b;
     }
 
     public int getMaxVId() {
@@ -566,16 +259,14 @@ public final class Problem {
         return Math.max(10, maxDomainSize / 10);
     }
 
-    public Variable getVariable(String name) {
+    public Variable getVariable(final String name) {
         return variables.get(name);
     }
 
-    public static enum LearnMethod {
-        NONE, EXT, RC, BIN
-    }
-
     public Variable getLastLevelVariable() {
+        if (currentLevel <= 0) {
+            return null;
+        }
         return levelVariables[currentLevel - 1];
     }
-
 }

@@ -72,11 +72,11 @@ public final class B3C extends AbstractSAC {
 
     private boolean check(Variable variable, int index) {
         problem.push();
-        variable.assign(index, problem);
-        problem.setLevelVariables(variable);
+        variable.assign(index);
+        problem.setCurrentLevelVariable(variable);
         nbSingletonTests++;
         final boolean consistent = filter.reduceAfter(variable);
-        variable.unassign(problem);
+        variable.unassign();
         problem.pop();
 
         if (!consistent) {

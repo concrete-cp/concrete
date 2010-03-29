@@ -21,17 +21,17 @@ package cspfj.util;
 
 import java.util.Random;
 
-public final class TieManager {
+public final class TieManager<T> {
 
-    private int bestValue;
+    private T bestValue;
 
-    private int bestEvaluation;
+    private double bestEvaluation;
 
     private int nbTies;
 
     private final Random random;
 
-    public TieManager(Random random) {
+    public TieManager(final Random random) {
         super();
 
         this.random = random;
@@ -39,12 +39,12 @@ public final class TieManager {
     }
 
     public void clear() {
-        bestValue = -1;
-        bestEvaluation = Integer.MAX_VALUE;
+        bestValue = null;
+        bestEvaluation = Double.MIN_VALUE;
         nbTies = 1;
     }
 
-    public boolean newValue(final int value, final int evaluation) {
+    public boolean newValue(final T value, final double evaluation) {
         if (newValue(evaluation)) {
             this.bestValue = value;
             return true;
@@ -52,12 +52,12 @@ public final class TieManager {
         return false;
     }
 
-    private boolean newValue(final int evaluation) {
+    private boolean newValue(final double evaluation) {
         if (evaluation == bestEvaluation) {
             return random.nextFloat() * nbTies++ < 1;
         }
 
-        if (evaluation < bestEvaluation) {
+        if (evaluation > bestEvaluation) {
             nbTies = 2;
             this.bestEvaluation = evaluation;
             return true;
@@ -66,11 +66,11 @@ public final class TieManager {
         return false;
     }
 
-    public int getBestValue() {
+    public T getBestValue() {
         return bestValue;
     }
 
-    public int getBestEvaluation() {
+    public double getBestEvaluation() {
         return bestEvaluation;
     }
 

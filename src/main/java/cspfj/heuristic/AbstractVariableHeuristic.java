@@ -4,6 +4,7 @@ import java.util.Random;
 
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
+import cspfj.util.TieManager;
 
 public abstract class AbstractVariableHeuristic implements VariableHeuristic {
 
@@ -11,53 +12,35 @@ public abstract class AbstractVariableHeuristic implements VariableHeuristic {
 
     protected final Problem problem;
 
+    private final TieManager<Variable> tieManager;
+
     public AbstractVariableHeuristic(final Problem problem) {
         this.problem = problem;
+        tieManager = new TieManager<Variable>(RAND);
     }
 
-    public final Variable selectVariable(final Variable[] variables) {
-        int ties = 1;
-        Variable bestVariable = null;
-        double bestScore = Double.MIN_VALUE;
-        // int i = variables.length;
-        // while (--i >= 0) {
-        // if (!variables[i].isAssigned()) {
-        // bestVariable = variables[i];
-        // bestScore = getScore(bestVariable);
-        // break;
-        // }
-        // }
+    @Override
+    public final Variable selectVariable() {
+        tieManager.clear();
 
-        for (Variable v : variables) {
+        for (Variable v : problem.getVariables()) {
             if (v.getDomainSize() > 1) {
-                final double score = getScore(v);
-                final int comp = Double.compare(score, bestScore);
-                if (comp > 0 || (comp == 0 && ++ties * RAND.nextFloat() > 1)) {
-                    bestVariable = v;
-                    bestScore = score;
-                    ties = 1;
-                }
+                tieManager.newValue(v, getScore(v));
             }
         }
 
-        if (bestVariable == null) {
-            for (Variable v : variables) {
+        if (tieManager.getBestValue() == null) {
+            for (Variable v : problem.getVariables()) {
                 if (!v.isAssigned()) {
                     return v;
                 }
             }
         }
 
-        return bestVariable;
+        return tieManager.getBestValue();
     }
 
     public final int compare(final Variable variable1, final Variable variable2) {
-        // if (variable1 == null) {
-        // return 1;
-        // }
-        // if (variable2 == null) {
-        // return -1;
-        // }
         return Double.compare(getScore(variable1), getScore(variable2));
     }
 

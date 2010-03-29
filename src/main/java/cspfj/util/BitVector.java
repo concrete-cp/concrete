@@ -1,24 +1,28 @@
 package cspfj.util;
 
 public abstract class BitVector implements Cloneable {
-    protected final static int ADDRESS_BITS_PER_WORD = 6;
+    protected static final int ADDRESS_BITS_PER_WORD = 6;
 
     // Taille d'un long (64=2^6)
-    protected final static int SIZE = 1 << ADDRESS_BITS_PER_WORD;
+    protected static final int SIZE = 1 << ADDRESS_BITS_PER_WORD;
 
-    protected final static long MASK = 0xFFFFFFFFFFFFFFFFL;
+    protected static final long MASK = 0xFFFFFFFFFFFFFFFFL;
 
     protected final int size;
 
-    protected BitVector(int size) {
+    public BitVector(final int size) {
         this.size = size;
     }
 
-    public boolean set(final int position, final boolean status) {
-        return status ? set(position) : clear(position);
+    public final boolean set(final int position, final boolean status) {
+        if (status) {
+            return set(position);
+        }
+        return clear(position);
     }
 
-    public String toString() {
+    @Override
+    public final String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append('{');
         int i = nextSetBit(0);
@@ -32,11 +36,14 @@ public abstract class BitVector implements Cloneable {
 
     }
 
-    public static BitVector factory(int size, boolean fill) {
-        return size > SIZE ? new LargeBitVector(size, fill)
-                : new SmallBitVector(size, fill);
+    public static BitVector factory(final int size, final boolean fill) {
+        if (size > SIZE) {
+            return new LargeBitVector(size, fill);
+        }
+        return new SmallBitVector(size, fill);
     }
 
+    @Override
     public BitVector clone() {
         try {
             return (BitVector) super.clone();
@@ -57,13 +64,13 @@ public abstract class BitVector implements Cloneable {
 
     public abstract int prevSetBit(final int start);
 
-    public int lastSetBit() {
+    public final int lastSetBit() {
         return prevSetBit(size);
     }
 
     public abstract int prevClearBit(final int start);
 
-    public int lastClearBit() {
+    public final int lastClearBit() {
         return prevClearBit(size);
     }
 
@@ -82,13 +89,13 @@ public abstract class BitVector implements Cloneable {
     public abstract BitVector xor(BitVector bv);
 
     public abstract BitVector and(BitVector bv);
-    
+
     public abstract BitVector inverse();
-    
+
     public abstract boolean isEmpty();
 
     public abstract void setAllBut(final int index);
 
     public abstract int cardinality();
-    
+
 }

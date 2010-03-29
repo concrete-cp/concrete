@@ -28,8 +28,10 @@ import java.util.logging.Logger;
 import cspfj.AbstractSolver;
 import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
+import cspfj.problem.NoGoodLearner;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
+import cspfj.problem.NoGoodLearner.LearnMethod;
 import cspfj.util.BitVector;
 
 /**
@@ -38,12 +40,18 @@ import cspfj.util.BitVector;
  */
 public final class DC1 extends AbstractSAC {
 
-    private final static Logger logger = Logger.getLogger(DC1.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(DC1.class.getName());
 
-    private final static Problem.LearnMethod addConstraints = AbstractSolver.parameters
-            .containsKey("cdc.addConstraints") ? Problem.LearnMethod
-            .valueOf(AbstractSolver.parameters.get("cdc.addConstraints"))
-            : Problem.LearnMethod.NONE;
+    private static final LearnMethod LEARN_METHOD;
+
+    static {
+        final String lm = AbstractSolver.parameters.get("dc.addConstraints");
+        if (lm == null) {
+            LEARN_METHOD = LearnMethod.NONE;
+        } else {
+            LEARN_METHOD = LearnMethod.valueOf(lm);
+        }
+    }
 
     private int addedConstraints = 0;
 
@@ -88,13 +96,13 @@ public final class DC1 extends AbstractSAC {
             }
 
             // if (logger.isLoggable(Level.FINER)) {
-            logger.fine(variable + " <- " + variable.getDomain().value(index)
+            LOGGER.fine(variable + " <- " + variable.getDomain().value(index)
                     + "(" + index + ")");
             // }
 
-            problem.setLevelVariables(variable);
+            problem.setCurrentLevelVariable(variable);
             problem.push();
-            variable.assign(index, problem);
+            variable.assign(index);
 
             nbSingletonTests++;
 
@@ -105,21 +113,21 @@ public final class DC1 extends AbstractSAC {
                 changedGraph = noGoods(variable) | changedGraph;
                 // logger.info(noGoods.toString());
 
-                variable.unassign(problem);
+                variable.unassign();
                 problem.pop();
 
                 // changedGraph = problem.noGoodsToConstraints(noGoods,
                 // addConstraints);
             } else {
-                variable.unassign(problem);
+                variable.unassign();
                 problem.pop();
-                logger.fine("Removing " + variable + ", " + index);
+                LOGGER.fine("Removing " + variable + ", " + index);
 
                 variable.remove(index);
                 changedGraph = true;
             }
         }
-        problem.setLevelVariables(null);
+        problem.setCurrentLevelVariable(null);
         return changedGraph;
     }
 
@@ -151,8 +159,8 @@ public final class DC1 extends AbstractSAC {
             }
 
             scopeSet.add(fv);
-            final DynamicConstraint constraint = problem.learnConstraint(
-                    scopeSet, addConstraints);
+            final DynamicConstraint constraint = NoGoodLearner.learnConstraint(
+                    problem, scopeSet, LEARN_METHOD);
             scopeSet.remove(fv);
 
             if (constraint == null) {
@@ -162,8 +170,8 @@ public final class DC1 extends AbstractSAC {
             scopeArray[1] = fv;
 
             final int[] base = new int[constraint.getArity()];
-            final int varPos = Problem.makeBase(scopeArray, tuple, constraint,
-                    base);
+            final int varPos = NoGoodLearner.makeBase(scopeArray, tuple,
+                    constraint, base);
 
             int newNogoods = 0;
             for (int i = changes.nextSetBit(0); i >= 0; i = changes
@@ -176,14 +184,14 @@ public final class DC1 extends AbstractSAC {
                 nbNoGoods += newNogoods;
                 modified = true;
                 if (constraint.getId() > problem.getMaxCId()) {
-                    logger.info("Added " + constraint);
+                    LOGGER.info("Added " + constraint);
                     addedConstraints.add(constraint);
                 }
             }
         }
 
         if (modified) {
-            logger.fine(nbNoGoods + " nogoods");
+            LOGGER.fine(nbNoGoods + " nogoods");
 
             if (!addedConstraints.isEmpty()) {
                 for (Constraint c : addedConstraints) {
@@ -191,7 +199,7 @@ public final class DC1 extends AbstractSAC {
                 }
 
                 problem.prepareConstraints();
-                logger.info(problem.getNbConstraints() + " constraints");
+                LOGGER.info(problem.getNbConstraints() + " constraints");
             }
         }
         return modified;
@@ -205,6 +213,6 @@ public final class DC1 extends AbstractSAC {
     }
 
     public String toString() {
-        return "DC w/ " + filter + " L " + addConstraints;
+        return "DC w/ " + filter + " L " + LEARN_METHOD;
     }
 }

@@ -53,10 +53,10 @@ public final class SAC1 extends AbstractSAC {
             // }
 
             problem.push();
-            variable.assign(index, problem);
+            variable.assign(index);
             nbSingletonTests++;
             final boolean consistent = filter.reduceAfter(variable);
-            variable.unassign(problem);
+            variable.unassign();
             problem.pop();
 
             if (!consistent) {

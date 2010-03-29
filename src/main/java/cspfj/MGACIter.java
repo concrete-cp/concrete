@@ -33,24 +33,30 @@ import cspfj.heuristic.Heuristic;
 import cspfj.heuristic.Lexico;
 import cspfj.heuristic.Pair;
 import cspfj.heuristic.WDegOnDom;
+import cspfj.problem.NoGoodLearner;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
+import cspfj.problem.NoGoodLearner.LearnMethod;
 
 public final class MGACIter extends AbstractSolver {
 
+    private static final Logger LOGGER = Logger.getLogger(MGACIter.class
+            .getName());
+
+    private static final float BT_GROWTH = 1.5f;
+    private static final LearnMethod LEARN_METHOD;
+
+    static {
+        final String lm = AbstractSolver.parameters.get("mgac.addConstraints");
+        if (lm == null) {
+            LEARN_METHOD = LearnMethod.NONE;
+        } else {
+            LEARN_METHOD = LearnMethod.valueOf(lm);
+        }
+    }
     private final Filter filter;
 
     private final Heuristic heuristic;
-
-    private static final Logger logger = Logger.getLogger(MGACIter.class
-            .getName());
-
-    private final static Problem.LearnMethod addConstraints = AbstractSolver.parameters
-            .containsKey("mgac.addConstraints") ? Problem.LearnMethod
-            .valueOf(AbstractSolver.parameters.get("mgac.addConstraints"))
-            : Problem.LearnMethod.NONE;
-
-    // private int level;
 
     public MGACIter(final Problem prob) {
         this(prob, new ResultHandler());
@@ -73,7 +79,7 @@ public final class MGACIter extends AbstractSolver {
         this.filter = filter;
         this.heuristic = heuristic;
 
-        logger.info(filter.getClass().toString());
+        LOGGER.info(filter.getClass().toString());
 
         setMaxBacktracks(prob.getMaxBacktracks());
     }
@@ -82,37 +88,23 @@ public final class MGACIter extends AbstractSolver {
             IOException {
         final Problem problem = this.problem;
 
-        // level = 0;
-
         Variable selectedVariable = null;
         int selectedIndex = -1;
-        do {
-            // for (Variable v: problem.getVariables()) {
-            // if (!v.isAssigned() && v.getDomainSize()==1) {
-            // logger.fine(level + " : " + v + " <- "
-            // + v.getDomain()[v.getFirst()] + "("
-            // + getNbBacktracks() + "/" + getMaxBacktracks() + ")");
-            // v.assign(v.getFirst(), level, problem);
-            // problem.setLevelVariables(level++, v);
-            // }
-            // }
-            if (problem.getNbFutureVariables() == 0) {
-                return solution();
-            }
-
+        for (;;) {
             if (selectedVariable != null
                     && !filter.reduceAfter(selectedVariable)) {
-                if (problem.getCurrentLevel() == 0) {
-                    break;
-                }
                 selectedVariable = backtrack();
-                if (selectedVariable.getDomainSize() <= 0) {
+                if (selectedVariable == null) {
                     break;
                 }
                 continue;
             }
 
             final Pair pair = heuristic.selectPair(problem);
+
+            if (pair == null) {
+                return solution();
+            }
 
             selectedVariable = pair.getVariable();
 
@@ -122,17 +114,17 @@ public final class MGACIter extends AbstractSolver {
 
             assert selectedVariable.isPresent(selectedIndex);
 
-            logger.fine(problem.getCurrentLevel() + " : " + selectedVariable
+            LOGGER.fine(problem.getCurrentLevel() + " : " + selectedVariable
                     + " <- "
                     + selectedVariable.getDomain().value(selectedIndex) + "("
                     + getNbBacktracks() + "/" + getMaxBacktracks() + ")");
 
-            problem.setLevelVariables(selectedVariable);
+            problem.setCurrentLevelVariable(selectedVariable);
             problem.push();
-            selectedVariable.assign(selectedIndex, problem);
+            selectedVariable.assign(selectedIndex);
             incrementNbAssignments();
 
-        } while (true);
+        }
         return null;
 
     }
@@ -142,53 +134,30 @@ public final class MGACIter extends AbstractSolver {
         int index;
         do {
             selectedVariable = problem.getLastLevelVariable();
+            if (selectedVariable == null) {
+                return null;
+            }
             index = selectedVariable.getFirst();
-            selectedVariable.unassign(problem);
+            selectedVariable.unassign();
             problem.pop();
-            problem.setLevelVariables(null);
-        } while (selectedVariable.getDomainSize() <= 1
-                && problem.getCurrentLevel() > 0);
+            problem.setCurrentLevelVariable(null);
+        } while (selectedVariable.getDomainSize() <= 1);
 
-        logger.finer(problem.getCurrentLevel() + " : " + selectedVariable
+        LOGGER.finer(problem.getCurrentLevel() + " : " + selectedVariable
                 + " /= " + selectedVariable.getDomain().value(index));
         selectedVariable.remove(index);
         checkBacktracks();
         return selectedVariable;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see cspfj.Solver#run(int)
-     */
+    @Override
     public Map<Variable, Integer> solve() throws IOException {
-        // Logger.getLogger("").setLevel(Level.WARNING);
-        // Logger.getLogger("").getHandlers()[0].setLevel(Level.WARNING);
         System.gc();
-        chronometer.startChrono();
-
-        // for (Constraint c : problem.getConstraints()) {
-        // if (c instanceof ExtensionConstraint) {
-        // ((ExtensionConstraint) c).getMatrixManager().countConflicts();
-        // }
-        // }
-        // for (Constraint c : problem.getConstraints()) {
-        // if (c.getArity() == 1) {
-        // c.revise(new RevisionHandler() {
-        // @Override
-        // public void revised(Constraint constraint, Variable variable) {
-        // // TODO Auto-generated method stub
-        //                        
-        // }
-        // });
-        // }
-        // }
-
-        final Filter filter = getFilter();
+        startChrono();
 
         try {
             if (!preprocess(filter)) {
-                chronometer.validateChrono();
+                validateChrono();
                 return null;
             }
         } catch (InstantiationException e1) {
@@ -202,7 +171,7 @@ public final class MGACIter extends AbstractSolver {
         } catch (InterruptedException e) {
             try {
                 if (!filter.reduceAll()) {
-                    chronometer.validateChrono();
+                    validateChrono();
                     return null;
                 }
             } catch (InterruptedException e1) {
@@ -210,41 +179,23 @@ public final class MGACIter extends AbstractSolver {
             }
         }
 
-        // statistics("prepro-nbskippedrevisions", Constraint
-        // .getNbSkippedRevisions());
-
-        // if (true) {
-        // return false;
-        // }
-
-        final float start = chronometer.getCurrentChrono();
+        final float start = getCurrentChrono();
         heuristic.compute();
 
-        // for (Variable v:problem.getVariables()) {
-        // for (int i = v.getFirst() ; i >=0 ; i=v.getNext(i)) {
-        // System.out.print(i+"-");
-        // }
-        // System.out.println();
-        // }
-
-        final float heuristicCpu = chronometer.getCurrentChrono();
+        final float heuristicCpu = getCurrentChrono();
         statistics.put("heuristic-cpu", heuristicCpu - start);
 
         int maxBT = getMaxBacktracks();
 
-        //
-        // logger.fine("ok!") ;
-
-        // final Random random = new Random(0);
         Map<Variable, Integer> solution = null;
-        do {
+        for (;;) {
             for (Variable v : problem.getVariables()) {
                 assert v.getDomainSize() > 0;
             }
             setMaxBacktracks(maxBT);
             problem.clearLevelVariables();
-            logger.info("MAC with " + maxBT + " bt");
-            float macTime = -chronometer.getCurrentChrono();
+            LOGGER.info("MAC with " + maxBT + " bt");
+            float macTime = -getCurrentChrono();
             // System.out.print("run ! ");
             try {
 
@@ -254,19 +205,18 @@ public final class MGACIter extends AbstractSolver {
             } catch (MaxBacktracksExceededException e) {
                 // On continue...
             } catch (OutOfMemoryError e) {
-                chronometer.validateChrono();
+                validateChrono();
                 throw e;
             } catch (IOException e) {
-                chronometer.validateChrono();
+                validateChrono();
                 throw e;
             }
-            macTime += chronometer.getCurrentChrono();
-            logger.info("Took " + macTime + "s (" + (maxBT / macTime) + " bps)");
+            macTime += getCurrentChrono();
+            LOGGER.info("Took " + macTime + "s (" + (maxBT / macTime) + " bps)");
 
-            // logger.info(constraintRepartition());
-            maxBT *= 1.5;
+            maxBT *= BT_GROWTH;
             // final Map<Variable[], List<int[]>> ngs = problem.noGoods();
-            problem.noGoods(addConstraints);
+            NoGoodLearner.noGoods(problem, LEARN_METHOD);
             problem.reset();
             // problem.noGoodsToConstraints(ngs, addConstraints);
 
@@ -278,9 +228,9 @@ public final class MGACIter extends AbstractSolver {
                 throw new IllegalArgumentException(
                         "Filter was unexpectingly interrupted !");
             }
-        } while (true);
+        }
 
-        final float searchCpu = chronometer.getCurrentChrono() - heuristicCpu;
+        final float searchCpu = getCurrentChrono() - heuristicCpu;
         statistics.put("search-cpu", searchCpu);
 
         if (searchCpu > 0) {
@@ -291,28 +241,10 @@ public final class MGACIter extends AbstractSolver {
 
     }
 
-    public synchronized void collectStatistics() {
-        chronometer.validateChrono();
+    public void collectStatistics() {
+        validateChrono();
         statistics.putAll(filter.getStatistics());
     }
-
-    // private String constraintRepartition() {
-    // final WeightHeuristic wvh = (WeightHeuristic) heuristic;
-    // final SortedSet<Constraint> sortedConstraint = new TreeSet<Constraint>(
-    // new Weight(false, wvh));
-    // sortedConstraint.addAll(Arrays.asList(problem.getConstraints()));
-    //
-    // final StringBuilder stb = new StringBuilder();
-    // final NumberFormat format = NumberFormat.getInstance();
-    // format.setMaximumFractionDigits(2);
-    // double total = 0;
-    // for (Constraint c : sortedConstraint) {
-    // stb.append(c.getName() + "(" + format.format(wvh.getWeight(c)) + ") ");
-    // total += wvh.getWeight(c);
-    // }
-    // stb.append(" - Total = " + total);
-    // return stb.toString();
-    // }
 
     public Filter getFilter() {
         return filter;
