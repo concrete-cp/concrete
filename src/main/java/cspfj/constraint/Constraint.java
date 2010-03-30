@@ -48,7 +48,7 @@ public interface Constraint extends Identified {
 	boolean isActive();
 
 	/**
-	 * Sets the activity of the constraint
+	 * Sets the activity of the constraint.
 	 * 
 	 * @param b
 	 */
@@ -58,7 +58,7 @@ public interface Constraint extends Identified {
 			throws CloneNotSupportedException;
 
 	/**
-	 * The constraint propagator
+	 * The constraint propagator.
 	 * 
 	 * @param revisator
 	 * @return false iff an inconsistency has been detected
