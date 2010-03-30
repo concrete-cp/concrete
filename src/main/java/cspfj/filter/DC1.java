@@ -45,7 +45,7 @@ public final class DC1 extends AbstractSAC {
     private static final LearnMethod LEARN_METHOD;
 
     static {
-        final String lm = AbstractSolver.parameters.get("dc.addConstraints");
+        final String lm = AbstractSolver.PARAMETERS.get("dc.addConstraints");
         if (lm == null) {
             LEARN_METHOD = LearnMethod.NONE;
         } else {

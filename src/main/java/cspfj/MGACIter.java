@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidParameterException;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import cspfj.exception.MaxBacktracksExceededException;
@@ -47,7 +48,7 @@ public final class MGACIter extends AbstractSolver {
     private static final LearnMethod LEARN_METHOD;
 
     static {
-        final String lm = AbstractSolver.parameters.get("mgac.addConstraints");
+        final String lm = AbstractSolver.PARAMETERS.get("mgac.addConstraints");
         if (lm == null) {
             LEARN_METHOD = LearnMethod.NONE;
         } else {
@@ -59,22 +60,16 @@ public final class MGACIter extends AbstractSolver {
     private final Heuristic heuristic;
 
     public MGACIter(final Problem prob) {
-        this(prob, new ResultHandler());
+        this(prob, new CrossHeuristic(new WDegOnDom(prob), new Lexico(false)));
     }
 
-    public MGACIter(final Problem prob, final ResultHandler resultHandler) {
-        this(prob, resultHandler, new CrossHeuristic(new WDegOnDom(prob),
-                new Lexico(false)));
+    public MGACIter(final Problem prob, final Heuristic heuristic) {
+        this(prob, heuristic, new AC3(prob));
     }
 
-    public MGACIter(final Problem prob, final ResultHandler resultHandler,
-            final Heuristic heuristic) {
-        this(prob, resultHandler, heuristic, new AC3(prob));
-    }
-
-    public MGACIter(final Problem prob, final ResultHandler resultHandler,
-            final Heuristic heuristic, final Filter filter) {
-        super(prob, resultHandler);
+    public MGACIter(final Problem prob, final Heuristic heuristic,
+            final Filter filter) {
+        super(prob);
         // filter = new B3C(problem, new BC(problem));
         this.filter = filter;
         this.heuristic = heuristic;
@@ -183,7 +178,7 @@ public final class MGACIter extends AbstractSolver {
         heuristic.compute();
 
         final float heuristicCpu = getCurrentChrono();
-        statistics.put("heuristic-cpu", heuristicCpu - start);
+        statistic("heuristic-cpu", heuristicCpu - start);
 
         int maxBT = getMaxBacktracks();
 
@@ -215,10 +210,9 @@ public final class MGACIter extends AbstractSolver {
             LOGGER.info("Took " + macTime + "s (" + (maxBT / macTime) + " bps)");
 
             maxBT *= BT_GROWTH;
-            // final Map<Variable[], List<int[]>> ngs = problem.noGoods();
+
             NoGoodLearner.noGoods(problem, LEARN_METHOD);
             problem.reset();
-            // problem.noGoodsToConstraints(ngs, addConstraints);
 
             try {
                 if (!filter.reduceAll()) {
@@ -231,10 +225,10 @@ public final class MGACIter extends AbstractSolver {
         }
 
         final float searchCpu = getCurrentChrono() - heuristicCpu;
-        statistics.put("search-cpu", searchCpu);
+        statistic("search-cpu", searchCpu);
 
         if (searchCpu > 0) {
-            statistics.put("search-nps", getNbAssignments() / searchCpu);
+            statistic("search-nps", getNbAssignments() / searchCpu);
         }
 
         return solution;
@@ -243,7 +237,9 @@ public final class MGACIter extends AbstractSolver {
 
     public void collectStatistics() {
         validateChrono();
-        statistics.putAll(filter.getStatistics());
+        for (Entry<String, Object> e : filter.getStatistics().entrySet()) {
+            statistic(e.getKey(), e.getValue());
+        }
     }
 
     public Filter getFilter() {

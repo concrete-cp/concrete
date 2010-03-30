@@ -39,13 +39,21 @@ import cspfj.util.Chronometer;
 import cspfj.util.Waker;
 
 public abstract class AbstractSolver implements Solver {
+    private static final Logger LOGGER = Logger.getLogger(AbstractSolver.class
+            .getName());
     public static final String VERSION;
+    public static final Map<String, String> PARAMETERS = new HashMap<String, String>();
     static {
         Matcher matcher = Pattern.compile("Rev:\\ (\\d+)").matcher(
                 "$Rev$");
         matcher.find();
         VERSION = matcher.group(1);
     }
+
+    public static void parameter(final String name, final String value) {
+        PARAMETERS.put(name, value);
+    }
+
     protected final Problem problem;
 
     private final Chronometer chronometer;
@@ -56,30 +64,22 @@ public abstract class AbstractSolver implements Solver {
 
     private int nbBacktracks;
 
-    private final ResultHandler resultHandler;
-
     private Class<? extends Filter> preprocessor = null;
 
     private int preproExpiration = -1;
 
-    private final static Logger logger = Logger.getLogger(AbstractSolver.class
-            .getName());
+    private final Map<String, Object> statistics;
 
-    protected final Map<String, Object> statistics;
-
-    public static final Map<String, String> parameters = new HashMap<String, String>();
-
-    public AbstractSolver(Problem prob, ResultHandler resultHandler) {
+    public AbstractSolver(final Problem prob) {
         super();
         problem = prob;
         nbAssignments = 0;
 
         chronometer = new Chronometer();
-        this.resultHandler = resultHandler;
         this.statistics = new HashMap<String, Object>();
     }
 
-    public int getNbAssignments() {
+    public final int getNbAssignments() {
         return nbAssignments;
     }
 
@@ -98,7 +98,7 @@ public abstract class AbstractSolver implements Solver {
         }
     }
 
-    public float getUserTime() {
+    public final float getUserTime() {
         return chronometer.getUserTime();
     }
 
@@ -130,10 +130,6 @@ public abstract class AbstractSolver implements Solver {
         return solution;
     }
 
-    protected final ResultHandler getResultHandler() {
-        return resultHandler;
-    }
-
     public final Problem getProblem() {
         return problem;
     }
@@ -143,7 +139,7 @@ public abstract class AbstractSolver implements Solver {
             InvocationTargetException, NoSuchMethodException,
             InterruptedException {
 
-        logger.info("Preprocessing (" + preproExpiration + ")");
+        LOGGER.info("Preprocessing (" + preproExpiration + ")");
 
         final Filter preprocessor;
         if (this.preprocessor == null) {
@@ -167,7 +163,7 @@ public abstract class AbstractSolver implements Solver {
         try {
             consistent = preprocessor.reduceAll();
         } catch (InterruptedException e) {
-            logger.warning("Interrupted preprocessing");
+            LOGGER.warning("Interrupted preprocessing");
             consistent = true;
             throw e;
         } finally {
@@ -183,8 +179,6 @@ public abstract class AbstractSolver implements Solver {
 
             }
             statistics.put("prepro-removed", removed);
-            // statistics("prepro-subs", preprocessor.getNbSub()) ;
-
             statistics.put("prepro-cpu", preproCpu);
             statistics.put("prepro-constraint-ccks", AbstractConstraint
                     .getChecks());
@@ -194,13 +188,6 @@ public abstract class AbstractSolver implements Solver {
             statistics.put("prepro-matrix2d-presenceccks", MatrixManager2D
                     .getPresenceChecks());
 
-            // if (SPACE.BRANCH.equals(space)) {
-            // statistics("prepro-singletontests", ((SAC) preprocessor)
-            // .getNbSingletonTests());
-            // } else if (SPACE.CLASSIC.equals(space)) {
-            // statistics("prepro-singletontests", ((AbstractSAC) preprocessor)
-            // .getNbSingletonTests());
-            // }
         }
         if (!consistent) {
             chronometer.validateChrono();
@@ -214,14 +201,10 @@ public abstract class AbstractSolver implements Solver {
         return statistics;
     }
 
-    public static void parameter(final String name, final String value) {
-        parameters.put(name, value);
-    }
-
     public String getXMLConfig() {
         final StringBuilder stb = new StringBuilder();
 
-        for (Entry<String, String> p : parameters.entrySet()) {
+        for (Entry<String, String> p : PARAMETERS.entrySet()) {
             stb.append("\t\t\t<p name=\"").append(p.getKey()).append("\">")
                     .append(p.getValue()).append("</p>\n");
         }
@@ -239,5 +222,9 @@ public abstract class AbstractSolver implements Solver {
 
     public final void validateChrono() {
         chronometer.validateChrono();
+    }
+
+    public final void statistic(String key, Object value) {
+        statistics.put(key, value);
     }
 }

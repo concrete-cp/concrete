@@ -31,8 +31,8 @@ import cspfj.problem.Variable;
 
 public final class DummySolver extends AbstractSolver {
 
-    public DummySolver(final Problem prob, final ResultHandler resultHandler) {
-        super(prob, resultHandler);
+    public DummySolver(final Problem prob) {
+        super(prob);
     }
 
     /*
