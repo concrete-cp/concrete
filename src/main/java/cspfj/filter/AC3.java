@@ -41,7 +41,7 @@ public final class AC3 implements Filter {
         // }, problem.getNbVariables());
         queue = new FibonacciHeap<Variable>(new Key<Variable>() {
             @Override
-            public int getKey(Variable o1) {
+            public int getKey(final Variable o1) {
                 return o1.getDomainSize();
             }
         }, problem.getNbVariables());
@@ -54,7 +54,8 @@ public final class AC3 implements Filter {
 
     }
 
-    public boolean reduceFrom(int[] modVar, int[] modCons, int cnt) {
+    public boolean reduceFrom(final int[] modVar, final int[] modCons,
+            final int cnt) {
         reviseCount++;
         queue.clear();
         LOGGER.fine("reduce after " + cnt);
@@ -139,9 +140,7 @@ public final class AC3 implements Filter {
 
     }
 
-    public boolean reduceOnce(Variable variable) {
-
-        final RevisionHandler revisator = this.revisator;
+    public boolean reduceOnce(final Variable variable) {
         final Constraint[] involvingConstraints = variable
                 .getInvolvingConstraints();
         for (int c = involvingConstraints.length; --c >= 0;) {
@@ -171,21 +170,18 @@ public final class AC3 implements Filter {
         }
     }
 
-    private boolean revised;
-
     private boolean control() {
 
-        final RevisionHandler revisator = new RevisionHandler() {
+        final RevisionHandler controlRevisator = new RevisionHandler() {
 
             @Override
-            public void revised(Constraint constraint, Variable variable) {
-                revised = true;
+            public void revised(final Constraint constraint,
+                    final Variable variable) {
+                assert false;
 
             }
 
         };
-
-        revised = false;
 
         for (Constraint c : problem.getConstraints()) {
             if (c instanceof AbstractPVRConstraint) {
@@ -196,8 +192,7 @@ public final class AC3 implements Filter {
                     }
                 }
             } else {
-                assert c.revise(revisator, -1);
-                assert !revised;
+                assert c.revise(controlRevisator, -1);
             }
 
         }

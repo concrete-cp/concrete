@@ -3,8 +3,17 @@ package cspfj.constraint;
 import cspfj.problem.Variable;
 
 public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
+    private static long checks = 0;
 
-    protected final int[][][] last;
+    public static final void clearStats() {
+        checks = 0;
+    }
+
+    public static final long getChecks() {
+        return checks;
+    }
+
+    private final int[][][] last;
 
     public AbstractAC3Constraint(Variable... scope) {
         this(null, scope);
@@ -59,7 +68,7 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
         return false;
     }
 
-    protected boolean findSupport(final int variablePosition, final int index) {
+    public boolean findSupport(final int variablePosition, final int index) {
         tupleManager.setFirstTuple(variablePosition, index);
 
         do {
@@ -72,7 +81,7 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
         return false;
     }
 
-    protected void updateResidues() {
+    public final void updateResidues() {
         final int[] residue = tuple.clone();
         for (int position = getArity(); --position >= 0;) {
             last[position][residue[position]] = residue;

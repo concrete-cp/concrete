@@ -59,6 +59,8 @@ public final class MGACIter extends AbstractSolver {
 
     private final Heuristic heuristic;
 
+    private final NoGoodLearner ngl;
+
     public MGACIter(final Problem prob) {
         this(prob, new CrossHeuristic(new WDegOnDom(prob), new Lexico(false)));
     }
@@ -77,6 +79,8 @@ public final class MGACIter extends AbstractSolver {
         LOGGER.info(filter.getClass().toString());
 
         setMaxBacktracks(prob.getMaxBacktracks());
+
+        ngl = new NoGoodLearner(problem, LEARN_METHOD);
     }
 
     public Map<Variable, Integer> mac() throws MaxBacktracksExceededException,
@@ -211,7 +215,7 @@ public final class MGACIter extends AbstractSolver {
 
             maxBT *= BT_GROWTH;
 
-            NoGoodLearner.noGoods(problem, LEARN_METHOD);
+            ngl.noGoods();
             problem.reset();
 
             try {

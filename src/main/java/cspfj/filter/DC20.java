@@ -54,9 +54,7 @@ public final class DC20 implements Filter {
             LEARN_METHOD = LearnMethod.valueOf(lm);
         }
     }
-    private int addedConstraints = 0;
-
-    private final Variable[] variables;
+    private int nbAddedConstraints = 0;
 
     private int nbNoGoods;
 
@@ -65,20 +63,21 @@ public final class DC20 implements Filter {
     private final int[] modVar;
 
     private int cnt;
-    protected final AC3 filter;
+    private final AC3 filter;
 
-    protected final Problem problem;
+    private final Problem problem;
 
     private int nbSingletonTests = 0;
+    private final NoGoodLearner ngl;
 
     // private final int[][] allDomainSizes;
 
-    public DC20(Problem problem) {
+    public DC20(final Problem problem) {
         this.problem = problem;
         this.filter = new AC3(problem);
-        this.variables = problem.getVariables();
         impliedConstraints = new ArrayList<DynamicConstraint>();
         modVar = new int[problem.getMaxVId() + 1];
+        ngl = new NoGoodLearner(problem, LEARN_METHOD);
         // allDomainSizes = new int[(2 + problem.getMaxVId())
         // * problem.getMaxDomainSize()][1 + problem.getMaxVId()];
     }
@@ -99,7 +98,7 @@ public final class DC20 implements Filter {
         try {
             result = cdcReduce();
         } finally {
-            addedConstraints += problem.getNbConstraints() - nbC;
+            nbAddedConstraints += problem.getNbConstraints() - nbC;
         }
         // ExtensionConstraintDynamic.quick = false;
         // for (Constraint c : problem.getConstraints()) {
@@ -115,12 +114,10 @@ public final class DC20 implements Filter {
     // }
 
     private boolean cdcReduce() throws InterruptedException {
-        final AC3 filter = this.filter;
-
         if (!filter.reduceAll()) {
             return false;
         }
-        final Variable[] variables = this.variables;
+        final Variable[] variables = problem.getVariables();
 
         int mark = 0;
 
@@ -187,7 +184,7 @@ public final class DC20 implements Filter {
 
             final boolean sat;
 
-            if (cnt <= variables.length) {
+            if (cnt <= problem.getNbVariables()) {
                 sat = filter.reduceAfter(variable);
             } else {
                 final Constraint[] involving = variable
@@ -202,7 +199,8 @@ public final class DC20 implements Filter {
                     c.fillRemovals(-1);
                 }
 
-                sat = filter.reduceFrom(modVar, null, cnt - variables.length);
+                sat = filter.reduceFrom(modVar, null, cnt
+                        - problem.getNbVariables());
             }
             if (sat) {
 
@@ -232,12 +230,12 @@ public final class DC20 implements Filter {
 
     private final RevisionHandler rh = new RevisionHandler() {
         @Override
-        public void revised(Constraint constraint, Variable variable) {
+        public void revised(final Constraint constraint, final Variable variable) {
             //
         }
     };
 
-    public boolean noGoods(Variable firstVariable) {
+    public boolean noGoods(final Variable firstVariable) {
         assert firstVariable.getDomainSize() == 1;
 
         int[] tuple = new int[2];
@@ -250,7 +248,7 @@ public final class DC20 implements Filter {
         boolean modified = false;
         final Collection<DynamicConstraint> addedConstraints = new ArrayList<DynamicConstraint>();
 
-        for (Variable v : variables) {
+        for (Variable v : problem.getVariables()) {
 
             // logger.fine("checking " +
             // getVariable(levelVariables[level-1]));
@@ -266,8 +264,7 @@ public final class DC20 implements Filter {
             }
 
             scopeSet.add(v);
-            final DynamicConstraint constraint = NoGoodLearner.learnConstraint(
-                    problem, scopeSet, LEARN_METHOD);
+            final DynamicConstraint constraint = ngl.learnConstraint(scopeSet);
             scopeSet.remove(v);
 
             if (constraint == null) {
@@ -327,7 +324,7 @@ public final class DC20 implements Filter {
             statistics.put("CDC-backend-" + stat.getKey(), stat.getValue());
         }
         statistics.put("CDC-nogoods", nbNoGoods);
-        statistics.put("CDC-added-constraints", addedConstraints);
+        statistics.put("CDC-added-constraints", nbAddedConstraints);
         return statistics;
     }
 

@@ -17,169 +17,171 @@ import cspfj.problem.Variable;
  * 
  */
 public final class AC3Constraint implements Filter {
-	private final Problem problem;
 
-	private final Queue<Constraint> queue;
+    private final Problem problem;
 
-	private static final Logger LOGGER = Logger.getLogger(Filter.class
-			.getSimpleName());
+    private final Queue<Constraint> queue;
 
-	private int revisions = 0;
+    private static final Logger LOGGER = Logger.getLogger(Filter.class
+            .getSimpleName());
 
-	private int revisionCount = 0;
+    private int revisions = 0;
 
-	public AC3Constraint(final Problem problem) {
-		super();
-		this.problem = problem;
+    private int revisionCount = 0;
 
-		queue = new FibonacciHeap<Constraint>(new Key<Constraint>() {
-			@Override
-			public int getKey(Constraint o1) {
-				return o1.getEvaluation(AC3Constraint.this.revisionCount);
-			}
-		}, problem.getNbConstraints());
-	}
+    public AC3Constraint(final Problem problem) {
+        super();
+        this.problem = problem;
 
-	public boolean reduceAll() {
-		queue.clear();
-		addAll();
-		return reduce();
+        queue = new FibonacciHeap<Constraint>(new Key<Constraint>() {
+            @Override
+            public int getKey(Constraint o1) {
+                return o1.getEvaluation(AC3Constraint.this.revisionCount);
+            }
+        }, problem.getNbConstraints());
+    }
 
-	}
+    public boolean reduceAll() {
+        queue.clear();
+        addAll();
+        return reduce();
 
-	public boolean reduceFrom(int[] modVar, int[] modCons, int cnt) {
-		revisionCount++;
-		queue.clear();
-		LOGGER.fine("reduce after " + cnt);
-		for (Variable v : problem.getVariables()) {
-			if (modVar[v.getId()] > cnt) {
-				final Constraint[] involved = v.getInvolvingConstraints();
-				for (int j = involved.length; --j >= 0;) {
-					// involved[j].fillRemovals(true);
-					involved[j].setRemovals(v.getPositionInConstraint(j), revisionCount);
-					queue.offer(involved[j]);
-				}
-			}
-		}
+    }
 
-		if (modCons != null) {
-			for (Constraint c : problem.getConstraints()) {
-				if (modCons[c.getId()] > cnt) {
-					c.fillRemovals(revisionCount);
-					queue.offer(c);
-				}
-			}
-		}
+    public boolean reduceFrom(int[] modVar, int[] modCons, int cnt) {
+        revisionCount++;
+        queue.clear();
+        LOGGER.fine("reduce after " + cnt);
+        for (Variable v : problem.getVariables()) {
+            if (modVar[v.getId()] > cnt) {
+                final Constraint[] involved = v.getInvolvingConstraints();
+                for (int j = involved.length; --j >= 0;) {
+                    // involved[j].fillRemovals(true);
+                    involved[j].setRemovals(v.getPositionInConstraint(j),
+                            revisionCount);
+                    queue.offer(involved[j]);
+                }
+            }
+        }
 
-		return reduce();
-	}
+        if (modCons != null) {
+            for (Constraint c : problem.getConstraints()) {
+                if (modCons[c.getId()] > cnt) {
+                    c.fillRemovals(revisionCount);
+                    queue.offer(c);
+                }
+            }
+        }
 
-	public boolean reduceAfter(final Variable variable) {
-		revisionCount++;
-		if (variable == null) {
-			return true;
-		}
-		queue.clear();
+        return reduce();
+    }
 
-		final Constraint[] involving = variable.getInvolvingConstraints();
+    public boolean reduceAfter(final Variable variable) {
+        revisionCount++;
+        if (variable == null) {
+            return true;
+        }
+        queue.clear();
 
-		for (int cp = involving.length; --cp >= 0;) {
-			involving[cp].setRemovals(variable.getPositionInConstraint(cp),
-					revisionCount);
-			queue.offer(involving[cp]);
+        final Constraint[] involving = variable.getInvolvingConstraints();
 
-		}
+        for (int cp = involving.length; --cp >= 0;) {
+            involving[cp].setRemovals(variable.getPositionInConstraint(cp),
+                    revisionCount);
+            queue.offer(involving[cp]);
 
-		return reduce();
-	}
+        }
 
-	private RevisionHandler revisator = new RevisionHandler() {
-		public void revised(final Constraint constraint, final Variable variable) {
-			final Constraint[] involvingConstraints = variable
-					.getInvolvingConstraints();
+        return reduce();
+    }
 
-			for (int cp = involvingConstraints.length; --cp >= 0;) {
-				final Constraint constraintP = involvingConstraints[cp];
-				if (constraintP != constraint) {
-					constraintP.setRemovals(variable
-							.getPositionInConstraint(cp), revisionCount);
-					queue.offer(constraintP);
-				}
+    private RevisionHandler revisator = new RevisionHandler() {
+        public void revised(final Constraint constraint, final Variable variable) {
+            final Constraint[] involvingConstraints = variable
+                    .getInvolvingConstraints();
 
-			}
-		}
-	};
+            for (int cp = involvingConstraints.length; --cp >= 0;) {
+                final Constraint constraintP = involvingConstraints[cp];
+                if (constraintP != constraint) {
+                    constraintP.setRemovals(variable
+                            .getPositionInConstraint(cp), revisionCount);
+                    queue.offer(constraintP);
+                }
 
-	private boolean reduce() {
-		LOGGER.finer("Reducing");
-		final RevisionHandler revisator = this.revisator;
+            }
+        }
+    };
 
-		while (!queue.isEmpty()) {
-			final Constraint constraint = queue.poll();
+    private boolean reduce() {
+        LOGGER.finer("Reducing");
+        final RevisionHandler revisator = this.revisator;
 
-			revisions++;
-			if (!constraint.revise(revisator, revisionCount)) {
-				constraint.incWeight();
-				return false;
-			}
+        while (!queue.isEmpty()) {
+            final Constraint constraint = queue.poll();
 
-			constraint.fillRemovals(-1);
-		}
+            revisions++;
+            if (!constraint.revise(revisator, revisionCount)) {
+                constraint.incWeight();
+                return false;
+            }
 
-		assert control();
+            constraint.fillRemovals(-1);
+        }
 
-		return true;
+        assert control();
 
-	}
+        return true;
 
-	private void addAll() {
-		for (Constraint c : problem.getConstraints()) {
-			c.fillRemovals(revisionCount);
-			queue.offer(c);
-		}
-	}
+    }
 
-	private boolean revised;
+    private void addAll() {
+        for (Constraint c : problem.getConstraints()) {
+            c.fillRemovals(revisionCount);
+            queue.offer(c);
+        }
+    }
 
-	private boolean control() {
+    private boolean revised;
 
-		final RevisionHandler revisator = new RevisionHandler() {
+    private boolean control() {
 
-			@Override
-			public void revised(Constraint constraint, Variable variable) {
-				revised = true;
+        final RevisionHandler revisator = new RevisionHandler() {
 
-			}
+            @Override
+            public void revised(Constraint constraint, Variable variable) {
+                revised = true;
 
-		};
+            }
 
-		revised = false;
+        };
 
-		for (Constraint c : problem.getConstraints()) {
-			if (c instanceof AbstractPVRConstraint) {
-				for (int i = c.getArity(); --i >= 0;) {
-					if (!c.getVariable(i).isAssigned()) {
-						assert !((AbstractPVRConstraint) c).revise(i) : c
-								+ ", " + c.getVariable(i);
-					}
-				}
-			} else {
-				assert c.revise(revisator, -1);
-				assert !revised;
-			}
+        revised = false;
 
-		}
-		return true;
-	}
+        for (Constraint c : problem.getConstraints()) {
+            if (c instanceof AbstractPVRConstraint) {
+                for (int i = c.getArity(); --i >= 0;) {
+                    if (!c.getVariable(i).isAssigned()) {
+                        assert !((AbstractPVRConstraint) c).revise(i) : c
+                                + ", " + c.getVariable(i);
+                    }
+                }
+            } else {
+                assert c.revise(revisator, -1);
+                assert !revised;
+            }
 
-	public String toString() {
-		return "GAC3rm-cons+" + queue.getClass().getSimpleName();
-	}
+        }
+        return true;
+    }
 
-	public Map<String, Object> getStatistics() {
-		final Map<String, Object> statistics = new HashMap<String, Object>(1);
-		statistics.put("revisions", revisions);
-		return statistics;
-	}
+    public String toString() {
+        return "GAC3rm-cons+" + queue.getClass().getSimpleName();
+    }
+
+    public Map<String, Object> getStatistics() {
+        final Map<String, Object> statistics = new HashMap<String, Object>(1);
+        statistics.put("revisions", revisions);
+        return statistics;
+    }
 
 }

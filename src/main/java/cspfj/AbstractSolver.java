@@ -29,6 +29,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import cspfj.constraint.AbstractAC3Constraint;
 import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.extension.MatrixManager2D;
 import cspfj.exception.MaxBacktracksExceededException;
@@ -180,7 +181,7 @@ public abstract class AbstractSolver implements Solver {
             }
             statistics.put("prepro-removed", removed);
             statistics.put("prepro-cpu", preproCpu);
-            statistics.put("prepro-constraint-ccks", AbstractConstraint
+            statistics.put("prepro-constraint-ccks", AbstractAC3Constraint
                     .getChecks());
             statistics.put("prepro-constraint-presenceccks", AbstractConstraint
                     .getPresenceChecks());

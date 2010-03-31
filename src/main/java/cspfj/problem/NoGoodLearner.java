@@ -33,16 +33,19 @@ public final class NoGoodLearner {
 
     private static int nbNoGoods = 0;
 
-    private NoGoodLearner() {
+    private final Problem problem;
+    private final LearnMethod learnMethod;
 
+    public NoGoodLearner(final Problem problem, final LearnMethod learnMethod) {
+        this.problem = problem;
+        this.learnMethod = learnMethod;
     }
 
     public static int getNbNoGoods() {
         return nbNoGoods;
     }
 
-    public static boolean noGoods(final Problem problem,
-            final LearnMethod learnMethod) {
+    public boolean noGoods() {
         if (!useNoGoods) {
             return false;
         }
@@ -96,8 +99,7 @@ public final class NoGoodLearner {
                 }
 
                 scopeSet.add(fv);
-                final DynamicConstraint constraint = learnConstraint(problem,
-                        scopeSet, learnMethod);
+                final DynamicConstraint constraint = learnConstraint(scopeSet);
                 scopeSet.remove(fv);
 
                 if (constraint == null) {
@@ -203,9 +205,8 @@ public final class NoGoodLearner {
         return positionInConstraint;
     }
 
-    public static boolean noGoodsToConstraints(
-            final Map<Variable[], List<int[]>> noGoods, final Problem problem,
-            final LearnMethod learnMethod) {
+    public boolean noGoodsToConstraints(
+            final Map<Variable[], List<int[]>> noGoods) {
         if (noGoods == null) {
             return false;
         }
@@ -216,8 +217,7 @@ public final class NoGoodLearner {
             final Set<Variable> scope = new HashSet<Variable>(Arrays.asList(e
                     .getKey()));
 
-            final DynamicConstraint constraint = learnConstraint(problem,
-                    scope, learnMethod);
+            final DynamicConstraint constraint = learnConstraint(scope);
 
             if (constraint == null) {
                 continue;
@@ -268,8 +268,7 @@ public final class NoGoodLearner {
         return null;
     }
 
-    public static DynamicConstraint learnConstraint(final Problem problem,
-            final Set<Variable> scope, final LearnMethod learnMethod) {
+    public DynamicConstraint learnConstraint(final Set<Variable> scope) {
         final DynamicConstraint constraint = findDynamicConstraint(scope);
 
         if (constraint != null) {

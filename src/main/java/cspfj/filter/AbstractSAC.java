@@ -16,18 +16,15 @@ public abstract class AbstractSAC implements Filter {
 
     protected int nbSingletonTests = 0;
 
-    private final Variable[] variables;
-
     // private final Comparator<Variable> heuristic;
 
-    private static final Logger logger = Logger.getLogger(AbstractSAC.class
+    private static final Logger LOGGER = Logger.getLogger(AbstractSAC.class
             .toString());
 
-    public AbstractSAC(Problem problem, AC3 filter) {
+    public AbstractSAC(final Problem problem, final AC3 filter) {
         super();
         this.filter = filter;
         this.problem = problem;
-        this.variables = problem.getVariables().clone();
         // heuristic = new Dom(problem);
     }
 
@@ -52,7 +49,7 @@ public abstract class AbstractSAC implements Filter {
         if (!filter.reduceAll()) {
             return false;
         }
-        final Variable[] variables = this.variables;
+        final Variable[] variables = problem.getVariables();
 
         int mark = 0;
 
@@ -61,7 +58,7 @@ public abstract class AbstractSAC implements Filter {
         do {
             final Variable variable = variables[v];
             // if (logger.isLoggable(Level.FINE)) {
-            logger.info(variable.toString());
+            LOGGER.info(variable.toString());
             // }
             if (variable.getDomainSize() > 1 && singletonTest(variable)) {
                 if (variable.getDomainSize() <= 0) {

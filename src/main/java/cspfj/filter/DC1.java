@@ -59,9 +59,12 @@ public final class DC1 extends AbstractSAC {
 
     private int nbNoGoods;
 
-    public DC1(Problem problem) {
+    private final NoGoodLearner ngl;
+
+    public DC1(final Problem problem) {
         super(problem, new AC3(problem));
         this.variables = problem.getVariables();
+        ngl = new NoGoodLearner(problem, LEARN_METHOD);
     }
 
     @Override
@@ -159,8 +162,7 @@ public final class DC1 extends AbstractSAC {
             }
 
             scopeSet.add(fv);
-            final DynamicConstraint constraint = NoGoodLearner.learnConstraint(
-                    problem, scopeSet, LEARN_METHOD);
+            final DynamicConstraint constraint = ngl.learnConstraint(scopeSet);
             scopeSet.remove(fv);
 
             if (constraint == null) {

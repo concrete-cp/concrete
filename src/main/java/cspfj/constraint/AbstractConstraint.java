@@ -30,20 +30,14 @@ import cspfj.problem.Variable;
 public abstract class AbstractConstraint implements Cloneable, Constraint {
     private static int cId = 0;
 
-    protected static long checks = 0;
-
     private static long nbPresenceChecks = 0;
 
     public static final long getPresenceChecks() {
         return nbPresenceChecks;
     }
 
-    public static final void clearStats() {
-        checks = nbPresenceChecks = 0;
-    }
-
-    public static final long getChecks() {
-        return checks;
+    public static void clearStats() {
+        nbPresenceChecks = 0;
     }
 
     private Variable[] scope;
@@ -172,18 +166,6 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
         cId = 0;
     }
 
-    protected boolean controlTuplePresence(final int[] tuple) {
-        nbPresenceChecks++;
-        final Variable[] involvedVariables = this.scope;
-        for (int i = arity; --i >= 0;) {
-            if (!involvedVariables[i].isPresent(tuple[i])) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     public final boolean isBound(Variable variable) {
         for (Variable v : scope) {
             if (v != variable && v.getDomainSize() > 1) {
@@ -278,5 +260,17 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 
     public int getEvaluation(int reviseCount) {
         return Integer.MAX_VALUE;
+    }
+
+    public final boolean controlTuplePresence(final int[] tuple) {
+        nbPresenceChecks++;
+        final Variable[] involvedVariables = getScope();
+        for (int i = getArity(); --i >= 0;) {
+            if (!involvedVariables[i].isPresent(tuple[i])) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

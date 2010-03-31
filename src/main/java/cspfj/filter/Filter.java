@@ -25,20 +25,20 @@ import cspfj.problem.Variable;
 
 /**
  * @author scand1sk
- *
+ * 
  */
 public interface Filter {
 
     /**
      * @return false iff an inconsistency has been detected
      */
-    boolean reduceAll() throws InterruptedException ;
-    
-    boolean reduceAfter(Variable variable) ;
+    boolean reduceAll() throws InterruptedException;
 
-    //boolean reduceOnce(Variable variable);
-    
+    boolean reduceAfter(Variable variable);
+
+    // boolean reduceOnce(Variable variable);
+
     Map<String, Object> getStatistics();
 
-    //boolean ensureAC();
+    // boolean ensureAC();
 }

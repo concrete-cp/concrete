@@ -5,8 +5,6 @@ import cspfj.problem.Variable;
 
 public abstract class AbstractFastPVRConstraint extends AbstractConstraint {
 
-    private boolean revised = false;
-
     public AbstractFastPVRConstraint(final Variable... scope) {
         super(scope);
         // removals = new boolean[getArity()];
@@ -18,7 +16,7 @@ public abstract class AbstractFastPVRConstraint extends AbstractConstraint {
     }
 
     /**
-     * Try to filter values from variable getVariable(position)
+     * Try to filter values from variable getVariable(position).
      * 
      * @param position
      * @return true iff any value has been removed
@@ -26,7 +24,8 @@ public abstract class AbstractFastPVRConstraint extends AbstractConstraint {
     public abstract boolean revise(final int position);
 
     @Override
-    public final boolean revise(final RevisionHandler revisator, int reviseCount) {
+    public final boolean revise(final RevisionHandler revisator,
+            final int reviseCount) {
         for (int i = getArity(); --i >= 0;) {
             final Variable variable = getVariable(i);
             // assert (!variable.isAssigned() && skipRevision(i)) ? !revise(i)

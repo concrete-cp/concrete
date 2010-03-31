@@ -29,9 +29,9 @@ import cspfj.problem.Variable;
  */
 public final class SAC1 extends AbstractSAC {
 
-    private final static Logger logger = Logger.getLogger(SAC1.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(SAC1.class.getName());
 
-    public SAC1(Problem problem) {
+    public SAC1(final Problem problem) {
         super(problem, new AC3(problem));
     }
 
@@ -48,7 +48,7 @@ public final class SAC1 extends AbstractSAC {
             }
 
             // if (logger.isLoggable(Level.FINER)) {
-            logger.finer(variable + " <- " + variable.getDomain().index(index)
+            LOGGER.finer(variable + " <- " + variable.getDomain().index(index)
                     + "(" + index + ")");
             // }
 
@@ -60,7 +60,7 @@ public final class SAC1 extends AbstractSAC {
             problem.pop();
 
             if (!consistent) {
-                logger.fine("Removing " + variable + ", " + index);
+                LOGGER.fine("Removing " + variable + ", " + index);
 
                 variable.remove(index);
                 changedGraph = true;
