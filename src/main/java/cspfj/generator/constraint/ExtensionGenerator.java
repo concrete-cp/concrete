@@ -31,7 +31,7 @@ public final class ExtensionGenerator extends AbstractGenerator {
 		super(problem);
 	}
 
-	public Matrix generate(final Domain[] domains,
+	private Matrix generate(final Domain[] domains,
 			final Extension<Number> extension) {
 		final Signature signature = new Signature(domains, extension);
 		Matrix matrix = generated.get(signature);
@@ -133,7 +133,7 @@ public final class ExtensionGenerator extends AbstractGenerator {
 		return map;
 	}
 
-	public static Matrix bestMatrix(final Extension<Number> extension,
+	private static Matrix bestMatrix(final Extension<Number> extension,
 			final Domain[] domains) {
 		if (!extension.init()
 				&& tupleSetBetterThanMatrix(domains, extension.getNbTuples())) {

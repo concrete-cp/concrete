@@ -83,7 +83,7 @@ public final class MGACIter extends AbstractSolver {
         ngl = new NoGoodLearner(problem, LEARN_METHOD);
     }
 
-    public Map<Variable, Integer> mac() throws MaxBacktracksExceededException,
+    private Map<Variable, Integer> mac() throws MaxBacktracksExceededException,
             IOException {
         final Problem problem = this.problem;
 
@@ -128,7 +128,7 @@ public final class MGACIter extends AbstractSolver {
 
     }
 
-    public Variable backtrack() throws MaxBacktracksExceededException {
+    private Variable backtrack() throws MaxBacktracksExceededException {
         Variable selectedVariable;
         int index;
         do {

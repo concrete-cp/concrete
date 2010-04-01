@@ -13,20 +13,21 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
         return checks;
     }
 
-    private final int[][][] last;
+    private final ResidueManager last;
 
-    public AbstractAC3Constraint(Variable... scope) {
+    public AbstractAC3Constraint(final Variable... scope) {
         this(null, scope);
     }
 
-    public AbstractAC3Constraint(String name, Variable... scope) {
+    public AbstractAC3Constraint(final String name, final Variable... scope) {
         super(name, scope);
 
-        last = new int[getArity()][][];
-
-        for (int i = getArity(); --i >= 0;) {
-            last[i] = new int[getVariable(i).getDomain().maxSize()][];
-        }
+        // last = new int[getArity()][][];
+        //
+        // for (int i = getArity(); --i >= 0;) {
+        // last[i] = new int[getVariable(i).getDomain().maxSize()][];
+        // }
+        last = new ResidueManager(getArity());
     }
 
     @Override
@@ -42,10 +43,7 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 
             if (!hasSupport(position, index)) {
                 variable.remove(index);
-
                 revised = true;
-                setActive(true);
-
             }
 
         }
@@ -57,12 +55,12 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
         assert this.isInvolved(getVariable(variablePosition));
         assert index >= 0;
 
-        if (last[variablePosition][index] != null
-                && controlTuplePresence(last[variablePosition][index])) {
+        final int[] residue = last.getResidue(variablePosition, index);
+        if (residue != null && controlTuplePresence(residue)) {
             return true;
         }
         if (findSupport(variablePosition, index)) {
-            updateResidues();
+            last.updateResidue(tuple.clone());
             return true;
         }
         return false;
@@ -79,13 +77,6 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
         } while (tupleManager.setNextTuple(variablePosition));
 
         return false;
-    }
-
-    public final void updateResidues() {
-        final int[] residue = tuple.clone();
-        for (int position = getArity(); --position >= 0;) {
-            last[position][residue[position]] = residue;
-        }
     }
 
 }

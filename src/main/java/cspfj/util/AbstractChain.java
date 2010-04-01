@@ -1,6 +1,6 @@
 package cspfj.util;
 
-public abstract class AbstractChain implements Cloneable {
+abstract class AbstractChain implements Cloneable {
 
 	protected int[] next;
 

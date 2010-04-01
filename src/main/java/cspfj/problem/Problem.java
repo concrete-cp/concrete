@@ -89,9 +89,6 @@ public final class Problem {
     }
 
     public void prepareConstraints() {
-        // constraintArray = constraints
-        // .toArray(new Constraint[constraints.size()]);
-
         maxArity = Collections.max(constraints, new Comparator<Constraint>() {
             @Override
             public int compare(final Constraint o1, final Constraint o2) {
@@ -99,10 +96,6 @@ public final class Problem {
             }
         }).getArity();
 
-        resetInvolvingConstraints();
-    }
-
-    public void resetInvolvingConstraints() {
         final Map<Integer, List<Constraint>> invConstraints = new HashMap<Integer, List<Constraint>>(
                 variableArray.length);
 

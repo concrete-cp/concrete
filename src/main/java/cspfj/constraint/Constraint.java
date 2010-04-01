@@ -1,6 +1,5 @@
 package cspfj.constraint;
 
-import java.util.Collection;
 import java.util.Set;
 
 import cspfj.filter.RevisionHandler;
@@ -41,21 +40,6 @@ public interface Constraint extends Identified {
 	 * @return the position of the given variable. /!\ implementation in O(k)
 	 */
 	int getPosition(final Variable variable);
-
-	/**
-	 * @return whether the constraint is active
-	 */
-	boolean isActive();
-
-	/**
-	 * Sets the activity of the constraint.
-	 * 
-	 * @param b
-	 */
-	void setActive(final boolean b);
-
-	Constraint deepCopy(final Collection<Variable> variables)
-			throws CloneNotSupportedException;
 
 	/**
 	 * The constraint propagator.

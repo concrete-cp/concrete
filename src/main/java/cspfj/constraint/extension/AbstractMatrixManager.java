@@ -26,7 +26,7 @@ public abstract class AbstractMatrixManager implements MatrixManager {
     private long[] nbMaxConflicts;
 
     public AbstractMatrixManager(final Variable[] scope, final Matrix matrix,
-            final boolean shared) {
+            final boolean shared, final int[] tuple) {
         super();
 
         variables = scope;
@@ -41,11 +41,8 @@ public abstract class AbstractMatrixManager implements MatrixManager {
 
         this.shared = shared;
 
-    }
-
-    @Override
-    public final void setTuple(final int[] tuple) {
         this.tuple = tuple;
+
     }
 
     private void countConflicts() {

@@ -20,14 +20,13 @@
 package cspfj.constraint;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
 import cspfj.constraint.extension.TupleManager;
 import cspfj.problem.Variable;
 
-public abstract class AbstractConstraint implements Cloneable, Constraint {
+public abstract class AbstractConstraint implements Constraint {
     private static int cId = 0;
 
     private static long nbPresenceChecks = 0;
@@ -47,8 +46,6 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
     private final int id;
 
     private final int arity;
-
-    private boolean active;
 
     private final String name;
 
@@ -77,30 +74,28 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
 
         tupleManager = new TupleManager(this, tuple);
 
-        active = false;
-
         if (name == null) {
             this.name = "C" + id;
         } else {
             this.name = name;
         }
 
-        removals = new int[arity];// new boolean[arity];
+        removals = new int[arity];
     }
 
-    public int getRemovals(int position) {
+    public final int getRemovals(final int position) {
         return removals[position];
     }
 
-    public void setRemovals(int position, int value) {
+    public final void setRemovals(final int position, final int value) {
         removals[position] = value;
     }
 
-    public void fillRemovals(final int value) {
+    public final void fillRemovals(final int value) {
         Arrays.fill(removals, value);
     }
 
-    public boolean hasNoRemovals(final int value) {
+    public final boolean hasNoRemovals(final int value) {
         for (int i : removals) {
             if (i >= value) {
                 return false;
@@ -110,21 +105,21 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
     }
 
     @Override
-    public int getWeight() {
+    public final int getWeight() {
         return weight;
     }
 
     @Override
-    public void incWeight() {
+    public final void incWeight() {
         weight++;
     }
 
     @Override
-    public void setWeight(final int weight) {
+    public final void setWeight(final int weight) {
         this.weight = weight;
     }
 
-    public int getValue(final int position) {
+    public final int getValue(final int position) {
         return scope[position].getValue(tuple[position]);
     }
 
@@ -162,11 +157,11 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
         return id;
     }
 
-    public final static void resetCId() {
+    public static final void resetCId() {
         cId = 0;
     }
 
-    public final boolean isBound(Variable variable) {
+    public final boolean isBound(final Variable variable) {
         for (Variable v : scope) {
             if (v != variable && v.getDomainSize() > 1) {
                 return true;
@@ -175,70 +170,19 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
         return false;
     }
 
-    //
-    // public final boolean check(int[] tuple) {
-    // System.arraycopy(tuple, 0, this.tuple, 0, arity);
-    // return chk();
-    // }
-    //
-    // public final boolean checkFirstWith(final int variablePosition,
-    // final int index) {
-    // tupleManager.setFirstTuple(variablePosition, index);
-    // return chk();
-    // }
-
     public final int getArity() {
         return arity;
     }
 
-    public final boolean isActive() {
-        return active;
-    }
-
-    public final void setActive(final boolean active) {
-        this.active = active;
-    }
-
-    public boolean equals(final Object object) {
+    @Override
+    public final boolean equals(final Object object) {
         if (!(object instanceof Constraint)) {
             return false;
         }
         return id == ((Constraint) object).getId();
     }
 
-    public AbstractConstraint deepCopy(final Collection<Variable> variables)
-            throws CloneNotSupportedException {
-        final AbstractConstraint constraint = this.clone();
-
-        constraint.scope = new Variable[arity];
-
-        for (int i = arity; --i >= 0;) {
-            for (Variable v : variables) {
-                if (v == scope[i]) {
-                    constraint.scope[i] = v;
-                    break;
-                }
-            }
-        }
-
-        return constraint;
-    }
-
-    public AbstractConstraint clone() throws CloneNotSupportedException {
-        final AbstractConstraint constraint = (AbstractConstraint) super
-                .clone();
-
-        constraint.tuple = new int[arity];
-
-        // constraint.positionInVariable fixe
-        // constraint.nbMaxConflicts fixe
-        // constraint.nbSupports fixe
-
-        constraint.tupleManager = new TupleManager(constraint, constraint.tuple);
-        return constraint;
-    }
-
-    public String getName() {
+    public final String getName() {
         return name;
     }
 
@@ -254,12 +198,9 @@ public abstract class AbstractConstraint implements Cloneable, Constraint {
         // Nothing here
     }
 
+    @Override
     public int hashCode() {
         return id;
-    }
-
-    public int getEvaluation(int reviseCount) {
-        return Integer.MAX_VALUE;
     }
 
     public final boolean controlTuplePresence(final int[] tuple) {

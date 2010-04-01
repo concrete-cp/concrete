@@ -24,28 +24,37 @@ import cspfj.problem.Variable;
 
 public final class ReifiedGt extends AbstractAC3Constraint {
 
-	private final boolean strict;
+    private final boolean strict;
 
-	public ReifiedGt(final Variable result, final Variable v0,
-			final Variable v1, final boolean strict) {
-		super(result, v0, v1);
-		this.strict = strict;
-	}
+    public ReifiedGt(final Variable result, final Variable v0,
+            final Variable v1, final boolean strict) {
+        super(result, v0, v1);
+        this.strict = strict;
+    }
 
-	@Override
-	public boolean check() {
-		if (strict) {
-			return getValue(0) == (getValue(1) > getValue(2) ? 1 : 0);
-		}
-		return getValue(0) == (getValue(1) >= getValue(2) ? 1 : 0);
-	}
+    @Override
+    public boolean check() {
+        if (strict) {
+            return getValue(0) == (getValue(1) > getValue(2) ? 1 : 0);
+        }
+        return getValue(0) == (getValue(1) >= getValue(2) ? 1 : 0);
+    }
 
-	public String toString() {
-		if (strict) {
-			return getVariable(0) + " = " + getVariable(1) + " > "
-					+ getVariable(2);
-		}
-		return getVariable(0) + " = " + getVariable(1) + " >= "
-				+ getVariable(2);
-	}
+    public String toString() {
+        if (strict) {
+            return getVariable(0) + " = " + getVariable(1) + " > "
+                    + getVariable(2);
+        }
+        return getVariable(0) + " = " + getVariable(1) + " >= "
+                + getVariable(2);
+    }
+
+    @Override
+    public int getEvaluation(final int reviseCount) {
+        int size = 1;
+        for (Variable v : getScope()) {
+            size *= v.getDomainSize();
+        }
+        return size;
+    }
 }

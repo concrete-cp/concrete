@@ -28,19 +28,18 @@ public final class ExtensionConstraintGeneral extends AbstractAC3Constraint
 
     private MatrixManager matrixManager;
 
-    public ExtensionConstraintGeneral(final Matrix matrix, boolean shared,
-            final Variable... scope) {
+    public ExtensionConstraintGeneral(final Matrix matrix,
+            final boolean shared, final Variable... scope) {
         super(scope);
-        this.matrixManager = new MatrixManagerGeneral(scope, matrix, shared);
-        matrixManager.setTuple(tuple);
-
+        this.matrixManager = new MatrixManagerGeneral(scope, matrix, shared,
+                getTuple());
     }
 
     public ExtensionConstraintGeneral(final String name, final Matrix matrix,
             final boolean shared, final Variable... scope) {
         super(name, scope);
-        this.matrixManager = new MatrixManagerGeneral(scope, matrix, shared);
-        matrixManager.setTuple(tuple);
+        this.matrixManager = new MatrixManagerGeneral(scope, matrix, shared,
+                getTuple());
     }
 
     @Override

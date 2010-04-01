@@ -31,16 +31,6 @@ public final class CrossHeuristic implements Heuristic {
         valueHeuristic.compute();
     }
 
-    @Override
-    public VariableHeuristic getVariableHeuristic() {
-        return variableHeuristic;
-    }
-
-    @Override
-    public ValueHeuristic getValueHeuristic() {
-        return valueHeuristic;
-    }
-
     public String toString() {
         return "Crossed " + variableHeuristic + ", " + valueHeuristic;
     }

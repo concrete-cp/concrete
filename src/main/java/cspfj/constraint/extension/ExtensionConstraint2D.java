@@ -20,35 +20,37 @@
 package cspfj.constraint.extension;
 
 import cspfj.constraint.AbstractPVRConstraint;
-import cspfj.constraint.DynamicConstraint;
 import cspfj.problem.Variable;
 
 public final class ExtensionConstraint2D extends AbstractPVRConstraint
         implements ExtensionConstraint {
 
-    private static final int GAIN_OVER_GENERAL = 32;
+    private static final int GAIN_OVER_GENERAL = 10;
 
-    private MatrixManager2D matrix;
+    private final MatrixManager2D matrixManager;
 
     public ExtensionConstraint2D(final Variable[] scope, final Matrix2D matrix,
             final boolean shared) {
         super(scope);
-        this.matrix = new MatrixManager2D(scope, matrix, shared);
+        this.matrixManager = new MatrixManager2D(scope, matrix, shared,
+                getTuple());
     }
 
     public ExtensionConstraint2D(final Variable[] scope, final Matrix2D matrix,
             final String name, final boolean shared) {
         super(name, scope);
-        this.matrix = new MatrixManager2D(scope, matrix, shared);
+        this.matrixManager = new MatrixManager2D(scope, matrix, shared,
+                getTuple());
     }
 
     public int getEvaluation(final int reviseCount) {
-        return super.getEvaluation(reviseCount) / GAIN_OVER_GENERAL;
+        return getVariable(0).getDomainSize() * getVariable(1).getDomainSize()
+                / GAIN_OVER_GENERAL;
     }
 
     @Override
     public boolean revise(final int position) {
-        if (matrix.supportCondition(position)) {
+        if (matrixManager.supportCondition(position)) {
             return false;
         }
 
@@ -61,12 +63,9 @@ public final class ExtensionConstraint2D extends AbstractPVRConstraint
         for (int index = variable.getFirst(); index >= 0; index = variable
                 .getNext(index)) {
 
-            if (!matrix.hasSupport(position, index)) {
+            if (!matrixManager.hasSupport(position, index)) {
                 variable.remove(index);
-
                 revised = true;
-                setActive(true);
-
             }
 
         }
@@ -76,7 +75,7 @@ public final class ExtensionConstraint2D extends AbstractPVRConstraint
 
     @Override
     public boolean removeTuple(final int[] tuple) {
-        return matrix.removeTuple(tuple);
+        return matrixManager.removeTuple(tuple);
     }
 
     @Override
@@ -93,11 +92,11 @@ public final class ExtensionConstraint2D extends AbstractPVRConstraint
 
     @Override
     public MatrixManager2D getMatrixManager() {
-        return matrix;
+        return matrixManager;
     }
 
     @Override
     public boolean check() {
-        return matrix.check();
+        return matrixManager.check();
     }
 }

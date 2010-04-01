@@ -68,31 +68,26 @@ public final class Variable implements Cloneable, Identified {
     }
 
     /**
-     * @param constraints2
+     * @param newConstraints
      *            Liste des contraintes impliquant la variable
      */
-    public void setInvolvingConstraints(final Constraint[] constraints2) {
-        this.constraints = constraints2;
-        final List<DynamicConstraint> dynamicConstraints = new ArrayList<DynamicConstraint>();
-        for (Constraint c : constraints2) {
+    public void setInvolvingConstraints(final Constraint[] newConstraints) {
+        this.constraints = newConstraints;
+        final List<DynamicConstraint> newDynamicConstraints = new ArrayList<DynamicConstraint>();
+        for (Constraint c : newConstraints) {
             if (c instanceof DynamicConstraint) {
-                dynamicConstraints.add((DynamicConstraint) c);
+                newDynamicConstraints.add((DynamicConstraint) c);
             }
         }
 
-        this.dynamicConstraints = dynamicConstraints
-                .toArray(new DynamicConstraint[dynamicConstraints.size()]);
+        this.dynamicConstraints = newDynamicConstraints
+                .toArray(new DynamicConstraint[newDynamicConstraints.size()]);
 
-        positionInConstraint = new int[constraints2.length];
-        for (int i = constraints2.length; --i >= 0;) {
-            updatePositionInConstraint(i);
+        positionInConstraint = new int[newConstraints.length];
+        for (int i = newConstraints.length; --i >= 0;) {
+            positionInConstraint[i] = constraints[i].getPosition(this);
         }
 
-    }
-
-    public void updatePositionInConstraint(final int constraintPosition) {
-        positionInConstraint[constraintPosition] = constraints[constraintPosition]
-                .getPosition(this);
     }
 
     /**
@@ -212,11 +207,11 @@ public final class Variable implements Cloneable, Identified {
         return positionInConstraint[constraint];
     }
 
-    public void setLevel(int level) {
+    public void setLevel(final int level) {
         domain.setLevel(level);
     }
 
-    public void restoreLevel(int level) {
+    public void restoreLevel(final int level) {
         domain.restoreLevel(level);
     }
 
@@ -227,15 +222,15 @@ public final class Variable implements Cloneable, Identified {
         domain.restoreLevel(0);
     }
 
-    public boolean isPresent(int index) {
+    public boolean isPresent(final int index) {
         return domain.present(index);
     }
 
-    public int getValue(int index) {
+    public int getValue(final int index) {
         return domain.value(index);
     }
 
-    public void makeSingleton(int value1) {
+    public void makeSingleton(final int value1) {
         domain.setSingle(value1);
     }
 

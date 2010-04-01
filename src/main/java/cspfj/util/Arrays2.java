@@ -8,14 +8,14 @@ public final class Arrays2 {
 
 	}
 
-	public static <T> T[] addBefore(T val, T[] array, T[] target) {
+	public static <T> T[] addBefore(final T val, final T[] array, final T[] target) {
 		assert target.length == array.length + 1;
 		target[0] = val;
 		System.arraycopy(array, 0, target, 1, array.length);
 		return target;
 	}
 
-	public static <T> String partialDisplay(T[] values) {
+	public static <T> String partialDisplay(final T[] values) {
 		final int iMax = values.length - 1;
 		if (iMax == -1) {
 			return "[]";
@@ -37,7 +37,7 @@ public final class Arrays2 {
 		}
 	}
 
-	public static String partialDisplay(int[] values) {
+	public static String partialDisplay(final int[] values) {
 		final int iMax = values.length - 1;
 		if (iMax == -1) {
 			return "[]";
@@ -59,7 +59,7 @@ public final class Arrays2 {
 		}
 	}
 
-	public static boolean isOrdered(int[] array) {
+	public static boolean isOrdered(final int[] array) {
 		for (int i = array.length - 1; --i >= 0;) {
 			if (array[i + 1] <= array[i]) {
 				return false;

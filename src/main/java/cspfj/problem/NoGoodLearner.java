@@ -17,13 +17,12 @@ import cspfj.constraint.extension.ExtensionConstraintGeneral;
 import cspfj.constraint.extension.Matrix;
 import cspfj.constraint.extension.Matrix2D;
 import cspfj.constraint.extension.TupleSet;
-import cspfj.constraint.semantic.RCConstraint;
 import cspfj.util.BitVector;
 
 public final class NoGoodLearner {
 
     public static enum LearnMethod {
-        NONE, EXT, RC, BIN
+        NONE, EXT, BIN;
     }
 
     private static final Logger LOGGER = Logger.getLogger(NoGoodLearner.class
@@ -284,9 +283,9 @@ public final class NoGoodLearner {
 
         if (level == 2) {
 
-            if (learnMethod == LearnMethod.RC) {
-                return new RCConstraint(constraintScope);
-            }
+            // if (learnMethod == LearnMethod.RC) {
+            // return new RCConstraint(constraintScope);
+            // }
 
             final Matrix2D matrix = new Matrix2D(constraintScope[0].getDomain()
                     .maxSize(), constraintScope[1].getDomain().maxSize(), true);

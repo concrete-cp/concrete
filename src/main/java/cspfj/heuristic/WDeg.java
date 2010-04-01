@@ -36,7 +36,7 @@ public final class WDeg extends AbstractVariableHeuristic {
 		return wDeg(variable);
 	}
 
-	private double wDeg(final Variable variable) {
+	private static double wDeg(final Variable variable) {
 		double count = 0;
 
 		for (Constraint c : variable.getInvolvingConstraints()) {

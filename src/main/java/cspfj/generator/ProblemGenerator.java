@@ -59,7 +59,7 @@ public final class ProblemGenerator {
 		return problem;
 	}
 
-	public static Domain generateDomain(final CSPOMDomain<?> cspomDomain) {
+	private static Domain generateDomain(final CSPOMDomain<?> cspomDomain) {
 		if (cspomDomain == null) {
 			return null;
 		}

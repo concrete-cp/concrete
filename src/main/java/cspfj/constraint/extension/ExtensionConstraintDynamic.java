@@ -35,27 +35,22 @@ public final class ExtensionConstraintDynamic extends AbstractConstraint
 
     private final BitVector[] toFind;
 
-    // private final static Logger logger = Logger
-    // .getLogger(ExtensionConstraintDynamic.class.getSimpleName());
-
-    // public static boolean quick = false;
-
     public ExtensionConstraintDynamic(final Variable[] scope,
             final TupleSet matrix, final boolean shared)
             throws FailedGenerationException {
         super(scope);
-        this.dynamic = new MatrixManagerDynamic(scope, matrix, shared);
+        this.dynamic = new MatrixManagerDynamic(scope, matrix, shared,
+                getTuple());
         toFind = initFound();
-        dynamic.setTuple(getTuple());
     }
 
     public ExtensionConstraintDynamic(final Variable[] scope,
             final TupleSet matrix, final String name, final boolean shared)
             throws FailedGenerationException {
         super(name, scope);
-        this.dynamic = new MatrixManagerDynamic(scope, matrix, shared);
+        this.dynamic = new MatrixManagerDynamic(scope, matrix, shared,
+                getTuple());
         toFind = initFound();
-        dynamic.setTuple(getTuple());
     }
 
     private BitVector[] initFound() {
@@ -183,7 +178,6 @@ public final class ExtensionConstraintDynamic extends AbstractConstraint
                     return false;
                 }
                 revisator.revised(this, variable);
-                setActive(true);
             }
         }
         return true;

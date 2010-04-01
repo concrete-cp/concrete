@@ -16,8 +16,8 @@ public final class MatrixManager2D extends AbstractMatrixManager {
     private static long presenceChecks = 0;
 
     public MatrixManager2D(final Variable[] scope, final Matrix2D matrix,
-            final boolean shared) {
-        super(scope, matrix, shared);
+            final boolean shared, final int[] tuple) {
+        super(scope, matrix, shared, tuple);
 
         this.matrix = matrix;
 

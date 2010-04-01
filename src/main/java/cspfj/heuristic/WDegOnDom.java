@@ -29,11 +29,12 @@ public final class WDegOnDom extends AbstractVariableHeuristic {
 		super(problem);
 	}
 
+	@Override
 	public double getScore(final Variable variable) {
 		return wDeg(variable) / variable.getDomainSize();
 	}
 
-	private double wDeg(final Variable variable) {
+	private static double wDeg(final Variable variable) {
 		double count = 0;
 
 		for (Constraint c : variable.getInvolvingConstraints()) {
@@ -44,6 +45,7 @@ public final class WDegOnDom extends AbstractVariableHeuristic {
 		return count;
 	}
 
+	@Override
 	public String toString() {
 		return "max-wdeg/dom";
 	}

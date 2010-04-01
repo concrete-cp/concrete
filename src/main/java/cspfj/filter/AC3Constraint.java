@@ -7,8 +7,10 @@ import java.util.logging.Logger;
 
 import cspfj.constraint.AbstractPVRConstraint;
 import cspfj.constraint.Constraint;
+import cspfj.priorityqueues.BinomialHeap;
 import cspfj.priorityqueues.FibonacciHeap;
 import cspfj.priorityqueues.Key;
+import cspfj.priorityqueues.SoftHeap;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -35,7 +37,7 @@ public final class AC3Constraint implements Filter {
 
         queue = new FibonacciHeap<Constraint>(new Key<Constraint>() {
             @Override
-            public int getKey(Constraint o1) {
+            public int getKey(final Constraint o1) {
                 return o1.getEvaluation(AC3Constraint.this.revisionCount);
             }
         }, problem.getNbConstraints());

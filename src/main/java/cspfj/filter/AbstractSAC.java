@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
-public abstract class AbstractSAC implements Filter {
+abstract class AbstractSAC implements Filter {
 
     protected final AC3 filter;
 

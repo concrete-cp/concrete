@@ -7,7 +7,6 @@ import java.util.logging.Logger;
 
 import cspfj.constraint.AbstractPVRConstraint;
 import cspfj.constraint.Constraint;
-import cspfj.priorityqueues.BinomialHeap;
 import cspfj.priorityqueues.FibonacciHeap;
 import cspfj.priorityqueues.Key;
 import cspfj.problem.Problem;
@@ -140,7 +139,7 @@ public final class AC3 implements Filter {
 
     }
 
-    public boolean reduceOnce(final Variable variable) {
+    private boolean reduceOnce(final Variable variable) {
         final Constraint[] involvingConstraints = variable
                 .getInvolvingConstraints();
         for (int c = involvingConstraints.length; --c >= 0;) {

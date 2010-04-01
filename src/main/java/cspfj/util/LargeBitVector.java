@@ -2,7 +2,7 @@ package cspfj.util;
 
 import java.util.Arrays;
 
-public final class LargeBitVector extends BitVector {
+final class LargeBitVector extends BitVector {
     private long[] words;
 
     public LargeBitVector(final int size, final boolean fill) {
@@ -21,12 +21,20 @@ public final class LargeBitVector extends BitVector {
     }
 
     public void fill(final boolean fill) {
-        Arrays.fill(words, fill ? MASK : 0);
-        words[words.length - 1] >>>= -size;
+        if (fill) {
+            Arrays.fill(words, MASK);
+            words[words.length - 1] >>>= -size;
+        } else {
+            Arrays.fill(words, 0);
+        }
+
     }
 
     public static int nbWords(final int nbBits) {
-        return (word(nbBits)) + (nbBits % SIZE > 0 ? 1 : 0);
+        if (nbBits % SIZE > 0) {
+            return word(nbBits) + 1;
+        }
+        return word(nbBits);
     }
 
     public boolean clear(final int position) {

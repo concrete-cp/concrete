@@ -23,8 +23,8 @@ public final class MatrixManagerDynamic extends AbstractMatrixManager implements
     // private int stingRemoved;
 
     public MatrixManagerDynamic(final Variable[] scope, final TupleSet matrix,
-            final boolean shared) {
-        super(scope, matrix, shared);
+            final boolean shared, final int[] tuple) {
+        super(scope, matrix, shared, tuple);
         this.tupleSet = matrix;
         tupleList = new int[matrix.size()][];
 

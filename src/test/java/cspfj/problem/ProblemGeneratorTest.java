@@ -11,13 +11,13 @@ import cspom.CSPOM;
 import cspom.CSPParseException;
 import cspom.compiler.ProblemCompiler;
 
-public class ProblemGeneratorTest {
+public final class ProblemGeneratorTest {
 
 	@Test
 	public void generateTest() throws CSPParseException, IOException,
 			FailedGenerationException, ClassNotFoundException {
 		final CSPOM cspom = CSPOM.load(ProblemGeneratorTest.class
-				.getResource("zebra.xml"));
+				.getResource("fapp01-0200-0.xml"));
 		System.out.println(cspom.getVariables().size() + " vars, "
 				+ cspom.getConstraints().size() + " cons");
 		System.out.println("----");

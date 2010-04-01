@@ -19,7 +19,7 @@ public final class DisjGenerator extends AbstractGenerator {
     }
 
     private void generateReify(final Variable[] scope,
-            final FunctionalConstraint<?> constraint) {
+            final FunctionalConstraint constraint) {
         /*
          * Reified disjunction is converted to CNF :
          * 
@@ -50,7 +50,7 @@ public final class DisjGenerator extends AbstractGenerator {
         }
     }
 
-    private void generateNeg(final FunctionalConstraint<?> constraint)
+    private void generateNeg(final FunctionalConstraint constraint)
             throws FailedGenerationException {
         /*
          * Negation is converted to CNF :
@@ -73,7 +73,7 @@ public final class DisjGenerator extends AbstractGenerator {
     }
 
     @Override
-    public boolean generate(final CSPOMConstraint<?> constraint)
+    public boolean generate(final CSPOMConstraint constraint)
             throws FailedGenerationException {
         final Variable[] scope = getSolverVariables(constraint.getScope());
 
@@ -83,11 +83,11 @@ public final class DisjGenerator extends AbstractGenerator {
 
         if ("or".equals(constraint.getDescription())) {
 
-            if (constraint instanceof GeneralConstraint<?>) {
+            if (constraint instanceof GeneralConstraint) {
                 addConstraint(new Disj(scope, parseParameters(constraint
                         .getParameters())));
-            } else if (constraint instanceof FunctionalConstraint<?>) {
-                generateReify(scope, (FunctionalConstraint<?>) constraint);
+            } else if (constraint instanceof FunctionalConstraint) {
+                generateReify(scope, (FunctionalConstraint) constraint);
             } else {
                 throw new IllegalArgumentException(
                         "Unhandled constraint type for " + constraint);
@@ -95,11 +95,11 @@ public final class DisjGenerator extends AbstractGenerator {
 
         } else if ("not".equals(constraint.getDescription())) {
 
-            if (!(constraint instanceof FunctionalConstraint<?>)) {
+            if (!(constraint instanceof FunctionalConstraint)) {
                 throw new FailedGenerationException(
                         "Unhandled constraint type for " + constraint);
             }
-            generateNeg((FunctionalConstraint<?>) constraint);
+            generateNeg((FunctionalConstraint) constraint);
 
         } else {
             throw new IllegalArgumentException("Unhandled constraint type for "
