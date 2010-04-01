@@ -3,11 +3,11 @@ package cspfj.constraint.extension;
 import cspfj.problem.Variable;
 import cspfj.util.BitVector;
 
-public final class MatrixManager2D extends MatrixManager {
+public final class MatrixManager2D extends AbstractMatrixManager {
+
+    private static final int MINIMUM_SIZE_FOR_LAST = 3 * Long.SIZE;
 
     private Matrix2D matrix;
-
-    private int[] mask;
 
     private final int[][] last;
 
@@ -15,7 +15,7 @@ public final class MatrixManager2D extends MatrixManager {
 
     private static long presenceChecks = 0;
 
-    public MatrixManager2D(Variable[] scope, Matrix2D matrix,
+    public MatrixManager2D(final Variable[] scope, final Matrix2D matrix,
             final boolean shared) {
         super(scope, matrix, shared);
 
@@ -24,7 +24,11 @@ public final class MatrixManager2D extends MatrixManager {
         int length = Math.max(scope[0].getDomain().maxSize(), scope[1]
                 .getDomain().maxSize());
 
-        if (length > 3 * Long.SIZE) {
+        /*
+         * No need for last data structure if domain sizes <=
+         * MINIMUM_SIZE_FOR_LAST
+         */
+        if (length > MINIMUM_SIZE_FOR_LAST) {
             last = new int[][] { new int[scope[0].getDomain().maxSize()],
                     new int[scope[1].getDomain().maxSize()] };
         } else {
@@ -41,13 +45,16 @@ public final class MatrixManager2D extends MatrixManager {
         return presenceChecks;
     }
 
-    public static final void clearStats() {
-        checks = presenceChecks = 0;
+    public static void clearStats() {
+        checks = 0;
+        presenceChecks = 0;
     }
 
     public boolean hasSupport(final int variablePosition, final int index) {
-        return last == null ? hasSupportNR(variablePosition, index)
-                : hasSupportR(variablePosition, index);
+        if (last == null) {
+            return hasSupportNR(variablePosition, index);
+        }
+        return hasSupportR(variablePosition, index);
     }
 
     private boolean hasSupportR(final int variablePosition, final int index) {
@@ -75,16 +82,6 @@ public final class MatrixManager2D extends MatrixManager {
                 variables[1 - variablePosition].getBitDomain()) >= 0;
     }
 
-//    public MatrixManager2D clone() throws CloneNotSupportedException {
-//        final MatrixManager2D matrix = (MatrixManager2D) super.clone();
-//
-//        matrix.matrix = this.matrix.clone();
-//
-//        matrix.mask = mask.clone();
-//
-//        return matrix;
-//    }
-
     public String toString() {
         return "MatrixManager2D\n" + matrix;
     }
@@ -97,7 +94,9 @@ public final class MatrixManager2D extends MatrixManager {
                         variables[1 - position].getBitDomain(), part);
     }
 
-    protected Matrix unshareMatrix() {
-        return matrix = (Matrix2D) super.unshareMatrix();
+    @Override
+    public Matrix unshareMatrix() {
+        matrix = (Matrix2D) super.unshareMatrix();
+        return matrix;
     }
 }

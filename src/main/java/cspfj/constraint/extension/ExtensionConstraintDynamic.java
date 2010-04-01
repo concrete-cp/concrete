@@ -19,7 +19,6 @@
 
 package cspfj.constraint.extension;
 
-import java.util.Collection;
 import java.util.Iterator;
 
 import cspfj.constraint.AbstractConstraint;
@@ -29,8 +28,8 @@ import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
 import cspfj.util.BitVector;
 
-public class ExtensionConstraintDynamic extends AbstractConstraint implements
-        ExtensionConstraint {
+public final class ExtensionConstraintDynamic extends AbstractConstraint
+        implements ExtensionConstraint {
 
     private final MatrixManagerDynamic dynamic;
 
@@ -86,7 +85,8 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
 
     }
 
-    public boolean revise(final RevisionHandler revisator, int reviseCount) {
+    @Override
+    public boolean revise(final RevisionHandler revisator, final int reviseCount) {
         return reviseSTR(revisator);
     }
 
@@ -100,11 +100,11 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
             if (var.isAssigned()) {
                 continue;
             }
-            final BitVector toFind = this.toFind[i];
-            toFind.fill(false);
+            final BitVector localToFind = this.toFind[i];
+            localToFind.fill(false);
             for (int index = var.getFirst(); index >= 0; index = var
                     .getNext(index)) {
-                toFind.set(index);
+                localToFind.set(index);
                 nbToFind++;
             }
         }
@@ -138,11 +138,11 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
             if (var.isAssigned()) {
                 continue;
             }
-            final BitVector toFind = this.toFind[i];
-            toFind.fill(false);
+            final BitVector finalToFind = this.toFind[i];
+            finalToFind.fill(false);
             for (int index = getVariable(i).getFirst(); index >= 0; index = getVariable(
                     i).getNext(index)) {
-                toFind.set(index);
+                finalToFind.set(index);
             }
 
         }
@@ -163,15 +163,16 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
         return filter(toFind, revisator);
     }
 
-    private boolean filter(BitVector[] toFinds, RevisionHandler revisator) {
+    private boolean filter(final BitVector[] toFinds,
+            final RevisionHandler revisator) {
         for (int i = getArity(); --i >= 0;) {
             final Variable variable = getVariable(i);
             if (variable.isAssigned()) {
                 continue;
             }
             boolean rev = false;
-            final BitVector toFind = toFinds[i];
-            for (int index = toFind.nextSetBit(0); index >= 0; index = toFind
+            final BitVector localToFind = toFinds[i];
+            for (int index = localToFind.nextSetBit(0); index >= 0; index = localToFind
                     .nextSetBit(index + 1)) {
                 variable.remove(index);
                 rev = true;
@@ -188,32 +189,13 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
         return true;
     }
 
-//    private boolean controlTuplePresence(final int[] tuple) {
-//        for (int i = tuple.length; --i >= 0;) {
-//            if (!getVariable(i).isPresent(tuple[i])) {
-//                return false;
-//            }
-//        }
-//        return true;
-//    }
-
-    public ExtensionConstraintDynamic deepCopy(
-            final Collection<Variable> variables)
-            throws CloneNotSupportedException {
-        final ExtensionConstraintDynamic constraint = (ExtensionConstraintDynamic) super
-                .deepCopy(variables);
-        // constraint.matrix = matrix.deepCopy(constraint.getScope(),
-        // constraint.tuple);
-        return constraint;
-    }
-
     @Override
     public boolean check() {
         return dynamic.check();
     }
 
     @Override
-    public boolean removeTuple(int[] tuple) {
+    public boolean removeTuple(final int[] tuple) {
         if (dynamic.removeTuple(tuple)) {
             // addConflict(tuple);
             return true;
@@ -221,7 +203,7 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
         return false;
     }
 
-    private static boolean match(int[] tuple, int[] base) {
+    private static boolean match(final int[] tuple, final int[] base) {
         assert tuple.length == base.length;
         for (int i = tuple.length; --i >= 0;) {
             if (base[i] >= 0 && base[i] != tuple[i]) {
@@ -232,7 +214,7 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
     }
 
     @Override
-    public int removeTuples(int[] base) {
+    public int removeTuples(final int[] base) {
         dynamic.unshareMatrix();
         int removed = 0;
         for (final Iterator<int[]> itr = dynamic.hsIterator(); itr.hasNext();) {
@@ -252,18 +234,8 @@ public class ExtensionConstraintDynamic extends AbstractConstraint implements
         return dynamic;
     }
 
-    // @Override
-    // public int removeTuples(int[] base) {
-    // int removed = 0;
-    // tupleManager.setFirstTuple(base);
-    // do {
-    // if (removeTuple(this.tuple)) {
-    // removed++;
-    // }
-    // } while (tupleManager.setNextTuple(base));
-    // return removed;
-    // }
-    public int getEvaluation(int reviseCount) {
+    @Override
+    public int getEvaluation(final int reviseCount) {
         return getArity() * dynamic.getSize();
     }
 

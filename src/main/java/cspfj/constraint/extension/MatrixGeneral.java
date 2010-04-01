@@ -1,20 +1,15 @@
 package cspfj.constraint.extension;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 
-public class MatrixGeneral implements Matrix, Cloneable {
+public final class MatrixGeneral implements Matrix, Cloneable {
+    private int[] skip;
 
-    public int[] skip;
+    private boolean[] matrix;
 
-    public boolean[] matrix;
+    private boolean empty;
 
-    public boolean empty;
-
-    private final static BigInteger MAX_VALUE = BigInteger
-            .valueOf(Integer.MAX_VALUE);
-
-    public MatrixGeneral(int[] sizes, boolean initialState) {
+    public MatrixGeneral(final int[] sizes, final boolean initialState) {
         int nbValues = 1;
         for (int size : sizes) {
             nbValues *= size;
@@ -37,18 +32,6 @@ public class MatrixGeneral implements Matrix, Cloneable {
         return matrix[matrixIndex(tuple)];
     }
 
-    public static boolean usable(final int[] sizes) {
-        BigInteger nbValues = BigInteger.ONE;
-
-        for (int size : sizes) {
-            nbValues = nbValues.multiply(BigInteger.valueOf(size));
-            if (nbValues.compareTo(MAX_VALUE) > 0) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     @Override
     public void set(final int[] tuple, final boolean status) {
         matrix[matrixIndex(tuple)] = status;
@@ -64,6 +47,7 @@ public class MatrixGeneral implements Matrix, Cloneable {
         return index;
     }
 
+    @Override
     public MatrixGeneral clone() {
         MatrixGeneral matrix;
         try {

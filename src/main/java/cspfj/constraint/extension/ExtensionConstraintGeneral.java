@@ -19,21 +19,78 @@
 
 package cspfj.constraint.extension;
 
+import cspfj.constraint.AbstractAC3Constraint;
+import cspfj.constraint.DynamicConstraint;
 import cspfj.problem.Variable;
 
-public class ExtensionConstraintGeneral extends AbstractExtensionConstraint {
+public final class ExtensionConstraintGeneral extends AbstractAC3Constraint
+        implements ExtensionConstraint, DynamicConstraint {
 
-    // private final static Logger logger = Logger
-    // .getLogger(ExtensionConstraintGeneral.class.getSimpleName());
+    private MatrixManager matrixManager;
 
-    public ExtensionConstraintGeneral(String name, Matrix matrix,
-            boolean shared, Variable... scope) {
-        super(name, new MatrixManager(scope, matrix, shared), scope);
+    public ExtensionConstraintGeneral(final Matrix matrix, boolean shared,
+            final Variable... scope) {
+        super(scope);
+        this.matrixManager = new MatrixManagerGeneral(scope, matrix, shared);
+        matrixManager.setTuple(tuple);
+
     }
 
-    public ExtensionConstraintGeneral(Matrix matrix, boolean shared,
-            Variable... scope) {
-        super(new MatrixManager(scope, matrix, shared), scope);
+    public ExtensionConstraintGeneral(final String name, final Matrix matrix,
+            final boolean shared, final Variable... scope) {
+        super(name, scope);
+        this.matrixManager = new MatrixManagerGeneral(scope, matrix, shared);
+        matrixManager.setTuple(tuple);
     }
 
+    @Override
+    public MatrixManager getMatrixManager() {
+        return matrixManager;
+    }
+
+    @Override
+    public boolean removeTuple(final int[] tuple) {
+        return matrixManager.removeTuple(tuple);
+    }
+
+    @Override
+    public boolean check() {
+        return matrixManager.check();
+    }
+
+    public String getType() {
+        return super.getType() + " w/ " + matrixManager.getType();
+    }
+
+    @Override
+    public int removeTuples(final int[] base) {
+        int removed = 0;
+        tupleManager.setFirstTuple(base);
+        do {
+            if (removeTuple(this.tuple)) {
+                removed++;
+            }
+        } while (tupleManager.setNextTuple(base));
+        return removed;
+    }
+
+    @Override
+    public boolean revise(final int position) {
+        if (matrixManager.supportCondition(position)) {
+
+            assert !super.revise(position);
+            return false;
+        }
+        return super.revise(position);
+    }
+
+    @Override
+    public int getEvaluation(final int reviseCount) {
+
+        int size = 1;
+        for (Variable v : getScope()) {
+            size *= v.getDomainSize();
+        }
+        return size;
+    }
 }

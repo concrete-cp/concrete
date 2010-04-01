@@ -5,7 +5,7 @@ import java.util.Iterator;
 
 import cspfj.problem.Variable;
 
-public class MatrixManagerDynamic extends MatrixManager implements
+public final class MatrixManagerDynamic extends AbstractMatrixManager implements
         Iterable<int[]> {
 
     private TupleSet tupleSet;
@@ -36,7 +36,7 @@ public class MatrixManagerDynamic extends MatrixManager implements
         next = new int[tupleSet.size()];
         Arrays.fill(next, -1);
 
-        removed = new int[arity];
+        removed = new int[scope.length];
         Arrays.fill(removed, -1);
         removedLast = removed.clone();
 
@@ -118,15 +118,7 @@ public class MatrixManagerDynamic extends MatrixManager implements
         return stb.toString();
     }
 
-    public boolean removeTuple(int[] tuple) {
-        if (super.removeTuple(tuple)) {
-            // stingRemoved = currentLevel;
-            return true;
-        }
-        return false;
-    }
-
-    public class LLIterator implements Iterator<int[]> {
+    public final class LLIterator implements Iterator<int[]> {
 
         private int current = -1;
 
@@ -134,7 +126,7 @@ public class MatrixManagerDynamic extends MatrixManager implements
 
         private int nextOne;
 
-        public LLIterator() {
+        private LLIterator() {
             nextOne = first;
         }
 

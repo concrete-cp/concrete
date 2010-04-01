@@ -19,54 +19,85 @@
 
 package cspfj.constraint.extension;
 
-import java.util.Collection;
-
+import cspfj.constraint.AbstractPVRConstraint;
 import cspfj.constraint.DynamicConstraint;
 import cspfj.problem.Variable;
 
-public class ExtensionConstraint2D extends AbstractExtensionConstraint
-        implements DynamicConstraint {
+public final class ExtensionConstraint2D extends AbstractPVRConstraint
+        implements ExtensionConstraint {
 
-    // private final double tightness;
+    private static final int GAIN_OVER_GENERAL = 32;
 
-    protected MatrixManager2D matrix;
+    private MatrixManager2D matrix;
 
     public ExtensionConstraint2D(final Variable[] scope, final Matrix2D matrix,
             final boolean shared) {
-
-        super(new MatrixManager2D(scope, matrix, shared), scope);
-        this.matrix = (MatrixManager2D) getMatrixManager();
+        super(scope);
+        this.matrix = new MatrixManager2D(scope, matrix, shared);
     }
 
     public ExtensionConstraint2D(final Variable[] scope, final Matrix2D matrix,
             final String name, final boolean shared) {
-        super(name, new MatrixManager2D(scope, matrix, shared), scope);
-
-        this.matrix = (MatrixManager2D) getMatrixManager();
+        super(name, scope);
+        this.matrix = new MatrixManager2D(scope, matrix, shared);
     }
 
-    public boolean hasSupport(final int variablePosition, final int index) {
-        assert this.isInvolved(getVariable(variablePosition));
-        return matrix.hasSupport(variablePosition, index);
+    public int getEvaluation(final int reviseCount) {
+        return super.getEvaluation(reviseCount) / GAIN_OVER_GENERAL;
     }
 
-    public ExtensionConstraint2D deepCopy(final Collection<Variable> variables)
-            throws CloneNotSupportedException {
-        final ExtensionConstraint2D constraint = (ExtensionConstraint2D) super
-                .deepCopy(variables);
-        constraint.matrix = (MatrixManager2D) matrix.deepCopy(constraint
-                .getScope(), constraint.tuple);
-        return constraint;
+    @Override
+    public boolean revise(final int position) {
+        if (matrix.supportCondition(position)) {
+            return false;
+        }
+
+        final Variable variable = getVariable(position);
+
+        assert !variable.isAssigned();
+
+        boolean revised = false;
+
+        for (int index = variable.getFirst(); index >= 0; index = variable
+                .getNext(index)) {
+
+            if (!matrix.hasSupport(position, index)) {
+                variable.remove(index);
+
+                revised = true;
+                setActive(true);
+
+            }
+
+        }
+
+        return revised;
     }
 
-    public int getEvaluation(int reviseCount) {
-        return super.getEvaluation(reviseCount) / 32;
+    @Override
+    public boolean removeTuple(final int[] tuple) {
+        return matrix.removeTuple(tuple);
     }
-    // @Override
-    // public int removeTuples(int[] base) {
-    // if (removeTuple(base)) {
-    // return 1;
-    // }
-    // return 0;
-    // }
+
+    @Override
+    public int removeTuples(final int[] base) {
+        int removed = 0;
+        tupleManager.setFirstTuple(base);
+        do {
+            if (removeTuple(this.tuple)) {
+                removed++;
+            }
+        } while (tupleManager.setNextTuple(base));
+        return removed;
+    }
+
+    @Override
+    public MatrixManager2D getMatrixManager() {
+        return matrix;
+    }
+
+    @Override
+    public boolean check() {
+        return matrix.check();
+    }
 }

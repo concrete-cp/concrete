@@ -197,7 +197,7 @@ public final class TupleManager {
         return false;
     }
 
-    int[] getTuple() {
+    public int[] getTuple() {
         return tuple;
     }
 }
