@@ -6,7 +6,7 @@ import cspfj.util.Arrays2;
 
 public final class ReifiedEq extends AbstractAC3Constraint {
 
-	public ReifiedEq(Variable result, Variable... vars) {
+	public ReifiedEq(final Variable result, final Variable... vars) {
 		super(Arrays2.addBefore(result, vars, new Variable[vars.length + 1]));
 	}
 
