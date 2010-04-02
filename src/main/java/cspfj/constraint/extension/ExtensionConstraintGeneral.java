@@ -76,7 +76,6 @@ public final class ExtensionConstraintGeneral extends AbstractAC3Constraint
     @Override
     public boolean revise(final int position) {
         if (matrixManager.supportCondition(position)) {
-
             assert !super.revise(position);
             return false;
         }

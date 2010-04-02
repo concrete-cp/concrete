@@ -1,5 +1,6 @@
 package cspfj.constraint;
 
+import cspfj.problem.Domain;
 import cspfj.problem.Variable;
 
 public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
@@ -21,49 +22,31 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 
     public AbstractAC3Constraint(final String name, final Variable... scope) {
         super(name, scope);
-
-        // last = new int[getArity()][][];
-        //
-        // for (int i = getArity(); --i >= 0;) {
-        // last[i] = new int[getVariable(i).getDomain().maxSize()][];
-        // }
-        last = new ResidueManager(getArity());
+        last = new ResidueManagerMap(getArity());
     }
 
     @Override
     public boolean revise(final int position) {
-        final Variable variable = getVariable(position);
-
-        assert !variable.isAssigned();
-
+        assert !getVariable(position).isAssigned();
+        final Domain dom = getVariable(position).getDomain();
         boolean revised = false;
+        for (int index = dom.first(); index >= 0; index = dom.next(index)) {
 
-        for (int index = variable.getFirst(); index >= 0; index = variable
-                .getNext(index)) {
+            final int[] residue = last.getResidue(position, index);
+            if (residue != null && controlTuplePresence(residue)) {
+                continue;
+            }
 
-            if (!hasSupport(position, index)) {
-                variable.remove(index);
+            if (findSupport(position, index)) {
+                last.updateResidue(tuple.clone());
+            } else {
+                dom.remove(index);
                 revised = true;
             }
 
         }
 
         return revised;
-    }
-
-    public boolean hasSupport(final int variablePosition, final int index) {
-        assert this.isInvolved(getVariable(variablePosition));
-        assert index >= 0;
-
-        final int[] residue = last.getResidue(variablePosition, index);
-        if (residue != null && controlTuplePresence(residue)) {
-            return true;
-        }
-        if (findSupport(variablePosition, index)) {
-            last.updateResidue(tuple.clone());
-            return true;
-        }
-        return false;
     }
 
     public boolean findSupport(final int variablePosition, final int index) {
