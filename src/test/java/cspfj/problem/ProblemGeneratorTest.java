@@ -14,10 +14,15 @@ import cspom.compiler.ProblemCompiler;
 public final class ProblemGeneratorTest {
 
 	@Test
-	public void generateTest() throws CSPParseException, IOException,
+	public void fapp01_0200_0() throws CSPParseException, IOException,
 			FailedGenerationException, ClassNotFoundException {
+		generateTest("fapp01-0200-0.xml");
+	}
+
+	private void generateTest(final String file) throws CSPParseException,
+			IOException, FailedGenerationException, ClassNotFoundException {
 		final CSPOM cspom = CSPOM.load(ProblemGeneratorTest.class
-				.getResource("fapp01-0200-0.xml"));
+				.getResource(file));
 		System.out.println(cspom.getVariables().size() + " vars, "
 				+ cspom.getConstraints().size() + " cons");
 		System.out.println("----");

@@ -25,7 +25,7 @@ public final class ProblemGenerator {
 	public static Problem generate(final CSPOM cspom)
 			throws FailedGenerationException {
 
-		new ProblemCompiler(cspom).compile();
+		// new ProblemCompiler(cspom).compile();
 
 		final Problem problem = new Problem();
 
