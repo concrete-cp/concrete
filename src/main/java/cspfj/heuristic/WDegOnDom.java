@@ -19,7 +19,6 @@
 
 package cspfj.heuristic;
 
-import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -31,18 +30,7 @@ public final class WDegOnDom extends AbstractVariableHeuristic {
 
 	@Override
 	public double getScore(final Variable variable) {
-		return wDeg(variable) / variable.getDomainSize();
-	}
-
-	private static double wDeg(final Variable variable) {
-		double count = 0;
-
-		for (Constraint c : variable.getInvolvingConstraints()) {
-			if (c.isBound(variable)) {
-				count += c.getWeight();
-			}
-		}
-		return count;
+		return WDeg.wDeg(variable) / variable.getDomainSize();
 	}
 
 	@Override

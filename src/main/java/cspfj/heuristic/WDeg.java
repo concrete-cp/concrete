@@ -36,12 +36,20 @@ public final class WDeg extends AbstractVariableHeuristic {
 		return wDeg(variable);
 	}
 
-	private static double wDeg(final Variable variable) {
+	public static double wDeg(final Variable variable) {
 		double count = 0;
 
 		for (Constraint c : variable.getInvolvingConstraints()) {
-			if (c.isBound(variable)) {
-				count += c.getWeight();
+			count += (nbUnboundVariables(c) - 1) * c.getWeight();
+		}
+		return count;
+	}
+
+	public static int nbUnboundVariables(final Constraint constraint) {
+		int count = 0;
+		for (Variable v : constraint.getScope()) {
+			if (v.getDomainSize() > 1) {
+				count++;
 			}
 		}
 		return count;

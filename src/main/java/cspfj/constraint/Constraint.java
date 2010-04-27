@@ -50,13 +50,6 @@ public interface Constraint extends Identified {
 	boolean revise(final RevisionHandler revisator, int reviseCount);
 
 	/**
-	 * @param variable
-	 * @return true iff all variables involved by the constraint, except the
-	 *         given one, are not instanciated (domain size > 1)
-	 */
-	boolean isBound(Variable variable);
-
-	/**
 	 * @return string description of the constraint
 	 */
 	String getType();
