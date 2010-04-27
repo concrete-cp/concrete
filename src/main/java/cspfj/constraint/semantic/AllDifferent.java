@@ -20,17 +20,20 @@
 package cspfj.constraint.semantic;
 
 import java.util.Arrays;
+import java.util.Deque;
+import java.util.LinkedList;
 
 import cspfj.constraint.AbstractArcGrainedConstraint;
 import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
 import cspfj.util.BitVector;
+import cspom.variable.CSPOMVariable;
 
 public final class AllDifferent extends AbstractArcGrainedConstraint {
 
 	private final BitVector union;
 
-	private final BitVector queue;
+	private final Deque<Variable> queue;
 
 	private int offset;
 
@@ -52,7 +55,7 @@ public final class AllDifferent extends AbstractArcGrainedConstraint {
 			}
 		}
 		union = BitVector.factory(max - offset + 1, false);
-		queue = BitVector.factory(getArity(), false);
+		queue = new LinkedList<Variable>();
 	}
 
 	@Override
@@ -74,63 +77,52 @@ public final class AllDifferent extends AbstractArcGrainedConstraint {
 
 	@Override
 	public boolean revise(final RevisionHandler revisator, final int reviseCount) {
-		final BitVector union = this.union;
 		final int min = this.offset;
-		final BitVector queue = this.queue;
+		final Deque<Variable> queue = this.queue;
 
-		queue.fill(false);
+		queue.clear();
 		for (int pos = getArity(); --pos >= 0;) {
 			if (getRemovals(pos) >= reviseCount
 					&& getVariable(pos).getDomainSize() == 1) {
-				queue.set(pos);
+				queue.offer(getVariable(pos));
 			}
 		}
 
 		while (!queue.isEmpty()) {
-			final int checkPos = queue.nextSetBit(0);
-			queue.clear(checkPos);
-
-			final Variable checkedVariable = getVariable(checkPos);
+			final Variable checkedVariable = queue.poll();
 			final int value = checkedVariable.getDomain().value(
 					checkedVariable.getFirst());
 
-			for (int remPos = getArity(); --remPos >= 0;) {
-				if (remPos == checkPos) {
+			for (Variable v : getScope()) {
+				if (v == checkedVariable || v.isAssigned()) {
 					continue;
 				}
-				final Variable remVariable = getVariable(remPos);
-				if (remVariable.isAssigned()) {
-					continue;
-				}
-				final int index = remVariable.getDomain().index(value);
-				if (index >= 0 && remVariable.isPresent(index)) {
-					remVariable.remove(index);
-					if (remVariable.getDomainSize() < 1) {
+				final int index = v.getDomain().index(value);
+				if (index >= 0 && v.isPresent(index)) {
+					v.remove(index);
+					if (v.getDomainSize() < 1) {
 						return false;
-					} else if (remVariable.getDomainSize() == 1) {
-						queue.set(remPos);
+					} else if (v.getDomainSize() == 1) {
+						queue.offer(v);
 					}
-					revisator.revised(this, remVariable);
+					revisator.revised(this, v);
 				}
 
 			}
 
 		}
 
+		final BitVector union = this.union;
 		union.fill(false);
 		int size = 0;
 		for (Variable v : getScope()) {
-
 			for (int i = v.getFirst(); i >= 0; i = v.getNext(i)) {
+				if (union.set(v.getDomain().value(i) - min)
+						&& ++size >= getArity()) {
+					return true;
 
-				if (union.set(v.getDomain().value(i) - min)) {
-					size++;
-					assert size == union.cardinality();
-					if (size >= getArity()) {
-						return true;
-					}
 				}
-
+				assert size == union.cardinality();
 			}
 		}
 
@@ -142,7 +134,7 @@ public final class AllDifferent extends AbstractArcGrainedConstraint {
 	}
 
 	@Override
-	public int getEvaluation(int reviseCount) {
+	public int getEvaluation(final int reviseCount) {
 		return getArity() * getArity();
 	}
 }
