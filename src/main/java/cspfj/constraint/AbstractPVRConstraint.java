@@ -1,20 +1,19 @@
 package cspfj.constraint;
 
+
 import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
 
-public abstract class AbstractPVRConstraint extends AbstractConstraint {
+public abstract class AbstractPVRConstraint extends AbstractArcGrainedConstraint {
 
     private boolean revised = false;
 
     public AbstractPVRConstraint(final Variable... scope) {
         super(scope);
-        // removals = new boolean[getArity()];
     }
 
     public AbstractPVRConstraint(final String name, final Variable... scope) {
         super(name, scope);
-
     }
 
     /**
@@ -26,7 +25,8 @@ public abstract class AbstractPVRConstraint extends AbstractConstraint {
     public abstract boolean revise(final int position);
 
     @Override
-    public final boolean revise(final RevisionHandler revisator, final int reviseCount) {
+    public final boolean revise(final RevisionHandler revisator,
+            final int reviseCount) {
         for (int i = getArity(); --i >= 0;) {
             final Variable variable = getVariable(i);
             // assert (!variable.isAssigned() && skipRevision(i)) ? !revise(i)

@@ -198,6 +198,7 @@ public final class DC2 implements Filter {
                     }
 
                     c.revise(rh, -1);
+                    
                     c.fillRemovals(-1);
                 }
 

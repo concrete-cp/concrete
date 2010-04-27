@@ -21,12 +21,12 @@ package cspfj.constraint.semantic;
 
 import java.util.Arrays;
 
-import cspfj.constraint.AbstractConstraint;
+import cspfj.constraint.AbstractArcGrainedConstraint;
 import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
 import cspfj.util.BitVector;
 
-public final class AllDifferent extends AbstractConstraint {
+public final class AllDifferent extends AbstractArcGrainedConstraint {
 
     private final BitVector union;
 

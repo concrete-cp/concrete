@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.logging.Logger;
 
+import cspfj.constraint.AbstractArcGrainedConstraint;
 import cspfj.constraint.AbstractPVRConstraint;
 import cspfj.constraint.Constraint;
 import cspfj.priorityqueues.FibonacciHeap;
@@ -69,13 +70,16 @@ public final class AC3 implements Filter {
             for (Constraint c : problem.getConstraints()) {
                 if (modCons[c.getId()] > cnt) {
                     // cons.set(c.getId());
+
                     c.fillRemovals(reviseCount);
 
                     if (!c.revise(revisator, reviseCount)) {
                         c.incWeight();
                         return false;
                     }
+
                     c.fillRemovals(-1);
+
                 }
             }
 
@@ -99,8 +103,11 @@ public final class AC3 implements Filter {
         final Constraint[] involving = variable.getInvolvingConstraints();
 
         for (int cp = involving.length; --cp >= 0;) {
-            involving[cp].setRemovals(variable.getPositionInConstraint(cp),
-                    reviseCount);
+            final Constraint constraint = involving[cp];
+            if (constraint instanceof AbstractArcGrainedConstraint) {
+                constraint.setRemovals(variable.getPositionInConstraint(cp),
+                        reviseCount);
+            }
 
         }
 
@@ -110,12 +117,14 @@ public final class AC3 implements Filter {
     private RevisionHandler revisator = new RevisionHandler() {
         public void revised(final Constraint constraint, final Variable variable) {
             queue.offer(variable);
+
             final Constraint[] involvingConstraints = variable
                     .getInvolvingConstraints();
 
             for (int cp = involvingConstraints.length; --cp >= 0;) {
                 final Constraint constraintP = involvingConstraints[cp];
-                if (constraintP != constraint) {
+                if (constraintP != constraint
+                        && constraintP instanceof AbstractArcGrainedConstraint) {
                     constraintP.setRemovals(variable
                             .getPositionInConstraint(cp), reviseCount);
                 }
@@ -154,7 +163,6 @@ public final class AC3 implements Filter {
             }
 
             constraint.fillRemovals(-1);
-
         }
         return true;
     }
@@ -165,7 +173,9 @@ public final class AC3 implements Filter {
         }
 
         for (Constraint c : problem.getConstraints()) {
+
             c.fillRemovals(reviseCount);
+
         }
     }
 

@@ -110,7 +110,7 @@ public final class BitVectorDomain implements Domain {
 
     @Override
     public void remove(final int index) {
-        assert !present(index);
+        assert present(index);
         size--;
         bvDomain.clear(index);
         if (index == last) {

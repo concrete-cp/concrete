@@ -5,12 +5,11 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.logging.Logger;
 
+import cspfj.constraint.AbstractArcGrainedConstraint;
 import cspfj.constraint.AbstractPVRConstraint;
 import cspfj.constraint.Constraint;
-import cspfj.priorityqueues.BinomialHeap;
 import cspfj.priorityqueues.FibonacciHeap;
 import cspfj.priorityqueues.Key;
-import cspfj.priorityqueues.SoftHeap;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -50,7 +49,8 @@ public final class AC3Constraint implements Filter {
 
     }
 
-    public boolean reduceFrom(int[] modVar, int[] modCons, int cnt) {
+    public boolean reduceFrom(final int[] modVar, final int[] modCons,
+            final int cnt) {
         revisionCount++;
         queue.clear();
         LOGGER.fine("reduce after " + cnt);
@@ -59,8 +59,12 @@ public final class AC3Constraint implements Filter {
                 final Constraint[] involved = v.getInvolvingConstraints();
                 for (int j = involved.length; --j >= 0;) {
                     // involved[j].fillRemovals(true);
-                    involved[j].setRemovals(v.getPositionInConstraint(j),
-                            revisionCount);
+                    final Constraint constraint = involved[j];
+                    if (constraint instanceof AbstractArcGrainedConstraint) {
+                        constraint.setRemovals(v.getPositionInConstraint(j),
+                                revisionCount);
+                    }
+
                     queue.offer(involved[j]);
                 }
             }
@@ -70,6 +74,7 @@ public final class AC3Constraint implements Filter {
             for (Constraint c : problem.getConstraints()) {
                 if (modCons[c.getId()] > cnt) {
                     c.fillRemovals(revisionCount);
+
                     queue.offer(c);
                 }
             }
@@ -104,7 +109,8 @@ public final class AC3Constraint implements Filter {
 
             for (int cp = involvingConstraints.length; --cp >= 0;) {
                 final Constraint constraintP = involvingConstraints[cp];
-                if (constraintP != constraint) {
+                if (constraintP != constraint
+                        && constraintP instanceof AbstractArcGrainedConstraint) {
                     constraintP.setRemovals(variable
                             .getPositionInConstraint(cp), revisionCount);
                     queue.offer(constraintP);

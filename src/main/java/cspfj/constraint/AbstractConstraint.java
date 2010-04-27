@@ -19,7 +19,6 @@
 
 package cspfj.constraint;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -55,8 +54,6 @@ public abstract class AbstractConstraint implements Constraint {
 
     private int weight = 1;
 
-    private final int[] removals;
-
     public AbstractConstraint(final Variable... scope) {
         this(null, scope);
     }
@@ -80,28 +77,6 @@ public abstract class AbstractConstraint implements Constraint {
             this.name = name;
         }
 
-        removals = new int[arity];
-    }
-
-    public final int getRemovals(final int position) {
-        return removals[position];
-    }
-
-    public final void setRemovals(final int position, final int value) {
-        removals[position] = value;
-    }
-
-    public final void fillRemovals(final int value) {
-        Arrays.fill(removals, value);
-    }
-
-    public final boolean hasNoRemovals(final int value) {
-        for (int i : removals) {
-            if (i >= value) {
-                return false;
-            }
-        }
-        return true;
     }
 
     @Override
@@ -214,4 +189,27 @@ public abstract class AbstractConstraint implements Constraint {
 
         return true;
     }
+
+    @Override
+    public int getRemovals(final int position) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setRemovals(final int position, final int value) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void fillRemovals(final int value) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public boolean hasNoRemovals(final int reviseCount) {
+        return false;
+    }
+
 }
