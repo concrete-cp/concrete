@@ -180,7 +180,8 @@ public final class BitVectorDomain implements Domain {
                     bvDomain.fill(true);
                     size = domain.length;
                     break;
-                } else if (bvHistory[l] != null) {
+                }
+                if (bvHistory[l] != null) {
                     assert !bvHistory[l].isEmpty();
                     bvHistory[l].copyTo(bvDomain);
                     size = dsHistory[l];
