@@ -83,8 +83,8 @@ public final class MGACIter extends AbstractSolver {
         ngl = new NoGoodLearner(problem, LEARN_METHOD);
     }
 
-    private Map<Variable, Integer> mac() throws MaxBacktracksExceededException,
-            IOException {
+    public Map<Variable, Integer> mac(final Map<Variable, Integer> lastSolution)
+            throws MaxBacktracksExceededException, IOException {
         final Problem problem = this.problem;
 
         Variable selectedVariable = null;
@@ -102,6 +102,14 @@ public final class MGACIter extends AbstractSolver {
             final Pair pair = heuristic.selectPair(problem);
 
             if (pair == null) {
+                final Map<Variable, Integer> solution = solution();
+                if (solution.equals(lastSolution)) {
+                    selectedVariable = backtrack();
+                    if (selectedVariable == null) {
+                        break;
+                    }
+                    continue;
+                }
                 return solution();
             }
 
@@ -198,7 +206,7 @@ public final class MGACIter extends AbstractSolver {
             // System.out.print("run ! ");
             try {
 
-                solution = mac();
+                solution = mac(null);
 
                 break;
             } catch (MaxBacktracksExceededException e) {
