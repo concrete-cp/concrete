@@ -4,13 +4,15 @@ import java.util.Arrays;
 
 import cspfj.constraint.AbstractConstraint;
 import cspfj.filter.RevisionHandler;
-import cspfj.problem.Domain;
+import cspfj.problem.BooleanDomain;
 import cspfj.problem.Variable;
+import cspfj.problem.BooleanDomain.Status;
 
 public final class Disj extends AbstractConstraint {
     private int watch1 = -1;
     private int watch2 = -1;
     private final boolean[] reverses;
+    private final BooleanDomain[] domains;
 
     public Disj(final Variable... disj) {
         this(disj, new boolean[disj.length]);
@@ -18,13 +20,18 @@ public final class Disj extends AbstractConstraint {
 
     public Disj(final Variable[] disj, final boolean[] reverses) {
         super(disj);
-        for (Variable v : disj) {
-            if (v.getDomainSize() != 2
-                    || !Arrays.equals(v.getDomain().allValues(), new int[] { 0,
-                            1 })) {
+        domains = new BooleanDomain[disj.length];
+        for (int i = disj.length; --i >= 0;) {
+            if (!(disj[i].getDomain() instanceof BooleanDomain)) {
                 throw new IllegalArgumentException(
-                        "Assigning constants or non-booleans to disjunctions is not allowed");
+                        "Only boolean domain are allowed");
             }
+            final BooleanDomain domain = (BooleanDomain) disj[i].getDomain();
+            if (domain.getStatus() != Status.UNKNOWN) {
+                throw new IllegalArgumentException(
+                        "Assigning constants to disjunctions is not allowed");
+            }
+            domains[i] = domain;
         }
         if (reverses == null) {
             this.reverses = new boolean[getArity()];
@@ -49,7 +56,7 @@ public final class Disj extends AbstractConstraint {
     @Override
     public boolean check() {
         for (int i = getArity(); --i >= 0;) {
-            if (reverses[i] ^ getValue(i) == 1) {
+            if (reverses[i] ^ tuple[i] == 1) {
                 return true;
             }
         }
@@ -78,42 +85,38 @@ public final class Disj extends AbstractConstraint {
         }
         if (isFalse(watch2)) {
             final int newWatch = seekWatch(watch1);
-            if (newWatch < 0) {
-                if (!canBeTrue(watch1)) {
-                    throw new IllegalStateException();
-                }
-                if (setTrue(watch1)) {
-                    revisator.revised(this, getVariable(watch1));
-                }
-            } else {
+            if (newWatch >= 0) {
                 watch2 = newWatch;
+            } else if (setTrue(watch1)) {
+                revisator.revised(this, getVariable(watch1));
             }
+
         }
         return true;
     }
 
     private boolean isFalse(final int position) {
-        return reverses[position] ^ getVariable(position).isPresent(1) ^ true;
+        if (reverses[position]) {
+            return domains[position].getStatus() == Status.TRUE;
+        }
+        return domains[position].getStatus() == Status.FALSE;
     }
 
     private boolean setTrue(final int position) {
-        final Domain dom = getVariable(position).getDomain();
-        if (dom.size() == 1) {
+        final BooleanDomain dom = domains[position];
+        if (dom.getStatus() != Status.UNKNOWN) {
             return false;
         }
         if (reverses[position]) {
-            dom.remove(1);
+            dom.setStatus(Status.FALSE);
         } else {
-            dom.remove(0);
+            dom.setStatus(Status.TRUE);
         }
         return true;
     }
 
     private boolean canBeTrue(final int position) {
-        if (reverses[position]) {
-            return getVariable(position).isPresent(0);
-        }
-        return getVariable(position).isPresent(1);
+        return domains[position].canBe(!reverses[position]);
     }
 
     private int seekWatch(final int excluding) {

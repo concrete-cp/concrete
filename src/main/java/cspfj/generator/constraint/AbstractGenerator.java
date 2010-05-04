@@ -5,7 +5,7 @@ import java.util.ListIterator;
 
 import cspfj.constraint.Constraint;
 import cspfj.exception.FailedGenerationException;
-import cspfj.problem.BitVectorDomain;
+import cspfj.problem.BooleanDomain;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspom.variable.CSPOMVariable;
@@ -54,11 +54,11 @@ public abstract class AbstractGenerator implements Generator {
         return null;
     }
 
-    public final void booleanDomain(final Variable variable)
+    public static void booleanDomain(final Variable variable)
             throws FailedGenerationException {
         if (variable.getDomain() == null) {
-            variable.setDomain(new BitVectorDomain(0, 1));
-        } else if (variable.getDomainSize() > 2) {
+            variable.setDomain(new BooleanDomain());
+        } else if (!(variable.getDomain() instanceof BooleanDomain)) {
             throw new FailedGenerationException(variable + " must be boolean");
         }
     }
