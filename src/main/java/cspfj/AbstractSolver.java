@@ -36,7 +36,6 @@ import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.Filter;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
-import cspfj.util.Chronometer;
 import cspfj.util.Waker;
 
 public abstract class AbstractSolver implements Solver {
@@ -57,8 +56,6 @@ public abstract class AbstractSolver implements Solver {
 
     protected final Problem problem;
 
-    private final Chronometer chronometer;
-
     private int nbAssignments;
 
     private int maxBacktracks;
@@ -75,8 +72,6 @@ public abstract class AbstractSolver implements Solver {
         super();
         problem = prob;
         nbAssignments = 0;
-
-        chronometer = new Chronometer();
         this.statistics = new HashMap<String, Object>();
     }
 
@@ -97,10 +92,6 @@ public abstract class AbstractSolver implements Solver {
         if (++nbBacktracks >= maxBacktracks && maxBacktracks >= 0) {
             throw new MaxBacktracksExceededException();
         }
-    }
-
-    public final float getUserTime() {
-        return chronometer.getUserTime();
     }
 
     public final int getMaxBacktracks() {
@@ -136,9 +127,7 @@ public abstract class AbstractSolver implements Solver {
     }
 
     public final boolean preprocess(final Filter filter)
-            throws InstantiationException, IllegalAccessException,
-            InvocationTargetException, NoSuchMethodException,
-            InterruptedException {
+            throws InterruptedException {
 
         LOGGER.info("Preprocessing (" + preproExpiration + ")");
 
@@ -146,8 +135,18 @@ public abstract class AbstractSolver implements Solver {
         if (this.preprocessor == null) {
             preprocessor = filter;
         } else {
-            preprocessor = this.preprocessor.getConstructor(Problem.class)
-                    .newInstance(problem);
+            try {
+                preprocessor = this.preprocessor.getConstructor(Problem.class)
+                        .newInstance(problem);
+            } catch (InstantiationException e) {
+                throw new IllegalArgumentException(e);
+            } catch (IllegalAccessException e) {
+                throw new IllegalArgumentException(e);
+            } catch (InvocationTargetException e) {
+                throw new IllegalArgumentException(e);
+            } catch (NoSuchMethodException e) {
+                throw new IllegalArgumentException(e);
+            }
         }
 
         Thread.interrupted();
@@ -159,7 +158,7 @@ public abstract class AbstractSolver implements Solver {
                     preproExpiration * 1000);
         }
 
-        final float start = chronometer.getCurrentChrono();
+        long preproCpu = -System.currentTimeMillis();
         boolean consistent;
         try {
             consistent = preprocessor.reduceAll();
@@ -168,7 +167,7 @@ public abstract class AbstractSolver implements Solver {
             consistent = true;
             throw e;
         } finally {
-            final float preproCpu = chronometer.getCurrentChrono() - start;
+            preproCpu += System.currentTimeMillis();
             waker.cancel();
 
             statistics.putAll(preprocessor.getStatistics());
@@ -180,7 +179,7 @@ public abstract class AbstractSolver implements Solver {
 
             }
             statistics.put("prepro-removed", removed);
-            statistics.put("prepro-cpu", preproCpu);
+            statistics.put("prepro-cpu", preproCpu / 1000f);
             statistics.put("prepro-constraint-ccks", AbstractAC3Constraint
                     .getChecks());
             statistics.put("prepro-constraint-presenceccks", AbstractConstraint
@@ -190,11 +189,8 @@ public abstract class AbstractSolver implements Solver {
                     .getPresenceChecks());
 
         }
-        if (!consistent) {
-            chronometer.validateChrono();
-            return false;
-        }
-        return true;
+
+        return consistent;
 
     }
 
@@ -213,19 +209,29 @@ public abstract class AbstractSolver implements Solver {
         return stb.toString();
     }
 
-    public final void startChrono() {
-        chronometer.startChrono();
-    }
-
-    public final float getCurrentChrono() {
-        return chronometer.getCurrentChrono();
-    }
-
-    public final void validateChrono() {
-        chronometer.validateChrono();
-    }
-
-    public final void statistic(String key, Object value) {
+    public final void statistic(final String key, final Object value) {
         statistics.put(key, value);
+    }
+
+    public final void increaseStatistic(final String key, final Integer value) {
+        Object currentValue = statistics.get(key);
+        if (currentValue == null) {
+            statistics.put(key, value);
+        } else if (!(currentValue instanceof Integer)) {
+            throw new IllegalArgumentException(value + " should be an integer");
+        } else {
+            statistics.put(key, (Integer) currentValue + value);
+        }
+    }
+
+    public final void increaseStatistic(final String key, final Float value) {
+        Object currentValue = statistics.get(key);
+        if (currentValue == null) {
+            statistics.put(key, value);
+        } else if (!(currentValue instanceof Float)) {
+            throw new IllegalArgumentException(value + " should be a double");
+        } else {
+            statistics.put(key, (Float) currentValue + value);
+        }
     }
 }

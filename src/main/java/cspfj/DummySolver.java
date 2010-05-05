@@ -40,32 +40,20 @@ public final class DummySolver extends AbstractSolver {
      * 
      * @see cspfj.Solver#run(int)
      */
-    public Map<Variable, Integer> solve() throws IOException {
-        System.gc();
-        startChrono();
+    public Map<Variable, Integer> nextSolution() throws IOException {
         try {
             if (!preprocess(new AC3(problem))) {
-                validateChrono();
                 return null;
             }
-        } catch (InstantiationException e1) {
-            throw new InvalidParameterException(e1.toString());
-        } catch (IllegalAccessException e1) {
-            throw new InvalidParameterException(e1.toString());
-        } catch (InvocationTargetException e1) {
-            throw new IllegalStateException(e1);
-        } catch (NoSuchMethodException e1) {
-            throw new InvalidParameterException(e1.toString());
         } catch (InterruptedException e) {
             throw new IllegalArgumentException("Unexpected interruption");
         }
-        validateChrono();
 
         return new HashMap<Variable, Integer>();
     }
 
     public synchronized void collectStatistics() {
-        validateChrono();
+
     }
 
     public String getXMLConfig() {

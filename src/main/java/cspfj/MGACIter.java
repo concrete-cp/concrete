@@ -83,10 +83,12 @@ public final class MGACIter extends AbstractSolver {
         ngl = new NoGoodLearner(problem, LEARN_METHOD);
     }
 
-    public Map<Variable, Integer> mac(final Map<Variable, Integer> lastSolution)
+    private boolean firstSolutionGiven = false;
+
+    public Map<Variable, Integer> mac(final boolean skipFirstSolution)
             throws MaxBacktracksExceededException, IOException {
         final Problem problem = this.problem;
-
+        boolean skipSolution = skipFirstSolution;
         Variable selectedVariable = null;
         int selectedIndex = -1;
         for (;;) {
@@ -103,14 +105,15 @@ public final class MGACIter extends AbstractSolver {
 
             if (pair == null) {
                 final Map<Variable, Integer> solution = solution();
-                if (solution.equals(lastSolution)) {
+                if (skipSolution) {
                     selectedVariable = backtrack();
                     if (selectedVariable == null) {
                         break;
                     }
+                    skipSolution = false;
                     continue;
                 }
-                return solution();
+                return solution;
             }
 
             selectedVariable = pair.getVariable();
@@ -158,97 +161,75 @@ public final class MGACIter extends AbstractSolver {
     }
 
     @Override
-    public Map<Variable, Integer> solve() throws IOException {
-        System.gc();
-        startChrono();
-
-        try {
-            if (!preprocess(filter)) {
-                validateChrono();
-                return null;
-            }
-        } catch (InstantiationException e1) {
-            throw new InvalidParameterException(e1.toString());
-        } catch (IllegalAccessException e1) {
-            throw new InvalidParameterException(e1.toString());
-        } catch (InvocationTargetException e1) {
-            throw new IllegalStateException(e1);
-        } catch (NoSuchMethodException e1) {
-            throw new InvalidParameterException(e1.toString());
-        } catch (InterruptedException e) {
+    public Map<Variable, Integer> nextSolution() throws IOException {
+        // System.gc();
+        int maxBT;
+        if (firstSolutionGiven) {
+            maxBT = -1;
+        } else {
             try {
-                if (!filter.reduceAll()) {
-                    validateChrono();
+                if (!preprocess(filter)) {
+                    firstSolutionGiven = true;
                     return null;
                 }
-            } catch (InterruptedException e1) {
-                throw new IllegalArgumentException("Unexpected interruption");
+            } catch (InterruptedException e) {
+                try {
+                    if (!filter.reduceAll()) {
+                        return null;
+                    }
+                } catch (InterruptedException e1) {
+                    throw new IllegalStateException("Unexpected interruption");
+                }
             }
+
+            long heuristicCpu = -System.currentTimeMillis();
+            heuristic.compute();
+
+            heuristicCpu += System.currentTimeMillis();
+            statistic("heuristic-cpu", heuristicCpu / 1000f);
+
+            maxBT = getMaxBacktracks();
         }
 
-        final float start = getCurrentChrono();
-        heuristic.compute();
-
-        final float heuristicCpu = getCurrentChrono();
-        statistic("heuristic-cpu", heuristicCpu - start);
-
-        int maxBT = getMaxBacktracks();
-
-        Map<Variable, Integer> solution = null;
         for (;;) {
-            for (Variable v : problem.getVariables()) {
-                assert v.getDomainSize() > 0;
-            }
             setMaxBacktracks(maxBT);
-            problem.clearLevelVariables();
+
             LOGGER.info("MAC with " + maxBT + " bt");
-            float macTime = -getCurrentChrono();
-            // System.out.print("run ! ");
+            float macTime = -System.currentTimeMillis();
+
             try {
-
-                solution = mac(null);
-
-                break;
+                final Map<Variable, Integer> solution = mac(firstSolutionGiven);
+                firstSolutionGiven = true;
+                return solution;
             } catch (MaxBacktracksExceededException e) {
+                ngl.noGoods();
+                problem.reset();
+                problem.clearLevelVariables();
                 // On continue...
-            } catch (OutOfMemoryError e) {
-                validateChrono();
-                throw e;
-            } catch (IOException e) {
-                validateChrono();
-                throw e;
+            } finally {
+                macTime += System.currentTimeMillis();
+                increaseStatistic("search-cpu", macTime);
+                LOGGER.info("Took " + macTime + "s (" + (maxBT / macTime)
+                        + " bps)");
             }
-            macTime += getCurrentChrono();
-            LOGGER.info("Took " + macTime + "s (" + (maxBT / macTime) + " bps)");
 
             maxBT *= BT_GROWTH;
-
-            ngl.noGoods();
-            problem.reset();
 
             try {
                 if (!filter.reduceAll()) {
                     break;
                 }
             } catch (InterruptedException e) {
-                throw new IllegalArgumentException(
+                throw new IllegalStateException(
                         "Filter was unexpectingly interrupted !");
             }
         }
 
-        final float searchCpu = getCurrentChrono() - heuristicCpu;
-        statistic("search-cpu", searchCpu);
-
-        if (searchCpu > 0) {
-            statistic("search-nps", getNbAssignments() / searchCpu);
-        }
-
-        return solution;
+        return null;
 
     }
 
     public void collectStatistics() {
-        validateChrono();
         for (Entry<String, Object> e : filter.getStatistics().entrySet()) {
             statistic(e.getKey(), e.getValue());
         }

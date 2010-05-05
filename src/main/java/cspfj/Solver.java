@@ -27,9 +27,7 @@ import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
 public interface Solver {
-    Map<Variable, Integer> solve() throws IOException;
-
-    float getUserTime();
+    Map<Variable, Integer> nextSolution() throws IOException;
 
     int getNbAssignments();
 
