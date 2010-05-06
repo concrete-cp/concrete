@@ -206,7 +206,7 @@ public final class BooleanDomain implements Domain {
     }
 
     public void setStatus(final Status status) {
-        assert status == Status.UNKNOWN;
+        assert this.status == Status.UNKNOWN || this.status == status;
 
         this.status = status;
         if (history[currentLevel] == null) {

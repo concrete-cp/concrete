@@ -145,7 +145,8 @@ public final class BitVectorDomain implements Domain {
 
     @Override
     public void setLevel(final int level) {
-        assert level > currentLevel;
+        assert level > currentLevel : "Given level " + level
+                + " should be greater than current " + currentLevel;
         ensureCapacity(level);
         if (bvHistory[currentLevel] != null) {
             bvDomain.copyTo(bvHistory[currentLevel]);

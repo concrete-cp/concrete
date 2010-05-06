@@ -278,7 +278,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
     private boolean smallest(final FibonacciHeapNode<T> min) {
 
         for (FibonacciHeapNode<T> n : map) {
-            if (map != null && n.inQueue && n.key < min.key) {
+            if (n != null && n.inQueue && n.key < min.key) {
                 return false;
             }
         }
