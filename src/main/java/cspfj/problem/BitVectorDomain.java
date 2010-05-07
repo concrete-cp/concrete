@@ -50,7 +50,8 @@ public final class BitVectorDomain implements Domain {
 
     @Override
     public int last() {
-        assert last == bvDomain.prevSetBit(domain.length);
+        assert last == bvDomain.prevSetBit(domain.length) : "Recorded " + last
+                + ", should be " + bvDomain.prevSetBit(domain.length);
         return last;
     }
 
@@ -217,10 +218,10 @@ public final class BitVectorDomain implements Domain {
 
     @Override
     public String toString() {
-    	final int first = first();
-    	if (first < 0) {
-    		return "[]";
-    	}
+        final int first = first();
+        if (first < 0) {
+            return "[]";
+        }
         final StringBuilder stb = new StringBuilder();
 
         stb.append('[');

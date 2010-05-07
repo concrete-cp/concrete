@@ -38,14 +38,6 @@ public class VariableTest {
     }
 
     @Test
-    public void testIsAssigned() {
-        assertFalse(variable.isAssigned());
-        variable.assign(0);
-        assertTrue(variable.isAssigned());
-
-    }
-
-    @Test
     public void testIsPresent() {
         assertTrue(variable.isPresent(0));
         variable.setLevel(1);
@@ -57,7 +49,7 @@ public class VariableTest {
 
     @Test
     public void testAssign() {
-        variable.assign(0);
+        variable.setSingle(0);
         assertFalse(variable.isPresent(1));
         assertTrue(variable.isPresent(0));
     }
@@ -65,8 +57,7 @@ public class VariableTest {
     @Test
     public void testUnassign() {
         variable.setLevel(1);
-        variable.assign(0);
-        variable.unassign();
+        variable.setSingle(0);
         variable.restoreLevel(0);
         assertTrue(variable.isPresent(1));
         assertTrue(variable.isPresent(0));
@@ -108,8 +99,7 @@ public class VariableTest {
         assertArrayEquals(new int[] { 2, 3, 4, 5 }, variable
                 .getCurrentIndexes());
         variable.setLevel(1);
-        variable.assign(2);
-        variable.unassign();
+        variable.setSingle(2);
         variable.restoreLevel(0);
         assertArrayEquals(new int[] { 2, 3, 4, 5 }, variable
                 .getCurrentIndexes());

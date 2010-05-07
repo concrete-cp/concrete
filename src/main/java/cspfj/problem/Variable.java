@@ -35,7 +35,7 @@ public final class Variable implements Cloneable, Identified {
 
     private Domain domain;
 
-    private boolean assigned;
+    // private boolean assigned;
 
     private static int nbV = 0;
 
@@ -47,7 +47,7 @@ public final class Variable implements Cloneable, Identified {
 
     public Variable(final String name, final Domain domain) {
         this.domain = domain;
-        assigned = false;
+        // assigned = false;
         id = nbV++;
         this.name = name;
     }
@@ -97,25 +97,30 @@ public final class Variable implements Cloneable, Identified {
         return domain.size();
     }
 
-    public boolean isAssigned() {
-        return assigned;
-    }
-
-    public void assign(final int index) {
-        assert !assigned;
-        assert domain.present(index);
-
-        assigned = true;
+    // public boolean isAssigned() {
+    // return assigned;
+    // }
+    //
+    // public void assign(final int index) {
+    // assert !assigned;
+    // assert domain.present(index);
+    //
+    // assigned = true;
+    // domain.setSingle(index);
+    // }
+    //
+    // public void unassign() {
+    // assert assigned;
+    // assigned = false;
+    // }
+    
+    public void setSingle(final int index) {
         domain.setSingle(index);
     }
 
-    public void unassign() {
-        assert assigned;
-        assigned = false;
-    }
-
     public void remove(final int index) {
-        assert !assigned : "Trying to remove a value from an assigned variable";
+        // assert !assigned :
+        // "Trying to remove a value from an assigned variable";
         assert domain.present(index);
 
         domain.remove(index);
@@ -216,9 +221,9 @@ public final class Variable implements Cloneable, Identified {
     }
 
     public void reset() {
-        if (isAssigned()) {
-            unassign();
-        }
+        // if (isAssigned()) {
+        // unassign();
+        // }
         domain.restoreLevel(0);
     }
 

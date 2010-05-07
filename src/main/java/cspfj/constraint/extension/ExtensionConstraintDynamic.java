@@ -92,9 +92,9 @@ public final class ExtensionConstraintDynamic extends AbstractConstraint
         for (int i = getArity(); --i >= 0;) {
 
             final Variable var = getVariable(i);
-            if (var.isAssigned()) {
-                continue;
-            }
+//            if (var.isAssigned()) {
+//                continue;
+//            }
             final BitVector localToFind = this.toFind[i];
             localToFind.fill(false);
             for (int index = var.getFirst(); index >= 0; index = var
@@ -130,9 +130,9 @@ public final class ExtensionConstraintDynamic extends AbstractConstraint
         // logger.fine("Revising "+this);
         for (int i = getArity(); --i >= 0;) {
             final Variable var = getVariable(i);
-            if (var.isAssigned()) {
-                continue;
-            }
+//            if (var.isAssigned()) {
+//                continue;
+//            }
             final BitVector finalToFind = this.toFind[i];
             finalToFind.fill(false);
             for (int index = getVariable(i).getFirst(); index >= 0; index = getVariable(
@@ -162,9 +162,9 @@ public final class ExtensionConstraintDynamic extends AbstractConstraint
             final RevisionHandler revisator) {
         for (int i = getArity(); --i >= 0;) {
             final Variable variable = getVariable(i);
-            if (variable.isAssigned()) {
-                continue;
-            }
+//            if (variable.isAssigned()) {
+//                continue;
+//            }
             boolean rev = false;
             final BitVector localToFind = toFinds[i];
             for (int index = localToFind.nextSetBit(0); index >= 0; index = localToFind

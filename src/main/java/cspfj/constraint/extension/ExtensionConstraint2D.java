@@ -56,7 +56,7 @@ public final class ExtensionConstraint2D extends AbstractPVRConstraint
 
         final Variable variable = getVariable(position);
 
-        assert !variable.isAssigned();
+        //assert !variable.isAssigned();
 
         boolean revised = false;
 

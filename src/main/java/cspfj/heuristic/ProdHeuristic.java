@@ -18,9 +18,8 @@ public final class ProdHeuristic implements Heuristic {
     public Pair selectPair(final Problem problem) {
         Variable bestVariable = null;
         for (Variable v : problem.getVariables()) {
-            if (!v.isAssigned()
-                    && (bestVariable == null || (v.getDomainSize() != 1 && compare(
-                            v, bestVariable) > 0))) {
+            if (bestVariable == null
+                    || (v.getDomainSize() != 1 && compare(v, bestVariable) > 0)) {
                 bestVariable = v;
             }
         }

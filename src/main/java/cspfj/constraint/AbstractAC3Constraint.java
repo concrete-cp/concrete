@@ -27,7 +27,6 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 
     @Override
     public boolean revise(final int position) {
-        assert !getVariable(position).isAssigned();
         final Domain dom = getVariable(position).getDomain();
         boolean revised = false;
         for (int index = dom.first(); index >= 0; index = dom.next(index)) {

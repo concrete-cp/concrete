@@ -178,7 +178,7 @@ public final class DC20 implements Filter {
 
             problem.setCurrentLevelVariable(variable);
             problem.push();
-            variable.assign(index);
+            variable.setSingle(index);
 
             nbSingletonTests++;
 
@@ -209,13 +209,11 @@ public final class DC20 implements Filter {
                 changedGraph = noGoods(variable) | changedGraph;
                 // logger.info(noGoods.toString());
 
-                variable.unassign();
                 problem.pop();
 
                 // changedGraph = problem.noGoodsToConstraints(noGoods,
                 // addConstraints);
             } else {
-                variable.unassign();
                 problem.pop();
                 LOGGER.fine("Removing " + variable + ", " + index);
 

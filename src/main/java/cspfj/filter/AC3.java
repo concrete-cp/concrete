@@ -195,10 +195,10 @@ public final class AC3 implements Filter {
         for (Constraint c : problem.getConstraints()) {
             if (c instanceof AbstractPVRConstraint) {
                 for (int i = c.getArity(); --i >= 0;) {
-                    if (!c.getVariable(i).isAssigned()) {
+//                    if (!c.getVariable(i).isAssigned()) {
                         assert !((AbstractPVRConstraint) c).revise(i) : c
                                 + ", " + c.getVariable(i);
-                    }
+//                    }
                 }
             } else {
                 assert c.revise(controlRevisator, -1);

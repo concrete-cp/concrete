@@ -29,13 +29,13 @@ public abstract class AbstractVariableHeuristic implements VariableHeuristic {
             }
         }
 
-        if (tieManager.getBestValue() == null) {
-            for (Variable v : problem.getVariables()) {
-                if (!v.isAssigned()) {
-                    return v;
-                }
-            }
-        }
+//        if (tieManager.getBestValue() == null) {
+//            for (Variable v : problem.getVariables()) {
+//                if (!v.isAssigned()) {
+//                    return v;
+//                }
+//            }
+//        }
 
         return tieManager.getBestValue();
     }

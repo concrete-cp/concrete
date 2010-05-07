@@ -94,7 +94,7 @@ public final class AllDifferent extends AbstractArcGrainedConstraint {
 					checkedVariable.getFirst());
 
 			for (Variable v : getScope()) {
-				if (v == checkedVariable || v.isAssigned()) {
+				if (v == checkedVariable) {
 					continue;
 				}
 				final int index = v.getDomain().index(value);

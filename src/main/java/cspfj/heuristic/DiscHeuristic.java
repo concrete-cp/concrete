@@ -51,14 +51,14 @@ public final class DiscHeuristic implements Heuristic {
 
         }
 
-        if (bestVariable == null) {
-            for (Variable v : problem.getVariables()) {
-                if (!v.isAssigned()) {
-                    bestVariable = v;
-                    break;
-                }
-            }
-        }
+//        if (bestVariable == null) {
+//            for (Variable v : problem.getVariables()) {
+//                if (!v.isAssigned()) {
+//                    bestVariable = v;
+//                    break;
+//                }
+//            }
+//        }
 
         return new Pair(bestVariable, valueHeuristic.selectIndex(bestVariable));
     }
