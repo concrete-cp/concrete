@@ -1,10 +1,10 @@
 package cspfj.constraint.semantic;
 
-import cspfj.constraint.AbstractFastPVRConstraint;
+import cspfj.constraint.AbstractPVRConstraint;
 import cspfj.problem.Domain;
 import cspfj.problem.Variable;
 
-public final class Neq extends AbstractFastPVRConstraint {
+public final class Neq extends AbstractPVRConstraint {
 
     /**
      * Corresponding scope is reversed!

@@ -30,7 +30,7 @@ public abstract class AbstractFastPVRConstraint extends AbstractConstraint {
             final Variable variable = getVariable(i);
             // assert (!variable.isAssigned() && skipRevision(i)) ? !revise(i)
             // : true : "Should not skip " + this + ", " + i;
-            if (!variable.isAssigned() && revise(i)) {
+            if (revise(i)) {
                 if (variable.getDomainSize() <= 0) {
                     return false;
                 }

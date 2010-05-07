@@ -217,15 +217,19 @@ public final class BitVectorDomain implements Domain {
 
     @Override
     public String toString() {
+    	final int first = first();
+    	if (first < 0) {
+    		return "[]";
+    	}
         final StringBuilder stb = new StringBuilder();
 
-        stb.append("[");
+        stb.append('[');
 
-        for (int i = first(), max = DISPLAYED_VALUES;;) {
+        for (int i = first, max = DISPLAYED_VALUES;;) {
             stb.append(value(i));
             i = next(i);
             if (i < 0) {
-                return stb.append("]").toString();
+                return stb.append(']').toString();
             }
             if (--max == 0) {
                 return stb.append("... (").append(size() - DISPLAYED_VALUES)

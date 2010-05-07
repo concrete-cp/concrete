@@ -31,7 +31,7 @@ public abstract class AbstractPVRConstraint extends AbstractArcGrainedConstraint
             final Variable variable = getVariable(i);
             // assert (!variable.isAssigned() && skipRevision(i)) ? !revise(i)
             // : true : "Should not skip " + this + ", " + i;
-            if (!variable.isAssigned() && !skipRevision(i, reviseCount)
+            if (!skipRevision(i, reviseCount)
                     && revise(i)) {
                 if (variable.getDomainSize() <= 0) {
                     return false;

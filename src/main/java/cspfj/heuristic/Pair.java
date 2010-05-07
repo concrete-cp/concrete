@@ -2,7 +2,7 @@ package cspfj.heuristic;
 
 import cspfj.problem.Variable;
 
-public class Pair {
+public final class Pair {
 
 	private final Variable variable;
 
@@ -20,6 +20,10 @@ public class Pair {
 
 	public int getIndex() {
 		return index;
+	}
+
+	public String toString() {
+		return "(" + variable + ", " + variable.getValue(index) + ")";
 	}
 
 }
