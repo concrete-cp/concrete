@@ -348,22 +348,22 @@ public final class BooleanDomain implements Domain {
 	}
 
 	@Override
-	public int greatest(int value) {
+	public int greatest(final int value) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public int removeFrom(int lb) {
+	public int removeFrom(final int lb) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public int removeTo(int ub) {
+	public int removeTo(final int ub) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public int lowest(int value) {
+	public int lowest(final int value) {
 		throw new UnsupportedOperationException();
 	}
 }
