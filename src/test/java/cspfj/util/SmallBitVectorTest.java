@@ -7,13 +7,13 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
-public final class LargeBitVectorTest {
+public class SmallBitVectorTest {
 
-	private LargeBitVector bitVector;
+	private SmallBitVector bitVector;
 
 	@Before
 	public void setUp() {
-		bitVector = new LargeBitVector(125, false);
+		bitVector = new SmallBitVector(64, false);
 	}
 
 	@Test
@@ -21,27 +21,17 @@ public final class LargeBitVectorTest {
 		bitVector.fill(true);
 		// assertEquals(bitVector.bitCount(), 64);
 		assertTrue(bitVector.get(64));
-		assertTrue(bitVector.get(65));
-		assertTrue(bitVector.get(124));
-		assertFalse(bitVector.get(125));
+		assertTrue(bitVector.get(32));
 
 		bitVector.fill(false);
 		assertEquals(-1, bitVector.nextSetBit(0));
 	}
 
 	@Test
-	public void testBooleanArraySize() {
-		assertEquals(LargeBitVector.nbWords(0), 0);
-		assertEquals(LargeBitVector.nbWords(1), 1);
-		assertEquals(LargeBitVector.nbWords(64), 1);
-		assertEquals(LargeBitVector.nbWords(65), 2);
-	}
-
-	@Test
 	public void testSet() {
-		assertFalse(bitVector.set(100, false));
-		assertTrue(bitVector.set(100, true));
-		assertFalse(bitVector.set(100, true));
+		assertFalse(bitVector.set(30, false));
+		assertTrue(bitVector.set(30, true));
+		assertFalse(bitVector.set(30, true));
 	}
 
 	@Test
@@ -55,14 +45,11 @@ public final class LargeBitVectorTest {
 	@Test
 	public void testNextSetBit() {
 		bitVector.set(46);
-		bitVector.set(49);
-		bitVector.set(100);
 		assertEquals(46, bitVector.nextSetBit(0));
 		assertEquals(46, bitVector.nextSetBit(46));
-		assertEquals(49, bitVector.nextSetBit(47));
-		assertEquals(100, bitVector.nextSetBit(63));
-		assertEquals(100, bitVector.nextSetBit(64));
-		assertEquals(-1, bitVector.nextSetBit(101));
+		assertEquals(-1, bitVector.nextSetBit(47));
+		bitVector.set(63);
+		assertEquals(63, bitVector.nextSetBit(47));
 
 	}
 
@@ -71,23 +58,13 @@ public final class LargeBitVectorTest {
 		bitVector.fill(true);
 		bitVector.clear(46);
 		bitVector.clear(49);
-		bitVector.clear(100);
 		assertEquals(46, bitVector.prevClearBit(47));
 		assertEquals(-1, bitVector.prevClearBit(46));
 		assertEquals(-1, bitVector.prevClearBit(45));
-		assertEquals(100, bitVector.prevClearBit(110));
 
-		assertEquals(49, bitVector.prevClearBit(64));
 		assertEquals(49, bitVector.prevClearBit(63));
-
-		bitVector.clear(64);
-		assertEquals(64, bitVector.prevClearBit(65));
 		assertEquals(49, bitVector.prevClearBit(64));
-
-		bitVector.set(64);
-		bitVector.clear(63);
-		assertEquals(63, bitVector.prevClearBit(65));
-		assertEquals(49, bitVector.prevClearBit(63));
+		assertEquals(49, bitVector.prevClearBit(65));
 
 	}
 
@@ -95,20 +72,15 @@ public final class LargeBitVectorTest {
 	public void testPrevSetBit() {
 		bitVector.set(46);
 		bitVector.set(49);
-		bitVector.set(100);
+
 		assertEquals(46, bitVector.prevSetBit(47));
 		assertEquals(-1, bitVector.prevSetBit(46));
 		assertEquals(-1, bitVector.prevSetBit(45));
-		assertEquals(100, bitVector.prevSetBit(110));
 
-		assertEquals(49, bitVector.prevSetBit(64));
 		assertEquals(49, bitVector.prevSetBit(63));
-
-		bitVector.set(64);
-		assertEquals(64, bitVector.prevSetBit(65));
 		assertEquals(49, bitVector.prevSetBit(64));
+		assertEquals(49, bitVector.prevSetBit(65));
 
-		bitVector.clear(64);
 		bitVector.set(63);
 		assertEquals(63, bitVector.prevSetBit(65));
 		assertEquals(49, bitVector.prevSetBit(63));
@@ -119,8 +91,7 @@ public final class LargeBitVectorTest {
 	public void testToStringIntArray() {
 		bitVector.set(46);
 		bitVector.set(49);
-		bitVector.set(100);
-		assertEquals("{46, 49, 100}", bitVector.toString());
+		assertEquals("{46, 49}", bitVector.toString());
 	}
 
 	@Test
@@ -134,26 +105,25 @@ public final class LargeBitVectorTest {
 	public void testClearFrom() {
 		bitVector.set(46);
 		bitVector.set(49);
-		bitVector.set(100);
+		bitVector.set(60);
 		assertEquals(2, bitVector.clearFrom(47));
 		assertEquals(1, bitVector.cardinality());
 		assertTrue(bitVector.get(46));
 		assertFalse(bitVector.get(49));
-		assertFalse(bitVector.get(100));
+		assertFalse(bitVector.get(60));
 	}
 
 	@Test
 	public void testClearTo() {
 		bitVector.set(46);
 		bitVector.set(49);
-		bitVector.set(100);
+		bitVector.set(60);
 		assertEquals(1, bitVector.clearTo(49));
 		assertEquals(2, bitVector.cardinality());
 		assertFalse(bitVector.get(46));
 		assertTrue(bitVector.get(49));
-		assertTrue(bitVector.get(100));
+		assertTrue(bitVector.get(60));
 	}
-
 	// @Test
 	// public void testIterator() {
 	// bitVector.set( 46);

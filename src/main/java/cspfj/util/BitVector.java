@@ -1,101 +1,103 @@
 package cspfj.util;
 
 public abstract class BitVector implements Cloneable {
-    protected static final int ADDRESS_BITS_PER_WORD = 6;
+	protected static final int ADDRESS_BITS_PER_WORD = 6;
 
-    // Taille d'un long (64=2^6)
-    protected static final int SIZE = 1 << ADDRESS_BITS_PER_WORD;
+	// Taille d'un long (64=2^6)
+	protected static final int SIZE = 1 << ADDRESS_BITS_PER_WORD;
 
-    protected static final long MASK = 0xFFFFFFFFFFFFFFFFL;
+	protected static final long MASK = 0xFFFFFFFFFFFFFFFFL;
 
-    protected final int size;
+	protected final int size;
 
-    public BitVector(final int size) {
-        this.size = size;
-    }
+	public BitVector(final int size) {
+		this.size = size;
+	}
 
-    public final boolean set(final int position, final boolean status) {
-        if (status) {
-            return set(position);
-        }
-        return clear(position);
-    }
+	public final boolean set(final int position, final boolean status) {
+		if (status) {
+			return set(position);
+		}
+		return clear(position);
+	}
 
-    @Override
-    public final String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append('{');
-        int i = nextSetBit(0);
-        if (i != -1) {
-            sb.append(i);
-        }
-        for (i = nextSetBit(i + 1); i != -1; i = nextSetBit(i + 1)) {
-            sb.append(", ").append(i);
-        }
-        return sb.append('}').toString();
+	@Override
+	public final String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append('{');
+		int i = nextSetBit(0);
+		if (i != -1) {
+			sb.append(i);
+		}
+		for (i = nextSetBit(i + 1); i != -1; i = nextSetBit(i + 1)) {
+			sb.append(", ").append(i);
+		}
+		return sb.append('}').toString();
 
-    }
+	}
 
-    public static BitVector factory(final int size, final boolean fill) {
-        if (size > SIZE) {
-            return new LargeBitVector(size, fill);
-        }
-        return new SmallBitVector(size, fill);
-    }
+	public static BitVector factory(final int size, final boolean fill) {
+		if (size > SIZE) {
+			return new LargeBitVector(size, fill);
+		}
+		return new SmallBitVector(size, fill);
+	}
 
-    @Override
-    public BitVector clone() {
-        try {
-            return (BitVector) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new IllegalStateException();
-        }
-    }
+	@Override
+	public BitVector clone() {
+		try {
+			return (BitVector) super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new IllegalStateException();
+		}
+	}
 
-    public abstract void fill(final boolean fill);
+	public abstract void fill(final boolean fill);
 
-    public abstract boolean clear(final int position);
+	public abstract boolean clear(final int position);
 
-    public abstract boolean set(final int position);
+	public abstract boolean set(final int position);
 
-    public abstract boolean get(final int position);
+	public abstract boolean get(final int position);
 
-    public abstract int nextSetBit(final int start);
+	public abstract int nextSetBit(final int start);
 
-    public abstract int prevSetBit(final int start);
+	public abstract int prevSetBit(final int start);
 
-    public final int lastSetBit() {
-        return prevSetBit(size);
-    }
+	public final int lastSetBit() {
+		return prevSetBit(size);
+	}
 
-    public abstract int prevClearBit(final int start);
+	public abstract int prevClearBit(final int start);
 
-    public final int lastClearBit() {
-        return prevClearBit(size);
-    }
+	public final int lastClearBit() {
+		return prevClearBit(size);
+	}
 
-    public abstract void setSingle(final int index);
+	public abstract void setSingle(final int index);
 
-    public abstract void clearFrom(final int from);
+	public abstract int clearFrom(final int from);
 
-    public abstract void copyTo(BitVector bV);
+	public abstract int clearTo(int ub);
 
-    public abstract boolean intersects(BitVector bV, final int position);
+	public abstract void copyTo(BitVector bV);
 
-    public abstract int intersects(BitVector bV);
+	public abstract boolean intersects(BitVector bV, final int position);
 
-    public abstract int realSize();
+	public abstract int intersects(BitVector bV);
 
-    public abstract BitVector xor(BitVector bv);
+	public abstract int realSize();
 
-    public abstract BitVector and(BitVector bv);
+	public abstract BitVector xor(BitVector bv);
 
-    public abstract BitVector inverse();
+	public abstract BitVector and(BitVector bv);
 
-    public abstract boolean isEmpty();
+	public abstract BitVector inverse();
 
-    public abstract void setAllBut(final int index);
+	public abstract boolean isEmpty();
 
-    public abstract int cardinality();
+	public abstract void setAllBut(final int index);
+
+	public abstract int cardinality();
 
 }

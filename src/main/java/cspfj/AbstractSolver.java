@@ -166,6 +166,10 @@ public abstract class AbstractSolver implements Solver {
             LOGGER.warning("Interrupted preprocessing");
             consistent = true;
             throw e;
+        } catch (OutOfMemoryError e) {
+        	System.err.println(e);
+        	e.printStackTrace();
+        	throw e;
         } finally {
             preproCpu += System.currentTimeMillis();
             waker.cancel();

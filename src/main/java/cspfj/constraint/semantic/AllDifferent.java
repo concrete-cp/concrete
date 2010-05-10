@@ -27,7 +27,6 @@ import cspfj.constraint.AbstractArcGrainedConstraint;
 import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
 import cspfj.util.BitVector;
-import cspom.variable.CSPOMVariable;
 
 public final class AllDifferent extends AbstractArcGrainedConstraint {
 
