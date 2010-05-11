@@ -123,6 +123,10 @@ public class SmallBitVectorTest {
 		assertFalse(bitVector.get(46));
 		assertTrue(bitVector.get(49));
 		assertTrue(bitVector.get(60));
+		bitVector.clearTo(0);
+		assertFalse(bitVector.get(46));
+		assertTrue(bitVector.get(49));
+		assertTrue(bitVector.get(60));
 	}
 	// @Test
 	// public void testIterator() {

@@ -71,6 +71,9 @@ public final class SmallBitVector extends BitVector {
 	}
 
 	public int clearTo(final int to) {
+		if (to <= 0) {
+			return 0;
+		}
 		final int before = Long.bitCount(word);
 		word &= ~(MASK >>> -to);
 		return before - Long.bitCount(word);

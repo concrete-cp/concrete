@@ -19,7 +19,10 @@ public final class AbsDiff extends AbstractAC3Constraint {
 	public boolean findSupport(final int variablePosition, final int index) {
 		switch (variablePosition) {
 		case 0:
-			return findValidTuple0(index);
+			if (getVariable(1).getDomainSize() < getVariable(2).getDomainSize()) {
+				return findValidTuple0(index, 1, 2);
+			}
+			return findValidTuple0(index, 2, 1);
 		case 1:
 			return findValidTuple(index, 1, 2);
 		case 2:
@@ -29,26 +32,33 @@ public final class AbsDiff extends AbstractAC3Constraint {
 		}
 	}
 
-	private boolean findValidTuple0(final int index) {
+	private boolean findValidTuple0(final int index, final int pos1,
+			final int pos2) {
 		final int val0 = getVariable(0).getValue(index);
-		final Domain dom1 = getVariable(1).getDomain();
-		final Domain dom2 = getVariable(2).getDomain();
+		if (val0 < 0) {
+			return false;
+		}
+		final Domain dom1 = getVariable(pos1).getDomain();
+		final Domain dom2 = getVariable(pos2).getDomain();
 		for (int i = dom1.first(); i >= 0; i = dom1.next(i)) {
 			final int val1 = dom1.value(i);
+
 			final int j1 = dom2.index(val1 - val0);
-			if (j1 >= 0 && dom2.present(j1) && val1 >= dom2.value(j1)) {
+			if (j1 >= 0 && dom2.present(j1)) {
 				tuple[0] = index;
-				tuple[1] = i;
-				tuple[2] = j1;
+				tuple[pos1] = i;
+				tuple[pos2] = j1;
 				return true;
 			}
 
 			final int j2 = dom2.index(val1 + val0);
-			if (j2 >= 0 && dom2.present(j2) && val1 <= dom2.value(j2)) {
+			if (j2 >= 0 && dom2.present(j2)) {
 				tuple[0] = index;
-				tuple[1] = i;
-				tuple[2] = j2;
+				tuple[pos1] = i;
+				tuple[pos2] = j2;
+				return true;
 			}
+
 		}
 		return false;
 	}

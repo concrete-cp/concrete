@@ -19,8 +19,10 @@
 
 package cspfj.filter;
 
+import java.util.Collection;
 import java.util.Map;
 
+import cspfj.constraint.Constraint;
 import cspfj.problem.Variable;
 
 /**
@@ -33,6 +35,8 @@ public interface Filter {
      * @return false iff an inconsistency has been detected
      */
     boolean reduceAll() throws InterruptedException;
+    
+    boolean reduceAfter(Collection<Constraint> constraints);
 
     boolean reduceAfter(Variable variable);
 

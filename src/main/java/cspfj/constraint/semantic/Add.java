@@ -19,58 +19,48 @@ public final class Add extends AbstractAC3Constraint {
 	public boolean findSupport(final int variablePosition, final int index) {
 		switch (variablePosition) {
 		case 0:
-			return findValidTuple0(index);
+			if (getVariable(1).getDomainSize() < getVariable(2).getDomainSize()) {
+				return findValidTuple0(index, 1, 2);
+			}
+			return findValidTuple0(index, 2, 1);
 		case 1:
-			return findValidTuple1(index);
+			return findValidTuple(index, 1, 2);
 		case 2:
-			return findValidTuple2(index);
+			return findValidTuple(index, 2, 1);
 		default:
 			throw new IndexOutOfBoundsException();
 		}
 	}
 
-	private boolean findValidTuple0(final int index) {
+	private boolean findValidTuple0(final int index, final int pos1,
+			final int pos2) {
 		final int val0 = getVariable(0).getValue(index);
-		final Domain dom1 = getVariable(1).getDomain();
-		final Domain dom2 = getVariable(2).getDomain();
+		final Domain dom1 = getVariable(pos1).getDomain();
+		final Domain dom2 = getVariable(pos2).getDomain();
+
 		for (int i = dom1.first(); i >= 0; i = dom1.next(i)) {
 			final int j = dom2.index(val0 - dom1.value(i));
 			if (j >= 0 && dom2.present(j)) {
 				tuple[0] = index;
-				tuple[1] = i;
-				tuple[2] = j;
+				tuple[pos1] = i;
+				tuple[pos2] = j;
 				return true;
 			}
 		}
 		return false;
 	}
 
-	private boolean findValidTuple1(final int index) {
+	private boolean findValidTuple(final int index, final int pos1,
+			final int pos2) {
 		final Domain result = getVariable(0).getDomain();
-		final int val = getVariable(1).getValue(index);
-		final Domain dom = getVariable(2).getDomain();
+		final int val = getVariable(pos1).getValue(index);
+		final Domain dom = getVariable(pos2).getDomain();
 		for (int i = dom.first(); i >= 0; i = dom.next(i)) {
 			final int resIndex = result.index(val + dom.value(i));
 			if (resIndex >= 0 && result.present(resIndex)) {
 				tuple[0] = resIndex;
-				tuple[1] = index;
-				tuple[2] = i;
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private boolean findValidTuple2(final int index) {
-		final Domain result = getVariable(0).getDomain();
-		final int val = getVariable(2).getValue(index);
-		final Domain dom = getVariable(1).getDomain();
-		for (int i = dom.first(); i >= 0; i = dom.next(i)) {
-			final int resIndex = result.index(val + dom.value(i));
-			if (resIndex >= 0 && result.present(resIndex)) {
-				tuple[0] = resIndex;
-				tuple[1] = i;
-				tuple[2] = index;
+				tuple[pos1] = index;
+				tuple[pos2] = i;
 				return true;
 			}
 		}

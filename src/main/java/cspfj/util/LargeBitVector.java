@@ -175,6 +175,9 @@ final class LargeBitVector extends BitVector {
 	}
 
 	public int clearTo(final int to) {
+		if (to <= 0) {
+			return 0;
+		}
 		int endWordIndex = word(to - 1);
 		int removed = Long.bitCount(words[endWordIndex]);
 		// Handle first word

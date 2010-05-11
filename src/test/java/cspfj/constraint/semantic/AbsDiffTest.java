@@ -1,9 +1,7 @@
 package cspfj.constraint.semantic;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.util.Arrays;
 import java.util.Random;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -17,17 +15,17 @@ import cspfj.filter.RevisionHandler;
 import cspfj.problem.BitVectorDomain;
 import cspfj.problem.Variable;
 
-public class AbsDiffTest {
+public final class AbsDiffTest {
 
-	private static final Random RAND = new Random(0);
+	private static final Random RAND = new Random();
 	private Variable x, y, z;
 	private int[] domX, domY, domZ;
 
 	@Before
 	public void setUp() throws Exception {
-		domX = randomDomain(0, 100, 20);
-		domY = randomDomain(0, 100, 20);
-		domZ = randomDomain(0, 100, 20);
+		domX = randomDomain(-100, 100, 20);
+		domY = randomDomain(-100, 100, 20);
+		domZ = randomDomain(-100, 100, 20);
 		x = new Variable("x", new BitVectorDomain(domX));
 		y = new Variable("y", new BitVectorDomain(domY));
 		z = new Variable("z", new BitVectorDomain(domZ));
@@ -63,7 +61,7 @@ public class AbsDiffTest {
 
 	}
 
-	private static int[] randomDomain(int min, int max, int nb) {
+	private static int[] randomDomain(final int min, final int max, final int nb) {
 		final SortedSet<Integer> domain = new TreeSet<Integer>();
 		while (domain.size() < nb) {
 			domain.add(RAND.nextInt(max - min) + min);
