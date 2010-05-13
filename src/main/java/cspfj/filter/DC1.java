@@ -21,6 +21,7 @@ package cspfj.filter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -103,7 +104,6 @@ public final class DC1 extends AbstractSAC {
                     + "(" + index + ")");
             // }
 
-            problem.setCurrentLevelVariable(variable);
             problem.push();
             variable.setSingle(index);
 
@@ -128,17 +128,16 @@ public final class DC1 extends AbstractSAC {
                 changedGraph = true;
             }
         }
-        problem.setCurrentLevelVariable(null);
         return changedGraph;
     }
 
-    public boolean noGoods(Variable firstVariable) {
-        int[] tuple = new int[2];
+    public boolean noGoods(final Variable firstVariable) {
+        List<Integer> tuple = new ArrayList<Integer>(2);
 
         final Set<Variable> scopeSet = new HashSet<Variable>(2);
 
         scopeSet.add(firstVariable);
-        tuple[0] = firstVariable.getFirst();
+        tuple.add(firstVariable.getFirst());
         final Variable[] scopeArray = new Variable[] { firstVariable, null };
 
         boolean modified = false;

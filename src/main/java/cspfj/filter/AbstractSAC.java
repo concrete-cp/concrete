@@ -1,10 +1,12 @@
 package cspfj.filter;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Logger;
 
+import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -76,6 +78,11 @@ abstract class AbstractSAC implements Filter {
 
         return true;
 
+    }
+
+    @Override
+    public boolean reduceAfter(Collection<Constraint> constraints) {
+        throw new UnsupportedOperationException();
     }
 
     public boolean reduceAll() throws InterruptedException {

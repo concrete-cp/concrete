@@ -41,8 +41,6 @@ public final class Problem {
 
     private int maxDomainSize;
 
-    private Variable[] levelVariables;
-
     private int maxArity;
 
     private int maxVId;
@@ -84,8 +82,6 @@ public final class Problem {
         }
 
         nbVariables = variables.size();
-
-        levelVariables = new Variable[nbVariables];
     }
 
     public void prepareConstraints() {
@@ -197,24 +193,6 @@ public final class Problem {
         return currentLevel;
     }
 
-    public void setCurrentLevelVariable(final Variable variable) {
-        assert (currentLevel + 1 >= levelVariables.length || levelVariables[currentLevel + 1] == null);
-        levelVariables[currentLevel] = variable;
-
-    }
-
-    public Variable getLevelVariable(final int level) {
-        return levelVariables[level];
-    }
-
-    public void clearLevelVariables() {
-        Arrays.fill(levelVariables, null);
-    }
-
-    public Variable[] getLevelVariablesTo(final int length) {
-        return Arrays.copyOf(levelVariables, length);
-    }
-
     public int getMaxArity() {
         return maxArity;
     }
@@ -256,10 +234,4 @@ public final class Problem {
         return variables.get(name);
     }
 
-    public Variable getLastLevelVariable() {
-        if (currentLevel <= 0) {
-            return null;
-        }
-        return levelVariables[currentLevel - 1];
-    }
 }

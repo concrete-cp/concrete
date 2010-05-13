@@ -18,11 +18,13 @@
  */
 package cspfj.filter;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Logger;
 
+import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -31,12 +33,12 @@ import cspfj.problem.Variable;
  * 
  */
 public final class B3C extends AbstractSAC {
-    private final static Logger LOGGER = Logger.getLogger(B3C.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(B3C.class.getName());
 
     // private final static Logger logger =
     // Logger.getLogger("cspfj.filter.CDC");
 
-    public B3C(Problem problem) {
+    public B3C(final Problem problem) {
         super(problem, new AC3(problem));
     }
 
@@ -70,10 +72,10 @@ public final class B3C extends AbstractSAC {
         return changed;
     }
 
-    private boolean check(Variable variable, int index) {
+    private boolean check(final Variable variable, final int index) {
         problem.push();
         variable.getDomain().setSingle(index);
-        problem.setCurrentLevelVariable(variable);
+
         nbSingletonTests++;
         final boolean consistent = filter.reduceAfter(variable);
 

@@ -1,5 +1,6 @@
 package cspfj.filter;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
@@ -190,6 +191,19 @@ public final class AC3Constraint implements Filter {
         final Map<String, Object> statistics = new HashMap<String, Object>(1);
         statistics.put("revisions", revisions);
         return statistics;
+    }
+
+    @Override
+    public boolean reduceAfter(final Collection<Constraint> constraints) {
+        revisionCount++;
+        queue.clear();
+
+        for (Constraint c : constraints) {
+            c.fillRemovals(revisionCount);
+            queue.offer(c);
+        }
+
+        return reduce();
     }
 
 }

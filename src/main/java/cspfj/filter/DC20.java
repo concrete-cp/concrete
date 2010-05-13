@@ -176,7 +176,6 @@ public final class DC20 implements Filter {
                     + "(" + index + ")");
             // }
 
-            problem.setCurrentLevelVariable(variable);
             problem.push();
             variable.setSingle(index);
 
@@ -222,7 +221,7 @@ public final class DC20 implements Filter {
                 modVar[variable.getId()] = cnt;
             }
         }
-        problem.setCurrentLevelVariable(null);
+
         return changedGraph;
     }
 
@@ -236,10 +235,10 @@ public final class DC20 implements Filter {
     public boolean noGoods(final Variable firstVariable) {
         assert firstVariable.getDomainSize() == 1;
 
-        int[] tuple = new int[2];
+        final List<Integer> tuple = new ArrayList<Integer>(2);
         final Set<Variable> scopeSet = new HashSet<Variable>(2);
         scopeSet.add(firstVariable);
-        tuple[0] = firstVariable.getFirst();
+        tuple.add(firstVariable.getFirst());
 
         final Variable[] scopeArray = new Variable[] { firstVariable, null };
 
@@ -341,6 +340,11 @@ public final class DC20 implements Filter {
             throw new IllegalStateException(
                     "Filter was unexpectingly interrupted !", e);
         }
+    }
+
+    @Override
+    public boolean reduceAfter(Collection<Constraint> constraints) {
+        throw new UnsupportedOperationException();
     }
 
 }
