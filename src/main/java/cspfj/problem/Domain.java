@@ -66,4 +66,6 @@ public interface Domain extends Cloneable {
 	 */
 	int lowest(int value);
 
+	BitVector getBitVector();
+
 }

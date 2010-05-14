@@ -84,6 +84,7 @@ public final class Gt extends AbstractConstraint {
 	public boolean revise(final RevisionHandler revisator, final int reviseCount) {
 		assert getVariable(0).getDomainSize() > 0
 				&& getVariable(1).getDomainSize() > 0;
+
 		if (removeLt(min(1), 0)) {
 			if (getVariable(0).getDomainSize() == 0) {
 				return false;
@@ -95,6 +96,12 @@ public final class Gt extends AbstractConstraint {
 				return false;
 			}
 			revisator.revised(this, getVariable(1));
+		}
+		final int max1 = max(1);
+		final int min0 = min(0);
+		if (max1 < min0 || !strict && min0 == max1) {
+			entail();
+			return true;
 		}
 		return true;
 	}

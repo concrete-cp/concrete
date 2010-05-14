@@ -197,7 +197,7 @@ public final class Variable implements Cloneable, Identified {
     }
 
     public BitVector getBitDomain() {
-        return ((BitVectorDomain) domain).getBitVector();
+        return domain.getBitVector();
     }
 
     public Variable clone() throws CloneNotSupportedException {

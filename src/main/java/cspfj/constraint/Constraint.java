@@ -70,8 +70,6 @@ public interface Constraint extends Identified {
 
 	void incWeight();
 
-	void setWeight(final int weight);
-
 	int getRemovals(int position);
 
 	void setRemovals(int position, int value);
@@ -81,4 +79,8 @@ public interface Constraint extends Identified {
 	boolean hasNoRemovals(final int reviseCount);
 
 	int getEvaluation(final int reviseCount);
+
+	boolean isEntailed();
+
+	void entail();
 }

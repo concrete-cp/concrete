@@ -21,11 +21,14 @@ package cspfj.constraint;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import cspfj.constraint.extension.TupleManager;
 import cspfj.problem.Variable;
 
 public abstract class AbstractConstraint implements Constraint {
+	private static final Logger LOGGER = Logger
+			.getLogger(AbstractConstraint.class.getName());
 	private static int cId = 0;
 
 	private static long nbPresenceChecks = 0;
@@ -52,7 +55,9 @@ public abstract class AbstractConstraint implements Constraint {
 
 	protected TupleManager tupleManager;
 
-	private int weight = 1;
+	private int weight = 0;
+
+	private int entailedAtLevel = -1;
 
 	public AbstractConstraint(final Variable... scope) {
 		this(null, scope);
@@ -87,11 +92,6 @@ public abstract class AbstractConstraint implements Constraint {
 	@Override
 	public final void incWeight() {
 		weight++;
-	}
-
-	@Override
-	public final void setWeight(final int weight) {
-		this.weight = weight;
 	}
 
 	public final int getValue(final int position) {
@@ -156,12 +156,24 @@ public abstract class AbstractConstraint implements Constraint {
 		return this.getClass().getSimpleName();
 	}
 
-	public void restore(final int level) {
-		// Nothing here
+	private int currentLevel;
+
+	public int getCurrentLevel() {
+		return currentLevel;
 	}
 
+	@Override
+	public void restore(final int level) {
+		if (entailedAtLevel > level) {
+			LOGGER.finer("Disentailing " + this);
+			entailedAtLevel = -1;
+		}
+		currentLevel = level;
+	}
+
+	@Override
 	public void setLevel(final int level) {
-		// Nothing here
+		currentLevel = level;
 	}
 
 	@Override
@@ -188,19 +200,28 @@ public abstract class AbstractConstraint implements Constraint {
 
 	@Override
 	public void setRemovals(final int position, final int value) {
-		// TODO Auto-generated method stub
-
+		// Ignore
 	}
 
 	@Override
 	public void fillRemovals(final int value) {
-		// TODO Auto-generated method stub
-
+		// Ignore
 	}
 
 	@Override
 	public boolean hasNoRemovals(final int reviseCount) {
 		return false;
+	}
+
+	@Override
+	public final boolean isEntailed() {
+		return entailedAtLevel >= 0;
+	}
+
+	@Override
+	public final void entail() {
+		entailedAtLevel = currentLevel;
+		LOGGER.finer("Entailing " + this);
 	}
 
 }

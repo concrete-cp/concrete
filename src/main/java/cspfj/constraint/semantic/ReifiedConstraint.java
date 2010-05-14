@@ -12,7 +12,6 @@ public final class ReifiedConstraint extends AbstractConstraint {
 	private final BooleanDomain controlDomain;
 	private final Constraint positiveConstraint;
 	private final Constraint negativeConstraint;
-	private int level;
 
 	private RevisionHandler usualRevisator;
 	private RevisionHandler usualReifiedRevisator;
@@ -31,12 +30,12 @@ public final class ReifiedConstraint extends AbstractConstraint {
 
 		this.positiveConstraint = positiveConstraint;
 		this.negativeConstraint = negativeConstraint;
-		positiveConstraint.fillRemovals(Integer.MAX_VALUE);
-		negativeConstraint.fillRemovals(Integer.MAX_VALUE);
-
+		// positiveConstraint.fillRemovals(Integer.MAX_VALUE);
+		// negativeConstraint.fillRemovals(Integer.MAX_VALUE);
 	}
 
 	private void push() {
+		final int level = getCurrentLevel();
 		for (Variable v : positiveConstraint.getScope()) {
 			v.setLevel(level + 1);
 		}
@@ -45,6 +44,7 @@ public final class ReifiedConstraint extends AbstractConstraint {
 	}
 
 	private void restore() {
+		final int level = getCurrentLevel();
 		for (Variable v : positiveConstraint.getScope()) {
 			v.restoreLevel(level);
 		}
@@ -75,28 +75,37 @@ public final class ReifiedConstraint extends AbstractConstraint {
 	};
 
 	@Override
+	public void setLevel(final int level) {
+		super.setLevel(level);
+		positiveConstraint.setLevel(level);
+		negativeConstraint.setLevel(level);
+	}
+
+	@Override
+	public void restore(final int level) {
+		super.restore(level);
+		positiveConstraint.restore(level);
+		negativeConstraint.restore(level);
+	}
+
+	@Override
 	public boolean revise(final RevisionHandler revisator, final int reviseCount) {
-		final RevisionHandler reifiedRevisator;
-		if (revisator == usualRevisator) {
-			reifiedRevisator = usualReifiedRevisator;
-		} else {
-			reifiedRevisator = new ReifiedRevisionHandler(revisator);
-			usualRevisator = revisator;
-			usualReifiedRevisator = reifiedRevisator;
-		}
+
 		switch (controlDomain.getStatus()) {
 		case UNKNOWN:
 			push();
 			final boolean isNegative = !positiveConstraint.revise(
 					nullRevisator, reviseCount);
+
 			restore();
 			if (isNegative) {
 				controlDomain.remove(1);
-				if (!negativeConstraint.revise(reifiedRevisator, reviseCount)) {
-					return false;
+				if (noReifyRevise(negativeConstraint, revisator, reviseCount)) {
+					revisator.revised(this, getVariable(0));
+					return true;
 				}
-				revisator.revised(this, getVariable(0));
-				return true;
+				return false;
+
 			}
 
 			push();
@@ -106,32 +115,45 @@ public final class ReifiedConstraint extends AbstractConstraint {
 
 			if (isPositive) {
 				controlDomain.remove(0);
-				if (!positiveConstraint.revise(reifiedRevisator, reviseCount)) {
-					return false;
+				if (noReifyRevise(positiveConstraint, revisator, reviseCount)) {
+					revisator.revised(this, getVariable(0));
+					return true;
 				}
-				revisator.revised(this, getVariable(0));
-				return true;
+				return false;
 			}
 			return true;
 		case TRUE:
-			return positiveConstraint.revise(reifiedRevisator, reviseCount);
+			return noReifyRevise(positiveConstraint, revisator, reviseCount);
 		case FALSE:
-			return negativeConstraint.revise(reifiedRevisator, reviseCount);
+			return noReifyRevise(negativeConstraint, revisator, reviseCount);
 		default:
 			throw new IllegalStateException();
 		}
 	}
 
-	@Override
-	public void setLevel(final int newLevel) {
-		super.setLevel(newLevel);
-		this.level = newLevel;
-	}
-
-	@Override
-	public void restore(final int newLevel) {
-		super.restore(newLevel);
-		this.level = newLevel;
+	private boolean noReifyRevise(final Constraint constraint,
+			final RevisionHandler revisator, final int reviseCount) {
+		final RevisionHandler reifiedRevisator;
+		if (revisator == usualRevisator) {
+			reifiedRevisator = usualReifiedRevisator;
+		} else {
+			reifiedRevisator = new ReifiedRevisionHandler(revisator);
+			usualRevisator = revisator;
+			usualReifiedRevisator = reifiedRevisator;
+		}
+		final int actualRevise;
+		if (controlRemovals >= reviseCount) {
+			actualRevise = -1;
+		} else {
+			actualRevise = reviseCount;
+		}
+		if (constraint.revise(reifiedRevisator, actualRevise)) {
+			if (constraint.isEntailed()) {
+				entail();
+			}
+			return true;
+		}
+		return false;
 	}
 
 	@Override
@@ -150,6 +172,31 @@ public final class ReifiedConstraint extends AbstractConstraint {
 	@Override
 	public String toString() {
 		return getVariable(0) + " == (" + positiveConstraint + ")";
+	}
+
+	private int controlRemovals;
+
+	@Override
+	public void setRemovals(final int position, final int value) {
+		if (position == 0) {
+			controlRemovals = value;
+		} else {
+			positiveConstraint.setRemovals(position - 1, value);
+			negativeConstraint.setRemovals(position - 1, value);
+		}
+	}
+
+	@Override
+	public void fillRemovals(final int value) {
+		controlRemovals = value;
+		positiveConstraint.fillRemovals(value);
+		negativeConstraint.fillRemovals(value);
+	}
+
+	@Override
+	public boolean hasNoRemovals(final int value) {
+		return controlRemovals < value
+				&& positiveConstraint.hasNoRemovals(value);
 	}
 
 }

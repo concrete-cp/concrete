@@ -27,9 +27,6 @@ public final class WDeg extends AbstractVariableHeuristic {
 
 	public WDeg(final Problem problem) {
 		super(problem);
-		for (Constraint c : problem.getConstraints()) {
-			c.setWeight(1);
-		}
 	}
 
 	public double getScore(final Variable variable) {
@@ -40,7 +37,10 @@ public final class WDeg extends AbstractVariableHeuristic {
 		double count = 0;
 
 		for (Constraint c : variable.getInvolvingConstraints()) {
-			count += (nbUnboundVariables(c) - 1) * c.getWeight();
+			// count += (nbUnboundVariables(c) - 1) * c.getWeight();
+			if (!c.isEntailed()) {
+				count += c.getWeight();
+			}
 		}
 		return count;
 	}
