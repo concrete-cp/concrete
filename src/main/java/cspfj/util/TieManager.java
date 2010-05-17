@@ -40,29 +40,21 @@ public final class TieManager<T> {
 
     public void clear() {
         bestValue = null;
-        bestEvaluation = Double.MIN_VALUE;
+        bestEvaluation = Double.NEGATIVE_INFINITY;
         nbTies = 1;
     }
 
     public boolean newValue(final T value, final double evaluation) {
-        if (newValue(evaluation)) {
+        if (evaluation > bestEvaluation) {
+            nbTies = 2;
+            this.bestValue = value;
+            this.bestEvaluation = evaluation;
+            return true;
+        } else if (evaluation == bestEvaluation
+                && random.nextFloat() * nbTies++ < 1) {
             this.bestValue = value;
             return true;
         }
-        return false;
-    }
-
-    private boolean newValue(final double evaluation) {
-        if (evaluation == bestEvaluation) {
-            return random.nextFloat() * nbTies++ < 1;
-        }
-
-        if (evaluation > bestEvaluation) {
-            nbTies = 2;
-            this.bestEvaluation = evaluation;
-            return true;
-        }
-
         return false;
     }
 

@@ -4,7 +4,7 @@ public abstract class BitVector implements Cloneable {
 	protected static final int ADDRESS_BITS_PER_WORD = 6;
 
 	// Taille d'un long (64=2^6)
-	protected static final int SIZE = 1 << ADDRESS_BITS_PER_WORD;
+	protected static final int WORD_SIZE = 1 << ADDRESS_BITS_PER_WORD;
 
 	protected static final long MASK = 0xFFFFFFFFFFFFFFFFL;
 
@@ -37,7 +37,7 @@ public abstract class BitVector implements Cloneable {
 	}
 
 	public static BitVector factory(final int size, final boolean fill) {
-		if (size > SIZE) {
+		if (size > WORD_SIZE) {
 			return new LargeBitVector(size, fill);
 		}
 		return new SmallBitVector(size, fill);

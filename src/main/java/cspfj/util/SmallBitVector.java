@@ -6,9 +6,9 @@ public final class SmallBitVector extends BitVector {
 
 	public SmallBitVector(final int size, final boolean fill) {
 		super(size);
-		if (size > SIZE) {
+		if (size > WORD_SIZE) {
 			throw new IllegalArgumentException(
-					"Cannot handle vectors larger than " + SIZE + " elements");
+					"Cannot handle vectors larger than " + WORD_SIZE + " elements");
 		}
 		if (fill) {
 			word = MASK >>> -size;
@@ -33,22 +33,22 @@ public final class SmallBitVector extends BitVector {
 
 	public int prevSetBit(final int start) {
 		final long prev;
-		if (start >= SIZE) {
+		if (start >= WORD_SIZE) {
 			prev = word;
 		} else {
 			prev = word & ~(MASK << start);
 		}
-		return prev == 0 ? -1 : (SIZE - Long.numberOfLeadingZeros(prev) - 1);
+		return prev == 0 ? -1 : (WORD_SIZE - Long.numberOfLeadingZeros(prev) - 1);
 	}
 
 	public int prevClearBit(final int start) {
 		final long prev;
-		if (start >= size) {
+		if (start >= WORD_SIZE) {
 			prev = ~word;
 		} else {
 			prev = ~word & ~(MASK << start);
 		}
-		return prev == 0 ? -1 : (SIZE - Long.numberOfLeadingZeros(prev) - 1);
+		return prev == 0 ? -1 : (WORD_SIZE - Long.numberOfLeadingZeros(prev) - 1);
 	}
 
 	public int nextSetBit(final int start) {

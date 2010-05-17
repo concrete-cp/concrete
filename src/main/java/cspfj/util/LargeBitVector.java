@@ -32,7 +32,7 @@ final class LargeBitVector extends BitVector {
 	}
 
 	public static int nbWords(final int nbBits) {
-		if (nbBits % SIZE > 0) {
+		if (nbBits % WORD_SIZE > 0) {
 			return word(nbBits) + 1;
 		}
 		return word(nbBits);
@@ -80,7 +80,7 @@ final class LargeBitVector extends BitVector {
 			}
 			word = words[position];
 		}
-		return (position * SIZE) + Long.numberOfTrailingZeros(word);
+		return (position * WORD_SIZE) + Long.numberOfTrailingZeros(word);
 	}
 
 	public int prevSetBit(final int start) {
@@ -99,7 +99,7 @@ final class LargeBitVector extends BitVector {
 			}
 			word = words[position];
 		}
-		return (1 + position) * SIZE - Long.numberOfLeadingZeros(word) - 1;
+		return (1 + position) * WORD_SIZE - Long.numberOfLeadingZeros(word) - 1;
 	}
 
 	public int prevClearBit(final int start) {
@@ -117,7 +117,7 @@ final class LargeBitVector extends BitVector {
 			}
 			word = ~words[position];
 		}
-		return (1 + position) * SIZE - Long.numberOfLeadingZeros(word) - 1;
+		return (1 + position) * WORD_SIZE - Long.numberOfLeadingZeros(word) - 1;
 	}
 
 	@Override

@@ -55,7 +55,7 @@ public abstract class AbstractConstraint implements Constraint {
 
 	protected TupleManager tupleManager;
 
-	private int weight = 0;
+	private int weight = 1;
 
 	private int entailedAtLevel = -1;
 

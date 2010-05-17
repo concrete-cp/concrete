@@ -10,7 +10,7 @@ public abstract class AbstractVariableHeuristic implements VariableHeuristic {
 
     private static final Random RAND = new Random(0);
 
-    protected final Problem problem;
+    private final Problem problem;
 
     private final TieManager<Variable> tieManager;
 
@@ -28,14 +28,6 @@ public abstract class AbstractVariableHeuristic implements VariableHeuristic {
                 tieManager.newValue(v, getScore(v));
             }
         }
-
-//        if (tieManager.getBestValue() == null) {
-//            for (Variable v : problem.getVariables()) {
-//                if (!v.isAssigned()) {
-//                    return v;
-//                }
-//            }
-//        }
 
         return tieManager.getBestValue();
     }
