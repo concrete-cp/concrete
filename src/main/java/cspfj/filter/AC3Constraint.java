@@ -6,8 +6,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.logging.Logger;
 
-import cspfj.constraint.AbstractArcGrainedConstraint;
-import cspfj.constraint.AbstractPVRConstraint;
 import cspfj.constraint.Constraint;
 import cspfj.priorityqueues.FibonacciHeap;
 import cspfj.priorityqueues.Key;
@@ -59,21 +57,20 @@ public final class AC3Constraint implements Filter {
             if (modVar[v.getId()] > cnt) {
                 final Constraint[] involved = v.getInvolvingConstraints();
                 for (int j = involved.length; --j >= 0;) {
-                    // involved[j].fillRemovals(true);
                     final Constraint constraint = involved[j];
-                    if (constraint instanceof AbstractArcGrainedConstraint) {
+                    if (!constraint.isEntailed()) {
                         constraint.setRemovals(v.getPositionInConstraint(j),
                                 revisionCount);
-                    }
 
-                    queue.offer(involved[j]);
+                        queue.offer(involved[j]);
+                    }
                 }
             }
         }
 
         if (modCons != null) {
             for (Constraint c : problem.getConstraints()) {
-                if (modCons[c.getId()] > cnt) {
+                if (modCons[c.getId()] > cnt && !c.isEntailed()) {
                     c.fillRemovals(revisionCount);
 
                     queue.offer(c);
@@ -94,10 +91,11 @@ public final class AC3Constraint implements Filter {
         final Constraint[] involving = variable.getInvolvingConstraints();
 
         for (int cp = involving.length; --cp >= 0;) {
-            involving[cp].setRemovals(variable.getPositionInConstraint(cp),
-                    revisionCount);
-            queue.offer(involving[cp]);
-
+            if (!involving[cp].isEntailed()) {
+                involving[cp].setRemovals(variable.getPositionInConstraint(cp),
+                        revisionCount);
+                queue.offer(involving[cp]);
+            }
         }
 
         return reduce();
@@ -110,8 +108,7 @@ public final class AC3Constraint implements Filter {
 
             for (int cp = involvingConstraints.length; --cp >= 0;) {
                 final Constraint constraintP = involvingConstraints[cp];
-                if (constraintP != constraint
-                        && constraintP instanceof AbstractArcGrainedConstraint) {
+                if (constraintP != constraint && !constraintP.isEntailed()) {
                     constraintP.setRemovals(variable
                             .getPositionInConstraint(cp), revisionCount);
                     queue.offer(constraintP);
@@ -145,40 +142,28 @@ public final class AC3Constraint implements Filter {
 
     private void addAll() {
         for (Constraint c : problem.getConstraints()) {
-            c.fillRemovals(revisionCount);
-            queue.offer(c);
+            if (!c.isEntailed()) {
+                c.fillRemovals(revisionCount);
+                queue.offer(c);
+            }
         }
     }
 
-    private boolean revised;
-
     private boolean control() {
 
-        final RevisionHandler revisator = new RevisionHandler() {
+        final RevisionHandler controlRevisator = new RevisionHandler() {
 
             @Override
-            public void revised(Constraint constraint, Variable variable) {
-                revised = true;
+            public void revised(final Constraint constraint,
+                    final Variable variable) {
+                assert false;
 
             }
 
         };
 
-        revised = false;
-
         for (Constraint c : problem.getConstraints()) {
-            if (c instanceof AbstractPVRConstraint) {
-                for (int i = c.getArity(); --i >= 0;) {
-                    // if (!c.getVariable(i).isAssigned()) {
-                    assert !((AbstractPVRConstraint) c).revise(i) : c + ", "
-                            + c.getVariable(i);
-                    // }
-                }
-            } else {
-                assert c.revise(revisator, -1);
-                assert !revised;
-            }
-
+            assert c.revise(controlRevisator, -1);
         }
         return true;
     }

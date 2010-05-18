@@ -56,7 +56,7 @@ public final class ExtensionConstraint2D extends AbstractPVRConstraint
 
         final Variable variable = getVariable(position);
 
-        //assert !variable.isAssigned();
+        // assert !variable.isAssigned();
 
         boolean revised = false;
 
@@ -98,5 +98,10 @@ public final class ExtensionConstraint2D extends AbstractPVRConstraint
     @Override
     public boolean check() {
         return matrixManager.check();
+    }
+
+    @Override
+    public String toString() {
+        return "ext2d(" + getVariable(0) + ", " + getVariable(1) + ")";
     }
 }

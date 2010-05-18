@@ -21,6 +21,7 @@ package cspfj;
 
 import java.io.IOException;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +31,7 @@ import java.util.logging.Logger;
 import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.AC3;
+import cspfj.filter.AC3Constraint;
 import cspfj.filter.Filter;
 import cspfj.heuristic.CrossHeuristic;
 import cspfj.heuristic.Heuristic;
@@ -67,6 +69,11 @@ public final class MGACIter extends AbstractSolver {
 
     public MGACIter(final Problem prob) {
         this(prob, new CrossHeuristic(new WDegOnDom(prob), new Lexico(false)));
+    }
+
+    public MGACIter(final Problem problem, final Filter filter) {
+        this(problem, new CrossHeuristic(new WDegOnDom(problem), new Lexico(
+                false)), filter);
     }
 
     public MGACIter(final Problem prob, final Heuristic heuristic) {
@@ -151,10 +158,12 @@ public final class MGACIter extends AbstractSolver {
             decision = decisions.pop();
             // decision.getVariable().unassign();
             problem.pop();
+
+            LOGGER.finer(problem.getCurrentLevel() + " : "
+                    + decision.getVariable() + " /= "
+                    + decision.getVariable().getValue(decision.getIndex()));
         } while (decision.getVariable().getDomainSize() <= 1);
 
-        LOGGER.finer(problem.getCurrentLevel() + " : " + decision.getVariable()
-                + " /= " + decision.getVariable().getValue(decision.getIndex()));
         decision.getVariable().remove(decision.getIndex());
         checkBacktracks();
         return decision.getVariable();
@@ -189,6 +198,18 @@ public final class MGACIter extends AbstractSolver {
             statistic("heuristic-cpu", heuristicCpu / 1000f);
 
             maxBT = getMaxBacktracks();
+
+            boolean entailed = false;
+            for (Iterator<Constraint> itr = problem.getConstraints().iterator(); itr
+                    .hasNext();) {
+                if (itr.next().isEntailed()) {
+                    itr.remove();
+                    entailed = true;
+                }
+            }
+            if (entailed) {
+                problem.prepareConstraints();
+            }
         }
 
         for (;;) {

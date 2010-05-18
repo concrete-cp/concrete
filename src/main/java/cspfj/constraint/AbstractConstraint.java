@@ -158,14 +158,14 @@ public abstract class AbstractConstraint implements Constraint {
 
 	private int currentLevel;
 
-	public int getCurrentLevel() {
+	public final int getCurrentLevel() {
 		return currentLevel;
 	}
 
 	@Override
 	public void restore(final int level) {
 		if (entailedAtLevel > level) {
-			LOGGER.finer("Disentailing " + this);
+			LOGGER.finest("Disentailing " + this);
 			entailedAtLevel = -1;
 		}
 		currentLevel = level;
@@ -221,7 +221,7 @@ public abstract class AbstractConstraint implements Constraint {
 	@Override
 	public final void entail() {
 		entailedAtLevel = currentLevel;
-		LOGGER.finer("Entailing " + this);
+		LOGGER.finer(currentLevel + ": entailing " + this);
 	}
 
 }
