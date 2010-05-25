@@ -76,8 +76,20 @@ public abstract class BitVector implements Cloneable {
 
 	public abstract void setSingle(final int index);
 
+	/**
+	 * Removes all values from given bound (included).
+	 * 
+	 * @param from
+	 * @return How many values were actually removed
+	 */
 	public abstract int clearFrom(final int from);
 
+	/**
+	 * Removes all values up to given bound (excluded).
+	 * 
+	 * @param ub
+	 * @return How many values were actually removed
+	 */
 	public abstract int clearTo(int ub);
 
 	public abstract void copyTo(BitVector bV);

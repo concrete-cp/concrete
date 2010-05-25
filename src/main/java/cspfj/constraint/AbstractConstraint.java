@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import cspfj.constraint.extension.TupleManager;
+import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
 
 public abstract class AbstractConstraint implements Constraint {
@@ -222,6 +223,31 @@ public abstract class AbstractConstraint implements Constraint {
 	public final void entail() {
 		entailedAtLevel = currentLevel;
 		LOGGER.finer(currentLevel + ": entailing " + this);
+	}
+
+	private static final RevisionHandler NULL_REVISATOR = new RevisionHandler() {
+		@Override
+		public void revised(final Constraint constraint, final Variable variable) {
+			// Nothing
+		}
+	};
+	
+	@Override
+	public boolean isConsistent(final int reviseCount) {
+		final int level = getCurrentLevel();
+		for (Variable v : getScope()) {
+			v.setLevel(level + 1);
+		}
+		setLevel(level + 1);
+		
+		final boolean consistent = revise(NULL_REVISATOR, reviseCount);
+		
+		for (Variable v : getScope()) {
+			v.restoreLevel(level);
+		}
+		restore(level);
+		
+		return consistent;
 	}
 
 }

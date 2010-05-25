@@ -80,7 +80,9 @@ public final class Neq extends AbstractConstraint {
 	}
 
 	public int getEvaluation(final int revise) {
-		return getArity();
+		return getArity()
+				+ Math.min(getVariable(0).getDomainSize(), getVariable(1)
+						.getDomainSize());
 	}
 
 }

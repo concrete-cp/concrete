@@ -5,7 +5,7 @@ import java.io.IOException;
 import org.junit.Test;
 
 import cspfj.exception.FailedGenerationException;
-import cspfj.filter.AC3;
+import cspfj.filter.AC3Constraint;
 import cspfj.generator.ProblemGenerator;
 import cspom.CSPOM;
 import cspom.CSPParseException;
@@ -71,7 +71,7 @@ public final class ProblemGeneratorTest {
         System.out.println(problem.getVariables().length + " vars, "
                 + problem.getConstraints().size() + " cons");
         System.out.println("----");
-        new AC3(problem).reduceAll();
+        new AC3Constraint(problem).reduceAll();
 
         System.out.println(problem);
     }

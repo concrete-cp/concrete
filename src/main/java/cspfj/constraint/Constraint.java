@@ -81,6 +81,8 @@ public interface Constraint extends Identified {
 	int getEvaluation(final int reviseCount);
 
 	boolean isEntailed();
+	
+	boolean isConsistent(final int reviseCount);
 
 	void entail();
 }

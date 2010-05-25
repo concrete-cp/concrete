@@ -154,12 +154,14 @@ final class LargeBitVector extends BitVector {
 		}
 		return bitVector;
 	}
-
+	
+	@Override
 	public void setSingle(final int index) {
 		Arrays.fill(words, 0);
 		set(index);
 	}
 
+	@Override
 	public int clearFrom(final int from) {
 		int startWordIndex = word(from);
 		int removed = Long.bitCount(words[startWordIndex]);
@@ -173,7 +175,8 @@ final class LargeBitVector extends BitVector {
 		}
 		return removed;
 	}
-
+	
+	@Override
 	public int clearTo(final int to) {
 		if (to <= 0) {
 			return 0;

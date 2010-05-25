@@ -34,24 +34,6 @@ public final class ReifiedConstraint extends AbstractConstraint {
 		// negativeConstraint.fillRemovals(Integer.MAX_VALUE);
 	}
 
-	private void push() {
-		final int level = getCurrentLevel();
-		for (Variable v : positiveConstraint.getScope()) {
-			v.setLevel(level + 1);
-		}
-		positiveConstraint.setLevel(level + 1);
-		negativeConstraint.setLevel(level + 1);
-	}
-
-	private void restore() {
-		final int level = getCurrentLevel();
-		for (Variable v : positiveConstraint.getScope()) {
-			v.restoreLevel(level);
-		}
-		positiveConstraint.restore(level);
-		negativeConstraint.restore(level);
-	}
-
 	private final class ReifiedRevisionHandler implements RevisionHandler {
 
 		private final RevisionHandler reifiedRevisator;
@@ -66,13 +48,6 @@ public final class ReifiedConstraint extends AbstractConstraint {
 		}
 
 	}
-
-	private final RevisionHandler nullRevisator = new RevisionHandler() {
-		@Override
-		public void revised(final Constraint constraint, final Variable variable) {
-			// Nothing
-		}
-	};
 
 	@Override
 	public void setLevel(final int level) {
@@ -90,30 +65,18 @@ public final class ReifiedConstraint extends AbstractConstraint {
 
 	@Override
 	public boolean revise(final RevisionHandler revisator, final int reviseCount) {
-
 		switch (controlDomain.getStatus()) {
 		case UNKNOWN:
-			push();
-			final boolean isNegative = !positiveConstraint.revise(
-					nullRevisator, reviseCount);
-
-			restore();
-			if (isNegative) {
+			if (!positiveConstraint.isConsistent(reviseCount)) {
 				controlDomain.remove(1);
 				if (noReifyRevise(negativeConstraint, revisator, reviseCount)) {
 					revisator.revised(this, getVariable(0));
 					return true;
 				}
 				return false;
-
 			}
 
-			push();
-			final boolean isPositive = !negativeConstraint.revise(
-					nullRevisator, reviseCount);
-			restore();
-
-			if (isPositive) {
+			if (!negativeConstraint.isConsistent(reviseCount)) {
 				controlDomain.remove(0);
 				if (noReifyRevise(positiveConstraint, revisator, reviseCount)) {
 					revisator.revised(this, getVariable(0));

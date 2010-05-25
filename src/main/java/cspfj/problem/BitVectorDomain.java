@@ -9,7 +9,7 @@ public final class BitVectorDomain implements Domain {
 
 	private static final int HISTORY_INCREMENT = 20;
 
-	private static final int DISPLAYED_VALUES = 5;
+	private static final int DISPLAYED_VALUES = 3;
 
 	private BitVector bvDomain;
 
@@ -167,7 +167,7 @@ public final class BitVectorDomain implements Domain {
 	public int removeFrom(final int lb) {
 		final int removed = bvDomain.clearFrom(lb);
 		if (removed > 0) {
-			last = bvDomain.prevSetBit(last + 1);
+			last = bvDomain.prevSetBit(lb);
 			if (bvHistory[currentLevel] == null) {
 				bvHistory[currentLevel] = BitVector.factory(domain.length,
 						false);
@@ -179,7 +179,7 @@ public final class BitVectorDomain implements Domain {
 
 	@Override
 	public int removeTo(final int ub) {
-		final int removed = bvDomain.clearTo(ub);
+		final int removed = bvDomain.clearTo(ub + 1);
 		if (removed > 0 && bvHistory[currentLevel] == null) {
 			bvHistory[currentLevel] = BitVector.factory(domain.length, false);
 		}
@@ -301,17 +301,24 @@ public final class BitVectorDomain implements Domain {
 
 		stb.append('[');
 
-		for (int i = first, max = DISPLAYED_VALUES;;) {
-			stb.append(value(i));
+		final int hideTo = size - DISPLAYED_VALUES;
+
+		for (int i = first, max = 0;;) {
+			if (++max <= DISPLAYED_VALUES || max > hideTo) {
+				stb.append(value(i));
+			} else if (max == hideTo) {
+				stb.append("(").append(size() - DISPLAYED_VALUES * 2).append(
+						" more)");
+
+			}
 			i = next(i);
 			if (i < 0) {
 				return stb.append(']').toString();
 			}
-			if (--max == 0) {
-				return stb.append("... (").append(size() - DISPLAYED_VALUES)
-						.append(" more)]").toString();
+			if (max <= DISPLAYED_VALUES || max >= hideTo) {
+				stb.append(", ");
 			}
-			stb.append(", ");
 		}
+
 	}
 }
