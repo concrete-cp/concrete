@@ -1,6 +1,9 @@
 package cspfj.generator.constraint;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -79,13 +82,15 @@ public final class AddGenerator extends AbstractGenerator {
 
     private static int[] generateValues(final Variable result,
             final Variable var) {
-        final SortedSet<Integer> values = new TreeSet<Integer>();
+        final Set<Integer> values = new HashSet<Integer>();
         for (int i : result.getDomain().allValues()) {
             for (int j : var.getDomain().allValues()) {
                 values.add(i - j);
             }
         }
-        return IntLinkedList.intCollectionToArray(values);
+        final int[] sortedValues = IntLinkedList.intCollectionToArray(values);
+        Arrays.sort(sortedValues);
+        return sortedValues;
     }
 
 }

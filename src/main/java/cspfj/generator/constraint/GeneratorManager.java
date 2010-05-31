@@ -27,6 +27,7 @@ public final class GeneratorManager {
         register("mul", MulGenerator.class);
         register("ne", NeqGenerator.class);
         register("absdiff", AbsDiffGenerator.class);
+        register("diffGe", DiffGeGenerator.class);
     }
 
     private final Problem problem;

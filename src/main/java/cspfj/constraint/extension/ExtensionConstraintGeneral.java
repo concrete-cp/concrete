@@ -81,14 +81,4 @@ public final class ExtensionConstraintGeneral extends AbstractAC3Constraint
         }
         return super.revise(position);
     }
-
-    @Override
-    public int getEvaluation(final int reviseCount) {
-
-        int size = 1;
-        for (Variable v : getScope()) {
-            size *= v.getDomainSize();
-        }
-        return size;
-    }
 }
