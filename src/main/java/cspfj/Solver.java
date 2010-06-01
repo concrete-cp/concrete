@@ -24,10 +24,9 @@ import java.util.Map;
 
 import cspfj.filter.Filter;
 import cspfj.problem.Problem;
-import cspfj.problem.Variable;
 
 public interface Solver {
-    Map<Variable, Integer> nextSolution() throws IOException;
+    Map<String, Integer> nextSolution() throws IOException;
 
     int getNbAssignments();
 

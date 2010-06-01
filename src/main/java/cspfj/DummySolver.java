@@ -40,7 +40,7 @@ public final class DummySolver extends AbstractSolver {
      * 
      * @see cspfj.Solver#run(int)
      */
-    public Map<Variable, Integer> nextSolution() throws IOException {
+    public Map<String, Integer> nextSolution() throws IOException {
         try {
             if (!preprocess(new AC3(problem))) {
                 return null;
@@ -49,7 +49,7 @@ public final class DummySolver extends AbstractSolver {
             throw new IllegalArgumentException("Unexpected interruption");
         }
 
-        return new HashMap<Variable, Integer>();
+        return new HashMap<String, Integer>();
     }
 
     public synchronized void collectStatistics() {
