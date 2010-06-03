@@ -63,7 +63,7 @@ public final class DiffGeGenerator extends AbstractGenerator {
             }
         }
 
-        return new Gt(v0, bound.getValue(0), v1, false);
+        return new Gt(v0, -bound.getValue(0), v1, false);
     }
 
     private Constraint generateReified(final FunctionalConstraint constraint)
