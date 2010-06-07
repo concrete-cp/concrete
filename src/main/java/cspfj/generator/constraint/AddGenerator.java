@@ -1,18 +1,19 @@
 package cspfj.generator.constraint;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
 import cspfj.constraint.semantic.Add;
+import cspfj.constraint.semantic.Eq;
 import cspfj.exception.FailedGenerationException;
 import cspfj.problem.BitVectorDomain;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.IntLinkedList;
+import cspfj.constraint.Constraint;
 import cspom.constraint.CSPOMConstraint;
 
 public final class AddGenerator extends AbstractGenerator {
@@ -70,12 +71,23 @@ public final class AddGenerator extends AbstractGenerator {
                 v1.setDomain(new BitVectorDomain(generateValues(result, v0)));
 
             } else {
-                
+
                 throw new IllegalStateException();
-                
+
             }
         }
-        addConstraint(new Add(result, v0, v1));
+
+        final Constraint generated;
+        if (result.getDomainSize() == 1) {
+            generated = new Eq(-1, v0, result.getFirstValue(), v1);
+        } else if (v0.getDomainSize() == 1) {
+            generated = new Eq(1, v1, v0.getFirstValue(), result);
+        } else if (v1.getDomainSize() == 1) {
+            generated = new Eq(1, v0, v1.getFirstValue(), result);
+        } else {
+            generated = new Add(result, v0, v1);
+        }
+        addConstraint(generated);
         return true;
 
     }

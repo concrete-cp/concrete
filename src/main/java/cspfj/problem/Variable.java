@@ -113,7 +113,7 @@ public final class Variable implements Cloneable, Identified {
     // assert assigned;
     // assigned = false;
     // }
-    
+
     public void setSingle(final int index) {
         domain.setSingle(index);
     }
@@ -233,6 +233,10 @@ public final class Variable implements Cloneable, Identified {
 
     public int getValue(final int index) {
         return domain.value(index);
+    }
+
+    public int getFirstValue() {
+        return domain.value(domain.first());
     }
 
     public void makeSingleton(final int value1) {

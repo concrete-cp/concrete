@@ -35,8 +35,9 @@ public final class AC3Constraint implements Filter {
 
         queue = new FibonacciHeap<Constraint>(new Key<Constraint>() {
             @Override
-            public int getKey(final Constraint o1) {
-                return o1.getEvaluation(AC3Constraint.this.revisionCount);
+            public double getKey(final Constraint o1) {
+                return o1.getEvaluation(AC3Constraint.this.revisionCount)
+                        / o1.getWeight();
             }
         }, problem.getNbConstraints());
     }

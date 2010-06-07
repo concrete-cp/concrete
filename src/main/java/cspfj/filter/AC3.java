@@ -40,7 +40,7 @@ public final class AC3 implements Filter {
         // }, problem.getNbVariables());
         queue = new FibonacciHeap<Variable>(new Key<Variable>() {
             @Override
-            public int getKey(final Variable o1) {
+            public double getKey(final Variable o1) {
                 return o1.getDomainSize();
             }
         }, problem.getNbVariables());

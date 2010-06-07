@@ -8,68 +8,68 @@ import java.util.Random;
 
 import org.junit.Test;
 
-public class BinomialHeapTest {
+public final class BinomialHeapTest {
 
-	private static int id = 0;
+    private static int id = 0;
 
-	private static final Random RANDOM = new Random();
+    private static final Random RANDOM = new Random();
 
-	private static final IdInteger[] INTS;
+    private static final IdInteger[] INTS;
 
-	static {
-		INTS = new IdInteger[100000];
-		for (int i = INTS.length; --i >= 0;) {
-			INTS[i] = new IdInteger(RANDOM.nextInt(5000000));
-		}
-	}
+    static {
+        INTS = new IdInteger[100000];
+        for (int i = INTS.length; --i >= 0;) {
+            INTS[i] = new IdInteger(RANDOM.nextInt(5000000));
+        }
+    }
 
-	@Test
-	public void test() {
-		final Queue<IdInteger> maximier = new BinomialHeap<IdInteger>(
-				new Key<IdInteger>() {
+    @Test
+    public void test() {
+        final Queue<IdInteger> maximier = new BinomialHeap<IdInteger>(
+                new Key<IdInteger>() {
 
-					@Override
-					public int getKey(IdInteger object) {
-						return object.value;
-					}
+                    @Override
+                    public double getKey(final IdInteger object) {
+                        return object.value;
+                    }
 
-				});
-		
-		assertEquals(maximier.size(), 0);
-		assertTrue(maximier.isEmpty());
+                });
 
-		for (IdInteger i : INTS) {
-			maximier.offer(i);
-		}
-		assertEquals(maximier.size(), INTS.length);
+        assertEquals(maximier.size(), 0);
+        assertTrue(maximier.isEmpty());
 
-		int last = maximier.peek().value;
-		while (!maximier.isEmpty()) {
-			final int current = maximier.poll().value;
-			assertTrue(current + " should be >= " + last, current >= last);
-			last = current;
-		}
-		
-	}
+        for (IdInteger i : INTS) {
+            maximier.offer(i);
+        }
+        assertEquals(maximier.size(), INTS.length);
 
-	private static class IdInteger implements Identified {
+        int last = maximier.peek().value;
+        while (!maximier.isEmpty()) {
+            final int current = maximier.poll().value;
+            assertTrue(current + " should be >= " + last, current >= last);
+            last = current;
+        }
 
-		final private int value;
+    }
 
-		final private int id;
+    private static class IdInteger implements Identified {
 
-		public IdInteger(final int value) {
-			this.value = value;
-			this.id = BinomialHeapTest.id++;
-		}
+        final private int value;
 
-		@Override
-		public int getId() {
-			return id;
-		}
+        final private int id;
 
-		public String toString() {
-			return Integer.toString(value);
-		}
-	}
+        public IdInteger(final int value) {
+            this.value = value;
+            this.id = BinomialHeapTest.id++;
+        }
+
+        @Override
+        public int getId() {
+            return id;
+        }
+
+        public String toString() {
+            return Integer.toString(value);
+        }
+    }
 }

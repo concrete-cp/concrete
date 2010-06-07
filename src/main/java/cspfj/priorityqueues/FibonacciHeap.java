@@ -203,8 +203,8 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
             map[id] = node;
         }
 
-        final int oldKey = node.key;
-        final int newKey = key.getKey(data);
+        final double oldKey = node.key;
+        final double newKey = key.getKey(data);
         node.key = newKey;
 
         if (node.inQueue) {
@@ -486,7 +486,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
          */
         private int degree;
 
-        private int key;
+        private double key;
 
         private boolean inQueue = false;
 

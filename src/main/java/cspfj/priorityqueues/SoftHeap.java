@@ -6,353 +6,357 @@ import java.util.Iterator;
 
 public final class SoftHeap<T extends Identified> extends AbstractQueue<T> {
 
-	// private final static double ERROR_RATE = .3;
-	// .3 is the error rate
-	private final static int R = (int) Math
-			.ceil(Math.log(1 / .1) / Math.log(2)) + 5;
+    // private final static double ERROR_RATE = .3;
+    // .3 is the error rate
+    private static final int R = (int) Math
+            .ceil(Math.log(1 / .1) / Math.log(2)) + 5;
 
-	private static int[] SIZES;
+    private static int[] sizes;
 
-	static {
-		SIZES = new int[] { 1 };
-	}
+    private static final int DEFAULT_INIT_SIZE = 10;
 
-	private final Key<T> key;
+    static {
+        sizes = new int[] { 1 };
+    }
 
-	private Tree<T> first;
+    private final Key<T> key;
 
-	private int size = 0;
+    private Tree<T> first;
 
-	private Entry<T>[] map;
+    private int size = 0;
 
-	public SoftHeap(Key<T> key) {
-		this(key, 10);
-	}
+    private Entry<T>[] map;
 
-	public SoftHeap(Key<T> key, int initSize) {
-		this.key = key;
-		first = null;
-		map = (Entry<T>[]) new Entry[initSize];
-	}
+    public SoftHeap(final Key<T> key) {
+        this(key, DEFAULT_INIT_SIZE);
+    }
 
-	@Override
-	public Iterator<T> iterator() {
-		throw new UnsupportedOperationException();
-	}
+    public SoftHeap(final Key<T> key, final int initSize) {
+        this.key = key;
+        first = null;
+        map = (Entry<T>[]) new Entry[initSize];
+    }
 
-	@Override
-	public int size() {
-		return size;
-	}
+    @Override
+    public Iterator<T> iterator() {
+        throw new UnsupportedOperationException();
+    }
 
-	@Override
-	public void clear() {
-		size = 0;
-		first = null;
-		for (Entry<T> e : map) {
-			if (e != null) {
-				e.inQueue = false;
-			}
-		}
-	}
+    @Override
+    public int size() {
+        return size;
+    }
 
-	private static int size(int rank) {
-		if (rank <= R) {
-			return 1;
-		}
-		final int target = rank - R;
-		int oldCapacity = SIZES.length;
+    @Override
+    public void clear() {
+        size = 0;
+        first = null;
+        for (Entry<T> e : map) {
+            if (e != null) {
+                e.inQueue = false;
+            }
+        }
+    }
 
-		if (target >= oldCapacity) {
-			final int newCapacity = Math.max(target + 1,
-					(oldCapacity * 3) / 2 + 1);
-			SIZES = Arrays.copyOf(SIZES, newCapacity);
-			for (int i = oldCapacity; i < newCapacity; i++) {
-				SIZES[i] = (3 * SIZES[i - 1] + 1) / 2;
-			}
-		}
-		return SIZES[target];
-	}
+    private static int size(final int rank) {
+        if (rank <= R) {
+            return 1;
+        }
+        final int target = rank - R;
+        int oldCapacity = sizes.length;
 
-	private void ensureCapacity(int minCapacity) {
-		int oldCapacity = map.length;
-		if (minCapacity > oldCapacity) {
-			final int newCapacity = Math.max(minCapacity,
-					(oldCapacity * 3) / 2 + 1);
-			// minCapacity is usually close to size, so this is a win:
-			map = Arrays.copyOf(map, newCapacity);
-		}
-	}
+        if (target >= oldCapacity) {
+            final int newCapacity = Math.max(target + 1,
+                    (oldCapacity * 3) / 2 + 1);
+            sizes = Arrays.copyOf(sizes, newCapacity);
+            for (int i = oldCapacity; i < newCapacity; i++) {
+                sizes[i] = (3 * sizes[i - 1] + 1) / 2;
+            }
+        }
+        return sizes[target];
+    }
 
-	@Override
-	public boolean offer(T elt) {
-		final int id = elt.getId();
-		ensureCapacity(id + 1);
-		Entry<T> e = map[id];
-		if (e == null) {
-			e = new Entry<T>(elt);
-			map[id] = e;
-		}
+    private void ensureCapacity(final int minCapacity) {
+        int oldCapacity = map.length;
+        if (minCapacity > oldCapacity) {
+            final int newCapacity = Math.max(minCapacity,
+                    (oldCapacity * 3) / 2 + 1);
+            // minCapacity is usually close to size, so this is a win:
+            map = Arrays.copyOf(map, newCapacity);
+        }
+    }
 
-		if (e.inQueue) {
-			return false;
-		}
+    @Override
+    public boolean offer(final T elt) {
+        final int id = elt.getId();
+        ensureCapacity(id + 1);
+        Entry<T> e = map[id];
+        if (e == null) {
+            e = new Entry<T>(elt);
+            map[id] = e;
+        }
 
-		e.next = null;
-		e.inQueue = true;
-		insertTree(new Tree<T>(new TreeNode<T>(e, key.getKey(elt))));
-		size++;
-		return true;
-	}
+        if (e.inQueue) {
+            return false;
+        }
 
-	private void removeTree(Tree<T> tree) {
-		if (tree.prev == null) {
-			first = tree.next;
-		} else {
-			tree.prev.next = tree.next;
-		}
-		if (tree.next != null) {
-			tree.next.prev = tree.prev;
-		}
-	}
+        e.next = null;
+        e.inQueue = true;
+        insertTree(new Tree<T>(new TreeNode<T>(e, key.getKey(elt))));
+        size++;
+        return true;
+    }
 
-	private void insertTree(Tree<T> tree) {
-		if (first != null) {
-			tree.next = first;
-			first.prev = tree;
-		}
-		first = tree;
-		while (tree.next != null && tree.rank() == tree.next.rank()) {
-			tree.root = new TreeNode<T>(tree.root, tree.next.root);
-			removeTree(tree.next);
-		}
-		tree.updateSufMin();
-	}
+    private void removeTree(final Tree<T> tree) {
+        if (tree.prev == null) {
+            first = tree.next;
+        } else {
+            tree.prev.next = tree.next;
+        }
+        if (tree.next != null) {
+            tree.next.prev = tree.prev;
+        }
+    }
 
-	@Override
-	public T peek() {
-		return first.sufMin.root.first.data;
-	}
+    private void insertTree(final Tree<T> tree) {
+        if (first != null) {
+            tree.next = first;
+            first.prev = tree;
+        }
+        first = tree;
+        while (tree.next != null && tree.rank() == tree.next.rank()) {
+            tree.root = new TreeNode<T>(tree.root, tree.next.root);
+            removeTree(tree.next);
+        }
+        tree.updateSufMin();
+    }
 
-	@Override
-	public T poll() {
-		final Tree<T> minTree = first.sufMin;
+    @Override
+    public T peek() {
+        return first.sufMin.root.first.data;
+    }
 
-		final TreeNode<T> min = minTree.root;
+    @Override
+    public T poll() {
+        final Tree<T> minTree = first.sufMin;
 
-		final int oldCKey = min.cKey;
-		final Entry<T> elt = min.pick();
-		if (min.nbEntries == 0) {
-			removeTree(minTree);
-			if (minTree.prev != null) {
-				minTree.prev.updateSufMin();
-			}
-		} else if (oldCKey != min.cKey) {
-			minTree.updateSufMin();
-		}
-		size--;
-		elt.inQueue = false;
-		return elt.data;
-	}
+        final TreeNode<T> min = minTree.root;
 
-	public String toString() {
-		final StringBuilder stb = new StringBuilder();
-		for (Tree<T> t = first; t != null; t = t.next) {
-			stb.append(t).append('\n');
-		}
-		return stb.toString();
-	}
+        final double oldCKey = min.cKey;
+        final Entry<T> elt = min.pick();
+        if (min.nbEntries == 0) {
+            removeTree(minTree);
+            if (minTree.prev != null) {
+                minTree.prev.updateSufMin();
+            }
+        } else if (oldCKey != min.cKey) {
+            minTree.updateSufMin();
+        }
+        size--;
+        elt.inQueue = false;
+        return elt.data;
+    }
 
-	private static final class Tree<T> {
-		private TreeNode<T> root;
-		private Tree<T> prev;
-		private Tree<T> next;
-		private Tree<T> sufMin = this;
+    public String toString() {
+        final StringBuilder stb = new StringBuilder();
+        for (Tree<T> t = first; t != null; t = t.next) {
+            stb.append(t).append('\n');
+        }
+        return stb.toString();
+    }
 
-		public Tree(TreeNode<T> root) {
-			this.root = root;
-		}
+    private static final class Tree<T> {
+        private TreeNode<T> root;
+        private Tree<T> prev;
+        private Tree<T> next;
+        private Tree<T> sufMin = this;
 
-		public int rank() {
-			return root.rank;
-		}
+        private Tree(final TreeNode<T> root) {
+            this.root = root;
+        }
 
-		public String toString() {
-			return root.toString();
-		}
-		
+        private int rank() {
+            return root.rank;
+        }
 
-		public void updateSufMin() {
-			for (Tree<T> t = this; t != null; t = t.prev) {
-				if (t.next == null || t.root.cKey <= t.next.sufMin.root.cKey) {
-					t.sufMin = t;
-				} else {
-					t.sufMin = t.next.sufMin;
-				}
-			}
-		}
+        public String toString() {
+            return root.toString();
+        }
 
-	}
+        private void updateSufMin() {
+            for (Tree<T> t = this; t != null; t = t.prev) {
+                if (t.next == null || t.root.cKey <= t.next.sufMin.root.cKey) {
+                    t.sufMin = t;
+                } else {
+                    t.sufMin = t.next.sufMin;
+                }
+            }
+        }
 
-	private static final class TreeNode<T> {
-		private TreeNode<T> left;
-		private TreeNode<T> right;
-		private boolean leaf;
+    }
 
-		private Entry<T> first;
-		private Entry<T> last;
-		private int nbEntries;
-		private int cKey;
+    private static final class TreeNode<T> {
+        private TreeNode<T> left;
+        private TreeNode<T> right;
+        private boolean leaf;
 
-		private final int rank;
-		private final int size;
+        private Entry<T> first;
+        private Entry<T> last;
+        private int nbEntries;
+        private double cKey;
 
-		/**
-		 * Creates a new leaf containing one single, given element
-		 * 
-		 * @param elt
-		 * @param key
-		 */
-		public TreeNode(Entry<T> elt, int key) {
-			rank = 0;
-			size = 1;
+        private final int rank;
+        private final int size;
 
-			first = last = elt;
-			cKey = key;
-			nbEntries = 1;
+        /**
+         * Creates a new leaf containing one single, given element.
+         * 
+         * @param elt
+         * @param key
+         */
+        private TreeNode(final Entry<T> elt, final double key) {
+            rank = 0;
+            size = 1;
 
-			left = right = null;
-			leaf = true;
-		}
+            first = elt;
+            last = elt;
+            cKey = key;
+            nbEntries = 1;
 
-		/**
-		 * Creates a new node combining the two given nodes and preserving the
-		 * soft heap structure
-		 * 
-		 * @param tree1
-		 * @param tree2
-		 */
-		public TreeNode(TreeNode<T> tree1, TreeNode<T> tree2) {
-			assert tree1.rank == tree2.rank;
+            left = null;
+            right = null;
+            leaf = true;
+        }
 
-			rank = tree1.rank + 1;
-			size = size(rank);
+        /**
+         * Creates a new node combining the two given nodes and preserving the
+         * soft heap structure.
+         * 
+         * @param tree1
+         * @param tree2
+         */
+        private TreeNode(final TreeNode<T> tree1, final TreeNode<T> tree2) {
+            assert tree1.rank == tree2.rank;
 
-			first = last = null;
-			cKey = -1;
-			nbEntries = 0;
+            rank = tree1.rank + 1;
+            size = size(rank);
 
-			left = tree1;
-			right = tree2;
-			leaf = false;
-			sift();
-		}
+            first = null;
+            last = null;
+            cKey = -1;
+            nbEntries = 0;
 
-		private void swap() {
-			final TreeNode<T> temp = right;
-			right = left;
-			left = temp;
-		}
+            left = tree1;
+            right = tree2;
+            leaf = false;
+            sift();
+        }
 
-		public Entry<T> pick() {
-			final Entry<T> elt = first;
-			first = first.next;
-			nbEntries--;
-			if (!leaf && nbEntries <= size / 2) {
-				sift();
-			}
+        private void swap() {
+            final TreeNode<T> temp = right;
+            right = left;
+            left = temp;
+        }
 
-			return elt;
-		}
+        private Entry<T> pick() {
+            final Entry<T> elt = first;
+            first = first.next;
+            nbEntries--;
+            if (!leaf && nbEntries <= size / 2) {
+                sift();
+            }
 
-		private void sift() {
-			while (nbEntries < size && !leaf) {
-				if (left == null || (right != null && left.cKey > right.cKey)) {
-					swap();
-				}
+            return elt;
+        }
 
-				concatenate(left);
+        private void sift() {
+            while (nbEntries < size && !leaf) {
+                if (left == null || (right != null && left.cKey > right.cKey)) {
+                    swap();
+                }
 
-				if (left.leaf) {
-					left = null;
-					if (right == null) {
-						leaf = true;
-					}
-				} else {
-					left.sift();
-				}
-			}
-		}
+                concatenate(left);
 
-		public void clear() {
-			first = null;
-			last = null;
-			nbEntries = 0;
-		}
+                if (left.leaf) {
+                    left = null;
+                    if (right == null) {
+                        leaf = true;
+                    }
+                } else {
+                    left.sift();
+                }
+            }
+        }
 
-		private void concatenate(TreeNode<T> e) {
-			if (first == null) {
-				first = e.first;
-			} else {
-				last.next = e.first;
-			}
-			last = e.last;
-			nbEntries += e.nbEntries;
-			cKey = e.cKey;
-			e.clear();
+        private void clear() {
+            first = null;
+            last = null;
+            nbEntries = 0;
+        }
 
-		}
+        private void concatenate(final TreeNode<T> e) {
+            if (first == null) {
+                first = e.first;
+            } else {
+                last.next = e.first;
+            }
+            last = e.last;
+            nbEntries += e.nbEntries;
+            cKey = e.cKey;
+            e.clear();
 
-		public String toString() {
-			final StringBuilder stb = new StringBuilder();
-			treeString(stb, 0);
-			return stb.toString();
-		}
+        }
 
-		public void treeString(StringBuilder stb, int level) {
+        public String toString() {
+            final StringBuilder stb = new StringBuilder();
+            treeString(stb, 0);
+            return stb.toString();
+        }
 
-			for (int i = level; --i >= 0;) {
-				stb.append("-");
-			}
-			stb.append(cKey).append(": {");
-			for (Entry<T> e = first; e != null; e = e.next) {
-				stb.append(e).append(", ");
-			}
-			stb.append("}\n");
-			if (leaf) {
-				return;
-			}
-			if (left == null) {
-				for (int i = level + 1; --i >= 0;) {
-					stb.append("-");
-				}
-				stb.append("*\n");
-			} else {
-				left.treeString(stb, level + 1);
-			}
-			if (right == null) {
-				for (int i = level + 1; --i >= 0;) {
-					stb.append("-");
-				}
-				stb.append("*\n");
-			} else {
-				right.treeString(stb, level + 1);
-			}
-		}
+        public void treeString(final StringBuilder stb, final int level) {
 
-	}
+            for (int i = level; --i >= 0;) {
+                stb.append("-");
+            }
+            stb.append(cKey).append(": {");
+            for (Entry<T> e = first; e != null; e = e.next) {
+                stb.append(e).append(", ");
+            }
+            stb.append("}\n");
+            if (leaf) {
+                return;
+            }
+            if (left == null) {
+                for (int i = level + 1; --i >= 0;) {
+                    stb.append("-");
+                }
+                stb.append("*\n");
+            } else {
+                left.treeString(stb, level + 1);
+            }
+            if (right == null) {
+                for (int i = level + 1; --i >= 0;) {
+                    stb.append("-");
+                }
+                stb.append("*\n");
+            } else {
+                right.treeString(stb, level + 1);
+            }
+        }
 
-	private static final class Entry<T> {
-		private final T data;
-		private Entry<T> next;
-		private boolean inQueue;
+    }
 
-		public Entry(T data) {
-			this.data = data;
-		}
+    private static final class Entry<T> {
+        private final T data;
+        private Entry<T> next;
+        private boolean inQueue;
 
-		public String toString() {
-			return data.toString();
-		}
-	}
+        public Entry(final T data) {
+            this.data = data;
+        }
+
+        public String toString() {
+            return data.toString();
+        }
+    }
 }
