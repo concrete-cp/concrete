@@ -1,13 +1,26 @@
 package cspfj.generator.constraint;
 
-import cspfj.constraint.semantic.AllDifferent;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
+import cspfj.constraint.semantic.InInterval;
+import cspfj.constraint.semantic.NotInInterval;
+import cspfj.constraint.semantic.ReifiedConstraint;
+import cspfj.constraint.semantic.SumLeq;
 import cspfj.exception.FailedGenerationException;
+import cspfj.problem.BooleanDomain;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
+import cspfj.util.IntLinkedList;
 import cspom.constraint.CSPOMConstraint;
 import cspom.constraint.GeneralConstraint;
 
 public final class AllDifferentGenerator extends AbstractGenerator {
+
+	private static int allDiff = 0;
 
 	public AllDifferentGenerator(final Problem problem) {
 		super(problem);
@@ -27,8 +40,50 @@ public final class AllDifferentGenerator extends AbstractGenerator {
 		if (nullVariable(solverVariables) != null) {
 			return false;
 		}
-		addConstraint(new AllDifferent(solverVariables));
+
+		final int[] values = values(solverVariables);
+
+		final Variable[][][] A = new Variable[solverVariables.length][values.length][values.length];
+		for (int i = solverVariables.length; --i >= 0;) {
+			for (int u = values.length; --u >= 0;) {
+				final int uV = values[u];
+				for (int l = u; --l >= 0 && l > u - solverVariables.length + 1;) {
+					final int lV = values[l];
+					A[i][l][u] = addVariable("A" + allDiff + "_" + i + "_" + l
+							+ "_" + u, new BooleanDomain());
+
+					addConstraint(new ReifiedConstraint(A[i][l][u],
+							new InInterval(solverVariables[i], lV, uV),
+							new NotInInterval(solverVariables[i], lV, uV)));
+				}
+			}
+		}
+
+		for (int u = values.length; --u >= 0;) {
+			for (int l = u; --l >= 0 && l > u - solverVariables.length + 1;) {
+				final Collection<Variable> sum = new ArrayList<Variable>();
+				for (int i = solverVariables.length; --i >= 0;) {
+					sum.add(A[i][l][u]);
+				}
+				addConstraint(new SumLeq(u - l + 1, sum
+						.toArray(new Variable[sum.size()])));
+			}
+
+		}
+		allDiff++;
 		return true;
+	}
+
+	private static int[] values(final Variable[] variables) {
+		final Set<Integer> valueSet = new HashSet<Integer>();
+		for (Variable v : variables) {
+			for (int i = v.getFirst(); i >= 0; i = v.getNext(i)) {
+				valueSet.add(v.getValue(i));
+			}
+		}
+		final int[] values = IntLinkedList.intCollectionToArray(valueSet);
+		Arrays.sort(values);
+		return values;
 	}
 
 }

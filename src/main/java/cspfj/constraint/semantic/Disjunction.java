@@ -8,17 +8,17 @@ import cspfj.problem.BooleanDomain;
 import cspfj.problem.Variable;
 import cspfj.problem.BooleanDomain.Status;
 
-public final class Disj extends AbstractConstraint {
+public final class Disjunction extends AbstractConstraint {
     private int watch1 = -1;
     private int watch2 = -1;
     private final boolean[] reverses;
     private final BooleanDomain[] domains;
 
-    public Disj(final Variable... disj) {
+    public Disjunction(final Variable... disj) {
         this(disj, new boolean[disj.length]);
     }
 
-    public Disj(final Variable[] disj, final boolean[] reverses) {
+    public Disjunction(final Variable[] disj, final boolean[] reverses) {
         super(disj);
         domains = new BooleanDomain[disj.length];
         for (int i = disj.length; --i >= 0;) {

@@ -3,7 +3,7 @@ package cspfj.generator.constraint;
 import java.security.InvalidParameterException;
 import java.util.Arrays;
 
-import cspfj.constraint.semantic.Disj;
+import cspfj.constraint.semantic.Disjunction;
 import cspfj.exception.FailedGenerationException;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
@@ -39,13 +39,13 @@ public final class DisjGenerator extends AbstractGenerator {
             System.arraycopy(parameters, 0, reverses, 1, parameters.length);
         }
         reverses[0] = true;
-        addConstraint(new Disj(scope, reverses));
+        addConstraint(new Disjunction(scope, reverses));
 
         final Variable result = getSolverVariable(constraint
                 .getResultVariable());
 
         for (CSPOMVariable v : constraint.getArguments()) {
-            addConstraint(new Disj(new Variable[] { result,
+            addConstraint(new Disjunction(new Variable[] { result,
                     getSolverVariable(v) }, new boolean[] { false, true }));
         }
     }
@@ -66,8 +66,8 @@ public final class DisjGenerator extends AbstractGenerator {
                 .getResultVariable());
         final Variable arg = getSolverVariable(constraint.getArguments()[0]);
 
-        addConstraint(new Disj(result, arg));
-        addConstraint(new Disj(new Variable[] { result, arg }, new boolean[] {
+        addConstraint(new Disjunction(result, arg));
+        addConstraint(new Disjunction(new Variable[] { result, arg }, new boolean[] {
                 true, true }));
 
     }
@@ -84,7 +84,7 @@ public final class DisjGenerator extends AbstractGenerator {
         if ("or".equals(constraint.getDescription())) {
 
             if (constraint instanceof GeneralConstraint) {
-                addConstraint(new Disj(scope, parseParameters(constraint
+                addConstraint(new Disjunction(scope, parseParameters(constraint
                         .getParameters())));
             } else if (constraint instanceof FunctionalConstraint) {
                 generateReify(scope, (FunctionalConstraint) constraint);

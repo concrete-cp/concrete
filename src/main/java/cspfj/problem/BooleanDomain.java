@@ -354,7 +354,33 @@ public final class BooleanDomain implements Domain {
 
 	@Override
 	public int removeFrom(final int lb) {
-		throw new UnsupportedOperationException();
+		switch (status) {
+		case UNKNOWN:
+			if (lb == 0) {
+				status = Status.EMPTY;
+				return 2;
+			}
+			if (lb == 1) {
+				status = Status.FALSE;
+				return 1;
+			}
+			return 0;
+		case FALSE:
+			if (lb == 0) {
+				status = Status.EMPTY;
+				return 1;
+			}
+			return 0;
+		case TRUE:
+			if (lb <= 1) {
+				status = Status.EMPTY;
+				return 1;
+			}
+			return 0;
+		default:
+			return 0;
+		}
+
 	}
 
 	@Override
@@ -364,6 +390,19 @@ public final class BooleanDomain implements Domain {
 
 	@Override
 	public int lowest(final int value) {
-		throw new UnsupportedOperationException();
+		switch (status) {
+		case UNKNOWN:
+		case FALSE:
+			return value;
+		case EMPTY:
+			return -1;
+		case TRUE:
+			if (value == 0) {
+				return -1;
+			}
+			return 1;
+		default:
+			throw new IllegalStateException();
+		}
 	}
 }
