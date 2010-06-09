@@ -2,8 +2,9 @@ package cspfj.generator.constraint;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.Set;
 
 import cspfj.constraint.semantic.InInterval;
@@ -48,7 +49,7 @@ public final class AllDifferentGenerator extends AbstractGenerator {
             for (int u = l; u < values.length
                     && u - l + 1 < solverVariables.length; u++) {
                 final int uV = values[u];
-                final Collection<Variable> sum = new ArrayList<Variable>();
+                final List<VariableInterval> sum = new ArrayList<VariableInterval>();
                 for (Variable v : solverVariables) {
 
                     final int lIndex = v.getDomain().lowest(lV);
@@ -60,24 +61,42 @@ public final class AllDifferentGenerator extends AbstractGenerator {
                         continue;
                     }
 
-                    final Variable aux = addVariable("A" + allDiff + "_"
-                            + v.getName() + "_" + lV + "_" + uV,
-                            new BooleanDomain());
-                    addConstraint(new ReifiedConstraint(aux, InInterval
-                            .indexes(v, lIndex, uIndex), NotInInterval.indexes(
-                            v, lIndex, uIndex)));
-                    sum.add(aux);
-
+                    sum.add(new VariableInterval(v, lIndex, uIndex));
                 }
                 if (sum.size() > u - l + 1) {
-                    addConstraint(new SumLeq(u - l + 1, sum
-                            .toArray(new Variable[sum.size()])));
+                    final Variable[] scope = new Variable[sum.size()];
+                    for (ListIterator<VariableInterval> itr = sum
+                            .listIterator(); itr.hasNext();) {
+                        final VariableInterval vi = itr.next();
+                        scope[itr.previousIndex()] = vi.variable;
+                        final Variable aux = addVariable("_A" + allDiff + "_"
+                                + vi.variable.getName() + "_" + lV + "_" + uV,
+                                new BooleanDomain());
+                        addConstraint(new ReifiedConstraint(aux, InInterval
+                                .indexes(vi.variable, vi.lb, vi.ub),
+                                NotInInterval
+                                        .indexes(vi.variable, vi.lb, vi.ub)));
+                    }
+
+                    addConstraint(new SumLeq(u - l + 1, scope));
                 }
             }
 
         }
         allDiff++;
         return true;
+    }
+
+    private static final class VariableInterval {
+        private final Variable variable;
+        private final int lb;
+        private final int ub;
+
+        private VariableInterval(Variable variable, int lb, int ub) {
+            this.variable = variable;
+            this.lb = lb;
+            this.ub = ub;
+        }
     }
 
     private static int[] values(final Variable[] variables) {
