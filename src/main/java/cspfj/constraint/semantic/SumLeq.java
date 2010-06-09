@@ -7,82 +7,81 @@ import cspfj.problem.Variable;
 
 public final class SumLeq extends AbstractConstraint {
 
-	private final int bound;
+    private final int bound;
 
-	public SumLeq(final int bound, final Variable... variables) {
-		super(variables);
-		this.bound = bound;
-	}
+    public SumLeq(final int bound, final Variable... variables) {
+        super(variables);
+        this.bound = bound;
+    }
 
-	@Override
-	public boolean check() {
-		int sum = 0;
-		for (int i = getArity(); --i >= 0;) {
-			sum += getValue(i);
-			if (sum > bound) {
-				return false;
-			}
-		}
+    @Override
+    public boolean check() {
+        int sum = 0;
+        for (int i = getArity(); --i >= 0;) {
+            sum += getValue(i);
+            if (sum > bound) {
+                return false;
+            }
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	@Override
-	public int getEvaluation(final int reviseCount) {
-		return getArity();
-	}
+    @Override
+    public int getEvaluation(final int reviseCount) {
+        return getArity();
+    }
 
-	private boolean removeGt(final int value, final int position) {
-		final Domain dom = getVariable(position).getDomain();
-		final int lb = dom.lowest(value);
-		if (lb >= 0) {
-			if (dom.value(lb) != value) {
-				return dom.removeFrom(lb) > 0;
-			}
-			return dom.removeFrom(lb + 1) > 0;
-		}
-		return false;
-	}
+    private boolean removeGt(final int value, final Domain dom) {
+        final int lb = dom.lowest(value);
+        if (lb >= 0) {
+            if (dom.value(lb) != value) {
+                return dom.removeFrom(lb) > 0;
+            }
+            return dom.removeFrom(lb + 1) > 0;
+        }
+        return false;
+    }
 
-	@Override
-	public boolean revise(final RevisionHandler revisator, final int reviseCount) {
-		int min = 0;
-		for (int i = getArity(); --i >= 0;) {
-			final Domain dom = getVariable(i).getDomain();
-			min += dom.value(dom.first());
-		}
-		final int newBound = bound - min;
-		if (newBound < 0) {
-			return false;
-		}
-		
-		int max = 0;
-		for (int i = getArity(); --i >= 0;) {
-			final Domain dom = getVariable(i).getDomain();
-			if (removeGt(newBound + dom.value(dom.first()), i)) {
-				if (dom.size() <= 0) {
-					return false;
-				}
-				revisator.revised(this, getVariable(i));
-			}
-			max += dom.value(dom.last());
-		}
+    @Override
+    public boolean revise(final RevisionHandler revisator, final int reviseCount) {
+        int min = 0;
+        for (int i = getArity(); --i >= 0;) {
+            final Domain dom = getVariable(i).getDomain();
+            min += dom.value(dom.first());
+        }
+        final int newBound = bound - min;
+        if (newBound < 0) {
+            return false;
+        }
 
-		if (max <= bound) {
-			entail();
-		}
-		
-		return true;
-	}
+        int max = 0;
+        for (int i = getArity(); --i >= 0;) {
+            final Domain dom = getVariable(i).getDomain();
+            if (removeGt(newBound + dom.value(dom.first()), dom)) {
+                if (dom.size() <= 0) {
+                    return false;
+                }
+                revisator.revised(this, getVariable(i));
+            }
+            max += dom.value(dom.last());
+        }
 
-	@Override
-	public String toString() {
-		final StringBuilder stb = new StringBuilder();
-		stb.append(getVariable(0));
-		for (int i = 1; i < getArity(); i++) {
-			stb.append(" + ").append(getVariable(i));
-		}
-		stb.append(" <= ").append(bound);
-		return stb.toString();
-	}
+        if (max <= bound) {
+            entail();
+        }
+
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder stb = new StringBuilder();
+        stb.append(getVariable(0));
+        for (int i = 1; i < getArity(); i++) {
+            stb.append(" + ").append(getVariable(i));
+        }
+        stb.append(" <= ").append(bound);
+        return stb.toString();
+    }
 }

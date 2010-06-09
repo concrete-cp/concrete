@@ -10,12 +10,23 @@ public final class InInterval extends AbstractConstraint {
     private final int lb, ub;
     private final Domain domain;
 
-    public InInterval(final Variable variable, final int lb, final int ub) {
+    private InInterval(final Variable variable, final int lb, final int ub) {
         super(variable);
 
         this.domain = variable.getDomain();
-        this.lb = domain.lowest(lb);
-        this.ub = domain.greatest(ub);
+        this.lb = lb;
+        this.ub = ub;
+    }
+
+    public static InInterval values(final Variable variable, final int lb,
+            final int ub) {
+        final Domain domain = variable.getDomain();
+        return new InInterval(variable, domain.lowest(lb), domain.greatest(ub));
+    }
+
+    public static InInterval indexes(final Variable variable, final int lb,
+            final int ub) {
+        return new InInterval(variable, lb, ub);
     }
 
     @Override
@@ -38,7 +49,7 @@ public final class InInterval extends AbstractConstraint {
 
     @Override
     public boolean isConsistent(final int reviseCount) {
-        for (int i = lb; i <= ub; i = domain.next(i)) {
+        for (int i = lb; 0 <= i && i <= ub; i = domain.next(i)) {
             if (domain.present(i)) {
                 return true;
             }

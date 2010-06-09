@@ -10,12 +10,24 @@ public final class NotInInterval extends AbstractConstraint {
     private final int lb, ub;
     private final Domain domain;
 
-    public NotInInterval(final Variable variable, final int lb, final int ub) {
+    private NotInInterval(final Variable variable, final int lb, final int ub) {
         super(variable);
 
         this.domain = variable.getDomain();
-        this.lb = domain.lowest(lb);
-        this.ub = domain.greatest(ub);
+        this.lb = lb;
+        this.ub = ub;
+    }
+
+    public static NotInInterval values(final Variable variable, final int lb,
+            final int ub) {
+        final Domain domain = variable.getDomain();
+        return new NotInInterval(variable, domain.lowest(lb), domain
+                .greatest(ub));
+    }
+
+    public static NotInInterval indexes(final Variable variable, final int lb,
+            final int ub) {
+        return new NotInInterval(variable, lb, ub);
     }
 
     @Override
@@ -26,7 +38,7 @@ public final class NotInInterval extends AbstractConstraint {
     @Override
     public boolean revise(final RevisionHandler revisator, final int reviseCount) {
         boolean changed = false;
-        for (int i = lb; i <= ub; i = domain.next(i)) {
+        for (int i = lb; 0 <= i && i <= ub; i = domain.next(i)) {
             if (domain.present(i)) {
                 domain.remove(i);
                 changed = true;
@@ -44,8 +56,7 @@ public final class NotInInterval extends AbstractConstraint {
 
     @Override
     public boolean isConsistent(final int reviseCount) {
-        return (this.lb > 0 && domain.first() < lb)
-                || (this.ub >= 0 && domain.last() > ub);
+        return domain.first() < lb || domain.last() > ub;
     }
 
     @Override

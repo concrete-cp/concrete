@@ -3,7 +3,9 @@ package cspfj.generator.constraint;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import cspfj.constraint.semantic.InInterval;
@@ -43,38 +45,58 @@ public final class AllDifferentGenerator extends AbstractGenerator {
 
         final int[] values = values(solverVariables);
 
+        final Map<String, Variable> auxVars = new HashMap<String, Variable>();
         final Variable[][][] A = new Variable[solverVariables.length][values.length][values.length];
         for (int i = solverVariables.length; --i >= 0;) {
             final Variable solverVariable = solverVariables[i];
             for (int u = values.length; --u >= 0;) {
                 final int uV = values[u];
-                for (int l = u; --l >= 0 && l > u - solverVariables.length + 1;) {
+                for (int l = u; l >= 0 && l > u - solverVariables.length + 1; l--) {
 
                     final int lV = values[l];
-                    if (solverVariable.getDomain().lowest(lV) >= 0
-                            && solverVariable.getDomain().greatest(uV) >= 0) {
-                        A[i][l][u] = addVariable("A" + allDiff + "_" + i + "_"
-                                + l + "_" + u, new BooleanDomain());
 
-                        addConstraint(new ReifiedConstraint(A[i][l][u],
-                                new InInterval(solverVariable, lV, uV),
-                                new NotInInterval(solverVariable, lV, uV)));
+                    final int lIndex = solverVariable.getDomain().lowest(lV);
+                    if (lIndex < 0) {
+                        continue;
                     }
+                    final int uIndex = solverVariable.getDomain().greatest(uV);
+                    if (uIndex < 0) {
+                        continue;
+                    }
+                    final String varRef = solverVariable.getName() + "_"
+                            + lIndex + "_" + uIndex;
+                    Variable auxVar = auxVars.get(varRef);
+                    if (auxVar == null) {
+                        auxVar = addVariable("A" + allDiff + "_"
+                                + solverVariable.getName() + "_"
+                                + solverVariable.getValue(lIndex) + "_"
+                                + solverVariable.getValue(uIndex),
+                                new BooleanDomain());
+                        auxVars.put(varRef, auxVar);
+                        addConstraint(new ReifiedConstraint(auxVar, InInterval
+                                .indexes(solverVariable, lIndex, uIndex),
+                                NotInInterval.indexes(solverVariable, lIndex,
+                                        uIndex)));
+                    }
+
+                    A[i][l][u] = auxVar;
 
                 }
             }
         }
 
         for (int u = values.length; --u >= 0;) {
-            for (int l = u; --l >= 0 && l > u - solverVariables.length + 1;) {
+            for (int l = u; l >= 0 && l > u - solverVariables.length + 1; l--) {
                 final Collection<Variable> sum = new ArrayList<Variable>();
                 for (int i = solverVariables.length; --i >= 0;) {
                     if (A[i][l][u] != null) {
                         sum.add(A[i][l][u]);
                     }
                 }
-                addConstraint(new SumLeq(u - l + 1, sum
-                        .toArray(new Variable[sum.size()])));
+                if (sum.size() > u - l + 1) {
+                    addConstraint(new SumLeq(u - l + 1, sum
+                            .toArray(new Variable[sum.size()])));
+                }
             }
 
         }
