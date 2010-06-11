@@ -21,7 +21,7 @@ public final class InIntervalTest {
 	public void setUp() throws Exception {
 		domain = new BitVectorDomain(1, 2, 3);
 		final Variable var = new Variable("test", domain);
-		constraint = new InInterval(var, 2, 4);
+		constraint = InInterval.values(var, 2, 4);
 	}
 
 	@Test
