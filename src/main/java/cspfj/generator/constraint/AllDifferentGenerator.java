@@ -2,9 +2,11 @@ package cspfj.generator.constraint;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.Set;
 
 import cspfj.constraint.semantic.InInterval;
@@ -43,6 +45,7 @@ public final class AllDifferentGenerator extends AbstractGenerator {
         }
 
         final int[] values = values(solverVariables);
+        final Map<VariableInterval, VariableInterval> vis = new HashMap<VariableInterval, VariableInterval>();
 
         for (int l = 0; l < values.length; l++) {
             final int lV = values[l];
@@ -61,21 +64,23 @@ public final class AllDifferentGenerator extends AbstractGenerator {
                         continue;
                     }
 
-                    sum.add(new VariableInterval(v, lIndex, uIndex));
+                    final VariableInterval currentVi = new VariableInterval(v,
+                            lIndex, uIndex);
+
+                    VariableInterval actualVi = vis.get(currentVi);
+                    if (actualVi == null) {
+                        actualVi = currentVi;
+                        vis.put(actualVi, actualVi);
+                    }
+
+                    sum.add(actualVi);
+
                 }
                 if (sum.size() > u - l + 1) {
                     final Variable[] scope = new Variable[sum.size()];
                     for (ListIterator<VariableInterval> itr = sum
                             .listIterator(); itr.hasNext();) {
-                        final VariableInterval vi = itr.next();
-                        scope[itr.previousIndex()] = vi.variable;
-                        final Variable aux = addVariable("_A" + allDiff + "_"
-                                + vi.variable.getName() + "_" + lV + "_" + uV,
-                                new BooleanDomain());
-                        addConstraint(new ReifiedConstraint(aux, InInterval
-                                .indexes(vi.variable, vi.lb, vi.ub),
-                                NotInInterval
-                                        .indexes(vi.variable, vi.lb, vi.ub)));
+                        scope[itr.nextIndex()] = itr.next().add();
                     }
 
                     addConstraint(new SumLeq(u - l + 1, scope));
@@ -87,15 +92,50 @@ public final class AllDifferentGenerator extends AbstractGenerator {
         return true;
     }
 
-    private static final class VariableInterval {
+    private final class VariableInterval {
         private final Variable variable;
         private final int lb;
         private final int ub;
+        private Variable auxVariable;
 
-        private VariableInterval(Variable variable, int lb, int ub) {
+        private VariableInterval(final Variable variable, final int lb,
+                final int ub) {
             this.variable = variable;
             this.lb = lb;
             this.ub = ub;
+        }
+
+        private Variable add() {
+            if (auxVariable == null) {
+                auxVariable = addVariable("_A" + allDiff + "_"
+                        + variable.getName() + "_" + variable.getValue(lb)
+                        + "_" + variable.getValue(ub), new BooleanDomain());
+
+                addConstraint(new ReifiedConstraint(auxVariable, InInterval
+                        .indexes(variable, lb, ub), NotInInterval.indexes(
+                        variable, lb, ub)));
+            }
+            return auxVariable;
+        }
+
+        @Override
+        public int hashCode() {
+            return 961 * variable.hashCode() + 31 * lb + ub;
+        }
+
+        @Override
+        public boolean equals(final Object obj) {
+            if (!(obj instanceof VariableInterval)) {
+                return false;
+            }
+            final VariableInterval vi = (VariableInterval) obj;
+            return variable == vi.variable && lb == vi.lb && ub == vi.ub;
+        }
+
+        @Override
+        public String toString() {
+            return "(" + variable + ", " + variable.getValue(lb) + ", "
+                    + variable.getValue(ub) + ")";
         }
     }
 

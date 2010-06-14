@@ -27,9 +27,9 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
 
     @Override
     public boolean revise(final int position) {
-        final Domain dom = getVariable(position).getDomain();
+        final Variable var = getVariable(position);
         boolean revised = false;
-        for (int index = dom.first(); index >= 0; index = dom.next(index)) {
+        for (int index = var.getFirst(); index >= 0; index = var.getNext(index)) {
 
             final int[] residue = last.getResidue(position, index);
             if (residue != null && controlTuplePresence(residue)) {
@@ -39,7 +39,7 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
             if (findSupport(position, index)) {
                 last.updateResidue(tuple.clone());
             } else {
-                dom.remove(index);
+                var.remove(index);
                 revised = true;
             }
 

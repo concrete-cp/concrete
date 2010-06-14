@@ -8,12 +8,12 @@ import cspfj.problem.Variable;
 public final class NotInInterval extends AbstractConstraint {
 
     private final int lb, ub;
-    private final Domain domain;
+    private final Variable variable;
 
     private NotInInterval(final Variable variable, final int lb, final int ub) {
         super(variable);
 
-        this.domain = variable.getDomain();
+        this.variable = variable;
         this.lb = lb;
         this.ub = ub;
     }
@@ -38,14 +38,14 @@ public final class NotInInterval extends AbstractConstraint {
     @Override
     public boolean revise(final RevisionHandler revisator, final int reviseCount) {
         boolean changed = false;
-        for (int i = lb; 0 <= i && i <= ub; i = domain.next(i)) {
-            if (domain.present(i)) {
-                domain.remove(i);
+        for (int i = lb; 0 <= i && i <= ub; i = variable.getNext(i)) {
+            if (variable.isPresent(i)) {
+                variable.remove(i);
                 changed = true;
             }
         }
         if (changed) {
-            if (domain.size() <= 0) {
+            if (variable.getDomainSize() <= 0) {
                 return false;
             }
             revisator.revised(this, getVariable(0));
@@ -56,7 +56,7 @@ public final class NotInInterval extends AbstractConstraint {
 
     @Override
     public boolean isConsistent(final int reviseCount) {
-        return domain.first() < lb || domain.last() > ub;
+        return variable.getFirst() < lb || variable.getLast() > ub;
     }
 
     @Override

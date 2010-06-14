@@ -24,222 +24,364 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 import cspfj.constraint.Constraint;
 
 public final class Problem {
-	private Map<String, Variable> variables;
+    private Map<String, Variable> variables;
 
-	private Variable[] variableArray;
+    private Variable[] variableArray;
 
-	private int nbVariables = 0;
+    private int nbVariables = 0;
 
-	private List<Constraint> constraints;
+    private List<Constraint> constraints;
 
-	private int maxDomainSize;
+    private int maxDomainSize;
 
-	private int maxArity;
+    private int maxArity;
 
-	private int maxVId;
+    private int maxVId;
 
-	private int maxCId;
+    private int maxCId;
 
-	private int currentLevel;
+    private int currentLevel;
 
-	public Problem() {
-		super();
-		variables = new HashMap<String, Variable>();
-		constraints = new ArrayList<Constraint>();
-	}
+    public Problem() {
+        super();
+        variables = new LinkedHashMap<String, Variable>();
+        constraints = new ArrayList<Constraint>();
+    }
 
-	public Variable addVariable(final String name, final Domain domain) {
-		if (variables.containsKey(name)) {
-			throw new IllegalArgumentException("A variable named " + name
-					+ " already exists");
-		}
-		final Variable var = new Variable(name, domain);
-		variables.put(name, var);
-		return var;
-	}
+    public Variable addVariable(final String name, final Domain domain) {
+        if (variables.containsKey(name)) {
+            throw new IllegalArgumentException("A variable named " + name
+                    + " already exists");
+        }
+        final Variable var = new Variable(name, domain);
+        variables.put(name, var);
+        return var;
+    }
 
-	public void addConstraint(final Constraint constraint) {
-		constraints.add(constraint);
-	}
+    public void addConstraint(final Constraint constraint) {
+        constraints.add(constraint);
+    }
 
-	public void prepareVariables() {
-		maxDomainSize = 0;
-		maxVId = 0;
+    public void prepareVariables() {
+        maxDomainSize = 0;
+        maxVId = 0;
 
-		variableArray = variables.values().toArray(
-				new Variable[variables.size()]);
+        variableArray = variables.values().toArray(
+                new Variable[variables.size()]);
 
-		for (Variable var : variableArray) {
-			maxDomainSize = Math.max(maxDomainSize, var.getDomain().maxSize());
-			maxVId = Math.max(maxVId, var.getId());
-		}
+        for (Variable var : variableArray) {
+            maxDomainSize = Math.max(maxDomainSize, var.getDomain().maxSize());
+            maxVId = Math.max(maxVId, var.getId());
+        }
 
-		nbVariables = variables.size();
-	}
+        nbVariables = variables.size();
+    }
 
-	public void prepareConstraints() {
-		maxArity = Collections.max(constraints, new Comparator<Constraint>() {
-			@Override
-			public int compare(final Constraint o1, final Constraint o2) {
-				return o1.getArity() - o2.getArity();
-			}
-		}).getArity();
+    public void prepareConstraints() {
+        maxArity = Collections.max(constraints, new Comparator<Constraint>() {
+            @Override
+            public int compare(final Constraint o1, final Constraint o2) {
+                return o1.getArity() - o2.getArity();
+            }
+        }).getArity();
 
-		final Map<Integer, List<Constraint>> invConstraints = new HashMap<Integer, List<Constraint>>(
-				variableArray.length);
+        final Map<Integer, List<Constraint>> invConstraints = new HashMap<Integer, List<Constraint>>(
+                variableArray.length);
 
-		for (Variable v : getVariables()) {
-			invConstraints.put(v.getId(), new ArrayList<Constraint>());
-		}
+        for (Variable v : getVariables()) {
+            invConstraints.put(v.getId(), new ArrayList<Constraint>());
+        }
 
-		for (Constraint c : getConstraints()) {
-			for (Variable v : c.getScope()) {
-				invConstraints.get(v.getId()).add(c);
-			}
-		}
+        for (Constraint c : getConstraints()) {
+            for (Variable v : c.getScope()) {
+                invConstraints.get(v.getId()).add(c);
+            }
+        }
 
-		for (Variable v : getVariables()) {
-			final Collection<Constraint> involvingConstraints = invConstraints
-					.get(v.getId());
-			v.setInvolvingConstraints(involvingConstraints
-					.toArray(new Constraint[involvingConstraints.size()]));
-		}
-	}
+        for (Variable v : getVariables()) {
+            final Collection<Constraint> involvingConstraints = invConstraints
+                    .get(v.getId());
+            v.setInvolvingConstraints(involvingConstraints
+                    .toArray(new Constraint[involvingConstraints.size()]));
+        }
+    }
 
-	public int getNbVariables() {
-		return nbVariables;
-	}
+    public int getNbVariables() {
+        return nbVariables;
+    }
 
-	public int getNbConstraints() {
-		return constraints.size();
-	}
+    public int getNbConstraints() {
+        return constraints.size();
+    }
 
-	public List<Constraint> getConstraints() {
-		return constraints;
-	}
+    public List<Constraint> getConstraints() {
+        return constraints;
+    }
 
-	public Variable[] getVariables() {
-		return variableArray;
-	}
+    public Variable[] getVariables() {
+        return variableArray;
+    }
 
-	public void push() {
-		currentLevel++;
-		setLevel(currentLevel);
+    public void push() {
+        currentLevel++;
+        setLevel(currentLevel);
 
-	}
+    }
 
-	public void pop() {
-		currentLevel--;
-		restoreLevel(currentLevel);
+    public void pop() {
+        currentLevel--;
+        restoreLevel(currentLevel);
 
-	}
+    }
 
-	private void setLevel(final int level) {
-		// currentLevel = level;
-		for (Variable v : variableArray) {
-			v.setLevel(level);
-		}
-		for (Constraint c : constraints) {
-			c.setLevel(level);
-		}
-	}
+    // private class Semaphore {
+    // private int credit = 0;
+    //
+    // public synchronized void V() {
+    // credit++;
+    // if (credit <= 0) {
+    // notify();
+    // }
+    // }
+    //
+    // public synchronized void P() throws InterruptedException {
+    // credit--;
+    // if (credit < 0) {
+    // wait();
+    // }
+    // }
+    //
+    // }
+    //
+    // private class LevelManager extends Thread {
+    // private final Semaphore sem;
+    // private boolean set;
+    // private int startV, endV, startC, endC, level;
+    //
+    // public LevelManager(Semaphore s) {
+    // this.sem = s;
+    // }
+    //
+    // public void run() {
+    // for (;;) {
+    // try {
+    // sem.P();
+    // } catch (InterruptedException e) {
+    // // TODO Auto-generated catch block
+    // e.printStackTrace();
+    // }
+    //
+    // if (set) {
+    // for (int i = startV; i < endV; i++) {
+    // variableArray[i].setLevel(level);
+    // }
+    // for (ListIterator<Constraint> itr = constraints
+    // .listIterator(startC); itr.nextIndex() < endC;) {
+    // itr.next().setLevel(level);
+    // }
+    // } else {
+    // for (int i = startV; i < endV; i++) {
+    // variableArray[i].restoreLevel(level);
+    // }
+    // for (ListIterator<Constraint> itr = constraints
+    // .listIterator(startC); itr.nextIndex() < endC;) {
+    // itr.next().restore(level);
+    // }
+    // }
+    // sem.V();
+    // }
+    // }
+    //
+    // public synchronized void setLevel(int startV, int endV, int startC,
+    // int endC, int level) {
+    // this.startV = startV;
+    // this.endV = endV;
+    // this.startC = startC;
+    // this.endC = endC;
+    // this.level = level;
+    // set = true;
+    // }
+    //
+    // public synchronized void restoreLevel(int startV, int endV, int startC,
+    // int endC, int level) {
+    // this.startV = startV;
+    // this.endV = endV;
+    // this.startC = startC;
+    // this.endC = endC;
+    // this.level = level;
+    // set = false;
+    // }
+    // }
+    //
+    // private final Semaphore sem0 = new Semaphore();
+    // private final Semaphore sem1 = new Semaphore();
+    // private final LevelManager t0 = new LevelManager(sem0);
+    // private final LevelManager t1 = new LevelManager(sem1);
+    //
+    // private synchronized void setLevel(final int level) {
+    // t0.setLevel(0, nbVariables / 2, 0, constraints.size() / 2, level);
+    // t1.setLevel(nbVariables / 2, nbVariables, constraints.size() / 2,
+    // constraints.size(), level);
+    // sem0.V();
+    // sem1.V();
+    // try {
+    // sem0.P();
+    // sem1.P();
+    // } catch (InterruptedException e) {
+    // }
+    // }
+    //
+    // private void restoreLevel(final int level) {
+    // t0.restoreLevel(0, nbVariables / 2, 0, constraints.size() / 2, level);
+    // t1.restoreLevel(nbVariables / 2, nbVariables, constraints.size() / 2,
+    // constraints.size(), level);
+    //
+    // try {
+    // sem.P();
+    // sem.P();
+    // } catch (InterruptedException e) {
+    // throw new IllegalStateException(e);
+    // }
+    // }
 
-	private void restoreLevel(final int level) {
-		// currentLevel = level;
-		for (Variable v : variableArray) {
-			v.restoreLevel(level);
-		}
-		for (Constraint c : getConstraints()) {
-			c.restore(level);
-		}
-	}
+    private void setLevel(final int level) {
+        for (Variable v : variableArray) {
+            v.setLevel(level);
+        }
+        for (Constraint c : constraints) {
+            c.setLevel(level);
+        }
+    }
 
-	public void reset() {
-		currentLevel = 0;
-		for (Variable v : variableArray) {
-			v.reset();
-		}
-		for (Constraint c : getConstraints()) {
-			c.restore(0);
-		}
-	}
+    private void restoreLevel(final int level) {
+        for (Variable v : variableArray) {
+            v.restoreLevel(level);
+        }
+        for (Constraint c : constraints) {
+            c.restore(level);
+        }
+    }
 
-	@Override
-	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		for (Variable v : variables.values()) {
-			sb.append(v).append('\n');
-		}
+    // private void setLevel(final int level) {
+    // final Thread t0 = new UpdateLevel(0, variableArray.length / 2, 0,
+    // constraints.size() / 2, level);
+    // final Thread t1 = new UpdateLevel(variableArray.length / 2,
+    // variableArray.length, constraints.size() / 2, constraints
+    // .size(), level);
+    // t0.start();
+    // t1.start();
+    //
+    // try {
+    // t0.join();
+    // t1.join();
+    // } catch (InterruptedException e) {
+    // }
+    // }
+    //
+    // private void restoreLevel(final int level) {
+    // final Thread t0 = new RestoreLevel(0, variableArray.length / 2, 0,
+    // constraints.size() / 2, level);
+    // final Thread t1 = new RestoreLevel(variableArray.length / 2,
+    // variableArray.length, constraints.size() / 2, constraints
+    // .size(), level);
+    // t0.start();
+    // t1.start();
+    //
+    // try {
+    // t0.join();
+    // t1.join();
+    // } catch (InterruptedException e) {
+    // }
+    // }
 
-		int entailed = 0;
-		for (Constraint c : constraints) {
-			if (c.isEntailed()) {
-				entailed++;
-			} else {
-				sb.append(c.toString()).append('\n');
-			}
-		}
-		sb.append("Total ").append(getNbVariables()).append(" variables, ")
-				.append(getNbConstraints() - entailed).append(
-						" constraints and ").append(entailed).append(
-						" entailed constraints");
+    public void reset() {
+        currentLevel = 0;
+        for (Variable v : variableArray) {
+            v.reset();
+        }
+        for (Constraint c : getConstraints()) {
+            c.restore(0);
+        }
+    }
 
-		return sb.toString();
-	}
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        for (Variable v : variables.values()) {
+            sb.append(v).append('\n');
+        }
 
-	public int getMaxDomainSize() {
-		return maxDomainSize;
-	}
+        int entailed = 0;
+        for (Constraint c : constraints) {
+            if (c.isEntailed()) {
+                entailed++;
+            } else {
+                sb.append(c.toString()).append('\n');
+            }
+        }
+        sb.append("Total ").append(getNbVariables()).append(" variables, ")
+                .append(getNbConstraints() - entailed).append(
+                        " constraints and ").append(entailed).append(
+                        " entailed constraints");
 
-	public int getCurrentLevel() {
-		return currentLevel;
-	}
+        return sb.toString();
+    }
 
-	public int getMaxArity() {
-		return maxArity;
-	}
+    public int getMaxDomainSize() {
+        return maxDomainSize;
+    }
 
-	public int getMaxVId() {
-		return maxVId;
-	}
+    public int getCurrentLevel() {
+        return currentLevel;
+    }
 
-	public int getMaxCId() {
-		return maxCId;
-	}
+    public int getMaxArity() {
+        return maxArity;
+    }
 
-	public int getND() {
-		int nd = 0;
-		for (Variable v : getVariables()) {
-			nd += v.getDomainSize();
-		}
-		return nd;
-	}
+    public int getMaxVId() {
+        return maxVId;
+    }
 
-	public int getMaxFlips() {
-		final int nd = getND();
-		// return 8 * nd + (int)(.4 * nd * nd);
-		// return 5*nd;
-		return Math.max((int) (-50000 + 10000 * Math.log(nd)), 10000);
-	}
+    public int getMaxCId() {
+        return maxCId;
+    }
 
-	public int getMaxBacktracks() {
-		// final int meanDomainSize = getND() / getNbVariables();
-		//
-		// final int localBT = getMaxFlips();
-		//
-		// return (int) (localBT * (100F * getNbVariables()) /
-		// (getNbConstraints() * meanDomainSize));
-		return Math.max(10, maxDomainSize / 10);
-	}
+    public int getND() {
+        int nd = 0;
+        for (Variable v : getVariables()) {
+            nd += v.getDomainSize();
+        }
+        return nd;
+    }
 
-	public Variable getVariable(final String name) {
-		return variables.get(name);
-	}
+    public int getMaxFlips() {
+        final int nd = getND();
+        // return 8 * nd + (int)(.4 * nd * nd);
+        // return 5*nd;
+        return Math.max((int) (-50000 + 10000 * Math.log(nd)), 10000);
+    }
+
+    public int getMaxBacktracks() {
+        // final int meanDomainSize = getND() / getNbVariables();
+        //
+        // final int localBT = getMaxFlips();
+        //
+        // return (int) (localBT * (100F * getNbVariables()) /
+        // (getNbConstraints() * meanDomainSize));
+        return Math.max(10, maxDomainSize / 10);
+    }
+
+    public Variable getVariable(final String name) {
+        return variables.get(name);
+    }
 
 }

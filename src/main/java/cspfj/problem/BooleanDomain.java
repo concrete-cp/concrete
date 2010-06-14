@@ -93,7 +93,7 @@ public final class BooleanDomain implements Domain {
         history = new Status[HISTORY_INCREMENT];
     }
 
-    public BooleanDomain(boolean constant) {
+    public BooleanDomain(final boolean constant) {
         if (constant) {
             status = Status.TRUE;
         } else {
@@ -223,15 +223,11 @@ public final class BooleanDomain implements Domain {
     public void remove(final int index) {
         assert present(index);
         if (status.size == 1) {
-            status = Status.EMPTY;
+            setStatus(Status.EMPTY);
         } else if (index == 0) {
-            status = Status.TRUE;
+            setStatus(Status.TRUE);
         } else {
-            status = Status.FALSE;
-        }
-
-        if (history[currentLevel] == null) {
-            history[currentLevel] = Status.UNKNOWN;
+            setStatus(Status.FALSE);
         }
     }
 
@@ -357,23 +353,23 @@ public final class BooleanDomain implements Domain {
         switch (status) {
         case UNKNOWN:
             if (lb == 0) {
-                status = Status.EMPTY;
+                setStatus(Status.EMPTY);
                 return 2;
             }
             if (lb == 1) {
-                status = Status.FALSE;
+                setStatus(Status.FALSE);
                 return 1;
             }
             return 0;
         case FALSE:
             if (lb == 0) {
-                status = Status.EMPTY;
+                setStatus(Status.EMPTY);
                 return 1;
             }
             return 0;
         case TRUE:
             if (lb <= 1) {
-                status = Status.EMPTY;
+                setStatus(Status.EMPTY);
                 return 1;
             }
             return 0;
