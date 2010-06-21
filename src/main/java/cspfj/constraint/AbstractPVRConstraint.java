@@ -26,11 +26,12 @@ public abstract class AbstractPVRConstraint extends
 	public final boolean revise(final RevisionHandler revisator,
 			final int reviseCount) {
 		int singletons = 0;
+		final int skip = skipRevision(reviseCount);
 		for (int i = getArity(); --i >= 0;) {
 			final Variable variable = getVariable(i);
 			// assert (!variable.isAssigned() && skipRevision(i)) ? !revise(i)
 			// : true : "Should not skip " + this + ", " + i;
-			if (!skipRevision(i, reviseCount) && revise(i)) {
+			if (i != skip && revise(i)) {
 				if (variable.getDomainSize() <= 0) {
 					return false;
 				}
@@ -46,14 +47,18 @@ public abstract class AbstractPVRConstraint extends
 		return true;
 	}
 
-	private boolean skipRevision(final int variablePosition,
-			final int reviseCount) {
+	private int skipRevision(final int reviseCount) {
+		int skip = -1;
 		for (int y = getArity(); --y >= 0;) {
-			if (y != variablePosition && getRemovals(y) >= reviseCount) {
-				return false;
+			if (getRemovals(y) >= reviseCount) {
+				if (skip < 0) {
+					skip = y;
+				} else {
+					return -1;
+				}
 			}
 		}
-		//throw new IllegalStateException();
-		return true;
+		// throw new IllegalStateException();
+		return -1;
 	}
 }
