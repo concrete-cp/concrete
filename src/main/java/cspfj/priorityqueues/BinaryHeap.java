@@ -35,143 +35,171 @@ import java.util.NoSuchElementException;
  */
 public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
 
-	private T[] content;
+    private T[] content;
 
-	private boolean[] inQueue;
+    private int[] inQueue;
 
-	private int size;
+    private int size;
 
-	private final Key<T> key;
+    private final Key<T> key;
 
-	public BinaryHeap(final Key<T> key) {
-		this(key, 10);
-	}
+    public BinaryHeap(final Key<T> key) {
+        this(key, 10);
+    }
 
-	public BinaryHeap(final Key<T> key, final int initSize) {
-		super();
-		this.key = key;
-		this.inQueue = new boolean[initSize];
-		this.content = (T[]) new Identified[initSize];
-		size = 0;
-	}
+    public BinaryHeap(final Key<T> key, final int initSize) {
+        super();
+        this.key = key;
+        this.inQueue = new int[initSize];
+        this.content = (T[]) new Identified[initSize];
+        Arrays.fill(inQueue, -1);
+        size = 0;
+    }
 
-	/**
-	 * Increases the capacity of this instance, if necessary, to ensure that it
-	 * can hold at least the number of elements specified by the minimum
-	 * capacity argument.
-	 * 
-	 * @param minCapacity
-	 *            the desired minimum capacity
-	 */
-	private void ensureCapacity(int minCapacity) {
-		int oldCapacity = inQueue.length;
-		assert content.length == oldCapacity;
-		if (minCapacity > oldCapacity) {
-			final int newCapacity = Math.max(minCapacity,
-					(oldCapacity * 3) / 2 + 1);
-			// minCapacity is usually close to size, so this is a win:
-			inQueue = Arrays.copyOf(inQueue, newCapacity);
-			content = Arrays.copyOf(content, newCapacity);
-		}
-	}
+    /**
+     * Increases the capacity of this instance, if necessary, to ensure that it
+     * can hold at least the number of elements specified by the minimum
+     * capacity argument.
+     * 
+     * @param minCapacity
+     *            the desired minimum capacity
+     */
+    private void ensureCapacity(final int minCapacity) {
+        int oldCapacity = inQueue.length;
+        assert content.length == oldCapacity;
+        if (minCapacity > oldCapacity) {
+            final int newCapacity = Math.max(minCapacity,
+                    (oldCapacity * 3) / 2 + 1);
+            // minCapacity is usually close to size, so this is a win:
+            inQueue = Arrays.copyOf(inQueue, newCapacity);
+            Arrays.fill(inQueue, oldCapacity, newCapacity, -1);
+            content = Arrays.copyOf(content, newCapacity);
+        }
+    }
 
-	@Override
-	public int size() {
-		return size;
-	}
+    @Override
+    public int size() {
+        return size;
+    }
 
-	@Override
-	public boolean offer(final T arg0) {
-		final int id = arg0.getId();
-		ensureCapacity(id + 1);
-		if (inQueue[id]) {
-			return false;
-		}
-		inQueue[id] = true;
-		content[size] = arg0;
-		siftUp(size++);
-		return true;
-	}
+    @Override
+    public boolean offer(final T arg0) {
+        final int id = arg0.getId();
+        ensureCapacity(id + 1);
+        final int initPos = inQueue[id];
+        if (initPos >= 0) {
+            siftUp(initPos);
+            final int newPos = inQueue[id];
+            if (initPos == newPos) {
+                siftDown(inQueue[id]);
+            }
+            return false;
+        }
 
-	@Override
-	public T poll() throws NoSuchElementException {
-		switch (size) {
-		case 0:
-			throw new NoSuchElementException();
-		case 1:
-			size = 0;
-			inQueue[content[0].getId()] = false;
-			return content[0];
-		default:
-			final T max = content[0];
-			content[0] = content[--size];
-			siftDown(0);
-			inQueue[max.getId()] = false;
-			return max;
-		}
-	}
+        content[size] = arg0;
+        inQueue[id] = size;
+        siftUp(size++);
+        return true;
+    }
 
-	@Override
-	public T peek() throws NoSuchElementException {
-		if (size == 0) {
-			throw new NoSuchElementException();
-		}
-		return content[0];
-	}
+    @Override
+    public T poll() {
+        switch (size) {
+        case 0:
+            throw new NoSuchElementException();
+        case 1:
+            size = 0;
+            inQueue[content[0].getId()] = -1;
+            return content[0];
+        default:
+            final T max = content[0];
+            content[0] = content[--size];
+            siftDown(0);
+            inQueue[max.getId()] = -1;
+            return max;
+        }
+    }
 
-	@Override
-	public void clear() {
-		size = 0;
-		Arrays.fill(inQueue, false);
-	}
+    @Override
+    public T peek() {
+        if (size == 0) {
+            throw new NoSuchElementException();
+        }
+        return content[0];
+    }
 
-	@Override
-	public Iterator<T> iterator() {
-		throw new UnsupportedOperationException();
-	}
+    @Override
+    public void clear() {
+        size = 0;
+        Arrays.fill(inQueue, -1);
+    }
 
-	private void swap(final int int0, final int int1) {
-		final T tmp = content[int0];
-		content[int0] = content[int1];
-		content[int1] = tmp;
-	}
+    @Override
+    public Iterator<T> iterator() {
+        throw new UnsupportedOperationException();
+    }
 
-	private void siftDown(final int start) {
-		int root = start;
-		final int end = size - 1;
-		while ((root << 1) + 1 <= end) {
-			int child = (root << 1) + 1;
+    private void swap(final int int0, final int int1) {
+        final T tmp = content[int0];
+        content[int0] = content[int1];
+        content[int1] = tmp;
+        inQueue[content[int0].getId()] = int0;
+        inQueue[content[int1].getId()] = int1;
+    }
 
-			if (child < end
-					&& key.getKey(content[child]) > key
-							.getKey(content[child + 1])) {
-				child++;
-			}
-			if (key.getKey(content[root]) > key.getKey(content[child])) {
-				swap(root, child);
-				root = child;
-			} else {
-				return;
-			}
-		}
-	}
+    private void siftDown(final int start) {
+        int root = start;
+        final int end = size - 1;
+        int child;
+        while ((child = (root << 1) + 1) <= end) {
+            if (child < end
+                    && key.getKey(content[child]) > key
+                            .getKey(content[child + 1])) {
+                child++;
+            }
+            if (key.getKey(content[root]) > key.getKey(content[child])) {
+                swap(root, child);
+                root = child;
+            } else {
+                return;
+            }
+        }
+    }
 
-	private void siftUp(final int start) {
-		int leaf = start;
-		while (leaf > 0) {
-			final int parent = ((leaf - 1) >> 1);
+    private void siftUp(final int start) {
+        int leaf = start;
+        while (leaf > 0) {
+            final int parent = ((leaf - 1) >> 1);
 
-			if (key.getKey(content[parent]) > key.getKey(content[leaf])) {
-				swap(parent, leaf);
-				leaf = parent;
-			} else {
-				return;
-			}
-		}
-	}
+            if (key.getKey(content[parent]) > key.getKey(content[leaf])) {
+                swap(parent, leaf);
+                leaf = parent;
+            } else {
+                return;
+            }
+        }
+        return;
+    }
 
-	public String toString() {
-		return Arrays.toString(content);
-	}
+    public String toString() {
+        return Arrays.toString(content);
+    }
 
+    public boolean control(final int position) {
+        if (position >= size) {
+            return true;
+        }
+        int child1 = (position << 1) + 1;
+        int child2 = (position << 1) + 2;
+        final double thisKey = key.getKey(content[position]);
+
+        if (child1 < size && thisKey > key.getKey(content[child1])) {
+            return false;
+        }
+        if (child2 < size && thisKey > key.getKey(content[child2])) {
+            return false;
+        }
+        return control(child1) && control(child2);
+
+    }
 }
