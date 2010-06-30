@@ -96,4 +96,6 @@ public final class IntLinkedList extends AbstractList<Integer> {
     public Integer get(final int index) {
         throw new UnsupportedOperationException();
     }
+    
+    
 }
