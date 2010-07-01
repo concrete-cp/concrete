@@ -18,6 +18,7 @@ public final class GeneratorManager {
         register("alldifferent", AllDifferentGenerator.class);
         register("or", DisjGenerator.class);
         register("not", DisjGenerator.class);
+        register("and", DisjGenerator.class);
         register("eq", EqGenerator.class);
         register("neg", EqGenerator.class);
         register("ext", ExtensionGenerator.class);
