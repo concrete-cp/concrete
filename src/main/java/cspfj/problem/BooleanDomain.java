@@ -27,13 +27,7 @@ public final class BooleanDomain implements Domain {
     }
 
     public static enum Status {
-        UNKNOWN(2), TRUE(1), FALSE(1), EMPTY(0);
-
-        private final int size;
-
-        private Status(final int size) {
-            this.size = size;
-        }
+        UNKNOWN, TRUE, FALSE, EMPTY;
 
         private int[] asArray() {
             switch (this) {
@@ -80,6 +74,20 @@ public final class BooleanDomain implements Domain {
                 throw new IllegalStateException();
             }
         }
+
+        public int size() {
+            switch (this) {
+            case UNKNOWN:
+                return 2;
+            case TRUE:
+            case FALSE:
+                return 1;
+            case EMPTY:
+                return 0;
+            default:
+                throw new IllegalStateException();
+            }
+        }
     }
 
     private Status status;
@@ -119,7 +127,7 @@ public final class BooleanDomain implements Domain {
 
     @Override
     public int size() {
-        return status.size;
+        return status.size();
     }
 
     @Override
@@ -222,7 +230,7 @@ public final class BooleanDomain implements Domain {
     @Override
     public void remove(final int index) {
         assert present(index);
-        if (status.size == 1) {
+        if (status.size() == 1) {
             setStatus(Status.EMPTY);
         } else if (index == 0) {
             setStatus(Status.TRUE);

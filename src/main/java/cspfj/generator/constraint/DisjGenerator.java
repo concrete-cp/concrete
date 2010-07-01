@@ -50,6 +50,38 @@ public final class DisjGenerator extends AbstractGenerator {
         }
     }
 
+    private void generateReifiedAnd(final Variable[] scope,
+            final FunctionalConstraint constraint) {
+        /*
+         * Reified conjunction is converted to CNF :
+         * 
+         * a = b ^ c ^ d...
+         * 
+         * <=>
+         * 
+         * (a v -b v -c v -d...) ^ (-a v b) ^ (-a v c) ^ (-a v d) ^ ...
+         */
+        final boolean[] parameters = parseParameters(constraint.getParameters());
+        if (parameters != null && parameters.length != scope.length - 1) {
+            throw new InvalidParameterException(
+                    "Incorrect number of parameters");
+        }
+        final boolean[] reverses = new boolean[scope.length];
+        if (parameters != null) {
+            System.arraycopy(parameters, 0, reverses, 1, parameters.length);
+        }
+        reverses[0] = true;
+        addConstraint(new Disjunction(scope, reverses));
+
+        final Variable result = getSolverVariable(constraint
+                .getResultVariable());
+
+        for (CSPOMVariable v : constraint.getArguments()) {
+            addConstraint(new Disjunction(new Variable[] { result,
+                    getSolverVariable(v) }, new boolean[] { false, true }));
+        }
+    }
+    
     private void generateNeg(final FunctionalConstraint constraint)
             throws FailedGenerationException {
         /*

@@ -17,6 +17,7 @@ public abstract class AbstractVariableHeuristic implements VariableHeuristic {
     public AbstractVariableHeuristic(final Problem problem) {
         this.problem = problem;
         tieManager = new TieManager<Variable>(RAND);
+        RAND.setSeed(0);
     }
 
     @Override

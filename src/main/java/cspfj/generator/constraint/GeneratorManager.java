@@ -15,10 +15,11 @@ public final class GeneratorManager {
         register("abs", AbsGenerator.class);
         register("add", AddGenerator.class);
         register("sub", AddGenerator.class);
-        register("allDifferent", AllDifferentGenerator.class);
+        register("alldifferent", AllDifferentGenerator.class);
         register("or", DisjGenerator.class);
         register("not", DisjGenerator.class);
         register("eq", EqGenerator.class);
+        register("neg", EqGenerator.class);
         register("ext", ExtensionGenerator.class);
         register("gt", GtGenerator.class);
         register("ge", GtGenerator.class);

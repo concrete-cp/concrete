@@ -44,7 +44,8 @@ public final class ProblemGenerator {
                 firstFailed = null;
             } else if (firstFailed == constraint) {
                 throw new FailedGenerationException(
-                        "Could not generate the constraints " + queue);
+                        "Could not generate the constraints "
+                                + queue.toString());
             } else {
                 if (firstFailed == null) {
                     firstFailed = constraint;
