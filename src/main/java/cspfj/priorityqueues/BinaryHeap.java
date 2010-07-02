@@ -191,7 +191,7 @@ public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
         }
         int child1 = (position << 1) + 1;
         int child2 = (position << 1) + 2;
-        final double thisKey = key.getKey(content[position]);
+        final float thisKey = key.getKey(content[position]);
 
         if (child1 < size && thisKey > key.getKey(content[child1])) {
             return false;

@@ -128,8 +128,9 @@ public final class ReifiedConstraint extends AbstractConstraint {
 	}
 
 	@Override
-	public int getEvaluation(final int reviseCount) {
-		return 2 * positiveConstraint.getEvaluation(reviseCount);
+	public float getEvaluation() {
+		return positiveConstraint.getEvaluation()
+				+ negativeConstraint.getEvaluation();
 	}
 
 	@Override

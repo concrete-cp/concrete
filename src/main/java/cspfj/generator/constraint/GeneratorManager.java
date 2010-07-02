@@ -50,7 +50,7 @@ public final class GeneratorManager {
     public boolean generate(final CSPOMConstraint constraint)
             throws FailedGenerationException {
         final Class<? extends Generator> candidate = KNOWN.get(constraint
-                .getDescription());
+                .getDescription().toLowerCase());
 
         if (candidate == null) {
             throw new FailedGenerationException("No candidate constraint for "

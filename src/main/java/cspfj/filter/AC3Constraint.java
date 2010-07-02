@@ -7,7 +7,7 @@ import java.util.Queue;
 import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
-import cspfj.priorityqueues.Fifo;
+import cspfj.priorityqueues.FibonacciHeap;
 import cspfj.priorityqueues.Key;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
@@ -27,22 +27,25 @@ public final class AC3Constraint implements Filter {
 
 	private int revisions = 0;
 
-	private int revisionCount = 0;
+	private static int revisionCount = 0;
 
 	public AC3Constraint(final Problem problem) {
+		this(problem, new FibonacciHeap<Constraint>(new Key<Constraint>() {
+			@Override
+			public float getKey(final Constraint object) {
+				return object.getEvaluation() / object.getWeight();
+			}
+		}));
+	}
+
+	public AC3Constraint(final Problem problem, final Queue<Constraint> queue) {
 		super();
 		this.problem = problem;
-
-		queue = new Fifo<Constraint>(new Key<Constraint>() {
-			@Override
-			public double getKey(final Constraint o1) {
-				return o1.getEvaluation(AC3Constraint.this.revisionCount)
-						/ o1.getWeight();
-			}
-		}, problem.getNbConstraints());
+		this.queue = queue;
 	}
 
 	public boolean reduceAll() {
+		revisionCount++;
 		queue.clear();
 		addAll();
 		return reduce();

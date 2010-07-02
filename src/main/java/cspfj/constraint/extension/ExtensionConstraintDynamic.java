@@ -229,7 +229,7 @@ public final class ExtensionConstraintDynamic extends AbstractConstraint
     }
 
     @Override
-    public int getEvaluation(final int reviseCount) {
+    public float getEvaluation() {
         return getArity() * dynamic.getSize();
     }
 

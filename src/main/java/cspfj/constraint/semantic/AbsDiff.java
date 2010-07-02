@@ -86,7 +86,7 @@ public final class AbsDiff extends AbstractAC3Constraint {
 	}
 
 	@Override
-	public int getEvaluation(final int rev) {
+	public float getEvaluation() {
 		final int d0 = getVariable(0).getDomainSize();
 		final int d1 = getVariable(1).getDomainSize();
 		final int d2 = getVariable(2).getDomainSize();

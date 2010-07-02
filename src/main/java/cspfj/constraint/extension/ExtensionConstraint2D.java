@@ -43,7 +43,8 @@ public final class ExtensionConstraint2D extends AbstractPVRConstraint
                 getTuple());
     }
 
-    public int getEvaluation(final int reviseCount) {
+    @Override
+    public float getEvaluation() {
         return getVariable(0).getDomainSize() * getVariable(1).getDomainSize()
                 / GAIN_OVER_GENERAL;
     }

@@ -78,7 +78,7 @@ public interface Constraint extends Identified {
 
 	boolean hasNoRemovals(final int reviseCount);
 
-	int getEvaluation(final int reviseCount);
+	float getEvaluation();
 
 	boolean isEntailed();
 	

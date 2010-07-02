@@ -62,8 +62,8 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
     }
 
     @Override
-    public int getEvaluation(final int reviseCount) {
-        int size = 1;
+    public float getEvaluation() {
+        float size = 1;
         for (Variable v : getScope()) {
             size *= v.getDomainSize();
         }

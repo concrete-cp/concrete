@@ -133,7 +133,7 @@ public final class AllDifferent extends AbstractArcGrainedConstraint {
 	}
 
 	@Override
-	public int getEvaluation(final int reviseCount) {
+	public float getEvaluation() {
 		return getArity() * getArity();
 	}
 }

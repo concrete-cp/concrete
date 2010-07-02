@@ -6,7 +6,7 @@ import java.util.Iterator;
 
 public final class SoftHeap<T extends Identified> extends AbstractQueue<T> {
 
-	private static final double ERROR_RATE = .1;
+	private static final float ERROR_RATE = .1f;
 	// .3 is the error rate
 	private static final int R = (int) Math.ceil(Math.log(1 / ERROR_RATE)
 			/ Math.log(2)) + 5;
@@ -142,7 +142,7 @@ public final class SoftHeap<T extends Identified> extends AbstractQueue<T> {
 
 		final TreeNode<T> min = minTree.root;
 
-		final double oldCKey = min.cKey;
+		final float oldCKey = min.cKey;
 		final Entry<T> elt = min.pick();
 		if (min.nbEntries == 0) {
 			removeTree(minTree);
@@ -203,7 +203,7 @@ public final class SoftHeap<T extends Identified> extends AbstractQueue<T> {
 		private Entry<T> first;
 		private Entry<T> last;
 		private int nbEntries;
-		private double cKey;
+		private float cKey;
 
 		private final int rank;
 		private final int size;
@@ -214,7 +214,7 @@ public final class SoftHeap<T extends Identified> extends AbstractQueue<T> {
 		 * @param elt
 		 * @param key
 		 */
-		private TreeNode(final Entry<T> elt, final double key) {
+		private TreeNode(final Entry<T> elt, final float key) {
 			rank = 0;
 			size = 1;
 

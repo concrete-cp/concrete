@@ -14,9 +14,9 @@ import java.util.Iterator;
  */
 public final class Fifo<T extends Identified> extends AbstractQueue<T> {
 
-	private static final int DEFAULT_NB_LISTS = 1;
+	private static final int DEFAULT_NB_LISTS = 8;
 
-	private static final int KEY_FACTOR = 10;
+	private static final int KEY_FACTOR = 8;
 
 	private static final long serialVersionUID = 1L;
 
@@ -28,9 +28,9 @@ public final class Fifo<T extends Identified> extends AbstractQueue<T> {
 
 	private final Key<T> key;
 
-	public static int insert = 0;
-	public static int update = 0;
-	public static int remove = 0;
+//	public static int insert = 0;
+//	public static int update = 0;
+//	public static int remove = 0;
 
 	public Fifo(final Key<T> k) {
 		this(k, DEFAULT_NB_LISTS);
@@ -55,7 +55,7 @@ public final class Fifo<T extends Identified> extends AbstractQueue<T> {
 		if (nbLists <= 1) {
 			return 0;
 		}
-		final double k = key.getKey(element);
+		final float k = key.getKey(element);
 		for (int i = 0, treshold = KEY_FACTOR;; i++, treshold *= KEY_FACTOR) {
 			if (nbLists <= i + 1 || k < treshold) {
 				return i;
@@ -96,10 +96,11 @@ public final class Fifo<T extends Identified> extends AbstractQueue<T> {
 		}
 		if (currentCell.myList != null) {
 			currentCell.myList.remove(currentCell);
-			update++;
-		} else {
-			insert++;
-		}
+//			update++;
+		} 
+//		else {
+//			insert++;
+//		}
 
 		lists[list].offer(currentCell);
 		return true;
@@ -109,7 +110,7 @@ public final class Fifo<T extends Identified> extends AbstractQueue<T> {
 	public T poll() {
 		for (MyLinkedList<T> ll : lists) {
 			if (!ll.isEmpty()) {
-				remove++;
+//				remove++;
 				return ll.poll();
 			}
 		}
