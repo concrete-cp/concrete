@@ -1,6 +1,7 @@
 package cspfj.priorityqueues;
 
 import java.util.AbstractQueue;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Iterator;
 
@@ -9,7 +10,7 @@ public final class BitVectorPriorityQueue<T extends Identified> extends
 
 	private final BitSet queue;
 
-	private final T[] values;
+	private T[] values;
 
 	private final Key<T> key;
 
@@ -21,6 +22,25 @@ public final class BitVectorPriorityQueue<T extends Identified> extends
 		this.values = (T[]) new Identified[initSize];
 		queue = new BitSet(initSize);
 		this.key = key;
+	}
+
+	/**
+	 * Increases the capacity of this instance, if necessary, to ensure that it
+	 * can hold at least the number of elements specified by the minimum
+	 * capacity argument.
+	 * 
+	 * @param minCapacity
+	 *            the desired minimum capacity
+	 */
+	private void ensureCapacity(final int minCapacity) {
+		int oldCapacity = values.length;
+
+		if (minCapacity > oldCapacity) {
+			final int newCapacity = Math.max(minCapacity,
+					(oldCapacity * 3) / 2 + 1);
+			// minCapacity is usually close to size, so this is a win:
+			values = Arrays.copyOf(values, newCapacity);
+		}
 	}
 
 	@Override
@@ -41,6 +61,7 @@ public final class BitVectorPriorityQueue<T extends Identified> extends
 	@Override
 	public boolean offer(final T e) {
 		final int id = e.getId();
+		ensureCapacity(id + 1);
 		values[id] = e;
 		queue.set(id);
 		return true;

@@ -47,7 +47,7 @@ public final class AbsDiffTest {
 			}
 
 			@Override
-			public int getEvaluation(final int reviseCount) {
+			public float getEvaluation() {
 				return 0;
 			}
 		};
