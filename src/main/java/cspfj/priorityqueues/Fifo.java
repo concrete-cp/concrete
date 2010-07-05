@@ -14,264 +14,267 @@ import java.util.Iterator;
  */
 public final class Fifo<T extends Identified> extends AbstractQueue<T> {
 
-	private static final int DEFAULT_NB_LISTS = 8;
+    private static final int DEFAULT_NB_LISTS = 8;
 
-	private static final int KEY_FACTOR = 8;
+    private static final int KEY_FACTOR = 3;
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private Cell<T>[] inQueue;
+    private Cell<T>[] inQueue;
 
-	private final MyLinkedList<T>[] lists;
+    private final MyLinkedList<T>[] lists;
 
-	private final int nbLists;
+    private final int nbLists;
 
-	private final Key<T> key;
+    private final Key<T> key;
 
-//	public static int insert = 0;
-//	public static int update = 0;
-//	public static int remove = 0;
+    private int iter = 0;
 
-	public Fifo(final Key<T> k) {
-		this(k, DEFAULT_NB_LISTS);
-	}
+    // public static int insert = 0;
+    // public static int update = 0;
+    // public static int remove = 0;
 
-	public Fifo(final Key<T> k, final int nbLists) {
-		this(k, nbLists, 10);
-	}
+    public Fifo(final Key<T> k) {
+        this(k, DEFAULT_NB_LISTS);
+    }
 
-	public Fifo(final Key<T> k, final int nbLists, final int initSize) {
-		inQueue = (Cell<T>[]) new Cell[initSize];
-		lists = (MyLinkedList<T>[]) new MyLinkedList[nbLists];
-		for (int i = nbLists; --i >= 0;) {
-			lists[i] = new MyLinkedList<T>();
-		}
-		this.key = k;
-		this.nbLists = nbLists;
+    public Fifo(final Key<T> k, final int nbLists) {
+        this(k, nbLists, 10);
+    }
 
-	}
+    public Fifo(final Key<T> k, final int nbLists, final int initSize) {
+        inQueue = (Cell<T>[]) new Cell[initSize];
+        lists = (MyLinkedList<T>[]) new MyLinkedList[nbLists];
+        for (int i = nbLists; --i >= 0;) {
+            lists[i] = new MyLinkedList<T>();
+        }
+        this.key = k;
+        this.nbLists = nbLists;
 
-	private int chooseList(final T element) {
-		if (nbLists <= 1) {
-			return 0;
-		}
-		final float k = key.getKey(element);
-		for (int i = 0, treshold = KEY_FACTOR;; i++, treshold *= KEY_FACTOR) {
-			if (nbLists <= i + 1 || k < treshold) {
-				return i;
-			}
-		}
-	}
+    }
 
-	/**
-	 * Increases the capacity of this instance, if necessary, to ensure that it
-	 * can hold at least the number of elements specified by the minimum
-	 * capacity argument.
-	 * 
-	 * @param minCapacity
-	 *            the desired minimum capacity
-	 */
-	private void ensureCapacity(final int minCapacity) {
-		int oldCapacity = inQueue.length;
-		if (minCapacity > oldCapacity) {
-			final int newCapacity = Math.max(minCapacity,
-					(oldCapacity * 3) / 2 + 1);
-			// minCapacity is usually close to size, so this is a win:
-			inQueue = Arrays.copyOf(inQueue, newCapacity);
-		}
-	}
+    private int chooseList(final T element) {
+        if (nbLists <= 1) {
+            return 0;
+        }
+        final float k = key.getKey(element);
+        for (int i = 0, treshold = KEY_FACTOR;; i++, treshold *= KEY_FACTOR) {
+            if (nbLists <= i + 1 || k < treshold) {
+                return i;
+            }
+        }
+    }
 
-	@Override
-	public boolean offer(final T e) {
-		final int id = e.getId();
-		ensureCapacity(id + 1);
-		Cell<T> currentCell = inQueue[id];
-		if (currentCell == null) {
-			currentCell = new Cell<T>(e);
-			inQueue[id] = currentCell;
-		}
-		final int list = chooseList(e);
-		if (currentCell.myList == lists[list]) {
-			return false;
-		}
-		if (currentCell.myList != null) {
-			currentCell.myList.remove(currentCell);
-//			update++;
-		} 
-//		else {
-//			insert++;
-//		}
+    /**
+     * Increases the capacity of this instance, if necessary, to ensure that it
+     * can hold at least the number of elements specified by the minimum
+     * capacity argument.
+     * 
+     * @param minCapacity
+     *            the desired minimum capacity
+     */
+    private void ensureCapacity(final int minCapacity) {
+        int oldCapacity = inQueue.length;
+        if (minCapacity > oldCapacity) {
+            final int newCapacity = Math.max(minCapacity,
+                    (oldCapacity * 3) / 2 + 1);
+            // minCapacity is usually close to size, so this is a win:
+            inQueue = Arrays.copyOf(inQueue, newCapacity);
+        }
+    }
 
-		lists[list].offer(currentCell);
-		return true;
-	}
+    @Override
+    public boolean offer(final T e) {
+        final int id = e.getId();
+        ensureCapacity(id + 1);
+        Cell<T> currentCell = inQueue[id];
+        if (currentCell == null) {
+            currentCell = new Cell<T>(e);
+            inQueue[id] = currentCell;
+        }
+        final int list = chooseList(e);
+        if (currentCell.iter == iter) {
+            if (currentCell.myList == lists[list]) {
+                return false;
+            }
+            if (currentCell.myList != null) {
+                currentCell.myList.remove(currentCell);
+                // update++;
+            }
+        }
+        // else {
+        // insert++;
+        // }
 
-	@Override
-	public T poll() {
-		for (MyLinkedList<T> ll : lists) {
-			if (!ll.isEmpty()) {
-//				remove++;
-				return ll.poll();
-			}
-		}
-		return null;
-	}
+        lists[list].offer(currentCell, iter);
+        return true;
+    }
 
-	@Override
-	public void clear() {
-		for (Cell<T> cell : inQueue) {
-			if (cell != null) {
-				cell.myList = null;
-			}
-		}
-		for (MyLinkedList<T> ll : lists) {
-			ll.clear();
-		}
-	}
+    @Override
+    public T poll() {
+        for (MyLinkedList<T> ll : lists) {
+            if (!ll.isEmpty()) {
+                // remove++;
+                return ll.poll();
+            }
+        }
+        return null;
+    }
 
-	@Override
-	public Iterator<T> iterator() {
-		throw new UnsupportedOperationException();
-	}
+    @Override
+    public void clear() {
+        iter++;
+        for (MyLinkedList<T> ll : lists) {
+            ll.clear();
+        }
+    }
 
-	@Override
-	public int size() {
-		int size = 0;
-		for (MyLinkedList<T> ll : lists) {
-			size += ll.size();
-		}
-		return size;
-	}
+    @Override
+    public Iterator<T> iterator() {
+        throw new UnsupportedOperationException();
+    }
 
-	@Override
-	public boolean isEmpty() {
-		for (MyLinkedList<T> ll : lists) {
-			if (!ll.isEmpty()) {
-				return false;
-			}
-		}
-		return true;
-	}
+    @Override
+    public int size() {
+        int size = 0;
+        for (MyLinkedList<T> ll : lists) {
+            size += ll.size();
+        }
+        return size;
+    }
 
-	@Override
-	public T peek() {
-		for (MyLinkedList<T> ll : lists) {
-			if (!ll.isEmpty()) {
-				return ll.peek();
-			}
-		}
-		return null;
-	}
+    @Override
+    public boolean isEmpty() {
+        for (MyLinkedList<T> ll : lists) {
+            if (!ll.isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-	private static final class Cell<T> {
-		private final T content;
-		private Cell<T> prev;
-		private Cell<T> next;
-		private MyLinkedList<T> myList;
+    @Override
+    public T peek() {
+        for (MyLinkedList<T> ll : lists) {
+            if (!ll.isEmpty()) {
+                return ll.peek();
+            }
+        }
+        return null;
+    }
 
-		private Cell(final T content) {
-			this.content = content;
-			this.prev = null;
-			this.next = null;
-			this.myList = null;
-		}
-	}
+    private static final class Cell<T> {
+        private final T content;
+        private Cell<T> prev;
+        private Cell<T> next;
+        private MyLinkedList<T> myList;
+        private int iter = -1;
 
-	private static final class MyLinkedList<T> {
+        private Cell(final T content) {
+            this.content = content;
+            this.prev = null;
+            this.next = null;
+            this.myList = null;
+        }
+    }
 
-		private int size;
+    private static final class MyLinkedList<T> {
 
-		private Cell<T> head;
-		private Cell<T> tail;
+        private int size;
 
-		private MyLinkedList() {
-			size = 0;
-			head = null;
-			tail = null;
-		}
+        private Cell<T> head;
+        private Cell<T> tail;
 
-		private void offer(final Cell<T> cell) {
-			cell.prev = null;
-			cell.next = head;
-			if (head != null) {
-				head.prev = cell;
-			}
-			head = cell;
-			if (tail == null) {
-				tail = cell;
-			}
-			cell.myList = this;
-			size++;
-		}
+        private MyLinkedList() {
+            size = 0;
+            head = null;
+            tail = null;
+        }
 
-		private void remove(final Cell<T> cell) {
-			if (cell.next == null) {
-				tail = cell.prev;
-				if (tail == null) {
-					head = null;
-				} else {
-					tail.next = null;
-				}
-			} else if (cell.prev == null) {
-				head = cell.next;
-				if (head == null) {
-					tail = null;
-				} else {
-					head.prev = null;
-				}
+        private void offer(final Cell<T> cell, final int newIter) {
+            cell.prev = null;
+            cell.next = head;
+            if (head != null) {
+                head.prev = cell;
+            }
+            head = cell;
+            if (tail == null) {
+                tail = cell;
+            }
+            cell.myList = this;
+            cell.iter = newIter;
+            size++;
+        }
 
-			} else {
-				cell.next.prev = cell.prev;
-				cell.prev.next = cell.next;
-			}
-			cell.myList = null;
-			size--;
-		}
+        private void remove(final Cell<T> cell) {
+            if (cell.next == null) {
+                tail = cell.prev;
+                if (tail == null) {
+                    head = null;
+                } else {
+                    tail.next = null;
+                }
+            } else if (cell.prev == null) {
+                head = cell.next;
+                if (head == null) {
+                    tail = null;
+                } else {
+                    head.prev = null;
+                }
 
-		private T poll() {
-			final T contents = tail.content;
-			tail.myList = null;
+            } else {
+                cell.next.prev = cell.prev;
+                cell.prev.next = cell.next;
+            }
+            cell.iter = -1;
+            size--;
+        }
 
-			tail = tail.prev;
-			if (tail == null) {
-				head = null;
-			} else {
-				tail.next = null;
-			}
-			size--;
-			return contents;
-		}
+        private T poll() {
+            final T contents = tail.content;
 
-		private T peek() {
-			return tail.content;
-		}
+            tail.iter = -1;
 
-		public int size() {
-			return size;
-		}
+            tail = tail.prev;
+            if (tail == null) {
+                head = null;
+            } else {
+                tail.next = null;
+            }
+            size--;
+            return contents;
+        }
 
-		public boolean isEmpty() {
-			return head == null;
-		}
+        private T peek() {
+            return tail.content;
+        }
 
-		public void clear() {
-			head = null;
-			tail = null;
-			size = 0;
-		}
+        public int size() {
+            return size;
+        }
 
-		public String toString() {
-			if (isEmpty()) {
-				return "{}";
-			}
-			final StringBuilder stb = new StringBuilder();
-			stb.append('{').append(head.content);
-			for (Cell<T> cell = head.next; cell != null; cell = cell.next) {
-				stb.append(", ").append(cell.content);
-			}
-			return stb.append('}').toString();
-		}
+        public boolean isEmpty() {
+            return head == null;
+        }
 
-	}
+        public void clear() {
+            head = null;
+            tail = null;
+            size = 0;
+        }
+
+        public String toString() {
+            if (isEmpty()) {
+                return "{}";
+            }
+            final StringBuilder stb = new StringBuilder();
+            stb.append('{').append(head.content);
+            for (Cell<T> cell = head.next; cell != null; cell = cell.next) {
+                stb.append(", ").append(cell.content);
+            }
+            return stb.append('}').toString();
+        }
+
+    }
 
 }

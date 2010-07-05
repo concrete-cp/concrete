@@ -22,8 +22,8 @@ public final class AC3Constraint implements Filter {
 
 	private final Queue<Constraint> queue;
 
-	private static final Logger LOGGER = Logger.getLogger(Filter.class
-			.getSimpleName());
+//	private static final Logger LOGGER = Logger.getLogger(Filter.class
+//			.getSimpleName());
 
 	private int revisions = 0;
 
@@ -56,7 +56,7 @@ public final class AC3Constraint implements Filter {
 			final int cnt) {
 		revisionCount++;
 		queue.clear();
-		LOGGER.fine("reduce after " + cnt);
+//		LOGGER.fine("reduce after " + cnt);
 		for (Variable v : problem.getVariables()) {
 			if (modVar[v.getId()] > cnt) {
 				final Constraint[] involved = v.getInvolvingConstraints();
@@ -123,7 +123,7 @@ public final class AC3Constraint implements Filter {
 	};
 
 	private boolean reduce() {
-		LOGGER.finer("Reducing");
+//		LOGGER.finer("Reducing");
 		final RevisionHandler revisator = this.revisator;
 
 		while (!queue.isEmpty()) {

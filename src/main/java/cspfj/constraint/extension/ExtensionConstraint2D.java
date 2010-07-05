@@ -25,7 +25,7 @@ import cspfj.problem.Variable;
 public final class ExtensionConstraint2D extends AbstractPVRConstraint
         implements ExtensionConstraint {
 
-    private static final int GAIN_OVER_GENERAL = 10;
+    private static final float GAIN_OVER_GENERAL = .1f;
 
     private final MatrixManager2D matrixManager;
 
@@ -46,7 +46,7 @@ public final class ExtensionConstraint2D extends AbstractPVRConstraint
     @Override
     public float getEvaluation() {
         return getVariable(0).getDomainSize() * getVariable(1).getDomainSize()
-                / GAIN_OVER_GENERAL;
+                * GAIN_OVER_GENERAL;
     }
 
     @Override

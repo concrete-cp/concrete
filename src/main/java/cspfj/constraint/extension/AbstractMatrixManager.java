@@ -6,9 +6,6 @@ import java.util.logging.Logger;
 import cspfj.problem.Variable;
 
 public abstract class AbstractMatrixManager implements MatrixManager {
-    private static final Logger LOGGER = Logger
-            .getLogger(AbstractMatrixManager.class.getName());
-
     private final int[] domainSize;
 
     protected Variable[] variables;
@@ -61,14 +58,14 @@ public abstract class AbstractMatrixManager implements MatrixManager {
             unshareMatrix();
         }
         matrix.set(tuple, status);
-        if (status == false) {
+        if (!status) {
             addConflict(tuple);
         }
         return true;
     }
 
     @Override
-    public final boolean removeTuple(int[] tuple) {
+    public final boolean removeTuple(final int[] tuple) {
         return set(tuple, false);
     }
 
@@ -191,8 +188,8 @@ public abstract class AbstractMatrixManager implements MatrixManager {
         if (matrix.isEmpty()) {
             return nbInitConflicts;
         }
-
-        LOGGER.fine("Counting " + this + " conflicts");
+//
+//        LOGGER.fine("Counting " + this + " conflicts");
 
         if (matrix instanceof TupleSet) {
 

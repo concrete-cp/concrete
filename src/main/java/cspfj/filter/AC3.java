@@ -21,8 +21,8 @@ public final class AC3 implements Filter {
 
 	private final Queue<Variable> queue;
 
-	private static final Logger LOGGER = Logger.getLogger(Filter.class
-			.getSimpleName());
+//	private static final Logger LOGGER = Logger.getLogger(Filter.class
+//			.getSimpleName());
 
 	private int revisions = 0;
 
@@ -80,7 +80,7 @@ public final class AC3 implements Filter {
 			final int cnt) {
 		reviseCount++;
 		queue.clear();
-		LOGGER.fine("reduce after " + cnt);
+//		LOGGER.fine("reduce after " + cnt);
 		for (Variable v : problem.getVariables()) {
 			if (modVar[v.getId()] > cnt) {
 				queue.offer(v);
@@ -152,7 +152,7 @@ public final class AC3 implements Filter {
 	};
 
 	private boolean reduce() {
-		LOGGER.finer("Reducing");
+//		LOGGER.finer("Reducing");
 
 		while (!queue.isEmpty()) {
 			if (!reduce(queue.poll())) {
@@ -187,7 +187,7 @@ public final class AC3 implements Filter {
 	}
 
 	private boolean control() {
-		LOGGER.fine("Control");
+//		LOGGER.fine("Control");
 		final RevisionHandler controlRevisator = new RevisionHandler() {
 
 			@Override

@@ -26,8 +26,8 @@ public final class NoGoodLearner {
         NONE, EXT, BIN;
     }
 
-    private static final Logger LOGGER = Logger.getLogger(NoGoodLearner.class
-            .getName());
+//    private static final Logger LOGGER = Logger.getLogger(NoGoodLearner.class
+//            .getName());
 
     private static boolean useNoGoods = true;
 
@@ -107,7 +107,7 @@ public final class NoGoodLearner {
                         nbNoGoods += newNogoods;
                         modifiedConstraints.add(constraint);
                         if (constraint.getId() > problem.getMaxCId()) {
-                            LOGGER.info("Added " + constraint);
+//                            LOGGER.info("Added " + constraint);
                             addedConstraints.add(constraint);
                         }
                     }
@@ -116,14 +116,14 @@ public final class NoGoodLearner {
             }
         }
         if (!modifiedConstraints.isEmpty()) {
-            LOGGER.info(nbNoGoods + " nogoods");
+//            LOGGER.info(nbNoGoods + " nogoods");
 
             if (!addedConstraints.isEmpty()) {
                 for (Constraint c : addedConstraints) {
                     problem.addConstraint(c);
                 }
                 problem.prepareConstraints();
-                LOGGER.info(problem.getNbConstraints() + " constraints");
+//                LOGGER.info(problem.getNbConstraints() + " constraints");
             }
         }
         return modifiedConstraints;

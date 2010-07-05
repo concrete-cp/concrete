@@ -6,271 +6,269 @@ import java.util.Iterator;
 
 public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
 
-	private static final int DEFAULT_SIZE = 10;
+    private static final int DEFAULT_SIZE = 10;
 
-	private static final float LOG2 = (float) Math.log(2);
+    private static final float LOG2 = (float) Math.log(2);
 
-	private final Key<T> key;
+    private final Key<T> key;
 
-	private BinomialHeapNode<T>[] trees;
+    private BinomialHeapNode<T>[] trees;
 
-	private int size = 0;
+    private int size = 0;
 
-	private BinomialHeapNode<T>[] map;
+    private BinomialHeapNode<T>[] map;
 
-	public BinomialHeap(final Key<T> key) {
-		this(key, DEFAULT_SIZE);
-	}
+    private int iter = 0;
 
-	public BinomialHeap(final Key<T> key, final int initSize) {
-		this.key = key;
-		map = (BinomialHeapNode<T>[]) new BinomialHeapNode[initSize];
-		trees = (BinomialHeapNode<T>[]) new BinomialHeapNode[maxNbTrees(initSize)];
-	}
+    public BinomialHeap(final Key<T> key) {
+        this(key, DEFAULT_SIZE);
+    }
 
-	private static int maxNbTrees(final int size) {
-		return 1 + (int) Math.floor(Math.log(size) / LOG2);
-	}
+    public BinomialHeap(final Key<T> key, final int initSize) {
+        this.key = key;
+        map = (BinomialHeapNode<T>[]) new BinomialHeapNode[initSize];
+        trees = (BinomialHeapNode<T>[]) new BinomialHeapNode[maxNbTrees(initSize)];
+    }
 
-	/**
-	 * Increases the capacity of this instance, if necessary, to ensure that it
-	 * can hold at least the number of elements specified by the minimum
-	 * capacity argument.
-	 * 
-	 * @param minCapacity
-	 *            the desired minimum capacity
-	 */
-	private void ensureCapacity(final int minCapacity) {
-		int oldCapacity = map.length;
-		if (minCapacity > oldCapacity) {
-			final int newCapacity = Math.max(minCapacity,
-					(oldCapacity * 3) / 2 + 1);
-			// minCapacity is usually close to size, so this is a win:
-			map = Arrays.copyOf(map, newCapacity);
-			final int nbTrees = maxNbTrees(newCapacity);
-			if (nbTrees > trees.length) {
-				trees = Arrays.copyOf(trees, nbTrees);
-			}
-		}
-	}
+    private static int maxNbTrees(final int size) {
+        return 1 + (int) Math.floor(Math.log(size) / LOG2);
+    }
 
-	@Override
-	public Iterator<T> iterator() {
-		throw new UnsupportedOperationException();
-	}
+    /**
+     * Increases the capacity of this instance, if necessary, to ensure that it
+     * can hold at least the number of elements specified by the minimum
+     * capacity argument.
+     * 
+     * @param minCapacity
+     *            the desired minimum capacity
+     */
+    private void ensureCapacity(final int minCapacity) {
+        int oldCapacity = map.length;
+        if (minCapacity > oldCapacity) {
+            final int newCapacity = Math.max(minCapacity,
+                    (oldCapacity * 3) / 2 + 1);
+            // minCapacity is usually close to size, so this is a win:
+            map = Arrays.copyOf(map, newCapacity);
+            final int nbTrees = maxNbTrees(newCapacity);
+            if (nbTrees > trees.length) {
+                trees = Arrays.copyOf(trees, nbTrees);
+            }
+        }
+    }
 
-	@Override
-	public int size() {
-		return size;
-	}
+    @Override
+    public Iterator<T> iterator() {
+        throw new UnsupportedOperationException();
+    }
 
-	@Override
-	public boolean offer(final T arg0) {
-		final int id = arg0.getId();
+    @Override
+    public int size() {
+        return size;
+    }
 
-		ensureCapacity(id + 1);
+    @Override
+    public boolean offer(final T arg0) {
+        final int id = arg0.getId();
 
-		BinomialHeapNode<T> node = map[id];
+        ensureCapacity(id + 1);
 
-		if (node == null) {
-			node = new BinomialHeapNode<T>(arg0);
-			map[id] = node;
-		}
+        BinomialHeapNode<T> node = map[id];
 
-		final float oldKey = node.key;
-		final float newKey = key.getKey(arg0);
-		node.key = newKey;
+        if (node == null) {
+            node = new BinomialHeapNode<T>(arg0);
+            map[id] = node;
+        }
 
-		if (node.inQueue) {
-			if (newKey < oldKey) {
-				decreaseKey(node, false);
-			} else if (newKey > oldKey) {
-				increaseKey(node);
-			}
-			return false;
-		}
+        final float oldKey = node.key;
+        final float newKey = key.getKey(arg0);
+        node.key = newKey;
 
-		node.clear();
+        if (node.inQueue == iter) {
+            if (newKey < oldKey) {
+                decreaseKey(node, false);
+            } else if (newKey > oldKey) {
+                increaseKey(node);
+            }
+            return false;
+        }
 
-		carryMerge(node, 0);
-		node.inQueue = true;
-		size++;
-		return true;
-	}
+        node.clear();
 
-	@Override
-	public T peek() {
-		return trees[minTree()].data;
-	}
+        carryMerge(node, 0);
+        node.inQueue = iter;
+        size++;
+        return true;
+    }
 
-	@Override
-	public T poll() {
-		final BinomialHeapNode<T> min = trees[minTree()];
-		deleteRoot(min);
-		min.inQueue = false;
-		size--;
-		return min.data;
-	}
+    @Override
+    public T peek() {
+        return trees[minTree()].data;
+    }
 
-	private void deleteRoot(final BinomialHeapNode<T> root) {
-		assert root.parent == null;
-		trees[root.rank] = null;
+    @Override
+    public T poll() {
+        final BinomialHeapNode<T> min = trees[minTree()];
+        deleteRoot(min);
+        min.inQueue = -1;
+        size--;
+        return min.data;
+    }
 
-		BinomialHeapNode<T> subTree = root.child;
-		while (subTree != null) {
-			final BinomialHeapNode<T> next = subTree.right;
-			subTree.right = null;
-			subTree.parent = null;
+    private void deleteRoot(final BinomialHeapNode<T> root) {
+        assert root.parent == null;
+        trees[root.rank] = null;
 
-			carryMerge(subTree, subTree.rank);
-			subTree = next;
-		}
-	}
+        BinomialHeapNode<T> subTree = root.child;
+        while (subTree != null) {
+            final BinomialHeapNode<T> next = subTree.right;
+            subTree.right = null;
+            subTree.parent = null;
 
-	private int minTree() {
-		int min = -1;
-		float minKey = 0;
-		for (int i = trees.length; --i >= 0;) {
-			final BinomialHeapNode<T> tree = trees[i];
-			if (tree != null && (min < 0 || tree.key <= minKey)) {
-				min = i;
-				minKey = tree.key;
-			}
-		}
-		return min;
-	}
+            carryMerge(subTree, subTree.rank);
+            subTree = next;
+        }
+    }
 
-	@Override
-	public void clear() {
-		Arrays.fill(trees, null);
-		for (BinomialHeapNode<T> n : map) {
-			if (n != null) {
-				n.inQueue = false;
-			}
-		}
-		size = 0;
-	}
+    private int minTree() {
+        int min = -1;
+        float minKey = 0;
+        for (int i = trees.length; --i >= 0;) {
+            final BinomialHeapNode<T> tree = trees[i];
+            if (tree != null && (min < 0 || tree.key <= minKey)) {
+                min = i;
+                minKey = tree.key;
+            }
+        }
+        return min;
+    }
 
-	private void carryMerge(final BinomialHeapNode<T> tree, final int i) {
-		final BinomialHeapNode<T> storedTree = trees[i];
+    @Override
+    public void clear() {
+        Arrays.fill(trees, null);
+        iter++;
+        size = 0;
+    }
 
-		if (storedTree == null) {
+    private void carryMerge(final BinomialHeapNode<T> tree, final int i) {
+        final BinomialHeapNode<T> storedTree = trees[i];
 
-			trees[i] = tree;
+        if (storedTree == null) {
 
-		} else {
+            trees[i] = tree;
 
-			trees[i] = null;
+        } else {
 
-			/**
-			 * We merge either the stored tree under the given tree or the
-			 * reverse.
-			 */
-			if (storedTree.key <= tree.key) {
-				storedTree.addSubTree(tree);
-				carryMerge(storedTree, i + 1);
-			} else {
-				tree.addSubTree(storedTree);
-				carryMerge(tree, i + 1);
-			}
-		}
-	}
+            trees[i] = null;
 
-	private BinomialHeapNode<T> decreaseKey(final BinomialHeapNode<T> node,
-			final boolean delete) {
-		BinomialHeapNode<T> swappy;
-		for (swappy = node; swappy.parent != null
-				&& (delete || swappy.parent.key > swappy.key); swappy = swappy.parent) {
-			swap(swappy, swappy.parent);
-		}
-		return swappy;
-	}
+            /**
+             * We merge either the stored tree under the given tree or the
+             * reverse.
+             */
+            if (storedTree.key <= tree.key) {
+                storedTree.addSubTree(tree);
+                carryMerge(storedTree, i + 1);
+            } else {
+                tree.addSubTree(storedTree);
+                carryMerge(tree, i + 1);
+            }
+        }
+    }
 
-	private void increaseKey(final BinomialHeapNode<T> node) {
-		final BinomialHeapNode<T> root = decreaseKey(node, true);
-		deleteRoot(root);
-		root.clear();
-		carryMerge(root, 0);
-	}
+    private BinomialHeapNode<T> decreaseKey(final BinomialHeapNode<T> node,
+            final boolean delete) {
+        BinomialHeapNode<T> swappy;
+        for (swappy = node; swappy.parent != null
+                && (delete || swappy.parent.key > swappy.key); swappy = swappy.parent) {
+            swap(swappy, swappy.parent);
+        }
+        return swappy;
+    }
 
-	@Override
-	public String toString() {
-		final StringBuilder stb = new StringBuilder();
-		for (BinomialHeapNode<T> n : trees) {
-			stb.append(n).append('\n');
-		}
-		return stb.toString();
-	}
+    private void increaseKey(final BinomialHeapNode<T> node) {
+        final BinomialHeapNode<T> root = decreaseKey(node, true);
+        deleteRoot(root);
+        root.clear();
+        carryMerge(root, 0);
+    }
 
-	private void swap(final BinomialHeapNode<T> node1,
-			final BinomialHeapNode<T> node2) {
-		final T node1Data = node1.data;
-		final float node1Key = node1.key;
-		map[node1Data.getId()] = node2;
-		map[node2.data.getId()] = node1;
-		node1.data = node2.data;
-		node1.key = node2.key;
-		node2.data = node1Data;
-		node2.key = node1Key;
-	}
+    @Override
+    public String toString() {
+        final StringBuilder stb = new StringBuilder();
+        for (BinomialHeapNode<T> n : trees) {
+            stb.append(n).append('\n');
+        }
+        return stb.toString();
+    }
 
-	private static final class BinomialHeapNode<T> {
-		private T data;
+    private void swap(final BinomialHeapNode<T> node1,
+            final BinomialHeapNode<T> node2) {
+        final T node1Data = node1.data;
+        final float node1Key = node1.key;
+        map[node1Data.getId()] = node2;
+        map[node2.data.getId()] = node1;
+        node1.data = node2.data;
+        node1.key = node2.key;
+        node2.data = node1Data;
+        node2.key = node1Key;
+    }
 
-		private float key;
+    private static final class BinomialHeapNode<T> {
+        private T data;
 
-		private BinomialHeapNode<T> child;
+        private float key;
 
-		private BinomialHeapNode<T> right;
+        private BinomialHeapNode<T> child;
 
-		private BinomialHeapNode<T> parent;
+        private BinomialHeapNode<T> right;
 
-		private int rank;
+        private BinomialHeapNode<T> parent;
 
-		private boolean inQueue;
+        private int rank;
 
-		private BinomialHeapNode(final T data) {
-			this.data = data;
-			inQueue = false;
-			clear();
-		}
+        private int inQueue;
 
-		public void clear() {
-			child = null;
-			right = null;
-			parent = null;
-			rank = 0;
-		}
+        private BinomialHeapNode(final T data) {
+            this.data = data;
+            inQueue = -1;
+            clear();
+        }
 
-		public void addSubTree(final BinomialHeapNode<T> subTree) {
-			if (child != null) {
-				subTree.right = child;
-			}
-			rank++;
-			child = subTree;
-			subTree.parent = this;
-		}
+        public void clear() {
+            child = null;
+            right = null;
+            parent = null;
+            rank = 0;
+        }
 
-		@Override
-		public String toString() {
-			final StringBuilder stb = new StringBuilder();
-			tree(stb, 0);
-			return stb.toString();
-		}
+        public void addSubTree(final BinomialHeapNode<T> subTree) {
+            if (child != null) {
+                subTree.right = child;
+            }
+            rank++;
+            child = subTree;
+            subTree.parent = this;
+        }
 
-		private void tree(final StringBuilder stb, final int depth) {
-			for (int i = depth; --i >= 0;) {
-				stb.append("--");
-			}
-			stb.append(data).append(" (").append(key).append(", ").append(rank)
-					.append(")\n");
-			if (child != null) {
-				child.tree(stb, depth + 1);
-			}
-			if (right != null) {
-				right.tree(stb, depth);
-			}
-		}
-	}
+        @Override
+        public String toString() {
+            final StringBuilder stb = new StringBuilder();
+            tree(stb, 0);
+            return stb.toString();
+        }
+
+        private void tree(final StringBuilder stb, final int depth) {
+            for (int i = depth; --i >= 0;) {
+                stb.append("--");
+            }
+            stb.append(data).append(" (").append(key).append(", ").append(rank)
+                    .append(")\n");
+            if (child != null) {
+                child.tree(stb, depth + 1);
+            }
+            if (right != null) {
+                right.tree(stb, depth);
+            }
+        }
+    }
 
 }

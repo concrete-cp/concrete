@@ -28,8 +28,8 @@ import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
 
 public abstract class AbstractConstraint implements Constraint {
-	private static final Logger LOGGER = Logger
-			.getLogger(AbstractConstraint.class.getName());
+//	private static final Logger LOGGER = Logger
+//			.getLogger(AbstractConstraint.class.getName());
 	private static int cId = 0;
 
 	private static long nbPresenceChecks = 0;
@@ -174,7 +174,7 @@ public abstract class AbstractConstraint implements Constraint {
 	@Override
 	public void restore(final int level) {
 		if (entailedAtLevel > level) {
-			LOGGER.finest("Disentailing " + this);
+//			LOGGER.finest("Disentailing " + this);
 			entailedAtLevel = -1;
 		}
 		currentLevel = level;
@@ -230,7 +230,7 @@ public abstract class AbstractConstraint implements Constraint {
 	@Override
 	public final void entail() {
 		entailedAtLevel = currentLevel;
-		LOGGER.finer(currentLevel + ": entailing " + this);
+//		LOGGER.finer(currentLevel + ": entailing " + this);
 	}
 
 	private static final RevisionHandler NULL_REVISATOR = new RevisionHandler() {

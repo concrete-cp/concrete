@@ -31,7 +31,7 @@ public final class FibonacciHeapTest {
                 new Key<IdInteger>() {
 
                     @Override
-                    public double getKey(final IdInteger object) {
+                    public float getKey(final IdInteger object) {
                         return object.value;
                     }
 

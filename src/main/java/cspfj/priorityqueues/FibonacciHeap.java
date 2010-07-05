@@ -62,6 +62,12 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 
     private final Key<T> key;
 
+    public static int insert = 0;
+    public static int update = 0;
+    public static int remove = 0;
+
+    private int iter = 0;
+
     public FibonacciHeap(final Key<T> key) {
         this(key, DEFAULT_SIZE);
     }
@@ -96,11 +102,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
     public void clear() {
         minNode = null;
         nNodes = 0;
-        for (FibonacciHeapNode<T> n : map) {
-            if (n != null) {
-                n.inQueue = false;
-            }
-        }
+        iter++;
     }
 
     /**
@@ -192,6 +194,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
         nNodes++;
     }
 
+    @Override
     public boolean offer(final T data) {
         final int id = data.getId();
 
@@ -207,7 +210,8 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
         final float newKey = key.getKey(data);
         node.key = newKey;
 
-        if (node.inQueue) {
+        if (node.inQueue == iter) {
+            update++;
             if (newKey < oldKey) {
                 decreaseKey(node, false);
                 assert smallest(minNode);
@@ -218,10 +222,10 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 
             return false;
         }
-
+        insert++;
         node.clear();
         insert(node);
-        node.inQueue = true;
+        node.inQueue = iter;
         return true;
     }
 
@@ -278,7 +282,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
     private boolean smallest(final FibonacciHeapNode<T> min) {
 
         for (FibonacciHeapNode<T> n : map) {
-            if (n != null && n.inQueue && n.key < min.key) {
+            if (n != null && n.inQueue == iter && n.key < min.key) {
                 return false;
             }
         }
@@ -379,7 +383,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
     public T poll() {
         assert smallest(minNode);
         final FibonacciHeapNode<T> min = removeMin();
-        min.inQueue = false;
+        min.inQueue = -1;
         return min.data;
     }
 
@@ -488,7 +492,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
 
         private float key;
 
-        private boolean inQueue = false;
+        private int inQueue = -1;
 
         /**
          * Default constructor. Initializes the right and left pointers, making

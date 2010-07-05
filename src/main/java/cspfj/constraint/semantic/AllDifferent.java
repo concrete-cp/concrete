@@ -30,110 +30,113 @@ import cspfj.util.BitVector;
 
 public final class AllDifferent extends AbstractArcGrainedConstraint {
 
-	private final BitVector union;
+    private final BitVector union;
 
-	private final Deque<Variable> queue;
+    private final Deque<Variable> queue;
 
-	private int offset;
+    private int offset;
 
-	// private final static Logger logger = Logger
-	// .getLogger("cspfj.constraint.AllDifferentConstraint");
-	public AllDifferent(final Variable... scope) {
-		this(null, scope);
-	}
+    private final float priority;
 
-	public AllDifferent(final String name, final Variable... scope) {
-		super(name, scope);
+    // private final static Logger logger = Logger
+    // .getLogger("cspfj.constraint.AllDifferentConstraint");
+    public AllDifferent(final Variable... scope) {
+        this(null, scope);
+    }
 
-		offset = Integer.MAX_VALUE;
-		int max = Integer.MIN_VALUE;
-		for (Variable v : scope) {
-			for (int i : v.getDomain().allValues()) {
-				offset = Math.min(i, offset);
-				max = Math.max(i, max);
-			}
-		}
-		union = BitVector.factory(max - offset + 1, false);
-		queue = new LinkedList<Variable>();
-	}
+    public AllDifferent(final String name, final Variable... scope) {
+        super(name, scope);
 
-	@Override
-	public boolean check() {
-		final BitVector singletons = this.union;
-		singletons.fill(false);
-		final int offset = this.offset;
+        offset = Integer.MAX_VALUE;
+        int max = Integer.MIN_VALUE;
+        for (Variable v : scope) {
+            for (int i : v.getDomain().allValues()) {
+                offset = Math.min(i, offset);
+                max = Math.max(i, max);
+            }
+        }
+        union = BitVector.factory(max - offset + 1, false);
+        queue = new LinkedList<Variable>();
+        priority = getArity() * getArity();
+    }
 
-		final int[] tuple = this.tuple;
-		for (int i = getArity(); --i >= 0;) {
-			final int value = getVariable(i).getDomain().value(tuple[i]);
-			if (singletons.get(value - offset)) {
-				return false;
-			}
-			singletons.set(value - offset);
-		}
-		return true;
-	}
+    @Override
+    public boolean check() {
+        final BitVector singletons = this.union;
+        singletons.fill(false);
+        final int offset = this.offset;
 
-	@Override
-	public boolean revise(final RevisionHandler revisator, final int reviseCount) {
-		final int min = this.offset;
-		final Deque<Variable> queue = this.queue;
+        final int[] tuple = this.tuple;
+        for (int i = getArity(); --i >= 0;) {
+            final int value = getVariable(i).getDomain().value(tuple[i]);
+            if (singletons.get(value - offset)) {
+                return false;
+            }
+            singletons.set(value - offset);
+        }
+        return true;
+    }
 
-		queue.clear();
-		for (int pos = getArity(); --pos >= 0;) {
-			if (getRemovals(pos) >= reviseCount
-					&& getVariable(pos).getDomainSize() == 1) {
-				queue.offer(getVariable(pos));
-			}
-		}
+    @Override
+    public boolean revise(final RevisionHandler revisator, final int reviseCount) {
+        final int min = this.offset;
+        final Deque<Variable> queue = this.queue;
 
-		while (!queue.isEmpty()) {
-			final Variable checkedVariable = queue.poll();
-			final int value = checkedVariable.getDomain().value(
-					checkedVariable.getFirst());
+        queue.clear();
+        for (int pos = getArity(); --pos >= 0;) {
+            if (getRemovals(pos) >= reviseCount
+                    && getVariable(pos).getDomainSize() == 1) {
+                queue.offer(getVariable(pos));
+            }
+        }
 
-			for (Variable v : getScope()) {
-				if (v == checkedVariable) {
-					continue;
-				}
-				final int index = v.getDomain().index(value);
-				if (index >= 0 && v.isPresent(index)) {
-					v.remove(index);
-					if (v.getDomainSize() < 1) {
-						return false;
-					} else if (v.getDomainSize() == 1) {
-						queue.offer(v);
-					}
-					revisator.revised(this, v);
-				}
+        while (!queue.isEmpty()) {
+            final Variable checkedVariable = queue.poll();
+            final int value = checkedVariable.getDomain().value(
+                    checkedVariable.getFirst());
 
-			}
+            for (Variable v : getScope()) {
+                if (v == checkedVariable) {
+                    continue;
+                }
+                final int index = v.getDomain().index(value);
+                if (index >= 0 && v.isPresent(index)) {
+                    v.remove(index);
+                    if (v.getDomainSize() < 1) {
+                        return false;
+                    } else if (v.getDomainSize() == 1) {
+                        queue.offer(v);
+                    }
+                    revisator.revised(this, v);
+                }
 
-		}
+            }
 
-		final BitVector union = this.union;
-		union.fill(false);
-		int size = 0;
-		for (Variable v : getScope()) {
-			for (int i = v.getFirst(); i >= 0; i = v.getNext(i)) {
-				if (union.set(v.getDomain().value(i) - min)
-						&& ++size >= getArity()) {
-					return true;
+        }
 
-				}
-				assert size == union.cardinality();
-			}
-		}
+        final BitVector union = this.union;
+        union.fill(false);
+        int size = 0;
+        for (Variable v : getScope()) {
+            for (int i = v.getFirst(); i >= 0; i = v.getNext(i)) {
+                if (union.set(v.getDomain().value(i) - min)
+                        && ++size >= getArity()) {
+                    return true;
 
-		return false;
-	}
+                }
+                assert size == union.cardinality();
+            }
+        }
 
-	public String toString() {
-		return "allDifferent" + Arrays.toString(getScope());
-	}
+        return false;
+    }
 
-	@Override
-	public float getEvaluation() {
-		return getArity() * getArity();
-	}
+    public String toString() {
+        return "allDifferent" + Arrays.toString(getScope());
+    }
+
+    @Override
+    public float getEvaluation() {
+        return priority;
+    }
 }

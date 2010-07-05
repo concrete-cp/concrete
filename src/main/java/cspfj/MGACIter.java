@@ -31,7 +31,6 @@ import java.util.logging.Logger;
 import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.AC3;
-import cspfj.filter.AC3Constraint;
 import cspfj.filter.Filter;
 import cspfj.heuristic.CrossHeuristic;
 import cspfj.heuristic.Heuristic;
@@ -87,7 +86,7 @@ public final class MGACIter extends AbstractSolver {
         this.filter = filter;
         this.heuristic = heuristic;
 
-        LOGGER.info(filter.getClass().toString());
+//        LOGGER.info(filter.getClass().toString());
 
         setMaxBacktracks(prob.getMaxBacktracks());
 
@@ -135,10 +134,10 @@ public final class MGACIter extends AbstractSolver {
 
             assert selectedVariable.isPresent(selectedIndex);
 
-            LOGGER.fine(problem.getCurrentLevel() + " : " + selectedVariable
-                    + " <- "
-                    + selectedVariable.getDomain().value(selectedIndex) + "("
-                    + getNbBacktracks() + "/" + getMaxBacktracks() + ")");
+//            LOGGER.fine(problem.getCurrentLevel() + " : " + selectedVariable
+//                    + " <- "
+//                    + selectedVariable.getDomain().value(selectedIndex) + "("
+//                    + getNbBacktracks() + "/" + getMaxBacktracks() + ")");
 
             problem.push();
             selectedVariable.setSingle(selectedIndex);
@@ -159,9 +158,9 @@ public final class MGACIter extends AbstractSolver {
             // decision.getVariable().unassign();
             problem.pop();
 
-            LOGGER.finer(problem.getCurrentLevel() + " : "
-                    + decision.getVariable() + " /= "
-                    + decision.getVariable().getValue(decision.getIndex()));
+//            LOGGER.finer(problem.getCurrentLevel() + " : "
+//                    + decision.getVariable() + " /= "
+//                    + decision.getVariable().getValue(decision.getIndex()));
         } while (decision.getVariable().getDomainSize() <= 1);
 
         decision.getVariable().remove(decision.getIndex());
