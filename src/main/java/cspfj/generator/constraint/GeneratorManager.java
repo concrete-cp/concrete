@@ -30,6 +30,7 @@ public final class GeneratorManager {
         register("ne", NeqGenerator.class);
         register("absdiff", AbsDiffGenerator.class);
         register("diffGe", DiffGeGenerator.class);
+        register("lexleq", LexLeqGenerator.class);
     }
 
     private final Problem problem;

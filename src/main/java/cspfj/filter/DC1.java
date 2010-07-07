@@ -86,6 +86,35 @@ public final class DC1 extends AbstractSAC {
         // }
         return result;
     }
+    
+    public boolean control() throws InterruptedException {
+        final Filter filter = this.filter;
+
+        if (!filter.reduceAll()) {
+            return false;
+        }
+        final Variable[] variables = problem.getVariables();
+
+        int mark = 0;
+
+        int v = 0;
+
+        do {
+            final Variable variable = variables[v];
+            // if (logger.isLoggable(Level.FINE)) {
+            LOGGER.info(variable.toString());
+            // }
+            if (variable.getDomainSize() > 1 && singletonTest(variable)) {
+            	return false;
+            }
+            if (++v >= variables.length) {
+                v = 0;
+            }
+        } while (v != mark);
+
+        return true;
+
+    }
 
     protected boolean singletonTest(final Variable variable)
             throws InterruptedException {
