@@ -10,17 +10,18 @@ public final class TupleSet implements Matrix, Cloneable, Iterable<int[]> {
 
 	private final boolean initialContent;
 
-	private boolean empty;
+	private TupleSet(final IntTupleSet tupleSet, final boolean initialContent) {
+		super();
+		this.initialContent = initialContent;
+		this.tupleSet = tupleSet;
+	}
 
 	public TupleSet(final int nbTuples, final boolean initialContent) {
-		super();
-		tupleSet = new IntTupleSet(nbTuples);
-		this.initialContent = initialContent;
-		empty = !initialContent;
+		this(new IntTupleSet(nbTuples), initialContent);
 	}
 
 	public TupleSet(final boolean initialContent) {
-		this(16, initialContent);
+		this(new IntTupleSet(), initialContent);
 	}
 
 	public TupleSet clone() {
@@ -46,7 +47,6 @@ public final class TupleSet implements Matrix, Cloneable, Iterable<int[]> {
 		} else {
 			tupleSet.add(tuple.clone());
 		}
-		empty = false;
 	}
 
 	public boolean getInitialContent() {
@@ -54,7 +54,7 @@ public final class TupleSet implements Matrix, Cloneable, Iterable<int[]> {
 	}
 
 	public boolean isEmpty() {
-		return empty;
+		return tupleSet.isEmpty() && !initialContent;
 	}
 
 	public int size() {
