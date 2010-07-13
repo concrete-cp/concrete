@@ -304,7 +304,7 @@ public final class DC20 implements Filter {
                     problem.addConstraint(c);
                 }
 
-                problem.prepareConstraints();
+                problem.prepare();
 
                 impliedConstraints.addAll(addedConstraints);
 

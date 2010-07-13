@@ -10,9 +10,8 @@ import org.junit.Test;
 
 import cspfj.exception.FailedGenerationException;
 import cspfj.util.BitVector;
-import cspom.variable.CSPOMVariable;
 
-public class VariableTest {
+public final class VariableTest {
 
     private Variable variable;
 
@@ -92,7 +91,7 @@ public class VariableTest {
 
         final Variable variable = problem.addVariable("V1",
                 new BitVectorDomain(1, 2, 3, 4, 5, 6));
-        problem.prepareVariables();
+        problem.prepare();
 
         variable.remove(0);
         variable.remove(1);

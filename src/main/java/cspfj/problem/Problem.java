@@ -49,6 +49,8 @@ public final class Problem {
 
     private int currentLevel;
 
+    private boolean prepared;
+
     public Problem() {
         super();
         variables = new LinkedHashMap<String, Variable>();
@@ -62,14 +64,24 @@ public final class Problem {
         }
         final Variable var = new Variable(name, domain);
         variables.put(name, var);
+        prepared = false;
         return var;
     }
 
     public void addConstraint(final Constraint constraint) {
         constraints.add(constraint);
+        prepared = false;
     }
 
-    public void prepareVariables() {
+    public void prepare() {
+        if (!prepared) {
+            prepareVariables();
+            prepareConstraints();
+            prepared = true;
+        }
+    }
+
+    private void prepareVariables() {
         maxDomainSize = 0;
         maxVId = 0;
 
@@ -84,7 +96,7 @@ public final class Problem {
         nbVariables = variables.size();
     }
 
-    public void prepareConstraints() {
+    private void prepareConstraints() {
         maxArity = Collections.max(constraints, new Comparator<Constraint>() {
             @Override
             public int compare(final Constraint o1, final Constraint o2) {

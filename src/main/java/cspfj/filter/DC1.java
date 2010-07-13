@@ -226,7 +226,7 @@ public final class DC1 extends AbstractSAC {
                     problem.addConstraint(c);
                 }
 
-                problem.prepareConstraints();
+                problem.prepare();
                 LOGGER.info(problem.getNbConstraints() + " constraints");
             }
         }

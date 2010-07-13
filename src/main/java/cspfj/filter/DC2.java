@@ -304,7 +304,7 @@ public final class DC2 implements Filter {
                     problem.addConstraint(c);
                 }
 
-                problem.prepareConstraints();
+                problem.prepare();
 
                 LOGGER.info(problem.getNbConstraints() + " constraints");
             }

@@ -122,7 +122,7 @@ public final class NoGoodLearner {
                 for (Constraint c : addedConstraints) {
                     problem.addConstraint(c);
                 }
-                problem.prepareConstraints();
+                problem.prepare();
 //                LOGGER.info(problem.getNbConstraints() + " constraints");
             }
         }

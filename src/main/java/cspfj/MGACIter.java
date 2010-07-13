@@ -174,15 +174,9 @@ public final class MGACIter extends AbstractSolver {
         decisions.clear();
     }
 
-    private boolean prepared = false;
-
     @Override
     public Map<String, Integer> nextSolution() throws IOException {
-        if (!prepared) {
-            problem.prepareVariables();
-            problem.prepareConstraints();
-            prepared = true;
-        }
+        problem.prepare();
         // System.gc();
         int maxBT;
         if (firstSolutionGiven) {
@@ -220,7 +214,7 @@ public final class MGACIter extends AbstractSolver {
                 }
             }
             if (entailed) {
-                problem.prepareConstraints();
+                problem.prepare();
             }
         }
 

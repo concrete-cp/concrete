@@ -54,8 +54,6 @@ public final class ProblemGenerator {
             }
         }
 
-        problem.prepareVariables();
-        problem.prepareConstraints();
         return problem;
     }
 
