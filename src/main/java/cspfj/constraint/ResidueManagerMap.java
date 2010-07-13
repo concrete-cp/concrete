@@ -1,5 +1,6 @@
 package cspfj.constraint;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,6 +22,14 @@ public final class ResidueManagerMap implements ResidueManager {
     public void updateResidue(final int[] residue) {
         for (int position = last.length; --position >= 0;) {
             last[position].put(residue[position], residue);
+        }
+    }
+
+    public void remove(final int[] residue) {
+        for (int position = last.length; --position >= 0;) {
+            if (Arrays.equals(residue, last[position].get(residue[position]))) {
+                last[position].remove(residue[position]);
+            }
         }
     }
 }

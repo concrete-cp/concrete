@@ -1,5 +1,7 @@
 package cspfj.constraint;
 
+import java.util.Arrays;
+
 import cspfj.problem.Variable;
 
 public final class ResidueManagerFast implements ResidueManager {
@@ -32,6 +34,15 @@ public final class ResidueManagerFast implements ResidueManager {
     public void updateResidue(final int[] residue) {
         for (int position = last.length; --position >= 0;) {
             last[position][residue[position]] = residue;
+        }
+    }
+
+    @Override
+    public void remove(final int[] residue) {
+        for (int position = last.length; --position >= 0;) {
+            if (Arrays.equals(residue, last[position][residue[position]])) {
+                last[position][residue[position]] = null;
+            }
         }
     }
 }

@@ -82,10 +82,6 @@ public final class MatrixManager2D extends AbstractMatrixManager {
                 variables[1 - variablePosition].getBitDomain()) >= 0;
     }
 
-    public String toString() {
-        return "MatrixManager2D\n" + matrix;
-    }
-
     private boolean controlResidue(final int position, final int index) {
         final int part = last[position][index];
         presenceChecks++;

@@ -1,7 +1,6 @@
 package cspfj.constraint.extension;
 
 import java.util.Arrays;
-import java.util.logging.Logger;
 
 import cspfj.problem.Variable;
 
@@ -188,8 +187,8 @@ public abstract class AbstractMatrixManager implements MatrixManager {
         if (matrix.isEmpty()) {
             return nbInitConflicts;
         }
-//
-//        LOGGER.fine("Counting " + this + " conflicts");
+        //
+        // LOGGER.fine("Counting " + this + " conflicts");
 
         if (matrix instanceof TupleSet) {
 
@@ -251,5 +250,9 @@ public abstract class AbstractMatrixManager implements MatrixManager {
                 nbMaxConflicts[p]++;
             }
         }
+    }
+
+    public final String toString() {
+        return getClass().getSimpleName() + "\n" + matrix.toString();
     }
 }

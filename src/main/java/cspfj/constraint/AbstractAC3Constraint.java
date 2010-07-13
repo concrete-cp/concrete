@@ -1,6 +1,5 @@
 package cspfj.constraint;
 
-import cspfj.problem.Domain;
 import cspfj.problem.Variable;
 
 public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
@@ -68,6 +67,10 @@ public abstract class AbstractAC3Constraint extends AbstractPVRConstraint {
             size *= v.getDomainSize();
         }
         return size;
+    }
+
+    public final ResidueManager getResidues() {
+        return last;
     }
 
 }

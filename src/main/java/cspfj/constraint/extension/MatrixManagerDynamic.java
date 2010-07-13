@@ -109,15 +109,6 @@ public final class MatrixManagerDynamic extends AbstractMatrixManager implements
 
     }
 
-    public String toString() {
-        final StringBuilder stb = new StringBuilder();
-
-        for (int[] tuple : this) {
-            stb.append(Arrays.toString(tuple)).append(",");
-        }
-        return stb.toString();
-    }
-
     public final class LLIterator implements Iterator<int[]> {
 
         private int current = -1;
