@@ -45,4 +45,6 @@ public interface Solver {
     void setPreproExp(int time);
 
     void collectStatistics();
+    
+    void reset();
 }

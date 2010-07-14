@@ -20,14 +20,11 @@
 package cspfj;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.security.InvalidParameterException;
 import java.util.HashMap;
 import java.util.Map;
 
 import cspfj.filter.AC3;
 import cspfj.problem.Problem;
-import cspfj.problem.Variable;
 
 public final class DummySolver extends AbstractSolver {
 
@@ -63,6 +60,11 @@ public final class DummySolver extends AbstractSolver {
 
     public String toString() {
         return "dummy";
+    }
+
+    @Override
+    public void reset() {
+        //
     }
 
 }
