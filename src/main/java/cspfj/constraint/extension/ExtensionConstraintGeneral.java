@@ -49,6 +49,7 @@ public final class ExtensionConstraintGeneral extends AbstractAC3Constraint
 
     @Override
     public boolean removeTuple(final int[] tuple) {
+        disEntail();
         getResidues().remove(tuple);
         return matrixManager.removeTuple(tuple);
     }

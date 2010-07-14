@@ -205,17 +205,17 @@ public final class MGACIter extends AbstractSolver {
 
             maxBT = getMaxBacktracks();
 
-            boolean entailed = false;
-            for (Iterator<Constraint> itr = problem.getConstraints().iterator(); itr
-                    .hasNext();) {
-                if (itr.next().isEntailed()) {
-                    itr.remove();
-                    entailed = true;
-                }
-            }
-            if (entailed) {
-                problem.prepare();
-            }
+//            boolean entailed = false;
+//            for (Iterator<Constraint> itr = problem.getConstraints().iterator(); itr
+//                    .hasNext();) {
+//                if (itr.next().isEntailed()) {
+//                    itr.remove();
+//                    entailed = true;
+//                }
+//            }
+//            if (entailed) {
+//                problem.prepare();
+//            }
         }
 
         for (;;) {

@@ -76,6 +76,7 @@ public final class ExtensionConstraint2D extends AbstractPVRConstraint
 
     @Override
     public boolean removeTuple(final int[] tuple) {
+        disEntail();
         return matrixManager.removeTuple(tuple);
     }
 
