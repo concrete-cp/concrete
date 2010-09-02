@@ -22,9 +22,9 @@ package cspfj.heuristic;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
-public final class WDegOnDom extends AbstractVariableHeuristic {
+public final class WDegFixedOnDom extends AbstractFixedVariableHeuristic {
 
-	public WDegOnDom(final Problem problem) {
+	public WDegFixedOnDom(final Problem problem) {
 		super(problem);
 	}
 

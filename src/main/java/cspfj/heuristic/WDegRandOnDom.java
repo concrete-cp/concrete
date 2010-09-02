@@ -22,18 +22,19 @@ package cspfj.heuristic;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
-public final class Dom extends AbstractRandVariableHeuristic {
-	
-	public Dom(Problem problem) {
+public final class WDegRandOnDom extends AbstractRandVariableHeuristic {
+
+	public WDegRandOnDom(final Problem problem) {
 		super(problem);
 	}
-	
+
+	@Override
 	public double getScore(final Variable variable) {
-		return variable.getDomainSize();
+		return WDeg.wDeg(variable) / variable.getDomainSize();
 	}
 
+	@Override
 	public String toString() {
-		return "min-dom";
+		return "max-wdeg/dom";
 	}
-
 }

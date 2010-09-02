@@ -23,7 +23,7 @@ import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
-public final class WDeg extends AbstractVariableHeuristic {
+public final class WDeg extends AbstractRandVariableHeuristic {
 
 	public WDeg(final Problem problem) {
 		super(problem);

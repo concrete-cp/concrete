@@ -6,7 +6,7 @@ import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.TieManager;
 
-public abstract class AbstractVariableHeuristic implements VariableHeuristic {
+public abstract class AbstractRandVariableHeuristic implements VariableHeuristic {
 
     private static final Random RAND = new Random(0);
 
@@ -14,7 +14,7 @@ public abstract class AbstractVariableHeuristic implements VariableHeuristic {
 
     private final TieManager<Variable> tieManager;
 
-    public AbstractVariableHeuristic(final Problem problem) {
+    public AbstractRandVariableHeuristic(final Problem problem) {
         this.problem = problem;
         tieManager = new TieManager<Variable>(RAND);
         RAND.setSeed(0);
