@@ -36,7 +36,7 @@ import cspfj.heuristic.CrossHeuristic;
 import cspfj.heuristic.Heuristic;
 import cspfj.heuristic.Lexico;
 import cspfj.heuristic.Pair;
-import cspfj.heuristic.WDegRandOnDom;
+import cspfj.heuristic.WDegOnDom;
 import cspfj.problem.NoGoodLearner;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
@@ -67,11 +67,11 @@ public final class MGACIter extends AbstractSolver {
     private final NoGoodLearner ngl;
 
     public MGACIter(final Problem prob) {
-        this(prob, new CrossHeuristic(new WDegRandOnDom(prob), new Lexico(false)));
+        this(prob, new CrossHeuristic(new WDegOnDom(prob), new Lexico(false)));
     }
 
     public MGACIter(final Problem problem, final Filter filter) {
-        this(problem, new CrossHeuristic(new WDegRandOnDom(problem), new Lexico(
+        this(problem, new CrossHeuristic(new WDegOnDom(problem), new Lexico(
                 false)), filter);
     }
 

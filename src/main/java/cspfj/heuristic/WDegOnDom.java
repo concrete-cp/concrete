@@ -22,9 +22,9 @@ package cspfj.heuristic;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
-public final class WDegRandOnDom extends AbstractRandVariableHeuristic {
+public final class WDegOnDom extends AbstractRandVariableHeuristic {
 
-	public WDegRandOnDom(final Problem problem) {
+	public WDegOnDom(final Problem problem) {
 		super(problem);
 	}
 
