@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
@@ -26,7 +25,7 @@ public final class NoGoodLearner {
         NONE, EXT, BIN;
     }
 
-//    private static final Logger LOGGER = Logger.getLogger(NoGoodLearner.class
+//    private static final Logger LOGGER = Logger.getLoggerS(NoGoodLearner.class
 //            .getName());
 
     private static boolean useNoGoods = true;

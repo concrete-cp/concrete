@@ -19,14 +19,13 @@
 
 package cspfj;
 
-import java.io.IOException;
 import java.util.Map;
 
 import cspfj.filter.Filter;
 import cspfj.problem.Problem;
 
 public interface Solver {
-    Map<String, Integer> nextSolution() throws IOException;
+    Map<String, Integer> nextSolution();
 
     int getNbAssignments();
 
@@ -45,6 +44,6 @@ public interface Solver {
     void setPreproExp(int time);
 
     void collectStatistics();
-    
+
     void reset();
 }

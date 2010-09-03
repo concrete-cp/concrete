@@ -36,7 +36,7 @@ import cspfj.heuristic.CrossHeuristic;
 import cspfj.heuristic.Heuristic;
 import cspfj.heuristic.Lexico;
 import cspfj.heuristic.Pair;
-import cspfj.heuristic.WDegOnDom;
+import cspfj.heuristic.WDegRandOnDom;
 import cspfj.problem.NoGoodLearner;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
@@ -67,11 +67,11 @@ public final class MGACIter extends AbstractSolver {
     private final NoGoodLearner ngl;
 
     public MGACIter(final Problem prob) {
-        this(prob, new CrossHeuristic(new WDegOnDom(prob), new Lexico(false)));
+        this(prob, new CrossHeuristic(new WDegRandOnDom(prob), new Lexico(false)));
     }
 
     public MGACIter(final Problem problem, final Filter filter) {
-        this(problem, new CrossHeuristic(new WDegOnDom(problem), new Lexico(
+        this(problem, new CrossHeuristic(new WDegRandOnDom(problem), new Lexico(
                 false)), filter);
     }
 
@@ -97,7 +97,7 @@ public final class MGACIter extends AbstractSolver {
     private boolean firstSolutionGiven = false;
 
     public Map<String, Integer> mac(final boolean skipFirstSolution)
-            throws MaxBacktracksExceededException, IOException {
+            throws MaxBacktracksExceededException {
         final Problem problem = this.problem;
         boolean skipSolution = skipFirstSolution;
         Variable selectedVariable = null;
@@ -133,7 +133,7 @@ public final class MGACIter extends AbstractSolver {
             selectedIndex = pair.getIndex();
 
             assert selectedVariable.isPresent(selectedIndex);
-
+            //
             // LOGGER.fine(problem.getCurrentLevel() + " : " + selectedVariable
             // + " <- "
             // + selectedVariable.getDomain().value(selectedIndex) + "("
@@ -175,7 +175,7 @@ public final class MGACIter extends AbstractSolver {
     }
 
     @Override
-    public Map<String, Integer> nextSolution() throws IOException {
+    public Map<String, Integer> nextSolution() {
         problem.prepare();
         // System.gc();
         int maxBT;
@@ -205,17 +205,18 @@ public final class MGACIter extends AbstractSolver {
 
             maxBT = getMaxBacktracks();
 
-//            boolean entailed = false;
-//            for (Iterator<Constraint> itr = problem.getConstraints().iterator(); itr
-//                    .hasNext();) {
-//                if (itr.next().isEntailed()) {
-//                    itr.remove();
-//                    entailed = true;
-//                }
-//            }
-//            if (entailed) {
-//                problem.prepare();
-//            }
+            // boolean entailed = false;
+            // for (Iterator<Constraint> itr =
+            // problem.getConstraints().iterator(); itr
+            // .hasNext();) {
+            // if (itr.next().isEntailed()) {
+            // itr.remove();
+            // entailed = true;
+            // }
+            // }
+            // if (entailed) {
+            // problem.prepare();
+            // }
         }
 
         for (;;) {

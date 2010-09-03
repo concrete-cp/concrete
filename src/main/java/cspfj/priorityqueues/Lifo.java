@@ -12,7 +12,7 @@ import java.util.Iterator;
  * 
  * @param <T>
  */
-public final class Fifo<T extends Identified> extends AbstractQueue<T> {
+public final class Lifo<T extends Identified> extends AbstractQueue<T> {
 
     private static final int DEFAULT_INIT_SIZE = 10;
 
@@ -28,11 +28,11 @@ public final class Fifo<T extends Identified> extends AbstractQueue<T> {
     // public static int update = 0;
     // public static int remove = 0;
 
-    public Fifo() {
+    public Lifo() {
         this(DEFAULT_INIT_SIZE);
     }
 
-    public Fifo(final int initSize) {
+    public Lifo(final int initSize) {
         inQueue = (Cell<T>[]) new Cell[initSize];
         list = new MyLinkedList<T>();
     }
@@ -77,7 +77,7 @@ public final class Fifo<T extends Identified> extends AbstractQueue<T> {
 
     @Override
     public T poll() {
-        return list.poll();
+        return list.pop();
     }
 
     @Override
@@ -108,13 +108,11 @@ public final class Fifo<T extends Identified> extends AbstractQueue<T> {
 
     private static final class Cell<T> {
         private final T content;
-        private Cell<T> prev;
         private Cell<T> next;
         private int iter = -1;
 
         private Cell(final T content) {
             this.content = content;
-            this.prev = null;
             this.next = null;
         }
     }
@@ -124,45 +122,31 @@ public final class Fifo<T extends Identified> extends AbstractQueue<T> {
         private int size;
 
         private Cell<T> head;
-        private Cell<T> tail;
 
         private MyLinkedList() {
             size = 0;
             head = null;
-            tail = null;
         }
 
         private void offer(final Cell<T> cell, final int newIter) {
-            cell.prev = null;
             cell.next = head;
-            if (head != null) {
-                head.prev = cell;
-            }
             head = cell;
-            if (tail == null) {
-                tail = cell;
-            }
             cell.iter = newIter;
             size++;
         }
 
-        private T poll() {
-            final T contents = tail.content;
+        private T pop() {
+            final T contents = head.content;
 
-            tail.iter = -1;
+            head.iter = -1;
 
-            tail = tail.prev;
-            if (tail == null) {
-                head = null;
-            } else {
-                tail.next = null;
-            }
+            head = head.next;
             size--;
             return contents;
         }
 
         private T peek() {
-            return tail.content;
+            return head.content;
         }
 
         public int size() {
@@ -175,7 +159,6 @@ public final class Fifo<T extends Identified> extends AbstractQueue<T> {
 
         public void clear() {
             head = null;
-            tail = null;
             size = 0;
         }
 

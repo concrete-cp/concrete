@@ -9,6 +9,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
+import cspfj.constraint.semantic.AllDifferent;
 import cspfj.constraint.semantic.InInterval;
 import cspfj.constraint.semantic.NotInInterval;
 import cspfj.constraint.semantic.ReifiedConstraint;
@@ -32,7 +33,6 @@ public final class AllDifferentGenerator extends AbstractGenerator {
     @Override
     public boolean generate(final CSPOMConstraint constraint)
             throws FailedGenerationException {
-
         if (!(constraint instanceof GeneralConstraint)) {
             throw new FailedGenerationException(constraint
                     + " is not supported");
@@ -43,6 +43,16 @@ public final class AllDifferentGenerator extends AbstractGenerator {
         if (nullVariable(solverVariables) != null) {
             return false;
         }
+
+        return generate1(solverVariables);
+    }
+
+    private boolean generate1(final Variable[] solverVariables) {
+        addConstraint(new AllDifferent(solverVariables));
+        return true;
+    }
+
+    private boolean generate2(final Variable[] solverVariables) {
 
         final int[] values = values(solverVariables);
         final Map<VariableInterval, VariableInterval> vis = new HashMap<VariableInterval, VariableInterval>();
@@ -107,13 +117,14 @@ public final class AllDifferentGenerator extends AbstractGenerator {
 
         private Variable add() {
             if (auxVariable == null) {
-                auxVariable = addVariable("_A" + allDiff + "_"
-                        + variable.getName() + "_" + variable.getValue(lb)
-                        + "_" + variable.getValue(ub), new BooleanDomain());
+                auxVariable = addVariable(
+                        "_A" + allDiff + "_" + variable.getName() + "_"
+                                + variable.getValue(lb) + "_"
+                                + variable.getValue(ub), new BooleanDomain());
 
-                addConstraint(new ReifiedConstraint(auxVariable, InInterval
-                        .indexes(variable, lb, ub), NotInInterval.indexes(
-                        variable, lb, ub)));
+                addConstraint(new ReifiedConstraint(auxVariable,
+                        InInterval.indexes(variable, lb, ub),
+                        NotInInterval.indexes(variable, lb, ub)));
             }
             return auxVariable;
         }

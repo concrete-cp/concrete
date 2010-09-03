@@ -104,6 +104,13 @@ public final class Problem {
             }
         }).getArity();
 
+        maxCId = Collections.max(constraints, new Comparator<Constraint>() {
+            @Override
+            public int compare(final Constraint o1, final Constraint o2) {
+                return o1.getId() - o2.getId();
+            }
+        }).getId();
+
         final Map<Integer, List<Constraint>> invConstraints = new HashMap<Integer, List<Constraint>>(
                 variableArray.length);
 
@@ -126,6 +133,7 @@ public final class Problem {
     }
 
     public int getNbVariables() {
+        prepare();
         return nbVariables;
     }
 
@@ -339,9 +347,9 @@ public final class Problem {
             }
         }
         sb.append("Total ").append(getNbVariables()).append(" variables, ")
-                .append(getNbConstraints() - entailed).append(
-                        " constraints and ").append(entailed).append(
-                        " entailed constraints");
+                .append(getNbConstraints() - entailed)
+                .append(" constraints and ").append(entailed)
+                .append(" entailed constraints");
 
         return sb.toString();
     }

@@ -77,6 +77,27 @@ public final class AllDifferent extends AbstractArcGrainedConstraint {
         return true;
     }
 
+    private boolean filter(Variable checkedVariable, int value,
+            RevisionHandler revisator) {
+        for (Variable v : getScope()) {
+            if (v == checkedVariable) {
+                continue;
+            }
+            final int index = v.getDomain().index(value);
+            if (index >= 0 && v.isPresent(index)) {
+                v.remove(index);
+                if (v.getDomainSize() < 1) {
+                    return true;
+                } else if (v.getDomainSize() == 1) {
+                    queue.offer(v);
+                }
+                revisator.revised(this, v);
+            }
+
+        }
+        return false;
+    }
+
     @Override
     public boolean revise(final RevisionHandler revisator, final int reviseCount) {
         final int min = this.offset;
@@ -95,23 +116,9 @@ public final class AllDifferent extends AbstractArcGrainedConstraint {
             final int value = checkedVariable.getDomain().value(
                     checkedVariable.getFirst());
 
-            for (Variable v : getScope()) {
-                if (v == checkedVariable) {
-                    continue;
-                }
-                final int index = v.getDomain().index(value);
-                if (index >= 0 && v.isPresent(index)) {
-                    v.remove(index);
-                    if (v.getDomainSize() < 1) {
-                        return false;
-                    } else if (v.getDomainSize() == 1) {
-                        queue.offer(v);
-                    }
-                    revisator.revised(this, v);
-                }
-
+            if (filter(checkedVariable, value, revisator)) {
+                return false;
             }
-
         }
 
         final BitVector union = this.union;

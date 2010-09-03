@@ -39,7 +39,7 @@ public final class FifoTest {
     @Test
     public void offerTest() {
 
-        final Fifo<IdInteger> fifo = new Fifo<IdInteger>(new Key<IdInteger>() {
+        final Fifos<IdInteger> fifo = new Fifos<IdInteger>(new Key<IdInteger>() {
 
             @Override
             public float getKey(final IdInteger object) {

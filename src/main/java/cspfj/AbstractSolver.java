@@ -19,13 +19,12 @@
 
 package cspfj;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Timer;
 import java.util.Map.Entry;
+import java.util.Timer;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -115,7 +114,7 @@ public abstract class AbstractSolver implements Solver {
         return preprocessor;
     }
 
-    protected final Map<String, Integer> solution() throws IOException {
+    protected final Map<String, Integer> solution() {
         final Map<String, Integer> solution = new LinkedHashMap<String, Integer>();
         for (Variable v : problem.getVariables()) {
             solution.put(v.getName(), v.getValue(v.getFirst()));
@@ -184,13 +183,13 @@ public abstract class AbstractSolver implements Solver {
             }
             statistics.put("prepro-removed", removed);
             statistics.put("prepro-cpu", preproCpu / 1000f);
-            statistics.put("prepro-constraint-ccks", AbstractAC3Constraint
-                    .getChecks());
-            statistics.put("prepro-constraint-presenceccks", AbstractConstraint
-                    .getPresenceChecks());
+            statistics.put("prepro-constraint-ccks",
+                    AbstractAC3Constraint.getChecks());
+            statistics.put("prepro-constraint-presenceccks",
+                    AbstractConstraint.getPresenceChecks());
             statistics.put("prepro-matrix2d-ccks", MatrixManager2D.getChecks());
-            statistics.put("prepro-matrix2d-presenceccks", MatrixManager2D
-                    .getPresenceChecks());
+            statistics.put("prepro-matrix2d-presenceccks",
+                    MatrixManager2D.getPresenceChecks());
 
         }
 

@@ -19,7 +19,6 @@
 
 package cspfj;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,7 +36,7 @@ public final class DummySolver extends AbstractSolver {
      * 
      * @see cspfj.Solver#run(int)
      */
-    public Map<String, Integer> nextSolution() throws IOException {
+    public Map<String, Integer> nextSolution() {
         try {
             if (!preprocess(new AC3(problem))) {
                 return null;
