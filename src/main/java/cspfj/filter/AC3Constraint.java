@@ -4,8 +4,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
-import java.util.logging.Logger;
 
+import cspfj.AbstractSolver;
 import cspfj.constraint.Constraint;
 import cspfj.priorityqueues.FibonacciHeap;
 import cspfj.priorityqueues.Key;
@@ -22,26 +22,33 @@ public final class AC3Constraint implements Filter {
 
 	private final Queue<Constraint> queue;
 
-//	private static final Logger LOGGER = Logger.getLogger(Filter.class
-//			.getSimpleName());
+	// private static final Logger LOGGER = Logger.getLogger(Filter.class
+	// .getSimpleName());
 
 	private int revisions = 0;
 
 	private static int revisionCount = 0;
 
-	public AC3Constraint(final Problem problem) {
-		this(problem, new FibonacciHeap<Constraint>(new Key<Constraint>() {
+	static {
+		AbstractSolver.defaultParameter("ac.queue", FibonacciHeap.class);
+		AbstractSolver.defaultParameter("ac.key", new Key<Constraint>() {
 			@Override
 			public float getKey(final Constraint object) {
 				return object.getEvaluation() / object.getWeight();
 			}
-		}));
+		});
 	}
 
-	public AC3Constraint(final Problem problem, final Queue<Constraint> queue) {
+	public AC3Constraint(final Problem problem) {
 		super();
 		this.problem = problem;
-		this.queue = queue;
+		try {
+			this.queue = ((Class<? extends Queue>) AbstractSolver
+					.getParameter("ac.queue")).getConstructor(Key.class)
+					.newInstance(AbstractSolver.getParameter("ac.key"));
+		} catch (Exception e) {
+			throw new IllegalStateException(e);
+		}
 	}
 
 	public boolean reduceAll() {
@@ -56,7 +63,7 @@ public final class AC3Constraint implements Filter {
 			final int cnt) {
 		revisionCount++;
 		queue.clear();
-//		LOGGER.fine("reduce after " + cnt);
+		// LOGGER.fine("reduce after " + cnt);
 		for (Variable v : problem.getVariables()) {
 			if (modVar[v.getId()] > cnt) {
 				final Constraint[] involved = v.getInvolvingConstraints();
@@ -113,8 +120,9 @@ public final class AC3Constraint implements Filter {
 			for (int cp = involvingConstraints.length; --cp >= 0;) {
 				final Constraint constraintP = involvingConstraints[cp];
 				if (constraintP != constraint && !constraintP.isEntailed()) {
-					constraintP.setRemovals(variable
-							.getPositionInConstraint(cp), revisionCount);
+					constraintP
+							.setRemovals(variable.getPositionInConstraint(cp),
+									revisionCount);
 					queue.offer(constraintP);
 				}
 
@@ -123,7 +131,7 @@ public final class AC3Constraint implements Filter {
 	};
 
 	private boolean reduce() {
-//		LOGGER.finer("Reducing");
+		// LOGGER.finer("Reducing");
 		final RevisionHandler revisator = this.revisator;
 
 		while (!queue.isEmpty()) {

@@ -41,206 +41,203 @@ import cspfj.util.BitVector;
  */
 public final class DC1 extends AbstractSAC {
 
-    private static final Logger LOGGER = Logger.getLogger(DC1.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(DC1.class.getName());
 
-    private static final LearnMethod LEARN_METHOD;
+	private static final LearnMethod LEARN_METHOD;
 
-    static {
-        final String lm = AbstractSolver.PARAMETERS.get("dc.addConstraints");
-        if (lm == null) {
-            LEARN_METHOD = LearnMethod.NONE;
-        } else {
-            LEARN_METHOD = LearnMethod.valueOf(lm);
-        }
-    }
+	static {
+		AbstractSolver.defaultParameter("dc.addConstraints", LearnMethod.NONE);
+		LEARN_METHOD = (LearnMethod) AbstractSolver
+				.getParameter("dc.addConstraints");
+	}
 
-    private int addedConstraints = 0;
+	private int addedConstraints = 0;
 
-    private final Variable[] variables;
+	private final Variable[] variables;
 
-    private int nbNoGoods;
+	private int nbNoGoods;
 
-    private final NoGoodLearner ngl;
+	private final NoGoodLearner ngl;
 
-    public DC1(final Problem problem) {
-        super(problem, new AC3(problem));
-        this.variables = problem.getVariables();
-        ngl = new NoGoodLearner(problem, LEARN_METHOD);
-    }
+	public DC1(final Problem problem) {
+		super(problem, new AC3(problem));
+		this.variables = problem.getVariables();
+		ngl = new NoGoodLearner(problem, LEARN_METHOD);
+	}
 
-    @Override
-    protected boolean reduce() throws InterruptedException {
-        final int nbC = problem.getNbConstraints();
-        // ExtensionConstraintDynamic.quick = true;
-        final boolean result;
-        try {
-            result = super.reduce();
-        } finally {
-            addedConstraints += problem.getNbConstraints() - nbC;
-        }
-        // ExtensionConstraintDynamic.quick = false;
-        // for (Constraint c : problem.getConstraints()) {
-        // if (c instanceof RCConstraint) {
-        // ((RCConstraint) c).flushPending();
-        // }
-        // }
-        return result;
-    }
-    
-    public boolean control() throws InterruptedException {
-        final Filter filter = this.filter;
+	@Override
+	protected boolean reduce() throws InterruptedException {
+		final int nbC = problem.getNbConstraints();
+		// ExtensionConstraintDynamic.quick = true;
+		final boolean result;
+		try {
+			result = super.reduce();
+		} finally {
+			addedConstraints += problem.getNbConstraints() - nbC;
+		}
+		// ExtensionConstraintDynamic.quick = false;
+		// for (Constraint c : problem.getConstraints()) {
+		// if (c instanceof RCConstraint) {
+		// ((RCConstraint) c).flushPending();
+		// }
+		// }
+		return result;
+	}
 
-        if (!filter.reduceAll()) {
-            return false;
-        }
-        final Variable[] variables = problem.getVariables();
+	public boolean control() throws InterruptedException {
+		final Filter filter = this.filter;
 
-        int mark = 0;
+		if (!filter.reduceAll()) {
+			return false;
+		}
+		final Variable[] variables = problem.getVariables();
 
-        int v = 0;
+		int mark = 0;
 
-        do {
-            final Variable variable = variables[v];
-            // if (logger.isLoggable(Level.FINE)) {
-            LOGGER.info(variable.toString());
-            // }
-            if (variable.getDomainSize() > 1 && singletonTest(variable)) {
-            	return false;
-            }
-            if (++v >= variables.length) {
-                v = 0;
-            }
-        } while (v != mark);
+		int v = 0;
 
-        return true;
+		do {
+			final Variable variable = variables[v];
+			// if (logger.isLoggable(Level.FINE)) {
+			LOGGER.info(variable.toString());
+			// }
+			if (variable.getDomainSize() > 1 && singletonTest(variable)) {
+				return false;
+			}
+			if (++v >= variables.length) {
+				v = 0;
+			}
+		} while (v != mark);
 
-    }
+		return true;
 
-    protected boolean singletonTest(final Variable variable)
-            throws InterruptedException {
-        boolean changedGraph = false;
-        for (int index = variable.getFirst(); index >= 0; index = variable
-                .getNext(index)) {
-            if (Thread.interrupted()) {
-                throw new InterruptedException();
-            }
-            if (!variable.isPresent(index)) {
-                continue;
-            }
+	}
 
-            // if (logger.isLoggable(Level.FINER)) {
-            LOGGER.fine(variable + " <- " + variable.getDomain().value(index)
-                    + "(" + index + ")");
-            // }
+	protected boolean singletonTest(final Variable variable)
+			throws InterruptedException {
+		boolean changedGraph = false;
+		for (int index = variable.getFirst(); index >= 0; index = variable
+				.getNext(index)) {
+			if (Thread.interrupted()) {
+				throw new InterruptedException();
+			}
+			if (!variable.isPresent(index)) {
+				continue;
+			}
 
-            problem.push();
-            variable.setSingle(index);
+			// if (logger.isLoggable(Level.FINER)) {
+			LOGGER.fine(variable + " <- " + variable.getDomain().value(index)
+					+ "(" + index + ")");
+			// }
 
-            nbSingletonTests++;
+			problem.push();
+			variable.setSingle(index);
 
-            if (filter.reduceAfter(variable)) {
+			nbSingletonTests++;
 
-                // final Map<Variable[], List<int[]>> noGoods =
-                // problem.noGoods();
-                changedGraph = noGoods(variable) | changedGraph;
-                // logger.info(noGoods.toString());
+			if (filter.reduceAfter(variable)) {
 
-                problem.pop();
+				// final Map<Variable[], List<int[]>> noGoods =
+				// problem.noGoods();
+				changedGraph = noGoods(variable) | changedGraph;
+				// logger.info(noGoods.toString());
 
-                // changedGraph = problem.noGoodsToConstraints(noGoods,
-                // addConstraints);
-            } else {
-                problem.pop();
-                LOGGER.fine("Removing " + variable + ", " + index);
+				problem.pop();
 
-                variable.remove(index);
-                changedGraph = true;
-            }
-        }
-        return changedGraph;
-    }
+				// changedGraph = problem.noGoodsToConstraints(noGoods,
+				// addConstraints);
+			} else {
+				problem.pop();
+				LOGGER.fine("Removing " + variable + ", " + index);
 
-    public boolean noGoods(final Variable firstVariable) {
-        List<Integer> tuple = new ArrayList<Integer>(2);
+				variable.remove(index);
+				changedGraph = true;
+			}
+		}
+		return changedGraph;
+	}
 
-        final Set<Variable> scopeSet = new HashSet<Variable>(2);
+	public boolean noGoods(final Variable firstVariable) {
+		List<Integer> tuple = new ArrayList<Integer>(2);
 
-        scopeSet.add(firstVariable);
-        tuple.add(firstVariable.getFirst());
-        final Variable[] scopeArray = new Variable[] { firstVariable, null };
+		final Set<Variable> scopeSet = new HashSet<Variable>(2);
 
-        boolean modified = false;
-        final Collection<Constraint> addedConstraints = new ArrayList<Constraint>();
+		scopeSet.add(firstVariable);
+		tuple.add(firstVariable.getFirst());
+		final Variable[] scopeArray = new Variable[] { firstVariable, null };
 
-        for (Variable fv : variables) {
+		boolean modified = false;
+		final Collection<Constraint> addedConstraints = new ArrayList<Constraint>();
 
-            // logger.fine("checking " +
-            // getVariable(levelVariables[level-1]));
+		for (Variable fv : variables) {
 
-            if (fv == firstVariable) {
-                continue;
-            }
+			// logger.fine("checking " +
+			// getVariable(levelVariables[level-1]));
 
-            final BitVector changes = fv.getDomain().getAtLevel(0).xor(
-                    fv.getDomain().getAtLevel(1));
-            if (changes.isEmpty()) {
-                continue;
-            }
+			if (fv == firstVariable) {
+				continue;
+			}
 
-            scopeSet.add(fv);
-            final DynamicConstraint constraint = ngl.learnConstraint(scopeSet);
-            scopeSet.remove(fv);
+			final BitVector changes = fv.getDomain().getAtLevel(0)
+					.xor(fv.getDomain().getAtLevel(1));
+			if (changes.isEmpty()) {
+				continue;
+			}
 
-            if (constraint == null) {
-                continue;
-            }
+			scopeSet.add(fv);
+			final DynamicConstraint constraint = ngl.learnConstraint(scopeSet);
+			scopeSet.remove(fv);
 
-            scopeArray[1] = fv;
+			if (constraint == null) {
+				continue;
+			}
 
-            final int[] base = new int[constraint.getArity()];
-            final int varPos = NoGoodLearner.makeBase(scopeArray, tuple,
-                    constraint, base);
+			scopeArray[1] = fv;
 
-            int newNogoods = 0;
-            for (int i = changes.nextSetBit(0); i >= 0; i = changes
-                    .nextSetBit(i + 1)) {
-                base[varPos] = i;
-                newNogoods += constraint.removeTuples(base);
+			final int[] base = new int[constraint.getArity()];
+			final int varPos = NoGoodLearner.makeBase(scopeArray, tuple,
+					constraint, base);
 
-            }
-            if (newNogoods > 0) {
-                nbNoGoods += newNogoods;
-                modified = true;
-                if (constraint.getId() > problem.getMaxCId()) {
-                    LOGGER.info("Added " + constraint);
-                    addedConstraints.add(constraint);
-                }
-            }
-        }
+			int newNogoods = 0;
+			for (int i = changes.nextSetBit(0); i >= 0; i = changes
+					.nextSetBit(i + 1)) {
+				base[varPos] = i;
+				newNogoods += constraint.removeTuples(base);
 
-        if (modified) {
-            LOGGER.fine(nbNoGoods + " nogoods");
+			}
+			if (newNogoods > 0) {
+				nbNoGoods += newNogoods;
+				modified = true;
+				if (constraint.getId() > problem.getMaxCId()) {
+					LOGGER.info("Added " + constraint);
+					addedConstraints.add(constraint);
+				}
+			}
+		}
 
-            if (!addedConstraints.isEmpty()) {
-                for (Constraint c : addedConstraints) {
-                    problem.addConstraint(c);
-                }
+		if (modified) {
+			LOGGER.fine(nbNoGoods + " nogoods");
 
-                problem.prepare();
-                LOGGER.info(problem.getNbConstraints() + " constraints");
-            }
-        }
-        return modified;
-    }
+			if (!addedConstraints.isEmpty()) {
+				for (Constraint c : addedConstraints) {
+					problem.addConstraint(c);
+				}
 
-    public Map<String, Object> getStatistics() {
-        final Map<String, Object> statistics = super.getStatistics();
-        statistics.put("CDC-nogoods", nbNoGoods);
-        statistics.put("CDC-added-constraints", addedConstraints);
-        return statistics;
-    }
+				problem.prepare();
+				LOGGER.info(problem.getNbConstraints() + " constraints");
+			}
+		}
+		return modified;
+	}
 
-    public String toString() {
-        return "DC w/ " + filter + " L " + LEARN_METHOD;
-    }
+	public Map<String, Object> getStatistics() {
+		final Map<String, Object> statistics = super.getStatistics();
+		statistics.put("CDC-nogoods", nbNoGoods);
+		statistics.put("CDC-added-constraints", addedConstraints);
+		return statistics;
+	}
+
+	public String toString() {
+		return "DC w/ " + filter + " L " + LEARN_METHOD;
+	}
 }

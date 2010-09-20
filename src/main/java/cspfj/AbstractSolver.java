@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Timer;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,35 +33,38 @@ import java.util.regex.Pattern;
 import cspfj.constraint.AbstractAC3Constraint;
 import cspfj.constraint.AbstractConstraint;
 import cspfj.constraint.extension.MatrixManager2D;
-import cspfj.exception.FailedGenerationException;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.Filter;
-import cspfj.generator.ProblemGenerator;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.Waker;
-import cspom.CSPOM;
 
 public abstract class AbstractSolver implements Solver {
 	private static final Logger LOGGER = Logger.getLogger(AbstractSolver.class
 			.getName());
 	public static final String VERSION;
-	public static final Map<String, String> PARAMETERS = new HashMap<String, String>();
+	private static final Map<String, Object> PARAMETERS = new HashMap<String, Object>();
 	static {
 		Matcher matcher = Pattern.compile("Rev:\\ (\\d+)").matcher(
 				"$Rev$");
 		matcher.find();
 		VERSION = matcher.group(1);
+		defaultParameter("logger.level", Level.WARNING);
+		Logger.getLogger("").setLevel((Level) getParameter("logger.level"));
 	}
 
-	public static void parameter(final String name, final String value) {
+	public static void parameter(final String name, final Object value) {
 		PARAMETERS.put(name, value);
 	}
 
-	public static void defaultParameter(final String name, final String value) {
+	public static void defaultParameter(final String name, final Object value) {
 		if (!PARAMETERS.containsKey(name)) {
 			PARAMETERS.put(name, value);
 		}
+	}
+
+	public static Object getParameter(final String name) {
+		return PARAMETERS.get(name);
 	}
 
 	protected final Problem problem;
@@ -213,7 +217,7 @@ public abstract class AbstractSolver implements Solver {
 	public String getXMLConfig() {
 		final StringBuilder stb = new StringBuilder();
 
-		for (Entry<String, String> p : PARAMETERS.entrySet()) {
+		for (Entry<String, Object> p : PARAMETERS.entrySet()) {
 			stb.append("\t\t\t<p name=\"").append(p.getKey()).append("\">")
 					.append(p.getValue()).append("</p>\n");
 		}

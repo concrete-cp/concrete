@@ -13,23 +13,22 @@ public final class CrossHeuristic implements Heuristic {
 	private final ValueHeuristic valueHeuristic;
 
 	static {
-		AbstractSolver.defaultParameter("heuristic.variable", "WDegOnDom");
-		AbstractSolver.defaultParameter("heuristic.value", "Lexico");
+		AbstractSolver.defaultParameter("heuristic.variable", WDegOnDom.class);
+		AbstractSolver.defaultParameter("heuristic.value", Lexico.class);
 	}
 
 	// private final static Logger logger =
 	// Logger.getLogger("cspfj.CrossHeuristic");
 
-	public CrossHeuristic(Problem problem) throws IllegalArgumentException,
-			SecurityException, InstantiationException, IllegalAccessException,
-			InvocationTargetException, NoSuchMethodException,
-			ClassNotFoundException {
-		variableHeuristic = (VariableHeuristic) Class
-				.forName(AbstractSolver.PARAMETERS.get("heuristic.variable"))
-				.getConstructor(Problem.class).newInstance(problem);
-		valueHeuristic = (ValueHeuristic) Class
-				.forName(AbstractSolver.PARAMETERS.get("heuristic.value"))
-				.getConstructor().newInstance();
+	public CrossHeuristic(Problem problem) throws InstantiationException,
+			IllegalAccessException, InvocationTargetException,
+			NoSuchMethodException, ClassNotFoundException {
+		variableHeuristic = ((Class<VariableHeuristic>) AbstractSolver
+				.getParameter("heuristic.variable")).getConstructor(
+				Problem.class).newInstance(problem);
+		valueHeuristic = ((Class<ValueHeuristic>) AbstractSolver
+				.getParameter("heuristic.value")).getConstructor()
+				.newInstance();
 	}
 
 	public Pair selectPair(final Problem problem) {

@@ -56,12 +56,12 @@ public final class MGACIter extends AbstractSolver {
 	private final Deque<Pair> decisions;
 
 	static {
-		AbstractSolver.defaultParameter("mgac.addConstraint", "BIN");
-		AbstractSolver.defaultParameter("mgac.filter", "AC3Constraint");
-		AbstractSolver.defaultParameter("mgac.heuristic", "CrossHeuristic");
+		AbstractSolver.defaultParameter("mgac.addConstraint", LearnMethod.BIN);
+		AbstractSolver.defaultParameter("mgac.filter", AC3Constraint.class);
+		AbstractSolver.defaultParameter("mgac.heuristic", CrossHeuristic.class);
 
-		LEARN_METHOD = LearnMethod.valueOf(AbstractSolver.PARAMETERS
-				.get("mgac.addConstraints"));
+		LEARN_METHOD = (LearnMethod) AbstractSolver
+				.getParameter("mgac.addConstraints");
 	}
 	private Filter filter;
 
@@ -80,20 +80,19 @@ public final class MGACIter extends AbstractSolver {
 		decisions = new LinkedList<Pair>();
 	}
 
-	private void prepare() throws ClassNotFoundException,
-			IllegalArgumentException, SecurityException,
-			InstantiationException, IllegalAccessException,
-			InvocationTargetException, NoSuchMethodException {
+	private void prepare() throws InstantiationException,
+			IllegalAccessException, InvocationTargetException,
+			NoSuchMethodException {
 		if (filter == null) {
-			filter = (Filter) Class
-					.forName(AbstractSolver.PARAMETERS.get("mgac.filter"))
-					.getConstructor(Problem.class).newInstance(problem);
+			filter = ((Class<Filter>) AbstractSolver
+					.getParameter("mgac.filter")).getConstructor(Problem.class)
+					.newInstance(problem);
 		}
 
 		if (heuristic == null) {
-			heuristic = (Heuristic) Class
-					.forName(AbstractSolver.PARAMETERS.get("mgac.heuristic"))
-					.getConstructor(Problem.class).newInstance(problem);
+			heuristic = ((Class<Heuristic>) AbstractSolver
+					.getParameter("mgac.heuristic")).getConstructor(
+					Problem.class).newInstance(problem);
 		}
 
 		problem.prepare();
