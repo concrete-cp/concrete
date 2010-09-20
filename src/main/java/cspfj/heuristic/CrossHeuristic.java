@@ -1,37 +1,51 @@
 package cspfj.heuristic;
 
+import java.lang.reflect.InvocationTargetException;
+
+import cspfj.AbstractSolver;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
 public final class CrossHeuristic implements Heuristic {
 
-    private final VariableHeuristic variableHeuristic;
+	private final VariableHeuristic variableHeuristic;
 
-    private final ValueHeuristic valueHeuristic;
+	private final ValueHeuristic valueHeuristic;
 
-    // private final static Logger logger =
-    // Logger.getLogger("cspfj.CrossHeuristic");
+	static {
+		AbstractSolver.defaultParameter("heuristic.variable", "WDegOnDom");
+		AbstractSolver.defaultParameter("heuristic.value", "Lexico");
+	}
 
-    public CrossHeuristic(final VariableHeuristic variableHeuristic,
-            final ValueHeuristic valueHeuristic) {
-        this.variableHeuristic = variableHeuristic;
-        this.valueHeuristic = valueHeuristic;
-    }
+	// private final static Logger logger =
+	// Logger.getLogger("cspfj.CrossHeuristic");
 
-    public Pair selectPair(final Problem problem) {
-        final Variable bestVariable = variableHeuristic.selectVariable();
-        if (bestVariable == null) {
-            return null;
-        }
-        return new Pair(bestVariable, valueHeuristic.selectIndex(bestVariable));
-    }
+	public CrossHeuristic(Problem problem) throws IllegalArgumentException,
+			SecurityException, InstantiationException, IllegalAccessException,
+			InvocationTargetException, NoSuchMethodException,
+			ClassNotFoundException {
+		variableHeuristic = (VariableHeuristic) Class
+				.forName(AbstractSolver.PARAMETERS.get("heuristic.variable"))
+				.getConstructor(Problem.class).newInstance(problem);
+		valueHeuristic = (ValueHeuristic) Class
+				.forName(AbstractSolver.PARAMETERS.get("heuristic.value"))
+				.getConstructor().newInstance();
+	}
 
-    public void compute() {
-        // logger.fine("Initializing heuristics");
-        valueHeuristic.compute();
-    }
+	public Pair selectPair(final Problem problem) {
+		final Variable bestVariable = variableHeuristic.selectVariable();
+		if (bestVariable == null) {
+			return null;
+		}
+		return new Pair(bestVariable, valueHeuristic.selectIndex(bestVariable));
+	}
 
-    public String toString() {
-        return "Crossed " + variableHeuristic + ", " + valueHeuristic;
-    }
+	public void compute() {
+		// logger.fine("Initializing heuristics");
+		valueHeuristic.compute();
+	}
+
+	public String toString() {
+		return "Crossed " + variableHeuristic + ", " + valueHeuristic;
+	}
 }
