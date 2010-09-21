@@ -26,13 +26,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import cspfj.AbstractSolver;
+import cspfj.ParameterManager;
 import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
 import cspfj.problem.NoGoodLearner;
+import cspfj.problem.NoGoodLearner.LearnMethod;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
-import cspfj.problem.NoGoodLearner.LearnMethod;
 import cspfj.util.BitVector;
 
 /**
@@ -43,12 +43,8 @@ public final class DC1 extends AbstractSAC {
 
 	private static final Logger LOGGER = Logger.getLogger(DC1.class.getName());
 
-	private static final LearnMethod LEARN_METHOD;
-
 	static {
-		AbstractSolver.defaultParameter("dc.addConstraints", LearnMethod.NONE);
-		LEARN_METHOD = (LearnMethod) AbstractSolver
-				.getParameter("dc.addConstraints");
+		ParameterManager.registerObject("dc.addConstraints", LearnMethod.NONE);
 	}
 
 	private int addedConstraints = 0;
@@ -62,7 +58,9 @@ public final class DC1 extends AbstractSAC {
 	public DC1(final Problem problem) {
 		super(problem, new AC3(problem));
 		this.variables = problem.getVariables();
-		ngl = new NoGoodLearner(problem, LEARN_METHOD);
+		ngl = new NoGoodLearner(problem,
+				(LearnMethod) ParameterManager
+						.getParameter("dc.addConstraints"));
 	}
 
 	@Override
@@ -238,6 +236,6 @@ public final class DC1 extends AbstractSAC {
 	}
 
 	public String toString() {
-		return "DC w/ " + filter + " L " + LEARN_METHOD;
+		return "DC w/ " + filter + " L " + ngl.getLearnMethod();
 	}
 }

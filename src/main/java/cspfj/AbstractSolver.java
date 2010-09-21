@@ -23,8 +23,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Timer;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -37,34 +37,30 @@ import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.Filter;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
+import cspfj.util.MsLogHandler;
 import cspfj.util.Waker;
 
 public abstract class AbstractSolver implements Solver {
 	private static final Logger LOGGER = Logger.getLogger(AbstractSolver.class
 			.getName());
 	public static final String VERSION;
-	private static final Map<String, Object> PARAMETERS = new HashMap<String, Object>();
+
 	static {
 		Matcher matcher = Pattern.compile("Rev:\\ (\\d+)").matcher(
 				"$Rev$");
 		matcher.find();
 		VERSION = matcher.group(1);
-		defaultParameter("logger.level", Level.WARNING);
-		Logger.getLogger("").setLevel((Level) getParameter("logger.level"));
+		ParameterManager.registerString("logger.level", "WARNING");
 	}
 
+	@Deprecated
 	public static void parameter(final String name, final Object value) {
-		PARAMETERS.put(name, value);
+		ParameterManager.parameter(name, value);
 	}
 
-	public static void defaultParameter(final String name, final Object value) {
-		if (!PARAMETERS.containsKey(name)) {
-			PARAMETERS.put(name, value);
-		}
-	}
-
+	@Deprecated
 	public static Object getParameter(final String name) {
-		return PARAMETERS.get(name);
+		return ParameterManager.getParameter(name);
 	}
 
 	protected final Problem problem;
@@ -86,6 +82,20 @@ public abstract class AbstractSolver implements Solver {
 		problem = prob;
 		nbAssignments = 0;
 		this.statistics = new HashMap<String, Object>();
+
+		final Level level = Level.parse((String) ParameterManager
+				.getParameter("logger.level"));
+
+		Logger.getLogger("").setLevel(level);
+		for (Handler h : Logger.getLogger("").getHandlers()) {
+			Logger.getLogger("").removeHandler(h);
+		}
+
+		final Handler handler = new MsLogHandler(System.currentTimeMillis());
+		handler.setLevel(level);
+		Logger.getLogger("").addHandler(handler);
+
+		LOGGER.info(ParameterManager.list());
 	}
 
 	public final int getNbAssignments() {
@@ -215,14 +225,7 @@ public abstract class AbstractSolver implements Solver {
 	}
 
 	public String getXMLConfig() {
-		final StringBuilder stb = new StringBuilder();
-
-		for (Entry<String, Object> p : PARAMETERS.entrySet()) {
-			stb.append("\t\t\t<p name=\"").append(p.getKey()).append("\">")
-					.append(p.getValue()).append("</p>\n");
-		}
-
-		return stb.toString();
+		return ParameterManager.toXML();
 	}
 
 	public final void statistic(final String key, final Object value) {

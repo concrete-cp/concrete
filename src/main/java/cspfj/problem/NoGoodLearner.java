@@ -222,5 +222,9 @@ public final class NoGoodLearner {
         }
         return null;
     }
+    
+    public final LearnMethod getLearnMethod() {
+    	return learnMethod;
+    }
 
 }

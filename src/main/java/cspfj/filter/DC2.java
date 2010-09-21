@@ -25,17 +25,18 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import cspfj.AbstractSolver;
+import cspfj.ParameterManager;
 import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
 import cspfj.problem.NoGoodLearner;
+import cspfj.problem.NoGoodLearner.LearnMethod;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
-import cspfj.problem.NoGoodLearner.LearnMethod;
 import cspfj.util.BitVector;
 
 /**
@@ -46,12 +47,8 @@ public final class DC2 implements Filter {
 
 	private static final Logger LOGGER = Logger.getLogger(DC2.class.getName());
 
-	private static final LearnMethod LEARN_METHOD;
-
 	static {
-		AbstractSolver.defaultParameter("dc.addConstraints", LearnMethod.NONE);
-		LEARN_METHOD = (LearnMethod) AbstractSolver
-				.getParameter("dc.addConstraints");
+		ParameterManager.registerObject("dc.addConstraints", LearnMethod.NONE);
 	}
 	private int nbAddedConstraints = 0;
 
@@ -77,7 +74,9 @@ public final class DC2 implements Filter {
 		// impliedConstraints = new ArrayList<DynamicConstraint>();
 		modCons = new int[problem.getMaxCId() + 1];
 		modVar = new int[problem.getMaxVId() + 1];
-		ngl = new NoGoodLearner(problem, LEARN_METHOD);
+		ngl = new NoGoodLearner(problem,
+				(LearnMethod) ParameterManager
+						.getParameter("dc.addConstraints"));
 	}
 
 	@Override
@@ -321,7 +320,7 @@ public final class DC2 implements Filter {
 	}
 
 	public String toString() {
-		return "DC w/ " + filter + " L " + LEARN_METHOD;
+		return "DC w/ " + filter + " L " + ngl.getLearnMethod();
 	}
 
 	@Override

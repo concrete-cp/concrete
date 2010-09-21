@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 
-import cspfj.AbstractSolver;
+import cspfj.ParameterManager;
 import cspfj.constraint.Constraint;
 import cspfj.priorityqueues.FibonacciHeap;
 import cspfj.priorityqueues.Key;
@@ -30,11 +30,16 @@ public final class AC3Constraint implements Filter {
 	private static int revisionCount = 0;
 
 	static {
-		AbstractSolver.defaultParameter("ac.queue", FibonacciHeap.class);
-		AbstractSolver.defaultParameter("ac.key", new Key<Constraint>() {
+		ParameterManager.registerClass("ac.queue", FibonacciHeap.class);
+		ParameterManager.registerObject("ac.key", new Key<Constraint>() {
 			@Override
 			public float getKey(final Constraint object) {
-				return object.getEvaluation() / object.getWeight();
+				return object.getEvaluation();
+			}
+
+			@Override
+			public String toString() {
+				return "object.getEvaluation()";
 			}
 		});
 	}
@@ -43,9 +48,9 @@ public final class AC3Constraint implements Filter {
 		super();
 		this.problem = problem;
 		try {
-			this.queue = ((Class<? extends Queue>) AbstractSolver
+			this.queue = ((Class<? extends Queue>) ParameterManager
 					.getParameter("ac.queue")).getConstructor(Key.class)
-					.newInstance(AbstractSolver.getParameter("ac.key"));
+					.newInstance(ParameterManager.getParameter("ac.key"));
 		} catch (Exception e) {
 			throw new IllegalStateException(e);
 		}

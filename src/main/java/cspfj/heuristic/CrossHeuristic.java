@@ -2,7 +2,7 @@ package cspfj.heuristic;
 
 import java.lang.reflect.InvocationTargetException;
 
-import cspfj.AbstractSolver;
+import cspfj.ParameterManager;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
@@ -13,8 +13,8 @@ public final class CrossHeuristic implements Heuristic {
 	private final ValueHeuristic valueHeuristic;
 
 	static {
-		AbstractSolver.defaultParameter("heuristic.variable", WDegOnDom.class);
-		AbstractSolver.defaultParameter("heuristic.value", Lexico.class);
+		ParameterManager.registerClass("heuristic.variable", WDegOnDom.class);
+		ParameterManager.registerClass("heuristic.value", Lexico.class);
 	}
 
 	// private final static Logger logger =
@@ -23,10 +23,10 @@ public final class CrossHeuristic implements Heuristic {
 	public CrossHeuristic(Problem problem) throws InstantiationException,
 			IllegalAccessException, InvocationTargetException,
 			NoSuchMethodException, ClassNotFoundException {
-		variableHeuristic = ((Class<VariableHeuristic>) AbstractSolver
+		variableHeuristic = ((Class<VariableHeuristic>) ParameterManager
 				.getParameter("heuristic.variable")).getConstructor(
 				Problem.class).newInstance(problem);
-		valueHeuristic = ((Class<ValueHeuristic>) AbstractSolver
+		valueHeuristic = ((Class<ValueHeuristic>) ParameterManager
 				.getParameter("heuristic.value")).getConstructor()
 				.newInstance();
 	}
