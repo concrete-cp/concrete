@@ -27,8 +27,6 @@ import cspfj.problem.Problem;
 public interface Solver {
     Map<String, Integer> nextSolution();
 
-    int getNbAssignments();
-
     void setMaxBacktracks(final int maxBacktracks);
 
     void setUsePrepro(final Class<? extends Filter> filter);

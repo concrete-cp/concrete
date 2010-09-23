@@ -39,219 +39,231 @@ import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.MsLogHandler;
 import cspfj.util.Waker;
+import cspom.CSPOM;
 
 public abstract class AbstractSolver implements Solver {
-	private static final Logger LOGGER = Logger.getLogger(AbstractSolver.class
-			.getName());
-	public static final String VERSION;
+    private static final Logger LOGGER = Logger.getLogger(AbstractSolver.class
+            .getName());
+    public static final String VERSION;
 
-	static {
-		Matcher matcher = Pattern.compile("Rev:\\ (\\d+)").matcher(
-				"$Rev$");
-		matcher.find();
-		VERSION = matcher.group(1);
-		ParameterManager.registerString("logger.level", "WARNING");
-	}
+    static {
+        Matcher matcher = Pattern.compile("Rev:\\ (\\d+)").matcher(
+                "$Rev$");
+        matcher.find();
+        VERSION = matcher.group(1);
+        ParameterManager.registerString("logger.level", "WARNING");
+        ParameterManager.registerClass("solver", MGACIter.class);
 
-	@Deprecated
-	public static void parameter(final String name, final Object value) {
-		ParameterManager.parameter(name, value);
-	}
+    }
 
-	@Deprecated
-	public static Object getParameter(final String name) {
-		return ParameterManager.getParameter(name);
-	}
+    @Deprecated
+    public static void parameter(final String name, final Object value) {
+        ParameterManager.parameter(name, value);
+    }
 
-	protected final Problem problem;
+    @Deprecated
+    public static Object getParameter(final String name) {
+        return ParameterManager.getParameter(name);
+    }
 
-	private int nbAssignments;
+    public static Solver factory(Problem problem) {
+        try {
+            return ((Class<Solver>) ParameterManager.getParameter("solver"))
+                    .getConstructor(Problem.class).newInstance(problem);
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
 
-	private int maxBacktracks;
+    public static Solver factory(CSPOM problem) {
+        try {
+            return ((Class<Solver>) ParameterManager.getParameter("solver"))
+                    .getConstructor(CSPOM.class).newInstance(problem);
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
 
-	private int nbBacktracks;
+    protected final Problem problem;
 
-	private Class<? extends Filter> preprocessor = null;
+    private int maxBacktracks;
 
-	private int preproExpiration = -1;
+    private Class<? extends Filter> preprocessor = null;
 
-	private final Map<String, Object> statistics;
+    private int preproExpiration = -1;
 
-	public AbstractSolver(final Problem prob) {
-		super();
-		problem = prob;
-		nbAssignments = 0;
-		this.statistics = new HashMap<String, Object>();
+    private final Map<String, Object> statistics;
 
-		final Level level = Level.parse((String) ParameterManager
-				.getParameter("logger.level"));
+    private int nbBacktracks;
 
-		Logger.getLogger("").setLevel(level);
-		for (Handler h : Logger.getLogger("").getHandlers()) {
-			Logger.getLogger("").removeHandler(h);
-		}
+    public AbstractSolver(final Problem prob) {
+        super();
 
-		final Handler handler = new MsLogHandler(System.currentTimeMillis());
-		handler.setLevel(level);
-		Logger.getLogger("").addHandler(handler);
+        problem = prob;
 
-		LOGGER.info(ParameterManager.list());
-	}
+        this.statistics = new HashMap<String, Object>();
 
-	public final int getNbAssignments() {
-		return nbAssignments;
-	}
+        final Level level = Level.parse((String) ParameterManager
+                .getParameter("logger.level"));
 
-	protected final void incrementNbAssignments() {
-		nbAssignments++;
-	}
+        Logger.getLogger("").setLevel(level);
+        for (Handler h : Logger.getLogger("").getHandlers()) {
+            Logger.getLogger("").removeHandler(h);
+        }
 
-	public final void setMaxBacktracks(final int maxBacktracks) {
-		this.maxBacktracks = maxBacktracks;
-		this.nbBacktracks = 0;
-	}
+        final Handler handler = new MsLogHandler(System.currentTimeMillis());
+        handler.setLevel(level);
+        Logger.getLogger("").addHandler(handler);
 
-	public final void checkBacktracks() throws MaxBacktracksExceededException {
-		if (++nbBacktracks >= maxBacktracks && maxBacktracks >= 0) {
-			throw new MaxBacktracksExceededException();
-		}
-	}
+        LOGGER.info(ParameterManager.list());
+    }
 
-	public final int getMaxBacktracks() {
-		return maxBacktracks;
-	}
+    public final void setMaxBacktracks(final int maxBacktracks) {
+        this.maxBacktracks = maxBacktracks;
+        this.nbBacktracks = 0;
+    }
 
-	protected final int getNbBacktracks() {
-		return nbBacktracks;
-	}
+    public final void checkBacktracks() throws MaxBacktracksExceededException {
+        if (++nbBacktracks >= maxBacktracks && maxBacktracks >= 0) {
+            throw new MaxBacktracksExceededException();
+        }
+    }
 
-	public final void setUsePrepro(final Class<? extends Filter> prepro) {
-		this.preprocessor = prepro;
-	}
+    public final int getMaxBacktracks() {
+        return maxBacktracks;
+    }
 
-	public final void setPreproExp(final int time) {
-		this.preproExpiration = time;
-	}
+    protected final int getNbBacktracks() {
+        return nbBacktracks;
+    }
 
-	public final Class<? extends Filter> getPreprocessor() {
-		return preprocessor;
-	}
+    public final void setUsePrepro(final Class<? extends Filter> prepro) {
+        this.preprocessor = prepro;
+    }
 
-	protected final Map<String, Integer> solution() {
-		final Map<String, Integer> solution = new LinkedHashMap<String, Integer>();
-		for (Variable v : problem.getVariables()) {
-			solution.put(v.getName(), v.getValue(v.getFirst()));
-		}
-		return solution;
-	}
+    public final void setPreproExp(final int time) {
+        this.preproExpiration = time;
+    }
 
-	public final Problem getProblem() {
-		return problem;
-	}
+    public final Class<? extends Filter> getPreprocessor() {
+        return preprocessor;
+    }
 
-	public final boolean preprocess(final Filter filter)
-			throws InterruptedException {
+    protected final Map<String, Integer> solution() {
+        final Map<String, Integer> solution = new LinkedHashMap<String, Integer>();
+        for (Variable v : problem.getVariables()) {
+            solution.put(v.getName(), v.getValue(v.getFirst()));
+        }
+        return solution;
+    }
 
-		LOGGER.info("Preprocessing (" + preproExpiration + ")");
+    public final Problem getProblem() {
+        return problem;
+    }
 
-		final Filter preprocessor;
-		if (this.preprocessor == null) {
-			preprocessor = filter;
-		} else {
-			try {
-				preprocessor = this.preprocessor.getConstructor(Problem.class)
-						.newInstance(problem);
-			} catch (InstantiationException e) {
-				throw new IllegalArgumentException(e);
-			} catch (IllegalAccessException e) {
-				throw new IllegalArgumentException(e);
-			} catch (InvocationTargetException e) {
-				throw new IllegalArgumentException(e);
-			} catch (NoSuchMethodException e) {
-				throw new IllegalArgumentException(e);
-			}
-		}
+    public final boolean preprocess(final Filter filter)
+            throws InterruptedException {
 
-		Thread.interrupted();
+        LOGGER.info("Preprocessing (" + preproExpiration + ")");
 
-		final Timer waker = new Timer();
+        final Filter preprocessor;
+        if (this.preprocessor == null) {
+            preprocessor = filter;
+        } else {
+            try {
+                preprocessor = this.preprocessor.getConstructor(Problem.class)
+                        .newInstance(problem);
+            } catch (InstantiationException e) {
+                throw new IllegalArgumentException(e);
+            } catch (IllegalAccessException e) {
+                throw new IllegalArgumentException(e);
+            } catch (InvocationTargetException e) {
+                throw new IllegalArgumentException(e);
+            } catch (NoSuchMethodException e) {
+                throw new IllegalArgumentException(e);
+            }
+        }
 
-		if (preproExpiration >= 0) {
-			waker.schedule(new Waker(Thread.currentThread()),
-					preproExpiration * 1000);
-		}
+        Thread.interrupted();
 
-		long preproCpu = -System.currentTimeMillis();
-		boolean consistent;
-		try {
-			consistent = preprocessor.reduceAll();
-		} catch (InterruptedException e) {
-			LOGGER.warning("Interrupted preprocessing");
-			consistent = true;
-			throw e;
-		} catch (OutOfMemoryError e) {
-			System.err.println(e);
-			e.printStackTrace();
-			throw e;
-		} finally {
-			preproCpu += System.currentTimeMillis();
-			waker.cancel();
+        final Timer waker = new Timer();
 
-			statistics.putAll(preprocessor.getStatistics());
+        if (preproExpiration >= 0) {
+            waker.schedule(new Waker(Thread.currentThread()),
+                    preproExpiration * 1000);
+        }
 
-			int removed = 0;
+        long preproCpu = -System.currentTimeMillis();
+        boolean consistent;
+        try {
+            consistent = preprocessor.reduceAll();
+        } catch (InterruptedException e) {
+            LOGGER.warning("Interrupted preprocessing");
+            consistent = true;
+            throw e;
+        } catch (OutOfMemoryError e) {
+            System.err.println(e);
+            e.printStackTrace();
+            throw e;
+        } finally {
+            preproCpu += System.currentTimeMillis();
+            waker.cancel();
 
-			for (Variable v : problem.getVariables()) {
-				removed += v.getDomain().maxSize() - v.getDomainSize();
-			}
-			statistics.put("prepro-removed", removed);
-			statistics.put("prepro-cpu", preproCpu / 1000f);
-			statistics.put("prepro-constraint-ccks",
-					AbstractAC3Constraint.getChecks());
-			statistics.put("prepro-constraint-presenceccks",
-					AbstractConstraint.getPresenceChecks());
-			statistics.put("prepro-matrix2d-ccks", MatrixManager2D.getChecks());
-			statistics.put("prepro-matrix2d-presenceccks",
-					MatrixManager2D.getPresenceChecks());
+            statistics.putAll(preprocessor.getStatistics());
 
-		}
+            int removed = 0;
 
-		return consistent;
+            for (Variable v : problem.getVariables()) {
+                removed += v.getDomain().maxSize() - v.getDomainSize();
+            }
+            statistics.put("prepro-removed", removed);
+            statistics.put("prepro-cpu", preproCpu / 1000f);
+            statistics.put("prepro-constraint-ccks",
+                    AbstractAC3Constraint.getChecks());
+            statistics.put("prepro-constraint-presenceccks",
+                    AbstractConstraint.getPresenceChecks());
+            statistics.put("prepro-matrix2d-ccks", MatrixManager2D.getChecks());
+            statistics.put("prepro-matrix2d-presenceccks",
+                    MatrixManager2D.getPresenceChecks());
 
-	}
+        }
 
-	public final Map<String, Object> getStatistics() {
-		return statistics;
-	}
+        return consistent;
 
-	public String getXMLConfig() {
-		return ParameterManager.toXML();
-	}
+    }
 
-	public final void statistic(final String key, final Object value) {
-		statistics.put(key, value);
-	}
+    public final Map<String, Object> getStatistics() {
+        return statistics;
+    }
 
-	public final void increaseStatistic(final String key, final Integer value) {
-		Object currentValue = statistics.get(key);
-		if (currentValue == null) {
-			statistics.put(key, value);
-		} else if (!(currentValue instanceof Integer)) {
-			throw new IllegalArgumentException(value + " should be an integer");
-		} else {
-			statistics.put(key, (Integer) currentValue + value);
-		}
-	}
+    public String getXMLConfig() {
+        return ParameterManager.toXML();
+    }
 
-	public final void increaseStatistic(final String key, final Float value) {
-		Object currentValue = statistics.get(key);
-		if (currentValue == null) {
-			statistics.put(key, value);
-		} else if (!(currentValue instanceof Float)) {
-			throw new IllegalArgumentException(value + " should be a double");
-		} else {
-			statistics.put(key, (Float) currentValue + value);
-		}
-	}
+    public final void statistic(final String key, final Object value) {
+        statistics.put(key, value);
+    }
+
+    public final void increaseStatistic(final String key, final Integer value) {
+        Object currentValue = statistics.get(key);
+        if (currentValue == null) {
+            statistics.put(key, value);
+        } else if (!(currentValue instanceof Integer)) {
+            throw new IllegalArgumentException(value + " should be an integer");
+        } else {
+            statistics.put(key, (Integer) currentValue + value);
+        }
+    }
+
+    public final void increaseStatistic(final String key, final Float value) {
+        Object currentValue = statistics.get(key);
+        if (currentValue == null) {
+            statistics.put(key, value);
+        } else if (!(currentValue instanceof Float)) {
+            throw new IllegalArgumentException(value + " should be a double");
+        } else {
+            statistics.put(key, (Float) currentValue + value);
+        }
+    }
 
 }
