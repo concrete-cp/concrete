@@ -34,6 +34,7 @@ import cspfj.problem.NoGoodLearner.LearnMethod;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.BitVector;
+import cspfj.util.Parameter;
 
 /**
  * @author Julien VION
@@ -43,8 +44,11 @@ public final class DC1 extends AbstractSAC {
 
 	private static final Logger LOGGER = Logger.getLogger(DC1.class.getName());
 
+	@Parameter("dc1.addConstraints")
+	private static LearnMethod addConstraints = LearnMethod.CONS;
+	
 	static {
-		ParameterManager.registerObject("dc.addConstraints", LearnMethod.NONE);
+		ParameterManager.register(DC1.class);
 	}
 
 	private int addedConstraints = 0;
@@ -58,9 +62,7 @@ public final class DC1 extends AbstractSAC {
 	public DC1(final Problem problem) {
 		super(problem, new AC3(problem));
 		this.variables = problem.getVariables();
-		ngl = new NoGoodLearner(problem,
-				(LearnMethod) ParameterManager
-						.getParameter("dc.addConstraints"));
+		ngl = new NoGoodLearner(problem, addConstraints);
 	}
 
 	@Override

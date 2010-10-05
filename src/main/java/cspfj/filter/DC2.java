@@ -29,7 +29,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import cspfj.AbstractSolver;
 import cspfj.ParameterManager;
 import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
@@ -38,6 +37,7 @@ import cspfj.problem.NoGoodLearner.LearnMethod;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.BitVector;
+import cspfj.util.Parameter;
 
 /**
  * @author Julien VION
@@ -47,8 +47,11 @@ public final class DC2 implements Filter {
 
 	private static final Logger LOGGER = Logger.getLogger(DC2.class.getName());
 
+	@Parameter("dc2.addConstraints")
+	private static LearnMethod addConstraints = LearnMethod.CONS;
+
 	static {
-		ParameterManager.registerObject("dc.addConstraints", LearnMethod.NONE);
+		ParameterManager.register(DC2.class);
 	}
 	private int nbAddedConstraints = 0;
 
@@ -74,9 +77,7 @@ public final class DC2 implements Filter {
 		// impliedConstraints = new ArrayList<DynamicConstraint>();
 		modCons = new int[problem.getMaxCId() + 1];
 		modVar = new int[problem.getMaxVId() + 1];
-		ngl = new NoGoodLearner(problem,
-				(LearnMethod) ParameterManager
-						.getParameter("dc.addConstraints"));
+		ngl = new NoGoodLearner(problem, addConstraints);
 	}
 
 	@Override

@@ -36,6 +36,7 @@ import cspfj.problem.NoGoodLearner.LearnMethod;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.BitVector;
+import cspfj.util.Parameter;
 
 /**
  * @author Julien VION
@@ -45,8 +46,11 @@ public final class DC20 implements Filter {
 
 	private static final Logger LOGGER = Logger.getLogger(DC20.class.getName());
 
+	@Parameter("dc20.addConstraints")
+	private static LearnMethod addConstraints = LearnMethod.CONS;
+
 	static {
-		ParameterManager.registerObject("dc.addConstraints", LearnMethod.NONE);
+		ParameterManager.register(DC20.class);
 	}
 	private int nbAddedConstraints = 0;
 
@@ -71,9 +75,7 @@ public final class DC20 implements Filter {
 		this.filter = new AC3(problem);
 		impliedConstraints = new ArrayList<DynamicConstraint>();
 		modVar = new int[problem.getMaxVId() + 1];
-		ngl = new NoGoodLearner(problem,
-				(LearnMethod) ParameterManager
-						.getParameter("dc.addConstraints"));
+		ngl = new NoGoodLearner(problem, addConstraints);
 		// allDomainSizes = new int[(2 + problem.getMaxVId())
 		// * problem.getMaxDomainSize()][1 + problem.getMaxVId()];
 	}

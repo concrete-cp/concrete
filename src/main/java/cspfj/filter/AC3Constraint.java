@@ -11,6 +11,8 @@ import cspfj.priorityqueues.FibonacciHeap;
 import cspfj.priorityqueues.Key;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
+import cspfj.util.Parameter;
+import cspfj.util.Statistic;
 
 /**
  * @author scand1sk
@@ -25,32 +27,36 @@ public final class AC3Constraint implements Filter {
 	// private static final Logger LOGGER = Logger.getLogger(Filter.class
 	// .getSimpleName());
 
-	private int revisions = 0;
+	@Statistic
+	public int revisions = 0;
 
 	private static int revisionCount = 0;
 
-	static {
-		ParameterManager.registerClass("ac.queue", FibonacciHeap.class);
-		ParameterManager.registerObject("ac.key", new Key<Constraint>() {
-			@Override
-			public float getKey(final Constraint object) {
-				return object.getEvaluation();
-			}
+	@Parameter("ac.queue")
+	private static Class<? extends Queue> queueType = FibonacciHeap.class;
 
-			@Override
-			public String toString() {
-				return "object.getEvaluation()";
-			}
-		});
+	@Parameter("ac.key")
+	private static Key<Constraint> key = new Key<Constraint>() {
+		@Override
+		public float getKey(final Constraint object) {
+			return object.getEvaluation();
+		}
+
+		@Override
+		public String toString() {
+			return "object.getEvaluation()";
+		}
+	};
+
+	static {
+		ParameterManager.register(AC3Constraint.class);
 	}
 
 	public AC3Constraint(final Problem problem) {
 		super();
 		this.problem = problem;
 		try {
-			this.queue = ((Class<? extends Queue>) ParameterManager
-					.getParameter("ac.queue")).getConstructor(Key.class)
-					.newInstance(ParameterManager.getParameter("ac.key"));
+			this.queue = queueType.getConstructor(Key.class).newInstance(key);
 		} catch (Exception e) {
 			throw new IllegalStateException(e);
 		}

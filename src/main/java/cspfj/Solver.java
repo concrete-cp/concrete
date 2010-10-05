@@ -25,23 +25,19 @@ import cspfj.filter.Filter;
 import cspfj.problem.Problem;
 
 public interface Solver {
-    Map<String, Integer> nextSolution();
+	Map<String, Integer> nextSolution();
 
-    void setMaxBacktracks(final int maxBacktracks);
+	void setMaxBacktracks(final int maxBacktracks);
 
-    void setUsePrepro(final Class<? extends Filter> filter);
+	void setUsePrepro(final Class<? extends Filter> filter);
 
-    int getMaxBacktracks();
+	int getMaxBacktracks();
 
-    String getXMLConfig();
+	String getXMLConfig();
 
-    Problem getProblem();
+	Problem getProblem();
 
-    Map<String, Object> getStatistics();
+	void setPreproExp(int time);
 
-    void setPreproExp(int time);
-
-    void collectStatistics();
-
-    void reset();
+	void reset();
 }
