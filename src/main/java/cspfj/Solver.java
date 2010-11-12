@@ -29,8 +29,6 @@ public interface Solver {
 
 	void setMaxBacktracks(final int maxBacktracks);
 
-	void setUsePrepro(final Class<? extends Filter> filter);
-
 	int getMaxBacktracks();
 
 	String getXMLConfig();

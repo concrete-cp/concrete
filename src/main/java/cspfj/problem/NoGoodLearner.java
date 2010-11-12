@@ -23,7 +23,7 @@ import cspfj.util.Statistic;
 public final class NoGoodLearner {
 
 	public static enum LearnMethod {
-		NONE, CONS, EXT, BIN;
+		NONE, CONSERVATIVE, EXT, BIN;
 	}
 
 	// private static final Logger LOGGER =
@@ -190,7 +190,7 @@ public final class NoGoodLearner {
 			return constraint;
 		}
 
-		if (learnMethod == LearnMethod.CONS) {
+		if (learnMethod == LearnMethod.CONSERVATIVE) {
 			return null;
 		}
 

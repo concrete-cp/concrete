@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import cspfj.ParameterManager;
+import cspfj.StatisticsManager;
 import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
 import cspfj.problem.NoGoodLearner;
@@ -35,6 +36,7 @@ import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.BitVector;
 import cspfj.util.Parameter;
+import cspfj.util.Statistic;
 
 /**
  * @author Julien VION
@@ -45,17 +47,20 @@ public final class DC1 extends AbstractSAC {
 	private static final Logger LOGGER = Logger.getLogger(DC1.class.getName());
 
 	@Parameter("dc1.addConstraints")
-	private static LearnMethod addConstraints = LearnMethod.CONS;
-	
+	private static LearnMethod addConstraints = LearnMethod.CONSERVATIVE;
+
 	static {
 		ParameterManager.register(DC1.class);
+		StatisticsManager.register(DC1.class);
 	}
 
-	private int addedConstraints = 0;
+	@Statistic
+	private static int addedConstraints = 0;
 
 	private final Variable[] variables;
 
-	private int nbNoGoods;
+	@Statistic
+	private static int nbNoGoods;
 
 	private final NoGoodLearner ngl;
 

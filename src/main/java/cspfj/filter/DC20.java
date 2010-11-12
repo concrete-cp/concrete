@@ -47,7 +47,7 @@ public final class DC20 implements Filter {
 	private static final Logger LOGGER = Logger.getLogger(DC20.class.getName());
 
 	@Parameter("dc20.addConstraints")
-	private static LearnMethod addConstraints = LearnMethod.CONS;
+	private static LearnMethod addConstraints = LearnMethod.CONSERVATIVE;
 
 	static {
 		ParameterManager.register(DC20.class);

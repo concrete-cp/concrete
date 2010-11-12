@@ -94,7 +94,8 @@ public abstract class AbstractSolver implements Solver {
 
 	private int maxBacktracks;
 
-	private Class<? extends Filter> preprocessor = null;
+	@Parameter("preprocessor")
+	private static Class<? extends Filter> preprocessor = null;
 
 	private int preproExpiration = -1;
 
@@ -136,10 +137,6 @@ public abstract class AbstractSolver implements Solver {
 
 	protected final int getNbBacktracks() {
 		return nbBacktracks;
-	}
-
-	public final void setUsePrepro(final Class<? extends Filter> prepro) {
-		this.preprocessor = prepro;
 	}
 
 	public final void setPreproExp(final int time) {

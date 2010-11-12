@@ -23,7 +23,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -66,6 +65,7 @@ public final class MGACIter extends AbstractSolver {
 
 	static {
 		ParameterManager.register(MGACIter.class);
+		StatisticsManager.register(MGACIter.class);
 	}
 
 	private final Deque<Pair> decisions;

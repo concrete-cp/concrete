@@ -6,9 +6,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Logger;
 
+import cspfj.StatisticsManager;
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
+import cspfj.util.Statistic;
 
 abstract class AbstractSAC implements Filter {
 
@@ -16,12 +18,17 @@ abstract class AbstractSAC implements Filter {
 
     protected final Problem problem;
 
+    @Statistic
     protected int nbSingletonTests = 0;
 
     // private final Comparator<Variable> heuristic;
 
     private static final Logger LOGGER = Logger.getLogger(AbstractSAC.class
             .toString());
+    
+    static {
+    	StatisticsManager.register(AbstractSAC.class);
+    }
 
     public AbstractSAC(final Problem problem, final AC3 filter) {
         super();
