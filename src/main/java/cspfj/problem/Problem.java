@@ -97,38 +97,48 @@ public final class Problem {
     }
 
     private void prepareConstraints() {
-        maxArity = Collections.max(constraints, new Comparator<Constraint>() {
-            @Override
-            public int compare(final Constraint o1, final Constraint o2) {
-                return o1.getArity() - o2.getArity();
+        if (constraints.isEmpty()) {
+            maxArity = 0;
+            maxCId = 0;
+            for (Variable v : getVariables()) {
+                v.setInvolvingConstraints(new Constraint[0]);
             }
-        }).getArity();
+        } else {
+            maxArity = Collections.max(constraints,
+                    new Comparator<Constraint>() {
+                        @Override
+                        public int compare(final Constraint o1,
+                                final Constraint o2) {
+                            return o1.getArity() - o2.getArity();
+                        }
+                    }).getArity();
 
-        maxCId = Collections.max(constraints, new Comparator<Constraint>() {
-            @Override
-            public int compare(final Constraint o1, final Constraint o2) {
-                return o1.getId() - o2.getId();
+            maxCId = Collections.max(constraints, new Comparator<Constraint>() {
+                @Override
+                public int compare(final Constraint o1, final Constraint o2) {
+                    return o1.getId() - o2.getId();
+                }
+            }).getId();
+
+            final Map<Integer, List<Constraint>> invConstraints = new HashMap<Integer, List<Constraint>>(
+                    variableArray.length);
+
+            for (Variable v : getVariables()) {
+                invConstraints.put(v.getId(), new ArrayList<Constraint>());
             }
-        }).getId();
 
-        final Map<Integer, List<Constraint>> invConstraints = new HashMap<Integer, List<Constraint>>(
-                variableArray.length);
-
-        for (Variable v : getVariables()) {
-            invConstraints.put(v.getId(), new ArrayList<Constraint>());
-        }
-
-        for (Constraint c : getConstraints()) {
-            for (Variable v : c.getScope()) {
-                invConstraints.get(v.getId()).add(c);
+            for (Constraint c : getConstraints()) {
+                for (Variable v : c.getScope()) {
+                    invConstraints.get(v.getId()).add(c);
+                }
             }
-        }
 
-        for (Variable v : getVariables()) {
-            final Collection<Constraint> involvingConstraints = invConstraints
-                    .get(v.getId());
-            v.setInvolvingConstraints(involvingConstraints
-                    .toArray(new Constraint[involvingConstraints.size()]));
+            for (Variable v : getVariables()) {
+                final Collection<Constraint> involvingConstraints = invConstraints
+                        .get(v.getId());
+                v.setInvolvingConstraints(involvingConstraints
+                        .toArray(new Constraint[involvingConstraints.size()]));
+            }
         }
     }
 

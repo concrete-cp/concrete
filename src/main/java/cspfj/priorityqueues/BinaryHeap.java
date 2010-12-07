@@ -181,10 +181,9 @@ public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
 				swap(parent, leaf);
 				leaf = parent;
 			} else {
-				return;
+				break;
 			}
 		}
-		return;
 	}
 
 	public String toString() {

@@ -60,11 +60,11 @@ public final class ProblemGeneratorTest {
         generateTest("normalized-crossword-m1-lex-15-04.xml.bz2");
     }
 
-    @Test
-    public void fapp01_0200_0() throws CSPParseException, IOException,
-            FailedGenerationException, ClassNotFoundException {
-        generateTest("fapp01-0200-0.xml");
-    }
+//    @Test
+//    public void fapp01_0200_0() throws CSPParseException, IOException,
+//            FailedGenerationException, ClassNotFoundException {
+//        generateTest("fapp01-0200-0.xml");
+//    }
 
     private void generateTest(final String file) throws CSPParseException,
             IOException, FailedGenerationException, ClassNotFoundException {
