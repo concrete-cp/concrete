@@ -10,8 +10,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 
 public class StatisticsManager {
+
+	private static final Logger LOGGER = Logger
+			.getLogger(StatisticsManager.class.getSimpleName());
 
 	private static final Collection<Field> STATIC_STATISTICS = new ArrayList<Field>();
 
@@ -36,7 +40,7 @@ public class StatisticsManager {
 
 	public static void register(String name, Object object) {
 		if (REFERENCED_OBJECTS.containsKey(name)) {
-			throw new IllegalArgumentException(name + " is already registered");
+			LOGGER.warning("Replacing statistic object for " + name);
 		}
 		REFERENCED_OBJECTS.put(name, object);
 	}
