@@ -3,7 +3,7 @@
 	<groupId>cspfj</groupId>
 	<artifactId>cspfj</artifactId>
 	<name>CSP4J</name>
-	<version>1.0.0</version>
+	<version>1.0.1-SNAPSHOT</version>
 
 	<dependencies>
 		<dependency>
@@ -23,8 +23,8 @@
 		<url>http://scand1sk.shacknet.nu/hudson/job/CSP4J/</url>
 	</ciManagement>
 	<scm>
-		<developerConnection>scm:svn:https://cspfj.svn.sourceforge.net/svnroot/cspfj/tags/cspfj-1.0.0</developerConnection>
-		<url>https://cspfj.svn.sourceforge.net/svnroot/cspfj/tags/cspfj-1.0.0</url>
+		<developerConnection>scm:svn:https://cspfj.svn.sourceforge.net/svnroot/cspfj/trunk/cspfj</developerConnection>
+		<url>https://cspfj.svn.sourceforge.net/svnroot/cspfj/trunk/cspfj</url>
 	</scm>
 	<distributionManagement>
 		<!-- use the following if you're not using a snapshot version. -->
