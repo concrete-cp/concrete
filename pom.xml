@@ -19,6 +19,23 @@
 			<version>1.0.0-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
+	<ciManagement>
+		<system>Hudson</system>
+		<url>http://scand1sk.shacknet.nu/hudson/job/CSP4J/</url>
+	</ciManagement>
+	<scm>
+		<developerConnection>scm:svn:https://cspfj.svn.sourceforge.net/svnroot/cspfj/trunk/cspfj</developerConnection>
+		<url>https://cspfj.svn.sourceforge.net/svnroot/cspfj/trunk/cspfj</url>
+	</scm>
+	<distributionManagement>
+		<!-- use the following if you're not using a snapshot version. -->
+		<repository>
+			<id>net.sourceforge.cspfj</id>
+			<name>CSP4J repository</name>
+			<url>sftp://web.sourceforge.net/home/groups/c/cs/cspfj/htdocs/repository</url>
+		</repository>
+
+	</distributionManagement>
 	<url>http://cspfj.sourceforge.net/</url>
 	<build>
 		<plugins>
