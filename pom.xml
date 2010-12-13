@@ -1,10 +1,9 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>cspfj</groupId>
 	<artifactId>cspfj</artifactId>
 	<name>CSP4J</name>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0</version>
 
 	<dependencies>
 		<dependency>
@@ -16,7 +15,7 @@
 		<dependency>
 			<groupId>cspfj</groupId>
 			<artifactId>cspom</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<version>1.0.5</version>
 		</dependency>
 	</dependencies>
 	<ciManagement>
@@ -24,8 +23,8 @@
 		<url>http://scand1sk.shacknet.nu/hudson/job/CSP4J/</url>
 	</ciManagement>
 	<scm>
-		<developerConnection>scm:svn:https://cspfj.svn.sourceforge.net/svnroot/cspfj/trunk/cspfj</developerConnection>
-		<url>https://cspfj.svn.sourceforge.net/svnroot/cspfj/trunk/cspfj</url>
+		<developerConnection>scm:svn:https://cspfj.svn.sourceforge.net/svnroot/cspfj/tags/cspfj-1.0.0</developerConnection>
+		<url>https://cspfj.svn.sourceforge.net/svnroot/cspfj/tags/cspfj-1.0.0</url>
 	</scm>
 	<distributionManagement>
 		<!-- use the following if you're not using a snapshot version. -->
