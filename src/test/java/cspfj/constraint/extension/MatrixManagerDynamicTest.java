@@ -22,6 +22,7 @@ public final class MatrixManagerDynamicTest {
 
     @Before
     public void setUp() throws Exception {
+        new Date();
         final TupleSet ta = new TupleSet(false);
         ta.set(new int[] { 0, 0 }, true);
         ta.set(new int[] { 1, 1 }, true);
