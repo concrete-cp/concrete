@@ -1,102 +1,110 @@
 package cspfj;
 
+import static com.google.common.collect.Maps.newHashMap;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
-import java.util.TreeMap;
-import java.util.logging.Logger;
+
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Maps.EntryTransformer;
+import com.google.common.collect.Multimap;
 
 public class StatisticsManager {
 
-	private static final Logger LOGGER = Logger
-			.getLogger(StatisticsManager.class.getSimpleName());
+    private static final Map<String, Field> STATIC_STATISTICS = newHashMap();
 
-	private static final Collection<Field> STATIC_STATISTICS = new ArrayList<Field>();
+    private static Map<Object, String> REFERENCED_OBJECTS = newHashMap();
 
-	private static Map<String, Object> REFERENCED_OBJECTS = new HashMap<String, Object>();
+    private static Multimap<Object, Field> DYNAMIC_FIELDS = HashMultimap
+            .create();
 
-	private StatisticsManager() {
+    private static final Predicate<Field> ANNOTED_FIELD = new Predicate<Field>() {
+        @Override
+        public boolean apply(Field input) {
+            return input.getAnnotation(cspfj.util.Statistic.class) != null;
+        }
+    };
 
-	}
+    private StatisticsManager() {
 
-	public static void register(Class<?> clazz) {
-		for (Field f : clazz.getDeclaredFields()) {
-			if ((f.getModifiers() & Modifier.STATIC) != 0) {
-				final Annotation a = f
-						.getAnnotation(cspfj.util.Statistic.class);
-				if (a != null) {
-					STATIC_STATISTICS.add(f);
-					f.setAccessible(true);
-				}
-			}
-		}
-	}
+    }
 
-	public static void register(String name, Object object) {
-		if (REFERENCED_OBJECTS.containsKey(name)) {
-			LOGGER.warning("Replacing statistic object for " + name);
-		}
-		REFERENCED_OBJECTS.put(name, object);
-	}
+    public static void register(Class<?> clazz) {
+        for (Field f : Iterables.filter(
+                Arrays.asList(clazz.getDeclaredFields()), ANNOTED_FIELD)) {
+            if ((f.getModifiers() & Modifier.STATIC) != 0) {
+                STATIC_STATISTICS.put(f.getDeclaringClass().toString() + '.'
+                        + f.getName(), f);
+                f.setAccessible(true);
+            }
+        }
+    }
 
-	public static Map<String, Object> digest() {
-		final SortedMap<String, Object> digest = new TreeMap<String, Object>();
-		for (Field f : STATIC_STATISTICS) {
-			try {
-				digest.put(f.getDeclaringClass() + "." + f.getName(),
-						f.get(null));
-			} catch (IllegalAccessException e) {
-				throw new IllegalStateException(e);
-			}
-		}
+    public static void register(String name, Object object) {
+        REFERENCED_OBJECTS.put(object, name);
+        final Class<?> clazz = object.getClass();
+        for (Field f : Iterables.filter(
+                Arrays.asList(clazz.getDeclaredFields()), ANNOTED_FIELD)) {
+            DYNAMIC_FIELDS.put(object, f);
+        }
+    }
 
-		for (Entry<String, Object> e : REFERENCED_OBJECTS.entrySet()) {
-			final Class<?> clazz = e.getValue().getClass();
-			for (Field f : clazz.getFields()) {
-				final Annotation a = f
-						.getAnnotation(cspfj.util.Statistic.class);
-				if (a != null) {
-					try {
-						digest.put(e.getKey() + "." + f.getName(),
-								f.get(e.getValue()));
-					} catch (IllegalAccessException e1) {
-						throw new IllegalStateException(e1);
-					}
-				}
+    public static Map<String, Object> digest() {
+        final SortedMap<String, Object> digest = Maps.newTreeMap();
+        digest.putAll(Maps.transformValues(STATIC_STATISTICS,
+                new Function<Field, Object>() {
+                    @Override
+                    public Object apply(Field value) {
+                        try {
+                            return value.get(null);
+                        } catch (IllegalAccessException e) {
+                            throw new IllegalStateException(e);
+                        }
+                    }
+                }));
 
-			}
-		}
-		return digest;
-	}
+        for (Entry<Object, Field> e : DYNAMIC_FIELDS.entries()) {
+            try {
+                digest.put(REFERENCED_OBJECTS.get(e.getKey()) + "."
+                        + e.getValue().getName(), e.getValue().get(e.getKey()));
+            } catch (IllegalAccessException e1) {
+                throw new IllegalStateException(e1);
+            }
+        }
+        return digest;
+    }
 
-	public static void reset() {
-		REFERENCED_OBJECTS.clear();
-		for (Field f : STATIC_STATISTICS) {
-			System.out.println(f.getGenericType());
-			if (Integer.class.equals(f.getType())
-					|| Integer.TYPE.equals(f.getType())
-					|| Long.class.equals(f.getType())
-					|| Long.TYPE.equals(f.getType())) {
-				try {
-					f.set(null, 0);
-				} catch (IllegalAccessException e) {
-					throw new IllegalStateException(e);
-				}
-			} else if (Double.class.equals(f.getType())
-					|| Double.TYPE.equals(f.getType())) {
-				try {
-					f.set(null, 0.0);
-				} catch (IllegalAccessException e) {
-					throw new IllegalStateException(e);
-				}
-			}
-		}
-	}
+    public static void reset() {
+        REFERENCED_OBJECTS.clear();
+        DYNAMIC_FIELDS.clear();
+        for (Field f : STATIC_STATISTICS.values()) {
+            if (Integer.class.equals(f.getType())
+                    || int.class.equals(f.getType())
+                    || Long.class.equals(f.getType())
+                    || Long.TYPE.equals(f.getType())) {
+                try {
+                    f.set(null, 0);
+                } catch (IllegalAccessException e) {
+                    throw new IllegalStateException(e);
+                }
+            } else if (Double.class.equals(f.getType())
+                    || Double.TYPE.equals(f.getType())) {
+                try {
+                    f.set(null, 0.0);
+                } catch (IllegalAccessException e) {
+                    throw new IllegalStateException(e);
+                }
+            }
+        }
+    }
 
 }
