@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import com.google.common.primitives.Ints;
+
 import cspfj.constraint.semantic.AbsDiff;
 import cspfj.exception.FailedGenerationException;
 import cspfj.problem.BitVectorDomain;
@@ -51,8 +53,7 @@ public final class AbsDiffGenerator extends AbstractGenerator {
                         values.add(Math.abs(i - j));
                     }
                 }
-                result.setDomain(new BitVectorDomain(IntLinkedList
-                        .intCollectionToArray(values)));
+                result.setDomain(new BitVectorDomain(Ints.toArray(values)));
 
             } else if (v0.getDomain() == null) {
 
@@ -82,7 +83,7 @@ public final class AbsDiffGenerator extends AbstractGenerator {
                 values.add(i - j);
             }
         }
-        return IntLinkedList.intCollectionToArray(values);
+        return Ints.toArray(values);
     }
 
 }

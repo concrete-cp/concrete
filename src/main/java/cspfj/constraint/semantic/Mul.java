@@ -5,7 +5,7 @@ import cspfj.problem.Domain;
 import cspfj.problem.Variable;
 
 /**
- * V0 = V1 * V2
+ * Contrainte V0 = V1 * V2.
  * 
  * @author vion
  * 

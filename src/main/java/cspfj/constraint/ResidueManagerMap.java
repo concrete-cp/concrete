@@ -1,7 +1,8 @@
 package cspfj.constraint;
 
+import static com.google.common.collect.Maps.newHashMap;
+
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 
 public final class ResidueManagerMap implements ResidueManager {
@@ -11,7 +12,7 @@ public final class ResidueManagerMap implements ResidueManager {
     public ResidueManagerMap(final int arity) {
         last = (Map<Integer, int[]>[]) new Map<?, ?>[arity];
         for (int i = arity; --i >= 0;) {
-            last[i] = new HashMap<Integer, int[]>();
+            last[i] = newHashMap();
         }
     }
 

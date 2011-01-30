@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Queue;
 import java.util.Random;
+import java.util.logging.Logger;
 
 import org.junit.Test;
 
@@ -15,6 +16,9 @@ public class SoftHeapTest {
     private static final Random RANDOM = new Random();
 
     private static final IdInteger[] INTS;
+
+    private static final Logger LOGGER = Logger.getLogger(SoftHeapTest.class
+            .getName());
 
     static {
         INTS = new IdInteger[100000];
@@ -55,8 +59,8 @@ public class SoftHeapTest {
             last = current;
 
         }
-        System.out.println(errors + " errors (rate = " + (float) errors
-                / INTS.length + ")");
+        LOGGER.info(errors + " errors (rate = " + (float) errors / INTS.length
+                + ")");
 
     }
 

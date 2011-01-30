@@ -64,9 +64,6 @@ public final class AllDifferent extends AbstractArcGrainedConstraint {
     public boolean check() {
         final BitVector singletons = this.union;
         singletons.fill(false);
-        final int offset = this.offset;
-
-        final int[] tuple = this.tuple;
         for (int i = getArity(); --i >= 0;) {
             final int value = getVariable(i).getDomain().value(tuple[i]);
             if (singletons.get(value - offset)) {
@@ -77,8 +74,8 @@ public final class AllDifferent extends AbstractArcGrainedConstraint {
         return true;
     }
 
-    private boolean filter(Variable checkedVariable, int value,
-            RevisionHandler revisator) {
+    private boolean filter(final Variable checkedVariable, final int value,
+            final RevisionHandler revisator) {
         for (Variable v : getScope()) {
             if (v == checkedVariable) {
                 continue;
@@ -100,9 +97,6 @@ public final class AllDifferent extends AbstractArcGrainedConstraint {
 
     @Override
     public boolean revise(final RevisionHandler revisator, final int reviseCount) {
-        final int min = this.offset;
-        final Deque<Variable> queue = this.queue;
-
         queue.clear();
         for (int pos = getArity(); --pos >= 0;) {
             if (getRemovals(pos) >= reviseCount
@@ -121,12 +115,11 @@ public final class AllDifferent extends AbstractArcGrainedConstraint {
             }
         }
 
-        final BitVector union = this.union;
         union.fill(false);
         int size = 0;
         for (Variable v : getScope()) {
             for (int i = v.getFirst(); i >= 0; i = v.getNext(i)) {
-                if (union.set(v.getDomain().value(i) - min)
+                if (union.set(v.getDomain().value(i) - offset)
                         && ++size >= getArity()) {
                     return true;
 

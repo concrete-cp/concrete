@@ -4,15 +4,15 @@ import java.util.Iterator;
 
 import cspfj.util.IntTupleSet;
 
-public final class TupleSet implements Matrix, Cloneable, Iterable<int[]> {
+public final class TupleSet implements Matrix, Iterable<int[]> {
 
     private IntTupleSet tupleSet;
 
-    private final boolean initialContent;
+    private final boolean initContent;
 
     private TupleSet(final IntTupleSet tupleSet, final boolean initialContent) {
         super();
-        this.initialContent = initialContent;
+        this.initContent = initialContent;
         this.tupleSet = tupleSet;
     }
 
@@ -25,25 +25,20 @@ public final class TupleSet implements Matrix, Cloneable, Iterable<int[]> {
     }
 
     @Override
-    public TupleSet clone() {
-        final TupleSet clone;
-        try {
-            clone = (TupleSet) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new InternalError(e.toString());
-        }
+    public TupleSet clone() throws CloneNotSupportedException {
+        final TupleSet clone = (TupleSet) super.clone();
         clone.tupleSet = new IntTupleSet(tupleSet);
         return clone;
     }
 
     @Override
     public boolean check(final int[] tuple) {
-        return tupleSet.containsTuple(tuple) ^ initialContent;
+        return tupleSet.containsTuple(tuple) ^ initContent;
     }
 
     @Override
     public void set(final int[] tuple, final boolean status) {
-        if (status == initialContent) {
+        if (status == initContent) {
             tupleSet.remove(tuple);
         } else {
             tupleSet.add(tuple.clone());
@@ -51,12 +46,12 @@ public final class TupleSet implements Matrix, Cloneable, Iterable<int[]> {
     }
 
     public boolean getInitialContent() {
-        return initialContent;
+        return initContent;
     }
 
     @Override
     public boolean isEmpty() {
-        return tupleSet.isEmpty() && !initialContent;
+        return tupleSet.isEmpty() && !initContent;
     }
 
     public int size() {
@@ -70,7 +65,7 @@ public final class TupleSet implements Matrix, Cloneable, Iterable<int[]> {
 
     @Override
     public String toString() {
-        if (initialContent) {
+        if (initContent) {
             return "nogoods: " + tupleSet.toString();
         }
         return "goods: " + tupleSet.toString();

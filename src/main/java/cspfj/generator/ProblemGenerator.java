@@ -1,15 +1,17 @@
 package cspfj.generator;
 
+import java.util.Collection;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.google.common.primitives.Ints;
 
 import cspfj.exception.FailedGenerationException;
 import cspfj.generator.constraint.GeneratorManager;
 import cspfj.problem.BitVectorDomain;
 import cspfj.problem.Domain;
 import cspfj.problem.Problem;
-import cspfj.util.IntLinkedList;
 import cspom.CSPOM;
 import cspom.constraint.CSPOMConstraint;
 import cspom.variable.BooleanDomain;
@@ -68,7 +70,7 @@ public final class ProblemGenerator {
             }
             return new cspfj.problem.BooleanDomain();
         }
-        return new BitVectorDomain(IntLinkedList
-                .intListToArray((List<Integer>) cspomDomain.getValues()));
+        return new BitVectorDomain(
+                Ints.toArray((Collection<Integer>) cspomDomain.getValues()));
     }
 }

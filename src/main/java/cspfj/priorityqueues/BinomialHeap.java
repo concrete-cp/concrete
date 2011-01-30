@@ -4,6 +4,8 @@ import java.util.AbstractQueue;
 import java.util.Arrays;
 import java.util.Iterator;
 
+import cspfj.util.Statistic;
+
 public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
 
     private static final int DEFAULT_SIZE = 10;
@@ -20,8 +22,11 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
 
     private int iter = 0;
 
+    @Statistic
     public int insert = 0;
+    @Statistic
     public int update = 0;
+    @Statistic
     public int remove = 0;
 
     public BinomialHeap(final Key<T> key) {

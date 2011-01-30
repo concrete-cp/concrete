@@ -39,7 +39,6 @@ public final class MatrixGeneral implements Matrix, Cloneable {
     }
 
     private int matrixIndex(final int[] tuple) {
-        final int[] skip = this.skip;
         int index = tuple[0];
         for (int i = skip.length; --i >= 0;) {
             index += skip[i] * tuple[i + 1];
@@ -48,16 +47,11 @@ public final class MatrixGeneral implements Matrix, Cloneable {
     }
 
     @Override
-    public MatrixGeneral clone() {
-        MatrixGeneral matrix;
-        try {
-            matrix = (MatrixGeneral) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new IllegalStateException(e);
-        }
-        matrix.skip = skip.clone();
-        matrix.matrix = this.matrix.clone();
-        return matrix;
+    public MatrixGeneral clone() throws CloneNotSupportedException {
+        final MatrixGeneral clone = (MatrixGeneral) super.clone();
+        clone.skip = skip.clone();
+        clone.matrix = this.matrix.clone();
+        return clone;
 
     }
 

@@ -2,22 +2,22 @@ package cspfj.constraint.extension;
 
 import cspfj.util.BitVector;
 
-public class Matrix2D implements Matrix, Cloneable {
+public final class Matrix2D implements Matrix {
     private BitVector[] xMatrix;
     private BitVector[] yMatrix;
     private boolean empty;
 
-    public Matrix2D(int x, int y, boolean initialState) {
+    public Matrix2D(final int xSize, final int ySize, final boolean initialState) {
 
-        xMatrix = new BitVector[x];
+        xMatrix = new BitVector[xSize];
         for (int i = xMatrix.length; --i >= 0;) {
-            xMatrix[i] = BitVector.factory(y, initialState);
+            xMatrix[i] = BitVector.factory(ySize, initialState);
         }
 
-        yMatrix = new BitVector[y];
+        yMatrix = new BitVector[ySize];
 
         for (int i = yMatrix.length; --i >= 0;) {
-            yMatrix[i] = BitVector.factory(x, initialState);
+            yMatrix[i] = BitVector.factory(xSize, initialState);
         }
         empty = initialState;
     }
@@ -45,13 +45,8 @@ public class Matrix2D implements Matrix, Cloneable {
         }
     }
 
-    public Matrix2D clone() {
-        final Matrix2D matrix2d;
-        try {
-            matrix2d = (Matrix2D) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new IllegalStateException();
-        }
+    public Matrix2D clone() throws CloneNotSupportedException {
+        final Matrix2D matrix2d = (Matrix2D) super.clone();
 
         matrix2d.xMatrix = new BitVector[xMatrix.length];
 
@@ -75,7 +70,11 @@ public class Matrix2D implements Matrix, Cloneable {
             tuple[0] = i;
             for (int j = 0; j < yMatrix.length; j++) {
                 tuple[1] = j;
-                stb.append(check(tuple) ? 1 : 0);
+                if (check(tuple)) {
+                    stb.append(1);
+                } else {
+                    stb.append(0);
+                }
             }
             stb.append('\n');
         }
@@ -85,5 +84,5 @@ public class Matrix2D implements Matrix, Cloneable {
     public boolean isEmpty() {
         return empty;
     }
-    
+
 }

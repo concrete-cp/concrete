@@ -23,17 +23,17 @@ import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 
 public final class Dom extends AbstractRandVariableHeuristic {
-	
-	public Dom(Problem problem) {
-		super(problem);
-	}
-	
-	public double getScore(final Variable variable) {
-		return variable.getDomainSize();
-	}
 
-	public String toString() {
-		return "min-dom";
-	}
+    public Dom(final Problem problem) {
+        super(problem);
+    }
+
+    public double getScore(final Variable variable) {
+        return variable.getDomainSize();
+    }
+
+    public String toString() {
+        return "min-dom";
+    }
 
 }

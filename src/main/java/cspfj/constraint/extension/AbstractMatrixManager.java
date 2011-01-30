@@ -74,10 +74,10 @@ public abstract class AbstractMatrixManager implements MatrixManager {
 
     public MatrixManager deepCopy(final Variable[] variables, final int[] tuple)
             throws CloneNotSupportedException {
-        final AbstractMatrixManager matrix = this.clone();
-        matrix.tuple = tuple;
-        matrix.variables = variables;
-        return matrix;
+        final AbstractMatrixManager clone = this.clone();
+        clone.tuple = tuple;
+        clone.variables = variables;
+        return clone;
     }
 
     public AbstractMatrixManager clone() throws CloneNotSupportedException {
@@ -97,8 +97,6 @@ public abstract class AbstractMatrixManager implements MatrixManager {
     }
 
     private boolean nextT() {
-        final int[] tuple = this.tuple;
-
         final Variable[] involvedVariables = this.variables;
         for (int i = arity; --i >= 0;) {
             tuple[i]--;
@@ -127,7 +125,12 @@ public abstract class AbstractMatrixManager implements MatrixManager {
             return matrix;
         }
         shared = false;
-        return matrix = matrix.clone();
+        try {
+            matrix = matrix.clone();
+            return matrix;
+        } catch (CloneNotSupportedException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     @Override
@@ -196,9 +199,6 @@ public abstract class AbstractMatrixManager implements MatrixManager {
             final boolean initialContent = tupleSet.getInitialContent();
 
             for (int[] tuple : tupleSet) {
-                // if (Thread.interrupted()) {
-                // throw new InterruptedException();
-                // }
                 if (!initialContent) {
                     for (int p = arity; --p >= 0;) {
                         nbInitConflicts[p][tuple[p]]--;
@@ -216,10 +216,6 @@ public abstract class AbstractMatrixManager implements MatrixManager {
 
         firstT();
         do {
-            // if (Thread.interrupted()) {
-            // LOGGER.info("Interrupted");
-            // throw new InterruptedException();
-            // }
             if (!check()) {
                 for (int p = arity; --p >= 0;) {
                     nbInitConflicts[p][tuple[p]]++;

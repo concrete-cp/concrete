@@ -5,9 +5,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-public final class Collections2 {
+public final class Statistics {
 
-	private Collections2() {
+	private Statistics() {
 	}
 
 	public static <T extends Comparable<T>> T median(final Collection<T> list) {

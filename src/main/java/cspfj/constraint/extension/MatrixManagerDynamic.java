@@ -20,8 +20,6 @@ public final class MatrixManagerDynamic extends AbstractMatrixManager implements
 
     private int[] removedLast;
 
-    // private int stingRemoved;
-
     public MatrixManagerDynamic(final Variable[] scope, final TupleSet matrix,
             final boolean shared, final int[] tuple) {
         super(scope, matrix, shared, tuple);
@@ -59,7 +57,7 @@ public final class MatrixManagerDynamic extends AbstractMatrixManager implements
 
     private int currentLevel;
 
-    public void setLevel(int level) {
+    public void setLevel(final int level) {
         currentLevel = level;
     }
 
@@ -96,13 +94,13 @@ public final class MatrixManagerDynamic extends AbstractMatrixManager implements
     }
 
     public Matrix unshareMatrix() {
-        return tupleSet = (TupleSet) super.unshareMatrix();
+        tupleSet = (TupleSet) super.unshareMatrix();
+        return tupleSet;
     }
 
     public MatrixManagerDynamic clone() throws CloneNotSupportedException {
         final MatrixManagerDynamic list = (MatrixManagerDynamic) super.clone();
         list.next = next.clone();
-        // list.prev = prev.clone();
         list.removed = removed.clone();
         list.removedLast = removedLast.clone();
         return list;
@@ -177,20 +175,6 @@ public final class MatrixManagerDynamic extends AbstractMatrixManager implements
             }
             current = prev;
         }
-
-        public void promote() {
-            if (prev < 0) {
-                return;
-            }
-
-            next[prev] = nextOne;
-            next[current] = first;
-            first = current;
-
-            current = prev;
-
-        }
-
     }
 
     public int getSize() {

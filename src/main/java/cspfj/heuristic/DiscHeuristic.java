@@ -43,22 +43,12 @@ public final class DiscHeuristic implements Heuristic {
                 final double indexScore = valueHeuristic.getScore(v,
                         valueHeuristic.selectIndex(v));
                 if (indexScore > bestIndexScore) {
-                    // System.out.print("disc! ");
                     bestVariable = v;
                     bestIndexScore = indexScore;
                 }
             }
 
         }
-
-//        if (bestVariable == null) {
-//            for (Variable v : problem.getVariables()) {
-//                if (!v.isAssigned()) {
-//                    bestVariable = v;
-//                    break;
-//                }
-//            }
-//        }
 
         return new Pair(bestVariable, valueHeuristic.selectIndex(bestVariable));
     }

@@ -33,7 +33,6 @@ public final class TupleManager {
     }
 
     public boolean setNextTuple() {
-        final int[] tuple = this.tuple;
         for (int i = arity; --i >= 0;) {
             final int index = constraint.getVariable(i).getNext(tuple[i]);
 
@@ -60,8 +59,6 @@ public final class TupleManager {
     }
 
     public boolean setNextTuple(final int fixedVariablePosition) {
-        final int[] tuple = this.tuple;
-
         for (int i = arity; --i >= 0;) {
             if (i == fixedVariablePosition) {
                 continue;
@@ -122,10 +119,7 @@ public final class TupleManager {
     }
 
     public boolean setTupleAfter(final int[] tpl, final int fixed) {
-        final int[] tuple = this.tuple;
         System.arraycopy(tpl, 0, tuple, 0, arity);
-
-        // tuple[fixed] = tpl[fixed];
         int changed = arity;
         int pos = 0;
         while (pos < arity) {
@@ -133,9 +127,6 @@ public final class TupleManager {
                 pos++;
                 continue;
             }
-            // if (changed == arity) {
-            // tuple[pos] = tpl[pos];
-            // }
 
             final Variable variable = constraint.getVariable(pos);
 
@@ -179,7 +170,6 @@ public final class TupleManager {
     }
 
     public boolean setPrevTuple(final int fixedVariablePosition) {
-        final int[] tuple = this.tuple;
         for (int i = arity; --i >= 0;) {
             if (i == fixedVariablePosition) {
                 continue;

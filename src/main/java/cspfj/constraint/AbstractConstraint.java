@@ -21,7 +21,6 @@ package cspfj.constraint;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import cspfj.constraint.extension.TupleManager;
 import cspfj.filter.RevisionHandler;
@@ -186,7 +185,7 @@ public abstract class AbstractConstraint implements Constraint {
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return id;
     }
 

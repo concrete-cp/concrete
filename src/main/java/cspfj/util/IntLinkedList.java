@@ -4,7 +4,6 @@ import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.ListIterator;
 
 public final class IntLinkedList extends AbstractList<Integer> {
 
@@ -66,36 +65,9 @@ public final class IntLinkedList extends AbstractList<Integer> {
         }
     }
 
-    public static int[] intListToArray(final List<Integer> list) {
-        final int[] array = new int[list.size()];
-        for (final ListIterator<Integer> itr = list.listIterator(); itr
-                .hasNext();) {
-            array[itr.nextIndex()] = itr.next();
-        }
-        return array;
-    }
-
-    public static List<Integer> arrayToIntList(final int[] array) {
-        final List<Integer> list = new ArrayList<Integer>(array.length);
-        for (int i : array) {
-            list.add(i);
-        }
-        return list;
-    }
-
-    public static int[] intCollectionToArray(final Collection<Integer> list) {
-        final int[] array = new int[list.size()];
-        int i = 0;
-        for (int v : list) {
-            array[i++] = v;
-        }
-        return array;
-    }
-
     @Override
     public Integer get(final int index) {
         throw new UnsupportedOperationException();
     }
-    
-    
+
 }

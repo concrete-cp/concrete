@@ -6,6 +6,8 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import com.google.common.primitives.Ints;
+
 import cspfj.constraint.semantic.Add;
 import cspfj.constraint.semantic.Eq;
 import cspfj.exception.FailedGenerationException;
@@ -59,8 +61,7 @@ public final class AddGenerator extends AbstractGenerator {
                         values.add(i + j);
                     }
                 }
-                result.setDomain(new BitVectorDomain(IntLinkedList
-                        .intCollectionToArray(values)));
+                result.setDomain(new BitVectorDomain(Ints.toArray(values)));
 
             } else if (v0.getDomain() == null) {
 
@@ -100,7 +101,7 @@ public final class AddGenerator extends AbstractGenerator {
                 values.add(i - j);
             }
         }
-        final int[] sortedValues = IntLinkedList.intCollectionToArray(values);
+        final int[] sortedValues = Ints.toArray(values);
         Arrays.sort(sortedValues);
         return sortedValues;
     }

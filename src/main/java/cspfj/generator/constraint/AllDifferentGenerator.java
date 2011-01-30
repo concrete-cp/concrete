@@ -9,6 +9,8 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.primitives.Ints;
+
 import cspfj.constraint.semantic.AllDifferent;
 import cspfj.constraint.semantic.InInterval;
 import cspfj.constraint.semantic.NotInInterval;
@@ -18,7 +20,6 @@ import cspfj.exception.FailedGenerationException;
 import cspfj.problem.BooleanDomain;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
-import cspfj.util.IntLinkedList;
 import cspom.constraint.CSPOMConstraint;
 import cspom.constraint.GeneralConstraint;
 
@@ -157,7 +158,7 @@ public final class AllDifferentGenerator extends AbstractGenerator {
                 valueSet.add(v.getValue(i));
             }
         }
-        final int[] values = IntLinkedList.intCollectionToArray(valueSet);
+        final int[] values = Ints.toArray(valueSet);
         Arrays.sort(values);
         return values;
     }

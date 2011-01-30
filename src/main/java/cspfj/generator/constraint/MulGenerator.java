@@ -4,12 +4,13 @@ import java.util.Arrays;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import com.google.common.primitives.Ints;
+
 import cspfj.constraint.semantic.Mul;
 import cspfj.exception.FailedGenerationException;
 import cspfj.problem.BitVectorDomain;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
-import cspfj.util.IntLinkedList;
 import cspom.constraint.CSPOMConstraint;
 
 public final class MulGenerator extends AbstractGenerator {
@@ -42,8 +43,7 @@ public final class MulGenerator extends AbstractGenerator {
                         values.add(i * j);
                     }
                 }
-                result.setDomain(new BitVectorDomain(IntLinkedList
-                        .intCollectionToArray(values)));
+                result.setDomain(new BitVectorDomain(Ints.toArray(values)));
             } else if (v0.getDomain() == null) {
                 v0.setDomain(new BitVectorDomain(generateDomain(result, v1)));
             } else if (v1.getDomain() == null) {
@@ -65,7 +65,7 @@ public final class MulGenerator extends AbstractGenerator {
                 }
             }
         }
-        return IntLinkedList.intCollectionToArray(values);
+        return Ints.toArray(values);
     }
 
 }
