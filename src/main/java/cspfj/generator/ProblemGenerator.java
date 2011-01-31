@@ -3,7 +3,6 @@ package cspfj.generator;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.LinkedList;
-import java.util.List;
 
 import com.google.common.primitives.Ints;
 
@@ -59,6 +58,7 @@ public final class ProblemGenerator {
         return problem;
     }
 
+    @SuppressWarnings("unchecked")
     private static Domain generateDomain(final CSPOMDomain<?> cspomDomain) {
         if (cspomDomain == null) {
             return null;

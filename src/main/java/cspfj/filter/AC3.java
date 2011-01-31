@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
-import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
 import cspfj.priorityqueues.FibonacciHeap;

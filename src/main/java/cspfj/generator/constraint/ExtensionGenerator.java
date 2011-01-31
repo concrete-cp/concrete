@@ -59,6 +59,7 @@ public final class ExtensionGenerator extends AbstractGenerator {
             domains[i] = domain;
         }
 
+        @SuppressWarnings("unchecked")
         final cspom.extension.ExtensionConstraint<Number> extConstraint = (cspom.extension.ExtensionConstraint<Number>) constraint;
         final Matrix matrix = generate(domains, extConstraint.getRelation());
 
@@ -125,8 +126,8 @@ public final class ExtensionGenerator extends AbstractGenerator {
     }
 
     private static Map<Number, Integer> indexMap(final Domain domain) {
-        final Map<Number, Integer> map = new HashMap<Number, Integer>(domain
-                .size());
+        final Map<Number, Integer> map = new HashMap<Number, Integer>(
+                domain.size());
         for (int i = domain.first(); i != -1; i = domain.next(i)) {
             map.put(domain.value(i), i);
         }
@@ -138,8 +139,8 @@ public final class ExtensionGenerator extends AbstractGenerator {
 
         if (extension.getArity() == 2) {
             // logger.fine(relation + " to Matrix2D");
-            return new Matrix2D(domains[0].size(), domains[1].size(), extension
-                    .init());
+            return new Matrix2D(domains[0].size(), domains[1].size(),
+                    extension.init());
         }
         if (!extension.init()
                 && tupleSetBetterThanMatrix(domains, extension.getNbTuples())) {

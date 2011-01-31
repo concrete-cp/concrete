@@ -75,6 +75,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
     /**
      * Constructs a FibonacciHeap object that contains no elements.
      */
+    @SuppressWarnings("unchecked")
     public FibonacciHeap(final Key<T> key, final int initSize) {
         this.key = key;
         map = (FibonacciHeapNode<T>[]) new FibonacciHeapNode<?>[initSize];

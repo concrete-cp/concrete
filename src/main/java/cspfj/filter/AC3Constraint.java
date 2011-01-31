@@ -33,6 +33,7 @@ public final class AC3Constraint implements Filter {
 
     private static int revisionCount = 0;
 
+    @SuppressWarnings("rawtypes")
     @Parameter("ac.queue")
     private static Class<? extends Queue> queueType = BinomialHeap.class;
 
@@ -53,6 +54,7 @@ public final class AC3Constraint implements Filter {
         ParameterManager.register(AC3Constraint.class);
     }
 
+    @SuppressWarnings("unchecked")
     public AC3Constraint(final Problem problem) {
         super();
         this.problem = problem;

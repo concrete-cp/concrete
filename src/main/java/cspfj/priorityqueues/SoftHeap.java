@@ -33,6 +33,7 @@ public final class SoftHeap<T extends Identified> extends AbstractQueue<T> {
         this(key, DEFAULT_INIT_SIZE);
     }
 
+    @SuppressWarnings("unchecked")
     public SoftHeap(final Key<T> key, final int initSize) {
         this.key = key;
         first = null;

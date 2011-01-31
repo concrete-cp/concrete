@@ -69,6 +69,7 @@ public final class ParameterManager {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private static Object parse(final Field field, final String value) {
         final Class<?> type = field.getType();
         if (Enum.class.isAssignableFrom(type)) {

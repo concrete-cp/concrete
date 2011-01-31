@@ -32,6 +32,7 @@ public final class Fifo<T extends Identified> extends AbstractQueue<T> {
         this(DEFAULT_INIT_SIZE);
     }
 
+    @SuppressWarnings("unchecked")
     public Fifo(final int initSize) {
         inQueue = (Cell<T>[]) new Cell[initSize];
         list = new MyLinkedList<T>();

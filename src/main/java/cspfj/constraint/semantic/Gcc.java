@@ -119,6 +119,7 @@ public final class Gcc extends AbstractConstraint {
                 queue.offer(getVariable(pos));
             }
         }
+        @SuppressWarnings("unchecked")
         final Set<Variable>[] singles = (Set<Variable>[]) new Set<?>[bounds.length];
 
         while (!queue.isEmpty()) {

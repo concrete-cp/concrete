@@ -10,7 +10,6 @@ import cspfj.exception.FailedGenerationException;
 import cspfj.problem.BitVectorDomain;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
-import cspfj.util.IntLinkedList;
 import cspom.constraint.CSPOMConstraint;
 
 public final class AbsGenerator extends AbstractGenerator {

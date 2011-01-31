@@ -44,6 +44,7 @@ public final class Fifos<T extends Identified> extends AbstractQueue<T> {
         this(k, nbLists, DEFAULT_INIT_SIZE);
     }
 
+    @SuppressWarnings("unchecked")
     public Fifos(final Key<T> k, final int nbLists, final int initSize) {
         inQueue = (Cell<T>[]) new Cell[initSize];
         lists = (MyLinkedList<T>[]) new MyLinkedList[nbLists];

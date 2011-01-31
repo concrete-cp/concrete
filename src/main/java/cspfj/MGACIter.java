@@ -45,252 +45,243 @@ import cspom.CSPOM;
 
 public final class MGACIter extends AbstractSolver {
 
-	private static final Logger LOGGER = Logger.getLogger(MGACIter.class
-			.getName());
+    private static final Logger LOGGER = Logger.getLogger(MGACIter.class
+            .getName());
 
-	@Statistic
-	public int nbAssignments = 0;
+    @Statistic
+    public int nbAssignments = 0;
 
-	@Parameter("mgac.btGrowth")
-	private static double btGrowth = 1.5;
+    @Parameter("mgac.btGrowth")
+    private static double btGrowth = 1.5;
 
-	@Parameter("mgac.addConstraint")
-	private static LearnMethod addConstraint = LearnMethod.BIN;
+    @Parameter("mgac.addConstraint")
+    private static LearnMethod addConstraint = LearnMethod.BIN;
 
-	@Parameter("mgac.filter")
-	private static Class<? extends Filter> filterClass = AC3Constraint.class;
+    @Parameter("mgac.filter")
+    private static Class<? extends Filter> filterClass = AC3Constraint.class;
 
-	@Parameter("mgac.heuristic")
-	private static Class<? extends Heuristic> heuristicClass = CrossHeuristic.class;
+    @Parameter("mgac.heuristic")
+    private static Class<? extends Heuristic> heuristicClass = CrossHeuristic.class;
 
-	static {
-		ParameterManager.register(MGACIter.class);
-		StatisticsManager.register(MGACIter.class);
-	}
+    static {
+        ParameterManager.register(MGACIter.class);
+        StatisticsManager.register(MGACIter.class);
+    }
 
-	private final Deque<Pair> decisions;
+    private final Deque<Pair> decisions;
 
-	private Filter filter;
+    private Filter filter;
 
-	private Heuristic heuristic;
+    private Heuristic heuristic;
 
-	private final NoGoodLearner ngl;
+    private final NoGoodLearner ngl;
 
-	public MGACIter(final CSPOM cspom) throws FailedGenerationException {
-		this(ProblemGenerator.generate(cspom));
-	}
+    public MGACIter(final CSPOM cspom) throws FailedGenerationException {
+        this(ProblemGenerator.generate(cspom));
+    }
 
-	public MGACIter(final Problem prob) {
-		super(prob);
-		setMaxBacktracks(prob.getMaxBacktracks());
-		ngl = new NoGoodLearner(problem, addConstraint);
-		StatisticsManager.register("nfr-learner", ngl);
-		decisions = new LinkedList<Pair>();
-	}
+    public MGACIter(final Problem prob) {
+        super(prob);
+        setMaxBacktracks(prob.getMaxBacktracks());
+        ngl = new NoGoodLearner(problem, addConstraint);
+        StatisticsManager.register("nfr-learner", ngl);
+        decisions = new LinkedList<Pair>();
+    }
 
-	private void prepare() throws InstantiationException,
-			IllegalAccessException, InvocationTargetException,
-			NoSuchMethodException {
-		if (filter == null) {
-			filter = filterClass.getConstructor(Problem.class).newInstance(
-					problem);
-			StatisticsManager.register("filter", filter);
-		}
+    private void prepare() throws InstantiationException,
+            IllegalAccessException, InvocationTargetException,
+            NoSuchMethodException {
+        if (filter == null) {
+            filter = filterClass.getConstructor(Problem.class).newInstance(
+                    problem);
+            StatisticsManager.register("filter", filter);
+        }
 
-		if (heuristic == null) {
-			heuristic = heuristicClass.getConstructor(Problem.class)
-					.newInstance(problem);
-		}
+        if (heuristic == null) {
+            heuristic = heuristicClass.getConstructor(Problem.class)
+                    .newInstance(problem);
+        }
 
-		problem.prepare();
-	}
+        problem.prepare();
+    }
 
-	private boolean firstSolutionGiven = false;
+    private boolean firstSolutionGiven = false;
 
-	public Map<String, Integer> mac(final boolean skipFirstSolution)
-			throws MaxBacktracksExceededException {
-		final Problem problem = this.problem;
-		boolean skipSolution = skipFirstSolution;
-		Variable selectedVariable = null;
-		int selectedIndex = -1;
-		for (;;) {
-			if (selectedVariable != null
-					&& !filter.reduceAfter(selectedVariable)) {
-				selectedVariable = backtrack();
-				if (selectedVariable == null) {
-					break;
-				}
-				continue;
-			}
+    public Map<String, Integer> mac(final boolean skipFirstSolution)
+            throws MaxBacktracksExceededException {
+        final Problem problem = this.problem;
+        boolean skipSolution = skipFirstSolution;
+        Variable selectedVariable = null;
+        int selectedIndex = -1;
+        for (;;) {
+            if (selectedVariable != null
+                    && !filter.reduceAfter(selectedVariable)) {
+                selectedVariable = backtrack();
+                if (selectedVariable == null) {
+                    break;
+                }
+                continue;
+            }
 
-			final Pair pair = heuristic.selectPair(problem);
+            final Pair pair = heuristic.selectPair(problem);
 
-			if (pair == null) {
-				if (skipSolution) {
-					selectedVariable = backtrack();
-					if (selectedVariable == null) {
-						break;
-					}
-					skipSolution = false;
-					continue;
-				}
-				return solution();
-			}
-			decisions.push(pair);
-			selectedVariable = pair.getVariable();
+            if (pair == null) {
+                if (skipSolution) {
+                    selectedVariable = backtrack();
+                    if (selectedVariable == null) {
+                        break;
+                    }
+                    skipSolution = false;
+                    continue;
+                }
+                return solution();
+            }
+            decisions.push(pair);
+            selectedVariable = pair.getVariable();
 
-			assert selectedVariable.getDomainSize() > 0;
+            assert selectedVariable.getDomainSize() > 0;
 
-			selectedIndex = pair.getIndex();
+            selectedIndex = pair.getIndex();
 
-			assert selectedVariable.isPresent(selectedIndex);
-			//
-			// LOGGER.fine(problem.getCurrentLevel() + " : " + selectedVariable
-			// + " <- "
-			// + selectedVariable.getDomain().value(selectedIndex) + "("
-			// + getNbBacktracks() + "/" + getMaxBacktracks() + ")");
+            assert selectedVariable.isPresent(selectedIndex);
+            //
+            // LOGGER.fine(problem.getCurrentLevel() + " : " + selectedVariable
+            // + " <- "
+            // + selectedVariable.getDomain().value(selectedIndex) + "("
+            // + getNbBacktracks() + "/" + getMaxBacktracks() + ")");
 
-			problem.push();
-			selectedVariable.setSingle(selectedIndex);
-			nbAssignments++;
+            problem.push();
+            selectedVariable.setSingle(selectedIndex);
+            nbAssignments++;
 
-		}
-		return null;
+        }
+        return null;
 
-	}
+    }
 
-	private Variable backtrack() throws MaxBacktracksExceededException {
-		Pair decision;
-		do {
-			if (decisions.isEmpty()) {
-				return null;
-			}
-			decision = decisions.pop();
-			// decision.getVariable().unassign();
-			problem.pop();
+    private Variable backtrack() throws MaxBacktracksExceededException {
+        Pair decision;
+        do {
+            if (decisions.isEmpty()) {
+                return null;
+            }
+            decision = decisions.pop();
+            // decision.getVariable().unassign();
+            problem.pop();
 
-			// LOGGER.finer(problem.getCurrentLevel() + " : "
-			// + decision.getVariable() + " /= "
-			// + decision.getVariable().getValue(decision.getIndex()));
-		} while (decision.getVariable().getDomainSize() <= 1);
+            // LOGGER.finer(problem.getCurrentLevel() + " : "
+            // + decision.getVariable() + " /= "
+            // + decision.getVariable().getValue(decision.getIndex()));
+        } while (decision.getVariable().getDomainSize() <= 1);
 
-		decision.getVariable().remove(decision.getIndex());
-		checkBacktracks();
-		return decision.getVariable();
-	}
+        decision.getVariable().remove(decision.getIndex());
+        checkBacktracks();
+        return decision.getVariable();
+    }
 
-	public void reset() {
-		firstSolutionGiven = false;
-		problem.reset();
-		decisions.clear();
-	}
+    public void reset() {
+        firstSolutionGiven = false;
+        problem.reset();
+        decisions.clear();
+    }
 
-	@Statistic
-	public double heuristicCpu;
+    @Statistic
+    public double heuristicCpu;
 
-	@Override
-	public Map<String, Integer> nextSolution() {
-		try {
-			prepare();
-		} catch (Exception e) {
-			throw new IllegalStateException(e);
-		}
-		// System.gc();
-		int maxBT;
-		if (firstSolutionGiven) {
-			maxBT = -1;
-		} else {
-			try {
-				if (!preprocess(filter)) {
-					firstSolutionGiven = true;
-					return null;
-				}
-			} catch (InterruptedException e) {
-				try {
-					if (!filter.reduceAll()) {
-						return null;
-					}
-				} catch (InterruptedException e1) {
-					throw new IllegalStateException("Unexpected interruption");
-				}
-			}
+    @Override
+    public Map<String, Integer> nextSolution() {
+        try {
+            prepare();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+        // System.gc();
+        int maxBT;
+        if (firstSolutionGiven) {
+            maxBT = -1;
+        } else {
+            try {
+                if (!preprocess(filter)) {
+                    firstSolutionGiven = true;
+                    return null;
+                }
+            } catch (InterruptedException e) {
+                try {
+                    if (!filter.reduceAll()) {
+                        return null;
+                    }
+                } catch (InterruptedException e1) {
+                    throw new IllegalStateException("Unexpected interruption");
+                }
+            }
 
-			long heuristicCpu = -System.currentTimeMillis();
-			heuristic.compute();
+            long heuristicCpu = -System.currentTimeMillis();
+            heuristic.compute();
 
-			heuristicCpu += System.currentTimeMillis();
-			this.heuristicCpu = heuristicCpu / 1000f;
+            heuristicCpu += System.currentTimeMillis();
+            this.heuristicCpu = heuristicCpu / 1000f;
 
-			maxBT = getMaxBacktracks();
+            maxBT = getMaxBacktracks();
 
-			// boolean entailed = false;
-			// for (Iterator<Constraint> itr =
-			// problem.getConstraints().iterator(); itr
-			// .hasNext();) {
-			// if (itr.next().isEntailed()) {
-			// itr.remove();
-			// entailed = true;
-			// }
-			// }
-			// if (entailed) {
-			// problem.prepare();
-			// }
-		}
+            // boolean entailed = false;
+            // for (Iterator<Constraint> itr =
+            // problem.getConstraints().iterator(); itr
+            // .hasNext();) {
+            // if (itr.next().isEntailed()) {
+            // itr.remove();
+            // entailed = true;
+            // }
+            // }
+            // if (entailed) {
+            // problem.prepare();
+            // }
+        }
 
-		for (;;) {
-			setMaxBacktracks(maxBT);
+        for (;;) {
+            setMaxBacktracks(maxBT);
 
-			LOGGER.info("MAC with " + maxBT + " bt");
-			long macTime = -System.currentTimeMillis();
-			int nbBT = getNbBacktracks();
+            LOGGER.info("MAC with " + maxBT + " bt");
+            long macTime = -System.currentTimeMillis();
+            int nbBT = getNbBacktracks();
 
-			try {
-				final Map<String, Integer> solution = mac(firstSolutionGiven);
-				firstSolutionGiven = true;
-				return solution;
-			} catch (MaxBacktracksExceededException e) {
-				final Set<Constraint> modified = ngl.noGoods(decisions);
-				problem.reset();
-				decisions.clear();
+            try {
+                final Map<String, Integer> solution = mac(firstSolutionGiven);
+                firstSolutionGiven = true;
+                return solution;
+            } catch (MaxBacktracksExceededException e) {
+                final Set<Constraint> modified = ngl.noGoods(decisions);
+                problem.reset();
+                decisions.clear();
 
-				if (!filter.reduceAfter(modified)) {
-					break;
-				}
+                if (!filter.reduceAfter(modified)) {
+                    break;
+                }
 
-				maxBT *= btGrowth;
+                maxBT *= btGrowth;
 
-			} finally {
-				macTime += System.currentTimeMillis();
-				searchCpu += macTime / 1000f;
-				LOGGER.info("Took " + (macTime / 1000f) + "s ("
-						+ (1000f * (getNbBacktracks() - nbBT) / macTime)
-						+ " bps)");
-			}
+            } finally {
+                macTime += System.currentTimeMillis();
+                searchCpu += macTime / 1000f;
+                LOGGER.info("Took " + (macTime / 1000f) + "s ("
+                        + (1000f * (getNbBacktracks() - nbBT) / macTime)
+                        + " bps)");
+            }
 
-		}
+        }
 
-		return null;
+        return null;
 
-	}
+    }
 
-	@Statistic
-	public double searchCpu;
+    @Statistic
+    public double searchCpu;
 
-	public Filter getFilter() {
-		return filter;
-	}
+    public Filter getFilter() {
+        return filter;
+    }
 
-	public String getXMLConfig() {
-		return super.getXMLConfig() + "\t\t\t<solver>" + this
-				+ "</solver>\n\t\t\t<filter>" + filter
-				+ "</filter>\n\t\t\t<heuristic>" + heuristic
-				+ "</heuristic>\n\t\t\t<prepro>" + getPreprocessor()
-				+ "</prepro>\n";
-
-	}
-
-	public String toString() {
-		return "maintain generalized arc consistency - iterative";
-	}
+    public String toString() {
+        return "maintain generalized arc consistency - iterative";
+    }
 
 }

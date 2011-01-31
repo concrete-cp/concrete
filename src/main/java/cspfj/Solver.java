@@ -21,7 +21,6 @@ package cspfj;
 
 import java.util.Map;
 
-import cspfj.filter.Filter;
 import cspfj.problem.Problem;
 
 public interface Solver {

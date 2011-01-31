@@ -1,6 +1,5 @@
 package cspfj;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Maps.newHashMap;
 
@@ -9,11 +8,10 @@ import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.logging.Logger;
 import java.util.SortedMap;
+import java.util.logging.Logger;
 
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.BiMap;

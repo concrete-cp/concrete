@@ -7,6 +7,7 @@ import cspfj.problem.Variable;
 public abstract class AbstractMatrixManager implements MatrixManager {
     private final int[] domainSize;
 
+    
     protected Variable[] variables;
 
     private final int arity;

@@ -33,6 +33,7 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
         this(key, DEFAULT_SIZE);
     }
 
+    @SuppressWarnings("unchecked")
     public BinomialHeap(final Key<T> key, final int initSize) {
         this.key = key;
         map = (BinomialHeapNode<T>[]) new BinomialHeapNode[initSize];

@@ -26,7 +26,7 @@
 			</arguments>
 		</buildCommand>
 		<buildCommand>
-			<name>net.sf.eclipsecs.core.CheckstyleBuilder</name>
+			<name>net.sourceforge.pmd.eclipse.plugin.pmdBuilder</name>
 			<arguments>
 			</arguments>
 		</buildCommand>
@@ -37,6 +37,6 @@
 		<nature>net.sourceforge.pmd.eclipse.pmdNature</nature>
 		<nature>net.sourceforge.pmd.runtime.pmdNature</nature>
 		<nature>edu.umd.cs.findbugs.plugin.eclipse.findbugsNature</nature>
-		<nature>net.sf.eclipsecs.core.CheckstyleNature</nature>
+		<nature>net.sourceforge.pmd.eclipse.plugin.pmdNature</nature>
 	</natures>
 </projectDescription>

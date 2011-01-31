@@ -51,7 +51,8 @@ public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
 		this(key, 10);
 	}
 
-	public BinaryHeap(final Key<T> key, final int initSize) {
+	@SuppressWarnings("unchecked")
+    public BinaryHeap(final Key<T> key, final int initSize) {
 		super();
 		this.key = key;
 		this.queuePosition = new int[initSize];

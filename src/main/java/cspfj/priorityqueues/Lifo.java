@@ -32,6 +32,7 @@ public final class Lifo<T extends Identified> extends AbstractQueue<T> {
         this(DEFAULT_INIT_SIZE);
     }
 
+    @SuppressWarnings("unchecked")
     public Lifo(final int initSize) {
         inQueue = (Cell<T>[]) new Cell[initSize];
         list = new MyLinkedList<T>();

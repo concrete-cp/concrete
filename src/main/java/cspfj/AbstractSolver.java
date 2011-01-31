@@ -61,11 +61,6 @@ public abstract class AbstractSolver implements Solver {
 
     }
 
-    @Deprecated
-    public static void parameter(final String name, final Object value) {
-        ParameterManager.parameter(name, value);
-    }
-
     public static Solver factory(Problem problem) {
         final Solver solver;
         try {
@@ -95,7 +90,7 @@ public abstract class AbstractSolver implements Solver {
     private int maxBacktracks;
 
     @Parameter("preprocessor")
-    private static Class<? extends Filter> preprocessor = null;
+    private static Class<? extends Filter> preprocessorClass = null;
 
     private int preproExpiration = -1;
 
@@ -143,10 +138,6 @@ public abstract class AbstractSolver implements Solver {
         this.preproExpiration = time;
     }
 
-    public final Class<? extends Filter> getPreprocessor() {
-        return preprocessor;
-    }
-
     protected final Map<String, Integer> solution() {
         final Map<String, Integer> solution = new LinkedHashMap<String, Integer>();
         for (Variable v : problem.getVariables()) {
@@ -165,11 +156,11 @@ public abstract class AbstractSolver implements Solver {
         LOGGER.info("Preprocessing (" + preproExpiration + ")");
 
         final Filter preprocessor;
-        if (this.preprocessor == null) {
+        if (preprocessorClass == null) {
             preprocessor = filter;
         } else {
             try {
-                preprocessor = this.preprocessor.getConstructor(Problem.class)
+                preprocessor = preprocessorClass.getConstructor(Problem.class)
                         .newInstance(problem);
             } catch (InstantiationException e) {
                 throw new IllegalArgumentException(e);

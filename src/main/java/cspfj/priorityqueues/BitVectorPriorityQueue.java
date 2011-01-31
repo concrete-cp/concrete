@@ -18,7 +18,8 @@ public final class BitVectorPriorityQueue<T extends Identified> extends
 		this(key, 10);
 	}
 
-	public BitVectorPriorityQueue(final Key<T> key, final int initSize) {
+	@SuppressWarnings("unchecked")
+    public BitVectorPriorityQueue(final Key<T> key, final int initSize) {
 		this.values = (T[]) new Identified[initSize];
 		queue = new BitSet(initSize);
 		this.key = key;

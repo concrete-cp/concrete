@@ -52,11 +52,6 @@ public final class DummySolver extends AbstractSolver {
 
     }
 
-    public String getXMLConfig() {
-        return "\t\t\t<solver>" + this + "</solver>\n\t\t\t<prepro>"
-                + getPreprocessor() + "</prepro>\n";
-    }
-
     public String toString() {
         return "dummy";
     }
