@@ -1,7 +1,15 @@
 package cspfj.generator.constraint;
 
-import java.security.InvalidParameterException;
 import java.util.Arrays;
+import java.util.List;
+
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.primitives.Booleans;
 
 import cspfj.constraint.semantic.Disjunction;
 import cspfj.exception.FailedGenerationException;
@@ -14,145 +22,140 @@ import cspom.variable.CSPOMVariable;
 
 public final class DisjGenerator extends AbstractGenerator {
 
-	public DisjGenerator(final Problem problem) {
-		super(problem);
-	}
+    public DisjGenerator(final Problem problem) {
+        super(problem);
+    }
 
-	private void generateReifiedOr(final Variable[] scope,
-			final FunctionalConstraint constraint) {
-		/*
-		 * Reified disjunction is converted to CNF :
-		 * 
-		 * a = b v c v d...
-		 * 
-		 * <=>
-		 * 
-		 * (-a v b v c v d...) ^ (a v -b) ^ (a v -c) ^ (a v -d) ^ ...
-		 */
-		final boolean[] parameters = parseParameters(constraint.getParameters());
-		if (parameters != null && parameters.length != scope.length - 1) {
-			throw new InvalidParameterException(
-					"Incorrect number of parameters");
-		}
-		final boolean[] reverses = new boolean[scope.length];
-		if (parameters != null) {
-			throw new UnsupportedOperationException();
-		}
-		reverses[0] = true;
-		addConstraint(new Disjunction(scope, reverses));
+    private void generateReifiedOr(final List<Variable> scope,
+            final FunctionalConstraint constraint) {
+        /*
+         * Reified disjunction is converted to CNF :
+         * 
+         * a = b v c v d...
+         * 
+         * <=>
+         * 
+         * (-a v b v c v d...) ^ (a v -b) ^ (a v -c) ^ (a v -d) ^ ...
+         */
+        Preconditions
+                .checkArgument(constraint.getParameters() == null,
+                        "Negative literals in reified disjunctions are currently not supported");
 
-		final Variable result = getSolverVariable(constraint
-				.getResultVariable());
+        final boolean[] reverses = new boolean[scope.size()];
 
-		for (CSPOMVariable v : constraint.getArguments()) {
-			addConstraint(new Disjunction(new Variable[] { result,
-					getSolverVariable(v) }, new boolean[] { false, true }));
-		}
-	}
+        reverses[0] = true;
+        addConstraint(new Disjunction(
+                scope.toArray(new Variable[scope.size()]), reverses));
 
-	private void generateReifiedAnd(final Variable[] scope,
-			final FunctionalConstraint constraint) {
-		/*
-		 * Reified conjunction is converted to CNF :
-		 * 
-		 * a = b ^ c ^ d...
-		 * 
-		 * <=>
-		 * 
-		 * (a v -b v -c v -d...) ^ (-a v b) ^ (-a v c) ^ (-a v d) ^ ...
-		 */
-		final boolean[] parameters = parseParameters(constraint.getParameters());
-		if (parameters != null && parameters.length != scope.length - 1) {
-			throw new InvalidParameterException(
-					"Incorrect number of parameters");
-		}
-		final boolean[] reverses = new boolean[scope.length];
-		if (parameters != null) {
-			throw new UnsupportedOperationException();
-		}
-		Arrays.fill(reverses, 1, scope.length, true);
+        final Variable result = getSolverVariable(constraint
+                .getResultVariable());
 
-		addConstraint(new Disjunction(scope, reverses));
+        for (CSPOMVariable v : constraint.getArguments()) {
+            addConstraint(new Disjunction(new Variable[] { result,
+                    getSolverVariable(v) }, new boolean[] { false, true }));
+        }
+    }
 
-		final Variable result = getSolverVariable(constraint
-				.getResultVariable());
+    private void generateReifiedAnd(final List<Variable> scope,
+            final FunctionalConstraint constraint) {
+        /*
+         * Reified conjunction is converted to CNF :
+         * 
+         * a = b ^ c ^ d...
+         * 
+         * <=>
+         * 
+         * (a v -b v -c v -d...) ^ (-a v b) ^ (-a v c) ^ (-a v d) ^ ...
+         */
+        Preconditions
+                .checkArgument(constraint.getParameters() == null,
+                        "Negative literals in reified conjuctions are currently not supported");
 
-		for (CSPOMVariable v : constraint.getArguments()) {
-			addConstraint(new Disjunction(new Variable[] { result,
-					getSolverVariable(v) }, new boolean[] { true, false }));
-		}
-	}
+        final boolean[] reverses = new boolean[scope.size()];
 
-	private void generateNeg(final FunctionalConstraint constraint)
-			throws FailedGenerationException {
-		/*
-		 * Negation is converted to CNF :
-		 * 
-		 * a = -b <=> (a v b) ^ (-a v -b)
-		 */
-		if (constraint.getArguments().length != 1) {
-			throw new FailedGenerationException(
-					"not() must have only one argument, found "
-							+ Arrays.toString(constraint.getArguments()));
-		}
-		final Variable result = getSolverVariable(constraint
-				.getResultVariable());
-		final Variable arg = getSolverVariable(constraint.getArguments()[0]);
+        Arrays.fill(reverses, 1, scope.size(), true);
 
-		addConstraint(new Disjunction(result, arg));
-		addConstraint(new Disjunction(new Variable[] { result, arg },
-				new boolean[] { true, true }));
+        addConstraint(new Disjunction(
+                scope.toArray(new Variable[scope.size()]), reverses));
 
-	}
+        final Variable result = getSolverVariable(constraint
+                .getResultVariable());
 
-	@Override
-	public boolean generate(final CSPOMConstraint constraint)
-			throws FailedGenerationException {
-		final Variable[] scope = getSolverVariables(constraint.getScope());
+        for (CSPOMVariable v : constraint.getArguments()) {
+            addConstraint(new Disjunction(new Variable[] { result,
+                    getSolverVariable(v) }, new boolean[] { true, false }));
+        }
+    }
 
-		for (Variable v : scope) {
-			booleanDomain(v);
-		}
+    private void generateNeg(final FunctionalConstraint constraint)
+            throws FailedGenerationException {
+        /*
+         * Negation is converted to CNF :
+         * 
+         * a = -b <=> (a v b) ^ (-a v -b)
+         */
+        final Variable result = getSolverVariable(constraint
+                .getResultVariable());
+        final Variable arg = getSolverVariable(Iterables
+                .getOnlyElement(constraint.getArguments()));
 
-		if ("or".equals(constraint.getDescription())) {
+        addConstraint(new Disjunction(result, arg));
+        addConstraint(new Disjunction(new Variable[] { result, arg },
+                new boolean[] { true, true }));
 
-			if (constraint instanceof GeneralConstraint) {
-				addConstraint(new Disjunction(scope, parseParameters(constraint
-						.getParameters())));
-			} else if (constraint instanceof FunctionalConstraint) {
-				generateReifiedOr(scope, (FunctionalConstraint) constraint);
-			} else {
-				throw new IllegalArgumentException(
-						"Unhandled constraint type for " + constraint);
-			}
+    }
 
-		} else if ("not".equals(constraint.getDescription())
-				&& (constraint instanceof FunctionalConstraint)) {
+    @Override
+    public boolean generate(final CSPOMConstraint constraint)
+            throws FailedGenerationException {
+        final List<Variable> scope = Lists.transform(constraint.getScope(),
+                CSPOM_TO_CSP4J);
 
-			generateNeg((FunctionalConstraint) constraint);
+        for (Variable v : scope) {
+            booleanDomain(v);
+        }
 
-		} else if ("and".equals(constraint.getDescription())
-				&& constraint instanceof FunctionalConstraint) {
+        if ("or".equals(constraint.getDescription())) {
 
-			generateReifiedAnd(scope, (FunctionalConstraint) constraint);
+            if (constraint instanceof GeneralConstraint) {
+                addConstraint(new Disjunction(scope.toArray(new Variable[scope
+                        .size()]), parseParameters(constraint.getParameters())));
+            } else if (constraint instanceof FunctionalConstraint) {
+                generateReifiedOr(scope, (FunctionalConstraint) constraint);
+            } else {
+                throw new IllegalArgumentException(
+                        "Unhandled constraint type for " + constraint);
+            }
 
-		} else {
-			throw new IllegalArgumentException("Unhandled constraint type for "
-					+ constraint);
-		}
+        } else if ("not".equals(constraint.getDescription())
+                && (constraint instanceof FunctionalConstraint)) {
 
-		return true;
-	}
+            generateNeg((FunctionalConstraint) constraint);
 
-	private static boolean[] parseParameters(final String parameters) {
-		if (parameters == null) {
-			return null;
-		}
-		final String[] params = parameters.split(",");
-		final boolean[] reverses = new boolean[params.length];
-		for (int i = params.length; --i >= 0;) {
-			reverses[i] = Integer.parseInt(params[i].trim()) > 0;
-		}
-		return reverses;
-	}
+        } else if ("and".equals(constraint.getDescription())
+                && constraint instanceof FunctionalConstraint) {
+
+            generateReifiedAnd(scope, (FunctionalConstraint) constraint);
+
+        } else {
+            throw new IllegalArgumentException("Unhandled constraint type for "
+                    + constraint);
+        }
+
+        return true;
+    }
+
+    private static boolean[] parseParameters(final String parameters) {
+        if (parameters == null) {
+            return null;
+        }
+        return Booleans.toArray(ImmutableList.copyOf(Iterables.transform(
+                Splitter.on(',').trimResults().split(parameters),
+                new Function<String, Boolean>() {
+                    @Override
+                    public Boolean apply(String input) {
+                        return Integer.parseInt(input) > 0;
+                    }
+                })));
+    }
 }

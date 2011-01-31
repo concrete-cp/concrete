@@ -1,9 +1,11 @@
 package cspfj.generator.constraint;
 
 import java.util.List;
-import java.util.ListIterator;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 import cspfj.constraint.Constraint;
 import cspfj.exception.FailedGenerationException;
@@ -23,28 +25,31 @@ public abstract class AbstractGenerator implements Generator {
         }
     };
 
+    public Function<CSPOMVariable, Variable> CSPOM_TO_CSP4J = new Function<CSPOMVariable, Variable>() {
+        @Override
+        public Variable apply(CSPOMVariable input) {
+            return problem.getVariable(input.getName());
+        }
+    };
+
     public AbstractGenerator(final Problem problem) {
         this.problem = problem;
     }
 
-    public final Variable[] getSolverVariables(
-            final List<CSPOMVariable> variables) {
-        final Variable[] solverVariables = new Variable[variables.size()];
-        for (ListIterator<CSPOMVariable> itr = variables.listIterator(); itr
-                .hasNext();) {
-            solverVariables[itr.nextIndex()] = problem.getVariable(itr.next()
-                    .getName());
-        }
-        return solverVariables;
-    }
+    //
+    // public final Variable[] getSolverVariables(
+    // final List<CSPOMVariable> variables) {
+    // return Lists.transform(variables, CSPOM_TO_CSP4J).toArray();
+    // }
 
-    public final Variable[] getSolverVariables(final CSPOMVariable[] variables) {
-        final Variable[] solverVariables = new Variable[variables.length];
-        for (int i = variables.length; --i >= 0;) {
-            solverVariables[i] = problem.getVariable(variables[i].getName());
-        }
-        return solverVariables;
-    }
+    // public final Variable[] getSolverVariables(final CSPOMVariable[]
+    // variables) {
+    // final Variable[] solverVariables = new Variable[variables.length];
+    // for (int i = variables.length; --i >= 0;) {
+    // solverVariables[i] = problem.getVariable(variables[i].getName());
+    // }
+    // return solverVariables;
+    // }
 
     public final Variable getSolverVariable(final CSPOMVariable variable) {
         return problem.getVariable(variable.getName());
@@ -58,14 +63,14 @@ public abstract class AbstractGenerator implements Generator {
         return problem.addVariable(name, domain);
     }
 
-    public static Variable nullVariable(final Variable[] array) {
-        for (Variable v : array) {
-            if (v.getDomain() == null) {
-                return v;
-            }
-        }
-        return null;
-    }
+    // public static Variable nullVariable(final Variable[] array) {
+    // for (Variable v : array) {
+    // if (v.getDomain() == null) {
+    // return v;
+    // }
+    // }
+    // return null;
+    // }
 
     public static void booleanDomain(final Variable variable)
             throws FailedGenerationException {

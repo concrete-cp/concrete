@@ -1,5 +1,10 @@
 package cspfj.generator.constraint;
 
+import java.util.List;
+
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 import cspfj.constraint.semantic.LexLeq;
 import cspfj.exception.FailedGenerationException;
 import cspfj.problem.Problem;
@@ -8,22 +13,25 @@ import cspom.constraint.CSPOMConstraint;
 
 public final class LexLeqGenerator extends AbstractGenerator {
 
-	public LexLeqGenerator(final Problem problem) {
-		super(problem);
-	}
+    public LexLeqGenerator(final Problem problem) {
+        super(problem);
+    }
 
-	@Override
-	public boolean generate(final CSPOMConstraint constraint)
-			throws FailedGenerationException {
+    @Override
+    public boolean generate(final CSPOMConstraint constraint)
+            throws FailedGenerationException {
 
-		Variable[] scope = this.getSolverVariables(constraint.getScope());
-		if (nullVariable(scope) != null) {
-			return false;
-		}
+        final List<Variable> solverVariables = Lists.transform(
+                constraint.getScope(), CSPOM_TO_CSP4J);
 
-		addConstraint(new LexLeq(scope));
-		return true;
+        if (Iterables.any(solverVariables, NULL_DOMAIN)) {
+            return false;
+        }
 
-	}
+        addConstraint(new LexLeq(
+                solverVariables.toArray(new Variable[solverVariables.size()])));
+        return true;
+
+    }
 
 }

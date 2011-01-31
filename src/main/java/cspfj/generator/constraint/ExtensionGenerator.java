@@ -7,10 +7,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 import cspfj.constraint.Constraint;
 import cspfj.constraint.extension.ExtensionConstraint2D;
 import cspfj.constraint.extension.ExtensionConstraintDynamic;
 import cspfj.constraint.extension.ExtensionConstraintGeneral;
+import cspfj.constraint.extension.ExtensionConstraints;
 import cspfj.constraint.extension.Matrix;
 import cspfj.constraint.extension.Matrix2D;
 import cspfj.constraint.extension.MatrixGeneral;
@@ -31,8 +36,15 @@ public final class ExtensionGenerator extends AbstractGenerator {
         super(problem);
     }
 
-    private Matrix generate(final Domain[] domains,
+    private Matrix generate(final List<Variable> variables,
             final Extension<Number> extension) {
+        final Domain[] domains = Lists.transform(variables,
+                new Function<Variable, Domain>() {
+                    @Override
+                    public Domain apply(Variable input) {
+                        return input.getDomain();
+                    }
+                }).toArray(new Domain[variables.size()]);
         final Signature signature = new Signature(domains, extension);
         Matrix matrix = generated.get(signature);
         if (matrix == null) {
@@ -47,34 +59,20 @@ public final class ExtensionGenerator extends AbstractGenerator {
     public boolean generate(final CSPOMConstraint constraint)
             throws FailedGenerationException {
 
-        final Variable[] solverVariables = getSolverVariables(constraint
-                .getScope());
+        final List<Variable> solverVariables = Lists.transform(
+                constraint.getScope(), CSPOM_TO_CSP4J);
 
-        final Domain[] domains = new Domain[constraint.getArity()];
-        for (int i = constraint.getArity(); --i >= 0;) {
-            final Domain domain = solverVariables[i].getDomain();
-            if (domain == null) {
-                return false;
-            }
-            domains[i] = domain;
+        if (Iterables.any(solverVariables, NULL_DOMAIN)) {
+            return false;
         }
 
         @SuppressWarnings("unchecked")
-        final cspom.extension.ExtensionConstraint<Number> extConstraint = (cspom.extension.ExtensionConstraint<Number>) constraint;
-        final Matrix matrix = generate(domains, extConstraint.getRelation());
+        final Matrix matrix = generate(solverVariables,
+                ((cspom.extension.ExtensionConstraint<Number>) constraint)
+                        .getRelation());
 
-        final Constraint gConstraint;
-        if (matrix instanceof Matrix2D) {
-            gConstraint = new ExtensionConstraint2D(solverVariables,
-                    (Matrix2D) matrix, true);
-        } else if (matrix instanceof TupleSet) {
-            gConstraint = new ExtensionConstraintDynamic(solverVariables,
-                    (TupleSet) matrix, true);
-        } else {
-            gConstraint = new ExtensionConstraintGeneral(matrix, true,
-                    solverVariables);
-        }
-        addConstraint(gConstraint);
+        addConstraint(ExtensionConstraints.newExtensionConstraint(matrix,
+                solverVariables.toArray(new Variable[solverVariables.size()])));
         return true;
 
     }

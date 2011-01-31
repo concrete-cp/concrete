@@ -1,5 +1,11 @@
 package cspfj.generator.constraint;
 
+import java.util.List;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 import cspfj.constraint.semantic.AllDifferent;
 import cspfj.exception.FailedGenerationException;
 import cspfj.problem.Problem;
@@ -16,17 +22,15 @@ public final class AllDifferentGenerator extends AbstractGenerator {
     @Override
     public boolean generate(final CSPOMConstraint constraint)
             throws FailedGenerationException {
-        if (!(constraint instanceof GeneralConstraint)) {
-            throw new FailedGenerationException(constraint
-                    + " is not supported");
-        }
-
-        final Variable[] solverVariables = getSolverVariables(constraint
-                .getScope());
-        if (nullVariable(solverVariables) != null) {
+        Preconditions.checkArgument(constraint instanceof GeneralConstraint,
+                "Not supported");
+        final List<Variable> solverVariables = Lists.transform(
+                constraint.getScope(), CSPOM_TO_CSP4J);
+        if (Iterables.any(solverVariables, NULL_DOMAIN)) {
             return false;
         }
-        addConstraint(new AllDifferent(solverVariables));
+        addConstraint(new AllDifferent(
+                solverVariables.toArray(new Variable[solverVariables.size()])));
         return true;
     }
 

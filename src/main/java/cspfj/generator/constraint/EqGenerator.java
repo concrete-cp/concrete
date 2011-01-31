@@ -1,11 +1,20 @@
 package cspfj.generator.constraint;
 
+import java.util.List;
+import java.util.NoSuchElementException;
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 import cspfj.constraint.Constraint;
 import cspfj.constraint.semantic.Eq;
 import cspfj.constraint.semantic.Neq;
 import cspfj.constraint.semantic.ReifiedConstraint;
 import cspfj.exception.FailedGenerationException;
 import cspfj.problem.BitVectorDomain;
+import cspfj.problem.Domain;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspom.constraint.CSPOMConstraint;
@@ -19,72 +28,69 @@ public final class EqGenerator extends AbstractGenerator {
     }
 
     private Constraint generateGeneral(final CSPOMConstraint constraint) {
-        final Variable[] scope = getSolverVariables(constraint.getScope());
-        Variable notNull = notNull(scope);
-        if (notNull == null) {
+        Preconditions.checkArgument("eq".equals(constraint.getDescription()));
+        if (constraint.getScope().size() != 2) {
             return null;
         }
-        if (scope.length != 2) {
+        final List<Variable> scope = Lists.transform(constraint.getScope(),
+                CSPOM_TO_CSP4J);
+        final Domain referenceDomain;
+        try {
+            referenceDomain = Iterables
+                    .find(scope, Predicates.not(NULL_DOMAIN)).getDomain();
+        } catch (NoSuchElementException e) {
             return null;
-        }
-        if ("eq".equals(constraint.getDescription())) {
-            for (Variable v : scope) {
-                if (v.getDomain() == null) {
-                    v.setDomain(new BitVectorDomain(notNull.getDomain()
-                            .allValues()));
-                }
-            }
-            return new Eq(scope[0], scope[1]);
         }
 
-        throw new IllegalArgumentException("Can not generate " + constraint);
+        for (Variable v : Iterables.filter(scope, NULL_DOMAIN)) {
+            v.setDomain(new BitVectorDomain(referenceDomain.allValues()));
+        }
+        return new Eq(scope.get(0), scope.get(1));
+
     }
 
     private Constraint generateReify(final FunctionalConstraint funcConstraint)
             throws FailedGenerationException {
 
         if ("eq".equals(funcConstraint.getDescription())) {
-            final Variable[] arguments = getSolverVariables(funcConstraint
-                    .getArguments());
+            final List<Variable> arguments = Lists.transform(
+                    funcConstraint.getArguments(), CSPOM_TO_CSP4J);
 
-            if (nullVariable(arguments) != null) {
+            if (arguments.size() != 2 || Iterables.any(arguments, NULL_DOMAIN)) {
                 return null;
             }
-            if (arguments.length != 2) {
-                return null;
-            }
-            if (!"eq".equals(funcConstraint.getDescription())) {
-                throw new IllegalArgumentException("Can not generate "
-                        + funcConstraint);
-            }
-            final Variable result = getSolverVariable(funcConstraint
+
+            final Variable result = CSPOM_TO_CSP4J.apply(funcConstraint
                     .getResultVariable());
 
             booleanDomain(result);
 
-            return new ReifiedConstraint(result, new Eq(arguments[0],
-                    arguments[1]), new Neq(arguments[0], arguments[1]));
+            return new ReifiedConstraint(result, new Eq(arguments.get(0),
+                    arguments.get(1)), new Neq(arguments.get(0),
+                    arguments.get(1)));
         }
         if ("neg".equals(funcConstraint.getDescription())) {
-            final Variable[] scope = getSolverVariables(funcConstraint
-                    .getScope());
-            Variable notNull = notNull(scope);
-            if (notNull == null) {
+            if (funcConstraint.getScope().size() != 2) {
                 return null;
             }
-            if (scope.length != 2) {
+            final List<Variable> scope = Lists.transform(
+                    funcConstraint.getScope(), CSPOM_TO_CSP4J);
+            final Domain referenceDomain;
+            try {
+                referenceDomain = Iterables.find(scope,
+                        Predicates.not(NULL_DOMAIN)).getDomain();
+            } catch (NoSuchElementException e) {
                 return null;
             }
-            final int[] negDomain = new int[notNull.getDomainSize()];
+
+            final int[] negDomain = new int[referenceDomain.size()];
             for (int i = negDomain.length; --i >= 0;) {
-                negDomain[i] = -notNull.getValue(negDomain.length - i - 1);
+                negDomain[i] = -referenceDomain.value(negDomain.length - i - 1);
             }
-            for (Variable v : scope) {
-                if (v.getDomain() == null) {
-                    v.setDomain(new BitVectorDomain(negDomain));
-                }
+            for (Variable v : Iterables.filter(scope, NULL_DOMAIN)) {
+                v.setDomain(new BitVectorDomain(negDomain));
             }
-            return new Eq(-1, scope[0], 0, scope[1]);
+            return new Eq(-1, scope.get(0), 0, scope.get(1));
         }
 
         throw new IllegalArgumentException("Can not generate " + funcConstraint);

@@ -5,6 +5,8 @@ import java.util.Deque;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.google.common.collect.ObjectArrays;
+
 import cspfj.constraint.AbstractConstraint;
 import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
@@ -119,8 +121,10 @@ public final class Gcc extends AbstractConstraint {
                 queue.offer(getVariable(pos));
             }
         }
+
         @SuppressWarnings("unchecked")
-        final Set<Variable>[] singles = (Set<Variable>[]) new Set<?>[bounds.length];
+        final Set<Variable>[] singles = ObjectArrays.newArray(Set.class,
+                bounds.length);
 
         while (!queue.isEmpty()) {
             final Variable var = queue.poll();

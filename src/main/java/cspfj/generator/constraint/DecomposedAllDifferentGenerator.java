@@ -3,12 +3,14 @@ package cspfj.generator.constraint;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.Set;
+import java.util.SortedSet;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
 
 import cspfj.constraint.semantic.InInterval;
@@ -38,9 +40,9 @@ public final class DecomposedAllDifferentGenerator extends AbstractGenerator {
                     + " is not supported");
         }
 
-        final Variable[] solverVariables = getSolverVariables(constraint
-                .getScope());
-        if (nullVariable(solverVariables) != null) {
+        final List<Variable> solverVariables = Lists.transform(
+                constraint.getScope(), CSPOM_TO_CSP4J);
+        if (Iterables.any(solverVariables, NULL_DOMAIN)) {
             return false;
         }
 
@@ -50,7 +52,7 @@ public final class DecomposedAllDifferentGenerator extends AbstractGenerator {
         for (int l = 0; l < values.length; l++) {
             final int lV = values[l];
             for (int u = l; u < values.length
-                    && u - l + 1 < solverVariables.length; u++) {
+                    && u - l + 1 < solverVariables.size(); u++) {
                 final int uV = values[u];
                 final List<VariableInterval> sum = new ArrayList<VariableInterval>();
                 for (Variable v : solverVariables) {
@@ -140,16 +142,14 @@ public final class DecomposedAllDifferentGenerator extends AbstractGenerator {
         }
     }
 
-    private static int[] values(final Variable[] variables) {
-        final Set<Integer> valueSet = new HashSet<Integer>();
+    private static int[] values(final List<Variable> variables) {
+        final SortedSet<Integer> valueSet = Sets.newTreeSet();
         for (Variable v : variables) {
             for (int i = v.getFirst(); i >= 0; i = v.getNext(i)) {
                 valueSet.add(v.getValue(i));
             }
         }
-        final int[] values = Ints.toArray(valueSet);
-        Arrays.sort(values);
-        return values;
+        return Ints.toArray(valueSet);
     }
 
 }

@@ -1,5 +1,10 @@
 package cspfj.generator.constraint;
 
+import java.util.List;
+
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 import cspfj.constraint.semantic.Gcc;
 import cspfj.constraint.semantic.Gcc.Bounds;
 import cspfj.exception.FailedGenerationException;
@@ -22,13 +27,14 @@ public class GccGenerator extends AbstractGenerator {
                     + " is not supported");
         }
 
-        final Variable[] solverVariables = getSolverVariables(constraint
-                .getScope());
-        if (nullVariable(solverVariables) != null) {
+        final List<Variable> scope = Lists.transform(constraint.getScope(),
+                CSPOM_TO_CSP4J);
+        if (Iterables.any(scope, NULL_DOMAIN)) {
             return false;
         }
 
         final String[] params = constraint.getParameters().split(", +");
+
         if (params.length % 3 != 0) {
             throw new FailedGenerationException("3 parameters per value");
         }
@@ -40,7 +46,7 @@ public class GccGenerator extends AbstractGenerator {
                     Integer.valueOf(params[3 * i + 2]));
         }
 
-        addConstraint(new Gcc(solverVariables, bounds));
+        addConstraint(new Gcc(scope.toArray(new Variable[scope.size()]), bounds));
         return true;
     }
 
