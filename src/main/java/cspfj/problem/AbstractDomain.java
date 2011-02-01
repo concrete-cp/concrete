@@ -2,15 +2,11 @@ package cspfj.problem;
 
 import java.util.Iterator;
 
-public abstract class AbstractDomain implements Domain<AbstractDomain> {
+public abstract class AbstractDomain implements Domain {
 
     @Override
     public Iterator<Integer> iterator() {
         return new DomainIterator();
-    }
-
-    public AbstractDomain clone() throws CloneNotSupportedException {
-        return (AbstractDomain) super.clone();
     }
 
     public class DomainIterator implements Iterator<Integer> {

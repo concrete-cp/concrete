@@ -1,11 +1,10 @@
 package cspfj.problem;
 
 import java.util.Arrays;
-import java.util.Iterator;
 
 import cspfj.util.BitVector;
 
-public final class BooleanDomain implements Domain {
+public final class BooleanDomain extends AbstractDomain implements Cloneable {
     private static final int HISTORY_INCREMENT = 20;
 
     private static final int[] UNKNOWN_ARRAY = new int[] { 0, 1 };
@@ -244,13 +243,16 @@ public final class BooleanDomain implements Domain {
         return status.asBitVector();
     }
 
-    public BooleanDomain clone() {
-        final BooleanDomain clone;
+    public BooleanDomain copy() {
         try {
-            clone = (BooleanDomain) super.clone();
+            return clone();
         } catch (CloneNotSupportedException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    public BooleanDomain clone() throws CloneNotSupportedException {
+        final BooleanDomain clone = (BooleanDomain) super.clone();
         clone.status = status;
         clone.history = history.clone();
         return clone;
@@ -419,10 +421,5 @@ public final class BooleanDomain implements Domain {
         default:
             throw new IllegalStateException();
         }
-    }
-
-    @Override
-    public Iterator<Integer> iterator() {
-        return new DomainIterator(this);
     }
 }

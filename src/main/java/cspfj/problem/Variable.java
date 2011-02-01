@@ -203,7 +203,7 @@ public final class Variable implements Cloneable, Identified {
     public Variable clone() throws CloneNotSupportedException {
         final Variable variable = (Variable) super.clone();
 
-        variable.domain = domain.clone();
+        variable.domain = domain.copy();
 
         return variable;
     }

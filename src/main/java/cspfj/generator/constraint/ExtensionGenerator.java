@@ -1,16 +1,16 @@
 package cspfj.generator.constraint;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.primitives.Ints;
 
 import cspfj.constraint.extension.ExtensionConstraints;
 import cspfj.constraint.extension.Matrix;
@@ -26,7 +26,7 @@ import cspom.extension.Extension;
 
 public final class ExtensionGenerator extends AbstractGenerator {
     private static final int TIGHTNESS_LIMIT = 4;
-    private static final int HASHCODE_BASE = 31;
+
     private final Map<Signature, Matrix> generated = new HashMap<Signature, Matrix>();
 
     public ExtensionGenerator(final Problem problem) {
@@ -35,17 +35,23 @@ public final class ExtensionGenerator extends AbstractGenerator {
 
     private Matrix generate(final List<Variable> variables,
             final Extension<Number> extension) {
-        final Domain[] domains = Lists.transform(variables,
+        final List<Domain> domains = Lists.transform(variables,
                 new Function<Variable, Domain>() {
                     @Override
                     public Domain apply(Variable input) {
                         return input.getDomain();
                     }
-                }).toArray(new Domain[variables.size()]);
+                });
         final Signature signature = new Signature(domains, extension);
         Matrix matrix = generated.get(signature);
         if (matrix == null) {
-            matrix = bestMatrix(extension, domains);
+            matrix = bestMatrix(extension,
+                    Lists.transform(domains, new Function<Domain, Integer>() {
+                        @Override
+                        public Integer apply(Domain input) {
+                            return input.size();
+                        }
+                    }));
             fillMatrix(domains, extension, matrix);
             generated.put(signature, matrix);
         }
@@ -75,19 +81,18 @@ public final class ExtensionGenerator extends AbstractGenerator {
     }
 
     private static class Signature {
-        private Domain[] domains;
+        private List<Domain> domains;
         private Extension<Number> extension;
 
-        public Signature(final Domain[] domains,
+        public Signature(final List<Domain> domains2,
                 final Extension<Number> extension) {
-            this.domains = domains;
+            this.domains = domains2;
             this.extension = extension;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(Arrays.deepHashCode(domains),
-                    extension.hashCode());
+            return Objects.hashCode(domains.hashCode(), extension.hashCode());
         }
 
         @Override
@@ -96,63 +101,49 @@ public final class ExtensionGenerator extends AbstractGenerator {
                 return false;
             }
             final Signature sign = (Signature) obj;
-            return extension == sign.extension
-                    && Arrays.equals(domains, sign.domains);
+            return extension == sign.extension && domains.equals(sign.domains);
         }
     }
 
-    private static boolean tupleSetBetterThanMatrix(final Domain[] domains,
+    private static boolean tupleSetBetterThanMatrix(final List<Integer> sizes,
             final int nbTuples) {
         BigInteger size = BigInteger.ONE;
-        for (Domain d : domains) {
-            size = size.multiply(BigInteger.valueOf(d.size()));
+        for (int i : sizes) {
+            size = size.multiply(BigInteger.valueOf(i));
         }
 
         return size.compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) >= 0
                 || (TIGHTNESS_LIMIT * nbTuples < size.intValue());
     }
 
-    private static int[] sizes(final Domain[] domains) {
-        final int[] sizes = new int[domains.length];
-        for (int i = sizes.length; --i >= 0;) {
-            sizes[i] = domains[i].size();
-        }
-        return sizes;
-    }
-
-    private static Map<Number, Integer> indexMap(final Domain domain) {
-        final Map<Number, Integer> map = new HashMap<Number, Integer>(
-                domain.size());
-        for (int i = domain.first(); i != -1; i = domain.next(i)) {
-            map.put(domain.value(i), i);
-        }
-        return map;
-    }
-
     private static Matrix bestMatrix(final Extension<Number> extension,
-            final Domain[] domains) {
+            final List<Integer> sizes) {
 
         if (extension.getArity() == 2) {
-            return new Matrix2D(domains[0].size(), domains[1].size(),
-                    extension.init());
+            return new Matrix2D(sizes.get(0), sizes.get(1), extension.init());
         }
         if (!extension.init()
-                && tupleSetBetterThanMatrix(domains, extension.getNbTuples())) {
+                && tupleSetBetterThanMatrix(sizes, extension.getNbTuples())) {
             return new TupleSet(extension.getNbTuples(), extension.init());
         }
-        return new MatrixGeneral(sizes(domains), extension.init());
+        return new MatrixGeneral(Ints.toArray(sizes), extension.init());
 
     }
 
-    private static void fillMatrix(final Domain[] domains,
+    private static void fillMatrix(final List<Domain> domains,
             final Extension<Number> extension, final Matrix matrix) {
-        final int[] tuple = new int[domains.length];
-        final List<Map<Number, Integer>> indexes = Lists.transform(
-                Arrays.asList(domains),
+        final int[] tuple = new int[domains.size()];
+        final List<Map<Number, Integer>> indexes = Lists.transform(domains,
                 new Function<Domain, Map<Number, Integer>>() {
                     @Override
-                    public Map<Number, Integer> apply(Domain input) {
-                        return indexMap(input);
+                    public Map<Number, Integer> apply(final Domain domain) {
+                        return Maps.uniqueIndex(domain,
+                                new Function<Integer, Number>() {
+                                    @Override
+                                    public Number apply(Integer input) {
+                                        return domain.value(input);
+                                    }
+                                });
                     }
                 });
 

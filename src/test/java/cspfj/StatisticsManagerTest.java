@@ -1,7 +1,6 @@
 package cspfj;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -9,25 +8,25 @@ import org.junit.Test;
 import cspfj.util.Statistic;
 
 public final class StatisticsManagerTest {
-
+    @SuppressWarnings("unused")
     private static class TestClass {
         @Statistic
-        static int testInt = 8;
+        private static int testInt = 8;
         @Statistic
-        static long testLong = 8;
+        private static long testLong = 8;
         @Statistic
-        static float testFloat = 9;
+        private static float testFloat = 9;
         @Statistic
-        static double testDouble = 9;
+        private static double testDouble = 9;
 
         @Statistic
-        int testDynInt;
+        private int testDynInt;
         @Statistic
-        long testDynLong;
+        private long testDynLong;
         @Statistic
-        float testDynFloat;
+        private float testDynFloat;
         @Statistic
-        double testDynDouble;
+        private double testDynDouble;
 
         public TestClass(int testDynInt, long testDynLong, float testDynFloat,
                 double testDynDouble) {

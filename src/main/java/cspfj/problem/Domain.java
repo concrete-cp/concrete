@@ -2,8 +2,7 @@ package cspfj.problem;
 
 import cspfj.util.BitVector;
 
-public interface Domain<T extends Domain<T>> extends Cloneable,
-        Iterable<Integer> {
+public interface Domain extends Iterable<Integer> {
     int first();
 
     int last();
@@ -66,8 +65,7 @@ public interface Domain<T extends Domain<T>> extends Cloneable,
     int lowest(int value);
 
     BitVector getBitVector();
-    
-    T clone() throws CloneNotSupportedException;
+
+    Domain copy();
 
 }
-

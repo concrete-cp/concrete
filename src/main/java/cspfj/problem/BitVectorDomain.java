@@ -7,7 +7,7 @@ import com.google.common.base.Preconditions;
 import cspfj.util.Arrays2;
 import cspfj.util.BitVector;
 
-public final class BitVectorDomain extends AbstractDomain {
+public final class BitVectorDomain extends AbstractDomain implements Cloneable {
 
     private static final int HISTORY_INCREMENT = 20;
 
@@ -195,13 +195,16 @@ public final class BitVectorDomain extends AbstractDomain {
         return bvDomain;
     }
 
-    public BitVectorDomain clone() {
-        final BitVectorDomain clone;
+    public BitVectorDomain copy() {
         try {
-            clone = (BitVectorDomain) super.clone();
+            return clone();
         } catch (CloneNotSupportedException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    public BitVectorDomain clone() throws CloneNotSupportedException {
+        final BitVectorDomain clone = (BitVectorDomain) super.clone();
         clone.domain = domain.clone();
         clone.bvHistory = bvHistory.clone();
         clone.dsHistory = dsHistory.clone();

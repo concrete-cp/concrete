@@ -9,6 +9,7 @@ public final class ResidueManagerMap implements ResidueManager {
 
     private final Map<Integer, int[]>[] last;
 
+    @SuppressWarnings("unchecked")
     public ResidueManagerMap(final int arity) {
         last = (Map<Integer, int[]>[]) new Map<?, ?>[arity];
         for (int i = arity; --i >= 0;) {
