@@ -3,6 +3,7 @@ package cspfj.problem;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -31,10 +32,6 @@ public final class NoGoodLearner {
         NONE, CONSERVATIVE, EXT, BIN;
     }
 
-    // private static final Logger LOGGER =
-    // Logger.getLoggerS(NoGoodLearner.class
-    // .getName());
-
     @Statistic
     public int nbNoGoods = 0;
 
@@ -48,7 +45,7 @@ public final class NoGoodLearner {
 
     public Set<Constraint> noGoods(final Deque<Pair> decisions) {
         if (LearnMethod.NONE.equals(learnMethod) || decisions.isEmpty()) {
-            return ImmutableSet.of();
+            return Collections.emptySet();
         }
 
         final Set<Constraint> modifiedConstraints = new HashSet<Constraint>();
@@ -160,15 +157,14 @@ public final class NoGoodLearner {
             final Variable var = constraint.getVariable(i);
             if (var == seek) {
                 positionInConstraint = i;
-                continue;
-            }
-            for (int j = scope.length - 1; --j >= 0;) {
-                if (scope[j] == var) {
-                    base[i] = values.get(j);
-                    break;
+            } else {
+                for (int j = scope.length - 1; --j >= 0;) {
+                    if (scope[j] == var) {
+                        base[i] = values.get(j);
+                        break;
+                    }
                 }
             }
-
         }
 
         return positionInConstraint;
