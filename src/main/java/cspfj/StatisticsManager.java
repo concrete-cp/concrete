@@ -85,6 +85,7 @@ public final class StatisticsManager {
                 Arrays.asList(clazz.getDeclaredFields()),
                 Predicates.and(ANNOTED_FIELD, Predicates.not(STATIC_FIELD)))) {
             DYNAMIC_FIELDS.put(object, f);
+            f.setAccessible(true);
         }
     }
 

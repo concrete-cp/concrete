@@ -22,6 +22,8 @@ package cspfj.problem;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.collect.ImmutableList;
+
 import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
 import cspfj.priorityqueues.Identified;
@@ -31,7 +33,7 @@ public final class Variable implements Cloneable, Identified {
 
     private Constraint[] constraints;
 
-    private DynamicConstraint[] dynamicConstraints;
+    private List<DynamicConstraint> dynamicConstraints;
 
     private Domain domain;
 
@@ -80,8 +82,7 @@ public final class Variable implements Cloneable, Identified {
             }
         }
 
-        this.dynamicConstraints = newDynamicConstraints
-                .toArray(new DynamicConstraint[newDynamicConstraints.size()]);
+        this.dynamicConstraints = ImmutableList.copyOf(newDynamicConstraints);
 
         positionInConstraint = new int[newConstraints.length];
         for (int i = newConstraints.length; --i >= 0;) {
@@ -134,7 +135,7 @@ public final class Variable implements Cloneable, Identified {
         return constraints;
     }
 
-    public DynamicConstraint[] getDynamicConstraints() {
+    public List<DynamicConstraint> getDynamicConstraints() {
         return dynamicConstraints;
     }
 
