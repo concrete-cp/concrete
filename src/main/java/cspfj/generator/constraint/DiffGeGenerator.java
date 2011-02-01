@@ -1,6 +1,8 @@
 package cspfj.generator.constraint;
 
-import java.util.Arrays;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import cspfj.constraint.Constraint;
 import cspfj.constraint.semantic.Gt;
@@ -45,22 +47,17 @@ public final class DiffGeGenerator extends AbstractGenerator {
         final Variable v0;
         final Variable v1;
         final Variable bound;
-        if ("diffGe".equals(constraint.getDescription())) {
-            v0 = getSolverVariable(constraint.getVariable(0));
-            v1 = getSolverVariable(constraint.getVariable(1));
-            bound = getSolverVariable(constraint.getVariable(2));
-        } else {
-            throw new IllegalArgumentException("Cannot handle " + constraint);
-        }
+        Preconditions.checkArgument(
+                "diffGe".equals(constraint.getDescription()),
+                "Cannot handle %s", constraint);
 
-        if (bound.getDomainSize() != 1) {
+        v0 = getSolverVariable(constraint.getVariable(0));
+        v1 = getSolverVariable(constraint.getVariable(1));
+        bound = getSolverVariable(constraint.getVariable(2));
+
+        if (Iterables.any(ImmutableList.of(v0, v1, bound), NULL_DOMAIN)
+                || bound.getDomainSize() != 1) {
             return null;
-        }
-
-        for (Variable v : Arrays.asList(v0, v1)) {
-            if (v.getDomain() == null) {
-                return null;
-            }
         }
 
         return new Gt(v0, -bound.getValue(0), v1, false);
@@ -71,22 +68,17 @@ public final class DiffGeGenerator extends AbstractGenerator {
         final Variable v0;
         final Variable v1;
         final Variable bound;
-        if ("diffGe".equals(constraint.getDescription())) {
-            v0 = getSolverVariable(constraint.getVariable(1));
-            v1 = getSolverVariable(constraint.getVariable(2));
-            bound = getSolverVariable(constraint.getVariable(3));
-        } else {
-            throw new IllegalArgumentException("Cannot handle " + constraint);
-        }
+        Preconditions.checkArgument(
+                "diffGe".equals(constraint.getDescription()),
+                "Cannot handle %s", constraint);
 
-        if (bound.getDomainSize() != 1) {
+        v0 = getSolverVariable(constraint.getVariable(1));
+        v1 = getSolverVariable(constraint.getVariable(2));
+        bound = getSolverVariable(constraint.getVariable(3));
+
+        if (Iterables.any(ImmutableList.of(v0, v1, bound), NULL_DOMAIN)
+                || bound.getDomainSize() != 1) {
             return null;
-        }
-
-        for (Variable v : Arrays.asList(v0, v1)) {
-            if (v.getDomain() == null) {
-                return null;
-            }
         }
 
         final Variable result = getSolverVariable(constraint

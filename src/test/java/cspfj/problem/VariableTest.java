@@ -193,7 +193,7 @@ public final class VariableTest {
 
     @Test
     public void testGetBitDomain() {
-        assertEquals(BitVector.factory(5, true), variable.getBitDomain());
+        assertEquals(BitVector.newBitVector(5, true), variable.getBitDomain());
     }
 
     // @Test

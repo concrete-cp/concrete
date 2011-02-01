@@ -55,7 +55,7 @@ public final class AllDifferent extends AbstractArcGrainedConstraint {
                 max = Math.max(i, max);
             }
         }
-        union = BitVector.factory(max - offset + 1, false);
+        union = BitVector.newBitVector(max - offset + 1, false);
         queue = new LinkedList<Variable>();
         priority = getArity() * getArity();
     }

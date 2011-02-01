@@ -22,7 +22,7 @@ public final class LexLeqGenerator extends AbstractGenerator {
             throws FailedGenerationException {
 
         final List<Variable> solverVariables = Lists.transform(
-                constraint.getScope(), CSPOM_TO_CSP4J);
+                constraint.getScope(), cspomToCspfj);
 
         if (Iterables.any(solverVariables, NULL_DOMAIN)) {
             return false;

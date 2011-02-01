@@ -1,6 +1,7 @@
 package cspfj.problem;
 
 import java.util.Arrays;
+import java.util.Iterator;
 
 import cspfj.util.BitVector;
 
@@ -18,12 +19,12 @@ public final class BooleanDomain implements Domain {
     private static final BitVector EMPTY_BV;
 
     static {
-        UNKNOWN_BV = BitVector.factory(2, true);
-        TRUE_BV = BitVector.factory(2, false);
+        UNKNOWN_BV = BitVector.newBitVector(2, true);
+        TRUE_BV = BitVector.newBitVector(2, false);
         TRUE_BV.set(1);
-        FALSE_BV = BitVector.factory(2, false);
+        FALSE_BV = BitVector.newBitVector(2, false);
         FALSE_BV.set(0);
-        EMPTY_BV = BitVector.factory(2, false);
+        EMPTY_BV = BitVector.newBitVector(2, false);
     }
 
     public static enum Status {
@@ -418,5 +419,10 @@ public final class BooleanDomain implements Domain {
         default:
             throw new IllegalStateException();
         }
+    }
+
+    @Override
+    public Iterator<Integer> iterator() {
+        return new DomainIterator(this);
     }
 }

@@ -109,7 +109,7 @@ public final class DisjGenerator extends AbstractGenerator {
     public boolean generate(final CSPOMConstraint constraint)
             throws FailedGenerationException {
         final List<Variable> scope = Lists.transform(constraint.getScope(),
-                CSPOM_TO_CSP4J);
+                cspomToCspfj);
 
         for (Variable v : scope) {
             booleanDomain(v);

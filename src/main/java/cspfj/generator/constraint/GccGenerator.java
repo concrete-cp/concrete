@@ -28,7 +28,7 @@ public class GccGenerator extends AbstractGenerator {
         }
 
         final List<Variable> scope = Lists.transform(constraint.getScope(),
-                CSPOM_TO_CSP4J);
+                cspomToCspfj);
         if (Iterables.any(scope, NULL_DOMAIN)) {
             return false;
         }

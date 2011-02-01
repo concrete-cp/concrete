@@ -2,10 +2,12 @@ package cspfj.problem;
 
 import java.util.Arrays;
 
+import com.google.common.base.Preconditions;
+
 import cspfj.util.Arrays2;
 import cspfj.util.BitVector;
 
-public final class BitVectorDomain implements Domain {
+public final class BitVectorDomain extends AbstractDomain {
 
     private static final int HISTORY_INCREMENT = 20;
 
@@ -25,11 +27,10 @@ public final class BitVectorDomain implements Domain {
     private int currentLevel = 0;
 
     public BitVectorDomain(final int... domain) {
-        if (!Arrays2.isOrdered(domain)) {
-            throw new IllegalArgumentException(
-                    "Only ordered domains are supported");
-        }
-        bvDomain = BitVector.factory(domain.length, true);
+        Preconditions.checkArgument(Arrays2.isOrdered(domain),
+                "Only ordered domains are supported");
+
+        bvDomain = BitVector.newBitVector(domain.length, true);
         this.domain = domain.clone();
         size = domain.length;
         last = domain.length - 1;
@@ -137,7 +138,8 @@ public final class BitVectorDomain implements Domain {
         size = 1;
         last = index;
         if (bvHistory[currentLevel] == null) {
-            bvHistory[currentLevel] = BitVector.factory(domain.length, false);
+            bvHistory[currentLevel] = BitVector.newBitVector(domain.length,
+                    false);
         }
     }
 
@@ -159,7 +161,8 @@ public final class BitVectorDomain implements Domain {
                 + " given current domain " + toString();
 
         if (bvHistory[currentLevel] == null) {
-            bvHistory[currentLevel] = BitVector.factory(domain.length, false);
+            bvHistory[currentLevel] = BitVector.newBitVector(domain.length,
+                    false);
         }
     }
 
@@ -169,7 +172,7 @@ public final class BitVectorDomain implements Domain {
         if (removed > 0) {
             last = bvDomain.prevSetBit(lb);
             if (bvHistory[currentLevel] == null) {
-                bvHistory[currentLevel] = BitVector.factory(domain.length,
+                bvHistory[currentLevel] = BitVector.newBitVector(domain.length,
                         false);
             }
         }
@@ -181,7 +184,8 @@ public final class BitVectorDomain implements Domain {
     public int removeTo(final int ub) {
         final int removed = bvDomain.clearTo(ub + 1);
         if (removed > 0 && bvHistory[currentLevel] == null) {
-            bvHistory[currentLevel] = BitVector.factory(domain.length, false);
+            bvHistory[currentLevel] = BitVector.newBitVector(domain.length,
+                    false);
         }
         size -= removed;
         return removed;
@@ -268,7 +272,7 @@ public final class BitVectorDomain implements Domain {
                     return bvHistory[l];
                 }
             }
-            return BitVector.factory(domain.length, true);
+            return BitVector.newBitVector(domain.length, true);
         }
 
         return bvDomain;

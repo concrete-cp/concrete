@@ -1,20 +1,17 @@
 package cspfj.generator.constraint;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import cspfj.constraint.Constraint;
-import cspfj.constraint.extension.ExtensionConstraint2D;
-import cspfj.constraint.extension.ExtensionConstraintDynamic;
-import cspfj.constraint.extension.ExtensionConstraintGeneral;
 import cspfj.constraint.extension.ExtensionConstraints;
 import cspfj.constraint.extension.Matrix;
 import cspfj.constraint.extension.Matrix2D;
@@ -60,7 +57,7 @@ public final class ExtensionGenerator extends AbstractGenerator {
             throws FailedGenerationException {
 
         final List<Variable> solverVariables = Lists.transform(
-                constraint.getScope(), CSPOM_TO_CSP4J);
+                constraint.getScope(), cspomToCspfj);
 
         if (Iterables.any(solverVariables, NULL_DOMAIN)) {
             return false;
@@ -89,8 +86,8 @@ public final class ExtensionGenerator extends AbstractGenerator {
 
         @Override
         public int hashCode() {
-            return HASHCODE_BASE * Arrays.deepHashCode(domains)
-                    + extension.hashCode();
+            return Objects.hashCode(Arrays.deepHashCode(domains),
+                    extension.hashCode());
         }
 
         @Override
@@ -136,7 +133,6 @@ public final class ExtensionGenerator extends AbstractGenerator {
             final Domain[] domains) {
 
         if (extension.getArity() == 2) {
-            // logger.fine(relation + " to Matrix2D");
             return new Matrix2D(domains[0].size(), domains[1].size(),
                     extension.init());
         }
@@ -151,11 +147,15 @@ public final class ExtensionGenerator extends AbstractGenerator {
     private static void fillMatrix(final Domain[] domains,
             final Extension<Number> extension, final Matrix matrix) {
         final int[] tuple = new int[domains.length];
-        final List<Map<Number, Integer>> indexes = new ArrayList<Map<Number, Integer>>(
-                domains.length);
-        for (Domain d : domains) {
-            indexes.add(indexMap(d));
-        }
+        final List<Map<Number, Integer>> indexes = Lists.transform(
+                Arrays.asList(domains),
+                new Function<Domain, Map<Number, Integer>>() {
+                    @Override
+                    public Map<Number, Integer> apply(Domain input) {
+                        return indexMap(input);
+                    }
+                });
+
         for (Number[] values : extension.getTuples()) {
             for (int i = tuple.length; --i >= 0;) {
                 tuple[i] = indexes.get(i).get(values[i]);
@@ -164,5 +164,4 @@ public final class ExtensionGenerator extends AbstractGenerator {
         }
 
     }
-
 }

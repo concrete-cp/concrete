@@ -1,13 +1,14 @@
 package cspfj.generator.constraint;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.SortedSet;
 
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -35,13 +36,11 @@ public final class DecomposedAllDifferentGenerator extends AbstractGenerator {
     @Override
     public boolean generate(final CSPOMConstraint constraint)
             throws FailedGenerationException {
-        if (!(constraint instanceof GeneralConstraint)) {
-            throw new FailedGenerationException(constraint
-                    + " is not supported");
-        }
+        Preconditions.checkArgument(constraint instanceof GeneralConstraint,
+                "%s is not supported", constraint);
 
         final List<Variable> solverVariables = Lists.transform(
-                constraint.getScope(), CSPOM_TO_CSP4J);
+                constraint.getScope(), cspomToCspfj);
         if (Iterables.any(solverVariables, NULL_DOMAIN)) {
             return false;
         }
@@ -123,7 +122,7 @@ public final class DecomposedAllDifferentGenerator extends AbstractGenerator {
 
         @Override
         public int hashCode() {
-            return 961 * variable.hashCode() + 31 * lb + ub;
+            return Objects.hashCode(variable.hashCode(), lb, ub);
         }
 
         @Override

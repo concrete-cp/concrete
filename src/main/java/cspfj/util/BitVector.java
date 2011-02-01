@@ -36,7 +36,7 @@ public abstract class BitVector implements Cloneable {
 
     }
 
-    public static BitVector factory(final int size, final boolean fill) {
+    public static BitVector newBitVector(final int size, final boolean fill) {
         if (size > WORD_SIZE) {
             return new LargeBitVector(size, fill);
         }

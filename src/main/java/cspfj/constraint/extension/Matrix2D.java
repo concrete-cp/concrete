@@ -11,13 +11,13 @@ public final class Matrix2D implements Matrix {
 
         xMatrix = new BitVector[xSize];
         for (int i = xMatrix.length; --i >= 0;) {
-            xMatrix[i] = BitVector.factory(ySize, initialState);
+            xMatrix[i] = BitVector.newBitVector(ySize, initialState);
         }
 
         yMatrix = new BitVector[ySize];
 
         for (int i = yMatrix.length; --i >= 0;) {
-            yMatrix[i] = BitVector.factory(xSize, initialState);
+            yMatrix[i] = BitVector.newBitVector(xSize, initialState);
         }
         empty = initialState;
     }

@@ -28,7 +28,7 @@ public final class NeqGenerator extends AbstractGenerator {
         Preconditions.checkArgument(constraint.getArity() == 2,
                 "Comparison constraints must have exactly two arguments");
         final List<Variable> scope = Lists.transform(constraint.getScope(),
-                CSPOM_TO_CSP4J);
+                cspomToCspfj);
         if (Iterables.any(scope, NULL_DOMAIN)) {
             return null;
         }
@@ -40,7 +40,7 @@ public final class NeqGenerator extends AbstractGenerator {
         Preconditions.checkArgument(constraint.getArguments().size() == 2,
                 "Comparison constraints must have exactly two arguments");
         final List<Variable> arguments = Lists.transform(
-                constraint.getArguments(), CSPOM_TO_CSP4J);
+                constraint.getArguments(), cspomToCspfj);
         if (Iterables.any(arguments, NULL_DOMAIN)) {
             return null;
         }

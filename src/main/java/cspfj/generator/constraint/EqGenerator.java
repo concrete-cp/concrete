@@ -33,7 +33,7 @@ public final class EqGenerator extends AbstractGenerator {
             return null;
         }
         final List<Variable> scope = Lists.transform(constraint.getScope(),
-                CSPOM_TO_CSP4J);
+                cspomToCspfj);
         final Domain referenceDomain;
         try {
             referenceDomain = Iterables
@@ -54,13 +54,13 @@ public final class EqGenerator extends AbstractGenerator {
 
         if ("eq".equals(funcConstraint.getDescription())) {
             final List<Variable> arguments = Lists.transform(
-                    funcConstraint.getArguments(), CSPOM_TO_CSP4J);
+                    funcConstraint.getArguments(), cspomToCspfj);
 
             if (arguments.size() != 2 || Iterables.any(arguments, NULL_DOMAIN)) {
                 return null;
             }
 
-            final Variable result = CSPOM_TO_CSP4J.apply(funcConstraint
+            final Variable result = cspomToCspfj.apply(funcConstraint
                     .getResultVariable());
 
             booleanDomain(result);
@@ -74,7 +74,7 @@ public final class EqGenerator extends AbstractGenerator {
                 return null;
             }
             final List<Variable> scope = Lists.transform(
-                    funcConstraint.getScope(), CSPOM_TO_CSP4J);
+                    funcConstraint.getScope(), cspomToCspfj);
             final Domain referenceDomain;
             try {
                 referenceDomain = Iterables.find(scope,
@@ -114,15 +114,6 @@ public final class EqGenerator extends AbstractGenerator {
         }
         addConstraint(generated);
         return true;
-    }
-
-    private static Variable notNull(final Variable[] variables) {
-        for (Variable v : variables) {
-            if (v.getDomain() != null) {
-                return v;
-            }
-        }
-        return null;
-    }
+    }   
 
 }

@@ -25,7 +25,7 @@ public final class GtGenerator extends AbstractGenerator {
     private Constraint generateGeneral(final CSPOMConstraint constraint)
             throws FailedGenerationException {
         final List<Variable> solverVariables = Lists.transform(
-                constraint.getScope(), CSPOM_TO_CSP4J);
+                constraint.getScope(), cspomToCspfj);
 
         if (Iterables.any(solverVariables, NULL_DOMAIN)) {
             return null;
@@ -53,7 +53,7 @@ public final class GtGenerator extends AbstractGenerator {
         Preconditions.checkArgument(constraint.getArguments().size() == 2,
                 "Comparison constraints must have exactly two arguments");
         final List<Variable> arguments = Lists.transform(
-                constraint.getArguments(), CSPOM_TO_CSP4J);
+                constraint.getArguments(), cspomToCspfj);
 
         if (Iterables.any(arguments, NULL_DOMAIN)) {
             return null;

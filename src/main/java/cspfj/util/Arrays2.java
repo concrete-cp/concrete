@@ -8,13 +8,6 @@ public final class Arrays2 {
 
 	}
 
-	public static <T> T[] addBefore(final T val, final T[] array, final T[] target) {
-		assert target.length == array.length + 1;
-		target[0] = val;
-		System.arraycopy(array, 0, target, 1, array.length);
-		return target;
-	}
-
 	public static <T> String partialDisplay(final T[] values) {
 		final int iMax = values.length - 1;
 		if (iMax == -1) {

@@ -57,7 +57,7 @@ public final class ExtensionConstraintDynamic extends AbstractConstraint
 
         final BitVector[] found = new BitVector[getArity()];
         for (int i = getArity(); --i >= 0;) {
-            found[i] = BitVector.factory(getVariable(i).getDomain().maxSize(),
+            found[i] = BitVector.newBitVector(getVariable(i).getDomain().maxSize(),
                     false);
         }
         return found;
