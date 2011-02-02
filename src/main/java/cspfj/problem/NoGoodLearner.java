@@ -6,14 +6,18 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
 import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
@@ -50,34 +54,31 @@ public final class NoGoodLearner {
 
         final Set<Constraint> modifiedConstraints = new HashSet<Constraint>();
 
-        // final Map<Variable[], List<int[]>> noGoods = new HashMap<Variable[],
-        // List<int[]>>();
-
-        // final Deque<Pair> workingDecisions = new LinkedList<Pair>(decisions);
-
         final Collection<Constraint> addedConstraints = new ArrayList<Constraint>();
 
         final List<Integer> tuple = new ArrayList<Integer>(decisions.size() + 1);
-        final LinkedHashSet<Variable> scope = new LinkedHashSet<Variable>(
-                decisions.size() + 1);
+        final Set<Variable> futureVariables = Sets.newHashSet(problem
+                .getVariables());
+        final LinkedList<Variable> currentScope = Lists.newLinkedList();
         int level = 0;
         while (!decisions.isEmpty()) {
             if (++level >= problem.getMaxArity()
                     && learnMethod != LearnMethod.EXT) {
                 break;
             }
-            final Pair lastDecision = decisions.removeLast();
+            /*
+             * Decisions are stacked, so the first decision in the search tree
+             * is actually the last in the stack.
+             */
+            final Pair lastDecision = decisions.pollLast();
             tuple.add(lastDecision.getIndex());
-            scope.add(lastDecision.getVariable());
+            currentScope.add(lastDecision.getVariable());
+            futureVariables.remove(lastDecision.getVariable());
 
-            for (Variable fv : problem.getVariables()) {
+            for (Variable fv : futureVariables) {
 
                 // logger.fine("checking " +
                 // getVariable(levelVariables[level-1]));
-
-                if (scope.contains(fv)) {
-                    continue;
-                }
 
                 final BitVector changes = fv.getDomain().getAtLevel(level - 1)
                         .xor(fv.getDomain().getAtLevel(level));
@@ -85,13 +86,12 @@ public final class NoGoodLearner {
                     continue;
                 }
 
-                scope.add(fv);
-                final DynamicConstraint constraint = learnConstraint(scope);
+                currentScope.add(fv);
+                final DynamicConstraint constraint = learnConstraint(currentScope);
 
                 if (constraint != null) {
                     final int[] base = new int[constraint.getArity()];
-                    final int varPos = makeBase(
-                            scope.toArray(new Variable[scope.size()]), tuple,
+                    final int varPos = makeBase(currentScope, tuple,
                             constraint, base);
 
                     int newNogoods = 0;
@@ -99,7 +99,6 @@ public final class NoGoodLearner {
                             .nextSetBit(i + 1)) {
                         base[varPos] = i;
                         newNogoods += constraint.removeTuples(base);
-
                     }
                     if (newNogoods > 0) {
                         nbNoGoods += newNogoods;
@@ -110,20 +109,76 @@ public final class NoGoodLearner {
                         }
                     }
                 }
-                scope.remove(fv);
+                currentScope.removeLast();
             }
         }
-        if (!modifiedConstraints.isEmpty()) {
-            // LOGGER.info(nbNoGoods + " nogoods");
 
-            if (!addedConstraints.isEmpty()) {
-                for (Constraint c : addedConstraints) {
-                    problem.addConstraint(c);
-                }
-                problem.prepare();
-                // LOGGER.info(problem.getNbConstraints() + " constraints");
+        if (!addedConstraints.isEmpty()) {
+            for (Constraint c : addedConstraints) {
+                problem.addConstraint(c);
             }
+            problem.prepare();
+            // LOGGER.info(problem.getNbConstraints() + " constraints");
         }
+
+        return modifiedConstraints;
+    }
+
+    public Set<Constraint> binNoGoods(final Variable firstVariable) {
+        final List<Integer> tuple = ImmutableList.of(firstVariable.getFirst());
+        final Set<Constraint> modifiedConstraints = new HashSet<Constraint>();
+        final LinkedList<Variable> scope = Lists.newLinkedList();
+        scope.add(firstVariable);
+
+        final Collection<Constraint> addedConstraints = new ArrayList<Constraint>();
+
+        for (Variable fv : Iterables.filter(
+                Arrays.asList(problem.getVariables()),
+                Predicates.not(Predicates.equalTo(firstVariable)))) {
+
+            // logger.fine("checking " +
+            // getVariable(levelVariables[level-1]));
+
+            final BitVector changes = fv.getDomain().getAtLevel(0)
+                    .xor(fv.getDomain().getAtLevel(1));
+            if (changes.isEmpty()) {
+                continue;
+            }
+            scope.add(fv);
+            final DynamicConstraint constraint = learnConstraint(scope);
+
+            if (constraint == null) {
+                continue;
+            }
+
+            final int[] base = new int[constraint.getArity()];
+            final int varPos = NoGoodLearner.makeBase(scope, tuple, constraint,
+                    base);
+
+            int newNogoods = 0;
+            for (int i = changes.nextSetBit(0); i >= 0; i = changes
+                    .nextSetBit(i + 1)) {
+                base[varPos] = i;
+                newNogoods += constraint.removeTuples(base);
+            }
+            if (newNogoods > 0) {
+                nbNoGoods += newNogoods;
+                modifiedConstraints.add(constraint);
+                if (constraint.getId() > problem.getMaxCId()) {
+                    addedConstraints.add(constraint);
+                }
+            }
+            scope.removeLast();
+        }
+
+        if (!addedConstraints.isEmpty()) {
+            for (Constraint c : addedConstraints) {
+                problem.addConstraint(c);
+            }
+
+            problem.prepare();
+        }
+
         return modifiedConstraints;
     }
 
@@ -132,7 +187,7 @@ public final class NoGoodLearner {
      * correspond to the values of the values array reordered such that they
      * correspond to the variables of the scope of the constraint. Variables
      * present in the scope of the constraint but not in the scope[] array
-     * result in a -1 value in the base[] array. Last variable of scope[] is
+     * result in a 0 value in the base[] array. Last variable of scope[] is
      * ignored. Returns the position of the last variable of scope[] in the
      * constraint's scope.
      * 
@@ -142,35 +197,22 @@ public final class NoGoodLearner {
      * @param base
      * @return
      */
-    public static int makeBase(final Variable[] scope,
+    public static int makeBase(final LinkedList<Variable> scope,
             final List<Integer> values, final Constraint constraint,
             final int[] base) {
-        assert scope.length == values.size() + 1;
+        assert scope.size() == values.size() + 1;
         assert base.length == constraint.getArity();
 
-        Arrays.fill(base, -1);
-
-        final Variable seek = scope[scope.length - 1];
-        int positionInConstraint = -1;
-
-        for (int i = constraint.getArity(); --i >= 0;) {
-            final Variable var = constraint.getVariable(i);
-            if (var == seek) {
-                positionInConstraint = i;
-            } else {
-                for (int j = scope.length - 1; --j >= 0;) {
-                    if (scope[j] == var) {
-                        base[i] = values.get(j);
-                        break;
-                    }
-                }
-            }
+        for (ListIterator<Variable> itr = scope.subList(0, scope.size() - 1)
+                .listIterator(); itr.hasNext();) {
+            final int index = itr.nextIndex();
+            base[constraint.getPosition(itr.next())] = values.get(index);
         }
 
-        return positionInConstraint;
+        return constraint.getPosition(scope.getLast());
     }
 
-    public DynamicConstraint learnConstraint(final Set<Variable> scope) {
+    public DynamicConstraint learnConstraint(final Collection<Variable> scope) {
         try {
             return Iterables.find(Iterables.getFirst(scope, null)
                     .getDynamicConstraints(),
@@ -190,10 +232,11 @@ public final class NoGoodLearner {
                     return null;
                 }
             case EXT:
-                if (level == 2) {
 
-                    final Variable[] constraintScope = scope
-                            .toArray(new Variable[level]);
+                final Variable[] constraintScope = scope
+                        .toArray(new Variable[level]);
+
+                if (level == 2) {
 
                     final Matrix2D matrix = new Matrix2D(constraintScope[0]
                             .getDomain().maxSize(), constraintScope[1]
@@ -202,9 +245,6 @@ public final class NoGoodLearner {
                             false);
 
                 }
-
-                final Variable[] constraintScope = scope
-                        .toArray(new Variable[level]);
 
                 final Matrix matrix = new TupleSet(true);
 

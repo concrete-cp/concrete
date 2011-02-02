@@ -22,11 +22,18 @@ package cspfj.problem;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Ordering;
 
 import cspfj.constraint.Constraint;
 
@@ -58,10 +65,9 @@ public final class Problem {
     }
 
     public Variable addVariable(final String name, final Domain domain) {
-        if (variables.containsKey(name)) {
-            throw new IllegalArgumentException("A variable named " + name
-                    + " already exists");
-        }
+        Preconditions.checkArgument(!variables.containsKey(name),
+                "A variable named %s already exists", name);
+
         final Variable var = new Variable(name, domain);
         variables.put(name, var);
         prepared = false;
@@ -82,16 +88,26 @@ public final class Problem {
     }
 
     private void prepareVariables() {
-        maxDomainSize = 0;
-        maxVId = 0;
+        maxDomainSize = Ordering.natural().max(
+                Iterables.transform(variables.values(),
+                        new Function<Variable, Integer>() {
+                            @Override
+                            public Integer apply(Variable input) {
+                                return input.getDomain().maxSize();
+                            }
+                        }));
+
+        maxVId = Ordering.natural().max(
+                Iterables.transform(variables.values(),
+                        new Function<Variable, Integer>() {
+                            @Override
+                            public Integer apply(Variable input) {
+                                return input.getId();
+                            }
+                        }));
 
         variableArray = variables.values().toArray(
                 new Variable[variables.size()]);
-
-        for (Variable var : variableArray) {
-            maxDomainSize = Math.max(maxDomainSize, var.getDomain().maxSize());
-            maxVId = Math.max(maxVId, var.getId());
-        }
 
         nbVariables = variables.size();
     }
@@ -99,45 +115,43 @@ public final class Problem {
     private void prepareConstraints() {
         if (constraints.isEmpty()) {
             maxArity = 0;
-            maxCId = 0;
+            maxCId = -1;
+            final List<Constraint> empty = Collections.emptyList();
             for (Variable v : getVariables()) {
-                v.setInvolvingConstraints(new Constraint[0]);
+                v.setInvolvingConstraints(empty);
             }
         } else {
-            maxArity = Collections.max(constraints,
-                    new Comparator<Constraint>() {
+            maxArity = Collections.max(Lists.transform(constraints,
+                    new Function<Constraint, Integer>() {
                         @Override
-                        public int compare(final Constraint o1,
-                                final Constraint o2) {
-                            return o1.getArity() - o2.getArity();
+                        public Integer apply(Constraint input) {
+                            return input.getArity();
                         }
-                    }).getArity();
+                    }));
 
-            maxCId = Collections.max(constraints, new Comparator<Constraint>() {
-                @Override
-                public int compare(final Constraint o1, final Constraint o2) {
-                    return o1.getId() - o2.getId();
-                }
-            }).getId();
+            maxCId = Collections.max(Lists.transform(constraints,
+                    new Function<Constraint, Integer>() {
+                        @Override
+                        public Integer apply(Constraint input) {
+                            return input.getId();
+                        }
+                    }));
 
-            final Map<Integer, List<Constraint>> invConstraints = new HashMap<Integer, List<Constraint>>(
-                    variableArray.length);
-
-            for (Variable v : getVariables()) {
-                invConstraints.put(v.getId(), new ArrayList<Constraint>());
-            }
+            final ImmutableMultimap.Builder<Variable, Constraint> builder = ImmutableMultimap
+                    .builder();
 
             for (Constraint c : getConstraints()) {
                 for (Variable v : c.getScope()) {
-                    invConstraints.get(v.getId()).add(c);
+                    builder.put(v, c);
                 }
             }
 
+            final Multimap<Variable, Constraint> invConstraints = builder.build();
+
             for (Variable v : getVariables()) {
                 final Collection<Constraint> involvingConstraints = invConstraints
-                        .get(v.getId());
-                v.setInvolvingConstraints(involvingConstraints
-                        .toArray(new Constraint[involvingConstraints.size()]));
+                        .get(v);
+                v.setInvolvingConstraints(involvingConstraints);
             }
         }
     }
@@ -171,116 +185,6 @@ public final class Problem {
 
     }
 
-    // private class Semaphore {
-    // private int credit = 0;
-    //
-    // public synchronized void V() {
-    // credit++;
-    // if (credit <= 0) {
-    // notify();
-    // }
-    // }
-    //
-    // public synchronized void P() throws InterruptedException {
-    // credit--;
-    // if (credit < 0) {
-    // wait();
-    // }
-    // }
-    //
-    // }
-    //
-    // private class LevelManager extends Thread {
-    // private final Semaphore sem;
-    // private boolean set;
-    // private int startV, endV, startC, endC, level;
-    //
-    // public LevelManager(Semaphore s) {
-    // this.sem = s;
-    // }
-    //
-    // public void run() {
-    // for (;;) {
-    // try {
-    // sem.P();
-    // } catch (InterruptedException e) {
-    // // TODO Auto-generated catch block
-    // e.printStackTrace();
-    // }
-    //
-    // if (set) {
-    // for (int i = startV; i < endV; i++) {
-    // variableArray[i].setLevel(level);
-    // }
-    // for (ListIterator<Constraint> itr = constraints
-    // .listIterator(startC); itr.nextIndex() < endC;) {
-    // itr.next().setLevel(level);
-    // }
-    // } else {
-    // for (int i = startV; i < endV; i++) {
-    // variableArray[i].restoreLevel(level);
-    // }
-    // for (ListIterator<Constraint> itr = constraints
-    // .listIterator(startC); itr.nextIndex() < endC;) {
-    // itr.next().restore(level);
-    // }
-    // }
-    // sem.V();
-    // }
-    // }
-    //
-    // public synchronized void setLevel(int startV, int endV, int startC,
-    // int endC, int level) {
-    // this.startV = startV;
-    // this.endV = endV;
-    // this.startC = startC;
-    // this.endC = endC;
-    // this.level = level;
-    // set = true;
-    // }
-    //
-    // public synchronized void restoreLevel(int startV, int endV, int startC,
-    // int endC, int level) {
-    // this.startV = startV;
-    // this.endV = endV;
-    // this.startC = startC;
-    // this.endC = endC;
-    // this.level = level;
-    // set = false;
-    // }
-    // }
-    //
-    // private final Semaphore sem0 = new Semaphore();
-    // private final Semaphore sem1 = new Semaphore();
-    // private final LevelManager t0 = new LevelManager(sem0);
-    // private final LevelManager t1 = new LevelManager(sem1);
-    //
-    // private synchronized void setLevel(final int level) {
-    // t0.setLevel(0, nbVariables / 2, 0, constraints.size() / 2, level);
-    // t1.setLevel(nbVariables / 2, nbVariables, constraints.size() / 2,
-    // constraints.size(), level);
-    // sem0.V();
-    // sem1.V();
-    // try {
-    // sem0.P();
-    // sem1.P();
-    // } catch (InterruptedException e) {
-    // }
-    // }
-    //
-    // private void restoreLevel(final int level) {
-    // t0.restoreLevel(0, nbVariables / 2, 0, constraints.size() / 2, level);
-    // t1.restoreLevel(nbVariables / 2, nbVariables, constraints.size() / 2,
-    // constraints.size(), level);
-    //
-    // try {
-    // sem.P();
-    // sem.P();
-    // } catch (InterruptedException e) {
-    // throw new IllegalStateException(e);
-    // }
-    // }
-
     private void setLevel(final int level) {
         for (Variable v : variableArray) {
             v.setLevel(level);
@@ -299,38 +203,6 @@ public final class Problem {
         }
     }
 
-    // private void setLevel(final int level) {
-    // final Thread t0 = new UpdateLevel(0, variableArray.length / 2, 0,
-    // constraints.size() / 2, level);
-    // final Thread t1 = new UpdateLevel(variableArray.length / 2,
-    // variableArray.length, constraints.size() / 2, constraints
-    // .size(), level);
-    // t0.start();
-    // t1.start();
-    //
-    // try {
-    // t0.join();
-    // t1.join();
-    // } catch (InterruptedException e) {
-    // }
-    // }
-    //
-    // private void restoreLevel(final int level) {
-    // final Thread t0 = new RestoreLevel(0, variableArray.length / 2, 0,
-    // constraints.size() / 2, level);
-    // final Thread t1 = new RestoreLevel(variableArray.length / 2,
-    // variableArray.length, constraints.size() / 2, constraints
-    // .size(), level);
-    // t0.start();
-    // t1.start();
-    //
-    // try {
-    // t0.join();
-    // t1.join();
-    // } catch (InterruptedException e) {
-    // }
-    // }
-
     public void reset() {
         currentLevel = 0;
         for (Variable v : variableArray) {
@@ -344,9 +216,7 @@ public final class Problem {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        for (Variable v : variables.values()) {
-            sb.append(v).append('\n');
-        }
+        Joiner.on('\n').appendTo(sb, variables.values());
 
         int entailed = 0;
         for (Constraint c : constraints) {
@@ -390,23 +260,6 @@ public final class Problem {
             nd += v.getDomainSize();
         }
         return nd;
-    }
-
-    public int getMaxFlips() {
-        final int nd = getND();
-        // return 8 * nd + (int)(.4 * nd * nd);
-        // return 5*nd;
-        return Math.max((int) (-50000 + 10000 * Math.log(nd)), 10000);
-    }
-
-    public int getMaxBacktracks() {
-        // final int meanDomainSize = getND() / getNbVariables();
-        //
-        // final int localBT = getMaxFlips();
-        //
-        // return (int) (localBT * (100F * getNbVariables()) /
-        // (getNbConstraints() * meanDomainSize));
-        return Math.max(10, maxDomainSize / 10);
     }
 
     public Variable getVariable(final String name) {

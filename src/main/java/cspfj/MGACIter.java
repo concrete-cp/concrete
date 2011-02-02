@@ -82,7 +82,7 @@ public final class MGACIter extends AbstractSolver {
 
     public MGACIter(final Problem prob) {
         super(prob);
-        setMaxBacktracks(prob.getMaxBacktracks());
+        setMaxBacktracks(Math.max(10, problem.getMaxDomainSize() / 10));
         ngl = new NoGoodLearner(problem, addConstraint);
         StatisticsManager.register("nfr-learner", ngl);
         decisions = new LinkedList<Pair>();
@@ -145,10 +145,10 @@ public final class MGACIter extends AbstractSolver {
 
             assert selectedVariable.isPresent(selectedIndex);
             //
-            // LOGGER.fine(problem.getCurrentLevel() + " : " + selectedVariable
-            // + " <- "
-            // + selectedVariable.getDomain().value(selectedIndex) + "("
-            // + getNbBacktracks() + "/" + getMaxBacktracks() + ")");
+            LOGGER.fine(problem.getCurrentLevel() + " : " + selectedVariable
+                    + " <- "
+                    + selectedVariable.getDomain().value(selectedIndex) + "("
+                    + getNbBacktracks() + "/" + getMaxBacktracks() + ")");
 
             problem.push();
             selectedVariable.setSingle(selectedIndex);

@@ -51,6 +51,8 @@ public abstract class AbstractSolver implements Solver {
     private static String loggerLevel = "WARNING";
     @Parameter("solver")
     private static Class<? extends Solver> solverClass = MGACIter.class;
+    @Parameter("preprocessor")
+    private static Class<? extends Filter> preprocessorClass = null;
 
     static {
         Matcher matcher = Pattern.compile("Rev:\\ (\\d+)").matcher(
@@ -88,9 +90,6 @@ public abstract class AbstractSolver implements Solver {
     protected final Problem problem;
 
     private int maxBacktracks;
-
-    @Parameter("preprocessor")
-    private static Class<? extends Filter> preprocessorClass = null;
 
     private int preproExpiration = -1;
 

@@ -19,10 +19,12 @@
 
 package cspfj.problem;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
@@ -73,19 +75,20 @@ public final class Variable implements Cloneable, Identified {
      * @param newConstraints
      *            Liste des contraintes impliquant la variable
      */
-    public void setInvolvingConstraints(final Constraint[] newConstraints) {
-        this.constraints = newConstraints;
-        final List<DynamicConstraint> newDynamicConstraints = new ArrayList<DynamicConstraint>();
-        for (Constraint c : newConstraints) {
-            if (c instanceof DynamicConstraint) {
-                newDynamicConstraints.add((DynamicConstraint) c);
-            }
+    public void setInvolvingConstraints(
+            final Collection<Constraint> newConstraints) {
+        this.constraints = newConstraints.toArray(new Constraint[newConstraints
+                .size()]);
+        final ImmutableList.Builder<DynamicConstraint> newDynamicConstraints = ImmutableList
+                .builder();
+        for (Constraint c : Iterables.filter(newConstraints,
+                Predicates.instanceOf(DynamicConstraint.class))) {
+            newDynamicConstraints.add((DynamicConstraint) c);
         }
+        dynamicConstraints = newDynamicConstraints.build();
 
-        this.dynamicConstraints = ImmutableList.copyOf(newDynamicConstraints);
-
-        positionInConstraint = new int[newConstraints.length];
-        for (int i = newConstraints.length; --i >= 0;) {
+        positionInConstraint = new int[newConstraints.size()];
+        for (int i = newConstraints.size(); --i >= 0;) {
             positionInConstraint[i] = constraints[i].getPosition(this);
         }
 
@@ -97,23 +100,6 @@ public final class Variable implements Cloneable, Identified {
     public int getDomainSize() {
         return domain.size();
     }
-
-    // public boolean isAssigned() {
-    // return assigned;
-    // }
-    //
-    // public void assign(final int index) {
-    // assert !assigned;
-    // assert domain.present(index);
-    //
-    // assigned = true;
-    // domain.setSingle(index);
-    // }
-    //
-    // public void unassign() {
-    // assert assigned;
-    // assigned = false;
-    // }
 
     public void setSingle(final int index) {
         domain.setSingle(index);
