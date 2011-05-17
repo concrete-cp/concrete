@@ -22,7 +22,8 @@ import cspfj.problem.Domain;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspom.constraint.CSPOMConstraint;
-import cspom.extension.Extension;
+import cspom.extension.Relation;
+
 
 public final class ExtensionGenerator extends AbstractGenerator {
     private static final int TIGHTNESS_LIMIT = 4;
@@ -34,7 +35,7 @@ public final class ExtensionGenerator extends AbstractGenerator {
     }
 
     private Matrix generate(final List<Variable> variables,
-            final Extension<Number> extension) {
+            final Relation extension) {
         final List<Domain> domains = Lists.transform(variables,
                 new Function<Variable, Domain>() {
                     @Override
@@ -131,7 +132,7 @@ public final class ExtensionGenerator extends AbstractGenerator {
     }
 
     private static void fillMatrix(final List<Domain> domains,
-            final Extension<Number> extension, final Matrix matrix) {
+            final Relation extension, final Matrix matrix) {
         final int[] tuple = new int[domains.size()];
         final List<Map<Number, Integer>> indexes = Lists.transform(domains,
                 new Function<Domain, Map<Number, Integer>>() {

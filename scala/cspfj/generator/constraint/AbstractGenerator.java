@@ -22,9 +22,9 @@ public abstract class AbstractGenerator implements Generator {
 
     private final Problem problem;
 
-    public Function<CSPOMVariable<?>, Variable> cspomToCspfj = new Function<CSPOMVariable<?>, Variable>() {
+    public Function<CSPOMVariable, Variable> cspomToCspfj = new Function<CSPOMVariable, Variable>() {
         @Override
-        public Variable apply(final CSPOMVariable<?> input) {
+        public Variable apply(final CSPOMVariable input) {
             return problem.getVariable(input.name());
         }
     };
@@ -33,7 +33,7 @@ public abstract class AbstractGenerator implements Generator {
         this.problem = problem;
     }
 
-    public final Variable getSolverVariable(final CSPOMVariable<?> variable) {
+    public final Variable getSolverVariable(final CSPOMVariable variable) {
         return problem.getVariable(variable.name());
     }
 

@@ -26,7 +26,7 @@ public final class BitVectorDomain extends AbstractDomain implements Cloneable {
 
     private int currentLevel = 0;
 
-    public BitVectorDomain(final int... domain) {
+    public BitVectorDomain(final int[] domain) {
         Preconditions.checkArgument(Arrays2.isOrdered(domain),
                 "Only ordered domains are supported");
 
