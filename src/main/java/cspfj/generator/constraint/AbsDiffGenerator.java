@@ -25,7 +25,7 @@ public final class AbsDiffGenerator extends AbstractGenerator {
         final Variable result;
         final Variable v0;
         final Variable v1;
-        if ("absdiff".equals(constraint.getDescription())) {
+        if ("absdiff".equals(constraint.description())) {
             result = getSolverVariable(constraint.getVariable(0));
             v0 = getSolverVariable(constraint.getVariable(1));
             v1 = getSolverVariable(constraint.getVariable(2));

@@ -13,19 +13,19 @@ import cspom.variable.CSPOMVariable;
 
 public abstract class AbstractGenerator implements Generator {
 
-    public static Predicate<Variable> NULL_DOMAIN = new Predicate<Variable>() {
+    public static final Predicate<Variable> NULL_DOMAIN = new Predicate<Variable>() {
         @Override
-        public boolean apply(Variable arg0) {
+        public boolean apply(final Variable arg0) {
             return arg0.getDomain() == null;
         }
     };
 
     private final Problem problem;
 
-    public Function<CSPOMVariable, Variable> cspomToCspfj = new Function<CSPOMVariable, Variable>() {
+    public Function<CSPOMVariable<?>, Variable> cspomToCspfj = new Function<CSPOMVariable<?>, Variable>() {
         @Override
-        public Variable apply(CSPOMVariable input) {
-            return problem.getVariable(input.getName());
+        public Variable apply(final CSPOMVariable<?> input) {
+            return problem.getVariable(input.name());
         }
     };
 
@@ -33,8 +33,8 @@ public abstract class AbstractGenerator implements Generator {
         this.problem = problem;
     }
 
-    public final Variable getSolverVariable(final CSPOMVariable variable) {
-        return problem.getVariable(variable.getName());
+    public final Variable getSolverVariable(final CSPOMVariable<?> variable) {
+        return problem.getVariable(variable.name());
     }
 
     public final void addConstraint(final Constraint constraint) {

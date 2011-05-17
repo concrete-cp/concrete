@@ -3,7 +3,7 @@ package cspfj.constraint.extension;
 import cspfj.exception.FailedGenerationException;
 import cspfj.problem.Variable;
 
-public abstract class ExtensionConstraints {
+public final class ExtensionConstraints {
     private ExtensionConstraints() {
     }
 

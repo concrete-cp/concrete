@@ -38,7 +38,7 @@ public final class DisjGenerator extends AbstractGenerator {
          * (-a v b v c v d...) ^ (a v -b) ^ (a v -c) ^ (a v -d) ^ ...
          */
         Preconditions
-                .checkArgument(constraint.getParameters() == null,
+                .checkArgument(constraint.parameters() == null,
                         "Negative literals in reified disjunctions are currently not supported");
 
         final boolean[] reverses = new boolean[scope.size()];
@@ -48,9 +48,9 @@ public final class DisjGenerator extends AbstractGenerator {
                 scope.toArray(new Variable[scope.size()]), reverses));
 
         final Variable result = getSolverVariable(constraint
-                .getResultVariable());
+                .result());
 
-        for (CSPOMVariable v : constraint.getArguments()) {
+        for (CSPOMVariable<?> v : constraint.getArguments()) {
             addConstraint(new Disjunction(new Variable[] { result,
                     getSolverVariable(v) }, new boolean[] { false, true }));
         }

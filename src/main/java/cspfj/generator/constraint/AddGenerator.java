@@ -30,11 +30,11 @@ public final class AddGenerator extends AbstractGenerator {
         final Variable result;
         final Variable v0;
         final Variable v1;
-        if ("sub".equals(constraint.getDescription())) {
+        if ("sub".equals(constraint.description())) {
             result = getSolverVariable(constraint.getVariable(1));
             v0 = getSolverVariable(constraint.getVariable(0));
             v1 = getSolverVariable(constraint.getVariable(2));
-        } else if ("add".equals(constraint.getDescription())) {
+        } else if ("add".equals(constraint.description())) {
             result = getSolverVariable(constraint.getVariable(0));
             v0 = getSolverVariable(constraint.getVariable(1));
             v1 = getSolverVariable(constraint.getVariable(2));

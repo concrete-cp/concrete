@@ -1,6 +1,5 @@
 package cspfj.generator;
 
-import java.util.Collection;
 import java.util.Deque;
 import java.util.LinkedList;
 
@@ -29,8 +28,8 @@ public final class ProblemGenerator {
 
         final Problem problem = new Problem();
 
-        for (CSPOMVariable v : cspom.getVariables()) {
-            problem.addVariable(v.getName(), generateDomain(v.getDomain()));
+        for (CSPOMVariable<?> v : cspom.getVariables()) {
+            problem.addVariable(v.name(), generateDomain(v.domain()));
         }
 
         final GeneratorManager gm = new GeneratorManager(problem);
@@ -71,6 +70,6 @@ public final class ProblemGenerator {
             return new cspfj.problem.BooleanDomain();
         }
         return new BitVectorDomain(
-                Ints.toArray((Collection<Integer>) cspomDomain.getValues()));
+                Ints.toArray(((CSPOMDomain<Integer>) cspomDomain).getValues()));
     }
 }

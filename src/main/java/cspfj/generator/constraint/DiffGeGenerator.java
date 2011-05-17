@@ -47,8 +47,7 @@ public final class DiffGeGenerator extends AbstractGenerator {
         final Variable v0;
         final Variable v1;
         final Variable bound;
-        Preconditions.checkArgument(
-                "diffGe".equals(constraint.getDescription()),
+        Preconditions.checkArgument("diffGe".equals(constraint.description()),
                 "Cannot handle %s", constraint);
 
         v0 = getSolverVariable(constraint.getVariable(0));
@@ -68,8 +67,7 @@ public final class DiffGeGenerator extends AbstractGenerator {
         final Variable v0;
         final Variable v1;
         final Variable bound;
-        Preconditions.checkArgument(
-                "diffGe".equals(constraint.getDescription()),
+        Preconditions.checkArgument("diffGe".equals(constraint.description()),
                 "Cannot handle %s", constraint);
 
         v0 = getSolverVariable(constraint.getVariable(1));
@@ -81,8 +79,7 @@ public final class DiffGeGenerator extends AbstractGenerator {
             return null;
         }
 
-        final Variable result = getSolverVariable(constraint
-                .getResultVariable());
+        final Variable result = getSolverVariable(constraint.result());
         booleanDomain(result);
         return new ReifiedConstraint(result, new Gt(v0, -bound.getValue(0), v1,
                 false), new Gt(v1, bound.getValue(0), v0, true));
