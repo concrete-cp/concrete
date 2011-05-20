@@ -17,7 +17,8 @@ public final class VariableTest {
 
     @Before
     public void setup() throws FailedGenerationException {
-        variable = new Variable("V0", new BitVectorDomain(1, 2, 3, 4, 5));
+        variable = new Variable("V0", new BitVectorDomain(new int[] { 1, 2, 3,
+                4, 5 }));
     }
 
     @Test
@@ -90,18 +91,18 @@ public final class VariableTest {
         final Problem problem = new Problem();
 
         final Variable variable = problem.addVariable("V1",
-                new BitVectorDomain(1, 2, 3, 4, 5, 6));
+                new BitVectorDomain(new int[] { 1, 2, 3, 4, 5, 6 }));
         problem.prepare();
 
         variable.remove(0);
         variable.remove(1);
-        assertArrayEquals(new int[] { 2, 3, 4, 5 }, variable
-                .getCurrentIndexes());
+        assertArrayEquals(new int[] { 2, 3, 4, 5 },
+                variable.getCurrentIndexes());
         variable.setLevel(1);
         variable.setSingle(2);
         variable.restoreLevel(0);
-        assertArrayEquals(new int[] { 2, 3, 4, 5 }, variable
-                .getCurrentIndexes());
+        assertArrayEquals(new int[] { 2, 3, 4, 5 },
+                variable.getCurrentIndexes());
     }
 
     @Test
@@ -120,11 +121,11 @@ public final class VariableTest {
 
     @Test
     public void testGetCurrentIndexes() {
-        assertArrayEquals(new int[] { 0, 1, 2, 3, 4 }, variable
-                .getCurrentIndexes());
+        assertArrayEquals(new int[] { 0, 1, 2, 3, 4 },
+                variable.getCurrentIndexes());
         variable.remove(1);
-        assertArrayEquals(new int[] { 0, 2, 3, 4 }, variable
-                .getCurrentIndexes());
+        assertArrayEquals(new int[] { 0, 2, 3, 4 },
+                variable.getCurrentIndexes());
     }
 
     @Test
