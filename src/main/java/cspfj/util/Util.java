@@ -6,7 +6,7 @@ import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
 
-public class Util {
+public final class Util {
     private Util() {
     }
 
