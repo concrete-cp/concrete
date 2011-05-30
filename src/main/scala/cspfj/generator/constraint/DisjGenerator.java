@@ -50,7 +50,7 @@ public final class DisjGenerator extends AbstractGenerator {
         final Variable result = getSolverVariable(constraint
                 .result());
 
-        for (CSPOMVariable<?> v : constraint.getArguments()) {
+        for (CSPOMVariable v : constraint.arguments()) {
             addConstraint(new Disjunction(new Variable[] { result,
                     getSolverVariable(v) }, new boolean[] { false, true }));
         }

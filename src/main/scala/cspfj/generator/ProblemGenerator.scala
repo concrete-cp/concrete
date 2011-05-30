@@ -58,6 +58,6 @@ object ProblemGenerator {
         new cspfj.problem.BooleanDomain();
       }
     case _ =>
-      new BitVectorDomain(cspomDomain.asInstanceOf[CSPOMDomain[Int]].values.toArray);
+      new BitVectorDomain(cspomDomain.asInstanceOf[CSPOMDomain[Int]].values: _*);
   }
 }
