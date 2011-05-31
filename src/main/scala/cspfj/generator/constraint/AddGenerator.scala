@@ -27,17 +27,17 @@ final class AddGenerator(problem: Problem) extends AbstractGenerator(problem) {
       case Seq() => true;
       case Seq(nullVariable) => {
         if (nullVariable == result) {
-          val values = SortedSet[Int]() ++ (for (i <- v0.getDomain.allValues; j <- v1.getDomain.allValues) yield i + j);
+          val values = AbstractGenerator.makeDomain(for (i <- v0.getDomain.allValues; j <- v1.getDomain.allValues) yield i + j);
 
-          result.setDomain(new BitVectorDomain(values.toSeq: _*));
+          result.setDomain(new BitVectorDomain(values));
 
         } else if (nullVariable == v0) {
 
-          v0.setDomain(new BitVectorDomain(generateValues(result, v1): _*));
+          v0.setDomain(new BitVectorDomain(generateValues(result, v1)));
 
         } else if (nullVariable == v1) {
 
-          v1.setDomain(new BitVectorDomain(generateValues(result, v0): _*));
+          v1.setDomain(new BitVectorDomain(generateValues(result, v0)));
 
         } else {
 
@@ -66,6 +66,6 @@ final class AddGenerator(problem: Problem) extends AbstractGenerator(problem) {
   }
 
   def generateValues(result: Variable, variable: Variable) =
-    (SortedSet[Int]() ++ (for (i <- result.getDomain.allValues; j <- result.getDomain.allValues) yield i - j)).toSeq
+    AbstractGenerator.makeDomain(for (i <- result.getDomain.allValues; j <- result.getDomain.allValues) yield i - j)
 
 }

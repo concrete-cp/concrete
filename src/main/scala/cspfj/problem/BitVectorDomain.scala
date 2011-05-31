@@ -21,14 +21,15 @@ final class BitVectorDomain(
 
   override def size = _size
 
-  def this(dom: IndexedSeq[Int]) = {
-    this(dom, BitVector.newBitVector(dom.size, true), new Array[BitVector](BitVectorDomain.HISTORY_INCREMENT), new Array[Int](BitVectorDomain.HISTORY_INCREMENT))
+  def this(dom: Seq[Int]) = {
+    this(dom.toIndexedSeq, BitVector.newBitVector(dom.size, true), new Array[BitVector](BitVectorDomain.HISTORY_INCREMENT), new Array[Int](BitVectorDomain.HISTORY_INCREMENT))
     require(dom.sliding(2).foldLeft(true)((test, v) => test && v(0) < v(1)),
       "Only ordered domains are supported");
   }
+  
 
   def this(dom: Int*) = {
-    this(dom.toIndexedSeq);
+    this(dom.toSeq);
   }
 
   def this(copy: BitVectorDomain) = {
