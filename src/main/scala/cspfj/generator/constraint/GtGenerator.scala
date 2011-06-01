@@ -16,7 +16,7 @@ final class GtGenerator(problem: Problem) extends AbstractGenerator(problem) {
     require(constraint.scope.size == 2,
       "Comparison constraints must have exactly two arguments");
     
-    val solverVariables = constraint.scope map getSolverVariable;
+    val solverVariables = constraint.scope map cspom2cspfj;
 
     if (solverVariables.exists(_.getDomain == null)) {
       null
@@ -38,14 +38,14 @@ final class GtGenerator(problem: Problem) extends AbstractGenerator(problem) {
     require(constraint.arguments.size == 2,
       "Comparison constraints must have exactly two arguments");
 
-    val arguments = constraint.arguments map getSolverVariable
+    val arguments = constraint.arguments map cspom2cspfj
 
     if (arguments exists (_.getDomain == null)) {
       null
     } else {
 
-      val result = getSolverVariable(constraint.result);
-      booleanDomain(result);
+      val result = cspom2cspfj(constraint.result);
+      AbstractGenerator.booleanDomain(result);
 
       constraint.description match {
         case "gt" =>

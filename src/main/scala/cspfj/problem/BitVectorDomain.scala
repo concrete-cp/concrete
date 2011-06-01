@@ -18,18 +18,13 @@ final class BitVectorDomain(
   private var _size = domain.size;
   private var _last = size - 1;
   private var currentLevel = 0;
-
+  val HISTORY_INCREMENT = 10
   override def size = _size
 
-  def this(dom: Seq[Int]) = {
+  def this(dom: Int*) = {
     this(dom.toIndexedSeq, BitVector.newBitVector(dom.size, true), new Array[BitVector](BitVectorDomain.HISTORY_INCREMENT), new Array[Int](BitVectorDomain.HISTORY_INCREMENT))
     require(dom.sliding(2).foldLeft(true)((test, v) => test && v(0) < v(1)),
       "Only ordered domains are supported");
-  }
-  
-
-  def this(dom: Int*) = {
-    this(dom.toSeq);
   }
 
   def this(copy: BitVectorDomain) = {
@@ -42,7 +37,7 @@ final class BitVectorDomain(
   override def first = bvDomain.nextSetBit(0);
 
   override def last = {
-    assert(_last == bvDomain.prevSetBit(domain.size), "Recorded " + last
+    assert(_last == bvDomain.prevSetBit(domain.size), "Recorded " + _last
       + ", should be " + bvDomain.prevSetBit(domain.size)
       + " given current domain " + toString());
     _last;
@@ -122,10 +117,10 @@ final class BitVectorDomain(
     assert(present(index));
     _size -= 1;
     bvDomain.clear(index);
-    if (index == last) {
+    if (index == _last) {
       _last = bvDomain.prevSetBit(index);
     }
-    assert(last == bvDomain.prevSetBit(domain.length), "Recorded " + last
+    assert(_last == bvDomain.prevSetBit(domain.length), "Recorded " + _last
       + ", should be " + bvDomain.prevSetBit(domain.length)
       + " given current domain " + toString());
 

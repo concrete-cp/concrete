@@ -7,7 +7,7 @@ import cspom.constraint.CSPOMConstraint
 import cspom.variable.CSPOMVariable
 
 abstract class AbstractGenerator(val problem: Problem) {
-  def getSolverVariable(variable: CSPOMVariable) = problem.getVariable(variable.name);
+  def cspom2cspfj(variable: CSPOMVariable) = problem.getVariable(variable.name);
 
   def addConstraint(constraint: Constraint) = problem.addConstraint(constraint)
 
@@ -38,9 +38,14 @@ object AbstractGenerator {
     }
 
   def cartesianS[A, B, C](s0: Seq[A], s1: Seq[B], f: (A, B) => C) =
-    for (i <- s0; j <- s1) yield f(i, j)
+    for {
+      i <- s0
+      j <- s1
+    } yield f(i, j)
 
   def cartesian[A](v0: Variable, v1: Variable, f: (Int, Int) => A) =
     cartesianS(v0.getDomain.allValues, v1.getDomain.allValues, f)
 
+  def domainFrom(v0: Variable, v1: Variable, f: (Int, Int) => Int) =
+    makeDomain(cartesian(v0, v1, f))
 }

@@ -43,8 +43,8 @@ final class MatrixManager2DTest {
 
   @Test
   def testCheck() {
-    tuple = Array(0, 1);
-    assertFalse(tuple.toString + " should be false", matrix.check());
+    Seq(0, 1).copyToArray(tuple);
+    assertFalse(tuple.toList + " should be false", matrix.check());
     tuple(1) = 2;
     assertTrue(tuple.toString + " should be true", matrix.check());
   }

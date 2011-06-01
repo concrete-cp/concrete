@@ -1,10 +1,5 @@
 package cspfj.generator.constraint;
 
-import java.util.List;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import cspfj.constraint.Constraint;
 import cspfj.constraint.semantic.Eq;
@@ -23,7 +18,7 @@ final class NeqGenerator(problem: Problem) extends AbstractGenerator(problem) {
     require(constraint.arity == 2,
       "Comparison constraints must have exactly two arguments");
 
-    val scope = constraint.scope map getSolverVariable
+    val scope = constraint.scope map cspom2cspfj
 
     if (scope exists { _.getDomain == null }) {
       null
@@ -36,14 +31,14 @@ final class NeqGenerator(problem: Problem) extends AbstractGenerator(problem) {
     require(constraint.arguments.size == 2,
       "Comparison constraints must have exactly two arguments");
 
-    val arguments = constraint.arguments map getSolverVariable
+    val arguments = constraint.arguments map cspom2cspfj
 
     if (arguments exists { _.getDomain == null }) {
       null
     } else {
 
-      val result = getSolverVariable(constraint.result);
-      booleanDomain(result);
+      val result = cspom2cspfj(constraint.result);
+      AbstractGenerator.booleanDomain(result);
       new ReifiedConstraint(result, new Neq(arguments(0),
         arguments(1)), new Eq(arguments(0), arguments(1)));
     }

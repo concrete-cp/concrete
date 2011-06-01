@@ -1,17 +1,9 @@
 package cspfj.generator.constraint;
 
-import com.google.common.collect.ImmutableList
-import com.google.common.collect.Iterables
-import com.google.common.primitives.Ints
+import cspfj.constraint.semantic.{Eq, Add}
 import cspfj.constraint.Constraint
-import cspfj.constraint.semantic.Add
-import cspfj.constraint.semantic.Eq
-import cspfj.exception.FailedGenerationException
-import cspfj.problem.BitVectorDomain
-import cspfj.problem.Problem
-import cspfj.problem.Variable
-import cspom.constraint.CSPOMConstraint;
-import scala.collection.immutable.SortedSet
+import cspfj.problem.{Variable, Problem, BitVectorDomain}
+import cspom.constraint.CSPOMConstraint
 
 final class AddGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
@@ -21,23 +13,23 @@ final class AddGenerator(problem: Problem) extends AbstractGenerator(problem) {
       case "sub" => Seq(constraint.scope(1), constraint.scope(0), constraint.getVariable(2))
       case "add" => constraint.scope
       case _ => throw new IllegalArgumentException("Cannot handle " + constraint)
-    }) map getSolverVariable
+    }) map cspom2cspfj
 
     if (Seq(result, v0, v1) filter { _.getDomain == null } match {
       case Seq() => true;
       case Seq(nullVariable) => {
         if (nullVariable == result) {
-          val values = AbstractGenerator.makeDomain(for (i <- v0.getDomain.allValues; j <- v1.getDomain.allValues) yield i + j);
+          val values = AbstractGenerator.domainFrom(v0, v1, { _ + _ });
 
-          result.setDomain(new BitVectorDomain(values));
+          result.setDomain(new BitVectorDomain(values: _*));
 
         } else if (nullVariable == v0) {
 
-          v0.setDomain(new BitVectorDomain(generateValues(result, v1)));
+          v0.setDomain(new BitVectorDomain(generateValues(result, v1): _*));
 
         } else if (nullVariable == v1) {
 
-          v1.setDomain(new BitVectorDomain(generateValues(result, v0)));
+          v1.setDomain(new BitVectorDomain(generateValues(result, v0): _*));
 
         } else {
 
@@ -66,6 +58,6 @@ final class AddGenerator(problem: Problem) extends AbstractGenerator(problem) {
   }
 
   def generateValues(result: Variable, variable: Variable) =
-    AbstractGenerator.makeDomain(for (i <- result.getDomain.allValues; j <- result.getDomain.allValues) yield i - j)
+    AbstractGenerator.domainFrom(result, variable, { _ - _ })
 
 }

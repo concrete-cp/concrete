@@ -1,38 +1,25 @@
 package cspfj.generator.constraint;
 
-import com.google.common.base.Function
-import com.google.common.base.Objects
-import com.google.common.collect.Iterables
-import com.google.common.collect.Lists
-import com.google.common.collect.Maps
-import com.google.common.primitives.Ints
-import cspfj.constraint.extension.ExtensionConstraints
-import cspfj.constraint.extension.Matrix
-import cspfj.constraint.extension.Matrix2D
-import cspfj.constraint.extension.MatrixGeneral
-import cspfj.constraint.extension.TupleSet
-import cspfj.exception.FailedGenerationException
-import cspfj.problem.Domain
-import cspfj.problem.Problem
-import cspfj.problem.Variable
+import cspfj.constraint.extension.{TupleSet, MatrixGeneral, Matrix2D, Matrix, ExtensionConstraints}
+import cspfj.problem.{Variable, Problem, Domain}
 import cspom.constraint.CSPOMConstraint
-import cspom.xcsp.Extension
+import cspom.extension.Relation
 import scala.collection.JavaConversions
 
-final case class Signature(domains: Seq[Domain], extension: Extension)
+final case class Signature(domains: Seq[Domain], relation: Relation, init: Boolean)
 
 final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
   var generated: Map[Signature, Matrix] = Map.empty
 
-  private def generate(variables: Seq[Variable], extension: Extension) = {
+  private def generate(variables: Seq[Variable], relation: Relation, init: Boolean) = {
     val domains = variables map (_.getDomain)
 
-    val signature = Signature(domains, extension);
+    val signature = Signature(domains, relation, init);
     generated.get(signature) match {
       case None => {
-        val matrix = ExtensionGenerator.bestMatrix(extension, domains map (_.size))
-        ExtensionGenerator.fillMatrix(domains, extension, matrix)
+        val matrix = ExtensionGenerator.bestMatrix(relation, init, domains map (_.size))
+        ExtensionGenerator.fillMatrix(domains, relation, init, matrix)
         generated += signature -> matrix
         matrix
       }
@@ -44,12 +31,13 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
   def generate(constraint: CSPOMConstraint) = {
     require(constraint.isInstanceOf[cspom.extension.ExtensionConstraint])
 
-    val solverVariables = constraint.scope map getSolverVariable
+    val solverVariables = constraint.scope map cspom2cspfj
 
     if (solverVariables exists (_.getDomain == null)) {
       false
     } else {
-      val matrix = generate(solverVariables, constraint.asInstanceOf[cspom.extension.ExtensionConstraint].extension);
+      val extensionConstraint = constraint.asInstanceOf[cspom.extension.ExtensionConstraint]
+      val matrix = generate(solverVariables, extensionConstraint.relation, extensionConstraint.init);
 
       addConstraint(ExtensionConstraints.newExtensionConstraint(matrix, solverVariables: _*));
       true;
@@ -65,17 +53,17 @@ object ExtensionGenerator {
     size > Int.MaxValue || size > (TIGHTNESS_LIMIT * nbTuples)
   }
 
-  def bestMatrix(extension: Extension, sizes: Seq[Int]) = {
-    if (extension.relation.arity == 2) {
-      new Matrix2D(sizes(0), sizes(1), extension.init);
-    } else if (!extension.init && tupleSetBetterThanMatrix(sizes, extension.relation.size)) {
-      new TupleSet(extension.relation.size, extension.init);
+  def bestMatrix(relation: Relation, init: Boolean, sizes: Seq[Int]) = {
+    if (relation.arity == 2) {
+      new Matrix2D(sizes(0), sizes(1), init);
+    } else if (!init && tupleSetBetterThanMatrix(sizes, relation.size)) {
+      new TupleSet(relation.size, init);
     } else {
-      new MatrixGeneral(sizes.toArray, extension.init);
+      new MatrixGeneral(sizes.toArray, init);
     }
   }
 
-  def fillMatrix(domains: Seq[Domain], extension: Extension, matrix: Matrix) {
+  def fillMatrix(domains: Seq[Domain], relation: Relation, init: Boolean, matrix: Matrix) {
 
     val indices = domains map (d =>
       JavaConversions.asScalaIterator(d.iterator) map (i => i -> d.value(i)) toMap);
@@ -95,9 +83,9 @@ object ExtensionGenerator {
     //                    }
     //                });
 
-    for (values <- extension.relation.asInstanceOf[Set[Seq[Int]]]) {
+    for (values <- relation.asInstanceOf[Set[Seq[Int]]]) {
       val tuple = indices.zip(values).map(t => t._1(t._2)).toArray
-      matrix.set(tuple, !extension.init)
+      matrix.set(tuple, !init)
     }
     //
     //        for (Number[] values : extension.getTuples()) {

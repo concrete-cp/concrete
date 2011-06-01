@@ -8,7 +8,7 @@ import scala.collection.immutable.SortedSet
 final class AbsGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
   def generate(constraint: CSPOMConstraint) = {
-    val Seq(result, v0) = constraint.scope map getSolverVariable
+    val Seq(result, v0) = constraint.scope map cspom2cspfj
 
     if (Seq(result, v0) filter (_.getDomain == null) match {
       case Seq() => true
@@ -16,12 +16,12 @@ final class AbsGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
         val values = result.getDomain.allValues
 
-        v.setDomain(new BitVectorDomain(AbstractGenerator.makeDomain(values ++ values.map(-_))));
+        v.setDomain(new BitVectorDomain(AbstractGenerator.makeDomain(values ++ values.map(-_)): _*));
         true;
       }
       case Seq(v) if v == result => {
         val values = AbstractGenerator.makeDomain(result.getDomain.allValues.map(math.abs))
-        v.setDomain(new BitVectorDomain(values));
+        v.setDomain(new BitVectorDomain(values: _*));
         true;
       }
       case _ => false

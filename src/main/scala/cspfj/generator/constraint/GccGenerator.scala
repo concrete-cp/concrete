@@ -1,23 +1,15 @@
 package cspfj.generator.constraint;
 
-import java.util.List;
-
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
-import cspfj.constraint.semantic.Gcc;
-import cspfj.constraint.semantic.Gcc.Bounds;
-import cspfj.exception.FailedGenerationException;
-import cspfj.problem.Problem;
-import cspfj.problem.Variable;
-import cspom.constraint.CSPOMConstraint;
-import cspom.constraint.GeneralConstraint;
+import cspfj.constraint.semantic.Gcc.Bounds
+import cspfj.constraint.semantic.Gcc
+import cspfj.problem.{Variable, Problem}
+import cspom.constraint.{GeneralConstraint, CSPOMConstraint}
 
 final class GccGenerator(problem: Problem) extends AbstractGenerator(problem) {
   def generate(constraint: CSPOMConstraint) = {
     require(constraint.isInstanceOf[GeneralConstraint])
 
-    val scope = constraint.scope map getSolverVariable
+    val scope = constraint.scope map cspom2cspfj
 
     if (scope exists (_.getDomain == null)) {
       false
@@ -28,7 +20,7 @@ final class GccGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
       val bounds = params.grouped(3) map (p => new Bounds(p(0).toInt, p(1).toInt, p(2).toInt))
 
-      addConstraint(new Gcc(scope, bounds));
+      addConstraint(new Gcc(scope.toArray, bounds.toArray));
       true;
     }
 

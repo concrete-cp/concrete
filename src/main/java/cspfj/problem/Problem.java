@@ -217,7 +217,7 @@ public final class Problem {
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         Joiner.on('\n').appendTo(sb, variables.values());
-
+        sb.append('\n');
         int entailed = 0;
         for (Constraint c : constraints) {
             if (c.isEntailed()) {
