@@ -23,7 +23,7 @@ final class BitVectorDomain(
 
   def this(dom: Int*) = {
     this(dom.toIndexedSeq, BitVector.newBitVector(dom.size, true), new Array[BitVector](BitVectorDomain.HISTORY_INCREMENT), new Array[Int](BitVectorDomain.HISTORY_INCREMENT))
-    require(dom.sliding(2).foldLeft(true)((test, v) => test && v(0) < v(1)),
+    require(dom.size == 1 || dom.sliding(2).forall(v => v(0) < v(1)),
       "Only ordered domains are supported");
   }
 
@@ -32,7 +32,10 @@ final class BitVectorDomain(
 
   }
 
-  override def index(value: Int) = indices(value)
+  override def index(value: Int) = indices.get(value) match {
+    case Some(v) => v
+    case None => -1
+  }
 
   override def first = bvDomain.nextSetBit(0);
 

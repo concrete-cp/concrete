@@ -1,8 +1,8 @@
 package cspfj.generator.constraint;
 
-import cspfj.constraint.semantic.{Eq, Add}
+import cspfj.constraint.semantic.{ Eq, Add }
 import cspfj.constraint.Constraint
-import cspfj.problem.{Variable, Problem, BitVectorDomain}
+import cspfj.problem.{ Variable, Problem, BitVectorDomain }
 import cspom.constraint.CSPOMConstraint
 
 final class AddGenerator(problem: Problem) extends AbstractGenerator(problem) {
@@ -51,10 +51,11 @@ final class AddGenerator(problem: Problem) extends AbstractGenerator(problem) {
         } else {
           new Add(result, v0, v1);
         });
-      true;
+      true
 
+    } else {
+      false
     }
-    false
   }
 
   def generateValues(result: Variable, variable: Variable) =

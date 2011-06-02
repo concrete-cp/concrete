@@ -83,8 +83,8 @@ object ExtensionGenerator {
     //                    }
     //                });
 
-    for (values <- relation.asInstanceOf[Set[Seq[Int]]]) {
-      val tuple = indices.zip(values).map(t => t._1(t._2)).toArray
+    for (values <- relation) {
+      val tuple = indices.zip(values).map(t => t._1(t._2.asInstanceOf[Int])).toArray
       matrix.set(tuple, !init)
     }
     //
