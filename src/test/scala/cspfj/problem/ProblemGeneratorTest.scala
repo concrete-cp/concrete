@@ -2,17 +2,20 @@ package cspfj.problem;
 
 import java.io.IOException
 import java.util.logging.Logger
+import java.util.logging.Level.WARNING
 import org.junit.Test
-import cspfj.exception.FailedGenerationException
 import cspfj.filter.AC3Constraint
 import cspfj.generator.ProblemGenerator
+import cspfj.util.Loggable
 import cspom.CSPOM
-import cspom.CSPParseException
 import cspom.compiler.ProblemCompiler;
-import cspom.Loggable
+
+
 
 final class ProblemGeneratorTest extends Loggable {
-
+    
+  setLevel(WARNING)
+  
   @Test
   def zebra() {
     generateTest("zebra.xml");
