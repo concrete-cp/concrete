@@ -188,6 +188,8 @@ public final class MGACIter extends AbstractSolver {
     @Statistic
     public double heuristicCpu;
 
+
+
     @Override
     public Map<String, Integer> nextSolution() {
         try {

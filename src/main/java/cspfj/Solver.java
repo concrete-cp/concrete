@@ -23,18 +23,18 @@ import java.util.Map;
 
 import cspfj.problem.Problem;
 
-public interface Solver {
-	Map<String, Integer> nextSolution();
+public interface Solver extends Iterable<Map<String, Integer>> {
+    Map<String, Integer> nextSolution();
 
-	void setMaxBacktracks(final int maxBacktracks);
+    void setMaxBacktracks(final int maxBacktracks);
 
-	int getMaxBacktracks();
+    int getMaxBacktracks();
 
-	String getXMLConfig();
+    String getXMLConfig();
 
-	Problem getProblem();
+    Problem getProblem();
 
-	void setPreproExp(int time);
+    void setPreproExp(int time);
 
-	void reset();
+    void reset();
 }
