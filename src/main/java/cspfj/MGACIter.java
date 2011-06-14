@@ -27,11 +27,9 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import cspfj.constraint.Constraint;
-import cspfj.exception.FailedGenerationException;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.AC3Constraint;
 import cspfj.filter.Filter;
-import cspfj.generator.ProblemGenerator;
 import cspfj.heuristic.CrossHeuristic;
 import cspfj.heuristic.Heuristic;
 import cspfj.heuristic.Pair;
@@ -41,7 +39,6 @@ import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.Parameter;
 import cspfj.util.Statistic;
-import cspom.CSPOM;
 
 public final class MGACIter extends AbstractSolver {
 
@@ -76,9 +73,9 @@ public final class MGACIter extends AbstractSolver {
 
     private final NoGoodLearner ngl;
 
-    public MGACIter(final CSPOM cspom) throws FailedGenerationException {
-        this(ProblemGenerator.generate(cspom));
-    }
+//    public MGACIter(final CSPOM cspom) throws FailedGenerationException {
+//        this(ProblemGenerator.generate(cspom));
+//    }
 
     public MGACIter(final Problem prob) {
         super(prob);

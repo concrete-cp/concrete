@@ -21,11 +21,9 @@ package cspfj.filter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import cspfj.ParameterManager;
@@ -35,7 +33,6 @@ import cspfj.problem.NoGoodLearner;
 import cspfj.problem.NoGoodLearner.LearnMethod;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
-import cspfj.util.BitVector;
 import cspfj.util.Parameter;
 
 /**

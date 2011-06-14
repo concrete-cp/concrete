@@ -1,7 +1,7 @@
 package cspfj.generator.constraint;
 
-import cspfj.exception.FailedGenerationException;
-import cspfj.problem.Problem;
+import cspfj.exception.FailedGenerationException
+import cspfj.problem.Problem
 import cspom.constraint.CSPOMConstraint;
 
 final class GeneratorManager(val problem: Problem) {
@@ -49,7 +49,8 @@ object GeneratorManager {
     "absdiff" -> classOf[AbsDiffGenerator],
     "diffGe" -> classOf[DiffGeGenerator],
     "lexleq" -> classOf[LexLeqGenerator],
-    "gcc" -> classOf[GccGenerator])
+    "gcc" -> classOf[GccGenerator],
+    "mod" -> classOf[ModGenerator])
 
   def register(entry: (String, Class[_ <: AbstractGenerator])) {
     known += entry
