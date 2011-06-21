@@ -30,7 +30,7 @@ import cspfj.ParameterManager;
 import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
 import cspfj.problem.NoGoodLearner;
-import cspfj.problem.NoGoodLearner.LearnMethod;
+import cspfj.problem.LearnMethod;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.Parameter;
@@ -240,7 +240,7 @@ public final class DC20 implements Filter {
     }
 
     public String toString() {
-        return "DC w/ " + filter + " L " + ngl.getLearnMethod();
+        return "DC w/ " + filter + " L " + ngl.learnMethod();
     }
 
     @Override

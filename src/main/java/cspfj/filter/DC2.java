@@ -26,10 +26,12 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import scala.collection.JavaConversions;
+
 import cspfj.ParameterManager;
 import cspfj.constraint.Constraint;
 import cspfj.problem.NoGoodLearner;
-import cspfj.problem.NoGoodLearner.LearnMethod;
+import cspfj.problem.LearnMethod;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.Parameter;
@@ -180,7 +182,7 @@ public final class DC2 implements Filter {
 
                 // final Map<Variable[], List<int[]>> noGoods =
                 // problem.noGoods();
-                final Set<Constraint> modified = ngl.binNoGoods(variable);
+                final Set<Constraint> modified = JavaConversions.setAsJavaSet(ngl.binNoGoods(variable));
                 if (!modified.isEmpty()) {
                     changedGraph = true;
                     modCons = Arrays.copyOf(modCons, problem.getMaxCId() + 1);
@@ -224,7 +226,7 @@ public final class DC2 implements Filter {
     }
 
     public String toString() {
-        return "DC w/ " + filter + " L " + ngl.getLearnMethod();
+        return "DC w/ " + filter + " L " + ngl.learnMethod();
     }
 
     @Override

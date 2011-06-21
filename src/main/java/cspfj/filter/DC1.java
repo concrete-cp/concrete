@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 import cspfj.ParameterManager;
 import cspfj.StatisticsManager;
 import cspfj.problem.NoGoodLearner;
-import cspfj.problem.NoGoodLearner.LearnMethod;
+import cspfj.problem.LearnMethod;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.Parameter;
@@ -160,6 +160,6 @@ public final class DC1 extends AbstractSAC {
     }
 
     public String toString() {
-        return "DC w/ " + filter + " L " + ngl.getLearnMethod();
+        return "DC w/ " + filter + " L " + ngl.learnMethod();
     }
 }

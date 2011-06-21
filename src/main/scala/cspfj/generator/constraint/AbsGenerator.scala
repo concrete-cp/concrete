@@ -13,15 +13,12 @@ final class AbsGenerator(problem: Problem) extends AbstractGenerator(problem) {
     if (Seq(result, v0) filter (_.getDomain == null) match {
       case Seq() => true
       case Seq(v) if v == v0 => {
-
         val values = result.getDomain.allValues
-
         v.setDomain(new BitVectorDomain(AbstractGenerator.makeDomain(values ++ values.map(-_)): _*));
         true;
       }
       case Seq(v) if v == result => {
-        val values = AbstractGenerator.makeDomain(result.getDomain.allValues.map(math.abs))
-        v.setDomain(new BitVectorDomain(values: _*));
+        v.setDomain(new BitVectorDomain(AbstractGenerator.makeDomain(v0.getDomain.allValues.map(math.abs)): _*));
         true;
       }
       case _ => false

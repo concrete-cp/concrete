@@ -1,7 +1,7 @@
 package cspfj.generator.constraint;
 
-import cspfj.constraint.extension.{TupleSet, MatrixGeneral, Matrix2D, Matrix, ExtensionConstraints}
-import cspfj.problem.{Variable, Problem, Domain}
+import cspfj.constraint.extension.{ TupleSet, MatrixGeneral, Matrix2D, Matrix, ExtensionConstraints }
+import cspfj.problem.{ Variable, Problem, Domain }
 import cspom.constraint.CSPOMConstraint
 import cspom.extension.Relation
 import scala.collection.JavaConversions
@@ -47,7 +47,7 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
 
 object ExtensionGenerator {
   val TIGHTNESS_LIMIT = 4;
-  
+
   def tupleSetBetterThanMatrix(sizes: Seq[Int], nbTuples: Int) = {
     val size = sizes.foldLeft(BigInt(1))(_ * _)
     size > Int.MaxValue || size > (TIGHTNESS_LIMIT * nbTuples)
@@ -66,7 +66,7 @@ object ExtensionGenerator {
   def fillMatrix(domains: Seq[Domain], relation: Relation, init: Boolean, matrix: Matrix) {
 
     val indices = domains map (d =>
-      JavaConversions.asScalaIterator(d.iterator) map (i => i -> d.value(i)) toMap);
+      JavaConversions.iterableAsScalaIterable(d) map (i => d.value(i) -> i.toInt) toMap);
 
     //        final int[] tuple = new int[domains.size()];
     //        final List<Map<Number, Integer>> indexes = Lists.transform(domains,
@@ -83,9 +83,11 @@ object ExtensionGenerator {
     //                    }
     //                });
 
-    for (values <- relation) {
-      val tuple = indices.zip(values).map(t => t._1(t._2.asInstanceOf[Int])).toArray
-      matrix.set(tuple, !init)
+    for (values <- relation map { _.asInstanceOf[Seq[Int]] }) {
+      assume(values.size == indices.size)
+      val tuple = values.zip(indices).map(t => t._2(t._1))
+      assume(tuple.size == domains.size)
+      matrix.set(tuple.toArray, !init)
     }
     //
     //        for (Number[] values : extension.getTuples()) {

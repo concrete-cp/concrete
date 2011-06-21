@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import scala.collection.JavaConversions;
+
 import cspfj.constraint.Constraint;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.AC3Constraint;
@@ -34,7 +36,7 @@ import cspfj.heuristic.CrossHeuristic;
 import cspfj.heuristic.Heuristic;
 import cspfj.heuristic.Pair;
 import cspfj.problem.NoGoodLearner;
-import cspfj.problem.NoGoodLearner.LearnMethod;
+import cspfj.problem.LearnMethod;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.Parameter;
@@ -73,9 +75,9 @@ public final class MGACIter extends AbstractSolver {
 
     private final NoGoodLearner ngl;
 
-//    public MGACIter(final CSPOM cspom) throws FailedGenerationException {
-//        this(ProblemGenerator.generate(cspom));
-//    }
+    // public MGACIter(final CSPOM cspom) throws FailedGenerationException {
+    // this(ProblemGenerator.generate(cspom));
+    // }
 
     public MGACIter(final Problem prob) {
         super(prob);
@@ -185,8 +187,6 @@ public final class MGACIter extends AbstractSolver {
     @Statistic
     public double heuristicCpu;
 
-
-
     @Override
     public Map<String, Integer> nextSolution() {
         try {
@@ -248,7 +248,8 @@ public final class MGACIter extends AbstractSolver {
                 firstSolutionGiven = true;
                 return solution;
             } catch (MaxBacktracksExceededException e) {
-                final Set<Constraint> modified = ngl.noGoods(decisions);
+                final Set<Constraint> modified = JavaConversions
+                        .setAsJavaSet(ngl.noGoods(decisions));
                 problem.reset();
                 decisions.clear();
 
