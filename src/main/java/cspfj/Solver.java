@@ -23,7 +23,7 @@ import java.util.Map;
 
 import cspfj.problem.Problem;
 
-public interface Solver extends Iterable<Map<String, Integer>> {
+public interface Solver {
     Map<String, Integer> nextSolution();
 
     void setMaxBacktracks(final int maxBacktracks);

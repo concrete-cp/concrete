@@ -23,6 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Timer;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -214,30 +215,7 @@ public abstract class AbstractSolver implements Solver {
 
     }
 
-    public Iterator<Map<String, Integer>> iterator() {
-        return new Iterator<Map<String, Integer>>() {
-            Map<String, Integer> current = nextSolution();
-
-            @Override
-            public boolean hasNext() {
-
-                return current != null;
-            }
-
-            @Override
-            public Map<String, Integer> next() {
-                final Map<String, Integer> returned = current;
-                current = nextSolution();
-                return returned;
-            }
-
-            @Override
-            public void remove() {
-                throw new UnsupportedOperationException();
-            }
-
-        };
-    }
+ 
 
     @Statistic
     public int preproRemoved;

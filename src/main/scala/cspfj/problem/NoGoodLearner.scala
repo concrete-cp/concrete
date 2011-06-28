@@ -1,13 +1,12 @@
 package cspfj.problem;
 
-import cspfj.constraint.extension.{ExtensionConstraint2D, ExtensionConstraintGeneral}
-import cspfj.constraint.extension.{Matrix2D, TupleSet}
-import cspfj.constraint.{Constraint, DynamicConstraint}
+import cspfj.constraint.extension.{ ExtensionConstraint2D, ExtensionConstraintGeneral }
+import cspfj.constraint.extension.{ Matrix2D, TupleSet }
+import cspfj.constraint.{ Constraint, DynamicConstraint }
 import cspfj.heuristic.Pair
-import cspfj.util.{BitVector, Statistic}
+import cspfj.util.{ BitVector, Statistic }
 import java.util.Deque
 import scala.collection.JavaConversions
-import scala.util.control.Breaks._
 
 final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMethod) {
 
@@ -27,58 +26,53 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
 
     var futureVariables = problem.getVariables.toSet;
 
-    var currentScope: List[Variable] = Nil;
-    var level = 0;
+    var currentScope: Vector[Variable] = Vector.empty;
+    var level = 1;
 
-    breakable {
-      while (!decisions.isEmpty()) {
-        level += 1;
-        if (level >= problem.getMaxArity && learnMethod != LearnMethod.EXT) {
-          break;
-        }
-        /*
+    while (!decisions.isEmpty() && (level < problem.getMaxArity || learnMethod == LearnMethod.EXT)) {
+      /*
              * Decisions are stacked, so the first decision in the search tree
              * is actually the last in the stack.
              */
-        val lastDecision = decisions.pollLast();
-        tuple :+= lastDecision.getIndex;
-        currentScope ::= lastDecision.getVariable;
-        futureVariables -= lastDecision.getVariable;
+      val lastDecision = decisions.pollLast();
+      tuple :+= lastDecision.getIndex;
+      currentScope :+= lastDecision.getVariable;
+      futureVariables -= lastDecision.getVariable;
 
-        for (fv <- futureVariables) {
+      for (fv <- futureVariables) {
 
-          // logger.fine("checking " +
-          // getVariable(levelVariables[level-1]));
+        // logger.fine("checking " +
+        // getVariable(levelVariables[level-1]));
 
-          val changes = fv.getDomain.getAtLevel(level - 1).xor(fv.getDomain.getAtLevel(level));
-          if (!changes.isEmpty) {
+        val changes = fv.getDomain.getAtLevel(level - 1).xor(fv.getDomain.getAtLevel(level));
+        if (!changes.isEmpty) {
 
-            val completeScope = fv :: currentScope
+          val completeScope = currentScope :+ fv
 
-            val constraint = learnConstraint(completeScope);
+          val constraint = learnConstraint(completeScope);
 
-            if (constraint != null) {
-              val (base, varPos) = NoGoodLearner.makeBase(completeScope, tuple, constraint);
+          if (constraint != null) {
+            val (base, varPos) = NoGoodLearner.makeBase(completeScope, tuple, constraint);
 
-              var newNogoods = 0;
-              var i = changes.nextSetBit(0);
-              while (i >= 0) {
-                base(varPos) = i;
-                newNogoods += constraint.removeTuples(base);
-                i = changes.nextSetBit(i + 1)
-              }
-              if (newNogoods > 0) {
-                nbNoGoods += newNogoods;
-                modifiedConstraints += constraint;
-                if (constraint.getId() > problem.getMaxCId()) {
-                  // LOGGER.info("Added " + constraint);
-                  addedConstraints ::= constraint;
-                }
+            var newNogoods = 0;
+            var i = changes.nextSetBit(0);
+            while (i >= 0) {
+              base(varPos) = i;
+              newNogoods += constraint.removeTuples(base);
+              i = changes.nextSetBit(i + 1)
+            }
+            if (newNogoods > 0) {
+              nbNoGoods += newNogoods;
+              modifiedConstraints += constraint;
+              if (constraint.getId() > problem.getMaxCId()) {
+                // LOGGER.info("Added " + constraint);
+                addedConstraints ::= constraint;
               }
             }
           }
         }
       }
+      level += 1;
     }
 
     if (!addedConstraints.isEmpty) {
@@ -118,8 +112,7 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
           while (i >= 0) {
             base(varPos) = i;
             newNogoods += constraint.removeTuples(base);
-            i = changes
-              .nextSetBit(i + 1)
+            i = changes.nextSetBit(i + 1)
           }
           if (newNogoods > 0) {
             nbNoGoods += newNogoods;
@@ -171,8 +164,8 @@ object NoGoodLearner {
    * Sets the base array given as a parameter so that the values of base
    * correspond to the values of the values array reordered such that they
    * correspond to the variables of the scope of the constraint. Variables
-   * present in the scope of the constraint but not in the scope[] array
-   * result in a 0 value in the base[] array. Last variable of scope[] is
+   * present in the scope of the constraint but not in the scope sequence
+   * result in a 0 value in the base array. Last variable of scope is
    * ignored. Returns the position of the last variable of scope[] in the
    * constraint's scope.
    *
@@ -188,7 +181,7 @@ object NoGoodLearner {
 
     val base = new Array[Int](constraint.getArity)
 
-    scope.zipWithIndex.foreach { z =>
+    scope.init.zipWithIndex.foreach { z =>
       base(constraint.getPosition(z._1)) = values(z._2)
     }
 

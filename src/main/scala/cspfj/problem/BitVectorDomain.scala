@@ -12,7 +12,7 @@ final class BitVectorDomain(
   val domain: IndexedSeq[Int],
   val bvDomain: BitVector,
   var bvHistory: Array[BitVector],
-  var dsHistory: Array[Int]) extends AbstractDomain with Cloneable {
+  var dsHistory: Array[Int]) extends Domain with Cloneable {
 
   private val indices = domain.indices.map(i => domain(i) -> i).toMap
   private var _size = domain.size;
@@ -46,13 +46,13 @@ final class BitVectorDomain(
     _last;
   }
 
-  override def lastAbsent() = bvDomain.prevClearBit(domain.size);
+  //override def lastAbsent() = bvDomain.prevClearBit(domain.size);
 
   override def next(i: Int) = bvDomain.nextSetBit(i + 1);
 
   override def prev(i: Int) = bvDomain.prevSetBit(i);
 
-  override def prevAbsent(i: Int) = bvDomain.prevClearBit(i);
+  //override def prevAbsent(i: Int) = bvDomain.prevClearBit(i);
 
   /**
    * @param value
