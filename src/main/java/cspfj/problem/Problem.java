@@ -146,8 +146,7 @@ public final class Problem {
                 }
             }
 
-            final Multimap<Variable, Constraint> invConstraints = builder
-                    .build();
+            final Multimap<Variable, Constraint> invConstraints = builder.build();
 
             for (Variable v : getVariables()) {
                 final Collection<Constraint> involvingConstraints = invConstraints
@@ -205,14 +204,12 @@ public final class Problem {
     }
 
     public void reset() {
-        if (currentLevel > 0) {
-            currentLevel = 0;
-            for (Variable v : variableArray) {
-                v.reset();
-            }
-            for (Constraint c : getConstraints()) {
-                c.restore(0);
-            }
+        currentLevel = 0;
+        for (Variable v : variableArray) {
+            v.reset();
+        }
+        for (Constraint c : getConstraints()) {
+            c.restore(0);
         }
     }
 
@@ -220,7 +217,7 @@ public final class Problem {
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         Joiner.on('\n').appendTo(sb, variables.values());
-        sb.append('\n');
+
         int entailed = 0;
         for (Constraint c : constraints) {
             if (c.isEntailed()) {

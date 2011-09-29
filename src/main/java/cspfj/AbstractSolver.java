@@ -202,7 +202,7 @@ public abstract class AbstractSolver implements Solver {
             preproRemoved = 0;
 
             for (Variable v : problem.getVariables()) {
-                preproRemoved += v.getDomain().maxSize() - v.getDomainSize();
+                preproRemoved += v.domain().maxSize() - v.getDomainSize();
             }
             this.preproCpu = preproCpu / 1000f;
             preproConstraintChecks = AbstractAC3Constraint.getChecks();
