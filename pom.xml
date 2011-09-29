@@ -56,6 +56,11 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.sat4j</groupId>
+			<artifactId>org.sat4j.core</artifactId>
+			<version>2.3.0</version>
+		</dependency>
 	</dependencies>
 	<ciManagement>
 		<system>Hudson</system>
