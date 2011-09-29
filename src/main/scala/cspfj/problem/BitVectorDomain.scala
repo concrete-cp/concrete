@@ -69,25 +69,29 @@ final class BitVectorDomain(
       greatest(value, lb, last());
     }
   }
+
+  private def lowest(value: Int, lb: Int, ub: Int): Int = {
+    if (domain(lb) >= value) {
+      lb
+    } else {
+      val test = (ub + lb) / 2;
+      if (domain(test) >= value) {
+        lowest(value, lb, test - 1)
+      } else {
+        lowest(value, test + 1, ub)
+      }
+    }
+  }
+
+  override def lowest(value: Int) = {
+    var ub = last();
+    if (domain(ub) < value) {
+      -1;
+    } else {
+      lowest(value, first, ub)
+    }
+  }
 }
-//
-//    override def lowest(value: Int) = {
-//        var ub = last();
-//        if (domain(ub) < value) {
-//             -1;
-//        } else {
-//        var lb = first();
-//        while (domain(lb) < value) {
-//            var test = (ub + lb) / 2;
-//            if (domain(test) >= value) {
-//                ub = test - 1;
-//            } else {
-//                lb = test + 1;
-//            }
-//        }
-//        lb;
-//        }
-//    }
 //
 //    /**
 //     * @param index

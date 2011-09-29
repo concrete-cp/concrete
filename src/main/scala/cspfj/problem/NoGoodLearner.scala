@@ -44,7 +44,7 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
         // logger.fine("checking " +
         // getVariable(levelVariables[level-1]));
 
-        val changes = fv.getDomain.getIndicesAtLevel(level - 1).xor(fv.getDomain.getAtLevel(level));
+        val changes = fv.getDomain.getAtLevel(level - 1).xor(fv.getDomain.getAtLevel(level));
         if (!changes.isEmpty) {
 
           val completeScope = currentScope :+ fv
