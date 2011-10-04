@@ -65,8 +65,7 @@ object ExtensionGenerator {
 
   def fillMatrix(domains: Seq[Domain], relation: Relation, init: Boolean, matrix: Matrix) {
 
-    val indices = domains map (d =>
-      JavaConversions.iterableAsScalaIterable(d) map (i => d.value(i) -> i.toInt) toMap);
+    val indices = domains map (d => d map (i => d.value(i) -> i.toInt) toMap);
 
     //        final int[] tuple = new int[domains.size()];
     //        final List<Map<Number, Integer>> indexes = Lists.transform(domains,

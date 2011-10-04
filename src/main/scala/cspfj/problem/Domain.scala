@@ -69,7 +69,7 @@ trait Domain extends Iterable[Int] {
   def copy(): Domain
 
   def iterator = new Iterator[Int] {
-    var index = first
+    var index = firstIndex
 
     override def hasNext = index >= 0
 
@@ -78,8 +78,6 @@ trait Domain extends Iterable[Int] {
       index = Domain.this.next(index);
       current
     }
-
-    override def remove() = throw new UnsupportedOperationException();
   }
 
 }
