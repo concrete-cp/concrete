@@ -134,7 +134,7 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
   }
 
   def learnConstraint(scope: Seq[Variable]): DynamicConstraint = {
-    JavaConversions.asScalaIterable(scope.head.getDynamicConstraints).find(c => c.getArity == scope.size &&
+    JavaConversions.collectionAsScalaIterable(scope.head.getDynamicConstraints).find(c => c.getArity == scope.size &&
       scope.forall(c.getScopeSet.contains)) match {
       case Some(c) => c
       case None => {

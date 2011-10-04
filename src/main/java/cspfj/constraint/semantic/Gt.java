@@ -50,7 +50,7 @@ public final class Gt extends AbstractConstraint {
 
     private int min(final int position) {
         final Domain dom = getVariable(position).getDomain();
-        return dom.value(dom.first());
+        return dom.value(dom.firstIndex());
     }
 
     private int max(final int position) {

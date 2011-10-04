@@ -67,8 +67,7 @@ public final class ReifiedConstraint extends AbstractConstraint {
 
     @Override
     public boolean revise(final RevisionHandler revisator, final int reviseCount) {
-        switch (controlDomain.getStatus()) {
-        case UNKNOWN:
+        if (controlDomain.isUnknown()) {
             if (!positiveConstraint.isConsistent(reviseCount)) {
                 controlDomain.remove(1);
                 if (noReifyRevise(negativeConstraint, revisator, reviseCount)) {
@@ -87,13 +86,14 @@ public final class ReifiedConstraint extends AbstractConstraint {
                 return false;
             }
             return true;
-        case TRUE:
-            return noReifyRevise(positiveConstraint, revisator, reviseCount);
-        case FALSE:
-            return noReifyRevise(negativeConstraint, revisator, reviseCount);
-        default:
-            throw new IllegalStateException();
         }
+        if (controlDomain.isTrue())
+            return noReifyRevise(positiveConstraint, revisator, reviseCount);
+        if (controlDomain.isFalse())
+            return noReifyRevise(negativeConstraint, revisator, reviseCount);
+
+        throw new IllegalStateException();
+
     }
 
     private boolean noReifyRevise(final Constraint constraint,

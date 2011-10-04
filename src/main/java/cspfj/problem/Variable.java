@@ -31,7 +31,7 @@ import cspfj.constraint.DynamicConstraint;
 import cspfj.priorityqueues.Identified;
 import cspfj.util.BitVector;
 
-public final class Variable implements Cloneable, Identified {
+public final class Variable implements Identified {
 
     private Constraint[] constraints;
 
@@ -130,11 +130,11 @@ public final class Variable implements Cloneable, Identified {
     }
 
     public int getFirst() {
-        return domain.first();
+        return domain.firstIndex();
     }
 
     public int getLast() {
-        return domain.last();
+        return domain.lastIndex();
     }
 
     public void setDomain(final Domain domain) {
@@ -187,14 +187,6 @@ public final class Variable implements Cloneable, Identified {
         return domain.getBitVector();
     }
 
-    public Variable clone() throws CloneNotSupportedException {
-        final Variable variable = (Variable) super.clone();
-
-        variable.domain = domain.copy();
-
-        return variable;
-    }
-
     public int getPositionInConstraint(final int constraint) {
         return positionInConstraint[constraint];
     }
@@ -223,7 +215,7 @@ public final class Variable implements Cloneable, Identified {
     }
 
     public int getFirstValue() {
-        return domain.value(domain.first());
+        return domain.value(domain.firstIndex());
     }
 
     public void makeSingleton(final int value1) {

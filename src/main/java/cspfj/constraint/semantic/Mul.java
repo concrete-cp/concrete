@@ -44,7 +44,7 @@ public final class Mul extends AbstractAC3Constraint {
 		final Domain dom1 = getVariable(pos1).getDomain();
 		final Domain dom2 = getVariable(pos2).getDomain();
 
-		for (int i = dom1.first(); i >= 0; i = dom1.next(i)) {
+		for (int i = dom1.firstIndex(); i >= 0; i = dom1.next(i)) {
 			final int val1 = dom1.value(i);
 			final int j;
 			if (val1 == 0 && val0 == 0) {
@@ -69,7 +69,7 @@ public final class Mul extends AbstractAC3Constraint {
 		final Domain result = getVariable(0).getDomain();
 		final int val = getVariable(pos1).getValue(index);
 		final Domain dom = getVariable(pos2).getDomain();
-		for (int i = dom.first(); i >= 0; i = dom.next(i)) {
+		for (int i = dom.firstIndex(); i >= 0; i = dom.next(i)) {
 			final int resIndex = result.index(val * dom.value(i));
 			if (resIndex >= 0 && result.present(resIndex)) {
 				tuple[0] = resIndex;

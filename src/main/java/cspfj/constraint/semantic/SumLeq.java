@@ -48,7 +48,7 @@ public final class SumLeq extends AbstractConstraint {
 		int min = 0;
 		for (int i = getArity(); --i >= 0;) {
 			final Domain dom = getVariable(i).getDomain();
-			min += dom.value(dom.first());
+			min += dom.value(dom.firstIndex());
 		}
 		final int newBound = bound - min;
 		if (newBound < 0) {
@@ -58,7 +58,7 @@ public final class SumLeq extends AbstractConstraint {
 		int max = 0;
 		for (int i = getArity(); --i >= 0;) {
 			final Domain dom = getVariable(i).getDomain();
-			if (removeGt(newBound + dom.value(dom.first()), dom)) {
+			if (removeGt(newBound + dom.value(dom.firstIndex()), dom)) {
 				if (dom.size() <= 0) {
 					return false;
 				}

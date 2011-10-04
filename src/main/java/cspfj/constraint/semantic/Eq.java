@@ -38,11 +38,11 @@ public final class Eq extends AbstractPVRConstraint {
 		corresponding = new int[][] { new int[xDom.maxSize()],
 				new int[yDom.maxSize()] };
 
-		for (int i = xDom.first(); i >= 0; i = xDom.next(i)) {
+		for (int i = xDom.firstIndex(); i >= 0; i = xDom.next(i)) {
 			corresponding[0][i] = yDom.index(a * xDom.value(i) + b);
 		}
 
-		for (int i = yDom.first(); i >= 0; i = yDom.next(i)) {
+		for (int i = yDom.firstIndex(); i >= 0; i = yDom.next(i)) {
 			final int r = yDom.value(i) - b;
 			if (r % a == 0) {
 				corresponding[1][i] = xDom.index(r / a);
@@ -79,7 +79,7 @@ public final class Eq extends AbstractPVRConstraint {
 		final Domain dom = getVariable(0).getDomain();
 		final Domain otherDom = getVariable(1).getDomain();
 		final int[] correspond = corresponding[0];
-		for (int i = dom.first(); i >= 0; i = dom.next(i)) {
+		for (int i = dom.firstIndex(); i >= 0; i = dom.next(i)) {
 			final int index = correspond[i];
 			if (index >= 0 && otherDom.present(index)) {
 				return true;

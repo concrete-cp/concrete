@@ -3,10 +3,6 @@ package cspfj.problem;
 import cspfj.util.BitVector;
 
 trait Domain extends Iterable[Int] {
-  def first(): Int
-
-  def last(): Int
-
   def next(i: Int): Int
 
   def prev(i: Int): Int
@@ -15,11 +11,17 @@ trait Domain extends Iterable[Int] {
 
   def prevAbsent(i: Int): Int
 
-  def size(): Int
-
   def index(value: Int): Int
 
   def value(index: Int): Int
+
+  def firstIndex: Int
+
+  def lastIndex: Int
+
+  override def head = firstIndex
+  override def last = lastIndex
+  override def isEmpty = firstIndex >= 0
 
   def maxSize(): Int
 
@@ -41,7 +43,7 @@ trait Domain extends Iterable[Int] {
    */
   def removeTo(ub: Int): Int
 
-  def setLevel(level: Int): Int
+  def setLevel(level: Int)
 
   def restoreLevel(level: Int)
 
@@ -65,8 +67,6 @@ trait Domain extends Iterable[Int] {
   def lowest(value: Int): Int
 
   def getBitVector(): BitVector
-
-  def copy(): Domain
 
   def iterator = new Iterator[Int] {
     var index = firstIndex

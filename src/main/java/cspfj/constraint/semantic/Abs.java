@@ -18,14 +18,14 @@ public final class Abs extends AbstractConstraint {
 
 		corresponding1 = new int[resultDom.maxSize()];
 		corresponding2 = new int[resultDom.maxSize()];
-		for (int i = resultDom.first(); i >= 0; i = resultDom.next(i)) {
+		for (int i = resultDom.firstIndex(); i >= 0; i = resultDom.next(i)) {
 			final int val = resultDom.value(i);
 			corresponding1[i] = v0Dom.index(val);
 			corresponding2[i] = v0Dom.index(-val);
 		}
 
 		correspondingR = new int[v0Dom.maxSize()];
-		for (int i = v0Dom.first(); i >= 0; i = v0Dom.next(i)) {
+		for (int i = v0Dom.firstIndex(); i >= 0; i = v0Dom.next(i)) {
 			correspondingR[i] = resultDom.index(Math.abs(v0Dom.value(i)));
 		}
 	}

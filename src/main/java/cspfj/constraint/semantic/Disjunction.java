@@ -5,8 +5,8 @@ import java.util.Arrays;
 import cspfj.constraint.AbstractConstraint;
 import cspfj.filter.RevisionHandler;
 import cspfj.problem.BooleanDomain;
+import cspfj.problem.UNKNOWN$;
 import cspfj.problem.Variable;
-import cspfj.problem.BooleanDomain.Status;
 
 public final class Disjunction extends AbstractConstraint {
     private int watch1 = -1;
@@ -28,7 +28,7 @@ public final class Disjunction extends AbstractConstraint {
                         "Only boolean domain are allowed");
             }
             final BooleanDomain domain = (BooleanDomain) disj[i].getDomain();
-            if (domain.getStatus() != Status.UNKNOWN) {
+            if (domain.size() < 2) {
                 throw new IllegalArgumentException(
                         "Assigning constants to disjunctions is not allowed");
             }
@@ -98,20 +98,20 @@ public final class Disjunction extends AbstractConstraint {
 
     private boolean isFalse(final int position) {
         if (reverses[position]) {
-            return domains[position].getStatus() == Status.TRUE;
+            return domains[position].isTrue();
         }
-        return domains[position].getStatus() == Status.FALSE;
+        return domains[position].isFalse();
     }
 
     private boolean setTrue(final int position) {
         final BooleanDomain dom = domains[position];
-        if (dom.getStatus() != Status.UNKNOWN) {
+        if (!dom.isUnknown()) {
             return false;
         }
         if (reverses[position]) {
-            dom.setStatus(Status.FALSE);
+            dom.setFalse();
         } else {
-            dom.setStatus(Status.TRUE);
+            dom.setTrue();
         }
         return true;
     }

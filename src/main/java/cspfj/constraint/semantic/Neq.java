@@ -19,10 +19,10 @@ public final class Neq extends AbstractConstraint {
         corresponding = new int[][] { new int[v1Dom.maxSize()],
                 new int[v0Dom.maxSize()] };
 
-        for (int i = v0Dom.first(); i >= 0; i = v0Dom.next(i)) {
+        for (int i = v0Dom.firstIndex(); i >= 0; i = v0Dom.next(i)) {
             corresponding[1][i] = v1Dom.index(v0Dom.value(i));
         }
-        for (int i = v1Dom.first(); i >= 0; i = v1Dom.next(i)) {
+        for (int i = v1Dom.firstIndex(); i >= 0; i = v1Dom.next(i)) {
             corresponding[0][i] = v0Dom.index(v1Dom.value(i));
         }
     }
@@ -39,7 +39,7 @@ public final class Neq extends AbstractConstraint {
             final Domain dom = getVariable(p).getDomain();
             if (dom.size() == 1) {
                 final Variable otherVar = getVariable(1 - p);
-                final int index = corresponding[1 - p][dom.first()];
+                final int index = corresponding[1 - p][dom.firstIndex()];
                 if (index >= 0 && otherVar.isPresent(index)) {
                     if (otherVar.getDomainSize() == 1) {
                         return false;
