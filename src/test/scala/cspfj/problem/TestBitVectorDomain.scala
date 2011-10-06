@@ -7,8 +7,11 @@ final class TestBitVectorDomain {
   @Test
   def testGreatest() {
     val b = new BitVectorDomain(1, 2, 7, 8)
-    assertEquals(2, b.greatest(3));
-    assertEquals(1, b.lowest(3));
-    assertEquals(-1, b.greatest(9));
+    assertEquals(1, b.closestLeq(3));
+    assertEquals(2, b.closestGeq(3));
+    assertEquals(3, b.closestLeq(9));
+    assertEquals(-1, b.closestGeq(9))
+    assertEquals(0, b.closestLeq(1))
+    assertEquals(-1, b.closestLeq(0))
   }
 }

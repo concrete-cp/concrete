@@ -5,7 +5,6 @@ import java.util.Arrays;
 import cspfj.constraint.AbstractConstraint;
 import cspfj.filter.RevisionHandler;
 import cspfj.problem.BooleanDomain;
-import cspfj.problem.UNKNOWN$;
 import cspfj.problem.Variable;
 
 public final class Disjunction extends AbstractConstraint {

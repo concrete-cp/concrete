@@ -210,7 +210,7 @@ class BooleanDomain extends Domain {
 
   def canBe(b: Boolean) = status.canBe(b)
 
-  def greatest(value: Int) = throw new UnsupportedOperationException
+  def closestLeq(value: Int) = throw new UnsupportedOperationException
 
   def removeFrom(lb: Int) = {
     val s = size
@@ -220,17 +220,17 @@ class BooleanDomain extends Domain {
 
   def removeTo(ub: Int) = throw new UnsupportedOperationException
 
-  def lowest(value: Int) = status.lowest(value)
+  def closestGeq(value: Int) = status.lowest(value)
 
   def prevAbsent(value: Int) = status.prevAbsent(value)
 
   def lastAbsent = status.lastAbsent
 
-  def isTrue = this == TRUE
-  def isFalse = this == FALSE
-  def isUnknown = this == UNKNOWN
-  override def isEmpty = this == EMPTY
-  def setTrue() { status = TRUE }
-  def setFalse() { status = FALSE }
+  def isTrue = status == TRUE
+  def isFalse = status == FALSE
+  def isUnknown = status == UNKNOWN
+  override def isEmpty = status == EMPTY
+  def setTrue() { setStatus(TRUE) }
+  def setFalse() { setStatus(FALSE) }
 }
 

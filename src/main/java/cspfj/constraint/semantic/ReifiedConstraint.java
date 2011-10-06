@@ -69,7 +69,7 @@ public final class ReifiedConstraint extends AbstractConstraint {
     public boolean revise(final RevisionHandler revisator, final int reviseCount) {
         if (controlDomain.isUnknown()) {
             if (!positiveConstraint.isConsistent(reviseCount)) {
-                controlDomain.remove(1);
+                controlDomain.setFalse();
                 if (noReifyRevise(negativeConstraint, revisator, reviseCount)) {
                     revisator.revised(this, getVariable(0));
                     return true;
@@ -78,7 +78,7 @@ public final class ReifiedConstraint extends AbstractConstraint {
             }
 
             if (!negativeConstraint.isConsistent(reviseCount)) {
-                controlDomain.remove(0);
+                controlDomain.setTrue();
                 if (noReifyRevise(positiveConstraint, revisator, reviseCount)) {
                     revisator.revised(this, getVariable(0));
                     return true;

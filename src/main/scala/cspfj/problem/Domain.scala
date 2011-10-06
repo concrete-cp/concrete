@@ -57,14 +57,14 @@ trait Domain extends Iterable[Int] {
    * @param value
    * @return the index of the closest value lower or equal to the given value.
    */
-  def greatest(value: Int): Int
+  def closestLeq(value: Int): Int
 
   /**
    * @param value
    * @return the index of the closest value greater or equal to the given
    *         value.
    */
-  def lowest(value: Int): Int
+  def closestGeq(value: Int): Int
 
   def getBitVector(): BitVector
 

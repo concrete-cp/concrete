@@ -23,7 +23,7 @@ final class DecomposedAllDifferentGenerator(problem: Problem) extends AbstractGe
           val uV = values(u)
 
           var sum = solverVariables map { v =>
-            VariableInterval(v, v.getDomain.lowest(lV), v.getDomain.greatest(uV))
+            VariableInterval(v, v.getDomain.closestGeq(lV), v.getDomain.closestLeq(uV))
           } filter { vi => vi.lb >= 0 && vi.ub >= 0 } map { vi =>
 
             vis.get(vi) match {

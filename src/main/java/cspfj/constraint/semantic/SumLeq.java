@@ -33,7 +33,7 @@ public final class SumLeq extends AbstractConstraint {
 	}
 
 	private boolean removeGt(final int value, final Domain dom) {
-		final int lb = dom.lowest(value);
+		final int lb = dom.closestGeq(value);
 		if (lb >= 0) {
 			if (dom.value(lb) != value) {
 				return dom.removeFrom(lb) > 0;

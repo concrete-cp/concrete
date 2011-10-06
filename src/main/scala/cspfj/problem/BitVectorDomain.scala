@@ -13,9 +13,9 @@ final class BitVectorDomain(
   private val bvDomain: BitVector,
   private var bvHistory: Array[BitVector],
   private var dsHistory: Array[Int]) extends Domain {
-  require(domain.sliding(2).forall(p => p(1) < p(2)), "Only ordered domains are supported");
+  require(domain.sliding(2).forall(p => p.size == 1 || p(0) < p(1)), "Only ordered domains are supported");
 
-  val indices = domain map { i => domain(i) -> i } toMap
+  val indices = domain.zipWithIndex.map { case (v, i) => v -> i }.toMap.withDefaultValue(-1)
 
   private var _size = domain.size
 
@@ -58,47 +58,47 @@ final class BitVectorDomain(
    */
   override def index(value: Int) = indices(value)
 
-  private def greatest(value: Int, lb: Int, ub: Int): Int = {
-    if (domain(ub) > value) {
+  private def closestLeq(value: Int, lb: Int, ub: Int): Int = {
+    if (domain(ub) <= value) {
       ub
     } else {
       val test = (ub + lb) / 2
       if (domain(test) > value) {
-        greatest(value, lb, test - 1)
+        closestLeq(value, lb, test - 1)
       } else {
-        greatest(value, test + 1, ub)
+        closestLeq(value, test + 1, ub)
       }
     }
   }
 
-  override def greatest(value: Int) = {
-    var lb = head;
+  override def closestLeq(value: Int) = {
+    var lb = firstIndex;
     if (domain(lb) > value) {
       -1;
     } else {
-      greatest(value, lb, last);
+      closestLeq(value, lb, lastIndex);
     }
   }
 
-  private def lowest(value: Int, lb: Int, ub: Int): Int = {
+  private def closestGeq(value: Int, lb: Int, ub: Int): Int = {
     if (domain(lb) >= value) {
       lb
     } else {
       val test = (ub + lb) / 2;
       if (domain(test) >= value) {
-        lowest(value, lb, test - 1)
+        closestGeq(value, lb, test - 1)
       } else {
-        lowest(value, test + 1, ub)
+        closestGeq(value, test + 1, ub)
       }
     }
   }
 
-  override def lowest(value: Int) = {
+  override def closestGeq(value: Int) = {
     var ub = last;
     if (domain(ub) < value) {
       -1;
     } else {
-      lowest(value, head, ub)
+      closestGeq(value, head, ub)
     }
   }
 

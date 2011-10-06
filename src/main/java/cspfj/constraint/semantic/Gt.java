@@ -60,7 +60,7 @@ public final class Gt extends AbstractConstraint {
 
     private boolean removeGt(final int value, final int position) {
         final Domain dom = getVariable(position).getDomain();
-        final int lb = dom.lowest(value);
+        final int lb = dom.closestLeq(value);
         if (lb >= 0) {
             if (strict || dom.value(lb) != value) {
                 return dom.removeFrom(lb) > 0;
@@ -72,7 +72,7 @@ public final class Gt extends AbstractConstraint {
 
     private boolean removeLt(final int value, final int position) {
         final Domain dom = getVariable(position).getDomain();
-        final int ub = dom.greatest(value);
+        final int ub = dom.closestGeq(value);
         if (ub >= 0) {
             if (strict || dom.value(ub) != value) {
                 return dom.removeTo(ub) > 0;

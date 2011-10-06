@@ -21,8 +21,8 @@ public final class NotInInterval extends AbstractConstraint {
 	public static NotInInterval values(final Variable variable, final int lb,
 			final int ub) {
 		final Domain domain = variable.getDomain();
-		return new NotInInterval(variable, domain.lowest(lb), domain
-				.greatest(ub));
+		return new NotInInterval(variable, domain.closestGeq(lb), domain
+				.closestLeq(ub));
 	}
 
 	public static NotInInterval indexes(final Variable variable, final int lb,

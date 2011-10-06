@@ -21,7 +21,7 @@ public final class InInterval extends AbstractConstraint {
 	public static InInterval values(final Variable variable, final int lb,
 			final int ub) {
 		final Domain domain = variable.getDomain();
-		return new InInterval(variable, domain.lowest(lb), domain.greatest(ub));
+		return new InInterval(variable, domain.closestGeq(lb), domain.closestLeq(ub));
 	}
 
 	public static InInterval indexes(final Variable variable, final int lb,
