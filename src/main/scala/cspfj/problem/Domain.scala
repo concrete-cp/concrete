@@ -7,7 +7,7 @@ trait Domain extends Iterable[Int] {
 
   def prev(i: Int): Int
 
-  def lastAbsent(): Int
+  def lastAbsent: Int
 
   def prevAbsent(i: Int): Int
 
@@ -23,7 +23,7 @@ trait Domain extends Iterable[Int] {
   override def last = lastIndex
   override def isEmpty = firstIndex >= 0
 
-  def maxSize(): Int
+  def maxSize: Int
 
   def present(index: Int): Boolean
 
@@ -49,9 +49,9 @@ trait Domain extends Iterable[Int] {
 
   def getAtLevel(level: Int): BitVector
 
-  def allValues(): Array[Int]
+  def allValues: Array[Int]
 
-  def currentValues(): Array[Int]
+  def currentValues: Array[Int]
 
   /**
    * @param value
@@ -66,7 +66,9 @@ trait Domain extends Iterable[Int] {
    */
   def closestGeq(value: Int): Int
 
-  def getBitVector(): BitVector
+  def getBitVector: BitVector
+  
+  def currentIndexes: Array[Int]
 
   def iterator = new Iterator[Int] {
     var index = firstIndex

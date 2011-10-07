@@ -36,7 +36,7 @@ final class InIntervalTest {
         variable: Variable) {
       }
     }, 0));
-    assertArrayEquals(Array(2, 3), domain.currentValues());
+    assertArrayEquals(Array(2, 3), domain.currentValues);
   }
 
 }

@@ -18,6 +18,7 @@ trait Status {
   def lowest(value: Int): Int
   def prevAbsent(value: Int): Int
   def lastAbsent: Int
+  def indexes: Array[Int]
 }
 
 object UNKNOWN extends Status {
@@ -43,6 +44,7 @@ object UNKNOWN extends Status {
 
   val lastAbsent = -1
   def prevAbsent(value: Int) = -1
+  val indexes = Array(0, 1)
 }
 
 object TRUE extends Status {
@@ -59,7 +61,8 @@ object TRUE extends Status {
   def removeFrom(lb: Int) = if (lb == 0) EMPTY else this
   def lowest(value: Int) = if (value > 1) -1 else 1;
   val lastAbsent = 0
-  def prevAbsent(value: Int) = -1
+  def prevAbsent(value: Int) = if (value > 0) 0 else -1
+  val indexes = Array(1)
 }
 
 object FALSE extends Status {
@@ -76,7 +79,8 @@ object FALSE extends Status {
   def removeFrom(lb: Int) = if (lb <= 1) EMPTY else this
   def lowest(value: Int) = if (value > 0) -1 else 0;
   val lastAbsent = 1
-  def prevAbsent(value: Int) = -1
+  def prevAbsent(value: Int) = if (value > 0) 1 else -1
+  val indexes = Array(0)
 }
 
 object EMPTY extends Status {
@@ -94,6 +98,7 @@ object EMPTY extends Status {
   def lowest(value: Int) = -1
   val lastAbsent = 1
   def prevAbsent(value: Int) = if (value >= 1) 0 else -1
+  val indexes = Array[Int]()
 }
 
 class BooleanDomain extends Domain {
@@ -145,11 +150,12 @@ class BooleanDomain extends Domain {
 
   }
 
-  def setStatus(status: Status) {
-    assert(this.status == UNKNOWN || this.status == status)
-    history ::= (currentLevel, this.status)
-    this.status = status;
+  var removed = false;
 
+  def setStatus(status: Status) {
+    assert(this.status == UNKNOWN || status == EMPTY && this.status != EMPTY)
+    this.status = status;
+    removed = true
   }
 
   def value(i: Int) = i
@@ -171,19 +177,21 @@ class BooleanDomain extends Domain {
 
   def setLevel(level: Int) {
     assert(level > currentLevel)
+    if (removed) {
+      history ::= (currentLevel, this.status)
+      removed = false
+    }
     currentLevel = level;
   }
 
   def restoreLevel(level: Int) {
     assert(level < currentLevel);
 
-    if (history.head._1 >= level) {
-      history = history.dropWhile(_._1 >= level)
-      status = if (history == Nil) {
-        UNKNOWN
-      } else {
-        history.head._2
-      }
+    history = history.dropWhile(_._1 > level)
+    status = if (history == Nil) {
+      UNKNOWN
+    } else {
+      history.head._2
     }
 
     currentLevel = level;
@@ -232,5 +240,6 @@ class BooleanDomain extends Domain {
   override def isEmpty = status == EMPTY
   def setTrue() { setStatus(TRUE) }
   def setFalse() { setStatus(FALSE) }
+  def currentIndexes = status.indexes
 }
 

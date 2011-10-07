@@ -12,7 +12,7 @@ import scala.collection.JavaConversions
 import util.Loggable
 
 final class SolvingTest extends Loggable {
-  setLevel(Level.WARNING)
+  setLevel(Level.FINE)
 
   @Test
   def crosswordm1() {

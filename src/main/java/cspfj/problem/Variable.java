@@ -145,26 +145,14 @@ public final class Variable implements Identified {
         if (domain == null) {
             return null;
         }
-        final int[] indexes = new int[domain.size()];
-
-        for (int i = getFirst(), j = 0; i >= 0; i = getNext(i), j++) {
-            indexes[j] = i;
-        }
-
-        return indexes;
+        return domain.currentIndexes();
     }
 
     public int[] getCurrentValues() {
         if (domain == null) {
             return null;
         }
-        final int[] values = new int[domain.size()];
-
-        for (int i = getFirst(), j = 0; i >= 0; i = getNext(i), j++) {
-            values[j] = domain.value(i);
-        }
-
-        return values;
+        return domain.currentValues();
     }
 
     public int getNext(final int index) {

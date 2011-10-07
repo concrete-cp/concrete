@@ -40,8 +40,8 @@ final class GtTest {
       def revised(c: Constraint, v: Variable) {}
     }, 0);
 
-    assertArrayEquals(Array(3, 4), v1.getDomain().currentValues());
-    assertArrayEquals(Array(3, 4), v2.getDomain().currentValues());
+    assertArrayEquals(Array(3, 4), v1.getDomain().currentValues);
+    assertArrayEquals(Array(3, 4), v2.getDomain().currentValues);
 
   }
 
