@@ -30,6 +30,8 @@ trait Domain extends Iterable[Int] {
   def setSingle(index: Int)
 
   def remove(index: Int)
+  
+  def size: Int
 
   /**
    * @param lb

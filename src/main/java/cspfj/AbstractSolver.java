@@ -140,7 +140,7 @@ public abstract class AbstractSolver implements Solver {
     protected final Map<String, Integer> solution() {
         final Map<String, Integer> solution = new LinkedHashMap<String, Integer>();
         for (Variable v : problem.getVariables()) {
-            solution.put(v.getName(), v.getValue(v.getFirst()));
+            solution.put(v.name(), v.domain().firstValue());
         }
         return solution;
     }
@@ -200,7 +200,7 @@ public abstract class AbstractSolver implements Solver {
             preproRemoved = 0;
 
             for (Variable v : problem.getVariables()) {
-                preproRemoved += v.getDomain().maxSize() - v.getDomainSize();
+                preproRemoved += v.domain().maxSize() - v.domain().size();
             }
             this.preproCpu = preproCpu / 1000f;
             preproConstraintChecks = AbstractAC3Constraint.getChecks();
@@ -212,8 +212,6 @@ public abstract class AbstractSolver implements Solver {
         return consistent;
 
     }
-
- 
 
     @Statistic
     public int preproRemoved;

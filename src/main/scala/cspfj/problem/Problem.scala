@@ -30,6 +30,7 @@ import com.google.common.collect.Ordering
 import cspfj.constraint.Constraint
 import scala.collection.mutable.MultiMap
 import scala.collection.mutable.HashMap
+import scala.collection.JavaConversions
 
 final class Problem {
   private var variableMap: Map[String, Variable] = Map.empty
@@ -106,5 +107,6 @@ final class Problem {
   def variable(name: String) = variableMap(name)
   def variables = _variables
   def constraints = _constraints
+  def getVariables = JavaConversions.seqAsJavaList(variables)
 
 }
