@@ -12,11 +12,11 @@ final class ModGenerator(problem: Problem) extends AbstractGenerator(problem) {
   def generate(constraint: CSPOMConstraint) = {
     val Seq(result, v0, v1) = constraint.scope map cspom2cspfj
 
-    if (Seq(result, v0, v1) filter (_.getDomain == null) match {
+    if (Seq(result, v0, v1) filter (_.domain == null) match {
       case Seq() => true
       case Seq(v) if v == result => {
         val values = AbstractGenerator.domainFrom(v0, v1, { _ % _ })
-        v.setDomain(new BitVectorDomain(values: _*))
+        v.domain = new BitVectorDomain(values: _*)
         true
       }
 

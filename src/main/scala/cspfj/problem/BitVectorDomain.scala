@@ -9,18 +9,21 @@ final object BitVectorDomain {
 }
 
 final class BitVectorDomain(
-  val domain: IndexedSeq[Int],
+  private val domain: IndexedSeq[Int],
   private val bvDomain: BitVector,
+  /**
+   * History entry is (level, domain, domain size)
+   */
   private var history: List[(Int, BitVector, Int)]) extends Domain {
   require(domain.sliding(2).forall(p => p.size == 1 || p(0) < p(1)), "Only ordered domains are supported");
 
-  val indices = domain.zipWithIndex.map { case (v, i) => v -> i }.toMap.withDefaultValue(-1)
+  private val indices = domain.zipWithIndex.map { case (v, i) => v -> i }.toMap.withDefaultValue(-1)
 
   private var _size = domain.size
 
   override def size = _size
 
-  private var _last = domain.size - 1
+  //  private var _last = domain.size - 1
 
   private var currentLevel = 0;
 
@@ -36,12 +39,14 @@ final class BitVectorDomain(
 
   override def firstIndex = bvDomain.nextSetBit(0);
 
-  override def lastIndex = {
-    assert(_last == bvDomain.prevSetBit(domain.length), "Recorded " + last
-      + ", should be " + bvDomain.prevSetBit(domain.length)
-      + " given current domain " + toString())
-    _last;
-  }
+  override def lastIndex = bvDomain.prevSetBit(maxSize)
+
+  //  override def lastIndex = {
+  //    assert(_last == bvDomain.prevSetBit(domain.length), "Recorded " + last
+  //      + ", should be " + bvDomain.prevSetBit(domain.length)
+  //      + " given current domain " + toString())
+  //    _last;
+  //  }
 
   override def lastAbsent() = bvDomain.prevClearBit(domain.length);
 
@@ -112,7 +117,7 @@ final class BitVectorDomain(
   override def setSingle(index: Int) {
     bvDomain.setSingle(index);
     _size = 1;
-    _last = index;
+    //_last = index;
     removed = true
   }
 
@@ -123,30 +128,19 @@ final class BitVectorDomain(
     assert(present(index));
     _size -= 1;
     bvDomain.clear(index);
-    if (index == _last) {
-      _last = bvDomain.prevSetBit(index);
-    }
-    assert(_last == bvDomain.prevSetBit(domain.length), "Recorded " + last
-      + ", should be " + bvDomain.prevSetBit(domain.length)
-      + " given current domain " + toString());
     removed = true
   }
 
   override def removeFrom(lb: Int) = {
     val nbRemVals = bvDomain.clearFrom(lb);
-    if (nbRemVals > 0) {
-      _last = bvDomain.prevSetBit(lb);
-      this.removed = true
-    }
+    removed = nbRemVals > 0
     _size -= nbRemVals;
     nbRemVals;
   }
 
   override def removeTo(ub: Int) = {
     val nbRemVals = bvDomain.clearTo(ub + 1);
-    if (nbRemVals > 0) {
-      this.removed = true
-    }
+    removed = nbRemVals > 0
     _size -= nbRemVals;
     nbRemVals;
   }
@@ -178,7 +172,7 @@ final class BitVectorDomain(
       _size = history.head._3
     }
     currentLevel = level;
-    _last = bvDomain.prevSetBit(domain.length);
+    //    _last = bvDomain.prevSetBit(domain.length);
 
   }
 
@@ -188,7 +182,7 @@ final class BitVectorDomain(
         case Some(e) => e._2
         case _ => BitVector.newBitVector(domain.length, true);
       }
-     } else bvDomain;
+    } else bvDomain;
   }
 
   override val allValues = domain.toArray;

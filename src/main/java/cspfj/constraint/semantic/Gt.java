@@ -49,17 +49,17 @@ public final class Gt extends AbstractConstraint {
     }
 
     private int min(final int position) {
-        final Domain dom = getVariable(position).getDomain();
+        final Domain dom = getVariable(position).domain;
         return dom.value(dom.firstIndex());
     }
 
     private int max(final int position) {
-        final Domain dom = getVariable(position).getDomain();
+        final Domain dom = getVariable(position).domain;
         return dom.value(dom.last());
     }
 
     private boolean removeGt(final int value, final int position) {
-        final Domain dom = getVariable(position).getDomain();
+        final Domain dom = getVariable(position).domain;
         final int lb = dom.closestLeq(value);
         if (lb >= 0) {
             if (strict || dom.value(lb) != value) {
@@ -71,7 +71,7 @@ public final class Gt extends AbstractConstraint {
     }
 
     private boolean removeLt(final int value, final int position) {
-        final Domain dom = getVariable(position).getDomain();
+        final Domain dom = getVariable(position).domain;
         final int ub = dom.closestGeq(value);
         if (ub >= 0) {
             if (strict || dom.value(ub) != value) {
@@ -85,17 +85,16 @@ public final class Gt extends AbstractConstraint {
 
     @Override
     public boolean revise(final RevisionHandler revisator, final int reviseCount) {
-        assert getVariable(0).getDomainSize() > 0
-                && getVariable(1).getDomainSize() > 0;
+        assert getVariable(0).domain.size > 0 && getVariable(1).domain.size > 0;
 
         if (removeLt(min(1) - constant, 0)) {
-            if (getVariable(0).getDomainSize() == 0) {
+            if (getVariable(0).domain.size == 0) {
                 return false;
             }
             revisator.revised(this, getVariable(0));
         }
         if (removeGt(max(0) + constant, 1)) {
-            if (getVariable(1).getDomainSize() == 0) {
+            if (getVariable(1).domain.size == 0) {
                 return false;
             }
             revisator.revised(this, getVariable(1));
@@ -139,7 +138,6 @@ public final class Gt extends AbstractConstraint {
 
     @Override
     public float getEvaluation() {
-        return Math.min(getVariable(0).getDomainSize(), getVariable(1)
-                .getDomainSize());
+        return Math.min(getVariable(0).domain.size, getVariable(1).domain.size);
     }
 }

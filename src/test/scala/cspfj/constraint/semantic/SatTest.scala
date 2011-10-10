@@ -23,8 +23,8 @@ class SatTest {
     c.getTuple(1) = 1
     assertFalse(c.check)
 
-    v1.remove(0)
-    v1.remove(2)
+    v1.domain.remove(0)
+    v1.domain.remove(2)
     assertFalse(c.findSupport(0, 0))
     
     assertTrue(c.findSupport(0, 1))

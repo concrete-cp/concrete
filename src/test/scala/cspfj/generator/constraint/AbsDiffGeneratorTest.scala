@@ -24,8 +24,8 @@ final class AbsDiffGeneratorTest {
     ProblemGenerator.generateVariables(problem, cspom)
     new AbsDiffGenerator(problem).generate(c)
 
-    assertEquals(1, problem.getConstraints.size)
-    assertTrue(problem.getConstraints.get(0).isInstanceOf[AbsDiff])
+    assertEquals(1, problem.constraints.size)
+    assertTrue(problem.constraints.head.isInstanceOf[AbsDiff])
 
   }
 }

@@ -11,7 +11,7 @@ final class GccGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
     val scope = constraint.scope map cspom2cspfj
 
-    if (scope exists (_.getDomain == null)) {
+    if (scope exists (_.domain == null)) {
       false
     } else {
       val params = constraint.parameters.split(", +");

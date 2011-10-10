@@ -31,8 +31,8 @@ final class SumLeqTest {
       }
     }, 0));
 
-    assertArrayEquals(Array(1, 2, 3, 4), v0.getDomain.currentValues);
-    assertArrayEquals(Array(0, 1, 2, 3), v1.getDomain.currentValues);
+    assertArrayEquals(Array(1, 2, 3, 4), v0.domain.currentValues);
+    assertArrayEquals(Array(0, 1, 2, 3), v1.domain.currentValues);
   }
 
 }

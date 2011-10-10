@@ -80,12 +80,12 @@ final class BooleanDomainTest {
     assertEquals(1, domain.firstIndex);
   }
 
-  @Test
-  def testLast() {
-    assertEquals(1, domain.lastIndex);
-    domain.remove(1);
-    assertEquals(0, domain.lastIndex);
-  }
+//  @Test
+//  def testLast() {
+//    assertEquals(1, domain.lastIndex);
+//    domain.remove(1);
+//    assertEquals(0, domain.lastIndex);
+//  }
 
   @Test
   def testCurrentIndexes() {

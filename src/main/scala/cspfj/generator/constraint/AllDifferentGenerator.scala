@@ -9,7 +9,7 @@ final class AllDifferentGenerator(problem: Problem) extends AbstractGenerator(pr
     require(constraint.isInstanceOf[GeneralConstraint]);
 
     val solverVariables = constraint.scope map cspom2cspfj
-    if (solverVariables exists { _.getDomain == null }) {
+    if (solverVariables exists { _.domain == null }) {
       false
     } else {
       addConstraint(new AllDifferent(solverVariables: _*));

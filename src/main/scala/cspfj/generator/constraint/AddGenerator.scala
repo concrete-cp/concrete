@@ -15,21 +15,21 @@ final class AddGenerator(problem: Problem) extends AbstractGenerator(problem) {
       case _ => throw new IllegalArgumentException("Cannot handle " + constraint)
     }) map cspom2cspfj
 
-    if (Seq(result, v0, v1) filter { _.getDomain == null } match {
+    if (Seq(result, v0, v1) filter { _.domain == null } match {
       case Seq() => true;
       case Seq(nullVariable) => {
         if (nullVariable == result) {
           val values = AbstractGenerator.domainFrom(v0, v1, { _ + _ });
 
-          result.setDomain(new BitVectorDomain(values: _*));
+          result.domain = new BitVectorDomain(values: _*);
 
         } else if (nullVariable == v0) {
 
-          v0.setDomain(new BitVectorDomain(generateValues(result, v1): _*));
+          v0.domain = new BitVectorDomain(generateValues(result, v1): _*);
 
         } else if (nullVariable == v1) {
 
-          v1.setDomain(new BitVectorDomain(generateValues(result, v0): _*));
+          v1.domain = new BitVectorDomain(generateValues(result, v0): _*);
 
         } else {
 
@@ -42,12 +42,12 @@ final class AddGenerator(problem: Problem) extends AbstractGenerator(problem) {
     }) {
 
       addConstraint(
-        if (result.getDomainSize == 1) {
-          new Eq(-1, v0, result.getFirstValue(), v1);
-        } else if (v0.getDomainSize == 1) {
-          new Eq(1, v1, v0.getFirstValue, result);
-        } else if (v1.getDomainSize == 1) {
-          new Eq(1, v0, v1.getFirstValue, result);
+        if (result.domain.size == 1) {
+          new Eq(-1, v0, result.domain.firstValue, v1);
+        } else if (v0.domain.size == 1) {
+          new Eq(1, v1, v0.domain.firstValue, result);
+        } else if (v1.domain.size == 1) {
+          new Eq(1, v0, v1.domain.firstValue, result);
         } else {
           new Add(result, v0, v1);
         });

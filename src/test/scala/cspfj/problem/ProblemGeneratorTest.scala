@@ -10,12 +10,10 @@ import cspfj.util.Loggable
 import cspom.CSPOM
 import cspom.compiler.ProblemCompiler;
 
-
-
 final class ProblemGeneratorTest extends Loggable {
-    
+
   setLevel(WARNING)
-  
+
   @Test
   def zebra() {
     generateTest("zebra.xml");
@@ -64,33 +62,19 @@ final class ProblemGeneratorTest extends Loggable {
 
   private def generateTest(file: String) {
     val cspom = CSPOM.load(classOf[ProblemGeneratorTest].getResource(file));
-    {
-      val stb = new StringBuilder();
-      stb.append(cspom).append('\n');
-      stb.append(cspom.variables.size).append(" vars, ")
-        .append(cspom.constraints.size).append(" cons");
-      info(stb.toString());
-    }
+
+    info(cspom + "\n" + cspom.variables.size + " vars, " + cspom.constraints.size + " cons")
 
     ProblemCompiler.compile(cspom);
-    {
-      val stb = new StringBuilder();
-      stb.append(cspom).append('\n');
-      stb.append(cspom.variables.size).append(" vars, ")
-        .append(cspom.constraints.size).append(" cons");
-      info(stb.toString());
-    }
+
+    info(cspom + "\n" + cspom.variables.size + " vars, " + cspom.constraints.size + " cons")
 
     val problem = ProblemGenerator.generate(cspom);
-    {
-      val stb = new StringBuilder();
-      stb.append(problem).append('\n');
-      stb.append(problem.getVariables().length).append(" vars, ")
-        .append(problem.getConstraints().size()).append(" cons");
-      info(stb.toString());
-    }
+
+    info(problem + "\n" + problem.variables.size + " vars, " + problem.constraints.size + " cons")
+
     new AC3Constraint(problem).reduceAll();
 
-    info(problem.toString());
+    info(problem.toString);
   }
 }

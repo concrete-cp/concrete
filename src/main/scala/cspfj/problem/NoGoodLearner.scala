@@ -24,12 +24,12 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
 
     var tuple: Vector[Int] = Vector.empty;
 
-    var futureVariables = problem.getVariables.toSet;
+    var futureVariables = problem.variables.toSet;
 
     var currentScope: Vector[Variable] = Vector.empty;
     var level = 1;
 
-    while (!decisions.isEmpty() && (level < problem.getMaxArity || learnMethod == LearnMethod.EXT)) {
+    while (!decisions.isEmpty() && (level < problem.maxArity || learnMethod == LearnMethod.EXT)) {
       /*
              * Decisions are stacked, so the first decision in the search tree
              * is actually the last in the stack.
@@ -44,7 +44,7 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
         // logger.fine("checking " +
         // getVariable(levelVariables[level-1]));
 
-        val changes = fv.getDomain.getAtLevel(level - 1).xor(fv.getDomain.getAtLevel(level));
+        val changes = fv.domain.getAtLevel(level - 1).xor(fv.domain.getAtLevel(level));
         if (!changes.isEmpty) {
 
           val completeScope = currentScope :+ fv
@@ -64,7 +64,7 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
             if (newNogoods > 0) {
               nbNoGoods += newNogoods;
               modifiedConstraints += constraint;
-              if (constraint.getId() > problem.getMaxCId()) {
+              if (constraint.getId() > problem.maxCId) {
                 // LOGGER.info("Added " + constraint);
                 addedConstraints ::= constraint;
               }
@@ -77,7 +77,6 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
 
     if (!addedConstraints.isEmpty) {
       addedConstraints.foreach(problem.addConstraint)
-      problem.prepare();
       // LOGGER.info(problem.getNbConstraints() + " constraints");
     }
 
@@ -85,19 +84,19 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
   }
 
   def binNoGoods(firstVariable: Variable): Set[Constraint] = {
-    val tuple = List(firstVariable.getFirst)
+    val tuple = List(firstVariable.domain.first)
     var modifiedConstraints: Set[Constraint] = Set.empty;
 
     var addedConstraints: List[Constraint] = Nil;
 
     for (
-      fv <- problem.getVariables;
+      fv <- problem.variables;
       if fv != firstVariable
     ) {
       // logger.fine("checking " +
       // getVariable(levelVariables[level-1]));
 
-      val changes = fv.getDomain().getAtLevel(0).xor(fv.getDomain().getAtLevel(1));
+      val changes = fv.domain.getAtLevel(0).xor(fv.domain.getAtLevel(1));
       if (!changes.isEmpty()) {
 
         val scope = Seq(firstVariable, fv)
@@ -117,7 +116,7 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
           if (newNogoods > 0) {
             nbNoGoods += newNogoods;
             modifiedConstraints += constraint;
-            if (constraint.getId > problem.getMaxCId) {
+            if (constraint.getId > problem.maxCId) {
               addedConstraints ::= constraint;
             }
           }
@@ -127,14 +126,13 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
 
     if (!addedConstraints.isEmpty) {
       addedConstraints.foreach(problem.addConstraint)
-      problem.prepare();
     }
 
     return modifiedConstraints;
   }
 
   def learnConstraint(scope: Seq[Variable]): DynamicConstraint = {
-    JavaConversions.collectionAsScalaIterable(scope.head.getDynamicConstraints).find(c => c.getArity == scope.size &&
+    scope.head.dynamicConstraints.find(c => c.getArity == scope.size &&
       scope.forall(c.getScopeSet.contains)) match {
       case Some(c) => c
       case None => {
@@ -150,7 +148,7 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
 
   private def generateConstraint(scope: Seq[Variable]) = {
     if (scope.size == 2) {
-      val matrix = new Matrix2D(scope(0).getDomain.maxSize, scope(1).getDomain.maxSize, true);
+      val matrix = new Matrix2D(scope(0).domain.maxSize, scope(1).domain.maxSize, true);
       new ExtensionConstraint2D(scope.toArray, matrix, false);
     } else {
       new ExtensionConstraintGeneral(new TupleSet(true), false, scope: _*);

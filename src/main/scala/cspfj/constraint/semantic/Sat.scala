@@ -7,7 +7,7 @@ import java.io.PrintWriter
 
 class Sat(val scope: IndexedSeq[Variable]) extends AbstractAC3Constraint(scope: _*) {
 
-  val offset = scope.map(_.getDomain.maxSize).scanLeft(1)(_ + _).toIndexedSeq
+  val offset = scope.map(_.domain.maxSize).scanLeft(1)(_ + _).toIndexedSeq
 
   private def numVariable(variablePosition: Int, index: Int) =
     index + offset(variablePosition)
@@ -19,7 +19,7 @@ class Sat(val scope: IndexedSeq[Variable]) extends AbstractAC3Constraint(scope: 
   var clauses: List[Array[Int]] = List.empty
 
   def newSolver = {
-    val MAXVAR = scope.map(_.getDomain.maxSize).sum
+    val MAXVAR = scope.map(_.domain.maxSize).sum
     //val NBCLAUSES = 500000;
 
     val s = SolverFactory.newLight();
@@ -63,7 +63,7 @@ class Sat(val scope: IndexedSeq[Variable]) extends AbstractAC3Constraint(scope: 
     //println(clauses map (_.toSeq))
     for (
       p <- (0 until getArity) if (p != vp);
-      i <- (0 until scope(p).getDomain.maxSize) if (!scope(p).isPresent(i))
+      i <- (0 until scope(p).domain.maxSize) if (!scope(p).domain.present(i))
     ) {
       //println(-numVariable(p, i))
       s.addClause(new VecInt(Array(-numVariable(p, i))))

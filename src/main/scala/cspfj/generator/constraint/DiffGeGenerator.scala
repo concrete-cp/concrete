@@ -1,8 +1,8 @@
 package cspfj.generator.constraint;
 
-import cspfj.constraint.semantic.{ReifiedConstraint, Gt}
-import cspfj.problem.{Variable, Problem}
-import cspom.constraint.{GeneralConstraint, FunctionalConstraint, CSPOMConstraint}
+import cspfj.constraint.semantic.{ ReifiedConstraint, Gt }
+import cspfj.problem.{ Variable, Problem }
+import cspom.constraint.{ GeneralConstraint, FunctionalConstraint, CSPOMConstraint }
 
 final class DiffGeGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
@@ -25,24 +25,24 @@ final class DiffGeGenerator(problem: Problem) extends AbstractGenerator(problem)
   private def generateGeneral(constraint: GeneralConstraint) = {
     val Seq(v0, v1, bound) = constraint.scope map cspom2cspfj
 
-    if (bound.getDomainSize != 1 || Seq(v0, v1, bound).exists(_.getDomain == null)) {
+    if (bound.domain.size != 1 || Seq(v0, v1, bound).exists(_.domain == null)) {
       null;
     } else {
-      new Gt(v0, -bound.getFirstValue, v1, false);
+      new Gt(v0, -bound.domain.firstValue, v1, false);
     }
   }
 
   private def generateReified(constraint: FunctionalConstraint) = {
     val Seq(result, v0, v1, bound) = constraint.scope map cspom2cspfj
 
-    if (bound.getDomainSize != 1 || Seq(v0, v1, bound).exists(_.getDomain == null)) {
+    if (bound.domain.size != 1 || Seq(v0, v1, bound).exists(_.domain == null)) {
       null;
     } else {
       AbstractGenerator.booleanDomain(result)
       new ReifiedConstraint(
         result,
-        new Gt(v0, -bound.getFirstValue, v1, false),
-        new Gt(v1, bound.getFirstValue, v0, true));
+        new Gt(v0, -bound.domain.firstValue, v1, false),
+        new Gt(v1, bound.domain.firstValue, v0, true));
     }
 
   }

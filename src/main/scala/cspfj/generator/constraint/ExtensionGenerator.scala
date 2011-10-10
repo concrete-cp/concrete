@@ -13,7 +13,7 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
   var generated: Map[Signature, Matrix] = Map.empty
 
   private def generate(variables: Seq[Variable], relation: Relation, init: Boolean) = {
-    val domains = variables map (_.getDomain)
+    val domains = variables map (_.domain)
 
     val signature = Signature(domains, relation, init);
     generated.get(signature) match {
@@ -33,7 +33,7 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
 
     val solverVariables = constraint.scope map cspom2cspfj
 
-    if (solverVariables exists (_.getDomain == null)) {
+    if (solverVariables exists (_.domain == null)) {
       false
     } else {
       val extensionConstraint = constraint.asInstanceOf[cspom.extension.ExtensionConstraint]
@@ -67,34 +67,12 @@ object ExtensionGenerator {
 
     val indices = domains map (d => d map (i => d.value(i) -> i.toInt) toMap);
 
-    //        final int[] tuple = new int[domains.size()];
-    //        final List<Map<Number, Integer>> indexes = Lists.transform(domains,
-    //                new Function<Domain, Map<Number, Integer>>() {
-    //                    @Override
-    //                    public Map<Number, Integer> apply(final Domain domain) {
-    //                        return Maps.uniqueIndex(domain,
-    //                                new Function<Integer, Number>() {
-    //                                    @Override
-    //                                    public Number apply(Integer input) {
-    //                                        return domain.value(input);
-    //                                    }
-    //                                });
-    //                    }
-    //                });
-
     for (values <- relation map { _.asInstanceOf[Seq[Int]] }) {
       assume(values.size == indices.size)
       val tuple = values.zip(indices).map(t => t._2(t._1))
       assume(tuple.size == domains.size)
       matrix.set(tuple.toArray, !init)
     }
-    //
-    //        for (Number[] values : extension.getTuples()) {
-    //            for (int i = tuple.length; --i >= 0;) {
-    //                tuple[i] = indexes.get(i).get(values[i]);
-    //            }
-    //            matrix.set(tuple, !extension.init());
-    //        }
 
   }
 }

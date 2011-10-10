@@ -10,7 +10,7 @@ final class DecomposedAllDifferentGenerator(problem: Problem) extends AbstractGe
 
     val solverVariables = constraint.scope map cspom2cspfj
 
-    if (solverVariables.exists(_.getDomain == null)) {
+    if (solverVariables.exists(_.domain == null)) {
       false
     } else {
       val values = this.values(solverVariables);
@@ -23,7 +23,7 @@ final class DecomposedAllDifferentGenerator(problem: Problem) extends AbstractGe
           val uV = values(u)
 
           var sum = solverVariables map { v =>
-            VariableInterval(v, v.getDomain.closestGeq(lV), v.getDomain.closestLeq(uV))
+            VariableInterval(v, v.domain.closestGeq(lV), v.domain.closestLeq(uV))
           } filter { vi => vi.lb >= 0 && vi.ub >= 0 } map { vi =>
 
             vis.get(vi) match {
@@ -54,9 +54,9 @@ final class DecomposedAllDifferentGenerator(problem: Problem) extends AbstractGe
     def add() = {
       if (auxVariable == null) {
         auxVariable = addVariable(
-          "_A" + DecomposedAllDifferentGenerator.allDiff + "_" + variable.getName() + "_"
-            + variable.getValue(lb) + "_"
-            + variable.getValue(ub), new BooleanDomain());
+          "_A" + DecomposedAllDifferentGenerator.allDiff + "_" + variable.name + "_"
+            + variable.domain.value(lb) + "_"
+            + variable.domain.value(ub), new BooleanDomain());
 
         addConstraint(new ReifiedConstraint(auxVariable,
           InInterval.indexes(variable, lb, ub),
@@ -69,7 +69,7 @@ final class DecomposedAllDifferentGenerator(problem: Problem) extends AbstractGe
 
   private def values(variables: Seq[Variable]) = {
     AbstractGenerator.makeDomain(variables.foldLeft(Array[Int]())((acc, v) =>
-      acc ++ v.getDomain.allValues))
+      acc ++ v.domain.allValues))
   }
 
 }

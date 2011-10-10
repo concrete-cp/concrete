@@ -20,7 +20,7 @@ trait Domain extends Iterable[Int] {
   def lastIndex: Int
 
   override def head = firstIndex
-  override def last = lastIndex
+  //override def last = lastIndex
   override def isEmpty = firstIndex >= 0
 
   def maxSize: Int
@@ -46,8 +46,12 @@ trait Domain extends Iterable[Int] {
   def setLevel(level: Int)
 
   def restoreLevel(level: Int)
+  
+  def reset() { restoreLevel(0) }
 
   def getAtLevel(level: Int): BitVector
+  
+  def firstValue = value(firstIndex)
 
   def allValues: Array[Int]
 
