@@ -5,7 +5,8 @@ import cspfj.problem.Variable
 import org.sat4j.core.VecInt
 import java.io.PrintWriter
 
-class Sat(scope: IndexedSeq[Variable]) extends AbstractAC3Constraint(scope: _*) {
+class Sat(scope: IndexedSeq[Variable]) extends AbstractConstraint(null, scope.toArray)
+  with AC3Constraint {
 
   val offset = scope.map(_.domain.maxSize).scanLeft(1)(_ + _).toIndexedSeq
 

@@ -50,8 +50,6 @@ trait Constraint extends Weighted {
 
   private var entailedAtLevel = -1;
 
-  private var removals = 0;
-
   protected def tuple: Array[Int]
 
   /**
@@ -59,7 +57,7 @@ trait Constraint extends Weighted {
    */
   def position: Map[Variable, Int]
 
-  def getValue(position: Int) = scope(position).domain.value(tuple(position))
+  def value(position: Int) = scope(position).domain.value(tuple(position))
 
   /**
    * @param variable
@@ -102,13 +100,13 @@ trait Constraint extends Weighted {
     scope.zip(tuple).forall(vv => vv._1.domain.present(vv._2))
   }
 
-  def getRemovals(position: Int): Int = throw new UnsupportedOperationException
+  def getRemovals(position: Int): Int
 
-  def setRemovals(position: Int, value: Int) { removals = value }
+  def setRemovals(position: Int, value: Int): Unit
 
-  def fillRemovals(value: Int) { removals = value }
+  def fillRemovals(value: Int): Unit
 
-  def hasNoRemovals(reviseCount: Int) = removals < reviseCount
+  def hasNoRemovals(reviseCount: Int): Boolean
 
   final def isEntailed = entailedAtLevel >= 0
 
@@ -149,4 +147,8 @@ trait Constraint extends Weighted {
     current.copyToArray(this.tuple)
     c
   }
+
+  def getEvaluation: Double
+  
+  def tupleManager: TupleManager
 }
