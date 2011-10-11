@@ -5,7 +5,7 @@ import cspfj.problem.Variable
 import org.sat4j.core.VecInt
 import java.io.PrintWriter
 
-class Sat(val scope: IndexedSeq[Variable]) extends AbstractAC3Constraint(scope: _*) {
+class Sat(scope: IndexedSeq[Variable]) extends AbstractAC3Constraint(scope: _*) {
 
   val offset = scope.map(_.domain.maxSize).scanLeft(1)(_ + _).toIndexedSeq
 
@@ -55,14 +55,14 @@ class Sat(val scope: IndexedSeq[Variable]) extends AbstractAC3Constraint(scope: 
   }
 
   def noGood(values: Seq[(Variable, Int)]) {
-    noGoodVP(values.map(v => (getPosition(v._1), v._2)))
+    noGoodVP(values.map(v => (position(v._1), v._2)))
   }
 
   override def findSupport(vp: Int, index: Int) = {
     val s = newSolver
     //println(clauses map (_.toSeq))
     for (
-      p <- (0 until getArity) if (p != vp);
+      p <- (0 until arity) if (p != vp);
       i <- (0 until scope(p).domain.maxSize) if (!scope(p).domain.present(i))
     ) {
       //println(-numVariable(p, i))

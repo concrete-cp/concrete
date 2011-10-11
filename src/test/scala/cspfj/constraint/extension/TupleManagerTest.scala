@@ -37,7 +37,7 @@ final class TupleManagerTest {
 
 		val constraint = new AllDifferent("allDiff", v1, v2, v3);
 
-		tupleManager = new TupleManager(constraint,	constraint.getTuple);
+		tupleManager = new TupleManager(constraint,	constraint.tuple);
 
 		tuple = tupleManager.getTuple;
 
