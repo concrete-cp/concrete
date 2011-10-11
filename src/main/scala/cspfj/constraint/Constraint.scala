@@ -19,9 +19,10 @@
 
 package cspfj.constraint;
 
-import cspfj.constraint.extension.TupleManager;
-import cspfj.filter.RevisionHandler;
+import cspfj.constraint.extension.TupleManager
+import cspfj.filter.RevisionHandler
 import cspfj.problem.Variable;
+import cspfj.heuristic.Weighted
 
 object Constraint {
   var cId = 0;
@@ -36,29 +37,14 @@ object NULL_REVISATOR extends RevisionHandler {
   def revised(constraint: Constraint, variable: Variable) {}
 }
 
-abstract class AbstractConstraint(
-  _name: String,
-  val scope: IndexedSeq[Variable]) extends Constraint {
-  val name = if (_name == null) "C" + getId else _name
-  val arity = scope.size
-  val scopeSet = scope.toSet
-  val tuple = new Array[Int](arity)
-  val tupleManager = new TupleManager(this, tuple)
-  val position = scope.zipWithIndex.map { case (value, index) => value -> index }.toMap
-  def this(scope: Variable*) = this(null, scope.toIndexedSeq)
-  def isInvolved(variable: Variable) = position.contains(variable)
-}
-
-trait Weighted {
-  var weight = 1
-}
-
 trait Constraint extends Weighted {
-  def scope: IndexedSeq[Variable];
 
   val getId = Constraint.cId
   Constraint.cId += 1
 
+  /**
+   * arity is the number of variables involved by the constraint
+   */
   def arity: Int
   def name: String
 
@@ -68,23 +54,41 @@ trait Constraint extends Weighted {
 
   protected def tuple: Array[Int]
 
+  /**
+   * @return a map containing the positions of variables in the scope of the constraint.
+   */
   def position: Map[Variable, Int]
 
   def getValue(position: Int) = scope(position).domain.value(tuple(position))
 
+  /**
+   * @param variable
+   * @return true iff the given variable is involved by the constraint
+   */
   def isInvolved(variable: Variable): Boolean
 
+  /**
+   * @return the scope of the constraint
+   */
+  def scope: Array[Variable];
+
+  /**
+   * @return the scope of the constraint as an unordered Set
+   */
   def scopeSet: Set[Variable]
 
   override def equals(o: Any) = o.asInstanceOf[Constraint].getId == getId
 
+  /**
+   * @return string description of the constraint
+   */
   def getType = getClass.getSimpleName
 
   private var _level = 0;
 
   def level = _level
   def level_=(l: Int) {
-    if (entailedAtLevel > level) {
+    if (entailedAtLevel > l) {
       // LOGGER.finest("Disentailing " + this);
       disEntail();
     }
@@ -121,6 +125,28 @@ trait Constraint extends Weighted {
     consistent
   }
 
+  /**
+   * The constraint propagator.
+   *
+   * @param revisator
+   * @return false iff an inconsistency has been detected
+   */
   def revise(revisator: RevisionHandler, reviseCount: Int): Boolean
+
+  /**
+   * @return true iff the constraint is satisfied by the current values of the
+   *         tuple associated to the constraint object (see tuple: Array[Int])
+   */
   def check: Boolean
+
+  /**
+   * @return true iff the constraint is satisfied by the given tuple
+   */
+  def check(tuple: Array[Int]): Boolean = {
+    val current = this.tuple
+    tuple.copyToArray(this.tuple)
+    val c = this.check
+    current.copyToArray(this.tuple)
+    c
+  }
 }

@@ -65,7 +65,7 @@ final class Variable(
   def constraints_=(newConstraints: Seq[Constraint]) {
     _constraints = newConstraints.toIndexedSeq
     _dynamicConstraints = newConstraints filter { _.isInstanceOf[DynamicConstraint] } map { _.asInstanceOf[DynamicConstraint] }
-    _positionInConstraint = constraints.map(_.getPosition(this))
+    _positionInConstraint = constraints.map(_.position(this))
   }
 
   def domain = _domain

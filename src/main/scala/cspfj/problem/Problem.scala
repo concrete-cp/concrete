@@ -56,9 +56,9 @@ final class Problem {
 
   def addConstraint(constraint: Constraint) {
     _constraints ::= constraint;
-    _maxArity = math.max(_maxArity, constraint.getArity)
+    _maxArity = math.max(_maxArity, constraint.arity)
     _maxCId = math.max(_maxCId, constraint.getId)
-    constraint.getScope foreach (v => v.constraints :+= constraint)
+    constraint.scope foreach (v => v.constraints :+= constraint)
   }
 
   def push() {
@@ -75,18 +75,18 @@ final class Problem {
 
   private def setLevel(level: Int) {
     _variables.foreach(_.domain.setLevel(level))
-    _constraints.foreach(_.setLevel(level))
+    _constraints.foreach(_.level = level)
   }
 
   private def restoreLevel(level: Int) {
     _variables.foreach(_.domain.restoreLevel(level))
-    _constraints.foreach(_.restore(level))
+    _constraints.foreach(_.level = level)
   }
 
   def reset() {
     _currentLevel = 0;
     _variables.foreach(_.domain.reset())
-    _constraints.foreach(_.restore(0))
+    _constraints.foreach(_.level = 0)
   }
 
   override def toString = {

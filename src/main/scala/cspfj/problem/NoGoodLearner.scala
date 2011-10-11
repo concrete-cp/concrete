@@ -64,7 +64,7 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
             if (newNogoods > 0) {
               nbNoGoods += newNogoods;
               modifiedConstraints += constraint;
-              if (constraint.getId() > problem.maxCId) {
+              if (constraint.getId > problem.maxCId) {
                 // LOGGER.info("Added " + constraint);
                 addedConstraints ::= constraint;
               }
@@ -132,8 +132,8 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
   }
 
   def learnConstraint(scope: Seq[Variable]): DynamicConstraint = {
-    scope.head.dynamicConstraints.find(c => c.getArity == scope.size &&
-      scope.forall(c.getScopeSet.contains)) match {
+    scope.head.dynamicConstraints.find(c => c.arity == scope.size &&
+      scope.forall(c.scopeSet.contains)) match {
       case Some(c) => c
       case None => {
         learnMethod match {
@@ -175,15 +175,15 @@ object NoGoodLearner {
    */
   def makeBase(scope: Seq[Variable], values: Seq[Int], constraint: Constraint) = {
     assert(scope.size == values.size + 1);
-    assert(scope.length == constraint.getArity);
+    assert(scope.length == constraint.arity);
 
-    val base = new Array[Int](constraint.getArity)
+    val base = new Array[Int](constraint.arity)
 
     scope.init.zipWithIndex.foreach { z =>
-      base(constraint.getPosition(z._1)) = values(z._2)
+      base(constraint.position(z._1)) = values(z._2)
     }
 
-    (base, constraint.getPosition(scope.last));
+    (base, constraint.position(scope.last));
   }
 }
 

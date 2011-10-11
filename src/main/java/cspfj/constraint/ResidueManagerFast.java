@@ -11,7 +11,7 @@ public final class ResidueManagerFast implements ResidueManager {
     public ResidueManagerFast(final Variable[] scope) {
         last = new int[scope.length][][];
         for (int i = scope.length; --i >= 0;) {
-            last[i] = new int[scope[i].getLast() + 1][];
+            last[i] = new int[scope[i].domain().lastIndex() + 1][];
         }
     }
 
