@@ -3,7 +3,10 @@ package cspfj.constraint;
 import cspfj.filter.RevisionHandler;
 import cspfj.problem.Variable;
 
-trait PVRConstraint extends ArcGrainedConstraint {
+/**
+ * A constraint that can be revised one variable at a time
+ */
+trait VariablePerVariable extends ArcGrainedConstraint {
 
   /**
    * Try to filter values from variable getVariable(position).
@@ -21,12 +24,12 @@ trait PVRConstraint extends ArcGrainedConstraint {
       // assert (!variable.isAssigned() && skipRevision(i)) ? !revise(i)
       // : true : "Should not skip " + this + ", " + i;
       if (i != skip && revise(i)) {
-        if (variable.domain.size == 0) {
+        if (variable.dom.size == 0) {
           return false;
         }
         revisator.revised(this, variable);
       }
-      if (variable.domain.size == 1) {
+      if (variable.dom.size == 1) {
         singletons += 1;
       }
     }

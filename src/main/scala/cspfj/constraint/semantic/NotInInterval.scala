@@ -5,69 +5,44 @@ import cspfj.filter.RevisionHandler;
 import cspfj.problem.Domain;
 import cspfj.problem.Variable;
 
-public final class NotInInterval extends AbstractConstraint {
+object NotInInterval {
+  def values(variable: Variable, lb: Int, ub: Int) =
+    new NotInInterval(variable, variable.dom.closestGeq(lb), variable.dom.closestLeq(ub))
 
-	private final int lb, ub;
-	private final Variable variable;
+  def indices(variable: Variable, lb: Int, ub: Int) =
+    new NotInInterval(variable, lb, ub)
+}
 
-	private NotInInterval(final Variable variable, final int lb, final int ub) {
-		super(variable);
+final class NotInInterval(val variable: Variable, val lb: Int, val ub: Int)
+  extends AbstractConstraint(Array(variable)) {
 
-		this.variable = variable;
-		this.lb = lb;
-		this.ub = ub;
-	}
+  val getEvaluation = 0
 
-	public static NotInInterval values(final Variable variable, final int lb,
-			final int ub) {
-		final Domain domain = variable.getDomain();
-		return new NotInInterval(variable, domain.closestGeq(lb), domain
-				.closestLeq(ub));
-	}
+  def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
+    var changed = false;
+    variable.dom.indices(lb).takeWhile(_ <= ub).foreach { i =>
+      variable.dom.remove(i)
+      changed = true
+    }
 
-	public static NotInInterval indexes(final Variable variable, final int lb,
-			final int ub) {
-		return new NotInInterval(variable, lb, ub);
-	}
+    if (changed) {
+      if (variable.dom.size == 0) {
+        return false;
+      }
+      revisator.revised(this, variable);
+    }
+    entail();
+    true;
+  }
 
-	@Override
-	public float getEvaluation() {
-		return 0;
-	}
+  def isConsistent(reviseCount: Int) =
+    variable.dom.first < lb || variable.dom.last > ub;
 
-	@Override
-	public boolean revise(final RevisionHandler revisator, final int reviseCount) {
-		boolean changed = false;
-		for (int i = lb; 0 <= i && i <= ub; i = variable.getNext(i)) {
-			if (variable.isPresent(i)) {
-				variable.remove(i);
-				changed = true;
-			}
-		}
-		if (changed) {
-			if (variable.getDomainSize() <= 0) {
-				return false;
-			}
-			revisator.revised(this, getVariable(0));
-		}
-		entail();
-		return true;
-	}
+  def check = {
+    val value = this.value(0);
+    value < lb || ub < value;
+  }
 
-	@Override
-	public boolean isConsistent(final int reviseCount) {
-		return variable.getFirst() < lb || variable.getLast() > ub;
-	}
+  def toString = variable + " notin [" + variable.dom.value(lb) + ", " + variable.dom.value(ub) + "]"
 
-	@Override
-	public boolean check() {
-		final int value = getValue(0);
-		return value < lb || ub < value;
-	}
-
-	@Override
-	public String toString() {
-		return getVariable(0) + " notin [" + getVariable(0).getValue(lb) + ", "
-				+ getVariable(0).getValue(ub) + "]";
-	}
 }

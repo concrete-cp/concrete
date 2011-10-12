@@ -1,168 +1,123 @@
 package cspfj.constraint.semantic;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ObjectArrays;
+import com.google.common.base.Preconditions
+import com.google.common.collect.ObjectArrays
+import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.Constraint
+import cspfj.filter.RevisionHandler
+import cspfj.problem.BooleanDomain
+import cspfj.problem.Variable
+import cspfj.problem.UNKNOWN
+import cspfj.problem.TRUE
+import cspfj.problem.FALSE
 
-import cspfj.constraint.AbstractConstraint;
-import cspfj.constraint.Constraint;
-import cspfj.filter.RevisionHandler;
-import cspfj.problem.BooleanDomain;
-import cspfj.problem.Variable;
+final class ReifiedConstraint(
+  controlVariable: Variable,
+  val positiveConstraint: Constraint,
+  val negativeConstraint: Constraint)
+  extends AbstractConstraint(controlVariable +: positiveConstraint.scope) {
 
-public final class ReifiedConstraint extends AbstractConstraint {
+  require(positiveConstraint.scope == negativeConstraint.scope)
+  require(controlVariable.dom.isInstanceOf[BooleanDomain], "Control variable must be boolean")
 
-    private final BooleanDomain controlDomain;
-    private final Constraint positiveConstraint;
-    private final Constraint negativeConstraint;
+  val controlDomain = controlVariable.dom.asInstanceOf[BooleanDomain]
 
-    private RevisionHandler usualRevisator;
-    private RevisionHandler usualReifiedRevisator;
+  var usualRevisator: RevisionHandler = null
+  var usualReifiedRevisator: RevisionHandler = null
 
-    public ReifiedConstraint(final Variable controlVariable,
-            final Constraint positiveConstraint,
-            final Constraint negativeConstraint) {
-        super(ObjectArrays.concat(controlVariable,
-                positiveConstraint.getScope()));
+  private final class ReifiedRevisionHandler(val reifiedRevisator: RevisionHandler)
+    extends RevisionHandler {
 
-        Preconditions.checkArgument(
-                controlVariable.getDomain() instanceof BooleanDomain,
-                "Control variable must be boolean");
-
-        this.controlDomain = (BooleanDomain) controlVariable.getDomain();
-
-        this.positiveConstraint = positiveConstraint;
-        this.negativeConstraint = negativeConstraint;
-        // positiveConstraint.fillRemovals(Integer.MAX_VALUE);
-        // negativeConstraint.fillRemovals(Integer.MAX_VALUE);
+    override def revised(constraint: Constraint, variable: Variable) {
+      reifiedRevisator.revised(ReifiedConstraint.this, variable);
     }
 
-    private final class ReifiedRevisionHandler implements RevisionHandler {
+  }
 
-        private final RevisionHandler reifiedRevisator;
+  override def level_=(l: Int) {
+    super.level = l
+    positiveConstraint.level = l
+    negativeConstraint.level = l
+  }
 
-        private ReifiedRevisionHandler(final RevisionHandler reifiedRevisator) {
-            this.reifiedRevisator = reifiedRevisator;
-        }
+  override def revise(revisator: RevisionHandler, reviseCount: Int): Boolean =
+    controlDomain.status match {
+      case UNKNOWN =>
+        if (!positiveConstraint.isConsistent(reviseCount)) {
+          controlDomain.setFalse();
+          if (noReifyRevise(negativeConstraint, revisator, reviseCount)) {
+            revisator.revised(this, scope(0));
+            true
+          } else false
+        } else if (!negativeConstraint.isConsistent(reviseCount)) {
+          controlDomain.setTrue();
+          if (noReifyRevise(positiveConstraint, revisator, reviseCount)) {
+            revisator.revised(this, scope(0));
+            true
+          } else false
+        } else true
 
-        @Override
-        public void revised(final Constraint constraint, final Variable variable) {
-            reifiedRevisator.revised(ReifiedConstraint.this, variable);
-        }
+      case TRUE => noReifyRevise(positiveConstraint, revisator, reviseCount);
+      case FALSE => noReifyRevise(negativeConstraint, revisator, reviseCount);
 
-    }
-
-    @Override
-    public void setLevel(final int level) {
-        super.setLevel(level);
-        positiveConstraint.setLevel(level);
-        negativeConstraint.setLevel(level);
-    }
-
-    @Override
-    public void restore(final int level) {
-        super.restore(level);
-        positiveConstraint.restore(level);
-        negativeConstraint.restore(level);
-    }
-
-    @Override
-    public boolean revise(final RevisionHandler revisator, final int reviseCount) {
-        if (controlDomain.isUnknown()) {
-            if (!positiveConstraint.isConsistent(reviseCount)) {
-                controlDomain.setFalse();
-                if (noReifyRevise(negativeConstraint, revisator, reviseCount)) {
-                    revisator.revised(this, getVariable(0));
-                    return true;
-                }
-                return false;
-            }
-
-            if (!negativeConstraint.isConsistent(reviseCount)) {
-                controlDomain.setTrue();
-                if (noReifyRevise(positiveConstraint, revisator, reviseCount)) {
-                    revisator.revised(this, getVariable(0));
-                    return true;
-                }
-                return false;
-            }
-            return true;
-        }
-        if (controlDomain.isTrue())
-            return noReifyRevise(positiveConstraint, revisator, reviseCount);
-        if (controlDomain.isFalse())
-            return noReifyRevise(negativeConstraint, revisator, reviseCount);
-
-        throw new IllegalStateException();
+      case _ => throw new IllegalStateException
 
     }
 
-    private boolean noReifyRevise(final Constraint constraint,
-            final RevisionHandler revisator, final int reviseCount) {
-        final RevisionHandler reifiedRevisator;
-        if (revisator == usualRevisator) {
-            reifiedRevisator = usualReifiedRevisator;
-        } else {
-            reifiedRevisator = new ReifiedRevisionHandler(revisator);
-            usualRevisator = revisator;
-            usualReifiedRevisator = reifiedRevisator;
-        }
-        final int actualRevise;
-        if (controlRemovals >= reviseCount) {
-            actualRevise = -1;
-        } else {
-            actualRevise = reviseCount;
-        }
-        if (constraint.revise(reifiedRevisator, actualRevise)) {
-            if (constraint.isEntailed()) {
-                entail();
-            }
-            return true;
-        }
-        return false;
+  private def noReifyRevise(constraint: Constraint,
+    revisator: RevisionHandler, reviseCount: Int) = {
+    val reifiedRevisator = if (revisator == usualRevisator) {
+      usualReifiedRevisator;
+    } else {
+      new ReifiedRevisionHandler(revisator);
+      usualRevisator = revisator;
+      usualReifiedRevisator = new ReifiedRevisionHandler(revisator)
+      usualReifiedRevisator
     }
 
-    @Override
-    public boolean check() {
-        System.arraycopy(tuple, 1, positiveConstraint.getTuple(), 0,
-                positiveConstraint.getArity());
-
-        return (getValue(0) == 1) == positiveConstraint.check();
+    val actualRevise = if (controlRemovals >= reviseCount) {
+      -1;
+    } else {
+      reviseCount;
     }
 
-    @Override
-    public float getEvaluation() {
-        return positiveConstraint.getEvaluation()
-                + negativeConstraint.getEvaluation();
-    }
+    if (constraint.revise(reifiedRevisator, actualRevise)) {
+      if (constraint.isEntailed) {
+        entail();
+      }
+      true;
+    } else false;
+  }
 
-    @Override
-    public String toString() {
-        return getVariable(0) + " == (" + positiveConstraint + ")";
-    }
+  def check = {
+    tuple.copyToArray(positiveConstraint.tuple, 1, arity - 1)
+    (value(0) == 1) == positiveConstraint.check
+  }
 
-    private int controlRemovals;
+  def getEvaluation =
+    positiveConstraint.getEvaluation
+  +negativeConstraint.getEvaluation
 
-    @Override
-    public void setRemovals(final int position, final int value) {
-        if (position == 0) {
-            controlRemovals = value;
-        } else {
-            positiveConstraint.setRemovals(position - 1, value);
-            negativeConstraint.setRemovals(position - 1, value);
-        }
-    }
+  def toString = scope(0) + " == (" + positiveConstraint + ")";
 
-    @Override
-    public void fillRemovals(final int value) {
-        controlRemovals = value;
-        positiveConstraint.fillRemovals(value);
-        negativeConstraint.fillRemovals(value);
-    }
+  var controlRemovals = 0
 
-    @Override
-    public boolean hasNoRemovals(final int value) {
-        return controlRemovals < value
-                && positiveConstraint.hasNoRemovals(value);
+  override def setRemovals(position: Int, value: Int) {
+    if (position == 0) {
+      controlRemovals = value;
+    } else {
+      positiveConstraint.setRemovals(position - 1, value);
+      negativeConstraint.setRemovals(position - 1, value);
     }
+  }
+
+  override def fillRemovals(value: Int) {
+    controlRemovals = value;
+    positiveConstraint.fillRemovals(value);
+    negativeConstraint.fillRemovals(value);
+  }
+
+  override def hasNoRemovals(value: Int) =
+    controlRemovals < value && positiveConstraint.hasNoRemovals(value);
 
 }

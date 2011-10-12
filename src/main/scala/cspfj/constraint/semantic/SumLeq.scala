@@ -1,87 +1,64 @@
 package cspfj.constraint.semantic;
 
-import cspfj.constraint.AbstractConstraint;
-import cspfj.filter.RevisionHandler;
-import cspfj.problem.Domain;
+import cspfj.constraint.AbstractConstraint
+import cspfj.filter.RevisionHandler
+import cspfj.problem.Domain
 import cspfj.problem.Variable;
+import scala.annotation.tailrec
 
-public final class SumLeq extends AbstractConstraint {
+final class SumLeq(val bound: Int, scope: Array[Variable]) extends AbstractConstraint(scope) {
 
-	private final int bound;
+  def check: Boolean = {
 
-	public SumLeq(final int bound, final Variable... variables) {
-		super(variables);
-		this.bound = bound;
-	}
+    @tailrec
+    def c(i: Int, bound: Int): Boolean = {
+      if (i >= arity) true else {
+        val nb = bound - value(i)
+        if (nb < 0) false else c(i + 1, nb)
+      }
+    }
 
-	@Override
-	public boolean check() {
-		int sum = 0;
-		for (int i = getArity(); --i >= 0;) {
-			sum += getValue(i);
-			if (sum > bound) {
-				return false;
-			}
-		}
+    c(0, bound)
+  }
 
-		return true;
-	}
+  def getEvaluation = arity
 
-	@Override
-	public float getEvaluation() {
-		return getArity();
-	}
+  private def removeGt(value: Int, dom: Domain) = {
+    val lb = dom.closestGeq(value)
+    if (lb >= 0) {
+      if (dom.value(lb) != value) {
+        dom.removeFrom(lb) > 0;
+      } else {
+        dom.removeFrom(lb + 1) > 0;
+      }
+    } else false
+  }
 
-	private boolean removeGt(final int value, final Domain dom) {
-		final int lb = dom.closestGeq(value);
-		if (lb >= 0) {
-			if (dom.value(lb) != value) {
-				return dom.removeFrom(lb) > 0;
-			}
-			return dom.removeFrom(lb + 1) > 0;
-		}
-		return false;
-	}
+  def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
 
-	@Override
-	public boolean revise(final RevisionHandler revisator, final int reviseCount) {
-		int min = 0;
-		for (int i = getArity(); --i >= 0;) {
-			final Domain dom = getVariable(i).getDomain();
-			min += dom.value(dom.firstIndex());
-		}
-		final int newBound = bound - min;
-		if (newBound < 0) {
-			return false;
-		}
+    val newBound = bound - scope.map(_.dom.firstValue).sum
+    if (newBound < 0) {
+      return false;
+    }
 
-		int max = 0;
-		for (int i = getArity(); --i >= 0;) {
-			final Domain dom = getVariable(i).getDomain();
-			if (removeGt(newBound + dom.value(dom.firstIndex()), dom)) {
-				if (dom.size() <= 0) {
-					return false;
-				}
-				revisator.revised(this, getVariable(i));
-			}
-			max += dom.value(dom.last());
-		}
+    var max = 0;
+    for (v <- scope) {
+      val dom = v.dom
+      if (removeGt(newBound + dom.firstValue, dom)) {
+        if (dom.size == 0) {
+          return false;
+        }
+        revisator.revised(this, v);
+      }
+      max += dom.lastValue
+    }
 
-		if (max <= bound) {
-			entail();
-		}
+    if (max <= bound) {
+      entail();
+    }
 
-		return true;
-	}
+    true;
+  }
 
-	@Override
-	public String toString() {
-		final StringBuilder stb = new StringBuilder();
-		stb.append(getVariable(0));
-		for (int i = 1; i < getArity(); i++) {
-			stb.append(" + ").append(getVariable(i));
-		}
-		stb.append(" <= ").append(bound);
-		return stb.toString();
-	}
+  def toString = scope.mkString(" + ") + " <= " + bound
 }

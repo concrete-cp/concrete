@@ -1,95 +1,85 @@
 package cspfj.constraint.semantic;
 
-import cspfj.constraint.AbstractAC3Constraint;
-import cspfj.problem.Domain;
+import cspfj.constraint.AbstractAC3Constraint
+import cspfj.problem.Domain
 import cspfj.problem.Variable;
+import cspfj.constraint.Residues
+import cspfj.constraint.AbstractConstraint
 
 /**
  * Contrainte V0 = V1 * V2.
- * 
+ *
  * @author vion
- * 
+ *
  */
-public final class Mul extends AbstractAC3Constraint {
+final class Mul(val result: Variable, val v0: Variable, val v1: Variable)
+  extends AbstractConstraint(Array(result, v0, v1))
+  with Residues {
 
-	public Mul(final Variable result, final Variable v0, final Variable v1) {
-		super(result, v0, v1);
-	}
+  def check = value(0) == (value(1) * value(2));
 
-	@Override
-	public boolean check() {
-		return getValue(0) == (getValue(1) * getValue(2));
-	}
+  def findSupport(variablePosition: Int, index: Int) =
+    variablePosition match {
+      case 0 =>
+        if (v0.dom.size < v1.dom.size)
+          findValidTuple0(index, 1, 2);
+        else
+          findValidTuple0(index, 2, 1);
+      case 1 => findValidTuple(index, 1, 2);
+      case 2 =>
+        findValidTuple(index, 2, 1);
+      case _ =>
+        throw new IndexOutOfBoundsException()
 
-	@Override
-	public boolean findSupport(final int variablePosition, final int index) {
-		switch (variablePosition) {
-		case 0:
-			if (getVariable(1).getDomainSize() < getVariable(2).getDomainSize()) {
-				return findValidTuple0(index, 1, 2);
-			}
-			return findValidTuple0(index, 2, 1);
-		case 1:
-			return findValidTuple(index, 1, 2);
-		case 2:
-			return findValidTuple(index, 2, 1);
-		default:
-			throw new IndexOutOfBoundsException();
-		}
-	}
+    }
 
-	private boolean findValidTuple0(final int index, final int pos1,
-			final int pos2) {
-		final int val0 = getVariable(0).getValue(index);
-		final Domain dom1 = getVariable(pos1).getDomain();
-		final Domain dom2 = getVariable(pos2).getDomain();
+  private def findValidTuple0(index: Int, pos1: Int, pos2: Int): Boolean = {
+    val val0 = result.dom.value(index)
+    val dom1 = scope(pos1).dom
+    val dom2 = scope(pos2).dom
 
-		for (int i = dom1.firstIndex(); i >= 0; i = dom1.next(i)) {
-			final int val1 = dom1.value(i);
-			final int j;
-			if (val1 == 0 && val0 == 0) {
-				j = dom2.index(0);
-			} else if (val1 == 0 || val0 % val1 != 0) {
-				continue;
-			} else {
-				j = dom2.index(val0 / val1);
-			}
-			if (j >= 0 && dom2.present(j)) {
-				tuple[0] = index;
-				tuple[pos1] = i;
-				tuple[pos2] = j;
-				return true;
-			}
-		}
-		return false;
-	}
+    for (i <- dom1.indices) {
+      val val1 = dom1.value(i);
+      val j =
+        if (val1 == 0 && val0 == 0) {
+          dom2.index(0);
+        } else if (val1 == 0 || val0 % val1 != 0) {
+          -1
+        } else {
+          dom2.index(val0 / val1);
+        }
+      if (j >= 0 && dom2.present(j)) {
+        tuple(0) = index;
+        tuple(pos1) = i;
+        tuple(pos2) = j;
+        return true;
+      }
+    }
+    false;
+  }
 
-	private boolean findValidTuple(final int index, final int pos1,
-			final int pos2) {
-		final Domain result = getVariable(0).getDomain();
-		final int val = getVariable(pos1).getValue(index);
-		final Domain dom = getVariable(pos2).getDomain();
-		for (int i = dom.firstIndex(); i >= 0; i = dom.next(i)) {
-			final int resIndex = result.index(val * dom.value(i));
-			if (resIndex >= 0 && result.present(resIndex)) {
-				tuple[0] = resIndex;
-				tuple[pos1] = index;
-				tuple[pos2] = i;
-				return true;
-			}
-		}
-		return false;
-	}
+  def findValidTuple(index: Int, pos1: Int, pos2: Int): Boolean = {
+    val result = this.result.dom
+    val value = scope(pos1).dom.value(index)
+    val dom = scope(pos2).dom
+    for (i <- dom.indices) {
+      val resIndex = result.index(value * dom.value(i));
+      if (resIndex >= 0 && result.present(resIndex)) {
+        tuple(0) = resIndex;
+        tuple(pos1) = index;
+        tuple(pos2) = i;
+        return true;
+      }
+    }
+    false;
+  }
 
-	public String toString() {
-		return getVariable(0) + " = " + getVariable(1) + " * " + getVariable(2);
-	}
+  def toString = result + " = " + v0 + " * " + v1
 
-	@Override
-	public float getEvaluation() {
-		final int d0 = getVariable(0).getDomainSize();
-		final int d1 = getVariable(1).getDomainSize();
-		final int d2 = getVariable(2).getDomainSize();
-		return d0 * d1 + d0 * d2 + d1 * d2;
-	}
+  def getEvaluation = {
+    val d0 = result.dom.size
+    val d1 = v0.dom.size
+    val d2 = v1.dom.size
+    d0 * d1 + d0 * d2 + d1 * d2;
+  }
 }

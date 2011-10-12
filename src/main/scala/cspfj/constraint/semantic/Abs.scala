@@ -1,19 +1,18 @@
 package cspfj.constraint.semantic;
 
-import cspfj.constraint.AbstractConstraint;
-import cspfj.filter.RevisionHandler;
-import cspfj.problem.Domain;
-import cspfj.problem.Variable;
+import cspfj.constraint.AbstractConstraint
+import cspfj.filter.RevisionHandler
+import cspfj.problem.Variable
 
 final class Abs(val result: Variable, val v0: Variable) extends AbstractConstraint(Array(result, v0)) {
 
-  val corresponding1 = result.domain.allValues map { v0.domain.index }
-  val corresponding2 = result.domain.allValues map { v => v0.domain.index(-v) }
-  val correspondingR = v0.domain.allValues map { v => result.domain.index(math.abs(v)) }
+  val corresponding1 = result.dom.allValues map { v0.dom.index }
+  val corresponding2 = result.dom.allValues map { v => v0.dom.index(-v) }
+  val correspondingR = v0.dom.allValues map { v => result.dom.index(math.abs(v)) }
 
   def check = value(0) == math.abs(value(1))
 
-  private def valid(index: Int, variable: Variable) = index >= 0 && variable.domain.present(index)
+  private def valid(index: Int, variable: Variable) = index >= 0 && variable.dom.present(index)
 
   def revise(revisator: RevisionHandler, reviseCount: Int) =
     revise(revisator, result, { i =>
@@ -23,16 +22,16 @@ final class Abs(val result: Variable, val v0: Variable) extends AbstractConstrai
   private def revise(revisator: RevisionHandler, v: Variable, f: (Int => Boolean)): Boolean = {
     var change = false
 
-    for (i <- v.domain if f(i)) {
-      v.domain.remove(i)
+    for (i <- v.dom.indices if f(i)) {
+      v.dom.remove(i)
       change = true
     }
 
     if (change) {
-      if (v.domain.size == 0) {
+      if (v.dom.size == 0) {
         return false
       }
-      if (v.domain.size == 1) {
+      if (v.dom.size == 1) {
         entail()
       }
       revisator.revised(this, v)
@@ -42,5 +41,5 @@ final class Abs(val result: Variable, val v0: Variable) extends AbstractConstrai
 
   def toString = result + " = |" + v0 + "|";
 
-  def getEvaluation = result.domain.size * 3 / 2 + v0.domain.size
+  def getEvaluation = result.dom.size * 3 / 2 + v0.dom.size
 }

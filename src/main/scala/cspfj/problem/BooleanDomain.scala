@@ -101,21 +101,20 @@ object EMPTY extends Status {
   val indexes = Array[Int]()
 }
 
-class BooleanDomain extends Domain {
+class BooleanDomain(var _status: Status) extends Domain {
 
   private var history: List[(Int, Status)] = Nil
 
   private var currentLevel = 0
 
-  private var status: Status = UNKNOWN
+  def this(constant: Boolean) = this(constant match {
+    case true => TRUE
+    case false => FALSE
+  })
 
-  def this(constant: Boolean) = {
-    this;
-    status = constant match {
-      case true => TRUE
-      case false => FALSE
-    }
-  }
+  def this() = this(UNKNOWN)
+
+  def status = _status
 
   override def firstIndex = status.first
 
@@ -143,18 +142,17 @@ class BooleanDomain extends Domain {
 
   def setSingle(i: Int) {
     if (i == 0) {
-      setStatus(FALSE);
+      status = FALSE
     } else {
-      setStatus(TRUE);
+      status = TRUE
     }
-
   }
 
   var removed = false;
 
-  def setStatus(status: Status) {
+  def status_=(s: Status) {
     assert(this.status == UNKNOWN || status == EMPTY && this.status != EMPTY)
-    this.status = status;
+    this.status = s;
     removed = true
   }
 
@@ -163,11 +161,11 @@ class BooleanDomain extends Domain {
   def remove(i: Int) {
     assert(present(i));
     if (status.size == 1) {
-      setStatus(EMPTY);
+      status = EMPTY
     } else if (i == 0) {
-      setStatus(TRUE);
+      status = TRUE
     } else {
-      setStatus(FALSE);
+      status = FALSE
     }
   }
 
@@ -210,8 +208,6 @@ class BooleanDomain extends Domain {
 
   val allValues = UNKNOWN.array
 
-  def currentValues = status.array
-
   override def toString = status.toString
 
   def getStatus = status
@@ -238,8 +234,8 @@ class BooleanDomain extends Domain {
   def isFalse = status == FALSE
   def isUnknown = status == UNKNOWN
   override def isEmpty = status == EMPTY
-  def setTrue() { setStatus(TRUE) }
-  def setFalse() { setStatus(FALSE) }
+  def setTrue() { status = TRUE }
+  def setFalse() { status = FALSE }
   def currentIndexes = status.indexes
 }
 

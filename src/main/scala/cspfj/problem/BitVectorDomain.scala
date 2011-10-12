@@ -17,13 +17,11 @@ final class BitVectorDomain(
   private var history: List[(Int, BitVector, Int)]) extends Domain {
   require(domain.sliding(2).forall(p => p.size == 1 || p(0) < p(1)), "Only ordered domains are supported");
 
-  private val indices = domain.zipWithIndex.map { case (v, i) => v -> i }.toMap.withDefaultValue(-1)
+  private val indicesMap = domain.zipWithIndex.map { case (v, i) => v -> i }.toMap.withDefaultValue(-1)
 
   private var _size = domain.size
 
   override def size = _size
-
-  //  private var _last = domain.size - 1
 
   private var currentLevel = 0;
 
@@ -37,18 +35,11 @@ final class BitVectorDomain(
   def this(domain: BitVectorDomain) =
     this(domain.domain, domain.bvDomain.clone, domain.history)
 
-  override def firstIndex = bvDomain.nextSetBit(0);
+  override def first = bvDomain.nextSetBit(0);
 
-  override def lastIndex = bvDomain.prevSetBit(maxSize)
+  override def last = bvDomain.prevSetBit(maxSize)
 
-  //  override def lastIndex = {
-  //    assert(_last == bvDomain.prevSetBit(domain.length), "Recorded " + last
-  //      + ", should be " + bvDomain.prevSetBit(domain.length)
-  //      + " given current domain " + toString())
-  //    _last;
-  //  }
-
-  override def lastAbsent() = bvDomain.prevClearBit(domain.length);
+  override def lastAbsent = bvDomain.prevClearBit(domain.length);
 
   override def next(i: Int) = bvDomain.nextSetBit(i + 1)
 
@@ -61,7 +52,7 @@ final class BitVectorDomain(
    *            the value we seek the index for
    * @return the index of the given value or -1 if it could not be found
    */
-  override def index(value: Int) = indices(value)
+  override def index(value: Int) = indicesMap(value)
 
   private def closestLeq(value: Int, lb: Int, ub: Int): Int = {
     if (domain(ub) <= value) {
@@ -76,14 +67,8 @@ final class BitVectorDomain(
     }
   }
 
-  override def closestLeq(value: Int) = {
-    var lb = firstIndex;
-    if (domain(lb) > value) {
-      -1;
-    } else {
-      closestLeq(value, lb, lastIndex);
-    }
-  }
+  override def closestLeq(value: Int) =
+    if (domain(first) > value) -1 else closestLeq(value, first, last)
 
   private def closestGeq(value: Int, lb: Int, ub: Int): Int = {
     if (domain(lb) >= value) {
@@ -98,14 +83,8 @@ final class BitVectorDomain(
     }
   }
 
-  override def closestGeq(value: Int) = {
-    var ub = last;
-    if (domain(ub) < value) {
-      -1;
-    } else {
-      closestGeq(value, head, ub)
-    }
-  }
+  override def closestGeq(value: Int) =
+    if (domain(last) < value) -1 else closestGeq(value, first, last)
 
   /**
    * @param index
@@ -117,12 +96,10 @@ final class BitVectorDomain(
   override def setSingle(index: Int) {
     bvDomain.setSingle(index);
     _size = 1;
-    //_last = index;
     removed = true
   }
 
-  override def value(index: Int) =
-    domain(index);
+  override def value(index: Int) = domain(index);
 
   override def remove(index: Int) {
     assert(present(index));
@@ -147,8 +124,6 @@ final class BitVectorDomain(
 
   override def getBitVector = bvDomain
 
-  override val maxSize = domain.length
-
   override def setLevel(level: Int) {
     assert(level > currentLevel, "Given level " + level
       + " should be greater than current " + currentLevel)
@@ -157,7 +132,6 @@ final class BitVectorDomain(
       removed = false
     }
     currentLevel = level;
-
   }
 
   override def restoreLevel(level: Int) {
@@ -185,27 +159,12 @@ final class BitVectorDomain(
     } else bvDomain;
   }
 
-  override val allValues = domain.toArray;
+  override def allValues = domain;
 
-  override def currentValues = currentIndexes map value
-
-  def currentIndexes = {
-    val indexes = new Array[Int](size)
-    var j = 0
-    var i = firstIndex
-    while (i != -1) {
-      indexes(j) = i
-      i = next(i)
-      j += 1
-    }
-    indexes
+  override def toString = if (size <= BitVectorDomain.DISPLAYED_VALUES) {
+    values.mkString("[", ", ", "]");
+  } else {
+    values.take(BitVectorDomain.DISPLAYED_VALUES).mkString("[", ", ", " (" + (size - BitVectorDomain.DISPLAYED_VALUES) + " more)]")
   }
 
-  override def toString = {
-    if (size <= BitVectorDomain.DISPLAYED_VALUES) {
-      mkString("[", ", ", "]");
-    } else {
-      take(BitVectorDomain.DISPLAYED_VALUES).mkString("[", ", ", " (" + (size - BitVectorDomain.DISPLAYED_VALUES) + " more)]")
-    }
-  }
 }

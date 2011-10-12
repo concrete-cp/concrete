@@ -5,61 +5,34 @@ import cspfj.filter.RevisionHandler;
 import cspfj.problem.Domain;
 import cspfj.problem.Variable;
 
-public final class Neq extends AbstractConstraint {
+final class Neq(v0: Variable, v1: Variable) extends AbstractConstraint(Array(v0, v1)) {
 
-    /**
-     * Corresponding scope is reversed!
-     */
-    private final int[][] corresponding;
+  val corresponding0 =
+    v1.dom.values map v0.dom.index toIndexedSeq
 
-    public Neq(final Variable v0, final Variable v1) {
-        super(v0, v1);
-        final Domain v0Dom = v0.getDomain();
-        final Domain v1Dom = v1.getDomain();
-        corresponding = new int[][] { new int[v1Dom.maxSize()],
-                new int[v0Dom.maxSize()] };
+  val corresponding1 =
+    v0.dom.values map v1.dom.index toIndexedSeq
 
-        for (int i = v0Dom.firstIndex(); i >= 0; i = v0Dom.next(i)) {
-            corresponding[1][i] = v1Dom.index(v0Dom.value(i));
-        }
-        for (int i = v1Dom.firstIndex(); i >= 0; i = v1Dom.next(i)) {
-            corresponding[0][i] = v0Dom.index(v1Dom.value(i));
-        }
+  def check = value(0) != value(1)
+
+  def revise(revisionHandler: RevisionHandler, revisionCount: Int): Boolean =
+    revise(revisionHandler, v0, v1, corresponding1) &&
+      revise(revisionHandler, v1, v0, corresponding0)
+
+  def revise(revisionHandler: RevisionHandler, variable: Variable, otherVar: Variable, corresponding: IndexedSeq[Int]): Boolean = {
+    if (variable.dom.size == 1) {
+      val index = corresponding(variable.dom.first)
+      if (index >= 0 && otherVar.dom.present(index)) {
+        if (otherVar.dom.size == 1) return false
+        otherVar.dom.remove(index)
+        revisionHandler.revised(this, otherVar)
+        entail()
+      }
     }
+    true
+  }
 
-    @Override
-    public boolean check() {
-        return getValue(0) != getValue(1);
-    }
+  def toString = v0 + " /= " + v1
 
-    @Override
-    public boolean revise(final RevisionHandler revisionHandler,
-            final int revisionCount) {
-        for (int p = 2; --p >= 0;) {
-            final Domain dom = getVariable(p).getDomain();
-            if (dom.size() == 1) {
-                final Variable otherVar = getVariable(1 - p);
-                final int index = corresponding[1 - p][dom.firstIndex()];
-                if (index >= 0 && otherVar.isPresent(index)) {
-                    if (otherVar.getDomainSize() == 1) {
-                        return false;
-                    }
-                    otherVar.remove(index);
-                    revisionHandler.revised(this, getVariable(1 - p));
-                    entail();
-                }
-            }
-        }
-        return true;
-    }
-
-    public String toString() {
-        return getVariable(0) + " /= " + getVariable(1);
-    }
-
-    @Override
-    public float getEvaluation() {
-        return getArity();
-    }
-
+  val getEvaluation = arity
 }

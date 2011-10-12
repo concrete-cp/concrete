@@ -68,9 +68,9 @@ final class Variable(
     _positionInConstraint = constraints.map(_.position(this))
   }
 
-  def domain = _domain
+  def dom = _domain
 
-  def domain_=(d: Domain) {
+  def dom_=(d: Domain) {
     require(_domain == null, "Reassignment of domain")
     _domain = d
   }

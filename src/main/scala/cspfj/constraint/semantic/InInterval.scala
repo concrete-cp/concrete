@@ -1,71 +1,46 @@
 package cspfj.constraint.semantic;
 
-import cspfj.constraint.AbstractConstraint;
-import cspfj.filter.RevisionHandler;
-import cspfj.problem.Domain;
+import cspfj.constraint.AbstractConstraint
+import cspfj.filter.RevisionHandler
+import cspfj.problem.Domain
 import cspfj.problem.Variable;
+import cspfj.filter.RevisionHandler
 
-public final class InInterval extends AbstractConstraint {
+object InInterval {
+  def values(variable: Variable, lb: Int, ub: Int) =
+    new InInterval(variable, variable.dom.closestGeq(lb), variable.dom.closestLeq(ub))
 
-	private final int lb, ub;
-	private final Domain domain;
+  def indices(variable: Variable, lb: Int, ub: Int) =
+    new InInterval(variable, lb, ub)
+}
 
-	private InInterval(final Variable variable, final int lb, final int ub) {
-		super(variable);
+final class InInterval(val variable: Variable, val lb: Int, val ub: Int)
+  extends AbstractConstraint(Array(variable)) {
 
-		this.domain = variable.getDomain();
-		this.lb = lb;
-		this.ub = ub;
-	}
+  val dom = variable.dom
 
-	public static InInterval values(final Variable variable, final int lb,
-			final int ub) {
-		final Domain domain = variable.getDomain();
-		return new InInterval(variable, domain.closestGeq(lb), domain.closestLeq(ub));
-	}
+  val getEvaluation = 0
 
-	public static InInterval indexes(final Variable variable, final int lb,
-			final int ub) {
-		return new InInterval(variable, lb, ub);
-	}
+  override def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
+    val removed = dom.removeTo(lb - 1) + dom.removeFrom(ub + 1);
+    if (removed > 0) {
+      if (dom.size == 0) {
+        return false
+      }
+      revisator.revised(this, variable);
 
-	@Override
-	public float getEvaluation() {
-		return 0;
-	}
+    }
+    entail()
+    true
+  }
 
-	@Override
-	public boolean revise(final RevisionHandler revisator, final int reviseCount) {
-		final int removed = domain.removeTo(lb - 1) + domain.removeFrom(ub + 1);
-		if (removed > 0) {
-			if (domain.size() <= 0) {
-				return false;
-			}
-			revisator.revised(this, getVariable(0));
-		}
-		entail();
-		return true;
-	}
+  def isConsistent(reviseCount: Int) = dom.indices(lb).takeWhile(_ <= ub).exists(dom.present)
 
-	@Override
-	public boolean isConsistent(final int reviseCount) {
-		for (int i = lb; 0 <= i && i <= ub; i = domain.next(i)) {
-			if (domain.present(i)) {
-				return true;
-			}
-		}
-		return false;
-	}
+  def check = {
+    val value = this.value(0);
+    lb <= value && value <= ub;
+  }
 
-	@Override
-	public boolean check() {
-		final int value = getValue(0);
-		return lb <= value && value <= ub;
-	}
+  def toString = variable + " in [" + variable.dom.value(lb) + ", " + variable.dom.value(ub) + "]"
 
-	@Override
-	public String toString() {
-		return getVariable(0) + " in [" + getVariable(0).getValue(lb) + ", "
-				+ getVariable(0).getValue(ub) + "]";
-	}
 }

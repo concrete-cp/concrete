@@ -1,6 +1,6 @@
 package cspfj.constraint.semantic;
 
-import cspfj.constraint.PVRConstraint
+import cspfj.constraint.VariablePerVariable
 import cspfj.problem.Domain
 import cspfj.problem.Variable;
 import cspfj.constraint.AbstractConstraint
@@ -14,14 +14,14 @@ import cspfj.constraint.AbstractConstraint
  * @param y
  */
 final class Eq(val a: Int, val x: Variable, val b: Int, val y: Variable)
-  extends AbstractConstraint(Array(x, y)) with PVRConstraint {
+  extends AbstractConstraint(Array(x, y)) with VariablePerVariable {
   require(a != 0, "a must be != 0")
 
   val corresponding = Array(
-    x.domain.allValues map { v => y.domain.index(a * v + b) },
-    y.domain.allValues map { v =>
+    x.dom.allValues map { v => y.dom.index(a * v + b) },
+    y.dom.allValues map { v =>
       val r = v - b
-      if (r % a == 0) x.domain.index(r / a) else -1
+      if (r % a == 0) x.dom.index(r / a) else -1
     })
 
   /**
@@ -40,10 +40,10 @@ final class Eq(val a: Int, val x: Variable, val b: Int, val y: Variable)
     val variable = scope(position);
     val otherVar = scope(1 - position);
     val correspond = corresponding(position);
-    for (i <- variable.domain) {
+    for (i <- variable.dom.indices) {
       val index = correspond(i);
-      if (index < 0 || !otherVar.domain.present(index)) {
-        variable.domain.remove(i)
+      if (index < 0 || !otherVar.dom.present(index)) {
+        variable.dom.remove(i)
         change = true
       }
     }
@@ -51,9 +51,9 @@ final class Eq(val a: Int, val x: Variable, val b: Int, val y: Variable)
   }
 
   def isConsistent(reviseCount: Int) = {
-    val otherDom = y.domain
+    val otherDom = y.dom
     val correspond = corresponding(0);
-    x.domain.exists { i =>
+    x.dom.indices.exists { i =>
       val index = correspond(i)
       index >= 0 && otherDom.present(index)
     }
@@ -64,5 +64,5 @@ final class Eq(val a: Int, val x: Variable, val b: Int, val y: Variable)
     (if (b > 0) " + " + b else if (b < 0) " - " + (-b) else "") +
     " = " + y
 
-  def getEvaluation = scope(0).domain.size + scope(1).domain.size
+  def getEvaluation = scope(0).dom.size + scope(1).dom.size
 }

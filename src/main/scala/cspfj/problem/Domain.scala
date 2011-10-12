@@ -2,7 +2,7 @@ package cspfj.problem;
 
 import cspfj.util.BitVector;
 
-trait Domain extends Iterable[Int] {
+trait Domain {
   def next(i: Int): Int
 
   def prev(i: Int): Int
@@ -15,22 +15,20 @@ trait Domain extends Iterable[Int] {
 
   def value(index: Int): Int
 
-  def firstIndex: Int
+  def first: Int
 
-  def lastIndex: Int
+  def last: Int
 
-  override def head = firstIndex
-  //override def last = lastIndex
-  override def isEmpty = firstIndex >= 0
+  def isEmpty = first >= 0
 
-  def maxSize: Int
+  def maxSize = allValues.size
 
   def present(index: Int): Boolean
 
   def setSingle(index: Int)
 
   def remove(index: Int)
-  
+
   def size: Int
 
   /**
@@ -48,16 +46,16 @@ trait Domain extends Iterable[Int] {
   def setLevel(level: Int)
 
   def restoreLevel(level: Int)
-  
+
   def reset() { restoreLevel(0) }
 
   def getAtLevel(level: Int): BitVector
-  
-  def firstValue = value(firstIndex)
 
-  def allValues: Array[Int]
+  def firstValue = value(first)
 
-  def currentValues: Array[Int]
+  def lastValue = value(last)
+
+  def allValues: IndexedSeq[Int]
 
   /**
    * @param value
@@ -73,11 +71,11 @@ trait Domain extends Iterable[Int] {
   def closestGeq(value: Int): Int
 
   def getBitVector: BitVector
-  
-  def currentIndexes: Array[Int]
 
-  def iterator = new Iterator[Int] {
-    var index = firstIndex
+  def indices: Iterator[Int] = indices(first)
+
+  def indices(from: Int) = new Iterator[Int] {
+    var index = from
 
     override def hasNext = index >= 0
 
@@ -87,5 +85,7 @@ trait Domain extends Iterable[Int] {
       current
     }
   }
+
+  def values = indices map value
 
 }

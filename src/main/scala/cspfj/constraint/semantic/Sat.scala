@@ -6,7 +6,7 @@ import org.sat4j.core.VecInt
 import java.io.PrintWriter
 
 class Sat(scope: IndexedSeq[Variable]) extends AbstractConstraint(null, scope.toArray)
-  with AC3Constraint {
+  with Residues {
 
   val offset = scope.map(_.domain.maxSize).scanLeft(1)(_ + _).toIndexedSeq
 

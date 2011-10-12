@@ -6,7 +6,7 @@ import cspfj.problem.Variable;
 
 trait ArcGrainedConstraint extends Constraint {
 
-  private val removals = new Array[Int](arity)
+  val removals = new Array[Int](arity)
 
   final def setRemovals(p: Int, v: Int) {
     removals(p) = v
@@ -29,7 +29,9 @@ trait ArcGrainedConstraint extends Constraint {
     } else {
       -1
     }
-
   }
+
+  final def varsWithRemovals(reviseCount: Int) =
+    (0 to arity).iterator.filter(removals(_) >= reviseCount).map(scope(_))
 
 }

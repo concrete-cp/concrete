@@ -1,17 +1,17 @@
 /**
  * CSPFJ - CSP solving API for Java
  * Copyright (C) 2006 Julien VION
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -24,120 +24,83 @@ import cspfj.filter.RevisionHandler;
 import cspfj.problem.Domain;
 import cspfj.problem.Variable;
 
-public final class Gt extends AbstractConstraint {
+final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict: Boolean)
+  extends AbstractConstraint(Array(v0, v1)) {
 
-    private final boolean strict;
-    private final int constant;
+  def this(v0: Variable, v1: Variable, strict: Boolean) =
+    this(v0, 0, v1, strict);
 
-    public Gt(final Variable v0, final Variable v1, final boolean strict) {
-        this(v0, 0, v1, strict);
+  override def check =
+    if (strict)
+      value(0) + constant > value(1);
+    else value(0) + constant >= value(1);
+
+  private def min(position: Int) = scope(position).dom.firstValue;
+
+  private def max(position: Int) = scope(position).dom.lastValue
+
+  private def removeGt(value: Int, position: Int) = {
+    val dom = scope(position).dom
+    val lb = dom.closestLeq(value);
+    if (lb >= 0) {
+      if (strict || dom.value(lb) != value) {
+        dom.removeFrom(lb) > 0;
+      } else {
+        dom.removeFrom(lb + 1) > 0;
+      }
+    } else {
+      false
     }
+  }
 
-    public Gt(final Variable v0, final int constant, final Variable v1,
-            final boolean strict) {
-        super(v0, v1);
-        this.strict = strict;
-        this.constant = constant;
-    }
+  private def removeLt(value: Int, position: Int) = {
+    val dom = scope(position).dom;
+    val ub = dom.closestGeq(value);
+    if (ub >= 0) {
+      if (strict || dom.value(ub) != value) {
+        dom.removeTo(ub) > 0;
+      } else
+        dom.removeTo(ub - 1) > 0;
+    } else false;
 
-    @Override
-    public boolean check() {
-        if (strict) {
-            return getValue(0) + constant > getValue(1);
-        }
-        return getValue(0) + constant >= getValue(1);
-    }
+  }
 
-    private int min(final int position) {
-        final Domain dom = getVariable(position).domain;
-        return dom.value(dom.firstIndex());
-    }
+  override def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
+    assert(scope(0).dom.size > 0 && scope(1).dom.size > 0)
 
-    private int max(final int position) {
-        final Domain dom = getVariable(position).domain;
-        return dom.value(dom.last());
-    }
-
-    private boolean removeGt(final int value, final int position) {
-        final Domain dom = getVariable(position).domain;
-        final int lb = dom.closestLeq(value);
-        if (lb >= 0) {
-            if (strict || dom.value(lb) != value) {
-                return dom.removeFrom(lb) > 0;
-            }
-            return dom.removeFrom(lb + 1) > 0;
-        }
+    if (removeLt(min(1) - constant, 0)) {
+      if (scope(0).dom.size == 0) {
         return false;
+      }
+      revisator.revised(this, scope(0));
     }
-
-    private boolean removeLt(final int value, final int position) {
-        final Domain dom = getVariable(position).domain;
-        final int ub = dom.closestGeq(value);
-        if (ub >= 0) {
-            if (strict || dom.value(ub) != value) {
-                return dom.removeTo(ub) > 0;
-            }
-            return dom.removeTo(ub - 1) > 0;
-        }
+    if (removeGt(max(0) + constant, 1)) {
+      if (scope(1).dom.size == 0) {
         return false;
-
+      }
+      revisator.revised(this, scope(1));
     }
-
-    @Override
-    public boolean revise(final RevisionHandler revisator, final int reviseCount) {
-        assert getVariable(0).domain.size > 0 && getVariable(1).domain.size > 0;
-
-        if (removeLt(min(1) - constant, 0)) {
-            if (getVariable(0).domain.size == 0) {
-                return false;
-            }
-            revisator.revised(this, getVariable(0));
-        }
-        if (removeGt(max(0) + constant, 1)) {
-            if (getVariable(1).domain.size == 0) {
-                return false;
-            }
-            revisator.revised(this, getVariable(1));
-        }
-        final int max1 = max(1);
-        final int min0 = min(0) + constant;
-        if (max1 < min0 || !strict && min0 == max1) {
-            entail();
-            return true;
-        }
-        // System.out.println("Could not entail " + this);
-        return true;
+    val max1 = max(1);
+    val min0 = min(0) + constant;
+    if (max1 < min0 || !strict && min0 == max1) {
+      entail();
     }
+    // System.out.println("Could not entail " + this);
+    return true;
+  }
 
-    @Override
-    public boolean isConsistent(final int reviseCount) {
-        final int max0 = max(0) + constant;
-        final int min1 = min(1);
-        return max0 > min1 || !strict && max0 == min1;
-    }
+  override def isConsistent(reviseCount: Int) = {
+    val max0 = max(0) + constant;
+    val min1 = min(1)
+    max0 > min1 || !strict && max0 == min1;
+  }
 
-    public String toString() {
-        final StringBuilder stb = new StringBuilder();
-        stb.append(getVariable(0));
+  override def toString = scope(0).toString + (if (constant > 0)
+    " + " + constant
+  else if (constant < 0)
+    " - " + (-constant)) + (if (strict) " > " else " >= ") + scope(1)
 
-        if (constant > 0) {
-            stb.append(" + ").append(constant);
-        } else if (constant < 0) {
-            stb.append(" - ").append(-constant);
-        }
+  override def getEvaluation =
+    math.min(scope(0).dom.size, scope(1).dom.size);
 
-        if (strict) {
-            stb.append(" > ");
-        } else {
-            stb.append(" >= ");
-        }
-
-        return stb.append(getVariable(1)).toString();
-
-    }
-
-    @Override
-    public float getEvaluation() {
-        return Math.min(getVariable(0).domain.size, getVariable(1).domain.size);
-    }
 }

@@ -50,14 +50,14 @@ trait Constraint extends Weighted {
 
   private var entailedAtLevel = -1;
 
-  protected def tuple: Array[Int]
+  def tuple: Array[Int]
 
   /**
    * @return a map containing the positions of variables in the scope of the constraint.
    */
   def position: Map[Variable, Int]
 
-  def value(position: Int) = scope(position).domain.value(tuple(position))
+  def value(position: Int) = scope(position).dom.value(tuple(position))
 
   /**
    * @param variable
@@ -85,6 +85,7 @@ trait Constraint extends Weighted {
   private var _level = 0;
 
   def level = _level
+  
   def level_=(l: Int) {
     if (entailedAtLevel > l) {
       // LOGGER.finest("Disentailing " + this);
@@ -97,7 +98,7 @@ trait Constraint extends Weighted {
 
   def controlTuplePresence(tuple: Array[Int]) = {
     Constraint.nbPresenceChecks += 1;
-    scope.zip(tuple).forall(vv => vv._1.domain.present(vv._2))
+    scope.zip(tuple).forall(vv => vv._1.dom.present(vv._2))
   }
 
   def getRemovals(position: Int): Int
@@ -116,10 +117,10 @@ trait Constraint extends Weighted {
 
   def isConsistent(reviseCount: Int) = {
     level += 1
-    scope foreach { _.domain.setLevel(level) }
+    scope foreach { _.dom.setLevel(level) }
     val consistent = revise(NULL_REVISATOR, reviseCount)
     level -= 1
-    scope foreach { _.domain.setLevel(level) }
+    scope foreach { _.dom.setLevel(level) }
     consistent
   }
 
@@ -149,6 +150,8 @@ trait Constraint extends Weighted {
   }
 
   def getEvaluation: Double
-  
+
   def tupleManager: TupleManager
+
+  def tupleValues = (0 to arity).iterator.map(p => scope(p).dom.value(tuple(p)))
 }
