@@ -19,59 +19,34 @@
 
 package cspfj.constraint.semantic;
 
-import java.util.Arrays;
-import java.util.Deque;
-import java.util.LinkedList;
-
-import cspfj.constraint.AbstractArcGrainedConstraint;
-import cspfj.filter.RevisionHandler;
-import cspfj.problem.Variable;
+import java.util.Arrays
+import java.util.Deque
+import java.util.LinkedList
+import cspfj.filter.RevisionHandler
+import cspfj.problem.Variable
 import cspfj.util.BitVector;
+import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.ArcGrainedConstraint
 
-public final class AllDifferent extends AbstractArcGrainedConstraint {
+ final class AllDifferent(scope: Variable*) extends AbstractConstraint(null, scope.toArray) 
+ with ArcGrainedConstraint {
+   
+   val offset = scope map { _.domain.allValues.min } min
+   val max = scope map { _.domain.allValues.max } max
+   val union = BitVector.newBitVector(max-offset+1, false)
 
-    private final BitVector union;
+   var queue: List[Variable] = Nil
+   val priority:Float = arity*arity
 
-    private final Deque<Variable> queue;
-
-    private int offset;
-
-    private final float priority;
-
-    // private final static Logger logger = Logger
-    // .getLogger("cspfj.constraint.AllDifferentConstraint");
-    public AllDifferent(final Variable... scope) {
-        this(null, scope);
-    }
-
-    public AllDifferent(final String name, final Variable... scope) {
-        super(name, scope);
-
-        offset = Integer.MAX_VALUE;
-        int max = Integer.MIN_VALUE;
-        for (Variable v : scope) {
-            for (int i : v.getDomain().allValues()) {
-                offset = Math.min(i, offset);
-                max = Math.max(i, max);
-            }
+    def check:Boolean = {
+        union.fill(false);
+        for (v<-scope.zip(tuple).map(t=>t._1.domain.value(t._2)) {
+          if (union.get(v - offset)) {
+            return false
+          }
+          union.set(v - offset)
         }
-        union = BitVector.newBitVector(max - offset + 1, false);
-        queue = new LinkedList<Variable>();
-        priority = getArity() * getArity();
-    }
-
-    @Override
-    public boolean check() {
-        final BitVector singletons = this.union;
-        singletons.fill(false);
-        for (int i = getArity(); --i >= 0;) {
-            final int value = getVariable(i).getDomain().value(tuple[i]);
-            if (singletons.get(value - offset)) {
-                return false;
-            }
-            singletons.set(value - offset);
-        }
-        return true;
+        true;
     }
 
     private boolean filter(final Variable checkedVariable, final int value,

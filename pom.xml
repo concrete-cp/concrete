@@ -91,6 +91,7 @@
 						<jvmArg>-Xms64m</jvmArg>
 						<jvmArg>-Xmx1024m</jvmArg>
 					</jvmArgs>
+					<failOnError>false</failOnError>
 				</configuration>
 				<version>2.15.2</version>
 				<executions>
@@ -101,6 +102,7 @@
 							<goal>add-source</goal>
 							<goal>compile</goal>
 						</goals>
+
 					</execution>
 					<execution>
 						<id>scala-test-compile</id>
@@ -118,6 +120,7 @@
 				<configuration>
 					<source>1.6</source>
 					<target>1.6</target>
+					<failOnError>false</failOnError>
 				</configuration>
 			</plugin>
 			<plugin>
