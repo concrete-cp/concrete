@@ -1,6 +1,6 @@
 package cspfj.constraint.semantic;
 
-import org.junit.Assert.assertArrayEquals;
+import org.junit.Assert.assertEquals;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -28,8 +28,8 @@ final class GtTest {
       def revised(c: Constraint, v: Variable) {}
     }, 0);
 
-    assertArrayEquals(Array(4), v1.domain.currentValues);
-    assertArrayEquals(Array(3), v2.domain.currentValues);
+    assertEquals(Iterator(4), v1.dom.values);
+    assertEquals(Iterator(3), v2.dom.values);
 
   }
 
@@ -40,8 +40,8 @@ final class GtTest {
       def revised(c: Constraint, v: Variable) {}
     }, 0);
 
-    assertArrayEquals(Array(3, 4), v1.domain.currentValues);
-    assertArrayEquals(Array(3, 4), v2.domain.currentValues);
+    assertEquals(Iterator(3, 4), v1.dom.values);
+    assertEquals(Iterator(3, 4), v2.dom.values);
 
   }
 

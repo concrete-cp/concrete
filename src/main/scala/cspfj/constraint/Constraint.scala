@@ -101,7 +101,7 @@ trait Constraint extends Weighted {
     scope.zip(tuple).forall(vv => vv._1.dom.present(vv._2))
   }
 
-  def getRemovals(position: Int): Int
+  //def getRemovals(position: Int): Int
 
   def setRemovals(position: Int, value: Int): Unit
 
@@ -151,7 +151,7 @@ trait Constraint extends Weighted {
 
   def getEvaluation: Double
 
-  def tupleManager: TupleManager
+  //def tupleManager: TupleManager
 
   def tupleValues = (0 to arity).iterator.map(p => scope(p).dom.value(tuple(p)))
 }

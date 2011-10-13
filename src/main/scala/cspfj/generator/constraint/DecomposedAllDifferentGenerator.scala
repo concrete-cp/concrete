@@ -10,7 +10,7 @@ final class DecomposedAllDifferentGenerator(problem: Problem) extends AbstractGe
 
     val solverVariables = constraint.scope map cspom2cspfj
 
-    if (solverVariables.exists(_.domain == null)) {
+    if (solverVariables.exists(_.dom == null)) {
       false
     } else {
       val values = this.values(solverVariables);
@@ -23,7 +23,7 @@ final class DecomposedAllDifferentGenerator(problem: Problem) extends AbstractGe
           val uV = values(u)
 
           var sum = solverVariables map { v =>
-            VariableInterval(v, v.domain.closestGeq(lV), v.domain.closestLeq(uV))
+            VariableInterval(v, v.dom.closestGeq(lV), v.dom.closestLeq(uV))
           } filter { vi => vi.lb >= 0 && vi.ub >= 0 } map { vi =>
 
             vis.get(vi) match {
@@ -37,7 +37,7 @@ final class DecomposedAllDifferentGenerator(problem: Problem) extends AbstractGe
           }
 
           if (sum.size > u - l + 1) {
-            addConstraint(new SumLeq(u - l + 1, sum map (_.add()): _*));
+            addConstraint(new SumLeq(u - l + 1, sum map (_.add()) toArray));
           }
         }
 
@@ -55,12 +55,12 @@ final class DecomposedAllDifferentGenerator(problem: Problem) extends AbstractGe
       if (auxVariable == null) {
         auxVariable = addVariable(
           "_A" + DecomposedAllDifferentGenerator.allDiff + "_" + variable.name + "_"
-            + variable.domain.value(lb) + "_"
-            + variable.domain.value(ub), new BooleanDomain());
+            + variable.dom.value(lb) + "_"
+            + variable.dom.value(ub), new BooleanDomain());
 
         addConstraint(new ReifiedConstraint(auxVariable,
-          InInterval.indexes(variable, lb, ub),
-          NotInInterval.indexes(variable, lb, ub)));
+          InInterval.indices(variable, lb, ub),
+          NotInInterval.indices(variable, lb, ub)));
       }
       auxVariable;
     }
@@ -69,7 +69,7 @@ final class DecomposedAllDifferentGenerator(problem: Problem) extends AbstractGe
 
   private def values(variables: Seq[Variable]) = {
     AbstractGenerator.makeDomain(variables.foldLeft(Array[Int]())((acc, v) =>
-      acc ++ v.domain.allValues))
+      acc ++ v.dom.allValues))
   }
 
 }

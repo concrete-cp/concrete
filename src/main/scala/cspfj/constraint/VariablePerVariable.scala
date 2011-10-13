@@ -6,7 +6,7 @@ import cspfj.problem.Variable;
 /**
  * A constraint that can be revised one variable at a time
  */
-trait VariablePerVariable extends ArcGrainedConstraint {
+trait VariablePerVariable extends VariableGrainedRemovals {
 
   /**
    * Try to filter values from variable getVariable(position).

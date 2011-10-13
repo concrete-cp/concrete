@@ -10,15 +10,15 @@ final class AbsGenerator(problem: Problem) extends AbstractGenerator(problem) {
   def generate(constraint: CSPOMConstraint) = {
     val Seq(result, v0) = constraint.scope map cspom2cspfj
 
-    if (Seq(result, v0) filter (_.domain == null) match {
+    if (Seq(result, v0) filter (_.dom == null) match {
       case Seq() => true
       case Seq(v) if v == v0 => {
-        val values = result.domain.allValues
-        v.domain = new BitVectorDomain(AbstractGenerator.makeDomain(values ++ values.map(-_)): _*);
+        val values = result.dom.allValues
+        v.dom = new BitVectorDomain(AbstractGenerator.makeDomain(values ++ values.map(-_)): _*);
         true;
       }
       case Seq(v) if v == result => {
-        v.domain = new BitVectorDomain(AbstractGenerator.makeDomain(v0.domain.allValues.map(math.abs)): _*);
+        v.dom = new BitVectorDomain(AbstractGenerator.makeDomain(v0.dom.allValues.map(math.abs)): _*);
         true;
       }
       case _ => false

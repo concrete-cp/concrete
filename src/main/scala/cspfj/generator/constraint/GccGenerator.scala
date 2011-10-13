@@ -1,9 +1,9 @@
 package cspfj.generator.constraint;
 
-import cspfj.constraint.semantic.Gcc.Bounds
+import cspfj.constraint.semantic.Bounds
 import cspfj.constraint.semantic.Gcc
-import cspfj.problem.{Variable, Problem}
-import cspom.constraint.{GeneralConstraint, CSPOMConstraint}
+import cspfj.problem.{ Variable, Problem }
+import cspom.constraint.{ GeneralConstraint, CSPOMConstraint }
 
 final class GccGenerator(problem: Problem) extends AbstractGenerator(problem) {
   def generate(constraint: CSPOMConstraint) = {
@@ -11,7 +11,7 @@ final class GccGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
     val scope = constraint.scope map cspom2cspfj
 
-    if (scope exists (_.domain == null)) {
+    if (scope exists (_.dom == null)) {
       false
     } else {
       val params = constraint.parameters.split(", +");

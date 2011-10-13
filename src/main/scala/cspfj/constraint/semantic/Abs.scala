@@ -3,8 +3,10 @@ package cspfj.constraint.semantic;
 import cspfj.constraint.AbstractConstraint
 import cspfj.filter.RevisionHandler
 import cspfj.problem.Variable
+import cspfj.constraint.SimpleRemovals
 
-final class Abs(val result: Variable, val v0: Variable) extends AbstractConstraint(Array(result, v0)) {
+final class Abs(val result: Variable, val v0: Variable) extends AbstractConstraint(Array(result, v0))
+  with SimpleRemovals {
 
   val corresponding1 = result.dom.allValues map { v0.dom.index }
   val corresponding2 = result.dom.allValues map { v => v0.dom.index(-v) }

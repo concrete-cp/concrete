@@ -2,10 +2,9 @@ package cspfj.constraint.semantic
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-
-import cspfj.constraint.Sat
 import cspfj.problem.BitVectorDomain
 import cspfj.problem.Problem
+import cspfj.constraint.semantic.Sat
 
 class SatTest {
   @Test
@@ -20,11 +19,11 @@ class SatTest {
 
     assertTrue(c.check)
     c.noGood(Seq((v0, 0), (v1, 1)))
-    c.getTuple(1) = 1
+    c.tuple(1) = 1
     assertFalse(c.check)
 
-    v1.domain.remove(0)
-    v1.domain.remove(2)
+    v1.dom.remove(0)
+    v1.dom.remove(2)
     assertFalse(c.findSupport(0, 0))
     
     assertTrue(c.findSupport(0, 1))

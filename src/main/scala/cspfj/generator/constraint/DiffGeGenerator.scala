@@ -25,24 +25,24 @@ final class DiffGeGenerator(problem: Problem) extends AbstractGenerator(problem)
   private def generateGeneral(constraint: GeneralConstraint) = {
     val Seq(v0, v1, bound) = constraint.scope map cspom2cspfj
 
-    if (bound.domain.size != 1 || Seq(v0, v1, bound).exists(_.domain == null)) {
+    if (bound.dom.size != 1 || Seq(v0, v1, bound).exists(_.dom == null)) {
       null;
     } else {
-      new Gt(v0, -bound.domain.firstValue, v1, false);
+      new Gt(v0, -bound.dom.firstValue, v1, false);
     }
   }
 
   private def generateReified(constraint: FunctionalConstraint) = {
     val Seq(result, v0, v1, bound) = constraint.scope map cspom2cspfj
 
-    if (bound.domain.size != 1 || Seq(v0, v1, bound).exists(_.domain == null)) {
+    if (bound.dom.size != 1 || Seq(v0, v1, bound).exists(_.dom == null)) {
       null;
     } else {
       AbstractGenerator.booleanDomain(result)
       new ReifiedConstraint(
         result,
-        new Gt(v0, -bound.domain.firstValue, v1, false),
-        new Gt(v1, bound.domain.firstValue, v0, true));
+        new Gt(v0, -bound.dom.firstValue, v1, false),
+        new Gt(v1, bound.dom.firstValue, v0, true));
     }
 
   }

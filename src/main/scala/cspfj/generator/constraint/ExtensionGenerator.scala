@@ -13,7 +13,7 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
   var generated: Map[Signature, Matrix] = Map.empty
 
   private def generate(variables: Seq[Variable], relation: Relation, init: Boolean) = {
-    val domains = variables map (_.domain)
+    val domains = variables map (_.dom)
 
     val signature = Signature(domains, relation, init);
     generated.get(signature) match {
@@ -33,7 +33,7 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
 
     val solverVariables = constraint.scope map cspom2cspfj
 
-    if (solverVariables exists (_.domain == null)) {
+    if (solverVariables exists (_.dom == null)) {
       false
     } else {
       val extensionConstraint = constraint.asInstanceOf[cspom.extension.ExtensionConstraint]
@@ -65,12 +65,8 @@ object ExtensionGenerator {
 
   def fillMatrix(domains: Seq[Domain], relation: Relation, init: Boolean, matrix: Matrix) {
 
-    val indices = domains map (d => d map (i => d.value(i) -> i.toInt) toMap);
-
     for (values <- relation map { _.asInstanceOf[Seq[Int]] }) {
-      assume(values.size == indices.size)
-      val tuple = values.zip(indices).map(t => t._2(t._1))
-      assume(tuple.size == domains.size)
+      val tuple = (values, domains).zip.map { case (v, d) => d.index(v) }
       matrix.set(tuple.toArray, !init)
     }
 

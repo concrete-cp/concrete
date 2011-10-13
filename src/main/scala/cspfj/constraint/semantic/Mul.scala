@@ -1,10 +1,9 @@
 package cspfj.constraint.semantic;
 
-import cspfj.constraint.AbstractAC3Constraint
-import cspfj.problem.Domain
-import cspfj.problem.Variable;
-import cspfj.constraint.Residues
 import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.Residues
+import cspfj.problem.Domain
+import cspfj.problem.Variable
 
 /**
  * Contrainte V0 = V1 * V2.

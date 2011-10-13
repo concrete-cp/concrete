@@ -29,8 +29,8 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import cspfj.constraint.AbstractAC3Constraint;
-import cspfj.constraint.AbstractConstraint;
+import cspfj.constraint.Constraint;
+import cspfj.constraint.TupleEnumerator;
 import cspfj.constraint.extension.MatrixManager2D;
 import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.Filter;
@@ -140,7 +140,7 @@ public abstract class AbstractSolver implements Solver {
     protected final Map<String, Integer> solution() {
         final Map<String, Integer> solution = new LinkedHashMap<String, Integer>();
         for (Variable v : problem.getVariables()) {
-            solution.put(v.name(), v.domain().firstValue());
+            solution.put(v.name(), v.dom().firstValue());
         }
         return solution;
     }
@@ -200,11 +200,11 @@ public abstract class AbstractSolver implements Solver {
             preproRemoved = 0;
 
             for (Variable v : problem.getVariables()) {
-                preproRemoved += v.domain().maxSize() - v.domain().size();
+                preproRemoved += v.dom().maxSize() - v.dom().size();
             }
             this.preproCpu = preproCpu / 1000f;
-            preproConstraintChecks = AbstractAC3Constraint.getChecks();
-            preproPresenceChecks = AbstractConstraint.getPresenceChecks();
+            preproConstraintChecks = TupleEnumerator.checks();
+            preproPresenceChecks = Constraint.nbPresenceChecks();
             preproMatrix2DChecks = MatrixManager2D.getChecks();
             preproMatrix2DPresenceChecks = MatrixManager2D.getPresenceChecks();
         }

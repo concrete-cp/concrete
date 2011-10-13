@@ -19,19 +19,17 @@
 
 package cspfj.constraint.semantic;
 
-import java.util.Arrays
-import java.util.Deque
-import java.util.LinkedList
+import scala.collection.immutable.Queue
+
+import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.VariableGrainedRemovals
+import cspfj.filter.RevisionHandler
 import cspfj.filter.RevisionHandler
 import cspfj.problem.Variable
 import cspfj.util.BitVector
-import cspfj.constraint.AbstractConstraint
-import cspfj.constraint.ArcGrainedConstraint
-import cspfj.filter.RevisionHandler
-import scala.collection.immutable.Queue
 
 final class AllDifferent(scope: Variable*) extends AbstractConstraint(null, scope.toArray)
-  with ArcGrainedConstraint {
+  with VariableGrainedRemovals {
 
   val offset = scope map { _.dom.allValues.min } min
   val max = scope map { _.dom.allValues.max } max
@@ -66,7 +64,7 @@ final class AllDifferent(scope: Variable*) extends AbstractConstraint(null, scop
   }
 
   override def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
-    queue = Queue.empty.enqueue(varsWithRemovals(reviseCount).filter(_.dom.size == 1))
+    queue = Queue.empty.enqueue(varsWithRemovals(reviseCount).filter(_.dom.size == 1).toList)
 
     while (queue != Nil) {
       val (checkedVariable, newQueue) = queue.dequeue

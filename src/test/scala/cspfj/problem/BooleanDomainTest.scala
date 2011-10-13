@@ -75,9 +75,9 @@ final class BooleanDomainTest {
 
   @Test
   def testFirst() {
-    assertEquals(0, domain.firstIndex);
+    assertEquals(0, domain.first);
     domain.remove(0);
-    assertEquals(1, domain.firstIndex);
+    assertEquals(1, domain.first);
   }
 
 //  @Test
@@ -89,9 +89,9 @@ final class BooleanDomainTest {
 
   @Test
   def testCurrentIndexes() {
-    assertArrayEquals(Array(0, 1), domain.currentIndexes);
+    assertEquals(Iterator(0, 1), domain.indices);
     domain.remove(1);
-    assertArrayEquals(Array(0), domain.currentIndexes);
+    assertEquals(Iterator(0), domain.indices);
   }
 
   @Test

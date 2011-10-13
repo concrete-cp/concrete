@@ -18,7 +18,7 @@ final class GtGenerator(problem: Problem) extends AbstractGenerator(problem) {
     
     val solverVariables = constraint.scope map cspom2cspfj;
 
-    if (solverVariables.exists(_.domain == null)) {
+    if (solverVariables.exists(_.dom == null)) {
       null
     } else {
       constraint.description match {
@@ -40,7 +40,7 @@ final class GtGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
     val arguments = constraint.arguments map cspom2cspfj
 
-    if (arguments exists (_.domain == null)) {
+    if (arguments exists (_.dom == null)) {
       null
     } else {
 

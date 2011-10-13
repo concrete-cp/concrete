@@ -116,11 +116,11 @@ class BooleanDomain(var _status: Status) extends Domain {
 
   def status = _status
 
-  override def firstIndex = status.first
+  override def first = status.first
 
   override def size = status.size
 
-  override def lastIndex = status.last
+  override def last = status.last
 
   def next(i: Int) = status.next(i)
 
@@ -171,7 +171,7 @@ class BooleanDomain(var _status: Status) extends Domain {
 
   def getBitVector = status.bitVector
 
-  val maxSize = 2
+  override val maxSize = 2
 
   def setLevel(level: Int) {
     assert(level > currentLevel)
@@ -206,7 +206,7 @@ class BooleanDomain(var _status: Status) extends Domain {
     status.bitVector;
   }
 
-  val allValues = UNKNOWN.array
+  override val allValues = UNKNOWN.array
 
   override def toString = status.toString
 

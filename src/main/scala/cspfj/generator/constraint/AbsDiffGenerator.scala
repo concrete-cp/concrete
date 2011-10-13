@@ -11,22 +11,22 @@ final class AbsDiffGenerator(problem: Problem) extends AbstractGenerator(problem
 
     val Seq(result, v0, v1) = constraint.scope.map(cspom2cspfj)
 
-    if (Seq(result, v0, v1).count(_.domain == null) > 1) {
+    if (Seq(result, v0, v1).count(_.dom == null) > 1) {
       false
     } else {
-      if (result.domain == null) {
+      if (result.dom == null) {
 
         val values = AbstractGenerator.domainFrom(v0, v1, (i, j) => math.abs(i - j))
 
-        result.domain = new BitVectorDomain(values: _*);
+        result.dom = new BitVectorDomain(values: _*);
 
-      } else if (v0.domain == null) {
+      } else if (v0.dom == null) {
 
-        v0.domain = new BitVectorDomain(generateValues(result, v1): _*);
+        v0.dom = new BitVectorDomain(generateValues(result, v1): _*);
 
-      } else if (v1.domain == null) {
+      } else if (v1.dom == null) {
 
-        v1.domain = new BitVectorDomain(generateValues(result, v0): _*);
+        v1.dom = new BitVectorDomain(generateValues(result, v0): _*);
 
       }
       addConstraint(new AbsDiff(result, v0, v1));

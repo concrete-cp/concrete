@@ -19,18 +19,10 @@
 
 package cspfj.problem;
 
-import com.google.common.base.Function
-import com.google.common.base.Joiner
-import com.google.common.base.Preconditions
-import com.google.common.collect.ImmutableMultimap
-import com.google.common.collect.Iterables
-import com.google.common.collect.Lists
-import com.google.common.collect.Multimap
-import com.google.common.collect.Ordering
-import cspfj.constraint.Constraint
 import scala.collection.mutable.MultiMap
-import scala.collection.mutable.HashMap
 import scala.collection.JavaConversions
+
+import cspfj.constraint.Constraint
 
 final class Problem {
   private var variableMap: Map[String, Variable] = Map.empty
@@ -49,7 +41,7 @@ final class Problem {
     val variable = new Variable(name, domain);
     variableMap += name -> variable
     _variables :+= variable
-    _maxDomainSize = math.max(variable.domain.size, _maxDomainSize)
+    _maxDomainSize = math.max(variable.dom.size, _maxDomainSize)
     _maxVId = math.max(variable.getId, _maxVId)
     variable;
   }
@@ -74,18 +66,18 @@ final class Problem {
   }
 
   private def setLevel(level: Int) {
-    _variables.foreach(_.domain.setLevel(level))
+    _variables.foreach(_.dom.setLevel(level))
     _constraints.foreach(_.level = level)
   }
 
   private def restoreLevel(level: Int) {
-    _variables.foreach(_.domain.restoreLevel(level))
+    _variables.foreach(_.dom.restoreLevel(level))
     _constraints.foreach(_.level = level)
   }
 
   def reset() {
     _currentLevel = 0;
-    _variables.foreach(_.domain.reset())
+    _variables.foreach(_.dom.reset())
     _constraints.foreach(_.level = 0)
   }
 
@@ -103,7 +95,7 @@ final class Problem {
   def maxArity = _maxArity
   def maxVId = _maxVId
   def maxCId = _maxCId
-  def nd = _variables map { _.domain.size } sum
+  def nd = _variables map { _.dom.size } sum
   def variable(name: String) = variableMap(name)
   def variables = _variables
   def constraints = _constraints

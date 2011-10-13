@@ -1,6 +1,6 @@
 package cspfj.constraint.semantic;
 
-import org.junit.Assert.assertArrayEquals;
+import org.junit.Assert.assertEquals;
 import org.junit.Assert.assertTrue;
 
 import org.junit.Before;
@@ -21,7 +21,7 @@ final class SumLeqTest {
   def setUp() {
     v0 = new Variable("v0", new BitVectorDomain(1, 2, 3, 4));
     v1 = new Variable("v1", new BitVectorDomain(0, 1, 2, 3, 4));
-    c = new SumLeq(4, v0, v1);
+    c = new SumLeq(4, Array(v0, v1));
   }
 
   @Test
@@ -31,8 +31,8 @@ final class SumLeqTest {
       }
     }, 0));
 
-    assertArrayEquals(Array(1, 2, 3, 4), v0.domain.currentValues);
-    assertArrayEquals(Array(0, 1, 2, 3), v1.domain.currentValues);
+    assertEquals(Iterator(1, 2, 3, 4), v0.dom.values);
+    assertEquals(Iterator(0, 1, 2, 3), v1.dom.values);
   }
 
 }

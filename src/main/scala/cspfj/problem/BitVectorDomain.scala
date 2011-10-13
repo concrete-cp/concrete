@@ -9,7 +9,7 @@ final object BitVectorDomain {
 }
 
 final class BitVectorDomain(
-  private val domain: IndexedSeq[Int],
+  private val domain: Array[Int],
   private val bvDomain: BitVector,
   /**
    * History entry is (level, domain, domain size)

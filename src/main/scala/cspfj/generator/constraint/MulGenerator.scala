@@ -11,19 +11,19 @@ final class MulGenerator(problem: Problem) extends AbstractGenerator(problem) {
   def generate(constraint: CSPOMConstraint) = {
     val Seq(result, v0, v1) = constraint.scope map cspom2cspfj
 
-    if (Seq(result, v0, v1) filter (_.domain == null) match {
+    if (Seq(result, v0, v1) filter (_.dom == null) match {
       case Seq() => true
       case Seq(v) if v == result => {
         val values = AbstractGenerator.domainFrom(v0, v1, { _ * _ })
-        v.domain = new BitVectorDomain(values: _*)
+        v.dom = new BitVectorDomain(values: _*)
         true
       }
       case Seq(v) if v == v0 => {
-        v.domain = new BitVectorDomain(generateDomain(result, v1): _*)
+        v.dom = new BitVectorDomain(generateDomain(result, v1): _*)
         true
       }
       case Seq(v) if v == v1 => {
-        v.domain = new BitVectorDomain(generateDomain(result, v0): _*)
+        v.dom = new BitVectorDomain(generateDomain(result, v0): _*)
         true
       }
       case _ => false
@@ -40,8 +40,8 @@ final class MulGenerator(problem: Problem) extends AbstractGenerator(problem) {
   private def generateDomain(result: Variable, variable: Variable) = {
     AbstractGenerator.makeDomain(
       for {
-        i <- result.domain.allValues
-        j <- variable.domain.allValues
+        i <- result.dom.allValues
+        j <- variable.dom.allValues
         if (i % j == 0)
       } yield i / j)
   }

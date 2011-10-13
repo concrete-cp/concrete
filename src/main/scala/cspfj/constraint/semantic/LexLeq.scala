@@ -1,9 +1,8 @@
 package cspfj.constraint.semantic;
 
-import cspfj.constraint.AbstractAC3Constraint
-import cspfj.problem.Variable
-import cspfj.constraint.Residues
 import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.Residues
+import cspfj.problem.Variable
 
 final class LexLeq(scope: Array[Variable]) extends AbstractConstraint(scope)
   with Residues {

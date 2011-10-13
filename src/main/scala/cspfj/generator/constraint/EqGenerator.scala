@@ -14,13 +14,13 @@ final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
     } else {
       val scope = constraint.scope map cspom2cspfj
 
-      val refDomain = scope map { _.domain } find { _ != null }
+      val refDomain = scope map { _.dom } find { _ != null }
 
       if (refDomain == None) {
         null
       } else {
-        for (v <- scope if (v.domain == null)) {
-          v.domain = new BitVectorDomain(refDomain.get.allValues: _*)
+        for (v <- scope if (v.dom == null)) {
+          v.dom = new BitVectorDomain(refDomain.get.allValues: _*)
         }
         new Eq(scope(0), scope(1));
       }
@@ -31,7 +31,7 @@ final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
     case "eq" => {
       val arguments = funcConstraint.arguments map cspom2cspfj
 
-      if (arguments.size != 2 || arguments.exists(_.domain == null)) {
+      if (arguments.size != 2 || arguments.exists(_.dom == null)) {
         null
       } else {
         val result = cspom2cspfj(funcConstraint.result)
@@ -47,15 +47,15 @@ final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
       } else {
         val scope = funcConstraint.scope map cspom2cspfj
 
-        val refDomain = scope map { _.domain } find { _ != null }
+        val refDomain = scope map { _.dom } find { _ != null }
 
         if (refDomain == None) {
           null
         } else {
           val negDomain = refDomain.get.allValues map { v => (-v) } reverse
 
-          for (v <- scope if (v.domain == null)) {
-            v.domain = new BitVectorDomain(negDomain: _*)
+          for (v <- scope if (v.dom == null)) {
+            v.dom = new BitVectorDomain(negDomain: _*)
           }
           new Eq(-1, scope(0), 0, scope(1));
         }

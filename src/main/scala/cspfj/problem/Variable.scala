@@ -19,18 +19,9 @@
 
 package cspfj.problem;
 
-import java.util.Collection;
-
-import java.util.List;
-
-import com.google.common.base.Predicates;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-
-import cspfj.constraint.Constraint;
-import cspfj.constraint.DynamicConstraint;
-import cspfj.priorityqueues.Identified;
-import cspfj.util.BitVector;
+import cspfj.constraint.Constraint
+import cspfj.constraint.DynamicConstraint
+import cspfj.priorityqueues.Identified
 
 object Variable {
   var nbV = 0;
@@ -78,7 +69,7 @@ final class Variable(
   def dynamicConstraints = _dynamicConstraints
   def positionInConstraint = _positionInConstraint
 
-  def currentIndexes = if (_domain == null) null else _domain.currentIndexes
+  def indices = if (_domain == null) null else _domain.indices
 
-  def currentValues = if (_domain == null) null else _domain.currentValues
+  def values = if (_domain == null) null else _domain.values
 }

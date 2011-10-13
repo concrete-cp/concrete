@@ -44,7 +44,7 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
         // logger.fine("checking " +
         // getVariable(levelVariables[level-1]));
 
-        val changes = fv.domain.getAtLevel(level - 1).xor(fv.domain.getAtLevel(level));
+        val changes = fv.dom.getAtLevel(level - 1).xor(fv.dom.getAtLevel(level));
         if (!changes.isEmpty) {
 
           val completeScope = currentScope :+ fv
@@ -84,7 +84,7 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
   }
 
   def binNoGoods(firstVariable: Variable): Set[Constraint] = {
-    val tuple = List(firstVariable.domain.first)
+    val tuple = List(firstVariable.dom.first)
     var modifiedConstraints: Set[Constraint] = Set.empty;
 
     var addedConstraints: List[Constraint] = Nil;
@@ -96,7 +96,7 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
       // logger.fine("checking " +
       // getVariable(levelVariables[level-1]));
 
-      val changes = fv.domain.getAtLevel(0).xor(fv.domain.getAtLevel(1));
+      val changes = fv.dom.getAtLevel(0).xor(fv.dom.getAtLevel(1));
       if (!changes.isEmpty()) {
 
         val scope = Seq(firstVariable, fv)
@@ -148,7 +148,7 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
 
   private def generateConstraint(scope: Seq[Variable]) = {
     if (scope.size == 2) {
-      val matrix = new Matrix2D(scope(0).domain.maxSize, scope(1).domain.maxSize, true);
+      val matrix = new Matrix2D(scope(0).dom.maxSize, scope(1).dom.maxSize, true);
       new ExtensionConstraint2D(scope.toArray, matrix, false);
     } else {
       new ExtensionConstraintGeneral(new TupleSet(true), false, scope: _*);

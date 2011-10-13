@@ -1,15 +1,13 @@
 package cspfj.constraint.semantic;
 
-import com.google.common.base.Preconditions
-import com.google.common.collect.ObjectArrays
 import cspfj.constraint.AbstractConstraint
 import cspfj.constraint.Constraint
 import cspfj.filter.RevisionHandler
 import cspfj.problem.BooleanDomain
-import cspfj.problem.Variable
-import cspfj.problem.UNKNOWN
-import cspfj.problem.TRUE
 import cspfj.problem.FALSE
+import cspfj.problem.TRUE
+import cspfj.problem.UNKNOWN
+import cspfj.problem.Variable
 
 final class ReifiedConstraint(
   controlVariable: Variable,

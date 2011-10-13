@@ -20,9 +20,9 @@ abstract class AbstractGenerator(val problem: Problem) {
 object AbstractGenerator {
   @throws(classOf[FailedGenerationException])
   def booleanDomain(variable: Variable) {
-    if (variable.domain == null) {
-      variable.domain = new BooleanDomain();
-    } else if (!(variable.domain.isInstanceOf[BooleanDomain])) {
+    if (variable.dom == null) {
+      variable.dom = new BooleanDomain();
+    } else if (!(variable.dom.isInstanceOf[BooleanDomain])) {
       throw new FailedGenerationException(variable + " must be boolean");
     }
   }
@@ -44,7 +44,7 @@ object AbstractGenerator {
     } yield f(i, j)
 
   def cartesian[A](v0: Variable, v1: Variable, f: (Int, Int) => A) =
-    cartesianS(v0.domain.allValues, v1.domain.allValues, f)
+    cartesianS(v0.dom.allValues, v1.dom.allValues, f)
 
   def domainFrom(v0: Variable, v1: Variable, f: (Int, Int) => Int) =
     makeDomain(cartesian(v0, v1, f))

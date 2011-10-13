@@ -4,7 +4,7 @@ import cspfj.problem.Variable
 import scala.collection.immutable.Map
 import cspfj.filter.RevisionHandler
 
-trait StandardRemovalsConstraint extends Constraint {
+trait SimpleRemovals extends Constraint {
 
   private var removals = 0;
 

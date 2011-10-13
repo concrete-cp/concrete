@@ -55,7 +55,7 @@ trait Domain {
 
   def lastValue = value(last)
 
-  def allValues: IndexedSeq[Int]
+  def allValues: Array[Int]
 
   /**
    * @param value

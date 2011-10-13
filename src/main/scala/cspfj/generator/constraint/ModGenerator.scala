@@ -4,7 +4,9 @@ import cspfj.constraint.semantic.Mul
 import cspfj.exception.FailedGenerationException
 import cspfj.problem.{ Variable, Problem, BitVectorDomain }
 import cspom.constraint.CSPOMConstraint
-import cspfj.constraint.AbstractAC3Constraint
+import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.Residues
+import cspfj.constraint.TupleEnumerator
 
 final class ModGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
@@ -12,20 +14,20 @@ final class ModGenerator(problem: Problem) extends AbstractGenerator(problem) {
   def generate(constraint: CSPOMConstraint) = {
     val Seq(result, v0, v1) = constraint.scope map cspom2cspfj
 
-    if (Seq(result, v0, v1) filter (_.domain == null) match {
+    if (Seq(result, v0, v1) filter (_.dom == null) match {
       case Seq() => true
       case Seq(v) if v == result => {
         val values = AbstractGenerator.domainFrom(v0, v1, { _ % _ })
-        v.domain = new BitVectorDomain(values: _*)
+        v.dom = new BitVectorDomain(values: _*)
         true
       }
 
       case _ => false
 
     }) {
-      addConstraint(new AbstractAC3Constraint(result, v0, v1) {
+      addConstraint(new AbstractConstraint(Array(result, v0, v1)) with Residues with TupleEnumerator {
         def check = {
-          getValue(0) == getValue(1) % getValue(2)
+          value(0) == value(1) % value(2)
         }
       })
       true

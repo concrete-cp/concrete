@@ -31,7 +31,7 @@ final class Disjunction(scope: Array[Variable],
 
   def toString = "\\/" + scope.iterator
 
-  override def revise(revisator: RevisionHandler, reviseCount: Int) = {
+  override def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
     if (isFalse(watch1)) {
       val newWatch = seekWatch(watch2);
       if (newWatch < 0) {
@@ -39,7 +39,7 @@ final class Disjunction(scope: Array[Variable],
           return false;
         }
         if (setTrue(watch2)) {
-          revisator.revised(this, getVariable(watch2));
+          revisator.revised(this, scope(watch2));
           return true;
         }
       } else {
@@ -51,16 +51,16 @@ final class Disjunction(scope: Array[Variable],
       if (newWatch >= 0) {
         watch2 = newWatch;
       } else if (setTrue(watch1)) {
-        revisator.revised(this, getVariable(watch1));
+        revisator.revised(this, scope(watch1));
       }
     }
     return true;
   }
 
   private def isFalse(position: Int) =
-    if (reverses[position]) domains(position).isTrue else domains(position).isFalse
+    if (reverses(position)) domains(position).isTrue else domains(position).isFalse
 
-  private def setTrue(position: Int) {
+  private def setTrue(position: Int) = {
     val dom = domains(position)
     if (dom.isUnknown) {
       if (reverses(position)) {

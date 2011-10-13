@@ -1,6 +1,6 @@
 package cspfj.constraint.semantic;
 
-import org.junit.Assert.assertArrayEquals;
+import org.junit.Assert.assertEquals;
 import org.junit.Assert.assertTrue;
 
 import org.junit.Before;
@@ -36,7 +36,7 @@ final class InIntervalTest {
         variable: Variable) {
       }
     }, 0));
-    assertArrayEquals(Array(2, 3), domain.currentValues);
+    assertEquals(Iterator(2, 3), domain.values);
   }
 
 }
