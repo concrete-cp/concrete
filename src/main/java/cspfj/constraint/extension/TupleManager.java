@@ -23,21 +23,21 @@ public final class TupleManager {
         super();
         this.constraint = constraint;
         this.tuple = tuple;
-        arity = constraint.getArity();
+        arity = constraint.arity();
     }
 
     public void setFirstTuple() {
         for (int position = arity; --position >= 0;) {
-            tuple[position] = constraint.getVariable(position).getFirst();
+            tuple[position] = constraint.scope()[position].dom().first();
         }
     }
 
     public boolean setNextTuple() {
         for (int i = arity; --i >= 0;) {
-            final int index = constraint.getVariable(i).getNext(tuple[i]);
+            final int index = constraint.scope()[i].dom().next(tuple[i]);
 
             if (index < 0) {
-                tuple[i] = constraint.getVariable(i).getFirst();
+                tuple[i] = constraint.scope()[i].dom().first();
             } else {
                 tuple[i] = index;
                 return true;
@@ -51,7 +51,7 @@ public final class TupleManager {
             if (position == variablePosition) {
                 tuple[position] = index;
             } else {
-                tuple[position] = constraint.getVariable(position).getFirst();
+                tuple[position] = constraint.scope()[position].dom().first();
                 assert tuple[position] >= 0;
             }
         }
@@ -64,10 +64,10 @@ public final class TupleManager {
                 continue;
             }
 
-            final int index = constraint.getVariable(i).getNext(tuple[i]);
+            final int index = constraint.scope()[i].dom().next(tuple[i]);
 
             if (index < 0) {
-                tuple[i] = constraint.getVariable(i).getFirst();
+                tuple[i] = constraint.scope()[i].dom().first();
             } else {
                 tuple[i] = index;
                 return true;
@@ -94,7 +94,7 @@ public final class TupleManager {
 
             final int index = tuple[i] + 1;
 
-            if (index >= constraint.getVariable(i).getDomain().maxSize()) {
+            if (index >= constraint.scope()[i].dom().maxSize()) {
                 tuple[i] = 0;
             } else {
                 tuple[i] = index;
@@ -111,7 +111,7 @@ public final class TupleManager {
 
     private boolean allPresent() {
         for (int i = arity; --i >= 0;) {
-            if (!constraint.getVariable(i).isPresent(tuple[i])) {
+            if (!constraint.scope()[i].dom().present(tuple[i])) {
                 return false;
             }
         }
@@ -128,21 +128,21 @@ public final class TupleManager {
                 continue;
             }
 
-            final Variable variable = constraint.getVariable(pos);
+            final Variable variable = constraint.scope()[pos];
 
             if (pos > changed) {
-                tuple[pos++] = variable.getFirst();
+                tuple[pos++] = variable.dom().first();
             } else {
 
                 int index = tuple[pos];
 
-                if (variable.isPresent(index)) {
+                if (variable.dom().present(index)) {
                     pos++;
                 } else {
                     changed = pos;
                     do {
-                        index = variable.getNext(index);
-                    } while (index >= 0 && !variable.isPresent(index));
+                        index = variable.dom().next(index);
+                    } while (index >= 0 && !variable.dom().present(index));
 
                     if (index < 0) {
                         do {
@@ -152,7 +152,7 @@ public final class TupleManager {
                             if (pos < 0) {
                                 return false;
                             }
-                            tuple[pos] = constraint.getVariable(pos).getNext(
+                            tuple[pos] = constraint.scope()[pos].dom().next(
                                     tuple[pos]);
                         } while (tuple[pos] < 0);
                         changed = pos;
@@ -175,10 +175,10 @@ public final class TupleManager {
                 continue;
             }
 
-            final int index = constraint.getVariable(i).getPrev(tuple[i]);
+            final int index = constraint.scope()[i].dom().prev(tuple[i]);
 
             if (index < 0) {
-                tuple[i] = constraint.getVariable(i).getLast();
+                tuple[i] = constraint.scope()[i].dom().last();
             } else {
                 tuple[i] = index;
                 return true;

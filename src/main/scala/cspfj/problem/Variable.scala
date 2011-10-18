@@ -23,15 +23,6 @@ import cspfj.constraint.Constraint
 import cspfj.constraint.DynamicConstraint
 import cspfj.priorityqueues.Identified
 
-object Variable {
-  var nbV = 0;
-
-  /**
-   * Reinit ID generator (before loading a new problem).
-   */
-  def resetVId() { nbV = 0 }
-}
-
 final class Variable(
   val name: String,
   private var _domain: Domain) extends Identified {
@@ -72,4 +63,13 @@ final class Variable(
   def indices = if (_domain == null) null else _domain.indices
 
   def values = if (_domain == null) null else _domain.values
+}
+
+object Variable {
+  var nbV = 0;
+
+  /**
+   * Reinit ID generator (before loading a new problem).
+   */
+  def resetVId() { nbV = 0 }
 }

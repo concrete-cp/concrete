@@ -19,11 +19,12 @@
 
 package cspfj.constraint.extension;
 
-import cspfj.constraint.AbstractPVRConstraint;
+import cspfj.constraint.VariablePerVariable;
+import cspfj.constraint.AbstractConstraint;
 import cspfj.problem.Variable;
 
-public final class ExtensionConstraint2D extends AbstractPVRConstraint
-        implements ExtensionConstraint {
+public final class ExtensionConstraint2D extends AbstractConstraint implements VariablePerVariable,
+        ExtensionConstraint {
 
     private static final float GAIN_OVER_GENERAL = .1f;
 

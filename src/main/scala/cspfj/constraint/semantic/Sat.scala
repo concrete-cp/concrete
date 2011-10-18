@@ -1,9 +1,11 @@
-package cspfj.constraint
+package cspfj.constraint.semantic
 import org.sat4j.minisat.SolverFactory
 import org.sat4j.specs.IProblem
 import cspfj.problem.Variable
 import org.sat4j.core.VecInt
 import java.io.PrintWriter
+import cspfj.constraint.Residues
+import cspfj.constraint.AbstractConstraint
 
 class Sat(scope: IndexedSeq[Variable]) extends AbstractConstraint(null, scope.toArray)
   with Residues {
