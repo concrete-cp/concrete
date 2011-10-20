@@ -1,14 +1,15 @@
 package cspfj.constraint.semantic;
 
-import java.util.Arrays;
-
-import cspfj.constraint.AbstractConstraint;
-import cspfj.filter.RevisionHandler;
-import cspfj.problem.BooleanDomain;
+import java.util.Arrays
+import cspfj.constraint.AbstractConstraint
+import cspfj.filter.RevisionHandler
+import cspfj.problem.BooleanDomain
 import cspfj.problem.Variable;
+import cspfj.constraint.SimpleRemovals
 
 final class Disjunction(scope: Array[Variable],
-  val reverses: IndexedSeq[Boolean]) extends AbstractConstraint(null, scope) {
+  val reverses: IndexedSeq[Boolean]) extends AbstractConstraint(null, scope)
+  with SimpleRemovals {
 
   require(scope forall (v => v.dom.isInstanceOf[BooleanDomain] && v.dom.size == 2),
     "Only non-constant boolean domains are allowed")
@@ -29,7 +30,7 @@ final class Disjunction(scope: Array[Variable],
 
   def check = reverses.zip(tuple).exists(l => l._1 ^ l._2 == 1)
 
-  def toString = "\\/" + scope.iterator
+  override def toString = "\\/" + scope.iterator
 
   override def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
     if (isFalse(watch1)) {

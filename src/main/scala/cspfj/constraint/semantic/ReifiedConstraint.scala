@@ -96,7 +96,7 @@ final class ReifiedConstraint(
     positiveConstraint.getEvaluation
   +negativeConstraint.getEvaluation
 
-  def toString = scope(0) + " == (" + positiveConstraint + ")";
+  override def toString = scope(0) + " == (" + positiveConstraint + ")";
 
   var controlRemovals = 0
 

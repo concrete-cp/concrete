@@ -73,7 +73,7 @@ final class Mul(val result: Variable, val v0: Variable, val v1: Variable)
     false;
   }
 
-  def toString = result + " = " + v0 + " * " + v1
+  override def toString = result + " = " + v0 + " * " + v1
 
   def getEvaluation = {
     val d0 = result.dom.size

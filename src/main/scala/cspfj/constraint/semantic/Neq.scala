@@ -1,11 +1,13 @@
 package cspfj.constraint.semantic;
 
-import cspfj.constraint.AbstractConstraint;
-import cspfj.filter.RevisionHandler;
-import cspfj.problem.Domain;
+import cspfj.constraint.AbstractConstraint
+import cspfj.filter.RevisionHandler
+import cspfj.problem.Domain
 import cspfj.problem.Variable;
+import cspfj.constraint.SimpleRemovals
 
-final class Neq(v0: Variable, v1: Variable) extends AbstractConstraint(Array(v0, v1)) {
+final class Neq(v0: Variable, v1: Variable) extends AbstractConstraint(Array(v0, v1)) 
+with SimpleRemovals {
 
   val corresponding0 =
     v1.dom.values map v0.dom.index toIndexedSeq
@@ -32,7 +34,7 @@ final class Neq(v0: Variable, v1: Variable) extends AbstractConstraint(Array(v0,
     true
   }
 
-  def toString = v0 + " /= " + v1
+  override def toString = v0 + " /= " + v1
 
-  val getEvaluation = arity
+  override val getEvaluation = arity.doubleValue
 }

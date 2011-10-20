@@ -36,7 +36,7 @@ final class TupleManagerTest {
 
     tupleManager = new TupleManager(constraint, constraint.tuple);
 
-    tuple = tupleManager.getTuple;
+    tuple = tupleManager.tuple;
 
   }
 

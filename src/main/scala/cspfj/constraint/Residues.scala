@@ -28,6 +28,6 @@ trait Residues extends VariablePerVariable {
 
   def findSupport(variablePosition: Int, index: Int): Boolean
 
-  def getEvaluation = scope.map(_.dom.size).foldLeft(1.0)(_ * _)
+  //def getEvaluation = scope.map(_.dom.size).foldLeft(1.0)(_ * _)
 
 }

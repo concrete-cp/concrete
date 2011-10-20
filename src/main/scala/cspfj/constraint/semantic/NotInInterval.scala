@@ -1,9 +1,10 @@
 package cspfj.constraint.semantic;
 
-import cspfj.constraint.AbstractConstraint;
-import cspfj.filter.RevisionHandler;
-import cspfj.problem.Domain;
+import cspfj.constraint.AbstractConstraint
+import cspfj.filter.RevisionHandler
+import cspfj.problem.Domain
 import cspfj.problem.Variable;
+import cspfj.constraint.SimpleRemovals
 
 object NotInInterval {
   def values(variable: Variable, lb: Int, ub: Int) =
@@ -14,9 +15,9 @@ object NotInInterval {
 }
 
 final class NotInInterval(val variable: Variable, val lb: Int, val ub: Int)
-  extends AbstractConstraint(Array(variable)) {
+  extends AbstractConstraint(Array(variable)) with SimpleRemovals {
 
-  val getEvaluation = 0
+  val getEvaluation = 0.0
 
   def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
     var changed = false;
@@ -35,7 +36,7 @@ final class NotInInterval(val variable: Variable, val lb: Int, val ub: Int)
     true;
   }
 
-  def isConsistent(reviseCount: Int) =
+  override def isConsistent(reviseCount: Int) =
     variable.dom.first < lb || variable.dom.last > ub;
 
   def check = {
@@ -43,6 +44,6 @@ final class NotInInterval(val variable: Variable, val lb: Int, val ub: Int)
     value < lb || ub < value;
   }
 
-  def toString = variable + " notin [" + variable.dom.value(lb) + ", " + variable.dom.value(ub) + "]"
+  override def toString = variable + " notin [" + variable.dom.value(lb) + ", " + variable.dom.value(ub) + "]"
 
 }

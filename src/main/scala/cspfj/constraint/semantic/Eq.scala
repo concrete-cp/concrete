@@ -50,7 +50,7 @@ final class Eq(val a: Int, val x: Variable, val b: Int, val y: Variable)
     change;
   }
 
-  def isConsistent(reviseCount: Int) = {
+  override def isConsistent(reviseCount: Int) = {
     val otherDom = y.dom
     val correspond = corresponding(0);
     x.dom.indices.exists { i =>
@@ -59,7 +59,7 @@ final class Eq(val a: Int, val x: Variable, val b: Int, val y: Variable)
     }
   }
 
-  def toString = (if (a != 1) a + "." else "") +
+  override def toString = (if (a != 1) a + "." else "") +
     x +
     (if (b > 0) " + " + b else if (b < 0) " - " + (-b) else "") +
     " = " + y

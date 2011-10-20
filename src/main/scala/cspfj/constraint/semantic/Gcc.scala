@@ -3,16 +3,17 @@ package cspfj.constraint.semantic;
 import scala.collection.immutable.Queue
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.MultiMap
-
 import cspfj.constraint.AbstractConstraint
 import cspfj.filter.RevisionHandler
 import cspfj.problem.Variable
+import cspfj.constraint.SimpleRemovals
 
 final case class Bounds(val value: Int, val minCount: Int, val maxCount: Int) {
-  def toString = value + ": [" + minCount + ", " + maxCount + "]"
+  override def toString = value + ": [" + minCount + ", " + maxCount + "]"
 }
 
-final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends AbstractConstraint(scope) {
+final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends AbstractConstraint(scope)
+  with SimpleRemovals {
 
   var queue: Queue[Variable] = Queue.empty
 
@@ -32,7 +33,7 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Abstract
 
   }
 
-  private def filter(except: Set[Variable], value: Int, revisator: RevisionHandler): Boolean = {
+  private def filter(except: collection.mutable.Set[Variable], value: Int, revisator: RevisionHandler): Boolean = {
     for (v <- scope if !except.contains(v)) {
       val index = v.dom.index(value)
       if (index >= 0 && v.dom.present(index)) {
@@ -68,14 +69,14 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Abstract
      */
     queue = Queue.empty.enqueue(scope.filter(_.dom.size == 1).toList)
 
-    val singles = new HashMap[Int, Set[Variable]] with MultiMap[Int, Variable]
+    val singles: MultiMap[Int, Variable] = new HashMap[Int, collection.mutable.Set[Variable]] with MultiMap[Int, Variable]
 
     while (queue != Nil) {
       val (checkedVariable, newQueue) = queue.dequeue
       queue = newQueue
       val value = checkedVariable.dom.firstValue
 
-      singles.add(value, checkedVariable)
+      singles.addBinding(value, checkedVariable)
 
       val currentSingles = singles(value)
 
@@ -103,6 +104,6 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Abstract
     true;
   }
 
-  val getEvaluation = arity * arity
+  val getEvaluation = arity.doubleValue * arity
 
 }

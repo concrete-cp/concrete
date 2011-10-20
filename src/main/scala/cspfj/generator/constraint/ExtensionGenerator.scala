@@ -1,10 +1,15 @@
 package cspfj.generator.constraint;
 
-import cspfj.constraint.extension.{ TupleSet, MatrixGeneral, Matrix2D, Matrix, ExtensionConstraints }
-import cspfj.problem.{ Variable, Problem, Domain }
+import cspfj.constraint.extension.ExtensionConstraint
+import cspfj.constraint.extension.Matrix
+import cspfj.constraint.extension.Matrix2D
+import cspfj.constraint.extension.MatrixGeneral
+import cspfj.constraint.extension.TupleSet
+import cspfj.problem.Domain
+import cspfj.problem.Problem
+import cspfj.problem.Variable
 import cspom.constraint.CSPOMConstraint
 import cspom.extension.Relation
-import scala.collection.JavaConversions
 
 final case class Signature(domains: Seq[Domain], relation: Relation, init: Boolean)
 
@@ -39,7 +44,7 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
       val extensionConstraint = constraint.asInstanceOf[cspom.extension.ExtensionConstraint]
       val matrix = generate(solverVariables, extensionConstraint.relation, extensionConstraint.init);
 
-      addConstraint(ExtensionConstraints.newExtensionConstraint(matrix, solverVariables: _*));
+      addConstraint(ExtensionConstraint.newExtensionConstraint(matrix, solverVariables.toArray));
       true;
     }
   }

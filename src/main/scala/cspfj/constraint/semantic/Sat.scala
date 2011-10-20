@@ -6,9 +6,10 @@ import org.sat4j.core.VecInt
 import java.io.PrintWriter
 import cspfj.constraint.Residues
 import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.VariablePerVariable
 
 class Sat(scope: IndexedSeq[Variable]) extends AbstractConstraint(null, scope.toArray)
-  with Residues {
+  with Residues with VariablePerVariable {
 
   val offset = scope.map(_.dom.maxSize).scanLeft(1)(_ + _).toIndexedSeq
 
@@ -82,4 +83,6 @@ class Sat(scope: IndexedSeq[Variable]) extends AbstractConstraint(null, scope.to
       false
     }
   }
+
+  override def getEvaluation = math.pow(2, scope.map(_.dom.size).sum)
 }

@@ -3,10 +3,12 @@ package cspfj.constraint.semantic;
 import cspfj.constraint.AbstractConstraint
 import cspfj.filter.RevisionHandler
 import cspfj.problem.Domain
-import cspfj.problem.Variable;
+import cspfj.problem.Variable
 import scala.annotation.tailrec
+import cspfj.constraint.SimpleRemovals
 
-final class SumLeq(val bound: Int, scope: Array[Variable]) extends AbstractConstraint(scope) {
+final class SumLeq(val bound: Int, scope: Array[Variable]) extends AbstractConstraint(scope)
+with SimpleRemovals {
 
   def check: Boolean = {
 
@@ -60,5 +62,5 @@ final class SumLeq(val bound: Int, scope: Array[Variable]) extends AbstractConst
     true;
   }
 
-  def toString = scope.mkString(" + ") + " <= " + bound
+  override def toString = scope.mkString(" + ") + " <= " + bound
 }

@@ -151,7 +151,7 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
       val matrix = new Matrix2D(scope(0).dom.maxSize, scope(1).dom.maxSize, true);
       new ExtensionConstraint2D(scope.toArray, matrix, false);
     } else {
-      new ExtensionConstraintGeneral(new TupleSet(true), false, scope: _*);
+      new ExtensionConstraintGeneral(new TupleSet(true), false, scope.toArray);
     }
   }
 }

@@ -3,8 +3,9 @@ package cspfj.constraint.semantic;
 import cspfj.constraint.AbstractConstraint
 import cspfj.filter.RevisionHandler
 import cspfj.problem.Domain
-import cspfj.problem.Variable;
+import cspfj.problem.Variable
 import cspfj.filter.RevisionHandler
+import cspfj.constraint.SimpleRemovals
 
 object InInterval {
   def values(variable: Variable, lb: Int, ub: Int) =
@@ -15,11 +16,11 @@ object InInterval {
 }
 
 final class InInterval(val variable: Variable, val lb: Int, val ub: Int)
-  extends AbstractConstraint(Array(variable)) {
+  extends AbstractConstraint(Array(variable)) with SimpleRemovals {
 
   val dom = variable.dom
 
-  val getEvaluation = 0
+  override val getEvaluation = 0.0
 
   override def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
     val removed = dom.removeTo(lb - 1) + dom.removeFrom(ub + 1);
@@ -34,13 +35,13 @@ final class InInterval(val variable: Variable, val lb: Int, val ub: Int)
     true
   }
 
-  def isConsistent(reviseCount: Int) = dom.indices(lb).takeWhile(_ <= ub).exists(dom.present)
+  override def isConsistent(reviseCount: Int) = dom.indices(lb).takeWhile(_ <= ub).exists(dom.present)
 
   def check = {
     val value = this.value(0);
     lb <= value && value <= ub;
   }
 
-  def toString = variable + " in [" + variable.dom.value(lb) + ", " + variable.dom.value(ub) + "]"
+  override def toString = variable + " in [" + variable.dom.value(lb) + ", " + variable.dom.value(ub) + "]"
 
 }

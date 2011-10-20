@@ -30,27 +30,27 @@ final class MatrixManagerDynamicTest {
       new Variable("V1", new BitVectorDomain(0, 1, 2)));
 
     mmd = new MatrixManagerDynamic(scope, ta, false, new Array[Int](2));
-    content = JavaConversions.asScalaIterator(mmd.iterator).toArray;
+    content = mmd.toArray;
   }
 
   @Test
   def testRestore() {
-    val itr2 = mmd.iterator();
-    mmd.setLevel(1);
+    val itr2 = mmd.iterator
+    mmd.level = 1;
     itr2.next();
     itr2.next();
     itr2.remove();
     itr2.next();
     itr2.remove();
 
-    val itr = mmd.iterator();
+    val itr = mmd.iterator
     assertArrayEquals(content(0), itr.next());
-    assertFalse(itr.hasNext());
+    assertFalse(itr.hasNext);
 
-    mmd.restore(0);
+    mmd.level = 0
 
     val set = collection.mutable.Set.empty ++ content;
-    val itr1 = mmd.iterator();
+    val itr1 = mmd.iterator
     assertTrue(set.remove(itr1.next()));
     assertTrue(set.remove(itr1.next()));
     assertTrue(set.remove(itr1.next()));
@@ -85,14 +85,14 @@ final class MatrixManagerDynamicTest {
     assertArrayEquals(content(1), itr2.next());
     assertArrayEquals(content(2), itr2.next());
     itr2.remove();
-    assertFalse(itr2.hasNext());
+    assertFalse(itr2.hasNext);
 
     itr2 = mmd.iterator;
     assertArrayEquals(content(1), itr2.next());
     itr2.remove();
     assertFalse(itr2.hasNext);
 
-    itr2 = mmd.iterator();
+    itr2 = mmd.iterator
     assertFalse(itr2.hasNext);
   }
 

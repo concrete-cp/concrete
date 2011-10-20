@@ -24,5 +24,7 @@ trait TupleEnumerator extends Constraint {
 
     return false;
   }
+  
+  def getEvaluation = scope map (_.dom.size) product
 
 }
