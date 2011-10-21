@@ -1,17 +1,17 @@
 /**
  * CSPFJ - CSP solving API for Java
  * Copyright (C) 2006 Julien VION
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -19,22 +19,18 @@
 
 package cspfj;
 
-import java.util.Map;
-
+import cspfj.filter.AC3;
 import cspfj.problem.Problem;
 
-public interface Solver {
-    Map<String, Integer> nextSolution();
+final class DummySolver(prob: Problem) extends AbstractSolver(prob) {
 
-    void setMaxBacktracks(final int maxBacktracks);
+  def nextSolution =
+    if (preprocess(new AC3(problem))) Map.empty else null
 
-    int getMaxBacktracks();
+  def collectStatistics
 
-    String getXMLConfig();
+  def toString = "dummy"
 
-    Problem getProblem();
+  def reset()
 
-    void setPreproExp(int time);
-
-    void reset();
 }
