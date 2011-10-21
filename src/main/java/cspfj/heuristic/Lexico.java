@@ -22,6 +22,6 @@ public final class Lexico implements ValueHeuristic {
 
 	@Override
 	public int selectIndex(final Variable variable) {
-		return variable.getFirst();
+		return variable.dom().first();
 	}
 }

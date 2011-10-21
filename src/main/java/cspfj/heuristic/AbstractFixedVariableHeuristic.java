@@ -19,7 +19,7 @@ public abstract class AbstractFixedVariableHeuristic implements
         double bestScore = Double.NEGATIVE_INFINITY;
 
         for (Variable v : problem.getVariables()) {
-            if (v.getDomainSize() == 1) {
+            if (v.dom().size() == 1) {
                 continue;
             }
             final double score = getScore(v);

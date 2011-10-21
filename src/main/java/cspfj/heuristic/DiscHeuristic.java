@@ -20,7 +20,7 @@ public final class DiscHeuristic implements Heuristic {
         double bestIndexScore = Double.NEGATIVE_INFINITY;
 
         for (Variable v : problem.getVariables()) {
-            if (v.getDomainSize() <= 1) {
+            if (v.dom().size() <= 1) {
                 continue;
             }
 

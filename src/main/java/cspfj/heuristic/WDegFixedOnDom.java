@@ -30,7 +30,7 @@ public final class WDegFixedOnDom extends AbstractFixedVariableHeuristic {
 
 	@Override
 	public double getScore(final Variable variable) {
-		return WDeg.wDeg(variable) / variable.getDomainSize();
+		return WDeg.wDeg(variable) / variable.dom().size();
 	}
 
 	@Override

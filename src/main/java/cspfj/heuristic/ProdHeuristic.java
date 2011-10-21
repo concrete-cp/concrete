@@ -19,7 +19,7 @@ public final class ProdHeuristic implements Heuristic {
         Variable bestVariable = null;
         for (Variable v : problem.getVariables()) {
             if (bestVariable == null
-                    || (v.getDomainSize() != 1 && compare(v, bestVariable) > 0)) {
+                    || (v.dom().size() != 1 && compare(v, bestVariable) > 0)) {
                 bestVariable = v;
             }
         }

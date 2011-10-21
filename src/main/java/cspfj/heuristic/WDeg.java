@@ -19,6 +19,7 @@
 
 package cspfj.heuristic;
 
+import scala.collection.JavaConversions;
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
@@ -36,10 +37,10 @@ public final class WDeg extends AbstractRandVariableHeuristic {
 	public static double wDeg(final Variable variable) {
 		double count = 0;
 
-		for (Constraint c : variable.getInvolvingConstraints()) {
+		for (Constraint c : JavaConversions.asJavaIterable(variable.constraints())) {
 			// count += (nbUnboundVariables(c) - 1) * c.getWeight();
 			if (!c.isEntailed()) {
-				count += c.getWeight();
+				count += c.weight();
 			}
 		}
 		return count;
@@ -47,8 +48,8 @@ public final class WDeg extends AbstractRandVariableHeuristic {
 
 	public static int nbUnboundVariables(final Constraint constraint) {
 		int count = 0;
-		for (Variable v : constraint.getScope()) {
-			if (v.getDomainSize() > 1) {
+		for (Variable v : constraint.scope()) {
+			if (v.dom().size() > 1) {
 				count++;
 			}
 		}

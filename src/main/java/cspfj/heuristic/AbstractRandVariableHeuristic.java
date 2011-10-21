@@ -26,7 +26,7 @@ public abstract class AbstractRandVariableHeuristic implements
         tieManager.clear();
 
         for (Variable v : problem.getVariables()) {
-            if (v.getDomainSize() > 1) {
+            if (v.dom().size() > 1) {
                 tieManager.newValue(v, getScore(v));
             }
         }

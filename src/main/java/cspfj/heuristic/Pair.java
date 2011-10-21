@@ -23,7 +23,7 @@ public final class Pair {
 	}
 
 	public String toString() {
-		return "(" + variable + ", " + variable.getValue(index) + ")";
+		return "(" + variable + ", " + variable.dom().value(index) + ")";
 	}
 
 }
