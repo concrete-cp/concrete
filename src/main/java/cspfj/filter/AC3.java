@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 
+import scala.collection.IndexedSeq;
+import scala.collection.JavaConversions;
 import cspfj.constraint.Constraint;
 import cspfj.priorityqueues.BinomialHeap;
 import cspfj.priorityqueues.Key;
@@ -31,7 +33,7 @@ public final class AC3 implements Filter {
         this(problem, new BinomialHeap<Variable>(new Key<Variable>() {
             @Override
             public float getKey(final Variable object) {
-                return object.getDomainSize();
+                return object.dom().size();
             }
         }));
     }
@@ -49,7 +51,8 @@ public final class AC3 implements Filter {
             queue.offer(v);
         }
 
-        for (Constraint c : problem.getConstraints()) {
+        for (Constraint c : JavaConversions.asJavaIterable(problem
+                .constraints())) {
             c.fillRemovals(reviseCount);
         }
         return reduce();
@@ -64,7 +67,7 @@ public final class AC3 implements Filter {
             c.fillRemovals(reviseCount);
 
             if (!c.revise(revisator, reviseCount)) {
-                c.incWeight();
+                c.weight_$eq(c.weight() + 1);
                 return false;
             }
 
@@ -88,14 +91,15 @@ public final class AC3 implements Filter {
 
         if (modCons != null) {
             // final BitSet cons = new BitSet();
-            for (Constraint c : problem.getConstraints()) {
+            for (Constraint c : JavaConversions.asJavaIterable(problem
+                    .constraints())) {
                 if (modCons[c.getId()] > cnt) {
                     // cons.set(c.getId());
 
                     c.fillRemovals(reviseCount);
 
                     if (!c.revise(revisator, reviseCount)) {
-                        c.incWeight();
+                        c.weight_$eq(c.weight() + 1);
                         return false;
                     }
 
@@ -121,11 +125,11 @@ public final class AC3 implements Filter {
 
         queue.offer(variable);
 
-        final Constraint[] involving = variable.getInvolvingConstraints();
+        final IndexedSeq<Constraint> involving = variable.constraints();
 
-        for (int cp = involving.length; --cp >= 0;) {
-            final Constraint constraint = involving[cp];
-            constraint.setRemovals(variable.getPositionInConstraint(cp),
+        for (int cp = involving.size(); --cp >= 0;) {
+            final Constraint constraint = involving.apply(cp);
+            constraint.setRemovals(variable.positionInConstraint()[cp],
                     reviseCount);
         }
 
@@ -136,14 +140,14 @@ public final class AC3 implements Filter {
         public void revised(final Constraint constraint, final Variable variable) {
             queue.offer(variable);
 
-            final Constraint[] involvingConstraints = variable
-                    .getInvolvingConstraints();
+            final IndexedSeq<Constraint> involvingConstraints = variable
+                    .constraints();
 
-            for (int cp = involvingConstraints.length; --cp >= 0;) {
-                final Constraint constraintP = involvingConstraints[cp];
+            for (int cp = involvingConstraints.size(); --cp >= 0;) {
+                final Constraint constraintP = involvingConstraints.apply(cp);
                 if (constraintP != constraint) {
                     constraintP.setRemovals(
-                            variable.getPositionInConstraint(cp), reviseCount);
+                            variable.positionInConstraint()[cp], reviseCount);
                 }
 
             }
@@ -166,17 +170,17 @@ public final class AC3 implements Filter {
     }
 
     private boolean reduce(final Variable variable) {
-        final Constraint[] involvingConstraints = variable
-                .getInvolvingConstraints();
-        for (int c = involvingConstraints.length; --c >= 0;) {
-            final Constraint constraint = involvingConstraints[c];
+        final IndexedSeq<Constraint> involvingConstraints = variable
+                .constraints();
+        for (int c = involvingConstraints.size(); --c >= 0;) {
+            final Constraint constraint = involvingConstraints.apply(c);
             if (constraint.isEntailed()
                     || constraint.hasNoRemovals(reviseCount)) {
                 continue;
             }
             revisions++;
             if (!constraint.revise(revisator, reviseCount)) {
-                constraint.incWeight();
+                constraint.weight_$eq(constraint.weight());
                 return false;
             }
 
@@ -198,7 +202,7 @@ public final class AC3 implements Filter {
 
         };
 
-        for (Constraint c : problem.getConstraints()) {
+        for (Constraint c : JavaConversions.asJavaIterable(problem.constraints())) {
             assert c.revise(controlRevisator, -1);
         }
         return true;

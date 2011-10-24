@@ -5,6 +5,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 
+import javax.swing.JCheckBox;
+
+import scala.collection.IndexedSeq;
+import scala.collection.JavaConversions;
+
 import cspfj.ParameterManager;
 import cspfj.StatisticsManager;
 import cspfj.constraint.Constraint;
@@ -40,7 +45,7 @@ public final class AC3Constraint implements Filter {
     @Parameter("ac.key")
     private static Key<Constraint> key = new Key<Constraint>() {
         @Override
-        public float getKey(final Constraint object) {
+        public double getKey(final Constraint object) {
             return object.getEvaluation();
         }
 
@@ -81,21 +86,22 @@ public final class AC3Constraint implements Filter {
         // LOGGER.fine("reduce after " + cnt);
         for (Variable v : problem.getVariables()) {
             if (modVar[v.getId()] > cnt) {
-                final Constraint[] involved = v.getInvolvingConstraints();
-                for (int j = involved.length; --j >= 0;) {
-                    final Constraint constraint = involved[j];
+                final IndexedSeq<Constraint> involved = v.constraints();
+                for (int j = involved.size(); --j >= 0;) {
+                    final Constraint constraint = involved.apply(j);
                     if (!constraint.isEntailed()) {
-                        constraint.setRemovals(v.getPositionInConstraint(j),
+                        constraint.setRemovals(v.positionInConstraint()[j],
                                 revisionCount);
 
-                        queue.offer(involved[j]);
+                        queue.offer(involved.apply(j));
                     }
                 }
             }
         }
 
         if (modCons != null) {
-            for (Constraint c : problem.getConstraints()) {
+            for (Constraint c : JavaConversions.asJavaIterable(problem
+                    .constraints())) {
                 if (modCons[c.getId()] > cnt && !c.isEntailed()) {
                     c.fillRemovals(revisionCount);
 
@@ -114,13 +120,13 @@ public final class AC3Constraint implements Filter {
         }
         queue.clear();
 
-        final Constraint[] involving = variable.getInvolvingConstraints();
+        final IndexedSeq<Constraint> involving = variable.constraints();
 
-        for (int cp = involving.length; --cp >= 0;) {
-            if (!involving[cp].isEntailed()) {
-                involving[cp].setRemovals(variable.getPositionInConstraint(cp),
-                        revisionCount);
-                queue.offer(involving[cp]);
+        for (int cp = involving.size(); --cp >= 0;) {
+            if (!involving.apply(cp).isEntailed()) {
+                involving.apply(cp).setRemovals(
+                        variable.positionInConstraint()[cp], revisionCount);
+                queue.offer(involving.apply(cp));
             }
         }
 
@@ -129,15 +135,14 @@ public final class AC3Constraint implements Filter {
 
     private RevisionHandler revisator = new RevisionHandler() {
         public void revised(final Constraint constraint, final Variable variable) {
-            final Constraint[] involvingConstraints = variable
-                    .getInvolvingConstraints();
+            final IndexedSeq<Constraint> involvingConstraints = variable
+                    .constraints();
 
-            for (int cp = involvingConstraints.length; --cp >= 0;) {
-                final Constraint constraintP = involvingConstraints[cp];
+            for (int cp = involvingConstraints.size(); --cp >= 0;) {
+                final Constraint constraintP = involvingConstraints.apply(cp);
                 if (constraintP != constraint && !constraintP.isEntailed()) {
-                    constraintP
-                            .setRemovals(variable.getPositionInConstraint(cp),
-                                    revisionCount);
+                    constraintP.setRemovals(
+                            variable.positionInConstraint()[cp], revisionCount);
                     queue.offer(constraintP);
                 }
 
@@ -152,7 +157,7 @@ public final class AC3Constraint implements Filter {
 
             revisions++;
             if (!constraint.revise(revisator, revisionCount)) {
-                constraint.incWeight();
+                constraint.weight_$eq(constraint.weight() + 1);
                 return false;
             }
 
