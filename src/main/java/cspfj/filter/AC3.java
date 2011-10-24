@@ -32,7 +32,7 @@ public final class AC3 implements Filter {
     public AC3(final Problem problem) {
         this(problem, new BinomialHeap<Variable>(new Key<Variable>() {
             @Override
-            public float getKey(final Variable object) {
+            public double getKey(final Variable object) {
                 return object.dom().size();
             }
         }));

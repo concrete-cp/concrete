@@ -38,22 +38,22 @@ public final class SAC1 extends AbstractSAC {
     protected boolean singletonTest(final Variable variable)
             throws InterruptedException {
         boolean changedGraph = false;
-        for (int index = variable.getFirst(); index >= 0; index = variable
-                .getNext(index)) {
+        for (int index = variable.dom().first(); index >= 0; index = variable
+                .dom().next(index)) {
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
-            if (!variable.isPresent(index)) {
+            if (!variable.dom().present(index)) {
                 continue;
             }
 
             // if (logger.isLoggable(Level.FINER)) {
-            LOGGER.finer(variable + " <- " + variable.getDomain().index(index)
+            LOGGER.finer(variable + " <- " + variable.dom().index(index)
                     + "(" + index + ")");
             // }
 
             problem.push();
-            variable.setSingle(index);
+            variable.dom().setSingle(index);
             nbSingletonTests++;
             final boolean consistent = filter.reduceAfter(variable);
 
@@ -62,7 +62,7 @@ public final class SAC1 extends AbstractSAC {
             if (!consistent) {
                 LOGGER.fine("Removing " + variable + ", " + index);
 
-                variable.remove(index);
+                variable.dom().remove(index);
                 changedGraph = true;
             }
         }

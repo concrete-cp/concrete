@@ -80,9 +80,9 @@ object StatisticsManager extends Loggable {
       }))
 
   def isIntType(input: Class[_]) =
-    input == Int || input == Long
+    input == classOf[Int] || input == classOf[Long]
 
-  def isFloatType(input: Class[_]) = input == Float || input == Double
+  def isFloatType(input: Class[_]) = input == classOf[Float] || input == classOf[Double]
 
   def reset() {
     static = Map.empty

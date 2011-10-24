@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 
-import javax.swing.JCheckBox;
-
 import scala.collection.IndexedSeq;
 import scala.collection.JavaConversions;
 
@@ -171,7 +169,8 @@ public final class AC3Constraint implements Filter {
     }
 
     private void addAll() {
-        for (Constraint c : problem.getConstraints()) {
+        for (Constraint c : JavaConversions.asJavaIterable(problem
+                .constraints())) {
             if (!c.isEntailed()) {
                 c.fillRemovals(revisionCount);
                 queue.offer(c);
@@ -192,7 +191,8 @@ public final class AC3Constraint implements Filter {
 
         };
 
-        for (Constraint c : problem.getConstraints()) {
+        for (Constraint c : JavaConversions.asJavaIterable(problem
+                .constraints())) {
             assert c.revise(controlRevisator, -1);
         }
         return true;

@@ -1,9 +1,6 @@
 package cspfj
 
-import scala.collection.Iterator
-import scala.collection.JavaConversions
-
-class SolverIterator(val s: Solver) extends Iterator[collection.mutable.Map[String, Int]] {
+class SolverIterator(val s: Solver) extends Iterator[Map[String, Int]] {
 
   var current = s.nextSolution();
 
@@ -12,7 +9,7 @@ class SolverIterator(val s: Solver) extends Iterator[collection.mutable.Map[Stri
   def next = if (hasNext) {
     val returned = current;
     current = s.nextSolution();
-    JavaConversions.mapAsScalaMap(returned) map { e => e._1 -> e._2.toInt };
+    returned
   } else {
     Iterator.empty.next;
   }

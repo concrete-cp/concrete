@@ -87,10 +87,10 @@ public final class BitVectorPriorityQueue<T extends Identified> extends
 
 	private int min() {
 		int best = queue.nextSetBit(0);
-		float bestKey = key.getKey(values[best]);
+		double bestKey = key.getKey(values[best]);
 		for (int i = queue.nextSetBit(best + 1); i >= 0; i = queue
 				.nextSetBit(i + 1)) {
-			final float keyValue = key.getKey(values[i]);
+			final double keyValue = key.getKey(values[i]);
 
 			if (keyValue < bestKey) {
 				best = i;

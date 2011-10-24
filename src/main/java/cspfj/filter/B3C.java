@@ -43,9 +43,9 @@ public final class B3C extends AbstractSAC {
     @Override
     protected boolean singletonTest(final Variable variable) {
         boolean changed = false;
-        for (int index = variable.getFirst(); index >= 0; index = variable
-                .getNext(index)) {
-            if (!variable.isPresent(index)) {
+        for (int index = variable.dom().first(); index >= 0; index = variable
+                .dom().next(index)) {
+            if (!variable.dom().present(index)) {
                 continue;
             }
             if (check(variable, index)) {
@@ -54,10 +54,10 @@ public final class B3C extends AbstractSAC {
                 break;
             }
         }
-        if (variable.getDomainSize() > 1) {
-            for (int index = variable.getLast(); index >= 0; index = variable
-                    .getPrev(index)) {
-                if (!variable.isPresent(index)) {
+        if (variable.dom().size() > 1) {
+            for (int index = variable.dom().last(); index >= 0; index = variable
+                    .dom().prev(index)) {
+                if (!variable.dom().present(index)) {
                     continue;
                 }
                 if (check(variable, index)) {
@@ -72,7 +72,7 @@ public final class B3C extends AbstractSAC {
 
     private boolean check(final Variable variable, final int index) {
         problem.push();
-        variable.getDomain().setSingle(index);
+        variable.dom().setSingle(index);
 
         nbSingletonTests++;
         final boolean consistent = filter.reduceAfter(variable);
@@ -82,7 +82,7 @@ public final class B3C extends AbstractSAC {
         if (!consistent) {
             LOGGER.fine("Removing " + variable + ", " + index);
 
-            variable.remove(index);
+            variable.dom().remove(index);
             return true;
         }
         return false;

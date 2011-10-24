@@ -26,11 +26,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Logger;
 
+import scala.collection.IndexedSeq;
+import scala.collection.JavaConversions;
 import cspfj.ParameterManager;
 import cspfj.constraint.Constraint;
 import cspfj.constraint.DynamicConstraint;
-import cspfj.problem.NoGoodLearner;
 import cspfj.problem.LearnMethod;
+import cspfj.problem.NoGoodLearner;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.Parameter;
@@ -71,7 +73,7 @@ public final class DC20 implements Filter {
         this.problem = problem;
         this.filter = new AC3(problem);
         impliedConstraints = new ArrayList<DynamicConstraint>();
-        modVar = new int[problem.getMaxVId() + 1];
+        modVar = new int[problem.maxVId() + 1];
         ngl = new NoGoodLearner(problem, addConstraints);
         // allDomainSizes = new int[(2 + problem.getMaxVId())
         // * problem.getMaxDomainSize()][1 + problem.getMaxVId()];
@@ -79,10 +81,11 @@ public final class DC20 implements Filter {
 
     @Override
     public boolean reduceAll() throws InterruptedException {
-        final int nbC = problem.getNbConstraints();
+        final int nbC = problem.constraints().size();
 
-        for (Constraint c : problem.getConstraints()) {
-            if (c.getArity() == 2
+        for (Constraint c : JavaConversions.asJavaIterable(problem
+                .constraints())) {
+            if (c.arity() == 2
                     && DynamicConstraint.class.isAssignableFrom(c.getClass())) {
                 impliedConstraints.add((DynamicConstraint) c);
             }
@@ -93,7 +96,7 @@ public final class DC20 implements Filter {
         try {
             result = cdcReduce();
         } finally {
-            nbAddedConstraints += problem.getNbConstraints() - nbC;
+            nbAddedConstraints += problem.constraints().size() - nbC;
         }
         // ExtensionConstraintDynamic.quick = false;
         // for (Constraint c : problem.getConstraints()) {
@@ -112,39 +115,39 @@ public final class DC20 implements Filter {
         if (!filter.reduceAll()) {
             return false;
         }
-        final Variable[] variables = problem.getVariables();
+        final IndexedSeq<Variable> variables = problem.variables();
 
         int mark = 0;
 
         int v = 0;
 
-        final int[] domainSizes = new int[problem.getMaxVId() + 1];
+        final int[] domainSizes = new int[problem.maxVId() + 1];
 
         do {
-            final Variable variable = variables[v];
+            final Variable variable = variables.apply(v);
             // if (logger.isLoggable(Level.FINE)) {
             LOGGER.info(variable.toString());
             // }
             cnt++;
-            if (variable.getDomainSize() > 1 && singletonTest(variable)) {
-                if (variable.getDomainSize() <= 0) {
+            if (variable.dom().size() > 1 && singletonTest(variable)) {
+                if (variable.dom().size() <= 0) {
                     return false;
                 }
 
                 for (Variable var : problem.getVariables()) {
-                    domainSizes[var.getId()] = var.getDomainSize();
+                    domainSizes[var.getId()] = var.dom().size();
                 }
                 if (!filter.reduceFrom(modVar, null, cnt - 1)) {
                     return false;
                 }
                 for (Variable var : problem.getVariables()) {
-                    if (domainSizes[var.getId()] != var.getDomainSize()) {
+                    if (domainSizes[var.getId()] != var.dom().size()) {
                         modVar[var.getId()] = cnt;
                     }
                 }
                 mark = v;
             }
-            if (++v >= variables.length) {
+            if (++v >= variables.size()) {
                 v = 0;
             }
         } while (v != mark);
@@ -157,35 +160,35 @@ public final class DC20 implements Filter {
             throws InterruptedException {
         boolean changedGraph = false;
 
-        for (int index = variable.getFirst(); index >= 0; index = variable
-                .getNext(index)) {
+        for (int index = variable.dom().first(); index >= 0; index = variable
+                .dom().next(index)) {
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
-            if (!variable.isPresent(index)) {
+            if (!variable.dom().present(index)) {
                 continue;
             }
 
             // if (logger.isLoggable(Level.FINER)) {
-            LOGGER.fine(variable + " <- " + variable.getDomain().value(index)
+            LOGGER.fine(variable + " <- " + variable.dom().value(index)
                     + "(" + index + ")");
             // }
 
             problem.push();
-            variable.setSingle(index);
+            variable.dom().setSingle(index);
 
             nbSingletonTests++;
 
             final boolean sat;
 
-            if (cnt <= problem.getNbVariables()) {
+            if (cnt <= problem.variables().size()) {
                 sat = filter.reduceAfter(variable);
             } else {
-                final Constraint[] involving = variable
-                        .getInvolvingConstraints();
-                for (int i = involving.length; --i >= 0;) {
-                    final Constraint c = involving[i];
-                    if (c.getArity() != 2) {
+                final IndexedSeq<Constraint> involving = variable
+                        .constraints();
+                for (int i = involving.size(); --i >= 0;) {
+                    final Constraint c = involving.apply(i);
+                    if (c.arity() != 2) {
                         continue;
                     }
 
@@ -194,7 +197,7 @@ public final class DC20 implements Filter {
                 }
 
                 sat = filter.reduceFrom(modVar, null,
-                        cnt - problem.getNbVariables());
+                        cnt - problem.variables().size());
             }
             if (sat) {
 
@@ -212,7 +215,7 @@ public final class DC20 implements Filter {
                 problem.pop();
                 LOGGER.fine("Removing " + variable + ", " + index);
 
-                variable.remove(index);
+                variable.dom().remove(index);
                 changedGraph = true;
                 modVar[variable.getId()] = cnt;
             }

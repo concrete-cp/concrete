@@ -44,8 +44,6 @@ import cspom.CSPOM;
 
 abstract class AbstractSolver(val problem: Problem) extends Solver {
 
-  protected def solution = problem.variables.map { v => v.name -> v.dom.firstValue } toMap
-
   @Statistic
   var preproRemoved = 0
   @Statistic

@@ -141,7 +141,7 @@ public final class SoftHeap<T extends Identified> extends AbstractQueue<T> {
 
         final TreeNode<T> min = minTree.root;
 
-        final float oldCKey = min.cKey;
+        final double oldCKey = min.cKey;
         final Entry<T> elt = min.pick();
         if (min.nbEntries == 0) {
             removeTree(minTree);
@@ -202,7 +202,7 @@ public final class SoftHeap<T extends Identified> extends AbstractQueue<T> {
         private Entry<T> first;
         private Entry<T> last;
         private int nbEntries;
-        private float cKey;
+        private double cKey;
 
         private final int rank;
         private final int size;
@@ -213,7 +213,7 @@ public final class SoftHeap<T extends Identified> extends AbstractQueue<T> {
          * @param elt
          * @param key
          */
-        private TreeNode(final Entry<T> elt, final float key) {
+        private TreeNode(final Entry<T> elt, final double key) {
             rank = 0;
             size = 1;
 

@@ -27,10 +27,8 @@ final class DummySolver(prob: Problem) extends AbstractSolver(prob) {
   def nextSolution =
     if (preprocess(new AC3(problem))) Map.empty else null
 
-  def collectStatistics
+  override def toString = "dummy"
 
-  def toString = "dummy"
-
-  def reset()
+  def reset() {}
 
 }

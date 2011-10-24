@@ -34,7 +34,7 @@ final class Variable(
 
   private var _dynamicConstraints: Seq[DynamicConstraint] = null
 
-  private var _positionInConstraint: IndexedSeq[Int] = null
+  private var _positionInConstraint: Array[Int] = null
 
   override def toString = name + (if (_domain == null) " [?]" else " " + _domain)
 
@@ -47,7 +47,7 @@ final class Variable(
   def constraints_=(newConstraints: Seq[Constraint]) {
     _constraints = newConstraints.toIndexedSeq
     _dynamicConstraints = newConstraints filter { _.isInstanceOf[DynamicConstraint] } map { _.asInstanceOf[DynamicConstraint] }
-    _positionInConstraint = constraints.map(_.position(this))
+    _positionInConstraint = constraints.map(_.position(this)).toArray
   }
 
   def dom = _domain

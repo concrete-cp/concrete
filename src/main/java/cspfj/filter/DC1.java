@@ -21,10 +21,11 @@ package cspfj.filter;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import scala.collection.IndexedSeq;
 import cspfj.ParameterManager;
 import cspfj.StatisticsManager;
-import cspfj.problem.NoGoodLearner;
 import cspfj.problem.LearnMethod;
+import cspfj.problem.NoGoodLearner;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.Parameter;
@@ -61,13 +62,13 @@ public final class DC1 extends AbstractSAC {
 
     @Override
     protected boolean reduce() throws InterruptedException {
-        final int nbC = problem.getNbConstraints();
+        final int nbC = problem.constraints().size();
         // ExtensionConstraintDynamic.quick = true;
         final boolean result;
         try {
             result = super.reduce();
         } finally {
-            addedConstraints += problem.getNbConstraints() - nbC;
+            addedConstraints += problem.constraints().size() - nbC;
         }
         // ExtensionConstraintDynamic.quick = false;
         // for (Constraint c : problem.getConstraints()) {
@@ -84,21 +85,21 @@ public final class DC1 extends AbstractSAC {
         if (!filter.reduceAll()) {
             return false;
         }
-        final Variable[] variables = problem.getVariables();
+        final IndexedSeq<Variable> variables = problem.variables();
 
         int mark = 0;
 
         int v = 0;
 
         do {
-            final Variable variable = variables[v];
+            final Variable variable = variables.apply(v);
             // if (logger.isLoggable(Level.FINE)) {
             LOGGER.info(variable.toString());
             // }
-            if (variable.getDomainSize() > 1 && singletonTest(variable)) {
+            if (variable.dom().size() > 1 && singletonTest(variable)) {
                 return false;
             }
-            if (++v >= variables.length) {
+            if (++v >= variables.size()) {
                 v = 0;
             }
         } while (v != mark);
@@ -110,12 +111,12 @@ public final class DC1 extends AbstractSAC {
     protected boolean singletonTest(final Variable variable)
             throws InterruptedException {
         boolean changedGraph = false;
-        for (int index = variable.getFirst(); index >= 0; index = variable
-                .getNext(index)) {
+        for (int index = variable.dom().first(); index >= 0; index = variable
+                .dom().next(index)) {
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
-            if (!variable.isPresent(index)) {
+            if (!variable.dom().present(index)) {
                 continue;
             }
 
@@ -125,7 +126,7 @@ public final class DC1 extends AbstractSAC {
             // }
 
             problem.push();
-            variable.setSingle(index);
+            variable.dom().setSingle(index);
 
             nbSingletonTests++;
 
@@ -145,7 +146,7 @@ public final class DC1 extends AbstractSAC {
                 problem.pop();
                 LOGGER.fine("Removing " + variable + ", " + index);
 
-                variable.remove(index);
+                variable.dom().remove(index);
                 changedGraph = true;
             }
         }

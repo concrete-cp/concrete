@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Logger;
 
+import scala.collection.IndexedSeq;
 import cspfj.StatisticsManager;
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
@@ -25,9 +26,9 @@ abstract class AbstractSAC implements Filter {
 
     private static final Logger LOGGER = Logger.getLogger(AbstractSAC.class
             .toString());
-    
+
     static {
-    	StatisticsManager.register(AbstractSAC.class);
+        StatisticsManager.register(AbstractSAC.class);
     }
 
     public AbstractSAC(final Problem problem, final AC3 filter) {
@@ -58,19 +59,19 @@ abstract class AbstractSAC implements Filter {
         if (!filter.reduceAll()) {
             return false;
         }
-        final Variable[] variables = problem.getVariables();
+        final IndexedSeq<Variable> variables = problem.variables();
 
         int mark = 0;
 
         int v = 0;
 
         do {
-            final Variable variable = variables[v];
-            // if (logger.isLoggable(Level.FINE)) {
+            final Variable variable = variables.apply(v);
+                    // if (logger.isLoggable(Level.FINE)) {
             LOGGER.info(variable.toString());
             // }
-            if (variable.getDomainSize() > 1 && singletonTest(variable)) {
-                if (variable.getDomainSize() <= 0) {
+            if (variable.dom().size() > 1 && singletonTest(variable)) {
+                if (variable.dom().size() <= 0) {
                     return false;
                 }
                 if (!filter.reduceAfter(variable)) {
@@ -78,7 +79,7 @@ abstract class AbstractSAC implements Filter {
                 }
                 mark = v;
             }
-            if (++v >= variables.length) {
+            if (++v >= variables.size()) {
                 v = 0;
             }
         } while (v != mark);

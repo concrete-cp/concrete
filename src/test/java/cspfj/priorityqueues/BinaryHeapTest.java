@@ -43,7 +43,7 @@ public final class BinaryHeapTest {
                 new Key<IdInteger>() {
 
                     @Override
-                    public float getKey(final IdInteger object) {
+                    public double getKey(final IdInteger object) {
                         return object.value;
                     }
                 });

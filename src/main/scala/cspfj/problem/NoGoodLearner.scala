@@ -13,8 +13,8 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
   @Statistic
   var nbNoGoods = 0;
 
-  def noGoods(decisions: Deque[Pair]): Set[Constraint] = {
-    if (LearnMethod.NONE.equals(learnMethod) || decisions.isEmpty()) {
+  def noGoods(decisions: List[Pair]): Set[Constraint] = {
+    if (LearnMethod.NONE.equals(learnMethod) || decisions == Nil) {
       return Set.empty;
     }
 
@@ -29,12 +29,12 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
     var currentScope: Vector[Variable] = Vector.empty;
     var level = 1;
 
-    while (!decisions.isEmpty() && (level < problem.maxArity || learnMethod == LearnMethod.EXT)) {
-      /*
-             * Decisions are stacked, so the first decision in the search tree
-             * is actually the last in the stack.
-             */
-      val lastDecision = decisions.pollLast();
+    while (decisions != Nil && (level < problem.maxArity || learnMethod == LearnMethod.EXT)) {
+      /**
+       * Decisions are stacked, so the first decision in the search tree
+       * is actually the last in the stack.
+       */
+      val lastDecision = decisions.last;
       tuple :+= lastDecision.getIndex;
       currentScope :+= lastDecision.getVariable;
       futureVariables -= lastDecision.getVariable;
@@ -128,7 +128,7 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
       addedConstraints.foreach(problem.addConstraint)
     }
 
-    return modifiedConstraints;
+    modifiedConstraints;
   }
 
   def learnConstraint(scope: Seq[Variable]): DynamicConstraint = {

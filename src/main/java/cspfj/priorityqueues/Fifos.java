@@ -60,7 +60,7 @@ public final class Fifos<T extends Identified> extends AbstractQueue<T> {
         if (nbLists <= 1) {
             return 0;
         }
-        final float k = key.getKey(element);
+        final double k = key.getKey(element);
         for (int i = 0, treshold = KEY_FACTOR;; i++, treshold *= KEY_FACTOR) {
             if (nbLists <= i + 1 || k < treshold) {
                 return i;

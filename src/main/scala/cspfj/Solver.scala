@@ -41,7 +41,7 @@ object Solver {
 
   val VERSION = """Rev:\\ (\\d+)""".r.findFirstIn("$Rev: -1 $").get
 
-  ParameterManager.register(Solver)
+  ParameterManager.register(classOf[Solver])
 
   def factory(problem: Problem) = {
     val solver = solverClass.getConstructor(classOf[Problem]).newInstance(problem);
@@ -56,7 +56,7 @@ object Solver {
   }
 }
 
-trait Solver extends Traversable[Map[String, Int]] with Loggable {
+trait Solver extends Loggable {
   /** Logger initialization */
   {
     val level = Level.parse(Solver.loggerLevel);
@@ -70,13 +70,13 @@ trait Solver extends Traversable[Map[String, Int]] with Loggable {
     handler.setLevel(level);
     Logger.getLogger("").addHandler(handler);
 
-    info(ParameterManager.list());
+    info(ParameterManager.list);
   }
 
   def nextSolution(): Map[String, Int]
 
   private var _maxBacktracks = -1
-  
+
   var preproExpiration = -1
 
   final def maxBacktracks = _maxBacktracks
@@ -97,12 +97,12 @@ trait Solver extends Traversable[Map[String, Int]] with Loggable {
     _nbBacktracks = bt
   }
 
-  def xmlConfig: xml.Elem
+  def XMLConfig: xml.NodeSeq
 
   def problem: Problem
 
-  def preproExp_=(time: Int)
-
   def reset()
+
+  protected def extractSolution = problem.variables.map { v => v.name -> v.dom.firstValue } toMap
 
 }

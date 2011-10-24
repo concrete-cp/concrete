@@ -13,5 +13,5 @@ public interface Key<T> {
 	 * @param object
 	 * @return an float key used to sort given objects.
 	 */
-	float getKey(T object);
+	double getKey(T object);
 }

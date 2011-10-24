@@ -5,7 +5,6 @@ import org.junit.Test
 import cspfj.problem.BitVectorDomain
 import cspfj.problem.Problem
 import cspfj.problem.Variable
-import cspfj.constraint.semantic.Sat
 
 class SatTest {
   @Test
@@ -26,7 +25,7 @@ class SatTest {
     v1.dom.remove(0)
     v1.dom.remove(2)
     assertFalse(c.findSupport(0, 0))
-    
+
     assertTrue(c.findSupport(0, 1))
   }
 }

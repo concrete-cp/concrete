@@ -26,12 +26,12 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import scala.collection.IndexedSeq;
 import scala.collection.JavaConversions;
-
 import cspfj.ParameterManager;
 import cspfj.constraint.Constraint;
-import cspfj.problem.NoGoodLearner;
 import cspfj.problem.LearnMethod;
+import cspfj.problem.NoGoodLearner;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspfj.util.Parameter;
@@ -72,20 +72,20 @@ public final class DC2 implements Filter {
         this.problem = problem;
         this.filter = new AC3(problem);
         // impliedConstraints = new ArrayList<DynamicConstraint>();
-        modCons = new int[problem.getMaxCId() + 1];
-        modVar = new int[problem.getMaxVId() + 1];
+        modCons = new int[problem.maxCId() + 1];
+        modVar = new int[problem.maxVId() + 1];
         ngl = new NoGoodLearner(problem, addConstraints);
     }
 
     @Override
     public boolean reduceAll() throws InterruptedException {
-        final int nbC = problem.getNbConstraints();
+        final int nbC = problem.constraints().size();
 
         final boolean result;
         try {
             result = cdcReduce();
         } finally {
-            nbAddedConstraints += problem.getNbConstraints() - nbC;
+            nbAddedConstraints += problem.constraints().size() - nbC;
         }
         return result;
     }
@@ -94,39 +94,39 @@ public final class DC2 implements Filter {
         if (!filter.reduceAll()) {
             return false;
         }
-        final Variable[] variables = problem.getVariables();
+        final IndexedSeq<Variable> variables = problem.variables();
 
         int mark = 0;
 
         int v = 0;
 
-        final int[] domainSizes = new int[problem.getMaxVId() + 1];
+        final int[] domainSizes = new int[problem.maxVId() + 1];
 
         do {
-            final Variable variable = variables[v];
+            final Variable variable = variables.apply(v);
             // if (logger.isLoggable(Level.FINE)) {
             LOGGER.info(variable.toString());
             // }
             cnt++;
-            if (variable.getDomainSize() > 1 && singletonTest(variable)) {
-                if (variable.getDomainSize() <= 0) {
+            if (variable.dom().size() > 1 && singletonTest(variable)) {
+                if (variable.dom().size() <= 0) {
                     return false;
                 }
 
                 for (Variable var : problem.getVariables()) {
-                    domainSizes[var.getId()] = var.getDomainSize();
+                    domainSizes[var.getId()] = var.dom().size();
                 }
                 if (!filter.reduceFrom(modVar, modCons, cnt - 1)) {
                     return false;
                 }
                 for (Variable var : problem.getVariables()) {
-                    if (domainSizes[var.getId()] != var.getDomainSize()) {
+                    if (domainSizes[var.getId()] != var.dom().size()) {
                         modVar[var.getId()] = cnt;
                     }
                 }
                 mark = v;
             }
-            if (++v >= variables.length) {
+            if (++v >= variables.size()) {
                 v = 0;
             }
         } while (v != mark);
@@ -139,34 +139,36 @@ public final class DC2 implements Filter {
             throws InterruptedException {
         boolean changedGraph = false;
 
-        for (int index = variable.getFirst(); index >= 0; index = variable
-                .getNext(index)) {
+        for (int index = variable.dom().first(); index >= 0; index = variable
+                .dom().next(index)) {
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
-            if (!variable.isPresent(index)) {
+            if (!variable.dom().present(index)) {
                 continue;
             }
 
             // if (logger.isLoggable(Level.FINER)) {
-            //LOGGER.fine(variable + " <- " + variable.getDomain().value(index));
+            // LOGGER.fine(variable + " <- " +
+            // variable.getDomain().value(index));
             // }
 
             problem.push();
-            variable.setSingle(index);
+            variable.dom().setSingle(index);
 
             nbSingletonTests++;
 
             final boolean sat;
 
-            if (cnt <= problem.getNbVariables()) {
+            if (cnt <= problem.variables().size()) {
                 sat = filter.reduceAfter(variable);
             } else {
                 /*
                  * Forward checking !
                  */
-                for (Constraint c : variable.getInvolvingConstraints()) {
-                    if (c.getArity() != 2) {
+                for (Constraint c : JavaConversions.asJavaIterable(variable
+                        .constraints())) {
+                    if (c.arity() != 2) {
                         continue;
                     }
 
@@ -175,17 +177,18 @@ public final class DC2 implements Filter {
                     c.fillRemovals(-1);
                 }
 
-                sat = filter.reduceFrom(modVar, modCons,
-                        cnt - problem.getNbVariables());
+                sat = filter.reduceFrom(modVar, modCons, cnt
+                        - problem.variables().size());
             }
             if (sat) {
 
                 // final Map<Variable[], List<int[]>> noGoods =
                 // problem.noGoods();
-                final Set<Constraint> modified = JavaConversions.setAsJavaSet(ngl.binNoGoods(variable));
+                final Set<Constraint> modified = JavaConversions
+                        .setAsJavaSet(ngl.binNoGoods(variable));
                 if (!modified.isEmpty()) {
                     changedGraph = true;
-                    modCons = Arrays.copyOf(modCons, problem.getMaxCId() + 1);
+                    modCons = Arrays.copyOf(modCons, problem.maxCId() + 1);
                     for (Constraint c : modified) {
                         modCons[c.getId()] = cnt;
                     }
@@ -199,7 +202,7 @@ public final class DC2 implements Filter {
                 problem.pop();
                 LOGGER.fine("Removing " + variable + ", " + index);
 
-                variable.remove(index);
+                variable.dom().remove(index);
                 changedGraph = true;
                 modVar[variable.getId()] = cnt;
             }
