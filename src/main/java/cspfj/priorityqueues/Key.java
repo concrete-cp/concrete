@@ -11,7 +11,7 @@ package cspfj.priorityqueues;
 public interface Key<T> {
 	/**
 	 * @param object
-	 * @return an float key used to sort given objects.
+	 * @return an double key used to sort given objects.
 	 */
 	double getKey(T object);
 }
