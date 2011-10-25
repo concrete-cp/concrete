@@ -30,26 +30,34 @@ final class Variable(
   val getId = Variable.nbV
   Variable.nbV += 1
 
-  private var _constraints: IndexedSeq[Constraint] = null
+  private var _constraints: IndexedSeq[Constraint] = IndexedSeq.empty
 
-  private var _dynamicConstraints: Seq[DynamicConstraint] = null
+  private var _dynamicConstraints: Seq[DynamicConstraint] = Nil
 
-  private var _positionInConstraint: Array[Int] = null
+  private var _positionInConstraint: Array[Int] = Array.empty
 
   override def toString = name + (if (_domain == null) " [?]" else " " + _domain)
 
   def constraints = _constraints
 
-  /**
-   * @param newConstraints
-   *            Liste des contraintes impliquant la variable
-   */
-  def constraints_=(newConstraints: Seq[Constraint]) {
-    _constraints = newConstraints.toIndexedSeq
-    _dynamicConstraints = newConstraints filter { _.isInstanceOf[DynamicConstraint] } map { _.asInstanceOf[DynamicConstraint] }
-    _positionInConstraint = constraints.map(_.position(this)).toArray
-  }
+//  /**
+//   * @param newConstraints
+//   *            Liste des contraintes impliquant la variable
+//   */
+//  def constraints_=(newConstraints: Seq[Constraint]) {
+//    _constraints = newConstraints.toIndexedSeq
+//    _dynamicConstraints = newConstraints filter { _.isInstanceOf[DynamicConstraint] } map { _.asInstanceOf[DynamicConstraint] }
+//    _positionInConstraint = constraints.map(_.position(this)).toArray
+//  }
 
+  def addConstraint(newConstraint: Constraint) {
+    _constraints :+= newConstraint
+    if (newConstraint.isInstanceOf[DynamicConstraint]) {
+      _dynamicConstraints :+= newConstraint.asInstanceOf[DynamicConstraint]
+    }
+    _positionInConstraint :+= newConstraint.position(this)
+  }
+  
   def dom = _domain
 
   def dom_=(d: Domain) {

@@ -31,8 +31,8 @@ final class SumLeqTest {
       }
     }, 0));
 
-    assertEquals(Iterator(1, 2, 3, 4), v0.dom.values);
-    assertEquals(Iterator(0, 1, 2, 3), v1.dom.values);
+    assertEquals(Seq(1, 2, 3, 4), v0.dom.values.toSeq);
+    assertEquals(Seq(0, 1, 2, 3), v1.dom.values.toSeq);
   }
 
 }

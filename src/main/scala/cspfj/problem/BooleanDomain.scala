@@ -151,8 +151,9 @@ class BooleanDomain(var _status: Status) extends Domain {
   var removed = false;
 
   def status_=(s: Status) {
-    assert(this.status == UNKNOWN || status == EMPTY && this.status != EMPTY)
-    this.status = s;
+    assert(status == UNKNOWN || s == EMPTY && status != EMPTY,
+        "Assigning from " + status + " to " + s)
+    _status = s;
     removed = true
   }
 
@@ -186,7 +187,7 @@ class BooleanDomain(var _status: Status) extends Domain {
     assert(level < currentLevel);
 
     history = history.dropWhile(_._1 > level)
-    status = if (history == Nil) {
+    _status = if (history == Nil) {
       UNKNOWN
     } else {
       history.head._2

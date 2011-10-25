@@ -59,7 +59,7 @@ final class TupleManager(val constraint: Constraint, val tuple: Array[Int]) {
         setNextTupleR(fixedVariablePosition, pos - 1)
       } else {
         tuple(pos) = index
-        false
+        true
       }
     }
   }

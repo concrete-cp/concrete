@@ -29,7 +29,7 @@ final class Problem {
   private var _variables: IndexedSeq[Variable] = IndexedSeq.empty
   private var _constraints: List[Constraint] = Nil
 
-  private var _maxDomainSize = 0
+  private var _maxDomainSize = -1
   private var _maxArity = 0
   private var _maxVId = 0
   private var _maxCId = 0
@@ -41,7 +41,7 @@ final class Problem {
     val variable = new Variable(name, domain);
     variableMap += name -> variable
     _variables :+= variable
-    _maxDomainSize = math.max(variable.dom.size, _maxDomainSize)
+
     _maxVId = math.max(variable.getId, _maxVId)
     variable;
   }
@@ -50,7 +50,7 @@ final class Problem {
     _constraints ::= constraint;
     _maxArity = math.max(_maxArity, constraint.arity)
     _maxCId = math.max(_maxCId, constraint.getId)
-    constraint.scope foreach (v => v.constraints :+= constraint)
+    constraint.scope foreach (v => v.addConstraint(constraint))
   }
 
   def push() {
@@ -90,7 +90,13 @@ final class Problem {
       entailed + " entailed constraints"
   }
 
-  def maxDomainSize = _maxDomainSize
+  def maxDomainSize = {
+    if (_maxDomainSize < 0) {
+      _maxDomainSize = variables map { _.dom.size } max
+    }
+    _maxDomainSize
+  }
+  
   def currentLevel = _currentLevel
   def maxArity = _maxArity
   def maxVId = _maxVId

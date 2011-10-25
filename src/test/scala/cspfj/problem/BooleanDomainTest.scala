@@ -89,9 +89,9 @@ final class BooleanDomainTest {
 
   @Test
   def testCurrentIndexes() {
-    assertEquals(Iterator(0, 1), domain.indices);
+    assertEquals(Seq(0, 1), domain.indices.toSeq);
     domain.remove(1);
-    assertEquals(Iterator(0), domain.indices);
+    assertEquals(Seq(0), domain.indices.toSeq);
   }
 
   @Test

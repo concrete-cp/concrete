@@ -36,7 +36,7 @@ final class InIntervalTest {
         variable: Variable) {
       }
     }, 0));
-    assertEquals(Iterator(2, 3), domain.values);
+    assertEquals(Seq(2, 3), domain.values.toSeq);
   }
 
 }

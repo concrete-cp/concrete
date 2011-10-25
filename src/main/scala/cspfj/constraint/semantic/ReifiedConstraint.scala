@@ -15,7 +15,8 @@ final class ReifiedConstraint(
   val negativeConstraint: Constraint)
   extends AbstractConstraint(controlVariable +: positiveConstraint.scope) {
 
-  require(positiveConstraint.scope == negativeConstraint.scope)
+  require(positiveConstraint.scope forall scope.tail.contains)
+  require(negativeConstraint.scope forall scope.tail.contains)
   require(controlVariable.dom.isInstanceOf[BooleanDomain], "Control variable must be boolean")
 
   val controlDomain = controlVariable.dom.asInstanceOf[BooleanDomain]

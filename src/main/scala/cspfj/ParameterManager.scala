@@ -64,17 +64,29 @@ final object ParameterManager {
     //            Enum.valueOf(fClass, value)
     //        }
 
-    fType match {
-      //          case e: Class[Enum[_]] => {
-      //            val fClass = field.get(null).asInstanceOf[Enum[_]]
-      //          }
-      case _: Class[Int] => value.toInt
-      case _: Class[Double] => value.toDouble
-      case _: Class[String] => value
-      case _: Class[Class[_]] => Class.forName(value)
-      case _ => throw new IllegalArgumentException(
+    if (fType.isAssignableFrom(classOf[Int])) {
+      value.toInt
+    } else if (fType.isAssignableFrom(classOf[Double])) {
+      value.toDouble
+    } else if (fType.isAssignableFrom(classOf[String])) {
+      value.toString
+    } else if (fType.isAssignableFrom(classOf[Class[_]])) {
+      Class.forName(value)
+    } else {
+      throw new IllegalArgumentException(
         "Cannot parse " + field + " of type " + fType)
     }
+//    fType match {
+//      //          case e: Class[Enum[_]] => {
+//      //            val fClass = field.get(null).asInstanceOf[Enum[_]]
+//      //          }
+//      case _: Class[Int] => value.toInt
+//      case _: Class[Double] => value.toDouble
+//      case _: Class[String] => value
+//      case _: Class[Class[_]] => Class.forName(value)
+//      case _ => throw new IllegalArgumentException(
+//        "Cannot parse " + field + " of type " + fType)
+//    }
 
   }
 

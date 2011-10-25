@@ -14,7 +14,7 @@ abstract class AbstractGenerator(val problem: Problem) {
   def addVariable(name: String, domain: Domain) = problem.addVariable(name, domain)
 
   @throws(classOf[FailedGenerationException])
-  def generate(constraint: CSPOMConstraint): Boolean;
+  def generate(constraint: CSPOMConstraint): Boolean
 }
 
 object AbstractGenerator {

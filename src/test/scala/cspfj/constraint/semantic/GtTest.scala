@@ -28,8 +28,8 @@ final class GtTest {
       def revised(c: Constraint, v: Variable) {}
     }, 0);
 
-    assertEquals(Iterator(4), v1.dom.values);
-    assertEquals(Iterator(3), v2.dom.values);
+    assertEquals(Seq(4), v1.dom.values.toSeq);
+    assertEquals(Seq(3), v2.dom.values.toSeq);
 
   }
 
@@ -40,8 +40,8 @@ final class GtTest {
       def revised(c: Constraint, v: Variable) {}
     }, 0);
 
-    assertEquals(Iterator(3, 4), v1.dom.values);
-    assertEquals(Iterator(3, 4), v2.dom.values);
+    assertEquals(Seq(3, 4), v1.dom.values.toSeq);
+    assertEquals(Seq(3, 4), v2.dom.values.toSeq);
 
   }
 

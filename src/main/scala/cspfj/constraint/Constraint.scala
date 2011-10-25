@@ -21,8 +21,9 @@ package cspfj.constraint;
 
 import cspfj.constraint.extension.TupleManager
 import cspfj.filter.RevisionHandler
-import cspfj.problem.Variable;
+import cspfj.problem.Variable
 import cspfj.heuristic.Weighted
+import cspfj.priorityqueues.Identified
 
 object Constraint {
   var cId = 0;
@@ -37,7 +38,7 @@ object NULL_REVISATOR extends RevisionHandler {
   def revised(constraint: Constraint, variable: Variable) {}
 }
 
-trait Constraint extends Weighted {
+trait Constraint extends Weighted with Identified {
 
   val getId = Constraint.cId
   Constraint.cId += 1

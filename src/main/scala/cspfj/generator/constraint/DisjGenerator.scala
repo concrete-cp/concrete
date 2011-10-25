@@ -1,8 +1,8 @@
 package cspfj.generator.constraint;
 
 import cspfj.constraint.semantic.Disjunction
-import cspfj.problem.{Variable, Problem}
-import cspom.constraint.{GeneralConstraint, FunctionalConstraint, CSPOMConstraint}
+import cspfj.problem.{ Variable, Problem }
+import cspom.constraint.{ GeneralConstraint, FunctionalConstraint, CSPOMConstraint }
 import cspom.variable.CSPOMVariable
 
 final class DisjGenerator(problem: Problem) extends AbstractGenerator(problem) {
@@ -75,8 +75,15 @@ final class DisjGenerator(problem: Problem) extends AbstractGenerator(problem) {
     scope foreach AbstractGenerator.booleanDomain
 
     constraint match {
-      case gC: GeneralConstraint if gC.description == "or" =>
-        addConstraint(new Disjunction(scope.toArray, parseParameters(constraint.parameters)))
+      case gC: GeneralConstraint if gC.description == "or" => {
+        val params: IndexedSeq[Boolean] = if (constraint.parameters == null) {
+          IndexedSeq.empty.padTo(scope.size, false)
+        } else {
+          constraint.parameters.split(",\\s*") map { _.toInt > 0 }
+        }
+
+        addConstraint(new Disjunction(scope.toArray, params))
+      }
 
       case fC: FunctionalConstraint if fC.description == "or" =>
         generateReifiedOr(scope, fC)
@@ -96,11 +103,4 @@ final class DisjGenerator(problem: Problem) extends AbstractGenerator(problem) {
     true;
   }
 
-  private def parseParameters(parameters: String) = {
-    if (parameters == null) {
-      null;
-    } else {
-      parameters.split(",\\s*") map { _.toInt > 0 }
-    }
-  }
 }

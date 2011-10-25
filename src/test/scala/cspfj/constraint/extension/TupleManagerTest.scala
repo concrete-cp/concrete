@@ -7,16 +7,18 @@
 package cspfj.constraint.extension;
 
 import java.util.Arrays
-
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-
 import cspfj.constraint.semantic.AllDifferent
 import cspfj.problem.BitVectorDomain
 import cspfj.problem.Variable
+import org.junit.runner.RunWith
+import junit.textui.TestRunner
+import org.junit.runner.Runner
 
+//@RunWith(classOf[Runner])
 final class TupleManagerTest {
 
   private var tupleManager: TupleManager = null;

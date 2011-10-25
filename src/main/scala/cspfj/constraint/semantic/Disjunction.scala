@@ -13,7 +13,10 @@ final class Disjunction(scope: Array[Variable],
 
   require(scope forall (v => v.dom.isInstanceOf[BooleanDomain] && v.dom.size == 2),
     "Only non-constant boolean domains are allowed")
+  require(reverses != null)
   require(reverses.size == scope.size, "reverses must cover all variables")
+
+  val domains = scope map (_.dom.asInstanceOf[BooleanDomain])
 
   var watch1 = seekWatch(-1);
   require(watch1 >= 0, "Unexpected inconsistency")
@@ -22,7 +25,6 @@ final class Disjunction(scope: Array[Variable],
     setTrue(watch1)
     watch2 = watch1
   }
-  val domains = scope map (_.dom.asInstanceOf[BooleanDomain])
 
   val getEvaluation = math.log(arity) / math.log(2)
 
@@ -77,7 +79,7 @@ final class Disjunction(scope: Array[Variable],
   private def canBeTrue(position: Int) = domains(position).canBe(!reverses(position));
 
   private def seekWatch(excluding: Int) =
-    (0 to arity).find(i => i != excluding && canBeTrue(i)) match {
+    (0 until arity).find(i => i != excluding && canBeTrue(i)) match {
       case Some(i) => i
       case None => -1
     }

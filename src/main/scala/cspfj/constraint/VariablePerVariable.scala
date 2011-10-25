@@ -19,8 +19,7 @@ trait VariablePerVariable extends VariableGrainedRemovals {
   final def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
     var singletons = 0;
     val skip = skipRevision(reviseCount);
-    for (i <- (0 to arity)) {
-      val variable = scope(i);
+    for ((variable, i) <- scope.zipWithIndex) {
       // assert (!variable.isAssigned() && skipRevision(i)) ? !revise(i)
       // : true : "Should not skip " + this + ", " + i;
       if (i != skip && revise(i)) {
