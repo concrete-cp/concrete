@@ -39,7 +39,7 @@ object Solver {
   @Parameter("preprocessor")
   var preprocessorClass: Class[_ <: Filter] = null
 
-  val VERSION = """Rev:\\ (\\d+)""".r.findFirstIn("$Rev: -1 $").get
+  val VERSION = """Rev:\\ (\\d+)""".r.findFirstIn("$Rev$").get
 
   ParameterManager.register(classOf[Solver])
 

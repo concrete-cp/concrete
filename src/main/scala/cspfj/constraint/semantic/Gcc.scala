@@ -30,7 +30,6 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Abstract
     }
 
     counts.forall { case (v, c) => c > bounds(v).minCount }
-
   }
 
   private def filter(except: collection.mutable.Set[Variable], value: Int, revisator: RevisionHandler): Boolean = {

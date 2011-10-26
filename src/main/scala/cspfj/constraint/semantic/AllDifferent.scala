@@ -58,7 +58,6 @@ final class AllDifferent(scope: Variable*) extends AbstractConstraint(null, scop
         }
         revisator.revised(this, v);
       }
-
     }
     false;
   }
