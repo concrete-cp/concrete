@@ -78,8 +78,8 @@ final class AllDifferent(scope: Variable*) extends AbstractConstraint(null, scop
 
     union.fill(false);
     var size = 0;
-    for (v <- scope; i <- v.dom.values) {
-      if (union.set(v.dom.value(i) - offset)) {
+    for (variable <- scope; value <- variable.dom.values) {
+      if (union.set(value - offset)) {
         size += 1
         if (size >= arity) return true
       }

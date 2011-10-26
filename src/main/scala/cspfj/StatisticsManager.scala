@@ -38,7 +38,6 @@ object StatisticsManager extends Loggable {
   def register(clazz: Class[_]) {
     for (f <- clazz.getDeclaredFields if (f.getModifiers & Modifier.STATIC) != 0) {
       static += (clazz.getName + '.' + f.getName) -> f
-      f.setAccessible(true);
     }
   }
 
@@ -48,11 +47,11 @@ object StatisticsManager extends Loggable {
     }
 
     objects += name -> o
-//    for (
-//      f <- o.getClass.getDeclaredFields if annotedInstanceVariable(f)
-//    ) {
-//      f.setAccessible(true);
-//    }
+    //    for (
+    //      f <- o.getClass.getDeclaredFields if annotedInstanceVariable(f)
+    //    ) {
+    //      f.setAccessible(true);
+    //    }
   }
 
   private def annotedInstanceVariable(f: Field) =
@@ -61,14 +60,14 @@ object StatisticsManager extends Loggable {
 
   def get(name: String) =
     static.get(name) match {
-      case Some(f) => f.get(null)
+      case Some(f) => { f.setAccessible(true); f.get(null) }
       case None => {
         val fieldNameAt = name.lastIndexOf('.')
-        val obj = objects(name.substring(0, fieldNameAt))
+        val obj = objects.get(name.substring(0, fieldNameAt)).get
         val fieldName = name.substring(fieldNameAt + 1, name.length)
         obj.getClass.getDeclaredFields.find(f => annotedInstanceVariable(f) && f.getName == fieldName) match {
-          case Some(f) => {f.setAccessible(true); f.get(obj)}
-          case None => throw new IllegalArgumentException("Could not find " + name)
+          case Some(f) => { f.setAccessible(true); f.get(obj) }
+          case None => throw new IllegalArgumentException("Could not find " + name + " (" + fieldName + " in " + obj.getClass.getDeclaredFields.toList + ")")
         }
       }
     }
@@ -85,11 +84,11 @@ object StatisticsManager extends Loggable {
   def isFloatType(input: Class[_]) = input == classOf[Float] || input == classOf[Double]
 
   def reset() {
-    static = Map.empty
+    //static = Map.empty
     objects = Map.empty
 
     for (f <- static.values) {
-
+      f.setAccessible(true)
       if (isIntType(f.getType())) {
         f.set(null, 0);
       } else if (isFloatType(f.getType())) {

@@ -28,60 +28,51 @@ import cspfj.constraint.SimpleRemovals
 
 final class ExtensionConstraintDynamic(
   scope: Array[Variable], matrix: TupleSet, shared: Boolean) extends AbstractConstraint(scope)
-    with SimpleRemovals 
-    with ExtensionConstraint {
+  with SimpleRemovals
+  with ExtensionConstraint {
 
   private val dynamic = new MatrixManagerDynamic(scope, matrix, shared, tuple)
 
-  private val toFind = initFound;
-
-  private def initFound =
+  private val toFind =
     scope map (v => BitVector.newBitVector(v.dom.maxSize, false))
 
   override def level_=(l: Int) {
     super.level = l
     dynamic.level = l
-    if (level <= 0) {
-      val itr = dynamic.iterator
-      for (tuple <- itr if !dynamic.isTrue(tuple)) itr.remove(-1)
-    }
+    //    if (level <= 0) {
+    //      val itr = dynamic.iterator
+    //      for (tuple <- itr if !dynamic.isTrue(tuple)) itr.remove(-1)
+    //    }
   }
 
   def revise(revisator: RevisionHandler, reviseCount: Int) = {
-    (scope, toFind).zipped.foreach { (v, tF) =>
-      tF.fill(false)
-      for (i <- v.dom.indices) tF.set(i)
-    }
+    var found: Set[(Variable, Int)] = Set.empty
 
     val itr = dynamic.iterator
     for (tuple <- itr) {
       if (controlTuplePresence(tuple)) {
-        (toFind, tuple).zipped.foreach((tF, i) => tF.clear(i))
+        found ++= scope.zip(tuple)
       } else {
         itr.remove();
       }
     }
 
-    filter(toFind, revisator);
+    filter(found, revisator);
   }
 
-  private def filter(toFinds: Array[BitVector], revisator: RevisionHandler): Boolean = {
-    (scope, toFinds).zipped.foreach { (v, tF) =>
-
-      var rev = false;
-      var i = tF.nextSetBit(0)
-      while (i >= 0) {
-        v.dom.remove(i);
-        rev = true;
-        i = tF.nextSetBit(i + 1)
+  private def filter(found: Set[(Variable, Int)], revisator: RevisionHandler): Boolean = {
+    for (v <- scope) {
+      var rev = false
+      for (i <- v.dom.indices if !found((v, i))) {
+        v.dom.remove(i)
+        rev = true
       }
       if (rev) {
-        if (v.dom.size <= 0) {
-          return false;
-        }
-        revisator.revised(this, v);
+        if (v.dom.size <= 0) return false
+        revisator.revised(this, v)
       }
     }
+
     true
   }
 
@@ -95,16 +86,17 @@ final class ExtensionConstraintDynamic(
   }
 
   def removeTuples(base: Array[Int]) = {
-    dynamic.unshareMatrix();
-    var removed = 0;
-    val itr = dynamic.hsIterator
-    for (t <- JavaConversions.asScalaIterator(itr) if matches(t, base)) {
-      // logger.fine("Removing " + Arrays.toString(currentTuple));
-      itr.remove();
-      assert(!dynamic.isTrue(t));
-      removed += 1;
-    }
-    removed;
+    throw new UnsupportedOperationException
+//    dynamic.unshareMatrix();
+//    var removed = 0;
+//    val itr = dynamic.hsIterator
+//    for (t <- JavaConversions.asScalaIterator(itr) if matches(t, base)) {
+//      // logger.fine("Removing " + Arrays.toString(currentTuple));
+//      itr.remove();
+//      assert(!dynamic.isTrue(t));
+//      removed += 1;
+//    }
+//    removed;
   }
 
   def matrixManager = dynamic

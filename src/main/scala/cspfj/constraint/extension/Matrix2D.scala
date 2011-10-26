@@ -26,7 +26,7 @@ final class Matrix2D(xSize: Int, ySize: Int, initialState: Boolean) extends Matr
   }
 
   def copy = {
-    val matrix2d = super.clone.asInstanceOf[Matrix2D]
+    val matrix2d = new Matrix2D(xSize, ySize, initialState)
     matrix2d.xMatrix = xMatrix map (_.clone)
     matrix2d.yMatrix = yMatrix map (_.clone)
     matrix2d;

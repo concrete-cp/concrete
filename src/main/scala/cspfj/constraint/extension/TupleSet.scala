@@ -11,7 +11,7 @@ final class TupleSet(private var tupleSet: IntTupleSet, val initialContent: Bool
 
   def this(initialContent: Boolean) = this(new IntTupleSet, initialContent)
 
-  override def copy: Matrix = {
+  override def copy: TupleSet = {
     val copy = super.clone.asInstanceOf[TupleSet]
     copy.tupleSet = new IntTupleSet(tupleSet)
     copy
@@ -32,9 +32,9 @@ final class TupleSet(private var tupleSet: IntTupleSet, val initialContent: Bool
 
   override def size = tupleSet.size
 
-  def iterator = JavaConversions.asScalaIterator(mutableIterator)
+  def iterator = JavaConversions.asScalaIterator(tupleSet.iterator)
   
-  def mutableIterator = tupleSet.iterator
+  //def mutableIterator = tupleSet.iterator
 
   override def toString =
     (if (initialContent) "nogoods: " else "goods: ") + tupleSet.toString

@@ -1,17 +1,14 @@
 package cspfj.constraint.extension;
 
 import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import java.util.Arrays
-import java.util.HashSet
-import java.util.Iterator
-import java.util.Set
 import org.junit.Before
 import org.junit.Test
+
 import cspfj.problem.BitVectorDomain
-import cspfj.problem.Variable;
-import scala.collection.JavaConversions
+import cspfj.problem.Variable
 
 final class MatrixManagerDynamicTest {
 
@@ -49,13 +46,7 @@ final class MatrixManagerDynamicTest {
 
     mmd.level = 0
 
-    val set = collection.mutable.Set.empty ++ content;
-    val itr1 = mmd.iterator
-    assertTrue(set.remove(itr1.next()));
-    assertTrue(set.remove(itr1.next()));
-    assertTrue(set.remove(itr1.next()));
-    assertFalse(itr1.hasNext);
-    assertTrue(set.isEmpty);
+    assertEquals(mmd.iterator.toSet, content.toSet)
 
   }
 

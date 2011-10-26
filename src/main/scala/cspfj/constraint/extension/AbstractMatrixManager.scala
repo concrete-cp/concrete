@@ -137,12 +137,10 @@ abstract class AbstractMatrixManager(
     }
 
     val nbInitConflicts = scope map {
-      v => new Array[Long](v.dom.size)
+      v => new Array[Long](v.dom.maxSize)
     }
 
-    if (matrix.isEmpty) {
-      nbInitConflicts;
-    } else if (matrix.isInstanceOf[TupleSet]) {
+    if (matrix.isInstanceOf[TupleSet]) {
 
       val tupleSet = matrix.asInstanceOf[TupleSet];
       val initialContent = tupleSet.initialContent
@@ -164,9 +162,7 @@ abstract class AbstractMatrixManager(
         }
       }
 
-      nbInitConflicts;
-
-    } else {
+    } else if (!matrix.isEmpty) {
 
       firstT();
       do {
@@ -176,9 +172,9 @@ abstract class AbstractMatrixManager(
           }
         }
       } while (nextT());
-
-      nbInitConflicts;
     }
+
+    nbInitConflicts
   }
 
   protected final def currentSize: Long = {

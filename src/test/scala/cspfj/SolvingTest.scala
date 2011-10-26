@@ -17,35 +17,35 @@ final class SolvingTest extends Loggable {
   @Test
   def crosswordm1() {
 
-    assert(solve("crossword-m1-debug-05-01.xml").isDefined);
+    assertTrue(solve("crossword-m1-debug-05-01.xml").isDefined);
     assertEquals(48, count("crossword-m1-debug-05-01.xml"));
 
   }
 
   @Test
   def crosswordm2() {
-    assert(solve("crossword-m2-debug-05-01.xml").isDefined);
+    assertTrue(solve("crossword-m2-debug-05-01.xml").isDefined);
     assertEquals(48, count("crossword-m2-debug-05-01.xml"));
 
   }
 
   @Test
   def queens8() {
-    assert(solve("queens-8.xml").isDefined);
+    assertTrue(solve("queens-8.xml").isDefined);
     assertEquals(92, count("queens-8.xml"));
 
   }
 
   @Test
   def queens12_ext() {
-    assert(solve("queens-12_ext.xml").isDefined);
+    assertTrue(solve("queens-12_ext.xml").isDefined);
     assertEquals(14200, count("queens-12_ext.xml"));
 
   }
 
   @Test
   def langford() {
-    assert(solve("langford-2-4-ext.xml").isDefined);
+    assertTrue(solve("langford-2-4-ext.xml").isDefined);
     assertEquals(2, count("langford-2-4-ext.xml"));
 
   }
@@ -53,14 +53,14 @@ final class SolvingTest extends Loggable {
   @Test
   def zebra() {
 
-    assert(solve("zebra.xml").isDefined);
+    assertTrue(solve("zebra.xml").isDefined);
     assertEquals(1, count("zebra.xml"));
 
   }
 
   @Test
   def dimacs() {
-    assert(solve("flat30-1.cnf").isDefined);
+    assertTrue(solve("flat30-1.cnf").isDefined);
     // assertNotNull(solve("clauses-2.cnf.bz2"));
     // assertEquals(1, count("flat30-1.cnf"));
 
@@ -68,7 +68,7 @@ final class SolvingTest extends Loggable {
 
   @Test
   def bqwh() {
-    assert(solve("bqwh-15-106-0_ext.xml").isDefined);
+    assertTrue(solve("bqwh-15-106-0_ext.xml").isDefined);
     assertEquals(182, count("bqwh-15-106-0_ext.xml"));
   }
 
@@ -92,7 +92,7 @@ final class SolvingTest extends Loggable {
 
   @Test
   def queens12() {
-    assert(solve("queens-12.xml").isDefined);
+    assertTrue(solve("queens-12.xml").isDefined);
     //    assertEquals(14200, count("queens-12.xml"));
 
   }

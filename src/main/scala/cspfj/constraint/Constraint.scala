@@ -121,7 +121,7 @@ trait Constraint extends Weighted with Identified {
     scope foreach { _.dom.setLevel(level) }
     val consistent = revise(NULL_REVISATOR, reviseCount)
     level -= 1
-    scope foreach { _.dom.setLevel(level) }
+    scope foreach { _.dom.restoreLevel(level) }
     consistent
   }
 
