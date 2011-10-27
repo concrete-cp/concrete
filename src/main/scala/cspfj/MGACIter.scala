@@ -84,17 +84,17 @@ final class MGACIter(prob: Problem) extends AbstractSolver(prob) with Loggable {
 
   private var firstSolutionGiven = false;
 
-  def mac(skipFirstSolution: Boolean): Map[String, Int] = {
+  def mac(skipFirstSolution: Boolean): Option[Map[String, Int]] = {
     var skipSolution = skipFirstSolution;
     var selectedVariable: Variable = null;
     var selectedIndex = -1;
-    var solution: Option[Map[String, Int]] = None
-    while (solution == None) {
+    var solution: Option[Map[String, Int]] = null
+    while (solution == null) {
       if (selectedVariable != null
         && !filter.reduceAfter(selectedVariable)) {
         selectedVariable = backtrack();
         if (selectedVariable == null) {
-          solution = Some(null)
+          solution = None
         }
       } else {
 
@@ -104,11 +104,12 @@ final class MGACIter(prob: Problem) extends AbstractSolver(prob) with Loggable {
           if (skipSolution) {
             selectedVariable = backtrack();
             if (selectedVariable == null) {
-              solution = Some(null)
+              solution = None
             }
             skipSolution = false;
+          } else {
+            solution = Some(extractSolution)
           }
-          solution = Some(extractSolution)
         } else {
           decisions ::= pair
           selectedVariable = pair.getVariable();
@@ -131,7 +132,7 @@ final class MGACIter(prob: Problem) extends AbstractSolver(prob) with Loggable {
       }
 
     }
-    solution.get
+    solution
 
   }
 
@@ -166,7 +167,7 @@ final class MGACIter(prob: Problem) extends AbstractSolver(prob) with Loggable {
   var heuristicCpu = 0.0
 
   @Override
-  def nextSolution(): Map[String, Int] = {
+  def nextSolution(): Option[Map[String, Int]] = {
 
     prepare();
 
@@ -196,16 +197,16 @@ final class MGACIter(prob: Problem) extends AbstractSolver(prob) with Loggable {
 
     }
 
-    var solution: Option[Map[String, Int]] = None
+    var solution: Option[Map[String, Int]] = null
 
-    while (solution == None) {
+    while (solution == null) {
 
       info("MAC with " + maxBacktracks + " bt")
       var macTime = -System.currentTimeMillis()
       var nbBT = nbBacktracks
 
       try {
-        solution = Some(mac(firstSolutionGiven))
+        solution = mac(firstSolutionGiven)
         firstSolutionGiven = true;
       } catch {
         case e: MaxBacktracksExceededException => {
@@ -214,7 +215,7 @@ final class MGACIter(prob: Problem) extends AbstractSolver(prob) with Loggable {
           decisions = Nil
 
           if (!filter.reduceAfter(modified)) {
-            solution = Some(null)
+            solution = None
           }
 
           maxBacktracks = (maxBacktracks * MGACIter.btGrowth).toInt;
@@ -229,7 +230,7 @@ final class MGACIter(prob: Problem) extends AbstractSolver(prob) with Loggable {
 
     }
 
-    return null;
+    solution;
 
   }
 

@@ -73,7 +73,7 @@ trait Solver extends Loggable {
     info(ParameterManager.list);
   }
 
-  def nextSolution(): Map[String, Int]
+  def nextSolution(): Option[Map[String, Int]]
 
   private var _maxBacktracks = -1
 

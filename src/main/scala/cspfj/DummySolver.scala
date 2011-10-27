@@ -1,5 +1,5 @@
 /**
- * CSPFJ - CSP solving API for Java
+ * CSPFJ - CSP solving API for Java)
  * Copyright (C) 2006 Julien VION
  *
  * This library is free software; you can redistribute it and/or
@@ -25,7 +25,7 @@ import cspfj.problem.Problem;
 final class DummySolver(prob: Problem) extends AbstractSolver(prob) {
 
   def nextSolution =
-    if (preprocess(new AC3(problem))) Map.empty else null
+    if (preprocess(new AC3(problem))) Some(Map.empty) else None
 
   override def toString = "dummy"
 
