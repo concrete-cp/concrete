@@ -12,7 +12,7 @@ final class MatrixManagerDynamic(
 
   private var allTuples: DoubleLinkedList[Array[Int]] = DoubleLinkedList.empty ++ tupleSet.toList
 
-  private var removedTuples: List[(Int, List[Array[Int]])] = Nil
+  private var removedTuples: List[(Int, DoubleLinkedList[Array[Int]])] = Nil
 
   var _level = 0;
 
@@ -60,17 +60,18 @@ final class MatrixManagerDynamic(
     def remove(level: Int) {
       assert(removedTuples.isEmpty || removedTuples.head._1 <= level)
       if (removedTuples == Nil || removedTuples.head._1 < level) {
-        removedTuples ::= (level, List(last.head))
+        removedTuples ::= (level, DoubleLinkedList(last.head))
       } else {
-        removedTuples = (removedTuples.head._1, last.head :: removedTuples.head._2) :: removedTuples.tail
+        removedTuples.head._2 :+ last.head
       }
+
       if (allTuples == last) {
         allTuples = last.tail
-      } else {
-        last.remove
       }
+      last.remove
       last = null
     }
+
   }
 
   def getSize = tupleSet.size

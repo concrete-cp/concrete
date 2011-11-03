@@ -19,20 +19,25 @@
 
 package cspfj;
 
+import java.lang.Override
+
+import scala.annotation.elidable
+import scala.collection.JavaConversions
+
+import annotation.elidable.ASSERTION
 import cspfj.exception.MaxBacktracksExceededException
 import cspfj.filter.AC3Constraint
 import cspfj.filter.Filter
 import cspfj.heuristic.CrossHeuristic
 import cspfj.heuristic.Heuristic
 import cspfj.heuristic.Pair
+import cspfj.problem.Problem
 import cspfj.problem.LearnMethod
 import cspfj.problem.NoGoodLearner
-import cspfj.problem.Problem
 import cspfj.problem.Variable
-import cspfj.util.Loggable
 import cspfj.util.Parameter
 import cspfj.util.Statistic
-import scala.collection.JavaConversions
+import cspfj.util.Loggable
 
 object MGACIter {
   @Parameter("mgac.btGrowth")

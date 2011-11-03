@@ -64,7 +64,7 @@ final class AllDifferent(scope: Variable*) extends AbstractConstraint(null, scop
 
   override def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
     queue = Queue.empty
-    varsWithRemovals(reviseCount).filter(_.dom.size == 1).foreach(v => queue = queue.enqueue(v))
+    varsWithRemovals(reviseCount).map(_._1).filter(_.dom.size == 1).foreach(v => queue = queue.enqueue(v))
 
     while (queue != Nil) {
       val (checkedVariable, newQueue) = queue.dequeue

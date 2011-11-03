@@ -31,9 +31,7 @@ trait VariableGrainedRemovals extends Constraint {
     }
   }
 
-  final def varsWithRemovals(reviseCount: Int): Iterator[Variable] = 
-    scope.iterator.zip(removals.iterator).filter(t => t._2 >= reviseCount).map(t => t._1)
-
-  
+  final def varsWithRemovals(reviseCount: Int): Iterator[(Variable, Int)] =
+    scope.iterator.zipWithIndex.zip(removals.iterator).filter(t => t._2 >= reviseCount).map(t => t._1)
 
 }
