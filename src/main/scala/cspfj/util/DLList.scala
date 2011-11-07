@@ -11,17 +11,18 @@ class DLList[A]() extends LinearSeq[A]
   with SeqLike[A, DLList[A]]
   with Serializable {
 
-  var firstNode: Option[Node[A]] = None
-  var lastNode: Option[Node[A]] = None
+  private var headNode = new Node[A](null, null)
+  headNode.prev = headNode
+  headNode.next = headNode
 
   def update(idx: Int, elem: A) {
     var count = idx
-    var current = firstNode
+    var current = headNode.next
     while (count > 0) {
       count -= 1
-      current = current.get.next
+      current = current.next
     }
-    current.get.content = elem
+    current.asInstanceOf[ContentNode[A]].item = elem
   }
 
   def apply(idx: Int) = {
@@ -30,49 +31,81 @@ class DLList[A]() extends LinearSeq[A]
 
   def length = iterator.length
 
-  def append(list: DLList[A]) {
+  def merge(list: DLList[A]) {
     if (isEmpty) {
-      firstNode = list.firstNode
-      lastNode = list.lastNode
-    } else {
-      lastNode.get.next = list.firstNode
-      list.firstNode.get.prev = lastNode
-      lastNode = list.lastNode
+      headNode = list.headNode
+    } else if (!list.isEmpty) {
+      list.headNode.next.prev = headNode.prev
+      headNode.prev.next = list.headNode.next
+      
+      list.headNode.prev.next = headNode
+      headNode.prev = list.headNode.prev
     }
   }
-  
-  override def isEmpty = firstNode == None
+
+  override def isEmpty = headNode.next == headNode
 
   def add(elem: A) {
-    val newNode = Node(elem, None, firstNode)
-    if (isEmpty) lastNode = Some(newNode)
-    firstNode = Some(newNode)
+    val newNode = new ContentNode(elem, headNode.prev, headNode)
+    headNode.prev.next = newNode
+    headNode.prev = newNode
   }
 
-  override def head = firstNode match {
-    case None => throw new NoSuchElementException
-    case Some(elem) => elem.content
+  def addNode(newNode: ContentNode[A]) {
+    newNode.prev = headNode.prev
+    newNode.next = headNode
+    headNode.prev.next = newNode
+    headNode.prev = newNode
+  }
+
+  override def head = {
+    val firstNode = headNode.next
+    if (firstNode == headNode) throw new NoSuchElementException
+    firstNode.asInstanceOf[ContentNode[A]].item
   }
 
   override def companion: GenericCompanion[DLList] = DLList
 
+  def mutableIterator = new DLLIterator()
+
   override def iterator = new DLLIterator()
 
   class DLLIterator extends Iterator[A] {
-    var current = firstNode
-    def hasNext = current.isDefined
+
+    var current = headNode.next
+    var lastReturned: ContentNode[A] = null
+    def hasNext = current != headNode
     def next() = {
-      var elem = current.get.content
-      current = current.get.next
+      lastReturned = current.asInstanceOf[ContentNode[A]]
+      current = current.next
+      lastReturned.item
+    }
+
+    def remove() = {
+      lastReturned.prev.next = lastReturned.next
+      lastReturned.next.prev = lastReturned.prev
+      lastReturned
+    }
+  }
+  
+  override def reverseIterator = new Iterator[A] {
+    var current = headNode.prev
+    def hasNext = current != headNode
+    def next() = {
+      val elem = current.asInstanceOf[ContentNode[A]].item
+      current = current.prev
       elem
     }
   }
+
 }
 
-case class Node[A](
-  var content: A,
-  var prev: Option[Node[A]] = None,
-  var next: Option[Node[A]] = None);
+class Node[A](
+  var prev: Node[A],
+  var next: Node[A]);
+
+class ContentNode[A](var item: A, prev: Node[A], next: Node[A])
+  extends Node[A](prev, next)
 
 object DLList extends SeqFactory[DLList] {
   def newBuilder[A]: Builder[A, DLList[A]] =

@@ -3,7 +3,9 @@ package cspfj.constraint.extension;
 import cspfj.util.IntTupleSet;
 import scala.collection.JavaConversions
 
-final class TupleSet(private var tupleSet: IntTupleSet, val initialContent: Boolean)
+final class TupleSet(
+  private var tupleSet: IntTupleSet,
+  val initialContent: Boolean)
   extends Matrix with Iterable[Array[Int]] {
 
   def this(nbTuples: Int, initialContent: Boolean) =
@@ -11,11 +13,8 @@ final class TupleSet(private var tupleSet: IntTupleSet, val initialContent: Bool
 
   def this(initialContent: Boolean) = this(new IntTupleSet, initialContent)
 
-  override def copy: TupleSet = {
-    val copy = super.clone.asInstanceOf[TupleSet]
-    copy.tupleSet = new IntTupleSet(tupleSet)
-    copy
-  }
+  override def copy: TupleSet =
+    new TupleSet(new IntTupleSet(tupleSet), initialContent)
 
   override def check(tuple: Array[Int]) =
     tupleSet.containsTuple(tuple) ^ initialContent;
@@ -33,7 +32,7 @@ final class TupleSet(private var tupleSet: IntTupleSet, val initialContent: Bool
   override def size = tupleSet.size
 
   def iterator = JavaConversions.asScalaIterator(tupleSet.iterator)
-  
+
   //def mutableIterator = tupleSet.iterator
 
   override def toString =

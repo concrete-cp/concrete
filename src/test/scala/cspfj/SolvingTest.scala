@@ -1,14 +1,15 @@
 package cspfj;
 
-import cspfj.generator.ProblemGenerator
-import cspfj.problem.Problem
-import cspom.compiler.ProblemCompiler
-import cspom.constraint.CSPOMConstraint
-import cspom.CSPOM
 import java.util.logging.Level
-import org.junit.Assert.{ assertTrue, assertNull, assertNotNull, assertEquals }
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
-import scala.collection.JavaConversions
+
+import cspfj.exception.FailedGenerationException
+import cspfj.generator.ProblemGenerator
+import cspom.compiler.ProblemCompiler
+import cspom.CSPOM
 import util.Loggable
 
 final class SolvingTest extends Loggable {

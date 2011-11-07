@@ -86,23 +86,26 @@ final class ExtensionConstraintDynamic(
   }
 
   def removeTuples(base: Array[Int]) = {
-    throw new UnsupportedOperationException
-//    dynamic.unshareMatrix();
-//    var removed = 0;
-//    val itr = dynamic.hsIterator
-//    for (t <- JavaConversions.asScalaIterator(itr) if matches(t, base)) {
-//      // logger.fine("Removing " + Arrays.toString(currentTuple));
-//      itr.remove();
-//      assert(!dynamic.isTrue(t));
-//      removed += 1;
-//    }
-//    removed;
+    dynamic.unshareMatrix();
+    var removed = 0;
+    val itr = dynamic.iterator
+    while (itr.hasNext) {
+      val t = itr.next
+
+      if (matches(t, base)) {
+        // logger.fine("Removing " + Arrays.toString(currentTuple));
+        itr.remove();
+        assert(!dynamic.isTrue(t));
+        removed += 1;
+      }
+    }
+    removed;
   }
 
   def matrixManager = dynamic
 
   def getEvaluation = arity * dynamic.size
-  
+
   override def toString = arity + "-ary STR w/ " + dynamic
 
 }

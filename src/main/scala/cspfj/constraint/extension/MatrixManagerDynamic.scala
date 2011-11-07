@@ -4,6 +4,7 @@ import cspfj.problem.Variable
 import java.util.Arrays
 import scala.collection.mutable.DoubleLinkedList
 import scala.annotation.tailrec
+import cspfj.util.DLList
 
 final class MatrixManagerDynamic(
   scope: Array[Variable],
@@ -11,24 +12,10 @@ final class MatrixManagerDynamic(
   shared: Boolean,
   tuple: Array[Int]) extends AbstractMatrixManager(scope, tupleSet, shared, tuple) with Iterable[Array[Int]] {
 
-  private var allTuples: DoubleLinkedList[Array[Int]] = {
-//    @tailrec
-//    def build(
-//      current: Iterator[Array[Int]],
-//      built: DoubleLinkedList[Array[Int]]): DoubleLinkedList[Array[Int]] = {
-//      if (!current.hasNext) {
-//        built
-//      } else {
-//        build(current, built += current.next)
-//      }
-//    }
-//    build(tupleSet.iterator, DoubleLinkedList.empty)
-    val b = DoubleLinkedList.newBuilder[Array[Int]]
-    tupleSet.foreach(b +=)
-    b.result
-  }
+  private val allTuples: DLList[Array[Int]] = new DLList()
+  tupleSet.foreach(allTuples.add)
 
-  private var removedTuples: List[(Int, DoubleLinkedList[Array[Int]])] = Nil
+  private var removedTuples: List[(Int, DLList[Array[Int]])] = Nil
 
   var _level = 0;
 
@@ -37,7 +24,7 @@ final class MatrixManagerDynamic(
   def level_=(newLevel: Int) {
     if (newLevel < level) {
       while (removedTuples != Nil && removedTuples.head._1 >= newLevel) {
-        allTuples ++= removedTuples.head._2
+        allTuples.merge(removedTuples.head._2)
         removedTuples = removedTuples.tail
       }
     }
@@ -51,41 +38,33 @@ final class MatrixManagerDynamic(
     matrix
   }
 
-  override def copy = {
-    val c = super.clone.asInstanceOf[MatrixManagerDynamic]
-    c.tupleSet = tupleSet.copy
-    c.allTuples = DoubleLinkedList.empty ++ allTuples.iterator
-    c
-  }
+  override def copy = throw new UnsupportedOperationException
 
   final class LLIterator extends Iterator[Array[Int]] {
+    private val itr = allTuples.iterator
 
-    private var current = allTuples
-    private var last: DoubleLinkedList[Array[Int]] = null
-
-    def hasNext = !current.isEmpty
-
-    def next() = {
-      last = current
-      current = current.next
-      last.head
-    }
+    def hasNext = itr.hasNext
+    def next() = itr.next()
 
     def remove() { remove(level) }
 
     def remove(level: Int) {
       assert(removedTuples.isEmpty || removedTuples.head._1 <= level)
-      if (removedTuples == Nil || removedTuples.head._1 < level) {
-        removedTuples ::= (level, DoubleLinkedList(last.head))
-      } else {
-        removedTuples.head._2 :+ last.head
-      }
+      val removed = itr.remove()
 
-      if (allTuples == last) {
-        allTuples = last.tail
-      }
-      last.remove
-      last = null
+      val histo =
+        if (removedTuples == Nil || removedTuples.head._1 < level) {
+          val h: DLList[Array[Int]] = new DLList()
+
+          removedTuples ::= (level, h)
+
+          h
+        } else {
+          removedTuples.head._2
+        }
+
+      histo.addNode(removed)
+
     }
 
   }

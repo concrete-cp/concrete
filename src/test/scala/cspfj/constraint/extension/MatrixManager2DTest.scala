@@ -1,7 +1,5 @@
 package cspfj.constraint.extension;
 
-import java.util.Arrays;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.Assert._;

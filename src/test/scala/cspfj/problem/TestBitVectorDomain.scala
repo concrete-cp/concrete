@@ -1,6 +1,6 @@
 package cspfj.problem
+import org.junit.Assert.assertEquals
 import org.junit.Test
-import org.junit.Assert._
 
 final class TestBitVectorDomain {
 

@@ -1,17 +1,18 @@
 package cspfj.constraint.semantic;
 
+import scala.util.Random
+
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
+
 import cspfj.constraint.AbstractConstraint
 import cspfj.constraint.Constraint
+import cspfj.constraint.Residues
+import cspfj.constraint.TupleEnumerator
 import cspfj.filter.RevisionHandler
 import cspfj.problem.BitVectorDomain
 import cspfj.problem.Variable
-import scala.util.Random
-import scala.collection.immutable.SortedSet
-import cspfj.constraint.Residues
-import cspfj.constraint.TupleEnumerator
 
 final class AbsDiffTest {
 
@@ -46,11 +47,11 @@ final class AbsDiffTest {
   }
 
   private def randomDomain(min: Int, max: Int, nb: Int) = {
-    var domain: SortedSet[Int] = SortedSet.empty
+    var domain: Set[Int] = Set.empty
 
     while (domain.size < nb) domain += RAND.nextInt(max - min) + min
 
-    domain.toSeq
+    domain.toSeq.sorted
   }
 
 }

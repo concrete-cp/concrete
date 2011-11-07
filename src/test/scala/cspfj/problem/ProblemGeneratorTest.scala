@@ -1,14 +1,15 @@
 package cspfj.problem;
 
-import java.io.IOException
-import java.util.logging.Logger
 import java.util.logging.Level.WARNING
+
 import org.junit.Test
+
+import cspfj.exception.FailedGenerationException
 import cspfj.filter.AC3Constraint
 import cspfj.generator.ProblemGenerator
 import cspfj.util.Loggable
+import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
-import cspom.compiler.ProblemCompiler;
 
 final class ProblemGeneratorTest extends Loggable {
 

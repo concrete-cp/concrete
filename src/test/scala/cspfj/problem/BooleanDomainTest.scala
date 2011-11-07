@@ -1,8 +1,12 @@
 package cspfj.problem;
 
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+
 import cspfj.util.BitVector
-import org.junit.Assert.{ assertTrue, assertFalse, assertEquals, assertArrayEquals }
-import org.junit.{ Test, Before }
 
 final class BooleanDomainTest {
 

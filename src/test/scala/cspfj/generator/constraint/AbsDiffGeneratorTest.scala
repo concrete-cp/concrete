@@ -1,12 +1,14 @@
 package cspfj.generator.constraint
 
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
 import cspfj.constraint.semantic.AbsDiff
 import cspfj.generator.ProblemGenerator
 import cspfj.problem.Problem
 import cspom.constraint.FunctionalConstraint
 import cspom.CSPOM
-import org.junit.Assert._
-import org.junit.Test
 
 final class AbsDiffGeneratorTest {
 
