@@ -102,5 +102,7 @@ final class ExtensionConstraintDynamic(
   def matrixManager = dynamic
 
   def getEvaluation = arity * dynamic.size
+  
+  override def toString = arity + "-ary STR w/ " + dynamic
 
 }

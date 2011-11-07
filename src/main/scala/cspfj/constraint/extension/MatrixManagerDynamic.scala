@@ -3,6 +3,7 @@ package cspfj.constraint.extension;
 import cspfj.problem.Variable
 import java.util.Arrays
 import scala.collection.mutable.DoubleLinkedList
+import scala.annotation.tailrec
 
 final class MatrixManagerDynamic(
   scope: Array[Variable],
@@ -10,7 +11,22 @@ final class MatrixManagerDynamic(
   shared: Boolean,
   tuple: Array[Int]) extends AbstractMatrixManager(scope, tupleSet, shared, tuple) with Iterable[Array[Int]] {
 
-  private var allTuples: DoubleLinkedList[Array[Int]] = DoubleLinkedList.empty ++ tupleSet.toList
+  private var allTuples: DoubleLinkedList[Array[Int]] = {
+//    @tailrec
+//    def build(
+//      current: Iterator[Array[Int]],
+//      built: DoubleLinkedList[Array[Int]]): DoubleLinkedList[Array[Int]] = {
+//      if (!current.hasNext) {
+//        built
+//      } else {
+//        build(current, built += current.next)
+//      }
+//    }
+//    build(tupleSet.iterator, DoubleLinkedList.empty)
+    val b = DoubleLinkedList.newBuilder[Array[Int]]
+    tupleSet.foreach(b +=)
+    b.result
+  }
 
   private var removedTuples: List[(Int, DoubleLinkedList[Array[Int]])] = Nil
 
@@ -75,5 +91,7 @@ final class MatrixManagerDynamic(
   }
 
   def getSize = tupleSet.size
+
+  override def toString = "MatrixManagerDynamic managing " + getSize + " tuples"
 
 }
