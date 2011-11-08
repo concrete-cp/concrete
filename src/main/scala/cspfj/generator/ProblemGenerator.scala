@@ -1,6 +1,5 @@
 package cspfj.generator;
 
-import cspfj.exception.FailedGenerationException
 import cspfj.generator.constraint.GeneratorManager
 import cspfj.problem.{ BitVectorDomain, Problem }
 import cspom.constraint.CSPOMConstraint

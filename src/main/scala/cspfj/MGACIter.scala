@@ -21,16 +21,12 @@ package cspfj;
 
 import java.lang.Override
 
-import scala.annotation.elidable
 import scala.collection.JavaConversions
 
-import annotation.elidable.ASSERTION
-import cspfj.exception.MaxBacktracksExceededException
 import cspfj.filter.AC3Constraint
 import cspfj.filter.Filter
 import cspfj.heuristic.CrossHeuristic
 import cspfj.heuristic.Heuristic
-import cspfj.heuristic.Pair
 import cspfj.problem.Problem
 import cspfj.problem.LearnMethod
 import cspfj.problem.NoGoodLearner
@@ -103,10 +99,8 @@ final class MGACIter(prob: Problem) extends AbstractSolver(prob) with Loggable {
         }
       } else {
 
-        val pair = heuristic.selectPair(problem);
-
-        if (pair == null) {
-          if (skipSolution) {
+        heuristic.selectPair(problem) match {
+          case None => if (skipSolution) {
             selectedVariable = backtrack();
             if (selectedVariable == null) {
               solution = None
@@ -115,25 +109,27 @@ final class MGACIter(prob: Problem) extends AbstractSolver(prob) with Loggable {
           } else {
             solution = Some(extractSolution)
           }
-        } else {
-          decisions ::= pair
-          selectedVariable = pair.getVariable();
+          case Some(pair) => {
+            decisions ::= pair
+            selectedVariable = pair.variable
 
-          assert(selectedVariable.dom.size > 0)
+            assert(selectedVariable.dom.size > 0)
 
-          selectedIndex = pair.getIndex();
+            selectedIndex = pair.index
 
-          assert(selectedVariable.dom.present(selectedIndex))
-          //
-          fine(problem.currentLevel + " : " + selectedVariable
-            + " <- "
-            + selectedVariable.dom.value(selectedIndex) + "("
-            + nbBacktracks + "/" + maxBacktracks + ")");
+            assert(selectedVariable.dom.present(selectedIndex))
+            //
+            fine(problem.currentLevel + " : " + selectedVariable
+              + " <- "
+              + selectedVariable.dom.value(selectedIndex) + "("
+              + nbBacktracks + "/" + maxBacktracks + ")");
 
-          problem.push();
-          selectedVariable.dom.setSingle(selectedIndex);
-          nbAssignments += 1;
+            problem.push();
+            selectedVariable.dom.setSingle(selectedIndex);
+            nbAssignments += 1;
+          }
         }
+
       }
 
     }
@@ -155,11 +151,11 @@ final class MGACIter(prob: Problem) extends AbstractSolver(prob) with Loggable {
       // LOGGER.finer(problem.getCurrentLevel() + " : "
       // + decision.getVariable() + " /= "
       // + decision.getVariable().getValue(decision.getIndex()));
-    } while (decision.getVariable.dom.size <= 1);
+    } while (decision.variable.dom.size <= 1);
 
-    decision.getVariable.dom.remove(decision.getIndex());
+    decision.variable.dom.remove(decision.index);
     nbBacktracks += 1;
-    return decision.getVariable();
+    return decision.variable;
   }
 
   def reset() {
@@ -184,12 +180,12 @@ final class MGACIter(prob: Problem) extends AbstractSolver(prob) with Loggable {
       try {
         if (!preprocess(filter)) {
           firstSolutionGiven = true;
-          return null;
+          return None;
         }
       } catch {
         case e: InterruptedException =>
           if (!filter.reduceAll()) {
-            return null;
+            return None;
           }
       }
 
@@ -215,7 +211,7 @@ final class MGACIter(prob: Problem) extends AbstractSolver(prob) with Loggable {
         firstSolutionGiven = true;
       } catch {
         case e: MaxBacktracksExceededException => {
-          val modified = JavaConversions.setAsJavaSet(ngl.noGoods(decisions))
+          val modified = ngl.noGoods(decisions)
           problem.reset();
           decisions = Nil
 

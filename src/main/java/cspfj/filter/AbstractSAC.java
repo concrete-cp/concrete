@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import scala.collection.IndexedSeq;
+import scala.collection.Iterable;
 import cspfj.StatisticsManager;
 import cspfj.constraint.Constraint;
 import cspfj.problem.Problem;
@@ -89,7 +90,7 @@ abstract class AbstractSAC implements Filter {
     }
 
     @Override
-    public boolean reduceAfter(Collection<Constraint> constraints) {
+    public boolean reduceAfter(Iterable<Constraint> constraints) {
         throw new UnsupportedOperationException();
     }
 

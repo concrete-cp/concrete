@@ -3,7 +3,7 @@ package cspfj.generator.constraint;
 import cspfj.constraint.Constraint;
 import cspfj.constraint.semantic.Gt;
 import cspfj.constraint.semantic.ReifiedConstraint;
-import cspfj.exception.FailedGenerationException;
+import cspfj.generator.FailedGenerationException;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspom.constraint.CSPOMConstraint;

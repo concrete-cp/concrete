@@ -135,7 +135,7 @@ final class BitVectorDomain(
   }
 
   override def restoreLevel(level: Int) {
-    assert(level < currentLevel);
+    assert(level <= currentLevel);
 
     history = history.dropWhile(_._1 > level)
     if (history == Nil) {

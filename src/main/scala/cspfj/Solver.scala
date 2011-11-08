@@ -19,15 +19,14 @@
 
 package cspfj;
 
-import cspfj.problem.Problem
-import cspfj.util.Parameter
-import cspfj.filter.Filter
-import cspom.CSPOM
-import cspfj.exception.MaxBacktracksExceededException
 import java.util.logging.Level
 import java.util.logging.Logger
-import cspfj.util.MsLogHandler
+import cspfj.problem.Problem
+import cspfj.util.Parameter
 import cspfj.util.Loggable
+import cspfj.util.MsLogHandler
+import cspom.CSPOM
+import cspfj.filter.Filter
 
 object Solver {
   @Parameter("logger.level")

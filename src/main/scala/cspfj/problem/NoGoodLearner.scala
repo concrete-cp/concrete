@@ -1,12 +1,14 @@
 package cspfj.problem;
 
-import cspfj.constraint.extension.{ ExtensionConstraint2D, ExtensionConstraintGeneral }
-import cspfj.constraint.extension.{ Matrix2D, TupleSet }
-import cspfj.constraint.{ Constraint, DynamicConstraint }
-import cspfj.heuristic.Pair
-import cspfj.util.{ BitVector, Statistic }
-import java.util.Deque
-import scala.collection.JavaConversions
+import cspfj.constraint.extension.ExtensionConstraint2D
+import cspfj.constraint.extension.ExtensionConstraintGeneral
+import cspfj.constraint.extension.Matrix2D
+import cspfj.constraint.extension.TupleSet
+import cspfj.constraint.Constraint
+import cspfj.constraint.DynamicConstraint
+import cspfj.util.BitVector
+import cspfj.util.Statistic
+import cspfj.Pair
 
 final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMethod) {
 
@@ -35,9 +37,9 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
        * is actually the last in the stack.
        */
       val lastDecision = decisions.last;
-      tuple :+= lastDecision.getIndex;
-      currentScope :+= lastDecision.getVariable;
-      futureVariables -= lastDecision.getVariable;
+      tuple :+= lastDecision.index;
+      currentScope :+= lastDecision.variable;
+      futureVariables -= lastDecision.variable;
 
       for (fv <- futureVariables) {
 

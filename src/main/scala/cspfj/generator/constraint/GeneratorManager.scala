@@ -1,6 +1,6 @@
 package cspfj.generator.constraint;
 
-import cspfj.exception.FailedGenerationException
+import cspfj.generator.FailedGenerationException
 import cspfj.problem.Problem
 import cspom.constraint.CSPOMConstraint;
 

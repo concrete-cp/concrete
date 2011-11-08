@@ -16,17 +16,22 @@ class DLList[A]() extends LinearSeq[A]
   headNode.next = headNode
 
   def update(idx: Int, elem: A) {
-    var count = idx
-    var current = headNode.next
-    while (count > 0) {
-      count -= 1
-      current = current.next
-    }
-    current.asInstanceOf[ContentNode[A]].item = elem
+    atLocation(idx)(_.item = elem)(outOfBounds(idx))
   }
 
-  def apply(idx: Int) = {
-    iterator.drop(idx).next
+  def apply(idx: Int) = atLocation(idx)(_.item)(outOfBounds(idx))
+
+  private def outOfBounds(n: Int) = throw new IndexOutOfBoundsException(n.toString)
+
+  private def atLocation[T](n: Int)(f: ContentNode[A] => T)(onOutOfBounds: => T) = if (isEmpty) onOutOfBounds else {
+    var loc = headNode.next
+    var left = n
+    while (left > 0) {
+      loc = loc.next
+      left -= 1
+      if (loc == headNode) onOutOfBounds
+    }
+    f(loc.asInstanceOf[ContentNode[A]])
   }
 
   def length = iterator.length
@@ -37,7 +42,7 @@ class DLList[A]() extends LinearSeq[A]
     } else if (!list.isEmpty) {
       list.headNode.next.prev = headNode.prev
       headNode.prev.next = list.headNode.next
-      
+
       list.headNode.prev.next = headNode
       headNode.prev = list.headNode.prev
     }
@@ -87,7 +92,7 @@ class DLList[A]() extends LinearSeq[A]
       lastReturned
     }
   }
-  
+
   override def reverseIterator = new Iterator[A] {
     var current = headNode.prev
     def hasNext = current != headNode
@@ -110,17 +115,17 @@ class ContentNode[A](var item: A, prev: Node[A], next: Node[A])
 object DLList extends SeqFactory[DLList] {
   def newBuilder[A]: Builder[A, DLList[A]] =
     new Builder[A, DLList[A]] {
-      def emptyList() = new DLList[A]()
-      var current = emptyList()
+      def emptyList = new DLList[A]()
+      var current = emptyList
 
       def +=(elem: A): this.type = {
         current add elem
         this
       }
 
-      def clear() { current = emptyList() }
+      def clear() { current = emptyList }
 
-      def result() = current
+      def result = current
     }
 
 }

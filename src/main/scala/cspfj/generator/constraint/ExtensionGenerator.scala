@@ -70,9 +70,9 @@ object ExtensionGenerator {
 
   def fillMatrix(domains: Seq[Domain], relation: Relation, init: Boolean, matrix: Matrix) {
 
-    for (values <- relation.iterator map { _.asInstanceOf[Array[Int]] }) {
+    for (values <- relation.iterator map { _.asInstanceOf[Seq[Int]] }) {
       val tuple = (values, domains).zipped.map { (v, d) => d.index(v) }
-      matrix.set(tuple, !init)
+      matrix.set(tuple.toArray, !init)
     }
 
   }

@@ -4,7 +4,7 @@ import cspfj.constraint.Constraint;
 import cspfj.constraint.semantic.Eq;
 import cspfj.constraint.semantic.Neq;
 import cspfj.constraint.semantic.ReifiedConstraint;
-import cspfj.exception.FailedGenerationException;
+import cspfj.generator.FailedGenerationException;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
 import cspom.constraint.CSPOMConstraint;

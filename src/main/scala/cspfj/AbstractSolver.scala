@@ -32,7 +32,6 @@ import java.util.regex.Pattern;
 import cspfj.constraint.Constraint;
 import cspfj.constraint.TupleEnumerator;
 import cspfj.constraint.extension.MatrixManager2D;
-import cspfj.exception.MaxBacktracksExceededException;
 import cspfj.filter.Filter;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;

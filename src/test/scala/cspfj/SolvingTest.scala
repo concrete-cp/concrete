@@ -6,14 +6,13 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-import cspfj.exception.FailedGenerationException
 import cspfj.generator.ProblemGenerator
 import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
 import util.Loggable
 
 final class SolvingTest extends Loggable {
-  setLevel(Level.FINE)
+  Solver.loggerLevel = "FINE"
 
   @Test
   def crosswordm1() {
@@ -110,7 +109,7 @@ final class SolvingTest extends Loggable {
     if (itr.hasNext) {
       val sol = itr.next
       val failed = cspomProblem.controlInt(sol);
-      assertTrue(failed.toString, failed.isEmpty)
+      assertTrue(sol + "\n" + failed.toString, failed.isEmpty)
       Some(sol)
     } else {
       None

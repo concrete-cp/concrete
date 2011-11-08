@@ -1,7 +1,7 @@
 package cspfj.generator.constraint;
 
 import cspfj.constraint.semantic.Mul
-import cspfj.exception.FailedGenerationException
+import cspfj.generator.FailedGenerationException
 import cspfj.problem.{ Variable, Problem, BitVectorDomain }
 import cspom.constraint.CSPOMConstraint
 import cspfj.constraint.AbstractConstraint

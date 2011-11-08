@@ -4,7 +4,6 @@ import java.util.logging.Level.WARNING
 
 import org.junit.Test
 
-import cspfj.exception.FailedGenerationException
 import cspfj.filter.AC3Constraint
 import cspfj.generator.ProblemGenerator
 import cspfj.util.Loggable

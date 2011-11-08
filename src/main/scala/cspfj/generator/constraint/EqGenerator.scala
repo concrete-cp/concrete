@@ -1,7 +1,7 @@
 package cspfj.generator.constraint;
 
 import cspfj.constraint.semantic.{ ReifiedConstraint, Neq, Eq }
-import cspfj.exception.FailedGenerationException
+import cspfj.generator.FailedGenerationException
 import cspfj.problem.{ Variable, Problem, Domain, BitVectorDomain }
 import cspom.constraint.{ GeneralConstraint, FunctionalConstraint, CSPOMConstraint }
 
