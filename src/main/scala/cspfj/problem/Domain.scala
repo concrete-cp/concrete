@@ -85,6 +85,18 @@ trait Domain {
       current
     }
   }
+  
+  def indicesR = new Iterator[Int] {
+    var index = last
+    
+    def hasNext = index >= 0
+    
+    def next = {
+      val current = index
+      index = Domain.this.prev(index)
+      current
+    }
+  }
 
   def values = indices map value
 

@@ -16,33 +16,34 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
 package cspfj.filter;
 
-import cspfj.constraint.Constraint
-import cspfj.problem.Variable;
+import java.util.logging.Logger
 import cspfj.problem.Problem
+import cspfj.problem.Variable;
+import cspfj.util.Loggable
 
 /**
- * @author scand1sk
+ * @author Julien VION
  *
  */
-trait Filter {
-  
-  def problem: Problem
+final class SAC1(val problem: Problem) extends SingletonConsistency with Loggable {
 
-  /**
-   * @return false iff an inconsistency has been detected
-   */
-  def reduceAll(): Boolean
+  val subFilter = new AC3(problem)
 
-  def reduceAfter(constraints: Iterable[Constraint]): Boolean;
+  def singletonTest(variable: Variable) = {
+    var changedGraph = false;
+    for (index <- variable.dom.indices) {
+      if (Thread.interrupted) {
+        throw new InterruptedException();
+      }
 
-  def reduceAfter(variable: Variable): Boolean;
+      changedGraph |= check(variable, index)
+    }
+    changedGraph;
+  }
 
-  // boolean reduceOnce(Variable variable);
 
-  def getStatistics: Map[String, Any]
+  override def toString = "SAC-1 w/ " + subFilter;
 
-  // boolean ensureAC();
 }

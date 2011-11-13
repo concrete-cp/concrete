@@ -1,18 +1,21 @@
 package cspfj;
 
-import java.util.logging.Level
-
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+import cspfj.filter.DC1
+import cspfj.generator.FailedGenerationException
 import cspfj.generator.ProblemGenerator
+import cspfj.problem.LearnMethod
 import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
 import util.Loggable
 
-final class SolvingTest extends Loggable {
+final class DC1SolvingTest extends Loggable {
   Solver.loggerLevel = "FINE"
+  ParameterManager.parameter("preprocessor", classOf[DC1]);
+  ParameterManager.parameter("dc1.addConstraints", LearnMethod.BIN);
 
   @Test
   def crosswordm1() {
