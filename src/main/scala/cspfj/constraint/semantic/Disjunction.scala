@@ -32,7 +32,7 @@ final class Disjunction(scope: Array[Variable],
 
   def check = reverses.zip(tuple).exists(l => l._1 ^ l._2 == 1)
 
-  override def toString = "\\/" + scope.iterator
+  override def toString = "\\/" + scope.mkString("(", ", ", ")")
 
   override def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
     if (isFalse(watch1)) {

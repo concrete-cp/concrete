@@ -15,7 +15,7 @@ object CrossHeuristic {
   @Parameter("heuristic.value")
   var valueHeuristicClass: Class[_ <: ValueHeuristic] = classOf[Lexico]
 
-  ParameterManager.register(classOf[CrossHeuristic]);
+  ParameterManager.register(this);
 }
 
 final class CrossHeuristic(problem: Problem) extends Heuristic {

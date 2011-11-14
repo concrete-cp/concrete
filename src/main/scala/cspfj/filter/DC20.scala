@@ -35,7 +35,7 @@ object DC20 {
   @Parameter("dc20.addConstraints")
   var addConstraints = LearnMethod.CONSERVATIVE;
 
-  ParameterManager.register(classOf[DC20]);
+  ParameterManager.register(this);
 
 }
 
@@ -105,7 +105,7 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
               false
             }
           } else {
-            process(remaining.head, remaining.tail, variable)
+            process(remaining.head, remaining.tail, if (mark == null) variable else mark)
           }
         }
 

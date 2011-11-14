@@ -22,7 +22,7 @@ package cspfj;
 import cspfj.filter.AC3;
 import cspfj.problem.Problem;
 
-final class DummySolver(prob: Problem) extends AbstractSolver(prob) {
+final class DummySolver(prob: Problem) extends Solver(prob) {
 
   def nextSolution =
     if (preprocess(new AC3(problem))) Some(Map.empty) else None

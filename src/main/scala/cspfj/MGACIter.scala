@@ -48,11 +48,11 @@ object MGACIter {
   @Parameter("mgac.heuristic")
   var heuristicClass: Class[_ <: Heuristic] = classOf[CrossHeuristic];
 
-  ParameterManager.register(classOf[MGACIter]);
-  StatisticsManager.register(classOf[MGACIter]);
+  ParameterManager.register(this);
+  StatisticsManager.register("MGACIter", this);
 }
 
-final class MGACIter(prob: Problem) extends AbstractSolver(prob) with Loggable {
+final class MGACIter(prob: Problem) extends Solver(prob) with Loggable {
 
   @Statistic
   var nbAssignments = 0;

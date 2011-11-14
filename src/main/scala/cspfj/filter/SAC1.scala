@@ -33,7 +33,7 @@ final class SAC1(val problem: Problem) extends SingletonConsistency with Loggabl
 
   def singletonTest(variable: Variable) = {
     var changedGraph = false;
-    for (index <- variable.dom.indices) {
+    for (index <- variable.dom.indices if variable.dom.size > 1) {
       if (Thread.interrupted) {
         throw new InterruptedException();
       }

@@ -1,17 +1,15 @@
-package cspfj.problem;
+package cspfj.longTest;
 
 import java.util.logging.Level.WARNING
-
 import org.junit.Test
-
 import cspfj.filter.AC3Constraint
 import cspfj.generator.ProblemGenerator
 import cspfj.util.Loggable
 import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
+import cspfj.Solver
 
 final class ProblemGeneratorTest extends Loggable {
-
   setLevel(WARNING)
 
   @Test

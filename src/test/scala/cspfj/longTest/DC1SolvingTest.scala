@@ -1,19 +1,22 @@
-package cspfj;
+package cspfj.longTest;
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-
 import cspfj.filter.DC1
 import cspfj.generator.FailedGenerationException
 import cspfj.generator.ProblemGenerator
 import cspfj.problem.LearnMethod
 import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
-import util.Loggable
+import cspfj.util.Loggable
+import cspfj.SolverIterator
+import cspfj.ParameterManager
+import cspfj.MGACIter
+import cspfj.Solver
 
 final class DC1SolvingTest extends Loggable {
-  Solver.loggerLevel = "FINE"
+  //Solver.loggerLevel = "FINER"
   ParameterManager.parameter("preprocessor", classOf[DC1]);
   ParameterManager.parameter("dc1.addConstraints", LearnMethod.BIN);
 
@@ -101,7 +104,7 @@ final class DC1SolvingTest extends Loggable {
   }
 
   private def solve(name: String) = {
-    val cspomProblem = CSPOM.load(getClass.getResource("problem/" + name));
+    val cspomProblem = CSPOM.load(getClass.getResource(name));
     ProblemCompiler.compile(cspomProblem);
     val problem = ProblemGenerator.generate(cspomProblem);
 
@@ -121,7 +124,7 @@ final class DC1SolvingTest extends Loggable {
   }
 
   private def count(name: String) = {
-    val cspomProblem = CSPOM.load(getClass.getResource("problem/" + name));
+    val cspomProblem = CSPOM.load(getClass.getResource(name));
     ProblemCompiler.compile(cspomProblem);
     val problem = ProblemGenerator.generate(cspomProblem);
     // System.out.println(problem);

@@ -28,7 +28,7 @@ object AC3Constraint {
   @Statistic
   var revisionCount = 0
 
-  ParameterManager.register(classOf[AC3Constraint]);
+  ParameterManager.register(this);
 }
 
 final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) extends Filter {

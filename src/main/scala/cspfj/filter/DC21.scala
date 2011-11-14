@@ -30,11 +30,11 @@ import cspfj.util.Parameter
 import cspfj.util.Loggable
 import scala.annotation.tailrec
 
-object DC2 {
-  @Parameter("dc2.addConstraints")
+object DC21 {
+  @Parameter("dc21.addConstraints")
   def addConstraints = LearnMethod.CONSERVATIVE;
 
-  ParameterManager.register(classOf[DC2])
+  ParameterManager.register(this)
 
 }
 
@@ -42,7 +42,7 @@ object DC2 {
  * @author Julien VION
  *
  */
-final class DC2(val problem: Problem) extends Filter with Loggable {
+final class DC21(val problem: Problem) extends Filter with Loggable {
 
   private var nbAddedConstraints = 0;
 
@@ -59,7 +59,7 @@ final class DC2(val problem: Problem) extends Filter with Loggable {
 
   private var nbSingletonTests = 0;
 
-  private val ngl = new NoGoodLearner(problem, DC2.addConstraints);
+  private val ngl = new NoGoodLearner(problem, DC21.addConstraints);
 
   def reduceAll() = {
     val nbC = problem.constraints.size
@@ -97,7 +97,7 @@ final class DC2(val problem: Problem) extends Filter with Loggable {
             }
 
           } else {
-            process(remaining.head, remaining.tail, variable)
+            process(remaining.head, remaining.tail, if (mark == null) variable else mark)
           }
         }
       }

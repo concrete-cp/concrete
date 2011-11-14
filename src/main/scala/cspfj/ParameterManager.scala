@@ -13,20 +13,21 @@ import scala.collection.JavaConversions
  */
 final object ParameterManager {
 
-  private var parameters: Map[String, Field] = Map.empty
+  private var parameters: Map[String, (Any, Field)] = Map.empty
   private var pending: Map[String, Any] = Map.empty
   private var pendingParse: Map[String, String] = Map.empty
 
-  def register(clazz: Class[_]) {
-    for (f <- clazz.getDeclaredFields) {
+  def register(o: AnyRef) {
+    require(!o.isInstanceOf[Class[_]])
+    for (f <- o.getClass.getDeclaredFields) {
       val param = f.getAnnotation(classOf[cspfj.util.Parameter]);
       if (param != null) {
         val name = param.value
-        parameters += name -> f
+        parameters += name -> (o, f)
         f.setAccessible(true);
         pending.get(name) match {
           case Some(value) => {
-            f.set(null, value)
+            f.set(o, value)
             pending -= name
           }
           case None =>
@@ -52,7 +53,7 @@ final object ParameterManager {
   def parameter(name: String, value: Any) {
     parameters.get(name) match {
       case None => pending += name -> value
-      case Some(oldParameter) => oldParameter.set(null, value)
+      case Some((o, f)) => f.set(o, value)
     }
   }
 
@@ -73,20 +74,19 @@ final object ParameterManager {
     } else if (fType.isAssignableFrom(classOf[Class[_]])) {
       Class.forName(value)
     } else {
-      throw new IllegalArgumentException(
-        "Cannot parse " + field + " of type " + fType)
+      throw new IllegalArgumentException("Cannot parse " + field + " of type " + fType)
     }
-//    fType match {
-//      //          case e: Class[Enum[_]] => {
-//      //            val fClass = field.get(null).asInstanceOf[Enum[_]]
-//      //          }
-//      case _: Class[Int] => value.toInt
-//      case _: Class[Double] => value.toDouble
-//      case _: Class[String] => value
-//      case _: Class[Class[_]] => Class.forName(value)
-//      case _ => throw new IllegalArgumentException(
-//        "Cannot parse " + field + " of type " + fType)
-//    }
+    //    fType match {
+    //      //          case e: Class[Enum[_]] => {
+    //      //            val fClass = field.get(null).asInstanceOf[Enum[_]]
+    //      //          }
+    //      case _: Class[Int] => value.toInt
+    //      case _: Class[Double] => value.toDouble
+    //      case _: Class[String] => value
+    //      case _: Class[Class[_]] => Class.forName(value)
+    //      case _ => throw new IllegalArgumentException(
+    //        "Cannot parse " + field + " of type " + fType)
+    //    }
 
   }
 
@@ -100,7 +100,7 @@ final object ParameterManager {
   def parameterParse(name: String, value: String) {
     parameters.get(name) match {
       case None => pendingParse += name -> value
-      case Some(field) => field.set(null, parse(field, value))
+      case Some((o, f)) => f.set(o, parse(f, value))
     }
   }
 
@@ -110,8 +110,8 @@ final object ParameterManager {
    * @return
    */
   def toXML = NodeSeq.fromSeq(parameters map {
-    case (k, f) =>
-      <p name="{k}">{ f.get(null) }</p>
+    case (k, (o, f)) =>
+      <p name="{k}">{ f.get(o) }</p>
   } toSeq)
 
   /**

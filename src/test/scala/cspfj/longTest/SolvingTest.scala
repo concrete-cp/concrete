@@ -1,15 +1,15 @@
-package cspfj;
+package cspfj.longTest;
 
 import java.util.logging.Level
-
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-
 import cspfj.generator.ProblemGenerator
 import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
-import util.Loggable
+import cspfj.util.Loggable
+import cspfj.MGACIter
+import cspfj.SolverIterator
 
 final class SolvingTest extends Loggable {
   //Solver.loggerLevel = "FINE"

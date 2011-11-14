@@ -42,8 +42,8 @@ object DC1 {
   @Parameter("dc1.addConstraints")
   val addConstraints = LearnMethod.CONSERVATIVE
 
-  ParameterManager.register(classOf[DC1])
-  StatisticsManager.register(classOf[DC1])
+  ParameterManager.register(this)
+  StatisticsManager.register("DC1", this)
 }
 
 final class DC1(val problem: Problem) extends SingletonConsistency with Loggable {
@@ -67,7 +67,7 @@ final class DC1(val problem: Problem) extends SingletonConsistency with Loggable
 
   def singletonTest(variable: Variable) = {
     var changedGraph = false;
-    for (index <- variable.dom.indices) {
+    for (index <- variable.dom.indices if variable.dom.size > 1) {
       if (Thread.interrupted()) {
         throw new InterruptedException();
       }
@@ -86,8 +86,11 @@ final class DC1(val problem: Problem) extends SingletonConsistency with Loggable
 
         // final Map<Variable[], List<int[]>> noGoods =
         // problem.noGoods();
-        changedGraph = !ngl.binNoGoods(variable).isEmpty || changedGraph;
-        // logger.info(noGoods.toString());
+        val noGoods = ngl.nbNoGoods
+        ngl.binNoGoods(variable)
+        val newNoGoods = ngl.nbNoGoods - noGoods
+        changedGraph |= newNoGoods > 0
+        if (newNoGoods > 0) info(newNoGoods + " nogoods");
 
         problem.pop();
 

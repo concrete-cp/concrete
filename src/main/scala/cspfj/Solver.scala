@@ -21,12 +21,19 @@ package cspfj;
 
 import java.util.logging.Level
 import java.util.logging.Logger
+import java.util.Timer
+
+import cspfj.constraint.extension.MatrixManager2D
+import cspfj.constraint.Constraint
+import cspfj.constraint.TupleEnumerator
+import cspfj.filter.Filter
 import cspfj.problem.Problem
 import cspfj.util.Parameter
+import cspfj.util.Statistic
 import cspfj.util.Loggable
 import cspfj.util.MsLogHandler
+import cspfj.util.Waker
 import cspom.CSPOM
-import cspfj.filter.Filter
 
 object Solver {
   @Parameter("logger.level")
@@ -40,7 +47,7 @@ object Solver {
 
   val VERSION = """Rev:\ (\d+)""".r.findFirstIn("$Rev$").get
 
-  ParameterManager.register(classOf[Solver])
+  ParameterManager.register(this)
 
   def factory(problem: Problem) = {
     val solver = solverClass.getConstructor(classOf[Problem]).newInstance(problem);
@@ -55,7 +62,21 @@ object Solver {
   }
 }
 
-trait Solver extends Loggable {
+abstract class Solver(val problem: Problem) extends Loggable {
+
+  @Statistic
+  var preproRemoved = 0
+  @Statistic
+  var preproCpu = 0.0
+  @Statistic
+  var preproConstraintChecks = 0
+  @Statistic
+  var preproPresenceChecks = 0
+  @Statistic
+  var preproMatrix2DChecks = 0
+  @Statistic
+  var preproMatrix2DPresenceChecks = 0
+
   /** Logger initialization */
   {
     val level = Level.parse(Solver.loggerLevel);
@@ -96,12 +117,61 @@ trait Solver extends Loggable {
     _nbBacktracks = bt
   }
 
-  def XMLConfig: xml.NodeSeq
-
-  def problem: Problem
-
   def reset()
 
   protected def extractSolution = problem.variables.map { v => v.name -> v.dom.firstValue } toMap
+
+  final def preprocess(filter: Filter): Boolean = {
+
+    info("Preprocessing (" + preproExpiration + ")");
+
+    val preprocessor = if (Solver.preprocessorClass == null) {
+      filter
+    } else {
+      val p = Solver.preprocessorClass.getConstructor(classOf[Problem])
+        .newInstance(problem)
+      StatisticsManager.register("preprocessor", p)
+      p
+    }
+
+    Thread.interrupted();
+
+    val waker = new Timer();
+
+    if (preproExpiration >= 0) {
+      waker.schedule(new Waker(Thread.currentThread()),
+        preproExpiration * 1000);
+    }
+
+    var preproCpu = -System.currentTimeMillis();
+
+    try {
+      preprocessor.reduceAll();
+    } catch {
+      case e: InterruptedException => {
+        warning("Interrupted preprocessing");
+        true;
+        throw e
+      }
+      case e: OutOfMemoryError => {
+        throwing("Filter", "reduceAll", e);
+        throw e
+      }
+    } finally {
+      preproCpu += System.currentTimeMillis();
+      waker.cancel();
+
+      preproRemoved = problem.variables map { v => v.dom.maxSize - v.dom.size } sum
+
+      this.preproCpu = preproCpu / 1000f;
+      preproConstraintChecks = TupleEnumerator.checks
+      preproPresenceChecks = Constraint.nbPresenceChecks
+      preproMatrix2DChecks = MatrixManager2D.checks
+      preproMatrix2DPresenceChecks = MatrixManager2D.presenceChecks
+    }
+
+  }
+
+  def XMLConfig = ParameterManager.toXML
 
 }

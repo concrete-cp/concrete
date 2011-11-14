@@ -161,8 +161,7 @@ final class AC3(
     // LOGGER.fine("Control");
     val controlRevisator = new RevisionHandler() {
 
-      def revised(constraint: Constraint,
-        variable: Variable) {
+      def revised(constraint: Constraint, variable: Variable) {
         assert(false, constraint + ", " + variable)
 
       }

@@ -35,13 +35,14 @@ object StatisticsManager extends Loggable {
   //        }
   //    };
 
-  def register(clazz: Class[_]) {
-    for (f <- clazz.getDeclaredFields if (f.getModifiers & Modifier.STATIC) != 0) {
-      static += (clazz.getName + '.' + f.getName) -> f
-    }
-  }
+//  def register(clazz: Class[_]) {
+//    for (f <- clazz.getDeclaredFields if (f.getModifiers & Modifier.STATIC) != 0) {
+//      static += (clazz.getName + '.' + f.getName) -> f
+//    }
+//  }
 
   def register(name: String, o: AnyRef) {
+    require(!o.isInstanceOf[Class[_]])
     if (objects.contains(name)) {
       info(name + ": an object with the same name is already registered");
     }
