@@ -10,8 +10,8 @@ import cspfj.priorityqueues.BinomialHeap
 import cspfj.priorityqueues.Key
 import cspfj.problem.Problem
 import cspfj.problem.Variable
-import cspfj.util.Parameter
-import cspfj.util.Statistic;
+import cspfj.Parameter
+import cspfj.Statistic;
 import scala.annotation.tailrec
 
 object AC3Constraint {

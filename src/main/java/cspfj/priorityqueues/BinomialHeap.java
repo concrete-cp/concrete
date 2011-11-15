@@ -4,7 +4,7 @@ import java.util.AbstractQueue;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import cspfj.util.Statistic;
+import cspfj.Statistic;
 
 public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
 

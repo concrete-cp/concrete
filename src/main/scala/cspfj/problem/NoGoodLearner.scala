@@ -7,7 +7,7 @@ import cspfj.constraint.extension.TupleSet
 import cspfj.constraint.Constraint
 import cspfj.constraint.DynamicConstraint
 import cspfj.util.BitVector
-import cspfj.util.Statistic
+import cspfj.Statistic
 import cspfj.Pair
 
 final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMethod) {

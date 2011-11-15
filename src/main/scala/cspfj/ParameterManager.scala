@@ -20,7 +20,7 @@ final object ParameterManager {
   def register(o: AnyRef) {
     require(!o.isInstanceOf[Class[_]])
     for (f <- o.getClass.getDeclaredFields) {
-      val param = f.getAnnotation(classOf[cspfj.util.Parameter]);
+      val param = f.getAnnotation(classOf[cspfj.Parameter]);
       if (param != null) {
         val name = param.value
         parameters += name -> (o, f)

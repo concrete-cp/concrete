@@ -28,8 +28,6 @@ import cspfj.constraint.Constraint
 import cspfj.constraint.TupleEnumerator
 import cspfj.filter.Filter
 import cspfj.problem.Problem
-import cspfj.util.Parameter
-import cspfj.util.Statistic
 import cspfj.util.Loggable
 import cspfj.util.MsLogHandler
 import cspfj.util.Waker

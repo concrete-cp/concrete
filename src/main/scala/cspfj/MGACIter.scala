@@ -31,8 +31,6 @@ import cspfj.problem.Problem
 import cspfj.problem.LearnMethod
 import cspfj.problem.NoGoodLearner
 import cspfj.problem.Variable
-import cspfj.util.Parameter
-import cspfj.util.Statistic
 import cspfj.util.Loggable
 
 object MGACIter {

@@ -52,8 +52,7 @@ final class B3C(val problem: Problem) extends SingletonConsistency with Loggable
   override def getStatistics =
     Map("3B-singletonTests" -> nbSingletonTests) ++
       subFilter.getStatistics.map {
-        case (k, v) =>
-          "3B-backend-" + k -> v
+        case (k, v) => "3B-backend-" + k -> v
       }
 
 }

@@ -5,7 +5,7 @@ import cspfj.StatisticsManager
 import cspfj.constraint.Constraint
 import cspfj.problem.Problem
 import cspfj.problem.Variable
-import cspfj.util.Statistic
+import cspfj.Statistic
 import cspfj.util.Loggable
 import scala.annotation.tailrec
 

@@ -26,7 +26,7 @@ import cspfj.problem.LearnMethod
 import cspfj.problem.NoGoodLearner
 import cspfj.problem.Problem
 import cspfj.problem.Variable
-import cspfj.util.Parameter
+import cspfj.Parameter
 import cspfj.util.Loggable
 import scala.annotation.tailrec
 

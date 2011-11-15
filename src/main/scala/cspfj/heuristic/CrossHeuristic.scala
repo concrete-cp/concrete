@@ -6,7 +6,7 @@ import cspfj.Pair;
 import cspfj.ParameterManager;
 import cspfj.problem.Problem;
 import cspfj.problem.Variable;
-import cspfj.util.Parameter;
+import cspfj.Parameter;
 
 object CrossHeuristic {
   @Parameter("heuristic.variable")

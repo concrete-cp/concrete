@@ -5,41 +5,11 @@ import scala.collection.mutable.HashMap
 import cspfj.util.Loggable
 import java.lang.reflect.Modifier
 import java.lang.reflect.Field
+import scala.annotation.tailrec
 
 object StatisticsManager extends Loggable {
 
-  var static: Map[String, Field] = Map.empty
-
   var objects: Map[String, AnyRef] = Map.empty
-
-  //    private static final Predicate<Field> ANNOTED_FIELD = new Predicate<Field>() {
-  //        @Override
-  //        public boolean apply(final Field input) {
-  //            return input.getAnnotation(cspfj.util.Statistic.class) != null;
-  //        }
-  //    };
-  //    private static final Predicate<Field> STATIC_FIELD = new Predicate<Field>() {
-  //        @Override
-  //        public boolean apply(final Field input) {
-  //            return (input.getModifiers() & Modifier.STATIC) != 0;
-  //        }
-  //    };
-  //    private static final Function<Field, Object> STATIC_FIELD_TO_VALUE = new Function<Field, Object>() {
-  //        @Override
-  //        public Object apply(final Field value) {
-  //            try {
-  //                return value.get(null);
-  //            } catch (IllegalAccessException e) {
-  //                throw new IllegalStateException(e);
-  //            }
-  //        }
-  //    };
-
-//  def register(clazz: Class[_]) {
-//    for (f <- clazz.getDeclaredFields if (f.getModifiers & Modifier.STATIC) != 0) {
-//      static += (clazz.getName + '.' + f.getName) -> f
-//    }
-//  }
 
   def register(name: String, o: AnyRef) {
     require(!o.isInstanceOf[Class[_]])
@@ -56,28 +26,27 @@ object StatisticsManager extends Loggable {
   }
 
   private def annotedInstanceVariable(f: Field) =
-    f.getAnnotation(classOf[cspfj.util.Statistic]) != null &&
+    f.getAnnotation(classOf[cspfj.Statistic]) != null &&
       (f.getModifiers & Modifier.STATIC) == 0
 
-  def get(name: String) =
-    static.get(name) match {
-      case Some(f) => { f.setAccessible(true); f.get(null) }
-      case None => {
-        val fieldNameAt = name.lastIndexOf('.')
-        val obj = objects.get(name.substring(0, fieldNameAt)).get
-        val fieldName = name.substring(fieldNameAt + 1, name.length)
-        obj.getClass.getDeclaredFields.find(f => annotedInstanceVariable(f) && f.getName == fieldName) match {
-          case Some(f) => { f.setAccessible(true); f.get(obj) }
-          case None => throw new IllegalArgumentException("Could not find " + name + " (" + fieldName + " in " + obj.getClass.getDeclaredFields.toList + ")")
-        }
-      }
+  def get(name: String) = {
+
+    val fieldNameAt = name.lastIndexOf('.')
+    val obj = objects.get(name.substring(0, fieldNameAt)).get
+    val fieldName = name.substring(fieldNameAt + 1, name.length)
+    obj.getClass.getDeclaredFields.find(f => annotedInstanceVariable(f) && f.getName == fieldName) match {
+      case Some(f) => { f.setAccessible(true); f.get(obj) }
+      case None => throw new IllegalArgumentException("Could not find " + name + " (" + fieldName + " in " + obj.getClass.getDeclaredFields.toList + ")")
     }
 
-  def digest =
-    (static map { case (k, v) => k -> v.get(null) }) ++
-      (objects.foldLeft(Map[String, AnyRef]())((acc, o) => acc ++ o._2.getClass.getDeclaredFields.map { f =>
-        (o._1 + "." + f.getName) -> f.get(o._2)
-      }))
+  }
+
+  def digest = (objects map {
+    case (s, o) =>
+      o.getClass.getDeclaredFields.map { f =>
+        (s + "." + f.getName) -> f.get(o)
+      }
+  } flatten).toMap
 
   def isIntType(input: Class[_]) =
     input == classOf[Int] || input == classOf[Long]
@@ -88,15 +57,32 @@ object StatisticsManager extends Loggable {
     //static = Map.empty
     objects = Map.empty
 
-    for (f <- static.values) {
-      f.setAccessible(true)
-      if (isIntType(f.getType())) {
-        f.set(null, 0);
-      } else if (isFloatType(f.getType())) {
-        f.set(null, 0f);
-      }
-
-    }
   }
+
+  def average[A](s: Seq[A])(implicit n: Numeric[A]) = n.toDouble(s.sum) / s.size
+
+  def stDev[A](s: Seq[A])(implicit n: Numeric[A]) = {
+    val avg = average(s)
+    val sumSq = s map (v => math.pow(n.toDouble(v) - avg, 2)) sum
+
+    math.sqrt(sumSq / (s.size - 1))
+  }
+
+  @tailrec
+  def findKMedian[A](arr: Seq[A], k: Int, o: Ordering[A]): A = {
+    val pivot = arr(scala.util.Random.nextInt(arr.size))
+    val (s, b) = arr partition (o.gt(pivot, _))
+    if (s.size == k) pivot
+    // The following test is used to avoid infinite repetition
+    else if (s.isEmpty) {
+      val (s, b) = arr partition (pivot ==)
+      if (s.size > k) pivot
+      else findKMedian(b, k - s.size, o)
+    } else if (s.size < k) findKMedian(b, k - s.size, o)
+    else findKMedian(s, k, o)
+  }
+
+  def median[A](arr: Seq[A])(implicit o: Ordering[A]) =
+    findKMedian(arr, arr.size / 2, o)
 
 }
