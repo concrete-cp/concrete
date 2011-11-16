@@ -24,6 +24,7 @@ import java.lang.Override
 import scala.collection.JavaConversions
 
 import cspfj.filter.AC3Constraint
+import cspfj.filter.AC3
 import cspfj.filter.Filter
 import cspfj.heuristic.CrossHeuristic
 import cspfj.heuristic.Heuristic
@@ -41,7 +42,7 @@ object MGACIter {
   var addConstraint = LearnMethod.BIN;
 
   @Parameter("mgac.filter")
-  var filterClass: Class[_ <: Filter] = classOf[AC3Constraint];
+  var filterClass: Class[_ <: Filter] = classOf[AC3];
 
   @Parameter("mgac.heuristic")
   var heuristicClass: Class[_ <: Heuristic] = classOf[CrossHeuristic];

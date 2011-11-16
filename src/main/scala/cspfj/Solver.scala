@@ -126,8 +126,7 @@ abstract class Solver(val problem: Problem) extends Loggable {
     val preprocessor = if (Solver.preprocessorClass == null) {
       filter
     } else {
-      val p = Solver.preprocessorClass.getConstructor(classOf[Problem])
-        .newInstance(problem)
+      val p = Solver.preprocessorClass.getConstructor(classOf[Problem]).newInstance(problem)
       StatisticsManager.register("preprocessor", p)
       p
     }

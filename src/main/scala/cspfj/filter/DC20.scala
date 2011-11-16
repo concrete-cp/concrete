@@ -31,14 +31,6 @@ import cspfj.Parameter
 import cspfj.util.Loggable
 import scala.annotation.tailrec
 
-object DC20 {
-  @Parameter("dc20.addConstraints")
-  var addConstraints = LearnMethod.CONSERVATIVE;
-
-  ParameterManager.register(this);
-
-}
-
 /**
  * @author Julien VION
  *
@@ -58,7 +50,7 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
   private var cnt = 0
 
   private var nbSingletonTests = 0;
-  private val ngl = new NoGoodLearner(problem, DC20.addConstraints)
+  private val ngl = new NoGoodLearner(problem, LearnMethod.BIN)
 
   def reduceAll() = {
     val nbC = problem.constraints.size
@@ -69,7 +61,7 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
     // ExtensionConstraintDynamic.quick = true;
 
     try {
-      cdcReduce();
+      dcReduce();
     } finally {
       nbAddedConstraints += problem.constraints.size - nbC;
     }
@@ -80,7 +72,7 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
   // return variable.getId() * problem.getMaxDomainSize() + value;
   // }
 
-  private def cdcReduce() = {
+  private def dcReduce() = {
     if (!filter.reduceAll()) {
       false;
     } else {
@@ -92,13 +84,16 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
           true
         } else {
           info(variable.toString)
+          cnt += 1
 
           if (variable.dom.size > 1 && singletonTest(variable)) {
             val domainSizes = problem.variables map (_.dom.size)
 
             if (filter.reduceFrom(modVar, null, cnt - 1)) {
-              for (v <- problem.variables if domainSizes(v.getId) != v.dom.size) {
-                modVar(v.getId) = cnt
+              for (
+                v <- problem.variables.iterator.zip(domainSizes.iterator) if v._1.dom.size != v._2
+              ) {
+                modVar(v._1.getId) = cnt
               }
               process(remaining.head, remaining.tail, variable)
             } else {
@@ -132,18 +127,16 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
 
       nbSingletonTests += 1;
 
-      val sat =
-
-        if (cnt <= problem.variables.size) {
-          filter.reduceAfter(variable);
-        } else {
-          for (c <- variable.constraints if c.arity == 2) {
-            c.revise(rh, -1);
-            c.fillRemovals(-1);
-          }
-
-          filter.reduceFrom(modVar, null, cnt - problem.variables.size);
+      val sat = if (cnt <= problem.variables.size) {
+        filter.reduceAfter(variable);
+      } else {
+        for (c <- variable.constraints if c.arity == 2) {
+          c.revise(rh, -1);
+          c.fillRemovals(-1);
         }
+
+        filter.reduceFrom(modVar, null, cnt - problem.variables.size);
+      }
       if (sat) {
 
         // final Map<Variable[], List<int[]>> noGoods =

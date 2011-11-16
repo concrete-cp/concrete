@@ -1,18 +1,24 @@
 package cspfj.longTest;
 
-import java.util.logging.Level
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import cspfj.filter.DC1
+import cspfj.generator.FailedGenerationException
 import cspfj.generator.ProblemGenerator
+import cspfj.problem.LearnMethod
 import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
 import cspfj.util.Loggable
-import cspfj.MGACIter
 import cspfj.SolverIterator
+import cspfj.ParameterManager
+import cspfj.MGACIter
+import cspfj.Solver
+import cspfj.filter.DC20
 
-final class SolvingTest extends Loggable {
-  //Solver.loggerLevel = "FINE"
+final class DC20SolvingTest extends Loggable {
+  Solver.loggerLevel = "FINER"
+  ParameterManager.parameter("preprocessor", classOf[DC20]);
 
   @Test
   def crosswordm1() {

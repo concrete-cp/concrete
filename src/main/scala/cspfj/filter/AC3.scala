@@ -131,30 +131,37 @@ final class AC3(
     if (queue.isEmpty) {
       assert(control)
       true
-    } else if (!reduce(queue.poll())) {
-      false
     } else {
-      reduce()
+      val variable = queue.poll()
+      if (reduce(variable.constraints.iterator)) {
+        reduce()
+      } else {
+        false
+      }
     }
 
   }
 
-  private def reduce(variable: Variable): Boolean = {
-    variable.constraints.foreach { c =>
-
-      if (!c.isEntailed
-        && !c.hasNoRemovals(reviseCount)) {
-
+  @tailrec
+  private def reduce(itr: Iterator[Constraint]): Boolean = {
+    if (!itr.hasNext) {
+      true
+    } else {
+      val c = itr.next
+      if (c.isEntailed || c.hasNoRemovals(reviseCount)) {
+        reduce(itr)
+      } else {
         revisions += 1;
-        if (!c.revise(revisator, reviseCount)) {
+        if (c.revise(revisator, reviseCount)) {
+          c.fillRemovals(-1)
+          reduce(itr)
+        } else {
           c.weight += 1;
-          return false;
+          false;
         }
-
-        c.fillRemovals(-1);
       }
     }
-    return true;
+
   }
 
   private def control() = {

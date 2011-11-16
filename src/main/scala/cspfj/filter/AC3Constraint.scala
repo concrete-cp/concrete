@@ -169,7 +169,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
     AC3Constraint.revisionCount += 1;
     queue.clear();
 
-    for (c <- constraints) {
+    for (c <- constraints if !c.isEntailed) {
       c.fillRemovals(AC3Constraint.revisionCount);
       queue.offer(c);
     }

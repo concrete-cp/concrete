@@ -184,7 +184,7 @@ class BooleanDomain(var _status: Status) extends Domain {
   }
 
   def restoreLevel(level: Int) {
-    assert(level < currentLevel);
+    assert(level == 0 || level < currentLevel);
 
     history = history.dropWhile(_._1 > level)
     _status = if (history == Nil) {
