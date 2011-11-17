@@ -25,6 +25,7 @@ import cspfj.util.BitVector
 import cspfj.filter.RevisionHandler
 import scala.collection.JavaConversions
 import cspfj.constraint.SimpleRemovals
+import scala.collection.mutable.BitSet
 
 final class ExtensionConstraintDynamic(
   scope: Array[Variable], matrix: TupleSet, shared: Boolean) extends AbstractConstraint(scope)
@@ -33,8 +34,8 @@ final class ExtensionConstraintDynamic(
 
   private val dynamic = new MatrixManagerDynamic(scope, matrix, shared, tuple)
 
-  private val toFind =
-    scope map (v => BitVector.newBitVector(v.dom.maxSize, false))
+  private val found =
+    (0 until arity) map (p => BitVector.newBitVector(scope(p).dom.maxSize, false)) toIndexedSeq
 
   override def level_=(l: Int) {
     super.level = l
@@ -46,24 +47,64 @@ final class ExtensionConstraintDynamic(
   }
 
   def revise(revisator: RevisionHandler, reviseCount: Int) = {
-    var found: Set[(Variable, Int)] = Set.empty
+    //    var found: Set[(Variable, Int)] = Set.empty
+    //
+    //    val itr = dynamic.iterator
+    //    for (tuple <- itr) {
+    //      if (controlTuplePresence(tuple)) {
+    //        found ++= scope.zip(tuple)
+    //      } else {
+    //        itr.remove();
+    //      }
+    //    }
+
+    //    val itr = dynamic.iterator
+    //    
+    //    val found: Iterator[Iterator[(Variable, Int)]] = itr map { tuple =>
+    //      if (controlTuplePresence(tuple)) {
+    //        scope.iterator.zip(tuple.iterator)
+    //      } else {
+    //        Iterator.empty
+    //      }
+    //    }
+    //
+    //    filter(found.flatten.toSet, revisator);
+
+    found.foreach(bs => bs.fill(false))
 
     val itr = dynamic.iterator
     for (tuple <- itr) {
       if (controlTuplePresence(tuple)) {
-        found ++= scope.zip(tuple)
+        tuple.iterator.zipWithIndex.foreach(p => found(p._2).set(p._1))
       } else {
-        itr.remove();
+        itr.remove()
       }
     }
 
-    filter(found, revisator);
+    filter(found, revisator)
+
   }
 
-  private def filter(found: Set[(Variable, Int)], revisator: RevisionHandler): Boolean = {
-    for (v <- scope) {
+  //  private def filter(found: Set[(Variable, Int)], revisator: RevisionHandler): Boolean = {
+  //    for (v <- scope) {
+  //      var rev = false
+  //      for (i <- v.dom.indices if !found((v, i))) {
+  //        v.dom.remove(i)
+  //        rev = true
+  //      }
+  //      if (rev) {
+  //        if (v.dom.size <= 0) return false
+  //        revisator.revised(this, v)
+  //      }
+  //    }
+  //
+  //    true
+  //  }
+
+  private def filter(found: IndexedSeq[BitVector], revisator: RevisionHandler): Boolean = {
+    for ((v, p) <- scope.iterator.zipWithIndex) {
       var rev = false
-      for (i <- v.dom.indices if !found((v, i))) {
+      for (i <- v.dom.indices if !found(p)(i)) {
         v.dom.remove(i)
         rev = true
       }

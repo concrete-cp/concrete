@@ -24,6 +24,7 @@ import cspfj.filter.RevisionHandler
 import cspfj.problem.Variable
 import cspfj.heuristic.Weighted
 import cspfj.priorityqueues.Identified
+import scala.annotation.tailrec
 
 object Constraint {
   var cId = 0;
@@ -86,7 +87,7 @@ trait Constraint extends Weighted with Identified {
   private var _level = 0;
 
   def level = _level
-  
+
   def level_=(l: Int) {
     if (entailedAtLevel > l) {
       // LOGGER.finest("Disentailing " + this);
@@ -99,7 +100,17 @@ trait Constraint extends Weighted with Identified {
 
   def controlTuplePresence(tuple: Array[Int]) = {
     Constraint.nbPresenceChecks += 1;
-    scope.zip(tuple).forall(vv => vv._1.dom.present(vv._2))
+    /** Need high optimization */
+
+    @tailrec
+    def control(i: Int): Boolean = {
+      if (i < 0) {
+        true
+      } else {
+        scope(i).dom.present(tuple(i)) && control(i - 1)
+      }
+    }
+    control(arity - 1)
   }
 
   //def getRemovals(position: Int): Int

@@ -71,8 +71,7 @@ final class MGACIter(prob: Problem) extends Solver(prob) with Loggable {
 
   private def prepare() {
     if (filter == null) {
-      _filter = MGACIter.filterClass.getConstructor(classOf[Problem]).newInstance(
-        problem);
+      _filter = MGACIter.filterClass.getConstructor(classOf[Problem]).newInstance(problem);
       StatisticsManager.register("filter", filter);
     }
 
@@ -118,7 +117,7 @@ final class MGACIter(prob: Problem) extends Solver(prob) with Loggable {
 
             assert(selectedVariable.dom.present(selectedIndex))
             //
-            fine(problem.currentLevel + " : " + selectedVariable
+            info(problem.currentLevel + " : " + selectedVariable
               + " <- "
               + selectedVariable.dom.value(selectedIndex) + "("
               + nbBacktracks + "/" + maxBacktracks + ")");
