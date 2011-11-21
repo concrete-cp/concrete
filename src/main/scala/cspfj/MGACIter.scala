@@ -20,9 +20,7 @@
 package cspfj;
 
 import java.lang.Override
-
 import scala.collection.JavaConversions
-
 import cspfj.filter.AC3Constraint
 import cspfj.filter.AC3
 import cspfj.filter.Filter
@@ -33,6 +31,7 @@ import cspfj.problem.LearnMethod
 import cspfj.problem.NoGoodLearner
 import cspfj.problem.Variable
 import cspfj.util.Loggable
+import scala.annotation.tailrec
 
 object MGACIter {
   @Parameter("mgac.btGrowth")
@@ -85,14 +84,13 @@ final class MGACIter(prob: Problem) extends Solver(prob) with Loggable {
 
   def mac(skipFirstSolution: Boolean): Option[Map[String, Int]] = {
     var skipSolution = skipFirstSolution;
-    var selectedVariable: Variable = null;
+    var selectedVariable: Option[Variable] = None;
     var selectedIndex = -1;
     var solution: Option[Map[String, Int]] = null
     while (solution == null) {
-      if (selectedVariable != null
-        && !filter.reduceAfter(selectedVariable)) {
+      if (selectedVariable.isDefined && !filter.reduceAfter(selectedVariable.get)) {
         selectedVariable = backtrack();
-        if (selectedVariable == null) {
+        if (selectedVariable == None) {
           solution = None
         }
       } else {
@@ -100,7 +98,7 @@ final class MGACIter(prob: Problem) extends Solver(prob) with Loggable {
         heuristic.selectPair(problem) match {
           case None => if (skipSolution) {
             selectedVariable = backtrack();
-            if (selectedVariable == null) {
+            if (selectedVariable == None) {
               solution = None
             }
             skipSolution = false;
@@ -109,21 +107,20 @@ final class MGACIter(prob: Problem) extends Solver(prob) with Loggable {
           }
           case Some(pair) => {
             decisions ::= pair
-            selectedVariable = pair.variable
+            selectedVariable = Some(pair.variable)
 
-            assert(selectedVariable.dom.size > 0)
+            assert(pair.variable.dom.size > 0)
 
             selectedIndex = pair.index
 
-            assert(selectedVariable.dom.present(selectedIndex))
+            assert(pair.variable.dom.present(selectedIndex))
             //
             info(problem.currentLevel + " : " + selectedVariable
-              + " <- "
-              + selectedVariable.dom.value(selectedIndex) + "("
+              + " <- " + pair.variable.dom.value(selectedIndex) + "("
               + nbBacktracks + "/" + maxBacktracks + ")");
 
             problem.push();
-            selectedVariable.dom.setSingle(selectedIndex);
+            pair.variable.dom.setSingle(selectedIndex);
             nbAssignments += 1;
           }
         }
@@ -135,25 +132,32 @@ final class MGACIter(prob: Problem) extends Solver(prob) with Loggable {
 
   }
 
-  private def backtrack(): Variable = {
-    var decision: Pair = null;
-    do {
-      if (decisions == Nil) {
-        return null;
+  @tailrec
+  private def backtrack(decisions: List[Pair]): (Option[Pair], List[Pair]) = {
+    if (decisions == Nil) {
+      (None, Nil)
+    } else {
+      problem.pop()
+      val decision = decisions.head
+      if (decision.variable.dom.size > 1) {
+        (Some(decision), decisions.tail)
+      } else {
+        backtrack(decisions.tail)
       }
-      decision = decisions.head;
-      decisions = decisions.tail
-      // decision.getVariable().unassign();
-      problem.pop();
+    }
+  }
 
-      // LOGGER.finer(problem.getCurrentLevel() + " : "
-      // + decision.getVariable() + " /= "
-      // + decision.getVariable().getValue(decision.getIndex()));
-    } while (decision.variable.dom.size <= 1);
-
-    decision.variable.dom.remove(decision.index);
+  private def backtrack(): Option[Variable] = {
     nbBacktracks += 1;
-    return decision.variable;
+    val (decision, newDecisions) = backtrack(decisions)
+
+    decision match {
+      case None => None
+      case Some(decision) => {
+        decision.variable.dom.remove(decision.index)
+        Some(decision.variable)
+      }
+    }
   }
 
   def reset() {
@@ -202,7 +206,7 @@ final class MGACIter(prob: Problem) extends Solver(prob) with Loggable {
 
       info("MAC with " + maxBacktracks + " bt")
       var macTime = -System.currentTimeMillis()
-      var nbBT = nbBacktracks
+      val nbBT = nbBacktracks
 
       try {
         solution = mac(firstSolutionGiven)
