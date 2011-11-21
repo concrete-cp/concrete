@@ -119,7 +119,7 @@ abstract class AbstractMatrixManager(
     } else {
       if (i != position) {
         val dSize = scope(i).dom.size
-        if (dSize > Long.MaxValue / dSize) {
+        if (acc > Long.MaxValue / dSize) {
           -1
         } else {
           getOtherSizeR(position, i - 1, acc * dSize)

@@ -30,88 +30,7 @@ final class AC3(
       def getKey(o: Variable) = o.dom.size
     }));
 
-  def reduceAll() = {
-    reviseCount += 1;
-    queue.clear();
-    problem.variables.foreach(queue.offer)
-    problem.constraints.foreach(_.fillRemovals(reviseCount))
-
-    reduce()
-
-  }
-
-  def reduceAfter(constraints: Iterable[Constraint]): Boolean = {
-    reviseCount += 1;
-    queue.clear();
-
-    for (c <- constraints) {
-      c.fillRemovals(reviseCount);
-
-      if (!c.revise(revisator, reviseCount)) {
-        c.weight += 1
-        return false;
-      }
-
-      c.fillRemovals(-1);
-
-    }
-
-    reduce()
-  }
-
-  def reduceFrom(modVar: Array[Int], modCons: Array[Int], cnt: Int): Boolean = {
-    reviseCount += 1;
-    queue.clear();
-    // LOGGER.fine("reduce after " + cnt);
-    problem.variables.foreach(v =>
-      if (modVar(v.getId) > cnt) queue.offer(v))
-
-    if (modCons != null) {
-      // final BitSet cons = new BitSet();
-      for (c <- problem.constraints) {
-        if (modCons(c.getId) > cnt) {
-          // cons.set(c.getId());
-
-          c.fillRemovals(reviseCount);
-
-          if (!c.revise(revisator, reviseCount)) {
-            c.weight += 1;
-            return false;
-          }
-
-          c.fillRemovals(-1);
-
-        }
-      }
-
-      // for (int i = modCons.length; --i >= 0;) {
-      // assert modCons[i] <= cnt || cons.get(i);
-      // }
-    }
-
-    reduce();
-  }
-
-  def reduceAfter(variable: Variable) = {
-    reviseCount += 1;
-    if (variable == null) {
-      true;
-    } else {
-      queue.clear();
-
-      queue.offer(variable);
-
-      variable.constraints.zipWithIndex.foreach {
-        case (c, i) =>
-          c.setRemovals(variable.positionInConstraint(i),
-            reviseCount);
-      }
-
-      reduce()
-    }
-  }
-
-  private val revisator = new RevisionHandler() {
+  private val rh = new RevisionHandler() {
     def revised(constraint: Constraint, variable: Variable) {
       queue.offer(variable);
 
@@ -124,6 +43,72 @@ final class AC3(
 
     }
   };
+
+  def reduceAll() = {
+    reviseCount += 1;
+    queue.clear();
+    problem.variables.foreach(queue.offer)
+    problem.constraints.foreach(_.fillRemovals(reviseCount))
+
+    reduce()
+
+  }
+
+  private def prepareQueue(v: Variable) {
+    queue.offer(v)
+    v.constraints.zipWithIndex.foreach {
+      case (c, i) =>
+        c.setRemovals(v.positionInConstraint(i), reviseCount)
+    }
+  }
+
+  @tailrec
+  private def prepareQueue(modifiedConstraints: Iterator[Constraint]): Boolean = {
+    if (modifiedConstraints.hasNext) {
+      val c = modifiedConstraints.next
+      c.fillRemovals(reviseCount);
+
+      /** RevisionHandler will add appropriate variables to the queue */
+      if (c.revise(rh, reviseCount)) {
+        c.fillRemovals(-1);
+        prepareQueue(modifiedConstraints)
+      } else {
+        c.weight += 1;
+        false;
+      }
+    } else {
+      true
+    }
+  }
+
+  def reduceAfter(constraints: Iterable[Constraint]): Boolean = {
+    reviseCount += 1
+    queue.clear()
+    prepareQueue(constraints.iterator) && reduce()
+  }
+
+  def reduceAfter(variable: Variable) =
+    variable == null || {
+      reviseCount += 1
+      queue.clear()
+      prepareQueue(variable)
+      reduce()
+    }
+
+  def reduceFrom(modVar: Array[Int], modCons: Array[Int], cnt: Int): Boolean = {
+    reviseCount += 1;
+    queue.clear();
+    // LOGGER.fine("reduce after " + cnt);
+
+    problem.variables.iterator.filter(v => modVar(v.getId) > cnt).foreach(prepareQueue);
+
+    if (modCons == null || prepareQueue(problem.constraints.iterator.filter(c => modCons(c.getId) > cnt))) {
+      reduce()
+    } else {
+      false
+    }
+
+  }
 
   @tailrec
   private def reduce(): Boolean = {
@@ -144,15 +129,13 @@ final class AC3(
 
   @tailrec
   private def reduce(itr: Iterator[Constraint]): Boolean = {
-    if (!itr.hasNext) {
-      true
-    } else {
+    if (itr.hasNext) {
       val c = itr.next
       if (c.isEntailed || c.hasNoRemovals(reviseCount)) {
         reduce(itr)
       } else {
         revisions += 1;
-        if (c.revise(revisator, reviseCount)) {
+        if (c.revise(rh, reviseCount)) {
           c.fillRemovals(-1)
           reduce(itr)
         } else {
@@ -160,7 +143,7 @@ final class AC3(
           false;
         }
       }
-    }
+    } else true
 
   }
 
@@ -170,7 +153,6 @@ final class AC3(
 
       def revised(constraint: Constraint, variable: Variable) {
         assert(false, constraint + ", " + variable)
-
       }
 
     };

@@ -43,7 +43,7 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
 
   private var nbNoGoods = 0
 
-  private var impliedConstraints: Seq[DynamicConstraint] = Nil
+  //private var impliedConstraints: Seq[DynamicConstraint] = Nil
 
   private val modVar = new Array[Int](problem.maxVId + 1)
 
@@ -55,8 +55,8 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
   def reduceAll() = {
     val nbC = problem.constraints.size
 
-    impliedConstraints = problem.constraints filter (c =>
-      c.arity == 2 && c.isInstanceOf[DynamicConstraint]) map (_.asInstanceOf[DynamicConstraint])
+    //    impliedConstraints = problem.constraints filter (c =>
+    //      c.arity == 2 && c.isInstanceOf[DynamicConstraint]) map (_.asInstanceOf[DynamicConstraint])
 
     // ExtensionConstraintDynamic.quick = true;
 
@@ -72,48 +72,62 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
   // return variable.getId() * problem.getMaxDomainSize() + value;
   // }
 
-  private def dcReduce() = {
-    if (!filter.reduceAll()) {
-      false;
-    } else {
-      val stream = Stream.continually(problem.variables.toStream).flatten
+  private def dcReduce() = filter.reduceAll() && {
+    val stream = Stream.continually(problem.variables.toStream).flatten
 
-      @tailrec
-      def process(variable: Variable, remaining: Stream[Variable], mark: Variable): Boolean = {
-        if (mark == variable) {
-          true
-        } else {
-          info(variable.toString)
-          cnt += 1
+    @tailrec
+    def process(variable: Variable, remaining: Stream[Variable], mark: Variable): Boolean = {
+      if (mark == variable) {
+        true
+      } else {
+        info(variable.toString)
+        cnt += 1
 
-          if (variable.dom.size > 1 && singletonTest(variable)) {
-            val domainSizes = problem.variables map (_.dom.size)
+        if (singletonTest(variable)) {
+          val domainSizes = problem.variables map (_.dom.size)
 
-            if (filter.reduceFrom(modVar, null, cnt - 1)) {
-              for (
-                v <- problem.variables.iterator.zip(domainSizes.iterator) if v._1.dom.size != v._2
-              ) {
-                modVar(v._1.getId) = cnt
-              }
-              process(remaining.head, remaining.tail, variable)
-            } else {
-              false
+          if (filter.reduceFrom(modVar, null, cnt - 1)) {
+            for (
+              v <- problem.variables.iterator.zip(domainSizes.iterator);
+              if v._1.dom.size != v._2
+            ) {
+              fine("Filtered " + (v._2 - v._1.dom.size) + " from " + v._1)
+              modVar(v._1.getId) = cnt
             }
+//            if (problem.variables.iterator.zip(domainSizes.iterator) exists {
+//              case (v, d) => v.dom.size != d
+//            }) {
+//              problem.variables.foreach(v => modVar(v.getId) = cnt)
+//            }
+            process(remaining.head, remaining.tail, variable)
           } else {
-            process(remaining.head, remaining.tail, if (mark == null) variable else mark)
+            false
           }
+        } else {
+          process(remaining.head, remaining.tail, if (mark == null) variable else mark)
         }
-
       }
-      process(stream.head, stream.tail, null)
 
     }
+    process(stream.head, stream.tail, null)
+
+  }
+
+  @tailrec
+  private def forwardCheck(constraints: Iterator[Constraint]): Boolean = {
+    if (constraints.hasNext) {
+      val c = constraints.next
+      if (c.revise(rh, -1)) {
+        c.fillRemovals(-1)
+        forwardCheck(constraints)
+      } else false
+    } else true
   }
 
   def singletonTest(variable: Variable) = {
     var changedGraph = false;
 
-    for (index <- variable.dom.indices) {
+    for (index <- variable.dom.indices if variable.dom.size > 1) {
       if (Thread.interrupted()) {
         throw new InterruptedException();
       }
@@ -130,18 +144,26 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
       val sat = if (cnt <= problem.variables.size) {
         filter.reduceAfter(variable);
       } else {
-        for (c <- variable.constraints if c.arity == 2) {
-          c.revise(rh, -1);
-          c.fillRemovals(-1);
-        }
-
-        filter.reduceFrom(modVar, null, cnt - problem.variables.size);
+        forwardCheck(variable.constraints.iterator.filter(_.arity == 2)) &&
+          filter.reduceFrom(modVar, null, cnt - problem.variables.size);
       }
+
       if (sat) {
+        val noGoods = ngl.nbNoGoods
+        val modified = ngl.binNoGoods(variable)
+        val newNoGoods = ngl.nbNoGoods - noGoods
+
+        if (newNoGoods > 0) {
+          changedGraph = true
+          for (v <- modified.map(_.scope).flatten) {
+            modVar(v.getId) = cnt
+          }
+          info(newNoGoods + " nogoods");
+        }
 
         // final Map<Variable[], List<int[]>> noGoods =
         // problem.noGoods();
-        changedGraph = !ngl.binNoGoods(variable).isEmpty || changedGraph;
+        //changedGraph = !ngl.binNoGoods(variable).isEmpty || changedGraph;
         // logger.info(noGoods.toString());
 
         problem.pop();
@@ -153,8 +175,8 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
         fine("Removing " + variable + ", " + index);
 
         variable.dom.remove(index);
+        modVar(variable.getId) = cnt
         changedGraph = true;
-        modVar(variable.getId) = cnt;
       }
     }
 

@@ -51,26 +51,27 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
 
           val completeScope = currentScope :+ fv
 
-          val constraint = learnConstraint(completeScope);
+          learnConstraint(completeScope) match {
+            case Some(constraint) => {
+              val (base, varPos) = NoGoodLearner.makeBase(completeScope, tuple, constraint);
 
-          if (constraint != null) {
-            val (base, varPos) = NoGoodLearner.makeBase(completeScope, tuple, constraint);
-
-            var newNogoods = 0;
-            var i = changes.nextSetBit(0);
-            while (i >= 0) {
-              base(varPos) = i;
-              newNogoods += constraint.removeTuples(base);
-              i = changes.nextSetBit(i + 1)
-            }
-            if (newNogoods > 0) {
-              nbNoGoods += newNogoods;
-              modifiedConstraints += constraint;
-              if (constraint.getId > problem.maxCId) {
-                // LOGGER.info("Added " + constraint);
-                addedConstraints ::= constraint;
+              var newNogoods = 0;
+              var i = changes.nextSetBit(0);
+              while (i >= 0) {
+                base(varPos) = i;
+                newNogoods += constraint.removeTuples(base);
+                i = changes.nextSetBit(i + 1)
+              }
+              if (newNogoods > 0) {
+                nbNoGoods += newNogoods;
+                modifiedConstraints += constraint;
+                if (constraint.getId > problem.maxCId) {
+                  // LOGGER.info("Added " + constraint);
+                  addedConstraints ::= constraint;
+                }
               }
             }
+            case None =>
           }
         }
       }
@@ -102,46 +103,44 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
       if (!changes.isEmpty()) {
 
         val scope = Seq(firstVariable, fv)
-        val constraint = learnConstraint(scope);
+        learnConstraint(scope) match {
+          case Some(constraint) => {
+            val (base, varPos) = NoGoodLearner.makeBase(scope, tuple, constraint);
 
-        if (constraint != null) {
-
-          val (base, varPos) = NoGoodLearner.makeBase(scope, tuple, constraint);
-
-          var newNogoods = 0;
-          var i = changes.nextSetBit(0);
-          while (i >= 0) {
-            base(varPos) = i;
-            newNogoods += constraint.removeTuples(base);
-            i = changes.nextSetBit(i + 1)
-          }
-          if (newNogoods > 0) {
-            nbNoGoods += newNogoods;
-            modifiedConstraints += constraint;
-            if (constraint.getId > problem.maxCId) {
-              addedConstraints ::= constraint;
+            var newNogoods = 0;
+            var i = changes.nextSetBit(0);
+            while (i >= 0) {
+              base(varPos) = i;
+              newNogoods += constraint.removeTuples(base);
+              i = changes.nextSetBit(i + 1)
+            }
+            if (newNogoods > 0) {
+              nbNoGoods += newNogoods;
+              modifiedConstraints += constraint;
+              if (constraint.getId > problem.maxCId) {
+                addedConstraints ::= constraint;
+              }
             }
           }
+          case None =>
         }
       }
     }
 
-    if (!addedConstraints.isEmpty) {
-      addedConstraints.foreach(problem.addConstraint)
-    }
+    addedConstraints.foreach(problem.addConstraint)
 
     modifiedConstraints;
   }
 
-  def learnConstraint(scope: Seq[Variable]): DynamicConstraint = {
+  def learnConstraint(scope: Seq[Variable]): Option[DynamicConstraint] = {
     scope.head.dynamicConstraints.find(c => c.arity == scope.size &&
       scope.forall(c.scopeSet.contains)) match {
-      case Some(c) => c
+      case Some(c) => Some(c)
       case None => {
         learnMethod match {
-          case LearnMethod.BIN => if (scope.size != 2) null else generateConstraint(scope);
-          case LearnMethod.EXT => generateConstraint(scope);
-          case _ => null;
+          case LearnMethod.BIN => if (scope.size != 2) None else Some(generateConstraint(scope));
+          case LearnMethod.EXT => Some(generateConstraint(scope));
+          case _ => None;
         }
 
       }

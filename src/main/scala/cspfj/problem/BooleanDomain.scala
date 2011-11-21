@@ -152,7 +152,7 @@ class BooleanDomain(var _status: Status) extends Domain {
 
   def status_=(s: Status) {
     assert(status == UNKNOWN || s == EMPTY && status != EMPTY,
-        "Assigning from " + status + " to " + s)
+      "Assigning from " + status + " to " + s)
     _status = s;
     removed = true
   }
@@ -199,12 +199,10 @@ class BooleanDomain(var _status: Status) extends Domain {
   def getAtLevel(level: Int) = {
     if (level < currentLevel) {
       history.find(h => h._1 <= level) match {
-        case Some(h) => h._2
+        case Some(h) => h._2.bitVector
         case None => UNKNOWN.bitVector
       }
-    }
-
-    status.bitVector;
+    } else status.bitVector;
   }
 
   override val allValues = UNKNOWN.array

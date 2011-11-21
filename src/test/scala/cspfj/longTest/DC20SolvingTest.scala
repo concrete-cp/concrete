@@ -17,7 +17,7 @@ import cspfj.Solver
 import cspfj.filter.DC20
 
 final class DC20SolvingTest extends Loggable {
-  Solver.loggerLevel = "FINER"
+  //Solver.loggerLevel = "FINER"
   ParameterManager.parameter("preprocessor", classOf[DC20]);
 
   @Test
