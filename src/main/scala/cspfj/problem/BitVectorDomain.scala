@@ -27,13 +27,12 @@ final class BitVectorDomain(
 
   private var removed = false;
 
-  def this(domain: Int*) = this(
-    domain.toArray,
-    BitVector.newBitVector(domain.length, true),
-    Nil)
-
   def this(domain: BitVectorDomain) =
     this(domain.domain, domain.bvDomain.clone, domain.history)
+
+  def this(domain: Array[Int]) = this(domain.toArray, BitVector.newBitVector(domain.length, true), Nil)
+
+  def this(domain: Int*) = this(domain.toArray)
 
   override def first = bvDomain.nextSetBit(0);
 
