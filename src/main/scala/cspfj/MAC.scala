@@ -33,24 +33,25 @@ import cspfj.problem.Variable
 import cspfj.util.Loggable
 import scala.annotation.tailrec
 
-object MGACIter {
-  @Parameter("mgac.btGrowth")
+object MAC {
+  @Parameter("mac.btGrowth")
   var btGrowth = 1.5;
 
-  @Parameter("mgac.addConstraint")
+  @Parameter("mac.addConstraint")
   var addConstraint = LearnMethod.BIN;
 
-  @Parameter("mgac.filter")
+  @Parameter("mac.filter")
   var filterClass: Class[_ <: Filter] = classOf[AC3];
 
-  @Parameter("mgac.heuristic")
+  @Parameter("mac.heuristic")
   var heuristicClass: Class[_ <: Heuristic] = classOf[CrossHeuristic];
 
   ParameterManager.register(this);
-  StatisticsManager.register("MGACIter", this);
+  StatisticsManager.register("MAC", this);
+
 }
 
-final class MGACIter(prob: Problem) extends Solver(prob) with Loggable {
+final class MAC(prob: Problem) extends Solver(prob) with Loggable {
 
   @Statistic
   var nbAssignments = 0;
@@ -63,111 +64,74 @@ final class MGACIter(prob: Problem) extends Solver(prob) with Loggable {
 
   private var heuristic: Heuristic = null;
 
-  private val ngl = new NoGoodLearner(prob, MGACIter.addConstraint)
+  private val ngl = new NoGoodLearner(prob, MAC.addConstraint)
   StatisticsManager.register("nfr-learner", ngl)
 
   maxBacktracks = math.max(10, problem.maxDomainSize / 10)
 
-  private def prepare() {
+  def prepare() {
     if (filter == null) {
-      _filter = MGACIter.filterClass.getConstructor(classOf[Problem]).newInstance(problem);
+      _filter = MAC.filterClass.getConstructor(classOf[Problem]).newInstance(problem);
       StatisticsManager.register("filter", filter);
     }
 
     if (heuristic == null) {
-      heuristic = MGACIter.heuristicClass.getConstructor(classOf[Problem])
+      heuristic = MAC.heuristicClass.getConstructor(classOf[Problem])
         .newInstance(problem);
     }
   }
 
-  private var firstSolutionGiven = false;
-
-  def mac(skipFirstSolution: Boolean): Option[Map[String, Int]] = {
-    var skipSolution = skipFirstSolution;
-    var selectedVariable: Option[Variable] = None;
-    var selectedIndex = -1;
-    var solution: Option[Map[String, Int]] = null
-    while (solution == null) {
-      if (selectedVariable.isDefined && !filter.reduceAfter(selectedVariable.get)) {
-        selectedVariable = backtrack();
-        if (selectedVariable == None) {
-          solution = None
-        }
-      } else {
-
-        heuristic.selectPair(problem) match {
-          case None => if (skipSolution) {
-            selectedVariable = backtrack();
-            if (selectedVariable == None) {
-              solution = None
-            }
-            skipSolution = false;
-          } else {
-            solution = Some(extractSolution)
-          }
-          case Some(pair) => {
-            decisions ::= pair
-            selectedVariable = Some(pair.variable)
-
-            assert(pair.variable.dom.size > 0)
-
-            selectedIndex = pair.index
-
-            assert(pair.variable.dom.present(selectedIndex))
-            //
-            info(problem.currentLevel + " : " + selectedVariable.get
-              + " <- " + pair.variable.dom.value(selectedIndex) + "("
-              + nbBacktracks + "/" + maxBacktracks + ")");
-
-            problem.push();
-            pair.variable.dom.setSingle(selectedIndex);
-            nbAssignments += 1;
-          }
-        }
-
-      }
-
-    }
-    solution
-
-  }
-
   @tailrec
-  private def backtrack(decisions: List[Pair]): (Option[Pair], List[Pair]) = {
-    if (decisions == Nil) {
+  def mac(modifiedVariable: Variable, stack: List[Pair]): (Option[Map[String, Int]], List[Pair]) = {
+
+    if (modifiedVariable == null || filter.reduceAfter(modifiedVariable)) {
+
+      heuristic.selectPair(problem) match {
+        case None => (Some(extractSolution), stack)
+        case Some(pair) => {
+
+          info(problem.currentLevel + " : " + pair.variable
+            + " <- " + pair.value + "("
+            + nbBacktracks + "/" + maxBacktracks + ")");
+
+          problem.push()
+
+          nbAssignments += 1
+
+          pair.variable.dom.setSingle(pair.index)
+
+          mac(pair.variable, pair :: stack)
+
+        }
+      }
+    } else if (stack == Nil) {
       (None, Nil)
     } else {
       problem.pop()
-      val decision = decisions.head
-      if (decision.variable.dom.size > 1) {
-        (Some(decision), decisions.tail)
-      } else {
-        backtrack(decisions.tail)
-      }
-    }
-  }
 
-  private def backtrack(): Option[Variable] = {
-    nbBacktracks += 1;
-    val (decision, newDecisions) = backtrack(decisions)
-    decisions = newDecisions
-    decision match {
-      case None => None
-      case Some(decision) => {
-        decision.variable.dom.remove(decision.index)
-        Some(decision.variable)
-      }
+      nbBacktracks += 1
+
+      stack.head.variable.dom.remove(stack.head.index)
+      mac(stack.head.variable, stack.tail)
     }
+
   }
 
   def reset() {
-    firstSolutionGiven = false;
     problem.reset();
     decisions = Nil
   }
 
   @Statistic
   var heuristicCpu = 0.0
+
+  def timedPreprocess() =
+    try preprocess(filter)
+    catch {
+      case _: InterruptedException =>
+        filter.reduceAll()
+      case e => throw e
+    }
 
   @Override
   def nextSolution(): Option[Map[String, Int]] = {
@@ -176,19 +140,9 @@ final class MGACIter(prob: Problem) extends Solver(prob) with Loggable {
 
     // System.gc();
 
-    if (firstSolutionGiven) {
-      maxBacktracks = -1
-    } else {
-      try {
-        if (!preprocess(filter)) {
-          firstSolutionGiven = true;
-          return None;
-        }
-      } catch {
-        case e: InterruptedException =>
-          if (!filter.reduceAll()) {
-            return None;
-          }
+    if (decisions == Nil) {
+      if (!timedPreprocess()) {
+        return None
       }
 
       var heuristicCpu = -System.currentTimeMillis();
@@ -198,6 +152,12 @@ final class MGACIter(prob: Problem) extends Solver(prob) with Loggable {
 
       this.heuristicCpu = heuristicCpu / 1000f;
 
+    } else {
+      maxBacktracks = -1
+      problem.pop()
+      val ld = decisions.head
+      decisions = decisions.tail
+      ld.variable.dom.remove(ld.index)
     }
 
     var solution: Option[Map[String, Int]] = null
@@ -209,8 +169,8 @@ final class MGACIter(prob: Problem) extends Solver(prob) with Loggable {
       val nbBT = nbBacktracks
 
       try {
-        solution = mac(firstSolutionGiven)
-        firstSolutionGiven = true;
+        val (solution, newDecisions) = mac(null, decisions)
+        decisions = newDecisions
       } catch {
         case e: MaxBacktracksExceededException => {
           val modified = ngl.noGoods(decisions)
@@ -221,7 +181,7 @@ final class MGACIter(prob: Problem) extends Solver(prob) with Loggable {
             solution = None
           }
 
-          maxBacktracks = (maxBacktracks * MGACIter.btGrowth).toInt;
+          maxBacktracks = (maxBacktracks * MAC.btGrowth).toInt;
         }
       } finally {
         macTime += System.currentTimeMillis();

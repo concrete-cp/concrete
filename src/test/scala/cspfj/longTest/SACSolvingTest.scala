@@ -17,7 +17,7 @@ import cspfj.Solver
 import cspfj.filter.SAC1
 
 final class SACSolvingTest extends Loggable {
-  //Solver.loggerLevel = "FINER"
+  Solver.loggerLevel = "FINER"
   ParameterManager.parameter("preprocessor", classOf[SAC1]);
 
   @Test

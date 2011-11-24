@@ -60,6 +60,7 @@ final class Problem {
   }
 
   def pop() {
+    assert(currentLevel > 0)
     _currentLevel -= 1;
     restoreLevel(_currentLevel);
 
