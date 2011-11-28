@@ -31,6 +31,7 @@ import cspfj.problem.Problem
 import cspfj.util.Loggable
 import cspfj.util.MsLogHandler
 import cspfj.util.Waker
+import cspfj.generator.ProblemGenerator
 import cspom.CSPOM
 
 object Solver {
@@ -38,7 +39,7 @@ object Solver {
   var loggerLevel = "WARNING";
 
   @Parameter("solver")
-  var solverClass: Class[_ <: Solver] = classOf[MGACIter]
+  var solverClass: Class[_ <: Solver] = classOf[MAC]
 
   @Parameter("preprocessor")
   var preprocessorClass: Class[_ <: Filter] = null
@@ -47,17 +48,14 @@ object Solver {
 
   ParameterManager.register(this)
 
-  def factory(problem: Problem) = {
+  def factory(problem: Problem): Solver = {
     val solver = solverClass.getConstructor(classOf[Problem]).newInstance(problem);
     StatisticsManager.register("solver", solver);
     solver;
   }
 
-  def factory(cspom: CSPOM) = {
-    val solver = solverClass.getConstructor(classOf[CSPOM]).newInstance(cspom)
-    StatisticsManager.register("solver", solver);
-    solver;
-  }
+  def factory(cspom: CSPOM): Solver = factory(ProblemGenerator.generate(cspom))
+
 }
 
 abstract class Solver(val problem: Problem) extends Loggable {

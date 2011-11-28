@@ -69,7 +69,10 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
 
   maxBacktracks = math.max(10, problem.maxDomainSize / 10)
 
-  def prepare() {
+  private var prepared = false
+
+  def prepare() = {
+
     if (filter == null) {
       _filter = MAC.filterClass.getConstructor(classOf[Problem]).newInstance(problem);
       StatisticsManager.register("filter", filter);
@@ -79,12 +82,18 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
       heuristic = MAC.heuristicClass.getConstructor(classOf[Problem])
         .newInstance(problem);
     }
+
+    val prep = prepared
+    prepared = true
+    !prep
+
   }
 
   @tailrec
   def mac(modifiedVariable: Variable, stack: List[Pair]): (Option[Map[String, Int]], List[Pair]) = {
 
-    if (modifiedVariable == null || filter.reduceAfter(modifiedVariable)) {
+    if (modifiedVariable == null || (
+      modifiedVariable.dom.size > 0 && filter.reduceAfter(modifiedVariable))) {
 
       heuristic.selectPair(problem) match {
         case None => (Some(extractSolution), stack)
@@ -98,7 +107,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
 
           nbAssignments += 1
 
-          pair.variable.dom.setSingle(pair.index)
+          pair.assign()
 
           mac(pair.variable, pair :: stack)
 
@@ -111,7 +120,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
 
       nbBacktracks += 1
 
-      stack.head.variable.dom.remove(stack.head.index)
+      stack.head.remove()
       mac(stack.head.variable, stack.tail)
     }
 
@@ -133,67 +142,67 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
       case e => throw e
     }
 
+  @tailrec
+  private def nextSolution(modifiedVar: Variable): (Option[Map[String, Int]], List[Pair]) = {
+    info("MAC with " + maxBacktracks + " bt")
+    val start = System.currentTimeMillis()
+    val nbBT = nbBacktracks
+
+    var s: (Option[Map[String, Int]], List[Pair]) = null
+
+    try {
+      s = mac(modifiedVar, decisions)
+    } catch {
+      case e: MaxBacktracksExceededException => // Continuing
+    } finally {
+      val macTime = System.currentTimeMillis() - start
+      searchCpu += macTime / 1000f;
+      info("Took " + (macTime / 1000f) + "s ("
+        + (1000f * (nbBacktracks - nbBT) / macTime)
+        + " bps)");
+    }
+
+    if (s == null) {
+
+      val modified = ngl.noGoods(decisions)
+      problem.reset();
+
+      if (!filter.reduceAfter(modified)) {
+        (None, Nil)
+      } else {
+        maxBacktracks = (maxBacktracks * MAC.btGrowth).toInt;
+        nextSolution(null)
+      }
+
+    } else s
+  }
+
   @Override
   def nextSolution(): Option[Map[String, Int]] = {
 
-    prepare();
-
     // System.gc();
-
-    if (decisions == Nil) {
+    if (prepare()) {
       if (!timedPreprocess()) {
-        return None
+        None
+      } else {
+
+        heuristicCpu = StatisticsManager.time(heuristic.compute())
+
+        val s = nextSolution(null)
+        decisions = s._2
+        s._1
       }
 
-      var heuristicCpu = -System.currentTimeMillis();
-      heuristic.compute();
-
-      heuristicCpu += System.currentTimeMillis();
-
-      this.heuristicCpu = heuristicCpu / 1000f;
-
+    } else if (decisions == Nil) {
+      None
     } else {
       maxBacktracks = -1
-      problem.pop()
-      val ld = decisions.head
-      decisions = decisions.tail
-      ld.variable.dom.remove(ld.index)
+
+      decisions.head.remove()
+      val s = nextSolution(decisions.head.variable)
+      decisions = s._2
+      s._1
     }
-
-    var solution: Option[Map[String, Int]] = null
-
-    while (solution == null) {
-
-      info("MAC with " + maxBacktracks + " bt")
-      var macTime = -System.currentTimeMillis()
-      val nbBT = nbBacktracks
-
-      try {
-        val (solution, newDecisions) = mac(null, decisions)
-        decisions = newDecisions
-      } catch {
-        case e: MaxBacktracksExceededException => {
-          val modified = ngl.noGoods(decisions)
-          problem.reset();
-          decisions = Nil
-
-          if (!filter.reduceAfter(modified)) {
-            solution = None
-          }
-
-          maxBacktracks = (maxBacktracks * MAC.btGrowth).toInt;
-        }
-      } finally {
-        macTime += System.currentTimeMillis();
-        searchCpu += macTime / 1000f;
-        info("Took " + (macTime / 1000f) + "s ("
-          + (1000f * (nbBacktracks - nbBT) / macTime)
-          + " bps)");
-      }
-
-    }
-
-    solution;
 
   }
 
