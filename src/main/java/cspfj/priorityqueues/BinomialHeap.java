@@ -23,11 +23,11 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
     private int iter = 0;
 
     @Statistic
-    public int insert = 0;
+    public static int insert = 0;
     @Statistic
-    public int update = 0;
+    public static int update = 0;
     @Statistic
-    public int remove = 0;
+    public static int remove = 0;
 
     public BinomialHeap(final Key<T> key) {
         this(key, DEFAULT_SIZE);

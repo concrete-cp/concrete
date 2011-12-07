@@ -9,7 +9,17 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-case class IntNode(val v: Int) extends BinomialHeapNode[IntNode]
+object IntNode {
+  var id: Int = 0
+  val key = new Key[IntNode]() {
+    def getKey(o: IntNode) = o.v
+  }
+}
+
+case class IntNode(val v: Int) extends Identified with BinomialHeapNode[IntNode] {
+  val getId = IntNode.id
+  IntNode.id += 1
+}
 
 final class ScalaPriorityQueueTest {
 
@@ -17,10 +27,8 @@ final class ScalaPriorityQueueTest {
 
   private val INTS = Stream.continually(IntNode(RANDOM.nextInt(5000000))).take(100000)
 
-  private val key = new Key[IntNode]() {
-    def getKey(o: IntNode) = o.v
-  }
-
+  val key = IntNode.key
+  
   @Test
   def testScalaBinomialHeap() {
     test(new ScalaBinomialHeap[IntNode](key))
@@ -38,6 +46,18 @@ final class ScalaPriorityQueueTest {
   @Test
   def testSkewHeap() {
     test(new SkewHeap[IntNode](key))
+  }
+  @Test
+  def testBinaryHeap() {
+    test(new BinaryHeap[IntNode](key))
+  }
+  @Test
+  def testBinomialHeap() {
+    test(new BinomialHeap[IntNode](key))
+  }
+  @Test
+  def testFibonacciHeap() {
+    test(new FibonacciHeap[IntNode](key))
   }
 
   def test(maximier: Queue[IntNode]) {
