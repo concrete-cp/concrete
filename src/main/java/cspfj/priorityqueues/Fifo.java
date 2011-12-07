@@ -31,6 +31,10 @@ public final class Fifo<T extends Identified> extends AbstractQueue<T> {
     public Fifo() {
         this(DEFAULT_INIT_SIZE);
     }
+    
+    public Fifo(Key<T> key) {
+        this();
+    }
 
     @SuppressWarnings("unchecked")
     public Fifo(final int initSize) {

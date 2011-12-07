@@ -2,21 +2,19 @@ package cspfj.filter;
 
 import java.util.Queue
 import scala.collection.IndexedSeq
-import scala.collection.JavaConversions
 import cspfj.ParameterManager
 import cspfj.StatisticsManager
 import cspfj.constraint.Constraint
-import cspfj.priorityqueues.BinomialHeap
-import cspfj.priorityqueues.Key
 import cspfj.problem.Problem
 import cspfj.problem.Variable
 import cspfj.Parameter
-import cspfj.Statistic;
+import cspfj.Statistic
 import scala.annotation.tailrec
+import cspfj.priorityqueues._
 
 object AC3Constraint {
   @Parameter("ac.queue")
-  var queueType: Class[_ <: Queue[Constraint]] = classOf[BinomialHeap[Constraint]]
+  var queueType: Class[_ <: Queue[Constraint]] = classOf[ScalaFifos[Constraint]]
 
   @Parameter("ac.key")
   var key = new Key[Constraint]() {

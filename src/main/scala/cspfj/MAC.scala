@@ -41,7 +41,7 @@ object MAC {
   var addConstraint = LearnMethod.BIN;
 
   @Parameter("mac.filter")
-  var filterClass: Class[_ <: Filter] = classOf[AC3];
+  var filterClass: Class[_ <: Filter] = classOf[AC3Constraint];
 
   @Parameter("mac.heuristic")
   var heuristicClass: Class[_ <: Heuristic] = classOf[CrossHeuristic];
@@ -58,9 +58,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
 
   private var decisions: List[Pair] = Nil
 
-  private var _filter: Filter = null;
-
-  def filter = _filter
+  private var filter: Filter = null;
 
   private var heuristic: Heuristic = null;
 
@@ -70,24 +68,6 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
   maxBacktracks = math.max(10, problem.maxDomainSize / 10)
 
   private var prepared = false
-
-  def prepare() = {
-
-    if (filter == null) {
-      _filter = MAC.filterClass.getConstructor(classOf[Problem]).newInstance(problem);
-      StatisticsManager.register("filter", filter);
-    }
-
-    if (heuristic == null) {
-      heuristic = MAC.heuristicClass.getConstructor(classOf[Problem])
-        .newInstance(problem);
-    }
-
-    val prep = prepared
-    prepared = true
-    !prep
-
-  }
 
   @tailrec
   def mac(modifiedVariable: Variable, stack: List[Pair]): (Option[Map[String, Int]], List[Pair]) = {
@@ -139,7 +119,6 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
     catch {
       case _: InterruptedException =>
         filter.reduceAll()
-      case e => throw e
     }
 
   @tailrec
@@ -177,11 +156,23 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
     } else s
   }
 
-  @Override
+  def prepare() {
+    filter = MAC.filterClass.getConstructor(classOf[Problem]).newInstance(problem);
+    StatisticsManager.register("filter", filter);
+
+    heuristic = MAC.heuristicClass.getConstructor(classOf[Problem])
+      .newInstance(problem);
+  }
+
   def nextSolution(): Option[Map[String, Int]] = {
 
     // System.gc();
-    if (prepare()) {
+    if (!prepared) {
+
+      prepare()
+
+      prepared = true
+
       if (!timedPreprocess()) {
         None
       } else {

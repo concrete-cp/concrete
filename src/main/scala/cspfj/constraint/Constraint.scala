@@ -25,6 +25,7 @@ import cspfj.problem.Variable
 import cspfj.heuristic.Weighted
 import cspfj.priorityqueues.Identified
 import scala.annotation.tailrec
+import cspfj.priorityqueues.PTag
 
 object Constraint {
   var cId = 0;
@@ -39,7 +40,7 @@ object NULL_REVISATOR extends RevisionHandler {
   def revised(constraint: Constraint, variable: Variable) {}
 }
 
-trait Constraint extends Weighted with Identified {
+trait Constraint extends Weighted with Identified with PTag {
 
   val getId = Constraint.cId
   Constraint.cId += 1
