@@ -14,6 +14,9 @@ object IntNode {
   val key = new Key[IntNode]() {
     def getKey(o: IntNode) = o.v
   }
+   val fhkey = new Key[FHNode]() {
+    def getKey(o: FHNode) = o.v
+  }
 }
 
 case class IntNode(val v: Int) extends Identified with BinomialHeapNode[IntNode] {
@@ -21,14 +24,18 @@ case class IntNode(val v: Int) extends Identified with BinomialHeapNode[IntNode]
   IntNode.id += 1
 }
 
+case class FHNode(val v: Int) extends FibonacciHeapNode[FHNode] 
+
 final class ScalaPriorityQueueTest {
 
   private val RANDOM = new Random(0);
 
   private val INTS = Stream.continually(IntNode(RANDOM.nextInt(5000000))).take(100000)
 
+  private val FHS = Stream.continually(FHNode(RANDOM.nextInt(5000000))).take(100000)
+
   val key = IntNode.key
-  
+
   @Test
   def testScalaBinomialHeap() {
     test(new ScalaBinomialHeap[IntNode](key))
@@ -58,6 +65,24 @@ final class ScalaPriorityQueueTest {
   @Test
   def testFibonacciHeap() {
     test(new FibonacciHeap[IntNode](key))
+  }
+  @Test
+  def testScalaFibonacciHeap() {
+    val maximier = new ScalaFibonacciHeap[FHNode](IntNode.fhkey)
+    assertEquals(maximier.size, 0);
+    assertTrue(maximier.isEmpty);
+
+    FHS.foreach { i => assertFalse(i.isPresent); maximier.offer(i) }
+
+    assertEquals(maximier.size, INTS.length);
+
+    var last = maximier.poll().v;
+    while (!maximier.isEmpty) {
+      val current = maximier.poll().v;
+      assertTrue(current + " should be >= " + last, current >= last);
+      last = current;
+    }
+
   }
 
   def test(maximier: Queue[IntNode]) {

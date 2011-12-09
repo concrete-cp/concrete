@@ -1,8 +1,6 @@
 package cspfj.priorityqueues
 
-trait BinomialHeapNode[T <: BinomialHeapNode[T]] extends PTag {
-
-  var key = 0.0
+trait BinomialHeapNode[T <: BinomialHeapNode[T]] extends PTag with LazyKey {
 
   var child: BinomialHeapNode[T] = null
 
