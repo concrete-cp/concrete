@@ -10,6 +10,7 @@ package cspfj.priorityqueues;
 
 import scala.annotation.tailrec
 import java.util.AbstractQueue
+import java.util.Arrays
 
 /**
  * This class implements a Fibonacci heap data structure. Much of the code in
@@ -196,7 +197,7 @@ final class ScalaFibonacciHeap[T <: FibonacciHeapNode[T]](
       case None => None
       case Some(z) => {
 
-        if (z.child.isDefined != null) {
+        if (z.child.isDefined) {
           val zChild = z.child.get
           zChild.parent = None;
           // for each child of z do...
@@ -227,7 +228,7 @@ final class ScalaFibonacciHeap[T <: FibonacciHeapNode[T]](
         nNodes -= 1;
 
         //assert(control(minNode, minNode));
-        z;
+        Some(z);
 
       }
     }
@@ -258,9 +259,9 @@ final class ScalaFibonacciHeap[T <: FibonacciHeapNode[T]](
   def size = nNodes;
 
   @tailrec
-  def emptyArray(array: Array[_ >: Null], i: Int) {
+  def emptyArray(array: Array[Option[T]], i: Int) {
     if (i >= 0) {
-      array(i) = null
+      array(i) = None
       emptyArray(array, i - 1)
     }
   }
@@ -277,16 +278,16 @@ final class ScalaFibonacciHeap[T <: FibonacciHeapNode[T]](
     emptyArray(array, array.length - 1)
 
     // For each root list node look for others of the same degree.
-    var start = minNode;
-    var w = minNode;
+    var start = minNode.get
+    var w = minNode.get
     do {
       var x = w;
       // Because x might be moved, save its sibling now.
       var nextW = w.right;
       var d = x.degree;
-      while (array(d) != null) {
+      while (array(d).isDefined) {
         // Make one of the nodes a child of the other.
-        var y = array(d);
+        var y = array(d).get
         if (x.key > y.key) {
           val temp = y;
           y = x;
@@ -307,24 +308,24 @@ final class ScalaFibonacciHeap[T <: FibonacciHeapNode[T]](
         // Node y disappears from root list.
         y.link(x);
         // We've handled this degree, go to next one.
-        array(d) = null;
+        array(d) = None;
         d += 1;
       }
       // Save this node for later when we might encounter another
       // of the same degree.
-      array(d) = x;
+      array(d) = Some(x);
       // Move forward through list.
       w = nextW;
     } while (w != start);
 
     // The node considered to be min may have been changed above.
-    minNode = start;
+    minNode = Some(array.iterator.flatten.minBy(_.key)) //Some(start);
     // Find the minimum key again.
-    for (a <- array) {
-      if (a != null && a.key < minNode.key) {
-        minNode = a;
-      }
-    }
+    //    for (a <- array) {
+    //      if (a != null && a.key < minNode.key) {
+    //        minNode = a;
+    //      }
+    //    }
 
     //assert(control(minNode, minNode));
   }
@@ -336,9 +337,9 @@ final class ScalaFibonacciHeap[T <: FibonacciHeapNode[T]](
 
   def poll() = {
     removals += 1
-    val min = removeMin();
+    val min = removeMin().get;
     min.unsetPresent()
-    min.asInstanceOf[T]
+    min
   }
 
   //  private def control(current: FibonacciHeapNode[T],
@@ -375,24 +376,23 @@ final class ScalaFibonacciHeap[T <: FibonacciHeapNode[T]](
    * @return String of this.
    */
   def fiboToString = {
-    if (minNode == null) {
+    if (minNode == None) {
       "empty";
     } else {
       val stb = new StringBuilder();
-      tree(stb, minNode, minNode, 0);
+      tree(stb, minNode.get, minNode.get, 0);
       stb.toString
     }
   }
 
   private def tree(stb: StringBuilder,
-    current: FibonacciHeapNode[T],
-    start: FibonacciHeapNode[T], depth: Int) {
+    current: T,
+    start: T, depth: Int) {
 
-    (0 until depth).foreach(
-      stb.append("--"))
+    (0 until depth).foreach(stb.append("--"))
     stb.append(current).append("\n");
-    if (current.child != null) {
-      tree(stb, current.child, current.child, depth + 1);
+    if (current.child.isDefined) {
+      tree(stb, current.child.get, current.child.get, depth + 1);
     }
     if (current.right != start) {
       tree(stb, current.right, start, depth);

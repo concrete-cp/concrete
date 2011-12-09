@@ -19,8 +19,6 @@ trait FibonacciHeapNode[T <: FibonacciHeapNode[T]] extends PTag with LazyKey wit
 
   var mark = false
 
-  val l: DoubleLinkedList[PTag]
-
   def clear() {
     mark = false
     degree = 0
