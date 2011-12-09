@@ -6,6 +6,11 @@ trait DLLNode[T <: DLLNode[T]] { self: T =>
 
   var left = this
 
+  def clearNode() {
+    right = this
+    left = this
+  }
+  
   /**
    * Remove this node from the list it appears in.
    */

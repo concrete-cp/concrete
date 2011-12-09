@@ -1,29 +1,33 @@
 package cspfj.priorityqueues
 
-trait BinomialHeapNode[T <: BinomialHeapNode[T]] extends PTag with LazyKey {
+trait BinomialHeapNode[T <: BinomialHeapNode[T]] extends PTag with LazyKey with DLLNode[T] {
+  self: T =>
 
-  var child: BinomialHeapNode[T] = null
+  var child: Option[T] = None
 
-  var right: BinomialHeapNode[T] = null
-
-  var parent: BinomialHeapNode[T] = null
+  var parent: Option[T] = None
 
   var rank = 0
 
-  def clearNode() {
-    child = null
-    right = null
-    parent = null
+  override def clearNode() {
+    super[DLLNode].clearNode()
+    child = None
+    parent = None
     rank = 0
   }
 
-  def addSubTree(subTree: BinomialHeapNode[T]) {
-    if (child != null) {
-      subTree.right = child
+  def addSubTree(subTree: T) {
+    if (child.isDefined) {
+      child.get.add(subTree)
     }
     rank += 1
-    child = subTree
-    subTree.parent = this
+    child = Some(subTree)
+    subTree.parent = Some(this)
   }
+
+  def tree(depth: Int, last: T): String =
+    (0 until depth).fold("")((i, acc) => acc + "--") + toString + " (" + key + ", " + rank + ")\n" +
+      (if (child.isDefined) child.get.tree(depth + 1, child.get)) +
+      (if (right != last) right.tree(depth, last))
 
 }
