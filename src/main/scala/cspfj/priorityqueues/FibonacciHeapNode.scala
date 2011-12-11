@@ -1,5 +1,6 @@
 package cspfj.priorityqueues
 import scala.collection.mutable.DoubleLinkedList
+import scala.annotation.tailrec
 
 /**
  * Implements a node of the Fibonacci heap. It holds the information
@@ -9,21 +10,13 @@ import scala.collection.mutable.DoubleLinkedList
  *
  * @author Nathan Fiedler, Julien Vion
  */
-trait FibonacciHeapNode[T <: FibonacciHeapNode[T]] extends PTag with LazyKey with DLLNode[T] { self: T =>
-
-  var child: Option[T] = None
-
-  var parent: Option[T] = None
-
-  var degree = 0
+trait FibonacciHeapNode[T >: Null <: FibonacciHeapNode[T]] extends PTag with LazyKey[T] with BinomialHeapNode[T] { self: T =>
 
   var mark = false
 
-  def clear() {
+  override def clearNode() {
+    super.clearNode()
     mark = false
-    degree = 0
-    child = None
-    parent = None
   }
 
   /**
@@ -34,35 +27,11 @@ trait FibonacciHeapNode[T <: FibonacciHeapNode[T]] extends PTag with LazyKey wit
    * @param parent
    *            the new parent node.
    */
-  def link(parent: T) {
-    /**
-     * Note: putting this code here in Node makes it 7x faster because
-     * it doesn't have to use generated accessor methods, which add a
-     * lot of time when called millions of times.
-     */
-
-    // Remove this from its circular list
-    left.right = right;
-    right.left = left;
-    // make this a child of x
-    this.parent = Some(parent);
-    parent.child match {
-      case None => {
-        parent.child = Some(this);
-        right = this;
-        left = this;
-      }
-      case Some(child) => {
-        left = child;
-        right = child.right;
-        child.right = this;
-        right.left = this;
-      }
-    }
-
-    // increase degree[x]
-    parent.degree += 1;
-    // set mark false
+  def link(tree: T) {
+    remove()
+    right = this
+    left = this
+    tree.addSubTree(this)
     mark = false;
   }
 
@@ -81,22 +50,20 @@ trait FibonacciHeapNode[T <: FibonacciHeapNode[T]] extends PTag with LazyKey wit
    */
   def cut(x: T, min: T) {
     // remove x from childlist and decrement degree
-    x.left.right = x.right;
-    x.right.left = x.left;
-    degree -= 1;
+    x.remove()
+//    x.left.right = x.right;
+//    x.right.left = x.left;
+    rank -= 1;
     // reset child if necessary
-    if (degree == 0) {
-      child = None;
+    if (rank == 0) {
+      child = null;
     } else if (child == x) {
-      child = Some(x.right);
+      child = x.right
     }
     // add x to root list of heap
-    x.right = min;
-    x.left = min.left;
-    min.left = x;
-    x.left.right = x;
+    min.add(x)
     // set parent[x] to nil
-    x.parent = None;
+    x.parent = null;
     // set mark[x] to false
     x.mark = false;
   }
@@ -112,10 +79,11 @@ trait FibonacciHeapNode[T <: FibonacciHeapNode[T]] extends PTag with LazyKey wit
    * @param min
    *            the minimum heap node, to which nodes will be added.
    */
-  def cascadingCut(min: T) {
+  @tailrec
+  private def cascadingCut(min: T) {
+    val z = parent
     // if there's a parent...
-    if (parent.isDefined) {
-      val z = parent.get
+    if (z != null) {
       if (mark) {
         // it's marked, cut it from parent
         z.cut(this, min);
@@ -126,6 +94,11 @@ trait FibonacciHeapNode[T <: FibonacciHeapNode[T]] extends PTag with LazyKey wit
         mark = true;
       }
     }
+  }
+  
+  def decrease(child: T, minNode: T) {
+    cut(child, minNode)
+    cascadingCut(minNode)
   }
 
   def viewFHN = {
@@ -160,7 +133,7 @@ trait FibonacciHeapNode[T <: FibonacciHeapNode[T]] extends PTag with LazyKey wit
       buf.append(" * ");
     }
 
-    buf.append(" (").append(degree).append(")]");
+    buf.append(" (").append(rank).append(")]");
 
     buf.toString;
 

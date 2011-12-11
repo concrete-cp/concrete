@@ -34,7 +34,7 @@ import java.util.Arrays
  *
  * @author Nathan Fiedler, Julien Vion
  */
-final class ScalaFibonacciHeap[T <: FibonacciHeapNode[T]](
+final class ScalaFibonacciHeap[T >: Null <: FibonacciHeapNode[T]](
   val key: Key[T]) extends AbstractQueue[T] {
   /**
    * The magic 45 comes from log base phi of Integer.MAX_VALUE, which is the
@@ -45,12 +45,14 @@ final class ScalaFibonacciHeap[T <: FibonacciHeapNode[T]](
 
   private val DEFAULT_SIZE = 10;
 
-  private val array = Array[Option[T]]().padTo(MAX_ARRAY_SIZE, None)
+  def init: Stream[FibonacciHeapNode[T]] = null #:: init
+
+  private val array = init.take(MAX_ARRAY_SIZE).toArray.asInstanceOf[Array[T]] //.padTo(MAX_ARRAY_SIZE, null) //maxNbTrees(DEFAULT_SIZE))
 
   /**
    * Points to the minimum node in the heap.
    */
-  private var minNode: Option[T] = None
+  private var minNode: T = null
 
   /**
    * Number of nodes in the heap.
@@ -71,13 +73,13 @@ final class ScalaFibonacciHeap[T <: FibonacciHeapNode[T]](
    *
    * @return true if the heap is empty, false otherwise
    */
-  override def isEmpty = minNode == None;
+  override def isEmpty = minNode == null;
 
   /**
    * Removes all elements from this heap.
    */
   override def clear() {
-    minNode = None;
+    minNode = null;
     nNodes = 0;
     PTag.clear()
   }
@@ -100,18 +102,15 @@ final class ScalaFibonacciHeap[T <: FibonacciHeapNode[T]](
    *                Thrown if k is larger than x.key value.
    */
   private def decreaseKey(x: T, delete: Boolean) {
-    x.parent match {
-      case Some(y) if delete || x.key < y.key => {
-        y.cut(x, minNode.get);
-        y.cascadingCut(minNode.get);
-      }
-      case None =>
+    val y = x.parent
+    if (y != null && (delete || x < y)) {
+      y.decrease(x, minNode);
     }
-    if (delete || x.key < minNode.get.key) {
-      minNode = Some(x);
+    if (delete || x < minNode) {
+      minNode = x
     }
 
-    //assert(control(minNode, minNode))
+    assert(control(minNode, minNode))
   }
 
   /**
@@ -122,7 +121,7 @@ final class ScalaFibonacciHeap[T <: FibonacciHeapNode[T]](
   private def increaseKey(x: T) {
     decreaseKey(x, true);
     removeMin();
-    x.clear();
+    x.clearNode();
     insert(x);
   }
 
@@ -140,19 +139,20 @@ final class ScalaFibonacciHeap[T <: FibonacciHeapNode[T]](
    */
   private def insert(node: T) {
     // concatenate node into min list
-    minNode match {
-      case Some(n) => {
-        n.add(node)
-        if (node.key < n.key) {
-          minNode = Some(node)
-        }
+    if (minNode == null) {
+      minNode = node
+      /**
+       * Should not be required as node has
+       * been cleared before
+       */
+      //node.left = node
+      //node.right = node
+    } else {
+      minNode.add(node)
+      if (node < minNode) {
+        minNode = node
       }
-      case None => {
-        minNode = Some(node)
-      }
-
     }
-
     nNodes += 1;
   }
 
@@ -175,7 +175,7 @@ final class ScalaFibonacciHeap[T <: FibonacciHeapNode[T]](
       false;
     } else {
       insert += 1
-      node.clear();
+      node.clearNode();
       insert(node);
       node.setPresent()
       true;
@@ -193,44 +193,38 @@ final class ScalaFibonacciHeap[T <: FibonacciHeapNode[T]](
    * @return node with the smallest key
    */
   def removeMin() = {
-    minNode match {
-      case None => None
-      case Some(z) => {
-
-        if (z.child.isDefined) {
-          val zChild = z.child.get
-          zChild.parent = None;
-          // for each child of z do...
-          var x = zChild.right
-          while (x != zChild) {
-            // set parent[x] to null
-            x.parent = null;
-            x = x.right
-          }
-          // merge the children into root list
-
-          val minLeft = z.left;
-          val zChildLeft = zChild.left;
-          z.left = zChildLeft;
-          zChildLeft.right = z;
-          zChild.left = minLeft;
-          minLeft.right = zChild;
+    val z = minNode
+    if (z == null) {
+      null
+    } else {
+      val zChild = z.child
+      if (zChild != null) {
+        zChild.parent = null;
+        // for each child of z do...
+        var x = zChild.right
+        while (x != zChild) {
+          // set parent[x] to null
+          x.parent = null;
+          x = x.right
         }
-        // remove z from root list of heap
-        z.remove();
-        if (z == z.right) {
-          minNode = None;
-        } else {
-          minNode = Some(z.right)
-          consolidate();
-        }
-        // decrement size of heap
-        nNodes -= 1;
+        // merge the children into root list
 
-        //assert(control(minNode, minNode));
-        Some(z);
-
+        minNode.merge(zChild)
       }
+      // remove z from root list of heap
+      z.remove();
+      if (z == z.right) {
+        minNode = null;
+      } else {
+        minNode = z.right
+        consolidate();
+      }
+      // decrement size of heap
+      nNodes -= 1;
+
+      assert(control(minNode, minNode));
+      z
+
     }
   }
 
@@ -259,9 +253,9 @@ final class ScalaFibonacciHeap[T <: FibonacciHeapNode[T]](
   def size = nNodes;
 
   @tailrec
-  def emptyArray(array: Array[Option[T]], i: Int) {
+  def emptyArray(array: Array[T], i: Int) {
     if (i >= 0) {
-      array(i) = None
+      array(i) = null
       emptyArray(array, i - 1)
     }
   }
@@ -278,27 +272,27 @@ final class ScalaFibonacciHeap[T <: FibonacciHeapNode[T]](
     emptyArray(array, array.length - 1)
 
     // For each root list node look for others of the same degree.
-    var start = minNode.get
-    var w = minNode.get
+    var start = minNode
+    var w = minNode
     do {
       var x = w;
       // Because x might be moved, save its sibling now.
       var nextW = w.right;
-      var d = x.degree;
-      while (array(d).isDefined) {
+      var d = x.rank;
+      while (array(d) != null) {
         // Make one of the nodes a child of the other.
-        var y = array(d).get
+        var y = array(d)
         if (x.key > y.key) {
           val temp = y;
           y = x;
           x = temp;
         }
         if (y == start) {
-          /*
-                     * Because removeMin() arbitrarily assigned the min
-                     * reference, we have to ensure we do not miss the end of
-                     * the root node list.
-                     */
+          /**
+           * Because removeMin() arbitrarily assigned the min
+           * reference, we have to ensure we do not miss the end of
+           * the root node list.
+           */
           start = start.right;
         }
         if (y == nextW) {
@@ -308,18 +302,18 @@ final class ScalaFibonacciHeap[T <: FibonacciHeapNode[T]](
         // Node y disappears from root list.
         y.link(x);
         // We've handled this degree, go to next one.
-        array(d) = None;
+        array(d) = null;
         d += 1;
       }
       // Save this node for later when we might encounter another
       // of the same degree.
-      array(d) = Some(x);
+      array(d) = x;
       // Move forward through list.
       w = nextW;
     } while (w != start);
 
     // The node considered to be min may have been changed above.
-    minNode = Some(array.iterator.flatten.minBy(_.key)) //Some(start);
+    minNode = minTree(array.length - 1, null) //Some(start);
     // Find the minimum key again.
     //    for (a <- array) {
     //      if (a != null && a.key < minNode.key) {
@@ -327,60 +321,74 @@ final class ScalaFibonacciHeap[T <: FibonacciHeapNode[T]](
     //      }
     //    }
 
-    //assert(control(minNode, minNode));
+    assert(control(minNode, minNode));
+  }
+
+  @tailrec
+  private def minTree(i: Int, min: T): T = {
+    if (i < 0) {
+      min
+    } else {
+      val t = array(i)
+
+      if (t == null || min != null && min < t) minTree(i - 1, min)
+      else minTree(i - 1, t)
+
+    }
+
   }
 
   def iterator =
     throw new UnsupportedOperationException();
 
-  def peek = minNode.asInstanceOf[T]
+  def peek = minNode
 
   def poll() = {
     removals += 1
-    val min = removeMin().get;
+    val min = removeMin();
     min.unsetPresent()
     min
   }
 
-  //  private def control(current: FibonacciHeapNode[T],
-  //    start: FibonacciHeapNode[T]): Boolean =
-  //    control(current, start, Set(), Set());
-  //
-  //  private def control(current: FibonacciHeapNode[T],
-  //    start: FibonacciHeapNode[T],
-  //    loopControl: Set[FibonacciHeapNode[T]],
-  //    ancestorControl: Set[FibonacciHeapNode[T]]): Boolean = {
-  //    if (current == null) {
-  //      true;
-  //    } else {
-  //      //assert(!loopControl(current))
-  //      //assert(!ancestorControl(current))
-  //
-  //      var ac = ancestorControl
-  //
-  //      if (current.child != null) {
-  //        ac += current
-  //
-  //        if (!control(current.child, current.child, Set(), ac)) {
-  //          return false;
-  //        }
-  //      }
-  //
-  //      current.right == start || control(current.right, start, loopControl + current, ac);
-  //    }
-  //  }
+  private def control(current: FibonacciHeapNode[T],
+    start: FibonacciHeapNode[T]): Boolean =
+    true || control(current, start, Set(), Set());
+
+  private def control(current: FibonacciHeapNode[T],
+    start: FibonacciHeapNode[T],
+    loopControl: Set[FibonacciHeapNode[T]],
+    ancestorControl: Set[FibonacciHeapNode[T]]): Boolean = {
+    if (current == null) {
+      true;
+    } else {
+      assert(!loopControl(current))
+      assert(!ancestorControl(current))
+
+      var ac = ancestorControl
+
+      if (current.child != null) {
+        ac += current
+
+        if (!control(current.child, current.child, Set(), ac)) {
+          return false;
+        }
+      }
+
+      current.right == start || control(current.right, start, loopControl + current, ac);
+    }
+  }
 
   /**
    * Creates a String representation of this Fibonacci heap.
    *
    * @return String of this.
    */
-  def fiboToString = {
-    if (minNode == None) {
+  override def toString = {
+    if (minNode == null) {
       "empty";
     } else {
       val stb = new StringBuilder();
-      tree(stb, minNode.get, minNode.get, 0);
+      tree(stb, minNode, minNode, 0);
       stb.toString
     }
   }
@@ -391,8 +399,8 @@ final class ScalaFibonacciHeap[T <: FibonacciHeapNode[T]](
 
     (0 until depth).foreach(stb.append("--"))
     stb.append(current).append("\n");
-    if (current.child.isDefined) {
-      tree(stb, current.child.get, current.child.get, depth + 1);
+    if (current.child != null) {
+      tree(stb, current.child, current.child, depth + 1);
     }
     if (current.right != start) {
       tree(stb, current.right, start, depth);

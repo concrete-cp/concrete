@@ -14,7 +14,7 @@ object IntNode {
   val key = new Key[IntNode]() {
     def getKey(o: IntNode) = o.v
   }
-   val fhkey = new Key[FHNode]() {
+  val fhkey = new Key[FHNode]() {
     def getKey(o: FHNode) = o.v
   }
 }
@@ -24,15 +24,15 @@ case class IntNode(val v: Int) extends Identified with BinomialHeapNode[IntNode]
   IntNode.id += 1
 }
 
-case class FHNode(val v: Int) extends FibonacciHeapNode[FHNode] 
+case class FHNode(val v: Int) extends FibonacciHeapNode[FHNode]
 
-final class ScalaPriorityQueueTest {
+final class PriorityQueueTest {
 
   private val RANDOM = new Random(0);
 
   private val INTS = Stream.continually(IntNode(RANDOM.nextInt(5000000))).take(100000)
 
-  private val FHS = Stream.continually(FHNode(RANDOM.nextInt(5000000))).take(100000)
+  private val FHS = Stream.continually(FHNode(RANDOM.nextInt(5000000))).take(7000)
 
   val key = IntNode.key
 
@@ -72,9 +72,9 @@ final class ScalaPriorityQueueTest {
     assertEquals(maximier.size, 0);
     assertTrue(maximier.isEmpty);
 
-    FHS.foreach { i => assertFalse(i.isPresent); maximier.offer(i) }
+    FHS.foreach { i => assertFalse(i.isPresent); assertTrue(maximier.offer(i)) }
 
-    assertEquals(maximier.size, INTS.length);
+    assertEquals(maximier.size, FHS.length);
 
     var last = maximier.poll().v;
     while (!maximier.isEmpty) {
@@ -86,20 +86,25 @@ final class ScalaPriorityQueueTest {
   }
 
   def test(maximier: Queue[IntNode]) {
+    //for (j <- 3001 to 5000) {
+    val j = INTS.size
+    maximier.clear()
 
     assertEquals(maximier.size, 0);
     assertTrue(maximier.isEmpty);
 
-    INTS.foreach { i => assertFalse(i.isPresent); maximier.offer(i) }
+    INTS.take(j).foreach { i => assertFalse(i.isPresent); assertTrue(maximier.offer(i)) }
 
-    assertEquals(maximier.size, INTS.length);
+    assertEquals(j, maximier.size);
 
+    println(j)
     var last = maximier.poll().v;
     while (!maximier.isEmpty) {
       val current = maximier.poll().v;
       assertTrue(current + " should be >= " + last, current >= last);
       last = current;
     }
+    //}
 
   }
 

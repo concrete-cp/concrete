@@ -6,13 +6,17 @@ import java.util.Iterator
 import cspfj.Statistic
 import scala.annotation.tailrec
 
-final class ScalaBinomialHeap[T <: BinomialHeapNode[T]](key: Key[T]) extends AbstractQueue[T] {
+final class ScalaBinomialHeap[T >: Null <: BinomialHeapNode[T]](key: Key[T]) extends AbstractQueue[T] {
 
   //  val DEFAULT_SIZE = 10;
   //
   //  val LOG2 = math.log(2);
 
-  private var trees = Array[Option[T]]().padTo(10, None) //maxNbTrees(DEFAULT_SIZE))
+  val MAX_ARRAY_SIZE = 33
+
+  def init: Stream[BinomialHeapNode[T]] = null #:: init
+
+  private val trees = init.take(MAX_ARRAY_SIZE).toArray.asInstanceOf[Array[T]] //.padTo(MAX_ARRAY_SIZE, null) //maxNbTrees(DEFAULT_SIZE))
 
   private var _size = 0;
 
@@ -48,15 +52,15 @@ final class ScalaBinomialHeap[T <: BinomialHeapNode[T]](key: Key[T]) extends Abs
     } else {
       insert += 1;
       arg0.clearNode();
-
-      carryMerge(arg0, 0);
-      arg0.setPresent
+      carryMerge(arg0);
+      arg0.setPresent()
       _size += 1;
+      //assert(_size == computeSize)
       true;
     }
   }
 
-  def peek = minTree.asInstanceOf[T]
+  def peek = minTree
 
   def poll() = {
     removals += 1;
@@ -64,45 +68,49 @@ final class ScalaBinomialHeap[T <: BinomialHeapNode[T]](key: Key[T]) extends Abs
     deleteRoot(min);
     min.unsetPresent()
     _size -= 1;
-    min.asInstanceOf[T];
+    //assert(_size == computeSize, _size + " should be " + computeSize)
+    min
   }
+
+  //  def computeSize = {
+  //    trees.iterator.flatten.map(t => t.treeSize).sum
+  //  }
 
   @tailrec
   def distribute(subTree: T, last: T) {
     val next = subTree.right
-    subTree.remove()
-    subTree.parent = None
-    carryMerge(subTree, subTree.rank)
+    subTree.left = subTree
+    subTree.right = subTree
+    subTree.parent = null
+    carryMerge(subTree)
     if (next != last) {
       distribute(next, last)
     }
   }
 
   private def deleteRoot(root: BinomialHeapNode[T]) {
-    assert(root.parent.isEmpty)
-    trees(root.rank) = None;
-
-    if (root.child.isDefined)
-      distribute(root.child.get, root.child.get)
+    assert(root.parent == null)
+    trees(root.rank) = null;
+    val child = root.child
+    if (child != null) distribute(child, child)
 
   }
-
+  //
   @tailrec
-  private def minTree(i: Int, min: Option[T]): Option[T] = {
+  private def minTree(i: Int, min: T): T = {
     if (i < 0) {
       min
-    } else trees(i) match {
-      case None => minTree(i - 1, min)
-      case Some(t) => if (min.isEmpty || t.key < min.get.key) {
-        minTree(i - 1, Some(t))
-      } else {
-        minTree(i - 1, min)
-      }
+    } else {
+      val t = trees(i)
+
+      if (t == null || min != null && min < t) minTree(i - 1, min)
+      else minTree(i - 1, t)
+
     }
 
   }
 
-  private def minTree: T = minTree(trees.length - 1, None).get
+  private def minTree: T = minTree(trees.length - 1, null) //trees.iterator.flatten.min //minTree(trees.length - 1, None).get
   //  //minTree(trees.length - 1, null)
   //    trees.reduceLeft((t, min) => if (t == null) {
   //      min
@@ -119,34 +127,28 @@ final class ScalaBinomialHeap[T <: BinomialHeapNode[T]](key: Key[T]) extends Abs
     _size = 0;
   }
 
-  private def carryMerge(tree: T, i: Int) {
-    //ensureCapacity(i + 1)
-    val storedTree = try trees(i)
-    catch {
-      case e: IndexOutOfBoundsException => {
-        trees = trees.padTo(i + 1, None)
-        None
+  private def carryMerge(tree: T) {
+
+    val i = tree.rank
+    val sTree = trees(i)
+
+    if (sTree == null) trees(i) = tree
+    else {
+
+      trees(i) = null;
+
+      /**
+       * We merge either the stored tree under the given tree or the
+       * reverse.
+       */
+      if (sTree < tree) {
+        sTree.addSubTree(tree);
+        carryMerge(sTree);
+      } else {
+        tree.addSubTree(sTree);
+        carryMerge(tree);
       }
-    }
 
-    storedTree match {
-      case None => trees(i) = Some(tree)
-      case Some(sTree) => {
-
-        trees(i) = None;
-
-        /**
-         * We merge either the stored tree under the given tree or the
-         * reverse.
-         */
-        if (sTree.key <= tree.key) {
-          sTree.addSubTree(tree);
-          carryMerge(sTree, i + 1);
-        } else {
-          tree.addSubTree(sTree);
-          carryMerge(tree, i + 1);
-        }
-      }
     }
 
   }
@@ -168,8 +170,8 @@ final class ScalaBinomialHeap[T <: BinomialHeapNode[T]](key: Key[T]) extends Abs
   //    }
 
   override def toString = trees.map {
-    case None => "*"
-    case Some(t) => t.tree(0, t)
+    case null => "*"
+    case t => t.tree(0, t)
   }.mkString("\n")
 
   //    private def swap(node1: BinomialHeapNode[T], node2: BinomialHeapNode[T]) {

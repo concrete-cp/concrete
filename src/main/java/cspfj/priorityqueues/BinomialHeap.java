@@ -10,7 +10,8 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
 
     private static final int DEFAULT_SIZE = 10;
 
-    private static final float LOG2 = (float) Math.log(2);
+    /* 2 + log_2(Integer.MAX_VALUE) */
+    private static final int MAX_ARRAY_SIZE = 33;
 
     private final Key<T> key;
 
@@ -37,11 +38,7 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
     public BinomialHeap(final Key<T> key, final int initSize) {
         this.key = key;
         map = (BinomialHeapNode<T>[]) new BinomialHeapNode[initSize];
-        trees = (BinomialHeapNode<T>[]) new BinomialHeapNode[maxNbTrees(initSize)];
-    }
-
-    private static int maxNbTrees(final int size) {
-        return 2 + (int) Math.floor(Math.log(size) / LOG2);
+        trees = (BinomialHeapNode<T>[]) new BinomialHeapNode[MAX_ARRAY_SIZE];
     }
 
     /**
@@ -59,10 +56,6 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
                     (oldCapacity * 3) / 2 + 1);
             // minCapacity is usually close to size, so this is a win:
             map = Arrays.copyOf(map, newCapacity);
-            final int nbTrees = maxNbTrees(newCapacity);
-            if (nbTrees > trees.length) {
-                trees = Arrays.copyOf(trees, nbTrees);
-            }
         }
     }
 
