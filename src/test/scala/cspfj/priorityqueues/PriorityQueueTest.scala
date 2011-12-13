@@ -26,78 +26,67 @@ final class PriorityQueueTest {
 
   private val RANDOM = new Random(0);
 
-  private val INTS = Stream.continually(IntNode(RANDOM.nextInt(5000000))).take(1000000)
+  private val INTS = Stream.continually(IntNode(RANDOM.nextInt(5000000))).take(284842)
 
   val key = IntNode.key
 
-  @Test
+  @Test(timeout = 5000)
   def testScalaBinomialHeap() {
     test(new ScalaBinomialHeap[IntNode](key))
   }
 
-  @Test
+  @Test(timeout = 5000)
   def testScalaNative() {
     test(new ScalaNative[IntNode](key))
   }
 
-  @Test
+  @Test(timeout = 5000)
   def testJavaNative() {
     test(new JavaNative[IntNode](key))
   }
-  @Test
+  @Test(timeout = 5000)
   def testSkewHeap() {
     test(new SkewHeap[IntNode](key))
   }
-  @Test
+  @Test(timeout = 5000)
   def testBinaryHeap() {
     test(new BinaryHeap[IntNode](key))
   }
-  @Test
+  @Test(timeout = 5000)
   def testBinomialHeap() {
     test(new BinomialHeap[IntNode](key))
   }
-  @Test
+  @Test(timeout = 5000)
   def testFibonacciHeap() {
     test(new FibonacciHeap[IntNode](key))
   }
-  @Test
+  @Test(timeout = 5000)
   def testScalaFibonacciHeap() {
     test(new ScalaFibonacciHeap[IntNode](key))
-    //    val maximier = new ScalaFibonacciHeap[FHNode](IntNode.fhkey)
-    //    assertEquals(maximier.size, 0);
-    //    assertTrue(maximier.isEmpty);
-    //
-    //    FHS.foreach { i => assertFalse(i.isPresent); assertTrue(maximier.offer(i)) }
-    //
-    //    assertEquals(maximier.size, FHS.length);
-    //
-    //    var last = maximier.poll().v;
-    //    while (!maximier.isEmpty) {
-    //      val current = maximier.poll().v;
-    //      assertTrue(current + " should be >= " + last, current >= last);
-    //      last = current;
-    //    }
-
   }
 
-  def test(maximier: Queue[IntNode]) {
+  def test(q: Queue[IntNode]) {
     //for (j <- 3001 to 5000) {
-    val j = INTS.size
-    maximier.clear()
+    var j = 1
+    while (j <= INTS.size) {
 
-    assertEquals(maximier.size, 0);
-    assertTrue(maximier.isEmpty);
+      q.clear()
 
-    INTS.take(j).foreach { i => assertFalse(i.isPresent); assertTrue(maximier.offer(i)) }
+      assertEquals(q.size, 0);
+      assertTrue(q.isEmpty);
 
-    assertEquals(j, maximier.size);
+      INTS.take(j).foreach { i => assertFalse(i.isPresent); assertTrue(q.offer(i)) }
 
-    println(j)
-    var last = maximier.poll().v;
-    while (!maximier.isEmpty) {
-      val current = maximier.poll().v;
-      assertTrue(current + " should be >= " + last, current >= last);
-      last = current;
+      assertEquals(j, q.size);
+
+      var last = q.poll().v;
+      while (!q.isEmpty) {
+        val current = q.poll().v;
+        assertTrue(current + " should be >= " + last + " (j = " + j + ")", current >= last);
+        last = current;
+      }
+
+      j = (j * 2.5).toInt
     }
     //}
 
