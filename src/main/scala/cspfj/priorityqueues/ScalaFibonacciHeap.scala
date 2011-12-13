@@ -194,38 +194,38 @@ final class ScalaFibonacciHeap[T >: Null <: FibonacciHeapNode[T]](
    */
   def removeMin() = {
     val z = minNode
-    if (z == null) {
-      null
-    } else {
-      val zChild = z.child
-      if (zChild != null) {
-        zChild.parent = null;
-        // for each child of z do...
-        var x = zChild.right
-        while (x != zChild) {
-          // set parent[x] to null
-          x.parent = null;
-          x = x.right
-        }
-        // merge the children into root list
 
-        minNode.merge(zChild)
-      }
-      // remove z from root list of heap
-      z.remove();
-      if (z == z.right) {
-        minNode = null;
-      } else {
-        minNode = z.right
-        consolidate();
-      }
-      // decrement size of heap
-      nNodes -= 1;
-
-      assert(control(minNode, minNode));
-      z
-
+    val zChild = try z.child
+    catch {
+      case e: NullPointerException => throw new NoSuchElementException
     }
+    if (zChild != null) {
+      zChild.parent = null;
+      // for each child of z do...
+      var x = zChild.right
+      while (x != zChild) {
+        // set parent[x] to null
+        x.parent = null;
+        x = x.right
+      }
+      // merge the children into root list
+
+      minNode.merge(zChild)
+    }
+    // remove z from root list of heap
+    z.remove();
+    if (z == z.right) {
+      minNode = null;
+    } else {
+      minNode = z.right
+      consolidate();
+    }
+    // decrement size of heap
+    nNodes -= 1;
+
+    assert(control(minNode, minNode));
+    z
+
   }
 
   //    private def smallest(min: FibonacciHeapNode[T]) =
@@ -282,7 +282,7 @@ final class ScalaFibonacciHeap[T >: Null <: FibonacciHeapNode[T]](
       while (array(d) != null) {
         // Make one of the nodes a child of the other.
         var y = array(d)
-        if (x.key > y.key) {
+        if (y < x) {
           val temp = y;
           y = x;
           x = temp;
@@ -313,7 +313,7 @@ final class ScalaFibonacciHeap[T >: Null <: FibonacciHeapNode[T]](
     } while (w != start);
 
     // The node considered to be min may have been changed above.
-    minNode = minTree(array.length - 1, null) //Some(start);
+    minNode = minTree(array.length - 1, minNode) //Some(start);
     // Find the minimum key again.
     //    for (a <- array) {
     //      if (a != null && a.key < minNode.key) {
@@ -331,7 +331,7 @@ final class ScalaFibonacciHeap[T >: Null <: FibonacciHeapNode[T]](
     } else {
       val t = array(i)
 
-      if (t == null || min != null && min < t) minTree(i - 1, min)
+      if (t == null || min < t) minTree(i - 1, min)
       else minTree(i - 1, t)
 
     }

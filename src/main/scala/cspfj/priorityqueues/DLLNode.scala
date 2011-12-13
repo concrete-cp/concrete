@@ -16,7 +16,8 @@ trait DLLNode[T <: DLLNode[T]] { self: T =>
   def remove() {
     left.right = right;
     right.left = left;
-    //clearNode()
+    //    left = this
+    //    right = this
   }
 
   /**
@@ -34,7 +35,8 @@ trait DLLNode[T <: DLLNode[T]] { self: T =>
   def merge(x: T) {
     val minLeft = this.left;
     val xLeft = x.left;
-    this.left = xLeft;
+    
+    left = xLeft;
     xLeft.right = this
     x.left = minLeft;
     minLeft.right = x;

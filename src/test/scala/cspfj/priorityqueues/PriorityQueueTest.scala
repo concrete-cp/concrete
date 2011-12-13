@@ -14,25 +14,19 @@ object IntNode {
   val key = new Key[IntNode]() {
     def getKey(o: IntNode) = o.v
   }
-  val fhkey = new Key[FHNode]() {
-    def getKey(o: FHNode) = o.v
-  }
+
 }
 
-case class IntNode(val v: Int) extends Identified with BinomialHeapNode[IntNode] {
+case class IntNode(val v: Int) extends Identified with BinomialHeapNode[IntNode] with FibonacciHeapNode[IntNode] {
   val getId = IntNode.id
   IntNode.id += 1
 }
-
-case class FHNode(val v: Int) extends FibonacciHeapNode[FHNode]
 
 final class PriorityQueueTest {
 
   private val RANDOM = new Random(0);
 
-  private val INTS = Stream.continually(IntNode(RANDOM.nextInt(5000000))).take(100000)
-
-  private val FHS = Stream.continually(FHNode(RANDOM.nextInt(5000000))).take(7000)
+  private val INTS = Stream.continually(IntNode(RANDOM.nextInt(5000000))).take(1000000)
 
   val key = IntNode.key
 
@@ -68,20 +62,21 @@ final class PriorityQueueTest {
   }
   @Test
   def testScalaFibonacciHeap() {
-    val maximier = new ScalaFibonacciHeap[FHNode](IntNode.fhkey)
-    assertEquals(maximier.size, 0);
-    assertTrue(maximier.isEmpty);
-
-    FHS.foreach { i => assertFalse(i.isPresent); assertTrue(maximier.offer(i)) }
-
-    assertEquals(maximier.size, FHS.length);
-
-    var last = maximier.poll().v;
-    while (!maximier.isEmpty) {
-      val current = maximier.poll().v;
-      assertTrue(current + " should be >= " + last, current >= last);
-      last = current;
-    }
+    test(new ScalaFibonacciHeap[IntNode](key))
+    //    val maximier = new ScalaFibonacciHeap[FHNode](IntNode.fhkey)
+    //    assertEquals(maximier.size, 0);
+    //    assertTrue(maximier.isEmpty);
+    //
+    //    FHS.foreach { i => assertFalse(i.isPresent); assertTrue(maximier.offer(i)) }
+    //
+    //    assertEquals(maximier.size, FHS.length);
+    //
+    //    var last = maximier.poll().v;
+    //    while (!maximier.isEmpty) {
+    //      val current = maximier.poll().v;
+    //      assertTrue(current + " should be >= " + last, current >= last);
+    //      last = current;
+    //    }
 
   }
 
