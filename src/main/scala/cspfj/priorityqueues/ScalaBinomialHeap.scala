@@ -68,23 +68,29 @@ final class ScalaBinomialHeap[T >: Null <: BinomialHeapNode[T]](key: Key[T]) ext
     deleteRoot(min);
     min.unsetPresent()
     _size -= 1;
-    //assert(_size == computeSize, _size + " should be " + computeSize)
+    assert(_size == computeSize, _size + " should be " + computeSize)
     min
   }
 
-  //  def computeSize = {
-  //    trees.iterator.flatten.map(t => t.treeSize).sum
-  //  }
+  def computeSize = {
+    trees.iterator.filter(_ != null).map(t => t.treeSize).sum
+  }
 
   @tailrec
-  def distribute(subTree: T, last: T) {
-    val next = subTree.right
-    subTree.left = subTree
-    subTree.right = subTree
+  def distribute(subTree: T) {
+    val next = subTree.left
+    val last = subTree == next
+    if (!last) {
+      subTree.remove()
+      subTree.clearDL()
+    } else {
+      assert(subTree.left == subTree)
+      assert(subTree.right == subTree)
+    }
     subTree.parent = null
     carryMerge(subTree)
-    if (next != last) {
-      distribute(next, last)
+    if (!last) {
+      distribute(next)
     }
   }
 
@@ -92,7 +98,7 @@ final class ScalaBinomialHeap[T >: Null <: BinomialHeapNode[T]](key: Key[T]) ext
     assert(root.parent == null)
     trees(root.rank) = null;
     val child = root.child
-    if (child != null) distribute(child, child)
+    if (child != null) distribute(child.left)
 
   }
   //

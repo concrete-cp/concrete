@@ -36,7 +36,7 @@ trait BinomialHeapNode[T >: Null <: BinomialHeapNode[T]] extends PTag with LazyK
 
   def tree(depth: Int, last: T): String =
     (0 until depth).map(_ => "--").fold("")(_ + _) + toString + " (" + key + ", " + rank + ")\n" +
-      (if (child != null) child.tree(depth + 1, child) else "") +
-      (if (right != last) right.tree(depth, last) else "")
+      (if (child != null) child.left.tree(depth + 1, child.left) else "") +
+      (if (left != last) left.tree(depth, last) else "")
 
 }

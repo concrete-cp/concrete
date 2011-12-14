@@ -2,22 +2,41 @@ package cspfj.priorityqueues
 
 trait DLLNode[T <: DLLNode[T]] { self: T =>
 
-  var right = this
-  var left = this
+  private var _right = this
+  private var _left = this
+
+  def right = _right
+  def left = _left
 
   def clearNode() {
-    right = this
-    left = this
+    clearDL()
   }
 
   /**
    * Remove this node from the list it appears in.
    */
   def remove() {
-    left.right = right;
-    right.left = left;
+    //val right = this.right
+    _left._right = _right;
+    _right._left = _left;
+//
+//    assert(_left.checkLone)
+//    assert(_right.checkLone)
+    clearDL()
     //    left = this
     //    right = this
+  }
+
+  def checkLone = {
+    (_left != this || _right == this) &&
+      (_right != this || _left == this) &&
+      (_left._right == this) && (_right._left == this)
+
+  }
+
+  def clearDL() {
+    _right = this
+    _left = this
   }
 
   /**
@@ -26,20 +45,27 @@ trait DLLNode[T <: DLLNode[T]] { self: T =>
    * @param x
    */
   def add(x: T) {
-    x.right = this;
-    x.left = left;
-    left = x;
-    x.left.right = x;
+    x._right = this;
+    x._left = _left;
+    _left._right = x
+    _left = x;
+
+    assert(_left != this)
+    assert(_right != this)
+    assert(_left._right == this)
+    assert(_right._left == this)
+
+    //x.left.right = x;
   }
 
   def merge(x: T) {
     val minLeft = this.left;
     val xLeft = x.left;
-    
-    left = xLeft;
-    xLeft.right = this
-    x.left = minLeft;
-    minLeft.right = x;
+
+    _left = xLeft;
+    xLeft._right = this
+    x._left = minLeft;
+    minLeft._right = x;
   }
 
 }

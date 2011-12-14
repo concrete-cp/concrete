@@ -29,8 +29,7 @@ trait FibonacciHeapNode[T >: Null <: FibonacciHeapNode[T]] extends PTag with Laz
    */
   def link(tree: T) {
     remove()
-    right = this
-    left = this
+    clearDL()
     tree.addSubTree(this)
     mark = false;
   }
@@ -51,8 +50,8 @@ trait FibonacciHeapNode[T >: Null <: FibonacciHeapNode[T]] extends PTag with Laz
   def cut(x: T, min: T) {
     // remove x from childlist and decrement degree
     x.remove()
-//    x.left.right = x.right;
-//    x.right.left = x.left;
+    //    x.left.right = x.right;
+    //    x.right.left = x.left;
     rank -= 1;
     // reset child if necessary
     if (rank == 0) {
@@ -95,7 +94,7 @@ trait FibonacciHeapNode[T >: Null <: FibonacciHeapNode[T]] extends PTag with Laz
       }
     }
   }
-  
+
   def decrease(child: T, minNode: T) {
     cut(child, minNode)
     cascadingCut(minNode)
