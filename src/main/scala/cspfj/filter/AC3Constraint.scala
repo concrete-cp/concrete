@@ -11,10 +11,11 @@ import cspfj.Parameter
 import cspfj.Statistic
 import scala.annotation.tailrec
 import cspfj.priorityqueues._
+import cspfj.util.Loggable
 
 object AC3Constraint {
   @Parameter("ac.queue")
-  var queueType: Class[_ <: Queue[Constraint]] = classOf[ScalaFifos[Constraint]]
+  var queueType: Class[_ <: Queue[Constraint]] = classOf[ScalaFifo[Constraint]]
 
   @Parameter("ac.key")
   var key = new Key[Constraint]() {
@@ -29,7 +30,7 @@ object AC3Constraint {
   ParameterManager.register(this);
 }
 
-final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) extends Filter {
+final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) extends Filter with Loggable {
   StatisticsManager.register("ac.priorityQueue", queue);
   // private static final Logger LOGGER = Logger.getLogger(Filter.class
   // .getSimpleName());
@@ -93,7 +94,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
             queue.offer(c);
           }
       }
-
+      info("reduce " + AC3Constraint.revisionCount)
       reduce();
     }
   }

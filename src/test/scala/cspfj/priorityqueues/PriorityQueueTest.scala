@@ -17,7 +17,7 @@ object IntNode {
 
 }
 
-case class IntNode(val v: Int) extends Identified with BinomialHeapNode[IntNode] with FibonacciHeapNode[IntNode] {
+case class IntNode(val v: Int) extends Identified with IOBinomialHeapNode[IntNode] {
   val getId = IntNode.id
   IntNode.id += 1
 }
@@ -30,10 +30,10 @@ final class PriorityQueueTest {
 
   val key = IntNode.key
 
-  @Test(timeout = 5000)
-  def testScalaBinomialHeap() {
-    test(new ScalaBinomialHeap[IntNode](key))
-  }
+//  @Test //(timeout = 5000)
+//  def testScalaBinomialHeap() {
+//    test(new ScalaBinomialHeap[IntNode](key))
+//  }
 
   @Test(timeout = 5000)
   def testScalaNative() {
@@ -52,7 +52,7 @@ final class PriorityQueueTest {
   def testBinaryHeap() {
     test(new BinaryHeap[IntNode](key))
   }
-  @Test(timeout = 5000)
+  @Test
   def testBinomialHeap() {
     test(new BinomialHeap[IntNode](key))
   }
@@ -60,14 +60,18 @@ final class PriorityQueueTest {
   def testFibonacciHeap() {
     test(new FibonacciHeap[IntNode](key))
   }
+//  @Test(timeout = 5000)
+//  def testScalaFibonacciHeap() {
+//    test(new ScalaFibonacciHeap[IntNode](key))
+//  }
   @Test(timeout = 5000)
-  def testScalaFibonacciHeap() {
-    test(new ScalaFibonacciHeap[IntNode](key))
+  def testScalaIOBinomialHeap() {
+    test(new ScalaIOBinomialHeap[IntNode](key))
   }
-
+  
   def test(q: Queue[IntNode]) {
     //for (j <- 3001 to 5000) {
-    var j = 1
+    var j = 100
     while (j <= INTS.size) {
 
       q.clear()
@@ -78,10 +82,13 @@ final class PriorityQueueTest {
       INTS.take(j).foreach { i => assertFalse(i.isPresent); assertTrue(q.offer(i)) }
 
       assertEquals(j, q.size);
-
+      //println(j)
+      var i = 1
       var last = q.poll().v;
       while (!q.isEmpty) {
         val current = q.poll().v;
+        println(i)
+        i += 1
         assertTrue(current + " should be >= " + last + " (j = " + j + ")", current >= last);
         last = current;
       }

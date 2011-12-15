@@ -100,6 +100,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
 
       nbBacktracks += 1
 
+      info(problem.currentLevel + " : " + stack.head + " removed")
       stack.head.remove()
       mac(stack.head.variable, stack.tail)
     }

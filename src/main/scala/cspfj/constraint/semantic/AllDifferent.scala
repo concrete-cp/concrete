@@ -20,13 +20,12 @@
 package cspfj.constraint.semantic;
 
 import scala.collection.immutable.Queue
-
 import cspfj.constraint.AbstractConstraint
 import cspfj.constraint.VariableGrainedRemovals
 import cspfj.filter.RevisionHandler
-import cspfj.filter.RevisionHandler
 import cspfj.problem.Variable
 import cspfj.util.BitVector
+import scala.annotation.tailrec
 
 final class AllDifferent(scope: Variable*) extends AbstractConstraint(null, scope.toArray)
   with VariableGrainedRemovals {
@@ -46,46 +45,77 @@ final class AllDifferent(scope: Variable*) extends AbstractConstraint(null, scop
     }
   }
 
-  private def filter(checkedVariable: Variable, value: Int, revisator: RevisionHandler): Boolean = {
-    for (v <- scope if v != checkedVariable) {
-      val index = v.dom.index(value)
-      if (index >= 0 && v.dom.present(index)) {
-        v.dom.remove(index);
-        if (v.dom.size < 1) {
-          return true;
-        } else if (v.dom.size == 1) {
-          queue = queue.enqueue(v)
-        }
-        revisator.revised(this, v);
+  val NOP = 0
+  val FILT = 1
+  val INC = 2
+
+  private def filter(values: Seq[Int], preserve: Set[Variable], revisator: RevisionHandler): Int = {
+    var change = false
+    for (v <- scope if (!preserve(v)); index <- values map (v.dom.index) if (index >= 0 && v.dom.present(index))) {
+      v.dom.remove(index);
+      if (v.dom.size < 1) {
+        return INC;
       }
+      revisator.revised(this, v);
+      change = true
     }
-    false;
+
+    if (change) FILT else NOP
+
   }
+  //
+  //  override def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
+  //    queue = Queue.empty
+  //    varsWithRemovals(reviseCount).map(_._1).filter(_.dom.size == 1).foreach(v => queue = queue.enqueue(v))
+  //
+  //    while (queue != Nil) {
+  //      val (checkedVariable, newQueue) = queue.dequeue
+  //      queue = newQueue
+  //      val value = checkedVariable.dom.firstValue
+  //
+  //      if (filter(checkedVariable, value, revisator)) {
+  //        return false;
+  //      }
+  //    }
+  //
+  //    union.fill(false);
+  //    var size = 0;
+  //    for (variable <- scope; value <- variable.dom.values) {
+  //      if (union.set(value - offset)) {
+  //        size += 1
+  //        if (size >= arity) return true
+  //      }
+  //    }
+  //
+  //    false;
+  //  }
 
   override def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
-    queue = Queue.empty
-    varsWithRemovals(reviseCount).map(_._1).filter(_.dom.size == 1).foreach(v => queue = queue.enqueue(v))
 
-    while (queue != Nil) {
-      val (checkedVariable, newQueue) = queue.dequeue
-      queue = newQueue
-      val value = checkedVariable.dom.firstValue
+    val scope = this.scope.toList
 
-      if (filter(checkedVariable, value, revisator)) {
-        return false;
+    @tailrec
+    def revise(vars: List[Variable], domains: Map[Seq[Int], Set[Variable]]): Boolean = {
+      if (vars.isEmpty) {
+        true
+      } else {
+        val head :: tail = vars
+        val domain = head.values.toSeq
+        val nbVars = domains.getOrElse(domain, Set()) + head
+        if (domain.size == nbVars.size) {
+          filter(domain, nbVars, revisator) match {
+            case NOP => revise(tail, domains + (domain -> nbVars))
+            case FILT => revise(scope, Map())
+            case INC => false
+          }
+        } else {
+          revise(vars.tail, domains + (domain -> nbVars))
+        }
+
       }
     }
 
-    union.fill(false);
-    var size = 0;
-    for (variable <- scope; value <- variable.dom.values) {
-      if (union.set(value - offset)) {
-        size += 1
-        if (size >= arity) return true
-      }
-    }
-
-    false;
+    revise(scope, Map())
   }
 
   override def toString = "allDifferent" + scope.mkString("(" + ", " + ")")

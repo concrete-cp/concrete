@@ -6,9 +6,10 @@ import cspfj.problem.Domain
 import cspfj.problem.Variable
 import scala.annotation.tailrec
 import cspfj.constraint.SimpleRemovals
+import cspfj.util.Loggable
 
 final class SumLeq(val bound: Int, scope: Array[Variable]) extends AbstractConstraint(scope)
-with SimpleRemovals {
+with SimpleRemovals with Loggable {
 
   def check: Boolean = {
 
@@ -37,8 +38,8 @@ with SimpleRemovals {
   }
 
   def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
-
-    val newBound = bound - scope.map(_.dom.firstValue).sum
+    info(this.toString)
+    val newBound = bound - scope.iterator.map(_.dom.firstValue).sum
     if (newBound < 0) {
       return false;
     }
