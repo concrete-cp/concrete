@@ -42,27 +42,16 @@ final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict
 
   private def removeGt(value: Int, position: Int) = {
     val dom = scope(position).dom
-    val lb = dom.closestLeq(value);
-    if (lb >= 0) {
-      if (strict || dom.value(lb) != value) {
-        dom.removeFrom(lb) > 0;
-      } else {
-        dom.removeFrom(lb + 1) > 0;
-      }
-    } else {
-      false
-    }
+    val lb = if (strict) dom.closestGeq(value) else dom.closestGt(value)
+    if (lb >= 0) dom.removeFrom(lb) > 0;
+    else false
   }
 
   private def removeLt(value: Int, position: Int) = {
     val dom = scope(position).dom;
-    val ub = dom.closestGeq(value);
-    if (ub >= 0) {
-      if (strict || dom.value(ub) != value) {
-        dom.removeTo(ub) > 0;
-      } else
-        dom.removeTo(ub - 1) > 0;
-    } else false;
+    val ub = if (strict) dom.closestLeq(value) else dom.closestLt(value)
+    if (ub >= 0) dom.removeTo(ub) > 0;
+    else false;
 
   }
 

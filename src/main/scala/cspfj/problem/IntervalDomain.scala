@@ -3,15 +3,6 @@ package cspfj.problem;
 import cspfj.util.BitVector;
 import java.util.Arrays
 
-case class Interval(val lb: Int, val ub: Int) {
-  // require(ub >= lb)
-  val size = math.max(0, ub - lb + 1)
-  def in(v: Int) = {
-    lb <= v && v <= ub
-  }
-  def allValues = lb to ub
-}
-
 final class IntervalDomain(
   private val offset: Int,
   private val initDomain: Interval,
@@ -64,7 +55,7 @@ final class IntervalDomain(
     }
   }
 
-  override def closestLeq(value: Int) =
+  override def closestLeq(value: Int): Int =
     if (this.value(first) > value) -1 else closestLeq(value, first, last)
 
   private def closestGeq(value: Int, lb: Int, ub: Int): Int = {
@@ -80,7 +71,7 @@ final class IntervalDomain(
     }
   }
 
-  override def closestGeq(value: Int) =
+  override def closestGeq(value: Int): Int =
     if (this.value(last) < value) -1 else closestGeq(value, first, last)
 
   /**

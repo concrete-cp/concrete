@@ -17,7 +17,7 @@ object IntNode {
 
 }
 
-case class IntNode(val v: Int) extends Identified with IOBinomialHeapNode[IntNode] {
+case class IntNode(val v: Int) extends Identified with PTag {//with IOBinomialHeapNode[IntNode] {
   val getId = IntNode.id
   IntNode.id += 1
 }
@@ -66,7 +66,7 @@ final class PriorityQueueTest {
 //  }
   @Test(timeout = 5000)
   def testScalaIOBinomialHeap() {
-    test(new ScalaIOBinomialHeap[IntNode](key))
+    //test(new ScalaIOBinomialHeap[IntNode](key))
   }
   
   def test(q: Queue[IntNode]) {

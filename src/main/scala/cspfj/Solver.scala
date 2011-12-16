@@ -22,7 +22,6 @@ package cspfj;
 import java.util.logging.Level
 import java.util.logging.Logger
 import java.util.Timer
-
 import cspfj.constraint.extension.MatrixManager2D
 import cspfj.constraint.Constraint
 import cspfj.constraint.TupleEnumerator
@@ -33,6 +32,8 @@ import cspfj.util.MsLogHandler
 import cspfj.util.Waker
 import cspfj.generator.ProblemGenerator
 import cspom.CSPOM
+import cspfj.problem.Variable
+import scala.annotation.tailrec
 
 object Solver {
   @Parameter("logger.level")
@@ -90,6 +91,22 @@ abstract class Solver(val problem: Problem) extends Loggable {
   }
 
   def nextSolution(): Option[Map[String, Int]]
+
+  @tailrec
+  private def bestSolution(v: Variable, best: Option[Map[String, Int]]): Option[Map[String, Int]] = {
+    val sol = nextSolution()
+    if (sol.isDefined) {
+      info("New bound " + sol.get(v.name))
+      //if (problem.currentLevel > 0) 
+      reset()
+      v.dom.removeTo(v.dom.index(sol.get(v.name)))
+      bestSolution(v, sol)
+    } else {
+      best
+    }
+  }
+
+  def bestSolution(v: Variable): Option[Map[String, Int]] = bestSolution(v, None)
 
   private var _maxBacktracks = -1
 

@@ -66,7 +66,7 @@ final class BitVectorDomain(
     }
   }
 
-  override def closestLeq(value: Int) =
+  override def closestLeq(value: Int): Int =
     if (domain(first) > value) -1 else closestLeq(value, first, last)
 
   private def closestGeq(value: Int, lb: Int, ub: Int): Int = {
@@ -82,7 +82,7 @@ final class BitVectorDomain(
     }
   }
 
-  override def closestGeq(value: Int) =
+  override def closestGeq(value: Int): Int =
     if (domain(last) < value) -1 else closestGeq(value, first, last)
 
   /**

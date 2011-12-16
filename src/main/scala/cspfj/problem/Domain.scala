@@ -59,6 +59,33 @@ trait Domain {
 
   /**
    * @param value
+   * @return the index of the closest value strictly lower than the given value.
+   */
+  def closestLt(value: Int) = {
+    val lb = closestLeq(value);
+    if (lb >= 0 && this.value(lb) == value) {
+      prev(lb)
+    } else {
+      lb
+    }
+  }
+
+  /**
+   * @param value
+   * @return the index of the closest value strictly greater than the given
+   *         value.
+   */
+  def closestGt(value: Int) = {
+    val ub = closestGeq(value);
+    if (ub >= 0 && this.value(ub) == value) {
+      next(ub)
+    } else {
+      ub
+    }
+  }
+
+  /**
+   * @param value
    * @return the index of the closest value lower or equal to the given value.
    */
   def closestLeq(value: Int): Int
@@ -85,12 +112,12 @@ trait Domain {
       current
     }
   }
-  
+
   def indicesR = new Iterator[Int] {
     var index = last
-    
+
     def hasNext = index >= 0
-    
+
     def next = {
       val current = index
       index = Domain.this.prev(index)
@@ -99,5 +126,13 @@ trait Domain {
   }
 
   def values = indices map value
+
+  def valueInterval = Interval(firstValue, lastValue)
+
+  def intersectVal(i: Interval) = {
+    val lb = closestLt(i.lb)
+    val ub = closestGt(i.ub)
+    (if (lb >= 0) removeTo(lb) else 0) + (if (ub >= 0) removeFrom(ub) else 0)
+  }
 
 }

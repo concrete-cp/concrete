@@ -68,6 +68,8 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
   maxBacktracks = math.max(10, problem.maxDomainSize / 10)
 
   private var prepared = false
+  
+  private var restart = true
 
   @tailrec
   def mac(modifiedVariable: Variable, stack: List[Pair]): (Option[Map[String, Int]], List[Pair]) = {
@@ -110,6 +112,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
   def reset() {
     problem.reset();
     decisions = Nil
+    restart = true
   }
 
   @Statistic
@@ -173,7 +176,10 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
       prepare()
 
       prepared = true
+    }
 
+    if (restart) {
+      restart = false
       if (!timedPreprocess()) {
         None
       } else {

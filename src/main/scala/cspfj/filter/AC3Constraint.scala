@@ -15,7 +15,7 @@ import cspfj.util.Loggable
 
 object AC3Constraint {
   @Parameter("ac.queue")
-  var queueType: Class[_ <: Queue[Constraint]] = classOf[ScalaFifo[Constraint]]
+  var queueType: Class[_ <: Queue[Constraint]] = classOf[ScalaIOBinomialHeap[Constraint]]
 
   @Parameter("ac.key")
   var key = new Key[Constraint]() {
@@ -86,7 +86,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
       true;
     } else {
       queue.clear();
-      variable.constraints.zipWithIndex.foreach {
+      variable.constraints.iterator.zipWithIndex.foreach {
         case (c, cp) =>
           if (!c.isEntailed) {
             c.setRemovals(
@@ -129,7 +129,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
       } else {
         (constraint.scope, sizes).zipped.foreach { (v, s) =>
           if (v.dom.size != s)
-            v.constraints.zipWithIndex.foreach {
+            v.constraints.iterator.zipWithIndex.foreach {
               case (c, cp) =>
                 if (c != constraint && !c.isEntailed) {
                   c.setRemovals(v.positionInConstraint(cp), AC3Constraint.revisionCount);
