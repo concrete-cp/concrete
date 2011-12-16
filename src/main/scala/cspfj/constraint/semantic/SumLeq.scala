@@ -38,7 +38,7 @@ with SimpleRemovals with Loggable {
   }
 
   def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
-    info(this.toString)
+    //info(this.toString)
     val newBound = bound - scope.iterator.map(_.dom.firstValue).sum
     if (newBound < 0) {
       return false;

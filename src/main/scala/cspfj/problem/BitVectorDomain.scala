@@ -109,14 +109,14 @@ final class BitVectorDomain(
 
   override def removeFrom(lb: Int) = {
     val nbRemVals = bvDomain.clearFrom(lb);
-    removed = nbRemVals > 0
+    removed |= nbRemVals > 0
     _size -= nbRemVals;
     nbRemVals;
   }
 
   override def removeTo(ub: Int) = {
     val nbRemVals = bvDomain.clearTo(ub + 1);
-    removed = nbRemVals > 0
+    removed |= nbRemVals > 0
     _size -= nbRemVals;
     nbRemVals;
   }

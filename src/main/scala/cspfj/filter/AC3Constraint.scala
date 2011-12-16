@@ -94,22 +94,22 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
             queue.offer(c);
           }
       }
-      info("reduce " + AC3Constraint.revisionCount)
+      //info("reduce " + AC3Constraint.revisionCount)
       reduce();
     }
   }
 
   private def revisator = new RevisionHandler() {
     def revised(constraint: Constraint, variable: Variable) {
-      variable.constraints.zipWithIndex.foreach {
-        case (c, cp) =>
-          if (c != constraint && !c.isEntailed) {
-            c.setRemovals(
-              variable.positionInConstraint(cp), AC3Constraint.revisionCount);
-            queue.offer(c);
-          }
-
-      }
+      //      variable.constraints.zipWithIndex.foreach {
+      //        case (c, cp) =>
+      //          if (c != constraint && !c.isEntailed) {
+      //            c.setRemovals(
+      //              variable.positionInConstraint(cp), AC3Constraint.revisionCount);
+      //            queue.offer(c);
+      //          }
+      //
+      //      }
     }
   };
 
@@ -122,11 +122,22 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
       val constraint = queue.poll();
 
       revisions += 1;
+      val sizes = constraint.scope.map(_.dom.size)
       if (!constraint.revise(revisator, AC3Constraint.revisionCount)) {
         constraint.weight += 1;
         false;
       } else {
+        (constraint.scope, sizes).zipped.foreach { (v, s) =>
+          if (v.dom.size != s)
+            v.constraints.zipWithIndex.foreach {
+              case (c, cp) =>
+                if (c != constraint && !c.isEntailed) {
+                  c.setRemovals(v.positionInConstraint(cp), AC3Constraint.revisionCount);
+                  queue.offer(c);
+                }
 
+            }
+        }
         constraint.fillRemovals(-1);
         reduce()
       }
@@ -160,7 +171,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
     true;
   }
 
-  override def toString = "GAC3rm-cons+" + queue.getClass().getSimpleName();
+  override def toString = "AC-cons+" + queue.getClass().getSimpleName();
 
   def getStatistics = Map("revisions" -> revisions)
 
