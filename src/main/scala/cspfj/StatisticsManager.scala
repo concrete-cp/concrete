@@ -85,11 +85,11 @@ object StatisticsManager extends Loggable {
   def median[A](arr: Seq[A])(implicit o: Ordering[A]) =
     findKMedian(arr, arr.size / 2, o)
 
-  def time(f: => Unit) = {
+  def time[A](f: => A) = {
     var t = -System.currentTimeMillis
-    f
+    val r = f
     t += System.currentTimeMillis()
-    t / 1000f
+    (r, t / 1000.0)
   }
 
 }

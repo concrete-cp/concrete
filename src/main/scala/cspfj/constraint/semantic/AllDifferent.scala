@@ -45,22 +45,24 @@ final class AllDifferent(scope: Variable*) extends AbstractConstraint(null, scop
     }
   }
 
-  val NOP = 0
-  val FILT = 1
-  val INC = 2
+  trait FilterResult
 
-  private def filter(values: Seq[Int], preserve: Set[Variable], revisator: RevisionHandler): Int = {
-    var change = false
+  case class FILT(f: List[Variable]) extends FilterResult
+  case object INC extends FilterResult
+
+  private def filter(values: Seq[Int], preserve: Set[Variable], revisator: RevisionHandler): FilterResult = {
+    var changed: List[Variable] = List.empty
     for (v <- scope if (!preserve(v)); index <- values map (v.dom.index) if (index >= 0 && v.dom.present(index))) {
       v.dom.remove(index);
       if (v.dom.size < 1) {
-        return INC;
+        return INC
       }
+
       revisator.revised(this, v);
-      change = true
+      changed ::= v
     }
 
-    if (change) FILT else NOP
+    FILT(changed)
 
   }
   //
@@ -90,32 +92,54 @@ final class AllDifferent(scope: Variable*) extends AbstractConstraint(null, scop
   //    false;
   //  }
 
+  var domains: Map[Seq[Int], Set[Variable]]
+
+  var oldDomains: Map[Variable, Seq[Int]]
+  
+  def update(vars: Seq[Variable]) {
+    
+  }
+
   override def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
 
-    val scope = this.scope.toList
-
     @tailrec
-    def revise(vars: List[Variable], domains: Map[Seq[Int], Set[Variable]]): Boolean = {
+    def revise(vars: Set[Variable]): Boolean = {
       if (vars.isEmpty) {
         true
       } else {
-        val head :: tail = vars
-        val domain = head.values.toSeq
-        val nbVars = domains.getOrElse(domain, Set()) + head
+        val head = vars.head
+        val tail = vars.tail
+
+        oldDomains.get(head) match {
+          case None =>
+          case Some(d) => {
+            domains += d -> (domains(d) - head)
+          }
+
+        }
+
+        val domain = head.values.toList
+
+        val nbVars = domains.getOrElse(domain, Set.empty) + head
+
         if (domain.size == nbVars.size) {
           filter(domain, nbVars, revisator) match {
-            case NOP => revise(tail, domains + (domain -> nbVars))
-            case FILT => revise(scope, Map())
+            case FILT(vars) => {
+
+              revise(tail ++ vars)
+            }
             case INC => false
           }
         } else {
-          revise(vars.tail, domains + (domain -> nbVars))
+          revise(tail)
         }
 
       }
     }
 
-    revise(scope, Map())
+    val changed = modified(reviseCount).toSet
+
+    revise(changed)
   }
 
   override def toString = "allDifferent" + scope.mkString("(" + ", " + ")")

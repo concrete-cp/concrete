@@ -49,6 +49,7 @@ object MAC {
   ParameterManager.register(this);
   StatisticsManager.register("MAC", this);
 
+  override def toString = "MAC parameters"
 }
 
 final class MAC(prob: Problem) extends Solver(prob) with Loggable {
@@ -68,7 +69,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
   maxBacktracks = math.max(10, problem.maxDomainSize / 10)
 
   private var prepared = false
-  
+
   private var restart = true
 
   @tailrec
@@ -184,7 +185,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
         None
       } else {
 
-        heuristicCpu = StatisticsManager.time(heuristic.compute())
+        val (_, heuristicCpu) = StatisticsManager.time(heuristic.compute())
 
         val s = nextSolution(null)
         decisions = s._2

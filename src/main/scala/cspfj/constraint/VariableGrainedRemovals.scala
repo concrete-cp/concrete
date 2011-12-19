@@ -25,7 +25,7 @@ trait VariableGrainedRemovals extends Constraint {
     val candidates = removals.toStream.zipWithIndex.filter(_._1 >= reviseCount).take(2)
 
     assert(candidates.size > 0)
-    
+
     if (candidates.size == 1) {
       candidates.head._2
     } else {
@@ -35,5 +35,8 @@ trait VariableGrainedRemovals extends Constraint {
 
   final def varsWithRemovals(reviseCount: Int): Iterator[(Variable, Int)] =
     scope.iterator.zipWithIndex.zip(removals.iterator).filter(t => t._2 >= reviseCount).map(t => t._1)
+
+  final def modified(reviseCount: Int): Iterator[Variable] =
+    scope.iterator.zip(removals.iterator).filter(t => t._2 >= reviseCount).map(t => t._1)
 
 }

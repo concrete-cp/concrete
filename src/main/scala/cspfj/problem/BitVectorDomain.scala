@@ -51,7 +51,7 @@ final class BitVectorDomain(
    *            the value we seek the index for
    * @return the index of the given value or -1 if it could not be found
    */
-  override def index(value: Int) = indicesMap(value)
+  def index(value: Int) = indicesMap(value)
 
   private def closestLeq(value: Int, lb: Int, ub: Int): Int = {
     if (domain(ub) <= value) {
@@ -66,7 +66,7 @@ final class BitVectorDomain(
     }
   }
 
-  override def closestLeq(value: Int): Int =
+  def closestLeq(value: Int): Int =
     if (domain(first) > value) -1 else closestLeq(value, first, last)
 
   private def closestGeq(value: Int, lb: Int, ub: Int): Int = {
@@ -82,7 +82,7 @@ final class BitVectorDomain(
     }
   }
 
-  override def closestGeq(value: Int): Int =
+  def closestGeq(value: Int): Int =
     if (domain(last) < value) -1 else closestGeq(value, first, last)
 
   /**
@@ -90,40 +90,40 @@ final class BitVectorDomain(
    *            index to test
    * @return true iff index is present
    */
-  override def present(index: Int) = bvDomain.get(index);
+  def present(index: Int) = bvDomain.get(index);
 
-  override def setSingle(index: Int) {
+  def setSingle(index: Int) {
     bvDomain.setSingle(index);
     _size = 1;
     removed = true
   }
 
-  override def value(index: Int) = domain(index);
+  def value(index: Int) = domain(index);
 
-  override def remove(index: Int) {
+  def remove(index: Int) {
     assert(present(index));
     _size -= 1;
     bvDomain.clear(index);
     removed = true
   }
 
-  override def removeFrom(lb: Int) = {
+  def removeFrom(lb: Int) = {
     val nbRemVals = bvDomain.clearFrom(lb);
     removed |= nbRemVals > 0
     _size -= nbRemVals;
     nbRemVals;
   }
 
-  override def removeTo(ub: Int) = {
+  def removeTo(ub: Int) = {
     val nbRemVals = bvDomain.clearTo(ub + 1);
     removed |= nbRemVals > 0
     _size -= nbRemVals;
     nbRemVals;
   }
 
-  override def getBitVector = bvDomain
+  def getBitVector = bvDomain
 
-  override def setLevel(level: Int) {
+  def setLevel(level: Int) {
     assert(level > currentLevel, "Given level " + level
       + " should be greater than current " + currentLevel)
     if (removed) {
@@ -133,7 +133,7 @@ final class BitVectorDomain(
     currentLevel = level;
   }
 
-  override def restoreLevel(level: Int) {
+  def restoreLevel(level: Int) {
     assert(level <= currentLevel);
 
     history = history.dropWhile(_._1 > level)
@@ -149,7 +149,7 @@ final class BitVectorDomain(
 
   }
 
-  override def getAtLevel(level: Int) = {
+  def getAtLevel(level: Int) = {
     if (level < currentLevel) {
       history.find(_._1 <= level) match {
         case Some(e) => e._2
@@ -158,7 +158,9 @@ final class BitVectorDomain(
     } else bvDomain;
   }
 
-  override def allValues = domain;
+  val allValues = domain;
+  
+  override val maxSize = domain.size
 
   override def toString = if (size <= BitVectorDomain.DISPLAYED_VALUES) {
     values.mkString("[", ", ", "]");
