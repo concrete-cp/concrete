@@ -1,27 +1,19 @@
 package cspfj.problem;
 
-import cspfj.util.BitVector;
+import cspfj.util.BitVector
 import java.util.Arrays
+import cspfj.util.Backtrackable
 
 final class IntervalDomain(
   private val offset: Int,
-  private val initDomain: Interval,
-  private var currentDomain: Interval,
-  /**
-   * History entry is (level, domain, domain size)
-   */
-  private var history: List[(Int, Interval)]) extends Domain {
+  private var currentDomain: Interval) extends Domain with Backtrackable[Interval] {
 
   override def size = currentDomain.size
+  //
+  //  def this(domain: IntervalDomain) =
+  //    this(domain.offset, domain.initDomain, domain.currentDomain, domain.history)
 
-  private var currentLevel = 0;
-
-  private var removed = false
-
-  def this(domain: IntervalDomain) =
-    this(domain.offset, domain.initDomain, domain.currentDomain, domain.history)
-
-  def this(lb: Int, ub: Int) = this(lb, Interval(0, ub - lb), Interval(0, ub - lb), Nil)
+  def this(lb: Int, ub: Int) = this(lb, Interval(0, ub - lb))
 
   override def first = currentDomain.lb
 
@@ -83,7 +75,7 @@ final class IntervalDomain(
 
   override def setSingle(index: Int) {
     currentDomain = Interval(index, index)
-    removed = true
+    altered()
   }
 
   override def value(index: Int) = index + offset
@@ -93,14 +85,15 @@ final class IntervalDomain(
     if (index == currentDomain.lb) currentDomain = Interval(currentDomain.lb + 1, currentDomain.ub)
     else if (index == currentDomain.ub) currentDomain = Interval(currentDomain.lb, currentDomain.ub - 1)
     else throw new IllegalArgumentException
-    removed = true
+    altered()
   }
 
   override def removeFrom(lb: Int) = {
 
     val nbRemVals = math.max(0, currentDomain.ub - lb + 1)
     currentDomain = Interval(currentDomain.lb, currentDomain.ub - nbRemVals)
-    removed = nbRemVals > 0
+    if (nbRemVals > 0) altered()
+    
     nbRemVals;
 
   }
@@ -108,34 +101,17 @@ final class IntervalDomain(
   override def removeTo(ub: Int) = {
     val nbRemVals = math.max(0, ub - currentDomain.lb + 1)
     currentDomain = Interval(currentDomain.lb + nbRemVals, ub)
-    removed = nbRemVals > 0
+    if (nbRemVals > 0) altered()
+    
     nbRemVals;
   }
 
   override def getBitVector = throw new UnsupportedOperationException
 
-  override def setLevel(level: Int) {
-    assert(level > currentLevel, "Given level " + level
-      + " should be greater than current " + currentLevel)
-    if (removed) {
-      history ::= (currentLevel, currentDomain)
-      removed = false
-    }
-    currentLevel = level;
-  }
+  def save() = currentDomain
 
-  override def restoreLevel(level: Int) {
-    assert(level <= currentLevel);
-
-    history = history.dropWhile(_._1 > level)
-    if (history == Nil) {
-      currentDomain = initDomain
-    } else {
-      currentDomain = history.head._2
-    }
-    currentLevel = level;
-    //    _last = bvDomain.prevSetBit(domain.length);
-
+  def restore(data: Interval) {
+    currentDomain = data
   }
 
   override def getAtLevel(level: Int) = throw new UnsupportedOperationException
@@ -148,7 +124,7 @@ final class IntervalDomain(
   //    } else bvDomain;
   //  }
 
-  override def allValues = initDomain.allValues.toArray
+  val allValues = currentDomain.allValues.toArray
 
   override def toString = "[" + currentDomain.lb + ", " + currentDomain.ub + "]"
 

@@ -91,14 +91,18 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
 
   def level = _level
 
-  def level_=(l: Int) {
+  def setLevel(l: Int) {
+    _level = l
+  }
+  
+  def restoreLevel(l: Int) {
     if (entailedAtLevel > l) {
       // LOGGER.finest("Disentailing " + this);
       disEntail();
     }
     _level = l;
   }
-
+  
   override def hashCode = getId
 
   def controlTuplePresence(tuple: Array[Int]) = {
@@ -131,10 +135,10 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
   final def entail() { entailedAtLevel = level }
 
   def isConsistent(reviseCount: Int) = {
-    level += 1
+    setLevel(level + 1)
     scope foreach { _.dom.setLevel(level) }
     val consistent = revise(NULL_REVISATOR, reviseCount)
-    level -= 1
+    restoreLevel(level - 1)
     scope foreach { _.dom.restoreLevel(level) }
     consistent
   }

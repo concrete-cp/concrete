@@ -37,13 +37,14 @@ final class ExtensionConstraintDynamic(
   private val found =
     (0 until arity) map (p => BitVector.newBitVector(scope(p).dom.maxSize, false)) toIndexedSeq
 
-  override def level_=(l: Int) {
-    super.level = l
+  override def setLevel(l: Int) {
+    super.setLevel(l)
     dynamic.level = l
-    //    if (level <= 0) {
-    //      val itr = dynamic.iterator
-    //      for (tuple <- itr if !dynamic.isTrue(tuple)) itr.remove(-1)
-    //    }
+  }
+
+  override def restoreLevel(l: Int) {
+    super.restoreLevel(l)
+    dynamic.level = l
   }
 
   def revise(revisator: RevisionHandler, reviseCount: Int) = {

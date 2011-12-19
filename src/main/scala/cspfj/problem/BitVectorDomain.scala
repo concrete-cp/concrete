@@ -1,7 +1,8 @@
 package cspfj.problem;
 
-import cspfj.util.BitVector;
+import cspfj.util.BitVector
 import java.util.Arrays
+import cspfj.util.Backtrackable
 
 final object BitVectorDomain {
   val HISTORY_INCREMENT = 20;
@@ -9,30 +10,35 @@ final object BitVectorDomain {
 }
 
 final class BitVectorDomain(
-  private val domain: Array[Int],
-  private val bvDomain: BitVector,
-  /**
-   * History entry is (level, domain, domain size)
-   */
-  private var history: List[(Int, BitVector, Int)]) extends Domain {
+  private val domain: Array[Int]) extends Domain with Backtrackable[(BitVector, Int)] {
   require(domain.sliding(2).forall(p => p.size == 1 || p(0) < p(1)), "Only ordered domains are supported");
 
   private val indicesMap = domain.zipWithIndex.map { case (v, i) => v -> i }.toMap.withDefaultValue(-1)
 
   private var _size = domain.size
 
-  override def size = _size
+  def size = _size
 
-  private var currentLevel = 0;
+  private val bvDomain = BitVector.newBitVector(domain.length, true)
 
-  private var removed = false;
-
-  def this(domain: BitVectorDomain) =
-    this(domain.domain, domain.bvDomain.clone, domain.history)
-
-  def this(domain: Array[Int]) = this(domain.toArray, BitVector.newBitVector(domain.length, true), Nil)
+  //  def this(domain: BitVectorDomain) =
+  //    this(domain.domain, domain.bvDomain.clone, domain.history)
+  //
+  //  def this(domain: Array[Int]) = this(domain, BitVector.newBitVector(domain.length, true))
 
   def this(domain: Int*) = this(domain.toArray)
+
+  def save() = (bvDomain.clone, size)
+
+  def restore(data: (BitVector, Int)) {
+    data._1.copyTo(bvDomain)
+    _size = data._2
+  }
+
+  def getAtLevel(level: Int) = getLevel(level) match {
+    case Some(data) => data._1
+    case None => bvDomain
+  }
 
   override def first = bvDomain.nextSetBit(0);
 
@@ -95,7 +101,7 @@ final class BitVectorDomain(
   def setSingle(index: Int) {
     bvDomain.setSingle(index);
     _size = 1;
-    removed = true
+    altered()
   }
 
   def value(index: Int) = domain(index);
@@ -104,62 +110,27 @@ final class BitVectorDomain(
     assert(present(index));
     _size -= 1;
     bvDomain.clear(index);
-    removed = true
+    altered()
   }
 
   def removeFrom(lb: Int) = {
     val nbRemVals = bvDomain.clearFrom(lb);
-    removed |= nbRemVals > 0
+    if (nbRemVals > 0) altered()
     _size -= nbRemVals;
     nbRemVals;
   }
 
   def removeTo(ub: Int) = {
     val nbRemVals = bvDomain.clearTo(ub + 1);
-    removed |= nbRemVals > 0
+    if (nbRemVals > 0) altered()
     _size -= nbRemVals;
     nbRemVals;
   }
 
   def getBitVector = bvDomain
 
-  def setLevel(level: Int) {
-    assert(level > currentLevel, "Given level " + level
-      + " should be greater than current " + currentLevel)
-    if (removed) {
-      history ::= (currentLevel, bvDomain.clone, size)
-      removed = false
-    }
-    currentLevel = level;
-  }
-
-  def restoreLevel(level: Int) {
-    assert(level <= currentLevel);
-
-    history = history.dropWhile(_._1 > level)
-    if (history == Nil) {
-      bvDomain.fill(true)
-      _size = domain.length
-    } else {
-      history.head._2.copyTo(bvDomain)
-      _size = history.head._3
-    }
-    currentLevel = level;
-    //    _last = bvDomain.prevSetBit(domain.length);
-
-  }
-
-  def getAtLevel(level: Int) = {
-    if (level < currentLevel) {
-      history.find(_._1 <= level) match {
-        case Some(e) => e._2
-        case _ => BitVector.newBitVector(domain.length, true);
-      }
-    } else bvDomain;
-  }
-
   val allValues = domain;
-  
+
   override val maxSize = domain.size
 
   override def toString = if (size <= BitVectorDomain.DISPLAYED_VALUES) {

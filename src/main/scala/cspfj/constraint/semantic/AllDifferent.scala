@@ -92,12 +92,16 @@ final class AllDifferent(scope: Variable*) extends AbstractConstraint(null, scop
   //    false;
   //  }
 
-  var domains: Map[Seq[Int], Set[Variable]]
+  var domains: Map[Seq[Int], Set[Variable]] = Map.empty
 
-  var oldDomains: Map[Variable, Seq[Int]]
-  
-  def update(vars: Seq[Variable]) {
-    
+  var oldDomains: Map[Variable, Seq[Int]] = Map.empty
+
+  def update(vars: Iterable[Variable]) {
+    vars.foreach(v =>
+      oldDomains.get(v) match {
+        case None =>
+        case Some(d) => domains += d -> (domains(d) - v)
+      })
   }
 
   override def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
@@ -121,11 +125,13 @@ final class AllDifferent(scope: Variable*) extends AbstractConstraint(null, scop
         val domain = head.values.toList
 
         val nbVars = domains.getOrElse(domain, Set.empty) + head
+        
+        domains += domain -> nbVars
 
         if (domain.size == nbVars.size) {
           filter(domain, nbVars, revisator) match {
             case FILT(vars) => {
-
+              update(vars)
               revise(tail ++ vars)
             }
             case INC => false
@@ -138,6 +144,8 @@ final class AllDifferent(scope: Variable*) extends AbstractConstraint(null, scop
     }
 
     val changed = modified(reviseCount).toSet
+
+    update(changed)
 
     revise(changed)
   }
