@@ -2,14 +2,19 @@ package cspfj.util
 
 trait Backtrackable[A] {
 
-  private var history: List[(Int, A)] = List((-1, save))
+  private var history: List[(Int, A)] = Nil //List((-1, save))
 
   private var currentLevel = 0
 
-  private var _altered = false
+  //private var _altered = false
 
-  def altered() {
-    _altered = true
+  private var saved = false
+
+  def altering() {
+    if (!saved) {
+      history ::= (currentLevel - 1, save)
+      saved = true
+    }
   }
 
   def save: A
@@ -19,24 +24,27 @@ trait Backtrackable[A] {
   def setLevel(level: Int) {
     assert(level > currentLevel, "Given level " + level
       + " should be greater than current " + currentLevel)
-    if (_altered) {
-      history ::= (currentLevel, save)
-      _altered = false
-    }
+    saved = false
     currentLevel = level;
   }
 
   def restoreLevel(level: Int) {
     assert(level <= currentLevel);
 
-    history = history.dropWhile(_._1 > level)
-    //    if (history == Nil) {
-    //      restore(init())
-    //    } else {
-    assert(!history.isEmpty)
-    restore(history.head._2)
+    if (history != Nil) {
+
+      history = history.dropWhile(_._1 > level)
+      //    if (history == Nil) {
+      //      restore(init())
+      //    } else {
+      // assert(!history.isEmpty)
+      //if (history != Nil)
+      assert(!history.isEmpty, "History of " + this + " emptied !")
+      restore(history.head._2)
+    }
     //    }
     currentLevel = level;
+
     //    _last = bvDomain.prevSetBit(domain.length);
 
   }

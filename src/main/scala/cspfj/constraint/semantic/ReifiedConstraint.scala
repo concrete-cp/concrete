@@ -33,10 +33,16 @@ final class ReifiedConstraint(
 
   }
 
-  override def level_=(l: Int) {
-    super.level = l
-    positiveConstraint.level = l
-    negativeConstraint.level = l
+  override def setLevel(l: Int) {
+    super.setLevel(l)
+    positiveConstraint.setLevel(l)
+    negativeConstraint.setLevel(l)
+  }
+  
+  override def restoreLevel(l: Int) {
+    super.restoreLevel(l)
+    positiveConstraint.restoreLevel(l)
+    negativeConstraint.restoreLevel(l)
   }
 
   override def revise(revisator: RevisionHandler, reviseCount: Int): Boolean =

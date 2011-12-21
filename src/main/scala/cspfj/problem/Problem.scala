@@ -68,18 +68,18 @@ final class Problem {
 
   private def setLevel(level: Int) {
     _variables.foreach(_.dom.setLevel(level))
-    _constraints.foreach(_.level = level)
+    _constraints.foreach(_.setLevel(level))
   }
 
   private def restoreLevel(level: Int) {
     _variables.foreach(_.dom.restoreLevel(level))
-    _constraints.foreach(_.level = level)
+    _constraints.foreach(_.restoreLevel(level))
   }
 
   def reset() {
     _currentLevel = 0;
     _variables.foreach(_.dom.reset())
-    _constraints.foreach(_.level = 0)
+    _constraints.foreach(_.restoreLevel(0))
   }
 
   override def toString = {
@@ -97,7 +97,7 @@ final class Problem {
     }
     _maxDomainSize
   }
-  
+
   def currentLevel = _currentLevel
   def maxArity = _maxArity
   def maxVId = _maxVId

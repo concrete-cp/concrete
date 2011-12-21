@@ -99,30 +99,30 @@ final class BitVectorDomain(
   def present(index: Int) = bvDomain.get(index);
 
   def setSingle(index: Int) {
+    altering()
     bvDomain.setSingle(index);
     _size = 1;
-    altered()
   }
 
   def value(index: Int) = domain(index);
 
   def remove(index: Int) {
     assert(present(index));
+    altering()
     _size -= 1;
     bvDomain.clear(index);
-    altered()
   }
 
   def removeFrom(lb: Int) = {
+    altering()
     val nbRemVals = bvDomain.clearFrom(lb);
-    if (nbRemVals > 0) altered()
     _size -= nbRemVals;
     nbRemVals;
   }
 
   def removeTo(ub: Int) = {
+    altering()
     val nbRemVals = bvDomain.clearTo(ub + 1);
-    if (nbRemVals > 0) altered()
     _size -= nbRemVals;
     nbRemVals;
   }

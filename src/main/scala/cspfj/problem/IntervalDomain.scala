@@ -74,35 +74,39 @@ final class IntervalDomain(
   override def present(index: Int) = currentDomain.in(index);
 
   override def setSingle(index: Int) {
+    altering()
     currentDomain = Interval(index, index)
-    altered()
   }
 
   override def value(index: Int) = index + offset
 
   override def remove(index: Int) {
     assert(present(index));
+    altering()
     if (index == currentDomain.lb) currentDomain = Interval(currentDomain.lb + 1, currentDomain.ub)
     else if (index == currentDomain.ub) currentDomain = Interval(currentDomain.lb, currentDomain.ub - 1)
     else throw new IllegalArgumentException
-    altered()
   }
 
   override def removeFrom(lb: Int) = {
 
     val nbRemVals = math.max(0, currentDomain.ub - lb + 1)
-    currentDomain = Interval(currentDomain.lb, currentDomain.ub - nbRemVals)
-    if (nbRemVals > 0) altered()
-    
+    if (nbRemVals > 0) {
+      altering()
+      currentDomain = Interval(currentDomain.lb, currentDomain.ub - nbRemVals)
+    }
+
     nbRemVals;
 
   }
 
   override def removeTo(ub: Int) = {
     val nbRemVals = math.max(0, ub - currentDomain.lb + 1)
-    currentDomain = Interval(currentDomain.lb + nbRemVals, ub)
-    if (nbRemVals > 0) altered()
-    
+    if (nbRemVals > 0) {
+      altering()
+      currentDomain = Interval(currentDomain.lb + nbRemVals, ub)
+    }
+
     nbRemVals;
   }
 

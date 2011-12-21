@@ -30,14 +30,13 @@ import scala.annotation.tailrec
 final class AllDifferent(scope: Variable*) extends AbstractConstraint(null, scope.toArray)
   with VariableGrainedRemovals {
 
-  val offset = scope map { _.dom.allValues.min } min
-  val max = scope map { _.dom.allValues.max } max
-  val union = BitVector.newBitVector(max - offset + 1, false)
+  val offset = scope map { _.dom.allValues.head } min
+  val max = scope map { _.dom.allValues.last } max
 
   var queue: Queue[Variable] = Queue.empty
 
   def check: Boolean = {
-    union.fill(false)
+    val union = BitVector.newBitVector(max - offset + 1, false)
     tupleValues.exists { v =>
       if (union.get(v - offset)) return false
       union.set(v - offset)
@@ -125,7 +124,7 @@ final class AllDifferent(scope: Variable*) extends AbstractConstraint(null, scop
         val domain = head.values.toList
 
         val nbVars = domains.getOrElse(domain, Set.empty) + head
-        
+
         domains += domain -> nbVars
 
         if (domain.size == nbVars.size) {
