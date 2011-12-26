@@ -26,14 +26,19 @@ import cspfj.filter.RevisionHandler
 import cspfj.problem.Variable
 import cspfj.util.BitVector
 import scala.annotation.tailrec
+import cspfj.constraint.Residues
+import cspfj.util.Loggable
 
-final class AllDifferent(scope: Variable*) extends AbstractConstraint(null, scope.toArray)
-  with VariableGrainedRemovals {
+final class Node(val n: Int) {
+  var list: List[Node] = Nil
+
+  override def toString = n.toString + " : " + list.map(_.n)
+}
+
+final class AllDifferent(scope: Variable*) extends AbstractConstraint(null, scope.toArray) with Loggable {
 
   val offset = scope map { _.dom.allValues.head } min
   val max = scope map { _.dom.allValues.last } max
-
-  var queue: Queue[Variable] = Queue.empty
 
   def check: Boolean = {
     val union = BitVector.newBitVector(max - offset + 1, false)
@@ -44,112 +49,81 @@ final class AllDifferent(scope: Variable*) extends AbstractConstraint(null, scop
     }
   }
 
-  trait FilterResult
+  val s = new Node(-1)
 
-  case class FILT(f: List[Variable]) extends FilterResult
-  case object INC extends FilterResult
+  val t = new Node(-1)
 
-  private def filter(values: Seq[Int], preserve: Set[Variable], revisator: RevisionHandler): FilterResult = {
-    var changed: List[Variable] = List.empty
-    for (v <- scope if (!preserve(v)); index <- values map (v.dom.index) if (index >= 0 && v.dom.present(index))) {
-      v.dom.remove(index);
-      if (v.dom.size < 1) {
-        return INC
+  val varNodes = (0 until arity) map (i => i -> new Node(i)) toMap
+
+  val valNodes = (for (v <- scope; i <- v.values) yield i).distinct map (i => i -> new Node(i)) toMap
+
+  def init(pos: Int, idx: Int) {
+
+    s.list = varNodes.iterator.filter(_._1 != pos).map(_._2).toList
+
+    val value = scope(pos).dom.value(idx)
+    tuple(pos) = idx
+
+    fine("Matching for (" + pos + ", " + value + ")")
+
+    for (v <- valNodes.values) v.list = List(t)
+
+    for (p <- 0 until arity if p != pos) {
+      varNodes(p).list = Nil
+      for (v <- scope(p).values if v != value) {
+        varNodes(p).list ::= valNodes(v)
+        valNodes(v).list ::= varNodes(p)
       }
-
-      revisator.revised(this, v);
-      changed ::= v
     }
 
-    FILT(changed)
-
-  }
-  //
-  //  override def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
-  //    queue = Queue.empty
-  //    varsWithRemovals(reviseCount).map(_._1).filter(_.dom.size == 1).foreach(v => queue = queue.enqueue(v))
-  //
-  //    while (queue != Nil) {
-  //      val (checkedVariable, newQueue) = queue.dequeue
-  //      queue = newQueue
-  //      val value = checkedVariable.dom.firstValue
-  //
-  //      if (filter(checkedVariable, value, revisator)) {
-  //        return false;
-  //      }
-  //    }
-  //
-  //    union.fill(false);
-  //    var size = 0;
-  //    for (variable <- scope; value <- variable.dom.values) {
-  //      if (union.set(value - offset)) {
-  //        size += 1
-  //        if (size >= arity) return true
-  //      }
-  //    }
-  //
-  //    false;
-  //  }
-
-  var domains: Map[Seq[Int], Set[Variable]] = Map.empty
-
-  var oldDomains: Map[Variable, Seq[Int]] = Map.empty
-
-  def update(vars: Iterable[Variable]) {
-    vars.foreach(v =>
-      oldDomains.get(v) match {
-        case None =>
-        case Some(d) => domains += d -> (domains(d) - v)
-      })
   }
 
-  override def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
+  @tailrec
+  def assign(s: List[Node], m: Int): Int =
+    if (s.tail.isEmpty) {
+      m
+    } else {
+      val value = s.head.n
+      val variable = s.tail.head.n
+      tuple(variable) = scope(variable).dom.index(value)
+      fine("matched (" + variable + ", " + value + ")")
+      assign(s.tail.tail, m + 1)
+    }
+
+  def matching(pos: Int, idx: Int) = {
+
+    init(pos, idx)
 
     @tailrec
-    def revise(vars: Set[Variable]): Boolean = {
-      if (vars.isEmpty) {
+    def alternate(stack: List[Node], b: Set[Node], matches: Int): Boolean = {
+      if (matches >= arity - 1) {
+        assert(matches == arity - 1)
         true
+      } else if (stack.isEmpty) {
+        false
+      } else if (stack.head.list.isEmpty) {
+        alternate(stack.tail, b, matches)
       } else {
-        val head = vars.head
-        val tail = vars.tail
+        val first = stack.head.list.head
+        stack.head.list = stack.head.list.tail
 
-        oldDomains.get(head) match {
-          case None =>
-          case Some(d) => {
-            domains += d -> (domains(d) - head)
-          }
-
-        }
-
-        val domain = head.values.toList
-
-        val nbVars = domains.getOrElse(domain, Set.empty) + head
-
-        domains += domain -> nbVars
-
-        if (domain.size == nbVars.size) {
-          filter(domain, nbVars, revisator) match {
-            case FILT(vars) => {
-              update(vars)
-              revise(tail ++ vars)
-            }
-            case INC => false
-          }
+        if (first == t) {
+          alternate(List(s), b, matches + assign(stack, 0))
+        } else if (b(first)) {
+          alternate(stack, b, matches)
         } else {
-          revise(tail)
+          alternate(first :: stack, b + first, matches)
         }
-
       }
     }
 
-    val changed = modified(reviseCount).toSet
+    alternate(List(s), Set.empty, 0)
 
-    update(changed)
-
-    revise(changed)
   }
+  
+  
 
-  override def toString = "allDifferent" + scope.mkString("(" + ", " + ")")
+  override def toString = "allDifferent" + scope.mkString("(", ", ", ")")
 
   val getEvaluation = arity.doubleValue * arity
 }
