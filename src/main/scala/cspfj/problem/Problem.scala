@@ -68,18 +68,18 @@ final class Problem {
 
   private def setLevel(level: Int) {
     _variables.foreach(_.dom.setLevel(level))
-    _constraints.foreach(_.setLevel(level))
+    _constraints.foreach(_.setLvl(level))
   }
 
   private def restoreLevel(level: Int) {
     _variables.foreach(_.dom.restoreLevel(level))
-    _constraints.foreach(_.restoreLevel(level))
+    _constraints.foreach(_.restoreLvl(level))
   }
 
   def reset() {
     _currentLevel = 0;
     _variables.foreach(_.dom.reset())
-    _constraints.foreach(_.restoreLevel(0))
+    _constraints.foreach(_.restoreLvl(0))
   }
 
   override def toString = {

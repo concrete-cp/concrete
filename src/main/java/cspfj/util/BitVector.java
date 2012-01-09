@@ -106,9 +106,11 @@ public abstract class BitVector implements Cloneable {
     public abstract void setAllBut(final int index);
 
     public abstract int cardinality();
-    
+
     public boolean apply(int i) {
         return get(i);
     }
+
+    public abstract boolean isSubSet(BitVector bv);
 
 }

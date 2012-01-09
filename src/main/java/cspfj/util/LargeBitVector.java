@@ -253,4 +253,14 @@ final class LargeBitVector extends BitVector {
         return bv;
     }
 
+    public boolean isSubSet(BitVector bv) {
+        final long[] otherWords = ((LargeBitVector) bv).words;
+
+        for (int i = words.length; --i >= 0;) {
+            if ((otherWords[i] & words[i]) != otherWords[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

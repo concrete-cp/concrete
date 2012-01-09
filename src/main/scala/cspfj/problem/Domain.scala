@@ -135,4 +135,6 @@ trait Domain {
     (if (lb >= 0) removeTo(lb) else 0) + (if (ub >= 0) removeFrom(ub) else 0)
   }
 
+  def subset(d: Domain) = values.forall(v => d.present(d.index(v)))
+
 }

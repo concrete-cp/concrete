@@ -28,19 +28,23 @@ import cspfj.util.BitVector
 import scala.annotation.tailrec
 import cspfj.constraint.Residues
 import cspfj.util.Loggable
-import cspfj.constraint.SimpleRemovals
 import scala.collection.immutable.BitSet
+import cspfj.util.Backtrackable
+import scala.util.Random
+import cspfj.util.Hasse
+import cspfj.util.UniversalSet
+import cspfj.util.SetInclusion
 
-final class Node(val n: Int) {
-  var list: List[Node] = Nil
+final class AllDifferent(scope: Variable*)
+  extends AbstractConstraint(null, scope.toArray)
+  with Loggable
+  with VariableGrainedRemovals
+  with Backtrackable[Hasse[(Variable, BitSet)]] {
 
-  override def toString = n.toString + " : " + list.map(_.n)
-}
+  private val offset = scope map { _.dom.allValues.head } min
+  private val max = scope map { _.dom.allValues.last } max
 
-final class AllDifferent(scope: Variable*) extends AbstractConstraint(null, scope.toArray) with SimpleRemovals with Loggable {
-
-  val offset = scope map { _.dom.allValues.head } min
-  val max = scope map { _.dom.allValues.last } max
+  private def dom(v: Variable) = BitSet.empty ++ (v.dom.values map { _ - offset })
 
   def check: Boolean = {
     val union = BitVector.newBitVector(max - offset + 1, false)
@@ -51,76 +55,148 @@ final class AllDifferent(scope: Variable*) extends AbstractConstraint(null, scop
     }
   }
 
-  class Node(val v: Variable) {
-    var d = BitSet.empty ++ (v.values map (_ - offset))
+  private var tree: Hasse[(Variable, Set[Int])] = Hasse.empty(
+    new PartialOrdering[(Variable, Set[Int])] {
+      val si = new SetInclusion[Int]
+      override def lteq(a: (Variable, Set[Int]), b: (Variable, Set[Int])) = si.lteq(a._2, b._2)
+    }, (null, UniversalSet), (null, Set.empty)) //scope.foldLeft(List[BDom]())((t, v) => add(v, dom(v), t)) //Nil
 
-    var child: Node = null
-    var next: Node = null
-    var rank = 1
-    
-    if (d.size == 1) filter(d, Set(v))
+  def save() = tree
 
-    override def toString = tree(0)
+  def restore(d: List[BDom[Variable]]) {
+    tree = d
+  }
 
-    def tree(depth: Int): String =
-      (0 until depth).map(_ => "--").fold("")(_ + _) + v + " (" + rank + ")\n" +
-        (if (child != null) child.tree(depth + 1) else "") +
-        (if (next != null) next.tree(depth) else "")
+  override def setLvl(l: Int) {
+    super.setLvl(l)
+    setLevel(l)
+  }
 
-    def flatten: Set[Variable] = {
-      var s = Set(v)
-      if (child != null) s ++= child.flatten
-      if (next != null) s ++= next.flatten
-      s
+  override def restoreLvl(l: Int) {
+    super.restoreLvl(l)
+    restoreLevel(l)
+  }
+
+  private def add(v: Variable, dom: BitSet, tree: List[BDom[Variable]]): List[BDom[Variable]] = {
+    var subset = false
+
+    val nt = tree map { p =>
+      if (dom.subsetOf(p.dom)) {
+        subset = true
+        val child = add(v, dom, p.child)
+        BDom(v, dom, child, 1 + child.map(_.rank).sum)
+      } else if (p.dom.subsetOf(dom)) {
+        subset = true
+        BDom(v, dom, List(p), p.rank + 1)
+      } else p
+    }
+
+    if (subset) nt else BDom(v, dom, Nil, 1) :: nt
+    //    if (tree == Nil) BDom(v, dom, Nil, 1) :: Nil
+    //    else if (tree.head.dom.subsetOf(dom)) {
+    //
+    //      val (subsets, others) = tree.tail.partition(bd => bd.dom.subsetOf(dom))
+    //      BDom(v, dom, tree.head :: subsets, 1 + tree.head.rank) :: others
+    //
+    //    } else if (dom.subsetOf(tree.head.dom)) {
+    //
+    //      BDom(tree.head.v, tree.head.dom, add(v, dom, tree.head.child), 1 + tree.head.rank) :: tree.tail
+    //
+    //    } else tree.head :: add(v, dom, tree.tail)
+
+  }
+
+  private def clean(tree: List[BDom], variables: Set[Variable]): (List[BDom], Set[Variable]) = {
+    if (tree == Nil) (Nil, variables)
+    else if (variables.isEmpty) (tree, variables)
+    else if (variables.contains(tree.head.v)) {
+
+      val (child, remaining) = clean(tree.head.child, variables - tree.head.v)
+      val (tail, remaining2) = clean(tree.tail, remaining)
+      (child ::: tail, remaining2)
+
+    } else {
+
+      val (child, remaining) = clean(tree.head.child, variables)
+      val rank = 1 + child.map(_.rank).sum
+      val (tail, remaining2) = clean(tree.tail, remaining)
+      (BDom(tree.head.v, tree.head.dom, child, rank) :: tail, remaining2)
+
     }
   }
 
-  var root: Node = null
+  def toString(tree: List[BDom], depth: Int): String = {
+    if (tree == Nil) ""
+    else (0 until depth).map(_ => "--").reduce(_ + _) + tree.head.v + " (" + tree.head.rank + ")\n" +
+      toString(tree.head.child, depth + 1) +
+      toString(tree.tail, depth)
 
-  def add(root: Node, n: Node): Node = {
-    if (root == null) n
+  }
+
+  @tailrec
+  private def filter(tree: List[BDom], stack: List[BDom], modified: Set[Variable]): Set[Variable] = {
+    if (tree == Nil) {
+
+      if (stack == Nil) modified
+      else filter(stack, Nil, modified)
+
+    } else if (tree.head.rank >= tree.head.size) {
+
+      val preserve = flatten(tree.head.child) + tree.head.v
+      val changed = performFilter(preserve, tree.head.dom.toList)
+
+      changed.headOption match {
+        case Some(first) if first.dom.size == 0 => changed
+        case _ => filter(tree.head.child, stack ++ tree.tail, modified ++ changed)
+      }
+
+    } else filter(tree.head.child, stack ++ tree.tail, modified)
+
+  }
+
+  @tailrec
+  private def performFilter(v: Variable, values: List[Int], change: Boolean): Boolean = {
+    if (values == Nil) change
     else {
-      val common = root.d & n.d
-
-      if (root.d == common) {
-        n.child = root
-        n.rank = root.rank + 1
-        if (n.rank == n.d.size) {
-          filter(n.d, n.flatten)
-        }
-        n
-      } else if (n.d == common) {
-        root.child = add(root.child, n)
-        root.rank += 1
-        if (root.rank == root.d.size) {
-          filter(root.d, root.flatten)
-        }
-        root
-      } else {
-        root.next = add(root.next, n)
-        root
-      }
-    }
-  }
-
-  var change = false
-
-  def filter(values: Set[Int], except: Set[Variable]) {
-    for (v <- scope if !except(v)) {
-      for (i <- values.map(v.dom.index) if i >= 0) {
+      val i = v.dom.index(values.head + offset)
+      if (i >= 0 && v.dom.present(i)) {
         v.dom.remove(i)
-        change = true
-      }
+        if (v.dom.size == 0) true
+        else performFilter(v, values.tail, true)
+      } else performFilter(v, values.tail, change)
     }
   }
 
-  def revise(rh: RevisionHandler, r: Int) = {
-    do {
-      change = false
-      root = scope.map(new Node(_)).reduce(add(_, _))
-    } while (change)
+  private def performFilter(preserve: Set[Variable], values: List[Int]): Set[Variable] = {
+    var changed: Set[Variable] = Set.empty
+    for (v <- scope) {
+      if (!preserve.contains(v) && performFilter(v, values, false)) {
+        if (v.dom.size == 0) return Set(v)
+        changed += v
+      }
+    }
+    changed
+  }
 
-    true
+  private def flatten(tree: List[BDom]): Set[Variable] = {
+    if (tree == Nil) Set.empty
+    else flatten(tree.head.child) ++ flatten(tree.tail) + tree.head.v
+  }
+
+  def revise(rh: RevisionHandler, rvls: Int): Boolean = revise(rh, modified(rvls).toSet)
+
+  private def revise(rh: RevisionHandler, changed: Set[Variable]): Boolean = {
+    altering()
+    tree = clean(tree, changed)._1
+    tree = changed.foldLeft(tree)((t, v) => add(v, dom(v), t))
+    val vars = filter(tree, Nil, Set.empty)
+
+    if (vars.isEmpty) true
+    else if (vars.exists(_.dom.size == 0)) false
+    else {
+      vars.foreach(rh.revised(this, _))
+      revise(rh, vars)
+    }
   }
 
   override def toString = "allDifferent" + scope.mkString("(", ", ", ")")

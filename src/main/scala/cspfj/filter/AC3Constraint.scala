@@ -116,7 +116,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
   @tailrec
   private def reduce(): Boolean = {
     if (queue.isEmpty) {
-      assert(control)
+      //assert(control)
       true
     } else {
       val constraint = queue.poll();

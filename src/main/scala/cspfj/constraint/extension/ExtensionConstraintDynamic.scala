@@ -37,13 +37,13 @@ final class ExtensionConstraintDynamic(
   private val found =
     (0 until arity) map (p => BitVector.newBitVector(scope(p).dom.maxSize, false)) toIndexedSeq
 
-  override def setLevel(l: Int) {
-    super.setLevel(l)
+  override def setLvl(l: Int) {
+    super.setLvl(l)
     dynamic.level = l
   }
 
-  override def restoreLevel(l: Int) {
-    super.restoreLevel(l)
+  override def restoreLvl(l: Int) {
+    super.restoreLvl(l)
     dynamic.level = l
   }
 

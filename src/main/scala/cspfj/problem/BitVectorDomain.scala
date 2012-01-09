@@ -6,7 +6,7 @@ import cspfj.util.Backtrackable
 
 final object BitVectorDomain {
   val HISTORY_INCREMENT = 20;
-  val DISPLAYED_VALUES = 3;
+  val DISPLAYED_VALUES = 4;
 }
 
 final class BitVectorDomain(
@@ -35,10 +35,7 @@ final class BitVectorDomain(
     _size = data._2
   }
 
-  def getAtLevel(level: Int) = getLevel(level) match {
-    case Some(data) => data._1
-    case None => bvDomain
-  }
+  def getAtLevel(level: Int) = getLevel(level)._1
 
   override def first = bvDomain.nextSetBit(0);
 
@@ -137,6 +134,11 @@ final class BitVectorDomain(
     values.mkString("[", ", ", "]");
   } else {
     values.take(BitVectorDomain.DISPLAYED_VALUES).mkString("[", ", ", " (" + (size - BitVectorDomain.DISPLAYED_VALUES) + " more)]")
+  }
+
+  override def subset(d: Domain) = d match {
+    //case d: BitVectorDomain => d.bvDomain.isSubSet(bvDomain)
+    case d => super.subset(d)
   }
 
 }
