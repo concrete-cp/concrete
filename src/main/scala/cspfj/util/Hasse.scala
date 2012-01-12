@@ -6,7 +6,7 @@ import scala.util.Random
 case class HNode[A](
   val v: A,
   val child: List[HNode[A]]) {
-  val rank: Int = if (child == Nil) 0 else 1 + child.map(_.rank).sum
+  val rank: Int = 1 + child.map(_.rank).sum
 }
 
 object Hasse {
@@ -18,33 +18,27 @@ class Hasse[A](val po: PartialOrdering[A], val roots: List[HNode[A]]) {
   def +(v: A): Hasse[A] = new Hasse[A](po, add(v, roots))
 
   private def add(v: A, roots: List[HNode[A]]): List[HNode[A]] = {
-
     val (subsets, remaining) = roots.partition(r => po.lteq(r.v, v))
 
-    if (subsets.isEmpty) {
-
-      val (supersets, remaining) = roots.partition(r => po.lteq(v, r.v))
-      if (supersets.isEmpty) {
-        HNode(v, collect(v, remaining, Set.empty).toList) :: remaining
-      } else {
-        remaining ::: supersets map { r => HNode(r.v, add(v, r.child)) }
-      }
-      
-    } else {
-      HNode(v, subsets ::: collect(v, remaining, Set.empty).toList) :: remaining
-    }
-
+    attach(HNode(v, subsets ::: collect(v, remaining, Nil)), remaining)
   }
 
-  private def collect(v: A, roots: List[HNode[A]], collected: Set[HNode[A]]): Set[HNode[A]] = {
+  private def attach(n: HNode[A], roots: List[HNode[A]]): List[HNode[A]] = {
+    val (supersets, remaining) = roots.partition(r => po.lteq(n.v, r.v))
+    if (supersets.isEmpty) n :: remaining
+    else {
+      supersets.map(s => HNode(s.v, attach(n, s.child))) ::: remaining
+    }
+  }
+
+  private def collect(v: A, roots: List[HNode[A]], collected: List[HNode[A]]): List[HNode[A]] =
     if (roots == Nil) collected
     else {
       val (subsets, remaining) = roots.partition(r => po.lteq(r.v, v))
-      collect(v, remaining.flatMap(r => r.child.filter(!collected(_))), collected ++ subsets)
+      collect(v, remaining.map(_.child).flatten, subsets.filter(r => !collected.exists(c => po.lteq(r.v, c.v))) ::: collected)
     }
-  }
 
-  override def toString: String = roots.toString
+  override def toString: String = toGML
 
   def toGML = {
     val stb = new StringBuilder();
@@ -110,7 +104,6 @@ object Test {
       println((i, s))
       i += 1
     }
-    println(h)
     println(h.toGML)
   }
 }
