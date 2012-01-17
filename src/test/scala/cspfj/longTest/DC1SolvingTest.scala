@@ -12,8 +12,8 @@ import cspom.CSPOM
 import cspfj.util.Loggable
 import cspfj.SolverIterator
 import cspfj.ParameterManager
-import cspfj.MGACIter
 import cspfj.Solver
+import cspfj.MAC
 
 final class DC1SolvingTest extends Loggable {
   //Solver.loggerLevel = "FINER"
@@ -108,7 +108,7 @@ final class DC1SolvingTest extends Loggable {
     ProblemCompiler.compile(cspomProblem);
     val problem = ProblemGenerator.generate(cspomProblem);
 
-    val solver = new MGACIter(problem);
+    val solver = new MAC(problem);
 
     val itr = new SolverIterator(solver)
 
@@ -129,7 +129,7 @@ final class DC1SolvingTest extends Loggable {
     val problem = ProblemGenerator.generate(cspomProblem);
     // System.out.println(problem);
 
-    val solver = new MGACIter(problem);
+    val solver = new MAC(problem);
     var count = 0
     for (solution <- new SolverIterator(solver)) {
       count += 1

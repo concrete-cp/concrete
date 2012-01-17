@@ -54,16 +54,17 @@ final class AllDifferent(scope: Variable*)
     }
   }
 
-  private var tree: Hasse[(Variable, Set[Int])] = Hasse.empty(
-    new PartialOrdering[(Variable, Set[Int])] {
-      val si = new SetInclusion[Int]
-      def tryCompare(a: (Variable, Set[Int]), b: (Variable, Set[Int])) =
-        if (lteq(a, b)) {
-          if (lteq(b, a)) Some(0)
-          else Some(1)
-        } else None
-      override def lteq(a: (Variable, Set[Int]), b: (Variable, Set[Int])) = si.lteq(a._2, b._2)
-    }) //scope.foldLeft(List[BDom]())((t, v) => add(v, dom(v), t)) //Nil
+  private var tree: Hasse[(Variable, Set[Int])] = null
+//  Hasse.empty(
+//    new PartialOrdering[(Variable, Set[Int])] {
+//      val si = new SetInclusion[Int]
+//      def tryCompare(a: (Variable, Set[Int]), b: (Variable, Set[Int])) =
+//        if (lteq(a, b)) {
+//          if (lteq(b, a)) Some(0)
+//          else Some(1)
+//        } else None
+//      override def lteq(a: (Variable, Set[Int]), b: (Variable, Set[Int])) = si.lteq(a._2, b._2)
+//    }) //scope.foldLeft(List[BDom]())((t, v) => add(v, dom(v), t)) //Nil
 
   def save() = tree
 

@@ -92,6 +92,11 @@ abstract class Solver(val problem: Problem) extends Loggable {
 
   def nextSolution(): Option[Map[String, Int]]
 
+  def nextSolutionNum() = nextSolution match {
+    case Some(m) => Some(m map { case (k, v) => k -> Integer.valueOf(v).asInstanceOf[Number] } toMap)
+    case None => None
+  }
+
   @tailrec
   private def bestSolution(v: Variable, best: Option[Map[String, Int]]): Option[Map[String, Int]] = {
     val sol = nextSolution()
