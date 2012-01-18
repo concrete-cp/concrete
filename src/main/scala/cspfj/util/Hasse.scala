@@ -5,19 +5,29 @@ object HNode {
   var id = 0
 }
 
-case class HNode[A](
+final case class HNode[A](
   val v: A,
   val child: List[HNode[A]]) {
-  val rank: Int = 1 + child.map(_.rank).sum
+  val rank: Int = 1 + count(child, Set.empty)
   val id = HNode.id
   HNode.id += 1
+
+  @tailrec
+  private def count(stack: List[HNode[A]], c: Set[HNode[A]]): Int = {
+    if (stack == Nil) c.size
+    else {
+      val head :: rem = stack
+      if (c(head)) count(rem, c)
+      else count(head.child ::: rem, c + head)
+    }
+  }
 }
 
 object Hasse {
   def empty[A](po: EnhancedPartialOrdering[A]) = new Hasse[A](po, Nil)
 }
 
-class Hasse[A](val po: EnhancedPartialOrdering[A], val roots: List[HNode[A]]) {
+final class Hasse[A](val po: EnhancedPartialOrdering[A], val roots: List[HNode[A]]) {
 
   def +(v: A): Hasse[A] = new Hasse[A](po, add(v, roots))
 
@@ -31,7 +41,10 @@ class Hasse[A](val po: EnhancedPartialOrdering[A], val roots: List[HNode[A]]) {
   private def attach(n: HNode[A], roots: List[HNode[A]]): List[HNode[A]] = {
     if (roots.contains(n)) roots
     else {
-      val (supersets, remaining) = roots.partition(r => po.tryCompare(n.v, r.v) == Some(-1))
+      val (supersets, remaining) = roots.partition { r =>
+        // Strict superset to avoid creating cycles
+        po.tryCompare(n.v, r.v) == Some(-1)
+      }
       if (supersets.isEmpty) n :: remaining.filter(r => !po.lteq(r.v, n.v))
       else {
         supersets.map(s => HNode(s.v, attach(n, s.child))) ::: remaining
@@ -43,11 +56,11 @@ class Hasse[A](val po: EnhancedPartialOrdering[A], val roots: List[HNode[A]]) {
   private def collect(v: A, stack: List[HNode[A]], collected: List[HNode[A]]): List[HNode[A]] =
     if (stack == Nil) collected
     else {
-      val node :: remaining = stack
+      val head :: tail = stack
 
-      if (collected.exists(c => po.lteq(node.v, c.v))) collect(v, remaining, collected)
-      else if (po.lteq(node.v, v)) collect(v, remaining, node :: collected)
-      else collect(v, node.child ::: remaining, collected)
+      if (collected.exists(c => po.lteq(head.v, c.v))) collect(v, tail, collected)
+      else if (po.lteq(head.v, v)) collect(v, tail, head :: collected)
+      else collect(v, head.child ::: tail, collected)
     }
 
   override def toString: String = toGML

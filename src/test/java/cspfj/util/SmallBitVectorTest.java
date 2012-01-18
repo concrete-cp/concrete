@@ -138,8 +138,8 @@ public class SmallBitVectorTest {
         BitVector bv2 = BitVector.newBitVector(64, false);
         bv2.set(46);
 
-        assertTrue(bitVector.isSubSet(bv2));
-        assertFalse(bv2.isSubSet(bitVector));
+        assertFalse(bitVector.subsetOf(bv2));
+        assertTrue(bv2.subsetOf(bitVector));
     }
     // @Test
     // public void testIterator() {

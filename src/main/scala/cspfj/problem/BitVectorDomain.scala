@@ -136,9 +136,9 @@ final class BitVectorDomain(
     values.take(BitVectorDomain.DISPLAYED_VALUES).mkString("[", ", ", " (" + (size - BitVectorDomain.DISPLAYED_VALUES) + " more)]")
   }
 
-  override def subset(d: Domain) = d match {
-    //case d: BitVectorDomain => d.bvDomain.isSubSet(bvDomain)
-    case d => super.subset(d)
+  override def subsetOf(d: Domain) = d match {
+    case d: BitVectorDomain => bvDomain.subsetOf(d.bvDomain)
+    case _ => super.subsetOf(d)
   }
 
 }

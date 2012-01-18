@@ -111,6 +111,6 @@ public abstract class BitVector implements Cloneable {
         return get(i);
     }
 
-    public abstract boolean isSubSet(BitVector bv);
+    public abstract boolean subsetOf(BitVector bv);
 
 }

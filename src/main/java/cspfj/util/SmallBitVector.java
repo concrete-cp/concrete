@@ -150,8 +150,9 @@ public final class SmallBitVector extends BitVector {
         return Long.bitCount(word);
     }
 
-    public boolean isSubSet(BitVector bv) {
+    @Override
+    public boolean subsetOf(BitVector bv) {
         final long otherWord = ((SmallBitVector) bv).word;
-        return (word & otherWord) == otherWord;
+        return (word & ~otherWord) == 0L;
     }
 }

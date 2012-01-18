@@ -253,11 +253,11 @@ final class LargeBitVector extends BitVector {
         return bv;
     }
 
-    public boolean isSubSet(BitVector bv) {
+    public boolean subsetOf(BitVector bv) {
         final long[] otherWords = ((LargeBitVector) bv).words;
 
         for (int i = words.length; --i >= 0;) {
-            if ((otherWords[i] & words[i]) != otherWords[i]) {
+            if ((words[i] & ~otherWords[i]) != 0L) {
                 return false;
             }
         }

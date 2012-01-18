@@ -57,6 +57,13 @@ trait Domain {
 
   def allValues: Array[Int]
 
+  override def equals(o: Any) = {
+    o match {
+      case d: Domain => values.sameElements(d.values)
+      case _ => false
+    }
+  }
+
   /**
    * @param value
    * @return the index of the closest value strictly lower than the given value.
@@ -135,6 +142,6 @@ trait Domain {
     (if (lb >= 0) removeTo(lb) else 0) + (if (ub >= 0) removeFrom(ub) else 0)
   }
 
-  def subset(d: Domain) = values.forall(v => d.present(d.index(v)))
+  def subsetOf(d: Domain) = values.forall(v => d.present(d.index(v)))
 
 }

@@ -163,8 +163,8 @@ public final class LargeBitVectorTest {
         BitVector bv2 = BitVector.newBitVector(125, false);
         bv2.set(46);
 
-        assertTrue(bitVector.isSubSet(bv2));
-        assertFalse(bv2.isSubSet(bitVector));
+        assertFalse(bitVector.subsetOf(bv2));
+        assertTrue(bv2.subsetOf(bitVector));
     }
 
     // @Test
