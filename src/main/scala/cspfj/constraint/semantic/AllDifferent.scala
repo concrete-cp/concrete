@@ -32,13 +32,48 @@ import scala.collection.immutable.BitSet
 import cspfj.util.Backtrackable
 import scala.util.Random
 import cspfj.util.Hasse
-import cspfj.util.SetInclusion
+import cspfj.util.HNode
+import cspfj.util.EnhancedPartialOrdering
+import cspfj.util.PredefPO
+import cspfj.util.BitVectorInclusion
+
+final case class VarInfo(
+  val v: Variable,
+  val d: BitVector,
+  val s: Int)
+
+final class VarInclusion extends EnhancedPartialOrdering[VarInfo] with PredefPO[VarInfo] {
+  val bvi = new BitVectorInclusion
+  def lteq(a: VarInfo, b: VarInfo) = bvi.lteq(a.d, b.d)
+
+  override def lt(a: VarInfo, b: VarInfo) = bvi.lt(a.d, b.d)
+
+  def disjoint(a: VarInfo, b: VarInfo) = bvi.disjoint(a.d, b.d)
+}
+
+object Inconsistency extends Exception
+
+final class Hierarchy(po: VarInclusion, roots: List[HNode[VarInfo]]) extends Hasse[VarInfo](po, roots) {
+  def seek: Option[HNode[VarInfo]] = seek(roots, Set.empty)
+  @tailrec
+  def seek(stack: List[HNode[VarInfo]], done: Set[HNode[VarInfo]]): Option[HNode[VarInfo]] =
+    if (stack == Nil) None
+    else {
+      val head :: tail = stack
+      if (done(head)) seek(tail, done)
+      else if (head.v.s > head.rank) throw Inconsistency
+      else if (head.v.s == head.rank) Some(head)
+      else seek(head.child ::: tail, done + head)
+    }
+
+  override def +(v: VarInfo): Hierarchy = new Hierarchy(po, add(v, roots))
+}
 
 final class AllDifferent(scope: Variable*)
   extends AbstractConstraint(null, scope.toArray)
   with Loggable
   with VariableGrainedRemovals
-  with Backtrackable[Hasse[(Variable, Set[Int])]] {
+  with Backtrackable[Hierarchy] {
 
   private val offset = scope map { _.dom.allValues.head } min
   private val max = scope map { _.dom.allValues.last } max
@@ -54,21 +89,21 @@ final class AllDifferent(scope: Variable*)
     }
   }
 
-  private var tree: Hasse[(Variable, Set[Int])] = null
-//  Hasse.empty(
-//    new PartialOrdering[(Variable, Set[Int])] {
-//      val si = new SetInclusion[Int]
-//      def tryCompare(a: (Variable, Set[Int]), b: (Variable, Set[Int])) =
-//        if (lteq(a, b)) {
-//          if (lteq(b, a)) Some(0)
-//          else Some(1)
-//        } else None
-//      override def lteq(a: (Variable, Set[Int]), b: (Variable, Set[Int])) = si.lteq(a._2, b._2)
-//    }) //scope.foldLeft(List[BDom]())((t, v) => add(v, dom(v), t)) //Nil
+  private var tree = new Hierarchy(new VarInclusion, Nil)
+  //  Hasse.empty(
+  //    new PartialOrdering[(Variable, Set[Int])] {
+  //      val si = new SetInclusion[Int]
+  //      def tryCompare(a: (Variable, Set[Int]), b: (Variable, Set[Int])) =
+  //        if (lteq(a, b)) {
+  //          if (lteq(b, a)) Some(0)
+  //          else Some(1)
+  //        } else None
+  //      override def lteq(a: (Variable, Set[Int]), b: (Variable, Set[Int])) = si.lteq(a._2, b._2)
+  //    }) //scope.foldLeft(List[BDom]())((t, v) => add(v, dom(v), t)) //Nil
 
   def save() = tree
 
-  def restore(d: Hasse[(Variable, Set[Int])]) {
+  def restore(d: Hierarchy) {
     tree = d
   }
 
@@ -86,17 +121,19 @@ final class AllDifferent(scope: Variable*)
 
   private def revise(rh: RevisionHandler, changed: Set[Variable]): Boolean = {
     altering()
-    true
-    //    tree = clean(tree, changed)._1
-    //    tree = changed.foldLeft(tree)((t, v) => add(v, dom(v), t))
-    //    val vars = filter(tree, Nil, Set.empty)
-    //
-    //    if (vars.isEmpty) true
-    //    else if (vars.exists(_.dom.size == 0)) false
-    //    else {
-    //      vars.foreach(rh.revised(this, _))
-    //      revise(rh, vars)
-    //    }
+    tree = changed.foldLeft(tree)((t, v) => t + VarInfo(v, v.dom.getBitVector, v.dom.size))
+    try {
+      tree.seek match {
+        case None => true
+        case Some(node) => {
+          val preserve = node.stream.map(_._1.v).toSet
+          for (v <- scope if !preserve(v)) {}
+          true
+        }
+      }
+    } catch {
+      case Inconsistency => false
+    }
   }
 
   override def toString = "allDifferent" + scope.mkString("(", ", ", ")")
