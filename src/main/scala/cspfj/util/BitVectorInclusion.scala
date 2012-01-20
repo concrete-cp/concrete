@@ -5,5 +5,5 @@ final class BitVectorInclusion extends PredefPO[BitVector] with EnhancedPartialO
 
   override def lt(a: BitVector, b: BitVector) = lteq(a, b) && !lteq(b, a)
 
-  def disjoint(a: BitVector, b: BitVector) = a.intersects(b) >= 0
+  def disjoint(a: BitVector, b: BitVector) = a.intersects(b) < 0
 }

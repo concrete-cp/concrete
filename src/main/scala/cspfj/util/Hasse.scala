@@ -1,25 +1,16 @@
 package cspfj.util
 import scala.annotation.tailrec
 
-//object HNode {
-//  var id = 0
-//}
+object HNode {
+  var id = 0
+}
 
 case class HNode[A](
   val v: A,
   val child: List[HNode[A]]) {
   val rank: Int = stream.size //1 + count(child, Set.empty)
-  //val id = HNode.id
-  //HNode.id += 1
-
-  @tailrec
-  private def count(stack: List[HNode[A]], c: Set[HNode[A]]): Int =
-    if (stack == Nil) c.size
-    else {
-      val head :: rem = stack
-      if (c(head)) count(rem, c)
-      else count(head.child ::: rem, c + head)
-    }
+  val id = HNode.id
+  HNode.id += 1
 
   def stream = Hasse.stream(this :: Nil)
 }
@@ -27,14 +18,14 @@ case class HNode[A](
 object Hasse {
   def empty[A](po: EnhancedPartialOrdering[A]) = new Hasse[A](po, Nil)
 
-  def stream[A](stack: List[HNode[A]]): Stream[(A, Int)] = stream(stack, Set[HNode[A]]())
+  def stream[A](stack: List[HNode[A]]): Stream[HNode[A]] = stream(stack, Set[HNode[A]]())
 
-  private def stream[A](stack: List[HNode[A]], done: Set[HNode[A]]): Stream[(A, Int)] =
-    if (stack == Nil) Stream.Empty
+  private def stream[A](stack: List[HNode[A]], done: Set[HNode[A]]): Stream[HNode[A]] =
+    if (stack == Nil) Stream.empty
     else {
       val head :: tail = stack
       if (done(head)) stream(tail, done)
-      else (head.v, head.rank) #:: stream(head.child ::: tail, done + head)
+      else head #:: stream(head.child ::: tail, done + head)
     }
 }
 
@@ -74,35 +65,44 @@ class Hasse[A](val po: EnhancedPartialOrdering[A], val roots: List[HNode[A]])
 
   override def toString = iterator.mkString(", ")
 
-  def iterator = Hasse.stream(roots).iterator
+  def iterator = Hasse.stream(roots).iterator.map(n => (n.v, n.rank))
 
-  //  def toGML = {
-  //    val stb = new StringBuilder();
-  //    stb.append("graph [\n");
-  //    stb.append("directed 0\n");
-  //
-  //    def flatnodes(r: List[HNode[A]]): Set[HNode[A]] = r.toSet ++ r.flatMap(v => flatnodes(v.child))
-  //
-  //    val edges = new StringBuilder()
-  //
-  //    for (n <- flatnodes(roots)) {
-  //      stb.append("node [\n");
-  //      stb.append("id \"").append(n.id).append("\"\n");
-  //      stb.append("label \"").append(n.v).append(", ").append(n.rank).append("\"\n");
-  //      stb.append("]\n");
-  //
-  //      for (c <- n.child) {
-  //        edges.append("edge [\n");
-  //        edges.append("source \"").append(n.id).append("\"\n");
-  //        edges.append("target \"").append(c.id).append("\"\n");
-  //        edges.append("graphics [ targetArrow \"standard\" ]\n");
-  //        edges.append("]\n");
-  //      }
-  //    }
-  //
-  //    stb.append(edges)
-  //    stb.append("]\n").toString
-  //  }
+  def filter(f: A => Boolean) = new Hasse[A](po, rem(f, roots))
+
+  private def rem(f: A => Boolean, roots: List[HNode[A]]): List[HNode[A]] = {
+    roots flatMap { r =>
+      if (f(r.v)) List(HNode(r.v, rem(f, r.child)))
+      else rem(f, r.child)
+    }
+  }
+
+  def toGML = {
+    val stb = new StringBuilder();
+    stb.append("graph [\n");
+    stb.append("directed 0\n");
+
+    def flatnodes(r: List[HNode[A]]): Set[HNode[A]] = r.toSet ++ r.flatMap(v => flatnodes(v.child))
+
+    val edges = new StringBuilder()
+
+    for (n <- flatnodes(roots)) {
+      stb.append("node [\n");
+      stb.append("id \"").append(n.id).append("\"\n");
+      stb.append("label \"").append(n.v).append(", ").append(n.rank).append("\"\n");
+      stb.append("]\n");
+
+      for (c <- n.child) {
+        edges.append("edge [\n");
+        edges.append("source \"").append(n.id).append("\"\n");
+        edges.append("target \"").append(c.id).append("\"\n");
+        edges.append("graphics [ targetArrow \"standard\" ]\n");
+        edges.append("]\n");
+      }
+    }
+
+    stb.append(edges)
+    stb.append("]\n").toString
+  }
 
 }
 

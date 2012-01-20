@@ -13,10 +13,43 @@ class HasseTest {
     BitSet.empty ++ Stream.continually(rand.nextInt(pool)).take(1 + rand.nextInt(size))
   }
 
-  @Test
-  def test() {
+  //  @Test
+  //  def test() {
+  //
+  //    val testSet = Stream.continually(randSet(100, 100)).take(200)
+  //
+  //    val h = testSet.foldLeft(
+  //      Hasse.empty(new SetInclusion[Int])) { (h, s) =>
+  //        println(s);
+  //        h + s
+  //      }
+  //
+  //    for ((s, c) <- h) {
+  //      val countUB = testSet.count { ss => ss.subsetOf(s) }
+  //      val countLB = testSet.distinct.count { ss => ss.subsetOf(s) }
+  //      assertTrue("Set " + s, countLB <= c && c <= countUB)
+  //    }
+  //
+  //    //    h = List(
+  //    //      BitSet(0, 1, 5),
+  //    //      BitSet(1, 2, 5),
+  //    //      BitSet(5),
+  //    //      //BitSet(2, 5),
+  //    //      //BitSet(1),
+  //    //      BitSet(0, 1, 5)
+  //    //      //BitSet(0, 5)
+  //    //      ).foldLeft(Hasse.empty(new SetInclusion[Int]))((h, s) => h + s)
+  //    //
+  //    //    val f = new File("/tmp/hasse.gml")
+  //    //    val ps = new PrintStream(f)
+  //    //    ps.print(h.toGML)
+  //    //    ps.close()
+  //    //    launchYEd(f)
+  //  }
 
-    val testSet = Stream.continually(randSet(100, 100)).take(200)
+  @Test
+  def testFilt() {
+    val testSet = Stream.continually(randSet(10, 10)).take(20)
 
     val h = testSet.foldLeft(
       Hasse.empty(new SetInclusion[Int])) { (h, s) =>
@@ -24,27 +57,13 @@ class HasseTest {
         h + s
       }
 
-    for ((s, c) <- h) {
-      val countUB = testSet.count { ss => ss.subsetOf(s) }
-      val countLB = testSet.distinct.count { ss => ss.subsetOf(s) }
-      assertTrue("Set " + s, countLB <= c && c <= countUB)
-    }
+    val r = h.filter { s: Set[Int] => !(s(testSet.head.head)) }
+    val f = new File("/tmp/hasse.gml")
+    val ps = new PrintStream(f)
+    ps.print(h.toGML)
+    ps.close()
+    launchYEd(f)
 
-    //    h = List(
-    //      BitSet(0, 1, 5),
-    //      BitSet(1, 2, 5),
-    //      BitSet(5),
-    //      //BitSet(2, 5),
-    //      //BitSet(1),
-    //      BitSet(0, 1, 5)
-    //      //BitSet(0, 5)
-    //      ).foldLeft(Hasse.empty(new SetInclusion[Int]))((h, s) => h + s)
-    //
-    //    val f = new File("/tmp/hasse.gml")
-    //    val ps = new PrintStream(f)
-    //    ps.print(h.toGML)
-    //    ps.close()
-    //    launchYEd(f)
   }
 
   private def findYEd = {

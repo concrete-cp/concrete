@@ -51,22 +51,27 @@ final class VarInclusion extends EnhancedPartialOrdering[VarInfo] with PredefPO[
   def disjoint(a: VarInfo, b: VarInfo) = bvi.disjoint(a.d, b.d)
 }
 
-object Inconsistency extends Exception
+final class Inconsistency extends Exception
 
-final class Hierarchy(po: VarInclusion, roots: List[HNode[VarInfo]]) extends Hasse[VarInfo](po, roots) {
-  def seek: Option[HNode[VarInfo]] = seek(roots, Set.empty)
+object AllDifferent {
+  val i = new Inconsistency
+}
+
+final class Hierarchy(p: VarInclusion, r: List[HNode[VarInfo]]) extends Hasse[VarInfo](p, r) {
+  def seek: List[HNode[VarInfo]] = seek(roots, Set.empty, Nil)
+
   @tailrec
-  def seek(stack: List[HNode[VarInfo]], done: Set[HNode[VarInfo]]): Option[HNode[VarInfo]] =
-    if (stack == Nil) None
+  def seek(stack: List[HNode[VarInfo]], done: Set[HNode[VarInfo]], collected: List[HNode[VarInfo]]): List[HNode[VarInfo]] =
+    if (stack == Nil) collected
     else {
       val head :: tail = stack
-      if (done(head)) seek(tail, done)
-      else if (head.v.s > head.rank) throw Inconsistency
-      else if (head.v.s == head.rank) Some(head)
-      else seek(head.child ::: tail, done + head)
+      if (done(head)) seek(tail, done, collected)
+      else if (head.v.s < head.rank) throw AllDifferent.i
+      else if (head.v.s == head.rank) seek(head.child ::: tail, done + head, head :: collected)
+      else seek(head.child ::: tail, done + head, collected)
     }
 
-  override def +(v: VarInfo): Hierarchy = new Hierarchy(po, add(v, roots))
+  override def +(v: VarInfo): Hierarchy = new Hierarchy(p, add(v, roots))
 }
 
 final class AllDifferent(scope: Variable*)
@@ -78,7 +83,11 @@ final class AllDifferent(scope: Variable*)
   private val offset = scope map { _.dom.allValues.head } min
   private val max = scope map { _.dom.allValues.last } max
 
-  private def dom(v: Variable) = BitSet.empty ++ (v.dom.values map { _ - offset })
+  private def dom(v: Variable) = {
+    val bv = BitVector.newBitVector(v.dom.lastValue - offset + 1, false)
+    v.dom.values.foreach(vl => bv.set(vl - offset))
+    bv
+  }
 
   def check: Boolean = {
     val union = BitVector.newBitVector(max - offset + 1, false)
@@ -121,18 +130,35 @@ final class AllDifferent(scope: Variable*)
 
   private def revise(rh: RevisionHandler, changed: Set[Variable]): Boolean = {
     altering()
-    tree = changed.foldLeft(tree)((t, v) => t + VarInfo(v, v.dom.getBitVector, v.dom.size))
+    //tree = tree.filter(v => !changed(v._1.v))
+    tree = scope.foldLeft(tree)((t, v) => t + VarInfo(v, dom(v), v.dom.size))
     try {
-      tree.seek match {
-        case None => true
-        case Some(node) => {
-          val preserve = node.stream.map(_._1.v).toSet
-          for (v <- scope if !preserve(v)) {}
-          true
+      var change: Set[Variable] = Set.empty
+      for (node <- tree.seek) {
+        val preserve = node.stream.map(_.v.v).toSet
+        var changeV = false
+        for (v <- scope if !preserve(v)) {
+          var i = node.v.d.nextSetBit(0)
+          while (i >= 0) {
+            val index = v.dom.index(i + offset)
+            if (v.dom.present(index)) {
+              v.dom.remove(index)
+              changeV = true
+            }
+            i = node.v.d.nextSetBit(i + 1)
+          }
+          if (changeV) {
+            if (v.dom.size == 0) throw AllDifferent.i
+            rh.revised(this, v)
+            change += v
+          }
         }
       }
+      if (!change.isEmpty) revise(rh, change)
+      else true
+
     } catch {
-      case Inconsistency => false
+      case e: Inconsistency => false
     }
   }
 
