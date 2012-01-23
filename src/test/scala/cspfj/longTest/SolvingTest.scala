@@ -11,7 +11,7 @@ import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
 
 final class SolvingTest extends Loggable {
-  Solver.loggerLevel = "FINE"
+  //Solver.loggerLevel = "FINE"
 
   @Test //(timeout = 40000)
   def crosswordm1() {

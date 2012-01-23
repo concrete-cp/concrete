@@ -57,28 +57,10 @@ object AllDifferent {
   val i = new Inconsistency
 }
 
-final class Hierarchy(p: VarInclusion, r: List[HNode[VarInfo]]) extends Hasse[VarInfo](p, r) {
-  def seek: List[HNode[VarInfo]] = seek(roots, Set.empty, Nil)
-
-  @tailrec
-  def seek(stack: List[HNode[VarInfo]], done: Set[HNode[VarInfo]], collected: List[HNode[VarInfo]]): List[HNode[VarInfo]] =
-    if (stack == Nil) collected
-    else {
-      val head :: tail = stack
-      if (done(head)) seek(tail, done, collected)
-      else if (head.v.s < head.rank) throw AllDifferent.i
-      else if (head.v.s == head.rank) seek(head.child ::: tail, done + head, head :: collected)
-      else seek(head.child ::: tail, done + head, collected)
-    }
-
-  override def +(v: VarInfo): Hierarchy = new Hierarchy(p, add(v, roots))
-}
-
 final class AllDifferent(scope: Variable*)
   extends AbstractConstraint(null, scope.toArray)
   with Loggable
-  with VariableGrainedRemovals
-  with Backtrackable[Hierarchy] {
+  with VariableGrainedRemovals {
 
   private val offset = scope map { _.dom.allValues.head } min
   private val max = scope map { _.dom.allValues.last } max
@@ -98,67 +80,92 @@ final class AllDifferent(scope: Variable*)
     }
   }
 
-  private var tree = new Hierarchy(new VarInclusion, Nil)
-  //  Hasse.empty(
-  //    new PartialOrdering[(Variable, Set[Int])] {
-  //      val si = new SetInclusion[Int]
-  //      def tryCompare(a: (Variable, Set[Int]), b: (Variable, Set[Int])) =
-  //        if (lteq(a, b)) {
-  //          if (lteq(b, a)) Some(0)
-  //          else Some(1)
-  //        } else None
-  //      override def lteq(a: (Variable, Set[Int]), b: (Variable, Set[Int])) = si.lteq(a._2, b._2)
-  //    }) //scope.foldLeft(List[BDom]())((t, v) => add(v, dom(v), t)) //Nil
+  def seek(h: Hasse[VarInfo]): List[HNode[VarInfo]] = seek(h.roots, Set.empty, Nil)
 
-  def save() = tree
+  @tailrec
+  def seek(stack: List[HNode[VarInfo]], done: Set[HNode[VarInfo]], collected: List[HNode[VarInfo]]): List[HNode[VarInfo]] =
+    if (stack == Nil) collected
+    else {
+      val head :: tail = stack
+      if (done(head)) seek(tail, done, collected)
+      else if (head.v.s < head.rank) throw AllDifferent.i
+      else if (head.v.s == head.rank) seek(head.child ::: tail, done + head, head :: collected)
+      else seek(head.child ::: tail, done + head, collected)
+    }
 
-  def restore(d: Hierarchy) {
-    tree = d
-  }
-
-  override def setLvl(l: Int) {
-    super.setLvl(l)
-    setLevel(l)
-  }
+  private var tree = new Hasse[VarInfo](new VarInclusion)
 
   override def restoreLvl(l: Int) {
     super.restoreLvl(l)
-    restoreLevel(l)
+
+    val changed = scope filter { v =>
+      val vi = info(v)
+      if (vi.s == v.dom.size) {
+        false
+      } else {
+        tree.remove(vi)
+        true
+      }
+    }
+
+    changed.foreach { v =>
+      val vi = VarInfo(v, dom(v), v.dom.size)
+      info += v -> vi
+      tree.add(vi)
+    }
   }
 
   def revise(rh: RevisionHandler, rvls: Int): Boolean = revise(rh, modified(rvls).toSet)
 
+  var info: Map[Variable, VarInfo] = Map.empty
+
+  @tailrec
   private def revise(rh: RevisionHandler, changed: Set[Variable]): Boolean = {
-    altering()
     //tree = tree.filter(v => !changed(v._1.v))
-    tree = scope.foldLeft(tree)((t, v) => t + VarInfo(v, dom(v), v.dom.size))
-    try {
+
+    if (changed.isEmpty) {
+      true
+    } else {
+
+      changed.foreach(v => info.get(v) match {
+        case None =>
+        case Some(v) => tree.remove(v)
+      })
+      changed.foreach { v =>
+        val vi = VarInfo(v, dom(v), v.dom.size)
+        info += v -> vi
+        tree.add(vi)
+      }
+
+      var unsat = false
       var change: Set[Variable] = Set.empty
-      for (node <- tree.seek) {
-        val preserve = node.stream.map(_.v.v).toSet
-        var changeV = false
-        for (v <- scope if !preserve(v)) {
-          var i = node.v.d.nextSetBit(0)
-          while (i >= 0) {
-            val index = v.dom.index(i + offset)
-            if (v.dom.present(index)) {
-              v.dom.remove(index)
-              changeV = true
+      try {
+
+        for (node <- seek(tree)) {
+          var changeV = false
+          for (v <- scopeSet -- node.stream.map(_.v.v)) {
+            var i = node.v.d.nextSetBit(0)
+            while (i >= 0) {
+              val index = v.dom.index(i + offset)
+              if (v.dom.present(index)) {
+                v.dom.remove(index)
+                changeV = true
+              }
+              i = node.v.d.nextSetBit(i + 1)
             }
-            i = node.v.d.nextSetBit(i + 1)
-          }
-          if (changeV) {
-            if (v.dom.size == 0) throw AllDifferent.i
-            rh.revised(this, v)
-            change += v
+            if (changeV) {
+              if (v.dom.size == 0) throw AllDifferent.i
+              rh.revised(this, v)
+              change += v
+            }
           }
         }
-      }
-      if (!change.isEmpty) revise(rh, change)
-      else true
 
-    } catch {
-      case e: Inconsistency => false
+      } catch {
+        case e: Inconsistency => unsat = true
+      }
+      if (unsat) false
+      else revise(rh, change)
     }
   }
 

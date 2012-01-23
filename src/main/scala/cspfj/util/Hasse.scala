@@ -5,19 +5,18 @@ object HNode {
   var id = 0
 }
 
-case class HNode[A](
-  val v: A,
-  val child: List[HNode[A]]) {
-  val rank: Int = stream.size //1 + count(child, Set.empty)
-  val id = HNode.id
+class HNode[A](val v: A, var child: List[HNode[A]]) {
+  override val hashCode = HNode.id
   HNode.id += 1
 
+  def rank: Int = stream.size
+
   def stream = Hasse.stream(this :: Nil)
+
+  override def toString = "[" + v + " (" + hashCode + "), " + rank + ", " + child + "]"
 }
 
 object Hasse {
-  def empty[A](po: EnhancedPartialOrdering[A]) = new Hasse[A](po, Nil)
-
   def stream[A](stack: List[HNode[A]]): Stream[HNode[A]] = stream(stack, Set[HNode[A]]())
 
   private def stream[A](stack: List[HNode[A]], done: Set[HNode[A]]): Stream[HNode[A]] =
@@ -29,27 +28,32 @@ object Hasse {
     }
 }
 
-class Hasse[A](val po: EnhancedPartialOrdering[A], val roots: List[HNode[A]])
-  extends Iterable[(A, Int)] {
+class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
 
-  def +(v: A): Hasse[A] = new Hasse[A](po, add(v, roots))
+  var roots: List[HNode[A]] = Nil
 
-  def add(v: A, roots: List[HNode[A]]): List[HNode[A]] = {
-    val newNode = HNode(v, collect(v, roots, Nil))
-    attach(newNode, roots)
+  //var nodes: Map[A, List[HNode[A]]] = Map.empty.withDefaultValue(Nil)
+
+  def add(v: A) = {
+    val newNode = new HNode(v, collect(v, roots, Nil))
+    //nodes += v -> (newNode :: nodes(v))
+    val supersets = collectParents(v, roots.filter(c => po.lt(v, c.v)), Nil)
+    if (supersets.isEmpty) roots ::= newNode
+    else supersets.foreach(s =>
+      s.child = newNode :: s.child.filter(r => !po.lteq(r.v, newNode.v)))
   }
 
-  private def attach(n: HNode[A], roots: List[HNode[A]]): List[HNode[A]] =
-    if (roots.contains(n)) roots
+  @tailrec
+  private def collectParents(v: A, stack: List[HNode[A]], collected: List[HNode[A]]): List[HNode[A]] =
+    if (stack == Nil) collected
     else {
-      val (supersets, remaining) = roots.partition { r =>
-        // Strict superset to avoid creating cycles
-        po.lt(n.v, r.v)
-      }
-      if (supersets.isEmpty) n :: remaining.filter(r => !po.lteq(r.v, n.v))
-      else {
-        supersets.map(s => HNode(s.v, attach(n, s.child))) ::: remaining
-      }
+      val head :: tail = stack
+
+      val child = head.child.filter(c => po.lt(v, c.v))
+
+      if (child == Nil) collectParents(v, tail, head :: collected)
+      else collectParents(v, child ::: tail, collected)
+
     }
 
   @tailrec
@@ -67,12 +71,19 @@ class Hasse[A](val po: EnhancedPartialOrdering[A], val roots: List[HNode[A]])
 
   def iterator = Hasse.stream(roots).iterator.map(n => (n.v, n.rank))
 
-  def filter(f: A => Boolean) = new Hasse[A](po, rem(f, roots))
+  //  def filter(f: A => Boolean) = new Hasse[A](po, rem(f, roots))
+  //
 
-  private def rem(f: A => Boolean, roots: List[HNode[A]]): List[HNode[A]] = {
+  def remove(v: A) { roots = rem(v, roots) }
+
+  private def rem(v: A, roots: List[HNode[A]]): List[HNode[A]] = {
     roots flatMap { r =>
-      if (f(r.v)) List(HNode(r.v, rem(f, r.child)))
-      else rem(f, r.child)
+      if (!po.lteq(v, r.v)) List(r)
+      if (r.v == v) r.child
+      else {
+        r.child = rem(v, r.child)
+        List(r)
+      }
     }
   }
 
@@ -87,14 +98,14 @@ class Hasse[A](val po: EnhancedPartialOrdering[A], val roots: List[HNode[A]])
 
     for (n <- flatnodes(roots)) {
       stb.append("node [\n");
-      stb.append("id \"").append(n.id).append("\"\n");
+      stb.append("id \"").append(n.hashCode).append("\"\n");
       stb.append("label \"").append(n.v).append(", ").append(n.rank).append("\"\n");
       stb.append("]\n");
 
       for (c <- n.child) {
         edges.append("edge [\n");
-        edges.append("source \"").append(n.id).append("\"\n");
-        edges.append("target \"").append(c.id).append("\"\n");
+        edges.append("source \"").append(n.hashCode).append("\"\n");
+        edges.append("target \"").append(c.hashCode).append("\"\n");
         edges.append("graphics [ targetArrow \"standard\" ]\n");
         edges.append("]\n");
       }
