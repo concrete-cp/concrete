@@ -142,17 +142,16 @@ final class AllDifferent(scope: Variable*)
       try {
 
         for (node <- seek(tree)) {
+          val vals = values(node.v.d)
           var changeV = false
           for (v <- scopeSet -- node.stream.map(_.v.v)) {
-            var i = node.v.d.nextSetBit(0)
-            while (i >= 0) {
-              val index = v.dom.index(i + offset)
-              if (v.dom.present(index)) {
-                v.dom.remove(index)
-                changeV = true
-              }
-              i = node.v.d.nextSetBit(i + 1)
+            for (
+              index <- vals map (v.dom.index) if v.dom.present(index)
+            ) {
+              v.dom.remove(index)
+              changeV = true
             }
+
             if (changeV) {
               if (v.dom.size == 0) throw AllDifferent.i
               rh.revised(this, v)
@@ -167,6 +166,16 @@ final class AllDifferent(scope: Variable*)
       if (unsat) false
       else revise(rh, change)
     }
+  }
+
+  def values(bv: BitVector) = {
+    var l: List[Int] = Nil
+    var i = bv.nextSetBit(0)
+    while (i >= 0) {
+      l ::= i + offset
+      i = bv.nextSetBit(i + 1)
+    }
+    l
   }
 
   override def toString = "allDifferent" + scope.mkString("(", ", ", ")")
