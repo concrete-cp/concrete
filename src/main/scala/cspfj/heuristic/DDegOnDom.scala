@@ -8,7 +8,7 @@ import cspfj.problem.Variable;
 final class DDegOnDom(val problem: Problem) extends VariableHeuristic with RandomBreak {
 
   def score(variable: Variable) =
-    dDeg(variable) / variable.dom.size
+    dDeg(variable).toDouble / variable.dom.size
 
   private def dDeg(variable: Variable) =
     variable.constraints.iterator.filter(!_.isEntailed).size

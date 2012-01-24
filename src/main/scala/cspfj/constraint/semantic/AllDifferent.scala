@@ -80,18 +80,18 @@ final class AllDifferent(scope: Variable*)
     }
   }
 
-  def seek(h: Hasse[VarInfo]): List[HNode[VarInfo]] = seek(h.roots, Set.empty, Nil)
+  def seek(h: Hasse[VarInfo]): List[HNode[VarInfo]] = seek(h.roots, BitSet.empty, Nil)
 
   @tailrec
-  def seek(s: List[HNode[VarInfo]], done: Set[Int], collected: List[HNode[VarInfo]]): List[HNode[VarInfo]] =
+  def seek(s: List[HNode[VarInfo]], done: BitSet, collected: List[HNode[VarInfo]]): List[HNode[VarInfo]] =
     if (s == Nil) collected
     else {
       val head :: tail = s
-      if (done(head.id)) seek(tail, done, collected)
+      if (done(head.cId)) seek(tail, done, collected)
       else if (head.v.s < head.rank) throw AllDifferent.i
       else if (head.v.s == head.rank)
-        seek(stack(head.child, tail), done + head.id, head :: collected)
-      else seek(stack(head.child, tail), done + head.id, collected)
+        seek(stack(head.child, tail), done + head.cId, head :: collected)
+      else seek(stack(head.child, tail), done + head.cId, collected)
     }
 
   /**
@@ -172,7 +172,7 @@ final class AllDifferent(scope: Variable*)
   }
 
   private def remove(v: Variable, vals: List[Int]) = {
-    val toRemove = vals map (v.dom.index) filter (v.dom.present)
+    val toRemove = vals.iterator map (v.dom.index) filter (v.dom.present)
 
     if (toRemove.isEmpty) false
     else {

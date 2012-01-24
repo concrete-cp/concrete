@@ -4,6 +4,7 @@ import scala.collection.immutable.BitSet
 
 object HNode {
   var id = 0
+  var offset = 0
 }
 
 class HNode[A](val v: A, var child: List[HNode[A]]) {
@@ -11,6 +12,8 @@ class HNode[A](val v: A, var child: List[HNode[A]]) {
   HNode.id += 1
 
   override val hashCode = id
+
+  def cId = id - HNode.offset
 
   def rank: Int = count(child, BitSet.empty, 1)
 
@@ -20,8 +23,8 @@ class HNode[A](val v: A, var child: List[HNode[A]]) {
   private def count(s: List[HNode[A]], done: BitSet, c: Int): Int =
     if (s == Nil) c
     else {
-      if (done(s.head.id)) count(s.tail, done, c)
-      else count(Hasse.stack(s.head.child, s.tail), done + s.head.id, c + 1)
+      if (done(s.head.cId)) count(s.tail, done, c)
+      else count(Hasse.stack(s.head.child, s.tail), done + s.head.cId, c + 1)
     }
 
   override def toString = "[" + v + " (" + hashCode + "), " + rank + ", " + child + "]"
@@ -34,8 +37,8 @@ object Hasse {
     if (s == Nil) Stream.empty
     else {
       val head :: tail = s
-      if (done(head.id)) stream(tail, done)
-      else head #:: stream(stack(head.child, tail), done + head.id)
+      if (done(head.cId)) stream(tail, done)
+      else head #:: stream(stack(head.child, tail), done + head.cId)
     }
 
   /**
@@ -93,13 +96,17 @@ class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
   //  def filter(f: A => Boolean) = new Hasse[A](po, rem(f, roots))
   //
 
-  def remove(v: A) { roots = rem(v, roots) }
+  def remove(v: A) {
+    roots = rem(v, roots)
+  }
 
   private def rem(v: A, roots: List[HNode[A]]): List[HNode[A]] = {
     roots flatMap { r =>
       if (!po.lteq(v, r.v)) List(r)
-      else if (r.v == v) r.child
-      else {
+      else if (r.v == v) {
+        if (r.id == HNode.offset) HNode.offset += 1
+        r.child
+      } else {
         r.child = rem(v, r.child)
         List(r)
       }
