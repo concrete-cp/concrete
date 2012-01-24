@@ -106,6 +106,8 @@ public abstract class BitVector implements Cloneable {
     public abstract void setAllBut(final int index);
 
     public abstract int cardinality();
+    
+    public abstract long getWord(int i);
 
     public boolean apply(int i) {
         return get(i);

@@ -59,16 +59,18 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
 
   private var decisions: List[Pair] = Nil
 
-  private var filter: Filter = null;
+  private val filter: Filter = MAC.filterClass.getConstructor(classOf[Problem]).newInstance(problem);
+  StatisticsManager.register("filter", filter);
 
-  private var heuristic: Heuristic = null;
+  private val heuristic: Heuristic = MAC.heuristicClass.getConstructor(classOf[Problem])
+    .newInstance(problem);
 
   private val ngl = new NoGoodLearner(prob, MAC.addConstraint)
   StatisticsManager.register("nfr-learner", ngl)
 
   maxBacktracks = math.max(10, problem.maxDomainSize / 10)
 
-  private var prepared = false
+  //private var prepared = false
 
   private var restart = true
 
@@ -161,23 +163,15 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
     } else s
   }
 
-  def prepare() {
-    filter = MAC.filterClass.getConstructor(classOf[Problem]).newInstance(problem);
-    StatisticsManager.register("filter", filter);
-
-    heuristic = MAC.heuristicClass.getConstructor(classOf[Problem])
-      .newInstance(problem);
-  }
-
   def nextSolution(): Option[Map[String, Int]] = {
 
     // System.gc();
-    if (!prepared) {
-
-      prepare()
-
-      prepared = true
-    }
+//    if (!prepared) {
+//
+//      prepare()
+//
+//      prepared = true
+//    }
 
     if (restart) {
       restart = false

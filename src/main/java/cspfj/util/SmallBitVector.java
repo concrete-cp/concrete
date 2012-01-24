@@ -105,7 +105,7 @@ public final class SmallBitVector extends BitVector {
     }
 
     public boolean intersects(final BitVector bv, final int position) {
-        return (((SmallBitVector) bv).word & word) != 0;
+        return (bv.getWord(0) & word) != 0;
     }
 
     public int intersects(final BitVector bv) {
@@ -152,7 +152,15 @@ public final class SmallBitVector extends BitVector {
 
     @Override
     public boolean subsetOf(BitVector bv) {
-        final long otherWord = ((SmallBitVector) bv).word;
+        final long otherWord = bv.getWord(0);
         return (word & ~otherWord) == 0L;
+    }
+
+    @Override
+    public long getWord(int i) {
+        if (i > 0)
+            return 0L;
+        else
+            return word;
     }
 }

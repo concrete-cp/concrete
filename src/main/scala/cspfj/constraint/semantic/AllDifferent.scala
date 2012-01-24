@@ -83,15 +83,24 @@ final class AllDifferent(scope: Variable*)
   def seek(h: Hasse[VarInfo]): List[HNode[VarInfo]] = seek(h.roots, Set.empty, Nil)
 
   @tailrec
-  def seek(stack: List[HNode[VarInfo]], done: Set[HNode[VarInfo]], collected: List[HNode[VarInfo]]): List[HNode[VarInfo]] =
-    if (stack == Nil) collected
+  def seek(s: List[HNode[VarInfo]], done: Set[Int], collected: List[HNode[VarInfo]]): List[HNode[VarInfo]] =
+    if (s == Nil) collected
     else {
-      val head :: tail = stack
-      if (done(head)) seek(tail, done, collected)
+      val head :: tail = s
+      if (done(head.id)) seek(tail, done, collected)
       else if (head.v.s < head.rank) throw AllDifferent.i
-      else if (head.v.s == head.rank) seek(head.child ::: tail, done + head, head :: collected)
-      else seek(head.child ::: tail, done + head, collected)
+      else if (head.v.s == head.rank)
+        seek(stack(head.child, tail), done + head.id, head :: collected)
+      else seek(stack(head.child, tail), done + head.id, collected)
     }
+
+  /**
+   * Stacks n (reversed for efficiency) on s
+   */
+  @tailrec
+  private def stack[A](n: List[A], s: List[A]): List[A] =
+    if (n == Nil) s
+    else stack(n.tail, n.head :: s)
 
   private var tree = new Hasse[VarInfo](new VarInclusion)
 
@@ -115,60 +124,65 @@ final class AllDifferent(scope: Variable*)
     }
   }
 
-  def revise(rh: RevisionHandler, rvls: Int): Boolean = revise(rh, modified(rvls).toSet)
+  def revise(rh: RevisionHandler, rvls: Int): Boolean = revise(rh, modified(rvls).toSeq)
 
   var info: Map[Variable, VarInfo] = Map.empty
 
   @tailrec
-  private def revise(rh: RevisionHandler, changed: Set[Variable]): Boolean = {
-    //tree = tree.filter(v => !changed(v._1.v))
-
-    if (changed.isEmpty) {
-      true
-    } else {
+  private def revise(rh: RevisionHandler, changed: Seq[Variable]): Boolean =
+    if (changed.isEmpty) true
+    else {
 
       changed.foreach(v => info.get(v) match {
         case None =>
         case Some(v) => tree.remove(v)
       })
-      changed.foreach { v =>
+
+      /**
+       * Much more efficient when adding largest domains first (less likely to
+       * have supersets)
+       */
+      changed.sortBy(-_.dom.size).foreach { v =>
         val vi = VarInfo(v, dom(v), v.dom.size)
         info += v -> vi
         tree.add(vi)
       }
 
       var unsat = false
-      var change: Set[Variable] = Set.empty
-      try {
-
-        for (node <- seek(tree)) {
-          val vals = values(node.v.d)
-          var changeV = false
-          for (v <- scopeSet -- node.stream.map(_.v.v)) {
-            for (
-              index <- vals map (v.dom.index) if v.dom.present(index)
-            ) {
-              v.dom.remove(index)
-              changeV = true
-            }
-
-            if (changeV) {
-              if (v.dom.size == 0) throw AllDifferent.i
-              rh.revised(this, v)
-              change += v
-            }
-          }
-        }
-
+      val change: Seq[Variable] = try {
+        seek(tree).foldLeft(Set[Variable]())((acc, n) =>
+          acc ++ filter(rh, n)).toSeq
       } catch {
-        case e: Inconsistency => unsat = true
+        case e: Inconsistency => { unsat = true; Seq.empty }
       }
+
       if (unsat) false
       else revise(rh, change)
     }
+
+  private def filter(rh: RevisionHandler, node: HNode[VarInfo]): Set[Variable] = {
+    val vals = values(node.v.d)
+
+    val change: Set[Variable] =
+      (scopeSet -- node.stream.map(_.v.v)) filter (remove(_, vals))
+
+    change.foreach(rh.revised(this, _))
+
+    change
   }
 
-  def values(bv: BitVector) = {
+  private def remove(v: Variable, vals: List[Int]) = {
+    val toRemove = vals map (v.dom.index) filter (v.dom.present)
+
+    if (toRemove.isEmpty) false
+    else {
+      toRemove.foreach(v.dom.remove)
+      if (v.dom.size == 0) throw AllDifferent.i
+      true
+    }
+  }
+
+  private def values(bv: BitVector) = {
     var l: List[Int] = Nil
     var i = bv.nextSetBit(0)
     while (i >= 0) {

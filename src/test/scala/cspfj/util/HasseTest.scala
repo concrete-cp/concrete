@@ -10,10 +10,14 @@ class HasseTest {
   val rand = new Random(0)
 
   def randSet(pool: Int, size: Int) = {
-    BitSet.empty ++ Stream.continually(rand.nextInt(pool)).take(1 + rand.nextInt(size))
+    val bv = BitVector.newBitVector(pool, false)
+
+    Stream.continually(rand.nextInt(pool)).take(1 + rand.nextInt(size)).foreach(bv.set)
+    
+    bv
   }
 
-  def control(h: Hasse[Set[Int]], testSet: Seq[Set[Int]]) {
+  def control(h: Hasse[BitVector], testSet: Seq[BitVector]) {
 
     for ((s, c) <- h) {
       val countUB = testSet.count { ss => ss.subsetOf(s) }
@@ -27,7 +31,7 @@ class HasseTest {
 
     val testSet = Stream.continually(randSet(100, 100)).take(200)
 
-    val h = new Hasse(new SetInclusion[Int])
+    val h = new Hasse(new BitVectorInclusion)
 
     testSet.foreach(h.add)
 
@@ -53,7 +57,7 @@ class HasseTest {
   def testFilt() {
     val testSet = Stream.continually(randSet(100, 100)).take(200)
 
-    val h = new Hasse[Set[Int]](new SetInclusion[Int])
+    val h = new Hasse(new BitVectorInclusion)
     testSet.foreach(h.add)
 
     val (remove, remain) = testSet.splitAt(50)
@@ -62,12 +66,12 @@ class HasseTest {
 
     control(h, remain)
     //    val r = h.filter { s: Set[Int] => !(s(testSet.head.head)) }
-//    val f = new File("/tmp/hasse.gml")
-//    val ps = new PrintStream(f)
-//    ps.print(h.toGML)
-//    ps.close()
-//    launchYEd(f)
-//    h.roots.foreach(println)
+    //    val f = new File("/tmp/hasse.gml")
+    //    val ps = new PrintStream(f)
+    //    ps.print(h.toGML)
+    //    ps.close()
+    //    launchYEd(f)
+    //    h.roots.foreach(println)
   }
 
   private def findYEd = {

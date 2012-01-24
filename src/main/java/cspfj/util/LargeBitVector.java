@@ -209,7 +209,7 @@ final class LargeBitVector extends BitVector {
 
     @Override
     public boolean intersects(final BitVector bv, final int position) {
-        return (((LargeBitVector) bv).words[position] & words[position]) != 0;
+        return (bv.getWord(position) & words[position]) != 0;
     }
 
     @Override
@@ -254,13 +254,18 @@ final class LargeBitVector extends BitVector {
     }
 
     public boolean subsetOf(BitVector bv) {
-        final long[] otherWords = ((LargeBitVector) bv).words;
-
         for (int i = words.length; --i >= 0;) {
-            if ((words[i] & ~otherWords[i]) != 0L) {
+            if ((words[i] & ~bv.getWord(i)) != 0L) {
                 return false;
             }
         }
         return true;
+    }
+
+    public long getWord(int i) {
+        if (i >= words.length)
+            return 0L;
+        else
+            return words[i];
     }
 }

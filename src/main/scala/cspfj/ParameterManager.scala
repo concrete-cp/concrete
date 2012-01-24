@@ -111,7 +111,7 @@ final object ParameterManager {
    */
   def toXML = NodeSeq.fromSeq(parameters map {
     case (k, (o, f)) =>
-      <p name="{k}">{ f.get(o) }</p>
+      <p name = { k }>{ f.get(o) }</p>
   } toSeq)
 
   /**

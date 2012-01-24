@@ -1,31 +1,50 @@
 package cspfj.util
 import scala.annotation.tailrec
+import scala.collection.immutable.BitSet
 
 object HNode {
   var id = 0
 }
 
 class HNode[A](val v: A, var child: List[HNode[A]]) {
-  override val hashCode = HNode.id
+  val id = HNode.id
   HNode.id += 1
 
-  def rank: Int = stream.size
+  override val hashCode = id
+
+  def rank: Int = count(child, BitSet.empty, 1)
 
   def stream = Hasse.stream(this :: Nil)
+
+  @tailrec
+  private def count(s: List[HNode[A]], done: BitSet, c: Int): Int =
+    if (s == Nil) c
+    else {
+      if (done(s.head.id)) count(s.tail, done, c)
+      else count(Hasse.stack(s.head.child, s.tail), done + s.head.id, c + 1)
+    }
 
   override def toString = "[" + v + " (" + hashCode + "), " + rank + ", " + child + "]"
 }
 
 object Hasse {
-  def stream[A](stack: List[HNode[A]]): Stream[HNode[A]] = stream(stack, Set[HNode[A]]())
+  def stream[A](stack: List[HNode[A]]): Stream[HNode[A]] = stream(stack, BitSet.empty)
 
-  private def stream[A](stack: List[HNode[A]], done: Set[HNode[A]]): Stream[HNode[A]] =
-    if (stack == Nil) Stream.empty
+  private def stream[A](s: List[HNode[A]], done: BitSet): Stream[HNode[A]] =
+    if (s == Nil) Stream.empty
     else {
-      val head :: tail = stack
-      if (done(head)) stream(tail, done)
-      else head #:: stream(head.child ::: tail, done + head)
+      val head :: tail = s
+      if (done(head.id)) stream(tail, done)
+      else head #:: stream(stack(head.child, tail), done + head.id)
     }
+
+  /**
+   * Stacks n (reversed for efficiency) on s
+   */
+  @tailrec
+  def stack[A](n: List[A], s: List[A]): List[A] =
+    if (n == Nil) s
+    else stack(n.tail, n.head :: s)
 }
 
 class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
@@ -34,7 +53,7 @@ class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
 
   //var nodes: Map[A, List[HNode[A]]] = Map.empty.withDefaultValue(Nil)
 
-  def add(v: A) = {
+  def add(v: A) {
     val newNode = new HNode(v, collect(v, roots, Nil))
     //nodes += v -> (newNode :: nodes(v))
     val supersets = collectParents(v, roots.filter(c => po.lt(v, c.v)), Nil)
@@ -44,27 +63,27 @@ class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
   }
 
   @tailrec
-  private def collectParents(v: A, stack: List[HNode[A]], collected: List[HNode[A]]): List[HNode[A]] =
-    if (stack == Nil) collected
+  private def collectParents(v: A, s: List[HNode[A]], collected: List[HNode[A]]): List[HNode[A]] =
+    if (s == Nil) collected
     else {
-      val head :: tail = stack
+      val head :: tail = s
 
       val child = head.child.filter(c => po.lt(v, c.v))
 
       if (child == Nil) collectParents(v, tail, head :: collected)
-      else collectParents(v, child ::: tail, collected)
+      else collectParents(v, Hasse.stack(child, tail), collected)
 
     }
 
   @tailrec
-  private def collect(v: A, stack: List[HNode[A]], collected: List[HNode[A]]): List[HNode[A]] =
-    if (stack == Nil) collected
+  private def collect(v: A, s: List[HNode[A]], collected: List[HNode[A]]): List[HNode[A]] =
+    if (s == Nil) collected
     else {
-      val head :: tail = stack
+      val head :: tail = s
 
       if (po.disjoint(head.v, v) || collected.exists(c => po.lteq(head.v, c.v))) collect(v, tail, collected)
       else if (po.lteq(head.v, v)) collect(v, tail, head :: (collected.filter(c => !po.lteq(c.v, head.v))))
-      else collect(v, head.child ::: tail, collected)
+      else collect(v, Hasse.stack(head.child, tail), collected)
     }
 
   override def toString = iterator.mkString(", ")
@@ -79,7 +98,7 @@ class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
   private def rem(v: A, roots: List[HNode[A]]): List[HNode[A]] = {
     roots flatMap { r =>
       if (!po.lteq(v, r.v)) List(r)
-      if (r.v == v) r.child
+      else if (r.v == v) r.child
       else {
         r.child = rem(v, r.child)
         List(r)
@@ -133,15 +152,4 @@ trait PredefPO[A] extends PartialOrdering[A] {
   }
 }
 
-class SetInclusion[A] extends PredefPO[Set[A]] with EnhancedPartialOrdering[Set[A]] {
-  def lteq(a: Set[A], b: Set[A]) = a.subsetOf(b)
-
-  override def lt(a: Set[A], b: Set[A]) = lteq(a, b) && !lteq(b, a)
-
-  def disjoint(a: Set[A], b: Set[A]) = {
-    require(!a.isEmpty)
-    require(!b.isEmpty)
-    (a & b).isEmpty
-  }
-}
 
