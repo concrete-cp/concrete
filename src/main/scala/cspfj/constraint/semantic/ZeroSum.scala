@@ -1,15 +1,15 @@
 package cspfj.constraint.semantic;
 
-import cspfj.constraint.AbstractConstraint
-import cspfj.filter.RevisionHandler
-import cspfj.problem.Domain
-import cspfj.problem.Variable
 import scala.annotation.tailrec
-import cspfj.constraint.SimpleRemovals
-import cspfj.util.Loggable
-import cspfj.problem.Interval
 
-final class NullSum(
+import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.SimpleRemovals
+import cspfj.problem.Domain
+import cspfj.problem.Interval
+import cspfj.problem.Variable
+import cspfj.util.Loggable
+
+final class ZeroSum(
   val factors: Array[Int],
   scope: Array[Variable]) extends AbstractConstraint(scope)
   with SimpleRemovals with Loggable {
@@ -19,7 +19,7 @@ final class NullSum(
 
   def getEvaluation = arity
 
-  def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
+  def revise(reviseCount: Int): Boolean = {
     //info(this.toString)
     //    val sum = scope.iterator.zip(factors.iterator).map {
     //      case (v, f) => v.dom.valueInterval * f
@@ -37,32 +37,24 @@ final class NullSum(
     } reduce { _ + _ }
 
     @tailrec
-    def revise(i: Int): Boolean = {
-      if (i < 0) {
-        true
-      } else {
-        val v = scope(i)
+    def reviseVariable(i: Int): Boolean = {
+      if (i < 0) true
+      else {
         val f = factors(i)
-        val dom = v.dom
+        val dom = scope(i).dom
 
-        val myBounds = v.dom.valueInterval * f
+        val myBounds = dom.valueInterval * f
 
         val boundsf = Interval(bounds.lb - myBounds.lb, bounds.ub - myBounds.ub) / -f
 
         val removed = dom.intersectVal(boundsf)
 
-        if (removed > 0) {
-          if (dom.size == 0) {
-            false;
-          } else {
-            revisator.revised(this, v);
-            revise(i - 1)
-          }
-        } else revise(i - 1)
+        if (dom.size == 0) false
+        else reviseVariable(i - 1)
       }
     }
 
-    revise(arity - 1)
+    reviseVariable(arity - 1)
   }
 
   override def toString = (scope, factors).zipped.map((v, f) => f + "." + v).mkString(" + ") + " >= 0"

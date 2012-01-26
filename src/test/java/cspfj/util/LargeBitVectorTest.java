@@ -13,7 +13,7 @@ public final class LargeBitVectorTest {
 
     @Before
     public void setUp() {
-        bitVector = new LargeBitVector(125, false);
+        bitVector = new LargeBitVector(125);
     }
 
     @Test
@@ -160,7 +160,7 @@ public final class LargeBitVectorTest {
         bitVector.set(49);
         bitVector.set(100);
 
-        BitVector bv2 = BitVector.newBitVector(125, false);
+        BitVector bv2 = BitVector.newBitVector(125);
         bv2.set(46);
 
         assertFalse(bitVector.subsetOf(bv2));

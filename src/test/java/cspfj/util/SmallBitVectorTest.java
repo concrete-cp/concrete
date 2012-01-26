@@ -13,7 +13,7 @@ public class SmallBitVectorTest {
 
     @Before
     public void setUp() {
-        bitVector = new SmallBitVector(64, false);
+        bitVector = new SmallBitVector(64);
     }
 
     @Test
@@ -135,7 +135,7 @@ public class SmallBitVectorTest {
         bitVector.set(49);
         bitVector.set(60);
 
-        BitVector bv2 = BitVector.newBitVector(64, false);
+        BitVector bv2 = BitVector.newBitVector(64);
         bv2.set(46);
 
         assertFalse(bitVector.subsetOf(bv2));

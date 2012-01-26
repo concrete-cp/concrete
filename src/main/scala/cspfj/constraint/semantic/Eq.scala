@@ -35,7 +35,7 @@ final class Eq(val a: Int, val x: Variable, val b: Int, val y: Variable)
 
   def check = a * value(0) + b == value(1);
 
-  def revise(position: Int) = {
+  def reviseVariable(position: Int) = {
     var change = false;
     val variable = scope(position);
     val otherVar = scope(1 - position);

@@ -4,17 +4,12 @@ public final class SmallBitVector extends BitVector {
 
     private long word;
 
-    public SmallBitVector(final int size, final boolean fill) {
+    public SmallBitVector(final int size) {
         super(size);
         if (size > WORD_SIZE) {
             throw new IllegalArgumentException(
                     "Cannot handle vectors larger than " + WORD_SIZE
                             + " elements");
-        }
-        if (fill) {
-            word = MASK >>> -size;
-        } else {
-            word = 0;
         }
     }
 
@@ -117,21 +112,21 @@ public final class SmallBitVector extends BitVector {
     }
 
     public BitVector xor(final BitVector bv) {
-        final SmallBitVector bitVector = new SmallBitVector(size, false);
+        final SmallBitVector bitVector = new SmallBitVector(size);
         bitVector.word = (((SmallBitVector) bv).word ^ this.word)
                 & (MASK >>> -size);
         return bitVector;
     }
 
     public BitVector and(final BitVector bv) {
-        final SmallBitVector bitVector = new SmallBitVector(size, false);
+        final SmallBitVector bitVector = new SmallBitVector(size);
         bitVector.word = (((SmallBitVector) bv).word & this.word)
                 & (MASK >>> -size);
         return bitVector;
     }
 
     public BitVector inverse() {
-        final SmallBitVector bitVector = new SmallBitVector(size, false);
+        final SmallBitVector bitVector = new SmallBitVector(size);
         bitVector.word = ~this.word & (MASK >>> -size);
         return bitVector;
     }

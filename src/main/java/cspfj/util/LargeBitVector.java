@@ -5,10 +5,9 @@ import java.util.Arrays;
 final class LargeBitVector extends BitVector {
     private long[] words;
 
-    public LargeBitVector(final int size, final boolean fill) {
+    public LargeBitVector(final int size) {
         super(size);
         words = new long[nbWords(size)];
-        fill(fill);
     }
 
     public LargeBitVector(final LargeBitVector bv) {
@@ -121,7 +120,7 @@ final class LargeBitVector extends BitVector {
 
     @Override
     public BitVector xor(final BitVector bv) {
-        final LargeBitVector bitVector = new LargeBitVector(size, false);
+        final LargeBitVector bitVector = new LargeBitVector(size);
         final LargeBitVector source = (LargeBitVector) bv;
         int i = words.length - 1;
         bitVector.words[i] = (source.words[i] & words[i]) ^ (MASK >>> -size);
@@ -133,7 +132,7 @@ final class LargeBitVector extends BitVector {
 
     @Override
     public BitVector and(final BitVector bv) {
-        final LargeBitVector bitVector = new LargeBitVector(size, false);
+        final LargeBitVector bitVector = new LargeBitVector(size);
         final LargeBitVector source = (LargeBitVector) bv;
         int i = words.length - 1;
         bitVector.words[i] = (source.words[i] & words[i]) & (MASK >>> -size);
@@ -145,7 +144,7 @@ final class LargeBitVector extends BitVector {
 
     @Override
     public BitVector inverse() {
-        final LargeBitVector bitVector = new LargeBitVector(size, false);
+        final LargeBitVector bitVector = new LargeBitVector(size);
         int i = words.length - 1;
         bitVector.words[i] = ~words[i] & (MASK >>> -size);
         while (--i >= 0) {

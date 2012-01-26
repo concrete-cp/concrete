@@ -2,7 +2,6 @@ package cspfj.constraint.semantic;
 
 import java.util.Arrays
 import cspfj.constraint.AbstractConstraint
-import cspfj.filter.RevisionHandler
 import cspfj.problem.BooleanDomain
 import cspfj.problem.Variable;
 import cspfj.constraint.SimpleRemovals
@@ -34,7 +33,7 @@ final class Disjunction(scope: Array[Variable],
 
   override def toString = "\\/" + scope.mkString("(", ", ", ")")
 
-  override def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
+  override def revise(reviseCount: Int): Boolean = {
     if (isFalse(watch1)) {
       val newWatch = seekWatch(watch2);
       if (newWatch < 0) {
@@ -42,7 +41,6 @@ final class Disjunction(scope: Array[Variable],
           return false;
         }
         if (setTrue(watch2)) {
-          revisator.revised(this, scope(watch2));
           return true;
         }
       } else {
@@ -53,9 +51,7 @@ final class Disjunction(scope: Array[Variable],
       val newWatch = seekWatch(watch1);
       if (newWatch >= 0) {
         watch2 = newWatch;
-      } else if (setTrue(watch1)) {
-        revisator.revised(this, scope(watch1));
-      }
+      } else setTrue(watch1)
     }
     return true;
   }

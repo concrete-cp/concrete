@@ -124,7 +124,7 @@ final class DC21(val problem: Problem) extends Filter with Loggable {
          * Forward checking !
          */
         for (c <- variable.constraints if c.arity == 2) {
-          c.revise(rh, -1);
+          c.revise(-1);
           c.fillRemovals(-1);
         }
 
@@ -157,12 +157,6 @@ final class DC21(val problem: Problem) extends Filter with Loggable {
     }
     changedGraph;
   }
-
-  private val rh = new RevisionHandler() {
-    def revised(constraint: Constraint, variable: Variable) {
-      fine("FC w " + constraint + ", " + variable);
-    }
-  };
 
   def getStatistics = Map(
     "DC-nbsingletontests" -> nbSingletonTests,

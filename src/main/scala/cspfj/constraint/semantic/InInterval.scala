@@ -1,11 +1,9 @@
 package cspfj.constraint.semantic;
 
 import cspfj.constraint.AbstractConstraint
-import cspfj.filter.RevisionHandler
+import cspfj.constraint.SimpleRemovals
 import cspfj.problem.Domain
 import cspfj.problem.Variable
-import cspfj.filter.RevisionHandler
-import cspfj.constraint.SimpleRemovals
 
 object InInterval {
   def values(variable: Variable, lb: Int, ub: Int) =
@@ -22,17 +20,14 @@ final class InInterval(val variable: Variable, val lb: Int, val ub: Int)
 
   override val getEvaluation = 0.0
 
-  override def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
+  override def revise(reviseCount: Int): Boolean = {
     val removed = dom.removeTo(lb - 1) + dom.removeFrom(ub + 1);
-    if (removed > 0) {
-      if (dom.size == 0) {
-        return false
-      }
-      revisator.revised(this, variable);
 
+    if (dom.size == 0) false
+    else {
+      entail()
+      true
     }
-    entail()
-    true
   }
 
   override def isConsistent(reviseCount: Int) = dom.indices(lb).takeWhile(_ <= ub).exists(dom.present)

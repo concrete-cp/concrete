@@ -10,7 +10,7 @@ class HasseTest {
   val rand = new Random(0)
 
   def randSet(pool: Int, size: Int) = {
-    val bv = BitVector.newBitVector(pool, false)
+    val bv = BitVector.newBitVector(pool)
 
     Stream.continually(rand.nextInt(pool)).take(1 + rand.nextInt(size)).foreach(bv.set)
     

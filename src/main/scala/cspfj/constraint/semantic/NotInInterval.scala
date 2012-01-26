@@ -1,7 +1,6 @@
 package cspfj.constraint.semantic;
 
 import cspfj.constraint.AbstractConstraint
-import cspfj.filter.RevisionHandler
 import cspfj.problem.Domain
 import cspfj.problem.Variable;
 import cspfj.constraint.SimpleRemovals
@@ -19,21 +18,19 @@ final class NotInInterval(val variable: Variable, val lb: Int, val ub: Int)
 
   val getEvaluation = 0.0
 
-  def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
+  def revise(reviseCount: Int): Boolean = {
     var changed = false;
     variable.dom.indices(lb).takeWhile(_ <= ub).foreach { i =>
       variable.dom.remove(i)
       changed = true
     }
 
-    if (changed) {
-      if (variable.dom.size == 0) {
-        return false;
-      }
-      revisator.revised(this, variable);
+    if (variable.dom.size == 0) {
+      false;
+    } else {
+      entail();
+      true;
     }
-    entail();
-    true;
   }
 
   override def isConsistent(reviseCount: Int) =

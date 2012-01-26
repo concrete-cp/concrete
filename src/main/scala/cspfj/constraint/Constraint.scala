@@ -19,14 +19,12 @@
 
 package cspfj.constraint;
 
-import cspfj.constraint.extension.TupleManager
-import cspfj.filter.RevisionHandler
-import cspfj.problem.Variable
-import cspfj.heuristic.Weighted
-import cspfj.priorityqueues.Identified
 import scala.annotation.tailrec
-import cspfj.priorityqueues.PTag
+
+import cspfj.heuristic.Weighted
 import cspfj.priorityqueues.IOBinomialHeapNode
+import cspfj.priorityqueues.Identified
+import cspfj.problem.Variable
 //import cspfj.priorityqueues.IOBinomialHeapNode
 
 object Constraint {
@@ -36,10 +34,6 @@ object Constraint {
   var nbPresenceChecks = 0
 
   def clearStats() { nbPresenceChecks = 0 }
-}
-
-object NULL_REVISATOR extends RevisionHandler {
-  def revised(constraint: Constraint, variable: Variable) {}
 }
 
 trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constraint] {
@@ -94,7 +88,7 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
   def setLvl(l: Int) {
     _level = l
   }
-  
+
   def restoreLvl(l: Int) {
     if (entailedAtLevel > l) {
       // LOGGER.finest("Disentailing " + this);
@@ -102,7 +96,7 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
     }
     _level = l;
   }
-  
+
   override def hashCode = getId
 
   def controlTuplePresence(tuple: Array[Int]) = {
@@ -137,7 +131,7 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
   def isConsistent(reviseCount: Int) = {
     setLvl(level + 1)
     scope foreach { _.dom.setLevel(level) }
-    val consistent = revise(NULL_REVISATOR, reviseCount)
+    val consistent = revise(reviseCount)
     restoreLvl(level - 1)
     scope foreach { _.dom.restoreLevel(level) }
     consistent
@@ -149,7 +143,7 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
    * @param revisator
    * @return false iff an inconsistency has been detected
    */
-  def revise(revisator: RevisionHandler, reviseCount: Int): Boolean
+  def revise(reviseCount: Int): Boolean
 
   /**
    * @return true iff the constraint is satisfied by the current values of the
@@ -173,4 +167,7 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
   //def tupleManager: TupleManager
 
   def tupleValues = (0 to arity).iterator.map(p => scope(p).dom.value(tuple(p)))
+
+  def sizes: Array[Int]
+
 }

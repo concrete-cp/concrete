@@ -36,7 +36,7 @@ final class ExtensionConstraint2D(
   override def getEvaluation =
     scope(0).dom.size * scope(1).dom.size * GAIN_OVER_GENERAL;
 
-  def revise(position: Int) = {
+  def reviseVariable(position: Int) = {
     if (matrixManager.supportCondition(position)) {
       false
     } else {

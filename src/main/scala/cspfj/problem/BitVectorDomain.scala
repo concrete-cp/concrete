@@ -19,7 +19,8 @@ final class BitVectorDomain(
 
   def size = _size
 
-  private val bvDomain = BitVector.newBitVector(domain.length, true)
+  private val bvDomain = BitVector.newBitVector(domain.length)
+  bvDomain.fill(true)
 
   //  def this(domain: BitVectorDomain) =
   //    this(domain.domain, domain.bvDomain.clone, domain.history)

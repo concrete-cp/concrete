@@ -1,9 +1,8 @@
 package cspfj.constraint.semantic
-import cspfj.problem.Variable
 import org.junit.Test
+
 import cspfj.problem.BitVectorDomain
-import cspfj.filter.RevisionHandler
-import cspfj.constraint.Constraint
+import cspfj.problem.Variable
 
 class AllDiffTest {
   @Test
@@ -16,8 +15,6 @@ class AllDiffTest {
 
     val c = new AllDifferent(v1, v2, v3, v4, v5)
 
-    c.revise(new RevisionHandler {
-      def revised(c: Constraint, v: Variable) {}
-    }, -1)
+    c.revise(-1)
   }
 }

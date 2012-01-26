@@ -4,10 +4,18 @@ import cspfj.util.BitVector;
 
 final class Matrix2D(xSize: Int, ySize: Int, initialState: Boolean) extends Matrix {
   private var xMatrix =
-    new Array[BitVector](xSize).map(_ => BitVector.newBitVector(ySize, initialState))
+    new Array[BitVector](xSize).map(_ => {
+      val bv = BitVector.newBitVector(ySize)
+      if (initialState) bv.fill(true)
+      bv
+    })
 
   private var yMatrix =
-    new Array[BitVector](ySize).map(_ => BitVector.newBitVector(xSize, initialState))
+    new Array[BitVector](ySize).map(_ => {
+      val bv = BitVector.newBitVector(xSize)
+      if (initialState) bv.fill(true)
+      bv
+    })
 
   private var empty = initialState
 

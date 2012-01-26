@@ -6,17 +6,17 @@ trait Residues extends VariablePerVariable {
 
   val last = new ResidueManagerMap(arity)
 
-  def revise(position: Int) = {
-    var variable = scope(position)
+  def reviseVariable(position: Int) = {
+    val dom = scope(position).dom
     var revised = false;
-    for (index <- variable.dom.indices) {
+    for (index <- dom.indices) {
 
       val residue = last.getResidue(position, index);
       if (residue == null || !controlTuplePresence(residue)) {
         if (findSupport(position, index)) {
           last.updateResidue(tuple.clone);
         } else {
-          variable.dom.remove(index);
+          dom.remove(index);
           revised = true;
         }
       }

@@ -11,9 +11,8 @@ final class DDegOnDom(val problem: Problem) extends VariableHeuristic with Rando
     dDeg(variable).toDouble / variable.dom.size
 
   private def dDeg(variable: Variable) =
-    variable.constraints.iterator.filter(!_.isEntailed).size
+    variable.constraints.count(!_.isEntailed)
 
-  override def toString =
-    "max-ddeg/dom"
+  override def toString = "max-ddeg/dom"
 
 }

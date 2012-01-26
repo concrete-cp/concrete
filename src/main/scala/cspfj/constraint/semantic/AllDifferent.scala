@@ -22,7 +22,6 @@ package cspfj.constraint.semantic;
 import scala.collection.immutable.Queue
 import cspfj.constraint.AbstractConstraint
 import cspfj.constraint.VariableGrainedRemovals
-import cspfj.filter.RevisionHandler
 import cspfj.problem.Variable
 import cspfj.util.BitVector
 import scala.annotation.tailrec
@@ -40,7 +39,9 @@ import cspfj.util.BitVectorInclusion
 final case class VarInfo(
   val v: Variable,
   val d: BitVector,
-  val s: Int)
+  val s: Int) {
+  var sought = -1
+}
 
 final class VarInclusion extends EnhancedPartialOrdering[VarInfo] with PredefPO[VarInfo] {
   val bvi = new BitVectorInclusion
@@ -66,13 +67,13 @@ final class AllDifferent(scope: Variable*)
   private val max = scope map { _.dom.allValues.last } max
 
   private def dom(v: Variable) = {
-    val bv = BitVector.newBitVector(v.dom.lastValue - offset + 1, false)
+    val bv = BitVector.newBitVector(v.dom.lastValue - offset + 1)
     v.dom.values.foreach(vl => bv.set(vl - offset))
     bv
   }
 
   def check: Boolean = {
-    val union = BitVector.newBitVector(max - offset + 1, false)
+    val union = BitVector.newBitVector(max - offset + 1)
     tupleValues.exists { v =>
       if (union.get(v - offset)) return false
       union.set(v - offset)
@@ -80,18 +81,27 @@ final class AllDifferent(scope: Variable*)
     }
   }
 
-  def seek(h: Hasse[VarInfo]): List[HNode[VarInfo]] = seek(h.roots, BitSet.empty, Nil)
+  var seeks = 0
+
+  def seek(h: Hasse[VarInfo]): List[HNode[VarInfo]] = {
+    seeks += 1
+    seek(h.roots, Nil)
+  }
 
   @tailrec
-  def seek(s: List[HNode[VarInfo]], done: BitSet, collected: List[HNode[VarInfo]]): List[HNode[VarInfo]] =
+  def seek(s: List[HNode[VarInfo]], collected: List[HNode[VarInfo]]): List[HNode[VarInfo]] =
     if (s == Nil) collected
     else {
       val head :: tail = s
-      if (done(head.cId)) seek(tail, done, collected)
+      if (head.v.sought == seeks) seek(tail, collected)
       else if (head.v.s < head.rank) throw AllDifferent.i
-      else if (head.v.s == head.rank)
-        seek(stack(head.child, tail), done + head.cId, head :: collected)
-      else seek(stack(head.child, tail), done + head.cId, collected)
+      else if (head.v.s == head.rank) {
+        head.v.sought = seeks
+        seek(stack(head.child, tail), head :: collected)
+      } else {
+        head.v.sought = seeks
+        seek(stack(head.child, tail), collected)
+      }
     }
 
   /**
@@ -124,15 +134,14 @@ final class AllDifferent(scope: Variable*)
     }
   }
 
-  def revise(rh: RevisionHandler, rvls: Int): Boolean = revise(rh, modified(rvls).toSeq)
+  def revise(rvls: Int): Boolean = revise(modified(rvls).toSeq)
 
   var info: Map[Variable, VarInfo] = Map.empty
 
   @tailrec
-  private def revise(rh: RevisionHandler, changed: Seq[Variable]): Boolean =
+  private def revise(changed: Seq[Variable]): Boolean =
     if (changed.isEmpty) true
     else {
-
       changed.foreach(v => info.get(v) match {
         case None =>
         case Some(v) => tree.remove(v)
@@ -149,26 +158,18 @@ final class AllDifferent(scope: Variable*)
       }
 
       var unsat = false
-      val change: Seq[Variable] = try {
-        seek(tree).foldLeft(Set[Variable]())((acc, n) =>
-          acc ++ filter(rh, n)).toSeq
-      } catch {
+      val change: Seq[Variable] = try seek(tree).flatMap(filter).distinct
+      catch {
         case e: Inconsistency => { unsat = true; Seq.empty }
       }
 
       if (unsat) false
-      else revise(rh, change)
+      else revise(change)
     }
 
-  private def filter(rh: RevisionHandler, node: HNode[VarInfo]): Set[Variable] = {
+  private def filter(node: HNode[VarInfo]) = {
     val vals = values(node.v.d)
-
-    val change: Set[Variable] =
-      (scopeSet -- node.stream.map(_.v.v)) filter (remove(_, vals))
-
-    change.foreach(rh.revised(this, _))
-
-    change
+    (scopeSet -- node.flatten.map(_.v.v)).iterator.filter(remove(_, vals))
   }
 
   private def remove(v: Variable, vals: List[Int]) = {

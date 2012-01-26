@@ -20,7 +20,6 @@
 package cspfj.constraint.semantic;
 
 import cspfj.constraint.AbstractConstraint
-import cspfj.filter.RevisionHandler
 import cspfj.problem.Domain
 import cspfj.problem.Variable;
 import cspfj.constraint.SimpleRemovals
@@ -55,20 +54,18 @@ final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict
 
   }
 
-  override def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
+  override def revise(reviseCount: Int): Boolean = {
     assert(scope(0).dom.size > 0 && scope(1).dom.size > 0)
 
     if (removeLt(min(1) - constant, 0)) {
       if (scope(0).dom.size == 0) {
         return false;
       }
-      revisator.revised(this, scope(0));
     }
     if (removeGt(max(0) + constant, 1)) {
       if (scope(1).dom.size == 0) {
         return false;
       }
-      revisator.revised(this, scope(1));
     }
     val max1 = max(1);
     val min0 = min(0) + constant;

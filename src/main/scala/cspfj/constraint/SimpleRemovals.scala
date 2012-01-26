@@ -1,8 +1,6 @@
 package cspfj.constraint
 
-import cspfj.problem.Variable
-import scala.collection.immutable.Map
-import cspfj.filter.RevisionHandler
+
 
 trait SimpleRemovals extends Constraint {
 

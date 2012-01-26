@@ -1,7 +1,6 @@
 package cspfj.constraint.semantic;
 
 import cspfj.constraint.AbstractConstraint
-import cspfj.filter.RevisionHandler
 import cspfj.problem.Variable
 import cspfj.constraint.SimpleRemovals
 
@@ -16,12 +15,12 @@ final class Abs(val result: Variable, val v0: Variable) extends AbstractConstrai
 
   private def valid(index: Int, variable: Variable) = index >= 0 && variable.dom.present(index)
 
-  def revise(revisator: RevisionHandler, reviseCount: Int) =
-    revise(revisator, result, { i =>
+  def revise(reviseCount: Int) =
+    revise(result, { i =>
       !valid(corresponding1(i), v0) && !valid(corresponding2(i), v0)
-    }) && revise(revisator, v0, { i => !valid(correspondingR(i), result) })
+    }) && revise(v0, { i => !valid(correspondingR(i), result) })
 
-  private def revise(revisator: RevisionHandler, v: Variable, f: (Int => Boolean)): Boolean = {
+  private def revise(v: Variable, f: (Int => Boolean)): Boolean = {
     var change = false
 
     for (i <- v.dom.indices if f(i)) {
@@ -30,15 +29,12 @@ final class Abs(val result: Variable, val v0: Variable) extends AbstractConstrai
     }
 
     if (change) {
-      if (v.dom.size == 0) {
-        return false
+      if (v.dom.size == 0) false
+      else {
+        if (v.dom.size == 1) entail()
+        true
       }
-      if (v.dom.size == 1) {
-        entail()
-      }
-      revisator.revised(this, v)
-    }
-    true
+    } else true
   }
 
   override def toString = result + " = |" + v0 + "|";

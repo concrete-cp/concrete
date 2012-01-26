@@ -22,7 +22,6 @@ package cspfj.constraint.extension;
 import cspfj.constraint.AbstractConstraint
 import cspfj.problem.Variable
 import cspfj.util.BitVector
-import cspfj.filter.RevisionHandler
 import scala.collection.JavaConversions
 import cspfj.constraint.SimpleRemovals
 import scala.collection.mutable.BitSet
@@ -35,7 +34,7 @@ final class ExtensionConstraintDynamic(
   private val dynamic = new MatrixManagerDynamic(scope, matrix, shared, tuple)
 
   private val found =
-    (0 until arity) map (p => BitVector.newBitVector(scope(p).dom.maxSize, false)) toIndexedSeq
+    (0 until arity) map (p => BitVector.newBitVector(scope(p).dom.maxSize)) toIndexedSeq
 
   override def setLvl(l: Int) {
     super.setLvl(l)
@@ -47,7 +46,7 @@ final class ExtensionConstraintDynamic(
     dynamic.level = l
   }
 
-  def revise(revisator: RevisionHandler, reviseCount: Int) = {
+  def revise(reviseCount: Int) = {
     //    var found: Set[(Variable, Int)] = Set.empty
     //
     //    val itr = dynamic.iterator
@@ -82,7 +81,7 @@ final class ExtensionConstraintDynamic(
       }
     }
 
-    filter(found, revisator)
+    filter(found)
 
   }
 
@@ -102,17 +101,14 @@ final class ExtensionConstraintDynamic(
   //    true
   //  }
 
-  private def filter(found: IndexedSeq[BitVector], revisator: RevisionHandler): Boolean = {
+  private def filter(found: IndexedSeq[BitVector]): Boolean = {
     for ((v, p) <- scope.iterator.zipWithIndex) {
-      var rev = false
       for (i <- v.dom.indices if !found(p)(i)) {
         v.dom.remove(i)
-        rev = true
       }
-      if (rev) {
-        if (v.dom.size <= 0) return false
-        revisator.revised(this, v)
-      }
+
+      if (v.dom.size <= 0) return false
+
     }
 
     true

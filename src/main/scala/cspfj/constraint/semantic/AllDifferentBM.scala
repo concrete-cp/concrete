@@ -22,7 +22,6 @@ package cspfj.constraint.semantic;
 import scala.collection.immutable.Queue
 import cspfj.constraint.AbstractConstraint
 import cspfj.constraint.VariableGrainedRemovals
-import cspfj.filter.RevisionHandler
 import cspfj.problem.Variable
 import cspfj.util.BitVector
 import scala.annotation.tailrec
@@ -44,7 +43,7 @@ final class AllDifferentBM(scope: Variable*)
   val max = scope map { _.dom.allValues.last } max
 
   def check: Boolean = {
-    val union = BitVector.newBitVector(max - offset + 1, false)
+    val union = BitVector.newBitVector(max - offset + 1)
     tupleValues.exists { v =>
       if (union.get(v - offset)) return false
       union.set(v - offset)

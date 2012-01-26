@@ -2,7 +2,6 @@ package cspfj.constraint.semantic;
 
 import cspfj.constraint.AbstractConstraint
 import cspfj.constraint.Constraint
-import cspfj.filter.RevisionHandler
 import cspfj.problem.BooleanDomain
 import cspfj.problem.FALSE
 import cspfj.problem.TRUE
@@ -21,17 +20,14 @@ final class ReifiedConstraint(
 
   val controlDomain = controlVariable.dom.asInstanceOf[BooleanDomain]
 
-  var usualRevisator: RevisionHandler = null
-  var usualReifiedRevisator: RevisionHandler = null
-
-  private final class ReifiedRevisionHandler(val reifiedRevisator: RevisionHandler)
-    extends RevisionHandler {
-
-    override def revised(constraint: Constraint, variable: Variable) {
-      reifiedRevisator.revised(ReifiedConstraint.this, variable);
-    }
-
-  }
+//  private final class ReifiedRevisionHandler(val reifiedRevisator: RevisionHandler)
+//    extends RevisionHandler {
+//
+//    override def revised(constraint: Constraint, variable: Variable) {
+//      reifiedRevisator.revised(ReifiedConstraint.this, variable);
+//    }
+//
+//  }
 
   override def setLvl(l: Int) {
     super.setLvl(l)
@@ -45,48 +41,32 @@ final class ReifiedConstraint(
     negativeConstraint.restoreLvl(l)
   }
 
-  override def revise(revisator: RevisionHandler, reviseCount: Int): Boolean =
+  override def revise(reviseCount: Int): Boolean =
     controlDomain.status match {
       case UNKNOWN =>
         if (!positiveConstraint.isConsistent(reviseCount)) {
           controlDomain.setFalse();
-          if (noReifyRevise(negativeConstraint, revisator, reviseCount)) {
-            revisator.revised(this, scope(0));
-            true
-          } else false
+          noReifyRevise(negativeConstraint, reviseCount)
         } else if (!negativeConstraint.isConsistent(reviseCount)) {
           controlDomain.setTrue();
-          if (noReifyRevise(positiveConstraint, revisator, reviseCount)) {
-            revisator.revised(this, scope(0));
-            true
-          } else false
+          noReifyRevise(positiveConstraint, reviseCount)
         } else true
 
-      case TRUE => noReifyRevise(positiveConstraint, revisator, reviseCount);
-      case FALSE => noReifyRevise(negativeConstraint, revisator, reviseCount);
+      case TRUE => noReifyRevise(positiveConstraint, reviseCount);
+      case FALSE => noReifyRevise(negativeConstraint, reviseCount);
 
       case _ => throw new IllegalStateException
 
     }
 
-  private def noReifyRevise(constraint: Constraint,
-    revisator: RevisionHandler, reviseCount: Int) = {
-    val reifiedRevisator = if (revisator == usualRevisator) {
-      usualReifiedRevisator;
-    } else {
-      new ReifiedRevisionHandler(revisator);
-      usualRevisator = revisator;
-      usualReifiedRevisator = new ReifiedRevisionHandler(revisator)
-      usualReifiedRevisator
-    }
-
+  private def noReifyRevise(constraint: Constraint, reviseCount: Int) = {
     val actualRevise = if (controlRemovals >= reviseCount) {
       -1;
     } else {
       reviseCount;
     }
 
-    if (constraint.revise(reifiedRevisator, actualRevise)) {
+    if (constraint.revise(actualRevise)) {
       if (constraint.isEntailed) {
         entail();
       }

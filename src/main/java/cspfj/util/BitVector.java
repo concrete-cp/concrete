@@ -36,11 +36,11 @@ public abstract class BitVector implements Cloneable {
 
     }
 
-    public static BitVector newBitVector(final int size, final boolean fill) {
+    public static BitVector newBitVector(final int size) {
         if (size > WORD_SIZE) {
-            return new LargeBitVector(size, fill);
+            return new LargeBitVector(size);
         }
-        return new SmallBitVector(size, fill);
+        return new SmallBitVector(size);
     }
 
     public BitVector clone() throws CloneNotSupportedException {
@@ -106,7 +106,7 @@ public abstract class BitVector implements Cloneable {
     public abstract void setAllBut(final int index);
 
     public abstract int cardinality();
-    
+
     public abstract long getWord(int i);
 
     public boolean apply(int i) {

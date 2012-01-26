@@ -5,7 +5,7 @@ import java.util.Arrays;
 import cspfj.util.BitVector;
 
 trait Status {
-  def bitVector: BitVector
+  val bitVector = BitVector.newBitVector(2)
   def array: Array[Int]
   def size: Int
   def first: Int
@@ -23,7 +23,7 @@ trait Status {
 }
 
 object UNKNOWN extends Status {
-  val bitVector = BitVector.newBitVector(2, true)
+  bitVector.fill(true)
   val array = Array(0, 1)
   override val toString = "[f, t]"
   val size = 2
@@ -54,7 +54,7 @@ object UNKNOWN extends Status {
 }
 
 object TRUE extends Status {
-  val bitVector = { val bv = BitVector.newBitVector(2, false); bv.set(1); bv }
+  bitVector.set(1)
   val array = Array(1)
   override val toString = "[t]"
   val size = 1
@@ -73,7 +73,7 @@ object TRUE extends Status {
 }
 
 object FALSE extends Status {
-  val bitVector = { val bv = BitVector.newBitVector(2, false); bv.set(0); bv }
+  bitVector.set(0)
   val array = Array(0)
   override val toString = "[f]"
   val size = 1
@@ -92,7 +92,6 @@ object FALSE extends Status {
 }
 
 object EMPTY extends Status {
-  val bitVector = BitVector.newBitVector(2, false)
   val array = Array[Int]()
   override val toString = "[]"
   val size = 0

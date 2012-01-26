@@ -3,42 +3,52 @@ import scala.annotation.tailrec
 import scala.collection.immutable.BitSet
 
 object HNode {
-  var id = 0
-  var offset = 0
+  var counts = 0
+  var flats = 0
 }
 
 class HNode[A](val v: A, var child: List[HNode[A]]) {
-  val id = HNode.id
-  HNode.id += 1
 
-  override val hashCode = id
+  def rank: Int = {
+    HNode.counts += 1
+    count(child, 1)
+  }
 
-  def cId = id - HNode.offset
-
-  def rank: Int = count(child, BitSet.empty, 1)
-
-  def stream = Hasse.stream(this :: Nil)
+  def flatten = Hasse.flatten(this :: Nil)
 
   @tailrec
-  private def count(s: List[HNode[A]], done: BitSet, c: Int): Int =
+  private def count(s: List[HNode[A]], c: Int): Int =
     if (s == Nil) c
     else {
-      if (done(s.head.cId)) count(s.tail, done, c)
-      else count(Hasse.stack(s.head.child, s.tail), done + s.head.cId, c + 1)
+      if (s.head.counted == HNode.counts) count(s.tail, c)
+      else {
+        s.head.counted = HNode.counts
+        count(Hasse.stack(s.head.child, s.tail), c + 1)
+      }
     }
+
+  var counted = -1
+  var listed = -1
 
   override def toString = "[" + v + " (" + hashCode + "), " + rank + ", " + child + "]"
 }
 
 object Hasse {
-  def stream[A](stack: List[HNode[A]]): Stream[HNode[A]] = stream(stack, BitSet.empty)
+  def flatten[A](stack: List[HNode[A]]): List[HNode[A]] = {
+    HNode.flats += 1
+    flatten(stack, Nil)
+  }
 
-  private def stream[A](s: List[HNode[A]], done: BitSet): Stream[HNode[A]] =
-    if (s == Nil) Stream.empty
+  @tailrec
+  private def flatten[A](s: List[HNode[A]], f: List[HNode[A]]): List[HNode[A]] =
+    if (s == Nil) f
     else {
       val head :: tail = s
-      if (done(head.cId)) stream(tail, done)
-      else head #:: stream(stack(head.child, tail), done + head.cId)
+      if (head.listed == HNode.flats) flatten(tail, f)
+      else {
+        head.listed = HNode.flats
+        flatten(stack(head.child, tail), head :: f)
+      }
     }
 
   /**
@@ -54,11 +64,8 @@ class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
 
   var roots: List[HNode[A]] = Nil
 
-  //var nodes: Map[A, List[HNode[A]]] = Map.empty.withDefaultValue(Nil)
-
   def add(v: A) {
     val newNode = new HNode(v, collect(v, roots, Nil))
-    //nodes += v -> (newNode :: nodes(v))
     val supersets = collectParents(v, roots.filter(c => po.lt(v, c.v)), Nil)
     if (supersets.isEmpty) roots ::= newNode
     else supersets.foreach(s =>
@@ -84,14 +91,17 @@ class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
     else {
       val head :: tail = s
 
-      if (po.disjoint(head.v, v) || collected.exists(c => po.lteq(head.v, c.v))) collect(v, tail, collected)
-      else if (po.lteq(head.v, v)) collect(v, tail, head :: (collected.filter(c => !po.lteq(c.v, head.v))))
-      else collect(v, Hasse.stack(head.child, tail), collected)
+      if (po.disjoint(head.v, v) || collected.exists(c => po.lteq(head.v, c.v)))
+        collect(v, tail, collected)
+      else if (po.lteq(head.v, v))
+        collect(v, tail, head :: (collected.filter(c => !po.lteq(c.v, head.v))))
+      else
+        collect(v, Hasse.stack(head.child, tail), collected)
     }
 
   override def toString = iterator.mkString(", ")
 
-  def iterator = Hasse.stream(roots).iterator.map(n => (n.v, n.rank))
+  def iterator = Hasse.flatten(roots).iterator.map(n => (n.v, n.rank))
 
   //  def filter(f: A => Boolean) = new Hasse[A](po, rem(f, roots))
   //
@@ -100,18 +110,15 @@ class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
     roots = rem(v, roots)
   }
 
-  private def rem(v: A, roots: List[HNode[A]]): List[HNode[A]] = {
+  private def rem(v: A, roots: List[HNode[A]]): List[HNode[A]] =
     roots flatMap { r =>
       if (!po.lteq(v, r.v)) List(r)
-      else if (r.v == v) {
-        if (r.id == HNode.offset) HNode.offset += 1
-        r.child
-      } else {
+      else if (r.v == v) r.child
+      else {
         r.child = rem(v, r.child)
         List(r)
       }
     }
-  }
 
   def toGML = {
     val stb = new StringBuilder();

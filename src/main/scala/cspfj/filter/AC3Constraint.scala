@@ -99,19 +99,19 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
     }
   }
 
-  private def revisator = new RevisionHandler() {
-    def revised(constraint: Constraint, variable: Variable) {
-      //      variable.constraints.zipWithIndex.foreach {
-      //        case (c, cp) =>
-      //          if (c != constraint && !c.isEntailed) {
-      //            c.setRemovals(
-      //              variable.positionInConstraint(cp), AC3Constraint.revisionCount);
-      //            queue.offer(c);
-      //          }
-      //
-      //      }
+  private def updateQueue(sizes: Seq[Int], constraint: Constraint) {
+    (constraint.scope, sizes).zipped.foreach { (v, s) =>
+      if (v.dom.size != s)
+        v.constraints.iterator.zipWithIndex.foreach {
+          case (c, cp) =>
+            if (c != constraint && !c.isEntailed) {
+              c.setRemovals(v.positionInConstraint(cp), AC3Constraint.revisionCount);
+              queue.offer(c);
+            }
+
+        }
     }
-  };
+  }
 
   @tailrec
   private def reduce(): Boolean = {
@@ -122,24 +122,14 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
       val constraint = queue.poll();
 
       revisions += 1;
-      val sizes = constraint.scope.map(_.dom.size)
-      if (!constraint.revise(revisator, AC3Constraint.revisionCount)) {
-        constraint.weight += 1;
-        false;
-      } else {
-        (constraint.scope, sizes).zipped.foreach { (v, s) =>
-          if (v.dom.size != s)
-            v.constraints.iterator.zipWithIndex.foreach {
-              case (c, cp) =>
-                if (c != constraint && !c.isEntailed) {
-                  c.setRemovals(v.positionInConstraint(cp), AC3Constraint.revisionCount);
-                  queue.offer(c);
-                }
-
-            }
-        }
+      val sizes = constraint.sizes
+      if (constraint.revise(AC3Constraint.revisionCount)) {
+        updateQueue(sizes, constraint)
         constraint.fillRemovals(-1);
         reduce()
+      } else {
+        constraint.weight += 1;
+        false;
       }
     }
   }
@@ -155,18 +145,10 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
 
   private def control() = {
 
-    val controlRevisator = new RevisionHandler() {
-
-      def revised(constraint: Constraint,
-        variable: Variable) {
-        assert(false)
-
-      }
-
-    };
-
     for (c <- problem.constraints) {
-      assert(c.revise(controlRevisator, -1));
+      val sizes = c.scope map (_.dom.size)
+      assert(c.revise(-1));
+      assert(sizes.sameElements(c.scope map (_.dom.size)))
     }
     true;
   }

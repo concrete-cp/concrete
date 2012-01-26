@@ -1,9 +1,9 @@
 package cspfj.constraint;
 
-import cspfj.filter.RevisionHandler
+import scala.annotation.tailrec
+
 import cspfj.problem.Variable
 import cspfj.util.Loggable
-import scala.annotation.tailrec
 
 /**
  * A constraint that can be revised one variable at a time
@@ -16,15 +16,15 @@ trait VariablePerVariable extends VariableGrainedRemovals with Loggable {
    * @param position
    * @return true iff any value has been removed
    */
-  def revise(position: Int): Boolean
+  def reviseVariable(position: Int): Boolean
 
-  final def revise(revisator: RevisionHandler, reviseCount: Int): Boolean = {
+  final def revise(reviseCount: Int): Boolean = {
     val skip = skipRevision(reviseCount);
 
     @tailrec
     def revise(singletons: Int, i: Int): Int = {
       if (i < 0) singletons
-      else if (i == skip || !this.revise(i)) {
+      else if (i == skip || !this.reviseVariable(i)) {
 
         if (scope(i).dom.size == 1) revise(singletons + 1, i - 1)
         else revise(singletons, i - 1)

@@ -134,7 +134,9 @@ final class BooleanDomainTest {
 
   @Test
   def testBitVector() {
-    assertEquals(BitVector.newBitVector(2, true), domain.getBitVector);
+    val bv = BitVector.newBitVector(2)
+    bv.fill(true)
+    assertEquals(bv, domain.getBitVector);
   }
 
   // @Test

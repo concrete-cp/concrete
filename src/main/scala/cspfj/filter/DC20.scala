@@ -94,11 +94,11 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
               fine("Filtered " + (v._2 - v._1.dom.size) + " from " + v._1)
               modVar(v._1.getId) = cnt
             }
-//            if (problem.variables.iterator.zip(domainSizes.iterator) exists {
-//              case (v, d) => v.dom.size != d
-//            }) {
-//              problem.variables.foreach(v => modVar(v.getId) = cnt)
-//            }
+            //            if (problem.variables.iterator.zip(domainSizes.iterator) exists {
+            //              case (v, d) => v.dom.size != d
+            //            }) {
+            //              problem.variables.foreach(v => modVar(v.getId) = cnt)
+            //            }
             process(remaining.head, remaining.tail, variable)
           } else {
             false
@@ -117,7 +117,7 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
   private def forwardCheck(constraints: Iterator[Constraint]): Boolean = {
     if (constraints.hasNext) {
       val c = constraints.next
-      if (c.revise(rh, -1)) {
+      if (c.revise(-1)) {
         c.fillRemovals(-1)
         forwardCheck(constraints)
       } else false
@@ -182,12 +182,6 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
 
     changedGraph;
   }
-
-  private val rh = new RevisionHandler() {
-    def revised(constraint: Constraint, variable: Variable) {
-      //
-    }
-  };
 
   def getStatistics = Map(
     "DC-nbsingletontests" -> nbSingletonTests,

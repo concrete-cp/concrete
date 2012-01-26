@@ -7,8 +7,11 @@ import cspfj.constraint.Constraint
 import cspfj.priorityqueues.BinomialHeap
 import cspfj.priorityqueues.Key
 import cspfj.problem.Problem
-import cspfj.problem.Variable;
+import cspfj.problem.Variable
 import scala.annotation.tailrec
+import cspfj.priorityqueues.ScalaIOBinomialHeap
+import cspfj.util.Loggable
+import cspfj.priorityqueues.ScalaNative
 
 /**
  * @author scand1sk
@@ -16,7 +19,7 @@ import scala.annotation.tailrec
  */
 final class AC3(
   val problem: Problem,
-  val queue: Queue[Variable]) extends Filter {
+  val queue: Queue[Variable]) extends Filter with Loggable {
 
   // private static final Logger LOGGER = Logger.getLogger(Filter.class
   // .getSimpleName());
@@ -26,23 +29,9 @@ final class AC3(
   private var reviseCount = 0;
 
   def this(problem: Problem) =
-    this(problem, new BinomialHeap[Variable](new Key[Variable]() {
+    this(problem, new ScalaIOBinomialHeap[Variable](new Key[Variable]() {
       def getKey(o: Variable) = o.dom.size
     }));
-
-  private val rh = new RevisionHandler() {
-    def revised(constraint: Constraint, variable: Variable) {
-      queue.offer(variable);
-
-      variable.constraints.zipWithIndex.foreach {
-        case (c, i) =>
-          if (c != constraint) {
-            c.setRemovals(variable.positionInConstraint(i), reviseCount)
-          }
-      }
-
-    }
-  };
 
   def reduceAll() = {
     reviseCount += 1;
@@ -63,22 +52,55 @@ final class AC3(
   }
 
   @tailrec
+  private def setRemovals(v: Variable, constraints: IndexedSeq[Constraint], skip: Constraint, i: Int) {
+    if (i >= 0) {
+      val c = constraints(i)
+      if (c ne skip) {
+        c.setRemovals(v.positionInConstraint(i), reviseCount)
+      }
+      setRemovals(v, constraints, skip, i - 1)
+    }
+  }
+
+  private def setRemovals(v: Variable, skip: Constraint) {
+    setRemovals(v, v.constraints, skip, v.constraints.size - 1)
+  }
+
+  @tailrec
+  private def updateQueue(prev: Array[Int], constraint: Constraint, scope: Array[Variable], i: Int) {
+    if (i >= 0) {
+      val variable = scope(i)
+      if (prev(i) != variable.dom.size) {
+        queue.offer(variable)
+        setRemovals(variable, constraint)
+      }
+      updateQueue(prev, constraint, scope, i - 1)
+    }
+  }
+
+  def updateQueue(prev: Array[Int], constraint: Constraint) {
+    /** Requires high optimization */
+    updateQueue(prev, constraint, constraint.scope, constraint.arity - 1)
+  }
+
+  @tailrec
   private def prepareQueue(modifiedConstraints: Iterator[Constraint]): Boolean = {
     if (modifiedConstraints.hasNext) {
       val c = modifiedConstraints.next
       c.fillRemovals(reviseCount);
 
-      /** RevisionHandler will add appropriate variables to the queue */
-      if (c.revise(rh, reviseCount)) {
+      val prev = c.sizes
+
+      if (c.revise(reviseCount)) {
         c.fillRemovals(-1);
+        updateQueue(prev, c)
         prepareQueue(modifiedConstraints)
       } else {
         c.weight += 1;
         false;
       }
-    } else {
-      true
-    }
+    } else true
+
   }
 
   def reduceAfter(constraints: Iterable[Constraint]): Boolean = {
@@ -118,6 +140,7 @@ final class AC3(
       true
     } else {
       val variable = queue.poll()
+      //info(variable.toString)
       if (reduce(variable.constraints.iterator)) {
         reduce()
       } else {
@@ -135,8 +158,10 @@ final class AC3(
         reduce(itr)
       } else {
         revisions += 1;
-        if (c.revise(rh, reviseCount)) {
+        val prev = c.sizes
+        if (c.revise(reviseCount)) {
           c.fillRemovals(-1)
+          updateQueue(prev, c)
           reduce(itr)
         } else {
           c.weight += 1;
@@ -149,16 +174,11 @@ final class AC3(
 
   private def control() = {
     // LOGGER.fine("Control");
-    val controlRevisator = new RevisionHandler() {
-
-      def revised(constraint: Constraint, variable: Variable) {
-        assert(false, constraint + ", " + variable)
-      }
-
-    };
 
     problem.constraints.foreach { c =>
-      assert(c.revise(controlRevisator, -1))
+      val prev = c.sizes
+      assert(c.revise(-1))
+      assert(prev.sameElements(c.sizes))
     }
     true;
   }
