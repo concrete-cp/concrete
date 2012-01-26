@@ -82,11 +82,12 @@ public final class SmallBitVector extends BitVector {
     }
 
     public boolean equals(final Object o) {
-        return ((SmallBitVector) o).word == word;
+        BitVector bv = (BitVector) o;
+        return bv.getWord(0) == word && bv.nextSetBit(WORD_SIZE) == -1;
     }
 
     public int hashCode() {
-        return (int) (word ^ (word >>> 32));
+        return (int) word;
     }
 
     @Override

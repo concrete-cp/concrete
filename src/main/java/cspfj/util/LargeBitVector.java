@@ -194,11 +194,32 @@ final class LargeBitVector extends BitVector {
 
     @Override
     public boolean equals(final Object o) {
-        return Arrays.equals(words, ((LargeBitVector) o).words);
+        final BitVector bv = (BitVector) o;
+        final BitVector smaller;
+        final BitVector larger;
+        if (bv.size < size) {
+            smaller = bv;
+            larger = this;
+        } else {
+            smaller = this;
+            larger = bv;
+        }
+
+        for (int i = nbWords(larger.size); --i >= 0;) {
+            if (larger.getWord(i) != smaller.getWord(i)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public int hashCode() {
-        return Arrays.hashCode(words);
+        long result = 0;
+        for (int i = words.length; --i >= 0;) {
+            result = 31 * result + words[i];
+        }
+
+        return (int) result;
     }
 
     @Override

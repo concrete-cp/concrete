@@ -1,14 +1,11 @@
 package cspfj.constraint.semantic;
 
-import org.junit.Assert.assertEquals;
+import org.junit.Assert.assertEquals
+import org.junit.Before
+import org.junit.Test
 
-import org.junit.Before;
-import org.junit.Test;
-
-import cspfj.constraint.Constraint;
-import cspfj.filter.RevisionHandler;
-import cspfj.problem.BitVectorDomain;
-import cspfj.problem.Variable;
+import cspfj.problem.BitVectorDomain
+import cspfj.problem.Variable
 
 final class GtTest {
   var v1: Variable = null
@@ -24,9 +21,7 @@ final class GtTest {
   def testRevise1() {
 
     val c = new Gt(v1, v2, true);
-    c.revise(new RevisionHandler() {
-      def revised(c: Constraint, v: Variable) {}
-    }, 0);
+    c.revise(0);
 
     assertEquals(Seq(4), v1.dom.values.toSeq);
     assertEquals(Seq(3), v2.dom.values.toSeq);
@@ -36,9 +31,7 @@ final class GtTest {
   @Test
   def testRevise2() {
     val c = new Gt(v1, v2, false);
-    c.revise(new RevisionHandler() {
-      def revised(c: Constraint, v: Variable) {}
-    }, 0);
+    c.revise(0);
 
     assertEquals(Seq(3, 4), v1.dom.values.toSeq);
     assertEquals(Seq(3, 4), v2.dom.values.toSeq);

@@ -141,6 +141,18 @@ public class SmallBitVectorTest {
         assertFalse(bitVector.subsetOf(bv2));
         assertTrue(bv2.subsetOf(bitVector));
     }
+
+    @Test
+    public void testEquals() {
+        bitVector.set(46);
+        BitVector lbv = BitVector.newBitVector(128);
+        lbv.set(46);
+        assertEquals(bitVector, lbv);
+        assertEquals(lbv, bitVector);
+        lbv.set(100);
+        assertFalse(bitVector.equals(lbv));
+        assertFalse(lbv.equals(bitVector));
+    }
     // @Test
     // public void testIterator() {
     // bitVector.set( 46);

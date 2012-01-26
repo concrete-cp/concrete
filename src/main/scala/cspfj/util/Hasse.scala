@@ -29,6 +29,7 @@ class HNode[A](val v: A, var child: List[HNode[A]]) {
 
   var counted = -1
   var listed = -1
+  var collected = -1
 
   override def toString = "[" + v + " (" + hashCode + "), " + rank + ", " + child + "]"
 }
@@ -65,11 +66,12 @@ class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
   var roots: List[HNode[A]] = Nil
 
   def add(v: A) {
+    colls += 1
     val newNode = new HNode(v, collect(v, roots, Nil))
     val supersets = collectParents(v, roots.filter(c => po.lt(v, c.v)), Nil)
     if (supersets.isEmpty) roots ::= newNode
     else supersets.foreach(s =>
-      s.child = newNode :: s.child.filter(r => !po.lteq(r.v, newNode.v)))
+      s.child = newNode :: s.child.filter(r => !po.lteq(r.v, v)))
   }
 
   @tailrec
@@ -85,18 +87,25 @@ class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
 
     }
 
+  var colls = 0
+
   @tailrec
   private def collect(v: A, s: List[HNode[A]], collected: List[HNode[A]]): List[HNode[A]] =
     if (s == Nil) collected
     else {
       val head :: tail = s
 
-      if (po.disjoint(head.v, v) || collected.exists(c => po.lteq(head.v, c.v)))
-        collect(v, tail, collected)
-      else if (po.lteq(head.v, v))
-        collect(v, tail, head :: (collected.filter(c => !po.lteq(c.v, head.v))))
-      else
-        collect(v, Hasse.stack(head.child, tail), collected)
+      if (head.collected == colls) collect(v, tail, collected)
+      else {
+        head.collected = colls
+        if (po.disjoint(head.v, v) || collected.exists(c => po.lteq(head.v, c.v))) {
+          collect(v, tail, collected)
+        } else if (po.lteq(head.v, v)) {
+          collect(v, tail, head :: (collected.filter(c => !po.lteq(c.v, head.v))))
+        } else {
+          collect(v, Hasse.stack(head.child, tail), collected)
+        }
+      }
     }
 
   override def toString = iterator.mkString(", ")
@@ -110,15 +119,25 @@ class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
     roots = rem(v, roots)
   }
 
-  private def rem(v: A, roots: List[HNode[A]]): List[HNode[A]] =
-    roots flatMap { r =>
-      if (!po.lteq(v, r.v)) List(r)
-      else if (r.v == v) r.child
+  private def rem(v: A, roots: List[HNode[A]]): List[HNode[A]] = {
+    /** Optimized from flatMap, results in a *2 performance increase */
+    @tailrec
+    def remL(roots: List[HNode[A]], newRoots: List[HNode[A]]): List[HNode[A]] =
+      if (roots == Nil) newRoots
       else {
-        r.child = rem(v, r.child)
-        List(r)
+        val r :: tail = roots
+        if (!po.lteq(v, r.v)) remL(tail, r :: newRoots)
+        else if (r.v == v) remL(tail, Hasse.stack(r.child, newRoots))
+        else {
+          r.child = rem(v, r.child)
+          remL(tail, r :: newRoots)
+        }
+
       }
-    }
+
+    remL(roots, Nil)
+
+  }
 
   def toGML = {
     val stb = new StringBuilder();

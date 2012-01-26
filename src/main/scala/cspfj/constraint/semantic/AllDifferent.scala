@@ -61,7 +61,8 @@ object AllDifferent {
 final class AllDifferent(scope: Variable*)
   extends AbstractConstraint(null, scope.toArray)
   with Loggable
-  with VariableGrainedRemovals {
+  with VariableGrainedRemovals
+  with Backtrackable[Set[VarInfo]] {
 
   private val offset = scope map { _.dom.allValues.head } min
   private val max = scope map { _.dom.allValues.last } max
@@ -132,6 +133,8 @@ final class AllDifferent(scope: Variable*)
       info += v -> vi
       tree.add(vi)
     }
+
+    restoreLevel(l)
   }
 
   def revise(rvls: Int): Boolean = revise(modified(rvls).toSeq)
@@ -167,10 +170,28 @@ final class AllDifferent(scope: Variable*)
       else revise(change)
     }
 
-  private def filter(node: HNode[VarInfo]) = {
-    val vals = values(node.v.d)
-    (scopeSet -- node.flatten.map(_.v.v)).iterator.filter(remove(_, vals))
+  private var filtered: Set[VarInfo] = Set.empty
+
+  def save = filtered
+
+  def restore(d: Set[VarInfo]) {
+    filtered = d
   }
+
+  private def filter(node: HNode[VarInfo]) =
+    if (filtered(node.v)) {
+      assert {
+        val vals = values(node.v.d)
+        (scopeSet -- node.flatten.map(_.v.v)).iterator.filter(remove(_, vals)).isEmpty
+      }
+      Set.empty
+
+    } else {
+      altering()
+      filtered += node.v
+      val vals = values(node.v.d)
+      (scopeSet -- node.flatten.map(_.v.v)).iterator.filter(remove(_, vals))
+    }
 
   private def remove(v: Variable, vals: List[Int]) = {
     val toRemove = vals.iterator map (v.dom.index) filter (v.dom.present)
@@ -193,7 +214,12 @@ final class AllDifferent(scope: Variable*)
     l
   }
 
+  override def setLvl(l: Int) {
+    super.setLvl(l)
+    setLevel(l)
+  }
+
   override def toString = "allDifferent" + scope.mkString("(", ", ", ")")
 
-  val getEvaluation = arity.doubleValue * arity
+  val getEvaluation = arity.doubleValue * arity * (max - offset)
 }

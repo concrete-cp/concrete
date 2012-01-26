@@ -10,7 +10,6 @@ import cspfj.constraint.AbstractConstraint
 import cspfj.constraint.Constraint
 import cspfj.constraint.Residues
 import cspfj.constraint.TupleEnumerator
-import cspfj.filter.RevisionHandler
 import cspfj.problem.BitVectorDomain
 import cspfj.problem.Variable
 
@@ -31,19 +30,13 @@ final class AbsDiffTest {
   @Test
   def testReviseInt() {
     val c = new AbsDiff(x, y, z);
-    c.revise(new RevisionHandler() {
-      def revised(constraint: Constraint, variable: Variable) {}
-    }, 0);
+    c.revise(0);
 
     val c2 = new AbstractConstraint(Array(x, y, z)) with Residues with TupleEnumerator {
       def check() = value(0) == math.abs(value(1) - value(2));
       override def getEvaluation = 0
     };
-    c2.revise(new RevisionHandler() {
-      def revised(constraint: Constraint, variable: Variable) {
-        fail("Revised " + variable);
-      }
-    }, 0);
+    c2.revise(0);
   }
 
   private def randomDomain(min: Int, max: Int, nb: Int) = {

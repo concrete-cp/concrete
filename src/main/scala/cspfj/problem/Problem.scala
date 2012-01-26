@@ -83,10 +83,16 @@ final class Problem {
   }
 
   override def toString = {
+
+    _variables.mkString("\n") + "\n" +
+      _constraints.filter(!_.isEntailed).mkString("\n") + "\n" +
+      stats
+  }
+
+  def stats = {
     val entailed = _constraints.count(_.isEntailed)
 
-    _variables.mkString("\n") + "\n" + _constraints.filter(!_.isEntailed).mkString("\n") + "\n" +
-      "Total " + _variables.size + " variables, " +
+    "Total " + _variables.size + " variables, " +
       (_constraints.size - entailed) + " active constraints and " +
       entailed + " entailed constraints"
   }

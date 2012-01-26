@@ -25,16 +25,17 @@ object StatisticsManager extends Loggable {
     //    }
   }
 
-  private def annotedInstanceVariable(f: Field) =
-    f.getAnnotation(classOf[cspfj.Statistic]) != null &&
-      (f.getModifiers & Modifier.STATIC) == 0
+  private def annoted(f: Field) =
+    f.getAnnotation(classOf[cspfj.Statistic]) != null
+  //&&
+  //(f.getModifiers & Modifier.STATIC) == 0
 
   def get(name: String) = {
 
     val fieldNameAt = name.lastIndexOf('.')
     val obj = objects.get(name.substring(0, fieldNameAt)).get
     val fieldName = name.substring(fieldNameAt + 1, name.length)
-    obj.getClass.getDeclaredFields.find(f => annotedInstanceVariable(f) && f.getName == fieldName) match {
+    obj.getClass.getDeclaredFields.find(f => annoted(f) && f.getName == fieldName) match {
       case Some(f) => { f.setAccessible(true); f.get(obj) }
       case None => throw new IllegalArgumentException("Could not find " + name + " (" + fieldName + " in " + obj.getClass.getDeclaredFields.toList + ")")
     }
@@ -43,10 +44,13 @@ object StatisticsManager extends Loggable {
 
   def digest = (objects map {
     case (s, o) =>
-      o.getClass.getDeclaredFields.map { f =>
+      o.getClass.getDeclaredFields.filter(annoted).map { f =>
+        f.setAccessible(true)
         (s + "." + f.getName) -> f.get(o)
       }
   } flatten).toMap
+
+  def display = digest.map(t => t._1 + " = " + t._2).toSeq.sorted.mkString("\n")
 
   def isIntType(input: Class[_]) =
     input == classOf[Int] || input == classOf[Long]

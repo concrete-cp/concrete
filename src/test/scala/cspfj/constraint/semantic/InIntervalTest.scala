@@ -1,16 +1,13 @@
 package cspfj.constraint.semantic;
 
-import org.junit.Assert.assertEquals;
-import org.junit.Assert.assertTrue;
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
 
-import org.junit.Before;
-import org.junit.Test;
-
-import cspfj.constraint.Constraint;
-import cspfj.filter.RevisionHandler;
-import cspfj.problem.BitVectorDomain;
-import cspfj.problem.Domain;
-import cspfj.problem.Variable;
+import cspfj.problem.BitVectorDomain
+import cspfj.problem.Domain
+import cspfj.problem.Variable
 
 final class InIntervalTest {
 
@@ -31,11 +28,7 @@ final class InIntervalTest {
 
   @Test
   def testRevise() {
-    assertTrue(constraint.revise(new RevisionHandler() {
-      def revised(constraint: Constraint,
-        variable: Variable) {
-      }
-    }, 0));
+    assertTrue(constraint.revise(0));
     assertEquals(Seq(2, 3), domain.values.toSeq);
   }
 
