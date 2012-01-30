@@ -1,6 +1,7 @@
 package cspfj.util
 import scala.annotation.tailrec
 import scala.collection.immutable.BitSet
+import scala.collection.mutable.DoubleLinkedList
 
 object HNode {
   var counts = 0
@@ -19,12 +20,10 @@ class HNode[A](val v: A, var child: List[HNode[A]]) {
   @tailrec
   private def count(s: List[HNode[A]], c: Int): Int =
     if (s == Nil) c
+    else if (s.head.counted == HNode.counts) count(s.tail, c)
     else {
-      if (s.head.counted == HNode.counts) count(s.tail, c)
-      else {
-        s.head.counted = HNode.counts
-        count(Hasse.stack(s.head.child, s.tail), c + 1)
-      }
+      s.head.counted = HNode.counts
+      count(Hasse.stack(s.head.child, s.tail), c + 1)
     }
 
   var counted = -1
@@ -68,8 +67,9 @@ class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
   def add(v: A) {
     colls += 1
     val newNode = new HNode(v, collect(v, roots, Nil))
-    val supersets = collectParents(v, roots.filter(c => po.lt(v, c.v)), Nil)
-    if (supersets.isEmpty) roots ::= newNode
+
+    val supersets = collectParents(v, roots.filter(r => po.lt(v, r.v)), Nil)
+    if (supersets.isEmpty) roots = newNode :: roots.filter(r => !po.lteq(r.v, v))
     else supersets.foreach(s =>
       s.child = newNode :: s.child.filter(r => !po.lteq(r.v, v)))
   }
@@ -108,7 +108,7 @@ class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
       }
     }
 
-  override def toString = iterator.mkString(", ")
+  override def toString = toGML
 
   def iterator = Hasse.flatten(roots).iterator.map(n => (n.v, n.rank))
 
@@ -120,7 +120,7 @@ class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
   }
 
   private def rem(v: A, roots: List[HNode[A]]): List[HNode[A]] = {
-    /** Optimized from flatMap, results in a *2 performance increase */
+
     @tailrec
     def remL(roots: List[HNode[A]], newRoots: List[HNode[A]]): List[HNode[A]] =
       if (roots == Nil) newRoots
@@ -147,6 +147,19 @@ class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
     def flatnodes(r: List[HNode[A]]): Set[HNode[A]] = r.toSet ++ r.flatMap(v => flatnodes(v.child))
 
     val edges = new StringBuilder()
+
+    stb.append("node [\n")
+    stb.append("id \"root\"\n");
+    stb.append("label \"root\"\n")
+    stb.append("]\n")
+
+    for (n <- roots) {
+      edges.append("edge [\n")
+      edges.append("source \"root\"\n")
+      edges.append("target \"").append(n.hashCode).append("\"\n")
+      edges.append("graphics [ targetArrow \"standard\" ]\n");
+      edges.append("]\n")
+    }
 
     for (n <- flatnodes(roots)) {
       stb.append("node [\n");

@@ -194,7 +194,8 @@ final class AllDifferent(scope: Variable*)
     }
 
   private def remove(v: Variable, vals: List[Int]) = {
-    val toRemove = vals.iterator map (v.dom.index) filter (v.dom.present)
+    val toRemove = vals.iterator map (v.dom.index) filter (i =>
+      i >= 0 && v.dom.present(i))
 
     if (toRemove.isEmpty) false
     else {
