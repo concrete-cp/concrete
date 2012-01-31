@@ -30,7 +30,7 @@ class HNode[A](val v: A, var child: List[HNode[A]]) {
   var listed = -1
   var collected = -1
 
-  override def toString = "[" + v + " (" + hashCode + "), " + rank + ", " + child + "]"
+  override def toString = "[" + v + ", " + rank + ", " + child + "]"
 }
 
 object Hasse {
@@ -132,7 +132,6 @@ class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
           r.child = rem(v, r.child)
           remL(tail, r :: newRoots)
         }
-
       }
 
     remL(roots, Nil)
