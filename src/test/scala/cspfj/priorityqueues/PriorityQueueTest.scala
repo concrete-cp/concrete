@@ -17,7 +17,7 @@ object IntNode {
 
 }
 
-case class IntNode(val v: Int) extends Identified with PTag {//with IOBinomialHeapNode[IntNode] {
+case class IntNode(val v: Int) extends Identified with IOBinomialHeapNode[IntNode] {
   val getId = IntNode.id
   IntNode.id += 1
 }
@@ -26,7 +26,7 @@ final class PriorityQueueTest {
 
   private val RANDOM = new Random(0);
 
-  private val INTS = Stream.continually(IntNode(RANDOM.nextInt(5000000))).take(284842)
+  private val INTS = Stream.continually(IntNode(RANDOM.nextInt(5000000))).take(100000)
 
   val key = IntNode.key
 
@@ -52,7 +52,7 @@ final class PriorityQueueTest {
   def testBinaryHeap() {
     test(new BinaryHeap[IntNode](key))
   }
-  @Test
+  @Test(timeout = 5000)
   def testBinomialHeap() {
     test(new BinomialHeap[IntNode](key))
   }
@@ -66,7 +66,7 @@ final class PriorityQueueTest {
 //  }
   @Test(timeout = 5000)
   def testScalaIOBinomialHeap() {
-    //test(new ScalaIOBinomialHeap[IntNode](key))
+    test(new ScalaIOBinomialHeap[IntNode](key))
   }
   
   def test(q: Queue[IntNode]) {
@@ -87,13 +87,12 @@ final class PriorityQueueTest {
       var last = q.poll().v;
       while (!q.isEmpty) {
         val current = q.poll().v;
-        println(i)
         i += 1
         assertTrue(current + " should be >= " + last + " (j = " + j + ")", current >= last);
         last = current;
       }
 
-      j = (j * 2.5).toInt
+      j = (j * 10).toInt
     }
     //}
 
