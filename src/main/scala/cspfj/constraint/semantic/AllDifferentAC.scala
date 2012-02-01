@@ -21,13 +21,13 @@ package cspfj.constraint.semantic;
 
 import scala.collection.immutable.Queue
 import cspfj.constraint.AbstractConstraint
-import cspfj.constraint.VariableGrainedRemovals
 import cspfj.problem.Variable
 import cspfj.util.BitVector
 import scala.annotation.tailrec
+import cspfj.constraint.ModTracker
 
 final class AllDifferentAC(scope: Variable*) extends AbstractConstraint(null, scope.toArray)
-  with VariableGrainedRemovals {
+  with ModTracker {
 
   val offset = scope map { _.dom.allValues.min } min
   val max = scope map { _.dom.allValues.max } max
@@ -71,13 +71,19 @@ final class AllDifferentAC(scope: Variable*) extends AbstractConstraint(null, sc
       }
     }
 
-    try {
+    val r = try {
       rev(modified(reviseCount).filter(_.dom.size == 1).foldLeft(Queue[Variable]())(_.enqueue(_)))
-      true
-      //checkPigeons
+      //true
+      checkPigeons
+
     } catch {
       case e: Inconsistency => false
     }
+
+    if (r) {
+      saveSizes(reviseCount)
+      true
+    } else false
 
   }
 

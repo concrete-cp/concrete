@@ -45,7 +45,7 @@ final class SACSolvingTest extends Loggable {
   @Test
   def queens12_ext() {
     assertTrue(solve("queens-12_ext.xml").isDefined);
-    assertEquals(14200, count("queens-12_ext.xml"));
+    //assertEquals(14200, count("queens-12_ext.xml"));
 
   }
 

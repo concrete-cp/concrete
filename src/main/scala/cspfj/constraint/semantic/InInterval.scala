@@ -1,7 +1,6 @@
 package cspfj.constraint.semantic;
 
 import cspfj.constraint.AbstractConstraint
-import cspfj.constraint.SimpleRemovals
 import cspfj.problem.Domain
 import cspfj.problem.Variable
 
@@ -14,7 +13,7 @@ object InInterval {
 }
 
 final class InInterval(val variable: Variable, val lb: Int, val ub: Int)
-  extends AbstractConstraint(Array(variable)) with SimpleRemovals {
+  extends AbstractConstraint(Array(variable)) {
 
   val dom = variable.dom
 

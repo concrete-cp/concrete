@@ -5,14 +5,12 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.MultiMap
 import cspfj.constraint.AbstractConstraint
 import cspfj.problem.Variable
-import cspfj.constraint.SimpleRemovals
 
 final case class Bounds(val value: Int, val minCount: Int, val maxCount: Int) {
   override def toString = value + ": [" + minCount + ", " + maxCount + "]"
 }
 
-final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends AbstractConstraint(scope)
-  with SimpleRemovals {
+final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends AbstractConstraint(scope) {
 
   var queue: Queue[Variable] = Queue.empty
 

@@ -16,8 +16,8 @@ final class SolvingTest extends Loggable {
   @Test //(timeout = 40000)
   def crosswordm1() {
 
-    //assertTrue(solve("crossword-m1-debug-05-01.xml").isDefined);
-    assertEquals(48, count("crossword-m1-debug-05-01.xml"));
+    assertTrue(solve("crossword-m1-debug-05-01.xml").isDefined);
+    //assertEquals(48, count("crossword-m1-debug-05-01.xml"));
 
   }
 

@@ -21,7 +21,6 @@ package cspfj.constraint.semantic;
 
 import scala.collection.immutable.Queue
 import cspfj.constraint.AbstractConstraint
-import cspfj.constraint.VariableGrainedRemovals
 import cspfj.problem.Variable
 import cspfj.util.BitVector
 import scala.annotation.tailrec
@@ -61,7 +60,6 @@ object AllDifferent {
 final class AllDifferent(scope: Variable*)
   extends AbstractConstraint(null, scope.toArray)
   with Loggable
-  with VariableGrainedRemovals
   with Backtrackable[Set[VarInfo]] {
 
   private val offset = scope map { _.dom.allValues.head } min
@@ -137,7 +135,19 @@ final class AllDifferent(scope: Variable*)
     restoreLevel(l)
   }
 
-  def revise(rvls: Int): Boolean = revise(modified(rvls).toSeq)
+  def revise(rvls: Int): Boolean = {
+    //val mod = modified(rvls)
+    //    assert(mod.forall(v => info.get(v) match {
+    //      case Some(vi) => v.dom.size != vi.s
+    //      case None => true
+    //    }))
+    //assert((scopeSet -- mod).forall(v => v.dom.size == info(v).s))
+    val mod = scope filter (v => info.get(v) match {
+      case Some(vi) => v.dom.size != vi.s
+      case None => true
+    })
+    revise(mod)
+  }
 
   var info: Map[Variable, VarInfo] = Map.empty
 

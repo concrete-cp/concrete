@@ -43,7 +43,7 @@ final class Problem {
     _variables :+= variable
 
     _maxVId = math.max(variable.getId, _maxVId)
-    _maxDomainSize = math.max(variable.dom.size, _maxDomainSize)
+    //_maxDomainSize = math.max(variable.dom.size, _maxDomainSize)
     variable;
   }
 
@@ -99,9 +99,9 @@ final class Problem {
   }
 
   def maxDomainSize = {
-//    if (_maxDomainSize < 0) {
-//      _maxDomainSize = variables map { _.dom.size } max
-//    }
+    if (_maxDomainSize < 0) {
+      _maxDomainSize = variables map { _.dom.size } max
+    }
     _maxDomainSize
   }
 

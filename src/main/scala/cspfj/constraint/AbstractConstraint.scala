@@ -11,7 +11,7 @@ abstract class AbstractConstraint(_name: String, val scope: Array[Variable]) ext
   val tuple = new Array[Int](arity)
   val position = scope.zipWithIndex.toMap
   def this(scope: Array[Variable]) = this(null, scope)
-  def isInvolved(variable: Variable) = position.contains(variable)
+  final def isInvolved(variable: Variable) = position.contains(variable)
 
   @tailrec
   private def sizes(a: Array[Int], i: Int): Array[Int] =
@@ -21,9 +21,9 @@ abstract class AbstractConstraint(_name: String, val scope: Array[Variable]) ext
       sizes(a, i - 1)
     }
 
-  def sizes: Array[Int] = {
+  final def sizes: Array[Int] =
     // scope map (_.dom.size)
     // Optimize this!
     sizes(new Array[Int](arity), arity - 1)
-  }
+
 }

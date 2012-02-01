@@ -4,11 +4,9 @@ import java.util.Arrays
 import cspfj.constraint.AbstractConstraint
 import cspfj.problem.BooleanDomain
 import cspfj.problem.Variable;
-import cspfj.constraint.SimpleRemovals
 
 final class Disjunction(scope: Array[Variable],
-  val reverses: IndexedSeq[Boolean]) extends AbstractConstraint(null, scope)
-  with SimpleRemovals {
+  val reverses: IndexedSeq[Boolean]) extends AbstractConstraint(null, scope) {
 
   require(scope forall (v => v.dom.isInstanceOf[BooleanDomain] && v.dom.size == 2),
     "Only non-constant boolean domains are allowed")

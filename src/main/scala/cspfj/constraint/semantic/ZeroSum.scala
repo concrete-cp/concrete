@@ -3,7 +3,7 @@ package cspfj.constraint.semantic;
 import scala.annotation.tailrec
 
 import cspfj.constraint.AbstractConstraint
-import cspfj.constraint.SimpleRemovals
+
 import cspfj.problem.Domain
 import cspfj.problem.Interval
 import cspfj.problem.Variable
@@ -12,7 +12,7 @@ import cspfj.util.Loggable
 final class ZeroSum(
   val factors: Array[Int],
   scope: Array[Variable]) extends AbstractConstraint(scope)
-  with SimpleRemovals with Loggable {
+  with Loggable {
 
   def check: Boolean =
     (0 until arity).map(i => value(i) * factors(i)).sum >= 0

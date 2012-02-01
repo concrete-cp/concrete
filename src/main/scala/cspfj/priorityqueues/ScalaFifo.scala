@@ -1,26 +1,27 @@
 package cspfj.priorityqueues
 import java.util.AbstractQueue
-import scala.collection.mutable.Queue
+import scala.collection.immutable.Queue
 import scala.collection.JavaConversions
 
 class ScalaFifo[T <: PTag] extends AbstractQueue[T] {
 
-  val queue = new Queue[T]()
-
+  var queue: Queue[T] = Queue.empty
+ 
   def this(k: Key[T]) = this()
 
   def offer(e: T) = {
     if (e.isPresent) {
       false
     } else {
-      queue.enqueue(e)
+      queue = queue.enqueue(e)
       e.setPresent()
       true
     }
   }
 
   def poll() = {
-    val p = queue.dequeue()
+    val (p, q) = queue.dequeue
+    queue = q
     p.unsetPresent()
     p
   }
@@ -35,7 +36,7 @@ class ScalaFifo[T <: PTag] extends AbstractQueue[T] {
 
   override def clear() {
     PTag.clear()
-    queue.clear()
+    queue = Queue.empty
   }
 
 }

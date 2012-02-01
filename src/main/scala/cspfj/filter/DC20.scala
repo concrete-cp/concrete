@@ -118,7 +118,7 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
     if (constraints.hasNext) {
       val c = constraints.next
       if (c.revise(-1)) {
-        c.fillRemovals(-1)
+        //c.fillRemovals(-1)
         forwardCheck(constraints)
       } else false
     } else true

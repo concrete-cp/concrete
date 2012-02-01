@@ -8,7 +8,7 @@ import cspfj.util.Loggable
 /**
  * A constraint that can be revised one variable at a time
  */
-trait VariablePerVariable extends VariableGrainedRemovals with Loggable {
+trait VariablePerVariable extends Constraint with ModTracker with Loggable {
 
   /**
    * Try to filter values from variable getVariable(position).
@@ -19,7 +19,7 @@ trait VariablePerVariable extends VariableGrainedRemovals with Loggable {
   def reviseVariable(position: Int): Boolean
 
   final def revise(reviseCount: Int): Boolean = {
-    val skip = skipRevision(reviseCount);
+    val skip = skipRevision(reviseCount)
 
     @tailrec
     def revise(singletons: Int, i: Int): Int = {
@@ -43,8 +43,10 @@ trait VariablePerVariable extends VariableGrainedRemovals with Loggable {
       if (singletons >= arity - 1) {
         entail();
       }
+      saveSizes(reviseCount)
       true;
     }
   }
+  
 
 }

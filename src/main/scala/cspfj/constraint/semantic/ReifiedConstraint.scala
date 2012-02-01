@@ -20,14 +20,14 @@ final class ReifiedConstraint(
 
   val controlDomain = controlVariable.dom.asInstanceOf[BooleanDomain]
 
-//  private final class ReifiedRevisionHandler(val reifiedRevisator: RevisionHandler)
-//    extends RevisionHandler {
-//
-//    override def revised(constraint: Constraint, variable: Variable) {
-//      reifiedRevisator.revised(ReifiedConstraint.this, variable);
-//    }
-//
-//  }
+  //  private final class ReifiedRevisionHandler(val reifiedRevisator: RevisionHandler)
+  //    extends RevisionHandler {
+  //
+  //    override def revised(constraint: Constraint, variable: Variable) {
+  //      reifiedRevisator.revised(ReifiedConstraint.this, variable);
+  //    }
+  //
+  //  }
 
   override def setLvl(l: Int) {
     super.setLvl(l)
@@ -60,13 +60,7 @@ final class ReifiedConstraint(
     }
 
   private def noReifyRevise(constraint: Constraint, reviseCount: Int) = {
-    val actualRevise = if (controlRemovals >= reviseCount) {
-      -1;
-    } else {
-      reviseCount;
-    }
-
-    if (constraint.revise(actualRevise)) {
+    if (constraint.revise(reviseCount)) {
       if (constraint.isEntailed) {
         entail();
       }
@@ -80,29 +74,8 @@ final class ReifiedConstraint(
   }
 
   def getEvaluation =
-    positiveConstraint.getEvaluation
-  +negativeConstraint.getEvaluation
+    positiveConstraint.getEvaluation + negativeConstraint.getEvaluation
 
   override def toString = scope(0) + " == (" + positiveConstraint + ")";
-
-  var controlRemovals = 0
-
-  override def setRemovals(position: Int, value: Int) {
-    if (position == 0) {
-      controlRemovals = value;
-    } else {
-      positiveConstraint.setRemovals(position - 1, value);
-      negativeConstraint.setRemovals(position - 1, value);
-    }
-  }
-
-  override def fillRemovals(value: Int) {
-    controlRemovals = value;
-    positiveConstraint.fillRemovals(value);
-    negativeConstraint.fillRemovals(value);
-  }
-
-  override def hasNoRemovals(value: Int) =
-    controlRemovals < value && positiveConstraint.hasNoRemovals(value);
 
 }

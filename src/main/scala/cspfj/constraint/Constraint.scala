@@ -114,14 +114,6 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
     control(arity - 1)
   }
 
-  //def getRemovals(position: Int): Int
-
-  def setRemovals(position: Int, value: Int): Unit
-
-  def fillRemovals(value: Int): Unit
-
-  def hasNoRemovals(reviseCount: Int): Boolean
-
   final def isEntailed = entailedAtLevel >= 0
 
   final def disEntail() { entailedAtLevel = -1 }

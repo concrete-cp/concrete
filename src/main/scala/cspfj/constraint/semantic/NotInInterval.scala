@@ -3,7 +3,6 @@ package cspfj.constraint.semantic;
 import cspfj.constraint.AbstractConstraint
 import cspfj.problem.Domain
 import cspfj.problem.Variable;
-import cspfj.constraint.SimpleRemovals
 
 object NotInInterval {
   def values(variable: Variable, lb: Int, ub: Int) =
@@ -14,7 +13,7 @@ object NotInInterval {
 }
 
 final class NotInInterval(val variable: Variable, val lb: Int, val ub: Int)
-  extends AbstractConstraint(Array(variable)) with SimpleRemovals {
+  extends AbstractConstraint(Array(variable)) {
 
   val getEvaluation = 0.0
 

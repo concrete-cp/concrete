@@ -37,32 +37,6 @@ class TestMAC {
     (queens, problem)
   }
 
-  //  @Test //(timeout = 1000)
-  //  def queens() {
-  //    val (queens, problem) = qp(4)
-  //
-  //    val solver = new MAC(problem)
-  //    solver.maxBacktracks = -1
-  //    solver.prepare()
-  //
-  //    @tailrec
-  //    def count(modified: Variable, stack: List[Pair], c: Int): Int = {
-  //      solver.mac(modified, stack) match {
-  //        case (None, _) => c
-  //        case (Some(solution), stack) => {
-  //          if (stack == Nil) c + 1
-  //          else {
-  //            stack.head.remove()
-  //            count(stack.head.variable, stack, c + 1)
-  //          }
-  //        }
-  //      }
-  //
-  //    }
-  //
-  //    Assert.assertEquals(14200, count(null, Nil, 0))
-  //  }
-
   def view(queens: Seq[Variable], solution: Map[String, Int]) =
     queens.map(q => q.name + " = " + solution.get(q.name)).mkString(", ")
 
@@ -73,25 +47,26 @@ class TestMAC {
     13 -> 73712);
 
   @Test //(timeout = 1000)
-  def queens2() {
-    val size = 12
-    val (queens, problem) = qp(size)
-    //ParameterManager.parameter("logger.level", "FINE")
-    val solver = new MAC(problem)
+  def queens() {
+    for (size <- Seq(12)) {
+      val (queens, problem) = qp(size)
+      ParameterManager.parameter("logger.level", "INFO")
+      val solver = new MAC(problem)
 
-    @tailrec
-    def count(c: Int): Int = {
+      @tailrec
+      def count(c: Int): Int = {
 
-      solver.nextSolution() match {
-        case None => c
-        case Some(solution) => {
-          //println(c + " : " + view(queens, solution))
-          count(c + 1)
+        solver.nextSolution() match {
+          case None => c
+          case Some(solution) => {
+            //println(c + " : " + view(queens, solution))
+            count(c + 1)
+          }
         }
+
       }
 
+      Assert.assertEquals(sols(size), count(0))
     }
-
-    Assert.assertEquals(sols(size), count(0))
   }
 }

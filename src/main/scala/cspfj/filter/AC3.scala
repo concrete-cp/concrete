@@ -37,7 +37,7 @@ final class AC3(
     reviseCount += 1;
     queue.clear();
     problem.variables.foreach(queue.offer)
-    problem.constraints.foreach(_.fillRemovals(reviseCount))
+    //problem.constraints.foreach(_.fillRemovals(reviseCount))
 
     reduce()
 
@@ -45,26 +45,26 @@ final class AC3(
 
   private def prepareQueue(v: Variable) {
     queue.offer(v)
-    v.constraints.zipWithIndex.foreach {
-      case (c, i) =>
-        c.setRemovals(v.positionInConstraint(i), reviseCount)
-    }
+//    v.constraints.zipWithIndex.foreach {
+//      case (c, i) =>
+//        c.setRemovals(v.positionInConstraint(i), reviseCount)
+//    }
   }
 
-  @tailrec
-  private def setRemovals(v: Variable, constraints: IndexedSeq[Constraint], skip: Constraint, i: Int) {
-    if (i >= 0) {
-      val c = constraints(i)
-      if (c ne skip) {
-        c.setRemovals(v.positionInConstraint(i), reviseCount)
-      }
-      setRemovals(v, constraints, skip, i - 1)
-    }
-  }
+//  @tailrec
+//  private def setRemovals(v: Variable, constraints: IndexedSeq[Constraint], skip: Constraint, i: Int) {
+//    if (i >= 0) {
+//      val c = constraints(i)
+//      if (c ne skip) {
+//        c.setRemovals(v.positionInConstraint(i), reviseCount)
+//      }
+//      setRemovals(v, constraints, skip, i - 1)
+//    }
+//  }
 
-  private def setRemovals(v: Variable, skip: Constraint) {
-    setRemovals(v, v.constraints, skip, v.constraints.size - 1)
-  }
+//  private def setRemovals(v: Variable, skip: Constraint) {
+//    setRemovals(v, v.constraints, skip, v.constraints.size - 1)
+//  }
 
   @tailrec
   private def updateQueue(prev: Array[Int], constraint: Constraint, scope: Array[Variable], i: Int) {
@@ -72,7 +72,7 @@ final class AC3(
       val variable = scope(i)
       if (prev(i) != variable.dom.size) {
         queue.offer(variable)
-        setRemovals(variable, constraint)
+        //setRemovals(variable, constraint)
       }
       updateQueue(prev, constraint, scope, i - 1)
     }
@@ -87,12 +87,12 @@ final class AC3(
   private def prepareQueue(modifiedConstraints: Iterator[Constraint]): Boolean = {
     if (modifiedConstraints.hasNext) {
       val c = modifiedConstraints.next
-      c.fillRemovals(reviseCount);
+      //c.fillRemovals(reviseCount);
 
       val prev = c.sizes
 
       if (c.revise(reviseCount)) {
-        c.fillRemovals(-1);
+       // c.fillRemovals(-1);
         updateQueue(prev, c)
         prepareQueue(modifiedConstraints)
       } else {
@@ -154,13 +154,13 @@ final class AC3(
   private def reduce(itr: Iterator[Constraint]): Boolean = {
     if (itr.hasNext) {
       val c = itr.next
-      if (c.isEntailed || c.hasNoRemovals(reviseCount)) {
+      if (c.isEntailed) {//} || c.hasNoRemovals(reviseCount)) {
         reduce(itr)
       } else {
         revisions += 1;
         val prev = c.sizes
         if (c.revise(reviseCount)) {
-          c.fillRemovals(-1)
+          //c.fillRemovals(-1)
           updateQueue(prev, c)
           reduce(itr)
         } else {

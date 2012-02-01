@@ -1,21 +1,23 @@
 package cspfj.filter;
 
 import java.util.Queue
+
+import scala.annotation.tailrec
 import scala.collection.IndexedSeq
-import cspfj.ParameterManager
-import cspfj.StatisticsManager
+
 import cspfj.constraint.Constraint
+import cspfj.priorityqueues._
 import cspfj.problem.Problem
 import cspfj.problem.Variable
-import cspfj.Parameter
-import cspfj.Statistic
-import scala.annotation.tailrec
-import cspfj.priorityqueues._
 import cspfj.util.Loggable
+import cspfj.Parameter
+import cspfj.ParameterManager
+import cspfj.Statistic
+import cspfj.StatisticsManager
 
 object AC3Constraint {
   @Parameter("ac.queue")
-  var queueType: Class[_ <: Queue[Constraint]] = classOf[ScalaIOBinomialHeap[Constraint]]
+  var queueType: Class[_ <: Queue[Constraint]] = classOf[ScalaFifos[Constraint]]
 
   @Parameter("ac.key")
   var key = new Key[Constraint]() {
@@ -58,8 +60,8 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
         v.constraints.zipWithIndex.foreach {
           case (c, j) =>
             if (!c.isEntailed) {
-              c.setRemovals(v.positionInConstraint(j),
-                AC3Constraint.revisionCount);
+//              c.setRemovals(v.positionInConstraint(j),
+//                AC3Constraint.revisionCount);
 
               queue.offer(c);
             }
@@ -70,7 +72,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
     if (modCons != null) {
       problem.constraints.foreach { c =>
         if (modCons(c.getId) > cnt && !c.isEntailed) {
-          c.fillRemovals(AC3Constraint.revisionCount);
+//          c.fillRemovals(AC3Constraint.revisionCount);
 
           queue.offer(c);
         }
@@ -86,30 +88,50 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
       true;
     } else {
       queue.clear();
-      variable.constraints.iterator.zipWithIndex.foreach {
-        case (c, cp) =>
-          if (!c.isEntailed) {
-            c.setRemovals(
-              variable.positionInConstraint(cp), AC3Constraint.revisionCount);
-            queue.offer(c);
-          }
-      }
+      updateQueue(variable, null)
+      //      variable.constraints.iterator.zipWithIndex.foreach {
+      //        case (c, cp) =>
+      //          enqueue(c, variable.positionInConstraint(cp))
+      //      }
       //info("reduce " + AC3Constraint.revisionCount)
       reduce();
     }
   }
 
-  private def updateQueue(sizes: Seq[Int], constraint: Constraint) {
-    (constraint.scope, sizes).zipped.foreach { (v, s) =>
-      if (v.dom.size != s)
-        v.constraints.iterator.zipWithIndex.foreach {
-          case (c, cp) =>
-            if (c != constraint && !c.isEntailed) {
-              c.setRemovals(v.positionInConstraint(cp), AC3Constraint.revisionCount);
-              queue.offer(c);
-            }
+  private def enqueue(c: Constraint, modified: Int) {
+    if (!c.isEntailed) {
+      //c.setRemovals(modified, AC3Constraint.revisionCount);
+      queue.offer(c);
+    }
+  }
 
-        }
+  private def updateQueue(modified: Variable, skip: Constraint) {
+    val constraints = modified.constraints
+
+    @tailrec
+    def upd(i: Int) {
+      if (i >= 0) {
+        val c = constraints(i)
+
+        if (c ne skip)
+          enqueue(c, 0)//modified.positionInConstraint(i))
+
+        upd(i - 1)
+      }
+    }
+
+    upd(constraints.size - 1)
+  }
+
+  @tailrec
+  private def updateQueue(sizes: Array[Int], constraint: Constraint, i: Int) {
+    if (i >= 0) {
+      val v = constraint.scope(i)
+
+      if (v.dom.size != sizes(i))
+        updateQueue(v, constraint)
+
+      updateQueue(sizes, constraint, i - 1)
     }
   }
 
@@ -124,8 +146,8 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
       revisions += 1;
       val sizes = constraint.sizes
       if (constraint.revise(AC3Constraint.revisionCount)) {
-        updateQueue(sizes, constraint)
-        constraint.fillRemovals(-1);
+        updateQueue(sizes, constraint, constraint.arity - 1)
+        //constraint.fillRemovals(-1);
         reduce()
       } else {
         constraint.weight += 1;
@@ -137,7 +159,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
   private def addAll() {
     problem.constraints.foreach { c =>
       if (!c.isEntailed) {
-        c.fillRemovals(AC3Constraint.revisionCount);
+        //c.fillRemovals(AC3Constraint.revisionCount);
         queue.offer(c);
       }
     }
@@ -148,7 +170,9 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
     for (c <- problem.constraints) {
       val sizes = c.scope map (_.dom.size)
       assert(c.revise(-1));
-      assert(sizes.sameElements(c.scope map (_.dom.size)))
+      assert(
+        sizes.sameElements(c.scope map (_.dom.size)),
+        c + " was revised! Was " + sizes.toSeq)
     }
     true;
   }
@@ -162,7 +186,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
     queue.clear();
 
     for (c <- constraints if !c.isEntailed) {
-      c.fillRemovals(AC3Constraint.revisionCount);
+      //c.fillRemovals(AC3Constraint.revisionCount);
       queue.offer(c);
     }
 

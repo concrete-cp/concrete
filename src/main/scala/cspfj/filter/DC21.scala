@@ -125,7 +125,7 @@ final class DC21(val problem: Problem) extends Filter with Loggable {
          */
         for (c <- variable.constraints if c.arity == 2) {
           c.revise(-1);
-          c.fillRemovals(-1);
+          //c.fillRemovals(-1);
         }
 
         filter.reduceFrom(modVar, modCons, cnt - problem.variables.size);

@@ -23,12 +23,10 @@ import cspfj.constraint.AbstractConstraint
 import cspfj.problem.Variable
 import cspfj.util.BitVector
 import scala.collection.JavaConversions
-import cspfj.constraint.SimpleRemovals
 import scala.collection.mutable.BitSet
 
 final class ExtensionConstraintDynamic(
   scope: Array[Variable], matrix: TupleSet, shared: Boolean) extends AbstractConstraint(scope)
-  with SimpleRemovals
   with ExtensionConstraint {
 
   private val dynamic = new MatrixManagerDynamic(scope, matrix, shared, tuple)
