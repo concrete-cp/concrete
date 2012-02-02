@@ -25,22 +25,21 @@ object AC3Constraint {
     override def toString = "object.getEvaluation"
   };
 
-  @Parameter("ac.control")
-  var doControl = true
-
   @Statistic
   var revisionCount = 0
 
   ParameterManager.register(this);
 
   def control(problem: Problem) = {
-    if (doControl) {
-      for (c <- problem.constraints) {
-        val sizes = c.scope map (_.dom.size)
-        assert(c.revise(-1));
-        assert(sizes.sameElements(c.scope map (_.dom.size)))
-      }
+
+    for (c <- problem.constraints) {
+      val sizes = c.scope map (_.dom.size)
+      assert(c.revise(-1));
+      assert(
+        sizes.sameElements(c.scope map (_.dom.size)),
+        c + " was revised!")
     }
+
     true;
   }
 }

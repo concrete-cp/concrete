@@ -58,7 +58,7 @@ final class AllDifferentAC(scope: Variable*) extends AbstractConstraint(null, sc
     mod;
   }
 
-  override def revise(reviseCount: Int): Boolean = {
+  def revise(modified: Seq[Int]): Boolean = {
 
     @tailrec
     def rev(q: Queue[Variable]) {
@@ -72,7 +72,7 @@ final class AllDifferentAC(scope: Variable*) extends AbstractConstraint(null, sc
     }
 
     try {
-      rev(modified(reviseCount).filter(_.dom.size == 1).foldLeft(Queue[Variable]())(_.enqueue(_)))
+      rev(modified.map(scope).filter(_.dom.size == 1).foldLeft(Queue[Variable]())(_.enqueue(_)))
       //true
       checkPigeons
 
