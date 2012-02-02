@@ -24,10 +24,10 @@ import cspfj.constraint.AbstractConstraint
 import cspfj.problem.Variable
 import cspfj.util.BitVector
 import scala.annotation.tailrec
-import cspfj.constraint.ModTracker
+import cspfj.constraint.Removals
 
 final class AllDifferentAC(scope: Variable*) extends AbstractConstraint(null, scope.toArray)
-  with ModTracker {
+  with Removals {
 
   val offset = scope map { _.dom.allValues.min } min
   val max = scope map { _.dom.allValues.max } max
@@ -71,7 +71,7 @@ final class AllDifferentAC(scope: Variable*) extends AbstractConstraint(null, sc
       }
     }
 
-    val r = try {
+    try {
       rev(modified(reviseCount).filter(_.dom.size == 1).foldLeft(Queue[Variable]())(_.enqueue(_)))
       //true
       checkPigeons
@@ -79,11 +79,6 @@ final class AllDifferentAC(scope: Variable*) extends AbstractConstraint(null, sc
     } catch {
       case e: Inconsistency => false
     }
-
-    if (r) {
-      saveSizes(reviseCount)
-      true
-    } else false
 
   }
 

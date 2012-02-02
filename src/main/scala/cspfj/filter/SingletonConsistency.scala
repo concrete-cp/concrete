@@ -9,15 +9,12 @@ import cspfj.Statistic
 import cspfj.util.Loggable
 import scala.annotation.tailrec
 
-
 trait SingletonConsistency extends Filter with Loggable {
 
-  def subFilter: AC3
+  def subFilter: Filter
 
   @Statistic
   var nbSingletonTests = 0;
-
-  StatisticsManager.register("SingletonConsistency", this)
 
   def reduceAfter(variable: Variable) = {
     if (variable == null) {

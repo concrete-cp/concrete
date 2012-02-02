@@ -8,7 +8,7 @@ import cspfj.util.Loggable
 /**
  * A constraint that can be revised one variable at a time
  */
-trait VariablePerVariable extends Constraint with ModTracker with Loggable {
+trait VariablePerVariable extends Constraint with Removals with Loggable {
 
   /**
    * Try to filter values from variable getVariable(position).
@@ -43,10 +43,8 @@ trait VariablePerVariable extends Constraint with ModTracker with Loggable {
       if (singletons >= arity - 1) {
         entail();
       }
-      saveSizes(reviseCount)
       true;
     }
   }
-  
 
 }

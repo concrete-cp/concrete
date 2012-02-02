@@ -43,14 +43,13 @@ class TestMAC {
   val sols = Map(
     4 -> 2,
     8 -> 92,
-    12 -> 14200,
-    13 -> 73712);
+    12 -> 14200);
 
   @Test //(timeout = 1000)
   def queens() {
-    for (size <- Seq(12)) {
+    for ((size, nb) <- sols) {
       val (queens, problem) = qp(size)
-      ParameterManager.parameter("logger.level", "INFO")
+      //ParameterManager.parameter("logger.level", "INFO")
       val solver = new MAC(problem)
 
       @tailrec
@@ -66,7 +65,7 @@ class TestMAC {
 
       }
 
-      Assert.assertEquals(sols(size), count(0))
+      Assert.assertEquals(nb, count(0))
     }
   }
 }

@@ -1,34 +1,35 @@
 package cspfj.constraint;
 
-import java.util.Arrays;
-
-import cspfj.problem.Variable;
+import scala.annotation.tailrec
+import cspfj.problem.Variable
 
 final class ResidueManagerFast(scope: Array[Variable]) extends ResidueManager {
 
+  val arity = scope.size
+
   val last = scope map (v => new Array[Array[Int]](v.dom.last + 1))
 
-  /*
-     * (non-Javadoc)
-     * 
-     * @see cspfj.constraint.ResidueManager#getResidue(int, int)
-     */
   def getResidue(position: Int, index: Int) = last(position)(index)
 
-  /*
-     * (non-Javadoc)
-     * 
-     * @see cspfj.constraint.ResidueManager#updateResidue(int[])
-     */
   def updateResidue(residue: Array[Int]) {
-    (last, residue).zipped.foreach { (l, r) =>
-      l(r) = residue
+    @tailrec
+    def upd(i: Int) {
+      if (i >= 0) {
+        last(i)(residue(i)) = residue
+        upd(i - 1)
+      }
     }
+    upd(arity - 1)
   }
 
   def remove(residue: Array[Int]) {
-    (last, residue).zipped.foreach { (l, r) =>
-      l(r) = null
+    @tailrec
+    def rem(i: Int) {
+      if (i >= 0) {
+        last(i)(residue(i)) = null
+        rem(i - 1)
+      }
     }
+    rem(arity - 1)
   }
 }

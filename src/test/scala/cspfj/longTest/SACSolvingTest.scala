@@ -17,21 +17,21 @@ import cspfj.filter.SAC1
 import cspfj.MAC
 
 final class SACSolvingTest extends Loggable {
-  //Solver.loggerLevel = "FINER"
-  ParameterManager.parameter("preprocessor", classOf[SAC1]);
-
+  //Solver.loggerLevel = "INFO"
+  ParameterManager("preprocessor") = classOf[SAC1]
+  
   @Test
   def crosswordm1() {
 
     assertTrue(solve("crossword-m1-debug-05-01.xml").isDefined);
-    assertEquals(48, count("crossword-m1-debug-05-01.xml"));
+    //assertEquals(48, count("crossword-m1-debug-05-01.xml"));
 
   }
 
   @Test
   def crosswordm2() {
     assertTrue(solve("crossword-m2-debug-05-01.xml").isDefined);
-    assertEquals(48, count("crossword-m2-debug-05-01.xml"));
+    //assertEquals(48, count("crossword-m2-debug-05-01.xml"));
 
   }
 
@@ -84,10 +84,12 @@ final class SACSolvingTest extends Loggable {
     assertEquals(2, count("frb35-17-1_ext.xml.bz2"));
   }
 
-  @Test
-  def scen11_f12() {
-    assertEquals(solve("scen11-f12.xml.bz2"), None);
-  }
+  //  @Test
+  //  def scen11_f12() {
+  //    ParameterManager.parameter("ac.control", false)
+  //    assertEquals(solve("scen11-f12.xml.bz2"), None);
+  //    ParameterManager.parameter("ac.control", true)
+  //  }
 
   //  @Test
   //  def fapp01_0200_0() {
@@ -130,6 +132,7 @@ final class SACSolvingTest extends Loggable {
     // System.out.println(problem);
 
     val solver = new MAC(problem);
+
     var count = 0
     for (solution <- new SolverIterator(solver)) {
       count += 1

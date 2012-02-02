@@ -33,20 +33,20 @@ import cspfj.problem.Problem
  *
  */
 object DC1 {
-  @Statistic
-  var addedConstraints = 0
-
-  @Statistic
-  var noGoods = 0
 
   @Parameter("dc1.addConstraints")
   val addConstraints = LearnMethod.CONSERVATIVE
 
   ParameterManager.register(this)
-  StatisticsManager.register("DC1", this)
+
 }
 
 final class DC1(val problem: Problem) extends SingletonConsistency with Loggable {
+  @Statistic
+  var addedConstraints = 0
+
+  @Statistic
+  var noGoods = 0
 
   val ngl = new NoGoodLearner(problem, DC1.addConstraints)
 
@@ -59,7 +59,7 @@ final class DC1(val problem: Problem) extends SingletonConsistency with Loggable
     try {
       super.reduce();
     } finally {
-      DC1.addedConstraints += problem.constraints.size - nbC;
+      addedConstraints += problem.constraints.size - nbC;
     }
   }
 
@@ -108,8 +108,8 @@ final class DC1(val problem: Problem) extends SingletonConsistency with Loggable
   }
 
   override def getStatistics = super.getStatistics ++ Map(
-    "CDC-nogoods" -> DC1.noGoods,
-    "CDC-added-constraints" -> DC1.addedConstraints)
+    "CDC-nogoods" -> noGoods,
+    "CDC-added-constraints" -> addedConstraints)
 
   override def toString = "DC w/ " + subFilter + " L " + ngl.learnMethod
 

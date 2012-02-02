@@ -20,7 +20,7 @@ final class ParameterManagerTest {
   @Test
   def classTest() {
     assertEquals(classOf[Int], ParameterManagerTest.classTest);
-    ParameterManager.parameter("classTest", classOf[Double]);
+    ParameterManager("classTest") = classOf[Double]
     assertEquals(classOf[Double], ParameterManagerTest.classTest);
     ParameterManager.parameterParse("classTest", "java.math.BigInteger");
     assertEquals(classOf[BigInteger], ParameterManagerTest.classTest);
@@ -29,7 +29,7 @@ final class ParameterManagerTest {
   @Test
   def intTest() {
     assertEquals(12, ParameterManagerTest.intTest);
-    ParameterManager.parameter("intTest", 32);
+    ParameterManager("intTest") = 32
     assertEquals(32, ParameterManagerTest.intTest);
   }
 

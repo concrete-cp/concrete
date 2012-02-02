@@ -49,7 +49,7 @@ object DichoMAC {
   var heuristicClass: Class[_ <: VariableHeuristic] = classOf[WDegTimesDom];
 
   ParameterManager.register(this);
-  StatisticsManager.register("MAC", this);
+
 
 }
 
@@ -65,7 +65,7 @@ final class DichoMAC(prob: Problem) extends Solver(prob) with Loggable {
   private var heuristic: VariableHeuristic = null;
 
   private val ngl = new NoGoodLearner(prob, MAC.addConstraint)
-  StatisticsManager.register("nfr-learner", ngl)
+  statistics.register("nfr-learner", ngl)
 
   maxBacktracks = math.max(10, problem.maxDomainSize / 10)
 
@@ -160,7 +160,7 @@ final class DichoMAC(prob: Problem) extends Solver(prob) with Loggable {
 
   def prepare() {
     filter = DichoMAC.filterClass.getConstructor(classOf[Problem]).newInstance(problem);
-    StatisticsManager.register("filter", filter);
+    statistics.register("filter", filter);
 
     heuristic = DichoMAC.heuristicClass.getConstructor(classOf[Problem])
       .newInstance(problem);

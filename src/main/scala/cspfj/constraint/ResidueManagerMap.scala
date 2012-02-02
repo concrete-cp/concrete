@@ -1,5 +1,6 @@
 package cspfj.constraint;
 import java.util.Arrays
+import scala.annotation.tailrec
 
 final class ResidueManagerMap(arity: Int) extends ResidueManager {
 
@@ -8,9 +9,14 @@ final class ResidueManagerMap(arity: Int) extends ResidueManager {
   def getResidue(position: Int, index: Int) = last(position)(index)
 
   def updateResidue(residue: Array[Int]) {
-    for (i <- residue.indices) {
-      last(i) += residue(i) -> residue
+    @tailrec
+    def upd(i: Int) {
+      if (i >= 0) {
+        last(i) += residue(i) -> residue
+        upd(i - 1)
+      }
     }
+    upd(arity - 1)
   }
 
   def remove(residue: Array[Int]) {

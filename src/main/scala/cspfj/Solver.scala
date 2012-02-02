@@ -51,7 +51,6 @@ object Solver {
 
   def factory(problem: Problem): Solver = {
     val solver = solverClass.getConstructor(classOf[Problem]).newInstance(problem);
-    StatisticsManager.register("solver", solver);
     solver;
   }
 
@@ -60,6 +59,9 @@ object Solver {
 }
 
 abstract class Solver(val problem: Problem) extends Loggable {
+
+  val statistics = new StatisticsManager
+  statistics.register("solver", this)
 
   @Statistic
   var preproRemoved = 0
@@ -147,7 +149,7 @@ abstract class Solver(val problem: Problem) extends Loggable {
       filter
     } else {
       val p = Solver.preprocessorClass.getConstructor(classOf[Problem]).newInstance(problem)
-      StatisticsManager.register("preprocessor", p)
+      statistics.register("preprocessor", p)
       p
     }
 

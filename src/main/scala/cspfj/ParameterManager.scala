@@ -50,7 +50,7 @@ final object ParameterManager {
    * @param name
    * @param value
    */
-  def parameter(name: String, value: Any) {
+  def update(name: String, value: Any) {
     parameters.get(name) match {
       case None => pending += name -> value
       case Some((o, f)) => f.set(o, value)

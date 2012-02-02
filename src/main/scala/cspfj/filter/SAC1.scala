@@ -29,7 +29,7 @@ import cspfj.util.Loggable
  */
 final class SAC1(val problem: Problem) extends SingletonConsistency with Loggable {
 
-  val subFilter = new AC3(problem)
+  val subFilter = new AC3Constraint(problem)
 
   def singletonTest(variable: Variable) = {
     var changedGraph = false;

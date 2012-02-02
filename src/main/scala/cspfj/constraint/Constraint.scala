@@ -99,18 +99,16 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
 
   override def hashCode = getId
 
-  def controlTuplePresence(tuple: Array[Int]) = {
+  final def controlTuplePresence(tuple: Array[Int]) = {
     Constraint.nbPresenceChecks += 1;
     /** Need high optimization */
 
     @tailrec
-    def control(i: Int): Boolean = {
-      if (i < 0) {
-        true
-      } else {
+    def control(i: Int): Boolean =
+      if (i < 0) true
+      else
         scope(i).dom.present(tuple(i)) && control(i - 1)
-      }
-    }
+
     control(arity - 1)
   }
 
@@ -128,6 +126,10 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
     scope foreach { _.dom.restoreLevel(level) }
     consistent
   }
+
+  def fillRemovals(i: Int) {}
+
+  def setRemovals(pos: Int, i: Int) {}
 
   /**
    * The constraint propagator.
@@ -147,7 +149,7 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
    * @return true iff the constraint is satisfied by the given tuple
    */
   def check(tuple: Array[Int]): Boolean = {
-    val current = this.tuple
+    val current = this.tuple.clone
     tuple.copyToArray(this.tuple)
     val c = this.check
     current.copyToArray(this.tuple)

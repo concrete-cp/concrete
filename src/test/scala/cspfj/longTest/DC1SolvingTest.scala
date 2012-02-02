@@ -17,8 +17,8 @@ import cspfj.MAC
 
 final class DC1SolvingTest extends Loggable {
   //Solver.loggerLevel = "FINER"
-  ParameterManager.parameter("preprocessor", classOf[DC1]);
-  ParameterManager.parameter("dc1.addConstraints", LearnMethod.BIN);
+  ParameterManager("preprocessor") = classOf[DC1];
+  ParameterManager("dc1.addConstraints") = LearnMethod.BIN;
 
   @Test
   def crosswordm1() {
@@ -84,10 +84,10 @@ final class DC1SolvingTest extends Loggable {
     assertEquals(2, count("frb35-17-1_ext.xml.bz2"));
   }
 
-  @Test
-  def scen11_f12() {
-    assertEquals(solve("scen11-f12.xml.bz2"), None);
-  }
+//  @Test
+//  def scen11_f12() {
+//    assertEquals(solve("scen11-f12.xml.bz2"), None);
+//  }
 
   //  @Test
   //  def fapp01_0200_0() {

@@ -18,11 +18,12 @@ final class StatisticsManagerTest {
 
   @Test
   def testRegisterStringObject() {
-    StatisticsManager.register("test", StatisticsManagerTest);
-    assertEquals(8, StatisticsManager.get("test.testInt"));
-    assertEquals(9l, StatisticsManager.get("test.testLong"));
-    assertEquals(10f, StatisticsManager.get("test.testFloat"));
-    assertEquals(11d, StatisticsManager.get("test.testDouble"));
+    val stats = new StatisticsManager
+    stats.register("test", StatisticsManagerTest);
+    assertEquals(8, stats("test.testInt"));
+    assertEquals(9l, stats("test.testLong"));
+    assertEquals(10f, stats("test.testFloat"));
+    assertEquals(11d, stats("test.testDouble"));
   }
 
   @Test

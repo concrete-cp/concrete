@@ -18,7 +18,7 @@ import cspfj.MAC
 
 final class DC20SolvingTest extends Loggable {
   //Solver.loggerLevel = "FINER"
-  ParameterManager.parameter("preprocessor", classOf[DC20]);
+  ParameterManager("preprocessor") = classOf[DC20]
 
   @Test
   def crosswordm1() {
@@ -84,10 +84,10 @@ final class DC20SolvingTest extends Loggable {
     assertEquals(2, count("frb35-17-1_ext.xml.bz2"));
   }
 
-  @Test
-  def scen11_f12() {
-    assertEquals(solve("scen11-f12.xml.bz2"), None);
-  }
+//  @Test
+//  def scen11_f12() {
+//    assertEquals(solve("scen11-f12.xml.bz2"), None);
+//  }
 
   //  @Test
   //  def fapp01_0200_0() {
@@ -96,12 +96,12 @@ final class DC20SolvingTest extends Loggable {
   //
   //  }
 
-  @Test
-  def queens12() {
-    assertTrue(solve("queens-12.xml").isDefined);
-    //    assertEquals(14200, count("queens-12.xml"));
-
-  }
+//  @Test
+//  def queens12() {
+//    assertTrue(solve("queens-12.xml").isDefined);
+//    //    assertEquals(14200, count("queens-12.xml"));
+//
+//  }
 
   private def solve(name: String) = {
     val cspomProblem = CSPOM.load(getClass.getResource(name));

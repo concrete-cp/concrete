@@ -7,7 +7,7 @@ import java.lang.reflect.Modifier
 import java.lang.reflect.Field
 import scala.annotation.tailrec
 
-object StatisticsManager extends Loggable {
+class StatisticsManager extends Loggable {
 
   var objects: Map[String, AnyRef] = Map.empty
 
@@ -30,7 +30,7 @@ object StatisticsManager extends Loggable {
   //&&
   //(f.getModifiers & Modifier.STATIC) == 0
 
-  def get(name: String) = {
+  def apply(name: String) = {
 
     val fieldNameAt = name.lastIndexOf('.')
     val obj = objects.get(name.substring(0, fieldNameAt)).get
@@ -60,8 +60,10 @@ object StatisticsManager extends Loggable {
   def reset() {
     //static = Map.empty
     objects = Map.empty
-
   }
+}
+
+object StatisticsManager {
 
   def average[A](s: Seq[A])(implicit n: Numeric[A]) = n.toDouble(s.sum) / s.size
 

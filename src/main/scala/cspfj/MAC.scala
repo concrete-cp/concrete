@@ -47,7 +47,6 @@ object MAC {
   var heuristicClass: Class[_ <: Heuristic] = classOf[CrossHeuristic];
 
   ParameterManager.register(this);
-  StatisticsManager.register("MAC", this);
 
   override def toString = "MAC parameters"
 }
@@ -60,13 +59,13 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
   private var decisions: List[Pair] = Nil
 
   private val filter: Filter = MAC.filterClass.getConstructor(classOf[Problem]).newInstance(problem);
-  StatisticsManager.register("filter", filter);
+  statistics.register("filter", filter);
 
   private val heuristic: Heuristic = MAC.heuristicClass.getConstructor(classOf[Problem])
     .newInstance(problem);
 
   private val ngl = new NoGoodLearner(prob, MAC.addConstraint)
-  StatisticsManager.register("nfr-learner", ngl)
+  statistics.register("nfr-learner", ngl)
 
   maxBacktracks = math.max(10, problem.maxDomainSize / 10)
 

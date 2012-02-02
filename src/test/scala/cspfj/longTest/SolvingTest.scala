@@ -3,15 +3,16 @@ package cspfj.longTest;
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-
 import cspfj.util.Loggable
 import cspfj.Solver
 import cspfj.SolverIterator
 import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
+import cspfj.ParameterManager
 
 final class SolvingTest extends Loggable {
   //Solver.loggerLevel = "FINE"
+  ParameterManager("preprocessor") = null
 
   @Test //(timeout = 40000)
   def crosswordm1() {
