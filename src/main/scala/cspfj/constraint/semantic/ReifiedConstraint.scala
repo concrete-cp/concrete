@@ -60,7 +60,13 @@ final class ReifiedConstraint(
     }
 
   private def noReifyRevise(constraint: Constraint, reviseCount: Int) = {
-    if (constraint.revise(reviseCount)) {
+    val actualRevise = if (controlRemovals >= reviseCount) {
+      -1;
+    } else {
+      reviseCount;
+    }
+
+    if (constraint.revise(actualRevise)) {
       if (constraint.isEntailed) {
         entail();
       }
@@ -74,8 +80,26 @@ final class ReifiedConstraint(
   }
 
   def getEvaluation =
-    positiveConstraint.getEvaluation + negativeConstraint.getEvaluation
+    positiveConstraint.getEvaluation
+  +negativeConstraint.getEvaluation
 
   override def toString = scope(0) + " == (" + positiveConstraint + ")";
+
+  var controlRemovals = 0
+
+  override def setRemovals(position: Int, value: Int) {
+    if (position == 0) {
+      controlRemovals = value;
+    } else {
+      positiveConstraint.setRemovals(position - 1, value);
+      negativeConstraint.setRemovals(position - 1, value);
+    }
+  }
+
+  override def fillRemovals(value: Int) {
+    controlRemovals = value;
+    positiveConstraint.fillRemovals(value);
+    negativeConstraint.fillRemovals(value);
+  }
 
 }

@@ -1,6 +1,7 @@
 package cspfj.problem;
 
 import cspfj.util.BitVector;
+import scala.annotation.tailrec
 
 trait Domain {
   def next(i: Int): Int
@@ -143,5 +144,10 @@ trait Domain {
   }
 
   def subsetOf(d: Domain) = values.forall(v => d.present(d.index(v)))
+
+  def disjoint(d: Domain) = values.forall { v =>
+    val i2 = d.index(v)
+    i2 < 0 || !d.present(i2)
+  }
 
 }

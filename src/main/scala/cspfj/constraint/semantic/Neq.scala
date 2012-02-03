@@ -12,8 +12,11 @@ final class Neq(v0: Variable, v1: Variable) extends AbstractConstraint(Array(v0,
 
   def check = value(0) != value(1)
 
-  def revise(revisionCount: Int): Boolean =
-    revise(v0, v1) && revise(v1, v0)
+  def revise(revisionCount: Int): Boolean = {
+    val r = revise(v0, v1) && revise(v1, v0)
+    if (v0.dom.disjoint(v1.dom)) entail()
+    r
+  }
 
   private def revise(variable: Variable, otherVar: Variable) = {
     if (variable.dom.size == 1) {
@@ -22,7 +25,6 @@ final class Neq(v0: Variable, v1: Variable) extends AbstractConstraint(Array(v0,
         if (otherVar.dom.size == 1) false
         else {
           otherVar.dom.remove(index)
-          entail()
           true
         }
       } else true
