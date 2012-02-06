@@ -83,7 +83,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
         case None => (Some(extractSolution), stack)
         case Some(pair) => {
 
-          info(problem.currentLevel + " : " + pair.variable
+          if (logInfo) info(problem.currentLevel + " : " + pair.variable
             + " <- " + pair.value + "("
             + nbBacktracks + "/" + maxBacktracks + ")");
 
@@ -104,7 +104,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
 
       nbBacktracks += 1
 
-      info(problem.currentLevel + " : " + stack.head + " removed")
+      if (logInfo) info(problem.currentLevel + " : " + stack.head + " removed")
       stack.head.remove()
       mac(stack.head.variable, stack.tail)
     }
@@ -165,12 +165,12 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
   def nextSolution(): Option[Map[String, Int]] = {
 
     // System.gc();
-//    if (!prepared) {
-//
-//      prepare()
-//
-//      prepared = true
-//    }
+    //    if (!prepared) {
+    //
+    //      prepare()
+    //
+    //      prepared = true
+    //    }
 
     if (restart) {
       restart = false

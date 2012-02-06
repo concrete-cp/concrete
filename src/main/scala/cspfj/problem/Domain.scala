@@ -137,6 +137,8 @@ trait Domain {
 
   def valueInterval = Interval(firstValue, lastValue)
 
+  def valueBV(offset: Int): BitVector
+
   def intersectVal(i: Interval) = {
     val lb = closestLt(i.lb)
     val ub = closestGt(i.ub)
@@ -145,9 +147,17 @@ trait Domain {
 
   def subsetOf(d: Domain) = values.forall(v => d.present(d.index(v)))
 
-  def disjoint(d: Domain) = values.forall { v =>
-    val i2 = d.index(v)
-    i2 < 0 || !d.present(i2)
+  def disjoint(d: Domain) = {
+    def disj(i: Int): Boolean = {
+      if (i < 0) true
+      else {
+        val i2 = d.index(value(i))
+        (i2 < 0 || !d.present(i2)) && disj(next(i))
+      }
+    }
+
+    disj(first)
+
   }
 
 }

@@ -97,5 +97,5 @@ final class AllDifferentAC(scope: Variable*) extends AbstractConstraint(null, sc
 
   override def toString = "allDifferent" + scope.iterator
 
-  val getEvaluation = arity.doubleValue * arity
+  val getEvaluation = arity * arity
 }

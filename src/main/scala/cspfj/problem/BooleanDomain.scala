@@ -248,5 +248,6 @@ class BooleanDomain(var _status: Status) extends Domain {
   def setTrue() { status = TRUE }
   def setFalse() { status = FALSE }
   def currentIndexes = status.indexes
+  def valueBV(offset: Int) = throw new UnsupportedOperationException
 }
 

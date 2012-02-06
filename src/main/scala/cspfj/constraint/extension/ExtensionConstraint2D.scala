@@ -29,12 +29,12 @@ final class ExtensionConstraint2D(
   matrix: Matrix2D,
   shared: Boolean) extends AbstractConstraint(scope) with VariablePerVariable with TupleEnumerator with ExtensionConstraint {
 
-  private val GAIN_OVER_GENERAL = .1f;
+  private val GAIN_OVER_GENERAL = 10;
 
   val matrixManager = new MatrixManager2D(scope, matrix, shared, tuple)
 
   override def getEvaluation =
-    scope(0).dom.size * scope(1).dom.size * GAIN_OVER_GENERAL;
+    scope(0).dom.size * scope(1).dom.size / GAIN_OVER_GENERAL;
 
   def reviseVariable(position: Int) = {
     if (matrixManager.supportCondition(position)) {

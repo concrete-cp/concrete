@@ -65,7 +65,15 @@ class StatisticsManager extends Loggable {
 
 object StatisticsManager {
 
-  def average[A](s: Seq[A])(implicit n: Numeric[A]) = n.toDouble(s.sum) / s.size
+  def average[A](s: Seq[A])(implicit n: Numeric[A]): Double = average(s.iterator)
+  def average[A](s: Iterator[A])(implicit n: Numeric[A]) = {
+    val (sum, count) = s.foldLeft((n.zero, 0l)) {
+      case ((cs, cc), i) =>
+        (n.plus(cs, i), cc + 1l)
+    }
+
+    n.toDouble(sum) / count
+  }
 
   def stDev[A](s: Seq[A])(implicit n: Numeric[A]) = {
     val avg = average(s)

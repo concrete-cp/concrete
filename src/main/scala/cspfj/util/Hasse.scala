@@ -2,6 +2,7 @@ package cspfj.util
 import scala.annotation.tailrec
 import scala.collection.immutable.BitSet
 import scala.collection.mutable.DoubleLinkedList
+import cspfj.util.UOLists._
 
 object HNode {
   var counts = 0
@@ -23,7 +24,7 @@ class HNode[A](val v: A, var child: List[HNode[A]]) {
     else if (s.head.counted == HNode.counts) count(s.tail, c)
     else {
       s.head.counted = HNode.counts
-      count(Hasse.stack(s.head.child, s.tail), c + 1)
+      count(addAll(s.head.child, s.tail), c + 1)
     }
 
   var counted = -1
@@ -47,17 +48,9 @@ object Hasse {
       if (head.listed == HNode.flats) flatten(tail, f)
       else {
         head.listed = HNode.flats
-        flatten(stack(head.child, tail), head :: f)
+        flatten(UOLists.addAll(head.child, tail), head :: f)
       }
     }
-
-  /**
-   * Stacks n (reversed for efficiency) on s
-   */
-  @tailrec
-  def stack[A](n: List[A], s: List[A]): List[A] =
-    if (n == Nil) s
-    else stack(n.tail, n.head :: s)
 }
 
 class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
@@ -68,10 +61,10 @@ class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
     colls += 1
     val newNode = new HNode(v, collect(v, roots, Nil))
 
-    val supersets = collectParents(v, roots.filter(r => po.lt(v, r.v)), Nil)
-    if (supersets.isEmpty) roots = newNode :: roots.filter(r => !po.lteq(r.v, v))
+    val supersets = collectParents(v, UOLists.filter(roots, { r: HNode[A] => po.lt(v, r.v) }), Nil)
+    if (supersets.isEmpty) roots = newNode :: UOLists.filter(roots, { r: HNode[A] => !po.lteq(r.v, v) })
     else supersets.foreach(s =>
-      s.child = newNode :: s.child.filter(r => !po.lteq(r.v, v)))
+      s.child = newNode :: UOLists.filter(s.child, { r: HNode[A] => !po.lteq(r.v, v) }))
   }
 
   @tailrec
@@ -80,10 +73,10 @@ class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
     else {
       val head :: tail = s
 
-      val child = head.child.filter(c => po.lt(v, c.v))
+      val child = UOLists.filter(head.child, { c: HNode[A] => po.lt(v, c.v) })
 
       if (child == Nil) collectParents(v, tail, head :: collected)
-      else collectParents(v, Hasse.stack(child, tail), collected)
+      else collectParents(v, addAll(child, tail), collected)
 
     }
 
@@ -101,9 +94,10 @@ class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
         if (po.disjoint(head.v, v) || collected.exists(c => po.lteq(head.v, c.v))) {
           collect(v, tail, collected)
         } else if (po.lteq(head.v, v)) {
-          collect(v, tail, head :: (collected.filter(c => !po.lteq(c.v, head.v))))
+          collect(v, tail,
+            head :: UOLists.filter(collected, { c: HNode[A] => !po.lteq(c.v, head.v) }))
         } else {
-          collect(v, Hasse.stack(head.child, tail), collected)
+          collect(v, addAll(head.child, tail), collected)
         }
       }
     }
@@ -127,7 +121,7 @@ class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
       else {
         val r :: tail = roots
         if (!po.lteq(v, r.v)) remL(tail, r :: newRoots)
-        else if (r.v == v) remL(tail, Hasse.stack(r.child, newRoots))
+        else if (r.v == v) remL(tail, addAll(r.child, newRoots))
         else {
           r.child = rem(v, r.child)
           remL(tail, r :: newRoots)

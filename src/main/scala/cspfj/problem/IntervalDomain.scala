@@ -131,5 +131,5 @@ final class IntervalDomain(
   val allValues = currentDomain.allValues.toArray
 
   override def toString = "[" + currentDomain.lb + ", " + currentDomain.ub + "]"
-
+  def valueBV(offset: Int) = throw new UnsupportedOperationException
 }

@@ -6,6 +6,12 @@ import java.util.Iterator
 import scala.annotation.tailrec
 import java.util.Arrays
 import scala.collection.JavaConversions
+import java.io.File
+import java.io.PrintStream
+
+//object Stats {
+//  val out = new PrintStream(new File("/tmp/stats.csv"))
+//}
 
 /**
  * Very simple FIFO queue based on LinkedList. All Identified elements are
@@ -21,19 +27,19 @@ final class ScalaFifos[T <: PTag](val key: Key[T], val nbLists: Int) extends Abs
 
   val queues: Array[Queue[T]] = Array[Queue[T]]().padTo(nbLists, Queue.empty)
 
-  def this(k: Key[T]) = this(k, 8)
+  def this(k: Key[T]) = this(k, 32)
 
-  @tailrec
-  private def chooseList(k: Double, treshold: Double, i: Int): Int =
-    if (i >= nbLists - 1 || k < treshold) i
-    else chooseList(k, treshold * KEY_FACTOR, i + 1)
+  var first = nbLists
 
-  private def chooseList(element: T): Int = chooseList(key.getKey(element), KEY_FACTOR, 0)
+  private def chooseList(element: T): Int =
+    nbLists - Integer.numberOfLeadingZeros(key.getKey(element) - 1)
 
   def offer(e: T) =
     if (e.isPresent) false
     else {
       val list = chooseList(e)
+      if (list < first) first = list
+      //Stats.out.println(key.getKey(e) + " : " + list)
       queues(list) = queues(list).enqueue(e)
       e.setPresent()
       true
@@ -46,16 +52,18 @@ final class ScalaFifos[T <: PTag](val key: Key[T], val nbLists: Int) extends Abs
     else {
       val (e, q) = queues(i).dequeue
       queues(i) = q
+      first = i
       e
     }
 
   def poll() = {
-    val e = poll(0)
+    val e = poll(first)
     e.unsetPresent()
     e
   }
 
   override def clear() {
+    first = nbLists
     PTag.clear()
     queues.indices.foreach(queues(_) = Queue.empty)
   }
@@ -64,7 +72,15 @@ final class ScalaFifos[T <: PTag](val key: Key[T], val nbLists: Int) extends Abs
 
   def size = queues.map(_.size).sum
 
-  override def isEmpty = queues.forall(_.isEmpty)
+  override def isEmpty = {
+    @tailrec
+    def empty(i: Int): Boolean =
+      if (i >= nbLists) true
+      else if (queues(i).isEmpty) empty(i + 1)
+      else false
+
+    empty(first)
+  }
 
   @tailrec
   private def peek(i: Int): T = {

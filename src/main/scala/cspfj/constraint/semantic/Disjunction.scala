@@ -23,7 +23,7 @@ final class Disjunction(scope: Array[Variable],
     watch2 = watch1
   }
 
-  val getEvaluation = math.log(arity) / math.log(2)
+  val getEvaluation = Integer.highestOneBit(arity)
 
   def this(scope: Variable*) = this(scope.toArray, new Array[Boolean](scope.size))
 

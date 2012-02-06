@@ -15,7 +15,7 @@ object NotInInterval {
 final class NotInInterval(val variable: Variable, val lb: Int, val ub: Int)
   extends AbstractConstraint(Array(variable)) {
 
-  val getEvaluation = 0.0
+  val getEvaluation = 1
 
   def revise(reviseCount: Int): Boolean = {
     var changed = false;

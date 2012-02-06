@@ -24,6 +24,8 @@ trait Loggable {
 
   def severe(msg: String, refs: Any*) = logger severe checkFormat(msg, refs)
 
+  def logInfo = logger.isLoggable(Level.INFO)
+  
   final def setLevel(level: Level) {
     logger.setLevel(level)
     //logger.getHandlers()(0).setLevel(level)

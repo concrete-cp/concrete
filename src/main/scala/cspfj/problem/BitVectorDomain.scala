@@ -10,10 +10,10 @@ final object BitVectorDomain {
 }
 
 final class BitVectorDomain(
-  private val domain: Array[Int]) extends Domain with Backtrackable[(BitVector, Int)] {
+  domain: Array[Int]) extends Domain with Backtrackable[(BitVector, Int)] {
   require(domain.sliding(2).forall(p => p.size == 1 || p(0) < p(1)), "Only ordered domains are supported");
 
-  private val indicesMap = domain.zipWithIndex.map { case (v, i) => v -> i }.toMap.withDefaultValue(-1)
+  private val indexer = Indexer.factory(domain)
 
   private var _size = domain.size
 
@@ -55,7 +55,7 @@ final class BitVectorDomain(
    *            the value we seek the index for
    * @return the index of the given value or -1 if it could not be found
    */
-  def index(value: Int) = indicesMap(value)
+  def index(value: Int) = indexer.index(value)
 
   private def closestLeq(value: Int, lb: Int, ub: Int): Int = {
     if (domain(ub) <= value) {
@@ -102,7 +102,18 @@ final class BitVectorDomain(
     _size = 1;
   }
 
-  def value(index: Int) = domain(index);
+  def value(index: Int) = indexer.value(index);
+
+  def valueBV(offset: Int) =
+    indexer match {
+      case i: DirectIndices if offset == 0 => bvDomain.clone
+      case i: OffsetIndices if offset == i.offset => bvDomain.clone
+      case _ => {
+        val bv = BitVector.newBitVector(lastValue - offset + 1)
+        values.foreach(vl => bv.set(vl - offset))
+        bv
+      }
+    }
 
   def remove(index: Int) {
     assert(present(index));

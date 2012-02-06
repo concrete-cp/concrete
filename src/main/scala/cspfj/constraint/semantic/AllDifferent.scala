@@ -65,12 +65,6 @@ final class AllDifferent(scope: Variable*)
   private val offset = scope map { _.dom.allValues.head } min
   private val max = scope map { _.dom.allValues.last } max
 
-  private def dom(v: Variable) = {
-    val bv = BitVector.newBitVector(v.dom.lastValue - offset + 1)
-    v.dom.values.foreach(vl => bv.set(vl - offset))
-    bv
-  }
-
   def check: Boolean = {
     val union = BitVector.newBitVector(max - offset + 1)
     tupleValues.exists { v =>
@@ -127,7 +121,7 @@ final class AllDifferent(scope: Variable*)
     }
 
     changed.foreach { v =>
-      val vi = VarInfo(v, dom(v), v.dom.size)
+      val vi = VarInfo(v, v.dom.valueBV(offset), v.dom.size)
       info += v -> vi
       tree.add(vi)
     }
@@ -142,17 +136,25 @@ final class AllDifferent(scope: Variable*)
     //      case None => true
     //    }))
     //assert((scopeSet -- mod).forall(v => v.dom.size == info(v).s))
-    val mod = scope filter (v => info.get(v) match {
-      case Some(vi) => v.dom.size != vi.s
-      case None => true
-    })
-    revise(mod)
+    @tailrec
+    def mod(i: Int, m: List[Variable]): List[Variable] = {
+      if (i < 0) m
+      else {
+        val v = scope(i)
+        info.get(v) match {
+          case Some(vi) if v.dom.size == vi.s => mod(i - 1, m)
+          case _ => mod(i - 1, v :: m)
+        }
+      }
+    }
+
+    revise(mod(arity - 1, Nil))
   }
 
   var info: Map[Variable, VarInfo] = Map.empty
 
   @tailrec
-  private def revise(changed: Seq[Variable]): Boolean =
+  private def revise(changed: List[Variable]): Boolean =
     if (changed.isEmpty) true
     else {
       changed.foreach(v => info.get(v) match {
@@ -165,15 +167,15 @@ final class AllDifferent(scope: Variable*)
        * have supersets)
        */
       changed.sortBy(-_.dom.size).foreach { v =>
-        val vi = VarInfo(v, dom(v), v.dom.size)
+        val vi = VarInfo(v, v.dom.valueBV(offset), v.dom.size)
         info += v -> vi
         tree.add(vi)
       }
 
       var unsat = false
-      val change: Seq[Variable] = try seek(tree).flatMap(filter).distinct
+      val change: List[Variable] = try seek(tree).flatMap(filter).distinct
       catch {
-        case e: Inconsistency => { unsat = true; Seq.empty }
+        case e: Inconsistency => { unsat = true; Nil }
       }
 
       if (unsat) false
@@ -232,5 +234,5 @@ final class AllDifferent(scope: Variable*)
 
   override def toString = "allDifferent" + scope.mkString("(", ", ", ")")
 
-  val getEvaluation = arity.doubleValue * arity * (max - offset)
+  val getEvaluation = arity * arity * (max - offset)
 }

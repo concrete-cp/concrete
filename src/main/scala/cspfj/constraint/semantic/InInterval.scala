@@ -17,7 +17,7 @@ final class InInterval(val variable: Variable, val lb: Int, val ub: Int)
 
   val dom = variable.dom
 
-  override val getEvaluation = 0.0
+  override val getEvaluation = 1
 
   override def revise(reviseCount: Int): Boolean = {
     val removed = dom.removeTo(lb - 1) + dom.removeFrom(ub + 1);

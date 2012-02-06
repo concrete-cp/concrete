@@ -156,7 +156,7 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
     c
   }
 
-  def getEvaluation: Double
+  def getEvaluation: Int
 
   //def tupleManager: TupleManager
 
