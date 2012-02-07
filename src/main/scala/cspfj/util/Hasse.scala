@@ -2,104 +2,128 @@ package cspfj.util
 import scala.annotation.tailrec
 import scala.collection.immutable.BitSet
 import scala.collection.mutable.DoubleLinkedList
-import cspfj.util.UOLists._
 
 object HNode {
   var counts = 0
   var flats = 0
 }
 
-class HNode[A](val v: A, var child: List[HNode[A]]) {
+class HNode[A](val v: A, var child: UOList[HNode[A]]) {
 
   def rank: Int = {
     HNode.counts += 1
     count(child, 1)
   }
 
-  def flatten = Hasse.flatten(this :: Nil)
+  def flatten = Hasse.flatten(UOList.empty + this)
 
   @tailrec
-  private def count(s: List[HNode[A]], c: Int): Int =
+  private def count(s: UOList[HNode[A]], c: Int): Int =
     if (s == Nil) c
     else if (s.head.counted == HNode.counts) count(s.tail, c)
     else {
       s.head.counted = HNode.counts
-      count(addAll(s.head.child, s.tail), c + 1)
+      //      if (s.head.removed) count(s.head.child ++ s.tail, c)
+      //      else 
+      count(s.head.child ++ s.tail, c + 1)
     }
 
   var counted = -1
   var listed = -1
   var collected = -1
+  var removed = false
 
   override def toString = "[" + v + ", " + rank + ", " + child + "]"
 }
 
 object Hasse {
-  def flatten[A](stack: List[HNode[A]]): List[HNode[A]] = {
+  def flatten[A](stack: UOList[HNode[A]]): UOList[HNode[A]] = {
     HNode.flats += 1
-    flatten(stack, Nil)
+    flatten(stack, UOList.empty)
   }
 
   @tailrec
-  private def flatten[A](s: List[HNode[A]], f: List[HNode[A]]): List[HNode[A]] =
+  private def flatten[A](s: UOList[HNode[A]], f: UOList[HNode[A]]): UOList[HNode[A]] =
     if (s == Nil) f
+    else if (s.head.listed == HNode.flats) flatten(s.tail, f)
     else {
-      val head :: tail = s
-      if (head.listed == HNode.flats) flatten(tail, f)
-      else {
-        head.listed = HNode.flats
-        flatten(UOLists.addAll(head.child, tail), head :: f)
-      }
+      s.head.listed = HNode.flats
+      //      if (s.head.removed) flatten(s.head.child ++ s.tail, f)
+      //      else 
+      flatten(s.head.child ++ s.tail, f + s.head)
     }
+
 }
 
 class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
+  var cleaned = true
+  var roots: UOList[HNode[A]] = UOList.empty
 
-  var roots: List[HNode[A]] = Nil
+  var nodes: Map[A, HNode[A]] = Map.empty
 
   def add(v: A) {
+    clean()
+    assert(!nodes.contains(v))
     colls += 1
-    val newNode = new HNode(v, collect(v, roots, Nil))
+    val newNode = new HNode(v, collect(v, roots, UOList.empty))
+    nodes += v -> newNode
 
-    val supersets = collectParents(v, UOLists.filter(roots, { r: HNode[A] => po.lt(v, r.v) }), Nil)
-    if (supersets.isEmpty) roots = newNode :: UOLists.filter(roots, { r: HNode[A] => !po.lteq(r.v, v) })
+    val supersets = collectParents(v, roots.filter(r => po.lt(v, r.v)), UOList.empty)
+    if (supersets.isEmpty) roots = roots.filter(r => !po.lteq(r.v, v)) + newNode
     else supersets.foreach(s =>
-      s.child = newNode :: UOLists.filter(s.child, { r: HNode[A] => !po.lteq(r.v, v) }))
+      s.child = s.child.filter(r => !po.lteq(r.v, v)) + newNode)
   }
 
   @tailrec
-  private def collectParents(v: A, s: List[HNode[A]], collected: List[HNode[A]]): List[HNode[A]] =
-    if (s == Nil) collected
+  private def collectParents(v: A, s: UOList[HNode[A]], collected: UOList[HNode[A]]): UOList[HNode[A]] =
+    if (s.isEmpty) collected
     else {
-      val head :: tail = s
+      //      var (removed, remaining) = s.head.child.partition(_.removed)
+      //      while (!removed.isEmpty) {
+      //
+      //        val t = removed.flatMap { n: HNode[A] => n.child }.partition(_.removed)
+      //
+      //        removed = t._1
+      //        remaining ++= t._2
+      //
+      //      }
+      //      s.head.child = remaining
+      //      val child = s.head.child.filter(c => po.lt(v, c.v))
 
-      val child = UOLists.filter(head.child, { c: HNode[A] => po.lt(v, c.v) })
+      //s.head.child = clean(s.head.child, UOList.empty)
 
-      if (child == Nil) collectParents(v, tail, head :: collected)
-      else collectParents(v, addAll(child, tail), collected)
+      val child = s.head.child.filter(c => !c.removed && po.lt(v, c.v))
+
+      if (child.isEmpty) collectParents(v, s.tail, collected + s.head)
+      else collectParents(v, child ++ s.tail, collected)
 
     }
 
   var colls = 0
 
-  @tailrec
-  private def collect(v: A, s: List[HNode[A]], collected: List[HNode[A]]): List[HNode[A]] =
-    if (s == Nil) collected
-    else {
-      val head :: tail = s
+  //  private def clean(s: UOList[HNode[A]], res: UOList[HNode[A]]): UOList[HNode[A]] = {
+  //    if (s.isEmpty) res
+  //    else if (s.head.removed) clean(s.tail, res ++ s.head.child)
+  //    else clean(s.tail, res + s.head)
+  //  }
 
-      if (head.collected == colls) collect(v, tail, collected)
-      else {
-        head.collected = colls
-        if (po.disjoint(head.v, v) || collected.exists(c => po.lteq(head.v, c.v))) {
-          collect(v, tail, collected)
-        } else if (po.lteq(head.v, v)) {
-          collect(v, tail,
-            head :: UOLists.filter(collected, { c: HNode[A] => !po.lteq(c.v, head.v) }))
-        } else {
-          collect(v, addAll(head.child, tail), collected)
-        }
-      }
+  @tailrec
+  private def collect(v: A, s: UOList[HNode[A]], collected: UOList[HNode[A]]): UOList[HNode[A]] =
+    if (s.isEmpty) collected
+    else if (s.head.collected == colls) collect(v, s.tail, collected)
+    else {
+      s.head.collected = colls
+      //      if (s.head.removed)
+      //        collect(v, s.head.child ++ s.tail, collected)
+      //      else 
+      if (po.disjoint(s.head.v, v) || collected.exists(c => po.lteq(s.head.v, c.v)))
+        collect(v, s.tail, collected)
+      else if (po.lteq(s.head.v, v))
+        collect(v, s.tail,
+          collected.filter(c => !po.lteq(c.v, s.head.v)) + s.head)
+      else
+        collect(v, s.head.child ++ s.tail, collected)
+
     }
 
   override def toString = toGML
@@ -110,34 +134,60 @@ class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
   //
 
   def remove(v: A) {
-    roots = rem(v, roots)
+    nodes(v).removed = true
+    nodes -= v
+    cleaned = false
+    //roots = rem(v, roots)
+  }
+  //
+  def clean() {
+    if (!cleaned) {
+      roots = clean(roots)
+      cleaned = true
+    }
   }
 
-  private def rem(v: A, roots: List[HNode[A]]): List[HNode[A]] = {
-
+  private def clean(roots: UOList[HNode[A]]): UOList[HNode[A]] = {
     @tailrec
-    def remL(roots: List[HNode[A]], newRoots: List[HNode[A]]): List[HNode[A]] =
-      if (roots == Nil) newRoots
+    def remL(roots: UOList[HNode[A]], newRoots: UOList[HNode[A]]): UOList[HNode[A]] =
+      if (roots.isEmpty) newRoots
       else {
-        val r :: tail = roots
-        if (!po.lteq(v, r.v)) remL(tail, r :: newRoots)
-        else if (r.v == v) remL(tail, addAll(r.child, newRoots))
+        val r = roots.head
+        if (r.removed) remL(roots.tail, clean(r.child) ++ newRoots)
         else {
-          r.child = rem(v, r.child)
-          remL(tail, r :: newRoots)
+          r.child = clean(r.child)
+          remL(roots.tail, newRoots + r)
         }
       }
 
-    remL(roots, Nil)
-
+    remL(roots, UOList.empty)
   }
+  //
+  //  private def rem(v: A, roots: UOList[HNode[A]]): UOList[HNode[A]] = {
+  //    @tailrec
+  //    def remL(roots: UOList[HNode[A]], newRoots: UOList[HNode[A]]): UOList[HNode[A]] =
+  //      if (roots.isEmpty) newRoots
+  //      else {
+  //        val r = roots.head
+  //        if (!po.lteq(v, r.v)) remL(roots.tail, newRoots + r)
+  //        else if (r.v == v) remL(roots.tail, r.child ++ newRoots)
+  //        else {
+  //          r.child = rem(v, r.child)
+  //          remL(roots.tail, newRoots + r)
+  //        }
+  //      }
+  //
+  //    remL(roots, UOList.empty)
+  //
+  //  }
 
   def toGML = {
     val stb = new StringBuilder();
     stb.append("graph [\n");
     stb.append("directed 0\n");
 
-    def flatnodes(r: List[HNode[A]]): Set[HNode[A]] = r.toSet ++ r.flatMap(v => flatnodes(v.child))
+    def flatnodes(r: UOList[HNode[A]]): Set[HNode[A]] =
+      r.toSet ++ r.flatMap { v: HNode[A] => flatnodes(v.child) }
 
     val edges = new StringBuilder()
 
@@ -157,6 +207,7 @@ class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
     for (n <- flatnodes(roots)) {
       stb.append("node [\n");
       stb.append("id \"").append(n.hashCode).append("\"\n");
+      if (n.removed) stb.append("graphics [ fill \"#CCCCCC\" ]\n")
       stb.append("label \"").append(n.v).append(", ").append(n.rank).append("\"\n");
       stb.append("]\n");
 

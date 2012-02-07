@@ -13,7 +13,7 @@ class HasseTest {
     val bv = BitVector.newBitVector(pool)
 
     Stream.continually(rand.nextInt(pool)).take(1 + rand.nextInt(size)).foreach(bv.set)
-    
+
     bv
   }
 
@@ -64,14 +64,14 @@ class HasseTest {
 
     remove.foreach(h.remove)
 
-    control(h, remain)
-    //    val r = h.filter { s: Set[Int] => !(s(testSet.head.head)) }
-    //    val f = new File("/tmp/hasse.gml")
-    //    val ps = new PrintStream(f)
-    //    ps.print(h.toGML)
-    //    ps.close()
-    //    launchYEd(f)
-    //    h.roots.foreach(println)
+        control(h, remain)
+//
+//    val f = new File("/tmp/hasse.gml")
+//    val ps = new PrintStream(f)
+//    ps.print(h.toGML)
+//    ps.close()
+//    launchYEd(f)
+//    h.roots.foreach(println)
   }
 
   private def findYEd = {

@@ -34,6 +34,7 @@ import cspfj.util.HNode
 import cspfj.util.EnhancedPartialOrdering
 import cspfj.util.PredefPO
 import cspfj.util.BitVectorInclusion
+import cspfj.util.UOList
 
 final case class VarInfo(
   val v: Variable,
@@ -76,34 +77,28 @@ final class AllDifferent(scope: Variable*)
 
   var seeks = 0
 
-  def seek(h: Hasse[VarInfo]): List[HNode[VarInfo]] = {
+  private def seek(h: Hasse[VarInfo]): UOList[HNode[VarInfo]] = {
     seeks += 1
-    seek(h.roots, Nil)
+    seek(h.roots, UOList.empty)
   }
 
   @tailrec
-  def seek(s: List[HNode[VarInfo]], collected: List[HNode[VarInfo]]): List[HNode[VarInfo]] =
-    if (s == Nil) collected
+  private def seek(s: UOList[HNode[VarInfo]], collected: UOList[HNode[VarInfo]]): UOList[HNode[VarInfo]] =
+    if (s.isEmpty) collected
+    else if (s.head.v.sought == seeks)
+      seek(s.tail, collected)
     else {
-      val head :: tail = s
-      if (head.v.sought == seeks) seek(tail, collected)
-      else if (head.v.s < head.rank) throw AllDifferent.i
-      else if (head.v.s == head.rank) {
-        head.v.sought = seeks
-        seek(stack(head.child, tail), head :: collected)
-      } else {
-        head.v.sought = seeks
-        seek(stack(head.child, tail), collected)
-      }
+      s.head.v.sought = seeks
+      //      if (s.head.removed)
+      //        seek(s.head.child ++ s.tail, collected)
+      //      else 
+      if (s.head.v.s < s.head.rank)
+        throw AllDifferent.i
+      else if (s.head.v.s == s.head.rank)
+        seek(s.head.child ++ s.tail, collected + s.head)
+      else
+        seek(s.head.child ++ s.tail, collected)
     }
-
-  /**
-   * Stacks n (reversed for efficiency) on s
-   */
-  @tailrec
-  private def stack[A](n: List[A], s: List[A]): List[A] =
-    if (n == Nil) s
-    else stack(n.tail, n.head :: s)
 
   private var tree = new Hasse[VarInfo](new VarInclusion)
 
@@ -173,7 +168,7 @@ final class AllDifferent(scope: Variable*)
       }
 
       var unsat = false
-      val change: List[Variable] = try seek(tree).flatMap(filter).distinct
+      val change: List[Variable] = try seek(tree).foldLeft(Set[Variable]())(_ ++ filter(_)).toList
       catch {
         case e: Inconsistency => { unsat = true; Nil }
       }
@@ -190,7 +185,7 @@ final class AllDifferent(scope: Variable*)
     filtered = d
   }
 
-  private def filter(node: HNode[VarInfo]) =
+  private def filter(node: HNode[VarInfo]): Set[Variable] =
     if (filtered(node.v)) {
       assert {
         val vals = values(node.v.d)
@@ -202,7 +197,7 @@ final class AllDifferent(scope: Variable*)
       altering()
       filtered += node.v
       val vals = values(node.v.d)
-      (scopeSet -- node.flatten.map(_.v.v)).iterator.filter(remove(_, vals))
+      (scopeSet -- node.flatten.map(_.v.v)).filter(remove(_, vals))
     }
 
   private def remove(v: Variable, vals: List[Int]) = {
