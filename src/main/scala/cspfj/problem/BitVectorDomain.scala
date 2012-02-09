@@ -13,11 +13,18 @@ final class BitVectorDomain(
   domain: Array[Int]) extends Domain with Backtrackable[(BitVector, Int)] {
   require(domain.sliding(2).forall(p => p.size == 1 || p(0) < p(1)), "Only ordered domains are supported");
 
+  if (domain.size == 0) throw Domain.empty
+
   private val indexer = Indexer.factory(domain)
 
   private var _size = domain.size
 
   def size = _size
+
+  private def size_=(s: Int) {
+    _size = s
+    if (s == 0) throw Domain.empty
+  }
 
   private val bvDomain = BitVector.newBitVector(domain.length)
   bvDomain.fill(true)
@@ -118,21 +125,21 @@ final class BitVectorDomain(
   def remove(index: Int) {
     assert(present(index));
     altering()
-    _size -= 1;
     bvDomain.clear(index);
+    size -= 1;
   }
 
   def removeFrom(lb: Int) = {
     altering()
     val nbRemVals = bvDomain.clearFrom(lb);
-    _size -= nbRemVals;
+    size -= nbRemVals;
     nbRemVals;
   }
 
   def removeTo(ub: Int) = {
     altering()
     val nbRemVals = bvDomain.clearTo(ub + 1);
-    _size -= nbRemVals;
+    size -= nbRemVals;
     nbRemVals;
   }
 

@@ -20,11 +20,14 @@
 package cspfj.constraint;
 
 import scala.annotation.tailrec
-
 import cspfj.heuristic.Weighted
 import cspfj.priorityqueues.IOBinomialHeapNode
 import cspfj.priorityqueues.Identified
 import cspfj.problem.Variable
+import cspfj.problem.EmptyDomainException
+import cspfj.UNSATException
+import cspfj.UNSATException
+import cspfj.UNSATException
 //import cspfj.priorityqueues.IOBinomialHeapNode
 
 object Constraint {
@@ -118,13 +121,25 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
 
   final def entail() { entailedAtLevel = level }
 
-  def isConsistent(reviseCount: Int) = {
+  def consistentRevise(reviseCount: Int) = try {
+    revise(reviseCount)
+    true
+  } catch {
+    case e: UNSATException => false
+  }
+
+  def isConsistent(reviseCount: Int): Boolean = {
     setLvl(level + 1)
     scope foreach { _.dom.setLevel(level) }
-    val consistent = revise(reviseCount)
-    restoreLvl(level - 1)
-    scope foreach { _.dom.restoreLevel(level) }
-    consistent
+    try {
+      revise(reviseCount)
+      true
+    } catch {
+      case e: UNSATException => false
+    } finally {
+      restoreLvl(level - 1)
+      scope foreach { _.dom.restoreLevel(level) }
+    }
   }
 
   def fillRemovals(i: Int) {}
@@ -135,9 +150,9 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
    * The constraint propagator.
    *
    * @param revisator
-   * @return false iff an inconsistency has been detected
    */
-  def revise(reviseCount: Int): Boolean
+  @throws(classOf[UNSATException])
+  def revise(reviseCount: Int)
 
   /**
    * @return true iff the constraint is satisfied by the current values of the
@@ -163,5 +178,7 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
   def tupleValues = (0 to arity).iterator.map(p => scope(p).dom.value(tuple(p)))
 
   def sizes: Array[Int]
+
+  override def toString = this.getClass.getName + scope.mkString("(", ", ", ")")
 
 }

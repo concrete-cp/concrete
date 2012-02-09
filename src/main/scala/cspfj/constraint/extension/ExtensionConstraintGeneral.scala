@@ -24,6 +24,7 @@ import cspfj.problem.Variable
 import cspfj.constraint.AbstractConstraint
 import cspfj.constraint.Residues
 import cspfj.constraint.TupleEnumerator
+import cspfj.UNSATException
 
 final class ExtensionConstraintGeneral(matrix: Matrix, shared: Boolean, scope: Array[Variable])
   extends AbstractConstraint(scope)
@@ -54,10 +55,13 @@ final class ExtensionConstraintGeneral(matrix: Matrix, shared: Boolean, scope: A
 
   override def reviseVariable(position: Int) = {
     if (matrixManager.supportCondition(position)) {
-      assert(!super.revise(position))
+      assert(try { super.revise(position); true }
+      catch {
+        case e: UNSATException => false
+      })
       false;
     } else
-      super.revise(position);
+      super.reviseVariable(position);
   }
 
 }

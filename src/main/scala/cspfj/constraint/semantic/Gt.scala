@@ -23,6 +23,9 @@ import cspfj.constraint.AbstractConstraint
 import cspfj.problem.Domain
 import cspfj.problem.Variable;
 
+/**
+ * Constraint v0 + constant >(=) v1
+ */
 final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict: Boolean)
   extends AbstractConstraint(Array(v0, v1)) {
 
@@ -53,26 +56,17 @@ final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict
 
   }
 
-  override def revise(reviseCount: Int): Boolean = {
+  override def revise(reviseCount: Int) {
     assert(scope(0).dom.size > 0 && scope(1).dom.size > 0)
 
-    if (removeLt(min(1) - constant, 0)) {
-      if (scope(0).dom.size == 0) {
-        return false;
-      }
-    }
-    if (removeGt(max(0) + constant, 1)) {
-      if (scope(1).dom.size == 0) {
-        return false;
-      }
-    }
+    removeLt(min(1) - constant, 0)
+    removeGt(max(0) + constant, 1)
     val max1 = max(1);
     val min0 = min(0) + constant;
     if (max1 < min0 || !strict && min0 == max1) {
       entail();
     }
-    // System.out.println("Could not entail " + this);
-    return true;
+
   }
 
   override def isConsistent(reviseCount: Int) = {

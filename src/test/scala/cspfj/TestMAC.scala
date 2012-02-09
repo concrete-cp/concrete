@@ -7,6 +7,7 @@ import cspfj.constraint.semantic.AllDifferent
 import cspfj.problem.Variable
 import org.junit.Assert
 import scala.annotation.tailrec
+import cspfj.constraint.semantic.BoundAllDiff
 
 class TestMAC {
 
@@ -15,7 +16,7 @@ class TestMAC {
 
     val queens = (0 until size) map (q => problem.addVariable("q" + q, new BitVectorDomain(0 until size: _*)))
 
-    problem.addConstraint(new AllDifferent(queens: _*))
+    problem.addConstraint(allDiff(queens))
 
     val qd1 = queens.zipWithIndex map {
       case (q, i) =>
@@ -24,7 +25,7 @@ class TestMAC {
         v
     }
 
-    problem.addConstraint(new AllDifferent(qd1: _*))
+    problem.addConstraint(allDiff(qd1))
 
     val qd2 = queens.zipWithIndex map {
       case (q, i) =>
@@ -33,9 +34,11 @@ class TestMAC {
         v
     }
 
-    problem.addConstraint(new AllDifferent(qd2: _*))
+    problem.addConstraint(allDiff(qd2))
     (queens, problem)
   }
+
+  def allDiff(q: Seq[Variable]) = new BoundAllDiff(q: _*)
 
   def view(queens: Seq[Variable], solution: Map[String, Int]) =
     queens.map(q => q.name + " = " + solution.get(q.name)).mkString(", ")

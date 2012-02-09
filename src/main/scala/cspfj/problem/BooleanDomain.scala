@@ -1,8 +1,9 @@
 package cspfj.problem;
 
-import java.util.Arrays;
-
-import cspfj.util.BitVector;
+import java.util.Arrays
+import cspfj.util.BitVector
+import cspfj.UNSATException
+import cspfj.util.Backtrackable
 
 trait Status {
   val bitVector = BitVector.newBitVector(2)
@@ -109,11 +110,8 @@ object EMPTY extends Status {
   val indexes = Array[Int]()
 }
 
-class BooleanDomain(var _status: Status) extends Domain {
-
-  private var history: List[(Int, Status)] = Nil
-
-  private var currentLevel = 0
+final class BooleanDomain(var _status: Status) extends Domain
+  with Backtrackable[Status] {
 
   def this(constant: Boolean) = this(constant match {
     case true => TRUE
@@ -123,6 +121,12 @@ class BooleanDomain(var _status: Status) extends Domain {
   def this() = this(UNKNOWN)
 
   def status = _status
+
+  def save = status
+
+  def restore(d: Status) { _status = d }
+
+  def getAtLevel(l: Int) = getLevel(l).bitVector
 
   override def first = status.first
 
@@ -156,13 +160,12 @@ class BooleanDomain(var _status: Status) extends Domain {
     }
   }
 
-  var removed = false;
-
   def status_=(s: Status) {
     assert(status == UNKNOWN || s == EMPTY && status != EMPTY,
       "Assigning from " + status + " to " + s)
     _status = s;
-    removed = true
+    altering()
+    if (s == EMPTY) throw Domain.empty
   }
 
   def value(i: Int) = i
@@ -182,36 +185,36 @@ class BooleanDomain(var _status: Status) extends Domain {
 
   override val maxSize = 2
 
-  def setLevel(level: Int) {
-    assert(level > currentLevel)
-    if (removed) {
-      history ::= (currentLevel, this.status)
-      removed = false
-    }
-    currentLevel = level;
-  }
-
-  def restoreLevel(level: Int) {
-    assert(level == 0 || level < currentLevel);
-
-    history = history.dropWhile(_._1 > level)
-    _status = if (history == Nil) {
-      UNKNOWN
-    } else {
-      history.head._2
-    }
-
-    currentLevel = level;
-  }
-
-  def getAtLevel(level: Int) = {
-    if (level < currentLevel) {
-      history.find(h => h._1 <= level) match {
-        case Some(h) => h._2.bitVector
-        case None => UNKNOWN.bitVector
-      }
-    } else status.bitVector;
-  }
+  //  def setLevel(level: Int) {
+  //    assert(level > currentLevel)
+  //    if (removed) {
+  //      history ::= (currentLevel, this.status)
+  //      removed = false
+  //    }
+  //    currentLevel = level;
+  //  }
+  //
+  //  def restoreLevel(level: Int) {
+  //    assert(level == 0 || level < currentLevel);
+  //
+  //    history = history.dropWhile(_._1 > level)
+  //    _status = if (history == Nil) {
+  //      UNKNOWN
+  //    } else {
+  //      history.head._2
+  //    }
+  //
+  //    currentLevel = level;
+  //  }
+  //
+  //  def getAtLevel(level: Int) = {
+  //    if (level < currentLevel) {
+  //      history.find(h => h._1 <= level) match {
+  //        case Some(h) => h._2.bitVector
+  //        case None => UNKNOWN.bitVector
+  //      }
+  //    } else status.bitVector;
+  //  }
 
   override val allValues = UNKNOWN.array
 

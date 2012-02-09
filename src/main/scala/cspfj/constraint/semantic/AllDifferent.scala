@@ -35,6 +35,7 @@ import cspfj.util.EnhancedPartialOrdering
 import cspfj.util.PredefPO
 import cspfj.util.BitVectorInclusion
 import cspfj.util.UOList
+import cspfj.UNSATException
 
 final case class VarInfo(
   val v: Variable,
@@ -50,12 +51,6 @@ final class VarInclusion extends EnhancedPartialOrdering[VarInfo] with PredefPO[
   override def lt(a: VarInfo, b: VarInfo) = bvi.lt(a.d, b.d)
 
   def disjoint(a: VarInfo, b: VarInfo) = bvi.disjoint(a.d, b.d)
-}
-
-final class Inconsistency extends Exception
-
-object AllDifferent {
-  val i = new Inconsistency
 }
 
 final class AllDifferent(scope: Variable*)
@@ -93,7 +88,7 @@ final class AllDifferent(scope: Variable*)
       //        seek(s.head.child ++ s.tail, collected)
       //      else 
       if (s.head.v.s < s.head.rank)
-        throw AllDifferent.i
+        throw UNSATException.e
       else if (s.head.v.s == s.head.rank)
         seek(s.head.child ++ s.tail, collected + s.head)
       else
@@ -124,13 +119,7 @@ final class AllDifferent(scope: Variable*)
     restoreLevel(l)
   }
 
-  def revise(rvls: Int): Boolean = {
-    //val mod = modified(rvls)
-    //    assert(mod.forall(v => info.get(v) match {
-    //      case Some(vi) => v.dom.size != vi.s
-    //      case None => true
-    //    }))
-    //assert((scopeSet -- mod).forall(v => v.dom.size == info(v).s))
+  def revise(rvls: Int) {
     @tailrec
     def mod(i: Int, m: List[Variable]): List[Variable] = {
       if (i < 0) m
@@ -149,33 +138,50 @@ final class AllDifferent(scope: Variable*)
   var info: Map[Variable, VarInfo] = Map.empty
 
   @tailrec
-  private def revise(changed: List[Variable]): Boolean =
-    if (changed.isEmpty) true
-    else {
+  private def revise(changed: List[Variable]) {
+    if (!changed.isEmpty) {
       changed.foreach(v => info.get(v) match {
         case None =>
         case Some(v) => tree.remove(v)
       })
 
-      /**
-       * Much more efficient when adding largest domains first (less likely to
-       * have supersets)
-       */
-      changed.sortBy(-_.dom.size).foreach { v =>
-        val vi = VarInfo(v, v.dom.valueBV(offset), v.dom.size)
-        info += v -> vi
-        tree.add(vi)
-      }
+      val (singles, other) = changed.partition(_.dom.size == 1)
 
-      var unsat = false
-      val change: List[Variable] = try seek(tree).foldLeft(Set[Variable]())(_ ++ filter(_)).toList
-      catch {
-        case e: Inconsistency => { unsat = true; Nil }
-      }
+      val change: List[Variable] =
+        if (singles.isEmpty) {
 
-      if (unsat) false
-      else revise(change)
+          /**
+           * Much more efficient when adding largest domains first (less likely to
+           * have supersets)
+           */
+          changed.sortBy(-_.dom.size).foreach { v =>
+            val vi = VarInfo(v, v.dom.valueBV(offset), v.dom.size)
+            info += v -> vi
+            tree.add(vi)
+
+          }
+
+          seek(tree).flatMap(filter(_)).toList.distinct
+        } else {
+          (other ++
+            singles.flatMap { v =>
+              val value = v.dom.firstValue
+              for (
+                f <- scope if f != v;
+                val i = f.dom.index(value);
+                if i >= 0 && f.dom.present(i)
+              ) yield {
+                f.dom.remove(i)
+                f
+              }
+            }).distinct
+
+        }
+
+      if (!change.isEmpty) altering()
+      revise(change)
     }
+  }
 
   private var filtered: Set[VarInfo] = Set.empty
 
@@ -194,7 +200,6 @@ final class AllDifferent(scope: Variable*)
       Set.empty
 
     } else {
-      altering()
       filtered += node.v
       val vals = values(node.v.d)
       (scopeSet -- node.flatten.map(_.v.v)).filter(remove(_, vals))
@@ -207,7 +212,6 @@ final class AllDifferent(scope: Variable*)
     if (toRemove.isEmpty) false
     else {
       toRemove.foreach(v.dom.remove)
-      if (v.dom.size == 0) throw AllDifferent.i
       true
     }
   }

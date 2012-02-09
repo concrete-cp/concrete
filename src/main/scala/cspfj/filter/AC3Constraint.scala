@@ -13,6 +13,7 @@ import cspfj.ParameterManager
 import cspfj.Statistic
 import cspfj.StatisticsManager
 import cspfj.constraint.Removals
+import cspfj.problem.EmptyDomainException
 
 object AC3Constraint {
   @Parameter("ac.queue")
@@ -34,7 +35,7 @@ object AC3Constraint {
 
     for (c <- problem.constraints) {
       val sizes = c.scope map (_.dom.size)
-      assert(c.revise(-1));
+      assert(c.consistentRevise(-1), c + " is inconsistent");
       assert(
         sizes.sameElements(c.scope map (_.dom.size)),
         c + " was revised!")
@@ -164,7 +165,8 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
 
       revisions += 1;
       val sizes = constraint.sizes
-      if (constraint.revise(AC3Constraint.revisionCount)) {
+
+      if (constraint.consistentRevise(AC3Constraint.revisionCount)) {
         updateQueue(sizes, constraint, constraint.arity - 1)
         constraint.fillRemovals(-1);
         reduce()

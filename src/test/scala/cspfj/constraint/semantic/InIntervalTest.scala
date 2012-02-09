@@ -28,7 +28,7 @@ final class InIntervalTest {
 
   @Test
   def testRevise() {
-    assertTrue(constraint.revise(0));
+    constraint.revise(0)
     assertEquals(Seq(2, 3), domain.values.toSeq);
   }
 

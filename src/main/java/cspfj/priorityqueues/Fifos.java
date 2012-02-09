@@ -20,8 +20,6 @@ public final class Fifos<T extends Identified> extends AbstractQueue<T> {
 
     private static final int KEY_FACTOR = 3;
 
-    private static final long serialVersionUID = 1L;
-
     private Cell<T>[] inQueue;
 
     private final MyLinkedList<T>[] lists;

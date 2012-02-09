@@ -25,6 +25,7 @@ import cspfj.problem.Variable
 import cspfj.util.BitVector
 import scala.annotation.tailrec
 import cspfj.constraint.Removals
+import cspfj.UNSATException
 
 final class AllDifferentAC(scope: Variable*) extends AbstractConstraint(null, scope.toArray)
   with Removals {
@@ -48,9 +49,7 @@ final class AllDifferentAC(scope: Variable*) extends AbstractConstraint(null, sc
       val index = v.dom.index(value)
       if (index >= 0 && v.dom.present(index)) {
         v.dom.remove(index);
-        if (v.dom.size < 1) {
-          throw AllDifferent.i
-        } else if (v.dom.size == 1) {
+        if (v.dom.size == 1) {
           mod ::= v
         }
       }
@@ -58,7 +57,7 @@ final class AllDifferentAC(scope: Variable*) extends AbstractConstraint(null, sc
     mod;
   }
 
-  def revise(modified: Seq[Int]): Boolean = {
+  def revise(modified: Seq[Int]) {
 
     @tailrec
     def rev(q: Queue[Variable]) {
@@ -71,28 +70,26 @@ final class AllDifferentAC(scope: Variable*) extends AbstractConstraint(null, sc
       }
     }
 
-    try {
-      rev(modified.map(scope).filter(_.dom.size == 1).foldLeft(Queue[Variable]())(_.enqueue(_)))
-      //true
-      checkPigeons
-
-    } catch {
-      case e: Inconsistency => false
-    }
+    rev(modified.map(scope).filter(_.dom.size == 1).foldLeft(Queue[Variable]())(_.enqueue(_)))
+    //true
+    if (!checkPigeons) throw UNSATException.e
 
   }
 
   def checkPigeons: Boolean = {
-    union.fill(false);
+    val union = BitVector.newBitVector(max - offset + 1)
     var size = 0;
-    for (variable <- scope; value <- variable.dom.values) {
-      if (union.set(value - offset)) {
+
+    def vals(v: Variable, i: Int): Boolean = {
+      if (i < 0) false
+      else if (union.set(v.dom.value(i) - offset)) {
         size += 1
-        if (size >= arity) return true
-      }
+        if (size >= arity) true
+        else vals(v, v.dom.next(i))
+      } else vals(v, v.dom.next(i))
     }
 
-    false;
+    scope.exists(v => vals(v, v.dom.first))
   }
 
   override def toString = "allDifferent" + scope.iterator

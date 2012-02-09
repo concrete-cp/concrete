@@ -11,7 +11,7 @@ import cspom.CSPOM
 import cspfj.ParameterManager
 
 final class SolvingTest extends Loggable {
-  //Solver.loggerLevel = "FINE"
+  Solver.loggerLevel = "FINE"
   ParameterManager("preprocessor") = null
 
   @Test //(timeout = 40000)

@@ -12,24 +12,23 @@ object NotInInterval {
     new NotInInterval(variable, lb, ub)
 }
 
+/**
+ * Constraint: variable \notin [lb, ub] 
+ * lb and ub are domain indices!
+ */
 final class NotInInterval(val variable: Variable, val lb: Int, val ub: Int)
   extends AbstractConstraint(Array(variable)) {
 
   val getEvaluation = 1
 
-  def revise(reviseCount: Int): Boolean = {
-    var changed = false;
+  def revise(reviseCount: Int) {
+
     variable.dom.indices(lb).takeWhile(_ <= ub).foreach { i =>
       variable.dom.remove(i)
-      changed = true
     }
 
-    if (variable.dom.size == 0) {
-      false;
-    } else {
-      entail();
-      true;
-    }
+    entail();
+
   }
 
   override def isConsistent(reviseCount: Int) =

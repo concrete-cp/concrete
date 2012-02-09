@@ -31,8 +31,11 @@ final class ScalaFifos[T <: PTag](val key: Key[T], val nbLists: Int) extends Abs
 
   var first = nbLists
 
-  private def chooseList(element: T): Int =
-    nbLists - Integer.numberOfLeadingZeros(key.getKey(element) - 1)
+  private def chooseList(element: T): Int = {
+    val k = key.getKey(element) - 1
+    assert(k >= 0, element.toString + " -> " + k)
+    nbLists - Integer.numberOfLeadingZeros(k)
+  }
 
   def offer(e: T) =
     if (e.isPresent) false

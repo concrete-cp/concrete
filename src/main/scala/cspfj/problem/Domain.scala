@@ -1,9 +1,17 @@
 package cspfj.problem;
 
-import cspfj.util.BitVector;
+import cspfj.util.BitVector
 import scala.annotation.tailrec
+import cspfj.UNSATException
+
+final class EmptyDomainException extends UNSATException
+
+object Domain {
+  val empty = new EmptyDomainException
+}
 
 trait Domain {
+
   def next(i: Int): Int
 
   def prev(i: Int): Int
@@ -38,11 +46,17 @@ trait Domain {
    */
   def removeFrom(lb: Int): Int
 
+  def removeFromVal(lb: Int) =
+    removeFrom(closestGeq(lb))
+
   /**
    * @param ub
    * @return Removes all indexes up to given upper bound.
    */
   def removeTo(ub: Int): Int
+
+  def removeToVal(ub: Int) =
+    removeTo(closestLt(ub + 1))
 
   def setLevel(level: Int)
 
@@ -143,6 +157,18 @@ trait Domain {
     val lb = closestLt(i.lb)
     val ub = closestGt(i.ub)
     (if (lb >= 0) removeTo(lb) else 0) + (if (ub >= 0) removeFrom(ub) else 0)
+  }
+
+  def removeValInterval(lb: Int, ub: Int) = {
+
+    var i = closestGeq(lb)
+    val end = closestLeq(ub)
+
+    if (i >= 0 && end >= 0)
+      while (i <= end) {
+        if (present(i)) remove(i)
+        i += 1
+      }
   }
 
   def subsetOf(d: Domain) = values.forall(v => d.present(d.index(v)))

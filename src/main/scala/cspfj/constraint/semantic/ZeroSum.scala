@@ -19,19 +19,7 @@ final class ZeroSum(
 
   def getEvaluation = arity
 
-  def revise(reviseCount: Int): Boolean = {
-    //info(this.toString)
-    //    val sum = scope.iterator.zip(factors.iterator).map {
-    //      case (v, f) => v.dom.valueInterval * f
-    //    } reduce { _ + _ }
-
-    //    if (sum.lb >= 0) {
-    //      entail()
-    //      true
-    //    } else if (sum.ub < 0) {
-    //      false
-    //    } else {
-
+  def revise(reviseCount: Int) {
     val bounds = scope.iterator.zip(factors.iterator).map {
       case (v, f) => v.dom.valueInterval * f
     } reduce { _ + _ }
@@ -47,10 +35,9 @@ final class ZeroSum(
 
         val boundsf = Interval(bounds.lb - myBounds.lb, bounds.ub - myBounds.ub) / -f
 
-        val removed = dom.intersectVal(boundsf)
+        dom.intersectVal(boundsf)
 
-        if (dom.size == 0) false
-        else reviseVariable(i - 1)
+        reviseVariable(i - 1)
       }
     }
 

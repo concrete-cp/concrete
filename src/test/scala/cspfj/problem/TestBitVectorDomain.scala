@@ -25,4 +25,14 @@ final class TestBitVectorDomain {
     domain.restoreLevel(0);
     assertTrue(domain.present(0));
   }
+
+  @Test
+  def testIntervals() {
+    val domain = new BitVectorDomain(3, 4, 5, 6, 7)
+    domain.removeToVal(4)
+    assertEquals(domain.toString, 5, domain.firstValue)
+
+    domain.removeFromVal(6)
+    assertEquals(domain.toString, 5, domain.lastValue)
+  }
 }

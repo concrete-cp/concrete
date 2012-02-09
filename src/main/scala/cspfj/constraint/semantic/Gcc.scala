@@ -5,6 +5,7 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.MultiMap
 import cspfj.constraint.AbstractConstraint
 import cspfj.problem.Variable
+import cspfj.UNSATException
 
 final case class Bounds(val value: Int, val minCount: Int, val maxCount: Int) {
   override def toString = value + ": [" + minCount + ", " + maxCount + "]"
@@ -29,13 +30,10 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Abstract
     counts.forall { case (v, c) => c > bounds(v).minCount }
   }
 
-  private def filter(except: collection.mutable.Set[Variable], value: Int): Boolean = {
+  private def filter(except: collection.mutable.Set[Variable], value: Int) {
     for (v <- scope if !except.contains(v)) {
       val index = v.dom.index(value)
       if (index >= 0 && v.dom.present(index)) {
-        if (v.dom.size == 1) {
-          return true
-        }
 
         v.dom.remove(index)
 
@@ -45,7 +43,7 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Abstract
 
       }
     }
-    false;
+
   }
 
   private def assignAll(value: Int) {
@@ -57,7 +55,7 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Abstract
     }
   }
 
-  def revise(reviseCount: Int): Boolean = {
+  def revise(reviseCount: Int) {
     /**
      * Upper bounds
      */
@@ -75,11 +73,9 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Abstract
       val currentSingles = singles(value)
 
       if (currentSingles.size == bounds(value).maxCount) {
-        if (filter(currentSingles, value)) {
-          return false;
-        }
+        filter(currentSingles, value)
       } else if (currentSingles.size > bounds(value).maxCount) {
-        return false;
+        throw UNSATException.e
       }
     }
 
@@ -91,7 +87,7 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Abstract
     }
 
     for (b <- bounds.values) {
-      if (counts(b.value) < b.minCount) return false
+      if (counts(b.value) < b.minCount) throw UNSATException.e
       if (counts(b.value) == b.minCount) assignAll(b.value)
     }
 

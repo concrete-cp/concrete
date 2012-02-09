@@ -16,8 +16,6 @@ public final class Fifo<T extends Identified> extends AbstractQueue<T> {
 
     private static final int DEFAULT_INIT_SIZE = 10;
 
-    private static final long serialVersionUID = 1L;
-
     private Cell<T>[] inQueue;
 
     private final MyLinkedList<T> list;
@@ -31,7 +29,7 @@ public final class Fifo<T extends Identified> extends AbstractQueue<T> {
     public Fifo() {
         this(DEFAULT_INIT_SIZE);
     }
-    
+
     public Fifo(Key<T> key) {
         this();
     }

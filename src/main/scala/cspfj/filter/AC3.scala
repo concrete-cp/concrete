@@ -93,7 +93,7 @@ final class AC3(
 
       val prev = c.sizes
 
-      if (c.revise(reviseCount)) {
+      if (c.consistentRevise(reviseCount)) {
 
         c.fillRemovals(-1)
 
@@ -163,7 +163,7 @@ final class AC3(
       } else {
         revisions += 1;
         val prev = c.sizes
-        if (c.revise(reviseCount)) {
+        if (c.consistentRevise(reviseCount)) {
           c.fillRemovals(-1)
 
           updateQueue(prev, c)

@@ -16,11 +16,11 @@ trait Removals extends Constraint {
     Arrays.fill(removals, value);
   }
 
-  final override def revise(reviseCount: Int) = {
+  final override def revise(reviseCount: Int) {
     revise(modified(reviseCount))
   }
 
-  def revise(modified: Seq[Int]): Boolean
+  def revise(modified: Seq[Int])
 
   /**
    * If only one variable in the scope has been altered, its revision can be skipped

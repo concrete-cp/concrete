@@ -3,7 +3,9 @@ package cspfj.constraint.semantic;
 import java.util.Arrays
 import cspfj.constraint.AbstractConstraint
 import cspfj.problem.BooleanDomain
-import cspfj.problem.Variable;
+import cspfj.problem.Variable
+import cspfj.UNSATException
+import scala.annotation.tailrec
 
 final class Disjunction(scope: Array[Variable],
   val reverses: IndexedSeq[Boolean]) extends AbstractConstraint(null, scope) {
@@ -15,12 +17,14 @@ final class Disjunction(scope: Array[Variable],
 
   val domains = scope map (_.dom.asInstanceOf[BooleanDomain])
 
-  var watch1 = seekWatch(-1);
-  require(watch1 >= 0, "Unexpected inconsistency")
-  var watch2 = seekWatch(watch1);
-  if (watch2 < 0) {
-    setTrue(watch1)
-    watch2 = watch1
+  var watch1 = seekWatch(-1).get
+
+  var watch2 = seekWatch(watch1) match {
+    case Some(w) => w
+    case None => {
+      setTrue(watch1)
+      watch1
+    }
   }
 
   val getEvaluation = Integer.highestOneBit(arity)
@@ -31,51 +35,56 @@ final class Disjunction(scope: Array[Variable],
 
   override def toString = "\\/" + scope.mkString("(", ", ", ")")
 
-  override def revise(reviseCount: Int): Boolean = {
+  override def revise(reviseCount: Int) {
     if (isFalse(watch1)) {
-      val newWatch = seekWatch(watch2);
-      if (newWatch < 0) {
-        if (!canBeTrue(watch2)) {
-          return false;
+
+      seekWatch(watch2) match {
+        case Some(w) => watch1 = w
+        case None => {
+          setTrue(watch2)
+          return
         }
-        if (setTrue(watch2)) {
-          return true;
-        }
-      } else {
-        watch1 = newWatch;
       }
+
     }
     if (isFalse(watch2)) {
-      val newWatch = seekWatch(watch1);
-      if (newWatch >= 0) {
-        watch2 = newWatch;
-      } else setTrue(watch1)
+
+      seekWatch(watch1) match {
+        case Some(w) => watch2 = w
+        case None => setTrue(watch1)
+      }
+
     }
-    return true;
   }
 
   private def isFalse(position: Int) =
     if (reverses(position)) domains(position).isTrue else domains(position).isFalse
 
-  private def setTrue(position: Int) = {
-    val dom = domains(position)
-    if (dom.isUnknown) {
-      if (reverses(position)) {
-        dom.setFalse()
-      } else {
-        dom.setTrue()
+  private def setTrue(position: Int) {
+    if (canBeTrue(position)) {
+
+      if (domains(position).isUnknown) {
+
+        if (reverses(position)) domains(position).setFalse()
+        else domains(position).setTrue()
+
       }
-      true
-    } else false
+    } else throw UNSATException.e
+
+    // } else sys.error("Unreachable state: " + dom + " / " + reverses(position))
 
   }
 
   private def canBeTrue(position: Int) = domains(position).canBe(!reverses(position));
 
-  private def seekWatch(excluding: Int) =
-    (0 until arity).find(i => i != excluding && canBeTrue(i)) match {
-      case Some(i) => i
-      case None => -1
-    }
+  private def seekWatch(excluding: Int) = {
+    @tailrec
+    def find(i: Int): Option[Int] =
+      if (i < 0) None
+      else if (i != excluding && canBeTrue(i)) Some(i)
+      else find(i - 1)
+
+    find(arity - 1)
+  }
 
 }

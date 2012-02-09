@@ -32,6 +32,7 @@ import cspfj.problem.NoGoodLearner
 import cspfj.problem.Variable
 import cspfj.util.Loggable
 import scala.annotation.tailrec
+import cspfj.problem.EmptyDomainException
 
 object MAC {
   @Parameter("mac.btGrowth")
@@ -54,7 +55,7 @@ object MAC {
 final class MAC(prob: Problem) extends Solver(prob) with Loggable {
 
   @Statistic
-  var nbAssignments = 0;
+  var nbAssignments = 1;
 
   private var decisions: List[Pair] = Nil
 
@@ -190,7 +191,11 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
     } else {
       maxBacktracks = -1
 
-      decisions.head.remove()
+      try decisions.head.remove()
+      catch {
+        case e: EmptyDomainException => // Will backtrack in mac()
+      }
+      
       val s = nextSolution(decisions.head.variable)
       decisions = s._2
       s._1

@@ -7,6 +7,7 @@ import cspfj.problem.FALSE
 import cspfj.problem.TRUE
 import cspfj.problem.UNKNOWN
 import cspfj.problem.Variable
+import cspfj.UNSATException
 
 final class ReifiedConstraint(
   controlVariable: Variable,
@@ -16,9 +17,11 @@ final class ReifiedConstraint(
 
   require(positiveConstraint.scope forall scope.tail.contains)
   require(negativeConstraint.scope forall scope.tail.contains)
-  require(controlVariable.dom.isInstanceOf[BooleanDomain], "Control variable must be boolean")
 
-  val controlDomain = controlVariable.dom.asInstanceOf[BooleanDomain]
+  val controlDomain = controlVariable.dom match {
+    case bd: BooleanDomain => bd
+    case _ => throw new IllegalArgumentException("Control variable must be boolean")
+  }
 
   //  private final class ReifiedRevisionHandler(val reifiedRevisator: RevisionHandler)
   //    extends RevisionHandler {
@@ -41,7 +44,7 @@ final class ReifiedConstraint(
     negativeConstraint.restoreLvl(l)
   }
 
-  override def revise(reviseCount: Int): Boolean =
+  override def revise(reviseCount: Int) {
     controlDomain.status match {
       case UNKNOWN =>
         if (!positiveConstraint.isConsistent(reviseCount)) {
@@ -58,20 +61,20 @@ final class ReifiedConstraint(
       case _ => throw new IllegalStateException
 
     }
+  }
 
-  private def noReifyRevise(constraint: Constraint, reviseCount: Int) = {
+  private def noReifyRevise(constraint: Constraint, reviseCount: Int) {
     val actualRevise = if (controlRemovals >= reviseCount) {
       -1;
     } else {
       reviseCount;
     }
 
-    if (constraint.revise(actualRevise)) {
-      if (constraint.isEntailed) {
-        entail();
-      }
-      true;
-    } else false;
+    constraint.revise(actualRevise)
+    if (constraint.isEntailed) {
+      entail();
+    }
+
   }
 
   def check = {
@@ -80,8 +83,7 @@ final class ReifiedConstraint(
   }
 
   def getEvaluation =
-    positiveConstraint.getEvaluation
-  +negativeConstraint.getEvaluation
+    positiveConstraint.getEvaluation + negativeConstraint.getEvaluation
 
   override def toString = scope(0) + " == (" + positiveConstraint + ")";
 

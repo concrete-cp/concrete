@@ -117,7 +117,7 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
   private def forwardCheck(constraints: Iterator[Constraint]): Boolean = {
     if (constraints.hasNext) {
       val c = constraints.next
-      if (c.revise(-1)) {
+      if (c.consistentRevise(-1)) {
         c.fillRemovals(-1)
         forwardCheck(constraints)
       } else false

@@ -3,7 +3,7 @@ package cspfj.problem
 object Indexer {
   def factory(values: Array[Int]): Indexer = {
     if (values.size == values.last - values.head + 1) {
-      if (values.first == 0) new DirectIndices(values.size)
+      if (values.head == 0) new DirectIndices(values.size)
       else new OffsetIndices(values.size, values.head)
     } else new GeneralIndices(values)
   }

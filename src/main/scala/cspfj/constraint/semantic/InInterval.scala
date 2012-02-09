@@ -12,6 +12,10 @@ object InInterval {
     new InInterval(variable, lb, ub)
 }
 
+/**
+ * Constraint: variable \in [lb, ub]
+ * lb and ub are domain indices!
+ */
 final class InInterval(val variable: Variable, val lb: Int, val ub: Int)
   extends AbstractConstraint(Array(variable)) {
 
@@ -19,14 +23,11 @@ final class InInterval(val variable: Variable, val lb: Int, val ub: Int)
 
   override val getEvaluation = 1
 
-  override def revise(reviseCount: Int): Boolean = {
-    val removed = dom.removeTo(lb - 1) + dom.removeFrom(ub + 1);
+  override def revise(reviseCount: Int) {
+    dom.removeTo(lb - 1)
+    dom.removeFrom(ub + 1);
 
-    if (dom.size == 0) false
-    else {
-      entail()
-      true
-    }
+    entail()
   }
 
   override def isConsistent(reviseCount: Int) = dom.indices(lb).takeWhile(_ <= ub).exists(dom.present)

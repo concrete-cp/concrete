@@ -25,7 +25,7 @@ final class ZeroSumTest {
 
   @Test
   def reviseTest() {
-    assertTrue(c.revise(0));
+    c.revise(0)
 
     assertEquals(Seq(1, 2, 3, 4), v0.dom.values.toSeq);
     assertEquals(Seq(0, 1, 2, 3), v1.dom.values.toSeq);

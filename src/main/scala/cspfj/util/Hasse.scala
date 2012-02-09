@@ -134,9 +134,13 @@ class Hasse[A](val po: EnhancedPartialOrdering[A]) extends Iterable[(A, Int)] {
   //
 
   def remove(v: A) {
-    nodes(v).removed = true
-    nodes -= v
-    cleaned = false
+    nodes.get(v) match {
+      case Some(n) =>
+        n.removed = true
+        nodes -= v
+        cleaned = false
+      case None =>
+    }
     //roots = rem(v, roots)
   }
   //
