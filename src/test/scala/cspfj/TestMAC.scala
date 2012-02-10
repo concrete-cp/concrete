@@ -8,6 +8,8 @@ import cspfj.problem.Variable
 import org.junit.Assert
 import scala.annotation.tailrec
 import cspfj.constraint.semantic.BoundAllDiff
+import cspfj.constraint.semantic.AllDifferentAC
+import cspfj.heuristic.MedValue
 
 class TestMAC {
 
@@ -52,6 +54,8 @@ class TestMAC {
   def queens() {
     for ((size, nb) <- sols) {
       val (queens, problem) = qp(size)
+
+      ParameterManager("heuristic.value") = classOf[MedValue]
       //ParameterManager.parameter("logger.level", "INFO")
       val solver = new MAC(problem)
 

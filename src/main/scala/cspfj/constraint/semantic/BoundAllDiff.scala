@@ -8,20 +8,27 @@ import cspfj.util.BitVector
 import cspfj.problem.EmptyDomainException
 import scala.annotation.tailrec
 import cspfj.UNSATException
+import cspfj.constraint.Removals
+import cspfj.util.Backtrackable
+import scala.collection.immutable.Queue
+import cspfj.util.UOList
+import cspfj.problem.Domain
 
-final class HInterval(val v: Variable) {
+final class HInterval(
+  val dom: Domain,
+  val pos: Int) {
   var minrank: Int = 0
   var maxrank: Int = 0
 }
 
 object MAX extends Ordering[HInterval] {
   def compare(o1: HInterval, o2: HInterval) =
-    o1.v.dom.lastValue - o2.v.dom.lastValue
+    o1.dom.lastValue - o2.dom.lastValue
 }
 
 object MIN extends Ordering[HInterval] {
   def compare(o1: HInterval, o2: HInterval) =
-    o1.v.dom.firstValue - o2.v.dom.firstValue
+    o1.dom.firstValue - o2.dom.firstValue
 }
 
 final class BoundAllDiff(vars: Variable*) extends AbstractConstraint(null, vars.toArray) {
@@ -35,28 +42,47 @@ final class BoundAllDiff(vars: Variable*) extends AbstractConstraint(null, vars.
 
   var nbBounds = 0
 
-  val intervals = scope.map(new HInterval(_)).toArray
+  val intervals = scope.indices.map(i => new HInterval(scope(i).dom, i)).toArray
   val minsorted = intervals.clone
   val maxsorted = intervals.clone
 
   //var infBoundModified = true;
   //var supBoundModified = true;
 
-  def sortIt() {
-    Arrays.sort(minsorted, MIN);
-    Arrays.sort(maxsorted, MAX);
+  private def bSort[A](array: Array[A], c: Ordering[A]) {
 
-    var min = minsorted(0).v.dom.firstValue
-    var max = maxsorted(0).v.dom.lastValue + 1
+    def swap[A](i: Int) {
+      val t = array(i)
+      array(i) = array(i + 1)
+      array(i + 1) = t
+    }
+
+    @tailrec
+    def s(end: Int, i: Int, change: Int) {
+      if (end > 0) {
+        if (i >= end) s(change, 0, 0)
+        else if (c.compare(array(i), array(i + 1)) > 0) {
+          swap(i)
+          s(end, i + 1, i)
+        } else s(end, i + 1, change)
+      }
+
+    }
+
+    s(array.size - 1, 0, 0)
+  }
+
+  def sortIt() {
+    bSort(minsorted, MIN)
+    bSort(maxsorted, MAX)
+
+    val min = minsorted(0).dom.firstValue
     var last = min - 2;
     var nb = 0;
     bounds(0) = last;
 
-    var i = 0
-    var j = 0
-
     @tailrec
-    def proceed() {
+    def proceed(min: Int, max: Int, i: Int, j: Int) {
       if (i < arity && min <= max) {
         if (min != last) {
           nb += 1
@@ -64,11 +90,9 @@ final class BoundAllDiff(vars: Variable*) extends AbstractConstraint(null, vars.
           bounds(nb) = min
         }
         minsorted(i).minrank = nb;
-        i += 1
-        if (i < arity) {
-          min = minsorted(i).v.dom.firstValue
-        }
-        proceed()
+
+        if (i < arity - 1) proceed(minsorted(i + 1).dom.firstValue, max, i + 1, j)
+        else proceed(min, max, i + 1, j)
       } else {
         if (max != last) {
           nb += 1
@@ -76,52 +100,44 @@ final class BoundAllDiff(vars: Variable*) extends AbstractConstraint(null, vars.
           bounds(nb) = max
         }
         maxsorted(j).maxrank = nb;
-        j += 1
-        if (j != arity) {
-          max = maxsorted(j).v.dom.lastValue + 1;
-          proceed()
+
+        if (j < arity - 1) {
+          proceed(min, maxsorted(j + 1).dom.lastValue + 1, i, j + 1)
         }
       }
     }
 
-    proceed()
+    proceed(min, maxsorted(0).dom.lastValue + 1, 0, 0)
 
     this.nbBounds = nb;
     bounds(nb + 1) = bounds(nb) + 2;
   }
 
+  @tailrec
   def pathset(tab: Array[Int], start: Int, end: Int, to: Int) {
-    var next = start;
-    var prev = next;
-
-    while (prev != end) {
-      next = tab(prev);
-      tab(prev) = to;
-      prev = next;
+    if (start != end) {
+      val next = tab(start)
+      tab(start) = to
+      pathset(tab, next, end, to)
     }
   }
 
-  def pathmin(tab: Array[Int], ip: Int) = {
-    var i = ip
-    while (tab(i) < i) {
-      i = tab(i);
-    }
-    i;
-  }
+  @tailrec
+  def pathmin(tab: Array[Int], i: Int): Int =
+    if (tab(i) < i) pathmin(tab, tab(i))
+    else i
 
-  def pathmax(tab: Array[Int], ip: Int) = {
-    var i = ip
-    while (tab(i) > i) {
-      i = tab(i);
-    }
-    i;
-  }
+  @tailrec
+  def pathmax(tab: Array[Int], i: Int): Int =
+    if (tab(i) > i) pathmax(tab, tab(i))
+    else i
 
-  def filterLower() {
+  def filterLower(): Boolean = {
+    var hole = false
     var i = 1
     while (i <= nbBounds + 1) {
+      t(i) = i - 1
       h(i) = i - 1
-      t(i) = i - 1;
       d(i) = bounds(i) - bounds(i - 1)
       i += 1
     }
@@ -147,7 +163,8 @@ final class BoundAllDiff(vars: Variable*) extends AbstractConstraint(null, vars.
 
       if (h(x) > x) {
         var w = pathmax(h, h(x));
-        maxsorted(i).v.dom.removeToVal(bounds(w) - 1);
+        maxsorted(i).dom.removeToVal(bounds(w) - 1)
+        hole |= maxsorted(i).dom.firstValue > bounds(w)
         pathset(h, x, w, w);
       }
 
@@ -157,9 +174,11 @@ final class BoundAllDiff(vars: Variable*) extends AbstractConstraint(null, vars.
       }
       i += 1
     }
+    hole
   }
 
-  def filterUpper() {
+  def filterUpper() = {
+    var hole = false
     var i = 0
     while (i <= nbBounds) {
       t(i) = i + 1
@@ -189,7 +208,8 @@ final class BoundAllDiff(vars: Variable*) extends AbstractConstraint(null, vars.
 
       if (h(x) < x) {
         val w = pathmin(h, h(x));
-        minsorted(i).v.dom.removeFromVal(bounds(w));
+        minsorted(i).dom.removeFromVal(bounds(w))
+        hole |= minsorted(i).dom.lastValue < bounds(w) - 1
         pathset(h, x, w, w);
       }
       if (d(z) == bounds(y) - bounds(z)) {
@@ -198,48 +218,56 @@ final class BoundAllDiff(vars: Variable*) extends AbstractConstraint(null, vars.
       }
       i -= 1
     }
+    hole
   }
 
-  def revise(revCount: Int) {
-    //    var left = 0
-    //    var right = 0
-    //    var j = 0
-    //    while (j < arity) {
-    //      left = Integer.MIN_VALUE
-    //      right = Integer.MIN_VALUE;
-    //      var i = 0
-    //      while (i < arity) {
-    //        if (scope(i).dom.size == 1) {
-    //          val value = scope(i).dom.firstValue;
-    //          if (i != j) {
-    //            if (value == right + 1) {
-    //              right = value;
-    //            } else {
-    //              scope(j).dom.removeValInterval(left, right);
-    //              left = value
-    //              right = value;
-    //            }
-    //            // vars(j).removeVal(vars(i).getVal(), this, true);
-    //          }
-    //        }
-    //        i += 1
+  def filterB(scope: Array[Variable], checkedVariable: Int, value: Int): UOList[Int] = {
+
+    def r(i: Int, mod: UOList[Int]): UOList[Int] = {
+      if (i < 0) mod
+      else if (i == checkedVariable) r(i - 1, mod)
+      else {
+        val v = scope(i)
+        val index = v.dom.index(value)
+        if (index >= 0 && (v.dom.first == index || v.dom.last == index)) {
+          v.dom.remove(index)
+          r(i - 1, mod + i)
+        } else r(i - 1, mod)
+
+      }
+    }
+
+    r(scope.size - 1, UOList.empty)
+
+  }
+
+  def revise(r: Int) {
+    //    @tailrec
+    //    def rev(q: UOList[Int]) {
+    //      if (!q.isEmpty) {
+    //        val checkedVariable = q.head
+    //        val newQueue = q.tail
+    //
+    //        val value = scope(checkedVariable).dom.firstValue
+    //
+    //        val modified = filterB(scope, checkedVariable, value)
+    //
+    //        rev(newQueue ++ modified.filter(scope(_).dom.size == 1))
     //      }
-    //      scope(j).dom.removeValInterval(left, right);
-    //      j += 1
     //    }
+    //
+    //    rev(UOList.build(change.filter(scope(_).dom.size == 1)))
 
-    propagate();
+    //val mod = 
+    if (propagate()) revise(r)
+    //if (!mod.isEmpty) revise(mod.toList)
   }
 
-  def propagate() {
-    //if (infBoundModified || supBoundModified) {
+  def propagate() = {
     sortIt();
-    filterLower()
-    filterUpper()
-    //      filterUpper();
-    //      infBoundModified = false;
-    //      supBoundModified = false;
-    //    }
+    val hl = filterLower()
+    val hu = filterUpper()
+    hl || hu
   }
 
   private val offset = (scope map { _.dom.allValues.min } min)
@@ -256,6 +284,6 @@ final class BoundAllDiff(vars: Variable*) extends AbstractConstraint(null, vars.
     }
   }
 
-  def getEvaluation = arity
+  def getEvaluation = arity * arity
 
 }

@@ -83,6 +83,13 @@ final case class UOL[A](
 
 object UOList {
   def empty = EmptyUOList
+  def build[A](i: Iterable[A]) = {
+    def a(i: List[A], r: UOList[A]): UOList[A] =
+      if (i == Nil) r
+      else a(i.tail, r + i.head)
+
+    a(i.toList, EmptyUOList)
+  }
 }
 
 //  @tailrec

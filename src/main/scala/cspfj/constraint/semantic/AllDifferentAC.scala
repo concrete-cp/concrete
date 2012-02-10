@@ -26,6 +26,29 @@ import cspfj.util.BitVector
 import scala.annotation.tailrec
 import cspfj.constraint.Removals
 import cspfj.UNSATException
+import cspfj.util.UOList
+
+object AllDifferentAC {
+  def filter(scope: Array[Variable], checkedVariable: Int, value: Int): UOList[Int] = {
+
+    def r(i: Int, mod: UOList[Int]): UOList[Int] = {
+      if (i < 0) mod
+      else if (i == checkedVariable) r(i - 1, mod)
+      else {
+        val v = scope(i)
+        val index = v.dom.index(value)
+        if (index >= 0 && v.dom.present(index)) {
+          v.dom.remove(index)
+          r(i - 1, mod + i)
+        } else r(i - 1, mod)
+
+      }
+    }
+
+    r(scope.size - 1, UOList.empty)
+
+  }
+}
 
 final class AllDifferentAC(scope: Variable*) extends AbstractConstraint(null, scope.toArray)
   with Removals {
@@ -33,6 +56,8 @@ final class AllDifferentAC(scope: Variable*) extends AbstractConstraint(null, sc
   val offset = scope map { _.dom.allValues.min } min
   val max = scope map { _.dom.allValues.max } max
   val union = BitVector.newBitVector(max - offset + 1)
+
+  val scopeA = scope.toArray
 
   def check: Boolean = {
     union.fill(false)
@@ -43,36 +68,24 @@ final class AllDifferentAC(scope: Variable*) extends AbstractConstraint(null, sc
     }
   }
 
-  private def filter(checkedVariable: Variable, value: Int): List[Variable] = {
-    var mod: List[Variable] = Nil
-    for (v <- scope if v != checkedVariable) {
-      val index = v.dom.index(value)
-      if (index >= 0 && v.dom.present(index)) {
-        v.dom.remove(index);
-        if (v.dom.size == 1) {
-          mod ::= v
-        }
-      }
-    }
-    mod;
-  }
-
   def revise(modified: Seq[Int]) {
 
     @tailrec
-    def rev(q: Queue[Variable]) {
+    def rev(q: UOList[Int]) {
       if (!q.isEmpty) {
-        val (checkedVariable, newQueue) = q.dequeue
+        val checkedVariable = q.head
+        val newQueue = q.tail
 
-        val value = checkedVariable.dom.firstValue
+        val value = scope(checkedVariable).dom.firstValue
 
-        rev(filter(checkedVariable, value).foldLeft(newQueue)(_.enqueue(_)))
+        rev(newQueue ++ AllDifferentAC.filter(scopeA, checkedVariable, value).
+          filter(scope(_).dom.size == 1))
       }
     }
 
-    rev(modified.map(scope).filter(_.dom.size == 1).foldLeft(Queue[Variable]())(_.enqueue(_)))
+    rev(UOList.build(modified.filter(scope(_).dom.size == 1)))
     //true
-    if (!checkPigeons) throw UNSATException.e
+    //if (!checkPigeons) throw UNSATException.e
 
   }
 
@@ -94,5 +107,5 @@ final class AllDifferentAC(scope: Variable*) extends AbstractConstraint(null, sc
 
   override def toString = "allDifferent" + scope.iterator
 
-  val getEvaluation = arity * arity
+  val getEvaluation = arity
 }
