@@ -22,7 +22,7 @@ final class ParameterManagerTest {
     assertEquals(classOf[Int], ParameterManagerTest.classTest);
     ParameterManager("classTest") = classOf[Double]
     assertEquals(classOf[Double], ParameterManagerTest.classTest);
-    ParameterManager.parameterParse("classTest", "java.math.BigInteger");
+    ParameterManager.parse("classTest", "java.math.BigInteger");
     assertEquals(classOf[BigInteger], ParameterManagerTest.classTest);
   }
 

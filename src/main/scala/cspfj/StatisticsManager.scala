@@ -42,15 +42,18 @@ class StatisticsManager extends Loggable {
 
   }
 
-  def digest = (objects map {
+  def digest(sub: String = ""): Map[String, Any] = objects flatMap {
     case (s, o) =>
-      o.getClass.getDeclaredFields.filter(annoted).map { f =>
+      o.getClass.getDeclaredFields.filter(annoted).flatMap { f =>
         f.setAccessible(true)
-        (s + "." + f.getName) -> f.get(o)
+        f.get(o) match {
+          case s: StatisticsManager => s.digest(s + "." + f.getName + ".")
+          case v => Map(sub + s + "." + f.getName -> v)
+        }
       }
-  } flatten).toMap
+  }
 
-  def display = digest.map(t => t._1 + " = " + t._2).toSeq.sorted.mkString("\n")
+  override def toString = digest().map(t => t._1 + " = " + t._2).toSeq.sorted.mkString("\n")
 
   def isIntType(input: Class[_]) =
     input == classOf[Int] || input == classOf[Long]

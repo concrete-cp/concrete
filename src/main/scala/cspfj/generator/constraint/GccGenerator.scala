@@ -14,7 +14,7 @@ final class GccGenerator(problem: Problem) extends AbstractGenerator(problem) {
     if (scope exists (_.dom == null)) {
       false
     } else {
-      val params = constraint.parameters.split(", +");
+      val params = constraint.asInstanceOf[GeneralConstraint].predicate.parameters.get.split(", +");
 
       require(params.size % 3 == 0, "3 parameters per value");
 

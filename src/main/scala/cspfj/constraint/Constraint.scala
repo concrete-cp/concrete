@@ -179,6 +179,6 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
 
   def sizes: Array[Int]
 
-  override def toString = this.getClass.getName + scope.mkString("(", ", ", ")")
+  override def toString = this.getClass.getSimpleName + scope.mkString("(", ", ", ")")
 
 }

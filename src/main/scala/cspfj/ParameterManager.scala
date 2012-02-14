@@ -35,7 +35,7 @@ final object ParameterManager {
 
         pendingParse.get(name) match {
           case Some(s) => {
-            f.set(null, parse(f, s))
+            f.set(o, parse(f, s))
             pendingParse -= name
           }
           case None =>
@@ -97,7 +97,7 @@ final object ParameterManager {
    * @param name
    * @param value
    */
-  def parameterParse(name: String, value: String) {
+  def parse(name: String, value: String) {
     parameters.get(name) match {
       case None => pendingParse += name -> value
       case Some((o, f)) => f.set(o, parse(f, value))
@@ -123,7 +123,7 @@ final object ParameterManager {
 
   def parseProperties(line: Properties) {
     JavaConversions.mapAsScalaMap(line).foreach {
-      case (k, v) => parameterParse(k.toString, v.toString)
+      case (k, v) => parse(k.toString, v.toString)
     }
   }
 

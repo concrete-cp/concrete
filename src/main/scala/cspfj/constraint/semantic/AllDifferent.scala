@@ -231,7 +231,5 @@ final class AllDifferent(scope: Variable*)
     setLevel(l)
   }
 
-  override def toString = "allDifferent" + scope.mkString("(", ", ", ")")
-
   val getEvaluation = arity * arity * (max - offset)
 }

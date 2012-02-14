@@ -21,11 +21,11 @@ import java.io.PrintStream
  *
  * @param <T>
  */
-final class ScalaFifos[T <: PTag](val key: Key[T], val nbLists: Int) extends AbstractQueue[T] {
+final class ScalaLifos[T <: PTag](val key: Key[T], val nbLists: Int) extends AbstractQueue[T] {
 
   val KEY_FACTOR = 3.0;
 
-  val queues: Array[Queue[T]] = Array[Queue[T]]().padTo(nbLists, Queue.empty)
+  val queues: Array[List[T]] = Array[List[T]]().padTo(nbLists, Nil)
 
   def this(k: Key[T]) = this(k, 32)
 
@@ -43,11 +43,11 @@ final class ScalaFifos[T <: PTag](val key: Key[T], val nbLists: Int) extends Abs
       if (list < first) first = list
       //Stats.out.println(key.getKey(e) + " : " + list)
       //try
-        queues(list) = queues(list).enqueue(e)
-//      catch {
-//        case exc: IndexOutOfBoundsException =>
-//          throw new IllegalArgumentException(e + " : " + key.getKey(e), exc)
-//      }
+      queues(list) ::= e
+      //      catch {
+      //        case exc: IndexOutOfBoundsException =>
+      //          throw new IllegalArgumentException(e + " : " + key.getKey(e), exc)
+      //      }
       e.setPresent()
       true
     }
@@ -57,10 +57,10 @@ final class ScalaFifos[T <: PTag](val key: Key[T], val nbLists: Int) extends Abs
     if (i >= nbLists) throw new NoSuchElementException
     else if (queues(i).isEmpty) poll(i + 1)
     else {
-      val (e, q) = queues(i).dequeue
-      queues(i) = q
+      val e = queues(i)
+      queues(i) = e.tail
       first = i
-      e
+      e.head
     }
 
   def poll() = {
@@ -72,7 +72,7 @@ final class ScalaFifos[T <: PTag](val key: Key[T], val nbLists: Int) extends Abs
   override def clear() {
     first = nbLists
     PTag.clear()
-    queues.indices.foreach(queues(_) = Queue.empty)
+    queues.indices.foreach(queues(_) = Nil)
   }
 
   def iterator = JavaConversions.asJavaIterator(queues.iterator.flatMap(_.iterator))

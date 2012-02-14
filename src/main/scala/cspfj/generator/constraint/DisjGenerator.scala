@@ -16,7 +16,7 @@ final class DisjGenerator(problem: Problem) extends AbstractGenerator(problem) {
    * (-a v b v c v d...) ^ (a v -b) ^ (a v -c) ^ (a v -d) ^ ...
    */
   private def generateReifiedOr(scope: Seq[Variable], constraint: FunctionalConstraint) {
-    require(constraint.parameters == null,
+    require(constraint.predicate.parameters == None,
       "Negative literals in reified disjunctions are currently not supported");
 
     val reverses = Seq(true).padTo(scope.size, false)
@@ -40,7 +40,7 @@ final class DisjGenerator(problem: Problem) extends AbstractGenerator(problem) {
    * (a v -b v -c v -d...) ^ (-a v b) ^ (-a v c) ^ (-a v d) ^ ...
    */
   private def generateReifiedAnd(scope: Seq[Variable], constraint: FunctionalConstraint) {
-    require(constraint.parameters == null,
+    require(constraint.predicate.parameters == None,
       "Negative literals in reified conjuctions are currently not supported");
 
     val reverses = Seq(false).padTo(scope.size, true)
@@ -76,10 +76,9 @@ final class DisjGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
     constraint match {
       case gC: GeneralConstraint if gC.description == "or" => {
-        val params: IndexedSeq[Boolean] = if (constraint.parameters == null) {
-          IndexedSeq.empty.padTo(scope.size, false)
-        } else {
-          constraint.parameters.split(",\\s*") map { _.toInt > 0 }
+        val params: IndexedSeq[Boolean] = gC.predicate.parameters match {
+          case None => IndexedSeq.empty.padTo(scope.size, false)
+          case Some(params) => params.split(",\\s*") map { _.toInt > 0 }
         }
 
         addConstraint(new Disjunction(scope.toArray, params))
