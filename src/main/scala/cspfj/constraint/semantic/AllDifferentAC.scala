@@ -50,7 +50,7 @@ object AllDifferentAC {
   }
 }
 
-final class AllDifferentAC(scope: Variable*) extends AbstractConstraint(null, scope.toArray)
+final class AllDifferentAC(scope: Variable*) extends AbstractConstraint(scope.toArray)
   with Removals {
 
   val offset = scope map { _.dom.allValues.min } min

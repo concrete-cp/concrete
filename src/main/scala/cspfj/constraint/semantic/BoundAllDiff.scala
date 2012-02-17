@@ -31,7 +31,7 @@ object MIN extends Ordering[HInterval] {
     o1.dom.firstValue - o2.dom.firstValue
 }
 
-final class BoundAllDiff(vars: Variable*) extends AbstractConstraint(null, vars.toArray) {
+final class BoundAllDiff(vars: Variable*) extends AbstractConstraint(vars.toArray) {
   //val PROPAGATE_ON_INSTANTIATIONS = true;
   //val PROPAGATE_ON_BOUNDS = true;
 
@@ -241,7 +241,7 @@ final class BoundAllDiff(vars: Variable*) extends AbstractConstraint(null, vars.
 
   }
 
-  def revise(r: Int) {
+  def revise() {
     //    @tailrec
     //    def rev(q: UOList[Int]) {
     //      if (!q.isEmpty) {
@@ -259,7 +259,7 @@ final class BoundAllDiff(vars: Variable*) extends AbstractConstraint(null, vars.
     //    rev(UOList.build(change.filter(scope(_).dom.size == 1)))
 
     //val mod = 
-    if (propagate()) revise(r)
+    if (propagate()) revise()
     //if (!mod.isEmpty) revise(mod.toList)
   }
 

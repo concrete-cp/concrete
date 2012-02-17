@@ -42,12 +42,12 @@ final class ScalaFifos[T <: PTag](val key: Key[T], val nbLists: Int) extends Abs
       val list = chooseList(e)
       if (list < first) first = list
       //Stats.out.println(key.getKey(e) + " : " + list)
-      //try
+      try
         queues(list) = queues(list).enqueue(e)
-//      catch {
-//        case exc: IndexOutOfBoundsException =>
-//          throw new IllegalArgumentException(e + " : " + key.getKey(e), exc)
-//      }
+      catch {
+        case exc: IndexOutOfBoundsException =>
+          throw new IllegalArgumentException(e + " : " + key.getKey(e), exc)
+      }
       e.setPresent()
       true
     }

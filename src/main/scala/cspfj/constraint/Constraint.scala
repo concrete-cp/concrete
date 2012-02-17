@@ -44,28 +44,9 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
   val getId = Constraint.cId
   Constraint.cId += 1
 
-  /**
-   * arity is the number of variables involved by the constraint
-   */
-  def arity: Int
-  def name: String
-
   private var entailedAtLevel = -1;
 
-  def tuple: Array[Int]
-
-  /**
-   * @return a map containing the positions of variables in the scope of the constraint.
-   */
-  def position: Map[Variable, Int]
-
   def value(position: Int) = scope(position).dom.value(tuple(position))
-
-  /**
-   * @param variable
-   * @return true iff the given variable is involved by the constraint
-   */
-  def isInvolved(variable: Variable): Boolean
 
   /**
    * @return the scope of the constraint
@@ -73,9 +54,21 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
   def scope: Array[Variable];
 
   /**
+   * arity is the number of variables involved by the constraint
+   */
+  val arity = scope.size
+
+  /**
    * @return the scope of the constraint as an unordered Set
    */
-  def scopeSet: Set[Variable]
+  val scopeSet = scope.toSet
+
+  val tuple = new Array[Int](arity)
+
+  /**
+   * @return a map containing the positions of variables in the scope of the constraint.
+   */
+  val position = scope.zipWithIndex.toMap
 
   override def equals(o: Any) = o.asInstanceOf[Constraint].getId == getId
 
@@ -102,7 +95,7 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
 
   override def hashCode = getId
 
-  final def controlTuplePresence(tuple: Array[Int]) = {
+  def controlTuplePresence(tuple: Array[Int]) = {
     Constraint.nbPresenceChecks += 1;
     /** Need high optimization */
 
@@ -121,18 +114,18 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
 
   final def entail() { entailedAtLevel = level }
 
-  def consistentRevise(reviseCount: Int) = try {
-    revise(reviseCount)
+  def consistentRevise() = try {
+    revise()
     true
   } catch {
     case e: UNSATException => false
   }
 
-  def isConsistent(reviseCount: Int): Boolean = {
+  def isConsistent(): Boolean = {
     setLvl(level + 1)
     scope foreach { _.dom.setLevel(level) }
     try {
-      revise(reviseCount)
+      revise()
       true
     } catch {
       case e: UNSATException => false
@@ -142,9 +135,11 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
     }
   }
 
-  def fillRemovals(i: Int) {}
+  def clearRemovals() {}
 
-  def setRemovals(pos: Int, i: Int) {}
+  def setRemovals(pos: Int) {}
+
+  def fillRemovals() {}
 
   /**
    * The constraint propagator.
@@ -152,7 +147,7 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
    * @param revisator
    */
   @throws(classOf[UNSATException])
-  def revise(reviseCount: Int)
+  def revise()
 
   /**
    * @return true iff the constraint is satisfied by the current values of the
@@ -177,8 +172,25 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
 
   def tupleValues = (0 to arity).iterator.map(p => scope(p).dom.value(tuple(p)))
 
-  def sizes: Array[Int]
-
   override def toString = this.getClass.getSimpleName + scope.mkString("(", ", ", ")")
+
+  /**
+   * @param variable
+   * @return true iff the given variable is involved by the constraint
+   */
+  final def isInvolved(variable: Variable) = position.contains(variable)
+
+  @tailrec
+  private def sizes(a: Array[Int], i: Int): Array[Int] =
+    if (i < 0) a
+    else {
+      a(i) = scope(i).dom.size
+      sizes(a, i - 1)
+    }
+
+  final def sizes: Array[Int] =
+    // scope map (_.dom.size)
+    // Optimize this!
+    sizes(new Array[Int](arity), arity - 1)
 
 }

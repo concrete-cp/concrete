@@ -23,14 +23,14 @@ final class InInterval(val variable: Variable, val lb: Int, val ub: Int)
 
   override val getEvaluation = 1
 
-  override def revise(reviseCount: Int) {
+  def revise() {
     dom.removeTo(lb - 1)
     dom.removeFrom(ub + 1);
 
     entail()
   }
 
-  override def isConsistent(reviseCount: Int) = dom.indices(lb).takeWhile(_ <= ub).exists(dom.present)
+  override def isConsistent() = dom.indices(lb).takeWhile(_ <= ub).exists(dom.present)
 
   def check = {
     val value = this.value(0);

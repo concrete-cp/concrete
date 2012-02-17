@@ -91,7 +91,7 @@ final class Eq(val a: Int, val x: Variable, val b: Int, val y: Variable)
   //    change;
   //  }
 
-  override def isConsistent(reviseCount: Int) = {
+  override def isConsistent() = {
     val otherDom = y.dom
 
     x.dom.indices.exists { i =>

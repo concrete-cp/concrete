@@ -4,20 +4,33 @@ import java.util.Arrays
 import cspfj.problem.Variable;
 import scala.annotation.tailrec
 
+object Removals {
+  var count = 0
+  def clear() {
+    count += 1
+  }
+}
+
 trait Removals extends Constraint {
 
   val removals = new Array[Int](arity)
+  
+  fillRemovals()
 
-  final override def setRemovals(p: Int, v: Int) {
-    removals(p) = v
+  final override def setRemovals(p: Int) {
+    removals(p) = Removals.count
   }
 
-  final override def fillRemovals(value: Int) {
-    Arrays.fill(removals, value);
+  final override def clearRemovals() {
+    Arrays.fill(removals, -1)
   }
 
-  final override def revise(reviseCount: Int) {
-    revise(modified(reviseCount))
+  final override def revise() {
+    revise(modified(Removals.count, arity - 1))
+  }
+  
+  override def fillRemovals() {
+    Arrays.fill(removals, Removals.count)
   }
 
   def revise(modified: Seq[Int])
@@ -27,20 +40,24 @@ trait Removals extends Constraint {
    */
   final def skipRevision(modified: Seq[Int]) =
     modified.take(2) match {
-      case Seq(c) => c
-      case _ => -1
+      case Seq() => All
+      case Seq(c) => S(c)
+      case _ => Nop
     }
+
+  trait Skip
+
+  case class S(val position: Int) extends Skip
+  case class Nop() extends Skip
+  case class All() extends Skip
 
   // scope.iterator.zipWithIndex.zip(removals.iterator).filter(t => t._2 >= reviseCount).map(t => t._1)
 
-  private def modified(reviseCount: Int) = {
-    def mod(i: Int): Stream[Int] =
-      if (i < 0) Stream.empty
-      else if (removals(i) >= reviseCount) i #:: mod(i - 1)
-      else mod(i - 1)
+  private def modified(reviseCount: Int, i: Int): Stream[Int] =
+    if (i < 0) Stream.empty
+    else if (removals(i) == reviseCount) i #:: modified(reviseCount, i - 1)
+    else modified(reviseCount, i - 1)
 
-    mod(arity - 1)
-  }
   //scope.iterator.zip(removals.iterator).filter(t => t._2 >= reviseCount).map(t => t._1)
 
 }

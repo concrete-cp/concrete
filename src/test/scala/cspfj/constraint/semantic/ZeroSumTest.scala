@@ -25,7 +25,8 @@ final class ZeroSumTest {
 
   @Test
   def reviseTest() {
-    c.revise(0)
+    (0 until c.arity).foreach(c.setRemovals)
+    c.revise()
 
     assertEquals(Seq(1, 2, 3, 4), v0.dom.values.toSeq);
     assertEquals(Seq(0, 1, 2, 3), v1.dom.values.toSeq);

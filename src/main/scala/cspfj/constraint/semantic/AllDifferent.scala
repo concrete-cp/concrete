@@ -54,7 +54,7 @@ final class VarInclusion extends EnhancedPartialOrdering[VarInfo] with PredefPO[
 }
 
 final class AllDifferent(scope: Variable*)
-  extends AbstractConstraint(null, scope.toArray)
+  extends AbstractConstraint(scope.toArray)
   with Loggable
   with Backtrackable[Set[VarInfo]] {
 
@@ -119,7 +119,7 @@ final class AllDifferent(scope: Variable*)
     restoreLevel(l)
   }
 
-  def revise(rvls: Int) {
+  def revise() {
     @tailrec
     def mod(i: Int, m: List[Variable]): List[Variable] = {
       if (i < 0) m

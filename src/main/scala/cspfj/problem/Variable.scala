@@ -22,10 +22,11 @@ package cspfj.problem;
 import cspfj.constraint.Constraint
 import cspfj.constraint.DynamicConstraint
 import cspfj.priorityqueues.IOBinomialHeapNode
+import cspfj.priorityqueues.Identified
 
 final class Variable(
   val name: String,
-  private var _domain: Domain) extends IOBinomialHeapNode[Variable] {
+  private var _domain: Domain) extends Identified with IOBinomialHeapNode[Variable] {
 
   val getId = Variable.nbV
   Variable.nbV += 1

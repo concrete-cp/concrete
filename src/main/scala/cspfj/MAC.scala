@@ -47,6 +47,9 @@ object MAC {
   @Parameter("mac.heuristic")
   var heuristicClass: Class[_ <: Heuristic] = classOf[CrossHeuristic];
 
+  @Parameter("mac.restartLevel")
+  var restartLevel = 0
+
   ParameterManager.register(this);
 
   override def toString = "MAC parameters"
@@ -68,7 +71,9 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
   private val ngl = new NoGoodLearner(prob, MAC.addConstraint)
   statistics.register("nfr-learner", ngl)
 
-  maxBacktracks = math.max(10, problem.maxDomainSize / 10)
+  maxBacktracks =
+    if (MAC.restartLevel == 0) math.max(10, problem.maxDomainSize / 10)
+    else MAC.restartLevel
 
   //private var prepared = false
 
@@ -195,7 +200,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
       catch {
         case e: EmptyDomainException => // Will backtrack in mac()
       }
-      
+
       val s = nextSolution(decisions.head.variable)
       decisions = s._2
       s._1

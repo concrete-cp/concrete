@@ -12,11 +12,26 @@ import scala.annotation.tailrec
 import cspfj.priorityqueues.ScalaIOBinomialHeap
 import cspfj.util.Loggable
 import cspfj.priorityqueues.ScalaNative
+import cspfj.priorityqueues.ScalaFifos
+import cspfj.Parameter
+import cspfj.ParameterManager
+import cspfj.constraint.Removals
 
 /**
  * @author scand1sk
  *
  */
+object AC3 {
+  @Parameter("ac3v.queue")
+  var queueType: Class[_ <: Queue[Variable]] = classOf[ScalaFifos[Variable]]
+
+  val key = new Key[Variable]() {
+    def getKey(o: Variable) = o.dom.size
+  }
+
+  ParameterManager.register(this);
+}
+
 final class AC3(
   val problem: Problem,
   val queue: Queue[Variable]) extends Filter with Loggable {
@@ -26,19 +41,14 @@ final class AC3(
 
   private var revisions = 0;
 
-  private var reviseCount = 0;
-
   def this(problem: Problem) =
-    this(problem, new ScalaIOBinomialHeap[Variable](new Key[Variable]() {
-      def getKey(o: Variable) = o.dom.size
-    }));
+    this(problem, AC3.queueType.getConstructor(classOf[Key[Variable]]).newInstance(AC3.key))
 
   def reduceAll() = {
-    reviseCount += 1;
     queue.clear();
     problem.variables.foreach(queue.offer)
-    problem.constraints.foreach {
-      _.fillRemovals(reviseCount)
+    problem.constraints.foreach { c =>
+      (0 until c.arity).foreach(c.setRemovals)
     }
 
     reduce()
@@ -49,7 +59,7 @@ final class AC3(
     queue.offer(v)
     v.constraints.zipWithIndex.foreach {
       case (c, i) =>
-        c.setRemovals(v.positionInConstraint(i), reviseCount)
+        c.setRemovals(v.positionInConstraint(i))
     }
   }
 
@@ -58,7 +68,7 @@ final class AC3(
     if (i >= 0) {
       val c = constraints(i)
       if (c ne skip)
-        c.setRemovals(v.positionInConstraint(i), reviseCount)
+        c.setRemovals(v.positionInConstraint(i))
 
       setRemovals(v, constraints, skip, i - 1)
     }
@@ -89,13 +99,13 @@ final class AC3(
   private def prepareQueue(modifiedConstraints: Iterator[Constraint]): Boolean = {
     if (modifiedConstraints.hasNext) {
       val c = modifiedConstraints.next
-      c.fillRemovals(reviseCount)
+      (0 until c.arity).foreach(c.setRemovals)
 
       val prev = c.sizes
 
-      if (c.consistentRevise(reviseCount)) {
+      if (c.consistentRevise()) {
 
-        c.fillRemovals(-1)
+        c.clearRemovals()
 
         updateQueue(prev, c)
         prepareQueue(modifiedConstraints)
@@ -108,21 +118,21 @@ final class AC3(
   }
 
   def reduceAfter(constraints: Iterable[Constraint]): Boolean = {
-    reviseCount += 1
+    Removals.clear()
     queue.clear()
     prepareQueue(constraints.iterator) && reduce()
   }
 
   def reduceAfter(variable: Variable) =
     variable == null || {
-      reviseCount += 1
+      Removals.clear()
       queue.clear()
       prepareQueue(variable)
       reduce()
     }
 
   def reduceFrom(modVar: Array[Int], modCons: Array[Int], cnt: Int): Boolean = {
-    reviseCount += 1;
+    Removals.clear()
     queue.clear();
     // LOGGER.fine("reduce after " + cnt);
 
@@ -163,8 +173,8 @@ final class AC3(
       } else {
         revisions += 1;
         val prev = c.sizes
-        if (c.consistentRevise(reviseCount)) {
-          c.fillRemovals(-1)
+        if (c.consistentRevise()) {
+          c.clearRemovals()
 
           updateQueue(prev, c)
           reduce(itr)

@@ -13,7 +13,7 @@ final class Abs(val result: Variable, val v0: Variable) extends AbstractConstrai
 
   private def valid(index: Int, variable: Variable) = index >= 0 && variable.dom.present(index)
 
-  def revise(reviseCount: Int) =
+  def revise() =
     revise(result, { i =>
       !valid(corresponding1(i), v0) && !valid(corresponding2(i), v0)
     }) && revise(v0, { i => !valid(correspondingR(i), result) })

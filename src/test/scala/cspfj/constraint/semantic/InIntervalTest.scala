@@ -23,12 +23,12 @@ final class InIntervalTest {
 
   @Test
   def testIsConsistent() {
-    assertTrue(constraint.isConsistent(0));
+    assertTrue(constraint.isConsistent());
   }
 
   @Test
   def testRevise() {
-    constraint.revise(0)
+    constraint.revise()
     assertEquals(Seq(2, 3), domain.values.toSeq);
   }
 

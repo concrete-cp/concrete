@@ -55,7 +55,7 @@ final class ExtensionConstraintGeneral(matrix: Matrix, shared: Boolean, scope: A
 
   override def reviseVariable(position: Int) = {
     if (matrixManager.supportCondition(position)) {
-      assert(try { super.revise(position); true }
+      assert(try { super.reviseVariable(position); true }
       catch {
         case e: UNSATException => false
       })

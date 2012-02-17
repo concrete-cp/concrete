@@ -8,7 +8,7 @@ import cspfj.UNSATException
 import scala.annotation.tailrec
 
 final class Disjunction(scope: Array[Variable],
-  val reverses: IndexedSeq[Boolean]) extends AbstractConstraint(null, scope) {
+  val reverses: IndexedSeq[Boolean]) extends AbstractConstraint(scope) {
 
   require(scope forall (v => v.dom.isInstanceOf[BooleanDomain] && v.dom.size == 2),
     "Only non-constant boolean domains are allowed")
@@ -23,6 +23,7 @@ final class Disjunction(scope: Array[Variable],
     case Some(w) => w
     case None => {
       setTrue(watch1)
+      entail()
       watch1
     }
   }
@@ -35,26 +36,46 @@ final class Disjunction(scope: Array[Variable],
 
   override def toString = "\\/" + scope.mkString("(", ", ", ")")
 
-  override def revise(reviseCount: Int) {
-    if (isFalse(watch1)) {
+  def revise() {
+    if (isTrue(watch1) || isTrue(watch2)) entail()
+    else {
+      if (isFalse(watch1)) {
 
-      seekWatch(watch2) match {
-        case Some(w) => watch1 = w
-        case None => {
-          setTrue(watch2)
-          return
+        seekWatch(watch2) match {
+          case Some(w) => {
+            watch1 = w
+            if (isTrue(w)) {
+              entail()
+              return
+            }
+          }
+          case None => {
+            setTrue(watch2)
+            entail()
+            return
+          }
         }
-      }
 
+      } //else if (isTrue(watch1)) entail()
+
+      if (isFalse(watch2)) {
+
+        seekWatch(watch1) match {
+          case Some(w) => {
+            watch2 = w
+            if (isTrue(w)) entail()
+          }
+          case None =>
+            setTrue(watch1)
+            entail()
+        }
+
+      } //else if (isTrue(watch2)) entail()
     }
-    if (isFalse(watch2)) {
+  }
 
-      seekWatch(watch1) match {
-        case Some(w) => watch2 = w
-        case None => setTrue(watch1)
-      }
-
-    }
+  private def isTrue(position: Int) = {
+    if (reverses(position)) domains(position).isFalse else domains(position).isTrue
   }
 
   private def isFalse(position: Int) =

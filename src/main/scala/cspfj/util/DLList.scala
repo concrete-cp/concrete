@@ -15,6 +15,13 @@ class DLList[A]() extends LinearSeq[A]
   headNode.prev = headNode
   headNode.next = headNode
 
+  var _size = 0
+
+  override def size = {
+    assert(_size == iterator.size)
+    _size
+  }
+
   def update(idx: Int, elem: A) {
     atLocation(idx)(_.item = elem)(outOfBounds(idx))
   }
@@ -39,12 +46,17 @@ class DLList[A]() extends LinearSeq[A]
   def merge(list: DLList[A]) {
     if (isEmpty) {
       headNode = list.headNode
+      _size = list.size
     } else if (!list.isEmpty) {
+
+      _size += list.size
+
       list.headNode.next.prev = headNode.prev
       headNode.prev.next = list.headNode.next
 
       list.headNode.prev.next = headNode
       headNode.prev = list.headNode.prev
+
     }
   }
 
@@ -54,6 +66,7 @@ class DLList[A]() extends LinearSeq[A]
     val newNode = new ContentNode(elem, headNode.prev, headNode)
     headNode.prev.next = newNode
     headNode.prev = newNode
+    _size += 1
   }
 
   def addNode(newNode: ContentNode[A]) {
@@ -61,6 +74,7 @@ class DLList[A]() extends LinearSeq[A]
     newNode.next = headNode
     headNode.prev.next = newNode
     headNode.prev = newNode
+    _size += 1
   }
 
   override def head = {
@@ -87,19 +101,10 @@ class DLList[A]() extends LinearSeq[A]
     }
 
     def remove() = {
+      _size -= 1
       lastReturned.prev.next = lastReturned.next
       lastReturned.next.prev = lastReturned.prev
       lastReturned
-    }
-  }
-
-  override def reverseIterator = new Iterator[A] {
-    var current = headNode.prev
-    def hasNext = current != headNode
-    def next() = {
-      val elem = current.asInstanceOf[ContentNode[A]].item
-      current = current.prev
-      elem
     }
   }
 

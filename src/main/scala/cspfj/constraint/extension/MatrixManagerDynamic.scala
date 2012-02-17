@@ -5,33 +5,24 @@ import java.util.Arrays
 import scala.collection.mutable.DoubleLinkedList
 import scala.annotation.tailrec
 import cspfj.util.DLList
+import cspfj.util.Backtrackable
 
 final class MatrixManagerDynamic(
   scope: Array[Variable],
   private var tupleSet: TupleSet,
   shared: Boolean,
-  tuple: Array[Int]) extends AbstractMatrixManager(scope, tupleSet, shared, tuple) with Iterable[Array[Int]] {
+  tuple: Array[Int])
+  extends AbstractMatrixManager(scope, tupleSet, shared, tuple)
+  with Iterable[Array[Int]]
+  with Backtrackable[List[Array[Int]]] {
 
-  private val allTuples: DLList[Array[Int]] = new DLList()
-  tupleSet.foreach(allTuples.add)
+  private var allTuples: List[Array[Int]] = tupleSet.toList
 
-  private var removedTuples: List[(Int, DLList[Array[Int]])] = Nil
+  def save = allTuples
 
-  var _level = 0;
-
-  def level = _level
-
-  def level_=(newLevel: Int) {
-    if (newLevel < level) {
-      while (removedTuples != Nil && removedTuples.head._1 >= newLevel) {
-        allTuples.merge(removedTuples.head._2)
-        removedTuples = removedTuples.tail
-      }
-    }
-    _level = newLevel
+  def restore(d: List[Array[Int]]) {
+    allTuples = d
   }
-
-  def iterator = new LLIterator()
 
   override def unshareMatrix = {
     tupleSet = super.unshareMatrix.asInstanceOf[TupleSet]
@@ -40,37 +31,14 @@ final class MatrixManagerDynamic(
 
   override def copy = throw new UnsupportedOperationException
 
-  final class LLIterator extends Iterator[Array[Int]] {
-    private val itr = allTuples.iterator
+  override def size = allTuples.size
 
-    def hasNext = itr.hasNext
-    def next() = itr.next()
-
-    def remove() { remove(level) }
-
-    def remove(level: Int) {
-      assert(removedTuples.isEmpty || removedTuples.head._1 <= level)
-      val removed = itr.remove()
-
-      val histo =
-        if (removedTuples == Nil || removedTuples.head._1 < level) {
-          val h: DLList[Array[Int]] = new DLList()
-
-          removedTuples ::= (level, h)
-
-          h
-        } else {
-          removedTuples.head._2
-        }
-
-      histo.addNode(removed)
-
-    }
-
+  def filterTuples(f: Array[Int] => Boolean) {
+    allTuples = allTuples.filter(f)
   }
+  
+  def iterator = allTuples.iterator
 
-  def getSize = tupleSet.size
-
-  override def toString = "MatrixManagerDynamic managing " + getSize + " tuples"
+  override def toString = "MatrixManagerDynamic managing " + size + " tuples"
 
 }

@@ -19,29 +19,39 @@ trait VariablePerVariable extends Constraint with Removals with Loggable {
   def reviseVariable(position: Int)
 
   final def revise(modified: Seq[Int]) {
-    if (!modified.isEmpty) {
-      val skip = skipRevision(modified)
+    @tailrec
+    def reviseNS(i: Int) {
 
-      @tailrec
-      def revise(singletons: Int, i: Int): Int = {
-
-        if (i < 0) singletons
-        else {
-          if (i != skip) this.reviseVariable(i)
-
-          if (scope(i).dom.size == 1) revise(singletons + 1, i - 1)
-          else revise(singletons, i - 1)
-        }
-
-      }
-
-      val singletons = revise(0, scope.length - 1)
-
-      if (singletons >= arity - 1) {
-        entail();
+      if (i >= 0) {
+        this.reviseVariable(i)
+        reviseNS(i - 1)
       }
 
     }
+
+    @tailrec
+    def reviseS(i: Int, skip: Int) {
+
+      if (i >= 0) {
+        if (i == skip) reviseNS(i - 1)
+        else {
+          this.reviseVariable(i)
+          reviseS(i - 1, skip)
+        }
+      }
+
+    }
+
+    skipRevision(modified) match {
+      case S(s) => reviseS(scope.length - 1, s)
+      case Nop => reviseNS(scope.length - 1)
+      case All =>
+    }
+
+    if (scope.count(_.dom.size == 1) >= arity - 1) {
+      entail();
+    }
+
   }
 
 }

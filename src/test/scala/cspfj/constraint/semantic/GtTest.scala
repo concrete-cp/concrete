@@ -21,7 +21,7 @@ final class GtTest {
   def testRevise1() {
 
     val c = new Gt(v1, v2, true);
-    c.revise(0);
+    c.revise();
 
     assertEquals(Seq(4), v1.dom.values.toSeq);
     assertEquals(Seq(3), v2.dom.values.toSeq);
@@ -31,7 +31,7 @@ final class GtTest {
   @Test
   def testRevise2() {
     val c = new Gt(v1, v2, false);
-    c.revise(0);
+    c.revise();
 
     assertEquals(Seq(3, 4), v1.dom.values.toSeq);
     assertEquals(Seq(3, 4), v2.dom.values.toSeq);

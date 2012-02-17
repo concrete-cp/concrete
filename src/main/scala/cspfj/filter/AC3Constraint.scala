@@ -16,26 +16,24 @@ import cspfj.constraint.Removals
 import cspfj.problem.EmptyDomainException
 
 object AC3Constraint {
-  @Parameter("ac.queue")
+  @Parameter("ac3c.queue")
   var queueType: Class[_ <: Queue[Constraint]] = classOf[ScalaFifos[Constraint]]
 
-  @Parameter("ac.key")
+  @Parameter("ac3c.key")
   var key = new Key[Constraint]() {
     def getKey(o: Constraint) = o.getEvaluation
 
-    override def toString = "object.getEvaluation"
+    override def toString = "constraint.getEvaluation"
   };
-
-  @Statistic
-  var revisionCount = 0
 
   ParameterManager.register(this);
 
   def control(problem: Problem) = {
 
     for (c <- problem.constraints) {
+      c.fillRemovals()
       val sizes = c.scope map (_.dom.size)
-      assert(c.consistentRevise(-1), c + " is inconsistent");
+      assert(c.consistentRevise(), c + " is inconsistent");
       assert(
         sizes.sameElements(c.scope map (_.dom.size)),
         c + " was revised!")
@@ -59,7 +57,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
     this(problem, AC3Constraint.queueType.getConstructor(classOf[Key[Constraint]]).newInstance(AC3Constraint.key))
 
   def reduceAll() = {
-    AC3Constraint.revisionCount += 1;
+    Removals.clear()
     queue.clear();
     addAll();
     reduce();
@@ -67,7 +65,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
   }
 
   def reduceFrom(modVar: Array[Int], modCons: Array[Int], cnt: Int) = {
-    AC3Constraint.revisionCount += 1;
+    Removals.clear()
     queue.clear();
     // LOGGER.fine("reduce after " + cnt);
     for (v <- problem.variables) {
@@ -77,8 +75,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
             if (!c.isEntailed) {
               c match {
                 case c: Removals =>
-                  c.setRemovals(v.positionInConstraint(j),
-                    AC3Constraint.revisionCount);
+                  c.setRemovals(v.positionInConstraint(j));
               }
 
               queue.offer(c);
@@ -90,10 +87,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
     if (modCons != null) {
       problem.constraints.foreach { c =>
         if (modCons(c.getId) > cnt && !c.isEntailed) {
-          c match {
-            case c: Removals => c.fillRemovals(AC3Constraint.revisionCount)
-          }
-
+          c.fillRemovals()
           queue.offer(c);
         }
       }
@@ -103,10 +97,11 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
   }
 
   def reduceAfter(variable: Variable) = {
-    AC3Constraint.revisionCount += 1;
+    
     if (variable == null) {
       true;
     } else {
+      Removals.clear()
       queue.clear();
       updateQueue(variable, null)
       //      variable.constraints.iterator.zipWithIndex.foreach {
@@ -120,7 +115,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
 
   private def enqueue(c: Constraint, modified: Int) {
     if (!c.isEntailed) {
-      c.setRemovals(modified, AC3Constraint.revisionCount);
+      c.setRemovals(modified);
       queue.offer(c);
     }
   }
@@ -166,9 +161,9 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
       revisions += 1;
       val sizes = constraint.sizes
 
-      if (constraint.consistentRevise(AC3Constraint.revisionCount)) {
+      if (constraint.consistentRevise()) {
         updateQueue(sizes, constraint, constraint.arity - 1)
-        constraint.fillRemovals(-1);
+        constraint.clearRemovals();
         reduce()
       } else {
         constraint.weight += 1;
@@ -180,7 +175,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
   private def addAll() {
     problem.constraints.foreach { c =>
       if (!c.isEntailed) {
-        c.fillRemovals(AC3Constraint.revisionCount);
+        c.fillRemovals()
         queue.offer(c);
       }
     }
@@ -191,11 +186,11 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
   def getStatistics = Map("revisions" -> revisions)
 
   def reduceAfter(constraints: Iterable[Constraint]) = {
-    AC3Constraint.revisionCount += 1;
+    Removals.clear()
     queue.clear();
 
     for (c <- constraints if !c.isEntailed) {
-      c.fillRemovals(AC3Constraint.revisionCount);
+      c.fillRemovals()
       queue.offer(c);
     }
 

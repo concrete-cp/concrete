@@ -55,7 +55,7 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Abstract
     }
   }
 
-  def revise(reviseCount: Int) {
+  def revise() {
     /**
      * Upper bounds
      */

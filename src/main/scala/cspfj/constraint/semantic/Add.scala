@@ -6,7 +6,7 @@ import cspfj.constraint.AbstractConstraint
 import cspfj.constraint.Residues
 
 final class Add(val result: Variable, val v0: Variable, val v1: Variable)
-  extends AbstractConstraint(null, Array(result, v0, v1)) with Residues {
+  extends AbstractConstraint(Array(result, v0, v1)) with Residues {
 
   def check = value(0) == value(1) + value(2)
 

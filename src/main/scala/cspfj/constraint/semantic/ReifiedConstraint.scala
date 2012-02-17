@@ -8,15 +8,24 @@ import cspfj.problem.TRUE
 import cspfj.problem.UNKNOWN
 import cspfj.problem.Variable
 import cspfj.UNSATException
+import cspfj.constraint.Removals
 
 final class ReifiedConstraint(
   controlVariable: Variable,
   val positiveConstraint: Constraint,
   val negativeConstraint: Constraint)
-  extends AbstractConstraint(controlVariable +: positiveConstraint.scope) {
+  extends AbstractConstraint(controlVariable +: (positiveConstraint.scope ++ negativeConstraint.scope).distinct) {
 
   require(positiveConstraint.scope forall scope.tail.contains)
   require(negativeConstraint.scope forall scope.tail.contains)
+
+  val positivePositions = (0 until positiveConstraint.arity) map { i =>
+    position(positiveConstraint.scope(i)) -> i
+  } toMap
+
+  val negativePositions = (0 until negativeConstraint.arity) map { i =>
+    position(negativeConstraint.scope(i)) -> i
+  } toMap
 
   val controlDomain = controlVariable.dom match {
     case bd: BooleanDomain => bd
@@ -44,33 +53,32 @@ final class ReifiedConstraint(
     negativeConstraint.restoreLvl(l)
   }
 
-  override def revise(reviseCount: Int) {
+  def revise() {
     controlDomain.status match {
       case UNKNOWN =>
-        if (!positiveConstraint.isConsistent(reviseCount)) {
+        if (!positiveConstraint.isConsistent) {
           controlDomain.setFalse();
-          noReifyRevise(negativeConstraint, reviseCount)
-        } else if (!negativeConstraint.isConsistent(reviseCount)) {
+          entail()
+        }
+        if (!negativeConstraint.isConsistent) {
+          if (!controlDomain.isUnknown) throw UNSATException.e
           controlDomain.setTrue();
-          noReifyRevise(positiveConstraint, reviseCount)
-        } else true
+          entail()
+        }
 
-      case TRUE => noReifyRevise(positiveConstraint, reviseCount);
-      case FALSE => noReifyRevise(negativeConstraint, reviseCount);
+      case TRUE => noReifyRevise(positiveConstraint);
+      case FALSE => noReifyRevise(negativeConstraint);
 
       case _ => throw new IllegalStateException
 
     }
   }
 
-  private def noReifyRevise(constraint: Constraint, reviseCount: Int) {
-    val actualRevise = if (controlRemovals >= reviseCount) {
-      -1;
-    } else {
-      reviseCount;
-    }
+  private def noReifyRevise(constraint: Constraint) {
+    if (controlRemovals != Removals.count)
+      constraint.fillRemovals()
 
-    constraint.revise(actualRevise)
+    constraint.revise()
     if (constraint.isEntailed) {
       entail();
     }
@@ -82,26 +90,38 @@ final class ReifiedConstraint(
     (value(0) == 1) == positiveConstraint.check
   }
 
-  def getEvaluation =
-    positiveConstraint.getEvaluation + negativeConstraint.getEvaluation
+  def getEvaluation = controlDomain.status match {
+    case UNKNOWN => positiveConstraint.getEvaluation + negativeConstraint.getEvaluation
+    case TRUE => positiveConstraint.getEvaluation
+    case FALSE => negativeConstraint.getEvaluation
+    case _ => throw new IllegalStateException
+  }
 
   override def toString = scope(0) + " == (" + positiveConstraint + ")";
 
   var controlRemovals = 0
 
-  override def setRemovals(position: Int, value: Int) {
-    if (position == 0) {
-      controlRemovals = value;
-    } else {
-      positiveConstraint.setRemovals(position - 1, value);
-      negativeConstraint.setRemovals(position - 1, value);
+  override def setRemovals(position: Int) {
+    if (position == 0) controlRemovals = position
+    else {
+      positivePositions.get(position) match {
+        case Some(p) => positiveConstraint.setRemovals(p)
+        case None =>
+      }
+      negativePositions.get(position) match {
+        case Some(p) => negativeConstraint.setRemovals(p)
+        case None =>
+      }
     }
   }
 
-  override def fillRemovals(value: Int) {
-    controlRemovals = value;
-    positiveConstraint.fillRemovals(value);
-    negativeConstraint.fillRemovals(value);
+  override def clearRemovals() {
+    positiveConstraint.clearRemovals();
+    negativeConstraint.clearRemovals();
   }
 
+  override def fillRemovals() {
+    positiveConstraint.fillRemovals()
+    negativeConstraint.fillRemovals()
+  }
 }

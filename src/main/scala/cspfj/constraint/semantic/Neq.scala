@@ -8,7 +8,7 @@ final class Neq(v0: Variable, v1: Variable) extends AbstractConstraint(Array(v0,
 
   def check = value(0) != value(1)
 
-  def revise(revisionCount: Int) {
+  def revise() {
     revise(v0, v1)
     revise(v1, v0)
     if (!isEntailed && (v0.dom disjoint v1.dom)) entail()

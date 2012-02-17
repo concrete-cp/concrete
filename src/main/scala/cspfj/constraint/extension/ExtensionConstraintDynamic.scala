@@ -24,97 +24,87 @@ import cspfj.problem.Variable
 import cspfj.util.BitVector
 import scala.collection.JavaConversions
 import scala.collection.mutable.BitSet
+import cspfj.constraint.Removals
+import cspfj.constraint.Constraint
+import scala.annotation.tailrec
 
 final class ExtensionConstraintDynamic(
   scope: Array[Variable], matrix: TupleSet, shared: Boolean) extends AbstractConstraint(scope)
-  with ExtensionConstraint {
+  with ExtensionConstraint with Removals {
 
-  private val dynamic = new MatrixManagerDynamic(scope, matrix, shared, tuple)
+  val matrixManager = new MatrixManagerDynamic(scope, matrix, shared, tuple)
 
   private val found =
-    (0 until arity) map (p => BitVector.newBitVector(scope(p).dom.maxSize)) toIndexedSeq
+    (0 until arity) map (p => BitVector.newBitVector(scope(p).dom.maxSize)) toArray
 
   override def setLvl(l: Int) {
     super.setLvl(l)
-    dynamic.level = l
+    matrixManager.setLevel(l)
   }
 
   override def restoreLvl(l: Int) {
     super.restoreLvl(l)
-    dynamic.level = l
+    matrixManager.restoreLevel(l)
   }
 
-  def revise(reviseCount: Int) = {
-    //    var found: Set[(Variable, Int)] = Set.empty
-    //
-    //    val itr = dynamic.iterator
-    //    for (tuple <- itr) {
-    //      if (controlTuplePresence(tuple)) {
-    //        found ++= scope.zip(tuple)
-    //      } else {
-    //        itr.remove();
-    //      }
-    //    }
+  def revise(mod: Seq[Int]) = {
+    found.foreach(_.fill(false))
 
-    //    val itr = dynamic.iterator
-    //    
-    //    val found: Iterator[Iterator[(Variable, Int)]] = itr map { tuple =>
-    //      if (controlTuplePresence(tuple)) {
-    //        scope.iterator.zip(tuple.iterator)
-    //      } else {
-    //        Iterator.empty
-    //      }
-    //    }
-    //
-    //    filter(found.flatten.toSet, revisator);
-
-    found.foreach(bs => bs.fill(false))
-
-    val itr = dynamic.iterator
-    for (tuple <- itr) {
-      if (controlTuplePresence(tuple)) {
-        tuple.iterator.zipWithIndex.foreach(p => found(p._2).set(p._1))
+    matrixManager.filterTuples { tuple =>
+      if (controlTuplePresence(tuple, mod)) {
+        assert(controlTuplePresence(tuple))
+        setFound(tuple, found, arity - 1)
+        true
       } else {
-        itr.remove()
+        assert(!controlTuplePresence(tuple))
+        false
       }
+
     }
 
-    filter(found)
+    filter(found, arity - 1)
+
+    //if (scope.map(_.dom.size).product == matrixManager.size) entail()
 
   }
 
-  //  private def filter(found: Set[(Variable, Int)], revisator: RevisionHandler): Boolean = {
-  //    for (v <- scope) {
-  //      var rev = false
-  //      for (i <- v.dom.indices if !found((v, i))) {
-  //        v.dom.remove(i)
-  //        rev = true
-  //      }
-  //      if (rev) {
-  //        if (v.dom.size <= 0) return false
-  //        revisator.revised(this, v)
-  //      }
-  //    }
-  //
-  //    true
-  //  }
+  @tailrec
+  private def setFound(tuple: Array[Int], found: Array[BitVector], p: Int) {
+    if (p >= 0) {
+      found(p).set(tuple(p))
+      setFound(tuple, found, p - 1)
+    }
+  }
 
-  private def filter(found: IndexedSeq[BitVector]): Boolean = {
-    for ((v, p) <- scope.iterator.zipWithIndex) {
+  private def controlTuplePresence(tuple: Array[Int], mod: Seq[Int]) = {
+    Constraint.nbPresenceChecks += 1;
+    /** Need high optimization */
+
+    @tailrec
+    def control(m: Seq[Int]): Boolean =
+      if (m.isEmpty) true
+      else {
+        val i = m.head
+        scope(i).dom.present(tuple(i)) && control(m.tail)
+      }
+
+    control(mod)
+  }
+
+  private def filter(found: Array[BitVector], p: Int) {
+    if (p >= 0) {
+      val v = scope(p)
       for (i <- v.dom.indices if !found(p)(i)) {
         v.dom.remove(i)
       }
-
-      if (v.dom.size <= 0) return false
-
+      filter(found, p - 1)
     }
 
-    true
   }
 
-  def check = dynamic.check
+  def check = matrixManager.check
 
-  def removeTuple(tuple: Array[Int]) = dynamic.removeTuple(tuple)
+  def removeTuple(tuple: Array[Int]) = matrixManager.removeTuple(tuple)
 
   private def matches(tuple: Array[Int], base: Array[Int]) = {
     assert(tuple.length == base.length);
@@ -122,26 +112,22 @@ final class ExtensionConstraintDynamic(
   }
 
   def removeTuples(base: Array[Int]) = {
-    dynamic.unshareMatrix();
+    matrixManager.unshareMatrix();
     var removed = 0;
-    val itr = dynamic.iterator
-    while (itr.hasNext) {
-      val t = itr.next
-
+    matrixManager.filter { t =>
       if (matches(t, base)) {
-        // logger.fine("Removing " + Arrays.toString(currentTuple));
-        itr.remove();
-        assert(!dynamic.isTrue(t));
         removed += 1;
-      }
+        false
+      } else true
     }
+
     removed;
   }
 
-  def matrixManager = dynamic
+  //def matrixManager = matrixManager
 
-  def getEvaluation = arity * dynamic.size
+  def getEvaluation = arity * matrixManager.size
 
-  override def toString = arity + "-ary STR w/ " + dynamic
+  override def toString = arity + "-ary STR w/ " + matrixManager
 
 }

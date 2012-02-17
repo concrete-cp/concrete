@@ -50,7 +50,7 @@ final class EqCached(val a: Int, val x: Variable, val b: Int, val y: Variable)
     change;
   }
 
-  override def isConsistent(reviseCount: Int) = {
+  override def isConsistent() = {
     val otherDom = y.dom
     val correspond = corresponding(0);
     x.dom.indices.exists { i =>

@@ -19,7 +19,7 @@ final class ZeroSum(
 
   def getEvaluation = arity
 
-  def revise(reviseCount: Int) {
+  def revise() {
     val bounds = scope.iterator.zip(factors.iterator).map {
       case (v, f) => v.dom.valueInterval * f
     } reduce { _ + _ }

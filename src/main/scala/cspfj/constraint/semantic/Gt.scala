@@ -56,7 +56,7 @@ final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict
 
   }
 
-  override def revise(reviseCount: Int) {
+  def revise() {
     assert(scope(0).dom.size > 0 && scope(1).dom.size > 0)
 
     removeLt(min(1) - constant, 0)
@@ -69,7 +69,7 @@ final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict
 
   }
 
-  override def isConsistent(reviseCount: Int) = {
+  override def isConsistent() = {
     val max0 = max(0) + constant;
     val min1 = min(1)
     max0 > min1 || !strict && max0 == min1;

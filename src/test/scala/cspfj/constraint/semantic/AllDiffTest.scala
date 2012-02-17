@@ -15,6 +15,6 @@ class AllDiffTest {
 
     val c = new AllDifferent(v1, v2, v3, v4, v5)
 
-    c.revise(-1)
+    c.revise()
   }
 }
