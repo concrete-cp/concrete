@@ -34,7 +34,9 @@ final class MatrixManagerDynamic(
   override def size = allTuples.size
 
   def filterTuples(f: Array[Int] => Boolean) {
+    val oldSize = size
     allTuples = allTuples.filter(f)
+    if (size != oldSize) altering()
   }
   
   def iterator = allTuples.iterator

@@ -27,10 +27,11 @@ import scala.collection.mutable.BitSet
 import cspfj.constraint.Removals
 import cspfj.constraint.Constraint
 import scala.annotation.tailrec
+import cspfj.util.Loggable
 
 final class ExtensionConstraintDynamic(
   scope: Array[Variable], matrix: TupleSet, shared: Boolean) extends AbstractConstraint(scope)
-  with ExtensionConstraint with Removals {
+  with ExtensionConstraint with Removals with Loggable {
 
   val matrixManager = new MatrixManagerDynamic(scope, matrix, shared, tuple)
 
@@ -48,6 +49,7 @@ final class ExtensionConstraintDynamic(
   }
 
   def revise(mod: Seq[Int]) = {
+    fine("Revising " + this + " : " + mod.toList)
     found.foreach(_.fill(false))
 
     matrixManager.filterTuples { tuple =>
@@ -64,7 +66,9 @@ final class ExtensionConstraintDynamic(
 
     filter(found, arity - 1)
 
-    //if (scope.map(_.dom.size).product == matrixManager.size) entail()
+    val card = scope.map(v => BigInt(v.dom.size)).product
+    assert(card >= matrixManager.size, card + " < " + matrixManager.size + "!")
+    if (card == matrixManager.size) entail()
 
   }
 
@@ -128,6 +132,6 @@ final class ExtensionConstraintDynamic(
 
   def getEvaluation = arity * matrixManager.size
 
-  override def toString = arity + "-ary STR w/ " + matrixManager
+  override def toString = "STR(" + scope.mkString(", ") + ") w/ " + matrixManager
 
 }
