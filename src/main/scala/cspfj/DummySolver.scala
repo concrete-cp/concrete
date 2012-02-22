@@ -19,13 +19,28 @@
 
 package cspfj;
 
-import cspfj.filter.AC3;
+import cspfj.filter.AC3
 import cspfj.problem.Problem;
+import cspfj.filter.AC3Constraint
+import cspfj.filter.Filter
+
+object DummySolver {
+  @Parameter("dummy.filter")
+  var filterClass: Class[_ <: Filter] = classOf[AC3Constraint];
+
+  ParameterManager.register(this);
+}
 
 final class DummySolver(prob: Problem) extends Solver(prob) {
 
-  def nextSolution =
-    if (preprocess(new AC3(problem))) Some(Map.empty) else None
+  val filter = DummySolver.filterClass.getConstructor(classOf[Problem]).newInstance(problem);
+  statistics.register("filter", filter);
+
+  def nextSolution = {
+    println(filter)
+
+    if (preprocess(filter)) Some(Map.empty) else None
+  }
 
   override def toString = "dummy"
 

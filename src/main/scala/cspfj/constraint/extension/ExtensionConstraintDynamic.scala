@@ -48,10 +48,12 @@ final class ExtensionConstraintDynamic(
     matrixManager.restoreLevel(l)
   }
 
-  def revise(mod: Seq[Int]) = {
-    fine("Revising " + this + " : " + mod.toList)
+  def revise(modified: Seq[Int]) = {
+    //fine("Revising " + this + " : " + mod.toList)
     found.foreach(_.fill(false))
 
+    val mod = modified.toList
+    
     matrixManager.filterTuples { tuple =>
       if (controlTuplePresence(tuple, mod)) {
         assert(controlTuplePresence(tuple))
@@ -68,7 +70,10 @@ final class ExtensionConstraintDynamic(
 
     val card = scope.map(v => BigInt(v.dom.size)).product
     assert(card >= matrixManager.size, card + " < " + matrixManager.size + "!")
-    if (card == matrixManager.size) entail()
+    if (card == matrixManager.size) {
+      //logger.info("Entailing " + this)
+      entail()
+    }
 
   }
 

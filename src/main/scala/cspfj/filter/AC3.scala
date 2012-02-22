@@ -63,36 +63,41 @@ final class AC3(
     }
   }
 
-  @tailrec
-  private def setRemovals(v: Variable, constraints: IndexedSeq[Constraint], skip: Constraint, i: Int) {
-    if (i >= 0) {
-      val c = constraints(i)
-      if (c ne skip)
-        c.setRemovals(v.positionInConstraint(i))
-
-      setRemovals(v, constraints, skip, i - 1)
-    }
-  }
-
   private def setRemovals(v: Variable, skip: Constraint) {
-    setRemovals(v, v.constraints, skip, v.constraints.size - 1)
-  }
 
-  @tailrec
-  private def updateQueue(prev: Array[Int], constraint: Constraint, scope: Array[Variable], i: Int) {
-    if (i >= 0) {
-      val variable = scope(i)
-      if (prev(i) != variable.dom.size) {
-        queue.offer(variable)
-        setRemovals(variable, constraint)
+    val constraints = v.constraints
+
+    def setR(i: Int) {
+      if (i >= 0) {
+        val c = constraints(i)
+        if (c ne skip)
+          c.setRemovals(v.positionInConstraint(i))
+
+        setR(i - 1)
       }
-      updateQueue(prev, constraint, scope, i - 1)
     }
+
+    setR(v.constraints.size - 1)
   }
 
   def updateQueue(prev: Array[Int], constraint: Constraint) {
     /** Requires high optimization */
-    updateQueue(prev, constraint, constraint.scope, constraint.arity - 1)
+
+    val scope = constraint.scope
+
+    @tailrec
+    def uQ(i: Int) {
+      if (i >= 0) {
+        val variable = scope(i)
+        if (prev(i) != variable.dom.size) {
+          queue.offer(variable)
+          setRemovals(variable, constraint)
+        }
+        uQ(i - 1)
+      }
+    }
+
+    uQ(constraint.arity - 1)
   }
 
   @tailrec
@@ -173,6 +178,7 @@ final class AC3(
       } else {
         revisions += 1;
         val prev = c.sizes
+        logger.fine("Revising " + c)
         if (c.consistentRevise()) {
           c.clearRemovals()
 

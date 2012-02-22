@@ -17,7 +17,7 @@ import cspfj.problem.EmptyDomainException
 
 object AC3Constraint {
   @Parameter("ac3c.queue")
-  var queueType: Class[_ <: Queue[Constraint]] = classOf[ScalaFifos[Constraint]]
+  var queueType: Class[_ <: Queue[Constraint]] = classOf[BinomialHeap[Constraint]]
 
   @Parameter("ac3c.key")
   var key = new Key[Constraint]() {
@@ -97,7 +97,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
   }
 
   def reduceAfter(variable: Variable) = {
-    
+
     if (variable == null) {
       true;
     } else {
@@ -160,7 +160,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
 
       revisions += 1;
       val sizes = constraint.sizes
-
+      logger.fine("ACc revising " + constraint)
       if (constraint.consistentRevise()) {
         updateQueue(sizes, constraint, constraint.arity - 1)
         constraint.clearRemovals();

@@ -97,6 +97,11 @@ final class SolvingTest extends Loggable {
 
   }
 
+  @Test
+  def bigleq() {
+    assertEquals(1, count("bigleq-50.xml"))
+  }
+
   private def solve(name: String) = {
     val cspomProblem = CSPOM.load(getClass.getResource(name));
     ProblemCompiler.compile(cspomProblem);

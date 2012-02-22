@@ -13,7 +13,7 @@ final class AllDifferentGenerator(problem: Problem) extends AbstractGenerator(pr
     if (solverVariables exists { _.dom == null }) {
       false
     } else {
-      addConstraint(new AllDifferentAC(solverVariables: _*));
+      //addConstraint(new AllDifferentAC(solverVariables: _*));
       addConstraint(new BoundAllDiff(solverVariables: _*));
       true;
     }

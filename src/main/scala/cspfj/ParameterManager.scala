@@ -109,10 +109,26 @@ final object ParameterManager {
    *
    * @return
    */
-  def toXML = NodeSeq.fromSeq(parameters map {
-    case (k, (o, f)) =>
-      <p name = { k }>{ f.get(o) }</p>
-  } toSeq)
+  def toXML = {
+
+    var params = parameters map {
+      case (k, (o, f)) =>
+        <p name={ k }>{ f.get(o) }</p>
+    }
+
+    params ++= pending map {
+      case (k, v) =>
+        <p name={ k }> { v } </p>
+    }
+
+    params ++= pendingParse map {
+      case (k, v) =>
+        <p name={ k }> { v } </p>
+    }
+
+    NodeSeq.fromSeq(params.toSeq)
+
+  }
 
   /**
    * Returns String representation of the registered parameters.

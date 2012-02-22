@@ -31,9 +31,12 @@ final class ScalaLifos[T <: PTag](val key: Key[T], val nbLists: Int) extends Abs
 
   var first = nbLists
 
+  var last = -1
+
   private def chooseList(element: T): Int = {
     val k = key.getKey(element)
     nbLists - Integer.numberOfLeadingZeros(k)
+    math.max(nbLists - 1, nbLists - Integer.numberOfLeadingZeros(k))
   }
 
   def offer(e: T) =
@@ -41,25 +44,26 @@ final class ScalaLifos[T <: PTag](val key: Key[T], val nbLists: Int) extends Abs
     else {
       val list = chooseList(e)
       if (list < first) first = list
+      if (list > last) last = list
       //Stats.out.println(key.getKey(e) + " : " + list)
-      //try
-      queues(list) ::= e
-      //      catch {
-      //        case exc: IndexOutOfBoundsException =>
-      //          throw new IllegalArgumentException(e + " : " + key.getKey(e), exc)
-      //      }
+      try queues(list) ::= e
+      catch {
+        case exc: IndexOutOfBoundsException =>
+          throw new IllegalArgumentException(e + " : " + key.getKey(e) + " -> " + list, exc)
+      }
       e.setPresent()
       true
     }
 
   @tailrec
   private def poll(i: Int): T =
-    if (i >= nbLists) throw new NoSuchElementException
+    if (i > last) throw new NoSuchElementException
     else if (queues(i).isEmpty) poll(i + 1)
     else {
       val e = queues(i)
       queues(i) = e.tail
       first = i
+      if (i == last && e.tail.isEmpty) last = -1
       e.head
     }
 
@@ -70,28 +74,21 @@ final class ScalaLifos[T <: PTag](val key: Key[T], val nbLists: Int) extends Abs
   }
 
   override def clear() {
+    (first to last).foreach(queues(_) = Nil)
     first = nbLists
+    last = -1
     PTag.clear()
-    queues.indices.foreach(queues(_) = Nil)
   }
 
   def iterator = JavaConversions.asJavaIterator(queues.iterator.flatMap(_.iterator))
 
-  def size = queues.map(_.size).sum
+  def size = (first to last).map(i => queues(i).size).sum
 
-  override def isEmpty = {
-    @tailrec
-    def empty(i: Int): Boolean =
-      if (i >= nbLists) true
-      else if (queues(i).isEmpty) empty(i + 1)
-      else false
-
-    empty(first)
-  }
+  override def isEmpty = first > last
 
   @tailrec
   private def peek(i: Int): T = {
-    if (i >= nbLists) {
+    if (i > last) {
       throw new NoSuchElementException
     } else if (queues(i).isEmpty) {
       peek(i + 1)

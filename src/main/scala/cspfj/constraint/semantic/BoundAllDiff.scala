@@ -32,8 +32,6 @@ object MIN extends Ordering[HInterval] {
 }
 
 final class BoundAllDiff(vars: Variable*) extends AbstractConstraint(vars.toArray) {
-  //val PROPAGATE_ON_INSTANTIATIONS = true;
-  //val PROPAGATE_ON_BOUNDS = true;
 
   val t = new Array[Int](2 * arity + 2) // Tree links
   val d = new Array[Int](2 * arity + 2) // Diffs between critical capacities
@@ -45,9 +43,6 @@ final class BoundAllDiff(vars: Variable*) extends AbstractConstraint(vars.toArra
   val intervals = scope.indices.map(i => new HInterval(scope(i).dom, i)).toArray
   val minsorted = intervals.clone
   val maxsorted = intervals.clone
-
-  //var infBoundModified = true;
-  //var supBoundModified = true;
 
   private def bSort[A](array: Array[A], c: Ordering[A]) {
 

@@ -31,9 +31,9 @@ final class Variable(
   val getId = Variable.nbV
   Variable.nbV += 1
 
-  private var _constraints: IndexedSeq[Constraint] = IndexedSeq.empty
+  private var _constraints: Array[Constraint] = Array.empty
 
-  private var _dynamicConstraints: Seq[DynamicConstraint] = Nil
+  private var _dynamicConstraints: List[DynamicConstraint] = Nil
 
   private var _positionInConstraint: Array[Int] = Array.empty
 
@@ -54,7 +54,7 @@ final class Variable(
   def addConstraint(newConstraint: Constraint) {
     _constraints :+= newConstraint
     if (newConstraint.isInstanceOf[DynamicConstraint]) {
-      _dynamicConstraints :+= newConstraint.asInstanceOf[DynamicConstraint]
+      _dynamicConstraints ::= newConstraint.asInstanceOf[DynamicConstraint]
     }
     _positionInConstraint :+= newConstraint.position(this)
   }

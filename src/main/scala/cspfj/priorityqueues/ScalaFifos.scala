@@ -31,9 +31,11 @@ final class ScalaFifos[T <: PTag](val key: Key[T], val nbLists: Int) extends Abs
 
   var first = nbLists
 
+  var last = -1
+
   private def chooseList(element: T): Int = {
     val k = key.getKey(element)
-    nbLists - Integer.numberOfLeadingZeros(k)
+    math.max(nbLists - 1, nbLists - Integer.numberOfLeadingZeros(k))
   }
 
   def offer(e: T) =
@@ -41,12 +43,13 @@ final class ScalaFifos[T <: PTag](val key: Key[T], val nbLists: Int) extends Abs
     else {
       val list = chooseList(e)
       if (list < first) first = list
+      if (list > last) last = list
       //Stats.out.println(key.getKey(e) + " : " + list)
       try
         queues(list) = queues(list).enqueue(e)
       catch {
         case exc: IndexOutOfBoundsException =>
-          throw new IllegalArgumentException(e + " : " + key.getKey(e), exc)
+          throw new IllegalArgumentException(e + " : " + key.getKey(e) + " -> " + list, exc)
       }
       e.setPresent()
       true
@@ -54,12 +57,13 @@ final class ScalaFifos[T <: PTag](val key: Key[T], val nbLists: Int) extends Abs
 
   @tailrec
   private def poll(i: Int): T =
-    if (i >= nbLists) throw new NoSuchElementException
+    if (i > last) throw new NoSuchElementException
     else if (queues(i).isEmpty) poll(i + 1)
     else {
       val (e, q) = queues(i).dequeue
       queues(i) = q
       first = i
+      if (i == last && q.isEmpty) last = -1
       e
     }
 
@@ -70,28 +74,21 @@ final class ScalaFifos[T <: PTag](val key: Key[T], val nbLists: Int) extends Abs
   }
 
   override def clear() {
+    (first to last).foreach(queues(_) = Queue.empty)
     first = nbLists
+    last = -1
     PTag.clear()
-    queues.indices.foreach(queues(_) = Queue.empty)
   }
 
   def iterator = JavaConversions.asJavaIterator(queues.iterator.flatMap(_.iterator))
 
-  def size = queues.map(_.size).sum
+  def size = (first to last).map(i => queues(i).size).sum
 
-  override def isEmpty = {
-    @tailrec
-    def empty(i: Int): Boolean =
-      if (i >= nbLists) true
-      else if (queues(i).isEmpty) empty(i + 1)
-      else false
-
-    empty(first)
-  }
+  override def isEmpty = first > last
 
   @tailrec
   private def peek(i: Int): T = {
-    if (i >= nbLists) {
+    if (i > last) {
       throw new NoSuchElementException
     } else if (queues(i).isEmpty) {
       peek(i + 1)
@@ -100,6 +97,6 @@ final class ScalaFifos[T <: PTag](val key: Key[T], val nbLists: Int) extends Abs
     }
   }
 
-  def peek() = peek(0)
+  def peek = peek(first)
 
 }
