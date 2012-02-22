@@ -124,4 +124,7 @@ final class ReifiedConstraint(
     positiveConstraint.fillRemovals()
     negativeConstraint.fillRemovals()
   }
+
+  val simpleEvaluation = math.max(positiveConstraint.simpleEvaluation,
+    negativeConstraint.simpleEvaluation)
 }

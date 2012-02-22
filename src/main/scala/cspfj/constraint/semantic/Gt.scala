@@ -82,5 +82,5 @@ final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict
 
   override def getEvaluation =
     math.min(scope(0).dom.size, scope(1).dom.size);
-
+  val simpleEvaluation = 1
 }

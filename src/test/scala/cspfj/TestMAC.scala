@@ -3,7 +3,6 @@ import org.junit.Test
 import cspfj.problem.BitVectorDomain
 import cspfj.problem.Problem
 import cspfj.constraint.semantic.Eq
-import cspfj.constraint.semantic.AllDifferent
 import cspfj.problem.Variable
 import org.junit.Assert
 import scala.annotation.tailrec

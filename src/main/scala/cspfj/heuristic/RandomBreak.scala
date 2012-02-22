@@ -15,19 +15,20 @@ trait RandomBreak extends VariableHeuristic {
     else {
 
       @tailrec
-      def select(itr: List[Variable], best: Variable, ties: Int): Variable = {
-        if (itr.isEmpty) best
+      def select(list: List[Variable], best: Variable, ties: Int): Variable = {
+        if (list.isEmpty) best
         else {
-          val current = itr.head
+          val current = list.head
           val comp = compare(current, best)
-          if (comp > 0) select(itr.tail, current, 2)
+          
+          if (comp > 0) select(list.tail, current, 2)
           else if (comp == 0) {
             if (rand.nextDouble * ties < 1)
-              select(itr.tail, current, ties + 1)
+              select(list.tail, current, ties + 1)
             else
-              select(itr.tail, best, ties + 1)
+              select(list.tail, best, ties + 1)
 
-          } else select(itr.tail, current, ties)
+          } else select(list.tail, best, ties)
         }
       }
 

@@ -45,4 +45,5 @@ final class ZeroSum(
   }
 
   override def toString = (scope, factors).zipped.map((v, f) => f + "." + v).mkString(" + ") + " >= 0"
+  val simpleEvaluation = 3
 }

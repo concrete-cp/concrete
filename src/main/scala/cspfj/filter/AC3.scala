@@ -1,21 +1,20 @@
 package cspfj.filter;
 
 import java.util.Queue
-import scala.collection.IndexedSeq
-import scala.collection.JavaConversions
+
+import scala.annotation.tailrec
+
 import cspfj.constraint.Constraint
-import cspfj.priorityqueues.BinomialHeap
+import cspfj.constraint.Removals
 import cspfj.priorityqueues.Key
+import cspfj.priorityqueues.ScalaFifos
+import cspfj.priorityqueues.ScalaIOBinomialHeap
+import cspfj.priorityqueues.ScalaNative
 import cspfj.problem.Problem
 import cspfj.problem.Variable
-import scala.annotation.tailrec
-import cspfj.priorityqueues.ScalaIOBinomialHeap
 import cspfj.util.Loggable
-import cspfj.priorityqueues.ScalaNative
-import cspfj.priorityqueues.ScalaFifos
 import cspfj.Parameter
 import cspfj.ParameterManager
-import cspfj.constraint.Removals
 
 /**
  * @author scand1sk
@@ -25,9 +24,12 @@ object AC3 {
   @Parameter("ac3v.queue")
   var queueType: Class[_ <: Queue[Variable]] = classOf[ScalaFifos[Variable]]
 
-  val key = new Key[Variable]() {
-    def getKey(o: Variable) = o.dom.size
-  }
+  @Parameter("ac3v.key")
+  val keyType: Class[_ <: Key[Variable]] = classOf[cspfj.heuristic.revision.Dom]
+
+  def key = keyType.getConstructor().newInstance()
+
+  def queue = queueType.getConstructor(classOf[Key[Variable]]).newInstance(key)
 
   ParameterManager.register(this);
 }
@@ -42,7 +44,7 @@ final class AC3(
   private var revisions = 0;
 
   def this(problem: Problem) =
-    this(problem, AC3.queueType.getConstructor(classOf[Key[Variable]]).newInstance(AC3.key))
+    this(problem, AC3.queue)
 
   def reduceAll() = {
     queue.clear();
@@ -178,7 +180,7 @@ final class AC3(
       } else {
         revisions += 1;
         val prev = c.sizes
-        logger.fine("Revising " + c)
+        //logger.fine("Revising " + c)
         if (c.consistentRevise()) {
           c.clearRemovals()
 

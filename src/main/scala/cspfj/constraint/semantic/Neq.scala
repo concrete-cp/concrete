@@ -29,4 +29,6 @@ final class Neq(v0: Variable, v1: Variable) extends AbstractConstraint(Array(v0,
   override def getEvaluation =
     if (v0.dom.size == 1 || v1.dom.size == 1) 2
     else (v0.dom.size + v1.dom.size)
+
+  val simpleEvaluation = 2
 }

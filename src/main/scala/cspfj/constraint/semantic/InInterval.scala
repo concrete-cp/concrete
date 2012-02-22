@@ -38,5 +38,5 @@ final class InInterval(val variable: Variable, val lb: Int, val ub: Int)
   }
 
   override def toString = variable + " in [" + variable.dom.value(lb) + ", " + variable.dom.value(ub) + "]"
-
+  val simpleEvaluation = 1
 }

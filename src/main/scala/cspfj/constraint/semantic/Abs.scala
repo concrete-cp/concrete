@@ -34,8 +34,12 @@ final class Abs(val result: Variable, val v0: Variable) extends AbstractConstrai
       }
     } else true
   }
+  
+  
 
   override def toString = result + " = |" + v0 + "|";
 
   def getEvaluation = result.dom.size * 3 / 2 + v0.dom.size
+  
+  def simpleEvaluation = 1
 }

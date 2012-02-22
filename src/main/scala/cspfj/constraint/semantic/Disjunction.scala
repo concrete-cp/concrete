@@ -107,5 +107,5 @@ final class Disjunction(scope: Array[Variable],
 
     find(arity - 1)
   }
-
+  val simpleEvaluation = 3
 }

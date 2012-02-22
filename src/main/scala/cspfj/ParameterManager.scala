@@ -4,6 +4,7 @@ import java.lang.reflect.Field
 import scala.xml.NodeSeq
 import java.util.Properties
 import scala.collection.JavaConversions
+import java.security.InvalidParameterException
 
 /**
  * This class is intended to hold CSP4J's various parameters.
@@ -141,6 +142,12 @@ final object ParameterManager {
     JavaConversions.mapAsScalaMap(line).foreach {
       case (k, v) => parse(k.toString, v.toString)
     }
+  }
+
+  def checkPending {
+    if (!pending.isEmpty) throw new InvalidParameterException("These parameters were not used " + pending)
+    if (!pendingParse.isEmpty) throw new InvalidParameterException("These parameters were not used " + pendingParse)
+
   }
 
 }

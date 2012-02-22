@@ -280,5 +280,5 @@ final class BoundAllDiff(vars: Variable*) extends AbstractConstraint(vars.toArra
   }
 
   def getEvaluation = arity * arity
-
+  val simpleEvaluation = 3
 }

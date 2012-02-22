@@ -106,4 +106,5 @@ final class Eq(val a: Int, val x: Variable, val b: Int, val y: Variable)
     " = " + y
 
   def getEvaluation = scope(0).dom.size + scope(1).dom.size
+  val simpleEvaluation = 2
 }

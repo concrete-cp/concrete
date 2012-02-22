@@ -53,7 +53,7 @@ final class ExtensionConstraintDynamic(
     found.foreach(_.fill(false))
 
     val mod = modified.toList
-    
+
     matrixManager.filterTuples { tuple =>
       if (controlTuplePresence(tuple, mod)) {
         assert(controlTuplePresence(tuple))
@@ -136,6 +136,8 @@ final class ExtensionConstraintDynamic(
   //def matrixManager = matrixManager
 
   def getEvaluation = arity * matrixManager.size
+
+  def simpleEvaluation = math.min(7, scope.count(_.dom.size > 1))
 
   override def toString = "STR(" + scope.mkString(", ") + ") w/ " + matrixManager
 

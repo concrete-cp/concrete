@@ -105,4 +105,5 @@ final class AllDifferentAC(scope: Variable*) extends AbstractConstraint(scope.to
     scope.exists(v => vals(v, v.dom.first))
   }
   val getEvaluation = arity
+  val simpleEvaluation = 3
 }

@@ -79,4 +79,6 @@ final class AbsDiff(val result: Variable, val v0: Variable, val v1: Variable)
     val d2 = v1.dom.size
     d0 * d1 + d0 * d2 + d1 * d2;
   }
+  
+  def simpleEvaluation = 2
 }

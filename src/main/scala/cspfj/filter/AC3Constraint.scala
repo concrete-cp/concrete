@@ -14,17 +14,14 @@ import cspfj.Statistic
 import cspfj.StatisticsManager
 import cspfj.constraint.Removals
 import cspfj.problem.EmptyDomainException
+import cspfj.heuristic.revision.Eval
 
 object AC3Constraint {
   @Parameter("ac3c.queue")
   var queueType: Class[_ <: Queue[Constraint]] = classOf[BinomialHeap[Constraint]]
 
   @Parameter("ac3c.key")
-  var key = new Key[Constraint]() {
-    def getKey(o: Constraint) = o.getEvaluation
-
-    override def toString = "constraint.getEvaluation"
-  };
+  var keyType: Class[_ <: Key[Constraint]] = classOf[Eval]
 
   ParameterManager.register(this);
 
@@ -41,6 +38,10 @@ object AC3Constraint {
 
     true;
   }
+
+  def key = keyType.getConstructor().newInstance()
+
+  def queue = queueType.getConstructor(classOf[Key[Constraint]]).newInstance(key)
 }
 
 final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) extends Filter with Loggable {
@@ -53,10 +54,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
   @Statistic
   var revisions = 0;
 
-  def this(problem: Problem) =
-    this(problem, AC3Constraint.queueType.getConstructor(classOf[Key[Constraint]]).newInstance(AC3Constraint.key))
-
-  
+  def this(problem: Problem) = this(problem, AC3Constraint.queue)
 
   def reduceAll() = {
     Removals.clear()

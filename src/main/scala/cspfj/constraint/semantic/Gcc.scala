@@ -95,5 +95,5 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Abstract
   }
 
   val getEvaluation = arity * arity
-
+  val simpleEvaluation = 3
 }

@@ -13,7 +13,7 @@ object NotInInterval {
 }
 
 /**
- * Constraint: variable \notin [lb, ub] 
+ * Constraint: variable \notin [lb, ub]
  * lb and ub are domain indices!
  */
 final class NotInInterval(val variable: Variable, val lb: Int, val ub: Int)
@@ -40,5 +40,5 @@ final class NotInInterval(val variable: Variable, val lb: Int, val ub: Int)
   }
 
   override def toString = variable + " notin [" + variable.dom.value(lb) + ", " + variable.dom.value(ub) + "]"
-
+  val simpleEvaluation = 1
 }

@@ -85,4 +85,5 @@ class Sat(scope: IndexedSeq[Variable]) extends AbstractConstraint(scope.toArray)
   }
 
   override def getEvaluation = 1 << (scope.map(_.dom.size).sum / 100)
+  val simpleEvaluation = 7
 }

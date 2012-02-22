@@ -1,7 +1,6 @@
 package cspfj.constraint
 import cspfj.constraint.extension.TupleManager
 
-
 object TupleEnumerator {
   var checks = 0
 
@@ -24,7 +23,9 @@ trait TupleEnumerator extends Constraint {
 
     return false;
   }
-  
+
   def getEvaluation = scope map (_.dom.size) product
+
+  def simpleEvaluation = math.min(7, scope.count(_.dom.size > 1))
 
 }

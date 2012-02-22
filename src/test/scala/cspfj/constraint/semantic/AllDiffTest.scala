@@ -13,7 +13,7 @@ class AllDiffTest {
     val v4 = new Variable("4", new BitVectorDomain(8))
     val v5 = new Variable("5", new BitVectorDomain(8, 9))
 
-    val c = new AllDifferent(v1, v2, v3, v4, v5)
+    val c = new AllDifferentAC(v1, v2, v3, v4, v5)
 
     c.revise()
   }

@@ -21,8 +21,9 @@ package cspfj.constraint.extension;
 
 import cspfj.constraint.VariablePerVariable
 import cspfj.constraint.AbstractConstraint
-import cspfj.problem.Variable;
+import cspfj.problem.Variable
 import cspfj.constraint.TupleEnumerator
+import scala.annotation.tailrec
 
 final class ExtensionConstraint2D(
   scope: Array[Variable],
@@ -33,26 +34,29 @@ final class ExtensionConstraint2D(
 
   val matrixManager = new MatrixManager2D(scope, matrix, shared, tuple)
 
-  override def getEvaluation =
-    scope(0).dom.size + scope(1).dom.size
+  override def getEvaluation = scope(0).dom.size + scope(1).dom.size
 
-  def reviseVariable(position: Int) = {
-    if (matrixManager.supportCondition(position)) {
-      false
-    } else {
+  override def simpleEvaluation = 2
 
-      val variable = scope(position)
+  def reviseVariable(position: Int) {
+    if (!matrixManager.supportCondition(position)) {
+
+      val dom = scope(position).dom
 
       // assert !variable.isAssigned();
 
-      var revised = false;
+      @tailrec
+      def process(i: Int) {
+        if (i >= 0) {
+          if (!matrixManager.hasSupport(position, i))
+            dom.remove(i)
 
-      for (index <- variable.dom.indices if !matrixManager.hasSupport(position, index)) {
-        variable.dom.remove(index);
-        revised = true;
+          process(dom.next(i))
+        }
       }
 
-      revised;
+      process(dom.first)
+
     }
   }
 
