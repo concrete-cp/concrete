@@ -35,21 +35,7 @@ trait Removals extends Constraint {
 
   def revise(modified: Seq[Int])
 
-  /**
-   * If only one variable in the scope has been altered, its revision can be skipped
-   */
-  final def skipRevision(modified: Seq[Int]) =
-    modified.take(2) match {
-      case Seq() => All
-      case Seq(c) => S(c)
-      case _ => Nop
-    }
-
-  trait Skip
-
-  case class S(val position: Int) extends Skip
-  case class Nop() extends Skip
-  case class All() extends Skip
+ 
 
   // scope.iterator.zipWithIndex.zip(removals.iterator).filter(t => t._2 >= reviseCount).map(t => t._1)
 

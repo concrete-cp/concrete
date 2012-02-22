@@ -19,14 +19,27 @@
 
 package cspfj.heuristic;
 
-import scala.collection.JavaConversions;
-import cspfj.constraint.Constraint;
-import cspfj.problem.Problem;
+import scala.collection.JavaConversions
+import cspfj.constraint.Constraint
+import cspfj.problem.Problem
 import cspfj.problem.Variable;
+import scala.annotation.tailrec
 
 object WDeg {
-  def wDeg(variable: Variable) =
-    variable.constraints.iterator.filter(!_.isEntailed).map(_.weight).sum
+  def wDeg(variable: Variable) = {
+    val constraints = variable.constraints
+
+    @tailrec
+    def sum(i: Int, s: Int): Int =
+      if (i < 0) s
+      else {
+        val c = constraints(i)
+        if (c.isEntailed) sum(i - 1, s)
+        else sum(i - 1, s + c.weight)
+      }
+
+    sum(constraints.size - 1, 0)
+  }
 
   def nbUnboundVariables(constraint: Constraint) =
     constraint.scope.iterator.filter(_.dom.size > 1).size

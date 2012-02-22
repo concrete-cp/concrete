@@ -26,7 +26,7 @@ import cspfj.constraint.Constraint
 
 final class Problem {
   private var variableMap: Map[String, Variable] = Map.empty
-  private var _variables: IndexedSeq[Variable] = IndexedSeq.empty
+  private var _variables: List[Variable] = Nil //IndexedSeq.empty
   private var _constraints: List[Constraint] = Nil
 
   private var _maxDomainSize = -1
@@ -40,7 +40,7 @@ final class Problem {
 
     val variable = new Variable(name, domain);
     variableMap += name -> variable
-    _variables :+= variable
+    _variables ::= variable
 
     _maxVId = math.max(variable.getId, _maxVId)
     //_maxDomainSize = math.max(variable.dom.size, _maxDomainSize)

@@ -32,20 +32,18 @@ trait VariablePerVariable extends Constraint with Removals with Loggable {
     @tailrec
     def reviseS(i: Int, skip: Int) {
 
-      if (i >= 0) {
-        if (i == skip) reviseNS(i - 1)
-        else {
-          this.reviseVariable(i)
-          reviseS(i - 1, skip)
-        }
+      if (i == skip) reviseNS(i - 1)
+      else if (i > 0) {
+        this.reviseVariable(i)
+        reviseS(i - 1, skip)
       }
 
     }
 
-    skipRevision(modified) match {
-      case S(s) => reviseS(scope.length - 1, s)
-      case Nop => reviseNS(scope.length - 1)
-      case All =>
+    modified match {
+      case Seq() =>
+      case Seq(s) => reviseS(scope.length - 1, s)
+      case _ => reviseNS(scope.length - 1)
     }
 
     if (scope.count(_.dom.size == 1) >= arity - 1) {

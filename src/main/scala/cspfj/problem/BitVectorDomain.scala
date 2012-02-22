@@ -15,6 +15,8 @@ final class BitVectorDomain(
 
   if (domain.size == 0) throw Domain.empty
 
+  override val maxSize = domain.size
+
   private val indexer = Indexer.factory(domain)
 
   private var _size = domain.size
@@ -41,13 +43,25 @@ final class BitVectorDomain(
   def restore(data: (BitVector, Int)) {
     data._1.copyTo(bvDomain)
     _size = data._2
+    _first = bvDomain.nextSetBit(0);
+    _last = bvDomain.prevSetBit(maxSize)
   }
 
   def getAtLevel(level: Int) = getLevel(level)._1
 
-  override def first = bvDomain.nextSetBit(0);
+  var _first = bvDomain.nextSetBit(0);
 
-  override def last = bvDomain.prevSetBit(maxSize)
+  var _last = bvDomain.prevSetBit(maxSize)
+
+  def first = {
+    assert(_first == bvDomain.nextSetBit(0))
+    _first
+  }
+
+  def last = {
+    assert(_last == bvDomain.prevSetBit(maxSize))
+    _last
+  }
 
   override def lastAbsent = bvDomain.prevClearBit(domain.length);
 
@@ -106,6 +120,8 @@ final class BitVectorDomain(
   def setSingle(index: Int) {
     altering()
     bvDomain.setSingle(index);
+    _first = index
+    _last = index
     _size = 1;
   }
 
@@ -126,12 +142,16 @@ final class BitVectorDomain(
     assert(present(index));
     altering()
     bvDomain.clear(index);
+    if (_first == index) _first = bvDomain.nextSetBit(index)
+    if (_last == index) _last = bvDomain.prevSetBit(index)
+
     size -= 1;
   }
 
   def removeFrom(lb: Int) = {
     altering()
     val nbRemVals = bvDomain.clearFrom(lb);
+    _last = bvDomain.prevSetBit(lb)
     size -= nbRemVals;
     nbRemVals;
   }
@@ -139,6 +159,7 @@ final class BitVectorDomain(
   def removeTo(ub: Int) = {
     altering()
     val nbRemVals = bvDomain.clearTo(ub + 1);
+    _first = bvDomain.nextSetBit(ub)
     size -= nbRemVals;
     nbRemVals;
   }
@@ -146,8 +167,6 @@ final class BitVectorDomain(
   def getBitVector = bvDomain
 
   val allValues = domain;
-
-  override val maxSize = domain.size
 
   override def toString = if (size <= BitVectorDomain.DISPLAYED_VALUES) {
     values.mkString("[", ", ", "]");

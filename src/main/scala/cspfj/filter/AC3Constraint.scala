@@ -56,6 +56,8 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
   def this(problem: Problem) =
     this(problem, AC3Constraint.queueType.getConstructor(classOf[Key[Constraint]]).newInstance(AC3Constraint.key))
 
+  
+
   def reduceAll() = {
     Removals.clear()
     queue.clear();
@@ -160,7 +162,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
 
       revisions += 1;
       val sizes = constraint.sizes
-      logger.fine("ACc revising " + constraint)
+
       if (constraint.consistentRevise()) {
         updateQueue(sizes, constraint, constraint.arity - 1)
         constraint.clearRemovals();
