@@ -1,9 +1,7 @@
 package cspfj.filter;
 
 import java.util.Queue
-
 import scala.annotation.tailrec
-
 import cspfj.constraint.Constraint
 import cspfj.constraint.Removals
 import cspfj.priorityqueues.Key
@@ -15,6 +13,7 @@ import cspfj.problem.Variable
 import cspfj.util.Loggable
 import cspfj.Parameter
 import cspfj.ParameterManager
+import cspfj.Statistic
 
 /**
  * @author scand1sk
@@ -41,7 +40,8 @@ final class AC3(
   // private static final Logger LOGGER = Logger.getLogger(Filter.class
   // .getSimpleName());
 
-  private var revisions = 0;
+  @Statistic
+  var revisions = 0;
 
   def this(problem: Problem) =
     this(problem, AC3.queue)
