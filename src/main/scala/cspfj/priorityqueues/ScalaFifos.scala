@@ -27,7 +27,7 @@ final class ScalaFifos[T <: PTag](val key: Key[T], val nbLists: Int) extends Abs
 
   val queues: Array[Queue[T]] = Array[Queue[T]]().padTo(nbLists, Queue.empty)
 
-  def this(k: Key[T]) = this(k, 32)
+  def this(k: Key[T]) = this(k, 8)
 
   var first = nbLists
 
@@ -35,13 +35,14 @@ final class ScalaFifos[T <: PTag](val key: Key[T], val nbLists: Int) extends Abs
 
   private def chooseList(element: T): Int = {
     val k = key.getKey(element)
-    math.max(nbLists - 1, nbLists - Integer.numberOfLeadingZeros(k))
+    math.min(nbLists - 1, nbLists - Integer.numberOfLeadingZeros(k) / 4)
   }
 
   def offer(e: T) =
     if (e.isPresent) false
     else {
       val list = chooseList(e)
+      //print(list + " ")
       if (list < first) first = list
       if (list > last) last = list
       //Stats.out.println(key.getKey(e) + " : " + list)

@@ -178,7 +178,10 @@ final class AC3(
       if (c.isEntailed) {
         reduce(itr)
       } else {
-        revisions += 1;
+        c match {
+          case c: Removals if (c.modified(Removals.count, c.arity - 1)).isEmpty =>
+          case _ => revisions += 1
+        }
         val prev = c.sizes
         //logger.fine("Revising " + c)
         if (c.consistentRevise()) {
