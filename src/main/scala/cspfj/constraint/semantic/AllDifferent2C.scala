@@ -28,7 +28,7 @@ import cspfj.constraint.Removals
 import cspfj.UNSATException
 import cspfj.util.UOList
 
-object AllDifferentAC {
+object AllDifferent2C {
   def filter(scope: Array[Variable], checkedVariable: Int, value: Int): UOList[Int] = {
 
     def r(i: Int, mod: UOList[Int]): UOList[Int] = {
@@ -50,7 +50,7 @@ object AllDifferentAC {
   }
 }
 
-final class AllDifferentAC(scope: Variable*) extends AbstractConstraint(scope.toArray)
+final class AllDifferent2C(scope: Variable*) extends AbstractConstraint(scope.toArray)
   with Removals {
 
   val offset = scope map { _.dom.allValues.min } min
@@ -78,7 +78,7 @@ final class AllDifferentAC(scope: Variable*) extends AbstractConstraint(scope.to
 
         val value = scope(checkedVariable).dom.firstValue
 
-        rev(newQueue ++ AllDifferentAC.filter(scopeA, checkedVariable, value).
+        rev(newQueue ++ AllDifferent2C.filter(scopeA, checkedVariable, value).
           filter(scope(_).dom.size == 1))
       }
     }

@@ -31,7 +31,7 @@ object MIN extends Ordering[HInterval] {
     o1.dom.firstValue - o2.dom.firstValue
 }
 
-final class BoundAllDiff(vars: Variable*) extends AbstractConstraint(vars.toArray) {
+final class AllDifferentBC(vars: Variable*) extends AbstractConstraint(vars.toArray) {
 
   val t = new Array[Int](2 * arity + 2) // Tree links
   val d = new Array[Int](2 * arity + 2) // Diffs between critical capacities

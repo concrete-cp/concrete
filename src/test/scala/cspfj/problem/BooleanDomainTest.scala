@@ -61,20 +61,17 @@ final class BooleanDomainTest {
 
   @Test
   def testRestore() {
-    domain.remove(0);
     domain.setLevel(1);
     domain.remove(1);
     assertFalse(domain.present(1));
 
     domain.restoreLevel(0);
     assertTrue(domain.present(1));
-    assertFalse(domain.present(0));
 
     domain.setLevel(3);
     domain.remove(1);
     domain.restoreLevel(0);
     assertTrue(domain.present(1));
-    assertFalse(domain.present(0));
   }
 
   @Test
@@ -84,12 +81,12 @@ final class BooleanDomainTest {
     assertEquals(1, domain.first);
   }
 
-//  @Test
-//  def testLast() {
-//    assertEquals(1, domain.lastIndex);
-//    domain.remove(1);
-//    assertEquals(0, domain.lastIndex);
-//  }
+  //  @Test
+  //  def testLast() {
+  //    assertEquals(1, domain.lastIndex);
+  //    domain.remove(1);
+  //    assertEquals(0, domain.lastIndex);
+  //  }
 
   @Test
   def testCurrentIndexes() {
@@ -120,8 +117,6 @@ final class BooleanDomainTest {
     assertEquals(-1, domain.lastAbsent);
     domain.remove(0);
     assertEquals(0, domain.lastAbsent);
-    domain.remove(1);
-    assertEquals(1, domain.lastAbsent);
   }
 
   @Test

@@ -70,8 +70,6 @@ abstract class Solver(val problem: Problem) extends Loggable {
   @Statistic
   var preproConstraintChecks = 0
   @Statistic
-  var preproPresenceChecks = 0
-  @Statistic
   var preproMatrix2DChecks = 0
   @Statistic
   var preproMatrix2DPresenceChecks = 0
@@ -186,7 +184,6 @@ abstract class Solver(val problem: Problem) extends Loggable {
 
       this.preproCpu = preproCpu / 1000f;
       preproConstraintChecks = TupleEnumerator.checks
-      preproPresenceChecks = Constraint.nbPresenceChecks
       preproMatrix2DChecks = MatrixManager2D.checks
       preproMatrix2DPresenceChecks = MatrixManager2D.presenceChecks
     }

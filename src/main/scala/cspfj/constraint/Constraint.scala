@@ -33,10 +33,6 @@ import cspfj.UNSATException
 object Constraint {
   var cId = 0;
   def reset() { cId = 0 }
-
-  var nbPresenceChecks = 0
-
-  def clearStats() { nbPresenceChecks = 0 }
 }
 
 trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constraint] {
@@ -96,7 +92,6 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
   override def hashCode = getId
 
   def controlTuplePresence(tuple: Array[Int]) = {
-    Constraint.nbPresenceChecks += 1;
     /** Need high optimization */
 
     @tailrec

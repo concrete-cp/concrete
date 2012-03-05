@@ -2,8 +2,7 @@ package cspfj.generator.constraint;
 
 import cspfj.problem.{ Variable, Problem }
 import cspom.constraint.{ GeneralConstraint, CSPOMConstraint }
-import cspfj.constraint.semantic.BoundAllDiff
-import cspfj.constraint.semantic.AllDifferentAC
+import cspfj.constraint.semantic.AllDifferentBC
 
 final class AllDifferentGenerator(problem: Problem) extends AbstractGenerator(problem) {
   def generate(constraint: CSPOMConstraint) = {
@@ -14,7 +13,7 @@ final class AllDifferentGenerator(problem: Problem) extends AbstractGenerator(pr
       false
     } else {
       //addConstraint(new AllDifferentAC(solverVariables: _*));
-      addConstraint(new BoundAllDiff(solverVariables: _*));
+      addConstraint(new AllDifferentBC(solverVariables: _*));
       true;
     }
   }

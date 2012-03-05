@@ -86,7 +86,6 @@ final class ExtensionConstraintDynamic(
   }
 
   private def controlTuplePresence(tuple: Array[Int], mod: Seq[Int]) = {
-    Constraint.nbPresenceChecks += 1;
     /** Need high optimization */
 
     @tailrec

@@ -6,8 +6,7 @@ import cspfj.constraint.semantic.Eq
 import cspfj.problem.Variable
 import org.junit.Assert
 import scala.annotation.tailrec
-import cspfj.constraint.semantic.BoundAllDiff
-import cspfj.constraint.semantic.AllDifferentAC
+import cspfj.constraint.semantic.AllDifferentBC
 import cspfj.heuristic.MedValue
 
 class TestMAC {
@@ -39,7 +38,7 @@ class TestMAC {
     (queens, problem)
   }
 
-  def allDiff(q: Seq[Variable]) = new BoundAllDiff(q: _*)
+  def allDiff(q: Seq[Variable]) = new AllDifferentBC(q: _*)
 
   def view(queens: Seq[Variable], solution: Map[String, Int]) =
     queens.map(q => q.name + " = " + solution.get(q.name)).mkString(", ")

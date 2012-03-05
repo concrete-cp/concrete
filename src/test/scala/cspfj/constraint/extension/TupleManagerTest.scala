@@ -12,7 +12,7 @@ import org.junit.Before
 import org.junit.Test
 import cspfj.problem.BitVectorDomain
 import cspfj.problem.Variable
-import cspfj.constraint.semantic.AllDifferentAC
+import cspfj.constraint.semantic.AllDifferent2C
 
 final class TupleManagerTest {
 
@@ -29,7 +29,7 @@ final class TupleManagerTest {
     val v2 = new Variable("V2", new BitVectorDomain(dom: _*));
     val v3 = new Variable("V3", new BitVectorDomain(dom: _*));
 
-    val constraint = new AllDifferentAC(v1, v2, v3);
+    val constraint = new AllDifferent2C(v1, v2, v3);
 
     tupleManager = new TupleManager(constraint, constraint.tuple);
 
