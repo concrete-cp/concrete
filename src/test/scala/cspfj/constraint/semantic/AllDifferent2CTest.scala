@@ -1,11 +1,11 @@
 package cspfj.constraint.semantic
 import org.junit.Test
-
 import cspfj.problem.BitVectorDomain
 import cspfj.problem.Variable
+import cspfj.UNSATException
 
 class AllDifferent2CTest {
-  @Test
+  @Test(expected = classOf[UNSATException])
   def test() {
     val v1 = new Variable("1", new BitVectorDomain(7))
     val v2 = new Variable("2", new BitVectorDomain(6))

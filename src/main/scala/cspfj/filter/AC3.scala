@@ -143,7 +143,8 @@ final class AC3(
     queue.clear();
     // LOGGER.fine("reduce after " + cnt);
 
-    problem.variables.iterator.filter(v => modVar(v.getId) > cnt).foreach(prepareQueue);
+    for (v <- problem.variables if modVar(v.getId) > cnt)
+      prepareQueue(v)
 
     if (modCons == null || prepareQueue(problem.constraints.iterator.filter(c => modCons(c.getId) > cnt))) {
       reduce()
@@ -178,10 +179,7 @@ final class AC3(
       if (c.isEntailed) {
         reduce(itr)
       } else {
-        c match {
-          case c: Removals if (c.modified(Removals.count, c.arity - 1)).isEmpty =>
-          case _ => revisions += 1
-        }
+        revisions += 1
         val prev = c.sizes
         //logger.fine("Revising " + c)
         if (c.consistentRevise()) {

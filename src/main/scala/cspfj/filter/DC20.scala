@@ -37,7 +37,7 @@ import scala.annotation.tailrec
  */
 final class DC20(val problem: Problem) extends Filter with Loggable {
 
-  val filter = new AC3(problem)
+  val filter = new AC3Constraint(problem)
 
   private var nbAddedConstraints = 0;
 
@@ -77,9 +77,8 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
 
     @tailrec
     def process(variable: Variable, remaining: Stream[Variable], mark: Variable): Boolean = {
-      if (mark == variable) {
-        true
-      } else {
+      if (mark == variable) true
+      else {
         info(variable.toString)
         cnt += 1
 

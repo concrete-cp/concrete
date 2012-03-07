@@ -37,7 +37,7 @@ trait Removals extends Constraint {
 
   // scope.iterator.zipWithIndex.zip(removals.iterator).filter(t => t._2 >= reviseCount).map(t => t._1)
 
-  def modified(reviseCount: Int, i: Int): Stream[Int] =
+  private def modified(reviseCount: Int, i: Int): Stream[Int] =
     if (i < 0) Stream.empty
     else if (removals(i) == reviseCount) i #:: modified(reviseCount, i - 1)
     else modified(reviseCount, i - 1)
