@@ -9,12 +9,12 @@ import cspfj.SolverIterator
 import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
 import cspfj.ParameterManager
-import cspfj.priorityqueues.ScalaFifos
+import cspfj.priorityqueues.Fifos
 import cspfj.constraint.Constraint
 
 final class SolvingTest extends Loggable {
   //Solver.loggerLevel = "FINE"
-  ParameterManager("ac3c.queue") = classOf[ScalaFifos[Constraint]]
+  //ParameterManager("ac3c.queue") = classOf[Fifos]
   ParameterManager("preprocessor") = null
 
   @Test //(timeout = 40000)

@@ -5,7 +5,7 @@ import scala.annotation.tailrec
 import cspfj.constraint.Constraint
 import cspfj.constraint.Removals
 import cspfj.priorityqueues.Key
-import cspfj.priorityqueues.ScalaFifos
+import cspfj.priorityqueues.Fifos
 import cspfj.priorityqueues.ScalaIOBinomialHeap
 import cspfj.priorityqueues.ScalaNative
 import cspfj.problem.Problem
@@ -14,6 +14,7 @@ import cspfj.util.Loggable
 import cspfj.Parameter
 import cspfj.ParameterManager
 import cspfj.Statistic
+import cspfj.priorityqueues.BinomialHeap
 
 /**
  * @author scand1sk
@@ -21,7 +22,7 @@ import cspfj.Statistic
  */
 object AC3 {
   @Parameter("ac3v.queue")
-  var queueType: Class[_ <: Queue[Variable]] = classOf[ScalaFifos[Variable]]
+  var queueType: Class[_ <: Queue[Variable]] = classOf[BinomialHeap[Variable]]
 
   @Parameter("ac3v.key")
   val keyType: Class[_ <: Key[Variable]] = classOf[cspfj.heuristic.revision.Dom]

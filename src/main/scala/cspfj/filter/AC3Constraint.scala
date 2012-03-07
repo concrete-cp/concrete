@@ -67,29 +67,21 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
   def reduceFrom(modVar: Array[Int], modCons: Array[Int], cnt: Int) = {
     Removals.clear()
     queue.clear();
-    // LOGGER.fine("reduce after " + cnt);
-    for (v <- problem.variables) {
-      if (modVar(v.getId) > cnt) {
-        v.constraints.zipWithIndex.foreach {
-          case (c, j) =>
-            if (!c.isEntailed) {
-              c match {
-                case c: Removals =>
-                  c.setRemovals(v.positionInConstraint(j));
-              }
 
-              queue.offer(c);
-            }
-        }
-      }
+    for (
+      v <- problem.variables if (modVar(v.getId) > cnt);
+      (c, j) <- v.constraints.zipWithIndex if (!c.isEntailed)
+    ) {
+      c.setRemovals(v.positionInConstraint(j));
+      queue.offer(c);
     }
 
     if (modCons != null) {
-      problem.constraints.foreach { c =>
-        if (modCons(c.getId) > cnt && !c.isEntailed) {
-          c.fillRemovals()
-          queue.offer(c);
-        }
+      for (c <- problem.constraints if (modCons(c.getId) > cnt && !c.isEntailed)) {
+
+        c.fillRemovals()
+        queue.offer(c);
+
       }
     }
 
