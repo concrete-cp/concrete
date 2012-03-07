@@ -10,7 +10,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import cspfj.problem.BitVectorDomain
+import cspfj.problem.IntDomain
 import cspfj.problem.Variable
 import cspfj.constraint.semantic.AllDifferent2C
 
@@ -25,9 +25,9 @@ final class TupleManagerTest {
 
     val dom = Seq(1, 2, 3, 4, 5);
 
-    val v1 = new Variable("V1", new BitVectorDomain(dom: _*));
-    val v2 = new Variable("V2", new BitVectorDomain(dom: _*));
-    val v3 = new Variable("V3", new BitVectorDomain(dom: _*));
+    val v1 = new Variable("V1", new IntDomain(dom: _*));
+    val v2 = new Variable("V2", new IntDomain(dom: _*));
+    val v3 = new Variable("V3", new IntDomain(dom: _*));
 
     val constraint = new AllDifferent2C(v1, v2, v3);
 

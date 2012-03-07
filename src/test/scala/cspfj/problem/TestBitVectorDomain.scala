@@ -2,11 +2,11 @@ package cspfj.problem
 import org.junit.Assert._
 import org.junit.Test
 
-final class TestBitVectorDomain {
+final class TestIntDomain {
 
   @Test
   def testGreatest() {
-    val b = new BitVectorDomain(1, 2, 7, 8)
+    val b = new IntDomain(1, 2, 7, 8)
     assertEquals(1, b.closestLt(3));
     assertEquals(2, b.closestGt(3));
     assertEquals(3, b.closestLt(9));
@@ -17,7 +17,7 @@ final class TestBitVectorDomain {
 
   @Test
   def testPresent() {
-    val domain = new BitVectorDomain(0, 1)
+    val domain = new IntDomain(0, 1)
     assertTrue(domain.present(0));
     domain.setLevel(1);
     domain.remove(0);
@@ -28,7 +28,7 @@ final class TestBitVectorDomain {
 
   @Test
   def testIntervals() {
-    val domain = new BitVectorDomain(3, 4, 5, 6, 7)
+    val domain = new IntDomain(3, 4, 5, 7)
     domain.removeToVal(4)
     assertEquals(domain.toString, 5, domain.firstValue)
 

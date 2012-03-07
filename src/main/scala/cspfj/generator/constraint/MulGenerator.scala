@@ -2,7 +2,7 @@ package cspfj.generator.constraint;
 
 import cspfj.constraint.semantic.Mul
 import cspfj.generator.FailedGenerationException
-import cspfj.problem.{ Variable, Problem, BitVectorDomain }
+import cspfj.problem.{ Variable, Problem, IntDomain }
 import cspom.constraint.CSPOMConstraint
 
 final class MulGenerator(problem: Problem) extends AbstractGenerator(problem) {
@@ -15,15 +15,15 @@ final class MulGenerator(problem: Problem) extends AbstractGenerator(problem) {
       case Seq() => true
       case Seq(v) if v == result => {
         val values = AbstractGenerator.domainFrom(v0, v1, { _ * _ })
-        v.dom = new BitVectorDomain(values: _*)
+        v.dom = new IntDomain(values: _*)
         true
       }
       case Seq(v) if v == v0 => {
-        v.dom = new BitVectorDomain(generateDomain(result, v1): _*)
+        v.dom = new IntDomain(generateDomain(result, v1): _*)
         true
       }
       case Seq(v) if v == v1 => {
-        v.dom = new BitVectorDomain(generateDomain(result, v0): _*)
+        v.dom = new IntDomain(generateDomain(result, v0): _*)
         true
       }
       case _ => false

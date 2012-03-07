@@ -1,7 +1,7 @@
 package cspfj.generator.constraint;
 
 import cspfj.constraint.semantic.Abs
-import cspfj.problem.{ Variable, Problem, BitVectorDomain }
+import cspfj.problem.{ Variable, Problem, IntDomain }
 import cspom.constraint.CSPOMConstraint
 import scala.collection.immutable.SortedSet
 
@@ -14,11 +14,11 @@ final class AbsGenerator(problem: Problem) extends AbstractGenerator(problem) {
       case Seq() => true
       case Seq(v) if v == v0 => {
         val values = result.dom.allValues
-        v.dom = new BitVectorDomain(AbstractGenerator.makeDomain(values ++ values.map(-_)): _*);
+        v.dom = new IntDomain(AbstractGenerator.makeDomain(values ++ values.map(-_)): _*);
         true;
       }
       case Seq(v) if v == result => {
-        v.dom = new BitVectorDomain(AbstractGenerator.makeDomain(v0.dom.allValues.map(math.abs)): _*);
+        v.dom = new IntDomain(AbstractGenerator.makeDomain(v0.dom.allValues.map(math.abs)): _*);
         true;
       }
       case _ => false

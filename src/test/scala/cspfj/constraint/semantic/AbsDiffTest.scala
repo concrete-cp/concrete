@@ -10,7 +10,7 @@ import cspfj.constraint.AbstractConstraint
 import cspfj.constraint.Constraint
 import cspfj.constraint.Residues
 import cspfj.constraint.TupleEnumerator
-import cspfj.problem.BitVectorDomain
+import cspfj.problem.IntDomain
 import cspfj.problem.Variable
 
 final class AbsDiffTest {
@@ -22,9 +22,9 @@ final class AbsDiffTest {
 
   @Before
   def setUp() {
-    x = new Variable("x", new BitVectorDomain(randomDomain(-100, 100, 20): _*));
-    y = new Variable("y", new BitVectorDomain(randomDomain(-100, 100, 20): _*));
-    z = new Variable("z", new BitVectorDomain(randomDomain(-100, 100, 20): _*));
+    x = new Variable("x", new IntDomain(randomDomain(-100, 100, 20): _*));
+    y = new Variable("y", new IntDomain(randomDomain(-100, 100, 20): _*));
+    z = new Variable("z", new IntDomain(randomDomain(-100, 100, 20): _*));
   }
 
   @Test

@@ -2,7 +2,7 @@ package cspfj.generator.constraint;
 
 import cspfj.constraint.semantic.{ Eq, Add }
 import cspfj.constraint.Constraint
-import cspfj.problem.{ Variable, Problem, BitVectorDomain }
+import cspfj.problem.{ Variable, Problem, IntDomain }
 import cspom.constraint.CSPOMConstraint
 
 final class AddGenerator(problem: Problem) extends AbstractGenerator(problem) {
@@ -21,15 +21,15 @@ final class AddGenerator(problem: Problem) extends AbstractGenerator(problem) {
         if (nullVariable == result) {
           val values = AbstractGenerator.domainFrom(v0, v1, { _ + _ });
 
-          result.dom = new BitVectorDomain(values: _*);
+          result.dom = new IntDomain(values: _*);
 
         } else if (nullVariable == v0) {
 
-          v0.dom = new BitVectorDomain(generateValues(result, v1): _*);
+          v0.dom = new IntDomain(generateValues(result, v1): _*);
 
         } else if (nullVariable == v1) {
 
-          v1.dom = new BitVectorDomain(generateValues(result, v0): _*);
+          v1.dom = new IntDomain(generateValues(result, v0): _*);
 
         } else {
 

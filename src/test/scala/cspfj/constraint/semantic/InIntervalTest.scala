@@ -5,7 +5,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-import cspfj.problem.BitVectorDomain
+import cspfj.problem.IntDomain
 import cspfj.problem.Domain
 import cspfj.problem.Variable
 
@@ -16,7 +16,7 @@ final class InIntervalTest {
 
   @Before
   def setUp() {
-    domain = new BitVectorDomain(1, 2, 3)
+    domain = new IntDomain(1, 2, 3)
     val variable = new Variable("test", domain);
     constraint = InInterval.values(variable, 2, 4);
   }

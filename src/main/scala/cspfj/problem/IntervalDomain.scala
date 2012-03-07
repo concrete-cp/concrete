@@ -4,132 +4,73 @@ import cspfj.util.BitVector
 import java.util.Arrays
 import cspfj.util.Backtrackable
 
-final class IntervalDomain(
-  private val offset: Int,
-  private var currentDomain: Interval) extends Domain with Backtrackable[Interval] {
+final class IntervalDomain(val domain: Interval) extends IntSet {
 
-  override def size = currentDomain.size
-  //
-  //  def this(domain: IntervalDomain) =
-  //    this(domain.offset, domain.initDomain, domain.currentDomain, domain.history)
+  def this(lb: Int, ub: Int) = this(Interval(lb, ub))
 
-  def this(lb: Int, ub: Int) = this(lb, Interval(0, ub - lb))
+  val size = domain.size
 
-  override def first = currentDomain.lb
+  if (size == 0) throw Domain.empty
 
-  override def last = currentDomain.ub
+  def first = domain.lb
 
-  override def lastAbsent = throw new UnsupportedOperationException
+  def last = domain.ub
 
-  override def next(i: Int) = if (i >= currentDomain.ub) -1 else i + 1
+  def next(i: Int) = if (i >= domain.ub) -1 else i + 1
 
-  override def prev(i: Int) = if (i <= currentDomain.lb) -1 else i - 1
+  def prev(i: Int) = if (i <= domain.lb) -1 else i - 1
 
-  override def prevAbsent(i: Int) = throw new UnsupportedOperationException
+  def closestLeq(i: Int): Int =
+    if (i < first) -1
+    else if (i > last) last
+    else i
 
-  /**
-   * @param value
-   *            the value we seek the index for
-   * @return the index of the given value or -1 if it could not be found
-   */
-  override def index(value: Int) = value - offset
+  def closestGeq(i: Int): Int =
+    if (i > last) -1
+    else if (i < first) first
+    else i
 
-  private def closestLeq(value: Int, lb: Int, ub: Int): Int = {
-    if (this.value(ub) <= value) {
-      ub
-    } else {
-      val test = (ub + lb) / 2
-      if (this.value(test) > value) {
-        closestLeq(value, lb, test - 1)
-      } else {
-        closestLeq(value, test + 1, ub)
-      }
-    }
-  }
-
-  override def closestLeq(value: Int): Int =
-    if (this.value(first) > value) -1 else closestLeq(value, first, last)
-
-  private def closestGeq(value: Int, lb: Int, ub: Int): Int = {
-    if (this.value(lb) >= value) {
-      lb
-    } else {
-      val test = (ub + lb) / 2;
-      if (this.value(test) >= value) {
-        closestGeq(value, lb, test - 1)
-      } else {
-        closestGeq(value, test + 1, ub)
-      }
-    }
-  }
-
-  override def closestGeq(value: Int): Int =
-    if (this.value(last) < value) -1 else closestGeq(value, first, last)
+  def copy = this
 
   /**
    * @param index
    *            index to test
    * @return true iff index is present
    */
-  override def present(index: Int) = currentDomain.in(index);
+  def present(index: Int) = domain.in(index);
 
-  override def setSingle(index: Int) {
-    altering()
-    currentDomain = Interval(index, index)
-  }
+  def setSingle(index: Int) = new IntervalDomain(index, index)
 
-  override def value(index: Int) = index + offset
-
-  override def remove(index: Int) {
+  def remove(index: Int) = {
     assert(present(index));
-    altering()
-    if (index == currentDomain.lb) currentDomain = Interval(currentDomain.lb + 1, currentDomain.ub)
-    else if (index == currentDomain.ub) currentDomain = Interval(currentDomain.lb, currentDomain.ub - 1)
-    else throw new IllegalArgumentException
+    if (index == domain.lb) new IntervalDomain(domain.lb + 1, domain.ub)
+    else if (index == domain.ub) new IntervalDomain(domain.lb, domain.ub - 1)
+    else new BitVectorDomain(domain.lb, domain.ub, index)
   }
 
-  override def removeFrom(lb: Int) = {
-
-    val nbRemVals = math.max(0, currentDomain.ub - lb + 1)
-    if (nbRemVals > 0) {
-      altering()
-      currentDomain = Interval(currentDomain.lb, currentDomain.ub - nbRemVals)
-    }
-
-    nbRemVals;
-
+  def removeFrom(lb: Int) = {
+    if (lb > domain.ub) this
+    else new IntervalDomain(domain.lb, lb - 1)
   }
 
-  override def removeTo(ub: Int) = {
-    val nbRemVals = math.max(0, ub - currentDomain.lb + 1)
-    if (nbRemVals > 0) {
-      altering()
-      currentDomain = Interval(currentDomain.lb + nbRemVals, ub)
-    }
-
-    nbRemVals;
+  def removeTo(ub: Int) = {
+    if (ub < domain.lb) this
+    else new IntervalDomain(ub + 1, domain.ub)
   }
 
   override def getBitVector = throw new UnsupportedOperationException
 
-  def save() = currentDomain
+  def toString(id: Indexer) = "[" + id.value(domain.lb) + ", " + id.value(domain.ub) + "]"
 
-  def restore(data: Interval) {
-    currentDomain = data
+  def subsetOf(d: IntSet) = d match {
+    case d: BitVectorDomain => (first to last).forall(d.present)
+    case d: IntervalDomain => first >= d.first && last <= d.last
   }
 
-  override def getAtLevel(level: Int) = throw new UnsupportedOperationException
-  //  {
-  //    if (level < currentLevel) {
-  //      history.find(_._1 <= level) match {
-  //        case Some(e) => e._2
-  //        case _ => BitVector.newBitVector(domain.length, true);
-  //      }
-  //    } else bvDomain;
-  //  }
-
-  val allValues = currentDomain.allValues.toArray
-
-  override def toString = "[" + currentDomain.lb + ", " + currentDomain.ub + "]"
-  def valueBV(offset: Int) = throw new UnsupportedOperationException
+  def toBitVector = {
+    val bv = BitVector.newBitVector(last + 1)
+    bv.fill(true)
+    bv.clearTo(first - 1)
+    bv
+  }
 }

@@ -6,7 +6,7 @@ class IntervalDomainTest {
 
   @Test
   def test {
-    val dom = new IntervalDomain(10, 20)
+    val dom = new IntDomain((10 to 20).toArray)
 
     assertEquals(0, dom.first)
     assertEquals(10, dom.last)
@@ -19,5 +19,9 @@ class IntervalDomainTest {
 
     dom.removeTo(3)
     assertEquals(4, dom.first)
+
+    val bv = dom.getBitVector
+    assertEquals(4, bv.nextSetBit(0))
+    assertEquals(4, bv.prevSetBit(30))
   }
 }

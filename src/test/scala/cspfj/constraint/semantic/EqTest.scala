@@ -2,15 +2,15 @@ package cspfj.constraint.semantic
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-import cspfj.problem.BitVectorDomain
+import cspfj.problem.IntDomain
 import cspfj.problem.Variable
 
 class EqTest {
 
   @Test
   def test() {
-    val v0 = new Variable("v0", new BitVectorDomain(1, 2, 3))
-    val v1 = new Variable("v1", new BitVectorDomain(3, 4, 5))
+    val v0 = new Variable("v0", new IntDomain(1, 2, 3))
+    val v1 = new Variable("v1", new IntDomain(3, 4, 5))
     val c = new Eq(v0, v1)
     c.fillRemovals()
     c.revise()

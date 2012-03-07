@@ -6,7 +6,7 @@ import org.junit.Before
 import org.junit.Test
 
 import cspfj.constraint.Constraint
-import cspfj.problem.BitVectorDomain
+import cspfj.problem.IntDomain
 import cspfj.problem.Variable
 
 final class ZeroSumTest {
@@ -17,9 +17,9 @@ final class ZeroSumTest {
 
   @Before
   def setUp() {
-    v0 = new Variable("v0", new BitVectorDomain(1, 2, 3, 4));
-    v1 = new Variable("v1", new BitVectorDomain(0, 1, 2, 3, 4));
-    val b = new Variable("b", new BitVectorDomain(1))
+    v0 = new Variable("v0", new IntDomain(1, 2, 3, 4));
+    v1 = new Variable("v1", new IntDomain(0, 1, 2, 3, 4));
+    val b = new Variable("b", new IntDomain(1))
     c = new ZeroSum(Array(4, -1, -1), Array(b, v0, v1));
   }
 

@@ -2,7 +2,7 @@ package cspfj.generator.constraint;
 
 import cspfj.constraint.semantic.{ ReifiedConstraint, Neq, Eq }
 import cspfj.generator.FailedGenerationException
-import cspfj.problem.{ Variable, Problem, Domain, BitVectorDomain }
+import cspfj.problem.{ Variable, Problem, Domain, IntDomain }
 import cspom.constraint.{ GeneralConstraint, FunctionalConstraint, CSPOMConstraint }
 
 final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
@@ -20,7 +20,7 @@ final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
         null
       } else {
         for (v <- scope if (v.dom == null)) {
-          v.dom = new BitVectorDomain(refDomain.get.allValues: _*)
+          v.dom = new IntDomain(refDomain.get.allValues: _*)
         }
         new Eq(scope(0), scope(1));
       }
@@ -55,7 +55,7 @@ final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
           val negDomain = refDomain.get.allValues map { v => (-v) } reverse
 
           for (v <- scope if (v.dom == null)) {
-            v.dom = new BitVectorDomain(negDomain: _*)
+            v.dom = new IntDomain(negDomain: _*)
           }
           new Eq(-1, scope(0), 0, scope(1));
         }

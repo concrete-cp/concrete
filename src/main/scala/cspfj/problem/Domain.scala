@@ -16,10 +16,6 @@ trait Domain {
 
   def prev(i: Int): Int
 
-  def lastAbsent: Int
-
-  def prevAbsent(i: Int): Int
-
   def index(value: Int): Int
 
   def value(index: Int): Int
@@ -136,13 +132,13 @@ trait Domain {
   }
 
   def indicesR = new Iterator[Int] {
-    var index = last
+    var index = Domain.this.last
 
-    def hasNext = index >= 0
+    override def hasNext = index >= 0
 
-    def next = {
+    override def next = {
       val current = index
-      index = Domain.this.prev(index)
+      index = Domain.this.prev(index);
       current
     }
   }
@@ -150,8 +146,6 @@ trait Domain {
   def values = indices map value
 
   def valueInterval = Interval(firstValue, lastValue)
-
-  def valueBV(offset: Int): BitVector
 
   def intersectVal(i: Interval) = {
     val lb = closestLt(i.lb)
@@ -170,8 +164,6 @@ trait Domain {
         i += 1
       }
   }
-
-  def subsetOf(d: Domain) = values.forall(v => d.present(d.index(v)))
 
   def disjoint(d: Domain) = {
     def disj(i: Int): Boolean = {

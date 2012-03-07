@@ -1,6 +1,6 @@
 package cspfj
 import org.junit.Test
-import cspfj.problem.BitVectorDomain
+import cspfj.problem.IntDomain
 import cspfj.problem.Problem
 import cspfj.constraint.semantic.Eq
 import cspfj.problem.Variable
@@ -14,13 +14,13 @@ class TestMAC {
   def qp(size: Int) = {
     val problem = new Problem
 
-    val queens = (0 until size) map (q => problem.addVariable("q" + q, new BitVectorDomain(0 until size: _*)))
+    val queens = (0 until size) map (q => problem.addVariable("q" + q, new IntDomain(0 until size: _*)))
 
     problem.addConstraint(allDiff(queens))
 
     val qd1 = queens.zipWithIndex map {
       case (q, i) =>
-        val v = problem.addVariable("d1_" + q.name, new BitVectorDomain(0 - i until size - i: _*))
+        val v = problem.addVariable("d1_" + q.name, new IntDomain(0 - i until size - i: _*))
         problem.addConstraint(new Eq(1, q, -i, v))
         v
     }
@@ -29,7 +29,7 @@ class TestMAC {
 
     val qd2 = queens.zipWithIndex map {
       case (q, i) =>
-        val v = problem.addVariable("d2_" + q.name, new BitVectorDomain(0 + i until size + i: _*))
+        val v = problem.addVariable("d2_" + q.name, new IntDomain(0 + i until size + i: _*))
         problem.addConstraint(new Eq(1, q, i, v))
         v
     }

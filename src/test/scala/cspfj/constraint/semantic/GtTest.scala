@@ -4,7 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
-import cspfj.problem.BitVectorDomain
+import cspfj.problem.IntDomain
 import cspfj.problem.Variable
 
 final class GtTest {
@@ -13,8 +13,8 @@ final class GtTest {
 
   @Before
   def setUp() {
-    v1 = new Variable("v1", new BitVectorDomain(1, 2, 3, 4));
-    v2 = new Variable("v2", new BitVectorDomain(3, 4, 5));
+    v1 = new Variable("v1", new IntDomain(1, 2, 3, 4));
+    v2 = new Variable("v2", new IntDomain(3, 4, 5));
   }
 
   @Test

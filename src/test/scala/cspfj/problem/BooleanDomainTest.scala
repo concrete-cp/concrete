@@ -113,21 +113,6 @@ final class BooleanDomainTest {
   }
 
   @Test
-  def testLastAbsent() {
-    assertEquals(-1, domain.lastAbsent);
-    domain.remove(0);
-    assertEquals(0, domain.lastAbsent);
-  }
-
-  @Test
-  def testPrevAbsent() {
-    assertEquals(-1, domain.prevAbsent(1));
-    domain.remove(0);
-    assertEquals(0, domain.prevAbsent(1));
-    assertEquals(-1, domain.prevAbsent(0));
-  }
-
-  @Test
   def testBitVector() {
     val bv = BitVector.newBitVector(2)
     bv.fill(true)

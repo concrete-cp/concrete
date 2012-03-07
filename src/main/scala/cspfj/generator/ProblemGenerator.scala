@@ -1,7 +1,7 @@
 package cspfj.generator;
 
 import cspfj.generator.constraint.GeneratorManager
-import cspfj.problem.{ BitVectorDomain, Problem }
+import cspfj.problem.{ Domain, IntDomain, Problem }
 import cspom.constraint.CSPOMConstraint
 import cspom.variable.{ CSPOMDomain, BooleanDomain }
 import cspom.CSPOM
@@ -52,7 +52,7 @@ object ProblemGenerator {
     }
   }
 
-  def generateDomain[T](cspomDomain: CSPOMDomain[T]) = cspomDomain match {
+  def generateDomain[T](cspomDomain: CSPOMDomain[T]): Domain = cspomDomain match {
     case null => null
     case bD: BooleanDomain =>
       if (bD.isConstant) {
@@ -61,6 +61,6 @@ object ProblemGenerator {
         new cspfj.problem.BooleanDomain();
       }
     case _ =>
-      new BitVectorDomain(cspomDomain.asInstanceOf[CSPOMDomain[Int]].values: _*);
+      new IntDomain(cspomDomain.asInstanceOf[CSPOMDomain[Int]].values: _*);
   }
 }
