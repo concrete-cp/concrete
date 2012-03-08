@@ -15,7 +15,6 @@ case class Interval(val a: Int, val b: Int) {
    * [a, b] − [c, d] = [a − d, b − c]
    * [a, b] × [c, d] = [min (a × c, a × d, b × c, b × d), max (a × c, a × d, b × c, b × d)]
    * [a, b] ÷ [c, d] = [min (a ÷ c, a ÷ d, b ÷ c, b ÷ d), max (a ÷ c, a ÷ d, b ÷ c, b ÷ d)] when 0 is not in [c, d].
-   *
    */
 
   def +(i: Interval) = {
@@ -44,7 +43,8 @@ case class Interval(val a: Int, val b: Int) {
   }
 
   def /(i: Int) = {
-    if (i > 0) {
+    if (i == 0) throw new ArithmeticException
+    else if (i > 0) {
       val a = this.a / i + (if (this.a % i != 0) 1 else 0)
       val b = this.b / i
       Interval(a, b)
@@ -53,8 +53,6 @@ case class Interval(val a: Int, val b: Int) {
       val b = this.a / i
       Interval(a, b)
     }
-
-    //Interval(math.ceil(min).toInt, math.floor(max).toInt)
   }
 
 }

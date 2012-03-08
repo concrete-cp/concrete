@@ -28,7 +28,6 @@ final class BitVectorDomain(val bvDomain: BitVector, val initSize: Int) extends 
 
   private def size_=(s: Int) {
     _size = s
-    if (s == 0) throw Domain.empty
   }
 
   var _first = 0
@@ -90,9 +89,9 @@ final class BitVectorDomain(val bvDomain: BitVector, val initSize: Int) extends 
   def getBitVector = bvDomain
 
   def toString(id: Indexer) = if (size <= BitVectorDomain.DISPLAYED_VALUES) {
-    iterator.map(id.value).mkString("[", ", ", "]");
+    iterator.map(id.value).mkString("{", ", ", "}");
   } else {
-    iterator.map(id.value).take(BitVectorDomain.DISPLAYED_VALUES).mkString("[", ", ", " (" + (size - BitVectorDomain.DISPLAYED_VALUES) + " more)]")
+    iterator.map(id.value).take(BitVectorDomain.DISPLAYED_VALUES).mkString("{", ", ", " (" + (size - BitVectorDomain.DISPLAYED_VALUES) + " more)}")
   }
 
   def subsetOf(d: IntSet) = d match {

@@ -49,15 +49,19 @@ final class IntDomain(
 
   def closestLeq(value: Int): Int = {
     val i = index(value)
-    if (i < 0) -1
-    else
+    if (i < 0) {
+      if (value > lastValue) last
+      else -1
+    } else
       intSet.closestLeq(i)
   }
 
   def closestGeq(value: Int): Int = {
     val i = index(value)
-    if (i < 0) -1
-    else
+    if (i < 0) {
+      if (value < firstValue) first
+      else -1
+    } else
       intSet.closestGeq(i)
   }
 
@@ -79,20 +83,29 @@ final class IntDomain(
     assert(present(index));
     altering()
     intSet = intSet.remove(index)
+    if (size == 0) throw Domain.empty
   }
 
   def removeFrom(lb: Int) = {
-    altering()
     val s = intSet.size
     intSet = intSet.removeFrom(lb)
-    intSet.size - s
+    val r = s - intSet.size
+    if (r > 0) {
+      altering()
+      if (r == s) throw Domain.empty
+      r
+    } else 0
   }
 
   def removeTo(ub: Int) = {
-    altering()
     val s = intSet.size
     intSet = intSet.removeTo(ub)
-    intSet.size - s
+    val r = s - intSet.size
+    if (r > 0) {
+      altering()
+      if (r == s) throw Domain.empty
+      r
+    } else 0
   }
 
   def intersects(bv: BitVector) = intSet.intersects(bv)

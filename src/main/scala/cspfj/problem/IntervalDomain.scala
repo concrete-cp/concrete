@@ -10,8 +10,6 @@ final class IntervalDomain(val domain: Interval) extends IntSet {
 
   val size = domain.size
 
-  if (size == 0) throw Domain.empty
-
   def first = domain.lb
 
   def last = domain.ub
@@ -59,7 +57,8 @@ final class IntervalDomain(val domain: Interval) extends IntSet {
   }
 
   def toString(id: Indexer) =
-    if (domain.lb == domain.ub) "[" + id.value(domain.lb) + "]"
+    if (domain.lb > domain.ub) "[]"
+    else if (domain.lb == domain.ub) "[" + id.value(domain.lb) + "]"
     else "[" + id.value(domain.lb) + ", " + id.value(domain.ub) + "]"
 
   def subsetOf(d: IntSet) = d match {
@@ -73,7 +72,7 @@ final class IntervalDomain(val domain: Interval) extends IntSet {
     bv.clearTo(first - 1)
     bv
   }
-  
+
   def intersects(bv: BitVector) = bv.intersects(toBitVector)
   def intersects(bv: BitVector, part: Int) = bv.intersects(toBitVector, part)
 }

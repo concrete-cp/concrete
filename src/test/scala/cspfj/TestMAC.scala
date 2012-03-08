@@ -54,7 +54,7 @@ class TestMAC {
       val (queens, problem) = qp(size)
 
       ParameterManager("heuristic.value") = classOf[MedValue]
-      //ParameterManager.parameter("logger.level", "INFO")
+      ParameterManager("logger.level") = "INFO"
       val solver = new MAC(problem)
 
       @tailrec
@@ -63,7 +63,7 @@ class TestMAC {
         solver.nextSolution() match {
           case None => c
           case Some(solution) => {
-            //println(c + " : " + view(queens, solution))
+            println(c + " : " + view(queens, solution))
             count(c + 1)
           }
         }
