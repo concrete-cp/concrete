@@ -33,17 +33,14 @@ final class MatrixManager2D(
   }
 
   def hasSupport(variablePosition: Int, index: Int) = {
-    if (last == null) {
-      hasSupportNR(variablePosition, index);
-    } else
-      hasSupportR(variablePosition, index);
+    if (last == null) hasSupportNR(variablePosition, index);
+    else hasSupportR(variablePosition, index);
   }
 
   private def hasSupportR(variablePosition: Int, index: Int) = {
     controlResidue(variablePosition, index) || {
       val matrixBV = matrix2d.getBitVector(variablePosition, index);
-      val intersection = matrixBV
-        .intersects(scope(1 - variablePosition).dom.getBitVector);
+      val intersection = scope(1 - variablePosition).dom.intersects(matrixBV)
 
       if (intersection >= 0) {
         MatrixManager2D.checks += 1 + intersection;
@@ -58,16 +55,14 @@ final class MatrixManager2D(
 
   private def hasSupportNR(variablePosition: Int, index: Int) = {
     MatrixManager2D.checks += 1;
-    matrix2d.getBitVector(variablePosition, index).intersects(
-      scope(1 - variablePosition).dom.getBitVector) >= 0;
+    scope(1 - variablePosition).dom.intersects(matrix2d.getBitVector(variablePosition, index)) >= 0
   }
 
   private def controlResidue(position: Int, index: Int) = {
     val part = last(position)(index)
     MatrixManager2D.presenceChecks += 1
-    (part != -1 &&
-      matrix2d.getBitVector(position, index).intersects(
-        scope(1 - position).dom.getBitVector, part))
+    (part != -1 && scope(1 - position).dom.intersects(
+      matrix2d.getBitVector(position, index), part))
   }
 
   override def unshareMatrix() = {

@@ -112,13 +112,6 @@ final class BooleanDomainTest {
 
   }
 
-  @Test
-  def testBitVector() {
-    val bv = BitVector.newBitVector(2)
-    bv.fill(true)
-    assertEquals(bv, domain.getBitVector);
-  }
-
   // @Test
   // public void testClone() throws CloneNotSupportedException {
   // final domain clone = domain.clone();

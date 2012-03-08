@@ -20,8 +20,5 @@ class IntervalDomainTest {
     dom.removeTo(3)
     assertEquals(4, dom.first)
 
-    val bv = dom.getBitVector
-    assertEquals(4, bv.nextSetBit(0))
-    assertEquals(4, bv.prevSetBit(30))
   }
 }

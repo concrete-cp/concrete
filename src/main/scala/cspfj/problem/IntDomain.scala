@@ -95,9 +95,9 @@ final class IntDomain(
     intSet.size - s
   }
 
-  def getBitVector = intSet.getBitVector
-
-  val allValues = domain;
+  def intersects(bv: BitVector) = intSet.intersects(bv)
+  def intersects(bv: BitVector, part: Int) = intSet.intersects(bv, part)
+  def allValues = domain
 
   override def toString = intSet.toString(indexer)
 

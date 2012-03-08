@@ -5,7 +5,7 @@ object IntSet {
   def factory(domain: Seq[Int]): IntSet = {
     require(domain.size == 1 || domain.sliding(2).forall(p => p(0) < p(1)), "Only ordered domains are supported");
 
-    if (domain.size == 1 + domain.last - domain.first)
+    if (domain.size == 1 + domain.last - domain.head)
       new IntervalDomain(0, domain.size - 1)
     else
       new BitVectorDomain(domain.size)
@@ -26,10 +26,11 @@ trait IntSet {
   def remove(i: Int): IntSet
   def removeFrom(lb: Int): IntSet
   def removeTo(ub: Int): IntSet
-  def getBitVector: BitVector
   def subsetOf(d: IntSet): Boolean
   def toString(id: Indexer): String
   def toBitVector: BitVector
+  def intersects(bv: BitVector): Int
+  def intersects(bv: BitVector, part: Int): Boolean
 
   private def indices(i: Int): Stream[Int] =
     if (i < 0) Stream.empty

@@ -101,5 +101,7 @@ final class BitVectorDomain(val bvDomain: BitVector, val initSize: Int) extends 
   }
 
   def toBitVector = bvDomain
+  def intersects(bv: BitVector) = bv.intersects(bvDomain)
+  def intersects(bv: BitVector, part: Int) = bv.intersects(bvDomain, part)
 
 }

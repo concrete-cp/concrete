@@ -58,8 +58,6 @@ final class IntervalDomain(val domain: Interval) extends IntSet {
     else new IntervalDomain(ub + 1, domain.ub)
   }
 
-  override def getBitVector = throw new UnsupportedOperationException
-
   def toString(id: Indexer) =
     if (domain.lb == domain.ub) "[" + id.value(domain.lb) + "]"
     else "[" + id.value(domain.lb) + ", " + id.value(domain.ub) + "]"
@@ -75,4 +73,7 @@ final class IntervalDomain(val domain: Interval) extends IntSet {
     bv.clearTo(first - 1)
     bv
   }
+  
+  def intersects(bv: BitVector) = bv.intersects(toBitVector)
+  def intersects(bv: BitVector, part: Int) = bv.intersects(toBitVector, part)
 }

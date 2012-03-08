@@ -181,40 +181,7 @@ final class BooleanDomain(var _status: Status) extends Domain
     }
   }
 
-  def getBitVector = status.bitVector
-
   override val maxSize = 2
-
-  //  def setLevel(level: Int) {
-  //    assert(level > currentLevel)
-  //    if (removed) {
-  //      history ::= (currentLevel, this.status)
-  //      removed = false
-  //    }
-  //    currentLevel = level;
-  //  }
-  //
-  //  def restoreLevel(level: Int) {
-  //    assert(level == 0 || level < currentLevel);
-  //
-  //    history = history.dropWhile(_._1 > level)
-  //    _status = if (history == Nil) {
-  //      UNKNOWN
-  //    } else {
-  //      history.head._2
-  //    }
-  //
-  //    currentLevel = level;
-  //  }
-  //
-  //  def getAtLevel(level: Int) = {
-  //    if (level < currentLevel) {
-  //      history.find(h => h._1 <= level) match {
-  //        case Some(h) => h._2.bitVector
-  //        case None => UNKNOWN.bitVector
-  //      }
-  //    } else status.bitVector;
-  //  }
 
   override val allValues = UNKNOWN.array
 
@@ -243,6 +210,9 @@ final class BooleanDomain(var _status: Status) extends Domain
   def prevAbsent(value: Int) = status.prevAbsent(value)
 
   def lastAbsent = status.lastAbsent
+
+  def intersects(bv: BitVector) = bv.intersects(status.bitVector)
+  def intersects(bv: BitVector, part: Int) = bv.intersects(status.bitVector, part)
 
   def isTrue = status == TRUE
   def isFalse = status == FALSE

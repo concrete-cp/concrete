@@ -115,8 +115,6 @@ trait Domain {
    */
   def closestGeq(value: Int): Int
 
-  def getBitVector: BitVector
-
   def indices: Iterator[Int] = indices(first)
 
   def indices(from: Int) = new Iterator[Int] {
@@ -177,5 +175,8 @@ trait Domain {
     disj(first)
 
   }
+
+  def intersects(bv: BitVector): Int
+  def intersects(bv: BitVector, part: Int): Boolean
 
 }
