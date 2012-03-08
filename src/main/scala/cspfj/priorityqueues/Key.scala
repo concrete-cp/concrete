@@ -6,13 +6,13 @@ object Key {
 
   def prod(num: Array[Variable]) = {
     @tailrec
-    def p(i: Int, r: Int): Int = {
-      if (i >= 0) {
+    def p(i: Int, r: Int): Int =
+      if (i < 0) r
+      else {
         val v = num(i).dom.size
         if (r > Int.MaxValue / v) Int.MaxValue
         else p(i - 1, r * v)
-      } else r
-    }
+      }
 
     p(num.length - 1, 1)
   }
