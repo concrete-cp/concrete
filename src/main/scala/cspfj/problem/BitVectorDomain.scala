@@ -6,33 +6,42 @@ import cspfj.util.Backtrackable
 
 final object BitVectorDomain {
   val DISPLAYED_VALUES = 4;
+
+  def fullBV(size: Int) = {
+    val bv = BitVector.newBitVector(size)
+    bv.fill(true)
+    bv
+  }
+
+  def bv(lb: Int, ub: Int, hole: Int) = {
+    val bv = fullBV(ub + 1)
+    bv.clearTo(lb)
+    bv.clear(hole)
+    bv
+  }
 }
 
 final class BitVectorDomain(val bvDomain: BitVector, val initSize: Int) extends IntSet {
 
   def this(size: Int) = {
-    this(BitVector.newBitVector(size), size)
-    bvDomain.fill(true)
+    this(BitVectorDomain.fullBV(size), size)
   }
 
   def this(lb: Int, ub: Int, hole: Int) = {
-    this(ub + 1)
-    if (lb > 0)
-      removeTo(lb - 1)
-    remove(hole)
+    this(BitVectorDomain.bv(lb, ub, hole), ub - lb)
   }
 
-  private var _size = initSize
+  private val _size = initSize
 
   def size = _size
 
-  private def size_=(s: Int) {
-    _size = s
-  }
+  //  private def size_=(s: Int) {
+  //    _size = s
+  //  }
 
-  var _first = 0
+  val _first = bvDomain.nextSetBit(0)
 
-  var _last = _size - 1
+  val _last = bvDomain.lastSetBit
 
   def first = {
     assert(_first == bvDomain.nextSetBit(0))
@@ -44,7 +53,7 @@ final class BitVectorDomain(val bvDomain: BitVector, val initSize: Int) extends 
     _last
   }
 
-  def copy = new BitVectorDomain(bvDomain.clone, size)
+  def copy = this //new BitVectorDomain(bvDomain.clone, size)
 
   override def next(i: Int) = bvDomain.nextSetBit(i + 1)
 
@@ -65,25 +74,32 @@ final class BitVectorDomain(val bvDomain: BitVector, val initSize: Int) extends 
 
   def remove(index: Int) = {
     assert(present(index));
-    bvDomain.clear(index);
-    if (_first == index) _first = bvDomain.nextSetBit(index)
-    if (_last == index) _last = bvDomain.prevSetBit(index)
-    size -= 1;
-    this
+    val nbv = bvDomain.clone
+    nbv.clear(index);
+    //    if (_first == index) nbv._first = bvDomain.nextSetBit(index)
+    //    if (_last == index) nbv._last = bvDomain.prevSetBit(index)
+    //    size -= 1;
+    new BitVectorDomain(nbv, size - 1)
   }
 
   def removeFrom(lb: Int) = {
-    val nbRemVals = bvDomain.clearFrom(lb);
-    _last = bvDomain.prevSetBit(lb)
-    size -= nbRemVals;
-    this
+    val nbv = bvDomain.clone
+    val nbRemVals = nbv.clearFrom(lb)
+    new BitVectorDomain(nbv, size - nbRemVals)
+    //    val nbRemVals = bvDomain.clearFrom(lb);
+    //    _last = bvDomain.prevSetBit(lb)
+    //    size -= nbRemVals;
+    //    this
   }
 
   def removeTo(ub: Int) = {
-    val nbRemVals = bvDomain.clearTo(ub + 1);
-    _first = bvDomain.nextSetBit(ub)
-    size -= nbRemVals;
-    this
+    val nbv = bvDomain.clone
+    val nbRemVals = nbv.clearTo(ub + 1)
+    new BitVectorDomain(nbv, size - nbRemVals)
+    //    val nbRemVals = bvDomain.clearTo(ub + 1);
+    //    _first = bvDomain.nextSetBit(ub)
+    //    size -= nbRemVals;
+    //    this
   }
 
   def getBitVector = bvDomain

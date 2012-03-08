@@ -7,8 +7,6 @@ import cspfj.util.Backtrackable
 final class IntDomain(
   domain: Array[Int]) extends Domain with Backtrackable[IntSet] {
 
-  if (domain.size == 0) throw Domain.empty
-
   private var intSet = IntSet.factory(domain)
 
   override val maxSize = domain.size
@@ -47,22 +45,43 @@ final class IntDomain(
    */
   def index(value: Int) = indexer.index(value)
 
+  private def closestLeq(v: Int, lb: Int, ub: Int): Int = {
+    if (value(ub) <= v) ub
+    else {
+      val test = (ub + lb) / 2
+      if (value(test) > v) {
+        closestLeq(v, lb, test - 1)
+      } else {
+        closestLeq(v, test + 1, ub)
+      }
+    }
+  }
+
+  private def closestGeq(v: Int, lb: Int, ub: Int): Int = {
+    if (value(lb) >= v) lb
+    else {
+      val test = (ub + lb) / 2;
+      if (value(test) >= v)
+        closestGeq(v, lb, test - 1)
+      else
+        closestGeq(v, test + 1, ub)
+    }
+  }
+
   def closestLeq(value: Int): Int = {
     val i = index(value)
     if (i < 0) {
-      if (value > lastValue) last
-      else -1
-    } else
-      intSet.closestLeq(i)
+      if (value < firstValue) -1
+      else closestLeq(value, first, last)
+    } else intSet.closestLeq(i)
   }
 
   def closestGeq(value: Int): Int = {
     val i = index(value)
     if (i < 0) {
-      if (value < firstValue) first
-      else -1
-    } else
-      intSet.closestGeq(i)
+      if (value > lastValue) -1
+      else closestGeq(value, first, last)
+    } else intSet.closestGeq(i)
   }
 
   /**
