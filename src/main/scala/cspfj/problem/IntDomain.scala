@@ -99,6 +99,6 @@ final class IntDomain(
 
   val allValues = domain;
 
-  override def toString = intSet.toString
+  override def toString = intSet.toString(indexer)
 
 }

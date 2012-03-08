@@ -5,7 +5,7 @@ import org.junit.Test
 import cspfj.problem.IntDomain
 import cspfj.problem.Variable
 
-class EqTest {
+final class EqTest {
 
   @Test
   def test() {

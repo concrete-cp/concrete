@@ -60,7 +60,9 @@ final class IntervalDomain(val domain: Interval) extends IntSet {
 
   override def getBitVector = throw new UnsupportedOperationException
 
-  def toString(id: Indexer) = "[" + id.value(domain.lb) + ", " + id.value(domain.ub) + "]"
+  def toString(id: Indexer) =
+    if (domain.lb == domain.ub) "[" + id.value(domain.lb) + "]"
+    else "[" + id.value(domain.lb) + ", " + id.value(domain.ub) + "]"
 
   def subsetOf(d: IntSet) = d match {
     case d: BitVectorDomain => (first to last).forall(d.present)

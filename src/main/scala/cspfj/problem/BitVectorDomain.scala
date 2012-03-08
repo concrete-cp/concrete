@@ -16,8 +16,9 @@ final class BitVectorDomain(val bvDomain: BitVector, val initSize: Int) extends 
   }
 
   def this(lb: Int, ub: Int, hole: Int) = {
-    this(ub - 1)
-    removeTo(lb - 1)
+    this(ub + 1)
+    if (lb > 0)
+      removeTo(lb - 1)
     remove(hole)
   }
 
@@ -98,7 +99,7 @@ final class BitVectorDomain(val bvDomain: BitVector, val initSize: Int) extends 
     case d: BitVectorDomain => bvDomain.subsetOf(d.bvDomain)
     case d: IntervalDomain => first >= d.first && last <= d.last
   }
-  
+
   def toBitVector = bvDomain
 
 }
