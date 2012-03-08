@@ -49,7 +49,7 @@ final class BitVectorDomain(val bvDomain: BitVector, val initSize: Int) extends 
   }
 
   def last = {
-    assert(_last == bvDomain.prevSetBit(initSize))
+    assert(_last == bvDomain.lastSetBit)
     _last
   }
 

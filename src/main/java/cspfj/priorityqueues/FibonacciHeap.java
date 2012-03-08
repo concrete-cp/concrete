@@ -151,7 +151,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
             minNode = x;
         }
 
-        assert control(minNode, minNode);
+        //assert control(minNode, minNode);
     }
 
     /**
@@ -276,7 +276,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
         // decrement size of heap
         nNodes--;
 
-        assert control(minNode, minNode);
+        //assert control(minNode, minNode);
         return z;
     }
 
@@ -366,7 +366,7 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
             }
         }
 
-        assert control(minNode, minNode);
+        //assert control(minNode, minNode);
     }
 
     @Override
@@ -388,33 +388,33 @@ public final class FibonacciHeap<T extends Identified> extends AbstractQueue<T> 
         return min.data;
     }
 
-    private boolean control(final FibonacciHeapNode<T> current,
-            final FibonacciHeapNode<T> start) {
-        return control(current, start, new HashSet<FibonacciHeapNode<T>>(),
-                new HashSet<FibonacciHeapNode<T>>());
-    }
-
-    private boolean control(final FibonacciHeapNode<T> current,
-            final FibonacciHeapNode<T> start,
-            final Set<FibonacciHeapNode<T>> loopControl,
-            final Set<FibonacciHeapNode<T>> ancestorControl) {
-        if (current == null) {
-            return true;
-        }
-        assert !loopControl.contains(current);
-        assert !ancestorControl.contains(current);
-        loopControl.add(current);
-        if (current.child != null) {
-            ancestorControl.add(current);
-            if (!control(current.child, current.child,
-                    new HashSet<FibonacciHeapNode<T>>(), ancestorControl)) {
-                return false;
-            }
-        }
-
-        return current.right == start
-                || control(current.right, start, loopControl, ancestorControl);
-    }
+//    private boolean control(final FibonacciHeapNode<T> current,
+//            final FibonacciHeapNode<T> start) {
+//        return control(current, start, new HashSet<FibonacciHeapNode<T>>(),
+//                new HashSet<FibonacciHeapNode<T>>());
+//    }
+//
+//    private boolean control(final FibonacciHeapNode<T> current,
+//            final FibonacciHeapNode<T> start,
+//            final Set<FibonacciHeapNode<T>> loopControl,
+//            final Set<FibonacciHeapNode<T>> ancestorControl) {
+//        if (current == null) {
+//            return true;
+//        }
+//        assert !loopControl.contains(current);
+//        assert !ancestorControl.contains(current);
+//        loopControl.add(current);
+//        if (current.child != null) {
+//            ancestorControl.add(current);
+//            if (!control(current.child, current.child,
+//                    new HashSet<FibonacciHeapNode<T>>(), ancestorControl)) {
+//                return false;
+//            }
+//        }
+//
+//        return current.right == start
+//                || control(current.right, start, loopControl, ancestorControl);
+//    }
 
     /**
      * Creates a String representation of this Fibonacci heap.
