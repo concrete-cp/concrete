@@ -30,10 +30,10 @@ final class PriorityQueueTest {
 
   val key = IntNode.key
 
-//  @Test //(timeout = 5000)
-//  def testScalaBinomialHeap() {
-//    test(new ScalaBinomialHeap[IntNode](key))
-//  }
+  //  @Test //(timeout = 5000)
+  //  def testScalaBinomialHeap() {
+  //    test(new ScalaBinomialHeap[IntNode](key))
+  //  }
 
   @Test(timeout = 5000)
   def testScalaNative() {
@@ -60,17 +60,18 @@ final class PriorityQueueTest {
   def testFibonacciHeap() {
     test(new FibonacciHeap[IntNode](key))
   }
-//  @Test(timeout = 5000)
-//  def testScalaFibonacciHeap() {
-//    test(new ScalaFibonacciHeap[IntNode](key))
-//  }
+  //  @Test(timeout = 5000)
+  //  def testScalaFibonacciHeap() {
+  //    test(new ScalaFibonacciHeap[IntNode](key))
+  //  }
   @Test(timeout = 5000)
   def testScalaIOBinomialHeap() {
     test(new ScalaIOBinomialHeap[IntNode](key))
   }
-  
+
   def test(q: Queue[IntNode]) {
     //for (j <- 3001 to 5000) {
+    INTS.foreach(i => i.unsetPresent())
     var j = 100
     while (j <= INTS.size) {
 

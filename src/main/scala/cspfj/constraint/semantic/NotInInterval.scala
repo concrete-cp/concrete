@@ -21,13 +21,13 @@ final class NotInInterval(val variable: Variable, val lb: Int, val ub: Int)
 
   val getEvaluation = 1
 
-  def revise() {
+  def revise() = {
 
-    variable.dom.indices(lb).takeWhile(_ <= ub).foreach { i =>
-      variable.dom.remove(i)
-    }
+    val ch = variable.dom.filter(i => lb < i || i > ub)
 
-    entail();
+    entail()
+
+    ch
 
   }
 

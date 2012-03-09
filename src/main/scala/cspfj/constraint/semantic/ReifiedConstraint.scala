@@ -53,18 +53,20 @@ final class ReifiedConstraint(
     negativeConstraint.restoreLvl(l)
   }
 
-  def revise() {
+  def revise() = {
     controlDomain.status match {
-      case UNKNOWN =>
+      case UNKNOWN => (
         if (!positiveConstraint.isConsistent) {
           controlDomain.setFalse();
           entail()
-        }
-        if (!negativeConstraint.isConsistent) {
-          if (!controlDomain.isUnknown) throw UNSATException.e
-          controlDomain.setTrue();
-          entail()
-        }
+          true
+        } else false) | (
+          if (!negativeConstraint.isConsistent) {
+            if (!controlDomain.isUnknown) throw UNSATException.e
+            controlDomain.setTrue();
+            entail()
+            true
+          } else false)
 
       case TRUE => noReifyRevise(positiveConstraint);
       case FALSE => noReifyRevise(negativeConstraint);
@@ -74,15 +76,15 @@ final class ReifiedConstraint(
     }
   }
 
-  private def noReifyRevise(constraint: Constraint) {
+  private def noReifyRevise(constraint: Constraint): Boolean = {
     if (controlRemovals != Removals.count)
       constraint.fillRemovals()
 
-    constraint.revise()
+    val c = constraint.revise()
     if (constraint.isEntailed) {
       entail();
     }
-
+    c
   }
 
   def check = {

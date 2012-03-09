@@ -56,16 +56,18 @@ final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict
 
   }
 
-  def revise() {
+  def revise() = {
     assert(scope(0).dom.size > 0 && scope(1).dom.size > 0)
 
-    removeLt(min(1) - constant, 0)
-    removeGt(max(0) + constant, 1)
+    val ch = removeLt(min(1) - constant, 0) | removeGt(max(0) + constant, 1)
+
     val max1 = max(1);
     val min0 = min(0) + constant;
     if (max1 < min0 || !strict && min0 == max1) {
       entail();
     }
+    
+    ch
 
   }
 

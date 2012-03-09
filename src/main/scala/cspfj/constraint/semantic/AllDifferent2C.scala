@@ -31,7 +31,7 @@ import cspfj.util.UOList
 object AllDifferent2C {
   def filter(scope: Array[Variable], checkedVariable: Int, value: Int): UOList[Int] = {
 
-    def r(i: Int, mod: UOList[Int]): UOList[Int] = {
+    def r(i: Int, mod: UOList[Int]): UOList[Int] =
       if (i < 0) mod
       else if (i == checkedVariable) r(i - 1, mod)
       else {
@@ -43,7 +43,6 @@ object AllDifferent2C {
         } else r(i - 1, mod)
 
       }
-    }
 
     r(scope.size - 1, UOList.empty)
 
@@ -68,22 +67,23 @@ final class AllDifferent2C(scope: Variable*) extends AbstractConstraint(scope.to
     }
   }
 
-  def revise(modified: Seq[Int]) {
+  def revise(modified: Seq[Int]) = {
 
     @tailrec
-    def rev(q: UOList[Int]) {
-      if (!q.isEmpty) {
+    def rev(q: UOList[Int], c: Boolean): Boolean =
+      if (q.isEmpty) c
+      else {
         val checkedVariable = q.head
         val newQueue = q.tail
 
         val value = scope(checkedVariable).dom.firstValue
 
-        rev(newQueue ++ AllDifferent2C.filter(scopeA, checkedVariable, value).
-          filter(scope(_).dom.size == 1))
-      }
-    }
+        val ch = AllDifferent2C.filter(scopeA, checkedVariable, value)
 
-    rev(UOList.build(modified.filter(scope(_).dom.size == 1)))
+        rev(newQueue ++ ch.filter(scope(_).dom.size == 1), c || !ch.isEmpty)
+      }
+
+    rev(UOList.build(modified.filter(scope(_).dom.size == 1)), false)
     //true
     //if (!checkPigeons) throw UNSATException.e
 

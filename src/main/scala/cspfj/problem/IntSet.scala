@@ -26,11 +26,13 @@ trait IntSet {
   def remove(i: Int): IntSet
   def removeFrom(lb: Int): IntSet
   def removeTo(ub: Int): IntSet
+  def filter(f: Int => Boolean): IntSet
   def subsetOf(d: IntSet): Boolean
   def toString(id: Indexer): String
   def toBitVector: BitVector
   def intersects(bv: BitVector): Int
   def intersects(bv: BitVector, part: Int): Boolean
+  def bound: Boolean
 
   private def indices(i: Int): Stream[Int] =
     if (i < 0) Stream.empty

@@ -10,9 +10,7 @@ package cspfj.priorityqueues;
 
 import java.util.AbstractQueue;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
 
 /**
  * This class implements a Fibonacci heap data structure. Much of the code in

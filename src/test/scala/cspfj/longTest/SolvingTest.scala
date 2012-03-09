@@ -102,7 +102,7 @@ final class SolvingTest extends Loggable {
 
   @Test
   def bigleq() {
-    assertEquals(1, count("bigleq-500.xml"))
+    assertEquals(1, count("bigleq-200.xml"))
   }
 
   private def solve(name: String) = {

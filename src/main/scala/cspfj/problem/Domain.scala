@@ -42,8 +42,7 @@ trait Domain {
    */
   def removeFrom(lb: Int): Int
 
-  def removeFromVal(lb: Int) =
-    removeFrom(closestGeq(lb))
+  def removeFromVal(lb: Int) = removeFrom(closestGeq(lb))
 
   /**
    * @param ub
@@ -51,8 +50,9 @@ trait Domain {
    */
   def removeTo(ub: Int): Int
 
-  def removeToVal(ub: Int) =
-    removeTo(closestLt(ub + 1))
+  def removeToVal(ub: Int) = removeTo(closestLeq(ub))
+
+  def filter(f: Int => Boolean): Boolean
 
   def setLevel(level: Int)
 
@@ -68,11 +68,9 @@ trait Domain {
 
   def allValues: Array[Int]
 
-  override def equals(o: Any) = {
-    o match {
-      case d: Domain => values.sameElements(d.values)
-      case _ => false
-    }
+  override def equals(o: Any) = o match {
+    case d: Domain => values.sameElements(d.values)
+    case _ => false
   }
 
   /**
@@ -145,11 +143,13 @@ trait Domain {
 
   def valueInterval = Interval(firstValue, lastValue)
 
-  def intersectVal(i: Interval) = {
-    val lb = closestLt(i.lb)
-    val ub = closestGt(i.ub)
+  def intersectVal(a: Int, b: Int): Int = {
+    val lb = closestLt(a)
+    val ub = closestGt(b)
     (if (lb >= 0) removeTo(lb) else 0) + (if (ub >= 0) removeFrom(ub) else 0)
   }
+
+  def intersectVal(i: Interval): Int = intersectVal(i.a, i.b)
 
   def removeValInterval(lb: Int, ub: Int) = {
 
@@ -178,5 +178,6 @@ trait Domain {
 
   def intersects(bv: BitVector): Int
   def intersects(bv: BitVector, part: Int): Boolean
+  def bound: Boolean
 
 }

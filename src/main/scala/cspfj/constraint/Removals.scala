@@ -25,15 +25,13 @@ trait Removals extends Constraint {
     Arrays.fill(removals, -1)
   }
 
-  final override def revise() {
-    revise(modified(Removals.count, arity - 1))
-  }
+  def revise() = revise(modified(Removals.count, arity - 1))
 
   override def fillRemovals() {
     Arrays.fill(removals, Removals.count)
   }
 
-  def revise(modified: Seq[Int])
+  def revise(modified: Seq[Int]): Boolean
 
   // scope.iterator.zipWithIndex.zip(removals.iterator).filter(t => t._2 >= reviseCount).map(t => t._1)
 

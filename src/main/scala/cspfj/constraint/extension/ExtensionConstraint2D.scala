@@ -38,26 +38,10 @@ final class ExtensionConstraint2D(
 
   override def simpleEvaluation = 2
 
-  def reviseVariable(position: Int) {
+  def reviseVariable(position: Int) = {
     if (!matrixManager.supportCondition(position)) {
-
-      val dom = scope(position).dom
-
-      // assert !variable.isAssigned();
-
-      @tailrec
-      def process(i: Int) {
-        if (i >= 0) {
-          if (!matrixManager.hasSupport(position, i))
-            dom.remove(i)
-
-          process(dom.next(i))
-        }
-      }
-
-      process(dom.first)
-
-    }
+      scope(position).dom.filter(i => matrixManager.hasSupport(position, i))
+    } else false
   }
 
   def removeTuple(tuple: Array[Int]) = {

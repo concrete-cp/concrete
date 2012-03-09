@@ -8,10 +8,10 @@ final class Neq(v0: Variable, v1: Variable) extends AbstractConstraint(Array(v0,
 
   def check = value(0) != value(1)
 
-  def revise() {
-    revise(v0, v1)
-    revise(v1, v0)
+  def revise() = {
+    val ch = revise(v0, v1) | revise(v1, v0)
     if (!isEntailed && (v0.dom disjoint v1.dom)) entail()
+    ch
   }
 
   private def revise(variable: Variable, otherVar: Variable) = {
@@ -20,8 +20,9 @@ final class Neq(v0: Variable, v1: Variable) extends AbstractConstraint(Array(v0,
       if (index >= 0 && otherVar.dom.present(index)) {
         otherVar.dom.remove(index)
         entail()
-      }
-    }
+        true
+      } else false
+    } else false
   }
 
   override def toString = v0 + " /= " + v1

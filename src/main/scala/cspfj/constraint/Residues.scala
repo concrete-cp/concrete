@@ -7,28 +7,19 @@ trait Residues extends VariablePerVariable {
 
   val last = new ResidueManagerFast(scope)
 
-  def reviseVariable(position: Int) {
+  def reviseVariable(position: Int): Boolean = {
     val dom = scope(position).dom
 
-    @tailrec
-    def rev(index: Int) {
-      if (index >= 0) {
-
-        val residue = last.getResidue(position, index);
-        if (residue == null || !controlTuplePresence(residue)) {
-          if (findSupport(position, index)) {
-            last.updateResidue(tuple.clone)
-          } else {
-            dom.remove(index)
-          }
-
-        }
-        rev(dom.next(index))
-
-      }
+    dom.filter { index =>
+      val residue = last.getResidue(position, index);
+      if (residue == null || !controlTuplePresence(residue)) {
+        if (findSupport(position, index)) {
+          last.updateResidue(tuple.clone)
+          true
+        } else false
+      } else true
     }
 
-    rev(dom.first)
   }
 
   def findSupport(variablePosition: Int, index: Int): Boolean

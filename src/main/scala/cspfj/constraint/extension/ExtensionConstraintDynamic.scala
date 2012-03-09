@@ -66,7 +66,7 @@ final class ExtensionConstraintDynamic(
 
     }
 
-    filter(found, arity - 1)
+    val c = filter(found, arity - 1, false)
 
     val card = scope.map(v => BigInt(v.dom.size)).product
     assert(card >= matrixManager.size, card + " < " + matrixManager.size + "!")
@@ -74,6 +74,8 @@ final class ExtensionConstraintDynamic(
       //logger.info("Entailing " + this)
       entail()
     }
+
+    c
 
   }
 
@@ -99,16 +101,12 @@ final class ExtensionConstraintDynamic(
     control(mod)
   }
 
-  private def filter(found: Array[BitVector], p: Int) {
-    if (p >= 0) {
-      val v = scope(p)
-      for (i <- v.dom.indices if !found(p)(i)) {
-        v.dom.remove(i)
-      }
-      filter(found, p - 1)
+  private def filter(found: Array[BitVector], p: Int, c: Boolean): Boolean =
+    if (p < 0) c
+    else {
+      val ch = scope(p).dom.filter(i => found(p)(i))
+      filter(found, p - 1, c || ch)
     }
-
-  }
 
   def check = matrixManager.check
 

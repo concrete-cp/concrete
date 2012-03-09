@@ -36,7 +36,7 @@ final class Disjunction(scope: Array[Variable],
 
   override def toString = "\\/" + scope.mkString("(", ", ", ")")
 
-  def revise() {
+  def revise(): Boolean = {
     if (isTrue(watch1) || isTrue(watch2)) entail()
     else {
       if (isFalse(watch1)) {
@@ -46,17 +46,17 @@ final class Disjunction(scope: Array[Variable],
             watch1 = w
             if (isTrue(w)) {
               entail()
-              return
+              return false
             }
           }
           case None => {
             setTrue(watch2)
             entail()
-            return
+            return true
           }
         }
 
-      } //else if (isTrue(watch1)) entail()
+      }
 
       if (isFalse(watch2)) {
 
@@ -65,13 +65,16 @@ final class Disjunction(scope: Array[Variable],
             watch2 = w
             if (isTrue(w)) entail()
           }
-          case None =>
+          case None => {
             setTrue(watch1)
             entail()
+            return true
+          }
         }
 
-      } //else if (isTrue(watch2)) entail()
+      }
     }
+    false
   }
 
   private def isTrue(position: Int) = {

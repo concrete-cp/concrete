@@ -46,14 +46,18 @@ final class IntervalDomain(val domain: Interval) extends IntSet {
     else new BitVectorDomain(domain.lb, domain.ub, index)
   }
 
-  def removeFrom(lb: Int) = {
+  def removeFrom(lb: Int) =
     if (lb > domain.ub) this
     else new IntervalDomain(domain.lb, lb - 1)
-  }
 
-  def removeTo(ub: Int) = {
+  def removeTo(ub: Int) =
     if (ub < domain.lb) this
     else new IntervalDomain(ub + 1, domain.ub)
+
+  def filter(f: Int => Boolean) = {
+    val bv = new BitVectorDomain(toBitVector, size)
+    val nbv = bv.filter(f)
+    if (bv eq nbv) this else nbv
   }
 
   def toString(id: Indexer) =
@@ -69,10 +73,11 @@ final class IntervalDomain(val domain: Interval) extends IntSet {
   def toBitVector = {
     val bv = BitVector.newBitVector(last + 1)
     bv.fill(true)
-    bv.clearTo(first - 1)
+    bv.clearTo(first)
     bv
   }
 
   def intersects(bv: BitVector) = bv.intersects(toBitVector)
   def intersects(bv: BitVector, part: Int) = bv.intersects(toBitVector, part)
+  def bound = true
 }

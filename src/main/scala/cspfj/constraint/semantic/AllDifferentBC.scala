@@ -236,26 +236,13 @@ final class AllDifferentBC(vars: Variable*) extends AbstractConstraint(vars.toAr
 
   }
 
-  def revise() {
-    //    @tailrec
-    //    def rev(q: UOList[Int]) {
-    //      if (!q.isEmpty) {
-    //        val checkedVariable = q.head
-    //        val newQueue = q.tail
-    //
-    //        val value = scope(checkedVariable).dom.firstValue
-    //
-    //        val modified = filterB(scope, checkedVariable, value)
-    //
-    //        rev(newQueue ++ modified.filter(scope(_).dom.size == 1))
-    //      }
-    //    }
-    //
-    //    rev(UOList.build(change.filter(scope(_).dom.size == 1)))
+  def revise() = {
+    @tailrec
+    def rev(c: Boolean): Boolean =
+      if (propagate()) rev(true)
+      else c
 
-    //val mod = 
-    if (propagate()) revise()
-    //if (!mod.isEmpty) revise(mod.toList)
+    rev(false)
   }
 
   def propagate() = {

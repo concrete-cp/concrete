@@ -127,6 +127,19 @@ final class IntDomain(
     } else 0
   }
 
+  def filter(f: Int => Boolean) = {
+    val is = intSet.filter(f)
+    if (is eq intSet) false
+    else {
+      intSet = is
+      altering()
+      if (size == 0) throw Domain.empty
+      true
+    }
+  }
+
+  def bound = intSet.bound
+
   def intersects(bv: BitVector) = intSet.intersects(bv)
   def intersects(bv: BitVector, part: Int) = intSet.intersects(bv, part)
   def allValues = domain

@@ -3,6 +3,7 @@ package cspfj.problem;
 import cspfj.util.BitVector
 import java.util.Arrays
 import cspfj.util.Backtrackable
+import scala.annotation.tailrec
 
 final object BitVectorDomain {
   val DISPLAYED_VALUES = 4;
@@ -33,25 +34,28 @@ final class BitVectorDomain(val bvDomain: BitVector, val initSize: Int) extends 
 
   private val _size = initSize
 
-  def size = _size
+  def size = {
+    assert(_size == iterator.size, "was %d, should be %d: %s".format(_size, iterator.size, iterator.mkString(",")))
+    _size
+  }
 
   //  private def size_=(s: Int) {
   //    _size = s
   //  }
 
-  val _first = bvDomain.nextSetBit(0)
+  val first = bvDomain.nextSetBit(0)
 
-  val _last = bvDomain.lastSetBit
-
-  def first = {
-    assert(_first == bvDomain.nextSetBit(0))
-    _first
-  }
-
-  def last = {
-    assert(_last == bvDomain.lastSetBit)
-    _last
-  }
+  val last = bvDomain.lastSetBit
+  //
+  //  def first = {
+  //    assert(_first == bvDomain.nextSetBit(0))
+  //    _first
+  //  }
+  //
+  //  def last = {
+  //    assert(_last == bvDomain.lastSetBit)
+  //    _last
+  //  }
 
   def copy = this //new BitVectorDomain(bvDomain.clone, size)
 
@@ -71,6 +75,23 @@ final class BitVectorDomain(val bvDomain: BitVector, val initSize: Int) extends 
   def present(index: Int) = bvDomain.get(index);
 
   def setSingle(index: Int) = new IntervalDomain(index, index)
+
+  def filter(f: Int => Boolean) = {
+    val nbv = bvDomain.clone
+
+    @tailrec
+    def filt(i: Int, s: Int): Int =
+      if (i < 0) s
+      else if (f(i)) filt(next(i), s)
+      else {
+        nbv.clear(i)
+        filt(next(i), s - 1)
+      }
+
+    val s = filt(first, size)
+    if (s != size) new BitVectorDomain(nbv, s)
+    else this
+  }
 
   def remove(index: Int) = {
     assert(present(index));
@@ -118,5 +139,5 @@ final class BitVectorDomain(val bvDomain: BitVector, val initSize: Int) extends 
   def toBitVector = bvDomain
   def intersects(bv: BitVector) = bv.intersects(bvDomain)
   def intersects(bv: BitVector, part: Int) = bv.intersects(bvDomain, part)
-
+  def bound = false
 }

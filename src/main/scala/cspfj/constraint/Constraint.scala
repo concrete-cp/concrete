@@ -137,12 +137,12 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
   def fillRemovals() {}
 
   /**
-   * The constraint propagator.
+   * The constraint propagator. Returns true if any domain change was done.
    *
    * @param revisator
    */
   @throws(classOf[UNSATException])
-  def revise()
+  def revise(): Boolean
 
   /**
    * @return true iff the constraint is satisfied by the current values of the
@@ -162,7 +162,7 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
   }
 
   def getEvaluation: Int
-  
+
   def simpleEvaluation: Int
 
   //def tupleManager: TupleManager
@@ -189,5 +189,7 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
     // scope map (_.dom.size)
     // Optimize this!
     sizes(new Array[Int](arity), arity - 1)
+
+  def isBound = scope.forall(_.dom.bound)
 
 }

@@ -181,6 +181,18 @@ final class BooleanDomain(var _status: Status) extends Domain
     }
   }
 
+  def filter(f: Int => Boolean) = {
+    if (present(0) && !f(0)) {
+      remove(0)
+      true
+    } else false
+  } | {
+    if (present(1) && !f(1)) {
+      remove(1)
+      true
+    } else false
+  }
+
   override val maxSize = 2
 
   override val allValues = UNKNOWN.array
@@ -222,5 +234,6 @@ final class BooleanDomain(var _status: Status) extends Domain
   def setFalse() { status = FALSE }
   def currentIndexes = status.indexes
   def valueBV(offset: Int) = throw new UnsupportedOperationException
+  def bound = true
 }
 

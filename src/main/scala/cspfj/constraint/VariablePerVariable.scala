@@ -16,39 +16,37 @@ trait VariablePerVariable extends Constraint with Removals with Loggable {
    * @param position
    * @return true iff any value has been removed
    */
-  def reviseVariable(position: Int)
+  def reviseVariable(position: Int): Boolean
 
-  final def revise(modified: Seq[Int]) {
+  def revise(modified: Seq[Int]) = {
     @tailrec
-    def reviseNS(i: Int) {
-
-      if (i >= 0) {
-        this.reviseVariable(i)
-        reviseNS(i - 1)
+    def reviseNS(i: Int, c: Boolean): Boolean =
+      if (i < 0) c
+      else {
+        val ch = this.reviseVariable(i)
+        reviseNS(i - 1, c || ch)
       }
 
-    }
-
     @tailrec
-    def reviseS(i: Int, skip: Int) {
-
-      if (i == skip) reviseNS(i - 1)
-      else if (i > 0) {
-        this.reviseVariable(i)
-        reviseS(i - 1, skip)
+    def reviseS(i: Int, skip: Int, c: Boolean): Boolean =
+      if (i < 0) c
+      else if (i == skip) reviseNS(i - 1, c)
+      else {
+        val ch = this.reviseVariable(i)
+        reviseS(i - 1, skip, c || ch)
       }
 
-    }
-
-    modified match {
-      case Seq() =>
-      case Seq(s) => reviseS(scope.length - 1, s)
-      case _ => reviseNS(scope.length - 1)
+    val c = modified match {
+      case Seq() => false
+      case Seq(s) => reviseS(scope.length - 1, s, false)
+      case _ => reviseNS(scope.length - 1, false)
     }
 
     if (scope.count(_.dom.size == 1) >= arity - 1) {
       entail();
     }
+
+    c
 
   }
 

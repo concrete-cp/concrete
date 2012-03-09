@@ -26,16 +26,16 @@ final class MatrixManager2D(
    * No need for last data structure if domain sizes <=
    * MINIMUM_SIZE_FOR_LAST
    */
-  private val last = if (scope.map(_.dom.maxSize).max > MINIMUM_SIZE_FOR_LAST) {
-    Array(new Array[Int](scope(0).dom.maxSize), new Array[Int](scope(1).dom.maxSize))
-  } else {
-    null
-  }
+  private val last =
+    if (scope.map(_.dom.maxSize).max > MINIMUM_SIZE_FOR_LAST) {
+      Array(new Array[Int](scope(0).dom.maxSize), new Array[Int](scope(1).dom.maxSize))
+    } else {
+      null
+    }
 
-  def hasSupport(variablePosition: Int, index: Int) = {
+  def hasSupport(variablePosition: Int, index: Int) =
     if (last == null) hasSupportNR(variablePosition, index);
     else hasSupportR(variablePosition, index);
-  }
 
   private def hasSupportR(variablePosition: Int, index: Int) = {
     controlResidue(variablePosition, index) || {

@@ -2,8 +2,9 @@ package cspfj.constraint.semantic;
 
 import cspfj.constraint.VariablePerVariable
 import cspfj.problem.Domain
-import cspfj.problem.Variable;
+import cspfj.problem.Variable
 import cspfj.constraint.AbstractConstraint
+import cspfj.problem.Interval
 
 /**
  * Constraint ax + b = y.
@@ -17,12 +18,12 @@ final class Eq(val a: Int, val x: Variable, val b: Int, val y: Variable)
   extends AbstractConstraint(Array(x, y)) with VariablePerVariable {
   require(a != 0, "a must be != 0")
 
-//  val corresponding = Array(
-//    x.dom.allValues map { v => y.dom.index(a * v + b) },
-//    y.dom.allValues map { v =>
-//      val r = v - b
-//      if (r % a == 0) x.dom.index(r / a) else -1
-//    })
+  //  val corresponding = Array(
+  //    x.dom.allValues map { v => y.dom.index(a * v + b) },
+  //    y.dom.allValues map { v =>
+  //      val r = v - b
+  //      if (r % a == 0) x.dom.index(r / a) else -1
+  //    })
 
   /**
    * public
@@ -43,53 +44,31 @@ final class Eq(val a: Int, val x: Variable, val b: Int, val y: Variable)
     if (r % a == 0) x.dom.index(r / a) else -1
   }
 
-  def reviseVariable(position: Int) = {
-    var change = false
+  override def revise() = {
+    var ch =
+      scope(0).dom.intersectVal((scope(1).dom.valueInterval - b) / a) +
+        scope(1).dom.intersectVal((scope(0).dom.valueInterval * a) + b)
 
-    position match {
-      case 0 => {
-        for (i <- x.dom.indices) {
-          val index = yIndex(i)
-          if (index < 0 || !y.dom.present(index)) {
-            x.dom.remove(i)
-            change = true
-          }
-        }
-      }
-      case 1 => {
-        for (i <- y.dom.indices) {
-          val index = xIndex(i)
-          if (index < 0 || !x.dom.present(index)) {
-            y.dom.remove(i)
-            change = true
-          }
-        }
-      }
-      case _ => throw new IllegalArgumentException
-    }
-    change
+    if (!isBound) super.revise() || ch > 0
+    else if (ch > 0) {
+      if (scope(0).dom.size == 1 || scope(1).dom.size == 1) entail()
+      true
+    } else false
   }
 
-  //  def test(index: Int, variable: Variable, change: Boolean) = {
-  //    if (index < 0 || !otherVar.dom.present(index)) {
-  //        variable.dom.remove(i)
-  //        true
-  //      }
-  //  }
-  //    
-  //    var change = false;
-  //    val variable = scope(position);
-  //    val otherVar = scope(1 - position);
-  //    val correspond = corresponding(position);
-  //    for (i <- variable.dom.indices) {
-  //      val index = correspond(i);
-  //      if (index < 0 || !otherVar.dom.present(index)) {
-  //        variable.dom.remove(i)
-  //        change = true
-  //      }
-  //    }
-  //    change;
-  //  }
+  def reviseVariable(position: Int) = position match {
+    case 0 => x.dom.filter { i =>
+      val index = yIndex(i)
+      index >= 0 && y.dom.present(index)
+    }
+
+    case 1 => y.dom.filter { i =>
+      val index = xIndex(i)
+      index >= 0 && x.dom.present(index)
+    }
+
+    case _ => throw new IllegalArgumentException
+  }
 
   override def isConsistent() = {
     val otherDom = y.dom

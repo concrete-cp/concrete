@@ -30,38 +30,44 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Abstract
     counts.forall { case (v, c) => c > bounds(v).minCount }
   }
 
-  private def filter(except: collection.mutable.Set[Variable], value: Int) {
+  private def filter(except: collection.mutable.Set[Variable], value: Int): Boolean = {
+    var ch = false
     for (v <- scope if !except.contains(v)) {
       val index = v.dom.index(value)
       if (index >= 0 && v.dom.present(index)) {
 
         v.dom.remove(index)
-
+        ch = true
         if (v.dom.size == 1) {
           queue = queue.enqueue(v)
         }
 
       }
     }
-
+    ch
   }
 
-  private def assignAll(value: Int) {
+  private def assignAll(value: Int) = {
+    var ch = false
     for (v <- scope) {
       val index = v.dom.index(value);
       if (index >= 0 && v.dom.present(index)) {
+        ch = true
         v.dom.setSingle(index)
       }
     }
+    ch
   }
 
-  def revise() {
+  def revise(): Boolean = {
     /**
      * Upper bounds
      */
     queue = Queue.empty.enqueue(scope.filter(_.dom.size == 1).toList)
 
     val singles: MultiMap[Int, Variable] = new HashMap[Int, collection.mutable.Set[Variable]] with MultiMap[Int, Variable]
+
+    var ch = false
 
     while (queue != Nil) {
       val (checkedVariable, newQueue) = queue.dequeue
@@ -73,7 +79,7 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Abstract
       val currentSingles = singles(value)
 
       if (currentSingles.size == bounds(value).maxCount) {
-        filter(currentSingles, value)
+        ch |= filter(currentSingles, value)
       } else if (currentSingles.size > bounds(value).maxCount) {
         throw UNSATException.e
       }
@@ -88,10 +94,12 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Abstract
 
     for (b <- bounds.values) {
       if (counts(b.value) < b.minCount) throw UNSATException.e
-      if (counts(b.value) == b.minCount) assignAll(b.value)
+      if (counts(b.value) == b.minCount) {
+        ch |= assignAll(b.value)
+      }
     }
 
-    true;
+    ch;
   }
 
   val getEvaluation = arity * arity
