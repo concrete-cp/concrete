@@ -22,10 +22,14 @@ case class Interval(val a: Int, val b: Int) {
     Interval(a + c, b + d)
   }
 
+  def +(v: Int) = Interval(a + v, b + v)
+
   def -(i: Interval) = {
     val Interval(c, d) = i
     Interval(a - d, b - c)
   }
+
+  def -(v: Int) = this + -v
 
   def *(i: Interval) = {
     val Interval(c, d) = i
@@ -42,17 +46,9 @@ case class Interval(val a: Int, val b: Int) {
     Interval(List(a / c, a / d, b / c, b / d).min, List(a / c, a / d, b / c, b / d).max)
   }
 
-  def /(i: Int) = {
-    if (i == 0) throw new ArithmeticException
-    else if (i > 0) {
-      val a = this.a / i + (if (this.a % i != 0) 1 else 0)
-      val b = this.b / i
-      Interval(a, b)
-    } else {
-      val a = this.b / i - (if (this.b % i != 0) 1 else 0)
-      val b = this.a / i
-      Interval(a, b)
-    }
+  def /(v: Int) = {
+    if (v == 0) throw new ArithmeticException
+    Interval(math.min(a / v, b / v), math.max(a / v, b / v))
   }
 
 }
