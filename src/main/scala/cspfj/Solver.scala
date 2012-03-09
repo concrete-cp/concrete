@@ -55,7 +55,6 @@ object Solver {
   }
 
   def factory(cspom: CSPOM): Solver = factory(ProblemGenerator.generate(cspom))
-
 }
 
 abstract class Solver(val problem: Problem) extends Loggable {
