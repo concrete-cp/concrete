@@ -22,7 +22,7 @@ final object BitVectorDomain {
   }
 }
 
-final class BitVectorDomain(val bvDomain: BitVector, val initSize: Int) extends IntSet {
+final class BitVectorDomain(val bvDomain: BitVector, val size: Int) extends IntSet {
 
   def this(size: Int) = {
     this(BitVectorDomain.fullBV(size), size)
@@ -30,13 +30,6 @@ final class BitVectorDomain(val bvDomain: BitVector, val initSize: Int) extends 
 
   def this(lb: Int, ub: Int, hole: Int) = {
     this(BitVectorDomain.bv(lb, ub, hole), ub - lb)
-  }
-
-  private val _size = initSize
-
-  def size = {
-    assert(_size == iterator.size, "was %d, should be %d: %s".format(_size, iterator.size, iterator.mkString(",")))
-    _size
   }
 
   //  private def size_=(s: Int) {
@@ -106,24 +99,18 @@ final class BitVectorDomain(val bvDomain: BitVector, val initSize: Int) extends 
   def removeFrom(lb: Int) = {
     val nbv = bvDomain.clone
     val nbRemVals = nbv.clearFrom(lb)
-    new BitVectorDomain(nbv, size - nbRemVals)
-    //    val nbRemVals = bvDomain.clearFrom(lb);
-    //    _last = bvDomain.prevSetBit(lb)
-    //    size -= nbRemVals;
-    //    this
+    if (nbRemVals > 0)
+      new BitVectorDomain(nbv, size - nbRemVals)
+    else this
   }
 
   def removeTo(ub: Int) = {
     val nbv = bvDomain.clone
     val nbRemVals = nbv.clearTo(ub + 1)
-    new BitVectorDomain(nbv, size - nbRemVals)
-    //    val nbRemVals = bvDomain.clearTo(ub + 1);
-    //    _first = bvDomain.nextSetBit(ub)
-    //    size -= nbRemVals;
-    //    this
+    if (nbRemVals > 0)
+      new BitVectorDomain(nbv, size - nbRemVals)
+    else this
   }
-
-  def getBitVector = bvDomain
 
   def toString(id: Indexer) = if (size <= BitVectorDomain.DISPLAYED_VALUES) {
     iterator.map(id.value).mkString("{", ", ", "}");

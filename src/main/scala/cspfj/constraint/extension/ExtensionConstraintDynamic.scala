@@ -59,11 +59,7 @@ final class ExtensionConstraintDynamic(
         assert(controlTuplePresence(tuple))
         setFound(tuple, found, arity - 1)
         true
-      } else {
-        assert(!controlTuplePresence(tuple))
-        false
-      }
-
+      } else false
     }
 
     val c = filter(found, arity - 1, false)

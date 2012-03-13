@@ -70,7 +70,7 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
   // }
 
   private def dcReduce() = filter.reduceAll() && {
-    val stream = Stream.continually(problem.variables.toStream).flatten
+    val stream = Stream.continually(problem.variables).flatten
 
     @tailrec
     def process(variable: Variable, remaining: Stream[Variable], mark: Variable): Boolean = {
@@ -146,7 +146,7 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
 
         if (newNoGoods > 0) {
           changedGraph = true
-          for (v <- modified.map(_.scope).flatten) {
+          for (v <- modified.flatMap(_.scope)) {
             modVar(v.getId) = cnt
           }
           info(newNoGoods + " nogoods");
