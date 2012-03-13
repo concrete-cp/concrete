@@ -3,6 +3,7 @@ package cspfj.problem;
 import cspfj.util.BitVector
 import scala.annotation.tailrec
 import cspfj.UNSATException
+import cspfj.util.Interval
 
 final class EmptyDomainException extends UNSATException
 

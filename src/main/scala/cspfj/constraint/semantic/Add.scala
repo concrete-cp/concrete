@@ -1,14 +1,30 @@
 package cspfj.constraint.semantic;
 
 import cspfj.problem.Domain
-import cspfj.problem.Variable;
+import cspfj.problem.Variable
 import cspfj.constraint.AbstractConstraint
 import cspfj.constraint.Residues
+import cspfj.util.Interval
 
 final class Add(val result: Variable, val v0: Variable, val v1: Variable)
   extends AbstractConstraint(Array(result, v0, v1)) with Residues {
 
   def check = value(0) == value(1) + value(2)
+
+  override def revise() = {
+    val bounds = v0.dom.valueInterval + v1.dom.valueInterval - result.dom.valueInterval
+    var ch = revise(result, -1, bounds) + revise(v0, 1, bounds) + revise(v1, 1, bounds)
+
+    if (isBound) super.revise() || ch > 0
+    else ch > 0
+  }
+
+  private def revise(v: Variable, fact: Int, bounds: Interval) = {
+    val myBounds = v.dom.valueInterval * fact
+    val boundsf = (bounds - myBounds) * -fact
+    v.dom.intersectVal(boundsf)
+
+  }
 
   def findSupport(position: Int, index: Int) = position match {
     case 0 => if (v0.dom.size < v1.dom.size) {
@@ -62,6 +78,6 @@ final class Add(val result: Variable, val v0: Variable, val v1: Variable)
     val d2 = v1.dom.size
     d0 * d1 + d0 * d2 + d1 * d2;
   }
-  
+
   def simpleEvaluation = 2
 }

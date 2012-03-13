@@ -56,7 +56,7 @@ final class PriorityQueueTest {
   def testBinomialHeap() {
     test(new BinomialHeap[IntNode](key))
   }
-  @Test(timeout = 10000)
+  @Test(timeout = 20000)
   def testFibonacciHeap() {
     test(new FibonacciHeap[IntNode](key))
   }

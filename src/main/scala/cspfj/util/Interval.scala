@@ -1,6 +1,6 @@
-package cspfj.problem
+package cspfj.util
 
-case class Interval(val a: Int, val b: Int) {
+final case class Interval(val a: Int, val b: Int) {
   // require(ub >= lb)
   val size = math.max(0, b - a + 1)
   def in(v: Int) = {

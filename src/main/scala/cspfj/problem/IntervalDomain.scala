@@ -3,6 +3,7 @@ package cspfj.problem;
 import cspfj.util.BitVector
 import java.util.Arrays
 import cspfj.util.Backtrackable
+import cspfj.util.Interval
 
 final class IntervalDomain(val domain: Interval) extends IntSet {
 

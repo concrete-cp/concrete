@@ -4,7 +4,7 @@ import cspfj.constraint.VariablePerVariable
 import cspfj.problem.Domain
 import cspfj.problem.Variable
 import cspfj.constraint.AbstractConstraint
-import cspfj.problem.Interval
+import cspfj.util.Interval
 
 /**
  * Constraint ax + b = y.

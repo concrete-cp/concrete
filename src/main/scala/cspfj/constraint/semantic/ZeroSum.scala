@@ -5,7 +5,7 @@ import scala.annotation.tailrec
 import cspfj.constraint.AbstractConstraint
 
 import cspfj.problem.Domain
-import cspfj.problem.Interval
+import cspfj.util.Interval
 import cspfj.problem.Variable
 import cspfj.util.Loggable
 
