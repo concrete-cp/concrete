@@ -133,6 +133,10 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
   def clearRemovals() {}
 
   def setRemovals(pos: Int) {}
+  
+  def setRemovals(v: Variable) {
+    setRemovals(position(v))
+  }
 
   def fillRemovals() {}
 

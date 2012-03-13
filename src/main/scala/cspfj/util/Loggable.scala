@@ -26,6 +26,8 @@ trait Loggable {
 
   def logInfo = logger.isLoggable(Level.INFO)
   
+  def logFine = logger.isLoggable(Level.FINE)
+  
   final def setLevel(level: Level) {
     logger.setLevel(level)
     //logger.getHandlers()(0).setLevel(level)

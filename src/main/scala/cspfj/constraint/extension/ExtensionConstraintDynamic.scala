@@ -118,16 +118,13 @@ final class ExtensionConstraintDynamic(
   }
 
   def removeTuples(base: Array[Int]) = {
-    matrixManager.unshareMatrix();
-    var removed = 0;
-    matrixManager.filter { t =>
-      if (matches(t, base)) {
-        removed += 1;
-        false
-      } else true
-    }
+    throw new UnsupportedOperationException
+    matrixManager.unshareMatrix()
+    val s = matrixManager.size
 
-    removed;
+    //matrixManager.filter(t => !matches(t, base))
+
+    matrixManager.size - s;
   }
 
   //def matrixManager = matrixManager

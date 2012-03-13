@@ -69,11 +69,9 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
     queue.clear();
 
     for (
-      v <- problem.variables if (modVar(v.getId) > cnt);
-      (c, j) <- v.constraints.zipWithIndex if (!c.isEntailed)
+      v <- problem.variables if (modVar(v.getId) > cnt)
     ) {
-      c.setRemovals(v.positionInConstraint(j));
-      queue.offer(c);
+      updateQueue(v, null)
     }
 
     if (modCons != null) {

@@ -18,18 +18,15 @@
  */
 package cspfj.filter;
 
-import scala.collection.IndexedSeq
-import scala.collection.JavaConversions
-import cspfj.ParameterManager
+import scala.annotation.tailrec
+
 import cspfj.constraint.Constraint
 import cspfj.constraint.DynamicConstraint
 import cspfj.problem.LearnMethod
 import cspfj.problem.NoGoodLearner
 import cspfj.problem.Problem
 import cspfj.problem.Variable
-import cspfj.Parameter
 import cspfj.util.Loggable
-import scala.annotation.tailrec
 
 /**
  * @author Julien VION
@@ -112,16 +109,11 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
 
   }
 
-  @tailrec
-  private def forwardCheck(constraints: Iterator[Constraint]): Boolean = {
-    if (constraints.hasNext) {
-      val c = constraints.next
-      if (c.consistentRevise()) {
-        c.clearRemovals()
-        forwardCheck(constraints)
-      } else false
-    } else true
-  }
+  private def forwardCheck(variable: Variable) =
+    variable.constraints.forall(c => c.arity != 2 || {
+      c.setRemovals(variable)
+      c.consistentRevise()
+    })
 
   def singletonTest(variable: Variable) = {
     var changedGraph = false;
@@ -131,9 +123,9 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
         throw new InterruptedException();
       }
 
-      // if (logger.isLoggable(Level.FINER)) {
-      fine(variable + " <- " + variable.dom.value(index) + "(" + index + ")");
-      // }
+      if (logFine) {
+        fine(variable + " <- " + variable.dom.value(index) + "(" + index + ")");
+      }
 
       problem.push();
       variable.dom.setSingle(index);
@@ -143,7 +135,7 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
       val sat = if (cnt <= problem.variables.size) {
         filter.reduceAfter(variable);
       } else {
-        forwardCheck(variable.constraints.iterator.filter(_.arity == 2)) &&
+        forwardCheck(variable) &&
           filter.reduceFrom(modVar, null, cnt - problem.variables.size);
       }
 

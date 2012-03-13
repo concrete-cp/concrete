@@ -13,11 +13,10 @@ final class MatrixManagerDynamic(
   shared: Boolean,
   tuple: Array[Int])
   extends AbstractMatrixManager(scope, tupleSet, shared, tuple)
-  with Iterable[Array[Int]]
   with Backtrackable[(List[Array[Int]], Int)] {
 
   private var allTuples: List[Array[Int]] = tupleSet.toList
-  
+
   private var _size: Int = tupleSet.size
 
   def save = (allTuples, size)
@@ -31,8 +30,8 @@ final class MatrixManagerDynamic(
     tupleSet = super.unshareMatrix.asInstanceOf[TupleSet]
     matrix
   }
-  
-  override def size = _size
+
+  def size = _size
 
   override def copy = throw new UnsupportedOperationException
 
@@ -43,7 +42,7 @@ final class MatrixManagerDynamic(
     if (size != oldSize) altering()
   }
   
-  def iterator = allTuples.iterator
+  def tuples = allTuples
 
   override def toString = "MatrixManagerDynamic managing " + size + " tuples"
 
