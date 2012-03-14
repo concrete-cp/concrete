@@ -25,9 +25,9 @@ final class TupleManagerTest {
 
     val dom = Seq(1, 2, 3, 4, 5);
 
-    val v1 = new Variable("V1", new IntDomain(dom: _*));
-    val v2 = new Variable("V2", new IntDomain(dom: _*));
-    val v3 = new Variable("V3", new IntDomain(dom: _*));
+    val v1 = new Variable("V1", new IntDomain(dom));
+    val v2 = new Variable("V2", new IntDomain(dom));
+    val v3 = new Variable("V3", new IntDomain(dom));
 
     val constraint = new AllDifferent2C(v1, v2, v3);
 

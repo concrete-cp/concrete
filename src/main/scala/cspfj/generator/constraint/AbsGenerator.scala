@@ -13,12 +13,12 @@ final class AbsGenerator(problem: Problem) extends AbstractGenerator(problem) {
     if (Seq(result, v0) filter (_.dom == null) match {
       case Seq() => true
       case Seq(v) if v == v0 => {
-        val values = result.dom.allValues
-        v.dom = new IntDomain(AbstractGenerator.makeDomain(values ++ values.map(-_)): _*);
+        val values = result.dom.values.toSeq
+        v.dom = new IntDomain(AbstractGenerator.makeDomain(values ++ values.map(-_)));
         true;
       }
       case Seq(v) if v == result => {
-        v.dom = new IntDomain(AbstractGenerator.makeDomain(v0.dom.allValues.map(math.abs)): _*);
+        v.dom = new IntDomain(AbstractGenerator.makeDomain(v0.dom.values.map(math.abs).toSeq));
         true;
       }
       case _ => false

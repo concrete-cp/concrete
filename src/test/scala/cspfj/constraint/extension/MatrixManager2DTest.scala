@@ -15,8 +15,8 @@ final class MatrixManager2DTest {
 
   @Before
   def setUp() {
-    val var1 = new Variable("V1", new IntDomain(1, 2, 3));
-    val var2 = new Variable("V2", new IntDomain(1, 2, 3, 4));
+    val var1 = new Variable("V1", new IntDomain(Seq(1, 2, 3)));
+    val var2 = new Variable("V2", new IntDomain(Seq(1, 2, 3, 4)));
     tuple = new Array(2);
 
     val matrix2d = new Matrix2D(3, 4, false);

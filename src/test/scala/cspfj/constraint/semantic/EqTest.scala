@@ -9,8 +9,8 @@ final class EqTest {
 
   @Test
   def test() {
-    val v0 = new Variable("v0", new IntDomain(1, 2, 3))
-    val v1 = new Variable("v1", new IntDomain(3, 4, 5))
+    val v0 = new Variable("v0", new IntDomain(Seq(1, 2, 3)))
+    val v1 = new Variable("v1", new IntDomain(Seq(3, 4, 5)))
     val c = new Eq(v0, v1)
     c.fillRemovals()
     c.revise()

@@ -6,7 +6,7 @@ class IntervalDomainTest {
 
   @Test
   def test {
-    val dom = new IntDomain((10 to 20).toArray)
+    val dom = new IntDomain(10, 20)
 
     assertEquals(0, dom.first)
     assertEquals(10, dom.last)

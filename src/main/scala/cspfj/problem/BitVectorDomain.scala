@@ -73,7 +73,7 @@ final class BitVectorDomain(val bvDomain: BitVector, val size: Int) extends IntS
    */
   def present(index: Int) = bvDomain.get(index);
 
-  def setSingle(index: Int) = new IntervalDomain(index, index)
+  def setSingle(index: Int) = new SingleDomain(index)
 
   def filter(f: Int => Boolean) = {
     val nbv = bvDomain.clone
@@ -88,8 +88,8 @@ final class BitVectorDomain(val bvDomain: BitVector, val size: Int) extends IntS
       }
 
     val s = filt(first, size)
-    if (s != size) new BitVectorDomain(nbv, s)
-    else this
+    if (s == size) this
+    else IntSet.ofBV(nbv, s)
   }
 
   def remove(index: Int) = {

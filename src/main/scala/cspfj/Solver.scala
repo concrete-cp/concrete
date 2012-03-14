@@ -131,7 +131,7 @@ abstract class Solver(val problem: Problem) extends Loggable {
   def nbBacktracks_=(bt: Int) {
     if (bt >= maxBacktracks && maxBacktracks >= 0) {
       logger.info("Restart")
-      throw new MaxBacktracksExceededException
+      throw MaxBacktracksExceededException.e
     }
     _nbBacktracks = bt
   }

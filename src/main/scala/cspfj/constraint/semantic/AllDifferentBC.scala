@@ -252,9 +252,9 @@ final class AllDifferentBC(vars: Variable*) extends AbstractConstraint(vars.toAr
     hl || hu
   }
 
-  private val offset = (scope map { _.dom.allValues.min } min)
+  private val offset = (scope map { _.dom.firstValue } min)
   private val unionSize = 1 +
-    (scope map { _.dom.allValues.last } max) -
+    (scope map { _.dom.lastValue } max) -
     offset
 
   def check: Boolean = {

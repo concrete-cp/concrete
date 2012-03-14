@@ -13,17 +13,16 @@ final class Add(val result: Variable, val v0: Variable, val v1: Variable)
 
   override def revise() = {
     val bounds = v0.dom.valueInterval + v1.dom.valueInterval - result.dom.valueInterval
-    var ch = revise(result, -1, bounds) + revise(v0, 1, bounds) + revise(v1, 1, bounds)
+    var ch = reviseB(result, -1, bounds) + reviseB(v0, 1, bounds) + reviseB(v1, 1, bounds)
 
-    if (isBound) super.revise() || ch > 0
+    if (!isBound) super.revise() || ch > 0
     else ch > 0
   }
 
-  private def revise(v: Variable, fact: Int, bounds: Interval) = {
+  private def reviseB(v: Variable, fact: Int, bounds: Interval) = {
     val myBounds = v.dom.valueInterval * fact
-    val boundsf = (bounds - myBounds) * -fact
+    val boundsf = Interval(bounds.lb - myBounds.lb, bounds.ub - myBounds.ub) * -fact
     v.dom.intersectVal(boundsf)
-
   }
 
   def findSupport(position: Int, index: Int) = position match {
@@ -72,12 +71,14 @@ final class Add(val result: Variable, val v0: Variable, val v1: Variable)
 
   override def toString = result + " = " + v0 + " + " + v1
 
-  def getEvaluation = {
-    val d0 = result.dom.size
-    val d1 = v0.dom.size
-    val d2 = v1.dom.size
-    d0 * d1 + d0 * d2 + d1 * d2;
-  }
+  def getEvaluation =
+    if (isBound) 6
+    else {
+      val d0 = result.dom.size
+      val d1 = v0.dom.size
+      val d2 = v1.dom.size
+      d0 * d1 + d0 * d2 + d1 * d2;
+    }
 
   def simpleEvaluation = 2
 }

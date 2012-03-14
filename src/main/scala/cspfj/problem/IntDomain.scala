@@ -4,14 +4,15 @@ import cspfj.util.BitVector
 import java.util.Arrays
 import cspfj.util.Backtrackable
 
+object IntDomain {
+  def of(d: Int*) = new IntDomain(d)
+}
+
 final class IntDomain(
-  domain: Array[Int]) extends Domain with Backtrackable[IntSet] {
+  var intSet: IntSet,
+  val indexer: Indexer) extends Domain with Backtrackable[IntSet] {
 
-  private var intSet = IntSet.factory(domain)
-
-  override val maxSize = domain.size
-
-  private val indexer = Indexer.factory(domain)
+  override val maxSize = intSet.size
 
   def size = intSet.size
 
@@ -20,7 +21,12 @@ final class IntDomain(
   //
   //  def this(domain: Array[Int]) = this(domain, BitVector.newBitVector(domain.length, true))
 
-  def this(domain: Int*) = this(domain.toArray)
+  def this(domain: Seq[Int]) = this(IntSet.factory(domain), Indexer.factory(domain))
+
+  def this(lb: Int, ub: Int) =
+    this(new IntervalDomain(0, ub - lb), new OffsetIndices(ub - lb + 1, lb))
+
+  def this(constant: Int) = this(constant, constant)
 
   def save() = intSet.copy
 
@@ -142,7 +148,7 @@ final class IntDomain(
 
   def intersects(bv: BitVector) = intSet.intersects(bv)
   def intersects(bv: BitVector, part: Int) = intSet.intersects(bv, part)
-  def allValues = domain
+  //def allValues = domain
 
   override def toString = intSet.toString(indexer)
 

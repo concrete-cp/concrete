@@ -1,7 +1,7 @@
 package cspfj.util
 
 final case class Interval(val a: Int, val b: Int) {
-  // require(ub >= lb)
+  require(ub >= lb)
   val size = math.max(0, b - a + 1)
   def in(v: Int) = {
     a <= v && v <= b
@@ -50,5 +50,10 @@ final case class Interval(val a: Int, val b: Int) {
     if (v == 0) throw new ArithmeticException
     Interval(math.min(a / v, b / v), math.max(a / v, b / v))
   }
+
+  def abs =
+    if (ub < 0) Interval(-ub, -lb)
+    else if (lb > 0) this
+    else Interval(0, math.max(lb, ub))
 
 }

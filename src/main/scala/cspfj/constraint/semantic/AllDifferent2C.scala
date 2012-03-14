@@ -52,8 +52,8 @@ object AllDifferent2C {
 final class AllDifferent2C(scope: Variable*) extends AbstractConstraint(scope.toArray)
   with Removals {
 
-  val offset = scope map { _.dom.allValues.min } min
-  val max = scope map { _.dom.allValues.max } max
+  val offset = scope map { _.dom.firstValue } min
+  val max = scope map { _.dom.lastValue } max
   val union = BitVector.newBitVector(max - offset + 1)
 
   val scopeA = scope.toArray

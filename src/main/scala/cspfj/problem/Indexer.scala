@@ -1,11 +1,11 @@
 package cspfj.problem
 
 object Indexer {
-  def factory(values: Array[Int]): Indexer = {
+  def factory(values: Seq[Int]): Indexer = {
     if (values.size == values.last - values.head + 1) {
       if (values.head == 0) new DirectIndices(values.size)
       else new OffsetIndices(values.size, values.head)
-    } else new GeneralIndices(values)
+    } else new GeneralIndices(values.toArray)
   }
 }
 

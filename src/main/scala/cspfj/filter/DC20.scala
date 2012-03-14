@@ -55,14 +55,8 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
   def reduceAll() = {
     val nbC = problem.constraints.size
 
-    //    impliedConstraints = problem.constraints filter (c =>
-    //      c.arity == 2 && c.isInstanceOf[DynamicConstraint]) map (_.asInstanceOf[DynamicConstraint])
-
-    // ExtensionConstraintDynamic.quick = true;
-
     try {
-      val stream = Stream.continually(problem.variables).flatten
-      filter.reduceAll() && dcReduce(stream.head, stream.tail, null);
+      filter.reduceAll() && dcReduce(Stream.continually(problem.variables).flatten, null)
     } finally {
       nbAddedConstraints += problem.constraints.size - nbC;
     }
@@ -74,7 +68,8 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
   // }
 
   @tailrec
-  private def dcReduce(variable: Variable, remaining: Stream[Variable], mark: Variable): Boolean =
+  private def dcReduce(s: Stream[Variable], mark: Variable): Boolean = {
+    val variable #:: remaining = s
     if (mark == variable) true
     else {
       logger.info(variable.toString)
@@ -88,21 +83,18 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
             (v, od) <- problem.variables.zip(domainSizes);
             if v.dom.size != od
           ) {
-            logger.fine("Filtered " + (od - v.dom.size) + " from " + v)
+            logger.info("Filtered " + (od - v.dom.size) + " from " + v)
             modVar(v.getId) = cnt
           }
-          //            if (problem.variables.iterator.zip(domainSizes.iterator) exists {
-          //              case (v, d) => v.dom.size != d
-          //            }) {
-          //              problem.variables.foreach(v => modVar(v.getId) = cnt)
-          //            }
-          dcReduce(remaining.head, remaining.tail, variable)
+
+          dcReduce(remaining, variable)
         } else false
 
       } else {
-        dcReduce(remaining.head, remaining.tail, if (mark == null) variable else mark)
+        dcReduce(remaining, if (mark == null) variable else mark)
       }
     }
+  }
 
   private def forwardCheck(variable: Variable) =
     variable.constraints.forall(c => c.arity != 2 || {
@@ -146,15 +138,8 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
           logger.info((ngl.nbNoGoods - noGoods) + " nogoods");
         }
 
-        // final Map<Variable[], List<int[]>> noGoods =
-        // problem.noGoods();
-        //changedGraph = !ngl.binNoGoods(variable).isEmpty || changedGraph;
-        // logger.info(noGoods.toString());
-
         problem.pop();
 
-        // changedGraph = problem.noGoodsToConstraints(noGoods,
-        // addConstraints);
       } else {
         problem.pop();
         logger.fine("Removing " + variable + ", " + index);

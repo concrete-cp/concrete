@@ -18,7 +18,7 @@ final class ModGenerator(problem: Problem) extends AbstractGenerator(problem) {
       case Seq() => true
       case Seq(v) if v == result => {
         val values = AbstractGenerator.domainFrom(v0, v1, { _ % _ })
-        v.dom = new IntDomain(values: _*)
+        v.dom = new IntDomain(values)
         true
       }
 

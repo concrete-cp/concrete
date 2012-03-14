@@ -21,15 +21,15 @@ final class AddGenerator(problem: Problem) extends AbstractGenerator(problem) {
         if (nullVariable == result) {
           val values = AbstractGenerator.domainFrom(v0, v1, { _ + _ });
 
-          result.dom = new IntDomain(values: _*);
+          result.dom = new IntDomain(values);
 
         } else if (nullVariable == v0) {
 
-          v0.dom = new IntDomain(generateValues(result, v1): _*);
+          v0.dom = new IntDomain(generateValues(result, v1));
 
         } else if (nullVariable == v1) {
 
-          v1.dom = new IntDomain(generateValues(result, v0): _*);
+          v1.dom = new IntDomain(generateValues(result, v0));
 
         } else {
 

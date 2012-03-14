@@ -7,6 +7,7 @@ import cspom.variable.{ CSPOMDomain, BooleanDomain }
 import cspom.CSPOM
 import scala.annotation.tailrec
 import scala.collection.immutable.Queue
+import cspom.variable.IntInterval
 
 object ProblemGenerator {
   @throws(classOf[FailedGenerationException])
@@ -60,7 +61,10 @@ object ProblemGenerator {
       } else {
         new cspfj.problem.BooleanDomain();
       }
-    case _ =>
-      new IntDomain(cspomDomain.asInstanceOf[CSPOMDomain[Int]].values: _*);
+    case int: IntInterval => new IntDomain(int.lb, int.ub)
+
+    case ext: CSPOMDomain[Int] => new IntDomain(ext.values)
+
+    case _ => throw new UnsupportedOperationException
   }
 }

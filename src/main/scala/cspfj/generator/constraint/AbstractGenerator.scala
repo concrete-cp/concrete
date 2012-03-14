@@ -44,7 +44,7 @@ object AbstractGenerator {
     } yield f(i, j)
 
   def cartesian[A](v0: Variable, v1: Variable, f: (Int, Int) => A) =
-    cartesianS(v0.dom.allValues, v1.dom.allValues, f)
+    cartesianS(v0.dom.values.toSeq, v1.dom.values.toSeq, f)
 
   def domainFrom(v0: Variable, v1: Variable, f: (Int, Int) => Int) =
     makeDomain(cartesian(v0, v1, f))

@@ -19,6 +19,8 @@
 
 package cspfj;
 
-final class MaxBacktracksExceededException extends Exception {
-
+object MaxBacktracksExceededException {
+  val e = new MaxBacktracksExceededException
 }
+
+final class MaxBacktracksExceededException extends Exception 

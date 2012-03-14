@@ -20,7 +20,7 @@ final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
         null
       } else {
         for (v <- scope if (v.dom == null)) {
-          v.dom = new IntDomain(refDomain.get.allValues: _*)
+          v.dom = new IntDomain(refDomain.get.values.toSeq)
         }
         new Eq(scope(0), scope(1));
       }
@@ -52,10 +52,10 @@ final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
         if (refDomain == None) {
           null
         } else {
-          val negDomain = refDomain.get.allValues map { v => (-v) } reverse
+          val negDomain = refDomain.get.values.map(v => -v).toSeq.reverse
 
           for (v <- scope if (v.dom == null)) {
-            v.dom = new IntDomain(negDomain: _*)
+            v.dom = new IntDomain(negDomain)
           }
           new Eq(-1, scope(0), 0, scope(1));
         }

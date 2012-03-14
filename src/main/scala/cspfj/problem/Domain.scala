@@ -27,9 +27,14 @@ trait Domain {
 
   def isEmpty = first >= 0
 
-  def maxSize = allValues.size
+  def maxSize: Int //= allValues.size
 
   def present(index: Int): Boolean
+  
+  def presentVal(value: Int) = {
+    val i = index(value)
+    i >= 0 && present(i)
+  }
 
   def setSingle(index: Int)
 
@@ -67,7 +72,7 @@ trait Domain {
 
   def lastValue = value(last)
 
-  def allValues: Array[Int]
+  //def allValues: Array[Int]
 
   override def equals(o: Any) = o match {
     case d: Domain => values.sameElements(d.values)
@@ -154,8 +159,8 @@ trait Domain {
 
   def removeValInterval(lb: Int, ub: Int) = {
 
-    var i = closestGeq(lb)
-    val end = closestLeq(ub)
+    var i = closestGt(lb)
+    val end = closestLt(ub)
 
     if (i >= 0 && end >= 0)
       while (i <= end) {

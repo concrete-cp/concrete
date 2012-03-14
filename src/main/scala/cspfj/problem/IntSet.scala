@@ -5,10 +5,29 @@ object IntSet {
   def factory(domain: Seq[Int]): IntSet = {
     require(domain.size == 1 || domain.sliding(2).forall(p => p(0) < p(1)), "Only ordered domains are supported");
 
-    if (domain.size == 1 + domain.last - domain.head)
-      new IntervalDomain(0, domain.size - 1)
-    else
-      new BitVectorDomain(domain.size)
+    domain match {
+      case Seq() => EmptyDomain
+      case Seq(v) => new SingleDomain(v)
+      case s if domain.size == 1 + domain.last - domain.head => new IntervalDomain(0, domain.size - 1)
+      case _ => new BitVectorDomain(domain.size)
+    }
+  }
+
+  def ofInt(lb: Int, ub: Int) = {
+    if (lb > ub) EmptyDomain
+    else if (ub == lb) new SingleDomain(lb)
+    else new IntervalDomain(lb, ub)
+  }
+
+  def ofBV(bv: BitVector, s: Int) = s match {
+    case 0 => EmptyDomain
+    case 1 => new SingleDomain(bv.nextSetBit(0))
+    case _ => {
+      val lb = bv.nextSetBit(0)
+      val ub = bv.lastSetBit
+      if (lb - ub == s - 1) new IntervalDomain(lb, ub)
+      else new BitVectorDomain(bv, s)
+    }
   }
 }
 

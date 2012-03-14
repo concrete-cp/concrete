@@ -23,8 +23,8 @@ final class MatrixManagerDynamicTest {
     ta.set(Array(2, 2), true);
 
     val scope = Array(
-      new Variable("V0", new IntDomain(0, 1, 2)),
-      new Variable("V1", new IntDomain(0, 1, 2)));
+      new Variable("V0", new IntDomain(Seq(0, 1, 2))),
+      new Variable("V1", new IntDomain(Seq(0, 1, 2))));
 
     mmd = new MatrixManagerDynamic(scope, ta, false, new Array[Int](2));
     content = mmd.tuples
