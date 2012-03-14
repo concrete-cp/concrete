@@ -131,6 +131,7 @@ final class SolvingTest extends Loggable {
     var count = 0
     for (solution <- new SolverIterator(solver)) {
       count += 1
+      logger.info(solution.toString)
       val failed = cspomProblem.controlInt(solution)
       assertTrue(1 + count + "th solution: " + failed.toString(), failed.isEmpty);
     }
