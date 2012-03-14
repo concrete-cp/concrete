@@ -37,7 +37,7 @@ final class SoftHeapTest extends Loggable {
       last = current;
 
     }
-    info(errors + " errors (rate = " + errors.toDouble / INTS.length + ")");
+    logger.info(errors + " errors (rate = " + errors.toDouble / INTS.length + ")");
 
   }
 

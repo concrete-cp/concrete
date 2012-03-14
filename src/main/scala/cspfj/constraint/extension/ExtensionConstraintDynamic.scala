@@ -56,7 +56,8 @@ final class ExtensionConstraintDynamic(
 
     matrixManager.filterTuples { tuple =>
       if (controlTuplePresence(tuple, mod)) {
-        assert(controlTuplePresence(tuple))
+        assert(controlTuplePresence(tuple), tuple.mkString("(", ", ", ")") +
+          " is not in " + scope.mkString("(", ", ", ")") + " with modified: " + modified)
         setFound(tuple, found, arity - 1)
         true
       } else false

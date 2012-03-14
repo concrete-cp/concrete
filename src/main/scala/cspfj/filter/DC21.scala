@@ -74,7 +74,7 @@ final class DC21(val problem: Problem) extends Filter with Loggable {
         if (mark == variable) {
           true
         } else {
-          info(variable.toString)
+          logger.info(variable.toString)
           cnt += 1
           if (variable.dom.size > 1 && singletonTest(variable)) {
             val domainSizes = problem.variables map { _.dom.size }
@@ -149,7 +149,7 @@ final class DC21(val problem: Problem) extends Filter with Loggable {
         // addConstraints);
       } else {
         problem.pop();
-        fine("Removing " + variable + ", " + index);
+        logger.fine("Removing " + variable + ", " + index);
 
         variable.dom.remove(index);
         changedGraph = true;

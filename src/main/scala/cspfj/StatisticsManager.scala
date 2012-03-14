@@ -14,7 +14,7 @@ class StatisticsManager extends Loggable {
   def register(name: String, o: AnyRef) {
     require(!o.isInstanceOf[Class[_]])
     if (objects.contains(name)) {
-      info(name + ": an object with the same name is already registered");
+      logger.info(name + ": an object with the same name is already registered");
     }
 
     objects += name -> o

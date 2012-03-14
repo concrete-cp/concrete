@@ -19,7 +19,6 @@
 package cspfj.filter;
 
 import scala.annotation.tailrec
-
 import cspfj.constraint.Constraint
 import cspfj.constraint.DynamicConstraint
 import cspfj.problem.LearnMethod
@@ -27,6 +26,7 @@ import cspfj.problem.NoGoodLearner
 import cspfj.problem.Problem
 import cspfj.problem.Variable
 import cspfj.util.Loggable
+import cspfj.Statistic
 
 /**
  * @author Julien VION
@@ -36,7 +36,8 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
 
   val filter = new AC3Constraint(problem)
 
-  private var nbAddedConstraints = 0;
+  @Statistic
+  var nbAddedConstraints = 0;
 
   private var nbNoGoods = 0
 
@@ -49,6 +50,8 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
   private var nbSingletonTests = 0;
   private val ngl = new NoGoodLearner(problem, LearnMethod.BIN)
 
+  val nbVar = problem.variables.size
+
   def reduceAll() = {
     val nbC = problem.constraints.size
 
@@ -58,7 +61,8 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
     // ExtensionConstraintDynamic.quick = true;
 
     try {
-      dcReduce();
+      val stream = Stream.continually(problem.variables).flatten
+      filter.reduceAll() && dcReduce(stream.head, stream.tail, null);
     } finally {
       nbAddedConstraints += problem.constraints.size - nbC;
     }
@@ -69,45 +73,36 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
   // return variable.getId() * problem.getMaxDomainSize() + value;
   // }
 
-  private def dcReduce() = filter.reduceAll() && {
-    val stream = Stream.continually(problem.variables).flatten
+  @tailrec
+  private def dcReduce(variable: Variable, remaining: Stream[Variable], mark: Variable): Boolean =
+    if (mark == variable) true
+    else {
+      logger.info(variable.toString)
+      cnt += 1
 
-    @tailrec
-    def process(variable: Variable, remaining: Stream[Variable], mark: Variable): Boolean = {
-      if (mark == variable) true
-      else {
-        info(variable.toString)
-        cnt += 1
+      if (singletonTest(variable)) {
+        val domainSizes = problem.variables map (_.dom.size)
 
-        if (singletonTest(variable)) {
-          val domainSizes = problem.variables map (_.dom.size)
-
-          if (filter.reduceFrom(modVar, null, cnt - 1)) {
-            for (
-              v <- problem.variables.iterator.zip(domainSizes.iterator);
-              if v._1.dom.size != v._2
-            ) {
-              fine("Filtered " + (v._2 - v._1.dom.size) + " from " + v._1)
-              modVar(v._1.getId) = cnt
-            }
-            //            if (problem.variables.iterator.zip(domainSizes.iterator) exists {
-            //              case (v, d) => v.dom.size != d
-            //            }) {
-            //              problem.variables.foreach(v => modVar(v.getId) = cnt)
-            //            }
-            process(remaining.head, remaining.tail, variable)
-          } else {
-            false
+        if (filter.reduceFrom(modVar, null, cnt - 1)) {
+          for (
+            (v, od) <- problem.variables.zip(domainSizes);
+            if v.dom.size != od
+          ) {
+            logger.fine("Filtered " + (od - v.dom.size) + " from " + v)
+            modVar(v.getId) = cnt
           }
-        } else {
-          process(remaining.head, remaining.tail, if (mark == null) variable else mark)
-        }
+          //            if (problem.variables.iterator.zip(domainSizes.iterator) exists {
+          //              case (v, d) => v.dom.size != d
+          //            }) {
+          //              problem.variables.foreach(v => modVar(v.getId) = cnt)
+          //            }
+          dcReduce(remaining.head, remaining.tail, variable)
+        } else false
+
+      } else {
+        dcReduce(remaining.head, remaining.tail, if (mark == null) variable else mark)
       }
-
     }
-    process(stream.head, stream.tail, null)
-
-  }
 
   private def forwardCheck(variable: Variable) =
     variable.constraints.forall(c => c.arity != 2 || {
@@ -124,7 +119,7 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
       }
 
       if (logFine) {
-        fine(variable + " <- " + variable.dom.value(index) + "(" + index + ")");
+        logger.fine(variable + " <- " + variable.dom.value(index) + " (" + index + ")");
       }
 
       problem.push();
@@ -132,24 +127,23 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
 
       nbSingletonTests += 1;
 
-      val sat = if (cnt <= problem.variables.size) {
+      val sat = if (cnt <= nbVar) {
         filter.reduceAfter(variable);
       } else {
         forwardCheck(variable) &&
-          filter.reduceFrom(modVar, null, cnt - problem.variables.size);
+          filter.reduceFrom(modVar, null, cnt - nbVar);
       }
 
       if (sat) {
         val noGoods = ngl.nbNoGoods
         val modified = ngl.binNoGoods(variable)
-        val newNoGoods = ngl.nbNoGoods - noGoods
 
-        if (newNoGoods > 0) {
+        if (modified.nonEmpty) {
           changedGraph = true
           for (v <- modified.flatMap(_.scope)) {
             modVar(v.getId) = cnt
           }
-          info(newNoGoods + " nogoods");
+          logger.info((ngl.nbNoGoods - noGoods) + " nogoods");
         }
 
         // final Map<Variable[], List<int[]>> noGoods =
@@ -163,7 +157,7 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
         // addConstraints);
       } else {
         problem.pop();
-        fine("Removing " + variable + ", " + index);
+        logger.fine("Removing " + variable + ", " + index);
 
         variable.dom.remove(index);
         modVar(variable.getId) = cnt
@@ -188,14 +182,13 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
   def reduceAfter(variable: Variable) = {
     if (variable == null) {
       true;
-    } else
-      try {
-        reduceAll();
-      } catch {
-        case e: InterruptedException =>
-          throw new IllegalStateException(
-            "Filter was unexpectingly interrupted !", e);
-      }
+    } else try {
+      reduceAll();
+    } catch {
+      case e: InterruptedException =>
+        throw new IllegalStateException(
+          "Filter was unexpectingly interrupted !", e);
+    }
   }
 
   def reduceAfter(constraints: Iterable[Constraint]) =

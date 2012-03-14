@@ -9,6 +9,7 @@ import cspfj.constraint.DynamicConstraint
 import cspfj.util.BitVector
 import cspfj.Statistic
 import cspfj.Pair
+import scala.annotation.tailrec
 
 final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMethod) {
 
@@ -100,20 +101,24 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
       // getVariable(levelVariables[level-1]));
 
       val changes = fv.dom.getAtLevel(0).xor(fv.dom.getAtLevel(1));
-      if (!changes.isEmpty()) {
+      if (!changes.isEmpty) {
 
         val scope = Seq(firstVariable, fv)
         learnConstraint(scope) match {
           case Some(constraint) => {
             val (base, varPos) = NoGoodLearner.makeBase(scope, tuple, constraint);
 
-            var newNogoods = 0;
-            var i = changes.nextSetBit(0);
-            while (i >= 0) {
-              base(varPos) = i;
-              newNogoods += constraint.removeTuples(base);
-              i = changes.nextSetBit(i + 1)
-            }
+            @tailrec
+            def rt(i: Int, noGoods: Int): Int =
+              if (i < 0) noGoods
+              else {
+                base(varPos) = i
+                val newNoGoods = constraint.removeTuples(base)
+                rt(changes.nextSetBit(i + 1), noGoods + newNoGoods)
+              }
+
+            val newNogoods = rt(changes.nextSetBit(0), 0)
+
             if (newNogoods > 0) {
               nbNoGoods += newNogoods;
               modifiedConstraints += constraint;
@@ -136,14 +141,12 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
     scope.head.dynamicConstraints.find(c => c.arity == scope.size &&
       scope.forall(c.scopeSet.contains)) match {
       case Some(c) => Some(c)
-      case None => {
-        learnMethod match {
-          case LearnMethod.BIN => if (scope.size != 2) None else Some(generateConstraint(scope));
-          case LearnMethod.EXT => Some(generateConstraint(scope));
-          case _ => None;
-        }
-
+      case None => learnMethod match {
+        case LearnMethod.BIN => if (scope.size != 2) None else Some(generateConstraint(scope));
+        case LearnMethod.EXT => Some(generateConstraint(scope));
+        case _ => None;
       }
+
     }
   }
 

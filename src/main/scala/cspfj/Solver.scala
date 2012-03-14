@@ -86,7 +86,7 @@ abstract class Solver(val problem: Problem) extends Loggable {
     handler.setLevel(level);
     Logger.getLogger("").addHandler(handler);
 
-    info(ParameterManager.list);
+    logger.info(ParameterManager.list);
   }
 
   def nextSolution(): Option[Map[String, Int]]
@@ -100,7 +100,7 @@ abstract class Solver(val problem: Problem) extends Loggable {
   private def bestSolution(v: Variable, best: Option[Map[String, Int]]): Option[Map[String, Int]] = {
     val sol = nextSolution()
     if (sol.isDefined) {
-      info("New bound " + sol.get(v.name))
+      logger.info("New bound " + sol.get(v.name))
       //if (problem.currentLevel > 0) 
       reset()
       v.dom.removeTo(v.dom.index(sol.get(v.name)))
@@ -142,7 +142,7 @@ abstract class Solver(val problem: Problem) extends Loggable {
 
   final def preprocess(filter: Filter): Boolean = {
 
-    info("Preprocessing (" + preproExpiration + ")");
+    logger.info("Preprocessing (" + preproExpiration + ")");
 
     val preprocessor = if (Solver.preprocessorClass == null) {
       filter
@@ -167,12 +167,12 @@ abstract class Solver(val problem: Problem) extends Loggable {
       preprocessor.reduceAll();
     } catch {
       case e: InterruptedException => {
-        warning("Interrupted preprocessing");
+        logger.warning("Interrupted preprocessing");
         true;
         throw e
       }
       case e: OutOfMemoryError => {
-        throwing("Filter", "reduceAll", e);
+        logger.throwing("Filter", "reduceAll", e);
         throw e
       }
     } finally {

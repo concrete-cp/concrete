@@ -89,7 +89,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
         case None => (Some(extractSolution), stack)
         case Some(pair) => {
 
-          if (logInfo) info(problem.currentLevel + " : " + pair.variable
+          if (logInfo) logger.info(problem.currentLevel + " : " + pair.variable
             + " <- " + pair.value + "("
             + nbBacktracks + "/" + maxBacktracks + ")");
 
@@ -110,7 +110,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
 
       nbBacktracks += 1
 
-      if (logInfo) info(problem.currentLevel + " : " + stack.head + " removed")
+      if (logInfo) logger.info(problem.currentLevel + " : " + stack.head + " removed")
       stack.head.remove()
       mac(stack.head.variable, stack.tail)
     }
@@ -135,7 +135,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
 
   @tailrec
   private def nextSolution(modifiedVar: Variable): (Option[Map[String, Int]], List[Pair]) = {
-    info("MAC with " + maxBacktracks + " bt")
+    logger.info("MAC with " + maxBacktracks + " bt")
     val start = System.currentTimeMillis()
     val nbBT = nbBacktracks
 
@@ -148,7 +148,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
     } finally {
       val macTime = System.currentTimeMillis() - start
       searchCpu += macTime / 1000f;
-      info("Took " + (macTime / 1000f) + "s ("
+      logger.info("Took " + (macTime / 1000f) + "s ("
         + (1000f * (nbBacktracks - nbBT) / macTime)
         + " bps)");
     }

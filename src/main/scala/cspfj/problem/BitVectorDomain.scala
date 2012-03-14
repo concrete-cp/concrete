@@ -14,9 +14,15 @@ final object BitVectorDomain {
     bv
   }
 
-  def bv(lb: Int, ub: Int, hole: Int) = {
+  def intBv(lb: Int, ub: Int): BitVector = {
     val bv = fullBV(ub + 1)
     bv.clearTo(lb)
+    bv
+
+  }
+
+  def intBvH(lb: Int, ub: Int, hole: Int): BitVector = {
+    val bv = intBv(lb, ub)
     bv.clear(hole)
     bv
   }
@@ -29,7 +35,7 @@ final class BitVectorDomain(val bvDomain: BitVector, val size: Int) extends IntS
   }
 
   def this(lb: Int, ub: Int, hole: Int) = {
-    this(BitVectorDomain.bv(lb, ub, hole), ub - lb)
+    this(BitVectorDomain.intBvH(lb, ub, hole), ub - lb)
   }
 
   //  private def size_=(s: Int) {

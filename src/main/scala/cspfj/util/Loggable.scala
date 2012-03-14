@@ -6,23 +6,23 @@ trait Loggable {
 
   val logger: Logger = Logging.getLogger(this)
 
-  def checkFormat(msg: String, refs: Seq[_]): String =
-    if (!refs.isEmpty)
-      checkFormat(msg.replaceFirst("{}", refs.head.toString), refs.tail);
-    else msg
+//  def checkFormat(msg: String, refs: Seq[_]): String =
+//    if (!refs.isEmpty)
+//      checkFormat(msg.replaceFirst("{}", refs.head.toString), refs.tail);
+//    else msg
 
-  def finer(msg: String, refs: Any*) = logger finer checkFormat(msg, refs)
-
-  def fine(msg: String, refs: Any*) = logger fine checkFormat(msg, refs)
-
-  def throwing(sourceClass: String, sourceMethod: String, t: Throwable) =
-    logger throwing (sourceClass, sourceMethod, t)
-
-  def info(msg: String, refs: Any*) = logger info checkFormat(msg, refs)
-
-  def warning(msg: String, refs: Any*) = logger warning checkFormat(msg, refs)
-
-  def severe(msg: String, refs: Any*) = logger severe checkFormat(msg, refs)
+//  def finer(msg: String, refs: Any*) = logger finer checkFormat(msg, refs)
+//
+//  def fine(msg: String, refs: Any*) = logger fine checkFormat(msg, refs)
+//
+//  def throwing(sourceClass: String, sourceMethod: String, t: Throwable) =
+//    logger throwing (sourceClass, sourceMethod, t)
+//
+//  def info(msg: String, refs: Any*) = logger info checkFormat(msg, refs)
+//
+//  def warning(msg: String, refs: Any*) = logger warning checkFormat(msg, refs)
+//
+//  def severe(msg: String, refs: Any*) = logger severe checkFormat(msg, refs)
 
   def logInfo = logger.isLoggable(Level.INFO)
   

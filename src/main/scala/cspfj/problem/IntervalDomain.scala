@@ -71,12 +71,7 @@ final class IntervalDomain(val domain: Interval) extends IntSet {
     case d: IntervalDomain => first >= d.first && last <= d.last
   }
 
-  def toBitVector = {
-    val bv = BitVector.newBitVector(last + 1)
-    bv.fill(true)
-    bv.clearTo(first)
-    bv
-  }
+  def toBitVector = BitVectorDomain.intBv(first, last)
 
   def intersects(bv: BitVector) = bv.intersects(toBitVector)
   def intersects(bv: BitVector, part: Int) = bv.intersects(toBitVector, part)

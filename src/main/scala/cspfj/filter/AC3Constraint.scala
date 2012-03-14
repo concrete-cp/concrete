@@ -58,10 +58,12 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
 
   def reduceAll() = {
     Removals.clear()
-    queue.clear();
-    addAll();
-    reduce();
-
+    queue.clear()
+    for (c <- problem.constraints if (!c.isEntailed)) {
+      c.fillRemovals()
+      queue.offer(c);
+    }
+    reduce()
   }
 
   def reduceFrom(modVar: Array[Int], modCons: Array[Int], cnt: Int) = {
@@ -74,40 +76,22 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
       updateQueue(v, null)
     }
 
-    if (modCons != null) {
+    if (modCons != null)
       for (c <- problem.constraints if (modCons(c.getId) > cnt && !c.isEntailed)) {
 
         c.fillRemovals()
         queue.offer(c);
 
       }
-    }
 
     reduce();
   }
 
-  def reduceAfter(variable: Variable) = {
-
-    if (variable == null) {
-      true;
-    } else {
-      Removals.clear()
-      queue.clear();
-      updateQueue(variable, null)
-      //      variable.constraints.iterator.zipWithIndex.foreach {
-      //        case (c, cp) =>
-      //          enqueue(c, variable.positionInConstraint(cp))
-      //      }
-      //info("reduce " + AC3Constraint.revisionCount)
-      reduce();
-    }
-  }
-
-  private def enqueue(c: Constraint, modified: Int) {
-    if (!c.isEntailed) {
-      c.setRemovals(modified);
-      queue.offer(c);
-    }
+  def reduceAfter(variable: Variable) = variable == null || {
+    Removals.clear()
+    queue.clear();
+    updateQueue(variable, null)
+    reduce();
   }
 
   private def updateQueue(modified: Variable, skip: Constraint) {
@@ -118,8 +102,10 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
       if (i >= 0) {
         val c = constraints(i)
 
-        if (c ne skip)
-          enqueue(c, modified.positionInConstraint(i))
+        if ((c ne skip) && !c.isEntailed) {
+          c.setRemovals(modified.positionInConstraint(i))
+          queue.offer(c)
+        }
 
         upd(i - 1)
       }
@@ -158,15 +144,6 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
       } else {
         constraint.weight += 1;
         false;
-      }
-    }
-  }
-
-  private def addAll() {
-    problem.constraints.foreach { c =>
-      if (!c.isEntailed) {
-        c.fillRemovals()
-        queue.offer(c);
       }
     }
   }

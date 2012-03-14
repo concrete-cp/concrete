@@ -90,7 +90,7 @@ final class DC1(val problem: Problem) extends SingletonConsistency with Loggable
         ngl.binNoGoods(variable)
         val newNoGoods = ngl.nbNoGoods - noGoods
         changedGraph |= newNoGoods > 0
-        if (newNoGoods > 0) info(newNoGoods + " nogoods");
+        if (newNoGoods > 0) logger.info(newNoGoods + " nogoods");
 
         problem.pop();
 
@@ -98,7 +98,7 @@ final class DC1(val problem: Problem) extends SingletonConsistency with Loggable
         // addConstraints);
       } else {
         problem.pop();
-        fine("Removing " + variable + ", " + index);
+        logger.fine("Removing " + variable + ", " + index);
 
         variable.dom.remove(index);
         changedGraph = true;

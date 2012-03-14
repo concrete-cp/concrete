@@ -83,7 +83,7 @@ final class DichoMAC(prob: Problem) extends Solver(prob) with Loggable {
 
           val mid = variable.dom.indices.drop(variable.dom.size / 2).next
 
-          info(problem.currentLevel + " : " + variable
+          logger.info(problem.currentLevel + " : " + variable
             + " < " + mid + "("
             + nbBacktracks + "/" + maxBacktracks + ")");
 
@@ -125,7 +125,7 @@ final class DichoMAC(prob: Problem) extends Solver(prob) with Loggable {
 
   @tailrec
   private def nextSolution(modifiedVar: Variable): (Option[Map[String, Int]], List[Pair]) = {
-    info("MAC with " + maxBacktracks + " bt")
+    logger.info("MAC with " + maxBacktracks + " bt")
     val start = System.currentTimeMillis()
     val nbBT = nbBacktracks
 
@@ -138,7 +138,7 @@ final class DichoMAC(prob: Problem) extends Solver(prob) with Loggable {
     } finally {
       val macTime = System.currentTimeMillis() - start
       searchCpu += macTime / 1000f;
-      info("Took " + (macTime / 1000f) + "s ("
+      logger.info("Took " + (macTime / 1000f) + "s ("
         + (1000f * (nbBacktracks - nbBT) / macTime)
         + " bps)");
     }

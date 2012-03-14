@@ -44,7 +44,7 @@ trait SingletonConsistency extends Filter with Loggable {
         if (mark == variable) {
           true
         } else {
-          info(variable.toString)
+          logger.info(variable.toString)
 
           if (singletonTest(variable)) {
             if (subFilter.reduceAfter(variable)) {
@@ -72,7 +72,7 @@ trait SingletonConsistency extends Filter with Loggable {
    */
   def check(variable: Variable, index: Int) = {
     // if (logger.isLoggable(Level.FINER)) {
-    finer(variable + " <- " + variable.dom.value(index) + "(" + index + ")");
+    logger.finer(variable + " <- " + variable.dom.value(index) + "(" + index + ")");
     // }
 
     problem.push();
@@ -86,7 +86,7 @@ trait SingletonConsistency extends Filter with Loggable {
     if (consistent) {
       false
     } else {
-      fine("Removing " + variable + ", " + index);
+      logger.fine("Removing " + variable + ", " + index);
 
       variable.dom.remove(index);
       true

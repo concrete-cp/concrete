@@ -61,18 +61,18 @@ final class ProblemGeneratorTest extends Loggable {
   private def generateTest(file: String) {
     val cspom = CSPOM.load(classOf[ProblemGeneratorTest].getResource(file));
 
-    info(cspom + "\n" + cspom.variables.size + " vars, " + cspom.constraints.size + " cons")
+    logger.info(cspom + "\n" + cspom.variables.size + " vars, " + cspom.constraints.size + " cons")
 
     ProblemCompiler.compile(cspom);
 
-    info(cspom + "\n" + cspom.variables.size + " vars, " + cspom.constraints.size + " cons")
+    logger.info(cspom + "\n" + cspom.variables.size + " vars, " + cspom.constraints.size + " cons")
 
     val problem = ProblemGenerator.generate(cspom);
 
-    info(problem + "\n" + problem.variables.size + " vars, " + problem.constraints.size + " cons")
+    logger.info(problem + "\n" + problem.variables.size + " vars, " + problem.constraints.size + " cons")
 
     new AC3Constraint(problem).reduceAll();
 
-    info(problem.toString);
+    logger.info(problem.toString);
   }
 }
