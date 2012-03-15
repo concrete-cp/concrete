@@ -13,13 +13,12 @@ object IntSet {
     }
   }
 
-  def ofInt(lb: Int, ub: Int) = {
+  def ofInt(lb: Int, ub: Int): IntSet =
     if (lb > ub) EmptyDomain
     else if (ub == lb) new SingleDomain(lb)
     else new IntervalDomain(lb, ub)
-  }
 
-  def ofBV(bv: BitVector, s: Int) = s match {
+  def ofBV(bv: BitVector, s: Int): IntSet = s match {
     case 0 => EmptyDomain
     case 1 => new SingleDomain(bv.nextSetBit(0))
     case _ => {
