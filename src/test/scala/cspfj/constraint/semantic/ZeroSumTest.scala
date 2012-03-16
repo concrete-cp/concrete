@@ -17,9 +17,9 @@ final class ZeroSumTest {
 
   @Before
   def setUp() {
-    v0 = new Variable("v0", new IntDomain(1, 2, 3, 4));
-    v1 = new Variable("v1", new IntDomain(0, 1, 2, 3, 4));
-    val b = new Variable("b", new IntDomain(1))
+    v0 = new Variable("v0", IntDomain(1 to 4))
+    v1 = new Variable("v1", IntDomain(0 to 4))
+    val b = new Variable("b", IntDomain(1))
     c = new ZeroSum(Array(4, -1, -1), Array(b, v0, v1));
   }
 

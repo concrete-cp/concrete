@@ -165,9 +165,9 @@ public final class LargeBitVectorTest {
 
         assertFalse(bitVector.subsetOf(bv2));
         assertTrue(bv2.subsetOf(bitVector));
-        
+
     }
-    
+
     @Test
     public void testSubset2() {
         BitVector bv1 = BitVector.newBitVector(70);
@@ -187,7 +187,7 @@ public final class LargeBitVectorTest {
 
         BitVector bv2 = BitVector.newBitVector(400);
         bv2.set(46);
-        
+
         BitVector bv3 = BitVector.newBitVector(50);
         bv3.set(46);
 
@@ -195,7 +195,25 @@ public final class LargeBitVectorTest {
         assertEquals(bitVector, bv3);
         assertEquals(bitVector.hashCode(), bv2.hashCode());
         assertEquals(bitVector.hashCode(), bv3.hashCode());
-        
+
+    }
+
+    @Test
+    public void testXor() {
+        bitVector.set(59);
+        bitVector.set(11);
+        BitVector bv2 = BitVector.newBitVector(10);
+        bv2.set(10);
+        bv2.set(11);
+
+        BitVector bv3 = bitVector.xor(bv2);
+        BitVector bv4 = bv2.xor(bitVector);
+        assertEquals(bv3, bv4);
+        assertEquals(2, bv3.cardinality());
+        assertTrue(bv3.get(10));
+        assertFalse(bv3.get(11));
+        assertTrue(bv3.get(59));
+
     }
 
     // @Test

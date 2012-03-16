@@ -61,11 +61,6 @@ public final class SmallBitVector extends BitVector {
         return next == 0 ? -1 : Long.numberOfTrailingZeros(next);
     }
 
-    public void setSingle(final int index) {
-        word = 0;
-        set(index);
-    }
-
     public int clearFrom(final int from) {
         final int before = Long.bitCount(word);
         word &= ~(MASK << from);
@@ -113,16 +108,19 @@ public final class SmallBitVector extends BitVector {
     }
 
     public BitVector xor(final BitVector bv) {
-        final SmallBitVector bitVector = new SmallBitVector(size);
-        bitVector.word = (((SmallBitVector) bv).word ^ this.word)
-                & (MASK >>> -size);
-        return bitVector;
+        try {
+            final BitVector bitVector = bv.clone();
+            bitVector.setFirstWord(bv.getWord(0) ^ this.word);
+            return bitVector;
+        } catch (CloneNotSupportedException e) {
+            throw new IllegalStateException(e);
+        }
+
     }
 
     public BitVector and(final BitVector bv) {
         final SmallBitVector bitVector = new SmallBitVector(size);
-        bitVector.word = (((SmallBitVector) bv).word & this.word)
-                & (MASK >>> -size);
+        bitVector.word = (bv.getWord(0) & this.word) & (MASK >>> -size);
         return bitVector;
     }
 
@@ -130,10 +128,6 @@ public final class SmallBitVector extends BitVector {
         final SmallBitVector bitVector = new SmallBitVector(size);
         bitVector.word = ~this.word & (MASK >>> -size);
         return bitVector;
-    }
-
-    public void setAllBut(final int index) {
-        word |= ~(1L << index) & (MASK >>> -size);
     }
 
     @Override
@@ -148,8 +142,7 @@ public final class SmallBitVector extends BitVector {
 
     @Override
     public boolean subsetOf(BitVector bv) {
-        final long otherWord = bv.getWord(0);
-        return (word & ~otherWord) == 0L;
+        return (word & ~bv.getWord(0)) == 0L;
     }
 
     @Override
@@ -158,5 +151,11 @@ public final class SmallBitVector extends BitVector {
             return 0L;
         else
             return word;
+    }
+
+    @Override
+    protected void setFirstWord(long word) {
+        this.word = word;
+
     }
 }

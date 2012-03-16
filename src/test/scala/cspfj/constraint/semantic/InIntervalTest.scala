@@ -16,7 +16,7 @@ final class InIntervalTest {
 
   @Before
   def setUp() {
-    domain = new IntDomain(1, 2, 3)
+    domain = IntDomain(1 to 3)
     val variable = new Variable("test", domain);
     constraint = InInterval.values(variable, 2, 4);
   }

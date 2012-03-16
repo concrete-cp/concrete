@@ -46,20 +46,6 @@ final class LargeBitVector extends BitVector {
         return (words[word(position)] |= 1L << position) != old;
     }
 
-    public void setAllBut(final int index) {
-        final int position = word(index);
-
-        words[words.length - 1] = MASK >>> -size;
-        for (int i = words.length - 1; --i >= 0;) {
-            if (i == position) {
-                words[i] |= ~(1L << position);
-            } else {
-                words[i] = MASK;
-            }
-        }
-
-    }
-
     public boolean get(final int position) {
         return (words[word(position)] & (1L << position)) != 0;
     }
@@ -120,12 +106,22 @@ final class LargeBitVector extends BitVector {
 
     @Override
     public BitVector xor(final BitVector bv) {
-        final LargeBitVector bitVector = new LargeBitVector(size);
-        final LargeBitVector source = (LargeBitVector) bv;
-        int i = words.length - 1;
-        bitVector.words[i] = (source.words[i] & words[i]) ^ (MASK >>> -size);
+        final BitVector larger;
+        final BitVector smaller;
+        if (size < bv.size) {
+            smaller = this;
+            larger = bv;
+        } else {
+            smaller = bv;
+            larger = this;
+        }
+
+        final LargeBitVector bitVector = new LargeBitVector(larger.size);
+        int i = nbWords(bitVector.size) - 1;
+        bitVector.words[i] = (larger.getWord(i) ^ smaller.getWord(i))
+                & (MASK >>> -size);
         while (--i >= 0) {
-            bitVector.words[i] = source.words[i] ^ words[i];
+            bitVector.words[i] = larger.getWord(i) ^ smaller.getWord(i);
         }
         return bitVector;
     }
@@ -133,11 +129,10 @@ final class LargeBitVector extends BitVector {
     @Override
     public BitVector and(final BitVector bv) {
         final LargeBitVector bitVector = new LargeBitVector(size);
-        final LargeBitVector source = (LargeBitVector) bv;
         int i = words.length - 1;
-        bitVector.words[i] = (source.words[i] & words[i]) & (MASK >>> -size);
+        bitVector.words[i] = (bv.getWord(i) & words[i]) & (MASK >>> -size);
         while (--i >= 0) {
-            bitVector.words[i] = source.words[i] & words[i];
+            bitVector.words[i] = bv.getWord(i) & words[i];
         }
         return bitVector;
     }
@@ -151,12 +146,6 @@ final class LargeBitVector extends BitVector {
             bitVector.words[i] = ~words[i];
         }
         return bitVector;
-    }
-
-    @Override
-    public void setSingle(final int index) {
-        Arrays.fill(words, 0);
-        set(index);
     }
 
     @Override
@@ -287,5 +276,11 @@ final class LargeBitVector extends BitVector {
             return 0L;
         else
             return words[i];
+    }
+
+    @Override
+    protected void setFirstWord(long word) {
+        words[0] = word;
+
     }
 }

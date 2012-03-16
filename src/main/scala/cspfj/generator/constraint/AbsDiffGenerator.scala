@@ -18,15 +18,15 @@ final class AbsDiffGenerator(problem: Problem) extends AbstractGenerator(problem
 
         val values = AbstractGenerator.domainFrom(v0, v1, (i, j) => math.abs(i - j))
 
-        result.dom = new IntDomain(values);
+        result.dom = IntDomain(values: _*);
 
       } else if (v0.dom == null) {
 
-        v0.dom = new IntDomain(generateValues(result, v1));
+        v0.dom = IntDomain(generateValues(result, v1): _*);
 
       } else if (v1.dom == null) {
 
-        v1.dom = new IntDomain(generateValues(result, v0));
+        v1.dom = IntDomain(generateValues(result, v0): _*);
 
       }
       addConstraint(new AbsDiff(result, v0, v1));

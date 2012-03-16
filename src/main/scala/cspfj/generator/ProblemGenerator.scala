@@ -56,14 +56,12 @@ object ProblemGenerator {
   def generateDomain[T](cspomDomain: CSPOMDomain[T]): Domain = cspomDomain match {
     case null => null
     case bD: BooleanDomain =>
-      if (bD.isConstant) {
-        new cspfj.problem.BooleanDomain(bD.getBoolean);
-      } else {
-        new cspfj.problem.BooleanDomain();
-      }
-    case int: IntInterval => new IntDomain(int.lb, int.ub)
+      if (bD.isConstant) new cspfj.problem.BooleanDomain(bD.getBoolean)
+      else new cspfj.problem.BooleanDomain();
 
-    case ext: CSPOMDomain[Int] => new IntDomain(ext.values)
+    case int: IntInterval => IntDomain(int.lb to int.ub)
+
+    case ext: CSPOMDomain[Int] => IntDomain(ext.values: _*)
 
     case _ => throw new UnsupportedOperationException
   }

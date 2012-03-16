@@ -69,8 +69,6 @@ public abstract class BitVector implements Cloneable {
         return prevClearBit(size);
     }
 
-    public abstract void setSingle(final int index);
-
     /**
      * Removes all values from given bound (included).
      * 
@@ -103,9 +101,7 @@ public abstract class BitVector implements Cloneable {
 
     public abstract boolean isEmpty();
 
-    public abstract void setAllBut(final int index);
-
-    public abstract int cardinality();
+     public abstract int cardinality();
 
     public abstract long getWord(int i);
 
@@ -115,4 +111,6 @@ public abstract class BitVector implements Cloneable {
 
     public abstract boolean subsetOf(BitVector bv);
 
+    protected abstract void setFirstWord(final long word);
+    
 }

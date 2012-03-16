@@ -12,7 +12,6 @@ object EmptyDomain extends IntSet {
   def closestLeq(i: Int) = -1
   def closestGeq(i: Int) = -1
   def present(i: Int) = false
-  def setSingle(i: Int) = throw new IllegalStateException
   def remove(i: Int) = throw new IllegalStateException
   def removeFrom(lb: Int) = this
   def removeTo(ub: Int) = this

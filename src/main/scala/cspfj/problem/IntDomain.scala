@@ -5,7 +5,13 @@ import java.util.Arrays
 import cspfj.util.Backtrackable
 
 object IntDomain {
-  def of(d: Int*) = new IntDomain(d)
+  def apply(d: Int*): IntDomain = new IntDomain(IntSet.factory(d), Indexer.factory(d))
+
+  def apply(r: Range): IntDomain =
+    if (r.step == 1) new IntDomain(
+      new IntervalSet(0, r.last - r.start),
+      Indexer.ofInt(r.start, r.last))
+    else apply(r: _*)
 }
 
 final class IntDomain(
@@ -20,13 +26,6 @@ final class IntDomain(
   //    this(domain.domain, domain.bvDomain.clone, domain.history)
   //
   //  def this(domain: Array[Int]) = this(domain, BitVector.newBitVector(domain.length, true))
-
-  def this(domain: Seq[Int]) = this(IntSet.factory(domain), Indexer.factory(domain))
-
-  def this(lb: Int, ub: Int) =
-    this(new IntervalDomain(0, ub - lb), new OffsetIndices(ub - lb + 1, lb))
-
-  def this(constant: Int) = this(constant, constant)
 
   def save() = intSet.copy
 
@@ -99,7 +98,7 @@ final class IntDomain(
 
   def setSingle(index: Int) {
     altering()
-    intSet = intSet.setSingle(index)
+    intSet = new Singleton(index)
   }
 
   def value(index: Int) = indexer.value(index);

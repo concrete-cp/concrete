@@ -2,7 +2,7 @@ package cspfj.problem;
 
 import cspfj.util.BitVector
 
-final class SingleDomain(val index: Int) extends IntSet {
+final class Singleton(val index: Int) extends IntSet {
 
   val size = 1
 
@@ -60,7 +60,11 @@ final class SingleDomain(val index: Int) extends IntSet {
     bv
   }
 
-  def intersects(bv: BitVector) = bv.intersects(toBitVector)
-  def intersects(bv: BitVector, part: Int) = bv.intersects(toBitVector, part)
+  def intersects(bv: BitVector) = {
+    val part = index >> 6
+    if (bv.get(index)) part else -1
+  }
+
+  def intersects(bv: BitVector, part: Int) = bv.get(index)
   def bound = true
 }

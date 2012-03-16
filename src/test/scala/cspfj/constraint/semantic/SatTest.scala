@@ -10,9 +10,9 @@ class SatTest {
   @Test
   def test {
     val problem = new Problem
-    val v0 = new Variable("v0", new IntDomain(0, 1, 2));
-    val v1 = new Variable("v1", new IntDomain(0, 1, 2));
-    val v2 = new Variable("v2", new IntDomain(0, 1, 2));
+    val v0 = new Variable("v0", IntDomain(0 to 2));
+    val v1 = new Variable("v1", IntDomain(0 to 2));
+    val v2 = new Variable("v2", IntDomain(0 to 2));
 
     val c = new Sat(v0, v1, v2)
     problem.addConstraint(c);

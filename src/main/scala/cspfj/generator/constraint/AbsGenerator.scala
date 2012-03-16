@@ -14,11 +14,11 @@ final class AbsGenerator(problem: Problem) extends AbstractGenerator(problem) {
       case Seq() => true
       case Seq(v) if v == v0 => {
         val values = result.dom.values.toSeq
-        v.dom = new IntDomain(AbstractGenerator.makeDomain(values ++ values.map(-_)));
+        v.dom = IntDomain(AbstractGenerator.makeDomain(values ++ values.map(-_)): _*);
         true;
       }
       case Seq(v) if v == result => {
-        v.dom = new IntDomain(AbstractGenerator.makeDomain(v0.dom.values.map(math.abs).toSeq));
+        v.dom = IntDomain(AbstractGenerator.makeDomain(v0.dom.values.map(math.abs).toSeq): _*);
         true;
       }
       case _ => false

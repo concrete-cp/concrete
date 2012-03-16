@@ -5,7 +5,7 @@ import java.util.Arrays
 import cspfj.util.Backtrackable
 import cspfj.util.Interval
 
-final class IntervalDomain(val domain: Interval) extends IntSet {
+final class IntervalSet(val domain: Interval) extends IntSet {
 
   def this(lb: Int, ub: Int) = this(Interval(lb, ub))
 
@@ -38,25 +38,23 @@ final class IntervalDomain(val domain: Interval) extends IntSet {
    */
   def present(index: Int) = domain.in(index);
 
-  def setSingle(index: Int) = new SingleDomain(index)
-
   def remove(index: Int) = {
     assert(present(index));
-    if (index == domain.lb) IntSet.ofInt(domain.lb + 1, domain.ub)
-    else if (index == domain.ub) IntSet.ofInt(domain.lb, domain.ub - 1)
-    else new BitVectorDomain(domain.lb, domain.ub, index)
+    if (index == domain.lb) IntSet.ofInterval(domain.lb + 1, domain.ub)
+    else if (index == domain.ub) IntSet.ofInterval(domain.lb, domain.ub - 1)
+    else new BitVectorSet(domain.lb, domain.ub, index)
   }
 
   def removeFrom(lb: Int) =
     if (lb > domain.ub) this
-    else IntSet.ofInt(domain.lb, lb - 1)
+    else IntSet.ofInterval(domain.lb, lb - 1)
 
   def removeTo(ub: Int) =
     if (ub < domain.lb) this
-    else IntSet.ofInt(ub + 1, domain.ub)
+    else IntSet.ofInterval(ub + 1, domain.ub)
 
   def filter(f: Int => Boolean) = {
-    val bv = new BitVectorDomain(toBitVector, size)
+    val bv = new BitVectorSet(toBitVector, size)
     val nbv = bv.filter(f)
     if (bv eq nbv) this else nbv
   }
@@ -67,11 +65,11 @@ final class IntervalDomain(val domain: Interval) extends IntSet {
     else "[" + id.value(domain.lb) + ", " + id.value(domain.ub) + "]"
 
   def subsetOf(d: IntSet) = d match {
-    case d: BitVectorDomain => (first to last).forall(d.present)
-    case d: IntervalDomain => first >= d.first && last <= d.last
+    case d: BitVectorSet => (first to last).forall(d.present)
+    case d: IntervalSet => first >= d.first && last <= d.last
   }
 
-  lazy val toBitVector = BitVectorDomain.intBv(first, last)
+  lazy val toBitVector = BitVectorSet.intBv(first, last)
 
   def intersects(bv: BitVector) = bv.intersects(toBitVector)
   def intersects(bv: BitVector, part: Int) = bv.intersects(toBitVector, part)

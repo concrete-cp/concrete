@@ -2,10 +2,15 @@ package cspfj.problem
 
 object Indexer {
   def factory(values: Seq[Int]): Indexer = {
-    if (values.size == values.last - values.head + 1) {
-      if (values.head == 0) new DirectIndices(values.size)
-      else new OffsetIndices(values.size, values.head)
-    } else new GeneralIndices(values.toArray)
+    val ub = values.last
+    val lb = values.head
+    if (values.size == ub - lb + 1) ofInt(lb, ub)
+    else new GeneralIndices(values.toArray)
+  }
+
+  def ofInt(lb: Int, ub: Int) = {
+    if (lb == 0) new DirectIndices(ub - lb + 1)
+    else new OffsetIndices(ub - lb + 1, lb)
   }
 }
 

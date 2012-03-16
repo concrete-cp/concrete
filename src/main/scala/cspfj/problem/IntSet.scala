@@ -7,25 +7,25 @@ object IntSet {
 
     domain match {
       case Seq() => EmptyDomain
-      case Seq(v) => new SingleDomain(v)
-      case s if domain.size == 1 + domain.last - domain.head => new IntervalDomain(0, domain.size - 1)
-      case _ => new BitVectorDomain(domain.size)
+      case Seq(v) => new Singleton(0)
+      case s if domain.size == 1 + domain.last - domain.head => new IntervalSet(0, domain.size - 1)
+      case _ => new BitVectorSet(domain.size)
     }
   }
 
-  def ofInt(lb: Int, ub: Int): IntSet =
+  def ofInterval(lb: Int, ub: Int): IntSet =
     if (lb > ub) EmptyDomain
-    else if (ub == lb) new SingleDomain(lb)
-    else new IntervalDomain(lb, ub)
+    else if (ub == lb) new Singleton(lb)
+    else new IntervalSet(lb, ub)
 
   def ofBV(bv: BitVector, s: Int): IntSet = s match {
     case 0 => EmptyDomain
-    case 1 => new SingleDomain(bv.nextSetBit(0))
+    case 1 => new Singleton(bv.nextSetBit(0))
     case _ => {
       val lb = bv.nextSetBit(0)
       val ub = bv.lastSetBit
-      if (lb - ub == s - 1) new IntervalDomain(lb, ub)
-      else new BitVectorDomain(bv, s)
+      if (lb - ub == s - 1) new IntervalSet(lb, ub)
+      else new BitVectorSet(bv, s)
     }
   }
 }
@@ -40,7 +40,6 @@ trait IntSet {
   def closestLeq(i: Int): Int
   def closestGeq(i: Int): Int
   def present(i: Int): Boolean
-  def setSingle(i: Int): IntSet
   def remove(i: Int): IntSet
   def removeFrom(lb: Int): IntSet
   def removeTo(ub: Int): IntSet

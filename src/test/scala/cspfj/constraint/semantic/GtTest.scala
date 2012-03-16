@@ -13,8 +13,8 @@ final class GtTest {
 
   @Before
   def setUp() {
-    v1 = new Variable("v1", new IntDomain(1, 2, 3, 4));
-    v2 = new Variable("v2", new IntDomain(3, 4, 5));
+    v1 = new Variable("v1", IntDomain(1 to 4));
+    v2 = new Variable("v2", IntDomain(3 to 5));
   }
 
   @Test

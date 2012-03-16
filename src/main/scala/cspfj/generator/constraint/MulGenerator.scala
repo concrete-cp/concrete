@@ -15,15 +15,15 @@ final class MulGenerator(problem: Problem) extends AbstractGenerator(problem) {
       case Seq() => true
       case Seq(v) if v == result => {
         val values = AbstractGenerator.domainFrom(v0, v1, { _ * _ })
-        v.dom = new IntDomain(values)
+        v.dom = IntDomain(values: _*)
         true
       }
       case Seq(v) if v == v0 => {
-        v.dom = new IntDomain(generateDomain(result, v1))
+        v.dom = IntDomain(generateDomain(result, v1): _*)
         true
       }
       case Seq(v) if v == v1 => {
-        v.dom = new IntDomain(generateDomain(result, v0))
+        v.dom = IntDomain(generateDomain(result, v0): _*)
         true
       }
       case _ => false

@@ -9,8 +9,8 @@ final class AbsIntTest {
   @Test
   def testX() {
     val prob = new Problem
-    val x = prob.addVariable("x", new IntDomain((-100 to 100).toSeq))
-    val y = prob.addVariable("y", new IntDomain(-5))
+    val x = prob.addVariable("x", IntDomain(-100 to 100))
+    val y = prob.addVariable("y", IntDomain(-5))
     val c = new Abs(x, y)
     prob.addConstraint(c)
     c.fillRemovals()
@@ -23,8 +23,8 @@ final class AbsIntTest {
   @Test
   def testY() {
     val prob = new Problem
-    val x = prob.addVariable("x", new IntDomain(7))
-    val y = prob.addVariable("y", new IntDomain((-100 to 100).toSeq))
+    val x = prob.addVariable("x", IntDomain(7))
+    val y = prob.addVariable("y", IntDomain(-100 to 100))
     val c = new Abs(x, y)
     prob.addConstraint(c)
     c.fillRemovals()
