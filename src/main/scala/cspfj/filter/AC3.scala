@@ -109,7 +109,7 @@ final class AC3(
       val c = modifiedConstraints.next
       (0 until c.arity).foreach(c.setRemovals)
 
-      val prev = c.sizes
+      val prev = c.sizes()
 
       if (c.consistentRevise()) {
 
@@ -181,7 +181,7 @@ final class AC3(
         reduce(itr)
       } else {
         revisions += 1
-        val prev = c.sizes
+        val prev = c.sizes()
         //logger.fine("Revising " + c)
         if (c.consistentRevise()) {
           c.clearRemovals()

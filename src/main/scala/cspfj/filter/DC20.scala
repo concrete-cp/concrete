@@ -97,10 +97,12 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
   }
 
   private def forwardCheck(variable: Variable) =
-    variable.constraints.forall(c => c.arity != 2 || {
+    variable.constraints.forall { c =>
       c.setRemovals(variable)
-      c.consistentRevise()
-    })
+      c.arity != 2 || {
+        c.consistentRevise()
+      }
+    }
 
   def singletonTest(variable: Variable) = {
     var changedGraph = false;

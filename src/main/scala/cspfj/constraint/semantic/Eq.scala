@@ -56,7 +56,7 @@ final class Eq(val a: Int, val x: Variable, val b: Int, val y: Variable)
     } else false
   }
 
-  def reviseVariable(position: Int) = position match {
+  def reviseVariable(position: Int, mod: Seq[Int]) = position match {
     case 0 => x.dom.filter { i =>
       val index = yIndex(i)
       index >= 0 && y.dom.present(index)

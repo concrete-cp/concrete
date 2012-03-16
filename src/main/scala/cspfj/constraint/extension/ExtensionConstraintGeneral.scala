@@ -53,12 +53,12 @@ final class ExtensionConstraintGeneral(matrix: Matrix, shared: Boolean, scope: A
     removed;
   }
 
-  override def reviseVariable(position: Int) = {
+  override def reviseVariable(position: Int, mod: Seq[Int]) = {
     if (matrixManager.supportCondition(position)) {
-      assert(!super.reviseVariable(position))
+      assert(!super.reviseVariable(position, mod))
       false
     } else
-      super.reviseVariable(position);
+      super.reviseVariable(position, mod);
   }
 
 }

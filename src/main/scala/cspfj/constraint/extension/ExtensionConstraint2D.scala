@@ -38,7 +38,7 @@ final class ExtensionConstraint2D(
 
   override def simpleEvaluation = 2
 
-  def reviseVariable(position: Int) = {
+  def reviseVariable(position: Int, mod: Seq[Int]) = {
     if (!matrixManager.supportCondition(position)) {
       scope(position).dom.filter(i => matrixManager.hasSupport(position, i))
     } else false

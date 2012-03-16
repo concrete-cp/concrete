@@ -91,16 +91,29 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
 
   override def hashCode = getId
 
-  def controlTuplePresence(tuple: Array[Int]) = {
+  @tailrec
+  final def controlTuplePresence(tuple: Array[Int], i: Int = arity - 1): Boolean = {
     /** Need high optimization */
 
-    @tailrec
-    def control(i: Int): Boolean =
-      if (i < 0) true
-      else
-        scope(i).dom.present(tuple(i)) && control(i - 1)
+    if (i < 0) true
+    else
+      scope(i).dom.present(tuple(i)) && controlTuplePresence(tuple, i - 1)
 
-    control(arity - 1)
+  }
+
+  @tailrec
+  final def controlTuplePresence(tuple: Array[Int], mod: Seq[Int]): Boolean = {
+    /** Need high optimization */
+
+    if (mod.isEmpty) {
+      assert(controlTuplePresence(tuple), tuple.mkString("(", ", ", ")") +
+        " is not in " + scope.mkString("(", ", ", ")"))
+      true
+    } else {
+      val i = mod.head
+      scope(i).dom.present(tuple(i)) && controlTuplePresence(tuple, mod.tail)
+    }
+
   }
 
   final def isEntailed = entailedAtLevel >= 0
@@ -133,7 +146,7 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
   def clearRemovals() {}
 
   def setRemovals(pos: Int) {}
-  
+
   def setRemovals(v: Variable) {
     setRemovals(position(v))
   }
@@ -182,17 +195,12 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
   final def isInvolved(variable: Variable) = position.contains(variable)
 
   @tailrec
-  private def sizes(a: Array[Int], i: Int): Array[Int] =
+  final def sizes(a: Array[Int] = new Array[Int](arity), i: Int = arity - 1): Array[Int] =
     if (i < 0) a
     else {
       a(i) = scope(i).dom.size
       sizes(a, i - 1)
     }
-
-  final def sizes: Array[Int] =
-    // scope map (_.dom.size)
-    // Optimize this!
-    sizes(new Array[Int](arity), arity - 1)
 
   def isBound = scope.forall(_.dom.bound)
 

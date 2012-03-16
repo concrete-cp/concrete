@@ -15,6 +15,7 @@ import cspfj.StatisticsManager
 import cspfj.constraint.Removals
 import cspfj.problem.EmptyDomainException
 import cspfj.heuristic.revision.Eval
+import cspfj.UNSATException
 
 object AC3Constraint {
   @Parameter("ac3c.queue")
@@ -67,7 +68,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
   }
 
   def reduceFrom(modVar: Array[Int], modCons: Array[Int], cnt: Int) = {
-    Removals.clear()
+    //Removals.clear()
     queue.clear();
 
     for (
@@ -135,16 +136,21 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
       val constraint = queue.poll();
 
       revisions += 1;
-      val sizes = constraint.sizes
+      val sizes = constraint.sizes()
 
-      if (constraint.consistentRevise()) {
-        updateQueue(sizes, constraint, constraint.arity - 1)
+      (try {
+        if (constraint.revise()) {
+          assert(!(constraint.sizes() sameElements sizes), constraint + " returned wrong true revised info")
+          updateQueue(sizes, constraint, constraint.arity - 1)
+        } else assert(constraint.sizes() sameElements sizes, constraint + " returned wrong false revised info")
+
         constraint.clearRemovals();
-        reduce()
-      } else {
-        constraint.weight += 1;
-        false;
-      }
+        true
+      } catch {
+        case e: UNSATException =>
+          constraint.weight += 1
+          false
+      }) && reduce()
     }
   }
 

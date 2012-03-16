@@ -128,7 +128,7 @@ final class AllDifferentBC(vars: Variable*) extends AbstractConstraint(vars.toAr
     else i
 
   def filterLower(): Boolean = {
-    var hole = false
+    var change = false
     var i = 1
     while (i <= nbBounds + 1) {
       t(i) = i - 1
@@ -158,8 +158,9 @@ final class AllDifferentBC(vars: Variable*) extends AbstractConstraint(vars.toAr
 
       if (h(x) > x) {
         var w = pathmax(h, h(x));
-        maxsorted(i).dom.removeToVal(bounds(w) - 1)
-        hole |= maxsorted(i).dom.firstValue > bounds(w)
+        val ch = maxsorted(i).dom.removeToVal(bounds(w) - 1)
+        assert(ch > 0)
+        change = true
         pathset(h, x, w, w);
       }
 
@@ -169,11 +170,11 @@ final class AllDifferentBC(vars: Variable*) extends AbstractConstraint(vars.toAr
       }
       i += 1
     }
-    hole
+    change
   }
 
   def filterUpper() = {
-    var hole = false
+    var change = false
     var i = 0
     while (i <= nbBounds) {
       t(i) = i + 1
@@ -203,8 +204,9 @@ final class AllDifferentBC(vars: Variable*) extends AbstractConstraint(vars.toAr
 
       if (h(x) < x) {
         val w = pathmin(h, h(x));
-        minsorted(i).dom.removeFromVal(bounds(w))
-        hole |= minsorted(i).dom.lastValue < bounds(w) - 1
+        val ch = minsorted(i).dom.removeFromVal(bounds(w))
+        assert(ch>0)
+        change = true
         pathset(h, x, w, w);
       }
       if (d(z) == bounds(y) - bounds(z)) {
@@ -213,7 +215,7 @@ final class AllDifferentBC(vars: Variable*) extends AbstractConstraint(vars.toAr
       }
       i -= 1
     }
-    hole
+    change
   }
 
   def filterB(scope: Array[Variable], checkedVariable: Int, value: Int): UOList[Int] = {
@@ -247,9 +249,7 @@ final class AllDifferentBC(vars: Variable*) extends AbstractConstraint(vars.toAr
 
   def propagate() = {
     sortIt();
-    val hl = filterLower()
-    val hu = filterUpper()
-    hl || hu
+    filterLower() | filterUpper()
   }
 
   private val offset = (scope map { _.dom.firstValue } min)

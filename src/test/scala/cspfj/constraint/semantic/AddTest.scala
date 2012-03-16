@@ -2,16 +2,19 @@ package cspfj.constraint.semantic;
 
 import scala.util.Random
 
-import org.junit.Assert.assertFalse
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
+import org.junit.Assert.assertFalse
 
 import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.Constraint
 import cspfj.constraint.Residues
 import cspfj.constraint.TupleEnumerator
 import cspfj.problem.IntDomain
 import cspfj.problem.Variable
-final class AbsDiffTest {
+
+final class AddTest {
 
   private val RAND = new Random
   private var x: Variable = null
@@ -27,12 +30,12 @@ final class AbsDiffTest {
 
   @Test
   def testReviseInt() {
-    val c = new AbsDiff(x, y, z);
+    val c = new Add(x, y, z);
     c.fillRemovals()
     c.revise()
 
     val c2 = new AbstractConstraint(Array(x, y, z)) with Residues with TupleEnumerator {
-      def check() = value(0) == math.abs(value(1) - value(2));
+      def check = value(0) == value(1) + value(2);
       override def getEvaluation = 0
     };
     c2.fillRemovals()
@@ -41,18 +44,17 @@ final class AbsDiffTest {
 
   @Test
   def testRevise2() {
-
     val c2 = new AbstractConstraint(Array(x, y, z)) with Residues with TupleEnumerator {
-      def check() = value(0) == math.abs(value(1) - value(2));
+      def check = value(0) == value(1) + value(2);
       override def getEvaluation = 0
     };
     c2.fillRemovals()
     c2.revise()
 
-    val c = new AbsDiff(x, y, z);
+    val c = new Add(x, y, z);
     c.fillRemovals()
+    assertFalse(c.revise())
 
-    assertFalse(c.revise());
   }
 
   private def randomDomain(min: Int, max: Int, nb: Int) = {

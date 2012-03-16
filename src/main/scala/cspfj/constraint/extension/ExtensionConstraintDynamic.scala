@@ -56,8 +56,6 @@ final class ExtensionConstraintDynamic(
 
     matrixManager.filterTuples { tuple =>
       if (controlTuplePresence(tuple, mod)) {
-        assert(controlTuplePresence(tuple), tuple.mkString("(", ", ", ")") +
-          " is not in " + scope.mkString("(", ", ", ")") + " with modified: " + modified)
         setFound(tuple, found, arity - 1)
         true
       } else false
@@ -84,19 +82,7 @@ final class ExtensionConstraintDynamic(
     }
   }
 
-  private def controlTuplePresence(tuple: Array[Int], mod: Seq[Int]) = {
-    /** Need high optimization */
-
-    @tailrec
-    def control(m: Seq[Int]): Boolean =
-      if (m.isEmpty) true
-      else {
-        val i = m.head
-        scope(i).dom.present(tuple(i)) && control(m.tail)
-      }
-
-    control(mod)
-  }
+ 
 
   private def filter(found: Array[BitVector], p: Int, c: Boolean): Boolean =
     if (p < 0) c
