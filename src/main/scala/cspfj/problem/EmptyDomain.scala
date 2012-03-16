@@ -22,4 +22,5 @@ object EmptyDomain extends IntSet {
   def intersects(bv: BitVector) = -1
   def intersects(bv: BitVector, part: Int) = false
   def bound = throw new IllegalStateException
+  def isEmpty = true
 }

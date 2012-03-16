@@ -54,6 +54,6 @@ final case class Interval(val a: Int, val b: Int) {
   def abs =
     if (ub < 0) Interval(-ub, -lb)
     else if (lb > 0) this
-    else Interval(0, math.max(lb, ub))
+    else Interval(0, math.max(-lb, ub))
 
 }

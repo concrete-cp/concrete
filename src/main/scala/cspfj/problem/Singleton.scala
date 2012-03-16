@@ -67,4 +67,5 @@ final class Singleton(val index: Int) extends IntSet {
 
   def intersects(bv: BitVector, part: Int) = bv.get(index)
   def bound = true
+  def isEmpty = false
 }

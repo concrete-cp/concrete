@@ -101,17 +101,18 @@ final class BitVectorSet(val bv: BitVector, val size: Int) extends IntSet {
 
   def removeFrom(lb: Int) = {
     val nbv = bv.clone
-    val nbRemVals = nbv.clearFrom(lb)
-    if (nbRemVals > 0)
-      new BitVectorSet(nbv, size - nbRemVals)
+    val ch = nbv.clearFrom(lb)
+    
+    if (ch)
+      new BitVectorSet(nbv, nbv.cardinality)
     else this
   }
 
   def removeTo(ub: Int) = {
     val nbv = bv.clone
-    val nbRemVals = nbv.clearTo(ub + 1)
-    if (nbRemVals > 0)
-      new BitVectorSet(nbv, size - nbRemVals)
+    val ch = nbv.clearTo(ub + 1)
+    if (ch)
+      new BitVectorSet(nbv, nbv.cardinality)
     else this
   }
 
@@ -122,7 +123,7 @@ final class BitVectorSet(val bv: BitVector, val size: Int) extends IntSet {
   }
 
   def subsetOf(d: IntSet) = d match {
-    case d: BitVectorSet=> bv.subsetOf(d.bv)
+    case d: BitVectorSet => bv.subsetOf(d.bv)
     case d: IntervalSet => first >= d.first && last <= d.last
   }
 
@@ -130,4 +131,5 @@ final class BitVectorSet(val bv: BitVector, val size: Int) extends IntSet {
   def intersects(that: BitVector) = bv.intersects(that)
   def intersects(that: BitVector, part: Int) = bv.intersects(that, part)
   def bound = false
+  def isEmpty = false
 }

@@ -159,7 +159,7 @@ final class AllDifferentBC(vars: Variable*) extends AbstractConstraint(vars.toAr
       if (h(x) > x) {
         var w = pathmax(h, h(x));
         val ch = maxsorted(i).dom.removeToVal(bounds(w) - 1)
-        assert(ch > 0)
+        assert(ch)
         change = true
         pathset(h, x, w, w);
       }
@@ -205,7 +205,7 @@ final class AllDifferentBC(vars: Variable*) extends AbstractConstraint(vars.toAr
       if (h(x) < x) {
         val w = pathmin(h, h(x));
         val ch = minsorted(i).dom.removeFromVal(bounds(w))
-        assert(ch>0)
+        assert(ch)
         change = true
         pathset(h, x, w, w);
       }

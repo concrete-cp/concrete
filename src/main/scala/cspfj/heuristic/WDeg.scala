@@ -30,7 +30,7 @@ object WDeg {
     val constraints = variable.constraints
 
     @tailrec
-    def sum(i: Int, s: Int): Int =
+    def sum(i: Int, s: Int = 0): Int =
       if (i < 0) s
       else {
         val c = constraints(i)
@@ -38,7 +38,7 @@ object WDeg {
         else sum(i - 1, s + c.weight)
       }
 
-    sum(constraints.size - 1, 0)
+    sum(constraints.size - 1)
   }
 
   def nbUnboundVariables(constraint: Constraint) =

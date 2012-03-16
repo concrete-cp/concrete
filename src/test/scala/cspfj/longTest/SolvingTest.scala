@@ -13,7 +13,7 @@ import cspfj.priorityqueues.Fifos
 import cspfj.constraint.Constraint
 
 final class SolvingTest extends Loggable {
-  Solver.loggerLevel = "FINE"
+  //Solver.loggerLevel = "FINE"
   //ParameterManager("ac3c.queue") = classOf[Fifos]
   ParameterManager("preprocessor") = null
 
@@ -85,7 +85,10 @@ final class SolvingTest extends Loggable {
   def scen11_f12() {
     assertEquals(solve("scen11-f12.xml.bz2"), None);
   }
-
+  @Test //(timeout = 7000)
+  def scen11() {
+    assertTrue(solve("scen11.xml.bz2").isDefined);
+  }
   //  @Test
   //  def fapp01_0200_0() {
   //    assertNull(solve("fapp01-0200-0.xml"));
@@ -97,6 +100,13 @@ final class SolvingTest extends Loggable {
   def queens12() {
     assertTrue(solve("queens-12.xml").isDefined);
     //assertEquals(14200, count("queens-12.xml"));
+
+  }
+
+  @Test
+  def queens4() {
+    //assertTrue(solve("queens-12.xml").isDefined);
+    assertEquals(2, count("queens-4.xml"));
 
   }
 

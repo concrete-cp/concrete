@@ -30,7 +30,7 @@ trait Domain {
   def maxSize: Int //= allValues.size
 
   def present(index: Int): Boolean
-  
+
   def presentVal(value: Int) = {
     val i = index(value)
     i >= 0 && present(i)
@@ -46,17 +46,25 @@ trait Domain {
    * @param lb
    * @return Removes all indexes starting from given lower bound.
    */
-  def removeFrom(lb: Int): Int
+  def removeFrom(lb: Int): Boolean
 
-  def removeFromVal(lb: Int) = removeFrom(closestGeq(lb))
+  def removeFromVal(lb: Int) = {
+    val v = closestGeq(lb)
+    if (v < 0) false
+    else removeFrom(v)
+  }
 
   /**
    * @param ub
    * @return Removes all indexes up to given upper bound.
    */
-  def removeTo(ub: Int): Int
+  def removeTo(ub: Int): Boolean
 
-  def removeToVal(ub: Int) = removeTo(closestLeq(ub))
+  def removeToVal(ub: Int) = {
+    val v = closestLeq(ub)
+    if (v < 0) false
+    else removeTo(closestLeq(ub))
+  }
 
   def filter(f: Int => Boolean): Boolean
 
@@ -149,13 +157,15 @@ trait Domain {
 
   def valueInterval = Interval(firstValue, lastValue)
 
-  def intersectVal(a: Int, b: Int): Int = {
+  def intersect(a: Int, b: Int) = removeTo(a - 1) | removeFrom(b + 1)
+
+  def intersectVal(a: Int, b: Int): Boolean = {
     val lb = closestLt(a)
     val ub = closestGt(b)
-    (if (lb >= 0) removeTo(lb) else 0) + (if (ub >= 0) removeFrom(ub) else 0)
+    (lb >= 0 && removeTo(lb)) | (ub >= 0 && removeFrom(ub))
   }
 
-  def intersectVal(i: Interval): Int = intersectVal(i.a, i.b)
+  def intersectVal(i: Interval): Boolean = intersectVal(i.a, i.b)
 
   def removeValInterval(lb: Int, ub: Int) = {
 

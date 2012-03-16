@@ -149,34 +149,44 @@ final class LargeBitVector extends BitVector {
     }
 
     @Override
-    public int clearFrom(final int from) {
+    public boolean clearFrom(final int from) {
+        if (from >= size)
+            return false;
+
         int startWordIndex = word(from);
-        int removed = Long.bitCount(words[startWordIndex]);
+
+        final long w = words[startWordIndex];
         // Handle first word
         words[startWordIndex] &= ~(MASK << from);
-        removed -= Long.bitCount(words[startWordIndex]);
+        boolean removed = w != words[startWordIndex];
         // Handle intermediate words, if any
         for (int i = words.length; --i >= startWordIndex + 1;) {
-            removed += Long.bitCount(words[i]);
-            words[i] = 0;
+            if (words[i] != 0) {
+                words[i] = 0;
+                removed = true;
+            }
         }
         return removed;
     }
 
     @Override
-    public int clearTo(final int to) {
+    public boolean clearTo(final int to) {
         if (to <= 0) {
-            return 0;
+            return false;
         }
         int endWordIndex = word(to - 1);
-        int removed = Long.bitCount(words[endWordIndex]);
+
+        final long w = words[endWordIndex];
         // Handle first word
         words[endWordIndex] &= ~(MASK >>> -to);
-        removed -= Long.bitCount(words[endWordIndex]);
+        boolean removed = w != words[endWordIndex];
+
         // Handle intermediate words, if any
         for (int i = endWordIndex; --i >= 0;) {
-            removed += Long.bitCount(words[i]);
-            words[i] = 0;
+            if (words[i] != 0) {
+                words[i] = 0;
+                removed = true;
+            }
         }
         return removed;
     }

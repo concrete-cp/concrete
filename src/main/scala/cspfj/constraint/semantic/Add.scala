@@ -13,10 +13,9 @@ final class Add(val result: Variable, val v0: Variable, val v1: Variable)
 
   override def revise() = {
     val bounds = v0.dom.valueInterval + v1.dom.valueInterval - result.dom.valueInterval
-    var ch = reviseB(result, -1, bounds) + reviseB(v0, 1, bounds) + reviseB(v1, 1, bounds)
+    val ch = reviseB(result, -1, bounds) | reviseB(v0, 1, bounds) | reviseB(v1, 1, bounds)
 
-    if (!isBound) super.revise() || ch > 0
-    else ch > 0
+    (!isBound && super.revise()) || ch
   }
 
   private def reviseB(v: Variable, fact: Int, bounds: Interval) = {

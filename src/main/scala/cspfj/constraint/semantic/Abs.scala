@@ -17,17 +17,25 @@ final class Abs(val result: Variable, val v0: Variable) extends AbstractConstrai
   }
 
   def revise() = {
-    val ch = result.dom.intersectVal(v0.dom.valueInterval.abs) > 0
+    var ch = result.dom.intersectVal(v0.dom.valueInterval.abs)
 
-    (!v0.dom.bound && revise(result, { i =>
-      val v = result.dom.value(i)
-      v0.dom.presentVal(v) || v0.dom.presentVal(-v)
-    })) |
-      revise(v0, { i =>
-        val v = v0.dom.value(i)
-        result.dom.presentVal(math.abs(v))
-      }) ||
-      ch
+    if (!v0.dom.bound) {
+      ch |= result.dom.filter { i =>
+        val v = result.dom.value(i)
+        v0.dom.presentVal(v) || v0.dom.presentVal(-v)
+      }
+    }
+
+    ch |= v0.dom.removeFromVal(result.dom.lastValue + 1)
+    ch |= v0.dom.removeToVal(-result.dom.lastValue - 1)
+    ch |= v0.dom.filter { i =>
+      val v = v0.dom.value(i)
+      result.dom.presentVal(math.abs(v))
+    }
+
+    if (ch && result.dom.size == 1 || v0.dom.size == 1) entail()
+
+    ch
   }
 
   private def revise(v: Variable, f: (Int => Boolean)): Boolean = {

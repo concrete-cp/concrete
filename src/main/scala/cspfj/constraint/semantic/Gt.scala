@@ -44,16 +44,13 @@ final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict
   private def removeGt(value: Int, position: Int) = {
     val dom = scope(position).dom
     val lb = if (strict) dom.closestGeq(value) else dom.closestGt(value)
-    if (lb >= 0) dom.removeFrom(lb) > 0;
-    else false
+    lb >= 0 && dom.removeFrom(lb)
   }
 
   private def removeLt(value: Int, position: Int) = {
     val dom = scope(position).dom;
     val ub = if (strict) dom.closestLeq(value) else dom.closestLt(value)
-    if (ub >= 0) dom.removeTo(ub) > 0;
-    else false;
-
+    ub >= 0 && dom.removeTo(ub)
   }
 
   def revise() = {
@@ -66,7 +63,7 @@ final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict
     if (max1 < min0 || !strict && min0 == max1) {
       entail();
     }
-    
+
     ch
 
   }

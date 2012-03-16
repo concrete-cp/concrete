@@ -108,28 +108,29 @@ final class IntDomain(
     altering()
     intSet = intSet.remove(index)
     if (size == 0) throw Domain.empty
+    assert(!intSet.isEmpty)
   }
 
   def removeFrom(lb: Int) = {
-    val s = intSet.size
-    intSet = intSet.removeFrom(lb)
-    val r = s - intSet.size
-    if (r > 0) {
+    val s = intSet.removeFrom(lb)
+    if (s eq intSet) false
+    else {
       altering()
-      if (r == s) throw Domain.empty
-      r
-    } else 0
+      intSet = s
+      if (s.isEmpty) throw Domain.empty
+      true
+    }
   }
 
   def removeTo(ub: Int) = {
-    val s = intSet.size
-    intSet = intSet.removeTo(ub)
-    val r = s - intSet.size
-    if (r > 0) {
+    val s = intSet.removeTo(ub)
+    if (s eq intSet) false
+    else {
       altering()
-      if (r == s) throw Domain.empty
-      r
-    } else 0
+      intSet = s
+      if (s.isEmpty) throw Domain.empty
+      true
+    }
   }
 
   def filter(f: Int => Boolean) = {

@@ -74,4 +74,5 @@ final class IntervalSet(val domain: Interval) extends IntSet {
   def intersects(bv: BitVector) = bv.intersects(toBitVector)
   def intersects(bv: BitVector, part: Int) = bv.intersects(toBitVector, part)
   def bound = true
+  def isEmpty = false
 }

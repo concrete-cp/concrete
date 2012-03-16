@@ -24,10 +24,9 @@ final class InInterval(val variable: Variable, val lb: Int, val ub: Int)
   override val getEvaluation = 1
 
   def revise() = {
-    val ch = dom.removeTo(lb - 1) + dom.removeFrom(ub + 1);
-
+    val ch = dom.intersect(lb, ub)
     entail()
-    ch > 0
+    ch
   }
 
   override def isConsistent() = dom.indices(lb).takeWhile(_ <= ub).exists(dom.present)

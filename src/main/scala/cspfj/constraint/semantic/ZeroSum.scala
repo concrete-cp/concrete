@@ -35,7 +35,7 @@ final class ZeroSum(
 
         val boundsf = Interval(bounds.lb - myBounds.lb, bounds.ub - myBounds.ub) / -f
 
-        val ch = dom.intersectVal(boundsf) > 0
+        val ch = dom.intersectVal(boundsf)
 
         reviseVariable(i - 1, c || ch)
       }

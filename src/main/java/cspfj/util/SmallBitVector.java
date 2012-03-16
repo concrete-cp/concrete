@@ -61,19 +61,21 @@ public final class SmallBitVector extends BitVector {
         return next == 0 ? -1 : Long.numberOfTrailingZeros(next);
     }
 
-    public int clearFrom(final int from) {
-        final int before = Long.bitCount(word);
+    public boolean clearFrom(final int from) {
+        if (from >= size)
+            return false;
+        final long before = word;
         word &= ~(MASK << from);
-        return before - Long.bitCount(word);
+        return word != before;
     }
 
-    public int clearTo(final int to) {
+    public boolean clearTo(final int to) {
         if (to <= 0) {
-            return 0;
+            return false;
         }
-        final int before = Long.bitCount(word);
+        final long before = word;
         word &= ~(MASK >>> -to);
-        return before - Long.bitCount(word);
+        return word != before;
     }
 
     public boolean equals(final Object o) {

@@ -46,11 +46,11 @@ final class Eq(val a: Int, val x: Variable, val b: Int, val y: Variable)
 
   override def revise() = {
     var ch =
-      scope(0).dom.intersectVal((scope(1).dom.valueInterval - b) / a) +
+      scope(0).dom.intersectVal((scope(1).dom.valueInterval - b) / a) |
         scope(1).dom.intersectVal((scope(0).dom.valueInterval * a) + b)
 
-    if (!isBound) super.revise() || ch > 0
-    else if (ch > 0) {
+    if (!isBound) super.revise() || ch
+    else if (ch) {
       if (scope(0).dom.size == 1 || scope(1).dom.size == 1) entail()
       true
     } else false

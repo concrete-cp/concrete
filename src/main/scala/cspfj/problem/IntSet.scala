@@ -50,6 +50,7 @@ trait IntSet {
   def intersects(bv: BitVector): Int
   def intersects(bv: BitVector, part: Int): Boolean
   def bound: Boolean
+  def isEmpty: Boolean
 
   private def indices(i: Int): Stream[Int] =
     if (i < 0) Stream.empty

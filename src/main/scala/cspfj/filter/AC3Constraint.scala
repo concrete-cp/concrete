@@ -138,7 +138,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
       revisions += 1;
       val sizes = constraint.sizes()
 
-      (try {
+      val sat = try {
         if (constraint.revise()) {
           assert(!(constraint.sizes() sameElements sizes), constraint + " returned wrong true revised info")
           updateQueue(sizes, constraint, constraint.arity - 1)
@@ -150,7 +150,8 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
         case e: UNSATException =>
           constraint.weight += 1
           false
-      }) && reduce()
+      }
+      sat && reduce()
     }
   }
 

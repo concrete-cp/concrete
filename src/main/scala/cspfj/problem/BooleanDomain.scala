@@ -206,15 +206,19 @@ final class BooleanDomain(var _status: Status) extends Domain
   def closestLeq(value: Int) = throw new UnsupportedOperationException
 
   def removeFrom(lb: Int) = {
-    val s = size
-    status = status.removeFrom(lb)
-    size - s
+    val s = status.removeFrom(lb)
+    if (s != status) {
+      status = s
+      true
+    } else false
   }
 
   def removeTo(ub: Int) = {
-    val s = size
-    status = status.removeTo(ub)
-    size - s
+    val s = status.removeTo(ub)
+    if (s != status) {
+      status = s;
+      true
+    } else false
   }
 
   def closestGeq(value: Int) = status.lowest(value)
