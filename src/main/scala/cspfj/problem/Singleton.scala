@@ -3,12 +3,16 @@ package cspfj.problem;
 import cspfj.util.BitVector
 
 final class Singleton(val index: Int) extends IntSet {
+  
+  require(index >= 0)
 
   val size = 1
 
   def first = index
 
   def last = index
+  
+  
 
   def next(i: Int) = if (i < index) index else -1
 
@@ -35,20 +39,20 @@ final class Singleton(val index: Int) extends IntSet {
 
   def remove(i: Int) = {
     assert(index == i)
-    EmptyDomain
+    EmptyIntSet
   }
 
   def removeFrom(lb: Int) =
     if (lb > index) this
-    else EmptyDomain
+    else EmptyIntSet
 
   def removeTo(ub: Int) =
     if (ub < index) this
-    else EmptyDomain
+    else EmptyIntSet
 
   def filter(f: Int => Boolean) =
     if (f(index)) this
-    else EmptyDomain
+    else EmptyIntSet
 
   def toString(id: Indexer) = "[" + id.value(index) + "]"
 

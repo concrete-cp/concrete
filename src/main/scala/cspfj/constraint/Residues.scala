@@ -12,7 +12,7 @@ trait Residues extends VariablePerVariable {
 
     dom.filter { index =>
       val residue = last.getResidue(position, index);
-      (residue != null && controlTuplePresence(residue, modified)) || (
+      (residue != null && controlTuplePresence(residue)) || (
         if (findSupport(position, index)) {
           last.updateResidue(tuple.clone)
           true

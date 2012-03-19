@@ -5,17 +5,18 @@ import cspfj.problem.Variable
 import cspfj.constraint.AbstractConstraint
 import cspfj.constraint.Residues
 import cspfj.util.Interval
+import cspfj.util.Loggable
 
 final class Add(val result: Variable, val v0: Variable, val v1: Variable)
-  extends AbstractConstraint(Array(result, v0, v1)) with Residues {
+  extends AbstractConstraint(Array(result, v0, v1)) with Residues with Loggable {
 
   def check = value(0) == value(1) + value(2)
 
   override def revise() = {
     val bounds = v0.dom.valueInterval + v1.dom.valueInterval - result.dom.valueInterval
-    val ch = reviseB(result, -1, bounds) | reviseB(v0, 1, bounds) | reviseB(v1, 1, bounds)
-
-    (!isBound && super.revise()) || ch
+    logger.info(this + " " + isBound)
+    if (isBound) reviseB(result, -1, bounds) | reviseB(v0, 1, bounds) | reviseB(v1, 1, bounds)
+    else super.revise()
   }
 
   private def reviseB(v: Variable, fact: Int, bounds: Interval) = {
@@ -32,7 +33,6 @@ final class Add(val result: Variable, val v0: Variable, val v1: Variable)
     }
     case 1 => findValidTuple(index, 1, 2);
     case 2 => findValidTuple(index, 2, 1);
-    case _ => throw new IndexOutOfBoundsException;
   }
 
   private def findValidTuple0(index: Int, pos1: Int, pos2: Int): Boolean = {
@@ -40,32 +40,30 @@ final class Add(val result: Variable, val v0: Variable, val v1: Variable)
     val dom1 = scope(pos1).dom;
     val dom2 = scope(pos2).dom;
 
-    for (i <- dom1.indices) {
+    dom1.indices.exists { i =>
       val j = dom2.index(val0 - dom1.value(i));
       if (j >= 0 && dom2.present(j)) {
         tuple(0) = index;
         tuple(pos1) = i;
         tuple(pos2) = j;
-        return true;
-      }
+        true;
+      } else false
     }
-    false;
   }
 
   private def findValidTuple(index: Int, pos1: Int, pos2: Int): Boolean = {
     val result = scope(0).dom
     val value = scope(pos1).dom.value(index)
     val dom = scope(pos2).dom
-    for (i <- dom.indices) {
+    dom.indices.exists { i =>
       val resIndex = result.index(value + dom.value(i));
       if (resIndex >= 0 && result.present(resIndex)) {
         tuple(0) = resIndex;
         tuple(pos1) = index;
         tuple(pos2) = i;
-        return true;
-      }
+        true;
+      } else false
     }
-    false;
   }
 
   override def toString = result + " = " + v0 + " + " + v1

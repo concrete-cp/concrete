@@ -9,6 +9,8 @@ final class IntervalSet(val domain: Interval) extends IntSet {
 
   def this(lb: Int, ub: Int) = this(Interval(lb, ub))
 
+  require(domain.lb >= 0)
+
   val size = domain.size
 
   def first = domain.lb

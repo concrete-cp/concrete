@@ -37,28 +37,26 @@ trait SingletonConsistency extends Filter with Loggable {
     if (!subFilter.reduceAll()) {
       false;
     } else {
-      val stream = Stream.continually(problem.variables.toStream).flatten
 
       @tailrec
-      def process(variable: Variable, remaining: Stream[Variable], mark: Variable): Boolean = {
-        if (mark == variable) {
-          true
-        } else {
+      def process(
+        stream: Stream[Variable] = Stream.continually(problem.variables.toStream).flatten,
+        mark: Variable = null): Boolean = {
+
+        val variable #:: remaining = stream
+        if (mark == variable) true
+        else {
           logger.info(variable.toString)
 
           if (singletonTest(variable)) {
-            if (subFilter.reduceAfter(variable)) {
-              process(remaining.head, remaining.tail, variable)
-            } else {
-              false
-            }
+            subFilter.reduceAfter(variable) && process(remaining, variable)
           } else {
-            process(remaining.head, remaining.tail, if (mark == null) variable else mark)
+            process(remaining, if (mark == null) variable else mark)
           }
         }
 
       }
-      process(stream.head, stream.tail, null)
+      process()
     }
   }
 
@@ -72,7 +70,7 @@ trait SingletonConsistency extends Filter with Loggable {
    */
   def check(variable: Variable, index: Int) = {
     // if (logger.isLoggable(Level.FINER)) {
-    logger.finer(variable + " <- " + variable.dom.value(index) + "(" + index + ")");
+    logger.fine(variable + " <- " + variable.dom.value(index) + "(" + index + ")");
     // }
 
     problem.push();

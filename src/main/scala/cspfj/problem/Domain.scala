@@ -76,7 +76,11 @@ trait Domain {
 
   def getAtLevel(level: Int): BitVector
 
-  def firstValue = value(first)
+  def firstValue = {
+    val f = first
+    assert(f >= 0, this)
+    value(f)
+  }
 
   def lastValue = value(last)
 

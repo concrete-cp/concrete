@@ -10,7 +10,7 @@ object IntDomain {
   def apply(r: Range): IntDomain =
     if (r.step == 1) new IntDomain(
       new IntervalSet(0, r.last - r.start),
-      Indexer.ofInt(r.start, r.last))
+      Indexer.ofInterval(r.start, r.last))
     else apply(r: _*)
 }
 
@@ -97,6 +97,8 @@ final class IntDomain(
   def present(index: Int) = intSet.present(index);
 
   def setSingle(index: Int) {
+    assert(present(index))
+    assert(size > 1)
     altering()
     intSet = new Singleton(index)
   }
@@ -107,8 +109,7 @@ final class IntDomain(
     assert(present(index));
     altering()
     intSet = intSet.remove(index)
-    if (size == 0) throw Domain.empty
-    assert(!intSet.isEmpty)
+    if (intSet.isEmpty) throw Domain.empty
   }
 
   def removeFrom(lb: Int) = {
@@ -139,7 +140,7 @@ final class IntDomain(
     else {
       intSet = is
       altering()
-      if (size == 0) throw Domain.empty
+      if (intSet.isEmpty) throw Domain.empty
       true
     }
   }

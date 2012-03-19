@@ -107,7 +107,7 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
 
     if (mod.isEmpty) {
       assert(controlTuplePresence(tuple), tuple.mkString("(", ", ", ")") +
-        " is not in " + scope.mkString("(", ", ", ")"))
+        " is not in " + this)
       true
     } else {
       val i = mod.head

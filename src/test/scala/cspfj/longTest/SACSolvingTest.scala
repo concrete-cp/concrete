@@ -17,9 +17,9 @@ import cspfj.filter.SAC1
 import cspfj.MAC
 
 final class SACSolvingTest extends Loggable {
-  //Solver.loggerLevel = "INFO"
+  //Solver.loggerLevel = "FINE"
   ParameterManager("preprocessor") = classOf[SAC1]
-  
+
   @Test
   def crosswordm1() {
 

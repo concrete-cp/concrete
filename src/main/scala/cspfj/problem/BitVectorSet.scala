@@ -28,6 +28,8 @@ final object BitVectorSet {
 }
 
 final class BitVectorSet(val bv: BitVector, val size: Int) extends IntSet {
+  require(size >= 2)
+  assert(bv.cardinality == size)
 
   def this(size: Int) = {
     this(BitVectorSet.fullBV(size), size)
@@ -43,7 +45,12 @@ final class BitVectorSet(val bv: BitVector, val size: Int) extends IntSet {
 
   val first = bv.nextSetBit(0)
 
+  assert(first >= 0)
+
   val last = bv.lastSetBit
+
+  assert(last >= 0)
+
   //
   //  def first = {
   //    assert(_first == bvDomain.nextSetBit(0))
@@ -93,26 +100,21 @@ final class BitVectorSet(val bv: BitVector, val size: Int) extends IntSet {
     assert(present(index));
     val nbv = bv.clone
     nbv.clear(index);
-    //    if (_first == index) nbv._first = bvDomain.nextSetBit(index)
-    //    if (_last == index) nbv._last = bvDomain.prevSetBit(index)
-    //    size -= 1;
-    new BitVectorSet(nbv, size - 1)
+    IntSet.ofBV(nbv, size - 1)
   }
 
   def removeFrom(lb: Int) = {
     val nbv = bv.clone
     val ch = nbv.clearFrom(lb)
-    
-    if (ch)
-      new BitVectorSet(nbv, nbv.cardinality)
+
+    if (ch) IntSet.ofBV(nbv, nbv.cardinality)
     else this
   }
 
   def removeTo(ub: Int) = {
     val nbv = bv.clone
     val ch = nbv.clearTo(ub + 1)
-    if (ch)
-      new BitVectorSet(nbv, nbv.cardinality)
+    if (ch) IntSet.ofBV(nbv, nbv.cardinality)
     else this
   }
 

@@ -4,14 +4,14 @@ object Indexer {
   def factory(values: Seq[Int]): Indexer = {
     val ub = values.last
     val lb = values.head
-    if (values.size == ub - lb + 1) ofInt(lb, ub)
+    if (values.size == ub - lb + 1) ofInterval(lb, ub)
     else new GeneralIndices(values.toArray)
   }
 
-  def ofInt(lb: Int, ub: Int) = {
+  def ofInterval(lb: Int, ub: Int) =
     if (lb == 0) new DirectIndices(ub - lb + 1)
     else new OffsetIndices(ub - lb + 1, lb)
-  }
+
 }
 
 trait Indexer {

@@ -50,10 +50,11 @@ final class AllDifferentBC(vars: Variable*) extends AbstractConstraint(vars.toAr
       val t = array(i)
       array(i) = array(i + 1)
       array(i + 1) = t
+
     }
 
     @tailrec
-    def s(end: Int, i: Int, change: Int) {
+    def s(end: Int = array.size - 1, i: Int = 0, change: Int = 0) {
       if (end > 0) {
         if (i >= end) s(change, 0, 0)
         else if (c.compare(array(i), array(i + 1)) > 0) {
@@ -64,7 +65,7 @@ final class AllDifferentBC(vars: Variable*) extends AbstractConstraint(vars.toAr
 
     }
 
-    s(array.size - 1, 0, 0)
+    s()
   }
 
   def sortIt() {
@@ -216,26 +217,6 @@ final class AllDifferentBC(vars: Variable*) extends AbstractConstraint(vars.toAr
       i -= 1
     }
     change
-  }
-
-  def filterB(scope: Array[Variable], checkedVariable: Int, value: Int): UOList[Int] = {
-
-    def r(i: Int, mod: UOList[Int]): UOList[Int] = {
-      if (i < 0) mod
-      else if (i == checkedVariable) r(i - 1, mod)
-      else {
-        val v = scope(i)
-        val index = v.dom.index(value)
-        if (index >= 0 && (v.dom.first == index || v.dom.last == index)) {
-          v.dom.remove(index)
-          r(i - 1, mod + i)
-        } else r(i - 1, mod)
-
-      }
-    }
-
-    r(scope.size - 1, UOList.empty)
-
   }
 
   def revise() = {

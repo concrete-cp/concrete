@@ -13,7 +13,7 @@ import cspfj.priorityqueues.Fifos
 import cspfj.constraint.Constraint
 
 final class SolvingTest extends Loggable {
-  //Solver.loggerLevel = "FINE"
+  Solver.loggerLevel = "FINE"
   //ParameterManager("ac3c.queue") = classOf[Fifos]
   ParameterManager("preprocessor") = null
 
@@ -75,6 +75,12 @@ final class SolvingTest extends Loggable {
     assertEquals(182, count("bqwh-15-106-0_ext.xml"));
   }
 
+  @Test //(timeout = 10000)
+  def bqwhGlb() {
+    assertEquals(10, count("bqwh-18-141-47_glb.xml.bz2"));
+    //assertEquals(182, count("bqwh-15-106-0_ext.xml"));
+  }
+
   @Test //(timeout = 40000)
   def frb35_17_1() {
     // assertNotNull(solve("frb35-17-1_ext.xml.bz2"));
@@ -89,6 +95,11 @@ final class SolvingTest extends Loggable {
   def scen11() {
     assertTrue(solve("scen11.xml.bz2").isDefined);
   }
+
+  @Test //(timeout = 7000)
+  def series() {
+    assertTrue(solve("series-15.xml.bz2").isDefined);
+  }
   //  @Test
   //  def fapp01_0200_0() {
   //    assertNull(solve("fapp01-0200-0.xml"));
@@ -100,6 +111,13 @@ final class SolvingTest extends Loggable {
   def queens12() {
     assertTrue(solve("queens-12.xml").isDefined);
     //assertEquals(14200, count("queens-12.xml"));
+
+  }
+
+  @Test
+  def tsp() {
+    assertTrue(solve("tsp-20-1_ext.xml.bz2").isDefined);
+    //    assertEquals(14200, count("queens-12.xml"));
 
   }
 

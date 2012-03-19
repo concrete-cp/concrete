@@ -6,22 +6,23 @@ object IntSet {
     require(domain.size == 1 || domain.sliding(2).forall(p => p(0) < p(1)), "Only ordered domains are supported");
 
     domain match {
-      case Seq() => EmptyDomain
+      case Seq() => EmptyIntSet
       case Seq(v) => new Singleton(0)
-      case s if domain.size == 1 + domain.last - domain.head => new IntervalSet(0, domain.size - 1)
-      case _ => new BitVectorSet(domain.size)
+      //case s if domain.size == 1 + domain.last - domain.head => new IntervalSet(0, domain.size - 1)
+      case _ => new IntervalSet(0, domain.size - 1)
+      //case _ => new BitVectorSet(domain.size)
     }
   }
 
   def ofInterval(lb: Int, ub: Int): IntSet =
-    if (lb > ub) EmptyDomain
+    if (lb > ub) EmptyIntSet
     else if (ub == lb) new Singleton(lb)
     else new IntervalSet(lb, ub)
 
   def ofBV(bv: BitVector, s: Int): IntSet = s match {
-    case 0 => EmptyDomain
+    case 0 => EmptyIntSet
     case 1 => new Singleton(bv.nextSetBit(0))
-    case _ => {
+    case s => {
       val lb = bv.nextSetBit(0)
       val ub = bv.lastSetBit
       if (lb - ub == s - 1) new IntervalSet(lb, ub)

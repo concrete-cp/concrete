@@ -135,7 +135,7 @@ public final class LargeBitVectorTest {
         bitVector.set(46);
         bitVector.set(49);
         bitVector.set(100);
-        assertEquals(2, bitVector.clearFrom(47));
+        assertTrue(bitVector.clearFrom(47));
         assertEquals(1, bitVector.cardinality());
         assertTrue(bitVector.get(46));
         assertFalse(bitVector.get(49));
@@ -147,7 +147,7 @@ public final class LargeBitVectorTest {
         bitVector.set(46);
         bitVector.set(49);
         bitVector.set(100);
-        assertEquals(1, bitVector.clearTo(49));
+        assertTrue(bitVector.clearTo(49));
         assertEquals(2, bitVector.cardinality());
         assertFalse(bitVector.get(46));
         assertTrue(bitVector.get(49));

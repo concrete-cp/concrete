@@ -151,6 +151,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
           constraint.weight += 1
           false
       }
+
       sat && reduce()
     }
   }
