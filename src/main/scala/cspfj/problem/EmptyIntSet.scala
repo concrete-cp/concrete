@@ -2,7 +2,7 @@ package cspfj.problem
 
 import cspfj.util.BitVector
 
-object EmptyDomain extends IntSet {
+object EmptyIntSet extends IntSet {
   def size = 0
   def copy = this
   def first = throw new NoSuchElementException
@@ -18,7 +18,7 @@ object EmptyDomain extends IntSet {
   def filter(f: Int => Boolean) = this
   def subsetOf(d: IntSet) = true
   def toString(id: Indexer) = "[]"
-  def toBitVector = BitVector.newBitVector(0)
+  val toBitVector = BitVector.newBitVector(0)
   def intersects(bv: BitVector) = -1
   def intersects(bv: BitVector, part: Int) = false
   def bound = throw new IllegalStateException
