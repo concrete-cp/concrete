@@ -121,7 +121,7 @@ final class BitVectorSet(val bv: BitVector, val size: Int) extends IntSet {
   def toString(id: Indexer) = if (size <= BitVectorSet.DISPLAYED_VALUES) {
     iterator.map(id.value).mkString("{", ", ", "}");
   } else {
-    iterator.map(id.value).take(BitVectorSet.DISPLAYED_VALUES).mkString("{", ", ", " (" + (size - BitVectorSet.DISPLAYED_VALUES) + " more)}")
+    iterator.map(id.value).take(BitVectorSet.DISPLAYED_VALUES + 1).mkString("{", ", ", ", [" + (size - BitVectorSet.DISPLAYED_VALUES) + "...], " + id.value(last) + "}")
   }
 
   def subsetOf(d: IntSet) = d match {

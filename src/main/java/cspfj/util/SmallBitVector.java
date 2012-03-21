@@ -26,6 +26,9 @@ public final class SmallBitVector extends BitVector {
     }
 
     public boolean get(final int position) {
+        if (position >= size)
+            return false;
+
         return (word & (1L << position)) != 0;
     }
 

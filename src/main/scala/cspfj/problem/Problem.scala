@@ -52,6 +52,7 @@ final class Problem {
     _maxArity = math.max(_maxArity, constraint.arity)
     _maxCId = math.max(_maxCId, constraint.getId)
     constraint.scope foreach (v => v.addConstraint(constraint))
+    constraint.inCN = true
   }
 
   def push() {

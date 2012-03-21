@@ -26,11 +26,9 @@ final class Abs(val result: Variable, val v0: Variable) extends AbstractConstrai
       }
     }
 
-    ch |= v0.dom.removeFromVal(result.dom.lastValue + 1)
-    ch |= v0.dom.removeToVal(-result.dom.lastValue - 1)
+    ch |= v0.dom.intersectVal(-result.dom.lastValue, result.dom.lastValue)
     ch |= v0.dom.filter { i =>
-      val v = v0.dom.value(i)
-      result.dom.presentVal(math.abs(v))
+      result.dom.presentVal(math.abs(v0.dom.value(i)))
     }
 
     if (ch && result.dom.size == 1 || v0.dom.size == 1) entail()

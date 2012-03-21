@@ -10,6 +10,40 @@ final class AbsDiff(val result: Variable, val v0: Variable, val v1: Variable)
 
   def check = value(0) == math.abs(value(1) - value(2))
 
+  def shave() = {
+    val i0 = v0.dom.valueInterval
+    val i1 = v1.dom.valueInterval
+
+    val diff = i0 - i1
+
+    var ch = result.dom.intersectVal(diff.abs)
+    val r = result.dom.valueInterval
+
+    if (diff.lb > 0) {
+      ch |= v0.dom.intersectVal(i1 + r)
+      ch |= v1.dom.intersectVal(i0 - r)
+    } else if (diff.ub < 0) {
+      ch |= v0.dom.intersectVal(i1 - r)
+      ch |= v1.dom.intersectVal(i0 + r)
+    } else {
+      ch |= v0.dom.intersectVal((i1 + r) union (i1 - r))
+      ch |= v1.dom.intersectVal((i0 - r) union (i0 + r))
+    }
+
+    ch
+  }
+
+  override def revise() = {
+
+    var ch = shave()
+    while (ch && shave()) {}
+
+    assert(!isBound || boundConsistent, this + " is not BC")
+
+    ch | (!isBound && super.revise())
+
+  }
+
   override def findSupport(position: Int, index: Int) =
     position match {
       case 0 =>

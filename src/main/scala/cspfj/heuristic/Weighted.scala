@@ -1,5 +1,7 @@
 package cspfj.heuristic
 
 trait Weighted {
-  var weight = 1
+  var _weight = 1
+  def weight = _weight
+  def weight_=(w: Int) { _weight = w }
 }

@@ -19,13 +19,13 @@ final class ZeroSum(
 
   def getEvaluation = arity
 
-  def revise(): Boolean = {
+  def shave() = {
     val bounds = scope.iterator.zip(factors.iterator).map {
       case (v, f) => v.dom.valueInterval * f
     } reduce { _ + _ }
 
     @tailrec
-    def reviseVariable(i: Int, c: Boolean): Boolean =
+    def reviseVariable(i: Int = arity - 1, c: Boolean = false): Boolean =
       if (i < 0) c
       else {
         val f = factors(i)
@@ -40,7 +40,15 @@ final class ZeroSum(
         reviseVariable(i - 1, c || ch)
       }
 
-    reviseVariable(arity - 1, false)
+    reviseVariable()
+  }
+
+  def revise(): Boolean = {
+
+    var ch = false
+    while (shave()) ch = true
+
+    ch
   }
 
   override def toString = (scope, factors).zipped.map((v, f) => f + "." + v).mkString(" + ") + " >= 0"

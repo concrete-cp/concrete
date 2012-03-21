@@ -42,10 +42,9 @@ trait VariablePerVariable extends Constraint with Removals with Loggable {
       case _ => reviseNS()
     }
 
-    if (scope.count(_.dom.size == 1) >= arity - 1) {
+    if (c && scope.count(_.dom.size == 1) >= arity - 1) {
       entail();
     }
-
     c
 
   }

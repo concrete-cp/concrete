@@ -8,9 +8,9 @@ object IntSet {
     domain match {
       case Seq() => EmptyIntSet
       case Seq(v) => new Singleton(0)
-      //case s if domain.size == 1 + domain.last - domain.head => new IntervalSet(0, domain.size - 1)
-      case _ => new IntervalSet(0, domain.size - 1)
-      //case _ => new BitVectorSet(domain.size)
+      case s if domain.size == 1 + domain.last - domain.head => new IntervalSet(0, domain.size - 1)
+      //case _ => new IntervalSet(0, domain.size - 1)
+      case _ => new BitVectorSet(domain.size)
     }
   }
 

@@ -23,6 +23,7 @@ import cspfj.constraint.Constraint
 import cspfj.constraint.DynamicConstraint
 import cspfj.priorityqueues.IOBinomialHeapNode
 import cspfj.priorityqueues.Identified
+import scala.annotation.tailrec
 
 final class Variable(
   val name: String,
@@ -57,6 +58,7 @@ final class Variable(
       _dynamicConstraints ::= newConstraint.asInstanceOf[DynamicConstraint]
     }
     _positionInConstraint :+= newConstraint.position(this)
+    wDeg += newConstraint.weight
   }
 
   def dom = _domain
@@ -72,6 +74,23 @@ final class Variable(
   def indices = if (_domain == null) null else _domain.indices
 
   def values = if (_domain == null) null else _domain.values
+
+  var wDeg = 0
+
+  @tailrec
+  private def _getWDeg(i: Int = constraints.size - 1, s: Int = 0): Int =
+    if (i < 0) s
+    else {
+      val c = constraints(i)
+      if (c.isEntailed) _getWDeg(i - 1, s)
+      else _getWDeg(i - 1, s + c.weight)
+    }
+
+  def getWDeg = {
+    assert(_getWDeg() == wDeg, "%s: was %d, should be %d".format(this, wDeg, _getWDeg()))
+    wDeg
+  }
+
 }
 
 object Variable {

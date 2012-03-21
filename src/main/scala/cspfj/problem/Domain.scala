@@ -169,7 +169,7 @@ trait Domain {
     (lb >= 0 && removeTo(lb)) | (ub >= 0 && removeFrom(ub))
   }
 
-  def intersectVal(i: Interval): Boolean = intersectVal(i.a, i.b)
+  def intersectVal(i: Interval): Boolean = intersectVal(i.lb, i.ub)
 
   def removeValInterval(lb: Int, ub: Int) = {
 

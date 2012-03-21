@@ -118,9 +118,33 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
 
   final def isEntailed = entailedAtLevel >= 0
 
-  final def disEntail() { entailedAtLevel = -1 }
+  var inCN = false
 
-  final def entail() { entailedAtLevel = level }
+  final def disEntail() {
+    entailedAtLevel = -1
+    if (inCN) for (v <- scope) {
+      v.wDeg += weight
+    }
+  }
+
+  final def entail() {
+    if (!isEntailed) {
+      entailedAtLevel = level
+      if (inCN) for (v <- scope) {
+        v.wDeg -= weight
+      }
+    }
+
+  }
+
+  override def weight_=(w: Int) {
+    assert(!isEntailed)
+    assert(inCN)
+    for (v <- scope) {
+      v.wDeg += w - weight
+    }
+    super.weight = w
+  }
 
   def consistentRevise() = try {
     revise()

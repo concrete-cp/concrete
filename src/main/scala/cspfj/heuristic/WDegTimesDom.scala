@@ -24,7 +24,7 @@ import cspfj.problem.Variable;
 
 class WDegTimesDom(val problem: Problem) extends VariableHeuristic with RandomBreak {
 
-  def score(variable: Variable) = WDeg.wDeg(variable) * variable.dom.size
+  def score(variable: Variable) = variable.getWDeg * variable.dom.size
 
   override def toString = "max-wdeg*dom"
 

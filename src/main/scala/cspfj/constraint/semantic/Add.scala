@@ -12,17 +12,34 @@ final class Add(val result: Variable, val v0: Variable, val v1: Variable)
 
   def check = value(0) == value(1) + value(2)
 
-  override def revise() = {
+  private def shave() = {
     val bounds = v0.dom.valueInterval + v1.dom.valueInterval - result.dom.valueInterval
-    logger.info(this + " " + isBound)
-    if (isBound) reviseB(result, -1, bounds) | reviseB(v0, 1, bounds) | reviseB(v1, 1, bounds)
-    else super.revise()
+    reviseB(result, true, bounds) | reviseB(v0, false, bounds) | reviseB(v1, false, bounds)
   }
 
-  private def reviseB(v: Variable, fact: Int, bounds: Interval) = {
-    val myBounds = v.dom.valueInterval * fact
-    val boundsf = Interval(bounds.lb - myBounds.lb, bounds.ub - myBounds.ub) * -fact
-    v.dom.intersectVal(boundsf)
+  override def revise() = {
+
+    var ch = false
+    while (shave()) {
+      ch = true
+    }
+
+    assert(!isBound || boundConsistent)
+
+    ch | (!isBound && super.revise())
+
+  }
+
+  private def reviseB(v: Variable, opp: Boolean, bounds: Interval) = {
+
+    val myBounds = v.dom.valueInterval
+
+    if (opp) {
+      v.dom.intersectVal(bounds.lb + myBounds.ub, bounds.ub + myBounds.lb)
+    } else {
+      v.dom.intersectVal(myBounds.ub - bounds.ub, myBounds.lb - bounds.lb)
+    }
+
   }
 
   def findSupport(position: Int, index: Int) = position match {

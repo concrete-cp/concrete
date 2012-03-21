@@ -1,14 +1,12 @@
 package cspfj.util
 
-final case class Interval(val a: Int, val b: Int) {
+final case class Interval(val lb: Int, val ub: Int) {
   require(ub >= lb)
-  val size = math.max(0, b - a + 1)
+  val size = ub - lb + 1
   def in(v: Int) = {
-    a <= v && v <= b
+    lb <= v && v <= ub
   }
-  def allValues = a to b
-  def lb = a
-  def ub = b
+  def allValues = lb to ub
 
   /**
    * [a, b] + [c, d] = [a + c, b + d]
@@ -17,42 +15,40 @@ final case class Interval(val a: Int, val b: Int) {
    * [a, b] ÷ [c, d] = [min (a ÷ c, a ÷ d, b ÷ c, b ÷ d), max (a ÷ c, a ÷ d, b ÷ c, b ÷ d)] when 0 is not in [c, d].
    */
 
-  def +(i: Interval) = {
-    val Interval(c, d) = i
-    Interval(a + c, b + d)
-  }
+  def +(i: Interval) = Interval(lb + i.lb, ub + i.ub)
 
-  def +(v: Int) = Interval(a + v, b + v)
+  def +(v: Int) = Interval(lb + v, ub + v)
 
-  def -(i: Interval) = {
-    val Interval(c, d) = i
-    Interval(a - d, b - c)
-  }
+  def -(i: Interval) = this + i.opp
 
   def -(v: Int) = this + -v
 
   def *(i: Interval) = {
     val Interval(c, d) = i
-    Interval(List(a * c, a * d, b * c, b * d).min, List(a * c, a * d, b * c, b * d).max)
+    Interval(List(lb * c, lb * d, ub * c, ub * d).min, List(lb * c, lb * d, ub * c, ub * d).max)
   }
 
-  def *(i: Int) = {
-    Interval(math.min(a * i, b * i), math.max(a * i, b * i))
+  def *(v: Int) = {
+    Interval(math.min(lb * v, ub * v), math.max(lb * v, ub * v))
   }
 
   def /(i: Interval) = {
     if (i.in(0)) throw new ArithmeticException
     val Interval(c, d) = i
-    Interval(List(a / c, a / d, b / c, b / d).min, List(a / c, a / d, b / c, b / d).max)
+    Interval(List(lb / c, lb / d, ub / c, ub / d).min, List(lb / c, lb / d, ub / c, ub / d).max)
   }
 
   def /(v: Int) = {
     if (v == 0) throw new ArithmeticException
-    Interval(math.min(a / v, b / v), math.max(a / v, b / v))
+    Interval(math.min(lb / v, ub / v), math.max(lb / v, ub / v))
   }
 
-  def abs =
-    if (ub < 0) Interval(-ub, -lb)
+  def union(i: Interval) = Interval(math.min(lb, i.lb), math.max(ub, i.ub))
+
+  lazy val opp = Interval(-ub, -lb)
+
+  lazy val abs =
+    if (ub < 0) opp
     else if (lb > 0) this
     else Interval(0, math.max(-lb, ub))
 

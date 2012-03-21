@@ -23,6 +23,12 @@ trait Residues extends VariablePerVariable {
 
   def findSupport(variablePosition: Int, index: Int): Boolean
 
+  def boundConsistent = scope.indices.forall { i =>
+    val lb = scope(i).dom.first
+    val ub = scope(i).dom.last
+    findSupport(i, lb) && findSupport(i, ub)
+  }
+
   //def getEvaluation = scope.map(_.dom.size).foldLeft(1.0)(_ * _)
 
 }

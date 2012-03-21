@@ -24,7 +24,7 @@ import cspfj.problem.Variable;
 
 class WDegFixedOnDom(val problem: Problem) extends VariableHeuristic {
 
-  def score(variable: Variable) = WDeg.wDeg(variable).toDouble / variable.dom.size
+  def score(variable: Variable) = variable.getWDeg.toDouble / variable.dom.size
 
   override def toString = "max-wdeg/dom"
 

@@ -17,7 +17,7 @@ import cspfj.problem.EmptyDomainException
 import cspfj.heuristic.revision.Eval
 import cspfj.UNSATException
 
-object AC3Constraint {
+object AC3Constraint extends Loggable {
   @Parameter("ac3c.queue")
   var queueType: Class[_ <: Queue[Constraint]] = classOf[BinomialHeap[Constraint]]
 
@@ -27,11 +27,11 @@ object AC3Constraint {
   ParameterManager.register(this);
 
   def control(problem: Problem) = {
-
+    logger.fine("Control !")
     for (c <- problem.constraints) {
       c.fillRemovals()
       val sizes = c.scope map (_.dom.size)
-      assert(c.consistentRevise(), c + " is inconsistent");
+      assert(!c.revise(), c + " was revised")
       assert(
         sizes.sameElements(c.scope map (_.dom.size)),
         c + " was revised!")
