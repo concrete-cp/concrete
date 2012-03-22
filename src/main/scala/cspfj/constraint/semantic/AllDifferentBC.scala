@@ -247,6 +247,6 @@ final class AllDifferentBC(vars: Variable*) extends AbstractConstraint(vars.toAr
     }
   }
 
-  def getEvaluation = arity * arity
+  val getEvaluation = (math.log(arity) * arity).toInt
   val simpleEvaluation = 3
 }

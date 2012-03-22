@@ -58,7 +58,7 @@ final class Variable(
       _dynamicConstraints ::= newConstraint.asInstanceOf[DynamicConstraint]
     }
     _positionInConstraint :+= newConstraint.position(this)
-    wDeg += newConstraint.weight
+    dDeg += 1//newConstraint.weight
   }
 
   def dom = _domain
@@ -75,7 +75,7 @@ final class Variable(
 
   def values = if (_domain == null) null else _domain.values
 
-  var wDeg = 0
+  //var wDeg = 0
 
   @tailrec
   private def _getWDeg(i: Int = constraints.size - 1, s: Int = 0): Int =
@@ -87,9 +87,24 @@ final class Variable(
     }
 
   def getWDeg = {
-    assert(_getWDeg() == wDeg, "%s: was %d, should be %d".format(this, wDeg, _getWDeg()))
-    wDeg
+    _getWDeg()
+//    assert(_getWDeg() == wDeg, "%s: was %d, should be %d".format(this, wDeg, _getWDeg()))
+//    
+//    wDeg
   }
+  
+  var dDeg = 0
+
+  @tailrec
+  private def _getDDeg(i: Int = constraints.size - 1, s: Int = 0): Int =
+    if (i < 0) s
+    else {
+      val c = constraints(i)
+      if (c.isEntailed) _getDDeg(i - 1, s)
+      else _getDDeg(i - 1, s + 1)
+    }
+  
+  def getDDeg = dDeg
 
 }
 

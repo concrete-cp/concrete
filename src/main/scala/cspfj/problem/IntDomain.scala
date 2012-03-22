@@ -3,6 +3,7 @@ package cspfj.problem;
 import cspfj.util.BitVector
 import java.util.Arrays
 import cspfj.util.Backtrackable
+import cspfj.util.Interval
 
 object IntDomain {
   def apply(d: Int*): IntDomain = new IntDomain(IntSet.factory(d), Indexer.factory(d))
@@ -15,17 +16,12 @@ object IntDomain {
 }
 
 final class IntDomain(
-  var intSet: IntSet,
+  private var _intSet: IntSet,
   val indexer: Indexer) extends Domain with Backtrackable[IntSet] {
 
   override val maxSize = intSet.size
 
-  def size = intSet.size
-
-  //  def this(domain: BitVectorDomain) =
-  //    this(domain.domain, domain.bvDomain.clone, domain.history)
-  //
-  //  def this(domain: Array[Int]) = this(domain, BitVector.newBitVector(domain.length, true))
+  var size = intSet.size
 
   def save() = intSet.copy
 
@@ -35,9 +31,44 @@ final class IntDomain(
 
   def getAtLevel(level: Int) = getLevel(level).toBitVector
 
-  def first = intSet.first
+  var first = intSet.first
 
-  def last = intSet.last
+  var last = intSet.last
+
+  override def isEmpty = intSet.isEmpty
+
+  def intSet_=(is: IntSet) {
+    first = is.first
+    last = is.last
+    size = is.size
+    _intSet = is
+    if (!isEmpty) {
+      _firstValue = value(first)
+      _lastValue = value(last)
+      _valueInterval = Interval(firstValue, lastValue)
+    }
+  }
+
+  var _firstValue = value(first)
+  var _lastValue = value(last)
+  var _valueInterval = Interval(firstValue, lastValue)
+
+  override def firstValue = {
+    assert(!isEmpty)
+    _firstValue
+  }
+
+  override def lastValue = {
+    assert(!isEmpty)
+    _lastValue
+  }
+
+  override def valueInterval = {
+    assert(!isEmpty)
+    _valueInterval
+  }
+
+  def intSet = _intSet
 
   def next(i: Int) = intSet.next(i)
 

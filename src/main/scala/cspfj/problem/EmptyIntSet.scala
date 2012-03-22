@@ -5,8 +5,8 @@ import cspfj.util.BitVector
 object EmptyIntSet extends IntSet {
   def size = 0
   def copy = this
-  def first = throw new NoSuchElementException
-  def last = throw new NoSuchElementException
+  def first = -1
+  def last = -1
   def next(i: Int) = -1
   def prev(i: Int) = -1
   def closestLeq(i: Int) = -1

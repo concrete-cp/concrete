@@ -33,6 +33,7 @@ final class OffsetIndices(val size: Int, val offset: Int) extends Indexer {
   }
   def value(index: Int) = index + offset
 
+  override def toString = "[0, %d] + %d".format(size - 1, offset)
 }
 
 final class DirectIndices(val size: Int) extends Indexer {

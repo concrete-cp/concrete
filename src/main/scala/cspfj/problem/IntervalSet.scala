@@ -13,9 +13,9 @@ final class IntervalSet(val domain: Interval) extends IntSet {
 
   val size = domain.size
 
-  def first = domain.lb
+  val first = domain.lb
 
-  def last = domain.ub
+  val last = domain.ub
 
   def next(i: Int) = if (i >= domain.ub) -1 else i + 1
 

@@ -33,14 +33,25 @@ final class AbsDiff(val result: Variable, val v0: Variable, val v1: Variable)
     ch
   }
 
-  override def revise() = {
+  override def revise(mod: Seq[Int]) = {
 
     var ch = shave()
     while (ch && shave()) {}
 
     assert(!isBound || boundConsistent, this + " is not BC")
 
-    ch | (!isBound && super.revise())
+    if (isBound) {
+      if ((v0.dom.valueInterval - v1.dom.valueInterval).in(0)) {
+        val skip = mod match {
+          case Seq(s) => s
+          case _ => -1
+        }
+        if (skip != 1) ch |= reviseVariable(1, mod)
+        if (skip != 2) ch |= reviseVariable(2, mod)
+      }
+    } else ch |= super.revise(mod)
+    
+    ch
 
   }
 

@@ -25,7 +25,7 @@ trait Domain {
 
   def last: Int
 
-  def isEmpty = first >= 0
+  def isEmpty = first < 0
 
   def maxSize: Int //= allValues.size
 
@@ -76,11 +76,7 @@ trait Domain {
 
   def getAtLevel(level: Int): BitVector
 
-  def firstValue = {
-    val f = first
-    assert(f >= 0, this)
-    value(f)
-  }
+  def firstValue = value(first)
 
   def lastValue = value(last)
 
