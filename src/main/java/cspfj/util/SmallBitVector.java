@@ -14,12 +14,14 @@ public final class SmallBitVector extends BitVector {
     }
 
     public boolean clear(final int position) {
+        assert position < size;
         final long old = word;
         word &= ~(1L << position);
         return word != old;
     }
 
     public boolean set(final int position) {
+        assert position < size;
         final long old = word;
         word |= (1L << position);
         return word != old;
@@ -33,6 +35,7 @@ public final class SmallBitVector extends BitVector {
     }
 
     public int prevSetBit(final int start) {
+
         final long prev;
         if (start >= WORD_SIZE) {
             prev = word;
@@ -57,7 +60,7 @@ public final class SmallBitVector extends BitVector {
     }
 
     public int nextSetBit(final int start) {
-        if (start >= Long.SIZE) {
+        if (start >= size) {
             return -1;
         }
         final long next = word & (MASK << start);
@@ -69,6 +72,15 @@ public final class SmallBitVector extends BitVector {
             return false;
         final long before = word;
         word &= ~(MASK << from);
+        return word != before;
+    }
+
+    public boolean setFrom(final int from) {
+        if (from >= size)
+            return false;
+        final long before = word;
+        word |= MASK << from;
+        word &= ~(MASK << size);
         return word != before;
     }
 

@@ -26,7 +26,10 @@ final class Add(val result: Variable, val v0: Variable, val v1: Variable)
 
     assert(!isBound || boundConsistent)
 
-    ch | (!isBound && super.revise())
+    if (isBound) entailCheck(ch)
+    else ch |= super.revise()
+
+    ch
 
   }
 

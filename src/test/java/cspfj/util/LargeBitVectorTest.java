@@ -155,6 +155,25 @@ public final class LargeBitVectorTest {
     }
 
     @Test
+    public void testSetFrom() {
+        assertTrue(bitVector.setFrom(80));
+        assertEquals(bitVector.toString(), 45, bitVector.cardinality());
+        for (int i = 0; i < 80; i++) {
+            assertFalse(bitVector.get(i));
+        }
+        for (int i = 80; i < 125; i++) {
+            assertTrue(Integer.toString(i), bitVector.get(i));
+        }
+        for (int i = 125; i < 200; i++) {
+            assertFalse(Integer.toString(i), bitVector.get(i));
+        }
+
+        final BitVector bv = BitVector.newBitVector(2000);
+        bv.fill(true);
+        assertFalse(bitVector.setFrom(100));
+    }
+
+    @Test
     public void testSubset() {
         bitVector.set(46);
         bitVector.set(49);

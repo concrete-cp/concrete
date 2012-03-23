@@ -15,8 +15,8 @@ final object BitVectorSet {
   }
 
   def intBv(lb: Int, ub: Int): BitVector = {
-    val bv = fullBV(ub + 1)
-    bv.clearTo(lb)
+    val bv = BitVector.newBitVector(ub + 1)
+    bv.setFrom(lb)
     bv
   }
 

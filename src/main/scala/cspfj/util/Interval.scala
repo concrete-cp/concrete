@@ -43,6 +43,13 @@ final case class Interval(val lb: Int, val ub: Int) {
     Interval(math.min(lb / v, ub / v), math.max(lb / v, ub / v))
   }
 
+  def intersect(i: Interval) = {
+    val l = math.max(lb, i.lb)
+    val u = math.min(ub, i.ub)
+    if (l <= u) Some(Interval(l, u))
+    else None
+  }
+
   def union(i: Interval) = Interval(math.min(lb, i.lb), math.max(ub, i.ub))
 
   lazy val opp = Interval(-ub, -lb)

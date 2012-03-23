@@ -76,6 +76,8 @@ public abstract class BitVector implements Cloneable {
      * @return How many values were actually removed
      */
     public abstract boolean clearFrom(final int from);
+    
+    public abstract boolean setFrom(final int from);
 
     /**
      * Removes all values up to given bound (excluded).

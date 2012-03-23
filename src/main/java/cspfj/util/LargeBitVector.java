@@ -49,7 +49,7 @@ final class LargeBitVector extends BitVector {
     public boolean get(final int position) {
         if (position >= size)
             return false;
-        
+
         return (words[word(position)] & (1L << position)) != 0;
     }
 
@@ -156,7 +156,7 @@ final class LargeBitVector extends BitVector {
         if (from >= size)
             return false;
 
-        int startWordIndex = word(from);
+        final int startWordIndex = word(from);
 
         final long w = words[startWordIndex];
         // Handle first word
@@ -170,6 +170,38 @@ final class LargeBitVector extends BitVector {
             }
         }
         return removed;
+    }
+
+    public boolean setFrom(final int from) {
+        if (from >= size)
+            return false;
+
+        final int startWordIndex = word(from);
+
+        boolean changed = false;
+        final long w = words[startWordIndex];
+        if (startWordIndex == words.length - 1) {
+            words[startWordIndex] |= MASK << from;
+            words[startWordIndex] &= ~(MASK << size);
+            changed |= w != words[startWordIndex];
+        } else {
+
+            words[startWordIndex] |= MASK << from;
+            changed |= w != words[startWordIndex];
+
+            for (int i = words.length - 1; --i >= startWordIndex + 1;) {
+                if (words[i] != MASK) {
+                    words[i] = MASK;
+                    changed = true;
+                }
+            }
+
+            final long w2 = words[words.length - 1];
+            words[words.length - 1] |= (MASK >>> -size);
+            changed |= w2 != words[words.length - 1];
+        }
+
+        return changed;
     }
 
     @Override

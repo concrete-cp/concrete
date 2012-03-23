@@ -2,8 +2,10 @@ package cspfj.constraint.semantic;
 
 import cspfj.constraint.Residues
 import cspfj.problem.Domain
-import cspfj.problem.Variable;
+import cspfj.problem.Variable
 import cspfj.constraint.AbstractConstraint
+import cspfj.UNSATException
+import cspfj.util.Interval
 
 final class AbsDiff(val result: Variable, val v0: Variable, val v1: Variable)
   extends AbstractConstraint(Array(result, v0, v1)) with Residues {
@@ -19,19 +21,27 @@ final class AbsDiff(val result: Variable, val v0: Variable, val v1: Variable)
     var ch = result.dom.intersectVal(diff.abs)
     val r = result.dom.valueInterval
 
-    if (diff.lb > 0) {
+    if (diff.lb >= 0) {
       ch |= v0.dom.intersectVal(i1 + r)
       ch |= v1.dom.intersectVal(i0 - r)
-    } else if (diff.ub < 0) {
+    } else if (diff.ub <= 0) {
       ch |= v0.dom.intersectVal(i1 - r)
       ch |= v1.dom.intersectVal(i0 + r)
     } else {
-      ch |= v0.dom.intersectVal((i1 + r) union (i1 - r))
-      ch |= v1.dom.intersectVal((i0 - r) union (i0 + r))
+      ch |= v0.dom.intersectVal(unionInter(i0, i1 + r, i0, i1 - r))
+      ch |= v1.dom.intersectVal(unionInter(i1, i0 - r, i1, i0 + r))
     }
 
     ch
   }
+
+  private def unionInter(i0: Interval, j0: Interval, i1: Interval, j1: Interval) =
+    (i0 intersect j0, i1 intersect j1) match {
+      case (Some(k0), Some(k1)) => k0 union k1
+      case (Some(k0), None) => k0
+      case (None, Some(k1)) => k1
+      case (None, None) => throw UNSATException.e
+    }
 
   override def revise(mod: Seq[Int]) = {
 
@@ -49,8 +59,9 @@ final class AbsDiff(val result: Variable, val v0: Variable, val v1: Variable)
         if (skip != 1) ch |= reviseVariable(1, mod)
         if (skip != 2) ch |= reviseVariable(2, mod)
       }
+      entailCheck(ch)
     } else ch |= super.revise(mod)
-    
+
     ch
 
   }

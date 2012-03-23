@@ -13,15 +13,17 @@ public class SmallBitVectorTest {
 
     @Before
     public void setUp() {
-        bitVector = new SmallBitVector(64);
+        bitVector = new SmallBitVector(50);
     }
 
     @Test
     public void testInitBooleanArray() {
         bitVector.fill(true);
         // assertEquals(bitVector.bitCount(), 64);
-        assertTrue(bitVector.get(64));
+        assertTrue(bitVector.get(49));
         assertTrue(bitVector.get(32));
+        assertFalse(bitVector.get(50));
+        assertEquals(50, bitVector.cardinality());
 
         bitVector.fill(false);
         assertEquals(-1, bitVector.nextSetBit(0));
@@ -57,14 +59,13 @@ public class SmallBitVectorTest {
     public void testPrevClearBit() {
         bitVector.fill(true);
         bitVector.clear(46);
-        bitVector.clear(49);
+        bitVector.clear(48);
         assertEquals(46, bitVector.prevClearBit(47));
         assertEquals(-1, bitVector.prevClearBit(46));
         assertEquals(-1, bitVector.prevClearBit(45));
 
-        assertEquals(49, bitVector.prevClearBit(63));
-        assertEquals(49, bitVector.prevClearBit(64));
-        assertEquals(49, bitVector.prevClearBit(65));
+        assertEquals(48, bitVector.prevClearBit(50));
+        assertEquals(48, bitVector.prevClearBit(49));
 
     }
 
@@ -114,19 +115,34 @@ public class SmallBitVectorTest {
     }
 
     @Test
+    public void testSetFrom() {
+        assertTrue(bitVector.setFrom(30));
+        assertEquals(bitVector.toString(), 20, bitVector.cardinality());
+        for (int i = 0; i < 30; i++) {
+            assertFalse(bitVector.get(i));
+        }
+        for (int i = 30; i < 50; i++) {
+            assertTrue(Integer.toString(i), bitVector.get(i));
+        }
+        for (int i = 50; i < 100; i++) {
+            assertFalse(Integer.toString(i), bitVector.get(i));
+        }
+    }
+
+    @Test
     public void testClearTo() {
-        bitVector.set(46);
-        bitVector.set(49);
-        bitVector.set(60);
-        assertTrue(bitVector.clearTo(49));
+        bitVector.set(26);
+        bitVector.set(29);
+        bitVector.set(40);
+        assertTrue(bitVector.clearTo(29));
         assertEquals(2, bitVector.cardinality());
-        assertFalse(bitVector.get(46));
-        assertTrue(bitVector.get(49));
-        assertTrue(bitVector.get(60));
-        bitVector.clearTo(0);
-        assertFalse(bitVector.get(46));
-        assertTrue(bitVector.get(49));
-        assertTrue(bitVector.get(60));
+        assertFalse(bitVector.get(26));
+        assertTrue(bitVector.get(29));
+        assertTrue(bitVector.get(40));
+        assertFalse(bitVector.clearTo(0));
+        assertFalse(bitVector.get(26));
+        assertTrue(bitVector.get(29));
+        assertTrue(bitVector.get(40));
     }
 
     @Test
