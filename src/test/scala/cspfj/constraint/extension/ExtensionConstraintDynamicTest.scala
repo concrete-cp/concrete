@@ -10,9 +10,9 @@ import org.junit.Test
 import cspfj.problem.IntDomain
 import cspfj.problem.Variable
 
-final class MatrixManagerDynamicTest {
+final class ExtensionConstraintDynamicTest {
 
-  private var mmd: MatrixManagerDynamic = null;
+  private var mmd: ExtensionConstraintDynamic = null;
   private var content: List[Array[Int]] = null;
 
   @Before
@@ -26,7 +26,7 @@ final class MatrixManagerDynamicTest {
       new Variable("V0", IntDomain(0, 1, 2)),
       new Variable("V1", IntDomain(0, 1, 2)))
 
-    mmd = new MatrixManagerDynamic(scope, ta, false, new Array[Int](2));
+    mmd = new ExtensionConstraintDynamic(scope, ta, false);
     content = mmd.tuples
     //println(content map (_.toSeq) mkString (", "))
   }

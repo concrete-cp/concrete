@@ -9,7 +9,7 @@ final class Abs(val result: Variable, val v0: Variable) extends AbstractConstrai
   //  val corresponding2 = result.dom.allValues map { v => v0.dom.index(-v) }
   //  val correspondingR = v0.dom.allValues map { v => result.dom.index(math.abs(v)) }
 
-  def check = value(0) == math.abs(value(1))
+  def checkValues(t: Array[Int]) = t(0) == math.abs(t(1))
 
   private def valid(value: Int, variable: Variable) = {
     val index = variable.dom.index(value)

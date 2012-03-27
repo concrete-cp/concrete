@@ -10,7 +10,7 @@ import cspfj.util.Interval
 final class AbsDiff(val result: Variable, val v0: Variable, val v1: Variable)
   extends AbstractConstraint(Array(result, v0, v1)) with Residues {
 
-  def check = value(0) == math.abs(value(1) - value(2))
+  def checkValues(t: Array[Int]) = t(0) == math.abs(t(1) - t(2))
 
   def shave() = {
     val i0 = v0.dom.valueInterval
@@ -48,8 +48,6 @@ final class AbsDiff(val result: Variable, val v0: Variable, val v1: Variable)
     var ch = shave()
     while (ch && shave()) {}
 
-    assert(!isBound || boundConsistent, this + " is not BC")
-
     if (isBound) {
       if ((v0.dom.valueInterval - v1.dom.valueInterval).in(0)) {
         val skip = mod match {
@@ -60,7 +58,10 @@ final class AbsDiff(val result: Variable, val v0: Variable, val v1: Variable)
         if (skip != 2) ch |= reviseVariable(2, mod)
       }
       entailCheck(ch)
-    } else ch |= super.revise(mod)
+    } else
+      ch |= super.revise(mod)
+
+    assert(!isBound || boundConsistent, this + " is not BC")
 
     ch
 
@@ -68,68 +69,63 @@ final class AbsDiff(val result: Variable, val v0: Variable, val v1: Variable)
 
   override def findSupport(position: Int, index: Int) =
     position match {
-      case 0 =>
-        if (scope(1).dom.size < scope(2).dom.size)
-          findValidTuple0(index, 1, 2);
-        else
-          findValidTuple0(index, 2, 1);
-      case 1 => findValidTuple(index, 1, 2);
-      case 2 => findValidTuple(index, 2, 1);
+      case 0 => findValidTuple0(index);
+      case 1 => findValidTupleV1(index);
+      case 2 => findValidTupleV2(index);
       case _ => throw new IndexOutOfBoundsException;
     }
 
-  def findValidTuple0(index: Int, pos1: Int, pos2: Int): Boolean = {
+  def findValidTuple0(index: Int) = {
     val val0 = scope(0).dom.value(index)
-    if (val0 < 0) {
-      return false;
-    }
-    val dom1 = scope(pos1).dom
-    val dom2 = scope(pos2).dom
-
-    for (i <- dom1.indices) {
-
-      val val1 = dom1.value(i);
-
-      val j1 = dom2.index(val1 - val0);
-      if (j1 >= 0 && dom2.present(j1)) {
-        tuple(0) = index;
-        tuple(pos1) = i;
-        tuple(pos2) = j1;
-        return true;
+    if (val0 < 0) None
+    else {
+      val dom1 = scope(1).dom
+      val dom2 = scope(2).dom
+      dom1.indices map { i =>
+        (i, dom2.index(dom1.value(i) - val0))
+      } find {
+        case (_, j) => j >= 0 && dom2.present(j)
+      } orElse {
+        dom1.indices map { i =>
+          (i, dom2.index(dom1.value(i) + val0))
+        } find {
+          case (_, j) => j >= 0 && dom2.present(j)
+        }
+      } map {
+        case (i, j) => Array(index, i, j)
       }
-
-      val j2 = dom2.index(val1 + val0);
-      if (j2 >= 0 && dom2.present(j2)) {
-        tuple(0) = index;
-        tuple(pos1) = i;
-        tuple(pos2) = j2;
-        return true;
-      }
-
     }
-    return false;
   }
 
-  def findValidTuple(index: Int, pos1: Int,
-    pos2: Int): Boolean = {
+  def findValidTupleV1(index: Int): Option[Array[Int]] = {
     val result = this.result.dom
-    val value = scope(pos1).dom.value(index);
-    val dom = scope(pos2).dom;
-    for (i <- dom.indices) {
-      val resIndex = result.index(math.abs(value - dom.value(i)));
-      if (resIndex >= 0 && result.present(resIndex)) {
-        tuple(0) = resIndex;
-        tuple(pos1) = index;
-        tuple(pos2) = i;
-        return true;
-      }
+    val value = scope(1).dom.value(index);
+    val dom = scope(2).dom;
+    dom.indices map { i =>
+      (i, result.index(math.abs(value - dom.value(i))))
+    } find {
+      case (_, resIndex) => resIndex >= 0 && result.present(resIndex)
+    } map {
+      case (i, resIndex) => Array(resIndex, index, i)
     }
-    return false;
+  }
+
+  def findValidTupleV2(index: Int): Option[Array[Int]] = {
+    val result = this.result.dom
+    val value = scope(2).dom.value(index);
+    val dom = scope(1).dom;
+    dom.indices map { i =>
+      (i, result.index(math.abs(value - dom.value(i))))
+    } find {
+      case (_, resIndex) => resIndex >= 0 && result.present(resIndex)
+    } map {
+      case (i, resIndex) => Array(resIndex, i, index)
+    }
   }
 
   override def toString = result + " = |" + v0 + " - " + v1 + "|";
 
-  def getEvaluation = {
+  def getEvaluation = if (isBound) 5 else {
     val d0 = result.dom.size
     val d1 = v0.dom.size
     val d2 = v1.dom.size

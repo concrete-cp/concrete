@@ -32,10 +32,9 @@ final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict
   def this(v0: Variable, v1: Variable, strict: Boolean) =
     this(v0, 0, v1, strict);
 
-  override def check =
-    if (strict)
-      value(0) + constant > value(1);
-    else value(0) + constant >= value(1);
+  override def checkValues(t: Array[Int]) =
+    if (strict) t(0) + constant > t(1);
+    else t(0) + constant >= t(1);
 
   private def min(position: Int) = scope(position).dom.firstValue;
 

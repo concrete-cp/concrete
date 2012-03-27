@@ -24,46 +24,96 @@ import cspfj.constraint.AbstractConstraint
 import cspfj.problem.Variable
 import cspfj.constraint.TupleEnumerator
 import scala.annotation.tailrec
+import cspfj.Statistic
+import cspfj.StatisticsManager
+
+object ExtensionConstraint2D {
+  @Statistic
+  var checks = 0;
+  @Statistic
+  var presenceChecks = 0
+}
 
 final class ExtensionConstraint2D(
   scope: Array[Variable],
-  matrix: Matrix2D,
-  shared: Boolean) extends AbstractConstraint(scope) with VariablePerVariable with TupleEnumerator with ExtensionConstraint {
+  private var _matrix: Matrix2D,
+  private var shared: Boolean)
+  extends AbstractConstraint(scope)
+  with VariablePerVariable
+  with ConflictCount {
 
   private val GAIN_OVER_GENERAL = 10;
 
-  val matrixManager = new MatrixManager2D(scope, matrix, shared, tuple)
+  private val MINIMUM_SIZE_FOR_LAST = 3 * java.lang.Long.SIZE;
+
+  /**
+   * No need for last data structure if domain sizes <=
+   * MINIMUM_SIZE_FOR_LAST
+   */
+  private val last =
+    if (scope.map(_.dom.maxSize).max > MINIMUM_SIZE_FOR_LAST) {
+      Array(new Array[Int](scope(0).dom.maxSize), new Array[Int](scope(1).dom.maxSize))
+    } else {
+      null
+    }
+
+  def matrix = _matrix
 
   override def getEvaluation = scope(0).dom.size + scope(1).dom.size
 
   override def simpleEvaluation = 2
 
-  def reviseVariable(position: Int, mod: Seq[Int]) = {
-    if (!matrixManager.supportCondition(position)) {
-      scope(position).dom.filter(i => matrixManager.hasSupport(position, i))
-    } else false
-  }
+  def reviseVariable(position: Int, mod: Seq[Int]) =
+    !supportCondition(position) && scope(position).dom.filter(i => hasSupport(position, i))
 
   def removeTuple(tuple: Array[Int]) = {
     disEntail();
-    matrixManager.removeTuple(tuple);
+    removeTuple(tuple);
   }
 
-  def removeTuples(base: Array[Int]) = {
-    var removed = 0;
-    tupleManager.setFirstTuple(base);
-    do {
-      if (removeTuple(this.tuple)) {
-        removed += 1;
-      }
-    } while (tupleManager.setNextTuple(base));
-    removed;
-  }
-
-  def getMatrixManager = matrixManager
-
-  def check = matrixManager.check
+  def removeTuples(base: Array[Int]) = tuples(base).count(removeTuple)
 
   override def toString = "ext2d(" + scope(0) + ", " + scope(1) + ")";
+
+  def hasSupport(variablePosition: Int, index: Int) =
+    if (last == null) hasSupportNR(variablePosition, index);
+    else hasSupportR(variablePosition, index);
+
+  private def hasSupportR(variablePosition: Int, index: Int) = {
+    controlResidue(variablePosition, index) || {
+      val matrixBV = matrix.getBitVector(variablePosition, index);
+      val intersection = scope(1 - variablePosition).dom.intersects(matrixBV)
+
+      if (intersection >= 0) {
+        ExtensionConstraint2D.checks += 1 + intersection;
+        last(variablePosition)(index) = intersection;
+        true;
+      } else {
+        ExtensionConstraint2D.checks += matrixBV.realSize;
+        false;
+      }
+    }
+  }
+
+  private def hasSupportNR(variablePosition: Int, index: Int) = {
+    ExtensionConstraint2D.checks += 1;
+    scope(1 - variablePosition).dom.intersects(matrix.getBitVector(variablePosition, index)) >= 0
+  }
+
+  private def controlResidue(position: Int, index: Int) = {
+    val part = last(position)(index)
+    ExtensionConstraint2D.presenceChecks += 1
+    (part != -1 && scope(1 - position).dom.intersects(
+      matrix.getBitVector(position, index), part))
+  }
+
+  def unshareMatrix() = {
+    if (shared) {
+      _matrix = matrix.copy
+      shared = false
+    }
+  }
+
+  override def checkIndices(t: Array[Int]) = matrix.check(t)
 
 }

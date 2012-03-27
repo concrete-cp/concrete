@@ -10,7 +10,7 @@ import cspfj.util.Loggable
 final class Add(val result: Variable, val v0: Variable, val v1: Variable)
   extends AbstractConstraint(Array(result, v0, v1)) with Residues with Loggable {
 
-  def check = value(0) == value(1) + value(2)
+  def checkValues(t: Array[Int]) = t(0) == t(1) + t(2)
 
   private def shave() = {
     val bounds = v0.dom.valueInterval + v1.dom.valueInterval - result.dom.valueInterval
@@ -19,10 +19,8 @@ final class Add(val result: Variable, val v0: Variable, val v1: Variable)
 
   override def revise() = {
 
-    var ch = false
-    while (shave()) {
-      ch = true
-    }
+    var ch = shave()
+    while (ch && shave()) {}
 
     assert(!isBound || boundConsistent)
 
@@ -46,44 +44,46 @@ final class Add(val result: Variable, val v0: Variable, val v1: Variable)
   }
 
   def findSupport(position: Int, index: Int) = position match {
-    case 0 => if (v0.dom.size < v1.dom.size) {
-      findValidTuple0(index, 1, 2);
-    } else {
-      findValidTuple0(index, 2, 1);
-    }
-    case 1 => findValidTuple(index, 1, 2);
-    case 2 => findValidTuple(index, 2, 1);
+    case 0 => findValidTuple0(index);
+    case 1 => findValidTupleV0(index);
+    case 2 => findValidTupleV1(index);
   }
 
-  private def findValidTuple0(index: Int, pos1: Int, pos2: Int): Boolean = {
+  private def findValidTuple0(index: Int) = {
     val val0 = scope(0).dom.value(index);
-    val dom1 = scope(pos1).dom;
-    val dom2 = scope(pos2).dom;
+    val dom1 = scope(1).dom;
+    val dom2 = scope(2).dom;
 
-    dom1.indices.exists { i =>
-      val j = dom2.index(val0 - dom1.value(i));
-      if (j >= 0 && dom2.present(j)) {
-        tuple(0) = index;
-        tuple(pos1) = i;
-        tuple(pos2) = j;
-        true;
-      } else false
+    dom1.indices.map { i => (i, dom2.index(val0 - dom1.value(i))) }.find {
+      case (i, j) => j >= 0 && dom2.present(j)
+    }.map {
+      case (i, j) => Array(index, i, j)
     }
   }
 
-  private def findValidTuple(index: Int, pos1: Int, pos2: Int): Boolean = {
+  private def findValidTupleV0(index: Int) = {
     val result = scope(0).dom
-    val value = scope(pos1).dom.value(index)
-    val dom = scope(pos2).dom
-    dom.indices.exists { i =>
-      val resIndex = result.index(value + dom.value(i));
-      if (resIndex >= 0 && result.present(resIndex)) {
-        tuple(0) = resIndex;
-        tuple(pos1) = index;
-        tuple(pos2) = i;
-        true;
-      } else false
-    }
+    val value = scope(1).dom.value(index)
+    val dom = scope(2).dom
+    dom.indices.map { i => (i, result.index(value + dom.value(i))) }
+      .find {
+        case (i, resIndex) => resIndex >= 0 && result.present(resIndex)
+      } map {
+        case (i, resIndex) => Array(resIndex, index, i)
+      }
+  }
+
+  private def findValidTupleV1(index: Int) = {
+    val result = scope(0).dom
+    val dom = scope(1).dom
+    val value = scope(2).dom.value(index)
+
+    dom.indices.map { i => (i, result.index(value + dom.value(i))) }
+      .find {
+        case (i, resIndex) => resIndex >= 0 && result.present(resIndex)
+      } map {
+        case (i, resIndex) => Array(resIndex, i, index)
+      }
   }
 
   override def toString = result + " = " + v0 + " + " + v1

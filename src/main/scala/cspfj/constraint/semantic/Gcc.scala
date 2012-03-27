@@ -19,9 +19,9 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Abstract
 
   require(scope.forall(v => v.dom.values.forall(bounds.contains)))
 
-  def check: Boolean = {
+  def checkValues(t: Array[Int]): Boolean = {
     var counts: Map[Int, Int] = Map.empty.default(0)
-    for (v <- tupleValues) {
+    for (v <- t) {
       val c = counts(v)
       if (c >= bounds(v).maxCount) return false
       counts += v -> (c + 1)

@@ -22,7 +22,6 @@ package cspfj;
 import java.util.logging.Level
 import java.util.logging.Logger
 import java.util.Timer
-import cspfj.constraint.extension.MatrixManager2D
 import cspfj.constraint.Constraint
 import cspfj.constraint.TupleEnumerator
 import cspfj.filter.Filter
@@ -34,6 +33,7 @@ import cspfj.generator.ProblemGenerator
 import cspom.CSPOM
 import cspfj.problem.Variable
 import scala.annotation.tailrec
+import cspfj.constraint.extension.ExtensionConstraint2D
 
 object Solver {
   @Parameter("logger.level")
@@ -183,8 +183,8 @@ abstract class Solver(val problem: Problem) extends Loggable {
 
       this.preproCpu = preproCpu / 1000f;
       preproConstraintChecks = TupleEnumerator.checks
-      preproMatrix2DChecks = MatrixManager2D.checks
-      preproMatrix2DPresenceChecks = MatrixManager2D.presenceChecks
+      preproMatrix2DChecks = ExtensionConstraint2D.checks
+      preproMatrix2DPresenceChecks = ExtensionConstraint2D.presenceChecks
     }
 
   }

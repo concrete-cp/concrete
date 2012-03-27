@@ -31,8 +31,8 @@ final class InInterval(val variable: Variable, val lb: Int, val ub: Int)
 
   override def isConsistent() = dom.indices(lb).takeWhile(_ <= ub).exists(dom.present)
 
-  def check = {
-    val value = this.value(0);
+  def checkValues(t: Array[Int]) = {
+    val value = t(0);
     lb <= value && value <= ub;
   }
 

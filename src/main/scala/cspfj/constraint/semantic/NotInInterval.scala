@@ -34,8 +34,8 @@ final class NotInInterval(val variable: Variable, val lb: Int, val ub: Int)
   override def isConsistent() =
     variable.dom.first < lb || variable.dom.last > ub;
 
-  def check = {
-    val value = this.value(0);
+  def checkValues(t: Array[Int]) = {
+    val value = t(0);
     value < lb || ub < value;
   }
 

@@ -42,8 +42,6 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
 
   private var entailedAtLevel = -1;
 
-  def value(position: Int) = scope(position).dom.value(tuple(position))
-
   /**
    * @return the scope of the constraint
    */
@@ -58,8 +56,6 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
    * @return the scope of the constraint as an unordered Set
    */
   val scopeSet = scope.toSet
-
-  val tuple = new Array[Int](arity)
 
   /**
    * @return a map containing the positions of variables in the scope of the constraint.
@@ -123,7 +119,7 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
   final def disEntail() {
     entailedAtLevel = -1
     if (inCN) for (v <- scope) {
-      v.dDeg += 1//weight
+      v.dDeg += 1 //weight
     }
   }
 
@@ -131,7 +127,7 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
     if (!isEntailed) {
       entailedAtLevel = level
       if (inCN) for (v <- scope) {
-        v.dDeg -= 1//weight
+        v.dDeg -= 1 //weight
       }
     }
 
@@ -140,9 +136,9 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
   override def weight_=(w: Int) {
     assert(!isEntailed)
     assert(inCN)
-//    for (v <- scope) {
-//      v.wDeg += w - weight
-//    }
+    //    for (v <- scope) {
+    //      v.wDeg += w - weight
+    //    }
     super.weight = w
   }
 
@@ -185,30 +181,23 @@ trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constr
   @throws(classOf[UNSATException])
   def revise(): Boolean
 
-  /**
-   * @return true iff the constraint is satisfied by the current values of the
-   *         tuple associated to the constraint object (see tuple: Array[Int])
-   */
-  def check: Boolean
+  private var valTuple = new Array[Int](arity)
 
   /**
    * @return true iff the constraint is satisfied by the given tuple
    */
-  def check(tuple: Array[Int]): Boolean = {
-    val current = this.tuple.clone
-    tuple.copyToArray(this.tuple)
-    val c = this.check
-    current.copyToArray(this.tuple)
-    c
+  def checkIndices(tuple: Array[Int]) = {
+    for (i <- 0 until arity) {
+      valTuple(i) = scope(i).dom.value(tuple(i))
+    }
+    checkValues(valTuple)
   }
+
+  def checkValues(tuple: Array[Int]): Boolean
 
   def getEvaluation: Int
 
   def simpleEvaluation: Int
-
-  //def tupleManager: TupleManager
-
-  def tupleValues = (0 to arity).iterator.map(p => scope(p).dom.value(tuple(p)))
 
   override def toString = this.getClass.getSimpleName + scope.mkString("(", ", ", ")")
 

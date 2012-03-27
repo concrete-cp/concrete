@@ -3,7 +3,7 @@ package cspfj.constraint;
 import scala.annotation.tailrec
 import cspfj.problem.Variable
 
-final class ResidueManagerFast(scope: Array[Variable]) extends ResidueManager {
+final class ResidueManagerFast(scope: Array[Variable]) {
 
   val arity = scope.size
 
@@ -11,25 +11,19 @@ final class ResidueManagerFast(scope: Array[Variable]) extends ResidueManager {
 
   def getResidue(position: Int, index: Int) = last(position)(index)
 
-  def updateResidue(residue: Array[Int]) {
-    @tailrec
-    def upd(i: Int) {
-      if (i >= 0) {
-        last(i)(residue(i)) = residue
-        upd(i - 1)
-      }
+  def updateResidue(residue: Array[Int], i: Int = arity - 1) {
+    if (i >= 0) {
+      last(i)(residue(i)) = residue
+      updateResidue(residue, i - 1)
     }
-    upd(arity - 1)
   }
 
-  def remove(residue: Array[Int]) {
-    @tailrec
-    def rem(i: Int) {
-      if (i >= 0) {
-        last(i)(residue(i)) = null
-        rem(i - 1)
-      }
+  def remove(residue: Array[Int], i: Int = arity - 1) {
+
+    if (i >= 0) {
+      last(i)(residue(i)) = null
+      remove(residue, i - 1)
     }
-    rem(arity - 1)
+
   }
 }

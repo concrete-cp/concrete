@@ -44,21 +44,20 @@ final class AllDifferentBC(vars: Variable*) extends AbstractConstraint(vars.toAr
   val minsorted = intervals.clone
   val maxsorted = intervals.clone
 
+  private def swap[A](array: Array[A], i: Int, j: Int) {
+    val t = array(i)
+    array(i) = array(j)
+    array(j) = t
+  }
+
   private def bSort[A](array: Array[A], c: Ordering[A]) {
-
-    def swap[A](i: Int) {
-      val t = array(i)
-      array(i) = array(i + 1)
-      array(i + 1) = t
-
-    }
 
     @tailrec
     def s(end: Int = array.size - 1, i: Int = 0, change: Int = 0) {
       if (end > 0) {
         if (i >= end) s(change, 0, 0)
         else if (c.compare(array(i), array(i + 1)) > 0) {
-          swap(i)
+          swap(array, i, i + 1)
           s(end, i + 1, i)
         } else s(end, i + 1, change)
       }
@@ -68,9 +67,22 @@ final class AllDifferentBC(vars: Variable*) extends AbstractConstraint(vars.toAr
     s()
   }
 
+  private def iSort[A](array: Array[A], c: Ordering[A]) {
+    for (i <- array.indices) {
+      val key = array(i)
+      var j = i - 1
+      while (j >= 0 && c.compare(array(j), key) > 0) {
+        array(j + 1) = array(j)
+        j -= 1
+      }
+      array(j + 1) = key
+    }
+
+  }
+
   def sortIt() {
-    bSort(minsorted, MIN)
-    bSort(maxsorted, MAX)
+    iSort(minsorted, MIN)
+    iSort(maxsorted, MAX)
 
     val min = minsorted(0).dom.firstValue
     var last = min - 2;
@@ -238,12 +250,14 @@ final class AllDifferentBC(vars: Variable*) extends AbstractConstraint(vars.toAr
     (scope map { _.dom.lastValue } max) -
     offset
 
-  def check: Boolean = {
+  def checkValues(t: Array[Int]): Boolean = {
     val union = BitVector.newBitVector(unionSize)
-    tupleValues.exists { v =>
-      if (union.get(v - offset)) return false
-      union.set(v - offset)
-      true
+    t.exists { v =>
+      if (union.get(v - offset)) true
+      else {
+        union.set(v - offset)
+        false
+      }
     }
   }
 

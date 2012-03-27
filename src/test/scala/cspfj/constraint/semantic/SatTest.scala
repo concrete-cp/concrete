@@ -17,15 +17,16 @@ class SatTest {
     val c = new Sat(v0, v1, v2)
     problem.addConstraint(c);
 
-    assertTrue(c.check)
+    val tuple = Array(0, 0, 0)
+
+    assertTrue(c.checkIndices(Array(0, 0, 0)))
     c.noGood(Seq((v0, 0), (v1, 1)))
-    c.tuple(1) = 1
-    assertFalse(c.check)
+    assertFalse(c.checkIndices(Array(0, 1, 0)))
 
     v1.dom.remove(0)
     v1.dom.remove(2)
-    assertFalse(c.findSupport(0, 0))
+    assertFalse(c.findSupport(0, 0).isDefined)
 
-    assertTrue(c.findSupport(0, 1))
+    assertTrue(c.findSupport(0, 1).isDefined)
   }
 }

@@ -12,21 +12,24 @@ trait Residues extends VariablePerVariable {
 
     dom.filter { index =>
       val residue = last.getResidue(position, index);
-      (residue != null && controlTuplePresence(residue)) || (
-        if (findSupport(position, index)) {
-          last.updateResidue(tuple.clone)
-          true
-        } else false)
+      (residue != null && controlTuplePresence(residue)) ||
+        (findSupport(position, index) match {
+          case Some(tuple) => {
+            last.updateResidue(tuple)
+            true
+          }
+          case None => false
+        })
     }
 
   }
 
-  def findSupport(variablePosition: Int, index: Int): Boolean
+  def findSupport(variablePosition: Int, index: Int): Option[Array[Int]]
 
   def boundConsistent = scope.indices.forall { i =>
     val lb = scope(i).dom.first
     val ub = scope(i).dom.last
-    findSupport(i, lb) && findSupport(i, ub)
+    findSupport(i, lb).isDefined && findSupport(i, ub).isDefined
   }
 
   //def getEvaluation = scope.map(_.dom.size).foldLeft(1.0)(_ * _)

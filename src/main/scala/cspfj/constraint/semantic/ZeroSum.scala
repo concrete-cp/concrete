@@ -14,8 +14,8 @@ final class ZeroSum(
   scope: Array[Variable]) extends AbstractConstraint(scope)
   with Loggable {
 
-  def check: Boolean =
-    (0 until arity).map(i => value(i) * factors(i)).sum >= 0
+  def checkValues(t: Array[Int]): Boolean =
+    (0 until arity).map(i => t(i) * factors(i)).sum >= 0
 
   def getEvaluation = arity
 

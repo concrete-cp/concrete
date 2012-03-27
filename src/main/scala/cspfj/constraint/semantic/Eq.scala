@@ -34,7 +34,7 @@ final class Eq(val a: Int, val x: Variable, val b: Int, val y: Variable)
    */
   def this(x: Variable, y: Variable) = this(1, x, 0, y);
 
-  def check = a * value(0) + b == value(1);
+  def checkValues(t: Array[Int]) = a * t(0) + b == t(1);
 
   def yIndex(xIndex: Int) = y.dom.index(a * x.dom.value(xIndex) + b)
 
@@ -49,11 +49,10 @@ final class Eq(val a: Int, val x: Variable, val b: Int, val y: Variable)
       scope(0).dom.intersectVal((scope(1).dom.valueInterval - b) / a) |
         scope(1).dom.intersectVal((scope(0).dom.valueInterval * a) + b)
 
-    if (!isBound) super.revise() || ch
-    else if (ch) {
-      if (scope(0).dom.size == 1 || scope(1).dom.size == 1) entail()
-      true
-    } else false
+    if (isBound) entailCheck(ch)
+    else ch |= super.revise()
+
+    ch
   }
 
   def reviseVariable(position: Int, mod: Seq[Int]) = position match {
@@ -84,6 +83,6 @@ final class Eq(val a: Int, val x: Variable, val b: Int, val y: Variable)
     (if (b > 0) " + " + b else if (b < 0) " - " + (-b) else "") +
     " = " + y
 
-  def getEvaluation = scope(0).dom.size + scope(1).dom.size
+  def getEvaluation = if (isBound) 3 else (scope(0).dom.size + scope(1).dom.size)
   val simpleEvaluation = 2
 }

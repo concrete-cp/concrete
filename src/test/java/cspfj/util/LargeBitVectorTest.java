@@ -221,7 +221,7 @@ public final class LargeBitVectorTest {
     public void testXor() {
         bitVector.set(59);
         bitVector.set(11);
-        BitVector bv2 = BitVector.newBitVector(10);
+        BitVector bv2 = BitVector.newBitVector(20);
         bv2.set(10);
         bv2.set(11);
 

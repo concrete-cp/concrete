@@ -42,17 +42,19 @@ class Sat(scope: IndexedSeq[Variable]) extends AbstractConstraint(scope.toArray)
 
   def this(scope: Variable*) = this(scope.toIndexedSeq)
 
-  override def check() = {
+  override def checkIndices(t: Array[Int]) = {
     val s = newSolver
 
     for (
       vp <- 0 until scope.size
     ) {
-      s.addClause(new VecInt(Array(numVariable(vp, tuple(vp)))))
+      s.addClause(new VecInt(Array(numVariable(vp, t(vp)))))
     }
 
     s.isSatisfiable
   }
+
+  def checkValues(t: Array[Int]) = throw new UnsupportedOperationException
 
   def noGoodVP(values: Seq[(Int, Int)]) {
     clauses ::= values.map(v => -numVariable(v._1, v._2)).toArray
@@ -78,9 +80,9 @@ class Sat(scope: IndexedSeq[Variable]) extends AbstractConstraint(scope.toArray)
 
     if (s.isSatisfiable) {
       println(s.model.toSeq)
-      true
+      Some(Array())
     } else {
-      false
+      None
     }
   }
 

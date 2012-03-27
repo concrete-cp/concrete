@@ -87,9 +87,12 @@ final class ReifiedConstraint(
     c
   }
 
-  def check = {
-    tuple.copyToArray(positiveConstraint.tuple, 1, arity - 1)
-    (value(0) == 1) == positiveConstraint.check
+  override def checkIndices(t: Array[Int]) = {
+    (t(0) == 1) == positiveConstraint.checkIndices(t.tail)
+  }
+  
+  override def checkValues(t: Array[Int]) = {
+    (t(0) == 1) == positiveConstraint.checkValues(t.tail)
   }
 
   def getEvaluation = controlDomain.status match {

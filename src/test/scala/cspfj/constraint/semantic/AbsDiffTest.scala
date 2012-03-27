@@ -32,8 +32,7 @@ final class AbsDiffTest {
     c.revise()
 
     val c2 = new AbstractConstraint(Array(x, y, z)) with Residues with TupleEnumerator {
-      def check() = value(0) == math.abs(value(1) - value(2));
-      override def getEvaluation = 0
+      def checkValues(t: Array[Int]) = t(0) == math.abs(t(1) - t(2));
     };
     c2.fillRemovals()
     assertFalse(c2.revise());
@@ -43,8 +42,7 @@ final class AbsDiffTest {
   def testRevise2() {
 
     val c2 = new AbstractConstraint(Array(x, y, z)) with Residues with TupleEnumerator {
-      def check() = value(0) == math.abs(value(1) - value(2));
-      override def getEvaluation = 0
+      def checkValues(t: Array[Int]) = t(0) == math.abs(t(1) - t(2));
     };
     c2.fillRemovals()
     c2.revise()

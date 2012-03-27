@@ -10,11 +10,11 @@ final class LexLeq(scope: Array[Variable]) extends AbstractConstraint(scope)
   require(scope.size % 2 == 0)
   val half = scope.size / 2
 
-  override def check: Boolean = {
+  def checkValues(t: Array[Int]): Boolean = {
     for (i <- 0 until half) {
 
-      val v0 = value(i);
-      val v1 = value(i + half);
+      val v0 = t(i);
+      val v1 = t(i + half);
       if (v0 < v1) {
         return true;
       }

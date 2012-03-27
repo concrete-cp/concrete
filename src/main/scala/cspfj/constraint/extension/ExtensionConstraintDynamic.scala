@@ -28,24 +28,25 @@ import cspfj.constraint.Removals
 import cspfj.constraint.Constraint
 import scala.annotation.tailrec
 import cspfj.util.Loggable
+import cspfj.util.Backtrackable
 
 final class ExtensionConstraintDynamic(
-  scope: Array[Variable], matrix: TupleSet, shared: Boolean) extends AbstractConstraint(scope)
-  with ExtensionConstraint with Removals with Loggable {
-
-  val matrixManager = new MatrixManagerDynamic(scope, matrix, shared, tuple)
+  scope: Array[Variable],
+  private var tupleSet: TupleSet,
+  private var shared: Boolean) extends AbstractConstraint(scope)
+  with Removals with Loggable with Backtrackable[(List[Array[Int]], Int)] {
 
   private val found =
     (0 until arity) map (p => BitVector.newBitVector(scope(p).dom.maxSize)) toArray
 
   override def setLvl(l: Int) {
     super.setLvl(l)
-    matrixManager.setLevel(l)
+    setLevel(l)
   }
 
   override def restoreLvl(l: Int) {
     super.restoreLvl(l)
-    matrixManager.restoreLevel(l)
+    restoreLevel(l)
   }
 
   def revise(modified: Seq[Int]) = {
@@ -54,7 +55,7 @@ final class ExtensionConstraintDynamic(
 
     val mod = modified.toList
 
-    matrixManager.filterTuples { tuple =>
+    filterTuples { tuple =>
       if (controlTuplePresence(tuple, mod)) {
         setFound(tuple, found, arity - 1)
         true
@@ -64,8 +65,8 @@ final class ExtensionConstraintDynamic(
     val c = filter(found, arity - 1, false)
 
     val card = scope.map(v => BigInt(v.dom.size)).product
-    assert(card >= matrixManager.size, card + " < " + matrixManager.size + "!")
-    if (card == matrixManager.size) {
+    assert(card >= size, card + " < " + size + "!")
+    if (card == size) {
       //logger.info("Entailing " + this)
       entail()
     }
@@ -82,8 +83,6 @@ final class ExtensionConstraintDynamic(
     }
   }
 
- 
-
   private def filter(found: Array[BitVector], p: Int, c: Boolean): Boolean =
     if (p < 0) c
     else {
@@ -91,9 +90,36 @@ final class ExtensionConstraintDynamic(
       filter(found, p - 1, c || ch)
     }
 
-  def check = matrixManager.check
+  private var allTuples: List[Array[Int]] = tupleSet.toList
 
-  def removeTuple(tuple: Array[Int]) = matrixManager.removeTuple(tuple)
+  private var _size: Int = tupleSet.size
+
+  def save = (allTuples, size)
+
+  def restore(d: (List[Array[Int]], Int)) {
+    allTuples = d._1
+    _size = d._2
+  }
+
+  override def checkIndices(t: Array[Int]) = tupleSet.check(t)
+
+  def unshareMatrix() = {
+    if (shared) {
+      tupleSet = tupleSet.copy
+      shared = false
+    }
+  }
+
+  def size = _size
+
+  def filterTuples(f: Array[Int] => Boolean) {
+    val oldSize = size
+    allTuples = allTuples.filter(f)
+    _size = allTuples.length
+    if (size != oldSize) altering()
+  }
+
+  def tuples = allTuples
 
   private def matches(tuple: Array[Int], base: Array[Int]) = {
     assert(tuple.length == base.length);
@@ -102,20 +128,21 @@ final class ExtensionConstraintDynamic(
 
   def removeTuples(base: Array[Int]) = {
     throw new UnsupportedOperationException
-    matrixManager.unshareMatrix()
-    val s = matrixManager.size
+    unshareMatrix()
+    val s = size
 
     //matrixManager.filter(t => !matches(t, base))
 
-    matrixManager.size - s;
+    size - s;
   }
 
   //def matrixManager = matrixManager
 
-  def getEvaluation = arity * matrixManager.size
+  def getEvaluation = arity * size
 
   def simpleEvaluation = math.min(7, scope.count(_.dom.size > 1))
 
-  override def toString = "STR(" + scope.mkString(", ") + ") w/ " + matrixManager
+  override def toString = scope.mkString("STR(", ", ", ")")
 
+  def checkValues(t: Array[Int]) = throw new UnsupportedOperationException
 }

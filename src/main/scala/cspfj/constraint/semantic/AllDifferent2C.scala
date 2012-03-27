@@ -58,12 +58,14 @@ final class AllDifferent2C(scope: Variable*) extends AbstractConstraint(scope.to
 
   val scopeA = scope.toArray
 
-  def check: Boolean = {
+  def checkValues(t: Array[Int]): Boolean = {
     union.fill(false)
-    tupleValues.exists { v =>
-      if (union.get(v - offset)) return false
-      union.set(v - offset)
-      true
+    t.exists { v =>
+      if (union.get(v - offset)) true
+      else {
+        union.set(v - offset)
+        false
+      }
     }
   }
 

@@ -26,35 +26,36 @@ import cspfj.constraint.Residues
 import cspfj.constraint.TupleEnumerator
 import cspfj.UNSATException
 
-final class ExtensionConstraintGeneral(matrix: Matrix, shared: Boolean, scope: Array[Variable])
+final class ExtensionConstraintGeneral(
+  private var _matrix: Matrix,
+  private var shared: Boolean, scope: Array[Variable])
   extends AbstractConstraint(scope)
-  with ExtensionConstraint with DynamicConstraint with Residues with TupleEnumerator {
-
-  val matrixManager = new MatrixManagerGeneral(scope, matrix, shared, tuple)
+  with ExtensionConstraint with DynamicConstraint with Residues with ConflictCount {
 
   def removeTuple(tuple: Array[Int]) = {
     disEntail();
     last.remove(tuple);
-    matrixManager.removeTuple(tuple);
+    unshareMatrix()
+    if (matrix.check(tuple)) {
+      matrix.set(tuple, false)
+      true
+    } else false
+
+  }
+  
+  def matrix = _matrix
+
+  def unshareMatrix() = {
+    if (shared) {
+      _matrix = matrix.copy
+      shared = false
+    }
   }
 
-  def check = matrixManager.check
-
-  override def getType = super.getType + " w/ " + matrixManager.getType
-
-  def removeTuples(base: Array[Int]) = {
-    var removed = 0;
-    tupleManager.setFirstTuple(base);
-    do {
-      if (removeTuple(this.tuple)) {
-        removed += 1;
-      }
-    } while (tupleManager.setNextTuple(base));
-    removed;
-  }
+  def removeTuples(base: Array[Int]) = tuples(base).count(removeTuple)
 
   override def reviseVariable(position: Int, mod: Seq[Int]) = {
-    if (matrixManager.supportCondition(position)) {
+    if (supportCondition(position)) {
       assert(!super.reviseVariable(position, mod))
       false
     } else

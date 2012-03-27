@@ -50,8 +50,8 @@ public class SmallBitVectorTest {
         assertEquals(46, bitVector.nextSetBit(0));
         assertEquals(46, bitVector.nextSetBit(46));
         assertEquals(-1, bitVector.nextSetBit(47));
-        bitVector.set(63);
-        assertEquals(63, bitVector.nextSetBit(47));
+        bitVector.set(49);
+        assertEquals(49, bitVector.nextSetBit(47));
 
     }
 
@@ -71,19 +71,19 @@ public class SmallBitVectorTest {
 
     @Test
     public void testPrevSetBit() {
-        bitVector.set(46);
+        bitVector.set(26);
+        bitVector.set(29);
+
+        assertEquals(26, bitVector.prevSetBit(27));
+        assertEquals(-1, bitVector.prevSetBit(26));
+        assertEquals(-1, bitVector.prevSetBit(25));
+
+        assertEquals(29, bitVector.prevSetBit(51));
+        assertEquals(29, bitVector.prevSetBit(50));
+        assertEquals(29, bitVector.prevSetBit(49));
+
         bitVector.set(49);
-
-        assertEquals(46, bitVector.prevSetBit(47));
-        assertEquals(-1, bitVector.prevSetBit(46));
-        assertEquals(-1, bitVector.prevSetBit(45));
-
-        assertEquals(49, bitVector.prevSetBit(63));
-        assertEquals(49, bitVector.prevSetBit(64));
         assertEquals(49, bitVector.prevSetBit(65));
-
-        bitVector.set(63);
-        assertEquals(63, bitVector.prevSetBit(65));
         assertEquals(49, bitVector.prevSetBit(63));
 
     }
@@ -104,14 +104,14 @@ public class SmallBitVectorTest {
 
     @Test
     public void testClearFrom() {
-        bitVector.set(46);
-        bitVector.set(49);
-        bitVector.set(60);
-        assertTrue(bitVector.clearFrom(47));
+        bitVector.set(26);
+        bitVector.set(29);
+        bitVector.set(30);
+        assertTrue(bitVector.clearFrom(27));
         assertEquals(1, bitVector.cardinality());
-        assertTrue(bitVector.get(46));
-        assertFalse(bitVector.get(49));
-        assertFalse(bitVector.get(60));
+        assertTrue(bitVector.get(26));
+        assertFalse(bitVector.get(29));
+        assertFalse(bitVector.get(30));
     }
 
     @Test
@@ -147,12 +147,12 @@ public class SmallBitVectorTest {
 
     @Test
     public void testSubset() {
-        bitVector.set(46);
-        bitVector.set(49);
-        bitVector.set(60);
+        bitVector.set(26);
+        bitVector.set(29);
+        bitVector.set(30);
 
-        BitVector bv2 = BitVector.newBitVector(64);
-        bv2.set(46);
+        BitVector bv2 = BitVector.newBitVector(50);
+        bv2.set(26);
 
         assertFalse(bitVector.subsetOf(bv2));
         assertTrue(bv2.subsetOf(bitVector));

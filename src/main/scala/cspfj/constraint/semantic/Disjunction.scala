@@ -32,7 +32,9 @@ final class Disjunction(scope: Array[Variable],
 
   def this(scope: Variable*) = this(scope.toArray, new Array[Boolean](scope.size))
 
-  def check = reverses.zip(tuple).exists(l => l._1 ^ l._2 == 1)
+  override def checkIndices(t: Array[Int]) = reverses.zip(t).exists(l => l._1 ^ l._2 == 1)
+  
+  def checkValues(t: Array[Int]) = checkIndices(t)
 
   override def toString = "\\/" + scope.mkString("(", ", ", ")")
 
