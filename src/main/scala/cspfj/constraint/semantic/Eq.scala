@@ -3,7 +3,7 @@ package cspfj.constraint.semantic;
 import cspfj.constraint.VariablePerVariable
 import cspfj.problem.Domain
 import cspfj.problem.Variable
-import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.Constraint
 import cspfj.util.Interval
 
 /**
@@ -15,7 +15,7 @@ import cspfj.util.Interval
  * @param y
  */
 final class Eq(val a: Int, val x: Variable, val b: Int, val y: Variable)
-  extends AbstractConstraint(Array(x, y)) with VariablePerVariable {
+  extends Constraint(Array(x, y)) with VariablePerVariable {
   require(a != 0, "a must be != 0")
 
   //  val corresponding = Array(

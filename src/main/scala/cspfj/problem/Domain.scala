@@ -11,7 +11,7 @@ object Domain {
   val empty = new EmptyDomainException
 }
 
-trait Domain {
+abstract class Domain {
 
   def next(i: Int): Int
 
@@ -166,6 +166,10 @@ trait Domain {
   }
 
   def intersectVal(i: Interval): Boolean = intersectVal(i.lb, i.ub)
+
+  def removeItvVal(a: Int, b: Int): Boolean = {
+    filter(i => a <= value(i) && value(i) <= b)
+  }
 
   def removeValInterval(lb: Int, ub: Int) = {
 

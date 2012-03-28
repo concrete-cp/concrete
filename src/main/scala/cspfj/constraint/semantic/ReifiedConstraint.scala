@@ -1,6 +1,6 @@
 package cspfj.constraint.semantic;
 
-import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.Constraint
 import cspfj.constraint.Constraint
 import cspfj.problem.BooleanDomain
 import cspfj.problem.FALSE
@@ -14,7 +14,7 @@ final class ReifiedConstraint(
   controlVariable: Variable,
   val positiveConstraint: Constraint,
   val negativeConstraint: Constraint)
-  extends AbstractConstraint(controlVariable +: (positiveConstraint.scope ++ negativeConstraint.scope).distinct) {
+  extends Constraint(controlVariable +: (positiveConstraint.scope ++ negativeConstraint.scope).distinct) {
 
   require(positiveConstraint.scope forall scope.tail.contains)
   require(negativeConstraint.scope forall scope.tail.contains)

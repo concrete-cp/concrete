@@ -19,7 +19,7 @@
 
 package cspfj.constraint.extension;
 
-import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.Constraint
 import cspfj.problem.Variable
 import cspfj.util.BitVector
 import scala.collection.JavaConversions
@@ -33,7 +33,7 @@ import cspfj.util.Backtrackable
 final class ExtensionConstraintDynamic(
   scope: Array[Variable],
   private var tupleSet: TupleSet,
-  private var shared: Boolean) extends AbstractConstraint(scope)
+  private var shared: Boolean) extends Constraint(scope)
   with Removals with Loggable with Backtrackable[(List[Array[Int]], Int)] {
 
   private val found =
@@ -57,6 +57,7 @@ final class ExtensionConstraintDynamic(
 
     filterTuples { tuple =>
       if (controlTuplePresence(tuple, mod)) {
+        assert(controlTuplePresence(tuple))
         setFound(tuple, found, arity - 1)
         true
       } else false

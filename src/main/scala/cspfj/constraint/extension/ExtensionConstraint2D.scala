@@ -20,7 +20,6 @@
 package cspfj.constraint.extension;
 
 import cspfj.constraint.VariablePerVariable
-import cspfj.constraint.AbstractConstraint
 import cspfj.problem.Variable
 import cspfj.constraint.TupleEnumerator
 import scala.annotation.tailrec
@@ -38,9 +37,8 @@ final class ExtensionConstraint2D(
   scope: Array[Variable],
   private var _matrix: Matrix2D,
   private var shared: Boolean)
-  extends AbstractConstraint(scope)
-  with VariablePerVariable
-  with ConflictCount {
+  extends ConflictCount(scope)
+  with VariablePerVariable {
 
   private val GAIN_OVER_GENERAL = 10;
 

@@ -7,7 +7,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.assertFalse
 
-import cspfj.constraint.AbstractConstraint
 import cspfj.constraint.Constraint
 import cspfj.constraint.Residues
 import cspfj.constraint.TupleEnumerator
@@ -34,7 +33,7 @@ final class AddTest {
     c.fillRemovals()
     c.revise()
 
-    val c2 = new AbstractConstraint(Array(x, y, z)) with Residues with TupleEnumerator {
+    val c2 = new Constraint(Array(x, y, z)) with Residues with TupleEnumerator {
       def checkValues(t: Array[Int]) = t(0) == t(1) + t(2);
     };
     c2.fillRemovals()
@@ -43,7 +42,7 @@ final class AddTest {
 
   @Test
   def testRevise2() {
-    val c2 = new AbstractConstraint(Array(x, y, z)) with Residues with TupleEnumerator {
+    val c2 = new Constraint(Array(x, y, z)) with Residues with TupleEnumerator {
       def checkValues(t: Array[Int]) = t(0) == t(1) + t(2);
     };
     c2.fillRemovals()

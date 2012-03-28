@@ -3,12 +3,12 @@ package cspfj.constraint.semantic;
 import cspfj.constraint.Residues
 import cspfj.problem.Domain
 import cspfj.problem.Variable
-import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.Constraint
 import cspfj.UNSATException
 import cspfj.util.Interval
 
 final class AbsDiff(val result: Variable, val v0: Variable, val v1: Variable)
-  extends AbstractConstraint(Array(result, v0, v1)) with Residues {
+  extends Constraint(Array(result, v0, v1)) with Residues {
 
   def checkValues(t: Array[Int]) = t(0) == math.abs(t(1) - t(2))
 
@@ -28,18 +28,22 @@ final class AbsDiff(val result: Variable, val v0: Variable, val v1: Variable)
       ch |= v0.dom.intersectVal(i1 - r)
       ch |= v1.dom.intersectVal(i0 + r)
     } else {
-      ch |= v0.dom.intersectVal(unionInter(i0, i1 + r, i0, i1 - r))
-      ch |= v1.dom.intersectVal(unionInter(i1, i0 - r, i1, i0 + r))
+      ch |= unionInter(v0.dom, i0, i1 + r, i0, i1 - r)
+      ch |= unionInter(v1.dom, i1, i0 - r, i1, i0 + r)
     }
 
     ch
   }
 
-  private def unionInter(i0: Interval, j0: Interval, i1: Interval, j1: Interval) =
+  private def unionInter(dom: Domain, i0: Interval, j0: Interval, i1: Interval, j1: Interval) =
     (i0 intersect j0, i1 intersect j1) match {
-      case (Some(k0), Some(k1)) => k0 union k1
-      case (Some(k0), None) => k0
-      case (None, Some(k1)) => k1
+      case (Some(k0), Some(k1)) => dom.intersectVal(k0 union k1) | (
+        if (k0.ub < k1.lb) dom.filter(i => k0.ub >= dom.value(i) || dom.value(i) >= k1.lb)
+        else if (k1.ub < k0.lb) dom.filter(i => k1.ub >= dom.value(i) || dom.value(i) >= k0.lb)
+        else false)
+
+      case (Some(k0), None) => dom.intersectVal(k0)
+      case (None, Some(k1)) => dom.intersectVal(k1)
       case (None, None) => throw UNSATException.e
     }
 
@@ -48,18 +52,8 @@ final class AbsDiff(val result: Variable, val v0: Variable, val v1: Variable)
     var ch = shave()
     while (ch && shave()) {}
 
-    if (isBound) {
-      if ((v0.dom.valueInterval - v1.dom.valueInterval).in(0)) {
-        val skip = mod match {
-          case Seq(s) => s
-          case _ => -1
-        }
-        if (skip != 1) ch |= reviseVariable(1, mod)
-        if (skip != 2) ch |= reviseVariable(2, mod)
-      }
-      entailCheck(ch)
-    } else
-      ch |= super.revise(mod)
+    if (isBound) entailCheck(ch)
+    else ch |= super.revise(mod)
 
     assert(!isBound || boundConsistent, this + " is not BC")
 

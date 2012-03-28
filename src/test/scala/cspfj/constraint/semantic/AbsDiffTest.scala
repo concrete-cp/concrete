@@ -6,11 +6,12 @@ import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
 
-import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.Constraint
 import cspfj.constraint.Residues
 import cspfj.constraint.TupleEnumerator
 import cspfj.problem.IntDomain
 import cspfj.problem.Variable
+
 final class AbsDiffTest {
 
   private val RAND = new Random
@@ -31,7 +32,7 @@ final class AbsDiffTest {
     c.fillRemovals()
     c.revise()
 
-    val c2 = new AbstractConstraint(Array(x, y, z)) with Residues with TupleEnumerator {
+    val c2 = new Constraint(Array(x, y, z)) with Residues with TupleEnumerator {
       def checkValues(t: Array[Int]) = t(0) == math.abs(t(1) - t(2));
     };
     c2.fillRemovals()
@@ -41,7 +42,7 @@ final class AbsDiffTest {
   @Test
   def testRevise2() {
 
-    val c2 = new AbstractConstraint(Array(x, y, z)) with Residues with TupleEnumerator {
+    val c2 = new Constraint(Array(x, y, z)) with Residues with TupleEnumerator {
       def checkValues(t: Array[Int]) = t(0) == math.abs(t(1) - t(2));
     };
     c2.fillRemovals()

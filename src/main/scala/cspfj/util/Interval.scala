@@ -3,9 +3,8 @@ package cspfj.util
 final case class Interval(val lb: Int, val ub: Int) {
   require(ub >= lb)
   val size = ub - lb + 1
-  def in(v: Int) = {
-    lb <= v && v <= ub
-  }
+  def in(v: Int) = lb <= v && v <= ub
+
   def allValues = lb to ub
 
   /**

@@ -3,7 +3,7 @@ package cspfj.constraint.semantic;
 import scala.collection.immutable.Queue
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.MultiMap
-import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.Constraint
 import cspfj.problem.Variable
 import cspfj.UNSATException
 
@@ -11,7 +11,7 @@ final case class Bounds(val value: Int, val minCount: Int, val maxCount: Int) {
   override def toString = value + ": [" + minCount + ", " + maxCount + "]"
 }
 
-final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends AbstractConstraint(scope) {
+final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Constraint(scope) {
 
   var queue: Queue[Variable] = Queue.empty
 

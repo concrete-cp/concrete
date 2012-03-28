@@ -4,7 +4,7 @@ import cspfj.constraint.semantic.Mul
 import cspfj.generator.FailedGenerationException
 import cspfj.problem.{ Variable, Problem, IntDomain }
 import cspom.constraint.CSPOMConstraint
-import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.Constraint
 import cspfj.constraint.Residues
 import cspfj.constraint.TupleEnumerator
 
@@ -25,7 +25,7 @@ final class ModGenerator(problem: Problem) extends AbstractGenerator(problem) {
       case _ => false
 
     }) {
-      addConstraint(new AbstractConstraint(Array(result, v0, v1)) with Residues with TupleEnumerator {
+      addConstraint(new Constraint(Array(result, v0, v1)) with Residues with TupleEnumerator {
         def checkValues(t: Array[Int]) =
           t(0) == t(1) % t(2)
 

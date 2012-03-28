@@ -20,7 +20,6 @@ package cspfj.filter;
 
 import scala.annotation.tailrec
 import cspfj.constraint.Constraint
-import cspfj.constraint.DynamicConstraint
 import cspfj.problem.LearnMethod
 import cspfj.problem.NoGoodLearner
 import cspfj.problem.Problem

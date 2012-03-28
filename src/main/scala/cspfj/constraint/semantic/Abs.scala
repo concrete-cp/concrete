@@ -1,9 +1,9 @@
 package cspfj.constraint.semantic;
 
-import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.Constraint
 import cspfj.problem.Variable
 
-final class Abs(val result: Variable, val v0: Variable) extends AbstractConstraint(Array(result, v0)) {
+final class Abs(val result: Variable, val v0: Variable) extends Constraint(Array(result, v0)) {
 
   //  val corresponding1 = result.dom.allValues map { v0.dom.index }
   //  val corresponding2 = result.dom.allValues map { v => v0.dom.index(-v) }

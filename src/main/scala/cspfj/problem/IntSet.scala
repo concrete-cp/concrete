@@ -31,7 +31,7 @@ object IntSet {
   }
 }
 
-trait IntSet {
+abstract class IntSet {
   def size: Int
   def copy: IntSet
   def first: Int
@@ -52,10 +52,6 @@ trait IntSet {
   def intersects(bv: BitVector, part: Int): Boolean
   def bound: Boolean
   def isEmpty: Boolean
-
-  private def indices(i: Int): Stream[Int] =
-    if (i < 0) Stream.empty
-    else i #:: indices(next(i))
 
   def iterator = new Iterator[Int] {
     var current = IntSet.this.first

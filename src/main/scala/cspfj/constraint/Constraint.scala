@@ -24,28 +24,19 @@ import cspfj.heuristic.Weighted
 import cspfj.priorityqueues.IOBinomialHeapNode
 import cspfj.priorityqueues.Identified
 import cspfj.problem.Variable
-import cspfj.problem.EmptyDomainException
 import cspfj.UNSATException
-import cspfj.UNSATException
-import cspfj.UNSATException
-//import cspfj.priorityqueues.IOBinomialHeapNode
 
 object Constraint {
   var cId = 0;
   def reset() { cId = 0 }
 }
 
-trait Constraint extends Weighted with Identified with IOBinomialHeapNode[Constraint] {
+abstract class Constraint(val scope: Array[Variable]) extends Weighted with Identified with IOBinomialHeapNode[Constraint] {
 
   val getId = Constraint.cId
   Constraint.cId += 1
 
   private var entailedAtLevel = -1;
-
-  /**
-   * @return the scope of the constraint
-   */
-  def scope: Array[Variable];
 
   /**
    * arity is the number of variables involved by the constraint

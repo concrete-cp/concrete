@@ -1,10 +1,10 @@
 package cspfj.constraint.extension;
 
-import cspfj.constraint.DynamicConstraint
 import cspfj.problem.Variable
 import scala.annotation.tailrec
 import cspfj.constraint.TupleEnumerator
 import java.util.Arrays
+import cspfj.constraint.Constraint
 
 object ExtensionConstraint {
 
@@ -17,12 +17,14 @@ object ExtensionConstraint {
 
 }
 
-trait ExtensionConstraint extends DynamicConstraint {
+abstract class ExtensionConstraint(scope: Array[Variable]) extends Constraint(scope) {
   //def matrix: Matrix
   def checkValues(t: Array[Int]) = throw new UnsupportedOperationException
+  def removeTuples(base: Array[Int]): Int
+  def removeTuple(tuple: Array[Int]): Boolean
 }
 
-trait ConflictCount extends ExtensionConstraint with TupleEnumerator {
+abstract class ConflictCount(scope: Array[Variable]) extends ExtensionConstraint(scope: Array[Variable]) with TupleEnumerator {
 
   def matrix: Matrix
 

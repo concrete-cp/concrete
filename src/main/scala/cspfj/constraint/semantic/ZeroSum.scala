@@ -2,7 +2,7 @@ package cspfj.constraint.semantic;
 
 import scala.annotation.tailrec
 
-import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.Constraint
 
 import cspfj.problem.Domain
 import cspfj.util.Interval
@@ -11,7 +11,7 @@ import cspfj.util.Loggable
 
 final class ZeroSum(
   val factors: Array[Int],
-  scope: Array[Variable]) extends AbstractConstraint(scope)
+  scope: Array[Variable]) extends Constraint(scope)
   with Loggable {
 
   def checkValues(t: Array[Int]): Boolean =

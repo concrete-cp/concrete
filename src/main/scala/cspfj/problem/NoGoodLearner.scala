@@ -5,7 +5,7 @@ import cspfj.constraint.extension.ExtensionConstraintGeneral
 import cspfj.constraint.extension.Matrix2D
 import cspfj.constraint.extension.TupleSet
 import cspfj.constraint.Constraint
-import cspfj.constraint.DynamicConstraint
+import cspfj.constraint.extension.ExtensionConstraint
 import cspfj.util.BitVector
 import cspfj.Statistic
 import cspfj.Pair
@@ -137,7 +137,7 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
     modifiedConstraints;
   }
 
-  def learnConstraint(scope: Seq[Variable]): Option[DynamicConstraint] = {
+  def learnConstraint(scope: Seq[Variable]): Option[ExtensionConstraint] = {
     scope.head.dynamicConstraints.find(c => c.arity == scope.size &&
       scope.forall(c.scopeSet.contains)) match {
       case Some(c) => Some(c)

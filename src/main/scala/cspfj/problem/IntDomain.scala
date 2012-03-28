@@ -13,6 +13,9 @@ object IntDomain {
       new IntervalSet(0, r.last - r.start),
       Indexer.ofInterval(r.start, r.last))
     else apply(r: _*)
+
+  //var s: Map[Class[_ <: IntSet], Int] = Map.empty.withDefaultValue(0)
+
 }
 
 final class IntDomain(
@@ -125,7 +128,12 @@ final class IntDomain(
    *            index to test
    * @return true iff index is present
    */
-  def present(index: Int) = intSet.present(index);
+  def present(index: Int) = {
+//    val c = IntDomain.s(intSet.getClass) + 1
+//    IntDomain.s += intSet.getClass -> c
+//    if (c % 10000 == 0) println(IntDomain.s)
+    intSet.present(index);
+  }
 
   def setSingle(index: Int) {
     assert(present(index))

@@ -1,6 +1,6 @@
 package cspfj.constraint.semantic;
 
-import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.Constraint
 import cspfj.problem.Domain
 import cspfj.problem.Variable
 
@@ -17,7 +17,7 @@ object InInterval {
  * lb and ub are domain indices!
  */
 final class InInterval(val variable: Variable, val lb: Int, val ub: Int)
-  extends AbstractConstraint(Array(variable)) {
+  extends Constraint(Array(variable)) {
 
   val dom = variable.dom
 

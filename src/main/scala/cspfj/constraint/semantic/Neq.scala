@@ -1,10 +1,10 @@
 package cspfj.constraint.semantic;
 
-import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.Constraint
 import cspfj.problem.Domain
 import cspfj.problem.Variable
 
-final class Neq(v0: Variable, v1: Variable) extends AbstractConstraint(Array(v0, v1)) {
+final class Neq(v0: Variable, v1: Variable) extends Constraint(Array(v0, v1)) {
 
   def checkValues(t: Array[Int]) = t(0) != t(1)
 

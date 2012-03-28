@@ -1,11 +1,11 @@
 package cspfj.constraint.semantic;
 
-import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.Constraint
 import cspfj.constraint.Residues
 import cspfj.problem.Variable
 import cspfj.constraint.TupleEnumerator
 
-final class LexLeq(scope: Array[Variable]) extends AbstractConstraint(scope)
+final class LexLeq(scope: Array[Variable]) extends Constraint(scope)
   with Residues with TupleEnumerator {
   require(scope.size % 2 == 0)
   val half = scope.size / 2

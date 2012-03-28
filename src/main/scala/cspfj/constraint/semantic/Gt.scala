@@ -19,7 +19,7 @@
 
 package cspfj.constraint.semantic;
 
-import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.Constraint
 import cspfj.problem.Domain
 import cspfj.problem.Variable;
 
@@ -27,7 +27,7 @@ import cspfj.problem.Variable;
  * Constraint v0 + constant >(=) v1
  */
 final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict: Boolean)
-  extends AbstractConstraint(Array(v0, v1)) {
+  extends Constraint(Array(v0, v1)) {
 
   def this(v0: Variable, v1: Variable, strict: Boolean) =
     this(v0, 0, v1, strict);

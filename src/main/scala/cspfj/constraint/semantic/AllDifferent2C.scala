@@ -20,7 +20,7 @@
 package cspfj.constraint.semantic;
 
 import scala.collection.immutable.Queue
-import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.Constraint
 import cspfj.problem.Variable
 import cspfj.util.BitVector
 import scala.annotation.tailrec
@@ -49,7 +49,7 @@ object AllDifferent2C {
   }
 }
 
-final class AllDifferent2C(scope: Variable*) extends AbstractConstraint(scope.toArray)
+final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray)
   with Removals {
 
   val offset = scope map { _.dom.firstValue } min

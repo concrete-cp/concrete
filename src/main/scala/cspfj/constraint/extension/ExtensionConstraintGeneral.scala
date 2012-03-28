@@ -19,9 +19,7 @@
 
 package cspfj.constraint.extension;
 
-import cspfj.constraint.DynamicConstraint
 import cspfj.problem.Variable
-import cspfj.constraint.AbstractConstraint
 import cspfj.constraint.Residues
 import cspfj.constraint.TupleEnumerator
 import cspfj.UNSATException
@@ -29,8 +27,7 @@ import cspfj.UNSATException
 final class ExtensionConstraintGeneral(
   private var _matrix: Matrix,
   private var shared: Boolean, scope: Array[Variable])
-  extends AbstractConstraint(scope)
-  with ExtensionConstraint with DynamicConstraint with Residues with ConflictCount {
+  extends ConflictCount(scope) with Residues {
 
   def removeTuple(tuple: Array[Int]) = {
     disEntail();
@@ -42,7 +39,7 @@ final class ExtensionConstraintGeneral(
     } else false
 
   }
-  
+
   def matrix = _matrix
 
   def unshareMatrix() = {

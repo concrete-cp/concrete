@@ -20,7 +20,7 @@
 package cspfj.problem;
 
 import cspfj.constraint.Constraint
-import cspfj.constraint.DynamicConstraint
+import cspfj.constraint.extension.ExtensionConstraint
 import cspfj.priorityqueues.IOBinomialHeapNode
 import cspfj.priorityqueues.Identified
 import scala.annotation.tailrec
@@ -34,7 +34,7 @@ final class Variable(
 
   private var _constraints: Array[Constraint] = Array.empty
 
-  private var _dynamicConstraints: List[DynamicConstraint] = Nil
+  private var _extensionConstraints: List[ExtensionConstraint] = Nil
 
   private var _positionInConstraint: Array[Int] = Array.empty
 
@@ -54,8 +54,8 @@ final class Variable(
 
   def addConstraint(newConstraint: Constraint) {
     _constraints :+= newConstraint
-    if (newConstraint.isInstanceOf[DynamicConstraint]) {
-      _dynamicConstraints ::= newConstraint.asInstanceOf[DynamicConstraint]
+    if (newConstraint.isInstanceOf[ExtensionConstraint]) {
+      _extensionConstraints ::= newConstraint.asInstanceOf[ExtensionConstraint]
     }
     _positionInConstraint :+= newConstraint.position(this)
     dDeg += 1//newConstraint.weight
@@ -68,7 +68,7 @@ final class Variable(
     _domain = d
   }
 
-  def dynamicConstraints = _dynamicConstraints
+  def dynamicConstraints = _extensionConstraints
   def positionInConstraint = _positionInConstraint
 
   def indices = if (_domain == null) null else _domain.indices

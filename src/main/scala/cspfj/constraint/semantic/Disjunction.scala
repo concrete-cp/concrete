@@ -1,14 +1,14 @@
 package cspfj.constraint.semantic;
 
 import java.util.Arrays
-import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.Constraint
 import cspfj.problem.BooleanDomain
 import cspfj.problem.Variable
 import cspfj.UNSATException
 import scala.annotation.tailrec
 
 final class Disjunction(scope: Array[Variable],
-  val reverses: IndexedSeq[Boolean]) extends AbstractConstraint(scope) {
+  val reverses: IndexedSeq[Boolean]) extends Constraint(scope) {
 
   require(scope forall (v => v.dom.isInstanceOf[BooleanDomain] && v.dom.size == 2),
     "Only non-constant boolean domains are allowed")

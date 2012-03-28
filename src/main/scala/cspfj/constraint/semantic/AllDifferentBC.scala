@@ -3,7 +3,7 @@ package cspfj.constraint.semantic;
 import java.util.Arrays
 import java.util.Comparator
 import cspfj.problem.Variable
-import cspfj.constraint.AbstractConstraint
+import cspfj.constraint.Constraint
 import cspfj.util.BitVector
 import cspfj.problem.EmptyDomainException
 import scala.annotation.tailrec
@@ -31,7 +31,7 @@ object MIN extends Ordering[HInterval] {
     o1.dom.firstValue - o2.dom.firstValue
 }
 
-final class AllDifferentBC(vars: Variable*) extends AbstractConstraint(vars.toArray) {
+final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) {
 
   val t = new Array[Int](2 * arity + 2) // Tree links
   val d = new Array[Int](2 * arity + 2) // Diffs between critical capacities
