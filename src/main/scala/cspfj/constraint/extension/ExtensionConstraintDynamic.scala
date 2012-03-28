@@ -57,13 +57,12 @@ final class ExtensionConstraintDynamic(
 
     filterTuples { tuple =>
       if (controlTuplePresence(tuple, mod)) {
-        assert(controlTuplePresence(tuple))
-        setFound(tuple, found, arity - 1)
+        setFound(tuple, found)
         true
       } else false
     }
 
-    val c = filter(found, arity - 1, false)
+    val c = filter(found)
 
     val card = scope.map(v => BigInt(v.dom.size)).product
     assert(card >= size, card + " < " + size + "!")
@@ -77,14 +76,15 @@ final class ExtensionConstraintDynamic(
   }
 
   @tailrec
-  private def setFound(tuple: Array[Int], found: Array[BitVector], p: Int) {
+  private def setFound(tuple: Array[Int], found: Array[BitVector], p: Int = arity - 1) {
     if (p >= 0) {
       found(p).set(tuple(p))
       setFound(tuple, found, p - 1)
     }
   }
-
-  private def filter(found: Array[BitVector], p: Int, c: Boolean): Boolean =
+  
+  @tailrec
+  private def filter(found: Array[BitVector], p: Int = arity - 1, c: Boolean = false): Boolean =
     if (p < 0) c
     else {
       val ch = scope(p).dom.filter(i => found(p)(i))
