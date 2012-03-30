@@ -15,6 +15,8 @@ import cspfj.Parameter
 import cspfj.ParameterManager
 import cspfj.Statistic
 import cspfj.priorityqueues.BinomialHeap
+import cspfj.priorityqueues.BinaryHeap
+import cspfj.UNSATException
 
 /**
  * @author scand1sk
@@ -22,7 +24,7 @@ import cspfj.priorityqueues.BinomialHeap
  */
 object AC3 {
   @Parameter("ac3v.queue")
-  var queueType: Class[_ <: Queue[Variable]] = classOf[BinomialHeap[Variable]]
+  var queueType: Class[_ <: Queue[Variable]] = classOf[BinaryHeap[Variable]]
 
   @Parameter("ac3v.key")
   val keyType: Class[_ <: Key[Variable]] = classOf[cspfj.heuristic.revision.Dom]
@@ -111,16 +113,20 @@ final class AC3(
 
       val prev = c.sizes()
 
-      if (c.consistentRevise()) {
+      val sat = try {
+        if (c.revise()) updateQueue(prev, c)
 
         c.clearRemovals()
-
-        updateQueue(prev, c)
-        prepareQueue(modifiedConstraints)
-      } else {
-        c.weight += 1;
-        false;
+        true
+      } catch {
+        case _: UNSATException => {
+          c.weight += 1
+          false
+        }
       }
+
+      sat && prepareQueue(modifiedConstraints)
+
     } else true
 
   }
@@ -164,7 +170,7 @@ final class AC3(
     } else {
       val variable = queue.poll()
       //info(variable.toString)
-      if (reduce(variable.constraints.iterator)) {
+      if (reduce(variable.constraints, variable.constraints.size - 1)) {
         reduce()
       } else {
         false
@@ -174,24 +180,32 @@ final class AC3(
   }
 
   @tailrec
-  private def reduce(itr: Iterator[Constraint]): Boolean = {
-    if (itr.hasNext) {
-      val c = itr.next
+  private def reduce(constraints: Array[Constraint], i: Int): Boolean = {
+    if (i >= 0) {
+      val c = constraints(i)
       if (c.isEntailed) {
-        reduce(itr)
+        reduce(constraints, i - 1)
       } else {
         revisions += 1
         val prev = c.sizes()
         //logger.fine("Revising " + c)
-        if (c.consistentRevise()) {
-          c.clearRemovals()
 
-          updateQueue(prev, c)
-          reduce(itr)
-        } else {
-          c.weight += 1;
-          false;
+        val sat = try {
+          if (c.revise()) {
+            assert(!(c.sizes() sameElements prev), c + " returned wrong true revised info")
+            updateQueue(prev, c)
+          } else assert(c.sizes() sameElements prev, c + " returned wrong false revised info")
+
+          c.clearRemovals();
+          true
+        } catch {
+          case e: UNSATException =>
+            c.weight += 1
+            false
         }
+
+        sat && reduce(constraints, i - 1)
+
       }
     } else true
 

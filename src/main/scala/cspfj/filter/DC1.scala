@@ -72,10 +72,10 @@ final class DC1(val problem: Problem) extends SingletonConsistency with Loggable
         throw new InterruptedException();
       }
 
-      // if (logger.isLoggable(Level.FINER)) {
-      // LOGGER.fine(variable + " <- " + variable.getDomain().value(index)
-      // + "(" + index + ")");
-      // }
+      if (logFine) {
+        logger.fine(variable + " <- " + variable.dom.value(index)
+          + " (" + index + ")");
+      }
 
       problem.push();
       variable.dom.setSingle(index);

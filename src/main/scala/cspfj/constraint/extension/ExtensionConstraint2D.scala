@@ -36,8 +36,8 @@ object ExtensionConstraint2D {
 final class ExtensionConstraint2D(
   scope: Array[Variable],
   private var _matrix: Matrix2D,
-  private var shared: Boolean)
-  extends ConflictCount(scope)
+  shared: Boolean)
+  extends ConflictCount(scope, _matrix, shared)
   with VariablePerVariable {
 
   private val GAIN_OVER_GENERAL = 10;
@@ -55,8 +55,6 @@ final class ExtensionConstraint2D(
       null
     }
 
-  def matrix = _matrix
-
   override def getEvaluation = scope(0).dom.size + scope(1).dom.size
 
   override def simpleEvaluation = 2
@@ -66,7 +64,7 @@ final class ExtensionConstraint2D(
 
   def removeTuple(tuple: Array[Int]) = {
     disEntail();
-    removeTuple(tuple);
+    set(tuple, false);
   }
 
   def removeTuples(base: Array[Int]) = tuples(base).count(removeTuple)
@@ -79,7 +77,7 @@ final class ExtensionConstraint2D(
 
   private def hasSupportR(variablePosition: Int, index: Int) = {
     controlResidue(variablePosition, index) || {
-      val matrixBV = matrix.getBitVector(variablePosition, index);
+      val matrixBV = _matrix.getBitVector(variablePosition, index);
       val intersection = scope(1 - variablePosition).dom.intersects(matrixBV)
 
       if (intersection >= 0) {
@@ -95,21 +93,14 @@ final class ExtensionConstraint2D(
 
   private def hasSupportNR(variablePosition: Int, index: Int) = {
     ExtensionConstraint2D.checks += 1;
-    scope(1 - variablePosition).dom.intersects(matrix.getBitVector(variablePosition, index)) >= 0
+    scope(1 - variablePosition).dom.intersects(_matrix.getBitVector(variablePosition, index)) >= 0
   }
 
   private def controlResidue(position: Int, index: Int) = {
     val part = last(position)(index)
     ExtensionConstraint2D.presenceChecks += 1
     (part != -1 && scope(1 - position).dom.intersects(
-      matrix.getBitVector(position, index), part))
-  }
-
-  def unshareMatrix() = {
-    if (shared) {
-      _matrix = matrix.copy
-      shared = false
-    }
+      _matrix.getBitVector(position, index), part))
   }
 
   override def checkIndices(t: Array[Int]) = matrix.check(t)

@@ -33,7 +33,7 @@ import cspfj.util.Backtrackable
 final class ExtensionConstraintDynamic(
   scope: Array[Variable],
   private var tupleSet: TupleSet,
-  private var shared: Boolean) extends Constraint(scope)
+  shared: Boolean) extends ExtensionConstraint(scope, tupleSet, shared)
   with Removals with Loggable with Backtrackable[(List[Array[Int]], Int)] {
 
   private val found =
@@ -82,7 +82,7 @@ final class ExtensionConstraintDynamic(
       setFound(tuple, found, p - 1)
     }
   }
-  
+
   @tailrec
   private def filter(found: Array[BitVector], p: Int = arity - 1, c: Boolean = false): Boolean =
     if (p < 0) c
@@ -103,13 +103,6 @@ final class ExtensionConstraintDynamic(
   }
 
   override def checkIndices(t: Array[Int]) = tupleSet.check(t)
-
-  def unshareMatrix() = {
-    if (shared) {
-      tupleSet = tupleSet.copy
-      shared = false
-    }
-  }
 
   def size = _size
 
@@ -137,6 +130,8 @@ final class ExtensionConstraintDynamic(
     size - s;
   }
 
+  def removeTuple(t: Array[Int]) = throw new UnsupportedOperationException
+
   //def matrixManager = matrixManager
 
   def getEvaluation = arity * size
@@ -144,6 +139,4 @@ final class ExtensionConstraintDynamic(
   def simpleEvaluation = math.min(7, scope.count(_.dom.size > 1))
 
   override def toString = scope.mkString("STR(", ", ", ")")
-
-  def checkValues(t: Array[Int]) = throw new UnsupportedOperationException
 }

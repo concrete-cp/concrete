@@ -26,6 +26,7 @@ import cspfj.problem.Problem
 import cspfj.problem.Variable
 import cspfj.util.Loggable
 import cspfj.Statistic
+import cspfj.UNSATException
 
 /**
  * @author Julien VION
@@ -98,9 +99,12 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
   private def forwardCheck(variable: Variable) =
     variable.constraints.forall { c =>
       c.setRemovals(variable)
-      c.arity != 2 || {
-        c.consistentRevise()
-      }
+      c.arity != 2 || (try {
+        c.revise()
+        true
+      } catch {
+        case _: UNSATException => false
+      })
     }
 
   def singletonTest(variable: Variable) = {

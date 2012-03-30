@@ -40,7 +40,7 @@ trait SingletonConsistency extends Filter with Loggable {
 
       @tailrec
       def process(
-        stream: Stream[Variable] = Stream.continually(problem.variables.toStream).flatten,
+        stream: Stream[Variable] = Stream.continually(problem.variables).flatten,
         mark: Variable = null): Boolean = {
 
         val variable #:: remaining = stream

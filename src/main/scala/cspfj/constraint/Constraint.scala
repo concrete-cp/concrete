@@ -133,12 +133,12 @@ abstract class Constraint(val scope: Array[Variable]) extends Weighted with Iden
     super.weight = w
   }
 
-  def consistentRevise() = try {
-    revise()
-    true
-  } catch {
-    case e: UNSATException => false
-  }
+//  def consistentRevise() = try {
+//    revise()
+//    true
+//  } catch {
+//    case e: UNSATException => false
+//  }
 
   def isConsistent(): Boolean = {
     setLvl(level + 1)

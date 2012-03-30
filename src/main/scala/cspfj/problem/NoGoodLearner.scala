@@ -10,6 +10,7 @@ import cspfj.util.BitVector
 import cspfj.Statistic
 import cspfj.Pair
 import scala.annotation.tailrec
+import cspfj.util.BitVectorIterator
 
 final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMethod) {
 
@@ -104,30 +105,23 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
       if (!changes.isEmpty) {
 
         val scope = Seq(firstVariable, fv)
-        learnConstraint(scope) match {
-          case Some(constraint) => {
-            val (base, varPos) = NoGoodLearner.makeBase(scope, tuple, constraint);
+        for (constraint <- learnConstraint(scope)) {
 
-            @tailrec
-            def rt(i: Int, noGoods: Int): Int =
-              if (i < 0) noGoods
-              else {
-                base(varPos) = i
-                val newNoGoods = constraint.removeTuples(base)
-                rt(changes.nextSetBit(i + 1), noGoods + newNoGoods)
-              }
+          val (base, varPos) = NoGoodLearner.makeBase(scope, tuple, constraint);
 
-            val newNogoods = rt(changes.nextSetBit(0), 0)
+          val newNogoods = new BitVectorIterator(changes) map { i =>
+            base(varPos) = i
+            constraint.removeTuples(base)
+          } sum
 
-            if (newNogoods > 0) {
-              nbNoGoods += newNogoods;
-              modifiedConstraints += constraint;
-              if (constraint.getId > problem.maxCId) {
-                addedConstraints ::= constraint;
-              }
+          if (newNogoods > 0) {
+            nbNoGoods += newNogoods;
+            modifiedConstraints += constraint;
+            if (constraint.getId > problem.maxCId) {
+              addedConstraints ::= constraint;
             }
           }
-          case None =>
+
         }
       }
     }
