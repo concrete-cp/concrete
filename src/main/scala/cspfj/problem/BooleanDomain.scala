@@ -193,7 +193,7 @@ final class BooleanDomain(var _status: Status) extends Domain
     } else false
   }
 
-  override val maxSize = 2
+  override def maxSize = 2
 
   //override val allValues = UNKNOWN.array
 

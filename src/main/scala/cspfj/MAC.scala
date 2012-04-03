@@ -60,7 +60,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
   @Statistic
   var nbAssignments = 1;
 
-  private var decisions: List[Pair] = Nil
+  //private var decisions: List[Pair] = Nil
 
   private val filter: Filter = MAC.filterClass.getConstructor(classOf[Problem]).newInstance(problem);
   statistics.register("filter", filter);
@@ -71,23 +71,25 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
   private val ngl = new NoGoodLearner(prob, MAC.addConstraint)
   statistics.register("nfr-learner", ngl)
 
-  maxBacktracks =
+  var maxBacktracks =
     if (MAC.restartLevel == 0) math.max(10, problem.maxDomainSize / 10)
     else MAC.restartLevel
+
+  var nbBacktracks = 0
 
   //private var prepared = false
 
   private var restart = true
 
   @tailrec
-  def mac(modifiedVariable: Variable, stack: List[Pair]): (Option[Map[String, Int]], List[Pair]) = {
+  def mac(modifiedVariable: Variable, stack: List[Pair]): (SolverResult, List[Pair]) = {
 
     if (modifiedVariable == null || (
       modifiedVariable.dom.size > 0 && filter.reduceAfter(modifiedVariable))) {
 
       heuristic.selectPair(problem) match {
-        case None => (Some(extractSolution), stack)
-        case Some(pair) => {
+        case None => (SAT(extractSolution), stack)
+        case Some(pair) =>
 
           if (logInfo) logger.info(problem.currentLevel + " : " + pair.variable
             + " <- " + pair.value + "("
@@ -101,13 +103,13 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
 
           mac(pair.variable, pair :: stack)
 
-        }
       }
     } else if (stack == Nil) {
-      (None, Nil)
+      (UNSAT, Nil)
+    } else if (maxBacktracks >= 0 && nbBacktracks >= maxBacktracks) {
+      (UNKNOWN, stack)
     } else {
       problem.pop()
-
       nbBacktracks += 1
 
       if (logInfo) logger.info(problem.currentLevel + " : " + stack.head + " removed")
@@ -119,91 +121,75 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
 
   def reset() {
     problem.reset();
-    decisions = Nil
+    //decisions = Nil
     restart = true
   }
 
   @Statistic
   var heuristicCpu = 0.0
 
-  def timedPreprocess() =
-    try preprocess(filter)
-    catch {
-      case _: InterruptedException =>
-        filter.reduceAll()
-    }
-
-  @tailrec
-  private def nextSolution(modifiedVar: Variable): (Option[Map[String, Int]], List[Pair]) = {
-    logger.info("MAC with " + maxBacktracks + " bt")
-    val start = System.currentTimeMillis()
-    val nbBT = nbBacktracks
-
-    var s: (Option[Map[String, Int]], List[Pair]) = null
-
-    try {
-      s = mac(modifiedVar, decisions)
-    } catch {
-      case e: MaxBacktracksExceededException => // Continuing
-    } finally {
-      val macTime = System.currentTimeMillis() - start
-      searchCpu += macTime / 1000f;
-      logger.info("Took " + (macTime / 1000f) + "s ("
-        + (1000f * (nbBacktracks - nbBT) / macTime)
-        + " bps)");
-    }
-
-    if (s == null) {
-
-      val modified = ngl.noGoods(decisions)
-      problem.reset();
-
-      if (!filter.reduceAfter(modified)) {
-        (None, Nil)
-      } else {
-        maxBacktracks = (maxBacktracks * MAC.btGrowth).toInt;
-        nextSolution(null)
-      }
-
-    } else s
+  def timedPreprocess() = try preprocess(filter)
+  catch {
+    case _: InterruptedException =>
+      filter.reduceAll()
   }
 
-  def nextSolution(): Option[Map[String, Int]] = {
+  @tailrec
+  private def nextSolution(modifiedVar: Variable, stack: List[Pair] = Nil): (SolverResult, List[Pair]) = {
+    logger.info("MAC with " + maxBacktracks + " bt")
 
-    // System.gc();
-    //    if (!prepared) {
-    //
-    //      prepare()
-    //
-    //      prepared = true
-    //    }
+    val nbBT = nbBacktracks
+
+    val ((sol, newStack), macTime) = StatisticsManager.time(mac(modifiedVar, stack))
+
+    searchCpu += macTime
+    logger.info("Took " + macTime + "s ("
+      + ((nbBacktracks - nbBT) / macTime)
+      + " bps)");
+
+    if (sol == UNKNOWN) {
+
+      //val modified = ngl.noGoods(newStack)
+      problem.reset();
+
+//      if (!filter.reduceAfter(modified)) {
+//        (UNSAT, Nil)
+//      } else {
+        maxBacktracks = (maxBacktracks * MAC.btGrowth).toInt;
+        nbBacktracks = 0
+        nextSolution(null)
+//      }
+
+    } else (sol, newStack)
+  }
+
+  var currentStack: List[Pair] = Nil
+
+  def nextSolution() = {
 
     if (restart) {
       restart = false
       if (!timedPreprocess()) {
-        None
+        UNSAT
       } else {
 
         val (_, heuristicCpu) = StatisticsManager.time(heuristic.compute())
 
-        val s = nextSolution(null)
-        decisions = s._2
-        s._1
+        val (sol, stack) = nextSolution(null)
+        currentStack = stack
+        sol
       }
 
-    } else if (decisions == Nil) {
-      None
+    } else if (currentStack == Nil) {
+      UNSAT
     } else {
       maxBacktracks = -1
+      problem.pop()
+      currentStack.head.remove()
 
-      try decisions.head.remove()
-      catch {
-        case e: EmptyDomainException => // Will backtrack in mac()
-      }
-
-      val s = nextSolution(decisions.head.variable)
-      decisions = s._2
-      s._1
+      val (sol, stack) = nextSolution(currentStack.head.variable, currentStack.tail)
+      currentStack = stack
+      sol
     }
 
   }

@@ -89,52 +89,28 @@ abstract class Solver(val problem: Problem) extends Loggable {
     logger.info(ParameterManager.list);
   }
 
-  def nextSolution(): Option[Map[String, Int]]
-
-  def nextSolutionNum() = nextSolution match {
-    case Some(m) => Some(m map { case (k, v) => k -> Integer.valueOf(v).asInstanceOf[Number] } toMap)
-    case None => None
-  }
+  def nextSolution(): SolverResult
 
   @tailrec
-  private def bestSolution(v: Variable, best: Option[Map[String, Int]]): Option[Map[String, Int]] = {
-    val sol = nextSolution()
-    if (sol.isDefined) {
-      logger.info("New bound " + sol.get(v.name))
-      //if (problem.currentLevel > 0) 
-      reset()
-      v.dom.removeTo(v.dom.index(sol.get(v.name)))
-      bestSolution(v, sol)
-    } else {
-      best
+  private def bestSolution(v: Variable, best: SolverResult): SolverResult = {
+    nextSolution() match {
+      case SAT(sol) =>
+        logger.info("New bound " + sol(v.name))
+        //if (problem.currentLevel > 0) 
+        reset()
+        v.dom.removeTo(v.dom.index(sol(v.name)))
+        bestSolution(v, SAT(sol))
+      case UNSAT => if (best == UNKNOWN) UNSAT else best
+      case UNKNOWN => best
+
     }
   }
 
-  def bestSolution(v: Variable): Option[Map[String, Int]] = bestSolution(v, None)
+  def bestSolution(v: Variable): SolverResult = bestSolution(v, UNKNOWN)
 
   private var _maxBacktracks = -1
 
   var preproExpiration = -1
-
-  final def maxBacktracks = _maxBacktracks
-
-  final def maxBacktracks_=(mBT: Int) {
-    _maxBacktracks = mBT
-    nbBacktracks = 0
-  }
-
-  private var _nbBacktracks = 0
-
-  def nbBacktracks = _nbBacktracks
-
-  @throws(classOf[MaxBacktracksExceededException])
-  def nbBacktracks_=(bt: Int) {
-    if (bt >= maxBacktracks && maxBacktracks >= 0) {
-      logger.info("Restart")
-      throw MaxBacktracksExceededException.e
-    }
-    _nbBacktracks = bt
-  }
 
   def reset()
 
@@ -191,4 +167,22 @@ abstract class Solver(val problem: Problem) extends Loggable {
 
   def XMLConfig = ParameterManager.toXML
 
+}
+
+abstract class SolverResult {
+  def isSat: Boolean
+  def get: Map[String, Int]
+}
+
+case class SAT(val solution: Map[String, Int]) extends SolverResult {
+  def isSat = true
+  def get = solution
+}
+case object UNSAT extends SolverResult {
+  def isSat = false
+  def get = throw new NoSuchElementException
+}
+case object UNKNOWN extends SolverResult {
+  def isSat = false
+  def get = throw new NoSuchElementException
 }

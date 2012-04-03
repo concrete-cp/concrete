@@ -4,7 +4,7 @@ class SolverIterator(val s: Solver) extends Iterator[Map[String, Int]] {
 
   var current = s.nextSolution();
 
-  def hasNext = current.isDefined;
+  def hasNext = current.isSat;
 
   def next = if (hasNext) {
     val returned = current;

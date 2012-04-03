@@ -72,17 +72,13 @@ final class AC3(
 
     val constraints = v.constraints
 
-    def setR(i: Int) {
-      if (i >= 0) {
-        val c = constraints(i)
-        if (c ne skip)
-          c.setRemovals(v.positionInConstraint(i))
+    for (i <- 0 until v.constraints.size) {
+      val c = constraints(i)
+      if (c ne skip)
+        c.setRemovals(v.positionInConstraint(i))
 
-        setR(i - 1)
-      }
     }
 
-    setR(v.constraints.size - 1)
   }
 
   def updateQueue(prev: Array[Int], constraint: Constraint) {
@@ -90,19 +86,14 @@ final class AC3(
 
     val scope = constraint.scope
 
-    @tailrec
-    def uQ(i: Int) {
-      if (i >= 0) {
-        val variable = scope(i)
-        if (prev(i) != variable.dom.size) {
-          queue.offer(variable)
-          setRemovals(variable, constraint)
-        }
-        uQ(i - 1)
+    for (i <- prev.indices) {
+      val variable = scope(i)
+      if (prev(i) != variable.dom.size) {
+        queue.offer(variable)
+        setRemovals(variable, constraint)
       }
     }
 
-    uQ(constraint.arity - 1)
   }
 
   @tailrec
@@ -137,13 +128,12 @@ final class AC3(
     prepareQueue(constraints.iterator) && reduce()
   }
 
-  def reduceAfter(variable: Variable) =
-    variable == null || {
-      Removals.clear()
-      queue.clear()
-      prepareQueue(variable)
-      reduce()
-    }
+  def reduceAfter(variable: Variable) = variable == null || {
+    Removals.clear()
+    queue.clear()
+    prepareQueue(variable)
+    reduce()
+  }
 
   def reduceFrom(modVar: Array[Int], modCons: Array[Int], cnt: Int): Boolean = {
     Removals.clear()
@@ -170,45 +160,31 @@ final class AC3(
     } else {
       val variable = queue.poll()
       //info(variable.toString)
-      if (reduce(variable.constraints, variable.constraints.size - 1)) {
-        reduce()
-      } else {
-        false
-      }
+      reduce(variable.constraints) && reduce()
     }
 
   }
 
-  @tailrec
-  private def reduce(constraints: Array[Constraint], i: Int): Boolean = {
-    if (i >= 0) {
-      val c = constraints(i)
-      if (c.isEntailed) {
-        reduce(constraints, i - 1)
-      } else {
-        revisions += 1
-        val prev = c.sizes()
-        //logger.fine("Revising " + c)
+  private def reduce(constraints: Array[Constraint]) = constraints.forall { c =>
+    c.isEntailed || {
+      revisions += 1
+      val prev = c.sizes()
+      //logger.fine("Revising " + c)
 
-        val sat = try {
-          if (c.revise()) {
-            assert(!(c.sizes() sameElements prev), c + " returned wrong true revised info")
-            updateQueue(prev, c)
-          } else assert(c.sizes() sameElements prev, c + " returned wrong false revised info")
+      try {
+        if (c.revise()) {
+          assert(!(c.sizes() sameElements prev), c + " returned wrong true revised info")
+          updateQueue(prev, c)
+        } else assert(c.sizes() sameElements prev, c + " returned wrong false revised info")
 
-          c.clearRemovals();
-          true
-        } catch {
-          case e: UNSATException =>
-            c.weight += 1
-            false
-        }
-
-        sat && reduce(constraints, i - 1)
-
+        c.clearRemovals();
+        true
+      } catch {
+        case e: UNSATException =>
+          c.weight += 1
+          false
       }
-    } else true
-
+    }
   }
 
   override def toString =

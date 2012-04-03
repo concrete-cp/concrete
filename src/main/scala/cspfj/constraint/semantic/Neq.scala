@@ -14,14 +14,12 @@ final class Neq(v0: Variable, v1: Variable) extends Constraint(Array(v0, v1)) {
     ch
   }
 
-  private def revise(variable: Variable, otherVar: Variable) = {
-    if (variable.dom.size == 1) {
-      val index = otherVar.dom.index(variable.dom.firstValue)
-      if (index >= 0 && otherVar.dom.present(index)) {
-        otherVar.dom.remove(index)
-        entail()
-        true
-      } else false
+  private def revise(variable: Variable, otherVar: Variable) = variable.dom.size == 1 && {
+    val index = otherVar.dom.index(variable.dom.firstValue)
+    if (index >= 0 && otherVar.dom.present(index)) {
+      otherVar.dom.remove(index)
+      entail()
+      true
     } else false
   }
 

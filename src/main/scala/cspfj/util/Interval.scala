@@ -18,7 +18,7 @@ final case class Interval(val lb: Int, val ub: Int) {
 
   def +(v: Int) = Interval(lb + v, ub + v)
 
-  def -(i: Interval) = this + i.opp
+  def -(i: Interval) = this + i.negate
 
   def -(v: Int) = this + -v
 
@@ -51,10 +51,10 @@ final case class Interval(val lb: Int, val ub: Int) {
 
   def union(i: Interval) = Interval(math.min(lb, i.lb), math.max(ub, i.ub))
 
-  lazy val opp = Interval(-ub, -lb)
+  lazy val negate = Interval(-ub, -lb)
 
   lazy val abs =
-    if (ub < 0) opp
+    if (ub < 0) negate
     else if (lb > 0) this
     else Interval(0, math.max(-lb, ub))
 

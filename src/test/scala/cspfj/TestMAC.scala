@@ -57,20 +57,9 @@ class TestMAC {
       //ParameterManager("logger.level") = "INFO"
       val solver = new MAC(problem)
 
-      @tailrec
-      def count(c: Int): Int = {
+      val count = new SolverIterator(solver).size
 
-        solver.nextSolution() match {
-          case None => c
-          case Some(solution) => {
-            //println(c + " : " + view(queens, solution))
-            count(c + 1)
-          }
-        }
-
-      }
-
-      Assert.assertEquals(nb, count(0))
+      Assert.assertEquals(nb, count)
     }
   }
 }

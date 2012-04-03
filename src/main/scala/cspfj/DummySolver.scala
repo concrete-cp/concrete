@@ -36,10 +36,8 @@ final class DummySolver(prob: Problem) extends Solver(prob) {
   val filter = DummySolver.filterClass.getConstructor(classOf[Problem]).newInstance(problem);
   statistics.register("filter", filter);
 
-  def nextSolution = {
-    println(filter)
-
-    if (preprocess(filter)) Some(Map.empty) else None
+  def nextSolution() = {
+    if (preprocess(filter)) UNKNOWN else UNSAT
   }
 
   override def toString = "dummy"

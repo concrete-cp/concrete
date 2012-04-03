@@ -48,17 +48,14 @@ final class AbsDiff(val result: Variable, val v0: Variable, val v1: Variable)
     }
 
   override def revise(mod: Seq[Int]) = {
+    val ch = fixPoint(shave())
 
-    var ch = shave()
-    while (ch && shave()) {}
-
-    if (isBound) entailCheck(ch)
-    else ch |= super.revise(mod)
-
-    assert(!isBound || boundConsistent, this + " is not BC")
-
-    ch
-
+    if (isBound) {
+      assert(boundConsistent, this + " is not BC")
+      assert(!super.revise(mod), this + " is not BC")
+      entailCheck(ch)
+      ch
+    } else super.revise(mod) || ch
   }
 
   override def findSupport(position: Int, index: Int) =

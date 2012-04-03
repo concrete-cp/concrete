@@ -20,7 +20,7 @@ final class Add(val result: Variable, val v0: Variable, val v1: Variable)
   override def revise() = {
 
     var ch = shave()
-    while (ch && shave()) {}
+    assert(!shave())
 
     assert(!isBound || boundConsistent)
 
