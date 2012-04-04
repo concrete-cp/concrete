@@ -12,6 +12,8 @@ public final class BitVectorPriorityQueue<T extends Identified> extends
 
     private T[] values;
 
+    private int[] evals;
+
     private final Key<T> key;
 
     public BitVectorPriorityQueue(final Key<T> key) {
@@ -21,6 +23,7 @@ public final class BitVectorPriorityQueue<T extends Identified> extends
     @SuppressWarnings("unchecked")
     public BitVectorPriorityQueue(final Key<T> key, final int initSize) {
         this.values = (T[]) new Identified[initSize];
+        evals = new int[initSize];
         queue = new BitSet(initSize);
         this.key = key;
     }
@@ -41,6 +44,7 @@ public final class BitVectorPriorityQueue<T extends Identified> extends
                     (oldCapacity * 3) / 2 + 1);
             // minCapacity is usually close to size, so this is a win:
             values = Arrays.copyOf(values, newCapacity);
+            evals = Arrays.copyOf(evals, newCapacity);
         }
     }
 
@@ -64,6 +68,7 @@ public final class BitVectorPriorityQueue<T extends Identified> extends
         final int id = e.getId();
         ensureCapacity(id + 1);
         values[id] = e;
+        evals[id] = key.getKey(e);
         if (queue.get(id)) {
             return false;
         } else {
@@ -91,10 +96,10 @@ public final class BitVectorPriorityQueue<T extends Identified> extends
 
     private int min() {
         int best = queue.nextSetBit(0);
-        double bestKey = key.getKey(values[best]);
+        int bestKey = key.getKey(values[best]);
         for (int i = queue.nextSetBit(best + 1); i >= 0; i = queue
                 .nextSetBit(i + 1)) {
-            final double keyValue = key.getKey(values[i]);
+            final int keyValue = evals[i];
 
             if (keyValue < bestKey) {
                 best = i;

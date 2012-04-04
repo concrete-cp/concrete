@@ -152,13 +152,13 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
       //val modified = ngl.noGoods(newStack)
       problem.reset();
 
-//      if (!filter.reduceAfter(modified)) {
-//        (UNSAT, Nil)
-//      } else {
-        maxBacktracks = (maxBacktracks * MAC.btGrowth).toInt;
-        nbBacktracks = 0
-        nextSolution(null)
-//      }
+      //      if (!filter.reduceAfter(modified)) {
+      //        (UNSAT, Nil)
+      //      } else {
+      maxBacktracks = (maxBacktracks * MAC.btGrowth).toInt;
+      nbBacktracks = 0
+      nextSolution(null)
+      //      }
 
     } else (sol, newStack)
   }

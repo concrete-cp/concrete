@@ -208,7 +208,4 @@ abstract class Constraint(val scope: Array[Variable]) extends Weighted with Iden
 
   def isBound = scope.forall(_.dom.bound)
 
-  def fixPoint(f: => Boolean, ch: Boolean = false): Boolean =
-    if (f) fixPoint(f, true) else ch
-
 }

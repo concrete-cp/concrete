@@ -6,33 +6,19 @@ import cspfj.constraint.Constraint
 import cspfj.constraint.Residues
 import cspfj.util.Interval
 import cspfj.util.Loggable
+import cspfj.constraint.Shaver
 
 final class Add(val result: Variable, val v0: Variable, val v1: Variable)
-  extends Constraint(Array(result, v0, v1)) with Residues with Loggable {
+  extends Constraint(Array(result, v0, v1)) with Shaver with Residues with Loggable {
 
   def checkValues(t: Array[Int]) = t(0) == t(1) + t(2)
 
-  private def shave() = {
+  def shave() = {
     val bounds = v0.dom.valueInterval + v1.dom.valueInterval - result.dom.valueInterval
     reviseB(result, true, bounds) | reviseB(v0, false, bounds) | reviseB(v1, false, bounds)
   }
 
-  override def revise() = {
-
-    var ch = shave()
-    assert(!shave())
-
-    assert(!isBound || boundConsistent)
-
-    if (isBound) entailCheck(ch)
-    else ch |= super.revise()
-
-    ch
-
-  }
-
   private def reviseB(v: Variable, opp: Boolean, bounds: Interval) = {
-
     val myBounds = v.dom.valueInterval
 
     if (opp) {

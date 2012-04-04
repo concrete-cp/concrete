@@ -6,9 +6,10 @@ import cspfj.problem.Variable
 import cspfj.constraint.Constraint
 import cspfj.UNSATException
 import cspfj.util.Interval
+import cspfj.constraint.Shaver
 
 final class AbsDiff(val result: Variable, val v0: Variable, val v1: Variable)
-  extends Constraint(Array(result, v0, v1)) with Residues {
+  extends Constraint(Array(result, v0, v1)) with Shaver with Residues {
 
   def checkValues(t: Array[Int]) = t(0) == math.abs(t(1) - t(2))
 
@@ -47,17 +48,6 @@ final class AbsDiff(val result: Variable, val v0: Variable, val v1: Variable)
       case (None, None) => throw UNSATException.e
     }
 
-  override def revise(mod: Seq[Int]) = {
-    val ch = fixPoint(shave())
-
-    if (isBound) {
-      assert(boundConsistent, this + " is not BC")
-      assert(!super.revise(mod), this + " is not BC")
-      entailCheck(ch)
-      ch
-    } else super.revise(mod) || ch
-  }
-
   override def findSupport(position: Int, index: Int) =
     position match {
       case 0 => findValidTuple0(index);
@@ -72,19 +62,12 @@ final class AbsDiff(val result: Variable, val v0: Variable, val v1: Variable)
     else {
       val dom1 = scope(1).dom
       val dom2 = scope(2).dom
-      dom1.indices map { i =>
-        (i, dom2.index(dom1.value(i) - val0))
-      } find {
-        case (_, j) => j >= 0 && dom2.present(j)
-      } orElse {
-        dom1.indices map { i =>
-          (i, dom2.index(dom1.value(i) + val0))
-        } find {
+      (dom1.indices map { i => (i, dom2.index(dom1.value(i) - val0)) }) ++
+        (dom1.indices map { i => (i, dom2.index(dom1.value(i) + val0)) }) find {
           case (_, j) => j >= 0 && dom2.present(j)
+        } map {
+          case (i, j) => Array(index, i, j)
         }
-      } map {
-        case (i, j) => Array(index, i, j)
-      }
     }
   }
 

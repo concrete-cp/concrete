@@ -11,10 +11,11 @@ import cspom.CSPOM
 import cspfj.ParameterManager
 import cspfj.priorityqueues.Fifos
 import cspfj.constraint.Constraint
+import cspfj.priorityqueues.BitVectorPriorityQueue
 
 final class SolvingTest extends Loggable {
   //Solver.loggerLevel = "FINE"
-  //ParameterManager("ac3c.queue") = classOf[Fifos]
+  ParameterManager("ac3c.queue") = classOf[BitVectorPriorityQueue[Constraint]]
   ParameterManager("preprocessor") = null
 
   @Test //(timeout = 40000)

@@ -72,11 +72,8 @@ final class AC3(
 
     val constraints = v.constraints
 
-    for (i <- 0 until v.constraints.size) {
-      val c = constraints(i)
-      if (c ne skip)
-        c.setRemovals(v.positionInConstraint(i))
-
+    for (i <- 0 until constraints.size; val c = constraints(i) if c ne skip) {
+      c.setRemovals(v.positionInConstraint(i))
     }
 
   }
@@ -169,7 +166,7 @@ final class AC3(
     c.isEntailed || {
       revisions += 1
       val prev = c.sizes()
-      //logger.fine("Revising " + c)
+      //println("Revising " + c)
 
       try {
         if (c.revise()) {

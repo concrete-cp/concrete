@@ -5,6 +5,7 @@ import cspfj.problem.Domain
 import cspfj.problem.Variable
 import cspfj.constraint.Constraint
 import cspfj.util.Interval
+import cspfj.constraint.Shaver
 
 /**
  * Constraint ax + b = y.
@@ -15,7 +16,7 @@ import cspfj.util.Interval
  * @param y
  */
 final class Eq(val a: Int, val x: Variable, val b: Int, val y: Variable)
-  extends Constraint(Array(x, y)) with VariablePerVariable {
+  extends Constraint(Array(x, y)) with Shaver {
   require(a != 0, "a must be != 0")
 
   //  val corresponding = Array(
@@ -44,16 +45,8 @@ final class Eq(val a: Int, val x: Variable, val b: Int, val y: Variable)
     if (r % a == 0) x.dom.index(r / a) else -1
   }
 
-  override def revise() = {
-    var ch =
-      scope(0).dom.intersectVal((scope(1).dom.valueInterval - b) / a) |
-        scope(1).dom.intersectVal((scope(0).dom.valueInterval * a) + b)
-
-    if (isBound) entailCheck(ch)
-    else ch |= super.revise()
-
-    ch
-  }
+  def shave() = scope(0).dom.intersectVal((scope(1).dom.valueInterval - b) / a) |
+    scope(1).dom.intersectVal((scope(0).dom.valueInterval * a) + b)
 
   def reviseVariable(position: Int, mod: Seq[Int]) = position match {
     case 0 => x.dom.filter { i =>
