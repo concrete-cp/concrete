@@ -82,8 +82,8 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
             map[id] = node;
         }
 
-        final double oldKey = node.key;
-        final double newKey = key.getKey(arg0);
+        final int oldKey = node.key;
+        final int newKey = key.getKey(arg0);
         node.key = newKey;
 
         if (node.inQueue == iter) {
@@ -208,7 +208,7 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
     private void swap(final BinomialHeapNode<T> node1,
             final BinomialHeapNode<T> node2) {
         final T node1Data = node1.data;
-        final double node1Key = node1.key;
+        final int node1Key = node1.key;
         map[node1Data.getId()] = node2;
         map[node2.data.getId()] = node1;
         node1.data = node2.data;
@@ -220,7 +220,7 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
     private static final class BinomialHeapNode<T> {
         private T data;
 
-        private double key;
+        private int key;
 
         private BinomialHeapNode<T> child;
 

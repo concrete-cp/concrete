@@ -21,17 +21,17 @@ package cspfj.constraint;
 
 import scala.annotation.tailrec
 import cspfj.heuristic.Weighted
-import cspfj.priorityqueues.IOBinomialHeapNode
 import cspfj.priorityqueues.Identified
 import cspfj.problem.Variable
 import cspfj.UNSATException
+import cspfj.priorityqueues.PTag
 
 object Constraint {
   var cId = 0;
   def reset() { cId = 0 }
 }
 
-abstract class Constraint(val scope: Array[Variable]) extends Weighted with Identified with IOBinomialHeapNode[Constraint] {
+abstract class Constraint(val scope: Array[Variable]) extends Weighted with Identified with PTag {
 
   val getId = Constraint.cId
   Constraint.cId += 1

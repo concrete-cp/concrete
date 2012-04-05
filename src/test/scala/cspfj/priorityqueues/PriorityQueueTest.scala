@@ -17,7 +17,7 @@ object IntNode {
 
 }
 
-case class IntNode(val v: Int) extends Identified with IOBinomialHeapNode[IntNode] {
+case class IntNode(val v: Int) extends Identified with PTag with LazyKey[IntNode] {
   val getId = IntNode.id
   IntNode.id += 1
 }
@@ -64,14 +64,14 @@ final class PriorityQueueTest {
   //  def testScalaFibonacciHeap() {
   //    test(new ScalaFibonacciHeap[IntNode](key))
   //  }
-  @Test(timeout = 5000)
-  def testScalaIOBinomialHeap() {
-    test(new ScalaIOBinomialHeap[IntNode](key))
-  }
+//  @Test(timeout = 5000)
+//  def testScalaIOBinomialHeap() {
+//    test(new ScalaIOBinomialHeap[IntNode](key))
+//  }
 
   def test(q: Queue[IntNode]) {
     //for (j <- 3001 to 5000) {
-    INTS.foreach(i => i.unsetPresent())
+    //INTS.foreach(i => i.unsetPresent())
     var j = 100
     while (j <= INTS.size) {
 
@@ -80,7 +80,7 @@ final class PriorityQueueTest {
       assertEquals(q.size, 0);
       assertTrue(q.isEmpty);
 
-      INTS.take(j).foreach { i => assertFalse(i.isPresent); assertTrue(q.offer(i)) }
+      INTS.take(j).foreach { i => assertTrue(q.offer(i)) }
 
       assertEquals(j, q.size);
       //println(j)

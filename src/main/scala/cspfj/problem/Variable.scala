@@ -21,13 +21,12 @@ package cspfj.problem;
 
 import cspfj.constraint.Constraint
 import cspfj.constraint.extension.ExtensionConstraint
-import cspfj.priorityqueues.IOBinomialHeapNode
 import cspfj.priorityqueues.Identified
 import scala.annotation.tailrec
 
 final class Variable(
   val name: String,
-  private var _domain: Domain) extends Identified with IOBinomialHeapNode[Variable] {
+  private var _domain: Domain) extends Identified {
 
   val getId = Variable.nbV
   Variable.nbV += 1

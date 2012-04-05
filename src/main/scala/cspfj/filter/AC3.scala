@@ -6,7 +6,6 @@ import cspfj.constraint.Constraint
 import cspfj.constraint.Removals
 import cspfj.priorityqueues.Key
 import cspfj.priorityqueues.Fifos
-import cspfj.priorityqueues.ScalaIOBinomialHeap
 import cspfj.priorityqueues.ScalaNative
 import cspfj.problem.Problem
 import cspfj.problem.Variable
