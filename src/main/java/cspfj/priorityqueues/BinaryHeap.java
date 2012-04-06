@@ -33,14 +33,15 @@ import java.util.NoSuchElementException;
  * 
  * @param <T>
  */
-public final class BinaryHeap<T extends Identified & LazyKey<T>> extends
-        AbstractQueue<T> {
+public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
 
     private T[] content;
 
     private int[] queuePosition;
 
     private int[] inQueue;
+
+    private int[] keyValue;
 
     private int size;
 
@@ -59,6 +60,7 @@ public final class BinaryHeap<T extends Identified & LazyKey<T>> extends
         this.queuePosition = new int[initSize];
         this.inQueue = new int[initSize];
         this.content = (T[]) new Identified[initSize];
+        this.keyValue = new int[initSize];
         Arrays.fill(inQueue, -1);
         size = 0;
     }
@@ -82,6 +84,7 @@ public final class BinaryHeap<T extends Identified & LazyKey<T>> extends
             inQueue = Arrays.copyOf(inQueue, newCapacity);
             Arrays.fill(inQueue, oldCapacity, newCapacity, -1);
             content = Arrays.copyOf(content, newCapacity);
+            keyValue = Arrays.copyOf(keyValue, newCapacity);
         }
     }
 
@@ -94,7 +97,7 @@ public final class BinaryHeap<T extends Identified & LazyKey<T>> extends
     public boolean offer(final T arg0) {
         final int id = arg0.getId();
         ensureCapacity(id + 1);
-        arg0.key_$eq(key.getKey(arg0));
+        keyValue[id] = key.getKey(arg0);
         if (inQueue[id] == iter) {
             final int position = queuePosition[id];
             siftUp(position);
@@ -163,10 +166,10 @@ public final class BinaryHeap<T extends Identified & LazyKey<T>> extends
         final int end = size - 1;
         int child;
         while ((child = (root << 1) + 1) <= end) {
-            if (child < end && content[child + 1].$less(content[child])) {
+            if (child < end && keyValue[child + 1] < keyValue[child]) {
                 child++;
             }
-            if (content[child].$less(content[root])) {
+            if (keyValue[child] < keyValue[root]) {
                 swap(root, child);
                 root = child;
             } else {
@@ -180,7 +183,7 @@ public final class BinaryHeap<T extends Identified & LazyKey<T>> extends
         while (leaf > 0) {
             final int parent = ((leaf - 1) >> 1);
 
-            if (content[leaf].$less(content[parent])) {
+            if (keyValue[leaf] < keyValue[parent]) {
                 swap(parent, leaf);
                 leaf = parent;
             } else {
@@ -199,7 +202,7 @@ public final class BinaryHeap<T extends Identified & LazyKey<T>> extends
         }
         int child1 = (position << 1) + 1;
         int child2 = (position << 1) + 2;
-        final double thisKey = key.getKey(content[position]);
+        final int thisKey = key.getKey(content[position]);
 
         if (child1 < size && thisKey > key.getKey(content[child1])) {
             return false;

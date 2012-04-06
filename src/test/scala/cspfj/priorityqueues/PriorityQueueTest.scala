@@ -17,7 +17,7 @@ object IntNode {
 
 }
 
-case class IntNode(val v: Int) extends Identified with PTag with LazyKey[IntNode] {
+case class IntNode(val v: Int) extends Identified with PTag {
   val getId = IntNode.id
   IntNode.id += 1
 }
@@ -99,17 +99,17 @@ final class PriorityQueueTest {
 
   }
 
-//  @Test
-//  def testJavaFifos() {
-//    val q = new JavaFifos(IntNode.key, 1);
-//    for (e <- INTS) q.offer(e)
-//
-//    var i = INTS
-//    while (!q.isEmpty()) {
-//      val e = q.poll();
-//      assertEquals(e, i.head)
-//      i = i.tail
-//    }
-//  }
+  //  @Test
+  //  def testJavaFifos() {
+  //    val q = new JavaFifos(IntNode.key, 1);
+  //    for (e <- INTS) q.offer(e)
+  //
+  //    var i = INTS
+  //    while (!q.isEmpty()) {
+  //      val e = q.poll();
+  //      assertEquals(e, i.head)
+  //      i = i.tail
+  //    }
+  //  }
 
 }
