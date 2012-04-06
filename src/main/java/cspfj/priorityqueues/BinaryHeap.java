@@ -97,17 +97,18 @@ public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
     public boolean offer(final T arg0) {
         final int id = arg0.getId();
         ensureCapacity(id + 1);
-        keyValue[id] = key.getKey(arg0);
+
         if (inQueue[id] == iter) {
             final int position = queuePosition[id];
+            keyValue[position] = key.getKey(arg0);
             siftUp(position);
             if (position == queuePosition[id]) {
                 siftDown(position);
             }
             return false;
         } else {
-
             content[size] = arg0;
+            keyValue[size] = key.getKey(arg0);
             queuePosition[id] = size;
             inQueue[id] = iter;
             siftUp(size++);
@@ -128,7 +129,7 @@ public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
             final T max = content[0];
             content[0] = content[--size];
             keyValue[0] = keyValue[size];
-            queuePosition[content[0].getId()] = 0;
+            queuePosition[size] = 0;
             siftDown(0);
             inQueue[max.getId()] = -1;
             return max;
