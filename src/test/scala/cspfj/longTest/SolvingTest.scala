@@ -15,10 +15,11 @@ import cspfj.priorityqueues.BitVectorPriorityQueue
 import cspfj.priorityqueues.JavaFifos
 import cspfj.priorityqueues.JavaFifo
 import cspfj.priorityqueues.JavaSimpleFifos
+import cspfj.priorityqueues.BinaryHeap
 
 final class SolvingTest extends Loggable {
   //Solver.loggerLevel = "FINE"
-  ParameterManager("ac3c.queue") = classOf[JavaSimpleFifos]
+  ParameterManager("ac3c.queue") = classOf[BinaryHeap[Constraint]]
   ParameterManager("preprocessor") = null
 
   @Test //(timeout = 40000)

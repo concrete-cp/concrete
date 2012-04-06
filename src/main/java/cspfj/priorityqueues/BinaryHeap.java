@@ -127,6 +127,7 @@ public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
         default:
             final T max = content[0];
             content[0] = content[--size];
+            keyValue[0] = keyValue[size];
             queuePosition[content[0].getId()] = 0;
             siftDown(0);
             inQueue[max.getId()] = -1;
@@ -157,6 +158,9 @@ public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
         final T tmp = content[int0];
         content[int0] = content[int1];
         content[int1] = tmp;
+        final int tmp2 = keyValue[int0];
+        keyValue[int0] = keyValue[int1];
+        keyValue[int1] = tmp2;
         queuePosition[content[int0].getId()] = int0;
         queuePosition[content[int1].getId()] = int1;
     }

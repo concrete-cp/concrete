@@ -48,7 +48,7 @@ final class PriorityQueueTest {
   def testSkewHeap() {
     test(new SkewHeap[IntNode](key))
   }
-  @Test(timeout = 5000)
+  @Test//(timeout = 5000)
   def testBinaryHeap() {
     test(new BinaryHeap[IntNode](key))
   }
@@ -99,17 +99,17 @@ final class PriorityQueueTest {
 
   }
 
-  //  @Test
-  //  def testJavaFifos() {
-  //    val q = new JavaFifos(IntNode.key, 1);
-  //    for (e <- INTS) q.offer(e)
-  //
-  //    var i = INTS
-  //    while (!q.isEmpty()) {
-  //      val e = q.poll();
-  //      assertEquals(e, i.head)
-  //      i = i.tail
-  //    }
-  //  }
+//  @Test
+//  def testJavaFifos() {
+//    val q = new JavaFifos(IntNode.key, 1);
+//    for (e <- INTS) q.offer(e)
+//
+//    var i = INTS
+//    while (!q.isEmpty()) {
+//      val e = q.poll();
+//      assertEquals(e, i.head)
+//      i = i.tail
+//    }
+//  }
 
 }
