@@ -23,12 +23,12 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
 
     private int iter = 0;
 
-    @Statistic
-    public static int insert = 0;
-    @Statistic
-    public static int update = 0;
-    @Statistic
-    public static int remove = 0;
+//    @Statistic
+//    public static int insert = 0;
+//    @Statistic
+//    public static int update = 0;
+//    @Statistic
+//    public static int remove = 0;
 
     public BinomialHeap(final Key<T> key) {
         this(key, DEFAULT_SIZE);
@@ -86,8 +86,8 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
         final int newKey = key.getKey(arg0);
         node.key = newKey;
 
-        if (node.inQueue == iter) {
-            update++;
+        if (node.isPresent(iter)) {
+            //update++;
             if (newKey < oldKey) {
                 decreaseKey(node, false);
             } else if (newKey > oldKey) {
@@ -95,11 +95,11 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
             }
             return false;
         }
-        insert++;
+        //insert++;
         node.clear();
 
         carryMerge(node, 0);
-        node.inQueue = iter;
+        node.setPresent(iter);
         size++;
         return true;
     }
@@ -111,10 +111,10 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
 
     @Override
     public T poll() {
-        remove++;
+        //remove++;
         final BinomialHeapNode<T> min = trees[minTree()];
         deleteRoot(min);
-        min.inQueue = -1;
+        min.unsetPresent();
         size--;
         return min.data;
     }
@@ -273,6 +273,18 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
             if (right != null) {
                 right.tree(stb, depth);
             }
+        }
+        
+        private void setPresent(final int iter) {
+            inQueue = iter;
+        }
+        
+        private void unsetPresent() {
+            inQueue = -1;
+        }
+        
+        private boolean isPresent(final int iter) {
+            return inQueue == iter;
         }
     }
 

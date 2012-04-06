@@ -26,7 +26,7 @@ final class PriorityQueueTest {
 
   private val RANDOM = new Random(0);
 
-  private val INTS = Stream.continually(IntNode(RANDOM.nextInt(5000000))).take(100000)
+  private val INTS = Seq.fill(100000)(IntNode(RANDOM.nextInt(5000000)))
 
   val key = IntNode.key
 
@@ -64,10 +64,10 @@ final class PriorityQueueTest {
   //  def testScalaFibonacciHeap() {
   //    test(new ScalaFibonacciHeap[IntNode](key))
   //  }
-//  @Test(timeout = 5000)
-//  def testScalaIOBinomialHeap() {
-//    test(new ScalaIOBinomialHeap[IntNode](key))
-//  }
+  //  @Test(timeout = 5000)
+  //  def testScalaIOBinomialHeap() {
+  //    test(new ScalaIOBinomialHeap[IntNode](key))
+  //  }
 
   def test(q: Queue[IntNode]) {
     //for (j <- 3001 to 5000) {
@@ -98,5 +98,18 @@ final class PriorityQueueTest {
     //}
 
   }
+
+//  @Test
+//  def testJavaFifos() {
+//    val q = new JavaFifos(IntNode.key, 1);
+//    for (e <- INTS) q.offer(e)
+//
+//    var i = INTS
+//    while (!q.isEmpty()) {
+//      val e = q.poll();
+//      assertEquals(e, i.head)
+//      i = i.tail
+//    }
+//  }
 
 }

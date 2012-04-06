@@ -15,21 +15,19 @@ import java.io.PrintStream
  *
  * @param <T>
  */
-final class Fifos[T <: PTag](val key: Key[T], val nbLists: Int) extends AbstractQueue[T] {
+final class Fifos[T <: PTag](val key: Key[T]) extends AbstractQueue[T] {
 
-  val KEY_FACTOR = 3.0;
+  val NB_LISTS = 8
 
-  val queues: Array[Queue[T]] = Array[Queue[T]]().padTo(nbLists, Queue.empty)
+  val queues: Array[Queue[T]] = Array.fill(NB_LISTS)(Queue.empty)
 
-  def this(k: Key[T]) = this(k, 8)
-
-  var first = nbLists
+  var first = NB_LISTS
 
   var last = -1
 
   private def chooseList(element: T): Int = {
     val k = key.getKey(element)
-    math.min(nbLists - 1, nbLists - Integer.numberOfLeadingZeros(k) / 4)
+    math.min(NB_LISTS - 1, NB_LISTS - Integer.numberOfLeadingZeros(k) / 4)
   }
 
   def offer(e: T) =

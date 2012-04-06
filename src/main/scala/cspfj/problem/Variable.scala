@@ -23,10 +23,11 @@ import cspfj.constraint.Constraint
 import cspfj.constraint.extension.ExtensionConstraint
 import cspfj.priorityqueues.Identified
 import scala.annotation.tailrec
+import cspfj.priorityqueues.PTag
 
 final class Variable(
   val name: String,
-  private var _domain: Domain) extends Identified {
+  private var _domain: Domain) extends Identified with PTag {
 
   val getId = Variable.nbV
   Variable.nbV += 1
@@ -57,7 +58,7 @@ final class Variable(
       _extensionConstraints ::= newConstraint.asInstanceOf[ExtensionConstraint]
     }
     _positionInConstraint :+= newConstraint.position(this)
-    dDeg += 1//newConstraint.weight
+    dDeg += 1 //newConstraint.weight
   }
 
   def dom = _domain
@@ -87,11 +88,11 @@ final class Variable(
 
   def getWDeg = {
     _getWDeg()
-//    assert(_getWDeg() == wDeg, "%s: was %d, should be %d".format(this, wDeg, _getWDeg()))
-//    
-//    wDeg
+    //    assert(_getWDeg() == wDeg, "%s: was %d, should be %d".format(this, wDeg, _getWDeg()))
+    //    
+    //    wDeg
   }
-  
+
   var dDeg = 0
 
   @tailrec
@@ -102,7 +103,7 @@ final class Variable(
       if (c.isEntailed) _getDDeg(i - 1, s)
       else _getDDeg(i - 1, s + 1)
     }
-  
+
   def getDDeg = dDeg
 
 }
