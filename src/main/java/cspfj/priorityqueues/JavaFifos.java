@@ -20,7 +20,8 @@ public final class JavaFifos<T extends Identified> extends AbstractQueue<T> {
 
     private Cell<T>[] inQueue;
 
-    private final MyLinkedList<T>[] lists;
+    @SuppressWarnings("unchecked")
+    private final MyLinkedList<T>[] lists = (MyLinkedList<T>[]) new MyLinkedList[NB_LISTS];
 
     private final Key<T> key;
 
@@ -40,7 +41,6 @@ public final class JavaFifos<T extends Identified> extends AbstractQueue<T> {
     @SuppressWarnings("unchecked")
     public JavaFifos(final Key<T> k, final int initSize) {
         inQueue = (Cell<T>[]) new Cell[initSize];
-        lists = (MyLinkedList<T>[]) new MyLinkedList[NB_LISTS];
         for (int i = NB_LISTS; --i >= 0;) {
             lists[i] = new MyLinkedList<T>();
         }
@@ -83,29 +83,48 @@ public final class JavaFifos<T extends Identified> extends AbstractQueue<T> {
         }
         final int list = chooseList(e);
         if (currentCell.isPresent(iter)) {
-            final List currentList = currentCell.myList;
+            final MyLinkedList<T> currentList = currentCell.myList;
             assert currentList != null;
-            if (currentCell.myList == lists[list]) {
+            if (currentList == lists[list]) {
                 return false;
             }
-            
-            currentCell.myList.remove(currentCell);
-            
+
+            currentList.remove(currentCell);
+            if (currentList.isEmpty()) {
+                if (currentList == lists[last]) {
+                    last--;
+                }
+                if (currentList == lists[first]) {
+                    first++;
+                }
+            }
+
         }
         // else {
         // insert++;
         // }
 
         lists[list].offer(currentCell, iter);
+        if (list < first) {
+            first = list;
+        }
+        if (list > last) {
+            last = list;
+        }
         return true;
     }
 
     @Override
     public T poll() {
-        for (MyLinkedList<T> ll : lists) {
-            if (!ll.isEmpty()) {
+        for (int i = first; i <= last; i++) {
+            if (!lists[i].isEmpty()) {
                 // remove++;
-                return ll.poll();
+                first = i;
+                final T val = lists[i].poll();
+                if (lists[i].isEmpty() && i == last) {
+                    last = -1;
+                }
+                return val;
             }
         }
         return null;
@@ -114,9 +133,11 @@ public final class JavaFifos<T extends Identified> extends AbstractQueue<T> {
     @Override
     public void clear() {
         iter++;
-        for (MyLinkedList<T> ll : lists) {
-            ll.clear();
+        for (int i = first; i <= last; i++) {
+            lists[i].clear();
         }
+        first = NB_LISTS;
+        last = -1;
     }
 
     @Override
@@ -127,27 +148,23 @@ public final class JavaFifos<T extends Identified> extends AbstractQueue<T> {
     @Override
     public int size() {
         int size = 0;
-        for (MyLinkedList<T> ll : lists) {
-            size += ll.size();
+        for (int i = first; i <= last; i++) {
+            size += lists[i].size();
         }
         return size;
     }
 
     @Override
     public boolean isEmpty() {
-        for (MyLinkedList<T> ll : lists) {
-            if (!ll.isEmpty()) {
-                return false;
-            }
-        }
-        return true;
+
+        return first > last;
     }
 
     @Override
     public T peek() {
-        for (MyLinkedList<T> ll : lists) {
-            if (!ll.isEmpty()) {
-                return ll.peek();
+        for (int i = first; i <= last; i++) {
+            if (!lists[i].isEmpty()) {
+                return lists[i].peek();
             }
         }
         return null;

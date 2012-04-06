@@ -68,7 +68,7 @@ final class Fifos[T <: PTag](val key: Key[T]) extends AbstractQueue[T] {
 
   override def clear() {
     (first to last).foreach(queues(_) = Queue.empty)
-    first = nbLists
+    first = NB_LISTS
     last = -1
     PTag.clear()
   }

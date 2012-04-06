@@ -12,10 +12,13 @@ import cspfj.ParameterManager
 import cspfj.priorityqueues.Fifos
 import cspfj.constraint.Constraint
 import cspfj.priorityqueues.BitVectorPriorityQueue
+import cspfj.priorityqueues.JavaFifos
+import cspfj.priorityqueues.JavaFifo
+import cspfj.priorityqueues.JavaSimpleFifos
 
 final class SolvingTest extends Loggable {
   //Solver.loggerLevel = "FINE"
-  ParameterManager("ac3c.queue") = classOf[BitVectorPriorityQueue[Constraint]]
+  ParameterManager("ac3c.queue") = classOf[JavaSimpleFifos]
   ParameterManager("preprocessor") = null
 
   @Test //(timeout = 40000)
