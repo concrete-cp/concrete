@@ -75,7 +75,7 @@ final class Add(val result: Variable, val v0: Variable, val v1: Variable)
   override def toString = result + " = " + v0 + " + " + v1
 
   def getEvaluation =
-    if (isBound) 6
+    if (isBound) 4
     else {
       val d0 = result.dom.size
       val d1 = v0.dom.size

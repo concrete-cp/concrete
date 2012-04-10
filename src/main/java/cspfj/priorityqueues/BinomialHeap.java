@@ -4,8 +4,6 @@ import java.util.AbstractQueue;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import cspfj.Statistic;
-
 public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
 
     private static final int DEFAULT_SIZE = 10;
@@ -23,12 +21,15 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
 
     private int iter = 0;
 
-//    @Statistic
-//    public static int insert = 0;
-//    @Statistic
-//    public static int update = 0;
-//    @Statistic
-//    public static int remove = 0;
+    private int first = MAX_ARRAY_SIZE;
+    private int last = -1;
+
+    // @Statistic
+    // public static int insert = 0;
+    // @Statistic
+    // public static int update = 0;
+    // @Statistic
+    // public static int remove = 0;
 
     public BinomialHeap(final Key<T> key) {
         this(key, DEFAULT_SIZE);
@@ -87,7 +88,7 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
         node.key = newKey;
 
         if (node.isPresent(iter)) {
-            //update++;
+            // update++;
             if (newKey < oldKey) {
                 decreaseKey(node, false);
             } else if (newKey > oldKey) {
@@ -95,7 +96,7 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
             }
             return false;
         }
-        //insert++;
+        // insert++;
         node.clear();
 
         carryMerge(node, 0);
@@ -106,22 +107,43 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
 
     @Override
     public T peek() {
-        return trees[minTree()].data;
+        return minTree().data;
     }
 
     @Override
     public T poll() {
-        //remove++;
-        final BinomialHeapNode<T> min = trees[minTree()];
+        // remove++;
+        final BinomialHeapNode<T> min = minTree();
         deleteRoot(min);
         min.unsetPresent();
         size--;
         return min.data;
     }
 
+    private void delRank(int rank) {
+        trees[rank] = null;
+        if (first == rank) {
+            first++;
+        }
+        if (last == rank) {
+            last--;
+        }
+    }
+
+    private void addRank(int rank, BinomialHeapNode<T> tree) {
+        trees[rank] = tree;
+        if (first > rank) {
+            first = rank;
+        }
+        if (last < rank) {
+            last = rank;
+        }
+
+    }
+
     private void deleteRoot(final BinomialHeapNode<T> root) {
         assert root.parent == null;
-        trees[root.rank] = null;
+        delRank(root.rank);
 
         BinomialHeapNode<T> subTree = root.child;
         while (subTree != null) {
@@ -134,13 +156,13 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
         }
     }
 
-    private int minTree() {
-        int min = -1;
+    private BinomialHeapNode<T> minTree() {
+        BinomialHeapNode<T> min = null;
         double minKey = 0;
-        for (int i = trees.length; --i >= 0;) {
+        for (int i = first; i <= last; i++) {
             final BinomialHeapNode<T> tree = trees[i];
-            if (tree != null && (min < 0 || tree.key <= minKey)) {
-                min = i;
+            if (tree != null && (min == null || tree.key <= minKey)) {
+                min = tree;
                 minKey = tree.key;
             }
         }
@@ -150,6 +172,8 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
     @Override
     public void clear() {
         Arrays.fill(trees, null);
+        first = MAX_ARRAY_SIZE;
+        last = -1;
         iter++;
         size = 0;
     }
@@ -159,11 +183,11 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
 
         if (storedTree == null) {
 
-            trees[i] = tree;
+            addRank(i, tree);
 
         } else {
 
-            trees[i] = null;
+            delRank(i);
 
             /**
              * We merge either the stored tree under the given tree or the
@@ -274,15 +298,15 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
                 right.tree(stb, depth);
             }
         }
-        
+
         private void setPresent(final int iter) {
             inQueue = iter;
         }
-        
+
         private void unsetPresent() {
             inQueue = -1;
         }
-        
+
         private boolean isPresent(final int iter) {
             return inQueue == iter;
         }
