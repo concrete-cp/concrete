@@ -72,7 +72,7 @@ abstract class Domain {
 
   def restoreLevel(level: Int)
 
-  def reset() { restoreLevel(0) }
+  def currentLevel: Int
 
   def getAtLevel(level: Int): BitVector
 

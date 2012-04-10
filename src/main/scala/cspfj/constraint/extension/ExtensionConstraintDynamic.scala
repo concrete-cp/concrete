@@ -122,12 +122,12 @@ final class ExtensionConstraintDynamic(
 
   def removeTuples(base: Array[Int]) = {
     throw new UnsupportedOperationException
-    unshareMatrix()
-    val s = size
-
-    //matrixManager.filter(t => !matches(t, base))
-
-    size - s;
+//    unshareMatrix()
+//    val s = size
+//
+//    //matrixManager.filter(t => !matches(t, base))
+//
+//    size - s;
   }
 
   def removeTuple(t: Array[Int]) = throw new UnsupportedOperationException

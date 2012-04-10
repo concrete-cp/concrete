@@ -80,7 +80,7 @@ final class Problem {
 
   def reset() {
     _currentLevel = 0;
-    _variables.foreach(_.dom.reset())
+    _variables.foreach(_.dom.restoreLevel(0))
     _constraints.foreach(_.restoreLvl(0))
   }
 

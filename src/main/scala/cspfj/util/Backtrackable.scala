@@ -1,15 +1,20 @@
 package cspfj.util
 
-trait Backtrackable[A] {
+trait Backtrackable[A] extends DelayedInit {
 
   private var history: List[(Int, A)] = Nil
+
+  def delayedInit(x: => Unit) {
+    x
+    history = List((0, save))
+  }
 
   private var _currentLevel = 0
 
   private var _altered = true
 
   def currentLevel = _currentLevel
-  
+
   def altering() {
     _altered = true
   }
@@ -31,12 +36,14 @@ trait Backtrackable[A] {
   def restoreLevel(level: Int) {
     assert(level <= currentLevel);
 
+    //if (history != Nil) {
     history = history.dropWhile(_._1 > level)
     //    if (history == Nil) {
     //      restore(init())
     //    } else {
     assert(!history.isEmpty)
     restore(history.head._2)
+    //}
     _altered = false
     //    }
     _currentLevel = level;
