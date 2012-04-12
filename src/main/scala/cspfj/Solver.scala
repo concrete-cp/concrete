@@ -34,6 +34,7 @@ import cspom.CSPOM
 import cspfj.problem.Variable
 import scala.annotation.tailrec
 import cspfj.constraint.extension.ExtensionConstraint2D
+import scala.collection.JavaConversions
 
 object Solver {
   @Parameter("logger.level")
@@ -172,17 +173,26 @@ abstract class Solver(val problem: Problem) extends Loggable {
 abstract class SolverResult {
   def isSat: Boolean
   def get: Map[String, Int]
+  def getNum: Map[String, Number] = get map {
+    case (s, i) => (s, i.asInstanceOf[Number])
+  }
+  def getInteger: java.util.Map[String, java.lang.Integer] = JavaConversions.mapAsJavaMap(get map {
+    case (s, i) => (s, i.asInstanceOf[java.lang.Integer])
+  })
 }
 
 case class SAT(val solution: Map[String, Int]) extends SolverResult {
   def isSat = true
   def get = solution
+  override def toString = "SAT: " + solution.toString
 }
 case object UNSAT extends SolverResult {
   def isSat = false
   def get = throw new NoSuchElementException
+  override def toString = "UNSAT"
 }
 case object UNKNOWN extends SolverResult {
   def isSat = false
   def get = throw new NoSuchElementException
+  override def toString = "UNKNOWN"
 }
