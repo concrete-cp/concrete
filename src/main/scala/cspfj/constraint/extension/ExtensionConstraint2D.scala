@@ -40,7 +40,7 @@ final class ExtensionConstraint2D(
   extends ConflictCount(scope, _matrix, shared)
   with VariablePerVariable {
 
-  private val GAIN_OVER_GENERAL = 10;
+  private val GAIN_OVER_GENERAL = 3;
 
   private val MINIMUM_SIZE_FOR_LAST = 3 * java.lang.Long.SIZE;
 
@@ -55,7 +55,7 @@ final class ExtensionConstraint2D(
       null
     }
 
-  override def getEvaluation = scope(0).dom.size + scope(1).dom.size
+  override def getEvaluation = (scope(0).dom.size * scope(1).dom.size) / GAIN_OVER_GENERAL
 
   override def simpleEvaluation = 2
 

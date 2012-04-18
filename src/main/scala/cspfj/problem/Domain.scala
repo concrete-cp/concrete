@@ -183,18 +183,12 @@ abstract class Domain {
       }
   }
 
-  def disjoint(d: Domain) = {
-    def disj(i: Int): Boolean = {
-      if (i < 0) true
-      else {
-        val i2 = d.index(value(i))
-        (i2 < 0 || !d.present(i2)) && disj(next(i))
-      }
+  def disjoint(d: Domain, i: Int = first): Boolean =
+    if (i < 0) true
+    else {
+      val i2 = d.index(value(i))
+      (i2 < 0 || !d.present(i2)) && disjoint(d, next(i))
     }
-
-    disj(first)
-
-  }
 
   def intersects(bv: BitVector): Int
   def intersects(bv: BitVector, part: Int): Boolean

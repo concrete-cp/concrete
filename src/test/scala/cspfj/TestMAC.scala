@@ -21,7 +21,7 @@ class TestMAC {
     val qd1 = queens.zipWithIndex map {
       case (q, i) =>
         val v = problem.addVariable("d1_" + q.name, IntDomain(-i until size - i))
-        problem.addConstraint(new Eq(1, q, -i, v))
+        problem.addConstraint(new Eq(false, q, -i, v))
         v
     }
 
@@ -30,7 +30,7 @@ class TestMAC {
     val qd2 = queens.zipWithIndex map {
       case (q, i) =>
         val v = problem.addVariable("d2_" + q.name, IntDomain(i until size + i))
-        problem.addConstraint(new Eq(1, q, i, v))
+        problem.addConstraint(new Eq(false, q, i, v))
         v
     }
 

@@ -13,7 +13,6 @@ import cspfj.priorityqueues.Fifos
 import cspfj.constraint.Constraint
 import cspfj.priorityqueues.BitVectorPriorityQueue
 import cspfj.priorityqueues.JavaFifos
-import cspfj.priorityqueues.JavaFifo
 import cspfj.priorityqueues.JavaSimpleFifos
 import cspfj.priorityqueues.BinaryHeap
 

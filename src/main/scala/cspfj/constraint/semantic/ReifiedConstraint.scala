@@ -9,6 +9,7 @@ import cspfj.problem.UNKNOWN
 import cspfj.problem.Variable
 import cspfj.UNSATException
 import cspfj.constraint.Removals
+import cspfj.problem.EMPTY
 
 final class ReifiedConstraint(
   controlVariable: Variable,
@@ -19,13 +20,21 @@ final class ReifiedConstraint(
   require(positiveConstraint.scope forall scope.tail.contains)
   require(negativeConstraint.scope forall scope.tail.contains)
 
-  val positivePositions = (0 until positiveConstraint.arity) map { i =>
-    position(positiveConstraint.scope(i)) -> i
-  } toMap
+  val positivePositions = {
+    val a = Array.fill(arity)(-1)
+    for (i <- 0 until positiveConstraint.arity) {
+      a(position(positiveConstraint.scope(i))) = i
+    }
+    a
+  }
 
-  val negativePositions = (0 until negativeConstraint.arity) map { i =>
-    position(negativeConstraint.scope(i)) -> i
-  } toMap
+  val negativePositions = {
+    val a = Array.fill(arity)(-1)
+    for (i <- 0 until negativeConstraint.arity) {
+      a(position(negativeConstraint.scope(i))) = i
+    }
+    a
+  }
 
   val controlDomain = controlVariable.dom match {
     case bd: BooleanDomain => bd
@@ -71,7 +80,7 @@ final class ReifiedConstraint(
       case TRUE => noReifyRevise(positiveConstraint);
       case FALSE => noReifyRevise(negativeConstraint);
 
-      case _ => throw new IllegalStateException
+      case EMPTY => throw new IllegalStateException
 
     }
   }
@@ -90,7 +99,7 @@ final class ReifiedConstraint(
   override def checkIndices(t: Array[Int]) = {
     (t(0) == 1) == positiveConstraint.checkIndices(t.tail)
   }
-  
+
   override def checkValues(t: Array[Int]) = {
     (t(0) == 1) == positiveConstraint.checkValues(t.tail)
   }
@@ -99,7 +108,7 @@ final class ReifiedConstraint(
     case UNKNOWN => positiveConstraint.getEvaluation + negativeConstraint.getEvaluation
     case TRUE => positiveConstraint.getEvaluation
     case FALSE => negativeConstraint.getEvaluation
-    case _ => throw new IllegalStateException
+    case EMPTY => throw new IllegalStateException
   }
 
   override def toString = scope(0) + " == (" + positiveConstraint + ")";
@@ -109,14 +118,8 @@ final class ReifiedConstraint(
   override def setRemovals(position: Int) {
     if (position == 0) controlRemovals = position
     else {
-      positivePositions.get(position) match {
-        case Some(p) => positiveConstraint.setRemovals(p)
-        case None =>
-      }
-      negativePositions.get(position) match {
-        case Some(p) => negativeConstraint.setRemovals(p)
-        case None =>
-      }
+      positiveConstraint.setRemovals(positivePositions(position))
+      negativeConstraint.setRemovals(negativePositions(position))
     }
   }
 

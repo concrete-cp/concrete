@@ -5,7 +5,7 @@ import cspfj.util.BitVector
 import cspfj.UNSATException
 import cspfj.util.Backtrackable
 
-trait Status {
+sealed trait Status {
   val bitVector = BitVector.newBitVector(2)
   def array: Array[Int]
   def size: Int
@@ -23,7 +23,7 @@ trait Status {
   def indexes: Array[Int]
 }
 
-object UNKNOWN extends Status {
+case object UNKNOWN extends Status {
   bitVector.fill(true)
   val array = Array(0, 1)
   override val toString = "[f, t]"
@@ -54,7 +54,7 @@ object UNKNOWN extends Status {
   val indexes = Array(0, 1)
 }
 
-object TRUE extends Status {
+case object TRUE extends Status {
   bitVector.set(1)
   val array = Array(1)
   override val toString = "[t]"
@@ -73,7 +73,7 @@ object TRUE extends Status {
   val indexes = Array(1)
 }
 
-object FALSE extends Status {
+case object FALSE extends Status {
   bitVector.set(0)
   val array = Array(0)
   override val toString = "[f]"
@@ -92,7 +92,7 @@ object FALSE extends Status {
   val indexes = Array(0)
 }
 
-object EMPTY extends Status {
+case object EMPTY extends Status {
   val array = Array[Int]()
   override val toString = "[]"
   val size = 0

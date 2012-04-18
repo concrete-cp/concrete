@@ -57,7 +57,7 @@ final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
           for (v <- scope if (v.dom == null)) {
             v.dom = IntDomain(negDomain: _*)
           }
-          new Eq(-1, scope(0), 0, scope(1));
+          new Eq(true, scope(0), 0, scope(1));
         }
       }
 

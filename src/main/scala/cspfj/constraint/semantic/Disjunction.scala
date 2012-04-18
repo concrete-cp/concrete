@@ -28,7 +28,7 @@ final class Disjunction(scope: Array[Variable],
     }
   }
 
-  val getEvaluation = Integer.highestOneBit(arity)
+  val getEvaluation = Integer.highestOneBit(arity) - 1
 
   def this(scope: Variable*) = this(scope.toArray, new Array[Boolean](scope.size))
 

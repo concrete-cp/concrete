@@ -8,16 +8,15 @@ import cspfj.util.Interval
 import cspfj.constraint.Shaver
 
 /**
- * Constraint ax + b = y.
+ * Constraint (-)x + b = y.
  *
  * @param a
  * @param x
  * @param b
  * @param y
  */
-final class Eq(val a: Int, val x: Variable, val b: Int, val y: Variable)
+final class Eq(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
   extends Constraint(Array(x, y)) with Shaver {
-  require(a != 0, "a must be != 0")
 
   //  val corresponding = Array(
   //    x.dom.allValues map { v => y.dom.index(a * v + b) },
@@ -33,20 +32,26 @@ final class Eq(val a: Int, val x: Variable, val b: Int, val y: Variable)
    * @param x
    * @param y
    */
-  def this(x: Variable, y: Variable) = this(1, x, 0, y);
+  def this(x: Variable, y: Variable) = this(false, x, 0, y);
 
-  def checkValues(t: Array[Int]) = a * t(0) + b == t(1);
+  def checkValues(t: Array[Int]) = (if (neg) -t(0) else t(0)) + b == t(1);
 
-  def yIndex(xIndex: Int) = y.dom.index(a * x.dom.value(xIndex) + b)
+  def yIndex(xIndex: Int) =
+    if (neg) y.dom.index(-x.dom.value(xIndex) + b)
+    else y.dom.index(x.dom.value(xIndex) + b)
 
   def xIndex(yIndex: Int) = {
-    val v = y.dom.value(yIndex)
-    var r = v - b
-    if (r % a == 0) x.dom.index(r / a) else -1
+    val yv = y.dom.value(yIndex)
+    var r = yv - b
+    if (neg) x.dom.index(-r) else x.dom.index(r)
   }
 
-  def shave() = scope(0).dom.intersectVal((scope(1).dom.valueInterval - b) / a) |
-    scope(1).dom.intersectVal((scope(0).dom.valueInterval * a) + b)
+  def shave() =
+    if (neg) scope(0).dom.intersectVal(scope(1).dom.valueInterval.negate + b) |
+      scope(1).dom.intersectVal(scope(0).dom.valueInterval.negate + b)
+    else
+      scope(0).dom.intersectVal(scope(1).dom.valueInterval - b) |
+        scope(1).dom.intersectVal(scope(0).dom.valueInterval + b)
 
   def reviseVariable(position: Int, mod: Seq[Int]) = position match {
     case 0 => x.dom.filter { i =>
@@ -71,11 +76,10 @@ final class Eq(val a: Int, val x: Variable, val b: Int, val y: Variable)
     }
   }
 
-  override def toString = (if (a != 1) a + "." else "") +
-    x +
+  override def toString = (if (neg) "-" else "") + x +
     (if (b > 0) " + " + b else if (b < 0) " - " + (-b) else "") +
-    " = " + y
+    " == " + y
 
-  def getEvaluation = if (isBound) 3 else (scope(0).dom.size + scope(1).dom.size)
+  def getEvaluation = if (x.dom.bound && y.dom.bound) 3 else (x.dom.size + y.dom.size)
   val simpleEvaluation = 2
 }

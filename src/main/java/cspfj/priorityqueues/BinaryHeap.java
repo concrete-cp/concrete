@@ -73,9 +73,9 @@ public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
      * @param minCapacity
      *            the desired minimum capacity
      */
-    private void ensureCapacity(final int minCapacity) {
+    private void ensureMapCapacity(final int minCapacity) {
         int oldCapacity = queuePosition.length;
-        assert content.length == oldCapacity;
+        assert inQueue.length == oldCapacity;
         if (minCapacity > oldCapacity) {
             final int newCapacity = Math.max(minCapacity,
                     (oldCapacity * 3) / 2 + 1);
@@ -83,6 +83,15 @@ public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
             queuePosition = Arrays.copyOf(queuePosition, newCapacity);
             inQueue = Arrays.copyOf(inQueue, newCapacity);
             Arrays.fill(inQueue, oldCapacity, newCapacity, -1);
+        }
+    }
+
+    private void ensureHeapCapacity(final int minCapacity) {
+        int oldCapacity = content.length;
+        if (minCapacity > oldCapacity) {
+            final int newCapacity = Math.max(minCapacity,
+                    (oldCapacity * 3) / 2 + 1);
+            // minCapacity is usually close to size, so this is a win:
             content = Arrays.copyOf(content, newCapacity);
             keyValue = Arrays.copyOf(keyValue, newCapacity);
         }
@@ -96,7 +105,7 @@ public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
     @Override
     public boolean offer(final T arg0) {
         final int id = arg0.getId();
-        ensureCapacity(id + 1);
+        ensureMapCapacity(id + 1);
 
         if (inQueue[id] == iter) {
             final int position = queuePosition[id];
@@ -107,6 +116,7 @@ public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
             }
             return false;
         } else {
+            ensureHeapCapacity(size + 1);
             content[size] = arg0;
             keyValue[size] = key.getKey(arg0);
             queuePosition[id] = size;
@@ -179,7 +189,7 @@ public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
                 swap(root, child);
                 root = child;
             } else {
-                return;
+                break;
             }
         }
     }
@@ -202,7 +212,7 @@ public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
         return Arrays.toString(content);
     }
 
-    public boolean control(final int position) {
+    private boolean control(final int position) {
         if (position >= size) {
             return true;
         }

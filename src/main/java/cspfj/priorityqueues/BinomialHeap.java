@@ -6,7 +6,7 @@ import java.util.Iterator;
 
 public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
 
-    private static final int DEFAULT_SIZE = 10;
+    private static final int DEFAULT_SIZE = 100;
 
     /* 2 + log_2(Integer.MAX_VALUE) */
     private static final int MAX_ARRAY_SIZE = 33;
@@ -21,7 +21,6 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
 
     private int iter = 0;
 
-    private int first = MAX_ARRAY_SIZE;
     private int last = -1;
 
     // @Statistic
@@ -122,9 +121,6 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
 
     private void delRank(int rank) {
         trees[rank] = null;
-        if (first == rank) {
-            first++;
-        }
         if (last == rank) {
             last--;
         }
@@ -132,9 +128,6 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
 
     private void addRank(int rank, BinomialHeapNode<T> tree) {
         trees[rank] = tree;
-        if (first > rank) {
-            first = rank;
-        }
         if (last < rank) {
             last = rank;
         }
@@ -159,7 +152,7 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
     private BinomialHeapNode<T> minTree() {
         BinomialHeapNode<T> min = null;
         double minKey = 0;
-        for (int i = first; i <= last; i++) {
+        for (int i = last; i >= 0; i--) {
             final BinomialHeapNode<T> tree = trees[i];
             if (tree != null && (min == null || tree.key <= minKey)) {
                 min = tree;
@@ -172,7 +165,6 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
     @Override
     public void clear() {
         Arrays.fill(trees, null);
-        first = MAX_ARRAY_SIZE;
         last = -1;
         iter++;
         size = 0;

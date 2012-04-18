@@ -73,12 +73,14 @@ final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict
     max0 > min1 || !strict && max0 == min1;
   }
 
-  override def toString = scope(0).toString + (if (constant > 0)
-    " + " + constant
-  else if (constant < 0)
-    " - " + (-constant)) + (if (strict) " > " else " >= ") + scope(1)
+  override def toString = scope(0).toString + (
+    if (constant > 0)
+      " + " + constant
+    else if (constant < 0)
+      " - " + (-constant)
+    else "") + (if (strict) " > " else " >= ") + scope(1)
 
-  override def getEvaluation =
-    math.min(scope(0).dom.size, scope(1).dom.size);
+  override def getEvaluation = 2
+
   val simpleEvaluation = 1
 }

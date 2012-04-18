@@ -43,11 +43,11 @@ final class AddGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
       addConstraint(
         if (result.dom.size == 1) {
-          new Eq(-1, v0, result.dom.firstValue, v1);
+          new Eq(true, v0, result.dom.firstValue, v1);
         } else if (v0.dom.size == 1) {
-          new Eq(1, v1, v0.dom.firstValue, result);
+          new Eq(false, v1, v0.dom.firstValue, result);
         } else if (v1.dom.size == 1) {
-          new Eq(1, v0, v1.dom.firstValue, result);
+          new Eq(false, v0, v1.dom.firstValue, result);
         } else {
           new Add(result, v0, v1);
         });
