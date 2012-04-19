@@ -261,6 +261,6 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) {
     }
   }
 
-  val getEvaluation = (math.log(arity) * arity).toInt
+  val getEvaluation = ((31 - Integer.numberOfLeadingZeros(arity)) * arity).toInt
   val simpleEvaluation = 3
 }
