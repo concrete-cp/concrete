@@ -49,5 +49,7 @@ final class ExtensionConstraintGeneral(
     } else
       super.reviseVariable(position, mod);
   }
+  
+  override def checkIndices(tuple: Array[Int]) = _matrix.check(tuple)
 
 }
