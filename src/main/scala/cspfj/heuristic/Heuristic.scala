@@ -1,7 +1,7 @@
 package cspfj.heuristic;
 
 import cspfj.Pair;
-import cspfj.problem.Problem;
+import cspfj.Problem;
 
 trait Heuristic {
   def selectPair(problem: Problem): Option[Pair]

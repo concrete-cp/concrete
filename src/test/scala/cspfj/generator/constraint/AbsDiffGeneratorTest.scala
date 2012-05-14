@@ -6,7 +6,7 @@ import org.junit.Test
 
 import cspfj.constraint.semantic.AbsDiff
 import cspfj.generator.ProblemGenerator
-import cspfj.problem.Problem
+import cspfj.Problem
 import cspom.constraint.FunctionalConstraint
 import cspom.CSPOM
 

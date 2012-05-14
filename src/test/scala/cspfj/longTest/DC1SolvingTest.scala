@@ -6,7 +6,7 @@ import org.junit.Test
 import cspfj.filter.DC1
 import cspfj.generator.FailedGenerationException
 import cspfj.generator.ProblemGenerator
-import cspfj.problem.LearnMethod
+import cspfj.LearnMethod
 import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
 import cspfj.util.Loggable

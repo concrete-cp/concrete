@@ -1,7 +1,7 @@
 package cspfj.generator.constraint;
 
 import cspfj.constraint.semantic.AbsDiff
-import cspfj.problem.{ Variable, Problem, IntDomain }
+import cspfj.{ Variable, Problem, IntDomain }
 import cspom.constraint.CSPOMConstraint
 
 final class AbsDiffGenerator(problem: Problem) extends AbstractGenerator(problem) {

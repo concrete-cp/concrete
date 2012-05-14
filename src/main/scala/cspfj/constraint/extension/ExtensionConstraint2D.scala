@@ -20,7 +20,7 @@
 package cspfj.constraint.extension;
 
 import cspfj.constraint.VariablePerVariable
-import cspfj.problem.Variable
+import cspfj.Variable
 import cspfj.constraint.TupleEnumerator
 import scala.annotation.tailrec
 import cspfj.Statistic
@@ -35,9 +35,9 @@ object ExtensionConstraint2D {
 
 final class ExtensionConstraint2D(
   scope: Array[Variable],
-  private var _matrix: Matrix2D,
+  private var matrix2d: Matrix2D,
   shared: Boolean)
-  extends ConflictCount(scope, _matrix, shared)
+  extends ConflictCount(scope, matrix2d, shared)
   with VariablePerVariable {
 
   private val GAIN_OVER_GENERAL = 3;
@@ -77,7 +77,7 @@ final class ExtensionConstraint2D(
 
   private def hasSupportR(variablePosition: Int, index: Int) = {
     controlResidue(variablePosition, index) || {
-      val matrixBV = _matrix.getBitVector(variablePosition, index);
+      val matrixBV = matrix2d.getBitVector(variablePosition, index);
       val intersection = scope(1 - variablePosition).dom.intersects(matrixBV)
 
       if (intersection >= 0) {
@@ -93,16 +93,21 @@ final class ExtensionConstraint2D(
 
   private def hasSupportNR(variablePosition: Int, index: Int) = {
     ExtensionConstraint2D.checks += 1;
-    scope(1 - variablePosition).dom.intersects(_matrix.getBitVector(variablePosition, index)) >= 0
+    scope(1 - variablePosition).dom.intersects(matrix2d.getBitVector(variablePosition, index)) >= 0
   }
 
   private def controlResidue(position: Int, index: Int) = {
     val part = last(position)(index)
     ExtensionConstraint2D.presenceChecks += 1
     (part != -1 && scope(1 - position).dom.intersects(
-      _matrix.getBitVector(position, index), part))
+      matrix2d.getBitVector(position, index), part))
   }
 
   override def checkIndices(t: Array[Int]) = matrix.check(t)
+
+  override def unshareMatrix() = {
+    matrix2d = super.unshareMatrix().asInstanceOf[Matrix2D]
+    matrix2d
+  }
 
 }

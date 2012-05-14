@@ -1,7 +1,7 @@
 package cspfj.constraint;
 
 import java.util.Arrays
-import cspfj.problem.Variable;
+import cspfj.Variable;
 import scala.annotation.tailrec
 
 object Removals {

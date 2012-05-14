@@ -1,6 +1,6 @@
 package cspfj.constraint.extension;
 
-import cspfj.problem.Variable
+import cspfj.Variable
 import scala.annotation.tailrec
 import cspfj.constraint.TupleEnumerator
 import java.util.Arrays
@@ -32,6 +32,7 @@ abstract class ExtensionConstraint(
       _matrix = matrix.copy
       shared = false
     }
+    _matrix
   }
 
 }

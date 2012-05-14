@@ -1,6 +1,6 @@
 package cspfj.heuristic;
 
-import cspfj.problem.Variable;
+import cspfj.Variable;
 
 trait ValueHeuristic {
     def selectIndex(variable: Variable): Int

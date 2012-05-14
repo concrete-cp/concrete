@@ -5,9 +5,9 @@ import cspfj.constraint.extension.Matrix
 import cspfj.constraint.extension.Matrix2D
 import cspfj.constraint.extension.MatrixGeneral
 import cspfj.constraint.extension.TupleSet
-import cspfj.problem.Domain
-import cspfj.problem.Problem
-import cspfj.problem.Variable
+import cspfj.Domain
+import cspfj.Problem
+import cspfj.Variable
 import cspom.constraint.CSPOMConstraint
 import cspom.extension.Relation
 

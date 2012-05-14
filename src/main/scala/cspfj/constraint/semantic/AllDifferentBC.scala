@@ -2,17 +2,16 @@ package cspfj.constraint.semantic;
 
 import java.util.Arrays
 import java.util.Comparator
-import cspfj.problem.Variable
+import cspfj.Variable
 import cspfj.constraint.Constraint
 import cspfj.util.BitVector
-import cspfj.problem.EmptyDomainException
 import scala.annotation.tailrec
 import cspfj.UNSATException
 import cspfj.constraint.Removals
 import cspfj.util.Backtrackable
 import scala.collection.immutable.Queue
 import cspfj.util.UOList
-import cspfj.problem.Domain
+import cspfj.Domain
 
 final class HInterval(
   val dom: Domain,

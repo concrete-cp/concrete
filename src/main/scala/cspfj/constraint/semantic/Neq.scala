@@ -1,8 +1,8 @@
 package cspfj.constraint.semantic;
 
 import cspfj.constraint.Constraint
-import cspfj.problem.Domain
-import cspfj.problem.Variable
+import cspfj.Domain
+import cspfj.Variable
 
 final class Neq(v0: Variable, v1: Variable) extends Constraint(Array(v0, v1)) {
 

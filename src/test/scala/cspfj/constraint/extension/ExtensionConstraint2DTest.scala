@@ -4,8 +4,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.Assert._;
 
-import cspfj.problem.IntDomain;
-import cspfj.problem.Variable;
+import cspfj.IntDomain;
+import cspfj.Variable;
 
 final class ExtensionConstraint2DTest {
 

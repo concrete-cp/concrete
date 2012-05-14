@@ -2,7 +2,7 @@ package cspfj.generator.constraint;
 
 import cspfj.constraint.semantic.Mul
 import cspfj.generator.FailedGenerationException
-import cspfj.problem.{ Variable, Problem, IntDomain }
+import cspfj.{ Variable, Problem, IntDomain }
 import cspom.constraint.CSPOMConstraint
 
 final class MulGenerator(problem: Problem) extends AbstractGenerator(problem) {

@@ -7,8 +7,8 @@ import cspfj.constraint.Removals
 import cspfj.priorityqueues.Key
 import cspfj.priorityqueues.Fifos
 import cspfj.priorityqueues.ScalaNative
-import cspfj.problem.Problem
-import cspfj.problem.Variable
+import cspfj.Problem
+import cspfj.Variable
 import cspfj.util.Loggable
 import cspfj.Parameter
 import cspfj.ParameterManager

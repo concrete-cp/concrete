@@ -1,6 +1,6 @@
 package cspfj.generator.constraint;
 
-import cspfj.problem.{ Variable, Problem }
+import cspfj.{ Variable, Problem }
 import cspom.constraint.{ GeneralConstraint, CSPOMConstraint }
 import cspfj.constraint.semantic.AllDifferentBC
 

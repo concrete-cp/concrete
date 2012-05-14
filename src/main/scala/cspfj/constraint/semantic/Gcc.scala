@@ -4,7 +4,7 @@ import scala.collection.immutable.Queue
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.MultiMap
 import cspfj.constraint.Constraint
-import cspfj.problem.Variable
+import cspfj.Variable
 import cspfj.UNSATException
 
 final case class Bounds(val value: Int, val minCount: Int, val maxCount: Int) {

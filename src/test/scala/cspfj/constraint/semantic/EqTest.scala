@@ -2,8 +2,8 @@ package cspfj.constraint.semantic
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-import cspfj.problem.IntDomain
-import cspfj.problem.Variable
+import cspfj.IntDomain
+import cspfj.Variable
 
 final class EqTest {
 

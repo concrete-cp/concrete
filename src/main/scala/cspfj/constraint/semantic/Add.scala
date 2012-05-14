@@ -1,7 +1,7 @@
 package cspfj.constraint.semantic;
 
-import cspfj.problem.Domain
-import cspfj.problem.Variable
+import cspfj.Domain
+import cspfj.Variable
 import cspfj.constraint.Constraint
 import cspfj.constraint.Residues
 import cspfj.util.Interval

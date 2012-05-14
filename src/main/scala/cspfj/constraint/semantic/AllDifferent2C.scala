@@ -21,7 +21,7 @@ package cspfj.constraint.semantic;
 
 import scala.collection.immutable.Queue
 import cspfj.constraint.Constraint
-import cspfj.problem.Variable
+import cspfj.Variable
 import cspfj.util.BitVector
 import scala.annotation.tailrec
 import cspfj.constraint.Removals

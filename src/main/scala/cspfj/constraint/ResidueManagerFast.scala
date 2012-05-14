@@ -1,7 +1,7 @@
 package cspfj.constraint;
 
 import scala.annotation.tailrec
-import cspfj.problem.Variable
+import cspfj.Variable
 
 final class ResidueManagerFast(scope: Array[Variable]) {
 

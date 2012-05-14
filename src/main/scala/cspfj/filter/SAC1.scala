@@ -19,8 +19,8 @@
 package cspfj.filter;
 
 import java.util.logging.Logger
-import cspfj.problem.Problem
-import cspfj.problem.Variable;
+import cspfj.Problem
+import cspfj.Variable;
 import cspfj.util.Loggable
 
 /**

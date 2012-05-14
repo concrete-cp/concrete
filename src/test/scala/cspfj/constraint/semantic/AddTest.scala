@@ -10,8 +10,8 @@ import org.junit.Assert.assertFalse
 import cspfj.constraint.Constraint
 import cspfj.constraint.Residues
 import cspfj.constraint.TupleEnumerator
-import cspfj.problem.IntDomain
-import cspfj.problem.Variable
+import cspfj.IntDomain
+import cspfj.Variable
 
 final class AddTest {
 

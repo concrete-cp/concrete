@@ -22,9 +22,9 @@ package cspfj.constraint;
 import scala.annotation.tailrec
 import cspfj.heuristic.Weighted
 import cspfj.priorityqueues.Identified
-import cspfj.problem.Variable
 import cspfj.UNSATException
 import cspfj.priorityqueues.PTag
+import cspfj.Variable
 
 object Constraint {
   var cId = 0;

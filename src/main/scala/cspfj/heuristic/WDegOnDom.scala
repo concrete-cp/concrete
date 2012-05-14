@@ -19,8 +19,8 @@
 
 package cspfj.heuristic;
 
-import cspfj.problem.Problem;
-import cspfj.problem.Variable;
+import cspfj.Problem;
+import cspfj.Variable;
 
 final class WDegOnDom(problem: Problem) extends WDegFixedOnDom(problem) with RandomBreak {
 

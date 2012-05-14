@@ -1,6 +1,6 @@
 package cspfj.constraint;
 
-import cspfj.problem.Variable;
+import cspfj.Variable;
 import scala.annotation.tailrec
 
 trait Residues extends VariablePerVariable {

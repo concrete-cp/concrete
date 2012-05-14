@@ -3,8 +3,8 @@ package cspfj.filter;
 import scala.collection.Iterable
 import cspfj.StatisticsManager
 import cspfj.constraint.Constraint
-import cspfj.problem.Problem
-import cspfj.problem.Variable
+import cspfj.Problem
+import cspfj.Variable
 import cspfj.Statistic
 import cspfj.util.Loggable
 import scala.annotation.tailrec

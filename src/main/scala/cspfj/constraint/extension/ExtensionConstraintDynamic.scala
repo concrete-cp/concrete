@@ -20,7 +20,7 @@
 package cspfj.constraint.extension;
 
 import cspfj.constraint.Constraint
-import cspfj.problem.Variable
+import cspfj.Variable
 import cspfj.util.BitVector
 import scala.collection.JavaConversions
 import scala.collection.mutable.BitSet

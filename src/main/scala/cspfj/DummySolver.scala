@@ -20,7 +20,6 @@
 package cspfj;
 
 import cspfj.filter.AC3
-import cspfj.problem.Problem;
 import cspfj.filter.AC3Constraint
 import cspfj.filter.Filter
 

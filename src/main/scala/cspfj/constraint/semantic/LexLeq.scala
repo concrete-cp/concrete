@@ -2,7 +2,7 @@ package cspfj.constraint.semantic;
 
 import cspfj.constraint.Constraint
 import cspfj.constraint.Residues
-import cspfj.problem.Variable
+import cspfj.Variable
 import cspfj.constraint.TupleEnumerator
 
 final class LexLeq(scope: Array[Variable]) extends Constraint(scope)

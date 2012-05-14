@@ -22,10 +22,10 @@ import scala.collection.IndexedSeq
 import scala.collection.JavaConversions
 import cspfj.ParameterManager
 import cspfj.constraint.Constraint
-import cspfj.problem.LearnMethod
-import cspfj.problem.NoGoodLearner
-import cspfj.problem.Problem
-import cspfj.problem.Variable
+import cspfj.LearnMethod
+import cspfj.NoGoodLearner
+import cspfj.Problem
+import cspfj.Variable
 import cspfj.Parameter
 import cspfj.util.Loggable
 import scala.annotation.tailrec

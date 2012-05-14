@@ -1,7 +1,7 @@
 package cspfj.constraint.semantic
 import org.sat4j.minisat.SolverFactory
 import org.sat4j.specs.IProblem
-import cspfj.problem.Variable
+import cspfj.Variable
 import org.sat4j.core.VecInt
 import java.io.PrintWriter
 import cspfj.constraint.Residues

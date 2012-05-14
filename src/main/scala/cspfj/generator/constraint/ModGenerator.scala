@@ -2,7 +2,7 @@ package cspfj.generator.constraint;
 
 import cspfj.constraint.semantic.Mul
 import cspfj.generator.FailedGenerationException
-import cspfj.problem.{ Variable, Problem, IntDomain }
+import cspfj.{ Variable, Problem, IntDomain }
 import cspom.constraint.CSPOMConstraint
 import cspfj.constraint.Constraint
 import cspfj.constraint.Residues

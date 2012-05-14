@@ -2,7 +2,7 @@ package cspfj.generator.constraint;
 
 import cspfj.constraint.semantic.Bounds
 import cspfj.constraint.semantic.Gcc
-import cspfj.problem.{ Variable, Problem }
+import cspfj.{ Variable, Problem }
 import cspom.constraint.{ GeneralConstraint, CSPOMConstraint }
 
 final class GccGenerator(problem: Problem) extends AbstractGenerator(problem) {

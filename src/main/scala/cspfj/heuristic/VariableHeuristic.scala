@@ -1,8 +1,8 @@
 package cspfj.heuristic;
 
 import java.util.Comparator
-import cspfj.problem.Variable
-import cspfj.problem.Problem
+import cspfj.Variable
+import cspfj.Problem
 import scala.math.Ordering.DoubleOrdering
 
 trait VariableHeuristic extends Ordering[Variable] {

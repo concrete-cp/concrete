@@ -2,7 +2,7 @@ package cspfj.generator.constraint;
 
 import cspfj.constraint.semantic.{ ReifiedConstraint, Neq, Eq }
 import cspfj.generator.FailedGenerationException
-import cspfj.problem.{ Variable, Problem, Domain, IntDomain }
+import cspfj.{ Variable, Problem, Domain, IntDomain }
 import cspom.constraint.{ GeneralConstraint, FunctionalConstraint, CSPOMConstraint }
 
 final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {

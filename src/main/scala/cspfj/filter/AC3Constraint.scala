@@ -5,15 +5,15 @@ import scala.annotation.tailrec
 import scala.collection.IndexedSeq
 import cspfj.constraint.Constraint
 import cspfj.priorityqueues._
-import cspfj.problem.Problem
-import cspfj.problem.Variable
+import cspfj.Problem
+import cspfj.Variable
 import cspfj.util.Loggable
 import cspfj.Parameter
 import cspfj.ParameterManager
 import cspfj.Statistic
 import cspfj.StatisticsManager
 import cspfj.constraint.Removals
-import cspfj.problem.EmptyDomainException
+import cspfj.EmptyDomainException
 import cspfj.heuristic.revision.Eval
 import cspfj.UNSATException
 

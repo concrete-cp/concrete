@@ -4,8 +4,8 @@ import java.lang.reflect.InvocationTargetException;
 
 import cspfj.Pair;
 import cspfj.ParameterManager;
-import cspfj.problem.Problem;
-import cspfj.problem.Variable;
+import cspfj.Problem;
+import cspfj.Variable;
 import cspfj.Parameter;
 
 object CrossHeuristic {

@@ -4,8 +4,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
-import cspfj.problem.IntDomain
-import cspfj.problem.Variable
+import cspfj.IntDomain
+import cspfj.Variable
 
 final class GtTest {
   var v1: Variable = null

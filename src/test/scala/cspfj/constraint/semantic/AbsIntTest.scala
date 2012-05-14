@@ -1,7 +1,7 @@
 package cspfj.constraint.semantic
-import cspfj.problem.Problem
+import cspfj.Problem
 import org.junit.Test
-import cspfj.problem.IntDomain
+import cspfj.IntDomain
 import org.junit.Assert._
 
 final class AbsIntTest {

@@ -1,7 +1,7 @@
 package cspfj.constraint.semantic;
 
 import cspfj.constraint.Constraint
-import cspfj.problem.Variable
+import cspfj.Variable
 
 final class Abs(val result: Variable, val v0: Variable) extends Constraint(Array(result, v0)) {
 

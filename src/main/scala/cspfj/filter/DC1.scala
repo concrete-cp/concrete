@@ -18,15 +18,15 @@
  */
 package cspfj.filter;
 
-import cspfj.problem.LearnMethod
-import cspfj.problem.NoGoodLearner
-import cspfj.problem.Variable
+import cspfj.LearnMethod
+import cspfj.NoGoodLearner
+import cspfj.Variable
 import cspfj.Parameter
 import cspfj.Statistic
 import cspfj.util.Loggable
 import cspfj.ParameterManager
 import cspfj.StatisticsManager
-import cspfj.problem.Problem
+import cspfj.Problem
 
 /**
  * @author Julien VION

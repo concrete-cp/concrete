@@ -1,8 +1,8 @@
 package cspfj.constraint.semantic;
 
 import cspfj.constraint.Constraint
-import cspfj.problem.Domain
-import cspfj.problem.Variable;
+import cspfj.Domain
+import cspfj.Variable;
 
 object NotInInterval {
   def values(variable: Variable, lb: Int, ub: Int) =

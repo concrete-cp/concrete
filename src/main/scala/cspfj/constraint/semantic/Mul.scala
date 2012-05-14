@@ -2,8 +2,8 @@ package cspfj.constraint.semantic;
 
 import cspfj.constraint.Constraint
 import cspfj.constraint.Residues
-import cspfj.problem.Domain
-import cspfj.problem.Variable
+import cspfj.Domain
+import cspfj.Variable
 
 /**
  * Contrainte V0 = V1 * V2.

@@ -1,7 +1,7 @@
 package cspfj.generator.constraint;
 
 import cspfj.constraint.semantic.Abs
-import cspfj.problem.{ Variable, Problem, IntDomain }
+import cspfj.{ Variable, Problem, IntDomain }
 import cspom.constraint.CSPOMConstraint
 import scala.collection.immutable.SortedSet
 

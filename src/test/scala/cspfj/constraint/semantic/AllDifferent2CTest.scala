@@ -1,8 +1,8 @@
 package cspfj.constraint.semantic
 import org.junit.Test
 import org.junit.Assert._
-import cspfj.problem.IntDomain
-import cspfj.problem.Variable
+import cspfj.IntDomain
+import cspfj.Variable
 import cspfj.UNSATException
 
 class AllDifferent2CTest {

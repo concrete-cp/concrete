@@ -2,9 +2,9 @@ package cspfj.constraint.semantic
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import cspfj.problem.IntDomain
-import cspfj.problem.Problem
-import cspfj.problem.Variable
+import cspfj.IntDomain
+import cspfj.Problem
+import cspfj.Variable
 
 class SatTest {
   @Test

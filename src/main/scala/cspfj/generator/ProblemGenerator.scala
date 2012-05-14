@@ -1,7 +1,7 @@
 package cspfj.generator;
 
 import cspfj.generator.constraint.GeneratorManager
-import cspfj.problem.{ Domain, IntDomain, Problem }
+import cspfj.{ Domain, IntDomain, Problem }
 import cspom.constraint.CSPOMConstraint
 import cspom.variable.{ CSPOMDomain, BooleanDomain }
 import cspom.CSPOM
@@ -56,8 +56,8 @@ object ProblemGenerator {
   def generateDomain[T](cspomDomain: CSPOMDomain[T]): Domain = cspomDomain match {
     case null => null
     case bD: BooleanDomain =>
-      if (bD.isConstant) new cspfj.problem.BooleanDomain(bD.getBoolean)
-      else new cspfj.problem.BooleanDomain();
+      if (bD.isConstant) new cspfj.BooleanDomain(bD.getBoolean)
+      else new cspfj.BooleanDomain();
 
     case int: IntInterval => IntDomain(int.lb to int.ub)
 

@@ -1,6 +1,6 @@
 package cspfj.priorityqueues
 import scala.annotation.tailrec
-import cspfj.problem.Variable
+import cspfj.Variable
 
 object Key {
 

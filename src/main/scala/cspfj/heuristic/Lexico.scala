@@ -1,6 +1,6 @@
 package cspfj.heuristic;
 
-import cspfj.problem.Variable;
+import cspfj.Variable;
 
 final class Lexico extends ValueHeuristic {
 

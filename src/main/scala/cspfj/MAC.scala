@@ -26,13 +26,8 @@ import cspfj.filter.AC3
 import cspfj.filter.Filter
 import cspfj.heuristic.CrossHeuristic
 import cspfj.heuristic.Heuristic
-import cspfj.problem.Problem
-import cspfj.problem.LearnMethod
-import cspfj.problem.NoGoodLearner
-import cspfj.problem.Variable
 import cspfj.util.Loggable
 import scala.annotation.tailrec
-import cspfj.problem.EmptyDomainException
 
 object MAC {
   @Parameter("mac.btGrowth")

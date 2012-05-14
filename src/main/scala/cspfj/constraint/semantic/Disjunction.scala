@@ -2,8 +2,8 @@ package cspfj.constraint.semantic;
 
 import java.util.Arrays
 import cspfj.constraint.Constraint
-import cspfj.problem.BooleanDomain
-import cspfj.problem.Variable
+import cspfj.BooleanDomain
+import cspfj.Variable
 import cspfj.UNSATException
 import scala.annotation.tailrec
 

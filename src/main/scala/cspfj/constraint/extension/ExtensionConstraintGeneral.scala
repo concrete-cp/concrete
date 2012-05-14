@@ -19,7 +19,7 @@
 
 package cspfj.constraint.extension;
 
-import cspfj.problem.Variable
+import cspfj.Variable
 import cspfj.constraint.Residues
 import cspfj.constraint.TupleEnumerator
 import cspfj.UNSATException

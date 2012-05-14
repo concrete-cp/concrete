@@ -1,7 +1,7 @@
 package cspfj.generator.constraint;
 
 import cspfj.constraint.semantic.{ ReifiedConstraint, Gt }
-import cspfj.problem.{ Variable, Problem }
+import cspfj.{ Variable, Problem }
 import cspom.constraint.{ GeneralConstraint, FunctionalConstraint, CSPOMConstraint }
 
 final class DiffGeGenerator(problem: Problem) extends AbstractGenerator(problem) {

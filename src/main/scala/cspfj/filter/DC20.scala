@@ -20,10 +20,10 @@ package cspfj.filter;
 
 import scala.annotation.tailrec
 import cspfj.constraint.Constraint
-import cspfj.problem.LearnMethod
-import cspfj.problem.NoGoodLearner
-import cspfj.problem.Problem
-import cspfj.problem.Variable
+import cspfj.LearnMethod
+import cspfj.NoGoodLearner
+import cspfj.Problem
+import cspfj.Variable
 import cspfj.util.Loggable
 import cspfj.Statistic
 import cspfj.UNSATException

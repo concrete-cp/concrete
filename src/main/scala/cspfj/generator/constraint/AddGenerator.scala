@@ -2,7 +2,7 @@ package cspfj.generator.constraint;
 
 import cspfj.constraint.semantic.{ Eq, Add }
 import cspfj.constraint.Constraint
-import cspfj.problem.{ Variable, Problem, IntDomain }
+import cspfj.{ Variable, Problem, IntDomain }
 import cspom.constraint.CSPOMConstraint
 
 final class AddGenerator(problem: Problem) extends AbstractGenerator(problem) {

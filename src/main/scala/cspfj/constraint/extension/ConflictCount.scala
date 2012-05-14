@@ -1,14 +1,14 @@
 package cspfj.constraint.extension
 import scala.annotation.tailrec
-import cspfj.problem.Variable
+import cspfj.Variable
 import cspfj.constraint.TupleEnumerator
 import java.util.Arrays
 
 abstract class ConflictCount(
   scope: Array[Variable],
-  matrix: Matrix,
+  _matrix: Matrix,
   shared: Boolean)
-  extends ExtensionConstraint(scope: Array[Variable], matrix, shared) with TupleEnumerator {
+  extends ExtensionConstraint(scope: Array[Variable], _matrix, shared) with TupleEnumerator {
 
   def supportCondition(position: Int): Boolean = {
     if (nbMaxConflicts == null) {

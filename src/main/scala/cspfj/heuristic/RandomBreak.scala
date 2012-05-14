@@ -1,7 +1,7 @@
 package cspfj.heuristic;
 
-import cspfj.problem.Problem
-import cspfj.problem.Variable
+import cspfj.Problem
+import cspfj.Variable
 import cspfj.util.TieManager
 import scala.util.Random
 import scala.annotation.tailrec

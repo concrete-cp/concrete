@@ -1,7 +1,7 @@
 package cspfj.generator.constraint;
 
 import cspfj.generator.FailedGenerationException
-import cspfj.problem.Problem
+import cspfj.Problem
 import cspom.constraint.CSPOMConstraint;
 
 final class GeneratorManager(val problem: Problem) {

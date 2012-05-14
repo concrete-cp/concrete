@@ -2,14 +2,14 @@ package cspfj.constraint.semantic;
 
 import cspfj.constraint.Constraint
 import cspfj.constraint.Constraint
-import cspfj.problem.BooleanDomain
-import cspfj.problem.FALSE
-import cspfj.problem.TRUE
-import cspfj.problem.UNKNOWN
-import cspfj.problem.Variable
+import cspfj.BooleanDomain
+import cspfj.FALSE
+import cspfj.TRUE
+import cspfj.UNKNOWNBoolean
+import cspfj.Variable
 import cspfj.UNSATException
 import cspfj.constraint.Removals
-import cspfj.problem.EMPTY
+import cspfj.EMPTY
 
 final class ReifiedConstraint(
   controlVariable: Variable,
@@ -64,7 +64,7 @@ final class ReifiedConstraint(
 
   def revise() = {
     controlDomain.status match {
-      case UNKNOWN => (
+      case UNKNOWNBoolean => (
         if (!positiveConstraint.isConsistent) {
           controlDomain.setFalse();
           entail()
@@ -105,7 +105,7 @@ final class ReifiedConstraint(
   }
 
   def getEvaluation = controlDomain.status match {
-    case UNKNOWN => positiveConstraint.getEvaluation + negativeConstraint.getEvaluation
+    case UNKNOWNBoolean => positiveConstraint.getEvaluation + negativeConstraint.getEvaluation
     case TRUE => positiveConstraint.getEvaluation
     case FALSE => negativeConstraint.getEvaluation
     case EMPTY => throw new IllegalStateException

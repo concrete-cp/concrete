@@ -25,13 +25,11 @@ import java.util.Timer
 import cspfj.constraint.Constraint
 import cspfj.constraint.TupleEnumerator
 import cspfj.filter.Filter
-import cspfj.problem.Problem
 import cspfj.util.Loggable
 import cspfj.util.MsLogHandler
 import cspfj.util.Waker
 import cspfj.generator.ProblemGenerator
 import cspom.CSPOM
-import cspfj.problem.Variable
 import scala.annotation.tailrec
 import cspfj.constraint.extension.ExtensionConstraint2D
 import scala.collection.JavaConversions

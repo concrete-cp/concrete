@@ -20,8 +20,8 @@
 package cspfj.filter;
 
 import cspfj.constraint.Constraint
-import cspfj.problem.Variable;
-import cspfj.problem.Problem
+import cspfj.Variable;
+import cspfj.Problem
 
 /**
  * @author scand1sk

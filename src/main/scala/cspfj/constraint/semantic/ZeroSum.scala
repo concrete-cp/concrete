@@ -4,9 +4,9 @@ import scala.annotation.tailrec
 
 import cspfj.constraint.Constraint
 
-import cspfj.problem.Domain
+import cspfj.Domain
 import cspfj.util.Interval
-import cspfj.problem.Variable
+import cspfj.Variable
 import cspfj.util.Loggable
 
 final class ZeroSum(

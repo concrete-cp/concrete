@@ -6,8 +6,8 @@ import org.junit.Before
 import org.junit.Test
 
 import cspfj.constraint.Constraint
-import cspfj.problem.IntDomain
-import cspfj.problem.Variable
+import cspfj.IntDomain
+import cspfj.Variable
 
 final class ZeroSumTest {
 

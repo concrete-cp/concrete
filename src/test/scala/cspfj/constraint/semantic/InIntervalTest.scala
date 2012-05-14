@@ -5,9 +5,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-import cspfj.problem.IntDomain
-import cspfj.problem.Domain
-import cspfj.problem.Variable
+import cspfj.IntDomain
+import cspfj.Domain
+import cspfj.Variable
 
 final class InIntervalTest {
 

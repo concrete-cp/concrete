@@ -1,7 +1,7 @@
 package cspfj.generator.constraint;
 
 import cspfj.constraint.semantic.Disjunction
-import cspfj.problem.{ Variable, Problem }
+import cspfj.{ Variable, Problem }
 import cspom.constraint.{ GeneralConstraint, FunctionalConstraint, CSPOMConstraint }
 import cspom.variable.CSPOMVariable
 
