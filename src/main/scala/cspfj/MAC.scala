@@ -102,7 +102,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
     } else if (stack == Nil) {
       (UNSAT, Nil)
     } else if (maxBacktracks >= 0 && nbBacktracks >= maxBacktracks) {
-      (UNKNOWN, stack)
+      (UNKNOWNResult, stack)
     } else {
       problem.pop()
       nbBacktracks += 1
@@ -142,7 +142,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
       + ((nbBacktracks - nbBT) / macTime)
       + " bps)");
 
-    if (sol == UNKNOWN) {
+    if (sol == UNKNOWNResult) {
 
       //val modified = ngl.noGoods(newStack)
       problem.reset();

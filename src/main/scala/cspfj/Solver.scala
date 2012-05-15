@@ -99,13 +99,13 @@ abstract class Solver(val problem: Problem) extends Loggable {
         reset()
         v.dom.removeTo(v.dom.index(sol(v.name)))
         bestSolution(v, SAT(sol))
-      case UNSAT => if (best == UNKNOWN) UNSAT else best
-      case UNKNOWN => best
+      case UNSAT => if (best == UNKNOWNResult) UNSAT else best
+      case UNKNOWNResult => best
 
     }
   }
 
-  def bestSolution(v: Variable): SolverResult = bestSolution(v, UNKNOWN)
+  def bestSolution(v: Variable): SolverResult = bestSolution(v, UNKNOWNResult)
 
   private var _maxBacktracks = -1
 
@@ -168,7 +168,7 @@ abstract class Solver(val problem: Problem) extends Loggable {
 
 }
 
-abstract class SolverResult {
+sealed trait SolverResult {
   def isSat: Boolean
   def get: Map[String, Int]
   def getNum: Map[String, Number] = get map {
@@ -189,7 +189,7 @@ case object UNSAT extends SolverResult {
   def get = throw new NoSuchElementException
   override def toString = "UNSAT"
 }
-case object UNKNOWN extends SolverResult {
+case object UNKNOWNResult extends SolverResult {
   def isSat = false
   def get = throw new NoSuchElementException
   override def toString = "UNKNOWN"

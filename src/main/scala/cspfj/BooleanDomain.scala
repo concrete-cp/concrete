@@ -159,7 +159,7 @@ final class BooleanDomain(var _status: Status) extends Domain
   }
 
   def status_=(s: Status) {
-    assert(status == UNKNOWN || s == EMPTY && status != EMPTY,
+    assert(status == UNKNOWNBoolean || s == EMPTY && status != EMPTY,
       "Assigning from " + status + " to " + s)
     _status = s;
     altering()
@@ -230,7 +230,7 @@ final class BooleanDomain(var _status: Status) extends Domain
 
   def isTrue = status == TRUE
   def isFalse = status == FALSE
-  def isUnknown = status == UNKNOWN
+  def isUnknown = status == UNKNOWNBoolean
   override def isEmpty = status == EMPTY
   def setTrue() { status = TRUE }
   def setFalse() { status = FALSE }
