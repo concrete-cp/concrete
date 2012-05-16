@@ -9,7 +9,10 @@ import cspfj.util.IntervalSet
 import cspfj.util.Singleton
 
 object IntDomain {
+  @annotation.varargs
   def apply(d: Int*): IntDomain = new IntDomain(IntSet.factory(d), Indexer.factory(d))
+
+  //def apply(d: Array[Int]): IntDomain = apply(d: _*)
 
   def apply(r: Range): IntDomain =
     if (r.step == 1) new IntDomain(

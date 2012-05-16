@@ -24,9 +24,7 @@ import cspfj.constraint.Residues
 import cspfj.constraint.TupleEnumerator
 import cspfj.UNSATException
 
-final class ExtensionConstraintGeneral(
-  _matrix: Matrix,
-  shared: Boolean, scope: Array[Variable])
+final class ExtensionConstraintUnary(scope: Variable])
   extends ConflictCount(scope, _matrix, shared) with Residues {
 
   def removeTuple(tuple: Array[Int]) = {
