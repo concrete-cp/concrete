@@ -1,9 +1,6 @@
 package cspfj
 import org.junit.Test
-import cspfj.IntDomain
-import cspfj.Problem
 import cspfj.constraint.semantic.Eq
-import cspfj.Variable
 import org.junit.Assert
 import scala.annotation.tailrec
 import cspfj.constraint.semantic.AllDifferentBC

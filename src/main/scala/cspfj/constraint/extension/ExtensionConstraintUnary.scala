@@ -24,31 +24,29 @@ import cspfj.constraint.Residues
 import cspfj.constraint.TupleEnumerator
 import cspfj.UNSATException
 
-final class ExtensionConstraintUnary(scope: Variable])
-  extends ConflictCount(scope, _matrix, shared) with Residues {
+final class ExtensionConstraintUnary(scope: Variable, matrix: Matrix, shared: Boolean)
+  extends ExtensionConstraint(Array(scope), matrix, shared) {
+
+  def revise() = scope.dom.filter { i => matrix.check(Array(i)) }
 
   def removeTuple(tuple: Array[Int]) = {
     disEntail();
-    last.remove(tuple);
     unshareMatrix()
     if (matrix.check(tuple)) {
       matrix.set(tuple, false)
-      addConflict(tuple)
       true
     } else false
-
   }
 
-  def removeTuples(base: Array[Int]) = tuples(base).count(removeTuple)
-
-  override def reviseVariable(position: Int, mod: Seq[Int]) = {
-    if (supportCondition(position)) {
-      assert(!super.reviseVariable(position, mod))
-      false
-    } else
-      super.reviseVariable(position, mod);
+  def removeTuples(base: Array[Int]) = base match {
+    case Array(-1) => scope.indices.count(i => removeTuple(Array(i)))
+    case Array(i) => if (removeTuple(Array(i))) 1 else 0
+    case _ => throw new IllegalArgumentException()
   }
-  
+
   override def checkIndices(tuple: Array[Int]) = matrix.check(tuple)
+
+  def simpleEvaluation = 1
+  def getEvaluation = scope.dom.size
 
 }

@@ -36,7 +36,7 @@
 		<dependency>
 			<groupId>cspfj</groupId>
 			<artifactId>cspom</artifactId>
-			<version>1.1.2-SNAPSHOT</version>
+			<version>1.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.sat4j</groupId>
@@ -85,7 +85,7 @@
 					</jvmArgs>
 					<failOnError>false</failOnError>
 				</configuration>
-			
+
 				<executions>
 					<execution>
 						<id>scala-compile-first</id>
@@ -94,7 +94,11 @@
 							<goal>add-source</goal>
 							<goal>compile</goal>
 						</goals>
-
+						<configuration>
+							<args>
+								<arg>-Xdisable-assertions</arg>
+							</args>
+						</configuration>
 					</execution>
 					<execution>
 						<id>scala-test-compile</id>
@@ -108,7 +112,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-		
+
 				<configuration>
 					<source>1.7</source>
 					<target>1.7</target>
