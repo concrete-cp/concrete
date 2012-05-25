@@ -26,7 +26,7 @@ final object BitVectorSet {
 
 final class BitVectorSet(val bv: BitVector, val size: Int) extends IntSet {
   require(size >= 2)
-  assert(bv.cardinality == size)
+  assert(bv.cardinality == size, bv + " : " + bv.cardinality + " != " + size)
 
   def this(size: Int) = {
     this(BitVectorSet.fullBV(size), size)

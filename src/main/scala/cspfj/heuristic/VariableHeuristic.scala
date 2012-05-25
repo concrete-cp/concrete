@@ -11,14 +11,20 @@ trait VariableHeuristic extends Ordering[Variable] {
   def select: Option[Variable] =
     select(problem.variables filter { _.dom.size > 1 })
 
-  def select(coll: List[Variable]) =
+  def select(coll: List[Variable]) = {
+//    for (v <- coll) {
+//      println(v + " : " + score(v))
+//    }
+
     if (coll.isEmpty) None
-    else Some(coll.reduceLeft(
-      (x, y) => if (compare(x, y) > 0) x else y))
+    else Some(coll.maxBy(score))
+  }
 
   def score(variable: Variable): Double
 
-  def compare(v1: Variable, v2: Variable) =
+  def compare(v1: Variable, v2: Variable) = {
+    //println(v1 + ", " + v2 + " : " + score(v1).compare(score(v2)))
     score(v1).compare(score(v2))
+  }
 
 }

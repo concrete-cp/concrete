@@ -80,7 +80,7 @@ public final class SmallBitVector extends BitVector {
             return false;
         final long before = word;
         word |= MASK << from;
-        word &= ~(MASK << size);
+        word &= MASK >>> -size;
         return word != before;
     }
 

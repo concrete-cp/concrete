@@ -66,10 +66,17 @@ final class IntervalSet(val domain: Interval) extends IntSet {
     case d: IntervalSet => first >= d.first && last <= d.last
   }
 
-  lazy val toBitVector = BitVectorSet.intBv(first, last)
+  lazy val toBitVector = {
+
+    val bv = BitVectorSet.intBv(first, last)
+    assert(bv.cardinality == size, this + " -> " + bv)
+    bv
+  }
 
   def intersects(bv: BitVector) = bv.intersects(toBitVector)
   def intersects(bv: BitVector, part: Int) = bv.intersects(toBitVector, part)
   def bound = true
   def isEmpty = false
+
+  override def toString = "[" + first + ", " + last + "]"
 }

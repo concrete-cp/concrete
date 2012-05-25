@@ -38,7 +38,7 @@ final class Problem {
 
     val variable = new Variable(name, domain);
     variableMap += name -> variable
-    _variables ::= variable
+    _variables :+= variable
 
     _maxVId = math.max(variable.getId, _maxVId)
     //_maxDomainSize = math.max(variable.dom.size, _maxDomainSize)
