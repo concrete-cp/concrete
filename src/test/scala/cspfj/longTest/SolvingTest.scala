@@ -18,7 +18,7 @@ import cspfj.priorityqueues.BinaryHeap
 
 final class SolvingTest extends Loggable {
   //Solver.loggerLevel = "FINE"
-  ParameterManager("ac3c.queue") = classOf[BinaryHeap[Constraint]]
+  //ParameterManager("ac3c.queue") = classOf[BinaryHeap[Constraint]]
   ParameterManager("preprocessor") = null
 
   @Test //(timeout = 40000)
@@ -164,8 +164,11 @@ final class SolvingTest extends Loggable {
     for (solution <- new SolverIterator(solver)) {
       count += 1
       logger.info(solution.toString)
-      val failed = cspomProblem.controlInt(solution)
-      assertTrue(1 + count + "th solution: " + failed.toString(), failed.isEmpty);
+      assert {
+        val failed = cspomProblem.controlInt(solution)
+        assertTrue(1 + count + "th solution: " + failed.toString(), failed.isEmpty);
+        true
+      }
     }
 
     count;

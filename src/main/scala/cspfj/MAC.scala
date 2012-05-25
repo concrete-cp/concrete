@@ -21,8 +21,7 @@ package cspfj;
 
 import java.lang.Override
 import scala.collection.JavaConversions
-import cspfj.filter.AC3Constraint
-import cspfj.filter.AC3
+import cspfj.filter.ACC
 import cspfj.filter.Filter
 import cspfj.heuristic.CrossHeuristic
 import cspfj.heuristic.Heuristic
@@ -37,7 +36,7 @@ object MAC {
   var addConstraint = LearnMethod.BIN;
 
   @Parameter("mac.filter")
-  var filterClass: Class[_ <: Filter] = classOf[AC3Constraint];
+  var filterClass: Class[_ <: Filter] = classOf[ACC];
 
   @Parameter("mac.heuristic")
   var heuristicClass: Class[_ <: Heuristic] = classOf[CrossHeuristic];

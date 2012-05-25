@@ -40,7 +40,7 @@ final class DC21(val problem: Problem) extends Filter with Loggable {
 
   private var nbNoGoods = 0
 
-  private val filter = new AC3(problem)
+  private val filter = new ACV(problem)
 
   // private final List<DynamicConstraint> impliedConstraints;
 

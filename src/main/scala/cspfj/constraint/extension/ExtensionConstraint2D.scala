@@ -45,15 +45,13 @@ final class ExtensionConstraint2D(
   private val MINIMUM_SIZE_FOR_LAST = 3 * java.lang.Long.SIZE;
 
   /**
-   * No need for last data structure if domain sizes <=
+   * No need for "last" data structure if domain sizes <=
    * MINIMUM_SIZE_FOR_LAST
    */
-  private val last =
+  private val residues =
     if (scope.map(_.dom.maxSize).max > MINIMUM_SIZE_FOR_LAST) {
       Array(new Array[Int](scope(0).dom.maxSize), new Array[Int](scope(1).dom.maxSize))
-    } else {
-      null
-    }
+    } else null
 
   override def getEvaluation = (scope(0).dom.size * scope(1).dom.size) / GAIN_OVER_GENERAL
 
@@ -64,15 +62,15 @@ final class ExtensionConstraint2D(
 
   def removeTuple(tuple: Array[Int]) = {
     disEntail();
-    set(tuple, false);
+    set(tuple, false)
   }
 
   def removeTuples(base: Array[Int]) = tuples(base).count(removeTuple)
 
-  override def toString = "ext2d(" + scope(0) + ", " + scope(1) + ")";
+  override def toString = "ext2d(" + scope(0) + ", " + scope(1) + ")" + (if (isEntailed) " [entailed]" else "");
 
   def hasSupport(variablePosition: Int, index: Int) =
-    if (last == null) hasSupportNR(variablePosition, index);
+    if (residues == null) hasSupportNR(variablePosition, index);
     else hasSupportR(variablePosition, index);
 
   private def hasSupportR(variablePosition: Int, index: Int) = {
@@ -82,7 +80,7 @@ final class ExtensionConstraint2D(
 
       if (intersection >= 0) {
         ExtensionConstraint2D.checks += 1 + intersection;
-        last(variablePosition)(index) = intersection;
+        residues(variablePosition)(index) = intersection;
         true;
       } else {
         ExtensionConstraint2D.checks += matrixBV.realSize;
@@ -97,7 +95,7 @@ final class ExtensionConstraint2D(
   }
 
   private def controlResidue(position: Int, index: Int) = {
-    val part = last(position)(index)
+    val part = residues(position)(index)
     ExtensionConstraint2D.presenceChecks += 1
     (part != -1 && scope(1 - position).dom.intersects(
       matrix2d.getBitVector(position, index), part))

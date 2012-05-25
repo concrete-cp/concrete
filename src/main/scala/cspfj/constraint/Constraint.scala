@@ -25,13 +25,16 @@ import cspfj.priorityqueues.Identified
 import cspfj.UNSATException
 import cspfj.priorityqueues.PTag
 import cspfj.Variable
+import scala.collection.mutable.DoubleLinkedList
+import cspfj.priorityqueues.DLNode
 
 object Constraint {
   var cId = 0;
   def reset() { cId = 0 }
 }
 
-abstract class Constraint(val scope: Array[Variable]) extends Weighted with Identified with PTag {
+abstract class Constraint(val scope: Array[Variable])
+  extends DLNode[Constraint] with Weighted with Identified with PTag {
 
   val getId = Constraint.cId
   Constraint.cId += 1

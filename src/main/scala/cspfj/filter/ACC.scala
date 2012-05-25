@@ -17,14 +17,14 @@ import cspfj.EmptyDomainException
 import cspfj.heuristic.revision.Eval
 import cspfj.UNSATException
 
-object AC3Constraint extends Loggable {
+object ACC extends Loggable {
   @Parameter("ac3c.queue")
-  var queueType: Class[_ <: Queue[Constraint]] = classOf[BinomialHeap[Constraint]]
+  var queueType: Class[_ <: Queue[Constraint]] = classOf[QuickFifos]
 
   @Parameter("ac3c.key")
   var keyType: Class[_ <: Key[Constraint]] = classOf[Eval]
 
-  ParameterManager.register(this);
+  ParameterManager.register(ACC.this);
 
   def control(problem: Problem) = {
     logger.fine("Control !")
@@ -45,7 +45,7 @@ object AC3Constraint extends Loggable {
   def queue = queueType.getConstructor(classOf[Key[Constraint]]).newInstance(key)
 }
 
-final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) extends Filter with Loggable {
+final class ACC(val problem: Problem, val queue: Queue[Constraint]) extends Filter with Loggable {
   @Statistic
   val substats = new StatisticsManager
   substats.register("ac.priorityQueue", queue);
@@ -55,7 +55,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
   @Statistic
   var revisions = 0;
 
-  def this(problem: Problem) = this(problem, AC3Constraint.queue)
+  def this(problem: Problem) = this(problem, ACC.queue)
 
   def reduceAll() = {
     Removals.clear()
@@ -112,7 +112,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
       }
     }
 
-    upd(constraints.size - 1)
+    upd(constraints.length - 1)
   }
 
   @tailrec
@@ -130,7 +130,7 @@ final class AC3Constraint(val problem: Problem, val queue: Queue[Constraint]) ex
   @tailrec
   private def reduce(): Boolean = {
     if (queue.isEmpty) {
-      assert(AC3Constraint.control(problem))
+      assert(ACC.control(problem))
       true
     } else {
       val constraint = queue.poll();

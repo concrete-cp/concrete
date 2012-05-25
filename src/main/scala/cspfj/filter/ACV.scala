@@ -21,7 +21,7 @@ import cspfj.UNSATException
  * @author scand1sk
  *
  */
-object AC3 {
+object ACV {
   @Parameter("ac3v.queue")
   var queueType: Class[_ <: Queue[Variable]] = classOf[BinaryHeap[Variable]]
 
@@ -32,10 +32,10 @@ object AC3 {
 
   def queue = queueType.getConstructor(classOf[Key[Variable]]).newInstance(key)
 
-  ParameterManager.register(this);
+  ParameterManager.register(ACV.this);
 }
 
-final class AC3(
+final class ACV(
   val problem: Problem,
   val queue: Queue[Variable]) extends Filter with Loggable {
 
@@ -46,7 +46,7 @@ final class AC3(
   var revisions = 0;
 
   def this(problem: Problem) =
-    this(problem, AC3.queue)
+    this(problem, ACV.queue)
 
   def reduceAll() = {
     queue.clear();
@@ -151,7 +151,7 @@ final class AC3(
   private def reduce(): Boolean = {
     // LOGGER.finer("Reducing");
     if (queue.isEmpty) {
-      assert(AC3Constraint.control(problem))
+      assert(ACC.control(problem))
       true
     } else {
       val variable = queue.poll()

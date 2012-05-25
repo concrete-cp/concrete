@@ -29,7 +29,7 @@ import scala.annotation.tailrec
  */
 final class B3C(val problem: Problem) extends SingletonConsistency with Loggable {
 
-  val subFilter = new AC3Constraint(problem)
+  val subFilter = new ACC(problem)
   // private final static Logger logger =
   // Logger.getLogger("cspfj.filter.CDC");
 

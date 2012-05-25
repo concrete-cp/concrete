@@ -5,17 +5,17 @@ import scala.annotation.tailrec
 
 trait Residues extends VariablePerVariable {
 
-  val last = new ResidueManagerFast(scope)
+  val residues = new ResidueManagerFast(scope)
 
   def reviseVariable(position: Int, modified: Seq[Int]): Boolean = {
     val dom = scope(position).dom
 
     dom.filter { index =>
-      val residue = last.getResidue(position, index);
+      val residue = residues.getResidue(position, index);
       (residue != null && controlTuplePresence(residue)) ||
         (findSupport(position, index) match {
           case Some(tuple) => {
-            last.updateResidue(tuple)
+            residues.updateResidue(tuple)
             true
           }
           case None => false

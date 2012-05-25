@@ -19,13 +19,12 @@
 
 package cspfj;
 
-import cspfj.filter.AC3
-import cspfj.filter.AC3Constraint
+import cspfj.filter.ACC
 import cspfj.filter.Filter
 
 object DummySolver {
   @Parameter("dummy.filter")
-  var filterClass: Class[_ <: Filter] = classOf[AC3Constraint];
+  var filterClass: Class[_ <: Filter] = classOf[ACC];
 
   ParameterManager.register(this);
 }

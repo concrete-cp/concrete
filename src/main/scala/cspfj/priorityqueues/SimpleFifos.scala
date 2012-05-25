@@ -91,6 +91,6 @@ final class SimpleFifos(key: Key[_]) extends AbstractQueue[Constraint] {
     }
   }
 
-  def peek = peek(first)
+  def peek() = peek(first)
 
 }

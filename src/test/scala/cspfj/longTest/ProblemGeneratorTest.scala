@@ -2,7 +2,7 @@ package cspfj.longTest;
 
 import java.util.logging.Level.WARNING
 import org.junit.Test
-import cspfj.filter.AC3Constraint
+import cspfj.filter.ACC
 import cspfj.generator.ProblemGenerator
 import cspfj.util.Loggable
 import cspom.compiler.ProblemCompiler
@@ -71,7 +71,7 @@ final class ProblemGeneratorTest extends Loggable {
 
     logger.info(problem + "\n" + problem.variables.size + " vars, " + problem.constraints.size + " cons")
 
-    new AC3Constraint(problem).reduceAll();
+    new ACC(problem).reduceAll();
 
     logger.info(problem.toString);
   }

@@ -31,14 +31,8 @@ final class ExtensionConstraintGeneral(
 
   def removeTuple(tuple: Array[Int]) = {
     disEntail();
-    last.remove(tuple);
-    unshareMatrix()
-    if (matrix.check(tuple)) {
-      matrix.set(tuple, false)
-      addConflict(tuple)
-      true
-    } else false
-
+    residues.remove(tuple);
+    set(tuple, false)
   }
 
   def removeTuples(base: Array[Int]) = tuples(base).count(removeTuple)
@@ -50,7 +44,7 @@ final class ExtensionConstraintGeneral(
     } else
       super.reviseVariable(position, mod);
   }
-  
+
   override def checkIndices(tuple: Array[Int]) = matrix.check(tuple)
 
 }

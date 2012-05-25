@@ -34,7 +34,7 @@ import cspfj.UNSATException
  */
 final class DC20(val problem: Problem) extends Filter with Loggable {
 
-  val filter = new AC3Constraint(problem)
+  val filter = new ACC(problem)
 
   @Statistic
   var nbAddedConstraints = 0;

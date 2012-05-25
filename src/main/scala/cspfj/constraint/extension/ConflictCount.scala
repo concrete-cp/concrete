@@ -37,17 +37,15 @@ abstract class ConflictCount(
 
   @tailrec
   private def getOtherSizeR(position: Int, i: Int, acc: Long): Long = {
-    if (i < 0) {
-      acc
-    } else {
-      if (i != position) {
-        val dSize = scope(i).dom.size
-        if (acc > Long.MaxValue / dSize) {
-          -1
-        } else {
-          getOtherSizeR(position, i - 1, acc * dSize)
-        }
-      } else getOtherSizeR(position, i - 1, acc)
+    if (i < 0) acc
+    else if (i == position) getOtherSizeR(position, i - 1, acc)
+    else {
+      val dSize = scope(i).dom.size
+      if (acc > Long.MaxValue / dSize) {
+        -1
+      } else {
+        getOtherSizeR(position, i - 1, acc * dSize)
+      }
     }
   }
 
@@ -98,7 +96,7 @@ abstract class ConflictCount(
   protected final def currentSize: Long = {
     var size = 1
     for (v <- scope) {
-      if (size > Integer.MAX_VALUE / v.dom.size) {
+      if (size > Long.MaxValue / v.dom.size) {
         return -1;
       }
       size *= v.dom.size
