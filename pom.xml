@@ -8,6 +8,14 @@
 	<name>CSP4J</name>
 	<version>1.0.1-SNAPSHOT</version>
 	<url>http://cspfj.sourceforge.net/</url>
+
+	<developers>
+		<developer>
+			<name>Julien Vion</name>
+			<timezone>+1</timezone>
+		</developer>
+	</developers>
+
 	<repositories>
 		<repository>
 			<id>net.sourceforge.cspfj</id>
@@ -75,14 +83,10 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.scala-tools</groupId>
-				<artifactId>maven-scala-plugin</artifactId>
+				<groupId>net.alchim31.maven</groupId>
+				<artifactId>scala-maven-plugin</artifactId>
 				<configuration>
 					<sourceDir>src/main/scala</sourceDir>
-					<jvmArgs>
-						<jvmArg>-Xms64m</jvmArg>
-						<jvmArg>-Xmx1024m</jvmArg>
-					</jvmArgs>
 					<failOnError>false</failOnError>
 				</configuration>
 
