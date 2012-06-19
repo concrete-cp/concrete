@@ -17,7 +17,7 @@ final class ExtensionConstraintDynamicTest {
 
   @Before
   def setUp() {
-    val ta = new TupleSet(false);
+    val ta = new TupleHashSet(false);
     ta.set(Array(0, 0), true);
     ta.set(Array(1, 1), true);
     ta.set(Array(2, 2), true);

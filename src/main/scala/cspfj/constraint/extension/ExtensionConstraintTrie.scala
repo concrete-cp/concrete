@@ -33,8 +33,8 @@ import scala.collection.immutable.IntMap
 
 final class ExtensionConstraintTrie(
   scope: Array[Variable],
-  var trie: TrieMap) extends Constraint(scope)
-  with Loggable with Backtrackable[TrieMap] {
+  var trie: Trie) extends Constraint(scope)
+  with Loggable with Backtrackable[Trie] {
 
   private val found =
     (0 until arity) map (p => BitVector.newBitVector(scope(p).dom.maxSize)) toArray
@@ -74,7 +74,7 @@ final class ExtensionConstraintTrie(
 
   def save = trie
 
-  def restore(d: TrieMap) {
+  def restore(d: Trie) {
     trie = d
   }
 

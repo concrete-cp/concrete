@@ -3,8 +3,8 @@ package cspfj.constraint.extension;
 import cspfj.util.IntTupleSet;
 import scala.collection.JavaConversions
 
-final class TupleSet(
-  private var tupleSet: IntTupleSet,
+final class TupleHashSet(
+  private var tupleSet: IntTupleSet, 
   val initialContent: Boolean)
   extends Matrix with Iterable[Array[Int]] {
 
@@ -13,8 +13,8 @@ final class TupleSet(
 
   def this(initialContent: Boolean) = this(new IntTupleSet, initialContent)
 
-  override def copy: TupleSet =
-    new TupleSet(new IntTupleSet(tupleSet), initialContent)
+  override def copy: TupleHashSet =
+    new TupleHashSet(new IntTupleSet(tupleSet), initialContent)
 
   override def check(tuple: Array[Int]) =
     tupleSet.containsTuple(tuple) ^ initialContent;

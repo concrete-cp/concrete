@@ -32,7 +32,7 @@ import cspfj.util.Backtrackable
 
 final class ExtensionConstraintDynamic(
   scope: Array[Variable],
-  private var tupleSet: TupleSet,
+  private var tupleSet: TupleHashSet,
   shared: Boolean) extends ExtensionConstraint(scope, tupleSet, shared)
   with Removals with Loggable with Backtrackable[(List[Array[Int]], Int)] {
 

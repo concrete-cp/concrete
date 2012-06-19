@@ -61,9 +61,9 @@ abstract class ConflictCount(
       v => new Array[Long](v.dom.maxSize)
     }
 
-    if (matrix.isInstanceOf[TupleSet]) {
+    if (matrix.isInstanceOf[TupleHashSet]) {
 
-      val tupleSet = matrix.asInstanceOf[TupleSet];
+      val tupleSet = matrix.asInstanceOf[TupleHashSet];
       val initialContent = tupleSet.initialContent
       if (!initialContent) {
         for (p <- nbInitConflicts.indices) {

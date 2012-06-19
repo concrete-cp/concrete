@@ -20,7 +20,7 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Constrai
   require(scope.forall(v => v.dom.values.forall(bounds.contains)))
 
   def checkValues(t: Array[Int]): Boolean = {
-    var counts: Map[Int, Int] = Map.empty.default(0)
+    var counts: Map[Int, Int] = Map.empty.withDefaultValue(0)
     for (v <- t) {
       val c = counts(v)
       if (c >= bounds(v).maxCount) return false
