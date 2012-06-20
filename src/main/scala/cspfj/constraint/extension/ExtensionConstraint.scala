@@ -11,7 +11,7 @@ object ExtensionConstraint {
   def newExtensionConstraint(matrix: Matrix, scope: Array[Variable]) =
     matrix match {
       case m: Matrix2D => new ExtensionConstraint2D(scope, m, true)
-      case m: TupleSet => {
+      case m: TupleHashSet => {
         //new ExtensionConstraintDynamic(scope, m, true)
         new ExtensionConstraintTrie(scope, Trie(m.toSeq: _*))
       }

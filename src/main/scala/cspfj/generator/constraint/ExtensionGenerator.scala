@@ -4,12 +4,12 @@ import cspfj.constraint.extension.ExtensionConstraint
 import cspfj.constraint.extension.Matrix
 import cspfj.constraint.extension.Matrix2D
 import cspfj.constraint.extension.MatrixGeneral
-import cspfj.constraint.extension.TupleSet
 import cspfj.Domain
 import cspfj.Problem
 import cspfj.Variable
 import cspom.constraint.CSPOMConstraint
 import cspom.extension.Relation
+import cspfj.constraint.extension.TupleHashSet
 
 final case class Signature(domains: Seq[Domain], relation: Relation, init: Boolean)
 
@@ -62,7 +62,7 @@ object ExtensionGenerator {
     if (relation.arity == 2) {
       new Matrix2D(sizes(0), sizes(1), init);
     } else if (!init && tupleSetBetterThanMatrix(sizes, relation.size)) {
-      new TupleSet(relation.size, init);
+      new TupleHashSet(relation.size, init);
     } else {
       new MatrixGeneral(sizes.toArray, init);
     }

@@ -1,5 +1,7 @@
 package cspfj.constraint
 
+import scala.annotation.tailrec
+
 trait Shaver extends VariablePerVariable {
 
   def shave(): Boolean
@@ -25,6 +27,7 @@ trait Shaver extends VariablePerVariable {
     }
   }
 
+  @tailrec
   private def fixPoint(f: => Boolean, ch: Boolean = false): Boolean =
     if (f) fixPoint(f, true) else ch
 

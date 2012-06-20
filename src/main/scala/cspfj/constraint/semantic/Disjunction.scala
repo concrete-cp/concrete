@@ -33,10 +33,10 @@ final class Disjunction(scope: Array[Variable],
   def this(scope: Variable*) = this(scope.toArray, new Array[Boolean](scope.size))
 
   override def checkIndices(t: Array[Int]) = reverses.zip(t).exists(l => l._1 ^ l._2 == 1)
-  
+
   def checkValues(t: Array[Int]) = checkIndices(t)
 
-  override def toString = "\\/" + scope.mkString("(", ", ", ")")
+  override def toString = "\\/" + (scope, reverses).zipped.map((v, r) => (if (r) "-" else "") + v).mkString("(", ", ", ")")
 
   def revise(): Boolean = {
     if (isTrue(watch1) || isTrue(watch2)) entail()

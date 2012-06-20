@@ -4,9 +4,9 @@ import cspfj.constraint.extension.ExtensionConstraint
 import cspfj.constraint.extension.ExtensionConstraint2D
 import cspfj.constraint.extension.ExtensionConstraintGeneral
 import cspfj.constraint.extension.Matrix2D
-import cspfj.constraint.extension.TupleSet
 import cspfj.constraint.Constraint
 import cspfj.util.BitVectorIterator
+import cspfj.constraint.extension.TupleHashSet
 
 final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMethod) {
 
@@ -145,7 +145,7 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
       val matrix = new Matrix2D(scope(0).dom.maxSize, scope(1).dom.maxSize, true);
       new ExtensionConstraint2D(scope.toArray, matrix, false);
     } else {
-      new ExtensionConstraintGeneral(new TupleSet(true), false, scope.toArray);
+      new ExtensionConstraintGeneral(new TupleHashSet(true), false, scope.toArray);
     }
   }
 }

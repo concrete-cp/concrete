@@ -24,7 +24,7 @@ trait DLNode[This <: DLNode[This]] {
     prev = n
   }
 
-  def isEmpty = false
+  def isEmpty: Boolean = throw new UnsupportedOperationException
 
   def clear(): Unit = throw new UnsupportedOperationException
 }
@@ -67,7 +67,9 @@ final class QuickFifos extends AbstractQueue[Constraint] {
     else {
       if (e.isPresent) {
         e.remove()
-        if (queues(e.currentList).isEmpty && last == e.currentList) last -= 1
+        if (last == e.currentList) {
+          while (last >= 0 && queues(last).isEmpty) last -= 1
+        }
       }
       //print(list + " ")
       if (list > last) last = list
@@ -82,16 +84,18 @@ final class QuickFifos extends AbstractQueue[Constraint] {
   }
 
   @tailrec
-  private def poll(i: Int): Constraint =
-    if (i > last) throw new NoSuchElementException
-    else if (queues(i).isEmpty) poll(i + 1)
+  private def poll(i: Int): Constraint = {
+    require(i <= last, i + " > " + last + "\n" + queues.map(n => n.isEmpty).mkString("\n"))
+    val q = queues(i)
+    if (q.isEmpty) poll(i + 1)
     else {
-      val q = queues(i)
       val e = q.next
       e.remove()
       if (i == last && q.isEmpty) last = -1
+      assert(last >= 0 || queues.forall(_.isEmpty))
       e.asInstanceOf[Constraint]
     }
+  }
 
   def poll() = {
     val e = poll(0)
