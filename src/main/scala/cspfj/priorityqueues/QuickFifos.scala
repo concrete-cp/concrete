@@ -47,7 +47,14 @@ final class QuickFifos extends AbstractQueue[Constraint] {
 
   val NB_LISTS = 8
 
-  val FACTOR = math.ceil(31.0 / NB_LISTS).toInt
+  val FACTOR = {
+    val s = 31 / NB_LISTS
+    var i = 1
+    (for (j <- 0 until NB_LISTS) yield {
+      i <<= s
+      i
+    }) toArray
+  }
 
   val queues: Array[DLNode[Constraint]] = Array.fill(NB_LISTS)(new HeadDLNode())
 
@@ -56,8 +63,10 @@ final class QuickFifos extends AbstractQueue[Constraint] {
   def this(k: Key[_]) = this()
 
   private def chooseList(element: Constraint): Int = {
-    val k = element.getEvaluation
-    math.min(NB_LISTS - 1, NB_LISTS - Integer.numberOfLeadingZeros(k) / FACTOR)
+    val e = element.getEvaluation
+    var i = 0
+    while (i < NB_LISTS && e > FACTOR(i)) i += 1
+    i
   }
 
   def offer(e: Constraint) = {

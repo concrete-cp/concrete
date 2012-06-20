@@ -48,7 +48,6 @@ object GeneratorManager {
     "ne" -> classOf[NeqGenerator],
     "absdiff" -> classOf[AbsDiffGenerator],
     "diffGe" -> classOf[DiffGeGenerator],
-    "lexleq" -> classOf[LexLeqGenerator],
     "gcc" -> classOf[GccGenerator],
     "mod" -> classOf[ModGenerator])
 
