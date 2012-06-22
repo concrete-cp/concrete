@@ -44,7 +44,7 @@ final class Abs(val result: Variable, val v0: Variable) extends Constraint(Array
 
   override def toString = result + " = |" + v0 + "|";
 
-  def getEvaluation = result.dom.size * 3 / 2 + v0.dom.size
+  def advise(p: Int) = result.dom.size * 3 / 2 + v0.dom.size
 
   def simpleEvaluation = 1
 }

@@ -20,7 +20,7 @@ final class ZeroSum(
   def checkValues(t: Array[Int]): Boolean =
     (0 until arity).map(i => t(i) * factors(i)).sum >= 0
 
-  def getEvaluation = arity
+  def advise(p: Int) = arity
 
   def shave() = {
 

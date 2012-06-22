@@ -157,15 +157,18 @@ abstract class Constraint(val scope: Array[Variable])
     }
   }
 
-  def clearRemovals() {}
+  def advise(pos: Int): Int
 
-  def setRemovals(pos: Int) {}
+  def advise(v: Variable): Int = advise(position(v))
 
-  def setRemovals(v: Variable) {
-    setRemovals(position(v))
+  @tailrec
+  def adviseAll(p: Int = arity - 1): Int = {
+    if (p == 0) advise(0)
+    else {
+      advise(p)
+      adviseAll(p - 1)
+    }
   }
-
-  def fillRemovals() {}
 
   /**
    * The constraint propagator. Returns true if any domain change was done.
@@ -188,8 +191,6 @@ abstract class Constraint(val scope: Array[Variable])
   }
 
   def checkValues(tuple: Array[Int]): Boolean
-
-  def getEvaluation: Int
 
   def simpleEvaluation: Int
 

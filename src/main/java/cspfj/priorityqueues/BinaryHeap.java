@@ -19,7 +19,6 @@
 
 package cspfj.priorityqueues;
 
-import java.util.AbstractQueue;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -33,7 +32,7 @@ import java.util.NoSuchElementException;
  * 
  * @param <T>
  */
-public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
+public final class BinaryHeap<T extends Identified> implements PriorityQueue<T> {
 
     private T[] content;
 
@@ -47,16 +46,13 @@ public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
 
     private int iter = 0;
 
-    private final Key<T> key;
-
-    public BinaryHeap(final Key<T> key) {
-        this(key, 10);
+    public BinaryHeap() {
+        this(10);
     }
 
     @SuppressWarnings("unchecked")
-    public BinaryHeap(final Key<T> key, final int initSize) {
+    public BinaryHeap(final int initSize) {
         super();
-        this.key = key;
         this.queuePosition = new int[initSize];
         this.inQueue = new int[initSize];
         this.content = (T[]) new Identified[initSize];
@@ -97,13 +93,10 @@ public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
         }
     }
 
-    @Override
-    public int size() {
-        return size;
-    }
+  
 
     @Override
-    public boolean offer(final T arg0) {
+    public boolean offer(final T arg0, final int eval) {
         final int id = arg0.getId();
         ensureMapCapacity(id + 1);
 
@@ -147,13 +140,7 @@ public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
         }
     }
 
-    @Override
-    public T peek() {
-        if (size == 0) {
-            throw new NoSuchElementException();
-        }
-        return content[0];
-    }
+  
 
     @Override
     public void clear() {
@@ -161,10 +148,6 @@ public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
         iter++;
     }
 
-    @Override
-    public Iterator<T> iterator() {
-        throw new UnsupportedOperationException();
-    }
 
     private void swap(final int int0, final int int1) {
         final T tmp = content[int0];
@@ -212,21 +195,21 @@ public final class BinaryHeap<T extends Identified> extends AbstractQueue<T> {
         return Arrays.toString(content);
     }
 
-    private boolean control(final int position) {
-        if (position >= size) {
-            return true;
-        }
-        int child1 = (position << 1) + 1;
-        int child2 = (position << 1) + 2;
-        final int thisKey = key.getKey(content[position]);
-
-        if (child1 < size && thisKey > key.getKey(content[child1])) {
-            return false;
-        }
-        if (child2 < size && thisKey > key.getKey(content[child2])) {
-            return false;
-        }
-        return control(child1) && control(child2);
-
-    }
+//    private boolean control(final int position) {
+//        if (position >= size) {
+//            return true;
+//        }
+//        int child1 = (position << 1) + 1;
+//        int child2 = (position << 1) + 2;
+//        final int thisKey = key.getKey(content[position]);
+//
+//        if (child1 < size && thisKey > key.getKey(content[child1])) {
+//            return false;
+//        }
+//        if (child2 < size && thisKey > key.getKey(content[child2])) {
+//            return false;
+//        }
+//        return control(child1) && control(child2);
+//
+//    }
 }

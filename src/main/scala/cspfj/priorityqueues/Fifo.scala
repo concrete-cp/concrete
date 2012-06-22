@@ -3,13 +3,11 @@ import java.util.AbstractQueue
 import scala.collection.immutable.Queue
 import scala.collection.JavaConversions
 
-class Fifo[T <: PTag] extends AbstractQueue[T] {
+class Fifo[T <: PTag] extends PriorityQueue[T] {
 
   var queue: Queue[T] = Queue.empty
- 
-  def this(k: Key[T]) = this()
 
-  def offer(e: T) = {
+  def offer(e: T, eval: Int) = {
     if (e.isPresent) {
       false
     } else {
@@ -25,10 +23,6 @@ class Fifo[T <: PTag] extends AbstractQueue[T] {
     p.unsetPresent()
     p
   }
-
-  def peek = queue.head
-
-  def size = queue.size
 
   override def isEmpty = queue.isEmpty
 

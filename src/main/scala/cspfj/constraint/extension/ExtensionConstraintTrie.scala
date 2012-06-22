@@ -101,7 +101,7 @@ final class ExtensionConstraintTrie(
 
   //def matrixManager = matrixManager
 
-  def getEvaluation = arity * trie.size
+  def advise(p: Int) = arity * trie.size
 
   def simpleEvaluation = math.min(7, scope.count(_.dom.size > 1))
 

@@ -1,25 +1,26 @@
 package cspfj.priorityqueues
 import java.util.Comparator
-import java.util.PriorityQueue
-import java.util.AbstractQueue
 
-class JavaNative[T <: PTag](val key: Key[T]) extends AbstractQueue[T] {
-  val queue = new PriorityQueue[T](10, new Comparator[T] {
-    def compare(x: T, y: T) = key.compare(x, y)
-  })
+class JavaNative[T <: PTag] extends PriorityQueue[T] {
 
-  def offer(elt: T) = {
+  case class E(val e: T, val eval: Int) extends Ordered[E] {
+    def compare(y: E) = eval.compare(y.eval)
+  }
+
+  val queue = new java.util.PriorityQueue[E]()
+
+  def offer(elt: T, eval: Int) = {
     if (elt.isPresent) {
       false
     } else {
-      queue.offer(elt)
+      queue.offer(E(elt, eval))
       elt.setPresent()
       true
     }
   }
 
   def poll() = {
-    val elt = queue.poll()
+    val elt = queue.poll().e
     elt.unsetPresent
     elt
   }

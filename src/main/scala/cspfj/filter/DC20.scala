@@ -98,7 +98,7 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
 
   private def forwardCheck(variable: Variable) =
     variable.constraints.forall { c =>
-      c.setRemovals(variable)
+      c.advise(variable)
       c.arity != 2 || (try {
         c.revise()
         true

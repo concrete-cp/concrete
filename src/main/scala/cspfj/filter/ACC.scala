@@ -1,35 +1,32 @@
 package cspfj.filter;
 
-import java.util.Queue
 import scala.annotation.tailrec
-import scala.collection.IndexedSeq
+
 import cspfj.constraint.Constraint
+import cspfj.constraint.Removals
 import cspfj.priorityqueues._
-import cspfj.Problem
-import cspfj.Variable
 import cspfj.util.Loggable
-import cspfj.Parameter
+import cspfj.EmptyDomainException
 import cspfj.ParameterManager
+import cspfj.Problem
 import cspfj.Statistic
 import cspfj.StatisticsManager
-import cspfj.constraint.Removals
-import cspfj.EmptyDomainException
-import cspfj.heuristic.revision.Eval
 import cspfj.UNSATException
+import cspfj.Variable
 
 object ACC extends Loggable {
-  @Parameter("ac3c.queue")
-  var queueType: Class[_ <: Queue[Constraint]] = classOf[QuickFifos]
-
-  @Parameter("ac3c.key")
-  var keyType: Class[_ <: Key[Constraint]] = classOf[Eval]
+//  @Parameter("ac3c.queue")
+//  var queueType: Class[_ <: Queue[Constraint]] = classOf[QuickFifos]
+//
+//  @Parameter("ac3c.key")
+//  var keyType: Class[_ <: Key[Constraint]] = classOf[Eval]
 
   ParameterManager.register(ACC.this);
 
   def control(problem: Problem) = {
     logger.fine("Control !")
     for (c <- problem.constraints) {
-      c.fillRemovals()
+      (0 until c.arity).foreach(c.advise)
       val sizes = c.scope map (_.dom.size)
       assert(!c.revise(), c + " was revised")
       assert(
@@ -40,12 +37,12 @@ object ACC extends Loggable {
     true;
   }
 
-  def key = keyType.getConstructor().newInstance()
+  //def key = keyType.getConstructor().newInstance()
 
-  def queue = queueType.getConstructor(classOf[Key[Constraint]]).newInstance(key)
+  def queue = new QuickFifos //queueType.getConstructor(classOf[Key[Constraint]]).newInstance(key)
 }
 
-final class ACC(val problem: Problem, val queue: Queue[Constraint]) extends Filter with Loggable {
+final class ACC(val problem: Problem, val queue: PriorityQueue[Constraint]) extends Filter with Loggable {
   @Statistic
   val substats = new StatisticsManager
   substats.register("ac.priorityQueue", queue);
@@ -61,8 +58,8 @@ final class ACC(val problem: Problem, val queue: Queue[Constraint]) extends Filt
     Removals.clear()
     queue.clear()
     for (c <- problem.constraints if (!c.isEntailed)) {
-      c.fillRemovals()
-      queue.offer(c);
+      val lastEval = (0 until c.arity).foldLeft(0)((p, acc) => c.advise(p))
+      queue.offer(c, lastEval);
     }
     reduce()
   }
@@ -79,8 +76,7 @@ final class ACC(val problem: Problem, val queue: Queue[Constraint]) extends Filt
 
     if (modCons != null)
       for (c <- problem.constraints if (modCons(c.getId) > cnt && !c.isEntailed)) {
-
-        c.fillRemovals()
+        (0 until c.arity).foreach(c.advise)
         queue.offer(c);
 
       }
@@ -104,7 +100,7 @@ final class ACC(val problem: Problem, val queue: Queue[Constraint]) extends Filt
         val c = constraints(i)
 
         if ((c ne skip) && !c.isEntailed) {
-          c.setRemovals(modified.positionInConstraint(i))
+          c.advise(modified.positionInConstraint(i))
           queue.offer(c)
         }
 
@@ -143,8 +139,6 @@ final class ACC(val problem: Problem, val queue: Queue[Constraint]) extends Filt
           assert(!(constraint.sizes() sameElements sizes), constraint + " returned wrong true revised info")
           updateQueue(sizes, constraint, constraint.arity - 1)
         } else assert(constraint.sizes() sameElements sizes, constraint + " returned wrong false revised info")
-
-        constraint.clearRemovals();
         true
       } catch {
         case e: UNSATException =>
@@ -165,7 +159,7 @@ final class ACC(val problem: Problem, val queue: Queue[Constraint]) extends Filt
     queue.clear();
 
     for (c <- constraints if !c.isEntailed) {
-      c.fillRemovals()
+      (0 until c.arity).foreach(c.advise)
       queue.offer(c);
     }
 

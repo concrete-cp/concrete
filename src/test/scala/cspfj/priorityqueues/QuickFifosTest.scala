@@ -14,18 +14,19 @@ class QuickFifosTest {
     assertTrue(q.isEmpty)
     for (i <- 0 until 10) {
       val c = new Constraint(Array()) {
-        val getEvaluation = r.nextInt(1000000)
+        val eval = r.nextInt(1000000)
+        def advise(p: Int) = eval
         def revise() = false
         def simpleEvaluation = 1
         def checkValues(t: Array[Int]) = true
       }
-      q.add(c)
+      q.offer(c, c.eval)
     }
 
     for (i <- 0 until 10) {
       assertFalse(q.isEmpty)
       val c = q.poll()
-      println(c.getEvaluation)
+      println(c.advise(0))
     }
     assertTrue(q.isEmpty)
 

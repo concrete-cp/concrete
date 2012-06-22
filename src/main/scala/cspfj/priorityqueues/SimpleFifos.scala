@@ -22,7 +22,7 @@ import cspfj.constraint.Constraint
  *
  * @param <T>
  */
-final class SimpleFifos(key: Key[_]) extends AbstractQueue[Constraint] {
+final class SimpleFifos() extends PriorityQueue[Constraint] {
 
   val nbLists = 8
 
@@ -32,7 +32,7 @@ final class SimpleFifos(key: Key[_]) extends AbstractQueue[Constraint] {
 
   var last = -1
 
-  def offer(e: Constraint) =
+  def offer(e: Constraint, eval: Int) =
     if (e.isPresent) false
     else {
       val list = e.simpleEvaluation
@@ -67,30 +67,13 @@ final class SimpleFifos(key: Key[_]) extends AbstractQueue[Constraint] {
     e
   }
 
-  override def clear() {
+  def clear() {
     (first to last).foreach(queues(_) = Queue.empty)
     first = nbLists
     last = -1
     PTag.clear()
   }
 
-  def iterator = JavaConversions.asJavaIterator(queues.iterator.flatMap(_.iterator))
-
-  def size = (first to last).map(i => queues(i).size).sum
-
-  override def isEmpty = first > last
-
-  @tailrec
-  private def peek(i: Int): Constraint = {
-    if (i > last) {
-      throw new NoSuchElementException
-    } else if (queues(i).isEmpty) {
-      peek(i + 1)
-    } else {
-      queues(i).head
-    }
-  }
-
-  def peek() = peek(first)
+  def isEmpty = first > last
 
 }

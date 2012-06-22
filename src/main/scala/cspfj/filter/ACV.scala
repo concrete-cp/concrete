@@ -52,7 +52,7 @@ final class ACV(
     queue.clear();
     problem.variables.foreach(queue.offer)
     problem.constraints.foreach { c =>
-      (0 until c.arity).foreach(c.setRemovals)
+      (0 until c.arity).foreach(c.advise)
     }
 
     reduce()
@@ -63,16 +63,16 @@ final class ACV(
     queue.offer(v)
     v.constraints.zipWithIndex.foreach {
       case (c, i) =>
-        c.setRemovals(v.positionInConstraint(i))
+        c.advise(v.positionInConstraint(i))
     }
   }
 
-  private def setRemovals(v: Variable, skip: Constraint) {
+  private def advise(v: Variable, skip: Constraint) {
 
     val constraints = v.constraints
 
     for (i <- 0 until constraints.size; val c = constraints(i) if c ne skip) {
-      c.setRemovals(v.positionInConstraint(i))
+      c.advise(v.positionInConstraint(i))
     }
 
   }
@@ -86,7 +86,7 @@ final class ACV(
       val variable = scope(i)
       if (prev(i) != variable.dom.size) {
         queue.offer(variable)
-        setRemovals(variable, constraint)
+        advise(variable, constraint)
       }
     }
 
@@ -96,14 +96,12 @@ final class ACV(
   private def prepareQueue(modifiedConstraints: Iterator[Constraint]): Boolean = {
     if (modifiedConstraints.hasNext) {
       val c = modifiedConstraints.next
-      (0 until c.arity).foreach(c.setRemovals)
+      (0 until c.arity).foreach(c.advise)
 
       val prev = c.sizes()
 
       val sat = try {
         if (c.revise()) updateQueue(prev, c)
-
-        c.clearRemovals()
         true
       } catch {
         case _: UNSATException => {
@@ -172,8 +170,6 @@ final class ACV(
           assert(!(c.sizes() sameElements prev), c + " returned wrong true revised info")
           updateQueue(prev, c)
         } else assert(c.sizes() sameElements prev, c + " returned wrong false revised info")
-
-        c.clearRemovals();
         true
       } catch {
         case e: UNSATException =>

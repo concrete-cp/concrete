@@ -15,20 +15,15 @@ trait Removals extends Constraint {
 
   val removals = new Array[Int](arity)
 
-  fillRemovals()
-
-  final override def setRemovals(p: Int) {
-    removals(p) = Removals.count
+  def advise(pos: Int) = {
+    removals(pos) = Removals.count
+    getEvaluation
   }
 
-  final override def clearRemovals() {
+  def revise() = {
+    val r = revise(modified(Removals.count, arity - 1))
     Arrays.fill(removals, -1)
-  }
-
-  def revise() = revise(modified(Removals.count, arity - 1))
-
-  override def fillRemovals() {
-    Arrays.fill(removals, Removals.count)
+    r
   }
 
   def revise(modified: Seq[Int]): Boolean
@@ -39,6 +34,8 @@ trait Removals extends Constraint {
     if (i < 0) Stream.empty
     else if (removals(i) == reviseCount) i #:: modified(reviseCount, i - 1)
     else modified(reviseCount, i - 1)
+
+  def getEvaluation: Int
 
   //scope.iterator.zip(removals.iterator).filter(t => t._2 >= reviseCount).map(t => t._1)
 

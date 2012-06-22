@@ -1,15 +1,12 @@
 package cspfj.priorityqueues
-import java.util.AbstractQueue
-import scala.collection.immutable.Queue
+
 import scala.collection.JavaConversions
 
-class Lifo[T <: PTag] extends AbstractQueue[T] {
+class Lifo[T <: PTag] extends PriorityQueue[T] {
 
   var stack: List[T] = Nil
 
-  def this(k: Key[T]) = this()
-
-  def offer(e: T) = {
+  def offer(e: T, eval: Int) = {
     if (e.isPresent) false
     else {
       stack ::= e

@@ -15,7 +15,7 @@ import java.io.PrintStream
  *
  * @param <T>
  */
-final class Fifos[T <: PTag](val key: Key[T]) extends AbstractQueue[T] {
+final class Fifos[T <: PTag] extends PriorityQueue[T] {
 
   val NB_LISTS = 8
 
@@ -25,15 +25,14 @@ final class Fifos[T <: PTag](val key: Key[T]) extends AbstractQueue[T] {
 
   var last = -1
 
-  private def chooseList(element: T): Int = {
-    val k = key.getKey(element)
-    math.min(NB_LISTS - 1, NB_LISTS - Integer.numberOfLeadingZeros(k) / 4)
+  private def chooseList(eval: Int): Int = {
+    math.min(NB_LISTS - 1, NB_LISTS - Integer.numberOfLeadingZeros(eval) / 4)
   }
 
-  def offer(e: T) =
+  def offer(e: T, eval: Int) =
     if (e.isPresent) false
     else {
-      val list = chooseList(e)
+      val list = chooseList(eval)
       //print(list + " ")
       if (list < first) first = list
       if (list > last) last = list
@@ -42,7 +41,7 @@ final class Fifos[T <: PTag](val key: Key[T]) extends AbstractQueue[T] {
         queues(list) = queues(list).enqueue(e)
       catch {
         case exc: IndexOutOfBoundsException =>
-          throw new IllegalArgumentException(e + " : " + key.getKey(e) + " -> " + list, exc)
+          throw new IllegalArgumentException(e + " : " + eval + " -> " + list, exc)
       }
       e.setPresent()
       true
@@ -66,30 +65,13 @@ final class Fifos[T <: PTag](val key: Key[T]) extends AbstractQueue[T] {
     e
   }
 
-  override def clear() {
+  def clear() {
     (first to last).foreach(queues(_) = Queue.empty)
     first = NB_LISTS
     last = -1
     PTag.clear()
   }
 
-  def iterator = JavaConversions.asJavaIterator(queues.iterator.flatMap(_.iterator))
-
-  def size = (first to last).map(i => queues(i).size).sum
-
-  override def isEmpty = first > last
-
-  @tailrec
-  private def peek(i: Int): T = {
-    if (i > last) {
-      throw new NoSuchElementException
-    } else if (queues(i).isEmpty) {
-      peek(i + 1)
-    } else {
-      queues(i).head
-    }
-  }
-
-  def peek = peek(first)
+  def isEmpty = first > last
 
 }

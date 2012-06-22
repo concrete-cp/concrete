@@ -1,37 +1,33 @@
 package cspfj.priorityqueues
 import java.util.AbstractQueue
-import scala.collection.mutable.PriorityQueue
 import scala.collection.JavaConversions
 
-final class ScalaNative[T <: PTag](
-  val key: Key[T]) extends AbstractQueue[T] {
-  
-  val queue = new PriorityQueue[T]()(key.reverse)
+final class ScalaNative[T <: PTag] extends PriorityQueue[T] {
 
-  def offer(elt: T) = {
+  final case class E(elt: T, eval: Int) extends Ordered[E] {
+    
+  }
+
+  val queue = new collection.mutable.PriorityQueue[E]()
+
+  def offer(elt: T, eval: Int) = {
     if (elt.isPresent) {
       false
     } else {
-      queue.enqueue(elt)
+      queue.enqueue(E(elt, eval))
       elt.setPresent()
       true
     }
   }
 
   def poll() = {
-    val elt = queue.dequeue()
+    val elt = queue.dequeue().elt
     elt.unsetPresent
     elt
   }
-
-  def peek = queue.head
-
-  def size = queue.size
 
   override def clear() {
     queue.clear()
     PTag.clear()
   }
-
-  def iterator = JavaConversions.asJavaIterator(queue.iterator)
 }

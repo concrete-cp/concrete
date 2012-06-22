@@ -35,7 +35,7 @@ trait DLNode[This <: DLNode[This]] {
  *
  * @param <T>
  */
-final class QuickFifos extends AbstractQueue[Constraint] {
+final class QuickFifos extends PriorityQueue[Constraint] {
 
   private class HeadDLNode extends DLNode[Constraint] {
     override def isEmpty = next eq this
@@ -60,17 +60,14 @@ final class QuickFifos extends AbstractQueue[Constraint] {
 
   var last = -1
 
-  def this(k: Key[_]) = this()
-
-  private def chooseList(element: Constraint): Int = {
-    val e = element.getEvaluation
+  private def chooseList(e: Int): Int = {
     var i = 0
     while (i < NB_LISTS && e > FACTOR(i)) i += 1
     i
   }
 
-  def offer(e: Constraint) = {
-    val list = chooseList(e)
+  def offer(e: Constraint, eval: Int) = {
+    val list = chooseList(eval)
 
     if (e.isPresent && list == e.currentList) false
     else {
@@ -112,25 +109,13 @@ final class QuickFifos extends AbstractQueue[Constraint] {
     e
   }
 
-  override def clear() {
+  def clear() {
     (0 to last).foreach(queues(_).clear())
     last = -1
     PTag.clear()
   }
 
-  def iterator = throw new UnsupportedOperationException // JavaConversions.asJavaIterator(queues.iterator.flatMap(_.iterator))
+  def isEmpty = last < 0
 
-  def size = throw new UnsupportedOperationException // (0 to last).map(i => queues(i).size).sum
-
-  override def isEmpty = last < 0
-
-  @tailrec
-  private def peek(i: Int): Constraint = {
-    if (i > last) throw new NoSuchElementException
-    else if (queues(i).isEmpty) peek(i + 1)
-    else queues(i).next.asInstanceOf[Constraint]
-  }
-
-  def peek() = peek(0)
 
 }
