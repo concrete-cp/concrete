@@ -25,7 +25,7 @@ final class Neq(v0: Variable, v1: Variable) extends Constraint(Array(v0, v1)) {
 
   override def toString = v0 + " /= " + v1
 
-  override def getEvaluation = math.min(v0.dom.size, v1.dom.size)
+  def advise(p: Int) = math.min(v0.dom.size, v1.dom.size)
 
   val simpleEvaluation = 2
 }

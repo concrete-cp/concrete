@@ -1,12 +1,10 @@
 package cspfj.priorityqueues;
 
-import java.util.AbstractQueue;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.Iterator;
 
-public final class BitVectorPriorityQueue<T extends Identified> extends
-        AbstractQueue<T> {
+public final class BitVectorPriorityQueue<T extends Identified> implements
+        PriorityQueue<T> {
 
     private final BitSet queue;
 
@@ -14,18 +12,16 @@ public final class BitVectorPriorityQueue<T extends Identified> extends
 
     private int[] evals;
 
-    private final Key<T> key;
 
-    public BitVectorPriorityQueue(final Key<T> key) {
-        this(key, 10);
+    public BitVectorPriorityQueue() {
+        this(10);
     }
 
     @SuppressWarnings("unchecked")
-    public BitVectorPriorityQueue(final Key<T> key, final int initSize) {
+    public BitVectorPriorityQueue(final int initSize) {
         this.values = (T[]) new Identified[initSize];
         evals = new int[initSize];
         queue = new BitSet(initSize);
-        this.key = key;
     }
 
     /**
@@ -48,38 +44,24 @@ public final class BitVectorPriorityQueue<T extends Identified> extends
         }
     }
 
-    @Override
-    public Iterator<T> iterator() {
-        throw new UnsupportedOperationException();
-    }
-
+   
     @Override
     public boolean isEmpty() {
         return queue.isEmpty();
     }
 
     @Override
-    public int size() {
-        return queue.cardinality();
-    }
-
-    @Override
-    public boolean offer(final T e) {
+    public boolean offer(final T e, final int eval) {
         final int id = e.getId();
         ensureCapacity(id + 1);
         values[id] = e;
-        evals[id] = key.getKey(e);
+        evals[id] = eval;
         if (queue.get(id)) {
             return false;
         } else {
             queue.set(id);
             return true;
         }
-    }
-
-    @Override
-    public T peek() {
-        return values[min()];
     }
 
     @Override
@@ -96,7 +78,7 @@ public final class BitVectorPriorityQueue<T extends Identified> extends
 
     private int min() {
         int best = queue.nextSetBit(0);
-        int bestKey = key.getKey(values[best]);
+        int bestKey = evals[best];
         for (int i = queue.nextSetBit(best + 1); i >= 0; i = queue
                 .nextSetBit(i + 1)) {
             final int keyValue = evals[i];

@@ -162,7 +162,7 @@ abstract class Constraint(val scope: Array[Variable])
   def advise(v: Variable): Int = advise(position(v))
 
   @tailrec
-  def adviseAll(p: Int = arity - 1): Int = {
+  final def adviseAll(p: Int = arity - 1): Int = {
     if (p == 0) advise(0)
     else {
       advise(p)

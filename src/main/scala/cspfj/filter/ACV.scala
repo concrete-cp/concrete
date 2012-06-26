@@ -4,7 +4,6 @@ import java.util.Queue
 import scala.annotation.tailrec
 import cspfj.constraint.Constraint
 import cspfj.constraint.Removals
-import cspfj.priorityqueues.Key
 import cspfj.priorityqueues.Fifos
 import cspfj.priorityqueues.ScalaNative
 import cspfj.Problem
@@ -16,6 +15,8 @@ import cspfj.Statistic
 import cspfj.priorityqueues.BinomialHeap
 import cspfj.priorityqueues.BinaryHeap
 import cspfj.UNSATException
+import cspfj.priorityqueues.PriorityQueue
+import cspfj.heuristic.revision.Key
 
 /**
  * @author scand1sk
@@ -23,24 +24,25 @@ import cspfj.UNSATException
  */
 object ACV {
   @Parameter("ac3v.queue")
-  var queueType: Class[_ <: Queue[Variable]] = classOf[BinaryHeap[Variable]]
+  var queueType: Class[_ <: PriorityQueue[Variable]] = classOf[BinaryHeap[Variable]]
 
   @Parameter("ac3v.key")
   val keyType: Class[_ <: Key[Variable]] = classOf[cspfj.heuristic.revision.Dom]
 
   def key = keyType.getConstructor().newInstance()
 
-  def queue = queueType.getConstructor(classOf[Key[Variable]]).newInstance(key)
+  def queue = queueType.getConstructor().newInstance()
 
   ParameterManager.register(ACV.this);
 }
 
 final class ACV(
   val problem: Problem,
-  val queue: Queue[Variable]) extends Filter with Loggable {
+  val queue: PriorityQueue[Variable]) extends Filter with Loggable {
 
   // private static final Logger LOGGER = Logger.getLogger(Filter.class
   // .getSimpleName());
+  val key = ACV.key
 
   @Statistic
   var revisions = 0;
@@ -50,7 +52,7 @@ final class ACV(
 
   def reduceAll() = {
     queue.clear();
-    problem.variables.foreach(queue.offer)
+    problem.variables.foreach(v => queue.offer(v, key.getKey(v)))
     problem.constraints.foreach { c =>
       (0 until c.arity).foreach(c.advise)
     }
@@ -60,7 +62,7 @@ final class ACV(
   }
 
   private def prepareQueue(v: Variable) {
-    queue.offer(v)
+    queue.offer(v, key.getKey(v))
     v.constraints.zipWithIndex.foreach {
       case (c, i) =>
         c.advise(v.positionInConstraint(i))
@@ -71,9 +73,16 @@ final class ACV(
 
     val constraints = v.constraints
 
-    for (i <- 0 until constraints.size; val c = constraints(i) if c ne skip) {
-      c.advise(v.positionInConstraint(i))
+    @tailrec
+    def a(i: Int) {
+      if (i >= 0) {
+        val c = constraints(i)
+        if (c ne skip) c.advise(v.positionInConstraint(i))
+      }
+      a(i - 1)
     }
+
+    a(constraints.length - 1)
 
   }
 
@@ -82,13 +91,18 @@ final class ACV(
 
     val scope = constraint.scope
 
-    for (i <- prev.indices) {
-      val variable = scope(i)
-      if (prev(i) != variable.dom.size) {
-        queue.offer(variable)
-        advise(variable, constraint)
+    @tailrec
+    def p(i: Int) {
+      if (i >= 0) {
+        val variable = scope(i)
+        if (prev(i) != variable.dom.size) {
+          queue.offer(variable, key.getKey(variable))
+          advise(variable, constraint)
+        }
       }
+      p(i - 1)
     }
+    p(prev.length)
 
   }
 
@@ -96,7 +110,7 @@ final class ACV(
   private def prepareQueue(modifiedConstraints: Iterator[Constraint]): Boolean = {
     if (modifiedConstraints.hasNext) {
       val c = modifiedConstraints.next
-      (0 until c.arity).foreach(c.advise)
+      c.adviseAll()
 
       val prev = c.sizes()
 
@@ -137,7 +151,8 @@ final class ACV(
     for (v <- problem.variables if modVar(v.getId) > cnt)
       prepareQueue(v)
 
-    if (modCons == null || prepareQueue(problem.constraints.iterator.filter(c => modCons(c.getId) > cnt))) {
+    if (modCons == null ||
+      prepareQueue(problem.constraints.iterator.filter(c => modCons(c.getId) > cnt))) {
       reduce()
     } else {
       false
@@ -159,26 +174,31 @@ final class ACV(
 
   }
 
-  private def reduce(constraints: Array[Constraint]) = constraints.forall { c =>
-    c.isEntailed || {
-      revisions += 1
-      val prev = c.sizes()
-      //println("Revising " + c)
+  private def reduce(constraints: Array[Constraint]) = {
 
-      try {
-        if (c.revise()) {
-          assert(!(c.sizes() sameElements prev), c + " returned wrong true revised info")
-          updateQueue(prev, c)
-        } else assert(c.sizes() sameElements prev, c + " returned wrong false revised info")
-        true
-      } catch {
-        case e: UNSATException =>
-          c.weight += 1
-          false
-      }
+    def r(i: Int): Boolean = {
+      val c = constraints(i)
+
+      (c.isEntailed || {
+        revisions += 1
+        val prev = c.sizes()
+        //println("Revising " + c)
+
+        try {
+          if (c.revise()) {
+            assert(!(c.sizes() sameElements prev), c + " returned wrong true revised info")
+            updateQueue(prev, c)
+          } else assert(c.sizes() sameElements prev, c + " returned wrong false revised info")
+          true
+        } catch {
+          case e: UNSATException =>
+            c.weight += 1
+            false
+        }
+      }) && r(i - 1)
     }
+    r(constraints.length - 1)
   }
-
   override def toString =
     "GAC3rm-var-" + queue.getClass.getSimpleName
 

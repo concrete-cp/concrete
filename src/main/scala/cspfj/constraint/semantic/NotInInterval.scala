@@ -19,7 +19,7 @@ object NotInInterval {
 final class NotInInterval(val variable: Variable, val lb: Int, val ub: Int)
   extends Constraint(Array(variable)) {
 
-  val getEvaluation = 1
+  def advise(p: Int) = 1
 
   def revise() = {
 

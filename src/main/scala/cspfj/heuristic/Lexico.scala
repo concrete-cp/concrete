@@ -12,6 +12,6 @@ final class Lexico extends ValueHeuristic {
     // Nothing to compute
   }
 
-  override def selectIndex(variable: Variable) = variable.dom.last
+  override def selectIndex(variable: Variable) = variable.dom.first
 
 }

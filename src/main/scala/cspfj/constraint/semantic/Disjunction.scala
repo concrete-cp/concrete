@@ -28,7 +28,9 @@ final class Disjunction(scope: Array[Variable],
 
   if (isTrue(watch1) || isTrue(watch2)) entail()
 
-  val getEvaluation = Integer.highestOneBit(arity) - 1
+  private val eval = Integer.highestOneBit(arity) - 1
+
+  def advise(p: Int) = eval
 
   def this(scope: Variable*) = this(scope.toArray, new Array[Boolean](scope.size))
 

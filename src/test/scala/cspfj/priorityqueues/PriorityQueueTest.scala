@@ -11,10 +11,6 @@ import org.junit.Test
 
 object IntNode {
   var id: Int = 0
-  val key = new Key[IntNode]() {
-    def getKey(o: IntNode) = o.v
-  }
-
 }
 
 case class IntNode(val v: Int) extends Identified with PTag {
@@ -28,8 +24,6 @@ final class PriorityQueueTest {
 
   private val INTS = Seq.fill(100000)(IntNode(RANDOM.nextInt(5000000)))
 
-  val key = IntNode.key
-
   //  @Test //(timeout = 5000)
   //  def testScalaBinomialHeap() {
   //    test(new ScalaBinomialHeap[IntNode](key))
@@ -37,28 +31,24 @@ final class PriorityQueueTest {
 
   @Test(timeout = 5000)
   def testScalaNative() {
-    test(new ScalaNative[IntNode](key))
+    test(new ScalaNative[IntNode]())
   }
 
   @Test(timeout = 5000)
   def testJavaNative() {
-    test(new JavaNative[IntNode](key))
+    test(new JavaNative[IntNode]())
   }
-  @Test(timeout = 5000)
-  def testSkewHeap() {
-    test(new SkewHeap[IntNode](key))
-  }
-  @Test//(timeout = 5000)
+  @Test //(timeout = 5000)
   def testBinaryHeap() {
-    test(new BinaryHeap[IntNode](key))
+    test(new BinaryHeap[IntNode]())
   }
   @Test(timeout = 5000)
   def testBinomialHeap() {
-    test(new BinomialHeap[IntNode](key))
+    test(new BinomialHeap[IntNode]())
   }
   @Test(timeout = 20000)
   def testFibonacciHeap() {
-    test(new FibonacciHeap[IntNode](key))
+    test(new FibonacciHeap[IntNode]())
   }
   //  @Test(timeout = 5000)
   //  def testScalaFibonacciHeap() {
@@ -69,7 +59,7 @@ final class PriorityQueueTest {
   //    test(new ScalaIOBinomialHeap[IntNode](key))
   //  }
 
-  def test(q: Queue[IntNode]) {
+  def test(q: PriorityQueue[IntNode]) {
     //for (j <- 3001 to 5000) {
     //INTS.foreach(i => i.unsetPresent())
     var j = 100
@@ -77,12 +67,11 @@ final class PriorityQueueTest {
 
       q.clear()
 
-      assertEquals(q.size, 0);
       assertTrue(q.isEmpty);
 
-      INTS.take(j).foreach { i => assertTrue(q.offer(i)) }
+      INTS.take(j).foreach { i => assertTrue(q.offer(i, i.v)) }
 
-      assertEquals(j, q.size);
+      //assertEquals(j, q.size);
       //println(j)
       var i = 1
       var last = q.poll().v;
@@ -99,17 +88,17 @@ final class PriorityQueueTest {
 
   }
 
-//  @Test
-//  def testJavaFifos() {
-//    val q = new JavaFifos(IntNode.key, 1);
-//    for (e <- INTS) q.offer(e)
-//
-//    var i = INTS
-//    while (!q.isEmpty()) {
-//      val e = q.poll();
-//      assertEquals(e, i.head)
-//      i = i.tail
-//    }
-//  }
+  //  @Test
+  //  def testJavaFifos() {
+  //    val q = new JavaFifos(IntNode.key, 1);
+  //    for (e <- INTS) q.offer(e)
+  //
+  //    var i = INTS
+  //    while (!q.isEmpty()) {
+  //      val e = q.poll();
+  //      assertEquals(e, i.head)
+  //      i = i.tail
+  //    }
+  //  }
 
 }

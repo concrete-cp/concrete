@@ -137,7 +137,7 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
     } else if (min(x(i)) == max(y(i))) updateBeta(i - 1)
   }
 
-  def getEvaluation = size
+  def advise(p: Int) = size
   def simpleEvaluation = 2
 
   // @Override

@@ -102,6 +102,6 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Constrai
     ch;
   }
 
-  val getEvaluation = arity * arity
+  def advise(p: Int) = arity * arity
   val simpleEvaluation = 3
 }

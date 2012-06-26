@@ -47,6 +47,6 @@ final class ExtensionConstraintUnary(scope: Variable, matrix: Matrix, shared: Bo
   override def checkIndices(tuple: Array[Int]) = matrix.check(tuple)
 
   def simpleEvaluation = 1
-  def getEvaluation = scope.dom.size
+  def advise(p: Int) = scope.dom.size
 
 }

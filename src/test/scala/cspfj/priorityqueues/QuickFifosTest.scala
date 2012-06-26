@@ -32,12 +32,13 @@ class QuickFifosTest {
 
     for (i <- 0 until 10000) {
       val c = new Constraint(Array()) {
-        val getEvaluation = r.nextInt(1000000)
+        val eval = r.nextInt(1000000)
+        def advise(p: Int) = eval
         def revise() = false
         def simpleEvaluation = 1
         def checkValues(t: Array[Int]) = true
       }
-      q.add(c)
+      q.offer(c, c.eval)
     }
     assertFalse(q.isEmpty)
     q.clear()

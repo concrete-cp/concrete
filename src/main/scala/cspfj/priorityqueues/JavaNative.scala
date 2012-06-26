@@ -1,7 +1,7 @@
 package cspfj.priorityqueues
 import java.util.Comparator
 
-class JavaNative[T <: PTag] extends PriorityQueue[T] {
+final class JavaNative[T <: PTag] extends PriorityQueue[T] {
 
   case class E(val e: T, val eval: Int) extends Ordered[E] {
     def compare(y: E) = eval.compare(y.eval)
@@ -25,15 +25,11 @@ class JavaNative[T <: PTag] extends PriorityQueue[T] {
     elt
   }
 
-  def peek = queue.peek
-
-  def size = queue.size
+  def isEmpty = queue.isEmpty
 
   override def clear() {
     queue.clear()
     PTag.clear()
   }
-
-  def iterator = queue.iterator
 
 }

@@ -15,11 +15,11 @@ import cspfj.UNSATException
 import cspfj.Variable
 
 object ACC extends Loggable {
-//  @Parameter("ac3c.queue")
-//  var queueType: Class[_ <: Queue[Constraint]] = classOf[QuickFifos]
-//
-//  @Parameter("ac3c.key")
-//  var keyType: Class[_ <: Key[Constraint]] = classOf[Eval]
+  //  @Parameter("ac3c.queue")
+  //  var queueType: Class[_ <: Queue[Constraint]] = classOf[QuickFifos]
+  //
+  //  @Parameter("ac3c.key")
+  //  var keyType: Class[_ <: Key[Constraint]] = classOf[Eval]
 
   ParameterManager.register(ACC.this);
 
@@ -76,9 +76,8 @@ final class ACC(val problem: Problem, val queue: PriorityQueue[Constraint]) exte
 
     if (modCons != null)
       for (c <- problem.constraints if (modCons(c.getId) > cnt && !c.isEntailed)) {
-        (0 until c.arity).foreach(c.advise)
-        queue.offer(c);
-
+        val a = c.adviseAll()
+        if (a >= 0) queue.offer(c, a);
       }
 
     reduce();
@@ -100,8 +99,8 @@ final class ACC(val problem: Problem, val queue: PriorityQueue[Constraint]) exte
         val c = constraints(i)
 
         if ((c ne skip) && !c.isEntailed) {
-          c.advise(modified.positionInConstraint(i))
-          queue.offer(c)
+          val a = c.advise(modified.positionInConstraint(i))
+          if (a >= 0) queue.offer(c, a)
         }
 
         upd(i - 1)
@@ -159,8 +158,8 @@ final class ACC(val problem: Problem, val queue: PriorityQueue[Constraint]) exte
     queue.clear();
 
     for (c <- constraints if !c.isEntailed) {
-      (0 until c.arity).foreach(c.advise)
-      queue.offer(c);
+      val a = c.adviseAll()
+      if (a >= 0) queue.offer(c, a);
     }
 
     reduce();

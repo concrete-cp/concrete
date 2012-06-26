@@ -20,7 +20,6 @@
 package cspfj.priorityqueues;
 
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
@@ -102,7 +101,7 @@ public final class BinaryHeap<T extends Identified> implements PriorityQueue<T> 
 
         if (inQueue[id] == iter) {
             final int position = queuePosition[id];
-            keyValue[position] = key.getKey(arg0);
+            keyValue[position] = eval;
             siftUp(position);
             if (position == queuePosition[id]) {
                 siftDown(position);
@@ -111,7 +110,7 @@ public final class BinaryHeap<T extends Identified> implements PriorityQueue<T> 
         } else {
             ensureHeapCapacity(size + 1);
             content[size] = arg0;
-            keyValue[size] = key.getKey(arg0);
+            keyValue[size] = eval;
             queuePosition[id] = size;
             inQueue[id] = iter;
             siftUp(size++);
@@ -146,6 +145,10 @@ public final class BinaryHeap<T extends Identified> implements PriorityQueue<T> 
     public void clear() {
         size = 0;
         iter++;
+    }
+    
+    public boolean isEmpty() {
+        return size == 0;
     }
 
 

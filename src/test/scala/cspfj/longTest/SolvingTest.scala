@@ -1,20 +1,17 @@
 package cspfj.longTest;
 
+import scala.annotation.elidable
+
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+
 import cspfj.util.Loggable
+import cspfj.ParameterManager
 import cspfj.Solver
 import cspfj.SolverIterator
 import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
-import cspfj.ParameterManager
-import cspfj.priorityqueues.Fifos
-import cspfj.constraint.Constraint
-import cspfj.priorityqueues.BitVectorPriorityQueue
-import cspfj.priorityqueues.JavaFifos
-import cspfj.priorityqueues.JavaSimpleFifos
-import cspfj.priorityqueues.BinaryHeap
 
 final class SolvingTest extends Loggable {
   //Solver.loggerLevel = "FINE"

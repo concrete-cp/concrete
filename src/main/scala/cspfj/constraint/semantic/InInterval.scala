@@ -21,7 +21,7 @@ final class InInterval(val variable: Variable, val lb: Int, val ub: Int)
 
   val dom = variable.dom
 
-  override val getEvaluation = 1
+  def advise(p: Int) = 1
 
   def revise() = {
     val ch = dom.intersect(lb, ub)

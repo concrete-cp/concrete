@@ -1,17 +1,15 @@
 package cspfj.priorityqueues;
 
-import java.util.AbstractQueue;
 import java.util.Arrays;
-import java.util.Iterator;
 
-public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
+public final class BinomialHeap<T extends Identified> implements PriorityQueue<T> {
 
     private static final int DEFAULT_SIZE = 100;
 
     /* 2 + log_2(Integer.MAX_VALUE) */
     private static final int MAX_ARRAY_SIZE = 33;
 
-    private final Key<T> key;
+    //private final Key<T> key;
 
     private BinomialHeapNode<T>[] trees;
 
@@ -30,13 +28,13 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
     // @Statistic
     // public static int remove = 0;
 
-    public BinomialHeap(final Key<T> key) {
-        this(key, DEFAULT_SIZE);
+    public BinomialHeap() {
+        this(DEFAULT_SIZE);
     }
 
     @SuppressWarnings("unchecked")
-    public BinomialHeap(final Key<T> key, final int initSize) {
-        this.key = key;
+    public BinomialHeap(final int initSize) {
+        //this.key = key;
         map = (BinomialHeapNode<T>[]) new BinomialHeapNode[initSize];
         trees = (BinomialHeapNode<T>[]) new BinomialHeapNode[MAX_ARRAY_SIZE];
     }
@@ -60,17 +58,7 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
     }
 
     @Override
-    public Iterator<T> iterator() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public int size() {
-        return size;
-    }
-
-    @Override
-    public boolean offer(final T arg0) {
+    public boolean offer(final T arg0, final int newKey) {
         final int id = arg0.getId();
 
         ensureCapacity(id + 1);
@@ -83,7 +71,7 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
         }
 
         final int oldKey = node.key;
-        final int newKey = key.getKey(arg0);
+        
         node.key = newKey;
 
         if (node.isPresent(iter)) {
@@ -105,11 +93,6 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
     }
 
     @Override
-    public T peek() {
-        return minTree().data;
-    }
-
-    @Override
     public T poll() {
         // remove++;
         final BinomialHeapNode<T> min = minTree();
@@ -117,6 +100,11 @@ public final class BinomialHeap<T extends Identified> extends AbstractQueue<T> {
         min.unsetPresent();
         size--;
         return min.data;
+    }
+    
+    @Override
+    public boolean isEmpty() {
+        return size == 0;
     }
 
     private void delRank(int rank) {

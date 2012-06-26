@@ -4,12 +4,14 @@ import scala.collection.JavaConversions
 
 final class ScalaNative[T <: PTag] extends PriorityQueue[T] {
 
-  final case class E(elt: T, eval: Int) extends Ordered[E] {
-    
+  private final case class E(elt: T, eval: Int) extends Ordered[E] {
+    def compare(y: E) = -eval.compare(y.eval)
   }
 
-  val queue = new collection.mutable.PriorityQueue[E]()
+  private val queue = new collection.mutable.PriorityQueue[E]()
 
+  def isEmpty = queue.isEmpty
+  
   def offer(elt: T, eval: Int) = {
     if (elt.isPresent) {
       false

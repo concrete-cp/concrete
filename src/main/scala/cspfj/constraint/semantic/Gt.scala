@@ -80,7 +80,7 @@ final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict
       " - " + (-constant)
     else "") + (if (strict) " > " else " >= ") + scope(1)
 
-  override def getEvaluation = 2
+  def advise(p: Int) = 2
 
   val simpleEvaluation = 1
 }
