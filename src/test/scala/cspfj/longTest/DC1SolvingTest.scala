@@ -14,11 +14,27 @@ import cspfj.SolverIterator
 import cspfj.ParameterManager
 import cspfj.Solver
 import cspfj.MAC
+import org.junit.After
+import org.junit.Before
 
 final class DC1SolvingTest extends Loggable {
-  Solver.loggerLevel = "FINER"
-  ParameterManager("preprocessor") = classOf[DC1];
-  ParameterManager("dc1.addConstraints") = LearnMethod.BIN;
+  //Solver.loggerLevel = "FINER"
+
+  val dlog = Solver.loggerLevel
+
+  @Before
+  def before() {
+    //Solver.loggerLevel = "INFO"
+    ParameterManager("preprocessor") = classOf[DC1]
+    ParameterManager("dc1.addConstraints") = LearnMethod.BIN;
+
+  }
+
+  @After
+  def after() {
+    Solver.loggerLevel = dlog
+    ParameterManager("preprocessor") = null
+  }
 
   @Test
   def crosswordm1() {

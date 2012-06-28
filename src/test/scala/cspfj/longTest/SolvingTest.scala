@@ -1,22 +1,36 @@
 package cspfj.longTest;
 
 import scala.annotation.elidable
-
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-
 import cspfj.util.Loggable
 import cspfj.ParameterManager
 import cspfj.Solver
 import cspfj.SolverIterator
 import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
+import org.junit.After
+import org.junit.Before
 
 final class SolvingTest extends Loggable {
   //Solver.loggerLevel = "FINE"
   //ParameterManager("ac3c.queue") = classOf[BinaryHeap[Constraint]]
-  ParameterManager("preprocessor") = null
+
+  val dlog = Solver.loggerLevel
+
+  @Before
+  def before() {
+    //Solver.loggerLevel = "INFO"
+    ParameterManager("preprocessor") = null
+
+  }
+
+  @After
+  def after() {
+    Solver.loggerLevel = dlog
+    ParameterManager("preprocessor") = null
+  }
 
   @Test //(timeout = 40000)
   def crosswordm1() {

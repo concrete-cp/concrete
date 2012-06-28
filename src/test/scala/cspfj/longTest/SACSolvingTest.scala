@@ -15,10 +15,25 @@ import cspfj.ParameterManager
 import cspfj.Solver
 import cspfj.filter.SAC1
 import cspfj.MAC
+import org.junit.After
+import org.junit.Before
 
 final class SACSolvingTest extends Loggable {
   //Solver.loggerLevel = "FINE"
-  ParameterManager("preprocessor") = classOf[SAC1]
+
+  val dlog = Solver.loggerLevel
+
+  @Before
+  def before() {
+    //Solver.loggerLevel = "INFO"
+    ParameterManager("preprocessor") = classOf[SAC1]
+  }
+
+  @After
+  def after() {
+    Solver.loggerLevel = dlog
+    ParameterManager("preprocessor") = null
+  }
 
   @Test
   def crosswordm1() {
