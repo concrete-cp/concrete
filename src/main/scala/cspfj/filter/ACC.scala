@@ -58,8 +58,7 @@ final class ACC(val problem: Problem, val queue: PriorityQueue[Constraint]) exte
     Removals.clear()
     queue.clear()
     for (c <- problem.constraints if (!c.isEntailed)) {
-      val lastEval = (0 until c.arity).foldLeft(0)((p, acc) => c.advise(p))
-      queue.offer(c, lastEval);
+      queue.offer(c, c.adviseAll());
     }
     reduce()
   }
