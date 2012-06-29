@@ -10,6 +10,7 @@ import cspfj.Variable
 import cspfj.UNSATException
 import cspfj.constraint.Removals
 import cspfj.EMPTY
+import cspfj.AdviseCount
 
 final class ReifiedConstraint(
   controlVariable: Variable,
@@ -86,7 +87,7 @@ final class ReifiedConstraint(
   }
 
   private def noReifyRevise(constraint: Constraint): Boolean = {
-    if (controlRemovals != Removals.count)
+    if (controlRemovals != AdviseCount.count)
       constraint.adviseAll()
 
     val c = constraint.revise()

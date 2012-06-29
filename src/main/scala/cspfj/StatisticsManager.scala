@@ -44,7 +44,7 @@ class StatisticsManager extends Loggable {
 
   def digest: Map[String, Any] = digest("")
 
-  def digest(sub: String): Map[String, Any] = objects flatMap {
+  private def digest(sub: String): Map[String, Any] = objects flatMap {
     case (s, o) =>
       o.getClass.getDeclaredFields.filter(annoted).flatMap { f =>
         f.setAccessible(true)

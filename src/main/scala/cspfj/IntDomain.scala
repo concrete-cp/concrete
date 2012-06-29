@@ -102,6 +102,14 @@ final class IntDomain(
     }
   }
 
+  def closestLeq(value: Int): Int = {
+    val i = index(value)
+    if (i < 0) {
+      if (value < firstValue) -1
+      else closestLeq(value, first, last)
+    } else intSet.closestLeq(i)
+  }
+  
   private def closestGeq(v: Int, lb: Int, ub: Int): Int = {
     if (value(lb) >= v) lb
     else {
@@ -111,14 +119,6 @@ final class IntDomain(
       else
         closestGeq(v, test + 1, ub)
     }
-  }
-
-  def closestLeq(value: Int): Int = {
-    val i = index(value)
-    if (i < 0) {
-      if (value < firstValue) -1
-      else closestLeq(value, first, last)
-    } else intSet.closestLeq(i)
   }
 
   def closestGeq(value: Int): Int = {

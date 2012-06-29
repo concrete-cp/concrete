@@ -38,8 +38,9 @@ final case class Interval(val lb: Int, val ub: Int) {
   }
 
   def /(v: Int) = {
-    if (v == 0) throw new ArithmeticException
-    Interval(math.min(lb / v, ub / v), math.max(lb / v, ub / v))
+    val l = lb / v
+    val u = ub / v
+    if (l < u) Interval(l, u) else Interval(u, l)
   }
 
   def intersect(i: Interval) = {

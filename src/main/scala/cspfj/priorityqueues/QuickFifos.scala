@@ -67,6 +67,7 @@ final class QuickFifos extends PriorityQueue[Constraint] {
   }
 
   def offer(e: Constraint, eval: Int) = {
+    require(eval >= 0)
     val list = chooseList(eval)
 
     if (e.isPresent && list == e.currentList) false

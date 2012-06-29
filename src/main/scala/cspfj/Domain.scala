@@ -158,9 +158,16 @@ abstract class Domain {
   def intersect(a: Int, b: Int) = removeTo(a - 1) | removeFrom(b + 1)
 
   def intersectVal(a: Int, b: Int): Boolean = {
-    val lb = closestLt(a)
-    val ub = closestGt(b)
-    (lb >= 0 && removeTo(lb)) | (ub >= 0 && removeFrom(ub))
+    var ch = false
+    if (a > firstValue) {
+      val lb = closestLt(a)
+      ch |= lb >= 0 && removeTo(lb)
+    }
+    if (b < lastValue) {
+      val ub = closestGt(b)
+      ch |= ub >= 0 && removeFrom(ub)
+    }
+    ch
   }
 
   def intersectVal(i: Interval): Boolean = intersectVal(i.lb, i.ub)

@@ -30,7 +30,7 @@ final class Disjunction(scope: Array[Variable],
 
   private val eval = Integer.highestOneBit(arity) - 1
 
-  def advise(p: Int) = eval
+  def advise(p: Int) = if (p == watch1 || p == watch2) eval else -1
 
   def this(scope: Variable*) = this(scope.toArray, new Array[Boolean](scope.size))
 

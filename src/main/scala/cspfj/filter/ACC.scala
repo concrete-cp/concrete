@@ -1,7 +1,6 @@
 package cspfj.filter;
 
 import scala.annotation.tailrec
-
 import cspfj.constraint.Constraint
 import cspfj.constraint.Removals
 import cspfj.priorityqueues._
@@ -13,6 +12,7 @@ import cspfj.Statistic
 import cspfj.StatisticsManager
 import cspfj.UNSATException
 import cspfj.Variable
+import cspfj.AdviseCount
 
 object ACC extends Loggable {
   //  @Parameter("ac3c.queue")
@@ -55,10 +55,11 @@ final class ACC(val problem: Problem, val queue: PriorityQueue[Constraint]) exte
   def this(problem: Problem) = this(problem, ACC.queue)
 
   def reduceAll() = {
-    Removals.clear()
+    AdviseCount.clear()
     queue.clear()
     for (c <- problem.constraints if (!c.isEntailed)) {
-      queue.offer(c, c.adviseAll());
+      val e = c.adviseAll()
+      if (e >= 0) queue.offer(c, e)
     }
     reduce()
   }
@@ -83,7 +84,7 @@ final class ACC(val problem: Problem, val queue: PriorityQueue[Constraint]) exte
   }
 
   def reduceAfter(variable: Variable) = variable == null || {
-    Removals.clear()
+    AdviseCount.clear()
     queue.clear();
     updateQueue(variable, null)
     reduce();
@@ -153,7 +154,7 @@ final class ACC(val problem: Problem, val queue: PriorityQueue[Constraint]) exte
   def getStatistics = Map("revisions" -> revisions)
 
   def reduceAfter(constraints: Iterable[Constraint]) = {
-    Removals.clear()
+    AdviseCount.clear()
     queue.clear();
 
     for (c <- constraints if !c.isEntailed) {

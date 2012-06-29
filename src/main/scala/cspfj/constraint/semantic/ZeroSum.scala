@@ -15,7 +15,7 @@ final class ZeroSum(
 
   def this(scope: Array[Variable]) = this(Array.fill(scope.length)(1), scope)
 
-  val domFact = scope map (_.dom) zip factors toList
+  //val domFact = scope map (_.dom) zip factors toList
 
   def checkValues(t: Array[Int]): Boolean =
     (0 until arity).map(i => t(i) * factors(i)).sum >= 0
@@ -24,27 +24,43 @@ final class ZeroSum(
 
   def shave() = {
 
-    val bounds = domFact map { case (d, f) => d.valueInterval * f } reduce (_ + _)
+    var i = arity - 1
+
+    var bounds = scope(arity - 1).dom.valueInterval * factors(i)
+
+    i -= 1
+
+    while (i >= 0) {
+      bounds += scope(i).dom.valueInterval * factors(i)
+      i -= 1
+    }
+
+    //val bounds = domFact map { case (d, f) => d.valueInterval * f } reduce (_ + _)
 
     //reduce (_ + _)
     //    val bounds = Interval(0, 0)
 
-    domFact.foldLeft(false) {
-      case (acc, (dom, f)) =>
-        val myBounds = dom.valueInterval * f
+    var ch = false
+    i = arity - 1
+    while (i >= 0) {
+      val dom = scope(i).dom
+      val f = factors(i)
+      val myBounds = dom.valueInterval * f
 
-        val boundsf = Interval(bounds.lb - myBounds.lb, bounds.ub - myBounds.ub) / -f
+      val boundsf = Interval(bounds.lb - myBounds.lb, bounds.ub - myBounds.ub) / -f
 
-        dom.intersectVal(boundsf) || acc
+      ch |= dom.intersectVal(boundsf)
+      i -= 1
     }
-
+    ch
   }
 
-  def revise() = fixPoint(shave())
-
-  @tailrec
-  private def fixPoint(f: => Boolean, ch: Boolean = false): Boolean =
-    if (f) fixPoint(f, true) else ch
+  def revise() = {
+    if (shave()) {
+      while (shave()) {}
+      true
+    } else false
+  }
 
   def reviseVariable(p: Int, mod: Seq[Int]) = false
 

@@ -17,6 +17,7 @@ import cspfj.priorityqueues.BinaryHeap
 import cspfj.UNSATException
 import cspfj.priorityqueues.PriorityQueue
 import cspfj.heuristic.revision.Key
+import cspfj.AdviseCount
 
 /**
  * @author scand1sk
@@ -131,20 +132,20 @@ final class ACV(
   }
 
   def reduceAfter(constraints: Iterable[Constraint]): Boolean = {
-    Removals.clear()
+    AdviseCount.clear()
     queue.clear()
     prepareQueue(constraints.iterator) && reduce()
   }
 
   def reduceAfter(variable: Variable) = variable == null || {
-    Removals.clear()
+    AdviseCount.clear()
     queue.clear()
     prepareQueue(variable)
     reduce()
   }
 
   def reduceFrom(modVar: Array[Int], modCons: Array[Int], cnt: Int): Boolean = {
-    Removals.clear()
+    AdviseCount.clear()
     queue.clear();
     // LOGGER.fine("reduce after " + cnt);
 
