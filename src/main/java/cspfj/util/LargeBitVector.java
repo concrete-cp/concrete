@@ -47,10 +47,8 @@ final class LargeBitVector extends BitVector {
     }
 
     public boolean get(final int position) {
-        if (position >= size)
-            return false;
-
-        return (words[word(position)] & (1L << position)) != 0;
+        return position < size
+                && (words[word(position)] & (1L << position)) != 0L;
     }
 
     public int nextSetBit(final int start) {

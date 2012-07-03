@@ -12,8 +12,8 @@ object ExtensionConstraint {
     matrix match {
       case m: Matrix2D => new ExtensionConstraint2D(scope, m, true)
       case m: TupleHashSet => {
-        //new ExtensionConstraintDynamic(scope, m, true)
-        new ExtensionConstraintTrie(scope, Trie(m.toSeq: _*))
+        new ExtensionConstraintDynamic(scope, m, true)
+        //new ExtensionConstraintTrie(scope, Trie(m.toSeq: _*))
       }
       case m => new ExtensionConstraintGeneral(m, true, scope)
     }

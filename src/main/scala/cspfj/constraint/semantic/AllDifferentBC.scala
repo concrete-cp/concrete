@@ -222,14 +222,10 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) {
     change
   }
 
-  def revise() = {
-    @tailrec
-    def rev(c: Boolean): Boolean =
-      if (propagate()) rev(true)
-      else c
-
-    rev(false)
-  }
+  def revise() = if (propagate()) {
+    while (propagate()) {}
+    true
+  } else false
 
   var lastState: Array[IntSet] = scope map (_.dom.intSet)
   var lastAdvise = -1
@@ -264,12 +260,13 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) {
 
   val eval = ((31 - Integer.numberOfLeadingZeros(arity)) * arity).toInt
 
-  def advise(p: Int) = {
-    if (lastAdvise != AdviseCount.count) {
-      saveState()
-      eval
-    } else if (sameBounds(p)) -1
-    else eval
-  }
+  def advise(p: Int) = eval
+//    {
+//      if (lastAdvise != AdviseCount.count) {
+//        saveState()
+//        eval
+//      } else if (sameBounds(p)) -1
+//      else eval
+//    }
   val simpleEvaluation = 3
 }

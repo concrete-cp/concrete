@@ -42,8 +42,7 @@ final class Eq(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
 
   def xIndex(yIndex: Int) = {
     val yv = y.dom.value(yIndex)
-    var r = yv - b
-    if (neg) x.dom.index(-r) else x.dom.index(r)
+    if (neg) x.dom.index(b - yv) else x.dom.index(yv - b)
   }
 
   def shave() =

@@ -76,21 +76,20 @@ final class BitVectorSet(val bv: BitVector, val size: Int) extends IntSet {
    */
   def present(index: Int) = bv.get(index);
 
+  @tailrec
+  private def filter(f: Int => Boolean, nbv: BitVector, i: Int = first, s: Int = size): Int = {
+    if (i < 0) s
+    else if (f(i)) filter(f, nbv, next(i), s)
+    else {
+      nbv.clear(i)
+      filter(f, nbv, next(i), s - 1)
+    }
+  }
+
   def filter(f: Int => Boolean) = {
     val nbv = bv.clone
-
-    @tailrec
-    def filt(i: Int, s: Int): Int =
-      if (i < 0) s
-      else if (f(i)) filt(next(i), s)
-      else {
-        nbv.clear(i)
-        filt(next(i), s - 1)
-      }
-
-    val s = filt(first, size)
-    if (s == size) this
-    else IntSet.ofBV(nbv, s)
+    val s = filter(f, nbv, first, size)
+    if (s == size) this else IntSet.ofBV(nbv, s)
   }
 
   def remove(index: Int) = {
