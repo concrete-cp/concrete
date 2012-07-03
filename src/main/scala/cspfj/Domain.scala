@@ -2,6 +2,7 @@ package cspfj
 
 import cspfj.util.BitVector
 import cspfj.util.Interval
+import cspfj.util.IntSet
 
 final class EmptyDomainException extends UNSATException
 
@@ -198,5 +199,6 @@ abstract class Domain {
   def intersects(bv: BitVector): Int
   def intersects(bv: BitVector, part: Int): Boolean
   def bound: Boolean
+  def intSet: IntSet
 
 }

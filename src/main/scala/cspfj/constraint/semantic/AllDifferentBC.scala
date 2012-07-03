@@ -12,22 +12,14 @@ import cspfj.util.Backtrackable
 import scala.collection.immutable.Queue
 import cspfj.util.UOList
 import cspfj.Domain
+import cspfj.util.IntSet
+import cspfj.AdviseCount
 
 final class HInterval(
   val dom: Domain,
   val pos: Int) {
   var minrank: Int = 0
   var maxrank: Int = 0
-}
-
-object MAX extends Ordering[HInterval] {
-  def compare(o1: HInterval, o2: HInterval) =
-    o1.dom.lastValue - o2.dom.lastValue
-}
-
-object MIN extends Ordering[HInterval] {
-  def compare(o1: HInterval, o2: HInterval) =
-    o1.dom.firstValue - o2.dom.firstValue
 }
 
 final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) {
@@ -49,39 +41,39 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) {
     array(j) = t
   }
 
-  private def bSort[A](array: Array[A], c: Ordering[A]) {
-
-    @tailrec
-    def s(end: Int = array.size - 1, i: Int = 0, change: Int = 0) {
-      if (end > 0) {
-        if (i >= end) s(change, 0, 0)
-        else if (c.compare(array(i), array(i + 1)) > 0) {
-          swap(array, i, i + 1)
-          s(end, i + 1, i)
-        } else s(end, i + 1, change)
-      }
-
-    }
-
-    s()
-  }
-
-  private def iSort[A](array: Array[A], c: Ordering[A]) {
-    for (i <- array.indices) {
+  @tailrec
+  private def iSortMin(array: Array[HInterval], i: Int = 0) {
+    if (i < array.length) {
       val key = array(i)
+      val kv = key.dom.firstValue
       var j = i - 1
-      while (j >= 0 && c.compare(array(j), key) > 0) {
+      while (j >= 0 && array(j).dom.firstValue > kv) {
         array(j + 1) = array(j)
         j -= 1
       }
       array(j + 1) = key
+      iSortMin(array, i + 1)
     }
+  }
 
+  @tailrec
+  private def iSortMax(array: Array[HInterval], i: Int = 0) {
+    if (i < array.length) {
+      val key = array(i)
+      val kv = key.dom.lastValue
+      var j = i - 1
+      while (j >= 0 && array(j).dom.lastValue > kv) {
+        array(j + 1) = array(j)
+        j -= 1
+      }
+      array(j + 1) = key
+      iSortMax(array, i + 1)
+    }
   }
 
   def sortIt() {
-    iSort(minsorted, MIN)
-    iSort(maxsorted, MAX)
+    iSortMin(minsorted)
+    iSortMax(maxsorted)
 
     val min = minsorted(0).dom.firstValue
     var last = min - 2;
@@ -239,6 +231,16 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) {
     rev(false)
   }
 
+  var lastState: Array[IntSet] = scope map (_.dom.intSet)
+  var lastAdvise = -1
+
+  def saveState() {
+    lastState = scope map (_.dom.intSet)
+    lastAdvise = AdviseCount.count
+  }
+
+  def sameBounds(p: Int) = scope(p).dom.first == lastState(p).first && scope(p).dom.last == lastState(p).last
+
   def propagate() = {
     sortIt();
     filterLower() | filterUpper()
@@ -260,6 +262,14 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) {
     }
   }
 
-  def advise(p: Int) = ((31 - Integer.numberOfLeadingZeros(arity)) * arity).toInt
+  val eval = ((31 - Integer.numberOfLeadingZeros(arity)) * arity).toInt
+
+  def advise(p: Int) = {
+    if (lastAdvise != AdviseCount.count) {
+      saveState()
+      eval
+    } else if (sameBounds(p)) -1
+    else eval
+  }
   val simpleEvaluation = 3
 }

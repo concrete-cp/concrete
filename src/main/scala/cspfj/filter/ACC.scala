@@ -13,13 +13,16 @@ import cspfj.StatisticsManager
 import cspfj.UNSATException
 import cspfj.Variable
 import cspfj.AdviseCount
+import cspfj.Parameter
+import cspfj.heuristic.revision.Key
+import cspfj.heuristic.revision.Eval
 
 object ACC extends Loggable {
-  //  @Parameter("ac3c.queue")
-  //  var queueType: Class[_ <: Queue[Constraint]] = classOf[QuickFifos]
-  //
-  //  @Parameter("ac3c.key")
-  //  var keyType: Class[_ <: Key[Constraint]] = classOf[Eval]
+  @Parameter("ac3c.queue")
+  var queueType: Class[_ <: PriorityQueue[Constraint]] = classOf[QuickFifos[Constraint]]
+
+  @Parameter("ac3c.key")
+  var keyType: Class[_ <: Key[Constraint]] = classOf[Eval]
 
   ParameterManager.register(ACC.this);
 
@@ -37,12 +40,12 @@ object ACC extends Loggable {
     true;
   }
 
-  //def key = keyType.getConstructor().newInstance()
+  def key = keyType.getConstructor().newInstance()
 
-  def queue = new QuickFifos //queueType.getConstructor(classOf[Key[Constraint]]).newInstance(key)
+  def queue = queueType.getConstructor().newInstance()
 }
 
-final class ACC(val problem: Problem, val queue: PriorityQueue[Constraint]) extends Filter with Loggable {
+final class ACC(val problem: Problem, val key: Key[Constraint], val queue: PriorityQueue[Constraint]) extends Filter with Loggable {
   @Statistic
   val substats = new StatisticsManager
   substats.register("ac.priorityQueue", queue);
@@ -52,15 +55,14 @@ final class ACC(val problem: Problem, val queue: PriorityQueue[Constraint]) exte
   @Statistic
   var revisions = 0;
 
-  def this(problem: Problem) = this(problem, ACC.queue)
+  def this(problem: Problem) = this(problem, ACC.key, ACC.queue)
 
   def reduceAll() = {
     AdviseCount.clear()
     queue.clear()
-    for (c <- problem.constraints if (!c.isEntailed)) {
-      val e = c.adviseAll()
-      if (e >= 0) queue.offer(c, e)
-    }
+    for (c <- problem.constraints if (!c.isEntailed))
+      adviseAndEnqueueAll(c)
+
     reduce()
   }
 
@@ -75,12 +77,19 @@ final class ACC(val problem: Problem, val queue: PriorityQueue[Constraint]) exte
     }
 
     if (modCons != null)
-      for (c <- problem.constraints if (modCons(c.getId) > cnt && !c.isEntailed)) {
-        val a = c.adviseAll()
-        if (a >= 0) queue.offer(c, a);
-      }
+      for (c <- problem.constraints if (modCons(c.getId) > cnt && !c.isEntailed))
+        adviseAndEnqueueAll(c)
 
     reduce();
+  }
+
+  private def adviseAndEnqueueAll(c: Constraint) {
+    var p = c.arity - 1
+    while (p >= 0) {
+      val a = c.advise(p)
+      if (a >= 0) queue.offer(c, key.getKey(c, a))
+      p -= 1
+    }
   }
 
   def reduceAfter(variable: Variable) = variable == null || {
@@ -100,7 +109,7 @@ final class ACC(val problem: Problem, val queue: PriorityQueue[Constraint]) exte
 
         if ((c ne skip) && !c.isEntailed) {
           val a = c.advise(modified.positionInConstraint(i))
-          if (a >= 0) queue.offer(c, a)
+          if (a >= 0) queue.offer(c, key.getKey(c, a))
         }
 
         upd(i - 1)
@@ -157,10 +166,8 @@ final class ACC(val problem: Problem, val queue: PriorityQueue[Constraint]) exte
     AdviseCount.clear()
     queue.clear();
 
-    for (c <- constraints if !c.isEntailed) {
-      val a = c.adviseAll()
-      if (a >= 0) queue.offer(c, a);
-    }
+    for (c <- constraints if !c.isEntailed)
+      adviseAndEnqueueAll(c)
 
     reduce();
   }

@@ -3,6 +3,7 @@ import cspfj.Problem
 import org.junit.Test
 import cspfj.IntDomain
 import org.junit.Assert._
+import cspfj.AdviseCount
 
 final class AddIntTest {
 
@@ -14,7 +15,7 @@ final class AddIntTest {
     val z = prob.addVariable("z", IntDomain(2))
     val c = new Add(x, y, z)
     prob.addConstraint(c)
-    c.adviseAll()
+    AdviseCount.adviseAll(c)
     assertTrue(c.isBound)
     assertTrue(c.revise())
     assertEquals(Seq(7), x.dom.values.toSeq)
@@ -29,7 +30,7 @@ final class AddIntTest {
     val z = prob.addVariable("z", IntDomain(2))
     val c = new Add(x, y, z)
     prob.addConstraint(c)
-    c.adviseAll()
+    AdviseCount.adviseAll(c)
     assertTrue(c.isBound)
     assertTrue(c.revise())
     assertEquals(Seq(5), y.dom.values.toSeq)
@@ -44,7 +45,7 @@ final class AddIntTest {
     val z = prob.addVariable("z", IntDomain(-100 to 100))
     val c = new Add(x, y, z)
     prob.addConstraint(c)
-    c.adviseAll()
+    AdviseCount.adviseAll(c)
     assertTrue(c.isBound)
     assertTrue(c.revise())
     assertEquals((-29 to -10).toSeq, z.dom.values.toSeq)

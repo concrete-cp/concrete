@@ -5,6 +5,7 @@ import org.junit.Assert
 import scala.annotation.tailrec
 import cspfj.constraint.semantic.AllDifferentBC
 import cspfj.heuristic.MedValue
+import cspfj.constraint.semantic.AllDifferent2C
 
 class TestMAC {
 
@@ -13,7 +14,7 @@ class TestMAC {
 
     val queens = (0 until size) map (q => problem.addVariable("q" + q, IntDomain(0 until size)))
 
-    problem.addConstraint(allDiff(queens))
+    allDiff(problem, queens)
 
     val qd1 = queens.zipWithIndex map {
       case (q, i) =>
@@ -22,7 +23,7 @@ class TestMAC {
         v
     }
 
-    problem.addConstraint(allDiff(qd1))
+    allDiff(problem, qd1)
 
     val qd2 = queens.zipWithIndex map {
       case (q, i) =>
@@ -31,11 +32,14 @@ class TestMAC {
         v
     }
 
-    problem.addConstraint(allDiff(qd2))
+    allDiff(problem, qd2)
     (queens, problem)
   }
 
-  def allDiff(q: Seq[Variable]) = new AllDifferentBC(q: _*)
+  def allDiff(p: Problem, q: Seq[Variable]) {
+    p.addConstraint(new AllDifferentBC(q: _*))
+    //p.addConstraint(new AllDifferent2C(q: _*))
+  }
 
   def view(queens: Seq[Variable], solution: Map[String, Int]) =
     queens.map(q => q.name + " = " + solution.get(q.name)).mkString(", ")

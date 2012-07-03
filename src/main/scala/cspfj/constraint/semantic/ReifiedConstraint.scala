@@ -88,7 +88,7 @@ final class ReifiedConstraint(
 
   private def noReifyRevise(constraint: Constraint): Boolean = {
     if (controlRemovals != AdviseCount.count)
-      constraint.adviseAll()
+      (0 until constraint.arity) foreach constraint.advise
 
     val c = constraint.revise()
     if (constraint.isEntailed) {

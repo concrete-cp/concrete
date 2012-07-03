@@ -1,79 +1,72 @@
 package cspfj.priorityqueues;
 
 import java.util.AbstractQueue
-import scala.collection.immutable.Queue
-import java.util.Iterator
+
 import scala.annotation.tailrec
-import java.util.Arrays
-import scala.collection.JavaConversions
-import java.io.File
-import java.io.PrintStream
+
 import cspfj.constraint.Constraint
 
-//object Stats {
-//  val out = new PrintStream(new File("/tmp/stats.csv"))
-//}
-
 /**
- * Very simple FIFO queue based on LinkedList. All Identified elements are
- * unique.
  *
  * @author scand1sk
  *
  * @param <T>
  */
-final class SimpleFifos() extends PriorityQueue[Constraint] {
+final class SimpleFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
 
-  val nbLists = 8
+  val NB_LISTS = 8
 
-  val queues: Array[Queue[Constraint]] = Array[Queue[Constraint]]().padTo(nbLists, Queue.empty)
-
-  var first = nbLists
+  val queues: Array[DLNode[T]] = Array.fill(NB_LISTS)(new HeadDLNode())
 
   var last = -1
 
-  def offer(e: Constraint, eval: Int) =
-    if (e.isPresent) false
+  def offer(e: T, list: Int) = {
+    if (e.isPresent && list == e.currentList) false
     else {
-      val list = e.simpleEvaluation
-      if (list < first) first = list
+      if (e.isPresent) {
+        e.remove()
+        if (last == e.currentList) {
+          while (last >= 0 && queues(last).isEmpty) last -= 1
+        }
+      }
+      //print(list + " ")
       if (list > last) last = list
       //Stats.out.println(key.getKey(e) + " : " + list)
-      try
-        queues(list) = queues(list).enqueue(e)
-      catch {
-        case exc: IndexOutOfBoundsException =>
-          throw new IllegalArgumentException(e + " : " + e.simpleEvaluation + " -> " + list, exc)
-      }
+
+      queues(list).append(e)
+      e.currentList = list
+
       e.setPresent()
       true
     }
+  }
 
   @tailrec
-  private def poll(i: Int): Constraint =
-    if (i > last) throw new NoSuchElementException
-    else if (queues(i).isEmpty) poll(i + 1)
+  private def poll(i: Int): T = {
+    require(i <= last, i + " > " + last + "\n" + queues.map(n => n.isEmpty).mkString("\n"))
+    val q = queues(i)
+    if (q.isEmpty) poll(i + 1)
     else {
-      val (e, q) = queues(i).dequeue
-      queues(i) = q
-      first = i
+      val e = q.next
+      e.remove()
       if (i == last && q.isEmpty) last = -1
-      e
+      assert(last >= 0 || queues.forall(_.isEmpty))
+      e.asInstanceOf[T]
     }
+  }
 
   def poll() = {
-    val e = poll(first)
+    val e = poll(0)
     e.unsetPresent()
     e
   }
 
   def clear() {
-    (first to last).foreach(queues(_) = Queue.empty)
-    first = nbLists
+    (0 to last).foreach(queues(_).clear())
     last = -1
     PTag.clear()
   }
 
-  def isEmpty = first > last
+  def isEmpty = last < 0
 
 }

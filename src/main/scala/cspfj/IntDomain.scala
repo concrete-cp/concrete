@@ -10,7 +10,7 @@ import cspfj.util.Singleton
 
 object IntDomain {
   @annotation.varargs
-  def apply(d: Int*): IntDomain = new IntDomain(IntSet.factory(d), Indexer.factory(d))
+  def apply(d: Int*): IntDomain = new IntDomain(IntSet(d: _*), Indexer.factory(d))
 
   //def apply(d: Array[Int]): IntDomain = apply(d: _*)
 
@@ -109,7 +109,7 @@ final class IntDomain(
       else closestLeq(value, first, last)
     } else intSet.closestLeq(i)
   }
-  
+
   private def closestGeq(v: Int, lb: Int, ub: Int): Int = {
     if (value(lb) >= v) lb
     else {

@@ -1,23 +1,20 @@
 package cspfj.filter;
 
-import java.util.Queue
 import scala.annotation.tailrec
+
 import cspfj.constraint.Constraint
-import cspfj.constraint.Removals
-import cspfj.priorityqueues.Fifos
+import cspfj.heuristic.revision.Key
+import cspfj.priorityqueues.BinaryHeap
+import cspfj.priorityqueues.PriorityQueue
 import cspfj.priorityqueues.ScalaNative
-import cspfj.Problem
-import cspfj.Variable
 import cspfj.util.Loggable
+import cspfj.AdviseCount
 import cspfj.Parameter
 import cspfj.ParameterManager
+import cspfj.Problem
 import cspfj.Statistic
-import cspfj.priorityqueues.BinomialHeap
-import cspfj.priorityqueues.BinaryHeap
 import cspfj.UNSATException
-import cspfj.priorityqueues.PriorityQueue
-import cspfj.heuristic.revision.Key
-import cspfj.AdviseCount
+import cspfj.Variable
 
 /**
  * @author scand1sk
@@ -54,12 +51,8 @@ final class ACV(
   def reduceAll() = {
     queue.clear();
     problem.variables.foreach(v => queue.offer(v, key.getKey(v)))
-    problem.constraints.foreach { c =>
-      (0 until c.arity).foreach(c.advise)
-    }
-
+    problem.constraints foreach AdviseCount.adviseAll
     reduce()
-
   }
 
   private def prepareQueue(v: Variable) {
@@ -79,8 +72,9 @@ final class ACV(
       if (i >= 0) {
         val c = constraints(i)
         if (c ne skip) c.advise(v.positionInConstraint(i))
+        a(i - 1)
       }
-      a(i - 1)
+
     }
 
     a(constraints.length - 1)
@@ -100,10 +94,11 @@ final class ACV(
           queue.offer(variable, key.getKey(variable))
           advise(variable, constraint)
         }
+        p(i - 1)
       }
-      p(i - 1)
+
     }
-    p(prev.length)
+    p(prev.length - 1)
 
   }
 
@@ -111,7 +106,7 @@ final class ACV(
   private def prepareQueue(modifiedConstraints: Iterator[Constraint]): Boolean = {
     if (modifiedConstraints.hasNext) {
       val c = modifiedConstraints.next
-      c.adviseAll()
+      AdviseCount.adviseAll(c)
 
       val prev = c.sizes()
 
@@ -177,7 +172,7 @@ final class ACV(
 
   private def reduce(constraints: Array[Constraint]) = {
 
-    def r(i: Int): Boolean = {
+    def r(i: Int): Boolean = (i < 0) || {
       val c = constraints(i)
 
       (c.isEntailed || {

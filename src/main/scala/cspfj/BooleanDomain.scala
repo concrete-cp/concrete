@@ -2,6 +2,7 @@ package cspfj
 
 import cspfj.util.Backtrackable
 import cspfj.util.BitVector
+import cspfj.util.IntSet
 
 sealed trait Status {
   val bitVector = BitVector.newBitVector(2)
@@ -18,7 +19,8 @@ sealed trait Status {
   def lowest(value: Int): Int
   def prevAbsent(value: Int): Int
   def lastAbsent: Int
-  def indexes: Array[Int]
+  def indices: Array[Int]
+  def intSet: IntSet
 }
 
 case object UNKNOWNBoolean extends Status {
@@ -49,7 +51,8 @@ case object UNKNOWNBoolean extends Status {
 
   val lastAbsent = -1
   def prevAbsent(value: Int) = -1
-  val indexes = Array(0, 1)
+  val indices = Array(0, 1)
+  val intSet = IntSet(0, 1)
 }
 
 case object TRUE extends Status {
@@ -68,7 +71,8 @@ case object TRUE extends Status {
   def lowest(value: Int) = if (value > 1) -1 else 1;
   val lastAbsent = 0
   def prevAbsent(value: Int) = if (value > 0) 0 else -1
-  val indexes = Array(1)
+  val indices = Array(1)
+  val intSet = IntSet(1)
 }
 
 case object FALSE extends Status {
@@ -87,7 +91,8 @@ case object FALSE extends Status {
   def lowest(value: Int) = if (value > 0) -1 else 0;
   val lastAbsent = 1
   def prevAbsent(value: Int) = if (value > 0) 1 else -1
-  val indexes = Array(0)
+  val indices = Array(0)
+  val intSet = IntSet(0)
 }
 
 case object EMPTY extends Status {
@@ -105,7 +110,8 @@ case object EMPTY extends Status {
   def lowest(value: Int) = -1
   val lastAbsent = 1
   def prevAbsent(value: Int) = if (value >= 1) 0 else -1
-  val indexes = Array[Int]()
+  val indices = Array[Int]()
+  val intSet = IntSet()
 }
 
 final class BooleanDomain(var _status: Status) extends Domain
@@ -234,8 +240,9 @@ final class BooleanDomain(var _status: Status) extends Domain
   override def isEmpty = status == EMPTY
   def setTrue() { status = TRUE }
   def setFalse() { status = FALSE }
-  def currentIndexes = status.indexes
+  def currentIndexes = status.indices
   def valueBV(offset: Int) = throw new UnsupportedOperationException
   def bound = true
+  def intSet = status.intSet
 }
 

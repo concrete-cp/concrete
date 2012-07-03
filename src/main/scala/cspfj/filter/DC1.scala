@@ -50,7 +50,7 @@ final class DC1(val problem: Problem) extends SingletonConsistency with Loggable
 
   val ngl = new NoGoodLearner(problem, DC1.addConstraints)
 
-  val subFilter = new ACV(problem)
+  val subFilter = new ACC(problem)
 
   override def reduce() = {
     val nbC = problem.constraints.size

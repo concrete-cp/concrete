@@ -9,7 +9,7 @@ trait Shaver extends VariablePerVariable {
   final override def revise() = {
     if (isBound) {
       val c = shave()
-      assert({ adviseAll(); !super.revise() }, this + " is not BC")
+      assert({ (0 until arity) foreach advise; !super.revise() }, this + " is not BC")
       entailCheck(c)
       c
     } else {

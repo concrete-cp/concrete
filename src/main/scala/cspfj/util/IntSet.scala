@@ -1,7 +1,7 @@
 package cspfj.util
 
 object IntSet {
-  def factory(domain: Seq[Int]): IntSet = {
+  def apply(domain: Int*): IntSet = {
     require(domain.size == 1 || domain.sliding(2).forall(p => p(0) < p(1)), "Only ordered domains are supported");
 
     domain match {
@@ -28,6 +28,7 @@ object IntSet {
       else new BitVectorSet(bv, s)
     }
   }
+
 }
 
 abstract class IntSet {

@@ -4,10 +4,10 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-
 import cspfj.constraint.Constraint
 import cspfj.IntDomain
 import cspfj.Variable
+import cspfj.AdviseCount
 
 final class ZeroSumTest {
 
@@ -25,7 +25,7 @@ final class ZeroSumTest {
 
   @Test
   def reviseTest() {
-    c.adviseAll()
+    AdviseCount.adviseAll(c)
     c.revise()
 
     assertEquals(Seq(1, 2, 3, 4), v0.dom.values.toSeq);

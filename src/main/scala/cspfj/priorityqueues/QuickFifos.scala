@@ -6,44 +6,13 @@ import scala.annotation.tailrec
 
 import cspfj.constraint.Constraint
 
-trait DLNode[This <: DLNode[This]] {
-  var currentList = -1
-  var prev: DLNode[This] = this
-  var next: DLNode[This] = this
-
-  def remove() {
-    prev.next = next
-    next.prev = prev
-  }
-
-  def append(n: This) {
-    n.prev = prev
-    n.next = this
-
-    prev.next = n
-    prev = n
-  }
-
-  def isEmpty: Boolean = throw new UnsupportedOperationException
-
-  def clear(): Unit = throw new UnsupportedOperationException
-}
-
 /**
  *
  * @author scand1sk
  *
  * @param <T>
  */
-final class QuickFifos extends PriorityQueue[Constraint] {
-
-  private class HeadDLNode extends DLNode[Constraint] {
-    override def isEmpty = next eq this
-    override def clear() {
-      next = this
-      prev = this
-    }
-  }
+final class QuickFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
 
   val NB_LISTS = 8
 
@@ -56,7 +25,7 @@ final class QuickFifos extends PriorityQueue[Constraint] {
     }) toArray
   }
 
-  val queues: Array[DLNode[Constraint]] = Array.fill(NB_LISTS)(new HeadDLNode())
+  val queues: Array[DLNode[T]] = Array.fill(NB_LISTS)(new HeadDLNode())
 
   var last = -1
 
@@ -66,7 +35,7 @@ final class QuickFifos extends PriorityQueue[Constraint] {
     i
   }
 
-  def offer(e: Constraint, eval: Int) = {
+  def offer(e: T, eval: Int) = {
     require(eval >= 0)
     val list = chooseList(eval)
 
@@ -91,7 +60,7 @@ final class QuickFifos extends PriorityQueue[Constraint] {
   }
 
   @tailrec
-  private def poll(i: Int): Constraint = {
+  private def poll(i: Int): T = {
     require(i <= last, i + " > " + last + "\n" + queues.map(n => n.isEmpty).mkString("\n"))
     val q = queues(i)
     if (q.isEmpty) poll(i + 1)
@@ -100,7 +69,7 @@ final class QuickFifos extends PriorityQueue[Constraint] {
       e.remove()
       if (i == last && q.isEmpty) last = -1
       assert(last >= 0 || queues.forall(_.isEmpty))
-      e.asInstanceOf[Constraint]
+      e.asInstanceOf[T]
     }
   }
 
@@ -117,6 +86,7 @@ final class QuickFifos extends PriorityQueue[Constraint] {
   }
 
   def isEmpty = last < 0
-
+  
+  override def toString = queues.mkString("\n")
 
 }

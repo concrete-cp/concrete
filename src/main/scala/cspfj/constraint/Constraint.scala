@@ -161,15 +161,6 @@ abstract class Constraint(val scope: Array[Variable])
 
   def advise(v: Variable): Int = advise(position(v))
 
-  @tailrec
-  final def adviseAll(p: Int = arity - 1): Int = {
-    if (p == 0) advise(0)
-    else {
-      advise(p)
-      adviseAll(p - 1)
-    }
-  }
-
   /**
    * The constraint propagator. Returns true if any domain change was done.
    *

@@ -1,17 +1,16 @@
 package cspfj.constraint.semantic;
 
 import scala.util.Random
-
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.assertFalse
-
 import cspfj.constraint.Constraint
 import cspfj.constraint.Residues
 import cspfj.constraint.TupleEnumerator
 import cspfj.IntDomain
 import cspfj.Variable
+import cspfj.AdviseCount
 
 final class AddTest {
 
@@ -30,13 +29,13 @@ final class AddTest {
   @Test
   def testReviseInt() {
     val c = new Add(x, y, z);
-    c.adviseAll()
+    AdviseCount.adviseAll(c)
     c.revise()
 
     val c2 = new Constraint(Array(x, y, z)) with Residues with TupleEnumerator {
       def checkValues(t: Array[Int]) = t(0) == t(1) + t(2);
     };
-    c2.adviseAll()
+    AdviseCount.adviseAll(c2)
     assertFalse(c2.revise());
   }
 
@@ -45,11 +44,11 @@ final class AddTest {
     val c2 = new Constraint(Array(x, y, z)) with Residues with TupleEnumerator {
       def checkValues(t: Array[Int]) = t(0) == t(1) + t(2);
     };
-    c2.adviseAll()
+    AdviseCount.adviseAll(c2)
     c2.revise()
 
     val c = new Add(x, y, z);
-    c.adviseAll()
+    AdviseCount.adviseAll(c)
     assertFalse(c.revise())
 
   }

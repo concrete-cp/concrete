@@ -9,7 +9,7 @@ class QuickFifosTest {
 
   @Test
   def test() {
-    val q = new QuickFifos()
+    val q = new QuickFifos[Constraint]()
     val r = new Random()
     assertTrue(q.isEmpty)
     for (i <- 0 until 10) {
@@ -26,7 +26,6 @@ class QuickFifosTest {
     for (i <- 0 until 10) {
       assertFalse(q.isEmpty)
       val c = q.poll()
-      println(c.advise(0))
     }
     assertTrue(q.isEmpty)
 
