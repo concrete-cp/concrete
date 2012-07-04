@@ -36,17 +36,16 @@ object ACV {
 
 final class ACV(
   val problem: Problem,
+  val key: Key[Variable],
   val queue: PriorityQueue[Variable]) extends Filter with Loggable {
 
   // private static final Logger LOGGER = Logger.getLogger(Filter.class
   // .getSimpleName());
-  val key = ACV.key
 
   @Statistic
   var revisions = 0;
 
-  def this(problem: Problem) =
-    this(problem, ACV.queue)
+  def this(problem: Problem) = this(problem, ACV.key, ACV.queue)
 
   def reduceAll() = {
     queue.clear();

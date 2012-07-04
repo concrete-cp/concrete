@@ -24,10 +24,11 @@ import cspfj.constraint.Constraint
 import cspfj.priorityqueues.Identified
 import cspfj.priorityqueues.PTag
 import scala.annotation.tailrec
+import cspfj.priorityqueues.DLNode
 
 final class Variable(
   val name: String,
-  private var _domain: Domain) extends Identified with PTag {
+  private var _domain: Domain) extends Identified with PTag with DLNode[Variable] {
 
   val getId = Variable.nbV
   Variable.nbV += 1

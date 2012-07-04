@@ -122,6 +122,11 @@ final class SolvingTest extends Loggable {
   //
   //  }
 
+  @Test
+  def jobshop() {
+    assertTrue(solve("e0ddr1-10-by-5-8.xml.bz2").isDefined)
+  }
+
   @Test //(timeout = 1000)
   def queens12() {
     assertTrue(solve("queens-12.xml").isDefined);
