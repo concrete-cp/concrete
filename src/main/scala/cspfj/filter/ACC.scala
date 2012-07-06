@@ -48,7 +48,7 @@ object ACC extends Loggable {
 final class ACC(val problem: Problem, val key: Key[Constraint], val queue: PriorityQueue[Constraint]) extends Filter with Loggable {
   @Statistic
   val substats = new StatisticsManager
-  substats.register("ac.priorityQueue", queue);
+  substats.register("queue", queue);
   // private static final Logger LOGGER = Logger.getLogger(Filter.class
   // .getSimpleName());
 

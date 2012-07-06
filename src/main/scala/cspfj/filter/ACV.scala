@@ -1,18 +1,22 @@
 package cspfj.filter;
 
+import scala.Array.canBuildFrom
+import scala.annotation.elidable
 import scala.annotation.tailrec
 
+import annotation.elidable.ASSERTION
 import cspfj.constraint.Constraint
+import cspfj.heuristic.revision.Dom
 import cspfj.heuristic.revision.Key
 import cspfj.priorityqueues.BinaryHeap
 import cspfj.priorityqueues.PriorityQueue
-import cspfj.priorityqueues.ScalaNative
 import cspfj.util.Loggable
-import cspfj.AdviseCount
 import cspfj.Parameter
+import cspfj.Statistic
+import cspfj.AdviseCount
 import cspfj.ParameterManager
 import cspfj.Problem
-import cspfj.Statistic
+import cspfj.StatisticsManager
 import cspfj.UNSATException
 import cspfj.Variable
 
@@ -38,6 +42,9 @@ final class ACV(
   val problem: Problem,
   val key: Key[Variable],
   val queue: PriorityQueue[Variable]) extends Filter with Loggable {
+  @Statistic
+  val substats = new StatisticsManager
+  substats.register("queue", queue);
 
   // private static final Logger LOGGER = Logger.getLogger(Filter.class
   // .getSimpleName());

@@ -21,6 +21,9 @@ trait DLNode[This <: DLNode[This]] {
   def isEmpty: Boolean = throw new UnsupportedOperationException
 
   def clear(): Unit = throw new UnsupportedOperationException
+
+  def iterator: Iterator[This] = throw new UnsupportedOperationException
+
 }
 
 final class HeadDLNode[T <: DLNode[T]] extends DLNode[T] {
@@ -29,7 +32,7 @@ final class HeadDLNode[T <: DLNode[T]] extends DLNode[T] {
     next = this
     prev = this
   }
-  def iterator = new Iterator[T] {
+  override def iterator = new Iterator[T] {
     var c = HeadDLNode.this.next
     def hasNext = !(c eq HeadDLNode.this)
     def next() = {

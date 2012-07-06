@@ -12,6 +12,7 @@ import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
 import org.junit.After
 import org.junit.Before
+import cspfj.heuristic.revision.DomCtr
 
 final class SolvingTest extends Loggable {
   //Solver.loggerLevel = "FINE"
@@ -23,7 +24,7 @@ final class SolvingTest extends Loggable {
   def before() {
     //Solver.loggerLevel = "INFO"
     ParameterManager("preprocessor") = null
-
+    ParameterManager("ac3c.key") = classOf[DomCtr]
   }
 
   @After

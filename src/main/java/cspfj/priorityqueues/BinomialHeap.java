@@ -2,14 +2,32 @@ package cspfj.priorityqueues;
 
 import java.util.Arrays;
 
-public final class BinomialHeap<T extends Identified> implements PriorityQueue<T> {
+import cspfj.Statistic;
+
+public final class BinomialHeap<T extends Identified> implements
+        PriorityQueue<T> {
+
+    @Statistic
+    private int nbOffer = 0;
+    @Statistic
+    private int nbUpdate = 0;
+    @Statistic
+    private int nbPoll = 0;
+    @Statistic
+    private int nbClear = 0;
+    @Statistic
+    private long offerSize = 0L;
+    @Statistic
+    private long updateSize = 0L;
+    @Statistic
+    private long pollSize = 0L;
 
     private static final int DEFAULT_SIZE = 100;
 
     /* 2 + log_2(Integer.MAX_VALUE) */
     private static final int MAX_ARRAY_SIZE = 33;
 
-    //private final Key<T> key;
+    // private final Key<T> key;
 
     private BinomialHeapNode<T>[] trees;
 
@@ -34,7 +52,7 @@ public final class BinomialHeap<T extends Identified> implements PriorityQueue<T
 
     @SuppressWarnings("unchecked")
     public BinomialHeap(final int initSize) {
-        //this.key = key;
+        // this.key = key;
         map = (BinomialHeapNode<T>[]) new BinomialHeapNode[initSize];
         trees = (BinomialHeapNode<T>[]) new BinomialHeapNode[MAX_ARRAY_SIZE];
     }
@@ -71,11 +89,12 @@ public final class BinomialHeap<T extends Identified> implements PriorityQueue<T
         }
 
         final int oldKey = node.key;
-        
+
         node.key = newKey;
 
         if (node.isPresent(iter)) {
-            // update++;
+            nbUpdate++;
+            updateSize += size;
             if (newKey < oldKey) {
                 decreaseKey(node, false);
             } else if (newKey > oldKey) {
@@ -83,7 +102,8 @@ public final class BinomialHeap<T extends Identified> implements PriorityQueue<T
             }
             return false;
         }
-        // insert++;
+        nbOffer++;
+        offerSize += size;
         node.clear();
 
         carryMerge(node, 0);
@@ -98,10 +118,12 @@ public final class BinomialHeap<T extends Identified> implements PriorityQueue<T
         final BinomialHeapNode<T> min = minTree();
         deleteRoot(min);
         min.unsetPresent();
+        nbPoll++;
+        pollSize += size;
         size--;
         return min.data;
     }
-    
+
     @Override
     public boolean isEmpty() {
         return size == 0;
@@ -156,6 +178,7 @@ public final class BinomialHeap<T extends Identified> implements PriorityQueue<T
         last = -1;
         iter++;
         size = 0;
+        nbClear++;
     }
 
     private void carryMerge(final BinomialHeapNode<T> tree, final int i) {
