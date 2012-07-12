@@ -10,7 +10,7 @@ trait Shaver extends VariablePerVariable {
     if (isBound) {
       val c = shave()
       assert({ (0 until arity) foreach advise; !super.revise() }, this + " is not BC")
-      entailCheck(c)
+      entailCheck()
       c
     } else {
       /* Shaving may exhibit holes, in this case, going for a fixpoint is a must */
