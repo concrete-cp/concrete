@@ -44,7 +44,7 @@ object Solver {
   @Parameter("preprocessor")
   var preprocessorClass: Class[_ <: Filter] = null
 
-  val VERSION = """Rev:\ (\d+)""".r.findFirstMatchIn("$Rev: 911$").get.group(1).toInt
+  val VERSION = """Rev:\ (\d+)""".r.findFirstMatchIn("$Rev: 924$").get.group(1).toInt
 
   ParameterManager.register(this)
 
