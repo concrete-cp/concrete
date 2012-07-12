@@ -1,8 +1,7 @@
 package cspfj.longTest;
 
 import scala.annotation.elidable
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import org.junit.Assert._
 import org.junit.Test
 import cspfj.util.Loggable
 import cspfj.ParameterManager
@@ -13,6 +12,9 @@ import cspom.CSPOM
 import org.junit.After
 import org.junit.Before
 import cspfj.heuristic.revision.DomCtr
+import cspfj.SAT
+import cspfj.UNSAT
+import cspfj.UNKNOWNResult
 
 final class SolvingTest extends Loggable {
   //Solver.loggerLevel = "FINE"
@@ -24,7 +26,7 @@ final class SolvingTest extends Loggable {
   def before() {
     //Solver.loggerLevel = "INFO"
     ParameterManager("preprocessor") = null
-    ParameterManager("ac3c.key") = classOf[DomCtr]
+    //ParameterManager("ac3c.key") = classOf[DomCtr]
   }
 
   @After
@@ -55,6 +57,13 @@ final class SolvingTest extends Loggable {
 
   }
 
+  @Test //(timeout = 7000)
+  def queens8AllDiff() {
+    //assertTrue(solve("queens-8.xml").isDefined);
+    assertEquals(92, count("queensAllDiff-8.xml.bz2"));
+
+  }
+
   @Test //(timeout = 30000)
   def queens12_ext() {
     //assertTrue(solve("queens-12_ext.xml").isDefined);
@@ -79,7 +88,7 @@ final class SolvingTest extends Loggable {
 
   @Test //(timeout = 1000)
   def dimacs() {
-    assertTrue(solve("flat30-1.cnf").isDefined);
+    assertTrue(solve("flat30-1.cnf"));
     // assertNotNull(solve("clauses-2.cnf.bz2"));
     //assertEquals(1, count("flat30-1.cnf"));
 
@@ -105,16 +114,17 @@ final class SolvingTest extends Loggable {
 
   @Test //(timeout = 7000)
   def scen11_f12() {
-    assertEquals(solve("scen11-f12.xml.bz2"), None);
+    assertFalse(solve("scen11-f12.xml.bz2"));
   }
+  
   @Test //(timeout = 7000)
   def scen11() {
-    assertTrue(solve("scen11.xml.bz2").isDefined);
+    assertTrue(solve("scen11.xml.bz2"));
   }
 
   @Test //(timeout = 7000)
   def series() {
-    assertTrue(solve("series-15.xml.bz2").isDefined);
+    assertTrue(solve("series-15.xml.bz2"));
   }
   //  @Test
   //  def fapp01_0200_0() {
@@ -125,27 +135,20 @@ final class SolvingTest extends Loggable {
 
   @Test
   def jobshop() {
-    assertTrue(solve("e0ddr1-10-by-5-8.xml.bz2").isDefined)
+    assertTrue(solve("e0ddr1-10-by-5-8.xml.bz2"))
   }
 
   @Test //(timeout = 1000)
   def queens12() {
-    assertTrue(solve("queens-12.xml").isDefined);
+    assertTrue(solve("queens-12.xml"));
     //assertEquals(14200, count("queens-12.xml"));
 
   }
 
   @Test
   def tsp() {
-    assertTrue(solve("tsp-20-1_ext.xml.bz2").isDefined);
+    assertTrue(solve("tsp-20-1_ext.xml.bz2"));
     //    assertEquals(14200, count("queens-12.xml"));
-
-  }
-
-  @Test
-  def queens4() {
-    //assertTrue(solve("queens-12.xml").isDefined);
-    assertEquals(2, count("queens-4.xml"));
 
   }
 
@@ -154,27 +157,28 @@ final class SolvingTest extends Loggable {
     assertEquals(1, count("bigleq-50.xml"))
   }
 
-  private def solve(name: String) = {
+  private def solve(name: String): Boolean = {
     val cspomProblem = CSPOM.load(getClass.getResource(name));
     ProblemCompiler.compile(cspomProblem);
 
+    
     val solver = Solver.factory(cspomProblem);
 
-    val sol = new SolverIterator(solver).toStream.headOption
-
-    if (sol.isDefined) {
-      val failed = cspomProblem.controlInt(sol.get);
-      assertTrue(sol.get + "\n" + failed.toString, failed.isEmpty)
+    solver.nextSolution() match {
+      case SAT(sol: Map[String, Int]) =>
+        val failed = cspomProblem.controlInt(sol);
+        assertTrue(sol + "\n" + failed.toString, failed.isEmpty)
+        true
+      case UNSAT => false
+      case UNKNOWNResult => fail(); false
     }
-
-    sol
   }
 
   private def count(name: String) = {
     val cspomProblem = CSPOM.load(getClass.getResource(name));
     ProblemCompiler.compile(cspomProblem);
 
-    // System.out.println(problem);
+    println(cspomProblem)
 
     val solver = Solver.factory(cspomProblem);
     var count = 0

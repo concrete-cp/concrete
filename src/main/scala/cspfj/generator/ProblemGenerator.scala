@@ -44,6 +44,11 @@ object ProblemGenerator {
     }
 
     processQueue(Queue.empty ++ cspom.constraints)
+    
+    for (v <- problem.variables if v.constraints.isEmpty) {
+      problem.removeVariable(v)
+    }
+    
     problem;
   }
 

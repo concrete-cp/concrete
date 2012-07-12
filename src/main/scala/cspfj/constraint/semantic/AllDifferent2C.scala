@@ -26,12 +26,10 @@ import cspfj.util.UOList
 import cspfj.Variable
 import cspfj.AdviseCount
 
-final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) {
+trait AllDiffChecker extends Constraint {
 
   val offset = scope map { _.dom.firstValue } min
   val max = scope map { _.dom.lastValue } max
-  //
-  val scopeA = scope.toArray
 
   def checkValues(t: Array[Int]): Boolean = {
     val union = BitVector.newBitVector(max - offset + 1)
@@ -44,6 +42,9 @@ final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) {
       }
     }
   }
+}
+
+final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) with AllDiffChecker {
 
   var q: UOList[Int] = UOList.empty
 

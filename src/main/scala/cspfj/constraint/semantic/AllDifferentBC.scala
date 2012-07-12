@@ -22,7 +22,7 @@ final class HInterval(
   var maxrank: Int = 0
 }
 
-final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) {
+final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) with AllDiffChecker {
 
   val t = new Array[Int](2 * arity + 2) // Tree links
   val d = new Array[Int](2 * arity + 2) // Diffs between critical capacities
@@ -34,12 +34,6 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) {
   val intervals = scope.indices.map(i => new HInterval(scope(i).dom, i)).toArray
   val minsorted = intervals.clone
   val maxsorted = intervals.clone
-
-  private def swap[A](array: Array[A], i: Int, j: Int) {
-    val t = array(i)
-    array(i) = array(j)
-    array(j) = t
-  }
 
   @tailrec
   private def iSortMin(array: Array[HInterval], i: Int = 0) {
@@ -240,22 +234,6 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) {
   def propagate() = {
     sortIt();
     filterLower() | filterUpper()
-  }
-
-  private val offset = (scope map { _.dom.firstValue } min)
-  private val unionSize = 1 +
-    (scope map { _.dom.lastValue } max) -
-    offset
-
-  def checkValues(t: Array[Int]): Boolean = {
-    val union = BitVector.newBitVector(unionSize)
-    t.exists { v =>
-      if (union.get(v - offset)) true
-      else {
-        union.set(v - offset)
-        false
-      }
-    }
   }
 
   val eval = ((31 - Integer.numberOfLeadingZeros(arity)) * arity).toInt

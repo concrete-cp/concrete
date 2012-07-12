@@ -44,6 +44,15 @@ final class Problem {
     //_maxDomainSize = math.max(variable.dom.size, _maxDomainSize)
     variable;
   }
+  
+  def removeVariable(v: Variable) {
+    require(v.constraints.isEmpty)
+    
+    variableMap -= v.name
+    _variables = _variables filter (_ ne v)
+    _maxVId = _variables map (_.getId) max
+    
+  }
 
   def addConstraint(constraint: Constraint) {
     _constraints ::= constraint;
