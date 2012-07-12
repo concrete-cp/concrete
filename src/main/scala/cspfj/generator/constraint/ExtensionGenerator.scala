@@ -11,13 +11,12 @@ import cspom.constraint.CSPOMConstraint
 import cspom.extension.Relation
 import cspfj.constraint.extension.TupleHashSet
 
-final case class Signature(domains: Seq[Domain], relation: Relation, init: Boolean)
-
 final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(problem) {
+  private case class Signature(domains: Seq[Domain], relation: Relation, init: Boolean)
 
-  var generated: Map[Signature, Matrix] = Map.empty
+  private var generated: Map[Signature, Matrix] = Map.empty
 
-  private def generate(variables: Seq[Variable], relation: Relation, init: Boolean) = {
+  private def generateMatrix(variables: Seq[Variable], relation: Relation, init: Boolean) = {
     val domains = variables map (_.dom)
 
     val signature = Signature(domains, relation, init);
@@ -33,16 +32,14 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
 
   }
 
-  def generate(constraint: CSPOMConstraint) = {
-    require(constraint.isInstanceOf[cspom.extension.ExtensionConstraint])
+  override def generateExtension(extensionConstraint: cspom.extension.ExtensionConstraint) = {
 
-    val solverVariables = constraint.scope map cspom2cspfj
+    val solverVariables = extensionConstraint.scope map cspom2cspfj
 
     if (solverVariables exists (_.dom == null)) {
       false
     } else {
-      val extensionConstraint = constraint.asInstanceOf[cspom.extension.ExtensionConstraint]
-      val matrix = generate(solverVariables, extensionConstraint.relation, extensionConstraint.init);
+      val matrix = generateMatrix(solverVariables, extensionConstraint.relation, extensionConstraint.init);
 
       addConstraint(ExtensionConstraint.newExtensionConstraint(matrix, solverVariables.toArray));
       true;

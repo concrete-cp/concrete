@@ -6,15 +6,13 @@ import cspfj.{ Variable, Problem }
 import cspom.constraint.{ GeneralConstraint, CSPOMConstraint }
 
 final class GccGenerator(problem: Problem) extends AbstractGenerator(problem) {
-  def generate(constraint: CSPOMConstraint) = {
-    require(constraint.isInstanceOf[GeneralConstraint])
-
+  override def generateGeneral(constraint: GeneralConstraint) = {
     val scope = constraint.scope map cspom2cspfj
 
     if (scope exists (_.dom == null)) {
       false
     } else {
-      val params = constraint.asInstanceOf[GeneralConstraint].predicate.parameters.get.split(", +");
+      val params = constraint.predicate.parameters.get.split(", +");
 
       require(params.size % 3 == 0, "3 parameters per value");
 

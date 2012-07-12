@@ -4,14 +4,15 @@ import cspfj.constraint.semantic.{ Eq, Add }
 import cspfj.constraint.Constraint
 import cspfj.{ Variable, Problem, IntDomain }
 import cspom.constraint.CSPOMConstraint
+import cspom.constraint.FunctionalConstraint
 
 final class AddGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
-  def generate(constraint: CSPOMConstraint) = {
+  override def generateFunctional(constraint: FunctionalConstraint) = {
 
     val Seq(result, v0, v1) = (constraint.description match {
-      case "sub" => Seq(constraint.scope(1), constraint.scope(0), constraint.getVariable(2))
-      case "add" => constraint.scope
+      case "sub" => Seq(constraint.arguments(0), constraint.result, constraint.arguments(1))
+      case "add" => constraint.result +: constraint.arguments
       case _ => throw new IllegalArgumentException("Cannot handle " + constraint)
     }) map cspom2cspfj
 

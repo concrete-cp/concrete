@@ -4,10 +4,11 @@ import cspfj.constraint.semantic.Abs
 import cspfj.{ Variable, Problem, IntDomain }
 import cspom.constraint.CSPOMConstraint
 import scala.collection.immutable.SortedSet
+import cspom.constraint.FunctionalConstraint
 
 final class AbsGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
-  def generate(constraint: CSPOMConstraint) = {
+  override def generateFunctional(constraint: FunctionalConstraint) = {
     val Seq(result, v0) = constraint.scope map cspom2cspfj
 
     if (Seq(result, v0) filter (_.dom == null) match {

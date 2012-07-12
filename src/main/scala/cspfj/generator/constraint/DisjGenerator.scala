@@ -69,37 +69,31 @@ final class DisjGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
   }
 
-  def generate(constraint: CSPOMConstraint) = {
-    val scope = constraint.scope map cspom2cspfj
+  override def generateGeneral(gC: GeneralConstraint) = {
+    require(gC.description == "or")
 
+    val scope = gC.scope map cspom2cspfj
     scope foreach AbstractGenerator.booleanDomain
-
-    constraint match {
-      case gC: GeneralConstraint if gC.description == "or" => {
-        val params: IndexedSeq[Boolean] = gC.predicate.parameters match {
-          case None => IndexedSeq.empty.padTo(scope.size, false)
-          case Some(params) => params.split(",\\s*") map { _.toInt > 0 }
-        }
-
-        addConstraint(new Disjunction(scope.toArray, params))
-      }
-
-      case fC: FunctionalConstraint if fC.description == "or" =>
-        generateReifiedOr(scope, fC)
-
-      case fC: FunctionalConstraint if fC.description == "not" =>
-        generateNeg(fC)
-
-      case fC: FunctionalConstraint if fC.description == "and" =>
-        generateReifiedAnd(scope, fC);
-
-      case _ =>
-        throw new IllegalArgumentException("Unhandled constraint type for "
-          + constraint);
-
+    val params: IndexedSeq[Boolean] = gC.predicate.parameters match {
+      case None => IndexedSeq.empty.padTo(scope.size, false)
+      case Some(params) => params.split(",\\s*") map { _.toInt > 0 }
     }
 
-    true;
+    addConstraint(new Disjunction(scope.toArray, params))
+    true
+  }
+
+  override def generateFunctional(fC: FunctionalConstraint) = {
+    val scope = fC.scope map cspom2cspfj
+    scope foreach AbstractGenerator.booleanDomain
+    fC.description match {
+      case "or" => generateReifiedOr(scope, fC);
+      case "not" => generateNeg(fC);
+      case "and" => generateReifiedAnd(scope, fC);
+      case _ =>
+        throw new IllegalArgumentException("Unhandled constraint type for " + fC);
+    }
+    true
   }
 
 }

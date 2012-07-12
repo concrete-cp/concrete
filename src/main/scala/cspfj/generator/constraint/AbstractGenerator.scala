@@ -5,6 +5,9 @@ import cspfj.generator.FailedGenerationException
 import cspfj.{ Variable, Problem, Domain, BooleanDomain }
 import cspom.constraint.CSPOMConstraint
 import cspom.variable.CSPOMVariable
+import cspom.constraint.FunctionalConstraint
+import cspom.constraint.GeneralConstraint
+import cspom.extension.ExtensionConstraint
 
 abstract class AbstractGenerator(val problem: Problem) {
   def cspom2cspfj(variable: CSPOMVariable) = problem.variable(variable.name);
@@ -14,7 +17,17 @@ abstract class AbstractGenerator(val problem: Problem) {
   def addVariable(name: String, domain: Domain) = problem.addVariable(name, domain)
 
   @throws(classOf[FailedGenerationException])
-  def generate(constraint: CSPOMConstraint): Boolean
+  def generate(constraint: CSPOMConstraint) = constraint match {
+    case c: GeneralConstraint => generateGeneral(c)
+    case c: FunctionalConstraint => generateFunctional(c)
+    case c: ExtensionConstraint => generateExtension(c)
+  }
+
+  def generateGeneral(constraint: GeneralConstraint) = false
+
+  def generateFunctional(constraint: FunctionalConstraint) = false
+
+  def generateExtension(constraint: ExtensionConstraint) = false
 }
 
 object AbstractGenerator {

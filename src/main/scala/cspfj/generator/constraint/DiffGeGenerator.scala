@@ -6,43 +6,31 @@ import cspom.constraint.{ GeneralConstraint, FunctionalConstraint, CSPOMConstrai
 
 final class DiffGeGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
-  def generate(constraint: CSPOMConstraint) = {
+  override def generateGeneral(constraint: GeneralConstraint) = {
     require("diffGe" == constraint.description, "Cannot handle" + constraint)
-    val generated = constraint match {
-      case gC: GeneralConstraint => generateGeneral(gC)
-      case fC: FunctionalConstraint => generateReified(fC)
-      case _ => throw new IllegalArgumentException(constraint + " not supported");
-    }
-
-    if (generated == null) {
-      false;
-    } else {
-      addConstraint(generated);
-      true;
-    }
-  }
-
-  private def generateGeneral(constraint: GeneralConstraint) = {
     val Seq(v0, v1, bound) = constraint.scope map cspom2cspfj
 
     if (bound.dom.size != 1 || Seq(v0, v1, bound).exists(_.dom == null)) {
-      null;
+      false
     } else {
-      new Gt(v0, -bound.dom.firstValue, v1, false);
+      addConstraint(new Gt(v0, -bound.dom.firstValue, v1, false))
+      true
     }
   }
 
-  private def generateReified(constraint: FunctionalConstraint) = {
+  override def generateFunctional(constraint: FunctionalConstraint) = {
+    require("diffGe" == constraint.description, "Cannot handle" + constraint)
     val Seq(result, v0, v1, bound) = constraint.scope map cspom2cspfj
 
     if (bound.dom.size != 1 || Seq(v0, v1, bound).exists(_.dom == null)) {
-      null;
+      false
     } else {
       AbstractGenerator.booleanDomain(result)
-      new ReifiedConstraint(
+      addConstraint(new ReifiedConstraint(
         result,
         new Gt(v0, -bound.dom.firstValue, v1, false),
-        new Gt(v1, bound.dom.firstValue, v0, true));
+        new Gt(v1, bound.dom.firstValue, v0, true)))
+      true
     }
 
   }

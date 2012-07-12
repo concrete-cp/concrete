@@ -4,11 +4,11 @@ import cspfj.constraint.semantic.Mul
 import cspfj.generator.FailedGenerationException
 import cspfj.{ Variable, Problem, IntDomain }
 import cspom.constraint.CSPOMConstraint
+import cspom.constraint.FunctionalConstraint
 
 final class MulGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
-  @throws(classOf[FailedGenerationException])
-  def generate(constraint: CSPOMConstraint) = {
+  override def generateFunctional(constraint: FunctionalConstraint) = {
     val Seq(result, v0, v1) = constraint.scope map cspom2cspfj
 
     if (Seq(result, v0, v1) filter (_.dom == null) match {

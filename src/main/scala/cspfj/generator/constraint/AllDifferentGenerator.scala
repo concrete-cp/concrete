@@ -5,9 +5,7 @@ import cspom.constraint.{ GeneralConstraint, CSPOMConstraint }
 import cspfj.constraint.semantic.{ AllDifferent2C, AllDifferentBC }
 
 final class AllDifferentGenerator(problem: Problem) extends AbstractGenerator(problem) {
-  def generate(constraint: CSPOMConstraint) = {
-    require(constraint.isInstanceOf[GeneralConstraint]);
-
+  override def generateGeneral(constraint: GeneralConstraint) = {
     val solverVariables = constraint.scope map cspom2cspfj
     if (solverVariables exists { _.dom == null }) {
       false

@@ -12,42 +12,41 @@ import cspom.constraint.GeneralConstraint;
 
 final class GtGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
-  private def generateGeneral(constraint: GeneralConstraint) = {
+  override def generateGeneral(constraint: GeneralConstraint) = {
     require(constraint.scope.size == 2,
       "Comparison constraints must have exactly two arguments");
-    
+
     val solverVariables = constraint.scope map cspom2cspfj;
 
     if (solverVariables.exists(_.dom == null)) {
-      null
+      false
     } else {
-      constraint.description match {
+      addConstraint(constraint.description match {
         case "gt" => new Gt(solverVariables(0), solverVariables(1), true);
         case "ge" => new Gt(solverVariables(0), solverVariables(1), false);
         case "lt" => new Gt(solverVariables(1), solverVariables(0), true);
         case "le" => new Gt(solverVariables(1), solverVariables(0), false);
-        case _ =>
-          throw new FailedGenerationException("Unhandled constraint "
-            + constraint);
-      }
+        case _ => throw new FailedGenerationException("Unhandled constraint " + constraint);
+      })
+      true
     }
 
   }
 
-  def generateReified(constraint: FunctionalConstraint) = {
+  override def generateFunctional(constraint: FunctionalConstraint) = {
     require(constraint.arguments.size == 2,
       "Comparison constraints must have exactly two arguments");
 
     val arguments = constraint.arguments map cspom2cspfj
 
     if (arguments exists (_.dom == null)) {
-      null
+      false
     } else {
 
       val result = cspom2cspfj(constraint.result);
       AbstractGenerator.booleanDomain(result);
 
-      constraint.description match {
+      addConstraint(constraint.description match {
         case "gt" =>
           new ReifiedConstraint(
             result,
@@ -70,23 +69,10 @@ final class GtGenerator(problem: Problem) extends AbstractGenerator(problem) {
             new Gt(arguments(0), arguments(1), true));
         case _ =>
           throw new FailedGenerationException("Unhandled constraint " + constraint);
-      }
+      })
+      true
 
     }
   }
 
-  def generate(constraint: CSPOMConstraint) = {
-    val generated = constraint match {
-      case gC: GeneralConstraint => generateGeneral(gC);
-      case fC: FunctionalConstraint => generateReified(fC);
-      case _ => throw new IllegalArgumentException(constraint + " not supported");
-    }
-
-    if (generated == null) {
-      false;
-    } else {
-      addConstraint(generated);
-      true;
-    }
-  }
 }

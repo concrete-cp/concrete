@@ -13,51 +13,37 @@ import cspom.constraint.GeneralConstraint;
 
 final class NeqGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
-  private def generateGeneral(constraint: GeneralConstraint) = {
+  override def generateGeneral(constraint: GeneralConstraint) = {
     require(constraint.arity == 2,
       "Comparison constraints must have exactly two arguments");
 
     val scope = constraint.scope map cspom2cspfj
 
     if (scope exists { _.dom == null }) {
-      null
+      false
     } else {
-      new Neq(scope(0), scope(1))
+      addConstraint(new Neq(scope(0), scope(1)))
+      true
     }
   }
 
-  private def generateReified(constraint: FunctionalConstraint) = {
+  override def generateFunctional(constraint: FunctionalConstraint) = {
     require(constraint.arguments.size == 2,
       "Comparison constraints must have exactly two arguments");
 
     val arguments = constraint.arguments map cspom2cspfj
 
     if (arguments exists { _.dom == null }) {
-      null
+      false
     } else {
 
       val result = cspom2cspfj(constraint.result);
       AbstractGenerator.booleanDomain(result);
-      new ReifiedConstraint(result, new Neq(arguments(0),
-        arguments(1)), new Eq(arguments(0), arguments(1)));
-    }
-  }
-
-  @throws(classOf[FailedGenerationException])
-  def generate(constraint: CSPOMConstraint) = {
-    val generated = constraint match {
-      case gC: GeneralConstraint => generateGeneral(gC)
-      case fC: FunctionalConstraint => generateReified(fC)
-      case _ =>
-        throw new FailedGenerationException(constraint
-          + " is not supported");
-    }
-
-    if (generated == null) {
-      false;
-    } else {
-      addConstraint(generated);
-      true;
+      addConstraint(new ReifiedConstraint(
+        result,
+        new Neq (arguments(0), arguments(1)),
+        new Eq(arguments(0), arguments(1))))
+      true
     }
   }
 
