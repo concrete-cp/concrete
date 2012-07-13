@@ -36,11 +36,10 @@ trait VariablePerVariable extends Constraint with Removals with Loggable {
         reviseS(skip, i - 1, c || ch)
       }
 
-    val c = modified match {
-      case Seq() => false
-      case Seq(s) => reviseS(s)
-      case _ => reviseNS()
-    }
+    val c =
+      if (modified.isEmpty) false
+      else if (modified.tail.isEmpty) reviseS(modified.head)
+      else reviseNS()
 
     entailCheck()
     c

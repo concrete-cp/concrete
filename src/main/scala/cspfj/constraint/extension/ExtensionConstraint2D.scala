@@ -90,8 +90,16 @@ final class ExtensionConstraint2D(
   }
 
   private def hasSupportNR(variablePosition: Int, index: Int) = {
-    ExtensionConstraint2D.checks += 1;
-    scope(1 - variablePosition).dom.intersects(matrix2d.getBitVector(variablePosition, index)) >= 0
+    val matrixBV = matrix2d.getBitVector(variablePosition, index);
+    val intersection = scope(1 - variablePosition).dom.intersects(matrixBV)
+
+    if (intersection >= 0) {
+      ExtensionConstraint2D.checks += 1 + intersection;
+      true;
+    } else {
+      ExtensionConstraint2D.checks += matrixBV.realSize;
+      false;
+    }
   }
 
   private def controlResidue(position: Int, index: Int) = {

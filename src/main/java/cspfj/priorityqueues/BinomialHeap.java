@@ -58,30 +58,33 @@ public final class BinomialHeap<T extends Identified> implements
     }
 
     /**
-     * Increases the capacity of this instance, if necessary, to ensure that it
-     * can hold at least the number of elements specified by the minimum
-     * capacity argument.
+     * Increases the capacity of this instance to ensure that it can hold at
+     * least the number of elements specified by the minimum capacity argument.
      * 
      * @param minCapacity
      *            the desired minimum capacity
      */
     private void ensureCapacity(final int minCapacity) {
         int oldCapacity = map.length;
-        if (minCapacity > oldCapacity) {
-            final int newCapacity = Math.max(minCapacity,
-                    (oldCapacity * 3) / 2 + 1);
-            // minCapacity is usually close to size, so this is a win:
-            map = Arrays.copyOf(map, newCapacity);
-        }
+
+        final int newCapacity = Math
+                .max(minCapacity, (oldCapacity * 3) / 2 + 1);
+        // minCapacity is usually close to size, so this is a win:
+        map = Arrays.copyOf(map, newCapacity);
+
     }
 
     @Override
     public boolean offer(final T arg0, final int newKey) {
         final int id = arg0.getId();
 
-        ensureCapacity(id + 1);
-
-        BinomialHeapNode<T> node = map[id];
+        BinomialHeapNode<T> node;
+        try {
+            node = map[id];
+        } catch (ArrayIndexOutOfBoundsException e) {
+            ensureCapacity(id + 1);
+            node = map[id];
+        }
 
         if (node == null) {
             node = new BinomialHeapNode<T>(arg0);
@@ -131,7 +134,7 @@ public final class BinomialHeap<T extends Identified> implements
 
     private void delRank(int rank) {
         trees[rank] = null;
-        if (last == rank) {
+        while (last >= 0 && trees[last] == null) {
             last--;
         }
     }
@@ -160,11 +163,11 @@ public final class BinomialHeap<T extends Identified> implements
     }
 
     private BinomialHeapNode<T> minTree() {
-        BinomialHeapNode<T> min = null;
-        double minKey = 0;
-        for (int i = last; i >= 0; i--) {
+        BinomialHeapNode<T> min = trees[last];
+        double minKey = min.key;
+        for (int i = last; --i >= 0;) {
             final BinomialHeapNode<T> tree = trees[i];
-            if (tree != null && (min == null || tree.key <= minKey)) {
+            if (tree != null && tree.key <= minKey) {
                 min = tree;
                 minKey = tree.key;
             }
