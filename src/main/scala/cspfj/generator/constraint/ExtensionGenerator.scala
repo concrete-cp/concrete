@@ -8,15 +8,16 @@ import cspfj.Domain
 import cspfj.Problem
 import cspfj.Variable
 import cspom.constraint.CSPOMConstraint
-import cspom.extension.Relation
+import cspom.extension.Trie
 import cspfj.constraint.extension.TupleHashSet
+import cspfj.constraint.extension.TupleTrieSet
 
 final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(problem) {
-  private case class Signature(domains: Seq[Domain], relation: Relation, init: Boolean)
+  private case class Signature(domains: Seq[Domain], relation: Trie, init: Boolean)
 
   private var generated: Map[Signature, Matrix] = Map.empty
 
-  private def generateMatrix(variables: Seq[Variable], relation: Relation, init: Boolean) = {
+  private def generateMatrix(variables: Seq[Variable], relation: Trie, init: Boolean) = {
     val domains = variables map (_.dom)
 
     val signature = Signature(domains, relation, init);
@@ -55,21 +56,21 @@ object ExtensionGenerator {
     size > Int.MaxValue || size > (TIGHTNESS_LIMIT * nbTuples)
   }
 
-  def bestMatrix(relation: Relation, init: Boolean, sizes: Seq[Int]) = {
+  def bestMatrix(relation: Trie, init: Boolean, sizes: Seq[Int]) = {
     if (relation.arity == 2) {
       new Matrix2D(sizes(0), sizes(1), init);
     } else if (!init && tupleSetBetterThanMatrix(sizes, relation.size)) {
-      new TupleHashSet(relation.size, init);
+      new TupleTrieSet(relation.size, init);
     } else {
       new MatrixGeneral(sizes.toArray, init);
     }
   }
 
-  def fillMatrix(domains: Seq[Domain], relation: Relation, init: Boolean, matrix: Matrix) {
+  def fillMatrix(domains: Seq[Domain], relation: Trie, init: Boolean, matrix: Matrix) {
 
-    for (values <- relation.iterator map { _.asInstanceOf[Seq[Int]] }) {
+    for (values <- relation.iterator) {
       val tuple = (values, domains).zipped.map { (v, d) => d.index(v) }
-      matrix.set(tuple.toArray, !init)
+      matrix.set(tuple, !init)
     }
 
   }

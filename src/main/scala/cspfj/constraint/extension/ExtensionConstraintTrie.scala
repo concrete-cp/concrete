@@ -19,17 +19,14 @@
 
 package cspfj.constraint.extension;
 
-import cspfj.constraint.Constraint
-import cspfj.Variable
-import cspfj.util.BitVector
-import scala.collection.JavaConversions
-import scala.collection.mutable.BitSet
-import cspfj.constraint.Removals
-import cspfj.constraint.Constraint
 import scala.annotation.tailrec
-import cspfj.util.Loggable
+
+import cspfj.constraint.Constraint
 import cspfj.util.Backtrackable
-import scala.collection.immutable.IntMap
+import cspfj.util.BitVector
+import cspfj.util.Loggable
+import cspfj.Variable
+import cspom.extension.Trie
 
 final class ExtensionConstraintTrie(
   scope: Array[Variable],

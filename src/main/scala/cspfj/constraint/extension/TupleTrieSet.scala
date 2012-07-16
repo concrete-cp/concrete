@@ -1,37 +1,37 @@
 package cspfj.constraint.extension;
 
-import cspfj.util.IntTupleSet;
-import scala.collection.JavaConversions
+import scala.annotation.tailrec
+import cspom.extension.Trie
 
 final class TupleTrieSet(
-  private var tupleSet: Trie,
+  var trie: Trie,
   val initialContent: Boolean)
   extends Matrix with Iterable[Array[Int]] {
 
   def this(width: Int, initialContent: Boolean) = this(Trie.empty(width), initialContent)
 
-  override def copy = new TupleTrieSet(tupleSet, initialContent)
+  override def copy = new TupleTrieSet(trie, initialContent)
 
   override def check(tuple: Array[Int]) =
-    tupleSet.contains(tuple) ^ initialContent;
+    trie.contains(tuple) ^ initialContent;
 
   override def set(tuple: Array[Int], status: Boolean) {
     if (status == initialContent) {
-      tupleSet -= tuple
+      trie -= tuple
     } else {
-      tupleSet += tuple
+      trie += tuple
     }
   }
 
-  override def isEmpty = tupleSet.isEmpty && !initialContent;
+  override def isEmpty = trie.isEmpty && !initialContent;
 
-  override def size = tupleSet.size
+  override def size = trie.size
 
-  def iterator = tupleSet.iterator
+  def iterator = trie.iterator
 
   //def mutableIterator = tupleSet.iterator
 
   override def toString =
-    (if (initialContent) "nogoods: " else "goods: ") + tupleSet.toString
+    (if (initialContent) "nogoods: " else "goods: ") + trie.toString
 
 }

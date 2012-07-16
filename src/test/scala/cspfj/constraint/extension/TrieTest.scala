@@ -4,11 +4,11 @@ import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Test
 
 import cspfj.IntDomain
 import cspfj.Variable
+import cspom.extension.Trie
 
 final class TrieTest {
 
@@ -41,7 +41,7 @@ final class TrieTest {
 
   @Test
   def testRestore() {
-    val ta = new TupleHashSet(false);
+    val ta = new TupleTrieSet(Trie.empty(2), false);
     ta.set(Array(0, 0), true);
     ta.set(Array(1, 1), true);
     ta.set(Array(2, 2), true);
@@ -50,7 +50,7 @@ final class TrieTest {
       new Variable("V0", IntDomain(0, 1)),
       new Variable("V1", IntDomain(0, 1, 2)))
 
-    val mmd = new ExtensionConstraintTrie(scope, Trie(ta.toSeq: _*));
+    val mmd = new ExtensionConstraintTrie(scope, ta.trie);
     val content = mmd.trie
     //println(content map (_.toSeq) mkString (", "))
 
