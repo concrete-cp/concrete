@@ -60,7 +60,7 @@ object ExtensionGenerator {
     if (relation.arity == 2) {
       new Matrix2D(sizes(0), sizes(1), init);
     } else if (!init && tupleSetBetterThanMatrix(sizes, relation.size)) {
-      new TupleTrieSet(relation.size, init);
+      new TupleTrieSet(relation.arity, init);
     } else {
       new MatrixGeneral(sizes.toArray, init);
     }

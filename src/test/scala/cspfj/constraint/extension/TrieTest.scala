@@ -50,7 +50,7 @@ final class TrieTest {
       new Variable("V0", IntDomain(0, 1)),
       new Variable("V1", IntDomain(0, 1, 2)))
 
-    val mmd = new ExtensionConstraintTrie(scope, ta.trie);
+    val mmd = new ExtensionConstraintTrie(scope, ta);
     val content = mmd.trie
     //println(content map (_.toSeq) mkString (", "))
 

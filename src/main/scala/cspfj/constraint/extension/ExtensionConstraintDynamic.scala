@@ -35,7 +35,7 @@ final class ExtensionConstraintDynamic(
   private var tupleSet: TupleHashSet,
   shared: Boolean) extends ExtensionConstraint(scope, tupleSet, shared)
   with Removals with Loggable with Backtrackable[(List[Array[Int]], Int)] {
-
+  require(tupleSet.initialContent == false)
   private val found =
     (0 until arity) map (p => BitVector.newBitVector(scope(p).dom.maxSize)) toArray
 

@@ -109,6 +109,7 @@ final class ACC(val problem: Problem, val key: Key[Constraint], val queue: Prior
 
         if ((c ne skip) && !c.isEntailed) {
           val a = c.advise(modified.positionInConstraint(i))
+          //logger.fine(c + ", " + modified.positionInConstraint(i) + " : " + a)
           if (a >= 0) queue.offer(c, key.getKey(c, a))
         }
 

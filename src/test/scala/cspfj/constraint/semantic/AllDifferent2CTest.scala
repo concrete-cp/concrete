@@ -4,6 +4,7 @@ import org.junit.Assert._
 import cspfj.IntDomain
 import cspfj.Variable
 import cspfj.UNSATException
+import cspfj.AdviseCount
 
 class AllDifferent2CTest {
   @Test(expected = classOf[UNSATException])
@@ -16,6 +17,8 @@ class AllDifferent2CTest {
 
     val c = new AllDifferent2C(v1, v2, v3, v4, v5)
 
+    AdviseCount.adviseAll(c)
+
     c.revise()
   }
 
@@ -27,7 +30,7 @@ class AllDifferent2CTest {
     val v5 = new Variable("5", IntDomain(8, 9, 10))
 
     val c = new AllDifferent2C(v1, v2, v3, v4, v5)
-
+    
     assertTrue(c.checkValues(Array(7, 6, 9, 8, 10)))
     assertFalse(c.checkValues(Array(7, 6, 7, 8, 10)))
 

@@ -18,28 +18,15 @@ final class ProblemGeneratorTest extends Loggable {
   }
 
   @Test
-  def queens4() {
-    generateTest("queens-4.xml");
-  }
-
-  @Test
   def queens12() {
     generateTest("queens-12.xml");
   }
 
-  @Test
-  def queens20() {
-    generateTest("queens-20.xml.bz2");
-  }
+
 
   @Test
-  def queens50() {
-    generateTest("queens-50.xml.bz2");
-  }
-
-  @Test
-  def scen11f10() {
-    generateTest("scen11-f10.xml.bz2");
+  def scen11f12() {
+    generateTest("scen11-f12.xml.bz2");
   }
 
   @Test

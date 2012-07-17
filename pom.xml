@@ -22,11 +22,6 @@
 			<name>CSP4J repository</name>
 			<url>http://cspfj.sourceforge.net/repository</url>
 		</repository>
-		<repository>
-			<id>maven2-snapshot-repository</id>
-			<name>Maven2 Snapshot Repository</name>
-			<url>file:///tmp/snapshots</url>
-		</repository>
 	</repositories>
 
 	<dependencies>
@@ -75,10 +70,8 @@
 			<plugin>
 				<groupId>net.alchim31.maven</groupId>
 				<artifactId>scala-maven-plugin</artifactId>
-				<configuration>
-					<sourceDir>src/main/scala</sourceDir>
-					<failOnError>false</failOnError>
-				</configuration>
+				<version>3.0.2</version>
+
 
 				<executions>
 					<execution>
@@ -88,21 +81,23 @@
 							<goal>add-source</goal>
 							<goal>compile</goal>
 						</goals>
-						<!--
-						<configuration>
-							<args>
-								<arg>-Xdisable-assertions</arg>
-							</args>
-						</configuration>
-						-->
+					</execution>
+					<execution>
+						<id>scala-test-compile</id>
+						<phase>process-test-resources</phase>
+						<goals>
+							<goal>testCompile</goal>
+						</goals>
 					</execution>
 				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
 
 				<configuration>
+					<encoding>UTF-8</encoding>
 					<source>1.7</source>
 					<target>1.7</target>
 				</configuration>
@@ -110,6 +105,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.5</version>
 				<configuration>
 					<encoding>UTF-8</encoding>
 				</configuration>

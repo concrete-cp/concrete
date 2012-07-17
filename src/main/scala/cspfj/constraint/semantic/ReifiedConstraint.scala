@@ -87,8 +87,6 @@ final class ReifiedConstraint(
   }
 
   private def noReifyRevise(constraint: Constraint): Boolean = {
-    if (controlRemovals != AdviseCount.count)
-      (0 until constraint.arity) foreach constraint.advise
 
     val c = constraint.revise()
     if (constraint.isEntailed) {
@@ -107,23 +105,28 @@ final class ReifiedConstraint(
 
   override def toString = scope(0) + " == (" + positiveConstraint + ")";
 
-  var controlRemovals = 0
-
-  var posEval = Integer.MAX_VALUE
-  var negEval = Integer.MAX_VALUE
+  //var controlRemovals = 0
 
   def advise(position: Int) = {
-    if (position == 0) controlRemovals = position
-    else {
-      posEval = positiveConstraint.advise(positivePositions(position))
-      negEval = negativeConstraint.advise(negativePositions(position))
+    if (position == 0) {
+      //   controlRemovals = position
+      controlDomain.status match {
+        case UNKNOWNBoolean => -1
+        case TRUE => positiveConstraint.scope.indices.map(positiveConstraint.advise).max
+        case FALSE => negativeConstraint.scope.indices.map(negativeConstraint.advise).max
+        case _ => throw new IllegalStateException
+      }
+    } else {
+      controlDomain.status match {
+        case UNKNOWNBoolean => {
+          positiveConstraint.advise(positivePositions(position)) + negativeConstraint.advise(negativePositions(position))
+        }
+        case TRUE => positiveConstraint.advise(positivePositions(position))
+        case FALSE => negativeConstraint.advise(negativePositions(position))
+        case EMPTY => throw new IllegalStateException
+      }
     }
-    controlDomain.status match {
-      case UNKNOWNBoolean => posEval + negEval
-      case TRUE => posEval
-      case FALSE => negEval
-      case EMPTY => throw new IllegalStateException
-    }
+
   }
 
   val simpleEvaluation = math.max(positiveConstraint.simpleEvaluation,

@@ -4,12 +4,14 @@ import scala.annotation.tailrec
 import cspom.extension.Trie
 
 final class TupleTrieSet(
-  var trie: Trie,
+  private var _trie: Trie,
   val initialContent: Boolean)
   extends Matrix with Iterable[Array[Int]] {
 
   def this(width: Int, initialContent: Boolean) = this(Trie.empty(width), initialContent)
 
+  def trie = _trie
+  
   override def copy = new TupleTrieSet(trie, initialContent)
 
   override def check(tuple: Array[Int]) =
@@ -17,9 +19,9 @@ final class TupleTrieSet(
 
   override def set(tuple: Array[Int], status: Boolean) {
     if (status == initialContent) {
-      trie -= tuple
+      _trie -= tuple
     } else {
-      trie += tuple
+      _trie += tuple
     }
   }
 

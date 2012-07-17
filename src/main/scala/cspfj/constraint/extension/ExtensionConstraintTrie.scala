@@ -28,13 +28,14 @@ import cspfj.util.Loggable
 import cspfj.Variable
 import cspom.extension.Trie
 
-final class ExtensionConstraintTrie(
-  scope: Array[Variable],
-  var trie: Trie) extends Constraint(scope)
-  with Loggable with Backtrackable[Trie] {
+final class ExtensionConstraintTrie(_scope: Array[Variable], private val _tts: TupleTrieSet)
+  extends Constraint(_scope) with Loggable with Backtrackable[Trie] {
 
-  private val found =
-    (0 until arity) map (p => BitVector.newBitVector(scope(p).dom.maxSize)) toArray
+  require(_tts.initialContent == false)
+
+  var trie = _tts.trie
+
+  private val found = scope map (p => BitVector.newBitVector(p.dom.maxSize))
 
   override def setLvl(l: Int) {
     super.setLvl(l)

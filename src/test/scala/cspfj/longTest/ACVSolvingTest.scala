@@ -140,13 +140,6 @@ final class ACVSolvingTest extends Loggable {
   }
 
   @Test
-  def queens4() {
-    //assertTrue(solve("queens-12.xml").isDefined);
-    assertEquals(2, count("queens-4.xml"));
-
-  }
-
-  @Test
   def bigleq() {
     assertEquals(1, count("bigleq-50.xml"))
   }
