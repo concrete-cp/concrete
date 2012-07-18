@@ -26,7 +26,8 @@ import cspfj.UNSATException
 
 final class ExtensionConstraintGeneral(
   _matrix: Matrix,
-  shared: Boolean, scope: Array[Variable])
+  shared: Boolean, 
+  scope: Array[Variable])
   extends ConflictCount(scope, _matrix, shared) with Residues {
 
   def removeTuple(tuple: Array[Int]) = {

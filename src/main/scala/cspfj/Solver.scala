@@ -44,7 +44,7 @@ object Solver {
   @Parameter("preprocessor")
   var preprocessorClass: Class[_ <: Filter] = null
 
-  val VERSION = """Rev:\ (\d+)""".r.findFirstMatchIn("$Rev: 924$").get.group(1).toInt
+  val VERSION = """Rev:\ (\d+)""".r.findFirstMatchIn("$Rev: 932$").get.group(1).toInt
 
   ParameterManager.register(this)
 
@@ -58,19 +58,13 @@ object Solver {
 
 abstract class Solver(val problem: Problem) extends Loggable {
 
-  val statistics = new StatisticsManager
-  statistics.register("solver", this)
-
   @Statistic
   var preproRemoved = 0
   @Statistic
   var preproCpu = 0.0
-  @Statistic
-  var preproConstraintChecks = 0
-  @Statistic
-  var preproMatrix2DChecks = 0
-  @Statistic
-  var preproMatrix2DPresenceChecks = 0
+
+  val statistics = new StatisticsManager
+  statistics.register("solver", this)
 
   /** Logger initialization */
   {
@@ -146,10 +140,6 @@ abstract class Solver(val problem: Problem) extends Loggable {
         true;
         throw e
       }
-      case e: OutOfMemoryError => {
-        logger.throwing("Filter", "reduceAll", e);
-        throw e
-      }
     } finally {
       preproCpu += System.currentTimeMillis();
       waker.cancel();
@@ -157,9 +147,6 @@ abstract class Solver(val problem: Problem) extends Loggable {
       preproRemoved = problem.variables map { v => v.dom.maxSize - v.dom.size } sum
 
       this.preproCpu = preproCpu / 1000f;
-      preproConstraintChecks = TupleEnumerator.checks
-      preproMatrix2DChecks = ExtensionConstraint2D.checks
-      preproMatrix2DPresenceChecks = ExtensionConstraint2D.presenceChecks
     }
 
   }

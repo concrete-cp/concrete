@@ -85,8 +85,8 @@ abstract class Domain {
     case d: Domain => values.sameElements(d.values)
     case _ => false
   }
-
-  /**
+  
+   /**
    * @param value
    * @return the index of the closest value strictly lower than the given value.
    */

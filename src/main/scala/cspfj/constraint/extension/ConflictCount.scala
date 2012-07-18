@@ -1,8 +1,12 @@
 package cspfj.constraint.extension
-import scala.annotation.tailrec
-import cspfj.Variable
-import cspfj.constraint.TupleEnumerator
+
 import java.util.Arrays
+
+import scala.Array.canBuildFrom
+import scala.annotation.tailrec
+
+import cspfj.constraint.TupleEnumerator
+import cspfj.Variable
 
 abstract class ConflictCount(
   scope: Array[Variable],
@@ -61,9 +65,9 @@ abstract class ConflictCount(
       v => new Array[Long](v.dom.maxSize)
     }
 
-    if (matrix.isInstanceOf[TupleHashSet]) {
+    if (matrix.isInstanceOf[TupleTrieSet]) {
 
-      val tupleSet = matrix.asInstanceOf[TupleHashSet];
+      val tupleSet = matrix.asInstanceOf[TupleTrieSet];
       val initialContent = tupleSet.initialContent
       if (!initialContent) {
         for (p <- nbInitConflicts.indices) {

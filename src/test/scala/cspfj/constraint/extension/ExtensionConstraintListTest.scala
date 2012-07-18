@@ -10,14 +10,14 @@ import org.junit.Test
 import cspfj.IntDomain
 import cspfj.Variable
 
-final class ExtensionConstraintDynamicTest {
+final class ExtensionConstraintListTest {
 
-  private var mmd: ExtensionConstraintDynamic = null;
+  private var mmd: ExtensionConstraintList = null;
   private var content: List[Array[Int]] = null;
 
   @Before
   def setUp() {
-    val ta = new TupleHashSet(false);
+    val ta = new TupleTrieSet(2, false);
     ta.set(Array(0, 0), true);
     ta.set(Array(1, 1), true);
     ta.set(Array(2, 2), true);
@@ -26,7 +26,7 @@ final class ExtensionConstraintDynamicTest {
       new Variable("V0", IntDomain(0, 1, 2)),
       new Variable("V1", IntDomain(0, 1, 2)))
 
-    mmd = new ExtensionConstraintDynamic(scope, ta, false);
+    mmd = new ExtensionConstraintList(scope, ta);
     content = mmd.tuples
     //println(content map (_.toSeq) mkString (", "))
   }

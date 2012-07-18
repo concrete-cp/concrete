@@ -30,12 +30,13 @@ import scala.annotation.tailrec
 import cspfj.util.Loggable
 import cspfj.util.Backtrackable
 
-final class ExtensionConstraintDynamic(
+final class ExtensionConstraintArray(
   scope: Array[Variable],
-  private var tupleSet: TupleHashSet,
-  shared: Boolean) extends ExtensionConstraint(scope, tupleSet, shared)
-  with Removals with Loggable with Backtrackable[(List[Array[Int]], Int)] {
+  private var tupleSet: TupleTrieSet) extends ExtensionConstraint(scope, tupleSet, false)
+  with Removals with Loggable with Backtrackable[Int] {
+
   require(tupleSet.initialContent == false)
+
   private val found =
     (0 until arity) map (p => BitVector.newBitVector(scope(p).dom.maxSize)) toArray
 
@@ -55,17 +56,25 @@ final class ExtensionConstraintDynamic(
 
     val mod = modified.toList
 
-    filterTuples(tuple =>
-      if (controlTuplePresence(tuple, mod)) {
-        setFound(tuple, found)
-        true
-      } else false)
+    var i = 0
+    while (i < bound) {
+      if (controlTuplePresence(tuplesArray(i), mod)) {
+        setFound(tuplesArray(i), found)
+        i += 1
+      } else {
+        altering()
+        bound -= 1
+        val tmp = tuplesArray(i)
+        tuplesArray(i) = tuplesArray(bound)
+        tuplesArray(bound) = tmp
+      }
+    }
 
     val c = filter(found)
 
     val card = scope.map(v => BigInt(v.dom.size)).product
-    assert(card >= nbTuples, card + " < " + nbTuples + "!")
-    if (card == nbTuples) {
+    assert(card >= bound, card + " < " + bound + "!")
+    if (card == bound) {
       //logger.info("Entailing " + this)
       entail()
     }
@@ -90,27 +99,19 @@ final class ExtensionConstraintDynamic(
       filter(found, p - 1, c || ch)
     }
 
-  private var allTuples: List[Array[Int]] = tupleSet.toList
+  private val tuplesArray: Array[Array[Int]] = tupleSet.toArray
 
-  private var nbTuples: Int = tupleSet.size
+  private var bound: Int = tuplesArray.length
 
-  def save = (allTuples, nbTuples)
+  def save = bound
 
-  def restore(d: (List[Array[Int]], Int)) {
-    allTuples = d._1
-    nbTuples = d._2
+  def restore(d: Int) {
+    bound = d
   }
 
   override def checkIndices(t: Array[Int]) = tupleSet.check(t)
 
-  def filterTuples(f: Array[Int] => Boolean) {
-    val oldSize = nbTuples
-    allTuples = allTuples.filter(f)
-    nbTuples = allTuples.length
-    if (nbTuples != oldSize) altering()
-  }
-
-  def tuples = allTuples
+  def tuples = tuplesArray.take(bound)
 
   private def matches(tuple: Array[Int], base: Array[Int]) = {
     assert(tuple.length == base.length);
@@ -131,7 +132,7 @@ final class ExtensionConstraintDynamic(
 
   //def matrixManager = matrixManager
 
-  def getEvaluation = arity * nbTuples
+  def getEvaluation = arity * bound
 
   def simpleEvaluation = math.min(7, scope.count(_.dom.size > 1))
 

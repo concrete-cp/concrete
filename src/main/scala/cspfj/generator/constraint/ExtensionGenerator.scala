@@ -1,36 +1,49 @@
 package cspfj.generator.constraint;
 
+import scala.Array.canBuildFrom
+import scala.math.BigInt.int2bigInt
 import cspfj.constraint.extension.ExtensionConstraint
 import cspfj.constraint.extension.Matrix
 import cspfj.constraint.extension.Matrix2D
 import cspfj.constraint.extension.MatrixGeneral
+import cspfj.constraint.extension.TupleTrieSet
 import cspfj.Domain
 import cspfj.Problem
 import cspfj.Variable
-import cspom.constraint.CSPOMConstraint
 import cspom.extension.Trie
-import cspfj.constraint.extension.TupleHashSet
-import cspfj.constraint.extension.TupleTrieSet
+import scala.collection.mutable.WeakHashMap
+import scala.collection.mutable.HashMap
 
 final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(problem) {
-  private case class Signature(domains: Seq[Domain], relation: Trie, init: Boolean)
 
-  private var generated: Map[Signature, Matrix] = Map.empty
+  private case class Signature(domains: Seq[List[Int]], init: Boolean)
+
+  private var generated: List[(Trie, HashMap[Signature, Matrix])] = Nil
 
   private def generateMatrix(variables: Seq[Variable], relation: Trie, init: Boolean) = {
     val domains = variables map (_.dom)
 
-    val signature = Signature(domains, relation, init);
-    generated.get(signature) match {
+    val map = generated.find(_._1 eq relation) match {
+      case Some(map) => map._2
       case None => {
-        val matrix = ExtensionGenerator.bestMatrix(relation, init, domains map (_.size))
-        ExtensionGenerator.fillMatrix(domains, relation, init, matrix)
-        generated += signature -> matrix
-        matrix
+       val map = new HashMap[Signature, Matrix]
+       generated ::= (relation, map)
+       map
       }
-      case Some(m) => m
     }
 
+    val signature = Signature(domains map (_.values.toList), init)
+
+    map.getOrElseUpdate(signature, {
+      //println("Generating " + relation + " for " + signature + " not found in " + map)
+      gen(relation, init, domains)
+    })
+  }
+
+  private def gen(relation: Trie, init: Boolean, domains: Seq[Domain]) = {
+    val matrix = ExtensionGenerator.bestMatrix(relation, init, domains map (_.size))
+    ExtensionGenerator.fillMatrix(domains, relation, init, matrix)
+    matrix
   }
 
   override def generateExtension(extensionConstraint: cspom.extension.ExtensionConstraint) = {
@@ -40,6 +53,7 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
     if (solverVariables exists (_.dom == null)) {
       false
     } else {
+
       val matrix = generateMatrix(solverVariables, extensionConstraint.relation, extensionConstraint.init);
 
       addConstraint(ExtensionConstraint.newExtensionConstraint(matrix, solverVariables.toArray));

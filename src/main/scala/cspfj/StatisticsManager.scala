@@ -18,35 +18,31 @@ class StatisticsManager extends Loggable {
     }
 
     objects += name -> o
-    //    for (
-    //      f <- o.getClass.getDeclaredFields if annotedInstanceVariable(f)
-    //    ) {
-    //      f.setAccessible(true);
-    //    }
   }
 
-  private def annoted(f: Field) =
-    f.getAnnotation(classOf[cspfj.Statistic]) != null
-  //&&
-  //(f.getModifiers & Modifier.STATIC) == 0
+  private def annoted(f: Field) = f.getAnnotation(classOf[cspfj.Statistic]) != null
 
   def apply(name: String) = {
 
     val fieldNameAt = name.lastIndexOf('.')
     val obj = objects.get(name.substring(0, fieldNameAt)).get
     val fieldName = name.substring(fieldNameAt + 1, name.length)
-    obj.getClass.getDeclaredFields.find(f => annoted(f) && f.getName == fieldName) match {
+    fields(obj.getClass).find(f => f.getName == fieldName) match {
       case Some(f) => { f.setAccessible(true); f.get(obj) }
-      case None => throw new IllegalArgumentException("Could not find " + name + " (" + fieldName + " in " + obj.getClass.getDeclaredFields.toList + ")")
+      case None => throw new IllegalArgumentException("Could not find " + name + " (" + fieldName + " in " + fields(obj.getClass) + ")")
     }
 
   }
 
   def digest: Map[String, Any] = digest("")
 
+  private def fields(c: Class[_], f: List[Field] = Nil): List[Field] =
+    if (c == null) f
+    else fields(c.getSuperclass, c.getDeclaredFields.toList.filter(annoted) ::: f)
+
   private def digest(sub: String): Map[String, Any] = objects flatMap {
     case (s, o) =>
-      o.getClass.getDeclaredFields.filter(annoted).flatMap { f =>
+      fields(o.getClass).flatMap { f =>
         f.setAccessible(true)
         f.get(o) match {
           case sm: StatisticsManager => sm.digest(s + "." + f.getName + ".")
@@ -57,13 +53,11 @@ class StatisticsManager extends Loggable {
 
   override def toString = digest.map(t => t._1 + " = " + t._2).toSeq.sorted.mkString("\n")
 
-  def isIntType(input: Class[_]) =
-    input == classOf[Int] || input == classOf[Long]
+  def isIntType(input: Class[_]) = input == classOf[Int] || input == classOf[Long]
 
   def isFloatType(input: Class[_]) = input == classOf[Float] || input == classOf[Double]
 
   def reset() {
-    //static = Map.empty
     objects = Map.empty
   }
 }
