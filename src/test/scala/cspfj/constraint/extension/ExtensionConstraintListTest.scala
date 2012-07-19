@@ -17,7 +17,7 @@ final class ExtensionConstraintListTest {
 
   @Before
   def setUp() {
-    val ta = new TupleTrieSet(2, false);
+    val ta = new TupleTrieSet(false);
     ta.set(Array(0, 0), true);
     ta.set(Array(1, 1), true);
     ta.set(Array(2, 2), true);
@@ -26,7 +26,7 @@ final class ExtensionConstraintListTest {
       new Variable("V0", IntDomain(0, 1, 2)),
       new Variable("V1", IntDomain(0, 1, 2)))
 
-    mmd = new ExtensionConstraintList(scope, ta);
+    mmd = new ExtensionConstraintList(scope, ta.toList);
     content = mmd.tuples
     //println(content map (_.toSeq) mkString (", "))
   }

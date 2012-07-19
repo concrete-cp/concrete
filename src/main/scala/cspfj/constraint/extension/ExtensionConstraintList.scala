@@ -30,11 +30,27 @@ import scala.annotation.tailrec
 import cspfj.util.Loggable
 import cspfj.util.Backtrackable
 
+object ExtensionConstraintList {
+  var cache: List[(TupleTrieSet, List[Array[Int]])] = Nil
+
+  def toList(t: TupleTrieSet) = {
+    cache.find(_._1 eq t) match {
+      case Some(l) => l._2
+      case None => {
+        val l = t.toList
+        cache ::= (t, l)
+        l
+      }
+    }
+  }
+}
+
 final class ExtensionConstraintList(
   scope: Array[Variable],
-  private var tupleSet: TupleTrieSet) extends ExtensionConstraint(scope, tupleSet, false)
+  private var allTuples: List[Array[Int]])
+  extends ExtensionConstraint(scope, new TupleSeq(allTuples), false)
   with Removals with Loggable with Backtrackable[(List[Array[Int]], Int)] {
-  require(tupleSet.initialContent == false)
+
   private val found =
     (0 until arity) map (p => BitVector.newBitVector(scope(p).dom.maxSize)) toArray
 
@@ -89,9 +105,7 @@ final class ExtensionConstraintList(
       filter(found, p - 1, c || ch)
     }
 
-  private var allTuples: List[Array[Int]] = tupleSet.toList
-
-  private var nbTuples: Int = tupleSet.size
+  private var nbTuples: Int = allTuples.size
 
   def save = (allTuples, nbTuples)
 
@@ -99,8 +113,6 @@ final class ExtensionConstraintList(
     allTuples = d._1
     nbTuples = d._2
   }
-
-  override def checkIndices(t: Array[Int]) = tupleSet.check(t)
 
   def filterTuples(f: Array[Int] => Boolean) {
     val oldSize = nbTuples
@@ -116,19 +128,9 @@ final class ExtensionConstraintList(
     (base, tuple).zipped.forall { (b, t) => b < 0 || b == t }
   }
 
-  def removeTuples(base: Array[Int]) = {
-    throw new UnsupportedOperationException
-    //    unshareMatrix()
-    //    val s = size
-    //
-    //    //matrixManager.filter(t => !matches(t, base))
-    //
-    //    size - s;
-  }
+  def removeTuples(base: Array[Int]) = throw new UnsupportedOperationException
 
   def removeTuple(t: Array[Int]) = throw new UnsupportedOperationException
-
-  //def matrixManager = matrixManager
 
   def getEvaluation = arity * nbTuples
 

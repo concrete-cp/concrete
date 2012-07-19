@@ -8,7 +8,7 @@ final class TupleTrieSet(
   val initialContent: Boolean)
   extends Matrix with Iterable[Array[Int]] {
 
-  def this(width: Int, initialContent: Boolean) = this(Trie.empty(width), initialContent)
+  def this(initialContent: Boolean) = this(Trie.empty, initialContent)
 
   def trie = _trie
   

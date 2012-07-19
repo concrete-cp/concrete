@@ -12,7 +12,7 @@ import cspom.extension.Trie
 
 final class TrieTest {
 
-  val t = Trie.empty(3) + Array(1, 2, 3) + Array(1, 3, 4) + Array(1, 2, 5) + Array(2, 3, 5)
+  val t = Trie.empty + Array(1, 2, 3) + Array(1, 3, 4) + Array(1, 2, 5) + Array(2, 3, 5)
 
   @Test
   def testTrie() {
@@ -21,7 +21,7 @@ final class TrieTest {
     assertTrue(t.contains(Array(1, 3, 4)))
     assertFalse(t.contains(Array(1, 2, 4)))
 
-    var s = Trie.empty(3) + Array(1, 2, 5) + Array(1, 3, 4) + Array(1, 2, 3)
+    var s = Trie.empty + Array(1, 2, 5) + Array(1, 3, 4) + Array(1, 2, 3)
 
     assertFalse(t == s)
 
@@ -41,7 +41,7 @@ final class TrieTest {
 
   @Test
   def testRestore() {
-    val ta = new TupleTrieSet(Trie.empty(2), false);
+    val ta = new TupleTrieSet(Trie.empty, false);
     ta.set(Array(0, 0), true);
     ta.set(Array(1, 1), true);
     ta.set(Array(2, 2), true);

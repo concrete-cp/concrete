@@ -32,10 +32,9 @@ import cspfj.util.Backtrackable
 
 final class ExtensionConstraintArray(
   scope: Array[Variable],
-  private var tupleSet: TupleTrieSet) extends ExtensionConstraint(scope, tupleSet, false)
+  private val tuplesArray: Array[Array[Int]])
+  extends ExtensionConstraint(scope, new TupleSeq(tuplesArray), false)
   with Removals with Loggable with Backtrackable[Int] {
-
-  require(tupleSet.initialContent == false)
 
   private val found =
     (0 until arity) map (p => BitVector.newBitVector(scope(p).dom.maxSize)) toArray
@@ -99,8 +98,6 @@ final class ExtensionConstraintArray(
       filter(found, p - 1, c || ch)
     }
 
-  private val tuplesArray: Array[Array[Int]] = tupleSet.toArray
-
   private var bound: Int = tuplesArray.length
 
   def save = bound
@@ -108,8 +105,6 @@ final class ExtensionConstraintArray(
   def restore(d: Int) {
     bound = d
   }
-
-  override def checkIndices(t: Array[Int]) = tupleSet.check(t)
 
   def tuples = tuplesArray.take(bound)
 
