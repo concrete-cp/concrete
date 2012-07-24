@@ -10,7 +10,7 @@ import cspfj.constraint.extension.TupleTrieSet
 import cspfj.Domain
 import cspfj.Problem
 import cspfj.Variable
-import cspom.extension.Trie
+import cspom.extension.HashTrie
 import scala.collection.mutable.WeakHashMap
 import scala.collection.mutable.HashMap
 import cspfj.constraint.extension.ExtensionConstraintArray
@@ -21,11 +21,15 @@ import cspfj.constraint.extension.ExtensionConstraint2D
 import cspfj.constraint.extension.ExtensionConstraintList
 import cspfj.constraint.extension.ExtensionConstraintTrie
 import cspfj.UNSATException
+import cspfj.util.UOList
+import cspfj.constraint.extension.ExtensionConstraintUOList
+import cspfj.constraint.extension.ArrayTrie
+import cspfj.constraint.extension.ExtensionConstraintArrayTrie
 
 object ExtensionGenerator {
 
   @Parameter("reduction")
-  var ds = "Trie"
+  var ds = "Array"
 
   ParameterManager.register(this)
 
@@ -36,7 +40,7 @@ object ExtensionGenerator {
     size > Int.MaxValue || size > (TIGHTNESS_LIMIT * nbTuples)
   }
 
-  def bestMatrix(relation: Trie, init: Boolean, sizes: Seq[Int]) = {
+  def bestMatrix(relation: HashTrie, init: Boolean, sizes: Seq[Int]) = {
     if (relation.depth == 2) {
       new Matrix2D(sizes(0), sizes(1), init);
     } else if (!init && tupleSetBetterThanMatrix(sizes, relation.size)) {
@@ -46,7 +50,7 @@ object ExtensionGenerator {
     }
   }
 
-  def fillMatrix(domains: Seq[Domain], relation: Trie, init: Boolean, matrix: Matrix) {
+  def fillMatrix(domains: Seq[Domain], relation: HashTrie, init: Boolean, matrix: Matrix) {
 
     for (values <- relation.iterator) {
       val tuple = (values, domains).zipped.map { (v, d) => d.index(v) }
@@ -63,9 +67,9 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
   /**
    * Used to cache value to indices conversion
    */
-  private val vToICache = new CacheConverter[Trie, HashMap[Signature, Matrix]]()
+  private val vToICache = new CacheConverter[HashTrie, HashMap[Signature, Matrix]]()
 
-  private def generateMatrix(variables: Seq[Variable], relation: Trie, init: Boolean) = {
+  private def generateMatrix(variables: Seq[Variable], relation: HashTrie, init: Boolean) = {
     val domains = variables map (_.dom)
 
     val map = vToICache.getOrAdd(relation, new HashMap[Signature, Matrix])
@@ -78,7 +82,7 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
     })
   }
 
-  private def gen(relation: Trie, init: Boolean, domains: Seq[Domain]) = {
+  private def gen(relation: HashTrie, init: Boolean, domains: Seq[Domain]) = {
     val matrix = ExtensionGenerator.bestMatrix(relation, init, domains map (_.size))
     ExtensionGenerator.fillMatrix(domains, relation, init, matrix)
     matrix
@@ -115,8 +119,16 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
               val struct = dsCache.getOrAdd(m, m.toList)
               new ExtensionConstraintList(scope, struct)
             }
-            case "Trie" => {
+            case "HashTrie" => {
               new ExtensionConstraintTrie(scope, m)
+            }
+            case "UOList" => {
+              val struct = dsCache.getOrAdd(m, m.toList)
+              new ExtensionConstraintUOList(scope, struct)
+            }
+            case "ArrayTrie" => {
+              val list = dsCache.getOrAdd(m, m.toList)
+              new ExtensionConstraintArrayTrie(scope, ArrayTrie(list: _*))
             }
           }
         }

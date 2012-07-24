@@ -1,14 +1,14 @@
 package cspfj.constraint.extension;
 
 import scala.annotation.tailrec
-import cspom.extension.Trie
+import cspom.extension.HashTrie
 
 final class TupleTrieSet(
-  private var _trie: Trie,
+  private var _trie: HashTrie,
   val initialContent: Boolean)
   extends Matrix with Iterable[Array[Int]] {
 
-  def this(initialContent: Boolean) = this(Trie.empty, initialContent)
+  def this(initialContent: Boolean) = this(HashTrie.empty, initialContent)
 
   def trie = _trie
   

@@ -3,7 +3,7 @@ package cspfj.util
 import scala.annotation.tailrec
 import scala.collection.generic.GenericTraversableTemplate
 
-trait UOList[+A] extends Iterable[A] {
+trait UOList[+A] extends Seq[A] {
   def head: A
   def rest: UOList[A]
   override def tail = rest
@@ -60,6 +60,7 @@ trait UOList[+A] extends Iterable[A] {
 
     fm(this, EmptyUOList)
   }
+
 }
 
 final case object EmptyUOList extends UOList[Nothing] {
@@ -73,22 +74,37 @@ final case object EmptyUOList extends UOList[Nothing] {
     case that1: collection.Seq[_] => that1.isEmpty
     case _ => false
   }
+  def length = 0
+
+  def apply(idx: Int) = throw new NoSuchElementException("out of bounds")
 }
 
 final case class UOL[A](
   override val head: A,
   override val rest: UOList[A]) extends UOList[A] {
   override def isEmpty = false
+  def length = {
+    var c = 1
+    var l = rest
+    while (l.nonEmpty) {
+      c += 1
+      l = l.rest
+    }
+    c
+  }
+
+  def apply(idx: Int) = if (idx == 0) head else rest.apply(idx - 1)
 }
 
 object UOList {
   def empty = EmptyUOList
   def build[A](i: Iterable[A]) = {
-    def a(i: List[A], r: UOList[A]): UOList[A] =
-      if (i == Nil) r
-      else a(i.tail, r + i.head)
-
-    a(i.toList, EmptyUOList)
+    var b: UOList[A] = EmptyUOList
+    val itr = i.iterator
+    while (itr.hasNext) {
+      b += itr.next()
+    }
+    b
   }
 }
 

@@ -29,8 +29,9 @@ import cspfj.constraint.Constraint
 import scala.annotation.tailrec
 import cspfj.util.Loggable
 import cspfj.util.Backtrackable
+import cspfj.util.UOList
 
-final class ExtensionConstraintList(
+final class ExtensionConstraintUOList(
   scope: Array[Variable],
   private var allTuples: List[Array[Int]])
   extends ExtensionConstraint(scope, new TupleSeq(allTuples), false)
@@ -53,13 +54,25 @@ final class ExtensionConstraintList(
     //fine("Revising " + this + " : " + mod.toList)
     found.foreach(_.fill(false))
 
-    val mod = modified.toList
-
-    filterTuples(tuple =>
-      if (controlTuplePresence(tuple, mod)) {
+ 
+    var newList: List[Array[Int]] = Nil
+    var oldList = allTuples
+    var newSize = 0
+    while (oldList.nonEmpty) {
+      val tuple = oldList.head
+      if (controlTuplePresence(tuple, modified)) {
         setFound(tuple, found)
-        true
-      } else false)
+        newList ::= tuple
+        newSize += 1
+      }
+      oldList = oldList.tail
+    }
+
+    if (nbTuples != newSize) {
+      allTuples = newList
+      nbTuples = newSize
+      altering()
+    }
 
     val c = filter(found)
 

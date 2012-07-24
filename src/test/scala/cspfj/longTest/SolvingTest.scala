@@ -26,6 +26,7 @@ final class SolvingTest extends Loggable {
   def before() {
     //Solver.loggerLevel = "INFO"
     ParameterManager("preprocessor") = null
+    ParameterManager("reduction") = "ArrayTrie"
     //ParameterManager("ac3c.key") = classOf[DomCtr]
   }
 

@@ -20,20 +20,20 @@
 package cspfj.constraint.extension;
 
 import scala.annotation.tailrec
-
 import cspfj.constraint.Constraint
 import cspfj.util.Backtrackable
 import cspfj.util.BitVector
 import cspfj.util.Loggable
 import cspfj.Variable
 import cspom.extension.HashTrie
+import cspfj.UNSATException
 
-final class ExtensionConstraintTrie(_scope: Array[Variable], private val _tts: TupleTrieSet)
-  extends Constraint(_scope) with Loggable with Backtrackable[HashTrie] {
+final class ExtensionConstraintArrayTrie(_scope: Array[Variable], private val _tts: ArrayTrie)
+  extends Constraint(_scope) with Loggable with Backtrackable[ArrayTrie] {
 
-  require(_tts.initialContent == false)
+  //require(_tts.initialContent == false)
 
-  var trie = _tts.trie
+  var trie = _tts
 
   private val found = scope map (p => BitVector.newBitVector(p.dom.maxSize))
 
@@ -55,6 +55,7 @@ final class ExtensionConstraintTrie(_scope: Array[Variable], private val _tts: T
 
     trie = trie.filterTrie(
       (i, v) => scope(i).dom.present(v))
+    if (trie eq null) throw UNSATException.e
     trie.foreachTrie((i, v) => found(i).set(v))
 
     altering()
@@ -72,7 +73,7 @@ final class ExtensionConstraintTrie(_scope: Array[Variable], private val _tts: T
 
   def save = trie
 
-  def restore(d: HashTrie) {
+  def restore(d: ArrayTrie) {
     trie = d
   }
 

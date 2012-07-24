@@ -1,7 +1,6 @@
 package cspfj.constraint.extension;
 
 import scala.annotation.tailrec
-import cspom.extension.Trie
 
 final class TupleSeq(private var content: Seq[Array[Int]])
   extends Matrix with Iterable[Array[Int]] {

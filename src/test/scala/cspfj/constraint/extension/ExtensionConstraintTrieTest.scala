@@ -8,40 +8,15 @@ import org.junit.Test
 
 import cspfj.IntDomain
 import cspfj.Variable
-import cspom.extension.Trie
+import cspom.extension.HashTrie
 
-final class TrieTest {
+final class ExtensionConstraintTrieTest {
 
-  val t = Trie.empty + Array(1, 2, 3) + Array(1, 3, 4) + Array(1, 2, 5) + Array(2, 3, 5)
 
-  @Test
-  def testTrie() {
-    assertEquals(4, t.size)
-
-    assertTrue(t.contains(Array(1, 3, 4)))
-    assertFalse(t.contains(Array(1, 2, 4)))
-
-    var s = Trie.empty + Array(1, 2, 5) + Array(1, 3, 4) + Array(1, 2, 3)
-
-    assertFalse(t == s)
-
-    s += Array(2, 3, 5)
-
-    assertEquals(t, s)
-
-    var u = Trie(
-      Array(1, 2, 3),
-      Array(1, 3, 4),
-      Array(1, 2, 5),
-      Array(2, 3, 5))
-
-    assertEquals(t, u)
-
-  }
 
   @Test
   def testRestore() {
-    val ta = new TupleTrieSet(Trie.empty, false);
+    val ta = new TupleTrieSet(HashTrie.empty, false);
     ta.set(Array(0, 0), true);
     ta.set(Array(1, 1), true);
     ta.set(Array(2, 2), true);
@@ -59,7 +34,7 @@ final class TrieTest {
     mmd.revise()
 
     assertEquals(
-      Trie(Array(0, 0), Array(1, 1)),
+      HashTrie(Array(0, 0), Array(1, 1)),
       mmd.trie);
     assertEquals(2, mmd.trie.size);
 
