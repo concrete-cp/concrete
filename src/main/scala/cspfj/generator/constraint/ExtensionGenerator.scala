@@ -1,30 +1,29 @@
 package cspfj.generator.constraint;
 
 import scala.Array.canBuildFrom
+import scala.collection.mutable.HashMap
 import scala.math.BigInt.int2bigInt
-import cspfj.constraint.extension.ExtensionConstraint
+
+import cspfj.constraint.extension.ArrayTrie
+import cspfj.constraint.extension.ExtensionConstraint2D
+import cspfj.constraint.extension.ExtensionConstraintArray
+import cspfj.constraint.extension.ExtensionConstraintArrayTrie
+import cspfj.constraint.extension.ExtensionConstraintGeneral
+import cspfj.constraint.extension.ExtensionConstraintList
+import cspfj.constraint.extension.ExtensionConstraintListTrie
+import cspfj.constraint.extension.ExtensionConstraintTrie
+import cspfj.constraint.extension.ListTrie
 import cspfj.constraint.extension.Matrix
 import cspfj.constraint.extension.Matrix2D
 import cspfj.constraint.extension.MatrixGeneral
 import cspfj.constraint.extension.TupleTrieSet
+import cspfj.Parameter
 import cspfj.Domain
+import cspfj.ParameterManager
 import cspfj.Problem
+import cspfj.UNSATException
 import cspfj.Variable
 import cspom.extension.HashTrie
-import scala.collection.mutable.WeakHashMap
-import scala.collection.mutable.HashMap
-import cspfj.constraint.extension.ExtensionConstraintArray
-import cspfj.ParameterManager
-import cspfj.Parameter
-import cspfj.constraint.extension.ExtensionConstraintGeneral
-import cspfj.constraint.extension.ExtensionConstraint2D
-import cspfj.constraint.extension.ExtensionConstraintList
-import cspfj.constraint.extension.ExtensionConstraintTrie
-import cspfj.UNSATException
-import cspfj.util.UOList
-import cspfj.constraint.extension.ExtensionConstraintUOList
-import cspfj.constraint.extension.ArrayTrie
-import cspfj.constraint.extension.ExtensionConstraintArrayTrie
 
 object ExtensionGenerator {
 
@@ -122,9 +121,9 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
             case "HashTrie" => {
               new ExtensionConstraintTrie(scope, m)
             }
-            case "UOList" => {
-              val struct = dsCache.getOrAdd(m, m.toList)
-              new ExtensionConstraintUOList(scope, struct)
+            case "ListTrie" => {
+              val list = dsCache.getOrAdd(m, m.toList)
+              new ExtensionConstraintListTrie(scope, ListTrie(list: _*))
             }
             case "ArrayTrie" => {
               val list = dsCache.getOrAdd(m, m.toList)

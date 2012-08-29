@@ -27,15 +27,18 @@ import cspfj.util.Loggable
 import cspfj.Variable
 import cspom.extension.HashTrie
 import cspfj.UNSATException
+import cspfj.constraint.Removals
 
 final class ExtensionConstraintArrayTrie(_scope: Array[Variable], private val _tts: ArrayTrie)
-  extends Constraint(_scope) with Loggable with Backtrackable[ArrayTrie] {
+  extends Constraint(_scope) with Loggable with Removals with Backtrackable[ArrayTrie] {
 
   //require(_tts.initialContent == false)
 
-  var trie = _tts
+  private var trie = _tts
 
   private val found = scope map (p => BitVector.newBitVector(p.dom.maxSize))
+
+  private var neverRevised = true
 
   override def setLvl(l: Int) {
     super.setLvl(l)
@@ -47,28 +50,42 @@ final class ExtensionConstraintArrayTrie(_scope: Array[Variable], private val _t
     restoreLevel(l)
   }
 
-  def revise() = {
+  def revise(mod: Seq[Int]) = {
     //fine("Revising " + this + " : " + mod.toList)
     found.foreach(_.fill(false))
 
     //val oldSize = trie.size
 
-    trie = trie.filterTrie(
-      (i, v) => scope(i).dom.present(v))
-    if (trie eq null) throw UNSATException.e
-    trie.foreachTrie((i, v) => found(i).set(v))
+    val newTrie = trie.filterTrie(
+      (i, v) => scope(i).dom.present(v), mod.reverse)
 
-    altering()
+    if (newTrie ne trie) {
 
-    filter(found)
+      if (newTrie eq null) throw UNSATException.e
+
+      trie = newTrie
+      altering()
+
+      neverRevised = false
+
+      newTrie.foreachTrie((i, v) => found(i).set(v))
+      filter()
+
+    } else if (neverRevised) {
+
+      neverRevised = false
+      newTrie.foreachTrie((i, v) => found(i).set(v))
+      filter()
+
+    } else false
   }
 
   @tailrec
-  private def filter(found: Array[BitVector], p: Int = arity - 1, c: Boolean = false): Boolean =
+  private def filter(p: Int = arity - 1, c: Boolean = false): Boolean =
     if (p < 0) c
     else {
       val ch = scope(p).dom.filter(i => found(p)(i))
-      filter(found, p - 1, c || ch)
+      filter(p - 1, c || ch)
     }
 
   def save = trie
@@ -100,7 +117,7 @@ final class ExtensionConstraintArrayTrie(_scope: Array[Variable], private val _t
 
   //def matrixManager = matrixManager
 
-  def advise(p: Int) = arity * trie.size
+  def getEvaluation = trie.size
 
   def simpleEvaluation = math.min(7, scope.count(_.dom.size > 1))
 

@@ -26,7 +26,7 @@ final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
           true
 
         case Some(refDomain: BooleanDomain) =>
-          scope map { _.dom.asInstanceOf[BooleanDomain] } find { _.size == 1 } match {
+          scope filter { _.dom ne null } map { _.dom.asInstanceOf[BooleanDomain] } find { _.size == 1 } match {
             case None =>
               for (v <- scope if (v.dom == null)) {
                 v.dom = new BooleanDomain(refDomain.status)

@@ -57,9 +57,7 @@ final class ArrayTrie(var trie: Array[ArrayTrie], private var _size: Int) {
       val v = tuple(i)
       ensureCapacity(v + 1)
 
-      var nextTrie = trie(v)
-
-      if (nextTrie eq null) {
+      if (trie(v) eq null) {
         if (i == tuple.length - 1) trie(v) = ArrayTrie.leaf
         else trie(v) = ArrayTrie.empty + (tuple, i + 1)
       } else {
@@ -116,31 +114,58 @@ final class ArrayTrie(var trie: Array[ArrayTrie], private var _size: Int) {
     }.mkString
 
   def foreachTrie(f: (Int, Int) => Unit, depth: Int = 0) {
-    var i = 0;
-    while (i < trie.length) {
+    var i = trie.length - 1;
+    while (i >= 0) {
       if (trie(i) ne null) {
         f(depth, i)
         trie(i).foreachTrie(f, depth + 1)
       }
-      i += 1
+      i -= 1
     }
   }
 
-  def filterTrie(f: (Int, Int) => Boolean, depth: Int = 0): ArrayTrie = {
-    if (this eq ArrayTrie.leaf) this
+  def filterTrie(f: (Int, Int) => Boolean, modified: Seq[Int], depth: Int = 0): ArrayTrie = {
+    if (modified eq Nil) this
     else {
-      var newTrie: Array[ArrayTrie] = null // new Array[ArrayTrie](trie.length)
+      var newTrie: Array[ArrayTrie] = null
       var i = trie.length - 1
       var newSize = 0
-      while (i >= 0) {
-        if ((trie(i) ne null) && f(depth, i)) {
-          if (newTrie eq null) {
-            newTrie = new Array[ArrayTrie](i + 1)
+
+      val nextMod = if (modified.head == depth) modified.tail else modified
+
+      if (nextMod eq modified) {
+        // No change at this level
+        while (i >= 0) {
+          val currentTrie = trie(i)
+          if (currentTrie ne null) {
+            val newSubTrie = currentTrie.filterTrie(f, nextMod, depth + 1)
+            if (newSubTrie ne null) {
+              if (newTrie eq null) {
+                newTrie = new Array[ArrayTrie](i + 1)
+              }
+              newTrie(i) = newSubTrie
+              newSize += newSubTrie.size
+            }
           }
-          newTrie(i) = trie(i).filterTrie(f, depth + 1)
-          if (newTrie(i) ne null) newSize += newTrie(i).size
+          i -= 1
         }
-        i -= 1
+      } else {
+        // Some change at this level
+        while (i >= 0) {
+          val currentTrie = trie(i)
+          if ((currentTrie ne null) && f(depth, i)) {
+
+            val newSubTrie = currentTrie.filterTrie(f, nextMod, depth + 1)
+            if (newSubTrie ne null) {
+              if (newTrie eq null) {
+                newTrie = new Array[ArrayTrie](i + 1)
+              }
+              newTrie(i) = newSubTrie
+              newSize += newSubTrie.size
+            }
+          }
+          i -= 1
+        }
       }
 
       if (newSize == 0) null
