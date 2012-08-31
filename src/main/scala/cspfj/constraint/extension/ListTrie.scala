@@ -5,6 +5,7 @@ import scala.collection.immutable.IntMap
 import scala.collection.mutable.HashMap
 import cspom.Loggable
 import java.util.Arrays
+import cspfj.util.BitVector
 
 object ListTrie {
 
@@ -14,9 +15,25 @@ object ListTrie {
 
   def apply(tuples: Array[Int]*) = tuples.foldLeft(empty)(_ + _)
 
+  def findAndRemove[A](f: A => Boolean, l: List[A]): (Option[A], List[A]) = {
+    if (l eq Nil) (None, Nil)
+    else if (f(l.head)) (Some(l.head), l.tail)
+    else {
+      val o = findAndRemove(f, l.tail)
+      (o._1, l.head :: o._2)
+    }
+  }
+
+  @tailrec
+  def updateOrAdd[A](l: List[A], q: A => Boolean, f: Option[A] => A, out: List[A] = Nil): List[A] = {
+    if (l eq Nil) f(None) :: out
+    else if (q(l.head)) f(Some(l.head)) :: out ::: l.tail
+    else updateOrAdd(l.tail, q, f, l.head :: out)
+  }
+
 }
 
-final class ListTrie(var trie: List[(Int, ListTrie)], private var _size: Int) {
+final class ListTrie(val trie: List[(Int, ListTrie)], private val _size: Int) {
 
   def depth: Int = {
     if (this eq ListTrie.leaf) 0
@@ -46,16 +63,15 @@ final class ListTrie(var trie: List[(Int, ListTrie)], private var _size: Int) {
     else {
       val v = tuple(i)
 
-      val (subTrie, remainTrie) = findAndRemove(v, trie)
-
-      if (subTrie.isEmpty) {
-        if (i == tuple.length - 1) trie ::= (v, ListTrie.leaf)
-        else trie ::= (v, ListTrie.empty + (tuple, i + 1))
-      } else {
-        trie = (v, (subTrie.get + (tuple, i + 1))) :: remainTrie
-      }
-      _size += 1
-      this
+      new ListTrie(ListTrie.updateOrAdd[(Int, ListTrie)](
+        trie,
+        { e: (Int, ListTrie) => e._1 == v }, {
+          case Some(o) => (v, o._2 + (tuple, i + 1))
+          case None =>
+            if (i == tuple.length - 1) (v, ListTrie.leaf)
+            else (v, ListTrie.empty + (tuple, i + 1))
+        }),
+        _size + 1)
     }
   }
 
@@ -68,14 +84,13 @@ final class ListTrie(var trie: List[(Int, ListTrie)], private var _size: Int) {
       val (subTrie, remainTrie) = findAndRemove(v, trie)
 
       if (subTrie.get eq ListTrie.leaf) {
-        trie = remainTrie
+        new ListTrie(remainTrie, _size - 1)
       } else {
         val newTrie = subTrie.get - (tuple, i + 1)
-        if (newTrie.isEmpty) trie = remainTrie else trie = (v, newTrie) :: remainTrie
+        if (newTrie.isEmpty) new ListTrie(remainTrie, _size - 1)
+        else new ListTrie((v, newTrie) :: remainTrie, _size - 1)
       }
-      _size -= 1
-    }
-    this
+    } else this
   }
 
   def contains(tuple: Array[Int]): Boolean = contains(tuple, 0)
@@ -91,13 +106,13 @@ final class ListTrie(var trie: List[(Int, ListTrie)], private var _size: Int) {
   }
 
   override def equals(o: Any): Boolean = o match {
-    case t: ListTrie => trie sameElements t.trie
+    case t: ListTrie => listiterator sameElements t.listiterator
     case _ => false
   }
 
   override lazy val hashCode = trie.toSeq.hashCode
 
-  override def toString = nodes + " nodes representing " + size + " tuples" + toString(0)
+  override def toString = nodes + " nodes representing " + size + " tuples " + listiterator.mkString("\n") //toString(0)
 
   private def toString(depth: Int): String =
     trie.map {
@@ -106,9 +121,23 @@ final class ListTrie(var trie: List[(Int, ListTrie)], private var _size: Int) {
     }.mkString
 
   def foreachTrie(f: (Int, Int) => Unit, depth: Int = 0) {
-    for (t <- trie) {
-      f(depth, t._1)
-      t._2.foreachTrie(f, depth + 1)
+    var t = trie
+    while (t ne Nil) {
+      val (v, s) = t.head
+      f(depth, v)
+      s.foreachTrie(f, depth + 1)
+      t = t.tail
+    }
+
+  }
+
+  def setFound(f: Array[BitVector], depth: Int = 0) {
+    var t = trie
+    while (t ne Nil) {
+      val (v, s) = t.head
+      f(depth).set(v)
+      s.setFound(f, depth + 1)
+      t = t.tail
     }
   }
 
@@ -120,7 +149,15 @@ final class ListTrie(var trie: List[(Int, ListTrie)], private var _size: Int) {
 
       val newTrie1 = if (nextMod ne modified) trie.filter(t => f(depth, t._1)) else trie
 
-      val newTrie2 = newTrie1 map (t => (t._1, t._2.filterTrie(f, nextMod, depth + 1))) filter (t => t._2.size > 0)
+      var newTrie2: List[(Int, ListTrie)] = Nil
+      var c = newTrie1
+      while (c ne Nil) {
+        val t = c.head._2.filterTrie(f, nextMod, depth + 1)
+        if (t.size > 0) newTrie2 ::= (c.head._1, t)
+        c = c.tail
+      }
+
+      // val newTrie2 = newTrie1.map(t => (t._1, t._2.filterTrie(f, nextMod, depth + 1))).filter(t => t._2.size > 0)
 
       if (newTrie2 eq Nil) ListTrie.empty
       else {

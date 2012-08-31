@@ -19,6 +19,25 @@ final class ListTrieTest {
   }
 
   @Test
+  def testFindAndRemove() {
+    val l = List(1, 2, 3, 4)
+    val o = ListTrie.findAndRemove({ x: Int => x % 3 == 0 }, l)
+    assertEquals(Some(3), o._1)
+    assertEquals(List(1, 2, 4), o._2)
+
+    val o2 = ListTrie.findAndRemove({ x: Int => x % 4 == 0 }, l)
+    assertEquals(Some(4), o2._1)
+    assertEquals(List(1, 2, 3), o2._2)
+  }
+
+  @Test
+  def testUpdateOrAdd() {
+    val l = List(1, 2, 3, 4)
+    val o = ListTrie.updateOrAdd(l, { x: Int => x % 3 == 0 }, { x: Option[Int] => x.get + 1 })
+    assertEquals(List(1, 2, 4, 4), o.sorted)
+  }
+
+  @Test
   def testContainsTuple() {
     assertTrue(ts.contains(Array(0, 1)));
     assertFalse(ts.contains(Array(1, 1)));
