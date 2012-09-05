@@ -17,8 +17,8 @@ import cspfj.constraint.extension.Matrix
 import cspfj.constraint.extension.Matrix2D
 import cspfj.constraint.extension.MatrixGeneral
 import cspfj.constraint.extension.TupleTrieSet
-import cspfj.Parameter
 import cspfj.Domain
+import cspfj.Parameter
 import cspfj.ParameterManager
 import cspfj.Problem
 import cspfj.UNSATException
@@ -128,6 +128,9 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
             case "ArrayTrie" => {
               val list = dsCache.getOrAdd(m, m.toList)
               new ExtensionConstraintArrayTrie(scope, ArrayTrie(list: _*))
+            }
+            case "General" => {
+              new ExtensionConstraintGeneral(m, true, scope)
             }
           }
         }

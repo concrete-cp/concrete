@@ -138,7 +138,7 @@ final class IntDomain(
     //    val c = IntDomain.s(intSet.getClass) + 1
     //    IntDomain.s += intSet.getClass -> c
     //    if (c % 10000 == 0) println(IntDomain.s)
-    intSet.present(index);
+    _intSet.present(index);
   }
 
   def setSingle(index: Int) {

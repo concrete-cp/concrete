@@ -49,7 +49,7 @@ final class ExtensionConstraintList(
     restoreLevel(l)
   }
 
-  def revise(modified: Seq[Int]) = {
+  def revise(modified: List[Int]) = {
     //fine("Revising " + this + " : " + mod.toList)
     found.foreach(_.fill(false))
 

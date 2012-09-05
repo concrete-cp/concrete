@@ -92,10 +92,10 @@ abstract class Constraint(val scope: Array[Variable])
   }
 
   @tailrec
-  final def controlTuplePresence(tuple: Array[Int], mod: Seq[Int]): Boolean = {
+  final def controlTuplePresence(tuple: Array[Int], mod: List[Int]): Boolean = {
     /** Need high optimization */
 
-    if (mod.isEmpty) {
+    if (mod eq Nil) {
       assert(controlTuplePresence(tuple), tuple.mkString("(", ", ", ")") +
         " is not in " + this)
       true

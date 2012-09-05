@@ -7,7 +7,7 @@ trait Residues extends VariablePerVariable {
 
   val residues = new ResidueManagerFast(scope)
 
-  def reviseVariable(position: Int, modified: Seq[Int]): Boolean = {
+  def reviseVariable(position: Int, modified: List[Int]): Boolean = {
     val dom = scope(position).dom
 
     dom.filter { index =>

@@ -19,7 +19,7 @@ trait Removals extends Constraint {
     r
   }
 
-  def revise(modified: Seq[Int]): Boolean
+  def revise(modified: List[Int]): Boolean
 
   // scope.iterator.zipWithIndex.zip(removals.iterator).filter(t => t._2 >= reviseCount).map(t => t._1)
 

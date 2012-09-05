@@ -38,7 +38,7 @@ final class ExtensionConstraintGeneral(
 
   def removeTuples(base: Array[Int]) = tuples(base).count(removeTuple)
 
-  override def reviseVariable(position: Int, mod: Seq[Int]) = {
+  override def reviseVariable(position: Int, mod: List[Int]) = {
     if (supportCondition(position)) {
       assert(!super.reviseVariable(position, mod))
       false

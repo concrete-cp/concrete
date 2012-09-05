@@ -50,34 +50,33 @@ final class ExtensionConstraintArrayTrie(_scope: Array[Variable], private val _t
     restoreLevel(l)
   }
 
-  def revise(mod: Seq[Int]) = {
+  def revise(mod: List[Int]) = {
     //fine("Revising " + this + " : " + mod.toList)
     found.foreach(_.fill(false))
 
     //val oldSize = trie.size
 
-    val newTrie = trie.filterTrie(
+       val newTrie = trie.filterTrie(
       (i, v) => scope(i).dom.present(v), mod.reverse)
 
     if (newTrie ne trie) {
-
       if (newTrie eq null) throw UNSATException.e
 
       trie = newTrie
       altering()
+    }
 
-      neverRevised = false
+    trie.foreachTrie((i, v) => found(i).set(v))
+    val c = filter()
 
-      newTrie.foreachTrie((i, v) => found(i).set(v))
-      filter()
+    val card = scope.map(v => BigInt(v.dom.size)).product
+    assert(card >= trie.size, card + " < " + trie.size + "!")
+    if (card == trie.size) {
+      //logger.info("Entailing " + this)
+      entail()
+    }
 
-    } else if (neverRevised) {
-
-      neverRevised = false
-      newTrie.foreachTrie((i, v) => found(i).set(v))
-      filter()
-
-    } else false
+    c
   }
 
   @tailrec

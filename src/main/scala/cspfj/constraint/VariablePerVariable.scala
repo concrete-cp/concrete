@@ -16,9 +16,9 @@ trait VariablePerVariable extends Constraint with Removals with Loggable {
    * @param position
    * @return true iff any value has been removed
    */
-  def reviseVariable(position: Int, modified: Seq[Int]): Boolean
+  def reviseVariable(position: Int, modified: List[Int]): Boolean
 
-  def revise(modified: Seq[Int]) = {
+  def revise(modified: List[Int]) = {
     @tailrec
     def reviseNS(i: Int = arity - 1, c: Boolean = false): Boolean =
       if (i < 0) c

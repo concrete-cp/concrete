@@ -52,7 +52,7 @@ final class Eq(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
       scope(0).dom.intersectVal(scope(1).dom.valueInterval - b) |
         scope(1).dom.intersectVal(scope(0).dom.valueInterval + b)
 
-  def reviseVariable(position: Int, mod: Seq[Int]) = position match {
+  def reviseVariable(position: Int, mod: List[Int]) = position match {
     case 0 => x.dom.filter { i =>
       val index = yIndex(i)
       index >= 0 && y.dom.present(index)

@@ -57,7 +57,7 @@ final class ExtensionConstraint2D(
 
   override def simpleEvaluation = 2
 
-  def reviseVariable(position: Int, mod: Seq[Int]) =
+  def reviseVariable(position: Int, mod: List[Int]) =
     !supportCondition(position) && scope(position).dom.filter(i => hasSupport(position, i))
 
   def removeTuple(tuple: Array[Int]) = {
