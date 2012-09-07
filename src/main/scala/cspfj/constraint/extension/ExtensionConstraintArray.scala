@@ -74,7 +74,7 @@ final class ExtensionConstraintArray(
       found(p).fill(false)
       pos.add(p)
     }
-    println(bound)
+    //println(bound)
 
     var i = 0
     while (i < bound) {

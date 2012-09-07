@@ -5,6 +5,8 @@ import scala.collection.immutable.IntMap
 import scala.collection.mutable.HashMap
 import cspom.Loggable
 import java.util.Arrays
+import cspfj.util.BitVector
+import cspfj.Variable
 
 object ArrayTrie {
 
@@ -17,7 +19,7 @@ object ArrayTrie {
   def apply(tuples: Array[Int]*) = tuples.foldLeft(empty)(_ + _)
 }
 
-final class ArrayTrie(var trie: Array[ArrayTrie], private var _size: Int) {
+final class ArrayTrie(val trie: Array[ArrayTrie], val size: Int) {
 
   def depth: Int = {
     if (this eq ArrayTrie.leaf) 0
@@ -26,45 +28,43 @@ final class ArrayTrie(var trie: Array[ArrayTrie], private var _size: Int) {
     }
   }
 
-  def size = _size
-
   private def values = trie.filter(_ ne null)
 
-  def isEmpty = _size == 0
+  def isEmpty = size == 0
 
   def +(t: Array[Int]): ArrayTrie = if (contains(t)) this else this + (t, 0)
 
-  /**
-   * Increases the capacity of this instance, if necessary, to ensure that it
-   * can hold at least the number of elements specified by the minimum
-   * capacity argument.
-   *
-   * @param minCapacity
-   *            the desired minimum capacity
-   */
-  private def ensureCapacity(minCapacity: Int) {
-    val oldCapacity = trie.length;
-    if (minCapacity > oldCapacity) {
-      val newCapacity = math.max(minCapacity, (oldCapacity * 3) / 2 + 1);
-      // minCapacity is usually close to size, so this is a win:
-      trie = Arrays.copyOf(trie, newCapacity)
-    }
-  }
+  //  /**
+  //   * Increases the capacity of this instance, if necessary, to ensure that it
+  //   * can hold at least the number of elements specified by the minimum
+  //   * capacity argument.
+  //   *
+  //   * @param minCapacity
+  //   *            the desired minimum capacity
+  //   */
+  //  private def ensureCapacity(minCapacity: Int) {
+  //    val oldCapacity = trie.length;
+  //    if (minCapacity > oldCapacity) {
+  //      val newCapacity = math.max(minCapacity, (oldCapacity * 3) / 2 + 1);
+  //      // minCapacity is usually close to size, so this is a win:
+  //      trie = Arrays.copyOf(trie, newCapacity)
+  //    }
+  //  }
 
   private def +(tuple: Array[Int], i: Int): ArrayTrie = {
     if (i >= tuple.length) ArrayTrie.leaf
     else {
       val v = tuple(i)
-      ensureCapacity(v + 1)
+      val newArray = trie.padTo(v + 1, null)
+      //ensureCapacity(v + 1)
 
-      if (trie(v) eq null) {
-        if (i == tuple.length - 1) trie(v) = ArrayTrie.leaf
-        else trie(v) = ArrayTrie.empty + (tuple, i + 1)
+      if (newArray(v) eq null) {
+        if (i == tuple.length - 1) newArray(v) = ArrayTrie.leaf
+        else newArray(v) = ArrayTrie.empty + (tuple, i + 1)
       } else {
-        trie(v) += (tuple, i + 1)
+        newArray(v) += (tuple, i + 1)
       }
-      _size += 1
-      this
+      new ArrayTrie(newArray, size + 1)
     }
   }
 
@@ -74,14 +74,16 @@ final class ArrayTrie(var trie: Array[ArrayTrie], private var _size: Int) {
     if (i < tuple.length) {
       val v = tuple(i)
 
+      val newArray = trie.clone
       val t = trie(v)
+
       if (t eq ArrayTrie.leaf) {
-        trie(v) = null
+        newArray(v) = null
       } else {
         val newTrie = t - (tuple, i + 1)
-        if (newTrie.isEmpty) trie(v) = null else trie(v) = newTrie
+        if (newTrie.isEmpty) newArray(v) = null else newArray(v) = newTrie
       }
-      _size -= 1
+      new ArrayTrie(newArray, size - 1)
     }
     this
   }
@@ -124,6 +126,25 @@ final class ArrayTrie(var trie: Array[ArrayTrie], private var _size: Int) {
     }
   }
 
+  def setFound(f: Array[BitVector], scope: Array[Variable]): Int = {
+    val fs = new FoundStack(f, scope)
+    setFound(fs, 0)
+    fs.last
+  }
+
+  private def setFound(f: FoundStack, depth: Int) {
+    //if (depth <= f.last)
+    var i = trie.length - 1
+    while (i >= 0 && depth <= f.last) {
+      if (trie(i) ne null) {
+        f.set(depth, i)
+        trie(i).setFound(f, depth + 1)
+      }
+      i -= 1
+    }
+
+  }
+
   def filterTrie(f: (Int, Int) => Boolean, modified: Seq[Int], depth: Int = 0): ArrayTrie = {
     if (modified eq Nil) this
     else {
@@ -156,6 +177,57 @@ final class ArrayTrie(var trie: Array[ArrayTrie], private var _size: Int) {
           if ((currentTrie ne null) && f(depth, i)) {
 
             val newSubTrie = currentTrie.filterTrie(f, nextMod, depth + 1)
+            if (newSubTrie ne null) {
+              if (newTrie eq null) {
+                newTrie = new Array[ArrayTrie](i + 1)
+              }
+              newTrie(i) = newSubTrie
+              newSize += newSubTrie.size
+            }
+          }
+          i -= 1
+        }
+      }
+
+      if (newSize == 0) null
+      else if (size == newSize) this
+      else new ArrayTrie(newTrie, newSize)
+
+    }
+  }
+
+  def filter(scope: Array[Variable], modified: Seq[Int], depth: Int = 0): ArrayTrie = {
+    if (modified eq Nil) this
+    else {
+      var newTrie: Array[ArrayTrie] = null
+      var i = trie.length - 1
+      var newSize = 0
+
+      val nextMod = if (modified.head == depth) modified.tail else modified
+
+      if (nextMod eq modified) {
+        // No change at this level
+        while (i >= 0) {
+          val currentTrie = trie(i)
+          if (currentTrie ne null) {
+            val newSubTrie = currentTrie.filter(scope, nextMod, depth + 1)
+            if (newSubTrie ne null) {
+              if (newTrie eq null) {
+                newTrie = new Array[ArrayTrie](i + 1)
+              }
+              newTrie(i) = newSubTrie
+              newSize += newSubTrie.size
+            }
+          }
+          i -= 1
+        }
+      } else {
+        // Some change at this level
+        while (i >= 0) {
+          val currentTrie = trie(i)
+          if ((currentTrie ne null) && scope(depth).dom.present(i)) {
+
+            val newSubTrie = currentTrie.filter(scope, nextMod, depth + 1)
             if (newSubTrie ne null) {
               if (newTrie eq null) {
                 newTrie = new Array[ArrayTrie](i + 1)
@@ -212,4 +284,14 @@ final class ArrayTrie(var trie: Array[ArrayTrie], private var _size: Int) {
 
   def tupleString = iterator map { _.mkString(" ") } mkString "|"
 
+}
+
+class FoundStack(val f: Array[BitVector], val scope: Array[Variable]) {
+  var last = f.length - 1
+
+  def set(p: Int, i: Int) {
+    if (f(p).set(i) && last == p) {
+      while (last >= 0 && f(last).cardinality == scope(last).dom.size) last -= 1
+    }
+  }
 }
