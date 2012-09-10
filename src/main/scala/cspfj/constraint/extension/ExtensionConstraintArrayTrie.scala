@@ -56,10 +56,10 @@ final class ExtensionConstraintArrayTrie(_scope: Array[Variable], private val _t
 
     //val oldSize = trie.size
 
-    //    val newTrie = trie.filterTrie(
-    //      (i, v) => scope(i).dom.present(v), mod.reverse)
+    val newTrie = trie.filterTrie(
+      (i, v) => scope(i).dom.present(v), mod.reverse)
 
-    val newTrie = trie.filter(scope, mod.reverse)
+    //    val newTrie = trie.filter(scope, mod.reverse)
 
     if (newTrie ne trie) {
       if (newTrie eq null) throw UNSATException.e
@@ -68,9 +68,17 @@ final class ExtensionConstraintArrayTrie(_scope: Array[Variable], private val _t
       altering()
     }
 
-    trie.setFound(found, scope)
-    var lastFound = arity - 1
-    while (lastFound >= 0 && found(lastFound).cardinality == scope(lastFound).dom.size) lastFound -= 1
+    var last = arity - 1
+
+    val lastFound = trie.setFound({ (depth: Int, i: Int) =>
+      if (found(depth).set(i) && last == depth) {
+        while (last >= 0 && found(last).cardinality == scope(last).dom.size) last -= 1
+      }
+      last
+    }, arity - 1)
+
+    //    var lastFound = arity - 1
+    //    while (lastFound >= 0 && found(lastFound).cardinality == scope(lastFound).dom.size) lastFound -= 1
     val c = filter(lastFound)
 
     val card = scope.map(v => BigInt(v.dom.size)).product

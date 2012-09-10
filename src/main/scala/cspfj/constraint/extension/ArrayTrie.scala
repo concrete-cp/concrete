@@ -1,18 +1,9 @@
 package cspfj.constraint.extension
 
 import scala.annotation.tailrec
-import scala.collection.immutable.IntMap
-import scala.collection.mutable.HashMap
-import cspom.Loggable
-import java.util.Arrays
-import cspfj.util.BitVector
-import cspfj.Variable
 
 object ArrayTrie {
-
-  val default_size = 2
-
-  def empty = new ArrayTrie(new Array(default_size), 0)
+  val empty = new ArrayTrie(Array(), 0)
 
   val leaf = new ArrayTrie(Array(), 1)
 
@@ -59,8 +50,9 @@ final class ArrayTrie(val trie: Array[ArrayTrie], val size: Int) {
       //ensureCapacity(v + 1)
 
       if (newArray(v) eq null) {
-        if (i == tuple.length - 1) newArray(v) = ArrayTrie.leaf
-        else newArray(v) = ArrayTrie.empty + (tuple, i + 1)
+        newArray(v) =
+          if (i == tuple.length - 1) ArrayTrie.leaf
+          else ArrayTrie.empty + (tuple, i + 1)
       } else {
         newArray(v) += (tuple, i + 1)
       }
@@ -126,23 +118,23 @@ final class ArrayTrie(val trie: Array[ArrayTrie], val size: Int) {
     }
   }
 
-  def setFound(f: Array[BitVector], scope: Array[Variable]): Int = {
-    val fs = new FoundStack(f, scope)
-    setFound(fs, 0)
-    fs.last
-  }
-
-  private def setFound(f: FoundStack, depth: Int) {
-    //if (depth <= f.last)
+  /**
+   * @param f(depth, i) : function called while traversing the trie, given depth and index. Returns the depth at which traversing must be stopped
+   * @param maxDepth : initial maximum depth at which traversing must be stopped
+   * @param depth : current depth
+   * @return current maximum depth
+   */
+  def setFound(f: (Int, Int) => Int, maxDepth: Int, depth: Int = 0): Int = {
     var i = trie.length - 1
-    while (i >= 0 && depth <= f.last) {
+    var last = maxDepth
+    while (i >= 0 && depth <= last) {
       if (trie(i) ne null) {
-        f.set(depth, i)
-        trie(i).setFound(f, depth + 1)
+        last = f(depth, i)
+        last = trie(i).setFound(f, last, depth + 1)
       }
       i -= 1
     }
-
+    last
   }
 
   def filterTrie(f: (Int, Int) => Boolean, modified: Seq[Int], depth: Int = 0): ArrayTrie = {
@@ -155,7 +147,7 @@ final class ArrayTrie(val trie: Array[ArrayTrie], val size: Int) {
       val nextMod = if (modified.head == depth) modified.tail else modified
 
       if (nextMod eq modified) {
-        // No change at this level
+        // No change at this level (no need to call f())
         while (i >= 0) {
           val currentTrie = trie(i)
           if (currentTrie ne null) {
@@ -196,57 +188,6 @@ final class ArrayTrie(val trie: Array[ArrayTrie], val size: Int) {
     }
   }
 
-  def filter(scope: Array[Variable], modified: Seq[Int], depth: Int = 0): ArrayTrie = {
-    if (modified eq Nil) this
-    else {
-      var newTrie: Array[ArrayTrie] = null
-      var i = trie.length - 1
-      var newSize = 0
-
-      val nextMod = if (modified.head == depth) modified.tail else modified
-
-      if (nextMod eq modified) {
-        // No change at this level
-        while (i >= 0) {
-          val currentTrie = trie(i)
-          if (currentTrie ne null) {
-            val newSubTrie = currentTrie.filter(scope, nextMod, depth + 1)
-            if (newSubTrie ne null) {
-              if (newTrie eq null) {
-                newTrie = new Array[ArrayTrie](i + 1)
-              }
-              newTrie(i) = newSubTrie
-              newSize += newSubTrie.size
-            }
-          }
-          i -= 1
-        }
-      } else {
-        // Some change at this level
-        while (i >= 0) {
-          val currentTrie = trie(i)
-          if ((currentTrie ne null) && scope(depth).dom.present(i)) {
-
-            val newSubTrie = currentTrie.filter(scope, nextMod, depth + 1)
-            if (newSubTrie ne null) {
-              if (newTrie eq null) {
-                newTrie = new Array[ArrayTrie](i + 1)
-              }
-              newTrie(i) = newSubTrie
-              newSize += newSubTrie.size
-            }
-          }
-          i -= 1
-        }
-      }
-
-      if (newSize == 0) null
-      else if (size == newSize) this
-      else new ArrayTrie(newTrie, newSize)
-
-    }
-  }
-
   //  private def asStream: Stream[List[Int]] =
   //    trie.toStream flatMap {
   //      case (i, t) => if (t.isEmpty) Stream(List(i)) else t.asStream map (i :: _)
@@ -267,31 +208,8 @@ final class ArrayTrie(val trie: Array[ArrayTrie], val size: Int) {
 
   def nodes: Int = 1 + values.map(_.nodes).sum
 
-  //  /**
-  //   * This method returns a copy of this extension with permuted tuples. New
-  //   * order of tuples is given as an argument.
-  //   *
-  //   * <p>
-  //   * For example, a ternary extension 1 2 3|1 3 4|2 4 5 will be reversed to 1
-  //   * 3 2|1 4 3|2 5 4 by a call to reverse(0, 2, 1).
-  //   * </p>
-  //   *
-  //   * @param newOrder
-  //   *            new order of the extension.
-  //   * @return a reversed copy of the extension.
-  //   */
-  //  def permute(newOrder: Seq[Int]) = ArrayTrie(toList map { t => newOrder.map(t(_)).toArray }: _*)
-
   def tupleString = iterator map { _.mkString(" ") } mkString "|"
 
 }
 
-class FoundStack(val f: Array[BitVector], val scope: Array[Variable]) {
-  var last = f.length - 1
 
-  def set(p: Int, i: Int) {
-    if (f(p).set(i) && last == p) {
-      while (last >= 0 && f(last).cardinality == scope(last).dom.size) last -= 1
-    }
-  }
-}
