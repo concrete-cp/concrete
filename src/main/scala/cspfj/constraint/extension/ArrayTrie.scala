@@ -10,7 +10,7 @@ object ArrayTrie {
   def apply(tuples: Array[Int]*) = tuples.foldLeft(empty)(_ + _)
 }
 
-final class ArrayTrie(val trie: Array[ArrayTrie], val size: Int) {
+final class ArrayTrie(val trie: Array[ArrayTrie], override val size: Int) extends Set[Array[Int]] {
 
   def depth: Int = {
     if (this eq ArrayTrie.leaf) 0
@@ -21,7 +21,7 @@ final class ArrayTrie(val trie: Array[ArrayTrie], val size: Int) {
 
   private def values = trie.filter(_ ne null)
 
-  def isEmpty = size == 0
+  override def isEmpty = size == 0
 
   def +(t: Array[Int]): ArrayTrie = if (contains(t)) this else this + (t, 0)
 
@@ -144,14 +144,13 @@ final class ArrayTrie(val trie: Array[ArrayTrie], val size: Int) {
       var i = trie.length - 1
       var newSize = 0
 
-      val nextMod = if (modified.head == depth) modified.tail else modified
-
-      if (nextMod eq modified) {
-        // No change at this level (no need to call f())
+      if (modified.head == depth) {
+        // Some change at this level
         while (i >= 0) {
           val currentTrie = trie(i)
-          if (currentTrie ne null) {
-            val newSubTrie = currentTrie.filterTrie(f, nextMod, depth + 1)
+          if ((currentTrie ne null) && f(depth, i)) {
+
+            val newSubTrie = currentTrie.filterTrie(f, modified.tail, depth + 1)
             if (newSubTrie ne null) {
               if (newTrie eq null) {
                 newTrie = new Array[ArrayTrie](i + 1)
@@ -163,12 +162,11 @@ final class ArrayTrie(val trie: Array[ArrayTrie], val size: Int) {
           i -= 1
         }
       } else {
-        // Some change at this level
+        // No change at this level (=> no need to call f())
         while (i >= 0) {
           val currentTrie = trie(i)
-          if ((currentTrie ne null) && f(depth, i)) {
-
-            val newSubTrie = currentTrie.filterTrie(f, nextMod, depth + 1)
+          if (currentTrie ne null) {
+            val newSubTrie = currentTrie.filterTrie(f, modified, depth + 1)
             if (newSubTrie ne null) {
               if (newTrie eq null) {
                 newTrie = new Array[ArrayTrie](i + 1)

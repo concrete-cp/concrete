@@ -78,34 +78,66 @@ final class Variable(
 
   //var wDeg = 0
 
-  @tailrec
-  private def _getWDeg(i: Int = constraints.size - 1, s: Int = 0): Int =
-    if (i < 0) s
-    else {
-      val c = constraints(i)
-      if (c.isEntailed) _getWDeg(i - 1, s)
-      else _getWDeg(i - 1, s + c.weight)
-    }
+  //  @tailrec
+  //  private def _getWDeg(i: Int = constraints.size - 1, s: Int = 0): Int =
+  //    if (i < 0) s
+  //    else {
+  //      val c = constraints(i)
+  //      if (c.isEntailed) _getWDeg(i - 1, s)
+  //      else _getWDeg(i - 1, s + c.weight)
+  //    }
 
-  def getWDeg = {
-    _getWDeg()
-    //    assert(_getWDeg() == wDeg, "%s: was %d, should be %d".format(this, wDeg, _getWDeg()))
-    //    
-    //    wDeg
+  private def nonFree(c: Constraint): Boolean = {
+    var free = 0
+    var i = c.arity - 1
+    while (i >= 0) {
+      if (c.scope(i).dom.size > 1) {
+        free += 1
+        if (free > 1) {
+          return true
+        }
+      }
+      i -= 1
+    }
+    false
+  }
+
+  def getWDegFree = {
+    var i = constraints.length - 1
+    var wDeg = 0
+    while (i >= 0) {
+      val c = constraints(i)
+      if (nonFree(c)) wDeg += c.weight
+      i -= 1
+    }
+    wDeg
+  }
+
+  def getWDegEntailed = {
+    var i = constraints.length - 1
+    var wDeg = 0
+    while (i >= 0) {
+      val c = constraints(i)
+      if (!c.isEntailed) wDeg += c.weight
+      i -= 1
+    }
+    wDeg
   }
 
   var dDeg = 0
 
-  @tailrec
-  private def _getDDeg(i: Int = constraints.size - 1, s: Int = 0): Int =
-    if (i < 0) s
-    else {
-      val c = constraints(i)
-      if (c.isEntailed) _getDDeg(i - 1, s)
-      else _getDDeg(i - 1, s + 1)
-    }
-
   def getDDeg = dDeg
+
+  def getDDegFree = {
+    var i = constraints.length - 1
+    var dDeg = 0
+    while (i >= 0) {
+      val c = constraints(i)
+      if (nonFree(c)) dDeg += 1
+      i -= 1
+    }
+    dDeg
+  }
 
 }
 

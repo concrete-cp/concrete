@@ -34,7 +34,7 @@ final class ExtensionConstraintArrayTrie(_scope: Array[Variable], private val _t
 
   //require(_tts.initialContent == false)
 
-  private var trie = _tts
+  var trie = _tts
 
   private val found = scope map (p => BitVector.newBitVector(p.dom.maxSize))
 

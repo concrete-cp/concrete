@@ -29,12 +29,12 @@ import cspom.extension.HashTrie
 import cspfj.UNSATException
 import cspfj.constraint.Removals
 
-final class ExtensionConstraintListTrie(_scope: Array[Variable], private val _tts: ListTrie)
-  extends Constraint(_scope) with Loggable with Removals with Backtrackable[ListTrie] {
+final class ExtensionConstraintMDD(_scope: Array[Variable], private val _tts: MDD)
+  extends Constraint(_scope) with Loggable with Removals with Backtrackable[MDD] {
 
   //require(_tts.initialContent == false)
 
-  private var trie = _tts
+  var trie = _tts
 
   private val found = scope map (p => BitVector.newBitVector(p.dom.maxSize))
 
@@ -53,21 +53,33 @@ final class ExtensionConstraintListTrie(_scope: Array[Variable], private val _tt
   def revise(mod: List[Int]) = {
     //fine("Revising " + this + " : " + mod.toList)
     found.foreach(_.fill(false))
-    //println(trie.size)
+
     //val oldSize = trie.size
 
     val newTrie = trie.filterTrie(
       (i, v) => scope(i).dom.present(v), mod.reverse)
 
+    //    val newTrie = trie.filter(scope, mod.reverse)
+
     if (newTrie ne trie) {
-      if (newTrie.isEmpty) throw UNSATException.e
+      if (newTrie eq null) throw UNSATException.e
 
       trie = newTrie
       altering()
     }
 
-    trie.setFound(found) //foreachTrie((i, v) => found(i).set(v))
-    val c = filter()
+    var last = arity - 1
+
+    val lastFound = trie.setFound({ (depth: Int, i: Int) =>
+      if (found(depth).set(i) && last == depth) {
+        while (last >= 0 && found(last).cardinality == scope(last).dom.size) last -= 1
+      }
+      last
+    }, arity - 1)
+
+    //    var lastFound = arity - 1
+    //    while (lastFound >= 0 && found(lastFound).cardinality == scope(lastFound).dom.size) lastFound -= 1
+    val c = filter(lastFound)
 
     val card = scope.map(v => BigInt(v.dom.size)).product
     assert(card >= trie.size, card + " < " + trie.size + "!")
@@ -89,7 +101,7 @@ final class ExtensionConstraintListTrie(_scope: Array[Variable], private val _tt
 
   def save = trie
 
-  def restore(d: ListTrie) {
+  def restore(d: MDD) {
     trie = d
   }
 

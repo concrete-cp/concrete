@@ -33,7 +33,7 @@ object WDeg {
 
 final class WDeg(val problem: Problem) extends VariableHeuristic {
 
-  def score(variable: Variable) = variable.getWDeg
+  def score(variable: Variable) = variable.getWDegEntailed
 
   override def toString = "max-wdeg"
 

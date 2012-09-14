@@ -17,29 +17,25 @@ import cspfj.Statistic
 final class QuickFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
 
   @Statistic
-   var nbOffer = 0
+  var nbOffer = 0
   @Statistic
-   var nbUpdate = 0
+  var nbUpdate = 0
   @Statistic
-   var nbPoll = 0
+  var nbPoll = 0
   @Statistic
-   var nbClear = 0
+  var nbClear = 0
   @Statistic
-   var offerSize = 0L
+  var offerSize = 0L
   @Statistic
-   var updateSize = 0L
+  var updateSize = 0L
   @Statistic
-   var pollSize = 0L
+  var pollSize = 0L
 
   private val NB_LISTS = 8
 
   private val FACTOR = {
-    val s = 31 / NB_LISTS
-    var i = 1
-    (for (j <- 0 until NB_LISTS) yield {
-      i <<= s
-      i
-    }) toArray
+    val s = 31.0 / (NB_LISTS)
+    (1 until NB_LISTS).map(i => math.pow(2, i * s).toInt).toArray
   }
 
   private val queues: Array[DLNode[T]] = Array.fill(NB_LISTS)(new HeadDLNode())
@@ -50,13 +46,14 @@ final class QuickFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
 
   private def chooseList(e: Int): Int = {
     var i = 0
-    while (i < NB_LISTS && e > FACTOR(i)) i += 1
+    while (i < NB_LISTS - 1 && e > FACTOR(i)) i += 1
     i
   }
 
   def offer(e: T, eval: Int) = {
     require(eval >= 0)
     val list = chooseList(eval)
+    //println(e + " : " + eval + " -> " + list)
 
     if (e.isPresent && list == e.currentList) false
     else {

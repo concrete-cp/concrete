@@ -3,15 +3,11 @@ package cspfj.generator.constraint;
 import scala.Array.canBuildFrom
 import scala.collection.mutable.HashMap
 import scala.math.BigInt.int2bigInt
-
 import cspfj.constraint.extension.ArrayTrie
 import cspfj.constraint.extension.ExtensionConstraint2D
 import cspfj.constraint.extension.ExtensionConstraintArray
 import cspfj.constraint.extension.ExtensionConstraintArrayTrie
 import cspfj.constraint.extension.ExtensionConstraintGeneral
-import cspfj.constraint.extension.ExtensionConstraintList
-import cspfj.constraint.extension.ExtensionConstraintListTrie
-import cspfj.constraint.extension.ExtensionConstraintTrie
 import cspfj.constraint.extension.ListTrie
 import cspfj.constraint.extension.Matrix
 import cspfj.constraint.extension.Matrix2D
@@ -24,6 +20,8 @@ import cspfj.Problem
 import cspfj.UNSATException
 import cspfj.Variable
 import cspom.extension.HashTrie
+import cspfj.constraint.extension.ExtensionConstraintMDD
+import cspfj.constraint.extension.MDD
 
 object ExtensionGenerator {
 
@@ -34,18 +32,20 @@ object ExtensionGenerator {
 
   val TIGHTNESS_LIMIT = 4;
 
-  def tupleSetBetterThanMatrix(sizes: Seq[Int], nbTuples: Int) = {
-    val size = sizes.foldLeft(BigInt(1))(_ * _)
-    size > Int.MaxValue || size > (TIGHTNESS_LIMIT * nbTuples)
+  def tupleSetBetterThanMatrix(size: BigInt, nbTuples: Int) = {
+    size > (TIGHTNESS_LIMIT * nbTuples)
   }
 
   def bestMatrix(relation: HashTrie, init: Boolean, sizes: Seq[Int]) = {
     if (relation.depth == 2) {
       new Matrix2D(sizes(0), sizes(1), init);
-    } else if (!init && tupleSetBetterThanMatrix(sizes, relation.size)) {
-      new TupleTrieSet(relation, init);
     } else {
-      new MatrixGeneral(sizes.toArray, init);
+      val totalSize = sizes.foldLeft(BigInt(1))(_ * _)
+      if (totalSize > Int.MaxValue || (!init && tupleSetBetterThanMatrix(totalSize, relation.size))) {
+        new TupleTrieSet(init);
+      } else {
+        new MatrixGeneral(sizes.toArray, init);
+      }
     }
   }
 
@@ -107,27 +107,29 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
       val scope = solverVariables.toArray
       val constraint = matrix match {
         case m: Matrix2D => new ExtensionConstraint2D(scope, m, true)
-        case m: TupleTrieSet => {
+        case m: TupleTrieSet if (m.initialContent == false) => {
           ExtensionGenerator.ds match {
             case "Array" => {
               val struct = dsCache.getOrAdd(m, m.toList)
               // Shallow copy necessary and sufficient
               new ExtensionConstraintArray(scope, struct.toArray)
             }
-            case "List" => {
-              val struct = dsCache.getOrAdd(m, m.toList)
-              new ExtensionConstraintList(scope, struct)
-            }
-            case "HashTrie" => {
-              new ExtensionConstraintTrie(scope, m)
-            }
-            case "ListTrie" => {
-              val list = dsCache.getOrAdd(m, m.toList)
-              new ExtensionConstraintListTrie(scope, ListTrie(list: _*))
-            }
+            //            case "List" => {
+            //              val struct = dsCache.getOrAdd(m, m.toList)
+            //              new ExtensionConstraintList(scope, struct)
+            //            }
+            //            case "HashTrie" => {
+            //              new ExtensionConstraintTrie(scope, m)
+            //            }
+            //            case "ListTrie" => {
+            //              val list = dsCache.getOrAdd(m, m.toList)
+            //              new ExtensionConstraintListTrie(scope, ListTrie(list: _*))
+            //            }
             case "ArrayTrie" => {
-              val list = dsCache.getOrAdd(m, m.toList)
-              new ExtensionConstraintArrayTrie(scope, ArrayTrie(list: _*))
+              new ExtensionConstraintArrayTrie(scope, m.arrayTrie)
+            }
+            case "MDD" => {
+              new ExtensionConstraintMDD(scope, MDD(m.toList: _*))
             }
             case "General" => {
               new ExtensionConstraintGeneral(m, true, scope)

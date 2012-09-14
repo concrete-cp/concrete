@@ -4,11 +4,11 @@ import scala.annotation.tailrec
 import cspom.extension.HashTrie
 
 final class TupleTrieSet(
-  private var _trie: HashTrie,
+  private var _trie: ArrayTrie,
   val initialContent: Boolean)
   extends Matrix with Iterable[Array[Int]] {
 
-  def this(initialContent: Boolean) = this(HashTrie.empty, initialContent)
+  def this(initialContent: Boolean) = this(ArrayTrie.empty, initialContent)
 
   def trie = _trie
   
@@ -24,6 +24,8 @@ final class TupleTrieSet(
       _trie += tuple
     }
   }
+  
+  def arrayTrie = _trie
 
   override def isEmpty = trie.isEmpty && !initialContent;
 
