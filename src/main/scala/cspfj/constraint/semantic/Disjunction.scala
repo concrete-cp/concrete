@@ -10,8 +10,6 @@ import scala.annotation.tailrec
 final class Disjunction(scope: Array[Variable],
   val reverses: IndexedSeq[Boolean]) extends Constraint(scope) {
 
-  //  require(scope forall (v => v.dom.isInstanceOf[BooleanDomain] && v.dom.size == 2),
-  //    "Only non-constant boolean domains are allowed")
   require(reverses.size == scope.size, "reverses must cover all variables")
 
   val domains = scope map (_.dom.asInstanceOf[BooleanDomain])

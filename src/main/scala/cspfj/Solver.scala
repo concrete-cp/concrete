@@ -44,7 +44,7 @@ object Solver {
   @Parameter("preprocessor")
   var preprocessorClass: Class[_ <: Filter] = null
 
-  val VERSION = """Rev:\ (\d+)""".r.findFirstMatchIn("$Rev: 940$").get.group(1).toInt
+  val VERSION = """Rev:\ (\d+)""".r.findFirstMatchIn("$Rev: 954$").get.group(1).toInt
 
   ParameterManager.register(this)
 
@@ -65,6 +65,7 @@ abstract class Solver(val problem: Problem) extends Loggable {
 
   val statistics = new StatisticsManager
   statistics.register("solver", this)
+  statistics.register("domains", IntDomain)
 
   /** Logger initialization */
   {
@@ -103,7 +104,7 @@ abstract class Solver(val problem: Problem) extends Loggable {
 
   private var _maxBacktracks = -1
 
-  var preproExpiration = -1
+  //var preproExpiration = -1
 
   def reset()
 
@@ -111,7 +112,7 @@ abstract class Solver(val problem: Problem) extends Loggable {
 
   final def preprocess(filter: Filter): Boolean = {
 
-    logger.info("Preprocessing (" + preproExpiration + ")");
+    logger.info("Preprocessing");
 
     val preprocessor = if (Solver.preprocessorClass == null) {
       filter
@@ -121,33 +122,12 @@ abstract class Solver(val problem: Problem) extends Loggable {
       p
     }
 
-    Thread.interrupted();
+    val (r, t) = StatisticsManager.time(preprocessor.reduceAll());
 
-    val waker = new Timer();
+    preproRemoved = problem.variables map { v => v.dom.maxSize - v.dom.size } sum
 
-    if (preproExpiration >= 0) {
-      waker.schedule(new Waker(Thread.currentThread()),
-        preproExpiration * 1000);
-    }
-
-    var preproCpu = -System.currentTimeMillis();
-
-    try {
-      preprocessor.reduceAll();
-    } catch {
-      case e: InterruptedException => {
-        logger.warning("Interrupted preprocessing");
-        true;
-        throw e
-      }
-    } finally {
-      preproCpu += System.currentTimeMillis();
-      waker.cancel();
-
-      preproRemoved = problem.variables map { v => v.dom.maxSize - v.dom.size } sum
-
-      this.preproCpu = preproCpu / 1000f;
-    }
+    this.preproCpu = t;
+    r
 
   }
 

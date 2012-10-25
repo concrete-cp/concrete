@@ -77,7 +77,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
 
   @tailrec
   def mac(modifiedVariable: Variable, stack: List[Pair]): (SolverResult, List[Pair]) = {
-
+    if (Thread.interrupted()) throw new InterruptedException()
     if (modifiedVariable == null || (
       modifiedVariable.dom.size > 0 && filter.reduceAfter(modifiedVariable))) {
 
@@ -122,12 +122,6 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
   @Statistic
   var heuristicCpu = 0.0
 
-  def timedPreprocess() = try preprocess(filter)
-  catch {
-    case _: InterruptedException =>
-      filter.reduceAll()
-  }
-
   @tailrec
   private def nextSolution(modifiedVar: Variable, stack: List[Pair] = Nil): (SolverResult, List[Pair]) = {
     logger.info("MAC with " + maxBacktracks + " bt")
@@ -163,7 +157,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
 
     if (restart) {
       restart = false
-      if (!timedPreprocess()) {
+      if (!preprocess(filter)) {
         UNSAT
       } else {
 

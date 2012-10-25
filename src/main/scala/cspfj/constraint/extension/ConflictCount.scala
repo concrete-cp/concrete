@@ -15,19 +15,25 @@ abstract class ConflictCount(
   extends ExtensionConstraint(scope: Array[Variable], _matrix, shared) with TupleEnumerator {
 
   def supportCondition(position: Int): Boolean = {
-    if (nbMaxConflicts == null) {
-      countConflicts();
-    }
-    getOtherSize(position) > nbMaxConflicts(position);
+    if (applicable) {
+      if (nbMaxConflicts == null) {
+        countConflicts();
+      }
+      getOtherSize(position) > nbMaxConflicts(position)
+    } else false
   }
 
   private var nbInitConflicts: Array[Array[Long]] = null
 
   private var nbMaxConflicts: Array[Long] = null
 
+  private var applicable = true
+
   private def countConflicts() {
     nbInitConflicts = nbConflicts();
-    if (nbInitConflicts != null) {
+    if (nbInitConflicts == null) {
+      applicable = false
+    } else {
       nbMaxConflicts = new Array(arity);
       updateMaxConflicts();
     }
@@ -56,7 +62,7 @@ abstract class ConflictCount(
   private def getOtherSize(position: Int) = getOtherSizeR(position, arity - 1, 1)
 
   private def nbConflicts(): Array[Array[Long]] = {
-    val size = currentSize
+    val size = cardSize
     if (size < 0) {
       return null;
     }
@@ -95,17 +101,6 @@ abstract class ConflictCount(
     }
 
     nbInitConflicts
-  }
-
-  protected final def currentSize: Long = {
-    var size = 1
-    for (v <- scope) {
-      if (size > Long.MaxValue / v.dom.size) {
-        return -1;
-      }
-      size *= v.dom.size
-    }
-    size
   }
 
   final def addConflict(tuple: Array[Int]) {

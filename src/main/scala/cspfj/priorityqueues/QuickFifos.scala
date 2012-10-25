@@ -51,7 +51,7 @@ final class QuickFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
   }
 
   def offer(e: T, eval: Int) = {
-    require(eval >= 0)
+    assume(eval >= 0)
     val list = chooseList(eval)
     //println(e + " : " + eval + " -> " + list)
 
@@ -83,7 +83,7 @@ final class QuickFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
 
   @tailrec
   private def poll(i: Int): T = {
-    require(i <= last, i + " > " + last + "\n" + queues.map(n => n.isEmpty).mkString("\n"))
+    assume(i <= last, i + " > " + last + "\n" + queues.map(n => n.isEmpty).mkString("\n"))
     val q = queues(i)
     if (q.isEmpty) poll(i + 1)
     else {

@@ -203,4 +203,15 @@ abstract class Constraint(val scope: Array[Variable])
 
   def isBound = scope.forall(_.dom.bound)
 
+  final def cardSize: Int = {
+    var size = 1
+    for (v <- scope) {
+      if (size > Int.MaxValue / v.dom.size) {
+        return -1;
+      }
+      size *= v.dom.size
+    }
+    size
+  }
+
 }

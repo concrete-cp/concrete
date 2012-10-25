@@ -1,13 +1,17 @@
 package cspfj.constraint.extension;
 
-trait Matrix  {
+trait Matrix {
 
-    def set(tuple: Array[Int], status: Boolean)
+  def set(tuple: Array[Int], status: Boolean)
 
-    def check(tuple: Array[Int]): Boolean
+  def setAll(tuple: Iterable[Array[Int]], status: Boolean) {
+    for (t <- tuple) set(t, status)
+  }
 
-    def copy: Matrix
+  def check(tuple: Array[Int]): Boolean
 
-    def isEmpty: Boolean
+  def copy: Matrix
+
+  def isEmpty: Boolean
 
 }

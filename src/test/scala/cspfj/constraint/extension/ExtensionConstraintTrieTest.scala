@@ -12,11 +12,9 @@ import cspom.extension.HashTrie
 
 final class ExtensionConstraintArrayTrieTest {
 
-
-
   @Test
   def testRestore() {
-    val ta = new TupleTrieSet(ArrayTrie.empty, false);
+    val ta = new TupleTrieSet(MDD(), false);
     ta.set(Array(0, 0), true);
     ta.set(Array(1, 1), true);
     ta.set(Array(2, 2), true);
@@ -25,7 +23,7 @@ final class ExtensionConstraintArrayTrieTest {
       new Variable("V0", IntDomain(0, 1)),
       new Variable("V1", IntDomain(0, 1, 2)))
 
-    val mmd = new ExtensionConstraintArrayTrie(scope, ta.arrayTrie);
+    val mmd = new ExtensionConstraintReduceable(scope, ArrayTrie(ta.toSeq: _*));
     val content = mmd.trie
     //println(content map (_.toSeq) mkString (", "))
 

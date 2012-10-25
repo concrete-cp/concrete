@@ -26,9 +26,7 @@ final class ModGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
     }) {
       addConstraint(new Constraint(Array(result, v0, v1)) with Residues with TupleEnumerator {
-        def checkValues(t: Array[Int]) =
-          t(0) == t(1) % t(2)
-
+        def checkValues(t: Array[Int]) = t(0) == t(1) % t(2)
       })
       true
     } else {

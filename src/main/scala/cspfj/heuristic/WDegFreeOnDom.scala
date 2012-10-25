@@ -17,35 +17,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package cspfj.constraint.extension;
+package cspfj.heuristic;
 
-import cspfj.Variable
-import cspfj.constraint.Residues
-import cspfj.constraint.TupleEnumerator
-import cspfj.UNSATException
+import cspfj.Problem;
+import cspfj.Variable;
 
-final class ExtensionConstraintGeneral(
-  _matrix: Matrix,
-  shared: Boolean,
-  scope: Array[Variable])
-  extends ConflictCount(scope, _matrix, shared) with Residues {
+class WDegFreeOnDom(val problem: Problem) extends VariableHeuristic with RandomBreak {
 
-  def removeTuple(tuple: Array[Int]) = {
-    disEntail();
-    residues.remove(tuple);
-    set(tuple, false)
-  }
+  def score(variable: Variable) = variable.getWDegFree.toDouble / variable.dom.size
 
-  def removeTuples(base: Array[Int]) = tuples(base).count(removeTuple)
-
-  override def reviseVariable(position: Int, mod: List[Int]) = {
-    if (supportCondition(position)) {
-      assert(!super.reviseVariable(position, mod))
-      false
-    } else
-      super.reviseVariable(position, mod);
-  }
-
-  override def checkIndices(tuple: Array[Int]) = matrix.check(tuple)
+  override def toString = "max-wdeg-free/dom"
 
 }

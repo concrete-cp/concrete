@@ -2,20 +2,22 @@ package cspfj.constraint.extension;
 
 import scala.annotation.tailrec
 import cspom.extension.HashTrie
+import cspfj.Parameter
+import cspfj.ParameterManager
 
 final class TupleTrieSet(
-  private var _trie: ArrayTrie,
+  private var _trie: Relation,
   val initialContent: Boolean)
   extends Matrix with Iterable[Array[Int]] {
 
-  def this(initialContent: Boolean) = this(ArrayTrie.empty, initialContent)
+  def this(initialContent: Boolean) = this(new MDD(), initialContent)
 
-  def trie = _trie
-  
-  override def copy = new TupleTrieSet(trie, initialContent)
+  def reduceable = _trie
+
+  override def copy = new TupleTrieSet(_trie.copy, initialContent)
 
   override def check(tuple: Array[Int]) =
-    trie.contains(tuple) ^ initialContent;
+    _trie.contains(tuple) ^ initialContent;
 
   override def set(tuple: Array[Int], status: Boolean) {
     if (status == initialContent) {
@@ -24,18 +26,25 @@ final class TupleTrieSet(
       _trie += tuple
     }
   }
-  
+
+  override def setAll(tuples: Iterable[Array[Int]], status: Boolean) {
+    if (status == initialContent) {
+      _trie --= tuples
+    } else
+      _trie ++= tuples
+  }
+
   def arrayTrie = _trie
 
-  override def isEmpty = trie.isEmpty && !initialContent;
+  override def isEmpty = _trie.isEmpty && !initialContent;
 
-  override def size = trie.size
+  override def size = _trie.size
 
-  def iterator = trie.iterator
+  def iterator = _trie.iterator
 
   //def mutableIterator = tupleSet.iterator
 
   override def toString =
-    (if (initialContent) "nogoods: " else "goods: ") + trie.toString
+    (if (initialContent) "nogoods: " else "goods: ") + _trie.toString
 
 }

@@ -1,6 +1,7 @@
 package cspfj.constraint.extension
 
 import scala.annotation.tailrec
+import cspfj.util.BitVector
 
 object ArrayTrie {
   val empty = new ArrayTrie(Array(), 0)
@@ -10,7 +11,9 @@ object ArrayTrie {
   def apply(tuples: Array[Int]*) = tuples.foldLeft(empty)(_ + _)
 }
 
-final class ArrayTrie(val trie: Array[ArrayTrie], override val size: Int) extends Set[Array[Int]] {
+final class ArrayTrie(val trie: Array[ArrayTrie], override val size: Int) extends Relation {
+
+  type Self2 = ArrayTrie
 
   def depth: Int = {
     if (this eq ArrayTrie.leaf) 0
@@ -92,6 +95,25 @@ final class ArrayTrie(val trie: Array[ArrayTrie], override val size: Int) extend
     }
   }
 
+  def find(f: (Int, Int) => Boolean): Option[Array[Int]] = find(f, 0) map (_.toArray)
+
+  private def find(f: (Int, Int) => Boolean, depth: Int): Option[List[Int]] = {
+    if (this eq ArrayTrie.leaf) Some(Nil)
+    else {
+      var i = trie.length - 1
+      while (i >= 0) {
+        if ((trie(i) ne null) && f(depth, i)) {
+          val found = trie(i).find(f, depth + 1)
+          if (found.isDefined) return Some(i :: found.get)
+        }
+        i -= 1
+      }
+      None
+    }
+  }
+
+  def copy = this
+
   override def equals(o: Any): Boolean = o match {
     case t: ArrayTrie => trie sameElements t.trie
     case _ => false
@@ -124,20 +146,28 @@ final class ArrayTrie(val trie: Array[ArrayTrie], override val size: Int) extend
    * @param depth : current depth
    * @return current maximum depth
    */
-  def setFound(f: (Int, Int) => Int, maxDepth: Int, depth: Int = 0): Int = {
+  def fillFound(f: (Int, Int) => Boolean, arity: Int) = {
+    val l = new ListWithMax(arity)
+    fillFound(f, 0, l)
+    l
+  }
+
+  private def fillFound(f: (Int, Int) => Boolean, depth: Int, l: ListWithMax) {
     var i = trie.length - 1
-    var last = maxDepth
-    while (i >= 0 && depth <= last) {
+
+    while (i >= 0 && depth <= l.max) {
       if (trie(i) ne null) {
-        last = f(depth, i)
-        last = trie(i).setFound(f, last, depth + 1)
+        if (f(depth, i)) l.clear(depth)
+        trie(i).fillFound(f, depth + 1, l)
       }
       i -= 1
     }
-    last
+
   }
 
-  def filterTrie(f: (Int, Int) => Boolean, modified: Seq[Int], depth: Int = 0): ArrayTrie = {
+  def filterTrie(f: (Int, Int) => Boolean, modified: List[Int]): ArrayTrie = filterTrie(f, modified, 0)
+
+  private def filterTrie(f: (Int, Int) => Boolean, modified: List[Int], depth: Int): ArrayTrie = {
     if (modified eq Nil) this
     else {
       var newTrie: Array[ArrayTrie] = null
@@ -191,10 +221,12 @@ final class ArrayTrie(val trie: Array[ArrayTrie], override val size: Int) extend
   //      case (i, t) => if (t.isEmpty) Stream(List(i)) else t.asStream map (i :: _)
   //    }
 
-  private def listiterator: Iterator[List[Int]] = trie.iterator.zipWithIndex flatMap {
-    case (t, i) if (t ne null) => if (t eq ArrayTrie.leaf) Iterator(List(i)) else t.listiterator map (i :: _)
-    case _ => Nil
-  }
+  private def listiterator: Iterator[List[Int]] =
+    if (this eq ArrayTrie.leaf) Iterator(List())
+    else trie.iterator.zipWithIndex flatMap {
+      case (t, i) if (t ne null) => t.listiterator map (i :: _)
+      case _ => Nil
+    }
 
   def iterator = listiterator map (_.toArray)
   //  
@@ -208,6 +240,26 @@ final class ArrayTrie(val trie: Array[ArrayTrie], override val size: Int) extend
 
   def tupleString = iterator map { _.mkString(" ") } mkString "|"
 
+}
+
+class ListWithMax(length: Int) extends Traversable[Int] {
+  var max = length - 1
+  var candidates = BitVector.newBitVector(length)
+  candidates.fill(true)
+
+  def clear(i: Int) {
+    if (candidates.clear(i) && i == max) {
+      max = candidates.prevSetBit(i)
+    }
+  }
+
+  def foreach[U](f: Int => U) {
+    var i = candidates.nextSetBit(0)
+    while (i >= 0) {
+      f(i)
+      i = candidates.nextSetBit(i + 1)
+    }
+  }
 }
 
 

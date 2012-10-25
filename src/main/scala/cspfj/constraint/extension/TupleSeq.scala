@@ -16,7 +16,7 @@ final class TupleSeq(private var content: Seq[Array[Int]])
   override def check(tuple: Array[Int]) = throw new UnsupportedOperationException
 
   override def set(tuple: Array[Int], status: Boolean) {
-    require(status == true)
+    assume(status == true)
     content :+= tuple
   }
 

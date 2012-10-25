@@ -88,23 +88,20 @@ final class ACV(
   }
 
   def updateQueue(prev: Array[Int], constraint: Constraint) {
+    assume(prev.length == constraint.arity)
     /** Requires high optimization */
 
     val scope = constraint.scope
 
-    @tailrec
-    def p(i: Int) {
-      if (i >= 0) {
-        val variable = scope(i)
-        if (prev(i) != variable.dom.size) {
-          queue.offer(variable, key.getKey(variable))
-          advise(variable, constraint)
-        }
-        p(i - 1)
+    var i = prev.length - 1
+    while (i >= 0) {
+      val variable = scope(i)
+      if (prev(i) != variable.dom.size) {
+        queue.offer(variable, key.getKey(variable))
+        advise(variable, constraint)
       }
-
+      i -= 1
     }
-    p(prev.length - 1)
 
   }
 

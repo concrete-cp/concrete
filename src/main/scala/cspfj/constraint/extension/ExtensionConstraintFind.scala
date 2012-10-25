@@ -23,29 +23,22 @@ import cspfj.Variable
 import cspfj.constraint.Residues
 import cspfj.constraint.TupleEnumerator
 import cspfj.UNSATException
+import cspfj.constraint.Constraint
 
-final class ExtensionConstraintGeneral(
-  _matrix: Matrix,
-  shared: Boolean,
-  scope: Array[Variable])
-  extends ConflictCount(scope, _matrix, shared) with Residues {
+final class ExtensionConstraintFind(scope: Array[Variable], tts: TupleTrieSet, shared: Boolean)
+  extends ConflictCount(scope, tts, shared) with Residues {
 
-  def removeTuple(tuple: Array[Int]) = {
-    disEntail();
-    residues.remove(tuple);
-    set(tuple, false)
-  }
+  val rel = tts.reduceable
 
-  def removeTuples(base: Array[Int]) = tuples(base).count(removeTuple)
+  override def findSupport(p: Int, i: Int) = rel.find(
+    (depth, index) => if (depth == p) i == index else scope(depth).dom.present(index))
 
-  override def reviseVariable(position: Int, mod: List[Int]) = {
-    if (supportCondition(position)) {
-      assert(!super.reviseVariable(position, mod))
-      false
-    } else
-      super.reviseVariable(position, mod);
-  }
+  override val getEvaluation = rel.nodes
 
-  override def checkIndices(tuple: Array[Int]) = matrix.check(tuple)
+  override def checkIndices(tuple: Array[Int]) = rel.contains(tuple)
 
+  def removeTuple(t: Array[Int]) = throw new UnsupportedOperationException
+  def removeTuples(t: Array[Int]) = throw new UnsupportedOperationException
+
+  override def simpleEvaluation = 6
 }

@@ -1,60 +1,54 @@
 package cspfj.generator.constraint;
 
-import scala.Array.canBuildFrom
-import scala.collection.mutable.HashMap
-import scala.math.BigInt.int2bigInt
-import cspfj.constraint.extension.ArrayTrie
-import cspfj.constraint.extension.ExtensionConstraint2D
-import cspfj.constraint.extension.ExtensionConstraintArray
-import cspfj.constraint.extension.ExtensionConstraintArrayTrie
-import cspfj.constraint.extension.ExtensionConstraintGeneral
-import cspfj.constraint.extension.ListTrie
-import cspfj.constraint.extension.Matrix
-import cspfj.constraint.extension.Matrix2D
-import cspfj.constraint.extension.MatrixGeneral
-import cspfj.constraint.extension.TupleTrieSet
 import cspfj.Domain
 import cspfj.Parameter
 import cspfj.ParameterManager
 import cspfj.Problem
 import cspfj.UNSATException
 import cspfj.Variable
+import cspfj.constraint.extension.ExtensionConstraint2D
+import cspfj.constraint.extension.ExtensionConstraintGeneral
+import cspfj.constraint.extension.ExtensionConstraintReduceable
+import cspfj.constraint.extension.Matrix
+import cspfj.constraint.extension.Matrix2D
+import cspfj.constraint.extension.MatrixGeneral
+import cspfj.constraint.extension.TupleTrieSet
 import cspom.extension.HashTrie
-import cspfj.constraint.extension.ExtensionConstraintMDD
+import scala.collection.mutable.HashMap
+import cspfj.constraint.extension.ExtensionConstraintFind
+import cspfj.constraint.extension.ArrayTrie
 import cspfj.constraint.extension.MDD
+import cspfj.constraint.extension.STR
 
 object ExtensionGenerator {
 
   @Parameter("reduction")
-  var ds = "Array"
+  var consType = "Reduce"
+
+  @Parameter("relation")
+  var ds = "MDD"
 
   ParameterManager.register(this)
 
   val TIGHTNESS_LIMIT = 4;
 
-  def tupleSetBetterThanMatrix(size: BigInt, nbTuples: Int) = {
-    size > (TIGHTNESS_LIMIT * nbTuples)
-  }
-
   def bestMatrix(relation: HashTrie, init: Boolean, sizes: Seq[Int]) = {
     if (relation.depth == 2) {
       new Matrix2D(sizes(0), sizes(1), init);
     } else {
-      val totalSize = sizes.foldLeft(BigInt(1))(_ * _)
-      if (totalSize > Int.MaxValue || (!init && tupleSetBetterThanMatrix(totalSize, relation.size))) {
-        new TupleTrieSet(init);
-      } else {
-        new MatrixGeneral(sizes.toArray, init);
-      }
+      new TupleTrieSet(ds match {
+        case "MDD" => new MDD()
+        case "STR" => new STR()
+        case "Trie" => ArrayTrie.empty
+      }, init)
     }
   }
 
   def fillMatrix(domains: Seq[Domain], relation: HashTrie, init: Boolean, matrix: Matrix) {
 
-    for (values <- relation.iterator) {
-      val tuple = (values, domains).zipped.map { (v, d) => d.index(v) }
-      matrix.set(tuple, !init)
-    }
+    matrix.setAll(relation.iterator.map {
+      values => (values, domains).zipped.map { (v, d) => d.index(v) }
+    }.toIterable, !init)
 
   }
 }
@@ -97,8 +91,7 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
     val solverVariables = extensionConstraint.scope map cspom2cspfj
 
     if (extensionConstraint.relation.isEmpty) {
-      if (extensionConstraint.init == true) true
-      else throw new UNSATException
+      (extensionConstraint.init == true) || (throw new UNSATException)
     } else if (solverVariables exists (_.dom == null)) {
       false
     } else {
@@ -108,28 +101,12 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
       val constraint = matrix match {
         case m: Matrix2D => new ExtensionConstraint2D(scope, m, true)
         case m: TupleTrieSet if (m.initialContent == false) => {
-          ExtensionGenerator.ds match {
-            case "Array" => {
-              val struct = dsCache.getOrAdd(m, m.toList)
-              // Shallow copy necessary and sufficient
-              new ExtensionConstraintArray(scope, struct.toArray)
+          ExtensionGenerator.consType match {
+            case "Reduce" => {
+              new ExtensionConstraintReduceable(scope, m.reduceable.copy)
             }
-            //            case "List" => {
-            //              val struct = dsCache.getOrAdd(m, m.toList)
-            //              new ExtensionConstraintList(scope, struct)
-            //            }
-            //            case "HashTrie" => {
-            //              new ExtensionConstraintTrie(scope, m)
-            //            }
-            //            case "ListTrie" => {
-            //              val list = dsCache.getOrAdd(m, m.toList)
-            //              new ExtensionConstraintListTrie(scope, ListTrie(list: _*))
-            //            }
-            case "ArrayTrie" => {
-              new ExtensionConstraintArrayTrie(scope, m.arrayTrie)
-            }
-            case "MDD" => {
-              new ExtensionConstraintMDD(scope, MDD(m.toList: _*))
+            case "Find" => {
+              new ExtensionConstraintFind(scope, m, true)
             }
             case "General" => {
               new ExtensionConstraintGeneral(m, true, scope)
