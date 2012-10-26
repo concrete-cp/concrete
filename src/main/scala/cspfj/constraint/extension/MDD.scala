@@ -155,11 +155,11 @@ final class MDDNode(val trie: Array[MDDNode], val size: Int) {
     }
   }
 
-  var latest: Option[List[Int]] = None
+  //var latest: Option[List[Int]] = None
 
   def find(f: (Int, Int) => Boolean, depth: Int): Option[List[Int]] = {
     if (this eq MDD.leaf) Some(Nil)
-    else if (timestamp == MDD.timestamp) latest
+    else if (timestamp == MDD.timestamp) None
     else {
       timestamp = MDD.timestamp
       var i = trie.length - 1
@@ -167,15 +167,13 @@ final class MDDNode(val trie: Array[MDDNode], val size: Int) {
         if ((trie(i) ne null) && f(depth, i)) {
           val found = trie(i).find(f, depth + 1)
           if (found.isDefined) {
-            latest = Some(i :: found.get)
-            return latest
+            return Some(i :: found.get)
           }
         }
 
         i -= 1
       }
-      latest = None
-      latest
+      None
     }
   }
 

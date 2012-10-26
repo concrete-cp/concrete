@@ -15,10 +15,10 @@ abstract class ConflictCount(
   extends ExtensionConstraint(scope: Array[Variable], _matrix, shared) with TupleEnumerator {
 
   def supportCondition(position: Int): Boolean = {
+    if (applicable && nbMaxConflicts == null) {
+      countConflicts();
+    }
     if (applicable) {
-      if (nbMaxConflicts == null) {
-        countConflicts();
-      }
       getOtherSize(position) > nbMaxConflicts(position)
     } else false
   }
