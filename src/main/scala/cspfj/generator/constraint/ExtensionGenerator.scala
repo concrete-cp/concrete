@@ -22,10 +22,10 @@ import cspfj.constraint.extension.STR
 
 object ExtensionGenerator {
 
-  @Parameter("reduction")
+  @Parameter("relationAlgorithm")
   var consType = "Reduce"
 
-  @Parameter("relation")
+  @Parameter("relationStructure")
   var ds = "MDD"
 
   ParameterManager.register(this)

@@ -79,7 +79,7 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
     assert(card < 0 || card >= trie.size, card + " < " + trie.size + "!")
     if (card == trie.size) {
       //logger.info("Entailing " + this)
-      entail()
+      //entail()
     }
 
     c
