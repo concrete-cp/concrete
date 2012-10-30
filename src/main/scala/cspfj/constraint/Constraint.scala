@@ -175,8 +175,10 @@ abstract class Constraint(val scope: Array[Variable])
    * @return true iff the constraint is satisfied by the given tuple
    */
   def checkIndices(tuple: Array[Int]) = {
-    for (i <- 0 until arity) {
+    var i = arity - 1
+    while (i >= 0) {
       valTuple(i) = scope(i).dom.value(tuple(i))
+      i -= 1
     }
     checkValues(valTuple)
   }

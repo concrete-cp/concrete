@@ -66,6 +66,7 @@ abstract class Solver(val problem: Problem) extends Loggable {
   val statistics = new StatisticsManager
   statistics.register("solver", this)
   statistics.register("domains", IntDomain)
+  statistics.register("enumerator", TupleEnumerator)
 
   /** Logger initialization */
   {

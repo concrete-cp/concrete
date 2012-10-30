@@ -71,33 +71,24 @@ abstract class ConflictCount(
       v => new Array[Long](v.dom.maxSize)
     }
 
-    if (matrix.isInstanceOf[TupleTrieSet]) {
-
-      val tupleSet = matrix.asInstanceOf[TupleTrieSet];
-      val initialContent = tupleSet.initialContent
-      if (!initialContent) {
-        for (p <- nbInitConflicts.indices) {
-          Arrays.fill(nbInitConflicts(p), getOtherSize(p))
-        }
-      }
-
-      for (tuple <- tupleSet) {
-        if (!initialContent) {
-          for (p <- tuple.indices) {
-            nbInitConflicts(p)(tuple(p)) -= 1;
-          }
+    matrix match {
+      case tupleSet: TupleTrieSet =>
+        if (tupleSet.initialContent) {
+          
+          for (tuple <- tupleSet; p <- tuple.indices) nbInitConflicts(p)(tuple(p)) += 1;
+          
         } else {
-          for (p <- tuple.indices) {
-            nbInitConflicts(p)(tuple(p)) += 1;
-          }
+          
+          for (p <- nbInitConflicts.indices) Arrays.fill(nbInitConflicts(p), getOtherSize(p))
+
+          for (tuple <- tupleSet; p <- tuple.indices) nbInitConflicts(p)(tuple(p)) -= 1
+          
         }
-      }
 
-    } else if (!matrix.isEmpty) {
-
-      for (tuple <- tuples() if (!checkIndices(tuple)); p <- tuple.indices) {
-        nbInitConflicts(p)(tuple(p)) += 1;
-      }
+      case _ if (!matrix.isEmpty) =>
+        for (tuple <- tuples() if (!checkIndices(tuple)); p <- tuple.indices) {
+          nbInitConflicts(p)(tuple(p)) += 1;
+        }
     }
 
     nbInitConflicts

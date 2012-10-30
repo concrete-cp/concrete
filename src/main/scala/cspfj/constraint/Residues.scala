@@ -7,12 +7,11 @@ trait Residues extends VariablePerVariable {
 
   val residues = new ResidueManagerFast(scope)
 
-  def reviseVariable(position: Int, modified: List[Int]): Boolean = {
-    val dom = scope(position).dom
-
-    dom.filter { index =>
+  def reviseVariable(position: Int, modified: List[Int]): Boolean =
+    scope(position).dom.filter { index =>
       val residue = residues.getResidue(position, index);
-      (residue != null && controlTuplePresence(residue)) ||
+      
+      ((residue ne null) && controlTuplePresence(residue)) ||
         (findSupport(position, index) match {
           case Some(tuple) => {
             residues.updateResidue(tuple)
@@ -21,8 +20,6 @@ trait Residues extends VariablePerVariable {
           case None => false
         })
     }
-
-  }
 
   def findSupport(variablePosition: Int, index: Int): Option[Array[Int]]
 

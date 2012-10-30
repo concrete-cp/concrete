@@ -19,25 +19,21 @@
 
 package concrete;
 
-import java.sql.DriverManager
+import java.io.ByteArrayInputStream
+import java.io.InputStream
+import java.math.BigInteger
 import java.net.URI
 import java.net.URL
-import java.math.BigInteger
 import java.security.MessageDigest
-import java.sql.SQLException
-import cspfj.Solver
-import cspom.CSPOM
-import cspfj.Problem
-import cspfj.StatisticsManager
-import java.io.InputStream
-import java.io.ByteArrayInputStream
-import SQLWriter.query
-import SQLWriter.queryEach
 import java.sql.Connection
+import java.sql.DriverManager
 import java.sql.ResultSet
-import scala.collection.mutable.ListBuffer
-import SQLWriter.using
+import java.sql.SQLException
+
+import cspfj.Solver
 import cspfj.SolverResult
+import cspfj.StatisticsManager
+import cspom.CSPOM
 
 object SQLWriter {
   def using[Closeable <: { def close(): Unit }, B](closeable: Closeable)(getB: Closeable => B): B =
@@ -64,7 +60,9 @@ object SQLWriter {
     }
 
   def connect(uri: URI) = {
-    require(!uri.isOpaque, "Opaque connection URI");
+    if (uri.isOpaque)
+      sys.error("Opaque connection URI : " + uri.toString)
+
     uri.getScheme match {
       case "mysql" =>
         Class.forName("com.mysql.jdbc.Driver");
@@ -80,10 +78,13 @@ object SQLWriter {
       case info => info.split(":");
     }
 
-    DriverManager.getConnection(
+    try DriverManager.getConnection(
       "jdbc:%s://%s%s".format(uri.getScheme, uri.getHost, uri.getPath),
       (if (userInfo.length > 0) userInfo(0) else null),
       (if (userInfo.length > 1) userInfo(1) else null))
+    catch {
+      case e: SQLException => throw e
+    }
   }
 
 }
@@ -92,6 +93,8 @@ final class SQLWriter(
   jdbcUri: URI,
   problemUrl: URL,
   params: String) extends ConcreteWriter {
+  
+  import SQLWriter._
 
   val connection = SQLWriter.connect(jdbcUri)
 
@@ -104,12 +107,12 @@ final class SQLWriter(
 
   //connection.close();
 
-  private def controlTables(tables: Seq[String]) = {
+  private def controlTables(tables: String*) = {
 
     var foundTables: Set[String] = Set.empty
     using(connection.getMetaData.getTables(null, null, "%", null)) { results =>
 
-      while (results.next()) foundTables += results.getString(3)
+      while (results.next()) foundTables += results.getString(3).toUpperCase
       tables.forall(foundTables)
 
     }
@@ -117,11 +120,15 @@ final class SQLWriter(
   }
 
   private def createTables() {
-    if (!controlTables(Seq("EXECUTIONS", "PROBLEMS", "PROBLEMTAGS", "STATISTICS"))) {
+    if (!controlTables("EXECUTIONS", "CONFIGS", "PROBLEMS", "PROBLEMTAGS", "STATISTICS")) {
 
       using(connection.createStatement) { stmt =>
 
-        val script = io.Source.fromURL(classOf[SQLWriter].getResource("concrete.sql")).getLines.reduce(_ + _)
+        val source = classOf[SQLWriter].getResource("concrete.sql")
+
+        if (source == null) sys.error("Could not find concrete.sql script")
+
+        val script = io.Source.fromURL(source).getLines.reduce(_ + _)
 
         script.split(';').foreach(stmt.addBatch)
 
@@ -274,7 +281,7 @@ final class SQLWriter(
       stmt.close();
     }
   }
-  
+
   def disconnect() {
     connection.close()
   }

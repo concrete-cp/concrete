@@ -5,8 +5,9 @@ import SQLWriter._
 import scala.xml.Node
 import scala.xml.Text
 import scala.xml.NodeSeq
-import java.math.MathContext
 import scala.collection.mutable.ListBuffer
+import scala.Array.canBuildFrom
+import concrete.SQLWriter
 
 object CrossTable extends App {
 
@@ -32,8 +33,8 @@ object CrossTable extends App {
   }
 
   //3647557
-  val version = 1874
-  using(SQLWriter.connect(new URI("postgresql://vion:vion@localhost/concrete"))) { connection =>
+  val version = 1888
+  using(SQLWriter.connect(new URI("postgresql://concrete:concrete@localhost/concrete"))) { connection =>
 
     val problems = queryEach(connection, """
         SELECT DISTINCT problemId, display, nbvars, nbcons
@@ -51,7 +52,7 @@ object CrossTable extends App {
     val heur = List(85, 64, 83, 84, 70, 72, 59, 71, 87, 86)
 
     //val nature = List(95, 100)
-    val nature = List(134, 135, 136, 137, 138)
+    val nature = 6 to 10//List(1, 2, 3, 4, 5)
     val configs = queryEach(connection, """
         SELECT configId, config
         FROM configs 
@@ -152,7 +153,8 @@ object CrossTable extends App {
               rs =>
                 if (rs.next()) {
                   val r = rs.getString(1)
-                  if (r.contains("OutOfMemoryError")) "mem"
+                  if (r == null) "null"
+                  else if (r.contains("OutOfMemoryError")) "mem"
                   else r
                 } else "---"
             };
@@ -254,8 +256,8 @@ object CrossTable extends App {
       case _ => "na"
     }
 
-    val reduction = className(desc \\ "p" filter attributeEquals("name", "reduction"))
-    val relation = className(desc \\ "p" filter attributeEquals("name", "relation"))
+    val reduction = className(desc \\ "p" filter attributeEquals("name", "relationAlgorithm"))
+    val relation = className(desc \\ "p" filter attributeEquals("name", "relationStructure"))
 
     "%s-%s-%s-%s-%s (%d)".format(filter, queue, heur, reduction, relation, id)
   }

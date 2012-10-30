@@ -11,7 +11,6 @@ import cspfj.constraint.extension.ExtensionConstraintGeneral
 import cspfj.constraint.extension.ExtensionConstraintReduceable
 import cspfj.constraint.extension.Matrix
 import cspfj.constraint.extension.Matrix2D
-import cspfj.constraint.extension.MatrixGeneral
 import cspfj.constraint.extension.TupleTrieSet
 import cspom.extension.HashTrie
 import scala.collection.mutable.HashMap

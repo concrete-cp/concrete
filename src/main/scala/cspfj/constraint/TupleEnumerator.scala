@@ -1,8 +1,14 @@
 package cspfj.constraint
+
+import scala.Array.canBuildFrom
+import scala.annotation.implicitNotFound
 import scala.annotation.tailrec
 
+import cspfj.Statistic
+
 object TupleEnumerator {
-  var checks = 0
+  @Statistic
+  var checks = 0l
 
   def clearStats() { checks = 0 }
 }
@@ -12,8 +18,8 @@ trait TupleEnumerator extends Constraint {
   private def firstTuple(): Array[Int] = scope map (_.dom.first)
 
   @tailrec
-  private def nextTuple(t: Array[Int], p: Int): Option[Array[Int]] =
-    if (p < 0) None
+  private def nextTuple(t: Array[Int], p: Int): Array[Int] =
+    if (p < 0) null
     else {
       val index = scope(p).dom.next(t(p))
       if (index < 0) {
@@ -21,32 +27,34 @@ trait TupleEnumerator extends Constraint {
         nextTuple(t, p - 1)
       } else {
         t(p) = index
-        Some(t)
+        t
       }
     }
 
-  def tuples() = new Iterator[Array[Int]] {
-    var tuple: Option[Array[Int]] = Some(firstTuple())
-    def hasNext = tuple.isDefined
-    def next() = {
-      val current = tuple.get
-      tuple = nextTuple(current, arity - 1)
-      current
+  def tuples() = new Traversable[Array[Int]] {
+    def foreach[U](f: Array[Int] => U) {
+      var tuple = firstTuple()
+      while (tuple ne null) {
+        f(tuple)
+        tuple = nextTuple(tuple, arity - 1)
+      }
     }
   }
 
   private def firstTuple(pos: Int, fix: Int) = {
     val t = new Array[Int](arity)
-    for (i <- t.indices) {
+    var i = arity - 1
+    while (i >= 0) {
       if (pos == i) t(i) = fix
       else t(i) = scope(i).dom.first
+      i -= 1
     }
     t
   }
 
   @tailrec
-  private def nextTuple(t: Array[Int], skip: Int, p: Int): Option[Array[Int]] =
-    if (p < 0) None
+  private def nextTuple(t: Array[Int], skip: Int, p: Int): Array[Int] =
+    if (p < 0) null
     else if (p == skip) nextTuple(t, skip, p - 1)
     else {
       val index = scope(p).dom.next(t(p))
@@ -55,19 +63,39 @@ trait TupleEnumerator extends Constraint {
         nextTuple(t, skip, p - 1)
       } else {
         t(p) = index
-        Some(t)
+        t
       }
     }
 
-  def tuples(pos: Int, fix: Int) = new Iterator[Array[Int]] {
-    private var tuple: Option[Array[Int]] = Some(firstTuple(pos, fix))
-    def hasNext = tuple.isDefined
-    def next() = {
-      val current = tuple.get
-      tuple = nextTuple(current, pos, arity - 1)
-      current
+  def tuples(pos: Int, fix: Int) = new Traversable[Array[Int]] {
+    def foreach[U](f: Array[Int] => U) {
+      var tuple = firstTuple(pos, fix)
+      while (tuple ne null) {
+        f(tuple)
+        tuple = nextTuple(tuple, pos, arity - 1)
+      }
     }
+
+    override def find(p: Array[Int] => Boolean): Option[Array[Int]] = {
+      var tuple = firstTuple(pos, fix)
+      while (tuple ne null) {
+        if (p(tuple)) return Some(tuple)
+        tuple = nextTuple(tuple, pos, arity - 1)
+      }
+      None
+    }
+
   }
+
+  //  def tuples(pos: Int, fix: Int) = new Iterator[Array[Int]] {
+  //    private var tuple: Array[Int] = firstTuple(pos, fix)
+  //    def hasNext = tuple ne null
+  //    def next() = {
+  //      val current = tuple
+  //      tuple = nextTuple(current, pos, arity - 1)
+  //      current
+  //    }
+  //  }
 
   private def firstTuple(base: Array[Int]): Array[Int] = {
     val t = new Array[Int](arity)
@@ -82,8 +110,8 @@ trait TupleEnumerator extends Constraint {
   }
 
   @tailrec
-  private def nextTuple(t: Array[Int], base: Array[Int], p: Int): Option[Array[Int]] =
-    if (p < 0) None
+  private def nextTuple(t: Array[Int], base: Array[Int], p: Int): Array[Int] =
+    if (p < 0) null
     else if (base(p) >= 0) nextTuple(t, base, p - 1)
     else {
       val index = t(p) + 1
@@ -92,17 +120,17 @@ trait TupleEnumerator extends Constraint {
         nextTuple(t, base, p - 1)
       } else {
         t(p) = index
-        Some(t)
+        t
       }
     }
 
-  def tuples(base: Array[Int]) = new Iterator[Array[Int]] {
-    var tuple: Option[Array[Int]] = Some(firstTuple(base))
-    def hasNext = tuple.isDefined
-    def next() = {
-      val current = tuple.get
-      tuple = nextTuple(current, base, arity - 1)
-      current
+  def tuples(base: Array[Int]) = new Traversable[Array[Int]] {
+    def foreach[U](f: Array[Int] => U) {
+      var tuple = firstTuple(base)
+      while (tuple ne null) {
+        f(tuple)
+        tuple = nextTuple(tuple, base, arity - 1)
+      }
     }
   }
 

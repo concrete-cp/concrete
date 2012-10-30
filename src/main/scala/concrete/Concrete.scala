@@ -1,18 +1,17 @@
 package concrete
 
+import java.net.URI
 import java.net.URL
+import java.util.Timer
 import cspfj.ParameterManager
+import cspfj.Solver
+import cspfj.Statistic
 import cspfj.Statistic
 import cspfj.StatisticsManager
-import cspom.compiler.ProblemCompiler
-import cspom.CSPOM
-import cspfj.Solver
-import cspfj.generator.ProblemGenerator
-import java.net.URI
-import cspfj.Problem
-import java.sql.DriverManager
-import java.util.Timer
 import cspfj.util.Waker
+import cspom.compiler.ProblemCompiler
+import cspfj.generator.ProblemGenerator
+import cspom.CSPOM
 
 object Concrete extends App {
 

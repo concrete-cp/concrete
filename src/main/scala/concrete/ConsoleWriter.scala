@@ -3,6 +3,7 @@ package concrete
 import cspfj.StatisticsManager
 import cspom.CSPOM
 import cspfj.SolverResult
+import concrete.ConcreteWriter
 
 class ConsoleWriter(params: String) extends ConcreteWriter {
 

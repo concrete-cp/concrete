@@ -110,33 +110,26 @@ final object ParameterManager {
    *
    * @return
    */
-  def toXML = {
-
-    var params = parameters map {
-      case (k, (o, f)) =>
-        <p name={ k }>{ f.get(o) }</p>
-    }
-
-    params ++= pending map {
-      case (k, v) =>
-        <p name={ k }> { v } </p>
-    }
-
-    params ++= pendingParse map {
-      case (k, v) =>
-        <p name={ k }> { v } </p>
-    }
-
-    NodeSeq.fromSeq(params.toSeq)
-
-  }
+  def toXML = NodeSeq.fromSeq(allParams.iterator.map {
+    case (k, v) =>
+      <p name={ k }>{ v }</p>
+  }.toSeq)
 
   /**
    * Returns String representation of the registered parameters.
    *
    * @return
    */
-  def list = parameters map { p => p._1 + "=" + p._2 } mkString (", ")
+  def list = allParams.iterator.map { case (k, v) => k + "=" + v }.mkString(", ")
+
+  def allParams: Map[String, Any] =
+    parameters.map {
+      case (k, (o, f)) => k -> f.get(o)
+    } ++ pending.map {
+      case (k, v) => k -> v
+    } ++ pendingParse.map {
+      case (k, v) => k -> v
+    }
 
   def parseProperties(line: Properties) {
     JavaConversions.mapAsScalaMap(line).foreach {

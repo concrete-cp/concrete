@@ -14,12 +14,12 @@ final class TupleTrieSet(
 
   def reduceable = _trie
 
-  override def copy = new TupleTrieSet(_trie.copy, initialContent)
+  def copy = new TupleTrieSet(_trie.copy, initialContent)
 
-  override def check(tuple: Array[Int]) =
+  def check(tuple: Array[Int]) =
     _trie.contains(tuple) ^ initialContent;
 
-  override def set(tuple: Array[Int], status: Boolean) {
+  def set(tuple: Array[Int], status: Boolean) {
     if (status == initialContent) {
       _trie -= tuple
     } else {

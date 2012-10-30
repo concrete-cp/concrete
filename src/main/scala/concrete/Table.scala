@@ -5,7 +5,6 @@ import SQLWriter._
 import scala.xml.Node
 import scala.xml.Text
 import scala.xml.NodeSeq
-import java.math.MathContext
 
 object Table extends App {
 
