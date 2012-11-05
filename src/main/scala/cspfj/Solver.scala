@@ -21,18 +21,17 @@ package cspfj;
 
 import java.util.logging.Level
 import java.util.logging.Logger
-import java.util.Timer
-import cspfj.constraint.Constraint
-import cspfj.constraint.TupleEnumerator
+import scala.annotation.tailrec
+import scala.collection.JavaConversions
 import cspfj.filter.Filter
+import cspfj.generator.ProblemGenerator
 import cspfj.util.Loggable
 import cspfj.util.MsLogHandler
 import cspfj.util.Waker
-import cspfj.generator.ProblemGenerator
+import cspfj.constraint.extension.MDD
+import cspfj.constraint.extension.MDD2
 import cspom.CSPOM
-import scala.annotation.tailrec
-import cspfj.constraint.extension.ExtensionConstraint2D
-import scala.collection.JavaConversions
+import cspfj.constraint.TupleEnumerator
 
 object Solver {
   @Parameter("logger.level")
@@ -44,7 +43,7 @@ object Solver {
   @Parameter("preprocessor")
   var preprocessorClass: Class[_ <: Filter] = null
 
-  val VERSION = """Rev:\ (\d+)""".r.findFirstMatchIn("$Rev: 954$").get.group(1).toInt
+  val VERSION = """Rev:\ (\d+)""".r.findFirstMatchIn("$Rev: 955$").get.group(1).toInt
 
   ParameterManager.register(this)
 
@@ -67,6 +66,8 @@ abstract class Solver(val problem: Problem) extends Loggable {
   statistics.register("solver", this)
   statistics.register("domains", IntDomain)
   statistics.register("enumerator", TupleEnumerator)
+  statistics.register("mdd", MDD)
+  statistics.register("mdd2", MDD2)
 
   /** Logger initialization */
   {

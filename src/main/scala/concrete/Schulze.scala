@@ -2,8 +2,6 @@ package concrete
 
 import scala.Array.canBuildFrom
 
-import concrete.Table
-
 object Schulze extends App {
 
   val d1 = Array(

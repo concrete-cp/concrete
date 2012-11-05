@@ -6,8 +6,7 @@ import scala.xml.Node
 import scala.xml.Text
 import scala.xml.NodeSeq
 import scala.collection.mutable.ListBuffer
-import scala.Array.canBuildFrom
-import concrete.SQLWriter
+import cspfj.StatisticsManager
 
 object CrossTable extends App {
 
@@ -33,7 +32,7 @@ object CrossTable extends App {
   }
 
   //3647557
-  val version = 1888
+  val version = args.head.toInt//1888
   using(SQLWriter.connect(new URI("postgresql://concrete:concrete@localhost/concrete"))) { connection =>
 
     val problems = queryEach(connection, """
@@ -52,7 +51,7 @@ object CrossTable extends App {
     val heur = List(85, 64, 83, 84, 70, 72, 59, 71, 87, 86)
 
     //val nature = List(95, 100)
-    val nature = 6 to 10//List(1, 2, 3, 4, 5)
+    val nature = args.tail map (_.toInt)//6 to 10//List(1, 2, 3, 4, 5)
     val configs = queryEach(connection, """
         SELECT configId, config
         FROM configs 
@@ -78,7 +77,7 @@ object CrossTable extends App {
 
     require(statistics.nonEmpty)
 
-    val totals = new Array[Double](configs.size)
+    val totals = Array.fill[List[Double]](configs.size)(Nil)
 
     for ((problemId, problem, nbvars, nbcons) <- problems) {
 
@@ -115,8 +114,8 @@ object CrossTable extends App {
         rs => rs.getInt(1) -> rs.getDouble(2)
       } toMap
 
-      for (i <- configs.indices; j <- results.get(configs(i)._1)) {
-        totals(i) += j
+      for (i <- configs.indices; val j = results.getOrElse(configs(i)._1, Double.PositiveInfinity)) {
+        totals(i) ::= j
       }
 
       for (
@@ -168,7 +167,7 @@ object CrossTable extends App {
 
     println("\\midrule")
 
-    println(configs.indices.map(totals(_)).mkString(" & "))
+    println(configs.indices.map(i=>StatisticsManager.median(totals(i))).mkString(" & "))
 
     println(d map (_.mkString(" ")) mkString ("\n"))
     println()

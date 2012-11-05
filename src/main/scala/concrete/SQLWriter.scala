@@ -219,8 +219,8 @@ final class SQLWriter(
     println("Problem " + problemId + ", config " + configId + ", version " + version)
 
     try {
-      val aiRst = stmt.executeQuery("INSERT INTO Executions (problemId, configId, version) VALUES ("
-        + problemId + ", " + configId + ", " + version + ") RETURNING executionId");
+      val aiRst = stmt.executeQuery("INSERT INTO Executions (problemId, configId, version, start) VALUES ("
+        + problemId + ", " + configId + ", " + version + ", CURRENT_TIMESTAMP) RETURNING executionId");
 
       try {
         if (aiRst.next()) {
