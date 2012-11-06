@@ -24,6 +24,7 @@ object Concrete extends App {
   'D
   'Control
   'Time
+  'CL
 
   def params(o: List[(String, String)], options: List[String]): List[(String, String)] =
     if (options == Nil) o
@@ -41,6 +42,7 @@ object Concrete extends App {
       options(o + ('SQL -> option), tail)
     case "-control" :: tail => options(o + ('Control -> None), tail)
     case "-time" :: t :: tail => options(o + ('Time -> t.toInt), tail)
+    case "-cl" :: tail => options(o + ('CL -> None), tail)
     case file :: Nil => o + ('file -> file)
     case unknown :: _ => throw new IllegalArgumentException(unknown)
     case _ => throw new IllegalArgumentException("Parameter expected")
@@ -67,67 +69,94 @@ object Concrete extends App {
 
   val file = new URL(opt('file).asInstanceOf[String])
 
-  val (problem, lT) = StatisticsManager.time(CSPOM.load(file))
+  val (lT, cT, gT, writer, solver, problem) =
+    if (opt.contains('CL)) {
+      val config = ParameterManager.toXML.toString
+      
+      val writer = opt.get('SQL) match {
+        case None => new ConsoleWriter(config)
+        case Some(url) => new SQLWriter(new URI(url.toString), file, config)
+      }
+      val (problem, lT) = StatisticsManager.time(CSPOM.load(file))
+
+      val (_, cT) = StatisticsManager.time(ProblemCompiler.compile(problem))
+
+      //println(problem)
+
+      val (cProblem, gT) = StatisticsManager.time(ProblemGenerator.generate(problem))
+
+      @Statistic
+      val generationTime = gT
+
+      val solver = Solver.factory(cProblem)
+
+      (lT, gT, cT, writer, solver, problem)
+    } else {
+      val (problem, lT) = StatisticsManager.time(CSPOM.load(file))
+
+      val (_, cT) = StatisticsManager.time(ProblemCompiler.compile(problem))
+
+      //println(problem)
+
+      val (cProblem, gT) = StatisticsManager.time(ProblemGenerator.generate(problem))
+
+      @Statistic
+      val generationTime = gT
+
+      val solver = Solver.factory(cProblem)
+      val writer = opt.get('SQL) match {
+        case None => new ConsoleWriter(ParameterManager.toXML.toString)
+        case Some(url) => new SQLWriter(new URI(url.toString), file, ParameterManager.toXML.toString)
+      }
+
+      (lT, gT, cT, writer, solver, problem)
+    }
 
   @Statistic
   val loadTime = lT
 
-  val (_, cT) = StatisticsManager.time(ProblemCompiler.compile(problem))
-
   @Statistic
   val compileTime = cT
-
-  //println(problem)
-
-  val (cProblem, gT) = StatisticsManager.time(ProblemGenerator.generate(problem))
 
   @Statistic
   val generationTime = gT
 
-  var writer: ConcreteWriter = null
   var exc: Throwable = null
 
-  {
-    val solver = Solver.factory(cProblem)
-    writer = opt.get('SQL) match {
-      case None => new ConsoleWriter(ParameterManager.toXML.toString)
-      case Some(url) => new SQLWriter(new URI(url.toString), file, ParameterManager.toXML.toString)
-    }
-
-    val thread = new Thread() {
-      override def run() {
-        try {
-          val solution = solver.nextSolution
-          writer.solution(solution, problem)
-          if (solution.isSat && opt.contains('Control)) {
-            val failed = problem.controlInt(solution.get);
-            println("Falsified constraints : " + failed.toString)
-          }
-          //        } catch {
-          //          case e: InterruptedException => throw e
-          //        }
-          writer.write(statistics)
-          writer.write(solver.statistics)
-        } catch {
-          case e: Throwable => exc = e
+  val thread = new Thread() {
+    override def run() {
+      try {
+        val solution = solver.nextSolution
+        writer.solution(solution, problem)
+        if (solution.isSat && opt.contains('Control)) {
+          val failed = problem.controlInt(solution.get);
+          println("Falsified constraints : " + failed.toString)
         }
+        //        } catch {
+        //          case e: InterruptedException => throw e
+        //        }
+        writer.write(statistics)
+        writer.write(solver.statistics)
+      } catch {
+        case e: Throwable => exc = e
       }
     }
-
-    val waker = new Timer()
-    opt.get('Time) match {
-      case Some(t: Int) => {
-        //println("Setting time limit to " + t + " seconds")
-        waker.schedule(new Waker(thread), t * 1000);
-      }
-      case _ =>
-    }
-    //
-    thread.start()
-    //t.wait()
-    thread.join()
-    waker.cancel()
   }
+
+  val waker = new Timer()
+  opt.get('Time) match {
+    case Some(t: Int) => {
+      //println("Setting time limit to " + t + " seconds")
+      waker.schedule(new Waker(thread), t * 1000);
+    }
+    case _ =>
+  }
+  //
+  thread.start()
+  //t.wait()
+  thread.join()
+  waker.cancel()
+
   if (exc ne null) writer.error(exc)
 
   writer.disconnect()

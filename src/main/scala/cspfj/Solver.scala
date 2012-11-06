@@ -29,9 +29,9 @@ import cspfj.util.Loggable
 import cspfj.util.MsLogHandler
 import cspfj.util.Waker
 import cspfj.constraint.extension.MDD
-import cspfj.constraint.extension.MDD2
 import cspom.CSPOM
 import cspfj.constraint.TupleEnumerator
+import cspfj.constraint.extension.ExtensionConstraintReduceable
 
 object Solver {
   @Parameter("logger.level")
@@ -66,8 +66,7 @@ abstract class Solver(val problem: Problem) extends Loggable {
   statistics.register("solver", this)
   statistics.register("domains", IntDomain)
   statistics.register("enumerator", TupleEnumerator)
-  statistics.register("mdd", MDD)
-  statistics.register("mdd2", MDD2)
+  statistics.register("relation", ExtensionConstraintReduceable)
 
   /** Logger initialization */
   {

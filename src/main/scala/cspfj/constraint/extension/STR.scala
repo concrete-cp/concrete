@@ -19,7 +19,7 @@ class STR(array: Array[Array[Int]], val bound: Int) extends Relation {
     var b = bound
     var i = 0
     while (i < b) {
-      if (modified.forall(p => f(p, array(i)(p)))) i += 1
+      if (modified.forall { p => f(p, array(i)(p)) }) i += 1
       else {
         b -= 1
         val tmp = array(i)
@@ -31,36 +31,37 @@ class STR(array: Array[Array[Int]], val bound: Int) extends Relation {
     else new STR(array, b)
   }
 
-    def fillFound(f: (Int, Int) => Boolean, arity: Int) = {
-      val pos = new MutableList(arity)
-      var i = bound - 1
-      while (i >= 0) {
-        val tuple = array(i)
-  
-        var pi = 0
-        while (pi < pos.nb) {
-          val p = pos(pi)
-          if (f(p, tuple(p))) pos.remove(pi) else pi += 1
-        }
-        i -= 1
-      }
-      pos
-    }
+  def fillFound(f: (Int, Int) => Boolean, arity: Int) = {
+    val pos = new MutableList(arity)
+    var i = bound - 1
+    while (i >= 0) {
+      val tuple = array(i)
 
-//  def fillFound(f: (Int, Int) => Boolean, arity: Int) = {
-//    var i = bound - 1
-//    while (i >= 0) {
-//      val tuple = array(i)
-//
-//      var pi = arity - 1
-//      while (pi >= 0) {
-//        f(pi, tuple(pi))
-//        pi -= 1
-//      }
-//      i -= 1
-//    }
-//    0 until arity
-//  }
+      var pi = 0
+      while (pi < pos.nb) {
+        val p = pos(pi)
+
+        if (f(p, tuple(p))) pos.remove(pi) else pi += 1
+      }
+      i -= 1
+    }
+    pos
+  }
+
+  //  def fillFound(f: (Int, Int) => Boolean, arity: Int) = {
+  //    var i = bound - 1
+  //    while (i >= 0) {
+  //      val tuple = array(i)
+  //
+  //      var pi = arity - 1
+  //      while (pi >= 0) {
+  //        f(pi, tuple(pi))
+  //        pi -= 1
+  //      }
+  //      i -= 1
+  //    }
+  //    0 until arity
+  //  }
 
   def nodes = bound * array(0).length
 

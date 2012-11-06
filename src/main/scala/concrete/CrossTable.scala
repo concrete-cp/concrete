@@ -32,26 +32,28 @@ object CrossTable extends App {
   }
 
   //3647557
-  val version = args.head.toInt//1888
+  val version = args.head.toInt //1888
+
+  val acv = List(98, 96, 95, 97, 99)
+  val acc = List(103, 101, 100, 102, 104)
+
+  val heur = List(85, 64, 83, 84, 70, 72, 59, 71, 87, 86)
+
+  //val nature = List(95, 100)
+  val nature = args.tail map (_.toInt) //6 to 10//List(1, 2, 3, 4, 5)
+
   using(SQLWriter.connect(new URI("postgresql://concrete:concrete@localhost/concrete"))) { connection =>
 
     val problems = queryEach(connection, """
         SELECT DISTINCT problemId, display, nbvars, nbcons
         FROM executions NATURAL JOIN problems
-        WHERE version = %d
+        WHERE version = %d and configId in (%s)
         ORDER BY display
-        """.format(version)) {
+        """.format(version, nature.mkString(", "))) {
       rs =>
         (rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getInt(4))
     }
 
-    val acv = List(98, 96, 95, 97, 99)
-    val acc = List(103, 101, 100, 102, 104)
-
-    val heur = List(85, 64, 83, 84, 70, 72, 59, 71, 87, 86)
-
-    //val nature = List(95, 100)
-    val nature = args.tail map (_.toInt)//6 to 10//List(1, 2, 3, 4, 5)
     val configs = queryEach(connection, """
         SELECT configId, config
         FROM configs 
@@ -167,9 +169,9 @@ object CrossTable extends App {
 
     println("\\midrule")
 
-    println(configs.indices.map(i=>StatisticsManager.median(totals(i))).mkString(" & "))
+    println(configs.indices.map(i => StatisticsManager.median(totals(i))).mkString(" & "))
 
-    println(d map (_.mkString(" ")) mkString ("\n"))
+    println(d.zipWithIndex map { case (r, i) => configs(i) + " " + r.mkString(" ") } mkString ("\n"))
     println()
 
     schulze(d, configs.map(c => c._1 + "." + c._2).toIndexedSeq)
@@ -239,26 +241,27 @@ object CrossTable extends App {
   }
 
   def configDisplay(desc: NodeSeq, id: Int) = {
-    val filter = className(desc \\ "p" filter attributeEquals("name", "mac.filter"))
-
-    val queue = filter match {
-      case "ACC" | "AC3Constraint" => className(desc \\ "p" filter attributeEquals("name", "ac3c.queue"))
-      case "ACV" | "AC3" => className(desc \\ "p" filter attributeEquals("name", "ac3v.queue"))
-      case _ => sys.error("Unknown filter: " + filter)
-    }
-
-    val heur = filter match {
-      case "ACC" if queue != "QuickFifo" && queue != "SimpleFifos" && queue != "JavaFifo" && queue != "JavaSimpleFifos" =>
-        className(desc \\ "p" filter attributeEquals("name", "ac3c.key"))
-      case "ACV" if queue != "QuickFifo" =>
-        className(desc \\ "p" filter attributeEquals("name", "ac3v.key"))
-      case _ => "na"
-    }
-
-    val reduction = className(desc \\ "p" filter attributeEquals("name", "relationAlgorithm"))
-    val relation = className(desc \\ "p" filter attributeEquals("name", "relationStructure"))
-
-    "%s-%s-%s-%s-%s (%d)".format(filter, queue, heur, reduction, relation, id)
+    desc \\ "p" map (n => className(n)) mkString ("/")
+    //    val filter = className(desc \\ "p" filter attributeEquals("name", "mac.filter"))
+    //
+    //    val queue = filter match {
+    //      case "ACC" | "AC3Constraint" => className(desc \\ "p" filter attributeEquals("name", "ac3c.queue"))
+    //      case "ACV" | "AC3" => className(desc \\ "p" filter attributeEquals("name", "ac3v.queue"))
+    //      case _ => sys.error("Unknown filter: " + filter)
+    //    }
+    //
+    //    val heur = filter match {
+    //      case "ACC" if queue != "QuickFifo" && queue != "SimpleFifos" && queue != "JavaFifo" && queue != "JavaSimpleFifos" =>
+    //        className(desc \\ "p" filter attributeEquals("name", "ac3c.key"))
+    //      case "ACV" if queue != "QuickFifo" =>
+    //        className(desc \\ "p" filter attributeEquals("name", "ac3v.key"))
+    //      case _ => "na"
+    //    }
+    //
+    //    val reduction = className(desc \\ "p" filter attributeEquals("name", "relationAlgorithm"))
+    //    val relation = className(desc \\ "p" filter attributeEquals("name", "relationStructure"))
+    //
+    //    "%s-%s-%s-%s-%s (%d)".format(filter, queue, heur, reduction, relation, id)
   }
 
   def className(n: NodeSeq) = {

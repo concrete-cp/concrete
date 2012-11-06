@@ -129,16 +129,16 @@ final class ArrayTrie(val trie: Array[ArrayTrie], override val size: Int) extend
         List.fill(depth)(" ").mkString + k + "\n" + v.toString(depth + 1)
     }.mkString
 
-  def foreachTrie(f: (Int, Int) => Unit, depth: Int = 0) {
-    var i = trie.length - 1;
-    while (i >= 0) {
-      if (trie(i) ne null) {
-        f(depth, i)
-        trie(i).foreachTrie(f, depth + 1)
-      }
-      i -= 1
-    }
-  }
+//  def foreachTrie(f: (Int, Int) => Unit, depth: Int = 0) {
+//    var i = trie.length - 1;
+//    while (i >= 0) {
+//      if (trie(i) ne null) {
+//        f(depth, i)
+//        trie(i).foreachTrie(f, depth + 1)
+//      }
+//      i -= 1
+//    }
+//  }
 
   /**
    * @param f(depth, i) : function called while traversing the trie, given depth and index. Returns the depth at which traversing must be stopped

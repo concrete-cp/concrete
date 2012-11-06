@@ -17,17 +17,7 @@ object MDD {
 
   val empty = new MDDNode(Array(), 0)
 
-  var _timestamp = 0
-
-  def timestamp = _timestamp
-
-  def timestamp_=(v: Int) {
-    _timestamp = v
-    exploredNodes += 1
-  }
-
-  @Statistic
-  var exploredNodes = 0l
+  var timestamp = 0
 
 }
 
@@ -89,7 +79,7 @@ final class MDD(val mdds: HashMap[Seq[MDDNode], MDDNode], val root: MDDNode) ext
 
   def find(f: (Int, Int) => Boolean) = {
     MDD.timestamp += 1
-    root.find(f, 0) map (_.toArray)
+    root.find(MDD.timestamp, f, 0) map (_.toArray)
   }
 
   override def toString = nodes + " nodes representing " + size + " tuples"
@@ -168,15 +158,15 @@ final class MDDNode(val trie: Array[MDDNode], val size: Int) {
 
   //var latest: Option[List[Int]] = None
 
-  def find(f: (Int, Int) => Boolean, depth: Int): Option[List[Int]] = {
+  def find(ts: Int, f: (Int, Int) => Boolean, depth: Int): Option[List[Int]] = {
     if (this eq MDD.leaf) Some(Nil)
-    else if (timestamp == MDD.timestamp) None
+    else if (timestamp == ts) None
     else {
-      timestamp = MDD.timestamp
+      timestamp = ts
       var i = trie.length - 1
       while (i >= 0) {
         if ((trie(i) ne null) && f(depth, i)) {
-          val found = trie(i).find(f, depth + 1)
+          val found = trie(i).find(ts, f, depth + 1)
           if (found.isDefined) {
             return Some(i :: found.get)
           }
@@ -208,17 +198,17 @@ final class MDDNode(val trie: Array[MDDNode], val size: Int) {
   }
 
   override def toString = "MDD representing " + size + " tuples"
-
-  def foreachTrie(f: (Int, Int) => Unit, depth: Int = 0) {
-    var i = trie.length - 1;
-    while (i >= 0) {
-      if (trie(i) ne null) {
-        f(depth, i)
-        trie(i).foreachTrie(f, depth + 1)
-      }
-      i -= 1
-    }
-  }
+  //
+  //  def foreachTrie(f: (Int, Int) => Unit, depth: Int = 0) {
+  //    var i = trie.length - 1;
+  //    while (i >= 0) {
+  //      if (trie(i) ne null) {
+  //        f(depth, i)
+  //        trie(i).foreachTrie(f, depth + 1)
+  //      }
+  //      i -= 1
+  //    }
+  //  }
 
   def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: ListWithMax) {
     if (timestamp != ts) {

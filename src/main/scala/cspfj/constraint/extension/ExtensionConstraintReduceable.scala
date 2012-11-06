@@ -28,7 +28,15 @@ import cspfj.Variable
 import cspom.extension.HashTrie
 import cspfj.UNSATException
 import cspfj.constraint.Removals
+import cspfj.Statistic
 
+object ExtensionConstraintReduceable {
+  @Statistic
+  var checks = 0l
+
+  @Statistic
+  var fills = 0l
+}
 
 final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _tts: Relation)
   extends Constraint(_scope) with Loggable with Removals with Backtrackable[Relation] {
@@ -54,9 +62,9 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
     //val oldSize = trie.size
 
     val rev = mod.reverse
-    
+
     val newTrie = trie.filterTrie(
-      (p, i) => scope(p).dom.present(i), rev)
+      { (p, i) => ExtensionConstraintReduceable.checks += 1; scope(p).dom.present(i) }, rev)
 
     //    val newTrie = trie.filter(scope, mod.reverse)
 
@@ -67,10 +75,16 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
       altering()
     }
 
-  
+    val domSizes = scope map (_.dom.size)
 
     val notFound = trie.fillFound({ (depth: Int, i: Int) =>
-      found(depth).set(i) && found(depth).cardinality == scope(depth).dom.size
+      ExtensionConstraintReduceable.fills += 1
+      if (found(depth).set(i)) {
+        val s = domSizes(depth) - 1
+        domSizes(depth) = s
+        assert(s == scope(depth).dom.size - found(depth).cardinality)
+        s == 0
+      } else false
     }, arity)
 
     val c = filter(notFound)

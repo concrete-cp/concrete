@@ -1,24 +1,24 @@
 package cspfj.generator.constraint;
 
+import scala.collection.mutable.HashMap
+
 import cspfj.Domain
 import cspfj.Parameter
 import cspfj.ParameterManager
 import cspfj.Problem
 import cspfj.UNSATException
 import cspfj.Variable
+import cspfj.constraint.extension.ArrayTrie
 import cspfj.constraint.extension.ExtensionConstraint2D
+import cspfj.constraint.extension.ExtensionConstraintFind
 import cspfj.constraint.extension.ExtensionConstraintGeneral
 import cspfj.constraint.extension.ExtensionConstraintReduceable
+import cspfj.constraint.extension.MDD
 import cspfj.constraint.extension.Matrix
 import cspfj.constraint.extension.Matrix2D
+import cspfj.constraint.extension.STR
 import cspfj.constraint.extension.TupleTrieSet
 import cspom.extension.HashTrie
-import scala.collection.mutable.HashMap
-import cspfj.constraint.extension.ExtensionConstraintFind
-import cspfj.constraint.extension.ArrayTrie
-import cspfj.constraint.extension.MDD
-import cspfj.constraint.extension.STR
-import cspfj.constraint.extension.MDD2
 
 object ExtensionGenerator {
 
@@ -38,7 +38,6 @@ object ExtensionGenerator {
     } else {
       new TupleTrieSet(ds match {
         case "MDD" => new MDD()
-        case "MDD2" => new MDD2()
         case "STR" => new STR()
         case "Trie" => ArrayTrie.empty
       }, init)
