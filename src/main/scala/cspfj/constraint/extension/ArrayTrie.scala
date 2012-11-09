@@ -113,6 +113,7 @@ final class ArrayTrie(val trie: Array[ArrayTrie], override val size: Int) extend
   }
 
   def copy = this
+  def quickCopy = this
 
   override def equals(o: Any): Boolean = o match {
     case t: ArrayTrie => trie sameElements t.trie
@@ -242,7 +243,7 @@ final class ArrayTrie(val trie: Array[ArrayTrie], override val size: Int) extend
 
 }
 
-class ListWithMax(length: Int) extends Traversable[Int] {
+final class ListWithMax(length: Int) extends Traversable[Int] {
   var max = length - 1
   var candidates = BitVector.newBitVector(length)
   candidates.fill(true)

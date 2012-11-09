@@ -20,9 +20,6 @@ object IntDomain {
       Indexer.ofInterval(r.start, r.last))
     else apply(r: _*)
 
-  //var s: Map[Class[_ <: IntSet], Int] = Map.empty.withDefaultValue(0)
-  @Statistic
-  var presenceChecks = 0l
 
 }
 
@@ -137,7 +134,6 @@ final class IntDomain(
    * @return true iff index is present
    */
   def present(index: Int) = {
-    IntDomain.presenceChecks += 1
     //    val c = IntDomain.s(intSet.getClass) + 1
     //    IntDomain.s += intSet.getClass -> c
     //    if (c % 10000 == 0) println(IntDomain.s)

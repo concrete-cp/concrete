@@ -101,7 +101,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
     } else if (stack == Nil) {
       (UNSAT, Nil)
     } else if (maxBacktracks >= 0 && nbBacktracks >= maxBacktracks) {
-      (UNKNOWNResult, stack)
+      (RESTART, stack)
     } else {
       problem.pop()
       nbBacktracks += 1
@@ -128,14 +128,18 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
 
     val nbBT = nbBacktracks
 
-    val ((sol, newStack), macTime) = StatisticsManager.time(mac(modifiedVar, stack))
+    val ((sol, newStack), macTime) = try {
+      StatisticsManager.time(mac(modifiedVar, stack))
+    } catch {
+      case e: TimedException => searchCpu += e.time; throw e.getCause
+    }
 
     searchCpu += macTime
     logger.info("Took " + macTime + "s ("
       + ((nbBacktracks - nbBT) / macTime)
       + " bps)");
 
-    if (sol == UNKNOWNResult) {
+    if (sol == RESTART) {
 
       //val modified = ngl.noGoods(newStack)
       problem.reset();

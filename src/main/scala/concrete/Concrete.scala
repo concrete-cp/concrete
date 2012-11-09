@@ -69,44 +69,37 @@ object Concrete extends App {
 
   val file = new URL(opt('file).asInstanceOf[String])
 
+  def load(file: URL) = {
+    val (problem, lT) = StatisticsManager.time(CSPOM.load(file))
+
+    val (_, cT) = StatisticsManager.time(ProblemCompiler.compile(problem))
+
+    //println(problem)
+
+    val (cProblem, gT) = StatisticsManager.time(ProblemGenerator.generate(problem))
+
+    (lT, cT, gT, Solver.factory(cProblem), problem)
+  }
+
   val (lT, cT, gT, writer, solver, problem) =
     if (opt.contains('CL)) {
+
       val config = ParameterManager.toXML.toString
-      
       val writer = opt.get('SQL) match {
         case None => new ConsoleWriter(config)
         case Some(url) => new SQLWriter(new URI(url.toString), file, config)
       }
-      val (problem, lT) = StatisticsManager.time(CSPOM.load(file))
 
-      val (_, cT) = StatisticsManager.time(ProblemCompiler.compile(problem))
-
-      //println(problem)
-
-      val (cProblem, gT) = StatisticsManager.time(ProblemGenerator.generate(problem))
-
-      @Statistic
-      val generationTime = gT
-
-      val solver = Solver.factory(cProblem)
+      val (lT, cT, gT, solver, problem) = load(file)
 
       (lT, gT, cT, writer, solver, problem)
     } else {
-      val (problem, lT) = StatisticsManager.time(CSPOM.load(file))
 
-      val (_, cT) = StatisticsManager.time(ProblemCompiler.compile(problem))
-
-      //println(problem)
-
-      val (cProblem, gT) = StatisticsManager.time(ProblemGenerator.generate(problem))
-
-      @Statistic
-      val generationTime = gT
-
-      val solver = Solver.factory(cProblem)
+      val (lT, cT, gT, solver, problem) = load(file)
+      val config = ParameterManager.toXML.toString
       val writer = opt.get('SQL) match {
-        case None => new ConsoleWriter(ParameterManager.toXML.toString)
-        case Some(url) => new SQLWriter(new URI(url.toString), file, ParameterManager.toXML.toString)
+        case None => new ConsoleWriter(config)
+        case Some(url) => new SQLWriter(new URI(url.toString), file, config)
       }
 
       (lT, gT, cT, writer, solver, problem)
@@ -123,42 +116,43 @@ object Concrete extends App {
 
   var exc: Throwable = null
 
-  val thread = new Thread() {
-    override def run() {
-      try {
-        val solution = solver.nextSolution
-        writer.solution(solution, problem)
-        if (solution.isSat && opt.contains('Control)) {
-          val failed = problem.controlInt(solution.get);
-          println("Falsified constraints : " + failed.toString)
-        }
-        //        } catch {
-        //          case e: InterruptedException => throw e
-        //        }
-        writer.write(statistics)
-        writer.write(solver.statistics)
-      } catch {
-        case e: Throwable => exc = e
-      }
-    }
-  }
+  //  val thread = new Thread() {
+  //    override def run() {
+  //      try {
+  //        val solution = solver.nextSolution
+  //        writer.solution(solution, problem)
+  //        if (solution.isSat && opt.contains('Control)) {
+  //          val failed = problem.controlInt(solution.get);
+  //          println("Falsified constraints : " + failed.toString)
+  //        }
+  //
+  //        writer.write(statistics)
+  //        writer.write(solver.statistics)
+  //      } catch {
+  //        case e: Throwable => exc = e
+  //      }
+  //    }
+  //  }
 
   val waker = new Timer()
-  opt.get('Time) match {
-    case Some(t: Int) => {
-      //println("Setting time limit to " + t + " seconds")
-      waker.schedule(new Waker(thread), t * 1000);
-    }
-    case _ =>
+  for (t <- opt.get('Time)) {
+    waker.schedule(new Waker(Thread.currentThread()), t.asInstanceOf[Int] * 1000);
   }
-  //
-  thread.start()
-  //t.wait()
-  thread.join()
-  waker.cancel()
 
-  if (exc ne null) writer.error(exc)
-
-  writer.disconnect()
+  try {
+    val solution = solver.nextSolution
+    writer.solution(solution, problem)
+    if (solution.isSat && opt.contains('Control)) {
+      val failed = problem.controlInt(solution.get);
+      println("Falsified constraints : " + failed.toString)
+    }
+  } catch {
+    case e: Throwable => writer.error(e)
+  } finally {
+    waker.cancel()
+    writer.write(statistics)
+    writer.write(solver.statistics)
+    writer.disconnect()
+  }
 
 }

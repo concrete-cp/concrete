@@ -64,7 +64,7 @@ abstract class Solver(val problem: Problem) extends Loggable {
 
   val statistics = new StatisticsManager
   statistics.register("solver", this)
-  statistics.register("domains", IntDomain)
+  //statistics.register("domains", IntDomain)
   statistics.register("enumerator", TupleEnumerator)
   statistics.register("relation", ExtensionConstraintReduceable)
 
@@ -161,4 +161,9 @@ case object UNKNOWNResult extends SolverResult {
   def isSat = false
   def get = throw new NoSuchElementException
   override def toString = "UNKNOWN"
+}
+case object RESTART extends SolverResult {
+  def isSat = false
+  def get = throw new NoSuchElementException
+  override def toString = "RESTART"
 }

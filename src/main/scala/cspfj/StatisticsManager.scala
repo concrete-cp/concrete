@@ -100,9 +100,17 @@ object StatisticsManager {
 
   def time[A](f: => A) = {
     var t = -System.currentTimeMillis
-    val r = f
-    t += System.currentTimeMillis()
-    (r, t / 1000.0)
+    try {
+      val r = f
+      t += System.currentTimeMillis()
+      (r, t / 1000.0)
+    } catch {
+      case e: Throwable =>
+        t += System.currentTimeMillis()
+        throw new TimedException(t / 1000.0, e)
+    }
   }
 
 }
+
+class TimedException(val time: Double, cause: Throwable) extends Exception(cause)

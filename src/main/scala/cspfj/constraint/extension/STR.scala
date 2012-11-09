@@ -2,12 +2,14 @@ package cspfj.constraint.extension
 
 import cspfj.util.BitVector
 
-class STR(array: Array[Array[Int]], val bound: Int) extends Relation {
+class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
   type Self2 = STR
 
   def this() = this(Array(), 0)
 
   def copy = new STR(array.clone, bound)
+  
+  def quickCopy = new STR(array, bound)
 
   def +(t: Array[Int]) = new STR(t +: array, bound + 1)
 
@@ -27,8 +29,10 @@ class STR(array: Array[Array[Int]], val bound: Int) extends Relation {
         array(b) = tmp
       }
     }
-    if (b == bound) this
-    else new STR(array, b)
+    bound = b
+    this
+//    if (b == bound) this
+//    else new STR(array, b)
   }
 
   def fillFound(f: (Int, Int) => Boolean, arity: Int) = {
@@ -47,21 +51,6 @@ class STR(array: Array[Array[Int]], val bound: Int) extends Relation {
     }
     pos
   }
-
-  //  def fillFound(f: (Int, Int) => Boolean, arity: Int) = {
-  //    var i = bound - 1
-  //    while (i >= 0) {
-  //      val tuple = array(i)
-  //
-  //      var pi = arity - 1
-  //      while (pi >= 0) {
-  //        f(pi, tuple(pi))
-  //        pi -= 1
-  //      }
-  //      i -= 1
-  //    }
-  //    0 until arity
-  //  }
 
   def nodes = bound * array(0).length
 

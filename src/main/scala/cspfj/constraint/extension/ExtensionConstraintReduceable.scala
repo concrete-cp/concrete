@@ -56,21 +56,30 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
   }
 
   def revise(mod: List[Int]) = {
-    //fine("Revising " + this + " : " + mod.toList)
+    logger.fine("Revising " + this + " : " + mod.toList)
     found.foreach(_.fill(false))
 
     //val oldSize = trie.size
 
     val rev = mod.reverse
 
+    val oldSize = trie.size
+
+    //println(this + ": filtering " + oldSize)
+
     val newTrie = trie.filterTrie(
       { (p, i) => ExtensionConstraintReduceable.checks += 1; scope(p).dom.present(i) }, rev)
 
+    //println("filtered " + newTrie.size)
     //    val newTrie = trie.filter(scope, mod.reverse)
 
-    if (newTrie ne trie) {
-      if (newTrie eq null) throw UNSATException.e
+    logger.fine("Filtered from " + oldSize + " to " + newTrie.size)
 
+    if ((newTrie eq null) || newTrie.size == 0) throw UNSATException.e
+
+    assert(newTrie.size <= oldSize)
+
+    if (newTrie.size < oldSize) {
       trie = newTrie
       altering()
     }
@@ -93,7 +102,7 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
     assert(card < 0 || card >= trie.size, card + " < " + trie.size + "!")
     if (card == trie.size) {
       //logger.info("Entailing " + this)
-      //entail()
+      entail()
     }
 
     c
@@ -102,10 +111,14 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
   private def filter(notFound: Traversable[Int]) = notFound.foldLeft(false)(
     (acc, p) => scope(p).dom.filter(i => found(p)(i)) || acc)
 
-  def save = trie
+  def save = {
+    //println(this + " <- " + trie.size)
+    trie.quickCopy
+  }
 
   def restore(d: Relation) {
-    trie = d
+    trie = d.quickCopy
+    //println(this + " -> " + trie.size)
   }
 
   override def checkIndices(t: Array[Int]) = trie.contains(t)

@@ -83,7 +83,7 @@ object CrossTable extends App {
 
     for ((problemId, problem, nbvars, nbcons) <- problems) {
 
-      val data = ListBuffer(problem, nbvars, nbcons)
+      val data = ListBuffer(problem) //, nbvars, nbcons)
       //print("\\em %s & \\np{%d} & \\np{%d}".format(problem, nbvars, nbcons))
       //print("\\em %s ".format(problem))
 
@@ -96,6 +96,7 @@ object CrossTable extends App {
       //val formula = """cast("solver.nbAssignments" as real) / (cast("solver.searchCpu" as real) + cast("solver.preproCpu" as real))"""
       val formula = """cast("solver.searchCpu" as real) + cast("solver.preproCpu" as real)"""
 
+      //val formula = """cast("relation.checks" as bigint)"""
       //val formula = """cast("concrete.generationTime" as real)"""
 
       //val formula = """cast("domains.presenceChecks" as bigint)"""
@@ -103,65 +104,66 @@ object CrossTable extends App {
       val min = true
 
       val sqlQuery = """
-            SELECT configId, %s
+            SELECT configId, solution, %s
             FROM crosstab('
     		  SELECT executionId, name, value FROM Statistics NATURAL JOIN Executions
               WHERE version = %d AND configID IN (%s) ORDER BY executionId, name') as ct(executionId int, %s)
-              NATURAL JOIN Executions
+              NATURAL RIGHT JOIN Executions
             WHERE (version, problemId) = (%d, %d)
         """.format(formula, version, cIds, statistics map (s => """"%s" text""".format(s)) mkString (", "), version, problemId)
 
       //println(sqlQuery)
       val results = queryEach(connection, sqlQuery) {
-        rs => rs.getInt(1) -> rs.getDouble(2)
+        rs => rs.getInt(1) -> (rs.getString(2), rs.getDouble(3))
       } toMap
 
-      for (i <- configs.indices; val j = results.getOrElse(configs(i)._1, Double.PositiveInfinity)) {
-        totals(i) ::= j
+      for (
+        i <- configs.indices;
+        j <- results.get(configs(i)._1);
+        val k = if (solved(j._1)) j._2 else Double.PositiveInfinity
+      ) {
+        totals(i) ::= k
       }
 
       for (
         i <- configs.indices; j <- configs.indices if i != j;
         val ci = configs(i)._1;
         val cj = configs(j)._1;
-        if results.contains(ci)
+        ri <- results.get(ci) if solved(ri._1);
+        rj <- results.get(cj)
       ) {
-        if (results.contains(cj)) {
-          val rj = results(cj)
-          val ri = results(ci)
-          if ((rj - ri) / math.min(ri, rj) > .1) d(i)(j) += 1
+        if (solved(rj._1)) {
+          val trj = rj._2
+          val tri = ri._2
+          if ((trj - tri) / math.min(tri, trj) > .1 && (trj - tri) > 1) d(i)(j) += 1
         } else d(i)(j) += 1
       }
 
-      val extrem = results.values.toSeq match {
-        case Nil => None
-        case d: Seq[Double] => Some(if (min) d.min else d.max)
-      }
+      //      val extrem = results.values.map(_._2).toSeq match {
+      //        case Nil => None
+      //        case d: Seq[Double] => Some(if (min) d.min else d.max)
+      //      }
 
       configs foreach { c =>
-        results.get(c._1) match {
-          case Some(e) =>
-            val r = e //engineer(e)._1
-            //        if (e._2 != "M") throw new IllegalStateException
-            //print(" & ")
-            //if (extrem.isDefined && (if (min) e < extrem.get * 1.1 else e > extrem.get * .9)) print("\\bf")
-            data.append(r) //print("\\np{%.1f}".format(r))
-          case None => {
-            val sql = """SELECT solution FROM Executions WHERE (version, problemId, configId)=(%d, %d, %d)"""
-              .format(version, problemId, c._1)
+        data.append(
+          results.get(c._1) match {
+            case Some((result, time)) =>
+              if (solved(result)) {
+                //engineer(e)._1
+                //        if (e._2 != "M") throw new IllegalStateException
+                //print(" & ")
+                //if (extrem.isDefined && (if (min) e < extrem.get * 1.1 else e > extrem.get * .9)) print("\\bf")
+                val e = engineer(time)
+                "%.1f%s".format(e._1, e._2.getOrElse("")) //print("\\np{%.1f}".format(r))
+              } else {
 
-            val r = query(connection, sql) {
-              rs =>
-                if (rs.next()) {
-                  val r = rs.getString(1)
-                  if (r == null) "null"
-                  else if (r.contains("OutOfMemoryError")) "mem"
-                  else r
-                } else "---"
-            };
-            data.append(r)
-          }
-        }
+                if (result == null) "null"
+                else if (result.contains("OutOfMemoryError")) "mem"
+                else if (result.contains("InterruptedException")) "exp"
+                else result
+              }
+            case None => "---"
+          })
       }
 
       println(tabular(data.toSeq))
@@ -169,7 +171,10 @@ object CrossTable extends App {
 
     println("\\midrule")
 
-    println(configs.indices.map(i => StatisticsManager.median(totals(i))).mkString(" & "))
+    println(configs.indices.map { i =>
+      val e = engineer(StatisticsManager.median(totals(i)))
+      "%.1f%s".format(e._1, e._2.getOrElse(""))
+    }.mkString(" & "))
 
     println(d.zipWithIndex map { case (r, i) => configs(i) + " " + r.mkString(" ") } mkString ("\n"))
     println()
@@ -177,6 +182,8 @@ object CrossTable extends App {
     schulze(d, configs.map(c => c._1 + "." + c._2).toIndexedSeq)
 
   }
+
+  def solved(solution: String) = solution == "UNSAT" || """^[0-9\ ]*$""".r.findFirstIn(solution).isDefined
 
   def rank(p: Array[Array[Int]], candidates: Seq[Int], cRank: Int = 1, ranking: Map[Int, Seq[Int]] = Map.empty): Map[Int, Seq[Int]] =
     if (candidates.isEmpty) ranking

@@ -1,7 +1,6 @@
 package cspfj.generator.constraint;
 
 import scala.collection.mutable.HashMap
-
 import cspfj.Domain
 import cspfj.Parameter
 import cspfj.ParameterManager
@@ -19,6 +18,7 @@ import cspfj.constraint.extension.Matrix2D
 import cspfj.constraint.extension.STR
 import cspfj.constraint.extension.TupleTrieSet
 import cspom.extension.HashTrie
+import cspfj.constraint.extension.MDD2
 
 object ExtensionGenerator {
 
@@ -38,6 +38,7 @@ object ExtensionGenerator {
     } else {
       new TupleTrieSet(ds match {
         case "MDD" => new MDD()
+        case "MDD2" => new MDD2()
         case "STR" => new STR()
         case "Trie" => ArrayTrie.empty
       }, init)

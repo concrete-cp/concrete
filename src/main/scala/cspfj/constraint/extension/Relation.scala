@@ -23,4 +23,5 @@ trait Relation extends Iterable[Array[Int]] {
   def --(t: Iterable[Array[Int]]) = t.foldLeft(Relation.this)(_ - _)
   def nodes: Int
   def copy: Self2
+  def quickCopy: Self2
 }
