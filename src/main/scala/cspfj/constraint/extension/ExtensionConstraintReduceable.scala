@@ -56,7 +56,7 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
   }
 
   def revise(mod: List[Int]) = {
-    logger.fine("Revising " + this + " : " + mod.toList)
+    //logger.fine("Revising " + this + " : " + mod.toList)
     found.foreach(_.fill(false))
 
     //val oldSize = trie.size
@@ -73,7 +73,7 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
     //println("filtered " + newTrie.size)
     //    val newTrie = trie.filter(scope, mod.reverse)
 
-    logger.fine("Filtered from " + oldSize + " to " + newTrie.size)
+    //logger.fine("Filtered from " + oldSize + " to " + newTrie.size)
 
     if ((newTrie eq null) || newTrie.size == 0) throw UNSATException.e
 

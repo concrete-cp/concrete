@@ -32,26 +32,6 @@ object ExtensionGenerator {
 
   val TIGHTNESS_LIMIT = 4;
 
-  def bestMatrix(relation: HashTrie, init: Boolean, sizes: Seq[Int]) = {
-    if (relation.depth == 2) {
-      new Matrix2D(sizes(0), sizes(1), init);
-    } else {
-      new TupleTrieSet(ds match {
-        case "MDD" => new MDD()
-        case "MDD2" => new MDD2()
-        case "STR" => new STR()
-        case "Trie" => ArrayTrie.empty
-      }, init)
-    }
-  }
-
-  def fillMatrix(domains: Seq[Domain], relation: HashTrie, init: Boolean, matrix: Matrix) {
-
-    matrix.setAll(relation.iterator.map {
-      values => (values, domains).zipped.map { (v, d) => d.index(v) }
-    }.toIterable, !init)
-
-  }
 }
 
 final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(problem) {
@@ -77,10 +57,21 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
   }
 
   private def gen(relation: HashTrie, init: Boolean, domains: Seq[Domain]) = {
-    val matrix = ExtensionGenerator.bestMatrix(relation, init, domains map (_.size))
-    ExtensionGenerator.fillMatrix(domains, relation, init, matrix)
-    matrix
+    if (relation.depth == 2) {
+      new Matrix2D(domains(0).size, domains(1).size, init).setAll(value2Index(domains, relation), !init)
+    } else {
+      new TupleTrieSet(ExtensionGenerator.ds match {
+        case "MDD" => MDD(value2Index(domains, relation).toSeq: _*)
+        case "MDD2" => MDD2(value2Index(domains, relation).toSeq: _*)
+        case "STR" => new STR() ++ value2Index(domains, relation)
+        case "Trie" => ArrayTrie(value2Index(domains, relation).toSeq: _*)
+      }, init)
+    }
   }
+
+  private def value2Index(domains: Seq[Domain], relation: HashTrie) = relation.iterator.map {
+    values => (values, domains).zipped.map { (v, d) => d.index(v) }
+  }.toIterable
 
   /**
    * Used to cache data structure conversion

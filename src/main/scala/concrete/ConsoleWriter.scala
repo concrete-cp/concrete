@@ -18,8 +18,9 @@ class ConsoleWriter(params: String) extends ConcreteWriter {
   }
   
   def error(e: Throwable) {
-    Console.println(e)
-    Console.println(e.getStackTrace().mkString("\n"))
+    e.printStackTrace(Console.out)
+//    Console.println(e)
+//    Console.println(e.getStackTrace().mkString("\n"))
   }
   
   def disconnect() {

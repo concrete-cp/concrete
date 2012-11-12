@@ -8,9 +8,8 @@ import cspfj.Statistic
 
 object MDD2 {
   def apply(data: Array[Int]*) = {
-    val mdd = data.foldLeft(new MDD2())(_ + _)
-    mdd.renew()
-    mdd
+    val mdds = new HashMap[Seq[MDD2Node], MDD2Node]()
+    new MDD2(data.foldLeft(empty)(_ + (mdds, _)))
   }
 
   val leaf = new MDD2Node(Array(), 1)
@@ -21,42 +20,25 @@ object MDD2 {
 
 }
 
-final class MDD2(val mdds: HashMap[Seq[MDD2Node], MDD2Node], val root: MDD2Node) extends Relation {
+final class MDD2(val root: MDD2Node) extends Relation {
 
   type Self2 = MDD2
-
-  def this() = this(new HashMap(), MDD2.empty)
-
-  def obtain(trie: Array[MDD2Node], size: Int) = {
-    mdds.getOrElseUpdate(trie, new MDD2Node(trie, size))
-  }
-
-  def renew() {
-    MDD2.timestamp += 1
-    mdds.clear()
-    root.renew(MDD2.timestamp, mdds)
-  }
 
   override def size = root.size
 
   def +(t: Array[Int]) = {
-    val e = new MDD2(mdds, root + (this, t))
-    if (Integer.bitCount(e.size) < 3) e.renew()
-    e
+    throw new UnsupportedOperationException
   }
 
   def -(t: Array[Int]) = {
-    val e = new MDD2(mdds, root + (this, t))
-    if (Integer.bitCount(e.size) < 3) e.renew()
-    e
+    throw new UnsupportedOperationException
   }
 
   def filterTrie(f: (Int, Int) => Boolean, modified: List[Int]) = {
     MDD2.timestamp += 1
-    val newRoot = root.filterTrie(MDD2.timestamp, f, modified, 0)
-    if (newRoot eq null) null
-    else new MDD2(mdds, newRoot)
-
+    root.filterTrie(MDD2.timestamp, f, modified, 0)
+    assert(root.size == root.computeSize, root.size + " != " + root.computeSize + "\n" + root.toString)
+    this
   }
 
   def contains(t: Array[Int]) = root.contains(t)
@@ -85,22 +67,39 @@ final class MDD2(val mdds: HashMap[Seq[MDD2Node], MDD2Node], val root: MDD2Node)
   override def toString = nodes + " nodes representing " + size + " tuples"
 
   def copy = {
+    //println("Copying")s
     MDD2.timestamp += 1
-    new MDD2(new HashMap(), root.copy(MDD2.timestamp))
+    new MDD2(root.copy(MDD2.timestamp))
   }
   def quickCopy = copy
 }
 
-final class MDD2Node(val trie: Array[MDD2Node], var size: Int) {
+final class MDD2Node(val trie: Array[MDD2Node], var _size: Int) {
+
+  assert(_size == 1 || _size == computeSize)
+
+  def size = {
+    assert(_size == computeSize, "%d != %d : %s".format(_size, computeSize, toString))
+    _size
+  }
+
+  def size_=(v: Int) = {
+    assert(this ne MDD2.leaf)
+    assert(size == computeSize)
+    _size = size
+  }
 
   var copied: MDD2Node = null
-  
+
   def copy(ts: Int): MDD2Node =
-    if (isEmpty) this
+    if (this eq MDD2.leaf) MDD2.leaf
     else if (ts == timestamp) copied
     else {
-      copied = new MDD2Node(trie map (t => if (t eq null) null else t.copy(ts)), size)
       timestamp = ts
+      copied = new MDD2Node(trie map {
+        case null => null
+        case t => t.copy(ts)
+      }, size)
       copied
     }
 
@@ -112,18 +111,10 @@ final class MDD2Node(val trie: Array[MDD2Node], var size: Int) {
 
   def isEmpty = size == 0
 
-  def +(mdd: MDD2, t: Array[Int]): MDD2Node = if (contains(t)) this else this + (mdd, t, 0)
+  def +(mdds: HashMap[Seq[MDD2Node], MDD2Node], t: Array[Int]): MDD2Node =
+    if (contains(t)) this else this + (mdds, t, 0)
 
-  def renew(ts: Int, mdds: HashMap[Seq[MDD2Node], MDD2Node] = new HashMap): HashMap[Seq[MDD2Node], MDD2Node] = {
-    if (timestamp != ts) {
-      timestamp = ts
-      mdds.put(trie, this)
-      values.foreach(_.renew(ts, mdds))
-    }
-    mdds
-  }
-
-  private def +(mdd: MDD2, tuple: Array[Int], i: Int): MDD2Node =
+  private def +(mdds: HashMap[Seq[MDD2Node], MDD2Node], tuple: Array[Int], i: Int): MDD2Node =
     if (i >= tuple.length) MDD2.leaf
     else {
       val v = tuple(i)
@@ -133,30 +124,11 @@ final class MDD2Node(val trie: Array[MDD2Node], var size: Int) {
       val oldTrie = newArray(v)
 
       if (oldTrie eq null) {
-        newArray(v) = MDD2.empty + (mdd, tuple, i + 1)
+        newArray(v) = MDD2.empty + (mdds, tuple, i + 1)
       } else {
-        newArray(v) = oldTrie + (mdd, tuple, i + 1)
+        newArray(v) = oldTrie + (mdds, tuple, i + 1)
       }
-      mdd.obtain(newArray, size + 1)
-    }
-
-  def -(mdd: MDD2, t: Array[Int]): MDD2Node = if (contains(t)) (this - (mdd, t, 0)) else this
-
-  private def -(mdd: MDD2, tuple: Array[Int], i: Int): MDD2Node =
-    if (i >= tuple.length) this
-    else {
-      val v = tuple(i)
-
-      val newArray = trie.clone
-      val t = trie(v)
-
-      if (t eq MDD2.leaf) {
-        newArray(v) = null
-      } else {
-        val newTrie = t - (mdd, tuple, i + 1)
-        if (newTrie.isEmpty) newArray(v) = null else newArray(v) = newTrie
-      }
-      mdd.obtain(newArray, size - 1)
+      mdds.getOrElseUpdate(trie, new MDD2Node(trie, size + 1))
     }
 
   def contains(tuple: Array[Int]): Boolean = contains(tuple, 0)
@@ -212,7 +184,7 @@ final class MDD2Node(val trie: Array[MDD2Node], var size: Int) {
     result;
   }
 
-  override def toString = "MDD2 representing " + size + " tuples"
+  override def toString = "MDD2 representing " + _size + " tuples"
   //
   //  def foreachTrie(f: (Int, Int) => Unit, depth: Int = 0) {
   //    var i = trie.length - 1;
@@ -241,8 +213,8 @@ final class MDD2Node(val trie: Array[MDD2Node], var size: Int) {
 
   //var filteredResult: MDD2Node = null
 
-  def filterTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int = 0): MDD2Node = {
-    if (modified.nonEmpty && ts != timestamp) {
+  def filterTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int = 0) {
+    if ((this ne MDD2.leaf) && modified.nonEmpty && ts != timestamp) {
       timestamp = ts
 
       var i = trie.length - 1
@@ -273,7 +245,6 @@ final class MDD2Node(val trie: Array[MDD2Node], var size: Int) {
         }
       }
     }
-    this
   }
 
   def listiterator(mdd: MDD2): Iterator[List[Int]] =
@@ -288,6 +259,14 @@ final class MDD2Node(val trie: Array[MDD2Node], var size: Int) {
     else {
       timestamp = ts
       1 + values.map(_.nodes(ts)).sum
+    }
+  }
+
+  def computeSize: Int = {
+    if (this eq MDD2.leaf) 1
+    else trie.foldLeft(0) {
+      case (acc, null) => acc
+      case (acc, t) => acc + t.computeSize
     }
   }
 

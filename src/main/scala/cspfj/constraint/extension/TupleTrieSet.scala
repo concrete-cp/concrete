@@ -27,12 +27,12 @@ final class TupleTrieSet(
     }
   }
 
-  override def setAll(tuples: Iterable[Array[Int]], status: Boolean) {
-    if (status == initialContent) {
-      _trie --= tuples
-    } else
-      _trie ++= tuples
-  }
+//  override def setAll(tuples: Iterable[Array[Int]], status: Boolean) {
+//    if (status == initialContent) {
+//      _trie --= tuples
+//    } else
+//      _trie ++= tuples
+//  }
 
   def arrayTrie = _trie
 

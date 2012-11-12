@@ -8,9 +8,8 @@ import cspfj.Statistic
 
 object MDD {
   def apply(data: Array[Int]*) = {
-    val mdd = data.foldLeft(new MDD())(_ + _)
-    mdd.renew()
-    mdd
+    val mdds = new HashMap[Seq[MDDNode], MDDNode]()
+    new MDD(data.foldLeft(empty)(_ + (mdds, _)))
   }
 
   val leaf = new MDDNode(Array(), 1)
@@ -21,41 +20,27 @@ object MDD {
 
 }
 
-final class MDD(val mdds: HashMap[Seq[MDDNode], MDDNode], val root: MDDNode) extends Relation {
+final class MDD(val root: MDDNode) extends Relation {
 
   type Self2 = MDD
 
-  def this() = this(new HashMap(), MDD.empty)
-
-  def obtain(trie: Array[MDDNode], size: Int) = {
-    mdds.getOrElseUpdate(trie, new MDDNode(trie, size))
-  }
-
-  def renew() {
-    MDD.timestamp += 1
-    mdds.clear()
-    root.renew(MDD.timestamp, mdds)
-  }
+  def this() = this(MDD.empty)
 
   override def size = root.size
 
   def +(t: Array[Int]) = {
-    val e = new MDD(mdds, root + (this, t))
-    if (Integer.bitCount(e.size) < 3) e.renew()
-    e
+    throw new UnsupportedOperationException
   }
 
   def -(t: Array[Int]) = {
-    val e = new MDD(mdds, root + (this, t))
-    if (Integer.bitCount(e.size) < 3) e.renew()
-    e
+    throw new UnsupportedOperationException
   }
 
   def filterTrie(f: (Int, Int) => Boolean, modified: List[Int]) = {
     MDD.timestamp += 1
     val newRoot = root.filterTrie(MDD.timestamp, f, modified, 0)
     if (newRoot eq null) null
-    else new MDD(mdds, newRoot)
+    else new MDD(newRoot)
 
   }
 
@@ -98,18 +83,10 @@ final class MDDNode(val trie: Array[MDDNode], val size: Int) {
 
   def isEmpty = size == 0
 
-  def +(mdd: MDD, t: Array[Int]): MDDNode = if (contains(t)) this else this + (mdd, t, 0)
+  def +(mdds: HashMap[Seq[MDDNode], MDDNode], t: Array[Int]): MDDNode =
+    if (contains(t)) this else this + (mdds, t, 0)
 
-  def renew(ts: Int, mdds: HashMap[Seq[MDDNode], MDDNode] = new HashMap): HashMap[Seq[MDDNode], MDDNode] = {
-    if (timestamp != ts) {
-      timestamp = ts
-      mdds.put(trie, this)
-      values.foreach(_.renew(ts, mdds))
-    }
-    mdds
-  }
-
-  private def +(mdd: MDD, tuple: Array[Int], i: Int): MDDNode =
+  private def +(mdds: HashMap[Seq[MDDNode], MDDNode], tuple: Array[Int], i: Int): MDDNode =
     if (i >= tuple.length) MDD.leaf
     else {
       val v = tuple(i)
@@ -119,30 +96,11 @@ final class MDDNode(val trie: Array[MDDNode], val size: Int) {
       val oldTrie = newArray(v)
 
       if (oldTrie eq null) {
-        newArray(v) = MDD.empty + (mdd, tuple, i + 1)
+        newArray(v) = MDD.empty + (mdds, tuple, i + 1)
       } else {
-        newArray(v) = oldTrie + (mdd, tuple, i + 1)
+        newArray(v) = oldTrie + (mdds, tuple, i + 1)
       }
-      mdd.obtain(newArray, size + 1)
-    }
-
-  def -(mdd: MDD, t: Array[Int]): MDDNode = if (contains(t)) (this - (mdd, t, 0)) else this
-
-  private def -(mdd: MDD, tuple: Array[Int], i: Int): MDDNode =
-    if (i >= tuple.length) this
-    else {
-      val v = tuple(i)
-
-      val newArray = trie.clone
-      val t = trie(v)
-
-      if (t eq MDD.leaf) {
-        newArray(v) = null
-      } else {
-        val newTrie = t - (mdd, tuple, i + 1)
-        if (newTrie.isEmpty) newArray(v) = null else newArray(v) = newTrie
-      }
-      mdd.obtain(newArray, size - 1)
+      mdds.getOrElseUpdate(trie, new MDDNode(trie, size + 1))
     }
 
   def contains(tuple: Array[Int]): Boolean = contains(tuple, 0)
