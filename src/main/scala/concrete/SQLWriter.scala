@@ -93,7 +93,7 @@ final class SQLWriter(
   jdbcUri: URI,
   problemUrl: URL,
   params: String) extends ConcreteWriter {
-  
+
   import SQLWriter._
 
   val connection = SQLWriter.connect(jdbcUri)
@@ -283,7 +283,13 @@ final class SQLWriter(
   }
 
   def disconnect() {
-    connection.close()
+    val stmt = connection.createStatement()
+    try {
+      stmt.executeUpdate("UPDATE executions SET \"end\" = CURRENT_TIMESTAMP where executionId = " + executionId)
+    } finally {
+      stmt.close()
+      connection.close()
+    }
   }
 
 }

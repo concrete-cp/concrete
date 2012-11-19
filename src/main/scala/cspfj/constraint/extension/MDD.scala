@@ -100,7 +100,7 @@ final class MDDNode(val trie: Array[MDDNode], val size: Int) {
       } else {
         newArray(v) = oldTrie + (mdds, tuple, i + 1)
       }
-      mdds.getOrElseUpdate(trie, new MDDNode(trie, size + 1))
+      mdds.getOrElseUpdate(newArray, new MDDNode(newArray, size + 1))
     }
 
   def contains(tuple: Array[Int]): Boolean = contains(tuple, 0)

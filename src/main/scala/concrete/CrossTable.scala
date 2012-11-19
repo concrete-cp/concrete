@@ -7,6 +7,7 @@ import scala.xml.Text
 import scala.xml.NodeSeq
 import scala.collection.mutable.ListBuffer
 import cspfj.StatisticsManager
+import java.util.Locale
 
 object CrossTable extends App {
 
@@ -34,10 +35,10 @@ object CrossTable extends App {
   //3647557
   val version = args.head.toInt //1888
 
-  val acv = List(98, 96, 95, 97, 99)
-  val acc = List(103, 101, 100, 102, 104)
-
-  val heur = List(85, 64, 83, 84, 70, 72, 59, 71, 87, 86)
+  //  val acv = List(98, 96, 95, 97, 99)
+  //  val acc = List(103, 101, 100, 102, 104)
+  //
+  //  val heur = List(85, 64, 83, 84, 70, 72, 59, 71, 87, 86)
 
   //val nature = List(95, 100)
   val nature = args.tail map (_.toInt) //6 to 10//List(1, 2, 3, 4, 5)
@@ -70,14 +71,18 @@ object CrossTable extends App {
 
     var d = Array.ofDim[Int](configs.size, configs.size)
 
-    val statistics = queryEach(connection, """
-            SELECT DISTINCT name 
-            FROM Statistics NATURAL JOIN Executions
-            WHERE version = %d AND configId IN (%s)
-    		ORDER BY name
-        """.format(version, cIds))(_.getString(1))
+    //    val statistics = queryEach(connection, """
+    //            SELECT DISTINCT name 
+    //            FROM Statistics NATURAL JOIN Executions
+    //            WHERE version = %d AND configId IN (%s)
+    //            GROUP BY name, configId
+    //            HAVING count(*) = %d
+    //    		ORDER BY name
+    //        """.format(version, cIds, cIds.length))(_.getString(1))
+    //
+    //    require(statistics.nonEmpty)
 
-    require(statistics.nonEmpty)
+    val statistics = Seq("solver.searchCpu", "solver.preproCpu", "solver.nbAssignments")
 
     val totals = Array.fill[List[Double]](configs.size)(Nil)
 
@@ -92,25 +97,24 @@ object CrossTable extends App {
       //val formula = """(cast("filter.substats.queue.pollSize" as real) / cast("filter.substats.queue.nbPoll" as int))"""
 
       //val formula = """cast("solver.nbAssignments" as real) / cast("solver.searchCpu" as real)"""
-      //val formula = """cast("solver.nbAssignments" as real)"""
+      ///val formula = """cast("solver.nbAssignments" as real)"""
       //val formula = """cast("solver.nbAssignments" as real) / (cast("solver.searchCpu" as real) + cast("solver.preproCpu" as real))"""
-      val formula = """cast("solver.searchCpu" as real) + cast("solver.preproCpu" as real)"""
+      //val formula = """cast("solver.searchCpu" as real) + cast("solver.preproCpu" as real)"""
 
       //val formula = """cast("relation.checks" as bigint)"""
       //val formula = """cast("concrete.generationTime" as real)"""
 
       //val formula = """cast("domains.presenceChecks" as bigint)"""
 
+      val stat = "SELECT cast(value as real) FROM statistics WHERE statistics.executionId = executions.executionId AND name = 'solver.nbAssignments'"
+
       val min = true
 
       val sqlQuery = """
-            SELECT configId, solution, %s
-            FROM crosstab('
-    		  SELECT executionId, name, value FROM Statistics NATURAL JOIN Executions
-              WHERE version = %d AND configID IN (%s) ORDER BY executionId, name') as ct(executionId int, %s)
-              NATURAL RIGHT JOIN Executions
+            SELECT configId, solution, (%s)
+            FROM Executions
             WHERE (version, problemId) = (%d, %d)
-        """.format(formula, version, cIds, statistics map (s => """"%s" text""".format(s)) mkString (", "), version, problemId)
+        """.format(stat, version, problemId)
 
       //println(sqlQuery)
       val results = queryEach(connection, sqlQuery) {
@@ -154,7 +158,7 @@ object CrossTable extends App {
                 //print(" & ")
                 //if (extrem.isDefined && (if (min) e < extrem.get * 1.1 else e > extrem.get * .9)) print("\\bf")
                 val e = engineer(time)
-                "%.1f%s".format(e._1, e._2.getOrElse("")) //print("\\np{%.1f}".format(r))
+                "%.1f%s".formatLocal(Locale.US, e._1, e._2.getOrElse("")) //print("\\np{%.1f}".format(r))
               } else {
 
                 if (result == null) "null"
@@ -173,7 +177,7 @@ object CrossTable extends App {
 
     println(configs.indices.map { i =>
       val e = engineer(StatisticsManager.median(totals(i)))
-      "%.1f%s".format(e._1, e._2.getOrElse(""))
+      "%.1f%s".formatLocal(Locale.US, e._1, e._2.getOrElse(""))
     }.mkString(" & "))
 
     println(d.zipWithIndex map { case (r, i) => configs(i) + " " + r.mkString(" ") } mkString ("\n"))
@@ -183,7 +187,7 @@ object CrossTable extends App {
 
   }
 
-  def solved(solution: String) = solution == "UNSAT" || """^[0-9\ ]*$""".r.findFirstIn(solution).isDefined
+  def solved(solution: String) = solution != null && ("UNSAT" == solution || """^[0-9\ ]*$""".r.findFirstIn(solution).isDefined)
 
   def rank(p: Array[Array[Int]], candidates: Seq[Int], cRank: Int = 1, ranking: Map[Int, Seq[Int]] = Map.empty): Map[Int, Seq[Int]] =
     if (candidates.isEmpty) ranking
@@ -279,7 +283,7 @@ object CrossTable extends App {
   }
 
   def engineer(value: Double): (Double, Option[Char]) = {
-    if (value == 0) (0, None)
+    if (value == 0 || value.isInfinity) (value, None)
     else {
       val CONSTANTS = Map(
         3 -> Some('G'),

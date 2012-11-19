@@ -76,17 +76,17 @@ final class MDD2(val root: MDD2Node) extends Relation {
 
 final class MDD2Node(val trie: Array[MDD2Node], var _size: Int) {
 
-  assert(_size == 1 || _size == computeSize)
+  //assert(_size == 1 || _size == computeSize)
 
   def size = {
-    assert(_size == computeSize, "%d != %d : %s".format(_size, computeSize, toString))
+    //assert(_size == computeSize, "%d != %d : %s".format(_size, computeSize, toString))
     _size
   }
 
   def size_=(v: Int) = {
     assert(this ne MDD2.leaf)
-    assert(size == computeSize)
-    _size = size
+    assert(v == computeSize)
+    _size = v
   }
 
   var copied: MDD2Node = null
@@ -128,7 +128,7 @@ final class MDD2Node(val trie: Array[MDD2Node], var _size: Int) {
       } else {
         newArray(v) = oldTrie + (mdds, tuple, i + 1)
       }
-      mdds.getOrElseUpdate(trie, new MDD2Node(trie, size + 1))
+      mdds.getOrElseUpdate(newArray, new MDD2Node(newArray, size + 1))
     }
 
   def contains(tuple: Array[Int]): Boolean = contains(tuple, 0)
@@ -219,7 +219,7 @@ final class MDD2Node(val trie: Array[MDD2Node], var _size: Int) {
 
       var i = trie.length - 1
 
-      size = 0
+      var newSize = 0
 
       if (modified.head == depth) {
         // Some change at this level
@@ -228,7 +228,7 @@ final class MDD2Node(val trie: Array[MDD2Node], var _size: Int) {
           if (currentTrie ne null) {
             if (f(depth, i)) {
               currentTrie.filterTrie(ts, f, modified.tail, depth + 1)
-              size += currentTrie.size
+              newSize += currentTrie.size
             } else trie(i) = null
           }
           i -= 1
@@ -239,11 +239,13 @@ final class MDD2Node(val trie: Array[MDD2Node], var _size: Int) {
           val currentTrie = trie(i)
           if (currentTrie ne null) {
             currentTrie.filterTrie(ts, f, modified, depth + 1)
-            size += currentTrie.size
+            newSize += currentTrie.size
           }
           i -= 1
         }
       }
+      
+      size = newSize
     }
   }
 
