@@ -34,3 +34,8 @@
            executionId integer not null REFERENCES Executions on delete cascade,
            value text not null, 
            primary key (name, executionId));
+
+create or replace function stat(text, int) returns text as $$
+  select value from statistics where (name, executionId) = ($1, $2);
+$$ language sql;
+

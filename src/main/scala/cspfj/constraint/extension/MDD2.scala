@@ -69,14 +69,16 @@ final class MDD2(val root: MDD2Node) extends Relation {
   def copy = {
     //println("Copying")s
     MDD2.timestamp += 1
-    new MDD2(root.copy(MDD2.timestamp))
+    val c = new MDD2(root.copy(MDD2.timestamp))
+    assert(c.size == this.size && (c, this).zipped.forall(Arrays.equals), (c, this).zipped.map((t1, t2) => t1.toSeq.toString + " " + t2.toSeq.toString).mkString("\n"))
+    c
   }
   def quickCopy = copy
 }
 
 final class MDD2Node(val trie: Array[MDD2Node], var _size: Int) {
 
-  //assert(_size == 1 || _size == computeSize)
+  //assert((_size == 1 && trie.isEmpty) || _size == computeSize)
 
   def size = {
     //assert(_size == computeSize, "%d != %d : %s".format(_size, computeSize, toString))
@@ -244,7 +246,7 @@ final class MDD2Node(val trie: Array[MDD2Node], var _size: Int) {
           i -= 1
         }
       }
-      
+
       size = newSize
     }
   }

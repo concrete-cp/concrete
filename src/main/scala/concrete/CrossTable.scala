@@ -106,8 +106,10 @@ object CrossTable extends App {
 
       //val formula = """cast("domains.presenceChecks" as bigint)"""
 
-      val stat = "SELECT cast(value as real) FROM statistics WHERE statistics.executionId = executions.executionId AND name = 'solver.nbAssignments'"
+      //val stat = "cast(stat('solver.nbAssignments', executionId) as int)"
 
+      val stat = "cast(stat('solver.searchCpu', executionId) as real) + cast(stat('solver.preproCpu', executionId) as real)"
+      
       val min = true
 
       val sqlQuery = """
