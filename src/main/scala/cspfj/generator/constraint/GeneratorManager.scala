@@ -49,7 +49,8 @@ object GeneratorManager {
     "absdiff" -> classOf[AbsDiffGenerator],
     "diffGe" -> classOf[DiffGeGenerator],
     "gcc" -> classOf[GccGenerator],
-    "mod" -> classOf[ModGenerator])
+    "mod" -> classOf[ModGenerator],
+    "nevec" -> classOf[NeqVecGenerator])
 
   def register(entry: (String, Class[_ <: AbstractGenerator])) {
     known += entry
