@@ -12,6 +12,7 @@ libraryDependencies ++= Seq(
 	//"fr.univ-valenciennes.cspfj" %% "cspom" % "1.3-SNAPSHOT",
 	"postgresql" % "postgresql" % "9.1-901-1.jdbc4",
 	"org.sat4j" % "org.sat4j.core" % "2.3.0",
-	"junit" % "junit" % "4.10" % "test"
+	"junit" % "junit" % "4.10" % "test",
+	"com.novocode" % "junit-interface" % "0.8" % "test->default"
 	)
 

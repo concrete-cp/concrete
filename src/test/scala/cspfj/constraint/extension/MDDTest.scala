@@ -12,10 +12,7 @@ final class MDDTest {
 
   @Before
   def setUp() {
-    ts = MDD();
-    ts += Array(0, 0)
-    ts += Array(0, 1)
-    ts += Array(1, 0)
+    ts = MDD(Array(0, 0), Array(0, 1), Array(1, 0));
   }
 
   @Test
