@@ -216,4 +216,12 @@ abstract class Constraint(val scope: Array[Variable])
     size
   }
 
+  final def hasChanged[A](l: Traversable[A], f: A => Boolean) = {
+    var ch = false
+    for (e <- l) {
+      ch |= f(e)
+    }
+    ch
+  }
+
 }

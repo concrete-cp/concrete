@@ -23,7 +23,7 @@ final class NeqVecGenerator(problem: Problem) extends AbstractGenerator(problem)
       false
     } else {
       val (x, y) = scope.splitAt(scope.length / 2)
-      addConstraint(new NeqVec(x, y))
+      addConstraint(new NeqVec(x.toArray, y.toArray))
       true
     }
   }

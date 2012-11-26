@@ -177,9 +177,10 @@ final class SolvingTest extends Loggable {
 
   private def count(name: String) = {
     val cspomProblem = CSPOM.load(getClass.getResource(name));
+    println(cspomProblem)
     ProblemCompiler.compile(cspomProblem);
 
-    //println(cspomProblem)
+    println(cspomProblem)
 
     val solver = Solver.factory(cspomProblem);
     var count = 0
