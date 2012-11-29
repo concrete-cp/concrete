@@ -55,6 +55,8 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
     restoreLevel(l)
   }
 
+  val domSizes = new Array[Int](arity)
+
   def revise(mod: List[Int]) = {
     //logger.fine("Revising " + this + " : " + mod.toList)
     found.foreach(_.fill(false))
@@ -84,16 +86,15 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
       altering()
     }
 
-    val domSizes = scope map (_.dom.size)
+    sizes(domSizes)
 
     val notFound = trie.fillFound({ (depth: Int, i: Int) =>
       ExtensionConstraintReduceable.fills += 1
-      if (found(depth).set(i)) {
-        val s = domSizes(depth) - 1
-        domSizes(depth) = s
-        assert(s == scope(depth).dom.size - found(depth).cardinality)
-        s == 0
-      } else false
+      found(depth).set(i) && {
+        domSizes(depth) -= 1
+        assert(domSizes(depth) == scope(depth).dom.size - found(depth).cardinality)
+        domSizes(depth) == 0
+      }
     }, arity)
 
     val c = filter(notFound)
@@ -117,7 +118,8 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
   }
 
   def restore(d: Relation) {
-    trie = d.quickCopy
+    if (trie ne d)
+      trie = d.quickCopy
     //println(this + " -> " + trie.size)
   }
 

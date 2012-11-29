@@ -87,18 +87,15 @@ abstract class Solver(val problem: Problem) extends Loggable {
   def nextSolution(): SolverResult
 
   @tailrec
-  private def bestSolution(v: Variable, best: SolverResult): SolverResult = {
-    nextSolution() match {
-      case SAT(sol) =>
-        logger.info("New bound " + sol(v.name))
-        //if (problem.currentLevel > 0) 
-        reset()
-        v.dom.removeTo(v.dom.index(sol(v.name)))
-        bestSolution(v, SAT(sol))
-      case UNSAT => if (best == UNKNOWNResult) UNSAT else best
-      case UNKNOWNResult => best
-
-    }
+  private def bestSolution(v: Variable, best: SolverResult): SolverResult = nextSolution() match {
+    case SAT(sol) =>
+      logger.info("New bound " + sol(v.name))
+      //if (problem.currentLevel > 0) 
+      reset()
+      v.dom.removeTo(v.dom.index(sol(v.name)))
+      bestSolution(v, SAT(sol))
+    case UNSAT => if (best == UNKNOWNResult) UNSAT else best
+    case _ => best
   }
 
   def bestSolution(v: Variable): SolverResult = bestSolution(v, UNKNOWNResult)

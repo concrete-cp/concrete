@@ -98,10 +98,16 @@ final class MDD2Node(val trie: Array[MDD2Node], var _size: Int) {
     else if (ts == timestamp) copied
     else {
       timestamp = ts
-      copied = new MDD2Node(trie map {
-        case null => null
-        case t => t.copy(ts)
-      }, size)
+      var i = trie.length - 1
+
+      while (trie(i) eq null) i -= 1
+
+      val newTrie = new Array[MDD2Node](i + 1)
+      while (i >= 0) {
+        if (trie(i) != null) newTrie(i) = trie(i).copy(ts)
+        i -= 1
+      }
+      copied = new MDD2Node(newTrie, size)
       copied
     }
 
@@ -216,7 +222,7 @@ final class MDD2Node(val trie: Array[MDD2Node], var _size: Int) {
   //var filteredResult: MDD2Node = null
 
   def filterTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int = 0) {
-    if ((this ne MDD2.leaf) && modified.nonEmpty && ts != timestamp) {
+    if (ts != timestamp && !modified.isEmpty) {
       timestamp = ts
 
       var i = trie.length - 1
@@ -230,7 +236,8 @@ final class MDD2Node(val trie: Array[MDD2Node], var _size: Int) {
           if (currentTrie ne null) {
             if (f(depth, i)) {
               currentTrie.filterTrie(ts, f, modified.tail, depth + 1)
-              newSize += currentTrie.size
+              if (currentTrie.size == 0) trie(i) = null
+              else newSize += currentTrie.size
             } else trie(i) = null
           }
           i -= 1
@@ -241,7 +248,8 @@ final class MDD2Node(val trie: Array[MDD2Node], var _size: Int) {
           val currentTrie = trie(i)
           if (currentTrie ne null) {
             currentTrie.filterTrie(ts, f, modified, depth + 1)
-            newSize += currentTrie.size
+            if (currentTrie.size == 0) trie(i) = null
+            else newSize += currentTrie.size
           }
           i -= 1
         }

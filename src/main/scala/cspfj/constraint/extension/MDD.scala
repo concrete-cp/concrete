@@ -194,6 +194,8 @@ final class MDDNode(val trie: Array[MDDNode], val size: Int) {
       var i = trie.length - 1
       var newSize = 0
 
+      assert(trie(i) ne null)
+
       if (modified.head == depth) {
         // Some change at this level
         while (i >= 0) {
@@ -202,9 +204,6 @@ final class MDDNode(val trie: Array[MDDNode], val size: Int) {
 
             val newSubTrie = currentTrie.filterTrie(ts, f, modified.tail, depth + 1)
             if (newSubTrie ne null) {
-              if (newTrie eq null) {
-                newTrie = new Array[MDDNode](i + 1)
-              }
               newTrie(i) = newSubTrie
               newSize += newSubTrie.size
             }
