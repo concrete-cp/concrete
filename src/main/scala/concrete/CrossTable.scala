@@ -109,7 +109,7 @@ object CrossTable extends App {
       //val stat = "cast(stat('solver.nbAssignments', executionId) as int)"
 
       val stat = "cast(stat('solver.searchCpu', executionId) as real) + cast(stat('solver.preproCpu', executionId) as real)"
-      
+
       val min = true
 
       val sqlQuery = """
@@ -180,6 +180,10 @@ object CrossTable extends App {
     println(configs.indices.map { i =>
       val e = engineer(StatisticsManager.median(totals(i)))
       "%.1f%s".formatLocal(Locale.US, e._1, e._2.getOrElse(""))
+    }.mkString(" & "))
+
+    println(configs.indices.map { i => 
+      "%d".format(totals(i).count(!_.isInfinity))
     }.mkString(" & "))
 
     println(d.zipWithIndex map { case (r, i) => configs(i) + " " + r.mkString(" ") } mkString ("\n"))

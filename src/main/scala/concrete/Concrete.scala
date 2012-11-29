@@ -74,7 +74,7 @@ object Concrete extends App {
 
     val (_, cT) = StatisticsManager.time(ProblemCompiler.compile(problem))
 
-    println(problem)
+    //println(problem)
 
     val (cProblem, gT) = StatisticsManager.time(ProblemGenerator.generate(problem))
 
