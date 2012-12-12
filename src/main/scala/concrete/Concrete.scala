@@ -78,6 +78,8 @@ object Concrete extends App {
 
     val (cProblem, gT) = StatisticsManager.time(ProblemGenerator.generate(problem))
 
+    problem.closeRelations()
+    
     (lT, cT, gT, Solver.factory(cProblem), problem)
   }
 

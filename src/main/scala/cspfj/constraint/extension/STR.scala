@@ -59,13 +59,14 @@ class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
 
   def iterator = array.iterator.take(bound)
 
-  def contains(t: Array[Int]): Boolean = {
-    val i = bound - 1
-    while (i >= 0) {
-      if (Arrays.equals(t, array(i))) return true
-    }
-    false
-  }
+  def contains(t: Array[Int]): Boolean = throw new UnsupportedOperationException 
+//  {
+//    val i = bound - 1
+//    while (i >= 0) {
+//      if (Arrays.equals(t, array(i))) return true
+//    }
+//    false
+//  }
 
   override def size = bound
 }

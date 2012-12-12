@@ -59,6 +59,8 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
   private def gen(relation: cspom.extension.Relation, init: Boolean, domains: Seq[Domain]) = {
     if (relation.arity == 2) {
       new Matrix2D(domains(0).size, domains(1).size, init).setAll(value2Index(domains, relation), !init)
+    } else if (init) {
+      new TupleTrieSet(MDD(value2Index(domains, relation)), init)
     } else {
       new TupleTrieSet(ExtensionGenerator.ds match {
         case "MDD" => MDD(value2Index(domains, relation))
@@ -91,7 +93,6 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
     } else if (solverVariables exists (_.dom == null)) {
       false
     } else {
-
       val matrix = generateMatrix(solverVariables, extensionConstraint.relation, extensionConstraint.init);
       val scope = solverVariables.toArray
       val constraint = matrix match {
@@ -111,6 +112,7 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
         }
         case m => new ExtensionConstraintGeneral(m, true, scope)
       }
+      //println(extensionConstraint + " -> " + constraint);
       addConstraint(constraint)
       true;
     }
