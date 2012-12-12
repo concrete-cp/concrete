@@ -41,9 +41,9 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
   /**
    * Used to cache value to indices conversion
    */
-  private val vToICache = new CacheConverter[HashTrie, HashMap[Signature, Matrix]]()
+  private val vToICache = new CacheConverter[cspom.extension.Relation, HashMap[Signature, Matrix]]()
 
-  private def generateMatrix(variables: Seq[Variable], relation: HashTrie, init: Boolean) = {
+  private def generateMatrix(variables: Seq[Variable], relation: cspom.extension.Relation, init: Boolean) = {
     val domains = variables map (_.dom)
 
     val map = vToICache.getOrAdd(relation, new HashMap[Signature, Matrix])
@@ -56,22 +56,26 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
     })
   }
 
-  private def gen(relation: HashTrie, init: Boolean, domains: Seq[Domain]) = {
-    if (relation.depth == 2) {
+  private def gen(relation: cspom.extension.Relation, init: Boolean, domains: Seq[Domain]) = {
+    if (relation.arity == 2) {
       new Matrix2D(domains(0).size, domains(1).size, init).setAll(value2Index(domains, relation), !init)
     } else {
       new TupleTrieSet(ExtensionGenerator.ds match {
-        case "MDD" => MDD(value2Index(domains, relation).toSeq: _*)
-        case "MDD2" => MDD2(value2Index(domains, relation).toSeq: _*)
-        case "STR" => new STR() ++ value2Index(domains, relation)
-        case "Trie" => ArrayTrie(value2Index(domains, relation).toSeq: _*)
+        case "MDD" => MDD(value2Index(domains, relation))
+        case "MDD2" => MDD2(value2Index(domains, relation))
+        case "STR" => new STR() ++ value2Index(domains, relation).toIterable
+        case "Trie" => ArrayTrie(value2Index(domains, relation))
       }, init)
     }
   }
 
-  private def value2Index(domains: Seq[Domain], relation: HashTrie) = relation.iterator.map {
-    values => (values, domains).zipped.map { (v, d) => d.index(v) }
-  }.toIterable
+  private def value2Index(domains: Seq[Domain], relation: cspom.extension.Relation) = new Traversable[Array[Int]] {
+    def foreach[A](f: Array[Int] => A) {
+      relation.foreach {
+        t => f((t, domains).zipped.map { (v, d) => d.index(v) })
+      }
+    }
+  }
 
   /**
    * Used to cache data structure conversion

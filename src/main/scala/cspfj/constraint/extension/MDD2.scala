@@ -7,7 +7,10 @@ import scala.collection.mutable.Seq
 import cspfj.Statistic
 
 object MDD2 {
-  def apply(data: Array[Int]*) = {
+
+  def apply(data: Array[Int]*): MDD2 = apply(data)
+
+  def apply(data: Traversable[Array[Int]]): MDD2 = {
     val mdds = new HashMap[Seq[MDD2Node], MDD2Node]()
     new MDD2(data.foldLeft(empty)(_ + (mdds, _)))
   }

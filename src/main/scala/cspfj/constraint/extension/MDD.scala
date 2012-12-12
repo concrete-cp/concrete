@@ -7,7 +7,9 @@ import scala.collection.mutable.Seq
 import cspfj.Statistic
 
 object MDD {
-  def apply(data: Array[Int]*) = {
+  def apply(data: Array[Int]*): MDD = apply(data)
+
+  def apply(data: Traversable[Array[Int]]): MDD = {
     val mdds = new HashMap[Seq[MDDNode], MDDNode]()
     new MDD(data.foldLeft(empty)(_ + (mdds, _)))
   }
@@ -204,6 +206,9 @@ final class MDDNode(val trie: Array[MDDNode], val size: Int) {
 
             val newSubTrie = currentTrie.filterTrie(ts, f, modified.tail, depth + 1)
             if (newSubTrie ne null) {
+              if (newTrie eq null) {
+                newTrie = new Array[MDDNode](i + 1)
+              }
               newTrie(i) = newSubTrie
               newSize += newSubTrie.size
             }
