@@ -46,8 +46,8 @@ final case class Interval(val lb: Int, val ub: Int) {
   def intersect(i: Interval) = {
     val l = math.max(lb, i.lb)
     val u = math.min(ub, i.ub)
-    if (l <= u) Some(Interval(l, u))
-    else None
+    if (l <= u) { Some(Interval(l, u)) }
+    else { None }
   }
 
   def union(i: Interval) = Interval(math.min(lb, i.lb), math.max(ub, i.ub))
@@ -55,8 +55,8 @@ final case class Interval(val lb: Int, val ub: Int) {
   lazy val negate = Interval(-ub, -lb)
 
   lazy val abs =
-    if (ub < 0) negate
-    else if (lb > 0) this
-    else Interval(0, math.max(-lb, ub))
+    if (ub < 0) { negate }
+    else if (lb > 0) { this }
+    else { Interval(0, math.max(-lb, ub)) }
 
 }

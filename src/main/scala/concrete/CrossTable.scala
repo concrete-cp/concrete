@@ -8,6 +8,7 @@ import scala.xml.NodeSeq
 import scala.collection.mutable.ListBuffer
 import cspfj.StatisticsManager
 import java.util.Locale
+import scala.collection.mutable.HashMap
 
 object CrossTable extends App {
 
@@ -46,13 +47,14 @@ object CrossTable extends App {
   using(SQLWriter.connect(new URI("postgresql://concrete:concrete@localhost/concrete"))) { connection =>
 
     val problems = queryEach(connection, """
-        SELECT DISTINCT problemId, display, nbvars, nbcons
-        FROM executions NATURAL JOIN problems
+        SELECT problemId, display, nbvars, nbcons, array_agg(tag) as tags
+        FROM executions NATURAL JOIN problems NATURAL LEFT JOIN problemTags
         WHERE version = %d and configId in (%s)
+        GROUP BY problemId, display, nbvars, nbcons
         ORDER BY display
         """.format(version, nature.mkString(", "))) {
       rs =>
-        (rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getInt(4))
+        (rs.getInt("problemId"), rs.getString("display"), rs.getInt("nbvars"), rs.getInt("nbcons"), rs.getArray("tags").getArray().asInstanceOf[Array[String]])
     }
 
     val configs = queryEach(connection, """
@@ -71,22 +73,9 @@ object CrossTable extends App {
 
     var d = Array.ofDim[Int](configs.size, configs.size)
 
-    //    val statistics = queryEach(connection, """
-    //            SELECT DISTINCT name 
-    //            FROM Statistics NATURAL JOIN Executions
-    //            WHERE version = %d AND configId IN (%s)
-    //            GROUP BY name, configId
-    //            HAVING count(*) = %d
-    //    		ORDER BY name
-    //        """.format(version, cIds, cIds.length))(_.getString(1))
-    //
-    //    require(statistics.nonEmpty)
+    val totals = new HashMap[String, Array[List[Double]]]()
 
-    val statistics = Seq("solver.searchCpu", "solver.preproCpu", "solver.nbAssignments")
-
-    val totals = Array.fill[List[Double]](configs.size)(Nil)
-
-    for ((problemId, problem, nbvars, nbcons) <- problems) {
+    for ((problemId, problem, nbvars, nbcons, tags) <- problems) {
 
       val data = ListBuffer(problem) //, nbvars, nbcons)
       //print("\\em %s & \\np{%d} & \\np{%d}".format(problem, nbvars, nbcons))
@@ -108,15 +97,21 @@ object CrossTable extends App {
 
       //val stat = "cast(stat('solver.nbAssignments', executionId) as int)"
 
-      val stat = "cast(stat('solver.searchCpu', executionId) as real) + cast(stat('solver.preproCpu', executionId) as real)"
+      //val stat = "cast(stat('solver.searchCpu', executionId) as real) + cast(stat('solver.preproCpu', executionId) as real)"
 
       val min = true
 
+      //      val sqlQuery = """
+      //            SELECT configId, solution, (%s)
+      //            FROM Executions
+      //            WHERE (version, problemId) = (%d, %d)
+      //        """.format(stat, version, problemId)
+
       val sqlQuery = """
-            SELECT configId, solution, (%s)
-            FROM Executions
+            SELECT configId, solution, totalTime
+            FROM Times
             WHERE (version, problemId) = (%d, %d)
-        """.format(stat, version, problemId)
+        """.format(version, problemId)
 
       //println(sqlQuery)
       val results = queryEach(connection, sqlQuery) {
@@ -126,9 +121,10 @@ object CrossTable extends App {
       for (
         i <- configs.indices;
         j <- results.get(configs(i)._1);
-        val k = if (solved(j._1)) j._2 else Double.PositiveInfinity
+        val k = if (solved(j._1)) j._2 else Double.PositiveInfinity;
+        tag <- tags
       ) {
-        totals(i) ::= k
+        totals.getOrElseUpdate(tag, Array.fill(configs.size)(Nil))(i) ::= k
       }
 
       for (
@@ -142,7 +138,7 @@ object CrossTable extends App {
           val trj = rj._2
           val tri = ri._2
           if ((trj - tri) / math.min(tri, trj) > .1 && (trj - tri) > 1) d(i)(j) += 1
-        } else d(i)(j) += 1
+        } else { d(i)(j) += 1 }
       }
 
       //      val extrem = results.values.map(_._2).toSeq match {
@@ -163,9 +159,9 @@ object CrossTable extends App {
                 "%.1f%s".formatLocal(Locale.US, e._1, e._2.getOrElse("")) //print("\\np{%.1f}".format(r))
               } else {
 
-                if (result == null) "null"
-                else if (result.contains("OutOfMemoryError")) "mem"
-                else if (result.contains("InterruptedException")) "exp"
+                if (result == null) { "null" }
+                else if (result.contains("OutOfMemoryError")) { "mem" }
+                else if (result.contains("InterruptedException")) { "exp" }
                 else result
               }
             case None => "---"
@@ -177,14 +173,19 @@ object CrossTable extends App {
 
     println("\\midrule")
 
-    println(configs.indices.map { i =>
-      val e = engineer(StatisticsManager.median(totals(i)))
-      "%.1f%s".formatLocal(Locale.US, e._1, e._2.getOrElse(""))
-    }.mkString(" & "))
+    for ((k, t) <- totals) {
+      println(k + " : " + configs.indices.map { i =>
+        val e = engineer(StatisticsManager.median(t(i)))
+        "%.1f%s".formatLocal(Locale.US, e._1, e._2.getOrElse(""))
+      }.mkString(" & "))
+    }
+    println("\\midrule")
 
-    println(configs.indices.map { i => 
-      "%d".format(totals(i).count(!_.isInfinity))
-    }.mkString(" & "))
+    for ((k, t) <- totals) {
+      println(k + " : " + configs.indices.map { i =>
+        "%d".format(t(i).count(!_.isInfinity))
+      }.mkString(" & "))
+    }
 
     println(d.zipWithIndex map { case (r, i) => configs(i) + " " + r.mkString(" ") } mkString ("\n"))
     println()
@@ -196,7 +197,7 @@ object CrossTable extends App {
   def solved(solution: String) = solution != null && ("UNSAT" == solution || """^[0-9\ ]*$""".r.findFirstIn(solution).isDefined)
 
   def rank(p: Array[Array[Int]], candidates: Seq[Int], cRank: Int = 1, ranking: Map[Int, Seq[Int]] = Map.empty): Map[Int, Seq[Int]] =
-    if (candidates.isEmpty) ranking
+    if (candidates.isEmpty) { ranking }
     else {
       val (win, rem) = candidates.partition { i =>
         candidates.forall { j => p(i)(j) >= p(j)(i) }
@@ -289,7 +290,7 @@ object CrossTable extends App {
   }
 
   def engineer(value: Double): (Double, Option[Char]) = {
-    if (value == 0 || value.isInfinity) (value, None)
+    if (value == 0 || value.isInfinity) { (value, None) }
     else {
       val CONSTANTS = Map(
         3 -> Some('G'),

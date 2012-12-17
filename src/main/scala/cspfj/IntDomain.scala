@@ -15,11 +15,13 @@ object IntDomain {
   //def apply(d: Array[Int]): IntDomain = apply(d: _*)
 
   def apply(r: Range): IntDomain =
-    if (r.step == 1) new IntDomain(
-      new IntervalSet(0, r.last - r.start),
-      Indexer.ofInterval(r.start, r.last))
-    else apply(r: _*)
-
+    if (r.step == 1) {
+      new IntDomain(
+        new IntervalSet(0, r.last - r.start),
+        Indexer.ofInterval(r.start, r.last))
+    } else {
+      apply(r: _*)
+    }
 
 }
 

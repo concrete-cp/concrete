@@ -54,7 +54,7 @@ trait Backtrackable[A] extends DelayedInit {
   def getLevel(level: Int) = {
     if (level < currentLevel) {
       history.find(_._1 <= level).get._2
-    } else save
+    } else { save }
   }
 
 }

@@ -189,12 +189,12 @@ final class BooleanDomain(var _status: Status) extends Domain
     if (present(0) && !f(0)) {
       remove(0)
       true
-    } else false
+    } else { false }
   } | {
     if (present(1) && !f(1)) {
       remove(1)
       true
-    } else false
+    } else { false }
   }
 
   override def maxSize = 2
@@ -214,7 +214,7 @@ final class BooleanDomain(var _status: Status) extends Domain
     if (s != status) {
       status = s
       true
-    } else false
+    } else { false }
   }
 
   def removeTo(ub: Int) = {
@@ -222,7 +222,7 @@ final class BooleanDomain(var _status: Status) extends Domain
     if (s != status) {
       status = s;
       true
-    } else false
+    } else { false }
   }
 
   def closestGeq(value: Int) = status.lowest(value)

@@ -66,8 +66,11 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
   statistics.register("nfr-learner", ngl)
 
   var maxBacktracks =
-    if (MAC.restartLevel == 0) math.max(10, problem.maxDomainSize / 10)
-    else MAC.restartLevel
+    if (MAC.restartLevel == 0) {
+      math.max(10, problem.maxDomainSize / 10)
+    } else {
+      MAC.restartLevel
+    }
 
   var nbBacktracks = 0
 
@@ -76,10 +79,10 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
   private var restart = true
 
   @tailrec
-  def mac(modifiedVariable: Variable, stack: List[Pair]): (SolverResult, List[Pair]) = {
+  def mac(modifiedVariable: Option[Variable], stack: List[Pair]): (SolverResult, List[Pair]) = {
     if (Thread.interrupted()) throw new InterruptedException()
-    if (modifiedVariable == null || (
-      modifiedVariable.dom.size > 0 && filter.reduceAfter(modifiedVariable))) {
+    if (!modifiedVariable.isDefined || (
+      modifiedVariable.get.dom.size > 0 && filter.reduceAfter(modifiedVariable.get))) {
 
       heuristic.selectPair(problem) match {
         case None => (SAT(extractSolution), stack)
@@ -95,7 +98,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
 
           pair.assign()
 
-          mac(pair.variable, pair :: stack)
+          mac(Some(pair.variable), pair :: stack)
 
       }
     } else if (stack == Nil) {
@@ -108,7 +111,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
 
       if (logInfo) logger.info(problem.currentLevel + " : " + stack.head + " removed")
       stack.head.remove()
-      mac(stack.head.variable, stack.tail)
+      mac(Some(stack.head.variable), stack.tail)
     }
 
   }
@@ -123,7 +126,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
   var heuristicCpu = 0.0
 
   @tailrec
-  private def nextSolution(modifiedVar: Variable, stack: List[Pair] = Nil): (SolverResult, List[Pair]) = {
+  private def nextSolution(modifiedVar: Option[Variable], stack: List[Pair] = Nil): (SolverResult, List[Pair]) = {
     logger.info("MAC with " + maxBacktracks + " bt")
 
     val nbBT = nbBacktracks
@@ -149,15 +152,15 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
       //      } else {
       maxBacktracks = (maxBacktracks * MAC.btGrowth).toInt;
       nbBacktracks = 0
-      nextSolution(null)
+      nextSolution(None)
       //      }
 
-    } else (sol, newStack)
+    } else { (sol, newStack) }
   }
 
   var currentStack: List[Pair] = Nil
 
-  def nextSolution() = {
+  def nextSolution(): SolverResult = {
 
     if (restart) {
       restart = false
@@ -167,7 +170,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
 
         val (_, heuristicCpu) = StatisticsManager.time(heuristic.compute())
 
-        val (sol, stack) = nextSolution(null)
+        val (sol, stack) = nextSolution(None)
         currentStack = stack
         sol
       }
@@ -179,7 +182,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
       problem.pop()
       currentStack.head.remove()
 
-      val (sol, stack) = nextSolution(currentStack.head.variable, currentStack.tail)
+      val (sol, stack) = nextSolution(Some(currentStack.head.variable), currentStack.tail)
       currentStack = stack
       sol
     }

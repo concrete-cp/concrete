@@ -60,11 +60,6 @@ final object ParameterManager {
 
   private def parse(field: Field, value: String) = {
     var fType = field.getType
-    //        if (classOf[Enum[_]].isAssignableFrom(fType)) {
-    //          val fClass=field.get(null).getClass.asInstanceOf[Class[Enum[_]]]
-    //          
-    //            Enum.valueOf(fClass, value)
-    //        }
 
     if (fType.isAssignableFrom(classOf[Int])) {
       value.toInt
@@ -77,17 +72,6 @@ final object ParameterManager {
     } else {
       throw new IllegalArgumentException("Cannot parse " + field + " of type " + fType)
     }
-    //    fType match {
-    //      //          case e: Class[Enum[_]] => {
-    //      //            val fClass = field.get(null).asInstanceOf[Enum[_]]
-    //      //          }
-    //      case _: Class[Int] => value.toInt
-    //      case _: Class[Double] => value.toDouble
-    //      case _: Class[String] => value
-    //      case _: Class[Class[_]] => Class.forName(value)
-    //      case _ => throw new IllegalArgumentException(
-    //        "Cannot parse " + field + " of type " + fType)
-    //    }
 
   }
 

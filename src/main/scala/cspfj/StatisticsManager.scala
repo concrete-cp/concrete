@@ -22,7 +22,7 @@ class StatisticsManager extends Loggable {
 
   private def annoted(f: Field) = f.getAnnotation(classOf[cspfj.Statistic]) != null
 
-  def apply(name: String) = {
+  def apply(name: String): AnyRef = {
 
     val fieldNameAt = name.lastIndexOf('.')
     val obj = objects.get(name.substring(0, fieldNameAt)).get
@@ -37,25 +37,28 @@ class StatisticsManager extends Loggable {
   def digest: Map[String, Any] = digest("")
 
   private def fields(c: Class[_], f: List[Field] = Nil): List[Field] =
-    if (c == null) f
-    else fields(c.getSuperclass, c.getDeclaredFields.toList.filter(annoted) ::: f)
+    if (c == null) {
+      f
+    } else {
+      fields(c.getSuperclass, c.getDeclaredFields.toList.filter(annoted) ::: f)
+    }
 
   private def digest(sub: String): Map[String, Any] = objects flatMap {
     case (s, o) =>
       fields(o.getClass).flatMap { f =>
         f.setAccessible(true)
         f.get(o) match {
-          case sm: StatisticsManager => sm.digest(s + "." + f.getName + ".")
-          case v => Map(sub + s + "." + f.getName -> v)
+          case sm: StatisticsManager => sm.digest("%s.%s.".format(s, f.getName))
+          case v: AnyRef => Map(sub + s + "." + f.getName -> v)
         }
       }
   }
 
   override def toString = digest.map(t => t._1 + " = " + t._2).toSeq.sorted.mkString("\n")
 
-  def isIntType(input: Class[_]) = input == classOf[Int] || input == classOf[Long]
+  private def isIntType(input: Class[_]) = input == classOf[Int] || input == classOf[Long]
 
-  def isFloatType(input: Class[_]) = input == classOf[Float] || input == classOf[Double]
+  private def isFloatType(input: Class[_]) = input == classOf[Float] || input == classOf[Double]
 
   def reset() {
     objects = Map.empty
@@ -65,16 +68,16 @@ class StatisticsManager extends Loggable {
 object StatisticsManager {
 
   def average[A](s: Seq[A])(implicit n: Numeric[A]): Double = average(s.iterator)
-  def average[A](s: Iterator[A])(implicit n: Numeric[A]) = {
-    val (sum, count) = s.foldLeft((n.zero, 0l)) {
+  def average[A](s: Iterator[A])(implicit n: Numeric[A]): Double = {
+    val (sum, count) = s.foldLeft((n.zero, 0L)) {
       case ((cs, cc), i) =>
-        (n.plus(cs, i), cc + 1l)
+        (n.plus(cs, i), cc + 1L)
     }
 
     n.toDouble(sum) / count
   }
 
-  def stDev[A](s: Seq[A])(implicit n: Numeric[A]) = {
+  def stDev[A](s: Seq[A])(implicit n: Numeric[A]): Double = {
     val avg = average(s)
     val sumSq = s map (v => math.pow(n.toDouble(v) - avg, 2)) sum
 
@@ -85,20 +88,27 @@ object StatisticsManager {
   def findKMedian[A](arr: Seq[A], k: Int, o: Ordering[A]): A = {
     val pivot = arr(scala.util.Random.nextInt(arr.size))
     val (s, b) = arr partition (o.gt(pivot, _))
-    if (s.size == k) pivot
-    // The following test is used to avoid infinite repetition
+    if (s.size == k) {
+      pivot
+    } // The following test is used to avoid infinite repetition
     else if (s.isEmpty) {
       val (s, b) = arr partition (pivot ==)
-      if (s.size > k) pivot
-      else findKMedian(b, k - s.size, o)
-    } else if (s.size < k) findKMedian(b, k - s.size, o)
-    else findKMedian(s, k, o)
+      if (s.size > k) {
+        pivot
+      } else {
+        findKMedian(b, k - s.size, o)
+      }
+    } else if (s.size < k) {
+      findKMedian(b, k - s.size, o)
+    } else {
+      findKMedian(s, k, o)
+    }
   }
 
-  def median[A](arr: Seq[A])(implicit o: Ordering[A]) =
+  def median[A](arr: Seq[A])(implicit o: Ordering[A]): A =
     findKMedian(arr, arr.size / 2, o)
 
-  def time[A](f: => A) = {
+  def time[A](f: => A): (A, Double) = {
     var t = -System.currentTimeMillis
     try {
       val r = f

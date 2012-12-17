@@ -72,9 +72,11 @@ final class Variable(
   def dynamicConstraints = _extensionConstraints
   def positionInConstraint = _positionInConstraint
 
-  def indices = if (_domain == null) null else _domain.indices
+  def indices = //if (_domain == null) null else 
+    _domain.indices
 
-  def values = if (_domain == null) null else _domain.values
+  def values = //if (_domain == null) null else 
+    _domain.values
 
   //var wDeg = 0
 

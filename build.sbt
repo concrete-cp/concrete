@@ -16,3 +16,5 @@ libraryDependencies ++= Seq(
 	"com.novocode" % "junit-interface" % "0.8" % "test->default"
 	)
 
+
+org.scalastyle.sbt.ScalastylePlugin.Settings

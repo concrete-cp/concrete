@@ -30,25 +30,24 @@ object IntSet {
     domain match {
       case Seq() => EmptyIntSet
       case Seq(v) => new Singleton(0)
-      case s if domain.size == 1 + domain.last - domain.head => new IntervalSet(0, domain.size - 1)
-      //case _ => new IntervalSet(0, domain.size - 1)
-      case _ => new BitVectorSet(domain.size)
+      case s: Seq[Int] if s.size == 1 + s.last - s.head => new IntervalSet(0, s.size - 1)
+      case s: Seq[Int] => new BitVectorSet(s.size)
     }
   }
 
   def ofInterval(lb: Int, ub: Int): IntSet =
-    if (lb > ub) EmptyIntSet
-    else if (ub == lb) new Singleton(lb)
-    else new IntervalSet(lb, ub)
+    if (lb > ub) { EmptyIntSet }
+    else if (ub == lb) { new Singleton(lb) }
+    else { new IntervalSet(lb, ub) }
 
   def ofBV(bv: BitVector, s: Int): IntSet = s match {
     case 0 => EmptyIntSet
     case 1 => new Singleton(bv.nextSetBit(0))
-    case s => {
+    case s: Int => {
       val lb = bv.nextSetBit(0)
       val ub = bv.lastSetBit
-      if (lb - ub == s - 1) new IntervalSet(lb, ub)
-      else new BitVectorSet(bv, s)
+      if (lb - ub == s - 1) { new IntervalSet(lb, ub) }
+      else { new BitVectorSet(bv, s) }
     }
   }
 

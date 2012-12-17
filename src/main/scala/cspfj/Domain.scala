@@ -24,20 +24,20 @@ abstract class Domain {
 
   def last: Int
 
-  def isEmpty = first < 0
+  def isEmpty: Boolean = first < 0
 
   def maxSize: Int //= allValues.size
 
   def present(index: Int): Boolean
 
-  def presentVal(value: Int) = {
+  def presentVal(value: Int): Boolean = {
     val i = index(value)
     i >= 0 && present(i)
   }
 
-  def setSingle(index: Int)
+  def setSingle(index: Int): Unit
 
-  def remove(index: Int)
+  def remove(index: Int): Unit
 
   def size: Int
 
@@ -47,10 +47,9 @@ abstract class Domain {
    */
   def removeFrom(lb: Int): Boolean
 
-  def removeFromVal(lb: Int) = {
+  def removeFromVal(lb: Int): Boolean = {
     val v = closestGeq(lb)
-    if (v < 0) false
-    else removeFrom(v)
+    v >= 0 && removeFrom(v)
   }
 
   /**
@@ -59,25 +58,24 @@ abstract class Domain {
    */
   def removeTo(ub: Int): Boolean
 
-  def removeToVal(ub: Int) = {
+  def removeToVal(ub: Int): Boolean = {
     val v = closestLeq(ub)
-    if (v < 0) false
-    else removeTo(closestLeq(ub))
+    v >= 0 && removeTo(closestLeq(ub))
   }
 
   def filter(f: Int => Boolean): Boolean
 
-  def setLevel(level: Int)
+  def setLevel(level: Int): Unit
 
-  def restoreLevel(level: Int)
+  def restoreLevel(level: Int): Unit
 
   def currentLevel: Int
 
   def getAtLevel(level: Int): BitVector
 
-  def firstValue = value(first)
+  def firstValue: Int = value(first)
 
-  def lastValue = value(last)
+  def lastValue: Int = value(last)
 
   //def allValues: Array[Int]
 
@@ -85,12 +83,12 @@ abstract class Domain {
     case d: Domain => values.sameElements(d.values)
     case _ => false
   }
-  
-   /**
+
+  /**
    * @param value
    * @return the index of the closest value strictly lower than the given value.
    */
-  def closestLt(value: Int) = {
+  def closestLt(value: Int): Int = {
     val lb = closestLeq(value);
     if (lb >= 0 && this.value(lb) == value) {
       prev(lb)
@@ -104,7 +102,7 @@ abstract class Domain {
    * @return the index of the closest value strictly greater than the given
    *         value.
    */
-  def closestGt(value: Int) = {
+  def closestGt(value: Int): Int = {
     val ub = closestGeq(value);
     if (ub >= 0 && this.value(ub) == value) {
       next(ub)
@@ -128,7 +126,7 @@ abstract class Domain {
 
   def indices: Iterator[Int] = indices(first)
 
-  def indices(from: Int) = new Iterator[Int] {
+  def indices(from: Int): Iterator[Int] = new Iterator[Int] {
     var index = from
 
     override def hasNext = index >= 0
@@ -140,7 +138,7 @@ abstract class Domain {
     }
   }
 
-  def indicesR = new Iterator[Int] {
+  def indicesR: Iterator[Int] = new Iterator[Int] {
     var index = Domain.this.last
 
     override def hasNext = index >= 0
@@ -152,11 +150,11 @@ abstract class Domain {
     }
   }
 
-  def values = indices map value
+  def values: Iterator[Int] = indices map value
 
-  def valueInterval = Interval(firstValue, lastValue)
+  def valueInterval: Interval = Interval(firstValue, lastValue)
 
-  def intersect(a: Int, b: Int) = removeTo(a - 1) | removeFrom(b + 1)
+  def intersect(a: Int, b: Int): Boolean = removeTo(a - 1) | removeFrom(b + 1)
 
   def intersectVal(a: Int, b: Int): Boolean = {
     var ch = false
@@ -177,24 +175,23 @@ abstract class Domain {
     filter(i => a <= value(i) && value(i) <= b)
   }
 
-  def removeValInterval(lb: Int, ub: Int) = {
+  def removeValInterval(lb: Int, ub: Int) {
 
     var i = closestGt(lb)
     val end = closestLt(ub)
 
-    if (i >= 0 && end >= 0)
+    if (i >= 0 && end >= 0) {
       while (i <= end) {
-        if (present(i)) remove(i)
+        if (present(i)) { remove(i) }
         i += 1
       }
+    }
   }
 
-  def disjoint(d: Domain, i: Int = first): Boolean =
-    if (i < 0) true
-    else {
-      val i2 = d.index(value(i))
-      (i2 < 0 || !d.present(i2)) && disjoint(d, next(i))
-    }
+  def disjoint(d: Domain, i: Int = first): Boolean = i < 0 || {
+    val i2 = d.index(value(i))
+    (i2 < 0 || !d.present(i2)) && disjoint(d, next(i))
+  }
 
   def intersects(bv: BitVector): Int
   def intersects(bv: BitVector, part: Int): Boolean

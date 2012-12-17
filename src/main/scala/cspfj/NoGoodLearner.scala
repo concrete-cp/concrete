@@ -13,44 +13,43 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
   @Statistic
   var nbNoGoods = 0;
 
-  def noGoods(decisions: List[Pair]): Set[Constraint] = {
+  def noGoods(decisions: List[Pair]): Set[Constraint] =
     if (LearnMethod.NONE.equals(learnMethod) || decisions == Nil) {
-      return Set.empty;
-    }
+      Set.empty;
+    } else {
 
-    var modifiedConstraints: Set[Constraint] = Set.empty;
+      var modifiedConstraints: Set[Constraint] = Set.empty;
 
-    var addedConstraints: List[Constraint] = Nil;
+      var addedConstraints: List[Constraint] = Nil;
 
-    var tuple: Vector[Int] = Vector.empty;
+      var tuple: Vector[Int] = Vector.empty;
 
-    var futureVariables = problem.variables.toSet;
+      var futureVariables = problem.variables.toSet;
 
-    var currentScope: Vector[Variable] = Vector.empty;
-    var level = 1;
+      var currentScope: Vector[Variable] = Vector.empty;
+      var level = 1;
 
-    while (decisions != Nil && (level < problem.maxArity || learnMethod == LearnMethod.EXT)) {
-      /**
-       * Decisions are stacked, so the first decision in the search tree
-       * is actually the last in the stack.
-       */
-      val lastDecision = decisions.last;
-      tuple :+= lastDecision.index;
-      currentScope :+= lastDecision.variable;
-      futureVariables -= lastDecision.variable;
+      while (decisions != Nil && (level < problem.maxArity || learnMethod == LearnMethod.EXT)) {
+        /**
+         * Decisions are stacked, so the first decision in the search tree
+         * is actually the last in the stack.
+         */
+        val lastDecision = decisions.last;
+        tuple :+= lastDecision.index;
+        currentScope :+= lastDecision.variable;
+        futureVariables -= lastDecision.variable;
 
-      for (fv <- futureVariables) {
+        for (fv <- futureVariables) {
 
-        // logger.fine("checking " +
-        // getVariable(levelVariables[level-1]));
+          // logger.fine("checking " +
+          // getVariable(levelVariables[level-1]));
 
-        val changes = fv.dom.getAtLevel(level - 1).xor(fv.dom.getAtLevel(level));
-        if (!changes.isEmpty) {
+          val changes = fv.dom.getAtLevel(level - 1).xor(fv.dom.getAtLevel(level));
+          if (!changes.isEmpty) {
 
-          val completeScope = currentScope :+ fv
+            val completeScope = currentScope :+ fv
 
-          learnConstraint(completeScope) match {
-            case Some(constraint) => {
+            for (constraint <- learnConstraint(completeScope)) {
               val (base, varPos) = NoGoodLearner.makeBase(completeScope, tuple, constraint);
 
               var newNogoods = 0;
@@ -69,20 +68,19 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
                 }
               }
             }
-            case None =>
+
           }
         }
+        level += 1;
       }
-      level += 1;
-    }
 
-    if (!addedConstraints.isEmpty) {
-      addedConstraints.foreach(problem.addConstraint)
-      // LOGGER.info(problem.getNbConstraints() + " constraints");
-    }
+      if (!addedConstraints.isEmpty) {
+        addedConstraints.foreach(problem.addConstraint)
+        // LOGGER.info(problem.getNbConstraints() + " constraints");
+      }
 
-    return modifiedConstraints;
-  }
+      modifiedConstraints;
+    }
 
   def binNoGoods(firstVariable: Variable): Set[Constraint] = {
     val tuple = List(firstVariable.dom.first)

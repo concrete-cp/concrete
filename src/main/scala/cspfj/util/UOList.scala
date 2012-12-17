@@ -14,8 +14,8 @@ trait UOList[+A] extends Seq[A] {
   def ++[B >: A](s: UOList[B]) = {
     @tailrec
     def add(l: UOList[B], added: UOList[B]): UOList[B] =
-      if (l.isEmpty) added
-      else add(l.rest, UOL(l.head, added))
+      if (l.isEmpty) { added }
+      else { add(l.rest, UOL(l.head, added)) }
 
     add(s, this)
   }
@@ -23,8 +23,8 @@ trait UOList[+A] extends Seq[A] {
   override def filter(f: A => Boolean): UOList[A] = {
     @tailrec
     def filt(l: UOList[A], filtered: UOList[A]): UOList[A] =
-      if (l.isEmpty) filtered
-      else if (f(l.head)) filt(l.rest, filtered + l.head)
+      if (l.isEmpty) { filtered }
+      else if (f(l.head)) { filt(l.rest, filtered + l.head) }
       else filt(l.rest, filtered)
 
     filt(this, EmptyUOList)
@@ -43,9 +43,9 @@ trait UOList[+A] extends Seq[A] {
   override def partition(f: A => Boolean): (UOList[A], UOList[A]) = {
     @tailrec
     def part(l: UOList[A], l0: UOList[A], l1: UOList[A]): (UOList[A], UOList[A]) = {
-      if (l.isEmpty) (l0, l1)
-      else if (f(l.head)) part(l.tail, l0 + l.head, l1)
-      else part(l.tail, l0, l1 + l.head)
+      if (l.isEmpty) { (l0, l1) }
+      else if (f(l.head)) { part(l.tail, l0 + l.head, l1) }
+      else { part(l.tail, l0, l1 + l.head) }
     }
 
     part(this, EmptyUOList, EmptyUOList)
@@ -54,8 +54,8 @@ trait UOList[+A] extends Seq[A] {
   def flatMap[B >: A](f: B => UOList[B]) = {
     @tailrec
     def fm(l: UOList[B], flat: UOList[B]): UOList[B] = {
-      if (l.isEmpty) flat
-      else fm(l.tail, flat ++ f(l.head))
+      if (l.isEmpty) { flat }
+      else { fm(l.tail, flat ++ f(l.head)) }
     }
 
     fm(this, EmptyUOList)
@@ -74,6 +74,7 @@ final case object EmptyUOList extends UOList[Nothing] {
     case that1: collection.Seq[_] => that1.isEmpty
     case _ => false
   }
+  override def hashCode = Nil.hashCode
   def length = 0
 
   def apply(idx: Int) = throw new NoSuchElementException("out of bounds")

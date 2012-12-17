@@ -1,7 +1,7 @@
 package cspfj.util
 
 final class Singleton(val index: Int) extends IntSet {
-  
+
   require(index >= 0)
 
   val size = 1
@@ -9,20 +9,18 @@ final class Singleton(val index: Int) extends IntSet {
   def first = index
 
   def last = index
-  
-  
 
   def next(i: Int) = if (i < index) index else -1
 
   def prev(i: Int) = if (i > index) index else -1
 
   def closestLeq(i: Int): Int =
-    if (i >= index) index
-    else -1
+    if (i >= index) { index }
+    else { -1 }
 
   def closestGeq(i: Int): Int =
-    if (i <= index) index
-    else -1
+    if (i <= index) { index }
+    else { -1 }
 
   def copy = this
 
@@ -41,15 +39,15 @@ final class Singleton(val index: Int) extends IntSet {
   }
 
   def removeFrom(lb: Int) =
-    if (lb > index) this
-    else EmptyIntSet
+    if (lb > index) { this }
+    else { EmptyIntSet }
 
   def removeTo(ub: Int) =
-    if (ub < index) this
+    if (ub < index) { this }
     else EmptyIntSet
 
   def filter(f: Int => Boolean) =
-    if (f(index)) this
+    if (f(index)) { this }
     else EmptyIntSet
 
   def toString(id: Indexer) = "[" + id.value(index) + "]"

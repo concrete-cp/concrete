@@ -78,8 +78,8 @@ final class BitVectorSet(val bv: BitVector, val size: Int) extends IntSet {
 
   @tailrec
   private def filter(f: Int => Boolean, nbv: BitVector, i: Int = first, s: Int = size): Int = {
-    if (i < 0) s
-    else if (f(i)) filter(f, nbv, next(i), s)
+    if (i < 0) { s }
+    else if (f(i)) { filter(f, nbv, next(i), s) }
     else {
       nbv.clear(i)
       filter(f, nbv, next(i), s - 1)
@@ -103,22 +103,24 @@ final class BitVectorSet(val bv: BitVector, val size: Int) extends IntSet {
     val nbv = bv.clone
     val ch = nbv.clearFrom(lb)
 
-    if (ch) IntSet.ofBV(nbv, nbv.cardinality)
-    else this
+    if (ch) { IntSet.ofBV(nbv, nbv.cardinality) }
+    else { this }
   }
 
   def removeTo(ub: Int) = {
     val nbv = bv.clone
     val ch = nbv.clearTo(ub + 1)
-    if (ch) IntSet.ofBV(nbv, nbv.cardinality)
-    else this
+    if (ch) { IntSet.ofBV(nbv, nbv.cardinality) }
+    else { this }
   }
 
-  def toString(id: Indexer) = if (size <= BitVectorSet.DISPLAYED_VALUES) {
-    iterator.map(id.value).mkString("{", ", ", "}");
-  } else {
-    iterator.map(id.value).take(BitVectorSet.DISPLAYED_VALUES - 1).mkString("{", ", ", ", [" + (size - BitVectorSet.DISPLAYED_VALUES) + "...], " + id.value(last) + "}")
-  }
+  def toString(id: Indexer) =
+    if (size <= BitVectorSet.DISPLAYED_VALUES) {
+      iterator.map(id.value).mkString("{", ", ", "}");
+    } else {
+      iterator.map(id.value).take(BitVectorSet.DISPLAYED_VALUES - 1)
+        .mkString("{", ", ", ", [" + (size - BitVectorSet.DISPLAYED_VALUES) + "...], " + id.value(last) + "}")
+    }
 
   def subsetOf(d: IntSet) = d match {
     case d: BitVectorSet => bv.subsetOf(d.bv)
