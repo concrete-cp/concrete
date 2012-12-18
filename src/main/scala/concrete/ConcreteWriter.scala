@@ -1,12 +1,12 @@
 package concrete
 
-import cspfj.StatisticsManager
-import cspom.CSPOM
-import cspfj.SolverResult
-import cspfj.SAT
-import cspfj.UNSAT
-import cspfj.UNKNOWNResult
 import cspfj.RESTART
+import cspfj.SAT
+import cspfj.SolverResult
+import cspfj.StatisticsManager
+import cspfj.UNKNOWNResult
+import cspfj.UNSAT
+import cspom.CSPOM
 
 trait ConcreteWriter {
   def solution(solution: SolverResult, problem: CSPOM)

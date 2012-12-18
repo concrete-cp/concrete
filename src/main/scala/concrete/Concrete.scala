@@ -27,7 +27,7 @@ object Concrete extends App {
   'CL
 
   def params(o: List[(String, String)], options: List[String]): List[(String, String)] =
-    if (options == Nil) o
+    if (options == Nil) { o }
     else {
       val Array(key, value) = options.head.split("=")
       params((key, value) :: o, options.tail)
@@ -79,7 +79,7 @@ object Concrete extends App {
     val (cProblem, gT) = StatisticsManager.time(ProblemGenerator.generate(problem))
 
     problem.closeRelations()
-    
+
     (lT, cT, gT, Solver.factory(cProblem), problem)
   }
 
@@ -116,7 +116,7 @@ object Concrete extends App {
   @Statistic
   val generationTime = gT
 
-  var exc: Throwable = null
+  //var exc: Option[Throwable] = None
 
   //  val thread = new Thread() {
   //    override def run() {

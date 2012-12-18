@@ -44,8 +44,8 @@ object SQLWriter {
     }
 
   def bmap[T](test: => Boolean)(block: => T): List[T] =
-    if (test) block :: bmap(test)(block)
-    else Nil
+    if (test) { block :: bmap(test)(block) }
+    else { Nil }
 
   /** Executes the SQL and processes the result set using the specified function. */
   def query[B](connection: Connection, sql: String)(process: ResultSet => B): B =
@@ -60,8 +60,7 @@ object SQLWriter {
     }
 
   def connect(uri: URI) = {
-    if (uri.isOpaque)
-      sys.error("Opaque connection URI : " + uri.toString)
+    require(!uri.isOpaque, "Opaque connection URI : " + uri.toString)
 
     uri.getScheme match {
       case "mysql" =>
@@ -75,16 +74,14 @@ object SQLWriter {
 
     val userInfo = uri.getUserInfo match {
       case null => Array[String]()
-      case info => info.split(":");
+      case info: String => info.split(":");
     }
 
-    try DriverManager.getConnection(
+    DriverManager.getConnection(
       "jdbc:%s://%s%s".format(uri.getScheme, uri.getHost, uri.getPath),
-      (if (userInfo.length > 0) userInfo(0) else null),
-      (if (userInfo.length > 1) userInfo(1) else null))
-    catch {
-      case e: SQLException => throw e
-    }
+      (if (userInfo.length > 0) { userInfo(0) } else { null }),
+      (if (userInfo.length > 1) { userInfo(1) } else { null }))
+
   }
 
 }
@@ -126,7 +123,7 @@ final class SQLWriter(
 
         val source = classOf[SQLWriter].getResource("concrete.sql")
 
-        if (source == null) sys.error("Could not find concrete.sql script")
+        if (source == null) { sys.error("Could not find concrete.sql script") }
 
         val script = io.Source.fromURL(source).getLines.reduce(_ + _)
 
