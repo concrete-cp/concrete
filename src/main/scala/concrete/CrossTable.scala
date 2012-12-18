@@ -48,13 +48,18 @@ object CrossTable extends App {
 
     val problems = queryEach(connection, """
         SELECT problemId, display, nbvars, nbcons, array_agg(tag) as tags
-        FROM executions NATURAL JOIN problems NATURAL LEFT JOIN problemTags
-        WHERE version = %d and configId in (%s)
+        FROM Problems NATURAL LEFT JOIN ProblemTags
+        WHERE problemId IN (
+          SELECT problemId 
+          FROM Executions
+          WHERE version = %d and configId in (%s))
         GROUP BY problemId, display, nbvars, nbcons
         ORDER BY display
         """.format(version, nature.mkString(", "))) {
       rs =>
-        (rs.getInt("problemId"), rs.getString("display"), rs.getInt("nbvars"), rs.getInt("nbcons"), rs.getArray("tags").getArray().asInstanceOf[Array[String]])
+        {
+          (rs.getInt("problemId"), rs.getString("display"), rs.getInt("nbvars"), rs.getInt("nbcons"), rs.getArray("tags").getArray().asInstanceOf[Array[String]])
+        }
     }
 
     val configs = queryEach(connection, """
@@ -115,7 +120,7 @@ object CrossTable extends App {
 
       //println(sqlQuery)
       val results = queryEach(connection, sqlQuery) {
-        rs => rs.getInt(1) -> (rs.getString(2), rs.getDouble(3))
+        rs => rs.getInt("configId") -> (rs.getString("solution"), rs.getDouble("totalTime"))
       } toMap
 
       for (
@@ -172,6 +177,12 @@ object CrossTable extends App {
     }
 
     println("\\midrule")
+
+//    for ((k, t) <- totals) {
+//      println(k + " : " + configs.indices.map { i =>
+//        t(i)
+//      }.mkString(" & "))
+//    }
 
     for ((k, t) <- totals) {
       println(k + " : " + configs.indices.map { i =>
