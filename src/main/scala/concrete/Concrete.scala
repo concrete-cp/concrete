@@ -83,7 +83,7 @@ object Concrete extends App {
     (lT, cT, gT, Solver.factory(cProblem), problem)
   }
 
-  val (lT, cT, gT, writer, solver, problem) =
+  var (lT, cT, gT, writer, solver, problem) =
     if (opt.contains('CL)) {
 
       val config = ParameterManager.toXML.toString
@@ -140,6 +140,8 @@ object Concrete extends App {
   for (t <- opt.get('Time)) {
     waker.schedule(new Waker(Thread.currentThread()), t.asInstanceOf[Int] * 1000);
   }
+  
+  val sstats = solver.statistics
 
   try {
     val solution = solver.nextSolution
@@ -149,11 +151,12 @@ object Concrete extends App {
       println("Falsified constraints : " + failed.toString)
     }
   } catch {
+    case e: OutOfMemoryError => solver = null; problem = null; writer.error(e)
     case e: Throwable => writer.error(e)
   } finally {
     waker.cancel()
     writer.write(statistics)
-    writer.write(solver.statistics)
+    writer.write(sstats)
     writer.disconnect()
   }
 

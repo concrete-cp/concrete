@@ -186,15 +186,17 @@ object Table extends App {
     //      }.mkString(" & "))
     //    }
 
-    for ((k, t) <- totals) {
+    for ((k, t) <- totals.toList.sortBy(_._1)) {
       println(k + " : " + configs.indices.map { i =>
-        val e = engineer(StatisticsManager.median(t(i)))
-        "%.1f%s".formatLocal(Locale.US, e._1, e._2.getOrElse(""))
+        if (t(i).nonEmpty) {
+          val e = engineer(StatisticsManager.median(t(i)))
+          "%.1f%s".formatLocal(Locale.US, e._1, e._2.getOrElse(""))
+        } else { "N/A" }
       }.mkString(" & "))
     }
     println("\\midrule")
 
-    for ((k, t) <- totals) {
+    for ((k, t) <- totals.toList.sortBy(_._1)) {
       println(k + " : " + configs.indices.map { i =>
         "%d".format(t(i).count(!_.isInfinity))
       }.mkString(" & "))

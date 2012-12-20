@@ -11,7 +11,9 @@ object MDD {
 
   def apply(data: Traversable[Array[Int]]): MDD = {
     val mdds = new HashMap[Seq[MDDNode], MDDNode]()
-    new MDD(data.foldLeft(empty)(_ + (mdds, _)))
+    val m = new MDD(data.foldLeft(empty)(_ + (mdds, _)))
+    //println(mdds.map(_._2.hashCode).toSeq.sorted)
+    m
   }
 
   val leaf = new MDDNode(Array(), 1)
@@ -89,7 +91,7 @@ final class MDDNode(val trie: Array[MDDNode], val size: Int) {
     if (contains(t)) this else this + (mdds, t, 0)
 
   private def +(mdds: HashMap[Seq[MDDNode], MDDNode], tuple: Array[Int], i: Int): MDDNode =
-    if (i >= tuple.length) MDD.leaf
+    if (i >= tuple.length) { MDD.leaf }
     else {
       val v = tuple(i)
       val newArray = trie.padTo(v + 1, null)
@@ -140,22 +142,29 @@ final class MDDNode(val trie: Array[MDDNode], val size: Int) {
   }
 
   override def equals(o: Any): Boolean = o match {
-    case t: MDDNode => trie sameElements t.trie
+    case t: MDDNode =>
+      val len = t.trie.length
+      len == trie.length && {
+        var i = 0
+        while (i < len && (t.trie(i) eq trie(i))) i += 1
+        i == len
+      }
+
     case _ => false
   }
 
-  override lazy val hashCode: Int = {
-    var result = 1;
-    var i = trie.length - 1
-    while (i >= 0) {
-      result *= 31
-      val e = trie(i)
-      if (e ne null) {
-        result += e.hashCode
-      }
-      i -= 1
-    }
-    result;
+  override val hashCode: Int = {
+    util.MurmurHash.arrayHash(trie)
+//    val h = new util.MurmurHash[Int]("MDD".hashCode)
+//    var i = trie.length - 1
+//    while (i >= 0) {
+//      val e = trie(i)
+//      if (e ne null) {
+//        h(e.hashCode)
+//      }
+//      i -= 1
+//    }
+//    h.hash;
   }
 
   override def toString = "MDD representing " + size + " tuples"

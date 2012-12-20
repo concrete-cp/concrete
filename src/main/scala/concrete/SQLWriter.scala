@@ -47,6 +47,10 @@ object SQLWriter {
     if (test) { block :: bmap(test)(block) }
     else { Nil }
 
+  def queryUpdate(connection: Connection, sql: String) {
+    using(connection.createStatement) { statement => statement.executeUpdate(sql) }
+  }
+
   /** Executes the SQL and processes the result set using the specified function. */
   def query[B](connection: Connection, sql: String)(process: ResultSet => B): B =
     using(connection.createStatement) { statement =>

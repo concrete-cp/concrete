@@ -177,21 +177,29 @@ final class MDD2Node(val trie: Array[MDD2Node], var _size: Int) {
   }
 
   override def equals(o: Any): Boolean = o match {
-    case t: MDD2Node => trie sameElements t.trie
+    case t: MDD2Node =>
+      val len = t.trie.length
+      len == trie.length && {
+        var i = 0
+        while (i < len && (t.trie(i) eq trie(i))) i += 1
+        i == len
+      }
+
     case _ => false
   }
 
-  override lazy val hashCode: Int = {
-    var result = 1;
+  override def hashCode: Int = {
+    var result = size;
     var i = trie.length - 1
     while (i >= 0) {
       result *= 31
       val e = trie(i)
       if (e ne null) {
-        result += e.hashCode
+        result += i
       }
       i -= 1
     }
+    println(result)
     result;
   }
 

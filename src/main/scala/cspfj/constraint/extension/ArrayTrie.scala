@@ -121,7 +121,19 @@ final class ArrayTrie(val trie: Array[ArrayTrie], override val size: Int) extend
     case _ => false
   }
 
-  override lazy val hashCode = trie.toSeq.hashCode
+  override def hashCode: Int = {
+    var result = 1;
+    var i = trie.length - 1
+    while (i >= 0) {
+      result *= 31
+      val e = trie(i)
+      if (e ne null) {
+        result += e.hashCode
+      }
+      i -= 1
+    }
+    result;
+  }
 
   override def toString = nodes + " nodes representing " + size + " tuples" // + toString(0)
 
