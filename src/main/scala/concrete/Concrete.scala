@@ -12,8 +12,9 @@ import cspfj.util.Waker
 import cspom.compiler.ProblemCompiler
 import cspfj.generator.ProblemGenerator
 import cspom.CSPOM
+import cspfj.Problem
 
-object Concrete extends App {
+trait Concrete extends App {
 
   def help = """
     Usage : Concrete file
@@ -33,23 +34,22 @@ object Concrete extends App {
       params((key, value) :: o, options.tail)
     }
 
-  def options(o: Map[Symbol, Any], args: List[String]): Map[Symbol, Any] = args match {
+  def options(args: List[String], o: Map[Symbol, Any] = Map.empty, unknown: List[String] = Nil): (Map[Symbol, Any], List[String]) = args match {
+    case Nil => (o, unknown)
     case "-D" :: opts :: tail => {
       val p = params(Nil, opts.split(":").toList)
-      options(o + ('D -> p), tail)
+      options(tail, o + ('D -> p), unknown)
     }
     case "-sql" :: option :: tail =>
-      options(o + ('SQL -> option), tail)
-    case "-control" :: tail => options(o + ('Control -> None), tail)
-    case "-time" :: t :: tail => options(o + ('Time -> t.toInt), tail)
-    case "-cl" :: tail => options(o + ('CL -> None), tail)
-    case file :: Nil => o + ('file -> file)
-    case unknown :: _ => throw new IllegalArgumentException(unknown)
-    case _ => throw new IllegalArgumentException("Parameter expected")
+      options(tail, o + ('SQL -> option), unknown)
+    case "-control" :: tail => options(tail, o + ('Control -> None))
+    case "-time" :: t :: tail => options(tail, o + ('Time -> t.toInt))
+    case "-cl" :: tail => options(tail, o + ('CL -> None))
+    case u :: tail => options(tail, o, u :: unknown)
   }
 
-  val opt = try {
-    options(Map.empty, args.toList)
+  val (opt, remaining) = try {
+    options(args.toList)
   } catch {
     case e: IllegalArgumentException =>
       println(e.getMessage)
@@ -67,54 +67,41 @@ object Concrete extends App {
   val statistics = new StatisticsManager()
   statistics.register("concrete", this)
 
-  val file = new URL(opt('file).asInstanceOf[String])
+  def load(args: List[String]): Problem
+  def description(args: List[String]): (String, String)
 
-  def load(file: URL) = {
-    val (problem, lT) = StatisticsManager.time(CSPOM.load(file))
-
-    val (_, cT) = StatisticsManager.time(ProblemCompiler.compile(problem))
-
-    //println(problem)
-
-    val (cProblem, gT) = StatisticsManager.time(ProblemGenerator.generate(problem))
-
-    problem.closeRelations()
-
-    (lT, cT, gT, Solver.factory(cProblem), problem)
-  }
-
-  var (lT, cT, gT, writer, solver, problem) =
+  val (lT, writer, solver, problem) =
     if (opt.contains('CL)) {
 
       val config = ParameterManager.toXML.toString
       val writer = opt.get('SQL) match {
         case None => new ConsoleWriter(config)
-        case Some(url) => new SQLWriter(new URI(url.toString), file, config)
+        case Some(url) =>
+          val (desc, md5) = description(remaining)
+          new SQLWriter(new URI(url.toString), desc, md5, config)
       }
 
-      val (lT, cT, gT, solver, problem) = load(file)
+      val (problem, lT) = StatisticsManager.time(load(remaining))
+      (lT, writer, Solver.factory(problem), problem)
 
-      (lT, gT, cT, writer, solver, problem)
     } else {
 
-      val (lT, cT, gT, solver, problem) = load(file)
+      val (problem, lT) = StatisticsManager.time(load(remaining))
+      val solver = Solver.factory(problem)
       val config = ParameterManager.toXML.toString
       val writer = opt.get('SQL) match {
         case None => new ConsoleWriter(config)
-        case Some(url) => new SQLWriter(new URI(url.toString), file, config)
+
+        case Some(url) =>
+          val (desc, md5) = description(remaining)
+          new SQLWriter(new URI(url.toString), desc, md5, config)
       }
 
-      (lT, gT, cT, writer, solver, problem)
+      (lT, writer, solver, problem)
     }
 
   @Statistic
   val loadTime = lT
-
-  @Statistic
-  val compileTime = cT
-
-  @Statistic
-  val generationTime = gT
 
   //var exc: Option[Throwable] = None
 
@@ -140,7 +127,7 @@ object Concrete extends App {
   for (t <- opt.get('Time)) {
     waker.schedule(new Waker(Thread.currentThread()), t.asInstanceOf[Int] * 1000);
   }
-  
+
   val sstats = solver.statistics
 
   try {
@@ -151,7 +138,6 @@ object Concrete extends App {
       println("Falsified constraints : " + failed.toString)
     }
   } catch {
-    case e: OutOfMemoryError => solver = null; problem = null; writer.error(e)
     case e: Throwable => writer.error(e)
   } finally {
     waker.cancel()

@@ -36,6 +36,7 @@ import cspfj.StatisticsManager
 import cspom.CSPOM
 
 object SQLWriter {
+
   def using[Closeable <: { def close(): Unit }, B](closeable: Closeable)(getB: Closeable => B): B =
     try {
       getB(closeable)
@@ -88,11 +89,30 @@ object SQLWriter {
 
   }
 
+  def md5(istr: InputStream) = {
+    val msgDigest = MessageDigest.getInstance("MD5");
+
+    def createDigest(buffer: Array[Byte]) {
+      val read = istr.read(buffer)
+      if (read > 0) {
+        msgDigest.update(buffer, 0, read)
+        createDigest(buffer)
+      }
+    }
+
+    createDigest(new Array[Byte](8192))
+
+    val sum = new BigInteger(1, msgDigest.digest).toString(16);
+    "".padTo(32 - sum.length, '0') + sum
+
+  }
+
 }
 
 final class SQLWriter(
   jdbcUri: URI,
-  problemUrl: URL,
+  description: String,
+  md5: String,
   params: String) extends ConcreteWriter {
 
   import SQLWriter._
@@ -102,7 +122,7 @@ final class SQLWriter(
   createTables()
 
   val executionId = execution(
-    problemId(problemUrl),
+    problemId(description, md5),
     config(params),
     Solver.VERSION + CSPOM.VERSION);
 
@@ -138,39 +158,22 @@ final class SQLWriter(
       }
     }
   }
-  def md5(istr: InputStream) = {
-    val msgDigest = MessageDigest.getInstance("MD5");
 
-    def createDigest(buffer: Array[Byte]) {
-      val read = istr.read(buffer)
-      if (read > 0) {
-        msgDigest.update(buffer, 0, read)
-        createDigest(buffer)
-      }
-    }
-
-    createDigest(new Array[Byte](8192))
-
-    val sum = new BigInteger(1, msgDigest.digest).toString(16);
-    "".padTo(32 - sum.length, '0') + sum
-
-  }
-
-  private def problemId(problem: URL) = {
-    val md5sum = md5(cspom.CSPOM.problemInputStream(problem))
+  private def problemId(description: String, md5sum: String) = {
+    //val md5sum = md5(cspom.CSPOM.problemInputStream(problem))
 
     queryEach(connection, """
-        SELECT problemId 
-        FROM Problems 
+        SELECT problemId
+        FROM Problems
         WHERE md5 = '%s'
         """.format(md5sum))(_.getInt(1)) match {
       case List(problemId) => problemId
       case _ => {
         queryEach(connection, """
-    	      INSERT INTO Problems(name, md5) 
-    	      VALUES ('%s', '%s') 
-    	      RETURNING problemId
-    	      """.format(problem.getFile, md5sum))(_.getInt(1)) match {
+          INSERT INTO Problems(name, md5)
+          VALUES ('%s', '%s')
+          RETURNING problemId
+          """.format(description, md5sum))(_.getInt(1)) match {
           case List(problemId) => problemId
           case _ =>
             throw new SQLException(
@@ -183,7 +186,7 @@ final class SQLWriter(
 
   private def config(options: String) = {
 
-    val md5sum = md5(new ByteArrayInputStream(options.getBytes))
+    val md5sum = SQLWriter.md5(new ByteArrayInputStream(options.getBytes))
 
     val stmt = connection.createStatement();
     val rst = stmt.executeQuery("SELECT configId FROM configs WHERE md5='"

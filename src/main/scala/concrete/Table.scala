@@ -180,11 +180,11 @@ object Table extends App {
 
     println("\\midrule")
 
-    //    for ((k, t) <- totals) {
-    //      println(k + " : " + configs.indices.map { i =>
-    //        t(i)
-    //      }.mkString(" & "))
-    //    }
+    for ((k, t) <- totals.toList.sortBy(_._1)) {
+      println(k + " : " + configs.indices.map { i =>
+        t(i)
+      }.mkString(" & "))
+    }
 
     for ((k, t) <- totals.toList.sortBy(_._1)) {
       println(k + " : " + configs.indices.map { i =>
