@@ -242,9 +242,9 @@ final class SQLWriter(
     }
   }
 
-  def solution(solution: SolverResult, problem: CSPOM) {
+  def solution(solution: SolverResult, concrete: Concrete) {
 
-    val sol = outputFormat(solution, problem)
+    val sol = outputFormat(solution, concrete)
 
     val stmt = connection.createStatement();
     try {

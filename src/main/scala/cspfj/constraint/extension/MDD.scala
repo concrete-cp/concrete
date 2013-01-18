@@ -5,12 +5,32 @@ import scala.annotation.tailrec
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.Seq
 import cspfj.Statistic
+import scala.collection.mutable.WeakHashMap
+import scala.util.hashing.MurmurHash3
 
 object MDD {
   def apply(data: Array[Int]*): MDD = apply(data)
 
   def apply(data: Traversable[Array[Int]]): MDD = {
     val mdds = new HashMap[Seq[MDDNode], MDDNode]()
+    var it = 1000
+    val m = new MDD(data.foldLeft(empty) { (acc, tuple) =>
+      if (mdds.size >= it) {
+        mdds.clear()
+        timestamp += 1
+        acc.renew(timestamp, mdds)
+        it += 1000
+      }
+      acc + (mdds, tuple)
+    })
+    mdds.clear()
+    m
+    //println(mdds.map(_._2.hashCode).toSeq.sorted)
+
+  }
+
+  def weak(data: Traversable[Array[Int]]): MDD = {
+    val mdds = new WeakHashMap[Seq[MDDNode], MDDNode]()
     val m = new MDD(data.foldLeft(empty)(_ + (mdds, _)))
     //println(mdds.map(_._2.hashCode).toSeq.sorted)
     m
@@ -87,10 +107,10 @@ final class MDDNode(val trie: Array[MDDNode], val size: Int) {
 
   def isEmpty = size == 0
 
-  def +(mdds: HashMap[Seq[MDDNode], MDDNode], t: Array[Int]): MDDNode =
+  def +(mdds: collection.mutable.Map[Seq[MDDNode], MDDNode], t: Array[Int]): MDDNode =
     if (contains(t)) this else this + (mdds, t, 0)
 
-  private def +(mdds: HashMap[Seq[MDDNode], MDDNode], tuple: Array[Int], i: Int): MDDNode =
+  private def +(mdds: collection.mutable.Map[Seq[MDDNode], MDDNode], tuple: Array[Int], i: Int): MDDNode =
     if (i >= tuple.length) { MDD.leaf }
     else {
       val v = tuple(i)
@@ -116,6 +136,14 @@ final class MDDNode(val trie: Array[MDDNode], val size: Int) {
     else trie(tuple(i)) match {
       case null => false
       case t => t.contains(tuple, i + 1)
+    }
+  }
+
+  def renew(ts: Int, mdds: collection.mutable.Map[Seq[MDDNode], MDDNode]) {
+    if (timestamp != ts) {
+      timestamp = ts
+      mdds.put(trie, this)
+      trie.foreach(t => if (t ne null) t.renew(ts, mdds))
     }
   }
 
@@ -154,17 +182,17 @@ final class MDDNode(val trie: Array[MDDNode], val size: Int) {
   }
 
   override val hashCode: Int = {
-    util.MurmurHash.arrayHash(trie)
-//    val h = new util.MurmurHash[Int]("MDD".hashCode)
-//    var i = trie.length - 1
-//    while (i >= 0) {
-//      val e = trie(i)
-//      if (e ne null) {
-//        h(e.hashCode)
-//      }
-//      i -= 1
-//    }
-//    h.hash;
+    MurmurHash3.arrayHash(trie)
+    //    val h = new util.MurmurHash[Int]("MDD".hashCode)
+    //    var i = trie.length - 1
+    //    while (i >= 0) {
+    //      val e = trie(i)
+    //      if (e ne null) {
+    //        h(e.hashCode)
+    //      }
+    //      i -= 1
+    //    }
+    //    h.hash;
   }
 
   override def toString = "MDD representing " + size + " tuples"

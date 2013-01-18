@@ -132,10 +132,10 @@ trait Concrete extends App {
 
   try {
     val solution = solver.nextSolution
-    writer.solution(solution, problem)
+    writer.solution(solution, this)
     if (solution.isSat && opt.contains('Control)) {
-      val failed = problem.controlInt(solution.get);
-      println("Falsified constraints : " + failed.toString)
+      val failed = control(solution.get);
+      if (failed.isDefined) throw new IllegalStateException("Falsified constraints : " + failed.get)
     }
   } catch {
     case e: Throwable => writer.error(e)
@@ -145,5 +145,8 @@ trait Concrete extends App {
     writer.write(sstats)
     writer.disconnect()
   }
+
+  def output(solution: Map[String, Int]): String
+  def control(solution: Map[String, Int]): Option[String]
 
 }

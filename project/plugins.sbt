@@ -1,3 +1,3 @@
 addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "0.2.0")
 
-resolvers += "sonatype-releases" at "http://oss.sonatype.org/content/repositories/releases/"
+addSbtPlugin("com.typesafe.sbt" % "sbt-start-script" % "0.6.0")

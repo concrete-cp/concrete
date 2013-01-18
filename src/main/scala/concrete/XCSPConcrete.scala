@@ -38,4 +38,11 @@ object XCSPConcrete extends Concrete {
       solution.getOrElse(v.name, v.domain.values.head)).mkString(" ")
   }
 
+  def control(solution: Map[String, Int]) = {
+    cProblem.get.controlInt(solution) match {
+      case s: Set[_] if s.isEmpty => None
+      case s: Set[_] => Some(s.mkString(", "))
+    }
+  }
+
 }

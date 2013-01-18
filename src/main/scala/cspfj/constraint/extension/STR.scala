@@ -3,6 +3,10 @@ package cspfj.constraint.extension
 import cspfj.util.BitVector
 import java.util.Arrays
 
+object STR {
+  def apply(data: Traversable[Array[Int]]): STR = new STR(data.toArray, data.size)
+}
+
 class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
   type Self2 = STR
 
@@ -22,8 +26,9 @@ class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
     var b = bound
     var i = 0
     while (i < b) {
-      if (modified.forall { p => f(p, array(i)(p)) }) i += 1
-      else {
+      if (modified.forall { p => f(p, array(i)(p)) }) {
+        i += 1
+      } else {
         b -= 1
         val tmp = array(i)
         array(i) = array(b)
@@ -53,20 +58,20 @@ class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
     pos
   }
 
-  def nodes = bound * array(0).length
+  def nodes = if (array.isEmpty) 0 else bound * array(0).length
 
   def find(f: (Int, Int) => Boolean) = throw new UnsupportedOperationException
 
   def iterator = array.iterator.take(bound)
 
-  def contains(t: Array[Int]): Boolean = throw new UnsupportedOperationException 
-//  {
-//    val i = bound - 1
-//    while (i >= 0) {
-//      if (Arrays.equals(t, array(i))) return true
-//    }
-//    false
-//  }
+  def contains(t: Array[Int]): Boolean = throw new UnsupportedOperationException
+  //  {
+  //    val i = bound - 1
+  //    while (i >= 0) {
+  //      if (Arrays.equals(t, array(i))) return true
+  //    }
+  //    false
+  //  }
 
   override def size = bound
 }

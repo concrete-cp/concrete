@@ -106,21 +106,21 @@ object Table extends App {
 
       val min = true
 
-      //      val sqlQuery = """
-      //            SELECT configId, solution, (%s)
-      //            FROM Executions
-      //            WHERE (version, problemId) = (%d, %d)
-      //        """.format(stat, version, problemId)
-
       val sqlQuery = """
-            SELECT configId, solution, totalTime
-            FROM Times
-            WHERE (version, problemId) = (%d, %d)
-        """.format(version, problemId)
+                  SELECT configId, solution, cast(stat('relation.checks', executionId) as real)
+                  FROM Executions
+                  WHERE (version, problemId) = (%d, %d)
+              """.format(version, problemId)
+
+      //      val sqlQuery = """
+      //            SELECT configId, solution, totalTime
+      //            FROM Times
+      //            WHERE (version, problemId) = (%d, %d)
+      //        """.format(version, problemId)
 
       //println(sqlQuery)
       val results = queryEach(connection, sqlQuery) {
-        rs => rs.getInt("configId") -> (rs.getString("solution"), rs.getDouble("totalTime"))
+        rs => rs.getInt(1) -> (rs.getString(2), rs.getDouble(3))
       } toMap
 
       for (
@@ -169,7 +169,7 @@ object Table extends App {
                 if (result == null) { "null" }
                 else if (result.contains("OutOfMemoryError")) { "mem" }
                 else if (result.contains("InterruptedException")) { "exp" }
-                else result
+                else { result }
               }
             case None => "---"
           })
@@ -180,26 +180,46 @@ object Table extends App {
 
     println("\\midrule")
 
-    for ((k, t) <- totals.toList.sortBy(_._1)) {
-      println(k + " : " + configs.indices.map { i =>
-        t(i)
-      }.mkString(" & "))
-    }
+    //    for ((k, t) <- totals.toList.sortBy(_._1)) {
+    //      println(k + " : " + configs.indices.map { i =>
+    //        t(i)
+    //      }.mkString(" & "))
+    //    }
 
     for ((k, t) <- totals.toList.sortBy(_._1)) {
-      println(k + " : " + configs.indices.map { i =>
-        if (t(i).nonEmpty) {
-          val e = engineer(StatisticsManager.median(t(i)))
-          "%.1f%s".formatLocal(Locale.US, e._1, e._2.getOrElse(""))
-        } else { "N/A" }
-      }.mkString(" & "))
+
+      val medians = configs.indices.map {
+        i => StatisticsManager.median(t(i))
+      }
+
+      val best = medians.min
+
+      println(s"\\em $k & " + medians.map { median =>
+        if (median.isInfinity) {
+          "timeout"
+        } else {
+          val (v, m) = engineer(median)
+
+          (if (median < best * 1.1) "\\bf " else "") + (
+            m match {
+              case Some(m) => f"\\np[$m%s]{$v%.1f}"
+              case None => f"\\np{$v%.1f}"
+            })
+        }
+      }.mkString(" & ") + " \\\\")
     }
     println("\\midrule")
 
     for ((k, t) <- totals.toList.sortBy(_._1)) {
-      println(k + " : " + configs.indices.map { i =>
-        "%d".format(t(i).count(!_.isInfinity))
-      }.mkString(" & "))
+      val counts = configs.indices.map { i =>
+        t(i).count(!_.isInfinity)
+      }
+
+      val best = counts.max
+
+      println(s"\\em $k & " + counts.map {
+        i => if (i == best) s"\\bf $i" else s"$i"
+      }.mkString(" & ") + " \\\\")
     }
 
     //    println(d.zipWithIndex map { case (r, i) => configs(i) + " " + r.mkString(" ") } mkString ("\n"))

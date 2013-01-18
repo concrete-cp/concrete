@@ -4,25 +4,24 @@ import cspfj.StatisticsManager
 import cspom.CSPOM
 import cspfj.SolverResult
 
-
 class ConsoleWriter(params: String) extends ConcreteWriter {
 
-  println(params)
+  Console.println(params)
 
-  def solution(solution: SolverResult, problem: CSPOM) {
-    Console.println(outputFormat(solution, problem))
+  def solution(solution: SolverResult, concrete: Concrete) {
+    Console.println(outputFormat(solution, concrete))
   }
 
   def write(stats: StatisticsManager) {
     Console.println(stats)
   }
-  
+
   def error(e: Throwable) {
     e.printStackTrace(Console.out)
-//    Console.println(e)
-//    Console.println(e.getStackTrace().mkString("\n"))
+    //    Console.println(e)
+    //    Console.println(e.getStackTrace().mkString("\n"))
   }
-  
+
   def disconnect() {
     Console.println("End.")
   }

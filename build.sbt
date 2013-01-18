@@ -1,12 +1,16 @@
+import com.typesafe.sbt.SbtStartScript
+
 name := "cspfj"
 
 organization := "fr.univ-valenciennes.cspfj"
 
 version := "1.0.1-SNAPSHOT"
 
-scalaVersion := "2.9.2"
+scalaVersion := "2.10.0"
 
 resolvers += "CSP4J repository" at "http://cspfj.sourceforge.net/repository"
+
+resolvers += "sonatype-releases" at "http://oss.sonatype.org/content/repositories/releases/"
 
 libraryDependencies ++= Seq(
 	//"fr.univ-valenciennes.cspfj" %% "cspom" % "1.3-SNAPSHOT",
@@ -18,3 +22,5 @@ libraryDependencies ++= Seq(
 
 
 org.scalastyle.sbt.ScalastylePlugin.Settings
+
+seq(SbtStartScript.startScriptForClassesSettings: _*)

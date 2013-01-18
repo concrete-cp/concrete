@@ -9,19 +9,17 @@ import cspfj.UNSAT
 import cspom.CSPOM
 
 trait ConcreteWriter {
-  def solution(solution: SolverResult, problem: CSPOM)
+  def solution(solution: SolverResult, concrete: Concrete)
   def write(stats: StatisticsManager)
   def error(e: Throwable)
 
-  def outputFormat(solution: SolverResult, problem: CSPOM) =
+  def outputFormat(solution: SolverResult, concrete: Concrete) =
     solution match {
-      case SAT(solution) =>
-        problem.variables.filter(!_.auxiliary).map(v =>
-          solution.getOrElse(v.name, v.domain.values.head)).mkString(" ")
+      case SAT(solution) => concrete.output(solution)
       case UNSAT => "UNSAT"
       case UNKNOWNResult => "UNKNOWN"
       case RESTART => throw new IllegalStateException
     }
-  
+
   def disconnect()
 }
