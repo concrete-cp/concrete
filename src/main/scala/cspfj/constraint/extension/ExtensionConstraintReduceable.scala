@@ -77,7 +77,7 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
 
     //logger.fine("Filtered from " + oldSize + " to " + newTrie.size)
 
-    if ((newTrie eq null) || newTrie.size == 0) throw UNSATException.e
+    if ((newTrie eq null) || newTrie.size == 0) {throw UNSATException.e}
 
     assert(newTrie.size <= oldSize)
 
@@ -99,7 +99,7 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
 
     val c = filter(notFound)
 
-    val card = cardSize
+    val card = cardSize()
     assert(card < 0 || card >= trie.size, card + " < " + trie.size + "!")
     if (card == trie.size) {
       //logger.info("Entailing " + this)
@@ -114,12 +114,11 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
 
   def save = {
     //println(this + " <- " + trie.size)
-    trie.quickCopy
+    trie
   }
 
   def restore(d: Relation) {
-    if (trie ne d)
-      trie = d.quickCopy
+    trie = d
     //println(this + " -> " + trie.size)
   }
 

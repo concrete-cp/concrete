@@ -8,7 +8,7 @@ import java.security.MessageDigest
 import java.math.BigInteger
 import java.io.InputStream
 
-object XCSPConcrete extends Concrete {
+object XCSPConcrete extends Concrete with App {
 
   var cProblem: Option[CSPOM] = None
 
@@ -44,5 +44,7 @@ object XCSPConcrete extends Concrete {
       case s: Set[_] => Some(s.mkString(", "))
     }
   }
+
+  run(args)
 
 }

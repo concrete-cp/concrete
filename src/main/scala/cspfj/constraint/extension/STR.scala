@@ -3,8 +3,11 @@ package cspfj.constraint.extension
 import cspfj.util.BitVector
 import java.util.Arrays
 
-object STR {
-  def apply(data: Traversable[Array[Int]]): STR = new STR(data.toArray, data.size)
+object STR extends RelationGenerator {
+  def apply(data: Iterator[Array[Int]]): STR = {
+    val d = data.toArray
+    new STR(d, d.length)
+  }
 }
 
 class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
@@ -13,8 +16,6 @@ class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
   def this() = this(Array(), 0)
 
   def copy = new STR(array.clone, bound)
-
-  def quickCopy = new STR(array, bound)
 
   def +(t: Array[Int]) = new STR(t +: array, bound + 1)
 
@@ -26,7 +27,7 @@ class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
     var b = bound
     var i = 0
     while (i < b) {
-      if (modified.forall { p => f(p, array(i)(p)) }) {
+      if (modified.forall(p => f(p, array(i)(p)))) {
         i += 1
       } else {
         b -= 1
@@ -35,10 +36,8 @@ class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
         array(b) = tmp
       }
     }
-    bound = b
-    this
-    //    if (b == bound) this
-    //    else new STR(array, b)
+    if (b == bound) this
+    else new STR(array, b)
   }
 
   def fillFound(f: (Int, Int) => Boolean, arity: Int) = {
@@ -57,6 +56,8 @@ class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
     }
     pos
   }
+
+  override def toString = s"$bound of ${array.size} tuples"
 
   def nodes = if (array.isEmpty) 0 else bound * array(0).length
 

@@ -62,36 +62,37 @@ abstract class ConflictCount(
   private def getOtherSize(position: Int) = getOtherSizeR(position, arity - 1, 1)
 
   private def nbConflicts(): Array[Array[Long]] = {
-    val size = cardSize
+    val size = cardSize()
     if (size < 0) {
-      return null;
+      null;
+    } else {
+
+      val nbInitConflicts = scope map {
+        v => new Array[Long](v.dom.maxSize)
+      }
+
+      matrix match {
+        case tupleSet: TupleTrieSet =>
+          if (tupleSet.initialContent) {
+
+            for (tuple <- tupleSet; p <- tuple.indices) nbInitConflicts(p)(tuple(p)) += 1;
+
+          } else {
+
+            for (p <- nbInitConflicts.indices) Arrays.fill(nbInitConflicts(p), getOtherSize(p))
+
+            for (tuple <- tupleSet; p <- tuple.indices) nbInitConflicts(p)(tuple(p)) -= 1
+
+          }
+
+        case _ if (!matrix.isEmpty) =>
+          for (tuple <- tuples() if (!checkIndices(tuple)); p <- tuple.indices) {
+            nbInitConflicts(p)(tuple(p)) += 1;
+          }
+      }
+
+      nbInitConflicts
     }
-
-    val nbInitConflicts = scope map {
-      v => new Array[Long](v.dom.maxSize)
-    }
-
-    matrix match {
-      case tupleSet: TupleTrieSet =>
-        if (tupleSet.initialContent) {
-          
-          for (tuple <- tupleSet; p <- tuple.indices) nbInitConflicts(p)(tuple(p)) += 1;
-          
-        } else {
-          
-          for (p <- nbInitConflicts.indices) Arrays.fill(nbInitConflicts(p), getOtherSize(p))
-
-          for (tuple <- tupleSet; p <- tuple.indices) nbInitConflicts(p)(tuple(p)) -= 1
-          
-        }
-
-      case _ if (!matrix.isEmpty) =>
-        for (tuple <- tuples() if (!checkIndices(tuple)); p <- tuple.indices) {
-          nbInitConflicts(p)(tuple(p)) += 1;
-        }
-    }
-
-    nbInitConflicts
   }
 
   final def addConflict(tuple: Array[Int]) {

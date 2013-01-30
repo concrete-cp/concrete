@@ -18,6 +18,8 @@ trait Backtrackable[A] extends DelayedInit {
   def altering() {
     _altered = true
   }
+  
+  def getHistory = history
 
   def save: A
 

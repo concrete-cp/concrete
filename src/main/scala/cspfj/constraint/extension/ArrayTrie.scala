@@ -3,13 +3,13 @@ package cspfj.constraint.extension
 import scala.annotation.tailrec
 import cspfj.util.BitVector
 
-object ArrayTrie {
+object ArrayTrie extends RelationGenerator {
   val empty = new ArrayTrie(Array(), 0)
 
   val leaf = new ArrayTrie(Array(), 1)
 
-  def apply(tuples: Traversable[Array[Int]]) = tuples.foldLeft(empty)(_ + _)
-  def apply(tuples: Array[Int]*): ArrayTrie = apply(tuples)
+  def apply(tuples: Iterator[Array[Int]]) = tuples.foldLeft(empty)(_ + _)
+  def apply(tuples: Array[Int]*): ArrayTrie = apply(tuples.iterator)
 }
 
 final class ArrayTrie(val trie: Array[ArrayTrie], override val size: Int) extends Relation {

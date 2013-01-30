@@ -18,7 +18,7 @@ import cspfj.constraint.extension.Matrix2D
 import cspfj.constraint.extension.STR
 import cspfj.constraint.extension.TupleTrieSet
 import cspom.extension.HashTrie
-import cspfj.constraint.extension.MDD2
+//import cspfj.constraint.extension.MDD2
 
 object ExtensionGenerator {
 
@@ -58,26 +58,21 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
 
   private def gen(relation: cspom.extension.Relation, init: Boolean, domains: Seq[Domain]) = {
     if (relation.arity == 2) {
-      new Matrix2D(domains(0).size, domains(1).size, init).setAll(value2Index(domains, relation), !init)
+      new Matrix2D(domains(0).size, domains(1).size, init).setAll(value2Index(domains, relation).toTraversable, !init)
     } else if (init) {
       new TupleTrieSet(MDD(value2Index(domains, relation)), init)
     } else {
       new TupleTrieSet(ExtensionGenerator.ds match {
         case "MDD" => MDD(value2Index(domains, relation))
-        case "MDD2" => MDD2(value2Index(domains, relation))
+        //case "MDD2" => MDD2(value2Index(domains, relation))
         case "STR" => new STR() ++ value2Index(domains, relation).toIterable
         case "Trie" => ArrayTrie(value2Index(domains, relation))
       }, init)
     }
   }
 
-  private def value2Index(domains: Seq[Domain], relation: cspom.extension.Relation) = new Traversable[Array[Int]] {
-    def foreach[A](f: Array[Int] => A) {
-      relation.foreach {
-        t => f((t, domains).zipped.map { (v, d) => d.index(v) })
-      }
-    }
-  }
+  private def value2Index(domains: Seq[Domain], relation: cspom.extension.Relation): Iterator[Array[Int]] =
+    relation.iterator.map { t => (t, domains).zipped.map { (v, d) => d.index(v) } }
 
   /**
    * Used to cache data structure conversion

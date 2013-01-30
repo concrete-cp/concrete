@@ -182,8 +182,9 @@ final class IntDomain(
 
   def filter(f: Int => Boolean) = {
     val is = intSet.filter(f)
-    if (is eq intSet) false
-    else {
+    if (is eq intSet) {
+      false
+    } else {
       intSet = is
       altering()
       if (intSet.isEmpty) throw Domain.empty

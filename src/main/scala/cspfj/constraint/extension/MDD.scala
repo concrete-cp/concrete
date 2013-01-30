@@ -8,32 +8,37 @@ import cspfj.Statistic
 import scala.collection.mutable.WeakHashMap
 import scala.util.hashing.MurmurHash3
 
-object MDD {
-  def apply(data: Array[Int]*): MDD = apply(data)
+trait RelationGenerator {
+  def apply(data: Iterator[Array[Int]]): Relation
+}
 
-  def apply(data: Traversable[Array[Int]]): MDD = {
-    val mdds = new HashMap[Seq[MDDNode], MDDNode]()
-    var it = 1000
-    val m = new MDD(data.foldLeft(empty) { (acc, tuple) =>
-      if (mdds.size >= it) {
-        mdds.clear()
-        timestamp += 1
-        acc.renew(timestamp, mdds)
-        it += 1000
-      }
-      acc + (mdds, tuple)
-    })
-    mdds.clear()
-    m
-    //println(mdds.map(_._2.hashCode).toSeq.sorted)
+object MDD extends RelationGenerator {
+  def apply(data: Array[Int]*): MDD = apply(data.iterator)
 
-  }
+  //  def apply(data: Iterator[Array[Int]]): MDD = {
+  //    val mdds = new HashMap[Seq[MDDNode], MDDNode]()
+  //    var it = 1000
+  //    val m = new MDD(data.foldLeft(empty) { (acc, tuple) =>
+  //      if (mdds.size >= it) {
+  //        mdds.clear()
+  //        timestamp += 1
+  //        acc.renew(timestamp, mdds)
+  //        it += 1000
+  //      }
+  //      acc + (mdds, tuple)
+  //    })
+  //    mdds.clear()
+  //    m
+  //    //println(mdds.map(_._2.hashCode).toSeq.sorted)
+  //
+  //  }
 
-  def weak(data: Traversable[Array[Int]]): MDD = {
-    val mdds = new WeakHashMap[Seq[MDDNode], MDDNode]()
-    val m = new MDD(data.foldLeft(empty)(_ + (mdds, _)))
-    //println(mdds.map(_._2.hashCode).toSeq.sorted)
-    m
+  def apply(data: Iterator[Array[Int]]): MDD = {
+    val root = data.foldLeft(empty) {
+      (acc, tuple) => acc.addTrie(tuple)
+    }
+    val reduced = root.reduce(new HashMap[Seq[MDDNode], MDDNode]())
+    new MDD(reduced)
   }
 
   val leaf = new MDDNode(Array(), 1)
@@ -62,10 +67,7 @@ final class MDD(val root: MDDNode) extends Relation {
 
   def filterTrie(f: (Int, Int) => Boolean, modified: List[Int]) = {
     MDD.timestamp += 1
-    val newRoot = root.filterTrie(MDD.timestamp, f, modified, 0)
-    if (newRoot eq null) null
-    else new MDD(newRoot)
-
+    new MDD(root.filterTrie(MDD.timestamp, f, modified, 0))
   }
 
   def contains(t: Array[Int]) = root.contains(t)
@@ -94,69 +96,94 @@ final class MDD(val root: MDDNode) extends Relation {
   override def toString = nodes + " nodes representing " + size + " tuples"
 
   def copy = this
-  def quickCopy = this
 }
 
 final class MDDNode(val trie: Array[MDDNode], val size: Int) {
 
   var timestamp = 0
 
-  def depth: Int = 1 + values.map(_.depth).max
-
-  private def values = trie.filter(_ ne null)
+  def depth: Int = 1 + trie.map(_.depth).max
 
   def isEmpty = size == 0
 
-  def +(mdds: collection.mutable.Map[Seq[MDDNode], MDDNode], t: Array[Int]): MDDNode =
-    if (contains(t)) this else this + (mdds, t, 0)
+  //  def +(mdds: collection.mutable.Map[Seq[MDDNode], MDDNode], t: Array[Int]): MDDNode =
+  //    if (contains(t)) this else this + (mdds, t, 0)
+  //
+  //  private def +(mdds: collection.mutable.Map[Seq[MDDNode], MDDNode], tuple: Array[Int], i: Int): MDDNode =
+  //    if (i >= tuple.length) { MDD.leaf }
+  //    else {
+  //      val v = tuple(i)
+  //      val newArray = trie.padTo(v + 1, null)
+  //      //ensureCapacity(v + 1)
+  //
+  //      val oldTrie = newArray(v)
+  //
+  //      if (oldTrie eq null) {
+  //        newArray(v) = MDD.empty + (mdds, tuple, i + 1)
+  //      } else {
+  //        newArray(v) = oldTrie + (mdds, tuple, i + 1)
+  //      }
+  //      mdds.getOrElseUpdate(newArray, new MDDNode(newArray, size + 1))
+  //    }
 
-  private def +(mdds: collection.mutable.Map[Seq[MDDNode], MDDNode], tuple: Array[Int], i: Int): MDDNode =
-    if (i >= tuple.length) { MDD.leaf }
-    else {
+  def addTrie(t: Array[Int]): MDDNode = if (contains(t)) this else this.addTrie(t, 0)
+
+  private def addTrie(tuple: Array[Int], i: Int): MDDNode = {
+    if (i >= tuple.length) {
+      MDD.leaf
+    } else {
       val v = tuple(i)
-      val newArray = trie.padTo(v + 1, null)
-      //ensureCapacity(v + 1)
-
-      val oldTrie = newArray(v)
-
-      if (oldTrie eq null) {
-        newArray(v) = MDD.empty + (mdds, tuple, i + 1)
-      } else {
-        newArray(v) = oldTrie + (mdds, tuple, i + 1)
-      }
-      mdds.getOrElseUpdate(newArray, new MDDNode(newArray, size + 1))
+      val newArray = trie.padTo(v + 1, MDD.empty)
+      newArray(v) = newArray(v).addTrie(tuple, i + 1)
+      new MDDNode(newArray, size + 1)
     }
+  }
+
+  def reduce(mdds: collection.mutable.Map[Seq[MDDNode], MDDNode]): MDDNode = {
+    if ((this eq MDD.leaf) || (this eq MDD.empty)) {
+      this
+      //    } else if (mdds.contains(trie)) {
+      //      this
+//    } else if (trie.forall(m => (m eq MDD.empty)) || trie.forall(m => (m eq MDD.leaf))) {
+//      this
+    } else {
+      var b = trie.map(_.reduce(mdds))
+
+      if (b.forall(_ eq MDD.empty)) {
+        MDD.empty
+      } else {
+        mdds.getOrElseUpdate(b, new MDDNode(b, size))
+      }
+    }
+  }
 
   def contains(tuple: Array[Int]): Boolean = contains(tuple, 0)
 
   @tailrec
   private def contains(tuple: Array[Int], i: Int): Boolean = {
-    if (i >= tuple.length) true
-    else if (tuple(i) >= trie.length) false
-    else trie(tuple(i)) match {
-      case null => false
-      case t => t.contains(tuple, i + 1)
-    }
+    i >= tuple.length || (tuple(i) < trie.length && trie(tuple(i)).contains(tuple, i + 1))
   }
 
-  def renew(ts: Int, mdds: collection.mutable.Map[Seq[MDDNode], MDDNode]) {
-    if (timestamp != ts) {
-      timestamp = ts
-      mdds.put(trie, this)
-      trie.foreach(t => if (t ne null) t.renew(ts, mdds))
-    }
-  }
+  //  def renew(ts: Int, mdds: collection.mutable.Map[Seq[MDDNode], MDDNode]) {
+  //    if (timestamp != ts) {
+  //      timestamp = ts
+  //      mdds.put(trie, this)
+  //      trie.foreach(t => if (t ne null) t.renew(ts, mdds))
+  //    }
+  //  }
 
   //var latest: Option[List[Int]] = None
 
   def find(ts: Int, f: (Int, Int) => Boolean, depth: Int): Option[List[Int]] = {
-    if (this eq MDD.leaf) Some(Nil)
-    else if (timestamp == ts) None
-    else {
+    if (this eq MDD.leaf) {
+      Some(Nil)
+    } else if (timestamp == ts) {
+      None
+    } else {
       timestamp = ts
       var i = trie.length - 1
       while (i >= 0) {
-        if ((trie(i) ne null) && f(depth, i)) {
+        if (f(depth, i)) {
           val found = trie(i).find(ts, f, depth + 1)
           if (found.isDefined) {
             return Some(i :: found.get)
@@ -181,19 +208,7 @@ final class MDDNode(val trie: Array[MDDNode], val size: Int) {
     case _ => false
   }
 
-  override val hashCode: Int = {
-    MurmurHash3.arrayHash(trie)
-    //    val h = new util.MurmurHash[Int]("MDD".hashCode)
-    //    var i = trie.length - 1
-    //    while (i >= 0) {
-    //      val e = trie(i)
-    //      if (e ne null) {
-    //        h(e.hashCode)
-    //      }
-    //      i -= 1
-    //    }
-    //    h.hash;
-  }
+  override val hashCode: Int = MurmurHash3.arrayHash(trie)
 
   override def toString = "MDD representing " + size + " tuples"
   //
@@ -213,7 +228,7 @@ final class MDDNode(val trie: Array[MDDNode], val size: Int) {
       timestamp = ts
       var i = trie.length - 1
       while (i >= 0 && depth <= l.max) {
-        if (trie(i) ne null) {
+        if (trie(i) ne MDD.empty) {
           if (f(depth, i)) l.clear(depth)
           trie(i).fillFound(ts, f, depth + 1, l)
         }
@@ -229,26 +244,20 @@ final class MDDNode(val trie: Array[MDDNode], val size: Int) {
     else if (ts == timestamp) filteredResult
     else {
       timestamp = ts
-      var newTrie: Array[MDDNode] = null
+      var newTrie: Array[MDDNode] = new Array[MDDNode](trie.length)
       var i = trie.length - 1
       var newSize = 0
-
-      assert(trie(i) ne null)
 
       if (modified.head == depth) {
         // Some change at this level
         while (i >= 0) {
           val currentTrie = trie(i)
-          if ((currentTrie ne null) && f(depth, i)) {
-
+          if ((currentTrie eq MDD.empty) || !f(depth, i)) {
+            newTrie(i) = MDD.empty
+          } else {
             val newSubTrie = currentTrie.filterTrie(ts, f, modified.tail, depth + 1)
-            if (newSubTrie ne null) {
-              if (newTrie eq null) {
-                newTrie = new Array[MDDNode](i + 1)
-              }
-              newTrie(i) = newSubTrie
-              newSize += newSubTrie.size
-            }
+            newTrie(i) = newSubTrie
+            newSize += newSubTrie.size
           }
           i -= 1
         }
@@ -256,40 +265,42 @@ final class MDDNode(val trie: Array[MDDNode], val size: Int) {
         // No change at this level (=> no need to call f())
         while (i >= 0) {
           val currentTrie = trie(i)
-          if (currentTrie ne null) {
+          if (currentTrie eq MDD.empty) {
+            newTrie(i) = MDD.empty
+          } else {
             val newSubTrie = currentTrie.filterTrie(ts, f, modified, depth + 1)
-            if (newSubTrie ne null) {
-              if (newTrie eq null) {
-                newTrie = new Array[MDDNode](i + 1)
-              }
-              newTrie(i) = newSubTrie
-              newSize += newSubTrie.size
-            }
+            newTrie(i) = newSubTrie
+            newSize += newSubTrie.size
           }
           i -= 1
         }
       }
 
-      filteredResult = if (newSize == 0) null
-      else if (size == newSize) this
-      else new MDDNode(newTrie, newSize)
+      filteredResult = if (newSize == 0) {
+        MDD.empty
+      } else if (size == newSize) {
+        this
+      } else {
+        new MDDNode(newTrie, newSize)
+      }
 
       filteredResult
 
     }
 
   def listiterator(mdd: MDD): Iterator[List[Int]] =
-    if (this eq MDD.leaf) Iterator(List())
-    else trie.iterator.zipWithIndex flatMap {
-      case (t, i) if (t ne null) => t.listiterator(mdd) map (i :: _)
-      case _ => Nil
+    if (this eq MDD.leaf) {
+      Iterator(List())
+    } else trie.iterator.zipWithIndex flatMap {
+      case (t, i) => t.listiterator(mdd) map (i :: _)
     }
 
   def nodes(ts: Int): Int = {
-    if (ts == timestamp) 0
-    else {
+    if (ts == timestamp) {
+      0
+    } else {
       timestamp = ts
-      1 + values.map(_.nodes(ts)).sum
+      1 + trie.map(_.nodes(ts)).sum
     }
   }
 

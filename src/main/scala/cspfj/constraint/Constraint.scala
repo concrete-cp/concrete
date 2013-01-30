@@ -197,31 +197,30 @@ abstract class Constraint(val scope: Array[Variable])
 
   @tailrec
   final def sizes(a: Array[Int] = new Array[Int](arity), i: Int = arity - 1): Array[Int] =
-    if (i < 0) a
-    else {
+    if (i < 0) {
+      a
+    } else {
       a(i) = scope(i).dom.size
       sizes(a, i - 1)
     }
 
   def isBound = scope.forall(_.dom.bound)
 
-  final def cardSize: Int = {
-    var size = 1
-    for (v <- scope) {
-      if (size > Int.MaxValue / v.dom.size) {
-        return -1;
+  @tailrec
+  final def cardSize(p: Int = arity - 1, size: Int = 1): Int =
+    if (p < 0) {
+      size
+    } else {
+      val s = scope(p).dom.size
+      if (size > Int.MaxValue / s) {
+        -1
+      } else {
+        cardSize(p - 1, size * s)
       }
-      size *= v.dom.size
     }
-    size
-  }
 
-  final def hasChanged[A](l: Traversable[A], f: A => Boolean) = {
-    var ch = false
-    for (e <- l) {
-      ch |= f(e)
-    }
-    ch
-  }
+  final def bigCardSize = scope.foldLeft(BigInt(1))(_ * _.dom.size)
+
+  final def hasChanged[A](l: Traversable[A], f: A => Boolean) = l.foldLeft(false)(_ | f(_))
 
 }
