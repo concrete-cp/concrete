@@ -8,11 +8,11 @@ import org.junit.Test
 
 final class ArrayTrieTest {
 
-  private var ts: ArrayTrie = null
+  private var ts: Trie = null
 
   @Before
   def setUp() {
-    ts = ArrayTrie.empty;
+    ts = Trie0;
     ts += Array(0, 0)
     ts += Array(0, 1)
     ts += Array(1, 0)
@@ -46,21 +46,21 @@ final class ArrayTrieTest {
   @Test
   def testSize() {
     assertEquals(3, ts.size);
-//    ts -= (0, 0);
-//    assertEquals(2, ts.size);
-//    ts += (1, 1);
-//    assertEquals(3, ts.size);
+    //    ts -= (0, 0);
+    //    assertEquals(2, ts.size);
+    //    ts += (1, 1);
+    //    assertEquals(3, ts.size);
   }
 
   @Test
   def testTrie() {
-    val t = ArrayTrie.empty + Array(1, 2, 3) + Array(1, 3, 4) + Array(1, 2, 5) + Array(2, 3, 5)
+    val t = Trie0 + Array(1, 2, 3) + Array(1, 3, 4) + Array(1, 2, 5) + Array(2, 3, 5)
     assertEquals(4, t.size)
 
     assertTrue(t.contains(Array(1, 3, 4)))
     assertFalse(t.contains(Array(1, 2, 4)))
 
-    var s = ArrayTrie.empty + Array(1, 2, 5) + Array(1, 3, 4) + Array(1, 2, 3)
+    var s = Trie0 + Array(1, 2, 5) + Array(1, 3, 4) + Array(1, 2, 3)
 
     assertFalse(t == s)
 
@@ -68,7 +68,7 @@ final class ArrayTrieTest {
 
     assertEquals(t, s)
 
-    var u = ArrayTrie(
+    var u = Trie(
       Array(1, 2, 3),
       Array(1, 3, 4),
       Array(1, 2, 5),

@@ -21,13 +21,13 @@ final class MDDTest {
     assertFalse(ts.contains(Array(1, 1)));
   }
 
-//  @Test
-//  def testRemoveTuple() {
-//    ts -= Array(0, 1);
-//    assertFalse(ts.contains(Array(0, 1)));
-//    ts -= Array(1, 1);
-//    assertEquals(2, ts.size)
-//  }
+  //  @Test
+  //  def testRemoveTuple() {
+  //    ts -= Array(0, 1);
+  //    assertFalse(ts.contains(Array(0, 1)));
+  //    ts -= Array(1, 1);
+  //    assertEquals(2, ts.size)
+  //  }
 
   @Test
   def testIterator() {
@@ -51,13 +51,13 @@ final class MDDTest {
 
   @Test
   def testTrie() {
-    val t = ArrayTrie.empty + Array(1, 2, 3) + Array(1, 3, 4) + Array(1, 2, 5) + Array(2, 3, 5)
+    val t = Trie0 + Array(1, 2, 3) + Array(1, 3, 4) + Array(1, 2, 5) + Array(2, 3, 5)
     assertEquals(4, t.size)
 
     assertTrue(t.contains(Array(1, 3, 4)))
     assertFalse(t.contains(Array(1, 2, 4)))
 
-    var s = ArrayTrie.empty + Array(1, 2, 5) + Array(1, 3, 4) + Array(1, 2, 3)
+    var s = Trie0 + Array(1, 2, 5) + Array(1, 3, 4) + Array(1, 2, 3)
 
     assertFalse(t == s)
 
@@ -65,7 +65,7 @@ final class MDDTest {
 
     assertEquals(t, s)
 
-    var u = ArrayTrie(
+    var u = Trie(
       Array(1, 2, 3),
       Array(1, 3, 4),
       Array(1, 2, 5),

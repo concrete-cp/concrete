@@ -23,7 +23,7 @@ final class ExtensionConstraintArrayTrieTest {
       new Variable("V0", IntDomain(0, 1)),
       new Variable("V1", IntDomain(0, 1, 2)))
 
-    val mmd = new ExtensionConstraintReduceable(scope, ArrayTrie(ta.toSeq: _*));
+    val mmd = new ExtensionConstraintReduceable(scope, Trie(ta.toSeq: _*));
     val content = mmd.trie
     //println(content map (_.toSeq) mkString (", "))
 
