@@ -20,19 +20,19 @@ object Trie extends RelationGenerator {
   }
 
   def newNode(t: Array[Trie], size: Int): Trie = {
-    var found1I, found2I, found3I: Int = 0
+    var found1I, found2I, found3I: Int = -1
     var found1N, found2N, found3N: Trie = null
 
     var i = t.length - 1
     while (i >= 0) {
       if (t(i) ne Trie0) {
-        if (found1N eq null) {
+        if (found1I < 0) {
           found1I = i
           found1N = t(i)
-        } else if (found2N eq null) {
+        } else if (found2I < 0) {
           found2I = i
           found2N = t(i)
-        } else if (found3N eq null) {
+        } else if (found3I < 0) {
           found3I = i
           found3N = t(i)
         } else {
@@ -42,10 +42,10 @@ object Trie extends RelationGenerator {
       i -= 1
     }
 
-    assert(found1N ne null)
-    if (found2N eq null) {
+    assert(found1I >= 0)
+    if (found2I < 0) {
       new Trie1(found1N, found1I, size)
-    } else if (found3N eq null) {
+    } else if (found3I < 0) {
       new Trie2(found2N, found2I, found1N, found1I, size)
     } else {
       new Trie3(found3N, found3I, found2N, found2I, found3N, found3I, size)
@@ -53,51 +53,6 @@ object Trie extends RelationGenerator {
   }
 
 }
-
-//final class Trie(val root: Trie) extends Relation {
-//
-//  type Self2 = Trie
-//
-//  def this() = this(Trie0)
-//
-//  override def size = root.size
-//
-//  def +(t: Array[Int]) = {
-//    throw new UnsupportedOperationException
-//  }
-//
-//  def -(t: Array[Int]) = {
-//    throw new UnsupportedOperationException
-//  }
-//
-//  def filterTrie(f: (Int, Int) => Boolean, modified: List[Int]) = {
-//    new Trie(root.filterTrie(f, modified, 0))
-//  }
-//
-//  def contains(t: Array[Int]) = root.contains(t)
-//
-//  def iterator = root.listIterator.map(_.toArray)
-//
-//  def tupleString = iterator map { _.mkString(" ") } mkString "|"
-//
-//  def fillFound(f: (Int, Int) => Boolean, arity: Int) = {
-//    val l = new ListWithMax(arity)
-//    root.fillFound(f, 0, l)
-//    l
-//  }
-//
-//  def nodes = {
-//    root.nodes()
-//  }
-//
-//  def find(f: (Int, Int) => Boolean) = {
-//    root.find(f, 0) map (_.toArray)
-//  }
-//
-//  override def toString = nodes + " nodes representing " + size + " tuples"
-//
-//  def copy = this
-//}
 
 trait Trie extends Relation {
   type Self2 = Trie

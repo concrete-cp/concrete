@@ -21,19 +21,19 @@ object MDD extends RelationGenerator {
   var timestamp = 0
 
   def newNode(t: Array[MDD], size: Int): MDD = {
-    var found1I, found2I, found3I: Int = 0
+    var found1I, found2I, found3I: Int = -1
     var found1N, found2N, found3N: MDD = null
 
     var i = t.length - 1
     while (i >= 0) {
       if (t(i) ne MDD0) {
-        if (found1N eq null) {
+        if (found1I < 0) {
           found1I = i
           found1N = t(i)
-        } else if (found2N eq null) {
+        } else if (found2I < 0) {
           found2I = i
           found2N = t(i)
-        } else if (found3N eq null) {
+        } else if (found3I < 0) {
           found3I = i
           found3N = t(i)
         } else {
@@ -43,10 +43,10 @@ object MDD extends RelationGenerator {
       i -= 1
     }
 
-    assert(found1N ne null)
-    if (found2N eq null) {
+    assert(found1I >= 0)
+    if (found2I < 0) {
       new MDD1(found1N, found1I, size)
-    } else if (found3N eq null) {
+    } else if (found3I < 0) {
       new MDD2(found2N, found2I, found1N, found1I, size)
     } else {
       new MDD3(found3N, found3I, found2N, found2I, found3N, found3I, size)
