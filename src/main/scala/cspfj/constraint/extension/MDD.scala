@@ -217,20 +217,19 @@ final class MDD1(private val child: MDD, private val index: Int, override val si
     } else {
       timestamp = ts
 
-      var nC: MDD = null
-
       //l nC =
-      if (modified.head == depth) {
-        // Some change at this level
-        if (f(depth, index)) {
-          nC = child.filterTrie(ts, f, modified.tail, depth + 1)
+      val nC =
+        if (modified.head == depth) {
+          // Some change at this level
+          if (f(depth, index)) {
+            child.filterTrie(ts, f, modified.tail, depth + 1)
+          } else {
+            MDD0
+          }
         } else {
-          nC = MDD0
+          // No change at this level (=> no need to call f())
+          child.filterTrie(ts, f, modified, depth + 1)
         }
-      } else {
-        // No change at this level (=> no need to call f())
-        nC = child.filterTrie(ts, f, modified, depth + 1)
-      }
 
       if (nC eq MDD0) {
         filteredResult = MDD0

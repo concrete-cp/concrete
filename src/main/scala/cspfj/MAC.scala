@@ -81,16 +81,14 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
   @tailrec
   def mac(modifiedVariable: Option[Variable], stack: List[Pair]): (SolverResult, List[Pair]) = {
     if (Thread.interrupted()) throw new InterruptedException()
-    if (!modifiedVariable.isDefined || (
+    if (modifiedVariable.isEmpty || (
       modifiedVariable.get.dom.size > 0 && filter.reduceAfter(modifiedVariable.get))) {
 
       heuristic.selectPair(problem) match {
         case None => (SAT(extractSolution), stack)
         case Some(pair) =>
 
-          if (logInfo) logger.info(problem.currentLevel + " : " + pair.variable
-            + " <- " + pair.value + "("
-            + nbBacktracks + "/" + maxBacktracks + ")");
+          info(s"${problem.currentLevel}: ${pair.variable} <- ${pair.value} ($nbBacktracks / $maxBacktracks)");
 
           problem.push()
 
@@ -109,7 +107,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
       problem.pop()
       nbBacktracks += 1
 
-      if (logInfo) logger.info(problem.currentLevel + " : " + stack.head + " removed")
+      info(s"${problem.currentLevel}: ${stack.head} removed")
       stack.head.remove()
       mac(Some(stack.head.variable), stack.tail)
     }

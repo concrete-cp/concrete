@@ -45,9 +45,9 @@ case object UNKNOWNBoolean extends Status {
     case _ => this
   }
   def lowest(value: Int) =
-    if (value > 1) -1
-    else if (value <= 0) 0
-    else 1
+    if (value > 1) { -1 }
+    else if (value <= 0) { 0 }
+    else { 1 }
 
   val lastAbsent = -1
   def prevAbsent(value: Int) = -1

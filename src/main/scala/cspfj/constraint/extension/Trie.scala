@@ -86,7 +86,6 @@ trait Trie extends Relation {
 }
 
 final object TrieLeaf extends Trie {
-
   override def size = 1
   def reduce(mdds: collection.mutable.Map[Seq[Trie], Trie]) = this
   def contains(tuple: Array[Int], i: Int) = true

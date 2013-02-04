@@ -90,7 +90,6 @@ abstract class Solver(val problem: Problem) extends Loggable {
   private def bestSolution(v: Variable, best: SolverResult): SolverResult = nextSolution() match {
     case SAT(sol) =>
       logger.info("New bound " + sol(v.name))
-      //if (problem.currentLevel > 0) 
       reset()
       v.dom.removeTo(v.dom.index(sol(v.name)))
       bestSolution(v, SAT(sol))
@@ -129,7 +128,7 @@ abstract class Solver(val problem: Problem) extends Loggable {
 
   }
 
-  def XMLConfig = ParameterManager.toXML
+  def xmlConfig = ParameterManager.toXML
 
 }
 

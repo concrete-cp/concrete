@@ -92,7 +92,7 @@ final class IntDomain(
   def index(value: Int) = indexer.index(value)
 
   private def closestLeq(v: Int, lb: Int, ub: Int): Int = {
-    if (value(ub) <= v) ub
+    if (value(ub) <= v) { ub }
     else {
       val test = (ub + lb) / 2
       if (value(test) > v) {
@@ -106,28 +106,40 @@ final class IntDomain(
   def closestLeq(value: Int): Int = {
     val i = index(value)
     if (i < 0) {
-      if (value < firstValue) -1
-      else closestLeq(value, first, last)
-    } else intSet.closestLeq(i)
+      if (value < firstValue) {
+        -1
+      } else {
+        closestLeq(value, first, last)
+      }
+    } else {
+      intSet.closestLeq(i)
+    }
   }
 
   private def closestGeq(v: Int, lb: Int, ub: Int): Int = {
-    if (value(lb) >= v) lb
-    else {
+    if (value(lb) >= v) {
+      lb
+    } else {
       val test = (ub + lb) / 2;
-      if (value(test) >= v)
+      if (value(test) >= v) {
         closestGeq(v, lb, test - 1)
-      else
+      } else {
         closestGeq(v, test + 1, ub)
+      }
     }
   }
 
   def closestGeq(value: Int): Int = {
     val i = index(value)
     if (i < 0) {
-      if (value > lastValue) -1
-      else closestGeq(value, first, last)
-    } else intSet.closestGeq(i)
+      if (value > lastValue) {
+        -1
+      } else {
+        closestGeq(value, first, last)
+      }
+    } else {
+      intSet.closestGeq(i)
+    }
   }
 
   /**
@@ -135,12 +147,7 @@ final class IntDomain(
    *            index to test
    * @return true iff index is present
    */
-  def present(index: Int) = {
-    //    val c = IntDomain.s(intSet.getClass) + 1
-    //    IntDomain.s += intSet.getClass -> c
-    //    if (c % 10000 == 0) println(IntDomain.s)
-    _intSet.present(index);
-  }
+  def present(index: Int) = _intSet.present(index);
 
   def setSingle(index: Int) {
     assert(present(index))
@@ -160,8 +167,9 @@ final class IntDomain(
 
   def removeFrom(lb: Int) = {
     val s = intSet.removeFrom(lb)
-    if (s eq intSet) false
-    else {
+    if (s eq intSet) {
+      false
+    } else {
       altering()
       intSet = s
       if (s.isEmpty) throw Domain.empty
@@ -171,8 +179,9 @@ final class IntDomain(
 
   def removeTo(ub: Int) = {
     val s = intSet.removeTo(ub)
-    if (s eq intSet) false
-    else {
+    if (s eq intSet) {
+      false
+    } else {
       altering()
       intSet = s
       if (s.isEmpty) throw Domain.empty
