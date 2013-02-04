@@ -85,9 +85,7 @@ abstract class Constraint(val scope: Array[Variable])
   final def controlTuplePresence(tuple: Array[Int], i: Int = arity - 1): Boolean = {
     /** Need high optimization */
 
-    if (i < 0) true
-    else
-      scope(i).dom.present(tuple(i)) && controlTuplePresence(tuple, i - 1)
+    i < 0 || (scope(i).dom.present(tuple(i)) && controlTuplePresence(tuple, i - 1))
 
   }
 

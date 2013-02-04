@@ -23,7 +23,9 @@ trait Shaver extends VariablePerVariable {
           super.revise()
         }
         true
-      } else super.revise()
+      } else {
+        super.revise()
+      }
     }
   }
 

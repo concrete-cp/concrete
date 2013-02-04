@@ -8,7 +8,7 @@ import cspfj.Statistic
 
 object TupleEnumerator {
   @Statistic
-  var checks = 0l
+  var checks = 0L
 
   def clearStats() { checks = 0 }
 }
@@ -19,7 +19,7 @@ trait TupleEnumerator extends Constraint {
 
   @tailrec
   private def nextTuple(t: Array[Int], p: Int): Array[Int] =
-    if (p < 0) null
+    if (p < 0) { null }
     else {
       val index = scope(p).dom.next(t(p))
       if (index < 0) {
@@ -45,8 +45,11 @@ trait TupleEnumerator extends Constraint {
     val t = new Array[Int](arity)
     var i = arity - 1
     while (i >= 0) {
-      if (pos == i) t(i) = fix
-      else t(i) = scope(i).dom.first
+      if (pos == i) {
+        t(i) = fix
+      } else {
+        t(i) = scope(i).dom.first
+      }
       i -= 1
     }
     t
@@ -54,9 +57,11 @@ trait TupleEnumerator extends Constraint {
 
   @tailrec
   private def nextTuple(t: Array[Int], skip: Int, p: Int): Array[Int] =
-    if (p < 0) null
-    else if (p == skip) nextTuple(t, skip, p - 1)
-    else {
+    if (p < 0) {
+      null
+    } else if (p == skip) {
+      nextTuple(t, skip, p - 1)
+    } else {
       val index = scope(p).dom.next(t(p))
       if (index < 0) {
         t(p) = scope(p).dom.first
@@ -111,9 +116,11 @@ trait TupleEnumerator extends Constraint {
 
   @tailrec
   private def nextTuple(t: Array[Int], base: Array[Int], p: Int): Array[Int] =
-    if (p < 0) null
-    else if (base(p) >= 0) nextTuple(t, base, p - 1)
-    else {
+    if (p < 0) {
+      null
+    } else if (base(p) >= 0) {
+      nextTuple(t, base, p - 1)
+    } else {
       val index = t(p) + 1
       if (index >= scope(p).dom.maxSize) {
         t(p) = 0
