@@ -106,17 +106,23 @@ object Table extends App {
 
       val min = true
 
-      val sqlQuery = """
-                  SELECT configId, solution, cast(stat('relation.checks', executionId) as real)
-                  FROM Executions
-                  WHERE (version, problemId) = (%d, %d)
-              """.format(version, problemId)
+      //            val sqlQuery = """
+      //                        SELECT configId, solution, cast(stat('relation.checks', executionId) as real)
+      //                        FROM Executions
+      //                        WHERE (version, problemId) = (%d, %d)
+      //                    """.format(version, problemId)
 
       //      val sqlQuery = """
-      //            SELECT configId, solution, totalTime
-      //            FROM Times
-      //            WHERE (version, problemId) = (%d, %d)
-      //        """.format(version, problemId)
+      //                        SELECT configId, solution, cast(stat('solver.usedMem', executionId) as real)
+      //                        FROM Executions
+      //                        WHERE (version, problemId) = (%d, %d)
+      //                    """.format(version, problemId)
+
+      val sqlQuery = """
+                        SELECT configId, solution, totalTime
+                        FROM Times
+                        WHERE (version, problemId) = (%d, %d)
+                    """.format(version, problemId)
 
       //println(sqlQuery)
       val results = queryEach(connection, sqlQuery) {
@@ -189,7 +195,11 @@ object Table extends App {
     for ((k, t) <- totals.toList.sortBy(_._1)) {
 
       val medians = configs.indices.map {
-        i => StatisticsManager.median(t(i))
+        i =>
+          try StatisticsManager.median(t(i))
+          catch {
+            case e: NoSuchElementException => Double.NaN
+          }
       }
 
       val best = medians.min

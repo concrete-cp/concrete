@@ -138,6 +138,14 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
     }
 
     searchCpu += macTime
+    System.gc()
+    System.gc()
+    System.gc()
+    System.gc()
+    System.gc()
+
+    usedMem = math.max(usedMem, Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
+
     logger.info("Took " + macTime + "s ("
       + ((nbBacktracks - nbBT) / macTime)
       + " bps)");
@@ -191,6 +199,9 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
 
   @Statistic
   var searchCpu = 0.0
+
+  @Statistic
+  var usedMem = 0L
 
   override def toString =
     "maintain generalized arc consistency - iterative";

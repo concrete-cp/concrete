@@ -105,8 +105,13 @@ object StatisticsManager {
     }
   }
 
-  def median[A](arr: Seq[A])(implicit o: Ordering[A]): A =
-    findKMedian(arr, arr.size / 2, o)
+  def median[A](arr: Seq[A])(implicit o: Ordering[A]): A = {
+    if (arr.isEmpty) {
+      throw new NoSuchElementException("Median of empty sequence")
+    } else {
+      findKMedian(arr, arr.size / 2, o)
+    }
+  }
 
   def time[A](f: => A): (A, Double) = {
     var t = -System.currentTimeMillis

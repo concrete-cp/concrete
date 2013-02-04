@@ -77,11 +77,13 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
 
     //logger.fine("Filtered from " + oldSize + " to " + newTrie.size)
 
-    if ((newTrie eq null) || newTrie.size == 0) {throw UNSATException.e}
+    val newSize = newTrie.size
 
-    assert(newTrie.size <= oldSize)
+    if (newSize == 0) { throw UNSATException.e }
 
-    if (newTrie.size < oldSize) {
+    assert(newSize <= oldSize)
+
+    if (newSize < oldSize) {
       trie = newTrie
       altering()
     }

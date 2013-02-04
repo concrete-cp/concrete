@@ -20,18 +20,21 @@ object Trie extends RelationGenerator {
   }
 
   def newNode(t: Array[Trie], size: Int): Trie = {
-    var found1: (Int, Trie) = null
-    var found2: (Int, Trie) = null
-    var found3: (Int, Trie) = null
+    var found1I, found2I, found3I: Int = 0
+    var found1N, found2N, found3N: Trie = null
+
     var i = t.length - 1
     while (i >= 0) {
       if (t(i) ne Trie0) {
-        if (found1 eq null) {
-          found1 = (i, t(i))
-        } else if (found2 eq null) {
-          found2 = (i, t(i))
-        } else if (found3 eq null) {
-          found3 = (i, t(i))
+        if (found1N eq null) {
+          found1I = i
+          found1N = t(i)
+        } else if (found2N eq null) {
+          found2I = i
+          found2N = t(i)
+        } else if (found3N eq null) {
+          found3I = i
+          found3N = t(i)
         } else {
           return new Trien(t, size)
         }
@@ -39,14 +42,13 @@ object Trie extends RelationGenerator {
       i -= 1
     }
 
-    val (i1, t1) = found1
-    found2 match {
-      case null => new Trie1(t1, i1)
-      case (i2, t2) => found3 match {
-        case null => new Trie2(t2, i2, t1, i1, size)
-        case (i3, t3) => new Trie3(t3, i3, t2, i2, t1, i1, size)
-      }
-
+    assert(found1N ne null)
+    if (found2N eq null) {
+      new Trie1(found1N, found1I, size)
+    } else if (found3N eq null) {
+      new Trie2(found2N, found2I, found1N, found1I, size)
+    } else {
+      new Trie3(found3N, found3I, found2N, found2I, found3N, found3I, size)
     }
   }
 
@@ -162,13 +164,13 @@ final object Trie0 extends Trie {
     if (i >= tuple.length) {
       TrieLeaf
     } else {
-      new Trie1(Trie0.addTrie(tuple, i + 1), tuple(i))
+      new Trie1(Trie0.addTrie(tuple, i + 1), tuple(i), 1)
     }
   }
   override def toString = "Empty Trie"
 }
 
-final class Trie1(private val child: Trie, private val index: Int) extends Trie {
+final class Trie1(private val child: Trie, private val index: Int, override val size: Int) extends Trie {
   require(child ne Trie0)
 
   def addTrie(t: Array[Int], i: Int): Trie =
@@ -177,13 +179,11 @@ final class Trie1(private val child: Trie, private val index: Int) extends Trie 
     } else {
       val v = t(i)
       if (v == index) {
-        new Trie1(child.addTrie(t, i + 1), index)
+        new Trie1(child.addTrie(t, i + 1), index, size + 1)
       } else {
         new Trie2(child, index, Trie0.addTrie(t, i + 1), v, size + 1)
       }
     }
-
-  override val size = child.size
 
   def contains(t: Array[Int], i: Int): Boolean = {
     t(i) == index && child.contains(t, i + 1)
@@ -222,16 +222,18 @@ final class Trie1(private val child: Trie, private val index: Int) extends Trie 
       this
     } else {
 
-      val nC = if (modified.head == depth) {
+      var nC: Trie = null
+
+      if (modified.head == depth) {
         // Some change at this level
         if (f(depth, index)) {
-          child.filterTrie(f, modified.tail, depth + 1)
+          nC = child.filterTrie(f, modified.tail, depth + 1)
         } else {
-          Trie0
+          nC = Trie0
         }
       } else {
         // No change at this level (=> no need to call f())
-        child.filterTrie(f, modified, depth + 1)
+        nC = child.filterTrie(f, modified, depth + 1)
       }
 
       if (nC eq Trie0) {
@@ -239,7 +241,7 @@ final class Trie1(private val child: Trie, private val index: Int) extends Trie 
       } else if (nC eq child) {
         this
       } else {
-        new Trie1(nC, index)
+        new Trie1(nC, index, nC.size)
       }
 
     }
@@ -328,10 +330,10 @@ final class Trie2(
         if (nR eq Trie0) {
           Trie0
         } else {
-          new Trie1(nR, rightI)
+          new Trie1(nR, rightI, nR.size)
         }
       } else if (nR eq Trie0) {
-        new Trie1(nL, leftI)
+        new Trie1(nL, leftI, nL.size)
       } else {
         val s = nL.size + nR.size
         if (s == size) {
@@ -464,16 +466,16 @@ final class Trie3(
           if (nR eq Trie0) {
             Trie0
           } else {
-            new Trie1(nR, rightI)
+            new Trie1(nR, rightI, nR.size)
           }
         } else if (nR eq Trie0) {
-          new Trie1(nM, midI)
+          new Trie1(nM, midI, nM.size)
         } else {
           new Trie2(nM, midI, nR, rightI, nM.size + nR.size)
         }
       } else if (nM eq Trie0) {
         if (nR eq Trie0) {
-          new Trie1(nL, leftI)
+          new Trie1(nL, leftI, nL.size)
         } else {
           new Trie2(nL, leftI, nR, rightI, nL.size + nR.size)
         }
