@@ -48,7 +48,7 @@ object Trie extends RelationGenerator {
     } else if (found3I < 0) {
       new Trie2(found2N, found2I, found1N, found1I, size)
     } else {
-      new Trie3(found3N, found3I, found2N, found2I, found3N, found3I, size)
+      new Trie3(found3N, found3I, found2N, found2I, found1N, found1I, size)
     }
   }
 
@@ -125,7 +125,7 @@ final object Trie0 extends Trie {
 }
 
 final class Trie1(private val child: Trie, private val index: Int, override val size: Int) extends Trie {
-  require(child ne Trie0)
+  assert(child ne Trie0)
 
   def addTrie(t: Array[Int], i: Int): Trie =
     if (i >= t.length) {
@@ -210,9 +210,9 @@ final class Trie2(
   private val left: Trie, private val leftI: Int,
   private val right: Trie, private val rightI: Int,
   override val size: Int) extends Trie {
-  require(right ne Trie0)
-  require(left ne Trie0)
-  require(leftI < rightI)
+  assert(right ne Trie0)
+  assert(left ne Trie0)
+  assert(leftI < rightI)
 
   def addTrie(t: Array[Int], i: Int): Trie =
     if (i >= t.length) {
@@ -332,11 +332,11 @@ final class Trie3(
   private val mid: Trie, private val midI: Int,
   private val right: Trie, private val rightI: Int,
   override val size: Int) extends Trie {
-  require(right ne Trie0)
-  require(mid ne Trie0)
-  require(left ne Trie0)
-  require(leftI < midI)
-  require(midI < rightI)
+  assert(right ne Trie0)
+  assert(mid ne Trie0)
+  assert(left ne Trie0)
+  assert(leftI < midI)
+  assert(midI < rightI)
 
   private var timestamp: Int = _
   def addTrie(t: Array[Int], i: Int): Trie =
@@ -483,7 +483,7 @@ final class Trie3(
 }
 
 final class Trien(private val trie: Array[Trie], override val size: Int) extends Trie {
-  require(size > 0)
+  assert(size > 0)
 
   def addTrie(tuple: Array[Int], i: Int): Trie = {
     if (i >= tuple.length) {
@@ -500,11 +500,7 @@ final class Trien(private val trie: Array[Trie], override val size: Int) extends
   def contains(tuple: Array[Int], i: Int): Boolean =
     tuple(i) < trie.length && trie(tuple(i)).contains(tuple, i + 1)
 
-  def find(f: (Int, Int) => Boolean, depth: Int): Option[List[Int]] = {
-
-    findHere(f, depth)
-
-  }
+  def find(f: (Int, Int) => Boolean, depth: Int): Option[List[Int]] = findHere(f, depth)
 
   @tailrec
   private def findHere(f: (Int, Int) => Boolean, depth: Int, i: Int = trie.length - 1): Option[List[Int]] = {

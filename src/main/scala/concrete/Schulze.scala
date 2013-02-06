@@ -23,6 +23,13 @@ object Schulze extends App {
   println(d map (_.mkString(" ")) mkString ("\n"))
   println()
 
-  Table.schulze(d, Vector("BV", "Binary", "Binomial", "Fibo"))
+  val s = Table.schulze(d)
+
+  val labels = Vector("BV", "Binary", "Binomial", "Fibo")
+  
+  println(Table.rank(s, s.indices).toList.sortBy(_._1) map {
+    case (r, c) => "%d: %s".format(r, c.map(labels).mkString(" "))
+  } mkString ("\n"))
+
 
 }

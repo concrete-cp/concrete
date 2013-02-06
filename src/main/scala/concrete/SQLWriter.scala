@@ -29,65 +29,22 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
 import java.sql.SQLException
-
 import cspfj.Solver
 import cspfj.SolverResult
 import cspfj.StatisticsManager
 import cspom.CSPOM
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+import scala.slick.session.Database
+import scala.slick.jdbc.{ GetResult, StaticQuery => Q }
+import scala.xml.NodeSeq
+import java.security.InvalidParameterException
+import scala.slick.session.Session
+import Database.threadLocalSession
+import Q.interpolation
 
 object SQLWriter {
-
-  def using[Closeable <: { def close(): Unit }, B](closeable: Closeable)(getB: Closeable => B): B =
-    try {
-      getB(closeable)
-    } finally {
-      closeable.close()
-    }
-
-  def bmap[T](test: => Boolean)(block: => T): List[T] =
-    if (test) { block :: bmap(test)(block) }
-    else { Nil }
-
-  def queryUpdate(connection: Connection, sql: String) {
-    using(connection.createStatement) { statement => statement.executeUpdate(sql) }
-  }
-
-  /** Executes the SQL and processes the result set using the specified function. */
-  def query[B](connection: Connection, sql: String)(process: ResultSet => B): B =
-    using(connection.createStatement) { statement =>
-      using(statement.executeQuery(sql))(process)
-    }
-
-  /** Executes the SQL and uses the process function to convert each row into a T. */
-  def queryEach[T](connection: Connection, sql: String)(process: ResultSet => T) =
-    query(connection, sql) { results =>
-      bmap(results.next())(process(results))
-    }
-
-  def connect(uri: URI) = {
-    require(!uri.isOpaque, "Opaque connection URI : " + uri.toString)
-
-    uri.getScheme match {
-      case "mysql" =>
-        Class.forName("com.mysql.jdbc.Driver");
-
-      case "postgresql" =>
-        Class.forName("org.postgresql.Driver")
-
-      case _ =>
-    }
-
-    val userInfo = uri.getUserInfo match {
-      case null => Array[String]()
-      case info: String => info.split(":");
-    }
-
-    DriverManager.getConnection(
-      "jdbc:%s://%s%s".format(uri.getScheme, uri.getHost, uri.getPath),
-      (if (userInfo.length > 0) { userInfo(0) } else { null }),
-      (if (userInfo.length > 1) { userInfo(1) } else { null }))
-
-  }
 
   def md5(istr: InputStream) = {
     val msgDigest = MessageDigest.getInstance("MD5");
@@ -107,6 +64,29 @@ object SQLWriter {
 
   }
 
+  private def connection(uri: URI) = {
+    require(!uri.isOpaque, "Opaque connection URI : " + uri.toString)
+
+    val driver = uri.getScheme match {
+      case "mysql" => "com.mysql.jdbc.Driver"
+
+      case "postgresql" => "org.postgresql.Driver"
+
+      case _ => throw new InvalidParameterException
+    }
+
+    val userInfo = uri.getUserInfo match {
+      case null => Array[String]()
+      case info: String => info.split(":");
+    }
+
+    Database.forURL(s"jdbc:${uri.getScheme}://${uri.getHost}${uri.getPath}",
+      user = (if (userInfo.length > 0) { userInfo(0) } else { null }),
+      password = (if (userInfo.length > 1) { userInfo(1) } else { null }),
+      driver = driver)
+
+  }
+
 }
 
 final class SQLWriter(
@@ -115,9 +95,7 @@ final class SQLWriter(
   md5: String,
   params: String) extends ConcreteWriter {
 
-  import SQLWriter._
-
-  val connection = SQLWriter.connect(jdbcUri)
+  lazy val db = SQLWriter.connection(jdbcUri)
 
   createTables()
 
@@ -128,171 +106,97 @@ final class SQLWriter(
 
   //connection.close();
 
-  private def controlTables(tables: String*) = {
+  private def controlTables(tables: String*) =
+    db.withSession { session: Session =>
+      val results = session.metaData.getTables(null, null, "%", null)
 
-    var foundTables: Set[String] = Set.empty
-    using(connection.getMetaData.getTables(null, null, "%", null)) { results =>
-
-      while (results.next()) foundTables += results.getString(3).toUpperCase
-      tables.forall(foundTables)
+      try {
+        var foundTables: Set[String] = Set.empty
+        while (results.next()) foundTables += results.getString(3).toUpperCase
+        tables.forall(foundTables)
+      } finally {
+        results.close()
+      }
 
     }
-
-  }
 
   private def createTables() {
     if (!controlTables("EXECUTIONS", "CONFIGS", "PROBLEMS", "PROBLEMTAGS", "STATISTICS")) {
 
-      using(connection.createStatement) { stmt =>
+      val source = classOf[SQLWriter].getResource("concrete.sql")
 
-        val source = classOf[SQLWriter].getResource("concrete.sql")
+      if (source == null) { sys.error("Could not find concrete.sql script") }
 
-        if (source == null) { sys.error("Could not find concrete.sql script") }
+      val script = io.Source.fromURL(source).getLines.reduce(_ + _)
 
-        val script = io.Source.fromURL(source).getLines.reduce(_ + _)
-
-        script.split(';').foreach(stmt.addBatch)
-
-        stmt.executeBatch()
-
-      }
-    }
-  }
-
-  private def problemId(description: String, md5sum: String) = {
-    //val md5sum = md5(cspom.CSPOM.problemInputStream(problem))
-
-    queryEach(connection, """
-        SELECT problemId
-        FROM Problems
-        WHERE md5 = '%s'
-        """.format(md5sum))(_.getInt(1)) match {
-      case List(problemId) => problemId
-      case _ => {
-        queryEach(connection, """
-          INSERT INTO Problems(name, md5)
-          VALUES ('%s', '%s')
-          RETURNING problemId
-          """.format(description, md5sum))(_.getInt(1)) match {
-          case List(problemId) => problemId
-          case _ =>
-            throw new SQLException(
-              "Could not retrieve generated key");
+      db.withSession { session: Session =>
+        session.withStatement() {
+          stmt =>
+            script.split(';').foreach(stmt.addBatch)
+            stmt.executeBatch()
         }
       }
     }
-
   }
+
+  private def problemId(description: String, md5sum: String) =
+    db.withSession {
+      sql"""
+        SELECT problemId
+        FROM Problems
+        WHERE md5 = $md5sum""".as[Int].firstOption getOrElse
+        sql"""
+              INSERT INTO Problems(name, md5)
+              VALUES ($description, $md5)
+              RETURNING problemId
+              """.as[Int].first
+    }
 
   private def config(options: String) = {
 
     val md5sum = SQLWriter.md5(new ByteArrayInputStream(options.getBytes))
-
-    val stmt = connection.createStatement();
-    val rst = stmt.executeQuery("SELECT configId FROM configs WHERE md5='"
-      + md5sum + "'");
-
-    try {
-      if (rst.next()) {
-        rst.getInt(1);
-      } else {
-        val aiRst = stmt.executeQuery("INSERT INTO Configs (config, md5) VALUES (xml '<conf>"
-          + options + "</conf>', '" + md5sum + "') RETURNING configId");
-
-        try {
-          if (aiRst.next()) {
-            aiRst.getInt(1);
-          } else {
-            throw new SQLException(
-              "Could not retrieve generated id");
-          }
-        } finally {
-          aiRst.close();
-        }
-      }
-
-    } finally {
-      rst.close();
-      stmt.close();
+    db.withSession {
+      sql"SELECT configId FROM configs WHERE md5=$md5sum".as[Int].firstOption getOrElse
+        sql"""INSERT INTO Configs (config, md5) 
+             VALUES (xml '<conf>#$options</conf>', $md5sum)
+             RETURNING configId""".as[Int].first
     }
   }
 
   def execution(problemId: Int, configId: Int, version: Int) = {
-    val stmt = connection.createStatement();
-
     println("Problem " + problemId + ", config " + configId + ", version " + version)
-
-    try {
-      val aiRst = stmt.executeQuery("INSERT INTO Executions (problemId, configId, version, start) VALUES ("
-        + problemId + ", " + configId + ", " + version + ", CURRENT_TIMESTAMP) RETURNING executionId");
-
-      try {
-        if (aiRst.next()) {
-          aiRst.getInt(1);
-        } else {
-          throw new SQLException(
-            "Could not retrieve generated id");
-        }
-      } finally {
-        aiRst.close();
-      }
-
-    } finally {
-      stmt.close();
+    db.withSession {
+      sql"""INSERT INTO Executions (problemId, configId, version, start)
+            VALUES ($problemId, $configId , $version, CURRENT_TIMESTAMP) 
+            RETURNING executionId""".as[Int].first
     }
   }
 
   def solution(solution: SolverResult, concrete: Concrete) {
-
     val sol = outputFormat(solution, concrete)
-
-    val stmt = connection.createStatement();
-    try {
-      stmt.executeUpdate("UPDATE executions SET solution='"
-        + sol + "' WHERE executionId="
-        + executionId);
-    } finally {
-      stmt.close();
+    db.withSession {
+      sqlu"UPDATE executions SET solution=$sol WHERE executionId=executionId"
     }
-
   }
 
   def write(stats: StatisticsManager) {
-
-    val stmt = connection
-      .prepareStatement("INSERT INTO statistics(name, executionId, value) VALUES (?,?,?)");
-    try {
-      stmt.setInt(2, executionId)
+    db.withSession {
       for ((key, value) <- stats.digest) {
-        stmt.setString(1, key)
-        stmt.setString(3, value.toString)
-        stmt.executeUpdate()
+        sqlu"INSERT INTO statistics(name, executionId, value) VALUES ($key, $executionId, ${value.toString})"
       }
-    } finally {
-      stmt.close();
     }
-
   }
 
   def error(e: Throwable) {
-    e.printStackTrace()
-    val stmt = connection.createStatement();
-    try {
-      stmt.executeUpdate("UPDATE executions SET solution='"
-        + e + "' WHERE executionId="
-        + executionId);
-    } finally {
-      stmt.close();
+    println(e.toString)
+    db.withSession {
+      sqlu"UPDATE executions SET solution=${e.toString} WHERE executionId=$executionId"
     }
   }
 
   def disconnect() {
-    val stmt = connection.createStatement()
-    try {
-      stmt.executeUpdate("UPDATE executions SET \"end\" = CURRENT_TIMESTAMP where executionId = " + executionId)
-    } finally {
-      stmt.close()
-      connection.close()
+    db.withSession {
+      sqlu"""UPDATE executions SET "end" = CURRENT_TIMESTAMP where executionId = $executionId"""
     }
   }
 

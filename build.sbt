@@ -17,7 +17,9 @@ libraryDependencies ++= Seq(
 	"postgresql" % "postgresql" % "9.1-901-1.jdbc4",
 	"org.sat4j" % "org.sat4j.core" % "2.3.0",
 	"junit" % "junit" % "4.10" % "test",
-	"com.novocode" % "junit-interface" % "0.8" % "test->default"
+	"com.novocode" % "junit-interface" % "0.8" % "test->default",
+	"com.typesafe.slick" %% "slick" % "1.0.0-RC2",
+	"org.slf4j" % "slf4j-nop" % "1.6.4"
 	)
 
 

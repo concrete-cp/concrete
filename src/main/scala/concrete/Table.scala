@@ -9,6 +9,13 @@ import scala.collection.mutable.ListBuffer
 import cspfj.StatisticsManager
 import java.util.Locale
 import scala.collection.mutable.HashMap
+import scala.annotation.tailrec
+import scala.collection.SortedMap
+import scala.slick.session.Database
+import Database.threadLocalSession
+import scala.slick.jdbc.{ GetResult, StaticQuery => Q }
+import scala.slick.driver.PostgresDriver.simple._
+import Q.interpolation
 
 object Table extends App {
 
@@ -33,248 +40,292 @@ object Table extends App {
     }
   }
 
-  //3647557
-  val version = args.head.toInt //1888
+  val version = args.head.toInt
 
-  //  val acv = List(98, 96, 95, 97, 99)
-  //  val acc = List(103, 101, 100, 102, 104)
-  //
-  //  val heur = List(85, 64, 83, 84, 70, 72, 59, 71, 87, 86)
+  val nature = args.tail map (_.toInt)
 
-  //val nature = List(95, 100)
-  val nature = args.tail map (_.toInt) //6 to 10//List(1, 2, 3, 4, 5)
+  case class Problem(
+    problemId: Int,
+    problem: String,
+    nbVars: Int,
+    nbCons: Int,
+    tags: Array[String])
 
-  using(SQLWriter.connect(new URI("postgresql://concrete:concrete@localhost/concrete"))) { connection =>
+  case class Config(
+    configId: Int,
+    config: Node) {
+    def display = config \\ "p" map (n => className(n)) mkString ("/")
+    override def toString = configId + "." + display
+  }
 
-    val problems = queryEach(connection, """
-        SELECT problemId, display, nbvars, nbcons, array_agg(tag) as tags
+  case class Resultat[A](
+    solution: String,
+    statistic: A)
+
+  implicit val getProblemResult = GetResult(r => Problem(r.<<, r.<<, r.<<, r.<<, r.nextString.split(",")))
+
+  implicit val getConfigResult = GetResult(r => Config(r.<<, xml.XML.loadString(r.nextString)))
+
+  Database.forURL("jdbc:postgresql://localhost/concrete",
+    user = "concrete",
+    password = "concrete",
+    driver = "org.postgresql.Driver") withSession {
+
+      val problems = sql"""
+        SELECT problemId, display, nbvars, nbcons, string_agg(tag, ',') as tags
         FROM Problems NATURAL LEFT JOIN ProblemTags
         WHERE problemId IN (
           SELECT problemId 
           FROM Executions
-          WHERE version = %d and configId in (%s))
+          WHERE version = $version and configId in (#${nature.mkString(",")}))
         GROUP BY problemId, display, nbvars, nbcons
         ORDER BY display
-        """.format(version, nature.mkString(", "))) {
-      rs =>
-        {
-          (rs.getInt("problemId"), rs.getString("display"), rs.getInt("nbvars"), rs.getInt("nbcons"), rs.getArray("tags").getArray().asInstanceOf[Array[String]])
-        }
-    }
+        """.as[Problem].list
 
-    val configs = queryEach(connection, """
+      val configs = sql"""
         SELECT configId, config
         FROM configs 
-        WHERE configId IN (%s) 
-        """.format(nature.mkString(", "))) {
-      rs => (rs.getInt(1), configDisplay(xml.XML.load(rs.getSQLXML(2).getBinaryStream), rs.getInt(1)))
-    } // sortBy (_._2)
+        WHERE configId IN (#${nature.mkString(", ")}) 
+        """.as[Config].list
 
-    for ((_, desc) <- configs) print(" & " + desc)
-    println("\\\\")
-    println("\\midrule")
+      for (c <- configs) print(" & " + c.display)
+      println("\\\\")
+      println("\\midrule")
 
-    val cIds = configs map (_._1) mkString (", ")
+      val cIds = configs map (_.configId) mkString (", ")
 
-    var d = Array.ofDim[Int](configs.size, configs.size)
+      var d = Array.ofDim[Int](configs.size, configs.size)
 
-    val totals = new HashMap[String, Array[List[Double]]]()
+      val totals = new HashMap[String, Array[List[Double]]]()
 
-    for ((problemId, problem, nbvars, nbcons, tags) <- problems) {
+      for (Problem(problemId, problem, nbvars, nbcons, tags) <- problems) {
 
-      val data = ListBuffer(problem) //, nbvars, nbcons)
-      //print("\\em %s & \\np{%d} & \\np{%d}".format(problem, nbvars, nbcons))
-      //print("\\em %s ".format(problem))
+        val data = ListBuffer(problem) //, nbvars, nbcons)
+        //print("\\em %s & \\np{%d} & \\np{%d}".format(problem, nbvars, nbcons))
+        //print("\\em %s ".format(problem))
 
-      //val name = List("solver.searchCpu", "filter.revisions", "solver.nbAssignments", "filter.substats.queue.pollSize")(3)
+        //val name = List("solver.searchCpu", "filter.revisions", "solver.nbAssignments", "filter.substats.queue.pollSize")(3)
 
-      //val formula = """(cast("filter.substats.queue.pollSize" as real) / cast("filter.substats.queue.nbPoll" as int))"""
+        //val formula = """(cast("filter.substats.queue.pollSize" as real) / cast("filter.substats.queue.nbPoll" as int))"""
 
-      //val formula = """cast("solver.nbAssignments" as real) / cast("solver.searchCpu" as real)"""
-      ///val formula = """cast("solver.nbAssignments" as real)"""
-      //val formula = """cast("solver.nbAssignments" as real) / (cast("solver.searchCpu" as real) + cast("solver.preproCpu" as real))"""
-      //val formula = """cast("solver.searchCpu" as real) + cast("solver.preproCpu" as real)"""
+        //val formula = """cast("solver.nbAssignments" as real) / cast("solver.searchCpu" as real)"""
+        ///val formula = """cast("solver.nbAssignments" as real)"""
+        //val formula = """cast("solver.nbAssignments" as real) / (cast("solver.searchCpu" as real) + cast("solver.preproCpu" as real))"""
+        //val formula = """cast("solver.searchCpu" as real) + cast("solver.preproCpu" as real)"""
 
-      //val formula = """cast("relation.checks" as bigint)"""
-      //val formula = """cast("concrete.generationTime" as real)"""
+        //val formula = """cast("relation.checks" as bigint)"""
+        //val formula = """cast("concrete.generationTime" as real)"""
 
-      //val formula = """cast("domains.presenceChecks" as bigint)"""
+        //val formula = """cast("domains.presenceChecks" as bigint)"""
 
-      //val stat = "cast(stat('solver.nbAssignments', executionId) as int)"
+        //val stat = "cast(stat('solver.nbAssignments', executionId) as int)"
 
-      //val stat = "cast(stat('solver.searchCpu', executionId) as real) + cast(stat('solver.preproCpu', executionId) as real)"
+        //val stat = "cast(stat('solver.searchCpu', executionId) as real) + cast(stat('solver.preproCpu', executionId) as real)"
 
-      val min = true
+        val min = true
 
-      //            val sqlQuery = """
-      //                        SELECT configId, solution, cast(stat('relation.checks', executionId) as real)
-      //                        FROM Executions
-      //                        WHERE (version, problemId) = (%d, %d)
-      //                    """.format(version, problemId)
+        //            val sqlQuery = """
+        //                        SELECT configId, solution, cast(stat('relation.checks', executionId) as real)
+        //                        FROM Executions
+        //                        WHERE (version, problemId) = (%d, %d)
+        //                    """.format(version, problemId)
 
-      //      val sqlQuery = """
-      //                        SELECT configId, solution, cast(stat('solver.usedMem', executionId) as real)
-      //                        FROM Executions
-      //                        WHERE (version, problemId) = (%d, %d)
-      //                    """.format(version, problemId)
+        //      val sqlQuery = """
+        //                        SELECT configId, solution, cast(stat('solver.usedMem', executionId) as real)
+        //                        FROM Executions
+        //                        WHERE (version, problemId) = (%d, %d)
+        //                    """.format(version, problemId)
 
-      val sqlQuery = """
+        val sqlQuery = sql"""
                         SELECT configId, solution, totalTime
                         FROM Times
-                        WHERE (version, problemId) = (%d, %d)
-                    """.format(version, problemId)
+                        WHERE (version, problemId) = ($version, $problemId)
+                    """
 
-      //println(sqlQuery)
-      val results = queryEach(connection, sqlQuery) {
-        rs => rs.getInt(1) -> (rs.getString(2), rs.getDouble(3))
-      } toMap
+        val results = sqlQuery.as[(Int, String, Double)].list.map {
+          case (config, solution, value) => config -> Resultat(solution, value)
+        } toMap
 
-      for (
-        i <- configs.indices;
-        j <- results.get(configs(i)._1);
-        val k = if (solved(j._1)) j._2 else Double.PositiveInfinity;
-        tag <- tags
-      ) {
-        totals.getOrElseUpdate(tag, Array.fill(configs.size)(Nil))(i) ::= k
-      }
-
-      for (
-        i <- configs.indices; j <- configs.indices if i != j;
-        val ci = configs(i)._1;
-        val cj = configs(j)._1;
-        ri <- results.get(ci) if solved(ri._1);
-        rj <- results.get(cj)
-      ) {
-        if (!solved(rj._1) || {
-          val trj = rj._2
-          val tri = ri._2
-          (trj - tri) / tri > .1 && (trj - tri) > 1
-        }) {
-          d(i)(j) += 1
+        for (
+          i <- configs.indices;
+          j <- results.get(configs(i).configId);
+          k = if (solved(j.solution)) j.statistic else Double.PositiveInfinity;
+          tag <- tags
+        ) {
+          totals.getOrElseUpdate(tag, Array.fill(configs.size)(Nil))(i) ::= k
         }
-      }
 
-      //      val extrem = results.values.map(_._2).toSeq match {
-      //        case Nil => None
-      //        case d: Seq[Double] => Some(if (min) d.min else d.max)
-      //      }
-
-      configs foreach { c =>
-        data.append(
-          results.get(c._1) match {
-            case Some((result, time)) =>
-              if (solved(result)) {
-                //engineer(e)._1
-                //        if (e._2 != "M") throw new IllegalStateException
-                //print(" & ")
-                //if (extrem.isDefined && (if (min) e < extrem.get * 1.1 else e > extrem.get * .9)) print("\\bf")
-                val e = engineer(time)
-                "%.1f%s".formatLocal(Locale.US, e._1, e._2.getOrElse("")) //print("\\np{%.1f}".format(r))
-              } else {
-
-                if (result == null) { "null" }
-                else if (result.contains("OutOfMemoryError")) { "mem" }
-                else if (result.contains("InterruptedException")) { "exp" }
-                else { result }
-              }
-            case None => "---"
-          })
-      }
-
-      println(tabular(data.toSeq))
-    }
-
-    println("\\midrule")
-
-    //    for ((k, t) <- totals.toList.sortBy(_._1)) {
-    //      println(k + " : " + configs.indices.map { i =>
-    //        t(i)
-    //      }.mkString(" & "))
-    //    }
-
-    for ((k, t) <- totals.toList.sortBy(_._1)) {
-
-      val medians = configs.indices.map {
-        i =>
-          try StatisticsManager.median(t(i))
-          catch {
-            case e: NoSuchElementException => Double.NaN
+        for (
+          i <- configs.indices; j <- configs.indices if i != j;
+          ci = configs(i).configId;
+          cj = configs(j).configId;
+          ri <- results.get(ci) if solved(ri.solution);
+          rj <- results.get(cj)
+        ) {
+          if (!solved(rj.solution) || {
+            val trj = rj.statistic
+            val tri = ri.statistic
+            (trj - tri) / tri > .1 && (trj - tri) > 1
+          }) {
+            d(i)(j) += 1
           }
-      }
+        }
 
-      val best = medians.min
+        //      val extrem = results.values.map(_._2).toSeq match {
+        //        case Nil => None
+        //        case d: Seq[Double] => Some(if (min) d.min else d.max)
+        //      }
 
-      println(s"\\em $k & " + medians.map { median =>
-        if (median.isInfinity) {
-          "timeout"
-        } else {
-          val (v, m) = engineer(median)
-
-          (if (median < best * 1.1) "\\bf " else "") + (
-            m match {
-              case Some(m) => f"\\np[$m%s]{$v%.1f}"
-              case None => f"\\np{$v%.1f}"
+        configs foreach { c =>
+          data.append(
+            results.get(c.configId) match {
+              case Some(Resultat(result, time)) =>
+                if (solved(result)) {
+                  //engineer(e)._1
+                  //        if (e._2 != "M") throw new IllegalStateException
+                  //print(" & ")
+                  //if (extrem.isDefined && (if (min) e < extrem.get * 1.1 else e > extrem.get * .9)) print("\\bf")
+                  val e = engineer(time)
+                  "%.1f%s".formatLocal(Locale.US, e._1, e._2.getOrElse("")) //print("\\np{%.1f}".format(r))
+                } else {
+                  if (result == null) {
+                    "null"
+                  } else if (result.contains("OutOfMemoryError")) {
+                    "mem"
+                  } else if (result.contains("InterruptedException")) {
+                    "exp"
+                  } else {
+                    result
+                  }
+                }
+              case None => "---"
             })
         }
-      }.mkString(" & ") + " \\\\")
-    }
-    println("\\midrule")
 
-    for ((k, t) <- totals.toList.sortBy(_._1)) {
-      val counts = configs.indices.map { i =>
-        t(i).count(!_.isInfinity)
+        println(tabular(data.toSeq))
       }
 
-      val best = counts.max
+      println("\\midrule")
 
-      println(s"\\em $k & " + counts.map {
-        i => if (i == best) s"\\bf $i" else s"$i"
-      }.mkString(" & ") + " \\\\")
+      //    for ((k, t) <- totals.toList.sortBy(_._1)) {
+      //      println(k + " : " + configs.indices.map { i =>
+      //        t(i)
+      //      }.mkString(" & "))
+      //    }
+
+      for ((k, t) <- totals.toList.sortBy(_._1)) {
+
+        val medians = configs.indices.map {
+          i =>
+            try StatisticsManager.median(t(i))
+            catch {
+              case e: NoSuchElementException => Double.NaN
+            }
+        }
+
+        val best = medians.min
+
+        println(s"\\em $k & " + medians.map { median =>
+          if (median.isInfinity) {
+            "timeout"
+          } else {
+            val (v, m) = engineer(median)
+
+            (if (median < best * 1.1) "\\bf " else "") + (
+              m match {
+                case Some(m) => f"\\np[$m%s]{$v%.1f}"
+                case None => f"\\np{$v%.1f}"
+              })
+          }
+        }.mkString(" & ") + " \\\\")
+      }
+      println("\\midrule")
+
+      for ((k, t) <- totals.toList.sortBy(_._1)) {
+        val counts = configs.indices.map { i =>
+          t(i).count(!_.isInfinity)
+        }
+
+        val best = counts.max
+
+        println(s"\\em $k & " + counts.map {
+          i => if (i == best) s"\\bf $i" else s"$i"
+        }.mkString(" & ") + " \\\\")
+      }
+
+      //    println(d.zipWithIndex map { case (r, i) => configs(i) + " " + r.mkString(" ") } mkString ("\n"))
+      //    println()
+
+      val labels = configs.map(_.toString).toIndexedSeq
+
+      toGML(d, labels)
+
+      val s = schulze(winnerTakesAll(d))
+
+      println(rank(s, s.indices).toList.sortBy(_._1) map {
+        case (r, c) => "%d: %s".format(r, c.map(labels).mkString(" "))
+      } mkString ("\n"))
     }
-
-    //    println(d.zipWithIndex map { case (r, i) => configs(i) + " " + r.mkString(" ") } mkString ("\n"))
-    //    println()
-    toGML(d, configs.map(c => c._1 + "." + c._2).toIndexedSeq)
-
-    schulze(d, configs.map(c => c._1 + "." + c._2).toIndexedSeq)
-
-  }
 
   def solved(solution: String) = solution != null && ("UNSAT" == solution || """^[0-9\ ]*$""".r.findFirstIn(solution).isDefined)
 
-  def rank(p: Array[Array[Int]], candidates: Seq[Int], cRank: Int = 1, ranking: Map[Int, Seq[Int]] = Map.empty): Map[Int, Seq[Int]] =
-    if (candidates.isEmpty) { ranking }
-    else {
+  @tailrec
+  def rank[B <% Ordered[B]](p: IndexedSeq[Array[B]], candidates: Seq[Int],
+    cRank: Int = 1, ranking: SortedMap[Int, Seq[Int]] = SortedMap.empty): SortedMap[Int, Seq[Int]] =
+    if (candidates.isEmpty) {
+      ranking
+    } else {
       val (win, rem) = candidates.partition { i =>
         candidates.forall { j => p(i)(j) >= p(j)(i) }
       }
-      rank(p, rem, cRank + win.size, ranking + (cRank -> win))
+      if (win.isEmpty) ranking
+      else {
+        //println(cRank + " : " + win)
+        rank(p, rem, cRank + win.size, ranking + (cRank -> win))
+      }
     }
 
-  def schulze(d: Array[Array[Int]], labels: IndexedSeq[String]) {
+  def winnerTakesAll(d: Array[Array[Int]]) = {
+    val p = Array.ofDim[Int](d.length, d.length)
+    for (i <- d.indices.par; j <- d.indices) {
+      if (d(i)(j) > d(j)(i)) {
+        p(i)(j) = d(i)(j)
+      }
+    }
+    p
+  }
 
-    val p = Array.ofDim[Int](d.size, d.size)
+  def schulze[A <% Ordered[A]](p0: Array[Array[A]]) = {
+    //val p = percentages(d, avis)
 
-    for (i <- d.indices; j <- d.indices if (i != j)) {
-      p(i)(j) = math.max(0, d(i)(j) - d(j)(i))
+    val p = p0.map(_.clone)
+
+    for (i <- p.indices) {
+      //println("%.0f %%".format(100.0 * i / p.length))
+
+      for (j <- p.indices if i != j) {
+        var k = 0;
+        while (k < p.length) {
+          if (i != k && j != k) {
+            p(j)(k) = max(p(j)(k), min(p(j)(i), p(i)(k)))
+          }
+          k += 1
+        }
+      }
     }
 
-    //    println(p map (_.mkString(" ")) mkString ("\n"))
-    //    println()
+    //p.map(_.mkString(" ")).foreach(println)
 
-    for (i <- d.indices; j <- d.indices; k <- d.indices) {
-      p(i)(j) = math.max(p(i)(j), math.min(p(i)(k), p(k)(j)))
-    }
-
-    //    println(p map (_.mkString(" ")) mkString ("\n"))
-    //    println()
-
-    println(rank(p, p.indices).toList.sortBy(_._1) map {
-      case (r, c) => "%d: %s".format(r, c.map(labels).mkString(" "))
-    } mkString ("\n"))
+    p
 
     //toGML(d,labels)
   }
+
+  private def min[A <% Ordered[A]](a: A, b: A): A =
+    if (a < b) a else b
+
+  private def max[A <% Ordered[A]](a: A, b: A): A =
+    if (a > b) a else b
 
   private def toGML(p: Array[Array[Int]], labels: IndexedSeq[String]) {
     println("graph [ directed 0 ");
@@ -291,30 +342,6 @@ object Table extends App {
     }
 
     println("]")
-  }
-
-  def configDisplay(desc: NodeSeq, id: Int) = {
-    desc \\ "p" map (n => className(n)) mkString ("/")
-    //    val filter = className(desc \\ "p" filter attributeEquals("name", "mac.filter"))
-    //
-    //    val queue = filter match {
-    //      case "ACC" | "AC3Constraint" => className(desc \\ "p" filter attributeEquals("name", "ac3c.queue"))
-    //      case "ACV" | "AC3" => className(desc \\ "p" filter attributeEquals("name", "ac3v.queue"))
-    //      case _ => sys.error("Unknown filter: " + filter)
-    //    }
-    //
-    //    val heur = filter match {
-    //      case "ACC" if queue != "QuickFifo" && queue != "SimpleFifos" && queue != "JavaFifo" && queue != "JavaSimpleFifos" =>
-    //        className(desc \\ "p" filter attributeEquals("name", "ac3c.key"))
-    //      case "ACV" if queue != "QuickFifo" =>
-    //        className(desc \\ "p" filter attributeEquals("name", "ac3v.key"))
-    //      case _ => "na"
-    //    }
-    //
-    //    val reduction = className(desc \\ "p" filter attributeEquals("name", "relationAlgorithm"))
-    //    val relation = className(desc \\ "p" filter attributeEquals("name", "relationStructure"))
-    //
-    //    "%s-%s-%s-%s-%s (%d)".format(filter, queue, heur, reduction, relation, id)
   }
 
   def className(n: NodeSeq) = {

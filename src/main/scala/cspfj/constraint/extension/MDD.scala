@@ -86,7 +86,7 @@ trait MDD extends Relation {
     l
   }
   def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: ListWithMax)
-  override def toString = nodes + " nodes representing " + size + " tuples"
+  override def toString = s"$nodes representing $size tuples"
   def copy = this
   def -(t: Array[Int]) = throw new UnsupportedOperationException
 }
@@ -194,8 +194,6 @@ final class MDD1(private val child: MDD, private val index: Int, override val si
     case t: MDD1 => t.index == index && (t.child eq child)
     case _ => false
   }
-
-  override def toString = "MDD representing " + size + " tuples"
 
   def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: ListWithMax) {
     if (timestamp != ts) {
@@ -641,19 +639,6 @@ final class MDDn(private val trie: Array[MDD], override val size: Int) extends M
       }
     case _ => false
   }
-
-  override def toString = "MDD representing " + size + " tuples"
-  //
-  //  def foreachTrie(f: (Int, Int) => Unit, depth: Int = 0) {
-  //    var i = trie.length - 1;
-  //    while (i >= 0) {
-  //      if (trie(i) ne null) {
-  //        f(depth, i)
-  //        trie(i).foreachTrie(f, depth + 1)
-  //      }
-  //      i -= 1
-  //    }
-  //  }
 
   def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: ListWithMax) {
     if (timestamp != ts) {
