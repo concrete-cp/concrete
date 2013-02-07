@@ -49,7 +49,7 @@ object MDD extends RelationGenerator {
     } else if (found3I < 0) {
       new MDD2(found2N, found2I, found1N, found1I, size)
     } else {
-      new MDD3(found3N, found3I, found2N, found2I, found3N, found3I, size)
+      new MDD3(found3N, found3I, found2N, found2I, found1N, found1I, size)
     }
   }
 

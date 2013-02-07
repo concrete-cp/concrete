@@ -22,6 +22,7 @@ libraryDependencies ++= Seq(
 	"org.slf4j" % "slf4j-nop" % "1.6.4"
 	)
 
+scalacOptions ++= Seq("-deprecation", "-unchecked", "-optimise", "-Xlint", "-Xdisable-assertions")
 
 org.scalastyle.sbt.ScalastylePlugin.Settings
 

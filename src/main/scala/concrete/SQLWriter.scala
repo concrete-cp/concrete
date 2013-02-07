@@ -164,39 +164,42 @@ final class SQLWriter(
   }
 
   def execution(problemId: Int, configId: Int, version: Int) = {
-    println("Problem " + problemId + ", config " + configId + ", version " + version)
-    db.withSession {
+    print(s"Problem $problemId, config $configId, version $version")
+    val executionId = db.withSession {
       sql"""INSERT INTO Executions (problemId, configId, version, start)
             VALUES ($problemId, $configId , $version, CURRENT_TIMESTAMP) 
             RETURNING executionId""".as[Int].first
     }
+    println(s", execution $executionId")
+    executionId
   }
 
   def solution(solution: SolverResult, concrete: Concrete) {
     val sol = outputFormat(solution, concrete)
     db.withSession {
-      sqlu"UPDATE executions SET solution=$sol WHERE executionId=executionId"
+      sqlu"UPDATE Executions SET solution = $sol WHERE executionId = $executionId".execute
     }
   }
 
   def write(stats: StatisticsManager) {
     db.withSession {
       for ((key, value) <- stats.digest) {
-        sqlu"INSERT INTO statistics(name, executionId, value) VALUES ($key, $executionId, ${value.toString})"
+        sqlu"INSERT INTO statistics(name, executionId, value) VALUES ($key, $executionId, ${value.toString})".execute
       }
     }
   }
 
   def error(e: Throwable) {
-    println(e.toString)
+    //println(e.toString)
+    e.printStackTrace()
     db.withSession {
-      sqlu"UPDATE executions SET solution=${e.toString} WHERE executionId=$executionId"
+      sqlu"UPDATE executions SET solution=${e.toString} WHERE executionId=$executionId".execute
     }
   }
 
   def disconnect() {
     db.withSession {
-      sqlu"""UPDATE executions SET "end" = CURRENT_TIMESTAMP where executionId = $executionId"""
+      sqlu"""UPDATE executions SET "end" = CURRENT_TIMESTAMP where executionId = $executionId""".execute
     }
   }
 
