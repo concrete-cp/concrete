@@ -130,17 +130,17 @@ object Table extends App {
         //                        WHERE (version, problemId) = (%d, %d)
         //                    """.format(version, problemId)
 
-        //      val sqlQuery = """
-        //                        SELECT configId, solution, cast(stat('solver.usedMem', executionId) as real)
-        //                        FROM Executions
-        //                        WHERE (version, problemId) = (%d, %d)
-        //                    """.format(version, problemId)
-
         val sqlQuery = sql"""
-                        SELECT configId, solution, totalTime
-                        FROM Times
-                        WHERE (version, problemId) = ($version, $problemId)
-                    """
+                                SELECT configId, solution, cast(stat('solver.usedMem', executionId) as real)
+                                FROM Executions
+                                WHERE (version, problemId) = ($version, $problemId)
+                            """
+
+        //        val sqlQuery = sql"""
+        //                        SELECT configId, solution, totalTime
+        //                        FROM Times
+        //                        WHERE (version, problemId) = ($version, $problemId)
+        //                    """
 
         val results = sqlQuery.as[(Int, String, Double)].list.map {
           case (config, solution, value) => config -> Resultat(solution, value)
