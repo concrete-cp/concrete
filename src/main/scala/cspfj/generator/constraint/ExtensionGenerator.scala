@@ -18,6 +18,7 @@ import cspfj.constraint.extension.Matrix2D
 import cspfj.constraint.extension.STR
 import cspfj.constraint.extension.TupleTrieSet
 import cspom.extension.HashTrie
+import cspfj.constraint.extension.MDDSparse
 //import cspfj.constraint.extension.MDD2
 
 object ExtensionGenerator {
@@ -63,6 +64,7 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
       new TupleTrieSet(MDD(value2Index(domains, relation)), init)
     } else {
       new TupleTrieSet(ExtensionGenerator.ds match {
+        case "MDDSparse" => MDDSparse(value2Index(domains, relation))
         case "MDD" => MDD(value2Index(domains, relation))
         //case "MDD2" => MDD2(value2Index(domains, relation))
         case "STR" => new STR() ++ value2Index(domains, relation).toIterable

@@ -6,62 +6,26 @@ import scala.collection.mutable.Seq
 import scala.util.hashing.MurmurHash3
 import cspfj.util.ListWithMax
 import java.util.Arrays
+import cspfj.util.SparseMap
 
-trait RelationGenerator {
-  def apply(data: Iterator[Array[Int]]): Relation
-}
-
-object MDD extends RelationGenerator {
+object MDDSparse extends RelationGenerator {
   def apply(data: Array[Int]*): MDD = apply(data.iterator)
 
   def apply(data: Iterator[Array[Int]]): MDD =
-    data.foldLeft[MDD](MDD0)(
+    data.foldLeft[MDD](MDD20)(
       (acc, tuple) => acc + tuple).reduce(new HashMap[Seq[MDD], MDD]())
 
   var timestamp = 0
 
-  def newNode(t: Array[MDD], size: Int): MDD = {
-    var found1I, found2I, found3I: Int = -1
-    var found1N, found2N, found3N: MDD = null
-
-    var i = t.length - 1
-    while (i >= 0) {
-      if (t(i) ne MDD0) {
-        if (found1I < 0) {
-          found1I = i
-          found1N = t(i)
-        } else if (found2I < 0) {
-          found2I = i
-          found2N = t(i)
-        } else if (found3I < 0) {
-          found3I = i
-          found3N = t(i)
-        } else {
-          return new MDDn(t, size)
-        }
-      }
-      i -= 1
-    }
-
-    assert(found1I >= 0)
-    if (found2I < 0) {
-      new MDD1(found1N, found1I, size)
-    } else if (found3I < 0) {
-      new MDD2(found2N, found2I, found1N, found1I, size)
-    } else {
-      new MDD3(found3N, found3I, found2N, found2I, found1N, found1I, size)
-    }
-  }
-
   def newTrie(i: Int, v: MDD) = {
-    val t = Array.fill[MDD](i + 1)(MDD0) //new Array[MDD](i + 1)
+    val t = Array.fill[MDD](i + 1)(MDD20)
     t(i) = v
     t
   }
 
   def newTrie(t: (Int, MDD)*) = {
     val s: Int = t.map(_._1).max
-    val trie = Array.fill[MDD](s + 1)(MDD0)
+    val trie = Array.fill[MDD](s + 1)(MDD20)
     addTrie(trie, t: _*)
     trie
   }
@@ -72,78 +36,18 @@ object MDD extends RelationGenerator {
     }
   }
 
+  def newNode(trie: SparseMap[MDD], s: Int) = new MDD2n(trie, s)
+
 }
 
-trait MDD extends Relation {
-  type Self2 = MDD
-  def +(t: Array[Int]): MDD = if (contains(t)) MDD.this else addTrie(t, 0)
-  def addTrie(t: Array[Int], i: Int): MDD
-  def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]): MDD
-  def contains(t: Array[Int]): Boolean = contains(t, 0)
-  def contains(t: Array[Int], i: Int): Boolean
-  def find(f: (Int, Int) => Boolean): Option[Array[Int]] = {
-    MDD.timestamp += 1
-    find(MDD.timestamp, f, 0) map (_.toArray)
-  }
-  def find(ts: Int, f: (Int, Int) => Boolean, depth: Int): Option[List[Int]]
-  def iterator = listIterator.map(_.toArray)
-  def listIterator: Iterator[List[Int]]
-  def nodes: Int = {
-    MDD.timestamp += 1
-    nodes(MDD.timestamp)
-  }
-  def nodes(ts: Int): Int
-  def filterTrie(f: (Int, Int) => Boolean, modified: List[Int]): MDD = {
-    MDD.timestamp += 1
-    filterTrie(MDD.timestamp, f, modified, 0)
-  }
-  def filterTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int): MDD
-  def fillFound(f: (Int, Int) => Boolean, arity: Int): Traversable[Int] = {
-    MDD.timestamp += 1
-    val l = new ListWithMax(arity)
-    fillFound(MDD.timestamp, f, 0, l)
-    l
-  }
-  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: ListWithMax)
-  override def toString = s"$nodes representing $size tuples"
-  def copy = this
-  def -(t: Array[Int]) = throw new UnsupportedOperationException
-}
-
-final object MDDLeaf extends MDD {
-  private var timestamp = 0
-  override def size = 1
-  def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]) = this
-  def contains(tuple: Array[Int], i: Int) = true
-  def find(ts: Int, f: (Int, Int) => Boolean, depth: Int) = Some(Nil)
-  def listIterator = Iterator(Nil)
-  def nodes(ts: Int) = {
-    if (ts == timestamp) {
-      0
-    } else {
-      timestamp = ts
-      1
-    }
-  }
-  def filterTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int) = {
-    assert(modified.isEmpty)
-    this
-  }
-  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: ListWithMax) = {
-    assert(depth > l.max)
-  }
-  def addTrie(tuple: Array[Int], i: Int) = throw new UnsupportedOperationException
-  override def toString = "MDD Leaf"
-}
-
-final object MDD0 extends MDD {
+final object MDD20 extends MDD {
   override def size = 0
-  def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]) = MDD0
+  def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]) = MDD20
   def contains(tuple: Array[Int], i: Int) = false
   def find(ts: Int, f: (Int, Int) => Boolean, depth: Int) = None
   def listIterator = Iterator()
   def nodes(ts: Int) = 0
-  def filterTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int) = MDD0
+  def filterTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int) = MDD20
   def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: ListWithMax) {
     throw new UnsupportedOperationException
   }
@@ -151,14 +55,14 @@ final object MDD0 extends MDD {
     if (i >= tuple.length) {
       MDDLeaf
     } else {
-      new MDD1(MDD0.addTrie(tuple, i + 1), tuple(i), 1)
+      new MDD21(MDD20.addTrie(tuple, i + 1), tuple(i), 1)
     }
   }
   override def toString = "Empty MDD"
 }
 
-final class MDD1(private val child: MDD, private val index: Int, override val size: Int) extends MDD {
-  assert(child ne MDD0)
+final class MDD21(private val child: MDD, private val index: Int, override val size: Int) extends MDD {
+  assert(child ne MDD20)
   private var timestamp: Int = _
   def addTrie(t: Array[Int], i: Int): MDD =
     if (i >= t.length) {
@@ -166,11 +70,11 @@ final class MDD1(private val child: MDD, private val index: Int, override val si
     } else {
       val v = t(i)
       if (v == index) {
-        new MDD1(child.addTrie(t, i + 1), index, size + 1)
+        new MDD21(child.addTrie(t, i + 1), index, size + 1)
       } else if (v < index) {
-        new MDD2(MDD0.addTrie(t, i + 1), v, child, index, size + 1)
+        new MDD22(MDD20.addTrie(t, i + 1), v, child, index, size + 1)
       } else {
-        new MDD2(child, index, MDD0.addTrie(t, i + 1), v, size + 1)
+        new MDD22(child, index, MDD20.addTrie(t, i + 1), v, size + 1)
       }
     }
 
@@ -189,8 +93,8 @@ final class MDD1(private val child: MDD, private val index: Int, override val si
     //    if (b eq EmptyMDD) {
     //      EmptyMDD
     //    } else {
-    val newArray = MDD.newTrie(index, b)
-    mdds.getOrElseUpdate(newArray, new MDD1(b, index, size))
+    val newArray = MDDSparse.newTrie((index, b))
+    mdds.getOrElseUpdate(newArray, new MDD21(b, index, size))
     //}
 
   }
@@ -211,7 +115,7 @@ final class MDD1(private val child: MDD, private val index: Int, override val si
   override def hashCode: Int = 31 * index + child.hashCode
 
   override def equals(o: Any): Boolean = o match {
-    case t: MDD1 => t.index == index && (t.child eq child)
+    case t: MDD21 => t.index == index && (t.child eq child)
     case _ => false
   }
 
@@ -242,19 +146,19 @@ final class MDD1(private val child: MDD, private val index: Int, override val si
           if (f(depth, index)) {
             child.filterTrie(ts, f, modified.tail, depth + 1)
           } else {
-            MDD0
+            MDD20
           }
         } else {
           // No change at this level (=> no need to call f())
           child.filterTrie(ts, f, modified, depth + 1)
         }
 
-      if (nC eq MDD0) {
-        filteredResult = MDD0
+      if (nC eq MDD20) {
+        filteredResult = MDD20
       } else if (nC eq child) {
         filteredResult = this
       } else {
-        filteredResult = new MDD1(nC, index, nC.size)
+        filteredResult = new MDD21(nC, index, nC.size)
       }
 
       filteredResult
@@ -273,12 +177,12 @@ final class MDD1(private val child: MDD, private val index: Int, override val si
   }
 }
 
-final class MDD2(
+final class MDD22(
   private val left: MDD, private val leftI: Int,
   private val right: MDD, private val rightI: Int,
   override val size: Int) extends MDD {
-  assert(right ne MDD0)
-  assert(left ne MDD0)
+  assert(right ne MDD20)
+  assert(left ne MDD20)
   assert(leftI < rightI)
 
   private var timestamp: Int = _
@@ -287,16 +191,16 @@ final class MDD2(
       MDDLeaf
     } else {
       t(i) match {
-        case `leftI` => new MDD2(left.addTrie(t, i + 1), leftI, right, rightI, size + 1)
-        case `rightI` => new MDD2(left, leftI, right.addTrie(t, i + 1), rightI, size + 1)
+        case `leftI` => new MDD22(left.addTrie(t, i + 1), leftI, right, rightI, size + 1)
+        case `rightI` => new MDD22(left, leftI, right.addTrie(t, i + 1), rightI, size + 1)
         case v: Int if v < leftI =>
-          new MDD3(MDD0.addTrie(t, i + 1), v, left, leftI, right, rightI, size + 1)
+          new MDD23(MDD20.addTrie(t, i + 1), v, left, leftI, right, rightI, size + 1)
 
         case v: Int if v < rightI =>
-          new MDD3(left, leftI, MDD0.addTrie(t, i + 1), v, right, rightI, size + 1)
+          new MDD23(left, leftI, MDD20.addTrie(t, i + 1), v, right, rightI, size + 1)
 
         case v: Int =>
-          new MDD3(left, leftI, right, rightI, MDD0.addTrie(t, i + 1), v, size + 1)
+          new MDD23(left, leftI, right, rightI, MDD20.addTrie(t, i + 1), v, size + 1)
 
       }
     }
@@ -328,7 +232,7 @@ final class MDD2(
     if (f(depth, i)) {
       t.filterTrie(ts, f, modified, depth + 1)
     } else {
-      MDD0
+      MDD20
     }
   }
 
@@ -354,20 +258,20 @@ final class MDD2(
       }
 
       filteredResult =
-        if (nL eq MDD0) {
-          if (nR eq MDD0) {
-            MDD0
+        if (nL eq MDD20) {
+          if (nR eq MDD20) {
+            MDD20
           } else {
-            new MDD1(nR, rightI, nR.size)
+            new MDD21(nR, rightI, nR.size)
           }
-        } else if (nR eq MDD0) {
-          new MDD1(nL, leftI, nL.size)
+        } else if (nR eq MDD20) {
+          new MDD21(nL, leftI, nL.size)
         } else {
           val s = nL.size + nR.size
           if (s == size) {
             this
           } else {
-            new MDD2(nL, leftI, nR, rightI, s)
+            new MDD22(nL, leftI, nR, rightI, s)
           }
         }
 
@@ -404,27 +308,27 @@ final class MDD2(
     var bL = left.reduce(mdds)
     var bR = right.reduce(mdds)
 
-    val nT = MDD.newTrie((leftI, bL), (rightI, bR))
+    val nT = MDDSparse.newTrie((leftI, bL), (rightI, bR))
 
-    mdds.getOrElseUpdate(nT, new MDD2(bL, leftI, bR, rightI, size))
+    mdds.getOrElseUpdate(nT, new MDD22(bL, leftI, bR, rightI, size))
   }
 
   override def hashCode: Int = List(left, leftI, right, rightI).hashCode
 
   override def equals(o: Any): Boolean = o match {
-    case t: MDD2 => (left eq t.left) && (right eq t.right) && (leftI == t.leftI) && (rightI == t.rightI)
+    case t: MDD22 => (left eq t.left) && (right eq t.right) && (leftI == t.leftI) && (rightI == t.rightI)
     case _ => false
   }
 }
 
-final class MDD3(
+final class MDD23(
   private val left: MDD, private val leftI: Int,
   private val mid: MDD, private val midI: Int,
   private val right: MDD, private val rightI: Int,
   override val size: Int) extends MDD {
-  assert(right ne MDD0)
-  assert(mid ne MDD0)
-  assert(left ne MDD0)
+  assert(right ne MDD20)
+  assert(mid ne MDD20)
+  assert(left ne MDD20)
   assert(leftI < midI)
   assert(midI < rightI)
 
@@ -434,12 +338,16 @@ final class MDD3(
       MDDLeaf
     } else {
       t(i) match {
-        case `leftI` => new MDD3(left.addTrie(t, i + 1), leftI, mid, midI, right, rightI, size + 1)
-        case `midI` => new MDD3(left, leftI, mid.addTrie(t, i + 1), midI, right, rightI, size + 1)
-        case `rightI` => new MDD3(left, leftI, mid, midI, right.addTrie(t, i + 1), rightI, size + 1)
+        case `leftI` => new MDD23(left.addTrie(t, i + 1), leftI, mid, midI, right, rightI, size + 1)
+        case `midI` => new MDD23(left, leftI, mid.addTrie(t, i + 1), midI, right, rightI, size + 1)
+        case `rightI` => new MDD23(left, leftI, mid, midI, right.addTrie(t, i + 1), rightI, size + 1)
         case v: Int => {
-          val newArray = MDD.newTrie((leftI, left), (midI, mid), (rightI, right), (v, MDD0.addTrie(t, i + 1)))
-          new MDDn(newArray, size + 1)
+          var sm = new SparseMap[MDD]()
+          sm += leftI -> left
+          sm += midI -> mid
+          sm += rightI -> right
+          sm += v -> MDD20.addTrie(t, i + 1)
+          new MDD2n(sm, size + 1)
         }
       }
     }
@@ -477,7 +385,7 @@ final class MDD3(
     if (f(depth, i)) {
       t.filterTrie(ts, f, modified, depth + 1)
     } else {
-      MDD0
+      MDD20
     }
   }
 
@@ -511,33 +419,33 @@ final class MDD3(
       }
 
       filteredResult =
-        if (nL eq MDD0) {
-          if (nM eq MDD0) {
-            if (nR eq MDD0) {
-              MDD0
+        if (nL eq MDD20) {
+          if (nM eq MDD20) {
+            if (nR eq MDD20) {
+              MDD20
             } else {
-              new MDD1(nR, rightI, nR.size)
+              new MDD21(nR, rightI, nR.size)
             }
-          } else if (nR eq MDD0) {
-            new MDD1(nM, midI, nM.size)
+          } else if (nR eq MDD20) {
+            new MDD21(nM, midI, nM.size)
           } else {
-            new MDD2(nM, midI, nR, rightI, nM.size + nR.size)
+            new MDD22(nM, midI, nR, rightI, nM.size + nR.size)
           }
-        } else if (nM eq MDD0) {
-          if (nR eq MDD0) {
-            new MDD1(nL, leftI, nL.size)
+        } else if (nM eq MDD20) {
+          if (nR eq MDD20) {
+            new MDD21(nL, leftI, nL.size)
           } else {
-            new MDD2(nL, leftI, nR, rightI, nL.size + nR.size)
+            new MDD22(nL, leftI, nR, rightI, nL.size + nR.size)
           }
         } else {
-          if (nR eq MDD0) {
-            new MDD2(nL, leftI, nM, midI, nL.size + nM.size)
+          if (nR eq MDD20) {
+            new MDD22(nL, leftI, nM, midI, nL.size + nM.size)
           } else {
             val s = nL.size + nM.size + nR.size
             if (s == size) {
               this
             } else {
-              new MDD3(nL, leftI, nM, midI, nR, rightI, s)
+              new MDD23(nL, leftI, nM, midI, nR, rightI, s)
             }
           }
         }
@@ -579,14 +487,14 @@ final class MDD3(
     val bM = mid.reduce(mdds)
     val bR = right.reduce(mdds)
 
-    val nT = MDD.newTrie((leftI, bL), (midI, bM), (rightI, bR))
-    mdds.getOrElseUpdate(nT, new MDD3(bL, leftI, bM, midI, bR, rightI, size))
+    val nT = MDDSparse.newTrie((leftI, bL), (midI, bM), (rightI, bR))
+    mdds.getOrElseUpdate(nT, new MDD23(bL, leftI, bM, midI, bR, rightI, size))
   }
 
   override def hashCode: Int = List(left, leftI, mid, midI, right, rightI).hashCode
 
   override def equals(o: Any): Boolean = o match {
-    case t: MDD3 =>
+    case t: MDD23 =>
       (left eq t.left) && (right eq t.right) &&
         (mid eq t.mid) && (leftI == t.leftI) &&
         (midI == t.midI) && (rightI == t.rightI)
@@ -594,7 +502,7 @@ final class MDD3(
   }
 }
 
-final class MDDn(private val trie: Array[MDD], override val size: Int) extends MDD {
+final class MDD2n(private val trie: SparseMap[MDD], override val size: Int) extends MDD {
   assert(size > 0)
   private var timestamp = 0
 
@@ -603,20 +511,20 @@ final class MDDn(private val trie: Array[MDD], override val size: Int) extends M
       MDDLeaf
     } else {
       val v = tuple(i)
-      val newTrie = trie.padTo(v + 1, MDD0)
-      newTrie(v) = newTrie(v).addTrie(tuple, i + 1)
-      new MDDn(newTrie, size + 1)
+      val newTrie = trie + (v -> trie.get(v).getOrElse(MDD20).addTrie(tuple, i + 1))
+      new MDD2n(newTrie, size + 1)
     }
   }
 
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]): MDD = {
-    var b = trie.map(_.reduce(mdds))
-    mdds.getOrElseUpdate(b, new MDDn(b, size))
+    val nt = trie.mapValues(_.reduce(mdds))
+    val b = MDDSparse.newTrie(nt.toSeq: _*)
+    mdds.getOrElseUpdate(b, new MDD2n(nt, size))
   }
 
   //@tailrec
   def contains(tuple: Array[Int], i: Int): Boolean =
-    tuple(i) < trie.length && trie(tuple(i)).contains(tuple, i + 1)
+    trie.get(tuple(i)).map(_.contains(tuple, i + 1)).getOrElse(false)
 
   def find(ts: Int, f: (Int, Int) => Boolean, depth: Int): Option[List[Int]] = {
     if (timestamp == ts) {
@@ -627,107 +535,57 @@ final class MDDn(private val trie: Array[MDD], override val size: Int) extends M
     }
   }
 
-  @tailrec
-  private def findHere(ts: Int, f: (Int, Int) => Boolean, depth: Int, i: Int = trie.length - 1): Option[List[Int]] = {
-    if (i < 0) {
-      None
-    } else if (f(depth, i)) {
-      trie(i).find(ts, f, depth + 1) match {
-        case Some(found) => Some(i :: found)
-        case None => findHere(ts, f, depth, i - 1)
+  private def findHere(ts: Int, f: (Int, Int) => Boolean, depth: Int): Option[List[Int]] = {
+    val it = trie.iterator
+    while (it.hasNext) {
+      val (k, v) = it.next
+      val found = v.find(ts, f, depth + 1)
+      if (found.isDefined) {
+        return Some(k :: found.get)
       }
-    } else {
-      findHere(ts, f, depth, i - 1)
     }
+    None
   }
 
-  override lazy val hashCode: Int = MurmurHash3.arrayHash(trie)
+  override lazy val hashCode: Int = trie.hashCode
 
   override def equals(o: Any): Boolean = o match {
-    case t: MDDn =>
-      val len = t.trie.length
-      len == trie.length && {
-        var i = len - 1
-        while (i >= 0 && (t.trie(i) eq trie(i))) i -= 1
-        i < 0
-      }
+    case t: MDD2n =>
+      t.trie.size == trie.size && t.trie.forall(t => trie.get(t._1).map(_ eq t._2).getOrElse(false))
+
     case _ => false
   }
 
   def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: ListWithMax) {
     if (timestamp != ts) {
       timestamp = ts
-      var i = trie.length - 1
-      while (i >= 0 && depth <= l.max) {
-        if (trie(i) ne MDD0) {
-          if (f(depth, i)) l.clear(depth)
-          trie(i).fillFound(ts, f, depth + 1, l)
+      val it = trie.iterator
+      while (it.hasNext && depth <= l.max) {
+        val (k, v) = it.next()
+        if (v ne MDD20) {
+          if (f(depth, k)) l.clear(depth)
+          v.fillFound(ts, f, depth + 1, l)
         }
-        i -= 1
       }
     }
   }
 
   private var filteredResult: MDD = _
 
-  private def udTrie0(trie: Array[MDD], i: Int) {
-    if (trie ne null) {
-      trie(i) = MDD0
-    }
-  }
-
   private def filteredTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int) = {
-    var newSize = 0
-    val trie = this.trie
-    var newTrie: Array[MDD] = null
-    var i = trie.length - 1
-    while (i >= 0) {
-      if ((trie(i) ne MDD0) && f(depth, i)) {
-        val uT = trie(i).filterTrie(ts, f, modified, depth + 1)
-        if (uT ne MDD0) {
-          if (newTrie eq null) {
-            newTrie = fill(i + 1, uT)
-          } else {
-            newTrie(i) = uT
-          }
-          newSize += uT.size
-        }
-      }
-      i -= 1
+
+    trie.filter { i: Int =>
+      f(depth, i)
+    } mapValues {
+      _.filterTrie(ts, f, modified, depth + 1)
     }
-    (newTrie, newSize)
+
   }
 
-  private def passedTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int): (Array[MDD], Int) = {
-    var newSize = 0
-    val trie = this.trie
-    var newTrie: Array[MDD] = null
-    var i = trie.length - 1
-    while (i >= 0) {
-      val nT = trie(i).filterTrie(ts, f, modified, depth)
-      if (nT ne MDD0) {
-        if (newTrie eq null) {
-          newTrie = fill(i + 1, nT)
-        } else {
-          newTrie(i) = nT
-        }
-        newSize += nT.size
-      }
-      i -= 1
+  private def passedTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int) = {
+    trie.mapValues {
+      _.filterTrie(ts, f, modified, depth + 1)
     }
-    (newTrie, newSize)
-  }
-
-  private def fill(s: Int, last: MDD) = {
-    val t = new Array[MDD](s)
-    var i = s - 1
-    t(i) = last
-    i -= 1
-    while (i >= 0) {
-      t(i) = MDD0
-      i -= 1
-    }
-    t
   }
 
   def filterTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int = 0): MDD =
@@ -738,7 +596,7 @@ final class MDDn(private val trie: Array[MDD], override val size: Int) extends M
     } else {
       timestamp = ts
 
-      val (newTrie, newSize) =
+      val newTrie =
         if (modified.head == depth) {
           // Some change at this level
           filteredTrie(ts, f, modified.tail, depth)
@@ -747,17 +605,19 @@ final class MDDn(private val trie: Array[MDD], override val size: Int) extends M
           passedTrie(ts, f, modified, depth + 1)
         }
 
+      val newSize = newTrie.foldLeft(0)(_ + _._2.size)
+
       filteredResult = newSize match {
-        case 0 => MDD0
+        case 0 => MDD20
         case `size` => this
-        case s: Int => MDD.newNode(newTrie, s)
+        case s: Int => MDDSparse.newNode(newTrie, s)
       }
       filteredResult
 
     }
 
-  def listIterator = trie.iterator.zipWithIndex flatMap {
-    case (t, i) => t.listIterator map (i :: _)
+  def listIterator = trie.iterator flatMap {
+    case (i, t) => t.listIterator map (i :: _)
   }
 
   def nodes(ts: Int): Int = {
@@ -765,7 +625,7 @@ final class MDDn(private val trie: Array[MDD], override val size: Int) extends M
       0
     } else {
       timestamp = ts
-      1 + trie.map(_.nodes(ts)).sum
+      1 + trie.map(_._2.nodes(ts)).sum
     }
   }
 

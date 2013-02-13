@@ -237,17 +237,17 @@ final class Trie2(
     case _ => false
   }
 
-  def fillFound(f: (Int, Int) => Boolean, depth: Int, l: ListWithMax): Unit =
-    {
-      if (depth <= l.max) {
-        if (f(depth, leftI)) l.clear(depth)
-        left.fillFound(f, depth + 1, l)
-      }
+  def fillFound(f: (Int, Int) => Boolean, depth: Int, l: ListWithMax) {
+    if (depth <= l.max) {
+      if (f(depth, leftI)) l.clear(depth)
+      left.fillFound(f, depth + 1, l)
+
       if (depth <= l.max) {
         if (f(depth, rightI)) l.clear(depth)
         right.fillFound(f, depth + 1, l)
       }
     }
+  }
 
   private def filteredTrie(f: (Int, Int) => Boolean, modified: List[Int], depth: Int, t: Trie, i: Int) = {
     if (f(depth, i)) {
@@ -266,19 +266,18 @@ final class Trie2(
       this
     } else {
 
-      var nL: Trie = null
-      var nR: Trie = null
-
-      if (modified.head == depth) {
-        // Some change at this level
-        nL = filteredTrie(f, modified.tail, depth, left, leftI)
-        nR = filteredTrie(f, modified.tail, depth, right, rightI)
-
-      } else {
-        // No change at this level (=> no need to call f())
-        nL = passedTrie(f, modified, depth, left)
-        nR = passedTrie(f, modified, depth, right)
-      }
+      val (nL, nR) =
+        if (modified.head == depth) {
+          // Some change at this level
+          val nL = filteredTrie(f, modified.tail, depth, left, leftI)
+          val nR = filteredTrie(f, modified.tail, depth, right, rightI)
+          (nL, nR)
+        } else {
+          // No change at this level (=> no need to call f())
+          val nL = passedTrie(f, modified, depth, left)
+          val nR = passedTrie(f, modified, depth, right)
+          (nL, nR)
+        }
 
       if (nL eq Trie0) {
         if (nR eq Trie0) {
@@ -317,9 +316,7 @@ final class Trie2(
   def nodes(): Int =
     1 + left.nodes + right.nodes
 
-  override def hashCode: Int = {
-    MurmurHash3.listHash(List(left, leftI, right, rightI), 0)
-  }
+  override def hashCode: Int = List(left, leftI, right, rightI).hashCode
 
   override def equals(o: Any): Boolean = o match {
     case t: Trie2 => (left eq t.left) && (right eq t.right) && (leftI == t.leftI) && (rightI == t.rightI)
@@ -370,14 +367,16 @@ final class Trie3(
       if (depth <= l.max) {
         if (f(depth, leftI)) l.clear(depth)
         left.fillFound(f, depth + 1, l)
-      }
-      if (depth <= l.max) {
-        if (f(depth, midI)) l.clear(depth)
-        mid.fillFound(f, depth + 1, l)
-      }
-      if (depth <= l.max) {
-        if (f(depth, rightI)) l.clear(depth)
-        right.fillFound(f, depth + 1, l)
+
+        if (depth <= l.max) {
+          if (f(depth, midI)) l.clear(depth)
+          mid.fillFound(f, depth + 1, l)
+
+          if (depth <= l.max) {
+            if (f(depth, rightI)) l.clear(depth)
+            right.fillFound(f, depth + 1, l)
+          }
+        }
       }
     }
 
@@ -469,9 +468,7 @@ final class Trie3(
   def nodes(): Int =
     1 + left.nodes + mid.nodes + right.nodes
 
-  override def hashCode: Int = {
-    MurmurHash3.listHash(List(left, leftI, mid, midI, right, rightI), 0)
-  }
+  override def hashCode: Int = List(left, leftI, mid, midI, right, rightI).hashCode
 
   override def equals(o: Any): Boolean = o match {
     case t: Trie3 =>
@@ -555,32 +552,58 @@ final class Trien(private val trie: Array[Trie], override val size: Int) extends
 
   }
 
-  private def filteredTrie(f: (Int, Int) => Boolean, modified: List[Int], depth: Int, newTrie: Array[Trie]) = {
+  private def fill(s: Int, last: Trie) = {
+    val t = new Array[Trie](s)
+    var i = s - 1
+    t(i) = last
+    i -= 1
+    while (i >= 0) {
+      t(i) = Trie0
+      i -= 1
+    }
+    t
+  }
+
+  private def filteredTrie(f: (Int, Int) => Boolean, modified: List[Int], depth: Int) = {
     var newSize = 0
     val trie = this.trie
+    var newTrie: Array[Trie] = null
     var i = trie.length - 1
     while (i >= 0) {
       if ((trie(i) ne Trie0) && f(depth, i)) {
-        newTrie(i) = trie(i).filterTrie(f, modified, depth + 1)
-        newSize += newTrie(i).size
-      } else {
-        newTrie(i) = Trie0
+        val uT = trie(i).filterTrie(f, modified, depth + 1)
+        if (uT ne Trie0) {
+          if (newTrie eq null) {
+            newTrie = fill(i + 1, uT)
+          } else {
+            newTrie(i) = uT
+          }
+          newSize += uT.size
+        }
       }
       i -= 1
     }
-    newSize
+    (newTrie, newSize)
   }
 
-  private def passedTrie(f: (Int, Int) => Boolean, modified: List[Int], depth: Int, newTrie: Array[Trie]) = {
+  private def passedTrie(f: (Int, Int) => Boolean, modified: List[Int], depth: Int) = {
     var newSize = 0
     val trie = this.trie
+    var newTrie: Array[Trie] = null
     var i = trie.length - 1
     while (i >= 0) {
-      newTrie(i) = trie(i).filterTrie(f, modified, depth)
-      newSize += newTrie(i).size
+      val nT = trie(i).filterTrie(f, modified, depth)
+      if (nT ne Trie0) {
+        if (newTrie eq null) {
+          newTrie = fill(i + 1, nT)
+        } else {
+          newTrie(i) = nT
+        }
+        newSize += nT.size
+      }
       i -= 1
     }
-    newSize
+    (newTrie, newSize)
   }
 
   def filterTrie(f: (Int, Int) => Boolean, modified: List[Int], depth: Int = 0): Trie =
@@ -588,16 +611,14 @@ final class Trien(private val trie: Array[Trie], override val size: Int) extends
       this
     } else {
 
-      val newTrie = new Array[Trie](trie.length)
-      var newSize = 0
-
-      if (modified.head == depth) {
-        // Some change at this level
-        newSize = filteredTrie(f, modified.tail, depth, newTrie)
-      } else {
-        // No change at this level (=> no need to call f())
-        newSize = passedTrie(f, modified, depth + 1, newTrie)
-      }
+      val (newTrie, newSize) =
+        if (modified.head == depth) {
+          // Some change at this level
+          filteredTrie(f, modified.tail, depth)
+        } else {
+          // No change at this level (=> no need to call f())
+          passedTrie(f, modified, depth + 1)
+        }
 
       newSize match {
         case 0 => Trie0

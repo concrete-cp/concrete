@@ -54,10 +54,12 @@ final class ScalaBinomialHeap[T <: Identified](initSize: Int) extends PriorityQu
    */
   private def ensureCapacity(minCapacity: Int) {
     val oldCapacity = map.length;
+    if (minCapacity > oldCapacity) {
+      val newCapacity = math.max(minCapacity, (oldCapacity * 3) / 2 + 1);
+      // minCapacity is usually close to size, so this is a win:
 
-    val newCapacity = math.max(minCapacity, (oldCapacity * 3) / 2 + 1);
-    // minCapacity is usually close to size, so this is a win:
-    map = Arrays.copyOf(map, newCapacity)
+      map = Arrays.copyOf(map, newCapacity)
+    }
 
   }
 

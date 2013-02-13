@@ -4,7 +4,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-
 class IndexerTest {
   @Test
   def testDirect {
@@ -15,7 +14,7 @@ class IndexerTest {
     assertEquals(-1, i.index(-1))
     assertEquals(-1, i.index(11))
   }
-  
+
   @Test
   def testOffset {
     val i = Indexer.factory(1 to 10 toArray)
