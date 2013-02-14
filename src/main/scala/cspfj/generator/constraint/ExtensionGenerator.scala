@@ -13,14 +13,12 @@ import cspfj.constraint.extension.ExtensionConstraintFind
 import cspfj.constraint.extension.ExtensionConstraintGeneral
 import cspfj.constraint.extension.ExtensionConstraintReduceable
 import cspfj.constraint.extension.MDD
+import cspfj.constraint.extension.MDDC
 import cspfj.constraint.extension.Matrix
 import cspfj.constraint.extension.Matrix2D
 import cspfj.constraint.extension.STR
 import cspfj.constraint.extension.TupleTrieSet
 import cspom.extension.HashTrie
-import cspfj.constraint.extension.ExtensionConstraintPopulate
-//import cspfj.constraint.extension.MDDSparse
-//import cspfj.constraint.extension.MDD2
 
 object ExtensionGenerator {
 
@@ -97,8 +95,8 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
         case m: Matrix2D => new ExtensionConstraint2D(scope, m, true)
         case m: TupleTrieSet if (m.initialContent == false) => {
           ExtensionGenerator.consType match {
-            case "ReducePop" => {
-              new ExtensionConstraintPopulate(scope, m.reduceable.asInstanceOf[MDD])
+            case "MDDC" => {
+              new MDDC(scope, m.reduceable.asInstanceOf[MDD])
             }
             case "Reduce" => {
               new ExtensionConstraintReduceable(scope, m.reduceable.copy)

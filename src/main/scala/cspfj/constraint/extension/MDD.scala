@@ -6,6 +6,9 @@ import scala.collection.mutable.Seq
 import scala.util.hashing.MurmurHash3
 import cspfj.util.ListWithMax
 import java.util.Arrays
+import cspfj.priorityqueues.Identified
+import cspfj.util.BitVector
+import cspfj.Variable
 
 trait RelationGenerator {
   def apply(data: Iterator[Array[Int]]): Relation
@@ -14,9 +17,10 @@ trait RelationGenerator {
 object MDD extends RelationGenerator {
   def apply(data: Array[Int]*): MDD = apply(data.iterator)
 
-  def apply(data: Iterator[Array[Int]]): MDD =
+  def apply(data: Iterator[Array[Int]]): MDD = {
     data.foldLeft[MDD](MDD0)(
       (acc, tuple) => acc + tuple).reduce(new HashMap[Seq[MDD], MDD]())
+  }
 
   var timestamp = 0
 
@@ -74,8 +78,23 @@ object MDD extends RelationGenerator {
 
 }
 
-trait MDD extends Relation {
+trait MDD extends Relation with Identified {
   type Self2 = MDD
+  var _id = -1
+  def getId = _id
+  def identify(): Int = {
+    MDD.timestamp += 1
+    identify(MDD.timestamp, 1)
+  }
+  def identify(ts: Int, i: Int): Int = {
+    if (ts == timestamp) {
+      i
+    } else {
+      timestamp = ts
+      _id = i
+      subTries.foldLeft(i)((acc, t) => t._2.identify(ts, acc + 1))
+    }
+  }
   def timestamp: Int
   def timestamp_=(i: Int)
   def +(t: Array[Int]): MDD = if (contains(t)) MDD.this else addTrie(t, 0)
@@ -112,10 +131,13 @@ trait MDD extends Relation {
   def copy = this
   def -(t: Array[Int]) = throw new UnsupportedOperationException
   def subTries: Iterator[(Int, MDD)]
+  def forSubtries(f: (Int, MDD) => Boolean)
+
 }
 
 final object MDDLeaf extends MDD {
   var timestamp = 0
+  override def getId = 0
   override def size = 1
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]) = this
   def contains(tuple: Array[Int], i: Int) = true
@@ -139,10 +161,16 @@ final object MDDLeaf extends MDD {
   def addTrie(tuple: Array[Int], i: Int) = throw new UnsupportedOperationException
   override def toString = "MDD Leaf"
   def subTries = throw new UnsupportedOperationException
+  def forSubtries(f: (Int, MDD) => Boolean) {
+    throw new UnsupportedOperationException
+  }
+  override def identify(ts: Int, i: Int): Int = i
 }
 
 final object MDD0 extends MDD {
   override def size = 0
+  override def getId = throw new UnsupportedOperationException
+  override def identify(ts: Int, i: Int): Int = throw new UnsupportedOperationException
   def timestamp = throw new UnsupportedOperationException
   def timestamp_=(i: Int) { throw new UnsupportedOperationException }
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]) = MDD0
@@ -163,6 +191,9 @@ final object MDD0 extends MDD {
   }
   override def toString = "Empty MDD"
   def subTries = throw new UnsupportedOperationException
+  def forSubtries(f: (Int, MDD) => Boolean) {
+    throw new UnsupportedOperationException
+  }
 }
 
 final class MDD1(private val child: MDD, private val index: Int, override val size: Int) extends MDD {
@@ -170,6 +201,10 @@ final class MDD1(private val child: MDD, private val index: Int, override val si
   var timestamp: Int = _
 
   def subTries = Iterator((index, child))
+
+  def forSubtries(f: (Int, MDD) => Boolean) {
+    f(index, child)
+  }
 
   def addTrie(t: Array[Int], i: Int): MDD =
     if (i >= t.length) {
@@ -293,7 +328,9 @@ final class MDD2(
   assert(leftI < rightI)
 
   def subTries = Iterator((leftI, left), (rightI, right))
-
+  def forSubtries(f: (Int, MDD) => Boolean) {
+    f(leftI, left) && f(rightI, right)
+  }
   var timestamp: Int = _
   def addTrie(t: Array[Int], i: Int): MDD =
     if (i >= t.length) {
@@ -442,7 +479,9 @@ final class MDD3(
   assert(midI < rightI)
 
   def subTries = Iterator((leftI, left), (midI, mid), (rightI, right))
-
+  def forSubtries(f: (Int, MDD) => Boolean) {
+    f(leftI, left) && f(midI, mid) && f(rightI, right)
+  }
   var timestamp: Int = _
   def addTrie(t: Array[Int], i: Int): MDD =
     if (i >= t.length) {
@@ -616,6 +655,19 @@ final class MDDn(private val trie: Array[MDD], override val size: Int) extends M
   lazy val st = trie.zipWithIndex.filter(_._1 ne MDD0).map(t => (t._2, t._1))
 
   def subTries = st.iterator
+  def forSubtries(f: (Int, MDD) => Boolean) {
+    forSubtries(f, trie.length - 1)
+  }
+
+  @tailrec
+  def forSubtries(f: (Int, MDD) => Boolean, i: Int) {
+    if (i >= 0) {
+      val t = trie(i)
+      if ((t eq MDD0) || f(i, t)) {
+        forSubtries(f, i - 1)
+      }
+    }
+  }
 
   def addTrie(tuple: Array[Int], i: Int): MDD = {
     if (i >= tuple.length) {
