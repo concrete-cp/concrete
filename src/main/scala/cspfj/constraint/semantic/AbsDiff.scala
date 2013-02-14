@@ -45,7 +45,7 @@ final class AbsDiff(val result: Variable, val v0: Variable, val v1: Variable)
 
       case (Some(k0), None) => dom.intersectVal(k0)
       case (None, Some(k1)) => dom.intersectVal(k1)
-      case (None, None) => throw UNSATException.e
+      case _ => throw UNSATException.e
     }
 
   override def findSupport(position: Int, index: Int) =

@@ -66,7 +66,7 @@ trait Trie extends Relation {
 
   def find(f: (Int, Int) => Boolean, depth: Int): Option[List[Int]]
   def listIterator: Iterator[List[Int]]
-  def nodes(): Int
+  def nodes: Int
 
   def filterTrie(f: (Int, Int) => Boolean, modified: List[Int]) = filterTrie(f, modified, 0)
 
@@ -109,7 +109,7 @@ final object Trie0 extends Trie {
   def contains(tuple: Array[Int], i: Int) = false
   def find(f: (Int, Int) => Boolean, depth: Int) = None
   def listIterator = Iterator()
-  def nodes() = 0
+  def nodes = 0
   def filterTrie(f: (Int, Int) => Boolean, modified: List[Int], depth: Int) = Trie0
   def fillFound(f: (Int, Int) => Boolean, depth: Int, l: ListWithMax) {
     throw new UnsupportedOperationException
@@ -202,7 +202,7 @@ final class Trie1(private val child: Trie, private val index: Int, override val 
 
   def listIterator = child.listIterator.map(index :: _)
 
-  def nodes(): Int = 1 + child.nodes
+  def nodes: Int = 1 + child.nodes
 
 }
 
@@ -313,8 +313,7 @@ final class Trie2(
   }
 
   def listIterator: Iterator[List[Int]] = left.listIterator.map(0 :: _) ++ right.listIterator.map(1 :: _)
-  def nodes(): Int =
-    1 + left.nodes + right.nodes
+  def nodes: Int = 1 + left.nodes + right.nodes
 
   override def hashCode: Int = List(left, leftI, right, rightI).hashCode
 
@@ -465,8 +464,7 @@ final class Trie3(
     mid.listIterator.map(midI :: _) ++
     right.listIterator.map(rightI :: _)
 
-  def nodes(): Int =
-    1 + left.nodes + mid.nodes + right.nodes
+  def nodes: Int = 1 + left.nodes + mid.nodes + right.nodes
 
   override def hashCode: Int = List(left, leftI, mid, midI, right, rightI).hashCode
 
@@ -632,8 +630,7 @@ final class Trien(private val trie: Array[Trie], override val size: Int) extends
     case (t, i) => t.listIterator map (i :: _)
   }
 
-  def nodes(): Int =
-    1 + trie.map(_.nodes).sum
+  def nodes: Int = 1 + trie.map(_.nodes).sum
 
 }
 

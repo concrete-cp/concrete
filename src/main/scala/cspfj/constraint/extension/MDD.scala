@@ -76,6 +76,8 @@ object MDD extends RelationGenerator {
 
 trait MDD extends Relation {
   type Self2 = MDD
+  def timestamp: Int
+  def timestamp_=(i: Int)
   def +(t: Array[Int]): MDD = if (contains(t)) MDD.this else addTrie(t, 0)
   def addTrie(t: Array[Int], i: Int): MDD
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]): MDD
@@ -105,13 +107,15 @@ trait MDD extends Relation {
     l
   }
   def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: ListWithMax)
+
   override def toString = s"$nodes representing $size tuples"
   def copy = this
   def -(t: Array[Int]) = throw new UnsupportedOperationException
+  def subTries: Iterator[(Int, MDD)]
 }
 
 final object MDDLeaf extends MDD {
-  private var timestamp = 0
+  var timestamp = 0
   override def size = 1
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]) = this
   def contains(tuple: Array[Int], i: Int) = true
@@ -134,10 +138,13 @@ final object MDDLeaf extends MDD {
   }
   def addTrie(tuple: Array[Int], i: Int) = throw new UnsupportedOperationException
   override def toString = "MDD Leaf"
+  def subTries = throw new UnsupportedOperationException
 }
 
 final object MDD0 extends MDD {
   override def size = 0
+  def timestamp = throw new UnsupportedOperationException
+  def timestamp_=(i: Int) { throw new UnsupportedOperationException }
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]) = MDD0
   def contains(tuple: Array[Int], i: Int) = false
   def find(ts: Int, f: (Int, Int) => Boolean, depth: Int) = None
@@ -155,11 +162,15 @@ final object MDD0 extends MDD {
     }
   }
   override def toString = "Empty MDD"
+  def subTries = throw new UnsupportedOperationException
 }
 
 final class MDD1(private val child: MDD, private val index: Int, override val size: Int) extends MDD {
   assert(child ne MDD0)
-  private var timestamp: Int = _
+  var timestamp: Int = _
+
+  def subTries = Iterator((index, child))
+
   def addTrie(t: Array[Int], i: Int): MDD =
     if (i >= t.length) {
       MDDLeaf
@@ -281,7 +292,9 @@ final class MDD2(
   assert(left ne MDD0)
   assert(leftI < rightI)
 
-  private var timestamp: Int = _
+  def subTries = Iterator((leftI, left), (rightI, right))
+
+  var timestamp: Int = _
   def addTrie(t: Array[Int], i: Int): MDD =
     if (i >= t.length) {
       MDDLeaf
@@ -428,7 +441,9 @@ final class MDD3(
   assert(leftI < midI)
   assert(midI < rightI)
 
-  private var timestamp: Int = _
+  def subTries = Iterator((leftI, left), (midI, mid), (rightI, right))
+
+  var timestamp: Int = _
   def addTrie(t: Array[Int], i: Int): MDD =
     if (i >= t.length) {
       MDDLeaf
@@ -596,7 +611,11 @@ final class MDD3(
 
 final class MDDn(private val trie: Array[MDD], override val size: Int) extends MDD {
   assert(size > 0)
-  private var timestamp = 0
+  var timestamp = 0
+
+  lazy val st = trie.zipWithIndex.filter(_._1 ne MDD0).map(t => (t._2, t._1))
+
+  def subTries = st.iterator
 
   def addTrie(tuple: Array[Int], i: Int): MDD = {
     if (i >= tuple.length) {
