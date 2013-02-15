@@ -7,46 +7,40 @@ class SparseSet(
   private val sparse: Array[Int],
   private val members: Int) extends Set[Int] {
 
-  def this() = this(new Array[Int](10), new Array[Int](10), 0)
-
-  private def ensureCapacity(minCapacity: Int): SparseSet = {
-    val oldCapacity = sparse.length;
-
-    if (minCapacity > oldCapacity) {
-      val newCapacity = math.max(minCapacity, (oldCapacity * 3) / 2 + 1);
-      new SparseSet(
-        Arrays.copyOf(dense, newCapacity),
-        Arrays.copyOf(sparse, newCapacity),
-        members)
-    } else {
-      this
-    }
-
-  }
+  def this(s: Int) = this(new Array[Int](s), new Array[Int](s), 0)
 
   def contains(k: Int) = {
-    k < sparse.length && {
-      val a = sparse(k)
-      a < members && dense(a) == k
-    }
+
+    val a = sparse(k)
+    a < members && dense(a) == k
+
   }
 
-  def +(k: Int) = ensureCapacity(k + 1).addCap(k)
-
-  private def addCap(k: Int): SparseSet = {
+  def +(k: Int): SparseSet = {
     val a = sparse(k)
     val b = members
     if (a >= b || dense(a) != k) {
       sparse(k) = b
       dense(b) = k
-      new SparseSet(sparse, dense, b + 1)
+      new SparseSet(dense, sparse, b + 1)
     } else {
       this
     }
   }
 
   // Members declared in scala.collection.GenSetLike 
-  def iterator: Iterator[Int] = ???
+  def iterator: Iterator[Int] = new Iterator[Int] {
+    var c = members - 1
+    def hasNext = c >= 0
+    def next() = {
+      val v = sparse(dense(c))
+      c -= 1
+      v
+    }
+  }
+  
+  override def size = members
+  
   // Members  declared in scala.collection.SetLike 
   def -(elem: Int): scala.collection.immutable.Set[Int] = ???
 

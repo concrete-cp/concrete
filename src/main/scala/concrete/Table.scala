@@ -130,7 +130,7 @@ object Table extends App {
         //                        WHERE (version, problemId) = (%d, %d)
         //                    """.format(version, problemId)
 
-        val sqlQuery = "time" match {
+        val sqlQuery = "mem" match {
           case "mem" => sql"""
                                 SELECT configId, solution, cast(stat('solver.usedMem', executionId) as real)
                                 FROM Executions
@@ -140,6 +140,12 @@ object Table extends App {
           case "time" => sql"""
                                 SELECT configId, solution, totalTime
                                 FROM Times
+                                WHERE (version, problemId) = ($version, $problemId)
+                            """
+                                
+          case "nodes" => sql"""
+                                SELECT configId, solution, cast(stat('solver.nbAssignments', executionId) as real)
+                                FROM Executions
                                 WHERE (version, problemId) = ($version, $problemId)
                             """
         }

@@ -21,9 +21,7 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
     restoreLevel(l)
   }
 
-  mdd.identify()
-
-  var gNo = Set[Int]()//Set[MDD]()
+  var gNo: Set[Int] = new SparseSet(mdd.identify() + 1)
 
   // Members declared in cspfj.util.Backtrackable 
   def restore(data: Set[Int]) {
@@ -81,7 +79,7 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
       true
     } else if (g.timestamp == ts) {
       true
-    } else if (gNo(g.getId)) {
+    } else if (gNo.contains(g.getId)) {
       false
     } else {
       var res = false
@@ -89,17 +87,13 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
       g.forSubtries {
         (ak, gk) =>
           ExtensionConstraintReduceable.checks += 1
-          if (scope(i).dom.present(ak)) {
-            if (seekSupports(ts, gk, i + 1)) {
-              res = true
-              unsupported(i).clear(ak)
+          if (scope(i).dom.present(ak) && seekSupports(ts, gk, i + 1)) {
+            res = true
+            unsupported(i).clear(ak)
 
-              if (i + 1 == delta && unsupported(i).isEmpty) {
-                delta = i
-                false
-              } else {
-                true
-              }
+            if (i + 1 == delta && unsupported(i).isEmpty) {
+              delta = i
+              false
             } else {
               true
             }

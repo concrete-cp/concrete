@@ -61,11 +61,9 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
     //logger.fine("Revising " + this + " : " + mod.toList)
     found.foreach(_.fill(false))
 
-    //val oldSize = trie.size
-
     val rev = mod.reverse
 
-    val oldSize = trie.size
+    //val oldSize = trie.size
 
     //println(this + ": filtering " + oldSize)
 
@@ -73,17 +71,16 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
       { (p, i) => ExtensionConstraintReduceable.checks += 1; scope(p).dom.present(i) }, rev)
 
     //println("filtered " + newTrie.size)
-    //    val newTrie = trie.filter(scope, mod.reverse)
 
     //logger.fine("Filtered from " + oldSize + " to " + newTrie.size)
 
-    val newSize = newTrie.size
+    // val newSize = newTrie.size
 
-    if (newSize == 0) { throw UNSATException.e }
+    if (newTrie.isEmpty) { throw UNSATException.e }
 
-    assert(newSize <= oldSize)
+    //assert(newSize <= oldSize)
 
-    if (newSize < oldSize) {
+    if (newTrie ne trie) {
       trie = newTrie
       altering()
     }
@@ -101,12 +98,12 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
 
     val c = filter(notFound)
 
-    val card = cardSize()
-    assert(card < 0 || card >= trie.size, card + " < " + trie.size + "!")
-    if (card == trie.size) {
-      //logger.info("Entailing " + this)
-      entail()
-    }
+    //    val card = cardSize()
+    //    assert(card < 0 || card >= trie.size, card + " < " + trie.size + "!")
+    //    if (card == trie.size) {
+    //      //logger.info("Entailing " + this)
+    //      entail()
+    //    }
 
     c
   }
@@ -147,7 +144,14 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
 
   //def matrixManager = matrixManager
 
-  def getEvaluation = trie.size
+  def getEvaluation = {
+    val card = cardSize()
+    if (card < 0 || arity > Int.MaxValue / card) {
+      Int.MaxValue
+    } else {
+      arity * card
+    }
+  } //trie.size
 
   def simpleEvaluation = math.min(7, scope.count(_.dom.size > 1))
 

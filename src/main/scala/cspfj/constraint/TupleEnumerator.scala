@@ -147,7 +147,14 @@ trait TupleEnumerator extends Constraint {
       checkIndices(t)
     }
 
-  def getEvaluation = arity * (scope map (_.dom.size) product)
+  def getEvaluation = {
+    val card = cardSize()
+    if (card < 0 || arity > Int.MaxValue / card) {
+      Int.MaxValue
+    } else {
+      arity * card
+    }
+  }
 
   def simpleEvaluation = math.min(7, scope.count(_.dom.size > 1))
 
