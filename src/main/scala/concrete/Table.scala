@@ -130,7 +130,7 @@ object Table extends App {
         //                        WHERE (version, problemId) = (%d, %d)
         //                    """.format(version, problemId)
 
-        val sqlQuery = "mem" match {
+        val sqlQuery = "time" match {
           case "mem" => sql"""
                                 SELECT configId, solution, cast(stat('solver.usedMem', executionId) as real)
                                 FROM Executions

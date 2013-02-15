@@ -144,14 +144,9 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
 
   //def matrixManager = matrixManager
 
-  def getEvaluation = {
-    val card = cardSize()
-    if (card < 0 || arity > Int.MaxValue / card) {
-      Int.MaxValue
-    } else {
-      arity * card
-    }
-  } //trie.size
+  val prop = _tts.nodes.toDouble / doubleCardSize
+
+  def getEvaluation = (prop * doubleCardSize).toInt
 
   def simpleEvaluation = math.min(7, scope.count(_.dom.size > 1))
 
