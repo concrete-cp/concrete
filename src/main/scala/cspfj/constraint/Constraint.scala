@@ -219,7 +219,15 @@ abstract class Constraint(val scope: Array[Variable])
 
   final def bigCardSize = scope.foldLeft(BigInt(1))(_ * _.dom.size)
 
-  final def doubleCardSize: Double = scope.foldLeft(1.0)(_ * _.dom.size)
+  final def doubleCardSize: Double = {
+    var size = 1.0
+    var p = arity - 1
+    while (p >= 0) {
+      size *= scope(p).dom.size
+      p -= 1
+    }
+    size
+  }
 
   final def hasChanged[A](l: Traversable[A], f: A => Boolean) = l.foldLeft(false)(_ | f(_))
 

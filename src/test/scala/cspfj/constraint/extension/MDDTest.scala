@@ -51,13 +51,13 @@ final class MDDTest {
 
   @Test
   def testTrie() {
-    val t = Trie0 + Array(1, 2, 3) + Array(1, 3, 4) + Array(1, 2, 5) + Array(2, 3, 5)
+    val t = MDD0 + Array(1, 2, 3) + Array(1, 3, 4) + Array(1, 2, 5) + Array(2, 3, 5)
     assertEquals(4, t.size)
 
     assertTrue(t.contains(Array(1, 3, 4)))
     assertFalse(t.contains(Array(1, 2, 4)))
 
-    var s = Trie0 + Array(1, 2, 5) + Array(1, 3, 4) + Array(1, 2, 3)
+    var s = MDD0 + Array(1, 2, 5) + Array(1, 3, 4) + Array(1, 2, 3)
 
     assertFalse(t == s)
 
@@ -65,7 +65,7 @@ final class MDDTest {
 
     assertEquals(t, s)
 
-    var u = Trie(
+    var u = MDD(
       Array(1, 2, 3),
       Array(1, 3, 4),
       Array(1, 2, 5),

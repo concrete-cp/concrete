@@ -7,11 +7,12 @@ import cspfj.ParameterManager
 import cspfj.Problem
 import cspfj.UNSATException
 import cspfj.Variable
-import cspfj.constraint.extension.Trie
+//import cspfj.constraint.extension.Trie
 import cspfj.constraint.extension.ExtensionConstraint2D
 import cspfj.constraint.extension.ExtensionConstraintFind
 import cspfj.constraint.extension.ExtensionConstraintGeneral
 import cspfj.constraint.extension.ExtensionConstraintReduceable
+import cspfj.constraint.extension.ExtensionConstraintSTR3
 import cspfj.constraint.extension.MDD
 import cspfj.constraint.extension.MDDC
 import cspfj.constraint.extension.Matrix
@@ -67,7 +68,7 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
         case "MDD" => MDD(value2Index(domains, relation))
         //case "MDD2" => MDD2(value2Index(domains, relation))
         case "STR" => new STR() ++ value2Index(domains, relation).toIterable
-        case "Trie" => Trie(value2Index(domains, relation))
+        //case "Trie" => Trie(value2Index(domains, relation))
       }, init)
     }
   }
@@ -97,6 +98,9 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
           ExtensionGenerator.consType match {
             case "MDDC" => {
               new MDDC(scope, m.reduceable.asInstanceOf[MDD])
+            }
+            case "STR3" => {
+              new ExtensionConstraintSTR3(scope, m.reduceable.asInstanceOf[STR].array)
             }
             case "Reduce" => {
               new ExtensionConstraintReduceable(scope, m.reduceable.copy)

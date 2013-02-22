@@ -3,7 +3,7 @@ package cspfj.util
 import java.util.Arrays
 
 class SparseSet(
-  private val dense: Array[Int],
+  val dense: Array[Int],
   private val sparse: Array[Int],
   private val members: Int) extends Set[Int] {
 
