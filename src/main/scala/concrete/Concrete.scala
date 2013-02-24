@@ -35,7 +35,7 @@ trait Concrete {
     }
 
   def options(args: List[String], o: Map[Symbol, Any] = Map.empty, unknown: List[String] = Nil): (Map[Symbol, Any], List[String]) = args match {
-    case Nil => (o, unknown)
+    case Nil => (o, unknown.reverse)
     case "-D" :: opts :: tail => {
       val p = params(Nil, opts.split(":").toList)
       options(tail, o + ('D -> p), unknown)

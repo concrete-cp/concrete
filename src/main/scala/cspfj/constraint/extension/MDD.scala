@@ -517,16 +517,19 @@ final class MDDn(private val trie: Array[MDD], private val indices: Array[Int], 
   }
 
   @tailrec
-  private def findHere(ts: Int, f: (Int, Int) => Boolean, depth: Int, i: Int = trie.length - 1): Option[List[Int]] = {
+  private def findHere(ts: Int, f: (Int, Int) => Boolean, depth: Int, i: Int = nbIndices - 1): Option[List[Int]] = {
     if (i < 0) {
       None
-    } else if (f(depth, i)) {
-      trie(i).find(ts, f, depth + 1) match {
-        case Some(found) => Some(i :: found)
-        case None => findHere(ts, f, depth, i - 1)
-      }
     } else {
-      findHere(ts, f, depth, i - 1)
+      val v = indices(i)
+      if (f(depth, v)) {
+        trie(v).find(ts, f, depth + 1) match {
+          case Some(found) => Some(v :: found)
+          case None => findHere(ts, f, depth, i - 1)
+        }
+      } else {
+        findHere(ts, f, depth, i - 1)
+      }
     }
   }
 
