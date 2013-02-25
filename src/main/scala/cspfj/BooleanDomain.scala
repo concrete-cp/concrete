@@ -154,7 +154,10 @@ final class BooleanDomain(var _status: Status) extends Domain
    *            index to test
    * @return true iff index is present
    */
-  def present(i: Int) = status.present(i)
+  def present(i: Int) = {
+    Domain.checks += 1
+    status.present(i)
+  }
 
   def setSingle(i: Int) {
     if (i == 0) {

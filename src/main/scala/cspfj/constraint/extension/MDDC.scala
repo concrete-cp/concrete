@@ -88,7 +88,6 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
 
       g.forSubtries {
         (ak, gk) =>
-          ExtensionConstraintReduceable.checks += 1
           if (scope(i).dom.present(ak) && seekSupports(ts, gk, i + 1)) {
             res = true
             unsupported(i).clear(ak)

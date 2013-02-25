@@ -32,9 +32,6 @@ import cspfj.Statistic
 
 object ExtensionConstraintReduceable {
   @Statistic
-  var checks = 0l
-
-  @Statistic
   var fills = 0l
 }
 
@@ -68,7 +65,7 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
     //println(this + ": filtering " + oldSize)
 
     val newTrie = trie.filterTrie(
-      { (p, i) => ExtensionConstraintReduceable.checks += 1; scope(p).dom.present(i) }, rev)
+      { (p, i) => scope(p).dom.present(i) }, rev)
 
     //println("filtered " + newTrie.size)
 

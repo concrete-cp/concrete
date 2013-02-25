@@ -67,6 +67,7 @@ abstract class Solver(val problem: Problem) extends Loggable {
   //statistics.register("domains", IntDomain)
   statistics.register("enumerator", TupleEnumerator)
   statistics.register("relation", ExtensionConstraintReduceable)
+  statistics.register("domain", Domain)
 
   /** Logger initialization */
   {

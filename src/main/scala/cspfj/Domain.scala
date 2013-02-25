@@ -8,6 +8,10 @@ final class EmptyDomainException extends UNSATException
 
 object Domain {
   val empty = new EmptyDomainException
+
+  @Statistic
+  var checks = 0L
+
 }
 
 abstract class Domain {

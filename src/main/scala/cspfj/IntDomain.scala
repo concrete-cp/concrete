@@ -147,7 +147,10 @@ final class IntDomain(
    *            index to test
    * @return true iff index is present
    */
-  def present(index: Int) = _intSet.present(index);
+  def present(index: Int) = {
+    Domain.checks += 1
+    _intSet.present(index)
+  }
 
   def setSingle(index: Int) {
     assert(present(index))
