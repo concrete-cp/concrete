@@ -62,11 +62,11 @@ object Table extends App {
     solution: String,
     statistic: A)
 
-  implicit val getProblemResult = GetResult(r => Problem(r.<<, r.<<, r.<<, r.<<, r.nextString.split(",")))
+  implicit val getProblemResult = GetResult(r => Problem(r.<<, r.<<, r.<<, r.<<, r.nextStringOption.map(_.split(",")).getOrElse(Array())))
 
   implicit val getConfigResult = GetResult(r => Config(r.<<, xml.XML.loadString(r.nextString)))
 
-  Database.forURL("jdbc:postgresql://localhost/concrete",
+  Database.forURL("jdbc:postgresql://precision-vion/concrete",
     user = "concrete",
     password = "concrete",
     driver = "org.postgresql.Driver") withSession {
@@ -130,7 +130,7 @@ object Table extends App {
         //                        WHERE (version, problemId) = (%d, %d)
         //                    """.format(version, problemId)
 
-        val sqlQuery = "time" match {
+        val sqlQuery = "domainChecks" match {
           case "mem" => sql"""
                                 SELECT configId, solution, cast(stat('solver.usedMem', executionId) as real)
                                 FROM Executions
@@ -142,14 +142,18 @@ object Table extends App {
                                 FROM Times
                                 WHERE (version, problemId) = ($version, $problemId)
                             """
-                                
+
           case "nodes" => sql"""
                                 SELECT configId, solution, cast(stat('solver.nbAssignments', executionId) as real)
                                 FROM Executions
                                 WHERE (version, problemId) = ($version, $problemId)
                             """
+          case "domainChecks" => sql"""
+                                SELECT configId, solution, cast(stat('relation.checks', executionId) as real)
+                                FROM Executions
+                                WHERE (version, problemId) = ($version, $problemId)
+                            """                   
         }
-        
 
         val results = sqlQuery.as[(Int, String, Double)].list.map {
           case (config, solution, value) => config -> Resultat(solution, value)

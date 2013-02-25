@@ -64,7 +64,7 @@ object SQLWriter {
 
   }
 
-  private def connection(uri: URI) = {
+  def connection(uri: URI) = {
     require(!uri.isOpaque, "Opaque connection URI : " + uri.toString)
 
     val driver = uri.getScheme match {

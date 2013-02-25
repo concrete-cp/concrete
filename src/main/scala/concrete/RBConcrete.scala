@@ -1,17 +1,16 @@
 package concrete
-import cspom.compiler.ProblemCompiler
-import java.net.URL
-import cspom.CSPOM
-import cspfj.generator.ProblemGenerator
-import java.security.MessageDigest
-import java.math.BigInteger
-import java.io.InputStream
-import rb.RBGenerator
-import rb.randomlists.RandomListGenerator.Structure
-import rb.RBGenerator.Tightness
-import java.io.StringReader
-import java.io.BufferedReader
+
 import java.io.ByteArrayInputStream
+import cspfj.generator.ProblemGenerator
+import cspom.CSPOM
+import rb.RBGenerator
+import rb.RBGenerator.Tightness
+import rb.randomlists.RandomListGenerator.Structure
+import java.net.URI
+import scala.slick.session.Database
+import scala.slick.jdbc.{ GetResult, StaticQuery => Q }
+import Q.interpolation
+import Database.threadLocalSession
 
 object RBConcrete extends Concrete with App {
 
@@ -20,7 +19,7 @@ object RBConcrete extends Concrete with App {
   def load(args: List[String]) = {
     val Array(nbVariables, domainSize, arity, nbConstraints,
       tightness, seed) = args(0).split(":")
-      
+
     val cp = new RBGenerator(nbVariables.toInt, domainSize.toInt, arity.toInt,
       nbConstraints.toInt, Tightness.PROPORTION, tightness.toDouble, seed.toInt,
       Structure.UNSTRUCTURED,
@@ -50,4 +49,30 @@ object RBConcrete extends Concrete with App {
 
   run(args)
 
+}
+
+object NameRB extends App {
+  SQLWriter.connection(new URI("postgresql://concrete:concrete@precision-vion")).withSession {
+    val f = io.Source.fromFile(args(0))
+    for (line <- f.getLines) {
+      val Array(n, d, k, e, l) = line.split(":")
+      val lp = f"${100 * l.toDouble}%.0f"
+      for (s <- 0 until 10) {
+        println(s"rb-$n-$d-$k-$e-$l-$s")
+        sqlu"""
+          UPDATE Problems 
+          SET display=${s"rb-$n-$d-$k-$e-$lp-$s"}, nbVars=${n.toInt}, nbCons=${e.toInt}
+          WHERE name=${s"rb-$n-$d-$k-$e-$l-$s"}""".execute
+      }
+
+      
+      sqlu"""
+        INSERT INTO ProblemTags 
+        SELECT ${s"rb-$n-$d-$k-$e-$lp"}, problemId 
+        FROM Problems NATURAL LEFT JOIN ProblemTags
+        WHERE name~${s"^rb-$n-$d-$k-$e-$l-"}
+          AND tag IS NULL""".execute
+    }
+
+  }
 }
