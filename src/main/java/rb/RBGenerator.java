@@ -247,7 +247,7 @@ public class RBGenerator {
 					"The number of allowed and unallowed tuples is greater than Integer.MAX_INT");
 		}
 
-		final boolean supports = true;//nbAllowedTuples < nbUnallowedTuples;
+		final boolean supports = false;//nbAllowedTuples < nbUnallowedTuples;
 
 		final int nbTuples;
 		if (supports) {

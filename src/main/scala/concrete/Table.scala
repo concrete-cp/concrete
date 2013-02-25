@@ -40,9 +40,8 @@ object Table extends App {
     }
   }
 
-  val version = args.head.toInt
-
-  val nature = args.tail map (_.toInt)
+  val statistic :: v :: nature = args.toList
+  val version = v.toInt
 
   case class Problem(
     problemId: Int,
@@ -130,7 +129,7 @@ object Table extends App {
         //                        WHERE (version, problemId) = (%d, %d)
         //                    """.format(version, problemId)
 
-        val sqlQuery = "domainChecks" match {
+        val sqlQuery = statistic match {
           case "mem" => sql"""
                                 SELECT configId, solution, cast(stat('solver.usedMem', executionId) as real)
                                 FROM Executions
@@ -152,7 +151,7 @@ object Table extends App {
                                 SELECT configId, solution, cast(stat('relation.checks', executionId) as real)
                                 FROM Executions
                                 WHERE (version, problemId) = ($version, $problemId)
-                            """                   
+                            """
         }
 
         val results = sqlQuery.as[(Int, String, Double)].list.map {
