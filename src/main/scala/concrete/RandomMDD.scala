@@ -11,11 +11,15 @@ import cspom.extension.ExtensionConstraint
 import cspom.extension.Relation
 import rb.randomlists.CoarseProportionRandomListGenerator
 import rb.randomlists.RandomListGenerator.Structure
+import scala.slick.session.Database
+import scala.slick.jdbc.{ GetResult, StaticQuery => Q }
+import Q.interpolation
+import Database.threadLocalSession
+import java.net.URI
 
 object RandomMDD extends Concrete with App {
 
-  def apply(d: Int, k: Int, l: Double, q: Double, s: Int) = {
-    val rand = new Random(s)
+  def apply(d: Int, k: Int, l: Double, q: Double, rand: Random) = {
     val existing = Array.fill(k + 1)(new ArrayBuffer[RandomMDD]())
     generate(d, k, l, q, existing, rand)
   }
@@ -50,17 +54,18 @@ object RandomMDD extends Concrete with App {
     val e = nbConstraints.toInt
     val l = looseness.toDouble
     val q = mddProb.toDouble
-    val s = seed.toInt
+    val rand = new Random(seed.toInt)
 
     val cp = new CSPOM()
     val vars = List.fill(n)(cp.interVar(0, d - 1))
 
-    val r = new CoarseProportionRandomListGenerator(n, k, s);
+    val r = new CoarseProportionRandomListGenerator(n, k, seed.toInt);
 
     for (scope <- r.selectTuples(e, Structure.UNSTRUCTURED, false, false)) {
-      val mdd = RandomMDD(d, k, l, q, s)
-//      println(mdd map (_.mkString(",")) mkString ("\n"))
-//      exit
+      val mdd = RandomMDD(d, k, l, q, rand)
+      // println(mdd.size)
+      //      println(mdd map (_.mkString(",")) mkString ("\n"))
+      //      exit
       cp.addConstraint(new ExtensionConstraint(mdd, false, scope map vars))
     }
 
@@ -88,6 +93,12 @@ object RandomMDD extends Concrete with App {
   }
 
   run(args)
+}
+
+object Test extends App {
+  val m = RandomMDD(10, 5, 0.21544346900319, 0.5, new Random(1))
+  m.literator.foreach(println)
+  println(m.size)
 }
 
 abstract class RandomMDD extends Relation {
@@ -125,4 +136,31 @@ final class RandomMDDNode(var trie: Array[RandomMDD]) extends RandomMDD {
 
   def k = trie.iterator.map(_.k).find(_.isDefined).map(_.get + 1)
 
+}
+
+object NameMDD extends App {
+  SQLWriter.connection(new URI("postgresql://concrete:concrete@precision-vion")).withSession {
+    val f = io.Source.fromFile(args(0))
+    val setP = Q.update[(String, Int, Int, String)]("""UPDATE Problems
+      SET display =?, nbVars=?, nbCons =?
+      WHERE name =?""")
+    for (line <- f.getLines) {
+      val Array(n, d, k, e, l, q) = line.split(":")
+      val lp = f"${100 * l.toDouble}%.0f"
+      val lq = f"${100 * q.toDouble}%.0f"
+      for (s <- 0 until 50) {
+        println(s"mdd-$n-$d-$k-$e-$l-$q-$s")
+        setP.execute((s"mdd-$n-$d-$k-$e-$lp-$lq-$s",
+          n.toInt, e.toInt, s"mdd-$n-$d-$k-$e-$l-$q-$s"))
+      }
+
+      sqlu"""
+        INSERT INTO ProblemTags 
+        SELECT ${s"mdd-$n-$d-$k-$e-$lp-$lq"}, problemId 
+        FROM Problems NATURAL LEFT JOIN ProblemTags
+        WHERE name~${s"^mdd-$n-$d-$k-$e-$l-$q-"}
+          AND tag IS NULL""".execute
+    }
+
+  }
 }
