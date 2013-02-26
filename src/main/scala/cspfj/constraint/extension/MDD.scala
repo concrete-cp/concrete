@@ -100,6 +100,32 @@ trait MDD extends Relation with Identified {
     find(MDD.timestamp, f, 0) map (_.toArray)
   }
   def find(ts: Int, f: (Int, Int) => Boolean, depth: Int): Option[List[Int]]
+
+  def findSupport(f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int]): Option[Array[Int]] = {
+    MDD.timestamp += 1
+    findSupport(MDD.timestamp, f, p, i, support, 0)
+  }
+
+  def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int): Option[Array[Int]]
+
+  def checkSupDepth(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, index: Int, next: MDD, support: Array[Int]) = {
+    if (i == index) {
+      support(p) = i
+      next.findSupport(ts, f, p, i, support, p + 1)
+    } else {
+      None
+    }
+  }
+
+  def checkSupF(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, index: Int, next: MDD, support: Array[Int], depth: Int) = {
+    if (f(depth, index)) {
+      support(depth) = index
+      next.findSupport(ts, f, p, i, support, depth + 1)
+    } else {
+      None
+    }
+  }
+
   def iterator = listIterator.map(_.toArray)
   def listIterator: Iterator[List[Int]]
   def nodes: Int = {
@@ -135,6 +161,7 @@ trait MDD extends Relation with Identified {
     s
   }
   override def isEmpty: Boolean
+
 }
 
 final object MDDLeaf extends MDD {
@@ -144,6 +171,7 @@ final object MDDLeaf extends MDD {
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]) = this
   def contains(tuple: Array[Int], i: Int) = true
   def find(ts: Int, f: (Int, Int) => Boolean, depth: Int) = Some(Nil)
+
   def listIterator = Iterator(Nil)
   def nodes(ts: Int) = 0
   def filterTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int) = {
@@ -161,6 +189,8 @@ final object MDDLeaf extends MDD {
   override def identify(ts: Int, i: Int): Int = i
   override def size = 1
   override def isEmpty = false
+  def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) =
+    Some(support)
 }
 
 final object MDD0 extends MDD {
@@ -190,6 +220,8 @@ final object MDD0 extends MDD {
     throw new UnsupportedOperationException
   }
   override def isEmpty = true
+  def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) =
+    None
 }
 
 final class MDD1(private val child: MDD, private val index: Int) extends MDD {
@@ -244,6 +276,19 @@ final class MDD1(private val child: MDD, private val index: Int) extends MDD {
         child.find(ts, f, depth + 1).map(index :: _)
       } else {
         None
+      }
+    }
+  }
+
+  def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) = {
+    if (timestamp == ts) {
+      None
+    } else {
+      timestamp = ts
+      if (depth == p) {
+        checkSupDepth(ts, f, p, i, index, child, support)
+      } else {
+        checkSupF(ts, f, p, i, index, child, support, depth)
       }
     }
   }
@@ -461,6 +506,21 @@ final class MDD2(
   }
 
   override def isEmpty = false
+
+  def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) = {
+    if (timestamp == ts) {
+      None
+    } else {
+      timestamp = ts
+      if (depth == p) {
+        checkSupDepth(ts, f, p, i, leftI, left, support).orElse(
+          checkSupDepth(ts, f, p, i, rightI, right, support))
+      } else {
+        checkSupF(ts, f, p, i, leftI, left, support, depth).orElse(
+          checkSupF(ts, f, p, i, rightI, right, support, depth))
+      }
+    }
+  }
 }
 
 final class MDDn(private val trie: Array[MDD], private val indices: Array[Int], private val nbIndices: Int) extends MDD {
@@ -693,6 +753,32 @@ final class MDDn(private val trie: Array[MDD], private val indices: Array[Int], 
 
   override def isEmpty = false
 
+  def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) = {
+    if (timestamp == ts) {
+      None
+    } else {
+      timestamp = ts
+
+      if (depth == p) {
+        if (i >= trie.length) {
+          None
+        } else {
+          support(depth) = i
+          trie(i).findSupport(ts, f, p, i, support, depth + 1)
+        }
+      } else {
+        var s: Option[Array[Int]] = None
+        var j = nbIndices - 1
+        while (s.isEmpty && j >= 0) {
+          val index = indices(j)
+          support(depth) = index
+          s = trie(index).findSupport(ts, f, p, i, support, depth + 1)
+          j -= 1
+        }
+        s
+      }
+    }
+  }
 }
 
 

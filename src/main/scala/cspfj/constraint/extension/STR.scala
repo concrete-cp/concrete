@@ -62,6 +62,7 @@ class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
   def nodes = if (array.isEmpty) 0 else bound * array(0).length
 
   def find(f: (Int, Int) => Boolean) = throw new UnsupportedOperationException
+  def findSupport(f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int]) = throw new UnsupportedOperationException
 
   def iterator = array.iterator.take(bound)
 

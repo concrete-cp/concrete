@@ -30,8 +30,9 @@ final class ExtensionConstraintFind(scope: Array[Variable], tts: TupleTrieSet, s
 
   val rel = tts.reduceable
 
-  override def findSupport(p: Int, i: Int) = rel.find(
-    (depth, index) => if (depth == p) i == index else scope(depth).dom.present(index))
+  override def findSupport(p: Int, i: Int) = rel.findSupport(
+    (depth, index) => scope(depth).dom.present(index),
+    p, i, new Array[Int](arity))
 
   override val getEvaluation = rel.nodes
 

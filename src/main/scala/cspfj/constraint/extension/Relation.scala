@@ -22,11 +22,12 @@ trait Relation extends Iterable[Array[Int]] {
   def --(t: Iterable[Array[Int]]) = t.foldLeft(Relation.this)(_ - _)
   def nodes: Int
   def copy: Self2
+  def findSupport(f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int]): Option[Array[Int]]
 
-//  override def equals(o: Any) = {
-//    o match {
-//      case r: Iterable[Array[Int]] => size == r.size && zip(r).forall(p => Arrays.equals(p._1, p._2))
-//      case _ => false
-//    }
-//  }
+  //  override def equals(o: Any) = {
+  //    o match {
+  //      case r: Iterable[Array[Int]] => size == r.size && zip(r).forall(p => Arrays.equals(p._1, p._2))
+  //      case _ => false
+  //    }
+  //  }
 }

@@ -148,7 +148,7 @@ object Table extends App {
                                 WHERE (version, problemId) = ($version, $problemId)
                             """
           case "domainChecks" => sql"""
-                                SELECT configId, solution, cast(stat('relation.checks', executionId) as real)
+                                SELECT configId, solution, cast(stat('domain.checks', executionId) as real)
                                 FROM Executions
                                 WHERE (version, problemId) = ($version, $problemId)
                             """
@@ -237,19 +237,20 @@ object Table extends App {
 
         val best = medians.min
 
-        println(s"\\em $k & " + medians.map { median =>
+        println(s"$k," + medians.map { median =>
           if (median.isInfinity) {
             "timeout"
           } else {
-            val (v, m) = engineer(median)
-
-            (if (median < best * 1.1) "\\bf " else "") + (
-              m match {
-                case Some(m) => f"\\np[$m%s]{$v%.1f}"
-                case None => f"\\np{$v%.1f}"
-              })
+            median.toString
+            //            val (v, m) = engineer(median)
+            //
+            //            (if (median < best * 1.1) "\\bf " else "") + (
+            //              m match {
+            //                case Some(m) => f"\\np[$m%s]{$v%.1f}"
+            //                case None => f"\\np{$v%.1f}"
+            //              })
           }
-        }.mkString(" & ") + " \\\\")
+        }.mkString(","))// + " \\\\")
       }
       println("\\midrule")
 
