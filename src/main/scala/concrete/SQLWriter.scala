@@ -165,10 +165,14 @@ final class SQLWriter(
 
   def execution(problemId: Int, configId: Int, version: Int) = {
     print(s"Problem $problemId, config $configId, version $version")
-    val executionId = db.withSession {
+
+    val executionId = try db.withSession {
       sql"""INSERT INTO Executions (problemId, configId, version, start)
             VALUES ($problemId, $configId , $version, CURRENT_TIMESTAMP) 
             RETURNING executionId""".as[Int].first
+    }
+    catch {
+      case e: SQLException => throw new IllegalArgumentException(e.getMessage())
     }
     println(s", execution $executionId")
     executionId
