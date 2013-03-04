@@ -16,6 +16,11 @@ import scala.slick.jdbc.{ GetResult, StaticQuery => Q }
 import Q.interpolation
 import Database.threadLocalSession
 import java.net.URI
+import cspfj.StatisticsManager
+import scala.collection.mutable.HashMap
+import cspfj.constraint.extension.MDDn
+import scala.util.hashing.MurmurHash3
+import scala.collection.mutable.HashSet
 
 object RandomMDD extends Concrete with App {
 
@@ -35,10 +40,15 @@ object RandomMDD extends Concrete with App {
     } else if (existing(k).nonEmpty && rand.nextDouble < q) {
       existing(k)(rand.nextInt(existing(k).size))
     } else {
-      val r = new RandomMDDNode(
-        Array.fill(d)(generate(d, k - 1, l, q, existing, rand)))
-      existing(k) += r
-      r
+      val t = Array.fill(d)(generate(d, k - 1, l, q, existing, rand))
+
+      if (t.forall(_ eq EmptyRandomMDD)) {
+        EmptyRandomMDD
+      } else {
+        val r = new RandomMDDNode(t)
+        existing(k) += r
+        r
+      }
     }
   }
 
@@ -95,10 +105,26 @@ object RandomMDD extends Concrete with App {
   run(args)
 }
 
-object Test extends App {
-  val m = RandomMDD(10, 5, 0.21544346900319, 0.5, new Random(1))
-  m.literator.foreach(println)
-  println(m.size)
+object TestMDD extends App {
+  val Array(domainSize, arity, looseness, mddProb) = args(0).split(":")
+
+  val d = domainSize.toInt
+  val k = arity.toInt
+  val l = looseness.toDouble
+  val q = mddProb.toDouble
+  var lambda: List[Int] = Nil
+  var nu: List[Int] = Nil
+  var ts = 0
+  for (seed <- 0 until 10000) {
+    val rand = new Random(seed)
+    val m = RandomMDD(d, k, l, q, rand).reduce
+    ts += 1
+    println(ts)
+    lambda ::= m.size
+    nu ::= m.edges(ts)
+  }
+  println(StatisticsManager.average(lambda))
+  println(StatisticsManager.average(nu))
 }
 
 abstract class RandomMDD extends Relation {
@@ -107,27 +133,40 @@ abstract class RandomMDD extends Relation {
   def close() {
 
   }
-
+  def reduce: RandomMDD = {
+    reduce(new HashMap())
+  }
+  def reduce(mdds: collection.mutable.Map[Seq[RandomMDD], RandomMDD]): RandomMDD
   def literator: Iterator[List[Int]]
   def iterator = literator map (_.toArray)
 
   def arity = k.get
 
   def k: Option[Int]
+
+  def edges(ts: Int): Int
+  override def toString = toString(0)
+  def toString(k: Int): String
 }
 
 object EmptyRandomMDD extends RandomMDD {
   def literator = Iterator()
   def k = None
+  def edges(ts: Int) = 0
+  def reduce(mdds: collection.mutable.Map[Seq[RandomMDD], RandomMDD]) = this
+  def toString(k: Int) = ""
 }
 
 object RandomMDDLeaf extends RandomMDD {
   def literator = Iterator(Nil)
   def k = Some(0)
+  def edges(ts: Int) = 0
+  def reduce(mdds: collection.mutable.Map[Seq[RandomMDD], RandomMDD]) = this
+  def toString(k: Int) = "\n"
 }
 
 final class RandomMDDNode(var trie: Array[RandomMDD]) extends RandomMDD {
-
+  var timestamp: Int = _
   override def close { trie = null }
 
   def literator = trie.iterator.zipWithIndex flatMap {
@@ -136,6 +175,44 @@ final class RandomMDDNode(var trie: Array[RandomMDD]) extends RandomMDD {
 
   def k = trie.iterator.map(_.k).find(_.isDefined).map(_.get + 1)
 
+  def reduce(mdds: collection.mutable.Map[Seq[RandomMDD], RandomMDD]): RandomMDD = {
+    var b = trie.map(_.reduce(mdds))
+    mdds.getOrElseUpdate(b, new RandomMDDNode(b))
+  }
+
+  def edges(ts: Int) =
+    if (ts == timestamp)
+      0
+    else {
+      timestamp = ts
+      trie.count(_ ne EmptyRandomMDD) + trie.map(_.edges(ts)).sum
+    }
+
+  override lazy val hashCode: Int = {
+    //val hash = new MurmurHash3
+    MurmurHash3.arrayHash(trie)
+  }
+
+  override def equals(o: Any): Boolean = o match {
+    case t: RandomMDDNode =>
+      val len = t.trie.length
+      len == trie.length && {
+        var i = len - 1
+        while (i >= 0 && (t.trie(i) eq trie(i))) {
+          i -= 1
+        }
+        i < 0
+      }
+    case _ => false
+  }
+
+  def toString(k: Int) = {
+    val space = (0 until k).map(" ").mkString("")
+    trie.zipWithIndex.filter(_._1 ne EmptyRandomMDD).map {
+      case (t, i) => space + i + "\n" + t.toString(k + 1)
+    } mkString ("")
+
+  }
 }
 
 object NameMDD extends App {
@@ -144,22 +221,25 @@ object NameMDD extends App {
     val setP = Q.update[(String, Int, Int, String)]("""UPDATE Problems
       SET display =?, nbVars=?, nbCons =?
       WHERE name =?""")
-    for (line <- f.getLines) {
+
+    val tag = Q.update[(String, String)]("""
+        INSERT INTO ProblemTags 
+        SELECT ?, problemId 
+        FROM Problems NATURAL LEFT JOIN ProblemTags
+        WHERE name ~ ? AND tag IS NULL""")
+
+    for (line <- f.getLines if !line.startsWith("#")) {
       val Array(n, d, k, e, l, q) = line.split(":")
       val lp = f"${100 * l.toDouble}%.0f"
       val lq = f"${100 * q.toDouble}%.0f"
-      for (s <- 0 until 50) {
-        println(s"mdd-$n-$d-$k-$e-$l-$q-$s")
+      println(s"mdd-$n-$d-$k-$e-$l-$q")
+      for (s <- 0 until 10) {
         setP.execute((s"mdd-$n-$d-$k-$e-$lp-$lq-$s",
           n.toInt, e.toInt, s"mdd-$n-$d-$k-$e-$l-$q-$s"))
       }
 
-      sqlu"""
-        INSERT INTO ProblemTags 
-        SELECT ${s"mdd-$n-$d-$k-$e-$lp-$lq"}, problemId 
-        FROM Problems NATURAL LEFT JOIN ProblemTags
-        WHERE name~${s"^mdd-$n-$d-$k-$e-$l-$q-"}
-          AND tag IS NULL""".execute
+      tag.execute((s"mdd-$n-$d-$k-$e-$lp-$lq", s"^mdd-$n-$d-$k-$e-$l-$q-"))
+
     }
 
   }

@@ -132,7 +132,10 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
     val ((sol, newStack), macTime) = try {
       StatisticsManager.time(mac(modifiedVar, stack))
     } catch {
-      case e: TimedException => searchCpu += e.time; throw e.getCause
+      case e: TimedException =>
+        searchCpu += e.time;
+        usedMem = math.max(usedMem, Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
+        throw e.getCause
     }
 
     searchCpu += macTime
@@ -141,8 +144,6 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
     System.gc()
     System.gc()
     System.gc()
-
-    usedMem = math.max(usedMem, Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
 
     logger.info("Took " + macTime + "s ("
       + ((nbBacktracks - nbBT) / macTime)

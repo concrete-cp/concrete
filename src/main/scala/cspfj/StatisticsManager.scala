@@ -29,7 +29,8 @@ class StatisticsManager extends Loggable {
     val fieldName = name.substring(fieldNameAt + 1, name.length)
     fields(obj.getClass).find(f => f.getName == fieldName) match {
       case Some(f) => { f.setAccessible(true); f.get(obj) }
-      case None => throw new IllegalArgumentException("Could not find " + name + " (" + fieldName + " in " + fields(obj.getClass) + ")")
+      case None => throw new IllegalArgumentException(
+        s"Could not find $name ($fieldName in ${fields(obj.getClass)})")
     }
 
   }
