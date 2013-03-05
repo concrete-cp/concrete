@@ -134,8 +134,9 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
     } catch {
       case e: TimedException =>
         searchCpu += e.time;
-        usedMem = math.max(usedMem, Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
         throw e.getCause
+    } finally {
+      usedMem = math.max(usedMem, Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
     }
 
     searchCpu += macTime
