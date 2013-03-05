@@ -42,13 +42,14 @@ object RandomMDD extends Concrete with App {
     } else {
       val t = Array.fill(d)(generate(d, k - 1, l, q, existing, rand))
 
-      if (t.forall(_ eq EmptyRandomMDD)) {
-        EmptyRandomMDD
-      } else {
-        val r = new RandomMDDNode(t)
-        existing(k) += r
-        r
-      }
+      val r =
+        if (t.forall(_ eq EmptyRandomMDD)) {
+          EmptyRandomMDD
+        } else {
+          new RandomMDDNode(t)
+        }
+      existing(k) += r
+      r
     }
   }
 
@@ -145,7 +146,7 @@ abstract class RandomMDD extends Relation {
   def k: Option[Int]
 
   def edges(ts: Int): Int
-  override def toString = toString(0)
+  override def toString = literator.mkString("\n")
   def toString(k: Int): String
 }
 
