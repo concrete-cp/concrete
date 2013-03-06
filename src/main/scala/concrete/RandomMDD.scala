@@ -113,16 +113,16 @@ object TestMDD extends App {
   val k = arity.toInt
   val l = looseness.toDouble
   val q = mddProb.toDouble
-  var lambda: List[Int] = Nil
-  var nu: List[Int] = Nil
+  var lambda: List[Long] = Nil
+  var nu: List[Long] = Nil
   var ts = 0
   for (seed <- 0 until 10000) {
     val rand = new Random(seed)
     val m = RandomMDD(d, k, l, q, rand).reduce
     ts += 1
     println(ts)
-    lambda ::= m.size
-    nu ::= m.edges(ts)
+    lambda ::= m.size.toLong
+    nu ::= m.edges(ts).toLong
   }
   println(StatisticsManager.average(lambda))
   println(StatisticsManager.average(nu))

@@ -131,7 +131,7 @@ object Table extends App {
 
         val sqlQuery = statistic match {
           case "mem" => sql"""
-                                SELECT configId, solution, cast(stat('solver.usedMem', executionId) as real)
+                                SELECT configId, solution, cast(stat('solver.usedMem', executionId) as real)/1048576.0
                                 FROM Executions
                                 WHERE (version, problemId) = ($version, $problemId)
                             """

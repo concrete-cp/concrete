@@ -136,15 +136,15 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
         searchCpu += e.time;
         throw e.getCause
     } finally {
+      System.gc()
+      System.gc()
+      System.gc()
+      System.gc()
+      System.gc()
       usedMem = math.max(usedMem, Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
     }
 
     searchCpu += macTime
-    System.gc()
-    System.gc()
-    System.gc()
-    System.gc()
-    System.gc()
 
     logger.info("Took " + macTime + "s ("
       + ((nbBacktracks - nbBT) / macTime)
