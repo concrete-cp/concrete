@@ -134,21 +134,8 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
     } catch {
       case e: TimedException =>
         searchCpu += e.time;
-        System.gc()
-        System.gc()
-        System.gc()
-        System.gc()
-        System.gc()
-        usedMem = math.max(usedMem, Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
-        problem.reset()
         throw e.getCause
     }
-    System.gc()
-    System.gc()
-    System.gc()
-    System.gc()
-    System.gc()
-    usedMem = math.max(usedMem, Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
 
     searchCpu += macTime
 
@@ -174,7 +161,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
 
   var currentStack: List[Pair] = Nil
 
-  def nextSolution(): SolverResult = {
+  def nextSolution(): SolverResult = try {
 
     if (restart) {
       restart = false
@@ -201,6 +188,13 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
       sol
     }
 
+  } finally {
+    System.gc()
+    System.gc()
+    System.gc()
+    System.gc()
+    System.gc()
+    usedMem = math.max(usedMem, Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
   }
 
   @Statistic
