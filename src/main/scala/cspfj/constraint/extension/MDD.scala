@@ -204,8 +204,8 @@ final object MDDLeaf extends MDD {
   override def isEmpty = false
   def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) =
     Some(support)
-    
-    def copy = this
+
+  def copy = this
 }
 
 final object MDD0 extends MDD {
@@ -237,8 +237,8 @@ final object MDD0 extends MDD {
   override def isEmpty = true
   def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) =
     None
-    
-    def copy = throw new UnsupportedOperationException
+
+  def copy = throw new UnsupportedOperationException
 }
 
 final class MDD1(private val child: MDD, private val index: Int) extends MDD {
@@ -377,7 +377,7 @@ final class MDD1(private val child: MDD, private val index: Int) extends MDD {
   }
 
   override def isEmpty = false
-  def copy = this
+  def copy = new MDD1(child.copy, index)
 }
 
 final class MDD2(
@@ -540,15 +540,15 @@ final class MDD2(
       }
     }
   }
-  
-  def copy = this
+
+  def copy = new MDD2(left.copy, leftI, right.copy, rightI)
 }
 
 final class MDDn(private val trie: Array[MDD], private val indices: Array[Int], private val nbIndices: Int) extends MDD {
   var timestamp = 0
 
-  def copy = new MDDn(trie, indices.clone, nbIndices)
-  
+  def copy = new MDDn(trie map (_.copy), indices.clone, nbIndices)
+
   def forSubtries(f: (Int, MDD) => Boolean) {
     forSubtries(f, nbIndices - 1)
   }
