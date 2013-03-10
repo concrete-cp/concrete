@@ -147,7 +147,7 @@ trait MDD extends Relation with Identified {
   def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: ListWithMax)
 
   override def toString = s"$nodes nodes representing $size tuples"
-  def copy = this
+
   def -(t: Array[Int]) = throw new UnsupportedOperationException
 
   def forSubtries(f: (Int, MDD) => Boolean)
@@ -161,6 +161,19 @@ trait MDD extends Relation with Identified {
     s
   }
   override def isEmpty: Boolean
+  def arity: Int = {
+    if (this eq MDDLeaf) {
+      0
+    } else {
+      var a = 1
+      forSubtries {
+        (_, t) =>
+          a += t.arity
+          false
+      }
+      a
+    }
+  }
 
 }
 
@@ -191,6 +204,8 @@ final object MDDLeaf extends MDD {
   override def isEmpty = false
   def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) =
     Some(support)
+    
+    def copy = this
 }
 
 final object MDD0 extends MDD {
@@ -222,6 +237,8 @@ final object MDD0 extends MDD {
   override def isEmpty = true
   def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) =
     None
+    
+    def copy = throw new UnsupportedOperationException
 }
 
 final class MDD1(private val child: MDD, private val index: Int) extends MDD {
@@ -360,6 +377,7 @@ final class MDD1(private val child: MDD, private val index: Int) extends MDD {
   }
 
   override def isEmpty = false
+  def copy = this
 }
 
 final class MDD2(
@@ -482,12 +500,13 @@ final class MDD2(
   }
 
   def listIterator: Iterator[List[Int]] = left.listIterator.map(0 :: _) ++ right.listIterator.map(1 :: _)
-  def nodes(ts: Int): Int = if (ts == timestamp) {
-    0
-  } else {
-    timestamp = ts
-    2 + left.nodes(ts) + right.nodes(ts)
-  }
+  def nodes(ts: Int): Int =
+    if (ts == timestamp) {
+      0
+    } else {
+      timestamp = ts
+      2 + left.nodes(ts) + right.nodes(ts)
+    }
 
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]): MDD = {
     var bL = left.reduce(mdds)
@@ -521,11 +540,15 @@ final class MDD2(
       }
     }
   }
+  
+  def copy = this
 }
 
 final class MDDn(private val trie: Array[MDD], private val indices: Array[Int], private val nbIndices: Int) extends MDD {
   var timestamp = 0
 
+  def copy = new MDDn(trie, indices.clone, nbIndices)
+  
   def forSubtries(f: (Int, MDD) => Boolean) {
     forSubtries(f, nbIndices - 1)
   }
