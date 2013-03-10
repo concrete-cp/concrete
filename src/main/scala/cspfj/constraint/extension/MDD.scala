@@ -238,7 +238,7 @@ final object MDD0 extends MDD {
   def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) =
     None
 
-  def copy = throw new UnsupportedOperationException
+  def copy = this
 }
 
 final class MDD1(private val child: MDD, private val index: Int) extends MDD {
