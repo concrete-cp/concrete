@@ -7,7 +7,6 @@ import cspfj.ParameterManager
 import cspfj.Problem
 import cspfj.UNSATException
 import cspfj.Variable
-//import cspfj.constraint.extension.Trie
 import cspfj.constraint.extension.ExtensionConstraint2D
 import cspfj.constraint.extension.ExtensionConstraintFind
 import cspfj.constraint.extension.ExtensionConstraintGeneral
@@ -19,7 +18,10 @@ import cspfj.constraint.extension.Matrix
 import cspfj.constraint.extension.Matrix2D
 import cspfj.constraint.extension.STR
 import cspfj.constraint.extension.TupleTrieSet
-import cspom.extension.HashTrie
+import scala.collection.mutable.ArrayBuffer
+import cspfj.constraint.extension.MDDn
+import cspfj.constraint.extension.MDD1
+import cspfj.constraint.extension.MDD2
 
 object ExtensionGenerator {
 
@@ -65,11 +67,57 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
     } else {
       new TupleTrieSet(ExtensionGenerator.ds match {
         //case "MDDSparse" => MDDSparse(value2Index(domains, relation))
-        case "MDD" => MDD(value2Index(domains, relation))
+        case "MDD" => relation match {
+          case mdd: cspom.extension.MDD => cspomMDDtoCspfjMDD(domains, mdd)
+          case r => MDD(value2Index(domains, r))
+        }
         //case "MDD2" => MDD2(value2Index(domains, relation))
         case "STR" => new STR() ++ value2Index(domains, relation).toIterable
         //case "Trie" => Trie(value2Index(domains, relation))
       }, init)
+    }
+  }
+
+  private def cspomMDDtoCspfjMDD(
+    domains: Seq[Domain],
+    relation: cspom.extension.MDD,
+    map: HashMap[cspom.extension.MDD, cspfj.constraint.extension.MDD] = new HashMap()): MDD = {
+    relation match {
+      case cspom.extension.MDDLeaf => cspfj.constraint.extension.MDDLeaf
+      case n: cspom.extension.MDDNode if n.trie.size == 1 =>
+        map.getOrElseUpdate(n, {
+          val domain = domains.head
+          val (v, t) = n.trie.head
+          val i = domain.index(v)
+          new MDD1(cspomMDDtoCspfjMDD(domains.tail, t, map), v)
+        })
+      case n: cspom.extension.MDDNode if n.trie.size == 2 =>
+        map.getOrElseUpdate(n, {
+          val domain = domains.head
+          val it = n.trie.iterator
+          val (v1, t1) = it.next
+          val (v2, t2) = it.next
+          val i1 = domain.index(v1)
+          val i2 = domain.index(v2)
+          new MDD2(
+            cspomMDDtoCspfjMDD(domains.tail, t1, map), v1,
+            cspomMDDtoCspfjMDD(domains.tail, t2, map), v2)
+        })
+      case n: cspom.extension.MDDNode =>
+        map.getOrElseUpdate(n, {
+          val domain = domains.head
+          val m = n.trie.keys.map(domain.index).max
+          val trie = new Array[cspfj.constraint.extension.MDD](m + 1)
+          val indices = new ArrayBuffer[Int](trie.size)
+          for ((v, t) <- n.trie) {
+            val i = domain.index(v)
+            trie(i) = cspomMDDtoCspfjMDD(domains.tail, t, map)
+            indices += i
+          }
+
+          new MDDn(trie, indices.toArray, indices.length)
+        })
+
     }
   }
 
@@ -97,6 +145,11 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
         case m: TupleTrieSet if (m.initialContent == false) => {
           ExtensionGenerator.consType match {
             case "MDDC" => {
+              print(m.reduceable.asInstanceOf[MDD].arity)
+              print(" ")
+              print(m.reduceable.asInstanceOf[MDD].size)
+              print(" ")
+              println(m.reduceable.asInstanceOf[MDD].nodes)
               new MDDC(scope, m.reduceable.asInstanceOf[MDD])
             }
             case "STR3" => {

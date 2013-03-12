@@ -1,7 +1,6 @@
 package cspfj.constraint.extension;
 
 import scala.annotation.tailrec
-import cspom.extension.HashTrie
 import cspfj.Parameter
 import cspfj.ParameterManager
 

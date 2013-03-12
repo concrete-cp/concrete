@@ -10,7 +10,7 @@ import cspom.Loggable
 import cspom.extension.ExtensionConstraint
 import cspom.extension.Relation
 import rb.randomlists.CoarseProportionRandomListGenerator
-import rb.randomlists.RandomListGenerator.Structure
+import rb.randomlists.Structure
 import scala.slick.session.Database
 import scala.slick.jdbc.{ GetResult, StaticQuery => Q }
 import Q.interpolation
@@ -21,32 +21,39 @@ import scala.collection.mutable.HashMap
 import cspfj.constraint.extension.MDDn
 import scala.util.hashing.MurmurHash3
 import scala.collection.mutable.HashSet
+import cspom.extension.EmptyMDD
+import cspom.extension.MDDLeaf
+import cspom.extension.MDDNode
+import cspom.extension.MDD
 
 object RandomMDD extends Concrete with App {
 
   def apply(d: Int, k: Int, l: Double, q: Double, rand: Random) = {
-    val existing = Array.fill(k + 1)(new ArrayBuffer[RandomMDD]())
+    val existing = Array.fill(k + 1)(new ArrayBuffer[MDD]())
     generate(d, k, l, q, existing, rand)
   }
 
   def generate(d: Int, k: Int, l: Double, q: Double,
-    existing: Array[ArrayBuffer[RandomMDD]], rand: Random): RandomMDD = {
+    existing: Array[ArrayBuffer[MDD]], rand: Random): MDD = {
     if (k == 0) {
       if (rand.nextDouble < l) {
-        RandomMDDLeaf
+        MDDLeaf
       } else {
-        EmptyRandomMDD
+        EmptyMDD
       }
     } else if (existing(k).nonEmpty && rand.nextDouble < q) {
       existing(k)(rand.nextInt(existing(k).size))
     } else {
-      val t = Array.fill(d)(generate(d, k - 1, l, q, existing, rand))
+      val t = Map(
+        (0 until d)
+          map (i => i -> generate(d, k - 1, l, q, existing, rand))
+          filter (_._2.nonEmpty): _*)
 
       val r =
-        if (t.forall(_ eq EmptyRandomMDD)) {
-          EmptyRandomMDD
+        if (t.isEmpty) {
+          EmptyMDD
         } else {
-          new RandomMDDNode(t)
+          new MDDNode(t)
         }
       existing(k) += r
       r
@@ -113,107 +120,18 @@ object TestMDD extends App {
   val k = arity.toInt
   val l = looseness.toDouble
   val q = mddProb.toDouble
-  var lambda: List[Long] = Nil
+  var lambda: List[BigInt] = Nil
   var nu: List[Long] = Nil
-  var ts = 0
+
   for (seed <- 0 until 10000) {
+    print(seed + " ")
     val rand = new Random(seed)
     val m = RandomMDD(d, k, l, q, rand).reduce
-    ts += 1
-    println(ts)
-    lambda ::= m.size.toLong
-    nu ::= m.edges(ts).toLong
+    lambda ::= m.lambda
+    nu ::= m.edges.toLong
   }
   println(StatisticsManager.average(lambda))
   println(StatisticsManager.average(nu))
-}
-
-abstract class RandomMDD extends Relation {
-  def contains(t: Seq[_]) = throw new UnsupportedOperationException
-
-  def close() {
-
-  }
-  def reduce: RandomMDD = {
-    reduce(new HashMap())
-  }
-  def reduce(mdds: collection.mutable.Map[Seq[RandomMDD], RandomMDD]): RandomMDD
-  def literator: Iterator[List[Int]]
-  def iterator = literator map (_.toArray)
-
-  def arity = k.get
-
-  def k: Option[Int]
-
-  def edges(ts: Int): Int
-  override def toString = literator.mkString("\n")
-  def toString(k: Int): String
-}
-
-object EmptyRandomMDD extends RandomMDD {
-  def literator = Iterator()
-  def k = None
-  def edges(ts: Int) = 0
-  def reduce(mdds: collection.mutable.Map[Seq[RandomMDD], RandomMDD]) = this
-  def toString(k: Int) = ""
-}
-
-object RandomMDDLeaf extends RandomMDD {
-  def literator = Iterator(Nil)
-  def k = Some(0)
-  def edges(ts: Int) = 0
-  def reduce(mdds: collection.mutable.Map[Seq[RandomMDD], RandomMDD]) = this
-  def toString(k: Int) = "\n"
-}
-
-final class RandomMDDNode(var trie: Array[RandomMDD]) extends RandomMDD {
-  var timestamp: Int = _
-  override def close { trie = null }
-
-  def literator = trie.iterator.zipWithIndex flatMap {
-    case (t, i) => t.literator map (i :: _)
-  }
-
-  def k = trie.iterator.map(_.k).find(_.isDefined).map(_.get + 1)
-
-  def reduce(mdds: collection.mutable.Map[Seq[RandomMDD], RandomMDD]): RandomMDD = {
-    var b = trie.map(_.reduce(mdds))
-    mdds.getOrElseUpdate(b, new RandomMDDNode(b))
-  }
-
-  def edges(ts: Int) =
-    if (ts == timestamp)
-      0
-    else {
-      timestamp = ts
-      trie.count(_ ne EmptyRandomMDD) + trie.map(_.edges(ts)).sum
-    }
-
-  override lazy val hashCode: Int = {
-    //val hash = new MurmurHash3
-    MurmurHash3.arrayHash(trie)
-  }
-
-  override def equals(o: Any): Boolean = o match {
-    case t: RandomMDDNode =>
-      val len = t.trie.length
-      len == trie.length && {
-        var i = len - 1
-        while (i >= 0 && (t.trie(i) eq trie(i))) {
-          i -= 1
-        }
-        i < 0
-      }
-    case _ => false
-  }
-
-  def toString(k: Int) = {
-    val space = (0 until k).map(" ").mkString("")
-    trie.zipWithIndex.filter(_._1 ne EmptyRandomMDD).map {
-      case (t, i) => space + i + "\n" + t.toString(k + 1)
-    } mkString ("")
-
-  }
 }
 
 object NameMDD extends App {

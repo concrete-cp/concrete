@@ -6,7 +6,7 @@ organization := "fr.univ-valenciennes.cspfj"
 
 version := "1.0.1-SNAPSHOT"
 
-scalaVersion := "2.10.0"
+scalaVersion := "2.10.1-RC2"
 
 resolvers += "CSP4J repository" at "http://cspfj.sourceforge.net/repository"
 
@@ -18,7 +18,7 @@ libraryDependencies ++= Seq(
 	"org.sat4j" % "org.sat4j.core" % "2.3.0",
 	"junit" % "junit" % "4.10" % "test",
 	"com.novocode" % "junit-interface" % "0.8" % "test->default",
-	"com.typesafe.slick" %% "slick" % "1.0.0-RC2",
+	"com.typesafe.slick" %% "slick" % "1.0.0",
 	"org.slf4j" % "slf4j-nop" % "1.6.4"
 	)
 

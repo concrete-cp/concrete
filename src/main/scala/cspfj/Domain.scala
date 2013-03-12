@@ -43,6 +43,16 @@ abstract class Domain {
 
   def remove(index: Int): Unit
 
+  def removeVal(v: Int): Boolean = {
+    val i = index(v)
+    if (i >= 0 && present(i)) {
+      remove(i)
+      true
+    } else {
+      false
+    }
+  }
+
   def size: Int
 
   /**
@@ -84,7 +94,7 @@ abstract class Domain {
   //def allValues: Array[Int]
 
   override def equals(o: Any) = o match {
-    case d: Domain => values.sameElements(d.values)
+    case d: Domain => valuesIterator.sameElements(d.valuesIterator)
     case _ => false
   }
 
@@ -128,9 +138,29 @@ abstract class Domain {
    */
   def closestGeq(value: Int): Int
 
-  def indices: Iterator[Int] = indices(first)
+  val indices = new Traversable[Int] {
+    def foreach[B](f: Int => B) {
+      var i = first
+      while (i >= 0) {
+        f(i)
+        i = next(i)
+      }
+    }
+  }
 
-  def indices(from: Int): Iterator[Int] = new Iterator[Int] {
+  def indices(from: Int): Traversable[Int] = new Traversable[Int] {
+    def foreach[B](f: Int => B) {
+      var i = if (present(from)) from else next(from)
+      while (i >= 0) {
+        f(i)
+        i = next(i)
+      }
+    }
+  }
+
+  def indicesIterator: Iterator[Int] = indicesIterator(first)
+
+  def indicesIterator(from: Int): Iterator[Int] = new Iterator[Int] {
     var index = from
 
     override def hasNext = index >= 0
@@ -154,7 +184,17 @@ abstract class Domain {
     }
   }
 
-  def values: Iterator[Int] = indices map value
+  def valuesIterator: Iterator[Int] = indicesIterator map value
+
+  val values = new Traversable[Int] {
+    def foreach[B](f: Int => B) {
+      var i = first
+      while (i >= 0) {
+        f(value(i))
+        i = next(i)
+      }
+    }
+  }
 
   def valueInterval: Interval = Interval(firstValue, lastValue)
 

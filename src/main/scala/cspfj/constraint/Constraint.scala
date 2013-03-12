@@ -231,4 +231,18 @@ abstract class Constraint(val scope: Array[Variable])
 
   final def hasChanged[A](l: Traversable[A], f: A => Boolean) = l.foldLeft(false)(_ | f(_))
 
+  def isFree: Boolean = {
+    var one = false
+    var i = arity - 1
+    while (i >= 0) {
+      if (scope(i).dom.size > 1) {
+        if (one) {
+          return false
+        }
+        one = true
+      }
+      i -= 1
+    }
+    false
+  }
 }

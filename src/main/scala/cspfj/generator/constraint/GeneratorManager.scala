@@ -50,7 +50,8 @@ object GeneratorManager {
     "diffGe" -> classOf[DiffGeGenerator],
     "gcc" -> classOf[GccGenerator],
     "mod" -> classOf[ModGenerator],
-    "nevec" -> classOf[NeqVecGenerator])
+    "nevec" -> classOf[NeqVecGenerator],
+    "zerosum" -> classOf[ZeroSumGenerator])
 
   def register(entry: (String, Class[_ <: AbstractGenerator])) {
     known += entry

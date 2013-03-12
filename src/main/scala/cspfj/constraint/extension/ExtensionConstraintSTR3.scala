@@ -25,7 +25,6 @@ import cspfj.util.Backtrackable
 import cspfj.util.BitVector
 import cspfj.util.Loggable
 import cspfj.Variable
-import cspom.extension.HashTrie
 import cspfj.UNSATException
 import cspfj.constraint.Removals
 import cspfj.Statistic

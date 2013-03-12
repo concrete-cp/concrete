@@ -25,7 +25,6 @@ import cspfj.util.Backtrackable
 import cspfj.util.BitVector
 import cspfj.util.Loggable
 import cspfj.Variable
-import cspom.extension.HashTrie
 import cspfj.UNSATException
 import cspfj.constraint.Removals
 import cspfj.Statistic
@@ -40,7 +39,7 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
 
   var trie = _tts
 
-  private val found = scope map (p => BitVector.newBitVector(p.dom.maxSize))
+  private val unsupported = scope map (p => BitVector.newBitVector(p.dom.maxSize))
 
   override def setLvl(l: Int) {
     super.setLvl(l)
@@ -52,11 +51,17 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
     restoreLevel(l)
   }
 
-  val domSizes = new Array[Int](arity)
+  //val domSizes = new Array[Int](arity)
 
   def revise(mod: List[Int]) = {
     //logger.fine("Revising " + this + " : " + mod.toList)
-    found.foreach(_.fill(false))
+    for (i <- scope.indices) {
+      unsupported(i).fill(false)
+      for (j <- scope(i).dom.indices) {
+        unsupported(i).set(j)
+      }
+    }
+    //found.foreach(_.fill(false))
 
     val rev = mod.reverse
 
@@ -82,15 +87,15 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
       altering()
     }
 
-    sizes(domSizes)
+    //sizes(domSizes)
 
     val notFound = trie.fillFound({ (depth: Int, i: Int) =>
       ExtensionConstraintReduceable.fills += 1
-      found(depth).set(i) && {
-        domSizes(depth) -= 1
-        assert(domSizes(depth) == scope(depth).dom.size - found(depth).cardinality)
-        domSizes(depth) == 0
-      }
+      unsupported(depth).clear(i) && unsupported(depth).isEmpty
+      //        domSizes(depth) -= 1
+      //        assert(domSizes(depth) == scope(depth).dom.size - found(depth).cardinality)
+      //        domSizes(depth) == 0
+      //      }
     }, arity)
 
     val c = filter(notFound)
@@ -101,12 +106,15 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
     //      //logger.info("Entailing " + this)
     //      entail()
     //    }
+    if (isFree) {
+      entail()
+    }
 
     c
   }
 
   private def filter(notFound: Traversable[Int]) = notFound.foldLeft(false)(
-    (acc, p) => scope(p).dom.filter(i => found(p)(i)) || acc)
+    (acc, p) => scope(p).dom.filter(i => !unsupported(p)(i)) || acc)
 
   def save = {
     //println(this + " <- " + trie.size)

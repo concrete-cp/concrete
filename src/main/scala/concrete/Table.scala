@@ -152,6 +152,11 @@ object Table extends App {
                                 FROM Executions
                                 WHERE (version, problemId) = ($version, $problemId)
                             """
+          case "nps" => sql"""
+                                SELECT configId, solution, 
+                                  cast(stat('solver.nbAssignments', executionId) as real)/(cast(stat('solver.searchCpu', executionId) as real) + cast(stat('solver.preproCpu', executionId) as real))
+                                FROM Executions
+                                WHERE (version, problemId) = ($version, $problemId)"""
         }
 
         val results = sqlQuery.as[(Int, String, Double)].list.map {
@@ -161,10 +166,9 @@ object Table extends App {
         for (
           i <- configs.indices;
           j <- results.get(configs(i).configId);
-          k = if (solved(j.solution)) j.statistic else Double.PositiveInfinity;
           tag <- tags
         ) {
-          totals.getOrElseUpdate(tag, Array.fill(configs.size)(Nil))(i) ::= k
+          totals.getOrElseUpdate(tag, Array.fill(configs.size)(Nil))(i) ::= j.statistic
         }
 
         for (
@@ -192,24 +196,21 @@ object Table extends App {
           data.append(
             results.get(c.configId) match {
               case Some(Resultat(result, time)) =>
-                if (solved(result)) {
-                  //engineer(e)._1
-                  //        if (e._2 != "M") throw new IllegalStateException
-                  //print(" & ")
-                  //if (extrem.isDefined && (if (min) e < extrem.get * 1.1 else e > extrem.get * .9)) print("\\bf")
-                  val e = engineer(time)
-                  "%.1f%s".formatLocal(Locale.US, e._1, e._2.getOrElse("")) //print("\\np{%.1f}".format(r))
-                } else {
-                  if (result == null) {
-                    "null"
-                  } else if (result.contains("OutOfMemoryError")) {
-                    "mem"
-                  } else if (result.contains("InterruptedException")) {
-                    "exp"
+                val e = engineer(time)
+                "%.1f%s".formatLocal(Locale.US, e._1, e._2.getOrElse("")) +
+                  (if (!solved(result)) {
+                    if (result == null) {
+                      "(null)"
+                    } else if (result.contains("OutOfMemoryError")) {
+                      "(mem)"
+                    } else if (result.contains("InterruptedException")) {
+                      "(exp)"
+                    } else {
+                      s"($result)"
+                    }
                   } else {
-                    result
-                  }
-                }
+                    ""
+                  })
               case None => "---"
             })
         }
@@ -250,7 +251,7 @@ object Table extends App {
             //                case None => f"\\np{$v%.1f}"
             //              })
           }
-        }.mkString(","))// + " \\\\")
+        }.mkString(",")) // + " \\\\")
       }
       println("\\midrule")
 
@@ -280,7 +281,7 @@ object Table extends App {
       } mkString ("\n"))
     }
 
-  def solved(solution: String) = solution != null && ("UNSAT" == solution || """^[0-9\ ]*$""".r.findFirstIn(solution).isDefined)
+  def solved(solution: String) = solution != null && ("UNSAT" == solution || """^[0-9\s]*$""".r.findFirstIn(solution).isDefined)
 
   @tailrec
   def rank[B <% Ordered[B]](p: IndexedSeq[Array[B]], candidates: Seq[Int],

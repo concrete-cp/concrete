@@ -87,27 +87,12 @@ final class Variable(
   //      else _getWDeg(i - 1, s + c.weight)
   //    }
 
-  private def nonFree(c: Constraint): Boolean = {
-    var free = 0
-    var i = c.arity - 1
-    while (i >= 0) {
-      if (c.scope(i).dom.size > 1) {
-        free += 1
-        if (free > 1) {
-          return true
-        }
-      }
-      i -= 1
-    }
-    false
-  }
-
   def getWDegFree = {
     var i = constraints.length - 1
     var wDeg = 0
     while (i >= 0) {
       val c = constraints(i)
-      if (nonFree(c)) wDeg += c.weight
+      if (!c.isFree) wDeg += c.weight
       i -= 1
     }
     wDeg
@@ -132,8 +117,7 @@ final class Variable(
     var i = constraints.length - 1
     var dDeg = 0
     while (i >= 0) {
-      val c = constraints(i)
-      if (nonFree(c)) dDeg += 1
+      if (!constraints(i).isFree) dDeg += 1
       i -= 1
     }
     dDeg

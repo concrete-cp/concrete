@@ -5,7 +5,7 @@ import cspfj.generator.ProblemGenerator
 import cspom.CSPOM
 import rb.RBGenerator
 import rb.RBGenerator.Tightness
-import rb.randomlists.RandomListGenerator.Structure
+import rb.randomlists.Structure
 import java.net.URI
 import scala.slick.session.Database
 import scala.slick.jdbc.{ GetResult, StaticQuery => Q }
