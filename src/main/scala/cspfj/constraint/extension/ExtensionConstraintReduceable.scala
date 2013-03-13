@@ -113,8 +113,8 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
     c
   }
 
-  private def filter(notFound: Traversable[Int]) = notFound.foldLeft(false)(
-    (acc, p) => scope(p).dom.filter(i => !unsupported(p)(i)) || acc)
+  private def filter(notFound: Traversable[Int]) = notFound.filter(
+    p => scope(p).dom.filter(i => !unsupported(p)(i)))
 
   def save = {
     //println(this + " <- " + trie.size)

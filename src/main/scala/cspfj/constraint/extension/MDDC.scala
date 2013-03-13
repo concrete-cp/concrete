@@ -57,6 +57,8 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
 
     MDD.timestamp += 1
 
+    val oldGno = gNo
+
     seekSupports(MDD.timestamp, mdd, 0)
 
     //    val (_, newNo, delta) = mdd.seekSupports(MDD.timestamp, scope, unsupported, 0, gNo, arity)
@@ -67,10 +69,16 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
     //    }
     //   
 
-    altering()
+    if (gNo ne oldGno) {
+      altering()
+    }
 
-    (0 until delta).foldLeft(false)(
+    val c = (0 until delta).foldLeft(false)(
       (acc, p) => scope(p).dom.filter(i => !unsupported(p)(i)) || acc)
+    if (isFree) {
+      entail()
+    }
+    c
   }
 
   private def seekSupports(ts: Int, g: MDD, i: Int): Boolean = {
