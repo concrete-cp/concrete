@@ -40,11 +40,12 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Constrai
     counts.forall { case (v, c) => c >= bound(v).minCount }
   }
 
-  private def filter(value: Int, q: Queue[Variable]): Boolean = {
-    var ch = false
-    for (v <- scope) {
+  private def filter(value: Int, q: Queue[Variable]) = {
+    var ch: List[Int] = Nil
+    for (p <- scope.indices) {
+      val v = scope(p)
       if (v.dom.size > 1 && v.dom.removeVal(value)) {
-        ch = true
+        ch ::= p
         if (v.dom.size == 1) {
           q.enqueue(v)
         }
@@ -53,7 +54,7 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Constrai
     ch
   }
 
-  def upper() = {
+  private def upper() = {
     val queue = new collection.mutable.Queue[Variable]()
     for (v <- scope) {
       if (v.dom.size == 1) {
@@ -64,7 +65,7 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Constrai
     //val singles: MultiMap[Int, Variable] = new HashMap[Int, collection.mutable.Set[Variable]] with MultiMap[Int, Variable]
     Arrays.fill(singles, 0)
 
-    var ch = false
+    var ch: List[Int] = Nil
     do {
       while (queue.nonEmpty) {
         singles(queue.dequeue.dom.firstValue) += 1
@@ -74,27 +75,28 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Constrai
         if (singles(v) > bound(v).maxCount) {
           throw UNSATException.e
         } else if (singles(v) == bound(v).maxCount) {
-          ch |= filter(v, queue)
+          ch ++= filter(v, queue)
         }
       }
     } while (queue.nonEmpty)
     ch
   }
 
-  private def assignAll(value: Int) = {
-    var ch = false
-    for (v <- scope) {
+  private def assignAll(value: Int): List[Int] = {
+    var mod: List[Int] = Nil
+    for (p <- scope.indices) {
+      val v = scope(p)
       val index = v.dom.index(value);
       if (index >= 0 && v.dom.present(index)) {
-        ch = true
+        mod ::= p
         v.dom.setSingle(index)
       }
     }
-    ch
+    mod
   }
 
-  def lower() = {
-    var ch = false
+  private def lower() = {
+    var ch: List[Int] = Nil //false
     Arrays.fill(counts, 0)
 
     //    val counts = scope.iterator.flatMap(_.dom.values).foldLeft(Map[Int, Int]().withDefaultValue(0)) {
@@ -109,13 +111,13 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Constrai
       if (c < min) {
         throw UNSATException.e
       } else if (c == min) {
-        ch |= assignAll(v)
+        ch ++= assignAll(v)
       }
     }
     ch
   }
 
-  def revise(): Boolean = upper() | lower()
+  def revise() = (upper() ++ lower()).distinct
 
   def advise(p: Int) = arity * arity
   val simpleEvaluation = 3

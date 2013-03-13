@@ -7,6 +7,7 @@ import cspfj.util.Interval
 import cspfj.Variable
 import cspfj.util.Loggable
 import cspfj.constraint.Shaver
+import scala.collection.mutable.HashSet
 
 final class ZeroSum(
   val factors: Array[Int],
@@ -22,7 +23,7 @@ final class ZeroSum(
 
   def advise(p: Int) = arity
 
-  def shave() = {
+  def shave(): List[Int] = {
 
     var i = arity - 1
 
@@ -40,7 +41,7 @@ final class ZeroSum(
     //reduce (_ + _)
     //    val bounds = Interval(0, 0)
 
-    var ch = false
+    var ch: List[Int] = Nil
     i = arity - 1
     while (i >= 0) {
       val dom = scope(i).dom
@@ -49,17 +50,26 @@ final class ZeroSum(
 
       val boundsf = Interval(bounds.lb - myBounds.lb, bounds.ub - myBounds.ub) / -f
 
-      ch |= dom.intersectVal(boundsf)
+      if (dom.intersectVal(boundsf)) {
+        ch ::= i
+      }
       i -= 1
     }
     ch
   }
 
   def revise() = {
-    if (shave()) {
-      while (shave()) {}
-      true
-    } else false
+    var mod = new HashSet[Int]()
+    var ch = true
+    while (ch) {
+      ch = false
+      val m = shave()
+      if (m.nonEmpty) {
+        ch = true
+        mod ++= m
+      }
+    }
+    mod
   }
 
   def reviseVariable(p: Int, mod: Seq[Int]) = false

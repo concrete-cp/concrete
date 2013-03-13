@@ -9,7 +9,14 @@ final class Neq(v0: Variable, v1: Variable) extends Constraint(Array(v0, v1)) {
   def checkValues(t: Array[Int]) = t(0) != t(1)
 
   def revise() = {
-    val ch = revise(v0, v1) | revise(v1, v0)
+    var ch: List[Int] = Nil
+    if (revise(v0, v1)) {
+      ch ::= 1
+    }
+    if (revise(v1, v0)) {
+      ch ::= 0
+    }
+
     if (!isEntailed && (v0.dom disjoint v1.dom)) entail()
     ch
   }

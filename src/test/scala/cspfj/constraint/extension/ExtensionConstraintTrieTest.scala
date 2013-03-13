@@ -27,12 +27,13 @@ final class ExtensionConstraintArrayTrieTest {
     //println(content map (_.toSeq) mkString (", "))
 
     mmd.setLevel(1);
+    mmd.advise(0)
+    mmd.advise(1)
+    assertEquals(Seq(1), mmd.revise())
 
-    mmd.revise()
-
-//    assertEquals(
-//      HashTrie(Array(0, 0), Array(1, 1)),
-//      mmd.trie);
+    //    assertEquals(
+    //      HashTrie(Array(0, 0), Array(1, 1)),
+    //      mmd.trie);
     assertEquals(2, mmd.trie.size);
 
     mmd.restoreLevel(0)

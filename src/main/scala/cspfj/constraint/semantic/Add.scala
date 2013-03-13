@@ -15,7 +15,17 @@ final class Add(val result: Variable, val v0: Variable, val v1: Variable)
 
   def shave() = {
     val bounds = v0.dom.valueInterval + v1.dom.valueInterval - result.dom.valueInterval
-    reviseB(result, true, bounds) | reviseB(v0, false, bounds) | reviseB(v1, false, bounds)
+    var mod: List[Int] = Nil
+    if (reviseB(result, true, bounds)) {
+      mod ::= 0
+    }
+    if (reviseB(v0, false, bounds)) {
+      mod ::= 1
+    }
+    if (reviseB(v1, false, bounds)) {
+      mod ::= 2
+    }
+    mod
   }
 
   private def reviseB(v: Variable, opp: Boolean, bounds: Interval) = {

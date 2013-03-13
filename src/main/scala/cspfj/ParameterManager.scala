@@ -121,7 +121,7 @@ final object ParameterManager {
     }
   }
 
-  def checkPending {
+  def checkPending() {
     if (!pending.isEmpty) throw new InvalidParameterException("These parameters were not used " + pending)
     if (!pendingParse.isEmpty) throw new InvalidParameterException("These parameters were not used " + pendingParse)
 

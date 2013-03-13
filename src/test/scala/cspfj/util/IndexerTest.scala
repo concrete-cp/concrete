@@ -6,7 +6,7 @@ import org.junit.Test
 
 class IndexerTest {
   @Test
-  def testDirect {
+  def testDirect() {
     val i = Indexer.factory(0 to 10 toArray)
     assertTrue(i.isInstanceOf[DirectIndices])
     assertEquals(3, i.index(3))
@@ -16,7 +16,7 @@ class IndexerTest {
   }
 
   @Test
-  def testOffset {
+  def testOffset() {
     val i = Indexer.factory(1 to 10 toArray)
     assertTrue(i.isInstanceOf[OffsetIndices])
     assertEquals(3, i.index(4))

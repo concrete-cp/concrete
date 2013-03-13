@@ -1,7 +1,7 @@
 package cspfj.constraint.semantic;
 
 import scala.util.Random
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import cspfj.constraint.Constraint
@@ -35,7 +35,7 @@ final class AbsDiffTest {
       def checkValues(t: Array[Int]) = t(0) == math.abs(t(1) - t(2));
     };
     AdviseCount.adviseAll(c2)
-    assertFalse(c2.revise());
+    assertEquals(List(), c2.revise());
   }
 
   @Test
@@ -50,7 +50,7 @@ final class AbsDiffTest {
     val c = new AbsDiff(x, y, z);
     AdviseCount.adviseAll(c)
 
-    assertFalse(c.revise());
+    assertEquals(List(), c.revise());
   }
 
   private def randomDomain(min: Int, max: Int, nb: Int) = {

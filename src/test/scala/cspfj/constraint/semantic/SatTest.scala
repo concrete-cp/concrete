@@ -8,7 +8,7 @@ import cspfj.Variable
 
 class SatTest {
   @Test
-  def test {
+  def test() {
     val problem = new Problem
     val v0 = new Variable("v0", IntDomain(0 to 2));
     val v1 = new Variable("v1", IntDomain(0 to 2));

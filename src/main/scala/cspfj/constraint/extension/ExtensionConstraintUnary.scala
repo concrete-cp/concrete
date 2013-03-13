@@ -27,7 +27,7 @@ import cspfj.UNSATException
 final class ExtensionConstraintUnary(scope: Variable, matrix: Matrix, shared: Boolean)
   extends ExtensionConstraint(Array(scope), matrix, shared) {
 
-  def revise() = scope.dom.filter { i => matrix.check(Array(i)) }
+  def revise() = if (scope.dom.filter { i => matrix.check(Array(i)) }) List(0) else Nil
 
   def removeTuple(tuple: Array[Int]) = {
     disEntail();

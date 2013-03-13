@@ -27,7 +27,11 @@ final class NotInInterval(val variable: Variable, val lb: Int, val ub: Int)
 
     entail()
 
-    ch
+    if (ch) {
+      0 :: Nil
+    } else {
+      Nil
+    }
 
   }
 

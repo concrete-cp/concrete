@@ -45,12 +45,25 @@ final class Eq(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
     if (neg) x.dom.index(b - yv) else x.dom.index(yv - b)
   }
 
-  def shave() =
-    if (neg) scope(0).dom.intersectVal(scope(1).dom.valueInterval.negate + b) |
-      scope(1).dom.intersectVal(scope(0).dom.valueInterval.negate + b)
-    else
-      scope(0).dom.intersectVal(scope(1).dom.valueInterval - b) |
-        scope(1).dom.intersectVal(scope(0).dom.valueInterval + b)
+  def shave(): List[Int] = {
+    var mod: List[Int] = Nil
+    if (neg) {
+      if (scope(0).dom.intersectVal(scope(1).dom.valueInterval.negate + b)) {
+        mod ::= 0
+      }
+      if (scope(1).dom.intersectVal(scope(0).dom.valueInterval.negate + b)) {
+        mod ::= 1
+      }
+    } else {
+      if (scope(0).dom.intersectVal(scope(1).dom.valueInterval - b)) {
+        mod ::= 0
+      }
+      if (scope(1).dom.intersectVal(scope(0).dom.valueInterval + b)) {
+        mod ::= 1
+      }
+    }
+    mod
+  }
 
   def reviseVariable(position: Int, mod: List[Int]) = position match {
     case 0 => x.dom.filter { i =>

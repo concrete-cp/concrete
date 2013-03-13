@@ -30,6 +30,7 @@ import cspfj.constraint.Removals
 import cspfj.Statistic
 import cspfj.util.SparseSet
 import cspfj.util.IntSet
+import scala.collection.mutable.HashSet
 
 final class ExtensionConstraintSTR3(_scope: Array[Variable], private var table: Array[Array[Int]])
   extends Constraint(_scope) with Removals with Backtrackable[(SparseSet, Array[Array[Int]], Array[IntSet])] {
@@ -79,8 +80,9 @@ final class ExtensionConstraintSTR3(_scope: Array[Variable], private var table: 
         }
       }
 
-      val c = (0 until arity).foldLeft(false)(
-        (acc, p) => scope(p).dom.filter(i => row(i).nonEmpty) || acc)
+      val c = (0 until arity).filter(
+        p => scope(p).dom.filter(i => row(i).nonEmpty))
+        
       for (p <- 0 until arity; i <- scope(p).indices) {
         cur(p)(i) = row(p)(i).length - 1
         dep(row(p)(i).head) = Set((p, i))
@@ -89,7 +91,7 @@ final class ExtensionConstraintSTR3(_scope: Array[Variable], private var table: 
       last = scope.map(_.dom.intSet)
       c
     } else {
-      var c = false
+      var c = new HashSet[Int]()
 
       for (x <- mod; a <- last(x).iterator if !scope(x).dom.present(a)) {
         val prevMembers = inv.size
@@ -106,7 +108,7 @@ final class ExtensionConstraintSTR3(_scope: Array[Variable], private var table: 
               }
               if (p < 0) {
                 scope(y).dom.remove(b)
-                c = true
+                c += y
               } else {
                 if (p != cur(y)(b)) {
                   cur(y)(b) = p
@@ -120,7 +122,7 @@ final class ExtensionConstraintSTR3(_scope: Array[Variable], private var table: 
         }
       }
 
-      if (c) {
+      if (c.nonEmpty) {
         last = scope.map(_.dom.intSet)
       }
       c

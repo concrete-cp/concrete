@@ -31,7 +31,7 @@ object ACC extends Loggable {
     for (c <- problem.constraints) {
       (0 until c.arity).foreach(c.advise)
       val sizes = c.scope map (_.dom.size)
-      assert(!c.revise(), c + " was revised")
+      assert(c.revise().isEmpty, c + " was revised")
       assert(
         sizes.sameElements(c.scope map (_.dom.size)),
         c + " was revised!")
@@ -120,16 +120,16 @@ final class ACC(val problem: Problem, val key: Key[Constraint], val queue: Prior
     upd(constraints.length - 1)
   }
 
-  @tailrec
-  private def updateQueue(sizes: Array[Int], constraint: Constraint, i: Int) {
-    if (i >= 0) {
-      val v = constraint.scope(i)
-
-      if (v.dom.size != sizes(i))
-        updateQueue(v, constraint)
-
-      updateQueue(sizes, constraint, i - 1)
-    }
+  private def updateQueue(mod: Traversable[Int], constraint: Constraint) {
+    mod.foreach(i => updateQueue(constraint.scope(i), constraint))
+    //    if (i >= 0) {
+    //      val v = constraint.scope(i)
+    //
+    //      if (v.dom.size != sizes(i))
+    //        updateQueue(v, constraint)
+    //
+    //      updateQueue(sizes, constraint, i - 1)
+    //    }
   }
 
   @tailrec
@@ -141,13 +141,14 @@ final class ACC(val problem: Problem, val key: Key[Constraint], val queue: Prior
       val constraint = queue.poll();
 
       revisions += 1;
-      val sizes = constraint.sizes()
+      //val sizes = constraint.sizes()
 
       val sat = try {
-        if (constraint.revise()) {
-          assert(!(constraint.sizes() sameElements sizes), constraint + " returned wrong true revised info")
-          updateQueue(sizes, constraint, constraint.arity - 1)
-        } else assert(constraint.sizes() sameElements sizes, constraint + " returned wrong false revised info")
+        updateQueue(constraint.revise(), constraint)
+        //        if (constraint.revise()) {
+        //          assert(!(constraint.sizes() sameElements sizes), constraint + " returned wrong true revised info")
+        //          updateQueue(sizes, constraint, constraint.arity - 1)
+        //        } else assert(constraint.sizes() sameElements sizes, constraint + " returned wrong false revised info")
         true
       } catch {
         case e: UNSATException =>

@@ -87,22 +87,17 @@ final class ACV(
 
   }
 
-  def updateQueue(prev: Array[Int], constraint: Constraint) {
-    assume(prev.length == constraint.arity)
+  def updateQueue(mod: Traversable[Int], constraint: Constraint) {
+    //assume(prev.length == constraint.arity)
     /** Requires high optimization */
 
-    val scope = constraint.scope
+    //val scope = constraint.scope
 
-    var i = prev.length - 1
-    while (i >= 0) {
-      val variable = scope(i)
-      if (prev(i) != variable.dom.size) {
-        queue.offer(variable, key.getKey(variable))
-        advise(variable, constraint)
-      }
-      i -= 1
+    for (p <- mod) {
+      val variable = constraint.scope(p)
+      queue.offer(variable, key.getKey(variable))
+      advise(variable, constraint)
     }
-
   }
 
   @tailrec
@@ -111,10 +106,11 @@ final class ACV(
       val c = modifiedConstraints.next
       AdviseCount.adviseAll(c)
 
-      val prev = c.sizes()
+      //val prev = c.sizes()
 
       val sat = try {
-        if (c.revise()) updateQueue(prev, c)
+        updateQueue(c.revise(), c)
+        //if (c.revise()) updateQueue(prev, c)
         true
       } catch {
         case _: UNSATException => {
@@ -180,14 +176,15 @@ final class ACV(
 
       (c.isEntailed || {
         revisions += 1
-        val prev = c.sizes()
+        //val prev = c.sizes()
         //println("Revising " + c)
 
         try {
-          if (c.revise()) {
-            assert(!(c.sizes() sameElements prev), c + " returned wrong true revised info")
-            updateQueue(prev, c)
-          } else assert(c.sizes() sameElements prev, c + " returned wrong false revised info")
+          updateQueue(c.revise(), c)
+//          if (c.revise()) {
+//            assert(!(c.sizes() sameElements prev), c + " returned wrong true revised info")
+//            updateQueue(prev, c)
+//          } else assert(c.sizes() sameElements prev, c + " returned wrong false revised info")
           true
         } catch {
           case e: UNSATException =>

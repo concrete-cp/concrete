@@ -17,21 +17,24 @@ final class Abs(val result: Variable, val v0: Variable) extends Constraint(Array
   }
 
   def revise() = {
-    var ch = result.dom.intersectVal(v0.dom.valueInterval.abs)
+    var ch: List[Int] = Nil
 
-    if (!v0.dom.bound) {
-      ch |= result.dom.filter { i =>
+    if (result.dom.intersectVal(v0.dom.valueInterval.abs)
+      | (!v0.dom.bound && result.dom.filter { i =>
         val v = result.dom.value(i)
         v0.dom.presentVal(v) || v0.dom.presentVal(-v)
-      }
+      })) {
+      ch ::= 0
     }
 
-    ch |= v0.dom.intersectVal(-result.dom.lastValue, result.dom.lastValue)
-    ch |= v0.dom.filter { i =>
-      result.dom.presentVal(math.abs(v0.dom.value(i)))
+    if (v0.dom.intersectVal(-result.dom.lastValue, result.dom.lastValue)
+      | v0.dom.filter { i =>
+        result.dom.presentVal(math.abs(v0.dom.value(i)))
+      }) {
+      ch ::= 1
     }
 
-    if (ch && result.dom.size == 1 || v0.dom.size == 1) entail()
+    if (ch.nonEmpty && result.dom.size == 1 || v0.dom.size == 1) entail()
 
     ch
   }

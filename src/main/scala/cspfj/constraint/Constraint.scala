@@ -165,7 +165,7 @@ abstract class Constraint(val scope: Array[Variable])
    * @param revisator
    */
   @throws(classOf[UNSATException])
-  def revise(): Boolean
+  def revise(): Traversable[Int]
 
   private var valTuple = new Array[Int](arity)
 

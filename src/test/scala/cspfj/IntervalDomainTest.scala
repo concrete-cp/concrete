@@ -6,7 +6,7 @@ import org.junit.Test
 class IntervalDomainTest {
 
   @Test
-  def test {
+  def test() {
     val dom = IntDomain(10 to 20)
 
     assertEquals(0, dom.first)

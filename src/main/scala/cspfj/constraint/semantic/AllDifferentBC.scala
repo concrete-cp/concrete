@@ -14,6 +14,7 @@ import cspfj.util.UOList
 import cspfj.Domain
 import cspfj.util.IntSet
 import cspfj.AdviseCount
+import scala.collection.mutable.HashSet
 
 final class HInterval(
   val dom: Domain,
@@ -31,7 +32,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
 
   var nbBounds = 0
 
-  val intervals = scope.indices.map(i => new HInterval(scope(i).dom, i)).toArray
+  val intervals = scope.zipWithIndex.map { case (v, i) => new HInterval(v.dom, i) }.toArray
   val minsorted = intervals.clone
   val maxsorted = intervals.clone
 
@@ -65,7 +66,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
     }
   }
 
-  def sortIt() {
+  private def sortIt() {
     iSortMin(minsorted)
     iSortMax(maxsorted)
 
@@ -107,7 +108,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
   }
 
   @tailrec
-  def pathset(tab: Array[Int], start: Int, end: Int, to: Int) {
+  private def pathset(tab: Array[Int], start: Int, end: Int, to: Int) {
     if (start != end) {
       val next = tab(start)
       tab(start) = to
@@ -116,17 +117,17 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
   }
 
   @tailrec
-  def pathmin(tab: Array[Int], i: Int): Int =
+  private def pathmin(tab: Array[Int], i: Int): Int =
     if (tab(i) < i) pathmin(tab, tab(i))
     else i
 
   @tailrec
-  def pathmax(tab: Array[Int], i: Int): Int =
+  private def pathmax(tab: Array[Int], i: Int): Int =
     if (tab(i) > i) pathmax(tab, tab(i))
     else i
 
-  def filterLower(): Boolean = {
-    var change = false
+  private def filterLower(): List[Int] = {
+    var mod: List[Int] = Nil
     var i = 1
     while (i <= nbBounds + 1) {
       t(i) = i - 1
@@ -158,7 +159,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
         var w = pathmax(h, h(x));
         val ch = maxsorted(i).dom.removeToVal(bounds(w) - 1)
         assert(ch)
-        change = true
+        mod ::= maxsorted(i).pos
         pathset(h, x, w, w);
       }
 
@@ -168,11 +169,11 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
       }
       i += 1
     }
-    change
+    mod
   }
 
-  def filterUpper() = {
-    var change = false
+  private def filterUpper(): List[Int] = {
+    var mod: List[Int] = Nil
     var i = 0
     while (i <= nbBounds) {
       t(i) = i + 1
@@ -204,7 +205,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
         val w = pathmin(h, h(x));
         val ch = minsorted(i).dom.removeFromVal(bounds(w))
         assert(ch)
-        change = true
+        mod ::= minsorted(i).pos
         pathset(h, x, w, w);
       }
       if (d(z) == bounds(y) - bounds(z)) {
@@ -213,38 +214,33 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
       }
       i -= 1
     }
-    change
+    mod
   }
 
-  def revise() = if (propagate()) {
-    while (propagate()) {}
-    true
-  } else false
+  def revise() = {
+    val mod = new HashSet[Int]()
+    var ch = true
+    while (ch) {
+      ch = false
+      sortIt();
+      val c2 = filterLower()
+      if (c2.nonEmpty) {
+        mod ++= c2
+        ch = true
+      }
+      val c1 = filterUpper()
+      if (c1.nonEmpty) {
+        mod ++= c1
+        ch = true
+      }
 
-  var lastState: Array[IntSet] = scope map (_.dom.intSet)
-  var lastAdvise = -1
-
-  def saveState() {
-    lastState = scope map (_.dom.intSet)
-    lastAdvise = AdviseCount.count
-  }
-
-  def sameBounds(p: Int) = scope(p).dom.first == lastState(p).first && scope(p).dom.last == lastState(p).last
-
-  def propagate() = {
-    sortIt();
-    filterLower() | filterUpper()
+    }
+    mod
   }
 
   val eval = ((31 - Integer.numberOfLeadingZeros(arity)) * arity).toInt
 
   def advise(p: Int) = eval
-//    {
-//      if (lastAdvise != AdviseCount.count) {
-//        saveState()
-//        eval
-//      } else if (sameBounds(p)) -1
-//      else eval
-//    }
+
   val simpleEvaluation = 3
 }

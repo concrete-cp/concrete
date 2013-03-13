@@ -1,8 +1,8 @@
 package cspfj.constraint;
 
 import java.util.Arrays
-
 import cspfj.AdviseCount
+import cspfj.Variable
 
 trait Removals extends Constraint {
 
@@ -19,7 +19,7 @@ trait Removals extends Constraint {
     r
   }
 
-  def revise(modified: List[Int]): Boolean
+  def revise(modified: List[Int]): Traversable[Int]
 
   // scope.iterator.zipWithIndex.zip(removals.iterator).filter(t => t._2 >= reviseCount).map(t => t._1)
 

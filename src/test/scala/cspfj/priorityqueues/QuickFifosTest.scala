@@ -16,7 +16,7 @@ class QuickFifosTest {
       val c = new Constraint(Array()) {
         val eval = r.nextInt(1000000)
         def advise(p: Int) = eval
-        def revise() = false
+        def revise() = Nil
         def simpleEvaluation = 1
         def checkValues(t: Array[Int]) = true
       }
@@ -33,7 +33,7 @@ class QuickFifosTest {
       val c = new Constraint(Array()) {
         val eval = r.nextInt(1000000)
         def advise(p: Int) = eval
-        def revise() = false
+        def revise() = Nil
         def simpleEvaluation = 1
         def checkValues(t: Array[Int]) = true
       }

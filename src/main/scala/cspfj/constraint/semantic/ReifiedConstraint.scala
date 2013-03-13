@@ -64,6 +64,17 @@ final class ReifiedConstraint(
   }
 
   def revise() = {
+    val sizes = this.sizes()
+    if (reviseB()) {
+
+      (0 until arity).filter(i => scope(i).dom.size != sizes(i))
+
+    } else {
+      Nil
+    }
+  }
+
+  def reviseB() = {
     controlDomain.status match {
       case UNKNOWNBoolean => (
         if (!positiveConstraint.isConsistent) {
@@ -88,7 +99,7 @@ final class ReifiedConstraint(
 
   private def noReifyRevise(constraint: Constraint): Boolean = {
 
-    val c = constraint.revise()
+    val c = constraint.revise().nonEmpty
     if (constraint.isEntailed) {
       entail();
     }

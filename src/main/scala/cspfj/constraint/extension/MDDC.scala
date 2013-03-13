@@ -45,7 +45,7 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
 
   var delta: Int = _
 
-  def revise(modified: List[Int]): Boolean = {
+  def revise(modified: List[Int]) = {
     for (i <- scope.indices) {
       unsupported(i).fill(false)
       for (j <- scope(i).dom.indices) {
@@ -73,8 +73,7 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
       altering()
     }
 
-    val c = (0 until delta).foldLeft(false)(
-      (acc, p) => scope(p).dom.filter(i => !unsupported(p)(i)) || acc)
+    val c = (0 until delta).filter(p => scope(p).dom.filter(i => !unsupported(p)(i)))
     if (isFree) {
       entail()
     }

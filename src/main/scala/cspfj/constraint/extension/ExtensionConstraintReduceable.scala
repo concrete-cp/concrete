@@ -51,8 +51,6 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
     restoreLevel(l)
   }
 
-  //val domSizes = new Array[Int](arity)
-
   def revise(mod: List[Int]) = {
     //logger.fine("Revising " + this + " : " + mod.toList)
     for (i <- scope.indices) {

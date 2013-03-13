@@ -52,9 +52,9 @@ final case class Interval(val lb: Int, val ub: Int) {
 
   def union(i: Interval) = Interval(math.min(lb, i.lb), math.max(ub, i.ub))
 
-  lazy val negate = Interval(-ub, -lb)
+  def negate = Interval(-ub, -lb)
 
-  lazy val abs =
+  def abs =
     if (ub < 0) { negate }
     else if (lb > 0) { this }
     else { Interval(0, math.max(-lb, ub)) }

@@ -35,10 +35,10 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
   var consistent = false
   var alpha = -1
   var beta = -1
-  var change = false
+  var change: List[Int] = Nil
 
   private def init() {
-    change = false
+    change = Nil
     consistent = false
     var i = 0
     while (i < size && groundEq(i)) i += 1
@@ -93,15 +93,27 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
     }
   }
 
-  private def removeGt(value: Int, v: Variable, strict: Boolean) = {
+  private def removeGt(value: Int, v: Variable) = {
     val dom = v.dom
-    val lb = if (strict) dom.closestGeq(value) else dom.closestGt(value)
+    val lb = dom.closestGt(value)
     lb >= 0 && dom.removeFrom(lb)
   }
 
-  private def removeLt(value: Int, v: Variable, strict: Boolean) = {
+  private def removeLt(value: Int, v: Variable) = {
     val dom = v.dom;
-    val ub = if (strict) dom.closestLeq(value) else dom.closestLt(value)
+    val ub = dom.closestLeq(value)
+    ub >= 0 && dom.removeTo(ub)
+  }
+
+  private def removeGeq(value: Int, v: Variable) = {
+    val dom = v.dom
+    val lb = dom.closestGeq(value)
+    lb >= 0 && dom.removeFrom(lb)
+  }
+
+  private def removeLeq(value: Int, v: Variable) = {
+    val dom = v.dom;
+    val ub = dom.closestLt(value)
     ub >= 0 && dom.removeTo(ub)
   }
 
@@ -110,10 +122,20 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
   private def max(v: Variable) = v.dom.lastValue
 
   private def acLt(i: Int) {
-    change |= removeLt(min(x(i)), y(i), true) | removeGt(max(y(i)), x(i), true)
+    if (removeLt(min(x(i)), y(i))) {
+      change ::= i + size
+    }
+    if (removeGt(max(y(i)), x(i))) {
+      change ::= i
+    }
   }
   private def acLeq(i: Int) {
-    change |= removeLt(min(x(i)), y(i), false) | removeGt(max(y(i)), x(i), false)
+    if (removeLeq(min(x(i)), y(i))) {
+      change ::= i + size
+    }
+    if (removeGeq(max(y(i)), x(i))) {
+      change ::= i
+    }
   }
 
   private def updateAlpha(i: Int) {

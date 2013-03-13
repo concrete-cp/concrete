@@ -20,28 +20,30 @@ trait VariablePerVariable extends Constraint with Removals with Loggable {
 
   def revise(modified: List[Int]) = {
     @tailrec
-    def reviseNS(i: Int = arity - 1, c: Boolean = false): Boolean =
+    def reviseNS(i: Int = arity - 1, c: List[Int] = Nil): List[Int] =
       if (i < 0) {
         c
+      } else if (this.reviseVariable(i, modified)) {
+        reviseNS(i - 1, i :: c)
       } else {
-        val ch = this.reviseVariable(i, modified)
-        reviseNS(i - 1, c || ch)
+        reviseNS(i - 1, c)
       }
 
     @tailrec
-    def reviseS(skip: Int, i: Int = arity - 1, c: Boolean = false): Boolean =
+    def reviseS(skip: Int, i: Int = arity - 1, c: List[Int] = Nil): List[Int] =
       if (i < 0) {
         c
       } else if (i == skip) {
         reviseNS(i - 1, c)
+      } else if (this.reviseVariable(i, modified)) {
+        reviseS(skip, i - 1, i :: c)
       } else {
-        val ch = this.reviseVariable(i, modified)
-        reviseS(skip, i - 1, c || ch)
+        reviseS(skip, i - 1, c)
       }
 
     val c =
       if (modified.isEmpty) {
-        false
+        Nil
       } else if (modified.tail.isEmpty) {
         reviseS(modified.head)
       } else {
@@ -53,7 +55,8 @@ trait VariablePerVariable extends Constraint with Removals with Loggable {
 
   }
 
-  def entailCheck(i: Int = scope.length - 1, c: Boolean = false) {
+  @tailrec
+  final def entailCheck(i: Int = scope.length - 1, c: Boolean = false) {
 
     if (i < 0) {
       entail()

@@ -19,21 +19,36 @@ final class AbsDiff(val result: Variable, val v0: Variable, val v1: Variable)
 
     val diff = i0 - i1
 
-    var ch = result.dom.intersectVal(diff.abs)
+    var mod: List[Int] = Nil
+    if (result.dom.intersectVal(diff.abs)) {
+      mod ::= 0
+    }
     val r = result.dom.valueInterval
 
     if (diff.lb >= 0) {
-      ch |= v0.dom.intersectVal(i1 + r)
-      ch |= v1.dom.intersectVal(i0 - r)
+      if (v0.dom.intersectVal(i1 + r)) {
+        mod ::= 1
+      }
+      if (v1.dom.intersectVal(i0 - r)) {
+        mod ::= 2
+      }
     } else if (diff.ub <= 0) {
-      ch |= v0.dom.intersectVal(i1 - r)
-      ch |= v1.dom.intersectVal(i0 + r)
+      if (v0.dom.intersectVal(i1 - r)) {
+        mod ::= 1
+      }
+      if (v1.dom.intersectVal(i0 + r)) {
+        mod ::= 2
+      }
     } else {
-      ch |= unionInter(v0.dom, i0, i1 + r, i0, i1 - r)
-      ch |= unionInter(v1.dom, i1, i0 - r, i1, i0 + r)
+      if (unionInter(v0.dom, i0, i1 + r, i0, i1 - r)) {
+        mod ::= 1
+      }
+      if (unionInter(v1.dom, i1, i0 - r, i1, i0 + r)) {
+        mod ::= 2
+      }
     }
 
-    ch
+    mod
   }
 
   private def unionInter(dom: Domain, i0: Interval, j0: Interval, i1: Interval, j1: Interval) =

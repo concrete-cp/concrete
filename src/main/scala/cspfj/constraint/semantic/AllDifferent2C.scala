@@ -25,6 +25,7 @@ import cspfj.util.BitVector
 import cspfj.util.UOList
 import cspfj.Variable
 import cspfj.AdviseCount
+import scala.collection.mutable.HashSet
 
 trait AllDiffChecker extends Constraint {
 
@@ -46,7 +47,7 @@ trait AllDiffChecker extends Constraint {
 
 final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) with AllDiffChecker {
 
-  var q: UOList[Int] = UOList.empty
+  var q: List[Int] = Nil
 
   @tailrec
   private def filter(checkedVariable: Int, value: Int, i: Int = arity - 1, mod: UOList[Int] = UOList.empty): UOList[Int] = {
@@ -65,32 +66,33 @@ final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) w
 
   }
 
-  def revise() = revise(false)
-
-  @tailrec
-  private def revise(c: Boolean): Boolean =
-    if (q.isEmpty) c
-    else {
+  def revise() = {
+    var mod = new HashSet[Int]()
+    while (q.nonEmpty) {
       val checkedVariable = q.head
-      val newQueue = q.tail
+      q = q.tail
 
       val value = scope(checkedVariable).dom.firstValue
 
-      val ch = filter(checkedVariable, value)
-
-      q = newQueue ++ ch.filter(scope(_).dom.size == 1)
-      revise(c || ch.nonEmpty)
+      for (i <- filter(checkedVariable, value)) {
+        mod += i
+        if (scope(i).dom.size == 1) {
+          q ::= i
+        }
+      }
     }
+    mod
+  }
 
   var lastAdvise = -1
 
   def advise(p: Int) = {
     if (lastAdvise != AdviseCount.count) {
-      q = UOList.empty
+      q = Nil
       lastAdvise = AdviseCount.count
     }
     if (scope(p).dom.size > 1) -1 else {
-      q += p
+      q ::= p
       arity
     }
   }

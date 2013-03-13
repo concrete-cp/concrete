@@ -38,7 +38,7 @@ final class Disjunction(scope: Array[Variable],
 
   override def toString = "\\/" + (scope, reverses).zipped.map((v, r) => (if (r) "-" else "") + v).mkString("(", ", ", ")")
 
-  def revise(): Boolean = {
+  def revise(): List[Int] = {
     if (isTrue(watch1) || isTrue(watch2)) entail()
     else {
       if (isFalse(watch1)) {
@@ -48,13 +48,13 @@ final class Disjunction(scope: Array[Variable],
             watch1 = w
             if (isTrue(w)) {
               entail()
-              return false
+              return Nil
             }
           }
           case None => {
             setTrue(watch2)
             entail()
-            return true
+            return watch2 :: Nil
           }
         }
 
@@ -70,13 +70,13 @@ final class Disjunction(scope: Array[Variable],
           case None => {
             setTrue(watch1)
             entail()
-            return true
+            return watch1 :: Nil
           }
         }
 
       }
     }
-    false
+    Nil
   }
 
   private def isTrue(position: Int) = {

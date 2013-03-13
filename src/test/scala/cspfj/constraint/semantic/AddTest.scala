@@ -4,7 +4,7 @@ import scala.util.Random
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertEquals
 import cspfj.constraint.Constraint
 import cspfj.constraint.Residues
 import cspfj.constraint.TupleEnumerator
@@ -36,7 +36,7 @@ final class AddTest {
       def checkValues(t: Array[Int]) = t(0) == t(1) + t(2);
     };
     AdviseCount.adviseAll(c2)
-    assertFalse(c2.revise());
+    assertEquals(Seq(), c2.revise());
   }
 
   @Test
@@ -49,7 +49,7 @@ final class AddTest {
 
     val c = new Add(x, y, z);
     AdviseCount.adviseAll(c)
-    assertFalse(c.revise())
+    assertEquals(Seq(), c.revise())
 
   }
 
