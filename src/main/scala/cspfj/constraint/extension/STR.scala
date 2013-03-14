@@ -28,7 +28,7 @@ final class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
     var b = bound
     var i = b - 1
     while (i >= 0) {
-      if (valid(modified, f, i)) {
+      if (!valid(modified, f, i)) {
         b -= 1
         val tmp = array(i)
         array(i) = array(b)
