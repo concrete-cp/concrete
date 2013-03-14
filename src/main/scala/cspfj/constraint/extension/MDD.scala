@@ -499,7 +499,9 @@ final class MDD2(
     }
   }
 
-  def listIterator: Iterator[List[Int]] = left.listIterator.map(0 :: _) ++ right.listIterator.map(1 :: _)
+  def listIterator: Iterator[List[Int]] =
+    left.listIterator.map(leftI :: _) ++ right.listIterator.map(rightI :: _)
+
   def nodes(ts: Int): Int =
     if (ts == timestamp) {
       0
@@ -544,10 +546,14 @@ final class MDD2(
   def copy = new MDD2(left.copy, leftI, right.copy, rightI)
 }
 
-final class MDDn(private val trie: Array[MDD], private val indices: Array[Int], private val nbIndices: Int) extends MDD {
+final class MDDn(
+  private val trie: Array[MDD],
+  private val indices: Array[Int],
+  private val nbIndices: Int) extends MDD {
+
   var timestamp = 0
 
-  def copy = new MDDn(trie map (_.copy), indices.clone, nbIndices)
+  def copy = new MDDn(trie map (t => if (t eq null) null else t.copy), indices.clone, nbIndices)
 
   def forSubtries(f: (Int, MDD) => Boolean) {
     forSubtries(f, nbIndices - 1)
