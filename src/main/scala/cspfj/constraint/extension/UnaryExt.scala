@@ -24,8 +24,9 @@ import cspfj.constraint.Residues
 import cspfj.constraint.TupleEnumerator
 import cspfj.UNSATException
 
-final class ExtensionConstraintUnary(scope: Variable, matrix: Matrix, shared: Boolean)
+final class UnaryExt(scope: Variable, matrix: Matrix, shared: Boolean)
   extends ExtensionConstraint(Array(scope), matrix, shared) {
+
 
   def revise() = if (scope.dom.filter { i => matrix.check(Array(i)) }) List(0) else Nil
 

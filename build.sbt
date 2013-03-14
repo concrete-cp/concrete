@@ -6,7 +6,7 @@ organization := "fr.univ-valenciennes.cspfj"
 
 version := "1.0.1-SNAPSHOT"
 
-scalaVersion := "2.10.1-RC3"
+scalaVersion := "2.10.1"
 
 resolvers += "CSP4J repository" at "http://cspfj.sourceforge.net/repository"
 

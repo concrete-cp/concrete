@@ -9,7 +9,7 @@ import cspfj.IntDomain
 import cspfj.StatisticsManager
 import cspfj.UNSATException
 import cspfj.Variable
-import cspfj.constraint.extension.ExtensionConstraintReduceable
+import cspfj.constraint.extension.ReduceableExt
 import cspfj.constraint.extension.MDD
 import cspfj.constraint.extension.RelationGenerator
 import cspfj.constraint.extension.STR
@@ -18,7 +18,7 @@ import cspfj.util.DirectIndices
 import cspfj.constraint.extension.TupleTrieSet
 import cspfj.constraint.extension.MDDC
 import cspfj.constraint.extension.ExtensionConstraintGeneral
-import cspfj.constraint.extension.ExtensionConstraintFind
+import cspfj.constraint.extension.FindSupportExt
 import cspfj.constraint.extension.ExtensionConstraintSTR3
 
 object TrieSize extends App {
@@ -85,10 +85,10 @@ object TrieSize extends App {
           new ExtensionConstraintSTR3(variables, t.reduceable.asInstanceOf[STR].array)
         }
         case "Reduce" => {
-          new ExtensionConstraintReduceable(variables, t.reduceable.copy)
+          new ReduceableExt(variables, t.reduceable.copy)
         }
         case "Find" => {
-          new ExtensionConstraintFind(variables, t, true)
+          new FindSupportExt(variables, t, true)
         }
         case "General" => {
           new ExtensionConstraintGeneral(t, true, variables)

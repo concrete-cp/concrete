@@ -231,6 +231,9 @@ abstract class Constraint(val scope: Array[Variable])
 
   final def hasChanged[A](l: Traversable[A], f: A => Boolean) = l.foldLeft(false)(_ | f(_))
 
+  /**
+   * A GAC constraint is entailed if it has zero or only one variable with domain size > 1
+   */
   def isFree: Boolean = {
     var one = false
     var i = arity - 1
@@ -243,6 +246,6 @@ abstract class Constraint(val scope: Array[Variable])
       }
       i -= 1
     }
-    false
+    true
   }
 }

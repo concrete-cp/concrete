@@ -1,7 +1,7 @@
 package cspfj
 
 import cspfj.constraint.extension.ExtensionConstraint
-import cspfj.constraint.extension.ExtensionConstraint2D
+import cspfj.constraint.extension.BinaryExt
 import cspfj.constraint.extension.ExtensionConstraintGeneral
 import cspfj.constraint.extension.Matrix2D
 import cspfj.constraint.Constraint
@@ -141,7 +141,7 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
   private def generateConstraint(scope: Seq[Variable]) = {
     if (scope.size == 2) {
       val matrix = new Matrix2D(scope(0).dom.maxSize, scope(1).dom.maxSize, true);
-      new ExtensionConstraint2D(scope.toArray, matrix, false);
+      new BinaryExt(scope.toArray, matrix, false);
     } else {
       new ExtensionConstraintGeneral(new TupleTrieSet(true), false, scope.toArray);
     }

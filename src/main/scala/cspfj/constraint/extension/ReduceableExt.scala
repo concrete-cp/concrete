@@ -29,12 +29,12 @@ import cspfj.UNSATException
 import cspfj.constraint.Removals
 import cspfj.Statistic
 
-object ExtensionConstraintReduceable {
+object ReduceableExt {
   @Statistic
   var fills = 0l
 }
 
-final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _tts: Relation)
+final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
   extends Constraint(_scope) with Loggable with Removals with Backtrackable[Relation] {
 
   var trie = _tts
@@ -88,12 +88,8 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
     //sizes(domSizes)
 
     val notFound = trie.fillFound({ (depth: Int, i: Int) =>
-      ExtensionConstraintReduceable.fills += 1
+      ReduceableExt.fills += 1
       unsupported(depth).clear(i) && unsupported(depth).isEmpty
-      //        domSizes(depth) -= 1
-      //        assert(domSizes(depth) == scope(depth).dom.size - found(depth).cardinality)
-      //        domSizes(depth) == 0
-      //      }
     }, arity)
 
     val c = filter(notFound)
@@ -108,7 +104,7 @@ final class ExtensionConstraintReduceable(_scope: Array[Variable], private val _
       entail()
     }
 
-    c
+    c.toList.sorted
   }
 
   private def filter(notFound: Traversable[Int]) = notFound.filter(

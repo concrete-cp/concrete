@@ -58,9 +58,6 @@ final class MDDTest {
     assertFalse(t.contains(Array(1, 2, 4)))
 
     var s = MDD0 + Array(1, 2, 5) + Array(1, 3, 4) + Array(1, 2, 3)
-
-    assertFalse(t.sameElements(s))
-
     s += Array(2, 3, 5)
 
     assertTrue(t.size == s.size)
@@ -72,7 +69,8 @@ final class MDDTest {
       Array(1, 2, 5),
       Array(2, 3, 5))
 
-    assertTrue(t.sameElements(u))
+    assertTrue(t.size == u.size)
+    assertTrue(t.forall(u.contains))
 
   }
 }

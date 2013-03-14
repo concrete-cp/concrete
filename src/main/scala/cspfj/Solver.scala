@@ -31,7 +31,7 @@ import cspfj.util.Waker
 import cspfj.constraint.extension.MDD
 import cspom.CSPOM
 import cspfj.constraint.TupleEnumerator
-import cspfj.constraint.extension.ExtensionConstraintReduceable
+import cspfj.constraint.extension.ReduceableExt
 
 object Solver {
   @Parameter("logger.level")
@@ -66,7 +66,7 @@ abstract class Solver(val problem: Problem) extends Loggable {
   statistics.register("solver", this)
   //statistics.register("domains", IntDomain)
   statistics.register("enumerator", TupleEnumerator)
-  statistics.register("relation", ExtensionConstraintReduceable)
+  statistics.register("relation", ReduceableExt)
   statistics.register("domain", Domain)
 
   /** Logger initialization */

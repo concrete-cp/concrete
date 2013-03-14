@@ -9,7 +9,7 @@ import cspfj.Variable;
 
 final class ExtensionConstraint2DTest {
 
-  private var c: ExtensionConstraint2D = null;
+  private var c: BinaryExt = null;
 
   @Before
   def setUp() {
@@ -20,7 +20,7 @@ final class ExtensionConstraint2DTest {
     matrix2d.set(Array(0, 0), true);
     matrix2d.set(Array(0, 2), true);
 
-    c = new ExtensionConstraint2D(Array(var1, var2), matrix2d, false)
+    c = new BinaryExt(Array(var1, var2), matrix2d, false)
 
   }
 

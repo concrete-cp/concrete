@@ -26,16 +26,16 @@ import scala.annotation.tailrec
 import cspfj.Statistic
 import cspfj.StatisticsManager
 
-object ExtensionConstraint2D {
+object BinaryExt {
   @Statistic
   var checks = 0;
   @Statistic
   var presenceChecks = 0
 }
 
-final class ExtensionConstraint2D(
-  scope: Array[Variable],
-  private var matrix2d: Matrix2D,
+final class BinaryExt(
+  scope: Array[Variable], 
+  private var matrix2d: Matrix2D, 
   shared: Boolean)
   extends ConflictCount(scope, matrix2d, shared)
   with VariablePerVariable {
@@ -79,11 +79,11 @@ final class ExtensionConstraint2D(
       val intersection = scope(1 - variablePosition).dom.intersects(matrixBV)
 
       if (intersection >= 0) {
-        ExtensionConstraint2D.checks += 1 + intersection;
+        BinaryExt.checks += 1 + intersection;
         residues(variablePosition)(index) = intersection;
         true;
       } else {
-        ExtensionConstraint2D.checks += matrixBV.realSize;
+        BinaryExt.checks += matrixBV.realSize;
         false;
       }
     }
@@ -94,17 +94,17 @@ final class ExtensionConstraint2D(
     val intersection = scope(1 - variablePosition).dom.intersects(matrixBV)
 
     if (intersection >= 0) {
-      ExtensionConstraint2D.checks += 1 + intersection;
+      BinaryExt.checks += 1 + intersection;
       true;
     } else {
-      ExtensionConstraint2D.checks += matrixBV.realSize;
+      BinaryExt.checks += matrixBV.realSize;
       false;
     }
   }
 
   private def controlResidue(position: Int, index: Int) = {
     val part = residues(position)(index)
-    ExtensionConstraint2D.presenceChecks += 1
+    BinaryExt.presenceChecks += 1
     (part != -1 && scope(1 - position).dom.intersects(
       matrix2d.getBitVector(position, index), part))
   }

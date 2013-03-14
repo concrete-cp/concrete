@@ -25,7 +25,7 @@ import cspfj.constraint.TupleEnumerator
 import cspfj.UNSATException
 import cspfj.constraint.Constraint
 
-final class ExtensionConstraintFind(scope: Array[Variable], tts: TupleTrieSet, shared: Boolean)
+final class FindSupportExt(scope: Array[Variable], tts: TupleTrieSet, shared: Boolean)
   extends ConflictCount(scope, tts, shared) with Residues {
 
   val rel = tts.reduceable
