@@ -9,7 +9,7 @@ import org.junit.Test
 import cspfj.IntDomain
 import cspfj.Variable
 
-final class ExtensionConstraintArrayTrieTest {
+final class ExtensionConstraintTrieTest {
 
   @Test
   def testRestore() {
@@ -29,7 +29,7 @@ final class ExtensionConstraintArrayTrieTest {
     mmd.setLevel(1);
     mmd.advise(0)
     mmd.advise(1)
-    assertEquals(Seq(1), mmd.revise())
+    assertEquals(Set(1), mmd.revise())
 
     //    assertEquals(
     //      HashTrie(Array(0, 0), Array(1, 1)),

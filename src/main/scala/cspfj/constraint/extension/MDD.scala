@@ -5,7 +5,7 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.Seq
 import scala.util.hashing.MurmurHash3
 import cspfj.priorityqueues.Identified
-import cspfj.util.ListWithMax
+import cspfj.util.SetWithMax
 import java.util.Arrays
 
 trait RelationGenerator {
@@ -42,7 +42,6 @@ object MDD extends RelationGenerator {
   }
 
 }
-
 
 trait MDD extends Relation with Identified {
   type Self2 = MDD
@@ -119,11 +118,11 @@ trait MDD extends Relation with Identified {
   def filterTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int): MDD
   def fillFound(f: (Int, Int) => Boolean, arity: Int): Traversable[Int] = {
     MDD.timestamp += 1
-    val l = new ListWithMax(arity)
+    val l = new SetWithMax(arity)
     fillFound(MDD.timestamp, f, 0, l)
     l
   }
-  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: ListWithMax)
+  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax)
 
   override def toString = s"$nodes nodes representing $size tuples"
 
@@ -170,7 +169,7 @@ final object MDDLeaf extends MDD {
     assert(modified.isEmpty)
     this
   }
-  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: ListWithMax) = {
+  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax) = {
     assert(depth > l.max)
   }
   def addTrie(tuple: Array[Int], i: Int) = throw new UnsupportedOperationException
@@ -199,7 +198,7 @@ final object MDD0 extends MDD {
   def listIterator = Iterator()
   def nodes(ts: Int) = 0
   def filterTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int) = MDD0
-  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: ListWithMax) {
+  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax) {
     throw new UnsupportedOperationException
   }
   def addTrie(tuple: Array[Int], i: Int) = {
@@ -296,11 +295,11 @@ final class MDD1(private val child: MDD, private val index: Int) extends MDD {
     case _ => false
   }
 
-  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: ListWithMax) {
+  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax) {
     if (timestamp != ts) {
       timestamp = ts
       if (depth <= l.max) {
-        if (f(depth, index)) l.clear(depth)
+        if (f(depth, index)) l -= depth
         if (depth + 1 <= l.max) {
           child.fillFound(ts, f, depth + 1, l)
         }
@@ -390,16 +389,16 @@ final class MDD2(
     case _ => false
   }
 
-  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: ListWithMax) {
+  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax) {
     if (timestamp != ts) {
       timestamp = ts
       if (depth <= l.max) {
-        if (f(depth, leftI)) l.clear(depth)
+        if (f(depth, leftI)) l -= depth
         if (depth + 1 <= l.max) {
           left.fillFound(ts, f, depth + 1, l)
         }
         if (depth <= l.max) {
-          if (f(depth, rightI)) l.clear(depth)
+          if (f(depth, rightI)) l -= depth
           if (depth + 1 <= l.max) {
             right.fillFound(ts, f, depth + 1, l)
           }
@@ -620,13 +619,13 @@ final class MDDn(
     case _ => false
   }
 
-  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: ListWithMax) {
+  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax) {
     if (timestamp != ts) {
       timestamp = ts
       var i = nbIndices - 1
       while (i >= 0 && depth <= l.max) {
         val ti = indices(i)
-        if (f(depth, ti)) l.clear(depth)
+        if (f(depth, ti)) l -= depth
         if (depth + 1 <= l.max) {
           trie(ti).fillFound(ts, f, depth + 1, l)
         }

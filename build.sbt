@@ -1,4 +1,5 @@
 import com.typesafe.sbt.SbtStartScript
+import AssemblyKeys._ // put this at the top of the file
 
 name := "cspfj"
 
@@ -27,3 +28,7 @@ scalacOptions ++= Seq("-deprecation", "-unchecked", "-optimise", "-Xlint", "-Xdi
 org.scalastyle.sbt.ScalastylePlugin.Settings
 
 seq(SbtStartScript.startScriptForClassesSettings: _*)
+
+assemblySettings
+
+mainClass in assembly := Some("concrete.XCSPConcrete")

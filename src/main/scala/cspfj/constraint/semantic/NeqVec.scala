@@ -50,14 +50,30 @@ final class NeqVec(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
     i >= v.length || (v(i).dom.size == 1 && singletonVector(v, i + 1))
 
   @tailrec
-  private def singleFreeVariable(in: Array[Variable], withValues: Array[Variable], i: Int = 0, single: Option[(Int, Int)] = None): Option[(Int, Int)] = {
-    if (i >= size) single
-    else if (single.isDefined && in(i).dom.size > 1) None
-    else {
+  private def singleFreeVariable(
+    in: Array[Variable],
+    withValues: Array[Variable],
+    i: Int = 0,
+    single: Option[(Int, Int)] = None): Option[(Int, Int)] = {
+
+    if (i >= size) {
+      single
+    } else if (i == size - 1 && single.isEmpty) {
+      val index = in(i).dom.index(withValues(i).dom.firstValue)
+      if (index >= 0 && in(i).dom.present(index)) {
+        Some((i, index))
+      } else {
+        entail()
+        None
+      }
+
+    } else if (single.isDefined && in(i).dom.size > 1) {
+      None
+    } else {
       val index = in(i).dom.index(withValues(i).dom.firstValue)
       if (index >= 0 && in(i).dom.present(index)) {
         if (in(i).dom.size > 1) {
-          singleFreeVariable(in, withValues, i + 1, Some(i, index))
+          singleFreeVariable(in, withValues, i + 1, Some((i, index)))
         } else {
           singleFreeVariable(in, withValues, i + 1, single)
         }

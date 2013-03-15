@@ -110,12 +110,12 @@ final class DC20SolvingTest extends Loggable {
   //
   //  }
 
-  @Test
-  def queens4() {
-    //assertTrue(solve("queens-12.xml").isDefined);
-    assertEquals(2, count("queens-4.xml"));
-
-  }
+//  @Test
+//  def queens4() {
+//    //assertTrue(solve("queens-12.xml").isDefined);
+//    assertEquals(2, count("queens-4.xml"));
+//
+//  }
 
   private def solve(name: String) = {
     val cspomProblem = CSPOM.load(getClass.getResource(name));

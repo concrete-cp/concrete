@@ -16,7 +16,7 @@ final class AbsIntTest {
     prob.addConstraint(c)
     AdviseCount.adviseAll(c)
     assertTrue(c.isBound)
-    assertEquals(Seq(1), c.revise())
+    assertEquals(Seq(0), c.revise())
     assertEquals(Seq(5), x.dom.values.toSeq)
     assertTrue(c.isBound)
   }
@@ -30,7 +30,7 @@ final class AbsIntTest {
     prob.addConstraint(c)
     AdviseCount.adviseAll(c)
     assertTrue(c.isBound)
-    assertEquals(Seq(2), c.revise())
+    assertEquals(Seq(1), c.revise())
     assertEquals(Seq(-7, 7), y.dom.values.toSeq)
     assertFalse(c.isBound)
     assertTrue(x.dom.bound)

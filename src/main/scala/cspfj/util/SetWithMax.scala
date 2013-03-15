@@ -1,17 +1,20 @@
 package cspfj.util
 
-final class ListWithMax(length: Int) extends Traversable[Int] {
+final class SetWithMax(length: Int) extends collection.mutable.Set[Int] {
   var max = length - 1
   var candidates = BitVector.newBitVector(length)
   candidates.fill(true)
 
-  def clear(i: Int) {
+  def +=(i: Int) = ???
+
+  def -=(i: Int) = {
     if (candidates.clear(i) && i == max) {
       max = candidates.prevSetBit(i)
     }
+    this
   }
 
-  def foreach[U](f: Int => U) {
+  override def foreach[U](f: Int => U) {
     var i = max
     while (i >= 0) {
       f(i)
@@ -23,10 +26,23 @@ final class ListWithMax(length: Int) extends Traversable[Int] {
     var i = max
     while (i >= 0) {
       if (!f(i)) {
-        clear(i)
+        this -= i
       }
       i = candidates.prevSetBit(i)
     }
-    this
+    SetWithMax.this
   }
+
+  def iterator: Iterator[Int] = new Iterator[Int] {
+    var i = max
+    def hasNext = (i >= 0)
+    def next() = {
+      val c = i
+      i = candidates.prevSetBit(i)
+      c
+    }
+  }
+
+  def contains(elem: Int): Boolean = candidates.get(elem)
+
 }
