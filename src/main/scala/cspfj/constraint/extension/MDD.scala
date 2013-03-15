@@ -43,27 +43,6 @@ object MDD extends RelationGenerator {
 
 }
 
-class ABuffer(var array: Array[Int]) {
-
-  def this(s: Int) = this(new Array[Int](s))
-
-  private var s = 0
-  def size = s
-  def clearNewIndices() {
-    s = 0
-  }
-  def add(i: Int) {
-    array(s) = i
-    s += 1
-  }
-  def toArray = {
-    //val array = new Array[Int](nbNewIndices)
-    Arrays.copyOf(array, s) //System.arrayCopy(newIndices, 0, array, 0, nbNewIndices)
-    //array
-
-  }
-  def apply(i: Int) = array(i)
-}
 
 trait MDD extends Relation with Identified {
   type Self2 = MDD

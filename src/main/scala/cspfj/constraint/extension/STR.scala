@@ -52,10 +52,13 @@ final class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
   private var pos: MutableList = _
 
   def fillFound(f: (Int, Int) => Boolean, arity: Int) = {
-    if (pos == null) {
-      pos = new MutableList(arity)
+    try {
+      pos.refill()
+    } catch {
+      case e: NullPointerException =>
+        pos = new MutableList(arity)
+        pos.refill()
     }
-    pos.refill()
     var i = bound - 1
     while (i >= 0) {
       val tuple = array(i)
@@ -67,7 +70,7 @@ final class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
       }
       i -= 1
     }
-    pos
+    pos.sorted
   }
 
   override def toString = s"$bound of ${array.size} tuples"
@@ -119,6 +122,12 @@ final class MutableList(size: Int) extends Traversable[Int] {
       f(data(i))
       i -= 1
     }
+  }
+
+  def sorted = {
+    val a = toArray
+    Arrays.sort(a)
+    a
   }
 
 }

@@ -104,7 +104,7 @@ final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
       entail()
     }
 
-    c.toList.sorted
+    c
   }
 
   private def filter(notFound: Traversable[Int]) = notFound.filter(
