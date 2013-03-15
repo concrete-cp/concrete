@@ -73,7 +73,7 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
       altering()
     }
 
-    val c = (0 until delta).filter(p => scope(p).dom.filter(i => !unsupported(p)(i)))
+    val c = (delta - 1 to 0 by -1).filter(p => scope(p).dom.filter(i => !unsupported(p)(i)))
     if (isFree) {
       entail()
     }

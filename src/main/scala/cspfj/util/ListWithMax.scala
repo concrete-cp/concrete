@@ -12,10 +12,21 @@ final class ListWithMax(length: Int) extends Traversable[Int] {
   }
 
   def foreach[U](f: Int => U) {
-    var i = candidates.nextSetBit(0)
+    var i = max
     while (i >= 0) {
       f(i)
-      i = candidates.nextSetBit(i + 1)
+      i = candidates.prevSetBit(i)
     }
+  }
+
+  override def filter(f: Int => Boolean) = {
+    var i = max
+    while (i >= 0) {
+      if (!f(i)) {
+        clear(i)
+      }
+      i = candidates.prevSetBit(i)
+    }
+    this
   }
 }

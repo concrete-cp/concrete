@@ -87,12 +87,12 @@ final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
 
     //sizes(domSizes)
 
-    val notFound = trie.fillFound({ (depth: Int, i: Int) =>
-      ReduceableExt.fills += 1
-      unsupported(depth).clear(i) && unsupported(depth).isEmpty
-    }, arity)
-
-    val c = filter(notFound)
+    val c = trie.
+      fillFound({ (depth: Int, i: Int) =>
+        ReduceableExt.fills += 1
+        unsupported(depth).clear(i) && unsupported(depth).isEmpty
+      }, arity).
+      filter(p => scope(p).dom.filter(i => !unsupported(p)(i)))
 
     //    val card = cardSize()
     //    assert(card < 0 || card >= trie.size, card + " < " + trie.size + "!")
@@ -106,9 +106,6 @@ final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
 
     c
   }
-
-  private def filter(notFound: Traversable[Int]) = notFound.filter(
-    p => scope(p).dom.filter(i => !unsupported(p)(i)))
 
   def save = {
     //println(this + " <- " + trie.size)

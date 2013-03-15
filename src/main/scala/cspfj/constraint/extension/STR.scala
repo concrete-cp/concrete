@@ -127,7 +127,7 @@ final class MutableList(size: Int) extends Traversable[Int] {
   def sorted = {
     val a = toArray
     Arrays.sort(a)
-    a
+    a.reverse
   }
 
 }
