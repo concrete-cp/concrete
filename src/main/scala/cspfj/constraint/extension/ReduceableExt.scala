@@ -140,7 +140,7 @@ final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
 
   //def matrixManager = matrixManager
 
-  val prop = _tts.nodes.toDouble / doubleCardSize
+  val prop = _tts.edges.toDouble / doubleCardSize
 
   def getEvaluation = (prop * doubleCardSize).toInt
 

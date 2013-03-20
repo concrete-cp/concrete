@@ -104,7 +104,7 @@ object TrieSize extends App {
 
       mem1s ::= Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()
 
-      nodes ::= t.reduceable.nodes
+      nodes ::= t.reduceable.edges
 
       var level = 0
       var time = -System.nanoTime()

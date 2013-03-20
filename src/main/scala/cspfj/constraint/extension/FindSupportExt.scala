@@ -34,7 +34,7 @@ final class FindSupportExt(scope: Array[Variable], tts: TupleTrieSet, shared: Bo
     (depth, index) => scope(depth).dom.present(index),
     p, i, new Array[Int](arity))
 
-  override val getEvaluation = rel.nodes
+  override val getEvaluation = rel.edges
 
   override def checkIndices(tuple: Array[Int]) = rel.contains(tuple)
 

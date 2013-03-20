@@ -70,7 +70,10 @@ object RandomMDD extends Concrete with App {
     val d = domainSize.toInt
     val k = arity.toInt
     val e = nbConstraints.toInt
-    val l = looseness.toDouble
+    val l = looseness.toDouble match {
+      case l if l > 0 => l
+      case l => math.exp(-n * math.log(d) / e)
+    }
     val q = mddProb.toDouble
     val rand = new Random(seed.toInt)
 

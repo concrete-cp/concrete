@@ -37,7 +37,7 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
   def simpleEvaluation: Int = math.min(7, scope.count(_.dom.size > 1))
 
   // Members declared in cspfj.constraint.Removals
-  val prop = mdd.nodes.toDouble / doubleCardSize
+  val prop = mdd.edges.toDouble / doubleCardSize
 
   def getEvaluation = (prop * doubleCardSize).toInt
 

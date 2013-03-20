@@ -20,7 +20,7 @@ trait Relation extends Iterable[Array[Int]] {
   def -(t: Array[Int]): Self2
   def ++(t: Iterable[Array[Int]]) = t.foldLeft(Relation.this)(_ + _)
   def --(t: Iterable[Array[Int]]) = t.foldLeft(Relation.this)(_ - _)
-  def nodes: Int
+  def edges: Int
   def copy: Self2
   def findSupport(f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int]): Option[Array[Int]]
 

@@ -106,11 +106,11 @@ trait MDD extends Relation with Identified {
 
   def iterator = listIterator.map(_.toArray)
   def listIterator: Iterator[List[Int]]
-  def nodes: Int = {
+  def edges: Int = {
     MDD.timestamp += 1
-    nodes(MDD.timestamp)
+    edges(MDD.timestamp)
   }
-  def nodes(ts: Int): Int
+  def edges(ts: Int): Int
   def filterTrie(f: (Int, Int) => Boolean, modified: List[Int]): MDD = {
     MDD.timestamp += 1
     filterTrie(MDD.timestamp, f, modified, 0)
@@ -124,7 +124,7 @@ trait MDD extends Relation with Identified {
   }
   def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax)
 
-  override def toString = s"$nodes nodes representing $size tuples"
+  override def toString = s"$edges edges representing $size tuples"
 
   def -(t: Array[Int]) = throw new UnsupportedOperationException
 
@@ -164,7 +164,7 @@ final object MDDLeaf extends MDD {
   def find(ts: Int, f: (Int, Int) => Boolean, depth: Int) = Some(Nil)
 
   def listIterator = Iterator(Nil)
-  def nodes(ts: Int) = 0
+  def edges(ts: Int) = 0
   def filterTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int) = {
     assert(modified.isEmpty)
     this
@@ -187,7 +187,6 @@ final object MDDLeaf extends MDD {
 }
 
 final object MDD0 extends MDD {
-  //override def size = 0
   override def getId = throw new UnsupportedOperationException
   override def identify(ts: Int, i: Int): Int = throw new UnsupportedOperationException
   def timestamp = throw new UnsupportedOperationException
@@ -196,7 +195,7 @@ final object MDD0 extends MDD {
   def contains(tuple: Array[Int], i: Int) = false
   def find(ts: Int, f: (Int, Int) => Boolean, depth: Int) = None
   def listIterator = Iterator()
-  def nodes(ts: Int) = 0
+  def edges(ts: Int) = 0
   def filterTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int) = MDD0
   def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax) {
     throw new UnsupportedOperationException
@@ -345,12 +344,12 @@ final class MDD1(private val child: MDD, private val index: Int) extends MDD {
 
   def listIterator = child.listIterator.map(index :: _)
 
-  def nodes(ts: Int): Int = {
+  def edges(ts: Int): Int = {
     if (ts == timestamp) {
       0
     } else {
       timestamp = ts
-      1 + child.nodes(ts)
+      1 + child.edges(ts)
     }
   }
 
@@ -480,12 +479,12 @@ final class MDD2(
   def listIterator: Iterator[List[Int]] =
     left.listIterator.map(leftI :: _) ++ right.listIterator.map(rightI :: _)
 
-  def nodes(ts: Int): Int =
+  def edges(ts: Int): Int =
     if (ts == timestamp) {
       0
     } else {
       timestamp = ts
-      2 + left.nodes(ts) + right.nodes(ts)
+      2 + left.edges(ts) + right.edges(ts)
     }
 
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]): MDD = {
@@ -717,7 +716,7 @@ final class MDDn(
 
     }
 
-  def newNode(t: Array[MDD], nbIndices: Int): MDD = {
+  private def newNode(t: Array[MDD], nbIndices: Int): MDD = {
     nbIndices match {
       case 1 => {
         val i = indices(0)
@@ -749,12 +748,12 @@ final class MDDn(
     case (t, i) => t.listIterator map (i :: _)
   }
 
-  def nodes(ts: Int): Int = {
+  def edges(ts: Int): Int = {
     if (ts == timestamp) {
       0
     } else {
       timestamp = ts
-      nbIndices + indices.take(nbIndices).map(trie(_)).map(_.nodes(ts)).sum
+      nbIndices + indices.take(nbIndices).map(trie(_)).map(_.edges(ts)).sum
     }
   }
 
