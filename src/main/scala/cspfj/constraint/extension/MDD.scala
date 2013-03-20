@@ -152,6 +152,12 @@ trait MDD extends Relation with Identified {
       a
     }
   }
+  def copy = {
+    MDD.timestamp += 1
+    copy(MDD.timestamp)
+  }
+
+  def copy(ts: Int): MDD
 
 }
 
@@ -183,7 +189,7 @@ final object MDDLeaf extends MDD {
   def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) =
     Some(support)
 
-  def copy = this
+  def copy(ts: Int) = this
 }
 
 final object MDD0 extends MDD {
@@ -215,7 +221,7 @@ final object MDD0 extends MDD {
   def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) =
     None
 
-  def copy = this
+  def copy(ts: Int) = this
 }
 
 final class MDD1(private val child: MDD, private val index: Int) extends MDD {
@@ -354,7 +360,15 @@ final class MDD1(private val child: MDD, private val index: Int) extends MDD {
   }
 
   override def isEmpty = false
-  def copy = new MDD1(child.copy, index)
+  def copy(ts: Int) =
+    if (ts == timestamp) {
+      filteredResult
+    } else {
+      timestamp = ts
+      filteredResult = new MDD1(child.copy(ts), index)
+      filteredResult
+    }
+
 }
 
 final class MDD2(
@@ -520,7 +534,14 @@ final class MDD2(
     }
   }
 
-  def copy = new MDD2(left.copy, leftI, right.copy, rightI)
+  def copy(ts: Int) =
+    if (ts == timestamp) {
+      filteredResult
+    } else {
+      timestamp = ts
+      filteredResult = new MDD2(left.copy(ts), leftI, right.copy(ts), rightI)
+      filteredResult
+    }
 }
 
 final class MDDn(
@@ -530,7 +551,15 @@ final class MDDn(
 
   var timestamp = 0
 
-  def copy = new MDDn(trie map (t => if (t eq null) null else t.copy), indices.clone, nbIndices)
+  def copy(ts: Int) = {
+    if (ts == timestamp) {
+      filteredResult
+    } else {
+      timestamp = ts
+      filteredResult = new MDDn(trie map (t => if (t eq null) null else t.copy(ts)), indices.clone, nbIndices)
+      filteredResult
+    }
+  }
 
   def forSubtries(f: (Int, MDD) => Boolean) {
     forSubtries(f, nbIndices - 1)

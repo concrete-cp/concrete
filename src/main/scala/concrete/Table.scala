@@ -65,13 +65,13 @@ object Table extends App {
 
   implicit val getConfigResult = GetResult(r => Config(r.<<, xml.XML.loadString(r.nextString)))
 
-  Database.forURL("jdbc:postgresql://precision-vion/concrete",
+  Database.forURL("jdbc:postgresql://raihmsvg/concrete",
     user = "concrete",
-    password = "concrete",
+    password = "Wizcof25",
     driver = "org.postgresql.Driver") withSession {
 
       val problems = sql"""
-        SELECT problemId, display, nbvars, nbcons, string_agg(tag, ',') as tags
+        SELECT problemId, display, nbvars, nbcons, array_to_string(array_agg(tag), ',') as tags
         FROM Problems NATURAL LEFT JOIN ProblemTags
         WHERE problemId IN (
           SELECT problemId 

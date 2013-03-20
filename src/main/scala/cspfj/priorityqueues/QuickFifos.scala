@@ -85,11 +85,14 @@ final class QuickFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
   private def poll(i: Int): T = {
     assume(i <= last, i + " > " + last + "\n" + queues.map(n => n.isEmpty).mkString("\n"))
     val q = queues(i)
-    if (q.isEmpty) poll(i + 1)
-    else {
+    if (q.isEmpty) {
+      poll(i + 1)
+    } else {
       val e = q.next
       e.remove()
-      if (i == last && q.isEmpty) last = -1
+      if (i == last && q.isEmpty) {
+        last = -1
+      }
       assert(last >= 0 || queues.forall(_.isEmpty))
       e.asInstanceOf[T]
     }

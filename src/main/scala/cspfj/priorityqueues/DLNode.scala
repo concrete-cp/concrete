@@ -1,16 +1,16 @@
 package cspfj.priorityqueues
 
-trait DLNode[This <: DLNode[This]] {
+trait DLNode[A <: DLNode[A]] {
   var currentList = -1
-  var prev: DLNode[This] = this
-  var next: DLNode[This] = this
+  var prev: DLNode[A] = this
+  var next: DLNode[A] = this
 
   def remove() {
     prev.next = next
     next.prev = prev
   }
 
-  def append(n: This) {
+  def append(n: A) {
     n.prev = prev
     n.next = this
 
@@ -22,7 +22,7 @@ trait DLNode[This <: DLNode[This]] {
 
   def clear(): Unit = throw new UnsupportedOperationException
 
-  def iterator: Iterator[This] = throw new UnsupportedOperationException
+  def iterator: Iterator[A] = throw new UnsupportedOperationException
 
 }
 

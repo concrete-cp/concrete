@@ -189,10 +189,10 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
     }
 
   } finally {
-    System.gc()  
-    System.gc()  
-    System.gc()  
-    System.gc()  
+    System.gc()
+    System.gc()
+    System.gc()
+    System.gc()
     System.gc()
     usedMem = math.max(usedMem, Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
   }

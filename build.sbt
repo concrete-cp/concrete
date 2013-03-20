@@ -32,3 +32,5 @@ seq(SbtStartScript.startScriptForClassesSettings: _*)
 assemblySettings
 
 mainClass in assembly := Some("concrete.XCSPConcrete")
+
+test in assembly := {}

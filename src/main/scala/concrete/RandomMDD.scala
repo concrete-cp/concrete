@@ -126,19 +126,20 @@ object TestMDD extends App {
   var lambda: List[BigInt] = Nil
   var nu: List[Long] = Nil
 
-  for (seed <- 0 until 10000) {
-    print(seed + " ")
+  for (seed <- 0 until 10) {
+    print(s"$seed : ")
     val rand = new Random(seed)
     val m = RandomMDD(d, k, l, q, rand).reduce
     lambda ::= m.lambda
     nu ::= m.edges.toLong
+    println(s"${m.lambda} tuples in ${m.edges} edges")
   }
   println(StatisticsManager.average(lambda))
   println(StatisticsManager.average(nu))
 }
 
 object NameMDD extends App {
-  SQLWriter.connection(new URI("postgresql://concrete:concrete@precision-vion")).withSession {
+  SQLWriter.connection(new URI("postgresql://concrete:Wizcof25@raihmsvg")).withSession {
     val f = io.Source.fromFile(args(0))
     val setP = Q.update[(String, Int, Int, String)]("""UPDATE Problems
       SET display =?, nbVars=?, nbCons =?
@@ -155,7 +156,7 @@ object NameMDD extends App {
       val lp = f"${100 * l.toDouble}%.0f"
       val lq = f"${100 * q.toDouble}%.0f"
       println(s"mdd-$n-$d-$k-$e-$l-$q")
-      for (s <- 0 until 10) {
+      for (s <- 0 until 20) {
         setP.execute((s"mdd-$n-$d-$k-$e-$lp-$lq-$s",
           n.toInt, e.toInt, s"mdd-$n-$d-$k-$e-$l-$q-$s"))
       }
