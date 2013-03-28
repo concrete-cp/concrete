@@ -3,8 +3,7 @@
            name text unique not null,
            nbvars int,
            nbcons int,
-           display text unique,
-           md5 char(32) unique not null);
+           display text unique);
 
 
 
@@ -21,6 +20,7 @@
               problemId integer not null REFERENCES Problems on delete cascade, 
               start timestamp not null,
               "end" timestamp null,
+	      hostname text,
               solution text,
               unique(version, configId, problemId));
 

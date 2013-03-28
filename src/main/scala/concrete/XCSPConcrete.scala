@@ -27,9 +27,7 @@ object XCSPConcrete extends Concrete with App {
 
   def description(args: List[String]) =
     args match {
-      case List(fileName) =>
-        (fileName, SQLWriter.md5(cspom.CSPOM.problemInputStream(new URL(fileName))))
-
+      case List(fileName) => fileName
       case _ => throw new IllegalArgumentException(args.toString)
     }
 

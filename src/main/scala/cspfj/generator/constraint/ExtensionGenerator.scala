@@ -129,12 +129,10 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
         case m: TupleTrieSet if (m.initialContent == false) => {
           ExtensionGenerator.consType match {
             case "MDDC" => {
-              //              print(m.reduceable.asInstanceOf[MDD].arity)
-              //              print(" ")
-              //              print(m.reduceable.asInstanceOf[MDD].size)
-              //              print(" ")
-              //              println(m.reduceable.asInstanceOf[MDD].nodes)
               new MDDC(scope, m.reduceable.asInstanceOf[MDD])
+            }
+            case "MDDC2" => {
+              new MDDC2(scope, m.reduceable.asInstanceOf[MDD])
             }
             case "STR3" => {
               new ExtensionConstraintSTR3(scope, m.reduceable.asInstanceOf[STR].array)

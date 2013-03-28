@@ -96,10 +96,11 @@ object Table extends App {
       var d = Array.ofDim[Int](configs.size, configs.size)
 
       val totals = new HashMap[String, Array[List[Double]]]()
+      val nbSolved = new HashMap[String, Array[Int]]()
 
       for (Problem(problemId, problem, nbvars, nbcons, tags) <- problems) {
 
-        val data = ListBuffer(problem) //, nbvars, nbcons)
+        val data = ListBuffer(s"$problem ($problemId)") //, nbvars, nbcons)
         //print("\\em %s & \\np{%d} & \\np{%d}".format(problem, nbvars, nbcons))
         //print("\\em %s ".format(problem))
 
@@ -169,6 +170,10 @@ object Table extends App {
           tag <- tags
         ) {
           totals.getOrElseUpdate(tag, Array.fill(configs.size)(Nil))(i) ::= j.statistic
+          val a = nbSolved.getOrElseUpdate(tag, Array.fill(configs.size)(0))
+          if (solved(j.solution)) {
+            a(i) += 1
+          }
         }
 
         for (
@@ -255,11 +260,7 @@ object Table extends App {
       }
       println("\\midrule")
 
-      for ((k, t) <- totals.toList.sortBy(_._1)) {
-        val counts = configs.indices.map { i =>
-          t(i).count(!_.isInfinity)
-        }
-
+      for ((k, counts) <- nbSolved.toList.sortBy(_._1)) {
         val best = counts.max
 
         println(s"\\em $k & " + counts.map {

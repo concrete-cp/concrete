@@ -7,9 +7,10 @@ import cspfj.constraint.Constraint
 import cspfj.util.SparseSet
 import cspfj.util.BitVector
 import scala.util.control.Breaks._
+import cspfj.util.SetWithMax
 import cspfj.UNSATException
 
-class MDDC(_scope: Array[Variable], private val mdd: MDD)
+class MDDC2(_scope: Array[Variable], private val mdd: MDD)
   extends Constraint(_scope) with Removals with Backtrackable[Set[Int]] {
 
   override def setLvl(l: Int) {
@@ -54,72 +55,88 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
       }
     }
 
-    delta = arity
+    //delta = arity
 
     MDD.timestamp += 1
 
     val oldGno = gNo
 
-    seekSupports(MDD.timestamp, mdd, 0)
+    mark(MDD.timestamp, mdd, 0, modified.reverse)
+
     if (gNo(mdd.getId)) {
       throw UNSATException.e
     }
-
-    //    val (_, newNo, delta) = mdd.seekSupports(MDD.timestamp, scope, unsupported, 0, gNo, arity)
-    //   
-    //    if (gNo ne newNo) {
-    //      altering()
-    //      gNo = newNo
-    //    }
-    //   
-
     if (gNo ne oldGno) {
       altering()
     }
 
-    val c = (delta - 1 to 0 by -1).filter(p => scope(p).dom.filter(i => !unsupported(p)(i)))
+    MDD.timestamp += 1
+
+    val l = new SetWithMax(arity)
+    fillFound(MDD.timestamp, mdd, 0, l)
+
+    val c = l.filter(p => scope(p).dom.filter(i => !unsupported(p)(i)))
     if (isFree) {
       entail()
     }
     c
   }
 
-  private def seekSupports(ts: Int, g: MDD, i: Int): Boolean = {
-    if (g eq MDDLeaf) {
-      if (i < delta) {
-        delta = i
-      }
-      true
-    } else if (g.timestamp == ts) {
+  private def mark(ts: Int, g: MDD, i: Int, mod: List[Int]): Boolean = {
+    if (g.timestamp == ts) {
       true
     } else if (gNo.contains(g.getId)) {
       false
+    } else mod match {
+      case Nil => true
+      case `i` :: next => mark2(ts, g, i, next)
+      case next => mark2(ts, g, i, next)
+    }
+  }
+
+  private def mark2(ts: Int, g: MDD, i: Int, next: List[Int]): Boolean = {
+    var res = false
+    g.forSubtries {
+      (ak, gk) =>
+        res |= scope(i).dom.present(ak) && mark(ts, gk, i + 1, next)
+        true
+    }
+
+    if (res) {
+      g.timestamp = ts
+      //require(isValid(g, i))
     } else {
-      var res = false
+      gNo += g.getId
+    }
+    res
+  }
 
-      g.forSubtries {
-        (ak, gk) =>
-          if (scope(i).dom.present(ak) && seekSupports(ts, gk, i + 1)) {
-            res = true
-            unsupported(i).clear(ak)
+  //  def isValid(g: MDD, i: Int): Boolean = (g eq MDDLeaf) || {
+  //    var res = false
+  //    g.forSubtries {
+  //      (ak, gk) =>
+  //        res |= scope(i).dom.present(ak) && isValid(gk, i + 1)
+  //        !res
+  //    }
+  //    res
+  //  }
 
-            if (i + 1 == delta && unsupported(i).isEmpty) {
-              delta = i
-              false
-            } else {
-              true
+  private def fillFound(ts: Int, g: MDD, i: Int, l: SetWithMax) {
+    if ((g ne MDDLeaf) && g.timestamp != ts) {
+      g.timestamp = ts
+      if (i <= l.max) {
+        g.forSubtries {
+          (ak, gk) =>
+            if (scope(i).dom.present(ak) && !gNo(gk.getId)) {
+              //require(isValid(gk, i + 1))
+              if (unsupported(i).clear(ak) && unsupported(i).isEmpty) {
+                l -= i
+              }
+              fillFound(ts, gk, i + 1, l)
             }
-          } else {
-            true
-          }
-
+            i <= l.max
+        }
       }
-      if (res) {
-        g.timestamp = ts
-      } else {
-        gNo += g.getId
-      }
-      res
     }
   }
 

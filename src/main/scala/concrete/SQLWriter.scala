@@ -43,26 +43,27 @@ import java.security.InvalidParameterException
 import scala.slick.session.Session
 import Database.threadLocalSession
 import Q.interpolation
+import java.net.InetAddress
 
 object SQLWriter {
 
-  def md5(istr: InputStream) = {
-    val msgDigest = MessageDigest.getInstance("MD5");
-
-    def createDigest(buffer: Array[Byte]) {
-      val read = istr.read(buffer)
-      if (read > 0) {
-        msgDigest.update(buffer, 0, read)
-        createDigest(buffer)
-      }
-    }
-
-    createDigest(new Array[Byte](8192))
-
-    val sum = new BigInteger(1, msgDigest.digest).toString(16);
-    "".padTo(32 - sum.length, '0') + sum
-
-  }
+  //  def md5(istr: InputStream) = {
+  //    val msgDigest = MessageDigest.getInstance("MD5");
+  //
+  //    def createDigest(buffer: Array[Byte]) {
+  //      val read = istr.read(buffer)
+  //      if (read > 0) {
+  //        msgDigest.update(buffer, 0, read)
+  //        createDigest(buffer)
+  //      }
+  //    }
+  //
+  //    createDigest(new Array[Byte](8192))
+  //
+  //    val sum = new BigInteger(1, msgDigest.digest).toString(16);
+  //    "".padTo(32 - sum.length, '0') + sum
+  //
+  //  }
 
   def connection(uri: URI) = {
     require(!uri.isOpaque, "Opaque connection URI : " + uri.toString)
@@ -92,7 +93,6 @@ object SQLWriter {
 final class SQLWriter(
   jdbcUri: URI,
   description: String,
-  md5: String,
   params: String) extends ConcreteWriter {
 
   lazy val db = SQLWriter.connection(jdbcUri)
@@ -100,7 +100,7 @@ final class SQLWriter(
   createTables()
 
   val executionId = execution(
-    problemId(description, md5),
+    problemId(description),
     config(params),
     Solver.VERSION + CSPOM.VERSION);
 
@@ -139,22 +139,37 @@ final class SQLWriter(
     }
   }
 
-  private def problemId(description: String, md5sum: String) =
+  private def problemId(description: String) =
     db.withSession {
       sql"""
         SELECT problemId
         FROM Problems
-        WHERE md5 = $md5sum""".as[Int].firstOption getOrElse
+        WHERE name = $description""".as[Int].firstOption getOrElse
         sql"""
-              INSERT INTO Problems(name, md5)
-              VALUES ($description, $md5)
+              INSERT INTO Problems(name)
+              VALUES ($description)
               RETURNING problemId
               """.as[Int].first
     }
 
   private def config(options: String) = {
+    val istr = new ByteArrayInputStream(options.getBytes)
+    val msgDigest = MessageDigest.getInstance("MD5");
 
-    val md5sum = SQLWriter.md5(new ByteArrayInputStream(options.getBytes))
+    def createDigest(buffer: Array[Byte]) {
+      val read = istr.read(buffer)
+      if (read > 0) {
+        msgDigest.update(buffer, 0, read)
+        createDigest(buffer)
+      }
+    }
+
+    createDigest(new Array[Byte](8192))
+
+    val sum = new BigInteger(1, msgDigest.digest).toString(16);
+    val md5sum = "".padTo(32 - sum.length, '0') + sum
+
+    //val md5sum = SQLWriter.md5(new ByteArrayInputStream(options.getBytes))
     db.withSession {
       sql"SELECT configId FROM configs WHERE md5=$md5sum".as[Int].firstOption getOrElse
         sql"""INSERT INTO Configs (config, md5) 
@@ -167,8 +182,8 @@ final class SQLWriter(
     print(s"Problem $problemId, config $configId, version $version")
 
     val executionId = try db.withSession {
-      sql"""INSERT INTO Executions (problemId, configId, version, start)
-            VALUES ($problemId, $configId , $version, CURRENT_TIMESTAMP) 
+      sql"""INSERT INTO Executions (problemId, configId, version, start, hostname)
+            VALUES ($problemId, $configId , $version, CURRENT_TIMESTAMP, ${InetAddress.getLocalHost.getHostName}) 
             RETURNING executionId""".as[Int].first
     }
     catch {

@@ -97,8 +97,7 @@ object RandomMDD extends Concrete with App {
   }
 
   def description(args: List[String]) = {
-    val name = "mdd-" + args(0).split(":").mkString("-")
-    (name, SQLWriter.md5(new ByteArrayInputStream(name.getBytes())))
+    "mdd-" + args(0).split(":").mkString("-")
   }
 
   def output(solution: Map[String, Int]) = {
@@ -117,7 +116,7 @@ object RandomMDD extends Concrete with App {
 }
 
 object TestMDD extends App {
-  val Array(domainSize, arity, looseness, mddProb) = args(0).split(":")
+  val Array(domainSize, arity, looseness, mddProb, iterations) = args(0).split(":")
 
   val d = domainSize.toInt
   val k = arity.toInt
@@ -126,7 +125,7 @@ object TestMDD extends App {
   var lambda: List[BigInt] = Nil
   var nu: List[Long] = Nil
 
-  for (seed <- 0 until 10) {
+  for (seed <- 0 until iterations.toInt) {
     print(s"$seed : ")
     val rand = new Random(seed)
     val m = RandomMDD(d, k, l, q, rand).reduce

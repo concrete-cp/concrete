@@ -29,13 +29,13 @@ import cspfj.UNSATException
 import cspfj.constraint.Removals
 import cspfj.Statistic
 
-object ReduceableExt {
+object MDDR {
   @Statistic
   var fills = 0l
 }
 
-final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
-  extends Constraint(_scope) with Loggable with Removals with Backtrackable[Relation] {
+final class MDDR(_scope: Array[Variable], private val _tts: MDD)
+  extends Constraint(_scope) with Loggable with Removals with Backtrackable[MDD] {
 
   var trie = _tts
 
@@ -59,11 +59,6 @@ final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
         unsupported(i).set(j)
       }
     }
-    //found.foreach(_.fill(false))
-
-    //val oldSize = trie.size
-
-    //println(this + ": filtering " + oldSize)
 
     val newTrie = trie.filterTrie(
       { (p, i) => scope(p).dom.present(i) }, mod.reverse)
@@ -105,12 +100,24 @@ final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
     c
   }
 
+//  def filterMDD(ts: Int, g: MDD, mod: List[Int], i: Int): MDD = {
+//    if (mod.isEmpty) {
+//      g
+//    } else {
+//      if (g.timestamp != ts) {
+//        g.timestamp = ts
+//        
+//      }
+//    }
+//
+//  }
+
   def save = {
     //println(this + " <- " + trie.size)
     trie
   }
 
-  def restore(d: Relation) {
+  def restore(d: MDD) {
     trie = d
     //println(this + " -> " + trie.size)
   }

@@ -31,8 +31,7 @@ object RBConcrete extends Concrete with App {
   }
 
   def description(args: List[String]) = {
-    val name = "rb-" + args(0).split(":").mkString("-")
-    (name, SQLWriter.md5(new ByteArrayInputStream(name.getBytes())))
+    "rb-" + args(0).split(":").mkString("-")
   }
 
   def output(solution: Map[String, Int]) = {
@@ -65,7 +64,6 @@ object NameRB extends App {
           WHERE name=${s"rb-$n-$d-$k-$e-$l-$s"}""".execute
       }
 
-      
       sqlu"""
         INSERT INTO ProblemTags 
         SELECT ${s"rb-$n-$d-$k-$e-$lp"}, problemId 
