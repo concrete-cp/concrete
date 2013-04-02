@@ -160,16 +160,22 @@ object Table extends App {
                                 WHERE (version, problemId) = ($version, $problemId)"""
         }
 
-        val results = sqlQuery.as[(Int, String, Double)].list.map {
-          case (config, solution, value) => config -> Resultat(solution, value)
+        val results = sqlQuery.as[(Int, String, Option[Double])].list.map {
+          case (config, solution, value) => config -> Resultat(solution, value.getOrElse(Double.NaN))
         } toMap
 
         for (
           i <- configs.indices;
-          j <- results.get(configs(i).configId);
+          j = results.getOrElse(configs(i).configId, Resultat(null, Double.NaN));
           tag <- tags
         ) {
-          totals.getOrElseUpdate(tag, Array.fill(configs.size)(Nil))(i) ::= j.statistic
+          totals.getOrElseUpdate(tag, Array.fill(configs.size)(Nil))(i) ::= {
+            if (statistic == "mem" && (j.solution ne null) && j.solution.contains("OutOfMemoryError")) {
+              Double.PositiveInfinity
+            } else {
+              j.statistic
+            }
+          }
           val a = nbSolved.getOrElseUpdate(tag, Array.fill(configs.size)(0))
           if (solved(j.solution)) {
             a(i) += 1
@@ -202,17 +208,15 @@ object Table extends App {
             results.get(c.configId) match {
               case Some(Resultat(result, time)) =>
                 val e = engineer(time)
-                "%.1f%s".formatLocal(Locale.US, e._1, e._2.getOrElse("")) +
-                  (if (!solved(result)) {
-                    if (result == null) {
-                      "(null)"
-                    } else if (result.contains("OutOfMemoryError")) {
-                      "(mem)"
-                    } else if (result.contains("InterruptedException")) {
-                      "(exp)"
-                    } else {
-                      s"($result)"
-                    }
+                "%.1f%s".formatLocal(Locale.US, e._1, e._2.getOrElse("")) + (
+                  if (result == null) {
+                    "(null)"
+                  } else if (result.contains("OutOfMemoryError")) {
+                    "(mem)"
+                  } else if (result.contains("InterruptedException")) {
+                    "(exp)"
+                  } else if (!solved(result)) {
+                    s"($result)"
                   } else {
                     ""
                   })
@@ -235,27 +239,26 @@ object Table extends App {
 
         val medians = configs.indices.map {
           i =>
-            try StatisticsManager.median(t(i))
-            catch {
-              case e: NoSuchElementException => Double.NaN
+            if (t(i).exists(_.isNaN)) { Double.NaN }
+            else {
+              try StatisticsManager.median(t(i))
+              catch {
+                case e: NoSuchElementException => Double.NaN
+              }
             }
         }
 
         val best = medians.min
 
         println(s"$k," + medians.map { median =>
-          if (median.isInfinity) {
-            "timeout"
-          } else {
-            median.toString
-            //            val (v, m) = engineer(median)
-            //
-            //            (if (median < best * 1.1) "\\bf " else "") + (
-            //              m match {
-            //                case Some(m) => f"\\np[$m%s]{$v%.1f}"
-            //                case None => f"\\np{$v%.1f}"
-            //              })
-          }
+          median.toString
+          //            val (v, m) = engineer(median)
+          //
+          //            (if (median < best * 1.1) "\\bf " else "") + (
+          //              m match {
+          //                case Some(m) => f"\\np[$m%s]{$v%.1f}"
+          //                case None => f"\\np{$v%.1f}"
+          //              })
         }.mkString(",")) // + " \\\\")
       }
       println("\\midrule")

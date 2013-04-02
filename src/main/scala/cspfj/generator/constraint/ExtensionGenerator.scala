@@ -33,7 +33,7 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
    */
   private val vToICache = new CacheConverter[cspom.extension.Relation, HashMap[Signature, Matrix]]()
 
-  private def generateMatrix(variables: Seq[Variable], relation: cspom.extension.Relation, init: Boolean) = {
+  private def generateMatrix(variables: List[Variable], relation: cspom.extension.Relation, init: Boolean) = {
     val domains = variables map (_.dom)
 
     val map = vToICache.getOrAdd(relation, new HashMap[Signature, Matrix])
@@ -46,7 +46,7 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
     })
   }
 
-  private def gen(relation: cspom.extension.Relation, init: Boolean, domains: Seq[Domain]) = {
+  private def gen(relation: cspom.extension.Relation, init: Boolean, domains: List[Domain]) = {
     if (relation.arity == 2) {
       new Matrix2D(domains(0).size, domains(1).size, init).setAll(value2Index(domains, relation).toTraversable, !init)
     } else if (init) {
@@ -54,10 +54,7 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
     } else {
       new TupleTrieSet(ExtensionGenerator.ds match {
         case "MDD" => relation match {
-          case mdd: cspom.extension.MDD =>
-            val r = cspomMDDtoCspfjMDD(domains, mdd)
-            //println(r.edges)
-            r
+          case mdd: cspom.extension.MDD => cspomMDDtoCspfjMDD(domains, mdd)
           case r => MDD(value2Index(domains, r))
         }
         case "STR" => new STR() ++ value2Index(domains, relation).toIterable
@@ -66,7 +63,7 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
   }
 
   private def cspomMDDtoCspfjMDD(
-    domains: Seq[Domain],
+    domains: List[Domain],
     relation: cspom.extension.MDD,
     map: HashMap[cspom.extension.MDD, cspfj.constraint.extension.MDD] = new HashMap()): MDD = {
     relation match {
@@ -89,17 +86,19 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
               cspomMDDtoCspfjMDD(tail, t1, map), v1,
               cspomMDDtoCspfjMDD(tail, t2, map), v2)
 
-          case _: Int =>
-            val m = n.trie.keys.map(domain.index).max
+          case s: Int =>
+            val m = n.trie.keysIterator.map(domain.index).max
             val trie = new Array[cspfj.constraint.extension.MDD](m + 1)
-            val indices = new ArrayBuffer[Int](trie.size)
+            val indices = new Array[Int](s)
+            var j = 0
             for ((v, t) <- n.trie) {
               val i = domain.index(v)
               trie(i) = cspomMDDtoCspfjMDD(tail, t, map)
-              indices += i
+              indices(j) = i
+              j += 1
             }
 
-            new MDDn(trie, indices.toArray, indices.length)
+            new MDDn(trie, indices, indices.length)
         }
       })
     }
@@ -115,7 +114,7 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
 
   override def generateExtension(extensionConstraint: cspom.extension.ExtensionConstraint) = {
 
-    val solverVariables = extensionConstraint.scope map cspom2cspfj
+    val solverVariables = extensionConstraint.scope map cspom2cspfj toList
 
     if (extensionConstraint.relation.isEmpty) {
       (extensionConstraint.init == true) || (throw new UNSATException)

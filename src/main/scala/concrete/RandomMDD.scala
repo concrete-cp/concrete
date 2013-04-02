@@ -92,7 +92,7 @@ object RandomMDD extends Concrete with App {
 
     cProblem = Some(cp)
     val problem = ProblemGenerator.generate(cp)
-    cp.closeRelations
+    cp.closeRelations()
     problem
   }
 
