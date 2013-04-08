@@ -54,7 +54,8 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
     } else {
       new TupleTrieSet(ExtensionGenerator.ds match {
         case "MDD" => relation match {
-          case mdd: cspom.extension.MDD => cspomMDDtoCspfjMDD(domains, mdd)
+          case mdd: cspom.extension.MDD => cspomMDDtoCspfjMDD(domains, mdd, new HashMap())
+          case mdd: cspom.extension.LazyMDD => cspomMDDtoCspfjMDD(domains, mdd.apply, new HashMap())
           case r => MDD(value2Index(domains, r))
         }
         case "STR" => new STR() ++ value2Index(domains, relation).toIterable
@@ -65,19 +66,23 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
   private def cspomMDDtoCspfjMDD(
     domains: List[Domain],
     relation: cspom.extension.MDD,
-    map: HashMap[cspom.extension.MDD, cspfj.constraint.extension.MDD] = new HashMap()): MDD = {
+    map: HashMap[cspom.extension.MDD, cspfj.constraint.extension.MDD]): MDD = {
     relation match {
       case cspom.extension.MDDLeaf => cspfj.constraint.extension.MDDLeaf
       case n: cspom.extension.MDDNode => map.getOrElseUpdate(n, {
         val (domain, tail) = (domains.head, domains.tail)
-        n.trie.size match {
+        val trie = n.asList
+
+        trie.size match {
           case 1 =>
-            val (v, t) = n.trie.head
+            val v = n.value
+            val t = n.child
+
             val i = domain.index(v)
             new MDD1(cspomMDDtoCspfjMDD(tail, t, map), v)
 
           case 2 =>
-            val it = n.trie.iterator
+            val it = trie.iterator
             val (v1, t1) = it.next
             val (v2, t2) = it.next
             val i1 = domain.index(v1)
@@ -87,18 +92,18 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
               cspomMDDtoCspfjMDD(tail, t2, map), v2)
 
           case s: Int =>
-            val m = n.trie.keysIterator.map(domain.index).max
-            val trie = new Array[cspfj.constraint.extension.MDD](m + 1)
+            val m = trie.map(l => domain.index(l._1)).max
+            val cspfjTrie = new Array[cspfj.constraint.extension.MDD](m + 1)
             val indices = new Array[Int](s)
             var j = 0
-            for ((v, t) <- n.trie) {
+            for ((v, t) <- trie) {
               val i = domain.index(v)
-              trie(i) = cspomMDDtoCspfjMDD(tail, t, map)
+              cspfjTrie(i) = cspomMDDtoCspfjMDD(tail, t, map)
               indices(j) = i
               j += 1
             }
 
-            new MDDn(trie, indices, indices.length)
+            new MDDn(cspfjTrie, indices, indices.length)
         }
       })
     }
@@ -149,8 +154,10 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
         }
         case m => new ExtensionConstraintGeneral(m, true, scope)
       }
+      extensionConstraint.closeRelation()
       //println(extensionConstraint + " -> " + constraint);
       addConstraint(constraint)
+      
       true;
     }
   }

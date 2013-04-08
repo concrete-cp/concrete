@@ -25,6 +25,7 @@ import cspom.extension.EmptyMDD
 import cspom.extension.MDDLeaf
 import cspom.extension.MDDNode
 import cspom.extension.MDD
+import cspom.extension.LazyMDD
 
 object RandomMDD extends Concrete with App {
 
@@ -44,16 +45,15 @@ object RandomMDD extends Concrete with App {
     } else if (existing(k).nonEmpty && rand.nextDouble < q) {
       existing(k)(rand.nextInt(existing(k).size))
     } else {
-      val t = Map(
-        (0 until d)
-          map (i => i -> generate(d, k - 1, l, q, existing, rand))
-          filter (_._2.nonEmpty): _*)
+      val t = (0 until d).iterator.
+        map(i => i -> generate(d, k - 1, l, q, existing, rand)).
+        filter(_._2.nonEmpty)
 
       val r =
         if (t.isEmpty) {
           EmptyMDD
         } else {
-          new MDDNode(t)
+          MDD.fromList(t.toList)
         }
       existing(k) += r
       r
@@ -63,41 +63,30 @@ object RandomMDD extends Concrete with App {
   var cProblem: Option[CSPOM] = None
 
   def load(args: List[String]) = {
-    val Array(nbVariables, domainSize, arity, nbConstraints,
-      looseness, mddProb, seed) = args(0).split(":")
 
-    val n = nbVariables.toInt
-    val d = domainSize.toInt
-    val k = arity.toInt
-    val e = nbConstraints.toInt
-    val l = looseness.toDouble match {
-      case l if l > 0 => l
-      case l => math.exp(-n * math.log(d) / e)
-    }
-    val q = mddProb.toDouble
-    val rand = new Random(seed.toInt)
+    val (n, d, k, e, l, q, s) = params(args(0))
+
+    val rand = new Random(s)
 
     val cp = new CSPOM()
     val vars = List.fill(n)(cp.interVar(0, d - 1))
 
-    val r = new CoarseProportionRandomListGenerator(n, k, seed.toInt);
+    val r = new CoarseProportionRandomListGenerator(n, k, s);
 
     for (scope <- r.selectTuples(e, Structure.UNSTRUCTURED, false, false)) {
-      val mdd = RandomMDD(d, k, l, q, rand)
-      // println(mdd.size)
-      //      println(mdd map (_.mkString(",")) mkString ("\n"))
-      //      exit
+      val mdd = new LazyMDD(Unit => RandomMDD.apply(d, k, l, q, rand))
       cp.addConstraint(new ExtensionConstraint(mdd, false, scope map vars))
     }
 
     cProblem = Some(cp)
     val problem = ProblemGenerator.generate(cp)
-    cp.closeRelations()
+    //cp.closeRelations()
     problem
   }
 
   def description(args: List[String]) = {
-    "mdd-" + args(0).split(":").mkString("-")
+    val (n, d, k, e, l, q, s) = params(args(0))
+    s"mdd-$n-$d-$k-$e-$l-$q-$s"
   }
 
   def output(solution: Map[String, Int]) = {
@@ -110,6 +99,23 @@ object RandomMDD extends Concrete with App {
       case s: Set[_] if s.isEmpty => None
       case s: Set[_] => Some(s.mkString(", "))
     }
+  }
+
+  def params(args: String) = {
+    val Array(nbVariables, domainSize, arity, nbConstraints,
+      looseness, mddProb, seed) = args.split(":")
+    val n = nbVariables.toInt
+    val d = domainSize.toInt
+    val k = arity.toInt
+    val e = nbConstraints.toInt
+    val l = looseness.toDouble match {
+      case l if l > 0 => l
+      case l => math.exp(-n * math.log(d) / e)
+    }
+    val q = mddProb.toDouble
+    val s = seed.toLong
+
+    (n, d, k, e, l, q, s)
   }
 
   run(args)
@@ -155,7 +161,7 @@ object NameMDD extends App {
       val lp = f"${100 * l.toDouble}%.0f"
       val lq = f"${100 * q.toDouble}%.0f"
       println(s"mdd-$n-$d-$k-$e-$l-$q")
-      for (s <- 0 until 20) {
+      for (s <- 0 until 25) {
         setP.execute((s"mdd-$n-$d-$k-$e-$lp-$lq-$s",
           n.toInt, e.toInt, s"mdd-$n-$d-$k-$e-$l-$q-$s"))
       }
