@@ -71,20 +71,18 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
       case cspom.extension.MDDLeaf => cspfj.constraint.extension.MDDLeaf
       case n: cspom.extension.MDDNode => map.getOrElseUpdate(n, {
         val (domain, tail) = (domains.head, domains.tail)
-        val trie = n.asList
+        val trie = n.trie
 
         trie.size match {
           case 1 =>
-            val v = n.value
-            val t = n.child
+
+            val (v, t) = trie.head
 
             val i = domain.index(v)
             new MDD1(cspomMDDtoCspfjMDD(tail, t, map), v)
 
           case 2 =>
-            val it = trie.iterator
-            val (v1, t1) = it.next
-            val (v2, t2) = it.next
+            val List((v1, t1), (v2, t2)) = trie.toList
             val i1 = domain.index(v1)
             val i2 = domain.index(v2)
             new MDD2(
@@ -157,7 +155,7 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
       extensionConstraint.closeRelation()
       //println(extensionConstraint + " -> " + constraint);
       addConstraint(constraint)
-      
+
       true;
     }
   }

@@ -53,7 +53,7 @@ object RandomMDD extends Concrete with App {
         if (t.isEmpty) {
           EmptyMDD
         } else {
-          MDD.fromList(t.toList)
+          new MDDNode(t.toMap)
         }
       existing(k) += r
       r

@@ -1,4 +1,4 @@
-JAVA PROFILE 1.0.1, created Tue Apr  2 17:32:37 2013
+JAVA PROFILE 1.0.1, created Tue Apr  2 18:19:10 2013
 
 Copyright (c) 2003, 2005, Oracle and/or its affiliates. All rights reserved.
 
@@ -89,3 +89,398 @@ Ctrl-\ (on Solaris) or by typing Ctrl-Break (on Win32).
 
 --------
 
+THREAD START (obj=50000162, id = 200001, name="main", group="main")
+THREAD START (obj=5000074d, id = 200004, name="ForkJoinPool-1-worker-1", group="main")
+THREAD START (obj=5000074d, id = 200005, name="ForkJoinPool-1-worker-2", group="main")
+THREAD START (obj=5000074d, id = 200006, name="ForkJoinPool-1-worker-3", group="main")
+THREAD START (obj=5000074d, id = 200007, name="ForkJoinPool-1-worker-4", group="main")
+THREAD END (id = 200001)
+THREAD START (obj=50000162, id = 200008, name="DestroyJavaVM", group="main")
+THREAD END (id = 200008)
+TRACE 300261:
+	java.net.SocketInputStream.socketRead0(SocketInputStream.java:Unknown line)
+	java.net.SocketInputStream.read(SocketInputStream.java:150)
+	java.net.SocketInputStream.read(SocketInputStream.java:121)
+	org.postgresql.core.VisibleBufferedInputStream.readMore(VisibleBufferedInputStream.java:145)
+TRACE 300038:
+	java.lang.ClassLoader.defineClass1(ClassLoader.java:Unknown line)
+	java.lang.ClassLoader.defineClass(ClassLoader.java:787)
+	java.security.SecureClassLoader.defineClass(SecureClassLoader.java:142)
+	java.net.URLClassLoader.defineClass(URLClassLoader.java:447)
+TRACE 300053:
+	java.lang.AbstractStringBuilder.<init>(AbstractStringBuilder.java:64)
+	java.lang.StringBuilder.<init>(StringBuilder.java:85)
+	java.io.UnixFileSystem.resolve(UnixFileSystem.java:108)
+	java.io.File.<init>(File.java:341)
+TRACE 300055:
+	java.lang.ClassLoader.findBootstrapClass(ClassLoader.java:Unknown line)
+	java.lang.ClassLoader.findBootstrapClassOrNull(ClassLoader.java:1057)
+	java.lang.ClassLoader.loadClass(ClassLoader.java:412)
+	java.lang.ClassLoader.loadClass(ClassLoader.java:410)
+TRACE 300059:
+	java.util.zip.Inflater.inflateBytes(Inflater.java:Unknown line)
+	java.util.zip.Inflater.inflate(Inflater.java:256)
+	java.util.zip.InflaterInputStream.read(InflaterInputStream.java:152)
+	sun.misc.Resource.getBytes(Resource.java:124)
+TRACE 300058:
+	java.lang.String.concat(String.java:2021)
+	java.net.URLClassLoader$1.run(URLClassLoader.java:357)
+	java.net.URLClassLoader$1.run(URLClassLoader.java:355)
+	java.security.AccessController.doPrivileged(AccessController.java:Unknown line)
+TRACE 300074:
+	java.util.zip.ZipFile.getEntry(ZipFile.java:Unknown line)
+	java.util.zip.ZipFile.getEntry(ZipFile.java:302)
+	java.util.jar.JarFile.getEntry(JarFile.java:226)
+	java.util.jar.JarFile.getJarEntry(JarFile.java:209)
+TRACE 300081:
+	java.lang.String.toCharArray(String.java:2801)
+	java.util.zip.ZipCoder.getBytes(ZipCoder.java:78)
+	java.util.zip.ZipFile.getEntry(ZipFile.java:302)
+	java.util.jar.JarFile.getEntry(JarFile.java:226)
+TRACE 300406:
+	java.lang.AbstractStringBuilder.<init>(AbstractStringBuilder.java:64)
+	java.lang.StringBuilder.<init>(StringBuilder.java:85)
+	java.net.URLStreamHandler.parseURL(URLStreamHandler.java:249)
+	sun.net.www.protocol.file.Handler.parseURL(Handler.java:67)
+TRACE 300030:
+	sun.net.www.protocol.file.Handler.createFileURLConnection(Handler.java:112)
+	sun.net.www.protocol.file.Handler.openConnection(Handler.java:81)
+	sun.net.www.protocol.file.Handler.openConnection(Handler.java:72)
+	java.net.URL.openConnection(URL.java:971)
+TRACE 300054:
+	java.lang.Thread.currentThread(Thread.java:Unknown line)
+	java.util.concurrent.locks.ReentrantLock$Sync.nonfairTryAcquire(ReentrantLock.java:134)
+	java.util.concurrent.locks.ReentrantLock.tryLock(ReentrantLock.java:370)
+	java.util.concurrent.ConcurrentHashMap$Segment.put(ConcurrentHashMap.java:366)
+TRACE 300057:
+	java.lang.Object.<init>(Object.java:37)
+	java.io.InputStream.<init>(InputStream.java:45)
+	java.util.zip.ZipFile$ZipFileInputStream.<init>(ZipFile.java:655)
+	java.util.zip.ZipFile.getInputStream(ZipFile.java:352)
+TRACE 300060:
+	java.lang.AbstractStringBuilder.<init>(AbstractStringBuilder.java:64)
+	java.lang.StringBuffer.<init>(StringBuffer.java:108)
+	java.net.URLStreamHandler.toExternalForm(URLStreamHandler.java:490)
+	java.net.URL.toExternalForm(URL.java:921)
+TRACE 300061:
+	java.lang.System.arraycopy(System.java:Unknown line)
+	java.lang.String.getChars(String.java:863)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:416)
+	java.lang.StringBuffer.append(StringBuffer.java:237)
+TRACE 300062:
+	java.io.UnixFileSystem.getBooleanAttributes0(UnixFileSystem.java:Unknown line)
+	java.io.UnixFileSystem.getBooleanAttributes(UnixFileSystem.java:242)
+	java.io.File.exists(File.java:772)
+	sun.misc.URLClassPath$FileLoader.getResource(URLClassPath.java:1057)
+TRACE 300065:
+	sun.nio.cs.FastCharsetProvider.toLower(FastCharsetProvider.java:86)
+	sun.nio.cs.FastCharsetProvider.lookup(FastCharsetProvider.java:99)
+	sun.nio.cs.FastCharsetProvider.charsetForName(FastCharsetProvider.java:136)
+	java.nio.charset.Charset.lookup2(Charset.java:487)
+TRACE 300075:
+	scala.App$class.$init$(App.scala:50)
+	concrete.Table$.<init>(Table.scala:20)
+	concrete.Table$.<clinit>(Table.scala:Unknown line)
+	concrete.Table.main(Table.scala:Unknown line)
+TRACE 300076:
+	scala.collection.immutable.List.<init>(List.scala:78)
+	scala.collection.immutable.Nil$.<init>(List.scala:325)
+	scala.collection.immutable.Nil$.<clinit>(List.scala:Unknown line)
+	scala.collection.mutable.ListBuffer.<init>(ListBuffer.scala:59)
+TRACE 300077:
+	sun.misc.Unsafe.getObject(Unsafe.java:Unknown line)
+	java.util.concurrent.ConcurrentHashMap.putIfAbsent(ConcurrentHashMap.java:1081)
+	java.lang.ClassLoader.getClassLoadingLock(ClassLoader.java:458)
+	java.lang.ClassLoader.loadClass(ClassLoader.java:403)
+TRACE 300078:
+	java.lang.String.substring(String.java:1960)
+	java.lang.ClassLoader.checkCerts(ClassLoader.java:920)
+	java.lang.ClassLoader.preDefineClass(ClassLoader.java:653)
+	java.lang.ClassLoader.defineClass(ClassLoader.java:781)
+TRACE 300079:
+	scala.collection.immutable.Set$.empty(Set.scala:47)
+	scala.collection.immutable.Set$.empty(Set.scala:44)
+	scala.collection.generic.ImmutableSetFactory.newBuilder(ImmutableSetFactory.scala:18)
+	scala.collection.generic.GenSetFactory$$anon$1.apply(GenSetFactory.scala:43)
+TRACE 300080:
+	scala.collection.immutable.Set$Set3.$plus(Set.scala:106)
+	scala.collection.immutable.Set$Set3.$plus(Set.scala:100)
+	scala.collection.mutable.SetBuilder.$plus$eq(SetBuilder.scala:24)
+	scala.collection.mutable.SetBuilder.$plus$eq(SetBuilder.scala:22)
+TRACE 300082:
+	java.util.Arrays.copyOf(Arrays.java:2271)
+	java.util.zip.ZipCoder.getBytes(ZipCoder.java:89)
+	java.util.zip.ZipFile.getEntry(ZipFile.java:302)
+	java.util.jar.JarFile.getEntry(JarFile.java:226)
+TRACE 300087:
+	java.util.Arrays.copyOf(Arrays.java:2367)
+	java.lang.AbstractStringBuilder.expandCapacity(AbstractStringBuilder.java:130)
+	java.lang.AbstractStringBuilder.ensureCapacityInternal(AbstractStringBuilder.java:114)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:415)
+TRACE 300088:
+	scala.reflect.ManifestFactory$.<init>(Manifest.scala:181)
+	scala.reflect.ManifestFactory$.<clinit>(Manifest.scala:Unknown line)
+	scala.reflect.ClassManifestFactory$.<init>(ClassManifestDeprecatedApis.scala:150)
+	scala.reflect.ClassManifestFactory$.<clinit>(ClassManifestDeprecatedApis.scala:Unknown line)
+TRACE 300089:
+	concrete.Table$delayedInit$body.apply(Table.scala:44)
+	scala.Function0$class.apply$mcV$sp(Function0.scala:40)
+	scala.runtime.AbstractFunction0.apply$mcV$sp(AbstractFunction0.scala:12)
+	scala.App$$anonfun$main$1.apply(App.scala:71)
+TRACE 300090:
+	java.util.zip.ZipFile.getEntrySize(ZipFile.java:Unknown line)
+	java.util.zip.ZipFile.access$1200(ZipFile.java:56)
+	java.util.zip.ZipFile$ZipFileInputStream.<init>(ZipFile.java:658)
+	java.util.zip.ZipFile.getInputStream(ZipFile.java:352)
+TRACE 300112:
+	java.nio.file.FileSystems$DefaultFileSystemHolder.defaultFileSystem(FileSystems.java:103)
+	java.nio.file.FileSystems$DefaultFileSystemHolder.<clinit>(FileSystems.java:90)
+	java.nio.file.FileSystems.getDefault(FileSystems.java:176)
+	sun.util.calendar.ZoneInfoFile$1.run(ZoneInfoFile.java:489)
+TRACE 300179:
+	java.util.Arrays.copyOfRange(Arrays.java:2694)
+	java.lang.String.<init>(String.java:234)
+	java.lang.StringBuilder.toString(StringBuilder.java:405)
+	java.io.UnixFileSystem.resolve(UnixFileSystem.java:108)
+TRACE 300181:
+	concrete.Table$$anonfun$1.apply$mcV$sp(Table.scala:73)
+	concrete.Table$$anonfun$1.apply(Table.scala:71)
+	concrete.Table$$anonfun$1.apply(Table.scala:71)
+	scala.util.DynamicVariable.withValue(DynamicVariable.scala:57)
+TRACE 300182:
+	scala.slick.util.Logging$class.logger(Logging.scala:46)
+	scala.slick.session.BaseSession.logger$lzycompute(Session.scala:201)
+	scala.slick.session.BaseSession.logger(Session.scala:201)
+	scala.slick.session.Session$class.prepareStatement(Session.scala:26)
+TRACE 300186:
+	java.lang.Class.getDeclaredFields0(Class.java:Unknown line)
+	java.lang.Class.privateGetDeclaredFields(Class.java:2317)
+	java.lang.Class.getDeclaredField(Class.java:1899)
+	java.net.InetSocketAddress.<clinit>(InetSocketAddress.java:310)
+TRACE 300250:
+	java.security.Provider$Service.addAttribute(Provider.java:1084)
+	java.security.Provider.parseLegacyPut(Provider.java:654)
+	java.security.Provider.ensureLegacyParsed(Provider.java:554)
+	java.security.Provider.getService(Provider.java:693)
+TRACE 300255:
+	java.lang.System.nanoTime(System.java:Unknown line)
+	java.net.URLClassLoader.defineClass(URLClassLoader.java:410)
+	java.net.URLClassLoader.access$100(URLClassLoader.java:71)
+	java.net.URLClassLoader$1.run(URLClassLoader.java:361)
+TRACE 300262:
+	java.lang.System.arraycopy(System.java:Unknown line)
+	java.util.Arrays.copyOf(Arrays.java:2272)
+	sun.misc.Resource.getBytes(Resource.java:117)
+	java.net.URLClassLoader.defineClass(URLClassLoader.java:443)
+TRACE 300263:
+	scala.slick.jdbc.StatementInvoker.results(StatementInvoker.scala:35)
+	scala.slick.jdbc.StatementInvoker.elementsTo(StatementInvoker.scala:17)
+	scala.slick.jdbc.Invoker$class.foreach(Invoker.scala:90)
+	scala.slick.jdbc.StatementInvoker.foreach(StatementInvoker.scala:10)
+TRACE 300291:
+	com.sun.org.apache.xerces.internal.parsers.XML11Configuration.<init>(XML11Configuration.java:549)
+	com.sun.org.apache.xerces.internal.parsers.XIncludeAwareParserConfiguration.<init>(XIncludeAwareParserConfiguration.java:130)
+	com.sun.org.apache.xerces.internal.parsers.XIncludeAwareParserConfiguration.<init>(XIncludeAwareParserConfiguration.java:91)
+	sun.reflect.NativeConstructorAccessorImpl.newInstance0(NativeConstructorAccessorImpl.java:Unknown line)
+TRACE 300348:
+	scala.xml.parsing.FactoryAdapter.startElement(FactoryAdapter.scala:126)
+	com.sun.org.apache.xerces.internal.parsers.AbstractSAXParser.startElement(AbstractSAXParser.java:506)
+	com.sun.org.apache.xerces.internal.impl.dtd.XMLDTDValidator.startElement(XMLDTDValidator.java:745)
+	com.sun.org.apache.xerces.internal.impl.XMLDocumentFragmentScannerImpl.scanStartElement(XMLDocumentFragmentScannerImpl.java:1322)
+TRACE 300349:
+	scala.xml.Attribute$.apply(Attribute.scala:37)
+	scala.xml.parsing.FactoryAdapter$$anonfun$startElement$1.apply$mcVI$sp(FactoryAdapter.scala:142)
+	scala.xml.parsing.FactoryAdapter.startElement(FactoryAdapter.scala:131)
+	com.sun.org.apache.xerces.internal.parsers.AbstractSAXParser.startElement(AbstractSAXParser.java:506)
+TRACE 300364:
+	java.security.AccessController.doPrivileged(AccessController.java:Unknown line)
+	java.net.URLClassLoader.findClass(URLClassLoader.java:354)
+	java.lang.ClassLoader.loadClass(ClassLoader.java:423)
+	java.lang.ClassLoader.loadClass(ClassLoader.java:410)
+TRACE 300365:
+	concrete.Table$$anonfun$1$$anonfun$apply$mcV$sp$3$$anonfun$7.apply(Table.scala:163)
+	concrete.Table$$anonfun$1$$anonfun$apply$mcV$sp$3$$anonfun$7.apply(Table.scala:163)
+	scala.collection.TraversableLike$$anonfun$map$1.apply(TraversableLike.scala:244)
+	scala.collection.TraversableLike$$anonfun$map$1.apply(TraversableLike.scala:244)
+TRACE 300366:
+	scala.collection.immutable.Vector.<init>(Vector.scala:81)
+	scala.collection.immutable.VectorBuilder.result(Vector.scala:722)
+	scala.collection.immutable.VectorBuilder.result(Vector.scala:692)
+	scala.collection.TraversableLike$class.map(TraversableLike.scala:245)
+TRACE 300373:
+	java.lang.StringCoding$StringEncoder.encode(StringCoding.java:299)
+	java.lang.StringCoding.encode(StringCoding.java:343)
+	java.lang.String.getBytes(String.java:955)
+	java.io.FileInputStream.open(FileInputStream.java:Unknown line)
+TRACE 300374:
+	scala.collection.TraversableLike$class.$plus$plus(TraversableLike.scala:155)
+	scala.collection.AbstractTraversable.$plus$plus(Traversable.scala:105)
+	scala.collection.immutable.HashMap.$plus(HashMap.scala:60)
+	scala.collection.immutable.Map$Map4.updated(Map.scala:172)
+TRACE 300388:
+	scala.Some.isEmpty(Option.scala:301)
+	concrete.Table$$anonfun$1$$anonfun$apply$mcV$sp$3$$anonfun$apply$3$$anonfun$apply$mcVI$sp$8$$anonfun$apply$11.apply(Table.scala:190)
+	concrete.Table$$anonfun$1$$anonfun$apply$mcV$sp$3$$anonfun$apply$3$$anonfun$apply$mcVI$sp$8$$anonfun$apply$11.apply(Table.scala:189)
+	scala.Option$WithFilter.foreach(Option.scala:208)
+TRACE 300389:
+	java.util.regex.Matcher.<init>(Matcher.java:224)
+	java.util.regex.Pattern.matcher(Pattern.java:1088)
+	scala.util.matching.Regex.findFirstIn(Regex.scala:232)
+	concrete.Table$.solved(Table.scala:288)
+TRACE 300390:
+	scala.collection.IndexedSeqOptimized$class.foreach(IndexedSeqOptimized.scala:33)
+	scala.collection.mutable.WrappedArray.foreach(WrappedArray.scala:34)
+	scala.collection.generic.Growable$class.$plus$plus$eq(Growable.scala:48)
+	scala.collection.mutable.MapBuilder.$plus$plus$eq(MapBuilder.scala:24)
+TRACE 300391:
+	org.postgresql.core.v3.QueryExecutorImpl.parseQuery(QueryExecutorImpl.java:134)
+	org.postgresql.core.v3.QueryExecutorImpl.createParameterizedQuery(QueryExecutorImpl.java:117)
+	org.postgresql.jdbc2.AbstractJdbc2Statement.<init>(AbstractJdbc2Statement.java:153)
+	org.postgresql.jdbc3.AbstractJdbc3Statement.<init>(AbstractJdbc3Statement.java:42)
+TRACE 300392:
+	scala.collection.immutable.HashMap$HashTrieMap.updated0(HashMap.scala:334)
+	scala.collection.immutable.HashMap.$plus(HashMap.scala:57)
+	scala.collection.immutable.HashMap.$plus(HashMap.scala:36)
+	scala.collection.mutable.MapBuilder.$plus$eq(MapBuilder.scala:28)
+TRACE 300393:
+	org.postgresql.core.Utils.encodeUTF8(Utils.java:66)
+	org.postgresql.core.v3.QueryExecutorImpl.sendParse(QueryExecutorImpl.java:1217)
+	org.postgresql.core.v3.QueryExecutorImpl.sendOneQuery(QueryExecutorImpl.java:1509)
+	org.postgresql.core.v3.QueryExecutorImpl.sendQuery(QueryExecutorImpl.java:1098)
+TRACE 300394:
+	java.lang.System.arraycopy(System.java:Unknown line)
+	org.postgresql.core.VisibleBufferedInputStream.read(VisibleBufferedInputStream.java:203)
+	org.postgresql.core.PGStream.Receive(PGStream.java:460)
+	org.postgresql.core.PGStream.ReceiveTupleV3(PGStream.java:365)
+TRACE 300395:
+	java.lang.Double.doubleToRawLongBits(Double.java:Unknown line)
+	sun.misc.FpUtils.getExponent(FpUtils.java:147)
+	java.lang.Math.getExponent(Math.java:1310)
+	java.lang.StrictMath.floorOrCeil(StrictMath.java:355)
+TRACE 300396:
+	java.nio.charset.CoderResult.isOverflow(CoderResult.java:129)
+	java.nio.charset.CharsetEncoder.encode(CharsetEncoder.java:568)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:271)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:125)
+TRACE 300397:
+	scala.collection.mutable.ResizableArray$class.$init$(ResizableArray.scala:32)
+	scala.collection.mutable.ArrayBuffer.<init>(ArrayBuffer.scala:47)
+	scala.collection.mutable.ArrayBuffer.<init>(ArrayBuffer.scala:62)
+	scala.collection.mutable.IndexedSeq$.newBuilder(IndexedSeq.scala:36)
+TRACE 300398:
+	scala.runtime.ScalaRunTime$.hash(ScalaRunTime.scala:213)
+	scala.collection.mutable.HashTable$HashUtils$class.elemHashCode(HashTable.scala:398)
+	scala.collection.mutable.HashMap.elemHashCode(HashMap.scala:39)
+	scala.collection.mutable.HashTable$class.findEntry(HashTable.scala:130)
+TRACE 300399:
+	java.lang.Thread.currentThread(Thread.java:Unknown line)
+	java.lang.ThreadLocal.get(ThreadLocal.java:143)
+	sun.nio.cs.ThreadLocalCoders$Cache.forName(ThreadLocalCoders.java:63)
+	sun.nio.cs.ThreadLocalCoders.encoderFor(ThreadLocalCoders.java:132)
+TRACE 300400:
+	scala.collection.immutable.Range$.apply(Range.scala:344)
+	scala.runtime.RichInt$.until$extension0(RichInt.scala:31)
+	scala.collection.SeqLike$class.indices(SeqLike.scala:629)
+	scala.collection.AbstractSeq.indices(Seq.scala:40)
+TRACE 300403:
+	java.io.UnixFileSystem.getLength(UnixFileSystem.java:Unknown line)
+	java.io.File.length(File.java:912)
+	sun.misc.URLClassPath$FileLoader$1.getContentLength(URLClassPath.java:1065)
+	sun.misc.Resource.getBytes(Resource.java:100)
+TRACE 300405:
+	sun.misc.Unsafe.compareAndSwapLong(Unsafe.java:Unknown line)
+	java.util.concurrent.atomic.AtomicLong.compareAndSet(AtomicLong.java:149)
+	java.util.Random.next(Random.java:189)
+	java.util.Random.nextInt(Random.java:303)
+TRACE 300408:
+	sun.misc.Unsafe.putOrderedObject(Unsafe.java:Unknown line)
+	java.util.concurrent.ConcurrentHashMap.setEntryAt(ConcurrentHashMap.java:258)
+	java.util.concurrent.ConcurrentHashMap$Segment.put(ConcurrentHashMap.java:396)
+	java.util.concurrent.ConcurrentHashMap.putIfAbsent(ConcurrentHashMap.java:1084)
+TRACE 300409:
+	scala.collection.parallel.immutable.ParRange.<init>(ParRange.scala:35)
+	scala.collection.immutable.Range.par(Range.scala:51)
+	concrete.Table$.winnerTakesAll(Table.scala:308)
+	concrete.Table$$anonfun$1.apply$mcV$sp(Table.scala:281)
+TRACE 300410:
+	java.util.zip.ZipCoder.getBytes(ZipCoder.java:80)
+	java.util.zip.ZipFile.getEntry(ZipFile.java:302)
+	java.util.jar.JarFile.getEntry(JarFile.java:226)
+	java.util.jar.JarFile.getJarEntry(JarFile.java:209)
+TRACE 300414:
+	java.lang.Thread.currentThread(Thread.java:Unknown line)
+	java.lang.ThreadLocal.get(ThreadLocal.java:143)
+	java.lang.StringCoding.deref(StringCoding.java:63)
+	java.lang.StringCoding.encode(StringCoding.java:329)
+TRACE 300415:
+	scala.concurrent.forkjoin.ForkJoinPool$WorkQueue.<clinit>(ForkJoinPool.java:1038)
+	scala.concurrent.forkjoin.ForkJoinPool.doSubmit(ForkJoinPool.java:1399)
+	scala.concurrent.forkjoin.ForkJoinPool.execute(ForkJoinPool.java:2208)
+	scala.collection.parallel.ForkJoinTasks$class.executeAndWaitResult(Tasks.scala:489)
+CPU SAMPLES BEGIN (total = 96) Tue Apr  2 18:19:11 2013
+rank   self  accum   count trace method
+   1 12,50% 12,50%      12 300261 java.net.SocketInputStream.socketRead0
+   2 10,42% 22,92%      10 300038 java.lang.ClassLoader.defineClass1
+   3  4,17% 27,08%       4 300053 java.lang.AbstractStringBuilder.<init>
+   4  4,17% 31,25%       4 300055 java.lang.ClassLoader.findBootstrapClass
+   5  3,12% 34,38%       3 300059 java.util.zip.Inflater.inflateBytes
+   6  2,08% 36,46%       2 300058 java.lang.String.concat
+   7  2,08% 38,54%       2 300074 java.util.zip.ZipFile.getEntry
+   8  2,08% 40,63%       2 300081 java.lang.String.toCharArray
+   9  2,08% 42,71%       2 300406 java.lang.AbstractStringBuilder.<init>
+  10  1,04% 43,75%       1 300030 sun.net.www.protocol.file.Handler.createFileURLConnection
+  11  1,04% 44,79%       1 300054 java.lang.Thread.currentThread
+  12  1,04% 45,83%       1 300057 java.lang.Object.<init>
+  13  1,04% 46,88%       1 300060 java.lang.AbstractStringBuilder.<init>
+  14  1,04% 47,92%       1 300061 java.lang.System.arraycopy
+  15  1,04% 48,96%       1 300062 java.io.UnixFileSystem.getBooleanAttributes0
+  16  1,04% 50,00%       1 300065 sun.nio.cs.FastCharsetProvider.toLower
+  17  1,04% 51,04%       1 300075 scala.App$class.$init$
+  18  1,04% 52,08%       1 300076 scala.collection.immutable.List.<init>
+  19  1,04% 53,12%       1 300077 sun.misc.Unsafe.getObject
+  20  1,04% 54,17%       1 300078 java.lang.String.substring
+  21  1,04% 55,21%       1 300079 scala.collection.immutable.Set$.empty
+  22  1,04% 56,25%       1 300080 scala.collection.immutable.Set$Set3.$plus
+  23  1,04% 57,29%       1 300082 java.util.Arrays.copyOf
+  24  1,04% 58,33%       1 300087 java.util.Arrays.copyOf
+  25  1,04% 59,37%       1 300088 scala.reflect.ManifestFactory$.<init>
+  26  1,04% 60,42%       1 300089 concrete.Table$delayedInit$body.apply
+  27  1,04% 61,46%       1 300090 java.util.zip.ZipFile.getEntrySize
+  28  1,04% 62,50%       1 300112 java.nio.file.FileSystems$DefaultFileSystemHolder.defaultFileSystem
+  29  1,04% 63,54%       1 300179 java.util.Arrays.copyOfRange
+  30  1,04% 64,58%       1 300181 concrete.Table$$anonfun$1.apply$mcV$sp
+  31  1,04% 65,62%       1 300182 scala.slick.util.Logging$class.logger
+  32  1,04% 66,67%       1 300186 java.lang.Class.getDeclaredFields0
+  33  1,04% 67,71%       1 300250 java.security.Provider$Service.addAttribute
+  34  1,04% 68,75%       1 300255 java.lang.System.nanoTime
+  35  1,04% 69,79%       1 300262 java.lang.System.arraycopy
+  36  1,04% 70,83%       1 300263 scala.slick.jdbc.StatementInvoker.results
+  37  1,04% 71,88%       1 300291 com.sun.org.apache.xerces.internal.parsers.XML11Configuration.<init>
+  38  1,04% 72,92%       1 300348 scala.xml.parsing.FactoryAdapter.startElement
+  39  1,04% 73,96%       1 300349 scala.xml.Attribute$.apply
+  40  1,04% 75,00%       1 300364 java.security.AccessController.doPrivileged
+  41  1,04% 76,04%       1 300365 concrete.Table$$anonfun$1$$anonfun$apply$mcV$sp$3$$anonfun$7.apply
+  42  1,04% 77,08%       1 300366 scala.collection.immutable.Vector.<init>
+  43  1,04% 78,13%       1 300373 java.lang.StringCoding$StringEncoder.encode
+  44  1,04% 79,17%       1 300374 scala.collection.TraversableLike$class.$plus$plus
+  45  1,04% 80,21%       1 300388 scala.Some.isEmpty
+  46  1,04% 81,25%       1 300389 java.util.regex.Matcher.<init>
+  47  1,04% 82,29%       1 300390 scala.collection.IndexedSeqOptimized$class.foreach
+  48  1,04% 83,33%       1 300391 org.postgresql.core.v3.QueryExecutorImpl.parseQuery
+  49  1,04% 84,38%       1 300392 scala.collection.immutable.HashMap$HashTrieMap.updated0
+  50  1,04% 85,42%       1 300393 org.postgresql.core.Utils.encodeUTF8
+  51  1,04% 86,46%       1 300394 java.lang.System.arraycopy
+  52  1,04% 87,50%       1 300395 java.lang.Double.doubleToRawLongBits
+  53  1,04% 88,54%       1 300396 java.nio.charset.CoderResult.isOverflow
+  54  1,04% 89,58%       1 300397 scala.collection.mutable.ResizableArray$class.$init$
+  55  1,04% 90,63%       1 300398 scala.runtime.ScalaRunTime$.hash
+  56  1,04% 91,67%       1 300399 java.lang.Thread.currentThread
+  57  1,04% 92,71%       1 300400 scala.collection.immutable.Range$.apply
+  58  1,04% 93,75%       1 300403 java.io.UnixFileSystem.getLength
+  59  1,04% 94,79%       1 300405 sun.misc.Unsafe.compareAndSwapLong
+  60  1,04% 95,83%       1 300408 sun.misc.Unsafe.putOrderedObject
+  61  1,04% 96,88%       1 300409 scala.collection.parallel.immutable.ParRange.<init>
+  62  1,04% 97,92%       1 300410 java.util.zip.ZipCoder.getBytes
+  63  1,04% 98,96%       1 300414 java.lang.Thread.currentThread
+  64  1,04% 100,00%       1 300415 scala.concurrent.forkjoin.ForkJoinPool$WorkQueue.<clinit>
+CPU SAMPLES END

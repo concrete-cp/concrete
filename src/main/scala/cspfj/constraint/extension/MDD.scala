@@ -23,23 +23,25 @@ object MDD extends RelationGenerator {
   var timestamp = 0
 
   def newTrie(i: Int, v: MDD) = {
-    val t = Array.fill[MDD](i + 1)(MDD0) //new Array[MDD](i + 1)
+    val t = new Array[MDD](i + 1) //Array.fill[MDD](i + 1)(MDD0) //new Array[MDD](i + 1)
     t(i) = v
     t
   }
-
+  //
   def newTrie(t: (Int, MDD)*) = {
     val s: Int = t.map(_._1).max
-    val trie = Array.fill[MDD](s + 1)(MDD0)
-    addTrie(trie, t: _*)
-    trie
-  }
-
-  def addTrie(trie: Array[MDD], t: (Int, MDD)*) {
+    val trie = new Array[MDD](s + 1) //Array.fill[MDD](s + 1)(MDD0)
     for ((i, v) <- t) {
       trie(i) = v
     }
+    trie
   }
+  //
+  //  def addTrie(trie: Array[MDD], t: (Int, MDD)*) {
+  //    for ((i, v) <- t) {
+  //      trie(i) = v
+  //    }
+  //  }
 
 }
 
@@ -239,8 +241,6 @@ final class MDD1(private val child: MDD, private val index: Int) extends MDD {
       val v = t(i)
       if (v == index) {
         new MDD1(child.addTrie(t, i + 1), index)
-      } else if (v < index) {
-        new MDD2(MDD0.addTrie(t, i + 1), v, child, index)
       } else {
         new MDD2(child, index, MDD0.addTrie(t, i + 1), v)
       }
@@ -581,20 +581,24 @@ final class MDDn(
     } else {
       val v = tuple(i)
       val newTrie = trie.padTo(v + 1, MDD0)
-      val newInd =
+      val (newInd, newLength) =
         if (newTrie(v) eq MDD0) {
-          indices :+ v
+          val ni = indices.padTo(indices.length + 1, 0)
+          ni(indices.length) = ni(nbIndices)
+          ni(nbIndices) = v
+          (ni, nbIndices + 1)
         } else {
-          indices
+          (indices, nbIndices)
         }
       newTrie(v) = newTrie(v).addTrie(tuple, i + 1)
 
-      new MDDn(newTrie, newInd, newInd.length)
+      new MDDn(newTrie, newInd, newLength)
     }
   }
 
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]): MDD = {
-    var b = trie.map(_.reduce(mdds))
+
+    var b = MDD.newTrie(indices.take(nbIndices).map(i => (i, trie(i))): _*)
     mdds.getOrElseUpdate(b, new MDDn(b, indices, nbIndices))
   }
 
