@@ -598,7 +598,7 @@ final class MDDn(
 
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]): MDD = {
 
-    var b = MDD.newTrie(indices.take(nbIndices).map(i => (i, trie(i))): _*)
+    var b = MDD.newTrie(indices.take(nbIndices).map(i => (i, trie(i).reduce(mdds))): _*)
     mdds.getOrElseUpdate(b, new MDDn(b, indices, nbIndices))
   }
 
