@@ -154,21 +154,63 @@ object NameMDD extends App {
         INSERT INTO ProblemTags 
         SELECT ?, problemId 
         FROM Problems NATURAL LEFT JOIN ProblemTags
-        WHERE name ~ ? AND tag IS NULL""")
+        WHERE name = ? AND tag IS NULL""")
 
     for (line <- f.getLines if !line.startsWith("#")) {
-      val Array(n, d, k, e, l, q) = line.split(":")
-      val lp = f"${100 * l.toDouble}%.0f"
-      val lq = f"${100 * q.toDouble}%.0f"
-      println(s"mdd-$n-$d-$k-$e-$l-$q")
-      for (s <- 0 until 25) {
-        setP.execute((s"mdd-$n-$d-$k-$e-$lp-$lq-$s",
-          n.toInt, e.toInt, s"mdd-$n-$d-$k-$e-$l-$q-$s"))
-      }
+      for (sp <- 0 until 25) {
+        val (n, d, k, e, l, q, s) = RandomMDD.params(s"$line:$sp")
+        val lp = f"${100 * l}%.0f"
+        val lq = f"${100 * q}%.0f"
+        val name = RandomMDD.description(List(s"$line:$sp"))
+        val display = s"mdd-$n-$d-$k-$e-$lp-$lq-$s"
+        println(name)
+        setP.execute((display, n, e, name))
 
-      tag.execute((s"mdd-$n-$d-$k-$e-$lp-$lq", s"^mdd-$n-$d-$k-$e-$l-$q-"))
+        tag.execute((s"mdd-$n-$d-$k-$e-$lp-$lq", name))
+      }
 
     }
 
+  }
+}
+
+object RenameMDD extends App {
+  SQLWriter.connection(new URI("postgresql://concrete:Wizcof25@raihmsvg")).withSession {
+
+    val r = sql"""SELECT problemId, name FROM Problems WHERE name ~ '^mdd-'""".as[(Int, String)]
+
+    val setN = Q.update[(String, Int)]("""UPDATE Problems SET name = ? WHERE problemId = ?""")
+
+    for (list <- r) {
+      val (id, name) = list
+      val newName = RandomMDD.description(List(name.split("-").tail.mkString(":")))
+      println(newName)
+      setN.execute((newName, id))
+    }
+
+    //    val setP = Q.update[(String, Int, Int, String)]("""UPDATE Problems
+    //      SET display =?, nbVars=?, nbCons =?
+    //      WHERE name =?""")
+    //
+    //    val tag = Q.update[(String, String)]("""
+    //        INSERT INTO ProblemTags 
+    //        SELECT ?, problemId 
+    //        FROM Problems NATURAL LEFT JOIN ProblemTags
+    //        WHERE name ~ ? AND tag IS NULL""")
+    //
+    //    for (line <- f.getLines if !line.startsWith("#")) {
+    //      val Array(n, d, k, e, l, q) = line.split(":")
+    //      val lp = f"${100 * l.toDouble}%.0f"
+    //      val lq = f"${100 * q.toDouble}%.0f"
+    //      println(s"mdd-$n-$d-$k-$e-$l-$q")
+    //      for (s <- 0 until 25) {
+    //        setP.execute((s"mdd-$n-$d-$k-$e-$lp-$lq-$s",
+    //          n.toInt, e.toInt, s"mdd-$n-$d-$k-$e-$l-$q-$s"))
+    //      }
+    //
+    //      tag.execute((s"mdd-$n-$d-$k-$e-$lp-$lq", s"^mdd-$n-$d-$k-$e-$l-$q-"))
+    //
+    //    }
+    //
   }
 }
