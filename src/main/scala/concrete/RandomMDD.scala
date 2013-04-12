@@ -30,12 +30,12 @@ import cspom.extension.LazyMDD
 object RandomMDD extends Concrete with App {
 
   def apply(d: Int, k: Int, l: Double, q: Double, rand: Random) = {
-    val existing = Array.fill(k + 1)(new ArrayBuffer[MDD]())
+    val existing = Array.fill(k + 1)(new HashMap[MDD, MDD]())
     generate(d, k, l, q, existing, rand)
   }
 
   def generate(d: Int, k: Int, l: Double, q: Double,
-    existing: Array[ArrayBuffer[MDD]], rand: Random): MDD = {
+    existing: Array[HashMap[MDD, MDD]], rand: Random): MDD = {
     if (k == 0) {
       if (rand.nextDouble < l) {
         MDDLeaf
@@ -43,7 +43,7 @@ object RandomMDD extends Concrete with App {
         EmptyMDD
       }
     } else if (existing(k).nonEmpty && rand.nextDouble < q) {
-      existing(k)(rand.nextInt(existing(k).size))
+      existing(k).keysIterator.drop(rand.nextInt(existing(k).size)).next
     } else {
       val t = (0 until d).iterator.
         map(i => i -> generate(d, k - 1, l, q, existing, rand)).
@@ -55,8 +55,8 @@ object RandomMDD extends Concrete with App {
         } else {
           new MDDNode(t.toMap)
         }
-      existing(k) += r
-      r
+
+      existing(k).getOrElseUpdate(r, r)
     }
   }
 
@@ -134,7 +134,7 @@ object TestMDD extends App {
   for (seed <- 0 until iterations.toInt) {
     print(s"$seed : ")
     val rand = new Random(seed)
-    val m = RandomMDD(d, k, l, q, rand).reduce
+    val m = RandomMDD(d, k, l, q, rand)
     lambda ::= m.lambda
     nu ::= m.edges.toLong
     println(s"${m.lambda} tuples in ${m.edges} edges")
