@@ -139,8 +139,14 @@ object TestMDD extends App {
     nu ::= m.edges.toLong
     println(s"${m.lambda} tuples in ${m.edges} edges")
   }
-  println(StatisticsManager.average(lambda))
-  println(StatisticsManager.average(nu))
+  val lambdaAvg = StatisticsManager.average(lambda)
+  val lambdaStDev = StatisticsManager.stDev(lambda)
+
+  val nuAvg = StatisticsManager.average(nu)
+  val nuStDev = StatisticsManager.stDev(nu)
+
+  println(s"$lambdaAvg - $lambdaStDev - ${lambdaAvg + 2.3 * lambdaStDev}")
+  println(s"$nuAvg - $nuStDev - ${nuAvg + 2.3 * nuStDev}")
 }
 
 object NameMDD extends App {

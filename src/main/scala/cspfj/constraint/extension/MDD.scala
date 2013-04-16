@@ -580,19 +580,19 @@ final class MDDn(
       MDDLeaf
     } else {
       val v = tuple(i)
-      val newTrie = trie.padTo(v + 1, MDD0)
-      val (newInd, newLength) =
-        if (newTrie(v) eq MDD0) {
-          val ni = indices.padTo(indices.length + 1, 0)
-          ni(indices.length) = ni(nbIndices)
-          ni(nbIndices) = v
-          (ni, nbIndices + 1)
-        } else {
-          (indices, nbIndices)
-        }
-      newTrie(v) = newTrie(v).addTrie(tuple, i + 1)
+      val newTrie = trie.padTo(v + 1, null)
 
-      new MDDn(newTrie, newInd, newLength)
+      if ((newTrie(v) eq null) || (newTrie(v) eq MDD0)) {
+        val ni = indices.padTo(nbIndices + 1, 0)
+        ni(nbIndices) = v
+        (ni, nbIndices + 1)
+        newTrie(v) = MDD0.addTrie(tuple, i + 1)
+        new MDDn(newTrie, ni, nbIndices + 1)
+      } else {
+        newTrie(v) = newTrie(v).addTrie(tuple, i + 1)
+        new MDDn(newTrie, indices, nbIndices)
+      }
+
     }
   }
 
@@ -603,8 +603,10 @@ final class MDDn(
   }
 
   //@tailrec
-  def contains(tuple: Array[Int], i: Int): Boolean =
-    tuple(i) < trie.length && trie(tuple(i)).contains(tuple, i + 1)
+  def contains(tuple: Array[Int], i: Int): Boolean = {
+    val v = tuple(i)
+    v < trie.length && (trie(v) ne null) && trie(v).contains(tuple, i + 1)
+  }
 
   def find(ts: Int, f: (Int, Int) => Boolean, depth: Int): Option[List[Int]] = {
     if (timestamp == ts) {

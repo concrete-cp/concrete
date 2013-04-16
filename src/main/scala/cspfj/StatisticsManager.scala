@@ -78,12 +78,14 @@ object StatisticsManager {
     n.toDouble(sum) / count
   }
 
-  def stDev[A](s: Seq[A])(implicit n: Numeric[A]): Double = {
+  def variance[A](s: Seq[A])(implicit n: Numeric[A]): Double = {
     val avg = average(s)
     val sumSq = s map (v => math.pow(n.toDouble(v) - avg, 2)) sum
 
-    math.sqrt(sumSq / (s.size - 1))
+    sumSq / (s.size - 1)
   }
+
+  def stDev[A](s: Seq[A])(implicit n: Numeric[A]): Double = math.sqrt(variance(s))
 
   @tailrec
   def findKMedian[A](arr: Seq[A], k: Int, o: Ordering[A]): A = {
