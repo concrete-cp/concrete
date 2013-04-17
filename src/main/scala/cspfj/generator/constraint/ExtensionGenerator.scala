@@ -77,17 +77,13 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
           case 1 =>
 
             val (v, t) = trie.head
-
-            val i = domain.index(v)
-            new MDD1(cspomMDDtoCspfjMDD(tail, t, map), v)
+            new MDD1(cspomMDDtoCspfjMDD(tail, t, map), domain.index(v))
 
           case 2 =>
             val List((v1, t1), (v2, t2)) = trie.toList
-            val i1 = domain.index(v1)
-            val i2 = domain.index(v2)
             new MDD2(
-              cspomMDDtoCspfjMDD(tail, t1, map), v1,
-              cspomMDDtoCspfjMDD(tail, t2, map), v2)
+              cspomMDDtoCspfjMDD(tail, t1, map), domain.index(v1),
+              cspomMDDtoCspfjMDD(tail, t2, map), domain.index(v2))
 
           case s: Int =>
             val m = trie.map(l => domain.index(l._1)).max

@@ -87,9 +87,8 @@ object Table extends App {
         WHERE configId IN (#${nature.mkString(", ")}) 
         """.as[Config].list
 
-      for (c <- configs) print(" & " + c.display)
-      println("\\\\")
-      println("\\midrule")
+      for (c <- configs) print("\t" + c.display)
+      println()
 
       val cIds = configs map (_.configId) mkString (", ")
 
@@ -138,7 +137,7 @@ object Table extends App {
                             """
 
           case "time" => sql"""
-                                SELECT configId, solution, totalTime
+                                SELECT configId, solution, case when totalTime > 1150 then 'inf' else totalTime end
                                 FROM Times
                                 WHERE (version, problemId) = ($version, $problemId)
                             """
@@ -158,6 +157,12 @@ object Table extends App {
                                   cast(stat('solver.nbAssignments', executionId) as real)/(cast(stat('solver.searchCpu', executionId) as real) + cast(stat('solver.preproCpu', executionId) as real))
                                 FROM Executions
                                 WHERE (version, problemId) = ($version, $problemId)"""
+          case "rps" => sql"""
+                                SELECT configId, solution, 
+                                  cast(stat('filter.revisions', executionId) as real)/(cast(stat('solver.searchCpu', executionId) as real) + cast(stat('solver.preproCpu', executionId) as real))
+                                FROM Executions
+                                WHERE (version, problemId) = ($version, $problemId)"""
+
         }
 
         val results = sqlQuery.as[(Int, String, Option[Double])].list.map {
@@ -227,7 +232,7 @@ object Table extends App {
         println(tabular(data.toSeq))
       }
 
-      println("\\midrule")
+     // println("\\midrule")
 
       //    for ((k, t) <- totals.toList.sortBy(_._1)) {
       //      println(k + " : " + configs.indices.map { i =>
@@ -261,28 +266,28 @@ object Table extends App {
           //              })
         }.mkString(",")) // + " \\\\")
       }
-      println("\\midrule")
+      //println("\\midrule")
 
-      for ((k, counts) <- nbSolved.toList.sortBy(_._1)) {
-        val best = counts.max
-
-        println(s"\\em $k & " + counts.map {
-          i => if (i == best) s"\\bf $i" else s"$i"
-        }.mkString(" & ") + " \\\\")
-      }
+//      for ((k, counts) <- nbSolved.toList.sortBy(_._1)) {
+//        val best = counts.max
+//
+//        println(s"\\em $k & " + counts.map {
+//          i => if (i == best) s"\\bf $i" else s"$i"
+//        }.mkString(" & ") + " \\\\")
+//      }
 
       //    println(d.zipWithIndex map { case (r, i) => configs(i) + " " + r.mkString(" ") } mkString ("\n"))
       //    println()
 
-      val labels = configs.map(_.toString).toIndexedSeq
-
-      toGML(d, labels)
-
-      val s = schulze(winnerTakesAll(d))
-
-      println(rank(s, s.indices).toList.sortBy(_._1) map {
-        case (r, c) => "%d: %s".format(r, c.map(labels).mkString(" "))
-      } mkString ("\n"))
+//      val labels = configs.map(_.toString).toIndexedSeq
+//
+//      toGML(d, labels)
+//
+//      val s = schulze(winnerTakesAll(d))
+//
+//      println(rank(s, s.indices).toList.sortBy(_._1) map {
+//        case (r, c) => "%d: %s".format(r, c.map(labels).mkString(" "))
+//      } mkString ("\n"))
     }
 
   def solved(solution: String) = solution != null && ("UNSAT" == solution || """^[0-9\s]*$""".r.findFirstIn(solution).isDefined)
