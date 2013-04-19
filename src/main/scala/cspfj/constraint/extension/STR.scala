@@ -92,6 +92,7 @@ final class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
   //  }
 
   override def size = bound
+  def lambda = bound
 }
 
 final class MutableList(size: Int) extends Traversable[Int] {

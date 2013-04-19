@@ -56,7 +56,9 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
         case "MDD" => relation match {
           case mdd: cspom.extension.MDD => cspomMDDtoCspfjMDD(domains, mdd, new HashMap())
           case mdd: cspom.extension.LazyMDD => cspomMDDtoCspfjMDD(domains, mdd.apply, new HashMap())
-          case r => MDD(value2Index(domains, r))
+          case r =>
+            val m = MDD(value2Index(domains, r))
+            m
         }
         case "STR" => new STR() ++ value2Index(domains, relation).toIterable
       }, init)

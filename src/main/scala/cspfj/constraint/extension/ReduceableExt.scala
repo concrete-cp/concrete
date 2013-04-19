@@ -38,7 +38,8 @@ final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
   extends Constraint(_scope) with Loggable with Removals with Backtrackable[Relation] {
 
   var trie = _tts
-  
+
+  println("sizesR " + arity + " " + trie.lambda + " " + trie.edges)
   //println(trie.edges)
 
   private val unsupported = scope map (p => BitVector.newBitVector(p.dom.maxSize))

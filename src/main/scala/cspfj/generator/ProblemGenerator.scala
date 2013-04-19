@@ -44,17 +44,19 @@ object ProblemGenerator {
     }
 
     processQueue(Queue.empty ++ cspom.constraints)
-    
+
     for (v <- problem.variables if v.constraints.isEmpty) {
       problem.removeVariable(v)
     }
-    
+
     problem;
   }
 
   def generateVariables(problem: Problem, cspom: CSPOM) {
     for (v <- cspom.variables) {
-      problem.addVariable(v.name, generateDomain(v.domain));
+      val d = generateDomain(v.domain)
+      println("sizeD " + d.size)
+      problem.addVariable(v.name, d);
     }
   }
 

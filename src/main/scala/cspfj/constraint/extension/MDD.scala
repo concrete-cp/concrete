@@ -130,6 +130,26 @@ trait MDD extends Relation with Identified {
 
   def -(t: Array[Int]) = throw new UnsupportedOperationException
 
+  def lambda: BigInt = {
+    lambda(new HashMap(), this)
+  }
+
+  def lambda(map: HashMap[MDD, BigInt], mdd: MDD): BigInt = {
+    if (this eq MDDLeaf) {
+      BigInt(1)
+    } else {
+      map.getOrElseUpdate(this, {
+        var l = BigInt(0)
+        forSubtries {
+          case (_, m) =>
+            l += m.lambda(map, m)
+            true
+        }
+        l
+      })
+    }
+  }
+
   def forSubtries(f: (Int, MDD) => Boolean)
   override def size = {
     var s = 0
@@ -293,7 +313,7 @@ final class MDD1(private val child: MDD, private val index: Int) extends MDD {
     }
   }
 
-  override def hashCode: Int = 31 * index + child.hashCode
+  override val hashCode: Int = 31 * index + child.hashCode
 
   override def equals(o: Any): Boolean = o match {
     case t: MDD1 => t.index == index && (t.child eq child)
@@ -510,7 +530,7 @@ final class MDD2(
     mdds.getOrElseUpdate(nT, new MDD2(bL, leftI, bR, rightI))
   }
 
-  override def hashCode: Int = List(left, leftI, right, rightI).hashCode
+  override val hashCode: Int = List(left, leftI, right, rightI).hashCode
 
   override def equals(o: Any): Boolean = o match {
     case t: MDD2 => (left eq t.left) && (right eq t.right) && (leftI == t.leftI) && (rightI == t.rightI)

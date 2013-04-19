@@ -16,12 +16,14 @@ object XCSPConcrete extends Concrete with App {
     val List(fileName) = args
     val file = new URL(fileName)
     cProblem = Some(CSPOM.load(file))
-    (for (cp <- cProblem) yield {
+
+    cProblem.map { cp =>
       ProblemCompiler.compile(cp)
       val problem = ProblemGenerator.generate(cp)
       //cp.closeRelations
+      sys.exit()
       problem
-    }).get
+    }.get
 
   }
 
