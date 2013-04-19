@@ -39,8 +39,7 @@ final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
 
   var trie = _tts
 
-  println("sizesR " + arity + " " + trie.lambda + " " + trie.edges)
-  //println(trie.edges)
+  //println("sizesR " + arity + " " + trie.lambda + " " + trie.edges)
 
   private val unsupported = scope map (p => BitVector.newBitVector(p.dom.maxSize))
 

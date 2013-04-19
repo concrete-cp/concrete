@@ -19,10 +19,7 @@ object XCSPConcrete extends Concrete with App {
 
     cProblem.map { cp =>
       ProblemCompiler.compile(cp)
-      val problem = ProblemGenerator.generate(cp)
-      //cp.closeRelations
-      sys.exit()
-      problem
+      ProblemGenerator.generate(cp)
     }.get
 
   }

@@ -290,7 +290,7 @@ object Table extends App {
 //      } mkString ("\n"))
     }
 
-  def solved(solution: String) = solution != null && ("UNSAT" == solution || """^[0-9\s]*$""".r.findFirstIn(solution).isDefined)
+  def solved(solution: String) = solution != null && ("UNSAT" == solution || """^[0-9\s]*$""".r.findFirstIn(solution).isDefined || "^Map".r.findFirstIn(solution).isDefined)
 
   @tailrec
   def rank[B <% Ordered[B]](p: IndexedSeq[Array[B]], candidates: Seq[Int],
