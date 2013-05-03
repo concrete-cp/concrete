@@ -13,6 +13,7 @@ import cspom.compiler.ProblemCompiler
 import cspfj.generator.ProblemGenerator
 import cspom.CSPOM
 import cspfj.Problem
+import cspfj.Parameter
 
 trait Concrete {
 
@@ -48,7 +49,21 @@ trait Concrete {
     case u :: tail => options(tail, o, u :: unknown)
   }
 
-  def load(args: List[String]): Problem
+  var _cProblem: Option[CSPOM] = None
+
+  def cProblem = _cProblem.get
+
+  def load(args: List[String]): Problem = {
+    val cspom = loadCSPOM(args)
+    if (Concrete.compile) {
+      ProblemCompiler.compile(cspom)
+    }
+    _cProblem = Some(cspom)
+    ProblemGenerator.generate(cspom)
+  }
+
+  def loadCSPOM(args: List[String]): CSPOM = ???
+
   def description(args: List[String]): String
 
   @Statistic
@@ -126,4 +141,9 @@ trait Concrete {
   def output(solution: Map[String, Int]): String
   def control(solution: Map[String, Int]): Option[String]
 
+}
+
+object Concrete {
+  @Parameter("concrete.compile")
+  val compile = true
 }

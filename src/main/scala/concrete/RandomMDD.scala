@@ -26,6 +26,7 @@ import cspom.extension.MDDLeaf
 import cspom.extension.MDDNode
 import cspom.extension.MDD
 import cspom.extension.LazyMDD
+import CSPOM._
 
 object RandomMDD extends Concrete with App {
 
@@ -60,28 +61,22 @@ object RandomMDD extends Concrete with App {
     }
   }
 
-  var cProblem: Option[CSPOM] = None
-
-  def load(args: List[String]) = {
+  override def loadCSPOM(args: List[String]) = {
 
     val (n, d, k, e, l, q, s) = params(args(0))
 
     val rand = new Random(s)
 
-    val cp = new CSPOM()
-    val vars = List.fill(n)(cp.interVar(0, d - 1))
+    CSPOM {
+      val vars = List.fill(n)(interVar(0, d - 1))
 
-    val r = new CoarseProportionRandomListGenerator(n, k, s);
+      val r = new CoarseProportionRandomListGenerator(n, k, s);
 
-    for (scope <- r.selectTuples(e, Structure.UNSTRUCTURED, false, false)) {
-      val mdd = new LazyMDD(Unit => RandomMDD.apply(d, k, l, q, rand))
-      cp.addConstraint(new ExtensionConstraint(mdd, false, scope map vars))
+      for (scope <- r.selectTuples(e, Structure.UNSTRUCTURED, false, false)) {
+        val mdd = new LazyMDD(Unit => RandomMDD.apply(d, k, l, q, rand))
+        ctr(mdd, false, scope map vars: _*)
+      }
     }
-
-    cProblem = Some(cp)
-    val problem = ProblemGenerator.generate(cp)
-    //cp.closeRelations()
-    problem
   }
 
   def description(args: List[String]) = {
@@ -90,12 +85,12 @@ object RandomMDD extends Concrete with App {
   }
 
   def output(solution: Map[String, Int]) = {
-    cProblem.get.variables.filter(!_.auxiliary).map(v =>
+    cProblem.variables.filter(!_.auxiliary).map(v =>
       solution.getOrElse(v.name, v.domain.values.head)).mkString(" ")
   }
 
   def control(solution: Map[String, Int]) = {
-    cProblem.get.controlInt(solution) match {
+    cProblem.controlInt(solution) match {
       case s: Set[_] if s.isEmpty => None
       case s: Set[_] => Some(s.mkString(", "))
     }

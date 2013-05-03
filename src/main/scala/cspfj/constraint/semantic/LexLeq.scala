@@ -101,7 +101,7 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
 
   private def removeLt(value: Int, v: Variable) = {
     val dom = v.dom;
-    val ub = dom.closestLeq(value)
+    val ub = dom.closestLt(value)
     ub >= 0 && dom.removeTo(ub)
   }
 
@@ -113,27 +113,27 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
 
   private def removeLeq(value: Int, v: Variable) = {
     val dom = v.dom;
-    val ub = dom.closestLt(value)
+    val ub = dom.closestLeq(value)
     ub >= 0 && dom.removeTo(ub)
   }
 
-  private def min(v: Variable) = v.dom.firstValue;
+  private def min(v: Variable) = v.dom.firstValue
 
   private def max(v: Variable) = v.dom.lastValue
 
   private def acLt(i: Int) {
-    if (removeLt(min(x(i)), y(i))) {
-      change ::= i + size
-    }
-    if (removeGt(max(y(i)), x(i))) {
-      change ::= i
-    }
-  }
-  private def acLeq(i: Int) {
     if (removeLeq(min(x(i)), y(i))) {
       change ::= i + size
     }
     if (removeGeq(max(y(i)), x(i))) {
+      change ::= i
+    }
+  }
+  private def acLeq(i: Int) {
+    if (removeLt(min(x(i)), y(i))) {
+      change ::= i + size
+    }
+    if (removeGt(max(y(i)), x(i))) {
       change ::= i
     }
   }

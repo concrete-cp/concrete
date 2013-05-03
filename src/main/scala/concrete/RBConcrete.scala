@@ -14,20 +14,15 @@ import Database.threadLocalSession
 
 object RBConcrete extends Concrete with App {
 
-  var cProblem: Option[CSPOM] = None
-
-  def load(args: List[String]) = {
+  override def loadCSPOM(args: List[String]) = {
     val Array(nbVariables, domainSize, arity, nbConstraints,
       tightness, seed) = args(0).split(":")
 
-    val cp = new RBGenerator(nbVariables.toInt, domainSize.toInt, arity.toInt,
+    new RBGenerator(nbVariables.toInt, domainSize.toInt, arity.toInt,
       nbConstraints.toInt, Tightness.PROPORTION, tightness.toDouble, seed.toInt,
       Structure.UNSTRUCTURED,
       Structure.UNSTRUCTURED, false, false).generate()
-    cProblem = Some(cp)
-    val problem = ProblemGenerator.generate(cp)
-    //cp.closeRelations
-    problem
+
   }
 
   def description(args: List[String]) = {
@@ -35,12 +30,12 @@ object RBConcrete extends Concrete with App {
   }
 
   def output(solution: Map[String, Int]) = {
-    cProblem.get.variables.filter(!_.auxiliary).map(v =>
+    cProblem.variables.filter(!_.auxiliary).map(v =>
       solution.getOrElse(v.name, v.domain.values.head)).mkString(" ")
   }
 
   def control(solution: Map[String, Int]) = {
-    cProblem.get.controlInt(solution) match {
+    cProblem.controlInt(solution) match {
       case s: Set[_] if s.isEmpty => None
       case s: Set[_] => Some(s.mkString(", "))
     }

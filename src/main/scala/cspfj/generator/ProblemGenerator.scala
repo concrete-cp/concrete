@@ -8,8 +8,9 @@ import cspom.CSPOM
 import scala.annotation.tailrec
 import scala.collection.immutable.Queue
 import cspom.variable.IntInterval
+import cspfj.util.Loggable
 
-object ProblemGenerator {
+object ProblemGenerator extends Loggable {
   @throws(classOf[FailedGenerationException])
   def generate(cspom: CSPOM) = {
 
@@ -55,7 +56,7 @@ object ProblemGenerator {
   def generateVariables(problem: Problem, cspom: CSPOM) {
     for (v <- cspom.variables) {
       val d = generateDomain(v.domain)
-      println("sizeD " + d.size)
+      logger.fine("sizeD " + d.size)
       problem.addVariable(v.name, d);
     }
   }
