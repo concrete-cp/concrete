@@ -55,14 +55,13 @@ object ProblemGenerator extends Loggable {
 
   def generateVariables(problem: Problem, cspom: CSPOM) {
     for (v <- cspom.variables) {
-      val d = generateDomain(v.domain)
+      val d = generateDomain(v.domainOption)
       logger.fine("sizeD " + d.size)
       problem.addVariable(v.name, d);
     }
   }
 
-  def generateDomain[T](cspomDomain: CSPOMDomain[T]): Domain = cspomDomain match {
-    case null => null
+  def generateDomain[T](cspomDomain: Option[CSPOMDomain[T]]): Domain = cspomDomain map {
     case bD: BooleanDomain =>
       if (bD.isConstant) new cspfj.BooleanDomain(bD.getBoolean)
       else new cspfj.BooleanDomain();
@@ -72,5 +71,5 @@ object ProblemGenerator extends Loggable {
     case ext: CSPOMDomain[Int] => IntDomain(ext.values: _*)
 
     case _ => throw new UnsupportedOperationException
-  }
+  } getOrElse(null)
 }

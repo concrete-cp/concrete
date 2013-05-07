@@ -163,7 +163,7 @@ final class SolvingTest extends Loggable {
     ProblemCompiler.compile(cspomProblem);
 
     
-    val solver = Solver.factory(cspomProblem);
+    val solver = Solver(cspomProblem);
 
     solver.nextSolution() match {
       case SAT(sol: Map[String, Int]) =>
@@ -182,7 +182,7 @@ final class SolvingTest extends Loggable {
 
     println(cspomProblem)
 
-    val solver = Solver.factory(cspomProblem);
+    val solver = Solver(cspomProblem);
     var count = 0
     for (solution <- new SolverIterator(solver)) {
       count += 1

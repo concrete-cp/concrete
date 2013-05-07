@@ -102,7 +102,7 @@ trait Concrete {
     try {
 
       val (problem, lT) = StatisticsManager.time(load(remaining))
-      val solver = Solver.factory(problem)
+      val solver = Solver(problem)
 
       loadTime = lT
 

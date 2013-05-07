@@ -74,7 +74,7 @@ object RandomMDD extends Concrete with App {
 
       for (scope <- r.selectTuples(e, Structure.UNSTRUCTURED, false, false)) {
         val mdd = new LazyMDD(Unit => RandomMDD.apply(d, k, l, q, rand))
-        ctr(mdd, false, scope map vars: _*)
+        ctr(mdd, false)(scope map vars: _*)
       }
     }
   }

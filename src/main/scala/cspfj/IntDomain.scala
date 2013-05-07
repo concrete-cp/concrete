@@ -33,7 +33,7 @@ final class IntDomain(
 
   var size = intSet.size
 
-  def save() = intSet.copy
+  def save = intSet.copy
 
   def restore(data: IntSet) {
     intSet = data

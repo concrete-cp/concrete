@@ -148,7 +148,7 @@ final class ACVSolvingTest extends Loggable {
     val cspomProblem = CSPOM.load(getClass.getResource(name));
     ProblemCompiler.compile(cspomProblem);
 
-    val solver = Solver.factory(cspomProblem);
+    val solver = Solver(cspomProblem);
 
     val sol = new SolverIterator(solver).toStream.headOption
 
@@ -166,7 +166,7 @@ final class ACVSolvingTest extends Loggable {
 
     // System.out.println(problem);
 
-    val solver = Solver.factory(cspomProblem);
+    val solver = Solver(cspomProblem);
     var count = 0
     for (solution <- new SolverIterator(solver)) {
       count += 1

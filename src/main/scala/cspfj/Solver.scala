@@ -47,12 +47,12 @@ object Solver {
 
   ParameterManager.register(this)
 
-  def factory(problem: Problem): Solver = {
+  def apply(problem: Problem): Solver = {
     val solver = solverClass.getConstructor(classOf[Problem]).newInstance(problem);
     solver;
   }
 
-  def factory(cspom: CSPOM): Solver = factory(ProblemGenerator.generate(cspom))
+  def apply(cspom: CSPOM): Solver = apply(ProblemGenerator.generate(cspom))
 }
 
 abstract class Solver(val problem: Problem) extends Loggable {
