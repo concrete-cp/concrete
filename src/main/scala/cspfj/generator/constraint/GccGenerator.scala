@@ -12,13 +12,13 @@ final class GccGenerator(problem: Problem) extends AbstractGenerator(problem) {
     if (scope exists (_.dom == null)) {
       false
     } else {
-      val params = constraint.predicate.parameters.get.split(", +");
+      val bounds = constraint.predicate.parameters match {
+        case Some(p: Seq[(Int, Int, Int)]) => p.map(i => Bounds(i._1, i._2, i._3)).toArray
+        case Some(p: Array[(Int, Int, Int)]) => p.map(i => Bounds(i._1, i._2, i._3))
+        case p: Any => throw new IllegalArgumentException(s"GCC constraints requires to be parameterized with a sequence of triples, found $p")
+      }
 
-      require(params.size % 3 == 0, "3 parameters per value");
-
-      val bounds = params.grouped(3) map (p => new Bounds(p(0).toInt, p(1).toInt, p(2).toInt))
-
-      addConstraint(new Gcc(scope.toArray, bounds.toArray));
+      addConstraint(new Gcc(scope.toArray, bounds));
       true;
     }
 

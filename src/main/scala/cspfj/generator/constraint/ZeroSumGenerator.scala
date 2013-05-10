@@ -22,13 +22,13 @@ final class ZeroSumGenerator(problem: Problem) extends AbstractGenerator(problem
     if (solverVariables exists { _.dom == null }) {
       false
     } else {
-      val params = constraint.predicate.parameters map {
-        p => p.split(", *").map(_.toInt)
-      } getOrElse {
-        Array.fill(solverVariables.length)(1)
+      val params = constraint.predicate.parameters match {
+        case Some(p: Seq[Int]) => p.toArray
+        case None => Array.fill(solverVariables.length)(1)
+        case _ => throw new IllegalArgumentException("Parameters for zero sum must be a sequence of integer values")
       }
-      //addConstraint(new ZeroSum(params, solverVariables));
-      addConstraint(new ReduceableExt(solverVariables, zeroSum(solverVariables.toList, params.toList)))
+      addConstraint(new ZeroSum(params, solverVariables));
+      //addConstraint(new ReduceableExt(solverVariables, zeroSum(solverVariables.toList, params.toList)))
       true;
     }
   }
@@ -44,12 +44,12 @@ final class ZeroSumGenerator(problem: Problem) extends AbstractGenerator(problem
 
   def zeroSum(variables: List[Variable], factors: List[Int]): MDD = {
     val domains = variables.map(_.dom.values.toSeq)
-    zeroSum(domains, factors, sum(domains, factors, _.min), sum(domains, factors, _.max))
+    zeroSum(variables, factors, sum(domains, factors, _.min), sum(domains, factors, _.max))
   }
 
-  def zeroSum(domains: List[Seq[Int]], factors: List[Int], min: Int, max: Int, currentSum: Int = 0,
+  def zeroSum(variables: List[Variable], factors: List[Int], min: Int, max: Int, currentSum: Int = 0,
     nodes: HashMap[(Int, Int), MDD] = new HashMap()): MDD = {
-    if (domains.isEmpty) {
+    if (variables.isEmpty) {
       require(currentSum == min && currentSum == max)
       if (currentSum == 0) {
         MDDLeaf
@@ -61,15 +61,18 @@ final class ZeroSumGenerator(problem: Problem) extends AbstractGenerator(problem
     } else if (max < 0) {
       MDD0
     } else {
-      nodes.getOrElseUpdate((domains.size, currentSum), {
-        val head :: tail = domains
+      nodes.getOrElseUpdate((variables.size, currentSum), {
+        val head :: tail = variables
         val hf :: tf = factors
-        val newMin = min - head.min * hf
-        val newMax = max - head.max * hf
-        val trie = head.iterator.
-          map(i => i -> zeroSum(tail, tf, newMin + i * hf, newMax + i * hf, currentSum + i * hf, nodes)).
-          filter(_._2.nonEmpty).
-          toSeq
+        val newMin = min - head.dom.firstValue * hf
+        val newMax = max - head.dom.lastValue * hf
+        val trie = head.indices.
+          map { i =>
+            val v = head.dom.value(i)
+            i -> zeroSum(tail, tf, newMin + v * hf, newMax + v * hf, currentSum + v * hf, nodes)
+          } filter {
+            _._2.nonEmpty
+          } toSeq
 
         if (trie.isEmpty) {
           MDD0

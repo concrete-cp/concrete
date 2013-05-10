@@ -55,9 +55,8 @@ object ProblemGenerator extends Loggable {
 
   def generateVariables(problem: Problem, cspom: CSPOM) {
     for (v <- cspom.variables) {
-      val d = generateDomain(v.domainOption)
-      logger.fine("sizeD " + d.size)
-      problem.addVariable(v.name, d);
+      logger.fine("sizeD " + v.domainOption.map(_.size).getOrElse("?"))
+      problem.addVariable(v.name, generateDomain(v.domainOption));
     }
   }
 
@@ -71,5 +70,5 @@ object ProblemGenerator extends Loggable {
     case ext: CSPOMDomain[Int] => IntDomain(ext.values: _*)
 
     case _ => throw new UnsupportedOperationException
-  } getOrElse(null)
+  } getOrElse (null)
 }
