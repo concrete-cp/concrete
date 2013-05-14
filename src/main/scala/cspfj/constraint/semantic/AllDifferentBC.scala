@@ -10,7 +10,6 @@ import cspfj.UNSATException
 import cspfj.constraint.Removals
 import cspfj.util.Backtrackable
 import scala.collection.immutable.Queue
-import cspfj.util.UOList
 import cspfj.Domain
 import cspfj.util.IntSet
 import cspfj.AdviseCount

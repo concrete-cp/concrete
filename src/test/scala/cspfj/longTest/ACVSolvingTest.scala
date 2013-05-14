@@ -26,7 +26,7 @@ final class ACVSolvingTest extends Loggable {
   def before() {
     //Solver.loggerLevel = "INFO"
     ParameterManager("mac.filter") = classOf[ACV]
-
+    ParameterManager("closeRelations") = false
   }
 
   @After

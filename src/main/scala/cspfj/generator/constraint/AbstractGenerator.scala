@@ -33,10 +33,10 @@ abstract class AbstractGenerator(val problem: Problem) {
 object AbstractGenerator {
   @throws(classOf[FailedGenerationException])
   def booleanDomain(variable: Variable) {
-    if (variable.dom == null) {
+    if (variable.dom.undefined) {
       variable.dom = new BooleanDomain();
     } else if (!(variable.dom.isInstanceOf[BooleanDomain])) {
-      throw new FailedGenerationException(variable + " must be boolean");
+      throw new FailedGenerationException(s"$variable  must be boolean");
     }
   }
 

@@ -24,7 +24,7 @@ final class IntervalSet(val domain: Interval) extends IntSet {
   def closestGeq(i: Int): Int =
     if (i > last) { -1 }
     else if (i < first) { first }
-    else i
+    else { i }
 
   def copy = this
 
@@ -58,8 +58,8 @@ final class IntervalSet(val domain: Interval) extends IntSet {
 
   def toString(id: Indexer) =
     if (domain.lb > domain.ub) { "[]" }
-    else if (domain.lb == domain.ub) { "[" + id.value(domain.lb) + "]" }
-    else { "[" + id.value(domain.lb) + ", " + id.value(domain.ub) + "]" }
+    else if (domain.lb == domain.ub) { s"[${id.value(domain.lb)}]" }
+    else { s"[${id.value(domain.lb)}, ${id.value(domain.ub)}]" }
 
   def subsetOf(d: IntSet) = d match {
     case d: BitVectorSet => (first to last).forall(d.present)

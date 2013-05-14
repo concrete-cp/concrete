@@ -23,8 +23,6 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Constrai
 
   def bound(v: Int) = _bounds2(v - offset)
 
-  require(scope.forall(v => v.dom.values.forall(i => bound(i) ne null)))
-
   val counts = Array.ofDim[Int](1 + scope.map(_.dom.values.max).max)
   val singles = Array.ofDim[Int](1 + scope.map(_.dom.values.max).max)
 
@@ -33,7 +31,7 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Constrai
     var counts: Map[Int, Int] = Map.empty.withDefaultValue(0)
     for (v <- t) {
       val c = counts(v)
-      if (c >= bound(v).maxCount) return false
+      if (c >= bound(v).maxCount) { return false }
       counts += v -> (c + 1)
     }
 

@@ -18,6 +18,9 @@ object ExtensionGenerator {
   @Parameter("relationStructure")
   var ds = "MDD"
 
+  @Parameter("closeRelations")
+  var closeRelations = true
+
   ParameterManager.register(this)
 
   val TIGHTNESS_LIMIT = 4;
@@ -119,13 +122,13 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
 
     if (extensionConstraint.relation.isEmpty) {
       (extensionConstraint.init == true) || (throw new UNSATException)
-    } else if (solverVariables exists (_.dom == null)) {
+    } else if (solverVariables.exists(_.dom.undefined)) {
       false
     } else {
       val matrix = generateMatrix(solverVariables, extensionConstraint.relation, extensionConstraint.init);
       val scope = solverVariables.toArray
       val constraint = matrix match {
-        case m: Matrix2D => new BinaryExt(scope, m, true)
+        case m: Matrix2D => BinaryExt(scope, m, true)
         case m: TupleTrieSet if (m.initialContent == false) => {
           ExtensionGenerator.consType match {
             case "MDDC" => {
@@ -148,9 +151,11 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
             }
           }
         }
-        case m => new ExtensionConstraintGeneral(m, true, scope)
+        case m: Matrix => new ExtensionConstraintGeneral(m, true, scope)
       }
-      extensionConstraint.closeRelation()
+      if (ExtensionGenerator.closeRelations) {
+        extensionConstraint.closeRelation()
+      }
       //println(extensionConstraint + " -> " + constraint);
       addConstraint(constraint)
 

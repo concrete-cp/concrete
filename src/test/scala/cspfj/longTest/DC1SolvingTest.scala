@@ -27,7 +27,7 @@ final class DC1SolvingTest extends Loggable {
     //Solver.loggerLevel = "INFO"
     ParameterManager("preprocessor") = classOf[DC1]
     ParameterManager("dc1.addConstraints") = LearnMethod.BIN;
-
+    ParameterManager("closeRelations") = false
   }
 
   @After

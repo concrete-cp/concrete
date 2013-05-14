@@ -211,5 +211,5 @@ final class IntDomain(
   //def allValues = domain
 
   override def toString = intSet.toString(indexer)
-
+  def undefined = false
 }

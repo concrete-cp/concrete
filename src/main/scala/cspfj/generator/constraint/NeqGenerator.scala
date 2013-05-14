@@ -19,7 +19,7 @@ final class NeqGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
     val scope = constraint.scope map cspom2cspfj
 
-    if (scope exists { _.dom == null }) {
+    if (scope exists { _.dom.undefined }) {
       false
     } else {
       addConstraint(new Neq(scope(0), scope(1)))
@@ -33,7 +33,7 @@ final class NeqGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
     val arguments = constraint.arguments map cspom2cspfj
 
-    if (arguments exists { _.dom == null }) {
+    if (arguments exists { _.dom.undefined }) {
       false
     } else {
 
@@ -41,7 +41,7 @@ final class NeqGenerator(problem: Problem) extends AbstractGenerator(problem) {
       AbstractGenerator.booleanDomain(result);
       addConstraint(new ReifiedConstraint(
         result,
-        new Neq (arguments(0), arguments(1)),
+        new Neq(arguments(0), arguments(1)),
         new Eq(arguments(0), arguments(1))))
       true
     }

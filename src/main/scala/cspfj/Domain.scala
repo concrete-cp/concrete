@@ -98,6 +98,8 @@ abstract class Domain {
     case _ => false
   }
 
+  override def hashCode = values.hashCode()
+
   /**
    * @param value
    * @return the index of the closest value strictly lower than the given value.
@@ -241,5 +243,6 @@ abstract class Domain {
   def intersects(bv: BitVector, part: Int): Boolean
   def bound: Boolean
   def intSet: IntSet
+  def undefined: Boolean
 
 }

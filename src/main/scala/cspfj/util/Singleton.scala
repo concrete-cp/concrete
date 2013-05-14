@@ -44,11 +44,11 @@ final class Singleton(val index: Int) extends IntSet {
 
   def removeTo(ub: Int) =
     if (ub < index) { this }
-    else EmptyIntSet
+    else { EmptyIntSet }
 
   def filter(f: Int => Boolean) =
     if (f(index)) { this }
-    else EmptyIntSet
+    else { EmptyIntSet }
 
   def toString(id: Indexer) = "[" + id.value(index) + "]"
 

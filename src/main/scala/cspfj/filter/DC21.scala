@@ -70,8 +70,8 @@ final class DC21(val problem: Problem) extends Filter with Loggable {
       val stream = Stream.continually(problem.variables.toStream).flatten
 
       @tailrec
-      def process(variable: Variable, remaining: Stream[Variable], mark: Variable): Boolean = {
-        if (mark == variable) {
+      def process(variable: Variable, remaining: Stream[Variable], mark: Option[Variable]): Boolean = {
+        if (mark == Some(variable)) {
           true
         } else {
           logger.info(variable.toString)
@@ -83,13 +83,13 @@ final class DC21(val problem: Problem) extends Filter with Loggable {
                 modVar(v.getId) = cnt;
               }
 
-              process(remaining.head, remaining.tail, variable)
+              process(remaining.head, remaining.tail, Some(variable))
             } else {
               false
             }
 
           } else {
-            process(remaining.head, remaining.tail, if (mark == null) variable else mark)
+            process(remaining.head, remaining.tail, mark.orElse(Some(variable)))
           }
         }
       }

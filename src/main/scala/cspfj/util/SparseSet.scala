@@ -28,7 +28,7 @@ class SparseSet(
     }
   }
 
-  // Members declared in scala.collection.GenSetLike 
+  // Members declared in scala.collection.GenSetLike
   def iterator: Iterator[Int] = new Iterator[Int] {
     var c = members - 1
     def hasNext = c >= 0
@@ -38,9 +38,9 @@ class SparseSet(
       v
     }
   }
-  
+
   override def size = members
-  
+
   // Members  declared in scala.collection.SetLike 
   def -(elem: Int): scala.collection.immutable.Set[Int] = ???
 

@@ -11,24 +11,25 @@ final class AbsGenerator(problem: Problem) extends AbstractGenerator(problem) {
   override def generateFunctional(constraint: FunctionalConstraint) = {
     val Seq(result, v0) = constraint.scope map cspom2cspfj
 
-    if (Seq(result, v0) filter (_.dom == null) match {
+    val g = Seq(result, v0) filter (_.dom.undefined) match {
       case Seq() => true
-      case Seq(v) if v == v0 => {
+      case Seq(`v0`) => {
         val values = result.dom.values.toSeq
-        v.dom = IntDomain(AbstractGenerator.makeDomain(values ++ values.map(-_)): _*);
+        v0.dom = IntDomain(AbstractGenerator.makeDomain(values ++ values.map(-_)): _*);
         true;
       }
-      case Seq(v) if v == result => {
-        v.dom = IntDomain(AbstractGenerator.makeDomain(v0.dom.values.map(math.abs).toSeq): _*);
+      case Seq(`result`) => {
+        result.dom = IntDomain(AbstractGenerator.makeDomain(v0.dom.values.map(math.abs).toSeq): _*);
         true;
       }
       case _ => false
-    }) {
-      addConstraint(new Abs(result, v0));
-      true
-    } else {
-      false
     }
+
+    if (g) {
+      addConstraint(new Abs(result, v0));
+    }
+
+    g
 
   }
 

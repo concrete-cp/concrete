@@ -22,7 +22,6 @@ package cspfj.constraint.semantic;
 import scala.annotation.tailrec
 import cspfj.constraint.Constraint
 import cspfj.util.BitVector
-import cspfj.util.UOList
 import cspfj.Variable
 import cspfj.AdviseCount
 import scala.collection.mutable.HashSet
@@ -36,8 +35,9 @@ trait AllDiffChecker extends Constraint {
     val union = BitVector.newBitVector(max - offset + 1)
 
     t.exists { v =>
-      if (union.get(v - offset)) true
-      else {
+      if (union.get(v - offset)) {
+        true
+      } else {
         union.set(v - offset)
         false
       }
@@ -50,17 +50,21 @@ final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) w
   var q: List[Int] = Nil
 
   @tailrec
-  private def filter(checkedVariable: Int, value: Int, i: Int = arity - 1, mod: UOList[Int] = UOList.empty): UOList[Int] = {
+  private def filter(checkedVariable: Int, value: Int, i: Int = arity - 1, mod: List[Int] = Nil): List[Int] = {
 
-    if (i < 0) mod
-    else if (i == checkedVariable) filter(checkedVariable, value, i - 1, mod)
-    else {
+    if (i < 0) {
+      mod
+    } else if (i == checkedVariable) {
+      filter(checkedVariable, value, i - 1, mod)
+    } else {
       val v = scope(i)
       val index = v.dom.index(value)
       if (index >= 0 && v.dom.present(index)) {
         v.dom.remove(index)
-        filter(checkedVariable, value, i - 1, mod + i)
-      } else filter(checkedVariable, value, i - 1, mod)
+        filter(checkedVariable, value, i - 1, i :: mod)
+      } else {
+        filter(checkedVariable, value, i - 1, mod)
+      }
 
     }
 
@@ -91,7 +95,9 @@ final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) w
       q = Nil
       lastAdvise = AdviseCount.count
     }
-    if (scope(p).dom.size > 1) -1 else {
+    if (scope(p).dom.size > 1) {
+      -1
+    } else {
       q ::= p
       arity
     }

@@ -3,6 +3,7 @@ package cspfj.generator.constraint;
 import cspfj.constraint.semantic.AbsDiff
 import cspfj.{ Variable, Problem, IntDomain }
 import cspom.constraint.CSPOMConstraint
+import cspfj.UndefinedDomain
 
 final class AbsDiffGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
@@ -11,27 +12,26 @@ final class AbsDiffGenerator(problem: Problem) extends AbstractGenerator(problem
 
     val Seq(result, v0, v1) = constraint.scope.map(cspom2cspfj)
 
-    if (Seq(result, v0, v1).count(_.dom == null) > 1) {
-      false
-    } else {
-      if (result.dom == null) {
-
+    val g = Seq(result, v0, v1).filter(_.dom.undefined) match {
+      case Seq() => true;
+      case Seq(`result`) =>
         val values = AbstractGenerator.domainFrom(v0, v1, (i, j) => math.abs(i - j))
-
-        result.dom = IntDomain(values: _*);
-
-      } else if (v0.dom == null) {
-
-        v0.dom = IntDomain(generateValues(result, v1): _*);
-
-      } else if (v1.dom == null) {
-
-        v1.dom = IntDomain(generateValues(result, v0): _*);
-
-      }
-      addConstraint(new AbsDiff(result, v0, v1));
-      true;
+        result.dom = IntDomain(values: _*)
+        true
+      case Seq(`v0`) =>
+        v0.dom = IntDomain(generateValues(result, v1): _*)
+        true
+      case Seq(`v1`) =>
+        v1.dom = IntDomain(generateValues(result, v0): _*)
+        true
+      case _ =>
+        false
     }
+
+    if (g) {
+      addConstraint(new AbsDiff(result, v0, v1));
+    }
+    g
 
   }
 

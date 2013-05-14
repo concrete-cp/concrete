@@ -47,8 +47,8 @@ abstract class ConflictCount(
 
   @tailrec
   private def getOtherSizeR(position: Int, i: Int, acc: Long): Long = {
-    if (i < 0) acc
-    else if (i == position) getOtherSizeR(position, i - 1, acc)
+    if (i < 0) { acc }
+    else if (i == position) { getOtherSizeR(position, i - 1, acc) }
     else {
       val dSize = scope(i).dom.size
       if (acc > Long.MaxValue / dSize) {
@@ -107,7 +107,7 @@ abstract class ConflictCount(
   }
 
   final def set(tuple: Array[Int], status: Boolean) =
-    if (matrix.check(tuple) == status) false
+    if (matrix.check(tuple) == status) { false }
     else {
       unshareMatrix();
       matrix.set(tuple, status);

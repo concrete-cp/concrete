@@ -9,6 +9,7 @@ import scala.annotation.tailrec
 import scala.collection.immutable.Queue
 import cspom.variable.IntInterval
 import cspfj.util.Loggable
+import cspfj.UndefinedDomain
 
 object ProblemGenerator extends Loggable {
   @throws(classOf[FailedGenerationException])
@@ -70,5 +71,5 @@ object ProblemGenerator extends Loggable {
     case ext: CSPOMDomain[Int] => IntDomain(ext.values: _*)
 
     case _ => throw new UnsupportedOperationException
-  } getOrElse (null)
+  } getOrElse UndefinedDomain
 }

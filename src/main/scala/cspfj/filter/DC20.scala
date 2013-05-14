@@ -56,7 +56,7 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
     val nbC = problem.constraints.size
 
     try {
-      filter.reduceAll() && dcReduce(Stream.continually(problem.variables).flatten, null)
+      filter.reduceAll() && dcReduce(Stream.continually(problem.variables).flatten, None)
     } finally {
       nbAddedConstraints += problem.constraints.size - nbC;
     }
@@ -68,9 +68,9 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
   // }
 
   @tailrec
-  private def dcReduce(s: Stream[Variable], mark: Variable): Boolean = {
+  private def dcReduce(s: Stream[Variable], mark: Option[Variable]): Boolean = {
     val variable #:: remaining = s
-    if (mark == variable) true
+    if (mark == Some(variable)) { true }
     else {
       logger.info(variable.toString)
       cnt += 1
@@ -87,11 +87,11 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
             modVar(v.getId) = cnt
           }
 
-          dcReduce(remaining, variable)
-        } else false
+          dcReduce(remaining, Some(variable))
+        } else { false }
 
       } else {
-        dcReduce(remaining, if (mark == null) variable else mark)
+        dcReduce(remaining, mark.orElse(Some(variable)))
       }
     }
   }

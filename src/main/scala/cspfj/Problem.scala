@@ -92,7 +92,6 @@ final class Problem {
   }
 
   override def toString = {
-
     _variables.mkString("\n") + "\n" +
       _constraints.filter(!_.isEntailed).mkString("\n") + "\n" +
       stats
@@ -101,9 +100,7 @@ final class Problem {
   def stats = {
     val entailed = _constraints.count(_.isEntailed)
 
-    "Total " + _variables.size + " variables, " +
-      (_constraints.size - entailed) + " active constraints and " +
-      entailed + " entailed constraints"
+    s"Total ${_variables.size} variables, ${_constraints.size - entailed} active constraints and $entailed entailed constraints"
   }
 
   def maxDomainSize = {

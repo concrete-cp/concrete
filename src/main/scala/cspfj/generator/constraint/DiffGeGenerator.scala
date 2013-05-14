@@ -10,7 +10,7 @@ final class DiffGeGenerator(problem: Problem) extends AbstractGenerator(problem)
     require("diffGe" == constraint.description, "Cannot handle" + constraint)
     val Seq(v0, v1, bound) = constraint.scope map cspom2cspfj
 
-    if (bound.dom.size != 1 || Seq(v0, v1, bound).exists(_.dom == null)) {
+    if (bound.dom.size != 1 || Seq(v0, v1, bound).exists(_.dom.undefined)) {
       false
     } else {
       addConstraint(new Gt(v0, -bound.dom.firstValue, v1, false))
@@ -22,7 +22,7 @@ final class DiffGeGenerator(problem: Problem) extends AbstractGenerator(problem)
     require("diffGe" == constraint.description, "Cannot handle" + constraint)
     val Seq(result, v0, v1, bound) = constraint.scope map cspom2cspfj
 
-    if (bound.dom.size != 1 || Seq(v0, v1, bound).exists(_.dom == null)) {
+    if (bound.dom.size != 1 || Seq(v0, v1, bound).exists(_.dom.undefined)) {
       false
     } else {
       AbstractGenerator.booleanDomain(result)

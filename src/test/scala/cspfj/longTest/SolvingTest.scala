@@ -26,8 +26,7 @@ final class SolvingTest extends Loggable {
   def before() {
     //Solver.loggerLevel = "INFO"
     ParameterManager("preprocessor") = null
-    ParameterManager("reduction") = "ArrayTrie"
-    //ParameterManager("ac3c.key") = classOf[DomCtr]
+    ParameterManager("closeRelations") = false
   }
 
   @After
@@ -117,7 +116,7 @@ final class SolvingTest extends Loggable {
   def scen11_f12() {
     assertFalse(solve("scen11-f12.xml.bz2"));
   }
-  
+
   @Test //(timeout = 7000)
   def scen11() {
     assertTrue(solve("scen11.xml.bz2"));
@@ -162,7 +161,6 @@ final class SolvingTest extends Loggable {
     val cspomProblem = CSPOM.load(getClass.getResource(name));
     ProblemCompiler.compile(cspomProblem);
 
-    
     val solver = Solver(cspomProblem);
 
     solver.nextSolution() match {

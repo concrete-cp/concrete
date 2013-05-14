@@ -19,7 +19,7 @@ final class ZeroSumGenerator(problem: Problem) extends AbstractGenerator(problem
   override def generateGeneral(constraint: GeneralConstraint) = {
     val solverVariables = constraint.scope map cspom2cspfj toArray
 
-    if (solverVariables exists { _.dom == null }) {
+    if (solverVariables exists { _.dom.undefined }) {
       false
     } else {
       val params = constraint.predicate.parameters match {

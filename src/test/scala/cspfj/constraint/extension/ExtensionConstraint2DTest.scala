@@ -20,7 +20,7 @@ final class ExtensionConstraint2DTest {
     matrix2d.set(Array(0, 0), true);
     matrix2d.set(Array(0, 2), true);
 
-    c = new BinaryExt(Array(var1, var2), matrix2d, false)
+    c = BinaryExt(Array(var1, var2), matrix2d, false)
 
   }
 

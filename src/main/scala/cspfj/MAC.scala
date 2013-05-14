@@ -44,6 +44,9 @@ object MAC {
   @Parameter("mac.restartLevel")
   var restartLevel = 0
 
+  @Parameter("mac.accurateMem")
+  var accurateMem = false
+
   ParameterManager.register(this);
 
   override def toString = "MAC parameters"
@@ -189,11 +192,13 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
     }
 
   } finally {
-    System.gc()
-    System.gc()
-    System.gc()
-    System.gc()
-    System.gc()
+    if (MAC.accurateMem) {
+      System.gc()
+      System.gc()
+      System.gc()
+      System.gc()
+      System.gc()
+    }
     usedMem = math.max(usedMem, Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
   }
 

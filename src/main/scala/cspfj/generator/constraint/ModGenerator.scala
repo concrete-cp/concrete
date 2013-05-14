@@ -14,11 +14,11 @@ final class ModGenerator(problem: Problem) extends AbstractGenerator(problem) {
   override def generateFunctional(constraint: FunctionalConstraint) = {
     val Seq(result, v0, v1) = constraint.scope map cspom2cspfj
 
-    if (Seq(result, v0, v1) filter (_.dom == null) match {
+    if (Seq(result, v0, v1) filter (_.dom.undefined) match {
       case Seq() => true
-      case Seq(v) if v == result => {
+      case Seq(`result`) => {
         val values = AbstractGenerator.domainFrom(v0, v1, { _ % _ })
-        v.dom = IntDomain(values: _*)
+        result.dom = IntDomain(values: _*)
         true
       }
 

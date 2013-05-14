@@ -6,7 +6,6 @@ import cspfj.Variable
 import cspfj.constraint.Constraint
 import cspfj.util.SparseSet
 import cspfj.util.BitVector
-import scala.util.control.Breaks._
 import cspfj.UNSATException
 
 class MDDC(_scope: Array[Variable], private val mdd: MDD)
@@ -24,7 +23,6 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
 
   var gNo: Set[Int] = new SparseSet(mdd.identify() + 1)
 
-  // Members declared in cspfj.util.Backtrackable 
   def restore(data: Set[Int]) {
     gNo = data
   }
@@ -35,7 +33,7 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
 
   def checkValues(tuple: Array[Int]): Boolean = throw new UnsupportedOperationException
 
-  def simpleEvaluation: Int = math.min(7, scope.count(_.dom.size > 1))
+  def simpleEvaluation: Int = math.min(Constraint.NP, scope.count(_.dom.size > 1))
 
   // Members declared in cspfj.constraint.Removals
   val prop = mdd.edges.toDouble / doubleCardSize
@@ -64,14 +62,6 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
     if (gNo(mdd.getId)) {
       throw UNSATException.e
     }
-
-    //    val (_, newNo, delta) = mdd.seekSupports(MDD.timestamp, scope, unsupported, 0, gNo, arity)
-    //   
-    //    if (gNo ne newNo) {
-    //      altering()
-    //      gNo = newNo
-    //    }
-    //   
 
     if (gNo ne oldGno) {
       altering()

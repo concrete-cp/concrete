@@ -141,7 +141,7 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
   private def generateConstraint(scope: Seq[Variable]) = {
     if (scope.size == 2) {
       val matrix = new Matrix2D(scope(0).dom.maxSize, scope(1).dom.maxSize, true);
-      new BinaryExt(scope.toArray, matrix, false);
+      BinaryExt(scope.toArray, matrix, false);
     } else {
       new ExtensionConstraintGeneral(new TupleTrieSet(true), false, scope.toArray);
     }

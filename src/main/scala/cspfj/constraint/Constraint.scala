@@ -31,6 +31,11 @@ import cspfj.priorityqueues.DLNode
 object Constraint {
   var cId = 0;
   def reset() { cId = 0 }
+
+  val UNARY = 1
+  val BINARY = 2
+  val TERNARY = 3
+  val NP = 7
 }
 
 abstract class Constraint(val scope: Array[Variable])

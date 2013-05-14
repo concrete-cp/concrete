@@ -16,29 +16,18 @@ final class AddGenerator(problem: Problem) extends AbstractGenerator(problem) {
       case _ => throw new IllegalArgumentException("Cannot handle " + constraint)
     }) map cspom2cspfj
 
-    if (Seq(result, v0, v1) filter { _.dom == null } match {
+    if (Seq(result, v0, v1) filter { _.dom.undefined } match {
       case Seq() => true;
-      case Seq(nullVariable) => {
-        if (nullVariable == result) {
-          val values = AbstractGenerator.domainFrom(v0, v1, { _ + _ });
-
-          result.dom = IntDomain(values: _*);
-
-        } else if (nullVariable == v0) {
-
-          v0.dom = IntDomain(generateValues(result, v1): _*);
-
-        } else if (nullVariable == v1) {
-
-          v1.dom = IntDomain(generateValues(result, v0): _*);
-
-        } else {
-
-          throw new IllegalStateException();
-
-        }
-        true;
-      }
+      case Seq(`result`) =>
+        val values = AbstractGenerator.domainFrom(v0, v1, { _ + _ });
+        result.dom = IntDomain(values: _*);
+        true
+      case Seq(`v0`) =>
+        v0.dom = IntDomain(generateValues(result, v1): _*);
+        true
+      case Seq(`v1`) =>
+        v1.dom = IntDomain(generateValues(result, v0): _*);
+        true
       case _ => false;
     }) {
 

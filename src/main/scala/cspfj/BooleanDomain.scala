@@ -237,15 +237,16 @@ final class BooleanDomain(var _status: Status) extends Domain
   def intersects(bv: BitVector) = bv.intersects(status.bitVector)
   def intersects(bv: BitVector, part: Int) = bv.intersects(status.bitVector, part)
 
-  def isTrue = status == TRUE
-  def isFalse = status == FALSE
-  def isUnknown = status == UNKNOWNBoolean
-  override def isEmpty = status == EMPTY
+  def isTrue = status eq TRUE
+  def isFalse = status eq FALSE
+  def isUnknown = status eq UNKNOWNBoolean
+  override def isEmpty = status eq EMPTY
   def setTrue() { status = TRUE }
   def setFalse() { status = FALSE }
   def currentIndexes = status.indices
   def valueBV(offset: Int) = throw new UnsupportedOperationException
   def bound = true
   def intSet = status.intSet
+  def undefined = false
 }
 

@@ -33,32 +33,27 @@ trait SingletonConsistency extends Filter with Loggable {
   @throws(classOf[InterruptedException])
   def singletonTest(variable: Variable): Boolean
 
-  def reduce(): Boolean = {
-    if (!subFilter.reduceAll()) {
-      false;
+  @tailrec
+  private def process(
+    stream: Stream[Variable] = Stream.continually(problem.variables).flatten,
+    mark: Option[Variable] = None): Boolean = {
+
+    val variable #:: remaining = stream
+    if (mark == Some(variable)) {
+      true
     } else {
+      logger.info(variable.toString)
 
-      @tailrec
-      def process(
-        stream: Stream[Variable] = Stream.continually(problem.variables).flatten,
-        mark: Variable = null): Boolean = {
-
-        val variable #:: remaining = stream
-        if (mark == variable) true
-        else {
-          logger.info(variable.toString)
-
-          if (singletonTest(variable)) {
-            subFilter.reduceAfter(variable) && process(remaining, variable)
-          } else {
-            process(remaining, if (mark == null) variable else mark)
-          }
-        }
-
+      if (singletonTest(variable)) {
+        subFilter.reduceAfter(variable) && process(remaining, Some(variable))
+      } else {
+        process(remaining, mark.orElse(Some(variable)))
       }
-      process()
     }
+
   }
+
+  def reduce(): Boolean = subFilter.reduceAll() && process()
 
   def reduceAfter(constraints: Iterable[Constraint]) =
     throw new UnsupportedOperationException()

@@ -6,7 +6,6 @@ import cspfj.Variable
 import cspfj.constraint.Constraint
 import cspfj.util.SparseSet
 import cspfj.util.BitVector
-import scala.util.control.Breaks._
 import cspfj.util.SetWithMax
 import cspfj.UNSATException
 
@@ -25,7 +24,7 @@ class MDDC2(_scope: Array[Variable], private val mdd: MDD)
 
   var gNo: Set[Int] = new SparseSet(mdd.identify() + 1)
 
-  // Members declared in cspfj.util.Backtrackable 
+  // Members declared in cspfj.util.Backtrackable
   def restore(data: Set[Int]) {
     gNo = data
   }
@@ -36,7 +35,7 @@ class MDDC2(_scope: Array[Variable], private val mdd: MDD)
 
   def checkValues(tuple: Array[Int]): Boolean = throw new UnsupportedOperationException
 
-  def simpleEvaluation: Int = math.min(7, scope.count(_.dom.size > 1))
+  def simpleEvaluation: Int = math.min(Constraint.NP, scope.count(_.dom.size > 1))
 
   // Members declared in cspfj.constraint.Removals
   val prop = mdd.edges.toDouble / doubleCardSize
@@ -87,10 +86,12 @@ class MDDC2(_scope: Array[Variable], private val mdd: MDD)
       true
     } else if (gNo.contains(g.getId)) {
       false
-    } else mod match {
-      case Nil => true
-      case `i` :: next => mark2(ts, g, i, next)
-      case next => mark2(ts, g, i, next)
+    } else {
+      mod match {
+        case Nil => true
+        case `i` :: next => mark2(ts, g, i, next)
+        case next: List[Int] => mark2(ts, g, i, next)
+      }
     }
   }
 
@@ -110,16 +111,6 @@ class MDDC2(_scope: Array[Variable], private val mdd: MDD)
     }
     res
   }
-
-  //  def isValid(g: MDD, i: Int): Boolean = (g eq MDDLeaf) || {
-  //    var res = false
-  //    g.forSubtries {
-  //      (ak, gk) =>
-  //        res |= scope(i).dom.present(ak) && isValid(gk, i + 1)
-  //        !res
-  //    }
-  //    res
-  //  }
 
   private def fillFound(ts: Int, g: MDD, i: Int, l: SetWithMax) {
     if ((g ne MDDLeaf) && g.timestamp != ts) {

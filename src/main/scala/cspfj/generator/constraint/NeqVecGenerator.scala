@@ -19,7 +19,7 @@ final class NeqVecGenerator(problem: Problem) extends AbstractGenerator(problem)
 
     val scope = constraint.scope map cspom2cspfj
 
-    if (scope exists { _.dom == null }) {
+    if (scope exists { _.dom.undefined }) {
       false
     } else {
       val (x, y) = scope.splitAt(scope.length / 2)

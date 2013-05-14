@@ -29,7 +29,8 @@ import cspfj.priorityqueues.DLNode
 final class Variable(
   val name: String,
   private var _domain: Domain) extends Identified with PTag with DLNode[Variable] {
-
+  require(_domain ne null)
+  
   val getId = Variable.nbV
   Variable.nbV += 1
 
@@ -39,7 +40,7 @@ final class Variable(
 
   private var _positionInConstraint: Array[Int] = Array.empty
 
-  override def toString = name + (if (_domain == null) " [?]" else " " + _domain)
+  override def toString = s"$name ${_domain}"
 
   def constraints = _constraints
 
@@ -65,7 +66,8 @@ final class Variable(
   def dom = _domain
 
   def dom_=(d: Domain) {
-    require(_domain == null, "Reassignment of domain")
+    require(d ne null)
+    require(_domain eq UndefinedDomain, "Reassignment of domain")
     _domain = d
   }
 

@@ -12,23 +12,24 @@ final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
   override def generateGeneral(constraint: GeneralConstraint): Boolean = {
     require("eq" == constraint.description);
-    if (constraint.scope.size != 2) false
-    else {
+    if (constraint.scope.size != 2) {
+      false
+    } else {
       val scope = constraint.scope map cspom2cspfj
 
-      scope map { _.dom } find { _ != null } match {
+      scope map { _.dom } find { !_.undefined } match {
         case None => false
         case Some(refDomain: IntDomain) =>
-          for (v <- scope if (v.dom == null)) {
+          for (v <- scope if (v.dom.undefined)) {
             v.dom = IntDomain(refDomain.values.toSeq: _*)
           }
           addConstraint(new Eq(scope(0), scope(1)));
           true
 
         case Some(refDomain: BooleanDomain) =>
-          scope filter { _.dom ne null } map { _.dom.asInstanceOf[BooleanDomain] } find { _.size == 1 } match {
+          scope filter { _.dom.undefined } map { _.dom.asInstanceOf[BooleanDomain] } find { _.size == 1 } match {
             case None =>
-              for (v <- scope if (v.dom == null)) {
+              for (v <- scope if (v.dom.undefined)) {
                 v.dom = new BooleanDomain(refDomain.status)
               }
 
@@ -40,16 +41,21 @@ final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
             case Some(constantDomain) =>
               for (v <- scope) {
-                if (v.dom == null) {
+                if (v.dom.undefined) {
                   v.dom = new BooleanDomain(refDomain.status)
                 } else {
                   val d = v.dom.asInstanceOf[BooleanDomain]
-                  if (d.isUnknown) d.status = refDomain.status
-                  else if (d.status != refDomain.status) throw new FailedGenerationException("Inconsistent equality")
+                  if (d.isUnknown) {
+                    d.status = refDomain.status
+                  } else if (d.status != refDomain.status) {
+                    throw new FailedGenerationException("Inconsistent equality")
+                  }
                 }
               }
               true
           }
+
+        case Some(d: Domain) => throw new FailedGenerationException("Unhandled domain")
 
       }
 
@@ -60,7 +66,7 @@ final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
     case "eq" => {
       val arguments = funcConstraint.arguments map cspom2cspfj
 
-      if (arguments.size != 2 || arguments.exists(_.dom == null)) {
+      if (arguments.size != 2 || arguments.exists(_.dom.undefined)) {
         false
       } else {
         val result = cspom2cspfj(funcConstraint.result)
@@ -79,14 +85,14 @@ final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
       } else {
         val scope = funcConstraint.scope map cspom2cspfj
 
-        val refDomain = scope map { _.dom } find { _ != null }
+        val refDomain = scope map { _.dom } find { !_.undefined }
 
         if (refDomain == None) {
           false
         } else {
           val negDomain = refDomain.get.values.map(v => -v).toSeq.reverse
 
-          for (v <- scope if (v.dom == null)) {
+          for (v <- scope if (v.dom.undefined)) {
             v.dom = IntDomain(negDomain: _*)
           }
           addConstraint(new Eq(true, scope(0), 0, scope(1)))

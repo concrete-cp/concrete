@@ -27,6 +27,7 @@ final class SACSolvingTest extends Loggable {
   def before() {
     //Solver.loggerLevel = "INFO"
     ParameterManager("preprocessor") = classOf[SAC1]
+    ParameterManager("closeRelations") = false
   }
 
   @After
