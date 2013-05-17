@@ -10,7 +10,6 @@ import cspfj.LearnMethod
 import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
 import cspfj.util.Loggable
-import cspfj.SolverIterator
 import cspfj.ParameterManager
 import cspfj.Solver
 import cspfj.MAC
@@ -124,15 +123,9 @@ final class DC1SolvingTest extends Loggable {
 
     val solver = new MAC(problem);
 
-    val itr = new SolverIterator(solver)
-
-    if (itr.hasNext) {
-      val sol = itr.next
+    solver.toIterable.headOption.map { sol =>
       val failed = cspomProblem.controlInt(sol);
       assertTrue(sol + "\n" + failed.toString, failed.isEmpty)
-      Some(sol)
-    } else {
-      None
     }
 
   }
@@ -145,7 +138,7 @@ final class DC1SolvingTest extends Loggable {
 
     val solver = new MAC(problem);
     var count = 0
-    for (solution <- new SolverIterator(solver)) {
+    for (solution <- solver) {
       count += 1
       val failed = cspomProblem.controlInt(solution)
       assertTrue(1 + count + "th solution: " + failed.toString(), failed.isEmpty);

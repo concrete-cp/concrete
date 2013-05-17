@@ -58,7 +58,7 @@ class TestMAC {
       //ParameterManager("logger.level") = "INFO"
       val solver = new MAC(problem)
 
-      val count = new SolverIterator(solver).size
+      val count = solver.size
 
       Assert.assertEquals(nb, count)
     }

@@ -55,7 +55,7 @@ object Solver {
   def apply(cspom: CSPOM): Solver = apply(ProblemGenerator.generate(cspom))
 }
 
-abstract class Solver(val problem: Problem) extends Loggable {
+abstract class Solver(val problem: Problem) extends Iterator[Map[String, Int]] with Loggable {
 
   @Statistic
   var preproRemoved = 0
@@ -85,20 +85,45 @@ abstract class Solver(val problem: Problem) extends Loggable {
     logger.info(ParameterManager.list);
   }
 
-  def nextSolution(): SolverResult
+  private var _next: SolverResult = UNKNOWNResult
+  private var optimise: Option[Variable] = None
+  def optimise_=(v: Variable) { optimise = Some(v) }
 
-  @tailrec
-  private def bestSolution(v: Variable, best: SolverResult): SolverResult = nextSolution() match {
+  def next() = _next match {
+    case UNSAT => Iterator.empty.next
+    case UNKNOWNResult => if (hasNext()) next() else Iterator.empty.next
     case SAT(sol) =>
-      logger.info("New bound " + sol(v.name))
-      reset()
-      v.dom.removeTo(v.dom.index(sol(v.name)))
-      bestSolution(v, SAT(sol))
-    case UNSAT => if (best == UNKNOWNResult) UNSAT else best
-    case _ => best
+      _next = UNKNOWNResult
+      for (v <- optimise) {
+        reset()
+        v.dom.removeTo(v.dom.index(sol(v.name)))
+      }
+      sol
+    case RESTART => throw new IllegalStateException()
   }
 
-  def bestSolution(v: Variable): SolverResult = bestSolution(v, UNKNOWNResult)
+  protected def nextSolution(): SolverResult
+
+  def hasNext() = _next match {
+    case UNSAT => false
+    case SAT(_) => true
+    case UNKNOWNResult =>
+      _next = nextSolution(); hasNext()
+    case RESTART => throw new IllegalStateException
+  }
+
+//  @tailrec
+//  private def bestSolution(v: Variable, best: SolverResult): SolverResult = nextSolution() match {
+//    case SAT(sol) =>
+//      logger.info("New bound " + sol(v.name))
+//      reset()
+//      v.dom.removeTo(v.dom.index(sol(v.name)))
+//      bestSolution(v, SAT(sol))
+//    case UNSAT => if (best == UNKNOWNResult) UNSAT else best
+//    case _ => best
+//  }
+//
+//  def bestSolution(v: Variable): SolverResult = bestSolution(v, UNKNOWNResult)
 
   private var _maxBacktracks = -1
 

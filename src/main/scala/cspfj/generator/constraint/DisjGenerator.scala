@@ -77,7 +77,7 @@ final class DisjGenerator(problem: Problem) extends AbstractGenerator(problem) {
     val params: IndexedSeq[Boolean] = gC.predicate.parameters match {
       case Some(p: Seq[Boolean]) => p.toIndexedSeq
       case None => IndexedSeq.fill(scope.size)(false)
-      case _ => throw new IllegalArgumentException("Parameters for disjunction must be a sequence of boolean values")
+      case p: Any => throw new IllegalArgumentException(s"Parameters for disjunction must be a sequence of boolean values, not '$p'")
     }
 
     addConstraint(new Disjunction(scope.toArray, params))

@@ -9,16 +9,14 @@ import cspfj.UNSAT
 import cspom.CSPOM
 
 trait ConcreteWriter {
-  def solution(solution: SolverResult, concrete: Concrete)
+  def solution(solution: Option[Map[String, Int]], concrete: Concrete)
   def write(stats: StatisticsManager)
   def error(e: Throwable)
 
-  def outputFormat(solution: SolverResult, concrete: Concrete) =
+  def outputFormat(solution: Option[Map[String, Int]], concrete: Concrete) =
     solution match {
-      case SAT(solution) => concrete.output(solution)
-      case UNSAT => "UNSAT"
-      case UNKNOWNResult => "UNKNOWN"
-      case RESTART => throw new IllegalStateException
+      case Some(solution) => concrete.output(solution)
+      case None => "UNSAT"
     }
 
   def disconnect()

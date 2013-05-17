@@ -9,15 +9,15 @@ trait VariableHeuristic extends Ordering[Variable] {
   def problem: Problem
 
   def select: Option[Variable] =
-    select(problem.variables filter { _.dom.size > 1 })
+    select(problem.variables.iterator.filter(_.dom.size > 1))
 
-  def select(coll: List[Variable]) = {
-//    for (v <- coll) {
-//      println(v + " : " + score(v))
-//    }
+  def select(coll: Iterator[Variable]) = {
+    //    for (v <- coll) {
+    //      println(v + " : " + score(v))
+    //    }
 
-    if (coll.isEmpty) None
-    else Some(coll.maxBy(score))
+    if (coll.isEmpty) { None }
+    else { Some(coll.maxBy(score)) }
   }
 
   def score(variable: Variable): Double

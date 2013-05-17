@@ -7,7 +7,6 @@ import org.junit.Test
 import cspfj.util.Loggable
 import cspfj.ParameterManager
 import cspfj.Solver
-import cspfj.SolverIterator
 import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
 import org.junit.After
@@ -150,7 +149,7 @@ final class ACVSolvingTest extends Loggable {
 
     val solver = Solver(cspomProblem);
 
-    val sol = new SolverIterator(solver).toStream.headOption
+    val sol = solver.toStream.headOption
 
     if (sol.isDefined) {
       val failed = cspomProblem.controlInt(sol.get);
@@ -168,7 +167,7 @@ final class ACVSolvingTest extends Loggable {
 
     val solver = Solver(cspomProblem);
     var count = 0
-    for (solution <- new SolverIterator(solver)) {
+    for (solution <- solver) {
       count += 1
       logger.info(solution.toString)
       assert {

@@ -8,7 +8,7 @@ class ConsoleWriter(params: String) extends ConcreteWriter {
 
   Console.println(params)
 
-  def solution(solution: SolverResult, concrete: Concrete) {
+  def solution(solution: Option[Map[String, Int]], concrete: Concrete) {
     Console.println(outputFormat(solution, concrete))
   }
 

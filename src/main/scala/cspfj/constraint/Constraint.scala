@@ -114,9 +114,10 @@ abstract class Constraint(val scope: Array[Variable])
   var inCN = false
 
   final def disEntail() {
+    assert(isEntailed)
     entailedAtLevel = -1
     if (inCN) for (v <- scope) {
-      v.dDeg += 1 //weight
+      v.wDeg += weight
     }
   }
 
@@ -124,7 +125,7 @@ abstract class Constraint(val scope: Array[Variable])
     if (!isEntailed) {
       entailedAtLevel = level
       if (inCN) for (v <- scope) {
-        v.dDeg -= 1 //weight
+        v.wDeg -= weight
       }
     }
 
@@ -133,9 +134,10 @@ abstract class Constraint(val scope: Array[Variable])
   override def weight_=(w: Int) {
     assert(!isEntailed)
     assert(inCN)
-    //    for (v <- scope) {
-    //      v.wDeg += w - weight
-    //    }
+    val inc = w - weight
+    for (v <- scope) {
+      v.wDeg += inc
+    }
     super.weight = w
   }
 

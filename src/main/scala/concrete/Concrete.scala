@@ -112,9 +112,9 @@ trait Concrete {
 
       sstats = solver.statistics
 
-      val solution = solver.nextSolution
+      val solution = solver.toIterable.headOption
       writer.solution(solution, this)
-      if (solution.isSat && opt.contains('Control)) {
+      if (solution.isDefined && opt.contains('Control)) {
         val failed = control(solution.get);
         if (failed.isDefined) throw new IllegalStateException("Falsified constraints : " + failed.get)
       }

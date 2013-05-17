@@ -193,7 +193,7 @@ final class SQLWriter(
     executionId
   }
 
-  def solution(solution: SolverResult, concrete: Concrete) {
+  def solution(solution: Option[Map[String, Int]], concrete: Concrete) {
     val sol = outputFormat(solution, concrete)
     db.withSession {
       sqlu"UPDATE Executions SET solution = $sol WHERE executionId = $executionId".execute

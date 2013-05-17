@@ -6,7 +6,6 @@ import org.junit.Test
 import cspfj.util.Loggable
 import cspfj.ParameterManager
 import cspfj.Solver
-import cspfj.SolverIterator
 import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
 import org.junit.After
@@ -163,35 +162,26 @@ final class SolvingTest extends Loggable {
 
     val solver = Solver(cspomProblem);
 
-    solver.nextSolution() match {
-      case SAT(sol: Map[String, Int]) =>
-        val failed = cspomProblem.controlInt(sol);
-        assertTrue(sol + "\n" + failed.toString, failed.isEmpty)
-        true
-      case UNSAT => false
-      case UNKNOWNResult => fail(); false
-    }
+    solver.toIterable.headOption.map { sol =>
+      val failed = cspomProblem.controlInt(sol);
+      assertTrue(sol + "\n" + failed.toString, failed.isEmpty)
+    } isDefined
+
   }
 
   private def count(name: String) = {
     val cspomProblem = CSPOM.load(getClass.getResource(name));
-    println(cspomProblem)
     ProblemCompiler.compile(cspomProblem);
 
-    println(cspomProblem)
-
-    val solver = Solver(cspomProblem);
-    var count = 0
-    for (solution <- new SolverIterator(solver)) {
-      count += 1
-      logger.info(solution.toString)
-      assert {
-        val failed = cspomProblem.controlInt(solution)
-        assertTrue(1 + count + "th solution: " + failed.toString(), failed.isEmpty);
-        true
-      }
+    Solver(cspomProblem).foldLeft(0) {
+      (count, solution) =>
+        logger.info(solution.toString)
+        assert {
+          val failed = cspomProblem.controlInt(solution)
+          assertTrue(1 + count + "th solution: " + failed.toString(), failed.isEmpty);
+          true
+        }
+        count + 1
     }
-
-    count;
   }
 }

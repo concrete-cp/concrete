@@ -9,7 +9,7 @@ import scala.annotation.tailrec
 final class DDegOnDom(val problem: Problem) extends VariableHeuristic with RandomBreak {
 
   def score(variable: Variable) =
-    variable.getDDeg.toDouble / variable.dom.size
+    variable.getDDegEntailed.toDouble / variable.dom.size
 
   override def toString = "max-ddeg/dom"
 

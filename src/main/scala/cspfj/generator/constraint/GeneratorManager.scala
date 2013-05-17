@@ -3,28 +3,18 @@ package cspfj.generator.constraint;
 import cspfj.generator.FailedGenerationException
 import cspfj.Problem
 import cspom.constraint.CSPOMConstraint;
+import scala.collection.mutable.HashMap
 
 final class GeneratorManager(val problem: Problem) {
 
-  var generators: Map[Class[_ <: AbstractGenerator], AbstractGenerator] = Map.empty;
+  var generators: HashMap[Class[_ <: AbstractGenerator], AbstractGenerator] = new HashMap();
 
   @throws(classOf[FailedGenerationException])
   def generate(constraint: CSPOMConstraint) = {
-    val candidate = GeneratorManager.known.get(constraint.description.toLowerCase) match {
-      case None =>
-        throw new FailedGenerationException("No candidate constraint for "
-          + constraint + " (" + constraint.description + ")");
-      case Some(generator) => generator
-    }
+    val candidate = GeneratorManager.known.getOrElse(constraint.description.toLowerCase,
+      throw new FailedGenerationException(s"No candidate constraint for $constraint"))
 
-    (generators.get(candidate) match {
-      case Some(generator) => generator
-      case None => {
-        val generator = candidate.getConstructor(classOf[Problem]).newInstance(problem);
-        generators += candidate -> generator
-        generator
-      }
-    }).generate(constraint)
+    generators.getOrElseUpdate(candidate, candidate.getConstructor(classOf[Problem]).newInstance(problem)).generate(constraint)
   }
 }
 
@@ -47,7 +37,7 @@ object GeneratorManager {
     "mul" -> classOf[MulGenerator],
     "ne" -> classOf[NeqGenerator],
     "absdiff" -> classOf[AbsDiffGenerator],
-    "diffGe" -> classOf[DiffGeGenerator],
+    "diffge" -> classOf[DiffGeGenerator],
     "gcc" -> classOf[GccGenerator],
     "mod" -> classOf[ModGenerator],
     "nevec" -> classOf[NeqVecGenerator],

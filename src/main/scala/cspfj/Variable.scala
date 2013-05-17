@@ -30,7 +30,7 @@ final class Variable(
   val name: String,
   private var _domain: Domain) extends Identified with PTag with DLNode[Variable] {
   require(_domain ne null)
-  
+
   val getId = Variable.nbV
   Variable.nbV += 1
 
@@ -60,7 +60,7 @@ final class Variable(
       _extensionConstraints ::= newConstraint.asInstanceOf[ExtensionConstraint]
     }
     _positionInConstraint :+= newConstraint.position(this)
-    dDeg += 1 //newConstraint.weight
+    wDeg += newConstraint.weight
   }
 
   def dom = _domain
@@ -78,16 +78,7 @@ final class Variable(
 
   def values = _domain.values
 
-  //var wDeg = 0
-
-  //  @tailrec
-  //  private def _getWDeg(i: Int = constraints.size - 1, s: Int = 0): Int =
-  //    if (i < 0) s
-  //    else {
-  //      val c = constraints(i)
-  //      if (c.isEntailed) _getWDeg(i - 1, s)
-  //      else _getWDeg(i - 1, s + c.weight)
-  //    }
+  var wDeg = 0
 
   def getWDegFree = {
     var i = constraints.length - 1
@@ -101,19 +92,28 @@ final class Variable(
   }
 
   def getWDegEntailed = {
-    var i = constraints.length - 1
-    var wDeg = 0
-    while (i >= 0) {
-      val c = constraints(i)
-      if (!c.isEntailed) wDeg += c.weight
-      i -= 1
-    }
-    wDeg
+    this.wDeg
+    //    var i = constraints.length - 1
+    //    var wDeg = 0
+    //    while (i >= 0) {
+    //      val c = constraints(i)
+    //      if (!c.isEntailed) wDeg += c.weight
+    //      i -= 1
+    //    }
+    //    wDeg
   }
 
-  var dDeg = 0
+  //var dDeg = 0
 
-  def getDDeg = dDeg
+  def getDDegEntailed = {
+    var i = constraints.length - 1
+    var dDeg = 0
+    while (i >= 0) {
+      if (!constraints(i).isEntailed) dDeg += 1
+      i -= 1
+    }
+    dDeg
+  }
 
   def getDDegFree = {
     var i = constraints.length - 1
