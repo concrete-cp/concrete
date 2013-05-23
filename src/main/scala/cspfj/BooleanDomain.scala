@@ -27,9 +27,9 @@ case object UNKNOWNBoolean extends Status {
   bitVector.fill(true)
   val array = Array(0, 1)
   override val toString = "[f, t]"
-  val size = 2
-  val first = 0
-  val last = 1
+  def size = 2
+  def first = 0
+  def last = 1
   def next(i: Int) = if (i == 0) 1 else -1
   def prev(i: Int) = if (i == 1) 0 else -1
   def present(i: Int) = true
@@ -49,7 +49,7 @@ case object UNKNOWNBoolean extends Status {
     else if (value <= 0) { 0 }
     else { 1 }
 
-  val lastAbsent = -1
+  def lastAbsent = -1
   def prevAbsent(value: Int) = -1
   val indices = Array(0, 1)
   val intSet = IntSet(0, 1)
@@ -59,9 +59,9 @@ case object TRUE extends Status {
   bitVector.set(1)
   val array = Array(1)
   override val toString = "[t]"
-  val size = 1
-  val first = 1
-  val last = 1
+  def size = 1
+  def first = 1
+  def last = 1
   def next(i: Int) = -1
   def prev(i: Int) = -1
   def present(i: Int) = i == 1
@@ -69,7 +69,7 @@ case object TRUE extends Status {
   def removeFrom(lb: Int) = if (lb == 0) EMPTY else this
   def removeTo(ub: Int) = if (ub == 1) EMPTY else this
   def lowest(value: Int) = if (value > 1) -1 else 1;
-  val lastAbsent = 0
+  def lastAbsent = 0
   def prevAbsent(value: Int) = if (value > 0) 0 else -1
   val indices = Array(1)
   val intSet = IntSet(1)
@@ -79,9 +79,9 @@ case object FALSE extends Status {
   bitVector.set(0)
   val array = Array(0)
   override val toString = "[f]"
-  val size = 1
-  val first = 0
-  val last = 0
+  def size = 1
+  def first = 0
+  def last = 0
   def next(i: Int) = -1
   def prev(i: Int) = -1
   def present(i: Int) = i == 0
@@ -89,7 +89,7 @@ case object FALSE extends Status {
   def removeFrom(lb: Int) = if (lb <= 1) EMPTY else this
   def removeTo(ub: Int) = if (ub == 0) EMPTY else this
   def lowest(value: Int) = if (value > 0) -1 else 0;
-  val lastAbsent = 1
+  def lastAbsent = 1
   def prevAbsent(value: Int) = if (value > 0) 1 else -1
   val indices = Array(0)
   val intSet = IntSet(0)
@@ -98,9 +98,9 @@ case object FALSE extends Status {
 case object EMPTY extends Status {
   val array = Array[Int]()
   override val toString = "[]"
-  val size = 0
-  val first = -1
-  val last = -1
+  def size = 0
+  def first = -1
+  def last = -1
   def next(i: Int) = -1
   def prev(i: Int) = -1
   def present(i: Int) = false
@@ -108,7 +108,7 @@ case object EMPTY extends Status {
   def removeFrom(lb: Int) = this
   def removeTo(ub: Int) = this
   def lowest(value: Int) = -1
-  val lastAbsent = 1
+  def lastAbsent = 1
   def prevAbsent(value: Int) = if (value >= 1) 0 else -1
   val indices = Array[Int]()
   val intSet = IntSet()

@@ -1,14 +1,18 @@
-package concrete
+package concrete.runner
 
 import cspfj.StatisticsManager
-import cspom.CSPOM
-import cspfj.SolverResult
 
-class ConsoleWriter(params: String) extends ConcreteWriter {
+class ConsoleWriter extends ConcreteWriter {
 
-  Console.println(params)
+  def parameters(params: String) {
+    Console.println(params)
+  }
+  
+  def problem(problem: String) {
+    Console.println(problem)
+  }
 
-  def solution(solution: Option[Map[String, Int]], concrete: Concrete) {
+  def solution(solution: Option[Map[String, Int]], concrete: ConcreteRunner) {
     Console.println(outputFormat(solution, concrete))
   }
 

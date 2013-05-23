@@ -1,4 +1,4 @@
-package concrete
+package concrete.runner
 
 import java.io.File
 import java.io.PrintStream
@@ -11,7 +11,6 @@ import cspfj.UNSATException
 import cspfj.Variable
 import cspfj.constraint.extension.ReduceableExt
 import cspfj.constraint.extension.MDD
-import cspfj.constraint.extension.RelationGenerator
 import cspfj.constraint.extension.STR
 import cspfj.util.BitVectorSet
 import cspfj.util.DirectIndices

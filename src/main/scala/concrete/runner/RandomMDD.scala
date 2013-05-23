@@ -1,34 +1,25 @@
-package concrete
-
-import java.io.ByteArrayInputStream
-import scala.annotation.tailrec
-import scala.collection.mutable.ArrayBuffer
+package concrete.runner
 import scala.util.Random
-import cspfj.generator.ProblemGenerator
 import cspom.CSPOM
-import cspom.Loggable
-import cspom.extension.ExtensionConstraint
-import cspom.extension.Relation
 import rb.randomlists.CoarseProportionRandomListGenerator
 import rb.randomlists.Structure
+import scala.slick.jdbc.StaticQuery.interpolation
 import scala.slick.session.Database
-import scala.slick.jdbc.{ GetResult, StaticQuery => Q }
-import Q.interpolation
 import Database.threadLocalSession
 import java.net.URI
 import cspfj.StatisticsManager
 import scala.collection.mutable.HashMap
-import cspfj.constraint.extension.MDDn
-import scala.util.hashing.MurmurHash3
-import scala.collection.mutable.HashSet
 import cspom.extension.EmptyMDD
 import cspom.extension.MDDLeaf
 import cspom.extension.MDDNode
 import cspom.extension.MDD
 import cspom.extension.LazyMDD
-import CSPOM._
+import cspom.CSPOM._
+import scala.Array.canBuildFrom
+import scala.slick.jdbc.{StaticQuery => Q}
 
-object RandomMDD extends Concrete with App {
+
+object RandomMDD extends ConcreteRunner with App {
 
   def apply(d: Int, k: Int, l: Double, q: Double, rand: Random) = {
     val existing = Array.fill(k + 1)(new HashMap[MDD, MDD]())

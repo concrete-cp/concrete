@@ -1,14 +1,8 @@
-package concrete
-
-import cspom.compiler.ProblemCompiler
+package concrete.runner
 import java.net.URL
 import cspom.CSPOM
-import cspfj.generator.ProblemGenerator
-import java.security.MessageDigest
-import java.math.BigInteger
-import java.io.InputStream
 
-object XCSPConcrete extends Concrete with App {
+object XCSPConcrete extends ConcreteRunner with App {
 
   override def loadCSPOM(args: List[String]) = {
     val List(fileName) = args

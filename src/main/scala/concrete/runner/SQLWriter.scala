@@ -17,53 +17,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package concrete;
+package concrete.runner;
 
 import java.io.ByteArrayInputStream
-import java.io.InputStream
 import java.math.BigInteger
 import java.net.URI
-import java.net.URL
 import java.security.MessageDigest
-import java.sql.Connection
-import java.sql.DriverManager
-import java.sql.ResultSet
-import java.sql.SQLException
 import cspfj.Solver
-import cspfj.SolverResult
 import cspfj.StatisticsManager
 import cspom.CSPOM
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-import scala.slick.session.Database
-import scala.slick.jdbc.{ GetResult, StaticQuery => Q }
-import scala.xml.NodeSeq
 import java.security.InvalidParameterException
-import scala.slick.session.Session
+import scala.slick.session.Database
+import scala.slick.jdbc.StaticQuery.interpolation
 import Database.threadLocalSession
-import Q.interpolation
 import java.net.InetAddress
 
 object SQLWriter {
-
-  //  def md5(istr: InputStream) = {
-  //    val msgDigest = MessageDigest.getInstance("MD5");
-  //
-  //    def createDigest(buffer: Array[Byte]) {
-  //      val read = istr.read(buffer)
-  //      if (read > 0) {
-  //        msgDigest.update(buffer, 0, read)
-  //        createDigest(buffer)
-  //      }
-  //    }
-  //
-  //    createDigest(new Array[Byte](8192))
-  //
-  //    val sum = new BigInteger(1, msgDigest.digest).toString(16);
-  //    "".padTo(32 - sum.length, '0') + sum
-  //
-  //  }
 
   def connection(uri: URI) = {
     require(!uri.isOpaque, "Opaque connection URI : " + uri.toString)
@@ -91,24 +60,39 @@ object SQLWriter {
 }
 
 final class SQLWriter(
-  jdbcUri: URI,
-  description: String,
-  params: String) extends ConcreteWriter {
+  jdbcUri: URI) extends ConcreteWriter {
 
   lazy val db = SQLWriter.connection(jdbcUri)
 
   //createTables()
 
-  val executionId = execution(
-    problemId(description),
-    config(params),
-    Solver.VERSION + CSPOM.VERSION);
+  var executionId: Int = -1
+
+  private var configId: Int = -1
+
+  private var problemId: Int = -1
+
+  private def version = Solver.VERSION + CSPOM.VERSION
+
+  def parameters(params: String) {
+    configId = config(params)
+    if (problemId >= 0 && executionId < 0) {
+      executionId = execution(problemId, configId, version)
+    }
+  }
+
+  def problem(problem: String) {
+    problemId = problemId(problem)
+    if (configId >= 0 && executionId < 0) {
+      executionId = execution(problemId, configId, version)
+    }
+  }
 
   //connection.close();
 
   private def controlTables(tables: String*) =
-    db.withSession { session: Session =>
-      val results = session.metaData.getTables(null, null, "%", null)
+    db.withSession {
+      val results = threadLocalSession.metaData.getTables(null, null, "%", null)
 
       try {
         var foundTables: Set[String] = Set.empty
@@ -129,8 +113,8 @@ final class SQLWriter(
 
       val script = io.Source.fromURL(source).getLines.reduce(_ + _)
 
-      db.withSession { session: Session =>
-        session.withStatement() {
+      db withSession {
+        threadLocalSession.withStatement() {
           stmt =>
             script.split(';').foreach(stmt.addBatch)
             stmt.executeBatch()
@@ -178,7 +162,7 @@ final class SQLWriter(
     }
   }
 
-  def execution(problemId: Int, configId: Int, version: Int) = {
+  private def execution(problemId: Int, configId: Int, version: Int) = {
     print(s"Problem $problemId, config $configId, version $version")
 
     val executionId = db.withSession {
@@ -186,14 +170,15 @@ final class SQLWriter(
             VALUES ($problemId, $configId , $version, CURRENT_TIMESTAMP, ${InetAddress.getLocalHost.getHostName}) 
             RETURNING executionId""".as[Int].first
     }
-//    catch {
-//      case e: SQLException => throw new IllegalArgumentException(e.getMessage())
-//    }
+    //    catch {
+    //      case e: SQLException => throw new IllegalArgumentException(e.getMessage())
+    //    }
     println(s", execution $executionId")
     executionId
   }
 
-  def solution(solution: Option[Map[String, Int]], concrete: Concrete) {
+  def solution(solution: Option[Map[String, Int]], concrete: ConcreteRunner) {
+    require(executionId >= 0, "Problem description or parameters were not defined")
     val sol = outputFormat(solution, concrete)
     db.withSession {
       sqlu"UPDATE Executions SET solution = $sol WHERE executionId = $executionId".execute

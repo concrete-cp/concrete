@@ -1,6 +1,4 @@
-package concrete
-
-import java.net.URI
+package concrete.runner
 import SQLWriter._
 import scala.xml.Node
 import scala.xml.Text
@@ -12,10 +10,10 @@ import scala.collection.mutable.HashMap
 import scala.annotation.tailrec
 import scala.collection.SortedMap
 import scala.slick.session.Database
+import scala.slick.jdbc.StaticQuery.interpolation
 import Database.threadLocalSession
-import scala.slick.jdbc.{ GetResult, StaticQuery => Q }
+import scala.slick.jdbc.GetResult
 import scala.slick.driver.PostgresDriver.simple._
-import Q.interpolation
 
 object Table extends App {
 
@@ -232,7 +230,7 @@ object Table extends App {
         println(tabular(data.toSeq))
       }
 
-     // println("\\midrule")
+      // println("\\midrule")
 
       //    for ((k, t) <- totals.toList.sortBy(_._1)) {
       //      println(k + " : " + configs.indices.map { i =>
@@ -268,26 +266,26 @@ object Table extends App {
       }
       //println("\\midrule")
 
-//      for ((k, counts) <- nbSolved.toList.sortBy(_._1)) {
-//        val best = counts.max
-//
-//        println(s"\\em $k & " + counts.map {
-//          i => if (i == best) s"\\bf $i" else s"$i"
-//        }.mkString(" & ") + " \\\\")
-//      }
+      //      for ((k, counts) <- nbSolved.toList.sortBy(_._1)) {
+      //        val best = counts.max
+      //
+      //        println(s"\\em $k & " + counts.map {
+      //          i => if (i == best) s"\\bf $i" else s"$i"
+      //        }.mkString(" & ") + " \\\\")
+      //      }
 
       //    println(d.zipWithIndex map { case (r, i) => configs(i) + " " + r.mkString(" ") } mkString ("\n"))
       //    println()
 
-//      val labels = configs.map(_.toString).toIndexedSeq
-//
-//      toGML(d, labels)
-//
-//      val s = schulze(winnerTakesAll(d))
-//
-//      println(rank(s, s.indices).toList.sortBy(_._1) map {
-//        case (r, c) => "%d: %s".format(r, c.map(labels).mkString(" "))
-//      } mkString ("\n"))
+      //      val labels = configs.map(_.toString).toIndexedSeq
+      //
+      //      toGML(d, labels)
+      //
+      //      val s = schulze(winnerTakesAll(d))
+      //
+      //      println(rank(s, s.indices).toList.sortBy(_._1) map {
+      //        case (r, c) => "%d: %s".format(r, c.map(labels).mkString(" "))
+      //      } mkString ("\n"))
     }
 
   def solved(solution: String) = solution != null && ("UNSAT" == solution || """^[0-9\s]*$""".r.findFirstIn(solution).isDefined || "^Map".r.findFirstIn(solution).isDefined)

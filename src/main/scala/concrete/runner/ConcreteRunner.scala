@@ -1,7 +1,6 @@
-package concrete
+package concrete.runner
 
 import java.net.URI
-import java.net.URL
 import java.util.Timer
 import cspfj.ParameterManager
 import cspfj.Solver
@@ -15,7 +14,7 @@ import cspom.CSPOM
 import cspfj.Problem
 import cspfj.Parameter
 
-trait Concrete {
+trait ConcreteRunner {
 
   def help = """
     Usage : Concrete file
@@ -79,6 +78,11 @@ trait Concrete {
         sys.exit(1)
     }
 
+    val writer: ConcreteWriter = opt.get('SQL).map(url => new SQLWriter(new URI(url.toString))).
+      getOrElse(new ConsoleWriter())
+
+    writer.problem(description(remaining))
+
     opt.get('D) match {
       case Some(p: List[(String, String)]) => for ((option, value) <- p) {
         ParameterManager.parse(option, value)
@@ -86,17 +90,12 @@ trait Concrete {
       case _ =>
     }
 
+    writer.parameters(ParameterManager.toXML.toString)
+
     val statistics = new StatisticsManager()
     statistics.register("concrete", this)
 
-    val config = ParameterManager.toXML.toString
-    val writer: ConcreteWriter = opt.get('SQL) match {
-      case None => new ConsoleWriter(config)
-      case Some(url) =>
-        val desc = description(remaining)
-        new SQLWriter(new URI(url.toString), desc, config)
-    }
-    var sstats: StatisticsManager = null
+    var sstats: Option[StatisticsManager] = None
 
     val waker = new Timer()
     try {
@@ -110,7 +109,7 @@ trait Concrete {
         waker.schedule(new Waker(Thread.currentThread()), t.asInstanceOf[Int] * 1000);
       }
 
-      sstats = solver.statistics
+      sstats = Some(solver.statistics)
 
       val solution = solver.toIterable.headOption
       writer.solution(solution, this)
@@ -119,17 +118,15 @@ trait Concrete {
         if (failed.isDefined) throw new IllegalStateException("Falsified constraints : " + failed.get)
       }
       writer.write(statistics)
-      writer.write(sstats)
+      writer.write(sstats.get)
     } catch {
       case e: Exception =>
         writer.error(e)
         writer.write(statistics)
-        if (sstats ne null) {
-          writer.write(sstats)
-        }
+        sstats.foreach(writer.write)
 
       case e: Throwable =>
-        sstats = null
+        sstats = None
         writer.error(e)
 
     } finally {

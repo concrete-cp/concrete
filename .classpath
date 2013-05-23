@@ -10,7 +10,7 @@
 	<classpathentry kind="lib" path="/home/vion/.ivy2/cache/org.mozilla/rhino/jars/rhino-1.7R4.jar"/>
 	<classpathentry kind="lib" path="/home/vion/.ivy2/cache/postgresql/postgresql/jars/postgresql-9.1-901-1.jdbc4.jar"/>
 	<classpathentry kind="lib" path="/home/vion/.ivy2/cache/org.sat4j/org.sat4j.core/jars/org.sat4j.core-2.3.0.jar"/>
-	<classpathentry kind="lib" path="/home/vion/.ivy2/cache/com.typesafe.slick/slick_2.10/jars/slick_2.10-1.0.0.jar"/>
+	<classpathentry kind="lib" path="/home/vion/.ivy2/cache/com.typesafe.slick/slick_2.10/jars/slick_2.10-1.0.0.jar" sourcepath="/home/vion/.m2/repository/com/typesafe/slick/slick_2.10/1.0.0/slick_2.10-1.0.0-sources.jar"/>
 	<classpathentry kind="lib" path="/home/vion/.ivy2/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.6.4.jar"/>
 	<classpathentry kind="lib" path="/home/vion/.ivy2/cache/org.slf4j/slf4j-nop/jars/slf4j-nop-1.6.4.jar"/>
 	<classpathentry kind="lib" path="/home/vion/.ivy2/cache/junit/junit/jars/junit-4.10.jar"/>

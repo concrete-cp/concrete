@@ -1,18 +1,13 @@
-package concrete
-
-import java.io.ByteArrayInputStream
-import cspfj.generator.ProblemGenerator
-import cspom.CSPOM
+package concrete.runner
 import rb.RBGenerator
 import rb.RBGenerator.Tightness
 import rb.randomlists.Structure
 import java.net.URI
 import scala.slick.session.Database
-import scala.slick.jdbc.{ GetResult, StaticQuery => Q }
-import Q.interpolation
+import scala.slick.jdbc.StaticQuery.interpolation
 import Database.threadLocalSession
 
-object RBConcrete extends Concrete with App {
+object RBConcrete extends ConcreteRunner with App {
 
   override def loadCSPOM(args: List[String]) = {
     val Array(nbVariables, domainSize, arity, nbConstraints,
