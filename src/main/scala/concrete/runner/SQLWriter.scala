@@ -72,7 +72,7 @@ final class SQLWriter(
 
   private var problemId: Int = -1
 
-  private def version = Solver.VERSION + CSPOM.VERSION
+  private def version: String = s"${Solver.VERSION}/${CSPOM.VERSION}"
 
   def parameters(params: String) {
     configId = config(params)
@@ -162,7 +162,7 @@ final class SQLWriter(
     }
   }
 
-  private def execution(problemId: Int, configId: Int, version: Int) = {
+  private def execution(problemId: Int, configId: Int, version: String) = {
     print(s"Problem $problemId, config $configId, version $version")
 
     val executionId = db.withSession {

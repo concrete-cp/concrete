@@ -43,7 +43,7 @@ object Solver {
   @Parameter("preprocessor")
   var preprocessorClass: Class[_ <: Filter] = null
 
-  val VERSION = """Rev:\ (\d+)""".r.findFirstMatchIn("$Rev: 1032$").get.group(1).toInt
+  val VERSION = s"Concrete 2.0-SNAPSHOT"
 
   ParameterManager.register(this)
 
@@ -112,18 +112,18 @@ abstract class Solver(val problem: Problem) extends Iterator[Map[String, Int]] w
     case RESTART => throw new IllegalStateException
   }
 
-//  @tailrec
-//  private def bestSolution(v: Variable, best: SolverResult): SolverResult = nextSolution() match {
-//    case SAT(sol) =>
-//      logger.info("New bound " + sol(v.name))
-//      reset()
-//      v.dom.removeTo(v.dom.index(sol(v.name)))
-//      bestSolution(v, SAT(sol))
-//    case UNSAT => if (best == UNKNOWNResult) UNSAT else best
-//    case _ => best
-//  }
-//
-//  def bestSolution(v: Variable): SolverResult = bestSolution(v, UNKNOWNResult)
+  //  @tailrec
+  //  private def bestSolution(v: Variable, best: SolverResult): SolverResult = nextSolution() match {
+  //    case SAT(sol) =>
+  //      logger.info("New bound " + sol(v.name))
+  //      reset()
+  //      v.dom.removeTo(v.dom.index(sol(v.name)))
+  //      bestSolution(v, SAT(sol))
+  //    case UNSAT => if (best == UNKNOWNResult) UNSAT else best
+  //    case _ => best
+  //  }
+  //
+  //  def bestSolution(v: Variable): SolverResult = bestSolution(v, UNKNOWNResult)
 
   private var _maxBacktracks = -1
 
