@@ -5,20 +5,20 @@ import java.io.PrintStream
 import scala.Array.canBuildFrom
 import scala.annotation.tailrec
 import scala.util.Random
-import cspfj.IntDomain
-import cspfj.StatisticsManager
-import cspfj.UNSATException
-import cspfj.Variable
-import cspfj.constraint.extension.ReduceableExt
-import cspfj.constraint.extension.MDD
-import cspfj.constraint.extension.STR
-import cspfj.util.BitVectorSet
-import cspfj.util.DirectIndices
-import cspfj.constraint.extension.TupleTrieSet
-import cspfj.constraint.extension.MDDC
-import cspfj.constraint.extension.ExtensionConstraintGeneral
-import cspfj.constraint.extension.FindSupportExt
-import cspfj.constraint.extension.ExtensionConstraintSTR3
+import concrete.IntDomain
+import concrete.StatisticsManager
+import concrete.UNSATException
+import concrete.Variable
+import concrete.constraint.extension.ReduceableExt
+import concrete.constraint.extension.MDD
+import concrete.constraint.extension.STR
+import concrete.util.BitVectorSet
+import concrete.util.DirectIndices
+import concrete.constraint.extension.TupleTrieSet
+import concrete.constraint.extension.MDDC
+import concrete.constraint.extension.ExtensionConstraintGeneral
+import concrete.constraint.extension.FindSupportExt
+import concrete.constraint.extension.ExtensionConstraintSTR3
 
 object TrieSize extends App {
 

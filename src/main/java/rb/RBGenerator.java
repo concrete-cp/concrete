@@ -6,12 +6,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import concrete.generator.FailedGenerationException;
+
 import rb.randomlists.CoarseProportionRandomListGenerator;
 import rb.randomlists.ProbabilityRandomListGenerator;
 import rb.randomlists.ProportionRandomListGenerator;
 import rb.randomlists.RandomListGenerator;
 import rb.randomlists.Structure;
-import cspfj.generator.FailedGenerationException;
 import cspom.CSPOM;
 import cspom.constraint.CSPOMConstraint;
 import cspom.extension.ExtensionConstraint;

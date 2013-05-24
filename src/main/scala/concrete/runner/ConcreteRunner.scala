@@ -2,17 +2,17 @@ package concrete.runner
 
 import java.net.URI
 import java.util.Timer
-import cspfj.ParameterManager
-import cspfj.Solver
-import cspfj.Statistic
-import cspfj.Statistic
-import cspfj.StatisticsManager
-import cspfj.util.Waker
+import concrete.ParameterManager
+import concrete.Solver
+import concrete.Statistic
+import concrete.Statistic
+import concrete.StatisticsManager
+import concrete.util.Waker
 import cspom.compiler.ProblemCompiler
-import cspfj.generator.ProblemGenerator
+import concrete.generator.ProblemGenerator
 import cspom.CSPOM
-import cspfj.Problem
-import cspfj.Parameter
+import concrete.Problem
+import concrete.Parameter
 
 trait ConcreteRunner {
 

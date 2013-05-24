@@ -23,8 +23,8 @@ import java.io.ByteArrayInputStream
 import java.math.BigInteger
 import java.net.URI
 import java.security.MessageDigest
-import cspfj.Solver
-import cspfj.StatisticsManager
+import concrete.Solver
+import concrete.StatisticsManager
 import cspom.CSPOM
 import java.security.InvalidParameterException
 import scala.slick.session.Database

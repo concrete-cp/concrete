@@ -1,5 +1,5 @@
 package concrete.runner
-import cspfj.StatisticsManager
+import concrete.StatisticsManager
 
 trait ConcreteWriter {
 
