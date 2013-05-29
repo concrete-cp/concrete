@@ -86,17 +86,23 @@ abstract class Solver(val problem: Problem) extends Iterator[Map[String, Int]] w
   }
 
   private var _next: SolverResult = UNKNOWNResult
-  private var optimise: Option[Variable] = None
-  def optimise_=(v: Variable) { optimise = Some(v) }
+  private var _minimize: Option[Variable] = None
+  private var _maximize: Option[Variable] = None
+  def minimize(v: Variable) { _maximize = None; _minimize = Some(v) }
+  def maximize(v: Variable) { _minimize = None; _maximize = Some(v) }
 
   def next() = _next match {
     case UNSAT => Iterator.empty.next
     case UNKNOWNResult => if (hasNext()) next() else Iterator.empty.next
     case SAT(sol) =>
       _next = UNKNOWNResult
-      for (v <- optimise) {
+      for (v <- _maximize) {
         reset()
         v.dom.removeTo(v.dom.index(sol(v.name)))
+      }
+      for (v <- _minimize) {
+        reset()
+        v.dom.removeFrom(v.dom.index(sol(v.name)))
       }
       sol
     case RESTART => throw new IllegalStateException()

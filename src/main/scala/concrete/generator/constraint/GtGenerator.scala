@@ -22,10 +22,10 @@ final class GtGenerator(problem: Problem) extends AbstractGenerator(problem) {
       false
     } else {
       addConstraint(constraint.description match {
-        case "gt" => new Gt(solverVariables(0), solverVariables(1), true);
-        case "ge" => new Gt(solverVariables(0), solverVariables(1), false);
-        case "lt" => new Gt(solverVariables(1), solverVariables(0), true);
-        case "le" => new Gt(solverVariables(1), solverVariables(0), false);
+        case "gt" | ">" => new Gt(solverVariables(0), solverVariables(1), true);
+        case "ge" | ">=" => new Gt(solverVariables(0), solverVariables(1), false);
+        case "lt" | "<" => new Gt(solverVariables(1), solverVariables(0), true);
+        case "le" | "<=" => new Gt(solverVariables(1), solverVariables(0), false);
         case _ => throw new FailedGenerationException("Unhandled constraint " + constraint);
       })
       true

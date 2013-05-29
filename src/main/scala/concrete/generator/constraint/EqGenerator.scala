@@ -11,55 +11,55 @@ import concrete.constraint.semantic.Disjunction
 final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
   override def generateGeneral(constraint: GeneralConstraint): Boolean = {
-    require("eq" == constraint.description);
-    if (constraint.scope.size != 2) {
-      false
-    } else {
-      val scope = constraint.scope map cspom2concrete
+    require(Seq("=", "eq").contains(constraint.description));
+    val scope = constraint.scope.map(cspom2concrete)
 
-      scope map { _.dom } find { !_.undefined } match {
-        case None => false
-        case Some(refDomain: IntDomain) =>
-          for (v <- scope if (v.dom.undefined)) {
-            v.dom = IntDomain(refDomain.values.toSeq: _*)
+    scope.map(_.dom).find(!_.undefined) match {
+      case None => false
+      case Some(refDomain: IntDomain) =>
+        generateInt(refDomain, scope); true
+      case Some(refDomain: BooleanDomain) =>
+        generateBool(refDomain, scope); true
+      case _ => throw new FailedGenerationException("Unhandled domain")
+    }
+  }
+
+  private def generateInt(refDomain: IntDomain, scope: Seq[Variable]) {
+    for (v <- scope if (v.dom.undefined)) {
+      v.dom = IntDomain(refDomain.values.toSeq: _*)
+    }
+    for (Seq(v0, v1) <- scope.sliding(2)) {
+      addConstraint(new Eq(v0, v1));
+    }
+  }
+
+  private def generateBool(refDomain: BooleanDomain, scope: Seq[Variable]) {
+    scope filter { _.dom.undefined } map { _.dom.asInstanceOf[BooleanDomain] } find { _.size == 1 } match {
+      case None =>
+        for (v <- scope if (v.dom.undefined)) {
+          v.dom = new BooleanDomain(refDomain.status)
+        }
+
+        for (Seq(i, j) <- scope.combinations(2)) {
+          addConstraint(new Disjunction(Array(i, j), Array(false, true)))
+        }
+
+      case Some(constantDomain) =>
+        for (v <- scope) {
+          if (v.dom.undefined) {
+            v.dom = new BooleanDomain(refDomain.status)
+          } else {
+            val d = v.dom.asInstanceOf[BooleanDomain]
+            if (d.isUnknown) {
+              d.status = refDomain.status
+            } else if (d.status != refDomain.status) {
+              throw new FailedGenerationException("Inconsistent equality")
+            }
           }
-          addConstraint(new Eq(scope(0), scope(1)));
-          true
-
-        case Some(refDomain: BooleanDomain) =>
-          scope filter { _.dom.undefined } map { _.dom.asInstanceOf[BooleanDomain] } find { _.size == 1 } match {
-            case None =>
-              for (v <- scope if (v.dom.undefined)) {
-                v.dom = new BooleanDomain(refDomain.status)
-              }
-
-              for (i <- scope; j <- scope if i != j) {
-                addConstraint(new Disjunction(Array(i, j), Array(false, true)))
-              }
-
-              true
-
-            case Some(constantDomain) =>
-              for (v <- scope) {
-                if (v.dom.undefined) {
-                  v.dom = new BooleanDomain(refDomain.status)
-                } else {
-                  val d = v.dom.asInstanceOf[BooleanDomain]
-                  if (d.isUnknown) {
-                    d.status = refDomain.status
-                  } else if (d.status != refDomain.status) {
-                    throw new FailedGenerationException("Inconsistent equality")
-                  }
-                }
-              }
-              true
-          }
-
-        case Some(d: Domain) => throw new FailedGenerationException("Unhandled domain")
-
-      }
+        }
 
     }
+
   }
 
   override def generateFunctional(funcConstraint: FunctionalConstraint) = funcConstraint.description match {
