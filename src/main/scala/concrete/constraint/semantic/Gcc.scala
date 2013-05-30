@@ -71,7 +71,7 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Constrai
 
       for (v <- singles.indices) {
         if (singles(v) > bound(v).maxCount) {
-          throw UNSATException.e
+          throw UNSATException
         } else if (singles(v) == bound(v).maxCount) {
           ch ++= filter(v, queue)
         }
@@ -107,7 +107,7 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Constrai
     for (Bounds(v, min, _) <- _bounds) {
       val c = counts(v)
       if (c < min) {
-        throw UNSATException.e
+        throw UNSATException
       } else if (c == min) {
         ch ++= assignAll(v)
       }

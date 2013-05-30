@@ -1,11 +1,12 @@
 package concrete
 
-case class Pair(val variable: Variable, val index: Int) {
-  def value: Int = variable.dom.value(index)
+final case class Pair(val variable: Variable, val index: Int) {
+  private val dom = variable.dom
+  def value: Int = dom.value(index)
   def assign() {
-    variable.dom.setSingle(index)
+    dom.setSingle(index)
   }
   def remove() {
-    variable.dom.remove(index)
+    dom.remove(index)
   }
 }

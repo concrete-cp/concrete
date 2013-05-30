@@ -155,7 +155,7 @@ abstract class Constraint(val scope: Array[Variable])
       revise()
       true
     } catch {
-      case e: UNSATException => false
+      case UNSATException => false
     } finally {
       restoreLvl(level - 1)
       scope foreach { _.dom.restoreLevel(level) }
@@ -171,7 +171,6 @@ abstract class Constraint(val scope: Array[Variable])
    *
    * @param revisator
    */
-  @throws(classOf[UNSATException])
   def revise(): Traversable[Int]
 
   private var valTuple = new Array[Int](arity)

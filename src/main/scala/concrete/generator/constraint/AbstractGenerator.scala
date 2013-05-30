@@ -14,8 +14,6 @@ abstract class AbstractGenerator(val problem: Problem) {
 
   def addConstraint(constraint: Constraint) = problem.addConstraint(constraint)
 
-  def addVariable(name: String, domain: Domain) = problem.addVariable(name, domain)
-
   @throws(classOf[FailedGenerationException])
   def generate(constraint: CSPOMConstraint) = constraint match {
     case c: GeneralConstraint => generateGeneral(c)

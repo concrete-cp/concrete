@@ -10,6 +10,7 @@ import scala.collection.immutable.Queue
 import cspom.variable.IntInterval
 import concrete.util.Loggable
 import concrete.UndefinedDomain
+import concrete.Variable
 
 object ProblemGenerator extends Loggable {
   @throws(classOf[FailedGenerationException])
@@ -17,9 +18,9 @@ object ProblemGenerator extends Loggable {
 
     // new ProblemCompiler(cspom).compile();
 
-    val problem = new Problem();
+    //val problem = new Problem();
 
-    generateVariables(problem, cspom)
+    val problem = new Problem(generateVariables(cspom))
 
     val gm = new GeneratorManager(problem);
 
@@ -47,18 +48,18 @@ object ProblemGenerator extends Loggable {
 
     processQueue(Queue.empty ++ cspom.constraints)
 
-    for (v <- problem.variables if v.constraints.isEmpty) {
-      problem.removeVariable(v)
-    }
+    //    for (v <- problem.variables if v.constraints.isEmpty) {
+    //      problem.removeVariable(v)
+    //    }
 
     problem;
   }
 
-  def generateVariables(problem: Problem, cspom: CSPOM) {
-    for (v <- cspom.variables) {
+  def generateVariables(cspom: CSPOM) = {
+    cspom.variables.map { v =>
       logger.fine("sizeD " + v.domainOption.map(_.size).getOrElse("?"))
-      problem.addVariable(v.name, generateDomain(v.domainOption));
-    }
+      new Variable(v.name, generateDomain(v.domainOption));
+    } toList
   }
 
   def generateDomain[T](cspomDomain: Option[CSPOMDomain[T]]): Domain = cspomDomain map {

@@ -22,8 +22,7 @@ final class AbsDiffGeneratorTest {
     val v2 = cspom.varOf(1, 2, 3)
     val c = cspom.addConstraint(new FunctionalConstraint(v0, "absdiff", v1, v2))
 
-    val problem = new Problem
-    ProblemGenerator.generateVariables(problem, cspom)
+    val problem = new Problem(ProblemGenerator.generateVariables(cspom))
     new AbsDiffGenerator(problem).generate(c)
 
     assertEquals(1, problem.constraints.size)

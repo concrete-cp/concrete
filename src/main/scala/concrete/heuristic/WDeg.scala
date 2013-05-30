@@ -25,12 +25,6 @@ import concrete.Problem
 import concrete.Variable;
 import scala.annotation.tailrec
 
-object WDeg {
-
-  def nbUnboundVariables(constraint: Constraint) =
-    constraint.scope.iterator.filter(_.dom.size > 1).size
-}
-
 final class WDeg(val problem: Problem) extends VariableHeuristic {
 
   def score(variable: Variable) = variable.getWDegEntailed

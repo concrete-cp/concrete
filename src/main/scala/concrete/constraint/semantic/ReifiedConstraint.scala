@@ -83,7 +83,7 @@ final class ReifiedConstraint(
           true
         } else false) | (
           if (!negativeConstraint.isConsistent) {
-            if (!controlDomain.isUnknown) throw UNSATException.e
+            if (!controlDomain.isUnknown) throw UNSATException
             controlDomain.setTrue();
             entail()
             true

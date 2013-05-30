@@ -69,7 +69,7 @@ final class MDDR(_scope: Array[Variable], private val _tts: MDD)
 
     // val newSize = newTrie.size
 
-    if (newTrie.isEmpty) { throw UNSATException.e }
+    if (newTrie.isEmpty) { throw UNSATException }
 
     //assert(newSize <= oldSize)
 

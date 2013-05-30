@@ -60,7 +60,7 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
 
     seekSupports(MDD.timestamp, mdd, 0)
     if (gNo(mdd.getId)) {
-      throw UNSATException.e
+      throw UNSATException
     }
 
     if (gNo ne oldGno) {

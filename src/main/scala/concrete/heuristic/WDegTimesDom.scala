@@ -22,7 +22,7 @@ package concrete.heuristic;
 import concrete.Problem;
 import concrete.Variable;
 
-class WDegTimesDom(val problem: Problem) extends VariableHeuristic with RandomBreak {
+class WDegTimesDom(val problem: Problem) extends VariableHeuristic {
 
   def score(variable: Variable) = variable.getWDegEntailed * variable.dom.size
 

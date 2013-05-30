@@ -151,7 +151,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
       pathset(t, x + 1, z, z);
 
       if (d(z) < bounds(z) - bounds(y)) {
-        throw UNSATException.e
+        throw UNSATException
       }
 
       if (h(x) > x) {
@@ -197,7 +197,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
       pathset(t, x - 1, z, z);
 
       if (d(z) < bounds(y) - bounds(z)) {
-        throw UNSATException.e
+        throw UNSATException
       }
 
       if (h(x) < x) {

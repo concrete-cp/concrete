@@ -22,8 +22,10 @@ package concrete.heuristic;
 import concrete.Problem;
 import concrete.Variable;
 
-final class WDegOnDom(problem: Problem) extends WDegFixedOnDom(problem) with RandomBreak {
+class WDegOnDom(val problem: Problem) extends VariableHeuristic {
 
-  override def toString = "max-wdeg/dom w/ rb";
+  def score(variable: Variable) = variable.getWDegEntailed.toDouble / variable.dom.size
+
+  override def toString = "max-wdeg/dom"
 
 }

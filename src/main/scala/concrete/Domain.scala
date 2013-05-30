@@ -4,14 +4,11 @@ import concrete.util.BitVector
 import concrete.util.Interval
 import concrete.util.IntSet
 
-final class EmptyDomainException extends UNSATException
+final object EmptyDomainException extends Exception
 
 object Domain {
-  val empty = new EmptyDomainException
-
   @Statistic
   var checks = 0L
-
 }
 
 abstract class Domain {

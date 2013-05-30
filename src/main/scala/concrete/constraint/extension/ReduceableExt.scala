@@ -76,7 +76,7 @@ final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
 
     // val newSize = newTrie.size
 
-    if (newTrie.isEmpty) { throw UNSATException.e }
+    if (newTrie.isEmpty) { throw UNSATException }
 
     //assert(newSize <= oldSize)
 

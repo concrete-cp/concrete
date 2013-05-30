@@ -4,14 +4,16 @@ import org.junit.Test
 import concrete.IntDomain
 import org.junit.Assert._
 import concrete.AdviseCount
+import concrete.Variable
 
 final class AbsIntTest {
 
   @Test
   def testX() {
-    val prob = new Problem
-    val x = prob.addVariable("x", IntDomain(-100 to 100))
-    val y = prob.addVariable("y", IntDomain(-5))
+
+    val x = new Variable("x", IntDomain(-100 to 100))
+    val y = new Variable("y", IntDomain(-5))
+    val prob = new Problem(x, y)
     val c = new Abs(x, y)
     prob.addConstraint(c)
     AdviseCount.adviseAll(c)
@@ -23,9 +25,10 @@ final class AbsIntTest {
 
   @Test
   def testY() {
-    val prob = new Problem
-    val x = prob.addVariable("x", IntDomain(7))
-    val y = prob.addVariable("y", IntDomain(-100 to 100))
+
+    val x = new Variable("x", IntDomain(7))
+    val y = new Variable("y", IntDomain(-100 to 100))
+    val prob = new Problem(x, y)
     val c = new Abs(x, y)
     prob.addConstraint(c)
     AdviseCount.adviseAll(c)

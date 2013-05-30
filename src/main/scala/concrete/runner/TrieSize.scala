@@ -110,7 +110,7 @@ object TrieSize extends App {
       try {
         constraint.revise((arity - 1 to 0 by -1).toList)
       } catch {
-        case _: UNSATException =>
+        case UNSATException =>
       }
 
       time += System.nanoTime()
@@ -139,7 +139,7 @@ object TrieSize extends App {
           count -= 1
         }
       } catch {
-        case _: UNSATException =>
+        case UNSATException =>
       }
       System.gc()
       System.gc()
@@ -160,7 +160,7 @@ object TrieSize extends App {
   def check(d: Array[IntDomain], p: Int, i: Int) = d(p).present(i)
 
   val algos = List(
- //   ("MDD", "Find"),
+    //   ("MDD", "Find"),
     ("MDD", "Reduce"),
     ("MDD", "MDDC"),
     ("STR", "Reduce"))
@@ -220,14 +220,14 @@ object TrieSize extends App {
   bench(Seq(5), Seq(.5), 2 to 50)
   bench(Seq(5), 0.02 to 1.0 by .02, Seq(10))
   bench(2 to 15, Seq(.5), Seq(10))
-//
-//  bench(Seq(6), Seq(.1), 2 to 50)
-//  bench(Seq(6), 0.02 to 1.0 by .02, Seq(10))
-//  bench(2 to 15, Seq(.1), Seq(10))
-//
-//  bench(Seq(10), Seq(.01), 2 to 50)
-//  bench(Seq(10), 0.02 to 1.0 by .02, Seq(5))
-//  bench(2 to 20, Seq(.01), Seq(5))
+  //
+  //  bench(Seq(6), Seq(.1), 2 to 50)
+  //  bench(Seq(6), 0.02 to 1.0 by .02, Seq(10))
+  //  bench(2 to 15, Seq(.1), Seq(10))
+  //
+  //  bench(Seq(10), Seq(.01), 2 to 50)
+  //  bench(Seq(10), 0.02 to 1.0 by .02, Seq(5))
+  //  bench(2 to 20, Seq(.01), Seq(5))
 
   nullOut.close()
   //println(t.mdds.size)

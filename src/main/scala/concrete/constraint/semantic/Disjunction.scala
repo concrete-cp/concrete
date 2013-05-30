@@ -95,7 +95,7 @@ final class Disjunction(scope: Array[Variable],
         else domains(position).setTrue()
 
       }
-    } else throw UNSATException.e
+    } else throw UNSATException
 
     // } else sys.error("Unreachable state: " + dom + " / " + reverses(position))
 

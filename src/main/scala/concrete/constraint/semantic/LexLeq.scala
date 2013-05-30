@@ -65,7 +65,7 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
 
       if (i == size) beta = Integer.MAX_VALUE
       else if (beta == -1) beta = i
-      if (alpha >= beta) throw UNSATException.e
+      if (alpha >= beta) throw UNSATException
       gacLexLeq(alpha)
     }
   }
@@ -139,7 +139,7 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
   }
 
   private def updateAlpha(i: Int) {
-    if (i == beta) throw UNSATException.e
+    if (i == beta) throw UNSATException
     if (i == size) {
       consistent = true
       return
@@ -152,7 +152,7 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
   }
 
   private def updateBeta(i: Int) {
-    if (i + 1 == alpha) throw UNSATException.e
+    if (i + 1 == alpha) throw UNSATException
     if (min(x(i)) < max(y(i))) {
       beta = i + 1
       if (notAlwaysLt(i)) gacLexLeq(i)

@@ -151,7 +151,7 @@ final class ACC(val problem: Problem, val key: Key[Constraint], val queue: Prior
         //        } else assert(constraint.sizes() sameElements sizes, constraint + " returned wrong false revised info")
         true
       } catch {
-        case e: UNSATException =>
+        case EmptyDomainException | UNSATException =>
           constraint.weight += 1
           false
       }

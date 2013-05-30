@@ -121,7 +121,7 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
     val solverVariables = extensionConstraint.scope map cspom2concrete toList
 
     if (extensionConstraint.relation.isEmpty) {
-      (extensionConstraint.init == true) || (throw new UNSATException)
+      (extensionConstraint.init == true) || (throw UNSATException)
     } else if (solverVariables.exists(_.dom.undefined)) {
       false
     } else {

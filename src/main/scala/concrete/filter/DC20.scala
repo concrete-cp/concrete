@@ -103,7 +103,7 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
         c.revise()
         true
       } catch {
-        case _: UNSATException => false
+        case UNSATException => false
       })
     }
 

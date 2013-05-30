@@ -6,7 +6,7 @@ import concrete.UNSATException
 import org.junit.Assert._
 
 class AllDifferentBCTest {
-  @Test(expected = classOf[UNSATException])
+  @Test(expected = classOf[Exception])
   def test() {
     val v1 = new Variable("1", IntDomain(7))
     val v2 = new Variable("2", IntDomain(6))

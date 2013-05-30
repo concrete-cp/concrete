@@ -5,6 +5,8 @@ import javax.constraints.Objective
 import javax.constraints.Var
 import concrete.generator.ProblemGenerator
 import javax.constraints.ProblemState
+import concrete.ParameterManager
+import concrete.MAC
 
 class Solver(problem: javax.constraints.impl.Problem) extends javax.constraints.impl.search.AbstractSolver(problem) {
   val cspom = problem.cspom
@@ -37,7 +39,11 @@ class Solver(problem: javax.constraints.impl.Problem) extends javax.constraints.
     def next = new Solution(itr.next)
   }
 
-  def newSearchStrategy(): javax.constraints.SearchStrategy = new SearchStrategy(this)
+  def newSearchStrategy(): javax.constraints.SearchStrategy = {
+    val ss = new SearchStrategy(this)
+    //concreteSolver.asInstanceOf[MAC].setHeuristic(ss)
+    ss
+  }
 
   override def findOptimalSolution(objective: Objective, variable: Var): Solution = {
     objective match {

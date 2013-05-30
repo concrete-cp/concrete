@@ -165,7 +165,7 @@ final class IntDomain(
     assert(present(index));
     altering()
     intSet = intSet.remove(index)
-    if (intSet.isEmpty) throw Domain.empty
+    if (intSet.isEmpty) throw EmptyDomainException
   }
 
   def removeFrom(lb: Int) = {
@@ -175,7 +175,7 @@ final class IntDomain(
     } else {
       altering()
       intSet = s
-      if (s.isEmpty) throw Domain.empty
+      if (s.isEmpty) throw EmptyDomainException
       true
     }
   }
@@ -187,7 +187,7 @@ final class IntDomain(
     } else {
       altering()
       intSet = s
-      if (s.isEmpty) throw Domain.empty
+      if (s.isEmpty) throw EmptyDomainException
       true
     }
   }
@@ -199,7 +199,7 @@ final class IntDomain(
     } else {
       intSet = is
       altering()
-      if (intSet.isEmpty) throw Domain.empty
+      if (intSet.isEmpty) throw EmptyDomainException
       true
     }
   }

@@ -21,38 +21,47 @@ package concrete
 
 import concrete.constraint.Constraint
 import scala.collection.JavaConversions
+import scala.collection.mutable.ArrayBuffer
 
-final class Problem {
-  private var variableMap: Map[String, Variable] = Map.empty
-  private var _variables: List[Variable] = Nil //IndexedSeq.empty
+object Problem {
+  @annotation.varargs
+  def apply(variables: Variable*) = new Problem(variables.toList)
+}
+
+final class Problem(val variables: List[Variable]) {
+  require(variables.map(_.name).distinct.size == variables.size, "Duplicates in variable names")
+
+  def this(variables: Variable*) = this(variables.toList)
+
+  private val variableMap: Map[String, Variable] = variables.map(v => v.name -> v).toMap
   private var _constraints: List[Constraint] = Nil
 
   private var _maxDomainSize = -1
   private var _maxArity = 0
-  private var _maxVId = 0
+  val maxVId = variables.map(_.getId).max
   private var _maxCId = 0
   private var _currentLevel = 0
 
-  def addVariable(name: String, domain: Domain) = {
-    require(!variableMap.contains(name), "A variable named " + name + " already exists");
-
-    val variable = new Variable(name, domain);
-    variableMap += name -> variable
-    _variables :+= variable
-
-    _maxVId = math.max(variable.getId, _maxVId)
-    //_maxDomainSize = math.max(variable.dom.size, _maxDomainSize)
-    variable;
-  }
-
-  def removeVariable(v: Variable) {
-    require(v.constraints.isEmpty)
-
-    variableMap -= v.name
-    _variables = _variables filter (_ ne v)
-    _maxVId = _variables map (_.getId) max
-
-  }
+  //  def addVariable(name: String, domain: Domain) = {
+  //    require(!variableMap.contains(name), "A variable named " + name + " already exists");
+  //
+  //    val variable = new Variable(name, domain);
+  //    variableMap += name -> variable
+  //    _variables += variable
+  //
+  //    _maxVId = math.max(variable.getId, _maxVId)
+  //    //_maxDomainSize = math.max(variable.dom.size, _maxDomainSize)
+  //    variable;
+  //  }
+  //
+  //  def removeVariable(v: Variable) {
+  //    require(v.constraints.isEmpty)
+  //
+  //    variableMap -= v.name
+  //    _variables -= v
+  //    _maxVId = _variables map (_.getId) max
+  //
+  //  }
 
   def addConstraint(constraint: Constraint) {
     _constraints ::= constraint;
@@ -76,23 +85,23 @@ final class Problem {
   }
 
   private def setLevel(level: Int) {
-    _variables.foreach(_.dom.setLevel(level))
+    variables.foreach(_.dom.setLevel(level))
     _constraints.foreach(_.setLvl(level))
   }
 
   private def restoreLevel(level: Int) {
-    _variables.foreach(_.dom.restoreLevel(level))
+    variables.foreach(_.dom.restoreLevel(level))
     _constraints.foreach(_.restoreLvl(level))
   }
 
   def reset() {
     _currentLevel = 0;
-    _variables.foreach(_.dom.restoreLevel(0))
+    variables.foreach(_.dom.restoreLevel(0))
     _constraints.foreach(_.restoreLvl(0))
   }
 
   override def toString = {
-    _variables.mkString("\n") + "\n" +
+    variables.mkString("\n") + "\n" +
       _constraints.filter(!_.isEntailed).mkString("\n") + "\n" +
       stats
   }
@@ -100,7 +109,7 @@ final class Problem {
   def stats = {
     val entailed = _constraints.count(_.isEntailed)
 
-    s"Total ${_variables.size} variables, ${_constraints.size - entailed} active constraints and $entailed entailed constraints"
+    s"Total ${variables.size} variables, ${_constraints.size - entailed} active constraints and $entailed entailed constraints"
   }
 
   def maxDomainSize = {
@@ -112,11 +121,11 @@ final class Problem {
 
   def currentLevel = _currentLevel
   def maxArity = _maxArity
-  def maxVId = _maxVId
+
   def maxCId = _maxCId
-  def nd = _variables map { _.dom.size } sum
+  def nd = variables map { _.dom.size } sum
   def variable(name: String) = variableMap(name)
-  def variables = _variables
+
   def constraints = _constraints
   def getVariables = JavaConversions.seqAsJavaList(variables)
 

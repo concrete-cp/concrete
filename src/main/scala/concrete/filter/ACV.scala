@@ -113,7 +113,7 @@ final class ACV(
         //if (c.revise()) updateQueue(prev, c)
         true
       } catch {
-        case _: UNSATException => {
+        case UNSATException => {
           c.weight += 1
           false
         }
@@ -181,13 +181,13 @@ final class ACV(
 
         try {
           updateQueue(c.revise(), c)
-//          if (c.revise()) {
-//            assert(!(c.sizes() sameElements prev), c + " returned wrong true revised info")
-//            updateQueue(prev, c)
-//          } else assert(c.sizes() sameElements prev, c + " returned wrong false revised info")
+          //          if (c.revise()) {
+          //            assert(!(c.sizes() sameElements prev), c + " returned wrong true revised info")
+          //            updateQueue(prev, c)
+          //          } else assert(c.sizes() sameElements prev, c + " returned wrong false revised info")
           true
         } catch {
-          case e: UNSATException =>
+          case UNSATException =>
             c.weight += 1
             false
         }

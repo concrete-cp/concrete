@@ -10,28 +10,26 @@ import concrete.constraint.semantic.AllDifferent2C
 class TestMAC {
 
   def qp(size: Int) = {
-    val problem = new Problem
 
-    val queens = (0 until size) map (q => problem.addVariable("q" + q, IntDomain(0 until size)))
-
-    allDiff(problem, queens)
+    val queens = (0 until size) map (q => new Variable("q" + q, IntDomain(0 until size))) toList
 
     val qd1 = queens.zipWithIndex map {
-      case (q, i) =>
-        val v = problem.addVariable("d1_" + q.name, IntDomain(-i until size - i))
-        problem.addConstraint(new Eq(false, q, -i, v))
-        v
+      case (q, i) => new Variable("d1_" + q.name, IntDomain(-i until size - i))
     }
-
-    allDiff(problem, qd1)
 
     val qd2 = queens.zipWithIndex map {
-      case (q, i) =>
-        val v = problem.addVariable("d2_" + q.name, IntDomain(i until size + i))
-        problem.addConstraint(new Eq(false, q, i, v))
-        v
+      case (q, i) => new Variable("d2_" + q.name, IntDomain(i until size + i))
     }
 
+    val problem = new Problem(queens ::: qd1 ::: qd2)
+
+    for (((q, q1, q2), i) <- (queens, qd1, qd2).zipped.toIterable.zipWithIndex) {
+      problem.addConstraint(new Eq(false, q, -i, q1))
+      problem.addConstraint(new Eq(false, q, i, q2))
+    }
+
+    allDiff(problem, queens)
+    allDiff(problem, qd1)
     allDiff(problem, qd2)
     (queens, problem)
   }

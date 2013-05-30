@@ -63,7 +63,7 @@ class MDDC2(_scope: Array[Variable], private val mdd: MDD)
     mark(MDD.timestamp, mdd, 0, modified.reverse)
 
     if (gNo(mdd.getId)) {
-      throw UNSATException.e
+      throw UNSATException
     }
     if (gNo ne oldGno) {
       altering()

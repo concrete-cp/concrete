@@ -6,7 +6,7 @@ import concrete.Problem
 import concrete.Variable;
 import scala.annotation.tailrec
 
-final class DDegOnDom(val problem: Problem) extends VariableHeuristic with RandomBreak {
+final class DDegOnDom(val problem: Problem) extends VariableHeuristic {
 
   def score(variable: Variable) =
     variable.getDDegEntailed.toDouble / variable.dom.size
