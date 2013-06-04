@@ -9,7 +9,7 @@ final class GccGenerator(problem: Problem) extends AbstractGenerator(problem) {
   override def generateGeneral(constraint: GeneralConstraint) = {
     val scope = constraint.scope map cspom2concrete
 
-    if (scope exists (_.dom == null)) {
+    if (scope.exists(_.dom.undefined)) {
       false
     } else {
       val bounds = constraint.predicate.parameters match {
