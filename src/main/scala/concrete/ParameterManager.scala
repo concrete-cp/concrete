@@ -5,6 +5,7 @@ import scala.xml.NodeSeq
 import java.util.Properties
 import scala.collection.JavaConversions
 import java.security.InvalidParameterException
+import scala.collection.mutable.HashMap
 
 /**
  * This class is intended to hold CSP4J's various parameters.
@@ -14,9 +15,9 @@ import java.security.InvalidParameterException
  */
 final object ParameterManager {
 
-  private var parameters: Map[String, (Any, Field)] = Map.empty
-  private var pending: Map[String, Any] = Map.empty
-  private var pendingParse: Map[String, String] = Map.empty
+  private val parameters: HashMap[String, (Any, Field)] = new HashMap()
+  private val pending: HashMap[String, Any] = new HashMap()
+  private val pendingParse: HashMap[String, String] = new HashMap()
 
   def register(o: AnyRef) {
     require(!o.isInstanceOf[Class[_]])
@@ -26,20 +27,13 @@ final object ParameterManager {
         val name = param.value
         parameters += name -> (o, f)
         f.setAccessible(true);
-        pending.get(name) match {
-          case Some(value) => {
-            f.set(o, value)
-            pending -= name
-          }
-          case None =>
+        for (value <- pending.get(name)) {
+          f.set(o, value)
+          pending -= name
         }
-
-        pendingParse.get(name) match {
-          case Some(s) => {
-            f.set(o, parse(f, s))
-            pendingParse -= name
-          }
-          case None =>
+        for (s <- pendingParse.get(name)) {
+          f.set(o, parse(f, s))
+          pendingParse -= name
         }
       }
     }
@@ -58,8 +52,8 @@ final object ParameterManager {
     }
   }
 
-  private def parse(field: Field, value: String) = {
-    var fType = field.getType
+  private def parse(field: Field, value: String): Any = {
+    val fType = field.getType
 
     if (fType.isAssignableFrom(classOf[Int])) {
       value.toInt
@@ -70,7 +64,7 @@ final object ParameterManager {
     } else if (fType.isAssignableFrom(classOf[Class[_]])) {
       Class.forName(value)
     } else {
-      throw new IllegalArgumentException("Cannot parse " + field + " of type " + fType)
+      throw new IllegalArgumentException(s"Cannot parse $field of type $fType")
     }
 
   }
@@ -107,13 +101,13 @@ final object ParameterManager {
   def list = allParams.iterator.map { case (k, v) => k + "=" + v }.mkString(", ")
 
   def allParams: Map[String, Any] =
-    parameters.map {
+    parameters.iterator.map {
       case (k, (o, f)) => k -> f.get(o)
-    } ++ pending.map {
+    } ++ pending.iterator.map {
       case (k, v) => k -> v
-    } ++ pendingParse.map {
+    } ++ pendingParse.iterator.map {
       case (k, v) => k -> v
-    }
+    } toMap
 
   def parseProperties(line: Properties) {
     JavaConversions.mapAsScalaMap(line).foreach {
@@ -122,8 +116,8 @@ final object ParameterManager {
   }
 
   def checkPending() {
-    if (!pending.isEmpty) throw new InvalidParameterException("These parameters were not used " + pending)
-    if (!pendingParse.isEmpty) throw new InvalidParameterException("These parameters were not used " + pendingParse)
+    if (pending.nonEmpty) throw new InvalidParameterException("These parameters were not used " + pending)
+    if (pendingParse.nonEmpty) throw new InvalidParameterException("These parameters were not used " + pendingParse)
 
   }
 
