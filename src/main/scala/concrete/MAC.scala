@@ -62,7 +62,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
   private val filter: Filter = MAC.filterClass.getConstructor(classOf[Problem]).newInstance(problem);
   statistics.register("filter", filter);
 
-  var heuristic: Heuristic = MAC.heuristicClass.getConstructor(classOf[Problem]).newInstance(problem);
+  var heuristic: Heuristic = MAC.heuristicClass.getConstructor().newInstance();
 
   private val ngl = new NoGoodLearner(prob, MAC.addConstraint)
   statistics.register("nfr-learner", ngl)
@@ -171,7 +171,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
         UNSAT
       } else {
 
-        val (_, heuristicCpu) = StatisticsManager.time(heuristic.compute())
+        val (_, heuristicCpu) = StatisticsManager.time(heuristic.compute(problem))
 
         val (sol, stack) = nextSolution(None)
         currentStack = stack

@@ -1,6 +1,7 @@
 package concrete.heuristic;
 
 import concrete.Variable;
+import concrete.Problem
 
 final class MedValue extends ValueHeuristic {
 
@@ -8,7 +9,7 @@ final class MedValue extends ValueHeuristic {
 
   override def toString = "median";
 
-  def compute() {
+  def compute(p: Problem) {
     // Nothing to compute
   }
 

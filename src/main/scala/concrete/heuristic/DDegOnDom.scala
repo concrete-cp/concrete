@@ -6,7 +6,7 @@ import concrete.Problem
 import concrete.Variable;
 import scala.annotation.tailrec
 
-final class DDegOnDom(val problem: Problem) extends VariableHeuristic {
+final class DDegOnDom extends VariableHeuristic {
 
   def score(variable: Variable) =
     variable.getDDegEntailed.toDouble / variable.dom.size

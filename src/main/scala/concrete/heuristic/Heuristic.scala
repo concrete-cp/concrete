@@ -5,5 +5,5 @@ import concrete.Problem;
 
 trait Heuristic {
   def selectPair(problem: Problem): Option[Pair]
-  def compute(): Unit
+  def compute(problem: Problem): Unit
 }

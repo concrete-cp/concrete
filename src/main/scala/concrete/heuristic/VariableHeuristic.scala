@@ -22,9 +22,9 @@ object VariableHeuristic {
 trait VariableHeuristic extends Ordering[Variable] {
   private val rand = if (VariableHeuristic.rb) new Random(VariableHeuristic.seed) else null
 
-  def problem: Problem
+  //def problem: Problem
 
-  def select: Option[Variable] =
+  def select(problem: Problem): Option[Variable] =
     select(problem.variables.iterator.filter(_.dom.size > 1))
 
   @tailrec

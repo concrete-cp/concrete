@@ -1,6 +1,7 @@
 package concrete.heuristic;
 
 import concrete.Variable;
+import concrete.Problem
 
 final class RevLexico extends ValueHeuristic {
 
@@ -8,7 +9,7 @@ final class RevLexico extends ValueHeuristic {
 
   override def toString = "lexico";
 
-  def compute() {
+  def compute(p: Problem) {
     // Nothing to compute
   }
 

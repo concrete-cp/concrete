@@ -22,7 +22,7 @@ package concrete.heuristic;
 import concrete.Problem;
 import concrete.Variable;
 
-final class Dom(val problem: Problem) extends VariableHeuristic {
+final class Dom extends VariableHeuristic {
 
   def score(variable: Variable) = -variable.dom.size
 

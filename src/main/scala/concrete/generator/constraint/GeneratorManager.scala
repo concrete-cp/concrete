@@ -47,7 +47,8 @@ object GeneratorManager {
     "mod" -> classOf[ModGenerator],
     "nevec" -> classOf[NeqVecGenerator],
     "zerosum" -> classOf[ZeroSumGenerator],
-    "lexleq" -> classOf[LexLeqGenerator])
+    "lexleq" -> classOf[LexLeqGenerator],
+    "occurrence" -> classOf[OccurrenceGenerator])
 
   def register(entry: (String, Class[_ <: AbstractGenerator])) {
     known += entry

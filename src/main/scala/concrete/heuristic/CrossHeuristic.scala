@@ -18,22 +18,22 @@ object CrossHeuristic {
   ParameterManager.register(this);
 }
 
-final class CrossHeuristic(problem: Problem) extends Heuristic {
+final class CrossHeuristic extends Heuristic {
 
-  val variableHeuristic = CrossHeuristic.variableHeuristicClass.getConstructor(classOf[Problem]).newInstance(problem)
+  val variableHeuristic = CrossHeuristic.variableHeuristicClass.getConstructor().newInstance()
 
   val valueHeuristic = CrossHeuristic.valueHeuristicClass.getConstructor().newInstance()
 
   def selectPair(problem: Problem) = {
-    variableHeuristic.select match {
+    variableHeuristic.select(problem) match {
       case None => None
       case Some(v) => Some(Pair(v, valueHeuristic.selectIndex(v)))
     }
   }
 
-  def compute() {
+  def compute(problem: Problem) {
     // logger.fine("Initializing heuristics");
-    valueHeuristic.compute();
+    valueHeuristic.compute(problem: Problem);
   }
 
   override def toString =

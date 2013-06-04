@@ -22,7 +22,7 @@ package concrete.heuristic;
 import concrete.Problem;
 import concrete.Variable;
 
-class WDegFreeOnDom(val problem: Problem) extends VariableHeuristic {
+class WDegFreeOnDom extends VariableHeuristic {
 
   def score(variable: Variable) = variable.getWDegFree.toDouble / variable.dom.size
 
