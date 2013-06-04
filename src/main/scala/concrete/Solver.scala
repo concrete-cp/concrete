@@ -98,11 +98,19 @@ abstract class Solver(val problem: Problem) extends Iterator[Map[String, Int]] w
       _next = UNKNOWNResult
       for (v <- _maximize) {
         reset()
-        v.dom.removeTo(v.dom.index(sol(v.name)))
+        try {
+          v.dom.removeTo(v.dom.index(sol(v.name)))
+        } catch {
+          case e: UNSATException => _next = UNSAT
+        }
       }
       for (v <- _minimize) {
         reset()
-        v.dom.removeFrom(v.dom.index(sol(v.name)))
+        try {
+          v.dom.removeFrom(v.dom.index(sol(v.name)))
+        } catch {
+          case e: UNSATException => _next = UNSAT
+        }
       }
       sol
     case RESTART => throw new IllegalStateException()
