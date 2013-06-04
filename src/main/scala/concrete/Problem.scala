@@ -29,16 +29,20 @@ object Problem {
 }
 
 final class Problem(val variables: List[Variable]) {
+  require(variables.nonEmpty, "A problem with no variables makes no sense")
   require(variables.map(_.name).distinct.size == variables.size, "Duplicates in variable names")
 
   def this(variables: Variable*) = this(variables.toList)
 
-  private val variableMap: Map[String, Variable] = variables.map(v => v.name -> v).toMap
+  val nbVariables = variables.foldLeft(0) {
+    (acc, v) => v.getId = acc; acc + 1
+  }
+
+  val variableMap: Map[String, Variable] = variables.map(v => v.name -> v).toMap
   private var _constraints: List[Constraint] = Nil
 
   private var _maxDomainSize = -1
   private var _maxArity = 0
-  val maxVId = variables.map(_.getId).max
   private var _maxCId = 0
   private var _currentLevel = 0
 

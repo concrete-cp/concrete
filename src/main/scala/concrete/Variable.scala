@@ -31,8 +31,7 @@ final class Variable(
   private var _domain: Domain) extends Identified with PTag with DLNode[Variable] {
   require(_domain ne null)
 
-  val getId = Variable.nbV
-  Variable.nbV += 1
+  var getId = -1
 
   private var _constraints: Array[Constraint] = Array.empty
 
@@ -127,11 +126,3 @@ final class Variable(
 
 }
 
-object Variable {
-  var nbV = 0;
-
-  /**
-   * Reinit ID generator (before loading a new problem).
-   */
-  def resetVId() { nbV = 0 }
-}
