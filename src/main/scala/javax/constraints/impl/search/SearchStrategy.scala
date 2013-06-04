@@ -31,7 +31,7 @@ class SearchStrategy(solver: Solver) extends AbstractSearchStrategy(solver) {
       case VarSelectorType.MAX_WEIGHTED_DEGREE => classOf[WDeg]
       case e: VarSelectorType => throw new IllegalArgumentException(s"Unknown variable selector type $e")
     }
-    solver.concreteSolver.asInstanceOf[MAC].heuristic = new CrossHeuristic(solver.concreteProblem)
+    solver.concreteSolver.asInstanceOf[MAC].heuristic = new CrossHeuristic()
   }
 
   override def setValueSelectorType(valueSelectorType: ValueSelectorType) {
@@ -41,6 +41,6 @@ class SearchStrategy(solver: Solver) extends AbstractSearchStrategy(solver) {
       case ValueSelectorType.MEDIAN => classOf[MedValue]
       case _ => throw new IllegalArgumentException("Unknown value selector type")
     }
-    solver.concreteSolver.asInstanceOf[MAC].heuristic = new CrossHeuristic(solver.concreteProblem)
+    solver.concreteSolver.asInstanceOf[MAC].heuristic = new CrossHeuristic()
   }
 }

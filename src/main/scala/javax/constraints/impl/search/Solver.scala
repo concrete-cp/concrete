@@ -50,7 +50,11 @@ class Solver(problem: javax.constraints.impl.Problem) extends javax.constraints.
       case Objective.MAXIMIZE => concreteSolver.maximize(concreteProblem.variable(variable.getName))
       case Objective.MINIMIZE => concreteSolver.minimize(concreteProblem.variable(variable.getName))
     }
-    new Solution(concreteSolver.toIterable.last)
+    var solution: Option[Map[String, Int]] = None
+    while (concreteSolver.hasNext) {
+      solution = Some(concreteSolver.next())
+    }
+    solution.map(new Solution(_)).getOrElse(null)
   }
 
   // Members declared in javax.constraints.Solver 
