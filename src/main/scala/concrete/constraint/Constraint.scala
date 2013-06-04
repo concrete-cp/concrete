@@ -41,6 +41,8 @@ object Constraint {
 abstract class Constraint(val scope: Array[Variable])
   extends DLNode[Constraint] with Weighted with Identified with PTag {
 
+  def this(scope: Variable*) = this(scope.toArray)
+
   val getId = Constraint.cId
   Constraint.cId += 1
 
@@ -155,7 +157,7 @@ abstract class Constraint(val scope: Array[Variable])
       revise()
       true
     } catch {
-      case UNSATException => false
+      case _: UNSATException => false
     } finally {
       restoreLvl(level - 1)
       scope foreach { _.dom.restoreLevel(level) }
