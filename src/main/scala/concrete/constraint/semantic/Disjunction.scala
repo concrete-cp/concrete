@@ -6,6 +6,7 @@ import concrete.BooleanDomain
 import concrete.Variable
 import concrete.UNSATException
 import scala.annotation.tailrec
+import concrete.UNSATObject
 
 final class Disjunction(scope: Array[Variable],
   val reverses: IndexedSeq[Boolean]) extends Constraint(scope) {
@@ -91,11 +92,16 @@ final class Disjunction(scope: Array[Variable],
 
       if (domains(position).isUnknown) {
 
-        if (reverses(position)) domains(position).setFalse()
-        else domains(position).setTrue()
+        if (reverses(position)) {
+          domains(position).setFalse()
+        } else {
+          domains(position).setTrue()
+        }
 
       }
-    } else throw UNSATException
+    } else {
+      throw UNSATObject
+    }
 
     // } else sys.error("Unreachable state: " + dom + " / " + reverses(position))
 

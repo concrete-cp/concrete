@@ -4,8 +4,6 @@ import concrete.util.BitVector
 import concrete.util.Interval
 import concrete.util.IntSet
 
-final object EmptyDomainException extends Exception
-
 object Domain {
   @Statistic
   var checks = 0L

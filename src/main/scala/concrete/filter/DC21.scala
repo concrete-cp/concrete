@@ -44,7 +44,7 @@ final class DC21(val problem: Problem) extends Filter with Loggable {
 
   // private final List<DynamicConstraint> impliedConstraints;
 
-  private val modVar = new Array[Int](problem.maxVId + 1)
+  private val modVar = new Array[Int](problem.nbVariables)
   private val modCons = new Array[Int](problem.maxCId + 1)
 
   private var cnt = 0

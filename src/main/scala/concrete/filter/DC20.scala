@@ -43,7 +43,7 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
 
   //private var impliedConstraints: Seq[DynamicConstraint] = Nil
 
-  private val modVar = new Array[Int](problem.maxVId + 1)
+  private val modVar = new Array[Int](problem.nbVariables)
 
   private var cnt = 0
 
@@ -103,7 +103,7 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
         c.revise()
         true
       } catch {
-        case UNSATException => false
+        case _: UNSATException => false
       })
     }
 

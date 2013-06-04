@@ -9,6 +9,7 @@ import concrete.UNSATException
 import concrete.Variable
 import concrete.constraint.extension._
 import scala.collection.mutable.ArrayBuffer
+import concrete.UNSATObject
 
 object ExtensionGenerator {
 
@@ -121,7 +122,7 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
     val solverVariables = extensionConstraint.scope map cspom2concrete toList
 
     if (extensionConstraint.relation.isEmpty) {
-      (extensionConstraint.init == true) || (throw UNSATException)
+      (extensionConstraint.init == true) || (throw UNSATObject)
     } else if (solverVariables.exists(_.dom.undefined)) {
       false
     } else {

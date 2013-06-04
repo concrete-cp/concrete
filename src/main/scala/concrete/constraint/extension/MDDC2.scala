@@ -8,6 +8,7 @@ import concrete.util.SparseSet
 import concrete.util.BitVector
 import concrete.util.SetWithMax
 import concrete.UNSATException
+import concrete.UNSATObject
 
 class MDDC2(_scope: Array[Variable], private val mdd: MDD)
   extends Constraint(_scope) with Removals with Backtrackable[Set[Int]] {
@@ -63,7 +64,7 @@ class MDDC2(_scope: Array[Variable], private val mdd: MDD)
     mark(MDD.timestamp, mdd, 0, modified.reverse)
 
     if (gNo(mdd.getId)) {
-      throw UNSATException
+      throw UNSATObject
     }
     if (gNo ne oldGno) {
       altering()

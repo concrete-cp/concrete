@@ -5,7 +5,6 @@ import concrete.constraint.Constraint
 import concrete.constraint.Removals
 import concrete.priorityqueues._
 import concrete.util.Loggable
-import concrete.EmptyDomainException
 import concrete.ParameterManager
 import concrete.Problem
 import concrete.Statistic
@@ -120,18 +119,6 @@ final class ACC(val problem: Problem, val key: Key[Constraint], val queue: Prior
     upd(constraints.length - 1)
   }
 
-  private def updateQueue(mod: Traversable[Int], constraint: Constraint) {
-    mod.foreach(i => updateQueue(constraint.scope(i), constraint))
-    //    if (i >= 0) {
-    //      val v = constraint.scope(i)
-    //
-    //      if (v.dom.size != sizes(i))
-    //        updateQueue(v, constraint)
-    //
-    //      updateQueue(sizes, constraint, i - 1)
-    //    }
-  }
-
   @tailrec
   private def reduce(): Boolean = {
     if (queue.isEmpty) {
@@ -143,20 +130,17 @@ final class ACC(val problem: Problem, val key: Key[Constraint], val queue: Prior
       revisions += 1;
       //val sizes = constraint.sizes()
 
-      val sat = try {
-        updateQueue(constraint.revise(), constraint)
-        //        if (constraint.revise()) {
-        //          assert(!(constraint.sizes() sameElements sizes), constraint + " returned wrong true revised info")
-        //          updateQueue(sizes, constraint, constraint.arity - 1)
-        //        } else assert(constraint.sizes() sameElements sizes, constraint + " returned wrong false revised info")
-        true
+      val mod = try {
+        constraint.revise()
       } catch {
-        case EmptyDomainException | UNSATException =>
+        case _: UNSATException =>
           constraint.weight += 1
-          false
+          return false
       }
 
-      sat && reduce()
+      mod.foreach(i => updateQueue(constraint.scope(i), constraint))
+
+      reduce()
     }
   }
 

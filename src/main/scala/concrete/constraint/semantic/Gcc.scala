@@ -7,6 +7,8 @@ import concrete.Variable
 import concrete.UNSATException
 import java.util.Arrays
 import scala.collection.mutable.Queue
+import concrete.UNSATObject
+import concrete.UNSATException
 
 final case class Bounds(val value: Int, val minCount: Int, val maxCount: Int) {
   override def toString = value + ": [" + minCount + ", " + maxCount + "]"
@@ -71,7 +73,7 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Constrai
 
       for (v <- singles.indices) {
         if (singles(v) > bound(v).maxCount) {
-          throw UNSATException
+          throw UNSATObject
         } else if (singles(v) == bound(v).maxCount) {
           ch ++= filter(v, queue)
         }
@@ -107,7 +109,7 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Constrai
     for (Bounds(v, min, _) <- _bounds) {
       val c = counts(v)
       if (c < min) {
-        throw UNSATException
+        throw UNSATObject
       } else if (c == min) {
         ch ++= assignAll(v)
       }

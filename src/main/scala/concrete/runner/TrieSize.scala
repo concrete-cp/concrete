@@ -110,7 +110,7 @@ object TrieSize extends App {
       try {
         constraint.revise((arity - 1 to 0 by -1).toList)
       } catch {
-        case UNSATException =>
+        case _: UNSATException =>
       }
 
       time += System.nanoTime()
@@ -139,7 +139,7 @@ object TrieSize extends App {
           count -= 1
         }
       } catch {
-        case UNSATException =>
+        case _: UNSATException =>
       }
       System.gc()
       System.gc()

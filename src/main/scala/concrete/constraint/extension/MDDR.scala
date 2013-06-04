@@ -28,6 +28,7 @@ import concrete.Variable
 import concrete.UNSATException
 import concrete.constraint.Removals
 import concrete.Statistic
+import concrete.UNSATObject
 
 object MDDR {
   @Statistic
@@ -69,7 +70,7 @@ final class MDDR(_scope: Array[Variable], private val _tts: MDD)
 
     // val newSize = newTrie.size
 
-    if (newTrie.isEmpty) { throw UNSATException }
+    if (newTrie.isEmpty) { throw UNSATObject }
 
     //assert(newSize <= oldSize)
 

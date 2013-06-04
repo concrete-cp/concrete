@@ -172,7 +172,7 @@ final class BooleanDomain(var _status: Status) extends Domain
       "Assigning from " + status + " to " + s)
     _status = s;
     altering()
-    if (s == EMPTY) throw EmptyDomainException
+    if (s == EMPTY) throw EmptyDomain
   }
 
   def value(i: Int) = i

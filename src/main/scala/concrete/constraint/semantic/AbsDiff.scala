@@ -7,6 +7,7 @@ import concrete.constraint.Constraint
 import concrete.UNSATException
 import concrete.util.Interval
 import concrete.constraint.Shaver
+import concrete.UNSATObject
 
 final class AbsDiff(val result: Variable, val v0: Variable, val v1: Variable)
   extends Constraint(Array(result, v0, v1)) with Shaver with Residues {
@@ -60,7 +61,7 @@ final class AbsDiff(val result: Variable, val v0: Variable, val v1: Variable)
 
       case (Some(k0), None) => dom.intersectVal(k0)
       case (None, Some(k1)) => dom.intersectVal(k1)
-      case _ => throw UNSATException
+      case _ => throw UNSATObject
     }
 
   override def findSupport(position: Int, index: Int) =

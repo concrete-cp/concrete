@@ -113,7 +113,7 @@ final class ACV(
         //if (c.revise()) updateQueue(prev, c)
         true
       } catch {
-        case UNSATException => {
+        case _: UNSATException => {
           c.weight += 1
           false
         }
@@ -187,7 +187,7 @@ final class ACV(
           //          } else assert(c.sizes() sameElements prev, c + " returned wrong false revised info")
           true
         } catch {
-          case UNSATException =>
+          case _: UNSATException =>
             c.weight += 1
             false
         }

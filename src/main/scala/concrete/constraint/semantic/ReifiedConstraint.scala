@@ -11,6 +11,7 @@ import concrete.UNSATException
 import concrete.constraint.Removals
 import concrete.EMPTY
 import concrete.AdviseCount
+import concrete.UNSATObject
 
 final class ReifiedConstraint(
   controlVariable: Variable,
@@ -83,7 +84,7 @@ final class ReifiedConstraint(
           true
         } else false) | (
           if (!negativeConstraint.isConsistent) {
-            if (!controlDomain.isUnknown) throw UNSATException
+            if (!controlDomain.isUnknown) throw UNSATObject
             controlDomain.setTrue();
             entail()
             true

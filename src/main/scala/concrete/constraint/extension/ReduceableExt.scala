@@ -28,6 +28,7 @@ import concrete.Variable
 import concrete.UNSATException
 import concrete.constraint.Removals
 import concrete.Statistic
+import concrete.UNSATObject
 
 object ReduceableExt {
   @Statistic
@@ -76,7 +77,7 @@ final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
 
     // val newSize = newTrie.size
 
-    if (newTrie.isEmpty) { throw UNSATException }
+    if (newTrie.isEmpty) { throw UNSATObject }
 
     //assert(newSize <= oldSize)
 

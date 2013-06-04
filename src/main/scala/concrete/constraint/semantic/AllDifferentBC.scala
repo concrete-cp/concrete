@@ -14,6 +14,8 @@ import concrete.Domain
 import concrete.util.IntSet
 import concrete.AdviseCount
 import scala.collection.mutable.HashSet
+import concrete.UNSATObject
+import concrete.UNSATException
 
 final class HInterval(
   val dom: Domain,
@@ -151,7 +153,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
       pathset(t, x + 1, z, z);
 
       if (d(z) < bounds(z) - bounds(y)) {
-        throw UNSATException
+        throw UNSATObject
       }
 
       if (h(x) > x) {
@@ -197,7 +199,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
       pathset(t, x - 1, z, z);
 
       if (d(z) < bounds(y) - bounds(z)) {
-        throw UNSATException
+        throw UNSATObject
       }
 
       if (h(x) < x) {
