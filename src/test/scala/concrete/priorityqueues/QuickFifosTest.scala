@@ -13,7 +13,7 @@ class QuickFifosTest {
     val r = new Random()
     assertTrue(q.isEmpty)
     for (i <- 0 until 10) {
-      val c = new Constraint(Array()) {
+      val c = new Constraint() {
         val eval = r.nextInt(1000000)
         def advise(p: Int) = eval
         def revise() = Nil
@@ -30,7 +30,7 @@ class QuickFifosTest {
     assertTrue(q.isEmpty)
 
     for (i <- 0 until 10000) {
-      val c = new Constraint(Array()) {
+      val c = new Constraint() {
         val eval = r.nextInt(1000000)
         def advise(p: Int) = eval
         def revise() = Nil
