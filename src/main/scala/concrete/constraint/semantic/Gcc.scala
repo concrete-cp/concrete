@@ -14,12 +14,12 @@ final case class Bounds(val value: Int, val minCount: Int, val maxCount: Int) {
   override def toString = value + ": [" + minCount + ", " + maxCount + "]"
 }
 
-final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Constraint(scope) {
+final class Gcc(scope: Array[Variable], bounds: Array[Bounds]) extends Constraint(scope) {
 
-  val offset = _bounds.map(_.value).min
+  val offset = bounds.map(_.value).min
 
-  val _bounds2 = new Array[Bounds](_bounds.map(_.value).max - offset + 1)
-  for (b <- _bounds) {
+  val _bounds2 = new Array[Bounds](bounds.map(_.value).max - offset + 1)
+  for (b <- bounds) {
     _bounds2(b.value - offset) = b
   }
 
@@ -106,7 +106,7 @@ final class Gcc(scope: Array[Variable], _bounds: Array[Bounds]) extends Constrai
       counts(v) += 1
     }
 
-    for (Bounds(v, min, _) <- _bounds) {
+    for (Bounds(v, min, _) <- bounds) {
       val c = counts(v)
       if (c < min) {
         throw UNSATObject
