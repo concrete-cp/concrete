@@ -39,11 +39,11 @@ class Occurrence(val result: Variable, val value: Int, val vars: Array[Variable]
     }
 
     if (affected == result.dom.lastValue && canBeAffected > 0) {
-      ch ::: (1 until arity).filter(scope(_).dom.removeVal(value)).toList
+      ch ::: (1 until arity).filter(v => scope(v).dom.size > 1 && scope(v).dom.removeVal(value)).toList
     } else if (result.dom.firstValue == affected + canBeAffected) {
       ch ::: (1 until arity).filter(
         p =>
-          if (scope(p).dom.present(value)) {
+          if (scope(p).dom.size > 1 && scope(p).dom.present(value)) {
             scope(p).dom.setSingle(value)
             true
           } else {
