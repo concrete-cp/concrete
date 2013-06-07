@@ -74,6 +74,8 @@ abstract class Domain {
 
   def filter(f: Int => Boolean): Boolean
 
+  def filterValues(f: Int => Boolean): Boolean = filter(i => f(value(i)))
+
   def setLevel(level: Int): Unit
 
   def restoreLevel(level: Int): Unit
