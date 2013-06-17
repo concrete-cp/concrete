@@ -31,6 +31,7 @@ import scala.slick.session.Database
 import scala.slick.jdbc.StaticQuery.interpolation
 import Database.threadLocalSession
 import java.net.InetAddress
+import scala.xml.NodeSeq
 
 object SQLWriter {
 
@@ -59,8 +60,7 @@ object SQLWriter {
 
 }
 
-final class SQLWriter(
-  jdbcUri: URI) extends ConcreteWriter {
+final class SQLWriter(jdbcUri: URI) extends ConcreteWriter {
 
   lazy val db = SQLWriter.connection(jdbcUri)
 
@@ -74,8 +74,8 @@ final class SQLWriter(
 
   private def version: String = s"${Solver.VERSION}/${CSPOM.VERSION}"
 
-  def parameters(params: String) {
-    configId = config(params)
+  def parameters(params: NodeSeq) {
+    configId = config(params.toString)
     if (problemId >= 0 && executionId < 0) {
       executionId = execution(problemId, configId, version)
     }

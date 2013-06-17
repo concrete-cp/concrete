@@ -1,13 +1,19 @@
 package concrete.runner
 
 import concrete.StatisticsManager
+import scala.xml.NodeSeq
 
 class ConsoleWriter extends ConcreteWriter {
 
-  def parameters(params: String) {
-    Console.println(params)
+  def parameters(params: NodeSeq) {
+    val p = for (p <- params \\ "p") yield {
+      //Console.println(p)
+      Console.println(s"${p \ "@name" text} = ${p.text}")
+
+    }
+
   }
-  
+
   def problem(problem: String) {
     Console.println(problem)
   }

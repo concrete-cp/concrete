@@ -13,6 +13,7 @@ import concrete.generator.ProblemGenerator
 import cspom.CSPOM
 import concrete.Problem
 import concrete.Parameter
+import java.security.InvalidParameterException
 
 trait ConcreteRunner {
 
@@ -27,11 +28,16 @@ trait ConcreteRunner {
   'Time
   'CL
 
-  def params(o: List[(String, String)], options: List[String]): List[(String, String)] =
-    if (options == Nil) { o }
-    else {
-      val Array(key, value) = options.head.split("=")
-      params((key, value) :: o, options.tail)
+  private def params(o: List[(String, String)], options: List[String]): List[(String, String)] =
+    if (options.isEmpty) {
+      o
+    } else {
+      try {
+        val Array(key, value) = options.head.split("=")
+        params((key, value) :: o, options.tail)
+      } catch {
+        case e: MatchError => throw new InvalidParameterException(options.toString)
+      }
     }
 
   def options(args: List[String], o: Map[Symbol, Any] = Map.empty, unknown: List[String] = Nil): (Map[Symbol, Any], List[String]) = args match {
@@ -90,8 +96,6 @@ trait ConcreteRunner {
       case _ =>
     }
 
-    writer.parameters(ParameterManager.toXML.toString)
-
     val statistics = new StatisticsManager()
     statistics.register("concrete", this)
 
@@ -102,6 +106,7 @@ trait ConcreteRunner {
 
       val (problem, lT) = StatisticsManager.time(load(remaining))
       val solver = Solver(problem)
+      writer.parameters(ParameterManager.toXML)
 
       loadTime = lT
 

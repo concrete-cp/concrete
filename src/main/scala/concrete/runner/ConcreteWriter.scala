@@ -1,9 +1,10 @@
 package concrete.runner
 import concrete.StatisticsManager
+import scala.xml.NodeSeq
 
 trait ConcreteWriter {
 
-  def parameters(params: String)
+  def parameters(params: NodeSeq)
   def problem(problem: String)
 
   def solution(solution: Option[Map[String, Int]], concrete: ConcreteRunner)
