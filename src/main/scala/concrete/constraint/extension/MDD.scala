@@ -180,6 +180,23 @@ trait MDD extends Relation with Identified {
   }
 
   def copy(ts: Int): MDD
+  //override def hashCode: Int = sys.error("Hashcodes are too slow")
+
+  override lazy val hashCode: Int =
+    MurmurHash3.unorderedHash(traverseST)
+
+  def traverseST: Traversable[(Int, MDD)] = new Traversable[(Int, MDD)] {
+    def foreach[A](f: ((Int, MDD)) => A) {
+      forSubtries { (i, mdd) => f(i, mdd); true }
+    }
+  }
+
+  //override def equals(o: Any): Boolean = sys.error("Equals are too slow")
+
+  override def equals(o: Any): Boolean = o match {
+    case t: MDD => t.traverseST == traverseST
+    case _ => false
+  }
 
 }
 
@@ -190,7 +207,7 @@ final object MDDLeaf extends MDD {
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]) = this
   def contains(tuple: Array[Int], i: Int) = true
   def find(ts: Int, f: (Int, Int) => Boolean, depth: Int) = Some(Nil)
-
+  override lazy val hashCode = 0
   def listIterator = Iterator(Nil)
   def edges(ts: Int) = 0
   def filterTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int) = {
@@ -235,11 +252,13 @@ final object MDD0 extends MDD {
       new MDD1(MDD0.addTrie(tuple, i + 1), tuple(i))
     }
   }
+  
   override def toString = "Empty MDD"
-  def forSubtries(f: (Int, MDD) => Boolean) {
-    throw new UnsupportedOperationException
-  }
+    
+  def forSubtries(f: (Int, MDD) => Boolean) {}
+  
   override def isEmpty = true
+  
   def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) =
     None
 
@@ -311,13 +330,6 @@ final class MDD1(private val child: MDD, private val index: Int) extends MDD {
         checkSupF(ts, f, p, i, index, child, support, depth)
       }
     }
-  }
-
-  override val hashCode: Int = 31 * index + child.hashCode
-
-  override def equals(o: Any): Boolean = o match {
-    case t: MDD1 => t.index == index && (t.child eq child)
-    case _ => false
   }
 
   def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax) {
@@ -530,13 +542,6 @@ final class MDD2(
     mdds.getOrElseUpdate(nT, new MDD2(bL, leftI, bR, rightI))
   }
 
-  override val hashCode: Int = List(left, leftI, right, rightI).hashCode
-
-  override def equals(o: Any): Boolean = o match {
-    case t: MDD2 => (left eq t.left) && (right eq t.right) && (leftI == t.leftI) && (rightI == t.rightI)
-    case _ => false
-  }
-
   override def isEmpty = false
 
   def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) = {
@@ -652,25 +657,6 @@ final class MDDn(
         findHere(ts, f, depth, i - 1)
       }
     }
-  }
-
-  override lazy val hashCode: Int = {
-    //val hash = new MurmurHash3
-    MurmurHash3.unorderedHash(indices.iterator.take(nbIndices).map(i => (i, trie(i))))
-  }
-
-  override def equals(o: Any): Boolean = o match {
-    case t: MDDn =>
-      val len = t.nbIndices
-      len == nbIndices && {
-        var i = len - 1
-        while (i >= 0 && t.trie.length > indices(i) && (t.trie(indices(i)) eq trie(indices(i))) &&
-          trie.length > t.indices(i) && (t.trie(t.indices(i)) eq trie(t.indices(i)))) {
-          i -= 1
-        }
-        i < 0
-      }
-    case _ => false
   }
 
   def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax) {

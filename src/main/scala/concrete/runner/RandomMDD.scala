@@ -16,8 +16,7 @@ import cspom.extension.MDD
 import cspom.extension.LazyMDD
 import cspom.CSPOM._
 import scala.Array.canBuildFrom
-import scala.slick.jdbc.{StaticQuery => Q}
-
+import scala.slick.jdbc.{ StaticQuery => Q }
 
 object RandomMDD extends ConcreteRunner with App {
 
@@ -64,7 +63,11 @@ object RandomMDD extends ConcreteRunner with App {
       val r = new CoarseProportionRandomListGenerator(n, k, s);
 
       for (scope <- r.selectTuples(e, Structure.UNSTRUCTURED, false, false)) {
-        val mdd = new LazyMDD(Unit => RandomMDD.apply(d, k, l, q, rand))
+        val mdd = new LazyMDD(Unit => {
+          val r = RandomMDD.apply(d, k, l, q, rand)
+          //println(r.edges)
+          r
+        })
         ctr(mdd, false)(scope map vars: _*)
       }
     }
