@@ -26,50 +26,7 @@ object ExtensionGenerator {
 
   val TIGHTNESS_LIMIT = 4;
 
-}
-
-final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(problem) {
-
-  private case class Signature(domains: Seq[List[Int]], init: Boolean)
-
-  /**
-   * Used to cache value to indices conversion
-   */
-  private val vToICache = new CacheConverter[cspom.extension.Relation, HashMap[Signature, Matrix]]()
-
-  private def generateMatrix(variables: List[Variable], relation: cspom.extension.Relation, init: Boolean) = {
-    val domains = variables map (_.dom)
-
-    val map = vToICache.getOrAdd(relation, new HashMap[Signature, Matrix])
-
-    val signature = Signature(domains map (_.values.toList), init)
-
-    map.getOrElseUpdate(signature, {
-      //println("Generating " + relation + " for " + signature + " not found in " + map)
-      gen(relation, init, domains)
-    })
-  }
-
-  private def gen(relation: cspom.extension.Relation, init: Boolean, domains: List[Domain]) = {
-    if (relation.arity == 2) {
-      new Matrix2D(domains(0).size, domains(1).size, init).setAll(value2Index(domains, relation).toTraversable, !init)
-    } else if (init) {
-      new TupleTrieSet(MDD(value2Index(domains, relation)), init)
-    } else {
-      new TupleTrieSet(ExtensionGenerator.ds match {
-        case "MDD" => relation match {
-          case mdd: cspom.extension.MDD => cspomMDDtoCspfjMDD(domains, mdd, new HashMap())
-          case mdd: cspom.extension.LazyMDD => cspomMDDtoCspfjMDD(domains, mdd.apply, new HashMap())
-          case r =>
-            val m = MDD(value2Index(domains, r))
-            m
-        }
-        case "STR" => new STR() ++ value2Index(domains, relation).toIterable
-      }, init)
-    }
-  }
-
-  private def cspomMDDtoCspfjMDD(
+  def cspomMDDtoCspfjMDD(
     domains: List[Domain],
     relation: cspom.extension.MDD,
     map: HashMap[cspom.extension.MDD, concrete.constraint.extension.MDD]): MDD = {
@@ -106,6 +63,50 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
             new MDDn(concreteTrie, indices, indices.length)
         }
       })
+    }
+  }
+}
+
+final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(problem) {
+
+  private case class Signature(domains: Seq[List[Int]], init: Boolean)
+
+  /**
+   * Used to cache value to indices conversion
+   */
+  private val vToICache = new CacheConverter[cspom.extension.Relation, HashMap[Signature, Matrix]]()
+
+  private def generateMatrix(variables: List[Variable], relation: cspom.extension.Relation, init: Boolean) = {
+    val domains = variables map (_.dom)
+
+    val map = vToICache.getOrAdd(relation, new HashMap[Signature, Matrix])
+
+    val signature = Signature(domains map (_.values.toList), init)
+
+    map.getOrElseUpdate(signature, {
+      //println("Generating " + relation + " for " + signature + " not found in " + map)
+      gen(relation, init, domains)
+    })
+  }
+
+  private def gen(relation: cspom.extension.Relation, init: Boolean, domains: List[Domain]) = {
+    if (relation.arity == 2) {
+      new Matrix2D(domains(0).size, domains(1).size, init).setAll(value2Index(domains, relation).toTraversable, !init)
+    } else if (init) {
+      new TupleTrieSet(MDD(value2Index(domains, relation)), init)
+    } else {
+      new TupleTrieSet(ExtensionGenerator.ds match {
+        case "MDD" => relation match {
+          case mdd: cspom.extension.MDD =>
+            ExtensionGenerator.cspomMDDtoCspfjMDD(domains, mdd, new HashMap())
+          case mdd: cspom.extension.LazyMDD =>
+            ExtensionGenerator.cspomMDDtoCspfjMDD(domains, mdd.apply, new HashMap())
+          case r =>
+            val m = MDD(value2Index(domains, r))
+            m
+        }
+        case "STR" => new STR() ++ value2Index(domains, relation).toIterable
+      }, init)
     }
   }
 
