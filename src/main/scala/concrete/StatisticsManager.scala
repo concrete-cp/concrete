@@ -88,7 +88,7 @@ object StatisticsManager {
   def stDev[A](s: Seq[A])(implicit n: Numeric[A]): Double = math.sqrt(variance(s))
 
   @tailrec
-  def findKMedian[A](arr: Seq[A], k: Int, o: Ordering[A]): A = {
+  def findKMedian[A](arr: Seq[A], k: Int)(implicit o: Ordering[A]): A = {
     val pivot = arr(scala.util.Random.nextInt(arr.size))
     val (s, b) = arr partition (o.gt(pivot, _))
     if (s.size == k) {
@@ -99,12 +99,12 @@ object StatisticsManager {
       if (s.size > k) {
         pivot
       } else {
-        findKMedian(b, k - s.size, o)
+        findKMedian(b, k - s.size)
       }
     } else if (s.size < k) {
-      findKMedian(b, k - s.size, o)
+      findKMedian(b, k - s.size)
     } else {
-      findKMedian(s, k, o)
+      findKMedian(s, k)
     }
   }
 
@@ -112,10 +112,24 @@ object StatisticsManager {
     if (arr.isEmpty) {
       throw new NoSuchElementException("Median of empty sequence")
     } else {
-      findKMedian(arr, arr.size / 2, o)
+      findKMedian(arr, arr.size / 2)
     }
   }
 
+  def fq[A](arr: Seq[A])(implicit o: Ordering[A]): A = {
+    if (arr.isEmpty) {
+      throw new NoSuchElementException("Median of empty sequence")
+    } else {
+      findKMedian(arr, arr.size / 4)
+    }
+  }
+  def tq[A](arr: Seq[A])(implicit o: Ordering[A]): A = {
+    if (arr.isEmpty) {
+      throw new NoSuchElementException("Median of empty sequence")
+    } else {
+      findKMedian(arr, 3 * arr.size / 4)
+    }
+  }
   def time[A](f: => A): (A, Double) = {
     var t = -System.currentTimeMillis
     try {
