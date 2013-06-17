@@ -57,6 +57,8 @@ final object ParameterManager {
 
     if (fType.isAssignableFrom(classOf[Int])) {
       value.toInt
+    } else if (fType.isAssignableFrom(classOf[Boolean])) {
+      value.toBoolean
     } else if (fType.isAssignableFrom(classOf[Double])) {
       value.toDouble
     } else if (fType.isAssignableFrom(classOf[String])) {
