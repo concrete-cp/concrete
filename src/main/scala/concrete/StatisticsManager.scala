@@ -68,7 +68,7 @@ class StatisticsManager extends Loggable {
 
 object StatisticsManager {
 
-  def average[A](s: Seq[A])(implicit n: Numeric[A]): Double = average(s.iterator)
+  def average[A: Numeric](s: Seq[A]): Double = average(s.iterator)
   def average[A](s: Iterator[A])(implicit n: Numeric[A]): Double = {
     val (sum, count) = s.foldLeft((n.zero, 0L)) {
       case ((cs, cc), i) =>
@@ -85,7 +85,11 @@ object StatisticsManager {
     sumSq / (s.size - 1)
   }
 
-  def stDev[A](s: Seq[A])(implicit n: Numeric[A]): Double = math.sqrt(variance(s))
+  def stDev[A: Numeric](s: Seq[A]): Double = math.sqrt(variance(s))
+  
+  def min[A: Ordering](s: Seq[A]): A = s.min
+  
+  def max[A: Ordering](s: Seq[A]): A = s.max
 
   @tailrec
   def findKMedian[A](arr: Seq[A], k: Int)(implicit o: Ordering[A]): A = {
@@ -108,7 +112,7 @@ object StatisticsManager {
     }
   }
 
-  def median[A](arr: Seq[A])(implicit o: Ordering[A]): A = {
+  def median[A: Ordering](arr: Seq[A]): A = {
     if (arr.isEmpty) {
       throw new NoSuchElementException("Median of empty sequence")
     } else {
@@ -116,30 +120,32 @@ object StatisticsManager {
     }
   }
 
-  def fq[A](arr: Seq[A])(implicit o: Ordering[A]): A = {
+  def fq[A: Ordering](arr: Seq[A]): A = {
     if (arr.isEmpty) {
       throw new NoSuchElementException("Median of empty sequence")
     } else {
       findKMedian(arr, arr.size / 4)
     }
   }
-  def tq[A](arr: Seq[A])(implicit o: Ordering[A]): A = {
+  
+  def tq[A: Ordering](arr: Seq[A]): A = {
     if (arr.isEmpty) {
       throw new NoSuchElementException("Median of empty sequence")
     } else {
       findKMedian(arr, 3 * arr.size / 4)
     }
   }
+  
   def time[A](f: => A): (A, Double) = {
-    var t = -System.currentTimeMillis
+    var t = -System.nanoTime
     try {
       val r = f
-      t += System.currentTimeMillis()
-      (r, t / 1000.0)
+      t += System.nanoTime
+      (r, t / 1e9)
     } catch {
       case e: Throwable =>
-        t += System.currentTimeMillis()
-        throw new TimedException(t / 1000.0, e)
+        t += System.nanoTime
+        throw new TimedException(t / 1e9, e)
     }
   }
 
