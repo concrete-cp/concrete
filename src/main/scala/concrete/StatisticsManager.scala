@@ -69,26 +69,35 @@ class StatisticsManager extends Loggable {
 object StatisticsManager {
 
   def average[A: Numeric](s: Seq[A]): Double = average(s.iterator)
-  def average[A](s: Iterator[A])(implicit n: Numeric[A]): Double = {
-    val (sum, count) = s.foldLeft((n.zero, 0L)) {
-      case ((cs, cc), i) =>
-        (n.plus(cs, i), cc + 1L)
+  def average[A](xs: Iterator[A])(implicit n: Numeric[A]): Double = {
+    var m = n.toDouble(xs.next)
+    var k = 1
+    for (x <- xs) {
+      k += 1
+      m += (n.toDouble(x) - m) / k
     }
-
-    n.toDouble(sum) / count
+    m
   }
 
-  def variance[A](s: Seq[A])(implicit n: Numeric[A]): Double = {
-    val avg = average(s)
-    val sumSq = s map (v => math.pow(n.toDouble(v) - avg, 2)) sum
-
-    sumSq / (s.size - 1)
+  def variance[A](xs: Iterator[A])(implicit n: Numeric[A]): Double = {
+    var m = n.toDouble(xs.next)
+    var s = 0.0
+    var k = 1
+    for (x <- xs map n.toDouble) {
+      k += 1
+      val mk = m + (x - m) / k
+      s += (x - m) * (x - mk)
+      m = mk
+    }
+    s / (k - 1)
   }
 
-  def stDev[A: Numeric](s: Seq[A]): Double = math.sqrt(variance(s))
-  
+  def stDev[A: Numeric](s: Iterator[A]): Double = math.sqrt(variance(s))
+
+  def stDev[A: Numeric](s: Seq[A]): Double = stDev(s.iterator)
+
   def min[A: Ordering](s: Seq[A]): A = s.min
-  
+
   def max[A: Ordering](s: Seq[A]): A = s.max
 
   @tailrec
@@ -127,7 +136,7 @@ object StatisticsManager {
       findKMedian(arr, arr.size / 4)
     }
   }
-  
+
   def tq[A: Ordering](arr: Seq[A]): A = {
     if (arr.isEmpty) {
       throw new NoSuchElementException("Median of empty sequence")
@@ -135,7 +144,7 @@ object StatisticsManager {
       findKMedian(arr, 3 * arr.size / 4)
     }
   }
-  
+
   def time[A](f: => A): (A, Double) = {
     var t = -System.nanoTime
     try {
