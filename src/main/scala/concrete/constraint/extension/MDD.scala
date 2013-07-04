@@ -151,6 +151,7 @@ trait MDD extends Relation with Identified {
   }
 
   def forSubtries(f: (Int, MDD) => Boolean)
+
   override def size = {
     var s = 0
     forSubtries {
@@ -160,7 +161,9 @@ trait MDD extends Relation with Identified {
     }
     s
   }
+
   override def isEmpty: Boolean
+
   def arity: Int = {
     if (this eq MDDLeaf) {
       0
@@ -174,6 +177,7 @@ trait MDD extends Relation with Identified {
       a
     }
   }
+
   def copy = {
     MDD.timestamp += 1
     copy(MDD.timestamp)
@@ -190,8 +194,6 @@ trait MDD extends Relation with Identified {
       forSubtries { (i, mdd) => f(i, mdd); true }
     }
   }
-
-  //override def equals(o: Any): Boolean = sys.error("Equals are too slow")
 
   override def equals(o: Any): Boolean = o match {
     case t: MDD => t.traverseST == traverseST
@@ -252,13 +254,13 @@ final object MDD0 extends MDD {
       new MDD1(MDD0.addTrie(tuple, i + 1), tuple(i))
     }
   }
-  
+
   override def toString = "Empty MDD"
-    
+
   def forSubtries(f: (Int, MDD) => Boolean) {}
-  
+
   override def isEmpty = true
-  
+
   def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) =
     None
 
@@ -807,7 +809,7 @@ final class MDDn(
       timestamp = ts
 
       if (depth == p) {
-        if (i >= trie.length) {
+        if (i >= trie.length || (trie(i) eq null)) {
           None
         } else {
           support(depth) = i
