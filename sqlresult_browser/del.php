@@ -11,7 +11,3 @@ $id = (int)$_GET['id'];
 
 mysql_query("DELETE FROM executions WHERE executionId=$id");
 mysql_query("DELETE FROM statistics WHERE executionId=$id");
-
-
-
-?>
