@@ -2,8 +2,7 @@ package concrete.generator;
 
 import concrete.generator.constraint.GeneratorManager
 import concrete.{ Domain, IntDomain, Problem }
-import cspom.constraint.CSPOMConstraint
-import cspom.variable.{ CSPOMDomain, BooleanDomain }
+import cspom.CSPOMConstraint
 import cspom.CSPOM
 import scala.annotation.tailrec
 import scala.collection.immutable.Queue
@@ -11,6 +10,11 @@ import cspom.variable.IntInterval
 import concrete.util.Loggable
 import concrete.UndefinedDomain
 import concrete.Variable
+import cspom.variable.CSPOMVariable
+import cspom.variable.BoolVariable
+import cspom.variable.IntVariable
+import cspom.variable.FreeVariable
+import cspom.variable.IntSeq
 
 object ProblemGenerator extends Loggable {
   @throws(classOf[FailedGenerationException])
@@ -57,20 +61,19 @@ object ProblemGenerator extends Loggable {
 
   def generateVariables(cspom: CSPOM) = {
     cspom.variables.map { v =>
-      logger.fine("sizeD " + v.domainOption.map(_.size).getOrElse("?"))
-      new Variable(v.name, generateDomain(v.domainOption));
+      new Variable(v.name, generateDomain(v));
     } toList
   }
 
-  def generateDomain[T](cspomDomain: Option[CSPOMDomain[T]]): Domain = cspomDomain map {
-    case bD: BooleanDomain =>
-      if (bD.isConstant) new concrete.BooleanDomain(bD.getBoolean)
-      else new concrete.BooleanDomain();
+  def generateDomain[T](cspomVar: CSPOMVariable): Domain = cspomVar match {
+    case bD: BoolVariable =>
+      new concrete.BooleanDomain();
 
-    case int: IntInterval => IntDomain(int.lb to int.ub)
+    case v: IntVariable => v.domain match {
+      case int: IntInterval => IntDomain(int.lb to int.ub)
+      case seq: IntSeq => IntDomain(seq: _*)
+    }
 
-    case ext: CSPOMDomain[Int] => IntDomain(ext.values: _*)
-
-    case _ => throw new UnsupportedOperationException
-  } getOrElse UndefinedDomain
+    case _: FreeVariable => UndefinedDomain
+  }
 }

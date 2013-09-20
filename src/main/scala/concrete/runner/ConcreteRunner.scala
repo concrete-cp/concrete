@@ -148,4 +148,8 @@ trait ConcreteRunner {
 object Concrete {
   @Parameter("concrete.compile")
   val compile = true
+  
+  val compilePatterns = Seq(
+      
+      )
 }
