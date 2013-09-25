@@ -3,6 +3,11 @@ import cspom.CSPOM
 import cspom.CSPOM._
 import org.junit.Assert._
 import org.junit.Test
+import cspom.CSPOMConstraint
+import concrete.generator.cspompatterns.DiffGe
+import cspom.variable.CSPOMTrue
+import cspom.variable.BoolVariable
+import org.hamcrest.CoreMatchers._
 
 class DiffGeTest {
   @Test
@@ -10,19 +15,23 @@ class DiffGeTest {
 
     val (cspom, sub) = CSPOM withResult {
 
-      val r = aux()
-      assertTrue(r.auxiliary)
+      val r = auxInt()
+      assertTrue(r.params("var_is_introduced"))
       ctr(r >= interVar(0, 5))
 
-      threadLocalProblem.addConstraint(new FunctionalConstraint(r, "sub", varOf(1, 2, 3), varOf(2, 3, 4)))
+      threadLocalProblem.addConstraint(new CSPOMConstraint(r, "sub", varOf(1, 2, 3), varOf(2, 3, 4)))
 
     }
-    new DiffGe(cspom).compile(sub)
+    for (d <- DiffGe.mtch(sub, cspom)) {
+      DiffGe.compile(sub, cspom, d)
+    }
+
     //println(cspom)
     assertEquals(3, cspom.variables.size)
     assertEquals(1, cspom.constraints.size)
-    assertEquals("diffGe", cspom.constraints.iterator.next.description)
-    assertTrue(cspom.constraints.iterator.next.isInstanceOf[GeneralConstraint])
+    val c = cspom.constraints.head
+    assertEquals("diffGe", c.function)
+    assertEquals(CSPOMTrue, c.result)
   }
 
   @Test
@@ -30,19 +39,20 @@ class DiffGeTest {
 
     val (cspom, sub) = CSPOM withResult {
 
-      val r = aux()
+      val r = auxInt()
 
       val r2 = (r >= interVar(0, 5))
 
-      threadLocalProblem.addConstraint(new FunctionalConstraint(r, "sub", varOf(1, 2, 3), varOf(2, 3, 4)))
+      threadLocalProblem.addConstraint(new CSPOMConstraint(r, "sub", varOf(1, 2, 3), varOf(2, 3, 4)))
     }
-    println(cspom)
-    new DiffGe(cspom).compile(sub)
-    println(cspom)
+    for (d <- DiffGe.mtch(sub, cspom)) {
+      DiffGe.compile(sub, cspom, d)
+    }
     assertEquals(4, cspom.variables.size)
     assertEquals(1, cspom.constraints.size)
-    assertEquals("diffGe", cspom.constraints.iterator.next.description)
-    assertTrue(cspom.constraints.iterator.next.isInstanceOf[FunctionalConstraint])
+    val c = cspom.constraints.head
+    assertEquals("diffGe", c.function)
+    assertTrue(c.result.isInstanceOf[BoolVariable])
   }
 
 }

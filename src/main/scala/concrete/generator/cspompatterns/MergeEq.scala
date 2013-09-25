@@ -1,67 +1,71 @@
 package concrete.generator.cspompatterns
 
-import cspom.constraint.{ GeneralConstraint, CSPOMConstraint }
 import cspom.variable.CSPOMVariable
 import cspom.CSPOM
 import scala.collection.mutable.Queue
 import cspom.compiler.ConstraintCompiler
+import cspom.CSPOMConstraint
+import cspom.compiler.Delta
+import cspom.variable.CSPOMTrue
+import cspom.variable.IntVariable
 
 /**
  * If given constraint is an all-equal constraint, merges and removes all
  * auxiliary variables.
  */
-final class MergeEq(private val problem: CSPOM,
-  private val constraints: Queue[CSPOMConstraint]) extends ConstraintCompiler {
+object MergeEq extends ConstraintCompiler {
 
-  override def compileGeneral(c: GeneralConstraint) = {
-    if (c.description == "eq") {
-      (for (
-        (auxVars, fullVars) <- Some(c.scope.partition { _.auxiliary });
-        if (auxVars.nonEmpty)
-      ) yield {
+  type A = (Set[IntVariable], Set[IntVariable])
 
-        problem.removeConstraint(c)
+  def mtch(c: CSPOMConstraint, problem: CSPOM) = {
+    if (c.function == "eq" && c.result == CSPOMTrue) {
+      val intVars = c.scope.collect {
+        case v: IntVariable => v
+      }
 
-        /*
-         * Generate a new all-equal constraint if more than one variable
-         * remains.
-         */
-        if (fullVars.size > 1) {
-          val newConstraint = new GeneralConstraint("eq", fullVars: _*);
-          constraints.enqueue(newConstraint)
-          problem.addConstraint(newConstraint)
+      if (intVars == c.scope) {
+        val (auxVars, fullVars) = intVars.partition(_.params("var_is_introduced"))
+        if (auxVars.nonEmpty) {
+          Some((auxVars, fullVars))
+        } else {
+          None
         }
+      } else {
+        None
+      }
 
-        /*
-         * Update the constraints of the problem
-         */
-        val refVar = if (fullVars.isEmpty) auxVars.head else fullVars.head
-
-        for (aux <- auxVars if aux != refVar) {
-          merge(aux, refVar)
-          for (c <- aux.constraints) constraints.enqueue(c)
-        }
-        true
-
-      }) isDefined
-    } else false
+    } else {
+      None
+    }
   }
 
-  private def merge(merged: CSPOMVariable, variable: CSPOMVariable) {
-    assume(merged != variable)
+  def compile(c: CSPOMConstraint, problem: CSPOM, data: A) = {
+    val (auxVars, fullVars) = data
 
-    for (d <- merged.domainOption) {
-      variable.intersectDomains(d)
-    }
-    for (d <- variable.domainOption) {
-      merged.intersectDomains(d)
+    problem.removeConstraint(c)
+
+    /**
+     * Generate a new all-equal constraint if more than one variable
+     * remains.
+     */
+    if (fullVars.size > 1) {
+      val newConstraint = new CSPOMConstraint("eq", fullVars.toSeq: _*);
+      problem.addConstraint(newConstraint)
     }
 
-    for (c <- merged.constraints) {
-      problem.removeConstraint(c);
-      problem.addConstraint(c.replacedVar(merged, variable));
+    /**
+     * Update the constraints of the problem
+     */
+    val mergedDom = (fullVars ++ auxVars).map(_.domain).reduce(_ intersect _)
+
+    val refVar = fullVars.headOption.getOrElse(auxVars.head)
+
+    val mergedVar = new IntVariable(refVar.name, mergedDom)
+
+    (auxVars + refVar).foldLeft(Delta()) { (acc, v) =>
+      acc ++ replaceVar(v, mergedVar, problem)
     }
-    problem.removeVariable(merged);
+
   }
 
 }

@@ -1,10 +1,9 @@
 package javax.constraints.impl
 
-import cspom.variable.CSPOMDomain
-import cspom.variable.CSPOMVariable
+import cspom.variable.IntVariable
 import concrete.Variable
 
-class Var(problem: Problem, name: String, val variable: CSPOMVariable) extends AbstractVar(problem, name) {
+class Var(problem: Problem, name: String, val variable: IntVariable) extends AbstractVar(problem, name) {
   setImpl(variable)
 
   var concreteVar: Option[Variable] = None
@@ -16,22 +15,22 @@ class Var(problem: Problem, name: String, val variable: CSPOMVariable) extends A
 
   // Members declared in javax.constraints.Var 
   def abs(): javax.constraints.Var = {
-    val cspomVar = problem.cspom.is("abs", variable)
+    val cspomVar = problem.cspom.is("abs", variable).asInstanceOf[IntVariable]
     new Var(problem, cspomVar.name, cspomVar)
   }
 
   def contains(x: Int): Boolean = variable.domain.contains(x)
 
-  def getMax(): Int = concreteVar.map(_.dom.lastValue).getOrElse(variable.domain.values.last.asInstanceOf[Int])
+  def getMax(): Int = concreteVar.map(_.dom.lastValue).getOrElse(variable.domain.last.asInstanceOf[Int])
 
-  def getMin(): Int = concreteVar.map(_.dom.firstValue).getOrElse(variable.domain.values.head.asInstanceOf[Int])
+  def getMin(): Int = concreteVar.map(_.dom.firstValue).getOrElse(variable.domain.head.asInstanceOf[Int])
 
   def isBound(): Boolean = concreteVar.map(_.dom.size == 1).getOrElse {
     throw new IllegalStateException("Solver was not created or variable is unavailable")
   }
 
   def multiply(v2: javax.constraints.Var): javax.constraints.Var = {
-    val cspomVar = variable.*(v2.getImpl.asInstanceOf[CSPOMVariable])(problem.cspom)
+    val cspomVar = variable.*(v2.getImpl.asInstanceOf[IntVariable])(problem.cspom)
     new Var(problem, cspomVar.name, cspomVar)
   }
 
@@ -41,7 +40,7 @@ class Var(problem: Problem, name: String, val variable: CSPOMVariable) extends A
   }
 
   def plus(v2: javax.constraints.Var): javax.constraints.Var = {
-    val cspomVar = variable.+(v2.getImpl.asInstanceOf[CSPOMVariable])(problem.cspom)
+    val cspomVar = variable.+(v2.getImpl.asInstanceOf[IntVariable])(problem.cspom)
     new Var(problem, cspomVar.name, cspomVar)
   }
 

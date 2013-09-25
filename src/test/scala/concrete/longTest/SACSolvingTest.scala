@@ -16,6 +16,7 @@ import concrete.filter.SAC1
 import concrete.MAC
 import org.junit.After
 import org.junit.Before
+import concrete.generator.cspompatterns.Patterns
 
 final class SACSolvingTest extends Loggable {
   //Solver.loggerLevel = "FINE"
@@ -122,7 +123,7 @@ final class SACSolvingTest extends Loggable {
 
   private def solve(name: String) = {
     val cspomProblem = CSPOM.load(getClass.getResource(name));
-    ProblemCompiler.compile(cspomProblem);
+    ProblemCompiler.compile(cspomProblem, Patterns());
     val problem = ProblemGenerator.generate(cspomProblem);
 
     val solver = new MAC(problem);
@@ -136,7 +137,7 @@ final class SACSolvingTest extends Loggable {
 
   private def count(name: String) = {
     val cspomProblem = CSPOM.load(getClass.getResource(name));
-    ProblemCompiler.compile(cspomProblem);
+    ProblemCompiler.compile(cspomProblem, Patterns());
     val problem = ProblemGenerator.generate(cspomProblem);
     // System.out.println(problem);
 

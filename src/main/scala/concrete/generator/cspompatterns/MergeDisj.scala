@@ -1,41 +1,51 @@
 package concrete.generator.cspompatterns
 
-import cspom.constraint.FunctionalConstraint
-import cspom.constraint.CSPOMConstraint
 import cspom.CSPOM
 import scala.collection.mutable.Queue
 import cspom.compiler.ConstraintCompiler
+import cspom.CSPOMConstraint
+import cspom.variable.CSPOMVariable
+import cspom.compiler.Delta
 
 /**
  * Transforms x = a \/ b, x \/ c \/ ... into a \/ b \/ c \/ ...
  */
-final class MergeDisj(
-  private val problem: CSPOM,
-  private val constraints: Queue[CSPOMConstraint]) extends ConstraintCompiler {
+object MergeDisj extends ConstraintCompiler {
+  type A = Seq[CSPOMConstraint]
+  def mtch(fc: CSPOMConstraint, problem: CSPOM) = {
+    if (fc.function == "or") {
+      fc.result match {
+        case v: CSPOMVariable if v.params("var_is_introduced") =>
+          val constraints = problem.constraints(v)
+          if (constraints.size == 2) {
+            val orConstraints = constraints.filter(_.function == "or")
+            if (orConstraints.nonEmpty) {
+              Some(orConstraints)
+            } else {
+              None
+            }
+          } else {
+            None
+          }
+        case _ => None
+      }
+    } else {
+      None
+    }
+  }
 
-  override def compileFunctional(fc: FunctionalConstraint)  = {
-    if (fc.description == "or" &&
-      fc.result.auxiliary &&
-      fc.result.constraints.size == 2) {
+  def compile(fc: CSPOMConstraint, problem: CSPOM, orConstraints: Seq[CSPOMConstraint]) = {
+    orConstraints.foldLeft(Delta()) { (acc, orConstraint) =>
+      problem.removeConstraint(fc)
+      problem.removeConstraint(orConstraint)
+      problem.removeVariable(fc.result.asInstanceOf[CSPOMVariable])
 
-      (for (
-        orConstraint <- fc.result.generalConstraints if orConstraint.description == "or"
-      ) yield {
-        problem.removeConstraint(fc)
-        problem.removeConstraint(orConstraint)
-        problem.removeVariable(fc.result)
-        
-        val newScope = fc.arguments ++ orConstraint.scope.filter(_ ne fc.result)
-        val newConstraint = new GeneralConstraint("or", newScope: _*)
-        problem.addConstraint(newConstraint)
-        
-//        for (v <- newScope; c <- v.constraints if c != newConstraint) {
-//          constraints.enqueue(c)
-//        }
-      }) contains (true)
+      val newScope = fc.arguments ++ orConstraint.scope.filter(_ ne fc.result)
+      val newConstraint = new CSPOMConstraint("or", newScope: _*)
+      problem.addConstraint(newConstraint)
 
-    } else false
-
-  } 
+      acc ++ new Delta(Seq(fc, orConstraint), newConstraint.scope)
+    }
+  }
 
 }

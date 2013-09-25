@@ -1,23 +1,23 @@
 package concrete.generator.constraint;
 
-import scala.annotation.varargs
-
 import concrete.constraint.Constraint
 import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
 import concrete.IntDomain
 import concrete.Problem
-import cspom.constraint.FunctionalConstraint
+import concrete.Variable
+import cspom.CSPOMConstraint
 
 final class ModGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
-  override def generateFunctional(constraint: FunctionalConstraint) = {
-    val Seq(result, v0, v1) = constraint.scope map cspom2concrete
+  override def genFunctional(constraint: CSPOMConstraint, r: C2Conc) = {
+    val C2V(result) = r
+    val Seq(v0, v1) = constraint.arguments map cspom2concreteVar
 
     if (Seq(result, v0, v1) filter (_.dom.undefined) match {
       case Seq() => true
       case Seq(`result`) => {
-        val values = AbstractGenerator.domainFrom(v0, v1, { _ % _ })
+        val values = AbstractGenerator.domainFromVar(v0, v1, { _ % _ })
         result.dom = IntDomain(values: _*)
         true
       }

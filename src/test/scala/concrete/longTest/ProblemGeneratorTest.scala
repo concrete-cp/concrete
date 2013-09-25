@@ -8,6 +8,7 @@ import concrete.util.Loggable
 import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
 import concrete.Solver
+import concrete.generator.cspompatterns.Patterns
 
 final class ProblemGeneratorTest extends Loggable {
   setLevel(WARNING)
@@ -50,7 +51,7 @@ final class ProblemGeneratorTest extends Loggable {
 
     logger.info(cspom + "\n" + cspom.variables.size + " vars, " + cspom.constraints.size + " cons")
 
-    ProblemCompiler.compile(cspom);
+    ProblemCompiler.compile(cspom, Patterns());
 
     logger.info(cspom + "\n" + cspom.variables.size + " vars, " + cspom.constraints.size + " cons")
 

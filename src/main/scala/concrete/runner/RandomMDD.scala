@@ -79,8 +79,8 @@ object RandomMDD extends ConcreteRunner with App {
   }
 
   def output(solution: Map[String, Int]) = {
-    cProblem.variables.filter(!_.auxiliary).map(v =>
-      solution.getOrElse(v.name, v.domain.values.head)).mkString(" ")
+    cProblem.variables.filter(!_.params("var_is_introduced")).map(v =>
+      solution(v.name)).mkString(" ")
   }
 
   def control(solution: Map[String, Int]) = {

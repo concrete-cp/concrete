@@ -16,6 +16,7 @@ import concrete.filter.DC20
 import concrete.MAC
 import org.junit.Before
 import org.junit.After
+import concrete.generator.cspompatterns.Patterns
 
 final class DC20SolvingTest extends Loggable {
 
@@ -119,7 +120,7 @@ final class DC20SolvingTest extends Loggable {
 
   private def solve(name: String) = {
     val cspomProblem = CSPOM.load(getClass.getResource(name));
-    ProblemCompiler.compile(cspomProblem);
+    ProblemCompiler.compile(cspomProblem, Patterns());
     val problem = ProblemGenerator.generate(cspomProblem);
 
     val solver = new MAC(problem);
@@ -133,7 +134,7 @@ final class DC20SolvingTest extends Loggable {
 
   private def count(name: String) = {
     val cspomProblem = CSPOM.load(getClass.getResource(name));
-    ProblemCompiler.compile(cspomProblem);
+    ProblemCompiler.compile(cspomProblem, Patterns());
     val problem = ProblemGenerator.generate(cspomProblem);
     // System.out.println(problem);
 

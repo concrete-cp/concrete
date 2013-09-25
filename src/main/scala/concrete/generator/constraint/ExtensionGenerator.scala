@@ -10,6 +10,8 @@ import concrete.Variable
 import concrete.constraint.extension._
 import scala.collection.mutable.ArrayBuffer
 import concrete.UNSATObject
+import cspom.CSPOMConstraint
+import cspom.xcsp.Extension
 
 object ExtensionGenerator {
 
@@ -76,7 +78,7 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
    */
   private val vToICache = new CacheConverter[cspom.extension.Relation, HashMap[Signature, Matrix]]()
 
-  private def generateMatrix(variables: List[Variable], relation: cspom.extension.Relation, init: Boolean) = {
+  private def generateMatrix(variables: List[Variable], relation: cspom.extension.Relation, init: Boolean): Matrix = {
     val domains = variables map (_.dom)
 
     val map = vToICache.getOrAdd(relation, new HashMap[Signature, Matrix])
@@ -118,16 +120,19 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
    */
   private val dsCache = new CacheConverter[Matrix, List[Array[Int]]]()
 
-  override def generateExtension(extensionConstraint: cspom.extension.ExtensionConstraint) = {
+  override def gen(extensionConstraint: CSPOMConstraint) = {
 
-    val solverVariables = extensionConstraint.scope map cspom2concrete toList
+    val solverVariables = extensionConstraint.arguments map cspom2concreteVar toList
 
-    if (extensionConstraint.relation.isEmpty) {
-      (extensionConstraint.init == true) || (throw UNSATObject)
+    val Some(relation: cspom.extension.Relation) = extensionConstraint.params.get("relation")
+    val Some(init: Boolean) = extensionConstraint.params.get("init")
+
+    if (relation.isEmpty) {
+      (init == true) || (throw UNSATObject)
     } else if (solverVariables.exists(_.dom.undefined)) {
       false
     } else {
-      val matrix = generateMatrix(solverVariables, extensionConstraint.relation, extensionConstraint.init);
+      val matrix = generateMatrix(solverVariables, relation, init);
       val scope = solverVariables.toArray
       val constraint = matrix match {
         case m: Matrix2D => BinaryExt(scope, m, true)
@@ -155,9 +160,9 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
         }
         case m: Matrix => new ExtensionConstraintGeneral(m, true, scope)
       }
-      if (ExtensionGenerator.closeRelations) {
-        extensionConstraint.closeRelation()
-      }
+      //      if (ExtensionGenerator.closeRelations) {
+      //        extensionConstraint.closeRelation()
+      //      }
       //println(extensionConstraint + " -> " + constraint);
       addConstraint(constraint)
 

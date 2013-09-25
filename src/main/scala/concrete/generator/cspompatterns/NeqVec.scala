@@ -1,72 +1,64 @@
 package concrete.generator.cspompatterns
 
-import cspom.constraint.FunctionalConstraint
-import cspom.constraint.CSPOMConstraint
-import cspom.CSPOM
-import scala.collection.mutable.Queue
 import scala.util.control.Breaks._
+
+import cspom.CSPOM
+import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompiler
+import cspom.compiler.Delta
+import cspom.variable.CSPOMExpression
+import cspom.variable.CSPOMSeq
+import cspom.variable.CSPOMTrue
+import cspom.variable.CSPOMVariable
 
 /**
- * Transforms x = a \/ b, x \/ c \/ ... into a \/ b \/ c \/ ...
+ * Transforms x = (a, b, ...) ne (c, d, ...), y = (e, f, ...) ne (g, h, ...), ..., x \/ y \/ ...
+ * into (a, b, e, f, ...) ne (c, d, g, h, ...)
  */
-final class NeqVec(
-  private val problem: CSPOM,
-  private val constraints: Queue[CSPOMConstraint]) extends ConstraintCompiler {
+object NeqVec extends ConstraintCompiler {
+  type A = (CSPOMConstraint, Set[CSPOMVariable], Set[CSPOMConstraint])
 
-  private def isNevec(c: CSPOMConstraint) = (c.description == "ne" || c.description == "nevec") && c.isInstanceOf[FunctionalConstraint]
+  /* NE constraints is a special case of nevec */
+  private def isNevec(c: CSPOMConstraint) = c.function == "ne" || c.function == "nevec"
 
-  override def compileFunctional(fc: FunctionalConstraint): Boolean = {
-    isNevec(fc) && ((fc.result.constraints - fc).toSeq match {
-      case Seq(orConstraint: GeneralConstraint) if orConstraint.description == "or" =>
-        val orVariables = orConstraint.scope
-        val neConstraints = orVariables.flatMap(_.constraints).filter(_ ne orConstraint)
+  def mtch(c: CSPOMConstraint, problem: CSPOM) = {
+    if (isNevec(c)) {
+      c.result match {
+        case v: CSPOMVariable => problem.constraints(v).filter(_ != c) match {
+          case Seq(orConstraint) if (orConstraint.function == "or" && orConstraint.result == CSPOMTrue) =>
+            val orVariables = orConstraint.scope
+            val neConstraints = orVariables.flatMap(problem.constraints) - orConstraint
 
-        if (neConstraints.forall(isNevec)) {
+            if (neConstraints.forall(isNevec)) {
+              Some((orConstraint, orVariables, neConstraints))
+            } else {
+              None
+            }
+          case _ => None
+        }
+        case _ => None
+      }
+    } else {
+      None
+    }
+  }
 
-          neConstraints.foreach(problem.removeConstraint)
-          problem.removeConstraint(orConstraint)
-          orVariables.foreach(problem.removeVariable)
+  def compile(fc: CSPOMConstraint, problem: CSPOM, data: (CSPOMConstraint, Set[CSPOMVariable], Set[CSPOMConstraint])) = {
+    val (orConstraint, orVariables, neConstraints) = data
 
-          val (x, y) = neConstraints.flatMap { c =>
-            val args = c.asInstanceOf[FunctionalConstraint].arguments
-            args.splitAt(args.size / 2).zipped.toSeq
-          }.unzip
+    neConstraints.foreach(problem.removeConstraint)
+    problem.removeConstraint(orConstraint)
+    orVariables.foreach(problem.removeVariable)
 
-          problem.addConstraint(new GeneralConstraint("nevec", (x ++ y): _*))
-          true
-        } else false
-      //        problem.removeConstraint
-      //          .exists(orVariable =>
-      //            (orVariable ne fc.result) && (
-      //              (orVariable.constraints - orConstraint).toSeq match {
-      //                case Seq(neConstraint: FunctionalConstraint) if isNevec(neConstraint) => {
-      //                  problem.removeConstraint(fc)
-      //                  problem.removeConstraint(neConstraint)
-      //                  problem.removeConstraint(orConstraint)
-      //                  problem.removeVariable(orVariable)
-      //
-      //                  val (x1, y1) = fc.arguments.splitAt(fc.arguments.size / 2)
-      //                  val (x2, y2) = neConstraint.arguments.splitAt(neConstraint.arguments.size / 2)
-      //
-      //                  val orScope = orConstraint.scope.filter(_ ne orVariable)
-      //
-      //                  if (orScope.size > 1) {
-      //                    problem.addConstraint(new FunctionalConstraint(fc.result, "nevec", ((x1 ++ x2) ++ (y1 ++ y2)): _*))
-      //                    problem.addConstraint(new GeneralConstraint("or", orScope: _*))
-      //                  } else {
-      //                    problem.addConstraint(new GeneralConstraint("nevec", ((x1 ++ x2) ++ (y1 ++ y2)): _*))
-      //                  }
-      //
-      //                  for (v <- x1 ++ y1 ++ x2 ++ y2; c <- v.constraints) {
-      //                    constraints.enqueue(c)
-      //                  }
-      //                  true
-      //                }
-      //                case _ => false
-      //              }))
-      case _ => false
-    })
+    val (x, y) = neConstraints.map(_.arguments).foldLeft((Seq[CSPOMExpression](), Seq[CSPOMExpression]())) {
+      case ((ax, ay), Seq(cx: CSPOMSeq, cy: CSPOMSeq)) => (ax ++ cx.values, ay ++ cy.values)
+      case ((ax, ay), Seq(cx: CSPOMVariable, cy: CSPOMVariable)) => (ax :+ cx, ay :+ cy)
+      case _ => throw new IllegalArgumentException(s"$neConstraints contains malformed ne/nevec constraint")
+    }
+
+    val newC = problem.addConstraint(new CSPOMConstraint("nevec", new CSPOMSeq(x), new CSPOMSeq(y)))
+
+    new Delta(orConstraint :: neConstraints.toList, newC.scope)
   }
 
 }

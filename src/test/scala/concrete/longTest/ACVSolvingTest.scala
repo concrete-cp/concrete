@@ -13,6 +13,7 @@ import org.junit.After
 import org.junit.Before
 import concrete.filter.ACV
 import concrete.MAC
+import concrete.generator.cspompatterns.Patterns
 
 final class ACVSolvingTest extends Loggable {
   //Solver.loggerLevel = "FINE"
@@ -145,7 +146,7 @@ final class ACVSolvingTest extends Loggable {
 
   private def solve(name: String) = {
     val cspomProblem = CSPOM.load(getClass.getResource(name));
-    ProblemCompiler.compile(cspomProblem);
+    ProblemCompiler.compile(cspomProblem, Patterns());
 
     val solver = Solver(cspomProblem);
 
@@ -161,7 +162,7 @@ final class ACVSolvingTest extends Loggable {
 
   private def count(name: String) = {
     val cspomProblem = CSPOM.load(getClass.getResource(name));
-    ProblemCompiler.compile(cspomProblem);
+    ProblemCompiler.compile(cspomProblem, Patterns());
 
     // System.out.println(problem);
 

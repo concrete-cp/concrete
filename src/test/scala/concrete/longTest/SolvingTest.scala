@@ -14,6 +14,7 @@ import concrete.heuristic.revision.DomCtr
 import concrete.SAT
 import concrete.UNSAT
 import concrete.UNKNOWNResult
+import concrete.generator.cspompatterns.Patterns
 
 final class SolvingTest extends Loggable {
   //Solver.loggerLevel = "FINE"
@@ -158,7 +159,7 @@ final class SolvingTest extends Loggable {
 
   private def solve(name: String): Boolean = {
     val cspomProblem = CSPOM.load(getClass.getResource(name));
-    ProblemCompiler.compile(cspomProblem);
+    ProblemCompiler.compile(cspomProblem, Patterns());
 
     val solver = Solver(cspomProblem);
 
@@ -171,7 +172,7 @@ final class SolvingTest extends Loggable {
 
   private def count(name: String) = {
     val cspomProblem = CSPOM.load(getClass.getResource(name));
-    ProblemCompiler.compile(cspomProblem);
+    ProblemCompiler.compile(cspomProblem, Patterns());
 
     Solver(cspomProblem).foldLeft(0) {
       (count, solution) =>

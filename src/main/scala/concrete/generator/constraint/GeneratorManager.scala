@@ -2,7 +2,7 @@ package concrete.generator.constraint;
 
 import concrete.generator.FailedGenerationException
 import concrete.Problem
-import cspom.constraint.CSPOMConstraint;
+import cspom.CSPOMConstraint;
 import scala.collection.mutable.HashMap
 
 final class GeneratorManager(val problem: Problem) {
@@ -10,8 +10,8 @@ final class GeneratorManager(val problem: Problem) {
   var generators: HashMap[Class[_ <: AbstractGenerator], AbstractGenerator] = new HashMap();
 
   @throws(classOf[FailedGenerationException])
-  def generate(constraint: CSPOMConstraint) = {
-    val candidate = GeneratorManager.known.getOrElse(constraint.description.toLowerCase,
+  def generate(constraint: CSPOMConstraint): Boolean = {
+    val candidate = GeneratorManager.known.getOrElse(constraint.function.toLowerCase,
       throw new FailedGenerationException(s"No candidate constraint for $constraint"))
 
     generators.getOrElseUpdate(candidate, candidate.getConstructor(classOf[Problem]).newInstance(problem)).generate(constraint)
@@ -48,7 +48,8 @@ object GeneratorManager {
     "nevec" -> classOf[NeqVecGenerator],
     "zerosum" -> classOf[ZeroSumGenerator],
     "lexleq" -> classOf[LexLeqGenerator],
-    "occurrence" -> classOf[OccurrenceGenerator])
+    "occurrence" -> classOf[OccurrenceGenerator],
+    "extension" -> classOf[ExtensionGenerator])
 
   def register(entry: (String, Class[_ <: AbstractGenerator])) {
     known += entry

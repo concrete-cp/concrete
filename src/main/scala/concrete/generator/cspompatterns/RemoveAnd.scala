@@ -1,19 +1,25 @@
 package concrete.generator.cspompatterns
 
-import cspom.constraint.{ CSPOMConstraint, GeneralConstraint }
 import cspom.CSPOM
 import scala.collection.mutable.Queue
 import cspom.compiler.ConstraintCompiler
+import cspom.compiler.ConstraintCompilerNoData
+import cspom.CSPOMConstraint
+import cspom.variable.CSPOMTrue
+import cspom.variable.BoolVariable
+import cspom.compiler.Delta
 
-class RemoveAnd(val problem: CSPOM, val constraints: Queue[CSPOMConstraint]) extends ConstraintCompiler {
-  override def compileGeneral(constraint: GeneralConstraint) = {
-    if (constraint.description == "and") {
-      for (v <- constraint.scope) {
-        v.domain = TrueDomain
-        for (c <- v.constraints if c != constraint) constraints.enqueue(c)
-      }
-      problem.removeConstraint(constraint);
-      true
-    } else false
+object RemoveAnd extends ConstraintCompilerNoData {
+  def matchBool(constraint: CSPOMConstraint, problem: CSPOM) =
+    constraint.function == "and" && constraint.result == CSPOMTrue
+
+  def compile(constraint: CSPOMConstraint, problem: CSPOM) = {
+
+    constraint.scope.foldLeft(Delta()) {
+      (acc, v) =>
+        require(v.isInstanceOf[BoolVariable])
+        acc ++ replaceVar(v, CSPOMTrue, problem)
+    }
+
   }
 }

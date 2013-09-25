@@ -4,6 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import cspom.CSPOM
 import cspom.CSPOM._
+import concrete.generator.cspompatterns.AllDiff
 
 class AllDiffTest {
   @Test
@@ -19,16 +20,18 @@ class AllDiffTest {
       }
     }
 
-    val allDiff = new AllDiff(cspom);
     val constraints = cspom.constraints.toSeq
 
-    for (c <- constraints if (cspom.constraints.contains(c))) {
-      allDiff.compile(c)
+    for (
+      c <- constraints if (cspom.constraints(c));
+      d <- AllDiff.mtch(c, cspom)
+    ) {
+      AllDiff.compile(c, cspom, d)
     }
 
     //println(cspom)
     assertEquals(1, cspom.constraints.size)
-    assertEquals("allDifferent", cspom.constraints.head.description)
+    assertEquals("allDifferent", cspom.constraints.head.function)
   }
 
 }

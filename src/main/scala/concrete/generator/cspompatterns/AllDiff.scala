@@ -1,27 +1,46 @@
 package concrete.generator.cspompatterns
 import cspom.CSPOM
-import cspom.constraint.CSPOMConstraint
-import cspom.constraint.GeneralConstraint
+import cspom.CSPOMConstraint
 import cspom.variable.CSPOMVariable
 import scala.util.Random
 import scala.util.control.Breaks
 import cspom.Loggable
 import cspom.compiler.ConstraintCompiler
+import cspom.variable.CSPOMTrue
+import cspom.compiler.Delta
+import cspom.variable.CSPOMSeq
 
-final class AllDiff(val problem: CSPOM) extends ConstraintCompiler with Loggable {
+object AllDiff extends ConstraintCompiler with Loggable {
+  type A = Set[CSPOMVariable]
 
   def DIFF_CONSTRAINT(constraint: CSPOMConstraint) =
-    constraint.isInstanceOf[GeneralConstraint] &&
-      Set("ne", "gt", "lt", "allDifferent").contains(constraint.description)
+    (constraint.result == CSPOMTrue) && Set("ne", "gt", "lt", "allDifferent").contains(constraint.function)
 
   def ALLDIFF_CONSTRAINT(constraint: CSPOMConstraint) =
-    constraint.isInstanceOf[GeneralConstraint] &&
-      "ne" == constraint.description ||
-      "allDifferent" == constraint.description
+    (constraint.result == CSPOMTrue) && "ne" == constraint.function ||
+      "allDifferent" == constraint.function
 
   val ITER = 750;
 
   //val cliqueDetector = new CliqueDetector;
+
+  def mtch(constraint: CSPOMConstraint, problem: CSPOM) = {
+    val clique: Set[CSPOMVariable] = constraint match {
+      case CSPOMConstraint(CSPOMTrue, func, args: Seq[CSPOMVariable], _) if Set("ne", "gt", "lt").contains(func) =>
+        expand(args.toSet, problem)
+      case CSPOMConstraint(CSPOMTrue, "allDifferent", Seq(CSPOMSeq(
+        _, _, args: Seq[CSPOMVariable], _, _)), _) =>
+        expand(args.toSet, problem)
+      case _ => Set()
+    }
+
+    if (clique.size > constraint.scope.size) {
+      Some(clique)
+    } else {
+      None
+    }
+
+  }
 
   /**
    * If constraint is part of a larger clique of inequalities, replace it by a
@@ -29,59 +48,27 @@ final class AllDiff(val problem: CSPOM) extends ConstraintCompiler with Loggable
    *
    * @param constraint
    */
-  def alldiff(constraint: CSPOMConstraint) = {
-    if (!DIFF_CONSTRAINT(constraint)) false
-    else {
-      // System.out.print(constraint);
+  def compile(constraint: CSPOMConstraint, problem: CSPOM, clique: Set[CSPOMVariable]) = {
 
-      //val clique: Set[CSPOMVariable] = Set.empty ++ constraint.scope
+    problem.removeConstraint(constraint)
+    newAllDiff(clique, problem);
 
-      // val pool = populate(constraint.scope);
-      //print(constraint + " : ")
-
-      val clique = expand(constraint.scope.toSet);
-      //println(clique.size)
-      if (clique.size > constraint.scope.size) {
-        problem.removeConstraint(constraint)
-        newAllDiff(clique);
-        true
-      } else false
-    }
-
-  }
-
-  /**
-   * Lazy neighbors computation
-   */
-  private class Neighbors {
-    var neighbors: Map[CSPOMVariable, Set[CSPOMVariable]] = Map.empty
-
-    def get(v: CSPOMVariable) = neighbors.get(v) match {
-      case Some(set) => set
-      case None => {
-        val n = (v.constraints.filter(DIFF_CONSTRAINT).foldLeft(Set[CSPOMVariable]())(
-          (acc, c) => acc ++ c.scope) - v)
-        neighbors += v -> n
-        n
-      }
-    }
+    new Delta(constraint, constraint.scope ++ clique)
 
   }
 
   /**
    * The pool contains all variables that can expand the base clique
    */
-  private def populate(base: Set[CSPOMVariable], neighbors: Neighbors) =
-    base.iterator.map(neighbors.get).reduceLeft((acc, vs) => acc & vs)
+  private def populate(base: Set[CSPOMVariable], problem: CSPOM) =
+    base.iterator.map(problem.neighbors).reduceLeft((acc, vs) => acc & vs)
 
-  private def expand(base: Set[CSPOMVariable]) = {
+  private def expand(base: Set[CSPOMVariable], problem: CSPOM) = {
 
     var largest = base
     var clique = base
 
-    val neighbors = new Neighbors
-
-    var pool = populate(base, neighbors)
+    var pool = populate(base, problem)
 
     //final Set<CSPOMVariable> base = new HashSet<CSPOMVariable>(clique);
 
@@ -96,11 +83,12 @@ final class AllDiff(val problem: CSPOM) extends ConstraintCompiler with Loggable
         newVar match {
           case None => {
             /* Could not expand the clique, removing a variable (not from the base) */
-            AllDiff.randPick((clique -- base).iterator) match {
-              case None => break
-              case Some(variable) => clique -= variable
-            }
-            pool = populate(clique, neighbors)
+            clique -= randPick((clique -- base).iterator).getOrElse(break)
+            //            match {
+            //              case None => break
+            //              case Some(variable) => clique -= variable
+            //            }
+            pool = populate(clique, problem)
           }
           case Some(variable) => {
             clique += variable
@@ -108,7 +96,7 @@ final class AllDiff(val problem: CSPOM) extends ConstraintCompiler with Loggable
               largest = clique
             }
 
-            pool &= neighbors.get(variable)
+            pool &= problem.neighbors(variable)
 
           }
         }
@@ -125,8 +113,8 @@ final class AllDiff(val problem: CSPOM) extends ConstraintCompiler with Loggable
    *
    * @param scope
    */
-  private def newAllDiff(scope: Set[CSPOMVariable]) {
-    val allDiff = new GeneralConstraint(
+  private def newAllDiff(scope: Set[CSPOMVariable], problem: CSPOM) {
+    val allDiff = new CSPOMConstraint(CSPOMTrue,
       "allDifferent",
       scope.toList: _*);
 
@@ -139,7 +127,8 @@ final class AllDiff(val problem: CSPOM) extends ConstraintCompiler with Loggable
       var removed = 0
       /* Remove newly subsumed neq/alldiff constraints. */
       for (
-        v <- scope; c <- v.constraints if (c != allDiff && ALLDIFF_CONSTRAINT(c) && c.scope.forall(allDiff.scopeSet.contains))
+        v <- scope; c <- problem.constraints(v) if (
+          c != allDiff && ALLDIFF_CONSTRAINT(c) && c.scope.forall(allDiff.scope.contains))
       ) {
         removed += 1
         problem.removeConstraint(c);
@@ -148,31 +137,6 @@ final class AllDiff(val problem: CSPOM) extends ConstraintCompiler with Loggable
     }
   }
 
-  /**
-   * If the given constraint is an all-different or neq constraint, remove it
-   * if it is subsumed by another difference constraint.
-   *
-   * @param constraint
-   */
-  def dropSubsumedDiff(constraint: CSPOMConstraint) = {
-    if (ALLDIFF_CONSTRAINT(constraint) &&
-      AllDiff.haveSubsumingConstraint(constraint, DIFF_CONSTRAINT)) {
-
-      problem.removeConstraint(constraint);
-      //fine("subsumed ! " + problem.constraints.size + " remaining")
-      true;
-    } else {
-      false;
-    }
-  }
-
-  override def compile(constraint: CSPOMConstraint) = {
-    dropSubsumedDiff(constraint) || alldiff(constraint)
-  }
-
-}
-
-object AllDiff {
   val RAND = new Random(0);
 
   val TABU_SIZE = 15;
@@ -201,10 +165,5 @@ object AllDiff {
     }
     returned
   }
-
-  private def haveSubsumingConstraint(
-    constraint: CSPOMConstraint, validator: CSPOMConstraint => Boolean) =
-    constraint.scope.minBy(_.constraints.size).constraints.exists(
-      c => c != constraint && validator(c) && constraint.scope.forall(c.scopeSet.contains))
 
 }

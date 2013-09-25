@@ -9,20 +9,19 @@ import concrete.constraint.extension.MDDLeaf
 import concrete.constraint.semantic.AllDifferent2C
 import concrete.constraint.semantic.AllDifferentBC
 import concrete.constraint.semantic.ZeroSum
-import cspom.constraint.CSPOMConstraint
-import cspom.constraint.GeneralConstraint
+import cspom.CSPOMConstraint
 import concrete.constraint.extension.MDDn
 import concrete.constraint.extension.ReduceableExt
 import scala.annotation.tailrec
 
 final class ZeroSumGenerator(problem: Problem) extends AbstractGenerator(problem) {
-  override def generateGeneral(constraint: GeneralConstraint) = {
-    val solverVariables = constraint.scope map cspom2concrete toArray
+  override def gen(constraint: CSPOMConstraint) = {
+    val solverVariables = constraint.arguments map cspom2concreteVar toArray
 
     if (solverVariables exists { _.dom.undefined }) {
       false
     } else {
-      val params = constraint.predicate.parameters match {
+      val params = constraint.params.get("coefficients") match {
         case Some(p: Seq[Int]) => p.toArray
         case None => Array.fill(solverVariables.length)(1)
         case _ => throw new IllegalArgumentException("Parameters for zero sum must be a sequence of integer values")

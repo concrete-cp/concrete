@@ -1,15 +1,15 @@
 package javax.constraints.impl
 
 import cspom.CSPOM
-import cspom.constraint.CSPOMConstraint
+import cspom.CSPOMConstraint
 import cspom.variable.CSPOMVariable
-import cspom.constraint.GeneralConstraint
 import java.io.BufferedWriter
 import java.io.OutputStreamWriter
 import cspom.Loggable
 import concrete.generator.ProblemGenerator
 import javax.constraints.impl.search.Solver
 import javax.constraints.Oper
+import cspom.xcsp.XCSPWriter
 
 class Problem(name: String) extends AbstractProblem(name) with Loggable {
   def this() = this("")
@@ -44,11 +44,11 @@ class Problem(name: String) extends AbstractProblem(name) with Loggable {
   def post(constraint: javax.constraints.Constraint) {
     cspom.addConstraint(constraint.getImpl.asInstanceOf[CSPOMConstraint])
   }
-  def variableBool(name: String): javax.constraints.VarBool = new VarBool(this, name)
+  def variableBool(name: String): javax.constraints.VarBool = ???
 
   // Members declared in javax.constraints.Problem
   def allDiff(scope: Array[javax.constraints.Var]): javax.constraints.Constraint = {
-    val constraint = new GeneralConstraint("alldifferent", scope.map(_.getImpl.asInstanceOf[CSPOMVariable]): _*)
+    val constraint = new CSPOMConstraint("alldifferent", scope.map(_.getImpl.asInstanceOf[CSPOMVariable]): _*)
     new Constraint(this, constraint)
   }
   def linear(v1: javax.constraints.Var, op: String, v2: javax.constraints.Var): javax.constraints.Constraint =
@@ -58,11 +58,11 @@ class Problem(name: String) extends AbstractProblem(name) with Loggable {
     post(v, op, c)
 
   def loadFromXML(is: java.io.InputStream) {
-    cspom.loadXML(is)
+    ???
   }
   def storeToXML(os: java.io.OutputStream, comments: String) {
     val ow = new OutputStreamWriter(os)
-    xml.XML.write(ow, cspom.toXCSP, xml.XML.encoding, false, null)
+    xml.XML.write(ow, XCSPWriter.toXCSP(cspom), xml.XML.encoding, false, null)
     ow.close()
   }
   def post(v1: javax.constraints.Var, op: String, v2: javax.constraints.Var): javax.constraints.Constraint = {
@@ -77,7 +77,8 @@ class Problem(name: String) extends AbstractProblem(name) with Loggable {
     val lb = sum.map(_.getMin()).sum
     val ub = sum.map(_.getMax()).sum
     val r = cspom.interVar(lb, ub)
-    val c = cspom.ctr("zerosum", -1 :: List.fill(sum.length)(1), r +: sum.map(_.getImpl.asInstanceOf[CSPOMVariable]): _*)
+    val c = cspom.ctr("zerosum", r +: sum.map(_.getImpl.asInstanceOf[CSPOMVariable]),
+      Map("coefficients" -> (-1 :: List.fill(sum.length)(1))))
     val constraint = cspom.ctr(op, r, v.getImpl.asInstanceOf[CSPOMVariable])
     new Constraint(this, constraint)
   }
@@ -88,7 +89,7 @@ class Problem(name: String) extends AbstractProblem(name) with Loggable {
   def post(x$1: Array[Int], x$2: Array[javax.constraints.Var], x$3: String, x$4: javax.constraints.Var): javax.constraints.Constraint = ???
   def post(x$1: Array[Int], x$2: Array[javax.constraints.Var], x$3: String, x$4: Int): javax.constraints.Constraint = ???
   def postCardinality(vars: Array[javax.constraints.Var], cardValue: Int, op: String, cardCount: javax.constraints.Var): javax.constraints.Constraint = {
-    val count = cspom.is("occurrence", cardValue, cspomVar(vars): _*)
+    val count = cspom.isInt("occurrence", cspomVar(vars), Map("occurence" -> cardValue))
     val countVar = new Var(this, count.name, count)
     post(countVar, op, cardCount)
   }

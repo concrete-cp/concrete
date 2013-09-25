@@ -6,22 +6,20 @@ import concrete.constraint.semantic.ReifiedConstraint;
 import concrete.generator.FailedGenerationException;
 import concrete.Problem;
 import concrete.Variable;
-import cspom.constraint.CSPOMConstraint;
-import cspom.constraint.FunctionalConstraint;
-import cspom.constraint.GeneralConstraint;
+import cspom.CSPOMConstraint;
 
 final class GtGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
-  override def generateGeneral(constraint: GeneralConstraint) = {
-    require(constraint.scope.size == 2,
+  override def gen(constraint: CSPOMConstraint) = {
+    require(constraint.arguments.size == 2,
       "Comparison constraints must have exactly two arguments");
 
-    val solverVariables = constraint.scope map cspom2concrete;
+    val solverVariables = constraint.arguments map cspom2concreteVar;
 
     if (solverVariables.exists(_.dom.undefined)) {
       false
     } else {
-      addConstraint(constraint.description match {
+      addConstraint(constraint.function match {
         case "gt" | ">" => new Gt(solverVariables(0), solverVariables(1), true);
         case "ge" | ">=" => new Gt(solverVariables(0), solverVariables(1), false);
         case "lt" | "<" => new Gt(solverVariables(1), solverVariables(0), true);
@@ -33,20 +31,19 @@ final class GtGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
   }
 
-  override def generateFunctional(constraint: FunctionalConstraint) = {
+  override def genReified(constraint: CSPOMConstraint, result: Variable) = {
     require(constraint.arguments.size == 2,
       "Comparison constraints must have exactly two arguments");
 
-    val arguments = constraint.arguments map cspom2concrete
+    val arguments = constraint.arguments map cspom2concreteVar
 
     if (arguments exists (_.dom.undefined)) {
       false
     } else {
 
-      val result = cspom2concrete(constraint.result);
       AbstractGenerator.booleanDomain(result);
 
-      addConstraint(constraint.description match {
+      addConstraint(constraint.function match {
         case "gt" =>
           new ReifiedConstraint(
             result,

@@ -1,33 +1,29 @@
 package concrete.generator.cspompatterns
-import cspom.constraint.CSPOMConstraint
 import cspom.CSPOM
 import scala.collection.mutable.Queue
-import cspom.constraint.FunctionalConstraint
 import cspom.compiler.ConstraintCompiler
+import cspom.CSPOMConstraint
+import cspom.compiler.Delta
 
 /**
- * If given constraint is an all-equal constraint, merges and removes all
- * auxiliary variables.
+ * Find and merge auxiliary variables similary defined by other constraints
  */
-final class MergeSame(private val problem: CSPOM,
-  private val constraints: Queue[CSPOMConstraint]) extends ConstraintCompiler {
+object MergeSame extends ConstraintCompiler {
 
-  override def compileFunctional(c: FunctionalConstraint) = {
-    for (
-      same <- c.arguments.flatMap(_.functionalConstraints).find(same => (same ne c) &&
-        same.description == c.description &&
-        same.arguments == c.arguments)
-    ) yield {
-      problem.removeConstraint(c)
-      val eqC = new GeneralConstraint("eq", c.result, same.result)
-      problem.addConstraint(eqC)
+  type A = CSPOMConstraint
 
-      for (c <- c.result.constraints)
-        constraints.enqueue(c)
+  def mtch(c: CSPOMConstraint, problem: CSPOM) = {
+    c.scope.flatMap(problem.constraints).find(same => (same ne c) && same.function == c.function &&
+      same.arguments == c.arguments)
+  }
 
-      for (c <- same.result.constraints)
-        constraints.enqueue(c)
-    }
-  } isDefined
+  def compile(c: CSPOMConstraint, problem: CSPOM, same: CSPOMConstraint) = {
+
+    problem.removeConstraint(c)
+    val eqC = new CSPOMConstraint("eq", c.result, same.result)
+    problem.addConstraint(eqC)
+
+    Delta(Seq(c), (c.result.flattenVariables ++ same.result.flattenVariables).toSet)
+  }
 
 }

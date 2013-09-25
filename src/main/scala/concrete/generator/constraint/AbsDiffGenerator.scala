@@ -2,20 +2,22 @@ package concrete.generator.constraint;
 
 import concrete.constraint.semantic.AbsDiff
 import concrete.{ Variable, Problem, IntDomain }
-import cspom.constraint.CSPOMConstraint
+import cspom.CSPOMConstraint
 import concrete.UndefinedDomain
+import AbstractGenerator._
 
 final class AbsDiffGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
-  override def generate(constraint: CSPOMConstraint) = {
-    require(constraint.description == "absdiff")
+  override def genFunctional(constraint: CSPOMConstraint, r: C2Conc) = {
+    require(constraint.function == "absdiff")
 
-    val Seq(result, v0, v1) = constraint.scope.map(cspom2concrete)
+    val C2V(result) = r
+    val Seq(v0, v1) = constraint.arguments.map(cspom2concrete).collect { case C2V(v) => v }
 
     val g = Seq(result, v0, v1).filter(_.dom.undefined) match {
       case Seq() => true;
       case Seq(`result`) =>
-        val values = AbstractGenerator.domainFrom(v0, v1, (i, j) => math.abs(i - j))
+        val values = domainFromVar(Seq(v0, v1), { case Seq(i, j) => math.abs(i - j) })
         result.dom = IntDomain(values: _*)
         true
       case Seq(`v0`) =>
@@ -29,14 +31,15 @@ final class AbsDiffGenerator(problem: Problem) extends AbstractGenerator(problem
     }
 
     if (g) {
-      addConstraint(new AbsDiff(result, v0, v1));
+      addConstraint(new AbsDiff(result, v0, v1))
     }
     g
 
   }
 
   private def generateValues(result: Variable, variable: Variable) = {
-    AbstractGenerator.makeDomain(
-      AbstractGenerator.cartesian(result, variable, (i, j) => Seq(i + j, i - j)).flatten)
+
+    domainFromVarFlat(Seq(result, variable), { case Seq(i, j) => Seq(i + j, i - j) })
+
   }
 }

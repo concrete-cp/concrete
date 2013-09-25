@@ -2,35 +2,67 @@ package concrete.generator.constraint;
 
 import concrete.constraint.semantic.{ ReifiedConstraint, Gt }
 import concrete.{ Variable, Problem }
-import cspom.constraint.{ GeneralConstraint, FunctionalConstraint, CSPOMConstraint }
+import cspom.CSPOMConstraint
+import cspom.variable.CSPOMTrue
+import cspom.variable.CSPOMBool
+import cspom.variable.BoolVariable
+import concrete.UNSATObject
+import concrete.BooleanDomain
+import cspom.variable.CSPOMFalse
 
+/**
+ * Generator for "diffGe" constraints defined as x - y >= k (k must be a constant)
+ */
 final class DiffGeGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
-  override def generateGeneral(constraint: GeneralConstraint) = {
-    require("diffGe" == constraint.description, "Cannot handle" + constraint)
-    val Seq(v0, v1, bound) = constraint.scope map cspom2concrete
+  override def gen(constraint: CSPOMConstraint): Boolean = {
 
-    if (bound.dom.size != 1 || Seq(v0, v1, bound).exists(_.dom.undefined)) {
-      false
-    } else {
-      addConstraint(new Gt(v0, -bound.dom.firstValue, v1, false))
-      true
+    val Seq(x: C21D, y: C21D, C2C(k)) = constraint.arguments map cspom2concrete
+
+    (x, y) match {
+      case (C2C(x), C2C(y)) => ((x - y) >= k) || (throw UNSATObject)
+      case (C2V(x), C2C(y)) =>
+        if (x.dom.undefined) {
+          false
+        } else {
+          x.dom.filterValues(_ - y >= k)
+          true
+        }
+      case (C2C(x), C2V(y)) =>
+        if (y.dom.undefined) {
+          false
+        } else {
+          y.dom.filterValues(x - _ >= k)
+          true
+        }
+      case (C2V(x), C2V(y)) =>
+        if (x.dom.undefined || y.dom.undefined) {
+          false
+        } else {
+          addConstraint(new Gt(x, -k, y, false))
+          true
+        }
     }
+
   }
 
-  override def generateFunctional(constraint: FunctionalConstraint) = {
-    require("diffGe" == constraint.description, "Cannot handle" + constraint)
-    val Seq(result, v0, v1, bound) = constraint.scope map cspom2concrete
+  override def genReified(constraint: CSPOMConstraint, result: Variable): Boolean = {
 
-    if (bound.dom.size != 1 || Seq(v0, v1, bound).exists(_.dom.undefined)) {
-      false
-    } else {
-      AbstractGenerator.booleanDomain(result)
-      addConstraint(new ReifiedConstraint(
-        result,
-        new Gt(v0, -bound.dom.firstValue, v1, false),
-        new Gt(v1, bound.dom.firstValue, v0, true)))
-      true
+    val rd = AbstractGenerator.booleanDomain(result)
+    val Seq(x: C21D, y: C21D, C2C(k)) = constraint.arguments map cspom2concrete
+
+    (x, y) match {
+      case (C2C(x), C2C(y)) =>
+        if (x - y >= k) { rd.setTrue() } else { rd.setFalse() }
+        true
+      case (C2V(x), C2C(y)) => ???
+      case (C2C(x), C2V(y)) => ???
+      case (C2V(x), C2V(y)) =>
+        addConstraint(new ReifiedConstraint(
+          result,
+          new Gt(x, -k, y, false),
+          new Gt(y, k, x, true)))
+        true
     }
 
   }

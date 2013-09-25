@@ -7,17 +7,15 @@ import concrete.constraint.semantic.ReifiedConstraint;
 import concrete.generator.FailedGenerationException;
 import concrete.Problem;
 import concrete.Variable;
-import cspom.constraint.CSPOMConstraint;
-import cspom.constraint.FunctionalConstraint;
-import cspom.constraint.GeneralConstraint;
+import cspom.CSPOMConstraint;
 
 final class NeqGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
-  override def generateGeneral(constraint: GeneralConstraint) = {
+  override def gen(constraint: CSPOMConstraint) = {
     require(constraint.arity == 2,
       "Comparison constraints must have exactly two arguments");
 
-    val scope = constraint.scope map cspom2concrete
+    val scope = constraint.arguments map cspom2concreteVar
 
     if (scope exists { _.dom.undefined }) {
       false
@@ -27,17 +25,16 @@ final class NeqGenerator(problem: Problem) extends AbstractGenerator(problem) {
     }
   }
 
-  override def generateFunctional(constraint: FunctionalConstraint) = {
+  override def genReified(constraint: CSPOMConstraint, result: Variable) = {
     require(constraint.arguments.size == 2,
       "Comparison constraints must have exactly two arguments");
 
-    val arguments = constraint.arguments map cspom2concrete
+    val arguments = constraint.arguments map cspom2concreteVar
 
     if (arguments exists { _.dom.undefined }) {
       false
     } else {
 
-      val result = cspom2concrete(constraint.result);
       AbstractGenerator.booleanDomain(result);
       addConstraint(new ReifiedConstraint(
         result,

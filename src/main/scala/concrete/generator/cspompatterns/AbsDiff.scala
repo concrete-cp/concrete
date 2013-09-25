@@ -12,28 +12,18 @@ import cspom.compiler.Delta
 object AbsDiff extends ConstraintCompiler {
   type A = (CSPOMVariable, Seq[CSPOMConstraint])
 
-  def matcher(c: CSPOMConstraint, problem: CSPOM) = {
-    if (c.function == "sub") {
-      c.result match {
-        case v: CSPOMVariable =>
-          if (v.params("var_is_introduced")) {
-            val process = problem.constraints(v).filter {
-              absC => absC.function == "abs" && absC.arguments.sameElements(List(v))
-            }
-            if (process.isEmpty) {
-              None
-            } else {
-              Some((v, process))
-            }
-          } else {
-            None
-          }
-
-        case _ => None
+  def mtch(c: CSPOMConstraint, problem: CSPOM) = c match {
+    case CSPOMConstraint(result: CSPOMVariable, "sub", args, _) if result.params("var_is_introduced") =>
+      val process = problem.constraints(result).filter {
+        case CSPOMConstraint(_, "abs", Seq(result), _) => true
+        case _ => false
       }
-    } else {
-      None
-    }
+      if (process.isEmpty) {
+        None
+      } else {
+        Some((result, process))
+      }
+    case _ => None
   }
 
   def compile(c: CSPOMConstraint, problem: CSPOM, data: (CSPOMVariable, Seq[CSPOMConstraint])) = {
@@ -43,7 +33,7 @@ object AbsDiff extends ConstraintCompiler {
       val nc = problem.addConstraint(new CSPOMConstraint(
         fc.result, "absdiff", c.arguments: _*));
       problem.removeVariable(data._1)
-      acc ++ Delta(Seq(c, fc), Seq(nc))
+      acc ++ Delta(Seq(c, fc), nc.scope)
     }
 
   }

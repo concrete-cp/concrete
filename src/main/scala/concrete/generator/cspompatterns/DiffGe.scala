@@ -1,47 +1,49 @@
 package concrete.generator.cspompatterns
 
-import cspom.constraint.FunctionalConstraint
 import cspom.CSPOM
 import cspom.compiler.ConstraintCompiler
+import cspom.CSPOMConstraint
+import cspom.variable.CSPOMVariable
+import cspom.compiler.Delta
 
 /**
  * Transforms x = sub(y, z), [t =] ge(x, k) into [t =] diffGe(y, z, k)
  */
-final class DiffGe(val problem: CSPOM) extends ConstraintCompiler {
+object DiffGe extends ConstraintCompiler {
+  type A = CSPOMConstraint
 
-  override def compileFunctional(subConstraint: FunctionalConstraint) = {
-    subConstraint.description == "sub" &&
-      subConstraint.result.auxiliary &&
-      subConstraint.result.constraints.size == 2 && (
-        subConstraint.result.constraints.find { c: CSPOMConstraint =>
-          c.description == "ge" && {
-            val scope = c match {
-              case fGe: FunctionalConstraint => fGe.arguments
-              case gGe: GeneralConstraint => gGe.scope
+  def mtch(constraint: CSPOMConstraint, problem: CSPOM) = {
+    if (constraint.function == "sub") {
+      constraint.result match {
+
+        case v: CSPOMVariable if (v.params("var_is_introduced")) =>
+          val constraints = problem.constraints(v)
+          if (constraints.size == 2) {
+            constraints.find { c =>
+              c.function == "ge" && {
+                c.arguments.size == 2 && c.result == constraint.result
+              }
             }
-            scope.size == 2 && scope(0) == subConstraint.result
+          } else {
+            None
           }
-        } map { geConstraint =>
 
-          problem.removeConstraint(subConstraint);
-          problem.removeConstraint(geConstraint);
-          problem.removeVariable(subConstraint.result)
+        case _ => None
+      }
+    } else {
+      None
+    }
+  }
 
-          geConstraint match {
-            case fc: FunctionalConstraint =>
-              problem.addConstraint(new FunctionalConstraint(
-                fc.result,
-                "diffGe",
-                subConstraint.arguments :+ fc.arguments(1): _*))
-            case _ =>
-              problem.addConstraint(new GeneralConstraint("diffGe",
-                subConstraint.arguments :+ geConstraint.scope(1): _*))
+  def compile(subConstraint: CSPOMConstraint, problem: CSPOM, geConstraint: CSPOMConstraint) = {
 
-          }
-          true
+    problem.removeConstraint(subConstraint);
+    problem.removeConstraint(geConstraint);
+    problem.removeVariable(subConstraint.result.asInstanceOf[CSPOMVariable])
 
-        } getOrElse (false))
+    val newC = problem.addConstraint(new CSPOMConstraint(geConstraint.result, "diffGe", subConstraint.arguments :+ geConstraint.arguments(1)))
 
+    Delta(Seq(subConstraint, geConstraint), newC.scope)
   }
 
 }

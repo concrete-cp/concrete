@@ -7,22 +7,17 @@ import concrete.constraint.semantic.ReifiedConstraint
 import concrete.generator.FailedGenerationException
 import concrete.Problem
 import concrete.Variable
-import cspom.constraint.CSPOMConstraint
-import cspom.constraint.FunctionalConstraint
-import cspom.constraint.GeneralConstraint;
+import cspom.CSPOMConstraint
 import concrete.constraint.semantic.NeqVec
 
 final class NeqVecGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
-  override def generateGeneral(constraint: GeneralConstraint) = {
-    require(constraint.arity % 2 == 0);
+  override def gen(constraint: CSPOMConstraint) = {
+    val Seq(x, y) = constraint.arguments map cspom2concreteSeqVar
 
-    val scope = constraint.scope map cspom2concrete
-
-    if (scope exists { _.dom.undefined }) {
+    if ((x.iterator ++ y) exists { _.dom.undefined }) {
       false
     } else {
-      val (x, y) = scope.splitAt(scope.length / 2)
       addConstraint(new NeqVec(x.toArray, y.toArray))
       true
     }

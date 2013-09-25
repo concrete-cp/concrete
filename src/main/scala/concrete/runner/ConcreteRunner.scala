@@ -14,6 +14,7 @@ import cspom.CSPOM
 import concrete.Problem
 import concrete.Parameter
 import java.security.InvalidParameterException
+import concrete.generator.cspompatterns.Patterns
 
 trait ConcreteRunner {
 
@@ -61,7 +62,7 @@ trait ConcreteRunner {
   def load(args: List[String]): Problem = {
     val cspom = loadCSPOM(args)
     if (Concrete.compile) {
-      ProblemCompiler.compile(cspom)
+      ProblemCompiler.compile(cspom, Patterns())
     }
     _cProblem = Some(cspom)
     ProblemGenerator.generate(cspom)
@@ -148,8 +149,6 @@ trait ConcreteRunner {
 object Concrete {
   @Parameter("concrete.compile")
   val compile = true
-  
-  val compilePatterns = Seq(
-      
-      )
+
+  val compilePatterns = Seq()
 }

@@ -3,16 +3,16 @@ package concrete.generator.constraint;
 import concrete.constraint.semantic.{ ReifiedConstraint, Neq, Eq }
 import concrete.generator.FailedGenerationException
 import concrete.{ Variable, Problem, Domain, IntDomain }
-import cspom.constraint.{ GeneralConstraint, FunctionalConstraint, CSPOMConstraint }
+import cspom.CSPOMConstraint
 import concrete.BooleanDomain
 import concrete.constraint.Constraint
 import concrete.constraint.semantic.Disjunction
 
 final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
-  override def generateGeneral(constraint: GeneralConstraint): Boolean = {
-    require(Seq("=", "eq").contains(constraint.description));
-    val scope = constraint.scope.map(cspom2concrete)
+  override def gen(constraint: CSPOMConstraint): Boolean = {
+    require(Set("=", "eq")(constraint.function));
+    val scope = constraint.arguments.map(cspom2concreteVar)
 
     scope.map(_.dom).find(!_.undefined) match {
       case None => false
@@ -62,14 +62,13 @@ final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
   }
 
-  override def generateFunctional(funcConstraint: FunctionalConstraint) = funcConstraint.description match {
+  override def genReified(funcConstraint: CSPOMConstraint, result: Variable) = funcConstraint.function match {
     case "eq" => {
-      val arguments = funcConstraint.arguments map cspom2concrete
+      val arguments = funcConstraint.arguments map cspom2concreteVar
 
       if (arguments.size != 2 || arguments.exists(_.dom.undefined)) {
         false
       } else {
-        val result = cspom2concrete(funcConstraint.result)
         AbstractGenerator.booleanDomain(result);
         addConstraint(
           new ReifiedConstraint(
@@ -80,23 +79,21 @@ final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
       }
     }
     case "neg" =>
-      if (funcConstraint.scope.size != 2) {
+      if (funcConstraint.arguments.size != 2) {
         false
       } else {
-        val scope = funcConstraint.scope map cspom2concrete
+        val scope = funcConstraint.arguments map cspom2concreteVar
 
-        val refDomain = scope map { _.dom } find { !_.undefined }
+        scope map { _.dom } find { !_.undefined } match {
+          case None => false
+          case Some(refDomain) =>
+            val negDomain = refDomain.values.map(v => -v).toSeq.reverse
 
-        if (refDomain == None) {
-          false
-        } else {
-          val negDomain = refDomain.get.values.map(v => -v).toSeq.reverse
-
-          for (v <- scope if (v.dom.undefined)) {
-            v.dom = IntDomain(negDomain: _*)
-          }
-          addConstraint(new Eq(true, scope(0), 0, scope(1)))
-          true
+            for (v <- scope if (v.dom.undefined)) {
+              v.dom = IntDomain(negDomain: _*)
+            }
+            addConstraint(new Eq(true, scope(0), 0, scope(1)))
+            true
         }
       }
 
