@@ -58,13 +58,26 @@ object MergeEq extends ConstraintCompiler {
      */
     val mergedDom = (fullVars ++ auxVars).map(_.domain).reduce(_ intersect _)
 
-    val refVar = fullVars.headOption.getOrElse(auxVars.head)
+    /**
+     * Tighten fullVars' domain
+     */
+    var delta = Delta()
+
+    val newFullVars = fullVars.map {
+      v =>
+        val nv = new IntVariable(v.name, mergedDom)
+        delta ++= replaceVars(Seq(v), nv, problem)
+        nv
+    }
+
+    /**
+     * Replacing aux variables by a single one (full var if available)
+     */
+    val refVar = newFullVars.headOption.getOrElse(auxVars.head)
 
     val mergedVar = new IntVariable(refVar.name, mergedDom)
 
-    (auxVars + refVar).foldLeft(Delta()) { (acc, v) =>
-      acc ++ replaceVar(v, mergedVar, problem)
-    }
+    delta ++ replaceVars((auxVars + refVar).toSeq, mergedVar, problem)
 
   }
 
