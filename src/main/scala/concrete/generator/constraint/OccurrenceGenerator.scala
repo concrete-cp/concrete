@@ -10,13 +10,18 @@ final class OccurrenceGenerator(problem: Problem) extends AbstractGenerator(prob
   override def genFunctional(constraint: CSPOMConstraint, r: C2Conc) = {
 
     val C2V(result) = r
-    val args = constraint.arguments map cspom2concreteVar
+    val Seq(vars) = constraint.arguments map cspom2concreteSeq
+
+    val args = vars map {
+      case C2V(v) => v
+      case _ => AbstractGenerator.fail("Variable expected")
+    }
 
     if (args.exists(_.dom.undefined) || result.dom.undefined) {
       false
     } else {
 
-      val bound = constraint.params.get("occurence") match {
+      val bound = constraint.params.get("occurrence") match {
         case Some(p: Int) => p
         case p: Any => throw new IllegalArgumentException(s"Occurrence constraints requires to be parameterized with an int value, found $p")
       }

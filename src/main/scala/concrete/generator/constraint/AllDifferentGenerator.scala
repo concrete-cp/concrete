@@ -8,7 +8,7 @@ import cspom.variable.CSPOMTrue
 
 final class AllDifferentGenerator(problem: Problem) extends AbstractGenerator(problem) {
   override def gen(constraint: CSPOMConstraint) = {
-    val Seq(C2S(solverVariables)) = constraint.arguments map cspom2concrete
+    val Seq(solverVariables) = constraint.arguments map cspom2concreteSeq
 
     val variables = solverVariables.collect { case C2V(v) => v }
 

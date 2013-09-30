@@ -16,7 +16,7 @@ import scala.annotation.tailrec
 
 final class ZeroSumGenerator(problem: Problem) extends AbstractGenerator(problem) {
   override def gen(constraint: CSPOMConstraint) = {
-    val solverVariables = constraint.arguments map cspom2concreteVar toArray
+    val Seq(solverVariables) = constraint.arguments map cspom2concreteSeqVar
 
     if (solverVariables exists { _.dom.undefined }) {
       false
@@ -26,7 +26,7 @@ final class ZeroSumGenerator(problem: Problem) extends AbstractGenerator(problem
         case None => Array.fill(solverVariables.length)(1)
         case _ => throw new IllegalArgumentException("Parameters for zero sum must be a sequence of integer values")
       }
-      addConstraint(new ZeroSum(params, solverVariables));
+      addConstraint(new ZeroSum(params, solverVariables.toArray));
       //addConstraint(new ReduceableExt(solverVariables, zeroSum(solverVariables.toList, params.toList)))
       true;
     }
