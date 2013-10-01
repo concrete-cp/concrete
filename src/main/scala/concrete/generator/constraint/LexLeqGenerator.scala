@@ -3,7 +3,7 @@ package concrete.generator.constraint;
 import concrete.{ Variable, Problem }
 import cspom.CSPOMConstraint
 import concrete.constraint.semantic.{ AllDifferent2C, AllDifferentBC }
-import concrete.constraint.semantic.ZeroSum
+import concrete.constraint.semantic.Sum
 import concrete.constraint.semantic.LexLeq
 
 final class LexLeqGenerator(problem: Problem) extends AbstractGenerator(problem) {
