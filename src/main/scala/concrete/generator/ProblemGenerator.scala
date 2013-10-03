@@ -71,8 +71,8 @@ object ProblemGenerator extends Loggable {
       new concrete.BooleanDomain();
 
     case v: IntVariable => v.domain match {
-      case int: IntInterval => IntDomain(int.lb to int.ub)
-      case seq: IntSeq => IntDomain(seq: _*)
+      case int: IntInterval => IntDomain(int)
+      case IntSeq(seq) => IntDomain(seq: _*)
       case FreeInt => UndefinedDomain
     }
 
