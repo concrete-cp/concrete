@@ -51,7 +51,7 @@ object NeqVec extends ConstraintCompiler {
     orVariables.foreach(problem.removeVariable)
 
     val (x, y) = neConstraints.map(_.arguments).foldLeft((Seq[CSPOMExpression](), Seq[CSPOMExpression]())) {
-      case ((ax, ay), Seq(cx: CSPOMSeq, cy: CSPOMSeq)) => (ax ++ cx.values, ay ++ cy.values)
+      case ((ax, ay), Seq(cx: CSPOMSeq[CSPOMExpression], cy: CSPOMSeq[CSPOMExpression])) => (ax ++ cx.values, ay ++ cy.values)
       case ((ax, ay), Seq(cx: CSPOMVariable, cy: CSPOMVariable)) => (ax :+ cx, ay :+ cy)
       case _ => throw new IllegalArgumentException(s"$neConstraints contains malformed ne/nevec constraint")
     }

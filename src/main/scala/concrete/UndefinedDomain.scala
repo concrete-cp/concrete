@@ -30,4 +30,8 @@ final object UndefinedDomain extends Domain {
   def value(index: Int): Int = throw new UnsupportedOperationException()
   override def toString = "[?]"
   def undefined = true
+  override def equals(o: Any) = o match {
+    case o: AnyRef => o eq this
+    case _ => false
+  }
 }

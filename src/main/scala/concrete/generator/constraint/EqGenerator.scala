@@ -7,20 +7,42 @@ import cspom.CSPOMConstraint
 import concrete.BooleanDomain
 import concrete.constraint.Constraint
 import concrete.constraint.semantic.Disjunction
+import concrete.UNSATObject
 
 final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
   override def gen(constraint: CSPOMConstraint): Boolean = {
     require(Set("=", "eq")(constraint.function));
-    val scope = constraint.arguments.map(cspom2concreteVar)
+    val scope = constraint.arguments.map(cspom2concrete1D)
 
-    scope.map(_.dom).find(!_.undefined) match {
-      case None => false
-      case Some(refDomain: IntDomain) =>
-        generateInt(refDomain, scope); true
-      case Some(refDomain: BooleanDomain) =>
-        generateBool(refDomain, scope); true
-      case _ => throw new FailedGenerationException("Unhandled domain")
+    val constants = scope.collect { case C2C(c) => c }
+    val variables = scope.collect { case C2V(v) => v }
+    if (constants.nonEmpty) {
+      if (constants.sliding(2).exists {
+        case Seq(_) => false
+        case Seq(i, j) => i != j
+      }) {
+        throw UNSATObject
+      } else {
+        val c = constants.head
+        for (v <- variables) {
+          if (v.dom.undefined) {
+            v.dom = IntDomain(c)
+          } else {
+            v.dom.setSingle(c)
+          }
+        }
+        true
+      }
+    } else {
+      variables.map(_.dom).find(!_.undefined) match {
+        case None => false
+        case Some(refDomain: IntDomain) =>
+          generateInt(refDomain, variables); true
+        case Some(refDomain: BooleanDomain) =>
+          generateBool(refDomain, variables); true
+        case _ => throw new FailedGenerationException("Unhandled domain")
+      }
     }
   }
 

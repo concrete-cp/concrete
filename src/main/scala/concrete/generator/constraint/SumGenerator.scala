@@ -8,28 +8,32 @@ import concrete.constraint.extension.MDD0
 import concrete.constraint.extension.MDDLeaf
 import concrete.constraint.semantic.AllDifferent2C
 import concrete.constraint.semantic.AllDifferentBC
-import concrete.constraint.semantic.ZeroSum
+import concrete.constraint.semantic.Sum
 import cspom.CSPOMConstraint
 import concrete.constraint.extension.MDDn
 import concrete.constraint.extension.ReduceableExt
 import scala.annotation.tailrec
 
-final class ZeroSumGenerator(problem: Problem) extends AbstractGenerator(problem) {
-  override def gen(constraint: CSPOMConstraint) = {
-    val solverVariables = constraint.arguments map cspom2concreteVar toArray
+final class SumGenerator(problem: Problem) extends AbstractGenerator(problem) {
+//  override def gen(constraint: CSPOMConstraint) = {
+//    val Seq(solverVariables) = constraint.arguments map cspom2concreteSeqVar
+//
+//    if (solverVariables exists { _.dom.undefined }) {
+//      false
+//    } else {
+//      val params = constraint.params.get("coefficients") match {
+//        case Some(p: Seq[Int]) => p.toArray
+//        case None => Array.fill(solverVariables.length)(1)
+//        case _ => throw new IllegalArgumentException("Parameters for zero sum must be a sequence of integer values")
+//      }
+//      addConstraint(new Sum(0, params, solverVariables.toArray));
+//      //addConstraint(new ReduceableExt(solverVariables, zeroSum(solverVariables.toList, params.toList)))
+//      true;
+//    }
+//  }
 
-    if (solverVariables exists { _.dom.undefined }) {
-      false
-    } else {
-      val params = constraint.params.get("coefficients") match {
-        case Some(p: Seq[Int]) => p.toArray
-        case None => Array.fill(solverVariables.length)(1)
-        case _ => throw new IllegalArgumentException("Parameters for zero sum must be a sequence of integer values")
-      }
-      addConstraint(new ZeroSum(params, solverVariables));
-      //addConstraint(new ReduceableExt(solverVariables, zeroSum(solverVariables.toList, params.toList)))
-      true;
-    }
+  override def genFunctional(constaint: CSPOMConstraint, result: C2Conc) = {
+    ???
   }
 
   @tailrec

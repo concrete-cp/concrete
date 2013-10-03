@@ -62,7 +62,7 @@ class Problem(name: String) extends AbstractProblem(name) with Loggable {
   }
   def storeToXML(os: java.io.OutputStream, comments: String) {
     val ow = new OutputStreamWriter(os)
-    xml.XML.write(ow, XCSPWriter.toXCSP(cspom), xml.XML.encoding, false, null)
+    xml.XML.write(ow, XCSPWriter(cspom), xml.XML.encoding, false, null)
     ow.close()
   }
   def post(v1: javax.constraints.Var, op: String, v2: javax.constraints.Var): javax.constraints.Constraint = {

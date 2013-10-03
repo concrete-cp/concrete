@@ -19,24 +19,46 @@ import cspom.variable.CSPOMTrue
 import cspom.variable.CSPOMFalse
 import cspom.variable.BoolVariable
 
-sealed trait C2Conc
+sealed trait C2Conc {
+  def is(o: Any): Boolean
+}
 sealed trait C21D extends C2Conc {
   def values: Seq[Int]
 }
 final case class C2V(v: Variable) extends C21D {
   def values = v.dom.values.toSeq
+  def is(o: Any) = o match {
+    case o: Variable => o eq v
+    case _ => false
+  }
 }
 final case class C2C(i: Int) extends C21D {
   def values = Seq(i)
+  def is(o: Any) = o match {
+    case o: Int => o == i
+    case _ => false
+  }
 }
-final case class C2S(s: Seq[C2Conc]) extends C2Conc
+final case class C2S(s: Seq[C2Conc]) extends C2Conc {
+  //TODO: probably bugged
+  def is(o: Any) = o match {
+    case o: Seq[C2Conc] => (o, s).zipped.forall((o, s) => o.is(s))
+    case _ => false
+  }
+}
 
 abstract class AbstractGenerator(val problem: Problem) {
   def cspom2concrete(variable: CSPOMExpression): C2Conc = variable match {
     case v: CSPOMVariable => C2V(cspomVar2concrete(v))
-    case seq: CSPOMSeq => C2S(seq.values map cspom2concrete)
+    case seq: CSPOMSeq[CSPOMExpression] => C2S(seq.values map cspom2concrete)
     case i: IntConstant => C2C(i.value)
     case _ => throw new UnsupportedOperationException(s"$variable is unexpected")
+  }
+
+  def cspom2concrete1D(variable: CSPOMExpression): C21D = cspom2concrete(variable) match {
+    case v: C2V => v
+    case v: C2C => v
+    case _ => AbstractGenerator.fail(s"Variable or constant expected, $variable found")
   }
 
   def cspomVar2concrete(variable: CSPOMVariable) = problem.variable(variable.name)
@@ -142,7 +164,10 @@ object AbstractGenerator {
 
   def restrictDomain(v: Variable, values: Traversable[Int]): Unit = v.dom match {
     case UndefinedDomain => v.dom = IntDomain(makeDomain(values.toSeq): _*)
-    case d: IntDomain => v.dom = IntDomain(makeDomain((d.values.toSet & values.toSet).toSeq): _*)
+    case d: IntDomain => {
+      val valSet = values.toSet
+      v.dom.filterValues(valSet)
+    }
     case _ => throw new UnsupportedOperationException
   }
 

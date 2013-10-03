@@ -9,27 +9,29 @@ import concrete.util.Loggable
 import concrete.constraint.Shaver
 import scala.collection.mutable.HashSet
 
-final class ZeroSum(
+final class Sum(
+  val constant: Int,
   val factors: Array[Int],
   scope: Array[Variable]) extends Constraint(scope)
   with Loggable {
 
-  def this(scope: Array[Variable]) = this(Array.fill(scope.length)(1), scope)
+  def this(constant: Int, scope: Array[Variable]) =
+    this(constant, Array.fill(scope.length)(1), scope)
 
   //val domFact = scope map (_.dom) zip factors toList
 
   def checkValues(t: Array[Int]): Boolean =
-    (0 until arity).map(i => t(i) * factors(i)).sum >= 0
+    (0 until arity).map(i => t(i) * factors(i)).sum == constant
 
   def advise(p: Int) = arity
 
+  val initBound = Interval(-constant, -constant)
+
   def shave(): List[Int] = {
 
+    var bounds = initBound
+
     var i = arity - 1
-
-    var bounds = scope(arity - 1).dom.valueInterval * factors(i)
-
-    i -= 1
 
     while (i >= 0) {
       bounds += scope(i).dom.valueInterval * factors(i)
