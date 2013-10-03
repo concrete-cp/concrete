@@ -50,7 +50,7 @@ final case class C2S(s: Seq[C2Conc]) extends C2Conc {
 abstract class AbstractGenerator(val problem: Problem) {
   def cspom2concrete(variable: CSPOMExpression): C2Conc = variable match {
     case v: CSPOMVariable => C2V(cspomVar2concrete(v))
-    case seq: CSPOMSeq => C2S(seq.values map cspom2concrete)
+    case seq: CSPOMSeq[CSPOMExpression] => C2S(seq.values map cspom2concrete)
     case i: IntConstant => C2C(i.value)
     case _ => throw new UnsupportedOperationException(s"$variable is unexpected")
   }
@@ -164,7 +164,10 @@ object AbstractGenerator {
 
   def restrictDomain(v: Variable, values: Traversable[Int]): Unit = v.dom match {
     case UndefinedDomain => v.dom = IntDomain(makeDomain(values.toSeq): _*)
-    case d: IntDomain => v.dom = IntDomain(makeDomain((d.values.toSet & values.toSet).toSeq): _*)
+    case d: IntDomain => {
+      val valSet = values.toSet
+      v.dom.filterValues(valSet)
+    }
     case _ => throw new UnsupportedOperationException
   }
 

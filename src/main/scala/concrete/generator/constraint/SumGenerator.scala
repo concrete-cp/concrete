@@ -32,7 +32,7 @@ final class SumGenerator(problem: Problem) extends AbstractGenerator(problem) {
 //    }
 //  }
 
-  override def genFunctional(constaint: CSPOMConstraint) = {
+  override def genFunctional(constaint: CSPOMConstraint, result: C2Conc) = {
     ???
   }
 

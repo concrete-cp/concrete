@@ -20,7 +20,7 @@ final class ZeroSumTest {
     v0 = new Variable("v0", IntDomain(1 to 4))
     v1 = new Variable("v1", IntDomain(0 to 4))
     val b = new Variable("b", IntDomain(1))
-    c = new Sum(Array(4, -1, -1), Array(b, v0, v1));
+    c = new Sum(0, Array(4, -1, -1), Array(b, v0, v1));
   }
 
   @Test

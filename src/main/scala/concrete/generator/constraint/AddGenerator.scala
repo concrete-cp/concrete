@@ -19,7 +19,7 @@ final class AddGenerator(problem: Problem) extends AbstractGenerator(problem) {
       case _ => throw new UnsupportedOperationException
     }
 
-    val result = r.asInstanceOf[C21D]
+    val result = cspom2concrete1D(cspomResult)
     val Seq(v0: C21D, v1: C21D) = Seq(cspomV0, cspomV1) map cspom2concrete
 
     //map cspom2concrete
