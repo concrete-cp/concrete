@@ -15,6 +15,7 @@ import cspom.variable.BoolVariable
 import cspom.variable.IntVariable
 import cspom.variable.FreeVariable
 import cspom.variable.IntSeq
+import cspom.variable.FreeInt
 
 object ProblemGenerator extends Loggable {
   @throws(classOf[FailedGenerationException])
@@ -70,8 +71,9 @@ object ProblemGenerator extends Loggable {
       new concrete.BooleanDomain();
 
     case v: IntVariable => v.domain match {
-      case int: IntInterval => IntDomain(int.lb to int.ub)
-      case seq: IntSeq => IntDomain(seq: _*)
+      case int: IntInterval => IntDomain(int)
+      case IntSeq(seq) => IntDomain(seq: _*)
+      case FreeInt => UndefinedDomain
     }
 
     case _: FreeVariable => UndefinedDomain
