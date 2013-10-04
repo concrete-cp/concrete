@@ -12,7 +12,6 @@ import concrete.UNSATObject
 final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
   override def gen(constraint: CSPOMConstraint): Boolean = {
-    require(Set("=", "eq")(constraint.function));
     val scope = constraint.arguments.map(cspom2concrete1D)
 
     val constants = scope.collect { case C2C(c) => c }
@@ -84,9 +83,9 @@ final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
   }
 
-  override def genReified(funcConstraint: CSPOMConstraint, result: Variable) = funcConstraint.function match {
-    case "eq" => {
-      val arguments = funcConstraint.arguments map cspom2concreteVar
+  override def genReified(funcConstraint: CSPOMConstraint, result: Variable) = funcConstraint match {
+    case CSPOMConstraint(_, 'eq, args, _) =>
+      val arguments = args map cspom2concreteVar
 
       if (arguments.size != 2 || arguments.exists(_.dom.undefined)) {
         false
@@ -99,28 +98,23 @@ final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
             new Neq(arguments(0), arguments(1))))
         true
       }
-    }
-    case "neg" =>
-      if (funcConstraint.arguments.size != 2) {
-        false
-      } else {
-        val scope = funcConstraint.arguments map cspom2concreteVar
 
-        scope map { _.dom } find { !_.undefined } match {
-          case None => false
-          case Some(refDomain) =>
-            val negDomain = refDomain.values.map(v => -v).toSeq.reverse
+    case CSPOMConstraint(_, 'neq, args, _) if args.size == 2 =>
+      val scope = funcConstraint.arguments map cspom2concreteVar
 
-            for (v <- scope if (v.dom.undefined)) {
-              v.dom = IntDomain(negDomain: _*)
-            }
-            addConstraint(new Eq(true, scope(0), 0, scope(1)))
-            true
-        }
+      scope map { _.dom } find { !_.undefined } match {
+        case None => false
+        case Some(refDomain) =>
+          val negDomain = refDomain.values.map(v => -v).toSeq.reverse
+
+          for (v <- scope if (v.dom.undefined)) {
+            v.dom = IntDomain(negDomain: _*)
+          }
+          addConstraint(new Eq(true, scope(0), 0, scope(1)))
+          true
       }
 
-    case _ =>
-      throw new IllegalArgumentException("Can not generate " + funcConstraint);
+    case _ => false
   }
 
 }

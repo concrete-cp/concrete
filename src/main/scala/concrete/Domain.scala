@@ -69,7 +69,7 @@ abstract class Domain {
 
   def removeToVal(ub: Int): Boolean = {
     val v = closestLeq(ub)
-    v >= 0 && removeTo(closestLeq(ub))
+    v >= 0 && removeTo(v)
   }
 
   def filter(f: Int => Boolean): Boolean
@@ -101,28 +101,14 @@ abstract class Domain {
    * @param value
    * @return the index of the closest value strictly lower than the given value.
    */
-  def closestLt(value: Int): Int = {
-    val lb = closestLeq(value);
-    if (lb >= 0 && this.value(lb) == value) {
-      prev(lb)
-    } else {
-      lb
-    }
-  }
+  def closestLt(value: Int): Int
 
   /**
    * @param value
    * @return the index of the closest value strictly greater than the given
    *         value.
    */
-  def closestGt(value: Int): Int = {
-    val ub = closestGeq(value);
-    if (ub >= 0 && this.value(ub) == value) {
-      next(ub)
-    } else {
-      ub
-    }
-  }
+  def closestGt(value: Int): Int
 
   /**
    * @param value
@@ -214,14 +200,10 @@ abstract class Domain {
 
   def intersectVal(i: Interval): Boolean = intersectVal(i.lb, i.ub)
 
-  def removeItvVal(a: Int, b: Int): Boolean = {
-    filter(i => a <= value(i) && value(i) <= b)
-  }
-
   def removeValInterval(lb: Int, ub: Int) {
 
-    var i = closestGt(lb)
-    val end = closestLt(ub)
+    var i = closestGeq(lb)
+    val end = closestLeq(ub)
 
     if (i >= 0 && end >= 0) {
       while (i <= end) {

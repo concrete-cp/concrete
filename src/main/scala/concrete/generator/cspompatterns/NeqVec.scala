@@ -19,7 +19,7 @@ object NeqVec extends ConstraintCompiler {
   type A = (CSPOMConstraint, Set[CSPOMVariable], Set[CSPOMConstraint])
 
   /* NE constraints is a special case of nevec */
-  private def isNevec(c: CSPOMConstraint) = c.function == "ne" || c.function == "nevec"
+  private def isNevec(c: CSPOMConstraint) = c.function == 'ne || c.function == 'nevec
 
   def mtch(c: CSPOMConstraint, problem: CSPOM) = {
     if (isNevec(c)) {
@@ -56,7 +56,7 @@ object NeqVec extends ConstraintCompiler {
       case _ => throw new IllegalArgumentException(s"$neConstraints contains malformed ne/nevec constraint")
     }
 
-    val newC = problem.addConstraint(new CSPOMConstraint("nevec", new CSPOMSeq(x), new CSPOMSeq(y)))
+    val newC = problem.addConstraint(new CSPOMConstraint('nevec, new CSPOMSeq(x), new CSPOMSeq(y)))
 
     new Delta(orConstraint :: neConstraints.toList, newC.scope)
   }

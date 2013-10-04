@@ -7,6 +7,8 @@ final object UndefinedDomain extends Domain {
   def bound: Boolean = throw new UnsupportedOperationException()
   def closestGeq(value: Int): Int = throw new UnsupportedOperationException()
   def closestLeq(value: Int): Int = throw new UnsupportedOperationException()
+  def closestGt(value: Int): Int = ???
+  def closestLt(value: Int): Int = ???
   def currentLevel: Int = throw new UnsupportedOperationException()
   def filter(f: Int => Boolean): Boolean = throw new UnsupportedOperationException()
   def first: Int = throw new UnsupportedOperationException()

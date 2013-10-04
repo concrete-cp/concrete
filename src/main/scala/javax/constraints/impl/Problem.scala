@@ -48,7 +48,7 @@ class Problem(name: String) extends AbstractProblem(name) with Loggable {
 
   // Members declared in javax.constraints.Problem
   def allDiff(scope: Array[javax.constraints.Var]): javax.constraints.Constraint = {
-    val constraint = new CSPOMConstraint("alldifferent", scope.map(_.getImpl.asInstanceOf[CSPOMVariable]): _*)
+    val constraint = new CSPOMConstraint('alldifferent, scope.map(_.getImpl.asInstanceOf[CSPOMVariable]): _*)
     new Constraint(this, constraint)
   }
   def linear(v1: javax.constraints.Var, op: String, v2: javax.constraints.Var): javax.constraints.Constraint =
@@ -66,21 +66,22 @@ class Problem(name: String) extends AbstractProblem(name) with Loggable {
     ow.close()
   }
   def post(v1: javax.constraints.Var, op: String, v2: javax.constraints.Var): javax.constraints.Constraint = {
-    val constraint = cspom.ctr(op, v1.getImpl.asInstanceOf[CSPOMVariable], v2.getImpl.asInstanceOf[CSPOMVariable])
+    val constraint = cspom.ctr(Symbol(op), Seq(v1.getImpl.asInstanceOf[CSPOMVariable], v2.getImpl.asInstanceOf[CSPOMVariable]), Map())
     new Constraint(this, constraint)
   }
   def post(v: javax.constraints.Var, op: String, c: Int): javax.constraints.Constraint = {
-    val constraint = cspom.ctr(op, v.getImpl.asInstanceOf[CSPOMVariable], cspom.varOf(c))
+    val constraint = cspom.ctr(Symbol(op), Seq(v.getImpl.asInstanceOf[CSPOMVariable], cspom.varOf(c)), Map())
     new Constraint(this, constraint)
   }
   def post(sum: Array[javax.constraints.Var], op: String, v: javax.constraints.Var): javax.constraints.Constraint = {
-    val lb = sum.map(_.getMin()).sum
-    val ub = sum.map(_.getMax()).sum
-    val r = cspom.interVar(lb, ub)
-    val c = cspom.ctr("zerosum", r +: sum.map(_.getImpl.asInstanceOf[CSPOMVariable]),
-      Map("coefficients" -> (-1 :: List.fill(sum.length)(1))))
-    val constraint = cspom.ctr(op, r, v.getImpl.asInstanceOf[CSPOMVariable])
-    new Constraint(this, constraint)
+    ???
+    //    val lb = sum.map(_.getMin()).sum
+    //    val ub = sum.map(_.getMax()).sum
+    //    val r = cspom.interVar(lb, ub)
+    //    val c = cspom.ctr("zerosum", r +: sum.map(_.getImpl.asInstanceOf[CSPOMVariable]),
+    //      Map("coefficients" -> (-1 :: List.fill(sum.length)(1))))
+    //    val constraint = cspom.ctr(op, r, v.getImpl.asInstanceOf[CSPOMVariable])
+    //    new Constraint(this, constraint)
   }
   def post(vs: Array[javax.constraints.Var], op: String, v: Int): javax.constraints.Constraint = {
     val constant = cspom.varOf(v)
@@ -89,7 +90,7 @@ class Problem(name: String) extends AbstractProblem(name) with Loggable {
   def post(x$1: Array[Int], x$2: Array[javax.constraints.Var], x$3: String, x$4: javax.constraints.Var): javax.constraints.Constraint = ???
   def post(x$1: Array[Int], x$2: Array[javax.constraints.Var], x$3: String, x$4: Int): javax.constraints.Constraint = ???
   def postCardinality(vars: Array[javax.constraints.Var], cardValue: Int, op: String, cardCount: javax.constraints.Var): javax.constraints.Constraint = {
-    val count = cspom.isInt("occurrence", cspomVar(vars), Map("occurence" -> cardValue))
+    val count = cspom.isInt('occurrence, cspomVar(vars), Map("occurence" -> cardValue))
     val countVar = new Var(this, count.name, count)
     post(countVar, op, cardCount)
   }

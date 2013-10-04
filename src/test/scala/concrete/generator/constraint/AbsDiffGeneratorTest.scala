@@ -19,7 +19,7 @@ final class AbsDiffGeneratorTest {
     val v0 = cspom.varOf(1, 2, 3)
     val v1 = cspom.varOf(1, 2, 3)
     val v2 = cspom.varOf(1, 2, 3)
-    val c = cspom.addConstraint(new CSPOMConstraint(v0, "absdiff", v1, v2))
+    val c = cspom.addConstraint(new CSPOMConstraint(v0, 'absdiff, v1, v2))
 
     val problem = new Problem(ProblemGenerator.generateVariables(cspom))
     new AbsDiffGenerator(problem).generate(c)

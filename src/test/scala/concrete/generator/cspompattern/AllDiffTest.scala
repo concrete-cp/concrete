@@ -5,6 +5,7 @@ import org.junit.Test
 import cspom.CSPOM
 import cspom.CSPOM._
 import concrete.generator.cspompatterns.AllDiff
+import concrete.CSPOMDriver._
 
 class AllDiffTest {
   @Test

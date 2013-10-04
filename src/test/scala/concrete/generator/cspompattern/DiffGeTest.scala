@@ -8,6 +8,7 @@ import concrete.generator.cspompatterns.DiffGe
 import cspom.variable.CSPOMTrue
 import cspom.variable.BoolVariable
 import org.hamcrest.CoreMatchers._
+import concrete.CSPOMDriver._
 
 class DiffGeTest {
   @Test
@@ -19,7 +20,7 @@ class DiffGeTest {
       assertTrue(r.params("var_is_introduced"))
       ctr(r >= interVar(0, 5))
 
-      threadLocalProblem.addConstraint(new CSPOMConstraint(r, "sub", varOf(1, 2, 3), varOf(2, 3, 4)))
+      threadLocalProblem.addConstraint(new CSPOMConstraint(r, 'sub, varOf(1, 2, 3), varOf(2, 3, 4)))
 
     }
     for (d <- DiffGe.mtch(sub, cspom)) {
@@ -43,7 +44,7 @@ class DiffGeTest {
 
       val r2 = (r >= interVar(0, 5))
 
-      threadLocalProblem.addConstraint(new CSPOMConstraint(r, "sub", varOf(1, 2, 3), varOf(2, 3, 4)))
+      threadLocalProblem.addConstraint(new CSPOMConstraint(r, 'sub, varOf(1, 2, 3), varOf(2, 3, 4)))
     }
     for (d <- DiffGe.mtch(sub, cspom)) {
       DiffGe.compile(sub, cspom, d)

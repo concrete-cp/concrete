@@ -76,6 +76,6 @@ final class Sum(
 
   def reviseVariable(p: Int, mod: Seq[Int]) = false
 
-  override def toString = (scope, factors).zipped.map((v, f) => f + "." + v).mkString(" + ") + " = 0"
+  override def toString = (scope, factors).zipped.map((v, f) => f + "." + v).mkString(" + ") + " = " + constant
   val simpleEvaluation = 3
 }

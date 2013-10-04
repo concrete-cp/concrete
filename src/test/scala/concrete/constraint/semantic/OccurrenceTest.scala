@@ -17,7 +17,7 @@ class OccurrenceTest {
 
     val occ = new Variable("occ", IntDomain(1, 2, 3))
 
-    val c = new Occurrence(occ, 7, Array(v1, v2, v3, v4, v5))
+    val c = new OccurrenceVar(occ, 7, Array(v1, v2, v3, v4, v5))
 
     assertEquals(Seq(0), c.revise())
 
@@ -35,7 +35,7 @@ class OccurrenceTest {
 
     val occ = new Variable("occ", IntDomain(3, 4, 5))
 
-    val c = new Occurrence(occ, 7, Array(v1, v2, v3, v4, v5))
+    val c = new OccurrenceVar(occ, 7, Array(v1, v2, v3, v4, v5))
     c.revise()
 
   }

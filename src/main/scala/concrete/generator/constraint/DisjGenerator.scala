@@ -85,9 +85,9 @@ final class DisjGenerator(problem: Problem) extends AbstractGenerator(problem) {
     val scope = fC.arguments map cspom2concreteVar
     scope foreach AbstractGenerator.booleanDomain
     fC.function match {
-      case "or" => generateReifiedOr(scope, fC, result, scope);
-      case "not" if scope.size == 1 => val Seq(v) = scope; generateNeg(result, v);
-      case "and" => generateReifiedAnd(scope, fC, result, scope);
+      case 'or => generateReifiedOr(scope, fC, result, scope);
+      case 'not if scope.size == 1 => val Seq(v) = scope; generateNeg(result, v);
+      case 'and => generateReifiedAnd(scope, fC, result, scope);
       case _ => AbstractGenerator.fail("Unhandled constraint: " + fC);
     }
     true

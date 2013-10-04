@@ -21,12 +21,14 @@ import cspom.variable.BoolVariable
 
 sealed trait C2Conc {
   def is(o: Any): Boolean
+  def undefined: Boolean
 }
 sealed trait C21D extends C2Conc {
   def values: Seq[Int]
 }
 final case class C2V(v: Variable) extends C21D {
   def values = v.dom.values.toSeq
+  def undefined = v.dom.undefined
   def is(o: Any) = o match {
     case o: Variable => o eq v
     case _ => false
@@ -34,6 +36,7 @@ final case class C2V(v: Variable) extends C21D {
 }
 final case class C2C(i: Int) extends C21D {
   def values = Seq(i)
+  def undefined = false
   def is(o: Any) = o match {
     case o: Int => o == i
     case _ => false
@@ -45,6 +48,7 @@ final case class C2S(s: Seq[C2Conc]) extends C2Conc {
     case o: Seq[C2Conc] => (o, s).zipped.forall((o, s) => o.is(s))
     case _ => false
   }
+  def undefined = s.exists(_.undefined)
 }
 
 abstract class AbstractGenerator(val problem: Problem) {

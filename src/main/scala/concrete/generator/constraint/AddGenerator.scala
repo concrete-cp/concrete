@@ -14,8 +14,8 @@ final class AddGenerator(problem: Problem) extends AbstractGenerator(problem) {
   override def genFunctional(constraint: CSPOMConstraint, r: C2Conc) = {
 
     val Seq(cspomResult, cspomV0, cspomV1) = constraint match {
-      case CSPOMConstraint(r, "sub", Seq(v0, v1), _) => Seq(v0, r, v1)
-      case CSPOMConstraint(r, "add", args, _) => r +: args
+      case CSPOMConstraint(r, 'sub, Seq(v0, v1), _) => Seq(v0, r, v1)
+      case CSPOMConstraint(r, 'add, args, _) => r +: args
       case _ => throw new UnsupportedOperationException
     }
 

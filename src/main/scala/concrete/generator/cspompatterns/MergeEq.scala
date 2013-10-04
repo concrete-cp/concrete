@@ -8,6 +8,9 @@ import cspom.CSPOMConstraint
 import cspom.compiler.Delta
 import cspom.variable.CSPOMTrue
 import cspom.variable.IntVariable
+import cspom.variable.IntConstant
+import cspom.variable.CSPOMExpression
+import cspom.variable.IntDomain
 
 /**
  * If given constraint is an all-equal constraint, merges and removes all
@@ -15,32 +18,31 @@ import cspom.variable.IntVariable
  */
 object MergeEq extends ConstraintCompiler {
 
-  type A = (Set[IntVariable], Set[IntVariable])
+  type A = (List[IntVariable], List[IntVariable], List[IntConstant])
+
+  private def partition(s: List[CSPOMExpression], aux: List[IntVariable] = Nil, full: List[IntVariable] = Nil, const: List[IntConstant] = Nil): (List[IntVariable], List[IntVariable], List[IntConstant]) =
+    s match {
+      case Nil => (aux, full, const)
+      case ::(a: IntVariable, tail) if a.params("var_is_introduced") => partition(tail, a :: aux, full, const)
+      case ::(f: IntVariable, tail) => partition(tail, aux, f :: full, const)
+      case ::(c: IntConstant, tail) => partition(tail, aux, full, c :: const)
+      case _ => throw new IllegalArgumentException
+    }
 
   def mtch(c: CSPOMConstraint, problem: CSPOM) = {
-    if (c.function == "eq" && c.result == CSPOMTrue) {
-      val intVars = c.scope.collect {
-        case v: IntVariable => v
-      }
+    if (c.function == 'eq && c.result == CSPOMTrue) {
 
-      if (intVars == c.scope) {
-        val (auxVars, fullVars) = intVars.partition(_.params("var_is_introduced"))
-        if (auxVars.nonEmpty) {
-          Some((auxVars, fullVars))
-        } else {
-          None
-        }
-      } else {
-        None
-      }
-
+      val (aux, full, const) = partition(c.arguments.toList)
+      if (aux.nonEmpty) {
+        Some((aux, full, const))
+      } else None
     } else {
       None
     }
   }
 
   def compile(c: CSPOMConstraint, problem: CSPOM, data: A) = {
-    val (auxVars, fullVars) = data
+    val (auxVars, fullVars, const) = data
 
     problem.removeConstraint(c)
 
@@ -49,35 +51,51 @@ object MergeEq extends ConstraintCompiler {
      * remains.
      */
     if (fullVars.size > 1) {
-      val newConstraint = new CSPOMConstraint("eq", fullVars.toSeq: _*);
+      val newConstraint = new CSPOMConstraint('eq, fullVars.toSeq: _*);
       problem.addConstraint(newConstraint)
     }
 
     /**
      * Update the constraints of the problem
      */
-    val mergedDom = (fullVars ++ auxVars).map(_.domain).reduce(_ intersect _)
+    const match {
+      case c :: tail =>
+        require(tail.forall(_ == c))
+        var delta = Delta()
+        val mergedDom = IntDomain.of(c.value)
+        val newFullVars = fullVars.map {
+          v =>
+            val nv = new IntVariable(v.name, mergedDom)
+            delta ++= replaceVars(Seq(v), nv, problem)
+            nv
+        }
 
-    /**
-     * Tighten fullVars' domain
-     */
-    var delta = Delta()
+        delta ++ replaceVars(auxVars, c, problem)
 
-    val newFullVars = fullVars.map {
-      v =>
-        val nv = new IntVariable(v.name, mergedDom)
-        delta ++= replaceVars(Seq(v), nv, problem)
-        nv
+      case Nil =>
+        val mergedDom = (fullVars ++ auxVars).map(_.domain).reduce(_ intersect _)
+
+        /**
+         * Tighten fullVars' domain
+         */
+        var delta = Delta()
+
+        val newFullVars = fullVars.map {
+          v =>
+            val nv = new IntVariable(v.name, mergedDom)
+            delta ++= replaceVars(Seq(v), nv, problem)
+            nv
+        }
+
+        /**
+         * Replacing aux variables by a single one (full var if available)
+         */
+        val refVar = newFullVars.headOption.getOrElse(auxVars.head)
+
+        val mergedVar = new IntVariable(refVar.name, mergedDom)
+
+        delta ++ replaceVars((auxVars :+ refVar).distinct, mergedVar, problem)
     }
-
-    /**
-     * Replacing aux variables by a single one (full var if available)
-     */
-    val refVar = newFullVars.headOption.getOrElse(auxVars.head)
-
-    val mergedVar = new IntVariable(refVar.name, mergedDom)
-
-    delta ++ replaceVars((auxVars + refVar).toSeq, mergedVar, problem)
 
   }
 

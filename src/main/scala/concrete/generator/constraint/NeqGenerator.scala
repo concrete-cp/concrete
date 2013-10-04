@@ -7,21 +7,27 @@ import concrete.constraint.semantic.ReifiedConstraint
 import concrete.generator.FailedGenerationException
 import concrete.Problem
 import concrete.Variable
-import cspom.CSPOMConstraint;
+import cspom.CSPOMConstraint
 import concrete.constraint.semantic.ReifiedNeq
+import concrete.UNSATObject
 
 final class NeqGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
   override def gen(constraint: CSPOMConstraint) = {
-    require(constraint.arity == 2,
-      "Comparison constraints must have exactly two arguments");
 
-    val scope = constraint.arguments map cspom2concreteVar
+    val Seq(v0, v1) = constraint.arguments map cspom2concrete1D
 
-    if (scope exists { _.dom.undefined }) {
+    if (v0.undefined || v1.undefined) {
       false
     } else {
-      addConstraint(new Neq(scope(0), scope(1)))
+      (v0, v1) match {
+        case (C2C(v0), C2C(v1)) => (v0 != v1) || (throw UNSATObject)
+        case (C2C(v0), C2V(v1)) => v1.dom.removeVal(v0)
+        case (C2V(v0), C2C(v1)) => v0.dom.removeVal(v1)
+        case (C2V(v0), C2V(v1)) => addConstraint(new Neq(v0, v1))
+
+      }
+
       true
     }
   }

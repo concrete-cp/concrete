@@ -4,20 +4,15 @@ import concrete.constraint.semantic.Bounds
 import concrete.constraint.semantic.Gcc
 import concrete.{ Variable, Problem }
 import cspom.{ CSPOMConstraint }
-import concrete.constraint.semantic.Occurrence
+import concrete.constraint.semantic.OccurrenceVar
+import concrete.constraint.semantic.OccurrenceConst
 
 final class OccurrenceGenerator(problem: Problem) extends AbstractGenerator(problem) {
   override def genFunctional(constraint: CSPOMConstraint, r: C2Conc) = {
 
-    val C2V(result) = r
-    val Seq(vars) = constraint.arguments map cspom2concreteSeq
+    val args = constraint.arguments map cspom2concreteVar
 
-    val args = vars map {
-      case C2V(v) => v
-      case _ => AbstractGenerator.fail("Variable expected")
-    }
-
-    if (args.exists(_.dom.undefined) || result.dom.undefined) {
+    if (args.exists(_.dom.undefined) || r.undefined) {
       false
     } else {
 
@@ -26,7 +21,11 @@ final class OccurrenceGenerator(problem: Problem) extends AbstractGenerator(prob
         case p: Any => throw new IllegalArgumentException(s"Occurrence constraints requires to be parameterized with an int value, found $p")
       }
 
-      addConstraint(new Occurrence(result, bound, args.toArray));
+      r match {
+        case C2C(result) => addConstraint(new OccurrenceConst(result, bound, args.toArray))
+        case C2V(result) => addConstraint(new OccurrenceVar(result, bound, args.toArray))
+      }
+
       true;
     }
 

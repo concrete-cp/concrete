@@ -116,6 +116,31 @@ final class IntDomain(
     }
   }
 
+  private def closestLt(v: Int, lb: Int, ub: Int): Int = {
+    if (value(ub) < v) { ub }
+    else {
+      val test = (ub + lb) / 2
+      if (value(test) >= v) {
+        closestLt(v, lb, test - 1)
+      } else {
+        closestLt(v, test + 1, ub)
+      }
+    }
+  }
+
+  def closestLt(value: Int): Int = {
+    val i = index(value)
+    if (i < 0) {
+      if (value <= firstValue) {
+        -1
+      } else {
+        closestLt(value, first, last)
+      }
+    } else {
+      intSet.closestLt(i)
+    }
+  }
+
   private def closestGeq(v: Int, lb: Int, ub: Int): Int = {
     if (value(lb) >= v) {
       lb
@@ -139,6 +164,32 @@ final class IntDomain(
       }
     } else {
       intSet.closestGeq(i)
+    }
+  }
+
+  private def closestGt(v: Int, lb: Int, ub: Int): Int = {
+    if (value(lb) > v) {
+      lb
+    } else {
+      val test = (ub + lb) / 2;
+      if (value(test) > v) {
+        closestGt(v, lb, test - 1)
+      } else {
+        closestGt(v, test + 1, ub)
+      }
+    }
+  }
+
+  def closestGt(value: Int): Int = {
+    val i = index(value)
+    if (i < 0) {
+      if (value >= lastValue) {
+        -1
+      } else {
+        closestGt(value, first, last)
+      }
+    } else {
+      intSet.closestGt(i)
     }
   }
 

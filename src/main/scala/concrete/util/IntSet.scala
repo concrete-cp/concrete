@@ -62,6 +62,8 @@ abstract class IntSet {
   def prev(i: Int): Int
   def closestLeq(i: Int): Int
   def closestGeq(i: Int): Int
+  def closestLt(i: Int): Int = prev(i)
+  def closestGt(i: Int): Int = next(i)
   def present(i: Int): Boolean
   def remove(i: Int): IntSet
   def removeFrom(lb: Int): IntSet

@@ -6,9 +6,6 @@ import cspom.variable.CSPOMInt
 
 object Patterns {
   def apply() =
-    Seq(AbsDiff, SubsumedDiff, AllDiff, DiffGe, MergeDisj, MergeEq, MergeSame, NeqVec, RemoveAnd,
-      new ConstraintTyper(knownConstraints))
+    Seq(AbsDiff, SubsumedDiff, AllDiff, DiffGe, MergeDisj, MergeEq, MergeSame, NeqVec, RemoveAnd)
 
-  private def knownConstraints = Seq(
-    ConstraintSignature(CSPOMInt, "add", CSPOMInt, CSPOMInt))
 }

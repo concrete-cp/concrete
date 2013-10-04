@@ -6,13 +6,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import concrete.generator.FailedGenerationException;
-
 import rb.randomlists.CoarseProportionRandomListGenerator;
 import rb.randomlists.ProbabilityRandomListGenerator;
 import rb.randomlists.ProportionRandomListGenerator;
 import rb.randomlists.RandomListGenerator;
 import rb.randomlists.Structure;
+import scala.Symbol;
+import concrete.generator.FailedGenerationException;
 import cspom.CSPOM;
 import cspom.CSPOMConstraint;
 import cspom.extension.MDD;
@@ -224,7 +224,7 @@ public class RBGenerator {
           incompatibilityGraphType, forcedTuple);
     }
 
-    return new CSPOMConstraint("extension", variables,
+    return new CSPOMConstraint(Symbol.apply("extension"), variables,
         CSPOMConstraint.param(
             "relation", matrix.e).param("init", matrix.sup));
   }

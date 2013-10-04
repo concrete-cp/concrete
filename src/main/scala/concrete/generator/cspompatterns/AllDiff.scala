@@ -14,7 +14,7 @@ object AllDiff extends ConstraintCompiler with Loggable {
   type A = Set[CSPOMVariable]
 
   def DIFF_CONSTRAINT(constraint: CSPOMConstraint) =
-    (constraint.result == CSPOMTrue) && Set("ne", "gt", "lt", "allDifferent").contains(constraint.function)
+    (constraint.result == CSPOMTrue) && Set('ne, 'gt, 'lt, 'allDifferent)(constraint.function)
 
   def ALLDIFF_CONSTRAINT(constraint: CSPOMConstraint) =
     (constraint.result == CSPOMTrue) && "ne" == constraint.function ||
@@ -26,9 +26,9 @@ object AllDiff extends ConstraintCompiler with Loggable {
 
   def mtch(constraint: CSPOMConstraint, problem: CSPOM) = {
     val clique: Set[CSPOMVariable] = constraint match {
-      case CSPOMConstraint(CSPOMTrue, func, args: Seq[CSPOMVariable], _) if Set("ne", "gt", "lt").contains(func) =>
+      case CSPOMConstraint(CSPOMTrue, func, args: Seq[CSPOMVariable], _) if Set('ne, 'gt, 'lt)(func) =>
         expand(args.toSet, problem)
-      case CSPOMConstraint(CSPOMTrue, "allDifferent", Seq(CSPOMSeq(
+      case CSPOMConstraint(CSPOMTrue, 'allDifferent, Seq(CSPOMSeq(
         _, _, args: Seq[CSPOMVariable], _, _)), _) =>
         expand(args.toSet, problem)
       case _ => Set()
@@ -115,7 +115,7 @@ object AllDiff extends ConstraintCompiler with Loggable {
    */
   private def newAllDiff(scope: Set[CSPOMVariable], problem: CSPOM) {
     val allDiff = new CSPOMConstraint(CSPOMTrue,
-      "allDifferent",
+      'allDifferent,
       scope.toList: _*);
 
     if (!problem.constraints.contains(allDiff)) {

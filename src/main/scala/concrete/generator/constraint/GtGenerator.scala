@@ -22,10 +22,10 @@ final class GtGenerator(problem: Problem) extends AbstractGenerator(problem) {
       false
     } else {
       constraint.function match {
-        case "gt" | ">" => gte(solverVariables(0), solverVariables(1), true);
-        case "ge" | ">=" => gte(solverVariables(0), solverVariables(1), false);
-        case "lt" | "<" => gte(solverVariables(1), solverVariables(0), true);
-        case "le" | "<=" => gte(solverVariables(1), solverVariables(0), false);
+        case 'gt => gte(solverVariables(0), solverVariables(1), true);
+        case 'ge => gte(solverVariables(0), solverVariables(1), false);
+        case 'lt => gte(solverVariables(1), solverVariables(0), true);
+        case 'le => gte(solverVariables(1), solverVariables(0), false);
         case _ => throw new FailedGenerationException("Unhandled constraint " + constraint);
       }
       true
@@ -64,22 +64,22 @@ final class GtGenerator(problem: Problem) extends AbstractGenerator(problem) {
       AbstractGenerator.booleanDomain(result);
 
       addConstraint(constraint.function match {
-        case "gt" =>
+        case 'gt =>
           new ReifiedConstraint(
             result,
             new Gt(arguments(0), arguments(1), true),
             new Gt(arguments(1), arguments(0), false));
-        case "ge" =>
+        case 'ge =>
           new ReifiedConstraint(
             result,
             new Gt(arguments(0), arguments(1), false),
             new Gt(arguments(1), arguments(0), true));
-        case "lt" =>
+        case 'lt =>
           new ReifiedConstraint(
             result,
             new Gt(arguments(1), arguments(0), true),
             new Gt(arguments(0), arguments(1), false));
-        case "le" =>
+        case 'le =>
           new ReifiedConstraint(
             result,
             new Gt(arguments(1), arguments(0), false),

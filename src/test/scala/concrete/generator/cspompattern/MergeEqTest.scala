@@ -7,6 +7,7 @@ import cspom.variable.IntVariable
 import concrete.generator.cspompatterns.MergeEq
 import cspom.variable.CSPOMVariable
 import cspom.variable.BoolVariable
+import concrete.CSPOMDriver._
 
 class MergeEqTest {
   @Test

@@ -5,7 +5,7 @@ import concrete.constraint.Constraint
 import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
 
-class Occurrence(val result: Variable, val value: Int, val vars: Array[Variable])
+class OccurrenceVar(val result: Variable, val value: Int, val vars: Array[Variable])
   extends Constraint(result +: vars) {
 
   def checkValues(tuple: Array[Int]) =

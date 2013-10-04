@@ -13,27 +13,46 @@ import cspom.CSPOMConstraint
 import concrete.constraint.extension.MDDn
 import concrete.constraint.extension.ReduceableExt
 import scala.annotation.tailrec
+import concrete.generator.FailedGenerationException
 
 final class SumGenerator(problem: Problem) extends AbstractGenerator(problem) {
-//  override def gen(constraint: CSPOMConstraint) = {
-//    val Seq(solverVariables) = constraint.arguments map cspom2concreteSeqVar
-//
-//    if (solverVariables exists { _.dom.undefined }) {
-//      false
-//    } else {
-//      val params = constraint.params.get("coefficients") match {
-//        case Some(p: Seq[Int]) => p.toArray
-//        case None => Array.fill(solverVariables.length)(1)
-//        case _ => throw new IllegalArgumentException("Parameters for zero sum must be a sequence of integer values")
-//      }
-//      addConstraint(new Sum(0, params, solverVariables.toArray));
-//      //addConstraint(new ReduceableExt(solverVariables, zeroSum(solverVariables.toList, params.toList)))
-//      true;
-//    }
-//  }
+  //  override def gen(constraint: CSPOMConstraint) = {
+  //    val Seq(solverVariables) = constraint.arguments map cspom2concreteSeqVar
+  //
+  //    if (solverVariables exists { _.dom.undefined }) {
+  //      false
+  //    } else {
+  //      val params = constraint.params.get("coefficients") match {
+  //        case Some(p: Seq[Int]) => p.toArray
+  //        case None => Array.fill(solverVariables.length)(1)
+  //        case _ => throw new IllegalArgumentException("Parameters for zero sum must be a sequence of integer values")
+  //      }
+  //      addConstraint(new Sum(0, params, solverVariables.toArray));
+  //      //addConstraint(new ReduceableExt(solverVariables, zeroSum(solverVariables.toList, params.toList)))
+  //      true;
+  //    }
+  //  }
 
-  override def genFunctional(constaint: CSPOMConstraint, result: C2Conc) = {
-    ???
+  override def genFunctional(constraint: CSPOMConstraint, result: C2Conc) = {
+    val solverVariables = constraint.arguments map cspom2concreteVar
+
+    if (result.undefined || solverVariables.exists(_.dom.undefined)) {
+      false
+    } else {
+      val params = constraint.params.get("coefficients") match {
+        case Some(p: Seq[Int]) => p.toArray
+        case None => Array.fill(solverVariables.length)(1)
+        case _ => throw new IllegalArgumentException("Parameters for zero sum must be a sequence of integer values")
+      }
+      result match {
+        case C2C(c) => addConstraint(new Sum(c, params, solverVariables.toArray));
+        case C2V(v) => addConstraint(new Sum(0, -1 +: params, (v +: solverVariables).toArray))
+        case _ => throw new FailedGenerationException("Variable or constant expected, found " + result)
+      }
+
+      //addConstraint(new ReduceableExt(solverVariables, zeroSum(solverVariables.toList, params.toList)))
+      true;
+    }
   }
 
   @tailrec

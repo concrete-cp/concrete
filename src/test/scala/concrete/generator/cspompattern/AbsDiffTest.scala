@@ -1,6 +1,7 @@
 package concrete.generator.cspompattern
 import cspom.CSPOM
 import cspom.CSPOM._
+import concrete.CSPOMDriver._
 import org.junit.Assert._
 import org.junit.Test
 import cspom.CSPOMConstraint
@@ -17,9 +18,9 @@ class AbsDiffTest {
       val r = auxInt()
       assertTrue(r.params("var_is_introduced"))
 
-      val r2 = 'abs(r)
+      val r2 = abs(r)
 
-      threadLocalProblem.addConstraint(new CSPOMConstraint(r, "sub", v0, v1))
+      threadLocalProblem.addConstraint(new CSPOMConstraint(r, 'sub, v0, v1))
     }
     println(cspom)
     for (d <- AbsDiff.mtch(sub, cspom)) {

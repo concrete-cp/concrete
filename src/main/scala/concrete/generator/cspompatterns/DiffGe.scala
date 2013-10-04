@@ -13,7 +13,7 @@ object DiffGe extends ConstraintCompiler {
   type A = CSPOMConstraint
 
   def mtch(constraint: CSPOMConstraint, problem: CSPOM) = {
-    if (constraint.function == "sub") {
+    if (constraint.function == 'sub) {
       constraint.result match {
 
         case v: CSPOMVariable if (v.params("var_is_introduced")) =>
@@ -41,7 +41,7 @@ object DiffGe extends ConstraintCompiler {
     problem.removeConstraint(geConstraint);
     problem.removeVariable(subConstraint.result.asInstanceOf[CSPOMVariable])
 
-    val newC = problem.addConstraint(new CSPOMConstraint(geConstraint.result, "diffGe", subConstraint.arguments :+ geConstraint.arguments(1)))
+    val newC = problem.addConstraint(new CSPOMConstraint(geConstraint.result, 'diffGe, subConstraint.arguments :+ geConstraint.arguments(1)))
 
     Delta(Seq(subConstraint, geConstraint), newC.scope)
   }

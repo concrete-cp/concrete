@@ -41,7 +41,7 @@ object MergeDisj extends ConstraintCompiler {
       problem.removeVariable(fc.result.asInstanceOf[CSPOMVariable])
 
       val newScope = fc.arguments ++ orConstraint.scope.filter(_ ne fc.result)
-      val newConstraint = new CSPOMConstraint("or", newScope: _*)
+      val newConstraint = new CSPOMConstraint('or, newScope: _*)
       problem.addConstraint(newConstraint)
 
       acc ++ new Delta(Seq(fc, orConstraint), newConstraint.scope)

@@ -25,21 +25,25 @@ final class Square(val x: Variable, val y: Variable)
 
   def checkValues(t: Array[Int]) = t(0) == t(1) * t(1)
 
-  def yIndex(xValue: Int) = {
+  def consistentX(xValue: Int) = {
     Square.sqrt(xValue) match {
       case Some(root) =>
         val idx = y.dom.index(root)
-        if (idx >= 0) {
-          idx
+        if (idx >= 0 && y.dom.present(idx)) {
+          true
         } else {
-          y.dom.index(-root)
+          val idx2 = y.dom.index(-root)
+          idx2 >= 0 && y.dom.present(idx2)
         }
-      case None => -1
+      case None => false
     }
 
   }
 
-  def xIndex(yValue: Int) = x.dom.index(yValue * yValue)
+  def consistentY(yValue: Int) = {
+    val idx = x.dom.index(yValue * yValue)
+    idx >= 0 && x.dom.present(idx)
+  }
 
   //  def shave(): List[Int] = {
   //    var mod: List[Int] = Nil
@@ -62,26 +66,15 @@ final class Square(val x: Variable, val y: Variable)
   //  }
 
   def reviseVariable(position: Int, mod: List[Int]) = position match {
-    case 0 => x.dom.filterValues { v =>
-      val index = yIndex(v)
-      index >= 0 && y.dom.present(index)
-    }
+    case 0 => x.dom.filterValues(consistentX)
 
-    case 1 => y.dom.filterValues { v =>
-      val index = xIndex(v)
-      index >= 0 && x.dom.present(index)
-    }
+    case 1 => y.dom.filterValues(consistentY)
 
     case _ => throw new IllegalArgumentException
   }
 
   override def isConsistent() = {
-    val otherDom = y.dom
-
-    x.dom.indices.exists { i =>
-      val index = yIndex(i)
-      index >= 0 && otherDom.present(index)
-    }
+    x.dom.values.exists(consistentX) && y.dom.values.exists(consistentY)
   }
 
   override def toString = s"$x == $y²"
@@ -91,12 +84,23 @@ final class Square(val x: Variable, val y: Variable)
 }
 
 object Square {
-  def sqrt(value: Int): Option[Int] = {
-    val ds = math.sqrt(value).toInt
-    if (ds * ds == value) {
-      Some(ds)
-    } else {
+  def sqrt(x: Int): Option[Int] = {
+    if ((x & 2) == 2 || (x & 7) == 5) {
       None
+    } else if ((x & 11) == 8 || (x & 31) == 20) {
+      None
+    } else if ((x & 47) == 32 || (x & 127) == 80) {
+      None
+    } else if ((x & 191) == 128 || (x & 511) == 320) {
+      None
+    } else {
+      val root = Math.sqrt(x).toInt
+      if (root * root == x) {
+        Some(root)
+      } else {
+        None
+      }
+
     }
   }
 }

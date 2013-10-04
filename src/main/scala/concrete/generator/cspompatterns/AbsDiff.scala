@@ -13,9 +13,9 @@ object AbsDiff extends ConstraintCompiler {
   type A = (CSPOMVariable, Seq[CSPOMConstraint])
 
   def mtch(c: CSPOMConstraint, problem: CSPOM) = c match {
-    case CSPOMConstraint(result: CSPOMVariable, "sub", args, _) if result.params("var_is_introduced") =>
+    case CSPOMConstraint(result: CSPOMVariable, 'sub, args, _) if result.params("var_is_introduced") =>
       val process = problem.constraints(result).filter {
-        case CSPOMConstraint(_, "abs", Seq(result), _) => true
+        case CSPOMConstraint(_, 'abs, Seq(result), _) => true
         case _ => false
       }
       if (process.isEmpty) {
@@ -31,7 +31,7 @@ object AbsDiff extends ConstraintCompiler {
       problem.removeConstraint(c);
       problem.removeConstraint(fc);
       val nc = problem.addConstraint(new CSPOMConstraint(
-        fc.result, "absdiff", c.arguments: _*));
+        fc.result, 'absdiff, c.arguments: _*));
       problem.removeVariable(data._1)
       acc ++ Delta(Seq(c, fc), nc.scope)
     }

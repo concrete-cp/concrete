@@ -8,6 +8,7 @@ import concrete.UNSATObject
 import concrete.constraint.Residues
 import concrete.constraint.Constraint
 import concrete.constraint.TupleEnumerator
+import concrete.constraint.semantic.Sum
 
 final class MulGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
@@ -61,41 +62,44 @@ final class MulGenerator(problem: Problem) extends AbstractGenerator(problem) {
             }
           })
         case (C2V(r), C2C(v0), C2V(v1)) => Some(
-          new Constraint(Array(r, v1)) with Residues with TupleEnumerator {
-            def checkValues(t: Array[Int]) = t(0) == v0 * t(1)
-          })
+          new Sum(0, Array(-1, v0), Array(r, v1)))
+        //          new Constraint(Array(r, v1)) with Residues with TupleEnumerator {
+        //            def checkValues(t: Array[Int]) = t(0) == v0 * t(1)
+        //          })
         case (C2V(r), C2V(v0), C2C(v1)) => Some(
-          new Constraint(Array(r, v0)) with Residues {
-            def checkValues(t: Array[Int]) = t(0) == t(1) * v1
-            def simpleEvaluation = 1
-            def getEvaluation = scope(0).dom.size + scope(1).dom.size
-            def findSupport(pos: Int, idx: Int) = {
-              val value = scope(pos).dom.value(idx)
-              pos match {
-                case 0 =>
-                  if (value % v1 == 0) {
-                    val sought = value / v1
-                    val index = scope(1).dom.index(sought)
-                    if (scope(1).dom.present(index)) {
-                      Some(Array(idx, index))
-                    } else {
-                      None
-                    }
-                  } else {
-                    None
-                  }
-                case 1 =>
-                  val sought = v1 * value
-                  val index = scope(0).dom.index(sought)
-                  if (scope(0).dom.present(index)) {
-                    Some(Array(index, idx))
-                  } else {
-                    None
-                  }
-                case _ => throw new IllegalStateException
-              }
-            }
-          })
+          new Sum(0, Array(-1, v1), Array(r, v0)))
+        //            
+        //          new Constraint(Array(r, v0)) with Residues {
+        //            def checkValues(t: Array[Int]) = t(0) == t(1) * v1
+        //            def simpleEvaluation = 1
+        //            def getEvaluation = scope(0).dom.size + scope(1).dom.size
+        //            def findSupport(pos: Int, idx: Int) = {
+        //              val value = scope(pos).dom.value(idx)
+        //              pos match {
+        //                case 0 =>
+        //                  if (value % v1 == 0) {
+        //                    val sought = value / v1
+        //                    val index = scope(1).dom.index(sought)
+        //                    if (scope(1).dom.present(index)) {
+        //                      Some(Array(idx, index))
+        //                    } else {
+        //                      None
+        //                    }
+        //                  } else {
+        //                    None
+        //                  }
+        //                case 1 =>
+        //                  val sought = v1 * value
+        //                  val index = scope(0).dom.index(sought)
+        //                  if (scope(0).dom.present(index)) {
+        //                    Some(Array(index, idx))
+        //                  } else {
+        //                    None
+        //                  }
+        //                case _ => throw new IllegalStateException
+        //              }
+        //            }
+        //          })
 
         case (C2V(r), C2V(v0), C2V(v1)) => Some(new Mul(r, v0, v1))
       }

@@ -20,7 +20,7 @@ final class IntervalSet(val domain: Interval) extends IntSet {
     if (i < first) { -1 }
     else if (i > last) { last }
     else { i }
-
+  
   def closestGeq(i: Int): Int =
     if (i > last) { -1 }
     else if (i < first) { first }
