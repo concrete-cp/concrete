@@ -47,8 +47,8 @@ class Solver(problem: javax.constraints.impl.Problem) extends javax.constraints.
 
   override def findOptimalSolution(objective: Objective, variable: Var): Solution = {
     objective match {
-      case Objective.MAXIMIZE => concreteSolver.maximize(concreteProblem.variable(variable.getName))
-      case Objective.MINIMIZE => concreteSolver.minimize(concreteProblem.variable(variable.getName))
+      case Objective.MAXIMIZE => concreteSolver.maximize(variable.getName)
+      case Objective.MINIMIZE => concreteSolver.minimize(variable.getName)
     }
     var solution: Option[Map[String, Int]] = None
     while (concreteSolver.hasNext) {

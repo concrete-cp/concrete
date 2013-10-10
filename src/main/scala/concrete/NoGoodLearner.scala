@@ -8,13 +8,29 @@ import concrete.constraint.Constraint
 import concrete.util.BitVectorIterator
 import concrete.constraint.extension.TupleTrieSet
 
+sealed trait LearnMethod
+
+object LearnMethod {
+  def apply(s: String) = s match {
+    case "BIN" => LearnBin
+    case "NONE" => NoLearn
+    case "EXT" => LearnExt
+    case "CONSERVATIVE" => LearnConservative
+  }
+}
+
+object NoLearn extends LearnMethod
+object LearnExt extends LearnMethod
+object LearnBin extends LearnMethod
+object LearnConservative extends LearnMethod
+
 final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMethod) {
 
   @Statistic
   var nbNoGoods = 0;
 
   def noGoods(decisions: List[Pair]): Set[Constraint] =
-    if (LearnMethod.NONE.equals(learnMethod) || decisions == Nil) {
+    if (learnMethod == NoLearn || decisions == Nil) {
       Set.empty;
     } else {
 
@@ -29,7 +45,7 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
       var currentScope: Vector[Variable] = Vector.empty;
       var level = 1;
 
-      while (decisions != Nil && (level < problem.maxArity || learnMethod == LearnMethod.EXT)) {
+      while (decisions != Nil && (level < problem.maxArity || learnMethod == LearnExt)) {
         /**
          * Decisions are stacked, so the first decision in the search tree
          * is actually the last in the stack.
@@ -130,8 +146,8 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
       scope.forall(c.scopeSet.contains)) match {
       case Some(c) => Some(c)
       case None => learnMethod match {
-        case LearnMethod.BIN => if (scope.size != 2) None else Some(generateConstraint(scope));
-        case LearnMethod.EXT => Some(generateConstraint(scope));
+        case LearnBin => if (scope.size != 2) None else Some(generateConstraint(scope));
+        case LearnExt => Some(generateConstraint(scope));
         case _ => None;
       }
 

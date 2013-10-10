@@ -35,7 +35,8 @@ import concrete.Problem
 object DC1 {
 
   @Parameter("dc1.addConstraints")
-  val addConstraints = LearnMethod.CONSERVATIVE
+  var _addConstraints = "CONSERVATIVE"
+  def addConstraints = LearnMethod(_addConstraints)
 
   ParameterManager.register(this)
 

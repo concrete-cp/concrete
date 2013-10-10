@@ -27,6 +27,7 @@ import concrete.Variable
 import concrete.util.Loggable
 import concrete.Statistic
 import concrete.UNSATException
+import concrete.LearnBin
 
 /**
  * @author Julien VION
@@ -48,7 +49,7 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
   private var cnt = 0
 
   private var nbSingletonTests = 0;
-  private val ngl = new NoGoodLearner(problem, LearnMethod.BIN)
+  private val ngl = new NoGoodLearner(problem, LearnBin)
 
   val nbVar = problem.variables.size
 

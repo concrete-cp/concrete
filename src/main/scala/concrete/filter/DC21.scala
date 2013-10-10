@@ -29,6 +29,7 @@ import concrete.Variable
 import concrete.Parameter
 import concrete.util.Loggable
 import scala.annotation.tailrec
+import concrete.LearnBin
 
 /**
  * @author Julien VION
@@ -51,7 +52,7 @@ final class DC21(val problem: Problem) extends Filter with Loggable {
 
   private var nbSingletonTests = 0;
 
-  private val ngl = new NoGoodLearner(problem, LearnMethod.BIN);
+  private val ngl = new NoGoodLearner(problem, LearnBin);
 
   def reduceAll() = {
     val nbC = problem.constraints.size

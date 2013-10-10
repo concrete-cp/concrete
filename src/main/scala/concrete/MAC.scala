@@ -33,7 +33,9 @@ object MAC {
   var btGrowth = 1.5;
 
   @Parameter("mac.addConstraint")
-  var addConstraint = LearnMethod.BIN;
+  var _addConstraint = "BIN";
+
+  def addConstraint: LearnMethod = LearnMethod(_addConstraint)
 
   @Parameter("mac.filter")
   var filterClass: Class[_ <: Filter] = classOf[ACC];

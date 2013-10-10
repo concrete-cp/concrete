@@ -4,17 +4,13 @@ import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
+import concrete.UNSATObject
 
 class OccurrenceConst(val result: Int, val value: Int, val vars: Array[Variable])
   extends Constraint(vars) {
 
   def checkValues(tuple: Array[Int]) =
     result == (0 until arity).count(i => tuple(i) == value)
-
-  /**
-   *  As seen from class Occurrence, the missing signatures are as follows.
-   *   For convenience, these are usable as stub implementations.
-   */
 
   def advise(pos: Int): Int = arity
 
@@ -32,6 +28,9 @@ class OccurrenceConst(val result: Int, val value: Int, val vars: Array[Variable]
       }
     }
 
+    if (affected + canBeAffected < result || affected > result) {
+      throw UNSATObject
+    }
     if (affected == result && canBeAffected > 0) {
       (0 until arity).filter(v => scope(v).dom.size > 1 && scope(v).dom.removeVal(value)) //.toList
     } else if (affected + canBeAffected == result) {

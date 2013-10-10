@@ -26,7 +26,7 @@ final class DC1SolvingTest extends Loggable {
   def before() {
     //Solver.loggerLevel = "INFO"
     ParameterManager("preprocessor") = classOf[DC1]
-    ParameterManager("dc1.addConstraints") = LearnMethod.BIN;
+    ParameterManager("dc1.addConstraints") = "BIN";
     ParameterManager("closeRelations") = false
   }
 

@@ -88,8 +88,8 @@ abstract class Solver(val problem: Problem) extends Iterator[Map[String, Int]] w
   private var _next: SolverResult = UNKNOWNResult
   private var _minimize: Option[Variable] = None
   private var _maximize: Option[Variable] = None
-  def minimize(v: Variable) { _maximize = None; _minimize = Some(v) }
-  def maximize(v: Variable) { _minimize = None; _maximize = Some(v) }
+  def minimize(vName: String) { _maximize = None; _minimize = Some(problem.variable(vName)) }
+  def maximize(vName: String) { _minimize = None; _maximize = Some(problem.variable(vName)) }
 
   def next() = _next match {
     case UNSAT => Iterator.empty.next

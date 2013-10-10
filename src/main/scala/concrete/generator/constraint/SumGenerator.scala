@@ -36,7 +36,7 @@ final class SumGenerator(problem: Problem) extends AbstractGenerator(problem) {
   override def genFunctional(constraint: CSPOMConstraint, result: C2Conc) = {
     val solverVariables = constraint.arguments map cspom2concreteVar
 
-    if (result.undefined || solverVariables.exists(_.dom.undefined)) {
+    if (solverVariables.exists(_.dom.undefined)) {
       false
     } else {
       val params = constraint.params.get("coefficients") match {
@@ -46,7 +46,14 @@ final class SumGenerator(problem: Problem) extends AbstractGenerator(problem) {
       }
       result match {
         case C2C(c) => addConstraint(new Sum(c, params, solverVariables.toArray));
-        case C2V(v) => addConstraint(new Sum(0, -1 +: params, (v +: solverVariables).toArray))
+        case C2V(v) => {
+          if (v.dom.undefined) {
+            val min = (solverVariables zip params).map { case (v, p) => v.dom.firstValue * p }.sum
+            val max = (solverVariables zip params).map { case (v, p) => v.dom.lastValue * p }.sum
+            AbstractGenerator.restrictDomain(v, min to max)
+          }
+          addConstraint(new Sum(0, -1 +: params, (v +: solverVariables).toArray))
+        }
         case _ => throw new FailedGenerationException("Variable or constant expected, found " + result)
       }
 

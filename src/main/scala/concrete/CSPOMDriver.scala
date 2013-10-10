@@ -9,6 +9,8 @@ import cspom.variable.CSPOMSeq
 import cspom.variable.IntVariable
 import cspom.variable.CSPOMTrue
 import cspom.CSPOMConstraint
+import cspom.variable.CSPOMConstant
+import cspom.variable.BoolVariable
 
 object CSPOMDriver {
   def sum(variables: CSPOMVariable*)(implicit problem: CSPOM): IntExpression = {
@@ -24,7 +26,7 @@ object CSPOMDriver {
     problem.isInt('abs, Seq(variable))
   }
 
-  def lexLeq(v0: Seq[IntVariable], v1: Seq[IntVariable])(implicit problem: CSPOM): CSPOMConstraint = {
+  def lexLeq(v0: Seq[CSPOMVariable], v1: Seq[CSPOMVariable])(implicit problem: CSPOM): CSPOMConstraint = {
     problem.ctr('lexleq, Seq(CSPOMSeq(v0: _*), CSPOMSeq(v1: _*)))
   }
 
@@ -40,8 +42,8 @@ object CSPOMDriver {
     problem.ctr('gcc, v, Map("gcc" -> cardinalities))
   }
 
-  def occurrence(value: Int, v: IntExpression*)(implicit problem: CSPOM): IntExpression = {
-    problem.isInt('occurrence, v, Map("occurrence" -> value))
+  def occurrence[A](constant: A with CSPOMConstant, variables: A with CSPOMExpression*)(implicit problem: CSPOM): IntExpression = {
+    problem.isInt('occurrence, variables, Map("occurrence" -> constant))
   }
 
   implicit class CSPOMExpressionOperations(e: CSPOMExpression) {
@@ -74,5 +76,9 @@ object CSPOMDriver {
     def |(other: BoolExpression)(implicit problem: CSPOM) = problem.isBool('or, Seq(e, other))
 
     def &(other: BoolExpression)(implicit problem: CSPOM) = problem.isBool('and, Seq(e, other))
+
+    def unary_!(implicit problem: CSPOM): BoolVariable = {
+      problem.isBool('not, Seq(e))
+    }
   }
 }
