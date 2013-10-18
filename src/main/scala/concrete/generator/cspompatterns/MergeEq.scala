@@ -11,6 +11,15 @@ import cspom.variable.IntVariable
 import cspom.variable.IntConstant
 import cspom.variable.CSPOMExpression
 import cspom.variable.IntDomain
+import cspom.variable.CSPOMConstant
+import cspom.compiler.Delta
+import cspom.variable.CSPOMConstant
+import cspom.variable.CSPOMVariable
+import cspom.CSPOM
+import cspom.variable.CSPOMExpression
+import cspom.compiler.ConstraintCompiler
+import cspom.variable.IntVariable
+import cspom.CSPOMConstraint
 
 /**
  * If given constraint is an all-equal constraint, merges and removes all
@@ -18,15 +27,20 @@ import cspom.variable.IntDomain
  */
 object MergeEq extends ConstraintCompiler {
 
-  type A = (List[IntVariable], List[IntVariable], List[IntConstant])
+  type A = (List[CSPOMVariable], List[CSPOMVariable], List[CSPOMConstant])
 
-  private def partition(s: List[CSPOMExpression], aux: List[IntVariable] = Nil, full: List[IntVariable] = Nil, const: List[IntConstant] = Nil): (List[IntVariable], List[IntVariable], List[IntConstant]) =
+  @annotation.tailrec
+  private def partition(
+    s: List[CSPOMExpression],
+    aux: List[CSPOMVariable] = Nil,
+    full: List[CSPOMVariable] = Nil,
+    const: List[CSPOMConstant] = Nil): (List[CSPOMVariable], List[CSPOMVariable], List[CSPOMConstant]) =
     s match {
       case Nil => (aux, full, const)
-      case ::(a: IntVariable, tail) if a.params("var_is_introduced") => partition(tail, a :: aux, full, const)
-      case ::(f: IntVariable, tail) => partition(tail, aux, f :: full, const)
-      case ::(c: IntConstant, tail) => partition(tail, aux, full, c :: const)
-      case _ => throw new IllegalArgumentException
+      case ::(a: CSPOMVariable, tail) if a.params("var_is_introduced") => partition(tail, a :: aux, full, const)
+      case ::(f: CSPOMVariable, tail) => partition(tail, aux, f :: full, const)
+      case ::(c: CSPOMConstant, tail) => partition(tail, aux, full, c :: const)
+      case o => throw new IllegalArgumentException(o.toString)
     }
 
   def mtch(c: CSPOMConstraint, problem: CSPOM) = {
@@ -41,49 +55,53 @@ object MergeEq extends ConstraintCompiler {
     }
   }
 
-  def compile(c: CSPOMConstraint, problem: CSPOM, data: A) = {
+  def compile(constraint: CSPOMConstraint, problem: CSPOM, data: A) = {
     val (auxVars, fullVars, const) = data
 
-    problem.removeConstraint(c)
-
+    problem.removeConstraint(constraint)
     /**
      * Generate a new all-equal constraint if more than one variable
      * remains.
      */
     if (fullVars.size > 1) {
-      val newConstraint = new CSPOMConstraint('eq, fullVars.toSeq: _*);
-      problem.addConstraint(newConstraint)
+      problem.ctr(new CSPOMConstraint('eq, fullVars.toSeq: _*))
     }
 
+    var delta = Delta()
     /**
      * Update the constraints of the problem
      */
     const match {
       case c :: tail =>
         require(tail.forall(_ == c))
-        var delta = Delta()
-        val mergedDom = IntDomain.of(c.value)
+
         val newFullVars = fullVars.map {
           v =>
-            val nv = new IntVariable(v.name, mergedDom)
+            val nv = v.intersected(c)
             delta ++= replaceVars(Seq(v), nv, problem)
+            require(problem.variable(v.name).nonEmpty, s"$v is useless and is going to be deleted")
             nv
         }
 
-        delta ++ replaceVars(auxVars, c, problem)
+        delta ++= replaceVars(auxVars, c, problem)
 
       case Nil =>
-        val mergedDom = (fullVars ++ auxVars).map(_.domain).reduce(_ intersect _)
+        val l = auxVars ++ fullVars
+        var merged: CSPOMExpression = l.head
+        for (v <- l.tail) {
+          merged = merged.intersected(v)
+        }
+        //reduce(_.intersected(_))
 
         /**
          * Tighten fullVars' domain
          */
-        var delta = Delta()
 
         val newFullVars = fullVars.map {
           v =>
-            val nv = new IntVariable(v.name, mergedDom)
-            delta ++= replaceVars(Seq(v), nv, problem)
+            val nv = v.intersected(merged)
+            delta ++= replaceVars(Seq(v), merged, problem)
+            require(problem.variable(v.name).nonEmpty, s"$v is useless and is going to be deleted")
             nv
         }
 
@@ -92,10 +110,10 @@ object MergeEq extends ConstraintCompiler {
          */
         val refVar = newFullVars.headOption.getOrElse(auxVars.head)
 
-        val mergedVar = new IntVariable(refVar.name, mergedDom)
-
-        delta ++ replaceVars((auxVars :+ refVar).distinct, mergedVar, problem)
+        delta ++= replaceVars(auxVars.distinct, refVar, problem)
     }
+
+    delta
 
   }
 

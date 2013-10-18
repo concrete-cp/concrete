@@ -9,8 +9,6 @@ import AbstractGenerator._
 final class AbsDiffGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
   override def genFunctional(constraint: CSPOMConstraint, r: C2Conc) = {
-    require(constraint.function == "absdiff")
-
     val C2V(result) = r
     val Seq(v0, v1) = constraint.arguments.map(cspom2concrete).collect { case C2V(v) => v }
 

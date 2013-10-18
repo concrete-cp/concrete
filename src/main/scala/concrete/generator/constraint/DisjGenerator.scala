@@ -66,8 +66,6 @@ final class DisjGenerator(problem: Problem) extends AbstractGenerator(problem) {
   }
 
   override def gen(gC: CSPOMConstraint) = {
-    require(gC.function == "or")
-
     val scope = gC.arguments map cspom2concreteVar
 
     scope foreach AbstractGenerator.booleanDomain

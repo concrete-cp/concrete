@@ -30,7 +30,7 @@ object AbsDiff extends ConstraintCompiler {
     data._2.foldLeft(Delta()) { (acc, fc) =>
       problem.removeConstraint(c);
       problem.removeConstraint(fc);
-      val nc = problem.addConstraint(new CSPOMConstraint(
+      val nc = problem.ctr(new CSPOMConstraint(
         fc.result, 'absdiff, c.arguments: _*));
       problem.removeVariable(data._1)
       acc ++ Delta(Seq(c, fc), nc.scope)

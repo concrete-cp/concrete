@@ -13,12 +13,12 @@ import cspom.compiler.Delta
 object MergeDisj extends ConstraintCompiler {
   type A = Seq[CSPOMConstraint]
   def mtch(fc: CSPOMConstraint, problem: CSPOM) = {
-    if (fc.function == "or") {
+    if (fc.function == 'or) {
       fc.result match {
         case v: CSPOMVariable if v.params("var_is_introduced") =>
           val constraints = problem.constraints(v)
           if (constraints.size == 2) {
-            val orConstraints = constraints.filter(_.function == "or")
+            val orConstraints = constraints.filter(_.function == 'or)
             if (orConstraints.nonEmpty) {
               Some(orConstraints)
             } else {
@@ -42,7 +42,7 @@ object MergeDisj extends ConstraintCompiler {
 
       val newScope = fc.arguments ++ orConstraint.scope.filter(_ ne fc.result)
       val newConstraint = new CSPOMConstraint('or, newScope: _*)
-      problem.addConstraint(newConstraint)
+      problem.ctr(newConstraint)
 
       acc ++ new Delta(Seq(fc, orConstraint), newConstraint.scope)
     }

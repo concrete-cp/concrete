@@ -3,7 +3,7 @@ import cspom.CSPOM
 import cspom.CSPOMConstraint
 import cspom.variable.CSPOMVariable
 import scala.util.Random
-import scala.util.control.Breaks
+import scala.util.control.Breaks._
 import cspom.Loggable
 import cspom.compiler.ConstraintCompiler
 import cspom.variable.CSPOMTrue
@@ -17,8 +17,8 @@ object AllDiff extends ConstraintCompiler with Loggable {
     (constraint.result == CSPOMTrue) && Set('ne, 'gt, 'lt, 'allDifferent)(constraint.function)
 
   def ALLDIFF_CONSTRAINT(constraint: CSPOMConstraint) =
-    (constraint.result == CSPOMTrue) && "ne" == constraint.function ||
-      "allDifferent" == constraint.function
+    (constraint.result == CSPOMTrue) && 'ne == constraint.function ||
+      'allDifferent == constraint.function
 
   val ITER = 750;
 
@@ -26,11 +26,9 @@ object AllDiff extends ConstraintCompiler with Loggable {
 
   def mtch(constraint: CSPOMConstraint, problem: CSPOM) = {
     val clique: Set[CSPOMVariable] = constraint match {
-      case CSPOMConstraint(CSPOMTrue, func, args: Seq[CSPOMVariable], _) if Set('ne, 'gt, 'lt)(func) =>
-        expand(args.toSet, problem)
-      case CSPOMConstraint(CSPOMTrue, 'allDifferent, Seq(CSPOMSeq(
-        _, _, args: Seq[CSPOMVariable], _, _)), _) =>
-        expand(args.toSet, problem)
+      case CSPOMConstraint(CSPOMTrue, func, args: Seq[_], _) if Set('allDiff, 'ne, 'gt, 'lt)(func)
+        && args.forall(_.isInstanceOf[CSPOMVariable]) =>
+        expand(args.asInstanceOf[Seq[CSPOMVariable]].toSet, problem)
       case _ => Set()
     }
 
@@ -51,9 +49,8 @@ object AllDiff extends ConstraintCompiler with Loggable {
   def compile(constraint: CSPOMConstraint, problem: CSPOM, clique: Set[CSPOMVariable]) = {
 
     problem.removeConstraint(constraint)
-    newAllDiff(clique, problem);
 
-    new Delta(constraint, constraint.scope ++ clique)
+    Delta(Seq(constraint), constraint.scope) ++ newAllDiff(clique, problem)
 
   }
 
@@ -61,7 +58,7 @@ object AllDiff extends ConstraintCompiler with Loggable {
    * The pool contains all variables that can expand the base clique
    */
   private def populate(base: Set[CSPOMVariable], problem: CSPOM) =
-    base.iterator.map(problem.neighbors).reduceLeft((acc, vs) => acc & vs)
+    base.iterator.map(problem.neighbors).reduceLeft(_ & _)
 
   private def expand(base: Set[CSPOMVariable], problem: CSPOM) = {
 
@@ -73,8 +70,6 @@ object AllDiff extends ConstraintCompiler with Loggable {
     //final Set<CSPOMVariable> base = new HashSet<CSPOMVariable>(clique);
 
     var tabu: Map[CSPOMVariable, Int] = Map.empty
-    val mybreaks = new Breaks
-    import mybreaks.{ break, breakable }
 
     breakable {
       for (i <- 1 to ITER) {
@@ -83,11 +78,7 @@ object AllDiff extends ConstraintCompiler with Loggable {
         newVar match {
           case None => {
             /* Could not expand the clique, removing a variable (not from the base) */
-            clique -= randPick((clique -- base).iterator).getOrElse(break)
-            //            match {
-            //              case None => break
-            //              case Some(variable) => clique -= variable
-            //            }
+            clique -= randPick((clique -- base).iterator).getOrElse(/*BREAK*/ break /*BREAK*/)
             pool = populate(clique, problem)
           }
           case Some(variable) => {
@@ -113,13 +104,15 @@ object AllDiff extends ConstraintCompiler with Loggable {
    *
    * @param scope
    */
-  private def newAllDiff(scope: Set[CSPOMVariable], problem: CSPOM) {
+  private def newAllDiff(scope: Set[CSPOMVariable], problem: CSPOM): Delta = {
     val allDiff = new CSPOMConstraint(CSPOMTrue,
       'allDifferent,
       scope.toList: _*);
 
+    var delta = Delta()
+
     if (!problem.constraints.contains(allDiff)) {
-      problem.addConstraint(allDiff);
+      problem.ctr(allDiff);
 
       //      val constraints =
       //        scope.foldLeft(Set[CSPOMConstraint]())((acc, v) => acc ++ v.constraints) - allDiff;
@@ -128,13 +121,15 @@ object AllDiff extends ConstraintCompiler with Loggable {
       /* Remove newly subsumed neq/alldiff constraints. */
       for (
         v <- scope; c <- problem.constraints(v) if (
-          c != allDiff && ALLDIFF_CONSTRAINT(c) && c.scope.forall(allDiff.scope.contains))
+          (c ne allDiff) && ALLDIFF_CONSTRAINT(c) && c.scope.forall(allDiff.scope.contains))
       ) {
         removed += 1
         problem.removeConstraint(c);
+        delta ++= Delta(Seq(c), c.scope)
       }
       fine("removed " + removed + " constraints, " + problem.constraints.size + " left")
     }
+    delta
   }
 
   val RAND = new Random(0);
@@ -144,10 +139,7 @@ object AllDiff extends ConstraintCompiler with Loggable {
   private def pickTabu(pool: Iterable[CSPOMVariable], tabu: Map[CSPOMVariable, Int], iteration: Int) = {
 
     randPick(pool.iterator.filter(v =>
-      tabu.get(v) match {
-        case None => true
-        case Some(i) => i < iteration
-      })) match {
+      tabu.get(v).map(_ < iteration).getOrElse(true))) match {
       case None =>
         (None, tabu)
       case Some(v) =>

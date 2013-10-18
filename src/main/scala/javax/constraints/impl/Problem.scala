@@ -35,14 +35,14 @@ class Problem(name: String) extends AbstractProblem(name) with Loggable {
   private def cspomVar(vars: Seq[javax.constraints.Var]) = vars.map(_.getImpl.asInstanceOf[CSPOMVariable])
 
   def createVariable(name: String, min: Int, max: Int): javax.constraints.Var = {
-    new Var(this, name, cspom.interVar(name, min, max))
+    new Var(this, name, CSPOM.interVar(name, min, max))
   }
   def debug(l: String) { logger.fine(l) }
   def error(l: String) { logger.severe(l) }
   def getImplVersion(): String = "CSPOM JSR331 implementation"
   def log(l: String) { logger.info(l) }
   def post(constraint: javax.constraints.Constraint) {
-    cspom.addConstraint(constraint.getImpl.asInstanceOf[CSPOMConstraint])
+    cspom.ctr(constraint.getImpl.asInstanceOf[CSPOMConstraint])
   }
   def variableBool(name: String): javax.constraints.VarBool = ???
 
@@ -66,11 +66,13 @@ class Problem(name: String) extends AbstractProblem(name) with Loggable {
     ow.close()
   }
   def post(v1: javax.constraints.Var, op: String, v2: javax.constraints.Var): javax.constraints.Constraint = {
-    val constraint = cspom.ctr(Symbol(op), Seq(v1.getImpl.asInstanceOf[CSPOMVariable], v2.getImpl.asInstanceOf[CSPOMVariable]), Map())
+    val constraint = cspom.ctr(
+      new CSPOMConstraint(Symbol(op), v1.getImpl.asInstanceOf[CSPOMVariable], v2.getImpl.asInstanceOf[CSPOMVariable]))
     new Constraint(this, constraint)
   }
   def post(v: javax.constraints.Var, op: String, c: Int): javax.constraints.Constraint = {
-    val constraint = cspom.ctr(Symbol(op), Seq(v.getImpl.asInstanceOf[CSPOMVariable], cspom.varOf(c)), Map())
+    val constraint = cspom.ctr(
+      new CSPOMConstraint(Symbol(op), v.getImpl.asInstanceOf[CSPOMVariable], CSPOM.varOf(c)))
     new Constraint(this, constraint)
   }
   def post(sum: Array[javax.constraints.Var], op: String, v: javax.constraints.Var): javax.constraints.Constraint = {
@@ -84,7 +86,7 @@ class Problem(name: String) extends AbstractProblem(name) with Loggable {
     //    new Constraint(this, constraint)
   }
   def post(vs: Array[javax.constraints.Var], op: String, v: Int): javax.constraints.Constraint = {
-    val constant = cspom.varOf(v)
+    val constant = CSPOM.varOf(v)
     post(vs, op, new Var(this, constant.name, constant))
   }
   def post(x$1: Array[Int], x$2: Array[javax.constraints.Var], x$3: String, x$4: javax.constraints.Var): javax.constraints.Constraint = ???
@@ -95,7 +97,7 @@ class Problem(name: String) extends AbstractProblem(name) with Loggable {
     post(countVar, op, cardCount)
   }
   def postCardinality(vars: Array[javax.constraints.Var], cardValue: Int, op: String, cardCount: Int): javax.constraints.Constraint = {
-    val constant = cspom.varOf(cardCount)
+    val constant = CSPOM.varOf(cardCount)
 
     postCardinality(vars, cardValue, op, new Var(this, constant.name, constant))
   }

@@ -20,18 +20,17 @@ class DiffGeTest {
       assertTrue(r.params("var_is_introduced"))
       ctr(r >= interVar(0, 5))
 
-      threadLocalProblem.addConstraint(new CSPOMConstraint(r, 'sub, varOf(1, 2, 3), varOf(2, 3, 4)))
+      ctr(new CSPOMConstraint(r, 'sub, varOf(1, 2, 3), varOf(2, 3, 4)))
 
     }
     for (d <- DiffGe.mtch(sub, cspom)) {
       DiffGe.compile(sub, cspom, d)
     }
 
-    //println(cspom)
     assertEquals(3, cspom.variables.size)
     assertEquals(1, cspom.constraints.size)
     val c = cspom.constraints.head
-    assertEquals("diffGe", c.function)
+    assertEquals('diffGe, c.function)
     assertEquals(CSPOMTrue, c.result)
   }
 
@@ -44,7 +43,7 @@ class DiffGeTest {
 
       val r2 = (r >= interVar(0, 5))
 
-      threadLocalProblem.addConstraint(new CSPOMConstraint(r, 'sub, varOf(1, 2, 3), varOf(2, 3, 4)))
+      ctr(new CSPOMConstraint(r, 'sub, varOf(1, 2, 3), varOf(2, 3, 4)))
     }
     for (d <- DiffGe.mtch(sub, cspom)) {
       DiffGe.compile(sub, cspom, d)
@@ -52,7 +51,7 @@ class DiffGeTest {
     assertEquals(4, cspom.variables.size)
     assertEquals(1, cspom.constraints.size)
     val c = cspom.constraints.head
-    assertEquals("diffGe", c.function)
+    assertEquals('diffGe, c.function)
     assertTrue(c.result.isInstanceOf[BoolVariable])
   }
 

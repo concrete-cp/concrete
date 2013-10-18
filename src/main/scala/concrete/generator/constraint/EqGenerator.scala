@@ -8,41 +8,43 @@ import concrete.BooleanDomain
 import concrete.constraint.Constraint
 import concrete.constraint.semantic.Disjunction
 import concrete.UNSATObject
+import concrete.constraint.semantic.ReifiedEquals
+import AbstractGenerator.restrictDomain
 
 final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
   override def gen(constraint: CSPOMConstraint): Boolean = {
-    val scope = constraint.arguments.map(cspom2concrete1D)
+    val Seq(a, b) = constraint.arguments.map(cspom2concrete1D)
 
-    val constants = scope.collect { case C2C(c) => c }
-    val variables = scope.collect { case C2V(v) => v }
-    if (constants.nonEmpty) {
-      if (constants.sliding(2).exists {
-        case Seq(_) => false
-        case Seq(i, j) => i != j
-      }) {
-        throw UNSATObject
-      } else {
-        val c = constants.head
-        for (v <- variables) {
-          if (v.dom.undefined) {
-            v.dom = IntDomain(c)
-          } else {
-            v.dom.setSingle(c)
-          }
-        }
+    (a, b) match {
+      case (C2C(a), C2C(b)) => a == b || (throw UNSATObject)
+      case (C2V(a), C2C(b)) =>
+        restrictDomain(a, Seq(b))
         true
-      }
-    } else {
-      variables.map(_.dom).find(!_.undefined) match {
-        case None => false
-        case Some(refDomain: IntDomain) =>
-          generateInt(refDomain, variables); true
-        case Some(refDomain: BooleanDomain) =>
-          generateBool(refDomain, variables); true
-        case _ => throw new FailedGenerationException("Unhandled domain")
-      }
+      case (C2C(a), C2V(b)) =>
+        restrictDomain(b, Seq(a))
+        true
+      case (C2V(a), C2V(b)) =>
+
+        if (a.dom.undefined && b.dom.undefined) {
+          false
+        } else {
+          if (!a.dom.undefined) {
+            restrictDomain(b, a.dom)
+          }
+          if (!b.dom.undefined) {
+            restrictDomain(a, b.dom)
+          }
+          if (a.dom.isInstanceOf[BooleanDomain] && b.dom.isInstanceOf[BooleanDomain]) {
+            addConstraint(new Disjunction(Array(a, b), Array(false, true)))
+            addConstraint(new Disjunction(Array(b, a), Array(false, true)))
+          } else {
+            addConstraint(new Eq(a, b))
+          }
+          true
+        }
     }
+
   }
 
   private def generateInt(refDomain: IntDomain, scope: Seq[Variable]) {
@@ -85,17 +87,28 @@ final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
   override def genReified(funcConstraint: CSPOMConstraint, result: Variable) = funcConstraint match {
     case CSPOMConstraint(_, 'eq, args, _) =>
-      val arguments = args map cspom2concreteVar
+      val Seq(a, b) = args map cspom2concrete1D
 
-      if (arguments.size != 2 || arguments.exists(_.dom.undefined)) {
+      if (a.undefined || b.undefined) {
         false
       } else {
         AbstractGenerator.booleanDomain(result);
-        addConstraint(
-          new ReifiedConstraint(
-            result,
-            new Eq(arguments(0), arguments(1)),
-            new Neq(arguments(0), arguments(1))))
+        (a, b) match {
+          case (C2C(a), C2C(b)) =>
+            if (a == b) {
+              result.dom.setSingle(1)
+            } else {
+              result.dom.setSingle(0)
+            }
+          case (C2C(a), C2V(b)) => addConstraint(new ReifiedEquals(result, b, a))
+          case (C2V(a), C2C(b)) => addConstraint(new ReifiedEquals(result, a, b))
+          case (C2V(a), C2V(b)) => addConstraint(
+            new ReifiedConstraint(
+              result,
+              new Eq(a, b),
+              new Neq(a, b)))
+        }
+
         true
       }
 

@@ -11,12 +11,13 @@ import cspom.compiler.Delta
 
 object RemoveAnd extends ConstraintCompilerNoData {
   def matchBool(constraint: CSPOMConstraint, problem: CSPOM) =
-    constraint.function == "and" && constraint.result == CSPOMTrue
+    constraint.function == 'and && constraint.result == CSPOMTrue
 
   def compile(constraint: CSPOMConstraint, problem: CSPOM) = {
 
     require(constraint.scope.forall(v => v.isInstanceOf[BoolVariable] || v == CSPOMTrue))
 
+    problem.removeConstraint(constraint)
     replaceVars(constraint.scope.toSeq, CSPOMTrue, problem)
 
   }

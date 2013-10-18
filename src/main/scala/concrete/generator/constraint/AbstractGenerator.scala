@@ -168,10 +168,18 @@ object AbstractGenerator {
 
   def restrictDomain(v: Variable, values: Traversable[Int]): Unit = v.dom match {
     case UndefinedDomain => v.dom = IntDomain(makeDomain(values.toSeq): _*)
-    case d: IntDomain => {
-      val valSet = values.toSet
-      v.dom.filterValues(valSet)
-    }
+    case d: IntDomain => v.dom.filterValues(values.toSet)
+
+    case _ => throw new UnsupportedOperationException
+  }
+
+  def restrictDomain(v: Variable, d: Domain): Unit = d match {
+    case b: BooleanDomain =>
+      if (v.dom.undefined) {
+        v.dom = new BooleanDomain()
+      }
+      v.dom.filterValues(b.values.toSet)
+    case d: IntDomain => restrictDomain(v, d.values)
     case _ => throw new UnsupportedOperationException
   }
 

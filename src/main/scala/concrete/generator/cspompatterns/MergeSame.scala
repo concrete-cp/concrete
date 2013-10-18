@@ -21,7 +21,7 @@ object MergeSame extends ConstraintCompiler {
 
     problem.removeConstraint(c)
     val eqC = new CSPOMConstraint('eq, c.result, same.result)
-    problem.addConstraint(eqC)
+    problem.ctr(eqC)
 
     Delta(Seq(c), (c.result.flattenVariables ++ same.result.flattenVariables).toSet)
   }

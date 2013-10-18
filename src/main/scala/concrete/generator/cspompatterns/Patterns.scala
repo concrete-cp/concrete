@@ -6,6 +6,6 @@ import cspom.variable.CSPOMInt
 
 object Patterns {
   def apply() =
-    Seq(AbsDiff, SubsumedDiff, AllDiff, DiffGe, MergeDisj, MergeEq, MergeSame, NeqVec, RemoveAnd)
+    Seq(AbsDiff, SubsumedDiff, AllDiff, DiffGe, MergeDisj, MergeEq, MergeSame, NeqVec, RemoveAnd, SplitAllEq)
 
 }

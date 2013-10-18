@@ -93,7 +93,7 @@ abstract class Solver(val problem: Problem) extends Iterator[Map[String, Int]] w
 
   def next() = _next match {
     case UNSAT => Iterator.empty.next
-    case UNKNOWNResult => if (hasNext()) next() else Iterator.empty.next
+    case UNKNOWNResult => if (hasNext) next() else Iterator.empty.next
     case SAT(sol) =>
       _next = UNKNOWNResult
       for (v <- _maximize) {
@@ -118,11 +118,11 @@ abstract class Solver(val problem: Problem) extends Iterator[Map[String, Int]] w
 
   protected def nextSolution(): SolverResult
 
-  def hasNext() = _next match {
+  def hasNext = _next match {
     case UNSAT => false
     case SAT(_) => true
     case UNKNOWNResult =>
-      _next = nextSolution(); hasNext()
+      _next = nextSolution(); hasNext
     case RESTART => throw new IllegalStateException
   }
 

@@ -23,7 +23,7 @@ object GeneratorManager {
     'abs -> classOf[AbsGenerator],
     'add -> classOf[AddGenerator],
     'sub -> classOf[AddGenerator],
-    'alldifferent -> classOf[AllDifferentGenerator],
+    'allDifferent -> classOf[AllDifferentGenerator],
     'or -> classOf[DisjGenerator],
     'not -> classOf[DisjGenerator],
     'and -> classOf[DisjGenerator],

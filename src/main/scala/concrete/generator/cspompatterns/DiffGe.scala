@@ -20,8 +20,8 @@ object DiffGe extends ConstraintCompiler {
           val constraints = problem.constraints(v)
           if (constraints.size == 2) {
             constraints.find { c =>
-              c.function == "ge" && {
-                c.arguments.size == 2 && c.result == constraint.result
+              c.function == 'ge && {
+                c.arguments.size == 2 && c.arguments(0) == constraint.result
               }
             }
           } else {
@@ -41,7 +41,7 @@ object DiffGe extends ConstraintCompiler {
     problem.removeConstraint(geConstraint);
     problem.removeVariable(subConstraint.result.asInstanceOf[CSPOMVariable])
 
-    val newC = problem.addConstraint(new CSPOMConstraint(geConstraint.result, 'diffGe, subConstraint.arguments :+ geConstraint.arguments(1)))
+    val newC = problem.ctr(new CSPOMConstraint(geConstraint.result, 'diffGe, subConstraint.arguments :+ geConstraint.arguments(1)))
 
     Delta(Seq(subConstraint, geConstraint), newC.scope)
   }

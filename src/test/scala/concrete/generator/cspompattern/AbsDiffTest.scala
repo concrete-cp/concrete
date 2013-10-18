@@ -20,7 +20,7 @@ class AbsDiffTest {
 
       val r2 = abs(r)
 
-      threadLocalProblem.addConstraint(new CSPOMConstraint(r, 'sub, v0, v1))
+      ctr(new CSPOMConstraint(r, 'sub, v0, v1))
     }
     println(cspom)
     for (d <- AbsDiff.mtch(sub, cspom)) {
@@ -31,7 +31,7 @@ class AbsDiffTest {
     assertEquals(1, cspom.constraints.size)
 
     val c = cspom.constraints.head
-    assertEquals("absdiff", c.function)
+    assertEquals('absdiff, c.function)
     assertFalse(c.result.isInstanceOf[BoolVariable])
   }
 

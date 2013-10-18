@@ -8,18 +8,19 @@ import concrete.generator.ProblemGenerator
 import concrete.Problem
 import cspom.CSPOM
 import cspom.CSPOMConstraint
+import cspom.CSPOM._
 
 final class AbsDiffGeneratorTest {
 
   @Test
   def test() {
 
-    val cspom = new CSPOM
-
-    val v0 = cspom.varOf(1, 2, 3)
-    val v1 = cspom.varOf(1, 2, 3)
-    val v2 = cspom.varOf(1, 2, 3)
-    val c = cspom.addConstraint(new CSPOMConstraint(v0, 'absdiff, v1, v2))
+    val (cspom, c) = CSPOM withResult {
+      val v0 = varOf(1, 2, 3)
+      val v1 = varOf(1, 2, 3)
+      val v2 = varOf(1, 2, 3)
+      ctr(new CSPOMConstraint(v0, 'absdiff, v1, v2))
+    }
 
     val problem = new Problem(ProblemGenerator.generateVariables(cspom))
     new AbsDiffGenerator(problem).generate(c)
