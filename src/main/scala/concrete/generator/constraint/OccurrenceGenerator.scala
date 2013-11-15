@@ -28,8 +28,8 @@ final class OccurrenceGenerator(problem: Problem) extends AbstractGenerator(prob
       }
 
       r match {
-        case C2C(result) => addConstraint(new OccurrenceConst(result, value, args.toArray))
-        case C2V(result) =>
+        case Const(result) => addConstraint(new OccurrenceConst(result, value, args.toArray))
+        case Var(result) =>
           if (result.dom.undefined) {
             AbstractGenerator.restrictDomain(result, 0 to args.count(_.dom.present(value)))
           }

@@ -17,25 +17,25 @@ final class DiffGeGenerator(problem: Problem) extends AbstractGenerator(problem)
 
   override def gen(constraint: CSPOMConstraint): Boolean = {
 
-    val Seq(x: C21D, y: C21D, C2C(k)) = constraint.arguments map cspom2concrete
+    val Seq(x: C21D, y: C21D, Const(k)) = constraint.arguments map cspom2concrete
 
     (x, y) match {
-      case (C2C(x), C2C(y)) => ((x - y) >= k) || (throw UNSATObject)
-      case (C2V(x), C2C(y)) =>
+      case (Const(x), Const(y)) => ((x - y) >= k) || (throw UNSATObject)
+      case (Var(x), Const(y)) =>
         if (x.dom.undefined) {
           false
         } else {
           x.dom.filterValues(_ - y >= k)
           true
         }
-      case (C2C(x), C2V(y)) =>
+      case (Const(x), Var(y)) =>
         if (y.dom.undefined) {
           false
         } else {
           y.dom.filterValues(x - _ >= k)
           true
         }
-      case (C2V(x), C2V(y)) =>
+      case (Var(x), Var(y)) =>
         if (x.dom.undefined || y.dom.undefined) {
           false
         } else {
@@ -49,15 +49,15 @@ final class DiffGeGenerator(problem: Problem) extends AbstractGenerator(problem)
   override def genReified(constraint: CSPOMConstraint, result: Variable): Boolean = {
 
     val rd = AbstractGenerator.booleanDomain(result)
-    val Seq(x: C21D, y: C21D, C2C(k)) = constraint.arguments map cspom2concrete
+    val Seq(x: C21D, y: C21D, Const(k)) = constraint.arguments map cspom2concrete
 
     (x, y) match {
-      case (C2C(x), C2C(y)) =>
+      case (Const(x), Const(y)) =>
         if (x - y >= k) { rd.setTrue() } else { rd.setFalse() }
         true
-      case (C2V(x), C2C(y)) => ???
-      case (C2C(x), C2V(y)) => ???
-      case (C2V(x), C2V(y)) =>
+      case (Var(x), Const(y)) => ???
+      case (Const(x), Var(y)) => ???
+      case (Var(x), Var(y)) =>
         addConstraint(new ReifiedConstraint(
           result,
           new Gt(x, -k, y, false),

@@ -11,13 +11,14 @@ import cspom.variable.CSPOMVariable
 import cspom.variable.IntExpression
 import cspom.variable.IntVariable
 import scala.annotation.varargs
+import cspom.variable.SimpleExpression
 
 object CSPOMDriver {
-  def sum(variables: CSPOMVariable*)(implicit problem: CSPOM): IntExpression = {
+  def sum(variables: SimpleExpression*)(implicit problem: CSPOM): IntExpression = {
     problem.isInt('sum, variables)
   }
 
-  def sumProd(coefVar: (Int, CSPOMVariable)*)(implicit problem: CSPOM): IntExpression = {
+  def sumProd(coefVar: (Int, SimpleExpression)*)(implicit problem: CSPOM): IntExpression = {
     val (coefs, vars) = coefVar.unzip
     problem.isInt('sum, vars, Map("coefficients" -> coefs))
   }
@@ -42,7 +43,7 @@ object CSPOMDriver {
     new CSPOMConstraint('gcc, v, Map("gcc" -> cardinalities))
   }
 
-  def occurrence[A](constant: A with CSPOMConstant, variables: A with CSPOMExpression*)(implicit problem: CSPOM): IntExpression = {
+  def occurrence[A](constant: A with CSPOMConstant, variables: A with SimpleExpression*)(implicit problem: CSPOM): IntExpression = {
     problem.isInt('occurrence, variables, Map("occurrence" -> constant))
   }
 
@@ -59,9 +60,9 @@ object CSPOMDriver {
 
     def >=(other: IntExpression)(implicit problem: CSPOM) = problem.isBool('ge, Seq(e, other))
 
-    def <(other: IntExpression)(implicit problem: CSPOM) = problem.isBool('lt, Seq(e, other))
+    def <(other: IntExpression)(implicit problem: CSPOM) = problem.isBool('gt, Seq(other, e))
 
-    def <=(other: IntExpression)(implicit problem: CSPOM) = problem.isBool('le, Seq(e, other))
+    def <=(other: IntExpression)(implicit problem: CSPOM) = problem.isBool('ge, Seq(other, e))
 
     def +(other: IntExpression)(implicit problem: CSPOM) = problem.isInt('add, Seq(e, other))
 
@@ -88,7 +89,7 @@ final class JCSPOMDriver extends CSPOM {
 
   implicit def cspom: CSPOM = this
 
-  def ne(e1: CSPOMExpression, e2: CSPOMExpression) = e1 !== e2
+  def ne[A <: SimpleExpression, B <: SimpleExpression](e1: A, e2: B) = e1 !== e2
 
   @varargs
   def allDifferent(v: IntVariable*) = CSPOMDriver.allDifferent(v: _*)(this)

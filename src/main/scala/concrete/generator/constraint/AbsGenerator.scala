@@ -15,15 +15,15 @@ final class AbsGenerator(problem: Problem) extends AbstractGenerator(problem) {
     val Seq(v0: C21D) = constraint.arguments map cspom2concrete
 
     (result, v0) match {
-      case (C2C(result), C2C(v0)) =>
+      case (Const(result), Const(v0)) =>
         result == math.abs(v0) || (throw UNSATObject)
-      case (C2C(result), C2V(v0)) =>
+      case (Const(result), Var(v0)) =>
         restrictDomain(v0, Seq(result, -result))
         true
-      case (C2V(result), C2C(v0)) =>
+      case (Var(result), Const(v0)) =>
         restrictDomain(result, Seq(math.abs(v0)))
         true
-      case (C2V(result), C2V(v0)) =>
+      case (Var(result), Var(v0)) =>
         if (v0.dom.undefined && result.dom.undefined) {
           false
         } else {

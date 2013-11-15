@@ -45,8 +45,8 @@ final class SumGenerator(problem: Problem) extends AbstractGenerator(problem) {
         case _ => throw new IllegalArgumentException("Parameters for zero sum must be a sequence of integer values")
       }
       result match {
-        case C2C(c) => addConstraint(new Sum(c, params, solverVariables.toArray));
-        case C2V(v) => {
+        case Const(c) => addConstraint(new Sum(c, params, solverVariables.toArray));
+        case Var(v) => {
           if (v.dom.undefined) {
             val min = (solverVariables zip params).map { case (v, p) => v.dom.firstValue * p }.sum
             val max = (solverVariables zip params).map { case (v, p) => v.dom.lastValue * p }.sum

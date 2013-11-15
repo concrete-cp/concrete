@@ -14,7 +14,7 @@ object MergeSame extends ConstraintCompiler {
 
   def mtch(c: CSPOMConstraint, problem: CSPOM) = {
     c.scope.flatMap(problem.constraints).find(same => (same ne c) && same.function == c.function &&
-      same.arguments == c.arguments)
+      same.arguments == c.arguments && same.params == c.params)
   }
 
   def compile(c: CSPOMConstraint, problem: CSPOM, same: CSPOMConstraint) = {

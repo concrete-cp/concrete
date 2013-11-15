@@ -11,7 +11,7 @@ import cspom.CSPOMConstraint
 final class ModGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
   override def genFunctional(constraint: CSPOMConstraint, r: C2Conc) = {
-    val C2V(result) = r
+    val Var(result) = r
     val Seq(v0, v1) = constraint.arguments map cspom2concreteVar
 
     if (Seq(result, v0, v1) filter (_.dom.undefined) match {

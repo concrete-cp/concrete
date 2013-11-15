@@ -26,7 +26,7 @@ sealed trait C2Conc {
 sealed trait C21D extends C2Conc {
   def values: Seq[Int]
 }
-final case class C2V(v: Variable) extends C21D {
+final case class Var(v: Variable) extends C21D {
   def values = v.dom.values.toSeq
   def undefined = v.dom.undefined
   def is(o: Any) = o match {
@@ -34,7 +34,7 @@ final case class C2V(v: Variable) extends C21D {
     case _ => false
   }
 }
-final case class C2C(i: Int) extends C21D {
+final case class Const(i: Int) extends C21D {
   def values = Seq(i)
   def undefined = false
   def is(o: Any) = o match {
@@ -42,7 +42,7 @@ final case class C2C(i: Int) extends C21D {
     case _ => false
   }
 }
-final case class C2S(s: Seq[C2Conc]) extends C2Conc {
+final case class Sequence(s: Seq[C2Conc]) extends C2Conc {
   //TODO: probably bugged
   def is(o: Any) = o match {
     case o: Seq[C2Conc] => (o, s).zipped.forall((o, s) => o.is(s))
@@ -53,32 +53,34 @@ final case class C2S(s: Seq[C2Conc]) extends C2Conc {
 
 abstract class AbstractGenerator(val problem: Problem) {
   def cspom2concrete(variable: CSPOMExpression): C2Conc = variable match {
-    case v: CSPOMVariable => C2V(cspomVar2concrete(v))
-    case seq: CSPOMSeq[CSPOMExpression] => C2S(seq.values map cspom2concrete)
-    case i: IntConstant => C2C(i.value)
+    case v: CSPOMVariable => Var(cspomVar2concrete(v))
+    case seq: CSPOMSeq[CSPOMExpression] => Sequence(seq.values map cspom2concrete)
+    case i: IntConstant => Const(i.value)
+    case CSPOMTrue => Const(1)
+    case CSPOMFalse => Const(0)
     case _ => throw new UnsupportedOperationException(s"$variable is unexpected")
   }
 
   def cspom2concrete1D(variable: CSPOMExpression): C21D = cspom2concrete(variable) match {
-    case v: C2V => v
-    case v: C2C => v
+    case v: Var => v
+    case v: Const => v
     case _ => AbstractGenerator.fail(s"Variable or constant expected, $variable found")
   }
 
   def cspomVar2concrete(variable: CSPOMVariable) = problem.variable(variable.name)
 
   def cspom2concreteVar(variable: CSPOMExpression) = cspom2concrete(variable) match {
-    case C2V(v) => v
+    case Var(v) => v
     case _ => AbstractGenerator.fail(s"Variable expected, $variable found")
   }
 
   def cspom2concreteSeq(variable: CSPOMExpression) = cspom2concrete(variable) match {
-    case C2S(s) => s
+    case Sequence(s) => s
     case _ => AbstractGenerator.fail(s"Sequence expected, $variable found")
   }
 
   def cspom2concreteSeqVar(e: CSPOMExpression) = cspom2concreteSeq(e) map {
-    case C2V(v) => v
+    case Var(v) => v
     case a: C2Conc => AbstractGenerator.fail(s"Variable expected, $a found")
   }
 

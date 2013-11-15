@@ -79,14 +79,13 @@ object MergeEq extends ConstraintCompiler {
           v =>
             val nv = v.intersected(c)
             delta ++= replaceVars(Seq(v), nv, problem)
-            require(problem.variable(v.name).nonEmpty, s"$v is useless and is going to be deleted")
             nv
         }
 
         delta ++= replaceVars(auxVars, c, problem)
 
       case Nil =>
-        val l = auxVars ++ fullVars
+        val l = fullVars ++ auxVars
         var merged: CSPOMExpression = l.head
         for (v <- l.tail) {
           merged = merged.intersected(v)
@@ -100,8 +99,7 @@ object MergeEq extends ConstraintCompiler {
         val newFullVars = fullVars.map {
           v =>
             val nv = v.intersected(merged)
-            delta ++= replaceVars(Seq(v), merged, problem)
-            require(problem.variable(v.name).nonEmpty, s"$v is useless and is going to be deleted")
+            delta ++= replaceVars(Seq(v), nv, problem)
             nv
         }
 
@@ -111,7 +109,9 @@ object MergeEq extends ConstraintCompiler {
         val refVar = newFullVars.headOption.getOrElse(auxVars.head)
 
         delta ++= replaceVars(auxVars.distinct, refVar, problem)
+
     }
+    require(fullVars.forall(v => problem.variable(v.name).nonEmpty))
 
     delta
 

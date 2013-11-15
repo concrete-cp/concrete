@@ -17,14 +17,14 @@ final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
     val Seq(a, b) = constraint.arguments.map(cspom2concrete1D)
 
     (a, b) match {
-      case (C2C(a), C2C(b)) => a == b || (throw UNSATObject)
-      case (C2V(a), C2C(b)) =>
+      case (Const(a), Const(b)) => a == b || (throw UNSATObject)
+      case (Var(a), Const(b)) =>
         restrictDomain(a, Seq(b))
         true
-      case (C2C(a), C2V(b)) =>
+      case (Const(a), Var(b)) =>
         restrictDomain(b, Seq(a))
         true
-      case (C2V(a), C2V(b)) =>
+      case (Var(a), Var(b)) =>
 
         if (a.dom.undefined && b.dom.undefined) {
           false
@@ -94,15 +94,15 @@ final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
       } else {
         AbstractGenerator.booleanDomain(result);
         (a, b) match {
-          case (C2C(a), C2C(b)) =>
+          case (Const(a), Const(b)) =>
             if (a == b) {
               result.dom.setSingle(1)
             } else {
               result.dom.setSingle(0)
             }
-          case (C2C(a), C2V(b)) => addConstraint(new ReifiedEquals(result, b, a))
-          case (C2V(a), C2C(b)) => addConstraint(new ReifiedEquals(result, a, b))
-          case (C2V(a), C2V(b)) => addConstraint(
+          case (Const(a), Var(b)) => addConstraint(new ReifiedEquals(result, b, a))
+          case (Var(a), Const(b)) => addConstraint(new ReifiedEquals(result, a, b))
+          case (Var(a), Var(b)) => addConstraint(
             new ReifiedConstraint(
               result,
               new Eq(a, b),

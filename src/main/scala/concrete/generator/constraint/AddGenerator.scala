@@ -24,7 +24,7 @@ final class AddGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
     //map cspom2concrete
 
-    if (Seq(result, v0, v1) collect { case C2V(v) if (v.dom.undefined) => v } match {
+    if (Seq(result, v0, v1) collect { case Var(v) if (v.dom.undefined) => v } match {
       case Seq() => true;
       case Seq(v) if result.is(v) =>
         val values = AbstractGenerator.domainFrom(Seq(v0, v1), { case Seq(i, j) => i + j });
@@ -39,24 +39,19 @@ final class AddGenerator(problem: Problem) extends AbstractGenerator(problem) {
       case _ => false;
     }) {
 
-      val constraint = (result, v0, v1) match {
-        case (C2C(r), C2C(v0), C2C(v1)) => if (r == v0 + v1) None else throw UNSATObject
+      (result, v0, v1) match {
+        case (Const(r), Const(v0), Const(v1)) => if (r != v0 + v1) throw UNSATObject
 
-        case (C2V(r), C2C(v0), C2C(v1)) =>
-          restrictDomain(r, Seq(v0 + v1)); None
-        case (C2C(r), C2V(v0), C2C(v1)) =>
-          restrictDomain(v0, Seq(r - v1)); None
-        case (C2C(r), C2C(v0), C2V(v1)) =>
-          restrictDomain(v1, Seq(r - v0)); None
+        case (Var(r), Const(v0), Const(v1)) => restrictDomain(r, Seq(v0 + v1))
+        case (Const(r), Var(v0), Const(v1)) => restrictDomain(v0, Seq(r - v1))
+        case (Const(r), Const(v0), Var(v1)) => restrictDomain(v1, Seq(r - v0))
 
-        case (C2C(r), C2V(v0), C2V(v1)) => Some(new Eq(true, v0, r, v1))
-        case (C2V(r), C2C(v0), C2V(v1)) => Some(new Eq(false, v1, v0, r))
-        case (C2V(r), C2V(v0), C2C(v1)) => Some(new Eq(false, v0, v1, r))
+        case (Const(r), Var(v0), Var(v1)) => addConstraint(new Eq(true, v0, r, v1))
+        case (Var(r), Const(v0), Var(v1)) => addConstraint(new Eq(false, v1, v0, r))
+        case (Var(r), Var(v0), Const(v1)) => addConstraint(new Eq(false, v0, v1, r))
 
-        case (C2V(r), C2V(v0), C2V(v1)) => Some(new Add(r, v0, v1))
+        case (Var(r), Var(v0), Var(v1)) => addConstraint(new Add(r, v0, v1))
       }
-
-      constraint.foreach(addConstraint)
 
       true
 

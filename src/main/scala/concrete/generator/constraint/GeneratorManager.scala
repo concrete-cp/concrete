@@ -31,8 +31,6 @@ object GeneratorManager {
     'neg -> classOf[EqGenerator],
     'gt -> classOf[GtGenerator],
     'ge -> classOf[GtGenerator],
-    'lt -> classOf[GtGenerator],
-    'le -> classOf[GtGenerator],
     'mul -> classOf[MulGenerator],
     'ne -> classOf[NeqGenerator],
     'absdiff -> classOf[AbsDiffGenerator],

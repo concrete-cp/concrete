@@ -16,7 +16,7 @@ final class MulGenerator(problem: Problem) extends AbstractGenerator(problem) {
     val result = r.asInstanceOf[C21D]
     val Seq(v0, v1) = constraint.arguments map cspom2concrete1D
 
-    if (Seq(result, v0, v1) collect { case C2V(v) if (v.dom.undefined) => v } match {
+    if (Seq(result, v0, v1) collect { case Var(v) if (v.dom.undefined) => v } match {
       case Seq() => true
       case Seq(v) if (result.is(v)) => {
         val values = AbstractGenerator.domainFrom(Seq(v0, v1), { case Seq(i, j) => i * j })
@@ -35,8 +35,8 @@ final class MulGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
     }) {
       val constraint = (result, v0, v1) match {
-        case (C2C(r), C2C(v0), C2C(v1)) => if (r == v0 * v1) None else throw UNSATObject
-        case (C2C(r), C2V(v0), C2V(v1)) => Some(
+        case (Const(r), Const(v0), Const(v1)) => if (r == v0 * v1) None else throw UNSATObject
+        case (Const(r), Var(v0), Var(v1)) => Some(
           new Constraint(Array(v0, v1)) with Residues {
             def checkValues(t: Array[Int]) = r == t(0) * t(1)
             def simpleEvaluation = 1
@@ -61,12 +61,12 @@ final class MulGenerator(problem: Problem) extends AbstractGenerator(problem) {
               }
             }
           })
-        case (C2V(r), C2C(v0), C2V(v1)) => Some(
+        case (Var(r), Const(v0), Var(v1)) => Some(
           new Sum(0, Array(-1, v0), Array(r, v1)))
         //          new Constraint(Array(r, v1)) with Residues with TupleEnumerator {
         //            def checkValues(t: Array[Int]) = t(0) == v0 * t(1)
         //          })
-        case (C2V(r), C2V(v0), C2C(v1)) => Some(
+        case (Var(r), Var(v0), Const(v1)) => Some(
           new Sum(0, Array(-1, v1), Array(r, v0)))
         //            
         //          new Constraint(Array(r, v0)) with Residues {
@@ -101,7 +101,7 @@ final class MulGenerator(problem: Problem) extends AbstractGenerator(problem) {
         //            }
         //          })
 
-        case (C2V(r), C2V(v0), C2V(v1)) => Some(new Mul(r, v0, v1))
+        case (Var(r), Var(v0), Var(v1)) => Some(new Mul(r, v0, v1))
       }
 
       constraint.foreach(addConstraint)

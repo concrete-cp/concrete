@@ -21,10 +21,10 @@ final class NeqGenerator(problem: Problem) extends AbstractGenerator(problem) {
       false
     } else {
       (v0, v1) match {
-        case (C2C(v0), C2C(v1)) => (v0 != v1) || (throw UNSATObject)
-        case (C2C(v0), C2V(v1)) => v1.dom.removeVal(v0)
-        case (C2V(v0), C2C(v1)) => v0.dom.removeVal(v1)
-        case (C2V(v0), C2V(v1)) => addConstraint(new Neq(v0, v1))
+        case (Const(v0), Const(v1)) => (v0 != v1) || (throw UNSATObject)
+        case (Const(v0), Var(v1)) => v1.dom.removeVal(v0)
+        case (Var(v0), Const(v1)) => v0.dom.removeVal(v1)
+        case (Var(v0), Var(v1)) => addConstraint(new Neq(v0, v1))
 
       }
 
@@ -38,22 +38,22 @@ final class NeqGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
     val Seq(v0, v1) = constraint.arguments map cspom2concrete1D
 
-    if (Seq(v0, v1) collect { case C2V(v) => v } exists (_.dom.undefined)) {
+    if (Seq(v0, v1) collect { case Var(v) => v } exists (_.dom.undefined)) {
       false
     } else {
       AbstractGenerator.booleanDomain(result);
       (v0, v1) match {
-        case (C2C(v0), C2C(v1)) =>
+        case (Const(v0), Const(v1)) =>
           if (v0 == v1) {
             result.dom.setSingle(1)
           } else {
             result.dom.setSingle(0)
           }
-        case (C2V(v0), C2C(v1)) =>
+        case (Var(v0), Const(v1)) =>
           addConstraint(new ReifiedNeq(result, v0, v1))
-        case (C2C(v0), C2V(v1)) =>
+        case (Const(v0), Var(v1)) =>
           addConstraint(new ReifiedNeq(result, v1, v0))
-        case (C2V(v0), C2V(v1)) =>
+        case (Var(v0), Var(v1)) =>
           addConstraint(new ReifiedConstraint(
             result,
             new Neq(v0, v1),
