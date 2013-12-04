@@ -1,8 +1,9 @@
 package concrete.constraint.extension;
 
 import concrete.util.BitVector;
+import concrete.util.Loggable
 
-final class Matrix2D(xSize: Int, ySize: Int, initialState: Boolean) extends Matrix {
+final class Matrix2D(xSize: Int, ySize: Int, initialState: Boolean) extends Matrix with Loggable {
   private var xMatrix =
     new Array[BitVector](xSize).map(_ => {
       val bv = BitVector.newBitVector(ySize)
@@ -22,9 +23,13 @@ final class Matrix2D(xSize: Int, ySize: Int, initialState: Boolean) extends Matr
   override def check(tuple: Array[Int]) = xMatrix(tuple(0)).get(tuple(1))
 
   override def set(tuple: Array[Int], status: Boolean) {
-    xMatrix(tuple(0)).set(tuple(1), status);
-    yMatrix(tuple(1)).set(tuple(0), status);
-    empty = false;
+    if (tuple(0) < xMatrix.length && tuple(1) < yMatrix.length) {
+      xMatrix(tuple(0)).set(tuple(1), status);
+      yMatrix(tuple(1)).set(tuple(0), status);
+      empty = false;
+    } else {
+      logger.warning(s"Tuple ${tuple.mkString("(", ", ", ")")} is out of the scope of matrix $this")
+    }
   }
 
   def getBitVector(position: Int, index: Int) = position match {
