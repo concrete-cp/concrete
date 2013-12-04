@@ -81,6 +81,9 @@ object CSPOMDriver {
     def unary_!(implicit problem: CSPOM): BoolVariable = {
       problem.isBool('not, Seq(e))
     }
+
+    def ==>(other: BoolExpression)(implicit problem: CSPOM) =
+      problem.isBool('or, Seq(e, other), Map("revsign" -> Array(true, false)))
   }
 }
 
