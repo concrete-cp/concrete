@@ -18,7 +18,7 @@ object SubsumedDiff extends ConstraintCompilerNoData {
 
   def compile(constraint: CSPOMConstraint, problem: CSPOM) = {
     problem.removeConstraint(constraint)
-    new Delta(constraint)
+    Delta().removed(constraint)
   }
 
   private def haveSubsumingConstraint(

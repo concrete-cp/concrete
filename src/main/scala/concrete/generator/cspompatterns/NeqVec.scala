@@ -24,7 +24,7 @@ object NeqVec extends ConstraintCompiler {
   def mtch(c: CSPOMConstraint, problem: CSPOM) = {
     if (isNevec(c)) {
       c.result match {
-        case v: CSPOMVariable => problem.constraints(v).filter(_ != c) match {
+        case v: CSPOMVariable => (problem.constraints(v) - c).toSeq match {
           case Seq(orConstraint) if (orConstraint.function == "or" && orConstraint.result == CSPOMTrue) =>
             val orVariables = orConstraint.scope
             val neConstraints = orVariables.flatMap(problem.constraints) - orConstraint
@@ -58,7 +58,7 @@ object NeqVec extends ConstraintCompiler {
 
     val newC = problem.ctr(new CSPOMConstraint('nevec, new CSPOMSeq(x), new CSPOMSeq(y)))
 
-    new Delta(orConstraint :: neConstraints.toList, newC.scope)
+    Delta().removed(orConstraint).removed(neConstraints).added(newC)
   }
 
 }

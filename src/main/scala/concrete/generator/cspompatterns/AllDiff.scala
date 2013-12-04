@@ -50,7 +50,7 @@ object AllDiff extends ConstraintCompiler with Loggable {
 
     problem.removeConstraint(constraint)
 
-    Delta(Seq(constraint), constraint.scope) ++ newAllDiff(clique, problem)
+    Delta().removed(constraint) ++ newAllDiff(clique, problem)
 
   }
 
@@ -78,7 +78,7 @@ object AllDiff extends ConstraintCompiler with Loggable {
         newVar match {
           case None => {
             /* Could not expand the clique, removing a variable (not from the base) */
-            clique -= randPick((clique -- base).iterator).getOrElse(/*BREAK*/ break /*BREAK*/)
+            clique -= randPick((clique -- base).iterator).getOrElse( /*BREAK*/ break /*BREAK*/ )
             pool = populate(clique, problem)
           }
           case Some(variable) => {
@@ -114,6 +114,7 @@ object AllDiff extends ConstraintCompiler with Loggable {
     if (!problem.constraints.contains(allDiff)) {
       problem.ctr(allDiff);
 
+      delta = delta.added(allDiff)
       //      val constraints =
       //        scope.foldLeft(Set[CSPOMConstraint]())((acc, v) => acc ++ v.constraints) - allDiff;
 
@@ -125,7 +126,7 @@ object AllDiff extends ConstraintCompiler with Loggable {
       ) {
         removed += 1
         problem.removeConstraint(c);
-        delta ++= Delta(Seq(c), c.scope)
+        delta = delta.removed(c)
       }
       fine("removed " + removed + " constraints, " + problem.constraints.size + " left")
     }

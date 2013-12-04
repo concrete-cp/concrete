@@ -37,9 +37,9 @@ object MergeEq extends ConstraintCompiler {
     const: List[CSPOMConstant] = Nil): (List[CSPOMVariable], List[CSPOMVariable], List[CSPOMConstant]) =
     s match {
       case Nil => (aux, full, const)
-      case ::(a: CSPOMVariable, tail) if a.params("var_is_introduced") => partition(tail, a :: aux, full, const)
-      case ::(f: CSPOMVariable, tail) => partition(tail, aux, f :: full, const)
-      case ::(c: CSPOMConstant, tail) => partition(tail, aux, full, c :: const)
+      case (a: CSPOMVariable) :: tail if a.params("var_is_introduced") => partition(tail, a :: aux, full, const)
+      case (f: CSPOMVariable) :: tail => partition(tail, aux, f :: full, const)
+      case (c: CSPOMConstant) :: tail => partition(tail, aux, full, c :: const)
       case o => throw new IllegalArgumentException(o.toString)
     }
 
@@ -55,6 +55,46 @@ object MergeEq extends ConstraintCompiler {
     }
   }
 
+  private def mergeConstant(
+    fullVars: Seq[CSPOMVariable],
+    auxVars: Seq[CSPOMVariable],
+    constant: CSPOMConstant, problem: CSPOM): Delta = {
+    var delta = Delta()
+    for (v <- fullVars) {
+      val nv = v.intersected(constant)
+      delta ++= replaceVars(Seq(v), nv, problem)
+    }
+
+    delta ++ replaceVars(auxVars, constant, problem)
+
+  }
+
+  private def mergeVariables(
+    fullVars: Seq[CSPOMVariable],
+    auxVars: Seq[CSPOMVariable],
+    problem: CSPOM): Delta = {
+    var delta = Delta()
+
+    val merged = (fullVars ++ auxVars).reduceLeft[CSPOMExpression](_ intersected _)
+
+    /**
+     * Tighten fullVars' domain
+     */
+
+    val newFullVars = for (v <- fullVars) yield {
+      val nv = v.intersected(merged)
+      delta ++= replaceVars(Seq(v), nv, problem)
+      nv
+    }
+
+    /**
+     * Replacing aux variables by a single one (full var if available)
+     */
+    val refVar = newFullVars.headOption.getOrElse(auxVars.head)
+
+    delta ++ replaceVars(auxVars.distinct, refVar, problem)
+  }
+
   def compile(constraint: CSPOMConstraint, problem: CSPOM, data: A) = {
     val (auxVars, fullVars, const) = data
 
@@ -67,51 +107,20 @@ object MergeEq extends ConstraintCompiler {
       problem.ctr(new CSPOMConstraint('eq, fullVars.toSeq: _*))
     }
 
-    var delta = Delta()
     /**
      * Update the constraints of the problem
      */
-    const match {
-      case c :: tail =>
-        require(tail.forall(_ == c))
+    val delta =
+      if (const.isEmpty) {
+        mergeVariables(fullVars, auxVars, problem)
+      } else {
+        val (c :: tail) = const
+        require(tail.forall(_ == c), "Inconsistent constants in " + (c :: tail))
+        mergeConstant(fullVars, auxVars, c, problem)
+      }
 
-        val newFullVars = fullVars.map {
-          v =>
-            val nv = v.intersected(c)
-            delta ++= replaceVars(Seq(v), nv, problem)
-            nv
-        }
-
-        delta ++= replaceVars(auxVars, c, problem)
-
-      case Nil =>
-        val l = fullVars ++ auxVars
-        var merged: CSPOMExpression = l.head
-        for (v <- l.tail) {
-          merged = merged.intersected(v)
-        }
-        //reduce(_.intersected(_))
-
-        /**
-         * Tighten fullVars' domain
-         */
-
-        val newFullVars = fullVars.map {
-          v =>
-            val nv = v.intersected(merged)
-            delta ++= replaceVars(Seq(v), nv, problem)
-            nv
-        }
-
-        /**
-         * Replacing aux variables by a single one (full var if available)
-         */
-        val refVar = newFullVars.headOption.getOrElse(auxVars.head)
-
-        delta ++= replaceVars(auxVars.distinct, refVar, problem)
-
-    }
-    require(fullVars.forall(v => problem.variable(v.name).nonEmpty))
+    require(fullVars.forall(v => problem.variable(v.name).nonEmpty),
+      s"Variables from $fullVars were removed")
 
     delta
 

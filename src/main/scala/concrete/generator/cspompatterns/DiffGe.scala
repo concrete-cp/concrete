@@ -43,7 +43,7 @@ object DiffGe extends ConstraintCompiler {
 
     val newC = problem.ctr(new CSPOMConstraint(geConstraint.result, 'diffGe, subConstraint.arguments :+ geConstraint.arguments(1)))
 
-    Delta(Seq(subConstraint, geConstraint), newC.scope)
+    Delta().removed(subConstraint).removed(geConstraint).added(newC)
   }
 
 }

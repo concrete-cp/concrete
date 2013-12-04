@@ -18,29 +18,30 @@ object SplitAllEq extends ConstraintCompilerNoData {
   def compile(constraint: CSPOMConstraint, problem: CSPOM) = {
 
     problem.removeConstraint(constraint)
-
+    val delta = Delta().removed(constraint)
     constraint.result match {
       case CSPOMTrue =>
-        for (Seq(a, b) <- constraint.arguments.sliding(2)) {
+        val c = for (Seq(a, b) <- constraint.arguments.sliding(2)) yield {
           problem.ctr(new CSPOMConstraint('eq, a, b))
         }
-        Delta(Seq(constraint), constraint.scope)
+        c.foldLeft(delta)(_ added _)
       case CSPOMFalse =>
+        var d = delta
         val rs = for (Seq(a, b) <- constraint.arguments.sliding(2)) yield {
           val r = CSPOMVariable.bool()
-          problem.ctr(new CSPOMConstraint(r, 'ne, a, b))
+          d = d.added(problem.ctr(new CSPOMConstraint(r, 'ne, a, b)))
           r
         }
-        problem.ctr(new CSPOMConstraint('or, rs.toSeq: _*))
-        Delta(Seq(constraint), constraint.scope ++ rs)
+        d.added(problem.ctr(new CSPOMConstraint('or, rs.toSeq: _*)))
+
       case r: BoolVariable =>
+        var d = delta
         val rs = for (Seq(a, b) <- constraint.arguments.sliding(2)) yield {
           val r = CSPOMVariable.bool()
-          problem.ctr(new CSPOMConstraint(r, 'eq, a, b))
+          d = d.added(problem.ctr(new CSPOMConstraint(r, 'eq, a, b)))
           r
         }
-        problem.ctr(new CSPOMConstraint(r, 'and, rs.toSeq: _*))
-        Delta(Seq(constraint), constraint.scope ++ rs + r)
+        d.added(problem.ctr(new CSPOMConstraint(r, 'and, rs.toSeq: _*)))
 
     }
 

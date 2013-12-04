@@ -10,7 +10,7 @@ import cspom.compiler.Delta
  * x=absdiff(y,z). No other constraint may imply the auxiliary constraint a.
  */
 object AbsDiff extends ConstraintCompiler {
-  type A = (CSPOMVariable, Seq[CSPOMConstraint])
+  type A = (CSPOMVariable, Set[CSPOMConstraint])
 
   def mtch(c: CSPOMConstraint, problem: CSPOM) = c match {
     case CSPOMConstraint(result: CSPOMVariable, 'sub, args, _) if result.params("var_is_introduced") =>
@@ -26,14 +26,14 @@ object AbsDiff extends ConstraintCompiler {
     case _ => None
   }
 
-  def compile(c: CSPOMConstraint, problem: CSPOM, data: (CSPOMVariable, Seq[CSPOMConstraint])) = {
+  def compile(c: CSPOMConstraint, problem: CSPOM, data: (CSPOMVariable, Set[CSPOMConstraint])) = {
     data._2.foldLeft(Delta()) { (acc, fc) =>
       problem.removeConstraint(c);
       problem.removeConstraint(fc);
       val nc = problem.ctr(new CSPOMConstraint(
         fc.result, 'absdiff, c.arguments: _*));
       problem.removeVariable(data._1)
-      acc ++ Delta(Seq(c, fc), nc.scope)
+      acc.removed(c).removed(fc).added(nc)
     }
 
   }

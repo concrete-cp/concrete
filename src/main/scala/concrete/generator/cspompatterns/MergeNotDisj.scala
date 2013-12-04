@@ -8,16 +8,19 @@ import cspom.variable.CSPOMVariable
 import cspom.compiler.Delta
 import cspom.variable.BoolVariable
 import cspom.variable.CSPOMTrue
+import cspom.variable.BoolExpression
 
 /**
- * Transforms x = a \/ b, x \/ c \/ ... into a \/ b \/ c \/ ...
+ * Transforms x = !a, x \/ c \/ ... into !a \/ b \/ c \/ ...
  */
-object MergeDisj extends ConstraintCompiler {
+object MergeNotDisj extends ConstraintCompiler {
   type A = CSPOMConstraint
   def mtch(fc: CSPOMConstraint, problem: CSPOM) = fc match {
-    case CSPOMConstraint(v: CSPOMVariable, 'or, _, _) if v.params("var_is_introduced") =>
-      problem.constraints(v).toSeq.filter(c =>
-        c.result == CSPOMTrue && c.function == 'or && (c ne fc)) match {
+    case CSPOMConstraint(v: BoolVariable, 'not, Seq(a: BoolExpression), _) if v.params("var_is_introduced") =>
+      val ors = problem.constraints(v).toSeq.filter(c =>
+        c.function == 'or)
+
+      ors match {
         case Seq(orConstraint) => Some(orConstraint)
         case _ => None
       }
@@ -30,9 +33,7 @@ object MergeDisj extends ConstraintCompiler {
     problem.removeConstraint(orConstraint)
     problem.removeVariable(fc.result.asInstanceOf[CSPOMVariable])
 
-    val fcParams = fc.params.get("revsign").collect {
-      case p: Seq[Boolean] => p
-    } getOrElse (Seq.fill(fc.arguments.size)(false))
+    val Seq(a: BoolExpression) = fc.arguments
 
     val oldOrParams = orConstraint.params.get("revsign").collect {
       case p: Seq[Boolean] => p
@@ -40,14 +41,13 @@ object MergeDisj extends ConstraintCompiler {
 
     val (orArgs, orParams) = (orConstraint.arguments zip oldOrParams).filter(_._1 ne fc.result).unzip
 
-    val newScope = fc.arguments ++ orArgs
-    val newParams = fcParams ++ orParams
+    val newScope = a +: orArgs
+    val newParams = true +: orParams
     val newConstraint =
-      new CSPOMConstraint(CSPOMTrue, 'or, newScope, Map("revsign" -> newParams))
+      new CSPOMConstraint(orConstraint.result, 'or, newScope, Map("revsign" -> newParams))
     problem.ctr(newConstraint)
 
     Delta().removed(fc).removed(orConstraint).added(newConstraint)
 
   }
-
 }

@@ -26,7 +26,6 @@ object GeneratorManager {
     'allDifferent -> classOf[AllDifferentGenerator],
     'or -> classOf[DisjGenerator],
     'not -> classOf[DisjGenerator],
-    'and -> classOf[DisjGenerator],
     'eq -> classOf[EqGenerator],
     'neg -> classOf[EqGenerator],
     'gt -> classOf[GtGenerator],
