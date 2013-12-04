@@ -5,6 +5,13 @@ import concrete.Variable
 import concrete.UNSATException
 import org.junit.Assert._
 import org.hamcrest.CoreMatchers._
+import cspom.CSPOM
+import CSPOM._
+import concrete.CSPOMDriver._
+import cspom.variable.CSPOMExpression
+import concrete.Solver
+import cspom.compiler.ProblemCompiler
+import concrete.generator.cspompatterns.Patterns
 
 class OccurrenceTest {
   @Test
@@ -37,6 +44,33 @@ class OccurrenceTest {
 
     val c = new OccurrenceVar(occ, 7, Array(v1, v2, v3, v4, v5))
     c.revise()
+
+  }
+
+  @Test
+  def test3() {
+    val problem = CSPOM {
+      val v1 = 7
+      val v2 = 6
+      val v3 = varOf(7, 9)
+      val v4 = 4
+      val v5 = varOf(8, 9)
+
+      val occ = interVar("occ", 1, 3)
+      ctr(occ === occurrence(7, v1, v2, v3, v4, v5))
+    }
+
+    ProblemCompiler.compile(problem, Patterns())
+
+    val s = Solver(problem)
+    val c = s.problem.constraints.collectFirst {
+      case c: OccurrenceVar => c
+    } get
+    val occ = s.problem.variable("occ")
+
+    assertEquals(Seq(0), c.revise())
+
+    assertEquals(List(1, 2), occ.dom.values.toList)
 
   }
 

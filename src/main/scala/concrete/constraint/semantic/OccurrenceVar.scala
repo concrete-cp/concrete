@@ -5,11 +5,12 @@ import concrete.constraint.Constraint
 import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
 
-class OccurrenceVar(val result: Variable, val value: Int, val vars: Array[Variable])
+class OccurrenceVar(val result: Variable, val value: Int,
+  val vars: Array[Variable], val offset: Int = 0)
   extends Constraint(result +: vars) {
 
   def checkValues(tuple: Array[Int]) =
-    tuple(0) == (1 until arity).count(i => tuple(i) == value)
+    offset + tuple(0) == (1 until arity).count(i => tuple(i) == value)
 
   /**
    *  As seen from class Occurrence, the missing signatures are as follows.
@@ -19,7 +20,7 @@ class OccurrenceVar(val result: Variable, val value: Int, val vars: Array[Variab
   def advise(pos: Int): Int = arity
 
   def revise(): Traversable[Int] = {
-    var affected = 0
+    var affected = offset
     var canBeAffected = 0
 
     for (v <- vars) {
