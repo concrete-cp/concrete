@@ -92,14 +92,6 @@ final class Variable(
 
   def getWDegEntailed = {
     this.wDeg
-    //    var i = constraints.length - 1
-    //    var wDeg = 0
-    //    while (i >= 0) {
-    //      val c = constraints(i)
-    //      if (!c.isEntailed) wDeg += c.weight
-    //      i -= 1
-    //    }
-    //    wDeg
   }
 
   //var dDeg = 0
