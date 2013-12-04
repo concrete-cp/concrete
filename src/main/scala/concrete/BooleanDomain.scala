@@ -230,9 +230,37 @@ final class BooleanDomain(var _status: Status) extends Domain
 
   def closestGeq(value: Int) = status.lowest(value)
 
-  def closestGt(value: Int): Int = ???
+  def closestGt(value: Int): Int = {
+    if (value < 0) {
+      if (status.canBe(false)) {
+        0
+      } else if (status.canBe(true)) {
+        1
+      } else {
+        -1
+      }
+    } else if (value == 0 && status.canBe(true)) {
+      1
+    } else {
+      -1
+    }
+  }
 
-  def closestLt(value: Int): Int = ???
+  def closestLt(value: Int): Int = {
+    if (value > 1) {
+      if (status.canBe(true)) {
+        1
+      } else if (status.canBe(false)) {
+        0
+      } else {
+        -1
+      }
+    } else if (value == 1 && status.canBe(false)) {
+      0
+    } else {
+      -1
+    }
+  }
 
   def prevAbsent(value: Int) = status.prevAbsent(value)
 
