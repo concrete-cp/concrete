@@ -78,12 +78,13 @@ final class AbsDiff(val result: Variable, val v0: Variable, val v1: Variable)
     else {
       val dom1 = scope(1).dom
       val dom2 = scope(2).dom
-      (dom1.indices map { i => (i, dom2.index(dom1.value(i) - val0)) }) ++
-        (dom1.indices map { i => (i, dom2.index(dom1.value(i) + val0)) }) find {
-          case (_, j) => j >= 0 && dom2.present(j)
-        } map {
-          case (i, j) => Array(index, i, j)
-        }
+
+      dom1.indices.find { i => dom2.presentVal(dom1.value(i) - val0) }.map { i =>
+        Array(index, i, dom2.index(dom1.value(i) - val0))
+      } orElse dom1.indices.find { i => dom2.presentVal(dom1.value(i) + val0) }.map { i =>
+        Array(index, i, dom2.index(dom1.value(i) + val0))
+      }
+
     }
   }
 
