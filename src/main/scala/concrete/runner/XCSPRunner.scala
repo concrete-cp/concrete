@@ -1,13 +1,25 @@
 package concrete.runner
 import java.net.URL
 import cspom.CSPOM
+import abscon.instance.tools.InstanceParser
+import java.util.StringTokenizer
+import java.io.File
+import abscon.instance.components.PConstraint
+import abscon.instance.components.PVariable
+import scala.collection.JavaConversions
 
 object XCSPConcrete extends ConcreteRunner with App {
 
+  var file: URL = _
+
+  var variables: Seq[String] = _
+
   override def loadCSPOM(args: List[String]) = {
-    val List(fileName) = args
-    val file = new URL(fileName)
-    CSPOM.load(file)
+    val List(fn) = args
+    file = new URL(fn)
+    val cspom = CSPOM.load(file)
+    variables = cspom._2
+    cspom._1
   }
 
   def description(args: List[String]) =
@@ -17,17 +29,79 @@ object XCSPConcrete extends ConcreteRunner with App {
     }
 
   def output(solution: Map[String, Int]) = {
-    cProblem.variables.filter(!_.params("var_is_introduced")).map(v =>
-      solution(v.name)).mkString(" ")
+    flatSolution(solution, variables).mkString(" ")
   }
 
+  def flatSolution(solution: Map[String, Int], variables: Iterable[String]): Iterable[Int] =
+    variables map solution
+
   def control(solution: Map[String, Int]) = {
-    cProblem.controlInt(solution) match {
-      case s: Set[_] if s.isEmpty => None
-      case s: Set[_] => Some(s.mkString(", "))
-    }
+    control(solution, variables, file)
+  }
+
+  def control(solution: Map[String, Int], variables: Iterable[String], file: URL) = {
+    new SolutionChecker(file).checkSolution(flatSolution(solution, variables).toIndexedSeq)
   }
 
   run(args)
+
+}
+
+class SolutionChecker(file: URL) {
+  println(file)
+  val instanceFileName = new File(file.toURI).getAbsolutePath
+  require(new File(instanceFileName).exists(), "PROBLEM \t The file " + instanceFileName + " has not been found.")
+
+  val parser = try {
+    loadAndParseInstance(instanceFileName);
+  } catch {
+    case e: Exception =>
+      throw new IllegalStateException("PROBLEM \t When loading and/or parsing file " + instanceFileName, e)
+  }
+
+  lazy val variablePositions = parser.getVariables().zipWithIndex.toMap
+
+  private def loadAndParseInstance(instanceFileName: String) = {
+    val parser = new InstanceParser();
+    parser.loadInstance(instanceFileName);
+    parser.parse(false);
+    parser;
+  }
+
+  /**
+   * Returns -1 if the solution is valid, the position of ther first invalid value otherwise
+   */
+  def isSolutionValid(solution: IndexedSeq[Int]): Int = {
+    assert(parser.getVariables().length == solution.size)
+
+    solution.indices.find {
+      i => !parser.getVariables()(i).getDomain().contains(solution(i))
+    } getOrElse (-1)
+
+  }
+
+  /**
+   * Extract from the given solution the tuple of values that corresponds to the scope of the given constraint.
+   */
+  def buildTupleFor(constraint: PConstraint, solution: IndexedSeq[Int]) = {
+    constraint.getScope().map(v => solution(variablePositions(v)))
+  }
+
+  def checkSolution(solution: IndexedSeq[Int]) = {
+    require(parser.getVariables.length == solution.size,
+      "PROBLEM \t The number of variables is " + parser.getVariables().length + " while the size of the solution is " + solution.length)
+
+    val invalidPosition = isSolutionValid(solution);
+    require(invalidPosition == -1, "ERROR \t The given solution is not valid as the " + invalidPosition + "th value of the solution is not present in the domain of the associated variable")
+
+    val (list, costs) = JavaConversions.collectionAsScalaIterable(parser.getMapOfConstraints.values).map(c =>
+      (c, c.computeCostOf(buildTupleFor(c, solution)))).filter(_._2 > 0).unzip
+
+    if (list.nonEmpty) {
+      Some("solutionCost " + costs.sum + ", listOfUnsatisfiedConstraints " + list)
+    } else {
+      None
+    }
+  }
 
 }

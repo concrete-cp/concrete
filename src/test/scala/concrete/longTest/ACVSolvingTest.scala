@@ -15,9 +15,11 @@ import concrete.filter.ACV
 import concrete.MAC
 import concrete.generator.cspompatterns.Patterns
 
-final class ACVSolvingTest extends Loggable {
+final class ACVSolvingTest {
   //Solver.loggerLevel = "FINE"
   //ParameterManager("ac3c.queue") = classOf[BinaryHeap[Constraint]]
+
+  import SolvingTest._
 
   val dlog = Solver.loggerLevel
   val dfilt = MAC.filterClass
@@ -81,7 +83,7 @@ final class ACVSolvingTest extends Loggable {
 
   @Test //(timeout = 1000)
   def dimacs() {
-    assertTrue(solve("flat30-1.cnf").isDefined);
+    assertTrue(solve("flat30-1.cnf"));
     // assertNotNull(solve("clauses-2.cnf.bz2"));
     //assertEquals(1, count("flat30-1.cnf"));
 
@@ -111,12 +113,12 @@ final class ACVSolvingTest extends Loggable {
   }
   @Test //(timeout = 7000)
   def scen11() {
-    assertTrue(solve("scen11.xml.bz2").isDefined);
+    assertTrue(solve("scen11.xml.bz2"));
   }
 
   @Test //(timeout = 7000)
   def series() {
-    assertTrue(solve("series-15.xml.bz2").isDefined);
+    assertTrue(solve("series-15.xml.bz2"));
   }
   //  @Test
   //  def fapp01_0200_0() {
@@ -127,14 +129,14 @@ final class ACVSolvingTest extends Loggable {
 
   @Test //(timeout = 1000)
   def queens12() {
-    assertTrue(solve("queens-12.xml").isDefined);
+    assertTrue(solve("queens-12.xml"));
     //assertEquals(14200, count("queens-12.xml"));
 
   }
 
   @Test
   def tsp() {
-    assertTrue(solve("tsp-20-1_ext.xml.bz2").isDefined);
+    assertTrue(solve("tsp-20-1_ext.xml.bz2"));
     //    assertEquals(14200, count("queens-12.xml"));
 
   }
@@ -144,40 +146,4 @@ final class ACVSolvingTest extends Loggable {
     assertEquals(1, count("bigleq-50.xml"))
   }
 
-  private def solve(name: String) = {
-    val cspomProblem = CSPOM.load(getClass.getResource(name));
-    ProblemCompiler.compile(cspomProblem, Patterns());
-
-    val solver = Solver(cspomProblem);
-
-    val sol = solver.toStream.headOption
-
-    if (sol.isDefined) {
-      val failed = cspomProblem.controlInt(sol.get);
-      assertTrue(sol.get + "\n" + failed.toString, failed.isEmpty)
-    }
-
-    sol
-  }
-
-  private def count(name: String) = {
-    val cspomProblem = CSPOM.load(getClass.getResource(name));
-    ProblemCompiler.compile(cspomProblem, Patterns());
-
-    // System.out.println(problem);
-
-    val solver = Solver(cspomProblem);
-    var count = 0
-    for (solution <- solver) {
-      count += 1
-      logger.info(solution.toString)
-      assert {
-        val failed = cspomProblem.controlInt(solution)
-        assertTrue(1 + count + "th solution: " + failed.toString(), failed.isEmpty);
-        true
-      }
-    }
-
-    count;
-  }
 }

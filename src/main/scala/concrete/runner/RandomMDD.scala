@@ -83,12 +83,7 @@ object RandomMDD extends ConcreteRunner with App {
       solution(v.name)).mkString(" ")
   }
 
-  def control(solution: Map[String, Int]) = {
-    cProblem.controlInt(solution) match {
-      case s: Set[_] if s.isEmpty => None
-      case s: Set[_] => Some(s.mkString(", "))
-    }
-  }
+  def control(solution: Map[String, Int]) = ???
 
   def params(args: String) = {
     val Array(nbVariables, domainSize, arity, nbConstraints,
