@@ -27,31 +27,30 @@ object ProblemGenerator extends Loggable {
 
     val problem = new Problem(generateVariables(cspom))
 
-    val gm = new GeneratorManager(problem);
-
-    var firstFailed: Option[CSPOMConstraint] = None;
+    //var firstFailed: Option[CSPOMConstraint] = None;
 
     @tailrec
-    def processQueue(queue: Queue[CSPOMConstraint]): Unit = if (queue.nonEmpty) {
+    def processQueue(queue: Queue[CSPOMConstraint], firstFailed: Option[CSPOMConstraint]): Unit = if (queue.nonEmpty) {
       val (constraint, rest) = queue.dequeue
 
-      if (gm.generate(constraint)) {
-        firstFailed = None;
-        processQueue(rest)
-      } else firstFailed match {
-        case Some(c) if c == constraint =>
-          throw new FailedGenerationException(
-            "Could not generate the constraints " + queue);
-        case Some(_) =>
-          processQueue(rest.enqueue(constraint));
-        case None =>
-          firstFailed = Some(constraint);
-          processQueue(rest.enqueue(constraint));
-      }
+      GeneratorManager.generate(constraint, problem) match {
+        case Some(s) =>
+          s.foreach(problem.addConstraint)
 
+          processQueue(rest, None)
+
+        case None =>
+          if (firstFailed.exists(_ == constraint)) {
+            throw new FailedGenerationException(
+              "Could not generate the constraints " + queue);
+          } else {
+            processQueue(rest.enqueue(constraint), firstFailed orElse Some(constraint));
+          }
+
+      }
     }
 
-    processQueue(Queue.empty ++ cspom.constraints)
+    processQueue(Queue.empty ++ cspom.constraints, None)
 
     //    for (v <- problem.variables if v.constraints.isEmpty) {
     //      problem.removeVariable(v)

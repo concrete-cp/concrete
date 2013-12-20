@@ -7,37 +7,36 @@ import scala.collection.immutable.SortedSet
 import cspom.CSPOMConstraint
 import concrete.UNSAT
 import concrete.UNSATObject
-import AbstractGenerator._
+import Generator._
 
-final class AbsGenerator(problem: Problem) extends AbstractGenerator(problem) {
+final object AbsGenerator extends Generator {
 
-  override def genFunctional(constraint: CSPOMConstraint, result: C2Conc) = {
+  override def genFunctional(constraint: CSPOMConstraint, result: C2Conc)(implicit problem: Problem) = {
     val Seq(v0: C21D) = constraint.arguments map cspom2concrete
 
     (result, v0) match {
       case (Const(result), Const(v0)) =>
-        result == math.abs(v0) || (throw UNSATObject)
+        if (result == math.abs(v0)) { Some(Nil) } else { throw UNSATObject }
       case (Const(result), Var(v0)) =>
         restrictDomain(v0, Seq(result, -result))
-        true
+        Some(Nil)
       case (Var(result), Const(v0)) =>
         restrictDomain(result, Seq(math.abs(v0)))
-        true
+        Some(Nil)
       case (Var(result), Var(v0)) =>
         if (v0.dom.undefined && result.dom.undefined) {
-          false
+          None
         } else {
           if (!v0.dom.undefined) {
-            restrictDomain(result, v0.dom.values)
+            restrictDomain(result, v0.dom.values.map(math.abs))
           }
           if (!result.dom.undefined) {
-            restrictDomain(v0, result.dom.values)
+            restrictDomain(v0, result.dom.values.flatMap(v => Seq(-v, v)))
           }
 
-          addConstraint(new Abs(result, v0))
-          true
+          Some(Seq(new Abs(result, v0)))
         }
-      case _ => false
+      case _ => None
 
     }
 

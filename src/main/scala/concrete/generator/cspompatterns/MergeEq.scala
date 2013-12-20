@@ -44,7 +44,8 @@ object MergeEq extends ConstraintCompiler {
     }
 
   def mtch(c: CSPOMConstraint, problem: CSPOM) = {
-    if (c.function == 'eq && c.result == CSPOMTrue) {
+    if (c.function == 'eq && c.result == CSPOMTrue &&
+      !c.params.contains("neg") && c.params.get("offset").forall(_ == 0)) {
 
       val (aux, full, const) = partition(c.arguments.toList)
       if (aux.nonEmpty) {

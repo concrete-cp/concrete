@@ -11,37 +11,44 @@ import cspom.CSPOMConstraint
 import concrete.constraint.semantic.ReifiedNeq
 import concrete.UNSATObject
 
-final class NeqGenerator(problem: Problem) extends AbstractGenerator(problem) {
+import Generator._
 
-  override def gen(constraint: CSPOMConstraint) = {
+final object NeqGenerator extends Generator {
+
+  override def gen(constraint: CSPOMConstraint)(implicit problem: Problem) = {
 
     val Seq(v0, v1) = constraint.arguments map cspom2concrete1D
 
-    if (v0.undefined || v1.undefined) {
-      false
+    if (undefinedVar(v0, v1).nonEmpty) {
+      None
     } else {
       (v0, v1) match {
-        case (Const(v0), Const(v1)) => (v0 != v1) || (throw UNSATObject)
-        case (Const(v0), Var(v1)) => v1.dom.removeVal(v0)
-        case (Var(v0), Const(v1)) => v0.dom.removeVal(v1)
-        case (Var(v0), Var(v1)) => addConstraint(new Neq(v0, v1))
+        case (Const(v0), Const(v1)) =>
+          if (v0 != v1) Some(Nil) else throw UNSATObject
+        case (Const(v0), Var(v1)) =>
+          v1.dom.removeVal(v0)
+          Some(Nil)
+        case (Var(v0), Const(v1)) =>
+          v0.dom.removeVal(v1)
+          Some(Nil)
+        case (Var(v0), Var(v1)) => Some(Seq(new Neq(v0, v1)))
 
       }
 
-      true
     }
   }
 
-  override def genReified(constraint: CSPOMConstraint, result: Variable) = {
+  override def genFunctional(constraint: CSPOMConstraint, r: C2Conc)(implicit problem: Problem) = {
+    val Var(result) = r
     require(constraint.arguments.size == 2,
       "Comparison constraints must have exactly two arguments");
 
     val Seq(v0, v1) = constraint.arguments map cspom2concrete1D
 
-    if (Seq(v0, v1) collect { case Var(v) => v } exists (_.dom.undefined)) {
-      false
+    if (undefinedVar(v0, v1).nonEmpty) {
+      None
     } else {
-      AbstractGenerator.booleanDomain(result);
+      Generator.booleanDomain(result);
       (v0, v1) match {
         case (Const(v0), Const(v1)) =>
           if (v0 == v1) {
@@ -49,18 +56,18 @@ final class NeqGenerator(problem: Problem) extends AbstractGenerator(problem) {
           } else {
             result.dom.setSingle(0)
           }
+          Some(Nil)
         case (Var(v0), Const(v1)) =>
-          addConstraint(new ReifiedNeq(result, v0, v1))
+          Some(Seq(new ReifiedNeq(result, v0, v1)))
         case (Const(v0), Var(v1)) =>
-          addConstraint(new ReifiedNeq(result, v1, v0))
+          Some(Seq(new ReifiedNeq(result, v1, v0)))
         case (Var(v0), Var(v1)) =>
-          addConstraint(new ReifiedConstraint(
+          Some(Seq(new ReifiedConstraint(
             result,
             new Neq(v0, v1),
-            new Eq(v0, v1)))
+            new Eq(v0, v1))))
       }
 
-      true
     }
   }
 

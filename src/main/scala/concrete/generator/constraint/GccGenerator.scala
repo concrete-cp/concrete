@@ -5,23 +5,23 @@ import concrete.Variable
 import concrete.constraint.semantic.Bounds
 import concrete.constraint.semantic.Gcc
 import cspom.CSPOMConstraint
+import Generator._
 
-final class GccGenerator(problem: Problem) extends AbstractGenerator(problem) {
-  override def gen(constraint: CSPOMConstraint) = {
+final object GccGenerator extends Generator {
+  override def gen(constraint: CSPOMConstraint)(implicit problem: Problem) = {
     val scope = constraint.arguments map cspom2concreteVar
 
     if (scope.exists(_.dom.undefined)) {
-      false
+      None
     } else {
       val bounds = constraint.params.get("gcc") match {
         case Some(p: Seq[(Int, Int, Int)]) => p.map(i => Bounds(i._1, i._2, i._3)).toArray
         case Some(p: Array[(Int, Int, Int)]) => p.map(i => Bounds(i._1, i._2, i._3))
-        case p: Any => AbstractGenerator.fail(
+        case p: Any => Generator.fail(
           s"GCC constraints requires to be parameterized with a sequence of triples, found $p")
       }
 
-      addConstraint(new Gcc(scope.toArray, bounds));
-      true;
+      Some(Seq(new Gcc(scope.toArray, bounds)))
     }
 
   }

@@ -9,125 +9,137 @@ import concrete.constraint.Constraint
 import concrete.constraint.semantic.Disjunction
 import concrete.UNSATObject
 import concrete.constraint.semantic.ReifiedEquals
-import AbstractGenerator.restrictDomain
+import Generator.restrictDomain
 
-final class EqGenerator(problem: Problem) extends AbstractGenerator(problem) {
+import Generator._
 
-  override def gen(constraint: CSPOMConstraint): Boolean = {
+final object EqGenerator extends Generator {
+
+  override def gen(constraint: CSPOMConstraint)(implicit problem: Problem): Option[Seq[Constraint]] = {
     val Seq(a, b) = constraint.arguments.map(cspom2concrete1D)
+    val neg: Boolean = constraint.getParam("neg", classOf[Boolean]).getOrElse(false)
+    val negFactor = if (neg) -1 else 1
+    val offset: Int = constraint.getParam("offset", classOf[Integer]).map(_.toInt).getOrElse(0)
 
     (a, b) match {
-      case (Const(a), Const(b)) => a == b || (throw UNSATObject)
+      case (Const(a), Const(b)) =>
+        if (negFactor * a + offset == b) {
+          Some(Seq())
+        } else {
+          throw UNSATObject
+        }
       case (Var(a), Const(b)) =>
-        restrictDomain(a, Seq(b))
-        true
+        restrictDomain(a, Seq((b - offset) * negFactor))
+        Some(Seq())
       case (Const(a), Var(b)) =>
-        restrictDomain(b, Seq(a))
-        true
+        restrictDomain(b, Seq(negFactor * a + offset))
+        Some(Seq())
       case (Var(a), Var(b)) =>
-
         if (a.dom.undefined && b.dom.undefined) {
-          false
+          None
         } else {
           if (!a.dom.undefined) {
-            restrictDomain(b, a.dom)
+            restrictDomain(b, a.dom.values.map(a => negFactor * a + offset))
           }
           if (!b.dom.undefined) {
-            restrictDomain(a, b.dom)
+            restrictDomain(a, b.dom.values.map(b => (b - offset) * negFactor))
           }
           if (a.dom.isInstanceOf[BooleanDomain] && b.dom.isInstanceOf[BooleanDomain]) {
-            addConstraint(new Disjunction(Array(a, b), Array(false, true)))
-            addConstraint(new Disjunction(Array(b, a), Array(false, true)))
+            require(!neg && offset == 0)
+            Some(Seq(new Disjunction(Array(a, b), Array(false, true)),
+              new Disjunction(Array(b, a), Array(false, true))))
           } else {
-            addConstraint(new Eq(a, b))
-          }
-          true
-        }
-    }
-
-  }
-
-  private def generateInt(refDomain: IntDomain, scope: Seq[Variable]) {
-    for (v <- scope if (v.dom.undefined)) {
-      v.dom = IntDomain(refDomain.values.toSeq: _*)
-    }
-    for (Seq(v0, v1) <- scope.sliding(2)) {
-      addConstraint(new Eq(v0, v1));
-    }
-  }
-
-  private def generateBool(refDomain: BooleanDomain, scope: Seq[Variable]) {
-    scope filter { _.dom.undefined } map { _.dom.asInstanceOf[BooleanDomain] } find { _.size == 1 } match {
-      case None =>
-        for (v <- scope if (v.dom.undefined)) {
-          v.dom = new BooleanDomain(refDomain.status)
-        }
-
-        for (Seq(i, j) <- scope.combinations(2)) {
-          addConstraint(new Disjunction(Array(i, j), Array(false, true)))
-        }
-
-      case Some(constantDomain) =>
-        for (v <- scope) {
-          if (v.dom.undefined) {
-            v.dom = new BooleanDomain(refDomain.status)
-          } else {
-            val d = v.dom.asInstanceOf[BooleanDomain]
-            if (d.isUnknown) {
-              d.status = refDomain.status
-            } else if (d.status != refDomain.status) {
-              throw new FailedGenerationException("Inconsistent equality")
-            }
+            Some(Seq(new Eq(neg, a, offset, b)))
           }
         }
-
     }
 
   }
 
-  override def genReified(funcConstraint: CSPOMConstraint, result: Variable) = funcConstraint match {
-    case CSPOMConstraint(_, 'eq, args, _) =>
-      val Seq(a, b) = args map cspom2concrete1D
+  //  private def generateInt(refDomain: IntDomain, scope: Seq[Variable], problem: Problem): Iterator[Constraint] = {
+  //    for (v <- scope if (v.dom.undefined)) {
+  //      v.dom = IntDomain(refDomain.values.toSeq: _*)
+  //    }
+  //    for (Seq(v0, v1) <- scope.sliding(2)) yield {
+  //      new Eq(v0, v1)
+  //    }
+  //  }
+  //
+  //  private def generateBool(refDomain: BooleanDomain, scope: Seq[Variable]): Iterator[Constraint] = {
+  //    scope filter { _.dom.undefined } map { _.dom.asInstanceOf[BooleanDomain] } find { _.size == 1 } match {
+  //      case None =>
+  //        for (v <- scope if (v.dom.undefined)) {
+  //          v.dom = new BooleanDomain(refDomain.status)
+  //        }
+  //
+  //        for (Seq(i, j) <- scope.combinations(2)) yield {
+  //          new Disjunction(Array(i, j), Array(false, true))
+  //        }
+  //
+  //      case Some(constantDomain) =>
+  //        for (v <- scope) {
+  //          if (v.dom.undefined) {
+  //            v.dom = new BooleanDomain(refDomain.status)
+  //          } else {
+  //            val d = v.dom.asInstanceOf[BooleanDomain]
+  //            if (d.isUnknown) {
+  //              d.status = refDomain.status
+  //            } else if (d.status != refDomain.status) {
+  //              throw new FailedGenerationException("Inconsistent equality")
+  //            }
+  //          }
+  //        }
+  //        Iterator()
+  //
+  //    }
+  //
+  //  }
 
-      if (a.undefined || b.undefined) {
-        false
-      } else {
-        AbstractGenerator.booleanDomain(result);
-        (a, b) match {
-          case (Const(a), Const(b)) =>
-            if (a == b) {
-              result.dom.setSingle(1)
-            } else {
-              result.dom.setSingle(0)
-            }
-          case (Const(a), Var(b)) => addConstraint(new ReifiedEquals(result, b, a))
-          case (Var(a), Const(b)) => addConstraint(new ReifiedEquals(result, a, b))
-          case (Var(a), Var(b)) => addConstraint(
-            new ReifiedConstraint(
-              result,
-              new Eq(a, b),
-              new Neq(a, b)))
+  override def genFunctional(funcConstraint: CSPOMConstraint, r: C2Conc)(implicit problem: Problem): Option[Seq[Constraint]] = {
+    val Var(result) = r
+    Generator.booleanDomain(result)
+    funcConstraint match {
+
+      case CSPOMConstraint(_, 'eq, args, _) =>
+        val Seq(a, b) = args map cspom2concrete1D
+
+        if (undefinedVar(a, b).nonEmpty) {
+          None
+        } else {
+          Generator.booleanDomain(result);
+          (a, b) match {
+            case (Const(a), Const(b)) =>
+              if (a == b) {
+                result.dom.setSingle(1)
+              } else {
+                result.dom.setSingle(0)
+              }
+              Some(Seq())
+            case (Const(a), Var(b)) => Some(Seq(new ReifiedEquals(result, b, a)))
+            case (Var(a), Const(b)) => Some(Seq(new ReifiedEquals(result, a, b)))
+            case (Var(a), Var(b)) => Some(Seq(
+              new ReifiedConstraint(
+                result,
+                new Eq(a, b),
+                new Neq(a, b))))
+          }
+
         }
 
-        true
-      }
+      case CSPOMConstraint(_, 'neq, args, _) if args.size == 2 =>
+        val scope = funcConstraint.arguments map cspom2concreteVar
 
-    case CSPOMConstraint(_, 'neq, args, _) if args.size == 2 =>
-      val scope = funcConstraint.arguments map cspom2concreteVar
-
-      scope map { _.dom } find { !_.undefined } match {
-        case None => false
-        case Some(refDomain) =>
+        scope map { _.dom } find { !_.undefined } map { refDomain =>
           val negDomain = refDomain.values.map(v => -v).toSeq.reverse
 
           for (v <- scope if (v.dom.undefined)) {
             v.dom = IntDomain(negDomain: _*)
           }
-          addConstraint(new Eq(true, scope(0), 0, scope(1)))
-          true
-      }
+          Seq(new Eq(true, scope(0), 0, scope(1)))
 
-    case _ => false
+        }
+
+      case _ => None
+    }
   }
-
 }
