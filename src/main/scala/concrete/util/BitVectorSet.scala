@@ -25,7 +25,7 @@ final object BitVectorSet {
 }
 
 final class BitVectorSet(val bv: BitVector, val size: Int) extends IntSet {
-  require(size >= 2)
+  require(size >= 2, "BitVectorSets must have at least two elements")
   assert(bv.cardinality == size, bv + " : " + bv.cardinality + " != " + size)
 
   def this(size: Int) = {

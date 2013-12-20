@@ -7,6 +7,8 @@ final class IntervalSet(val domain: Interval) extends IntSet {
   require(domain.lb >= 0)
 
   val size = domain.size
+  
+  require(size >= 2, "Invervals must have at least two elements, use Singleton instead")
 
   val first = domain.lb
 
@@ -33,7 +35,7 @@ final class IntervalSet(val domain: Interval) extends IntSet {
    *            index to test
    * @return true iff index is present
    */
-  def present(index: Int) = domain.in(index);
+  def present(index: Int) = domain.contains(index);
 
   def remove(index: Int) = {
     assert(present(index));
