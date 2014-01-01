@@ -6,61 +6,39 @@ import concrete.{ Variable, Problem, IntDomain }
 import cspom.CSPOMConstraint
 import cspom.variable.IntVariable
 import cspom.variable.FreeInt
-import AbstractGenerator._
+import Generator._
 import concrete.UNSATObject
 
-final class AddGenerator(problem: Problem) extends AbstractGenerator(problem) {
+final object AddGenerator extends Generator {
 
-  override def genFunctional(constraint: CSPOMConstraint, r: C2Conc) = {
+  override def genFunctional(constraint: CSPOMConstraint, r: C2Conc)(implicit problem: Problem) = {
 
-    val Seq(cspomResult, cspomV0, cspomV1) = constraint match {
-      case CSPOMConstraint(r, 'sub, Seq(v0, v1), _) => Seq(v0, r, v1)
-      case CSPOMConstraint(r, 'add, args, _) => r +: args
-      case _ => throw new UnsupportedOperationException
-    }
-
-    val result = cspom2concrete1D(cspomResult)
-    val Seq(v0: C21D, v1: C21D) = Seq(cspomV0, cspomV1) map cspom2concrete
+    val result = cspom2concreteVar(constraint.result)
+    val Seq(v0, v1) = constraint.arguments map cspom2concreteVar
 
     //map cspom2concrete
 
-    if (Seq(result, v0, v1) collect { case Var(v) if (v.dom.undefined) => v } match {
-      case Seq() => true;
-      case Seq(v) if result.is(v) =>
-        val values = AbstractGenerator.domainFrom(Seq(v0, v1), { case Seq(i, j) => i + j });
-        v.dom = IntDomain(values: _*);
-        true
-      case Seq(v) if v0.is(v) =>
-        v.dom = IntDomain(generateValues(result, v1): _*);
-        true
-      case Seq(v) if v1.is(v) =>
-        v.dom = IntDomain(generateValues(result, v0): _*);
-        true
-      case _ => false;
-    }) {
-
-      (result, v0, v1) match {
-        case (Const(r), Const(v0), Const(v1)) => if (r != v0 + v1) throw UNSATObject
-
-        case (Var(r), Const(v0), Const(v1)) => restrictDomain(r, Seq(v0 + v1))
-        case (Const(r), Var(v0), Const(v1)) => restrictDomain(v0, Seq(r - v1))
-        case (Const(r), Const(v0), Var(v1)) => restrictDomain(v1, Seq(r - v0))
-
-        case (Const(r), Var(v0), Var(v1)) => addConstraint(new Eq(true, v0, r, v1))
-        case (Var(r), Const(v0), Var(v1)) => addConstraint(new Eq(false, v1, v0, r))
-        case (Var(r), Var(v0), Const(v1)) => addConstraint(new Eq(false, v0, v1, r))
-
-        case (Var(r), Var(v0), Var(v1)) => addConstraint(new Add(r, v0, v1))
-      }
-
-      true
-
+    if (completeVariables(result, v0, v1)) {
+      Some(Seq(new Add(result, v0, v1)))
     } else {
-      false
+      None
     }
   }
 
-  def generateValues(result: C21D, variable: C21D) =
-    AbstractGenerator.domainFrom(Seq(result, variable), { case Seq(i, j) => i - j })
+  private def completeVariables(result: Variable, v0: Variable, v1: Variable): Boolean = {
+    undefinedVar(result, v0, v1) match {
+      case Seq() => true;
+      case Seq(`result`) =>
+        result.dom = IntDomain(domainFrom(v0, v1, (_ + _)): _*);
+        true
+      case Seq(`v0`) =>
+        v0.dom = IntDomain(domainFrom(result, v1, (_ - _)): _*);
+        true
+      case Seq(`v1`) =>
+        v1.dom = IntDomain(domainFrom(result, v0, (_ - _)): _*);
+        true
+      case _ => false;
+    }
+  }
 
 }

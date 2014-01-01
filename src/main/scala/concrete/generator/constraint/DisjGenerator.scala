@@ -8,21 +8,22 @@ import cspom.variable.CSPOMTrue
 import cspom.variable.CSPOMFalse
 import cspom.variable.BoolVariable
 
-final class DisjGenerator(problem: Problem) extends AbstractGenerator(problem) {
+import Generator._
 
-  override def gen(gC: CSPOMConstraint) = {
+final object DisjGenerator extends Generator {
+
+  override def gen(gC: CSPOMConstraint)(implicit problem: Problem) = {
     require(gC.function == 'or, "Unexpected constraint " + gC)
     val scope = gC.arguments map cspom2concreteVar
 
-    scope foreach AbstractGenerator.booleanDomain
+    scope foreach Generator.booleanDomain
     val params: IndexedSeq[Boolean] = gC.params.get("revsign") match {
       case Some(p: Seq[Boolean]) => p.toIndexedSeq
       case None => IndexedSeq.fill(scope.size)(false)
       case p: Any => throw new IllegalArgumentException(s"Parameters for disjunction must be a sequence of boolean values, not '$p'")
     }
 
-    addConstraint(new Disjunction(scope.toArray, params))
-    true
+    Some(Seq(new Disjunction(scope.toArray, params)))
   }
 
 }

@@ -10,14 +10,14 @@ import cspom.variable.IntConstant
 
 import cspom.variable.CSPOMFalse
 import cspom.variable.CSPOMTrue
-
-final class OccurrenceGenerator(problem: Problem) extends AbstractGenerator(problem) {
-  override def genFunctional(constraint: CSPOMConstraint, r: C2Conc) = {
+import Generator._
+final object OccurrenceGenerator extends Generator {
+  override def genFunctional(constraint: CSPOMConstraint, r: C2Conc)(implicit problem: Problem) = {
 
     val args = constraint.arguments map cspom2concrete1D
 
-    if (args.exists(_.undefined)) {
-      false
+    if (undefinedVar(args: _*).nonEmpty) {
+      None
     } else {
 
       val value: Int = constraint.params.get("occurrence") match {
@@ -38,16 +38,15 @@ final class OccurrenceGenerator(problem: Problem) extends AbstractGenerator(prob
       }
 
       r match {
-        case Const(result) => addConstraint(new OccurrenceConst(result - constOcc, value, scope.toArray))
+        case Const(result) => Some(Seq(new OccurrenceConst(result - constOcc, value, scope.toArray)))
         case Var(result) =>
           if (result.dom.undefined) {
-            AbstractGenerator.restrictDomain(result, constOcc to (constOcc + scope.count(_.dom.presentVal(value))))
+            Generator.restrictDomain(result, constOcc to (constOcc + scope.count(_.dom.presentVal(value))))
           }
-          addConstraint(new OccurrenceVar(result, value, scope.toArray, constOcc))
+          Some(Seq(new OccurrenceVar(result, value, scope.toArray, constOcc)))
         case _ => throw new IllegalArgumentException(s"Result must be a variable or constant, was $r")
       }
 
-      true;
     }
 
   }

@@ -6,7 +6,7 @@ import org.junit.Assert._
 class DomainTest {
 
   @Test
-  def testRemove {
+  def testRemove() {
     val domain = IntDomain(10 to 20)
 
     domain.removeValInterval(13, 16)

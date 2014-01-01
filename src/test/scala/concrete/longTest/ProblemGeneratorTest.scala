@@ -23,8 +23,6 @@ final class ProblemGeneratorTest extends Loggable {
     generateTest("queens-12.xml");
   }
 
-
-
   @Test
   def scen11f12() {
     generateTest("scen11-f12.xml.bz2");
@@ -47,7 +45,7 @@ final class ProblemGeneratorTest extends Loggable {
   // }
 
   private def generateTest(file: String) {
-    val cspom = CSPOM.load(classOf[ProblemGeneratorTest].getResource(file));
+    val cspom = CSPOM.load(classOf[ProblemGeneratorTest].getResource(file))._1;
 
     logger.info(cspom + "\n" + cspom.variables.size + " vars, " + cspom.constraints.size + " cons")
 

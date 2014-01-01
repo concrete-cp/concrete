@@ -3,24 +3,22 @@ package concrete.generator.constraint;
 import concrete.{ Variable, Problem }
 import cspom.CSPOMConstraint
 import concrete.constraint.semantic.{ AllDifferent2C, AllDifferentBC }
-import cspom.CSPOMConstraint
 import cspom.variable.CSPOMTrue
+import Generator._
 
-final class AllDifferentGenerator(problem: Problem) extends AbstractGenerator(problem) {
-  override def gen(constraint: CSPOMConstraint) = {
+final object AllDifferentGenerator extends Generator {
+  override def gen(constraint: CSPOMConstraint)(implicit problem: Problem) = {
     val variables = constraint.arguments map cspom2concreteVar
 
     if (variables.exists(_.dom.undefined)) {
-      false
+      None
     } else {
 
-//      for (constant <- solverVariables.collect { case C2C(i) => i }; v <- variables) {
-//        v.dom.removeVal(constant)
-//      }
+      //      for (constant <- solverVariables.collect { case C2C(i) => i }; v <- variables) {
+      //        v.dom.removeVal(constant)
+      //      }
 
-      addConstraint(new AllDifferent2C(variables: _*));
-      addConstraint(new AllDifferentBC(variables: _*));
-      true;
+      Some(Seq(new AllDifferent2C(variables: _*), new AllDifferentBC(variables: _*)))
     }
   }
 

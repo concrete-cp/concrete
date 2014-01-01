@@ -3,7 +3,7 @@ package concrete.util
 final case class Interval(val lb: Int, val ub: Int) {
   assume(ub >= lb)
   val size = ub - lb + 1
-  def in(v: Int) = lb <= v && v <= ub
+  def contains(v: Int) = lb <= v && v <= ub
 
   def allValues = lb to ub
 
@@ -32,7 +32,7 @@ final case class Interval(val lb: Int, val ub: Int) {
   }
 
   def /(i: Interval) = {
-    if (i.in(0)) throw new ArithmeticException
+    if (i.contains(0)) throw new ArithmeticException
     val Interval(c, d) = i
     Interval(List(lb / c, lb / d, ub / c, ub / d).min, List(lb / c, lb / d, ub / c, ub / d).max)
   }

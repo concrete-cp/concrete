@@ -5,17 +5,17 @@ import cspom.CSPOMConstraint
 import concrete.constraint.semantic.{ AllDifferent2C, AllDifferentBC }
 import concrete.constraint.semantic.Sum
 import concrete.constraint.semantic.LexLeq
+import Generator._
 
-final class LexLeqGenerator(problem: Problem) extends AbstractGenerator(problem) {
-  override def gen(constraint: CSPOMConstraint) = {
+final object LexLeqGenerator extends Generator {
+  override def gen(constraint: CSPOMConstraint)(implicit problem: Problem) = {
     val Seq(x, y) = constraint.arguments map cspom2concreteSeqVar map (_.toArray)
     require(x.length == y.length)
 
     if ((x.iterator ++ y) exists { _.dom.undefined }) {
-      false
+      None
     } else {
-      addConstraint(new LexLeq(x, y));
-      true;
+      Some(Seq(new LexLeq(x, y)));
     }
   }
 

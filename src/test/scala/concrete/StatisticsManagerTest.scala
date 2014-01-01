@@ -1,9 +1,7 @@
 package concrete;
 
-import org.junit.Assert.assertEquals
+import org.junit.Assert._
 import org.junit.Test
-
-import concrete.Statistic;
 
 object StatisticsManagerTest {
   @Statistic

@@ -12,8 +12,10 @@ import scala.collection.mutable.ArrayBuffer
 import concrete.UNSATObject
 import cspom.CSPOMConstraint
 import cspom.xcsp.Extension
+import concrete.constraint.Constraint
+import Generator._
 
-object ExtensionGenerator {
+object ExtensionGenerator extends Generator {
 
   @Parameter("relationAlgorithm")
   var consType = "Reduce"
@@ -67,9 +69,6 @@ object ExtensionGenerator {
       })
     }
   }
-}
-
-final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(problem) {
 
   private case class Signature(domains: Seq[List[Int]], init: Boolean)
 
@@ -120,7 +119,7 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
    */
   private val dsCache = new CacheConverter[Matrix, List[Array[Int]]]()
 
-  override def gen(extensionConstraint: CSPOMConstraint) = {
+  override def gen(extensionConstraint: CSPOMConstraint)(implicit problem: Problem): Option[Seq[Constraint]] = {
 
     val solverVariables = extensionConstraint.arguments map cspom2concreteVar toList
 
@@ -128,9 +127,9 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
     val Some(init: Boolean) = extensionConstraint.params.get("init")
 
     if (relation.isEmpty) {
-      (init == true) || (throw UNSATObject)
+      if (init == true) { Some(Seq()) } else { throw UNSATObject }
     } else if (solverVariables.exists(_.dom.undefined)) {
-      false
+      None
     } else {
       val matrix = generateMatrix(solverVariables, relation, init);
       val scope = solverVariables.toArray
@@ -164,9 +163,8 @@ final class ExtensionGenerator(problem: Problem) extends AbstractGenerator(probl
       //        extensionConstraint.closeRelation()
       //      }
       //println(extensionConstraint + " -> " + constraint);
-      addConstraint(constraint)
+      Some(Seq(constraint))
 
-      true;
     }
   }
 }

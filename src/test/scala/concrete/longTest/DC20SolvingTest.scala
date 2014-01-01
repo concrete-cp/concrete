@@ -19,6 +19,7 @@ import org.junit.After
 import concrete.generator.cspompatterns.Patterns
 
 final class DC20SolvingTest extends Loggable {
+  import SolvingTest._
 
   val dlog = Solver.loggerLevel
 
@@ -81,7 +82,7 @@ final class DC20SolvingTest extends Loggable {
 
   @Test
   def dimacs() {
-    assertTrue(solve("flat30-1.cnf").isDefined);
+    assertTrue(solve("flat30-1.cnf"));
     // assertNotNull(solve("clauses-2.cnf.bz2"));
     //assertEquals(1, count("flat30-1.cnf"));
 
@@ -116,36 +117,5 @@ final class DC20SolvingTest extends Loggable {
   //    //assertTrue(solve("queens-12.xml").isDefined);
   //    assertEquals(2, count("queens-4.xml"));
   //
-  //  }
 
-  private def solve(name: String) = {
-    val cspomProblem = CSPOM.load(getClass.getResource(name));
-    ProblemCompiler.compile(cspomProblem, Patterns());
-    val problem = ProblemGenerator.generate(cspomProblem);
-
-    val solver = new MAC(problem);
-
-    solver.toIterable.headOption.map { sol =>
-      val failed = cspomProblem.controlInt(sol);
-      assertTrue(sol + "\n" + failed.toString, failed.isEmpty)
-    }
-
-  }
-
-  private def count(name: String) = {
-    val cspomProblem = CSPOM.load(getClass.getResource(name));
-    ProblemCompiler.compile(cspomProblem, Patterns());
-    val problem = ProblemGenerator.generate(cspomProblem);
-    // System.out.println(problem);
-
-    val solver = new MAC(problem);
-    var count = 0
-    for (solution <- solver) {
-      count += 1
-      val failed = cspomProblem.controlInt(solution)
-      assertTrue(1 + count + "th solution: " + failed.toString(), failed.isEmpty);
-    }
-
-    count;
-  }
 }

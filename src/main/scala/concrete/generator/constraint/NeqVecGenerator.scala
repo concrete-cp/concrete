@@ -9,17 +9,17 @@ import concrete.Problem
 import concrete.Variable
 import cspom.CSPOMConstraint
 import concrete.constraint.semantic.NeqVec
+import Generator._
 
-final class NeqVecGenerator(problem: Problem) extends AbstractGenerator(problem) {
+final object NeqVecGenerator extends Generator {
 
-  override def gen(constraint: CSPOMConstraint) = {
+  override def gen(constraint: CSPOMConstraint)(implicit problem: Problem) = {
     val Seq(x, y) = constraint.arguments map cspom2concreteSeqVar
 
-    if ((x.iterator ++ y) exists { _.dom.undefined }) {
-      false
+    if (undefinedVar(x.toStream ++ y: _*).nonEmpty) {
+      None
     } else {
-      addConstraint(new NeqVec(x.toArray, y.toArray))
-      true
+      Some(Seq(new NeqVec(x.toArray, y.toArray)))
     }
   }
 

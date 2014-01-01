@@ -14,30 +14,15 @@ import concrete.constraint.extension.MDDn
 import concrete.constraint.extension.ReduceableExt
 import scala.annotation.tailrec
 import concrete.generator.FailedGenerationException
+import Generator._
 
-final class SumGenerator(problem: Problem) extends AbstractGenerator(problem) {
-  //  override def gen(constraint: CSPOMConstraint) = {
-  //    val Seq(solverVariables) = constraint.arguments map cspom2concreteSeqVar
-  //
-  //    if (solverVariables exists { _.dom.undefined }) {
-  //      false
-  //    } else {
-  //      val params = constraint.params.get("coefficients") match {
-  //        case Some(p: Seq[Int]) => p.toArray
-  //        case None => Array.fill(solverVariables.length)(1)
-  //        case _ => throw new IllegalArgumentException("Parameters for zero sum must be a sequence of integer values")
-  //      }
-  //      addConstraint(new Sum(0, params, solverVariables.toArray));
-  //      //addConstraint(new ReduceableExt(solverVariables, zeroSum(solverVariables.toList, params.toList)))
-  //      true;
-  //    }
-  //  }
+final object SumGenerator extends Generator {
 
-  override def genFunctional(constraint: CSPOMConstraint, result: C2Conc) = {
+  override def genFunctional(constraint: CSPOMConstraint, result: C2Conc)(implicit problem: Problem) = {
     val solverVariables = constraint.arguments map cspom2concreteVar
 
-    if (solverVariables.exists(_.dom.undefined)) {
-      false
+    if (undefinedVar(solverVariables: _*).nonEmpty) {
+      None
     } else {
       val params = constraint.params.get("coefficients") match {
         case Some(p: Seq[Int]) => p.toArray
@@ -45,20 +30,18 @@ final class SumGenerator(problem: Problem) extends AbstractGenerator(problem) {
         case _ => throw new IllegalArgumentException("Parameters for zero sum must be a sequence of integer values")
       }
       result match {
-        case Const(c) => addConstraint(new Sum(c, params, solverVariables.toArray));
+        case Const(c) => Some(Seq(new Sum(c, params, solverVariables.toArray)))
         case Var(v) => {
           if (v.dom.undefined) {
             val min = (solverVariables zip params).map { case (v, p) => v.dom.firstValue * p }.sum
             val max = (solverVariables zip params).map { case (v, p) => v.dom.lastValue * p }.sum
-            AbstractGenerator.restrictDomain(v, min to max)
+            Generator.restrictDomain(v, min to max)
           }
-          addConstraint(new Sum(0, -1 +: params, (v +: solverVariables).toArray))
+          Some(Seq(new Sum(0, -1 +: params, (v +: solverVariables).toArray)))
         }
         case _ => throw new FailedGenerationException("Variable or constant expected, found " + result)
       }
 
-      //addConstraint(new ReduceableExt(solverVariables, zeroSum(solverVariables.toList, params.toList)))
-      true;
     }
   }
 

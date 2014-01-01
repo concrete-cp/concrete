@@ -26,10 +26,10 @@ final class Mul(val result: Variable, val v0: Variable, val v1: Variable)
     if (result.dom.intersectVal(v0.dom.valueInterval * v1.dom.valueInterval)) {
       mod ::= 0
     }
-    if (!v1.dom.valueInterval.in(0) && v0.dom.intersectVal(result.dom.valueInterval / v1.dom.valueInterval)) {
+    if (!v1.dom.valueInterval.contains(0) && v0.dom.intersectVal(result.dom.valueInterval / v1.dom.valueInterval)) {
       mod ::= 1
     }
-    if (!v0.dom.valueInterval.in(0) && v1.dom.intersectVal(result.dom.valueInterval / v0.dom.valueInterval)) {
+    if (!v0.dom.valueInterval.contains(0) && v1.dom.intersectVal(result.dom.valueInterval / v0.dom.valueInterval)) {
       mod ::= 2
     }
     mod
