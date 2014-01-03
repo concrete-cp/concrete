@@ -38,6 +38,4 @@ test in assembly := {}
 
 publishTo := Some(
 	Resolver.file("Concrete local repository",
-		new File(Path.userHome.absolutePath+"/concrete/repository")))
-
-EclipseKeys.withSource := true		
+		new File(Path.userHome.absolutePath+"/concrete/repository")))		
