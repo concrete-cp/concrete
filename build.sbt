@@ -13,6 +13,9 @@ resolvers += "Concrete repository" at "http://scand1sk.github.io/concrete/reposi
 
 resolvers += "sonatype-releases" at "http://oss.sonatype.org/content/repositories/releases/"
 
+// For JSR 331 (should be moved to GitHub)
+resolvers += "CSP4J repository" at "http://cspfj.sourceforge.net/repository"
+
 libraryDependencies ++= Seq(
 	"fr.univ-valenciennes.concrete" %% "cspom" % "1.3-SNAPSHOT",
 	"postgresql" % "postgresql" % "9.1-901-1.jdbc4",
