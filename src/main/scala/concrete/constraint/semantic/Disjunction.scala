@@ -17,23 +17,19 @@ final class Disjunction(scope: Array[Variable],
 
   var watch1 = seekWatch(-1).get
 
-  var watch2 = seekWatch(watch1) match {
-    case Some(w) => w
-    case None => {
-      setTrue(watch1)
-      watch1
-    }
+  var watch2 = seekWatch(watch1).getOrElse {
+    setTrue(watch1)
+    watch1
   }
 
   if (isTrue(watch1) || isTrue(watch2)) entail()
 
-  private val eval = Integer.highestOneBit(arity) - 1
-
-  def advise(p: Int) = if (p == watch1 || p == watch2) eval else -1
+  def advise(p: Int) = if (p == watch1 || p == watch2) 1 else -1
 
   def this(scope: Variable*) = this(scope.toArray, new Array[Boolean](scope.size))
 
-  override def checkIndices(t: Array[Int]) = reverses.zip(t).exists(l => l._1 ^ l._2 == 1)
+  override def checkIndices(t: Array[Int]) =
+    reverses.zip(t).exists(l => l._1 ^ l._2 == 1)
 
   def checkValues(t: Array[Int]) = checkIndices(t)
 
@@ -102,8 +98,6 @@ final class Disjunction(scope: Array[Variable],
     } else {
       throw UNSATObject
     }
-
-    // } else sys.error("Unreachable state: " + dom + " / " + reverses(position))
 
   }
 
