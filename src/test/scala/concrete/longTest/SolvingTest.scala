@@ -174,7 +174,7 @@ object SolvingTest extends Loggable {
 
     val solver = Solver(cspomProblem);
 
-    println(solver.problem)
+    logger.info(solver.problem.toString)
 
     solver.toIterable.headOption.map { sol =>
       val failed = XCSPConcrete.control(sol, variables, url)
