@@ -11,21 +11,20 @@ import cspom.variable.CSPOMExpression
 import concrete.UNSATObject
 import concrete.constraint.semantic.ReifiedGtC
 import concrete.constraint.semantic.ReifiedLtC
+import concrete.constraint.Residues
+import concrete.constraint.TupleEnumerator
 
 final object GtGenerator extends Generator {
   import Generator._
   override def gen(constraint: CSPOMConstraint)(implicit problem: Problem) = {
-    require(constraint.arguments.size == 2,
-      "Comparison constraints must have exactly two arguments");
+    val Seq(v0, v1) = constraint.arguments map cspom2concrete1D;
 
-    val solverVariables = constraint.arguments map cspom2concrete1D;
-
-    if (solverVariables.collect { case Var(v) => v } exists (_.dom.undefined)) {
+    if (undefinedVar(v0, v1).nonEmpty) {
       None
     } else {
       constraint.function match {
-        case 'gt => gte(solverVariables(0), solverVariables(1), true)
-        case 'ge => gte(solverVariables(0), solverVariables(1), false)
+        case 'gt => gte(v0, v1, true)
+        case 'ge => gte(v0, v1, false)
         case _ => throw new FailedGenerationException("Unhandled constraint " + constraint);
       }
 
@@ -52,7 +51,8 @@ final object GtGenerator extends Generator {
       }
       Some(Nil)
     case (Var(v0), Var(v1)) =>
-      Some(Seq(new Gt(v0, v1, strict)))
+      Some(Seq(
+        new Gt(v0, v1, strict)))
   }
 
   override def genFunctional(constraint: CSPOMConstraint, r: C2Conc)(implicit problem: Problem) = {
@@ -86,10 +86,11 @@ final object GtGenerator extends Generator {
         case (Const(v0), Var(v1)) =>
           Some(Seq(new ReifiedLtC(result, v1, v0, !strict)))
 
-        case (Var(v0), Var(v1)) => Some(Seq(new ReifiedConstraint(
-          result,
-          new Gt(v0, v1, strict),
-          new Gt(v1, v0, !strict))))
+        case (Var(v0), Var(v1)) => Some(Seq(
+          new ReifiedConstraint(
+            result,
+            new Gt(v0, v1, strict),
+            new Gt(v1, v0, !strict))))
       }
 
     }

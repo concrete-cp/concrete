@@ -14,9 +14,8 @@ final object AddGenerator extends Generator {
   override def genFunctional(constraint: CSPOMConstraint, r: C2Conc)(implicit problem: Problem) = {
 
     val result = cspom2concreteVar(constraint.result)
-    val Seq(v0, v1) = constraint.arguments map cspom2concreteVar
 
-    //map cspom2concrete
+    val Seq(v0, v1) = constraint.arguments map cspom2concreteVar
 
     if (completeVariables(result, v0, v1)) {
       Some(Seq(new Add(result, v0, v1)))
