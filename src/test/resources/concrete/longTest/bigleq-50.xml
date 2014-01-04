@@ -1,21 +1,15 @@
 <instance>
       <presentation maxConstraintArity="50"></presentation>
-      <domains>
+      <domains nbDomains="1">
         <domain name="D0" nbValues="50">1..50</domain>
       </domains>
       <variables nbVariables="50">
         <variable name="V1" domain="D0"></variable><variable name="V2" domain="D0"></variable><variable name="V3" domain="D0"></variable><variable name="V4" domain="D0"></variable><variable name="V5" domain="D0"></variable><variable name="V6" domain="D0"></variable><variable name="V7" domain="D0"></variable><variable name="V8" domain="D0"></variable><variable name="V9" domain="D0"></variable><variable name="V10" domain="D0"></variable><variable name="V11" domain="D0"></variable><variable name="V12" domain="D0"></variable><variable name="V13" domain="D0"></variable><variable name="V14" domain="D0"></variable><variable name="V15" domain="D0"></variable><variable name="V16" domain="D0"></variable><variable name="V17" domain="D0"></variable><variable name="V18" domain="D0"></variable><variable name="V19" domain="D0"></variable><variable name="V20" domain="D0"></variable><variable name="V21" domain="D0"></variable><variable name="V22" domain="D0"></variable><variable name="V23" domain="D0"></variable><variable name="V24" domain="D0"></variable><variable name="V25" domain="D0"></variable><variable name="V26" domain="D0"></variable><variable name="V27" domain="D0"></variable><variable name="V28" domain="D0"></variable><variable name="V29" domain="D0"></variable><variable name="V30" domain="D0"></variable><variable name="V31" domain="D0"></variable><variable name="V32" domain="D0"></variable><variable name="V33" domain="D0"></variable><variable name="V34" domain="D0"></variable><variable name="V35" domain="D0"></variable><variable name="V36" domain="D0"></variable><variable name="V37" domain="D0"></variable><variable name="V38" domain="D0"></variable><variable name="V39" domain="D0"></variable><variable name="V40" domain="D0"></variable><variable name="V41" domain="D0"></variable><variable name="V42" domain="D0"></variable><variable name="V43" domain="D0"></variable><variable name="V44" domain="D0"></variable><variable name="V45" domain="D0"></variable><variable name="V46" domain="D0"></variable><variable name="V47" domain="D0"></variable><variable name="V48" domain="D0"></variable><variable name="V49" domain="D0"></variable><variable name="V50" domain="D0"></variable>
       </variables>
-      <relations nbRelations="0">
-        
-      </relations>
-      <predicates nbPredicates="2">
+      <predicates nbPredicates="1">
         <predicate name="P0">
                 <parameters>int X0 int X1</parameters>
-                <expression><functional>ge(X0, X1)</functional></expression>
-              </predicate><predicate name="P1">
-                <parameters>int X0 int X1 int X2 int X3 int X4 int X5 int X6 int X7 int X8 int X9 int X10 int X11 int X12 int X13 int X14 int X15 int X16 int X17 int X18 int X19 int X20 int X21 int X22 int X23 int X24 int X25 int X26 int X27 int X28 int X29 int X30 int X31 int X32 int X33 int X34 int X35 int X36 int X37 int X38 int X39 int X40 int X41 int X42 int X43 int X44 int X45 int X46 int X47 int X48 int X49</parameters>
-                <expression><functional>allDifferent(X0, X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, X11, X12, X13, X14, X15, X16, X17, X18, X19, X20, X21, X22, X23, X24, X25, X26, X27, X28, X29, X30, X31, X32, X33, X34, X35, X36, X37, X38, X39, X40, X41, X42, X43, X44, X45, X46, X47, X48, X49)</functional></expression>
+                <expression><functional>ge(X0,X1)</functional></expression>
               </predicate>
       </predicates>
       <constraints nbConstraints="50">
@@ -117,8 +111,6 @@
                 <parameters>V49 V48</parameters>
               </constraint><constraint reference="P0" name="C48" scope="V50 V49" arity="2">
                 <parameters>V50 V49</parameters>
-              </constraint><constraint reference="P1" name="C49" scope="V1 V2 V3 V4 V5 V6 V7 V8 V9 V10 V11 V12 V13 V14 V15 V16 V17 V18 V19 V20 V21 V22 V23 V24 V25 V26 V27 V28 V29 V30 V31 V32 V33 V34 V35 V36 V37 V38 V39 V40 V41 V42 V43 V44 V45 V46 V47 V48 V49 V50" arity="50">
-                <parameters>V1 V2 V3 V4 V5 V6 V7 V8 V9 V10 V11 V12 V13 V14 V15 V16 V17 V18 V19 V20 V21 V22 V23 V24 V25 V26 V27 V28 V29 V30 V31 V32 V33 V34 V35 V36 V37 V38 V39 V40 V41 V42 V43 V44 V45 V46 V47 V48 V49 V50</parameters>
-              </constraint>
+              </constraint><constraint reference="global:allDifferent" name="C49" scope="V1 V2 V3 V4 V5 V6 V7 V8 V9 V10 V11 V12 V13 V14 V15 V16 V17 V18 V19 V20 V21 V22 V23 V24 V25 V26 V27 V28 V29 V30 V31 V32 V33 V34 V35 V36 V37 V38 V39 V40 V41 V42 V43 V44 V45 V46 V47 V48 V49 V50" arity="50"/>
       </constraints>
     </instance>
