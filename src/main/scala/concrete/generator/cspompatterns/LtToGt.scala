@@ -16,34 +16,31 @@ import cspom.variable.IntExpression
 import cspom.variable.CSPOMExpression
 
 /**
- * Substraction is converted to addition :
+ * Only one side of comparison is supported, so :
  *
- * a = b - c
+ * a = b < c <=> a = c > b
  *
- * <=>
+ * and
  *
- * b = a + c
+ * a = b <= c <=> a = c >= b
  */
-object SubToAdd extends ConstraintCompiler {
+object LtToGt extends ConstraintCompiler {
 
-  type A = CSPOMExpression
+  type A = Boolean
 
-  def mtch(fc: CSPOMConstraint, problem: CSPOM) = fc match {
-    case CSPOMConstraint(a, 'sub, _, _) =>
-      Some(a)
+  def mtch(fc: CSPOMConstraint, problem: CSPOM) = fc.function match {
+    case 'lt => Some(true)
+
+    case 'le => Some(false)
 
     case _ => None
 
   }
 
-  def compile(fc: CSPOMConstraint, problem: CSPOM, a: CSPOMExpression) = {
-
-    val Seq(b, c) = fc.arguments
-
-    problem.removeConstraint(fc)
-
-    Delta().removed(fc).added(problem.ctr(
-      new CSPOMConstraint(b, 'add, Seq(a, c), fc.params)))
+  def compile(fc: CSPOMConstraint, problem: CSPOM, strict: Boolean) = {
+    replaceCtr(fc,
+      new CSPOMConstraint(fc.result, (if (strict) 'gt else 'ge), fc.arguments.reverse, fc.params),
+      problem)
 
   }
 
