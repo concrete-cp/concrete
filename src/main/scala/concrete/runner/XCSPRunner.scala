@@ -48,7 +48,7 @@ object XCSPConcrete extends ConcreteRunner with App {
 }
 
 class SolutionChecker(file: URL) {
-  println(file)
+  //println(file)
   val instanceFileName = new File(file.toURI).getAbsolutePath
   require(new File(instanceFileName).exists(), "PROBLEM \t The file " + instanceFileName + " has not been found.")
 
