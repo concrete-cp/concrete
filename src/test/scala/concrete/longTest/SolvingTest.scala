@@ -14,7 +14,7 @@ import concrete.heuristic.revision.DomCtr
 import concrete.SAT
 import concrete.UNSAT
 import concrete.UNKNOWNResult
-import concrete.generator.cspompatterns.Patterns
+import concrete.generator.cspompatterns.ConcretePatterns
 import concrete.runner.XCSPConcrete
 import java.io.File
 
@@ -162,6 +162,17 @@ final class SolvingTest {
     assertTrue(solve("bigleq-50.xml"))
     assertEquals(1, count("bigleq-50.xml"))
   }
+
+  @Test
+  def testFZN() {
+    assertTrue(solve("test.fzn"))
+  }
+
+  @Test
+  def testRC() {
+    assertTrue(solve("1d_rubiks_cube.fzn"))
+  }
+
 }
 
 object SolvingTest extends Loggable {
@@ -169,8 +180,6 @@ object SolvingTest extends Loggable {
   def solve(name: String): Boolean = {
     val url = getClass.getResource(name)
     val (cspomProblem, variables) = CSPOM.load(url);
-
-    ProblemCompiler.compile(cspomProblem, Patterns());
 
     val solver = Solver(cspomProblem);
 
@@ -189,8 +198,6 @@ object SolvingTest extends Loggable {
   def count(name: String) = {
     val url = getClass.getResource(name)
     val (cspomProblem, variables) = CSPOM.load(url);
-
-    ProblemCompiler.compile(cspomProblem, Patterns());
 
     val solver = Solver(cspomProblem)
 

@@ -15,7 +15,7 @@ import concrete.Solver
 import concrete.MAC
 import org.junit.After
 import org.junit.Before
-import concrete.generator.cspompatterns.Patterns
+import concrete.generator.cspompatterns.ConcretePatterns
 
 final class DC1SolvingTest extends Loggable {
   //Solver.loggerLevel = "FINER"

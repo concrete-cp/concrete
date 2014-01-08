@@ -11,7 +11,7 @@ import concrete.CSPOMDriver._
 import cspom.variable.CSPOMExpression
 import concrete.Solver
 import cspom.compiler.ProblemCompiler
-import concrete.generator.cspompatterns.Patterns
+import concrete.generator.cspompatterns.ConcretePatterns
 
 class OccurrenceTest {
   @Test
@@ -59,8 +59,6 @@ class OccurrenceTest {
       val occ = interVar("occ", 1, 3)
       ctr(occ === occurrence(7, v1, v2, v3, v4, v5))
     }
-
-    ProblemCompiler.compile(problem, Patterns())
 
     val s = Solver(problem)
     val c = s.problem.constraints.collectFirst {

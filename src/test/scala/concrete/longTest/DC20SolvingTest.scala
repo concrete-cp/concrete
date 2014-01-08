@@ -16,7 +16,7 @@ import concrete.filter.DC20
 import concrete.MAC
 import org.junit.Before
 import org.junit.After
-import concrete.generator.cspompatterns.Patterns
+import concrete.generator.cspompatterns.ConcretePatterns
 
 final class DC20SolvingTest extends Loggable {
   import SolvingTest._

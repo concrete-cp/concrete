@@ -13,7 +13,7 @@ import org.junit.After
 import org.junit.Before
 import concrete.filter.ACV
 import concrete.MAC
-import concrete.generator.cspompatterns.Patterns
+import concrete.generator.cspompatterns.ConcretePatterns
 
 final class ACVSolvingTest {
   //Solver.loggerLevel = "FINE"

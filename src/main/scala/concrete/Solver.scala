@@ -32,6 +32,8 @@ import concrete.constraint.extension.MDD
 import cspom.CSPOM
 import concrete.constraint.TupleEnumerator
 import concrete.constraint.extension.ReduceableExt
+import cspom.compiler.ProblemCompiler
+import concrete.generator.cspompatterns.ConcretePatterns
 
 object Solver {
   @Parameter("logger.level")
@@ -52,7 +54,10 @@ object Solver {
     solver;
   }
 
-  def apply(cspom: CSPOM): Solver = apply(ProblemGenerator.generate(cspom))
+  def apply(cspom: CSPOM): Solver = {
+    ProblemCompiler.compile(cspom, ConcretePatterns())
+    apply(ProblemGenerator.generate(cspom))
+  }
 }
 
 abstract class Solver(val problem: Problem) extends Iterator[Map[String, Int]] with Loggable {

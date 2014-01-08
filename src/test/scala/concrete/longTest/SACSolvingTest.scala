@@ -16,7 +16,7 @@ import concrete.filter.SAC1
 import concrete.MAC
 import org.junit.After
 import org.junit.Before
-import concrete.generator.cspompatterns.Patterns
+import concrete.generator.cspompatterns.ConcretePatterns
 
 final class SACSolvingTest extends Loggable {
   //Solver.loggerLevel = "FINE"

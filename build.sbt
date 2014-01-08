@@ -1,6 +1,3 @@
-import com.typesafe.sbt.SbtStartScript
-import AssemblyKeys._ // put this at the top of the file
-
 name := "concrete"
 
 organization := "fr.univ-valenciennes.concrete"
@@ -31,14 +28,11 @@ scalacOptions ++= Seq("-deprecation", "-unchecked", "-optimise", "-Xlint", "-Xdi
 
 org.scalastyle.sbt.ScalastylePlugin.Settings
 
-seq(SbtStartScript.startScriptForClassesSettings: _*)
+com.typesafe.sbt.SbtNativePackager.packageArchetype.java_application
 
-assemblySettings
-
-mainClass in assembly := Some("concrete.XCSPConcrete")
-
-test in assembly := {}
+mainClass in Compile := Some("concrete.runner.XCSPConcrete")
 
 publishTo := Some(
 	Resolver.file("Concrete local repository",
-		new File(Path.userHome.absolutePath+"/concrete/repository")))		
+		new File(Path.userHome.absolutePath+"/concrete/repository")))
+		

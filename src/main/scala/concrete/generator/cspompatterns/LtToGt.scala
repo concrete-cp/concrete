@@ -28,7 +28,7 @@ object LtToGt extends ConstraintCompiler {
 
   type A = Boolean
 
-  def mtch(fc: CSPOMConstraint, problem: CSPOM) = fc.function match {
+  def mtch = constraintMatch andThen {
     case 'lt => Some(true)
 
     case 'le => Some(false)

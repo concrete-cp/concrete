@@ -12,15 +12,12 @@ object ConstToVar extends ConstraintCompiler {
 
   type A = Seq[CSPOMConstant]
 
-  def mtch(constraint: CSPOMConstraint, problem: CSPOM) = {
-    val constants = constraint.arguments.collect {
+  def mtch = constraintMatch andThen {
+    case constraint => constraint.arguments.collect {
       case c: CSPOMConstant => c
     }
-    if (constants.nonEmpty) {
-      Some(constants)
-    } else {
-      None
-    }
+  } andThen {
+    case constants if constants.nonEmpty => constants
   }
 
   val singletons = new HashMap[CSPOMConstant, CSPOMVariable]()

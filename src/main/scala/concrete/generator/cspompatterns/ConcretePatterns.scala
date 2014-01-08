@@ -1,6 +1,6 @@
 package concrete.generator.cspompatterns
 
-object Patterns {
+object ConcretePatterns {
   def apply() =
     Seq(
       AbsDiff, SubToAdd, AddToEq,
