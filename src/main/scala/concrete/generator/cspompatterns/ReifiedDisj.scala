@@ -26,12 +26,9 @@ object ReifiedDisj extends ConstraintCompiler {
 
   type A = BoolExpression
 
-  def mtch(fc: CSPOMConstraint, problem: CSPOM) = fc match {
+  def mtch = constraintMatch andThen {
     case CSPOMConstraint(res: BoolExpression, 'or, args, params) if (res != CSPOMTrue && !params.contains("revsign")) =>
-      Some(res)
-
-    case _ => None
-
+      res
   }
 
   def compile(fc: CSPOMConstraint, problem: CSPOM, res: BoolExpression) = {

@@ -28,27 +28,23 @@ object AddToEq extends ConstraintCompiler {
 
   type A = ConstantFound
 
-  def mtch(fc: CSPOMConstraint, problem: CSPOM) = fc match {
-    case CSPOMConstraint(a, 'add, Seq(b, c), params) =>
-      (a, b, c) match {
-        case (a: CSPOMVariable, b: CSPOMVariable, c: CSPOMVariable) => None
+  def mtch = constraintMatch andThen {
+    case CSPOMConstraint(a, 'add, Seq(b, c), params) => (a, b, c)
+  } andThen {
+    //(a, b, c) match {
+    //case (a: CSPOMVariable, b: CSPOMVariable, c: CSPOMVariable) => None
 
-        case (a: IntConstant, b: CSPOMVariable, c: CSPOMVariable) => Some(ConstantResult(a.value))
-        case (a: CSPOMVariable, b: IntConstant, c: CSPOMVariable) => Some(ConstantArg(b.value, c))
-        case (a: CSPOMVariable, b: CSPOMVariable, c: IntConstant) => Some(ConstantArg(c.value, b))
+    case (a: IntConstant, b: CSPOMVariable, c: CSPOMVariable) => ConstantResult(a.value)
+    case (a: CSPOMVariable, b: IntConstant, c: CSPOMVariable) => ConstantArg(b.value, c)
+    case (a: CSPOMVariable, b: CSPOMVariable, c: IntConstant) => ConstantArg(c.value, b)
 
-        case (a: CSPOMVariable, b: IntConstant, c: IntConstant) => Some(OneVariable(a, b.value + c.value))
-        case (a: IntConstant, b: CSPOMVariable, c: IntConstant) => Some(OneVariable(b, a.value - c.value))
-        case (a: IntConstant, b: IntConstant, c: CSPOMVariable) => Some(OneVariable(c, a.value - b.value))
+    case (a: CSPOMVariable, b: IntConstant, c: IntConstant) => OneVariable(a, b.value + c.value)
+    case (a: IntConstant, b: CSPOMVariable, c: IntConstant) => OneVariable(b, a.value - c.value)
+    case (a: IntConstant, b: IntConstant, c: CSPOMVariable) => OneVariable(c, a.value - b.value)
 
-        case (a: IntConstant, b: IntConstant, c: IntConstant) =>
-          require(a.value == b.value + c.value, s"Inconsistent addition: $a = $b + $c")
-          Some(NoVariable)
-          
-        case _ => None
-      }
-
-    case _ => None
+    case (a: IntConstant, b: IntConstant, c: IntConstant) =>
+      require(a.value == b.value + c.value, s"Inconsistent addition: $a = $b + $c")
+      NoVariable
 
   }
 

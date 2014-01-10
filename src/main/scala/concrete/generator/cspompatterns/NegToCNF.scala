@@ -27,11 +27,9 @@ object NegToCNF extends ConstraintCompiler {
 
   type A = (BoolExpression, BoolExpression)
 
-  def mtch(fc: CSPOMConstraint, problem: CSPOM) = fc match {
+  def mtch = constraintMatch andThen {
     case CSPOMConstraint(res: BoolExpression, 'not, Seq(arg: BoolExpression), params) =>
-      Some((res, arg))
-
-    case _ => None
+      (res, arg)
 
   }
 

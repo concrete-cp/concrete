@@ -12,18 +12,15 @@ import cspom.compiler.Delta
 object AbsDiff extends ConstraintCompiler {
   type A = (CSPOMVariable, Set[CSPOMConstraint])
 
-  def mtch(c: CSPOMConstraint, problem: CSPOM) = c match {
-    case CSPOMConstraint(result: CSPOMVariable, 'sub, args, _) if result.params("var_is_introduced") =>
-      val process = problem.constraints(result).filter {
-        case CSPOMConstraint(_, 'abs, Seq(result), _) => true
-        case _ => false
-      }
-      if (process.isEmpty) {
-        None
-      } else {
-        Some((result, process))
-      }
-    case _ => None
+  val constraintWithAbs: PartialFunction[(CSPOMConstraint, CSPOM), (CSPOMVariable, Set[CSPOMConstraint])] = {
+    case (CSPOMConstraint(result: CSPOMVariable, 'sub, args, _), problem) if result.params("var_is_introduced") =>
+      (result, problem.constraints(result).collect {
+        case c @ CSPOMConstraint(_, 'abs, Seq(`result`), _) => c
+      })
+  }
+
+  def mtch = constraintWithAbs andThen {
+    case (result, process) if process.nonEmpty => (result, process)
   }
 
   def compile(c: CSPOMConstraint, problem: CSPOM, data: (CSPOMVariable, Set[CSPOMConstraint])) = {

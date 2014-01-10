@@ -24,20 +24,15 @@ object AllDiff extends ConstraintCompiler with Loggable {
 
   //val cliqueDetector = new CliqueDetector;
 
-  def mtch(constraint: CSPOMConstraint, problem: CSPOM) = {
-    val clique: Set[CSPOMVariable] = constraint match {
-      case CSPOMConstraint(CSPOMTrue, func, args: Seq[_], _) if Set('allDiff, 'ne, 'gt, 'lt)(func)
-        && args.forall(_.isInstanceOf[CSPOMVariable]) =>
-        expand(args.asInstanceOf[Seq[CSPOMVariable]].toSet, problem)
-      case _ => Set()
-    }
+  def constraintToClique: PartialFunction[(CSPOMConstraint, CSPOM), (CSPOMConstraint, Set[CSPOMVariable])] = {
+    case (c @ CSPOMConstraint(CSPOMTrue, func, args, _), problem) if Set('allDifferent, 'ne, 'gt, 'lt)(func)
+      && args.forall(_.isInstanceOf[CSPOMVariable]) =>
+      (c, expand(args.asInstanceOf[Seq[CSPOMVariable]].toSet, problem))
+    case (c, _) => (c, Set())
+  }
 
-    if (clique.size > constraint.scope.size) {
-      Some(clique)
-    } else {
-      None
-    }
-
+  def mtch = constraintToClique andThen {
+    case (constraint, clique) if (clique.size > constraint.scope.size) => clique
   }
 
   /**

@@ -25,7 +25,7 @@ class AllDiffTest {
 
     for (
       c <- constraints if (cspom.constraints(c));
-      d <- AllDiff.mtch(c, cspom)
+      d <- AllDiff.mtch.lift(c, cspom)
     ) {
       AllDiff.compile(c, cspom, d)
     }

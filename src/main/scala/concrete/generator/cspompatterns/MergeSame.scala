@@ -12,14 +12,16 @@ object MergeSame extends ConstraintCompiler {
 
   type A = CSPOMConstraint
 
-  def mtch(c: CSPOMConstraint, problem: CSPOM): Option[A] = {
-    for (v <- c.scope; same <- problem.constraints(v)) {
-      if ((same ne c) && same.function == c.function &&
-        same.arguments == c.arguments && same.params == c.params) {
-        return Some(same)
+  def mtch = findSame andThen {
+    case Some(same: CSPOMConstraint) => same
+  }
+
+  val findSame: PartialFunction[(CSPOMConstraint, CSPOM), Option[A]] = {
+    case (c, problem) =>
+      c.scope.flatMap(problem.constraints(_)).find { same =>
+        (same ne c) && same.function == c.function &&
+          same.arguments == c.arguments && same.params == c.params
       }
-    }
-    return None
     //    c.scope.flatMap(problem.constraints).find(same => (same ne c) && same.function == c.function &&
     //      same.arguments == c.arguments && same.params == c.params)
   }

@@ -23,7 +23,7 @@ class DiffGeTest {
       ctr(new CSPOMConstraint(r, 'sub, varOf(1, 2, 3), varOf(2, 3, 4)))
 
     }
-    for (d <- DiffGe.mtch(sub, cspom)) {
+    for (d <- DiffGe.mtch.lift(sub, cspom)) {
       DiffGe.compile(sub, cspom, d)
     }
 
@@ -45,7 +45,7 @@ class DiffGeTest {
 
       ctr(new CSPOMConstraint(r, 'sub, varOf(1, 2, 3), varOf(2, 3, 4)))
     }
-    for (d <- DiffGe.mtch(sub, cspom)) {
+    for (d <- DiffGe.mtch.lift(sub, cspom)) {
       DiffGe.compile(sub, cspom, d)
     }
     assertEquals(4, cspom.variables.size)

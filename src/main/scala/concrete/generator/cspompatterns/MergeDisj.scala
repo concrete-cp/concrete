@@ -14,15 +14,15 @@ import cspom.variable.CSPOMTrue
  */
 object MergeDisj extends ConstraintCompiler {
   type A = CSPOMConstraint
-  def mtch(fc: CSPOMConstraint, problem: CSPOM) = fc match {
-    case CSPOMConstraint(v: CSPOMVariable, 'or, _, _) if v.params("var_is_introduced") =>
-      problem.constraints(v).toSeq.filter(c =>
-        c.result == CSPOMTrue && c.function == 'or && (c ne fc)) match {
-        case Seq(orConstraint) => Some(orConstraint)
-        case _ => None
-      }
-    case _ => None
 
+  val otherOr: PartialFunction[(CSPOMConstraint, CSPOM), Seq[CSPOMConstraint]] = {
+    case (fc @ CSPOMConstraint(v: CSPOMVariable, 'or, _, _), problem) if v.params("var_is_introduced") =>
+      problem.constraints(v).toSeq.filter(c =>
+        c.result == CSPOMTrue && c.function == 'or && (c ne fc))
+  }
+
+  def mtch = otherOr andThen {
+    case Seq(orConstraint) => orConstraint
   }
 
   def compile(fc: CSPOMConstraint, problem: CSPOM, orConstraint: CSPOMConstraint) = {

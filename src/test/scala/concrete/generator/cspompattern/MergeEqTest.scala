@@ -22,7 +22,7 @@ class MergeEqTest {
       (v0, eq)
     }
 
-    for (d <- MergeEq.mtch(eq, cspom)) {
+    for (d <- MergeEq.mtch.lift(eq, cspom)) {
       MergeEq.compile(eq, cspom, d)
     }
 
@@ -45,7 +45,7 @@ class MergeEqTest {
       (v0, eq)
     }
 
-    for (d <- MergeEq.mtch(eq, cspom)) {
+    for (d <- MergeEq.mtch.lift(eq, cspom)) {
       MergeEq.compile(eq, cspom, d)
     }
 
