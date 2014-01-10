@@ -25,11 +25,13 @@ object RemoveUselessEq extends ConstraintCompiler {
 
   type A = BoolExpression
 
-  def mtch = constraintMatch andThen {
+  def mtch(c: CSPOMConstraint, problem: CSPOM) = c match {
     case CSPOMConstraint(res: BoolExpression, 'eq, args, _) if allEqual(args) =>
-      res
+      Some(res)
     case CSPOMConstraint(res: BoolExpression, 'eq, args, _) if args.forall(_.isInstanceOf[CSPOMConstant]) =>
-      res
+      Some(res)
+    case _ => None
+
   }
 
   def compile(c: CSPOMConstraint, problem: CSPOM, res: A): Delta = {

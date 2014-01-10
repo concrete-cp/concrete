@@ -19,9 +19,12 @@ object UnaryOr extends ConstraintCompiler {
 
   type A = BoolExpression
 
-  def mtch = constraintMatch andThen {
+  def mtch(fc: CSPOMConstraint, problem: CSPOM) = fc match {
     case CSPOMConstraint(CSPOMTrue, 'or, Seq(arg: BoolVariable), params) =>
-      arg
+      Some(arg)
+
+    case _ => None
+
   }
 
   def compile(fc: CSPOMConstraint, problem: CSPOM, arg: A) = {

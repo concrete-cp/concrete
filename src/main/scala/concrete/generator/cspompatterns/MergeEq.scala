@@ -43,11 +43,15 @@ object MergeEq extends ConstraintCompiler {
       case o => throw new IllegalArgumentException(o.toString)
     }
 
-  def mtch = constraintMatch andThen {
+  override def matchConstraint(c: CSPOMConstraint) = c match {
     case CSPOMConstraint(CSPOMTrue, 'eq, args, params) if !params.contains("neg") && params.get("offset").forall(_ == 0) =>
-      partition(args.toList)
-  } andThen {
-    case r @ (aux, _, _) if (aux.nonEmpty) => r
+      val (aux, full, const) = partition(c.arguments.toList)
+      if (aux.nonEmpty) {
+        Some((aux, full, const))
+      } else None
+
+    case _ => None
+
   }
 
   private def mergeConstant(

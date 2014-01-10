@@ -12,28 +12,20 @@ import cspom.compiler.Delta
 object DiffGe extends ConstraintCompiler {
   type A = CSPOMConstraint
 
-  val findSub: PartialFunction[(CSPOMConstraint, CSPOM), (CSPOMVariable, Set[CSPOMConstraint])] = {
-    case (CSPOMConstraint(result: CSPOMVariable, 'sub, _, _), problem) if (result.params("var_is_introduced")) =>
-      (result, problem.constraints(result))
-  }
-
-  def mtch = findSub andThen {
-    case (result, constraints) if constraints.size == 2 => constraints.find { c =>
-      c.function == 'ge && {
-        c.arguments.size == 2 && c.arguments(0) == result
+  override def mtch(constraint: CSPOMConstraint, problem: CSPOM) = constraint match {
+    case CSPOMConstraint(result: CSPOMVariable, 'sub, args, _) if (result.params("var_is_introduced")) =>
+      val constraints = problem.constraints(result)
+      if (constraints.size == 2) {
+        constraints.collectFirst {
+          case c @ CSPOMConstraint(_, 'ge, Seq(`result`, _), _) => c
+        }
+      } else {
+        None
       }
-    }
-  } andThen {
-    case Some(c) => c
+
+    case _ => None
+
   }
-  //  val constraints = problem.constraints(v)
-  //  if (constraints.size == 2) {
-  //    constraints.find { c =>
-  //      c.function == 'ge && {
-  //        c.arguments.size == 2 && c.arguments(0) == constraint.result
-  //      }
-  //    }
-  //  }
 
   def compile(subConstraint: CSPOMConstraint, problem: CSPOM, geConstraint: CSPOMConstraint) = {
 

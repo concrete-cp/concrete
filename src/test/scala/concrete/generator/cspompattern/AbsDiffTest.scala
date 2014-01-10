@@ -23,7 +23,7 @@ class AbsDiffTest {
       ctr(new CSPOMConstraint(r, 'sub, v0, v1))
     }
     println(cspom)
-    for (d <- AbsDiff.mtch.lift(sub, cspom)) {
+    for (d <- AbsDiff.mtch(sub, cspom)) {
       AbsDiff.compile(sub, cspom, d)
     }
     println(cspom)

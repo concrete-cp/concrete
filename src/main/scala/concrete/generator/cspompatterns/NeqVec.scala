@@ -21,38 +21,44 @@ object NeqVec extends ConstraintCompiler {
   /* NE constraints is a special case of nevec */
   private def isNevec(c: CSPOMConstraint) = c.function == 'ne || c.function == 'nevec
 
-  val neVec:PartialFunction[(CSPOMConstraint, CSPOM), (CSPOMConstraint, Seq[CSPOMConstraint], CSPOM)]= {
-    case (c@CSPOMConstraint(result:CSPOMVariable, _,_,_), problem) if isNevec(c) => (c, (problem.constraints(result) - c).toSeq, problem)
-  }
-  
-  def mtch(c: CSPOMConstraint, problem: CSPOM) = neVec andThen {
-    case Seq(orConstraint @ CSPOMConstraint(CSPOMTrue, 'or, _, _)) =>
+  override def mtch(c: CSPOMConstraint, problem: CSPOM) = {
+
+    val result = c match {
+
+      case CSPOMConstraint(result: CSPOMVariable, 'ne | 'nevec, _, _) => Some((problem.constraints(result) - c).toSeq)
+      case _ => None
+    }
+
+    result collect {
+      case Seq(orConstraint @ CSPOMConstraint(CSPOMTrue, 'or, _, _)) =>
         val orVariables = orConstraint.scope
         val neConstraints = orVariables.flatMap(problem.constraints) - orConstraint
-        neConstraints.forall(isNevec)
-  } andThen {
-    case true => (orConstraint, orVariables, neConstraints)
+        (orConstraint, orVariables, neConstraints)
+    } filter {
+      _._3.forall(isNevec)
+    }
+
   }
-//    if (isNevec(c)) {
-//      c.result match {
-//        case v: CSPOMVariable => (problem.constraints(v) - c).toSeq match {
-//          case Seq(orConstraint) if (orConstraint.function == "or" && orConstraint.result == CSPOMTrue) =>
-//            val orVariables = orConstraint.scope
-//            val neConstraints = orVariables.flatMap(problem.constraints) - orConstraint
-//
-//            if (neConstraints.forall(isNevec)) {
-//              Some()
-//            } else {
-//              None
-//            }
-//          case _ => None
-//        }
-//        case _ => None
-//      }
-//    } else {
-//      None
-//    }
-  }
+  //    if (isNevec(c)) {
+  //      c.result match {
+  //        case v: CSPOMVariable => (problem.constraints(v) - c).toSeq match {
+  //          case Seq(orConstraint) if (orConstraint.function == "or" && orConstraint.result == CSPOMTrue) =>
+  //            val orVariables = orConstraint.scope
+  //            val neConstraints = orVariables.flatMap(problem.constraints) - orConstraint
+  //
+  //            if (neConstraints.forall(isNevec)) {
+  //              Some((orConstraint, orVariables, neConstraints))
+  //            } else {
+  //              None
+  //            }
+  //          case _ => None
+  //        }
+  //        case _ => None
+  //      }
+  //    } else {
+  //      None
+  //    }
+  //  }
 
   def compile(fc: CSPOMConstraint, problem: CSPOM, data: (CSPOMConstraint, Set[CSPOMVariable], Set[CSPOMConstraint])) = {
     val (orConstraint, orVariables, neConstraints) = data

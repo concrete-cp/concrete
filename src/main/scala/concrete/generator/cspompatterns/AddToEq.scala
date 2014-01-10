@@ -28,12 +28,9 @@ object AddToEq extends ConstraintCompiler {
 
   type A = ConstantFound
 
-  def mtch = constraintMatch andThen {
+  override def matchConstraint(constraint: CSPOMConstraint) = Some(constraint).collect {
     case CSPOMConstraint(a, 'add, Seq(b, c), params) => (a, b, c)
-  } andThen {
-    //(a, b, c) match {
-    //case (a: CSPOMVariable, b: CSPOMVariable, c: CSPOMVariable) => None
-
+  } collect {
     case (a: IntConstant, b: CSPOMVariable, c: CSPOMVariable) => ConstantResult(a.value)
     case (a: CSPOMVariable, b: IntConstant, c: CSPOMVariable) => ConstantArg(b.value, c)
     case (a: CSPOMVariable, b: CSPOMVariable, c: IntConstant) => ConstantArg(c.value, b)

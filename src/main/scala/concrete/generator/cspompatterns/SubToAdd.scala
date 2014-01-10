@@ -28,8 +28,12 @@ object SubToAdd extends ConstraintCompiler {
 
   type A = CSPOMExpression
 
-  def mtch = constraintMatch andThen {
-    case CSPOMConstraint(a, 'sub, _, _) => a
+  def mtch(fc: CSPOMConstraint, problem: CSPOM) = fc match {
+    case CSPOMConstraint(a, 'sub, _, _) =>
+      Some(a)
+
+    case _ => None
+
   }
 
   def compile(fc: CSPOMConstraint, problem: CSPOM, a: CSPOMExpression) = {

@@ -16,13 +16,16 @@ import cspom.variable.BoolExpression
 object MergeNotDisj extends ConstraintCompiler {
   type A = CSPOMConstraint
 
-  val ors: PartialFunction[(CSPOMConstraint, CSPOM), Seq[CSPOMConstraint]] = {
-    case (CSPOMConstraint(v: BoolVariable, 'not, Seq(a: BoolExpression), _), problem) if v.params("var_is_introduced") =>
-      problem.constraints(v).toSeq.filter(c => c.function == 'or)
-  }
+  override def mtch(fc: CSPOMConstraint, problem: CSPOM) = fc match {
+    case CSPOMConstraint(v: BoolVariable, 'not, Seq(a: BoolExpression), _) if v.params("var_is_introduced") =>
+      val ors = problem.constraints(v).toSeq.filter(c => c.function == 'or)
 
-  def mtch = ors andThen {
-    case Seq(orConstraint) => orConstraint
+      ors match {
+        case Seq(orConstraint) => Some(orConstraint)
+        case _ => None
+      }
+    case _ => None
+
   }
 
   def compile(fc: CSPOMConstraint, problem: CSPOM, orConstraint: CSPOMConstraint) = {
