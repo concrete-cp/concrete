@@ -42,4 +42,6 @@ final class FindSupportExt(scope: Array[Variable], tts: TupleTrieSet, shared: Bo
   def removeTuples(t: Array[Int]) = throw new UnsupportedOperationException
 
   override def simpleEvaluation = 6
+  
+  override def dataSize = rel.edges
 }

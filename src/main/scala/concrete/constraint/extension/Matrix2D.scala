@@ -18,6 +18,8 @@ final class Matrix2D(xSize: Int, ySize: Int, initialState: Boolean) extends Matr
       bv
     })
 
+  def size: Int = xMatrix.size * yMatrix.size
+
   private var empty = initialState
 
   override def check(tuple: Array[Int]) = xMatrix(tuple(0)).get(tuple(1))

@@ -48,4 +48,5 @@ final class ExtensionConstraintGeneral(
 
   override def checkIndices(tuple: Array[Int]) = matrix.check(tuple)
 
+  override def dataSize = _matrix.size
 }

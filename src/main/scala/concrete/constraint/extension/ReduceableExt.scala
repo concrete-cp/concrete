@@ -148,4 +148,6 @@ final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
   def simpleEvaluation = math.min(7, scope.count(_.dom.size > 1))
 
   override def toString = scope.mkString("ExtReduce(", ", ", ")")
+  
+  override def dataSize = trie.edges
 }

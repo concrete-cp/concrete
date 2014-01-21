@@ -49,5 +49,6 @@ final class UnaryExt(scope: Variable, matrix: Matrix, shared: Boolean)
 
   def simpleEvaluation = 1
   def advise(p: Int) = scope.dom.size
+  override def dataSize = matrix.size
 
 }

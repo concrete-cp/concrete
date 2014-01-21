@@ -239,6 +239,8 @@ abstract class Constraint(val scope: Array[Variable])
 
   final def hasChanged[A](l: Traversable[A], f: A => Boolean) = l.foldLeft(false)(_ | f(_))
 
+  def dataSize: Int = ???
+  
   /**
    * A GAC constraint is entailed if it has zero or only one variable with domain size > 1
    */

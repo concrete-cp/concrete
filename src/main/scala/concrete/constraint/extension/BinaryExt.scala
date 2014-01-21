@@ -80,6 +80,7 @@ abstract class BinaryExt(
     matrix2d
   }
 
+  override def dataSize = matrix2d.size
 }
 final class BinaryExtR(scope: Array[Variable], matrix2d: Matrix2D, shared: Boolean) extends BinaryExt(scope, matrix2d, shared) {
   private val residues: Array[Array[Int]] = Array(new Array[Int](scope(0).dom.maxSize), new Array[Int](scope(1).dom.maxSize))

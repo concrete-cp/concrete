@@ -172,6 +172,8 @@ final class ExtensionConstraintSTR3(_scope: Array[Variable], private var table: 
   def simpleEvaluation = math.min(7, scope.count(_.dom.size > 1))
 
   override def toString = scope.mkString("ExtReduce(", ", ", ")")
+  
+  override def dataSize = ???
 }
 
 

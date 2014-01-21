@@ -15,4 +15,5 @@ trait Matrix {
 
   def isEmpty: Boolean
 
+  def size: Int
 }

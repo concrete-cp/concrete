@@ -113,5 +113,7 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
       res
     }
   }
+  
+  override def dataSize = mdd.edges
 
 }
