@@ -196,7 +196,10 @@ trait MDD extends Relation with Identified {
   }
 
   override def equals(o: Any): Boolean = o match {
-    case t: MDD => t.traverseST == traverseST
+    case MDDLeaf => false
+    case t: MDD => t.traverseST.toIterable.zip(traverseST.toIterable).forall {
+      case ((i1, s1), (i2, s2)) => i1 == i2 && (s1 eq s2)
+    }
     case _ => false
   }
 
@@ -229,6 +232,11 @@ final object MDDLeaf extends MDD {
   override def isEmpty = false
   def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) =
     Some(support)
+
+  override def equals(o: Any) = o match {
+    case r: AnyRef => r eq MDDLeaf
+    case _ => false
+  }
 
   def copy(ts: Int) = this
 }
