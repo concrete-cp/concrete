@@ -165,19 +165,19 @@ final class SolvingTest {
 
   @Test
   def testFZN() {
-    assertTrue(solve("test.fzn"))
+    assertTrue(solve("test.fzn", false))
   }
 
   @Test
   def testRC() {
-    assertTrue(solve("1d_rubiks_cube.fzn"))
+    assertTrue(solve("1d_rubiks_cube.fzn", false))
   }
 
 }
 
 object SolvingTest extends Loggable {
 
-  def solve(name: String): Boolean = {
+  def solve(name: String, test: Boolean = true): Boolean = {
     val url = getClass.getResource(name)
     val (cspomProblem, variables) = CSPOM.load(url);
 
@@ -186,9 +186,13 @@ object SolvingTest extends Loggable {
     logger.info(solver.problem.toString)
 
     solver.toIterable.headOption.map { sol =>
-      val failed = XCSPConcrete.control(sol, variables, url)
-      for (f <- failed) {
-        fail(sol + "\n" + f)
+      println(sol.toSeq.sortBy((_._1)))
+
+      if (test) {
+        val failed = XCSPConcrete.control(sol, variables, url)
+        for (f <- failed) {
+          fail(sol + "\n" + f)
+        }
       }
 
     } isDefined
