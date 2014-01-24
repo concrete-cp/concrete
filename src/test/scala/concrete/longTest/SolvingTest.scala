@@ -164,12 +164,12 @@ final class SolvingTest {
   }
 
   @Test
-  def testFZN() {
+  def queensFZN() {
     assertTrue(solve("test.fzn", false))
   }
 
   @Test
-  def testRC() {
+  def rubiksCubeFZN() {
     assertTrue(solve("1d_rubiks_cube.fzn", false))
   }
 
@@ -182,6 +182,8 @@ object SolvingTest extends Loggable {
     val (cspomProblem, variables) = CSPOM.load(url);
 
     val solver = Solver(cspomProblem);
+
+    println(solver.problem.toString)
 
     logger.info(solver.problem.toString)
 
