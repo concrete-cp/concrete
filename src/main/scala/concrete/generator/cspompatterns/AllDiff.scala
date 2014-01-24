@@ -9,9 +9,11 @@ import cspom.compiler.ConstraintCompiler
 import cspom.variable.CSPOMTrue
 import cspom.compiler.Delta
 import cspom.variable.CSPOMSeq
+import scala.collection.mutable.WeakHashMap
+import cspom.variable.CSPOMExpression
 
 object AllDiff extends ConstraintCompiler with Loggable {
-  type A = Set[CSPOMVariable]
+  type A = Set[CSPOMExpression]
 
   def DIFF_CONSTRAINT(constraint: CSPOMConstraint) =
     (constraint.result == CSPOMTrue) && Set('ne, 'gt, 'lt, 'allDifferent)(constraint.function)
@@ -22,20 +24,19 @@ object AllDiff extends ConstraintCompiler with Loggable {
 
   val ITER = 750;
 
-  //val cliqueDetector = new CliqueDetector;
+  val TABU_SIZE = 15;
 
   override def mtch(constraint: CSPOMConstraint, problem: CSPOM) = {
-    val clique: Set[CSPOMVariable] = constraint match {
-      case CSPOMConstraint(CSPOMTrue, func, args: Seq[_], _) if Set('allDiff, 'ne, 'gt, 'lt)(func)
-        && args.forall(_.isInstanceOf[CSPOMVariable]) =>
-        expand(args.asInstanceOf[Seq[CSPOMVariable]].toSet, problem)
-      case _ => Set()
-    }
 
-    if (clique.size > constraint.scope.size) {
-      Some(clique)
-    } else {
-      None
+    constraint match {
+      case CSPOMConstraint(CSPOMTrue, func, args: Seq[CSPOMExpression], _) if Set('allDifferent, 'ne, 'gt, 'lt)(func) =>
+        val clique = expand(args.toSet, problem)
+        if (clique.size > constraint.arguments.size) {
+          Some(clique)
+        } else {
+          None
+        }
+      case _ => None
     }
 
   }
@@ -46,40 +47,56 @@ object AllDiff extends ConstraintCompiler with Loggable {
    *
    * @param constraint
    */
-  def compile(constraint: CSPOMConstraint, problem: CSPOM, clique: Set[CSPOMVariable]) = {
+  def compile(constraint: CSPOMConstraint, problem: CSPOM, clique: Set[CSPOMExpression]) = {
 
     problem.removeConstraint(constraint)
 
-    Delta().removed(constraint) ++ newAllDiff(clique, problem)
+    Delta().removed(constraint) ++ newAllDiff(clique.toSeq, problem)
+
+  }
+
+  //private val neighborsCache = new WeakHashMap[CSPOMVariable, Set[CSPOMVariable]]
+
+  def neighbors(v: CSPOMExpression, problem: CSPOM,
+    cache: WeakHashMap[CSPOMVariable, Set[CSPOMExpression]]): Set[CSPOMExpression] = {
+    v match {
+      case v: CSPOMVariable => cache.getOrElseUpdate(v,
+        problem.constraints(v).filter(DIFF_CONSTRAINT).flatMap(_.arguments).toSet - v)
+      case e: CSPOMExpression => Set()
+      //case _ => throw new UnsupportedOperationException
+    }
 
   }
 
   /**
    * The pool contains all variables that can expand the base clique
    */
-  private def populate(base: Set[CSPOMVariable], problem: CSPOM) =
-    base.iterator.map(problem.neighbors).reduceLeft(_ & _)
+  private def populate(base: Set[CSPOMExpression], problem: CSPOM,
+    cache: WeakHashMap[CSPOMVariable, Set[CSPOMExpression]]) =
+    base.iterator.map(neighbors(_, problem, cache)).reduceLeft(_ & _)
 
-  private def expand(base: Set[CSPOMVariable], problem: CSPOM) = {
+  private def expand(base: Set[CSPOMExpression], problem: CSPOM) = {
+
+    val cache = new WeakHashMap[CSPOMVariable, Set[CSPOMExpression]]
 
     var largest = base
     var clique = base
 
-    var pool = populate(base, problem)
+    var pool = populate(base, problem, cache)
 
     //final Set<CSPOMVariable> base = new HashSet<CSPOMVariable>(clique);
 
-    var tabu: Map[CSPOMVariable, Int] = Map.empty
+    var tabu: Map[CSPOMExpression, Int] = Map.empty
 
     breakable {
       for (i <- 1 to ITER) {
-        val (newVar, newTabu) = AllDiff.pickTabu(pool, tabu, i);
+        val (newVar, newTabu) = pickTabu(pool, tabu, i);
         tabu = newTabu
         newVar match {
           case None => {
             /* Could not expand the clique, removing a variable (not from the base) */
             clique -= randPick((clique -- base).iterator).getOrElse( /*BREAK*/ break /*BREAK*/ )
-            pool = populate(clique, problem)
+            pool = populate(clique, problem, cache)
           }
           case Some(variable) => {
             clique += variable
@@ -87,7 +104,7 @@ object AllDiff extends ConstraintCompiler with Loggable {
               largest = clique
             }
 
-            pool &= problem.neighbors(variable)
+            pool &= neighbors(variable, problem, cache)
 
           }
         }
@@ -104,10 +121,8 @@ object AllDiff extends ConstraintCompiler with Loggable {
    *
    * @param scope
    */
-  private def newAllDiff(scope: Set[CSPOMVariable], problem: CSPOM): Delta = {
-    val allDiff = new CSPOMConstraint(CSPOMTrue,
-      'allDifferent,
-      scope.toList: _*);
+  private def newAllDiff(scope: Seq[CSPOMExpression], problem: CSPOM): Delta = {
+    val allDiff = new CSPOMConstraint(CSPOMTrue, 'allDifferent, scope: _*);
 
     var delta = Delta()
 
@@ -120,13 +135,16 @@ object AllDiff extends ConstraintCompiler with Loggable {
 
       var removed = 0
       /* Remove newly subsumed neq/alldiff constraints. */
-      for (
-        v <- scope; c <- problem.constraints(v) if (
-          (c ne allDiff) && ALLDIFF_CONSTRAINT(c) && c.scope.forall(allDiff.scope.contains))
-      ) {
-        removed += 1
-        problem.removeConstraint(c);
-        delta = delta.removed(c)
+
+      scope.iterator.collect {
+        case v: CSPOMVariable => v
+      } flatMap (problem.constraints) filter {
+        c => (c ne allDiff) && ALLDIFF_CONSTRAINT(c) && c.scope.forall(allDiff.scope.contains)
+      } foreach {
+        c =>
+          removed += 1
+          problem.removeConstraint(c);
+          delta = delta.removed(c)
       }
       fine("removed " + removed + " constraints, " + problem.constraints.size + " left")
     }
@@ -135,12 +153,10 @@ object AllDiff extends ConstraintCompiler with Loggable {
 
   val RAND = new Random(0);
 
-  val TABU_SIZE = 15;
-
-  private def pickTabu(pool: Iterable[CSPOMVariable], tabu: Map[CSPOMVariable, Int], iteration: Int) = {
+  private def pickTabu(pool: Iterable[CSPOMExpression], tabu: Map[CSPOMExpression, Int], iteration: Int) = {
 
     randPick(pool.iterator.filter(v =>
-      tabu.get(v).map(_ < iteration).getOrElse(true))) match {
+      tabu.get(v).forall(_ < iteration))) match {
       case None =>
         (None, tabu)
       case Some(v) =>
