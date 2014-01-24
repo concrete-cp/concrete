@@ -56,45 +56,6 @@ final object EqGenerator extends Generator {
 
   }
 
-  //  private def generateInt(refDomain: IntDomain, scope: Seq[Variable], problem: Problem): Iterator[Constraint] = {
-  //    for (v <- scope if (v.dom.undefined)) {
-  //      v.dom = IntDomain(refDomain.values.toSeq: _*)
-  //    }
-  //    for (Seq(v0, v1) <- scope.sliding(2)) yield {
-  //      new Eq(v0, v1)
-  //    }
-  //  }
-  //
-  //  private def generateBool(refDomain: BooleanDomain, scope: Seq[Variable]): Iterator[Constraint] = {
-  //    scope filter { _.dom.undefined } map { _.dom.asInstanceOf[BooleanDomain] } find { _.size == 1 } match {
-  //      case None =>
-  //        for (v <- scope if (v.dom.undefined)) {
-  //          v.dom = new BooleanDomain(refDomain.status)
-  //        }
-  //
-  //        for (Seq(i, j) <- scope.combinations(2)) yield {
-  //          new Disjunction(Array(i, j), Array(false, true))
-  //        }
-  //
-  //      case Some(constantDomain) =>
-  //        for (v <- scope) {
-  //          if (v.dom.undefined) {
-  //            v.dom = new BooleanDomain(refDomain.status)
-  //          } else {
-  //            val d = v.dom.asInstanceOf[BooleanDomain]
-  //            if (d.isUnknown) {
-  //              d.status = refDomain.status
-  //            } else if (d.status != refDomain.status) {
-  //              throw new FailedGenerationException("Inconsistent equality")
-  //            }
-  //          }
-  //        }
-  //        Iterator()
-  //
-  //    }
-  //
-  //  }
-
   override def genFunctional(funcConstraint: CSPOMConstraint, r: C2Conc)(implicit problem: Problem): Option[Seq[Constraint]] = {
     val Var(result) = r
     Generator.booleanDomain(result)
