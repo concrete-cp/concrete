@@ -119,7 +119,7 @@ object ExtensionGenerator extends Generator {
    */
   private val dsCache = new CacheConverter[Matrix, List[Array[Int]]]()
 
-  override def gen(extensionConstraint: CSPOMConstraint)(implicit problem: Problem): Option[Seq[Constraint]] = {
+  override def gen(extensionConstraint: CSPOMConstraint)(implicit variables: VarMap): Option[Seq[Constraint]] = {
 
     val solverVariables = extensionConstraint.arguments map cspom2concreteVar toList
 

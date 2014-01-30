@@ -9,6 +9,8 @@ import cspom.variable.CSPOMTrue
 import cspom.variable.BoolVariable
 import org.hamcrest.CoreMatchers._
 import concrete.CSPOMDriver._
+import cspom.compiler.ProblemCompiler
+import concrete.generator.cspompatterns.MergeEq
 
 class DiffGeTest {
   @Test
@@ -23,11 +25,10 @@ class DiffGeTest {
       ctr(new CSPOMConstraint(r, 'sub, varOf(1, 2, 3), varOf(2, 3, 4)))
 
     }
-    for (d <- DiffGe.mtch(sub, cspom)) {
-      DiffGe.compile(sub, cspom, d)
-    }
 
-    assertEquals(3, cspom.variables.size)
+    ProblemCompiler.compile(cspom, Seq(MergeEq, DiffGe))
+
+    assertEquals(cspom.toString, 4, cspom.referencedExpressions.size)
     assertEquals(1, cspom.constraints.size)
     val c = cspom.constraints.head
     assertEquals('diffGe, c.function)
@@ -48,7 +49,7 @@ class DiffGeTest {
     for (d <- DiffGe.mtch(sub, cspom)) {
       DiffGe.compile(sub, cspom, d)
     }
-    assertEquals(4, cspom.variables.size)
+    assertEquals(4, cspom.referencedExpressions.size)
     assertEquals(1, cspom.constraints.size)
     val c = cspom.constraints.head
     assertEquals('diffGe, c.function)

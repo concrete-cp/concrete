@@ -14,7 +14,7 @@ import cspom.compiler.Delta
 object SubsumedDiff extends ConstraintCompilerNoData {
 
   def matchBool(constraint: CSPOMConstraint, problem: CSPOM) =
-    AllDiff.ALLDIFF_CONSTRAINT(constraint) && haveSubsumingConstraint(constraint, problem, AllDiff.DIFF_CONSTRAINT)
+    AllDiff.ALLDIFF_CONSTRAINT(constraint) && haveSubsumingConstraint(constraint, problem)
 
   def compile(constraint: CSPOMConstraint, problem: CSPOM) = {
     problem.removeConstraint(constraint)
@@ -22,10 +22,10 @@ object SubsumedDiff extends ConstraintCompilerNoData {
   }
 
   private def haveSubsumingConstraint(
-    constraint: CSPOMConstraint, problem: CSPOM, validator: CSPOMConstraint => Boolean) = {
-    val smallestDegree = constraint.scope.minBy(problem.constraints(_).size)
+    constraint: CSPOMConstraint, problem: CSPOM) = {
+    val smallestDegree = constraint.fullScope.minBy(problem.constraints(_).size)
 
     problem.constraints(smallestDegree).exists(
-      c => c != constraint && validator(c) && constraint.scope.forall(c.scope.contains))
+      c => c != constraint && AllDiff.DIFF_CONSTRAINT(c) && constraint.fullScope.toSet.subsetOf(c.fullScope.toSet))
   }
 }

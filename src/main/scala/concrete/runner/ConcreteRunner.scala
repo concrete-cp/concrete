@@ -83,8 +83,12 @@ trait ConcreteRunner {
         sys.exit(1)
     }
 
-    val writer: ConcreteWriter = opt.get('SQL).map(url => new SQLWriter(new URI(url.toString))).
-      getOrElse(new ConsoleWriter())
+    val writer: ConcreteWriter =
+      opt.get('SQL).map(url => new SQLWriter(new URI(url.toString))).orElse {
+        opt.get('Writer).map(_.asInstanceOf[ConcreteWriter])
+      } getOrElse {
+        new ConsoleWriter()
+      }
 
     writer.problem(description(remaining))
 
@@ -139,7 +143,12 @@ trait ConcreteRunner {
     }
   }
 
-  def output(solution: Map[String, Int]): String
+  def output(solution: Map[String, Int]): String = {
+    cProblem.namedExpressions.collect {
+      case (name, variable) if (!variable.params("var_is_introduced")) => s"$name = ${solution(name)}"
+    }.mkString("\n")
+  }
+
   def control(solution: Map[String, Int]): Option[String]
 
 }

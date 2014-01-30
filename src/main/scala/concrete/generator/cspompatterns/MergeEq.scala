@@ -58,13 +58,14 @@ object MergeEq extends ConstraintCompiler {
     fullVars: Seq[CSPOMVariable],
     auxVars: Seq[CSPOMVariable],
     constant: CSPOMConstant, problem: CSPOM): Delta = {
-    var delta = Delta()
-    for (v <- fullVars) {
-      val nv = v.intersected(constant)
-      delta ++= replaceVars(Seq(v), nv, problem)
+
+    val delta = fullVars.foldLeft(Delta()) {
+      case (delta, v) =>
+        val nv = v.intersected(constant)
+        delta ++ replace(Seq(v), nv, problem)
     }
 
-    delta ++ replaceVars(auxVars, constant, problem)
+    delta ++ replace(auxVars, constant, problem)
 
   }
 
@@ -82,7 +83,7 @@ object MergeEq extends ConstraintCompiler {
 
     val newFullVars = for (v <- fullVars) yield {
       val nv = v.intersected(merged)
-      delta ++= replaceVars(Seq(v), nv, problem)
+      delta ++= replace(Seq(v), nv, problem)
       nv
     }
 
@@ -91,13 +92,15 @@ object MergeEq extends ConstraintCompiler {
      */
     val refVar = newFullVars.headOption.getOrElse(auxVars.head)
 
-    delta ++ replaceVars(auxVars.distinct, refVar, problem)
+    delta ++ replace(auxVars.distinct, refVar, problem)
   }
 
   def compile(constraint: CSPOMConstraint, problem: CSPOM, data: A) = {
     val (auxVars, fullVars, const) = data
 
     problem.removeConstraint(constraint)
+
+    val delta = Delta().removed(constraint)
     /**
      * Generate a new all-equal constraint if more than one variable
      * remains.
@@ -106,22 +109,24 @@ object MergeEq extends ConstraintCompiler {
       problem.ctr(new CSPOMConstraint('eq, fullVars.toSeq: _*))
     }
 
+    val oldNames = problem.namedExpressions.keySet
+
     /**
      * Update the constraints of the problem
      */
-    val delta =
+    val delta2 = delta ++ (
       if (const.isEmpty) {
         mergeVariables(fullVars, auxVars, problem)
       } else {
         val (c :: tail) = const
         require(tail.forall(_ == c), "Inconsistent constants in " + (c :: tail))
         mergeConstant(fullVars, auxVars, c, problem)
-      }
+      })
 
-    require(fullVars.forall(v => problem.variable(v.name).nonEmpty),
-      s"Variables from $fullVars were removed")
+    require(oldNames == problem.namedExpressions.keySet,
+      s"Variables from $oldNames were removed")
 
-    delta
+    delta2
 
   }
 

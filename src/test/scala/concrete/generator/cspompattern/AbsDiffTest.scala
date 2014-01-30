@@ -22,12 +22,12 @@ class AbsDiffTest {
 
       ctr(new CSPOMConstraint(r, 'sub, v0, v1))
     }
-    println(cspom)
+
     for (d <- AbsDiff.mtch(sub, cspom)) {
       AbsDiff.compile(sub, cspom, d)
     }
-    println(cspom)
-    assertEquals(3, cspom.variables.size)
+
+    assertEquals(3, cspom.referencedExpressions.size)
     assertEquals(1, cspom.constraints.size)
 
     val c = cspom.constraints.head

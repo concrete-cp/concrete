@@ -11,7 +11,7 @@ import Generator._
 
 final object ModGenerator extends Generator {
 
-  override def genFunctional(constraint: CSPOMConstraint, r: C2Conc)(implicit problem: Problem) = {
+  override def genFunctional(constraint: CSPOMConstraint, r: C2Conc)(implicit variables: VarMap) = {
     val Var(result) = r
     val Seq(v0, v1) = constraint.arguments map cspom2concreteVar
 

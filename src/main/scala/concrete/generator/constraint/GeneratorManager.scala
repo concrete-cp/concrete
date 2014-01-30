@@ -5,6 +5,8 @@ import concrete.Problem
 import cspom.CSPOMConstraint
 import scala.collection.mutable.HashMap
 import concrete.constraint.Constraint
+import cspom.variable.CSPOMVariable
+import concrete.Variable
 
 object GeneratorManager {
   private var known: Map[Symbol, Generator] = Map(
@@ -36,11 +38,11 @@ object GeneratorManager {
   }
 
   @throws(classOf[FailedGenerationException])
-  def generate(constraint: CSPOMConstraint, problem: Problem): Option[Seq[Constraint]] = {
+  def generate(constraint: CSPOMConstraint, variables: Map[CSPOMVariable, Variable], problem: Problem): Option[Seq[Constraint]] = {
     val candidate = known.getOrElse(constraint.function,
       throw new FailedGenerationException(s"No candidate constraint for $constraint"))
 
-    candidate.generate(constraint, problem)
+    candidate.generate(constraint, variables: Map[CSPOMVariable, Variable], problem)
   }
 
 }

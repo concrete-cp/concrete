@@ -90,13 +90,13 @@ final class SolvingTest {
 
   }
 
-  //  @Test //(timeout = 1000)
-  //  def dimacs() {
-  //    assertTrue(solve("flat30-1.cnf"));
-  //    // assertNotNull(solve("clauses-2.cnf.bz2"));
-  //    //assertEquals(1, count("flat30-1.cnf"));
-  //
-  //  }
+  @Test //(timeout = 1000)
+  def dimacs() {
+    assertTrue(solve("flat30-1.cnf", false));
+    // assertNotNull(solve("clauses-2.cnf.bz2"));
+    //assertEquals(1, count("flat30-1.cnf"));
+
+  }
 
   @Test //(timeout = 10000)
   def bqwh() {
@@ -131,12 +131,13 @@ final class SolvingTest {
   def series() {
     assertTrue(solve("series-15.xml.bz2"));
   }
-  //  @Test
-  //  def fapp01_0200_0() {
-  //    assertNull(solve("fapp01-0200-0.xml"));
-  //    assertEquals(0, count("fapp01-0200-0.xml"));
-  //
-  //  }
+  
+//  @Test
+//  def fapp01_0200_0() {
+//    assertNull(solve("fapp01-0200-0.xml"));
+//    assertEquals(0, count("fapp01-0200-0.xml"));
+//
+//  }
 
   @Test
   def jobshop() {
@@ -179,7 +180,7 @@ object SolvingTest extends Loggable {
 
   def solve(name: String, test: Boolean = true): Boolean = {
     val url = getClass.getResource(name)
-    val (cspomProblem, variables) = CSPOM.load(url);
+    val (cspomProblem, data) = CSPOM.load(url);
 
     val solver = Solver(cspomProblem);
 
@@ -191,7 +192,7 @@ object SolvingTest extends Loggable {
       println(sol.toSeq.sortBy((_._1)))
 
       if (test) {
-        val failed = XCSPConcrete.control(sol, variables, url)
+        val failed = XCSPConcrete.control(sol, data('variables).asInstanceOf[Seq[String]], url)
         for (f <- failed) {
           fail(sol + "\n" + f)
         }
@@ -203,7 +204,7 @@ object SolvingTest extends Loggable {
 
   def count(name: String) = {
     val url = getClass.getResource(name)
-    val (cspomProblem, variables) = CSPOM.load(url);
+    val (cspomProblem, data) = CSPOM.load(url);
 
     val solver = Solver(cspomProblem)
 
@@ -211,7 +212,7 @@ object SolvingTest extends Loggable {
       (count, sol) =>
         //logger.info(solution.toString)
         assert {
-          val failed = XCSPConcrete.control(sol, variables, url)
+          val failed = XCSPConcrete.control(sol, data('variables).asInstanceOf[Seq[String]], url)
           for (f <- failed) {
             fail(1 + count + "th solution: " + f)
           }

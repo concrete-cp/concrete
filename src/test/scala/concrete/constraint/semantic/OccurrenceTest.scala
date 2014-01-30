@@ -56,7 +56,7 @@ class OccurrenceTest {
       val v4 = 4
       val v5 = varOf(8, 9)
 
-      val occ = interVar("occ", 1, 3)
+      val occ = interVar(1, 3) as "occ"
       ctr(occ === occurrence(7, v1, v2, v3, v4, v5))
     }
 

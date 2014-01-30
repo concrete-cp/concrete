@@ -16,10 +16,11 @@ object RemoveAnd extends ConstraintCompilerNoData {
 
   def compile(constraint: CSPOMConstraint, problem: CSPOM) = {
 
-    require(constraint.scope.forall(v => v.isInstanceOf[FreeVariable] || v.isInstanceOf[BoolVariable] || v == CSPOMTrue), constraint.scope)
+    require(constraint.fullScope.forall(v => v.isInstanceOf[FreeVariable] || v.isInstanceOf[BoolVariable] || v == CSPOMTrue), constraint)
 
     problem.removeConstraint(constraint)
-    replaceVars(constraint.scope.toSeq, CSPOMTrue, problem)
+
+    Delta().removed(constraint) ++ replace(constraint.fullScope.distinct, CSPOMTrue, problem)
 
   }
 }

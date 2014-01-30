@@ -24,11 +24,6 @@ object RBConcrete extends ConcreteRunner with App {
     "rb-" + args(0).split(":").mkString("-")
   }
 
-  def output(solution: Map[String, Int]) = {
-    cProblem.variables.filter(!_.params("var_is_introduced")).map(v =>
-      solution(v.name)).mkString(" ")
-  }
-
   def control(solution: Map[String, Int]) = ???
 
   run(args)

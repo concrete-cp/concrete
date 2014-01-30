@@ -78,11 +78,6 @@ object RandomMDD extends ConcreteRunner with App {
     s"mdd-$n-$d-$k-$e-$l-$q-$s"
   }
 
-  def output(solution: Map[String, Int]) = {
-    cProblem.variables.filter(!_.params("var_is_introduced")).map(v =>
-      solution(v.name)).mkString(" ")
-  }
-
   def control(solution: Map[String, Int]) = ???
 
   def params(args: String) = {

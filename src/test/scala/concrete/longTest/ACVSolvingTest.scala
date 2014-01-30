@@ -1,7 +1,7 @@
 package concrete.longTest;
 
 import scala.annotation.elidable
-import org.junit.Assert.assertEquals
+import org.junit.Assert._
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import concrete.util.Loggable
@@ -83,7 +83,7 @@ final class ACVSolvingTest {
 
   @Test //(timeout = 1000)
   def dimacs() {
-    assertTrue(solve("flat30-1.cnf"));
+    assertTrue(solve("flat30-1.cnf", false));
     // assertNotNull(solve("clauses-2.cnf.bz2"));
     //assertEquals(1, count("flat30-1.cnf"));
 
@@ -109,7 +109,7 @@ final class ACVSolvingTest {
 
   @Test //(timeout = 7000)
   def scen11_f12() {
-    assertEquals(solve("scen11-f12.xml.bz2"), None);
+    assertFalse(solve("scen11-f12.xml.bz2"));
   }
   @Test //(timeout = 7000)
   def scen11() {

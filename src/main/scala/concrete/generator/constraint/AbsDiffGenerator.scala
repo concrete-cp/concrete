@@ -10,7 +10,7 @@ import concrete.constraint.Constraint
 
 final object AbsDiffGenerator extends Generator {
 
-  override def genFunctional(constraint: CSPOMConstraint, r: C2Conc)(implicit problem: Problem) = {
+  override def genFunctional(constraint: CSPOMConstraint, r: C2Conc)(implicit variables: VarMap) = {
     val result = r.asInstanceOf[C21D]
 
     val Seq(v0, v1) = constraint.arguments.map(cspom2concreteVar)

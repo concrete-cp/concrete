@@ -16,7 +16,7 @@ import concrete.constraint.TupleEnumerator
 
 final object GtGenerator extends Generator {
   import Generator._
-  override def gen(constraint: CSPOMConstraint)(implicit problem: Problem) = {
+  override def gen(constraint: CSPOMConstraint)(implicit variables: VarMap) = {
     val Seq(v0, v1) = constraint.arguments map cspom2concrete1D;
 
     if (undefinedVar(v0, v1).nonEmpty) {
@@ -55,7 +55,7 @@ final object GtGenerator extends Generator {
         new Gt(v0, v1, strict)))
   }
 
-  override def genFunctional(constraint: CSPOMConstraint, r: C2Conc)(implicit problem: Problem) = {
+  override def genFunctional(constraint: CSPOMConstraint, r: C2Conc)(implicit variables: VarMap) = {
 
     val Var(result) = r
 

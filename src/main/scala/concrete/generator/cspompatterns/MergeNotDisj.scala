@@ -29,10 +29,6 @@ object MergeNotDisj extends ConstraintCompiler {
   }
 
   def compile(fc: CSPOMConstraint, problem: CSPOM, orConstraint: CSPOMConstraint) = {
-    problem.removeConstraint(fc)
-    problem.removeConstraint(orConstraint)
-    problem.removeVariable(fc.result.asInstanceOf[CSPOMVariable])
-
     val Seq(a: BoolExpression) = fc.arguments
 
     val oldOrParams = orConstraint.params.get("revsign").collect {
@@ -45,9 +41,8 @@ object MergeNotDisj extends ConstraintCompiler {
     val newParams = true +: orParams
     val newConstraint =
       new CSPOMConstraint(orConstraint.result, 'or, newScope, Map("revsign" -> newParams))
-    problem.ctr(newConstraint)
 
-    Delta().removed(fc).removed(orConstraint).added(newConstraint)
+    replaceCtr(Seq(fc, orConstraint), newConstraint, problem)
 
   }
 }

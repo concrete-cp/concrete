@@ -12,7 +12,7 @@ import cspom.variable.CSPOMFalse
 import cspom.variable.CSPOMTrue
 import Generator._
 final object OccurrenceGenerator extends Generator {
-  override def genFunctional(constraint: CSPOMConstraint, r: C2Conc)(implicit problem: Problem) = {
+  override def genFunctional(constraint: CSPOMConstraint, r: C2Conc)(implicit variables: VarMap) = {
 
     val args = constraint.arguments map cspom2concrete1D
 

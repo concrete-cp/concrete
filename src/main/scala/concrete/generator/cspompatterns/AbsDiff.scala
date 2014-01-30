@@ -10,30 +10,25 @@ import cspom.compiler.Delta
  * x=absdiff(y,z). No other constraint may imply the auxiliary constraint a.
  */
 object AbsDiff extends ConstraintCompiler {
-  type A = (CSPOMVariable, Set[CSPOMConstraint])
+  type A = Set[CSPOMConstraint]
 
   override def mtch(c: CSPOMConstraint, problem: CSPOM) = c match {
     case CSPOMConstraint(result: CSPOMVariable, 'sub, args, _) if result.params("var_is_introduced") =>
-      val process = problem.constraints(result).filter {
-        case CSPOMConstraint(_, 'abs, Seq(result), _) => true
-        case _ => false
+      val process = problem.constraints(result).collect {
+        case c @ CSPOMConstraint(_, 'abs, Seq(result), _) => c
       }
       if (process.isEmpty) {
         None
       } else {
-        Some((result, process))
+        Some(process)
       }
     case _ => None
   }
 
-  def compile(c: CSPOMConstraint, problem: CSPOM, data: (CSPOMVariable, Set[CSPOMConstraint])) = {
-    data._2.foldLeft(Delta()) { (acc, fc) =>
-      problem.removeConstraint(c);
-      problem.removeConstraint(fc);
-      val nc = problem.ctr(new CSPOMConstraint(
-        fc.result, 'absdiff, c.arguments: _*));
-      problem.removeVariable(data._1)
-      acc.removed(c).removed(fc).added(nc)
+  def compile(c: CSPOMConstraint, problem: CSPOM, data: Set[CSPOMConstraint]) = {
+    data.foldLeft(Delta()) { (acc, fc) =>
+      val nc = new CSPOMConstraint(fc.result, 'absdiff, c.arguments: _*)
+      acc ++ replaceCtr(Seq(c, fc), nc, problem)
     }
 
   }

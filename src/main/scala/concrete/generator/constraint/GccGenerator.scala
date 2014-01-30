@@ -8,7 +8,7 @@ import cspom.CSPOMConstraint
 import Generator._
 
 final object GccGenerator extends Generator {
-  override def gen(constraint: CSPOMConstraint)(implicit problem: Problem) = {
+  override def gen(constraint: CSPOMConstraint)(implicit variables: VarMap) = {
     val scope = constraint.arguments map cspom2concreteVar
 
     if (scope.exists(_.dom.undefined)) {

@@ -6,6 +6,8 @@ import cspom.CSPOM
 import cspom.CSPOM._
 import concrete.generator.cspompatterns.AllDiff
 import concrete.CSPOMDriver._
+import concrete.generator.cspompatterns.MergeEq
+import cspom.compiler.ProblemCompiler
 
 class AllDiffTest {
   @Test
@@ -21,14 +23,7 @@ class AllDiffTest {
       }
     }
 
-    val constraints = cspom.constraints.toSeq
-
-    for (
-      c <- constraints if (cspom.constraints(c));
-      d <- AllDiff.mtch(c, cspom)
-    ) {
-      AllDiff.compile(c, cspom, d)
-    }
+    ProblemCompiler.compile(cspom, Seq(MergeEq, AllDiff))
 
     //println(cspom)
     assertEquals(1, cspom.constraints.size)

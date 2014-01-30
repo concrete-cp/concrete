@@ -29,13 +29,10 @@ object DiffGe extends ConstraintCompiler {
 
   def compile(subConstraint: CSPOMConstraint, problem: CSPOM, geConstraint: CSPOMConstraint) = {
 
-    problem.removeConstraint(subConstraint);
-    problem.removeConstraint(geConstraint);
-    problem.removeVariable(subConstraint.result.asInstanceOf[CSPOMVariable])
+    val newC = new CSPOMConstraint(geConstraint.result, 'diffGe, subConstraint.arguments :+ geConstraint.arguments(1))
 
-    val newC = problem.ctr(new CSPOMConstraint(geConstraint.result, 'diffGe, subConstraint.arguments :+ geConstraint.arguments(1)))
+    replaceCtr(Seq(subConstraint, geConstraint), newC, problem)
 
-    Delta().removed(subConstraint).removed(geConstraint).added(newC)
   }
 
 }

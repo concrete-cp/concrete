@@ -18,7 +18,7 @@ import Generator._
 
 final object SumGenerator extends Generator {
 
-  override def genFunctional(constraint: CSPOMConstraint, result: C2Conc)(implicit problem: Problem) = {
+  override def genFunctional(constraint: CSPOMConstraint, result: C2Conc)(implicit variables: VarMap) = {
     val solverVariables = constraint.arguments map cspom2concreteVar
 
     if (undefinedVar(solverVariables: _*).nonEmpty) {

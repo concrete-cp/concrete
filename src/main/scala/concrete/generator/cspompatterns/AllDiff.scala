@@ -124,6 +124,8 @@ object AllDiff extends ConstraintCompiler with Loggable {
   private def newAllDiff(scope: Seq[CSPOMExpression], problem: CSPOM): Delta = {
     val allDiff = new CSPOMConstraint(CSPOMTrue, 'allDifferent, scope: _*);
 
+    val scopeSet = scope.toSet
+
     var delta = Delta()
 
     if (!problem.constraints.contains(allDiff)) {
@@ -139,7 +141,7 @@ object AllDiff extends ConstraintCompiler with Loggable {
       scope.iterator.collect {
         case v: CSPOMVariable => v
       } flatMap (problem.constraints) filter {
-        c => (c ne allDiff) && ALLDIFF_CONSTRAINT(c) && c.scope.forall(allDiff.scope.contains)
+        c => (c ne allDiff) && ALLDIFF_CONSTRAINT(c) && c.arguments.forall(scopeSet)
       } foreach {
         c =>
           removed += 1

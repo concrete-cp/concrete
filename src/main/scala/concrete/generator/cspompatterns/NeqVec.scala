@@ -16,7 +16,7 @@ import cspom.variable.CSPOMVariable
  * into (a, b, e, f, ...) ne (c, d, g, h, ...)
  */
 object NeqVec extends ConstraintCompiler {
-  type A = (CSPOMConstraint, Set[CSPOMVariable], Set[CSPOMConstraint])
+  type A = (CSPOMConstraint, Set[CSPOMExpression], Set[CSPOMConstraint])
 
   /* NE constraints is a special case of nevec */
   private def isNevec(c: CSPOMConstraint) = c.function == 'ne || c.function == 'nevec
@@ -31,7 +31,7 @@ object NeqVec extends ConstraintCompiler {
 
     result collect {
       case Seq(orConstraint @ CSPOMConstraint(CSPOMTrue, 'or, _, _)) =>
-        val orVariables = orConstraint.scope
+        val orVariables = orConstraint.fullScope.toSet
         val neConstraints = orVariables.flatMap(problem.constraints) - orConstraint
         (orConstraint, orVariables, neConstraints)
     } filter {
@@ -60,12 +60,8 @@ object NeqVec extends ConstraintCompiler {
   //    }
   //  }
 
-  def compile(fc: CSPOMConstraint, problem: CSPOM, data: (CSPOMConstraint, Set[CSPOMVariable], Set[CSPOMConstraint])) = {
+  def compile(fc: CSPOMConstraint, problem: CSPOM, data: (CSPOMConstraint, Set[CSPOMExpression], Set[CSPOMConstraint])) = {
     val (orConstraint, orVariables, neConstraints) = data
-
-    neConstraints.foreach(problem.removeConstraint)
-    problem.removeConstraint(orConstraint)
-    orVariables.foreach(problem.removeVariable)
 
     val (x, y) = neConstraints.map(_.arguments).foldLeft((Seq[CSPOMExpression](), Seq[CSPOMExpression]())) {
       case ((ax, ay), Seq(cx: CSPOMSeq[CSPOMExpression], cy: CSPOMSeq[CSPOMExpression])) => (ax ++ cx.values, ay ++ cy.values)
@@ -75,7 +71,8 @@ object NeqVec extends ConstraintCompiler {
 
     val newC = problem.ctr(new CSPOMConstraint('nevec, new CSPOMSeq(x), new CSPOMSeq(y)))
 
-    Delta().removed(orConstraint).removed(neConstraints).added(newC)
+    replaceCtr(orConstraint +: neConstraints.toSeq, newC, problem)
+
   }
 
 }

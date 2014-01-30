@@ -25,7 +25,9 @@ object ProblemGenerator extends Loggable {
 
     //val problem = new Problem();
 
-    val problem = new Problem(generateVariables(cspom))
+    val variables = generateVariables(cspom)
+
+    val problem = new Problem(variables.values.toList)
 
     //var firstFailed: Option[CSPOMConstraint] = None;
 
@@ -33,7 +35,7 @@ object ProblemGenerator extends Loggable {
     def processQueue(queue: Queue[CSPOMConstraint], firstFailed: Option[CSPOMConstraint]): Unit = if (queue.nonEmpty) {
       val (constraint, rest) = queue.dequeue
 
-      GeneratorManager.generate(constraint, problem) match {
+      GeneratorManager.generate(constraint, variables, problem) match {
         case Some(s) =>
           s.foreach(problem.addConstraint)
 
@@ -59,10 +61,26 @@ object ProblemGenerator extends Loggable {
     problem;
   }
 
-  def generateVariables(cspom: CSPOM) = {
-    cspom.variables.map { v =>
-      new Variable(v.name, generateDomain(v));
-    } toList
+  def generateVariables(cspom: CSPOM): Map[CSPOMVariable, Variable] = {
+
+    var unnamed = 0;
+
+    /**
+     * Generates an unique variable name.
+     *
+     * @return An unique variable name.
+     */
+    def generate() = {
+      val name = "_" + unnamed;
+      unnamed += 1;
+      name;
+    }
+
+    cspom.referencedExpressions.collect {
+      case v: CSPOMVariable =>
+        val name = cspom.nameOf(v).getOrElse(generate())
+        v -> new Variable(name, generateDomain(v));
+    } toMap
   }
 
   def generateDomain[T](cspomVar: CSPOMVariable): Domain = cspomVar match {

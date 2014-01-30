@@ -43,7 +43,7 @@ object RemoveUselessEq extends ConstraintCompiler {
     }
 
     res match {
-      case b: CSPOMVariable => delta ++ replaceVars(Seq(b), result, problem)
+      case b: CSPOMVariable => delta ++ replace(Seq(b), result, problem)
       case c: CSPOMConstant =>
         require(c == result); delta
       case _ => throw new IllegalArgumentException

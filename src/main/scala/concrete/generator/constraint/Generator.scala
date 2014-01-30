@@ -47,18 +47,20 @@ final case class Sequence(s: Seq[C2Conc]) extends C2Conc {
 
 trait Generator {
 
-  def gen(constraint: CSPOMConstraint)(implicit problem: Problem): Option[Seq[Constraint]] = None
+  type VarMap = Map[CSPOMVariable, Variable]
 
-  def genReversed(constraint: CSPOMConstraint)(implicit problem: Problem): Option[Seq[Constraint]] = None
+  def gen(constraint: CSPOMConstraint)(implicit variables: VarMap): Option[Seq[Constraint]] = None
 
-  def genFunctional(constraint: CSPOMConstraint, result: C2Conc)(implicit problem: Problem): Option[Seq[Constraint]] = None
+  def genReversed(constraint: CSPOMConstraint)(implicit variables: VarMap): Option[Seq[Constraint]] = None
+
+  def genFunctional(constraint: CSPOMConstraint, result: C2Conc)(implicit variables: VarMap): Option[Seq[Constraint]] = None
 
   @throws(classOf[FailedGenerationException])
-  final def generate(constraint: CSPOMConstraint, problem: Problem) = {
+  final def generate(constraint: CSPOMConstraint, variables: VarMap, problem: Problem) = {
     constraint.result match {
-      case CSPOMTrue => gen(constraint)(problem)
-      case CSPOMFalse => genReversed(constraint)(problem)
-      case v: CSPOMExpression => genFunctional(constraint, Generator.cspom2concrete(v)(problem))(problem)
+      case CSPOMTrue => gen(constraint)(variables)
+      case CSPOMFalse => genReversed(constraint)(variables)
+      case v: CSPOMExpression => genFunctional(constraint, Generator.cspom2concrete(v)(variables))(variables)
     }
   }
 }
@@ -73,7 +75,7 @@ object Generator {
     _.dom.undefined
   }
 
-  final def cspom2concrete(variable: CSPOMExpression)(implicit problem: Problem): C2Conc = variable match {
+  final def cspom2concrete(variable: CSPOMExpression)(implicit variables: Map[CSPOMVariable, Variable]): C2Conc = variable match {
     case v: CSPOMVariable => Var(cspomVar2concrete(v))
     case seq: CSPOMSeq[CSPOMExpression] => Sequence(seq.values map cspom2concrete)
     case i: IntConstant => Const(i.value)
@@ -82,25 +84,25 @@ object Generator {
     case _ => throw new UnsupportedOperationException(s"$variable is unexpected")
   }
 
-  final def cspom2concrete1D(variable: CSPOMExpression)(implicit problem: Problem): C21D = cspom2concrete(variable) match {
+  final def cspom2concrete1D(variable: CSPOMExpression)(implicit variables: Map[CSPOMVariable, Variable]): C21D = cspom2concrete(variable) match {
     case v: Var => v
     case v: Const => v
     case _ => fail(s"Variable or constant expected, $variable found")
   }
 
-  final def cspomVar2concrete(variable: CSPOMVariable)(implicit problem: Problem) = problem.variable(variable.name)
+  final def cspomVar2concrete(variable: CSPOMVariable)(implicit variables: Map[CSPOMVariable, Variable]) = variables(variable)
 
-  final def cspom2concreteVar(variable: CSPOMExpression)(implicit problem: Problem) = cspom2concrete(variable) match {
+  final def cspom2concreteVar(variable: CSPOMExpression)(implicit variables: Map[CSPOMVariable, Variable]) = cspom2concrete(variable) match {
     case Var(v) => v
     case _ => fail(s"Variable expected, $variable found")
   }
 
-  final def cspom2concreteSeq(variable: CSPOMExpression)(implicit problem: Problem) = cspom2concrete(variable) match {
+  final def cspom2concreteSeq(variable: CSPOMExpression)(implicit variables: Map[CSPOMVariable, Variable]) = cspom2concrete(variable) match {
     case Sequence(s) => s
     case _ => fail(s"Sequence expected, $variable found")
   }
 
-  final def cspom2concreteSeqVar(e: CSPOMExpression)(implicit problem: Problem) = cspom2concreteSeq(e) map {
+  final def cspom2concreteSeqVar(e: CSPOMExpression)(implicit variables: Map[CSPOMVariable, Variable]) = cspom2concreteSeq(e) map {
     case Var(v) => v
     case a: C2Conc => fail(s"Variable expected, $a found")
   }

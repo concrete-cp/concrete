@@ -12,7 +12,7 @@ import Generator._
 
 final object DisjGenerator extends Generator {
 
-  override def gen(gC: CSPOMConstraint)(implicit problem: Problem) = {
+  override def gen(gC: CSPOMConstraint)(implicit variables: VarMap) = {
     require(gC.function == 'or, "Unexpected constraint " + gC)
     val scope = gC.arguments map cspom2concreteVar
 

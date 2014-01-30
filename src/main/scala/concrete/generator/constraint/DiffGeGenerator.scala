@@ -15,7 +15,7 @@ import Generator._
  */
 final object DiffGeGenerator extends Generator {
 
-  override def gen(constraint: CSPOMConstraint)(implicit problem: Problem) = {
+  override def gen(constraint: CSPOMConstraint)(implicit variables: VarMap) = {
 
     val Seq(x: C21D, y: C21D, Const(k)) = constraint.arguments map cspom2concrete
 
@@ -45,7 +45,7 @@ final object DiffGeGenerator extends Generator {
 
   }
 
-  override def genFunctional(constraint: CSPOMConstraint, r: C2Conc)(implicit problem: Problem) = {
+  override def genFunctional(constraint: CSPOMConstraint, r: C2Conc)(implicit variables: VarMap) = {
     val Var(result) = r
     val rd = Generator.booleanDomain(result)
     val Seq(x: C21D, y: C21D, Const(k)) = constraint.arguments map cspom2concrete

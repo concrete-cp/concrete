@@ -8,7 +8,7 @@ import concrete.constraint.semantic.LexLeq
 import Generator._
 
 final object LexLeqGenerator extends Generator {
-  override def gen(constraint: CSPOMConstraint)(implicit problem: Problem) = {
+  override def gen(constraint: CSPOMConstraint)(implicit variables: VarMap) = {
     val Seq(x, y) = constraint.arguments map cspom2concreteSeqVar map (_.toArray)
     require(x.length == y.length)
 

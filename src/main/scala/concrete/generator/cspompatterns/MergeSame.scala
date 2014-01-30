@@ -13,7 +13,7 @@ object MergeSame extends ConstraintCompiler {
   type A = CSPOMConstraint
 
   override def mtch(c: CSPOMConstraint, problem: CSPOM): Option[A] = {
-    c.scope.flatMap(problem.constraints).collectFirst {
+    c.fullScope.flatMap(problem.constraints).collectFirst {
       case same @ CSPOMConstraint(_, c.function, c.arguments, c.params) if (same ne c) => same
     }
 
@@ -23,11 +23,9 @@ object MergeSame extends ConstraintCompiler {
 
   def compile(c: CSPOMConstraint, problem: CSPOM, same: CSPOMConstraint) = {
 
-    problem.removeConstraint(c)
     val eqC = new CSPOMConstraint('eq, c.result, same.result)
-    problem.ctr(eqC)
+    replaceCtr(c, eqC, problem)
 
-    Delta().removed(c).added(eqC)
   }
 
 }

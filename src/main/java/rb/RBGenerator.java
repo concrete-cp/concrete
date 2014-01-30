@@ -11,13 +11,15 @@ import rb.randomlists.ProbabilityRandomListGenerator;
 import rb.randomlists.ProportionRandomListGenerator;
 import rb.randomlists.RandomListGenerator;
 import rb.randomlists.Structure;
-import scala.Symbol;
+import concrete.JCSPOMDriver;
 import concrete.generator.FailedGenerationException;
 import cspom.CSPOM;
 import cspom.CSPOMConstraint;
 import cspom.extension.MDD;
 import cspom.extension.MDD$;
 import cspom.variable.IntVariable;
+
+import static concrete.JCSPOMDriver.*;
 
 /**
  * This class corresponds to explicit random problems, i.e., random problems
@@ -126,10 +128,12 @@ public class RBGenerator {
 	public CSPOM generate() throws FailedGenerationException {
 		final CSPOM cspom = new CSPOM();
 
-		final List<IntVariable> variables = new ArrayList<IntVariable>(nbVariables);
+		final List<IntVariable> variables = new ArrayList<>(nbVariables);
 
 		for (int i = nbVariables; --i >= 0;) {
-			variables.add(cspom.interVar("X" + i, 0, domainSize - 1));
+			final IntVariable v = CSPOM.interVar(0, domainSize - 1);
+			variables.add(v);
+			cspom.nameExpression(v, "X" + i);
 		}
 
 		RAND.setSeed(seed);

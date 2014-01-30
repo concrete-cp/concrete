@@ -18,7 +18,7 @@ object XCSPConcrete extends ConcreteRunner with App {
     val List(fn) = args
     file = new URL(fn)
     val cspom = CSPOM.load(file)
-    variables = cspom._2
+    variables = cspom._2('variables).asInstanceOf[Seq[String]]
     cspom._1
   }
 
@@ -28,7 +28,7 @@ object XCSPConcrete extends ConcreteRunner with App {
       case _ => throw new IllegalArgumentException(args.toString)
     }
 
-  def output(solution: Map[String, Int]) = {
+  override def output(solution: Map[String, Int]) = {
     flatSolution(solution, variables).mkString(" ")
   }
 

@@ -28,7 +28,7 @@ object SplitAllEq extends ConstraintCompilerNoData {
       case CSPOMFalse =>
         var d = delta
         val rs = for (Seq(a, b) <- constraint.arguments.sliding(2)) yield {
-          val r = CSPOMVariable.bool()
+          val r = new BoolVariable()
           d = d.added(problem.ctr(new CSPOMConstraint(r, 'ne, a, b)))
           r
         }
@@ -37,7 +37,7 @@ object SplitAllEq extends ConstraintCompilerNoData {
       case r: BoolVariable =>
         var d = delta
         val rs = for (Seq(a, b) <- constraint.arguments.sliding(2)) yield {
-          val r = CSPOMVariable.bool()
+          val r = new BoolVariable()
           d = d.added(problem.ctr(new CSPOMConstraint(r, 'eq, a, b)))
           r
         }

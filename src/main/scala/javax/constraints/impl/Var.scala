@@ -16,7 +16,7 @@ class Var(problem: Problem, name: String, val variable: IntVariable) extends Abs
   // Members declared in javax.constraints.Var 
   def abs(): javax.constraints.Var = {
     val cspomVar = problem.cspom.is('abs, Seq(variable), Map()).asInstanceOf[IntVariable]
-    new Var(problem, cspomVar.name, cspomVar)
+    new Var(problem, Var.generate(), cspomVar)
   }
 
   def contains(x: Int): Boolean = variable.domain.contains(x)
@@ -31,25 +31,40 @@ class Var(problem: Problem, name: String, val variable: IntVariable) extends Abs
 
   def multiply(v2: javax.constraints.Var): javax.constraints.Var = {
     ???
-//    val cspomVar = variable.*(v2.getImpl.asInstanceOf[IntVariable])(problem.cspom)
-//    new Var(problem, cspomVar.name, cspomVar)
+    //    val cspomVar = variable.*(v2.getImpl.asInstanceOf[IntVariable])(problem.cspom)
+    //    new Var(problem, cspomVar.name, cspomVar)
   }
 
   def multiply(constant: Int): javax.constraints.Var = {
     ???
-//    val cspomVar = variable.*(problem.cspom.varOf(constant))(problem.cspom)
-//    new Var(problem, cspomVar.name, cspomVar)
+    //    val cspomVar = variable.*(problem.cspom.varOf(constant))(problem.cspom)
+    //    new Var(problem, cspomVar.name, cspomVar)
   }
 
   def plus(v2: javax.constraints.Var): javax.constraints.Var = {
     ???
-//    val cspomVar = variable.+(v2.getImpl.asInstanceOf[IntVariable])(problem.cspom)
-//    new Var(problem, cspomVar.name, cspomVar)
+    //    val cspomVar = variable.+(v2.getImpl.asInstanceOf[IntVariable])(problem.cspom)
+    //    new Var(problem, cspomVar.name, cspomVar)
   }
 
   def plus(constant: Int): javax.constraints.Var = {
     ???
-//    val cspomVar = variable.+(problem.cspom.varOf(constant))(problem.cspom)
-//    new Var(problem, cspomVar.name, cspomVar)
+    //    val cspomVar = variable.+(problem.cspom.varOf(constant))(problem.cspom)
+    //    new Var(problem, cspomVar.name, cspomVar)
+  }
+}
+
+object Var {
+  var unnamed = 0;
+
+  /**
+   * Generates an unique variable name.
+   *
+   * @return An unique variable name.
+   */
+  def generate() = {
+    val name = "_" + unnamed;
+    unnamed += 1;
+    name;
   }
 }

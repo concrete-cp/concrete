@@ -83,7 +83,7 @@ final class SACSolvingTest extends Loggable {
 
   @Test
   def dimacs() {
-    assertTrue(solve("flat30-1.cnf"));
+    assertTrue(solve("flat30-1.cnf", false));
     // assertNotNull(solve("clauses-2.cnf.bz2"));
     // assertEquals(1, count("flat30-1.cnf"));
 
