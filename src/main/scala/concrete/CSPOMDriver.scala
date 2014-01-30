@@ -35,11 +35,11 @@ object CSPOMDriver {
     problem.isInt('sq, Seq(v))
   }
 
-  def allDifferent(v: IntExpression*)(implicit problem: CSPOM): CSPOMConstraint = {
+  def allDifferent(v: IntExpression*): CSPOMConstraint = {
     new CSPOMConstraint('allDifferent, v)
   }
 
-  def gcc(cardinalities: Seq[(Int, Int, Int)], v: IntExpression*)(implicit problem: CSPOM): CSPOMConstraint = {
+  def gcc(cardinalities: Seq[(Int, Int, Int)], v: IntExpression*): CSPOMConstraint = {
     new CSPOMConstraint('gcc, v, Map("gcc" -> cardinalities))
   }
 
@@ -87,17 +87,15 @@ object CSPOMDriver {
   }
 }
 
-final class JCSPOMDriver extends CSPOM {
+final object JCSPOMDriver {
   import CSPOMDriver._
-
-  implicit def cspom: CSPOM = this
 
   def ne[A <: SimpleExpression, B <: SimpleExpression](e1: A, e2: B) = e1 !== e2
 
   @varargs
-  def allDifferent(v: IntVariable*) = CSPOMDriver.allDifferent(v: _*)(this)
+  def allDifferent(v: IntVariable*) = CSPOMDriver.allDifferent(v: _*)
 
-  def abs(v: IntVariable) = CSPOMDriver.abs(v)(this)
+  def abs(v: IntVariable) = CSPOMDriver.abs(v)
 
   def lt(v1: IntExpression, v2: IntExpression) = v1 < v2
 

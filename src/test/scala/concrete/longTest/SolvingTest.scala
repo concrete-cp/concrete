@@ -179,7 +179,7 @@ object SolvingTest extends Loggable {
 
   def solve(name: String, test: Boolean = true): Boolean = {
     val url = getClass.getResource(name)
-    val (cspomProblem, variables) = CSPOM.load(url);
+    val (cspomProblem, data) = CSPOM.load(url);
 
     val solver = Solver(cspomProblem);
 
@@ -191,7 +191,7 @@ object SolvingTest extends Loggable {
       println(sol.toSeq.sortBy((_._1)))
 
       if (test) {
-        val failed = XCSPConcrete.control(sol, variables, url)
+        val failed = XCSPConcrete.control(sol, data('variables).asInstanceOf[Seq[String]], url)
         for (f <- failed) {
           fail(sol + "\n" + f)
         }
@@ -203,7 +203,7 @@ object SolvingTest extends Loggable {
 
   def count(name: String) = {
     val url = getClass.getResource(name)
-    val (cspomProblem, variables) = CSPOM.load(url);
+    val (cspomProblem, data) = CSPOM.load(url);
 
     val solver = Solver(cspomProblem)
 
@@ -211,7 +211,7 @@ object SolvingTest extends Loggable {
       (count, sol) =>
         //logger.info(solution.toString)
         assert {
-          val failed = XCSPConcrete.control(sol, variables, url)
+          val failed = XCSPConcrete.control(sol, data('variables).asInstanceOf[Seq[String]], url)
           for (f <- failed) {
             fail(1 + count + "th solution: " + f)
           }

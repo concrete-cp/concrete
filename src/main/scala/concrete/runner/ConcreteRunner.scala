@@ -83,8 +83,12 @@ trait ConcreteRunner {
         sys.exit(1)
     }
 
-    val writer: ConcreteWriter = opt.get('SQL).map(url => new SQLWriter(new URI(url.toString))).
-      getOrElse(new ConsoleWriter())
+    val writer: ConcreteWriter =
+      opt.get('SQL).map(url => new SQLWriter(new URI(url.toString))).orElse {
+        opt.get('Writer).map(_.asInstanceOf[ConcreteWriter])
+      } getOrElse {
+        new ConsoleWriter()
+      }
 
     writer.problem(description(remaining))
 

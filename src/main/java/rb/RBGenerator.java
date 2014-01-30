@@ -11,13 +11,15 @@ import rb.randomlists.ProbabilityRandomListGenerator;
 import rb.randomlists.ProportionRandomListGenerator;
 import rb.randomlists.RandomListGenerator;
 import rb.randomlists.Structure;
-import scala.Symbol;
+import concrete.JCSPOMDriver;
 import concrete.generator.FailedGenerationException;
 import cspom.CSPOM;
 import cspom.CSPOMConstraint;
 import cspom.extension.MDD;
 import cspom.extension.MDD$;
 import cspom.variable.IntVariable;
+
+import static concrete.JCSPOMDriver.*;
 
 /**
  * This class corresponds to explicit random problems, i.e., random problems
