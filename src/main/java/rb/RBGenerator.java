@@ -21,6 +21,8 @@ import cspom.variable.IntVariable;
 
 import static concrete.JCSPOMDriver.*;
 
+import static concrete.JCSPOMDriver.*;
+
 /**
  * This class corresponds to explicit random problems, i.e., random problems
  * such that constraints are given in extension. <br>
