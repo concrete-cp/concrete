@@ -22,7 +22,7 @@ import concrete.LearnMethod
 import concrete.NoGoodLearner
 import concrete.Variable
 import concrete.Parameter
-import concrete.Statistic
+import cspom.Statistic
 import concrete.util.Loggable
 import concrete.ParameterManager
 import concrete.StatisticsManager

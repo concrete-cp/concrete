@@ -8,7 +8,7 @@ class ConsoleWriter extends ConcreteWriter {
   def parameters(params: NodeSeq) {
     val p = for (p <- params \\ "p") yield {
       //Console.println(p)
-      Console.println(s"${p \ "@name" text} = ${p.text}")
+      Console.println(s"# ${p \ "@name" text} = ${p.text}")
 
     }
 

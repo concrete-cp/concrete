@@ -3,6 +3,8 @@ package concrete;
 import org.junit.Assert._
 import org.junit.Test
 
+import cspom.Statistic;
+
 object StatisticsManagerTest {
   @Statistic
   val testInt = 8;

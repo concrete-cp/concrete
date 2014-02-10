@@ -1,7 +1,7 @@
 package concrete.priorityqueues;
 
 import java.util.Arrays
-import concrete.Statistic
+import cspom.Statistic
 import scala.annotation.tailrec
 
 final class ScalaBinomialHeap[T <: Identified](initSize: Int) extends PriorityQueue[T] {

@@ -2,12 +2,12 @@ package concrete.generator.cspompatterns
 
 object ConcretePatterns {
   def apply() =
-    Seq(
+    Seq(MergeSame,
       AbsDiff, SubToAdd, AddToEq,
       SubsumedDiff, AllDiff, RemoveUselessEq, DiffGe,
       UnaryOr, MergeDisj, MergeNotDisj, MergeEq,
       NegToCNF, ReifiedDisj, ReifiedConj,
-      SimplDisj, MergeSame,
+      SimplDisj,
       NeqVec, RemoveAnd, SplitAllEq,
       LtToGt //, ConstToVar
       )

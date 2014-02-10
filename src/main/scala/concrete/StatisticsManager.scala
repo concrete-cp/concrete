@@ -20,7 +20,7 @@ class StatisticsManager extends Loggable {
     objects += name -> o
   }
 
-  private def annoted(f: Field) = f.getAnnotation(classOf[concrete.Statistic]) != null
+  private def annoted(f: Field) = f.getAnnotation(classOf[cspom.Statistic]) != null
 
   def apply(name: String): AnyRef = {
 

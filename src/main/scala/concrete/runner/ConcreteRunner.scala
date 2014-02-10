@@ -1,20 +1,20 @@
 package concrete.runner
 
 import java.net.URI
-import java.util.Timer
-import concrete.ParameterManager
-import concrete.Solver
-import concrete.Statistic
-import concrete.Statistic
-import concrete.StatisticsManager
-import concrete.util.Waker
-import cspom.compiler.ProblemCompiler
-import concrete.generator.ProblemGenerator
-import cspom.CSPOM
-import concrete.Problem
-import concrete.Parameter
 import java.security.InvalidParameterException
+import java.util.Timer
+
+import concrete.ParameterManager
+import concrete.Problem
+import concrete.Solver
+import concrete.StatisticsManager
+import concrete.generator.FailedGenerationException
+import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
+import concrete.util.Waker
+import cspom.CSPOM
+import cspom.Statistic
+import cspom.compiler.ProblemCompiler
 
 trait ConcreteRunner {
 
@@ -109,6 +109,9 @@ trait ConcreteRunner {
 
       val (problem, lT) = StatisticsManager.time(load(remaining))
       val solver = Solver(problem)
+      
+      println(solver.problem)
+      
       writer.parameters(ParameterManager.toXML)
 
       loadTime = lT

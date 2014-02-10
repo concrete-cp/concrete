@@ -12,7 +12,7 @@ import concrete.priorityqueues.BinaryHeap
 import concrete.priorityqueues.PriorityQueue
 import concrete.util.Loggable
 import concrete.Parameter
-import concrete.Statistic
+import cspom.Statistic
 import concrete.AdviseCount
 import concrete.ParameterManager
 import concrete.Problem

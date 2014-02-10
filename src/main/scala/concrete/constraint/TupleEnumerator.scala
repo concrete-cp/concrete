@@ -4,7 +4,7 @@ import scala.Array.canBuildFrom
 import scala.annotation.implicitNotFound
 import scala.annotation.tailrec
 
-import concrete.Statistic
+import cspom.Statistic
 
 object TupleEnumerator {
   @Statistic

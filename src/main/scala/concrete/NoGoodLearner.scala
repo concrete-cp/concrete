@@ -7,6 +7,7 @@ import concrete.constraint.extension.Matrix2D
 import concrete.constraint.Constraint
 import concrete.util.BitVectorIterator
 import concrete.constraint.extension.TupleTrieSet
+import cspom.Statistic;
 
 sealed trait LearnMethod
 

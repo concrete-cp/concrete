@@ -6,7 +6,7 @@ import scala.annotation.tailrec
 
 import concrete.constraint.Constraint
 
-import concrete.Statistic
+import cspom.Statistic
 
 /**
  *

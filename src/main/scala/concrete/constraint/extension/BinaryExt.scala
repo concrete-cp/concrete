@@ -23,7 +23,7 @@ import concrete.constraint.VariablePerVariable
 import concrete.Variable
 import concrete.constraint.TupleEnumerator
 import scala.annotation.tailrec
-import concrete.Statistic
+import cspom.Statistic
 import concrete.StatisticsManager
 
 object BinaryExt {

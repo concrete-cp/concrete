@@ -16,6 +16,8 @@ import cspom.variable.IntVariable
 import cspom.variable.FreeVariable
 import cspom.variable.IntSeq
 import cspom.variable.FreeInt
+import cspom.variable.CSPOMSeq
+import cspom.variable.CSPOMExpression
 
 object ProblemGenerator extends Loggable {
   @throws(classOf[FailedGenerationException])
@@ -76,12 +78,24 @@ object ProblemGenerator extends Loggable {
       name;
     }
 
-    cspom.referencedExpressions.collect {
-      case v: CSPOMVariable =>
-        val name = cspom.nameOf(v).getOrElse(generate())
-        v -> new Variable(name, generateDomain(v));
-    } toMap
+    val named = cspom.namedExpressions.flatMap(
+      ne => generateVariables(ne._1, ne._2))
+
+    named ++ cspom.referencedExpressions.iterator.collect {
+      case v: CSPOMVariable if !named.contains(v) =>
+        v -> new Variable(generate(), generateDomain(v))
+    }
   }
+
+  def generateVariables(name: String, e: CSPOMExpression): Map[CSPOMVariable, Variable] =
+    e match {
+      case v: CSPOMVariable => Map(v -> new Variable(name, generateDomain(v)))
+      case CSPOMSeq(vars, range, _) =>
+        (vars zip range).flatMap {
+          case (e, i) => generateVariables(s"$name[$i]", e)
+        } toMap
+      case _ => throw new UnsupportedOperationException(s"Cannot generate $e")
+    }
 
   def generateDomain[T](cspomVar: CSPOMVariable): Domain = cspomVar match {
     case bD: BoolVariable =>

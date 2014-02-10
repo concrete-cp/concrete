@@ -13,12 +13,9 @@ object MergeSame extends ConstraintCompiler {
   type A = CSPOMConstraint
 
   override def mtch(c: CSPOMConstraint, problem: CSPOM): Option[A] = {
-    c.fullScope.flatMap(problem.constraints).collectFirst {
-      case same @ CSPOMConstraint(_, c.function, c.arguments, c.params) if (same ne c) => same
+    c.fullScope.iterator.flatMap(problem.constraints).filter(_ ne c).collectFirst {
+      case same @ CSPOMConstraint(_, c.function, c.arguments, c.params) => same
     }
-
-    //    c.scope.flatMap(problem.constraints).find(same => (same ne c) && same.function == c.function &&
-    //      same.arguments == c.arguments && same.params == c.params)
   }
 
   def compile(c: CSPOMConstraint, problem: CSPOM, same: CSPOMConstraint) = {

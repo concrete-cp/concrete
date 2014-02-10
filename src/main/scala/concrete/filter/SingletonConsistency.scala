@@ -5,7 +5,7 @@ import concrete.StatisticsManager
 import concrete.constraint.Constraint
 import concrete.Problem
 import concrete.Variable
-import concrete.Statistic
+import cspom.Statistic
 import concrete.util.Loggable
 import scala.annotation.tailrec
 

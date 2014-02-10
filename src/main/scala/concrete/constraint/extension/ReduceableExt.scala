@@ -27,7 +27,7 @@ import concrete.util.Loggable
 import concrete.Variable
 import concrete.UNSATException
 import concrete.constraint.Removals
-import concrete.Statistic
+import cspom.Statistic
 import concrete.UNSATObject
 
 object ReduceableExt {

@@ -20,12 +20,14 @@
 package concrete;
 
 import java.lang.Override
+
 import scala.collection.JavaConversions
 import concrete.filter.ACC
 import concrete.filter.Filter
 import concrete.heuristic.CrossHeuristic
 import concrete.heuristic.Heuristic
 import concrete.util.Loggable
+import cspom.Statistic;
 import scala.annotation.tailrec
 
 object MAC {

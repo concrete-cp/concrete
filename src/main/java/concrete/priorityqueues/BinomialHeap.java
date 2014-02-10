@@ -2,7 +2,7 @@ package concrete.priorityqueues;
 
 import java.util.Arrays;
 
-import concrete.Statistic;
+import cspom.Statistic;
 
 
 public final class BinomialHeap<T extends Identified> implements

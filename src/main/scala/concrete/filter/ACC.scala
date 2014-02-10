@@ -7,7 +7,7 @@ import concrete.priorityqueues._
 import concrete.util.Loggable
 import concrete.ParameterManager
 import concrete.Problem
-import concrete.Statistic
+import cspom.Statistic
 import concrete.StatisticsManager
 import concrete.UNSATException
 import concrete.Variable

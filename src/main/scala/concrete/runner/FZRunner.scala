@@ -9,6 +9,10 @@ import abscon.instance.components.PVariable
 import scala.collection.JavaConversions
 import java.net.URI
 import cspom.variable.CSPOMVariable
+import cspom.flatzinc.FZAnnotation
+import cspom.flatzinc.FZArrayExpr
+import cspom.flatzinc.FZSetConst
+import cspom.variable.CSPOMSeq
 
 object FZConcrete extends ConcreteRunner with App {
 
@@ -38,15 +42,46 @@ object FZConcrete extends ConcreteRunner with App {
       case _ => throw new IllegalArgumentException(args.toString)
     }
 
+  def flattenArrayExpr(ranges: Seq[Seq[Int]], name: String, solution: Map[String, Int]): Seq[Int] = {
+    if (ranges.isEmpty) {
+      Seq(solution(name))
+    } else {
+      ranges.head.flatMap(
+        i => flattenArrayExpr(ranges.tail, s"$name[$i]", solution))
+    }
+  }
+
+  def flattenedSize(ranges: Seq[Seq[Int]]): Int =
+    if (ranges.isEmpty) {
+      1
+    } else {
+      ranges.head.size * flattenedSize(ranges.tail)
+    }
+
   override def output(solution: Map[String, Int]) = {
+    val out: Iterable[String] = cProblem.namedExpressions.flatMap {
+      case (name, output) =>
+        output.params.collectFirst {
+          case FZAnnotation("output_var", Seq()) =>
+            name + " = " + solution(name) + ";"
+          case FZAnnotation("output_array", Seq(data: FZArrayExpr[Seq[Int]])) =>
+            val FZArrayExpr(array) = data
+            val ranges = array.map {
+              case FZSetConst(range) => range
+            }
+            val CSPOMSeq(variables, initRange, _) = output
+            require(initRange.size == flattenedSize(ranges))
+            val solutions = initRange.map(i => solution(s"$name[$i]"))
 
-    val out = cProblem.namedExpressions.collect {
-      case (name, output) if output.params("output_var") =>
-        name + " = " + solution(name) + ";"
+            s"$name = array${array.size}d(${
+              ranges.map(range => s"[${range.head}..${range.last}], ").mkString
+            }${solutions.mkString(", ")});"
 
-      case (name, output) if output.params.exists(_.contains("output_array")) =>
-        name + " : " + output.params
-        
+        }
+
+      //      case (name, output) if output.params("output_array") =>
+      //        name + " : " + output.params
+
     }
 
     out.mkString("\n")
