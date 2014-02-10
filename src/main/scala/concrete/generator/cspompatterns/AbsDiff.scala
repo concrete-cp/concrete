@@ -32,4 +32,6 @@ object AbsDiff extends ConstraintCompiler {
     }
 
   }
+  
+  def selfPropagation = false
 }

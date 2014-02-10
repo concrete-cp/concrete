@@ -10,13 +10,13 @@ import concrete.heuristic.revision.Dom
 import concrete.heuristic.revision.Key
 import concrete.priorityqueues.BinaryHeap
 import concrete.priorityqueues.PriorityQueue
-import concrete.util.Loggable
+import cspom.Loggable
 import concrete.Parameter
 import cspom.Statistic
 import concrete.AdviseCount
 import concrete.ParameterManager
 import concrete.Problem
-import concrete.StatisticsManager
+import cspom.StatisticsManager
 import concrete.UNSATException
 import concrete.Variable
 

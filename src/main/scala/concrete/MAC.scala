@@ -20,15 +20,16 @@
 package concrete;
 
 import java.lang.Override
-
 import scala.collection.JavaConversions
 import concrete.filter.ACC
 import concrete.filter.Filter
 import concrete.heuristic.CrossHeuristic
 import concrete.heuristic.Heuristic
-import concrete.util.Loggable
-import cspom.Statistic;
+import cspom.Loggable
+import cspom.Statistic
+import cspom.StatisticsManager
 import scala.annotation.tailrec
+import cspom.TimedException
 
 object MAC {
   @Parameter("mac.btGrowth")
@@ -94,7 +95,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
         case None => (SAT(extractSolution), stack)
         case Some(pair) =>
 
-          info(s"${problem.currentLevel}: ${pair.variable} <- ${pair.value} ($nbBacktracks / $maxBacktracks)");
+          logger.info(s"${problem.currentLevel}: ${pair.variable} <- ${pair.value} ($nbBacktracks / $maxBacktracks)");
 
           problem.push()
 
@@ -113,7 +114,7 @@ final class MAC(prob: Problem) extends Solver(prob) with Loggable {
       problem.pop()
       nbBacktracks += 1
 
-      info(s"${problem.currentLevel}: ${stack.head} removed")
+      logger.info(s"${problem.currentLevel}: ${stack.head} removed")
       stack.head.remove()
       mac(Some(stack.head.variable), stack.tail)
     }

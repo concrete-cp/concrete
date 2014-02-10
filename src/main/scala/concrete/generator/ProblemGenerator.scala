@@ -7,7 +7,7 @@ import cspom.CSPOM
 import scala.annotation.tailrec
 import scala.collection.immutable.Queue
 import cspom.variable.IntInterval
-import concrete.util.Loggable
+import cspom.Loggable
 import concrete.UndefinedDomain
 import concrete.Variable
 import cspom.variable.CSPOMVariable

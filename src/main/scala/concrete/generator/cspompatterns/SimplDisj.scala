@@ -58,4 +58,6 @@ object SimplDisj extends ConstraintCompilerNoData {
 
   }
 
+  def selfPropagation = false
+
 }

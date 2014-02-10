@@ -46,4 +46,6 @@ object ReifiedConj extends ConstraintCompiler {
 
   }
 
+  def selfPropagation = false
+  
 }

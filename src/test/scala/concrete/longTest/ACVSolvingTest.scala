@@ -4,7 +4,7 @@ import scala.annotation.elidable
 import org.junit.Assert._
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import concrete.util.Loggable
+import cspom.Loggable
 import concrete.ParameterManager
 import concrete.Solver
 import cspom.compiler.ProblemCompiler

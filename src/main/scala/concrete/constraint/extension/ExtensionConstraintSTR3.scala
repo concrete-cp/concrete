@@ -23,7 +23,7 @@ import scala.annotation.tailrec
 import concrete.constraint.Constraint
 import concrete.util.Backtrackable
 import concrete.util.BitVector
-import concrete.util.Loggable
+import cspom.Loggable
 import concrete.Variable
 import concrete.UNSATException
 import concrete.constraint.Removals

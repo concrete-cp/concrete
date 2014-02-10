@@ -20,7 +20,7 @@ package concrete.filter;
 
 import concrete.Problem
 import concrete.Variable
-import concrete.util.Loggable
+import cspom.Loggable
 import scala.annotation.tailrec
 
 /**

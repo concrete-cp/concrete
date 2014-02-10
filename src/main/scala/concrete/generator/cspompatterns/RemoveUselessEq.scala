@@ -17,10 +17,6 @@ import cspom.variable.CSPOMFalse
 import cspom.variable.CSPOMTrue
 import cspom.variable.CSPOMVariable
 
-/**
- * If given constraint is an all-equal constraint, merges and removes all
- * auxiliary variables.
- */
 object RemoveUselessEq extends ConstraintCompiler {
 
   type A = BoolExpression
@@ -53,4 +49,5 @@ object RemoveUselessEq extends ConstraintCompiler {
 
   private def allEqual[A](s: Seq[A]) = s.forall(_ == s.head)
 
+  def selfPropagation = false
 }

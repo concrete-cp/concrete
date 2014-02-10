@@ -10,7 +10,7 @@ import cspom.variable.BoolVariable
 import org.hamcrest.CoreMatchers._
 import concrete.CSPOMDriver._
 import cspom.compiler.ProblemCompiler
-import concrete.generator.cspompatterns.MergeEq
+import cspom.compiler.MergeEq
 
 class DiffGeTest {
   @Test

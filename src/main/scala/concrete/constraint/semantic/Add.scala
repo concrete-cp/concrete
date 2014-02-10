@@ -5,7 +5,7 @@ import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.Residues
 import concrete.util.Interval
-import concrete.util.Loggable
+import cspom.Loggable
 import concrete.constraint.Shaver
 
 final class Add(val result: Variable, val v0: Variable, val v1: Variable)

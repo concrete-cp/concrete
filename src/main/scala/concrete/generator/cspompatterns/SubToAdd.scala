@@ -43,4 +43,6 @@ object SubToAdd extends ConstraintCompiler {
 
   }
 
+  def selfPropagation = false
+
 }

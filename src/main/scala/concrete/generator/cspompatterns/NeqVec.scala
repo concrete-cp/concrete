@@ -39,26 +39,6 @@ object NeqVec extends ConstraintCompiler {
     }
 
   }
-  //    if (isNevec(c)) {
-  //      c.result match {
-  //        case v: CSPOMVariable => (problem.constraints(v) - c).toSeq match {
-  //          case Seq(orConstraint) if (orConstraint.function == "or" && orConstraint.result == CSPOMTrue) =>
-  //            val orVariables = orConstraint.scope
-  //            val neConstraints = orVariables.flatMap(problem.constraints) - orConstraint
-  //
-  //            if (neConstraints.forall(isNevec)) {
-  //              Some((orConstraint, orVariables, neConstraints))
-  //            } else {
-  //              None
-  //            }
-  //          case _ => None
-  //        }
-  //        case _ => None
-  //      }
-  //    } else {
-  //      None
-  //    }
-  //  }
 
   def compile(fc: CSPOMConstraint, problem: CSPOM, data: (CSPOMConstraint, Set[CSPOMExpression], Set[CSPOMConstraint])) = {
     val (orConstraint, orVariables, neConstraints) = data
@@ -74,5 +54,7 @@ object NeqVec extends ConstraintCompiler {
     replaceCtr(orConstraint +: neConstraints.toSeq, newC, problem)
 
   }
+  
+  def selfPropagation = true
 
 }

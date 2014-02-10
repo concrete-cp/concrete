@@ -24,7 +24,7 @@ import concrete.LearnMethod
 import concrete.NoGoodLearner
 import concrete.Problem
 import concrete.Variable
-import concrete.util.Loggable
+import cspom.Loggable
 import cspom.Statistic
 import concrete.UNSATException
 import concrete.LearnBin

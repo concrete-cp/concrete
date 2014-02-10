@@ -28,4 +28,6 @@ object SubsumedDiff extends ConstraintCompilerNoData {
     problem.constraints(smallestDegree).exists(
       c => c != constraint && AllDiff.DIFF_CONSTRAINT(c) && constraint.fullScope.toSet.subsetOf(c.fullScope.toSet))
   }
+
+  def selfPropagation = false
 }

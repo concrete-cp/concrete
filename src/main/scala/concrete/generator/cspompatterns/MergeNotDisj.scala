@@ -45,4 +45,6 @@ object MergeNotDisj extends ConstraintCompiler {
     replaceCtr(Seq(fc, orConstraint), newConstraint, problem)
 
   }
+  
+  def selfPropagation = true
 }

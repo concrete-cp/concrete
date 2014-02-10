@@ -1,5 +1,5 @@
 package concrete.runner
-import concrete.StatisticsManager
+import cspom.StatisticsManager
 import scala.xml.NodeSeq
 
 trait ConcreteWriter {

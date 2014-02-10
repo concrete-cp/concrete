@@ -148,7 +148,7 @@ object AllDiff extends ConstraintCompiler with Loggable {
           problem.removeConstraint(c);
           delta = delta.removed(c)
       }
-      fine("removed " + removed + " constraints, " + problem.constraints.size + " left")
+      logger.fine("removed " + removed + " constraints, " + problem.constraints.size + " left")
     }
     delta
   }
@@ -176,5 +176,5 @@ object AllDiff extends ConstraintCompiler with Loggable {
     }
     returned
   }
-
+  def selfPropagation = false
 }

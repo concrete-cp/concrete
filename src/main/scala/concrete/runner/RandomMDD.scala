@@ -7,7 +7,7 @@ import scala.slick.jdbc.StaticQuery.interpolation
 import scala.slick.session.Database
 import Database.threadLocalSession
 import java.net.URI
-import concrete.StatisticsManager
+import cspom.StatisticsManager
 import scala.collection.mutable.HashMap
 import cspom.extension.EmptyMDD
 import cspom.extension.MDDLeaf

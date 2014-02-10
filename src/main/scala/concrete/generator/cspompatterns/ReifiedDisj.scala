@@ -46,4 +46,5 @@ object ReifiedDisj extends ConstraintCompiler {
 
   }
 
+  def selfPropagation = false
 }

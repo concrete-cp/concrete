@@ -34,5 +34,5 @@ object DiffGe extends ConstraintCompiler {
     replaceCtr(Seq(subConstraint, geConstraint), newC, problem)
 
   }
-
+  def selfPropagation = false
 }

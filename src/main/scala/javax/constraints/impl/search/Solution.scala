@@ -1,6 +1,6 @@
 package javax.constraints.impl.search
 
-import concrete.util.Loggable
+import cspom.Loggable
 
 class Solution(sol: Map[String, Int]) extends javax.constraints.Solution with Loggable {
   def getAt(x$1: String): Int = ???

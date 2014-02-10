@@ -39,5 +39,5 @@ object LtToGt extends ConstraintCompiler {
       problem)
 
   }
-
+  def selfPropagation = false
 }

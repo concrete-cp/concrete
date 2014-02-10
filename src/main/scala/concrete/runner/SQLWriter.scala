@@ -24,7 +24,7 @@ import java.math.BigInteger
 import java.net.URI
 import java.security.MessageDigest
 import concrete.Solver
-import concrete.StatisticsManager
+import cspom.StatisticsManager
 import cspom.CSPOM
 import java.security.InvalidParameterException
 import scala.slick.session.Database

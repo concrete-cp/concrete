@@ -21,7 +21,7 @@ package concrete.filter;
 import java.util.logging.Logger
 import concrete.Problem
 import concrete.Variable;
-import concrete.util.Loggable
+import cspom.Loggable
 
 /**
  * @author Julien VION

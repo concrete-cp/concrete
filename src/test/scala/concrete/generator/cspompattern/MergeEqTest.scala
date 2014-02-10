@@ -4,7 +4,7 @@ import cspom.CSPOM._
 import org.junit.Assert._
 import org.junit.Test
 import cspom.variable.IntVariable
-import concrete.generator.cspompatterns.MergeEq
+import cspom.compiler.MergeEq
 import cspom.variable.CSPOMVariable
 import cspom.variable.BoolVariable
 import concrete.CSPOMDriver._

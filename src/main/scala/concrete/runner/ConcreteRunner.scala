@@ -7,7 +7,7 @@ import java.util.Timer
 import concrete.ParameterManager
 import concrete.Problem
 import concrete.Solver
-import concrete.StatisticsManager
+import cspom.StatisticsManager
 import concrete.generator.FailedGenerationException
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns

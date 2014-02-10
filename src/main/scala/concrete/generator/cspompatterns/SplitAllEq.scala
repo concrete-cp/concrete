@@ -46,4 +46,6 @@ object SplitAllEq extends ConstraintCompilerNoData {
     }
 
   }
+
+  def selfPropagation = false
 }

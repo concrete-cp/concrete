@@ -3,7 +3,7 @@ package concrete.constraint;
 import scala.annotation.tailrec
 
 import concrete.Variable
-import concrete.util.Loggable
+import cspom.Loggable
 
 /**
  * A constraint that can be revised one variable at a time

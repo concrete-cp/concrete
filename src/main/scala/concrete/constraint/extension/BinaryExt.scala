@@ -24,7 +24,7 @@ import concrete.Variable
 import concrete.constraint.TupleEnumerator
 import scala.annotation.tailrec
 import cspom.Statistic
-import concrete.StatisticsManager
+import cspom.StatisticsManager
 
 object BinaryExt {
   @Statistic

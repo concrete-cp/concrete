@@ -40,4 +40,5 @@ object UnaryOr extends ConstraintCompiler {
 
   }
 
+  def selfPropagation = false
 }

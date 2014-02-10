@@ -5,7 +5,7 @@ import concrete.constraint.Constraint
 import concrete.Domain
 import concrete.util.Interval
 import concrete.Variable
-import concrete.util.Loggable
+import cspom.Loggable
 import concrete.constraint.Shaver
 import scala.collection.mutable.HashSet
 

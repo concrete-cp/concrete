@@ -1,13 +1,13 @@
 package concrete.runner
 
-import concrete.StatisticsManager
+import cspom.StatisticsManager
 import scala.xml.NodeSeq
 
 class ConsoleWriter extends ConcreteWriter {
 
   def parameters(params: NodeSeq) {
-    val p = for (p <- params \\ "p") yield {
-      //Console.println(p)
+    for (p <- params \\ "p") {
+
       Console.println(s"# ${p \ "@name" text} = ${p.text}")
 
     }
@@ -15,7 +15,7 @@ class ConsoleWriter extends ConcreteWriter {
   }
 
   def problem(problem: String) {
-    Console.println(problem)
+    Console.println("# " + problem)
   }
 
   def solution(solution: Option[Map[String, Int]], concrete: ConcreteRunner) {
@@ -23,7 +23,10 @@ class ConsoleWriter extends ConcreteWriter {
   }
 
   def write(stats: StatisticsManager) {
-    Console.println(stats)
+    for ((n, v) <- stats.digest.toSeq.sortBy(_._1)) {
+      Console.println(s"# $n = $v")
+    }
+
   }
 
   def error(e: Throwable) {
@@ -33,7 +36,7 @@ class ConsoleWriter extends ConcreteWriter {
   }
 
   def disconnect() {
-    Console.println("End.")
+    //Console.println("==========")
   }
 
 }

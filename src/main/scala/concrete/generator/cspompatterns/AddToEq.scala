@@ -64,5 +64,5 @@ object AddToEq extends ConstraintCompiler {
     }
 
   }
-
+  def selfPropagation = false
 }

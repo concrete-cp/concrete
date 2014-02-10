@@ -1,12 +1,12 @@
 package concrete.filter;
 
 import scala.collection.Iterable
-import concrete.StatisticsManager
+import cspom.StatisticsManager
 import concrete.constraint.Constraint
 import concrete.Problem
 import concrete.Variable
 import cspom.Statistic
-import concrete.util.Loggable
+import cspom.Loggable
 import scala.annotation.tailrec
 
 trait SingletonConsistency extends Filter with Loggable {

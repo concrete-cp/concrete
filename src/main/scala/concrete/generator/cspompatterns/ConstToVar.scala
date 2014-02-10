@@ -37,5 +37,5 @@ object ConstToVar extends ConstraintCompiler {
     }
     replaceCtr(constraint, newConstraint, problem)
   }
-
+  def selfPropagation = false
 }

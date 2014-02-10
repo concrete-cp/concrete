@@ -9,7 +9,7 @@ import concrete.generator.ProblemGenerator
 import concrete.LearnMethod
 import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
-import concrete.util.Loggable
+import cspom.Loggable
 import concrete.ParameterManager
 import concrete.Solver
 import concrete.filter.SAC1

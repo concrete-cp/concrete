@@ -23,9 +23,9 @@ import concrete.NoGoodLearner
 import concrete.Variable
 import concrete.Parameter
 import cspom.Statistic
-import concrete.util.Loggable
+import cspom.Loggable
 import concrete.ParameterManager
-import concrete.StatisticsManager
+import cspom.StatisticsManager
 import concrete.Problem
 
 /**

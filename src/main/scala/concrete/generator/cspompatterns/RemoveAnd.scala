@@ -23,4 +23,6 @@ object RemoveAnd extends ConstraintCompilerNoData {
     Delta().removed(constraint) ++ replace(constraint.fullScope.distinct, CSPOMTrue, problem)
 
   }
+
+  def selfPropagation = false
 }

@@ -4,7 +4,7 @@ import scala.xml.Node
 import scala.xml.Text
 import scala.xml.NodeSeq
 import scala.collection.mutable.ListBuffer
-import concrete.StatisticsManager
+import cspom.StatisticsManager
 import java.util.Locale
 import scala.collection.mutable.HashMap
 import scala.annotation.tailrec

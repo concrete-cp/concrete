@@ -27,7 +27,7 @@ import concrete.NoGoodLearner
 import concrete.Problem
 import concrete.Variable
 import concrete.Parameter
-import concrete.util.Loggable
+import cspom.Loggable
 import scala.annotation.tailrec
 import concrete.LearnBin
 

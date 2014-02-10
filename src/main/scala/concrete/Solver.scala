@@ -21,21 +21,21 @@ package concrete;
 
 import java.util.logging.Level
 import java.util.logging.Logger
-
 import scala.annotation.tailrec
 import scala.collection.JavaConversions
 import concrete.filter.Filter
 import concrete.generator.ProblemGenerator
-import concrete.util.Loggable
+import cspom.Loggable
 import concrete.util.MsLogHandler
 import concrete.util.Waker
 import concrete.constraint.extension.MDD
 import cspom.CSPOM
-import cspom.Statistic;
+import cspom.Statistic
 import concrete.constraint.TupleEnumerator
 import concrete.constraint.extension.ReduceableExt
 import cspom.compiler.ProblemCompiler
 import concrete.generator.cspompatterns.ConcretePatterns
+import cspom.StatisticsManager
 
 object Solver {
   @Parameter("logger.level")

@@ -43,5 +43,5 @@ object NegToCNF extends ConstraintCompiler {
       new CSPOMConstraint(CSPOMTrue, 'or, Seq(res, arg), fc.params + ("revsign" -> Seq(true, true)))))
 
   }
-
+  def selfPropagation = false
 }

@@ -6,7 +6,7 @@ import scala.Array.canBuildFrom
 import scala.annotation.tailrec
 import scala.util.Random
 import concrete.IntDomain
-import concrete.StatisticsManager
+import cspom.StatisticsManager
 import concrete.UNSATException
 import concrete.Variable
 import concrete.constraint.extension.ReduceableExt

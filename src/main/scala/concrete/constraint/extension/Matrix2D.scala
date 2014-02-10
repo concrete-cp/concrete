@@ -1,7 +1,7 @@
 package concrete.constraint.extension;
 
 import concrete.util.BitVector;
-import concrete.util.Loggable
+import cspom.Loggable
 
 final class Matrix2D(xSize: Int, ySize: Int, initialState: Boolean) extends Matrix with Loggable {
   private var xMatrix =
