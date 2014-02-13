@@ -16,7 +16,11 @@ import Generator._
 final object EqGenerator extends Generator {
 
   override def gen(constraint: CSPOMConstraint)(implicit variables: VarMap): Option[Seq[Constraint]] = {
-    val Seq(a, b) = constraint.arguments.map(cspom2concrete1D)
+    val Seq(a, b) = try {
+      constraint.arguments.map(cspom2concrete1D)
+    } catch {
+      case _: FailedGenerationException => return None
+    }
     val neg: Boolean = constraint.getParam("neg", classOf[Boolean]).getOrElse(false)
     val negFactor = if (neg) -1 else 1
     val offset: Int = constraint.getParam("offset", classOf[Integer]).map(_.toInt).getOrElse(0)

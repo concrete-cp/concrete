@@ -52,22 +52,27 @@ object Solver {
   ParameterManager.register(this)
 
   def apply(problem: Problem): Solver = {
-    val solver = solverClass.getConstructor(classOf[Problem]).newInstance(problem);
-    solver;
+    solverClass.getConstructor(classOf[Problem]).newInstance(problem);
   }
 
   def apply(cspom: CSPOM): Solver = {
     ProblemCompiler.compile(cspom, ConcretePatterns())
-    apply(ProblemGenerator.generate(cspom))
+    Solver(ProblemGenerator.generate(cspom))
   }
 }
 
-abstract class Solver(val problem: Problem) extends Iterator[Map[String, Int]] with Loggable {
+abstract class Solver(val problem: Problem) extends Iterator[Map[String, Any]] with Loggable {
 
   @Statistic
   var preproRemoved = 0
   @Statistic
   var preproCpu = 0.0
+
+  @Statistic
+  val nbConstraints = problem.constraints.size
+
+  @Statistic
+  val nbVariables = problem.variables.size
 
   val statistics = new StatisticsManager
   statistics.register("solver", this)
@@ -107,7 +112,7 @@ abstract class Solver(val problem: Problem) extends Iterator[Map[String, Int]] w
       for (v <- _maximize) {
         reset()
         try {
-          v.dom.removeTo(v.dom.index(sol(v.name)))
+          v.dom.removeTo(v.dom.index(sol(v.name).asInstanceOf[Int]))
         } catch {
           case e: UNSATException => _next = UNSAT
         }
@@ -115,7 +120,7 @@ abstract class Solver(val problem: Problem) extends Iterator[Map[String, Int]] w
       for (v <- _minimize) {
         reset()
         try {
-          v.dom.removeFrom(v.dom.index(sol(v.name)))
+          v.dom.removeFrom(v.dom.index(sol(v.name).asInstanceOf[Int]))
         } catch {
           case e: UNSATException => _next = UNSAT
         }
@@ -153,7 +158,10 @@ abstract class Solver(val problem: Problem) extends Iterator[Map[String, Int]] w
 
   def reset()
 
-  protected def extractSolution = problem.variables.map { v => v.name -> v.dom.firstValue } toMap
+  protected def extractSolution = problem.variables.map(v => (v.name, v.dom)).map {
+    case (name, dom: IntDomain) => name -> dom.firstValue
+    case (name, dom: BooleanDomain) => name -> dom.canBe(true)
+  } toMap
 
   final def preprocess(filter: Filter): Boolean = {
 
@@ -182,7 +190,7 @@ abstract class Solver(val problem: Problem) extends Iterator[Map[String, Int]] w
 
 sealed trait SolverResult {
   def isSat: Boolean
-  def get: Map[String, Int]
+  def get: Map[String, Any]
   def getNum: Map[String, Number] = get map {
     case (s, i) => (s, i.asInstanceOf[Number])
   }
@@ -191,7 +199,7 @@ sealed trait SolverResult {
   })
 }
 
-case class SAT(val solution: Map[String, Int]) extends SolverResult {
+case class SAT(val solution: Map[String, Any]) extends SolverResult {
   def isSat = true
   def get = solution
   override def toString = "SAT: " + solution.toString

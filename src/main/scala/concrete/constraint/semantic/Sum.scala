@@ -9,14 +9,27 @@ import cspom.Loggable
 import concrete.constraint.Shaver
 import scala.collection.mutable.HashSet
 
+object FilterSum extends Enumeration {
+  type FilterSum = Value
+  val SumLE = Value("le")
+  val SumLT = Value("lt")
+  val SumGE = Value("ge")
+  val SumGT = Value("gt")
+  val SumEQ = Value("eq")
+  val SumNE = Value("ne")
+}
+
+import FilterSum._
+
 final class Sum(
   val constant: Int,
   val factors: Array[Int],
-  scope: Array[Variable]) extends Constraint(scope)
+  scope: Array[Variable],
+  mode: FilterSum) extends Constraint(scope)
   with Loggable {
 
-  def this(constant: Int, scope: Array[Variable]) =
-    this(constant, Array.fill(scope.length)(1), scope)
+  def this(constant: Int, scope: Array[Variable], mode: FilterSum) =
+    this(constant, Array.fill(scope.length)(1), scope, mode)
 
   //val domFact = scope map (_.dom) zip factors toList
 
@@ -26,6 +39,15 @@ final class Sum(
   def advise(p: Int) = arity
 
   val initBound = Interval(-constant, -constant)
+
+  private def filter(dom: Domain, itv: Interval, neg: Boolean): Boolean = mode match {
+    case SumGE if neg => dom.removeFromVal(itv.ub + 1)
+    case SumGE => dom.removeToVal(itv.lb - 1)
+    case SumLE if neg => dom.removeToVal(itv.lb - 1)
+    case SumLE => dom.removeFromVal(itv.ub + 1)
+    case SumEQ => dom.intersectVal(itv)
+    case _ => ???
+  }
 
   def shave(): List[Int] = {
 
@@ -52,7 +74,7 @@ final class Sum(
 
       val boundsf = Interval(bounds.lb - myBounds.lb, bounds.ub - myBounds.ub) / -f
 
-      if (dom.intersectVal(boundsf)) {
+      if (filter(dom, boundsf, f < 0)) {
         ch ::= i
       }
       i -= 1

@@ -16,8 +16,13 @@ class Solver(problem: javax.constraints.impl.Problem) extends javax.constraints.
   // Members declared in 	 javax.constraints.impl.search.AbstractSolver
   def applySolution(x$1: javax.constraints.Solution): Boolean = ???
 
+  private def concreteSol(s: Map[String, Any]) = {
+    new Solution(
+      s.mapValues(_.asInstanceOf[Int]))
+  }
+
   def findSolution(ps: ProblemState): javax.constraints.Solution = {
-    val s = concreteSolver.toIterable.headOption.map(new Solution(_)).getOrElse(null)
+    val s = concreteSolver.toIterable.headOption.map(concreteSol).getOrElse(null)
     if (ps == ProblemState.RESTORE) {
       concreteSolver.reset()
     }
@@ -29,14 +34,12 @@ class Solver(problem: javax.constraints.impl.Problem) extends javax.constraints.
       concreteSolver
     } else {
       concreteSolver.take(maxNumberOfSolutions)
-    }) map {
-      new Solution(_)
-    } toArray
+    }) map (concreteSol) toArray
 
   override def solutionIterator: SolutionIterator = new SolutionIterator {
     val itr = concreteSolver
     def hasNext = itr.hasNext
-    def next = new Solution(itr.next)
+    def next = concreteSol(itr.next)
   }
 
   def newSearchStrategy(): javax.constraints.SearchStrategy = {
@@ -50,11 +53,8 @@ class Solver(problem: javax.constraints.impl.Problem) extends javax.constraints.
       case Objective.MAXIMIZE => concreteSolver.maximize(variable.getName)
       case Objective.MINIMIZE => concreteSolver.minimize(variable.getName)
     }
-    var solution: Option[Map[String, Int]] = None
-    while (concreteSolver.hasNext) {
-      solution = Some(concreteSolver.next())
-    }
-    solution.map(new Solution(_)).getOrElse(null)
+    concreteSolver.toIterable.lastOption.map(concreteSol).getOrElse(null)
+
   }
 
   // Members declared in javax.constraints.Solver 

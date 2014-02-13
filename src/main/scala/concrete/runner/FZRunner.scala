@@ -26,10 +26,13 @@ object FZConcrete extends ConcreteRunner with App {
     val f = new URI(fn)
 
     file = if (f.getScheme() == null) {
-      new URL("file://" + f)
+      new URL("file:" + f)
     } else {
+      println(f.getScheme())
       f.toURL
     }
+    
+    //println(file)
 
     val cspom = CSPOM.load(file)
     data = cspom._2
@@ -58,7 +61,7 @@ object FZConcrete extends ConcreteRunner with App {
       ranges.head.size * flattenedSize(ranges.tail)
     }
 
-  override def output(solution: Map[String, Int]) = {
+  override def output(solution: Map[String, Any]) = {
     val out: Iterable[String] = cProblem.namedExpressions.flatMap {
       case (name, output) =>
         output.params.collectFirst {
@@ -74,8 +77,8 @@ object FZConcrete extends ConcreteRunner with App {
             val solutions = initRange.map(i => solution(s"$name[$i]"))
 
             s"$name = array${array.size}d(${
-              ranges.map(range => s"[${range.head}..${range.last}], ").mkString
-            }${solutions.mkString(", ")});"
+              ranges.map(range => s"${range.head}..${range.last}, ").mkString
+            }${solutions.mkString("[", ", ", "]")});"
 
         }
 
@@ -84,11 +87,11 @@ object FZConcrete extends ConcreteRunner with App {
 
     }
 
-    out.mkString("\n")
+    out.mkString("\n") + "\n----------\n"
     //flatSolution(solution, variables).mkString(" ")
   }
 
-  def control(solution: Map[String, Int]) = ???
+  def control(solution: Map[String, Any]) = ???
 
   run(args)
 

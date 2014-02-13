@@ -11,6 +11,7 @@ import concrete.constraint.TupleEnumerator
 import concrete.constraint.semantic.Sum
 import Generator._
 import concrete.constraint.semantic.ConstProd
+import concrete.constraint.semantic.FilterSum
 
 final object MulGenerator extends Generator {
 
@@ -42,9 +43,9 @@ final object MulGenerator extends Generator {
         case (Const(r), Var(v0), Var(v1)) => Some(Seq(
           new ConstProd(v0, v1, r)))
         case (Var(r), Const(v0), Var(v1)) => Some(Seq(
-          new Sum(0, Array(-1, v0), Array(r, v1))))
+          new Sum(0, Array(-1, v0), Array(r, v1), FilterSum.SumEQ)))
         case (Var(r), Var(v0), Const(v1)) => Some(Seq(
-          new Sum(0, Array(-1, v1), Array(r, v0))))
+          new Sum(0, Array(-1, v1), Array(r, v0), FilterSum.SumEQ)))
 
         case (Var(r), Var(v0), Var(v1)) =>
           Some(Seq(new Mul(r, v0, v1)))

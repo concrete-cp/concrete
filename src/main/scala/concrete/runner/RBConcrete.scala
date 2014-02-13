@@ -24,7 +24,7 @@ object RBConcrete extends ConcreteRunner with App {
     "rb-" + args(0).split(":").mkString("-")
   }
 
-  def control(solution: Map[String, Int]) = ???
+  def control(solution: Map[String, Any]) = ???
 
   run(args)
 

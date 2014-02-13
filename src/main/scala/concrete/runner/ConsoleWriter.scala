@@ -5,26 +5,31 @@ import scala.xml.NodeSeq
 
 class ConsoleWriter extends ConcreteWriter {
 
+  var unsat = false
+
   def parameters(params: NodeSeq) {
     for (p <- params \\ "p") {
 
-      Console.println(s"# ${p \ "@name" text} = ${p.text}")
+      Console.println(s"% ${p \ "@name" text} = ${p.text}")
 
     }
 
   }
 
   def problem(problem: String) {
-    Console.println("# " + problem)
+    Console.println("% " + problem)
   }
 
-  def solution(solution: Option[Map[String, Int]], concrete: ConcreteRunner) {
-    Console.println(outputFormat(solution, concrete))
+  def solution(solution: Option[Map[String, Any]], concrete: ConcreteRunner) {
+    solution match {
+      case Some(solution) => Console.println(concrete.output(solution))
+      case None => unsat = true
+    }
   }
 
   def write(stats: StatisticsManager) {
     for ((n, v) <- stats.digest.toSeq.sortBy(_._1)) {
-      Console.println(s"# $n = $v")
+      Console.println(s"% $n = $v")
     }
 
   }
@@ -36,7 +41,11 @@ class ConsoleWriter extends ConcreteWriter {
   }
 
   def disconnect() {
-    //Console.println("==========")
+    if (unsat) {
+      Console.println("=====UNSATISFIABLE=====")
+    } else {
+      Console.println("==========")
+    }
   }
 
 }

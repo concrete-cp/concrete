@@ -78,7 +78,7 @@ object RandomMDD extends ConcreteRunner with App {
     s"mdd-$n-$d-$k-$e-$l-$q-$s"
   }
 
-  def control(solution: Map[String, Int]) = ???
+  def control(solution: Map[String, Any]) = ???
 
   def params(args: String) = {
     val Array(nbVariables, domainSize, arity, nbConstraints,

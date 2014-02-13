@@ -81,7 +81,7 @@ object Generator {
     case i: IntConstant => Const(i.value)
     case CSPOMTrue => Const(1)
     case CSPOMFalse => Const(0)
-    case _ => throw new UnsupportedOperationException(s"$variable is unexpected")
+    case _ => fail(s"$variable is unexpected")
   }
 
   final def cspom2concrete1D(variable: CSPOMExpression)(implicit variables: Map[CSPOMVariable, Variable]): C21D = cspom2concrete(variable) match {

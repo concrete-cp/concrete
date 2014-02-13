@@ -177,7 +177,13 @@ final class SQLWriter(jdbcUri: URI) extends ConcreteWriter {
     executionId
   }
 
-  def solution(solution: Option[Map[String, Int]], concrete: ConcreteRunner) {
+  def outputFormat(solution: Option[Map[String, Any]], concrete: ConcreteRunner) =
+    solution match {
+      case Some(solution) => concrete.output(solution)
+      case None => "UNSAT"
+    }
+
+  def solution(solution: Option[Map[String, Any]], concrete: ConcreteRunner) {
     require(executionId >= 0, "Problem description or parameters were not defined")
     val sol = outputFormat(solution, concrete)
     db.withSession {

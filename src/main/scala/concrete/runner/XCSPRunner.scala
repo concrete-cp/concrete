@@ -28,19 +28,19 @@ object XCSPConcrete extends ConcreteRunner with App {
       case _ => throw new IllegalArgumentException(args.toString)
     }
 
-  override def output(solution: Map[String, Int]) = {
+  override def output(solution: Map[String, Any]) = {
     flatSolution(solution, variables).mkString(" ")
   }
 
-  def flatSolution(solution: Map[String, Int], variables: Iterable[String]): Iterable[Int] =
+  def flatSolution(solution: Map[String, Any], variables: Iterable[String]): Iterable[Any] =
     variables map solution
 
-  def control(solution: Map[String, Int]) = {
+  def control(solution: Map[String, Any]) = {
     control(solution, variables, file)
   }
 
-  def control(solution: Map[String, Int], variables: Iterable[String], file: URL) = {
-    new SolutionChecker(file).checkSolution(flatSolution(solution, variables).toIndexedSeq)
+  def control(solution: Map[String, Any], variables: Iterable[String], file: URL) = {
+    new SolutionChecker(file).checkSolution(flatSolution(solution, variables).map(_.asInstanceOf[Int]).toIndexedSeq)
   }
 
   run(args)

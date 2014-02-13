@@ -110,7 +110,7 @@ trait ConcreteRunner {
       val (problem, lT) = StatisticsManager.time(load(remaining))
       val solver = Solver(problem)
       
-      println(solver.problem)
+      //println(solver.problem)
       
       writer.parameters(ParameterManager.toXML)
 
@@ -146,13 +146,13 @@ trait ConcreteRunner {
     }
   }
 
-  def output(solution: Map[String, Int]): String = {
+  def output(solution: Map[String, Any]): String = {
     cProblem.namedExpressions.collect {
       case (name, variable) if (!variable.params("var_is_introduced")) => s"$name = ${solution(name)}"
     }.mkString("\n")
   }
 
-  def control(solution: Map[String, Int]): Option[String]
+  def control(solution: Map[String, Any]): Option[String]
 
 }
 
