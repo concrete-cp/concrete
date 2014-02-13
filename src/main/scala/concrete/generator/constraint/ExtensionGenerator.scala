@@ -112,7 +112,7 @@ object ExtensionGenerator extends Generator {
   }
 
   private def value2Index(domains: Seq[Domain], relation: cspom.extension.Relation): Iterator[Array[Int]] =
-    relation.iterator.map { t => (t, domains).zipped.map { (v, d) => d.index(v) } }
+    relation.iterator.map { t => (t, domains).zipped.map { (v, d) => val i = d.index(v); require(i >= 0, (v, d)); i } }
 
   /**
    * Used to cache data structure conversion

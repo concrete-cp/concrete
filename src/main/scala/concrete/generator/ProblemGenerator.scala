@@ -18,6 +18,7 @@ import cspom.variable.IntSeq
 import cspom.variable.FreeInt
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMExpression
+import cspom.variable.CSPOMConstant
 
 object ProblemGenerator extends Loggable {
   @throws(classOf[FailedGenerationException])
@@ -89,6 +90,7 @@ object ProblemGenerator extends Loggable {
 
   def generateVariables(name: String, e: CSPOMExpression): Map[CSPOMVariable, Variable] =
     e match {
+      case c: CSPOMConstant => Map()
       case v: CSPOMVariable => Map(v -> new Variable(name, generateDomain(v)))
       case CSPOMSeq(vars, range, _) =>
         (vars zip range).flatMap {

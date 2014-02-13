@@ -3,7 +3,6 @@ package concrete.runner
 import java.net.URI
 import java.security.InvalidParameterException
 import java.util.Timer
-
 import concrete.ParameterManager
 import concrete.Problem
 import concrete.Solver
@@ -15,6 +14,7 @@ import concrete.util.Waker
 import cspom.CSPOM
 import cspom.Statistic
 import cspom.compiler.ProblemCompiler
+import cspom.TimedException
 
 trait ConcreteRunner {
 
@@ -107,14 +107,22 @@ trait ConcreteRunner {
     val waker = new Timer()
     try {
 
-      val (problem, lT) = StatisticsManager.time(load(remaining))
-      val solver = Solver(problem)
-      
-      //println(solver.problem)
-      
-      writer.parameters(ParameterManager.toXML)
+      val solver = try {
+        val (solver, lT) = StatisticsManager.time {
+          val problem = load(remaining)
+          Solver(problem)
+        }
+        loadTime = lT
+        solver
+      } catch {
+        case e: TimedException =>
+          loadTime = e.time
+          throw e.getCause()
+      }
 
-      loadTime = lT
+      //println(solver.problem)
+
+      writer.parameters(ParameterManager.toXML)
 
       for (t <- opt.get('Time)) {
         waker.schedule(new Waker(Thread.currentThread()), t.asInstanceOf[Int] * 1000);
