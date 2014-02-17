@@ -8,17 +8,22 @@ import Generator._
 
 final object AllDifferentGenerator extends Generator {
   override def gen(constraint: CSPOMConstraint)(implicit varMap: VarMap) = {
-    val variables = constraint.arguments.map(cspom2concreteVar(_))
+    val arguments = constraint.arguments.map(cspom2concrete(_))
 
-    if (variables.exists(_.dom.undefined)) {
+    val vars = arguments.collect { case Var(v) => v }
+
+    if (undefinedVar(vars: _*).nonEmpty) {
       None
     } else {
 
-      //      for (constant <- solverVariables.collect { case C2C(i) => i }; v <- variables) {
-      //        v.dom.removeVal(constant)
-      //      }
+      for (
+        constant <- arguments.collect { case Const(i) => i };
+        v <- vars
+      ) {
+        v.dom.removeVal(constant)
+      }
 
-      Some(Seq(new AllDifferent2C(variables: _*), new AllDifferentBC(variables: _*)))
+      Some(Seq(new AllDifferent2C(vars: _*), new AllDifferentBC(vars: _*)))
     }
   }
 
