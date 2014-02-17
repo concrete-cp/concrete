@@ -14,8 +14,9 @@ import cspom.CSPOMConstraint
 import cspom.xcsp.Extension
 import concrete.constraint.Constraint
 import Generator._
+import cspom.Loggable
 
-object ExtensionGenerator extends Generator {
+object ExtensionGenerator extends Generator with Loggable {
 
   @Parameter("relationAlgorithm")
   var consType = "Reduce"
@@ -112,7 +113,17 @@ object ExtensionGenerator extends Generator {
   }
 
   private def value2Index(domains: Seq[Domain], relation: cspom.extension.Relation): Iterator[Array[Int]] =
-    relation.iterator.map { t => (t, domains).zipped.map { (v, d) => val i = d.index(v); require(i >= 0, (v, d)); i } }
+    relation.iterator.map { t =>
+      (t, domains).zipped.map { (v, d) =>
+        val i = d.index(v)
+        if (i < 0) {
+          logger.warning(s"Could not find $v in $d")
+        }
+        i
+      }
+    } filterNot {
+      _.contains(-1)
+    }
 
   /**
    * Used to cache data structure conversion
