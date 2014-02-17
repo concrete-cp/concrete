@@ -43,7 +43,6 @@ object ExtensionGenerator extends Generator with Loggable {
 
         trie.size match {
           case 1 =>
-
             val (v, t) = trie.head
             new MDD1(cspomMDDtoCspfjMDD(tail, t, map), domain.index(v))
 
@@ -142,30 +141,29 @@ object ExtensionGenerator extends Generator with Loggable {
     } else if (solverVariables.exists(_.dom.undefined)) {
       None
     } else {
-      val matrix = generateMatrix(solverVariables, relation, init);
+      val matrix = generateMatrix(solverVariables, relation, init)
       val scope = solverVariables.toArray
       val constraint = matrix match {
         case m: Matrix2D => BinaryExt(scope, m, true)
         case m: TupleTrieSet if (m.initialContent == false) => {
           ExtensionGenerator.consType match {
-            case "MDDC" => {
+            case "MDDC" =>
               new MDDC(scope, m.reduceable.asInstanceOf[MDD])
-            }
-            case "MDDC2" => {
+
+            case "MDDC2" =>
               new MDDC2(scope, m.reduceable.asInstanceOf[MDD])
-            }
-            case "STR3" => {
+
+            case "STR3" =>
               new ExtensionConstraintSTR3(scope, m.reduceable.asInstanceOf[STR].array)
-            }
-            case "Reduce" => {
+
+            case "Reduce" =>
               new ReduceableExt(scope, m.reduceable.copy)
-            }
-            case "Find" => {
+
+            case "Find" =>
               new FindSupportExt(scope, m, true)
-            }
-            case "General" => {
+
+            case "General" =>
               new ExtensionConstraintGeneral(m, true, scope)
-            }
           }
         }
         case m: Matrix => new ExtensionConstraintGeneral(m, true, scope)

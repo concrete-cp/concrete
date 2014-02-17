@@ -18,6 +18,9 @@ import Generator._
 import concrete.constraint.semantic.FilterSum
 import cspom.variable.CSPOMSeq
 import cspom.variable.IntConstant
+import concrete.constraint.semantic.FilterSum
+import concrete.constraint.semantic.FilterSum
+import concrete.util.Interval
 
 final object SumGenerator extends Generator {
 
@@ -28,34 +31,42 @@ final object SumGenerator extends Generator {
 
     val solverVariables = vars map cspom2concreteVar
 
-    if (undefinedVar(solverVariables: _*).nonEmpty) {
-      None
-    } else {
-      val params = constraint.params.get("coefficients") match {
-        case Some(p: Seq[Int]) => p.toArray
-        case None => Array.fill(solverVariables.length)(1)
-        case _ => throw new IllegalArgumentException("Parameters for zero sum must be a sequence of integer values")
-      }
-      val mode =
-        constraint.params.get("mode").collect { case s: String => FilterSum.withName(s) }.get
+    val Some(mode: FilterSum.Value) = constraint.params.get("mode").collect { case m: String => FilterSum.withName(m) }
 
-      Some(Seq(new Sum(c, params, solverVariables.toArray, mode)))
-
-      //      result match {
-      //        case Const(c) => Some(Seq(new Sum(c, params, solverVariables.toArray, mode)))
-      ////        case Var(v) => {
-      //          if (v.dom.undefined) {
-      //            val min = (solverVariables zip params).map { case (v, p) => v.dom.firstValue * p }.sum
-      //            val max = (solverVariables zip params).map { case (v, p) => v.dom.lastValue * p }.sum
-      //            Generator.restrictDomain(v, min to max)
-      //          }
-      //          Some(Seq(new Sum(0, -1 +: params, (v +: solverVariables).toArray, mode)))
-      //        }
-      //        case _ => throw new FailedGenerationException("Variable or constant expected, found " + result)
-      //      }
-
+    val params = constraint.params.get("coefficients") match {
+      case Some(p: Seq[Int]) => p.toArray
+      case None => Array.fill(solverVariables.length)(1)
+      case _ => throw new IllegalArgumentException("Parameters for zero sum must be a sequence of integer values")
     }
+
+    undefinedVar(solverVariables: _*) match {
+      case Seq() => go(c, params, solverVariables, mode)
+      case Seq(uv) if mode == FilterSum.SumEQ =>
+        val min = (solverVariables zip params).map { case (v, p) => if (v eq uv) 0 else v.dom.firstValue * p }.sum
+        val max = (solverVariables zip params).map { case (v, p) => if (v eq uv) 0 else v.dom.lastValue * p }.sum
+        val factor = params(solverVariables.indexOf(uv))
+        Generator.restrictDomain(uv, (Interval(min, max) / -factor).allValues)
+        go(c, params, solverVariables, mode)
+      case s => None
+    }
+
   }
+
+  def go(c: Int, params: Array[Int], solverVariables: Seq[Variable], mode: FilterSum.Value) =
+    Some(Seq(new Sum(c, params, solverVariables.toArray, mode)))
+
+  //      result match {
+  //        case Const(c) => Some(Seq(new Sum(c, params, solverVariables.toArray, mode)))
+  ////        case Var(v) => {
+  //          if (v.dom.undefined) {
+  //            val min = (solverVariables zip params).map { case (v, p) => v.dom.firstValue * p }.sum
+  //            val max = (solverVariables zip params).map { case (v, p) => v.dom.lastValue * p }.sum
+  //            Generator.restrictDomain(v, min to max)
+  //          }
+  //          Some(Seq(new Sum(0, -1 +: params, (v +: solverVariables).toArray, mode)))
+  //        }
+  //        case _ => throw new FailedGenerationException("Variable or constant expected, found " + result)
+  //      }
 
   @tailrec
   def sum(domains: List[Seq[Int]], factors: List[Int], f: Seq[Int] => Int, currentSum: Int = 0): Int = {

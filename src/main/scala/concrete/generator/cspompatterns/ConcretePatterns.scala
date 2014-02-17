@@ -16,7 +16,7 @@ object ConcretePatterns {
         NegToCNF, ReifiedDisj, ReifiedConj,
         SimplDisj,
         NeqVec, RemoveAnd,
-        LtToGt //, ConstToVar
+        LtToGt, SlidingSum, SetIn //, ConstToVar
         )
 
 }

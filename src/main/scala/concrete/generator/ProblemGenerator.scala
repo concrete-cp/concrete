@@ -19,8 +19,14 @@ import cspom.variable.FreeInt
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMConstant
+import cspom.compiler.QueueSet
+import concrete.Parameter
 
 object ProblemGenerator extends Loggable {
+
+  @Parameter("generator.generateLargeDomains")
+  val generateLargeDomains = false
+
   @throws(classOf[FailedGenerationException])
   def generate(cspom: CSPOM) = {
 
@@ -32,36 +38,45 @@ object ProblemGenerator extends Loggable {
 
     val problem = new Problem(variables.values.toList)
 
-    //var firstFailed: Option[CSPOMConstraint] = None;
+    val failed = fixPoint(cspom.constraints.toSeq, genConstraint(_: CSPOMConstraint, variables, problem))
 
-    @tailrec
-    def processQueue(queue: Queue[CSPOMConstraint], firstFailed: Option[CSPOMConstraint]): Unit = if (queue.nonEmpty) {
-      val (constraint, rest) = queue.dequeue
-
-      GeneratorManager.generate(constraint, variables, problem) match {
-        case Some(s) =>
-          s.foreach(problem.addConstraint)
-
-          processQueue(rest, None)
-
-        case None =>
-          if (firstFailed.exists(_ == constraint)) {
-            throw new FailedGenerationException(
-              "Could not generate the constraints " + queue);
-          } else {
-            processQueue(rest.enqueue(constraint), firstFailed orElse Some(constraint));
-          }
-
-      }
+    val failed2 = if (generateLargeDomains) {
+      genLarge(failed, variables, problem)
+    } else {
+      failed
     }
 
-    processQueue(Queue.empty ++ cspom.constraints, None)
-
-    //    for (v <- problem.variables if v.constraints.isEmpty) {
-    //      problem.removeVariable(v)
-    //    }
+    require(failed2.isEmpty, "Could not generate constraints " + failed2)
 
     problem;
+  }
+
+  def genLarge(failed: Seq[CSPOMConstraint], variables: Map[CSPOMVariable, Variable], problem: Problem): Seq[CSPOMConstraint] = {
+    for (v <- problem.variables if v.dom.undefined) {
+      logger.warning("Generating arbitrary domain for " + v)
+      v.dom = IntDomain(-1000000 to 1000000)
+    }
+
+    fixPoint(failed, genConstraint(_: CSPOMConstraint, variables, problem))
+  }
+
+  def genConstraint(c: CSPOMConstraint, variables: Map[CSPOMVariable, Variable], problem: Problem): Boolean = {
+    GeneratorManager.generate(c, variables, problem) match {
+      case Some(s) =>
+        s.foreach(problem.addConstraint(_))
+        false
+      case None => true
+    }
+  }
+
+  @tailrec
+  def fixPoint[A](list: Seq[A], process: A => Boolean): Seq[A] = {
+    val l2 = list.filter(process)
+    if (list == l2) {
+      list
+    } else {
+      fixPoint(l2, process)
+    }
   }
 
   def generateVariables(cspom: CSPOM): Map[CSPOMVariable, Variable] = {
