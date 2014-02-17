@@ -26,7 +26,6 @@ import scala.collection.JavaConversions
 import concrete.filter.Filter
 import concrete.generator.ProblemGenerator
 import cspom.Loggable
-import concrete.util.MsLogHandler
 import concrete.util.Waker
 import concrete.constraint.extension.MDD
 import cspom.CSPOM
@@ -36,6 +35,7 @@ import concrete.constraint.extension.ReduceableExt
 import cspom.compiler.ProblemCompiler
 import concrete.generator.cspompatterns.ConcretePatterns
 import cspom.StatisticsManager
+import cspom.Logging
 
 object Solver {
   @Parameter("logger.level")
@@ -86,14 +86,7 @@ abstract class Solver(val problem: Problem) extends Iterator[Map[String, Any]] w
   {
     val level = Level.parse(Solver.loggerLevel);
 
-    Logger.getLogger("").setLevel(level);
-    for (h <- Logger.getLogger("").getHandlers()) {
-      Logger.getLogger("").removeHandler(h);
-    }
-
-    val handler = new MsLogHandler(System.currentTimeMillis());
-    handler.setLevel(level);
-    Logger.getLogger("").addHandler(handler);
+    Logging.setLevel(level)
 
     logger.info(ParameterManager.list);
   }

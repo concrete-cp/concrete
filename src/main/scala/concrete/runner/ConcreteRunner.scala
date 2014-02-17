@@ -3,18 +3,20 @@ package concrete.runner
 import java.net.URI
 import java.security.InvalidParameterException
 import java.util.Timer
+
 import concrete.ParameterManager
 import concrete.Problem
 import concrete.Solver
-import cspom.StatisticsManager
 import concrete.generator.FailedGenerationException
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
 import concrete.util.Waker
 import cspom.CSPOM
+import cspom.Loggable
 import cspom.Statistic
-import cspom.compiler.ProblemCompiler
+import cspom.StatisticsManager
 import cspom.TimedException
+import cspom.compiler.ProblemCompiler
 
 trait ConcreteRunner {
 
@@ -28,6 +30,8 @@ trait ConcreteRunner {
   'Control
   'Time
   'CL
+  
+  //logger.addHandler(new MsLogHandler)
 
   private def params(o: List[(String, String)], options: List[String]): List[(String, String)] =
     if (options.isEmpty) {
