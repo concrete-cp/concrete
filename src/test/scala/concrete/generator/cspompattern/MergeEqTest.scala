@@ -32,7 +32,7 @@ class MergeEqTest {
       throw new AssertionFailedError()
     }
     assertEquals(1, cspom.namedExpressions.size)
-    assertSame(nv0, cspom.expressionNames.keySet.head)
+    assertSame(nv0, cspom.namedExpressions.head._2)
     assertEquals(cspom.toString, 1, cspom.constraints.size)
     assertEquals(List(2, 3), nv0.domain)
 
