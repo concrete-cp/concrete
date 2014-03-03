@@ -1,0 +1,1 @@
+predicate sequence(array[int] of var int)

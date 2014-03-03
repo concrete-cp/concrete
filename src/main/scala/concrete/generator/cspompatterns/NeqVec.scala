@@ -1,7 +1,6 @@
 package concrete.generator.cspompatterns
 
 import scala.util.control.Breaks._
-
 import cspom.CSPOM
 import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompiler
@@ -16,16 +15,16 @@ import cspom.variable.CSPOMVariable
  * into (a, b, e, f, ...) ne (c, d, g, h, ...)
  */
 object NeqVec extends ConstraintCompiler {
-  type A = (CSPOMConstraint, Set[CSPOMExpression], Set[CSPOMConstraint])
+  type A = (CSPOMConstraint[_], Set[CSPOMExpression[_]], Set[CSPOMConstraint[_]])
 
   /* NE constraints is a special case of nevec */
-  private def isNevec(c: CSPOMConstraint) = c.function == 'ne || c.function == 'nevec
+  private def isNevec(c: CSPOMConstraint[_]) = c.function == 'ne || c.function == 'nevec
 
-  override def mtch(c: CSPOMConstraint, problem: CSPOM) = {
+  override def mtch(c: CSPOMConstraint[_], problem: CSPOM) = {
 
     val result = c match {
 
-      case CSPOMConstraint(result: CSPOMVariable, 'ne | 'nevec, _, _) => Some((problem.constraints(result) - c).toSeq)
+      case CSPOMConstraint(result: CSPOMExpression[Boolean], 'ne | 'nevec, _, _) => Some((problem.constraints(result) - c).toSeq)
       case _ => None
     }
 
@@ -40,21 +39,21 @@ object NeqVec extends ConstraintCompiler {
 
   }
 
-  def compile(fc: CSPOMConstraint, problem: CSPOM, data: (CSPOMConstraint, Set[CSPOMExpression], Set[CSPOMConstraint])) = {
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM, data: A) = {
     val (orConstraint, orVariables, neConstraints) = data
 
-    val (x, y) = neConstraints.map(_.arguments).foldLeft((Seq[CSPOMExpression](), Seq[CSPOMExpression]())) {
-      case ((ax, ay), Seq(cx: CSPOMSeq[CSPOMExpression], cy: CSPOMSeq[CSPOMExpression])) => (ax ++ cx.values, ay ++ cy.values)
-      case ((ax, ay), Seq(cx: CSPOMVariable, cy: CSPOMVariable)) => (ax :+ cx, ay :+ cy)
+    val (x, y) = neConstraints.map(_.arguments).foldLeft((Seq[CSPOMExpression[_]](), Seq[CSPOMExpression[_]]())) {
+      case ((ax, ay), Seq(cx: CSPOMSeq[_], cy: CSPOMSeq[_])) => (ax ++ cx.values, ay ++ cy.values)
+      case ((ax, ay), Seq(cx: CSPOMVariable[_], cy: CSPOMVariable[_])) => (ax :+ cx, ay :+ cy)
       case _ => throw new IllegalArgumentException(s"$neConstraints contains malformed ne/nevec constraint")
     }
 
-    val newC = problem.ctr(new CSPOMConstraint('nevec, new CSPOMSeq(x), new CSPOMSeq(y)))
+    val newC = problem.ctr(CSPOMConstraint('nevec, new CSPOMSeq[Any](x), new CSPOMSeq[Any](y)))
 
     replaceCtr(orConstraint +: neConstraints.toSeq, newC, problem)
 
   }
-  
+
   def selfPropagation = true
 
 }

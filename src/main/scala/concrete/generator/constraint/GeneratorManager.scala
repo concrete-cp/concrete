@@ -38,11 +38,11 @@ object GeneratorManager {
   }
 
   @throws(classOf[FailedGenerationException])
-  def generate(constraint: CSPOMConstraint, variables: Map[CSPOMVariable, Variable], problem: Problem): Option[Seq[Constraint]] = {
+  def generate[A](constraint: CSPOMConstraint[A], variables: Map[CSPOMVariable[_], Variable], problem: Problem): Option[Seq[Constraint]] = {
     val candidate = known.getOrElse(constraint.function,
       throw new FailedGenerationException(s"No candidate constraint for $constraint"))
 
-    candidate.generate(constraint, variables: Map[CSPOMVariable, Variable], problem)
+    candidate.generate(constraint, variables: Map[CSPOMVariable[_], Variable], problem)
   }
 
 }

@@ -7,7 +7,7 @@ import cspom.variable.CSPOMTrue
 import Generator._
 
 final object AllDifferentGenerator extends Generator {
-  override def gen(constraint: CSPOMConstraint)(implicit varMap: VarMap) = {
+  override def gen(constraint: CSPOMConstraint[Boolean])(implicit varMap: VarMap) = {
     val arguments = constraint.arguments.map(cspom2concrete(_))
 
     val vars = arguments.collect { case Var(v) => v }

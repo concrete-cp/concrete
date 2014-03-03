@@ -68,7 +68,7 @@ object RandomMDD extends ConcreteRunner with App {
           //println(r.edges)
           r
         })
-        ctr(table(mdd, false, scope map vars: _*))
+        ctr(table(mdd, false, scope map vars))
       }
     }
   }

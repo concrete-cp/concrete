@@ -10,7 +10,7 @@ import cspom.variable.BoolVariable
 import cspom.variable.CSPOMTrue
 import cspom.variable.CSPOMConstant
 import cspom.compiler.ConstraintCompilerNoData
-import cspom.variable.BoolExpression
+import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMFalse
 /**
  * Negation is converted to CNF :
@@ -25,15 +25,15 @@ import cspom.variable.CSPOMFalse
 //  }
 object NegToCNF extends ConstraintCompiler {
 
-  type A = (BoolExpression, BoolExpression)
+  type A = (CSPOMExpression[Boolean], CSPOMExpression[Boolean])
 
   override def constraintMatcher = {
-    case CSPOMConstraint(res: BoolExpression, 'not, Seq(arg: BoolExpression), params) =>
+    case CSPOMConstraint(res: CSPOMExpression[Boolean], 'not, Seq(arg: CSPOMExpression[Boolean]), params) =>
       (res, arg)
 
   }
 
-  def compile(fc: CSPOMConstraint, problem: CSPOM, data: A) = {
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM, data: A) = {
 
     val (res, arg) = data
     problem.removeConstraint(fc)

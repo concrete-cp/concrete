@@ -29,7 +29,7 @@ trait ConcreteRunner {
   'D
   'Control
   'Time
-  'CL
+
   
   //logger.addHandler(new MsLogHandler)
 
@@ -55,7 +55,7 @@ trait ConcreteRunner {
       options(tail, o + ('SQL -> option), unknown)
     case "-control" :: tail => options(tail, o + ('Control -> None))
     case "-time" :: t :: tail => options(tail, o + ('Time -> t.toInt))
-    case "-cl" :: tail => options(tail, o + ('CL -> None))
+//    case "-cl" :: tail => options(tail, o + ('CL -> None))
     case u :: tail => options(tail, o, u :: unknown)
   }
 

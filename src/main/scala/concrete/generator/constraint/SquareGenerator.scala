@@ -14,7 +14,7 @@ import Generator._
 
 final object SquareGenerator extends Generator {
 
-  override def genFunctional(constraint: CSPOMConstraint, result: C2Conc)(implicit variables: VarMap) = {
+  override def genFunctional(constraint: CSPOMConstraint[_], result: C2Conc)(implicit variables: VarMap) = {
     val Seq(v0: C21D) = constraint.arguments map cspom2concrete
 
     (result, v0) match {

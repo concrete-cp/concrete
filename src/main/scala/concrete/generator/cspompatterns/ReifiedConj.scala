@@ -10,7 +10,7 @@ import cspom.variable.BoolVariable
 import cspom.variable.CSPOMTrue
 import cspom.variable.CSPOMConstant
 import cspom.compiler.ConstraintCompilerNoData
-import cspom.variable.BoolExpression
+import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMFalse
 
 /**
@@ -24,28 +24,28 @@ import cspom.variable.CSPOMFalse
  */
 object ReifiedConj extends ConstraintCompiler {
 
-  type A = BoolExpression
+  type A = CSPOMExpression[Boolean]
 
   override def constraintMatcher = {
-    case CSPOMConstraint(res: BoolExpression, 'and, args, params) if (res != CSPOMTrue && !params.contains("revsign")) =>
+    case CSPOMConstraint(res: CSPOMExpression[Boolean], 'and, args, params) if (res != CSPOMTrue && !params.contains("revsign")) =>
       res
   }
 
-  def compile(fc: CSPOMConstraint, problem: CSPOM, res: BoolExpression) = {
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM, res: CSPOMExpression[Boolean]) = {
     val reverses = Seq(false).padTo(1 + fc.arguments.size, true)
 
-    problem.removeConstraint(fc)
+    val c1 =
+      CSPOMConstraint('or, res +: fc.arguments, fc.params + ("revsign" -> reverses))
 
-    val delta = Delta().removed(fc).added(problem.ctr(
-      new CSPOMConstraint(CSPOMTrue, 'or, res +: fc.arguments, fc.params + ("revsign" -> reverses))))
-
-    fc.arguments.foldLeft(delta) {
-      case (d, v) => d.added(problem.ctr(
-        new CSPOMConstraint(CSPOMTrue, 'or, Seq(res, v), Map("revsign" -> Seq(true, false)))))
+    val c2 = fc.arguments.map {
+      v =>
+        CSPOMConstraint('or, Seq(res, v), Map("revsign" -> Seq(true, false)))
     }
+
+    replaceCtr(fc, c1 +: c2, problem)
 
   }
 
   def selfPropagation = false
-  
+
 }

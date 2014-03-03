@@ -15,7 +15,7 @@ import concrete.constraint.semantic.FilterSum
 
 final object MulGenerator extends Generator {
 
-  override def genFunctional(constraint: CSPOMConstraint, r: C2Conc)(implicit variables: VarMap) = {
+  override def genFunctional(constraint: CSPOMConstraint[_], r: C2Conc)(implicit variables: VarMap) = {
     val result = r.asInstanceOf[C21D]
     val Seq(v0, v1) = constraint.arguments map cspom2concrete1D
 

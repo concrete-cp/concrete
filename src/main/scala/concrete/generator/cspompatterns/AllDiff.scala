@@ -1,7 +1,7 @@
 package concrete.generator.cspompatterns
 import cspom.CSPOM
 import cspom.CSPOMConstraint
-import cspom.variable.CSPOMVariable
+import cspom.variable.IntVariable
 import scala.util.Random
 import scala.util.control.Breaks._
 import cspom.Loggable
@@ -13,12 +13,13 @@ import scala.collection.mutable.WeakHashMap
 import cspom.variable.CSPOMExpression
 
 object AllDiff extends ConstraintCompiler with Loggable {
-  type A = Set[CSPOMExpression]
+  type A = Set[IntVariable]
 
-  def DIFF_CONSTRAINT(constraint: CSPOMConstraint) =
-    (constraint.result == CSPOMTrue) && Set('ne, 'gt, 'lt, 'allDifferent)(constraint.function)
+  def DIFF_CONSTRAINT(constraint: CSPOMConstraint[_]) =
+    (constraint.result == CSPOMTrue) &&
+      Set('ne, 'gt, 'lt, 'allDifferent)(constraint.function)
 
-  def ALLDIFF_CONSTRAINT(constraint: CSPOMConstraint) =
+  def ALLDIFF_CONSTRAINT(constraint: CSPOMConstraint[_]) =
     (constraint.result == CSPOMTrue) && 'ne == constraint.function ||
       'allDifferent == constraint.function
 
@@ -26,11 +27,11 @@ object AllDiff extends ConstraintCompiler with Loggable {
 
   val TABU_SIZE = 15;
 
-  override def mtch(constraint: CSPOMConstraint, problem: CSPOM) = {
+  override def mtch(constraint: CSPOMConstraint[_], problem: CSPOM) = {
 
     constraint match {
-      case CSPOMConstraint(CSPOMTrue, func, args: Seq[CSPOMExpression], _) if Set('allDifferent, 'ne, 'gt, 'lt)(func) =>
-        val clique = expand(args.toSet, problem)
+      case c @ CSPOMConstraint(_, func, args: Seq[CSPOMExpression[Int]], _) if DIFF_CONSTRAINT(c) =>
+        val clique = expand(args.collect { case v: IntVariable => v }.toSet, problem)
         if (clique.size > constraint.arguments.size) {
           Some(clique)
         } else {
@@ -47,7 +48,7 @@ object AllDiff extends ConstraintCompiler with Loggable {
    *
    * @param constraint
    */
-  def compile(constraint: CSPOMConstraint, problem: CSPOM, clique: Set[CSPOMExpression]) = {
+  def compile(constraint: CSPOMConstraint[_], problem: CSPOM, clique: Set[IntVariable]) = {
 
     problem.removeConstraint(constraint)
 
@@ -55,38 +56,44 @@ object AllDiff extends ConstraintCompiler with Loggable {
 
   }
 
-  //private val neighborsCache = new WeakHashMap[CSPOMVariable, Set[CSPOMVariable]]
+  //private val neighborsCache = new WeakHashMap[IntVariable, Set[IntVariable]]
 
-  def neighbors(v: CSPOMExpression, problem: CSPOM,
-    cache: WeakHashMap[CSPOMVariable, Set[CSPOMExpression]]): Set[CSPOMExpression] = {
-    v match {
-      case v: CSPOMVariable => cache.getOrElseUpdate(v,
-        problem.constraints(v).filter(DIFF_CONSTRAINT).flatMap(_.arguments).toSet - v)
-      case e: CSPOMExpression => Set()
-      //case _ => throw new UnsupportedOperationException
-    }
+  def neighbors(v: IntVariable, problem: CSPOM,
+    cache: WeakHashMap[IntVariable, Set[IntVariable]]): Set[IntVariable] = {
+
+    cache.getOrElseUpdate(v,
+      problem.constraints(v).filter(DIFF_CONSTRAINT).flatMap(_.arguments).collect {
+        case v: IntVariable => v
+      }.toSet - v)
 
   }
 
   /**
    * The pool contains all variables that can expand the base clique
    */
-  private def populate(base: Set[CSPOMExpression], problem: CSPOM,
-    cache: WeakHashMap[CSPOMVariable, Set[CSPOMExpression]]) =
-    base.iterator.map(neighbors(_, problem, cache)).reduceLeft(_ & _)
+  private def populate(base: Set[IntVariable], problem: CSPOM,
+    cache: WeakHashMap[IntVariable, Set[IntVariable]]): Set[IntVariable] = {
+    val nb = base.iterator.map(neighbors(_, problem, cache))
 
-  private def expand(base: Set[CSPOMExpression], problem: CSPOM) = {
+    if (nb.isEmpty) {
+      Set()
+    } else {
+      nb.reduceLeft(_ & _)
+    }
+  }
 
-    val cache = new WeakHashMap[CSPOMVariable, Set[CSPOMExpression]]
+  private def expand(base: Set[IntVariable], problem: CSPOM) = {
+
+    val cache = new WeakHashMap[IntVariable, Set[IntVariable]]
 
     var largest = base
     var clique = base
 
     var pool = populate(base, problem, cache)
 
-    //final Set<CSPOMVariable> base = new HashSet<CSPOMVariable>(clique);
+    //final Set<IntVariable> base = new HashSet<IntVariable>(clique);
 
-    var tabu: Map[CSPOMExpression, Int] = Map.empty
+    var tabu: Map[IntVariable, Int] = Map.empty
 
     breakable {
       for (i <- 1 to ITER) {
@@ -121,8 +128,8 @@ object AllDiff extends ConstraintCompiler with Loggable {
    *
    * @param scope
    */
-  private def newAllDiff(scope: Seq[CSPOMExpression], problem: CSPOM): Delta = {
-    val allDiff = new CSPOMConstraint(CSPOMTrue, 'allDifferent, scope: _*);
+  private def newAllDiff(scope: Seq[CSPOMExpression[Int]], problem: CSPOM): Delta = {
+    val allDiff = CSPOMConstraint('allDifferent, scope: _*);
 
     val scopeSet = scope.toSet
 
@@ -139,9 +146,13 @@ object AllDiff extends ConstraintCompiler with Loggable {
       /* Remove newly subsumed neq/alldiff constraints. */
 
       scope.iterator.collect {
-        case v: CSPOMVariable => v
+        case v: IntVariable => v
       } flatMap (problem.constraints) filter {
-        c => (c ne allDiff) && ALLDIFF_CONSTRAINT(c) && c.arguments.forall(scopeSet)
+        c =>
+          (c ne allDiff) && ALLDIFF_CONSTRAINT(c) && c.arguments.forall {
+            case v: IntVariable => scopeSet(v)
+            case _ => false
+          }
       } foreach {
         c =>
           removed += 1
@@ -155,7 +166,7 @@ object AllDiff extends ConstraintCompiler with Loggable {
 
   val RAND = new Random(0);
 
-  private def pickTabu(pool: Iterable[CSPOMExpression], tabu: Map[CSPOMExpression, Int], iteration: Int) = {
+  private def pickTabu[A](pool: Iterable[A], tabu: Map[A, Int], iteration: Int) = {
 
     randPick(pool.iterator.filter(v =>
       tabu.get(v).forall(_ < iteration))) match {

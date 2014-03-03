@@ -32,8 +32,13 @@ object XCSPConcrete extends ConcreteRunner with App {
     flatSolution(solution, variables).mkString(" ")
   }
 
-  def flatSolution(solution: Map[String, Any], variables: Iterable[String]): Iterable[Any] =
-    variables map solution
+  def flatSolution(solution: Map[String, Any], variables: Iterable[String]): Iterable[Any] = {
+    val sol = solution.flatMap {
+      case (n, v) => n.split("\\|\\|").map(_ -> v)
+    }
+    variables map sol
+
+  }
 
   def control(solution: Map[String, Any]) = {
     control(solution, variables, file)

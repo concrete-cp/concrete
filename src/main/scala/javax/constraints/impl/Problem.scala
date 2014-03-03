@@ -32,7 +32,7 @@ class Problem(name: String) extends AbstractProblem(name) with Loggable {
     solver
   }
 
-  private def cspomVar(vars: Seq[javax.constraints.Var]) = vars.map(_.getImpl.asInstanceOf[CSPOMVariable])
+  private def cspomVar(vars: Seq[javax.constraints.Var]) = vars.map(_.getImpl.asInstanceOf[IntVariable])
 
   def createVariable(name: String, min: Int, max: Int): javax.constraints.Var = {
     new Var(this, name, IntVariable.ofInterval(min, max))
@@ -42,13 +42,13 @@ class Problem(name: String) extends AbstractProblem(name) with Loggable {
   def getImplVersion(): String = "CSPOM JSR331 implementation"
   def log(l: String) { logger.info(l) }
   def post(constraint: javax.constraints.Constraint) {
-    cspom.ctr(constraint.getImpl.asInstanceOf[CSPOMConstraint])
+    cspom.ctr(constraint.getImpl.asInstanceOf[CSPOMConstraint[_]])
   }
   def variableBool(name: String): javax.constraints.VarBool = ???
 
   // Members declared in javax.constraints.Problem
   def allDiff(scope: Array[javax.constraints.Var]): javax.constraints.Constraint = {
-    val constraint = new CSPOMConstraint('alldifferent, scope.map(_.getImpl.asInstanceOf[CSPOMVariable]): _*)
+    val constraint = CSPOMConstraint('allDifferent, scope.map(_.getImpl.asInstanceOf[IntVariable]): _*)
     new Constraint(this, constraint)
   }
   def linear(v1: javax.constraints.Var, op: String, v2: javax.constraints.Var): javax.constraints.Constraint =
@@ -68,12 +68,12 @@ class Problem(name: String) extends AbstractProblem(name) with Loggable {
   }
   def post(v1: javax.constraints.Var, op: String, v2: javax.constraints.Var): javax.constraints.Constraint = {
     val constraint = cspom.ctr(
-      new CSPOMConstraint(Symbol(op), v1.getImpl.asInstanceOf[CSPOMVariable], v2.getImpl.asInstanceOf[CSPOMVariable]))
+      CSPOMConstraint(Symbol(op), v1.getImpl.asInstanceOf[CSPOMVariable[_]], v2.getImpl.asInstanceOf[CSPOMVariable[_]]))
     new Constraint(this, constraint)
   }
   def post(v: javax.constraints.Var, op: String, c: Int): javax.constraints.Constraint = {
     val constraint = cspom.ctr(
-      new CSPOMConstraint(Symbol(op), v.getImpl.asInstanceOf[CSPOMVariable], CSPOM.varOf(c)))
+      CSPOMConstraint(Symbol(op), v.getImpl.asInstanceOf[CSPOMVariable[_]], CSPOM.varOf(c)))
     new Constraint(this, constraint)
   }
   def post(sum: Array[javax.constraints.Var], op: String, v: javax.constraints.Var): javax.constraints.Constraint = {

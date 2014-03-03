@@ -10,9 +10,7 @@ import cspom.variable.BoolVariable
 import cspom.variable.CSPOMTrue
 import cspom.variable.CSPOMConstant
 import cspom.compiler.ConstraintCompilerNoData
-import cspom.variable.BoolExpression
 import cspom.variable.CSPOMFalse
-import cspom.variable.IntExpression
 import cspom.variable.CSPOMExpression
 
 /**
@@ -26,20 +24,17 @@ import cspom.variable.CSPOMExpression
  */
 object SubToAdd extends ConstraintCompiler {
 
-  type A = CSPOMExpression
+  type A = CSPOMExpression[Int]
 
   override def constraintMatcher = {
-    case CSPOMConstraint(a, 'sub, _, _) => a
+    case CSPOMConstraint(a: CSPOMExpression[Int], 'sub, _, _) => a
   }
 
-  def compile(fc: CSPOMConstraint, problem: CSPOM, a: CSPOMExpression) = {
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM, a: CSPOMExpression[Int]) = {
 
     val Seq(b, c) = fc.arguments
 
-    problem.removeConstraint(fc)
-
-    Delta().removed(fc).added(problem.ctr(
-      new CSPOMConstraint(b, 'add, Seq(a, c), fc.params)))
+    replaceCtr(fc, CSPOMConstraint(b, 'add, Seq(a, c), fc.params), problem)
 
   }
 

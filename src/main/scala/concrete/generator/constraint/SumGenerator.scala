@@ -17,15 +17,15 @@ import concrete.generator.FailedGenerationException
 import Generator._
 import concrete.constraint.semantic.FilterSum
 import cspom.variable.CSPOMSeq
-import cspom.variable.IntConstant
 import concrete.constraint.semantic.FilterSum
 import concrete.constraint.semantic.FilterSum
 import concrete.util.Interval
+import cspom.variable.CSPOMConstant
 
 final object SumGenerator extends Generator {
 
-  override def gen(constraint: CSPOMConstraint)(implicit variables: VarMap) = {
-    val Seq(CSPOMSeq(vars, _, _), const: IntConstant) = constraint.arguments //map cspom2concreteVar
+  override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
+    val Seq(CSPOMSeq(vars, _, _), const: CSPOMConstant[Int]) = constraint.arguments //map cspom2concreteVar
 
     val c = const.value
 

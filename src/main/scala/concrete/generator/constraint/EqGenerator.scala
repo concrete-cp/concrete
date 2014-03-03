@@ -15,7 +15,7 @@ import Generator._
 
 final object EqGenerator extends Generator {
 
-  override def gen(constraint: CSPOMConstraint)(implicit variables: VarMap): Option[Seq[Constraint]] = {
+  override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Option[Seq[Constraint]] = {
     val Seq(a, b) = try {
       constraint.arguments.map(cspom2concrete1D)
     } catch {
@@ -60,7 +60,7 @@ final object EqGenerator extends Generator {
 
   }
 
-  override def genFunctional(funcConstraint: CSPOMConstraint, r: C2Conc)(implicit variables: VarMap): Option[Seq[Constraint]] = {
+  override def genFunctional(funcConstraint: CSPOMConstraint[_], r: C2Conc)(implicit variables: VarMap): Option[Seq[Constraint]] = {
     val Var(result) = r
     Generator.booleanDomain(result)
     funcConstraint match {

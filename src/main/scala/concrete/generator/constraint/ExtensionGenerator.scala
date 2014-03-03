@@ -92,9 +92,9 @@ object ExtensionGenerator extends Generator with Loggable {
 
   private def gen(relation: cspom.extension.Relation, init: Boolean, domains: List[Domain]) = {
     if (relation.arity == 2) {
-      new Matrix2D(domains(0).size, domains(1).size, init).setAll(value2Index(domains, relation).toTraversable, !init)
+      new Matrix2D(domains(0).size, domains(1).size, init).setAll(value2Index(domains, relation).toTraversable.map(_.toArray), !init)
     } else if (init) {
-      new TupleTrieSet(MDD(value2Index(domains, relation)), init)
+      new TupleTrieSet(MDD(value2Index(domains, relation).map(_.toArray)), init)
     } else {
       new TupleTrieSet(ExtensionGenerator.ds match {
         case "MDD" => relation match {
@@ -103,15 +103,15 @@ object ExtensionGenerator extends Generator with Loggable {
           case mdd: cspom.extension.LazyMDD =>
             ExtensionGenerator.cspomMDDtoCspfjMDD(domains, mdd.apply, new HashMap())
           case r =>
-            val m = MDD(value2Index(domains, r))
+            val m = MDD(value2Index(domains, r).map(_.toArray))
             m
         }
-        case "STR" => new STR() ++ value2Index(domains, relation).toIterable
+        case "STR" => new STR() ++ value2Index(domains, relation).toIterable.map(_.toArray)
       }, init)
     }
   }
 
-  private def value2Index(domains: Seq[Domain], relation: cspom.extension.Relation): Iterator[Array[Int]] =
+  private def value2Index(domains: Seq[Domain], relation: cspom.extension.Relation): Iterator[Seq[Int]] =
     relation.iterator.map { t =>
       (t, domains).zipped.map { (v, d) =>
         val i = d.index(v)
@@ -129,7 +129,7 @@ object ExtensionGenerator extends Generator with Loggable {
    */
   private val dsCache = new CacheConverter[Matrix, List[Array[Int]]]()
 
-  override def gen(extensionConstraint: CSPOMConstraint)(implicit variables: VarMap): Option[Seq[Constraint]] = {
+  override def gen(extensionConstraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Option[Seq[Constraint]] = {
 
     val solverVariables = extensionConstraint.arguments map cspom2concreteVar toList
 

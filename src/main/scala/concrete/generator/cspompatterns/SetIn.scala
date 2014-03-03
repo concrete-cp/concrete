@@ -18,16 +18,17 @@ import cspom.variable.BoolVariable
 
 object SetIn extends ConstraintCompilerNoData {
 
-  def matchBool(constraint: CSPOMConstraint, problem: CSPOM) = constraint.function == 'set_in && constraint.result == CSPOMTrue
+  def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM) =
+    constraint.function == 'set_in && constraint.result == CSPOMTrue
 
-  def compile(constraint: CSPOMConstraint, problem: CSPOM) = {
+  def compile(constraint: CSPOMConstraint[_], problem: CSPOM) = {
     val Seq(variable, CSPOMSeq(set, _, _)) = constraint.arguments
 
     val constraints = for (v <- set) yield {
       new CSPOMConstraint(new BoolVariable(), 'eq, Seq(variable, v))
     }
 
-    val disjunction = new CSPOMConstraint('or, constraints.map(_.result))
+    val disjunction = CSPOMConstraint('or, constraints.map(_.result))
 
     replaceCtr(constraint, disjunction +: constraints, problem)
 

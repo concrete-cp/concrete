@@ -20,7 +20,7 @@ class AbsDiffTest {
 
       val r2 = abs(r)
 
-      ctr(new CSPOMConstraint(r, 'sub, v0, v1))
+      ctr(CSPOMConstraint(r, 'sub, v0, v1))
     }
 
     for (d <- AbsDiff.mtch(sub, cspom)) {

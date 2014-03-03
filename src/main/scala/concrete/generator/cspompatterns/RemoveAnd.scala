@@ -11,16 +11,16 @@ import cspom.compiler.Delta
 import cspom.variable.FreeVariable
 
 object RemoveAnd extends ConstraintCompilerNoData {
-  def matchBool(constraint: CSPOMConstraint, problem: CSPOM) =
+  def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM) =
     constraint.function == 'and && constraint.result == CSPOMTrue
 
-  def compile(constraint: CSPOMConstraint, problem: CSPOM) = {
+  def compile(constraint: CSPOMConstraint[_], problem: CSPOM) = {
 
-    require(constraint.fullScope.forall(v => v.isInstanceOf[FreeVariable] || v.isInstanceOf[BoolVariable] || v == CSPOMTrue), constraint)
+    require(constraint.arguments.forall(v => v.isInstanceOf[FreeVariable] || v.isInstanceOf[BoolVariable] || v == CSPOMTrue), constraint)
 
     problem.removeConstraint(constraint)
 
-    Delta().removed(constraint) ++ replace(constraint.fullScope.distinct, CSPOMTrue, problem)
+    Delta().removed(constraint) ++ replace[Any, Boolean](constraint.arguments.distinct, CSPOMTrue, problem)
 
   }
 

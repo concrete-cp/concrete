@@ -8,17 +8,19 @@ import cspom.variable.CSPOMVariable
 import cspom.compiler.Delta
 import cspom.variable.BoolVariable
 import cspom.variable.CSPOMTrue
+import cspom.variable.CSPOMTrue
 
 /**
  * Transforms x = a \/ b, x \/ c \/ ... into a \/ b \/ c \/ ...
  */
 object MergeDisj extends ConstraintCompiler {
-  type A = CSPOMConstraint
+  type A = CSPOMConstraint[CSPOMTrue.type]
 
-  override def mtch(fc: CSPOMConstraint, problem: CSPOM) = fc match {
-    case CSPOMConstraint(v: CSPOMVariable, 'or, _, _) if v.params("var_is_introduced") =>
+  override def mtch(fc: CSPOMConstraint[_], problem: CSPOM) = fc match {
+    case CSPOMConstraint(v: BoolVariable, 'or, _, _) if v.params("var_is_introduced") =>
       problem.constraints(v).toSeq.collect {
-        case orConstraint @ CSPOMConstraint(CSPOMTrue, 'or, _, _) if (orConstraint ne fc) => orConstraint
+        case orConstraint @ CSPOMConstraint(CSPOMTrue, 'or, _, _) if (orConstraint ne fc) => 
+          orConstraint.asInstanceOf[CSPOMConstraint[CSPOMTrue.type]]
       } match {
         case Seq(orConstraint) => Some(orConstraint)
         case _ => None
@@ -27,7 +29,7 @@ object MergeDisj extends ConstraintCompiler {
 
   }
 
-  def compile(fc: CSPOMConstraint, problem: CSPOM, orConstraint: CSPOMConstraint) = {
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM, orConstraint: A) = {
 
     val fcParams = fc.params.get("revsign").collect {
       case p: Seq[Boolean] => p
@@ -42,7 +44,7 @@ object MergeDisj extends ConstraintCompiler {
     val newScope = fc.arguments ++ orArgs
     val newParams = fcParams ++ orParams
     val newConstraint =
-      new CSPOMConstraint(CSPOMTrue, 'or, newScope, Map("revsign" -> newParams))
+      CSPOMConstraint('or, newScope, Map("revsign" -> newParams))
 
     replaceCtr(Seq(fc, orConstraint), newConstraint, problem)
 

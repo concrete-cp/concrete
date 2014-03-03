@@ -6,16 +6,15 @@ import cspom.CSPOMConstraint
 import cspom.variable.CSPOMConstant
 import scala.collection.mutable.HashMap
 import cspom.variable.CSPOMVariable
-import cspom.variable.IntConstant
 import cspom.variable.IntVariable
 
 object ConstToVar extends ConstraintCompiler {
 
-  type A = Seq[CSPOMConstant]
+  type A = Seq[CSPOMConstant[_]]
 
-  override def matchConstraint(c: CSPOMConstraint) = {
+  override def matchConstraint(c: CSPOMConstraint[_]) = {
     val constants = c.arguments.collect {
-      case c: CSPOMConstant => c
+      case c: CSPOMConstant[_] => c
     }
 
     if (constants.nonEmpty) {
@@ -25,15 +24,15 @@ object ConstToVar extends ConstraintCompiler {
     }
   }
 
-  val singletons = new HashMap[CSPOMConstant, CSPOMVariable]()
+  val singletons = new HashMap[CSPOMConstant[_], CSPOMVariable[_]]()
 
-  def compile(constraint: CSPOMConstraint, problem: CSPOM, constants: A) = {
+  def compile(constraint: CSPOMConstraint[_], problem: CSPOM, constants: A) = {
     val newConstraint = constants.foldLeft(constraint) {
       case (constraint, c) => constraint.replacedVar(c,
-        singletons.getOrElseUpdate(c, IntVariable.of(
-          c match {
-            case c: IntConstant => c.value
-          })))
+        singletons.getOrElseUpdate(c, IntVariable.of {
+          val CSPOMConstant(value: Int) = c
+          value
+        }))
     }
     replaceCtr(constraint, newConstraint, problem)
   }

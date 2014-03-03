@@ -22,7 +22,7 @@ class DiffGeTest {
       assertTrue(r.params("var_is_introduced"))
       ctr(r >= interVar(0, 5))
 
-      ctr(new CSPOMConstraint(r, 'sub, varOf(1, 2, 3), varOf(2, 3, 4)))
+      ctr(CSPOMConstraint(r, 'sub, varOf(1, 2, 3), varOf(2, 3, 4)))
 
     }
 
@@ -44,7 +44,7 @@ class DiffGeTest {
 
       val r2 = (r >= interVar(0, 5))
 
-      ctr(new CSPOMConstraint(r, 'sub, varOf(1, 2, 3), varOf(2, 3, 4)))
+      ctr(CSPOMConstraint(r, 'sub, varOf(1, 2, 3), varOf(2, 3, 4)))
     }
     for (d <- DiffGe.mtch(sub, cspom)) {
       DiffGe.compile(sub, cspom, d)

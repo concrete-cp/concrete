@@ -10,9 +10,7 @@ import cspom.variable.BoolVariable
 import cspom.variable.CSPOMTrue
 import cspom.variable.CSPOMConstant
 import cspom.compiler.ConstraintCompilerNoData
-import cspom.variable.BoolExpression
 import cspom.variable.CSPOMFalse
-import cspom.variable.IntExpression
 import cspom.variable.CSPOMExpression
 
 /**
@@ -33,9 +31,9 @@ object LtToGt extends ConstraintCompiler {
     case CSPOMConstraint(_, 'le, _, _) => false
   }
 
-  def compile(fc: CSPOMConstraint, problem: CSPOM, strict: Boolean) = {
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM, strict: Boolean) = {
     replaceCtr(fc,
-      new CSPOMConstraint(fc.result, (if (strict) 'gt else 'ge), fc.arguments.reverse, fc.params),
+      CSPOMConstraint(fc.result, (if (strict) 'gt else 'ge), fc.arguments.reverse, fc.params),
       problem)
 
   }

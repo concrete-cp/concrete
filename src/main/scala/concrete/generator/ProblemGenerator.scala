@@ -21,46 +21,60 @@ import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMConstant
 import cspom.compiler.QueueSet
 import concrete.Parameter
+import cspom.Statistic
+import cspom.StatisticsManager
+import cspom.TimedException
 
 object ProblemGenerator extends Loggable {
 
   @Parameter("generator.generateLargeDomains")
   val generateLargeDomains = false
 
+  @Statistic
+  var genTime: Double = 0.0
+
   @throws(classOf[FailedGenerationException])
   def generate(cspom: CSPOM) = {
+    val (pb, time) = try StatisticsManager.time {
 
-    // new ProblemCompiler(cspom).compile();
+      // new ProblemCompiler(cspom).compile();
 
-    //val problem = new Problem();
+      //val problem = new Problem();
 
-    val variables = generateVariables(cspom)
+      val variables = generateVariables(cspom)
 
-    val problem = new Problem(variables.values.toList)
+      val problem = new Problem(variables.values.toList)
 
-    val failed = fixPoint(cspom.constraints.toSeq, genConstraint(_: CSPOMConstraint, variables, problem))
+      val failed = fixPoint(cspom.constraints.toSeq, genConstraint(_: CSPOMConstraint[_], variables, problem))
 
-    val failed2 = if (generateLargeDomains) {
-      genLarge(failed, variables, problem)
-    } else {
-      failed
+      val failed2 = if (generateLargeDomains) {
+        genLarge(failed, variables, problem)
+      } else {
+        failed
+      }
+
+      require(failed2.isEmpty, "Could not generate constraints " + failed2)
+
+      problem;
+    } catch {
+      case t: TimedException =>
+        genTime += t.time
+        throw t.getCause()
     }
-
-    require(failed2.isEmpty, "Could not generate constraints " + failed2)
-
-    problem;
+    genTime += time
+    pb
   }
 
-  def genLarge(failed: Seq[CSPOMConstraint], variables: Map[CSPOMVariable, Variable], problem: Problem): Seq[CSPOMConstraint] = {
+  def genLarge(failed: Seq[CSPOMConstraint[_]], variables: Map[CSPOMVariable[_], Variable], problem: Problem): Seq[CSPOMConstraint[_]] = {
     for (v <- problem.variables if v.dom.undefined) {
       logger.warning("Generating arbitrary domain for " + v)
       v.dom = IntDomain(-1000000 to 1000000)
     }
 
-    fixPoint(failed, genConstraint(_: CSPOMConstraint, variables, problem))
+    fixPoint(failed, genConstraint(_: CSPOMConstraint[_], variables, problem))
   }
 
-  def genConstraint(c: CSPOMConstraint, variables: Map[CSPOMVariable, Variable], problem: Problem): Boolean = {
+  def genConstraint(c: CSPOMConstraint[_], variables: Map[CSPOMVariable[_], Variable], problem: Problem): Boolean = {
     GeneratorManager.generate(c, variables, problem) match {
       case Some(s) =>
         s.foreach(problem.addConstraint(_))
@@ -79,7 +93,7 @@ object ProblemGenerator extends Loggable {
     }
   }
 
-  def generateVariables(cspom: CSPOM): Map[CSPOMVariable, Variable] = {
+  def generateVariables(cspom: CSPOM): Map[CSPOMVariable[_], Variable] = {
 
     var unnamed = 0;
 
@@ -94,19 +108,23 @@ object ProblemGenerator extends Loggable {
       name;
     }
 
-    val named = cspom.namedExpressions.flatMap(
-      ne => generateVariables(ne._1, ne._2))
+    val names = cspom.namedExpressions.groupBy(_._2).mapValues(_.map(_._1))
+
+    val named = names.flatMap {
+      case (e, n) =>
+        generateVariables(n.mkString("||"), e)
+    }
 
     named ++ cspom.referencedExpressions.iterator.collect {
-      case v: CSPOMVariable if !named.contains(v) =>
+      case v: CSPOMVariable[_] if !named.contains(v) =>
         v -> new Variable(generate(), generateDomain(v))
     }
   }
 
-  def generateVariables(name: String, e: CSPOMExpression): Map[CSPOMVariable, Variable] =
+  def generateVariables(name: String, e: CSPOMExpression[_]): Map[CSPOMVariable[_], Variable] =
     e match {
-      case c: CSPOMConstant => Map()
-      case v: CSPOMVariable => Map(v -> new Variable(name, generateDomain(v)))
+      case c: CSPOMConstant[_] => Map()
+      case v: CSPOMVariable[_] => Map(v -> new Variable(name, generateDomain(v)))
       case CSPOMSeq(vars, range, _) =>
         (vars zip range).flatMap {
           case (e, i) => generateVariables(s"$name[$i]", e)
@@ -114,7 +132,7 @@ object ProblemGenerator extends Loggable {
       case _ => throw new UnsupportedOperationException(s"Cannot generate $e")
     }
 
-  def generateDomain[T](cspomVar: CSPOMVariable): Domain = cspomVar match {
+  def generateDomain[T](cspomVar: CSPOMVariable[_]): Domain = cspomVar match {
     case bD: BoolVariable =>
       new concrete.BooleanDomain();
 

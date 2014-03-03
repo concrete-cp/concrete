@@ -10,7 +10,7 @@ import cspom.variable.BoolVariable
 import cspom.variable.CSPOMTrue
 import cspom.variable.CSPOMConstant
 import cspom.compiler.ConstraintCompilerNoData
-import cspom.variable.BoolExpression
+import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMFalse
 
 /**
@@ -18,15 +18,16 @@ import cspom.variable.CSPOMFalse
  */
 object SimplDisj extends ConstraintCompilerNoData {
 
-  def matchBool(fc: CSPOMConstraint, problem: CSPOM) = fc match {
-    case CSPOMConstraint(CSPOMTrue, 'or, args, _) if (args.exists(_.isInstanceOf[CSPOMConstant])) =>
+  def matchBool(fc: CSPOMConstraint[_], problem: CSPOM) = fc match {
+    case CSPOMConstraint(CSPOMTrue, 'or, args, _) if (
+      args.exists(_.isInstanceOf[CSPOMConstant[Boolean]])) =>
       true
 
     case _ => false
 
   }
 
-  def compile(fc: CSPOMConstraint, problem: CSPOM) = {
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM) = {
 
     problem.removeConstraint(fc)
 
@@ -41,17 +42,17 @@ object SimplDisj extends ConstraintCompilerNoData {
     }
 
     val constants = (expressions, params).zipped.collect {
-      case (c: BoolExpression with CSPOMConstant, p) =>
-        if (p) { c.neg } else { c }
+      case (CSPOMConstant(c: Boolean), p) =>
+        if (p) { CSPOMConstant(!c) } else { c }
     }
 
     if (!constants.exists(i => i == CSPOMTrue)) {
       val (scope, varParams) = (expressions zip params).collect {
-        case (v: CSPOMVariable, p) => (v, p)
+        case (v: BoolVariable, p) => (v, p)
       } unzip
 
       delta.added(problem.ctr(
-        new CSPOMConstraint(CSPOMTrue, 'or, scope, Map("revsign" -> varParams))))
+        CSPOMConstraint('or, scope, Map("revsign" -> varParams))))
     } else {
       delta
     }

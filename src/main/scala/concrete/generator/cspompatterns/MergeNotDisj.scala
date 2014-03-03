@@ -8,17 +8,19 @@ import cspom.variable.CSPOMVariable
 import cspom.compiler.Delta
 import cspom.variable.BoolVariable
 import cspom.variable.CSPOMTrue
-import cspom.variable.BoolExpression
+import cspom.variable.CSPOMExpression
 
 /**
  * Transforms x = !a, x \/ c \/ ... into !a \/ b \/ c \/ ...
  */
 object MergeNotDisj extends ConstraintCompiler {
-  type A = CSPOMConstraint
+  type A = CSPOMConstraint[Boolean]
 
-  override def mtch(fc: CSPOMConstraint, problem: CSPOM) = fc match {
-    case CSPOMConstraint(v: BoolVariable, 'not, Seq(a: BoolExpression), _) if v.params("var_is_introduced") =>
-      val ors = problem.constraints(v).toSeq.filter(c => c.function == 'or)
+  override def mtch(fc: CSPOMConstraint[_], problem: CSPOM) = fc match {
+    case CSPOMConstraint(v: BoolVariable, 'not, Seq(a: CSPOMExpression[Boolean]), _) if v.params("var_is_introduced") =>
+      val ors = problem.constraints(v).toSeq.collect {
+        case c: CSPOMConstraint[Boolean] if c.function == 'or => c
+      }
 
       ors match {
         case Seq(orConstraint) => Some(orConstraint)
@@ -28,8 +30,8 @@ object MergeNotDisj extends ConstraintCompiler {
 
   }
 
-  def compile(fc: CSPOMConstraint, problem: CSPOM, orConstraint: CSPOMConstraint) = {
-    val Seq(a: BoolExpression) = fc.arguments
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM, orConstraint: A) = {
+    val Seq(a: CSPOMExpression[Boolean]) = fc.arguments
 
     val oldOrParams = orConstraint.params.get("revsign").collect {
       case p: Seq[Boolean] => p
@@ -45,6 +47,6 @@ object MergeNotDisj extends ConstraintCompiler {
     replaceCtr(Seq(fc, orConstraint), newConstraint, problem)
 
   }
-  
+
   def selfPropagation = true
 }

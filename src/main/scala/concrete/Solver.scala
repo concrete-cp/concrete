@@ -81,6 +81,7 @@ abstract class Solver(val problem: Problem) extends Iterator[Map[String, Any]] w
   statistics.register("relation", ReduceableExt)
   statistics.register("domain", Domain)
   statistics.register("problemCompiler", ProblemCompiler)
+  statistics.register("problemGenerator", ProblemGenerator)
 
   /** Logger initialization */
   {

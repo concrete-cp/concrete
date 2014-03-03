@@ -15,7 +15,7 @@ import Generator._
 
 final object NeqGenerator extends Generator {
 
-  override def gen(constraint: CSPOMConstraint)(implicit variables: VarMap) = {
+  override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
 
     val Seq(v0, v1) = constraint.arguments map cspom2concrete1D
 
@@ -38,7 +38,7 @@ final object NeqGenerator extends Generator {
     }
   }
 
-  override def genFunctional(constraint: CSPOMConstraint, r: C2Conc)(implicit variables: VarMap) = {
+  override def genFunctional(constraint: CSPOMConstraint[_], r: C2Conc)(implicit variables: VarMap) = {
     val Var(result) = r
     require(constraint.arguments.size == 2,
       "Comparison constraints must have exactly two arguments");

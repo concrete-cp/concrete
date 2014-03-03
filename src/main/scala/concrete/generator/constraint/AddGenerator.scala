@@ -11,7 +11,7 @@ import concrete.UNSATObject
 
 final object AddGenerator extends Generator {
 
-  override def genFunctional(constraint: CSPOMConstraint, r: C2Conc)(implicit variables: VarMap) = {
+  override def genFunctional(constraint: CSPOMConstraint[_], r: C2Conc)(implicit variables: VarMap) = {
 
     val result = cspom2concreteVar(constraint.result)
 
