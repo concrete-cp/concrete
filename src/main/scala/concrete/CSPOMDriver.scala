@@ -100,20 +100,24 @@ object CSPOMDriver {
   }
 }
 
-final object JCSPOMDriver {
+final class JCSPOMDriver extends CSPOM {
   import CSPOMDriver._
 
-  @varargs
-  def allDifferent(v: IntVariable*) = CSPOMDriver.allDifferent(v: _*)
+  implicit def problem: CSPOM = this
 
-  def abs(v: CSPOMExpression[Int]) = CSPOMDriver.abs(v)
-
-  def lt(v1: CSPOMExpression[Int], v2: CSPOMExpression[Int]) = v1 < v2
+  def lt(v1: CSPOMExpression[Int], v2: CSPOMExpression[Int]) = v1.<(v2)(this)
 
   def less(v1: CSPOMExpression[Int], v2: CSPOMExpression[Int]) = v1 - v2
 
   def neq(e1: CSPOMExpression[Any], e2: CSPOMExpression[Any]) = e1 !== e2
 
+  @varargs
+  def allDifferent(v: IntVariable*) = CSPOMDriver.allDifferent(v: _*)
+
+  def abs(v: CSPOMExpression[Int]) = CSPOMDriver.abs(v)
+}
+
+final object JCSPOMDriver {
   // Required to avoid incompatibility between Int and Integer
   def constant(a: Int) = CSPOMConstant(a)
 }
