@@ -25,9 +25,7 @@ import cspom.variable.CSPOMConstant
 final object SumGenerator extends Generator {
 
   override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
-    val Seq(CSPOMSeq(vars, _, _), const: CSPOMConstant[Int]) = constraint.arguments //map cspom2concreteVar
-
-    val c = const.value
+    val Seq(CSPOMSeq(vars, _, _), CSPOMConstant(const: Int)) = constraint.arguments //map cspom2concreteVar
 
     val solverVariables = vars map cspom2concreteVar
 
@@ -40,13 +38,13 @@ final object SumGenerator extends Generator {
     }
 
     undefinedVar(solverVariables: _*) match {
-      case Seq() => go(c, params, solverVariables, mode)
+      case Seq() => go(const, params, solverVariables, mode)
       case Seq(uv) if mode == FilterSum.SumEQ =>
         val min = (solverVariables zip params).map { case (v, p) => if (v eq uv) 0 else v.dom.firstValue * p }.sum
         val max = (solverVariables zip params).map { case (v, p) => if (v eq uv) 0 else v.dom.lastValue * p }.sum
         val factor = params(solverVariables.indexOf(uv))
         Generator.restrictDomain(uv, (Interval(min, max) / -factor).allValues)
-        go(c, params, solverVariables, mode)
+        go(const, params, solverVariables, mode)
       case s => None
     }
 

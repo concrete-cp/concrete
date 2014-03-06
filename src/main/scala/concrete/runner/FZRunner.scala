@@ -13,6 +13,7 @@ import cspom.flatzinc.FZAnnotation
 import cspom.flatzinc.FZArrayExpr
 import cspom.flatzinc.FZSetConst
 import cspom.variable.CSPOMSeq
+import cspom.variable.CSPOMConstant
 
 object FZConcrete extends ConcreteRunner with App {
 
@@ -31,11 +32,12 @@ object FZConcrete extends ConcreteRunner with App {
       println(f.getScheme())
       f.toURL
     }
-    
+
     //println(file)
 
     val cspom = CSPOM.load(file)
     data = cspom._2
+    //println(cspom._1)
     cspom._1
   }
 
@@ -61,12 +63,24 @@ object FZConcrete extends ConcreteRunner with App {
       ranges.head.size * flattenedSize(ranges.tail)
     }
 
+  def getConstant(n: String): Option[Any] = {
+    cProblem.namedExpressions.get(n).collect {
+      case CSPOMConstant(v) => v
+    }
+  }
+
   override def output(solution: Map[String, Any]) = {
+    val sol1 = solution.flatMap {
+      case (s, a) => s.split("\\|\\|").map(_ -> a)
+    }
+
+    val sol = sol1.orElse(Function.unlift[String, Any](getConstant(_)))
+
     val out: Iterable[String] = cProblem.namedExpressions.flatMap {
       case (name, output) =>
         output.params.collectFirst {
           case FZAnnotation("output_var", Seq()) =>
-            name + " = " + solution(name) + ";"
+            name + " = " + sol(name) + ";"
           case FZAnnotation("output_array", Seq(data: FZArrayExpr[Seq[Int]])) =>
             val FZArrayExpr(array) = data
             val ranges = array.map {
@@ -74,7 +88,7 @@ object FZConcrete extends ConcreteRunner with App {
             }
             val CSPOMSeq(variables, initRange, _) = output
             require(initRange.size == flattenedSize(ranges))
-            val solutions = initRange.map(i => solution(s"$name[$i]"))
+            val solutions = initRange.map(i => sol(s"$name[$i]"))
 
             s"$name = array${array.size}d(${
               ranges.map(range => s"${range.head}..${range.last}, ").mkString
