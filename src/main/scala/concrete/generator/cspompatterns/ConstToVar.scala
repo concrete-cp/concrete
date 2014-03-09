@@ -29,9 +29,9 @@ object ConstToVar extends ConstraintCompiler {
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM, constants: A) = {
     val newConstraint = constants.foldLeft(constraint) {
       case (constraint, c) => constraint.replacedVar(c,
-        singletons.getOrElseUpdate(c, IntVariable.of {
+        singletons.getOrElseUpdate(c, IntVariable {
           val CSPOMConstant(value: Int) = c
-          value
+          Seq(value)
         }))
     }
     replaceCtr(constraint, newConstraint, problem)

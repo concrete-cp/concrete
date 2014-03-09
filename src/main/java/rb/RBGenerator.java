@@ -18,8 +18,8 @@ import cspom.CSPOMConstraint;
 import cspom.extension.MDD;
 import cspom.extension.MDD$;
 import cspom.variable.IntVariable;
-import static concrete.JCSPOMDriver.*;
-import static concrete.JCSPOMDriver.*;
+
+import scala.collection.immutable.Range;
 
 /**
  * This class corresponds to explicit random problems, i.e., random problems
@@ -134,7 +134,7 @@ public class RBGenerator {
     final List<IntVariable> variables = new ArrayList<>(nbVariables);
 
     for (int i = nbVariables; --i >= 0;) {
-      final IntVariable v = CSPOM.interVar(0, domainSize - 1);
+      final IntVariable v = IntVariable(Range.apply(0, domainSize));
       variables.add(v);
       cspom.nameExpression(v, "X" + i);
     }

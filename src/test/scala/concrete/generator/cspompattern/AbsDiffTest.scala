@@ -7,14 +7,15 @@ import org.junit.Test
 import cspom.CSPOMConstraint
 import concrete.generator.cspompatterns.AbsDiff
 import cspom.variable.BoolVariable
+import cspom.variable.IntVariable
 
 class AbsDiffTest {
   @Test
   def testExt() {
     val (cspom, sub) = CSPOM withResult {
 
-      val v0 = varOf(1, 2, 3)
-      val v1 = varOf(2, 3, 4)
+      val v0 = IntVariable(Seq(1, 2, 3))
+      val v1 = IntVariable(Seq(2, 3, 4))
       val r = auxInt()
       assertTrue(r.params("var_is_introduced"))
 

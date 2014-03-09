@@ -9,6 +9,7 @@ import concrete.Problem
 import cspom.CSPOM
 import cspom.CSPOMConstraint
 import cspom.CSPOM._
+import cspom.variable.IntVariable
 
 final class AbsDiffGeneratorTest {
 
@@ -16,9 +17,9 @@ final class AbsDiffGeneratorTest {
   def test() {
 
     val cspom = CSPOM {
-      val v0 = varOf(1, 2, 3)
-      val v1 = varOf(1, 2, 3)
-      val v2 = varOf(1, 2, 3)
+      val v0 = IntVariable(Seq(1, 2, 3))
+      val v1 = IntVariable(Seq(1, 2, 3))
+      val v2 = IntVariable(Seq(1, 2, 3))
       ctr(CSPOMConstraint(v0, 'absdiff, v1, v2))
     }
 
