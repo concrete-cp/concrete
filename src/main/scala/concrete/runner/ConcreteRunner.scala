@@ -160,7 +160,7 @@ trait ConcreteRunner {
 
   def output(solution: Map[String, Any]): String = {
     cProblem.namedExpressions.collect {
-      case (name, variable) if (!variable.params("var_is_introduced")) => s"$name = ${solution(name)}"
+      case (name, variable) if (!variable.hasParam("var_is_introduced")) => s"$name = ${solution(name)}"
     }.mkString("\n")
   }
 

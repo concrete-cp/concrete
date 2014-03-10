@@ -19,7 +19,7 @@ import cspom.extension.MDD;
 import cspom.extension.MDD$;
 import cspom.variable.IntVariable;
 
-import scala.collection.immutable.Range;
+import static cspom.JCSPOM.*;
 
 /**
  * This class corresponds to explicit random problems, i.e., random problems
@@ -134,7 +134,7 @@ public class RBGenerator {
     final List<IntVariable> variables = new ArrayList<>(nbVariables);
 
     for (int i = nbVariables; --i >= 0;) {
-      final IntVariable v = IntVariable(Range.apply(0, domainSize));
+      final IntVariable v = intVarRange(0, domainSize - 1);
       variables.add(v);
       cspom.nameExpression(v, "X" + i);
     }
@@ -178,7 +178,7 @@ public class RBGenerator {
     Map<IntVariable, Integer> solution = new HashMap<IntVariable, Integer>(
         nbVariables);
     for (IntVariable v : variables) {
-      solution.put(v, RAND.nextInt(v.domain().getValues().size()));
+      solution.put(v, RAND.nextInt(v.domain().size()));
     }
     return solution;
   }
@@ -313,7 +313,7 @@ public class RBGenerator {
   }
 
   private static MDD tuplesToMatrix(int arity, int[][] tuples) {
-    MDD extension = MDD$.MODULE$.empty();
+    MDD extension = emptyMDD();
 
     for (int[] tuple : tuples) {
       extension = extension.add(tuple);

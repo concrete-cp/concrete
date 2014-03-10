@@ -78,7 +78,8 @@ object FZConcrete extends ConcreteRunner with App {
 
     val out: Iterable[String] = cProblem.namedExpressions.flatMap {
       case (name, output) =>
-        output.params.collectFirst {
+        output.getParam("fzAnnotations", classOf[Seq[FZAnnotation]]).flatMap(_.collectFirst {
+
           case FZAnnotation("output_var", Seq()) =>
             name + " = " + sol(name) + ";"
           case FZAnnotation("output_array", Seq(data: FZArrayExpr[Seq[Int]])) =>
@@ -94,8 +95,7 @@ object FZConcrete extends ConcreteRunner with App {
               ranges.map(range => s"${range.head}..${range.last}, ").mkString
             }${solutions.mkString("[", ", ", "]")});"
 
-        }
-
+        })
       //      case (name, output) if output.params("output_array") =>
       //        name + " : " + output.params
 

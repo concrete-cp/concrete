@@ -19,7 +19,7 @@ class MergeEqTest {
     val cspom = CSPOM {
       val v0 = IntVariable(1 to 3) as "V0"
       ctr(CSPOMConstraint('dummy, v0))
-      val v1 = IntVariable(2 to 4, Set("var_is_introduced"))
+      val v1 = IntVariable(2 to 4, Map("var_is_introduced" -> Unit))
       ctr(v0 === v1)
     }
 

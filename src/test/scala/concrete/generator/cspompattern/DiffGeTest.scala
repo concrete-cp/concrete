@@ -17,13 +17,11 @@ class DiffGeTest {
   @Test
   def testGen() {
 
-    val (cspom, sub) = CSPOM withResult {
+    val cspom = CSPOM {
 
-      val r = auxInt()
-      assertTrue(r.params("var_is_introduced"))
+      val r = IntVariable(1 to 3) - IntVariable(2 to 4)
+      assertTrue(r.hasParam("var_is_introduced"))
       ctr(r >= IntVariable(0 to 5))
-
-      ctr(CSPOMConstraint(r, 'sub, IntVariable(1 to 3), IntVariable(2 to 4)))
 
     }
 
@@ -39,17 +37,16 @@ class DiffGeTest {
   @Test
   def testFunc() {
 
-    val (cspom, sub) = CSPOM withResult {
+    val cspom = CSPOM {
 
-      val r = auxInt()
+      val r = IntVariable(1 to 3) - IntVariable(2 to 4)
 
       val r2 = (r >= IntVariable(0 to 5))
 
-      ctr(CSPOMConstraint(r, 'sub, IntVariable(1 to 3), IntVariable(2 to 4)))
     }
-    for (d <- DiffGe.mtch(sub, cspom)) {
-      DiffGe.compile(sub, cspom, d)
-    }
+
+    ProblemCompiler.compile(cspom, Seq(DiffGe))
+
     assertEquals(4, cspom.referencedExpressions.size)
     assertEquals(1, cspom.constraints.size)
     val c = cspom.constraints.head
