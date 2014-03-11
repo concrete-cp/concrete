@@ -24,6 +24,7 @@ import concrete.Parameter
 import cspom.Statistic
 import cspom.StatisticsManager
 import cspom.TimedException
+import cspom.VariableNames
 
 object ProblemGenerator extends Loggable {
 
@@ -95,30 +96,37 @@ object ProblemGenerator extends Loggable {
 
   def generateVariables(cspom: CSPOM): Map[CSPOMVariable[_], Variable] = {
 
-    var unnamed = 0;
+    val vn = new VariableNames(cspom)
 
-    /**
-     * Generates an unique variable name.
-     *
-     * @return An unique variable name.
-     */
-    def generate() = {
-      val name = "_" + unnamed;
-      unnamed += 1;
-      name;
-    }
+    cspom.namedExpressions.values.flatMap(_.flatten).collect {
+      case v: CSPOMVariable[_] => v -> new Variable(vn.names(v), generateDomain(v))
+    }.toMap
 
-    val names = cspom.namedExpressions.groupBy(_._2).mapValues(_.map(_._1))
-
-    val named = names.flatMap {
-      case (e, n) =>
-        generateVariables(n.mkString("||"), e)
-    }
-
-    named ++ cspom.referencedExpressions.iterator.collect {
-      case v: CSPOMVariable[_] if !named.contains(v) =>
-        v -> new Variable(generate(), generateDomain(v))
-    }
+    //toMap
+    //    var unnamed = 0;
+    //
+    //    /**
+    //     * Generates an unique variable name.
+    //     *
+    //     * @return An unique variable name.
+    //     */
+    //    def generate() = {
+    //      val name = "_" + unnamed;
+    //      unnamed += 1;
+    //      name;
+    //    }
+    //
+    //    val names = cspom.namedExpressions.groupBy(_._2).mapValues(_.map(_._1))
+    //
+    //    val named = names.flatMap {
+    //      case (e, n) =>
+    //        generateVariables(n.mkString("||"), e)
+    //    }
+    //
+    //    named ++ cspom.referencedExpressions.iterator.collect {
+    //      case v: CSPOMVariable[_] if !named.contains(v) =>
+    //        v -> new Variable(generate(), generateDomain(v))
+    //    }
   }
 
   def generateVariables(name: String, e: CSPOMExpression[_]): Map[CSPOMVariable[_], Variable] =

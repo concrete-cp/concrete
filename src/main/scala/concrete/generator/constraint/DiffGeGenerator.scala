@@ -3,11 +3,11 @@ package concrete.generator.constraint;
 import concrete.constraint.semantic.{ ReifiedConstraint, Gt }
 import concrete.{ Variable, Problem }
 import cspom.CSPOMConstraint
-import cspom.variable.CSPOMTrue
+import cspom.variable.CSPOMConstant
 import cspom.variable.BoolVariable
 import concrete.UNSATObject
 import concrete.BooleanDomain
-import cspom.variable.CSPOMFalse
+import cspom.variable.CSPOMConstant
 import Generator._
 
 /**

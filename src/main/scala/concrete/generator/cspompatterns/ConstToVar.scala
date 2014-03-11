@@ -27,7 +27,7 @@ object ConstToVar extends ConstraintCompiler {
   val singletons = new HashMap[CSPOMConstant[_], CSPOMVariable[_]]()
 
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM, constants: A) = {
-    val newConstraint = constants.foldLeft(constraint) {
+    val newConstraint = constants.foldLeft[CSPOMConstraint[Any]](constraint) {
       case (constraint, c) => constraint.replacedVar(c,
         singletons.getOrElseUpdate(c, IntVariable {
           val CSPOMConstant(value: Int) = c

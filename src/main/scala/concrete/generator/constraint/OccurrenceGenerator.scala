@@ -6,8 +6,6 @@ import concrete.{ Variable, Problem }
 import cspom.{ CSPOMConstraint }
 import concrete.constraint.semantic.OccurrenceVar
 import concrete.constraint.semantic.OccurrenceConst
-import cspom.variable.CSPOMFalse
-import cspom.variable.CSPOMTrue
 import Generator._
 import cspom.variable.CSPOMConstant
 
@@ -21,8 +19,8 @@ final object OccurrenceGenerator extends Generator {
     } else {
 
       val value: Int = constraint.params.get("occurrence") match {
-        case Some(CSPOMTrue) => 1
-        case Some(CSPOMFalse) => 0
+        case Some(CSPOMConstant(true)) => 1
+        case Some(CSPOMConstant(false)) => 0
         case Some(p: CSPOMConstant[Int]) => p.value
         case p: Any => throw new IllegalArgumentException(s"Occurrence constraints requires to be parameterized with an int value, found $p")
       }

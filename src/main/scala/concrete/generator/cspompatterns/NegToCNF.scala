@@ -7,11 +7,11 @@ import cspom.CSPOMConstraint
 import cspom.variable.CSPOMVariable
 import cspom.compiler.Delta
 import cspom.variable.BoolVariable
-import cspom.variable.CSPOMTrue
+import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMConstant
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.variable.CSPOMExpression
-import cspom.variable.CSPOMFalse
+
 /**
  * Negation is converted to CNF :
  *
@@ -39,8 +39,8 @@ object NegToCNF extends ConstraintCompiler {
     problem.removeConstraint(fc)
 
     Delta().removed(fc).added(problem.ctr(
-      new CSPOMConstraint(CSPOMTrue, 'or, Seq(res, arg), fc.params))).added(problem.ctr(
-      new CSPOMConstraint(CSPOMTrue, 'or, Seq(res, arg), fc.params + ("revsign" -> Seq(true, true)))))
+      new CSPOMConstraint(CSPOMConstant(true), 'or, Seq(res, arg), fc.params))).added(problem.ctr(
+      new CSPOMConstraint(CSPOMConstant(true), 'or, Seq(res, arg), fc.params + ("revsign" -> Seq(true, true)))))
 
   }
   def selfPropagation = false

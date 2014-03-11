@@ -7,20 +7,21 @@ import cspom.CSPOMConstraint
 import cspom.variable.CSPOMVariable
 import cspom.compiler.Delta
 import cspom.variable.BoolVariable
-import cspom.variable.CSPOMTrue
-import cspom.variable.CSPOMTrue
+import cspom.variable.CSPOMConstant
+import cspom.variable.CSPOMConstant
+import cspom.variable.CSPOMExpression
 
 /**
  * Transforms x = a \/ b, x \/ c \/ ... into a \/ b \/ c \/ ...
  */
 object MergeDisj extends ConstraintCompiler {
-  type A = CSPOMConstraint[CSPOMTrue.type]
+  type A = CSPOMConstraint[CSPOMConstant[Boolean]]
 
   override def mtch(fc: CSPOMConstraint[_], problem: CSPOM) = fc match {
-    case CSPOMConstraint(v: BoolVariable, 'or, _, _) if v.hasParam("var_is_introduced") =>
+    case CSPOMConstraint(v: CSPOMExpression[Boolean], 'or, _, _) =>
       problem.constraints(v).toSeq.collect {
-        case orConstraint @ CSPOMConstraint(CSPOMTrue, 'or, _, _) if (orConstraint ne fc) => 
-          orConstraint.asInstanceOf[CSPOMConstraint[CSPOMTrue.type]]
+        case orConstraint @ CSPOMConstraint(CSPOMConstant(true), 'or, _, _) if (orConstraint ne fc) =>
+          orConstraint.asInstanceOf[CSPOMConstraint[CSPOMConstant[Boolean]]]
       } match {
         case Seq(orConstraint) => Some(orConstraint)
         case _ => None

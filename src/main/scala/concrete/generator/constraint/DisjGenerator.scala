@@ -4,8 +4,7 @@ import concrete.constraint.semantic.Disjunction
 import concrete.{ Variable, Problem }
 import cspom.CSPOMConstraint
 import cspom.variable.CSPOMVariable
-import cspom.variable.CSPOMTrue
-import cspom.variable.CSPOMFalse
+import cspom.variable.CSPOMConstant
 import cspom.variable.BoolVariable
 
 import Generator._

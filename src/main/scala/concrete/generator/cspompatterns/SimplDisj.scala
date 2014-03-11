@@ -7,11 +7,10 @@ import cspom.CSPOMConstraint
 import cspom.variable.CSPOMVariable
 import cspom.compiler.Delta
 import cspom.variable.BoolVariable
-import cspom.variable.CSPOMTrue
+import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMConstant
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.variable.CSPOMExpression
-import cspom.variable.CSPOMFalse
 
 /**
  * Removes constants from disjunctions
@@ -19,7 +18,7 @@ import cspom.variable.CSPOMFalse
 object SimplDisj extends ConstraintCompilerNoData {
 
   def matchBool(fc: CSPOMConstraint[_], problem: CSPOM) = fc match {
-    case CSPOMConstraint(CSPOMTrue, 'or, args, _) if (
+    case CSPOMConstraint(CSPOMConstant(true), 'or, args, _) if (
       args.exists(_.isInstanceOf[CSPOMConstant[Boolean]])) =>
       true
 
@@ -28,11 +27,6 @@ object SimplDisj extends ConstraintCompilerNoData {
   }
 
   def compile(fc: CSPOMConstraint[_], problem: CSPOM) = {
-
-    problem.removeConstraint(fc)
-
-    val delta = Delta().removed(fc)
-
     val expressions = fc.arguments
 
     val params: Seq[Boolean] = fc.params.get("revsign") match {
@@ -41,22 +35,23 @@ object SimplDisj extends ConstraintCompilerNoData {
       case p: Any => throw new IllegalArgumentException(s"Parameters for disjunction must be a sequence of boolean values, not '$p'")
     }
 
-    val constants = (expressions, params).zipped.collect {
-      case (CSPOMConstant(c: Boolean), p) =>
-        if (p) { CSPOMConstant(!c) } else { c }
+    val validated = (expressions zip params).exists {
+      case (CSPOMConstant(c: Boolean), p) => p ^ c
+      case _ => false
     }
 
-    if (!constants.exists(i => i == CSPOMTrue)) {
+    val repl = if (validated) {
+      Seq()
+    } else {
       val (scope, varParams) = (expressions zip params).collect {
         case (v: BoolVariable, p) => (v, p)
       } unzip
 
-      delta.added(problem.ctr(
-        CSPOMConstraint('or, scope, Map("revsign" -> varParams))))
-    } else {
-      delta
+      Seq(
+        CSPOMConstraint('or, scope, Map("revsign" -> varParams)))
     }
 
+    replaceCtr(fc, repl, problem)
   }
 
   def selfPropagation = false

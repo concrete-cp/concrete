@@ -46,6 +46,7 @@ final class Sum(
     case SumLE if neg => dom.removeToVal(itv.lb - 1)
     case SumLE => dom.removeFromVal(itv.ub + 1)
     case SumEQ => dom.intersectVal(itv)
+    case SumNE => dom.removeValInterval(itv.lb, itv.ub)
     case _ => ???
   }
 

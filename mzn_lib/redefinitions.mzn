@@ -74,14 +74,14 @@ predicate alt_2_aux_int_eq_iff_1(var int: x, var int: y, var int: p) =
     sum(q) <= p + 1;
 
 
-predicate aux_float_eq_iff_1(var float: x, var float: y, var float: p) =
-    let { array[1..2] of var 0..1: q }
-    in
-    aux_float_le_if_1(x, y, p) /\
-    aux_float_ge_if_1(x, y, p) /\
-    aux_float_lt_if_0(x, y, int2float(q[1])) /\
-    aux_float_gt_if_0(x, y, int2float(q[2])) /\
-    int2float(sum(q)) <= 1.0 + p;
+%predicate aux_float_eq_iff_1(var float: x, var float: y, var float: p) =
+%    let { array[1..2] of var 0..1: q }
+%    in
+%    aux_float_le_if_1(x, y, p) /\
+%    aux_float_ge_if_1(x, y, p) /\
+%    aux_float_lt_if_0(x, y, int2float(q[1])) /\
+%    aux_float_gt_if_0(x, y, int2float(q[2])) /\
+%    int2float(sum(q)) <= 1.0 + p;
 
 %-----------------------------------------------------------------------------%
 % Auxiliary: indicator constraints
@@ -95,10 +95,10 @@ predicate aux_int_le_zero_if_0(var int: x, var int: p) =
 predicate aux_float_le_zero_if_0(var float: x, var float: p) =
     x <= ub(x) * p;
 
-predicate aux_float_lt_zero_if_0(var float: x, var float: p) =
-    let { float: rho = 1e-02 * abs(ub(x)) }  % same order of magnitude as ub(x)
-    in
-    x < (ub(x) + rho) * p;
+%predicate aux_float_lt_zero_if_0(var float: x, var float: p) =
+%    let { float: rho = 1e-02 * abs(ub(x)) }  % same order of magnitude as ub(x)
+%    in
+%    x < (ub(x) + rho) * p;
 
 
 % Derived cases

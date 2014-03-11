@@ -6,7 +6,7 @@ import scala.util.Random
 import scala.util.control.Breaks._
 import cspom.Loggable
 import cspom.compiler.ConstraintCompiler
-import cspom.variable.CSPOMTrue
+import cspom.variable.CSPOMConstant
 import cspom.compiler.Delta
 import cspom.variable.CSPOMSeq
 import scala.collection.mutable.WeakHashMap
@@ -16,11 +16,11 @@ object AllDiff extends ConstraintCompiler with Loggable {
   type A = Set[IntVariable]
 
   def DIFF_CONSTRAINT(constraint: CSPOMConstraint[_]) =
-    (constraint.result == CSPOMTrue) &&
+    (constraint.result == CSPOMConstant(true)) &&
       Set('ne, 'gt, 'lt, 'allDifferent)(constraint.function)
 
   def ALLDIFF_CONSTRAINT(constraint: CSPOMConstraint[_]) =
-    (constraint.result == CSPOMTrue) && 'ne == constraint.function ||
+    (constraint.result == CSPOMConstant(true)) && 'ne == constraint.function ||
       'allDifferent == constraint.function
 
   val ITER = 750;

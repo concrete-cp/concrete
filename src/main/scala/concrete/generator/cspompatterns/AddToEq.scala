@@ -7,10 +7,8 @@ import cspom.CSPOMConstraint
 import cspom.variable.CSPOMVariable
 import cspom.compiler.Delta
 import cspom.variable.BoolVariable
-import cspom.variable.CSPOMTrue
 import cspom.variable.CSPOMConstant
 import cspom.compiler.ConstraintCompilerNoData
-import cspom.variable.CSPOMFalse
 
 /**
  * Addition with constants are converted to equality constraints

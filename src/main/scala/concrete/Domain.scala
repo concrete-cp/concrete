@@ -201,17 +201,22 @@ abstract class Domain {
 
   def intersectVal(i: Interval): Boolean = intersectVal(i.lb, i.ub)
 
-  def removeValInterval(lb: Int, ub: Int) {
-
+  def removeValInterval(lb: Int, ub: Int) = {
+    var ch = false
     var i = closestGeq(lb)
     val end = closestLeq(ub)
 
-    if (i >= 0 && end >= 0) {
-      while (i <= end) {
-        if (present(i)) { remove(i) }
-        i += 1
+    if (end >= 0) {
+      while (i >= 0 && i <= end) {
+        if (present(i)) {
+          remove(i)
+          ch = true
+        }
+        i = next(i)
       }
     }
+
+    ch
   }
 
   def disjoint(d: Domain, i: Int = first): Boolean = i < 0 || {

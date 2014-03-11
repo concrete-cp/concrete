@@ -27,31 +27,37 @@ final object SumGenerator extends Generator {
   override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
     val Seq(CSPOMSeq(vars, _, _), CSPOMConstant(const: Int)) = constraint.arguments //map cspom2concreteVar
 
-    val solverVariables = vars map cspom2concreteVar
-
-    val Some(mode: FilterSum.Value) = constraint.params.get("mode").collect { case m: String => FilterSum.withName(m) }
-
     val params = constraint.params.get("coefficients") match {
-      case Some(p: Seq[Int]) => p.toArray
-      case None => Array.fill(solverVariables.length)(1)
+      case Some(p: Seq[Int]) => p
+      case None => Seq.fill(vars.length)(1)
       case _ => throw new IllegalArgumentException("Parameters for zero sum must be a sequence of integer values")
     }
 
+    val (solverVariables, varParams) = (vars map cspom2concrete).zip(params).collect {
+      case (Var(v), p) => (v, p)
+    } unzip
+
+    val constant = const - (vars map cspom2concrete).zip(params).collect {
+      case (Const(c), p) => c * p
+    }.sum
+
+    val Some(mode: FilterSum.Value) = constraint.params.get("mode").collect { case m: String => FilterSum.withName(m) }
+
     undefinedVar(solverVariables: _*) match {
-      case Seq() => go(const, params, solverVariables, mode)
+      case Seq() => go(constant, varParams, solverVariables, mode)
       case Seq(uv) if mode == FilterSum.SumEQ =>
-        val min = (solverVariables zip params).map { case (v, p) => if (v eq uv) 0 else v.dom.firstValue * p }.sum
-        val max = (solverVariables zip params).map { case (v, p) => if (v eq uv) 0 else v.dom.lastValue * p }.sum
-        val factor = params(solverVariables.indexOf(uv))
-        Generator.restrictDomain(uv, (Interval(min, max) / -factor).allValues)
-        go(const, params, solverVariables, mode)
+        val min = (solverVariables zip varParams).map { case (v, p) => if (v eq uv) 0 else v.dom.firstValue * p }.sum
+        val max = (solverVariables zip varParams).map { case (v, p) => if (v eq uv) 0 else v.dom.lastValue * p }.sum
+        val factor = varParams(solverVariables.indexOf(uv))
+        Generator.restrictDomain(uv, ((Interval(min, max) - constant) / -factor).allValues)
+        go(constant, varParams, solverVariables, mode)
       case s => None
     }
 
   }
 
-  def go(c: Int, params: Array[Int], solverVariables: Seq[Variable], mode: FilterSum.Value) =
-    Some(Seq(new Sum(c, params, solverVariables.toArray, mode)))
+  def go(c: Int, params: Seq[Int], solverVariables: Seq[Variable], mode: FilterSum.Value) =
+    Some(Seq(new Sum(c, params.toArray, solverVariables.toArray, mode)))
 
   //      result match {
   //        case Const(c) => Some(Seq(new Sum(c, params, solverVariables.toArray, mode)))

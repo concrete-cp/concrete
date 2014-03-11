@@ -6,7 +6,7 @@ import org.junit.Assert._
 import org.junit.Test
 import cspom.CSPOMConstraint
 import concrete.generator.cspompatterns.DiffGe
-import cspom.variable.CSPOMTrue
+import cspom.variable.CSPOMConstant
 import cspom.variable.BoolVariable
 import org.hamcrest.CoreMatchers._
 import concrete.CSPOMDriver._
@@ -32,7 +32,7 @@ class DiffGeTest {
     assertEquals(1, cspom.constraints.size)
     val c = cspom.constraints.head
     assertEquals('diffGe, c.function)
-    assertEquals(CSPOMTrue, c.result)
+    assertEquals(CSPOMConstant(true), c.result)
   }
 
   @Test

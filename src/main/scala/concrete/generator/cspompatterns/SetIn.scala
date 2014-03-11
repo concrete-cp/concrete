@@ -6,7 +6,7 @@ import scala.util.Random
 import scala.util.control.Breaks._
 import cspom.Loggable
 import cspom.compiler.ConstraintCompiler
-import cspom.variable.CSPOMTrue
+import cspom.variable.CSPOMConstant
 import cspom.compiler.Delta
 import cspom.variable.CSPOMSeq
 import scala.collection.mutable.WeakHashMap
@@ -19,7 +19,7 @@ import cspom.variable.BoolVariable
 object SetIn extends ConstraintCompilerNoData {
 
   def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM) =
-    constraint.function == 'set_in && constraint.result == CSPOMTrue
+    constraint.function == 'set_in && constraint.result == CSPOMConstant(true)
 
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM) = {
     val Seq(variable, CSPOMSeq(set, _, _)) = constraint.arguments

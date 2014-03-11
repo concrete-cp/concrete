@@ -3,7 +3,7 @@ package concrete.generator.constraint;
 import concrete.{ Variable, Problem }
 import cspom.CSPOMConstraint
 import concrete.constraint.semantic.{ AllDifferent2C, AllDifferentBC }
-import cspom.variable.CSPOMTrue
+import cspom.variable.CSPOMConstant
 import Generator._
 
 final object AllDifferentGenerator extends Generator {

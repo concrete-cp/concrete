@@ -18,6 +18,7 @@ object GeneratorManager {
     'not -> DisjGenerator,
     'eq -> EqGenerator,
     'neg -> EqGenerator,
+    'bool2int -> EqGenerator,
     'gt -> GtGenerator,
     'ge -> GtGenerator,
     'mul -> MulGenerator,

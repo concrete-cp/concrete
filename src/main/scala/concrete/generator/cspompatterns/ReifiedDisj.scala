@@ -7,11 +7,11 @@ import cspom.CSPOMConstraint
 import cspom.variable.CSPOMVariable
 import cspom.compiler.Delta
 import cspom.variable.BoolVariable
-import cspom.variable.CSPOMTrue
+import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMConstant
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.variable.CSPOMExpression
-import cspom.variable.CSPOMFalse
+import cspom.variable.SimpleExpression
 
 /**
  * Reified disjunction is converted to CNF :
@@ -27,7 +27,7 @@ object ReifiedDisj extends ConstraintCompiler {
   type A = CSPOMExpression[Boolean]
 
   override def constraintMatcher = {
-    case CSPOMConstraint(res: CSPOMExpression[Boolean], 'or, args, params) if (res != CSPOMTrue) =>
+    case CSPOMConstraint(res: SimpleExpression[Boolean], 'or, args, params) if (!res.isTrue) =>
       res
   }
 

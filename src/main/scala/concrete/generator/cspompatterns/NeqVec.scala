@@ -7,7 +7,7 @@ import cspom.compiler.ConstraintCompiler
 import cspom.compiler.Delta
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
-import cspom.variable.CSPOMTrue
+import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMVariable
 
 /**
@@ -29,7 +29,7 @@ object NeqVec extends ConstraintCompiler {
     }
 
     result collect {
-      case Seq(orConstraint @ CSPOMConstraint(CSPOMTrue, 'or, _, _)) =>
+      case Seq(orConstraint @ CSPOMConstraint(CSPOMConstant(true), 'or, _, _)) =>
         val orVariables = orConstraint.fullScope.toSet
         val neConstraints = orVariables.flatMap(problem.constraints) - orConstraint
         (orConstraint, orVariables, neConstraints)
