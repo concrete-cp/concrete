@@ -37,7 +37,7 @@ class Problem(name: String) extends AbstractProblem(name) with Loggable {
   private def cspomVar(vars: Seq[javax.constraints.Var]) = vars.map(_.getImpl.asInstanceOf[IntVariable])
 
   def createVariable(name: String, min: Int, max: Int): javax.constraints.Var = {
-    new Var(this, name, IntVariable.ofInterval(min, max))
+    new Var(this, name, IntVariable(min to max))
   }
   def debug(l: String) { logger.fine(l) }
   def error(l: String) { logger.severe(l) }
@@ -93,7 +93,7 @@ class Problem(name: String) extends AbstractProblem(name) with Loggable {
       CSPOMConstraint('sum, Seq(
         new CSPOMSeq(vs.map(_.getImpl.asInstanceOf[IntVariable])),
         CSPOMConstant(v)),
-        Map("mode" -> "eq")))
+        Map("mode" -> op)))
     new Constraint(this, constraint)
   }
   def post(x$1: Array[Int], x$2: Array[javax.constraints.Var], x$3: String, x$4: javax.constraints.Var): javax.constraints.Constraint = ???
@@ -104,7 +104,11 @@ class Problem(name: String) extends AbstractProblem(name) with Loggable {
     post(countVar, op, cardCount)
   }
   def postCardinality(vars: Array[javax.constraints.Var], cardValue: Int, op: String, cardCount: Int): javax.constraints.Constraint = {
+<<<<<<< HEAD
     val constant = IntVariable.of(cardCount)
+=======
+    val constant = IntVariable(Seq(cardCount))
+>>>>>>> b0a9797cd667caf6f8aa3f550c738bb80f773c8b
 
     postCardinality(vars, cardValue, op, new Var(this, Var.generate(), constant))
   }

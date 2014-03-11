@@ -95,10 +95,6 @@ object FZConcrete extends ConcreteRunner with App {
             }${solutions.mkString("[", ", ", "]")});"
 
         })
-
-      //      case (name, output) if output.params("output_array") =>
-      //        name + " : " + output.params
-
     }
 
     out.mkString("\n") + "\n----------\n"

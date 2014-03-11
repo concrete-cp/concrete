@@ -17,9 +17,11 @@ final class AbsDiffGeneratorTest {
   def test() {
 
     val cspom = CSPOM {
-      val v0 = IntVariable.of(1, 2, 3)
-      val v1 = IntVariable.of(1, 2, 3)
-      val v2 = IntVariable.of(1, 2, 3)
+
+      val v0 = IntVariable(Seq(1, 2, 3))
+      val v1 = IntVariable(Seq(1, 2, 3))
+      val v2 = IntVariable(Seq(1, 2, 3))
+
       ctr(CSPOMConstraint(v0, 'absdiff, v1, v2))
     }
 

@@ -59,7 +59,7 @@ object RandomMDD extends ConcreteRunner with App {
     val rand = new Random(s)
 
     CSPOM {
-      val vars = List.fill(n)(IntVariable.ofInterval(0, d - 1))
+      val vars = List.fill(n)(IntVariable(0 until d))
 
       val r = new CoarseProportionRandomListGenerator(n, k, s);
 

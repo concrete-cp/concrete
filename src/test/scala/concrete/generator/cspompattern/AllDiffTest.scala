@@ -14,10 +14,11 @@ class AllDiffTest {
   @Test
   def testExt() {
     val cspom = CSPOM {
-      val v0 = IntVariable.of(1, 2, 3)
-      val v1 = IntVariable.of(2, 3, 4)
-      val v2 = IntVariable.of(1, 2, 3)
-      val v3 = IntVariable.of(1, 2, 3)
+
+      val v0 = IntVariable(Seq(1, 2, 3))
+      val v1 = IntVariable(Seq(2, 3, 4))
+      val v2 = IntVariable(Seq(1, 2, 3))
+      val v3 = IntVariable(Seq(1, 2, 3))
 
       for (Seq(p1, p2) <- List(v0, v1, v2, v3).combinations(2)) {
         ctr(p1 ≠ p2)
