@@ -34,7 +34,7 @@ object ProblemGenerator extends Loggable {
   var genTime: Double = 0.0
 
   @throws(classOf[FailedGenerationException])
-  def generate(cspom: CSPOM) = {
+  def generate(cspom: CSPOM): Problem = {
     val (pb, time) = try StatisticsManager.time {
 
       // new ProblemCompiler(cspom).compile();

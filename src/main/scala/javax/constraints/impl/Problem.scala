@@ -104,11 +104,7 @@ class Problem(name: String) extends AbstractProblem(name) with Loggable {
     post(countVar, op, cardCount)
   }
   def postCardinality(vars: Array[javax.constraints.Var], cardValue: Int, op: String, cardCount: Int): javax.constraints.Constraint = {
-<<<<<<< HEAD
-    val constant = IntVariable.of(cardCount)
-=======
     val constant = IntVariable(Seq(cardCount))
->>>>>>> b0a9797cd667caf6f8aa3f550c738bb80f773c8b
 
     postCardinality(vars, cardValue, op, new Var(this, Var.generate(), constant))
   }

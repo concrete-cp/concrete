@@ -42,17 +42,8 @@ class DiffGeTest {
 
       val r = IntVariable(1 to 3) - IntVariable(2 to 4)
 
-<<<<<<< HEAD
-      val r2 = (r >= IntVariable.ofInterval(0, 5))
-
-      ctr(CSPOMConstraint(r, 'sub, IntVariable.of(1, 2, 3), IntVariable.of(2, 3, 4)))
-    }
-    for (d <- DiffGe.mtch(sub, cspom)) {
-      DiffGe.compile(sub, cspom, d)
-=======
       val r2 = (r >= IntVariable(0 to 5))
 
->>>>>>> b0a9797cd667caf6f8aa3f550c738bb80f773c8b
     }
 
     ProblemCompiler.compile(cspom, Seq(DiffGe))

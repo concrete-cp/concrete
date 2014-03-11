@@ -97,7 +97,7 @@ final class JCSPOMDriver extends CSPOM {
 
   implicit def problem: CSPOM = this
 
-  def lt(v1: CSPOMExpression[Int], v2: CSPOMExpression[Int]) = v1.<(v2)(this)
+  def lt(v1: CSPOMExpression[Int], v2: CSPOMExpression[Int]) = v1 < v2
 
   def less(v1: CSPOMExpression[Int], v2: CSPOMExpression[Int]) = v1 - v2
 
@@ -109,7 +109,3 @@ final class JCSPOMDriver extends CSPOM {
   def abs(v: CSPOMExpression[Int]) = CSPOMDriver.abs(v)
 }
 
-final object JCSPOMDriver {
-  // Required to avoid incompatibility between Int and Integer
-  def constant(a: Int) = CSPOMConstant(a)
-}
