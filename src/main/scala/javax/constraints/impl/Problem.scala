@@ -10,6 +10,8 @@ import concrete.generator.ProblemGenerator
 import javax.constraints.impl.search.Solver
 import javax.constraints.Oper
 import cspom.variable.IntVariable
+import cspom.variable.CSPOMConstant
+import cspom.variable.CSPOMSeq
 
 class Problem(name: String) extends AbstractProblem(name) with Loggable {
   def this() = this("")
@@ -62,9 +64,9 @@ class Problem(name: String) extends AbstractProblem(name) with Loggable {
   }
   def storeToXML(os: java.io.OutputStream, comments: String) {
     ???
-//    val ow = new OutputStreamWriter(os)
-//    xml.XML.write(ow, XCSPWriter(cspom), xml.XML.encoding, false, null)
-//    ow.close()
+    //    val ow = new OutputStreamWriter(os)
+    //    xml.XML.write(ow, XCSPWriter(cspom), xml.XML.encoding, false, null)
+    //    ow.close()
   }
   def post(v1: javax.constraints.Var, op: String, v2: javax.constraints.Var): javax.constraints.Constraint = {
     val constraint = cspom.ctr(
@@ -73,22 +75,26 @@ class Problem(name: String) extends AbstractProblem(name) with Loggable {
   }
   def post(v: javax.constraints.Var, op: String, c: Int): javax.constraints.Constraint = {
     val constraint = cspom.ctr(
-      CSPOMConstraint(Symbol(op), v.getImpl.asInstanceOf[CSPOMVariable[_]], CSPOM.varOf(c)))
+      CSPOMConstraint(Symbol(op), v.getImpl.asInstanceOf[CSPOMVariable[_]], CSPOMConstant(c)))
     new Constraint(this, constraint)
   }
   def post(sum: Array[javax.constraints.Var], op: String, v: javax.constraints.Var): javax.constraints.Constraint = {
     ???
     //    val lb = sum.map(_.getMin()).sum
     //    val ub = sum.map(_.getMax()).sum
-    //    val r = cspom.interVar(lb, ub)
+    //    val r = cspom.IntVariable.ofInterval(lb, ub)
     //    val c = cspom.ctr("zerosum", r +: sum.map(_.getImpl.asInstanceOf[CSPOMVariable]),
     //      Map("coefficients" -> (-1 :: List.fill(sum.length)(1))))
     //    val constraint = cspom.ctr(op, r, v.getImpl.asInstanceOf[CSPOMVariable])
     //    new Constraint(this, constraint)
   }
   def post(vs: Array[javax.constraints.Var], op: String, v: Int): javax.constraints.Constraint = {
-    val constant = CSPOM.varOf(v)
-    post(vs, op, new Var(this, Var.generate(), constant))
+    val constraint = cspom.ctr(
+      CSPOMConstraint('sum, Seq(
+        new CSPOMSeq(vs.map(_.getImpl.asInstanceOf[IntVariable])),
+        CSPOMConstant(v)),
+        Map("mode" -> "eq")))
+    new Constraint(this, constraint)
   }
   def post(x$1: Array[Int], x$2: Array[javax.constraints.Var], x$3: String, x$4: javax.constraints.Var): javax.constraints.Constraint = ???
   def post(x$1: Array[Int], x$2: Array[javax.constraints.Var], x$3: String, x$4: Int): javax.constraints.Constraint = ???
@@ -98,7 +104,7 @@ class Problem(name: String) extends AbstractProblem(name) with Loggable {
     post(countVar, op, cardCount)
   }
   def postCardinality(vars: Array[javax.constraints.Var], cardValue: Int, op: String, cardCount: Int): javax.constraints.Constraint = {
-    val constant = CSPOM.varOf(cardCount)
+    val constant = IntVariable.of(cardCount)
 
     postCardinality(vars, cardValue, op, new Var(this, Var.generate(), constant))
   }

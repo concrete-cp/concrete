@@ -17,7 +17,7 @@ object MergeDisj extends ConstraintCompiler {
   type A = CSPOMConstraint[CSPOMTrue.type]
 
   override def mtch(fc: CSPOMConstraint[_], problem: CSPOM) = fc match {
-    case CSPOMConstraint(v: BoolVariable, 'or, _, _) if v.params("var_is_introduced") =>
+    case CSPOMConstraint(v: BoolVariable, 'or, _, _) if v.hasParam("var_is_introduced") =>
       problem.constraints(v).toSeq.collect {
         case orConstraint @ CSPOMConstraint(CSPOMTrue, 'or, _, _) if (orConstraint ne fc) => 
           orConstraint.asInstanceOf[CSPOMConstraint[CSPOMTrue.type]]

@@ -17,6 +17,7 @@ import cspom.extension.LazyMDD
 import cspom.CSPOM._
 import scala.Array.canBuildFrom
 import scala.slick.jdbc.{ StaticQuery => Q }
+import cspom.variable.IntVariable
 
 object RandomMDD extends ConcreteRunner with App {
 
@@ -58,7 +59,7 @@ object RandomMDD extends ConcreteRunner with App {
     val rand = new Random(s)
 
     CSPOM {
-      val vars = List.fill(n)(interVar(0, d - 1))
+      val vars = List.fill(n)(IntVariable.ofInterval(0, d - 1))
 
       val r = new CoarseProportionRandomListGenerator(n, k, s);
 
@@ -193,7 +194,7 @@ object RenameMDD extends App {
     //          n.toInt, e.toInt, s"mdd-$n-$d-$k-$e-$l-$q-$s"))
     //      }
     //
-    //      tag.execute((s"mdd-$n-$d-$k-$e-$lp-$lq", s"^mdd-$n-$d-$k-$e-$l-$q-"))
+    //      tag.execute((s"mdd-$n-$d-$k-$e-$lp-$lq", s"^mdd-$n-$d-$k-$e-$l-$q-"))))))))
     //
     //    }
     //

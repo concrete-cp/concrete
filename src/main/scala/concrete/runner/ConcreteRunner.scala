@@ -30,7 +30,6 @@ trait ConcreteRunner {
   'Control
   'Time
 
-  
   //logger.addHandler(new MsLogHandler)
 
   private def params(o: List[(String, String)], options: List[String]): List[(String, String)] =
@@ -55,7 +54,7 @@ trait ConcreteRunner {
       options(tail, o + ('SQL -> option), unknown)
     case "-control" :: tail => options(tail, o + ('Control -> None))
     case "-time" :: t :: tail => options(tail, o + ('Time -> t.toInt))
-//    case "-cl" :: tail => options(tail, o + ('CL -> None))
+    //    case "-cl" :: tail => options(tail, o + ('CL -> None))
     case u :: tail => options(tail, o, u :: unknown)
   }
 
@@ -159,8 +158,8 @@ trait ConcreteRunner {
   }
 
   def output(solution: Map[String, Any]): String = {
-    cProblem.namedExpressions.collect {
-      case (name, variable) if (!variable.params("var_is_introduced")) => s"$name = ${solution(name)}"
+    cProblem.namedExpressions.map {
+      case (name, variable) => s"$name = ${solution(name)}"
     }.mkString("\n")
   }
 

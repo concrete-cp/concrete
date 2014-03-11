@@ -12,6 +12,7 @@ import cspom.variable.CSPOMExpression
 import concrete.Solver
 import cspom.compiler.ProblemCompiler
 import concrete.generator.cspompatterns.ConcretePatterns
+import cspom.variable.IntVariable
 
 class OccurrenceTest {
   @Test
@@ -52,11 +53,11 @@ class OccurrenceTest {
     val problem = CSPOM {
       val v1 = 7
       val v2 = 6
-      val v3 = varOf(7, 9)
+      val v3 = IntVariable.of(7, 9)
       val v4 = 4
-      val v5 = varOf(8, 9)
+      val v5 = IntVariable.of(8, 9)
 
-      val occ = interVar(1, 3) as "occ"
+      val occ = IntVariable.ofInterval(1, 3) as "occ"
       ctr(occ === occurrence(7, v1, v2, v3, v4, v5))
     }
 

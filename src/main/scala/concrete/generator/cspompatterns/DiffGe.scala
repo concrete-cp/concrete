@@ -15,7 +15,7 @@ object DiffGe extends ConstraintCompiler {
   type A = CSPOMConstraint[Boolean]
 
   override def mtch(constraint: CSPOMConstraint[_], problem: CSPOM) = constraint match {
-    case CSPOMConstraint(result: IntVariable, 'sub, args, _) if (result.params("var_is_introduced")) =>
+    case CSPOMConstraint(result: IntVariable, 'sub, args, _) if (result.hasParam("var_is_introduced")) =>
       val constraints = problem.constraints(result)
       if (constraints.size == 2) {
         constraints.collectFirst {

@@ -37,7 +37,7 @@ class Var(problem: Problem, name: String, val variable: IntVariable) extends Abs
 
   def multiply(constant: Int): javax.constraints.Var = {
     ???
-    //    val cspomVar = variable.*(problem.cspom.varOf(constant))(problem.cspom)
+    //    val cspomVar = variable.*(problem.cspom.IntVariable.of(constant))(problem.cspom)
     //    new Var(problem, cspomVar.name, cspomVar)
   }
 
@@ -49,7 +49,7 @@ class Var(problem: Problem, name: String, val variable: IntVariable) extends Abs
 
   def plus(constant: Int): javax.constraints.Var = {
     ???
-    //    val cspomVar = variable.+(problem.cspom.varOf(constant))(problem.cspom)
+    //    val cspomVar = variable.+(problem.cspom.IntVariable.of(constant))(problem.cspom)
     //    new Var(problem, cspomVar.name, cspomVar)
   }
 }

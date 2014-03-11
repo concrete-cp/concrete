@@ -60,14 +60,6 @@ object CSPOMDriver {
     problem.isInt('occurrence, variables, Map("occurrence" -> constant))
   }
 
-  implicit class CSPOMExpressionOperations[+A](e: CSPOMExpression[A]) {
-    def !==(other: CSPOMExpression[_ >: A])(implicit problem: CSPOM): BoolVariable = problem.isBool('ne, Seq(e, other))
-
-    def ≠(other: CSPOMExpression[_ >: A])(implicit problem: CSPOM): BoolVariable = this !== other
-
-    def ===(other: CSPOMExpression[_ >: A])(implicit problem: CSPOM): BoolVariable = problem.isBool('eq, Seq(e, other))
-  }
-
   implicit class CSPOMIntExpressionOperations(e: CSPOMExpression[Int]) {
     def >(other: CSPOMExpression[Int])(implicit problem: CSPOM) = problem.isBool('gt, Seq(e, other))
 

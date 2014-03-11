@@ -11,6 +11,7 @@ import org.hamcrest.CoreMatchers._
 import concrete.CSPOMDriver._
 import cspom.compiler.ProblemCompiler
 import cspom.compiler.MergeEq
+import cspom.variable.IntVariable
 
 class DiffGeTest {
   @Test
@@ -19,10 +20,10 @@ class DiffGeTest {
     val (cspom, sub) = CSPOM withResult {
 
       val r = auxInt()
-      assertTrue(r.params("var_is_introduced"))
-      ctr(r >= interVar(0, 5))
+      assertTrue(r.hasParam("var_is_introduced"))
+      ctr(r >= IntVariable.ofInterval(0, 5))
 
-      ctr(CSPOMConstraint(r, 'sub, varOf(1, 2, 3), varOf(2, 3, 4)))
+      ctr(CSPOMConstraint(r, 'sub, IntVariable.of(1, 2, 3), IntVariable.of(2, 3, 4)))
 
     }
 
@@ -42,9 +43,9 @@ class DiffGeTest {
 
       val r = auxInt()
 
-      val r2 = (r >= interVar(0, 5))
+      val r2 = (r >= IntVariable.ofInterval(0, 5))
 
-      ctr(CSPOMConstraint(r, 'sub, varOf(1, 2, 3), varOf(2, 3, 4)))
+      ctr(CSPOMConstraint(r, 'sub, IntVariable.of(1, 2, 3), IntVariable.of(2, 3, 4)))
     }
     for (d <- DiffGe.mtch(sub, cspom)) {
       DiffGe.compile(sub, cspom, d)

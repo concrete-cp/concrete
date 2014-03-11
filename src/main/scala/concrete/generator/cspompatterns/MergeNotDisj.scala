@@ -17,7 +17,7 @@ object MergeNotDisj extends ConstraintCompiler {
   type A = CSPOMConstraint[Boolean]
 
   override def mtch(fc: CSPOMConstraint[_], problem: CSPOM) = fc match {
-    case CSPOMConstraint(v: BoolVariable, 'not, Seq(a: CSPOMExpression[Boolean]), _) if v.params("var_is_introduced") =>
+    case CSPOMConstraint(v: BoolVariable, 'not, Seq(a: CSPOMExpression[Boolean]), _) if v.hasParam("var_is_introduced") =>
       val ors = problem.constraints(v).toSeq.collect {
         case c: CSPOMConstraint[Boolean] if c.function == 'or => c
       }

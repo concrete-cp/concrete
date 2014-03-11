@@ -134,7 +134,7 @@ public class RBGenerator {
     final List<IntVariable> variables = new ArrayList<>(nbVariables);
 
     for (int i = nbVariables; --i >= 0;) {
-      final IntVariable v = CSPOM.interVar(0, domainSize - 1);
+      final IntVariable v = IntVariable.ofInterval(0, domainSize - 1);
       variables.add(v);
       cspom.nameExpression(v, "X" + i);
     }
