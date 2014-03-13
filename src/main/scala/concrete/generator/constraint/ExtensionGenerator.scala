@@ -59,9 +59,13 @@ object ExtensionGenerator extends Generator with Loggable {
             var j = 0
             for ((v, t) <- trie) {
               val i = domain.index(v)
-              concreteTrie(i) = cspomMDDtoCspfjMDD(tail, t, map)
-              indices(j) = i
-              j += 1
+              if (i < 0) {
+                logger.warning(s"Could not find $v in $domain")
+              } else {
+                concreteTrie(i) = cspomMDDtoCspfjMDD(tail, t, map)
+                indices(j) = i
+                j += 1
+              }
             }
 
             new MDDn(concreteTrie, indices, indices.length)
