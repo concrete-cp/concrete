@@ -124,7 +124,7 @@ trait ConcreteRunner {
       }
 
       //println(solver.problem)
-
+      
       writer.parameters(ParameterManager.toXML)
 
       for (t <- opt.get('Time)) {

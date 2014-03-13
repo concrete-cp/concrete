@@ -16,16 +16,14 @@ object ConcretePatterns {
     val standard = StandardCompilers() ++
       Seq(
         AbsDiff, SubToAdd, AddToEq,
-        SubsumedDiff, 
         UnaryOr, MergeDisj, MergeNotDisj,
         NegToCNF, ReifiedDisj, ReifiedConj,
-        SimplDisj,
         NeqVec, RemoveAnd,
-        LtToGt, SlidingSum, SetIn //, ConstToVar
+        LtToGt, SlidingSum, SetIn//, //SimplDisj//ConstToVar
         )
 
     if (improveModel) {
-      StandardCompilers.improve() ++ Seq(AllDiff, DiffGe) ++ standard
+      StandardCompilers.improve() ++ Seq(AllDiff, SubsumedDiff, DiffGe, SimplDisj) ++ standard
     } else {
       standard
     }

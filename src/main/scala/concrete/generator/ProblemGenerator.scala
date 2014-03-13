@@ -28,6 +28,9 @@ import cspom.VariableNames
 
 object ProblemGenerator extends Loggable {
 
+  @Parameter("generator.intToBool")
+  val intToBool = false
+
   @Parameter("generator.generateLargeDomains")
   val generateLargeDomains = false
 
@@ -98,7 +101,7 @@ object ProblemGenerator extends Loggable {
 
     val vn = new VariableNames(cspom)
 
-    cspom.namedExpressions.values.flatMap(_.flatten).collect {
+    cspom.referencedExpressions.flatMap(_.flatten).collect {
       case v: CSPOMVariable[_] => v -> new Variable(vn.names(v), generateDomain(v))
     }.toMap
 
@@ -145,6 +148,9 @@ object ProblemGenerator extends Loggable {
       new concrete.BooleanDomain();
 
     case v: IntVariable => v.domain match {
+      case Seq(0) if intToBool => new concrete.BooleanDomain(false)
+      case Seq(1) if intToBool => new concrete.BooleanDomain(true)
+      case Seq(0, 1) if intToBool => new concrete.BooleanDomain()
       case int: IntInterval => IntDomain(int)
       case IntSeq(seq) => IntDomain(seq: _*)
       case FreeInt => UndefinedDomain

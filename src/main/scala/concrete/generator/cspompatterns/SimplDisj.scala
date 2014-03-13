@@ -11,6 +11,7 @@ import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMConstant
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.variable.CSPOMExpression
+import cspom.variable.CSPOMSeq
 
 /**
  * Removes constants from disjunctions
@@ -18,9 +19,8 @@ import cspom.variable.CSPOMExpression
 object SimplDisj extends ConstraintCompilerNoData {
 
   def matchBool(fc: CSPOMConstraint[_], problem: CSPOM) = fc match {
-    case CSPOMConstraint(CSPOMConstant(true), 'or, args, _) if (
-      args.exists(_.isInstanceOf[CSPOMConstant[Boolean]])) =>
-      true
+    case CSPOMConstraint(CSPOMConstant(true), 'or, args, _) =>
+      args.exists(_.isInstanceOf[CSPOMConstant[Boolean]])
 
     case _ => false
 
@@ -32,7 +32,8 @@ object SimplDisj extends ConstraintCompilerNoData {
     val params: Seq[Boolean] = fc.params.get("revsign") match {
       case Some(p: Seq[Boolean]) => p
       case None => Seq.fill(expressions.size)(false)
-      case p: Any => throw new IllegalArgumentException(s"Parameters for disjunction must be a sequence of boolean values, not '$p'")
+      case p: Any => throw new IllegalArgumentException(
+        s"Parameters for disjunction must be a sequence of boolean values, not '$p'")
     }
 
     val validated = (expressions zip params).exists {
@@ -44,7 +45,8 @@ object SimplDisj extends ConstraintCompilerNoData {
       Seq()
     } else {
       val (scope, varParams) = (expressions zip params).collect {
-        case (v: BoolVariable, p) => (v, p)
+        case (v: CSPOMVariable[_], p) => (v, p)
+        case (s: CSPOMSeq[_], _) => throw new IllegalStateException
       } unzip
 
       Seq(

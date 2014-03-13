@@ -16,11 +16,11 @@ object AllDiff extends ConstraintCompiler with Loggable {
   type A = Set[IntVariable]
 
   def DIFF_CONSTRAINT(constraint: CSPOMConstraint[_]) =
-    (constraint.result == CSPOMConstant(true)) &&
+    (constraint.result.isTrue) &&
       Set('ne, 'gt, 'lt, 'allDifferent)(constraint.function)
 
   def ALLDIFF_CONSTRAINT(constraint: CSPOMConstraint[_]) =
-    (constraint.result == CSPOMConstant(true)) && 'ne == constraint.function ||
+    (constraint.result.isTrue) && 'ne == constraint.function ||
       'allDifferent == constraint.function
 
   val ITER = 750;

@@ -13,8 +13,6 @@ object FilterSum extends Enumeration {
   type FilterSum = Value
   val SumLE = Value("le")
   val SumLT = Value("lt")
-  val SumGE = Value("ge")
-  val SumGT = Value("gt")
   val SumEQ = Value("eq")
   val SumNE = Value("ne")
 }
@@ -41,8 +39,6 @@ final class Sum(
   val initBound = Interval(-constant, -constant)
 
   private def filter(dom: Domain, itv: Interval, neg: Boolean): Boolean = mode match {
-    case SumGE if neg => dom.removeFromVal(itv.ub + 1)
-    case SumGE => dom.removeToVal(itv.lb - 1)
     case SumLE if neg => dom.removeToVal(itv.lb - 1)
     case SumLE => dom.removeFromVal(itv.ub + 1)
     case SumEQ => dom.intersectVal(itv)
@@ -99,6 +95,6 @@ final class Sum(
 
   def reviseVariable(p: Int, mod: Seq[Int]) = false
 
-  override def toString = (scope, factors).zipped.map((v, f) => f + "." + v).mkString(" + ") + " = " + constant
+  override def toString = (scope, factors).zipped.map((v, f) => f + "." + v).mkString(" + ") + s" $mode $constant"
   val simpleEvaluation = 3
 }

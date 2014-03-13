@@ -18,7 +18,7 @@ final case class Interval(val lb: Int, val ub: Int) {
 
   def +(v: Int) = Interval(lb + v, ub + v)
 
-  def -(i: Interval) = this + i.negate
+  def -(i: Interval) = Interval(lb - i.ub, ub - i.lb)
 
   def -(v: Int) = this + -v
 
@@ -34,13 +34,64 @@ final case class Interval(val lb: Int, val ub: Int) {
   def /(i: Interval) = {
     if (i.contains(0)) throw new ArithmeticException
     val Interval(c, d) = i
-    Interval(List(lb / c, lb / d, ub / c, ub / d).min, List(lb / c, lb / d, ub / c, ub / d).max)
+    Interval(
+      List(ceilDiv(lb, c), ceilDiv(lb, d), ceilDiv(ub, c), ceilDiv(ub, d)).min,
+      List(floorDiv(lb, c), floorDiv(lb, d), floorDiv(ub, c), floorDiv(ub, d)).max)
   }
 
   def /(v: Int) = {
-    val l = lb / v
-    val u = ub / v
-    if (l < u) Interval(l, u) else Interval(u, l)
+    if (v >= 0) {
+      Interval(ceilDiv(lb, v), floorDiv(ub, v))
+    } else {
+      Interval(ceilDiv(ub, v), floorDiv(lb, v))
+    }
+
+    //    if (l < u) Interval(l, u) else Interval(u, l)
+  }
+
+  def floorDiv(dividend: Int, divisor: Int) = {
+    val roundedTowardsZeroQuotient = dividend / divisor;
+    val dividedEvenly = (dividend % divisor) == 0;
+    if (dividedEvenly) {
+      roundedTowardsZeroQuotient;
+    } else {
+      // At this point we know that 
+      // dividend was not zero (because there would have been no remainder)
+      // Therefore both are non-zero.  Either they are of the same sign, 
+      // or opposite signs. If they're of opposite sign then we rounded 
+      // UP towards zero so we rem one. If they're of the same sign then 
+      // we rounded DOWN towards zero, so we are done.
+
+      val wasRoundedDown = ((divisor > 0) == (dividend > 0));
+      if (wasRoundedDown) {
+        roundedTowardsZeroQuotient;
+      } else {
+        roundedTowardsZeroQuotient - 1;
+      }
+    }
+  }
+
+  def ceilDiv(dividend: Int, divisor: Int) = {
+
+    val roundedTowardsZeroQuotient = dividend / divisor;
+    val dividedEvenly = (dividend % divisor) == 0;
+    if (dividedEvenly) {
+      roundedTowardsZeroQuotient;
+    } else {
+      // At this point we know that 
+      // dividend was not zero (because there would have been no remainder)
+      // Therefore both are non-zero.  Either they are of the same sign, 
+      // or opposite signs. If they're of opposite sign then we rounded 
+      // UP towards zero so we're done. If they're of the same sign then 
+      // we rounded DOWN towards zero, so we need to add one.
+
+      val wasRoundedDown = ((divisor > 0) == (dividend > 0));
+      if (wasRoundedDown) {
+        roundedTowardsZeroQuotient + 1;
+      } else {
+        roundedTowardsZeroQuotient;
+      }
+    }
   }
 
   def intersect(i: Interval) = {

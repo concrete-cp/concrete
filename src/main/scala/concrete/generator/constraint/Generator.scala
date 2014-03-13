@@ -14,7 +14,6 @@ import cspom.variable.BoolVariable
 import scala.reflect.ClassTag
 import cspom.variable.CSPOMConstant
 
-
 sealed trait C2Conc
 sealed trait C21D extends C2Conc {
   def values: Seq[Int]
@@ -81,7 +80,8 @@ object Generator {
       case _ => fail(s"Variable or constant expected, $variable found")
     }
 
-  final def cspomVar2concrete[A](variable: CSPOMVariable[A])(implicit variables: Map[CSPOMVariable[_], Variable]) = variables(variable)
+  final def cspomVar2concrete[A](variable: CSPOMVariable[A])(implicit variables: Map[CSPOMVariable[_], Variable]) =
+    variables(variable)
 
   final def cspom2concreteVar[A](variable: CSPOMExpression[A])(implicit variables: Map[CSPOMVariable[_], Variable]) = cspom2concrete(variable) match {
     case Var(v) => v

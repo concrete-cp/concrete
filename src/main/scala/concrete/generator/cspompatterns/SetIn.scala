@@ -19,7 +19,7 @@ import cspom.variable.BoolVariable
 object SetIn extends ConstraintCompilerNoData {
 
   def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM) =
-    constraint.function == 'set_in && constraint.result == CSPOMConstant(true)
+    constraint.function == 'set_in && constraint.nonReified
 
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM) = {
     val Seq(variable, CSPOMSeq(set, _, _)) = constraint.arguments

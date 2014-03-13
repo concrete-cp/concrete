@@ -32,6 +32,22 @@ final object GtGenerator extends Generator {
 
   }
 
+  override def genReversed(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
+    val Seq(v0, v1) = constraint.arguments map cspom2concrete1D;
+
+    if (undefinedVar(v0, v1).nonEmpty) {
+      None
+    } else {
+      constraint.function match {
+        case 'gt => gte(v1, v0, false)
+        case 'ge => gte(v1, v0, true)
+        case _ => throw new FailedGenerationException("Unhandled constraint " + constraint);
+      }
+
+    }
+
+  }
+
   private def gte(v0: C21D, v1: C21D, strict: Boolean): Option[Seq[Constraint]] = (v0, v1) match {
     case (Const(v0), Const(v1)) =>
       require(v0 > v1 || (!strict && v0 >= v1))
@@ -84,7 +100,7 @@ final object GtGenerator extends Generator {
         case (Var(v0), Const(v1)) =>
           Some(Seq(new ReifiedGtC(result, v0, v1, strict)))
         case (Const(v0), Var(v1)) =>
-          Some(Seq(new ReifiedLtC(result, v1, v0, !strict)))
+          Some(Seq(new ReifiedLtC(result, v1, v0, strict)))
 
         case (Var(v0), Var(v1)) => Some(Seq(
           new ReifiedConstraint(

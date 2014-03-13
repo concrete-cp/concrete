@@ -24,14 +24,14 @@ import cspom.variable.SimpleExpression
  */
 object ReifiedDisj extends ConstraintCompiler {
 
-  type A = CSPOMExpression[Boolean]
+  type A = SimpleExpression[Boolean]
 
   override def constraintMatcher = {
     case CSPOMConstraint(res: SimpleExpression[Boolean], 'or, args, params) if (!res.isTrue) =>
       res
   }
 
-  def compile(fc: CSPOMConstraint[_], problem: CSPOM, res: CSPOMExpression[Boolean]) = {
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM, res: SimpleExpression[Boolean]) = {
     val revsign = fc.params.get("revsign") match {
       case Some(r: Seq[Boolean]) => r
       case None => Seq.fill(fc.arguments.size)(false)

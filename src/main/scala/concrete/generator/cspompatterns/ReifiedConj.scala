@@ -33,9 +33,8 @@ object ReifiedConj extends ConstraintCompiler {
 
   def compile(fc: CSPOMConstraint[_], problem: CSPOM, res: CSPOMExpression[Boolean]) = {
     require(!fc.params.contains("revsign")) // Conjunctions should not be parameterized -- yet
-    val revsign = Seq.fill(fc.arguments.size)(false)
 
-    val reverses = true +: revsign
+    val reverses = Seq(false).padTo(fc.arguments.size + 1, true)
 
     val c1 =
       CSPOMConstraint('or, res +: fc.arguments, fc.params + ("revsign" -> reverses))
