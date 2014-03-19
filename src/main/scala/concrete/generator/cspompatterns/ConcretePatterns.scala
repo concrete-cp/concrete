@@ -19,7 +19,7 @@ object ConcretePatterns {
         UnaryOr, MergeDisj, MergeNotDisj,
         NegToCNF, ReifiedDisj, ReifiedConj,
         NeqVec, RemoveAnd,
-        LtToGt, SlidingSum, SetIn, Element//, //SimplDisj//ConstToVar
+        LtToGt, SlidingSum, SetIn, Element, In, MinMax//, //SimplDisj//ConstToVar
         )
 
     if (improveModel) {

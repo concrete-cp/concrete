@@ -62,6 +62,12 @@ object CSPOMDriver {
 
   implicit class CSPOMSeqOperations[A](e: CSPOMSeq[A]) {
     def apply(idx: CSPOMVariable[Int])(implicit problem: CSPOM) = problem.is('element, Seq(e, idx))
+
+    def min(implicit problem: CSPOM) = problem.is('min, Seq(e))
+
+    def max(implicit problem: CSPOM) = problem.is('max, Seq(e))
+
+    def contains(v: SimpleExpression[A])(implicit problem: CSPOM) = problem.isBool('in, Seq(v, e))
   }
 
   implicit class CSPOMIntExpressionOperations(e: CSPOMExpression[Int]) {

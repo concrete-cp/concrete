@@ -11,23 +11,24 @@ import scala.collection.mutable.HashMap
 import cspom.extension.Relation
 import cspom.extension.MDD
 import cspom.variable.CSPOMExpression
+import cspom.variable.SimpleExpression
 
 object Element extends ConstraintCompiler {
 
-  type A = (CSPOMVariable[_], CSPOMSeq[_], CSPOMVariable[_])
+  type A = (SimpleExpression[_], CSPOMSeq[_], CSPOMVariable[_])
 
   override def constraintMatcher = {
-    case CSPOMConstraint(r: CSPOMVariable[_], 'element, Seq(array: CSPOMSeq[_], idx: CSPOMVariable[_]), _) => (r, array, idx)
+    case CSPOMConstraint(r: SimpleExpression[_], 'element, Seq(array: CSPOMSeq[_], idx: CSPOMVariable[_]), _) => (r, array, idx)
   }
 
   def compile(c: CSPOMConstraint[_], p: CSPOM, data: A) = {
     val (res, vars, idx) = data
-    val scope = vars.values.asInstanceOf[Seq[SimpleExpression[A]]].toArray
+    val scope = vars.values.asInstanceOf[Seq[SimpleExpression[Any]]].toArray
     val range = vars.definedIndices
     replaceCtr(c, CSPOM.table(elementVar(scope, range), false, idx +: res +: scope), p)
   }
 
-  def elementVar[A <: B, B >: Int](scope: Array[SimpleExpression[A]], range: Range): Relation[B] = {
+  def elementVar[A <: B, B >: Int](scope: IndexedSeq[SimpleExpression[A]], range: Range): Relation[B] = {
     val cache = new HashMap[(Int, Int, A), MDD[A]]()
 
     val map: Seq[(B, MDD[B])] = for (i <- scope.indices) yield {
@@ -43,7 +44,7 @@ object Element extends ConstraintCompiler {
 
   }
 
-  private def elementVar[A](current: Int, b: Int, c: A, as: Array[CSPOMVariable[A]], cache: HashMap[(Int, Int, A), MDD[A]]): MDD[A] = {
+  private def elementVar[A](current: Int, b: Int, c: A, as: IndexedSeq[SimpleExpression[A]], cache: HashMap[(Int, Int, A), MDD[A]]): MDD[A] = {
     if (current >= as.length) {
       MDD.leaf
     } else cache.getOrElseUpdate((current, b, c), {
