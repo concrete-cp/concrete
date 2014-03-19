@@ -60,6 +60,10 @@ object CSPOMDriver {
     problem.isInt('occurrence, variables, Map("occurrence" -> constant))
   }
 
+  implicit class CSPOMSeqOperations[A](e: CSPOMSeq[A]) {
+    def apply(idx: CSPOMVariable[Int])(implicit problem: CSPOM) = problem.is('element, Seq(e, idx))
+  }
+
   implicit class CSPOMIntExpressionOperations(e: CSPOMExpression[Int]) {
     def >(other: CSPOMExpression[Int])(implicit problem: CSPOM) = problem.isBool('gt, Seq(e, other))
 

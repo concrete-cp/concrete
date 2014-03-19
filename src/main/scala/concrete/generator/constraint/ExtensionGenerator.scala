@@ -33,15 +33,16 @@ object ExtensionGenerator extends Generator with Loggable {
 
   def cspomMDDtoCspfjMDD(
     domains: List[Domain],
-    relation: cspom.extension.MDD,
-    map: HashMap[cspom.extension.MDD, concrete.constraint.extension.MDD]): MDD = {
+    relation: cspom.extension.MDD[Int],
+    map: HashMap[cspom.extension.MDD[Int], concrete.constraint.extension.MDD]): MDD = {
     relation match {
-      case cspom.extension.MDDLeaf => concrete.constraint.extension.MDDLeaf
-      case n: cspom.extension.MDDNode => map.getOrElseUpdate(n, {
+      case n if n eq cspom.extension.MDDLeaf => concrete.constraint.extension.MDDLeaf
+      case n: cspom.extension.MDDNode[Int] => map.getOrElseUpdate(n, {
         val (domain, tail) = (domains.head, domains.tail)
         val trie = n.trie
 
         trie.size match {
+          case 0 => MDD0
           case 1 =>
             val (v, t) = trie.head
             new MDD1(cspomMDDtoCspfjMDD(tail, t, map), domain.index(v))
@@ -79,9 +80,9 @@ object ExtensionGenerator extends Generator with Loggable {
   /**
    * Used to cache value to indices conversion
    */
-  private val vToICache = new CacheConverter[cspom.extension.Relation, HashMap[Signature, Matrix]]()
+  private val vToICache = new CacheConverter[cspom.extension.Relation[_], HashMap[Signature, Matrix]]()
 
-  private def generateMatrix(variables: List[Variable], relation: cspom.extension.Relation, init: Boolean): Matrix = {
+  private def generateMatrix(variables: List[Variable], relation: cspom.extension.Relation[_], init: Boolean): Matrix = {
     val domains = variables map (_.dom)
 
     val map = vToICache.getOrAdd(relation, new HashMap[Signature, Matrix])
@@ -94,31 +95,34 @@ object ExtensionGenerator extends Generator with Loggable {
     })
   }
 
-  private def gen(relation: cspom.extension.Relation, init: Boolean, domains: List[Domain]) = {
+  private def gen(relation: cspom.extension.Relation[_], init: Boolean, domains: List[Domain]) = {
     if (relation.arity == 2) {
       new Matrix2D(domains(0).size, domains(1).size, init).setAll(value2Index(domains, relation).toTraversable.map(_.toArray), !init)
     } else if (init) {
       new TupleTrieSet(MDD(value2Index(domains, relation).map(_.toArray)), init)
     } else {
       new TupleTrieSet(ExtensionGenerator.ds match {
-        case "MDD" => relation match {
-          case mdd: cspom.extension.MDD =>
-            ExtensionGenerator.cspomMDDtoCspfjMDD(domains, mdd, new HashMap())
-          case mdd: cspom.extension.LazyMDD =>
-            ExtensionGenerator.cspomMDDtoCspfjMDD(domains, mdd.apply, new HashMap())
-          case r =>
-            val m = MDD(value2Index(domains, r).map(_.toArray))
-            m
-        }
+        case "MDD" => relation2MDD(relation, domains)
         case "STR" => new STR() ++ value2Index(domains, relation).toIterable.map(_.toArray)
       }, init)
     }
   }
 
-  private def value2Index(domains: Seq[Domain], relation: cspom.extension.Relation): Iterator[Seq[Int]] =
+  private def relation2MDD(relation: cspom.extension.Relation[_], domains: List[Domain]): MDD = {
+    relation match {
+      case laz: cspom.extension.LazyRelation[_] => relation2MDD(laz.apply, domains)
+      case mdd: cspom.extension.MDD[Int] =>
+        ExtensionGenerator.cspomMDDtoCspfjMDD(domains, mdd, new HashMap())
+      case r =>
+        val m = MDD(value2Index(domains, r).map(_.toArray))
+        m
+    }
+  }
+
+  private def value2Index(domains: Seq[Domain], relation: cspom.extension.Relation[_]): Iterator[Seq[Int]] =
     relation.iterator.map { t =>
       (t, domains).zipped.map { (v, d) =>
-        val i = d.index(v)
+        val i = d.index(v.asInstanceOf[Int])
         if (i < 0) {
           logger.warning(s"Could not find $v in $d")
         }
@@ -137,7 +141,7 @@ object ExtensionGenerator extends Generator with Loggable {
 
     val solverVariables = extensionConstraint.arguments map cspom2concreteVar toList
 
-    val Some(relation: cspom.extension.Relation) = extensionConstraint.params.get("relation")
+    val Some(relation: cspom.extension.Relation[_]) = extensionConstraint.params.get("relation")
     val Some(init: Boolean) = extensionConstraint.params.get("init")
 
     if (relation.isEmpty) {

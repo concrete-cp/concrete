@@ -3,8 +3,6 @@ package concrete.generator.cspompatterns
 import cspom.CSPOMConstraint
 import cspom.variable.CSPOMVariable
 import cspom.CSPOM
-import cspom.extension.LazyMDD
-import cspom.extension.EmptyMDD
 import scala.collection.mutable.HashMap
 import cspom.extension.MDD
 import cspom.extension.MDDLeaf
@@ -19,6 +17,7 @@ import cspom.variable.CSPOMSeq
 import cspom.variable.IntVariable
 import cspom.extension.MDDNode
 import scala.collection.immutable.Queue
+import cspom.extension.LazyRelation
 
 final object SlidingSum extends ConstraintCompilerNoData {
 
@@ -27,27 +26,27 @@ final object SlidingSum extends ConstraintCompilerNoData {
   }
 
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM) = {
-    val Seq(low: CSPOMConstant[Int], up: CSPOMConstant[Int], seq: CSPOMConstant[Int], args: CSPOMSeq[Int]) = constraint.arguments
+    val Seq(CSPOMConstant(low: Int), CSPOMConstant(up: Int), CSPOMConstant(seq: Int), CSPOMSeq(args: Seq[_], _, _)) = constraint.arguments
 
-    val vars = args.values.map(_.asInstanceOf[IntVariable])
+    val vars = args.map(_.asInstanceOf[CSPOMVariable[Int]])
 
-    val b = new LazyMDD(Unit => mdd(low.value, up.value, seq.value, vars.toArray))
+    val b = new LazyRelation(Unit => mdd(low, up, seq, vars.map(_.domain).toArray))
     //println(s"sizeR ${b.apply.lambda} ${b.apply.edges}")
     replaceCtr(constraint,
       CSPOMConstraint('extension, vars, constraint.params ++ Map("init" -> false, "relation" -> b)),
       problem)
   }
 
-  def mdd(low: Int, up: Int, seq: Int, vars: Array[IntVariable], k: Int = 0, queue: Queue[Int] = Queue.empty,
-    nodes: HashMap[(Int, Queue[Int]), MDD] = new HashMap()): MDD = {
+  def mdd(low: Int, up: Int, seq: Int, domains: Array[Seq[Int]], k: Int = 0, queue: Queue[Int] = Queue.empty,
+    nodes: HashMap[(Int, Queue[Int]), MDD[Int]] = new HashMap()): MDD[Int] = {
     val current = queue.sum
-    val nextVars = vars.view.slice(k, k + seq - queue.size)
-    if (current + nextVars.map(_.domain.min).sum > up) {
-      EmptyMDD
-    } else if (current + nextVars.map(_.domain.max).sum < low) {
-      EmptyMDD
-    } else if (k >= vars.length) {
-      MDDLeaf
+    val nextDomains = domains.view.slice(k, k + seq - queue.size)
+    if (current + nextDomains.map(_.min).sum > up) {
+      MDD.empty
+    } else if (current + nextDomains.map(_.max).sum < low) {
+      MDD.empty
+    } else if (k >= domains.length) {
+      MDD.leaf
     } else {
       nodes.getOrElseUpdate((k, queue), {
         val nextQueue = if (queue.size >= seq) {
@@ -56,8 +55,8 @@ final object SlidingSum extends ConstraintCompilerNoData {
           queue
         }
 
-        val children = vars(k).domain.iterator map {
-          i => i -> mdd(low, up, seq, vars, k + 1, nextQueue.enqueue(i), nodes)
+        val children = domains(k).iterator map {
+          i => i -> mdd(low, up, seq, domains, k + 1, nextQueue.enqueue(i), nodes)
         } filter {
           _._2.nonEmpty
         }
