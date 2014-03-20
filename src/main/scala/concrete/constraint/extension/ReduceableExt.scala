@@ -23,7 +23,7 @@ import scala.annotation.tailrec
 import concrete.constraint.Constraint
 import concrete.util.Backtrackable
 import concrete.util.BitVector
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import concrete.Variable
 import concrete.UNSATException
 import concrete.constraint.Removals
@@ -36,7 +36,7 @@ object ReduceableExt {
 }
 
 final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
-  extends Constraint(_scope) with Loggable with Removals with Backtrackable[Relation] {
+  extends Constraint(_scope) with LazyLogging with Removals with Backtrackable[Relation] {
 
   var trie = _tts
 

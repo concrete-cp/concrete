@@ -14,9 +14,9 @@ import cspom.CSPOMConstraint
 import cspom.xcsp.Extension
 import concrete.constraint.Constraint
 import Generator._
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 
-object ExtensionGenerator extends Generator with Loggable {
+object ExtensionGenerator extends Generator with LazyLogging {
 
   @Parameter("relationAlgorithm")
   var consType = "Reduce"
@@ -61,7 +61,7 @@ object ExtensionGenerator extends Generator with Loggable {
             for ((v, t) <- trie) {
               val i = domain.index(v)
               if (i < 0) {
-                logger.warning(s"Could not find $v in $domain")
+                logger.warn(s"Could not find $v in $domain")
               } else {
                 concreteTrie(i) = cspomMDDtoCspfjMDD(tail, t, map)
                 indices(j) = i
@@ -124,7 +124,7 @@ object ExtensionGenerator extends Generator with Loggable {
       (t, domains).zipped.map { (v, d) =>
         val i = d.index(v.asInstanceOf[Int])
         if (i < 0) {
-          logger.warning(s"Could not find $v in $d")
+          logger.warn(s"Could not find $v in $d")
         }
         i
       }
@@ -160,9 +160,6 @@ object ExtensionGenerator extends Generator with Loggable {
 
             case "MDDC2" =>
               new MDDC2(scope, m.reduceable.asInstanceOf[MDD])
-
-            case "STR3" =>
-              new ExtensionConstraintSTR3(scope, m.reduceable.asInstanceOf[STR].array)
 
             case "Reduce" =>
               new ReduceableExt(scope, m.reduceable.copy)

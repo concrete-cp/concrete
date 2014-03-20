@@ -25,7 +25,7 @@ import concrete.filter.ACC
 import concrete.filter.Filter
 import concrete.heuristic.CrossHeuristic
 import concrete.heuristic.Heuristic
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import cspom.Statistic
 import cspom.StatisticsManager
 import scala.annotation.tailrec
@@ -57,7 +57,7 @@ object MAC {
   override def toString = "MAC parameters"
 }
 
-final class MAC(prob: Problem) extends Solver(prob) with Loggable {
+final class MAC(prob: Problem) extends Solver(prob) with LazyLogging {
 
   @Statistic
   var nbAssignments = 1;

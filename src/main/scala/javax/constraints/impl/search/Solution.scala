@@ -1,8 +1,8 @@
 package javax.constraints.impl.search
 
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 
-class Solution(sol: Map[String, Int]) extends javax.constraints.Solution with Loggable {
+class Solution(sol: Map[String, Int]) extends javax.constraints.Solution with LazyLogging {
   def getAt(x$1: String): Int = ???
   def getMax(x$1: Int): Int = ???
   def getMax(x$1: String): Int = ???

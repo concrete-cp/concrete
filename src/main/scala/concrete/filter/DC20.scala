@@ -24,7 +24,7 @@ import concrete.LearnMethod
 import concrete.NoGoodLearner
 import concrete.Problem
 import concrete.Variable
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import cspom.Statistic
 import concrete.UNSATException
 import concrete.LearnBin
@@ -33,7 +33,7 @@ import concrete.LearnBin
  * @author Julien VION
  *
  */
-final class DC20(val problem: Problem) extends Filter with Loggable {
+final class DC20(val problem: Problem) extends Filter with LazyLogging {
 
   val filter = new ACC(problem)
 
@@ -116,9 +116,7 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
         throw new InterruptedException();
       }
 
-      if (logFine) {
-        logger.fine(variable + " <- " + variable.dom.value(index) + " (" + index + ")");
-      }
+      logger.debug(variable + " <- " + variable.dom.value(index) + " (" + index + ")");
 
       problem.push();
       variable.dom.setSingle(index);
@@ -148,7 +146,7 @@ final class DC20(val problem: Problem) extends Filter with Loggable {
 
       } else {
         problem.pop();
-        logger.fine("Removing " + variable + ", " + index);
+        logger.debug("Removing " + variable + ", " + index);
 
         variable.dom.remove(index);
         modVar(variable.getId) = cnt

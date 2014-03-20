@@ -17,13 +17,13 @@ object ConcretePatterns {
       Seq(
         AbsDiff, SubToAdd, AddToEq,
         UnaryOr, MergeDisj, MergeNotDisj,
-        NegToCNF, ReifiedDisj, ReifiedConj,
+        NegToCNF, Xor, ReifiedDisj, ReifiedConj,
         NeqVec, RemoveAnd,
         LtToGt, SlidingSum, SetIn, Element, In, MinMax//, //SimplDisj//ConstToVar
         )
 
     if (improveModel) {
-      StandardCompilers.improve() ++ Seq(AllDiff, SubsumedDiff, DiffGe, SimplDisj) ++ standard
+      StandardCompilers.improve() ++ Seq(AllDiff, SubsumedDiff, DiffGe, SimplDisj, Square) ++ standard
     } else {
       standard
     }

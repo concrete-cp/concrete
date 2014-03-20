@@ -48,7 +48,7 @@ object NeqVec extends ConstraintCompiler {
       case _ => throw new IllegalArgumentException(s"$neConstraints contains malformed ne/nevec constraint")
     }
 
-    val newC = problem.ctr(CSPOMConstraint('nevec, new CSPOMSeq[Any](x), new CSPOMSeq[Any](y)))
+    val newC = problem.ctr(CSPOMConstraint('nevec, Seq(new CSPOMSeq[Any](x), new CSPOMSeq[Any](y))))
 
     replaceCtr(orConstraint +: neConstraints.toSeq, newC, problem)
 

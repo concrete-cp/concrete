@@ -15,7 +15,7 @@ import CSPOM._
 object CSPOMDriver {
 
   def sum(variables: CSPOMExpression[Int]*)(implicit problem: CSPOM): CSPOMExpression[Int] = {
-    sumProd(variables.map((1, _)): _*)
+    sumProd(variables.map((1, _)): _*)(problem)
     //    val result = IntVariable.free()
     //    problem.ctr(new CSPOMConstraint(
     //      'sum,

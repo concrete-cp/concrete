@@ -25,7 +25,7 @@ import scala.annotation.tailrec
 import scala.collection.JavaConversions
 import concrete.filter.Filter
 import concrete.generator.ProblemGenerator
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import concrete.util.Waker
 import concrete.constraint.extension.MDD
 import cspom.CSPOM
@@ -35,12 +35,8 @@ import concrete.constraint.extension.ReduceableExt
 import cspom.compiler.ProblemCompiler
 import concrete.generator.cspompatterns.ConcretePatterns
 import cspom.StatisticsManager
-import cspom.Logging
 
 object Solver {
-  @Parameter("logger.level")
-  var loggerLevel = "WARNING";
-
   @Parameter("solver")
   var solverClass: Class[_ <: Solver] = classOf[MAC]
 
@@ -61,7 +57,7 @@ object Solver {
   }
 }
 
-abstract class Solver(val problem: Problem) extends Iterator[Map[String, Any]] with Loggable {
+abstract class Solver(val problem: Problem) extends Iterator[Map[String, Any]] with LazyLogging {
 
   @Statistic
   var preproRemoved = 0
@@ -82,15 +78,6 @@ abstract class Solver(val problem: Problem) extends Iterator[Map[String, Any]] w
   statistics.register("domain", Domain)
   statistics.register("problemCompiler", ProblemCompiler)
   statistics.register("problemGenerator", ProblemGenerator)
-
-  /** Logger initialization */
-  {
-    val level = Level.parse(Solver.loggerLevel);
-
-    Logging.setLevel(level)
-
-    logger.info(ParameterManager.list);
-  }
 
   private var _next: SolverResult = UNKNOWNResult
   private var _minimize: Option[Variable] = None

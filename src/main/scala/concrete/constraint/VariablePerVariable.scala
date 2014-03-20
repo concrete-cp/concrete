@@ -3,12 +3,12 @@ package concrete.constraint;
 import scala.annotation.tailrec
 
 import concrete.Variable
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 
 /**
  * A constraint that can be revised one variable at a time
  */
-trait VariablePerVariable extends Constraint with Removals with Loggable {
+trait VariablePerVariable extends Constraint with Removals with LazyLogging {
 
   /**
    * Try to filter values from variable getVariable(position).

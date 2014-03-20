@@ -1,15 +1,9 @@
 package concrete.generator.cspompatterns
 
 import cspom.CSPOM
-import scala.collection.mutable.Queue
-import cspom.compiler.ConstraintCompiler
 import cspom.CSPOMConstraint
-import cspom.variable.CSPOMVariable
-import cspom.compiler.Delta
-import cspom.variable.BoolVariable
+import cspom.compiler.ConstraintCompiler
 import cspom.variable.CSPOMConstant
-import cspom.compiler.ConstraintCompilerNoData
-import cspom.variable.CSPOMExpression
 import cspom.variable.SimpleExpression
 
 /**
@@ -30,7 +24,7 @@ object UnaryOr extends ConstraintCompiler {
 
     val Seq(constant: Boolean) = fc.params.getOrElse("revsign", Seq(false))
 
-    replaceCtr(fc, CSPOMConstraint('eq, arg, CSPOMConstant(constant ^ res)), problem)
+    replaceCtr(fc, CSPOMConstraint('eq, Seq(arg, CSPOMConstant(constant ^ res))), problem)
 
   }
 

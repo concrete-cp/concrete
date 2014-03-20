@@ -22,7 +22,7 @@ final class AbsDiffGeneratorTest {
       val v1 = IntVariable(Seq(1, 2, 3))
       val v2 = IntVariable(Seq(1, 2, 3))
 
-      ctr(CSPOMConstraint(v0, 'absdiff, v1, v2))
+      ctr(CSPOMConstraint(v0, 'absdiff, Seq(v1, v2)))
     }
 
     val problem = ProblemGenerator.generate(cspom)

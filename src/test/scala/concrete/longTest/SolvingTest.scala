@@ -3,7 +3,7 @@ package concrete.longTest;
 import scala.annotation.elidable
 import org.junit.Assert._
 import org.junit.Test
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import concrete.ParameterManager
 import concrete.Solver
 import cspom.compiler.ProblemCompiler
@@ -24,7 +24,6 @@ final class SolvingTest {
   //Solver.loggerLevel = "FINE"
   //ParameterManager("ac3c.queue") = classOf[BinaryHeap[Constraint]]
   import SolvingTest._
-  val dlog = Solver.loggerLevel
 
   @Before
   def before() {
@@ -35,7 +34,6 @@ final class SolvingTest {
 
   @After
   def after() {
-    Solver.loggerLevel = dlog
     ParameterManager("preprocessor") = null
   }
 
@@ -131,13 +129,13 @@ final class SolvingTest {
   def series() {
     assertTrue(solve("series-15.xml.bz2"));
   }
-  
-//  @Test
-//  def fapp01_0200_0() {
-//    assertNull(solve("fapp01-0200-0.xml"));
-//    assertEquals(0, count("fapp01-0200-0.xml"));
-//
-//  }
+
+  //  @Test
+  //  def fapp01_0200_0() {
+  //    assertNull(solve("fapp01-0200-0.xml"));
+  //    assertEquals(0, count("fapp01-0200-0.xml"));
+  //
+  //  }
 
   @Test
   def jobshop() {
@@ -176,7 +174,7 @@ final class SolvingTest {
 
 }
 
-object SolvingTest extends Loggable {
+object SolvingTest extends LazyLogging {
 
   def solve(name: String, test: Boolean = true): Boolean = {
     val url = getClass.getResource(name)

@@ -12,7 +12,7 @@ import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
 import concrete.util.Waker
 import cspom.CSPOM
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import cspom.Statistic
 import cspom.StatisticsManager
 import cspom.TimedException
@@ -87,9 +87,8 @@ trait ConcreteRunner {
     }
 
     val writer: ConcreteWriter =
-      opt.get('SQL).map(url => new SQLWriter(new URI(url.toString))).orElse {
-        opt.get('Writer).map(_.asInstanceOf[ConcreteWriter])
-      } getOrElse {
+      //opt.get('SQL).map(url => new SQLWriter(new URI(url.toString))).getOrElse 
+      {
         new ConsoleWriter()
       }
 
@@ -124,7 +123,7 @@ trait ConcreteRunner {
       }
 
       //println(solver.problem)
-      
+
       writer.parameters(ParameterManager.toXML)
 
       for (t <- opt.get('Time)) {

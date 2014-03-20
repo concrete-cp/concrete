@@ -9,7 +9,7 @@ import concrete.generator.ProblemGenerator
 import concrete.LearnMethod
 import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import concrete.ParameterManager
 import concrete.Solver
 import concrete.filter.SAC1
@@ -18,11 +18,9 @@ import org.junit.After
 import org.junit.Before
 import concrete.generator.cspompatterns.ConcretePatterns
 
-final class SACSolvingTest extends Loggable {
+final class SACSolvingTest extends LazyLogging {
   //Solver.loggerLevel = "FINE"
   import SolvingTest._
-
-  val dlog = Solver.loggerLevel
 
   @Before
   def before() {
@@ -33,7 +31,6 @@ final class SACSolvingTest extends Loggable {
 
   @After
   def after() {
-    Solver.loggerLevel = dlog
     ParameterManager("preprocessor") = null
   }
 

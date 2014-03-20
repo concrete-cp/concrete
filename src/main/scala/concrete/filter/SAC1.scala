@@ -21,13 +21,13 @@ package concrete.filter;
 import java.util.logging.Logger
 import concrete.Problem
 import concrete.Variable;
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 
 /**
  * @author Julien VION
  *
  */
-final class SAC1(val problem: Problem) extends SingletonConsistency with Loggable {
+final class SAC1(val problem: Problem) extends SingletonConsistency with LazyLogging {
 
   val subFilter = new ACC(problem)
 

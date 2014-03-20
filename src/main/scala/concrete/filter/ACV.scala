@@ -10,7 +10,7 @@ import concrete.heuristic.revision.Dom
 import concrete.heuristic.revision.Key
 import concrete.priorityqueues.BinaryHeap
 import concrete.priorityqueues.PriorityQueue
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import concrete.Parameter
 import cspom.Statistic
 import concrete.AdviseCount
@@ -41,7 +41,7 @@ object ACV {
 final class ACV(
   val problem: Problem,
   val key: Key[Variable],
-  val queue: PriorityQueue[Variable]) extends Filter with Loggable {
+  val queue: PriorityQueue[Variable]) extends Filter with LazyLogging {
   @Statistic
   val substats = new StatisticsManager
   substats.register("queue", queue);

@@ -4,7 +4,7 @@ import scala.annotation.elidable
 import org.junit.Assert._
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import concrete.ParameterManager
 import concrete.Solver
 import cspom.compiler.ProblemCompiler
@@ -21,7 +21,6 @@ final class ACVSolvingTest {
 
   import SolvingTest._
 
-  val dlog = Solver.loggerLevel
   val dfilt = MAC.filterClass
 
   @Before
@@ -33,7 +32,6 @@ final class ACVSolvingTest {
 
   @After
   def after() {
-    Solver.loggerLevel = dlog
     ParameterManager("mac.filter") = dfilt
   }
 

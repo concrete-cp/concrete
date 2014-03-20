@@ -4,7 +4,7 @@ import cspom.CSPOMConstraint
 import cspom.variable.CSPOMVariable
 import scala.util.Random
 import scala.util.control.Breaks._
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import cspom.compiler.ConstraintCompiler
 import cspom.variable.CSPOMConstant
 import cspom.compiler.Delta

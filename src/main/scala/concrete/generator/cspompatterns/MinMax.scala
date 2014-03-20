@@ -19,11 +19,11 @@ object MinMax extends ConstraintCompiler {
   def compile(c: CSPOMConstraint[_], p: CSPOM, mode: Symbol) = {
     val r = c.result
     val eq = c.arguments.map {
-      case v: SimpleExpression[_] => CSPOMConstraint(mode, r, v)
+      case v: SimpleExpression[_] => CSPOMConstraint(mode, Seq(r, v))
       case _ => ???
     }
 
-    replaceCtr(c, CSPOMConstraint('in, r, new CSPOMSeq(c.arguments)) +: eq, p)
+    replaceCtr(c, CSPOMConstraint('in, Seq(r, new CSPOMSeq(c.arguments))) +: eq, p)
   }
 
   def selfPropagation = false

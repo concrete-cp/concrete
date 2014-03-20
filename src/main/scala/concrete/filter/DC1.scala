@@ -23,7 +23,7 @@ import concrete.NoGoodLearner
 import concrete.Variable
 import concrete.Parameter
 import cspom.Statistic
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import concrete.ParameterManager
 import cspom.StatisticsManager
 import concrete.Problem
@@ -42,7 +42,7 @@ object DC1 {
 
 }
 
-final class DC1(val problem: Problem) extends SingletonConsistency with Loggable {
+final class DC1(val problem: Problem) extends SingletonConsistency with LazyLogging {
   @Statistic
   var addedConstraints = 0
 
@@ -73,10 +73,8 @@ final class DC1(val problem: Problem) extends SingletonConsistency with Loggable
         throw new InterruptedException();
       }
 
-      if (logFine) {
-        logger.fine(variable + " <- " + variable.dom.value(index)
-          + " (" + index + ")");
-      }
+      logger.debug(variable + " <- " + variable.dom.value(index)
+        + " (" + index + ")");
 
       problem.push();
       variable.dom.setSingle(index);
@@ -99,7 +97,7 @@ final class DC1(val problem: Problem) extends SingletonConsistency with Loggable
         // addConstraints);
       } else {
         problem.pop();
-        logger.fine("Removing " + variable + ", " + index);
+        logger.debug("Removing " + variable + ", " + index);
 
         variable.dom.remove(index);
         changedGraph = true;

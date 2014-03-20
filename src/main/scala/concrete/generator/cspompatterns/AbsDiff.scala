@@ -28,7 +28,7 @@ object AbsDiff extends ConstraintCompiler {
 
   def compile(c: CSPOMConstraint[_], problem: CSPOM, data: A) = {
     data.foldLeft(Delta()) { (acc, fc) =>
-      val nc = CSPOMConstraint(fc.result, 'absdiff, c.arguments: _*)
+      val nc = CSPOMConstraint(fc.result, 'absdiff, c.arguments)
       acc ++ replaceCtr(Seq(c, fc), nc, problem)
     }
 

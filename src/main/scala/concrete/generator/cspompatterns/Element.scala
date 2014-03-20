@@ -25,19 +25,21 @@ object Element extends ConstraintCompiler {
     val (res, vars, idx) = data
     val scope = vars.values.asInstanceOf[Seq[SimpleExpression[Any]]].toArray
     val range = vars.definedIndices
-    replaceCtr(c, CSPOM.table(elementVar(scope, range), false, idx +: res +: scope), p)
+
+    val mdd = elementVar(scope, range)
+    replaceCtr(c, CSPOM.table(mdd.reduce, false, idx +: res +: scope), p)
   }
 
-  def elementVar[A <: B, B >: Int](scope: IndexedSeq[SimpleExpression[A]], range: Range): Relation[B] = {
+  def elementVar[A <: B, B >: Int](scope: IndexedSeq[SimpleExpression[A]], range: Range): MDD[B] = {
     val cache = new HashMap[(Int, Int, A), MDD[A]]()
 
     val map: Seq[(B, MDD[B])] = for (i <- scope.indices) yield {
 
-      val s: Seq[(B, MDD[B])] = scope(i).domain.map {
+      val s: Map[B, MDD[B]] = scope(i).domain.iterator.map {
         c => c -> elementVar(0, i, c, scope, cache).asInstanceOf[MDD[B]]
-      }
+      } toMap
 
-      range(i) -> new MDDNode(s.toMap)
+      range(i) -> new MDDNode(s)
     }
 
     new MDDNode(map.toMap)

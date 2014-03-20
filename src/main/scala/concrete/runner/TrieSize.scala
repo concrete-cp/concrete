@@ -18,7 +18,6 @@ import concrete.constraint.extension.TupleTrieSet
 import concrete.constraint.extension.MDDC
 import concrete.constraint.extension.ExtensionConstraintGeneral
 import concrete.constraint.extension.FindSupportExt
-import concrete.constraint.extension.ExtensionConstraintSTR3
 
 object TrieSize extends App {
 
@@ -79,9 +78,6 @@ object TrieSize extends App {
       val constraint = algo match {
         case "MDDC" => {
           new MDDC(variables, t.reduceable.asInstanceOf[MDD])
-        }
-        case "STR3" => {
-          new ExtensionConstraintSTR3(variables, t.reduceable.asInstanceOf[STR].array)
         }
         case "Reduce" => {
           new ReduceableExt(variables, t.reduceable.copy)

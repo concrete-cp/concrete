@@ -7,12 +7,13 @@ import concrete.util.IntSet
 import concrete.util.Interval
 import concrete.util.IntervalSet
 import concrete.util.Singleton
+import scala.collection.SortedSet
 
 object IntDomain {
   @annotation.varargs
   def apply(d: Int*): IntDomain = new IntDomain(IntSet(d: _*), Indexer.factory(d))
 
-  //def apply(d: Array[Int]): IntDomain = apply(d: _*)
+  def apply(d: SortedSet[Int]): IntDomain = apply(d.toSeq: _*)
 
   def apply(r: Range): IntDomain =
     if (r.step == 1 && r.size > 1) {

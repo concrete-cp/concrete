@@ -4,7 +4,6 @@ import scala.annotation.tailrec
 import concrete.constraint.Constraint
 import concrete.constraint.Removals
 import concrete.priorityqueues._
-import cspom.Loggable
 import concrete.ParameterManager
 import concrete.Problem
 import cspom.Statistic
@@ -15,8 +14,9 @@ import concrete.AdviseCount
 import concrete.Parameter
 import concrete.heuristic.revision.Key
 import concrete.heuristic.revision.Eval
+import com.typesafe.scalalogging.slf4j.LazyLogging
 
-object ACC extends Loggable {
+object ACC extends LazyLogging {
   @Parameter("ac3c.queue")
   var queueType: Class[_ <: PriorityQueue[Constraint]] = classOf[QuickFifos[Constraint]]
 
@@ -26,7 +26,7 @@ object ACC extends Loggable {
   ParameterManager.register(ACC.this);
 
   def control(problem: Problem) = {
-    logger.fine("Control !")
+    logger.debug("Control !")
     for (c <- problem.constraints) {
       (0 until c.arity).foreach(c.advise)
       val sizes = c.scope map (_.dom.size)
@@ -44,7 +44,7 @@ object ACC extends Loggable {
   def queue = queueType.getConstructor().newInstance()
 }
 
-final class ACC(val problem: Problem, val key: Key[Constraint], val queue: PriorityQueue[Constraint]) extends Filter with Loggable {
+final class ACC(val problem: Problem, val key: Key[Constraint], val queue: PriorityQueue[Constraint]) extends Filter with LazyLogging {
   @Statistic
   val substats = new StatisticsManager
   substats.register("queue", queue);

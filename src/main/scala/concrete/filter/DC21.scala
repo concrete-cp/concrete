@@ -27,7 +27,7 @@ import concrete.NoGoodLearner
 import concrete.Problem
 import concrete.Variable
 import concrete.Parameter
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.annotation.tailrec
 import concrete.LearnBin
 
@@ -35,7 +35,7 @@ import concrete.LearnBin
  * @author Julien VION
  *
  */
-final class DC21(val problem: Problem) extends Filter with Loggable {
+final class DC21(val problem: Problem) extends Filter with LazyLogging {
 
   private var nbAddedConstraints = 0;
 
@@ -108,7 +108,7 @@ final class DC21(val problem: Problem) extends Filter with Loggable {
         throw new InterruptedException();
       }
 
-      // if (logger.isLoggable(Level.FINER)) {
+      // if (logger.isLazyLogging(Level.FINER)) {
       // LOGGER.fine(variable + " <- " +
       // variable.getDomain().value(index));
       // }
@@ -149,7 +149,7 @@ final class DC21(val problem: Problem) extends Filter with Loggable {
         // addConstraints);
       } else {
         problem.pop();
-        logger.fine("Removing " + variable + ", " + index);
+        logger.debug("Removing " + variable + ", " + index);
 
         variable.dom.remove(index);
         changedGraph = true;

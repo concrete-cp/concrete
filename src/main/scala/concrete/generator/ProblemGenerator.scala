@@ -7,7 +7,7 @@ import cspom.CSPOM
 import scala.annotation.tailrec
 import scala.collection.immutable.Queue
 import cspom.variable.IntInterval
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import concrete.UndefinedDomain
 import concrete.Variable
 import cspom.variable.CSPOMVariable
@@ -26,7 +26,7 @@ import cspom.StatisticsManager
 import cspom.TimedException
 import cspom.VariableNames
 
-object ProblemGenerator extends Loggable {
+object ProblemGenerator extends LazyLogging {
 
   @Parameter("generator.intToBool")
   val intToBool = false
@@ -71,7 +71,7 @@ object ProblemGenerator extends Loggable {
 
   def genLarge(failed: Seq[CSPOMConstraint[_]], variables: Map[CSPOMVariable[_], Variable], problem: Problem): Seq[CSPOMConstraint[_]] = {
     for (v <- problem.variables if v.dom.undefined) {
-      logger.warning("Generating arbitrary domain for " + v)
+      logger.warn("Generating arbitrary domain for " + v)
       v.dom = IntDomain(-1000000 to 1000000)
     }
 
@@ -151,8 +151,8 @@ object ProblemGenerator extends Loggable {
       case Seq(0) if intToBool => new concrete.BooleanDomain(false)
       case Seq(1) if intToBool => new concrete.BooleanDomain(true)
       case Seq(0, 1) if intToBool => new concrete.BooleanDomain()
-      case int: IntInterval => IntDomain(int)
-      case IntSeq(seq) => IntDomain(seq: _*)
+      case int: IntInterval => IntDomain(int.range)
+      case IntSeq(seq) => IntDomain(seq)
       case FreeInt => UndefinedDomain
     }
 

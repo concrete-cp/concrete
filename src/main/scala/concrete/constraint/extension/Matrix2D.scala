@@ -1,9 +1,9 @@
 package concrete.constraint.extension;
 
 import concrete.util.BitVector;
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 
-final class Matrix2D(xSize: Int, ySize: Int, initialState: Boolean) extends Matrix with Loggable {
+final class Matrix2D(xSize: Int, ySize: Int, initialState: Boolean) extends Matrix with LazyLogging {
   private var xMatrix =
     new Array[BitVector](xSize).map(_ => {
       val bv = BitVector.newBitVector(ySize)
@@ -30,7 +30,7 @@ final class Matrix2D(xSize: Int, ySize: Int, initialState: Boolean) extends Matr
       yMatrix(tuple(1)).set(tuple(0), status);
       empty = false;
     } else {
-      logger.warning(s"Tuple ${tuple.mkString("(", ", ", ")")} is out of the scope of matrix $this")
+      logger.warn(s"Tuple ${tuple.mkString("(", ", ", ")")} is out of the scope of matrix $this")
     }
   }
 

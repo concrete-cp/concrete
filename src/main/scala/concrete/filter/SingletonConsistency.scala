@@ -6,10 +6,10 @@ import concrete.constraint.Constraint
 import concrete.Problem
 import concrete.Variable
 import cspom.Statistic
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.annotation.tailrec
 
-trait SingletonConsistency extends Filter with Loggable {
+trait SingletonConsistency extends Filter with LazyLogging {
 
   def subFilter: Filter
 
@@ -64,9 +64,8 @@ trait SingletonConsistency extends Filter with Loggable {
    * @return true iff the index has been removed from the domain of the variable
    */
   def check(variable: Variable, index: Int) = {
-    // if (logger.isLoggable(Level.FINER)) {
-    logger.fine(variable + " <- " + variable.dom.value(index) + "(" + index + ")");
-    // }
+
+    logger.debug(variable + " <- " + variable.dom.value(index) + "(" + index + ")");
 
     problem.push();
 
@@ -79,7 +78,7 @@ trait SingletonConsistency extends Filter with Loggable {
     if (consistent) {
       false
     } else {
-      logger.fine("Removing " + variable + ", " + index);
+      logger.debug("Removing " + variable + ", " + index);
 
       variable.dom.remove(index);
       true

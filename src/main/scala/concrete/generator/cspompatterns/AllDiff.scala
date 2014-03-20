@@ -4,15 +4,16 @@ import cspom.CSPOMConstraint
 import cspom.variable.IntVariable
 import scala.util.Random
 import scala.util.control.Breaks._
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import cspom.compiler.ConstraintCompiler
 import cspom.variable.CSPOMConstant
 import cspom.compiler.Delta
 import cspom.variable.CSPOMSeq
 import scala.collection.mutable.WeakHashMap
 import cspom.variable.CSPOMExpression
+import cspom.VariableNames
 
-object AllDiff extends ConstraintCompiler with Loggable {
+object AllDiff extends ConstraintCompiler with LazyLogging {
   type A = Set[IntVariable]
 
   def DIFF_CONSTRAINT(constraint: CSPOMConstraint[_]) =
@@ -50,9 +51,15 @@ object AllDiff extends ConstraintCompiler with Loggable {
    */
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM, clique: Set[IntVariable]) = {
 
-    problem.removeConstraint(constraint)
+    val delta =
+      if (ALLDIFF_CONSTRAINT(constraint)) {
+        problem.removeConstraint(constraint)
+        Delta().removed(constraint)
+      } else {
+        Delta()
+      }
 
-    Delta().removed(constraint) ++ newAllDiff(clique.toSeq, problem)
+    delta ++ newAllDiff(clique.toSeq, problem)
 
   }
 
@@ -129,14 +136,16 @@ object AllDiff extends ConstraintCompiler with Loggable {
    * @param scope
    */
   private def newAllDiff(scope: Seq[CSPOMExpression[Int]], problem: CSPOM): Delta = {
-    val allDiff = CSPOMConstraint('allDifferent, scope: _*);
+
+    val allDiff = CSPOMConstraint('allDifferent, scope);
 
     val scopeSet = scope.toSet
 
     var delta = Delta()
 
-    if (!problem.constraints.contains(allDiff)) {
+    if (!scope.flatMap(problem.constraints).exists(c => isSubsumed(allDiff, c))) {
       problem.ctr(allDiff);
+      logger.debug("New alldiff: " + allDiff.toString(new VariableNames(problem)))
 
       delta = delta.added(allDiff)
       //      val constraints =
@@ -145,23 +154,19 @@ object AllDiff extends ConstraintCompiler with Loggable {
       var removed = 0
       /* Remove newly subsumed neq/alldiff constraints. */
 
-      scope.iterator.collect {
-        case v: IntVariable => v
-      } flatMap (problem.constraints) filter {
-        c =>
-          (c ne allDiff) && ALLDIFF_CONSTRAINT(c) && c.arguments.forall {
-            case v: IntVariable => scopeSet(v)
-            case _ => false
-          }
-      } foreach {
+      scope.iterator.flatMap(problem.constraints).filter(c => isSubsumed(c, allDiff)).foreach {
         c =>
           removed += 1
           problem.removeConstraint(c);
           delta = delta.removed(c)
       }
-      logger.fine("removed " + removed + " constraints, " + problem.constraints.size + " left")
+      logger.debug("removed " + removed + " constraints, " + problem.constraints.size + " left")
     }
     delta
+  }
+
+  private def isSubsumed(c: CSPOMConstraint[_], by: CSPOMConstraint[_]): Boolean = {
+    (by ne c) && DIFF_CONSTRAINT(by) && ALLDIFF_CONSTRAINT(c) && c.arguments.forall(by.arguments.contains)
   }
 
   val RAND = new Random(0);

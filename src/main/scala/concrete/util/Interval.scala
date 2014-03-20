@@ -55,15 +55,11 @@ final case class Interval(val lb: Int, val ub: Int) {
     if (dividedEvenly) {
       roundedTowardsZeroQuotient;
     } else {
-      // At this point we know that 
-      // dividend was not zero (because there would have been no remainder)
-      // Therefore both are non-zero.  Either they are of the same sign, 
-      // or opposite signs. If they're of opposite sign then we rounded 
+      // If they're of opposite sign then we rounded 
       // UP towards zero so we rem one. If they're of the same sign then 
       // we rounded DOWN towards zero, so we are done.
 
-      val wasRoundedDown = ((divisor > 0) == (dividend > 0));
-      if (wasRoundedDown) {
+      if (divisor.signum == dividend.signum) {
         roundedTowardsZeroQuotient;
       } else {
         roundedTowardsZeroQuotient - 1;
@@ -78,15 +74,11 @@ final case class Interval(val lb: Int, val ub: Int) {
     if (dividedEvenly) {
       roundedTowardsZeroQuotient;
     } else {
-      // At this point we know that 
-      // dividend was not zero (because there would have been no remainder)
-      // Therefore both are non-zero.  Either they are of the same sign, 
-      // or opposite signs. If they're of opposite sign then we rounded 
+      // If they're of opposite sign then we rounded 
       // UP towards zero so we're done. If they're of the same sign then 
       // we rounded DOWN towards zero, so we need to add one.
 
-      val wasRoundedDown = ((divisor > 0) == (dividend > 0));
-      if (wasRoundedDown) {
+      if (divisor.signum == dividend.signum) {
         roundedTowardsZeroQuotient + 1;
       } else {
         roundedTowardsZeroQuotient;

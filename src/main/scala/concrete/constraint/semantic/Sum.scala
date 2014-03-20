@@ -5,7 +5,7 @@ import concrete.constraint.Constraint
 import concrete.Domain
 import concrete.util.Interval
 import concrete.Variable
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import concrete.constraint.Shaver
 import scala.collection.mutable.HashSet
 
@@ -24,7 +24,7 @@ final class Sum(
   val factors: Array[Int],
   scope: Array[Variable],
   mode: FilterSum) extends Constraint(scope)
-  with Loggable {
+  with LazyLogging {
 
   def this(constant: Int, scope: Array[Variable], mode: FilterSum) =
     this(constant, Array.fill(scope.length)(1), scope, mode)

@@ -5,11 +5,11 @@ import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.Residues
 import concrete.util.Interval
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import concrete.constraint.Shaver
 
 final class Add(val result: Variable, val v0: Variable, val v1: Variable)
-  extends Constraint(Array(result, v0, v1)) with Shaver with Residues with Loggable {
+  extends Constraint(Array(result, v0, v1)) with Shaver with Residues with LazyLogging {
 
   def checkValues(t: Array[Int]) = t(0) == t(1) + t(2)
 

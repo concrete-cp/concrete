@@ -37,7 +37,7 @@ final object SlidingSum extends ConstraintCompilerNoData {
       problem)
   }
 
-  def mdd(low: Int, up: Int, seq: Int, domains: Array[Seq[Int]], k: Int = 0, queue: Queue[Int] = Queue.empty,
+  def mdd(low: Int, up: Int, seq: Int, domains: Array[Iterable[Int]], k: Int = 0, queue: Queue[Int] = Queue.empty,
     nodes: HashMap[(Int, Queue[Int]), MDD[Int]] = new HashMap()): MDD[Int] = {
     val current = queue.sum
     val nextDomains = domains.view.slice(k, k + seq - queue.size)

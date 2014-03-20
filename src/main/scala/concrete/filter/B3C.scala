@@ -20,14 +20,14 @@ package concrete.filter;
 
 import concrete.Problem
 import concrete.Variable
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.annotation.tailrec
 
 /**
  * @author Julien VION
  *
  */
-final class B3C(val problem: Problem) extends SingletonConsistency with Loggable {
+final class B3C(val problem: Problem) extends SingletonConsistency with LazyLogging {
 
   val subFilter = new ACC(problem)
   // private final static Logger logger =

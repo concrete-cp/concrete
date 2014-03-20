@@ -4,14 +4,13 @@ import java.util.logging.Level.WARNING
 import org.junit.Test
 import concrete.filter.ACC
 import concrete.generator.ProblemGenerator
-import cspom.Loggable
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
 import concrete.Solver
 import concrete.generator.cspompatterns.ConcretePatterns
 
-final class ProblemGeneratorTest extends Loggable {
-  setLevel(WARNING)
+final class ProblemGeneratorTest extends LazyLogging {
 
   @Test
   def zebra() {
