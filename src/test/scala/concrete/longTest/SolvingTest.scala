@@ -180,7 +180,7 @@ object SolvingTest extends LazyLogging {
     val url = getClass.getResource(name)
     val (cspomProblem, data) = CSPOM.load(url);
 
-    val solver = Solver(cspomProblem);
+    val solver = Solver(cspomProblem)._1
 
     println(solver.problem.toString)
 
@@ -204,7 +204,7 @@ object SolvingTest extends LazyLogging {
     val url = getClass.getResource(name)
     val (cspomProblem, data) = CSPOM.load(url);
 
-    val solver = Solver(cspomProblem)
+    val solver = Solver(cspomProblem)._1
 
     solver.foldLeft(0) {
       (count, sol) =>

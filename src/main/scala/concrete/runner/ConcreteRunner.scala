@@ -3,7 +3,6 @@ package concrete.runner
 import java.net.URI
 import java.security.InvalidParameterException
 import java.util.Timer
-
 import concrete.ParameterManager
 import concrete.Problem
 import concrete.Solver
@@ -17,6 +16,10 @@ import cspom.Statistic
 import cspom.StatisticsManager
 import cspom.TimedException
 import cspom.compiler.ProblemCompiler
+import concrete.Parameter
+import cspom.variable.CSPOMVariable
+import concrete.Variable
+import cspom.variable.CSPOMExpression
 
 trait ConcreteRunner {
 
@@ -62,7 +65,7 @@ trait ConcreteRunner {
 
   def cProblem = _cProblem.get
 
-  def load(args: List[String]): Problem = {
+  def load(args: List[String]): (Problem, Map[CSPOMVariable[_], Variable]) = {
     val cspom = loadCSPOM(args)
     ProblemCompiler.compile(cspom, ConcretePatterns())
     _cProblem = Some(cspom)
@@ -71,10 +74,18 @@ trait ConcreteRunner {
 
   def loadCSPOM(args: List[String]): CSPOM = ???
 
+  def applyParameters(s: Solver, variables: Map[CSPOMVariable[_], Variable]): Unit = {}
+
   def description(args: List[String]): String
 
   @Statistic
   var loadTime: Double = _
+
+  @Parameter("optimize")
+  var optimize: String = "sat"
+
+  @Parameter("optimizeVar")
+  var optimizeVar: String = ""
 
   def run(args: Array[String]) {
     val (opt, remaining) = try {
@@ -109,10 +120,10 @@ trait ConcreteRunner {
     val waker = new Timer()
     try {
 
-      val solver = try {
+      val (solver, variables) = try {
         val (solver, lT) = StatisticsManager.time {
-          val problem = load(remaining)
-          Solver(problem)
+          val (problem, variables) = load(remaining)
+          (Solver(problem), variables)
         }
         loadTime = lT
         solver
@@ -122,6 +133,7 @@ trait ConcreteRunner {
           throw e.getCause()
       }
 
+      applyParameters(solver, variables)
       //println(solver.problem)
 
       writer.parameters(ParameterManager.toXML)
@@ -132,12 +144,24 @@ trait ConcreteRunner {
 
       sstats = Some(solver.statistics)
 
-      val solution = solver.toIterable.headOption
-      writer.solution(solution, this)
-      if (solution.isDefined && opt.contains('Control)) {
-        val failed = control(solution.get);
-        if (failed.isDefined) throw new IllegalStateException("Falsified constraints : " + failed.get)
+      optimize match {
+        case "sat" => solution(solver.toIterable.headOption, writer, opt)
+        case "min" =>
+          solver.minimize(solver.problem.variable(optimizeVar))
+        case "max" =>
+          solver.maximize(solver.problem.variable(optimizeVar))
       }
+
+      if (solver.isOptimizer) {
+        if (solver.isEmpty) {
+          solution(None, writer, opt)
+        } else for (s <- solver) {
+          solution(Some(s), writer, opt)
+        }
+      } else {
+        solution(solver.toIterable.headOption, writer, opt)
+      }
+
       writer.write(statistics)
       writer.write(sstats.get)
     } catch {
@@ -153,6 +177,16 @@ trait ConcreteRunner {
     } finally {
       waker.cancel()
       writer.disconnect()
+    }
+  }
+
+  def solution(sol: Option[Map[String, Any]], writer: ConcreteWriter, opt: Map[Symbol, Any]) {
+    writer.solution(sol, this)
+    for (
+      s <- sol if opt.contains('Control);
+      failed <- control(s)
+    ) {
+      throw new IllegalStateException("Falsified constraints : " + failed)
     }
   }
 

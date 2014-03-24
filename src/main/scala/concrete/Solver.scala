@@ -35,6 +35,7 @@ import concrete.constraint.extension.ReduceableExt
 import cspom.compiler.ProblemCompiler
 import concrete.generator.cspompatterns.ConcretePatterns
 import cspom.StatisticsManager
+import cspom.variable.CSPOMVariable
 
 object Solver {
   @Parameter("solver")
@@ -51,9 +52,10 @@ object Solver {
     solverClass.getConstructor(classOf[Problem]).newInstance(problem);
   }
 
-  def apply(cspom: CSPOM): Solver = {
+  def apply(cspom: CSPOM): (Solver, Map[CSPOMVariable[_], Variable]) = {
     ProblemCompiler.compile(cspom, ConcretePatterns())
-    Solver(ProblemGenerator.generate(cspom))
+    val (problem, variables) = ProblemGenerator.generate(cspom)
+    (Solver(problem), variables)
   }
 }
 
@@ -80,10 +82,13 @@ abstract class Solver(val problem: Problem) extends Iterator[Map[String, Any]] w
   statistics.register("problemGenerator", ProblemGenerator)
 
   private var _next: SolverResult = UNKNOWNResult
+  
   private var _minimize: Option[Variable] = None
   private var _maximize: Option[Variable] = None
-  def minimize(vName: String) { _maximize = None; _minimize = Some(problem.variable(vName)) }
-  def maximize(vName: String) { _minimize = None; _maximize = Some(problem.variable(vName)) }
+  def minimize(v: Variable) { _maximize = None; _minimize = Some(v) }
+  def maximize(v: Variable) { _minimize = None; _maximize = Some(v) }
+  
+  def isOptimizer = _maximize.nonEmpty || _minimize.nonEmpty
 
   def next() = _next match {
     case UNSAT => Iterator.empty.next

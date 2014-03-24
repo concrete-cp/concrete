@@ -52,7 +52,7 @@ final class ProblemGeneratorTest extends LazyLogging {
 
     logger.info(cspom + "\n" + cspom.referencedExpressions.size + " vars, " + cspom.constraints.size + " cons")
 
-    val problem = ProblemGenerator.generate(cspom);
+    val problem = ProblemGenerator.generate(cspom)._1;
 
     logger.info(problem + "\n" + problem.variables.size + " vars, " + problem.constraints.size + " cons")
 

@@ -25,7 +25,7 @@ final class AbsDiffGeneratorTest {
       ctr(CSPOMConstraint(v0, 'absdiff, Seq(v1, v2)))
     }
 
-    val problem = ProblemGenerator.generate(cspom)
+    val problem = ProblemGenerator.generate(cspom)._1
 
     assertEquals(1, problem.constraints.size)
     assertTrue(problem.constraints.head.isInstanceOf[AbsDiff])

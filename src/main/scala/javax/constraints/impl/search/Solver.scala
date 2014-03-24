@@ -10,7 +10,7 @@ import concrete.MAC
 
 class Solver(problem: javax.constraints.impl.Problem) extends javax.constraints.impl.search.AbstractSolver(problem) {
   val cspom = problem.cspom
-  val concreteProblem = ProblemGenerator.generate(cspom)
+  val concreteProblem = ProblemGenerator.generate(cspom)._1
   val concreteSolver = concrete.Solver(concreteProblem)
 
   // Members declared in 	 javax.constraints.impl.search.AbstractSolver
@@ -50,8 +50,8 @@ class Solver(problem: javax.constraints.impl.Problem) extends javax.constraints.
 
   override def findOptimalSolution(objective: Objective, variable: Var): Solution = {
     objective match {
-      case Objective.MAXIMIZE => concreteSolver.maximize(variable.getName)
-      case Objective.MINIMIZE => concreteSolver.minimize(variable.getName)
+      case Objective.MAXIMIZE => ???//concreteSolver.maximize(variable.getName)
+      case Objective.MINIMIZE => ???//concreteSolver.minimize(variable.getName)
     }
     concreteSolver.toIterable.lastOption.map(concreteSol).getOrElse(null)
 

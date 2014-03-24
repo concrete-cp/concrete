@@ -38,8 +38,8 @@ object ProblemGenerator extends LazyLogging {
   var genTime: Double = 0.0
 
   @throws(classOf[FailedGenerationException])
-  def generate(cspom: CSPOM): Problem = {
-    val (pb, time) = try StatisticsManager.time {
+  def generate(cspom: CSPOM): (Problem, Map[CSPOMVariable[_], Variable]) = {
+    val (result, time) = try StatisticsManager.time {
 
       // new ProblemCompiler(cspom).compile();
 
@@ -59,14 +59,14 @@ object ProblemGenerator extends LazyLogging {
 
       require(failed2.isEmpty, "Could not generate constraints " + failed2)
 
-      problem;
+      (problem, variables)
     } catch {
       case t: TimedException =>
         genTime += t.time
         throw t.getCause()
     }
     genTime += time
-    pb
+    result
   }
 
   def genLarge(failed: Seq[CSPOMConstraint[_]], variables: Map[CSPOMVariable[_], Variable], problem: Problem): Seq[CSPOMConstraint[_]] = {

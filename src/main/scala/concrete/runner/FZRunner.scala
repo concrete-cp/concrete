@@ -14,16 +14,25 @@ import cspom.flatzinc.FZArrayExpr
 import cspom.flatzinc.FZSetConst
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMConstant
+import cspom.flatzinc.FZSolve
+import cspom.flatzinc.Satisfy
+import cspom.flatzinc.Maximize
+import cspom.flatzinc.FZVarParId
+import cspom.flatzinc.Minimize
+import java.security.InvalidParameterException
+import concrete.Variable
+import concrete.Solver
+import cspom.variable.CSPOMExpression
 
 object FZConcrete extends ConcreteRunner with App {
 
   var file: URL = _
 
-  var data: Map[Symbol, Any] = _
-
   var outputVars: Seq[String] = _
 
   var outputArrays: Map[String, Seq[Seq[Int]]] = _
+
+  var goal: FZSolve = _
 
   override def loadCSPOM(args: List[String]) = {
     val List(fn) = args
@@ -39,30 +48,48 @@ object FZConcrete extends ConcreteRunner with App {
 
     //println(file)
 
-    val cspom = CSPOM.load(file)
-    data = cspom._2
+    val (cspom, data) = CSPOM.load(file)
 
-    outputVars = cspom._1.namedExpressions.collect {
+    outputVars = cspom.namedExpressions.collect {
       case (n, e) if e.getSeqParam("fzAnnotations", classOf[FZAnnotation]).exists {
         case FZAnnotation("output_var", Seq()) => true
         case _ => false
       } => n
     }.toSeq
 
-    outputArrays = cspom._1.namedExpressions.flatMap {
+    outputArrays = cspom.namedExpressions.flatMap {
       case (n, e) =>
         e.getSeqParam("fzAnnotations", classOf[FZAnnotation]).collectFirst {
-          case FZAnnotation("output_array", Seq(data: FZArrayExpr[Seq[Int]])) =>
+          case FZAnnotation("output_array", Seq(data: FZArrayExpr[_])) =>
             val FZArrayExpr(array) = data
             val ranges = array.map {
               case FZSetConst(range) => range
+              case _ => throw new InvalidParameterException("An array of set constants is expected here: " + data)
             }
             n -> ranges
         }
     }
 
+    val Some(goal: FZSolve) = data.get('goal)
+
+    this.goal = goal
+
     //println(cspom._1)
-    cspom._1
+    cspom
+  }
+
+  override def applyParameters(solver: Solver, variables: Map[CSPOMVariable[_], Variable]) = {
+
+    goal.mode match {
+      case Satisfy =>
+      case Maximize(expr) =>
+        val e = expr.toCSPOM(_cProblem.get.namedExpressions).asInstanceOf[CSPOMVariable[_]]
+        solver.maximize(variables(e))
+      case Minimize(expr) =>
+        val e = expr.toCSPOM(_cProblem.get.namedExpressions).asInstanceOf[CSPOMVariable[_]]
+        solver.minimize(variables(e))
+      case _ => throw new InvalidParameterException("Cannot execute goal " + goal)
+    }
   }
 
   def description(args: List[String]) =
