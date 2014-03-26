@@ -14,7 +14,7 @@ import cspom.compiler.ProblemCompiler
 class AbsDiffTest {
   @Test
   def testExt() {
-    val cspom = CSPOM {
+    val cspom = CSPOM { implicit problem =>
 
       val v0 = IntVariable(Seq(1, 2, 3))
       val v1 = IntVariable(Seq(2, 3, 4))

@@ -18,7 +18,7 @@ class DiffGeTest {
   @Test
   def testGen() {
 
-    val cspom = CSPOM {
+    val cspom = CSPOM { implicit problem =>
 
       val r = IntVariable(1 to 3) - IntVariable(2 to 4)
       assertTrue(r.hasParam("var_is_introduced"))
@@ -38,7 +38,7 @@ class DiffGeTest {
   @Test
   def testFunc() {
 
-    val cspom = CSPOM {
+    val cspom = CSPOM { implicit problem =>
 
       val r = IntVariable(1 to 3) - IntVariable(2 to 4)
 

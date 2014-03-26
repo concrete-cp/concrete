@@ -50,7 +50,7 @@ class OccurrenceTest {
 
   @Test
   def test3() {
-    val problem = CSPOM {
+    val problem = CSPOM { implicit problem =>
       val v1 = 7
       val v2 = 6
 

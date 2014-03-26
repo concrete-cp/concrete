@@ -16,7 +16,7 @@ final class AbsDiffGeneratorTest {
   @Test
   def test() {
 
-    val cspom = CSPOM {
+    val cspom = CSPOM { implicit problem =>
 
       val v0 = IntVariable(Seq(1, 2, 3))
       val v1 = IntVariable(Seq(1, 2, 3))

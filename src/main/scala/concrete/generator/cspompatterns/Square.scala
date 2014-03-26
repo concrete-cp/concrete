@@ -14,13 +14,7 @@ import cspom.variable.CSPOMExpression
 import cspom.variable.SimpleExpression
 
 /**
- * Reified conjunction is converted to CNF :
- *
- * a = b (+) c
- *
- * <=>
- *
- * a
+ * Converts a = b × b to a = b² 
  */
 object Square extends ConstraintCompiler {
 

@@ -62,18 +62,25 @@ object SQLWriter {
 
   }
 
-  class Problem(tag: Tag) extends Table[(Int, String, Int, Int, String)](tag, "Problem") {
+  val now = SimpleFunction.nullary[Timestamp]("now")
+
+  class Problem(tag: Tag) extends Table[(Int, String, Option[Int], Option[Int], String)](tag, "Problem") {
     def problemId = column[Int]("problemId", O.PrimaryKey, O.AutoInc)
     def name = column[String]("name")
     def nbVars = column[Option[Int]]("nbVars")
     def nbCons = column[Option[Int]]("nbCons")
     def display = column[String]("display")
 
+    def * = (problemId, name, nbVars, nbCons, display)
+
     def idxName = index("idxName", name, unique = true)
     def idxDisplay = index("idxDisplay", display, unique = true)
   }
 
   val problems = TableQuery[Problem]
+  
+  def findProblemByID = problems.findBy(_.problemId)
+  def findProblemByName = problems.findBy(_.name)
 
   class Config(tag: Tag) extends Table[(Int, String, String)](tag, "Config") {
     def configId = column[Int]("configId", O.PrimaryKey, O.AutoInc)
@@ -85,15 +92,17 @@ object SQLWriter {
 
   val configs = TableQuery[Config]
 
-  class Execution(tag: Tag) extends Table[(Int, Int, Int, Timestamp, Timestamp, String, String)](tag, "Execution") {
+  class Execution(tag: Tag) extends Table[(Int, String, Int, Timestamp, Timestamp, String, String)](tag, "Execution") {
     def executionId = column[Int]("executionId", O.PrimaryKey, O.AutoInc)
-    def version = column[Int]("version")
+    def version = column[String]("version")
     def configId = column[Int]("configId")
     def problemId = column[Int]("problemId")
     def start = column[Timestamp]("start")
     def end = column[Option[Timestamp]]("end")
     def hostname = column[Option[String]]("hostname")
     def solution = column[Option[String]]("solution")
+
+    //def * = executionId ~ version ~ configId ~ problemId ~ start ~ end ~ hostname ~ solution
 
     def fkConfig = foreignKey("fkConfig", configId, configs)(_.configId, onDelete = ForeignKeyAction.Cascade)
     def fkProblem = foreignKey("fkProblem", problemId, problems)(_.problemId, onDelete = ForeignKeyAction.Cascade)
@@ -150,7 +159,7 @@ final class SQLWriter(jdbcUri: URI) extends ConcreteWriter {
     problemId = db.withSession {
       implicit session =>
 
-        problems.filter(_.name === name).firstOption.map(_._1).getOrElse {
+        findProblemByName(name).firstOption.map(_._1).getOrElse {
           problems.map(p => p.name) returning problems.map(_.problemId) += name
         }
 
@@ -210,15 +219,15 @@ final class SQLWriter(jdbcUri: URI) extends ConcreteWriter {
 
   }
 
-  private def execution(problemId: Int, configId: Int, version: Int) = {
+  private def execution(problemId: Int, configId: Int, version: String) = {
     print(s"Problem $problemId, config $configId, version $version")
 
-    val executionId = db.withSession {
+    val executionId = db.withSession { implicit session =>
       executions.map(e =>
         (e.problemId, e.configId, e.version, e.start, e.hostname)) returning
-        executions.map(_.executionId) += (
-          (problemId, configId, version, new Timestamp(), 
-              Some(InetAddress.getLocalHost.getHostName)))
+        executions.map(_.executionId) += ((
+          problemId, configId, version, SQLWriter.now.run,
+          Some(InetAddress.getLocalHost.getHostName)))
     }
     //    catch {
     //      case e: SQLException => throw new IllegalArgumentException(e.getMessage())
@@ -236,15 +245,18 @@ final class SQLWriter(jdbcUri: URI) extends ConcreteWriter {
   def solution(solution: Option[Map[String, Any]], concrete: ConcreteRunner) {
     require(executionId >= 0, "Problem description or parameters were not defined")
     val sol = outputFormat(solution, concrete)
-    db.withSession {
-      sqlu"UPDATE Executions SET solution = $sol WHERE executionId = $executionId".execute
+    db.withSession { implicit session =>
+
+      executions.filter(_.executionId === executionId).map(_.solution).update(Some(sol))
+
     }
   }
 
   def write(stats: StatisticsManager) {
-    db.withSession {
+    db.withSession { implicit session =>
       for ((key, value) <- stats.digest) {
-        sqlu"INSERT INTO statistics(name, executionId, value) VALUES ($key, $executionId, ${value.toString})".execute
+        statistic += ((key, executionId, value.toString))
+        //sqlu"INSERT INTO statistics(name, executionId, value) VALUES ($key, $executionId, ${value.toString})".execute
       }
     }
   }
@@ -252,14 +264,20 @@ final class SQLWriter(jdbcUri: URI) extends ConcreteWriter {
   def error(e: Throwable) {
     //println(e.toString)
     e.printStackTrace()
-    db.withSession {
-      sqlu"UPDATE executions SET solution=${e.toString} WHERE executionId=$executionId".execute
+    db.withSession { implicit session =>
+      val ex = executions.findBy(_.executionId).apply(executionId).first
+      //.map(_.solution) //.update(Some(e.toString))
     }
+    //    db.withSession {
+    //      sqlu"UPDATE executions SET solution=${e.toString} WHERE executionId=$executionId".execute
+    //    }
   }
 
   def disconnect() {
-    db.withSession {
-      sqlu"""UPDATE executions SET "end" = CURRENT_TIMESTAMP where executionId = $executionId""".execute
+
+    db.withSession { implicit session =>
+      executions.filter(_.executionId === executionId).map(_.end).update(Some(SQLWriter.now.run))
+      //sqlu"""UPDATE executions SET "end" = CURRENT_TIMESTAMP where executionId = $executionId""".execute
     }
   }
 
