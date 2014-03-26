@@ -29,7 +29,7 @@ class AllDiffTest {
 
     //println(cspom)
     assertEquals(1, cspom.constraints.size)
-    assertEquals('allDifferent, cspom.constraints.head.function)
+    assertEquals('allDifferent, cspom.constraints.next.function)
   }
 
 }

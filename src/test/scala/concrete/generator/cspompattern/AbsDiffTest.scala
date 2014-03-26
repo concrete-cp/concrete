@@ -32,7 +32,7 @@ class AbsDiffTest {
     assertEquals(3, cspom.referencedExpressions.size)
     assertEquals(1, cspom.constraints.size)
 
-    val c = cspom.constraints.head
+    val c = cspom.constraints.next
     assertEquals('absdiff, c.function)
     assertFalse(c.result.isInstanceOf[BoolVariable])
   }

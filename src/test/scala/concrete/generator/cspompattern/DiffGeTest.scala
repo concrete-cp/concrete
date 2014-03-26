@@ -30,7 +30,7 @@ class DiffGeTest {
 
     assertEquals(cspom.toString, 4, cspom.referencedExpressions.size)
     assertEquals(1, cspom.constraints.size)
-    val c = cspom.constraints.head
+    val c = cspom.constraints.next
     assertEquals('diffGe, c.function)
     assertEquals(CSPOMConstant(true), c.result)
   }
@@ -50,7 +50,7 @@ class DiffGeTest {
 
     assertEquals(4, cspom.referencedExpressions.size)
     assertEquals(1, cspom.constraints.size)
-    val c = cspom.constraints.head
+    val c = cspom.constraints.next
     assertEquals('diffGe, c.function)
     assertTrue(c.result.isInstanceOf[BoolVariable])
   }

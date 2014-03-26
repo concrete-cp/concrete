@@ -3,23 +3,25 @@ package concrete.runner
 import java.net.URI
 import java.security.InvalidParameterException
 import java.util.Timer
+
+import com.typesafe.scalalogging.slf4j.LazyLogging
+
+import concrete.Parameter
 import concrete.ParameterManager
 import concrete.Problem
 import concrete.Solver
-import concrete.generator.FailedGenerationException
+import concrete.Variable
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
 import concrete.util.Waker
+import concrete.runner.sql.SQLWriter
 import cspom.CSPOM
-import com.typesafe.scalalogging.slf4j.LazyLogging
 import cspom.Statistic
 import cspom.StatisticsManager
 import cspom.TimedException
 import cspom.compiler.ProblemCompiler
-import concrete.Parameter
-import cspom.variable.CSPOMVariable
-import concrete.Variable
 import cspom.variable.CSPOMExpression
+import cspom.variable.CSPOMVariable
 
 trait ConcreteRunner {
 
@@ -49,7 +51,7 @@ trait ConcreteRunner {
 
   def options(args: List[String], o: Map[Symbol, Any] = Map.empty, unknown: List[String] = Nil): (Map[Symbol, Any], List[String]) = args match {
     case Nil => (o, unknown.reverse)
-    case "-D" :: opts :: tail => {
+    case "-P" :: opts :: tail => {
       val p = params(Nil, opts.split(":").toList)
       options(tail, o + ('D -> p), unknown)
     }
@@ -97,20 +99,18 @@ trait ConcreteRunner {
         sys.exit(1)
     }
 
+    opt.get('D).collect {
+      case p: Seq[(String, String)] => for ((option, value) <- p) {
+        ParameterManager.parse(option, value)
+      }
+    }
+
     val writer: ConcreteWriter =
-      //opt.get('SQL).map(url => new SQLWriter(new URI(url.toString))).getOrElse 
-      {
+      opt.get('SQL).map(url => new SQLWriter(new URI(url.toString))).getOrElse {
         new ConsoleWriter()
       }
 
     writer.problem(description(remaining))
-
-    opt.get('D) match {
-      case Some(p: List[(String, String)]) => for ((option, value) <- p) {
-        ParameterManager.parse(option, value)
-      }
-      case _ =>
-    }
 
     val statistics = new StatisticsManager()
     statistics.register("concrete", this)

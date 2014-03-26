@@ -36,8 +36,15 @@ import java.sql.Timestamp
 import scala.slick.model.PrimaryKey
 import SQLWriter._
 import java.net.InetAddress
+import concrete.Parameter
+import concrete.ParameterManager
 
 object SQLWriter {
+
+  @Parameter("sql.createTables")
+  var createTables = false
+
+  ParameterManager.register(this)
 
   def connection(uri: URI) = {
     require(!uri.isOpaque, "Opaque connection URI : " + uri.toString)
@@ -50,26 +57,40 @@ object SQLWriter {
       case _ => throw new InvalidParameterException
     }
 
-    val userInfo = uri.getUserInfo match {
-      case null => Array[String]()
+    val userInfo: IndexedSeq[String] = uri.getUserInfo match {
+      case null => IndexedSeq[String]()
       case info: String => info.split(":");
     }
 
-    Database.forURL(s"jdbc:${uri.getScheme}://${uri.getHost}${uri.getPath}",
-      user = (if (userInfo.length > 0) { userInfo(0) } else { null }),
-      password = (if (userInfo.length > 1) { userInfo(1) } else { null }),
+    val db = Database.forURL(s"jdbc:${uri.getScheme}://${uri.getHost}${uri.getPath}",
+      user = userInfo.applyOrElse(0, { _: Int => null }),
+      password = userInfo.applyOrElse(1, { _: Int => null }),
       driver = driver)
+
+    if (createTables) {
+      db.withSession { implicit session =>
+        (problems.ddl ++
+          configs.ddl ++
+          executions.ddl ++
+          problemTag.ddl ++
+          statistic.ddl).create
+      }
+    }
+
+    db
 
   }
 
   val now = SimpleFunction.nullary[Timestamp]("now")
 
-  class Problem(tag: Tag) extends Table[(Int, String, Option[Int], Option[Int], String)](tag, "Problem") {
+  class Problem(tag: Tag)
+    extends Table[(Int, String, Option[Int], Option[Int], Option[String])](
+      tag, "Problem") {
     def problemId = column[Int]("problemId", O.PrimaryKey, O.AutoInc)
     def name = column[String]("name")
     def nbVars = column[Option[Int]]("nbVars")
     def nbCons = column[Option[Int]]("nbCons")
-    def display = column[String]("display")
+    def display = column[Option[String]]("display")
 
     def * = (problemId, name, nbVars, nbCons, display)
 
@@ -78,7 +99,7 @@ object SQLWriter {
   }
 
   val problems = TableQuery[Problem]
-  
+
   def findProblemByID = problems.findBy(_.problemId)
   def findProblemByName = problems.findBy(_.name)
 
@@ -87,12 +108,14 @@ object SQLWriter {
     def config = column[String]("config")
     def md5 = column[String]("md5")
 
+    def * = (configId, config, md5)
+
     def idxMd5 = index("idxMD5", md5, unique = true)
   }
 
   val configs = TableQuery[Config]
 
-  class Execution(tag: Tag) extends Table[(Int, String, Int, Timestamp, Timestamp, String, String)](tag, "Execution") {
+  class Execution(tag: Tag) extends Table[(Int, String, Int, Int, Timestamp, Option[Timestamp], Option[String], Option[String])](tag, "Execution") {
     def executionId = column[Int]("executionId", O.PrimaryKey, O.AutoInc)
     def version = column[String]("version")
     def configId = column[Int]("configId")
@@ -102,7 +125,7 @@ object SQLWriter {
     def hostname = column[Option[String]]("hostname")
     def solution = column[Option[String]]("solution")
 
-    //def * = executionId ~ version ~ configId ~ problemId ~ start ~ end ~ hostname ~ solution
+    def * = (executionId, version, configId, problemId, start, end, hostname, solution)
 
     def fkConfig = foreignKey("fkConfig", configId, configs)(_.configId, onDelete = ForeignKeyAction.Cascade)
     def fkProblem = foreignKey("fkProblem", problemId, problems)(_.problemId, onDelete = ForeignKeyAction.Cascade)
@@ -115,8 +138,10 @@ object SQLWriter {
     def problemTag = column[String]("problemTag")
     def problemId = column[Int]("problemId")
 
+    def * = (problemTag, problemId)
+
     def fkProblem = foreignKey("fkProblem", problemId, problems)(_.problemId, onDelete = ForeignKeyAction.Cascade)
-    def pk = primaryKey("pk", (problemTag, problemId))
+    def pkPT = primaryKey("pkPT", (problemTag, problemId))
   }
 
   val problemTag = TableQuery[ProblemTag]
@@ -126,8 +151,10 @@ object SQLWriter {
     def executionId = column[Int]("executionId")
     def value = column[String]("value")
 
+    def * = (name, executionId, value)
+
     def fkExecution = foreignKey("fkExecution", executionId, executions)(_.executionId, onDelete = ForeignKeyAction.Cascade)
-    def pk = primaryKey("pk", (name, executionId))
+    def pk = primaryKey("pkS", (name, executionId))
   }
 
   val statistic = TableQuery[Statistic]
