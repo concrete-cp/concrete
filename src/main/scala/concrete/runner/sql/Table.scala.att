@@ -15,7 +15,7 @@ import Database.threadLocalSession
 import scala.slick.jdbc.GetResult
 import scala.slick.driver.PostgresDriver.simple._
 
-object Table extends App {
+object Table2 extends App {
 
   val format = "csv"
 
