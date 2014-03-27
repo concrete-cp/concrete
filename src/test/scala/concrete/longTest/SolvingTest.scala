@@ -180,17 +180,13 @@ object SolvingTest extends LazyLogging {
     val url = getClass.getResource(name)
     val (cspomProblem, data) = CSPOM.load(url);
 
-    val solver = Solver(cspomProblem)._1
+    val solver = Solver(cspomProblem)
 
-    println(solver.problem.toString)
-
-    logger.info(solver.problem.toString)
+    logger.info(solver.concreteProblem.toString)
 
     solver.toIterable.headOption.map { sol =>
-      println(sol.toSeq.sortBy((_._1)))
-
       if (test) {
-        val failed = XCSPConcrete.control(sol, data('variables).asInstanceOf[Seq[String]], url)
+        val failed = XCSPConcrete.controlCSPOM(sol, data('variables).asInstanceOf[Seq[String]], url)
         for (f <- failed) {
           fail(sol + "\n" + f)
         }
@@ -204,13 +200,13 @@ object SolvingTest extends LazyLogging {
     val url = getClass.getResource(name)
     val (cspomProblem, data) = CSPOM.load(url);
 
-    val solver = Solver(cspomProblem)._1
+    val solver = Solver(cspomProblem)
 
     solver.foldLeft(0) {
       (count, sol) =>
         //logger.info(solution.toString)
         assert {
-          val failed = XCSPConcrete.control(sol, data('variables).asInstanceOf[Seq[String]], url)
+          val failed = XCSPConcrete.controlCSPOM(sol, data('variables).asInstanceOf[Seq[String]], url)
           for (f <- failed) {
             fail(1 + count + "th solution: " + f)
           }

@@ -2,6 +2,7 @@ package concrete.runner
 
 import cspom.StatisticsManager
 import scala.xml.NodeSeq
+import concrete.Variable
 
 class ConsoleWriter extends ConcreteWriter {
 
@@ -20,7 +21,7 @@ class ConsoleWriter extends ConcreteWriter {
     Console.println("% " + problem)
   }
 
-  def solution(solution: Option[Map[String, Any]], concrete: ConcreteRunner) {
+  def solution(solution: Option[Map[Variable, Any]], concrete: ConcreteRunner) {
     solution match {
       case Some(solution) => Console.println(concrete.output(solution))
       case None => unsat = true

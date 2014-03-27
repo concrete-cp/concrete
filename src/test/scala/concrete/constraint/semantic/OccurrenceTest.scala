@@ -63,11 +63,11 @@ class OccurrenceTest {
       ctr(occ === occurrence(7, v1, v2, v3, v4, v5))
     }
 
-    val s = Solver(problem)._1
-    val c = s.problem.constraints.collectFirst {
+    val s = Solver(problem)
+    val c = s.concreteProblem.constraints.collectFirst {
       case c: OccurrenceVar => c
     } get
-    val occ = s.problem.variable("occ")
+    val occ = s.concreteProblem.variable("occ")
 
     assertEquals(Seq(0), c.revise())
 

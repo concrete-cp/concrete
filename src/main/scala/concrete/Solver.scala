@@ -19,23 +19,23 @@
 
 package concrete;
 
-import java.util.logging.Level
 import java.util.logging.Logger
 import scala.annotation.tailrec
 import scala.collection.JavaConversions
-import concrete.filter.Filter
-import concrete.generator.ProblemGenerator
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import concrete.util.Waker
-import concrete.constraint.extension.MDD
-import cspom.CSPOM
-import cspom.Statistic
 import concrete.constraint.TupleEnumerator
 import concrete.constraint.extension.ReduceableExt
-import cspom.compiler.ProblemCompiler
+import concrete.filter.Filter
+import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
+import cspom.CSPOM
+import cspom.Statistic
 import cspom.StatisticsManager
+import cspom.compiler.ProblemCompiler
 import cspom.variable.CSPOMVariable
+import cspom.variable.CSPOMSeq
+import cspom.variable.CSPOMExpression
+import cspom.variable.CSPOMConstant
 
 object Solver {
   @Parameter("solver")
@@ -52,14 +52,49 @@ object Solver {
     solverClass.getConstructor(classOf[Problem]).newInstance(problem);
   }
 
-  def apply(cspom: CSPOM): (Solver, Map[CSPOMVariable[_], Variable]) = {
+  def apply(cspom: CSPOM): CSPOMSolver = {
     ProblemCompiler.compile(cspom, ConcretePatterns())
     val (problem, variables) = ProblemGenerator.generate(cspom)
-    (Solver(problem), variables)
+    new CSPOMSolver(Solver(problem), cspom, variables)
   }
 }
 
-abstract class Solver(val problem: Problem) extends Iterator[Map[String, Any]] with LazyLogging {
+class CSPOMSolver(
+  private val solver: Solver,
+  private val cspom: CSPOM,
+  private val variables: Map[CSPOMVariable[_], Variable]) extends Iterator[Map[String, Any]] {
+
+  def hasNext = solver.hasNext
+
+  def next() = {
+    val sol = solver.next
+
+    cspom.namedExpressions.flatMap {
+      case (n, e) => concrete2CspomSol(n, e, sol)
+    }
+
+  }
+
+  private def concrete2CspomSol(name: String, expr: CSPOMExpression[_], sol: Map[Variable, Any]): Map[String, Any] = {
+    expr match {
+      case seq: CSPOMSeq[_] => (seq.values zip seq.definedIndices).flatMap {
+        case (v, i) => concrete2CspomSol(s"$name[$i]", v, sol)
+      } toMap
+      case const: CSPOMConstant[_] => Map(name -> const.value)
+      case variable: CSPOMVariable[_] => Map(name -> sol(variables(variable)))
+    }
+  }
+
+  def maximize(v: String) = solver.maximize(variables(cspom.variable(v)))
+
+  def minimize(v: String) = solver.minimize(variables(cspom.variable(v)))
+
+  def concreteProblem = solver.problem
+
+  def statistics = solver.statistics
+}
+
+abstract class Solver(val problem: Problem) extends Iterator[Map[Variable, Any]] with LazyLogging {
 
   @Statistic
   var preproRemoved = 0
@@ -82,12 +117,12 @@ abstract class Solver(val problem: Problem) extends Iterator[Map[String, Any]] w
   statistics.register("problemGenerator", ProblemGenerator)
 
   private var _next: SolverResult = UNKNOWNResult
-  
+
   private var _minimize: Option[Variable] = None
   private var _maximize: Option[Variable] = None
   def minimize(v: Variable) { _maximize = None; _minimize = Some(v) }
   def maximize(v: Variable) { _minimize = None; _maximize = Some(v) }
-  
+
   def isOptimizer = _maximize.nonEmpty || _minimize.nonEmpty
 
   def next() = _next match {
@@ -98,7 +133,7 @@ abstract class Solver(val problem: Problem) extends Iterator[Map[String, Any]] w
       for (v <- _maximize) {
         reset()
         try {
-          v.dom.removeTo(v.dom.index(sol(v.name).asInstanceOf[Int]))
+          v.dom.removeTo(v.dom.index(sol(v).asInstanceOf[Int]))
         } catch {
           case e: UNSATException => _next = UNSAT
         }
@@ -106,7 +141,7 @@ abstract class Solver(val problem: Problem) extends Iterator[Map[String, Any]] w
       for (v <- _minimize) {
         reset()
         try {
-          v.dom.removeFrom(v.dom.index(sol(v.name).asInstanceOf[Int]))
+          v.dom.removeFrom(v.dom.index(sol(v).asInstanceOf[Int]))
         } catch {
           case e: UNSATException => _next = UNSAT
         }
@@ -144,9 +179,9 @@ abstract class Solver(val problem: Problem) extends Iterator[Map[String, Any]] w
 
   def reset()
 
-  protected def extractSolution = problem.variables.map(v => (v.name, v.dom)).map {
-    case (name, dom: IntDomain) => name -> dom.firstValue
-    case (name, dom: BooleanDomain) => name -> dom.canBe(true)
+  protected def extractSolution: Map[Variable, Any] = problem.variables.map(v => (v, v.dom)).map {
+    case (variable, dom: IntDomain) => variable -> dom.firstValue
+    case (variable, dom: BooleanDomain) => variable -> dom.canBe(true)
   } toMap
 
   final def preprocess(filter: Filter): Boolean = {
@@ -176,16 +211,16 @@ abstract class Solver(val problem: Problem) extends Iterator[Map[String, Any]] w
 
 sealed trait SolverResult {
   def isSat: Boolean
-  def get: Map[String, Any]
-  def getNum: Map[String, Number] = get map {
+  def get: Map[Variable, Any]
+  def getNum: Map[Variable, Number] = get map {
     case (s, i) => (s, i.asInstanceOf[Number])
   }
-  def getInteger: java.util.Map[String, java.lang.Integer] = JavaConversions.mapAsJavaMap(get map {
+  def getInteger: java.util.Map[Variable, java.lang.Integer] = JavaConversions.mapAsJavaMap(get map {
     case (s, i) => (s, i.asInstanceOf[java.lang.Integer])
   })
 }
 
-case class SAT(val solution: Map[String, Any]) extends SolverResult {
+case class SAT(val solution: Map[Variable, Any]) extends SolverResult {
   def isSat = true
   def get = solution
   override def toString = "SAT: " + solution.toString

@@ -120,13 +120,13 @@ object FZConcrete extends ConcreteRunner with App {
     }
   }
 
-  def constantOrErr(solution: Map[String, Any]): PartialFunction[String, Any] = {
+  def constantOrErr(solution: Map[Variable, Any]): PartialFunction[String, Any] = {
     case n: String => getConstant(n).getOrElse(throw new MatchError(s"could not find $n in $solution or $cProblem"))
   }
 
-  override def output(solution: Map[String, Any]) = {
+  override def output(solution: Map[Variable, Any]) = {
     val sol1 = solution.flatMap {
-      case (s, a) => s.split("\\|\\|").map(_ -> a)
+      case (s, a) => s.name.split("\\|\\|").map(_ -> a)
     }
 
     val sol = sol1.orElse(constantOrErr(solution))
@@ -150,7 +150,7 @@ object FZConcrete extends ConcreteRunner with App {
     //flatSolution(solution, variables).mkString(" ")
   }
 
-  def control(solution: Map[String, Any]) = ???
+  def control(solution: Map[Variable, Any]) = ???
 
   run(args)
 

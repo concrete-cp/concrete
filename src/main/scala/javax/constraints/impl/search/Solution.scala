@@ -1,8 +1,14 @@
 package javax.constraints.impl.search
 
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import concrete.Variable
 
-class Solution(sol: Map[String, Int]) extends javax.constraints.Solution with LazyLogging {
+class Solution(sol: Map[Variable, Int]) extends javax.constraints.Solution with LazyLogging {
+
+  private lazy val namedSol = sol.map {
+    case (k, v) => k.name -> v
+  }
+
   def getAt(x$1: String): Int = ???
   def getMax(x$1: Int): Int = ???
   def getMax(x$1: String): Int = ???
@@ -17,7 +23,7 @@ class Solution(sol: Map[String, Int]) extends javax.constraints.Solution with La
   def getSolutionNumber(): Int = ???
   def getSolver(): javax.constraints.Solver = ???
   def getValue(x$1: Int): Int = ???
-  def getValue(name: String): Int = sol(name)
+  def getValue(name: String): Int = namedSol(name)
   def isBound(): Boolean = ???
   def isBound(x$1: Int): Boolean = ???
   def isBound(x$1: String): Boolean = ???

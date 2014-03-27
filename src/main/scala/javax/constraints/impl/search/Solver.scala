@@ -7,6 +7,7 @@ import concrete.generator.ProblemGenerator
 import javax.constraints.ProblemState
 import concrete.ParameterManager
 import concrete.MAC
+import concrete.Variable
 
 class Solver(problem: javax.constraints.impl.Problem) extends javax.constraints.impl.search.AbstractSolver(problem) {
   val cspom = problem.cspom
@@ -16,7 +17,7 @@ class Solver(problem: javax.constraints.impl.Problem) extends javax.constraints.
   // Members declared in 	 javax.constraints.impl.search.AbstractSolver
   def applySolution(x$1: javax.constraints.Solution): Boolean = ???
 
-  private def concreteSol(s: Map[String, Any]) = {
+  private def concreteSol(s: Map[Variable, Any]) = {
     new Solution(
       s.mapValues(_.asInstanceOf[Int]))
   }
@@ -50,8 +51,8 @@ class Solver(problem: javax.constraints.impl.Problem) extends javax.constraints.
 
   override def findOptimalSolution(objective: Objective, variable: Var): Solution = {
     objective match {
-      case Objective.MAXIMIZE => ???//concreteSolver.maximize(variable.getName)
-      case Objective.MINIMIZE => ???//concreteSolver.minimize(variable.getName)
+      case Objective.MAXIMIZE => ??? //concreteSolver.maximize(variable.getName)
+      case Objective.MINIMIZE => ??? //concreteSolver.minimize(variable.getName)
     }
     concreteSolver.toIterable.lastOption.map(concreteSol).getOrElse(null)
 

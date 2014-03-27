@@ -38,6 +38,7 @@ import java.net.InetAddress
 import concrete.Parameter
 import concrete.ParameterManager
 import MyPGDriver.simple._
+import concrete.Variable
 
 
 object SQLWriter {
@@ -264,13 +265,13 @@ final class SQLWriter(jdbcUri: URI) extends ConcreteWriter {
     executionId
   }
 
-  def outputFormat(solution: Option[Map[String, Any]], concrete: ConcreteRunner) =
+  def outputFormat(solution: Option[Map[Variable, Any]], concrete: ConcreteRunner) =
     solution match {
       case Some(solution) => concrete.output(solution)
       case None => "UNSAT"
     }
 
-  def solution(solution: Option[Map[String, Any]], concrete: ConcreteRunner) {
+  def solution(solution: Option[Map[Variable, Any]], concrete: ConcreteRunner) {
     require(executionId >= 0, "Problem description or parameters were not defined")
     val sol = outputFormat(solution, concrete)
     db.withSession { implicit session =>

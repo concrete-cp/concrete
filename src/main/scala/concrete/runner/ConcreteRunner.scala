@@ -180,7 +180,7 @@ trait ConcreteRunner {
     }
   }
 
-  def solution(sol: Option[Map[String, Any]], writer: ConcreteWriter, opt: Map[Symbol, Any]) {
+  def solution(sol: Option[Map[Variable, Any]], writer: ConcreteWriter, opt: Map[Symbol, Any]) {
     writer.solution(sol, this)
     for (
       s <- sol if opt.contains('Control);
@@ -190,13 +190,13 @@ trait ConcreteRunner {
     }
   }
 
-  def output(solution: Map[String, Any]): String = {
-    cProblem.namedExpressions.collect {
-      case (name, variable) if (!variable.hasParam("var_is_introduced")) => s"$name = ${solution(name)}"
+  def output(solution: Map[Variable, Any]): String = {
+    solution.map {
+      case (variable, value) => s"${variable.name} = $value"
     }.mkString("\n")
   }
 
-  def control(solution: Map[String, Any]): Option[String]
+  def control(solution: Map[Variable, Any]): Option[String]
 
 }
 
