@@ -26,7 +26,6 @@ import java.security.MessageDigest
 import cspom.StatisticsManager
 import cspom.CSPOM
 import java.security.InvalidParameterException
-import scala.slick.driver.PostgresDriver.simple._
 import scala.xml.NodeSeq
 import concrete.runner.ConcreteRunner
 import concrete.runner.ConcreteWriter
@@ -38,6 +37,8 @@ import SQLWriter._
 import java.net.InetAddress
 import concrete.Parameter
 import concrete.ParameterManager
+import MyPGDriver.simple._
+
 
 object SQLWriter {
 
