@@ -39,7 +39,7 @@ import concrete.Parameter
 import concrete.ParameterManager
 import MyPGDriver.simple._
 import concrete.Variable
-
+import scala.slick.jdbc.StaticQuery.interpolation
 
 object SQLWriter {
 
@@ -117,6 +117,8 @@ object SQLWriter {
 
   val configs = TableQuery[Config]
 
+  def findConfigByMD5 = configs.findBy(_.md5)
+
   class Execution(tag: Tag) extends Table[(Int, String, Int, Int, Timestamp, Option[Timestamp], Option[String], Option[String])](tag, "Execution") {
     def executionId = column[Int]("executionId", O.PrimaryKey, O.AutoInc)
     def version = column[String]("version")
@@ -168,58 +170,31 @@ final class SQLWriter(jdbcUri: URI) extends ConcreteWriter {
 
   //createTables()
 
-  var executionId: Int = -1
+  var executionId: Option[Int] = None
 
-  private var configId: Int = -1
+  private var configId: Option[Int] = None
 
-  private var problemId: Int = -1
+  private var problemId: Option[Int] = None
 
   private def version: String = s"${Solver.VERSION}/${CSPOM.VERSION}"
 
   def parameters(params: NodeSeq) {
-    configId = config(params.toString)
-    if (problemId >= 0 && executionId < 0) {
-      executionId = execution(problemId, configId, version)
-    }
+    configId = Some(config(params.toString))
+    executionId = execution(problemId, configId, version)
   }
 
   def problem(name: String) {
 
-    problemId = db.withSession {
+    problemId = Some(db.withSession {
       implicit session =>
 
         findProblemByName(name).firstOption.map(_._1).getOrElse {
           problems.map(p => p.name) returning problems.map(_.problemId) += name
         }
 
-    }
-    if (configId >= 0 && executionId < 0) {
-      executionId = execution(problemId, configId, version)
-    }
+    })
+    executionId = execution(problemId, configId, version)
   }
-
-  //connection.close();
-
-  //  private def createTables() {
-  //    db.withDynSession {
-  //      SQLWriter.problems.ddl
-  //    }
-  //  }
-  //
-  //  private def problemId(description: String) =
-  //
-  //    db.withSession {
-  //      problem
-  //      sql"""
-  //        SELECT problemId
-  //        FROM Problems
-  //        WHERE name = $description""".as[Int].firstOption getOrElse
-  //        sql"""
-  //              INSERT INTO Problems(name)
-  //              VALUES ($description)
-  //              RETURNING problemId
-  //              """.as[Int].first
-  //    }
 
   private def config(options: String) = {
     val istr = new ByteArrayInputStream(options.getBytes)
@@ -248,44 +223,40 @@ final class SQLWriter(jdbcUri: URI) extends ConcreteWriter {
 
   }
 
-  private def execution(problemId: Int, configId: Int, version: String) = {
-    print(s"Problem $problemId, config $configId, version $version")
+  private def execution(problemId: Option[Int], configId: Option[Int], version: String) = {
+    for (p <- problemId; c <- configId) yield {
+      print(s"Problem $p, config $c, version $version")
 
-    val executionId = db.withSession { implicit session =>
-      executions.map(e =>
-        (e.problemId, e.configId, e.version, e.start, e.hostname)) returning
-        executions.map(_.executionId) += ((
-          problemId, configId, version, SQLWriter.now.run,
-          Some(InetAddress.getLocalHost.getHostName)))
+      val executionId = db.withSession { implicit session =>
+        executions.map(e =>
+          (e.problemId, e.configId, e.version, e.start, e.hostname)) returning
+          executions.map(_.executionId) += ((
+            p, c, version, SQLWriter.now.run,
+            Some(InetAddress.getLocalHost.getHostName)))
+      }
+
+      println(s", execution $executionId")
+      executionId
     }
-    //    catch {
-    //      case e: SQLException => throw new IllegalArgumentException(e.getMessage())
-    //    }
-    println(s", execution $executionId")
-    executionId
   }
 
-  def outputFormat(solution: Option[Map[Variable, Any]], concrete: ConcreteRunner) =
-    solution match {
-      case Some(solution) => concrete.output(solution)
-      case None => "UNSAT"
-    }
+  def solution(solution: String) {
+    require(executionId.nonEmpty, "Problem description or parameters were not defined")
 
-  def solution(solution: Option[Map[Variable, Any]], concrete: ConcreteRunner) {
-    require(executionId >= 0, "Problem description or parameters were not defined")
-    val sol = outputFormat(solution, concrete)
     db.withSession { implicit session =>
 
-      executions.filter(_.executionId === executionId).map(_.solution).update(Some(sol))
+      executions.filter(_.executionId === executionId.get).map(_.solution).update(Some(solution))
 
     }
   }
 
   def write(stats: StatisticsManager) {
-    db.withSession { implicit session =>
-      for ((key, value) <- stats.digest) {
-        statistic += ((key, executionId, value.toString))
-        //sqlu"INSERT INTO statistics(name, executionId, value) VALUES ($key, $executionId, ${value.toString})".execute
+    for (e <- executionId) {
+      db.withSession { implicit session =>
+        for ((key, value) <- stats.digest) {
+          statistic += ((key, e, value.toString))
+          //sqlu"INSERT INTO statistics(name, executionId, value) VALUES ($key, $executionId, ${value.toString})".execute
+        }
       }
     }
   }
@@ -293,9 +264,10 @@ final class SQLWriter(jdbcUri: URI) extends ConcreteWriter {
   def error(e: Throwable) {
     //println(e.toString)
     e.printStackTrace()
-    db.withSession { implicit session =>
-      val ex = executions.findBy(_.executionId).apply(executionId).first
-      //.map(_.solution) //.update(Some(e.toString))
+    for (e <- executionId) {
+      db.withSession { implicit session =>
+        executions.filter(_.executionId === e).map(_.solution).update(Some(e.toString))
+      }
     }
     //    db.withSession {
     //      sqlu"UPDATE executions SET solution=${e.toString} WHERE executionId=$executionId".execute
@@ -303,10 +275,11 @@ final class SQLWriter(jdbcUri: URI) extends ConcreteWriter {
   }
 
   def disconnect() {
+    for (e <- executionId) {
+      db.withSession { implicit session =>
+        executions.filter(_.executionId === e).map(_.end).update(Some(SQLWriter.now.run))
+      }
 
-    db.withSession { implicit session =>
-      executions.filter(_.executionId === executionId).map(_.end).update(Some(SQLWriter.now.run))
-      //sqlu"""UPDATE executions SET "end" = CURRENT_TIMESTAMP where executionId = $executionId""".execute
     }
   }
 

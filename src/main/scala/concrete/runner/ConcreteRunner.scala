@@ -12,10 +12,8 @@ import concrete.Problem
 import concrete.Solver
 import concrete.Variable
 import concrete.generator.ProblemGenerator
-import concrete.generator.cspompatterns.ConcretePatterns
-import concrete.util.Waker
 import concrete.runner.sql.SQLWriter
-import cspom.CSPOM
+import concrete.util.Waker
 import cspom.Statistic
 import cspom.StatisticsManager
 import cspom.TimedException
@@ -63,20 +61,9 @@ trait ConcreteRunner {
     case u :: tail => options(tail, o, u :: unknown)
   }
 
-  var _cProblem: Option[CSPOM] = None
+  def load(args: List[String]): concrete.Problem
 
-  def cProblem = _cProblem.get
-
-  def load(args: List[String]): (Problem, Map[CSPOMVariable[_], Variable]) = {
-    val cspom = loadCSPOM(args)
-    ProblemCompiler.compile(cspom, ConcretePatterns())
-    _cProblem = Some(cspom)
-    ProblemGenerator.generate(cspom)
-  }
-
-  def loadCSPOM(args: List[String]): CSPOM = ???
-
-  def applyParameters(s: Solver, variables: Map[CSPOMVariable[_], Variable]): Unit = {}
+  def applyParameters(s: Solver): Unit = {}
 
   def description(args: List[String]): String
 
@@ -113,39 +100,41 @@ trait ConcreteRunner {
     writer.problem(description(remaining))
 
     val statistics = new StatisticsManager()
-    statistics.register("concrete", this)
-
-    var sstats: Option[StatisticsManager] = None
+    statistics.register("runner", this)
+    statistics.register("problemCompiler", ProblemCompiler)
+    statistics.register("problemGenerator", ProblemGenerator)
 
     val waker = new Timer()
     try {
 
-      val (solver, variables) = try {
-        val (solver, lT) = StatisticsManager.time {
-          val (problem, variables) = load(remaining)
-          (Solver(problem), variables)
+      val problem = try {
+        val (problem, lT) = StatisticsManager.time {
+          load(remaining)
         }
         loadTime = lT
-        solver
+        problem
       } catch {
         case e: TimedException =>
           loadTime = e.time
+          // Required to obtain a configId
+          writer.parameters(ParameterManager.toXML)
           throw e.getCause()
       }
 
-      applyParameters(solver, variables)
-      //println(solver.problem)
-
+      val solver = Solver(problem)
+      // Loading the solver will initialize many parameters
       writer.parameters(ParameterManager.toXML)
+
+      statistics.register("solver", solver)
+      applyParameters(solver)
+      //println(solver.problem)
 
       for (t <- opt.get('Time)) {
         waker.schedule(new Waker(Thread.currentThread()), t.asInstanceOf[Int] * 1000);
       }
 
-      sstats = Some(solver.statistics)
-
       optimize match {
-        case "sat" => solution(solver.toIterable.headOption, writer, opt)
+        case "sat" =>
         case "min" =>
           solver.minimize(solver.problem.variable(optimizeVar))
         case "max" =>
@@ -153,7 +142,7 @@ trait ConcreteRunner {
       }
 
       if (solver.isOptimizer) {
-        if (solver.isEmpty) {
+        if (!solver.hasNext) {
           solution(None, writer, opt)
         } else for (s <- solver) {
           solution(Some(s), writer, opt)
@@ -162,38 +151,34 @@ trait ConcreteRunner {
         solution(solver.toIterable.headOption, writer, opt)
       }
 
-      writer.write(statistics)
-      writer.write(sstats.get)
     } catch {
-      case e: Exception =>
-        writer.error(e)
-        writer.write(statistics)
-        sstats.foreach(writer.write)
-
       case e: Throwable =>
-        sstats = None
         writer.error(e)
 
     } finally {
       waker.cancel()
+      writer.write(statistics)
       writer.disconnect()
     }
   }
 
-  def solution(sol: Option[Map[Variable, Any]], writer: ConcreteWriter, opt: Map[Symbol, Any]) {
-    writer.solution(sol, this)
-    for (
-      s <- sol if opt.contains('Control);
-      failed <- control(s)
-    ) {
-      throw new IllegalStateException("Falsified constraints : " + failed)
+  final def solution(sol: Option[Map[Variable, Any]], writer: ConcreteWriter, opt: Map[Symbol, Any]): Unit = {
+    writer.solution(output(sol))
+    if (opt.contains('Control)) {
+      for (s <- sol; failed <- control(s)) {
+        throw new IllegalStateException("Falsified constraints : " + failed)
+      }
     }
   }
 
-  def output(solution: Map[Variable, Any]): String = {
-    solution.map {
-      case (variable, value) => s"${variable.name} = $value"
-    }.mkString("\n")
+  def output(solution: Option[Map[Variable, Any]]): String = {
+    solution match {
+      case None => "UNSAT"
+      case Some(s) => s.map {
+        case (variable, value) => s"${variable.name} = $value"
+      }.mkString("\n")
+    }
+
   }
 
   def control(solution: Map[Variable, Any]): Option[String]

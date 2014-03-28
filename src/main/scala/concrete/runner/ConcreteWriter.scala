@@ -8,7 +8,7 @@ trait ConcreteWriter {
   def parameters(params: NodeSeq)
   def problem(problem: String)
 
-  def solution(solution: Option[Map[Variable, Any]], concrete: ConcreteRunner)
+  def solution(solution: String)
   def write(stats: StatisticsManager)
   def error(e: Throwable)
 

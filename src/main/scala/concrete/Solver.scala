@@ -66,13 +66,12 @@ class CSPOMSolver(
 
   def hasNext = solver.hasNext
 
-  def next() = {
-    val sol = solver.next
+  def next() = concrete2CspomSol(solver.next)
 
+  def concrete2CspomSol(sol: Map[Variable, Any]): Map[String, Any] = {
     cspom.namedExpressions.flatMap {
       case (n, e) => concrete2CspomSol(n, e, sol)
     }
-
   }
 
   private def concrete2CspomSol(name: String, expr: CSPOMExpression[_], sol: Map[Variable, Any]): Map[String, Any] = {
@@ -113,8 +112,6 @@ abstract class Solver(val problem: Problem) extends Iterator[Map[Variable, Any]]
   statistics.register("enumerator", TupleEnumerator)
   statistics.register("relation", ReduceableExt)
   statistics.register("domain", Domain)
-  statistics.register("problemCompiler", ProblemCompiler)
-  statistics.register("problemGenerator", ProblemGenerator)
 
   private var _next: SolverResult = UNKNOWNResult
 

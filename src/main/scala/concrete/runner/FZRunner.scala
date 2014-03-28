@@ -23,8 +23,9 @@ import java.security.InvalidParameterException
 import concrete.Variable
 import concrete.Solver
 import cspom.variable.CSPOMExpression
+import concrete.CSPOMSolver
 
-object FZConcrete extends ConcreteRunner with App {
+object FZConcrete extends CSPOMRunner with App {
 
   var file: URL = _
 
@@ -78,16 +79,15 @@ object FZConcrete extends ConcreteRunner with App {
     cspom
   }
 
-  override def applyParameters(solver: Solver, variables: Map[CSPOMVariable[_], Variable]) = {
-
+  override def applyParametersCSPOM(solver: CSPOMSolver) = {
     goal.mode match {
       case Satisfy =>
       case Maximize(expr) =>
-        val e = expr.toCSPOM(_cProblem.get.namedExpressions).asInstanceOf[CSPOMVariable[_]]
-        solver.maximize(variables(e))
+        val e = expr.toCSPOM(cspom.namedExpressions)
+        solver.maximize(cspom.namesOf(e).head)
       case Minimize(expr) =>
-        val e = expr.toCSPOM(_cProblem.get.namedExpressions).asInstanceOf[CSPOMVariable[_]]
-        solver.minimize(variables(e))
+        val e = expr.toCSPOM(cspom.namedExpressions)
+        solver.minimize(cspom.namesOf(e).head)
       case _ => throw new InvalidParameterException("Cannot execute goal " + goal)
     }
   }
@@ -115,42 +115,39 @@ object FZConcrete extends ConcreteRunner with App {
     }
 
   private def getConstant(n: String): Option[Any] = {
-    cProblem.expression(n).collect {
+    cspom.expression(n).collect {
       case CSPOMConstant(v) => v
     }
   }
 
   def constantOrErr(solution: Map[Variable, Any]): PartialFunction[String, Any] = {
-    case n: String => getConstant(n).getOrElse(throw new MatchError(s"could not find $n in $solution or $cProblem"))
+    case n: String => getConstant(n).getOrElse(throw new MatchError(s"could not find $n in $solution or $cspom"))
   }
 
-  override def output(solution: Map[Variable, Any]) = {
-    val sol1 = solution.flatMap {
-      case (s, a) => s.name.split("\\|\\|").map(_ -> a)
+  override def outputCSPOM(solution: Option[Map[String, Any]]) =
+    solution.map { sol =>
+      val out: Iterable[String] = outputVars.map {
+        n => s"$n = ${sol(n)} ;"
+      } ++ outputArrays.map {
+        case (n, ranges) =>
+          val CSPOMSeq(_, initRange, _) =
+            cspom.namedExpressions.getOrElse(n, throw new MatchError(s"could not find $n in $cspom"))
+          require(initRange.size == flattenedSize(ranges))
+          val solutions = initRange.map(i => sol(s"$n[$i]"))
+
+          s"$n = array${ranges.size}d(${
+            ranges.map(range => s"${range.head}..${range.last}, ").mkString
+          }${solutions.mkString("[", ", ", "]")});"
+
+      }
+
+      out.mkString("\n") + "\n----------\n"
+      //flatSolution(solution, variables).mkString(" ")
+    } getOrElse {
+      "\n=====UNSATISFIABLE=====\n"
     }
 
-    val sol = sol1.orElse(constantOrErr(solution))
-
-    val out: Iterable[String] = outputVars.map {
-      n => s"$n = ${sol(n)} ;"
-    } ++ outputArrays.map {
-      case (n, ranges) =>
-        val CSPOMSeq(variables, initRange, _) =
-          cProblem.namedExpressions.getOrElse(n, throw new MatchError(s"could not find $n in $solution or $cProblem"))
-        require(initRange.size == flattenedSize(ranges))
-        val solutions = initRange.map(i => sol(s"$n[$i]"))
-
-        s"$n = array${ranges.size}d(${
-          ranges.map(range => s"${range.head}..${range.last}, ").mkString
-        }${solutions.mkString("[", ", ", "]")});"
-
-    }
-
-    out.mkString("\n") + "\n----------\n"
-    //flatSolution(solution, variables).mkString(" ")
-  }
-
-  def control(solution: Map[Variable, Any]) = ???
+  def controlCSPOM(solution: Map[String, Any]) = ???
 
   run(args)
 

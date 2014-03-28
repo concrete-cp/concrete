@@ -9,20 +9,23 @@ import abscon.instance.components.PVariable
 import scala.collection.JavaConversions
 import concrete.Variable
 import cspom.variable.CSPOMVariable
+import concrete.CSPOMSolver
 
-object XCSPConcrete extends ConcreteRunner with App {
+object XCSPConcrete extends CSPOMRunner with App {
 
   var file: URL = _
 
-  var variables: Seq[String] = _
+  var declaredVariables: Seq[String] = _
 
-  override def loadCSPOM(args: List[String]) = {
+  def loadCSPOM(args: List[String]) = {
     val List(fn) = args
     file = new URL(fn)
     val cspom = CSPOM.load(file)
-    variables = cspom._2('variables).asInstanceOf[Seq[String]]
+    declaredVariables = cspom._2('variables).asInstanceOf[Seq[String]]
     cspom._1
   }
+
+  def applyParametersCSPOM(s: CSPOMSolver) = {}
 
   def description(args: List[String]) =
     args match {
@@ -30,24 +33,8 @@ object XCSPConcrete extends ConcreteRunner with App {
       case _ => throw new IllegalArgumentException(args.toString)
     }
 
-  override def output(solution: Map[Variable, Any]) = {
-    flatSolution(solution, variables).mkString(" ")
-  }
-
-  def flatSolution(solution: Map[Variable, Any], variables: Iterable[String]): Iterable[Any] = {
-    val sol = solution.flatMap {
-      case (variable, v) => variable.name.split("\\|\\|").map(_ -> v)
-    }
-    variables map sol
-
-  }
-
-  def control(solution: Map[Variable, Any]) = {
-    control(solution, variables, file)
-  }
-
-  def control(solution: Map[Variable, Any], variables: Iterable[String], file: URL) = {
-    new SolutionChecker(file).checkSolution(flatSolution(solution, variables).map(_.asInstanceOf[Int]).toIndexedSeq)
+  def controlCSPOM(solution: Map[String, Any]) = {
+    controlCSPOM(solution, declaredVariables, file)
   }
 
   def controlCSPOM(solution: Map[String, Any], variables: Iterable[String], file: URL) = {

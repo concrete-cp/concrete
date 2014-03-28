@@ -29,7 +29,7 @@ object Problem {
 }
 
 final class Problem(val variables: List[Variable]) {
-  require(variables.nonEmpty, "A problem with no variables makes no sense")
+  //require(variables.nonEmpty, "A problem with no variables makes no sense")
   require(variables.map(_.name).distinct.size == variables.size, "Duplicates in variable names")
 
   def this(variables: Variable*) = this(variables.toList)
@@ -117,7 +117,7 @@ final class Problem(val variables: List[Variable]) {
   }
 
   def maxDomainSize = {
-    if (_maxDomainSize < 0) {
+    if (_maxDomainSize < 0 && variables.nonEmpty) {
       _maxDomainSize = variables map { _.dom.size } max
     }
     _maxDomainSize

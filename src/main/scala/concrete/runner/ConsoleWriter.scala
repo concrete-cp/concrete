@@ -6,7 +6,7 @@ import concrete.Variable
 
 class ConsoleWriter extends ConcreteWriter {
 
-  var unsat = false
+  var sat = false
 
   def parameters(params: NodeSeq) {
     for (p <- params \\ "p") {
@@ -21,11 +21,9 @@ class ConsoleWriter extends ConcreteWriter {
     Console.println("% " + problem)
   }
 
-  def solution(solution: Option[Map[Variable, Any]], concrete: ConcreteRunner) {
-    solution match {
-      case Some(solution) => Console.println(concrete.output(solution))
-      case None => unsat = true
-    }
+  def solution(sol: String) {
+    sat = true
+    Console.println(sol)
   }
 
   def write(stats: StatisticsManager) {
@@ -42,9 +40,7 @@ class ConsoleWriter extends ConcreteWriter {
   }
 
   def disconnect() {
-    if (unsat) {
-      Console.println("=====UNSATISFIABLE=====")
-    } else {
+    if (sat) {
       Console.println("==========")
     }
   }
