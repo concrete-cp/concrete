@@ -255,7 +255,6 @@ final class SQLWriter(jdbcUri: URI) extends ConcreteWriter {
       db.withSession { implicit session =>
         for ((key, value) <- stats.digest) {
           statistic += ((key, e, value.toString))
-          //sqlu"INSERT INTO statistics(name, executionId, value) VALUES ($key, $executionId, ${value.toString})".execute
         }
       }
     }
@@ -269,9 +268,6 @@ final class SQLWriter(jdbcUri: URI) extends ConcreteWriter {
         executions.filter(_.executionId === e).map(_.solution).update(Some(e.toString))
       }
     }
-    //    db.withSession {
-    //      sqlu"UPDATE executions SET solution=${e.toString} WHERE executionId=$executionId".execute
-    //    }
   }
 
   def disconnect() {
@@ -279,7 +275,6 @@ final class SQLWriter(jdbcUri: URI) extends ConcreteWriter {
       db.withSession { implicit session =>
         executions.filter(_.executionId === e).map(_.end).update(Some(SQLWriter.now.run))
       }
-
     }
   }
 
