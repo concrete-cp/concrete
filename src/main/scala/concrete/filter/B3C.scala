@@ -42,7 +42,7 @@ final class B3C(val problem: Problem) extends SingletonConsistency with LazyLogg
       } else false
     }
 
-    val itr = variable.dom.indicesIterator
+    val itr = variable.dom.indices
     var itr2 = variable.dom.indicesR
     filterBound(itr.next, itr, false) | filterBound(itr2.next, itr2, false)
   }

@@ -31,8 +31,9 @@ final class RandomValue extends ValueHeuristic {
   }
 
   override def selectIndex(variable: Variable) = {
-    val itr = variable.dom.indicesIterator
-    select(itr, itr.next(), 2)
+    val skip = rand.nextInt(variable.dom.size)
+    variable.dom.indices.drop(skip).next
+
   }
 
 }

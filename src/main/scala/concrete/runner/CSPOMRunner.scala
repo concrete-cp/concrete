@@ -31,7 +31,7 @@ trait CSPOMRunner extends ConcreteRunner {
     applyParametersCSPOM(cspomSolver)
   }
 
-  def applyParametersCSPOM(s: CSPOMSolver)
+  def applyParametersCSPOM(s: CSPOMSolver): Unit = {}
 
   def loadCSPOM(args: List[String]): CSPOM
 

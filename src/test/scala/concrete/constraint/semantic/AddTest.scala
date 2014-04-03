@@ -28,7 +28,7 @@ final class AddTest {
 
   @Test
   def testReviseInt() {
-    val c = new Add(x, y, z);
+    val c = new AddAC(x, y, z);
     AdviseCount.adviseAll(c)
     c.revise()
 
@@ -47,7 +47,7 @@ final class AddTest {
     AdviseCount.adviseAll(c2)
     c2.revise()
 
-    val c = new Add(x, y, z);
+    val c = new AddAC(x, y, z);
     AdviseCount.adviseAll(c)
     assertEquals(Seq(), c.revise())
 

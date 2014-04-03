@@ -17,10 +17,10 @@ final class AbsIntTest {
     val c = new Abs(x, y)
     prob.addConstraint(c)
     AdviseCount.adviseAll(c)
-    assertTrue(c.isBound)
+    assertTrue(c.intervalsOnly)
     assertEquals(Seq(0), c.revise())
     assertEquals(Seq(5), x.dom.values.toSeq)
-    assertTrue(c.isBound)
+    assertTrue(c.intervalsOnly)
   }
 
   @Test
@@ -32,10 +32,10 @@ final class AbsIntTest {
     val c = new Abs(x, y)
     prob.addConstraint(c)
     AdviseCount.adviseAll(c)
-    assertTrue(c.isBound)
+    assertTrue(c.intervalsOnly)
     assertEquals(Seq(1), c.revise())
     assertEquals(Seq(-7, 7), y.dom.values.toSeq)
-    assertFalse(c.isBound)
+    assertFalse(c.intervalsOnly)
     assertTrue(x.dom.bound)
   }
 

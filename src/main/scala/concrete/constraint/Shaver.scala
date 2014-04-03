@@ -10,7 +10,7 @@ trait Shaver extends VariablePerVariable {
   def shave(): List[Int]
 
   final override def revise() = {
-    if (isBound) {
+    if (intervalsOnly) {
       val c = shave()
       assert({ (0 until arity) foreach advise; super.revise().isEmpty }, this + " is not BC")
       entailCheck()
@@ -22,7 +22,7 @@ trait Shaver extends VariablePerVariable {
         super.revise()
       } else {
         /* Shaving may have restored bound consistency */
-        if (isBound) {
+        if (intervalsOnly) {
           c
         } else {
           c.foreach(advise)

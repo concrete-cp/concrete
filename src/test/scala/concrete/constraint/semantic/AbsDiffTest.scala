@@ -1,15 +1,17 @@
 package concrete.constraint.semantic;
 
 import scala.util.Random
+
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+
+import concrete.AdviseCount
+import concrete.IntDomain
+import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
-import concrete.IntDomain
-import concrete.Variable
-import concrete.AdviseCount
 
 final class AbsDiffTest {
 
@@ -27,7 +29,7 @@ final class AbsDiffTest {
 
   @Test
   def testReviseInt() {
-    val c = new AbsDiff(x, y, z);
+    val c = new AbsDiffAC(x, y, z);
     AdviseCount.adviseAll(c)
     c.revise()
 
@@ -47,7 +49,7 @@ final class AbsDiffTest {
     AdviseCount.adviseAll(c2)
     c2.revise()
 
-    val c = new AbsDiff(x, y, z);
+    val c = new AbsDiffAC(x, y, z);
     AdviseCount.adviseAll(c)
 
     assertEquals(List(), c.revise());

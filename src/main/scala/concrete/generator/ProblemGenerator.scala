@@ -49,7 +49,7 @@ object ProblemGenerator extends LazyLogging {
 
       val problem = new Problem(variables.values.toList)
 
-      val failed = fixPoint(cspom.constraints.toSeq, genConstraint(_: CSPOMConstraint[_], variables, problem))
+      val failed = fixPoint(cspom.constraints.toList, genConstraint(_: CSPOMConstraint[_], variables, problem))
 
       val failed2 = if (generateLargeDomains) {
         genLarge(failed, variables, problem)

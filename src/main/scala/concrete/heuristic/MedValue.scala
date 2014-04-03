@@ -15,7 +15,7 @@ final class MedValue extends ValueHeuristic {
 
   override def selectIndex(variable: Variable) = {
     val skip = variable.dom.size / 2
-    variable.dom.indices.drop(skip).head
+    variable.dom.indices.drop(skip).next
   }
 
 }

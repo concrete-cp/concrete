@@ -25,8 +25,6 @@ object XCSPConcrete extends CSPOMRunner with App {
     cspom._1
   }
 
-  def applyParametersCSPOM(s: CSPOMSolver) = {}
-
   def description(args: List[String]) =
     args match {
       case List(fileName) => fileName

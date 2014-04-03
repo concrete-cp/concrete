@@ -21,7 +21,7 @@ final object OccurrenceGenerator extends Generator {
       val value: Int = constraint.params.get("occurrence") match {
         case Some(CSPOMConstant(true)) => 1
         case Some(CSPOMConstant(false)) => 0
-        case Some(p: CSPOMConstant[Int]) => p.value
+        case Some(CSPOMConstant(p: Int)) => p
         case p: Any => throw new IllegalArgumentException(s"Occurrence constraints requires to be parameterized with an int value, found $p")
       }
 
@@ -39,7 +39,7 @@ final object OccurrenceGenerator extends Generator {
         case Const(result) => Some(Seq(new OccurrenceConst(result - constOcc, value, scope.toArray)))
         case Var(result) =>
           if (result.dom.undefined) {
-            Generator.restrictDomain(result, constOcc to (constOcc + scope.count(_.dom.presentVal(value))))
+            Generator.restrictDomain(result, constOcc to (constOcc + scope.count(_.dom.presentVal(value))) iterator)
           }
           Some(Seq(new OccurrenceVar(result, value, scope.toArray, constOcc)))
         case _ => throw new IllegalArgumentException(s"Result must be a variable or constant, was $r")

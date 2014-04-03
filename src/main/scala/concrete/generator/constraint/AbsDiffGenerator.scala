@@ -1,12 +1,13 @@
 package concrete.generator.constraint;
 
-import concrete.constraint.semantic.AbsDiff
 import concrete.{ Variable, Problem, IntDomain }
 import cspom.CSPOMConstraint
 import concrete.UndefinedDomain
 import Generator._
 import concrete.constraint.semantic.AbsDiffConst
 import concrete.constraint.Constraint
+import concrete.constraint.semantic.AbsDiffBC
+import concrete.constraint.semantic.AbsDiffAC
 
 final object AbsDiffGenerator extends Generator {
 
@@ -19,23 +20,23 @@ final object AbsDiffGenerator extends Generator {
       case Seq() => true;
       case Seq(r) if result.is(r) =>
         val values = domainFrom(v0, v1, { case (i, j) => math.abs(i - j) })
-        restrictDomain(r, values)
+        restrictDomain(r, values.iterator)
         true
       case Seq(`v0`) =>
-        restrictDomain(v0, generateValues(result, v1))
+        restrictDomain(v0, generateValues(result, v1).iterator)
         true
       case Seq(`v1`) =>
-        restrictDomain(v1, generateValues(result, v0))
+        restrictDomain(v1, generateValues(result, v0).iterator)
         true
       case _ =>
         false
     }
 
     if (g) {
-      Some(Seq(result match {
-        case Var(r) => new AbsDiff(r, v0, v1)
-        case Const(c) => new AbsDiffConst(c, v0, v1)
-      }))
+      Some(result match {
+        case Var(r) => Seq(new AbsDiffBC(r, v0, v1), new AbsDiffAC(r, v0, v1, true))
+        case Const(c) => Seq(new AbsDiffConst(c, v0, v1))
+      })
     } else {
       None
     }

@@ -1,5 +1,5 @@
 package concrete.runner
-import SQLWriter._
+
 import scala.xml.Node
 import scala.xml.Text
 import scala.xml.NodeSeq
@@ -9,9 +9,7 @@ import java.util.Locale
 import scala.collection.mutable.HashMap
 import scala.annotation.tailrec
 import scala.collection.SortedMap
-import scala.slick.session.Database
 import scala.slick.jdbc.StaticQuery.interpolation
-import Database.threadLocalSession
 import scala.slick.jdbc.GetResult
 import scala.slick.driver.PostgresDriver.simple._
 
@@ -66,7 +64,7 @@ object Table2 extends App {
   Database.forURL("jdbc:postgresql://raihmsvg/concrete",
     user = "concrete",
     password = "Wizcof25",
-    driver = "org.postgresql.Driver") withSession {
+    driver = "org.postgresql.Driver") withSession { implicit session =>
 
       val problems = sql"""
         SELECT problemId, display, nbvars, nbcons, array_to_string(array_agg(tag), ',') as tags

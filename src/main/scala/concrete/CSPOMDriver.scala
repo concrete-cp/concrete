@@ -16,17 +16,10 @@ object CSPOMDriver {
 
   def sum(variables: CSPOMExpression[Int]*)(implicit problem: CSPOM): CSPOMExpression[Int] = {
     sumProd(variables.map((1, _)): _*)(problem)
-    //    val result = IntVariable.free()
-    //    problem.ctr(new CSPOMConstraint(
-    //      'sum,
-    //      Seq[CSPOMExpression](result +: variables, 0),
-    //      Map("mode" -> "SumEq", "coefficients" -> (-1 +: Seq.fill(variables.size)(1)))))
-    //    result
   }
 
   def sumProd(coefVar: (Int, CSPOMExpression[Int])*)(implicit problem: CSPOM): CSPOMExpression[Int] = {
     val (coefs, vars) = coefVar.unzip
-    //problem.isInt('sum, vars, Map("coefficients" -> coefs))
 
     val result = IntVariable.free()
     problem.ctr(CSPOMConstraint(

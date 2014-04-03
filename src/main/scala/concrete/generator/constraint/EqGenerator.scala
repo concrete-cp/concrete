@@ -33,10 +33,10 @@ final object EqGenerator extends Generator {
           throw UNSATObject
         }
       case (Var(a), Const(b)) =>
-        restrictDomain(a, Seq((b - offset) * negFactor))
+        restrictDomain(a, Iterator((b - offset) * negFactor))
         Some(Seq())
       case (Const(a), Var(b)) =>
-        restrictDomain(b, Seq(negFactor * a + offset))
+        restrictDomain(b, Iterator(negFactor * a + offset))
         Some(Seq())
       case (Var(a), Var(b)) =>
         if (a.dom.undefined && b.dom.undefined) {

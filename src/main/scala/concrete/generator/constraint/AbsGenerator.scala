@@ -18,10 +18,10 @@ final object AbsGenerator extends Generator {
       case (Const(result), Const(v0)) =>
         if (result == math.abs(v0)) { Some(Nil) } else { throw UNSATObject }
       case (Const(result), Var(v0)) =>
-        restrictDomain(v0, Seq(result, -result))
+        restrictDomain(v0, Iterator(result, -result))
         Some(Nil)
       case (Var(result), Const(v0)) =>
-        restrictDomain(result, Seq(math.abs(v0)))
+        restrictDomain(result, Iterator(math.abs(v0)))
         Some(Nil)
       case (Var(result), Var(v0)) =>
         if (v0.dom.undefined && result.dom.undefined) {

@@ -16,6 +16,7 @@ import concrete.AdviseCount
 import scala.collection.mutable.HashSet
 import concrete.UNSATObject
 import concrete.UNSATException
+import concrete.constraint.BC
 
 final class HInterval(
   val dom: Domain,
@@ -24,7 +25,7 @@ final class HInterval(
   var maxrank: Int = 0
 }
 
-final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) with AllDiffChecker {
+final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) with BC with AllDiffChecker {
 
   val t = new Array[Int](2 * arity + 2) // Tree links
   val d = new Array[Int](2 * arity + 2) // Diffs between critical capacities
@@ -218,28 +219,12 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
     mod
   }
 
-  def revise() = {
-    val mod = new HashSet[Int]()
-    var ch = true
-    while (ch) {
-      ch = false
-      sortIt();
-      val c2 = filterLower()
-      if (c2.nonEmpty) {
-        mod ++= c2
-        ch = true
-      }
-      val c1 = filterUpper()
-      if (c1.nonEmpty) {
-        mod ++= c1
-        ch = true
-      }
-
-    }
-    mod
+  def shave() = {
+    sortIt()
+    filterLower() ++ filterUpper()
   }
 
-  val eval = ((31 - Integer.numberOfLeadingZeros(arity)) * arity).toInt
+  private val eval: Int = (31 - Integer.numberOfLeadingZeros(arity)) * arity
 
   def advise(p: Int) = eval
 

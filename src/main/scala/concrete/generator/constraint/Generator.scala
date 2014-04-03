@@ -125,9 +125,8 @@ object Generator {
     }
 
   final def domainFrom(x: Variable, y: Variable, f: (Int, Int) => Int): Seq[Int] = {
-    val f2: Seq[Int] => Int = { s =>
-      val Seq(i, j) = s
-      f(i, j)
+    val f2: Seq[Int] => Int = {
+      case Seq(i, j) => f(i, j)
     }
     domainFromVar(Seq(x, y), f2)
   }
@@ -163,7 +162,7 @@ object Generator {
       l.head.iterator.flatMap(i => cartesian(l.tail).map(i +: _))
     }
 
-  final def restrictDomain(v: Variable, values: Traversable[Int]): Unit = v.dom match {
+  final def restrictDomain(v: Variable, values: Iterator[Int]): Unit = v.dom match {
     case UndefinedDomain => v.dom = IntDomain(makeDomain(values.toSeq): _*)
     case d: Domain => d.filterValues(values.toSet)
   }

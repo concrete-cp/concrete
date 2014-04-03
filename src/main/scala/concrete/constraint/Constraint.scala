@@ -210,7 +210,7 @@ abstract class Constraint(val scope: Array[Variable])
       sizes(a, i - 1)
     }
 
-  def isBound = scope.forall(_.dom.bound)
+  def intervalsOnly = scope.forall(_.dom.bound)
 
   @tailrec
   final def cardSize(p: Int = arity - 1, size: Int = 1): Int =

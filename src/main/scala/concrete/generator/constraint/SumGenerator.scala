@@ -28,7 +28,7 @@ final object SumGenerator extends Generator {
     val Seq(CSPOMSeq(vars, _, _), CSPOMConstant(const: Int)) = constraint.arguments //map cspom2concreteVar
 
     val params = constraint.params.get("coefficients") match {
-      case Some(p: Seq[Int]) => p
+      case Some(p: Seq[_]) => p.asInstanceOf[Seq[Int]]
       case None => Seq.fill(vars.length)(1)
       case _ => throw new IllegalArgumentException("Parameters for zero sum must be a sequence of integer values")
     }
@@ -41,7 +41,7 @@ final object SumGenerator extends Generator {
       case (Const(c), p) => c * p
     }.sum
 
-    val Some(mode: FilterSum.Value) = constraint.params.get("mode").collect { case m: String => FilterSum.withName(m) }
+    val mode = constraint.params.get("mode").collect { case m: String => FilterSum.withName(m) }.get
 
     undefinedVar(solverVariables: _*) match {
       case Seq() => go(constant, varParams, solverVariables, mode)
@@ -49,78 +49,14 @@ final object SumGenerator extends Generator {
         val min = (solverVariables zip varParams).map { case (v, p) => if (v eq uv) 0 else v.dom.firstValue * p }.sum
         val max = (solverVariables zip varParams).map { case (v, p) => if (v eq uv) 0 else v.dom.lastValue * p }.sum
         val factor = varParams(solverVariables.indexOf(uv))
-        Generator.restrictDomain(uv, ((Interval(min, max) - constant) / -factor).allValues)
+        Generator.restrictDomain(uv, ((Interval(min, max) - constant) / -factor).allValues.iterator)
         go(constant, varParams, solverVariables, mode)
-      case s => None
+      case _ => None
     }
 
   }
 
   def go(c: Int, params: Seq[Int], solverVariables: Seq[Variable], mode: FilterSum.Value) =
     Some(Seq(new Sum(c, params.toArray, solverVariables.toArray, mode)))
-
-  //      result match {
-  //        case Const(c) => Some(Seq(new Sum(c, params, solverVariables.toArray, mode)))
-  ////        case Var(v) => {
-  //          if (v.dom.undefined) {
-  //            val min = (solverVariables zip params).map { case (v, p) => v.dom.firstValue * p }.sum
-  //            val max = (solverVariables zip params).map { case (v, p) => v.dom.lastValue * p }.sum
-  //            Generator.restrictDomain(v, min to max)
-  //          }
-  //          Some(Seq(new Sum(0, -1 +: params, (v +: solverVariables).toArray, mode)))
-  //        }
-  //        case _ => throw new FailedGenerationException("Variable or constant expected, found " + result)
-  //      }
-
-  @tailrec
-  def sum(domains: List[Seq[Int]], factors: List[Int], f: Seq[Int] => Int, currentSum: Int = 0): Int = {
-    if (domains.isEmpty) {
-      currentSum
-    } else {
-      sum(domains.tail, factors.tail, f, currentSum + f(domains.head) * factors.head)
-    }
-  }
-
-  def zeroSum(variables: List[Variable], factors: List[Int]): MDD = {
-    val domains = variables.map(_.dom.values.toSeq)
-    zeroSum(variables, factors, sum(domains, factors, _.min), sum(domains, factors, _.max))
-  }
-
-  def zeroSum(variables: List[Variable], factors: List[Int], min: Int, max: Int, currentSum: Int = 0,
-    nodes: HashMap[(Int, Int), MDD] = new HashMap()): MDD = {
-    if (variables.isEmpty) {
-      require(currentSum == min && currentSum == max)
-      if (currentSum == 0) {
-        MDDLeaf
-      } else {
-        MDD0
-      }
-    } else if (min > 0) {
-      MDD0
-    } else if (max < 0) {
-      MDD0
-    } else {
-      nodes.getOrElseUpdate((variables.size, currentSum), {
-        val head :: tail = variables
-        val hf :: tf = factors
-        val newMin = min - head.dom.firstValue * hf
-        val newMax = max - head.dom.lastValue * hf
-        val trie = head.indices.
-          map { i =>
-            val v = head.dom.value(i)
-            i -> zeroSum(tail, tf, newMin + v * hf, newMax + v * hf, currentSum + v * hf, nodes)
-          } filter {
-            _._2.nonEmpty
-          } toSeq
-
-        if (trie.isEmpty) {
-          MDD0
-        } else {
-          new MDDn(MDD.newTrie(trie: _*), trie.map(_._1).toArray, trie.length)
-        }
-      })
-
-    }
-  }
 
 }

@@ -15,13 +15,13 @@ final class AddIntTest {
     val y = new Variable("y", IntDomain(5))
     val z = new Variable("z", IntDomain(2))
     val prob = new Problem(x, y, z)
-    val c = new Add(x, y, z)
+    val c = new AddAC(x, y, z)
     prob.addConstraint(c)
     AdviseCount.adviseAll(c)
-    assertTrue(c.isBound)
+    assertTrue(c.intervalsOnly)
     assertEquals(Seq(0), c.revise())
     assertEquals(Seq(7), x.dom.values.toSeq)
-    assertTrue(c.isBound)
+    assertTrue(c.intervalsOnly)
   }
 
   @Test
@@ -31,13 +31,13 @@ final class AddIntTest {
     val y = new Variable("y", IntDomain(-100 to 100))
     val z = new Variable("z", IntDomain(2))
     val prob = new Problem(x, y, z)
-    val c = new Add(x, y, z)
+    val c = new AddAC(x, y, z)
     prob.addConstraint(c)
     AdviseCount.adviseAll(c)
-    assertTrue(c.isBound)
+    assertTrue(c.intervalsOnly)
     assertEquals(Seq(1), c.revise())
     assertEquals(Seq(5), y.dom.values.toSeq)
-    assertTrue(c.isBound)
+    assertTrue(c.intervalsOnly)
   }
 
   @Test
@@ -47,12 +47,12 @@ final class AddIntTest {
     val y = new Variable("y", IntDomain(20 to 30))
     val z = new Variable("z", IntDomain(-100 to 100))
     val prob = new Problem(x, y, z)
-    val c = new Add(x, y, z)
+    val c = new AddAC(x, y, z)
     prob.addConstraint(c)
     AdviseCount.adviseAll(c)
-    assertTrue(c.isBound)
+    assertTrue(c.intervalsOnly)
     assertEquals(Seq(2), c.revise())
     assertEquals((-29 to -10).toSeq, z.dom.values.toSeq)
-    assertTrue(c.isBound)
+    assertTrue(c.intervalsOnly)
   }
 }

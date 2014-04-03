@@ -8,35 +8,17 @@ import concrete.util.Interval
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import concrete.constraint.Shaver
 
-final class Add(val result: Variable, val v0: Variable, val v1: Variable)
-  extends Constraint(Array(result, v0, v1)) with Shaver with Residues with LazyLogging {
+final class AddAC(val result: Variable, val v0: Variable, val v1: Variable, val skipIntervals: Boolean = false)
+  extends Constraint(Array(result, v0, v1)) with Residues with LazyLogging {
 
   def checkValues(t: Array[Int]) = t(0) == t(1) + t(2)
 
-  def shave() = {
-    val bounds = v0.dom.valueInterval + v1.dom.valueInterval - result.dom.valueInterval
-    var mod: List[Int] = Nil
-    if (reviseB(result, true, bounds)) {
-      mod ::= 0
-    }
-    if (reviseB(v0, false, bounds)) {
-      mod ::= 1
-    }
-    if (reviseB(v1, false, bounds)) {
-      mod ::= 2
-    }
-    mod
-  }
-
-  private def reviseB(v: Variable, opp: Boolean, bounds: Interval) = {
-    val myBounds = v.dom.valueInterval
-
-    if (opp) {
-      v.dom.intersectVal(bounds.lb + myBounds.ub, bounds.ub + myBounds.lb)
+  override def advise(pos: Int): Int = {
+    if (skipIntervals && scope(pos).dom.bound) {
+      -1
     } else {
-      v.dom.intersectVal(myBounds.ub - bounds.ub, myBounds.lb - bounds.lb)
+      super.advise(pos)
     }
-
   }
 
   def findSupport(position: Int, index: Int) = position match {
@@ -47,12 +29,13 @@ final class Add(val result: Variable, val v0: Variable, val v1: Variable)
 
   private def findValidTuple0(index: Int) = {
     val val0 = scope(0).dom.value(index);
+
     val dom1 = scope(1).dom;
     val dom2 = scope(2).dom;
 
     dom1.indices.map { i => (i, dom2.index(val0 - dom1.value(i))) }.find {
-      case (i, j) => j >= 0 && dom2.present(j)
-    }.map {
+      case (_, j) => j >= 0 && dom2.present(j)
+    } map {
       case (i, j) => Array(index, i, j)
     }
   }
@@ -63,7 +46,7 @@ final class Add(val result: Variable, val v0: Variable, val v1: Variable)
     val dom = scope(2).dom
     dom.indices.map { i => (i, result.index(value + dom.value(i))) }
       .find {
-        case (i, resIndex) => resIndex >= 0 && result.present(resIndex)
+        case (_, resIndex) => resIndex >= 0 && result.present(resIndex)
       } map {
         case (i, resIndex) => Array(resIndex, index, i)
       }
@@ -76,7 +59,7 @@ final class Add(val result: Variable, val v0: Variable, val v1: Variable)
 
     dom.indices.map { i => (i, result.index(value + dom.value(i))) }
       .find {
-        case (i, resIndex) => resIndex >= 0 && result.present(resIndex)
+        case (_, resIndex) => resIndex >= 0 && result.present(resIndex)
       } map {
         case (i, resIndex) => Array(resIndex, i, index)
       }
@@ -84,14 +67,12 @@ final class Add(val result: Variable, val v0: Variable, val v1: Variable)
 
   override def toString = result + " = " + v0 + " + " + v1
 
-  def getEvaluation =
-    if (isBound) 4
-    else {
-      val d0 = result.dom.size
-      val d1 = v0.dom.size
-      val d2 = v1.dom.size
-      d0 * d1 + d0 * d2 + d1 * d2;
-    }
+  def getEvaluation = {
+    val d0 = result.dom.size
+    val d1 = v0.dom.size
+    val d2 = v1.dom.size
+    d0 * d1 + d0 * d2 + d1 * d2
+  }
 
   def simpleEvaluation = 2
 }

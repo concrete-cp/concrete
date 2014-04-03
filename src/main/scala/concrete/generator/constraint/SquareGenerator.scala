@@ -25,10 +25,10 @@ final object SquareGenerator extends Generator {
           throw UNSATObject
         }
       case (Const(result), Var(v0)) =>
-        restrictDomain(v0, Square.sqrt(result))
+        restrictDomain(v0, Square.sqrt(result).map(s => Iterator(-s, s)).getOrElse(Iterator.empty))
         Some(Nil)
       case (Var(result), Const(v0)) =>
-        restrictDomain(result, Seq(v0 * v0))
+        restrictDomain(result, Iterator(v0 * v0))
         Some(Nil)
       case (Var(result), Var(v0)) =>
         if (v0.dom.undefined && result.dom.undefined) {
@@ -39,7 +39,7 @@ final object SquareGenerator extends Generator {
           }
           if (!result.dom.undefined) {
             restrictDomain(v0, result.dom.values.flatMap(
-              v => Square.sqrt(v).map(s => Seq(-s, s)).getOrElse(Nil)))
+              v => Square.sqrt(v).toIterable.flatMap(s => Seq(-s, s))))
           }
 
           Some(Seq(new Square(result, v0)))

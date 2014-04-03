@@ -17,12 +17,16 @@ object IntDomain {
 
   def apply(r: Range): IntDomain =
     if (r.step == 1 && r.size > 1) {
-      new IntDomain(
-        new IntervalSet(0, r.last - r.start),
-        Indexer.ofInterval(r.start, r.last))
+      apply(Interval(r.start, r.last))
     } else {
       apply(r: _*)
     }
+
+  def apply(i: Interval): IntDomain = {
+    new IntDomain(
+      new IntervalSet(0, i.ub - i.lb),
+      Indexer.ofInterval(i.lb, i.ub))
+  }
 
 }
 
