@@ -32,7 +32,11 @@ class DiffGeTest {
     assertEquals(1, cspom.constraints.size)
     val c = cspom.constraints.next
     assertEquals('diffGe, c.function)
-    assertEquals(CSPOMConstant(true), c.result)
+    c.result match {
+      case CSPOMConstant(true) =>
+      case _ => fail()
+    }
+
   }
 
   @Test

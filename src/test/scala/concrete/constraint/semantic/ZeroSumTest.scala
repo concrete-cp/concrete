@@ -65,7 +65,7 @@ final class ZeroSumTest {
       v2), SumLE)
     AdviseCount.adviseAll(c)
     c.revise()
-    assertEquals(0 to 1, v2)
+    assertEquals(0 to 1, v2.dom.values.toSeq)
   }
 
 }

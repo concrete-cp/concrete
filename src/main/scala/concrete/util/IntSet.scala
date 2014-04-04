@@ -46,8 +46,11 @@ object IntSet {
     case s: Int => {
       val lb = bv.nextSetBit(0)
       val ub = bv.lastSetBit
-      if (lb - ub == s - 1) { new IntervalSet(lb, ub) }
-      else { new BitVectorSet(bv, s) }
+      if (ub - lb == s - 1) {
+        new IntervalSet(lb, ub)
+      } else {
+        new BitVectorSet(bv, s)
+      }
     }
   }
 

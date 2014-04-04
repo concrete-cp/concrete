@@ -38,7 +38,7 @@ class SumGeneratorTest {
 
     var problem = ProblemGenerator.generate(cspom)._1
 
-    assertEquals(problem.toString, Interval(-30, -27), problem.variable("test").dom.valueInterval)
+    assertEquals(problem.toString, Interval(-30, -28), problem.variable("test").dom.valueInterval)
 
   }
 }

@@ -10,7 +10,7 @@ class SparseSetTest {
 
     val map2 = map + 6
 
-    println(map2)
+    //println(map2)
 
     assertTrue(map2(7))
     assertTrue(map2(6))

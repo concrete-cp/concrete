@@ -13,7 +13,7 @@ import scala.slick.jdbc.StaticQuery.interpolation
 import scala.slick.jdbc.GetResult
 import scala.slick.driver.PostgresDriver.simple._
 
-object Table2 extends App {
+object Table extends App {
 
   val format = "csv"
 

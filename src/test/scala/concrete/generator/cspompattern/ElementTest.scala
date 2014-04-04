@@ -20,7 +20,7 @@ class ElementTest {
 
     val mdd = Element.elementVar(as, 2 to 4)
 
-    mdd.foreach(println)
+    //mdd.foreach(println)
     assertEquals(54, mdd.size)
 
   }

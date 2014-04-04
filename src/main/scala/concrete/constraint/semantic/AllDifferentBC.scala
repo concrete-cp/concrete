@@ -18,7 +18,7 @@ import concrete.UNSATObject
 import concrete.UNSATException
 import concrete.constraint.BC
 
-final class HInterval(
+final case class HInterval(
   val dom: Domain,
   val pos: Int) {
   var minrank: Int = 0
@@ -38,39 +38,87 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
   val minsorted = intervals.clone
   val maxsorted = intervals.clone
 
-  @tailrec
-  private def iSortMin(array: Array[HInterval], i: Int = 0) {
-    if (i < array.length) {
-      val key = array(i)
-      val kv = key.dom.firstValue
-      var j = i - 1
-      while (j >= 0 && array(j).dom.firstValue > kv) {
-        array(j + 1) = array(j)
-        j -= 1
+  private def isSortedMax(array: Array[HInterval], from: Int, to: Int): Boolean = {
+    var i = from + 1
+    while (i <= to) {
+      if (array(i - 1).dom.lastValue > array(i).dom.lastValue) {
+        return false
       }
-      array(j + 1) = key
-      iSortMin(array, i + 1)
+      i += 1
+    }
+    true
+  }
+
+  private def isSortedMin(array: Array[HInterval], from: Int, to: Int): Boolean = {
+    var i = from + 1
+    while (i <= to) {
+      if (array(i - 1).dom.firstValue > array(i).dom.firstValue) {
+        return false
+      }
+      i += 1
+    }
+    true
+  }
+
+  private def swap(array: Array[HInterval], i: Int, j: Int) {
+    val tmp = array(i)
+    array(i) = array(j)
+    array(j) = tmp
+  }
+
+  private def qSortMax(array: Array[HInterval], from: Int, to: Int) {
+    if (!isSortedMax(array, from, to)) {
+      //if (to > from) {
+      val pivotIndex = (from + to) / 2
+      val pivot = array(pivotIndex).dom.lastValue
+      var left = from
+      var right = to
+      while (left <= right) {
+        while (array(left).dom.lastValue < pivot) {
+          left += 1
+        }
+        while (array(right).dom.lastValue > pivot) {
+          right -= 1
+        }
+        if (left <= right) {
+          swap(array, left, right)
+          left += 1
+          right -= 1
+        }
+      }
+      qSortMax(array, from, right)
+      qSortMax(array, left, to)
     }
   }
 
-  @tailrec
-  private def iSortMax(array: Array[HInterval], i: Int = 0) {
-    if (i < array.length) {
-      val key = array(i)
-      val kv = key.dom.lastValue
-      var j = i - 1
-      while (j >= 0 && array(j).dom.lastValue > kv) {
-        array(j + 1) = array(j)
-        j -= 1
+  private def qSortMin(array: Array[HInterval], from: Int, to: Int) {
+    if (!isSortedMin(array, from, to)) {
+      //if (to > from) {
+      val pivotIndex = (from + to) / 2
+      val pivot = array(pivotIndex).dom.firstValue
+      var left = from
+      var right = to
+      while (left <= right) {
+        while (array(left).dom.firstValue < pivot) {
+          left += 1
+        }
+        while (array(right).dom.firstValue > pivot) {
+          right -= 1
+        }
+        if (left <= right) {
+          swap(array, left, right)
+          left += 1
+          right -= 1
+        }
       }
-      array(j + 1) = key
-      iSortMax(array, i + 1)
+      qSortMin(array, from, right)
+      qSortMin(array, left, to)
     }
   }
 
   private def sortIt() {
-    iSortMin(minsorted)
-    iSortMax(maxsorted)
+    qSortMin(minsorted, 0, minsorted.length - 1)
+    qSortMax(maxsorted, 0, maxsorted.length - 1)
 
     val min = minsorted(0).dom.firstValue
     var last = min - 2;
