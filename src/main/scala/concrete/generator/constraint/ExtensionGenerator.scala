@@ -96,7 +96,7 @@ object ExtensionGenerator extends Generator with LazyLogging {
   }
 
   private def gen(relation: cspom.extension.Relation[_], init: Boolean, domains: List[Domain]) = {
-    if (relation.arity == 2) {
+    if (relation.nonEmpty && relation.head.size == 2) {
       new Matrix2D(domains(0).size, domains(1).size, init).setAll(value2Index(domains, relation).toTraversable.map(_.toArray), !init)
     } else if (init) {
       new TupleTrieSet(MDD(value2Index(domains, relation).map(_.toArray)), init)
@@ -111,8 +111,11 @@ object ExtensionGenerator extends Generator with LazyLogging {
   private def relation2MDD(relation: cspom.extension.Relation[_], domains: List[Domain]): MDD = {
     relation match {
       case laz: cspom.extension.LazyRelation[_] => relation2MDD(laz.apply, domains)
-      case mdd: cspom.extension.MDD[Int] =>
-        ExtensionGenerator.cspomMDDtoCspfjMDD(domains, mdd, new HashMap())
+      case mdd: cspom.extension.MDD[_] =>
+        ExtensionGenerator.cspomMDDtoCspfjMDD(
+          domains,
+          mdd.asInstanceOf[cspom.extension.MDD[Int]],
+          new HashMap())
       case r =>
         val m = MDD(value2Index(domains, r).map(_.toArray))
         m

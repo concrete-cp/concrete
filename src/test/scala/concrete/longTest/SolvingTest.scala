@@ -179,10 +179,10 @@ object SolvingTest extends LazyLogging {
   def solve(name: String, test: Boolean = true): Boolean = {
     val url = getClass.getResource(name)
     val (cspomProblem, data) = CSPOM.load(url);
-
+    println(cspomProblem)
     val solver = Solver(cspomProblem)
 
-    logger.info(solver.concreteProblem.toString)
+    println(solver.concreteProblem.toString)
 
     solver.toIterable.headOption.map { sol =>
       if (test) {

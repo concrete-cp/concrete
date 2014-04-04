@@ -13,6 +13,14 @@ final class AddAC(val result: Variable, val v0: Variable, val v1: Variable, val 
 
   def checkValues(t: Array[Int]) = t(0) == t(1) + t(2)
 
+  override def revise() = {
+    if (skipIntervals && intervalsOnly) {
+      Nil
+    } else {
+      super.revise()
+    }
+  }
+
   override def advise(pos: Int): Int = {
     if (skipIntervals && scope(pos).dom.bound) {
       -1

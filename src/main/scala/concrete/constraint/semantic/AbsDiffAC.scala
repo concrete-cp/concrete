@@ -12,6 +12,14 @@ import concrete.UNSATObject
 final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable, val skipIntervals: Boolean = false)
   extends Constraint(Array(result, v0, v1)) with Residues {
 
+  override def revise() = {
+    if (skipIntervals && intervalsOnly) {
+      Nil
+    } else {
+      super.revise()
+    }
+  }
+  
   def checkValues(t: Array[Int]) = t(0) == math.abs(t(1) - t(2))
 
   override def findSupport(position: Int, index: Int) =
