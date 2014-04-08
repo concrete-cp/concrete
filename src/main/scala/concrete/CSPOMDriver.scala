@@ -11,14 +11,15 @@ import cspom.variable.CSPOMVariable
 import cspom.variable.IntVariable
 import cspom.variable.SimpleExpression
 import CSPOM._
+import cspom.variable.BoolVariable
 
 object CSPOMDriver {
 
-  def sum(variables: CSPOMExpression[Int]*)(implicit problem: CSPOM): CSPOMExpression[Int] = {
+  def sum(variables: CSPOMExpression[Int]*)(implicit problem: CSPOM): SimpleExpression[Int] = {
     sumProd(variables.map((1, _)): _*)(problem)
   }
 
-  def sumProd(coefVar: (Int, CSPOMExpression[Int])*)(implicit problem: CSPOM): CSPOMExpression[Int] = {
+  def sumProd(coefVar: (Int, CSPOMExpression[Int])*)(implicit problem: CSPOM): SimpleExpression[Int] = {
     val (coefs, vars) = coefVar.unzip
 
     val result = IntVariable.free()
@@ -29,15 +30,11 @@ object CSPOMDriver {
     result
   }
 
-  def abs(variable: CSPOMExpression[Int])(implicit problem: CSPOM): IntVariable = {
+  def abs(variable: CSPOMExpression[Int])(implicit problem: CSPOM): SimpleExpression[Int] = {
     problem.isInt('abs, Seq(variable))
   }
 
-  def lexLeq(v0: Seq[IntVariable], v1: Seq[IntVariable])(implicit problem: CSPOM): CSPOMConstraint[Boolean] = {
-    CSPOMConstraint('lexleq, Seq(new CSPOMSeq(v0), new CSPOMSeq(v1)))
-  }
-
-  def sq(v: CSPOMExpression[Int])(implicit problem: CSPOM): CSPOMExpression[Int] = {
+  def sq(v: CSPOMExpression[Int])(implicit problem: CSPOM): SimpleExpression[Int] = {
     problem.isInt('sq, Seq(v))
   }
 
@@ -49,48 +46,55 @@ object CSPOMDriver {
     CSPOMConstraint('gcc, v, Map("gcc" -> cardinalities))
   }
 
-  def occurrence[A](constant: CSPOMConstant[A], variables: CSPOMExpression[A]*)(implicit problem: CSPOM): CSPOMExpression[Int] = {
+  def occurrence[A](constant: CSPOMConstant[A], variables: CSPOMExpression[A]*)(implicit problem: CSPOM): SimpleExpression[Int] = {
     problem.isInt('occurrence, variables, Map("occurrence" -> constant))
   }
 
-  implicit class CSPOMSeqOperations[A](e: CSPOMSeq[A]) {
+  implicit class CSPOMSeqOperations[+A](e: CSPOMSeq[A]) {
     def apply(idx: CSPOMVariable[Int])(implicit problem: CSPOM) = problem.is('element, Seq(e, idx))
 
     def min(implicit problem: CSPOM) = problem.is('min, Seq(e))
 
     def max(implicit problem: CSPOM) = problem.is('max, Seq(e))
 
-    def contains(v: SimpleExpression[A])(implicit problem: CSPOM) = problem.isBool('in, Seq(v, e))
+    def <=[B >: A](that: CSPOMSeq[B])(implicit problem: CSPOM) = {
+      require(e.size == that.size)
+      problem.isBool('lexleq, Seq(e, that))
+    }
+
+    def contains[B >: A](v: SimpleExpression[B])(implicit problem: CSPOM) = problem.isBool('in, Seq(v, e))
   }
 
-  implicit class CSPOMIntExpressionOperations(e: CSPOMExpression[Int]) {
-    def >(other: CSPOMExpression[Int])(implicit problem: CSPOM) = problem.isBool('gt, Seq(e, other))
+  implicit class SeqOperations[+A](e: Seq[CSPOMExpression[A]]) extends CSPOMSeqOperations(seq2CSPOMSeq(e))
 
-    def >=(other: CSPOMExpression[Int])(implicit problem: CSPOM) = problem.isBool('ge, Seq(e, other))
+  implicit class CSPOMIntExpressionOperations(e: SimpleExpression[Int]) {
+    def >(other: SimpleExpression[Int])(implicit problem: CSPOM) = problem.isBool('gt, Seq(e, other))
 
-    def <(other: CSPOMExpression[Int])(implicit problem: CSPOM) = problem.isBool('gt, Seq(other, e))
+    def >=(other: SimpleExpression[Int])(implicit problem: CSPOM) = problem.isBool('ge, Seq(e, other))
 
-    def <=(other: CSPOMExpression[Int])(implicit problem: CSPOM) = problem.isBool('ge, Seq(other, e))
+    def <(other: SimpleExpression[Int])(implicit problem: CSPOM) = problem.isBool('gt, Seq(other, e))
 
-    def +(other: CSPOMExpression[Int])(implicit problem: CSPOM) = problem.isInt('add, Seq(e, other))
+    def <=(other: SimpleExpression[Int])(implicit problem: CSPOM) = problem.isBool('ge, Seq(other, e))
 
-    def -(other: CSPOMExpression[Int])(implicit problem: CSPOM) = problem.isInt('sub, Seq(e, other))
+    def +(other: SimpleExpression[Int])(implicit problem: CSPOM) = problem.isInt('add, Seq(e, other))
 
-    def *(other: CSPOMExpression[Int])(implicit problem: CSPOM) = problem.isInt('mul, Seq(e, other))
+    def -(other: SimpleExpression[Int])(implicit problem: CSPOM) = problem.isInt('sub, Seq(e, other))
 
-    def /(other: CSPOMExpression[Int])(implicit problem: CSPOM) = problem.isInt('div, Seq(e, other))
+    def *(other: SimpleExpression[Int])(implicit problem: CSPOM) = problem.isInt('mul, Seq(e, other))
+
+    def /(other: SimpleExpression[Int])(implicit problem: CSPOM) = problem.isInt('div, Seq(e, other))
   }
 
-  implicit class CSPOMBoolExpressionOperations(e: CSPOMExpression[Boolean]) {
-    def |(other: CSPOMExpression[Boolean])(implicit problem: CSPOM) = problem.isBool('or, Seq(e, other))
+  implicit class CSPOMBoolExpressionOperations(e: SimpleExpression[Boolean]) {
+    def |(other: SimpleExpression[Boolean])(implicit problem: CSPOM) = problem.isBool('or, Seq(e, other))
 
-    def &(other: CSPOMExpression[Boolean])(implicit problem: CSPOM) = problem.isBool('and, Seq(e, other))
+    def &(other: SimpleExpression[Boolean])(implicit problem: CSPOM) = problem.isBool('and, Seq(e, other))
 
     def unary_!(implicit problem: CSPOM): BoolVariable = {
       problem.isBool('not, Seq(e))
     }
 
-    def ==>(other: CSPOMExpression[Boolean])(implicit problem: CSPOM) =
+    def ==>(other: SimpleExpression[Boolean])(implicit problem: CSPOM) =
       problem.isBool('or, Seq(e, other), Map("revsign" -> Array(true, false)))
   }
 }
@@ -100,9 +104,9 @@ final class JCSPOMDriver extends CSPOM {
 
   implicit def problem: CSPOM = this
 
-  def lt(v1: CSPOMExpression[Int], v2: CSPOMExpression[Int]) = v1 < v2
+  def lt(v1: SimpleExpression[Int], v2: SimpleExpression[Int]) = v1 < v2
 
-  def less(v1: CSPOMExpression[Int], v2: CSPOMExpression[Int]) = v1 - v2
+  def less(v1: SimpleExpression[Int], v2: SimpleExpression[Int]) = v1 - v2
 
   def neq(e1: CSPOMExpression[Any], e2: CSPOMExpression[Any]) = e1 !== e2
 
