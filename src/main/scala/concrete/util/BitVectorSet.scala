@@ -5,23 +5,7 @@ import scala.annotation.tailrec
 final object BitVectorSet {
   val DISPLAYED_VALUES = 5;
 
-  def fullBV(size: Int) = {
-    val bv = BitVector.newBitVector(size)
-    bv.fill(true)
-    bv
-  }
 
-  def intBv(lb: Int, ub: Int): BitVector = {
-    val bv = BitVector.newBitVector(ub + 1)
-    bv.setFrom(lb)
-    bv
-  }
-
-  def intBvH(lb: Int, ub: Int, hole: Int): BitVector = {
-    val bv = intBv(lb, ub)
-    bv.clear(hole)
-    bv
-  }
 }
 
 final class BitVectorSet(val bv: BitVector, val size: Int) extends IntSet {
@@ -29,11 +13,11 @@ final class BitVectorSet(val bv: BitVector, val size: Int) extends IntSet {
   assert(bv.cardinality == size, bv + " : " + bv.cardinality + " != " + size)
 
   def this(size: Int) = {
-    this(BitVectorSet.fullBV(size), size)
+    this(BitVector.fullBV(size), size)
   }
 
   def this(lb: Int, ub: Int, hole: Int) = {
-    this(BitVectorSet.intBvH(lb, ub, hole), ub - lb)
+    this(BitVector.intBvH(lb, ub, hole), ub - lb)
   }
 
   //  private def size_=(s: Int) {
@@ -76,19 +60,22 @@ final class BitVectorSet(val bv: BitVector, val size: Int) extends IntSet {
    */
   def present(index: Int) = bv.get(index);
 
-  @tailrec
-  private def filter(f: Int => Boolean, nbv: BitVector, i: Int = first, s: Int = size): Int = {
-    if (i < 0) { s }
-    else if (f(i)) { filter(f, nbv, next(i), s) }
-    else {
-      nbv.clear(i)
-      filter(f, nbv, next(i), s - 1)
+  private def filter(f: Int => Boolean, nbv: BitVector): Int = {
+    var i = first
+    var s = size
+    while (i >= 0) {
+      if (!f(i)) {
+        nbv.clear(i)
+        s -= 1
+      }
+      i = next(i)
     }
+    s
   }
 
   def filter(f: Int => Boolean) = {
     val nbv = bv.clone
-    val s = filter(f, nbv, first, size)
+    val s = filter(f, nbv)
     if (s == size) this else IntSet.ofBV(nbv, s)
   }
 

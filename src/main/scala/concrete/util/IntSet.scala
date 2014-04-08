@@ -24,14 +24,11 @@ object EmptyIntSet extends IntSet {
 }
 
 object IntSet {
-  def apply(domain: Int*): IntSet = {
-    require(domain.size == 1 || domain.sliding(2).forall(p => p(0) < p(1)), "Only ordered domains are supported");
-
-    domain match {
-      case Seq() => EmptyIntSet
-      case Seq(v) => new Singleton(0)
-      case s: Seq[Int] if s.size == 1 + s.last - s.head => new IntervalSet(0, s.size - 1)
-      case s: Seq[Int] => new BitVectorSet(s.size)
+  def apply(size: Int): IntSet = {
+    size match {
+      case 0 => EmptyIntSet
+      case 1 => new Singleton(0)
+      case s => new IntervalSet(0, s - 1)
     }
   }
 

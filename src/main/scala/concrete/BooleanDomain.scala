@@ -3,6 +3,8 @@ package concrete
 import concrete.util.Backtrackable
 import concrete.util.BitVector
 import concrete.util.IntSet
+import concrete.util.Singleton
+import concrete.util.EmptyIntSet
 
 sealed trait Status {
   val bitVector = BitVector.newBitVector(2)
@@ -52,7 +54,7 @@ case object UNKNOWNBoolean extends Status {
   def lastAbsent = -1
   def prevAbsent(value: Int) = -1
   val indices = Array(0, 1)
-  val intSet = IntSet(0, 1)
+  val intSet = IntSet.ofInterval(0, 1)
 }
 
 case object TRUE extends Status {
@@ -72,7 +74,7 @@ case object TRUE extends Status {
   def lastAbsent = 0
   def prevAbsent(value: Int) = if (value > 0) 0 else -1
   val indices = Array(1)
-  val intSet = IntSet(1)
+  val intSet = new Singleton(1)
 }
 
 case object FALSE extends Status {
@@ -92,7 +94,7 @@ case object FALSE extends Status {
   def lastAbsent = 1
   def prevAbsent(value: Int) = if (value > 0) 1 else -1
   val indices = Array(0)
-  val intSet = IntSet(0)
+  val intSet = new Singleton(0)
 }
 
 case object EMPTY extends Status {
@@ -111,7 +113,7 @@ case object EMPTY extends Status {
   def lastAbsent = 1
   def prevAbsent(value: Int) = if (value >= 1) 0 else -1
   val indices = Array[Int]()
-  val intSet = IntSet()
+  val intSet = EmptyIntSet
 }
 
 final class BooleanDomain(var _status: Status) extends Domain

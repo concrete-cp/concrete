@@ -11,7 +11,7 @@ import scala.collection.SortedSet
 
 object IntDomain {
   @annotation.varargs
-  def apply(d: Int*): IntDomain = new IntDomain(IntSet(d: _*), Indexer.factory(d))
+  def apply(d: Int*): IntDomain = new IntDomain(IntSet(d.size), Indexer.factory(d))
 
   def apply(d: SortedSet[Int]): IntDomain = apply(d.toSeq: _*)
 

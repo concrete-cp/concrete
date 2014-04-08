@@ -178,11 +178,14 @@ object SolvingTest extends LazyLogging {
 
   def solve(name: String, test: Boolean = true): Boolean = {
     val url = getClass.getResource(name)
+
+    require(url != null, "Could not find resource " + name)
+
     val (cspomProblem, data) = CSPOM.load(url);
-    println(cspomProblem)
+    // println(cspomProblem)
     val solver = Solver(cspomProblem)
 
-    println(solver.concreteProblem.toString)
+    // println(solver.concreteProblem.toString)
 
     solver.toIterable.headOption.map { sol =>
       if (test) {
