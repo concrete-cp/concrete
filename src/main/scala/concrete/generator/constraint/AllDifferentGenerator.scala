@@ -16,14 +16,22 @@ final object AllDifferentGenerator extends Generator {
       None
     } else {
 
-      for (
-        constant <- arguments.collect { case Const(i) => i };
-        v <- vars
-      ) {
-        v.dom.removeVal(constant)
-      }
+      val constants = arguments.collect { case Const(i) => i }
 
-      Some(Seq(new AllDifferent2C(vars: _*), new AllDifferentBC(vars: _*)))
+      require(constants.distinct.size == constants.size, "All-diff with equal constants: " + constraint)
+
+      if (vars.nonEmpty) {
+
+        for (
+          constant <- constants; v <- vars
+        ) {
+          v.dom.removeVal(constant)
+        }
+
+        Some(Seq(new AllDifferent2C(vars: _*), new AllDifferentBC(vars: _*)))
+      } else {
+        Some(Seq())
+      }
     }
   }
 
