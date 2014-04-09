@@ -5,6 +5,7 @@ import cspom.CSPOMConstraint
 import concrete.constraint.semantic.{ AllDifferent2C, AllDifferentBC }
 import cspom.variable.CSPOMConstant
 import Generator._
+import concrete.constraint.semantic.Neq
 
 final object AllDifferentGenerator extends Generator {
   override def gen(constraint: CSPOMConstraint[Boolean])(implicit varMap: VarMap) = {
@@ -20,18 +21,18 @@ final object AllDifferentGenerator extends Generator {
 
       require(constants.distinct.size == constants.size, "All-diff with equal constants: " + constraint)
 
-      if (vars.nonEmpty) {
-
-        for (
-          constant <- constants; v <- vars
-        ) {
-          v.dom.removeVal(constant)
-        }
-
-        Some(Seq(new AllDifferent2C(vars: _*), new AllDifferentBC(vars: _*)))
-      } else {
-        Some(Seq())
+      for (
+        constant <- constants; v <- vars
+      ) {
+        v.dom.removeVal(constant)
       }
+
+      vars match {
+        case Seq() | Seq(_) => Some(Seq())
+        case Seq(v0, v1) => Some(Seq(new Neq(v0, v1)))
+        case v => Some(Seq(new AllDifferent2C(v: _*), new AllDifferentBC(v: _*)))
+      }
+
     }
   }
 
