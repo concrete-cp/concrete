@@ -65,14 +65,14 @@ class SolutionChecker(file: URL) {
   }
 
   /**
-   * Returns -1 if the solution is valid, the position of ther first invalid value otherwise
+   * Returns None if the solution is valid, the position of ther first invalid value otherwise
    */
-  def isSolutionValid(solution: IndexedSeq[Int]): Int = {
+  def isSolutionValid(solution: IndexedSeq[Int]): Option[Int] = {
     assert(parser.getVariables().length == solution.size)
 
     solution.indices.find {
       i => !parser.getVariables()(i).getDomain().contains(solution(i))
-    } getOrElse (-1)
+    }
 
   }
 
@@ -88,7 +88,7 @@ class SolutionChecker(file: URL) {
       "PROBLEM \t The number of variables is " + parser.getVariables().length + " while the size of the solution is " + solution.length)
 
     val invalidPosition = isSolutionValid(solution);
-    require(invalidPosition == -1, "ERROR \t The given solution is not valid as the " + invalidPosition + "th value of the solution is not present in the domain of the associated variable")
+    require(invalidPosition.isEmpty, "ERROR \t The given solution is not valid as the " + invalidPosition.get + "th value of the solution is not present in the domain of the associated variable")
 
     val (list, costs) = JavaConversions.collectionAsScalaIterable(parser.getMapOfConstraints.values).map(c =>
       (c, c.computeCostOf(buildTupleFor(c, solution)))).filter(_._2 > 0).unzip

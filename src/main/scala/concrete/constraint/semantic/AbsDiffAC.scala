@@ -8,18 +8,11 @@ import concrete.UNSATException
 import concrete.util.Interval
 import concrete.constraint.Shaver
 import concrete.UNSATObject
+import concrete.constraint.BCCompanion
 
 final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable, val skipIntervals: Boolean = false)
-  extends Constraint(Array(result, v0, v1)) with Residues {
+  extends Constraint(Array(result, v0, v1)) with Residues with BCCompanion {
 
-  override def revise() = {
-    if (skipIntervals && intervalsOnly) {
-      Nil
-    } else {
-      super.revise()
-    }
-  }
-  
   def checkValues(t: Array[Int]) = t(0) == math.abs(t(1) - t(2))
 
   override def findSupport(position: Int, index: Int) =
@@ -43,14 +36,6 @@ final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable, 
         Array(index, i, dom2.index(dom1.value(i) + val0))
       }
 
-    }
-  }
-
-  override def advise(pos: Int): Int = {
-    if (skipIntervals && scope(pos).dom.bound) {
-      -1
-    } else {
-      super.advise(pos)
     }
   }
 

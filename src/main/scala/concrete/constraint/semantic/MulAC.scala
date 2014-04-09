@@ -6,6 +6,7 @@ import concrete.Domain
 import concrete.Variable
 import concrete.constraint.Shaver
 import concrete.util.Interval
+import concrete.constraint.BCCompanion
 
 /**
  * Contrainte V0 = V1 * V2.
@@ -13,27 +14,12 @@ import concrete.util.Interval
  * @author vion
  *
  */
-final class Mul(val result: Variable, val v0: Variable, val v1: Variable)
+final class MulAC(val result: Variable, val v0: Variable, val v1: Variable, val skipIntervals: Boolean = false)
   extends Constraint(Array(result, v0, v1))
-  with Shaver
-  with Residues {
+  with Residues
+  with BCCompanion {
 
   def checkValues(t: Array[Int]) = t(0) == (t(1) * t(2));
-
-  def shave() = {
-    //val bounds = v0.dom.valueInterval * v1.dom.valueInterval - result.dom.valueInterval
-    var mod: List[Int] = Nil
-    if (result.dom.intersectVal(v0.dom.valueInterval * v1.dom.valueInterval)) {
-      mod ::= 0
-    }
-    if (!v1.dom.valueInterval.contains(0) && v0.dom.intersectVal(result.dom.valueInterval / v1.dom.valueInterval)) {
-      mod ::= 1
-    }
-    if (!v0.dom.valueInterval.contains(0) && v1.dom.intersectVal(result.dom.valueInterval / v0.dom.valueInterval)) {
-      mod ::= 2
-    }
-    mod
-  }
 
   private def reviseB(v: Variable, opp: Boolean, bounds: Interval) = {
     val myBounds = v.dom.valueInterval

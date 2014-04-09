@@ -28,7 +28,7 @@ final class MulTest {
 
   @Test
   def testReviseInt() {
-    val c = new Mul(x, y, z);
+    val c = new MulAC(x, y, z);
     AdviseCount.adviseAll(c)
     c.revise()
 
@@ -37,20 +37,6 @@ final class MulTest {
     };
     AdviseCount.adviseAll(c2)
     assertEquals(Seq(), c2.revise());
-  }
-
-  @Test
-  def testRevise2() {
-    val c2 = new Constraint(Array(x, y, z)) with Residues with TupleEnumerator {
-      def checkValues(t: Array[Int]) = t(0) == t(1) * t(2);
-    };
-    AdviseCount.adviseAll(c2)
-    c2.revise()
-
-    val c = new Mul(x, y, z);
-    AdviseCount.adviseAll(c)
-    assertEquals(Seq(), c.revise())
-
   }
 
   private def randomDomain(min: Int, max: Int, nb: Int) = {

@@ -7,27 +7,12 @@ import concrete.constraint.Residues
 import concrete.util.Interval
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import concrete.constraint.Shaver
+import concrete.constraint.BCCompanion
 
 final class AddAC(val result: Variable, val v0: Variable, val v1: Variable, val skipIntervals: Boolean = false)
-  extends Constraint(Array(result, v0, v1)) with Residues with LazyLogging {
+  extends Constraint(Array(result, v0, v1)) with Residues with BCCompanion with LazyLogging {
 
   def checkValues(t: Array[Int]) = t(0) == t(1) + t(2)
-
-  override def revise() = {
-    if (skipIntervals && intervalsOnly) {
-      Nil
-    } else {
-      super.revise()
-    }
-  }
-
-  override def advise(pos: Int): Int = {
-    if (skipIntervals && scope(pos).dom.bound) {
-      -1
-    } else {
-      super.advise(pos)
-    }
-  }
 
   def findSupport(position: Int, index: Int) = position match {
     case 0 => findValidTuple0(index);

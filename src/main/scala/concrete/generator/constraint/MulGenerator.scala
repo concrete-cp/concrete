@@ -1,6 +1,5 @@
 package concrete.generator.constraint;
 
-import concrete.constraint.semantic.Mul
 import concrete.generator.FailedGenerationException
 import concrete.{ Variable, Problem, IntDomain }
 import cspom.CSPOMConstraint
@@ -12,6 +11,8 @@ import concrete.constraint.semantic.Sum
 import Generator._
 import concrete.constraint.semantic.ConstProd
 import concrete.constraint.semantic.FilterSum
+import concrete.constraint.semantic.MulAC
+import concrete.constraint.semantic.MulBC
 
 final object MulGenerator extends Generator {
 
@@ -48,7 +49,7 @@ final object MulGenerator extends Generator {
           new Sum(0, Array(-1, v1), Array(r, v0), FilterSum.SumEQ)))
 
         case (Var(r), Var(v0), Var(v1)) =>
-          Some(Seq(new Mul(r, v0, v1)))
+          Some(Seq(new MulAC(r, v0, v1, true), new MulBC(r, v0, v1)))
       }
 
     } else {

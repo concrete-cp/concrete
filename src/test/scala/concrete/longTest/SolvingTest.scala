@@ -25,18 +25,6 @@ final class SolvingTest {
   //ParameterManager("ac3c.queue") = classOf[BinaryHeap[Constraint]]
   import SolvingTest._
 
-  @Before
-  def before() {
-    //Solver.loggerLevel = "INFO"
-    ParameterManager("preprocessor") = null
-    ParameterManager("closeRelations") = false
-  }
-
-  @After
-  def after() {
-    ParameterManager("preprocessor") = null
-  }
-
   @Test //(timeout = 40000)
   def crosswordm1() {
 
