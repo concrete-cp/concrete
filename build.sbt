@@ -12,18 +12,21 @@ resolvers += "typesafe-relases" at "http://repo.typesafe.com/typesafe/releases"
 
 resolvers += "sonatype-releases" at "http://oss.sonatype.org/content/repositories/releases/"
 
+resolvers += "Concrete local repository" at "file://" + Path.userHome.absolutePath+"/concrete/repository"
+
 // For JSR 331 (should be moved to GitHub)
 resolvers += "CSP4J repository" at "http://cspfj.sourceforge.net/repository"
 
 libraryDependencies ++= Seq(
-	"fr.univ-valenciennes.concrete" %% "cspom" % "1.3-SNAPSHOT",
+	"fr.univ-valenciennes.concrete" %% "cspom" % "2.0",
 	"postgresql" % "postgresql" % "9.1-901-1.jdbc4",
 	"org.sat4j" % "org.sat4j.core" % "2.3.0",
 	"junit" % "junit" % "4.11" % "test",
 	"com.novocode" % "junit-interface" % "0.10" % "test->default",
 	//"com.typesafe.slick" %% "slick" % "2.0.0",
 	//"org.slf4j" % "slf4j-nop" % "1.6.4",
-	"org.jcp" % "jsr331" % "1.1.1"
+	"org.jcp" % "jsr331" % "1.1.1",
+	"org.scalatest" %% "scalatest" % "2.1.3" % "test"
 	)
 
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-optimise", "-Xlint", "-Xdisable-assertions")
@@ -35,6 +38,6 @@ com.typesafe.sbt.SbtNativePackager.packageArchetype.java_application
 mainClass in Compile := Some("concrete.runner.FZConcrete")
 
 publishTo := Some(
-	Resolver.file("Concrete local repository",
+	Resolver.file("Concrete local repository 2",
 		new File(Path.userHome.absolutePath+"/concrete/repository")))
 		
