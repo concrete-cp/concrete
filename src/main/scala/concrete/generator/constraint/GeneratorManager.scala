@@ -7,8 +7,9 @@ import scala.collection.mutable.HashMap
 import concrete.constraint.Constraint
 import cspom.variable.CSPOMVariable
 import concrete.Variable
+import concrete.ParameterManager
 
-object GeneratorManager {
+class GeneratorManager(pm: ParameterManager) {
   private var known: Map[Symbol, Generator] = Map(
     'abs -> AbsGenerator,
     'add -> AddGenerator,
@@ -31,7 +32,7 @@ object GeneratorManager {
     'sum -> SumGenerator,
     'lexleq -> LexLeqGenerator,
     'occurrence -> OccurrenceGenerator,
-    'extension -> ExtensionGenerator,
+    'extension -> new ExtensionGenerator(pm),
     'sq -> SquareGenerator)
 
   def register(entry: (Symbol, Generator)) {

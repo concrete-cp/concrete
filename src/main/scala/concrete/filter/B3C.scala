@@ -22,14 +22,15 @@ import concrete.Problem
 import concrete.Variable
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.annotation.tailrec
+import concrete.ParameterManager
 
 /**
  * @author Julien VION
  *
  */
-final class B3C(val problem: Problem) extends SingletonConsistency with LazyLogging {
+final class B3C(val problem: Problem, params: ParameterManager) extends SingletonConsistency with LazyLogging {
 
-  val subFilter = new ACC(problem)
+  val subFilter = new ACC(problem, params)
   // private final static Logger logger =
   // Logger.getLogger("concrete.filter.CDC");
 
@@ -43,7 +44,7 @@ final class B3C(val problem: Problem) extends SingletonConsistency with LazyLogg
     }
 
     val itr = variable.dom.indices
-    var itr2 = variable.dom.indicesR
+    val itr2 = variable.dom.indicesR
     filterBound(itr.next, itr, false) | filterBound(itr2.next, itr2, false)
   }
 

@@ -9,18 +9,14 @@ import scala.util.Random
 import scala.annotation.tailrec
 import concrete.ParameterManager
 
-object VariableHeuristic {
+abstract class VariableHeuristic(params: ParameterManager) extends Ordering[Variable] {
   @Parameter("variableHeuristic.randomBreak")
   var rb = true
 
   @Parameter("randomBreak.seed")
   var seed = 0L
 
-  ParameterManager.register(this)
-}
-
-trait VariableHeuristic extends Ordering[Variable] {
-  private val rand = if (VariableHeuristic.rb) new Random(VariableHeuristic.seed) else null
+  private val rand = if (rb) Some(new Random(seed)) else None
 
   //def problem: Problem
 
@@ -28,23 +24,23 @@ trait VariableHeuristic extends Ordering[Variable] {
     select(problem.variables.iterator.filter(_.dom.size > 1))
 
   @tailrec
-  private def select(list: Iterator[Variable], best: Variable, ties: Int): Variable = {
+  private def select(list: Iterator[Variable], best: Variable, ties: Int, rand: Random): Variable = {
     if (list.isEmpty) { best }
     else {
       val current = list.next
       val comp = compare(current, best)
 
       if (comp > 0) {
-        select(list, current, 2)
+        select(list, current, 2, rand)
       } else if (comp == 0) {
         if (rand.nextDouble() * ties < 1) {
-          select(list, current, ties + 1)
+          select(list, current, ties + 1, rand)
         } else {
-          select(list, best, ties + 1)
+          select(list, best, ties + 1, rand)
         }
 
       } else {
-        select(list, best, ties)
+        select(list, best, ties, rand)
       }
     }
   }
@@ -52,10 +48,12 @@ trait VariableHeuristic extends Ordering[Variable] {
   def select(itr: Iterator[Variable]): Option[Variable] = {
     if (itr.isEmpty) {
       None
-    } else if (VariableHeuristic.rb) {
-      Some(select(itr, itr.next, 2))
     } else {
-      Some(itr.maxBy(score))
+      rand.map {
+        rand => select(itr, itr.next, 2, rand)
+      } orElse {
+        Some(itr.maxBy(score))
+      }
     }
   }
 

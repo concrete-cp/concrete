@@ -17,13 +17,13 @@ import concrete.heuristic.MedValue
 import concrete.MAC
 import concrete.heuristic.CrossHeuristic
 
-class SearchStrategy(solver: Solver) extends AbstractSearchStrategy(solver) {
+class SearchStrategy(solver: Solver, params: ParameterManager) extends AbstractSearchStrategy(solver) {
   override def setVarSelectorType(varSelectorType: VarSelectorType) {
-    ParameterManager("heuristic.variable") = varSelectorType match {
+    params("heuristic.variable") = varSelectorType match {
       case VarSelectorType.INPUT_ORDER => classOf[LexVar]
       case VarSelectorType.MIN_DOMAIN | VarSelectorType.MIN_DOMAIN_RANDOM => classOf[Dom]
       case VarSelectorType.MIN_DOMAIN_MIN_VALUE =>
-        ParameterManager("variableHeuristic.randomBreak") = false
+        params("variableHeuristic.randomBreak") = false
         classOf[Dom]
 
       case VarSelectorType.MIN_DOMAIN_OVER_DEGREE => classOf[DDegOnDom]
@@ -31,16 +31,16 @@ class SearchStrategy(solver: Solver) extends AbstractSearchStrategy(solver) {
       case VarSelectorType.MAX_WEIGHTED_DEGREE => classOf[WDeg]
       case e: VarSelectorType => throw new IllegalArgumentException(s"Unknown variable selector type $e")
     }
-    solver.concreteSolver.asInstanceOf[MAC].heuristic = new CrossHeuristic()
+    solver.concreteSolver.asInstanceOf[MAC].heuristic = new CrossHeuristic(params)
   }
 
   override def setValueSelectorType(valueSelectorType: ValueSelectorType) {
-    ParameterManager("heuristic.value") = valueSelectorType match {
+    params("heuristic.value") = valueSelectorType match {
       case ValueSelectorType.MIN => classOf[Lexico]
       case ValueSelectorType.MAX => classOf[RevLexico]
       case ValueSelectorType.MEDIAN => classOf[MedValue]
       case _ => throw new IllegalArgumentException("Unknown value selector type")
     }
-    solver.concreteSolver.asInstanceOf[MAC].heuristic = new CrossHeuristic()
+    solver.concreteSolver.asInstanceOf[MAC].heuristic = new CrossHeuristic(params)
   }
 }

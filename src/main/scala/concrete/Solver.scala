@@ -37,16 +37,12 @@ import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMConstant
 
-object Solver {
+final class SolverFactory(val params: ParameterManager) {
+
   @Parameter("solver")
   var solverClass: Class[_ <: Solver] = classOf[MAC]
 
-  @Parameter("preprocessor")
-  var preprocessorClass: Class[_ <: Filter] = null
-
-  val VERSION = s"Concrete 2.0-SNAPSHOT"
-
-  ParameterManager.register(this)
+  params.register(this)
 
   def apply(problem: Problem): Solver = {
     solverClass.getConstructor(classOf[Problem]).newInstance(problem);
@@ -54,9 +50,17 @@ object Solver {
 
   def apply(cspom: CSPOM): CSPOMSolver = {
     ProblemCompiler.compile(cspom, ConcretePatterns())
-    val (problem, variables) = ProblemGenerator.generate(cspom)
-    new CSPOMSolver(Solver(problem), cspom, variables)
+    val pg = new ProblemGenerator(params)
+    val (problem, variables) = pg.generate(cspom)
+    new CSPOMSolver(apply(problem), cspom, variables)
   }
+}
+
+object Solver {
+  val VERSION = s"Concrete 2.0-SNAPSHOT"
+  def apply(cspom: CSPOM, pm: ParameterManager = new ParameterManager): CSPOMSolver = new SolverFactory(pm)(cspom)
+  def apply(problem: Problem): Solver = apply(problem, new ParameterManager)
+  def apply(problem: Problem, pm: ParameterManager): Solver = new SolverFactory(pm)(problem)
 }
 
 class CSPOMSolver(
@@ -93,7 +97,9 @@ class CSPOMSolver(
   def statistics = solver.statistics
 }
 
-abstract class Solver(val problem: Problem) extends Iterator[Map[Variable, Any]] with LazyLogging {
+abstract class Solver(val problem: Problem, val params: ParameterManager) extends Iterator[Map[Variable, Any]] with LazyLogging {
+
+  params.register(this)
 
   @Statistic
   var preproRemoved = 0
@@ -105,6 +111,9 @@ abstract class Solver(val problem: Problem) extends Iterator[Map[Variable, Any]]
 
   @Statistic
   val nbVariables = problem.variables.size
+
+  @Parameter("preprocessor")
+  var preprocessorClass: Class[_ <: Filter] = null
 
   val statistics = new StatisticsManager
   statistics.register("solver", this)
@@ -185,10 +194,10 @@ abstract class Solver(val problem: Problem) extends Iterator[Map[Variable, Any]]
 
     logger.info("Preprocessing");
 
-    val preprocessor = if (Solver.preprocessorClass == null) {
+    val preprocessor = if (preprocessorClass == null) {
       filter
     } else {
-      val p = Solver.preprocessorClass.getConstructor(classOf[Problem]).newInstance(problem)
+      val p = preprocessorClass.getConstructor(classOf[Problem]).newInstance(problem)
       statistics.register("preprocessor", p)
       p
     }
@@ -202,7 +211,7 @@ abstract class Solver(val problem: Problem) extends Iterator[Map[Variable, Any]]
 
   }
 
-  def xmlConfig = ParameterManager.toXML
+  def xmlConfig = params.toXML
 
 }
 

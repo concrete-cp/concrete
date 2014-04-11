@@ -22,16 +22,12 @@ package concrete;
 import concrete.filter.ACC
 import concrete.filter.Filter
 
-object DummySolver {
+final class DummySolver(prob: Problem, params: ParameterManager) extends Solver(prob, params) {
+
   @Parameter("dummy.filter")
   var filterClass: Class[_ <: Filter] = classOf[ACC];
 
-  ParameterManager.register(this);
-}
-
-final class DummySolver(prob: Problem) extends Solver(prob) {
-
-  val filter = DummySolver.filterClass.getConstructor(classOf[Problem]).newInstance(problem);
+  val filter = filterClass.getConstructor(classOf[Problem]).newInstance(problem);
   statistics.register("filter", filter);
 
   def nextSolution() = if (preprocess(filter)) UNKNOWNResult else UNSAT

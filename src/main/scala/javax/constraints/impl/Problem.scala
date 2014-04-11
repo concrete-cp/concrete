@@ -12,9 +12,11 @@ import javax.constraints.Oper
 import cspom.variable.IntVariable
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
+import concrete.ParameterManager
+import concrete.SolverFactory
 
-class Problem(name: String) extends AbstractProblem(name) with LazyLogging {
-  def this() = this("")
+class Problem(name: String, params: ParameterManager) extends AbstractProblem(name) with LazyLogging {
+  def this(params: ParameterManager) = this("", params)
 
   val cspom = new CSPOM()
 
@@ -26,7 +28,7 @@ class Problem(name: String) extends AbstractProblem(name) with LazyLogging {
 
   // Members declared in javax.constraints.impl.AbstractProblem
   protected def createSolver(): javax.constraints.Solver = {
-    val solver = new Solver(this)
+    val solver = new Solver(this, params)
     concreteProblemOption = Some(solver.concreteProblem)
     for (v <- getVars.map(_.asInstanceOf[javax.constraints.impl.Var])) {
       v.concreteVar = solver.concreteProblem.variableMap.get(v.getName)

@@ -28,14 +28,15 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 import cspom.Statistic
 import concrete.UNSATException
 import concrete.LearnBin
+import concrete.ParameterManager
 
 /**
  * @author Julien VION
  *
  */
-final class DC20(val problem: Problem) extends Filter with LazyLogging {
+final class DC20(val problem: Problem, params: ParameterManager) extends Filter with LazyLogging {
 
-  val filter = new ACC(problem)
+  val filter = new ACC(problem, params)
 
   @Statistic
   var nbAddedConstraints = 0;

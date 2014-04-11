@@ -25,14 +25,20 @@ import cspom.Statistic
 import cspom.StatisticsManager
 import cspom.TimedException
 import cspom.VariableNames
+import concrete.generator.constraint.GeneratorManager
+import concrete.ParameterManager
 
-object ProblemGenerator extends LazyLogging {
+final class ProblemGenerator(private val pm: ParameterManager = new ParameterManager()) extends LazyLogging {
 
   @Parameter("generator.intToBool")
   val intToBool = false
 
   @Parameter("generator.generateLargeDomains")
   val generateLargeDomains = false
+
+  pm.register(this)
+
+  private val gm = new GeneratorManager(pm)
 
   @Statistic
   var genTime: Double = 0.0
@@ -79,7 +85,7 @@ object ProblemGenerator extends LazyLogging {
   }
 
   def genConstraint(c: CSPOMConstraint[_], variables: Map[CSPOMVariable[_], Variable], problem: Problem): Boolean = {
-    GeneratorManager.generate(c, variables, problem) match {
+    gm.generate(c, variables, problem) match {
       case Some(s) =>
         s.foreach(problem.addConstraint(_))
         false
@@ -105,31 +111,6 @@ object ProblemGenerator extends LazyLogging {
       case v: CSPOMVariable[_] => v -> new Variable(vn.names(v), generateDomain(v))
     }.toMap
 
-    //toMap
-    //    var unnamed = 0;
-    //
-    //    /**
-    //     * Generates an unique variable name.
-    //     *
-    //     * @return An unique variable name.
-    //     */
-    //    def generate() = {
-    //      val name = "_" + unnamed;
-    //      unnamed += 1;
-    //      name;
-    //    }
-    //
-    //    val names = cspom.namedExpressions.groupBy(_._2).mapValues(_.map(_._1))
-    //
-    //    val named = names.flatMap {
-    //      case (e, n) =>
-    //        generateVariables(n.mkString("||"), e)
-    //    }
-    //
-    //    named ++ cspom.referencedExpressions.iterator.collect {
-    //      case v: CSPOMVariable[_] if !named.contains(v) =>
-    //        v -> new Variable(generate(), generateDomain(v))
-    //    }
   }
 
   def generateVariables(name: String, e: CSPOMExpression[_]): Map[CSPOMVariable[_], Variable] =

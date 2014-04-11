@@ -26,7 +26,7 @@ final class AbsDiffGeneratorTest {
       ctr(CSPOMConstraint(v0, 'absdiff, Seq(v1, v2)))
     }
 
-    val problem = ProblemGenerator.generate(cspom)._1
+    val problem = new ProblemGenerator().generate(cspom)._1
 
     assertEquals(2, problem.constraints.size)
     assertEquals(Seq(classOf[AbsDiffAC], classOf[AbsDiffBC]), problem.constraints.map(_.getClass()))

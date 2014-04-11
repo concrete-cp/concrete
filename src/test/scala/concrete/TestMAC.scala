@@ -6,8 +6,10 @@ import scala.annotation.tailrec
 import concrete.constraint.semantic.AllDifferentBC
 import concrete.heuristic.MedValue
 import concrete.constraint.semantic.AllDifferent2C
+import org.scalatest.Matchers
+import org.scalatest.FlatSpec
 
-class TestMAC {
+class TestMAC extends FlatSpec with Matchers {
 
   def qp(size: Int) = {
 
@@ -47,18 +49,20 @@ class TestMAC {
     8 -> 92,
     12 -> 14200);
 
-  @Test //(timeout = 1000)
-  def queens() {
-    for ((size, nb) <- sols) {
+  val pm = new ParameterManager
+  pm("heuristic.value") = classOf[MedValue]
+
+  behavior of "MAC"
+
+  for ((size, nb) <- sols) {
+    it should s"solve queens-$size" in {
       val (queens, problem) = qp(size)
 
-      ParameterManager("heuristic.value") = classOf[MedValue]
-      //ParameterManager("logger.level") = "INFO"
-      val solver = new MAC(problem)
+      val solver = new MAC(problem, pm)
+      pm.register(solver)
 
-      val count = solver.size
-
-      Assert.assertEquals(nb, count)
+      solver.size shouldBe nb
     }
   }
+
 }

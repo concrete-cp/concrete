@@ -16,7 +16,7 @@ import concrete.constraint.Constraint
 import Generator._
 import com.typesafe.scalalogging.slf4j.LazyLogging
 
-object ExtensionGenerator extends Generator with LazyLogging {
+class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLogging {
 
   @Parameter("relationAlgorithm")
   var consType = "Reduce"
@@ -27,7 +27,7 @@ object ExtensionGenerator extends Generator with LazyLogging {
   @Parameter("closeRelations")
   var closeRelations = true
 
-  ParameterManager.register(this)
+  params.register(this)
 
   val TIGHTNESS_LIMIT = 4;
 
@@ -101,7 +101,7 @@ object ExtensionGenerator extends Generator with LazyLogging {
     } else if (init) {
       new TupleTrieSet(MDD(value2Index(domains, relation).map(_.toArray)), init)
     } else {
-      new TupleTrieSet(ExtensionGenerator.ds match {
+      new TupleTrieSet(ds match {
         case "MDD" => relation2MDD(relation, domains)
         case "STR" => new STR() ++ value2Index(domains, relation).toIterable.map(_.toArray)
       }, init)
@@ -112,7 +112,7 @@ object ExtensionGenerator extends Generator with LazyLogging {
     relation match {
       case laz: cspom.extension.LazyRelation[_] => relation2MDD(laz.apply, domains)
       case mdd: cspom.extension.MDD[_] =>
-        ExtensionGenerator.cspomMDDtoCspfjMDD(
+        cspomMDDtoCspfjMDD(
           domains,
           mdd.asInstanceOf[cspom.extension.MDD[Int]],
           new HashMap())
@@ -157,7 +157,7 @@ object ExtensionGenerator extends Generator with LazyLogging {
       val constraint = matrix match {
         case m: Matrix2D => BinaryExt(scope, m, true)
         case m: TupleTrieSet if (m.initialContent == false) => {
-          ExtensionGenerator.consType match {
+          consType match {
             case "MDDC" =>
               new MDDC(scope, m.reduceable.asInstanceOf[MDD])
 

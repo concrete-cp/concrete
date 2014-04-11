@@ -19,10 +19,11 @@
 
 package concrete.heuristic;
 
-import concrete.Problem;
+import concrete.Problem
 import concrete.Variable;
+import concrete.ParameterManager
 
-class WDegTimesDom extends VariableHeuristic {
+class WDegTimesDom(params: ParameterManager) extends VariableHeuristic(params) {
 
   def score(variable: Variable) = variable.getWDegEntailed * variable.dom.size
 

@@ -24,24 +24,20 @@ import concrete.Variable
  * @author scand1sk
  *
  */
-object ACV {
+
+final class ACV(
+  val problem: Problem, params: ParameterManager) extends Filter with LazyLogging {
+
   @Parameter("ac3v.queue")
   var queueType: Class[_ <: PriorityQueue[Variable]] = classOf[BinaryHeap[Variable]]
 
   @Parameter("ac3v.key")
-  val keyType: Class[_ <: Key[Variable]] = classOf[concrete.heuristic.revision.Dom]
+  var keyType: Class[_ <: Key[Variable]] = classOf[concrete.heuristic.revision.Dom]
 
-  def key = keyType.getConstructor().newInstance()
+  val key = keyType.getConstructor().newInstance()
 
-  def queue = queueType.getConstructor().newInstance()
+  val queue = queueType.getConstructor().newInstance()
 
-  ParameterManager.register(ACV.this);
-}
-
-final class ACV(
-  val problem: Problem,
-  val key: Key[Variable],
-  val queue: PriorityQueue[Variable]) extends Filter with LazyLogging {
   @Statistic
   val substats = new StatisticsManager
   substats.register("queue", queue);
@@ -51,8 +47,6 @@ final class ACV(
 
   @Statistic
   var revisions = 0;
-
-  def this(problem: Problem) = this(problem, ACV.key, ACV.queue)
 
   def reduceAll() = {
     queue.clear();

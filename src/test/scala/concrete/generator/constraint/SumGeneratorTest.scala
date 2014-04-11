@@ -21,7 +21,7 @@ class SumGeneratorTest {
       val r = sumProd((1, IntVariable(0 to 5)), (2, IntVariable(10 to 15)), (3, CSPOMConstant(20))) as "test"
     }
 
-    var problem = ProblemGenerator.generate(cspom)._1
+    var problem = new ProblemGenerator().generate(cspom)._1
 
     assertEquals(Interval(80, 95), problem.variable("test").dom.valueInterval)
 
@@ -36,7 +36,7 @@ class SumGeneratorTest {
 
     ProblemCompiler.compile(cspom, Seq(MergeEq))
 
-    var problem = ProblemGenerator.generate(cspom)._1
+    var problem = new ProblemGenerator().generate(cspom)._1
 
     assertEquals(problem.toString, Interval(-30, -28), problem.variable("test").dom.valueInterval)
 

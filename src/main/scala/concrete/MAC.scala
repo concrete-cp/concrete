@@ -31,7 +31,8 @@ import cspom.StatisticsManager
 import scala.annotation.tailrec
 import cspom.TimedException
 
-object MAC {
+final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, params) with LazyLogging {
+
   @Parameter("mac.btGrowth")
   var btGrowth = 1.5;
 
@@ -52,31 +53,26 @@ object MAC {
   @Parameter("mac.accurateMem")
   var accurateMem = false
 
-  ParameterManager.register(this);
-
-  override def toString = "MAC parameters"
-}
-
-final class MAC(prob: Problem) extends Solver(prob) with LazyLogging {
+  params.register(this)
 
   @Statistic
   var nbAssignments = 1;
 
   //private var decisions: List[Pair] = Nil
 
-  private val filter: Filter = MAC.filterClass.getConstructor(classOf[Problem]).newInstance(problem);
+  private val filter: Filter = filterClass.getConstructor(classOf[Problem], classOf[ParameterManager]).newInstance(problem, params);
   statistics.register("filter", filter);
 
-  var heuristic: Heuristic = MAC.heuristicClass.getConstructor().newInstance();
+  var heuristic: Heuristic = heuristicClass.getConstructor(classOf[ParameterManager]).newInstance(params);
 
-  private val ngl = new NoGoodLearner(prob, MAC.addConstraint)
+  private val ngl = new NoGoodLearner(prob, addConstraint)
   statistics.register("nfr-learner", ngl)
 
   var maxBacktracks =
-    if (MAC.restartLevel == 0) {
+    if (restartLevel == 0) {
       math.max(10, problem.maxDomainSize / 10)
     } else {
-      MAC.restartLevel
+      restartLevel
     }
 
   var nbBacktracks = 0
@@ -158,7 +154,7 @@ final class MAC(prob: Problem) extends Solver(prob) with LazyLogging {
       //      if (!filter.reduceAfter(modified)) {
       //        (UNSAT, Nil)
       //      } else {
-      maxBacktracks = (maxBacktracks * MAC.btGrowth).toInt;
+      maxBacktracks = (maxBacktracks * btGrowth).toInt;
       nbBacktracks = 0
       nextSolution(None)
       //      }
@@ -196,7 +192,7 @@ final class MAC(prob: Problem) extends Solver(prob) with LazyLogging {
     }
 
   } finally {
-    if (MAC.accurateMem) {
+    if (accurateMem) {
       System.gc()
       System.gc()
       System.gc()

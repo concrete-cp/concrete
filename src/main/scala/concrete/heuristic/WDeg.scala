@@ -22,10 +22,11 @@ package concrete.heuristic;
 import scala.collection.JavaConversions
 import concrete.constraint.Constraint
 import concrete.Problem
-import concrete.Variable;
+import concrete.Variable
 import scala.annotation.tailrec
+import concrete.ParameterManager
 
-final class WDeg(val problem: Problem) extends VariableHeuristic {
+final class WDeg(val problem: Problem, params: ParameterManager) extends VariableHeuristic(params) {
 
   def score(variable: Variable) = variable.getWDegEntailed
 

@@ -19,10 +19,11 @@
 
 package concrete.heuristic;
 
-import concrete.Problem;
+import concrete.Problem
 import concrete.Variable;
+import concrete.ParameterManager
 
-final class LexVar extends VariableHeuristic {
+final class LexVar(params: ParameterManager) extends VariableHeuristic(params) {
 
   def score(variable: Variable) = variable.getId
 

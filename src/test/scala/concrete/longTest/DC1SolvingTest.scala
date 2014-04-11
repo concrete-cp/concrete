@@ -16,103 +16,15 @@ import concrete.MAC
 import org.junit.After
 import org.junit.Before
 import concrete.generator.cspompatterns.ConcretePatterns
+import org.scalatest.FlatSpec
 
-final class DC1SolvingTest extends LazyLogging {
-  //Solver.loggerLevel = "FINER"
-  import SolvingTest._
+final class DC1SolvingTest extends FlatSpec with SolvingBehaviors {
 
-  @Before
-  def before() {
-    //Solver.loggerLevel = "INFO"
-    ParameterManager("preprocessor") = classOf[DC1]
-    ParameterManager("dc1.addConstraints") = "BIN";
-    ParameterManager("closeRelations") = false
-  }
+  val pm = new ParameterManager
 
-  @After
-  def after() {
-    ParameterManager("preprocessor") = null
-  }
+  pm("preprocessor") = classOf[DC1]
+  pm("dc1.addConstraints") = "BIN";
 
-  @Test
-  def crosswordm1() {
-
-    assertEquals(48, count("crossword-m1-debug-05-01.xml"));
-
-  }
-
-  @Test
-  def crosswordm2() {
-
-    assertEquals(48, count("crossword-m2-debug-05-01.xml"));
-
-  }
-
-  @Test
-  def queens8() {
-
-    assertEquals(92, count("queens-8.xml"));
-
-  }
-
-  @Test
-  def queens12_ext() {
-
-    assertEquals(14200, count("queens-12_ext.xml"));
-
-  }
-
-  @Test
-  def langford() {
-
-    assertEquals(2, count("langford-2-4-ext.xml"));
-
-  }
-
-  @Test
-  def zebra() {
-
-    assertEquals(1, count("zebra.xml"));
-
-  }
-
-  @Test
-  def dimacs() {
-    assertTrue(solve("flat30-1.cnf", false));
-    // assertNotNull(solve("clauses-2.cnf.bz2"));
-    // assertEquals(1, count("flat30-1.cnf"));
-
-  }
-
-  @Test
-  def bqwh() {
-
-    assertEquals(182, count("bqwh-15-106-0_ext.xml"));
-  }
-
-  @Test
-  def frb35_17_1() {
-    // assertNotNull(solve("frb35-17-1_ext.xml.bz2"));
-    assertEquals(2, count("frb35-17-1_ext.xml.bz2"));
-  }
-
-  //  @Test
-  //  def scen11_f12() {
-  //    assertEquals(solve("scen11-f12.xml.bz2"), None);
-  //  }
-
-  //  @Test
-  //  def fapp01_0200_0() {
-  //    assertNull(solve("fapp01-0200-0.xml"));
-  //    assertEquals(0, count("fapp01-0200-0.xml"));
-  //
-  //  }
-
-  @Test
-  def queens12() {
-    assertTrue(solve("queens-12.xml"));
-    //    assertEquals(14200, count("queens-12.xml"));
-
-  }
+  "Solving with DC1" should behave like test(pm)
 
 }

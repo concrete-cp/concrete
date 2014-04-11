@@ -43,12 +43,7 @@ import scala.slick.jdbc.StaticQuery.interpolation
 
 object SQLWriter {
 
-  @Parameter("sql.createTables")
-  var createTables = false
-
-  ParameterManager.register(this)
-
-  def connection(uri: URI) = {
+  def connection(uri: URI, createTables: Boolean) = {
     require(!uri.isOpaque, "Opaque connection URI : " + uri.toString)
 
     val driver = uri.getScheme match {
@@ -164,9 +159,14 @@ object SQLWriter {
   val statistic = TableQuery[Statistic]
 }
 
-final class SQLWriter(jdbcUri: URI) extends ConcreteWriter {
+final class SQLWriter(jdbcUri: URI, params: ParameterManager) extends ConcreteWriter {
 
-  lazy val db = SQLWriter.connection(jdbcUri)
+  @Parameter("sql.createTables")
+  var createTables = false
+
+  params.register(this)
+
+  lazy val db = SQLWriter.connection(jdbcUri, createTables)
 
   //createTables()
 

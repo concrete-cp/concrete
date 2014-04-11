@@ -20,16 +20,17 @@ package concrete.filter;
 
 import java.util.logging.Logger
 import concrete.Problem
-import concrete.Variable;
+import concrete.Variable
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import concrete.ParameterManager
 
 /**
  * @author Julien VION
  *
  */
-final class SAC1(val problem: Problem) extends SingletonConsistency with LazyLogging {
+final class SAC1(val problem: Problem, params: ParameterManager) extends SingletonConsistency with LazyLogging {
 
-  val subFilter = new ACC(problem)
+  val subFilter = new ACC(problem, params)
 
   def singletonTest(variable: Variable) = {
     var changedGraph = false;
@@ -42,7 +43,6 @@ final class SAC1(val problem: Problem) extends SingletonConsistency with LazyLog
     }
     changedGraph;
   }
-
 
   override def toString = "SAC-1 w/ " + subFilter;
 

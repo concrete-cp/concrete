@@ -8,12 +8,12 @@ import java.security.InvalidParameterException
 import scala.collection.mutable.HashMap
 
 /**
- * This class is intended to hold CSP4J's various parameters.
+ * This class is intended to hold Concrete's various parameters.
  *
  * @author vion
  *
  */
-final object ParameterManager {
+final class ParameterManager {
 
   private val parameters: HashMap[String, (Any, Field)] = new HashMap()
   private val pending: HashMap[String, Any] = new HashMap()
@@ -51,6 +51,8 @@ final object ParameterManager {
       case Some((o, f)) => f.set(o, value)
     }
   }
+
+  def apply(name: String) = parameters.get(name).map(_._1)
 
   private def parse(field: Field, value: String): Any = {
     val fType = field.getType

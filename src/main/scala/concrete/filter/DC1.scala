@@ -32,26 +32,21 @@ import concrete.Problem
  * @author Julien VION
  *
  */
-object DC1 {
-
+final class DC1(val problem: Problem, params: ParameterManager) extends SingletonConsistency with LazyLogging {
   @Parameter("dc1.addConstraints")
-  var _addConstraints = "CONSERVATIVE"
-  def addConstraints = LearnMethod(_addConstraints)
+  var addConstraints = "CONSERVATIVE"
 
-  ParameterManager.register(this)
+  params.register(this)
 
-}
-
-final class DC1(val problem: Problem) extends SingletonConsistency with LazyLogging {
   @Statistic
   var addedConstraints = 0
 
   @Statistic
   var noGoods = 0
 
-  val ngl = new NoGoodLearner(problem, DC1.addConstraints)
+  val ngl = new NoGoodLearner(problem, LearnMethod(addConstraints))
 
-  val subFilter = new ACC(problem)
+  val subFilter = new ACC(problem, params)
 
   override def reduce() = {
     val nbC = problem.constraints.size

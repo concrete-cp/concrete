@@ -3,9 +3,7 @@ package concrete.runner
 import java.net.URI
 import java.security.InvalidParameterException
 import java.util.Timer
-
 import com.typesafe.scalalogging.slf4j.LazyLogging
-
 import concrete.Parameter
 import concrete.ParameterManager
 import concrete.Problem
@@ -20,6 +18,7 @@ import cspom.TimedException
 import cspom.compiler.ProblemCompiler
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMVariable
+import concrete.SolverFactory
 
 trait ConcreteRunner {
 
@@ -76,6 +75,9 @@ trait ConcreteRunner {
   @Parameter("optimizeVar")
   var optimizeVar: String = ""
 
+  val pm = new ParameterManager
+  val statistics = new StatisticsManager()
+
   def run(args: Array[String]) {
     val (opt, remaining) = try {
       options(args.toList)
@@ -88,21 +90,22 @@ trait ConcreteRunner {
 
     opt.get('D).collect {
       case p: Seq[(String, String)] => for ((option, value) <- p) {
-        ParameterManager.parse(option, value)
+        pm.parse(option, value)
       }
     }
 
+    pm.register(this)
+
     val writer: ConcreteWriter =
-      opt.get('SQL).map(url => new SQLWriter(new URI(url.toString))).getOrElse {
+      opt.get('SQL).map(url => new SQLWriter(new URI(url.toString), pm)).getOrElse {
         new ConsoleWriter()
       }
 
     writer.problem(description(remaining))
 
-    val statistics = new StatisticsManager()
     statistics.register("runner", this)
     statistics.register("problemCompiler", ProblemCompiler)
-    statistics.register("problemGenerator", ProblemGenerator)
+    //statistics.register("problemGenerator", ProblemGenerator)
 
     val waker = new Timer()
     try {
@@ -117,13 +120,13 @@ trait ConcreteRunner {
         case e: TimedException =>
           loadTime = e.time
           // Required to obtain a configId
-          writer.parameters(ParameterManager.toXML)
+          writer.parameters(pm.toXML)
           throw e.getCause()
       }
 
-      val solver = Solver(problem)
+      val solver = new SolverFactory(pm)(problem)
       // Loading the solver will initialize many parameters
-      writer.parameters(ParameterManager.toXML)
+      writer.parameters(pm.toXML)
 
       statistics.register("solver", solver)
       applyParameters(solver)

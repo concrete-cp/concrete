@@ -17,14 +17,6 @@ import concrete.heuristic.revision.Eval
 import com.typesafe.scalalogging.slf4j.LazyLogging
 
 object ACC extends LazyLogging {
-  @Parameter("ac3c.queue")
-  var queueType: Class[_ <: PriorityQueue[Constraint]] = classOf[QuickFifos[Constraint]]
-
-  @Parameter("ac3c.key")
-  var keyType: Class[_ <: Key[Constraint]] = classOf[Eval]
-
-  ParameterManager.register(ACC.this);
-
   def control(problem: Problem) = {
     logger.debug("Control !")
     for (c <- problem.constraints) {
@@ -39,12 +31,22 @@ object ACC extends LazyLogging {
     true;
   }
 
-  def key = keyType.getConstructor().newInstance()
-
-  def queue = queueType.getConstructor().newInstance()
 }
 
-final class ACC(val problem: Problem, val key: Key[Constraint], val queue: PriorityQueue[Constraint]) extends Filter with LazyLogging {
+final class ACC(val problem: Problem, params: ParameterManager) extends Filter with LazyLogging {
+
+  @Parameter("ac3c.queue")
+  var queueType: Class[_ <: PriorityQueue[Constraint]] = classOf[QuickFifos[Constraint]]
+
+  @Parameter("ac3c.key")
+  var keyType: Class[_ <: Key[Constraint]] = classOf[Eval]
+  
+  params.register(this)
+
+  val key = keyType.getConstructor().newInstance()
+
+  val queue = queueType.getConstructor().newInstance()
+
   @Statistic
   val substats = new StatisticsManager
   substats.register("queue", queue);
@@ -53,8 +55,6 @@ final class ACC(val problem: Problem, val key: Key[Constraint], val queue: Prior
 
   @Statistic
   var revisions = 0;
-
-  def this(problem: Problem) = this(problem, ACC.key, ACC.queue)
 
   def reduceAll() = {
     AdviseCount.clear()

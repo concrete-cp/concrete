@@ -9,31 +9,29 @@ import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
 import concrete.Solver
 import concrete.generator.cspompatterns.ConcretePatterns
+import org.scalatest.Assertions
+import org.scalatest.FlatSpec
+import concrete.ParameterManager
 
-final class ProblemGeneratorTest extends LazyLogging {
+final class ProblemGeneratorTest extends FlatSpec with LazyLogging {
 
-  @Test
-  def zebra() {
+  "ProblemGenerator" should "generate zebra" in {
     generateTest("zebra.xml");
   }
 
-  @Test
-  def queens12() {
+  it should "generate queens-12" in {
     generateTest("queens-12.xml");
   }
 
-  @Test
-  def scen11f12() {
+  it should "generate scen11-f12" in {
     generateTest("scen11-f12.xml.bz2");
   }
 
-  @Test
-  def crosswordm2() {
+  it should "generate crosswordm2" in {
     generateTest("crossword-m2-debug-05-01.xml");
   }
 
-  @Test
-  def lexHerald() {
+  it should "generate lexHerald" in {
     generateTest("normalized-crossword-m1-lex-15-04.xml.bz2");
   }
 
@@ -52,11 +50,11 @@ final class ProblemGeneratorTest extends LazyLogging {
 
     logger.info(cspom + "\n" + cspom.referencedExpressions.size + " vars, " + cspom.constraints.size + " cons")
 
-    val problem = ProblemGenerator.generate(cspom)._1;
+    val problem = new ProblemGenerator(new ParameterManager).generate(cspom)._1;
 
     logger.info(problem + "\n" + problem.variables.size + " vars, " + problem.constraints.size + " cons")
 
-    new ACC(problem).reduceAll();
+    new ACC(problem, new ParameterManager).reduceAll();
 
     logger.info(problem.toString);
   }

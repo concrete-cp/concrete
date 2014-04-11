@@ -30,18 +30,20 @@ import concrete.Parameter
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.annotation.tailrec
 import concrete.LearnBin
+import com.sun.org.apache.bcel.internal.classfile.PMGClass
+import concrete.ParameterManager
 
 /**
  * @author Julien VION
  *
  */
-final class DC21(val problem: Problem) extends Filter with LazyLogging {
+final class DC21(val problem: Problem, params:ParameterManager) extends Filter with LazyLogging {
 
   private var nbAddedConstraints = 0;
 
   private var nbNoGoods = 0
 
-  private val filter = new ACV(problem)
+  private val filter = new ACV(problem, params)
 
   // private final List<DynamicConstraint> impliedConstraints;
 

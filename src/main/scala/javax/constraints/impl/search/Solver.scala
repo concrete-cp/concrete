@@ -9,9 +9,9 @@ import concrete.ParameterManager
 import concrete.MAC
 import concrete.Variable
 
-class Solver(problem: javax.constraints.impl.Problem) extends javax.constraints.impl.search.AbstractSolver(problem) {
+class Solver(problem: javax.constraints.impl.Problem, params: ParameterManager) extends javax.constraints.impl.search.AbstractSolver(problem) {
   val cspom = problem.cspom
-  val concreteProblem = ProblemGenerator.generate(cspom)._1
+  val concreteProblem = new ProblemGenerator(params).generate(cspom)._1
   val concreteSolver = concrete.Solver(concreteProblem)
 
   // Members declared in 	 javax.constraints.impl.search.AbstractSolver
@@ -44,7 +44,7 @@ class Solver(problem: javax.constraints.impl.Problem) extends javax.constraints.
   }
 
   def newSearchStrategy(): javax.constraints.SearchStrategy = {
-    val ss = new SearchStrategy(this)
+    val ss = new SearchStrategy(this, params)
     //concreteSolver.asInstanceOf[MAC].setHeuristic(ss)
     ss
   }

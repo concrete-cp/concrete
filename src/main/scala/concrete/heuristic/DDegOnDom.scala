@@ -1,12 +1,12 @@
 package concrete.heuristic;
 
-import scala.collection.JavaConversions
+
 import concrete.constraint.Constraint
 import concrete.Problem
 import concrete.Variable;
-import scala.annotation.tailrec
+import concrete.ParameterManager
 
-final class DDegOnDom extends VariableHeuristic {
+final class DDegOnDom(params: ParameterManager) extends VariableHeuristic(params) {
 
   def score(variable: Variable) =
     variable.getDDegEntailed.toDouble / variable.dom.size
