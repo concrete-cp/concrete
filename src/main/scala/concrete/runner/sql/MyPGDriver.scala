@@ -1,6 +1,7 @@
 package concrete.runner.sql
 
 import scala.slick.driver.PostgresDriver
+import scala.slick.jdbc.JdbcType
 
 trait MyPGDriver extends PostgresDriver {
   override def defaultSqlTypeName(tmd: JdbcType[_]): String = tmd.sqlType match {
