@@ -1,42 +1,38 @@
 package concrete.generator;
 
-import concrete.generator.constraint.GeneratorManager
-import concrete.{ Domain, IntDomain, Problem }
-import cspom.CSPOMConstraint
-import cspom.CSPOM
 import scala.annotation.tailrec
-import scala.collection.immutable.Queue
-import cspom.variable.IntInterval
+import scala.reflect.runtime.universe
+
 import com.typesafe.scalalogging.slf4j.LazyLogging
+
+import concrete.Domain
+import concrete.IntDomain
+import concrete.ParameterManager
+import concrete.Problem
 import concrete.UndefinedDomain
 import concrete.Variable
-import cspom.variable.CSPOMVariable
-import cspom.variable.BoolVariable
-import cspom.variable.IntVariable
-import cspom.variable.FreeVariable
-import cspom.variable.IntSeq
-import cspom.variable.FreeInt
-import cspom.variable.CSPOMSeq
-import cspom.variable.CSPOMExpression
-import cspom.variable.CSPOMConstant
-import cspom.compiler.QueueSet
-import concrete.Parameter
+import concrete.generator.constraint.GeneratorManager
+import cspom.CSPOM
+import cspom.CSPOMConstraint
 import cspom.Statistic
 import cspom.StatisticsManager
 import cspom.TimedException
 import cspom.VariableNames
-import concrete.generator.constraint.GeneratorManager
-import concrete.ParameterManager
+import cspom.variable.BoolVariable
+import cspom.variable.CSPOMConstant
+import cspom.variable.CSPOMExpression
+import cspom.variable.CSPOMSeq
+import cspom.variable.CSPOMVariable
+import cspom.variable.FreeInt
+import cspom.variable.FreeVariable
+import cspom.variable.IntInterval
+import cspom.variable.IntSeq
+import cspom.variable.IntVariable
 
 final class ProblemGenerator(private val pm: ParameterManager = new ParameterManager()) extends LazyLogging {
 
-  @Parameter("generator.intToBool")
-  val intToBool = false
-
-  @Parameter("generator.generateLargeDomains")
-  val generateLargeDomains = false
-
-  pm.register(this)
+  val intToBool = pm("generator.intToBool").getOrElse(false)
+  val generateLargeDomains = pm("generator.generateLargeDomains").getOrElse(false)
 
   private val gm = new GeneratorManager(pm)
 

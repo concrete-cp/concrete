@@ -1,33 +1,40 @@
 package concrete.generator.constraint;
 
 import scala.collection.mutable.HashMap
-import concrete.Domain
-import concrete.Parameter
-import concrete.ParameterManager
-import concrete.Problem
-import concrete.UNSATException
-import concrete.Variable
-import concrete.constraint.extension._
-import scala.collection.mutable.ArrayBuffer
-import concrete.UNSATObject
-import cspom.CSPOMConstraint
-import cspom.xcsp.Extension
-import concrete.constraint.Constraint
-import Generator._
+import scala.reflect.runtime.universe
+
 import com.typesafe.scalalogging.slf4j.LazyLogging
+
+import Generator.cspom2concreteVar
+import concrete.Domain
+import concrete.ParameterManager
+import concrete.UNSATObject
+import concrete.Variable
+import concrete.constraint.Constraint
+import concrete.constraint.extension.BinaryExt
+import concrete.constraint.extension.ExtensionConstraintGeneral
+import concrete.constraint.extension.FindSupportExt
+import concrete.constraint.extension.MDD
+import concrete.constraint.extension.MDD0
+import concrete.constraint.extension.MDD1
+import concrete.constraint.extension.MDD2
+import concrete.constraint.extension.MDDC
+import concrete.constraint.extension.MDDC2
+import concrete.constraint.extension.MDDn
+import concrete.constraint.extension.Matrix
+import concrete.constraint.extension.Matrix2D
+import concrete.constraint.extension.ReduceableExt
+import concrete.constraint.extension.STR
+import concrete.constraint.extension.TupleTrieSet
+import cspom.CSPOMConstraint
 
 class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLogging {
 
-  @Parameter("relationAlgorithm")
-  var consType = "Reduce"
+  val consType = params("relationAlgorithm").getOrElse("Reduce")
 
-  @Parameter("relationStructure")
-  var ds = "MDD"
+  val ds = params("relationStructure").getOrElse("MDD")
 
-  @Parameter("closeRelations")
-  var closeRelations = true
-
-  params.register(this)
+  val closeRelations = params("closeRelations").getOrElse(true)
 
   val TIGHTNESS_LIMIT = 4;
 

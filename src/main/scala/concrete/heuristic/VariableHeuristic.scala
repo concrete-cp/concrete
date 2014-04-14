@@ -4,17 +4,13 @@ import java.util.Comparator
 import concrete.Variable
 import concrete.Problem
 import scala.math.Ordering.DoubleOrdering
-import concrete.Parameter
 import scala.util.Random
 import scala.annotation.tailrec
 import concrete.ParameterManager
 
 abstract class VariableHeuristic(params: ParameterManager) extends Ordering[Variable] {
-  @Parameter("variableHeuristic.randomBreak")
-  var rb = true
-
-  @Parameter("randomBreak.seed")
-  var seed = 0L
+  private val rb: Boolean = params("variableHeuristic.randomBreak").getOrElse(true)
+  private val seed: Long = params("randomBreak.seed").getOrElse(0L)
 
   private val rand = if (rb) Some(new Random(seed)) else None
 

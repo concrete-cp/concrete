@@ -21,7 +21,6 @@ package concrete.filter;
 import concrete.LearnMethod
 import concrete.NoGoodLearner
 import concrete.Variable
-import concrete.Parameter
 import cspom.Statistic
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import concrete.ParameterManager
@@ -33,10 +32,8 @@ import concrete.Problem
  *
  */
 final class DC1(val problem: Problem, params: ParameterManager) extends SingletonConsistency with LazyLogging {
-  @Parameter("dc1.addConstraints")
-  var addConstraints = "CONSERVATIVE"
-
-  params.register(this)
+  private val addConstraints =
+    params("dc1.addConstraints").getOrElse("CONSERVATIVE")
 
   @Statistic
   var addedConstraints = 0

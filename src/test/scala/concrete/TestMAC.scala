@@ -59,7 +59,6 @@ class TestMAC extends FlatSpec with Matchers {
       val (queens, problem) = qp(size)
 
       val solver = new MAC(problem, pm)
-      pm.register(solver)
 
       solver.size shouldBe nb
     }

@@ -24,10 +24,10 @@ import concrete.filter.Filter
 
 final class DummySolver(prob: Problem, params: ParameterManager) extends Solver(prob, params) {
 
-  @Parameter("dummy.filter")
-  var filterClass: Class[_ <: Filter] = classOf[ACC];
+  private val filterClass: Class[_ <: Filter] =
+    params("dummy.filter").getOrElse(classOf[ACC])
 
-  val filter = filterClass.getConstructor(classOf[Problem]).newInstance(problem);
+  private val filter = filterClass.getConstructor(classOf[Problem]).newInstance(problem);
   statistics.register("filter", filter);
 
   def nextSolution() = if (preprocess(filter)) UNKNOWNResult else UNSAT

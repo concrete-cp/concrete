@@ -26,7 +26,6 @@ import concrete.LearnMethod
 import concrete.NoGoodLearner
 import concrete.Problem
 import concrete.Variable
-import concrete.Parameter
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.annotation.tailrec
 import concrete.LearnBin

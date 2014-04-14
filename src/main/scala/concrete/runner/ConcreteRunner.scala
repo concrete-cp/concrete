@@ -4,7 +4,6 @@ import java.net.URI
 import java.security.InvalidParameterException
 import java.util.Timer
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import concrete.Parameter
 import concrete.ParameterManager
 import concrete.Problem
 import concrete.Solver
@@ -69,12 +68,6 @@ trait ConcreteRunner {
   @Statistic
   var loadTime: Double = _
 
-  @Parameter("optimize")
-  var optimize: String = "sat"
-
-  @Parameter("optimizeVar")
-  var optimizeVar: String = ""
-
   val pm = new ParameterManager
   val statistics = new StatisticsManager()
 
@@ -94,7 +87,9 @@ trait ConcreteRunner {
       }
     }
 
-    pm.register(this)
+    val optimize: String = pm("optimize").getOrElse("sat")
+
+    val optimizeVar: Option[String] = pm("optimizeVar")
 
     val writer: ConcreteWriter =
       opt.get('SQL).map(url => new SQLWriter(new URI(url.toString), pm)).getOrElse {
@@ -139,9 +134,9 @@ trait ConcreteRunner {
       optimize match {
         case "sat" =>
         case "min" =>
-          solver.minimize(solver.problem.variable(optimizeVar))
+          solver.minimize(solver.problem.variable(optimizeVar.get))
         case "max" =>
-          solver.maximize(solver.problem.variable(optimizeVar))
+          solver.maximize(solver.problem.variable(optimizeVar.get))
       }
 
       if (solver.isOptimizer) {

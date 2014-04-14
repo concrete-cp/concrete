@@ -1,20 +1,20 @@
 package concrete.filter;
 
 import scala.annotation.tailrec
-import concrete.constraint.Constraint
-import concrete.constraint.Removals
-import concrete.priorityqueues._
+import scala.reflect.runtime.universe
+import com.typesafe.scalalogging.slf4j.LazyLogging
+import concrete.AdviseCount
 import concrete.ParameterManager
 import concrete.Problem
-import cspom.Statistic
-import cspom.StatisticsManager
 import concrete.UNSATException
 import concrete.Variable
-import concrete.AdviseCount
-import concrete.Parameter
-import concrete.heuristic.revision.Key
+import concrete.constraint.Constraint
 import concrete.heuristic.revision.Eval
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import concrete.priorityqueues.QuickFifos
+import cspom.Statistic
+import cspom.StatisticsManager
+import concrete.priorityqueues.PriorityQueue
+import concrete.heuristic.revision.Key
 
 object ACC extends LazyLogging {
   def control(problem: Problem) = {
@@ -35,17 +35,15 @@ object ACC extends LazyLogging {
 
 final class ACC(val problem: Problem, params: ParameterManager) extends Filter with LazyLogging {
 
-  @Parameter("ac3c.queue")
-  var queueType: Class[_ <: PriorityQueue[Constraint]] = classOf[QuickFifos[Constraint]]
+  private val queueType: Class[_ <: PriorityQueue[Constraint]] =
+    params("ac3c.queue").getOrElse(classOf[QuickFifos[Constraint]])
 
-  @Parameter("ac3c.key")
-  var keyType: Class[_ <: Key[Constraint]] = classOf[Eval]
-  
-  params.register(this)
+  private val keyType: Class[_ <: Key[Constraint]] =
+    params("ac3c.key").getOrElse(classOf[Eval])
 
-  val key = keyType.getConstructor().newInstance()
+  private val key = keyType.getConstructor().newInstance()
 
-  val queue = queueType.getConstructor().newInstance()
+  private val queue = queueType.getConstructor().newInstance()
 
   @Statistic
   val substats = new StatisticsManager

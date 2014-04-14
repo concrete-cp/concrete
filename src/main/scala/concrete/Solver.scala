@@ -39,10 +39,8 @@ import cspom.variable.CSPOMConstant
 
 final class SolverFactory(val params: ParameterManager) {
 
-  @Parameter("solver")
-  var solverClass: Class[_ <: Solver] = classOf[MAC]
-
-  params.register(this)
+  val solverClass: Class[_ <: Solver] =
+    params("solver").getOrElse(classOf[MAC])
 
   def apply(problem: Problem): Solver = {
     solverClass.getConstructor(classOf[Problem]).newInstance(problem);
@@ -100,8 +98,6 @@ class CSPOMSolver(
 
 abstract class Solver(val problem: Problem, val params: ParameterManager) extends Iterator[Map[Variable, Any]] with LazyLogging {
 
-  params.register(this)
-
   @Statistic
   var preproRemoved = 0
   @Statistic
@@ -113,8 +109,8 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   @Statistic
   val nbVariables = problem.variables.size
 
-  @Parameter("preprocessor")
-  var preprocessorClass: Class[_ <: Filter] = null
+  val preprocessorClass: Option[Class[_ <: Filter]] =
+    params("preprocessor")
 
   val statistics = new StatisticsManager
   statistics.register("solver", this)
@@ -195,12 +191,13 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
 
     logger.info("Preprocessing");
 
-    val preprocessor = if (preprocessorClass == null) {
+    val preprocessor = preprocessorClass.map {
+      pc =>
+        val p = pc.getConstructor(classOf[Problem]).newInstance(problem)
+        statistics.register("preprocessor", p)
+        p
+    } getOrElse {
       filter
-    } else {
-      val p = preprocessorClass.getConstructor(classOf[Problem]).newInstance(problem)
-      statistics.register("preprocessor", p)
-      p
     }
 
     val (r, t) = StatisticsManager.time(preprocessor.reduceAll());

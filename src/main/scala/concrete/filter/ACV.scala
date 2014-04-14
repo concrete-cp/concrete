@@ -11,7 +11,6 @@ import concrete.heuristic.revision.Key
 import concrete.priorityqueues.BinaryHeap
 import concrete.priorityqueues.PriorityQueue
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import concrete.Parameter
 import cspom.Statistic
 import concrete.AdviseCount
 import concrete.ParameterManager
@@ -28,11 +27,11 @@ import concrete.Variable
 final class ACV(
   val problem: Problem, params: ParameterManager) extends Filter with LazyLogging {
 
-  @Parameter("ac3v.queue")
-  var queueType: Class[_ <: PriorityQueue[Variable]] = classOf[BinaryHeap[Variable]]
+  private val queueType: Class[_ <: PriorityQueue[Variable]] =
+    params("ac3v.queue").getOrElse(classOf[BinaryHeap[Variable]])
 
-  @Parameter("ac3v.key")
-  var keyType: Class[_ <: Key[Variable]] = classOf[concrete.heuristic.revision.Dom]
+  private val keyType: Class[_ <: Key[Variable]] =
+    params("ac3v.key").getOrElse(classOf[concrete.heuristic.revision.Dom])
 
   val key = keyType.getConstructor().newInstance()
 

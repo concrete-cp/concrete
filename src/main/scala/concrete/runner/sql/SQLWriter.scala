@@ -35,7 +35,6 @@ import java.sql.Timestamp
 import scala.slick.model.PrimaryKey
 import SQLWriter._
 import java.net.InetAddress
-import concrete.Parameter
 import concrete.ParameterManager
 import MyPGDriver.simple._
 import concrete.Variable
@@ -161,10 +160,7 @@ object SQLWriter {
 
 final class SQLWriter(jdbcUri: URI, params: ParameterManager) extends ConcreteWriter {
 
-  @Parameter("sql.createTables")
-  var createTables = false
-
-  params.register(this)
+  val createTables: Boolean = params("sql.createTables").getOrElse(false)
 
   lazy val db = SQLWriter.connection(jdbcUri, createTables)
 
