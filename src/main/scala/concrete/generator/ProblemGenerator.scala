@@ -31,8 +31,8 @@ import cspom.variable.IntVariable
 
 final class ProblemGenerator(private val pm: ParameterManager = new ParameterManager()) extends LazyLogging {
 
-  val intToBool = pm("generator.intToBool").getOrElse(false)
-  val generateLargeDomains = pm("generator.generateLargeDomains").getOrElse(false)
+  val intToBool = pm.getOrElse("generator.intToBool", false)
+  val generateLargeDomains = pm.getOrElse("generator.generateLargeDomains", false)
 
   private val gm = new GeneratorManager(pm)
 

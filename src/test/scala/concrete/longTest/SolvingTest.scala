@@ -22,9 +22,11 @@ import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 import concrete.SolverFactory
 import concrete.Solver
+import org.scalatest.Tag
+import concrete.SlowTest
 
 //import SolvingTest._
-
+ 
 class SolvingTest extends FlatSpec with SolvingBehaviors {
 
   behavior of "default parameters"
@@ -32,7 +34,7 @@ class SolvingTest extends FlatSpec with SolvingBehaviors {
   it should behave like test()
 }
 
-trait SolvingBehaviors extends Matchers with LazyLogging {
+trait SolvingBehaviors extends Matchers with LazyLogging { this: FlatSpec =>
 
   val problemBank = Map[String, AnyVal](
     "crossword-m1-debug-05-01.xml" -> 48,
@@ -66,10 +68,14 @@ trait SolvingBehaviors extends Matchers with LazyLogging {
         case _ => throw new IllegalArgumentException
       }
 
-      solve(p, expected, parameters, test)
+      it should "solve " + p taggedAs(SlowTest) in {
+        solve(p, expected, parameters, test)
+      }
 
       r match {
-        case e: Int => count(p, e, parameters, test)
+        case e: Int => it should s"find $e solutions to $p" taggedAs(SlowTest) in {
+          count(p, e, parameters, test)
+        }
         case _ =>
       }
     }

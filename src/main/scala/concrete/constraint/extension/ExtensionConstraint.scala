@@ -1,12 +1,9 @@
 package concrete.constraint.extension;
 
-import concrete.Variable
 import scala.annotation.tailrec
-import concrete.constraint.TupleEnumerator
-import java.util.Arrays
+
+import concrete.Variable
 import concrete.constraint.Constraint
-import concrete.Parameter
-import concrete.ParameterManager
 
 abstract class ExtensionConstraint(
   scope: Array[Variable],

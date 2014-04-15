@@ -42,19 +42,22 @@ final class ProblemGeneratorTest extends FlatSpec with LazyLogging {
   // }
 
   private def generateTest(file: String) {
+    
+    val pm = new ParameterManager()
     val cspom = CSPOM.load(classOf[ProblemGeneratorTest].getResource(file))._1;
 
+    
     logger.info(cspom + "\n" + cspom.referencedExpressions.size + " vars, " + cspom.constraints.size + " cons")
 
-    ProblemCompiler.compile(cspom, ConcretePatterns());
+    ProblemCompiler.compile(cspom, ConcretePatterns(pm));
 
     logger.info(cspom + "\n" + cspom.referencedExpressions.size + " vars, " + cspom.constraints.size + " cons")
 
-    val problem = new ProblemGenerator(new ParameterManager).generate(cspom)._1;
+    val problem = new ProblemGenerator(pm).generate(cspom)._1;
 
     logger.info(problem + "\n" + problem.variables.size + " vars, " + problem.constraints.size + " cons")
 
-    new ACC(problem, new ParameterManager).reduceAll();
+    new ACC(problem, pm).reduceAll();
 
     logger.info(problem.toString);
   }

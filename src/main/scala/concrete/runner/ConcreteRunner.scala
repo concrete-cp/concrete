@@ -87,9 +87,9 @@ trait ConcreteRunner {
       }
     }
 
-    val optimize: String = pm("optimize").getOrElse("sat")
+    val optimize: String = pm.getOrElse("optimize", "sat")
 
-    val optimizeVar: Option[String] = pm("optimizeVar")
+    val optimizeVar: Option[String] = pm.get[String]("optimizeVar")
 
     val writer: ConcreteWriter =
       opt.get('SQL).map(url => new SQLWriter(new URI(url.toString), pm)).getOrElse {

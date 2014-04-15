@@ -33,23 +33,22 @@ import cspom.TimedException
 
 final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, params) with LazyLogging {
 
-  val btGrowth: Double = params("mac.btGrowth").getOrElse(1.5)
+  val btGrowth: Double = params.getOrElse("mac.btGrowth", 1.5)
 
-  val _addConstraint: String = params("mac.addConstraint").getOrElse("BIN")
-
-  def addConstraint: LearnMethod = LearnMethod(_addConstraint)
+  def addConstraint: LearnMethod = LearnMethod(
+    params.getOrElse("mac.addConstraint", "BIN"))
 
   val filterClass: Class[_ <: Filter] =
-    params("mac.filter").getOrElse(classOf[ACC])
+    params.getOrElse("mac.filter", classOf[ACC])
 
   val heuristicClass: Class[_ <: Heuristic] =
-    params("mac.heuristic").getOrElse(classOf[CrossHeuristic])
+    params.getOrElse("mac.heuristic", classOf[CrossHeuristic])
 
   val restartLevel =
-    params("mac.restartLevel").getOrElse(0)
+    params.getOrElse("mac.restartLevel", 0)
 
   val accurateMem: Boolean =
-    params("mac.accurateMem").getOrElse(false)
+    params.getOrElse("mac.accurateMem", false)
 
   @Statistic
   var nbAssignments = 1;

@@ -20,7 +20,7 @@ trait CSPOMRunner extends ConcreteRunner {
 
   final def load(args: List[String]): Problem = {
     cspom = loadCSPOM(args)
-    ProblemCompiler.compile(cspom, ConcretePatterns())
+    ProblemCompiler.compile(cspom, ConcretePatterns(pm))
     val pg = new ProblemGenerator(pm)
     statistics.register("problemGenerator", pg)
     val (problem, vars) = pg.generate(cspom)

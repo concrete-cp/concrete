@@ -10,12 +10,12 @@ import concrete.Variable;
 final class CrossHeuristic(params: ParameterManager) extends Heuristic {
 
   private val variableHeuristicClass: Class[_ <: VariableHeuristic] =
-    params("heuristic.variable").getOrElse(classOf[WDegOnDom])
+    params.getOrElse("heuristic.variable", classOf[WDegOnDom])
 
   private val valueHeuristicClass: Class[_ <: ValueHeuristic] =
-    params("heuristic.value").getOrElse(classOf[Lexico])
+    params.getOrElse("heuristic.value", classOf[Lexico])
 
-  val variableHeuristic = variableHeuristicClass.getConstructor().newInstance()
+  val variableHeuristic = variableHeuristicClass.getConstructor(classOf[ParameterManager]).newInstance(params)
 
   val valueHeuristic = valueHeuristicClass.getConstructor().newInstance()
 

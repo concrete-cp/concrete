@@ -8,6 +8,10 @@ import concrete.heuristic.MedValue
 import concrete.constraint.semantic.AllDifferent2C
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
+import org.scalatest.Tag
+
+object SlowTest extends Tag("concrete.SlowTest")
+
 
 class TestMAC extends FlatSpec with Matchers {
 
@@ -55,7 +59,7 @@ class TestMAC extends FlatSpec with Matchers {
   behavior of "MAC"
 
   for ((size, nb) <- sols) {
-    it should s"solve queens-$size" in {
+    it should s"solve queens-$size" taggedAs(SlowTest) in {
       val (queens, problem) = qp(size)
 
       val solver = new MAC(problem, pm)

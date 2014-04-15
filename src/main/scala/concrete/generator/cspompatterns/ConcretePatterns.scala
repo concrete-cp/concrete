@@ -5,22 +5,21 @@ import cspom.compiler.MergeSame
 import cspom.compiler.StandardCompilers
 import cspom.compiler.RemoveUselessEq
 import cspom.compiler.SplitAllEq
-import concrete.Parameter
+import concrete.ParameterManager
 
 object ConcretePatterns {
 
-  @Parameter("improveModel")
-  var improveModel = true
-
-  def apply() = {
+  def apply(params: ParameterManager) = {
     val standard = StandardCompilers() ++
       Seq(
         AbsDiff, SubToAdd, AddToEq,
         UnaryOr, MergeDisj, MergeNotDisj,
         NegToCNF, Xor, ReifiedDisj, ReifiedConj,
         NeqVec, RemoveAnd,
-        LtToGt, SlidingSum, SetIn, Element, In, MinMax//, //SimplDisj//ConstToVar
+        LtToGt, SlidingSum, SetIn, Element, In, MinMax //, //SimplDisj//ConstToVar
         )
+
+    val improveModel = params.getOrElse("improveModel", true)
 
     if (improveModel) {
       StandardCompilers.improve() ++ Seq(AllDiff, SubsumedDiff, DiffGe, SimplDisj, Square) ++ standard

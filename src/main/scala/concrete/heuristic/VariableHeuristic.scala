@@ -9,8 +9,10 @@ import scala.annotation.tailrec
 import concrete.ParameterManager
 
 abstract class VariableHeuristic(params: ParameterManager) extends Ordering[Variable] {
-  private val rb: Boolean = params("variableHeuristic.randomBreak").getOrElse(true)
-  private val seed: Long = params("randomBreak.seed").getOrElse(0L)
+  private val rb: Boolean =
+    params.getOrElse("variableHeuristic.randomBreak", true)
+  private val seed: Long =
+    params.getOrElse("randomBreak.seed", 0L)
 
   private val rand = if (rb) Some(new Random(seed)) else None
 

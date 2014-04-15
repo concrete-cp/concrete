@@ -40,14 +40,14 @@ import cspom.variable.CSPOMConstant
 final class SolverFactory(val params: ParameterManager) {
 
   val solverClass: Class[_ <: Solver] =
-    params("solver").getOrElse(classOf[MAC])
+    params.getOrElse("solver", classOf[MAC])
 
   def apply(problem: Problem): Solver = {
     solverClass.getConstructor(classOf[Problem]).newInstance(problem);
   }
 
   def apply(cspom: CSPOM): CSPOMSolver = {
-    ProblemCompiler.compile(cspom, ConcretePatterns())
+    ProblemCompiler.compile(cspom, ConcretePatterns(params))
     val pg = new ProblemGenerator(params)
     val (problem, variables) = pg.generate(cspom)
     new CSPOMSolver(apply(problem), cspom, variables)
@@ -110,7 +110,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   val nbVariables = problem.variables.size
 
   val preprocessorClass: Option[Class[_ <: Filter]] =
-    params("preprocessor")
+    params.get[Class[_ <: Filter]]("preprocessor")
 
   val statistics = new StatisticsManager
   statistics.register("solver", this)

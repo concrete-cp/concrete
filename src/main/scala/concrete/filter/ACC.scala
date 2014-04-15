@@ -36,10 +36,10 @@ object ACC extends LazyLogging {
 final class ACC(val problem: Problem, params: ParameterManager) extends Filter with LazyLogging {
 
   private val queueType: Class[_ <: PriorityQueue[Constraint]] =
-    params("ac3c.queue").getOrElse(classOf[QuickFifos[Constraint]])
+    params.getOrElse("ac3c.queue", classOf[QuickFifos[Constraint]])
 
   private val keyType: Class[_ <: Key[Constraint]] =
-    params("ac3c.key").getOrElse(classOf[Eval])
+    params.getOrElse("ac3c.key", classOf[Eval])
 
   private val key = keyType.getConstructor().newInstance()
 

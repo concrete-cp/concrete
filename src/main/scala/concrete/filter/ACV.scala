@@ -28,10 +28,10 @@ final class ACV(
   val problem: Problem, params: ParameterManager) extends Filter with LazyLogging {
 
   private val queueType: Class[_ <: PriorityQueue[Variable]] =
-    params("ac3v.queue").getOrElse(classOf[BinaryHeap[Variable]])
+    params.getOrElse("ac3v.queue", classOf[BinaryHeap[Variable]])
 
   private val keyType: Class[_ <: Key[Variable]] =
-    params("ac3v.key").getOrElse(classOf[concrete.heuristic.revision.Dom])
+    params.getOrElse("ac3v.key", classOf[concrete.heuristic.revision.Dom])
 
   val key = keyType.getConstructor().newInstance()
 

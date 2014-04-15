@@ -25,7 +25,7 @@ import concrete.filter.Filter
 final class DummySolver(prob: Problem, params: ParameterManager) extends Solver(prob, params) {
 
   private val filterClass: Class[_ <: Filter] =
-    params("dummy.filter").getOrElse(classOf[ACC])
+    params.getOrElse[Class[_ <: Filter]]("dummy.filter", classOf[ACC])
 
   private val filter = filterClass.getConstructor(classOf[Problem]).newInstance(problem);
   statistics.register("filter", filter);

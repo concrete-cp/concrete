@@ -30,11 +30,11 @@ import cspom.CSPOMConstraint
 
 class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLogging {
 
-  val consType = params("relationAlgorithm").getOrElse("Reduce")
+  val consType = params.getOrElse("relationAlgorithm", "Reduce")
 
-  val ds = params("relationStructure").getOrElse("MDD")
+  val ds = params.getOrElse("relationStructure", "MDD")
 
-  val closeRelations = params("closeRelations").getOrElse(true)
+  val closeRelations = params.getOrElse("closeRelations", true)
 
   val TIGHTNESS_LIMIT = 4;
 

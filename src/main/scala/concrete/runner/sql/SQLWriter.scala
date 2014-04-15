@@ -160,7 +160,8 @@ object SQLWriter {
 
 final class SQLWriter(jdbcUri: URI, params: ParameterManager) extends ConcreteWriter {
 
-  val createTables: Boolean = params("sql.createTables").getOrElse(false)
+  val createTables: Boolean = 
+    params.getOrElse("sql.createTables", false)
 
   lazy val db = SQLWriter.connection(jdbcUri, createTables)
 

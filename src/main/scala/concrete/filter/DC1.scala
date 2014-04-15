@@ -33,7 +33,7 @@ import concrete.Problem
  */
 final class DC1(val problem: Problem, params: ParameterManager) extends SingletonConsistency with LazyLogging {
   private val addConstraints =
-    params("dc1.addConstraints").getOrElse("CONSERVATIVE")
+    params.getOrElse("dc1.addConstraints", "CONSERVATIVE")
 
   @Statistic
   var addedConstraints = 0
