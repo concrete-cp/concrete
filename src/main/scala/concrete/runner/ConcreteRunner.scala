@@ -102,6 +102,8 @@ trait ConcreteRunner {
     statistics.register("problemCompiler", ProblemCompiler)
     //statistics.register("problemGenerator", ProblemGenerator)
 
+    writer.parameters(pm.toXML)
+
     val waker = new Timer()
     try {
 
@@ -114,14 +116,10 @@ trait ConcreteRunner {
       } catch {
         case e: TimedException =>
           loadTime = e.time
-          // Required to obtain a configId
-          writer.parameters(pm.toXML)
           throw e.getCause()
       }
 
       val solver = new SolverFactory(pm)(problem)
-      // Loading the solver will initialize many parameters
-      writer.parameters(pm.toXML)
 
       statistics.register("solver", solver)
       applyParameters(solver)
