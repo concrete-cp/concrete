@@ -16,7 +16,7 @@ resolvers += "sonatype-releases" at "http://oss.sonatype.org/content/repositorie
 resolvers += "CSP4J repository" at "http://cspfj.sourceforge.net/repository"
 
 libraryDependencies ++= Seq(
-	"fr.univ-valenciennes.concrete" %% "cspom" % "2.0",
+	"fr.univ-valenciennes.concrete" %% "cspom" % "2.0.1",
 	"postgresql" % "postgresql" % "9.1-901-1.jdbc4",
 	"org.sat4j" % "org.sat4j.core" % "2.3.0",
 	"junit" % "junit" % "4.11" % "test",
