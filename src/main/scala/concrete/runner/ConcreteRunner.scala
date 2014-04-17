@@ -82,8 +82,8 @@ trait ConcreteRunner {
     }
 
     opt.get('D).collect {
-      case p: Seq[(String, String)] => for ((option, value) <- p) {
-        pm.parse(option, value)
+      case p: Seq[_] => for ((option, value) <- p.map { _.asInstanceOf[(String, String)] }) {
+        pm(option) = value
       }
     }
 

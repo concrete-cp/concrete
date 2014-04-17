@@ -15,7 +15,7 @@ import scala.xml.NodeSeq
  */
 final class ParameterManager {
 
-  private val parameters: HashMap[String, Any] = new HashMap()
+  private val _parameters: HashMap[String, Any] = new HashMap()
 
   /**
    * Updates some parameter, overriding default or previous value.
@@ -24,7 +24,7 @@ final class ParameterManager {
    * @param value
    */
   def update(name: String, value: Any) {
-    parameters(name) = value
+    _parameters(name) = value
   }
 
   def getOrElse[T: TypeTag](name: String, default: => T): T = {
@@ -32,7 +32,7 @@ final class ParameterManager {
   }
 
   def get[T: TypeTag](name: String): Option[T] = {
-    require(TypeTag.Nothing != typeTag[T], "Please give a type, was " + typeTag[T])
+    require(TypeTag.Nothing != typeTag[T], s"Please give a type for $name, was ${typeTag[T]}")
     parameters.get(name).map {
       case s: String => parse(typeOf[T], s)
       case v: Any => v.asInstanceOf[T]
@@ -57,26 +57,11 @@ final class ParameterManager {
   }
 
   /**
-   * Parses some parameter as a String, and converts it automatically using
-   * given registered type.
-   *
-   * @param name
-   * @param value
-   */
-  def parse(name: String, value: String) {
-    parameters(name) = value
-    //    parameters.get(name) match {
-    //      case None => pendingParse += name -> value
-    //      case Some((o, f)) => f.set(o, parse(f, value))
-    //    }
-  }
-
-  /**
    * Returns XML representation of the registered parameters.
    *
    * @return
    */
-  def toXML = NodeSeq.fromSeq(allParams.iterator.map {
+  def toXML = NodeSeq.fromSeq(parameters.iterator.map {
     case (k, v) =>
       <p name={ k }>{ v }</p>
   }.toSeq)
@@ -86,9 +71,9 @@ final class ParameterManager {
    *
    * @return
    */
-  def list = allParams.iterator.map { case (k, v) => k + "=" + v }.mkString(", ")
+  override def toString = _parameters.iterator.map { case (k, v) => k + "=" + v }.mkString(", ")
 
-  def allParams: Map[String, Any] = parameters.toMap
+  def parameters: collection.immutable.Map[String, Any] = _parameters.toMap
   //  ++ pending.iterator.map {
   //      case (k, v) => k -> v
   //    } ++ pendingParse.iterator.map {
@@ -97,7 +82,7 @@ final class ParameterManager {
 
   def parseProperties(line: Properties) {
     JavaConversions.mapAsScalaMap(line).foreach {
-      case (k, v) => parse(k.toString, v.toString)
+      case (k, v) => update(k.toString, v.toString)
     }
   }
 
