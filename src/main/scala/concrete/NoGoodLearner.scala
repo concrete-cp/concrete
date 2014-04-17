@@ -20,10 +20,10 @@ object LearnMethod {
   }
 }
 
-object NoLearn extends LearnMethod
-object LearnExt extends LearnMethod
-object LearnBin extends LearnMethod
-object LearnConservative extends LearnMethod
+case object NoLearn extends LearnMethod
+case object LearnExt extends LearnMethod
+case object LearnBin extends LearnMethod
+case object LearnConservative extends LearnMethod
 
 final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMethod) {
 

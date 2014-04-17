@@ -29,8 +29,15 @@ import scala.collection.mutable.DoubleLinkedList
 import concrete.priorityqueues.DLNode
 
 object Constraint {
-  var cId = 0;
-  def reset() { cId = 0 }
+
+  private val cId = new ThreadLocal[Int];
+  cId.set(0)
+
+  def next(): Int = {
+    val r = cId.get
+    cId.set(r + 1)
+    r
+  }
 
   val UNARY = 1
   val BINARY = 2
@@ -43,8 +50,7 @@ abstract class Constraint(val scope: Array[Variable])
 
   def this(scope: Variable*) = this(scope.toArray)
 
-  val getId = Constraint.cId
-  Constraint.cId += 1
+  val getId = Constraint.next()
 
   private var entailedAtLevel = -1;
 
@@ -240,7 +246,7 @@ abstract class Constraint(val scope: Array[Variable])
   final def hasChanged[A](l: Traversable[A], f: A => Boolean) = l.foldLeft(false)(_ | f(_))
 
   def dataSize: Int = ???
-  
+
   /**
    * A GAC constraint is entailed if it has zero or only one variable with domain size > 1
    */

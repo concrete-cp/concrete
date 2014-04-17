@@ -48,11 +48,11 @@ trait CSPOMRunner extends ConcreteRunner {
   }
 
   override final def output(sol: Option[Map[Variable, Any]]) =
-    outputCSPOM(sol.map(cspomSolver.concrete2CspomSol))
+    outputCSPOM(sol.map(cspomSolver.solution(_)))
 
   def controlCSPOM(solution: Map[String, Any]): Option[String]
 
   override final def control(sol: Map[Variable, Any]) =
-    controlCSPOM(cspomSolver.concrete2CspomSol(sol))
+    controlCSPOM(cspomSolver.solution(sol))
 
 }

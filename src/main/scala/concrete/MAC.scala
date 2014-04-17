@@ -47,8 +47,8 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
   val restartLevel =
     params.getOrElse("mac.restartLevel", 0)
 
-  val accurateMem: Boolean =
-    params.getOrElse("mac.accurateMem", false)
+  val measureMem: Boolean =
+    params.getOrElse("mac.measureMem", false)
 
   @Statistic
   var nbAssignments = 1;
@@ -189,14 +189,14 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
     }
 
   } finally {
-    if (accurateMem) {
+    if (measureMem || usedMem == 0L) {
       System.gc()
       System.gc()
       System.gc()
       System.gc()
       System.gc()
-    }
-    usedMem = math.max(usedMem, Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
+      usedMem = math.max(usedMem, Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
+    } 
   }
 
   @Statistic

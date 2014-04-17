@@ -24,9 +24,10 @@ import concrete.SolverFactory
 import concrete.Solver
 import org.scalatest.Tag
 import concrete.SlowTest
+import org.scalatest.Inspectors
 
 //import SolvingTest._
- 
+
 class SolvingTest extends FlatSpec with SolvingBehaviors {
 
   behavior of "default parameters"
@@ -34,7 +35,7 @@ class SolvingTest extends FlatSpec with SolvingBehaviors {
   it should behave like test()
 }
 
-trait SolvingBehaviors extends Matchers with LazyLogging { this: FlatSpec =>
+trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this: FlatSpec =>
 
   val problemBank = Map[String, AnyVal](
     "crossword-m1-debug-05-01.xml" -> 48,
@@ -68,12 +69,12 @@ trait SolvingBehaviors extends Matchers with LazyLogging { this: FlatSpec =>
         case _ => throw new IllegalArgumentException
       }
 
-      it should "solve " + p taggedAs(SlowTest) in {
+      it should "solve " + p taggedAs (SlowTest) in {
         solve(p, expected, parameters, test)
       }
 
       r match {
-        case e: Int => it should s"find $e solutions to $p" taggedAs(SlowTest) in {
+        case e: Int => it should s"find $e solutions to $p" taggedAs (SlowTest) in {
           count(p, e, parameters, test & false)
         }
         case _ =>
@@ -109,7 +110,7 @@ trait SolvingBehaviors extends Matchers with LazyLogging { this: FlatSpec =>
   }
 
   def count(name: String, expectedResult: Int, parameters: ParameterManager = new ParameterManager(),
-      test: Boolean): Unit = {
+    test: Boolean): Unit = {
     val url = getClass.getResource(name)
 
     require(url != null, "Could not find resource " + name)
@@ -118,17 +119,15 @@ trait SolvingBehaviors extends Matchers with LazyLogging { this: FlatSpec =>
 
     val solver = new SolverFactory(parameters)(cspomProblem)
 
-    val nbSol = solver.foldLeft(0) {
-      (count, sol) =>
-        //logger.info(solution.toString)
-        if (test) assert {
-          val failed = XCSPConcrete.controlCSPOM(sol, data('variables).asInstanceOf[Seq[String]], url)
-          failed shouldBe 'empty
-          true
-        }
-        count + 1
+    val sols = solver.toStream.take(expectedResult + 1)
+
+    if (test) {
+      forAll(sols) { sol =>
+        val failed = XCSPConcrete.controlCSPOM(sol, data('variables).asInstanceOf[Seq[String]], url)
+        failed shouldBe 'empty
+      }
     }
 
-    nbSol shouldBe expectedResult
+    sols should have size expectedResult
   }
 }

@@ -12,8 +12,7 @@ resolvers += "typesafe-relases" at "http://repo.typesafe.com/typesafe/releases"
 
 resolvers += "sonatype-releases" at "http://oss.sonatype.org/content/repositories/releases/"
 
-// For JSR 331 (should be moved to GitHub)
-resolvers += "CSP4J repository" at "http://cspfj.sourceforge.net/repository"
+testOptions in Test += Tests.Argument("-oD")
 
 libraryDependencies ++= Seq(
 	"fr.univ-valenciennes.concrete" %% "cspom" % "2.0.1",
