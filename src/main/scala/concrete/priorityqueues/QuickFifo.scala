@@ -16,11 +16,13 @@ final class QuickFifo[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
 
   val queue = new HeadDLNode[T]()
 
+  val presence = new Presence
+
   def offer(e: T, eval: Int) = {
-    if (e.isPresent) false
+    if (presence.isPresent(e)) false
     else {
       queue.append(e)
-      e.setPresent()
+      presence.setPresent(e)
       true
     }
   }
@@ -29,13 +31,13 @@ final class QuickFifo[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
     val e = queue.next
     e.remove()
     val e2 = e.asInstanceOf[T]
-    e2.unsetPresent()
+    presence.unsetPresent(e2)
     e2
   }
 
   def clear() {
     queue.clear()
-    PTag.clear()
+    presence.clear()
   }
 
   def isEmpty = queue.isEmpty

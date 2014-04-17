@@ -7,21 +7,23 @@ final class JavaNative[T <: PTag] extends PriorityQueue[T] {
     def compare(y: E) = eval.compare(y.eval)
   }
 
-  val queue = new java.util.PriorityQueue[E]()
+  private val queue = new java.util.PriorityQueue[E]()
+
+  private val presence = new Presence
 
   def offer(elt: T, eval: Int) = {
-    if (elt.isPresent) {
+    if (presence.isPresent(elt)) {
       false
     } else {
       queue.offer(E(elt, eval))
-      elt.setPresent()
+      presence.setPresent(elt)
       true
     }
   }
 
   def poll() = {
     val elt = queue.poll().e
-    elt.unsetPresent
+    presence.unsetPresent(elt)
     elt
   }
 
@@ -29,7 +31,7 @@ final class JavaNative[T <: PTag] extends PriorityQueue[T] {
 
   override def clear() {
     queue.clear()
-    PTag.clear()
+    presence.clear()
   }
 
 }

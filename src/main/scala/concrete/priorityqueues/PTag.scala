@@ -1,17 +1,17 @@
 package concrete.priorityqueues
 
-object PTag {
-  var current = 0
+class Presence {
+  private var current = 0
 
-  def clear() { current += 1 }
+  def clear(): Unit = { current += 1 }
+
+  def isPresent(e: PTag): Boolean = (e.present == current)
+
+  def setPresent(e: PTag): Unit = (e.present = current)
+
+  def unsetPresent(e: PTag): Unit = (e.present = -1)
 }
 
 trait PTag {
-  private var present = -1
-
-  def isPresent = present == PTag.current
-
-  def setPresent() { present = PTag.current }
-
-  def unsetPresent() { present = -1 }
+  var present = -1
 }

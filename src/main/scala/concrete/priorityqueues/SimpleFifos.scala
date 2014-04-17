@@ -20,10 +20,13 @@ final class SimpleFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
 
   var last = -1
 
+  private val presence = new Presence
+
   def offer(e: T, list: Int) = {
-    if (e.isPresent && list == e.currentList) false
+    val present = presence.isPresent(e)
+    if (present && list == e.currentList) false
     else {
-      if (e.isPresent) {
+      if (present) {
         e.remove()
         if (last == e.currentList) {
           while (last >= 0 && queues(last).isEmpty) last -= 1
@@ -36,7 +39,7 @@ final class SimpleFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
       queues(list).append(e)
       e.currentList = list
 
-      e.setPresent()
+      presence.setPresent(e)
       true
     }
   }
@@ -57,14 +60,14 @@ final class SimpleFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
 
   def poll() = {
     val e = poll(0)
-    e.unsetPresent()
+    presence.unsetPresent(e)
     e
   }
 
   def clear() {
     (0 to last).foreach(queues(_).clear())
     last = -1
-    PTag.clear()
+    presence.clear()
   }
 
   def isEmpty = last < 0

@@ -39,6 +39,8 @@ final class QuickFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
   }
 
   private val queues: Array[DLNode[T]] = Array.fill(NB_LISTS)(new HeadDLNode())
+  
+  private val presence = new Presence
 
   private var last = -1
 
@@ -55,9 +57,11 @@ final class QuickFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
     val list = chooseList(eval)
     //println(e + " : " + eval + " -> " + list)
 
-    if (e.isPresent && list == e.currentList) false
+    val present = presence.isPresent(e)
+    
+    if (present && list == e.currentList) false
     else {
-      if (e.isPresent) {
+      if (present) {
         e.remove()
         if (last == e.currentList) {
           while (last >= 0 && queues(last).isEmpty) last -= 1
@@ -76,7 +80,7 @@ final class QuickFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
       queues(list).append(e)
       e.currentList = list
 
-      e.setPresent()
+      presence.setPresent(e)
       true
     }
   }
@@ -103,7 +107,7 @@ final class QuickFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
     pollSize += size
     size -= 1
     val e = poll(0)
-    e.unsetPresent()
+    presence.unsetPresent(e)
     e
   }
 
@@ -112,7 +116,7 @@ final class QuickFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
     last = -1
     size = 0
     nbClear += 1
-    PTag.clear()
+    presence.clear()
   }
 
   def isEmpty = last < 0
