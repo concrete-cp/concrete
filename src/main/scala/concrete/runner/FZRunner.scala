@@ -1,29 +1,21 @@
 package concrete.runner
-import java.net.URL
-import cspom.CSPOM
-import abscon.instance.tools.InstanceParser
-import java.util.StringTokenizer
-import java.io.File
-import abscon.instance.components.PConstraint
-import abscon.instance.components.PVariable
-import scala.collection.JavaConversions
+
 import java.net.URI
-import cspom.variable.CSPOMVariable
+import java.net.URL
+import java.security.InvalidParameterException
+
+import concrete.CSPOMSolver
+import concrete.Variable
+import cspom.CSPOM
 import cspom.flatzinc.FZAnnotation
 import cspom.flatzinc.FZArrayExpr
 import cspom.flatzinc.FZSetConst
-import cspom.variable.CSPOMSeq
-import cspom.variable.CSPOMConstant
 import cspom.flatzinc.FZSolve
-import cspom.flatzinc.Satisfy
 import cspom.flatzinc.Maximize
-import cspom.flatzinc.FZVarParId
 import cspom.flatzinc.Minimize
-import java.security.InvalidParameterException
-import concrete.Variable
-import concrete.Solver
-import cspom.variable.CSPOMExpression
-import concrete.CSPOMSolver
+import cspom.flatzinc.Satisfy
+import cspom.variable.CSPOMConstant
+import cspom.variable.CSPOMSeq
 
 object FZConcrete extends CSPOMRunner with App {
 

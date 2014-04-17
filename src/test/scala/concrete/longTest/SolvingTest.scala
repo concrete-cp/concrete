@@ -74,7 +74,7 @@ trait SolvingBehaviors extends Matchers with LazyLogging { this: FlatSpec =>
 
       r match {
         case e: Int => it should s"find $e solutions to $p" taggedAs(SlowTest) in {
-          count(p, e, parameters, test)
+          count(p, e, parameters, test & false)
         }
         case _ =>
       }
@@ -108,7 +108,8 @@ trait SolvingBehaviors extends Matchers with LazyLogging { this: FlatSpec =>
 
   }
 
-  def count(name: String, expectedResult: Int, parameters: ParameterManager = new ParameterManager(), test: Boolean = true): Unit = {
+  def count(name: String, expectedResult: Int, parameters: ParameterManager = new ParameterManager(),
+      test: Boolean): Unit = {
     val url = getClass.getResource(name)
 
     require(url != null, "Could not find resource " + name)
