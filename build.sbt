@@ -4,7 +4,7 @@ organization := "fr.univ-valenciennes.concrete"
 
 version := "1.0.1-SNAPSHOT"
 
-scalaVersion := "2.11.0-RC4"
+scalaVersion := "2.11.0"
 
 resolvers += "Concrete repository" at "http://concrete-cp.github.io/concrete/repository"
 
@@ -20,7 +20,7 @@ libraryDependencies ++= Seq(
 	"org.sat4j" % "org.sat4j.core" % "2.3.0",
 	"junit" % "junit" % "4.11" % "test",
 	"com.novocode" % "junit-interface" % "0.10" % "test->default",
-	"com.typesafe.slick" %% "slick" % "2.1.0-SNAPSHOT",
+	"com.typesafe.slick" %% "slick" % "2.1.0-M1",
 	"org.jcp" % "jsr331" % "1.1.1",
 	"org.scalatest" %% "scalatest" % "2.1.3" % "test"
 	)
