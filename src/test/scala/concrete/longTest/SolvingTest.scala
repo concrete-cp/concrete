@@ -74,8 +74,8 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
       }
 
       r match {
-        case e: Int => it should s"find $e solutions to $p" taggedAs (SlowTest) in {
-          count(p, e, parameters, test & false)
+        case e: Int if e > 0 => it should s"find $e solutions to $p" taggedAs (SlowTest) in {
+          count(p, e, parameters, false)
         }
         case _ =>
       }

@@ -15,12 +15,14 @@ resolvers += "sonatype-releases" at "http://oss.sonatype.org/content/repositorie
 testOptions in Test += Tests.Argument("-oD")
 
 libraryDependencies ++= Seq(
-	"fr.univ-valenciennes.concrete" %% "cspom" % "2.0.1",
+	"fr.univ-valenciennes.concrete" %% "cspom" % "2.0.3",
+	"junit" % "junit" % "4.11" % "test",
 	"org.postgresql" % "postgresql" % "9.3-1101-jdbc41",
-	"org.sat4j" % "org.sat4j.core" % "2.3.4",
+	"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.4",
 	"com.typesafe.slick" %% "slick" % "2.1.0-M1",
 	"org.jcp" % "jsr331" % "1.1.1",
-	"org.scalatest" %% "scalatest" % "2.1.3" % "test"
+	"org.scalatest" %% "scalatest" % "2.1.3" % "test",
+	"org.scalacheck" %% "scalacheck" % "1.11.3" % "test"
 	)
 
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-optimise", "-Xlint", "-Xdisable-assertions")

@@ -29,7 +29,7 @@ trait Backtrackable[A] extends DelayedInit {
     assert(level > currentLevel, "Given level " + level
       + " should be greater than current " + currentLevel)
     if (_altered) {
-      history ::= (currentLevel, save)
+      history ::= ((currentLevel, save))
       _altered = false
     }
     _currentLevel = level;

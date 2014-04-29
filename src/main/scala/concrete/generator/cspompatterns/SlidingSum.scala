@@ -1,23 +1,16 @@
 package concrete.generator.cspompatterns
 
-import cspom.CSPOMConstraint
-import cspom.variable.CSPOMVariable
-import cspom.CSPOM
+import scala.collection.immutable.Queue
 import scala.collection.mutable.HashMap
-import cspom.extension.MDD
-import cspom.extension.MDDLeaf
-import concrete._
-import concrete.generator.constraint.Const
-import concrete.generator.constraint.Generator
-import concrete.generator.constraint.Sequence
-import concrete.generator.constraint.Var
+
+import cspom.CSPOM
+import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompilerNoData
+import cspom.extension.MDD
+import cspom.extension.MDDNode
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
-import cspom.variable.IntVariable
-import cspom.extension.MDDNode
-import scala.collection.immutable.Queue
-import cspom.extension.LazyRelation
+import cspom.variable.CSPOMVariable
 
 final object SlidingSum extends ConstraintCompilerNoData {
 
@@ -30,14 +23,14 @@ final object SlidingSum extends ConstraintCompilerNoData {
 
     val vars = args.map(_.asInstanceOf[CSPOMVariable[Int]])
 
-    val b = new LazyRelation(Unit => mdd(low, up, seq, vars.map(_.domain).toArray))
+    val b = mdd(low, up, seq, vars.map(_.domain).toIndexedSeq)
     //println(s"sizeR ${b.apply.lambda} ${b.apply.edges}")
     replaceCtr(constraint,
       CSPOMConstraint('extension, vars, constraint.params ++ Map("init" -> false, "relation" -> b)),
       problem)
   }
 
-  def mdd(low: Int, up: Int, seq: Int, domains: Array[Iterable[Int]], k: Int = 0, queue: Queue[Int] = Queue.empty,
+  def mdd(low: Int, up: Int, seq: Int, domains: IndexedSeq[Iterable[Int]], k: Int = 0, queue: Queue[Int] = Queue.empty,
     nodes: HashMap[(Int, Queue[Int]), MDD[Int]] = new HashMap()): MDD[Int] = {
     val current = queue.sum
     val nextDomains = domains.view.slice(k, k + seq - queue.size)

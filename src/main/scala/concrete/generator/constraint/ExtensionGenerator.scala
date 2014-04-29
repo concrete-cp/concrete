@@ -117,7 +117,6 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
 
   private def relation2MDD(relation: cspom.extension.Relation[_], domains: List[Domain]): MDD = {
     relation match {
-      case laz: cspom.extension.LazyRelation[_] => relation2MDD(laz.apply, domains)
       case mdd: cspom.extension.MDD[_] =>
         cspomMDDtoCspfjMDD(
           domains,
