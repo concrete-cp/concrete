@@ -17,7 +17,7 @@ class AllDifferent2CTest {
 
     val c = new AllDifferent2C(v1, v2, v3, v4, v5)
 
-    AdviseCount.adviseAll(c)
+    c.adviseAll()
 
     c.revise()
   }

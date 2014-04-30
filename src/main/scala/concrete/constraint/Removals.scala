@@ -3,18 +3,19 @@ package concrete.constraint;
 import java.util.Arrays
 import concrete.AdviseCount
 import concrete.Variable
+import concrete.AdviseCounts
 
-trait Removals extends Constraint {
+trait Removals extends Constraint with AdviseCounts {
 
   val removals = new Array[Int](arity)
 
   def advise(pos: Int) = {
-    removals(pos) = AdviseCount.count
+    removals(pos) = adviseCount
     getEvaluation
   }
 
   def revise() = {
-    val r = revise(modified(AdviseCount.count, arity - 1))
+    val r = revise(modified(adviseCount))
     Arrays.fill(removals, -1)
     r
   }
@@ -23,14 +24,17 @@ trait Removals extends Constraint {
 
   // scope.iterator.zipWithIndex.zip(removals.iterator).filter(t => t._2 >= reviseCount).map(t => t._1)
 
-  private def modified(reviseCount: Int, i: Int): List[Int] =
-    if (i < 0) {
-      Nil
-    } else if (removals(i) == reviseCount) {
-      i :: modified(reviseCount, i - 1)
-    } else {
-      modified(reviseCount, i - 1)
+  private def modified(reviseCount: Int): List[Int] = {
+    var i = arity - 1
+    var mod: List[Int] = Nil
+    while (i >= 0) {
+      if (removals(i) == reviseCount) {
+        mod ::= i
+      }
+      i -= 1
     }
+    mod
+  }
 
   def getEvaluation: Int
 

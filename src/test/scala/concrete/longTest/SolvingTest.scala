@@ -60,7 +60,7 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
     "1d_rubiks_cube.fzn" -> true)
 
   def test(parameters: ParameterManager = new ParameterManager()): Unit = {
-    for ((p, r) <- problemBank.filterKeys(_.startsWith("zebra"))) {
+    for ((p, r) <- problemBank.filterKeys(k => k.startsWith("zebra") || k.startsWith("frb"))) {
       val test = p.contains(".xml")
 
       val expected: Boolean = r match {

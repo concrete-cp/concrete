@@ -43,6 +43,7 @@ object Constraint {
   val BINARY = 2
   val TERNARY = 3
   val NP = 7
+
 }
 
 abstract class Constraint(val scope: Array[Variable])
@@ -173,6 +174,14 @@ abstract class Constraint(val scope: Array[Variable])
   def advise(pos: Int): Int
 
   def advise(v: Variable): Int = advise(position(v))
+
+  final def adviseAll(): Unit = {
+    var p = arity - 1
+    while (p >= 0) {
+      advise(p)
+      p -= 1
+    }
+  }
 
   /**
    * The constraint propagator. Returns true if any domain change was done.

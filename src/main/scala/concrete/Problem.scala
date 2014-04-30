@@ -46,27 +46,6 @@ final class Problem(val variables: List[Variable]) {
   private var _maxCId = 0
   private var _currentLevel = 0
 
-  //  def addVariable(name: String, domain: Domain) = {
-  //    require(!variableMap.contains(name), "A variable named " + name + " already exists");
-  //
-  //    val variable = new Variable(name, domain);
-  //    variableMap += name -> variable
-  //    _variables += variable
-  //
-  //    _maxVId = math.max(variable.getId, _maxVId)
-  //    //_maxDomainSize = math.max(variable.dom.size, _maxDomainSize)
-  //    variable;
-  //  }
-  //
-  //  def removeVariable(v: Variable) {
-  //    require(v.constraints.isEmpty)
-  //
-  //    variableMap -= v.name
-  //    _variables -= v
-  //    _maxVId = _variables map (_.getId) max
-  //
-  //  }
-
   def addConstraint(constraint: Constraint) {
     _constraints ::= constraint;
     _maxArity = math.max(_maxArity, constraint.arity)

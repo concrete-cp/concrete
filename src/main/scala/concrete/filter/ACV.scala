@@ -3,7 +3,6 @@ package concrete.filter;
 import scala.Array.canBuildFrom
 import scala.annotation.elidable
 import scala.annotation.tailrec
-
 import annotation.elidable.ASSERTION
 import concrete.constraint.Constraint
 import concrete.heuristic.revision.Dom
@@ -18,6 +17,8 @@ import concrete.Problem
 import cspom.StatisticsManager
 import concrete.UNSATException
 import concrete.Variable
+import concrete.AdviseCounts
+import concrete.AdviseCount
 
 /**
  * @author scand1sk
@@ -47,10 +48,17 @@ final class ACV(
   @Statistic
   var revisions = 0;
 
+  private val advises = new AdviseCount
+  problem.constraints.iterator.collect {
+    case c: AdviseCounts => c
+  } foreach {
+    _.register(advises)
+  }
+
   def reduceAll() = {
     queue.clear();
     problem.variables.foreach(v => queue.offer(v, key.getKey(v)))
-    problem.constraints foreach AdviseCount.adviseAll
+    problem.constraints.foreach(_.adviseAll)
     reduce()
   }
 
@@ -97,7 +105,7 @@ final class ACV(
   private def prepareQueue(modifiedConstraints: Iterator[Constraint]): Boolean = {
     if (modifiedConstraints.hasNext) {
       val c = modifiedConstraints.next
-      AdviseCount.adviseAll(c)
+      c.adviseAll()
 
       //val prev = c.sizes()
 
@@ -119,20 +127,20 @@ final class ACV(
   }
 
   def reduceAfter(constraints: Iterable[Constraint]): Boolean = {
-    AdviseCount.clear()
+    advises.clear()
     queue.clear()
     prepareQueue(constraints.iterator) && reduce()
   }
 
   def reduceAfter(variable: Variable) = variable == null || {
-    AdviseCount.clear()
+    advises.clear()
     queue.clear()
     prepareQueue(variable)
     reduce()
   }
 
   def reduceFrom(modVar: Array[Int], modCons: Array[Int], cnt: Int): Boolean = {
-    AdviseCount.clear()
+    advises.clear()
     queue.clear();
     // LOGGER.fine("reduce after " + cnt);
 

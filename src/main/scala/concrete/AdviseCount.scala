@@ -2,17 +2,19 @@ package concrete
 
 import concrete.constraint.Constraint
 
-final object AdviseCount {
+final class AdviseCount {
   var count = 0
   def clear() {
     count += 1
   }
+}
 
-  def adviseAll(c: Constraint) {
-    var p = c.arity - 1
-    while (p >= 0) {
-      c.advise(p)
-      p -= 1
-    }
+trait AdviseCounts {
+  private var advise: AdviseCount = _
+  
+  def register(ac: AdviseCount) = {
+    advise = ac
   }
+  
+  def adviseCount = advise.count
 }

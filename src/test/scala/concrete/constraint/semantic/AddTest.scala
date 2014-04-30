@@ -29,13 +29,13 @@ final class AddTest {
   @Test
   def testReviseInt() {
     val c = new AddAC(x, y, z);
-    AdviseCount.adviseAll(c)
+    c.adviseAll()
     c.revise()
 
     val c2 = new Constraint(Array(x, y, z)) with Residues with TupleEnumerator {
       def checkValues(t: Array[Int]) = t(0) == t(1) + t(2);
     };
-    AdviseCount.adviseAll(c2)
+    c2.adviseAll()
     assertEquals(Seq(), c2.revise());
   }
 
@@ -44,11 +44,11 @@ final class AddTest {
     val c2 = new Constraint(Array(x, y, z)) with Residues with TupleEnumerator {
       def checkValues(t: Array[Int]) = t(0) == t(1) + t(2);
     };
-    AdviseCount.adviseAll(c2)
+    c2.adviseAll()
     c2.revise()
 
     val c = new AddAC(x, y, z);
-    AdviseCount.adviseAll(c)
+    c.adviseAll()
     assertEquals(Seq(), c.revise())
 
   }

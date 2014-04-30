@@ -15,6 +15,7 @@ import cspom.Statistic
 import cspom.StatisticsManager
 import concrete.priorityqueues.PriorityQueue
 import concrete.heuristic.revision.Key
+import concrete.AdviseCounts
 
 object ACC extends LazyLogging {
   def control(problem: Problem) = {
@@ -45,6 +46,14 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
   private val queue = queueType.getConstructor().newInstance()
 
+  private val advises = new AdviseCount()
+
+  problem.constraints.iterator.collect {
+    case c: AdviseCounts => c
+  } foreach {
+    _.register(advises)
+  }
+
   @Statistic
   val substats = new StatisticsManager
   substats.register("queue", queue);
@@ -55,7 +64,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
   var revisions = 0;
 
   def reduceAll() = {
-    AdviseCount.clear()
+    advises.clear()
     queue.clear()
     for (c <- problem.constraints if (!c.isEntailed))
       adviseAndEnqueueAll(c)
@@ -90,7 +99,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
   }
 
   def reduceAfter(variable: Variable) = variable == null || {
-    AdviseCount.clear()
+    advises.clear()
     queue.clear();
     updateQueue(variable, null)
     reduce();
@@ -147,7 +156,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
   def getStatistics = Map("revisions" -> revisions)
 
   def reduceAfter(constraints: Iterable[Constraint]) = {
-    AdviseCount.clear()
+    advises.clear()
     queue.clear();
 
     for (c <- constraints if !c.isEntailed)
