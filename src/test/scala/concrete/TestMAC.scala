@@ -37,12 +37,12 @@ class TestMAC extends FlatSpec with Matchers {
     allDiff(problem, queens)
     allDiff(problem, qd1)
     allDiff(problem, qd2)
-    (queens, problem)
+    problem
   }
 
   def allDiff(p: Problem, q: Seq[Variable]) {
     p.addConstraint(new AllDifferentBC(q: _*))
-    //p.addConstraint(new AllDifferent2C(q: _*))
+    p.addConstraint(new AllDifferent2C(q: _*))
   }
 
   def view(queens: Seq[Variable], solution: Map[String, Int]) =
@@ -60,7 +60,7 @@ class TestMAC extends FlatSpec with Matchers {
 
   for ((size, nb) <- sols) {
     it should s"solve queens-$size" taggedAs(SlowTest) in {
-      val (queens, problem) = qp(size)
+      val problem = qp(size)
 
       val solver = new MAC(problem, pm)
 

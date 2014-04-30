@@ -15,7 +15,7 @@ resolvers += "sonatype-releases" at "http://oss.sonatype.org/content/repositorie
 testOptions in Test += Tests.Argument("-oD")
 
 libraryDependencies ++= Seq(
-	"fr.univ-valenciennes.concrete" %% "cspom" % "2.0.3",
+	"fr.univ-valenciennes.concrete" %% "cspom" % "2.0.4-SNAPSHOT",
 	"junit" % "junit" % "4.11" % "test",
 	"org.postgresql" % "postgresql" % "9.3-1101-jdbc41",
 	"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.4",
