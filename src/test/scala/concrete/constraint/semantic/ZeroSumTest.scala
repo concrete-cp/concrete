@@ -7,7 +7,7 @@ import org.junit.Test
 import concrete.constraint.Constraint
 import concrete.IntDomain
 import concrete.Variable
-import concrete.AdviseCount
+import concrete.constraint.AdviseCount
 
 import concrete.constraint.semantic.FilterSum._
 

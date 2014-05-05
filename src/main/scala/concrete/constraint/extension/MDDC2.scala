@@ -1,14 +1,13 @@
 package concrete.constraint.extension
 
-import concrete.util.Backtrackable
-import concrete.constraint.Removals
+import concrete.UNSATObject
 import concrete.Variable
 import concrete.constraint.Constraint
-import concrete.util.SparseSet
+import concrete.constraint.Removals
+import concrete.util.Backtrackable
 import concrete.util.BitVector
 import concrete.util.SetWithMax
-import concrete.UNSATException
-import concrete.UNSATObject
+import concrete.util.SparseSet
 
 class MDDC2(_scope: Array[Variable], private val mdd: MDD)
   extends Constraint(_scope) with Removals with Backtrackable[Set[Int]] {
@@ -47,6 +46,8 @@ class MDDC2(_scope: Array[Variable], private val mdd: MDD)
 
   var delta: Int = _
 
+  private val timestamp = new Timestamp()
+
   def revise(modified: List[Int]) = {
     for (i <- scope.indices) {
       unsupported(i).fill(false)
@@ -57,11 +58,9 @@ class MDDC2(_scope: Array[Variable], private val mdd: MDD)
 
     //delta = arity
 
-    MDD.timestamp += 1
-
     val oldGno = gNo
 
-    mark(MDD.timestamp, mdd, 0, modified.reverse)
+    mark(timestamp.nextTimestamp(), mdd, 0, modified.reverse)
 
     if (gNo(mdd.getId)) {
       throw UNSATObject
@@ -70,10 +69,8 @@ class MDDC2(_scope: Array[Variable], private val mdd: MDD)
       altering()
     }
 
-    MDD.timestamp += 1
-
     val l = new SetWithMax(arity)
-    fillFound(MDD.timestamp, mdd, 0, l)
+    fillFound(timestamp.nextTimestamp(), mdd, 0, l)
 
     val c = l.filter(p => scope(p).dom.filter(i => !unsupported(p)(i)))
     if (isFree) {
@@ -131,7 +128,7 @@ class MDDC2(_scope: Array[Variable], private val mdd: MDD)
       }
     }
   }
-  
+
   override def dataSize = mdd.edges
 
 }

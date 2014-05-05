@@ -10,14 +10,16 @@ import concrete.Variable
 import concrete.UNSATException
 import concrete.constraint.Removals
 import concrete.EMPTY
-import concrete.AdviseCount
+import concrete.constraint.AdviseCount
 import concrete.UNSATObject
+import concrete.constraint.Advisable
 
 final class ReifiedConstraint(
   controlVariable: Variable,
   val positiveConstraint: Constraint,
   val negativeConstraint: Constraint)
-  extends Constraint(controlVariable +: (positiveConstraint.scope ++ negativeConstraint.scope).distinct) {
+  extends Constraint(controlVariable +: (positiveConstraint.scope ++ negativeConstraint.scope).distinct)
+  with Advisable {
 
   require(positiveConstraint.scope forall scope.tail.contains)
   require(negativeConstraint.scope forall scope.tail.contains)
@@ -118,6 +120,12 @@ final class ReifiedConstraint(
   override def toString = scope(0) + " == (" + positiveConstraint + ")";
 
   //var controlRemovals = 0
+
+  def register(ac: AdviseCount) {
+    Seq(positiveConstraint, negativeConstraint).collect {
+      case c: Advisable => c.register(ac)
+    }
+  }
 
   def advise(position: Int) = {
     if (position == 0) {

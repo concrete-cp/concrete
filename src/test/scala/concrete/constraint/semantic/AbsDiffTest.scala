@@ -6,7 +6,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
-import concrete.AdviseCount
+import concrete.constraint.AdviseCount
 import concrete.IntDomain
 import concrete.Variable
 import concrete.constraint.Constraint

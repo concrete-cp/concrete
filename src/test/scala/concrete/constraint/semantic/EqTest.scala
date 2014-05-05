@@ -3,7 +3,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import concrete.IntDomain
 import concrete.Variable
-import concrete.AdviseCount
+import concrete.constraint.AdviseCount
 
 final class EqTest {
 

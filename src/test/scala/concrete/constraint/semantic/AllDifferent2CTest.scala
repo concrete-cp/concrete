@@ -4,7 +4,7 @@ import org.junit.Assert._
 import concrete.IntDomain
 import concrete.Variable
 import concrete.UNSATException
-import concrete.AdviseCount
+import concrete.constraint.AdviseCount
 
 class AllDifferent2CTest {
   @Test(expected = classOf[Exception])

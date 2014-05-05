@@ -23,10 +23,10 @@ import scala.annotation.tailrec
 import concrete.constraint.Constraint
 import concrete.util.BitVector
 import concrete.Variable
-import concrete.AdviseCount
+import concrete.constraint.AdviseCount
 import scala.collection.mutable.HashSet
-import concrete.AdviseCounts
-import concrete.AdviseCount
+import concrete.constraint.AdviseCounts
+import concrete.constraint.AdviseCount
 
 trait AllDiffChecker extends Constraint {
 

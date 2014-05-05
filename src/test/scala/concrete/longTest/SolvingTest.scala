@@ -1,30 +1,17 @@
 package concrete.longTest;
 
-import scala.annotation.elidable
-import org.junit.Assert._
-import org.junit.Test
-import com.typesafe.scalalogging.slf4j.LazyLogging
-import concrete.ParameterManager
-import concrete.Solver
-import cspom.compiler.ProblemCompiler
-import cspom.CSPOM
-import org.junit.After
-import org.junit.Before
-import concrete.heuristic.revision.DomCtr
-import concrete.SAT
-import concrete.UNSAT
-import concrete.UNKNOWNResult
-import concrete.generator.cspompatterns.ConcretePatterns
-import concrete.runner.XCSPConcrete
-import java.io.File
-import org.scalatest.Assertions
 import org.scalatest.FlatSpec
-import org.scalatest.Matchers
-import concrete.SolverFactory
-import concrete.Solver
-import org.scalatest.Tag
-import concrete.SlowTest
 import org.scalatest.Inspectors
+import org.scalatest.Matchers
+
+import com.typesafe.scalalogging.slf4j.LazyLogging
+
+import concrete.ParameterManager
+import concrete.SlowTest
+import concrete.SolverFactory
+import concrete.heuristic.revision.DomCtr
+import concrete.runner.XCSPConcrete
+import cspom.CSPOM
 
 //import SolvingTest._
 
@@ -60,7 +47,7 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
     "1d_rubiks_cube.fzn" -> true)
 
   def test(parameters: ParameterManager = new ParameterManager()): Unit = {
-    for ((p, r) <- problemBank.filterKeys(k => k.startsWith("zebra") || k.startsWith("frb"))) {
+    for ((p, r) <- problemBank.filterKeys(_.startsWith("tsp"))) {
       val test = p.contains(".xml")
 
       val expected: Boolean = r match {
@@ -89,19 +76,24 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
     require(url != null, "Could not find resource " + name)
 
     val (cspomProblem, data) = CSPOM.load(url);
-    // println(cspomProblem)
-    val solver = new SolverFactory(parameters)(cspomProblem).toIterable
+
+    val solver = new SolverFactory(parameters)(cspomProblem)
+
+    println(cspomProblem)
+    println(solver.concreteProblem)
+
+    val solvIt = solver.toIterable
 
     if (expectedResult) {
-      solver should not be 'empty
+      solvIt should not be 'empty
     } else {
-      solver shouldBe 'empty
+      solvIt shouldBe 'empty
     }
 
     // println(solver.concreteProblem.toString)
 
     if (test) {
-      for (sol <- solver.headOption) {
+      for (sol <- solver.toIterable.headOption) {
         val failed = XCSPConcrete.controlCSPOM(sol, data('variables).asInstanceOf[Seq[String]], url)
         failed shouldBe 'empty
       }

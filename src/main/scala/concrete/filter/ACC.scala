@@ -3,7 +3,7 @@ package concrete.filter;
 import scala.annotation.tailrec
 import scala.reflect.runtime.universe
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import concrete.AdviseCount
+import concrete.constraint.AdviseCount
 import concrete.ParameterManager
 import concrete.Problem
 import concrete.UNSATException
@@ -15,7 +15,8 @@ import cspom.Statistic
 import cspom.StatisticsManager
 import concrete.priorityqueues.PriorityQueue
 import concrete.heuristic.revision.Key
-import concrete.AdviseCounts
+import concrete.constraint.AdviseCounts
+import concrete.constraint.Advisable
 
 object ACC extends LazyLogging {
   def control(problem: Problem) = {
@@ -49,7 +50,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
   private val advises = new AdviseCount()
 
   problem.constraints.iterator.collect {
-    case c: AdviseCounts => c
+    case c: Advisable => c
   } foreach {
     _.register(advises)
   }

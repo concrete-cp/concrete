@@ -3,7 +3,7 @@ import concrete.Problem
 import org.junit.Test
 import concrete.IntDomain
 import org.junit.Assert._
-import concrete.AdviseCount
+import concrete.constraint.AdviseCount
 import concrete.Variable
 
 final class AbsIntTest {

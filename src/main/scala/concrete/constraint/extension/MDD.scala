@@ -1,12 +1,22 @@
 package concrete.constraint.extension
 
 import scala.annotation.tailrec
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.Seq
 import scala.util.hashing.MurmurHash3
+
+import com.typesafe.scalalogging.slf4j.LazyLogging
+
 import concrete.priorityqueues.Identified
 import concrete.util.SetWithMax
-import java.util.Arrays
+import cspom.extension.IdMap
+import cspom.extension.IdSet
+
+final class Timestamp {
+  var timestamp = 0
+  def nextTimestamp(): Int = {
+    timestamp += 1
+    timestamp
+  }
+}
 
 trait RelationGenerator {
   def apply(data: Iterator[Array[Int]]): Relation
@@ -17,41 +27,54 @@ object MDD extends RelationGenerator {
 
   def apply(data: Iterator[Array[Int]]): MDD = {
     data.foldLeft[MDD](MDD0)(
-      (acc, tuple) => acc + tuple).reduce(new HashMap[Seq[MDD], MDD]())
+      (acc, tuple) => acc + tuple).reduce(new IdMap[Seq[MDD], MDD]())
   }
 
-  var timestamp = 0
-
   def newTrie(i: Int, v: MDD) = {
-    val t = new Array[MDD](i + 1) //Array.fill[MDD](i + 1)(MDD0) //new Array[MDD](i + 1)
+    val t = new Array[MDD](i + 1) //Array.fill[MDD](i + 1)(MDD0)
     t(i) = v
     t
   }
   //
   def newTrie(t: (Int, MDD)*) = {
     val s: Int = t.map(_._1).max
-    val trie = new Array[MDD](s + 1) //Array.fill[MDD](s + 1)(MDD0)
+    val trie = new Array[MDD](s + 1)
     for ((i, v) <- t) {
       trie(i) = v
     }
     trie
   }
-  //
-  //  def addTrie(trie: Array[MDD], t: (Int, MDD)*) {
-  //    for ((i, v) <- t) {
-  //      trie(i) = v
-  //    }
-  //  }
 
 }
 
-trait MDD extends Relation with Identified {
+trait MDD extends Relation with Identified with LazyLogging {
   type Self2 = MDD
+
+  private var mddTimestamp: Timestamp = null
+  var timestamp: Int = 0
+
+  def nextTimestamp() = {
+    if (mddTimestamp == null) {
+      registerTimestamp(new Timestamp(), new IdSet())
+    }
+
+    mddTimestamp.nextTimestamp()
+  }
+
+  private def registerTimestamp(ts: Timestamp, cache: IdSet[MDD]): Timestamp = {
+    if (!cache(this) && (this ne MDDLeaf)) {
+      mddTimestamp = ts
+      forSubtries {
+        (_, m: MDD) => m.registerTimestamp(ts, cache); true
+      }
+    }
+    ts
+  }
+
   var _id: Int = _
   def getId = _id
   def identify(): Int = {
-    MDD.timestamp += 1
-    identify(MDD.timestamp, 1)
+    identify(nextTimestamp(), 1)
   }
   def identify(ts: Int, i: Int): Int = {
     if (ts == timestamp) {
@@ -68,22 +91,19 @@ trait MDD extends Relation with Identified {
       id
     }
   }
-  def timestamp: Int
-  def timestamp_=(i: Int)
+
   def +(t: Array[Int]): MDD = if (contains(t)) MDD.this else addTrie(t, 0)
   def addTrie(t: Array[Int], i: Int): MDD
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]): MDD
   def contains(t: Array[Int]): Boolean = contains(t, 0)
   def contains(t: Array[Int], i: Int): Boolean
   def find(f: (Int, Int) => Boolean): Option[Array[Int]] = {
-    MDD.timestamp += 1
-    find(MDD.timestamp, f, 0) map (_.toArray)
+    find(nextTimestamp(), f, 0) map (_.toArray)
   }
   def find(ts: Int, f: (Int, Int) => Boolean, depth: Int): Option[List[Int]]
 
   def findSupport(f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int]): Option[Array[Int]] = {
-    MDD.timestamp += 1
-    findSupport(MDD.timestamp, f, p, i, support, 0)
+    findSupport(nextTimestamp(), f, p, i, support, 0)
   }
 
   def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int): Option[Array[Int]]
@@ -109,19 +129,16 @@ trait MDD extends Relation with Identified {
   def iterator = listIterator.map(_.toArray)
   def listIterator: Iterator[List[Int]]
   def edges: Int = {
-    MDD.timestamp += 1
-    edges(MDD.timestamp)
+    edges(nextTimestamp())
   }
   def edges(ts: Int): Int
   def filterTrie(f: (Int, Int) => Boolean, modified: List[Int]): MDD = {
-    MDD.timestamp += 1
-    filterTrie(MDD.timestamp, f, modified, 0)
+    filterTrie(nextTimestamp(), f, modified, 0)
   }
   def filterTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int): MDD
   def fillFound(f: (Int, Int) => Boolean, arity: Int): Traversable[Int] = {
-    MDD.timestamp += 1
     val l = new SetWithMax(arity)
-    fillFound(MDD.timestamp, f, 0, l)
+    fillFound(nextTimestamp(), f, 0, l)
     l
   }
   def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax)
@@ -131,10 +148,10 @@ trait MDD extends Relation with Identified {
   def -(t: Array[Int]) = throw new UnsupportedOperationException
 
   def lambda: BigInt = {
-    lambda(new HashMap(), this)
+    lambda(new IdMap(), this)
   }
 
-  def lambda(map: HashMap[MDD, BigInt], mdd: MDD): BigInt = {
+  def lambda(map: IdMap[MDD, BigInt], mdd: MDD): BigInt = {
     if (this eq MDDLeaf) {
       BigInt(1)
     } else {
@@ -152,46 +169,22 @@ trait MDD extends Relation with Identified {
 
   def forSubtries(f: (Int, MDD) => Boolean)
 
-  override def size = {
-    var s = 0
-    forSubtries {
-      (_, t) =>
-        s += t.size
-        true
-    }
-    s
-  }
-
   override def isEmpty: Boolean
 
-  def arity: Int = {
-    if (this eq MDDLeaf) {
-      0
-    } else {
-      var a = 1
-      forSubtries {
-        (_, t) =>
-          a += t.arity
-          false
-      }
-      a
-    }
-  }
-
   def copy = {
-    MDD.timestamp += 1
-    copy(MDD.timestamp)
+    copy(nextTimestamp())
   }
 
   def copy(ts: Int): MDD
-  //override def hashCode: Int = sys.error("Hashcodes are too slow")
 
-  override lazy val hashCode: Int =
+  override lazy val hashCode: Int = {
+    logger.warn("Computed hashcode")
     MurmurHash3.unorderedHash(traverseST)
+  }
 
-  def traverseST: Traversable[(Int, MDD)] = new Traversable[(Int, MDD)] {
+  private def traverseST: Traversable[(Int, MDD)] = new Traversable[(Int, MDD)] {
     def foreach[A](f: ((Int, MDD)) => A) {
-      forSubtries { (i, mdd) => f(i, mdd); true }
+      forSubtries { (i, mdd) => f((i, mdd)); true }
     }
   }
 
@@ -206,7 +199,6 @@ trait MDD extends Relation with Identified {
 }
 
 final object MDDLeaf extends MDD {
-  var timestamp = 0
   override def getId = 0
   //override def size = 1
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]) = this
@@ -244,8 +236,6 @@ final object MDDLeaf extends MDD {
 final object MDD0 extends MDD {
   override def getId = throw new UnsupportedOperationException
   override def identify(ts: Int, i: Int): Int = throw new UnsupportedOperationException
-  def timestamp = throw new UnsupportedOperationException
-  def timestamp_=(i: Int) { throw new UnsupportedOperationException }
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]) = MDD0
   def contains(tuple: Array[Int], i: Int) = false
   def find(ts: Int, f: (Int, Int) => Boolean, depth: Int) = None
@@ -277,7 +267,6 @@ final object MDD0 extends MDD {
 
 final class MDD1(private val child: MDD, private val index: Int) extends MDD {
   assert(child ne MDD0)
-  var timestamp: Int = _
 
   def forSubtries(f: (Int, MDD) => Boolean) {
     f(index, child)
@@ -423,7 +412,7 @@ final class MDD2(
   def forSubtries(f: (Int, MDD) => Boolean) {
     f(leftI, left) && f(rightI, right)
   }
-  var timestamp: Int = _
+
   def addTrie(t: Array[Int], i: Int): MDD =
     if (i >= t.length) {
       MDDLeaf
@@ -583,8 +572,6 @@ final class MDDn(
   private val trie: Array[MDD],
   private val indices: Array[Int],
   private val nbIndices: Int) extends MDD {
-
-  var timestamp = 0
 
   def copy(ts: Int) = {
     if (ts == timestamp) {

@@ -12,7 +12,7 @@ import concrete.util.Backtrackable
 import scala.collection.immutable.Queue
 import concrete.Domain
 import concrete.util.IntSet
-import concrete.AdviseCount
+import concrete.constraint.AdviseCount
 import scala.collection.mutable.HashSet
 import concrete.UNSATObject
 import concrete.UNSATException

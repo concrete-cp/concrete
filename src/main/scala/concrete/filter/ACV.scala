@@ -11,14 +11,14 @@ import concrete.priorityqueues.BinaryHeap
 import concrete.priorityqueues.PriorityQueue
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import cspom.Statistic
-import concrete.AdviseCount
+import concrete.constraint.AdviseCount
 import concrete.ParameterManager
 import concrete.Problem
 import cspom.StatisticsManager
 import concrete.UNSATException
 import concrete.Variable
-import concrete.AdviseCounts
-import concrete.AdviseCount
+import concrete.constraint.AdviseCounts
+import concrete.constraint.AdviseCount
 
 /**
  * @author scand1sk

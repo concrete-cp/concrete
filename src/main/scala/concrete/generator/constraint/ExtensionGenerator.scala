@@ -2,9 +2,7 @@ package concrete.generator.constraint;
 
 import scala.collection.mutable.HashMap
 import scala.reflect.runtime.universe
-
 import com.typesafe.scalalogging.slf4j.LazyLogging
-
 import Generator.cspom2concreteVar
 import concrete.Domain
 import concrete.ParameterManager
@@ -27,6 +25,7 @@ import concrete.constraint.extension.ReduceableExt
 import concrete.constraint.extension.STR
 import concrete.constraint.extension.TupleTrieSet
 import cspom.CSPOMConstraint
+import cspom.extension.IdMap
 
 class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLogging {
 
@@ -38,34 +37,32 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
 
   val TIGHTNESS_LIMIT = 4;
 
-  def cspomMDDtoCspfjMDD(
+  private def cspomMDDtoCspfjMDD(
     domains: List[Domain],
     relation: cspom.extension.MDD[Int],
-    map: HashMap[cspom.extension.MDD[Int], concrete.constraint.extension.MDD]): MDD = {
+    map: collection.mutable.Map[cspom.extension.MDD[Int], concrete.constraint.extension.MDD]): MDD = {
     relation match {
       case n if n eq cspom.extension.MDDLeaf => concrete.constraint.extension.MDDLeaf
       case n: cspom.extension.MDDNode[Int] => map.getOrElseUpdate(n, {
         val (domain, tail) = (domains.head, domains.tail)
         val trie = n.trie
 
-        trie.size match {
-          case 0 => MDD0
-          case 1 =>
-            val (v, t) = trie.head
+        trie.toSeq match {
+          case Seq() => MDD0
+          case Seq((v, t)) =>
             new MDD1(cspomMDDtoCspfjMDD(tail, t, map), domain.index(v))
 
-          case 2 =>
-            val List((v1, t1), (v2, t2)) = trie.toList
+          case Seq((v1, t1), (v2, t2)) =>
             new MDD2(
               cspomMDDtoCspfjMDD(tail, t1, map), domain.index(v1),
               cspomMDDtoCspfjMDD(tail, t2, map), domain.index(v2))
 
-          case s: Int =>
-            val m = trie.map(l => domain.index(l._1)).max
+          case trieSeq =>
+            val m = trieSeq.map(l => domain.index(l._1)).max
             val concreteTrie = new Array[concrete.constraint.extension.MDD](m + 1)
-            val indices = new Array[Int](s)
+            val indices = new Array[Int](trieSeq.size)
             var j = 0
-            for ((v, t) <- trie) {
+            for ((v, t) <- trieSeq) {
               val i = domain.index(v)
               if (i < 0) {
                 logger.warn(s"Could not find $v in $domain")
@@ -121,7 +118,7 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
         cspomMDDtoCspfjMDD(
           domains,
           mdd.asInstanceOf[cspom.extension.MDD[Int]],
-          new HashMap())
+          new IdMap())
       case r =>
         val m = MDD(value2Index(domains, r).map(_.toArray))
         m
@@ -171,7 +168,8 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
               new MDDC2(scope, m.reduceable.asInstanceOf[MDD])
 
             case "Reduce" =>
-              new ReduceableExt(scope, m.reduceable.copy)
+              val r = m.reduceable.copy
+              new ReduceableExt(scope, r)
 
             case "Find" =>
               new FindSupportExt(scope, m, true)

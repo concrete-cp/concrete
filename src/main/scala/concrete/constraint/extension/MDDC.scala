@@ -45,6 +45,8 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
 
   var delta: Int = _
 
+  private val timestamp = new Timestamp()//mdd.registerTimestamp()
+
   def revise(modified: List[Int]) = {
     for (i <- scope.indices) {
       unsupported(i).fill(false)
@@ -55,11 +57,9 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
 
     delta = arity
 
-    MDD.timestamp += 1
-
     val oldGno = gNo
 
-    seekSupports(MDD.timestamp, mdd, 0)
+    seekSupports(timestamp.nextTimestamp(), mdd, 0)
     if (gNo(mdd.getId)) {
       throw UNSATObject
     }
@@ -113,7 +113,7 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
       res
     }
   }
-  
+
   override def dataSize = mdd.edges
 
 }

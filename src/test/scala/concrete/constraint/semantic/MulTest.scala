@@ -10,7 +10,7 @@ import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
 import concrete.IntDomain
 import concrete.Variable
-import concrete.AdviseCount
+import concrete.constraint.AdviseCount
 
 final class MulTest {
 
