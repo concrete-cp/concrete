@@ -26,6 +26,7 @@ import concrete.constraint.extension.STR
 import concrete.constraint.extension.TupleTrieSet
 import cspom.CSPOMConstraint
 import cspom.extension.IdMap
+import concrete.constraint.extension.Timestamp
 
 class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLogging {
 
@@ -40,7 +41,8 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
   private def cspomMDDtoCspfjMDD(
     domains: List[Domain],
     relation: cspom.extension.MDD[Int],
-    map: collection.mutable.Map[cspom.extension.MDD[Int], concrete.constraint.extension.MDD]): MDD = {
+    map: collection.mutable.Map[cspom.extension.MDD[Int], concrete.constraint.extension.MDD],
+    timestamp: Timestamp): MDD = {
     relation match {
       case n if n eq cspom.extension.MDDLeaf => concrete.constraint.extension.MDDLeaf
       case n: cspom.extension.MDDNode[Int] => map.getOrElseUpdate(n, {
@@ -50,12 +52,12 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
         trie.toSeq match {
           case Seq() => MDD0
           case Seq((v, t)) =>
-            new MDD1(cspomMDDtoCspfjMDD(tail, t, map), domain.index(v))
+            new MDD1(cspomMDDtoCspfjMDD(tail, t, map, timestamp), domain.index(v), timestamp)
 
           case Seq((v1, t1), (v2, t2)) =>
             new MDD2(
-              cspomMDDtoCspfjMDD(tail, t1, map), domain.index(v1),
-              cspomMDDtoCspfjMDD(tail, t2, map), domain.index(v2))
+              cspomMDDtoCspfjMDD(tail, t1, map, timestamp), domain.index(v1),
+              cspomMDDtoCspfjMDD(tail, t2, map, timestamp), domain.index(v2), timestamp)
 
           case trieSeq =>
             val m = trieSeq.map(l => domain.index(l._1)).max
@@ -67,13 +69,13 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
               if (i < 0) {
                 logger.warn(s"Could not find $v in $domain")
               } else {
-                concreteTrie(i) = cspomMDDtoCspfjMDD(tail, t, map)
+                concreteTrie(i) = cspomMDDtoCspfjMDD(tail, t, map, timestamp)
                 indices(j) = i
                 j += 1
               }
             }
 
-            new MDDn(concreteTrie, indices, indices.length)
+            new MDDn(concreteTrie, indices, indices.length, timestamp)
         }
       })
     }
@@ -84,12 +86,12 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
   /**
    * Used to cache value to indices conversion
    */
-  private val vToICache = new CacheConverter[cspom.extension.Relation[_], HashMap[Signature, Matrix]]()
+  private val vToICache = new IdMap[cspom.extension.Relation[_], HashMap[Signature, Matrix]]()
 
   private def generateMatrix(variables: List[Variable], relation: cspom.extension.Relation[_], init: Boolean): Matrix = {
     val domains = variables map (_.dom)
 
-    val map = vToICache.getOrAdd(relation, new HashMap[Signature, Matrix])
+    val map = vToICache.getOrElseUpdate(relation, new HashMap[Signature, Matrix])
 
     val signature = Signature(domains map (_.values.toList), init)
 
@@ -101,9 +103,9 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
 
   private def gen(relation: cspom.extension.Relation[_], init: Boolean, domains: List[Domain]) = {
     if (relation.nonEmpty && relation.head.size == 2) {
-      new Matrix2D(domains(0).size, domains(1).size, init).setAll(value2Index(domains, relation).toTraversable.map(_.toArray), !init)
+      new Matrix2D(domains(0).size, domains(1).size, init).setAll(value2Index(domains, relation).map(_.toArray).toTraversable, !init)
     } else if (init) {
-      new TupleTrieSet(MDD(value2Index(domains, relation).map(_.toArray)), init)
+      new TupleTrieSet(relation2MDD(relation, domains), init)
     } else {
       new TupleTrieSet(ds match {
         case "MDD" => relation2MDD(relation, domains)
@@ -118,10 +120,9 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
         cspomMDDtoCspfjMDD(
           domains,
           mdd.asInstanceOf[cspom.extension.MDD[Int]],
-          new IdMap())
-      case r =>
-        val m = MDD(value2Index(domains, r).map(_.toArray))
-        m
+          new IdMap(),
+          new Timestamp())
+      case r => MDD(value2Index(domains, r).map(_.toArray))
     }
   }
 
@@ -138,11 +139,6 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
       _.contains(-1)
     }
 
-  /**
-   * Used to cache data structure conversion
-   */
-  private val dsCache = new CacheConverter[Matrix, List[Array[Int]]]()
-
   override def gen(extensionConstraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Option[Seq[Constraint]] = {
 
     val solverVariables = extensionConstraint.arguments map cspom2concreteVar toList
@@ -155,9 +151,8 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
     } else if (solverVariables.exists(_.dom.undefined)) {
       None
     } else {
-      val matrix = generateMatrix(solverVariables, relation, init)
       val scope = solverVariables.toArray
-      val constraint = matrix match {
+      val constraint = generateMatrix(solverVariables, relation, init) match {
         case m: Matrix2D => BinaryExt(scope, m, true)
         case m: TupleTrieSet if (m.initialContent == false) => {
           consType match {

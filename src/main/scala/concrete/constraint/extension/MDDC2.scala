@@ -60,7 +60,7 @@ class MDDC2(_scope: Array[Variable], private val mdd: MDD)
 
     val oldGno = gNo
 
-    mark(timestamp.nextTimestamp(), mdd, 0, modified.reverse)
+    mark(timestamp.next(), mdd, 0, modified.reverse)
 
     if (gNo(mdd.getId)) {
       throw UNSATObject
@@ -70,7 +70,7 @@ class MDDC2(_scope: Array[Variable], private val mdd: MDD)
     }
 
     val l = new SetWithMax(arity)
-    fillFound(timestamp.nextTimestamp(), mdd, 0, l)
+    fillFound(timestamp.next(), mdd, 0, l)
 
     val c = l.filter(p => scope(p).dom.filter(i => !unsupported(p)(i)))
     if (isFree) {

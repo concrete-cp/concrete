@@ -79,8 +79,8 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
 
     val solver = new SolverFactory(parameters)(cspomProblem)
 
-    println(cspomProblem)
-    println(solver.concreteProblem)
+//    println(cspomProblem)
+//    println(solver.concreteProblem)
 
     val solvIt = solver.toIterable
 

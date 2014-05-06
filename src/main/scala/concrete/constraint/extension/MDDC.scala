@@ -59,7 +59,7 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
 
     val oldGno = gNo
 
-    seekSupports(timestamp.nextTimestamp(), mdd, 0)
+    seekSupports(timestamp.next(), mdd, 0)
     if (gNo(mdd.getId)) {
       throw UNSATObject
     }

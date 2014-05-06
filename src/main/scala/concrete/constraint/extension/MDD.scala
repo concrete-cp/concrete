@@ -11,8 +11,8 @@ import cspom.extension.IdMap
 import cspom.extension.IdSet
 
 final class Timestamp {
-  var timestamp = 0
-  def nextTimestamp(): Int = {
+  private var timestamp = 0
+  def next(): Int = {
     timestamp += 1
     timestamp
   }
@@ -50,34 +50,16 @@ object MDD extends RelationGenerator {
 trait MDD extends Relation with Identified with LazyLogging {
   type Self2 = MDD
 
-  private var mddTimestamp: Timestamp = null
+  def mddTimestamp: Timestamp
   var timestamp: Int = 0
 
-  def nextTimestamp() = {
-    if (mddTimestamp == null) {
-      registerTimestamp(new Timestamp(), new IdSet())
-    }
-
-    mddTimestamp.nextTimestamp()
-  }
-
-  private def registerTimestamp(ts: Timestamp, cache: IdSet[MDD]): Timestamp = {
-    if (!cache(this) && (this ne MDDLeaf)) {
-      mddTimestamp = ts
-      forSubtries {
-        (_, m: MDD) => m.registerTimestamp(ts, cache); true
-      }
-    }
-    ts
-  }
-
-  var _id: Int = _
+  private var _id: Int = _
   def getId = _id
-  def identify(): Int = {
-    identify(nextTimestamp(), 1)
+  final def identify(): Int = {
+    identify(mddTimestamp.next(), 1)
   }
-  def identify(ts: Int, i: Int): Int = {
-    if (ts == timestamp) {
+  private def identify(ts: Int, i: Int): Int = {
+    if ((this eq MDDLeaf) || (ts == timestamp)) {
       i
     } else {
       timestamp = ts
@@ -98,12 +80,12 @@ trait MDD extends Relation with Identified with LazyLogging {
   def contains(t: Array[Int]): Boolean = contains(t, 0)
   def contains(t: Array[Int], i: Int): Boolean
   def find(f: (Int, Int) => Boolean): Option[Array[Int]] = {
-    find(nextTimestamp(), f, 0) map (_.toArray)
+    find(mddTimestamp.next(), f, 0) map (_.toArray)
   }
   def find(ts: Int, f: (Int, Int) => Boolean, depth: Int): Option[List[Int]]
 
   def findSupport(f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int]): Option[Array[Int]] = {
-    findSupport(nextTimestamp(), f, p, i, support, 0)
+    findSupport(mddTimestamp.next(), f, p, i, support, 0)
   }
 
   def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int): Option[Array[Int]]
@@ -129,16 +111,16 @@ trait MDD extends Relation with Identified with LazyLogging {
   def iterator = listIterator.map(_.toArray)
   def listIterator: Iterator[List[Int]]
   def edges: Int = {
-    edges(nextTimestamp())
+    edges(mddTimestamp.next())
   }
   def edges(ts: Int): Int
   def filterTrie(f: (Int, Int) => Boolean, modified: List[Int]): MDD = {
-    filterTrie(nextTimestamp(), f, modified, 0)
+    filterTrie(mddTimestamp.next(), f, modified, 0)
   }
   def filterTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int): MDD
   def fillFound(f: (Int, Int) => Boolean, arity: Int): Traversable[Int] = {
     val l = new SetWithMax(arity)
-    fillFound(nextTimestamp(), f, 0, l)
+    fillFound(mddTimestamp.next(), f, 0, l)
     l
   }
   def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax)
@@ -147,11 +129,11 @@ trait MDD extends Relation with Identified with LazyLogging {
 
   def -(t: Array[Int]) = throw new UnsupportedOperationException
 
-  def lambda: BigInt = {
+  final def lambda: BigInt = {
     lambda(new IdMap(), this)
   }
 
-  def lambda(map: IdMap[MDD, BigInt], mdd: MDD): BigInt = {
+  final def lambda(map: IdMap[MDD, BigInt], mdd: MDD): BigInt = {
     if (this eq MDDLeaf) {
       BigInt(1)
     } else {
@@ -167,15 +149,13 @@ trait MDD extends Relation with Identified with LazyLogging {
     }
   }
 
-  def forSubtries(f: (Int, MDD) => Boolean)
+  def forSubtries(f: (Int, MDD) => Boolean): Boolean
 
   override def isEmpty: Boolean
 
-  def copy = {
-    copy(nextTimestamp())
-  }
+  final def copy = copy(mddTimestamp.next(), new Timestamp())
 
-  def copy(ts: Int): MDD
+  def copy(ts: Int, newTimestamp: Timestamp): MDD
 
   override lazy val hashCode: Int = {
     logger.warn("Computed hashcode")
@@ -201,6 +181,8 @@ trait MDD extends Relation with Identified with LazyLogging {
 final object MDDLeaf extends MDD {
   override def getId = 0
   //override def size = 1
+  def mddTimestamp = throw new UnsupportedOperationException
+
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]) = this
   def contains(tuple: Array[Int], i: Int) = true
   def find(ts: Int, f: (Int, Int) => Boolean, depth: Int) = Some(Nil)
@@ -216,10 +198,9 @@ final object MDDLeaf extends MDD {
   }
   def addTrie(tuple: Array[Int], i: Int) = throw new UnsupportedOperationException
   override def toString = "MDD Leaf"
-  def forSubtries(f: (Int, MDD) => Boolean) {
+  def forSubtries(f: (Int, MDD) => Boolean): Boolean = {
     throw new UnsupportedOperationException
   }
-  override def identify(ts: Int, i: Int): Int = i
   override def size = 1
   override def isEmpty = false
   def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) =
@@ -230,12 +211,12 @@ final object MDDLeaf extends MDD {
     case _ => false
   }
 
-  def copy(ts: Int) = this
+  def copy(ts: Int, newTimestamp: Timestamp) = this
 }
 
 final object MDD0 extends MDD {
   override def getId = throw new UnsupportedOperationException
-  override def identify(ts: Int, i: Int): Int = throw new UnsupportedOperationException
+  def mddTimestamp = throw new UnsupportedOperationException
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]) = MDD0
   def contains(tuple: Array[Int], i: Int) = false
   def find(ts: Int, f: (Int, Int) => Boolean, depth: Int) = None
@@ -249,26 +230,26 @@ final object MDD0 extends MDD {
     if (i >= tuple.length) {
       MDDLeaf
     } else {
-      new MDD1(MDD0.addTrie(tuple, i + 1), tuple(i))
+      new MDD1(MDD0.addTrie(tuple, i + 1), tuple(i), mddTimestamp)
     }
   }
 
   override def toString = "Empty MDD"
 
-  def forSubtries(f: (Int, MDD) => Boolean) {}
+  def forSubtries(f: (Int, MDD) => Boolean) = true
 
   override def isEmpty = true
 
   def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) =
     None
 
-  def copy(ts: Int) = this
+  def copy(ts: Int, newTimestamp: Timestamp) = this
 }
 
-final class MDD1(private val child: MDD, private val index: Int) extends MDD {
+final class MDD1(private val child: MDD, private val index: Int, val mddTimestamp: Timestamp) extends MDD {
   assert(child ne MDD0)
 
-  def forSubtries(f: (Int, MDD) => Boolean) {
+  def forSubtries(f: (Int, MDD) => Boolean) = {
     f(index, child)
   }
 
@@ -278,9 +259,9 @@ final class MDD1(private val child: MDD, private val index: Int) extends MDD {
     } else {
       val v = t(i)
       if (v == index) {
-        new MDD1(child.addTrie(t, i + 1), index)
+        new MDD1(child.addTrie(t, i + 1), index, mddTimestamp)
       } else {
-        new MDD2(child, index, MDD0.addTrie(t, i + 1), v)
+        new MDD2(child, index, MDD0.addTrie(t, i + 1), v, mddTimestamp)
       }
     }
 
@@ -300,7 +281,7 @@ final class MDD1(private val child: MDD, private val index: Int) extends MDD {
     //      EmptyMDD
     //    } else {
     val newArray = MDD.newTrie(index, b)
-    mdds.getOrElseUpdate(newArray, new MDD1(b, index))
+    mdds.getOrElseUpdate(newArray, new MDD1(b, index, mddTimestamp))
     //}
 
   }
@@ -372,7 +353,7 @@ final class MDD1(private val child: MDD, private val index: Int) extends MDD {
       } else if (nC eq child) {
         filteredResult = this
       } else {
-        filteredResult = new MDD1(nC, index)
+        filteredResult = new MDD1(nC, index, mddTimestamp)
       }
 
       filteredResult
@@ -391,12 +372,12 @@ final class MDD1(private val child: MDD, private val index: Int) extends MDD {
   }
 
   override def isEmpty = false
-  def copy(ts: Int) =
+  def copy(ts: Int, newTimestamp: Timestamp) =
     if (ts == timestamp) {
       filteredResult
     } else {
       timestamp = ts
-      filteredResult = new MDD1(child.copy(ts), index)
+      filteredResult = new MDD1(child.copy(ts, newTimestamp), index, newTimestamp)
       filteredResult
     }
 
@@ -404,12 +385,13 @@ final class MDD1(private val child: MDD, private val index: Int) extends MDD {
 
 final class MDD2(
   private val left: MDD, private val leftI: Int,
-  private val right: MDD, private val rightI: Int) extends MDD {
+  private val right: MDD, private val rightI: Int,
+  val mddTimestamp: Timestamp) extends MDD {
   assert(right ne MDD0)
   assert(left ne MDD0)
   assert(leftI < rightI)
 
-  def forSubtries(f: (Int, MDD) => Boolean) {
+  def forSubtries(f: (Int, MDD) => Boolean) = {
     f(leftI, left) && f(rightI, right)
   }
 
@@ -418,11 +400,11 @@ final class MDD2(
       MDDLeaf
     } else {
       t(i) match {
-        case `leftI` => new MDD2(left.addTrie(t, i + 1), leftI, right, rightI)
-        case `rightI` => new MDD2(left, leftI, right.addTrie(t, i + 1), rightI)
+        case `leftI` => new MDD2(left.addTrie(t, i + 1), leftI, right, rightI, mddTimestamp)
+        case `rightI` => new MDD2(left, leftI, right.addTrie(t, i + 1), rightI, mddTimestamp)
         case v: Int =>
           val newArray = MDD.newTrie((leftI, left), (rightI, right), (v, MDD0.addTrie(t, i + 1)))
-          new MDDn(newArray, Array(leftI, rightI, v), 3)
+          new MDDn(newArray, Array(leftI, rightI, v), 3, mddTimestamp)
 
       }
     }
@@ -488,15 +470,15 @@ final class MDD2(
           if (nR eq MDD0) {
             MDD0
           } else {
-            new MDD1(nR, rightI)
+            new MDD1(nR, rightI, mddTimestamp)
           }
         } else if (nR eq MDD0) {
-          new MDD1(nL, leftI)
+          new MDD1(nL, leftI, mddTimestamp)
         } else {
           if ((nL eq left) && (nR eq right)) {
             this
           } else {
-            new MDD2(nL, leftI, nR, rightI)
+            new MDD2(nL, leftI, nR, rightI, mddTimestamp)
           }
         }
 
@@ -538,7 +520,7 @@ final class MDD2(
 
     val nT = MDD.newTrie((leftI, bL), (rightI, bR))
 
-    mdds.getOrElseUpdate(nT, new MDD2(bL, leftI, bR, rightI))
+    mdds.getOrElseUpdate(nT, new MDD2(bL, leftI, bR, rightI, mddTimestamp))
   }
 
   override def isEmpty = false
@@ -558,12 +540,12 @@ final class MDD2(
     }
   }
 
-  def copy(ts: Int) =
+  def copy(ts: Int, newTimestamp: Timestamp) =
     if (ts == timestamp) {
       filteredResult
     } else {
       timestamp = ts
-      filteredResult = new MDD2(left.copy(ts), leftI, right.copy(ts), rightI)
+      filteredResult = new MDD2(left.copy(ts, newTimestamp), leftI, right.copy(ts, newTimestamp), rightI, newTimestamp)
       filteredResult
     }
 }
@@ -571,29 +553,30 @@ final class MDD2(
 final class MDDn(
   private val trie: Array[MDD],
   private val indices: Array[Int],
-  private val nbIndices: Int) extends MDD {
+  private val nbIndices: Int,
+  val mddTimestamp: Timestamp) extends MDD {
 
-  def copy(ts: Int) = {
+  def copy(ts: Int, newTimestamp: Timestamp) = {
     if (ts == timestamp) {
       filteredResult
     } else {
       timestamp = ts
-      filteredResult = new MDDn(trie map (t => if (t eq null) null else t.copy(ts)), indices.clone, nbIndices)
+      filteredResult = new MDDn(trie map (t => if (t eq null) null else t.copy(ts, newTimestamp)), indices.clone, nbIndices, newTimestamp)
       filteredResult
     }
   }
 
-  def forSubtries(f: (Int, MDD) => Boolean) {
+  def forSubtries(f: (Int, MDD) => Boolean) = {
     forSubtries(f, nbIndices - 1)
   }
 
   @tailrec
-  private def forSubtries(f: (Int, MDD) => Boolean, i: Int) {
-    if (i >= 0) {
+  private def forSubtries(f: (Int, MDD) => Boolean, i: Int): Boolean = {
+    if (i < 0) {
+      true
+    } else {
       val ti = indices(i)
-      if (f(ti, trie(ti))) {
-        forSubtries(f, i - 1)
-      }
+      f(ti, trie(ti)) && forSubtries(f, i - 1)
     }
   }
 
@@ -609,10 +592,10 @@ final class MDDn(
         ni(nbIndices) = v
         (ni, nbIndices + 1)
         newTrie(v) = MDD0.addTrie(tuple, i + 1)
-        new MDDn(newTrie, ni, nbIndices + 1)
+        new MDDn(newTrie, ni, nbIndices + 1, mddTimestamp)
       } else {
         newTrie(v) = newTrie(v).addTrie(tuple, i + 1)
-        new MDDn(newTrie, indices, nbIndices)
+        new MDDn(newTrie, indices, nbIndices, mddTimestamp)
       }
 
     }
@@ -621,7 +604,7 @@ final class MDDn(
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]): MDD = {
 
     var b = MDD.newTrie(indices.take(nbIndices).map(i => (i, trie(i).reduce(mdds))): _*)
-    mdds.getOrElseUpdate(b, new MDDn(b, indices, nbIndices))
+    mdds.getOrElseUpdate(b, new MDDn(b, indices, nbIndices, mddTimestamp))
   }
 
   //@tailrec
@@ -758,14 +741,14 @@ final class MDDn(
     nbIndices match {
       case 1 => {
         val i = indices(0)
-        new MDD1(t(i), i)
+        new MDD1(t(i), i, mddTimestamp)
       }
       case 2 => {
         val i = indices(0)
         val j = indices(1)
-        new MDD2(t(i), i, t(j), j)
+        new MDD2(t(i), i, t(j), j, mddTimestamp)
       }
-      case _ => new MDDn(t, indices, nbIndices)
+      case _ => new MDDn(t, indices, nbIndices, mddTimestamp)
     }
 
   }
