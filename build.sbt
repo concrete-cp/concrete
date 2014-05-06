@@ -6,13 +6,14 @@ version := "1.0.1-SNAPSHOT"
 
 scalaVersion := "2.11.0"
 
+
+// For JSR331, CSPOM and its dependencies
 resolvers += "Concrete repository" at "http://concrete-cp.github.io/concrete/repository"
 
-resolvers += "typesafe-relases" at "http://repo.typesafe.com/typesafe/releases"
+testOptions in Test <+= (target in Test) map {
+  t => Tests.Argument(TestFrameworks.ScalaTest, "-u", s"${t / "test-reports"}")
+}
 
-resolvers += "sonatype-releases" at "http://oss.sonatype.org/content/repositories/releases/"
-
-testOptions in Test += Tests.Argument("-oD")
 
 libraryDependencies ++= Seq(
 	"fr.univ-valenciennes.concrete" %% "cspom" % "2.0.4-SNAPSHOT",
