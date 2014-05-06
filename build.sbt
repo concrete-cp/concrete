@@ -7,11 +7,8 @@ version := "1.0.1-SNAPSHOT"
 scalaVersion := "2.11.0"
 
 
-// For snapshots
-resolvers += "Local repository" at "file:///home/vion/concrete/repository"
-
 // For JSR331, CSPOM and its dependencies
-// resolvers += "Concrete repository" at "http://concrete-cp.github.io/concrete/repository"
+resolvers += "Concrete repository" at "http://concrete-cp.github.io/concrete/repository"
 
 
 
