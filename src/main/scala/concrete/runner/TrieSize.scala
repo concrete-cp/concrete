@@ -18,6 +18,7 @@ import concrete.constraint.extension.TupleTrieSet
 import concrete.constraint.extension.MDDC
 import concrete.constraint.extension.ExtensionConstraintGeneral
 import concrete.constraint.extension.FindSupportExt
+import concrete.constraint.extension.MDDRelation
 
 object TrieSize extends App {
 
@@ -63,7 +64,7 @@ object TrieSize extends App {
       var initTime = -System.nanoTime()
 
       val t = new TupleTrieSet(structure match {
-        case "MDD" => MDD(data: _*)
+        case "MDD" => new MDDRelation(MDD(data))
         case "STR" => new STR() ++ data
       }, false)
       initTime += System.nanoTime()
@@ -77,7 +78,7 @@ object TrieSize extends App {
 
       val constraint = algo match {
         case "MDDC" => {
-          new MDDC(variables, t.reduceable.asInstanceOf[MDD])
+          new MDDC(variables, t.reduceable.asInstanceOf[MDDRelation].mdd)
         }
         case "Reduce" => {
           new ReduceableExt(variables, t.reduceable.copy)

@@ -7,11 +7,9 @@ final class TupleTrieSet(
   val initialContent: Boolean)
   extends Matrix with Iterable[Array[Int]] {
 
-  def this(initialContent: Boolean) = this(MDD0, initialContent)
+  def this(initialContent: Boolean) = this(new MDDRelation(), initialContent)
 
   def reduceable = _trie
-
-
 
   def copy = new TupleTrieSet(_trie.copy, initialContent)
 

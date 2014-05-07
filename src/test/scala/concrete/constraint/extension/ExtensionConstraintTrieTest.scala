@@ -13,7 +13,7 @@ final class ExtensionConstraintTrieTest {
 
   @Test
   def testRestore() {
-    val ta = new TupleTrieSet(MDD(), false);
+    val ta = new TupleTrieSet(new MDDRelation(), false);
     ta.set(Array(0, 0), true);
     ta.set(Array(1, 1), true);
     ta.set(Array(2, 2), true);
@@ -22,7 +22,7 @@ final class ExtensionConstraintTrieTest {
       new Variable("V0", IntDomain(0, 1)),
       new Variable("V1", IntDomain(0, 1, 2)))
 
-    val mmd = new ReduceableExt(scope, MDD(ta.toSeq: _*));
+    val mmd = new ReduceableExt(scope, ta.reduceable);
     val content = mmd.trie
     //println(content map (_.toSeq) mkString (", "))
 

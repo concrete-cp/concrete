@@ -22,7 +22,9 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
     restoreLevel(l)
   }
 
-  var gNo: Set[Int] = new SparseSet(mdd.identify() + 1)
+  private val timestamp = new Timestamp()
+
+  var gNo: Set[Int] = new SparseSet(mdd.identify(timestamp.next()) + 1)
 
   def restore(data: Set[Int]) {
     gNo = data
@@ -37,15 +39,14 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
   def simpleEvaluation: Int = math.min(Constraint.NP, scope.count(_.dom.size > 1))
 
   // Members declared in concrete.constraint.Removals
-  val prop = mdd.edges.toDouble / doubleCardSize
+  val prop = mdd.edges(timestamp.next()).toDouble / doubleCardSize
 
   def getEvaluation = (prop * doubleCardSize).toInt
 
   private val unsupported = scope map (p => BitVector.newBitVector(p.dom.maxSize))
 
   var delta: Int = _
-
-  private val timestamp = new Timestamp()//mdd.registerTimestamp()
+  //mdd.registerTimestamp()
 
   def revise(modified: List[Int]) = {
     for (i <- scope.indices) {
@@ -114,6 +115,6 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
     }
   }
 
-  override def dataSize = mdd.edges
+  override def dataSize = mdd.edges(timestamp.next())
 
 }

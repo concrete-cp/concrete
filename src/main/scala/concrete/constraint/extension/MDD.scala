@@ -2,32 +2,17 @@ package concrete.constraint.extension
 
 import scala.annotation.tailrec
 import scala.util.hashing.MurmurHash3
-
 import com.typesafe.scalalogging.slf4j.LazyLogging
-
 import concrete.priorityqueues.Identified
 import concrete.util.SetWithMax
 import cspom.extension.IdMap
 import cspom.extension.IdSet
+import concrete.Variable
 
-final class Timestamp {
-  private var timestamp = 0
-  def next(): Int = {
-    timestamp += 1
-    timestamp
-  }
-}
-
-trait RelationGenerator {
-  def apply(data: Iterator[Array[Int]]): Relation
-}
-
-object MDD extends RelationGenerator {
-  def apply(data: Array[Int]*): MDD = apply(data.iterator)
-
-  def apply(data: Iterator[Array[Int]]): MDD = {
+object MDD {
+  def apply(data: Seq[Array[Int]]): MDD = {
     data.foldLeft[MDD](MDD0)(
-      (acc, tuple) => acc + tuple).reduce(new IdMap[Seq[MDD], MDD]())
+      (acc, tuple) => acc + tuple) //.reduce(new IdMap[Seq[MDD], MDD]())
   }
 
   def newTrie(i: Int, v: MDD) = {
@@ -47,18 +32,14 @@ object MDD extends RelationGenerator {
 
 }
 
-trait MDD extends Relation with Identified with LazyLogging {
-  type Self2 = MDD
+trait MDD extends Identified with Iterable[Seq[Int]] with LazyLogging {
 
-  def mddTimestamp: Timestamp
   var timestamp: Int = 0
 
   private var _id: Int = _
   def getId = _id
-  final def identify(): Int = {
-    identify(mddTimestamp.next(), 1)
-  }
-  private def identify(ts: Int, i: Int): Int = {
+
+  def identify(ts: Int, i: Int = 1): Int = {
     if ((this eq MDDLeaf) || (ts == timestamp)) {
       i
     } else {
@@ -79,61 +60,32 @@ trait MDD extends Relation with Identified with LazyLogging {
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]): MDD
   def contains(t: Array[Int]): Boolean = contains(t, 0)
   def contains(t: Array[Int], i: Int): Boolean
-  def find(f: (Int, Int) => Boolean): Option[Array[Int]] = {
-    find(mddTimestamp.next(), f, 0) map (_.toArray)
-  }
+
   def find(ts: Int, f: (Int, Int) => Boolean, depth: Int): Option[List[Int]]
 
-  def findSupport(f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int]): Option[Array[Int]] = {
-    findSupport(mddTimestamp.next(), f, p, i, support, 0)
-  }
+  def findSupport(ts: Int, scope: Array[Variable], p: Int, i: Int, support: Array[Int], depth: Int): Option[Array[Int]]
 
-  def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int): Option[Array[Int]]
-
-  def checkSupDepth(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, index: Int, next: MDD, support: Array[Int]) = {
-    if (i == index) {
-      support(p) = i
-      next.findSupport(ts, f, p, i, support, p + 1)
-    } else {
-      None
-    }
-  }
-
-  def checkSupF(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, index: Int, next: MDD, support: Array[Int], depth: Int) = {
-    if (f(depth, index)) {
+  def checkSup(ts: Int, scope: Array[Variable], p: Int, i: Int, index: Int, next: MDD, support: Array[Int], depth: Int) = {
+    val ok = if (p == depth) i == index else scope(depth).dom.present(index)
+    if (ok) {
       support(depth) = index
-      next.findSupport(ts, f, p, i, support, depth + 1)
+      next.findSupport(ts, scope, p, i, support, depth + 1)
     } else {
       None
     }
   }
 
-  def iterator = listIterator.map(_.toArray)
-  def listIterator: Iterator[List[Int]]
-  def edges: Int = {
-    edges(mddTimestamp.next())
-  }
   def edges(ts: Int): Int
-  def filterTrie(f: (Int, Int) => Boolean, modified: List[Int]): MDD = {
-    filterTrie(mddTimestamp.next(), f, modified, 0)
-  }
+
   def filterTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int): MDD
-  def fillFound(f: (Int, Int) => Boolean, arity: Int): Traversable[Int] = {
-    val l = new SetWithMax(arity)
-    fillFound(mddTimestamp.next(), f, 0, l)
-    l
-  }
+
   def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax)
 
-  override def toString = s"$edges edges representing $size tuples"
-
-  def -(t: Array[Int]) = throw new UnsupportedOperationException
-
   final def lambda: BigInt = {
-    lambda(new IdMap(), this)
+    lambda(new IdMap())
   }
 
-  final def lambda(map: IdMap[MDD, BigInt], mdd: MDD): BigInt = {
+  final def lambda(map: IdMap[MDD, BigInt]): BigInt = {
     if (this eq MDDLeaf) {
       BigInt(1)
     } else {
@@ -141,7 +93,7 @@ trait MDD extends Relation with Identified with LazyLogging {
         var l = BigInt(0)
         forSubtries {
           case (_, m) =>
-            l += m.lambda(map, m)
+            l += m.lambda(map)
             true
         }
         l
@@ -153,9 +105,7 @@ trait MDD extends Relation with Identified with LazyLogging {
 
   override def isEmpty: Boolean
 
-  final def copy = copy(mddTimestamp.next(), new Timestamp())
-
-  def copy(ts: Int, newTimestamp: Timestamp): MDD
+  def copy(ts: Int): MDD
 
   override lazy val hashCode: Int = {
     logger.warn("Computed hashcode")
@@ -187,7 +137,7 @@ final object MDDLeaf extends MDD {
   def contains(tuple: Array[Int], i: Int) = true
   def find(ts: Int, f: (Int, Int) => Boolean, depth: Int) = Some(Nil)
   override lazy val hashCode = 0
-  def listIterator = Iterator(Nil)
+  def iterator = Iterator(Nil)
   def edges(ts: Int) = 0
   def filterTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int) = {
     assert(modified.isEmpty)
@@ -203,7 +153,7 @@ final object MDDLeaf extends MDD {
   }
   override def size = 1
   override def isEmpty = false
-  def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) =
+  def findSupport(ts: Int, scope: Array[Variable], p: Int, i: Int, support: Array[Int], depth: Int) =
     Some(support)
 
   override def equals(o: Any) = o match {
@@ -211,16 +161,15 @@ final object MDDLeaf extends MDD {
     case _ => false
   }
 
-  def copy(ts: Int, newTimestamp: Timestamp) = this
+  def copy(ts: Int) = this
 }
 
 final object MDD0 extends MDD {
   override def getId = throw new UnsupportedOperationException
-  def mddTimestamp = throw new UnsupportedOperationException
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]) = MDD0
   def contains(tuple: Array[Int], i: Int) = false
   def find(ts: Int, f: (Int, Int) => Boolean, depth: Int) = None
-  def listIterator = Iterator()
+  def iterator = Iterator()
   def edges(ts: Int) = 0
   def filterTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int) = MDD0
   def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax) {
@@ -230,7 +179,7 @@ final object MDD0 extends MDD {
     if (i >= tuple.length) {
       MDDLeaf
     } else {
-      new MDD1(MDD0.addTrie(tuple, i + 1), tuple(i), mddTimestamp)
+      new MDD1(MDD0.addTrie(tuple, i + 1), tuple(i))
     }
   }
 
@@ -240,13 +189,13 @@ final object MDD0 extends MDD {
 
   override def isEmpty = true
 
-  def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) =
+  def findSupport(ts: Int, scope: Array[Variable], p: Int, i: Int, support: Array[Int], depth: Int) =
     None
 
-  def copy(ts: Int, newTimestamp: Timestamp) = this
+  def copy(ts: Int) = this
 }
 
-final class MDD1(private val child: MDD, private val index: Int, val mddTimestamp: Timestamp) extends MDD {
+final class MDD1(private val child: MDD, private val index: Int) extends MDD {
   assert(child ne MDD0)
 
   def forSubtries(f: (Int, MDD) => Boolean) = {
@@ -259,9 +208,9 @@ final class MDD1(private val child: MDD, private val index: Int, val mddTimestam
     } else {
       val v = t(i)
       if (v == index) {
-        new MDD1(child.addTrie(t, i + 1), index, mddTimestamp)
+        new MDD1(child.addTrie(t, i + 1), index)
       } else {
-        new MDD2(child, index, MDD0.addTrie(t, i + 1), v, mddTimestamp)
+        new MDD2(child, index, MDD0.addTrie(t, i + 1), v)
       }
     }
 
@@ -281,7 +230,7 @@ final class MDD1(private val child: MDD, private val index: Int, val mddTimestam
     //      EmptyMDD
     //    } else {
     val newArray = MDD.newTrie(index, b)
-    mdds.getOrElseUpdate(newArray, new MDD1(b, index, mddTimestamp))
+    mdds.getOrElseUpdate(newArray, new MDD1(b, index))
     //}
 
   }
@@ -299,16 +248,12 @@ final class MDD1(private val child: MDD, private val index: Int, val mddTimestam
     }
   }
 
-  def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) = {
+  def findSupport(ts: Int, scope: Array[Variable], p: Int, i: Int, support: Array[Int], depth: Int) = {
     if (timestamp == ts) {
       None
     } else {
       timestamp = ts
-      if (depth == p) {
-        checkSupDepth(ts, f, p, i, index, child, support)
-      } else {
-        checkSupF(ts, f, p, i, index, child, support, depth)
-      }
+      checkSup(ts, scope, p, i, index, child, support, depth)
     }
   }
 
@@ -353,14 +298,14 @@ final class MDD1(private val child: MDD, private val index: Int, val mddTimestam
       } else if (nC eq child) {
         filteredResult = this
       } else {
-        filteredResult = new MDD1(nC, index, mddTimestamp)
+        filteredResult = new MDD1(nC, index)
       }
 
       filteredResult
 
     }
 
-  def listIterator = child.listIterator.map(index :: _)
+  def iterator = child.iterator.map(index +: _)
 
   def edges(ts: Int): Int = {
     if (ts == timestamp) {
@@ -372,12 +317,13 @@ final class MDD1(private val child: MDD, private val index: Int, val mddTimestam
   }
 
   override def isEmpty = false
-  def copy(ts: Int, newTimestamp: Timestamp) =
+
+  def copy(ts: Int) =
     if (ts == timestamp) {
       filteredResult
     } else {
       timestamp = ts
-      filteredResult = new MDD1(child.copy(ts, newTimestamp), index, newTimestamp)
+      filteredResult = new MDD1(child.copy(ts), index)
       filteredResult
     }
 
@@ -385,8 +331,7 @@ final class MDD1(private val child: MDD, private val index: Int, val mddTimestam
 
 final class MDD2(
   private val left: MDD, private val leftI: Int,
-  private val right: MDD, private val rightI: Int,
-  val mddTimestamp: Timestamp) extends MDD {
+  private val right: MDD, private val rightI: Int) extends MDD {
   assert(right ne MDD0)
   assert(left ne MDD0)
   assert(leftI < rightI)
@@ -400,11 +345,11 @@ final class MDD2(
       MDDLeaf
     } else {
       t(i) match {
-        case `leftI` => new MDD2(left.addTrie(t, i + 1), leftI, right, rightI, mddTimestamp)
-        case `rightI` => new MDD2(left, leftI, right.addTrie(t, i + 1), rightI, mddTimestamp)
+        case `leftI` => new MDD2(left.addTrie(t, i + 1), leftI, right, rightI)
+        case `rightI` => new MDD2(left, leftI, right.addTrie(t, i + 1), rightI)
         case v: Int =>
           val newArray = MDD.newTrie((leftI, left), (rightI, right), (v, MDD0.addTrie(t, i + 1)))
-          new MDDn(newArray, Array(leftI, rightI, v), 3, mddTimestamp)
+          new MDDn(newArray, Array(leftI, rightI, v), 3)
 
       }
     }
@@ -470,15 +415,15 @@ final class MDD2(
           if (nR eq MDD0) {
             MDD0
           } else {
-            new MDD1(nR, rightI, mddTimestamp)
+            new MDD1(nR, rightI)
           }
         } else if (nR eq MDD0) {
-          new MDD1(nL, leftI, mddTimestamp)
+          new MDD1(nL, leftI)
         } else {
           if ((nL eq left) && (nR eq right)) {
             this
           } else {
-            new MDD2(nL, leftI, nR, rightI, mddTimestamp)
+            new MDD2(nL, leftI, nR, rightI)
           }
         }
 
@@ -503,8 +448,8 @@ final class MDD2(
     }
   }
 
-  def listIterator: Iterator[List[Int]] =
-    left.listIterator.map(leftI :: _) ++ right.listIterator.map(rightI :: _)
+  def iterator: Iterator[Seq[Int]] =
+    left.iterator.map(leftI +: _) ++ right.iterator.map(rightI +: _)
 
   def edges(ts: Int): Int =
     if (ts == timestamp) {
@@ -520,32 +465,27 @@ final class MDD2(
 
     val nT = MDD.newTrie((leftI, bL), (rightI, bR))
 
-    mdds.getOrElseUpdate(nT, new MDD2(bL, leftI, bR, rightI, mddTimestamp))
+    mdds.getOrElseUpdate(nT, new MDD2(bL, leftI, bR, rightI))
   }
 
   override def isEmpty = false
 
-  def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) = {
+  def findSupport(ts: Int, scope: Array[Variable], p: Int, i: Int, support: Array[Int], depth: Int) = {
     if (timestamp == ts) {
       None
     } else {
       timestamp = ts
-      if (depth == p) {
-        checkSupDepth(ts, f, p, i, leftI, left, support).orElse(
-          checkSupDepth(ts, f, p, i, rightI, right, support))
-      } else {
-        checkSupF(ts, f, p, i, leftI, left, support, depth).orElse(
-          checkSupF(ts, f, p, i, rightI, right, support, depth))
-      }
+      checkSup(ts, scope, p, i, leftI, left, support, depth).orElse(
+        checkSup(ts, scope, p, i, rightI, right, support, depth))
     }
   }
 
-  def copy(ts: Int, newTimestamp: Timestamp) =
+  def copy(ts: Int) =
     if (ts == timestamp) {
       filteredResult
     } else {
       timestamp = ts
-      filteredResult = new MDD2(left.copy(ts, newTimestamp), leftI, right.copy(ts, newTimestamp), rightI, newTimestamp)
+      filteredResult = new MDD2(left.copy(ts), leftI, right.copy(ts), rightI)
       filteredResult
     }
 }
@@ -553,22 +493,19 @@ final class MDD2(
 final class MDDn(
   private val trie: Array[MDD],
   private val indices: Array[Int],
-  private val nbIndices: Int,
-  val mddTimestamp: Timestamp) extends MDD {
+  private val nbIndices: Int) extends MDD {
 
-  def copy(ts: Int, newTimestamp: Timestamp) = {
+  def copy(ts: Int) = {
     if (ts == timestamp) {
       filteredResult
     } else {
       timestamp = ts
-      filteredResult = new MDDn(trie map (t => if (t eq null) null else t.copy(ts, newTimestamp)), indices.clone, nbIndices, newTimestamp)
+      filteredResult = new MDDn(trie map (t => if (t eq null) null else t.copy(ts)), indices.clone, nbIndices)
       filteredResult
     }
   }
 
-  def forSubtries(f: (Int, MDD) => Boolean) = {
-    forSubtries(f, nbIndices - 1)
-  }
+  def forSubtries(f: (Int, MDD) => Boolean) = forSubtries(f, nbIndices - 1)
 
   @tailrec
   private def forSubtries(f: (Int, MDD) => Boolean, i: Int): Boolean = {
@@ -592,10 +529,10 @@ final class MDDn(
         ni(nbIndices) = v
         (ni, nbIndices + 1)
         newTrie(v) = MDD0.addTrie(tuple, i + 1)
-        new MDDn(newTrie, ni, nbIndices + 1, mddTimestamp)
+        new MDDn(newTrie, ni, nbIndices + 1)
       } else {
         newTrie(v) = newTrie(v).addTrie(tuple, i + 1)
-        new MDDn(newTrie, indices, nbIndices, mddTimestamp)
+        new MDDn(newTrie, indices, nbIndices)
       }
 
     }
@@ -604,7 +541,7 @@ final class MDDn(
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]): MDD = {
 
     var b = MDD.newTrie(indices.take(nbIndices).map(i => (i, trie(i).reduce(mdds))): _*)
-    mdds.getOrElseUpdate(b, new MDDn(b, indices, nbIndices, mddTimestamp))
+    mdds.getOrElseUpdate(b, new MDDn(b, indices, nbIndices))
   }
 
   //@tailrec
@@ -741,14 +678,14 @@ final class MDDn(
     nbIndices match {
       case 1 => {
         val i = indices(0)
-        new MDD1(t(i), i, mddTimestamp)
+        new MDD1(t(i), i)
       }
       case 2 => {
         val i = indices(0)
         val j = indices(1)
-        new MDD2(t(i), i, t(j), j, mddTimestamp)
+        new MDD2(t(i), i, t(j), j)
       }
-      case _ => new MDDn(t, indices, nbIndices, mddTimestamp)
+      case _ => new MDDn(t, indices, nbIndices)
     }
 
   }
@@ -765,8 +702,8 @@ final class MDDn(
     }
   }
 
-  def listIterator = indices.iterator.take(nbIndices).map(i => (trie(i), i)) flatMap {
-    case (t, i) => t.listIterator map (i :: _)
+  def iterator = indices.iterator.take(nbIndices).map(i => (trie(i), i)) flatMap {
+    case (t, i) => t.iterator map (i +: _)
   }
 
   def edges(ts: Int): Int = {
@@ -780,7 +717,7 @@ final class MDDn(
 
   override def isEmpty = false
 
-  def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) = {
+  def findSupport(ts: Int, scope: Array[Variable], p: Int, i: Int, support: Array[Int], depth: Int) = {
     if (timestamp == ts) {
       None
     } else {
@@ -791,7 +728,7 @@ final class MDDn(
           None
         } else {
           support(depth) = i
-          trie(i).findSupport(ts, f, p, i, support, depth + 1)
+          trie(i).findSupport(ts, scope, p, i, support, depth + 1)
         }
       } else {
         var s: Option[Array[Int]] = None
@@ -799,7 +736,7 @@ final class MDDn(
         while (s.isEmpty && j >= 0) {
           val index = indices(j)
           support(depth) = index
-          s = trie(index).findSupport(ts, f, p, i, support, depth + 1)
+          s = trie(index).findSupport(ts, scope, p, i, support, depth + 1)
           j -= 1
         }
         s

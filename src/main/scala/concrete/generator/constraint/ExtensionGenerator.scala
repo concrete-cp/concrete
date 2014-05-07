@@ -27,10 +27,11 @@ import concrete.constraint.extension.TupleTrieSet
 import cspom.CSPOMConstraint
 import cspom.extension.IdMap
 import concrete.constraint.extension.Timestamp
+import concrete.constraint.extension.MDDRelation
 
 class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLogging {
 
-  val consType = params.getOrElse("relationAlgorithm", "Reduce")
+  val consType = params.getOrElse("relationAlgorithm", "Find")
 
   val ds = params.getOrElse("relationStructure", "MDD")
 
@@ -38,11 +39,12 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
 
   val TIGHTNESS_LIMIT = 4;
 
+  val timestamp = new Timestamp()
+
   private def cspomMDDtoCspfjMDD(
     domains: List[Domain],
     relation: cspom.extension.MDD[Int],
-    map: collection.mutable.Map[cspom.extension.MDD[Int], concrete.constraint.extension.MDD],
-    timestamp: Timestamp): MDD = {
+    map: collection.mutable.Map[cspom.extension.MDD[Int], concrete.constraint.extension.MDD]): MDD = {
     relation match {
       case n if n eq cspom.extension.MDDLeaf => concrete.constraint.extension.MDDLeaf
       case n: cspom.extension.MDDNode[Int] => map.getOrElseUpdate(n, {
@@ -52,12 +54,12 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
         trie.toSeq match {
           case Seq() => MDD0
           case Seq((v, t)) =>
-            new MDD1(cspomMDDtoCspfjMDD(tail, t, map, timestamp), domain.index(v), timestamp)
+            new MDD1(cspomMDDtoCspfjMDD(tail, t, map), domain.index(v))
 
           case Seq((v1, t1), (v2, t2)) =>
             new MDD2(
-              cspomMDDtoCspfjMDD(tail, t1, map, timestamp), domain.index(v1),
-              cspomMDDtoCspfjMDD(tail, t2, map, timestamp), domain.index(v2), timestamp)
+              cspomMDDtoCspfjMDD(tail, t1, map), domain.index(v1),
+              cspomMDDtoCspfjMDD(tail, t2, map), domain.index(v2))
 
           case trieSeq =>
             val m = trieSeq.map(l => domain.index(l._1)).max
@@ -69,13 +71,13 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
               if (i < 0) {
                 logger.warn(s"Could not find $v in $domain")
               } else {
-                concreteTrie(i) = cspomMDDtoCspfjMDD(tail, t, map, timestamp)
+                concreteTrie(i) = cspomMDDtoCspfjMDD(tail, t, map)
                 indices(j) = i
                 j += 1
               }
             }
 
-            new MDDn(concreteTrie, indices, indices.length, timestamp)
+            new MDDn(concreteTrie, indices, j)
         }
       })
     }
@@ -114,20 +116,20 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
     }
   }
 
-  private def relation2MDD(relation: cspom.extension.Relation[_], domains: List[Domain]): MDD = {
-    relation match {
+  private def relation2MDD(relation: cspom.extension.Relation[_], domains: List[Domain]): MDDRelation = {
+    val mdd = relation match {
       case mdd: cspom.extension.MDD[_] =>
         cspomMDDtoCspfjMDD(
           domains,
           mdd.asInstanceOf[cspom.extension.MDD[Int]],
-          new IdMap(),
-          new Timestamp())
+          new IdMap())
       case r => MDD(value2Index(domains, r).map(_.toArray))
     }
+    new MDDRelation(mdd, timestamp)
   }
 
-  private def value2Index(domains: Seq[Domain], relation: cspom.extension.Relation[_]): Iterator[Seq[Int]] =
-    relation.iterator.map { t =>
+  private def value2Index(domains: Seq[Domain], relation: cspom.extension.Relation[_]): Seq[Seq[Int]] =
+    relation.toSeq.map { t =>
       (t, domains).zipped.map { (v, d) =>
         val i = d.index(v.asInstanceOf[Int])
         if (i < 0) {
@@ -157,10 +159,10 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
         case m: TupleTrieSet if (m.initialContent == false) => {
           consType match {
             case "MDDC" =>
-              new MDDC(scope, m.reduceable.asInstanceOf[MDD])
+              new MDDC(scope, m.reduceable.asInstanceOf[MDDRelation].mdd)
 
             case "MDDC2" =>
-              new MDDC2(scope, m.reduceable.asInstanceOf[MDD])
+              new MDDC2(scope, m.reduceable.asInstanceOf[MDDRelation].mdd)
 
             case "Reduce" =>
               val r = m.reduceable.copy

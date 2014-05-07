@@ -12,7 +12,7 @@ final class MDDTest {
 
   @Before
   def setUp() {
-    ts = MDD(Array(0, 0), Array(0, 1), Array(1, 0));
+    ts = MDD(Seq(Array(0, 0), Array(0, 1), Array(1, 0)))
   }
 
   @Test
@@ -37,12 +37,12 @@ final class MDDTest {
       itr.next();
       i += 1;
     }
-    assertEquals(ts.size, i)
+    assertEquals(ts.lambda, i)
   }
 
   @Test
   def testSize() {
-    assertEquals(3, ts.size);
+    assertEquals(3, ts.lambda);
     //    ts -= (0, 0);
     //    assertEquals(2, ts.size);
     //    ts += (1, 1);
@@ -52,7 +52,7 @@ final class MDDTest {
   @Test
   def testTrie() {
     val t = MDD0 + Array(1, 2, 3) + Array(1, 3, 4) + Array(1, 2, 5) + Array(2, 3, 5)
-    assertEquals(4, t.size)
+    assertEquals(4, t.lambda)
 
     assertTrue(t.contains(Array(1, 3, 4)))
     assertFalse(t.contains(Array(1, 2, 4)))
@@ -60,17 +60,17 @@ final class MDDTest {
     var s = MDD0 + Array(1, 2, 5) + Array(1, 3, 4) + Array(1, 2, 3)
     s += Array(2, 3, 5)
 
-    assertTrue(t.size == s.size)
-    assertTrue(t.forall(s.contains))
+    assertTrue(t.lambda == s.lambda)
+    assertTrue(t.iterator.map(_.toArray).forall(s.contains))
 
-    var u = MDD(
+    var u = MDD(Seq(
       Array(1, 2, 3),
       Array(1, 3, 4),
       Array(1, 2, 5),
-      Array(2, 3, 5))
+      Array(2, 3, 5)))
 
-    assertTrue(t.size == u.size)
-    assertTrue(t.forall(u.contains))
+    assertTrue(t.lambda == u.lambda)
+    assertTrue(t.iterator.map(_.toArray).forall(u.contains))
 
   }
 }

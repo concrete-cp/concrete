@@ -28,11 +28,16 @@ import concrete.constraint.Constraint
 final class FindSupportExt(scope: Array[Variable], tts: TupleTrieSet, shared: Boolean)
   extends ConflictCount(scope, tts, shared) with Residues {
 
-  val rel = tts.reduceable
+  private val rel = tts.reduceable
 
-  override def findSupport(p: Int, i: Int) = rel.findSupport(
-    (depth, index) => scope(depth).dom.present(index),
-    p, i, new Array[Int](arity))
+  override def findSupport(p: Int, i: Int) = {
+    val s = rel.findSupport(
+      scope, p, i, new Array[Int](arity))
+
+    require(s.forall(rel.contains))
+
+    s
+  }
 
   override val getEvaluation = rel.edges
 
@@ -42,6 +47,6 @@ final class FindSupportExt(scope: Array[Variable], tts: TupleTrieSet, shared: Bo
   def removeTuples(t: Array[Int]) = throw new UnsupportedOperationException
 
   override def simpleEvaluation = 6
-  
+
   override def dataSize = rel.edges
 }

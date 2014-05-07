@@ -2,16 +2,14 @@ package concrete.constraint.extension
 
 import scala.annotation.tailrec
 import scala.collection.mutable.HashMap
-import scala.collection.mutable.Seq
 import scala.util.hashing.MurmurHash3
 import concrete.priorityqueues.Identified
 import concrete.util.SetWithMax
 import java.util.Arrays
+import concrete.Variable
 
 object MDDLink extends RelationGenerator {
-  def apply(data: Array[Int]*): MDDLink = apply(data.iterator)
-
-  def apply(data: Iterator[Array[Int]]): MDDLink = {
+  def apply(data: Seq[Array[Int]]): MDDLink = {
     data.foldLeft[MDDLink](MDDLink0)(
       (acc, tuple) => acc + tuple).reduce(new HashMap())
   }
@@ -20,7 +18,7 @@ object MDDLink extends RelationGenerator {
 
 }
 
-trait MDDLink extends Relation {//with Identified {
+trait MDDLink extends Relation { //with Identified {
 
   var timestamp: Int = _
 
@@ -117,7 +115,7 @@ trait MDDLink extends Relation {//with Identified {
 
   def copy = this
 
-  def findSupport(f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int]): Option[Array[Int]] = ???
+  def findSupport(scope: Array[Variable], p: Int, i: Int, support: Array[Int]): Option[Array[Int]] = ???
   def find(f: (Int, Int) => Boolean): Option[Array[Int]] = ???
 }
 
@@ -145,7 +143,7 @@ final object MDDLinkLeaf extends MDDLink {
 
   override def size = 1
   override def isEmpty = false
-  def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) =
+  def findSupport(ts: Int, scope: Array[Variable], p: Int, i: Int, support: Array[Int], depth: Int) =
     Some(support)
 
   def copy(ts: Int) = this
@@ -175,7 +173,7 @@ final object MDDLink0 extends MDDLink {
 
   override def isEmpty = true
 
-  def findSupport(ts: Int, f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int], depth: Int) =
+  def findSupport(ts: Int, scope: Array[Variable], p: Int, i: Int, support: Array[Int], depth: Int) =
     None
 
   def copy(ts: Int) = this

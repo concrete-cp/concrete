@@ -2,6 +2,7 @@ package concrete.constraint.extension
 
 import concrete.util.BitVector
 import java.util.Arrays
+import concrete.Variable
 
 trait Relation extends Iterable[Array[Int]] {
   type Self2 <: Relation
@@ -22,9 +23,9 @@ trait Relation extends Iterable[Array[Int]] {
   def --(t: Iterable[Array[Int]]) = t.foldLeft(Relation.this)(_ - _)
   def edges: Int
   def copy: Self2
-  def findSupport(f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int]): Option[Array[Int]]
+  def findSupport(scope: Array[Variable], p: Int, i: Int, support: Array[Int]): Option[Array[Int]]
   def lambda: BigInt
-  
+
   //  override def equals(o: Any) = {
   //    o match {
   //      case r: Iterable[Array[Int]] => size == r.size && zip(r).forall(p => Arrays.equals(p._1, p._2))

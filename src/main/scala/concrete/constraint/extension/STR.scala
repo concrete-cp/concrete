@@ -3,9 +3,10 @@ package concrete.constraint.extension
 import concrete.util.BitVector
 import java.util.Arrays
 import scala.annotation.tailrec
+import concrete.Variable
 
 object STR extends RelationGenerator {
-  def apply(data: Iterator[Array[Int]]): STR = {
+  def apply(data: Seq[Array[Int]]): STR = {
     val d = data.toArray
     new STR(d, d.length)
   }
@@ -78,7 +79,7 @@ final class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
   def edges = if (array.isEmpty) 0 else bound * array(0).length
 
   def find(f: (Int, Int) => Boolean) = throw new UnsupportedOperationException
-  def findSupport(f: (Int, Int) => Boolean, p: Int, i: Int, support: Array[Int]) = throw new UnsupportedOperationException
+  def findSupport(scope: Array[Variable], p: Int, i: Int, support: Array[Int]) = throw new UnsupportedOperationException
 
   def iterator = array.iterator.take(bound)
 
