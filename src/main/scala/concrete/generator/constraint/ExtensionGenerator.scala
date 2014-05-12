@@ -30,7 +30,7 @@ import concrete.constraint.extension.Timestamp
 
 class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLogging {
 
-  val consType = params.getOrElse("relationAlgorithm", "Reduce")
+  val consType = params.getOrElse("relationAlgorithm", "General")
 
   val ds = params.getOrElse("relationStructure", "MDD")
 
