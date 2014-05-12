@@ -8,6 +8,7 @@ import concrete.util.SetWithMax
 import cspom.extension.IdMap
 import cspom.extension.IdSet
 import concrete.Variable
+import concrete.util.TSCache
 
 object MDD {
   def apply(data: Seq[Array[Int]]): MDD = {
@@ -34,39 +35,38 @@ object MDD {
 
 trait MDD extends Identified with Iterable[Seq[Int]] with LazyLogging {
 
-  var timestamp: Int = 0
+  val cache = new TSCache[MDD]()
 
   private var _id: Int = _
   def getId = _id
 
   def identify(ts: Int, i: Int = 1): Int = {
-    if ((this eq MDDLeaf) || (ts == timestamp)) {
+    if (this eq MDDLeaf) {
       i
     } else {
-      timestamp = ts
-      var id = i
-      _id = id
-      forSubtries {
-        (_, t) =>
-          id = t.identify(ts, id + 1)
-          true
-      }
-      id
+      cache(ts, i, {
+        var id = i
+        _id = id
+        forSubtries {
+          (_, t) =>
+            id = t.identify(ts, id + 1)
+            true
+        }
+        id
+      })
     }
   }
 
   def +(t: Array[Int]): MDD = if (contains(t)) MDD.this else addTrie(t, 0)
   def addTrie(t: Array[Int], i: Int): MDD
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]): MDD
-  def contains(t: Array[Int]): Boolean = contains(t, 0)
+  final def contains(t: Array[Int]): Boolean = contains(t, 0)
   def contains(t: Array[Int], i: Int): Boolean
-
-  def find(ts: Int, f: (Int, Int) => Boolean, depth: Int): Option[List[Int]]
 
   def findSupport(ts: Int, scope: Array[Variable], p: Int, i: Int, support: Array[Int], depth: Int): Option[Array[Int]]
 
   def checkSup(ts: Int, scope: Array[Variable], p: Int, i: Int, index: Int, next: MDD, support: Array[Int], depth: Int) = {
-    val ok = if (p == depth) i == index else scope(depth).dom.present(index)
+    val ok = if (p == depth) { i == index } else scope(depth).dom.present(index)
     if (ok) {
       support(depth) = index
       next.findSupport(ts, scope, p, i, support, depth + 1)
@@ -131,11 +131,9 @@ trait MDD extends Identified with Iterable[Seq[Int]] with LazyLogging {
 final object MDDLeaf extends MDD {
   override def getId = 0
   //override def size = 1
-  def mddTimestamp = throw new UnsupportedOperationException
 
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]) = this
   def contains(tuple: Array[Int], i: Int) = true
-  def find(ts: Int, f: (Int, Int) => Boolean, depth: Int) = Some(Nil)
   override lazy val hashCode = 0
   def iterator = Iterator(Nil)
   def edges(ts: Int) = 0
@@ -166,9 +164,9 @@ final object MDDLeaf extends MDD {
 
 final object MDD0 extends MDD {
   override def getId = throw new UnsupportedOperationException
+
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]) = MDD0
   def contains(tuple: Array[Int], i: Int) = false
-  def find(ts: Int, f: (Int, Int) => Boolean, depth: Int) = None
   def iterator = Iterator()
   def edges(ts: Int) = 0
   def filterTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int) = MDD0
@@ -235,97 +233,58 @@ final class MDD1(private val child: MDD, private val index: Int) extends MDD {
 
   }
 
-  def find(ts: Int, f: (Int, Int) => Boolean, depth: Int): Option[List[Int]] = {
-    if (timestamp == ts) {
-      None
-    } else {
-      timestamp = ts
-      if (f(depth, index)) {
-        child.find(ts, f, depth + 1).map(index :: _)
-      } else {
-        None
-      }
-    }
-  }
-
   def findSupport(ts: Int, scope: Array[Variable], p: Int, i: Int, support: Array[Int], depth: Int) = {
-    if (timestamp == ts) {
-      None
-    } else {
-      timestamp = ts
-      checkSup(ts, scope, p, i, index, child, support, depth)
-    }
+    cache(ts, None,
+      checkSup(ts, scope, p, i, index, child, support, depth))
   }
 
-  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax) {
-    if (timestamp != ts) {
-      timestamp = ts
+  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax): Unit = {
+    cache(ts, (), {
       if (depth <= l.max) {
         if (f(depth, index)) l -= depth
         if (depth + 1 <= l.max) {
           child.fillFound(ts, f, depth + 1, l)
         }
       }
-    }
+    })
   }
-
-  private var filteredResult: MDD = _
 
   def filterTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int = 0): MDD =
     if (modified.isEmpty) {
       this
-    } else if (ts == timestamp) {
-      filteredResult
     } else {
-      timestamp = ts
-
-      //l nC =
-      val nC =
-        if (modified.head == depth) {
-          // Some change at this level
-          if (f(depth, index)) {
-            child.filterTrie(ts, f, modified.tail, depth + 1)
+      cache(ts, {
+        val nC =
+          if (modified.head == depth) {
+            // Some change at this level
+            if (f(depth, index)) {
+              child.filterTrie(ts, f, modified.tail, depth + 1)
+            } else {
+              MDD0
+            }
           } else {
-            MDD0
+            // No change at this level (=> no need to call f())
+            child.filterTrie(ts, f, modified, depth + 1)
           }
+
+        if (nC eq MDD0) {
+          MDD0
+        } else if (nC eq child) {
+          this
         } else {
-          // No change at this level (=> no need to call f())
-          child.filterTrie(ts, f, modified, depth + 1)
+          new MDD1(nC, index)
         }
-
-      if (nC eq MDD0) {
-        filteredResult = MDD0
-      } else if (nC eq child) {
-        filteredResult = this
-      } else {
-        filteredResult = new MDD1(nC, index)
-      }
-
-      filteredResult
+      })
 
     }
 
   def iterator = child.iterator.map(index +: _)
 
-  def edges(ts: Int): Int = {
-    if (ts == timestamp) {
-      0
-    } else {
-      timestamp = ts
-      1 + child.edges(ts)
-    }
-  }
+  def edges(ts: Int): Int = cache(ts, 0, 1 + child.edges(ts))
 
   override def isEmpty = false
 
-  def copy(ts: Int) =
-    if (ts == timestamp) {
-      filteredResult
-    } else {
-      timestamp = ts
-      filteredResult = new MDD1(child.copy(ts), index)
-      filteredResult
-    }
+  def copy(ts: Int) = cache(ts, new MDD1(child.copy(ts), index))
 
 }
 
@@ -360,25 +319,20 @@ final class MDD2(
     case _ => false
   }
 
-  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax) {
-    if (timestamp != ts) {
-      timestamp = ts
+  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax): Unit = cache(ts, (), {
+    if (depth <= l.max) {
+      if (f(depth, leftI)) l -= depth
+      if (depth + 1 <= l.max) {
+        left.fillFound(ts, f, depth + 1, l)
+      }
       if (depth <= l.max) {
-        if (f(depth, leftI)) l -= depth
+        if (f(depth, rightI)) l -= depth
         if (depth + 1 <= l.max) {
-          left.fillFound(ts, f, depth + 1, l)
-        }
-        if (depth <= l.max) {
-          if (f(depth, rightI)) l -= depth
-          if (depth + 1 <= l.max) {
-            right.fillFound(ts, f, depth + 1, l)
-          }
+          right.fillFound(ts, f, depth + 1, l)
         }
       }
     }
-  }
-
-  private var filteredResult: MDD = _
+  })
 
   @inline
   private def filteredTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int, t: MDD, i: Int) = {
@@ -392,11 +346,7 @@ final class MDD2(
   def filterTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int): MDD =
     if (modified.isEmpty) {
       this
-    } else if (ts == timestamp) {
-      filteredResult
-    } else {
-      timestamp = ts
-
+    } else cache(ts, {
       var nL: MDD = null
       var nR: MDD = null
 
@@ -410,54 +360,28 @@ final class MDD2(
         nR = right.filterTrie(ts, f, modified, depth + 1)
       }
 
-      filteredResult =
-        if (nL eq MDD0) {
-          if (nR eq MDD0) {
-            MDD0
-          } else {
-            new MDD1(nR, rightI)
-          }
-        } else if (nR eq MDD0) {
-          new MDD1(nL, leftI)
+      if (nL eq MDD0) {
+        if (nR eq MDD0) {
+          MDD0
         } else {
-          if ((nL eq left) && (nR eq right)) {
-            this
-          } else {
-            new MDD2(nL, leftI, nR, rightI)
-          }
+          new MDD1(nR, rightI)
         }
+      } else if (nR eq MDD0) {
+        new MDD1(nL, leftI)
+      } else {
+        if ((nL eq left) && (nR eq right)) {
+          this
+        } else {
+          new MDD2(nL, leftI, nR, rightI)
+        }
+      }
 
-      filteredResult
-
-    }
-
-  def find(ts: Int, f: (Int, Int) => Boolean, depth: Int): Option[List[Int]] = {
-    if (timestamp == ts) {
-      None
-    } else {
-      timestamp = ts
-      check(ts, f, depth, leftI, left).orElse(check(ts, f, depth, rightI, right))
-    }
-  }
-
-  private def check(ts: Int, f: (Int, Int) => Boolean, depth: Int, direction: Int, trie: MDD): Option[List[Int]] = {
-    if (f(depth, direction)) {
-      trie.find(ts, f, depth + 1).map(direction :: _)
-    } else {
-      None
-    }
-  }
+    })
 
   def iterator: Iterator[Seq[Int]] =
     left.iterator.map(leftI +: _) ++ right.iterator.map(rightI +: _)
 
-  def edges(ts: Int): Int =
-    if (ts == timestamp) {
-      0
-    } else {
-      timestamp = ts
-      2 + left.edges(ts) + right.edges(ts)
-    }
+  def edges(ts: Int): Int = cache(ts, 0, 2 + left.edges(ts) + right.edges(ts))
 
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]): MDD = {
     var bL = left.reduce(mdds)
@@ -470,24 +394,12 @@ final class MDD2(
 
   override def isEmpty = false
 
-  def findSupport(ts: Int, scope: Array[Variable], p: Int, i: Int, support: Array[Int], depth: Int) = {
-    if (timestamp == ts) {
-      None
-    } else {
-      timestamp = ts
+  def findSupport(ts: Int, scope: Array[Variable], p: Int, i: Int, support: Array[Int], depth: Int) =
+    cache(ts, None,
       checkSup(ts, scope, p, i, leftI, left, support, depth).orElse(
-        checkSup(ts, scope, p, i, rightI, right, support, depth))
-    }
-  }
+        checkSup(ts, scope, p, i, rightI, right, support, depth)))
 
-  def copy(ts: Int) =
-    if (ts == timestamp) {
-      filteredResult
-    } else {
-      timestamp = ts
-      filteredResult = new MDD2(left.copy(ts), leftI, right.copy(ts), rightI)
-      filteredResult
-    }
+  def copy(ts: Int) = cache(ts, new MDD2(left.copy(ts), leftI, right.copy(ts), rightI))
 }
 
 final class MDDn(
@@ -495,15 +407,7 @@ final class MDDn(
   private val indices: Array[Int],
   private val nbIndices: Int) extends MDD {
 
-  def copy(ts: Int) = {
-    if (ts == timestamp) {
-      filteredResult
-    } else {
-      timestamp = ts
-      filteredResult = new MDDn(trie map (t => if (t eq null) null else t.copy(ts)), indices.clone, nbIndices)
-      filteredResult
-    }
-  }
+  def copy(ts: Int) = cache(ts, new MDDn(trie map (t => if (t eq null) null else t.copy(ts)), indices.clone, nbIndices))
 
   def forSubtries(f: (Int, MDD) => Boolean) = forSubtries(f, nbIndices - 1)
 
@@ -550,48 +454,17 @@ final class MDDn(
     v < trie.length && (trie(v) ne null) && trie(v).contains(tuple, i + 1)
   }
 
-  def find(ts: Int, f: (Int, Int) => Boolean, depth: Int): Option[List[Int]] = {
-    if (timestamp == ts) {
-      None
-    } else {
-      timestamp = ts
-      findHere(ts, f, depth)
-    }
-  }
-
-  @tailrec
-  private def findHere(ts: Int, f: (Int, Int) => Boolean, depth: Int, i: Int = nbIndices - 1): Option[List[Int]] = {
-    if (i < 0) {
-      None
-    } else {
-      val v = indices(i)
-      if (f(depth, v)) {
-        trie(v).find(ts, f, depth + 1) match {
-          case Some(found) => Some(v :: found)
-          case None => findHere(ts, f, depth, i - 1)
-        }
-      } else {
-        findHere(ts, f, depth, i - 1)
+  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax): Unit = cache(ts, (), {
+    var i = nbIndices - 1
+    while (i >= 0 && depth <= l.max) {
+      val ti = indices(i)
+      if (f(depth, ti)) l -= depth
+      if (depth + 1 <= l.max) {
+        trie(ti).fillFound(ts, f, depth + 1, l)
       }
+      i -= 1
     }
-  }
-
-  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax) {
-    if (timestamp != ts) {
-      timestamp = ts
-      var i = nbIndices - 1
-      while (i >= 0 && depth <= l.max) {
-        val ti = indices(i)
-        if (f(depth, ti)) l -= depth
-        if (depth + 1 <= l.max) {
-          trie(ti).fillFound(ts, f, depth + 1, l)
-        }
-        i -= 1
-      }
-    }
-  }
-
-  private var filteredResult: MDD = _
+  })
 
   private def filteredTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int): (Array[MDD], Int) = {
 
@@ -648,10 +521,7 @@ final class MDDn(
   def filterTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int = 0): MDD =
     if (modified.isEmpty) {
       this
-    } else if (ts == timestamp) {
-      filteredResult
-    } else {
-      timestamp = ts
+    } else cache(ts, {
 
       val (newTrie, nbNewIndices) =
         if (modified.head == depth) {
@@ -662,17 +532,15 @@ final class MDDn(
           passedTrie(ts, f, modified, depth + 1)
         }
 
-      filteredResult =
-        if (nbNewIndices == 0) {
-          MDD0
-        } else if (same(newTrie, nbNewIndices, trie)) {
-          this
-        } else {
-          newNode(newTrie, nbNewIndices)
-        }
-      filteredResult
+      if (nbNewIndices == 0) {
+        MDD0
+      } else if (same(newTrie, nbNewIndices, trie)) {
+        this
+      } else {
+        newNode(newTrie, nbNewIndices)
+      }
 
-    }
+    })
 
   private def newNode(t: Array[MDD], nbIndices: Int): MDD = {
     nbIndices match {
@@ -706,22 +574,13 @@ final class MDDn(
     case (t, i) => t.iterator map (i +: _)
   }
 
-  def edges(ts: Int): Int = {
-    if (ts == timestamp) {
-      0
-    } else {
-      timestamp = ts
-      nbIndices + indices.take(nbIndices).map(trie(_)).map(_.edges(ts)).sum
-    }
-  }
+  def edges(ts: Int): Int = cache(ts, 0,
+    nbIndices + indices.take(nbIndices).map(trie(_)).map(_.edges(ts)).sum)
 
   override def isEmpty = false
 
-  def findSupport(ts: Int, scope: Array[Variable], p: Int, i: Int, support: Array[Int], depth: Int) = {
-    if (timestamp == ts) {
-      None
-    } else {
-      timestamp = ts
+  def findSupport(ts: Int, scope: Array[Variable], p: Int, i: Int, support: Array[Int], depth: Int) =
+    cache(ts, None, {
 
       if (depth == p) {
         if (i >= trie.length || (trie(i) eq null)) {
@@ -735,14 +594,15 @@ final class MDDn(
         var j = nbIndices - 1
         while (s.isEmpty && j >= 0) {
           val index = indices(j)
-          support(depth) = index
-          s = trie(index).findSupport(ts, scope, p, i, support, depth + 1)
+          if (scope(depth).dom.present(index)) {
+            support(depth) = index
+            s = trie(index).findSupport(ts, scope, p, i, support, depth + 1)
+          }
           j -= 1
         }
         s
       }
-    }
-  }
+    })
 }
 
 

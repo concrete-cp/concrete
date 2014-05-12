@@ -2,14 +2,8 @@ package concrete.constraint.extension
 
 import concrete.util.SetWithMax
 import concrete.Variable
-
-final class Timestamp {
-  private var timestamp = 0
-  def next(): Int = {
-    timestamp += 1
-    timestamp
-  }
-}
+import scala.util.Random
+import concrete.util.Timestamp
 
 trait RelationGenerator {
   def apply(data: Seq[Array[Int]]): Relation
@@ -22,12 +16,14 @@ object MDDRelation extends RelationGenerator {
 final class MDDRelation(val mdd: MDD = MDD0, val timestamp: Timestamp = new Timestamp()) extends Relation {
   type Self2 = MDDRelation
 
-  def find(f: (Int, Int) => Boolean): Option[Array[Int]] = {
-    mdd.find(timestamp.next(), f, 0) map (_.toArray)
-  }
-
   def findSupport(scope: Array[Variable], p: Int, i: Int, support: Array[Int]): Option[Array[Int]] = {
-    mdd.findSupport(timestamp.next(), scope, p, i, support, 0)
+    assert(scope(p).dom.present(i))
+    val s = mdd.findSupport(timestamp.next(), scope, p, i, support, 0)
+    assert(s.forall(contains))
+    assert(s.forall { sup =>
+      (sup zip scope).forall(a => a._2.dom.present(a._1))
+    })
+    s
   }
 
   def edges: Int = {
@@ -35,7 +31,13 @@ final class MDDRelation(val mdd: MDD = MDD0, val timestamp: Timestamp = new Time
   }
 
   def filterTrie(f: (Int, Int) => Boolean, modified: List[Int]): MDDRelation = {
-    new MDDRelation(mdd.filterTrie(timestamp.next(), f, modified, 0), timestamp)
+    val m = new MDDRelation(mdd.filterTrie(timestamp.next(), f, modified, 0), timestamp)
+
+    require(m.forall { sup =>
+      sup.zipWithIndex.forall { case (i, p) => f(p, i) }
+    }, modified)
+
+    m
   }
 
   def fillFound(f: (Int, Int) => Boolean, arity: Int): Traversable[Int] = {

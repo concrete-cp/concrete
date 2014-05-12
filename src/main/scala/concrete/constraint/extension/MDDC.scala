@@ -8,6 +8,7 @@ import concrete.util.SparseSet
 import concrete.util.BitVector
 import concrete.UNSATException
 import concrete.UNSATObject
+import concrete.util.Timestamp
 
 class MDDC(_scope: Array[Variable], private val mdd: MDD)
   extends Constraint(_scope) with Removals with Backtrackable[Set[Int]] {
@@ -82,7 +83,7 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
         delta = i
       }
       true
-    } else if (g.timestamp == ts) {
+    } else if (g.cache.timestamp == ts) {
       true
     } else if (gNo.contains(g.getId)) {
       false
@@ -107,7 +108,7 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
 
       }
       if (res) {
-        g.timestamp = ts
+        g.cache.timestamp = ts
       } else {
         gNo += g.getId
       }

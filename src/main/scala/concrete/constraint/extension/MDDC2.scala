@@ -8,6 +8,7 @@ import concrete.util.Backtrackable
 import concrete.util.BitVector
 import concrete.util.SetWithMax
 import concrete.util.SparseSet
+import concrete.util.Timestamp
 
 class MDDC2(_scope: Array[Variable], private val mdd: MDD)
   extends Constraint(_scope) with Removals with Backtrackable[Set[Int]] {
@@ -23,7 +24,7 @@ class MDDC2(_scope: Array[Variable], private val mdd: MDD)
   }
 
   private val timestamp = new Timestamp()
-  
+
   var gNo: Set[Int] = new SparseSet(mdd.identify(timestamp.next()) + 1)
 
   // Members declared in concrete.util.Backtrackable
@@ -80,7 +81,7 @@ class MDDC2(_scope: Array[Variable], private val mdd: MDD)
   }
 
   private def mark(ts: Int, g: MDD, i: Int, mod: List[Int]): Boolean = {
-    if (g.timestamp == ts) {
+    if (g.cache.timestamp == ts) {
       true
     } else if (gNo.contains(g.getId)) {
       false
@@ -102,7 +103,7 @@ class MDDC2(_scope: Array[Variable], private val mdd: MDD)
     }
 
     if (res) {
-      g.timestamp = ts
+      g.cache.timestamp = ts
       //require(isValid(g, i))
     } else {
       gNo += g.getId
@@ -111,8 +112,7 @@ class MDDC2(_scope: Array[Variable], private val mdd: MDD)
   }
 
   private def fillFound(ts: Int, g: MDD, i: Int, l: SetWithMax) {
-    if ((g ne MDDLeaf) && g.timestamp != ts) {
-      g.timestamp = ts
+    if (g ne MDDLeaf) g.cache(ts, Unit,
       if (i <= l.max) {
         g.forSubtries {
           (ak, gk) =>
@@ -125,8 +125,7 @@ class MDDC2(_scope: Array[Variable], private val mdd: MDD)
             }
             i <= l.max
         }
-      }
-    }
+      })
   }
 
   override def dataSize = mdd.edges(timestamp.next())
