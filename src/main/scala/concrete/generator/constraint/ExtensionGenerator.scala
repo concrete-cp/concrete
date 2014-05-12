@@ -1,8 +1,7 @@
 package concrete.generator.constraint;
 
-import scala.collection.mutable.HashMap
-import scala.reflect.runtime.universe
 import com.typesafe.scalalogging.slf4j.LazyLogging
+
 import Generator.cspom2concreteVar
 import concrete.Domain
 import concrete.ParameterManager
@@ -18,20 +17,20 @@ import concrete.constraint.extension.MDD1
 import concrete.constraint.extension.MDD2
 import concrete.constraint.extension.MDDC
 import concrete.constraint.extension.MDDC2
+import concrete.constraint.extension.MDDRelation
 import concrete.constraint.extension.MDDn
 import concrete.constraint.extension.Matrix
 import concrete.constraint.extension.Matrix2D
 import concrete.constraint.extension.ReduceableExt
 import concrete.constraint.extension.STR
+import concrete.constraint.extension.Timestamp
 import concrete.constraint.extension.TupleTrieSet
 import cspom.CSPOMConstraint
 import cspom.extension.IdMap
-import concrete.constraint.extension.Timestamp
-import concrete.constraint.extension.MDDRelation
 
 class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLogging {
 
-  val consType = params.getOrElse("relationAlgorithm", "Find")
+  val consType = params.getOrElse("relationAlgorithm", "General")
 
   val ds = params.getOrElse("relationStructure", "MDD")
 
@@ -88,12 +87,12 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
   /**
    * Used to cache value to indices conversion
    */
-  private val vToICache = new IdMap[cspom.extension.Relation[_], HashMap[Signature, Matrix]]()
+  private val vToICache = new IdMap[cspom.extension.Relation[_], collection.mutable.Map[Signature, Matrix]]()
 
   private def generateMatrix(variables: List[Variable], relation: cspom.extension.Relation[_], init: Boolean): Matrix = {
     val domains = variables map (_.dom)
 
-    val map = vToICache.getOrElseUpdate(relation, new HashMap[Signature, Matrix])
+    val map = vToICache.getOrElseUpdate(relation, collection.mutable.Map[Signature, Matrix]())
 
     val signature = Signature(domains map (_.values.toList), init)
 

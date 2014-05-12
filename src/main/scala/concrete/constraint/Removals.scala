@@ -1,7 +1,6 @@
 package concrete.constraint;
 
 import java.util.Arrays
-import concrete.Variable
 
 trait Removals extends Constraint with AdviseCounts {
 

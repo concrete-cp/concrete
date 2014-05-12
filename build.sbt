@@ -7,11 +7,8 @@ version := "1.0.1-SNAPSHOT"
 scalaVersion := "2.11.0"
 
 
-// For snapshots
-resolvers += "Local repository" at "file:///home/vion/concrete/repository"
-
 // For JSR331, CSPOM and its dependencies
-// resolvers += "Concrete repository" at "http://concrete-cp.github.io/concrete/repository"
+resolvers += "Concrete repository" at "http://concrete-cp.github.io/concrete/repository"
 
 
 
@@ -27,8 +24,8 @@ libraryDependencies ++= Seq(
 	"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.4",
 	"com.typesafe.slick" %% "slick" % "2.1.0-M1",
 	"org.jcp" % "jsr331" % "1.1.1",
-	"org.scalatest" %% "scalatest" % "2.1.3" % "test",
-	"org.scalacheck" %% "scalacheck" % "1.11.3" % "test"
+	"org.scalatest" %% "scalatest" % "2.1.5" % "test",
+	"org.scalacheck" %% "scalacheck" % "1.11.4" % "test"
 	)
 
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-optimise", "-Xlint", "-Xdisable-assertions")
