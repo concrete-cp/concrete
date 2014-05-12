@@ -1,7 +1,6 @@
 package concrete.generator.constraint;
 
 import com.typesafe.scalalogging.slf4j.LazyLogging
-
 import Generator.cspom2concreteVar
 import concrete.Domain
 import concrete.ParameterManager
@@ -23,22 +22,20 @@ import concrete.constraint.extension.Matrix
 import concrete.constraint.extension.Matrix2D
 import concrete.constraint.extension.ReduceableExt
 import concrete.constraint.extension.STR
-import concrete.constraint.extension.Timestamp
 import concrete.constraint.extension.TupleTrieSet
 import cspom.CSPOMConstraint
 import cspom.extension.IdMap
+import concrete.constraint.extension.UnaryExt
 
 class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLogging {
 
-  val consType = params.getOrElse("relationAlgorithm", "General")
+  val consType = params.getOrElse("relationAlgorithm", "Reduce")
 
   val ds = params.getOrElse("relationStructure", "MDD")
 
   val closeRelations = params.getOrElse("closeRelations", true)
 
   val TIGHTNESS_LIMIT = 4;
-
-  val timestamp = new Timestamp()
 
   private def cspomMDDtoCspfjMDD(
     domains: List[Domain],
@@ -97,9 +94,10 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
     val signature = Signature(domains map (_.values.toList), init)
 
     map.getOrElseUpdate(signature, {
-      //println("Generating " + relation + " for " + signature + " not found in " + map)
+      logger.debug(s"Generating $relation for $signature not found in $map")
       gen(relation, init, domains)
     })
+
   }
 
   private def gen(relation: cspom.extension.Relation[_], init: Boolean, domains: List[Domain]) = {
@@ -124,7 +122,8 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
           new IdMap())
       case r => MDD(value2Index(domains, r).map(_.toArray))
     }
-    new MDDRelation(mdd, timestamp)
+    //println(mdd)
+    new MDDRelation(mdd)
   }
 
   private def value2Index(domains: Seq[Domain], relation: cspom.extension.Relation[_]): Seq[Seq[Int]] =
@@ -153,28 +152,35 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
       None
     } else {
       val scope = solverVariables.toArray
-      val constraint = generateMatrix(solverVariables, relation, init) match {
-        case m: Matrix2D => BinaryExt(scope, m, true)
-        case m: TupleTrieSet if (m.initialContent == false) => {
-          consType match {
-            case "MDDC" =>
-              new MDDC(scope, m.reduceable.asInstanceOf[MDDRelation].mdd)
 
-            case "MDDC2" =>
-              new MDDC2(scope, m.reduceable.asInstanceOf[MDDRelation].mdd)
+      val matrix = generateMatrix(solverVariables, relation, init)
 
-            case "Reduce" =>
-              val r = m.reduceable.copy
-              new ReduceableExt(scope, r)
+      val constraint = if (scope.size == 1) {
+        new UnaryExt(scope.head, matrix, true)
+      } else {
+        matrix match {
+          case m: Matrix2D => BinaryExt(scope, m, true)
+          case m: TupleTrieSet if (m.initialContent == false) => {
+            consType match {
+              case "MDDC" =>
+                new MDDC(scope, m.reduceable.asInstanceOf[MDDRelation].mdd)
 
-            case "Find" =>
-              new FindSupportExt(scope, m, true)
+              case "MDDC2" =>
+                new MDDC2(scope, m.reduceable.asInstanceOf[MDDRelation].mdd)
 
-            case "General" =>
-              new ExtensionConstraintGeneral(m, true, scope)
+              case "Reduce" =>
+                val r = m.reduceable.copy
+                new ReduceableExt(scope, r)
+
+              case "Find" =>
+                new FindSupportExt(scope, m, true)
+
+              case "General" =>
+                new ExtensionConstraintGeneral(m, true, scope)
+            }
           }
+          case m: Matrix => new ExtensionConstraintGeneral(m, true, scope)
         }
-        case m: Matrix => new ExtensionConstraintGeneral(m, true, scope)
       }
       //      if (ExtensionGenerator.closeRelations) {
       //        extensionConstraint.closeRelation()

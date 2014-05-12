@@ -16,7 +16,6 @@ trait Relation extends Iterable[Array[Int]] {
   def fillFound(f: (Int, Int) => Boolean, arity: Int): Traversable[Int]
 
   def contains(t: Array[Int]): Boolean
-  def find(f: (Int, Int) => Boolean): Option[Array[Int]]
   def +(t: Array[Int]): Self2
   def -(t: Array[Int]): Self2
   def ++(t: Iterable[Array[Int]]) = t.foldLeft(Relation.this)(_ + _)
@@ -26,10 +25,4 @@ trait Relation extends Iterable[Array[Int]] {
   def findSupport(scope: Array[Variable], p: Int, i: Int, support: Array[Int]): Option[Array[Int]]
   def lambda: BigInt
 
-  //  override def equals(o: Any) = {
-  //    o match {
-  //      case r: Iterable[Array[Int]] => size == r.size && zip(r).forall(p => Arrays.equals(p._1, p._2))
-  //      case _ => false
-  //    }
-  //  }
 }

@@ -79,8 +79,8 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
 
     val solver = new SolverFactory(parameters)(cspomProblem)
 
-//    println(cspomProblem)
-//    println(solver.concreteProblem)
+    //    println(cspomProblem)
+    //    println(solver.concreteProblem)
 
     val solvIt = solver.toIterable
 
@@ -95,7 +95,9 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
     if (test) {
       for (sol <- solver.toIterable.headOption) {
         val failed = XCSPConcrete.controlCSPOM(sol, data('variables).asInstanceOf[Seq[String]], url)
-        failed shouldBe 'empty
+        withClue(sol) {
+          failed shouldBe 'empty
+        }
       }
     }
 

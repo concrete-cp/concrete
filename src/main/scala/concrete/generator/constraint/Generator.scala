@@ -13,6 +13,7 @@ import concrete.IntDomain
 import cspom.variable.BoolVariable
 import scala.reflect.ClassTag
 import cspom.variable.CSPOMConstant
+import scala.collection.immutable.SortedSet
 
 sealed trait C2Conc
 sealed trait C21D extends C2Conc {
@@ -114,15 +115,10 @@ object Generator {
 
   final def fail(m: String): Nothing = throw new FailedGenerationException(m)
 
-  /**
-   * Sorts and remove duplicates from the given sequence to make eligible domain
-   */
-  final def makeDomain(seq: Seq[Int]): Seq[Int] =
-    if (seq.isEmpty) { Nil }
-    else {
-      val itr = seq.sorted.reverseIterator
-      itr.foldLeft(List(itr.next)) { (l, v) => if (l.head == v) l else v :: l }
-    }
+  //  /**
+  //   * Sorts and remove duplicates from the given sequence to make eligible domain
+  //   */
+  final def makeDomain(seq: Iterator[Int]): Seq[Int] = seq.to[SortedSet].toSeq //distinct.sorted
 
   final def domainFrom(x: Variable, y: Variable, f: (Int, Int) => Int): Seq[Int] = {
     val f2: Seq[Int] => Int = {
@@ -140,7 +136,7 @@ object Generator {
   }
 
   final def domainFromSeq(source: Seq[Seq[Int]], f: (Seq[Int] => Int)): Seq[Int] = {
-    makeDomain(cartesian(source).map(f).toSeq)
+    makeDomain(cartesian(source).map(f))
   }
 
   final def domainFromFlatVar(source: Seq[Variable], f: (Seq[Int] => Iterable[Int])): Seq[Int] = {
@@ -152,7 +148,7 @@ object Generator {
   }
 
   final def domainFromFlatSeq(source: Seq[Seq[Int]], f: (Seq[Int] => Iterable[Int])): Seq[Int] = {
-    makeDomain(cartesian(source).flatMap(f).toSeq)
+    makeDomain(cartesian(source).flatMap(f))
   }
 
   final def cartesian[A](l: Seq[Seq[A]]): Iterator[Seq[A]] =
@@ -163,7 +159,7 @@ object Generator {
     }
 
   final def restrictDomain(v: Variable, values: Iterator[Int]): Unit = v.dom match {
-    case UndefinedDomain => v.dom = IntDomain(makeDomain(values.toSeq): _*)
+    case UndefinedDomain => v.dom = IntDomain(makeDomain(values): _*)
     case d: Domain => d.filterValues(values.toSet)
   }
 
