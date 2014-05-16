@@ -1,13 +1,13 @@
 package concrete
 
+import scala.collection.SortedSet
 import concrete.util.Backtrackable
 import concrete.util.BitVector
 import concrete.util.Indexer
 import concrete.util.IntSet
-import concrete.util.Interval
-import concrete.util.IntervalSet
 import concrete.util.Singleton
-import scala.collection.SortedSet
+import cspom.variable.Interval
+import concrete.util.IntervalSet
 
 object IntDomain {
   @annotation.varargs

@@ -7,7 +7,7 @@ import cspom.variable.IntVariable
 import concrete.generator.ProblemGenerator
 import cspom.variable.CSPOMConstant
 import org.junit.Assert.assertEquals
-import concrete.util.Interval
+import cspom.variable.Interval
 import cspom.CSPOM.ctr
 import cspom.compiler.ProblemCompiler
 import cspom.compiler.MergeEq

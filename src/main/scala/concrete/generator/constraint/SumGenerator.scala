@@ -19,7 +19,7 @@ import concrete.constraint.semantic.FilterSum
 import cspom.variable.CSPOMSeq
 import concrete.constraint.semantic.FilterSum
 import concrete.constraint.semantic.FilterSum
-import concrete.util.Interval
+import cspom.variable.Interval
 import cspom.variable.CSPOMConstant
 
 final object SumGenerator extends Generator {

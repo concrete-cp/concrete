@@ -1,5 +1,7 @@
 package concrete.util
 
+import cspom.variable.Interval
+
 final class IntervalSet(val domain: Interval) extends IntSet {
 
   def this(lb: Int, ub: Int) = this(Interval(lb, ub))
@@ -7,7 +9,7 @@ final class IntervalSet(val domain: Interval) extends IntSet {
   require(domain.lb >= 0)
 
   val size = domain.size
-  
+
   require(size >= 2, "Invervals must have at least two elements, use Singleton instead")
 
   val first = domain.lb
@@ -22,7 +24,7 @@ final class IntervalSet(val domain: Interval) extends IntSet {
     if (i < first) { -1 }
     else if (i > last) { last }
     else { i }
-  
+
   def closestGeq(i: Int): Int =
     if (i > last) { -1 }
     else if (i < first) { first }
@@ -73,7 +75,7 @@ final class IntervalSet(val domain: Interval) extends IntSet {
     assert(bv.cardinality == size, this + " -> " + bv)
     bv
   }
-  
+
   val bitVectorSet = new BitVectorSet(toBitVector, size)
 
   def intersects(bv: BitVector) = bv.intersects(toBitVector)

@@ -1,14 +1,11 @@
 package concrete.constraint.semantic;
 
-import concrete.constraint.Residues
 import concrete.Domain
-import concrete.Variable
-import concrete.constraint.Constraint
-import concrete.UNSATException
-import concrete.util.Interval
-import concrete.constraint.Shaver
 import concrete.UNSATObject
+import concrete.Variable
 import concrete.constraint.BC
+import concrete.constraint.Constraint
+import cspom.variable.Interval
 
 final class AbsDiffBC(val result: Variable, val v0: Variable, val v1: Variable)
   extends Constraint(Array(result, v0, v1)) with BC {

@@ -5,7 +5,7 @@ import concrete.Domain
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.UNSATException
-import concrete.util.Interval
+import cspom.variable.Interval
 import concrete.constraint.Shaver
 import concrete.UNSATObject
 

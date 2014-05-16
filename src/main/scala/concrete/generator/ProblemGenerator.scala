@@ -25,8 +25,6 @@ import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
 import cspom.variable.FreeInt
 import cspom.variable.FreeVariable
-import cspom.variable.IntInterval
-import cspom.variable.IntSeq
 import cspom.variable.IntVariable
 
 final class ProblemGenerator(private val pm: ParameterManager = new ParameterManager()) extends LazyLogging {
@@ -128,8 +126,7 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
       case Seq(0) if intToBool => new concrete.BooleanDomain(false)
       case Seq(1) if intToBool => new concrete.BooleanDomain(true)
       case Seq(0, 1) if intToBool => new concrete.BooleanDomain()
-      case int: IntInterval => IntDomain(int.range)
-      case IntSeq(seq) => IntDomain(seq)
+      case int: IntIntervals => IntDomain(int.range)
       case FreeInt => UndefinedDomain
     }
 
