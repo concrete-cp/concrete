@@ -8,12 +8,11 @@ import concrete.util.IntSet
 import concrete.util.Singleton
 import cspom.variable.Interval
 import concrete.util.IntervalSet
+import cspom.variable.Intervals
 
 object IntDomain {
   @annotation.varargs
   def apply(d: Int*): IntDomain = new IntDomain(IntSet(d.size), Indexer.factory(d))
-
-  def apply(d: SortedSet[Int]): IntDomain = apply(d.toSeq: _*)
 
   def apply(r: Range): IntDomain =
     if (r.step == 1 && r.size > 1) {
@@ -26,6 +25,14 @@ object IntDomain {
     new IntDomain(
       new IntervalSet(0, i.ub - i.lb),
       Indexer.ofInterval(i.lb, i.ub))
+  }
+
+  def apply(i: Intervals): IntDomain = {
+    if (i.isConvex) {
+      apply(i.head to i.last)
+    } else {
+      apply(i.toSeq: _*)
+    }
   }
 
 }

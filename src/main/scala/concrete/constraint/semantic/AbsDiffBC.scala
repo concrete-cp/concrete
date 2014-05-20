@@ -7,6 +7,28 @@ import concrete.constraint.BC
 import concrete.constraint.Constraint
 import cspom.variable.Interval
 
+object AbsDiffBC {
+  def unionInter(dom: Domain, i0: Interval, j0: Interval, i1: Interval, j1: Interval) = {
+    val k0 = i0 intersect j0
+    val k1 = i1 intersect j1
+
+    if (k0.isEmpty) {
+      if (k1.isEmpty) {
+        throw UNSATObject
+      } else {
+        dom.intersectVal(k1)
+      }
+    } else if (k1.isEmpty) {
+      dom.intersectVal(k0)
+    } else {
+      dom.intersectVal(k0 union k1) | (
+        if (k0.ub < k1.lb) dom.filter(i => k0.ub >= dom.value(i) || dom.value(i) >= k1.lb)
+        else if (k1.ub < k0.lb) dom.filter(i => k1.ub >= dom.value(i) || dom.value(i) >= k0.lb)
+        else false)
+    }
+  }
+}
+
 final class AbsDiffBC(val result: Variable, val v0: Variable, val v1: Variable)
   extends Constraint(Array(result, v0, v1)) with BC {
 
@@ -39,35 +61,15 @@ final class AbsDiffBC(val result: Variable, val v0: Variable, val v1: Variable)
         mod ::= 2
       }
     } else {
-      if (unionInter(v0.dom, i0, i1 + r, i0, i1 - r)) {
+      if (AbsDiffBC.unionInter(v0.dom, i0, i1 + r, i0, i1 - r)) {
         mod ::= 1
       }
-      if (unionInter(v1.dom, i1, i0 - r, i1, i0 + r)) {
+      if (AbsDiffBC.unionInter(v1.dom, i1, i0 - r, i1, i0 + r)) {
         mod ::= 2
       }
     }
 
     mod
-  }
-
-  private def unionInter(dom: Domain, i0: Interval, j0: Interval, i1: Interval, j1: Interval) = {
-    val k0 = i0 intersect j0
-    val k1 = i1 intersect j1
-
-    if (k0.isEmpty) {
-      if (k1.isEmpty) {
-        throw UNSATObject
-      } else {
-        dom.intersectVal(k1)
-      }
-    } else if (k1.isEmpty) {
-      dom.intersectVal(k0)
-    } else {
-      dom.intersectVal(k0 union k1) | (
-        if (k0.ub < k1.lb) dom.filter(i => k0.ub >= dom.value(i) || dom.value(i) >= k1.lb)
-        else if (k1.ub < k0.lb) dom.filter(i => k1.ub >= dom.value(i) || dom.value(i) >= k0.lb)
-        else false)
-    }
   }
 
   override def toString = result + " = |" + v0 + " - " + v1 + "|";

@@ -39,28 +39,16 @@ final class AbsDiffConst(val result: Int, val v0: Variable, val v1: Variable)
         mod ::= 1
       }
     } else {
-      if (unionInter(v0.dom, i0, i1 + result, i0, i1 - result)) {
+      if (AbsDiffBC.unionInter(v0.dom, i0, i1 + result, i0, i1 - result)) {
         mod ::= 0
       }
-      if (unionInter(v1.dom, i1, i0 - result, i1, i0 + result)) {
+      if (AbsDiffBC.unionInter(v1.dom, i1, i0 - result, i1, i0 + result)) {
         mod ::= 1
       }
     }
 
     mod
   }
-
-  private def unionInter(dom: Domain, i0: Interval, j0: Interval, i1: Interval, j1: Interval) =
-    (i0 intersect j0, i1 intersect j1) match {
-      case (Some(k0), Some(k1)) => dom.intersectVal(k0 union k1) | (
-        if (k0.ub < k1.lb) dom.filter(i => k0.ub >= dom.value(i) || dom.value(i) >= k1.lb)
-        else if (k1.ub < k0.lb) dom.filter(i => k1.ub >= dom.value(i) || dom.value(i) >= k0.lb)
-        else false)
-
-      case (Some(k0), None) => dom.intersectVal(k0)
-      case (None, Some(k1)) => dom.intersectVal(k1)
-      case _ => throw UNSATObject
-    }
 
   override def findSupport(position: Int, index: Int) = {
     val other = scope(1 - position).dom

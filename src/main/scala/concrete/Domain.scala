@@ -10,6 +10,8 @@ object Domain {
   var checks = 0L
 }
 
+sealed trait Filtering
+
 abstract class Domain {
 
   def next(i: Int): Int
@@ -124,25 +126,25 @@ abstract class Domain {
    */
   def closestGeq(value: Int): Int
 
-//  val indices = new Traversable[Int] {
-//    def foreach[B](f: Int => B) {
-//      var i = first
-//      while (i >= 0) {
-//        f(i)
-//        i = next(i)
-//      }
-//    }
-//  }
-//
-//  def indices(from: Int): Traversable[Int] = new Traversable[Int] {
-//    def foreach[B](f: Int => B) {
-//      var i = if (present(from)) from else next(from)
-//      while (i >= 0) {
-//        f(i)
-//        i = next(i)
-//      }
-//    }
-//  }
+  //  val indices = new Traversable[Int] {
+  //    def foreach[B](f: Int => B) {
+  //      var i = first
+  //      while (i >= 0) {
+  //        f(i)
+  //        i = next(i)
+  //      }
+  //    }
+  //  }
+  //
+  //  def indices(from: Int): Traversable[Int] = new Traversable[Int] {
+  //    def foreach[B](f: Int => B) {
+  //      var i = if (present(from)) from else next(from)
+  //      while (i >= 0) {
+  //        f(i)
+  //        i = next(i)
+  //      }
+  //    }
+  //  }
 
   def indices: Iterator[Int] = indices(first)
 
@@ -172,15 +174,15 @@ abstract class Domain {
 
   def values: Iterator[Int] = indices map value
 
-//  val values = new Traversable[Int] {
-//    def foreach[B](f: Int => B) {
-//      var i = first
-//      while (i >= 0) {
-//        f(value(i))
-//        i = next(i)
-//      }
-//    }
-//  }
+  //  val values = new Traversable[Int] {
+  //    def foreach[B](f: Int => B) {
+  //      var i = first
+  //      while (i >= 0) {
+  //        f(value(i))
+  //        i = next(i)
+  //      }
+  //    }
+  //  }
 
   def valueInterval: Interval = Interval(firstValue, lastValue)
 

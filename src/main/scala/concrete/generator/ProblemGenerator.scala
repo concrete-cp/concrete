@@ -125,7 +125,7 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
       case Seq(0) if intToBool => new concrete.BooleanDomain(false)
       case Seq(1) if intToBool => new concrete.BooleanDomain(true)
       case Seq(0, 1) if intToBool => new concrete.BooleanDomain()
-      case int: IntIntervals => IntDomain(int.range)
+      case int: IntIntervals => IntDomain(int.intervals)
       case FreeInt => UndefinedDomain
     }
 
