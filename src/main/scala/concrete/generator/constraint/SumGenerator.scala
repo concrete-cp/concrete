@@ -49,7 +49,7 @@ final object SumGenerator extends Generator {
         val min = (solverVariables zip varParams).map { case (v, p) => if (v eq uv) 0 else v.dom.firstValue * p }.sum
         val max = (solverVariables zip varParams).map { case (v, p) => if (v eq uv) 0 else v.dom.lastValue * p }.sum
         val factor = varParams(solverVariables.indexOf(uv))
-        Generator.restrictDomain(uv, ((Interval(min, max) - constant) / -factor).allValues.iterator)
+        Generator.restrictDomain(uv, ((Interval(min, max) - constant) / -factor).range.iterator)
         go(constant, varParams, solverVariables, mode)
       case _ => None
     }

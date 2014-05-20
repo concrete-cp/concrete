@@ -2,9 +2,7 @@ package concrete.generator;
 
 import scala.annotation.tailrec
 import scala.reflect.runtime.universe
-
 import com.typesafe.scalalogging.slf4j.LazyLogging
-
 import concrete.Domain
 import concrete.IntDomain
 import concrete.ParameterManager
@@ -26,6 +24,7 @@ import cspom.variable.CSPOMVariable
 import cspom.variable.FreeInt
 import cspom.variable.FreeVariable
 import cspom.variable.IntVariable
+import cspom.variable.IntIntervals
 
 final class ProblemGenerator(private val pm: ParameterManager = new ParameterManager()) extends LazyLogging {
 
