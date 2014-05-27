@@ -9,10 +9,10 @@ import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMVariable
 import cspom.variable.IntVariable
 import cspom.variable.SimpleExpression
-import cspom.variable.Interval
-import cspom.variable.IntIntervals
-import cspom.variable.IntervalsArithmetic
 import cspom.compiler.IntDomainGenerator
+import cspom.util.IntervalsArithmetic
+import IntervalsArithmetic._
+import cspom.util.GuavaRange
 
 /**
  * If constraint is the sub() constraint, converts a=sub(y,z), x=abs(a) to
@@ -48,5 +48,13 @@ object AbsDiff extends ConstraintCompiler {
 object AbsDiffDomains extends IntDomainGenerator('absdiff,
   IndexedSeq(
     { case Seq(i0, i1) => IntervalsArithmetic((_.abs), IntervalsArithmetic((_ - _), i0, i1)) },
-    { case Seq(r, i1) => IntervalsArithmetic((_ + _), i1, r) ++ IntervalsArithmetic((_ - _), i1, r) },
-    { case Seq(r, i0) => IntervalsArithmetic((_ + _), i0, r) ++ IntervalsArithmetic((_ - _), i0, r) }))
+    {
+      case Seq(r, i1) =>
+        IntervalsArithmetic((i: GuavaRange[Int], j: GuavaRange[Int]) => i + j, i1, r) ++
+          IntervalsArithmetic((i: GuavaRange[Int], j: GuavaRange[Int]) => i - j, i1, r)
+    },
+    {
+      case Seq(r, i0) =>
+        IntervalsArithmetic((i: GuavaRange[Int], j: GuavaRange[Int]) => i + j, i0, r) ++
+          IntervalsArithmetic((i: GuavaRange[Int], j: GuavaRange[Int]) => i - j, i0, r)
+    }))

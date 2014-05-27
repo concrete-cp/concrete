@@ -10,7 +10,7 @@ final class IntervalSet(val domain: Interval) extends IntSet {
 
   val size = domain.size
 
-  require(size >= 2, "Invervals must have at least two elements, use Singleton instead")
+  require(size >= 2, "Intervals must have at least two elements, use Singleton instead")
 
   val first = domain.lb
 
