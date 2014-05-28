@@ -1,14 +1,11 @@
 package concrete.generator.cspompatterns
-
 import cspom.CSPOM
-import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompiler
-import cspom.compiler.ConstraintCompilerNoData
+import cspom.CSPOMConstraint
+import cspom.variable.CSPOMVariable
 import cspom.compiler.Delta
 import cspom.util.IntervalsArithmetic._
 import cspom.variable.CSPOMExpression
-import cspom.variable.CSPOMVariable
-import cspom.variable.SimpleExpression
 
 /**
  * If constraint is the sub() constraint, converts a=sub(y,z), x=abs(a) to

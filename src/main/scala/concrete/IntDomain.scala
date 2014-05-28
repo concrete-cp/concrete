@@ -1,12 +1,13 @@
 package concrete
 
-import scala.collection.SortedSet
 import concrete.util.Backtrackable
 import concrete.util.BitVector
 import concrete.util.Indexer
 import concrete.util.IntSet
 import concrete.util.Singleton
 import scala.collection.SortedSet
+import concrete.util.IntervalSet
+import concrete.util.Interval
 
 object IntDomain {
   @annotation.varargs
@@ -23,14 +24,6 @@ object IntDomain {
     new IntDomain(
       new IntervalSet(0, i.ub - i.lb),
       Indexer.ofInterval(i.lb, i.ub))
-  }
-
-  def apply(i: Intervals): IntDomain = {
-    if (i.isConvex) {
-      apply(i.head to i.last)
-    } else {
-      apply(i.toSeq: _*)
-    }
   }
 
 }

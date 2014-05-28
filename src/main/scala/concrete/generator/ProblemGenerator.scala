@@ -26,6 +26,7 @@ import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
 import cspom.variable.FreeVariable
+
 import cspom.variable.IntVariable
 
 final class ProblemGenerator(private val pm: ParameterManager = new ParameterManager()) extends LazyLogging {

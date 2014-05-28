@@ -5,7 +5,7 @@ import concrete.constraint.Residues
 import concrete.Domain
 import concrete.Variable
 import concrete.constraint.Shaver
-import cspom.variable.Interval
+import concrete.util.Interval
 import concrete.constraint.BCCompanion
 
 /**

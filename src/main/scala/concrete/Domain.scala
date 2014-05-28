@@ -1,9 +1,9 @@
 package concrete
 
 import concrete.util.BitVector
+import concrete.util.Interval
 import concrete.util.IntSet
 import cspom.Statistic;
-import cspom.variable.Interval
 
 object Domain {
   @Statistic
