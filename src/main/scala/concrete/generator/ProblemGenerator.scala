@@ -23,8 +23,13 @@ import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
 import cspom.variable.FreeInt
 import cspom.variable.FreeVariable
+import cspom.variable.IntInterval
+import cspom.variable.IntSeq
 import cspom.variable.IntVariable
 import cspom.variable.IntIntervals
+import cspom.util.GuavaRange
+import cspom.util.RangeSet
+import concrete.util.Interval
 
 final class ProblemGenerator(private val pm: ParameterManager = new ParameterManager()) extends LazyLogging {
 
@@ -121,12 +126,20 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
     case bD: BoolVariable =>
       new concrete.BooleanDomain();
 
-    case v: IntVariable => v.domain match {
-      case Seq(0) if intToBool => new concrete.BooleanDomain(false)
+    case v: IntVariable => v.domainValues match {
+      case Seq(0, 1) if intToBool => new concrete.BooleanDomain(false)
       case Seq(1) if intToBool => new concrete.BooleanDomain(true)
       case Seq(0, 1) if intToBool => new concrete.BooleanDomain()
-      case int: IntIntervals => IntDomain(int.intervals)
-      case FreeInt => UndefinedDomain
+      case s =>
+        if (v.fullyDefined) {
+          if (v.domain.isConvex) {
+            IntDomain(Interval(v.firstValue, v.lastValue))
+          } else {
+            IntDomain(s.toSeq: _*)
+          }
+        } else {
+          UndefinedDomain
+        }
     }
 
     case _: FreeVariable => UndefinedDomain

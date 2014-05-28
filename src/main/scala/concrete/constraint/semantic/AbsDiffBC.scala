@@ -1,11 +1,14 @@
 package concrete.constraint.semantic;
 
+import concrete.constraint.Residues
 import concrete.Domain
-import concrete.UNSATObject
 import concrete.Variable
-import concrete.constraint.BC
 import concrete.constraint.Constraint
-import cspom.variable.Interval
+import concrete.UNSATException
+import concrete.util.Interval
+import concrete.constraint.Shaver
+import concrete.UNSATObject
+import concrete.constraint.BC
 
 object AbsDiffBC {
   def unionInter(dom: Domain, i0: Interval, j0: Interval, i1: Interval, j1: Interval) = {

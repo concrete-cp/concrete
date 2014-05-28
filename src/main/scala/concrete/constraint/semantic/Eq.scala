@@ -4,7 +4,7 @@ import concrete.constraint.VariablePerVariable
 import concrete.Domain
 import concrete.Variable
 import concrete.constraint.Constraint
-import cspom.variable.Interval
+import concrete.util.Interval
 import concrete.constraint.Shaver
 
 /**

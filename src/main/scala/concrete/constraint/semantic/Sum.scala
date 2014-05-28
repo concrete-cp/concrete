@@ -3,7 +3,7 @@ package concrete.constraint.semantic;
 import scala.annotation.tailrec
 import concrete.constraint.Constraint
 import concrete.Domain
-import cspom.variable.Interval
+import concrete.util.Interval
 import concrete.Variable
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import concrete.constraint.Shaver

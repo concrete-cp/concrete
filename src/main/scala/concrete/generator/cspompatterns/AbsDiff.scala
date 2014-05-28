@@ -1,13 +1,12 @@
 package concrete.generator.cspompatterns
-
 import cspom.CSPOM
-import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompiler
-import cspom.compiler.ConstraintCompilerNoData
+import cspom.CSPOMConstraint
+import cspom.variable.CSPOMVariable
 import cspom.compiler.Delta
 import cspom.variable.CSPOMExpression
-import cspom.variable.CSPOMVariable
-import cspom.variable.IntVariable
+import cspom.compiler.ConstraintCompilerNoData
+import concrete.generator.constraint.Generator
 import cspom.variable.SimpleExpression
 import cspom.compiler.IntDomainGenerator
 import cspom.util.IntervalsArithmetic
@@ -47,7 +46,10 @@ object AbsDiff extends ConstraintCompiler {
 
 object AbsDiffDomains extends IntDomainGenerator('absdiff,
   IndexedSeq(
-    { case Seq(i0, i1) => IntervalsArithmetic((_.abs), IntervalsArithmetic((_ - _), i0, i1)) },
+    {
+      case Seq(i0, i1) =>
+        IntervalsArithmetic((_.abs), IntervalsArithmetic((_ - _), i0, i1))
+    },
     {
       case Seq(r, i1) =>
         IntervalsArithmetic((i: GuavaRange[Int], j: GuavaRange[Int]) => i + j, i1, r) ++

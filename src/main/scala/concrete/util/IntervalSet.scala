@@ -1,7 +1,5 @@
 package concrete.util
 
-import cspom.variable.Interval
-
 final class IntervalSet(val domain: Interval) extends IntSet {
 
   def this(lb: Int, ub: Int) = this(Interval(lb, ub))
