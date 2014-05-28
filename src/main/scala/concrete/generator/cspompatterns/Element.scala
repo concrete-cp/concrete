@@ -35,7 +35,7 @@ object Element extends ConstraintCompiler {
 
     val map: Seq[(B, MDD[B])] = for (i <- scope.indices) yield {
 
-      val s: Map[B, MDD[B]] = scope(i).domain.iterator.map {
+      val s: Map[B, MDD[B]] = scope(i).iterator.map {
         c => c -> elementVar(0, i, c, scope, cache).asInstanceOf[MDD[B]]
       } toMap
 
@@ -53,7 +53,7 @@ object Element extends ConstraintCompiler {
       if (current == b) {
         new MDDNode(Map(c -> elementVar(current + 1, b, c, as, cache)))
       } else {
-        new MDDNode(as(current).domain.map {
+        new MDDNode(as(current).iterator.map {
           v => v -> elementVar(current + 1, b, c, as, cache)
         } toMap)
       }

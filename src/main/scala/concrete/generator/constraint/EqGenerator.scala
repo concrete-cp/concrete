@@ -63,48 +63,29 @@ final object EqGenerator extends Generator {
   override def genFunctional(funcConstraint: CSPOMConstraint[_], r: C2Conc)(implicit variables: VarMap): Option[Seq[Constraint]] = {
     val Var(result) = r
     Generator.booleanDomain(result)
-    funcConstraint match {
 
-      case CSPOMConstraint(_, 'eq, args, _) =>
-        val Seq(a, b) = args map cspom2concrete1D
+    val Seq(a, b) = funcConstraint.arguments map cspom2concrete1D
 
-        if (undefinedVar(a, b).nonEmpty) {
-          None
-        } else {
-          Generator.booleanDomain(result);
-          (a, b) match {
-            case (Const(a), Const(b)) =>
-              if (a == b) {
-                result.dom.setSingle(1)
-              } else {
-                result.dom.setSingle(0)
-              }
-              Some(Seq())
-            case (Const(a), Var(b)) => Some(Seq(new ReifiedEquals(result, b, a)))
-            case (Var(a), Const(b)) => Some(Seq(new ReifiedEquals(result, a, b)))
-            case (Var(a), Var(b)) => Some(Seq(
-              new ReifiedConstraint(
-                result,
-                new Eq(a, b),
-                new Neq(a, b))))
+    allDefinedOption(a, b) {
+      Generator.booleanDomain(result);
+      (a, b) match {
+        case (Const(a), Const(b)) =>
+          if (a == b) {
+            result.dom.setSingle(1)
+          } else {
+            result.dom.setSingle(0)
           }
+          Seq()
+        case (Const(a), Var(b)) => Seq(new ReifiedEquals(result, b, a))
+        case (Var(a), Const(b)) => Seq(new ReifiedEquals(result, a, b))
+        case (Var(a), Var(b)) => Seq(
+          new ReifiedConstraint(
+            result,
+            new Eq(a, b),
+            new Neq(a, b)))
+      }
 
-        }
-
-      case CSPOMConstraint(_, 'neq, args, _) if args.size == 2 =>
-        val scope = funcConstraint.arguments map cspom2concreteVar
-
-        scope map { _.dom } find { !_.undefined } map { refDomain =>
-          val negDomain = refDomain.values.map(v => -v).toSeq.reverse
-
-          for (v <- scope if (v.dom.undefined)) {
-            v.dom = IntDomain(negDomain: _*)
-          }
-          Seq(new Eq(true, scope(0), 0, scope(1)))
-
-        }
-
-      case _ => None
     }
   }
+
 }

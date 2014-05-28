@@ -23,7 +23,7 @@ final object SlidingSum extends ConstraintCompilerNoData {
 
     val vars = args.map(_.asInstanceOf[CSPOMVariable[Int]])
 
-    val b = mdd(low, up, seq, vars.map(_.domain).toIndexedSeq)
+    val b = mdd(low, up, seq, vars.toIndexedSeq)
     //println(s"sizeR ${b.apply.lambda} ${b.apply.edges}")
     replaceCtr(constraint,
       CSPOMConstraint('extension, vars, constraint.params ++ Map("init" -> false, "relation" -> b)),

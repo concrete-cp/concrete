@@ -4,7 +4,7 @@ organization := "fr.univ-valenciennes.concrete"
 
 version := "1.0.1-SNAPSHOT"
 
-scalaVersion := "2.11.0"
+scalaVersion := "2.11.1"
 
 
 // For JSR331, CSPOM and its dependencies

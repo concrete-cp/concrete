@@ -230,7 +230,6 @@ abstract class Domain {
   def intersects(bv: BitVector, part: Int): Boolean
   def bound: Boolean
   def intSet: IntSet
-  def undefined: Boolean
 
   def boundVal = size == (1 + lastValue - firstValue)
 

@@ -6,19 +6,17 @@ import concrete.util.BitVector
 import concrete.util.Indexer
 import concrete.util.IntSet
 import concrete.util.Singleton
-import cspom.variable.Interval
-import concrete.util.IntervalSet
-import cspom.variable.Intervals
+import scala.collection.SortedSet
 
 object IntDomain {
   @annotation.varargs
-  def apply(d: Int*): IntDomain = new IntDomain(IntSet(d.size), Indexer.factory(d))
+  def apply(d: SortedSet[Int]): IntDomain = new IntDomain(IntSet(d.size), Indexer.factory(d))
 
   def apply(r: Range): IntDomain =
     if (r.step == 1 && r.size > 1) {
       apply(Interval(r.start, r.last))
     } else {
-      apply(r: _*)
+      apply(SortedSet[Int]() ++ r)
     }
 
   def apply(i: Interval): IntDomain = {
@@ -274,5 +272,4 @@ final class IntDomain(
   //def allValues = domain
 
   override def toString = intSet.toString(indexer)
-  def undefined = false
 }
