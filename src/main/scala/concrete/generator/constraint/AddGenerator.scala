@@ -14,9 +14,8 @@ final object AddGenerator extends Generator {
 
     val Seq(v0, v1) = constraint.arguments map cspom2concreteVar
 
-    allDefinedOption(result, v0, v1) {
-      Seq(new AddBC(result, v0, v1), new AddAC(result, v0, v1, true))
-    }
+    Seq(new AddBC(result, v0, v1), new AddAC(result, v0, v1, true))
+
   }
 
 }

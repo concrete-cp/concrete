@@ -1,30 +1,25 @@
 package concrete.generator.cspompatterns
 
-import scala.IndexedSeq
-import cspom.util.GuavaRange
-import cspom.util.IntervalsArithmetic
-import cspom.util.IntervalsArithmetic.Arithmetics
-import cspom.util.RangeSet
-import cspom.compiler.VariableCompiler
 import cspom.CSPOMConstraint
-import cspom.variable.IntVariable
+import cspom.compiler.VariableCompiler
+import cspom.util.IntervalsArithmetic.RangeArithmetics
+import cspom.variable.IntVariable.arithmetics
+import cspom.variable.IntVariable.intExpression
+import cspom.variable.IntVariable.ranges
 import cspom.variable.SimpleExpression
 
-object AbsDiffDomains {
-  val v = new VariableCompiler('absdiff, {
-    case CSPOMConstraint(r: SimpleExpression[Int], _, Seq(i0: SimpleExpression[Int], i1: SimpleExpression[Int]), _) =>
-      Map(
-        r -> (r intersected IntVariable((i0 - i1).abs)
-        i0 -> (i0 intersected IntVariable {
-          val g1: RangeSet[Int] = i1 + r
-          val g2: RangeSet[Int] = i1 - r
+object AbsDiffDomains extends VariableCompiler('absdiff) {
 
-          g1 ++ g2
-        }),
-        i1 -> (i1 intersected IntVariable {
-          val g1: RangeSet[Int] = IntervalsArithmetic(_ + _, i0, r)
-          val g2: RangeSet[Int] = IntervalsArithmetic(_ - _, i0, r)
-          g1 ++ g2
-        }))
-  })
+  def compiler(c: CSPOMConstraint[Int]) = c match {
+    case CSPOMConstraint(ir: SimpleExpression[_], _, Seq(ii0: SimpleExpression[_], ii1: SimpleExpression[_]), _) =>
+      val r = intExpression(ir)
+      val i0 = intExpression(ii0)
+      val i1 = intExpression(ii1)
+      Map(
+        ir -> reduceDomain(r, (i0 - i1).abs),
+        ii0 -> reduceDomain(i0, (i1 + r) ++ (i1 - r)),
+        ii1 -> reduceDomain(i1, (i0 + r) ++ (i0 - r)))
+
+    case _ => throw new IllegalArgumentException
+  }
 }
