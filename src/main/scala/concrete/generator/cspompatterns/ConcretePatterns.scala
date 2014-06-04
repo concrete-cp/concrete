@@ -23,7 +23,7 @@ object ConcretePatterns {
     val improveModel = params.getOrElse("improveModel", true)
 
     if (improveModel) {
-      standard ++ StandardCompilers.improve() ++ Seq(AllDiff, SubsumedDiff, DiffGe, SimplDisj, Square)
+      standard ++ StandardCompilers.improve() ++ Seq(AllDiff, SubsumedDiff, DiffGe, SimplDisj, Square, GtDomains)
     } else {
       standard
     }

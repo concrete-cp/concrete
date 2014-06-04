@@ -28,7 +28,7 @@ object EqDomains extends VariableCompiler('eq) {
       val res = if (intersect.isEmpty) {
         reduceDomain(br, false)
       } else (ii0, ii1) match {
-        case (CSPOMConstant(i), CSPOMConstant(j)) => reduceDomain(br, i == j)
+        case (CSPOMConstant(i), CSPOMConstant(j)) => reduceDomain(br, i * negFactor + offset == j)
         case _ => br
       }
 
