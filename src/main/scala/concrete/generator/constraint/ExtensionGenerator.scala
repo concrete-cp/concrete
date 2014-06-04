@@ -139,7 +139,7 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
       _.contains(-1)
     }
 
-  override def gen(extensionConstraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Option[Seq[Constraint]] = {
+  override def gen(extensionConstraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] = {
 
     val solverVariables = extensionConstraint.arguments map cspom2concreteVar toList
 
@@ -147,9 +147,7 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
     val Some(init: Boolean) = extensionConstraint.params.get("init")
 
     if (relation.isEmpty) {
-      if (init == true) { Some(Seq()) } else { throw UNSATObject }
-    } else if (solverVariables.exists(_.dom.undefined)) {
-      None
+      if (init == true) { Seq() } else { throw UNSATObject }
     } else {
       val scope = solverVariables.toArray
 
@@ -186,7 +184,7 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
       //        extensionConstraint.closeRelation()
       //      }
       //println(extensionConstraint + " -> " + constraint);
-      Some(Seq(constraint))
+      Seq(constraint)
 
     }
   }

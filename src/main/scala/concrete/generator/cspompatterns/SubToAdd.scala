@@ -22,13 +22,13 @@ import cspom.variable.CSPOMExpression
  */
 object SubToAdd extends ConstraintCompiler {
 
-  type A = CSPOMExpression[Int]
+  type A = CSPOMExpression[_]
 
   override def constraintMatcher = {
-    case CSPOMConstraint(a: CSPOMExpression[Int], 'sub, _, _) => a
+    case CSPOMConstraint(a: CSPOMExpression[_], 'sub, _, _) => a
   }
 
-  def compile(fc: CSPOMConstraint[_], problem: CSPOM, a: CSPOMExpression[Int]) = {
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM, a: CSPOMExpression[_]) = {
 
     val Seq(b, c) = fc.arguments
 

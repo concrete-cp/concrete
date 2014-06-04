@@ -11,10 +11,10 @@ import cspom.variable.SimpleExpression
  */
 object UnaryOr extends ConstraintCompiler {
 
-  type A = (Boolean, SimpleExpression[Boolean])
+  type A = (Boolean, SimpleExpression[_])
 
   override def constraintMatcher = {
-    case CSPOMConstraint(CSPOMConstant(res: Boolean), 'or, Seq(arg: SimpleExpression[Boolean]), params) =>
+    case CSPOMConstraint(CSPOMConstant(res: Boolean), 'or, Seq(arg: SimpleExpression[_]), params) =>
       (res, arg)
   }
 

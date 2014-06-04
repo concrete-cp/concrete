@@ -12,7 +12,8 @@ object ConcretePatterns {
   def apply(params: ParameterManager) = {
     val standard = StandardCompilers() ++
       Seq(
-        AbsDiff, AbsDiffDomains, SubToAdd, AddToEq,
+        AbsDiff, AbsDiffDomains, SubToAdd, AddToEq, BoolEq,
+        AddDomains, EqDomains,
         UnaryOr, MergeDisj, MergeNotDisj,
         NegToCNF, Xor, ReifiedDisj, ReifiedConj,
         NeqVec,

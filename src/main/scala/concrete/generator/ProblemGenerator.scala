@@ -90,20 +90,20 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
     }
 
   def generateDomain[T](cspomVar: CSPOMVariable[_]): Domain = {
-    require(cspomVar.fullyDefined)
+    require(cspomVar.fullyDefined, s"$cspomVar has no bounds")
     cspomVar match {
       case bD: BoolVariable =>
         new concrete.BooleanDomain();
 
-      case v: IntVariable => v.toStream match {
+      case v: IntVariable => IntVariable.iterable(v).toStream match {
         case Seq(0, 1) if intToBool => new concrete.BooleanDomain(false)
         case Seq(1) if intToBool => new concrete.BooleanDomain(true)
         case Seq(0, 1) if intToBool => new concrete.BooleanDomain()
         case s =>
-          if (v.domain.isConvex) {
+          if (v.isConvex) {
             IntDomain(Interval(v.head, v.last))
           } else {
-            IntDomain(SortedSet[Int]() ++ s)
+            IntDomain(v.asSortedSet)
           }
       }
 

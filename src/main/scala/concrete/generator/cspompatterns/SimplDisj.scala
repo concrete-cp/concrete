@@ -20,7 +20,7 @@ object SimplDisj extends ConstraintCompilerNoData {
 
   def matchBool(fc: CSPOMConstraint[_], problem: CSPOM) = fc match {
     case CSPOMConstraint(CSPOMConstant(true), 'or, args, _) =>
-      args.exists(_.isInstanceOf[CSPOMConstant[Boolean]])
+      args.exists(_.isInstanceOf[CSPOMConstant[_]])
 
     case _ => false
 
@@ -30,7 +30,7 @@ object SimplDisj extends ConstraintCompilerNoData {
     val expressions = fc.arguments
 
     val params: Seq[Boolean] = fc.params.get("revsign") match {
-      case Some(p: Seq[Boolean]) => p
+      case Some(p: Seq[_]) => p.map(_.asInstanceOf[Boolean])
       case None => Seq.fill(expressions.size)(false)
       case p: Any => throw new IllegalArgumentException(
         s"Parameters for disjunction must be a sequence of boolean values, not '$p'")

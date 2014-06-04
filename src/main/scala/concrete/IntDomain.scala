@@ -10,14 +10,14 @@ import concrete.util.IntervalSet
 import concrete.util.Interval
 
 object IntDomain {
-  @annotation.varargs
+
   def apply(d: SortedSet[Int]): IntDomain = new IntDomain(IntSet(d.size), Indexer.factory(d))
 
   def apply(r: Range): IntDomain =
     if (r.step == 1 && r.size > 1) {
       apply(Interval(r.start, r.last))
     } else {
-      apply(SortedSet[Int]() ++ r)
+      apply(r: _*)
     }
 
   def apply(i: Interval): IntDomain = {
@@ -25,6 +25,9 @@ object IntDomain {
       new IntervalSet(0, i.ub - i.lb),
       Indexer.ofInterval(i.lb, i.ub))
   }
+
+  @annotation.varargs
+  def apply(d: Int*): IntDomain = apply(SortedSet[Int]() ++ d)
 
 }
 

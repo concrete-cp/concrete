@@ -16,11 +16,8 @@ final object NeqVecGenerator extends Generator {
   override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
     val Seq(x, y) = constraint.arguments map cspom2concreteSeqVar
 
-    if (undefinedVar(x.toStream ++ y: _*).nonEmpty) {
-      None
-    } else {
-      Some(Seq(new NeqVec(x.toArray, y.toArray)))
-    }
+    Seq(new NeqVec(x.toArray, y.toArray))
+
   }
 
 }

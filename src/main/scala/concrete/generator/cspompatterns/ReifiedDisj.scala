@@ -24,18 +24,18 @@ import cspom.variable.SimpleExpression
  */
 object ReifiedDisj extends ConstraintCompiler {
 
-  type A = SimpleExpression[Boolean]
+  type A = SimpleExpression[_]
 
   override def constraintMatcher = {
-    case CSPOMConstraint(res: SimpleExpression[Boolean], 'or, args, params) if (!res.isTrue) =>
+    case CSPOMConstraint(res: SimpleExpression[_], 'or, args, params) if (!res.isTrue) =>
       res
   }
 
-  def compile(fc: CSPOMConstraint[_], problem: CSPOM, res: SimpleExpression[Boolean]) = {
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM, res: SimpleExpression[_]) = {
     val revsign = fc.params.get("revsign") match {
-      case Some(r: Seq[Boolean]) => r
+      case Some(r: Seq[_]) => r.map(_.asInstanceOf[Boolean])
       case None => Seq.fill(fc.arguments.size)(false)
-      case _ => throw new MatchError()
+      case o => throw new MatchError(o)
     }
 
     val reverses = true +: revsign

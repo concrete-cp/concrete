@@ -9,10 +9,12 @@ import concrete.CSPOMDriver._
 import cspom.compiler.MergeEq
 import cspom.compiler.ProblemCompiler
 import cspom.variable.IntVariable
+import org.scalatest.Matchers
+import org.scalatest.FlatSpec
 
-class AllDiffTest {
-  @Test
-  def testExt() {
+object AllDiffTest extends FlatSpec with Matchers {
+
+  "AllDiff" should "compile" in {
     val cspom = CSPOM { implicit problem =>
 
       val v0 = IntVariable(Seq(1, 2, 3))
@@ -28,8 +30,8 @@ class AllDiffTest {
     ProblemCompiler.compile(cspom, Seq(MergeEq, AllDiff))
 
     //println(cspom)
-    assertEquals(1, cspom.constraints.size)
-    assertEquals('allDifferent, cspom.constraints.next.function)
+    cspom.constraints should have size 1
+    cspom.constraints.next.function shouldBe 'allDifferent
   }
 
 }

@@ -20,54 +20,50 @@ final object MulGenerator extends Generator {
     val result = r.asInstanceOf[C21D]
     val Seq(v0, v1) = constraint.arguments map cspom2concrete1D
 
-    if (Seq(result, v0, v1) collect { case Var(v) if (v.dom.undefined) => v } match {
-      case Seq() => true
-      case Seq(v) if (result.is(v)) => {
-        val values = domainFrom1D(Seq(v0, v1), genMul(_))
-        v.dom = IntDomain(values: _*)
-        true
-      }
-      case Seq(v) if (v0.is(v)) => {
-        v.dom = IntDomain(generateValues(result, v1): _*)
-        true
-      }
-      case Seq(v) if (v1.is(v)) => {
-        v.dom = IntDomain(generateValues(result, v0): _*)
-        true
-      }
-      case _ => false
+    //    if (Seq(result, v0, v1) collect { case Var(v) if (v.dom.undefined) => v } match {
+    //      case Seq() => true
+    //      case Seq(v) if (result.is(v)) => {
+    //        val values = domainFrom1D(Seq(v0, v1), genMul(_))
+    //        v.dom = IntDomain(values: _*)
+    //        true
+    //      }
+    //      case Seq(v) if (v0.is(v)) => {
+    //        v.dom = IntDomain(generateValues(result, v1): _*)
+    //        true
+    //      }
+    //      case Seq(v) if (v1.is(v)) => {
+    //        v.dom = IntDomain(generateValues(result, v0): _*)
+    //        true
+    //      }
+    //      case _ => false
+    //
+    //    }) {
+    (result, v0, v1) match {
+      case (Const(r), Const(v0), Const(v1)) =>
+        if (r == v0 * v1) Nil else throw UNSATObject
+      case (Const(r), Var(v0), Var(v1)) => Seq(
+        new ConstProd(v0, v1, r))
+      case (Var(r), Const(v0), Var(v1)) => Seq(
+        new Sum(0, Array(-1, v0), Array(r, v1), FilterSum.SumEQ))
+      case (Var(r), Var(v0), Const(v1)) => Seq(
+        new Sum(0, Array(-1, v1), Array(r, v0), FilterSum.SumEQ))
 
-    }) {
-      (result, v0, v1) match {
-        case (Const(r), Const(v0), Const(v1)) =>
-          if (r == v0 * v1) Some(Nil) else throw UNSATObject
-        case (Const(r), Var(v0), Var(v1)) => Some(Seq(
-          new ConstProd(v0, v1, r)))
-        case (Var(r), Const(v0), Var(v1)) => Some(Seq(
-          new Sum(0, Array(-1, v0), Array(r, v1), FilterSum.SumEQ)))
-        case (Var(r), Var(v0), Const(v1)) => Some(Seq(
-          new Sum(0, Array(-1, v1), Array(r, v0), FilterSum.SumEQ)))
-
-        case (Var(r), Var(v0), Var(v1)) =>
-          Some(Seq(new MulAC(r, v0, v1, true), new MulBC(r, v0, v1)))
-      }
-
-    } else {
-      None
+      case (Var(r), Var(v0), Var(v1)) =>
+        Seq(new MulAC(r, v0, v1, true), new MulBC(r, v0, v1))
     }
 
   }
-
-  private def genMul: Function[Seq[Int], Int] = { case Seq(i, j) => i * j }
-
-  private def genDivP: PartialFunction[Seq[Int], Int] = {
-    case Seq(i, j) if (i % j == 0) => i / j
-  }
-
-  private def genDiv(s: Seq[Int]) = genDivP.lift(s).toIterable
-
-  private def generateValues(result: C21D, variable: C21D) = {
-    domainFromFlat1D(Seq(result, variable), genDiv(_))
-  }
+//
+//  private def genMul: Function[Seq[Int], Int] = { case Seq(i, j) => i * j }
+//
+//  private def genDivP: PartialFunction[Seq[Int], Int] = {
+//    case Seq(i, j) if (i % j == 0) => i / j
+//  }
+//
+//  private def genDiv(s: Seq[Int]) = genDivP.lift(s).toIterable
+//
+//  private def generateValues(result: C21D, variable: C21D) = {
+//    domainFromFlat1D(Seq(result, variable), genDiv(_))
+//  }
 
 }

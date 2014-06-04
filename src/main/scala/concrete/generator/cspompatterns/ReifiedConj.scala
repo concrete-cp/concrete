@@ -24,14 +24,14 @@ import cspom.variable.SimpleExpression
  */
 object ReifiedConj extends ConstraintCompiler {
 
-  type A = CSPOMExpression[Boolean]
+  type A = CSPOMExpression[_]
 
   override def constraintMatcher = {
-    case CSPOMConstraint(res: SimpleExpression[Boolean], 'and, args, params) if (!res.isTrue) =>
+    case CSPOMConstraint(res: SimpleExpression[_], 'and, args, params) if (!res.isTrue) =>
       res
   }
 
-  def compile(fc: CSPOMConstraint[_], problem: CSPOM, res: CSPOMExpression[Boolean]) = {
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM, res: CSPOMExpression[_]) = {
     require(!fc.params.contains("revsign")) // Conjunctions should not be parameterized -- yet
 
     val reverses = Seq(false).padTo(fc.arguments.size + 1, true)

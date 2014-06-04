@@ -10,7 +10,7 @@ import cspom.variable.SimpleExpression
 
 object AbsDiffDomains extends VariableCompiler('absdiff) {
 
-  def compiler(c: CSPOMConstraint[Int]) = c match {
+  def compiler(c: CSPOMConstraint[_]) = c match {
     case CSPOMConstraint(ir: SimpleExpression[_], _, Seq(ii0: SimpleExpression[_], ii1: SimpleExpression[_]), _) =>
       val r = intExpression(ir)
       val i0 = intExpression(ii0)

@@ -15,7 +15,7 @@ object AbsDiff extends ConstraintCompiler {
   type A = Set[CSPOMConstraint[Int]]
 
   override def mtch(c: CSPOMConstraint[_], problem: CSPOM) = c match {
-    case CSPOMConstraint(result: CSPOMVariable[Int], 'sub, args, _) if result.hasParam("var_is_introduced") =>
+    case CSPOMConstraint(result: CSPOMVariable[_], 'sub, args, _) if result.hasParam("var_is_introduced") =>
       val process: Set[CSPOMConstraint[Int]] = problem.constraints(result).collect {
         case c @ CSPOMConstraint(_, 'abs, Seq(result), _) => c.asInstanceOf[CSPOMConstraint[Int]]
       }

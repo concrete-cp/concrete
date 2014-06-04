@@ -7,6 +7,7 @@ import cspom.variable.CSPOMConstant
 import scala.collection.mutable.HashMap
 import cspom.variable.CSPOMVariable
 import cspom.variable.IntVariable
+import cspom.compiler.Delta
 
 object ConstToVar extends ConstraintCompiler {
 
@@ -27,7 +28,7 @@ object ConstToVar extends ConstraintCompiler {
   val singletons = new HashMap[CSPOMConstant[_], CSPOMVariable[_]]()
 
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM, constants: A) = {
-    val deltas = for (c <- constants.distinct) yield {
+    val deltas: Seq[Delta] = for (c <- constants.distinct) yield {
       replace(Seq(c),
         singletons.getOrElseUpdate(c, c match {
           case CSPOMConstant(value: Int) => IntVariable(Seq(value))
