@@ -1,15 +1,16 @@
 package concrete.generator.cspompatterns
 
-import cspom.CSPOMConstraint
 import cspom.compiler.VariableCompiler
 import cspom.util.IntervalsArithmetic.RangeArithmetics
 import cspom.variable.IntVariable.arithmetics
 import cspom.variable.IntVariable.intExpression
 import cspom.variable.IntVariable.ranges
 import cspom.variable.SimpleExpression
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import cspom.CSPOM
+import cspom.CSPOMConstraint
 
-object AbsDiffDomains extends VariableCompiler('absdiff) {
+object AbsDiffDomains extends VariableCompiler('absdiff) with LazyLogging {
 
   def compiler(c: CSPOMConstraint[_]) = c match {
     case CSPOMConstraint(ir: SimpleExpression[_], _, Seq(ii0: SimpleExpression[_], ii1: SimpleExpression[_]), _) =>
@@ -35,7 +36,7 @@ object AbsDiffDomains extends VariableCompiler('absdiff) {
   override def compile(c: CSPOMConstraint[_], problem: CSPOM, data: A) = {
     val e = problem.referencedExpressions
     val ct = e.count(_.fullyDefined)
-    println(s"$ct/${e.size}")
+    logger.info(s"$ct/${e.size}")
     super.compile(c, problem, data)
   }
 }
