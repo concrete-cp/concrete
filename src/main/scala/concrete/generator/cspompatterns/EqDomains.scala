@@ -9,7 +9,7 @@ import cspom.util.IntervalsArithmetic._
 import cspom.variable.BoolVariable
 import cspom.variable.IntVariable.intExpression
 import cspom.variable.CSPOMConstant
-import cspom.util.Interval._
+import cspom.util.IntInterval._
 import cspom.variable.IntVariable
 
 object EqDomains extends VariableCompiler('eq) {

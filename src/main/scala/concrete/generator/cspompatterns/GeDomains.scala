@@ -9,9 +9,10 @@ import cspom.variable.SimpleExpression
 import cspom.variable.BoolVariable.boolExpression
 import cspom.util.Interval
 import cspom.util.RangeSet.rangeAsRangeSet
+import cspom.util.Closed
 import cspom.util.IntInterval
 
-object GtDomains extends VariableCompiler('gt) {
+object GeDomains extends VariableCompiler('ge) {
 
   def compiler(c: CSPOMConstraint[_]) = c match {
     case CSPOMConstraint(r: SimpleExpression[_], _, Seq(i0: SimpleExpression[_], i1: SimpleExpression[_]), _) =>
@@ -20,13 +21,21 @@ object GtDomains extends VariableCompiler('gt) {
       val ii1 = intExpression(i1)
       val li1 = ii1.headInterval
       val ri0: SimpleExpression[Int] = if (ir.isTrue && li1.hasLowerBound) {
-        reduceDomain(ii0, IntInterval.greaterThan(li1.lowerEndpoint))
+        if (li1.lowerBoundType == Closed) {
+          reduceDomain(ii0, IntInterval.atLeast(li1.lowerEndpoint))
+        } else {
+          reduceDomain(ii0, IntInterval.greaterThan(li1.lowerEndpoint))
+        }
       } else {
         ii0
       }
       val ui0 = ii0.lastInterval
       val ri1 = if (ir.isTrue && ui0.hasUpperBound) {
-        reduceDomain(ii1, IntInterval.lessThan(ui0.upperEndpoint))
+        if (ui0.upperBoundType == Closed) {
+          reduceDomain(ii1, IntInterval.atMost(ui0.upperEndpoint))
+        } else {
+          reduceDomain(ii1, IntInterval.lessThan(ui0.upperEndpoint))
+        }
       } else {
         ii1
       }

@@ -21,7 +21,8 @@ object AbsDiffDomains extends VariableCompiler('absdiff) {
       val ni0 = i0 & ((i1 + nr) ++ (i1 - nr))
       val ni1 = i1 & ((ni0 + nr) ++ (ni0 - nr))
 
-      require(nr == (ni0 - ni1).abs, s"$nr = |$ni0 - $ni1| still requires shaving")
+      assert(nr == (nr & (ni0 - ni1).abs), s"$nr = |$ni0 - $ni1| still requires shaving (result is ${(ni0 - ni1).abs})")
+      assert(ni0 == (ni0 & (ni1 + nr) ++ (ni1 - nr)), s"$ni0 still requires shaving")
 
       Map(
         ir -> reduceDomain(r, nr),
