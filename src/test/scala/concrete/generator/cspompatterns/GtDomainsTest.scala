@@ -21,7 +21,7 @@ class GtDomainsTest extends FlatSpec with Matchers {
   "GtDomains" should "filter" in {
     val ch = GtDomains.compiler(ctr).filter(t => t._1 != t._2)
     ch should have size 1
-    ch(v0).asInstanceOf[IntVariable].domain shouldBe IntRangeSet(IntInterval.greaterThan(0))
+    ch(v0).asInstanceOf[IntVariable].domain shouldBe IntRangeSet(IntInterval.greaterThan(0).canonical)
   }
 
 }
