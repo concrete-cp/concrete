@@ -5,6 +5,7 @@ import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompiler
 import cspom.variable.CSPOMConstant
 import cspom.variable.SimpleExpression
+import cspom.compiler.Delta
 
 /**
  * Unary disjunction transformed to equality
@@ -24,7 +25,7 @@ object UnaryOr extends ConstraintCompiler {
 
     val Seq(constant: Boolean) = fc.params.getOrElse("revsign", Seq(false))
 
-    replaceCtr(fc, CSPOMConstraint('eq, Seq(arg, CSPOMConstant(constant ^ res))), problem)
+    replaceCtr(fc, Seq(), problem) ++ replace(Seq(arg), CSPOMConstant(constant ^ res), problem)
 
   }
 

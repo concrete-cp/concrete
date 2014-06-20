@@ -69,25 +69,12 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
   }
 
   def generateVariables(cspom: CSPOM): Map[CSPOMVariable[_], Variable] = {
-
     val vn = new VariableNames(cspom)
 
     cspom.referencedExpressions.flatMap(_.flatten).collect {
       case v: CSPOMVariable[_] => v -> new Variable(vn.names(v), generateDomain(v))
     }.toMap
-
   }
-
-  def generateVariables(name: String, e: CSPOMExpression[_]): Map[CSPOMVariable[_], Variable] =
-    e match {
-      case c: CSPOMConstant[_] => Map()
-      case v: CSPOMVariable[_] => Map(v -> new Variable(name, generateDomain(v)))
-      case CSPOMSeq(vars, range, _) =>
-        (vars zip range).flatMap {
-          case (e, i) => generateVariables(s"$name[$i]", e)
-        } toMap
-      case _ => throw new UnsupportedOperationException(s"Cannot generate $e")
-    }
 
   def generateDomain[T](cspomVar: CSPOMVariable[_]): Domain = {
     require(cspomVar.fullyDefined, s"$cspomVar has no bounds")
@@ -96,7 +83,7 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
         new concrete.BooleanDomain();
 
       case v: IntVariable => IntVariable.iterable(v).toStream match {
-        case Seq(0, 1) if intToBool => new concrete.BooleanDomain(false)
+        case Seq(0) if intToBool => new concrete.BooleanDomain(false)
         case Seq(1) if intToBool => new concrete.BooleanDomain(true)
         case Seq(0, 1) if intToBool => new concrete.BooleanDomain()
         case s =>

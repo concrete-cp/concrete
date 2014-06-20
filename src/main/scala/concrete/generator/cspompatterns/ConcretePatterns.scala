@@ -16,15 +16,15 @@ object ConcretePatterns {
         AddDomains, EqDomains,
         UnaryOr, MergeDisj, MergeNotDisj,
         NegToCNF, Xor, ReifiedDisj, ReifiedConj,
-        NeqVec,
+        NeqVec, SimplDisj, 
         LtToGt, SlidingSum, SetIn, Element, In, MinMax //, //SimplDisj//ConstToVar
         )
 
     val improveModel = params.getOrElse("improveModel", true)
 
     if (improveModel) {
-      standard ++ StandardCompilers.improve() ++ Seq(
-        AllDiff, SubsumedDiff, DiffGe, SimplDisj, Square, GtDomains, GeDomains)
+      StandardCompilers.improve() ++ standard ++ Seq(
+        AllDiff, SubsumedDiff, DiffGe, Square, GtDomains, GeDomains)
     } else {
       standard
     }

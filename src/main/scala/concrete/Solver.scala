@@ -50,7 +50,10 @@ final class SolverFactory(val params: ParameterManager) {
     ProblemCompiler.compile(cspom, ConcretePatterns(params))
     val pg = new ProblemGenerator(params)
     val (problem, variables) = pg.generate(cspom)
-    new CSPOMSolver(apply(problem), cspom, variables)
+    val solver = apply(problem)
+    solver.statistics.register("compiler", ProblemCompiler)
+    solver.statistics.register("generator", pg)
+    new CSPOMSolver(solver, cspom, variables)
   }
 }
 
