@@ -12,13 +12,18 @@ import cspom.CSPOMConstraint
 
 final object EqGenerator extends Generator {
 
+  def params(constraint: CSPOMConstraint[_]): (Boolean, Int) = {
+    val neg: Boolean = constraint.getParam("neg", classOf[Boolean]).getOrElse(false)
+
+    val offset: Int = constraint.getParam("offset", classOf[Integer]).map(_.toInt).getOrElse(0)
+    (neg, offset)
+  }
+
   override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] = {
     val Seq(a, b) = constraint.arguments.map(cspom2concrete1D)
 
-    val neg: Boolean = constraint.getParam("neg", classOf[Boolean]).getOrElse(false)
+    val (neg, offset) = params(constraint)
     val negFactor = if (neg) -1 else 1
-    val offset: Int = constraint.getParam("offset", classOf[Integer]).map(_.toInt).getOrElse(0)
-
     (a, b) match {
       case (Const(a), Const(b)) =>
         require(negFactor * a + offset == b)
@@ -36,13 +41,18 @@ final object EqGenerator extends Generator {
   }
 
   override def genReversed(c: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] = {
+    val (neg, offset) = params(c)
+    require(!neg)
+    require(offset == 0)
     NeqGenerator.gen(c)
   }
 
   override def genFunctional(funcConstraint: CSPOMConstraint[_], r: C2Conc)(implicit variables: VarMap): Seq[Constraint] = {
     val Var(result) = r
     val Seq(a, b) = funcConstraint.arguments map cspom2concrete1D
-
+    val (neg, offset) = params(funcConstraint)
+    require(!neg)
+    require(offset == 0)
     (a, b) match {
       case (Const(a), Const(b)) => ???
       case (Const(a), Var(b)) => Seq(new ReifiedEquals(result, b, a))

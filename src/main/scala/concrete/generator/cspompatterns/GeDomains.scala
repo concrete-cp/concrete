@@ -2,15 +2,13 @@ package concrete.generator.cspompatterns
 
 import cspom.CSPOMConstraint
 import cspom.compiler.VariableCompiler
-import cspom.variable.IntVariable.arithmetics
-import cspom.variable.IntVariable.ranges
-import cspom.variable.IntVariable.intExpression
-import cspom.variable.SimpleExpression
-import cspom.variable.BoolVariable.boolExpression
-import cspom.util.Interval
-import cspom.util.RangeSet.rangeAsRangeSet
 import cspom.util.Closed
 import cspom.util.IntInterval
+import cspom.variable.BoolVariable.boolExpression
+import cspom.variable.IntVariable.arithmetics
+import cspom.variable.IntVariable.intExpression
+import cspom.variable.IntVariable.ranges
+import cspom.variable.SimpleExpression
 
 object GeDomains extends VariableCompiler('ge) {
 

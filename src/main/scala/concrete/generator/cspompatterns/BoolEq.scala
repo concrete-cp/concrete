@@ -1,21 +1,20 @@
 package concrete.generator.cspompatterns
 
+import concrete.CSPOMDriver
+import cspom.CSPOM
 import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompiler
+import cspom.compiler.ConstraintCompilerNoData
+import cspom.compiler.Delta
 import cspom.compiler.VariableCompiler
-import cspom.util.Interval._
 import cspom.util.IntervalsArithmetic._
 import cspom.variable.BoolVariable
+import cspom.variable.CSPOMConstant
+import cspom.variable.CSPOMExpression
 import cspom.variable.IntVariable.arithmetics
 import cspom.variable.IntVariable.intExpression
 import cspom.variable.IntVariable.ranges
 import cspom.variable.SimpleExpression
-import cspom.variable.CSPOMExpression
-import cspom.compiler.ConstraintCompilerNoData
-import cspom.compiler.Delta
-import cspom.CSPOM
-import cspom.variable.CSPOMConstant
-import concrete.CSPOMDriver
 
 object BoolEq extends ConstraintCompiler {
 
@@ -43,7 +42,7 @@ object BoolEq extends ConstraintCompiler {
         CSPOMDriver.clause(Seq(na, nb), Seq(false, true))), problem)
 
   }
-  
+
   def selfPropagation = true
 
 }

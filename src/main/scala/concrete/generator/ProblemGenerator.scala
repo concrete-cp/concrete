@@ -1,7 +1,6 @@
 package concrete.generator;
 
 import scala.annotation.tailrec
-import scala.collection.SortedSet
 import scala.reflect.runtime.universe
 
 import com.typesafe.scalalogging.slf4j.LazyLogging
@@ -19,14 +18,10 @@ import cspom.Statistic
 import cspom.StatisticsManager
 import cspom.TimedException
 import cspom.VariableNames
-import cspom.util.RangeSet
 import cspom.variable.BoolVariable
-import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMExpression
-import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
 import cspom.variable.FreeVariable
-
 import cspom.variable.IntVariable
 
 final class ProblemGenerator(private val pm: ParameterManager = new ParameterManager()) extends LazyLogging {
@@ -72,12 +67,14 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
     val vn = new VariableNames(cspom)
 
     cspom.referencedExpressions.flatMap(_.flatten).collect {
-      case v: CSPOMVariable[_] => v -> new Variable(vn.names(v), generateDomain(v))
+      case v: CSPOMVariable[_] =>
+        require(v.fullyDefined, s"$v has no bounds. Involved by ${cspom.constraints(v)}")
+        v -> new Variable(vn.names(v), generateDomain(v))
     }.toMap
   }
 
   def generateDomain[T](cspomVar: CSPOMVariable[_]): Domain = {
-    require(cspomVar.fullyDefined, s"$cspomVar has no bounds")
+
     cspomVar match {
       case bD: BoolVariable =>
         new concrete.BooleanDomain();

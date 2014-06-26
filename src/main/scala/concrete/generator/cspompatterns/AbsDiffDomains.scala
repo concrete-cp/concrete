@@ -26,9 +26,9 @@ object AbsDiffDomains extends VariableCompiler('absdiff) with LazyLogging {
       assert(ni0 == (ni0 & (ni1 + nr) ++ (ni1 - nr)), s"$ni0 still requires shaving")
 
       Map(
-        ir -> reduceDomain(r, nr),
-        ii0 -> reduceDomain(i0, ni0),
-        ii1 -> reduceDomain(i1, ni1))
+        ir -> applyDomain(r, nr),
+        ii0 -> applyDomain(i0, ni0),
+        ii1 -> applyDomain(i1, ni1))
 
     case _ => throw new IllegalArgumentException
   }

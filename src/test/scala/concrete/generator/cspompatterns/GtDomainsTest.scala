@@ -2,14 +2,13 @@ package concrete.generator.cspompattern
 
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
+
 import concrete.CSPOMDriver._
-import cspom.variable.IntVariable
-import cspom.CSPOMConstraint
 import concrete.generator.cspompatterns.GtDomains
-import cspom.util.Interval
-import cspom.util.RangeSet
+import cspom.CSPOMConstraint
 import cspom.util.IntInterval
 import cspom.util.IntRangeSet
+import cspom.variable.IntVariable
 
 class GtDomainsTest extends FlatSpec with Matchers {
 

@@ -48,6 +48,8 @@ final class SolverFactory(val params: ParameterManager) {
 
   def apply(cspom: CSPOM): CSPOMSolver = {
     ProblemCompiler.compile(cspom, ConcretePatterns(params))
+
+    //println(cspom)
     val pg = new ProblemGenerator(params)
     val (problem, variables) = pg.generate(cspom)
     val solver = apply(problem)

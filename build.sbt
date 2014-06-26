@@ -21,10 +21,10 @@ libraryDependencies ++= Seq(
 	"fr.univ-valenciennes.concrete" %% "cspom" % "2.2-SNAPSHOT",
 	"junit" % "junit" % "4.11" % "test",
 	"org.postgresql" % "postgresql" % "9.3-1101-jdbc41",
-	"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.4",
-	"com.typesafe.slick" %% "slick" % "2.1.0-M1",
+	"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
+	"com.typesafe.slick" %% "slick" % "2.1.0-M2",
 	"org.jcp" % "jsr331" % "1.1.1",
-	"org.scalatest" %% "scalatest" % "2.1.6" % "test",
+	"org.scalatest" %% "scalatest" % "2.2.0" % "test",
 	"org.scalacheck" %% "scalacheck" % "1.11.4" % "test"
 	)
 

@@ -14,10 +14,10 @@ object ConcretePatterns {
       Seq(
         AbsDiff, AbsDiffDomains, SubToAdd, AddToEq, BoolEq,
         AddDomains, EqDomains,
-        UnaryOr, MergeDisj, MergeNotDisj,
+        UnaryOr, MergeNotDisj,
         NegToCNF, Xor, ReifiedDisj, ReifiedConj,
         NeqVec, SimplDisj, 
-        LtToGt, SlidingSum, SetIn, Element, In, MinMax //, //SimplDisj//ConstToVar
+        LtToGt, SlidingSum, SetIn, Element, In, MinMax, ConcreteTypes //, //SimplDisj//ConstToVar
         )
 
     val improveModel = params.getOrElse("improveModel", true)
