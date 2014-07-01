@@ -11,6 +11,7 @@ import cspom.variable.IntVariable.intExpression
 import cspom.variable.CSPOMConstant
 import cspom.util.IntInterval._
 import cspom.variable.IntVariable
+import cspom.util.IntInterval
 
 object EqDomains extends VariableCompiler('eq) {
 
@@ -23,7 +24,7 @@ object EqDomains extends VariableCompiler('eq) {
       val br = BoolVariable.boolExpression(r)
       val ii0 = intExpression(i0)
       val ii1 = intExpression(i1)
-      val intersect = (ii0 * (<(negFactor)>) + (<(offset)>)) & ii1
+      val intersect = (ii0 * IntInterval.singleton(negFactor) + IntInterval.singleton(offset)) & ii1
 
       val res = if (intersect.isEmpty) {
         reduceDomain(br, false)
@@ -33,7 +34,7 @@ object EqDomains extends VariableCompiler('eq) {
       }
 
       val ri0 = if (res.isTrue) {
-        reduceDomain(ii0, (intersect - (<(offset)>)) * (<(negFactor)>))
+        reduceDomain(ii0, (intersect - IntInterval.singleton(offset)) * IntInterval.singleton(negFactor))
       } else {
         ii0
       }

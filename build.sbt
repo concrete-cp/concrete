@@ -30,8 +30,6 @@ libraryDependencies ++= Seq(
 
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-optimise", "-Xlint", "-Xdisable-assertions")
 
-org.scalastyle.sbt.ScalastylePlugin.Settings
-
 com.typesafe.sbt.SbtNativePackager.packageArchetype.java_application
 
 mainClass in Compile := Some("concrete.runner.FZConcrete")

@@ -8,6 +8,7 @@ import cspom.variable.IntVariable.arithmetics
 import cspom.variable.IntVariable.intExpression
 import cspom.variable.IntVariable.ranges
 import cspom.variable.SimpleExpression
+import cspom.util.Finite
 
 object GtDomains extends VariableCompiler('gt) {
 
@@ -16,18 +17,17 @@ object GtDomains extends VariableCompiler('gt) {
       val ir = boolExpression(r)
       val ii0 = intExpression(i0)
       val ii1 = intExpression(i1)
-      val li1 = ii1.headInterval
-      val ri0: SimpleExpression[Int] = if (ir.isTrue && li1.hasLowerBound) {
-        reduceDomain(ii0, IntInterval.greaterThan(li1.lowerEndpoint))
-      } else {
-        ii0
+
+      val ri0: SimpleExpression[Int] = ii1.lowerBound match {
+        case Finite(l) if ir.isTrue => reduceDomain(ii0, IntInterval.atLeast(l + 1))
+        case _ => ii0
       }
-      val ui0 = ii0.lastInterval
-      val ri1 = if (ir.isTrue && ui0.hasUpperBound) {
-        reduceDomain(ii1, IntInterval.lessThan(ui0.upperEndpoint))
-      } else {
-        ii1
+
+      val ri1 = ii0.upperBound match {
+        case Finite(u) if ir.isTrue => reduceDomain(ii1, IntInterval.atMost(u - 1))
+        case _ => ii1
       }
+
       Map(
         r -> ir,
         i0 -> ri0,

@@ -12,7 +12,7 @@ import cspom.compiler.ProblemCompiler
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
 
-object AbsDiffTest extends FlatSpec with Matchers {
+class AbsDiffTest extends FlatSpec with Matchers {
 
   "AbsDiff compiler" should "compile" in {
 
