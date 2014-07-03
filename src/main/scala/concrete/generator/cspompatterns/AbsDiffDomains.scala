@@ -18,17 +18,22 @@ object AbsDiffDomains extends VariableCompiler('absdiff) with LazyLogging {
       val i0 = intExpression(ii0)
       val i1 = intExpression(ii1)
 
-      val nr = r & (i0 - i1).abs
-      val ni0 = i0 & ((i1 + nr) ++ (i1 - nr))
-      val ni1 = i1 & ((ni0 + nr) ++ (ni0 - nr))
+      if (r.fullyDefined && i0.fullyDefined && i1.fullyDefined) {
+        Map()
+      } else {
 
-      assert(nr == (nr & (ni0 - ni1).abs), s"$nr = |$ni0 - $ni1| still requires shaving (result is ${(ni0 - ni1).abs})")
-      assert(ni0 == (ni0 & (ni1 + nr) ++ (ni1 - nr)), s"$ni0 still requires shaving")
+        val nr = r & (i0 - i1).abs
+        val ni0 = i0 & ((i1 + nr) ++ (i1 - nr))
+        val ni1 = i1 & ((ni0 + nr) ++ (ni0 - nr))
 
-      Map(
-        ir -> applyDomain(r, nr),
-        ii0 -> applyDomain(i0, ni0),
-        ii1 -> applyDomain(i1, ni1))
+        assert(nr == (nr & (ni0 - ni1).abs), s"$nr = |$ni0 - $ni1| still requires shaving (result is ${(ni0 - ni1).abs})")
+        assert(ni0 == (ni0 & (ni1 + nr) ++ (ni1 - nr)), s"$ni0 still requires shaving")
+
+        Map(
+          ir -> applyDomain(r, nr),
+          ii0 -> applyDomain(i0, ni0),
+          ii1 -> applyDomain(i1, ni1))
+      }
 
     case _ => throw new IllegalArgumentException
   }
