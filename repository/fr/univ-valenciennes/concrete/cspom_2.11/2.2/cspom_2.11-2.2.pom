@@ -2,10 +2,10 @@
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
     <modelVersion>4.0.0</modelVersion>
     <groupId>fr.univ-valenciennes.concrete</groupId>
-    <artifactId>cspom_2.11.0-RC4</artifactId>
+    <artifactId>cspom_2.11</artifactId>
     <packaging>jar</packaging>
     <description>cspom</description>
-    <version>2.0.1</version>
+    <version>2.2</version>
     <name>cspom</name>
     <organization>
         <name>fr.univ-valenciennes.concrete</name>
@@ -14,7 +14,7 @@
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
-            <version>2.11.0-RC4</version>
+            <version>2.11.1</version>
         </dependency>
         <dependency>
             <groupId>org.kohsuke</groupId>
@@ -22,45 +22,45 @@
             <version>1.0</version>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.11</version>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_2.11</artifactId>
+            <version>2.2.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scalacheck</groupId>
+            <artifactId>scalacheck_2.11</artifactId>
+            <version>1.11.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.1.1</version>
+            <version>1.1.2</version>
         </dependency>
         <dependency>
             <groupId>com.typesafe.scala-logging</groupId>
-            <artifactId>scala-logging-slf4j_2.11.0-RC4</artifactId>
-            <version>2.0.2</version>
+            <artifactId>scala-logging-slf4j_2.11</artifactId>
+            <version>2.1.2</version>
         </dependency>
         <dependency>
             <groupId>org.scala-lang.modules</groupId>
-            <artifactId>scala-parser-combinators_2.11.0-RC4</artifactId>
+            <artifactId>scala-parser-combinators_2.11</artifactId>
             <version>1.0.1</version>
         </dependency>
         <dependency>
             <groupId>org.scala-lang.modules</groupId>
-            <artifactId>scala-xml_2.11.0-RC4</artifactId>
-            <version>1.0.1</version>
+            <artifactId>scala-xml_2.11</artifactId>
+            <version>1.0.2</version>
         </dependency>
         <dependency>
-            <groupId>com.novocode</groupId>
-            <artifactId>junit-interface</artifactId>
-            <version>0.10</version>
+            <groupId>com.github.axel22</groupId>
+            <artifactId>scalameter_2.11</artifactId>
+            <version>0.5-M2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
     <repositories>
-        <repository>
-            <id>typesaferelases</id>
-            <name>typesafe-relases</name>
-            <url>http://repo.typesafe.com/typesafe/releases/</url>
-            <layout>default</layout>
-        </repository>
         <repository>
             <id>Concreterepository</id>
             <name>Concrete repository</name>
