@@ -1,3 +1,6 @@
+import com.typesafe.sbt.SbtNativePackager._
+import NativePackagerKeys._
+
 name := "concrete"
 
 organization := "fr.univ-valenciennes.concrete"
@@ -18,7 +21,7 @@ testOptions in Test <+= (target in Test) map {
 
 
 libraryDependencies ++= Seq(
-	"fr.univ-valenciennes.concrete" %% "cspom" % "2.2-SNAPSHOT",
+	"fr.univ-valenciennes.concrete" %% "cspom" % "2.2",
 	"junit" % "junit" % "4.11" % "test",
 	"org.postgresql" % "postgresql" % "9.3-1101-jdbc41",
 	"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
@@ -30,7 +33,9 @@ libraryDependencies ++= Seq(
 
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-optimise", "-Xlint", "-Xdisable-assertions")
 
-com.typesafe.sbt.SbtNativePackager.packageArchetype.java_application
+
+
+packageArchetype.java_application
 
 mainClass in Compile := Some("concrete.runner.FZConcrete")
 

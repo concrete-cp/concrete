@@ -19,7 +19,7 @@ class Var(problem: Problem, name: String, val variable: IntVariable) extends Abs
     new Var(problem, Var.generate(), cspomVar)
   }
 
-  def contains(x: Int): Boolean = variable.domain.contains(x)
+  def contains(x: Int): Boolean = variable.contains(x)
 
   def getMax(): Int = concreteVar.map(_.dom.lastValue).getOrElse(variable.asSortedSet.last)
 

@@ -29,10 +29,12 @@ final object EqGenerator extends Generator {
         require(negFactor * a + offset == b)
         Seq()
       case (Var(a), Const(b)) =>
-        require(a.dom.values.sameElements(Iterator((b - offset) * negFactor)))
+        require(a.dom.values.sameElements(Iterator((b - offset) * negFactor)),
+            s"Domain of $a should be ($b - $offset) * $negFactor = ${(b - offset) * negFactor}")
         Seq()
       case (Const(a), Var(b)) =>
-        require(b.dom.values.sameElements(Iterator(negFactor * a + offset)))
+        require(b.dom.values.sameElements(Iterator(negFactor * a + offset)),
+          s"Domain of $b should be $negFactor * $a + $offset = ${negFactor * a + offset}")
         Seq()
       case (Var(a), Var(b)) =>
         Seq(new Eq(neg, a, offset, b))

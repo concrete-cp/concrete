@@ -12,6 +12,8 @@ import cspom.variable.CSPOMConstant
 import cspom.util.IntInterval._
 import cspom.variable.IntVariable
 import cspom.util.IntInterval
+import cspom.variable.CSPOMExpression
+import cspom.VariableNames
 
 object EqDomains extends VariableCompiler('eq) {
 
@@ -45,6 +47,8 @@ object EqDomains extends VariableCompiler('eq) {
         ii1
       }
 
-      Map(r -> res, i0 -> ri0, i1 -> ri1)
+      val s: Map[CSPOMExpression[_], CSPOMExpression[_]] = Map(r -> res, i0 -> ri0, i1 -> ri1)
+
+      s
   }
 }
