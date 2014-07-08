@@ -4,7 +4,7 @@ import java.util.logging.Level.WARNING
 import org.junit.Test
 import concrete.filter.ACC
 import concrete.generator.ProblemGenerator
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
 import concrete.Solver

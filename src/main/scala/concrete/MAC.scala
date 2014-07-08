@@ -25,7 +25,7 @@ import concrete.filter.ACC
 import concrete.filter.Filter
 import concrete.heuristic.CrossHeuristic
 import concrete.heuristic.Heuristic
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import cspom.Statistic
 import cspom.StatisticsManager
 import scala.annotation.tailrec

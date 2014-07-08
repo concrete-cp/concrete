@@ -5,7 +5,7 @@ import cspom.CSPOMConstraint
 import cspom.variable.CSPOMVariable
 import java.io.BufferedWriter
 import java.io.OutputStreamWriter
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import concrete.generator.ProblemGenerator
 import javax.constraints.impl.search.Solver
 import javax.constraints.Oper

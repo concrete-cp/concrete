@@ -5,7 +5,7 @@ import scala.util.Random
 import scala.util.control.Breaks.break
 import scala.util.control.Breaks.breakable
 
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 
 import cspom.CSPOM
 import cspom.CSPOMConstraint

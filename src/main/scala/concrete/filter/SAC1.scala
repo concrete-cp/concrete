@@ -21,7 +21,7 @@ package concrete.filter;
 import java.util.logging.Logger
 import concrete.Problem
 import concrete.Variable
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import concrete.ParameterManager
 
 /**

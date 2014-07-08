@@ -1,7 +1,7 @@
 package concrete.constraint.extension;
 
 import concrete.util.BitVector;
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 
 final class Matrix2D(xSize: Int, ySize: Int, initialState: Boolean) extends Matrix with LazyLogging {
   private var xMatrix =

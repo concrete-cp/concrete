@@ -2,7 +2,7 @@ package concrete.constraint.extension
 
 import scala.annotation.tailrec
 import scala.util.hashing.MurmurHash3
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import concrete.priorityqueues.Identified
 import concrete.util.SetWithMax
 import cspom.extension.IdMap

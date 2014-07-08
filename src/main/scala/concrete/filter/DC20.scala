@@ -24,7 +24,7 @@ import concrete.LearnMethod
 import concrete.NoGoodLearner
 import concrete.Problem
 import concrete.Variable
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import cspom.Statistic
 import concrete.UNSATException
 import concrete.LearnBin

@@ -5,7 +5,7 @@ import concrete.constraint.Constraint
 import concrete.Domain
 import concrete.util.Interval
 import concrete.Variable
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import concrete.constraint.Shaver
 import scala.collection.mutable.HashSet
 
@@ -31,8 +31,15 @@ final class Sum(
 
   //val domFact = scope map (_.dom) zip factors toList
 
-  def checkValues(t: Array[Int]): Boolean =
-    (0 until arity).map(i => t(i) * factors(i)).sum == constant
+  def checkValues(t: Array[Int]): Boolean = {
+    val sum = (0 until arity).map(i => t(i) * factors(i)).sum
+    mode match {
+      case SumLE => sum <= constant
+      case SumLT => sum < constant
+      case SumEQ => sum == constant
+      case SumNE => sum != constant
+    }
+  }
 
   def advise(p: Int) = arity
 
@@ -43,7 +50,6 @@ final class Sum(
     case SumLE => dom.removeFromVal(itv.ub + 1)
     case SumEQ => dom.intersectVal(itv)
     case SumNE => dom.removeValInterval(itv.lb, itv.ub)
-    case _ => ???
   }
 
   def shave(): List[Int] = {

@@ -58,8 +58,4 @@ final object SumGenerator extends Generator {
     //    }
 
   }
-
-  def go(c: Int, params: Seq[Int], solverVariables: Seq[Variable], mode: FilterSum.Value) =
-    Seq(new Sum(c, params.toArray, solverVariables.toArray, mode))
-
 }

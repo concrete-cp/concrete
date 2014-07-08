@@ -22,7 +22,7 @@ package concrete;
 import java.util.logging.Logger
 import scala.annotation.tailrec
 import scala.collection.JavaConversions
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import concrete.constraint.TupleEnumerator
 import concrete.constraint.extension.ReduceableExt
 import concrete.filter.Filter
@@ -48,8 +48,6 @@ final class SolverFactory(val params: ParameterManager) {
 
   def apply(cspom: CSPOM): CSPOMSolver = {
     ProblemCompiler.compile(cspom, ConcretePatterns(params))
-
-    //println(cspom)
     val pg = new ProblemGenerator(params)
     val (problem, variables) = pg.generate(cspom)
     val solver = apply(problem)

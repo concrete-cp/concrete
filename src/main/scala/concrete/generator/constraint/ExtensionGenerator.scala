@@ -1,6 +1,6 @@
 package concrete.generator.constraint;
 
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import Generator.cspom2concreteVar
 import concrete.Domain
 import concrete.ParameterManager

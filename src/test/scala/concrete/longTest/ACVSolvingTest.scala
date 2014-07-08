@@ -4,7 +4,7 @@ import scala.annotation.elidable
 import org.junit.Assert._
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import concrete.ParameterManager
 import concrete.Solver
 import cspom.compiler.ProblemCompiler

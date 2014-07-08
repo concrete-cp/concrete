@@ -3,7 +3,7 @@ package concrete.longTest;
 import org.scalatest.FlatSpec
 import org.scalatest.Inspectors
 import org.scalatest.Matchers
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import concrete.ParameterManager
 import concrete.SlowTest
 import concrete.SolverFactory

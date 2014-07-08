@@ -6,7 +6,7 @@ import cspom.variable.IntVariable.arithmetics
 import cspom.variable.IntVariable.intExpression
 import cspom.variable.IntVariable.ranges
 import cspom.variable.SimpleExpression
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import cspom.CSPOM
 import cspom.CSPOMConstraint
 

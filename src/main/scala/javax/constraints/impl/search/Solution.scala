@@ -1,6 +1,6 @@
 package javax.constraints.impl.search
 
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import concrete.Variable
 
 class Solution(sol: Map[Variable, Int]) extends javax.constraints.Solution with LazyLogging {

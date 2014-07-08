@@ -22,7 +22,7 @@ import concrete.LearnMethod
 import concrete.NoGoodLearner
 import concrete.Variable
 import cspom.Statistic
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import concrete.ParameterManager
 import cspom.StatisticsManager
 import concrete.Problem

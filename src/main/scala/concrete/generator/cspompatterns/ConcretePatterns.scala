@@ -13,7 +13,7 @@ object ConcretePatterns {
     val standard = StandardCompilers() ++
       Seq(
         AbsDiff, AbsDiffDomains, SubToAdd, AddToEq, BoolEq,
-        AddDomains, EqDomains, Bool2IntDomains,
+        AddDomains, EqDomains, Bool2IntDomains, SumDomains,
         UnaryOr, MergeNotDisj,
         NegToCNF, Xor, ReifiedDisj, ReifiedConj,
         NeqVec, SimplDisj, 

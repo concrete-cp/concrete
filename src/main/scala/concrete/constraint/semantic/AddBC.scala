@@ -5,7 +5,7 @@ import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.Residues
 import concrete.util.Interval
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import concrete.constraint.Shaver
 import concrete.constraint.BC
 

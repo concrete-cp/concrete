@@ -9,7 +9,7 @@ import concrete.heuristic.revision.Dom
 import concrete.heuristic.revision.Key
 import concrete.priorityqueues.BinaryHeap
 import concrete.priorityqueues.PriorityQueue
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import cspom.Statistic
 import concrete.constraint.AdviseCount
 import concrete.ParameterManager
