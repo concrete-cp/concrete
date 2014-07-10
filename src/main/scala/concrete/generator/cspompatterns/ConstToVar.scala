@@ -28,12 +28,14 @@ object ConstToVar extends ConstraintCompiler {
   val singletons = new HashMap[CSPOMConstant[_], CSPOMVariable[_]]()
 
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM, constants: A) = {
+
     val deltas: Seq[Delta] = for (c <- constants.distinct) yield {
-      replace(Seq(c),
-        singletons.getOrElseUpdate(c, c match {
-          case CSPOMConstant(value: Int) => IntVariable(Seq(value))
-          case CSPOMConstant(value: Boolean) => IntVariable(Seq(if (value) 1 else 0))
-        }), problem)
+      val singleton = singletons.getOrElseUpdate(c, c match {
+        case CSPOMConstant(value: Int) => IntVariable.ofSeq(value)
+        case CSPOMConstant(value: Boolean) => IntVariable.ofSeq((if (value) 1 else 0))
+      })
+
+      replace(Seq(c), singleton, problem)
     }
     deltas.reduceLeft(_ ++ _)
   }

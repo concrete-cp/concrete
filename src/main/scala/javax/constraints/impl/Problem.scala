@@ -106,7 +106,7 @@ class Problem(name: String, params: ParameterManager) extends AbstractProblem(na
     post(countVar, op, cardCount)
   }
   def postCardinality(vars: Array[javax.constraints.Var], cardValue: Int, op: String, cardCount: Int): javax.constraints.Constraint = {
-    val constant = IntVariable(Seq(cardCount))
+    val constant = IntVariable.ofSeq(cardCount)
 
     postCardinality(vars, cardValue, op, new Var(this, Var.generate(), constant))
   }

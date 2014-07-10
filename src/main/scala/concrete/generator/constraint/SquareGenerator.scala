@@ -9,13 +9,15 @@ import concrete.UNSAT
 import concrete.UNSATObject
 import Generator._
 import concrete.constraint.semantic.Square
-
 import Generator._
+import concrete.constraint.semantic.SquareAC
+import concrete.constraint.semantic.SquareBC
 
 final object SquareGenerator extends Generator {
 
   override def genFunctional(constraint: CSPOMConstraint[_], result: C2Conc)(implicit variables: VarMap) = {
     val Seq(v0: C21D) = constraint.arguments map cspom2concrete
+
 
     (result, v0) match {
       case (Const(result), Const(v0)) =>
@@ -44,7 +46,9 @@ final object SquareGenerator extends Generator {
         //              v => Square.sqrt(v).toIterable.flatMap(s => Seq(-s, s))))
         //          }
 
-        Seq(new Square(result, v0))
+        Seq(new SquareBC(result, v0), new SquareAC(result, v0))
+        
+      case _ => throw new AssertionError("No sequences allowed")
     }
 
   }

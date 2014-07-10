@@ -4,11 +4,12 @@ import Generator._
 import concrete.Domain
 import concrete.Variable
 import concrete.constraint.Constraint
-import concrete.constraint.semantic.Eq
 import concrete.constraint.semantic.Neq
 import concrete.constraint.semantic.ReifiedConstraint
 import concrete.constraint.semantic.ReifiedEquals
 import cspom.CSPOMConstraint
+import concrete.constraint.semantic.EqAC
+import concrete.constraint.semantic.EqBC
 
 final object EqGenerator extends Generator {
 
@@ -30,14 +31,14 @@ final object EqGenerator extends Generator {
         Seq()
       case (Var(a), Const(b)) =>
         require(a.dom.values.sameElements(Iterator((b - offset) * negFactor)),
-            s"Domain of $a should be ($b - $offset) * $negFactor = ${(b - offset) * negFactor}")
+          s"Domain of $a should be ($b - $offset) * $negFactor = ${(b - offset) * negFactor}")
         Seq()
       case (Const(a), Var(b)) =>
         require(b.dom.values.sameElements(Iterator(negFactor * a + offset)),
           s"Domain of $b should be $negFactor * $a + $offset = ${negFactor * a + offset}")
         Seq()
       case (Var(a), Var(b)) =>
-        Seq(new Eq(neg, a, offset, b))
+        Seq(new EqBC(neg, a, offset, b), new EqAC(neg, a, offset, b))
     }
 
   }
@@ -62,7 +63,7 @@ final object EqGenerator extends Generator {
       case (Var(a), Var(b)) => Seq(
         new ReifiedConstraint(
           result,
-          new Eq(a, b),
+          new EqAC(a, b),
           new Neq(a, b)))
     }
 

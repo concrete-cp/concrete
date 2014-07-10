@@ -28,7 +28,8 @@ libraryDependencies ++= Seq(
 	"com.typesafe.slick" %% "slick" % "2.1.0-M2",
 	"org.jcp" % "jsr331" % "1.1.1",
 	"org.scalatest" %% "scalatest" % "2.2.0" % "test",
-	"org.scalacheck" %% "scalacheck" % "1.11.4" % "test"
+	"org.scalacheck" %% "scalacheck" % "1.11.4" % "test",
+	"com.github.axel22" %% "scalameter" % "0.5-M2" % "test"
 	)
 
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-optimise", "-Xlint", "-Xdisable-assertions")

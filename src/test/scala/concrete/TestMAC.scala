@@ -1,6 +1,5 @@
 package concrete
 import org.junit.Test
-import concrete.constraint.semantic.Eq
 import org.junit.Assert
 import scala.annotation.tailrec
 import concrete.constraint.semantic.AllDifferentBC
@@ -9,6 +8,8 @@ import concrete.constraint.semantic.AllDifferent2C
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
 import org.scalatest.Tag
+import concrete.constraint.semantic.EqBC
+import concrete.constraint.semantic.EqAC
 
 object SlowTest extends Tag("concrete.SlowTest")
 
@@ -30,8 +31,8 @@ class TestMAC extends FlatSpec with Matchers {
     val problem = new Problem(queens ::: qd1 ::: qd2)
 
     for (((q, q1, q2), i) <- (queens, qd1, qd2).zipped.toIterable.zipWithIndex) {
-      problem.addConstraint(new Eq(false, q, -i, q1))
-      problem.addConstraint(new Eq(false, q, i, q2))
+      problem.addConstraint(new EqAC(false, q, -i, q1))
+      problem.addConstraint(new EqAC(false, q, i, q2))
     }
 
     allDiff(problem, queens)

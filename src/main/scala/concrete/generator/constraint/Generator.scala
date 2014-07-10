@@ -14,6 +14,8 @@ import cspom.variable.BoolVariable
 import scala.reflect.ClassTag
 import cspom.variable.CSPOMConstant
 import scala.collection.immutable.SortedSet
+import concrete.constraint.BC
+import concrete.constraint.BCCompanion
 
 sealed trait C2Conc
 sealed trait C21D extends C2Conc {

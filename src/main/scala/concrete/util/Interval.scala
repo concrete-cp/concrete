@@ -24,11 +24,38 @@ final case class Interval(val lb: Int, val ub: Int) {
 
   def *(i: Interval) = {
     val Interval(c, d) = i
-    Interval(List(lb * c, lb * d, ub * c, ub * d).min, List(lb * c, lb * d, ub * c, ub * d).max)
+    val prods = List(lb * c, lb * d, ub * c, ub * d)
+    Interval(prods.min, prods.max)
   }
 
   def *(v: Int) = {
-    Interval(math.min(lb * v, ub * v), math.max(lb * v, ub * v))
+    val lbv = lb * v
+    val ubv = ub * v
+    if (lbv < ubv) {
+      Interval(lbv, ubv)
+    } else {
+      Interval(ubv, lbv)
+    }
+  }
+
+  def sq() = {
+    val lb2 = lb * lb
+    val ub2 = ub * ub
+    if (contains(0)) {
+      Interval(0, math.max(lb2, ub2))
+    } else {
+      if (lb2 < ub2) {
+        Interval(lb2, ub2)
+      } else {
+        Interval(ub2, lb2)
+      }
+    }
+  }
+
+  def sqrt() = {
+    require(lb >= 0)
+    val root = math.sqrt(ub).toInt
+    Interval(-root, root)
   }
 
   def /(i: Interval) = {
@@ -47,6 +74,14 @@ final case class Interval(val lb: Int, val ub: Int) {
     }
 
     //    if (l < u) Interval(l, u) else Interval(u, l)
+  }
+
+  def /:(v: Int) = {
+    /** v / this **/
+    if (this.contains(0)) throw new ArithmeticException
+    Interval(
+      math.min(ceilDiv(v, lb), ceilDiv(v, ub)),
+      math.max(floorDiv(v, lb), floorDiv(v, ub)))
   }
 
   def floorDiv(dividend: Int, divisor: Int) = {

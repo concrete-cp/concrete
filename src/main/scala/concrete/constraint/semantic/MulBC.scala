@@ -4,7 +4,6 @@ import concrete.constraint.Constraint
 import concrete.constraint.Residues
 import concrete.Domain
 import concrete.Variable
-import concrete.constraint.Shaver
 import concrete.util.Interval
 import concrete.constraint.BC
 
@@ -33,16 +32,6 @@ final class MulBC(val result: Variable, val v0: Variable, val v1: Variable)
       mod ::= 2
     }
     mod
-  }
-
-  private def reviseB(v: Variable, opp: Boolean, bounds: Interval) = {
-    val myBounds = v.dom.valueInterval
-
-    if (opp) {
-      v.dom.intersectVal(bounds.lb + myBounds.ub, bounds.ub + myBounds.lb)
-    } else {
-      v.dom.intersectVal(bounds.ub / myBounds.ub, bounds.lb / myBounds.lb)
-    }
   }
 
   override def toString = result + " = " + v0 + " * " + v1

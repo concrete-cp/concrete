@@ -1,7 +1,6 @@
 package concrete.generator.constraint;
 
 import concrete.constraint.Constraint
-import concrete.constraint.semantic.Eq
 import concrete.constraint.semantic.Neq
 import concrete.constraint.semantic.ReifiedConstraint
 import concrete.generator.FailedGenerationException
@@ -10,8 +9,8 @@ import concrete.Variable
 import cspom.CSPOMConstraint
 import concrete.constraint.semantic.ReifiedNeq
 import concrete.UNSATObject
-
 import Generator._
+import concrete.constraint.semantic.EqAC
 
 final object NeqGenerator extends Generator {
 
@@ -57,7 +56,7 @@ final object NeqGenerator extends Generator {
         Seq(new ReifiedConstraint(
           result,
           new Neq(v0, v1),
-          new Eq(v0, v1)))
+          new EqAC(v0, v1)))
     }
 
   }

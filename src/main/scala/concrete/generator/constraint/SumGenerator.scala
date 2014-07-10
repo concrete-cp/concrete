@@ -15,10 +15,10 @@ import concrete.constraint.extension.ReduceableExt
 import scala.annotation.tailrec
 import concrete.generator.FailedGenerationException
 import Generator._
-import concrete.constraint.semantic.FilterSum
+import concrete.constraint.semantic.SumMode
 import cspom.variable.CSPOMSeq
-import concrete.constraint.semantic.FilterSum
-import concrete.constraint.semantic.FilterSum
+import concrete.constraint.semantic.SumMode
+import concrete.constraint.semantic.SumMode
 import concrete.util.Interval
 import cspom.variable.CSPOMConstant
 
@@ -42,7 +42,7 @@ final object SumGenerator extends Generator {
     }.sum
 
     val mode = constraint.params.get("mode").collect {
-      case m: String => FilterSum.withName(m)
+      case m: String => SumMode.withName(m)
     }.get
     Seq(new Sum(constant, varParams.toArray, solverVariables.toArray, mode))
     //    

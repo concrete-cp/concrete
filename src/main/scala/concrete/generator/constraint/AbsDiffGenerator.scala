@@ -5,8 +5,9 @@ import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.semantic.AbsDiffAC
 import concrete.constraint.semantic.AbsDiffBC
-import concrete.constraint.semantic.AbsDiffConst
 import cspom.CSPOMConstraint
+import concrete.constraint.semantic.AbsDiffConstAC
+import concrete.constraint.semantic.AbsDiffConstBC
 
 final object AbsDiffGenerator extends Generator {
 
@@ -17,7 +18,7 @@ final object AbsDiffGenerator extends Generator {
 
     result match {
       case Var(r) => Seq(new AbsDiffBC(r, v0, v1), new AbsDiffAC(r, v0, v1, true))
-      case Const(c) => Seq(new AbsDiffConst(c, v0, v1))
+      case Const(c) => Seq(new AbsDiffConstBC(c, v0, v1), new AbsDiffConstAC(c, v0, v1))
     }
 
   }

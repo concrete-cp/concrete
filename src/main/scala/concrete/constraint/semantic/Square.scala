@@ -5,16 +5,11 @@ import concrete.Domain
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.util.Interval
-import concrete.constraint.Shaver
+import concrete.constraint.BC
+import concrete.constraint.BCCompanion
 
-/**
- * Constraint x = y².
- *
- * @param x
- * @param y
- */
-final class Square(val x: Variable, val y: Variable)
-  extends Constraint(Array(x, y)) with VariablePerVariable {
+final class SquareBC(val x: Variable, val y: Variable)
+  extends Constraint(Array(x, y)) with BC {
 
   //  val corresponding = Array(
   //    x.dom.allValues map { v => y.dom.index(a * v + b) },
@@ -25,17 +20,50 @@ final class Square(val x: Variable, val y: Variable)
 
   def checkValues(t: Array[Int]) = t(0) == t(1) * t(1)
 
+  def shave() = {
+    //val bounds = v0.dom.valueInterval * v1.dom.valueInterval - result.dom.valueInterval
+    var mod: List[Int] = Nil
+    if (x.dom.intersectVal(y.dom.valueInterval.sq)) {
+      mod ::= 0
+    }
+    if (y.dom.intersectVal(x.dom.valueInterval.sqrt)) {
+      mod ::= 1
+    }
+    mod
+  }
+
+  override def toString = s"$x == $y²"
+
+  def advise(pos: Int) = 3 // else (x.dom.size + y.dom.size)
+  val simpleEvaluation = 2
+}
+
+/**
+ * Constraint x = y².
+ *
+ * @param x
+ * @param y
+ */
+final class SquareAC(val x: Variable, val y: Variable)
+  extends Constraint(Array(x, y)) with BCCompanion with VariablePerVariable {
+
+  def skipIntervals = false
+  //  val corresponding = Array(
+  //    x.dom.allValues map { v => y.dom.index(a * v + b) },
+  //    y.dom.allValues map { v =>
+  //      val r = v - b
+  //      if (r % a == 0) x.dom.index(r / a) else -1
+  //    })
+
+  def checkValues(t: Array[Int]) = t(0) == t(1) * t(1)
+
   def consistentX(xValue: Int) = {
-    Square.sqrt(xValue) match {
-      case Some(root) =>
-        val idx = y.dom.index(root)
-        if (idx >= 0 && y.dom.present(idx)) {
-          true
-        } else {
-          val idx2 = y.dom.index(-root)
-          idx2 >= 0 && y.dom.present(idx2)
-        }
-      case None => false
+    Square.sqrt(xValue).exists { root =>
+      val idx = y.dom.index(root)
+      idx >= 0 && y.dom.present(idx) || {
+        val idx2 = y.dom.index(-root)
+        idx2 >= 0 && y.dom.present(idx2)
+      }
     }
 
   }
@@ -45,32 +73,12 @@ final class Square(val x: Variable, val y: Variable)
     idx >= 0 && x.dom.present(idx)
   }
 
-  //  def shave(): List[Int] = {
-  //    var mod: List[Int] = Nil
-  //    if (neg) {
-  //      if (scope(0).dom.intersectVal(scope(1).dom.valueInterval.negate + b)) {
-  //        mod ::= 0
-  //      }
-  //      if (scope(1).dom.intersectVal(scope(0).dom.valueInterval.negate + b)) {
-  //        mod ::= 1
-  //      }
-  //    } else {
-  //      if (scope(0).dom.intersectVal(scope(1).dom.valueInterval - b)) {
-  //        mod ::= 0
-  //      }
-  //      if (scope(1).dom.intersectVal(scope(0).dom.valueInterval + b)) {
-  //        mod ::= 1
-  //      }
-  //    }
-  //    mod
-  //  }
-
   def reviseVariable(position: Int, mod: List[Int]) = position match {
     case 0 => x.dom.filterValues(consistentX)
 
     case 1 => y.dom.filterValues(consistentY)
 
-    case _ => throw new IllegalArgumentException
+    case _ => throw new AssertionError
   }
 
   override def isConsistent() = {

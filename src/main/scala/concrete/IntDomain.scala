@@ -122,6 +122,7 @@ final class IntDomain(
     }
   }
 
+  @annotation.tailrec
   private def closestLt(v: Int, lb: Int, ub: Int): Int = {
     if (value(ub) < v) { ub }
     else {
