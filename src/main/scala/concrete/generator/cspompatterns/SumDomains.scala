@@ -40,7 +40,7 @@ object SumDomains extends VariableCompiler('sum) {
         case SumLE => IntInterval.atMost(result)
         case SumLT => IntInterval.atMost(result - 1)
         case SumEQ => IntInterval.singleton(result)
-        case SumNE => ???
+        //case SumNE => ???
       }
 
       val coefspan = (iargs, coef).zipped.map((a, c) => IntVariable.span(a) * c).toIndexedSeq
