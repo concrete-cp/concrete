@@ -7,7 +7,7 @@ final class SmallBitVector(size: Int, val word: Long) extends BitVector(size) {
 
   def this(size: Int) = this(size, 0)
 
-  def clear(position: Int) = {
+  def -(position: Int) = {
     assert(position < size)
     val newWord = word & ~(1L << position)
     if (word == newWord) {
@@ -17,8 +17,7 @@ final class SmallBitVector(size: Int, val word: Long) extends BitVector(size) {
     }
   }
 
-  def set(position: Int) = {
-
+  def +(position: Int) = {
     assert(position < size)
     val newWord = word | (1L << position)
     if (word == newWord) {
@@ -83,7 +82,7 @@ final class SmallBitVector(size: Int, val word: Long) extends BitVector(size) {
       this
 
     } else {
-      val newWord = (word | (MASK << from)) & (MASK >>> -size)
+      val newWord = truncate(word | (MASK << from), size)
       if (word == newWord) {
         this
       } else {
@@ -97,7 +96,7 @@ final class SmallBitVector(size: Int, val word: Long) extends BitVector(size) {
     if (to <= 0) {
       this
     } else {
-      val newWord = word & ~(MASK >>> -to)
+      val newWord = truncate(word, to)
       if (word == newWord) {
         this
       } else {
@@ -128,7 +127,7 @@ final class SmallBitVector(size: Int, val word: Long) extends BitVector(size) {
   }
 
   def &(bv: BitVector) = {
-    val newWord = (bv.getWord(0) & this.word) & (MASK >>> -size)
+    val newWord = (bv.getWord(0) & this.word) //& (MASK >>> -size)
     if (newWord == word) {
       this
     } else {
@@ -137,7 +136,7 @@ final class SmallBitVector(size: Int, val word: Long) extends BitVector(size) {
   }
 
   def unary_~() = {
-    new SmallBitVector(size, ~this.word & (MASK >>> -size))
+    new SmallBitVector(size, truncate(~this.word, size))
   }
 
   def isEmpty = word == 0L;
@@ -157,5 +156,21 @@ final class SmallBitVector(size: Int, val word: Long) extends BitVector(size) {
 
   def setFirstWord(word: Long) = {
     new SmallBitVector(size, word)
+  }
+
+  def filter(f: Int => Boolean) = {
+    var newWord = 0L
+    var i = nextSetBit(0)
+    while (i >= 0) {
+      if (f(i)) {
+        newWord |= (1L << i)
+      }
+      i = nextSetBit(i)
+    }
+    if (newWord == word) {
+      this
+    } else {
+      new SmallBitVector(size, newWord)
+    }
   }
 }

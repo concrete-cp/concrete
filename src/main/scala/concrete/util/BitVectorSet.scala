@@ -5,7 +5,6 @@ import scala.annotation.tailrec
 final object BitVectorSet {
   val DISPLAYED_VALUES = 5;
 
-
 }
 
 final class BitVectorSet(val bv: BitVector, val size: Int) extends IntSet {
@@ -13,7 +12,7 @@ final class BitVectorSet(val bv: BitVector, val size: Int) extends IntSet {
   assert(bv.cardinality == size, bv + " : " + bv.cardinality + " != " + size)
 
   def this(size: Int) = {
-    this(BitVector.fullBV(size), size)
+    this(BitVector.filled(size), size)
   }
 
   def this(lb: Int, ub: Int, hole: Int) = {
@@ -58,47 +57,38 @@ final class BitVectorSet(val bv: BitVector, val size: Int) extends IntSet {
    *            index to test
    * @return true iff index is present
    */
-  def present(index: Int) = bv.get(index);
-
-  private def filter(f: Int => Boolean, nbv: BitVector): Int = {
-    var i = first
-    var s = size
-    while (i >= 0) {
-      if (!f(i)) {
-        nbv.clear(i)
-        s -= 1
-      }
-      i = next(i)
-    }
-    s
-  }
+  def present(index: Int) = bv(index);
 
   def filter(f: Int => Boolean) = {
-    val nbv = bv.clone
-    val s = filter(f, nbv)
-    if (s == size) this else IntSet.ofBV(nbv, s)
+    val newBv = bv.filter(f)
+    if (newBv eq bv) {
+      this
+    } else {
+      IntSet.ofBV(newBv, newBv.cardinality)
+    }
   }
 
   def remove(index: Int) = {
     assert(present(index));
-    val nbv = bv.clone
-    nbv.clear(index);
-    IntSet.ofBV(nbv, size - 1)
+    IntSet.ofBV(bv - index, size - 1)
   }
 
   def removeFrom(lb: Int) = {
-    val nbv = bv.clone
-    val ch = nbv.clearFrom(lb)
-
-    if (ch) { IntSet.ofBV(nbv, nbv.cardinality) }
-    else { this }
+    val newBv = bv.clearFrom(lb)
+    if (newBv eq bv) {
+      this
+    } else {
+      IntSet.ofBV(newBv, newBv.cardinality)
+    }
   }
 
   def removeTo(ub: Int) = {
-    val nbv = bv.clone
-    val ch = nbv.clearTo(ub + 1)
-    if (ch) { IntSet.ofBV(nbv, nbv.cardinality) }
-    else { this }
+    val nbv = bv.clearTo(ub)
+    if (nbv eq bv) {
+      this
+    } else {
+      IntSet.ofBV(nbv, nbv.cardinality)
+    }
   }
 
   def toString(id: Indexer) =

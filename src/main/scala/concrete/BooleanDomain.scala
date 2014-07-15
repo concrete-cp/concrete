@@ -7,7 +7,7 @@ import concrete.util.Singleton
 import concrete.util.EmptyIntSet
 
 sealed trait Status {
-  val bitVector = BitVector.newBitVector(2)
+  def bitVector: BitVector
   def array: Array[Int]
   def size: Int
   def first: Int
@@ -26,7 +26,7 @@ sealed trait Status {
 }
 
 case object UNKNOWNBoolean extends Status {
-  bitVector.fill(true)
+  val bitVector = BitVector.filled(2)
   val array = Array(0, 1)
   override val toString = "[f, t]"
   def size = 2
@@ -58,7 +58,7 @@ case object UNKNOWNBoolean extends Status {
 }
 
 case object TRUE extends Status {
-  bitVector.set(1)
+  val bitVector = BitVector.cleared(2) + 1
   val array = Array(1)
   override val toString = "[t]"
   def size = 1
@@ -78,7 +78,7 @@ case object TRUE extends Status {
 }
 
 case object FALSE extends Status {
-  bitVector.set(0)
+  val bitVector = BitVector.cleared(2) + 0
   val array = Array(0)
   override val toString = "[f]"
   def size = 1
@@ -98,6 +98,7 @@ case object FALSE extends Status {
 }
 
 case object EMPTY extends Status {
+  val bitVector = BitVector.cleared(2)
   val array = Array[Int]()
   override val toString = "[]"
   def size = 0

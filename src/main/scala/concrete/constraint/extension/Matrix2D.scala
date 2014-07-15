@@ -4,25 +4,29 @@ import concrete.util.BitVector;
 import com.typesafe.scalalogging.LazyLogging
 
 final class Matrix2D(xSize: Int, ySize: Int, initialState: Boolean) extends Matrix with LazyLogging {
-  private var xMatrix =
-    new Array[BitVector](xSize).map(_ => {
-      val bv = BitVector.newBitVector(ySize)
-      if (initialState) bv.fill(true)
-      bv
-    })
+  private var xMatrix = {
+    val bv = if (initialState) {
+      BitVector.filled(ySize)
+    } else {
+      BitVector.cleared(ySize)
+    }
+    Array.fill(xSize)(bv)
+  }
 
-  private var yMatrix =
-    new Array[BitVector](ySize).map(_ => {
-      val bv = BitVector.newBitVector(xSize)
-      if (initialState) bv.fill(true)
-      bv
-    })
+  private var yMatrix = {
+    val bv = if (initialState) {
+      BitVector.filled(xSize)
+    } else {
+      BitVector.cleared(xSize)
+    }
+    Array.fill(ySize)(bv)
+  }
 
   def size: Int = xMatrix.size * yMatrix.size
 
   private var empty = initialState
 
-  override def check(tuple: Array[Int]) = xMatrix(tuple(0)).get(tuple(1))
+  override def check(tuple: Array[Int]) = xMatrix(tuple(0))(tuple(1))
 
   override def set(tuple: Array[Int], status: Boolean) {
     if (tuple(0) < xMatrix.length && tuple(1) < yMatrix.length) {

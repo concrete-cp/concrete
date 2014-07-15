@@ -1,27 +1,33 @@
 package concrete.util;
 
-object BitVector {
+final object BitVector {
   val ADDRESS_BITS_PER_WORD = 6
   val WORD_SIZE = 1 << ADDRESS_BITS_PER_WORD
   val MASK = 0xFFFFFFFFFFFFFFFFL
 
   def intBv(lb: Int, ub: Int) = {
-    val bv = BitVector(ub + 1);
-    bv.setFrom(lb);
-    bv;
+    BitVector.cleared(ub + 1).setFrom(lb)
   }
 
   def intBvH(lb: Int, ub: Int, hole: Int) = {
-    val bv = intBv(lb, ub);
-    bv.clear(hole);
-    bv;
+    intBv(lb, ub) - hole
   }
 
-  def apply(size: Int) = {
+  def cleared(size: Int) = {
     if (size > WORD_SIZE) {
       new LargeBitVector(size);
     } else {
       new SmallBitVector(size);
+    }
+  }
+
+  def filled(size: Int) = {
+    if (size > WORD_SIZE) {
+      val words = Array.fill(size / WORD_SIZE)(MASK);
+      words(words.length - 1) >>>= -size;
+      new LargeBitVector(size, words)
+    } else {
+      new SmallBitVector(size, truncate(MASK, size))
     }
   }
 
@@ -34,6 +40,8 @@ object BitVector {
   }
 
   def word(bit: Int) = bit >> ADDRESS_BITS_PER_WORD
+
+  def truncate(word: Long, size: Int): Long = word >>> -size
 
 }
 
@@ -55,9 +63,9 @@ abstract class BitVector(val size: Int) {
 
   }
 
-  def clear(position: Int): BitVector
+  def -(position: Int): BitVector
 
-  def set(position: Int): BitVector
+  def +(position: Int): BitVector
 
   def apply(position: Int): Boolean
 
@@ -93,7 +101,7 @@ abstract class BitVector(val size: Int) {
 
   def intersects(bV: BitVector): Int;
 
-  def nbWords(): Int
+  def nbWords: Int
 
   def ^(bv: BitVector): BitVector
 
@@ -111,4 +119,5 @@ abstract class BitVector(val size: Int) {
 
   def setFirstWord(word: Long): BitVector
 
+  def filter(f: Int => Boolean): BitVector
 }
