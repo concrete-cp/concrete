@@ -16,7 +16,7 @@ object EmptyIntSet extends IntSet {
   def filter(f: Int => Boolean) = this
   def subsetOf(d: IntSet) = true
   def toString(id: Indexer) = "[]"
-  val toBitVector = BitVector.newBitVector(0)
+  val toBitVector = BitVector.cleared(0)
   def intersects(bv: BitVector) = -1
   def intersects(bv: BitVector, part: Int) = false
   def bound = throw new IllegalStateException
