@@ -6,7 +6,7 @@ import concrete.constraint.Constraint
 import concrete.Problem
 import concrete.Variable
 import cspom.Statistic
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import scala.annotation.tailrec
 
 trait SingletonConsistency extends Filter with LazyLogging {

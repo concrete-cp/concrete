@@ -13,27 +13,22 @@ final object AllDifferentGenerator extends Generator {
 
     val vars = arguments.collect { case Var(v) => v }
 
-    if (undefinedVar(vars: _*).nonEmpty) {
-      None
-    } else {
+    val constants = arguments.collect { case Const(i) => i }
 
-      val constants = arguments.collect { case Const(i) => i }
+    require(constants.distinct.size == constants.size, "All-diff with equal constants: " + constraint)
 
-      require(constants.distinct.size == constants.size, "All-diff with equal constants: " + constraint)
-
-      for (
-        constant <- constants; v <- vars
-      ) {
-        v.dom.removeVal(constant)
-      }
-
-      vars match {
-        case Seq() | Seq(_) => Some(Seq())
-        case Seq(v0, v1) => Some(Seq(new Neq(v0, v1)))
-        case v => Some(Seq(new AllDifferent2C(v: _*), new AllDifferentBC(v: _*)))
-      }
-
+    for (
+      constant <- constants; v <- vars
+    ) {
+      v.dom.removeVal(constant)
     }
+
+    vars match {
+      case Seq() | Seq(_) => Seq()
+      case Seq(v0, v1) => Seq(new Neq(v0, v1))
+      case v => Seq(new AllDifferent2C(v: _*), new AllDifferentBC(v: _*))
+    }
+
   }
 
 }

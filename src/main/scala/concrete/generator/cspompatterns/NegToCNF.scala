@@ -25,10 +25,10 @@ import cspom.variable.CSPOMExpression
 //  }
 object NegToCNF extends ConstraintCompiler {
 
-  type A = (CSPOMExpression[Boolean], CSPOMExpression[Boolean])
+  type A = (CSPOMExpression[_], CSPOMExpression[_])
 
   override def constraintMatcher = {
-    case CSPOMConstraint(res: CSPOMExpression[Boolean], 'not, Seq(arg: CSPOMExpression[Boolean]), params) =>
+    case CSPOMConstraint(res: CSPOMExpression[_], 'not, Seq(arg: CSPOMExpression[_]), params) =>
       (res, arg)
 
   }

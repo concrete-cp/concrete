@@ -20,7 +20,7 @@ package concrete.filter;
 
 import concrete.Problem
 import concrete.Variable
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import scala.annotation.tailrec
 import concrete.ParameterManager
 

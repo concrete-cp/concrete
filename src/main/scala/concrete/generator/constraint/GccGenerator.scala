@@ -11,18 +11,14 @@ final object GccGenerator extends Generator {
   override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
     val scope = constraint.arguments map cspom2concreteVar
 
-    if (scope.exists(_.dom.undefined)) {
-      None
-    } else {
-      val bounds = constraint.params.get("gcc") match {
-        case Some(p: Seq[(Int, Int, Int)]) => p.map(i => Bounds(i._1, i._2, i._3)).toArray
-        case Some(p: Array[(Int, Int, Int)]) => p.map(i => Bounds(i._1, i._2, i._3))
-        case p: Any => Generator.fail(
-          s"GCC constraints requires to be parameterized with a sequence of triples, found $p")
-      }
-
-      Some(Seq(new Gcc(scope.toArray, bounds)))
+    val bounds = constraint.params.get("gcc") match {
+      case Some(p: Seq[(Int, Int, Int)]) => p.map(i => Bounds(i._1, i._2, i._3)).toArray
+      case Some(p: Array[(Int, Int, Int)]) => p.map(i => Bounds(i._1, i._2, i._3))
+      case p: Any => Generator.fail(
+        s"GCC constraints requires to be parameterized with a sequence of triples, found $p")
     }
+
+    Seq(new Gcc(scope.toArray, bounds))
 
   }
 }

@@ -7,13 +7,14 @@ import cspom.compiler.ConstraintCompiler
 import cspom.variable.SimpleExpression
 import cspom.variable.BoolVariable
 import cspom.variable.CSPOMSeq
+import cspom.variable.CSPOMExpression
 
 object In extends ConstraintCompiler {
 
-  type A = (SimpleExpression[_], SimpleExpression[_], Seq[SimpleExpression[_]])
+  type A = (SimpleExpression[_], SimpleExpression[_], Seq[_])
 
   override def constraintMatcher = {
-    case CSPOMConstraint(r: SimpleExpression[_], 'in, Seq(v: SimpleExpression[_], CSPOMSeq(in: Seq[SimpleExpression[_]], _, _)), _) =>
+    case CSPOMConstraint(r: SimpleExpression[_], 'in, Seq(v: SimpleExpression[_], CSPOMSeq(in: Seq[_], _, _)), _) =>
       (r, v, in)
 
   }
@@ -22,7 +23,7 @@ object In extends ConstraintCompiler {
 
     val (r, v, in) = data
     val eq = in.map {
-      case i => CSPOMConstraint(new BoolVariable(), 'eq, Seq(i, v))
+      case i: CSPOMExpression[_] => CSPOMConstraint(new BoolVariable(), 'eq, Seq(i, v))
     }
 
     val disj = CSPOMConstraint(r, 'or, eq.map(_.result))

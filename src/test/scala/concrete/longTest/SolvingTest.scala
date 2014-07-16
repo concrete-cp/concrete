@@ -3,15 +3,14 @@ package concrete.longTest;
 import org.scalatest.FlatSpec
 import org.scalatest.Inspectors
 import org.scalatest.Matchers
-
-import com.typesafe.scalalogging.slf4j.LazyLogging
-
+import com.typesafe.scalalogging.LazyLogging
 import concrete.ParameterManager
 import concrete.SlowTest
 import concrete.SolverFactory
 import concrete.heuristic.revision.DomCtr
 import concrete.runner.XCSPConcrete
 import cspom.CSPOM
+import scala.collection.mutable.LinkedHashMap
 
 //import SolvingTest._
 
@@ -24,20 +23,20 @@ class SolvingTest extends FlatSpec with SolvingBehaviors {
 
 trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this: FlatSpec =>
 
-  val problemBank = Map[String, AnyVal](
+  val problemBank = LinkedHashMap[String, AnyVal](
+    "scen11-f12.xml.bz2" -> 0,
+    "scen11.xml.bz2" -> true,
+    "bqwh-15-106-0_ext.xml" -> 182,
+    "zebra.xml" -> 1,
     "crossword-m1-debug-05-01.xml" -> 48,
     "crossword-m2-debug-05-01.xml" -> 48,
     "queens-8.xml" -> 92,
     "queensAllDiff-8.xml.bz2" -> 92,
     "queens-12_ext.xml" -> 14200,
     "langford-2-4-ext.xml" -> 2,
-    "zebra.xml" -> 1,
     "flat30-1.cnf" -> true,
-    "bqwh-15-106-0_ext.xml" -> 182,
     "bqwh-18-141-47_glb.xml.bz2" -> 10,
     "frb35-17-1_ext.xml.bz2" -> 2,
-    "scen11-f12.xml.bz2" -> 0,
-    "scen11.xml.bz2" -> true,
     "series-15.xml.bz2" -> true,
     "e0ddr1-10-by-5-8.xml.bz2" -> true,
     "queens-12.xml" -> 14200,
@@ -79,7 +78,6 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
 
     val solver = new SolverFactory(parameters)(cspomProblem)
 
-    //    println(cspomProblem)
     //    println(solver.concreteProblem)
 
     val solvIt = solver.toIterable

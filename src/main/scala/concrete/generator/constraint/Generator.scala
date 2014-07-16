@@ -1,19 +1,14 @@
 package concrete.generator.constraint;
 
+import concrete.Problem
+import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.generator.FailedGenerationException
-import concrete.{ Variable, Problem, Domain, BooleanDomain }
 import cspom.CSPOMConstraint
-import cspom.variable.CSPOMVariable
-import concrete.constraint.extension.ExtensionConstraint
+import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
-import concrete.UndefinedDomain
-import concrete.IntDomain
-import cspom.variable.BoolVariable
-import scala.reflect.ClassTag
-import cspom.variable.CSPOMConstant
-import scala.collection.immutable.SortedSet
+import cspom.variable.CSPOMVariable
 
 sealed trait C2Conc
 sealed trait C21D extends C2Conc {
@@ -37,11 +32,11 @@ trait Generator {
 
   type VarMap = Map[CSPOMVariable[_], Variable]
 
-  def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Option[Seq[Constraint]] = None
+  def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] = ???
 
-  def genReversed(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Option[Seq[Constraint]] = None
+  def genReversed(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] = ???
 
-  def genFunctional(constraint: CSPOMConstraint[_], result: C2Conc)(implicit variables: VarMap): Option[Seq[Constraint]] = None
+  def genFunctional(constraint: CSPOMConstraint[_], result: C2Conc)(implicit variables: VarMap): Seq[Constraint] = ???
 
   @throws(classOf[FailedGenerationException])
   final def generate[A](constraint: CSPOMConstraint[A], variables: VarMap, problem: Problem) = {
@@ -54,15 +49,6 @@ trait Generator {
 }
 
 object Generator {
-
-  def undefinedVar(s: AnyRef*): Seq[Variable] = s.toStream collect {
-    case v: Variable => v
-    case Var(v) => v
-    //case v: Any => throw new IllegalArgumentException(s"$v is not supported")
-  } filter {
-    _.dom.undefined
-  }
-
   final def cspom2concrete[A](variable: CSPOMExpression[A])(
     implicit variables: Map[CSPOMVariable[_], Variable]): C2Conc = variable match {
     case v: CSPOMVariable[A] => Var(cspomVar2concrete(v))
@@ -99,78 +85,6 @@ object Generator {
     case a: C2Conc => fail(s"Variable expected, $a found")
   }
 
-  @throws(classOf[FailedGenerationException])
-  final def booleanDomain(variable: Variable): BooleanDomain = {
-
-    variable.dom match {
-      case d if d.undefined =>
-        val bd = new BooleanDomain()
-        variable.dom = bd
-        bd
-      case bd: BooleanDomain => bd
-      case _ => fail(s"$variable  must be boolean");
-    }
-
-  }
-
   final def fail(m: String): Nothing = throw new FailedGenerationException(m)
-
-  //  /**
-  //   * Sorts and remove duplicates from the given sequence to make eligible domain
-  //   */
-  final def makeDomain(seq: Iterator[Int]): Seq[Int] = seq.to[SortedSet].toSeq //distinct.sorted
-
-  final def domainFrom(x: Variable, y: Variable, f: (Int, Int) => Int): Seq[Int] = {
-    val f2: Seq[Int] => Int = {
-      case Seq(i, j) => f(i, j)
-    }
-    domainFromVar(Seq(x, y), f2)
-  }
-
-  final def domainFromVar(source: Seq[Variable], f: (Seq[Int] => Int)): Seq[Int] = {
-    domainFromSeq(source.map(_.dom.values.toSeq), f)
-  }
-
-  final def domainFrom1D(source: Seq[C21D], f: (Seq[Int] => Int)): Seq[Int] = {
-    domainFromSeq(source.map(_.values), f)
-  }
-
-  final def domainFromSeq(source: Seq[Seq[Int]], f: (Seq[Int] => Int)): Seq[Int] = {
-    makeDomain(cartesian(source).map(f))
-  }
-
-  final def domainFromFlatVar(source: Seq[Variable], f: (Seq[Int] => Iterable[Int])): Seq[Int] = {
-    domainFromFlatSeq(source.map(_.dom.values.toSeq), f)
-  }
-
-  final def domainFromFlat1D(source: Seq[C21D], f: (Seq[Int] => Iterable[Int])): Seq[Int] = {
-    domainFromFlatSeq(source.map(_.values), f)
-  }
-
-  final def domainFromFlatSeq(source: Seq[Seq[Int]], f: (Seq[Int] => Iterable[Int])): Seq[Int] = {
-    makeDomain(cartesian(source).flatMap(f))
-  }
-
-  final def cartesian[A](l: Seq[Seq[A]]): Iterator[Seq[A]] =
-    if (l.isEmpty) {
-      Iterator(Seq())
-    } else {
-      l.head.iterator.flatMap(i => cartesian(l.tail).map(i +: _))
-    }
-
-  final def restrictDomain(v: Variable, values: Iterator[Int]): Unit = v.dom match {
-    case UndefinedDomain => v.dom = IntDomain(makeDomain(values): _*)
-    case d: Domain => d.filterValues(values.toSet)
-  }
-
-  final def restrictDomain(v: Variable, d: Domain): Unit = d match {
-    case b: BooleanDomain =>
-      if (v.dom.undefined) {
-        v.dom = new BooleanDomain()
-      }
-      v.dom.filterValues(b.values.toSet)
-    case d: IntDomain => restrictDomain(v, d.values)
-    case _ => throw new UnsupportedOperationException
-  }
 
 }

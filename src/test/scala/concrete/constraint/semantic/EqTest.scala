@@ -11,7 +11,7 @@ final class EqTest {
   def test() {
     val v0 = new Variable("v0", IntDomain(1, 2, 3))
     val v1 = new Variable("v1", IntDomain(3, 4, 5))
-    val c = new Eq(v0, v1)
+    val c = new EqAC(v0, v1)
     c.adviseAll()
     c.revise()
     assertEquals(Seq(3), v0.dom.values.toSeq)

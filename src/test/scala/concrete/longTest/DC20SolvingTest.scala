@@ -9,7 +9,7 @@ import concrete.generator.ProblemGenerator
 import concrete.LearnMethod
 import cspom.compiler.ProblemCompiler
 import cspom.CSPOM
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import concrete.ParameterManager
 import concrete.Solver
 import concrete.filter.DC20

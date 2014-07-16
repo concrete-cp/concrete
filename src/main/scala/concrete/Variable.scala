@@ -28,8 +28,8 @@ import concrete.priorityqueues.DLNode
 
 final class Variable(
   val name: String,
-  private var _domain: Domain) extends Identified with PTag with DLNode[Variable] {
-  require(_domain ne null)
+  val dom: Domain) extends Identified with PTag with DLNode[Variable] {
+  require(dom ne null)
 
   var getId = -1
 
@@ -39,7 +39,7 @@ final class Variable(
 
   private var _positionInConstraint: Array[Int] = Array.empty
 
-  override def toString = s"$name ${_domain}"
+  override def toString = s"$name $dom"
 
   def constraints = _constraints
 
@@ -52,20 +52,13 @@ final class Variable(
     wDeg += newConstraint.weight
   }
 
-  def dom = _domain
-
-  def dom_=(d: Domain) {
-    require(d ne null)
-    require(_domain eq UndefinedDomain, "Reassignment of domain")
-    _domain = d
-  }
 
   def dynamicConstraints = _extensionConstraints
   def positionInConstraint = _positionInConstraint
 
-  def indices = _domain.indices
+  def indices = dom.indices
 
-  def values = _domain.values
+  def values = dom.values
 
   var wDeg = 0
 

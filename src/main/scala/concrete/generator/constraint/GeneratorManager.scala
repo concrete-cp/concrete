@@ -18,7 +18,6 @@ class GeneratorManager(pm: ParameterManager) {
     'or -> DisjGenerator,
     'not -> DisjGenerator,
     'eq -> EqGenerator,
-    'neg -> EqGenerator,
     'bool2int -> EqGenerator,
     'gt -> GtGenerator,
     'ge -> GtGenerator,
@@ -40,7 +39,7 @@ class GeneratorManager(pm: ParameterManager) {
   }
 
   @throws(classOf[FailedGenerationException])
-  def generate[A](constraint: CSPOMConstraint[A], variables: Map[CSPOMVariable[_], Variable], problem: Problem): Option[Seq[Constraint]] = {
+  def generate[A](constraint: CSPOMConstraint[A], variables: Map[CSPOMVariable[_], Variable], problem: Problem): Seq[Constraint] = {
     val candidate = known.getOrElse(constraint.function,
       throw new FailedGenerationException(s"No candidate constraint for $constraint"))
 

@@ -6,11 +6,12 @@ import org.junit.Test
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
 import org.scalatest.Assertions
+import scala.collection.SortedSet
 
 class IndexerTest extends FlatSpec with Assertions {
 
   "Indexer.factory" should "use DirectIndices class" in {
-    val i = Indexer.factory(0 to 10 toArray)
+    val i = Indexer.factory(SortedSet[Int]() ++ (0 to 10))
 
     assert(i.isInstanceOf[DirectIndices])
     assertResult(3)(i.index(3))
@@ -20,7 +21,7 @@ class IndexerTest extends FlatSpec with Assertions {
   }
 
   "Indexer.factory" should "generate OffsetIndices class" in {
-    val i = Indexer.factory(1 to 10 toArray)
+    val i = Indexer.factory(SortedSet[Int]() ++ (1 to 10))
     assert(i.isInstanceOf[OffsetIndices])
     assertResult(3)(i.index(4))
     assertResult(4)(i.value(3))

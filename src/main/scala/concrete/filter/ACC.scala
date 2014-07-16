@@ -2,7 +2,7 @@ package concrete.filter;
 
 import scala.annotation.tailrec
 import scala.reflect.runtime.universe
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import concrete.constraint.AdviseCount
 import concrete.ParameterManager
 import concrete.Problem

@@ -14,12 +14,12 @@ import cspom.variable.CSPOMExpression
  * Transforms x = !a, x \/ c \/ ... into !a \/ b \/ c \/ ...
  */
 object MergeNotDisj extends ConstraintCompiler {
-  type A = CSPOMConstraint[Boolean]
+  type A = CSPOMConstraint[_]
 
   override def mtch(fc: CSPOMConstraint[_], problem: CSPOM) = fc match {
-    case CSPOMConstraint(v: CSPOMExpression[Boolean], 'not, Seq(a: CSPOMExpression[Boolean]), _) =>
+    case CSPOMConstraint(v: CSPOMExpression[_], 'not, Seq(a: CSPOMExpression[_]), _) =>
       val ors = problem.constraints(v).toSeq.collect {
-        case c: CSPOMConstraint[Boolean] if c.function == 'or => c
+        case c: CSPOMConstraint[_] if c.function == 'or => c
       }
 
       ors match {
@@ -31,10 +31,10 @@ object MergeNotDisj extends ConstraintCompiler {
   }
 
   def compile(fc: CSPOMConstraint[_], problem: CSPOM, orConstraint: A) = {
-    val Seq(a: CSPOMExpression[Boolean]) = fc.arguments
+    val Seq(a: CSPOMExpression[_]) = fc.arguments
 
     val oldOrParams = orConstraint.params.get("revsign").collect {
-      case p: Seq[Boolean] => p
+      case p: Seq[_] => p
     } getOrElse (Seq.fill(orConstraint.arguments.size)(false))
 
     val (orArgs, orParams) = (orConstraint.arguments zip oldOrParams).filter(_._1 ne fc.result).unzip

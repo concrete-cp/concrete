@@ -4,13 +4,15 @@ import concrete.util.Backtrackable
 import concrete.util.BitVector
 import concrete.util.Indexer
 import concrete.util.IntSet
-import concrete.util.Interval
-import concrete.util.IntervalSet
 import concrete.util.Singleton
+import scala.collection.SortedSet
+import concrete.util.IntervalSet
+import concrete.util.Interval
+
 
 object IntDomain {
-  @annotation.varargs
-  def apply(d: Int*): IntDomain = new IntDomain(IntSet(d.size), Indexer.factory(d))
+
+  def apply(d: SortedSet[Int]): IntDomain = new IntDomain(IntSet(d.size), Indexer.factory(d))
 
   def apply(r: Range): IntDomain =
     if (r.step == 1 && r.size > 1) {
@@ -24,6 +26,9 @@ object IntDomain {
       new IntervalSet(0, i.ub - i.lb),
       Indexer.ofInterval(i.lb, i.ub))
   }
+
+  @annotation.varargs
+  def apply(d: Int*): IntDomain = apply(SortedSet[Int]() ++ d)
 
 }
 
@@ -118,6 +123,7 @@ final class IntDomain(
     }
   }
 
+  @annotation.tailrec
   private def closestLt(v: Int, lb: Int, ub: Int): Int = {
     if (value(ub) < v) { ub }
     else {
@@ -264,5 +270,4 @@ final class IntDomain(
   //def allValues = domain
 
   override def toString = intSet.toString(indexer)
-  def undefined = false
 }

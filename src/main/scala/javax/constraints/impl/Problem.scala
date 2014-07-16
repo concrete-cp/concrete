@@ -5,7 +5,7 @@ import cspom.CSPOMConstraint
 import cspom.variable.CSPOMVariable
 import java.io.BufferedWriter
 import java.io.OutputStreamWriter
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import concrete.generator.ProblemGenerator
 import javax.constraints.impl.search.Solver
 import javax.constraints.Oper
@@ -106,7 +106,7 @@ class Problem(name: String, params: ParameterManager) extends AbstractProblem(na
     post(countVar, op, cardCount)
   }
   def postCardinality(vars: Array[javax.constraints.Var], cardValue: Int, op: String, cardCount: Int): javax.constraints.Constraint = {
-    val constant = IntVariable(Seq(cardCount))
+    val constant = IntVariable.ofSeq(cardCount)
 
     postCardinality(vars, cardValue, op, new Var(this, Var.generate(), constant))
   }

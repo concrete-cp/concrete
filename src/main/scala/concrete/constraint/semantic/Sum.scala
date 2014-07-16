@@ -1,38 +1,35 @@
-package concrete.constraint.semantic;
+package concrete.constraint.semantic
 
 import scala.annotation.tailrec
 import concrete.constraint.Constraint
 import concrete.Domain
 import concrete.util.Interval
 import concrete.Variable
-import com.typesafe.scalalogging.slf4j.LazyLogging
-import concrete.constraint.Shaver
+import com.typesafe.scalalogging.LazyLogging
 import scala.collection.mutable.HashSet
+import concrete.constraint.BC
 
-object FilterSum extends Enumeration {
-  type FilterSum = Value
-  val SumLE = Value("le")
-  val SumLT = Value("lt")
-  val SumEQ = Value("eq")
-  val SumNE = Value("ne")
-}
-
-import FilterSum._
+import SumMode._
 
 final class Sum(
   val constant: Int,
   val factors: Array[Int],
   scope: Array[Variable],
-  mode: FilterSum) extends Constraint(scope)
+  mode: SumMode) extends Constraint(scope) with BC
   with LazyLogging {
 
-  def this(constant: Int, scope: Array[Variable], mode: FilterSum) =
+  def this(constant: Int, scope: Array[Variable], mode: SumMode) =
     this(constant, Array.fill(scope.length)(1), scope, mode)
 
-  //val domFact = scope map (_.dom) zip factors toList
-
-  def checkValues(t: Array[Int]): Boolean =
-    (0 until arity).map(i => t(i) * factors(i)).sum == constant
+  def checkValues(t: Array[Int]): Boolean = {
+    val sum = (0 until arity).map(i => t(i) * factors(i)).sum
+    mode match {
+      case SumLE => sum <= constant
+      case SumLT => sum < constant
+      case SumEQ => sum == constant
+      // case SumNE => sum != constant
+    }
+  }
 
   def advise(p: Int) = arity
 
@@ -42,8 +39,7 @@ final class Sum(
     case SumLE if neg => dom.removeToVal(itv.lb - 1)
     case SumLE => dom.removeFromVal(itv.ub + 1)
     case SumEQ => dom.intersectVal(itv)
-    case SumNE => dom.removeValInterval(itv.lb, itv.ub)
-    case _ => ???
+    //case SumNE => dom.removeValInterval(itv.lb, itv.ub)
   }
 
   def shave(): List[Int] = {
@@ -79,22 +75,7 @@ final class Sum(
     ch
   }
 
-  def revise() = {
-    var mod = new HashSet[Int]()
-    var ch = true
-    while (ch) {
-      ch = false
-      val m = shave()
-      if (m.nonEmpty) {
-        ch = true
-        mod ++= m
-      }
-    }
-    mod
-  }
-
-  def reviseVariable(p: Int, mod: Seq[Int]) = false
-
   override def toString = (scope, factors).zipped.map((v, f) => f + "." + v).mkString(" + ") + s" $mode $constant"
+
   val simpleEvaluation = 3
 }

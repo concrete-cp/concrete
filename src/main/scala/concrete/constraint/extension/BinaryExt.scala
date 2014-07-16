@@ -19,12 +19,10 @@
 
 package concrete.constraint.extension;
 
-import concrete.constraint.VariablePerVariable
 import concrete.Variable
-import concrete.constraint.TupleEnumerator
-import scala.annotation.tailrec
+import concrete.constraint.VariablePerVariable
+import concrete.util.BitVector
 import cspom.Statistic
-import cspom.StatisticsManager
 
 object BinaryExt {
   @Statistic
@@ -87,7 +85,7 @@ final class BinaryExtR(scope: Array[Variable], matrix2d: Matrix2D, shared: Boole
 
   def hasSupport(variablePosition: Int, index: Int) = {
     controlResidue(variablePosition, index) || {
-      val matrixBV = matrix2d.getBitVector(variablePosition, index);
+      val matrixBV: BitVector = matrix2d.getBitVector(variablePosition, index);
       val intersection = scope(1 - variablePosition).dom.intersects(matrixBV)
 
       if (intersection >= 0) {
@@ -95,7 +93,7 @@ final class BinaryExtR(scope: Array[Variable], matrix2d: Matrix2D, shared: Boole
         residues(variablePosition)(index) = intersection;
         true;
       } else {
-        BinaryExt.checks += matrixBV.realSize;
+        BinaryExt.checks += matrixBV.nbWords;
         false;
       }
     }
@@ -111,14 +109,14 @@ final class BinaryExtR(scope: Array[Variable], matrix2d: Matrix2D, shared: Boole
 
 final class BinaryExtNR(scope: Array[Variable], matrix2d: Matrix2D, shared: Boolean) extends BinaryExt(scope, matrix2d, shared) {
   def hasSupport(variablePosition: Int, index: Int) = {
-    val matrixBV = matrix2d.getBitVector(variablePosition, index);
+    val matrixBV: BitVector = matrix2d.getBitVector(variablePosition, index);
     val intersection = scope(1 - variablePosition).dom.intersects(matrixBV)
 
     if (intersection >= 0) {
       BinaryExt.checks += 1 + intersection;
       true;
     } else {
-      BinaryExt.checks += matrixBV.realSize;
+      BinaryExt.checks += matrixBV.nbWords;
       false;
     }
   }

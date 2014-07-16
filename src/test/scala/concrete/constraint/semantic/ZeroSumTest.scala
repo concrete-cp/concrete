@@ -9,7 +9,7 @@ import concrete.IntDomain
 import concrete.Variable
 import concrete.constraint.AdviseCount
 
-import concrete.constraint.semantic.FilterSum._
+import concrete.constraint.semantic.SumMode._
 
 final class ZeroSumTest {
   val v0 = new Variable("v0", IntDomain(1 to 4))

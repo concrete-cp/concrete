@@ -19,8 +19,8 @@ final class ExtensionConstraintTrieTest {
     ta.set(Array(2, 2), true);
 
     val scope = Array(
-      new Variable("V0", IntDomain(0, 1)),
-      new Variable("V1", IntDomain(0, 1, 2)))
+      new Variable("V0", IntDomain(0 to 1)),
+      new Variable("V1", IntDomain(0 to 2)))
 
     val mmd = new ReduceableExt(scope, ta.reduceable);
     val content = mmd.trie

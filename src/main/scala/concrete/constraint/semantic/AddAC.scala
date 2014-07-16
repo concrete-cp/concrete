@@ -5,8 +5,7 @@ import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.Residues
 import concrete.util.Interval
-import com.typesafe.scalalogging.slf4j.LazyLogging
-import concrete.constraint.Shaver
+import com.typesafe.scalalogging.LazyLogging
 import concrete.constraint.BCCompanion
 
 final class AddAC(val result: Variable, val v0: Variable, val v1: Variable, val skipIntervals: Boolean = false)

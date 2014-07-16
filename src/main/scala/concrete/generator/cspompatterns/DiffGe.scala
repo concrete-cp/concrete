@@ -12,14 +12,15 @@ import cspom.variable.CSPOMExpression
  * Transforms x = sub(y, z), [t =] ge(x, k) into [t =] diffGe(y, z, k)
  */
 object DiffGe extends ConstraintCompiler {
-  type A = CSPOMConstraint[Boolean]
+  type A = CSPOMConstraint[_]
 
   override def mtch(constraint: CSPOMConstraint[_], problem: CSPOM) = constraint match {
     case CSPOMConstraint(result: IntVariable, 'sub, args, _) if (result.hasParam("var_is_introduced")) =>
       val constraints = problem.constraints(result)
       if (constraints.size == 2) {
         constraints.collectFirst {
-          case c @ CSPOMConstraint(_: CSPOMExpression[Boolean], 'ge, Seq(`result`, _), _) => c.asInstanceOf[CSPOMConstraint[Boolean]]
+          case c @ CSPOMConstraint(_: CSPOMExpression[_], 'ge, Seq(`result`, _), _) =>
+            c //.asInstanceOf[CSPOMConstraint[Boolean]]
         }
       } else {
         None
@@ -29,9 +30,10 @@ object DiffGe extends ConstraintCompiler {
 
   }
 
-  def compile(subConstraint: CSPOMConstraint[_], problem: CSPOM, geConstraint: CSPOMConstraint[Boolean]) = {
+  def compile(subConstraint: CSPOMConstraint[_], problem: CSPOM, geConstraint: A) = {
 
-    val newC = CSPOMConstraint(geConstraint.result, 'diffGe, subConstraint.arguments :+ geConstraint.arguments(1))
+    val newC = CSPOMConstraint(geConstraint.result, 'diffGe,
+      subConstraint.arguments :+ geConstraint.arguments(1))
 
     replaceCtr(Seq(subConstraint, geConstraint), newC, problem)
 

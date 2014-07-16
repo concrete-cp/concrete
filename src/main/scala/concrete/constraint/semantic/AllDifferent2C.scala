@@ -34,13 +34,11 @@ trait AllDiffChecker extends Constraint {
   val max = scope map { _.dom.lastValue } max
 
   def checkValues(t: Array[Int]): Boolean = {
-    val union = BitVector.newBitVector(max - offset + 1)
+    var union = BitVector.cleared(max - offset + 1)
 
     t.exists { v =>
-      if (union.get(v - offset)) {
-        true
-      } else {
-        union.set(v - offset)
+      union(v - offset) || {
+        union += (v - offset)
         false
       }
     }

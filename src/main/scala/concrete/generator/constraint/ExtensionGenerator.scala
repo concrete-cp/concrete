@@ -1,6 +1,6 @@
 package concrete.generator.constraint;
 
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import Generator.cspom2concreteVar
 import concrete.Domain
 import concrete.ParameterManager
@@ -64,13 +64,12 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
             var j = 0
             for ((v, t) <- trieSeq) {
               val i = domain.index(v)
-              if (i < 0) {
-                logger.warn(s"Could not find $v in $domain")
-              } else {
-                concreteTrie(i) = cspomMDDtoCspfjMDD(tail, t, map)
-                indices(j) = i
-                j += 1
-              }
+              require(i >= 0, s"Could not find $v in $domain")
+
+              concreteTrie(i) = cspomMDDtoCspfjMDD(tail, t, map)
+              indices(j) = i
+              j += 1
+
             }
 
             new MDDn(concreteTrie, indices, j)
@@ -94,7 +93,7 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
     val signature = Signature(domains map (_.values.toList), init)
 
     map.getOrElseUpdate(signature, {
-      logger.debug(s"Generating $relation for $signature not found in $map")
+      logger.debug(s"Generating $relation for $signature ($variables) not found in $map")
       gen(relation, init, domains)
     })
 
@@ -130,16 +129,15 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
     relation.toSeq.map { t =>
       (t, domains).zipped.map { (v, d) =>
         val i = d.index(v.asInstanceOf[Int])
-        if (i < 0) {
-          logger.warn(s"Could not find $v in $d")
-        }
+        require(i >= 0, s"Could not find $v in $d")
         i
       }
-    } filterNot {
-      _.contains(-1)
-    }
+    } 
+//  filterNot {
+//      _.contains(-1)
+//    }
 
-  override def gen(extensionConstraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Option[Seq[Constraint]] = {
+  override def gen(extensionConstraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] = {
 
     val solverVariables = extensionConstraint.arguments map cspom2concreteVar toList
 
@@ -147,9 +145,7 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
     val Some(init: Boolean) = extensionConstraint.params.get("init")
 
     if (relation.isEmpty) {
-      if (init == true) { Some(Seq()) } else { throw UNSATObject }
-    } else if (solverVariables.exists(_.dom.undefined)) {
-      None
+      if (init == true) { Seq() } else { throw UNSATObject }
     } else {
       val scope = solverVariables.toArray
 
@@ -186,7 +182,7 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
       //        extensionConstraint.closeRelation()
       //      }
       //println(extensionConstraint + " -> " + constraint);
-      Some(Seq(constraint))
+      Seq(constraint)
 
     }
   }

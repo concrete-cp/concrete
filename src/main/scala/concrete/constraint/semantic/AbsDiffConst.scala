@@ -6,11 +6,42 @@ import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.UNSATException
 import concrete.util.Interval
-import concrete.constraint.Shaver
+import concrete.constraint.BC
 import concrete.UNSATObject
+import concrete.constraint.BCCompanion
 
-final class AbsDiffConst(val result: Int, val v0: Variable, val v1: Variable)
-  extends Constraint(Array(v0, v1)) with Shaver with Residues {
+final class AbsDiffConstAC(val result: Int, val v0: Variable, val v1: Variable)
+  extends Constraint(Array(v0, v1)) with BCCompanion with Residues {
+
+  def skipIntervals = true
+  
+  def checkValues(t: Array[Int]) = result == math.abs(t(0) - t(1))
+
+  override def findSupport(position: Int, index: Int) = {
+    val other = scope(1 - position).dom
+
+    val value = scope(position).dom.value(index);
+
+    Seq(value + result, value - result).iterator.map(other.index).find(
+      i => i >= 0 && other.present(i)).map { i =>
+
+        val tuple = new Array[Int](2)
+        tuple(position) = index
+        tuple(1 - position) = i
+        tuple
+      }
+
+  }
+
+  override def toString = result + " = |" + v0 + " - " + v1 + "|";
+
+  def getEvaluation = v0.dom.size + v1.dom.size
+
+  def simpleEvaluation = 2
+}
+
+final class AbsDiffConstBC(val result: Int, val v0: Variable, val v1: Variable)
+  extends Constraint(Array(v0, v1)) with BC {
 
   def checkValues(t: Array[Int]) = result == math.abs(t(0) - t(1))
 
@@ -50,24 +81,9 @@ final class AbsDiffConst(val result: Int, val v0: Variable, val v1: Variable)
     mod
   }
 
-  override def findSupport(position: Int, index: Int) = {
-    val other = scope(1 - position).dom
-
-    val value = scope(position).dom.value(index);
-
-    Seq(value + result, value - result).iterator.map(other.index).find(
-      i => i >= 0 && other.present(i)).map { i =>
-
-        val tuple = new Array[Int](2)
-        tuple(position) = index
-        tuple(1 - position) = i
-        tuple
-      }
-
-  }
-
   override def toString = result + " = |" + v0 + " - " + v1 + "|";
 
+  def advise(p: Int) = 5
   def getEvaluation = if (intervalsOnly) 5 else {
 
     val d1 = v0.dom.size
@@ -75,5 +91,5 @@ final class AbsDiffConst(val result: Int, val v0: Variable, val v1: Variable)
     d1 + d2;
   }
 
-  def simpleEvaluation = 2
+  def simpleEvaluation = 1
 }
