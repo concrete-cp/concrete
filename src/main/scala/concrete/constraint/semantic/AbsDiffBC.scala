@@ -6,7 +6,6 @@ import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.UNSATException
 import concrete.util.Interval
-import concrete.constraint.Shaver
 import concrete.UNSATObject
 import concrete.constraint.BC
 
@@ -15,16 +14,11 @@ object AbsDiffBC {
     val k0 = i0 intersect j0
     val k1 = i1 intersect j1
 
-    if (k0.isEmpty) {
-      if (k1.isEmpty) {
-        throw UNSATObject
-      } else {
-        dom.intersectVal(k1)
-      }
-    } else if (k1.isEmpty) {
-      dom.intersectVal(k0)
-    } else {
-      dom.intersectVal(k0 union k1) | (
+    (k0, k1) match {
+      case (None, None) => throw UNSATObject
+      case (None, Some(k)) => dom.intersectVal(k)
+      case (Some(k), None) => dom.intersectVal(k)
+      case (Some(k0), Some(k1)) => dom.intersectVal(k0 union k1) | (
         if (k0.ub < k1.lb) dom.filter(i => k0.ub >= dom.value(i) || dom.value(i) >= k1.lb)
         else if (k1.ub < k0.lb) dom.filter(i => k1.ub >= dom.value(i) || dom.value(i) >= k0.lb)
         else false)

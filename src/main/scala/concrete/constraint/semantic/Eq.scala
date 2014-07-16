@@ -5,7 +5,10 @@ import concrete.Domain
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.util.Interval
-import concrete.constraint.Shaver
+import concrete.constraint.BC
+import concrete.constraint.BCCompanion
+import concrete.constraint.Removals
+
 
 /**
  * Constraint (-)x + b = y.
@@ -15,8 +18,45 @@ import concrete.constraint.Shaver
  * @param b
  * @param y
  */
-final class Eq(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
-  extends Constraint(Array(x, y)) with Shaver {
+final class EqAC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
+  extends Constraint(Array(x, y)) with VariablePerVariable with BCCompanion {
+  def this(x: Variable, y: Variable) = this(false, x, 0, y);
+
+  private def yValue(x: Int) =
+    if (neg) -x + b else x + b
+
+  private def xValue(y: Int) =
+    if (neg) b - y else y - b
+
+  def checkValues(t: Array[Int]) = (if (neg) -t(0) else t(0)) + b == t(1);
+
+  def skipIntervals: Boolean = true
+
+  def simpleEvaluation: Int = ???
+
+  def getEvaluation: Int = ???
+
+  override def isConsistent() = {
+    x.dom.values.exists { xv =>
+      y.dom.presentVal(yValue(xv))
+    }
+  }
+
+  def reviseVariable(position: Int, mod: List[Int]) = position match {
+    case 0 => x.dom.filterValues { xv =>
+      y.dom.presentVal(yValue(xv))
+    }
+
+    case 1 => y.dom.filterValues { yv =>
+      x.dom.presentVal(xValue(yv))
+    }
+
+    case _ => throw new IllegalArgumentException
+  }
+}
+
+final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
+  extends Constraint(Array(x, y)) with BC {
 
   //  val corresponding = Array(
   //    x.dom.allValues map { v => y.dom.index(a * v + b) },
@@ -35,21 +75,6 @@ final class Eq(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
   def this(x: Variable, y: Variable) = this(false, x, 0, y);
 
   def checkValues(t: Array[Int]) = (if (neg) -t(0) else t(0)) + b == t(1);
-
-  private def yValue(x: Int) =
-    if (neg) -x + b else x + b
-
-  private def xValue(y: Int) =
-    if (neg) b - y else y - b
-  //
-  //  def yIndex(xIndex: Int) =
-  //    if (neg) y.dom.index(-x.dom.value(xIndex) + b)
-  //    else y.dom.index(x.dom.value(xIndex) + b)
-  //
-  //  def xIndex(yIndex: Int) = {
-  //    val yv = y.dom.value(yIndex)
-  //    if (neg) x.dom.index(b - yv) else x.dom.index(yv - b)
-  //  }
 
   def shave(): List[Int] = {
     var mod: List[Int] = Nil
@@ -73,28 +98,10 @@ final class Eq(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
     mod
   }
 
-  def reviseVariable(position: Int, mod: List[Int]) = position match {
-    case 0 => x.dom.filterValues { xv =>
-      y.dom.presentVal(yValue(xv))
-    }
-
-    case 1 => y.dom.filterValues { yv =>
-      x.dom.presentVal(xValue(yv))
-    }
-
-    case _ => throw new IllegalArgumentException
-  }
-
-  override def isConsistent() = {
-    x.dom.values.exists { xv =>
-      y.dom.presentVal(yValue(xv))
-    }
-  }
-
   override def toString = (if (neg) "-" else "") + x +
     (if (b > 0) " + " + b else if (b < 0) " - " + (-b) else "") +
     " == " + y
 
-  def getEvaluation = if (x.dom.bound && y.dom.bound) 3 else (x.dom.size + y.dom.size)
+  def advise(p: Int) = 3
   val simpleEvaluation = 2
 }

@@ -19,49 +19,46 @@ final object DiffGeGenerator extends Generator {
 
     val Seq(x: C21D, y: C21D, Const(k)) = constraint.arguments map cspom2concrete
 
-    if (undefinedVar(x, y).nonEmpty) {
-      None
-    } else {
+    (x, y) match {
+      case (Const(x), Const(y)) => if ((x - y) >= k) {
+        Nil
+      } else { throw UNSATObject }
 
-      (x, y) match {
-        case (Const(x), Const(y)) => if ((x - y) >= k) {
-          Some(Nil)
-        } else { throw UNSATObject }
+      case (Var(x), Const(y)) =>
 
-        case (Var(x), Const(y)) =>
+        x.dom.filterValues(_ - y >= k)
+        Nil
+      case (Const(x), Var(y)) =>
 
-          x.dom.filterValues(_ - y >= k)
-          Some(Nil)
-        case (Const(x), Var(y)) =>
+        y.dom.filterValues(x - _ >= k)
+        Nil
+      case (Var(x), Var(y)) =>
 
-          y.dom.filterValues(x - _ >= k)
-          Some(Nil)
-        case (Var(x), Var(y)) =>
+        Seq(new Gt(x, -k, y, false))
 
-          Some(Seq(new Gt(x, -k, y, false)))
-
-      }
     }
 
   }
 
   override def genFunctional(constraint: CSPOMConstraint[_], r: C2Conc)(
-      implicit variables: VarMap) = {
+    implicit variables: VarMap) = {
     val Var(result) = r
-    val rd = Generator.booleanDomain(result)
+
+    val rd = result.dom.asInstanceOf[BooleanDomain] //Generator.booleanDomain(result)
+
     val Seq(x: C21D, y: C21D, Const(k)) = constraint.arguments map cspom2concrete
 
     (x, y) match {
       case (Const(x), Const(y)) =>
         if (x - y >= k) { rd.setTrue() } else { rd.setFalse() }
-        Some(Nil)
+        Nil
       case (Var(x), Const(y)) => ???
       case (Const(x), Var(y)) => ???
       case (Var(x), Var(y)) =>
-        Some(Seq(new ReifiedConstraint(
+        Seq(new ReifiedConstraint(
           result,
           new Gt(x, -k, y, false),
-          new Gt(y, k, x, true))))
+          new Gt(y, k, x, true)))
     }
 
   }

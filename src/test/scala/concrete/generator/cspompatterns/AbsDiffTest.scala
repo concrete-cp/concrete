@@ -9,15 +9,17 @@ import concrete.generator.cspompatterns.AbsDiff
 import cspom.variable.BoolVariable
 import cspom.variable.IntVariable
 import cspom.compiler.ProblemCompiler
+import org.scalatest.Matchers
+import org.scalatest.FlatSpec
 
+class AbsDiffTest extends FlatSpec with Matchers {
 
-class AbsDiffTest {
-  @Test
-  def testExt() {
+  "AbsDiff compiler" should "compile" in {
+
     val cspom = CSPOM { implicit problem =>
 
-      val v0 = IntVariable(Seq(1, 2, 3))
-      val v1 = IntVariable(Seq(2, 3, 4))
+      val v0 = IntVariable(1 to 3)
+      val v1 = IntVariable(2 to 4)
 
       val r = v0 - v1
 
@@ -29,12 +31,11 @@ class AbsDiffTest {
 
     ProblemCompiler.compile(cspom, Seq(AbsDiff))
 
-    assertEquals(3, cspom.referencedExpressions.size)
-    assertEquals(1, cspom.constraints.size)
+    cspom.referencedExpressions should have size 3
+    cspom.constraints should have size 1
 
     val c = cspom.constraints.next
-    assertEquals('absdiff, c.function)
-    assertFalse(c.result.isInstanceOf[BoolVariable])
+    c.function shouldBe 'absdiff
+    c.result shouldBe an[IntVariable]
   }
-
 }

@@ -19,11 +19,11 @@ class Var(problem: Problem, name: String, val variable: IntVariable) extends Abs
     new Var(problem, Var.generate(), cspomVar)
   }
 
-  def contains(x: Int): Boolean = variable.domain.contains(x)
+  def contains(x: Int): Boolean = variable.contains(x)
 
-  def getMax(): Int = concreteVar.map(_.dom.lastValue).getOrElse(variable.domain.last.asInstanceOf[Int])
+  def getMax(): Int = concreteVar.map(_.dom.lastValue).getOrElse(variable.asSortedSet.last)
 
-  def getMin(): Int = concreteVar.map(_.dom.firstValue).getOrElse(variable.domain.head.asInstanceOf[Int])
+  def getMin(): Int = concreteVar.map(_.dom.firstValue).getOrElse(variable.asSortedSet.head)
 
   def isBound(): Boolean = concreteVar.map(_.dom.size == 1).getOrElse {
     throw new IllegalStateException("Solver was not created or variable is unavailable")

@@ -2,13 +2,15 @@ package concrete.util
 
 final class SetWithMax(length: Int) extends collection.mutable.Set[Int] {
   var max = length - 1
-  var candidates = BitVector.newBitVector(length)
-  candidates.fill(true)
+  var candidates = BitVector.filled(length)
 
   def +=(i: Int) = ???
 
   def -=(i: Int) = {
-    if (candidates.clear(i) && i == max) {
+    val oldC = candidates
+    candidates -= i
+
+    if ((candidates ne oldC) && i == max) {
       max = candidates.prevSetBit(i)
     }
     this
@@ -43,6 +45,6 @@ final class SetWithMax(length: Int) extends collection.mutable.Set[Int] {
     }
   }
 
-  def contains(elem: Int): Boolean = candidates.get(elem)
+  def contains(elem: Int): Boolean = candidates(elem)
 
 }

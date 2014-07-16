@@ -3,7 +3,7 @@ package concrete.constraint;
 import scala.annotation.tailrec
 
 import concrete.Variable
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 
 /**
  * A constraint that can be revised one variable at a time

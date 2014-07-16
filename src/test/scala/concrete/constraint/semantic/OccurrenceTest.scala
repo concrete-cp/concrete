@@ -54,9 +54,9 @@ class OccurrenceTest {
       val v1 = 7
       val v2 = 6
 
-      val v3 = IntVariable(Seq(7, 9))
+      val v3 = IntVariable.ofSeq(7, 9)
       val v4 = 4
-      val v5 = IntVariable(Seq(8, 9))
+      val v5 = IntVariable.ofSeq(8, 9)
 
       val occ = IntVariable(1 to 3) as "occ"
 

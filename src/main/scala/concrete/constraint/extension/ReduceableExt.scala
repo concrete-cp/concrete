@@ -23,7 +23,7 @@ import scala.annotation.tailrec
 import concrete.constraint.Constraint
 import concrete.util.Backtrackable
 import concrete.util.BitVector
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import concrete.Variable
 import concrete.UNSATException
 import concrete.constraint.Removals

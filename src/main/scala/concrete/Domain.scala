@@ -189,37 +189,32 @@ abstract class Domain {
   def intersect(a: Int, b: Int): Boolean = removeTo(a - 1) | removeFrom(b + 1)
 
   def intersectVal(a: Int, b: Int): Boolean = {
-    var ch = false
-    if (a > firstValue) {
-      val lb = closestLt(a)
-      ch |= lb >= 0 && removeTo(lb)
-    }
-    if (b < lastValue) {
-      val ub = closestGt(b)
-      ch |= ub >= 0 && removeFrom(ub)
-    }
-    ch
+    val lb = closestLt(a)
+    val ub = closestGt(b)
+
+    (lb >= 0 && removeTo(lb)) | (ub >= 0 && removeFrom(ub))
+
   }
 
   def intersectVal(i: Interval): Boolean = intersectVal(i.lb, i.ub)
 
-  def removeValInterval(lb: Int, ub: Int) = {
-    var ch = false
-    var i = closestGeq(lb)
-    val end = closestLeq(ub)
-
-    if (end >= 0) {
-      while (i >= 0 && i <= end) {
-        if (present(i)) {
-          remove(i)
-          ch = true
-        }
-        i = next(i)
-      }
-    }
-
-    ch
-  }
+//  def removeValInterval(lb: Int, ub: Int) = {
+//    var ch = false
+//    var i = closestGeq(lb)
+//    val end = closestLeq(ub)
+//
+//    if (end >= 0) {
+//      while (i >= 0 && i <= end) {
+//        if (present(i)) {
+//          remove(i)
+//          ch = true
+//        }
+//        i = next(i)
+//      }
+//    }
+//
+//    ch
+//  }
 
   def disjoint(d: Domain, i: Int = first): Boolean = i < 0 || {
     val i2 = d.index(value(i))
@@ -230,7 +225,6 @@ abstract class Domain {
   def intersects(bv: BitVector, part: Int): Boolean
   def bound: Boolean
   def intSet: IntSet
-  def undefined: Boolean
 
   def boundVal = size == (1 + lastValue - firstValue)
 

@@ -50,6 +50,10 @@ object CSPOMDriver {
     problem.isInt('occurrence, variables, Map("occurrence" -> constant))
   }
 
+  def clause(vars: Seq[SimpleExpression[Boolean]], modifiers: Seq[Boolean]): CSPOMConstraint[Boolean] = {
+    CSPOMConstraint('or, vars, Map("revsign" -> modifiers))
+  }
+
   implicit class CSPOMSeqOperations[+A](e: CSPOMSeq[A]) {
     def apply(idx: CSPOMVariable[Int])(implicit problem: CSPOM) = problem.is('element, Seq(e, idx))
 

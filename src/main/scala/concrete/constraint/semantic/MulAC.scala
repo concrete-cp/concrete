@@ -4,7 +4,6 @@ import concrete.constraint.Constraint
 import concrete.constraint.Residues
 import concrete.Domain
 import concrete.Variable
-import concrete.constraint.Shaver
 import concrete.util.Interval
 import concrete.constraint.BCCompanion
 
@@ -36,8 +35,8 @@ final class MulAC(val result: Variable, val v0: Variable, val v1: Variable, val 
     variablePosition match {
       case 0 => findValidTuple0(index);
 
-      case 1 => findValidTupleV0(index);
-      case 2 => findValidTupleV1(index);
+      case 1 => findValidTupleV(index, 1, 2);
+      case 2 => findValidTupleV(index, 2, 1);
       case _ =>
         throw new IndexOutOfBoundsException()
 
@@ -61,29 +60,22 @@ final class MulAC(val result: Variable, val v0: Variable, val v1: Variable, val 
 
   }
 
-  def findValidTupleV0(index: Int) = {
+  def findValidTupleV(index: Int, of: Int, in: Int) = {
     val result = this.result.dom
-    val value = scope(1).dom.value(index)
-    val dom = scope(2).dom
+    val value = scope(of).dom.value(index)
+    val dom = scope(in).dom
     dom.indices.map { i =>
       (i, result.index(value * dom.value(i)))
     } find {
       case (i, resIndex) => resIndex >= 0 && result.present(resIndex)
     } map {
-      case (i, resIndex) => Array(resIndex, index, i)
-    }
-  }
-
-  def findValidTupleV1(index: Int) = {
-    val result = this.result.dom
-    val value = scope(2).dom.value(index)
-    val dom = scope(1).dom
-    dom.indices.map { i =>
-      (i, result.index(value * dom.value(i)))
-    } find {
-      case (i, resIndex) => resIndex >= 0 && result.present(resIndex)
-    } map {
-      case (i, resIndex) => Array(resIndex, i, index)
+      case (i, resIndex) => {
+        val a = new Array[Int](3)
+        a(0) = resIndex
+        a(of) = index
+        a(in) = i
+        a
+      }
     }
   }
 

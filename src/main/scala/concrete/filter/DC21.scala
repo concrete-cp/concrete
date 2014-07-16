@@ -26,7 +26,7 @@ import concrete.LearnMethod
 import concrete.NoGoodLearner
 import concrete.Problem
 import concrete.Variable
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import scala.annotation.tailrec
 import concrete.LearnBin
 import com.sun.org.apache.bcel.internal.classfile.PMGClass

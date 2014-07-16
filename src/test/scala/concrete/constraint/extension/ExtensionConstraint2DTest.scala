@@ -13,8 +13,8 @@ final class ExtensionConstraint2DTest {
 
   @Before
   def setUp() {
-    val var1 = new Variable("V1", IntDomain(1, 2, 3))
-    val var2 = new Variable("V2", IntDomain(1, 2, 3, 4))
+    val var1 = new Variable("V1", IntDomain(1 to 3))
+    val var2 = new Variable("V2", IntDomain(1 to 4))
 
     val matrix2d = new Matrix2D(3, 4, false);
     matrix2d.set(Array(0, 0), true);

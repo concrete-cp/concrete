@@ -67,7 +67,6 @@ object FZConcrete extends CSPOMRunner with App {
 
     this.goal = goal
 
-    //println(cspom._1)
     cspom
   }
 

@@ -14,11 +14,7 @@ final object OccurrenceGenerator extends Generator {
 
     val args = constraint.arguments map cspom2concrete1D
 
-    if (undefinedVar(args: _*).nonEmpty) {
-      None
-    } else {
-
-      val value: Int = constraint.params.get("occurrence") match {
+       val value: Int = constraint.params.get("occurrence") match {
         case Some(CSPOMConstant(true)) => 1
         case Some(CSPOMConstant(false)) => 0
         case Some(CSPOMConstant(p: Int)) => p
@@ -36,16 +32,15 @@ final object OccurrenceGenerator extends Generator {
       }
 
       r match {
-        case Const(result) => Some(Seq(new OccurrenceConst(result - constOcc, value, scope.toArray)))
+        case Const(result) => Seq(new OccurrenceConst(result - constOcc, value, scope.toArray))
         case Var(result) =>
-          if (result.dom.undefined) {
-            Generator.restrictDomain(result, constOcc to (constOcc + scope.count(_.dom.presentVal(value))) iterator)
-          }
-          Some(Seq(new OccurrenceVar(result, value, scope.toArray, constOcc)))
+//          if (result.dom.undefined) {
+//            Generator.restrictDomain(result, constOcc to (constOcc + scope.count(_.dom.presentVal(value))) iterator)
+//          }
+          Seq(new OccurrenceVar(result, value, scope.toArray, constOcc))
         case _ => throw new IllegalArgumentException(s"Result must be a variable or constant, was $r")
       }
 
-    }
 
   }
 }

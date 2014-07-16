@@ -3,7 +3,7 @@ package concrete.runner
 import java.net.URI
 import java.security.InvalidParameterException
 import java.util.Timer
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import concrete.ParameterManager
 import concrete.Problem
 import concrete.Solver

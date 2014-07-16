@@ -85,7 +85,7 @@ abstract class ConflictCount(
 
           }
 
-        case _ if (!matrix.isEmpty) =>
+        case _ =>
           for (tuple <- tuples() if (!checkIndices(tuple)); p <- tuple.indices) {
             nbInitConflicts(p)(tuple(p)) += 1;
           }

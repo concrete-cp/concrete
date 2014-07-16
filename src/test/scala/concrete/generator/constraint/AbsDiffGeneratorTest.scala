@@ -19,9 +19,9 @@ final class AbsDiffGeneratorTest {
 
     val cspom = CSPOM { implicit problem =>
 
-      val v0 = IntVariable(Seq(1, 2, 3))
-      val v1 = IntVariable(Seq(1, 2, 3))
-      val v2 = IntVariable(Seq(1, 2, 3))
+      val v0 = IntVariable.ofSeq(1, 2, 3)
+      val v1 = IntVariable.ofSeq(1, 2, 3)
+      val v2 = IntVariable.ofSeq(1, 2, 3)
 
       ctr(CSPOMConstraint(v0, 'absdiff, Seq(v1, v2)))
     }

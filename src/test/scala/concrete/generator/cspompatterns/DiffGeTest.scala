@@ -13,10 +13,12 @@ import concrete.CSPOMDriver._
 import cspom.compiler.ProblemCompiler
 import cspom.compiler.MergeEq
 import cspom.variable.IntVariable
+import org.scalatest.Matchers
+import org.scalatest.FlatSpec
 
-class DiffGeTest {
-  @Test
-  def testGen() {
+class DiffGeTest extends FlatSpec with Matchers {
+
+  "DiffGe" should "compile general" in {
 
     val cspom = CSPOM { implicit problem =>
 
@@ -28,10 +30,13 @@ class DiffGeTest {
 
     ProblemCompiler.compile(cspom, Seq(MergeEq, DiffGe))
 
-    assertEquals(cspom.toString, 4, cspom.referencedExpressions.size)
-    assertEquals(1, cspom.constraints.size)
+    cspom.referencedExpressions should have size 4
+    cspom.constraints should have size 1
+
     val c = cspom.constraints.next
-    assertEquals('diffGe, c.function)
+
+    c.function shouldBe 'diffGe
+
     c.result match {
       case CSPOMConstant(true) =>
       case _ => fail()
@@ -39,9 +44,7 @@ class DiffGeTest {
 
   }
 
-  @Test
-  def testFunc() {
-
+  it should "compile functional" in {
     val cspom = CSPOM { implicit problem =>
 
       val r = IntVariable(1 to 3) - IntVariable(2 to 4)
@@ -52,11 +55,11 @@ class DiffGeTest {
 
     ProblemCompiler.compile(cspom, Seq(DiffGe))
 
-    assertEquals(4, cspom.referencedExpressions.size)
-    assertEquals(1, cspom.constraints.size)
+    cspom.referencedExpressions should have size 4
+    cspom.constraints should have size 1
     val c = cspom.constraints.next
-    assertEquals('diffGe, c.function)
-    assertTrue(c.result.isInstanceOf[BoolVariable])
+    c.function shouldBe 'diffGe
+    c.result shouldBe a [BoolVariable]
   }
 
 }

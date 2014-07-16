@@ -24,7 +24,8 @@ object NeqVec extends ConstraintCompiler {
 
     val result = c match {
 
-      case CSPOMConstraint(result: CSPOMExpression[Boolean], 'ne | 'nevec, _, _) => Some((problem.constraints(result) - c).toSeq)
+      case CSPOMConstraint(result, 'ne | 'nevec, _, _) => Some(
+        (problem.constraints(result) - c).toSeq)
       case _ => None
     }
 

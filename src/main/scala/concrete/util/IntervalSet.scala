@@ -81,5 +81,5 @@ final class IntervalSet(val domain: Interval) extends IntSet {
   def bound = true
   def isEmpty = false
 
-  override def toString = "[" + first + ", " + last + "]"
+  override def toString = s"[$first, $last]"
 }

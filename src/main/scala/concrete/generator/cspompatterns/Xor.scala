@@ -28,7 +28,7 @@ object Xor extends ConstraintCompilerNoData {
 
   def compile(fc: CSPOMConstraint[_], problem: CSPOM) = {
 
-    val Seq(a: SimpleExpression[Boolean], b: SimpleExpression[Boolean]) = fc.arguments
+    val Seq(a: SimpleExpression[_], b: SimpleExpression[_]) = fc.arguments
     val res = fc.result.asInstanceOf[SimpleExpression[Boolean]]
 
     val alt1 = CSPOMConstraint(new BoolVariable(), 'or, Seq(a, b))

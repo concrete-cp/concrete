@@ -12,11 +12,7 @@ final object LexLeqGenerator extends Generator {
     val Seq(x, y) = constraint.arguments map cspom2concreteSeqVar map (_.toArray)
     require(x.length == y.length)
 
-    if ((x.iterator ++ y) exists { _.dom.undefined }) {
-      None
-    } else {
-      Some(Seq(new LexLeq(x, y)));
-    }
+    Seq(new LexLeq(x, y))
   }
 
 }

@@ -33,7 +33,7 @@ final class MDDRelation(val mdd: MDD = MDD0, val timestamp: Timestamp = new Time
   def filterTrie(f: (Int, Int) => Boolean, modified: List[Int]): MDDRelation = {
     val m = new MDDRelation(mdd.filterTrie(timestamp.next(), f, modified, 0), timestamp)
 
-    require(m.forall { sup =>
+    assert(m.forall { sup =>
       sup.zipWithIndex.forall { case (i, p) => f(p, i) }
     }, modified)
 

@@ -1,7 +1,9 @@
 package concrete.util
 
+import scala.collection.SortedSet
+
 object Indexer {
-  def factory(values: Seq[Int]): Indexer = {
+  def factory(values: SortedSet[Int]): Indexer = {
     val ub = values.last
     val lb = values.head
     if (values.size == ub - lb + 1) { ofInterval(lb, ub) }
