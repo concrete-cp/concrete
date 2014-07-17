@@ -42,7 +42,7 @@ final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
 
   //println("sizesR " + arity + " " + trie.lambda + " " + trie.edges)
 
-  private val unsupported = scope map (p => BitVector.newBitVector(p.dom.maxSize))
+  private val unsupported = scope map (p => new collection.mutable.BitSet(p.dom.maxSize))
 
   override def setLvl(l: Int) {
     super.setLvl(l)
@@ -57,9 +57,9 @@ final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
   def revise(mod: List[Int]) = {
     //logger.fine("Revising " + this + " : " + mod.toList)
     for (i <- scope.indices) {
-      unsupported(i).fill(false)
+      unsupported(i).clear()
       for (j <- scope(i).dom.indices) {
-        unsupported(i).set(j)
+        unsupported(i) += j
       }
     }
     //found.foreach(_.fill(false))
@@ -88,12 +88,13 @@ final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
 
     //sizes(domSizes)
 
-    val c = trie.
-      fillFound({ (depth: Int, i: Int) =>
+    val c = trie
+      .fillFound({ (depth: Int, i: Int) =>
         ReduceableExt.fills += 1
-        unsupported(depth).clear(i) && unsupported(depth).isEmpty
-      }, arity).
-      filter(p => scope(p).dom.filter(i => !unsupported(p)(i)))
+        unsupported(depth) -= i
+        unsupported(depth).isEmpty
+      }, arity)
+      .filter(p => scope(p).dom.filter(i => !unsupported(p)(i)))
 
     //    val card = cardSize()
     //    assert(card < 0 || card >= trie.size, card + " < " + trie.size + "!")

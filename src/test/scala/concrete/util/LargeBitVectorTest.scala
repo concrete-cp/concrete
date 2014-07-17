@@ -1,237 +1,203 @@
 package concrete.util;
 
-import org.junit.Assert.assertEquals;
-import org.junit.Assert.assertFalse;
-import org.junit.Assert.assertTrue;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.scalatest.Matchers
+import org.scalatest.FlatSpec
 
-final class LargeBitVectorTest {
+final class LargeBitVectorTest extends FlatSpec with Matchers {
 
-  private var bitVector: LargeBitVector = null
+  "LargeBitVectors" should "be filled" in {
+    var bitVector = BitVector.filled(125)
+    assert(bitVector(64));
+    assert(bitVector(65));
+    assert(bitVector(124));
+    assert(!bitVector(125));
 
-  @Before
-  def setUp() {
-    bitVector = new LargeBitVector(125);
+    bitVector = BitVector.cleared(125)
+    bitVector.nextSetBit(0) shouldBe -1
   }
 
-  @Test
-  def testInitBooleanArray() {
-    bitVector.fill(true);
-    // assertEquals(bitVector.bitCount(), 64);
-    assertTrue(bitVector.get(64));
-    assertTrue(bitVector.get(65));
-    assertTrue(bitVector.get(124));
-    assertFalse(bitVector.get(125));
-
-    bitVector.fill(false);
-    assertEquals(-1, bitVector.nextSetBit(0));
+  it should "compute correct number of words" in {
+    BitVector.nbWords(0) shouldBe 0
+    BitVector.nbWords(1) shouldBe 1
+    BitVector.nbWords(64) shouldBe 1
+    BitVector.nbWords(65) shouldBe 2
   }
 
-  @Test
-  def testBooleanArraySize() {
-    assertEquals(LargeBitVector.nbWords(0), 0);
-    assertEquals(LargeBitVector.nbWords(1), 1);
-    assertEquals(LargeBitVector.nbWords(64), 1);
-    assertEquals(LargeBitVector.nbWords(65), 2);
+  it should "set bits" in {
+    var bitVector = BitVector.cleared(125)
+    assert(!bitVector(100))
+    bitVector += 100
+    assert(bitVector(100))
+    bitVector = bitVector.set(100, false)
+    assert(!bitVector(100))
   }
 
-  @Test
-  def testSet() {
-    assertFalse(bitVector.set(100, false));
-    assertTrue(bitVector.set(100, true));
-    assertFalse(bitVector.set(100, true));
+  it should "get bits" in {
+    val bitVector = BitVector.cleared(125) + 46
+    assert(!bitVector(0));
+    assert(!bitVector(45));
+    assert(bitVector(46));
   }
 
-  @Test
-  def testGet() {
-    bitVector.set(46);
-    assertFalse(bitVector.get(0));
-    assertFalse(bitVector.get(45));
-    assertTrue(bitVector.get(46));
+  it should "compute next bit" in {
+    val bitVector = BitVector.cleared(125) + 46 + 49 + 100
+    bitVector.nextSetBit(0) shouldBe 46
+    bitVector.nextSetBit(46) shouldBe 46
+    bitVector.nextSetBit(47) shouldBe 49
+    bitVector.nextSetBit(63) shouldBe 100
+    bitVector.nextSetBit(64) shouldBe 100
+    bitVector.nextSetBit(101) shouldBe -1
   }
 
-  @Test
-  def testNextSetBit() {
-    bitVector.set(46);
-    bitVector.set(49);
-    bitVector.set(100);
-    assertEquals(46, bitVector.nextSetBit(0));
-    assertEquals(46, bitVector.nextSetBit(46));
-    assertEquals(49, bitVector.nextSetBit(47));
-    assertEquals(100, bitVector.nextSetBit(63));
-    assertEquals(100, bitVector.nextSetBit(64));
-    assertEquals(-1, bitVector.nextSetBit(101));
+  it should "compute prev cleared bit" in {
+    var bitVector = BitVector.filled(125) - 46 - 49 - 100
 
-  }
+    bitVector.prevClearBit(47) shouldBe 46
+    bitVector.prevClearBit(46) shouldBe -1
+    bitVector.prevClearBit(45) shouldBe -1
+    bitVector.prevClearBit(110) shouldBe 100
 
-  @Test
-  def testPrevClearBit() {
-    bitVector.fill(true);
-    bitVector.clear(46);
-    bitVector.clear(49);
-    bitVector.clear(100);
-    assertEquals(46, bitVector.prevClearBit(47));
-    assertEquals(-1, bitVector.prevClearBit(46));
-    assertEquals(-1, bitVector.prevClearBit(45));
-    assertEquals(100, bitVector.prevClearBit(110));
+    bitVector.prevClearBit(64) shouldBe 49
+    bitVector.prevClearBit(63) shouldBe 49
 
-    assertEquals(49, bitVector.prevClearBit(64));
-    assertEquals(49, bitVector.prevClearBit(63));
+    bitVector -= 64
+    bitVector.prevClearBit(65) shouldBe 64
+    bitVector.prevClearBit(64) shouldBe 49
 
-    bitVector.clear(64);
-    assertEquals(64, bitVector.prevClearBit(65));
-    assertEquals(49, bitVector.prevClearBit(64));
-
-    bitVector.set(64);
-    bitVector.clear(63);
-    assertEquals(63, bitVector.prevClearBit(65));
-    assertEquals(49, bitVector.prevClearBit(63));
+    bitVector += 64
+    bitVector -= 63
+    bitVector.prevClearBit(65) shouldBe 63
+    bitVector.prevClearBit(63) shouldBe 49
 
   }
 
-  @Test
-  def testPrevSetBit() {
-    bitVector.set(46);
-    bitVector.set(49);
-    bitVector.set(100);
-    assertEquals(46, bitVector.prevSetBit(47));
-    assertEquals(-1, bitVector.prevSetBit(46));
-    assertEquals(-1, bitVector.prevSetBit(45));
-    assertEquals(100, bitVector.prevSetBit(110));
+  it should "compute prev set bit" in {
+    var bitVector = BitVector.cleared(125) + 46 + 49 + 100;
 
-    assertEquals(49, bitVector.prevSetBit(64));
-    assertEquals(49, bitVector.prevSetBit(63));
+    bitVector.prevSetBit(47) shouldBe 46
+    bitVector.prevSetBit(46) shouldBe -1
+    bitVector.prevSetBit(45) shouldBe -1
+    bitVector.prevSetBit(110) shouldBe 100
 
-    bitVector.set(64);
-    assertEquals(64, bitVector.prevSetBit(65));
-    assertEquals(49, bitVector.prevSetBit(64));
+    bitVector.prevSetBit(64) shouldBe 49
+    bitVector.prevSetBit(63) shouldBe 49
 
-    bitVector.clear(64);
-    bitVector.set(63);
-    assertEquals(63, bitVector.prevSetBit(65));
-    assertEquals(49, bitVector.prevSetBit(63));
+    bitVector += 64
+    bitVector.prevSetBit(65) shouldBe 64
+    bitVector.prevSetBit(64) shouldBe 49
+
+    bitVector -= 64
+    bitVector += 63
+    bitVector.prevSetBit(65) shouldBe 63
+    bitVector.prevSetBit(63) shouldBe 49
 
   }
 
-  @Test
-  def testToStringIntArray() {
-    bitVector.set(46);
-    bitVector.set(49);
-    bitVector.set(100);
-    assertEquals("{46, 49, 100}", bitVector.toString());
+  it should "be converted to String" in {
+    val bitVector = BitVector.cleared(125) + 46 + 49 + 100
+    bitVector.toString shouldBe "{46, 49, 100}"
   }
 
-  @Test
-  def testWord() {
-    assertEquals(0, LargeBitVector.word(0));
-    assertEquals(0, LargeBitVector.word(63));
-    assertEquals(1, LargeBitVector.word(64));
+  it should "compute correct word positions" in {
+    BitVector.word(0) shouldBe 0
+    BitVector.word(63) shouldBe 0
+    BitVector.word(64) shouldBe 1
   }
 
-  @Test
-  def testClearFrom() {
-    bitVector.set(46);
-    bitVector.set(49);
-    bitVector.set(100);
-    assertTrue(bitVector.clearFrom(47));
-    assertEquals(1, bitVector.cardinality());
-    assertTrue(bitVector.get(46));
-    assertFalse(bitVector.get(49));
-    assertFalse(bitVector.get(100));
+  it should "correctly clear parts from bit" in {
+    val bitVector = BitVector.cleared(125) + 46 + 49 + 100
+    bitVector.clearFrom(101) should be theSameInstanceAs(bitVector)
+    val bv2 = bitVector.clearFrom(47)
+    bv2 should not be theSameInstanceAs(bitVector)
+    bv2.cardinality shouldBe 1
+    assert(bv2(46))
+    assert(!bv2(49))
+    assert(!bv2(100))
   }
 
-  @Test
-  def testClearTo() {
-    bitVector.set(46);
-    bitVector.set(49);
-    bitVector.set(100);
-    assertTrue(bitVector.clearTo(49));
-    assertEquals(2, bitVector.cardinality());
-    assertFalse(bitVector.get(46));
-    assertTrue(bitVector.get(49));
-    assertTrue(bitVector.get(100));
+  it should "correctly clear parts to bit" in {
+    val bitVector = BitVector.cleared(125) + 46 + 49 + 100
+    bitVector.clearTo(45) should be theSameInstanceAs(bitVector)
+    
+    val bv2 = bitVector.clearTo(49)
+    bv2 should not be theSameInstanceAs (bitVector)
+    bv2.cardinality shouldBe 2
+    assert(!bv2(46))
+    assert(!bv2(49))
+    assert(bv2(100))
   }
 
-  @Test
-  def testSetFrom() {
-    assertTrue(bitVector.setFrom(80));
-    assertEquals(bitVector.toString(), 45, bitVector.cardinality());
+ it should "correctly set parts from bit" in {
+   val bitVector = BitVector.cleared(125)
+   val bv2 = bitVector.setFrom(80)
+   
+   bv2 should not be theSameInstanceAs(bitVector)
+    
+   bitVector.cardinality shouldBe 45
+   
     for (i <- 0 until 80) {
-      assertFalse(bitVector.get(i));
+      assert(!bitVector(i));
     }
     for (i <- 80 until 125) {
-      assertTrue(Integer.toString(i), bitVector.get(i));
+      assert(bitVector(i));
     }
     for (i <- 125 until 200) {
-      assertFalse(Integer.toString(i), bitVector.get(i));
+      assert(!bitVector(i));
     }
 
-    val bv = BitVector.newBitVector(2000);
-    bv.fill(true);
-    assertFalse(bitVector.setFrom(100));
+    val bv = BitVector.filled(2000)
+    bv.setFrom(100) should be theSameInstanceAs(bv)
   }
 
-  @Test
-  def testSubset() {
-    bitVector.set(46);
-    bitVector.set(49);
-    bitVector.set(100);
+ it should "detect subsets" in {
+   val bitVector = BitVector.cleared(125) + 46 + 49 + 100
 
-    val bv2 = BitVector.newBitVector(125);
-    bv2.set(46);
+    val bv2 = BitVector.cleared(125) + 46
+    
+    assert(!bitVector.subsetOf(bv2));
+    assert(bv2.subsetOf(bitVector));
 
-    assertFalse(bitVector.subsetOf(bv2));
-    assertTrue(bv2.subsetOf(bitVector));
-
-  }
-
-  @Test
-  def testSubset2() {
-    val bv1 = BitVector.newBitVector(70);
-    val bv2 = BitVector.newBitVector(70);
+    var bv3 = BitVector.cleared(70);
+    var bv4 = BitVector.cleared(70);
     for (i <- 0 until 70) {
-      bv1.set(i);
-      bv2.set(i);
+      bv3 += i;
+      bv4 += i;
     }
-    assertTrue(bv1.subsetOf(bv2));
-    assertTrue(bv2.subsetOf(bv1));
-    assertEquals(bv1, bv2);
+    assert(bv3.subsetOf(bv4));
+    assert(bv4.subsetOf(bv3));
+    bv3 shouldBe bv4
   }
 
-  @Test
-  def testHashcode() {
-    bitVector.set(46);
+ it should "have correct hash codes" in {
+    val bitVector = BitVector.cleared(125) + 46
+    
+    val bv2 = BitVector.cleared(400) + 46
+    
 
-    val bv2 = BitVector.newBitVector(400);
-    bv2.set(46);
+    val bv3 = BitVector.cleared(50) + 46
 
-    val bv3 = BitVector.newBitVector(50);
-    bv3.set(46);
-
-    assertEquals(bitVector, bv2);
-    assertEquals(bitVector, bv3);
-    assertEquals(bitVector.hashCode(), bv2.hashCode());
-    assertEquals(bitVector.hashCode(), bv3.hashCode());
+    bitVector shouldBe bv2
+    bitVector shouldBe bv3
+    bitVector.hashCode shouldBe bv2.hashCode
+    bitVector.hashCode shouldBe bv3.hashCode
 
   }
 
-  @Test
-  def testXor() {
-    bitVector.set(59);
-    bitVector.set(11);
-    val bv2 = BitVector.newBitVector(20);
-    bv2.set(10);
-    bv2.set(11);
+  it should "compute xor" in {
+    val bitVector = BitVector.cleared(125) + 59 + 11
+    
+    val bv2 = BitVector.cleared(20) + 10 +11
 
-    val bv3 = bitVector.xor(bv2);
-    val bv4 = bv2.xor(bitVector);
-    assertEquals(bv3, bv4);
-    assertEquals(2, bv3.cardinality());
-    assertTrue(bv3.get(10));
-    assertFalse(bv3.get(11));
-    assertTrue(bv3.get(59));
+    val bv3 = bitVector ^ bv2
+    val bv4 = bv2 ^ bitVector
+    
+    bv3 shouldBe bv4
+    bv2.cardinality shouldBe 2
+    
+    assert(bv3(10))
+    assert(!bv3(11))
+    assert(bv3(59))
 
   }
 

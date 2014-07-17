@@ -1,35 +1,21 @@
 package concrete.util;
-
+import BitVector._
 final object BitVector {
   val ADDRESS_BITS_PER_WORD = 6
   val WORD_SIZE = 1 << ADDRESS_BITS_PER_WORD
   val MASK = 0xFFFFFFFFFFFFFFFFL
 
   def intBv(lb: Int, ub: Int) = {
-    BitVector.cleared(ub + 1).setFrom(lb)
+    BitVector.empty.set(lb, ub)
   }
 
   def intBvH(lb: Int, ub: Int, hole: Int) = {
     intBv(lb, ub) - hole
   }
 
-  def cleared(size: Int) = {
-    if (size > WORD_SIZE) {
-      new LargeBitVector(size);
-    } else {
-      new SmallBitVector(size);
-    }
-  }
+  val empty = new SmallBitVector(0)
 
-  def filled(size: Int) = {
-    if (size > WORD_SIZE) {
-      val words = Array.fill(size / WORD_SIZE)(MASK);
-      words(words.length - 1) >>>= -size;
-      new LargeBitVector(size, words)
-    } else {
-      new SmallBitVector(size, truncate(MASK, size))
-    }
-  }
+  def filled(size: Int) = empty.set(0, size - 1)
 
   def nbWords(nbBits: Int) = {
     if (nbBits % WORD_SIZE > 0) {
@@ -45,7 +31,7 @@ final object BitVector {
 
 }
 
-abstract class BitVector(val size: Int) {
+trait BitVector extends Any {
 
   override def toString(): String = {
     val sb = new StringBuilder();
@@ -63,9 +49,27 @@ abstract class BitVector(val size: Int) {
 
   }
 
+  def set(position: Int, status: Boolean) = {
+    if (status) {
+      this + position
+    } else {
+      this - position
+    }
+  }
+
   def -(position: Int): BitVector
 
-  def +(position: Int): BitVector
+  def +(position: Int): BitVector = {
+    val wordPos = word(position)
+    val oldWord = getWord(wordPos)
+    val newWord = oldWord | (1L << position)
+
+    if (oldWord == newWord) {
+      this
+    } else {
+      setWord(wordPos, newWord)
+    }
+  }
 
   def apply(position: Int): Boolean
 
@@ -73,29 +77,13 @@ abstract class BitVector(val size: Int) {
 
   def prevSetBit(start: Int): Int
 
-  def lastSetBit = prevSetBit(size)
+  def lastSetBit: Int
 
-  def prevClearBit(start: Int): Int
-
-  def lastClearBit: Int = prevClearBit(size)
-
-  /**
-   * Removes all values from given bound (included).
-   *
-   * @param from
-   * @return How many values were actually removed
-   */
   def clearFrom(from: Int): BitVector
 
-  def setFrom(from: Int): BitVector
+  def clearTo(to: Int): BitVector
 
-  /**
-   * Removes all values up to given bound (excluded).
-   *
-   * @param ub
-   * @return How many values were actually removed
-   */
-  def clearTo(ub: Int): BitVector
+  def set(from: Int, to: Int): BitVector
 
   def intersects(bV: BitVector, position: Int): Boolean
 
@@ -107,8 +95,6 @@ abstract class BitVector(val size: Int) {
 
   def &(bv: BitVector): BitVector
 
-  def unary_~(): BitVector
-
   def isEmpty(): Boolean
 
   def cardinality(): Int
@@ -117,7 +103,7 @@ abstract class BitVector(val size: Int) {
 
   def subsetOf(bv: BitVector): Boolean
 
-  def setFirstWord(word: Long): BitVector
+  def setWord(pos: Int, word: Long): BitVector
 
   def filter(f: Int => Boolean): BitVector
 }

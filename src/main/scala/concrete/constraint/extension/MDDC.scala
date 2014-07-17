@@ -44,16 +44,16 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
 
   def getEvaluation = (prop * doubleCardSize).toInt
 
-  private val unsupported = scope map (p => BitVector.newBitVector(p.dom.maxSize))
+  private val unsupported = scope map (p => new collection.mutable.BitSet(p.dom.maxSize))
 
   var delta: Int = _
   //mdd.registerTimestamp()
 
   def revise(modified: List[Int]) = {
     for (i <- scope.indices) {
-      unsupported(i).fill(false)
+      unsupported(i).clear()
       for (j <- scope(i).dom.indices) {
-        unsupported(i).set(j)
+        unsupported(i) += j
       }
     }
 
@@ -94,7 +94,7 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
         (ak, gk) =>
           if (scope(i).dom.present(ak) && seekSupports(ts, gk, i + 1)) {
             res = true
-            unsupported(i).clear(ak)
+            unsupported(i) -= ak
 
             if (i + 1 == delta && unsupported(i).isEmpty) {
               delta = i

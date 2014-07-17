@@ -54,18 +54,14 @@ final class Singleton(val index: Int) extends IntSet {
 
   def subsetOf(d: IntSet) = d.present(index)
 
-  lazy val toBitVector = {
-    val bv = BitVector.newBitVector(index + 1)
-    bv.set(index)
-    bv
-  }
+  lazy val toBitVector = BitVector.cleared(index + 1) + index
 
   def intersects(bv: BitVector) = {
     val part = index >> 6
-    if (bv.get(index)) part else -1
+    if (bv(index)) part else -1
   }
 
-  def intersects(bv: BitVector, part: Int) = bv.get(index)
+  def intersects(bv: BitVector, part: Int) = bv(index)
   def bound = true
   def isEmpty = false
 }

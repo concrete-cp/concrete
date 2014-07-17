@@ -2,47 +2,44 @@ package concrete.util;
 
 import BitVector._
 
-final class SmallBitVector(size: Int, val word: Long) extends BitVector(size) {
-  require(size <= WORD_SIZE, s"Cannot handle vectors larger than $WORD_SIZE elements")
-
-  def this(size: Int) = this(size, 0)
-
+final class SmallBitVector(val word: Long) extends AnyVal with BitVector {
   def -(position: Int) = {
-    assert(position < size)
     val newWord = word & ~(1L << position)
     if (word == newWord) {
       this
+    } else if (word == 0L) {
+      BitVector.empty
     } else {
-      new SmallBitVector(size, newWord)
+      new SmallBitVector(newWord)
     }
   }
 
   def +(position: Int) = {
-    assert(position < size)
+    require(position < WORD_SIZE)
     val newWord = word | (1L << position)
     if (word == newWord) {
       this
     } else {
-      new SmallBitVector(size, newWord)
+      new SmallBitVector(newWord)
     }
   }
 
   def apply(position: Int) = {
-    position < size && (word & (1L << position)) != 0L;
+    position < WORD_SIZE && (word & (1L << position)) != 0L;
   }
 
   def prevSetBit(start: Int) = {
     val prev = if (start >= WORD_SIZE) {
-      word;
+      word
     } else {
       word & ~(MASK << start);
     }
-    if (prev == 0) {
-      -1;
-    } else {
 
-      WORD_SIZE - java.lang.Long.numberOfLeadingZeros(prev) - 1
-    }
+    WORD_SIZE - java.lang.Long.numberOfLeadingZeros(prev) - 1
+  }
+
+  def lastSetBit = {
+    WORD_SIZE - java.lang.Long.numberOfLeadingZeros(word) - 1
   }
 
   def prevClearBit(start: Int) = {
@@ -56,61 +53,48 @@ final class SmallBitVector(size: Int, val word: Long) extends BitVector(size) {
   }
 
   def nextSetBit(start: Int) = {
-    if (start >= size) {
-      -1;
+    val next = word & (MASK << start);
+    if (next == 0) {
+      -1
     } else {
-      val next = word & (MASK << start);
-      if (next == 0) { -1 } else { java.lang.Long.numberOfTrailingZeros(next) }
+      java.lang.Long.numberOfTrailingZeros(next)
     }
   }
 
   def clearFrom(from: Int) = {
-    if (from >= size) { this }
+    if (from >= WORD_SIZE) { this }
     else {
       val newWord = word & ~(MASK << from)
       if (word == newWord) {
         this
       } else {
-        new SmallBitVector(size, newWord)
+        new SmallBitVector(newWord)
       }
 
     }
-  }
-
-  def setFrom(from: Int) = {
-    if (from >= size) {
-      this
-
-    } else {
-      val newWord = truncate(word | (MASK << from), size)
-      if (word == newWord) {
-        this
-      } else {
-        new SmallBitVector(size, newWord)
-      }
-    }
-
   }
 
   def clearTo(to: Int) = {
-    if (to <= 0) {
+    if (to < 0) {
       this
+    } else if (to >= WORD_SIZE) {
+      BitVector.empty
     } else {
       val newWord = truncate(word, to)
       if (word == newWord) {
         this
       } else {
-        new SmallBitVector(size, newWord)
+        new SmallBitVector(newWord)
       }
     }
   }
 
-  override def equals(o: Any) = o match {
-    case bv: BitVector => bv.getWord(0) == word && bv.nextSetBit(WORD_SIZE) == -1
-    case _ => false
-  }
-
-  override def hashCode = word.toInt
+  //  override def equals(o: Any) = o match {
+  //    case bv: BitVector => bv.getWord(0) == word && bv.nextSetBit(WORD_SIZE) == -1
+  //    case _ => false
+  //  }
+  //
+  //  override def hashCode = word.toInt
 
   def intersects(bv: BitVector, position: Int) = {
     (bv.getWord(0) & word) != 0;
@@ -123,7 +107,7 @@ final class SmallBitVector(size: Int, val word: Long) extends BitVector(size) {
   def nbWords = 1
 
   def ^(bv: BitVector) = {
-    bv.setFirstWord(bv.getWord(0) ^ this.word)
+    bv.setWord(0, bv.getWord(0) ^ this.word)
   }
 
   def &(bv: BitVector) = {
@@ -131,12 +115,8 @@ final class SmallBitVector(size: Int, val word: Long) extends BitVector(size) {
     if (newWord == word) {
       this
     } else {
-      new SmallBitVector(size, word)
+      new SmallBitVector(word)
     }
-  }
-
-  def unary_~() = {
-    new SmallBitVector(size, truncate(~this.word, size))
   }
 
   def isEmpty = word == 0L;
@@ -154,8 +134,15 @@ final class SmallBitVector(size: Int, val word: Long) extends BitVector(size) {
       word;
   }
 
-  def setFirstWord(word: Long) = {
-    new SmallBitVector(size, word)
+  def setWord(pos: Int, word: Long) = {
+    if (pos == 0) {
+      new SmallBitVector(word)
+    } else {
+      val array = new Array[Long](pos + 1)
+      array(0) = this.word
+      array(pos) = word
+      new LargeBitVector(array)
+    }
   }
 
   def filter(f: Int => Boolean) = {
@@ -170,7 +157,7 @@ final class SmallBitVector(size: Int, val word: Long) extends BitVector(size) {
     if (newWord == word) {
       this
     } else {
-      new SmallBitVector(size, newWord)
+      new SmallBitVector(newWord)
     }
   }
 }

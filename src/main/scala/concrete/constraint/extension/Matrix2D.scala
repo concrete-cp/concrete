@@ -30,8 +30,8 @@ final class Matrix2D(xSize: Int, ySize: Int, initialState: Boolean) extends Matr
 
   override def set(tuple: Array[Int], status: Boolean) {
     if (tuple(0) < xMatrix.length && tuple(1) < yMatrix.length) {
-      xMatrix(tuple(0)).set(tuple(1), status);
-      yMatrix(tuple(1)).set(tuple(0), status);
+      xMatrix(tuple(0)) = xMatrix(tuple(0)).set(tuple(1), status);
+      yMatrix(tuple(1)) = yMatrix(tuple(1)).set(tuple(0), status);
       empty = false;
     } else {
       logger.warn(s"Tuple ${tuple.mkString("(", ", ", ")")} is out of the scope of matrix $this")
@@ -46,8 +46,8 @@ final class Matrix2D(xSize: Int, ySize: Int, initialState: Boolean) extends Matr
 
   def copy = {
     val matrix2d = new Matrix2D(xSize, ySize, initialState)
-    matrix2d.xMatrix = xMatrix map (_.clone)
-    matrix2d.yMatrix = yMatrix map (_.clone)
+    matrix2d.xMatrix = xMatrix.clone
+    matrix2d.yMatrix = yMatrix.clone
     matrix2d;
   }
 

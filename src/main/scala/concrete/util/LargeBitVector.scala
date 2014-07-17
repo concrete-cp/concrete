@@ -3,15 +3,7 @@ package concrete.util;
 import java.util.Arrays;
 import BitVector._
 
-class LargeBitVector(size: Int, val words: Array[Long]) extends BitVector(size) {
-
-  def this(size: Int) = this(size, Array.ofDim(nbWords(size)))
-
-  private def updatedWord(wordPos: Int, newWord: Long) = {
-    val newWords = words.clone
-    newWords(wordPos) = newWord
-    new LargeBitVector(size, newWords)
-  }
+class LargeBitVector(val words: Array[Long]) extends AnyVal with BitVector {
 
   def -(position: Int) = {
     val wordPos: Int = word(position)
@@ -20,7 +12,7 @@ class LargeBitVector(size: Int, val words: Array[Long]) extends BitVector(size) 
     if (oldWord == newWord) {
       this
     } else {
-      updatedWord(wordPos, newWord)
+      setWord(wordPos, newWord)
     }
   }
 
@@ -31,12 +23,14 @@ class LargeBitVector(size: Int, val words: Array[Long]) extends BitVector(size) 
     if (oldWord == newWord) {
       this
     } else {
-      updatedWord(wordPos, newWord)
+      setWord(wordPos, newWord)
     }
   }
 
-  def apply(position: Int) =
-    position < size && (words(word(position)) & (1L << position)) != 0L;
+  def apply(position: Int) = {
+    val wordPos = word(position)
+    wordPos < nbWords && (words(wordPos) & (1L << position)) != 0L
+  }
 
   def nextSetBit(start: Int): Int = {
     var position = word(start);
@@ -100,116 +94,80 @@ class LargeBitVector(size: Int, val words: Array[Long]) extends BitVector(size) 
   }
 
   def ^(bv: BitVector) = {
-    val (larger, smaller) =
-      if (size < bv.size) {
-        (bv, this)
-      } else {
-        (this, bv)
-      }
+    val n = math.max(nbWords, bv.nbWords)
 
-    var i = larger.nbWords - 1
-    val words = Array.ofDim[Long](i)
-    words(i) = (larger.getWord(i) ^ smaller.getWord(i)) & (MASK >>> -larger.size)
-    i -= 1
+    val words = Array.ofDim[Long](n)
+    var i = n - 1
     while (i >= 0) {
-      words(i) = larger.getWord(i) ^ smaller.getWord(i);
+      words(i) = getWord(i) ^ bv.getWord(i);
       i -= 1
     }
-    new LargeBitVector(larger.size, words)
+    new LargeBitVector(words)
   }
 
-  def &(bv: BitVector) {
-    val newWords = Array.ofDim[Long](nbWords)
-    var i = newWords.length - 1
-    newWords(i) = (bv.getWord(i) & words(i)) & (MASK >>> -size);
-    i -= 1
+  def &(bv: BitVector) = {
+    val n = math.min(nbWords, bv.nbWords)
+    val newWords = Array.ofDim[Long](n)
+    var i = n - 1
     while (i >= 0) {
-      i -= 1
       newWords(i) = bv.getWord(i) & words(i);
-    }
-    new LargeBitVector(size, newWords)
-  }
-
-  def unary_~() = {
-    val newWords = Array.ofDim[Long](nbWords)
-    var i = words.length - 1;
-    newWords(i) = ~words(i) & (MASK >>> -size);
-    i -= 1
-    while (i >= 0) {
       i -= 1
-      newWords(i) = ~words(i);
     }
-    new LargeBitVector(size, newWords)
+    new LargeBitVector(newWords)
   }
 
   def clearFrom(from: Int) = {
-    if (from >= size) {
-      this
+    val startWordIndex = word(from);
+
+    val newWords = words.take(startWordIndex + 1)
+
+    val w = newWords(startWordIndex);
+
+    newWords(startWordIndex) &= ~(MASK << from);
+
+    if (startWordIndex + 1 < nbWords || w != newWords(startWordIndex)) {
+      new LargeBitVector(newWords)
     } else {
-
-      val startWordIndex = word(from);
-
-      val newWords = words.clone
-
-      val w = newWords(startWordIndex);
-      // Handle first word
-      newWords(startWordIndex) &= ~(MASK << from);
-      var removed = w != newWords(startWordIndex)
-      // Handle intermediate words, if any
-      for (i <- startWordIndex + 1 until newWords.length) {
-        if (newWords(i) != 0) {
-          newWords(i) = 0
-          removed = true
-        }
-      }
-
-      if (removed) {
-        new LargeBitVector(size, newWords)
-      } else {
-        this
-      }
-
+      this
     }
+
   }
 
-  def setFrom(from: Int) = {
-    if (from >= size) { this }
-    else {
+  def set(from: Int, to: Int) = {
 
-      val startWordIndex = word(from);
+    val startWordIndex = word(from);
 
-      val newWords = words.clone
+    val newWords = words.clone
 
-      // Handle first word
-      val w = newWords(startWordIndex)
-      newWords(startWordIndex) |= MASK << from;
+    // Handle first word
+    val w = newWords(startWordIndex)
+    newWords(startWordIndex) |= MASK << from;
 
-      var changed = w != newWords(startWordIndex);
-      // Handle intermediate words, if any
-      for (i <- startWordIndex + 1 until newWords.length - 1) {
-        if (newWords(i) != MASK) {
-          newWords(i) = MASK
-          changed = true
-        }
+    var changed = w != newWords(startWordIndex);
+    // Handle intermediate words, if any
+    for (i <- startWordIndex + 1 until newWords.length - 1) {
+      if (newWords(i) != MASK) {
+        newWords(i) = MASK
+        changed = true
       }
-
-      // Handle last word
-      val w2 = newWords(newWords.length - 1);
-
-      newWords(newWords.length - 1) |= truncate(MASK, size)
-      changed |= w2 != newWords(newWords.length - 1);
-
-      if (changed) {
-        new LargeBitVector(size, newWords)
-      } else {
-        this
-      }
-
     }
+
+    // Handle last word
+    val w2 = newWords(newWords.length - 1);
+
+    newWords(newWords.length - 1) |= truncate(MASK, size)
+    changed |= w2 != newWords(newWords.length - 1);
+
+    if (changed) {
+      new LargeBitVector(size, newWords)
+    } else {
+      this
+    }
+
   }
 
   def clearTo(to: Int) = {
-    if (to <= 0) {
+    if (to < 0) {
       this
     } else {
       val endWordIndex = word(to - 1);
@@ -282,7 +240,7 @@ class LargeBitVector(size: Int, val words: Array[Long]) extends BitVector(size) 
     return true;
   }
 
-  def cardinality() {
+  def cardinality = {
     var cardinality = 0;
     for (w <- words) {
       cardinality += java.lang.Long.bitCount(w);
@@ -306,9 +264,25 @@ class LargeBitVector(size: Int, val words: Array[Long]) extends BitVector(size) 
       words(i);
   }
 
-  def setFirstWord(word: Long) = {
-    val newWords = words.clone
-    newWords(0) = word;
-    new LargeBitVector(size, newWords)
+  def setWord(pos: Int, word: Long) = {
+    val newWords = words.padTo(pos + 1, 0L)
+    newWords(pos) = word;
+    new LargeBitVector(newWords)
+  }
+
+  def filter(f: Int => Boolean) = {
+    val words = new Array[Long](nbWords)
+    var i = nextSetBit(0)
+    while (i >= 0) {
+      if (f(i)) {
+        words(word(i)) |= (1L << i)
+      }
+      i = nextSetBit(i + 1)
+    }
+    if (Arrays.equals(words, this.words)) {
+      this
+    } else {
+      new LargeBitVector(words)
+    }
   }
 }
