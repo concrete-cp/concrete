@@ -2,7 +2,6 @@ package concrete.util
 
 object EmptyIntSet extends IntSet {
   def size = 0
-  def copy = this
   def first = -1
   def last = -1
   def next(i: Int) = -1
@@ -16,7 +15,7 @@ object EmptyIntSet extends IntSet {
   def filter(f: Int => Boolean) = this
   def subsetOf(d: IntSet) = true
   def toString(id: Indexer) = "[]"
-  val toBitVector = BitVector.cleared(0)
+  val toBitVector = BitVector.empty
   def intersects(bv: BitVector) = -1
   def intersects(bv: BitVector, part: Int) = false
   def bound = throw new IllegalStateException
@@ -55,7 +54,6 @@ object IntSet {
 
 abstract class IntSet {
   def size: Int
-  def copy: IntSet
   def first: Int
   def last: Int
   def next(i: Int): Int

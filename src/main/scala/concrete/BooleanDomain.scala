@@ -58,7 +58,7 @@ case object UNKNOWNBoolean extends Status {
 }
 
 case object TRUE extends Status {
-  val bitVector = BitVector.cleared(2) + 1
+  val bitVector = BitVector.empty + 1
   val array = Array(1)
   override val toString = "[t]"
   def size = 1
@@ -78,7 +78,7 @@ case object TRUE extends Status {
 }
 
 case object FALSE extends Status {
-  val bitVector = BitVector.cleared(2) + 0
+  val bitVector = BitVector.empty + 0
   val array = Array(0)
   override val toString = "[f]"
   def size = 1
@@ -98,7 +98,7 @@ case object FALSE extends Status {
 }
 
 case object EMPTY extends Status {
-  val bitVector = BitVector.cleared(2)
+  val bitVector = BitVector.empty
   val array = Array[Int]()
   override val toString = "[]"
   def size = 0

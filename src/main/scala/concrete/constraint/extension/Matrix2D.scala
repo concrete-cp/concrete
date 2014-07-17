@@ -8,7 +8,7 @@ final class Matrix2D(xSize: Int, ySize: Int, initialState: Boolean) extends Matr
     val bv = if (initialState) {
       BitVector.filled(ySize)
     } else {
-      BitVector.cleared(ySize)
+      BitVector.empty
     }
     Array.fill(xSize)(bv)
   }
@@ -17,7 +17,7 @@ final class Matrix2D(xSize: Int, ySize: Int, initialState: Boolean) extends Matr
     val bv = if (initialState) {
       BitVector.filled(xSize)
     } else {
-      BitVector.cleared(xSize)
+      BitVector.empty
     }
     Array.fill(ySize)(bv)
   }

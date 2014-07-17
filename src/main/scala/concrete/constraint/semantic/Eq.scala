@@ -9,7 +9,6 @@ import concrete.constraint.BC
 import concrete.constraint.BCCompanion
 import concrete.constraint.Removals
 
-
 /**
  * Constraint (-)x + b = y.
  *
@@ -32,9 +31,9 @@ final class EqAC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
 
   def skipIntervals: Boolean = true
 
-  def simpleEvaluation: Int = ???
+  def simpleEvaluation: Int = 2
 
-  def getEvaluation: Int = ???
+  def getEvaluation: Int = x.dom.size + y.dom.size
 
   override def isConsistent() = {
     x.dom.values.exists { xv =>
@@ -42,17 +41,24 @@ final class EqAC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
     }
   }
 
-  def reviseVariable(position: Int, mod: List[Int]) = position match {
-    case 0 => x.dom.filterValues { xv =>
-      y.dom.presentVal(yValue(xv))
-    }
+  def reviseVariable(position: Int, mod: List[Int]) = {
+    position match {
 
-    case 1 => y.dom.filterValues { yv =>
-      x.dom.presentVal(xValue(yv))
-    }
+      case 0 => x.dom.filterValues { xv =>
+        y.dom.presentVal(yValue(xv))
+      }
 
-    case _ => throw new IllegalArgumentException
+      case 1 => y.dom.filterValues { yv =>
+        x.dom.presentVal(xValue(yv))
+      }
+
+      case _ => throw new IllegalArgumentException
+    }
   }
+
+  override def toString = (if (neg) "-" else "") + x +
+    (if (b > 0) " + " + b else if (b < 0) " - " + (-b) else "") +
+    " =AC= " + y
 }
 
 final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
@@ -100,7 +106,7 @@ final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
 
   override def toString = (if (neg) "-" else "") + x +
     (if (b > 0) " + " + b else if (b < 0) " - " + (-b) else "") +
-    " == " + y
+    " =BC= " + y
 
   def advise(p: Int) = 3
   val simpleEvaluation = 2

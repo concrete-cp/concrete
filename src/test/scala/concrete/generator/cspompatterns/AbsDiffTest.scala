@@ -35,7 +35,7 @@ class AbsDiffTest extends FlatSpec with Matchers {
     cspom.constraints should have size 1
 
     val c = cspom.constraints.next
-    c.function shouldBe 'absdiff
+    c.function shouldEqual 'absdiff
     c.result shouldBe an[IntVariable]
   }
 }

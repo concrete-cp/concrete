@@ -35,7 +35,7 @@ class DiffGeTest extends FlatSpec with Matchers {
 
     val c = cspom.constraints.next
 
-    c.function shouldBe 'diffGe
+    c.function shouldEqual 'diffGe
 
     c.result match {
       case CSPOMConstant(true) =>
@@ -58,7 +58,7 @@ class DiffGeTest extends FlatSpec with Matchers {
     cspom.referencedExpressions should have size 4
     cspom.constraints should have size 1
     val c = cspom.constraints.next
-    c.function shouldBe 'diffGe
+    c.function shouldEqual 'diffGe
     c.result shouldBe a [BoolVariable]
   }
 

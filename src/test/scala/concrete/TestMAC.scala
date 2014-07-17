@@ -33,6 +33,8 @@ class TestMAC extends FlatSpec with Matchers {
     for (((q, q1, q2), i) <- (queens, qd1, qd2).zipped.toIterable.zipWithIndex) {
       problem.addConstraint(new EqAC(false, q, -i, q1))
       problem.addConstraint(new EqAC(false, q, i, q2))
+      problem.addConstraint(new EqBC(false, q, -i, q1))
+      problem.addConstraint(new EqBC(false, q, i, q2))
     }
 
     allDiff(problem, queens)

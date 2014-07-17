@@ -54,7 +54,7 @@ final class Singleton(val index: Int) extends IntSet {
 
   def subsetOf(d: IntSet) = d.present(index)
 
-  lazy val toBitVector = BitVector.cleared(index + 1) + index
+  lazy val toBitVector = BitVector.empty + index
 
   def intersects(bv: BitVector) = {
     val part = index >> 6

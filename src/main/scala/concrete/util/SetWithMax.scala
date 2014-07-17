@@ -10,7 +10,7 @@ final class SetWithMax(length: Int) extends collection.mutable.Set[Int] {
     val oldC = candidates
     candidates -= i
 
-    if ((candidates ne oldC) && i == max) {
+    if ((candidates != oldC) && i == max) {
       max = candidates.prevSetBit(i)
     }
     this
