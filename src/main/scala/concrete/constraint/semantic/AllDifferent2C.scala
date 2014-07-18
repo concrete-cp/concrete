@@ -71,6 +71,7 @@ final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) w
   }
 
   def revise() = {
+    // print(this)
     var mod = new HashSet[Int]()
     while (q.nonEmpty) {
       val checkedVariable = q.head
@@ -85,12 +86,14 @@ final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) w
         }
       }
     }
+    // println(s" -> $this")
     mod
   }
 
   var lastAdvise = -1
 
   def advise(p: Int) = {
+
     if (lastAdvise != adviseCount) {
       q = Nil
       lastAdvise = adviseCount

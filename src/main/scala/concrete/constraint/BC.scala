@@ -2,17 +2,16 @@ package concrete.constraint
 
 import scala.annotation.tailrec
 import scala.collection.immutable.HashSet
+import scala.collection.immutable.BitSet
 
 trait BC extends Constraint {
   def shave(): Seq[Int]
 
   override def revise() = {
-    val c = shave()
-
     if (intervalsOnly) {
-      c
+      shave()
     } else {
-      fixPoint(shave, c.toSet)
+      fixPoint(shave, BitSet())
     }
   }
 

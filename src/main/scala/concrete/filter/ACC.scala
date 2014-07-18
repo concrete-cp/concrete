@@ -23,9 +23,10 @@ object ACC extends LazyLogging {
     logger.debug("Control !")
     for (c <- problem.constraints) {
       (0 until c.arity).foreach(c.advise)
+      //println(c)
       val sizes = c.scope map (_.dom.size)
-      assert(c.revise().isEmpty, c + " was revised")
-      assert(
+      require(c.revise().isEmpty, c + " was revised")
+      require(
         sizes.sameElements(c.scope map (_.dom.size)),
         c + " was revised!")
     }
@@ -138,6 +139,8 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
       revisions += 1;
       //val sizes = constraint.sizes()
 
+      //val doms = domSizes(constraint)
+
       val mod = try {
         constraint.revise()
       } catch {
@@ -146,11 +149,17 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
           return false
       }
 
+//      assert(
+//        mod.toSet == (0 until constraint.arity).filter(i => domSizes(constraint)(i) != doms(i)).toSet,
+//        s"$constraint returned $mod")
+
       mod.foreach(i => updateQueue(constraint.scope(i), constraint))
 
       reduce()
     }
   }
+
+  def domSizes(c: Constraint) = c.scope.map(_.dom.size)
 
   override def toString = "AC-cons+" + queue.getClass().getSimpleName();
 
