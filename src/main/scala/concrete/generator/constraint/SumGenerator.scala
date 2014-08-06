@@ -18,17 +18,24 @@ final object SumGenerator extends Generator {
       case _ => throw new IllegalArgumentException("Parameters for zero sum must be a sequence of integer values")
     }
 
-    val (solverVariables, varParams) = (vars map cspom2concrete).zip(params).collect {
-      case (Var(v), p) => (v, p)
-    } unzip
+    val (solverVariables, varParams) = (vars map cspom2concrete)
+      .zip(params)
+      .collect {
+        case (Var(v), p) => (v, p)
+      }
+      .unzip
 
-    val constant = const - (vars map cspom2concrete).zip(params).collect {
-      case (Const(c), p) => c * p
-    }.sum
+    val constant = const - (vars map cspom2concrete)
+      .zip(params)
+      .collect {
+        case (Const(c), p) => c * p
+      }
+      .sum
 
     val mode = constraint.params.get("mode").collect {
       case m: String => SumMode.withName(m)
     }.get
+
     Seq(new Sum(constant, varParams.toArray, solverVariables.toArray, mode))
     //    
     //    undefinedVar(solverVariables: _*) match {

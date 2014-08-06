@@ -43,6 +43,17 @@ class SmallBitVectorTest extends FlatSpec with Matchers with PropertyChecks {
 
     val bv2 = bitVector + 49
     bv2.nextSetBit(47) shouldBe 49
+
+    val bv3 = BitVector.filled(64)
+    bv3 shouldBe a[SmallBitVector]
+    bv3.lastSetBit shouldBe 63
+
+    BitVector.filled(63).lastSetBit shouldBe 62
+
+    val bv4 = BitVector.filled(65)
+    bv4 shouldBe a[LargeBitVector]
+    bv4.lastSetBit shouldBe (64)
+
   }
 
   //  it should "compute prev clear bits" in {
@@ -146,6 +157,17 @@ class SmallBitVectorTest extends FlatSpec with Matchers with PropertyChecks {
     val lbv2 = lbv + 100
     bitVector should not be (lbv2)
     lbv2 should not be (bitVector)
+  }
+
+  it should "filter" in {
+    val bv = BitVector.empty + 63
+    val filt = bv.filter(_ % 2 == 1)
+
+    val bitVector = BitVector.filled(64)
+    val filtered = bitVector.filter(_ % 2 == 1)
+    filtered.cardinality shouldBe 32
+    filtered.lastSetBit shouldBe 63
+    filtered.nextSetBit(0) shouldBe 1
   }
 
 }

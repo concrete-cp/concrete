@@ -36,10 +36,9 @@ final class Sum(
   val initBound = Interval(-constant, -constant)
 
   private def filter(dom: Domain, itv: Interval, neg: Boolean): Boolean = mode match {
-    case SumLE if neg => dom.removeToVal(itv.lb - 1)
-    case SumLE => dom.removeFromVal(itv.ub + 1)
+    case SumLE if neg => dom.removeUntilVal(itv.lb)
+    case SumLE => dom.removeAfterVal(itv.ub)
     case SumEQ => dom.intersectVal(itv)
-    //case SumNE => dom.removeValInterval(itv.lb, itv.ub)
   }
 
   def shave(): List[Int] = {
@@ -52,11 +51,6 @@ final class Sum(
       bounds += scope(i).dom.valueInterval * factors(i)
       i -= 1
     }
-
-    //val bounds = domFact map { case (d, f) => d.valueInterval * f } reduce (_ + _)
-
-    //reduce (_ + _)
-    //    val bounds = Interval(0, 0)
 
     var ch: List[Int] = Nil
     i = arity - 1
@@ -72,6 +66,7 @@ final class Sum(
       }
       i -= 1
     }
+
     ch
   }
 

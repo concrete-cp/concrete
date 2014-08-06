@@ -10,10 +10,18 @@ final class SetWithMax(length: Int) extends collection.mutable.Set[Int] {
     val oldC = candidates
     candidates -= i
 
-    if ((candidates != oldC) && i == max) {
-      max = candidates.prevSetBit(i)
+    if (i == max) {
+      max = candidates.prevSetBit(max + 1)
     }
+    //println(s"- $i -> $this")
     this
+  }
+
+  def clearFrom(newMax: Int): Unit = {
+    if (newMax <= max) {
+      max = candidates.prevSetBit(newMax)
+    }
+    //println(s"clearFrom($newMax) -> $this")
   }
 
   override def foreach[U](f: Int => U) {
@@ -45,6 +53,6 @@ final class SetWithMax(length: Int) extends collection.mutable.Set[Int] {
     }
   }
 
-  def contains(elem: Int): Boolean = candidates(elem)
+  def contains(elem: Int): Boolean = elem <= max && candidates(elem)
 
 }

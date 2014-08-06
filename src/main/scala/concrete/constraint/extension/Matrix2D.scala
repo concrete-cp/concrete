@@ -29,13 +29,15 @@ final class Matrix2D(xSize: Int, ySize: Int, initialState: Boolean) extends Matr
   override def check(tuple: Array[Int]) = xMatrix(tuple(0))(tuple(1))
 
   override def set(tuple: Array[Int], status: Boolean) {
+
     if (tuple(0) < xMatrix.length && tuple(1) < yMatrix.length) {
       xMatrix(tuple(0)) = xMatrix(tuple(0)).set(tuple(1), status);
       yMatrix(tuple(1)) = yMatrix(tuple(1)).set(tuple(0), status);
       empty = false;
     } else {
-      logger.warn(s"Tuple ${tuple.mkString("(", ", ", ")")} is out of the scope of matrix $this")
+      logger.info(s"Tuple ${tuple.mkString("(", ", ", ")")} is out of the scope of matrix $this")
     }
+
   }
 
   def getBitVector(position: Int, index: Int) = position match {

@@ -45,9 +45,12 @@ object SumDomains extends VariableCompiler('sum) {
 
       val coefspan = (iargs, coef).zipped.map((a, c) => IntVariable.span(a) * c).toIndexedSeq
 
-      val map = for ((a, i) <- args zip iargs.indices) yield {
-        val others = iargs.indices.filter(_ != i).map(coefspan).reduce(_ + _)
-        a -> reduceDomain(iargs(i), (initBound - others) / coef(i))
+      val map = for (i <- args.indices) yield {
+        val others = iargs.indices
+          .filter(_ != i)
+          .map(coefspan)
+          .foldLeft(initBound)(_ - _)
+        args(i) -> reduceDomain(iargs(i), others / coef(i))
       }
 
       map.toMap

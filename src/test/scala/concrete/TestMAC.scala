@@ -13,12 +13,13 @@ import concrete.constraint.semantic.EqAC
 
 object SlowTest extends Tag("concrete.SlowTest")
 
-
 class TestMAC extends FlatSpec with Matchers {
 
   def qp(size: Int) = {
 
-    val queens = (0 until size) map (q => new Variable("q" + q, IntDomain(0 until size))) toList
+    val queens = (0 until size)
+      .map(q => new Variable("q" + q, IntDomain(0 until size)))
+      .toList
 
     val qd1 = queens.zipWithIndex map {
       case (q, i) => new Variable("d1_" + q.name, IntDomain(-i until size - i))
@@ -62,7 +63,7 @@ class TestMAC extends FlatSpec with Matchers {
   behavior of "MAC"
 
   for ((size, nb) <- sols) {
-    it should s"solve queens-$size" taggedAs(SlowTest) in {
+    it should s"solve queens-$size" taggedAs (SlowTest) in {
       val problem = qp(size)
 
       val solver = new MAC(problem, pm)

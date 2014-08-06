@@ -38,25 +38,25 @@ trait Backtrackable[A] extends DelayedInit {
   def restoreLevel(level: Int) {
     assert(level <= currentLevel);
 
-    //if (history != Nil) {
-    history = history.dropWhile(_._1 > level)
-    //    if (history == Nil) {
-    //      restore(init())
-    //    } else {
-    assert(!history.isEmpty)
+    while (history.head._1 > level) {
+      history = history.tail
+    }
+
+    assert(history.nonEmpty)
     restore(history.head._2)
-    //}
+
     _altered = false
-    //    }
+
     _currentLevel = level;
-    //    _last = bvDomain.prevSetBit(domain.length);
 
   }
 
   def getLevel(level: Int) = {
     if (level < currentLevel) {
       history.find(_._1 <= level).get._2
-    } else { save }
+    } else {
+      save
+    }
   }
 
 }

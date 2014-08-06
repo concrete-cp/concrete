@@ -16,7 +16,7 @@ import cspom.variable.IntVariable.iterable
 final object SlidingSum extends ConstraintCompilerNoData {
 
   override def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM) = {
-    constraint.function == 'slidingSum
+    constraint.function == 'slidingSum && constraint.result.isTrue
   }
 
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM) = {

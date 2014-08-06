@@ -126,6 +126,16 @@ trait MDD extends Identified with Iterable[Seq[Int]] with LazyLogging {
     case _ => false
   }
 
+  def universal(scope: Array[Variable], timestamp: Int, position: Int = 0): Boolean = {
+    (this ne MDD0) && ((this eq MDDLeaf) || cache(timestamp, true, {
+      scope(position).dom.indices.forall { i =>
+        subMDD(i).universal(scope, timestamp, position + 1)
+      }
+    }))
+  }
+
+  def subMDD(i: Int): MDD
+
 }
 
 final object MDDLeaf extends MDD {
@@ -142,7 +152,9 @@ final object MDDLeaf extends MDD {
     this
   }
   def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax) = {
-    assert(depth > l.max)
+    //assert(depth > l.max)
+    //println("leaf at depth " + depth)
+    l.clearFrom(depth)
   }
   def addTrie(tuple: Array[Int], i: Int) = throw new UnsupportedOperationException
   override def toString = "MDD Leaf"
@@ -160,6 +172,8 @@ final object MDDLeaf extends MDD {
   }
 
   def copy(ts: Int) = this
+
+  def subMDD(i: Int) = MDDLeaf
 }
 
 final object MDD0 extends MDD {
@@ -191,6 +205,8 @@ final object MDD0 extends MDD {
     None
 
   def copy(ts: Int) = this
+
+  def subMDD(i: Int) = MDD0
 }
 
 final class MDD1(private val child: MDD, private val index: Int) extends MDD {
@@ -242,9 +258,7 @@ final class MDD1(private val child: MDD, private val index: Int) extends MDD {
     cache(ts, (), {
       if (depth <= l.max) {
         if (f(depth, index)) l -= depth
-        if (depth + 1 <= l.max) {
-          child.fillFound(ts, f, depth + 1, l)
-        }
+        child.fillFound(ts, f, depth + 1, l)
       }
     })
   }
@@ -286,6 +300,7 @@ final class MDD1(private val child: MDD, private val index: Int) extends MDD {
 
   def copy(ts: Int) = cache(ts, new MDD1(child.copy(ts), index))
 
+  def subMDD(i: Int) = if (index == i) child else MDD0
 }
 
 final class MDD2(
@@ -293,7 +308,6 @@ final class MDD2(
   private val right: MDD, private val rightI: Int) extends MDD {
   assert(right ne MDD0)
   assert(left ne MDD0)
-  assert(leftI < rightI)
 
   def forSubtries(f: (Int, MDD) => Boolean) = {
     f(leftI, left) && f(rightI, right)
@@ -319,20 +333,15 @@ final class MDD2(
     case _ => false
   }
 
-  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax): Unit = cache(ts, (), {
-    if (depth <= l.max) {
-      if (f(depth, leftI)) l -= depth
-      if (depth + 1 <= l.max) {
-        left.fillFound(ts, f, depth + 1, l)
-      }
+  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax): Unit =
+    cache(ts, (), {
       if (depth <= l.max) {
+        if (f(depth, leftI)) l -= depth
+        left.fillFound(ts, f, depth + 1, l)
         if (f(depth, rightI)) l -= depth
-        if (depth + 1 <= l.max) {
-          right.fillFound(ts, f, depth + 1, l)
-        }
+        right.fillFound(ts, f, depth + 1, l)
       }
-    }
-  })
+    })
 
   @inline
   private def filteredTrie(ts: Int, f: (Int, Int) => Boolean, modified: List[Int], depth: Int, t: MDD, i: Int) = {
@@ -400,6 +409,12 @@ final class MDD2(
         checkSup(ts, scope, p, i, rightI, right, support, depth)))
 
   def copy(ts: Int) = cache(ts, new MDD2(left.copy(ts), leftI, right.copy(ts), rightI))
+
+  def subMDD(i: Int) = i match {
+    case `leftI` => left
+    case `rightI` => right
+    case _ => MDD0
+  }
 }
 
 final class MDDn(
@@ -459,9 +474,7 @@ final class MDDn(
     while (i >= 0 && depth <= l.max) {
       val ti = indices(i)
       if (f(depth, ti)) l -= depth
-      if (depth + 1 <= l.max) {
-        trie(ti).fillFound(ts, f, depth + 1, l)
-      }
+      trie(ti).fillFound(ts, f, depth + 1, l)
       i -= 1
     }
   })
@@ -603,6 +616,14 @@ final class MDDn(
         s
       }
     })
+
+  def subMDD(i: Int) = {
+    if (i >= trie.length || (trie(i) eq null)) {
+      MDD0
+    } else {
+      trie(i)
+    }
+  }
 }
 
 

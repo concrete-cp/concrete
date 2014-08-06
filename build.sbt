@@ -5,9 +5,9 @@ name := "concrete"
 
 organization := "fr.univ-valenciennes.concrete"
 
-version := "1.0.1-SNAPSHOT"
+version := "1.1"
 
-scalaVersion := "2.11.1"
+scalaVersion := "2.11.2"
 
 
 // For JSR331, CSPOM and its dependencies
@@ -32,7 +32,16 @@ libraryDependencies ++= Seq(
 	"com.github.axel22" %% "scalameter" % "0.5-M2" % "test"
 	)
 
-scalacOptions ++= Seq("-deprecation", "-unchecked", "-optimise", "-Xlint", "-Xdisable-assertions")
+scalacOptions ++= Seq("-optimise"
+	      , "-Xdisable-assertions"
+//	"-deprecation", 
+//	"-unchecked", 
+//	"-optimise", 
+//	"-Xlint", 
+//	
+//	"-feature",
+//	"-Yinline-warnings"
+)
 
 
 

@@ -32,7 +32,9 @@ class GeneratorManager(pm: ParameterManager) {
     'lexleq -> LexLeqGenerator,
     'occurrence -> OccurrenceGenerator,
     'extension -> new ExtensionGenerator(pm),
-    'sq -> SquareGenerator)
+    'sq -> SquareGenerator,
+    'inverse -> InverseGenerator,
+    'cumulative -> CumulativeGenerator)
 
   def register(entry: (Symbol, Generator)) {
     known += entry

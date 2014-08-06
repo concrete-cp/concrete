@@ -15,6 +15,7 @@ import cspom.compiler.ConstraintCompilerNoData
 import concrete.CSPOMDriver
 import CSPOMDriver._
 import cspom.variable.BoolVariable
+import cspom.variable.IntVariable
 
 object SetIn extends ConstraintCompilerNoData {
 
@@ -22,15 +23,18 @@ object SetIn extends ConstraintCompilerNoData {
     constraint.function == 'set_in && constraint.nonReified
 
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM) = {
-    val Seq(variable, CSPOMSeq(set, _, _)) = constraint.arguments
+    val Seq(variable: CSPOMVariable[_], CSPOMConstant(set: Seq[Int] @unchecked)) = constraint.arguments
 
-    val constraints = for (v <- set) yield {
-      new CSPOMConstraint(new BoolVariable(), 'eq, Seq(variable, v))
-    }
-
-    val disjunction = CSPOMConstraint('or, constraints.map(_.result))
-
-    replaceCtr(constraint, disjunction +: constraints, problem)
+    replaceCtr(constraint, Nil, problem) ++
+      replace(Seq(variable), variable.intersected(IntVariable.ofSeq(set: _*)), problem)
+    //
+    //    val constraints = for (v <- set) yield {
+    //      new CSPOMConstraint(new BoolVariable(), 'eq, Seq(variable, v))
+    //    }
+    //
+    //    val disjunction = CSPOMConstraint('or, constraints.map(_.result))
+    //
+    //    replaceCtr(constraint, disjunction +: constraints, problem)
 
   }
   def selfPropagation = false

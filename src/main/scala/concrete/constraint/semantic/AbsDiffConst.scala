@@ -13,7 +13,7 @@ import concrete.constraint.BCCompanion
 final class AbsDiffConstAC(val result: Int, val v0: Variable, val v1: Variable)
   extends Constraint(Array(v0, v1)) with BCCompanion with Residues {
 
-  def skipIntervals = true
+  def skipIntervals = false
   
   def checkValues(t: Array[Int]) = result == math.abs(t(0) - t(1))
 
@@ -33,7 +33,7 @@ final class AbsDiffConstAC(val result: Int, val v0: Variable, val v1: Variable)
 
   }
 
-  override def toString = result + " = |" + v0 + " - " + v1 + "|";
+  override def toString = result + " =AC= |" + v0 + " - " + v1 + "|";
 
   def getEvaluation = v0.dom.size + v1.dom.size
 
@@ -81,15 +81,9 @@ final class AbsDiffConstBC(val result: Int, val v0: Variable, val v1: Variable)
     mod
   }
 
-  override def toString = result + " = |" + v0 + " - " + v1 + "|";
+  override def toString = result + " =BC= |" + v0 + " - " + v1 + "|";
 
   def advise(p: Int) = 5
-  def getEvaluation = if (intervalsOnly) 5 else {
-
-    val d1 = v0.dom.size
-    val d2 = v1.dom.size
-    d1 + d2;
-  }
 
   def simpleEvaluation = 1
 }

@@ -24,7 +24,7 @@ class LargeBitVector(val words: Array[Long]) extends AnyVal with BitVector {
   def nextSetBit(start: Int): Int = {
     var position = word(start);
 
-    if (position < 0 || position >= nbWords) {
+    if (position >= nbWords) {
       -1
     } else {
       var word = words(position) & (MASK << start);
@@ -170,7 +170,7 @@ class LargeBitVector(val words: Array[Long]) extends AnyVal with BitVector {
   //  }
 
   def intersects(bv: BitVector, position: Int) = {
-    (bv.getWord(position) & words(position)) != 0;
+    (bv.getWord(position) & getWord(position)) != 0;
   }
 
   def intersects(bv: BitVector): Int = {
@@ -187,7 +187,7 @@ class LargeBitVector(val words: Array[Long]) extends AnyVal with BitVector {
 
   def nbWords = words.length
 
-  def isEmpty(): Boolean = {
+  def isEmpty: Boolean = {
     for (l <- words) {
       if (l != 0L) {
         return false;

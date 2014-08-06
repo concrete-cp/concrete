@@ -18,7 +18,7 @@ class ElementTest {
 
     val c = IntVariable(1 to 7)
 
-    val mdd = Element.elementVar(as, 2 to 4)
+    val mdd = Element.elementVar(as.map(_.toSeq), 2 to 4)
 
     //mdd.foreach(println)
     assertEquals(54, mdd.size)

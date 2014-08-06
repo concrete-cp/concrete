@@ -11,7 +11,7 @@ class ConsoleWriter extends ConcreteWriter {
   def parameters(params: NodeSeq) {
     for (p <- params \\ "p") {
 
-      Console.println(s"% ${p \ "@name" text} = ${p.text}")
+      Console.println(s"% ${(p \ "@name").text} = ${p.text}")
 
     }
 

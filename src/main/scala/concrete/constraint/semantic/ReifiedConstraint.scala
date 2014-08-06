@@ -40,7 +40,7 @@ final class ReifiedConstraint(
     a
   }
 
-  val controlDomain = controlVariable.dom match {
+  private val controlDomain: BooleanDomain = controlVariable.dom match {
     case bd: BooleanDomain => bd
     case _ => throw new IllegalArgumentException("Control variable must be boolean")
   }
@@ -139,7 +139,22 @@ final class ReifiedConstraint(
     } else {
       controlDomain.status match {
         case UNKNOWNBoolean => {
-          positiveConstraint.advise(positivePositions(position)) + negativeConstraint.advise(negativePositions(position))
+          val p = positiveConstraint.advise(positivePositions(position))
+          val n = negativeConstraint.advise(negativePositions(position))
+          if (p < 0) {
+            if (n < 0) {
+              -1
+            } else {
+              n
+            }
+          } else {
+            if (n < 0) {
+              p
+            } else {
+              p + n
+            }
+          }
+
         }
         case TRUE => positiveConstraint.advise(positivePositions(position))
         case FALSE => negativeConstraint.advise(negativePositions(position))

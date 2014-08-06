@@ -69,7 +69,7 @@ final class AbsDiffBC(val result: Variable, val v0: Variable, val v1: Variable)
     mod
   }
 
-  override def toString = result + " = |" + v0 + " - " + v1 + "|";
+  override def toString = result + " =BC= |" + v0 + " - " + v1 + "|";
 
   def advise(pos: Int) = 5
 

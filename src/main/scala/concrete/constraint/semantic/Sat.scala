@@ -16,9 +16,8 @@ class Sat(scope: IndexedSeq[Variable]) extends Constraint(scope.toArray)
   private def numVariable(variablePosition: Int, index: Int) =
     index + offset(variablePosition)
 
-  val values = (0 until scope.size) map { vp =>
-    offset(vp) until offset(vp + 1) toArray
-  }
+  val values = (0 until scope.size)
+    .map { vp => (offset(vp) until offset(vp + 1)).toArray }
 
   var clauses: List[Array[Int]] = List.empty
 

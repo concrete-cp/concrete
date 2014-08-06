@@ -84,9 +84,12 @@ final class BinaryExtR(scope: Array[Variable], matrix2d: Matrix2D, shared: Boole
   private val residues: Array[Array[Int]] = Array(new Array[Int](scope(0).dom.maxSize), new Array[Int](scope(1).dom.maxSize))
 
   def hasSupport(variablePosition: Int, index: Int) = {
-    controlResidue(variablePosition, index) || {
-      val matrixBV: BitVector = matrix2d.getBitVector(variablePosition, index);
-      val intersection = scope(1 - variablePosition).dom.intersects(matrixBV)
+    val matrixBV: BitVector = matrix2d.getBitVector(variablePosition, index)
+    val dom = scope(1 - variablePosition).dom
+    val part = residues(variablePosition)(index)
+    BinaryExt.presenceChecks += 1
+    (part >= 0 && dom.intersects(matrixBV, part)) || {
+      val intersection = dom.intersects(matrixBV)
 
       if (intersection >= 0) {
         BinaryExt.checks += 1 + intersection;
@@ -99,12 +102,6 @@ final class BinaryExtR(scope: Array[Variable], matrix2d: Matrix2D, shared: Boole
     }
   }
 
-  private def controlResidue(position: Int, index: Int) = {
-    val part = residues(position)(index)
-    BinaryExt.presenceChecks += 1
-    (part != -1 && scope(1 - position).dom.intersects(
-      matrix2d.getBitVector(position, index), part))
-  }
 }
 
 final class BinaryExtNR(scope: Array[Variable], matrix2d: Matrix2D, shared: Boolean) extends BinaryExt(scope, matrix2d, shared) {

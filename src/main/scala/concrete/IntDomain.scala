@@ -87,6 +87,8 @@ final class IntDomain(
 
   def intSet = _intSet
 
+  def toBitVector = intSet.toBitVector
+  
   def next(i: Int) = intSet.next(i)
 
   def prev(i: Int) = intSet.prev(i)
@@ -263,7 +265,7 @@ final class IntDomain(
     }
   }
 
-  def bound = intSet.bound
+  def bound = intSet.bound && indexer.contiguous
 
   def intersects(bv: BitVector) = intSet.intersects(bv)
   def intersects(bv: BitVector, part: Int) = intSet.intersects(bv, part)

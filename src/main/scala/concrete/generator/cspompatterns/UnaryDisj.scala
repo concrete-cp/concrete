@@ -23,7 +23,7 @@ object UnaryOr extends ConstraintCompiler {
 
     val (res, arg) = data
 
-    val Seq(constant: Boolean) = fc.params.getOrElse("revsign", Seq(false))
+    val Seq(constant: Boolean) = fc.getParamOrElse("revsign", Seq(false))
 
     replaceCtr(fc, Seq(), problem) ++ replace(Seq(arg), CSPOMConstant(constant ^ res), problem)
 

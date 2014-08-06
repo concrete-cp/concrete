@@ -12,12 +12,12 @@ object ConcretePatterns {
   def apply(params: ParameterManager) = {
     val standard = StandardCompilers() ++
       Seq(
-        AbsDiff, AbsDiffDomains, SubToAdd, AddToEq, BoolEq,
+        SubToAdd, AbsDiff, AbsDiffDomains, AddToEq, BoolEq,
         AddDomains, EqDomains, Bool2IntDomains, SumDomains,
         UnaryOr, MergeNotDisj,
         NegToCNF, Xor, ReifiedDisj, ReifiedConj,
         NeqVec, SimplDisj, 
-        LtToGt, SlidingSum, SetIn, Element, In, MinMax, ConcreteTypes //, //SimplDisj//ConstToVar
+        LtToGt, SlidingSum, Regular, SetIn, Element, In, MinMax, ConcreteTypes //, //SimplDisj//ConstToVar
         )
 
     val improveModel = params.getOrElse("improveModel", true)

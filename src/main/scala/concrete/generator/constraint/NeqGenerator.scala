@@ -11,6 +11,7 @@ import concrete.constraint.semantic.ReifiedNeq
 import concrete.UNSATObject
 import Generator._
 import concrete.constraint.semantic.EqAC
+import concrete.constraint.semantic.EqBC
 
 final object NeqGenerator extends Generator {
 
@@ -42,7 +43,7 @@ final object NeqGenerator extends Generator {
 
     (v0, v1) match {
       case (Const(v0), Const(v1)) =>
-        if (v0 == v1) {
+        if (v0 != v1) {
           result.dom.setSingle(1)
         } else {
           result.dom.setSingle(0)
@@ -56,7 +57,11 @@ final object NeqGenerator extends Generator {
         Seq(new ReifiedConstraint(
           result,
           new Neq(v0, v1),
-          new EqAC(v0, v1)))
+          new EqAC(v0, v1)),
+          new ReifiedConstraint(
+            result,
+            new Neq(v0, v1),
+            new EqBC(v0, v1)))
     }
 
   }

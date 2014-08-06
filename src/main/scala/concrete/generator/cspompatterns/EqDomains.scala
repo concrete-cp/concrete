@@ -18,10 +18,13 @@ import cspom.VariableNames
 object EqDomains extends VariableCompiler('eq) {
 
   def compiler(c: CSPOMConstraint[_]) = c match {
-    case CSPOMConstraint(r: SimpleExpression[_], _, Seq(i0: SimpleExpression[_], i1: SimpleExpression[_]), params) =>
+    case CSPOMConstraint(r: SimpleExpression[_], _,
+      Seq(i0: SimpleExpression[_], i1: SimpleExpression[_]),
+      params) if (IntVariable.isInt(i0) || IntVariable.isInt(i1)) =>
       val neg: Boolean = params.get("neg").map { case n: Boolean => n }.getOrElse(false)
-      val negFactor = if (neg) -1 else 1
       val offset: Int = params.get("offset").map { case o: Int => o }.getOrElse(0)
+
+      val negFactor = if (neg) -1 else 1
 
       val br = BoolVariable.boolExpression(r)
       val ii0 = intExpression(i0)
@@ -47,8 +50,7 @@ object EqDomains extends VariableCompiler('eq) {
         ii1
       }
 
-      val s: Map[CSPOMExpression[_], CSPOMExpression[_]] = Map(r -> res, i0 -> ri0, i1 -> ri1)
-
-      s
+      Map(r -> res, i0 -> ri0, i1 -> ri1)
+    case _ => Map()
   }
 }

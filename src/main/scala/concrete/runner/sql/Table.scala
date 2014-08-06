@@ -161,9 +161,11 @@ object Table extends App {
 
         }
 
-        val results = sqlQuery.as[(Int, String, Option[Double])].list.map {
-          case (config, solution, value) => config -> Resultat(solution, value.getOrElse(Double.NaN))
-        } toMap
+        val results = sqlQuery.as[(Int, String, Option[Double])].list
+          .map {
+            case (config, solution, value) => config -> Resultat(solution, value.getOrElse(Double.NaN))
+          }
+          .toMap
 
         for (
           i <- configs.indices;

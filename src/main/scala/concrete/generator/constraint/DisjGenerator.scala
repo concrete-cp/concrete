@@ -16,7 +16,7 @@ final object DisjGenerator extends Generator {
     val scope = gC.arguments map cspom2concreteVar
 
     val params: IndexedSeq[Boolean] = gC.params.get("revsign") match {
-      case Some(p: Seq[Boolean]) => p.toIndexedSeq
+      case Some(p: Seq[_]) => p.toIndexedSeq.asInstanceOf[IndexedSeq[Boolean]]
       case None => IndexedSeq.fill(scope.size)(false)
       case p: Any => throw new IllegalArgumentException(s"Parameters for disjunction must be a sequence of boolean values, not '$p'")
     }

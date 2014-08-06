@@ -12,7 +12,7 @@ trait Removals extends Constraint with AdviseCounts {
   }
 
   def revise() = {
-    val r = revise(modified(adviseCount))
+    val r = revise(modified)
     Arrays.fill(removals, -1)
     r
   }
@@ -21,11 +21,11 @@ trait Removals extends Constraint with AdviseCounts {
 
   // scope.iterator.zipWithIndex.zip(removals.iterator).filter(t => t._2 >= reviseCount).map(t => t._1)
 
-  private def modified(reviseCount: Int): List[Int] = {
+  def modified: List[Int] = {
     var i = arity - 1
     var mod: List[Int] = Nil
     while (i >= 0) {
-      if (removals(i) == reviseCount) {
+      if (removals(i) == adviseCount) {
         mod ::= i
       }
       i -= 1

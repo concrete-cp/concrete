@@ -7,22 +7,20 @@ trait BC extends Constraint {
   def shave(): Seq[Int]
 
   override def revise() = {
-    val c = shave()
-
     if (intervalsOnly) {
-      c
+      shave()
     } else {
-      fixPoint(shave, c.toSet)
+      fixPoint()
     }
   }
 
   @tailrec
-  private def fixPoint(f: => Seq[Int], ch: Set[Int]): Set[Int] = {
-    val c = f
+  private def fixPoint(ch: Set[Int] = Set()): Set[Int] = {
+    val c = shave()
     if (c.isEmpty) {
       ch
     } else {
-      fixPoint(f, ch ++ c)
+      fixPoint(ch ++ c)
     }
   }
 }

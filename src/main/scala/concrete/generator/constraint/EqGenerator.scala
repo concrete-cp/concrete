@@ -57,13 +57,20 @@ final object EqGenerator extends Generator {
     require(!neg)
     require(offset == 0)
     (a, b) match {
-      case (Const(a), Const(b)) => ???
+      case (Const(a), Const(b)) =>
+        result.dom.assign(
+          if (a == b) { 1 } else { 0 })
+        Nil
       case (Const(a), Var(b)) => Seq(new ReifiedEquals(result, b, a))
       case (Var(a), Const(b)) => Seq(new ReifiedEquals(result, a, b))
       case (Var(a), Var(b)) => Seq(
         new ReifiedConstraint(
           result,
           new EqAC(a, b),
+          new Neq(a, b)),
+        new ReifiedConstraint(
+          result,
+          new EqBC(a, b),
           new Neq(a, b)))
     }
 

@@ -11,6 +11,7 @@ final class ResidueManagerFast(scope: Array[Variable]) {
 
   def getResidue(position: Int, index: Int) = last(position)(index)
 
+  @annotation.tailrec
   def updateResidue(residue: Array[Int], i: Int = arity - 1) {
     if (i >= 0) {
       last(i)(residue(i)) = residue
@@ -18,12 +19,11 @@ final class ResidueManagerFast(scope: Array[Variable]) {
     }
   }
 
+  @annotation.tailrec
   def remove(residue: Array[Int], i: Int = arity - 1) {
-
     if (i >= 0) {
       last(i)(residue(i)) = null
       remove(residue, i - 1)
     }
-
   }
 }

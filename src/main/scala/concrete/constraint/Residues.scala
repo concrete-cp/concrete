@@ -9,7 +9,7 @@ trait Residues extends VariablePerVariable {
 
   def reviseVariable(position: Int, modified: List[Int]): Boolean =
     scope(position).dom.filter { index =>
-      val residue = residues.getResidue(position, index);
+      val residue = residues.getResidue(position, index)
       
       ((residue ne null) && controlTuplePresence(residue)) ||
         (findSupport(position, index) match {

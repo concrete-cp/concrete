@@ -171,7 +171,7 @@ final class BooleanDomain(var _status: Status) extends Domain
   }
 
   def status_=(s: Status) {
-    assert(status == UNKNOWNBoolean || s == EMPTY && status != EMPTY,
+    assert(status == UNKNOWNBoolean || status == s || s == EMPTY,
       "Assigning from " + status + " to " + s)
     _status = s;
     altering()
@@ -281,7 +281,7 @@ final class BooleanDomain(var _status: Status) extends Domain
   def currentIndexes = status.indices
   def valueBV(offset: Int) = throw new UnsupportedOperationException
   def bound = true
-  def intSet = status.intSet
+  def toBitVector = status.intSet.toBitVector
   def undefined = false
 }
 

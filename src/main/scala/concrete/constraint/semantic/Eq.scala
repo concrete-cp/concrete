@@ -104,6 +104,8 @@ final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
     mod
   }
 
+  override def isConsistent = x.dom.valueInterval.intersects(y.dom.valueInterval)
+  
   override def toString = (if (neg) "-" else "") + x +
     (if (b > 0) " + " + b else if (b < 0) " - " + (-b) else "") +
     " =BC= " + y

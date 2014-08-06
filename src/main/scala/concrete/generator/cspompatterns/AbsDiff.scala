@@ -6,32 +6,60 @@ import cspom.variable.CSPOMVariable
 import cspom.compiler.Delta
 import cspom.util.IntervalsArithmetic._
 import cspom.variable.CSPOMExpression
-
+import cspom.variable.SimpleExpression
 
 /**
  * If constraint is the sub() constraint, converts a=sub(y,z), x=abs(a) to
  * x=absdiff(y,z). No other constraint may imply the auxiliary constraint a.
  */
 object AbsDiff extends ConstraintCompiler {
-  type A = Set[CSPOMConstraint[Int]]
+  type A = (CSPOMConstraint[Any], SimpleExpression[Any], Set[CSPOMConstraint[Any]])
 
   override def mtch(c: CSPOMConstraint[_], problem: CSPOM) = c match {
-    case CSPOMConstraint(result: CSPOMVariable[_], 'sub, args, _) if result.hasParam("var_is_introduced") =>
-      val process: Set[CSPOMConstraint[Int]] = problem.constraints(result).collect {
-        case c @ CSPOMConstraint(_, 'abs, Seq(result), _) => c.asInstanceOf[CSPOMConstraint[Int]]
+    case absConstraint @ CSPOMConstraint(_, 'abs, Seq(absArg: SimpleExpression[_]), _) =>
+      val addConstraints = problem.constraints(absArg).collect {
+        case addConstraint @ CSPOMConstraint(_, 'add, addArgs, _) if addArgs.size == 2 && addArgs.contains(absArg) =>
+          addConstraint
       }
-      if (process.isEmpty) {
+
+      if (addConstraints.isEmpty) {
         None
       } else {
-        Some(process)
+        Some((absConstraint, absArg, addConstraints))
       }
     case _ => None
   }
 
   def compile(c: CSPOMConstraint[_], problem: CSPOM, data: A) = {
-    data.foldLeft(Delta()) { (acc, fc) =>
-      val nc = CSPOMConstraint(fc.result, 'absdiff, c.arguments)
-      acc ++ replaceCtr(Seq(c, fc), nc, problem)
+    val (absConstraint, absArg, addConstraints) = data
+    val delta = addConstraints.foldLeft(Delta()) {
+      case (acc, addConstraint) =>
+        val Seq(other: SimpleExpression[_]) = addConstraint.arguments.filterNot(_ eq absArg)
+
+        /**
+         * We have  absConstraint.result = |absArg| and addConstraint.result = absArg + other
+         *
+         * so absConstraint.result = |addConstraint.result - other|
+         */
+
+        val nc = CSPOMConstraint(absConstraint.result, 'absdiff, Seq(addConstraint.result, other))
+        val delta = acc.added(problem.ctr(nc))
+        /**
+         *  Remove addConstraint if absArg is not referenced
+         */
+        if (problem.namesOf(absArg).isEmpty) {
+          problem.removeConstraint(addConstraint)
+          delta.removed(addConstraint)
+        } else {
+          delta
+        }
+    }
+
+    if (problem.constraints(absArg).size == 1) {
+      problem.removeConstraint(absConstraint)
+      delta.removed(absConstraint)
+    } else {
+      delta
     }
 
   }

@@ -89,9 +89,11 @@ class CSPOMSolver(
     lazy val apply = concrete2CspomSol(concreteSol)
 
     def concrete2CspomSol(sol: Map[Variable, Any]): Map[String, Any] = {
-      cspom.namedExpressions.iterator.flatMap {
-        case (n, e) => concrete2CspomSol(n, e, sol)
-      } toMap
+      cspom.namedExpressions.iterator
+        .flatMap {
+          case (n, e) => concrete2CspomSol(n, e, sol)
+        }
+        .toMap
     }
 
     private def concrete2CspomSol(name: String, expr: CSPOMExpression[_], sol: Map[Variable, Any]): Seq[(String, Any)] = {
@@ -198,27 +200,33 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
 
   def reset()
 
-  protected def extractSolution: Map[Variable, Any] = problem.variables.map(v => (v, v.dom)).map {
-    case (variable, dom: IntDomain) => variable -> dom.firstValue
-    case (variable, dom: BooleanDomain) => variable -> dom.canBe(true)
-  } toMap
+  protected def extractSolution: Map[Variable, Any] = problem.variables
+    .map(v => (v, v.dom)).map {
+      case (variable, dom: IntDomain) => variable -> dom.firstValue
+      case (variable, dom: BooleanDomain) => variable -> dom.canBe(true)
+    }
+    .toMap
 
   final def preprocess(filter: Filter): Boolean = {
 
     logger.info("Preprocessing");
 
-    val preprocessor = preprocessorClass.map {
-      pc =>
-        val p = pc.getConstructor(classOf[Problem]).newInstance(problem)
-        statistics.register("preprocessor", p)
-        p
-    } getOrElse {
-      filter
-    }
+    val preprocessor = preprocessorClass
+      .map {
+        pc =>
+          val p = pc.getConstructor(classOf[Problem]).newInstance(problem)
+          statistics.register("preprocessor", p)
+          p
+      }
+      .getOrElse {
+        filter
+      }
 
     val (r, t) = StatisticsManager.time(preprocessor.reduceAll());
 
-    preproRemoved = problem.variables map { v => v.dom.maxSize - v.dom.size } sum
+    preproRemoved = problem.variables
+      .map { v => v.dom.maxSize - v.dom.size }
+      .sum
 
     this.preproCpu = t;
     r

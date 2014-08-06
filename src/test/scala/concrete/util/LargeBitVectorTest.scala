@@ -6,14 +6,23 @@ import org.scalatest.FlatSpec
 final class LargeBitVectorTest extends FlatSpec with Matchers {
 
   "LargeBitVectors" should "be filled" in {
-    var bitVector = BitVector.filled(125)
+    val bitVector = BitVector.filled(125)
     assert(bitVector(64));
     assert(bitVector(65));
     assert(bitVector(124));
     assert(!bitVector(125));
+    bitVector.nextSetBit(0) shouldBe 0
 
-    bitVector = BitVector.empty
-    bitVector.nextSetBit(0) shouldBe -1
+    BitVector.empty.nextSetBit(0) shouldBe -1
+    
+    BitVector.filled(0) shouldBe BitVector.empty
+    
+    val bv2 = BitVector.empty + 0
+    bv2.nextSetBit(0) shouldBe 0
+    bv2.nextSetBit(1) shouldBe -1
+    
+    val bv3 = BitVector.empty + 64
+    bv3.nextSetBit(0) shouldBe 64
   }
 
   it should "compute correct number of words" in {
@@ -48,28 +57,28 @@ final class LargeBitVectorTest extends FlatSpec with Matchers {
     bitVector.nextSetBit(64) shouldBe 100
     bitVector.nextSetBit(101) shouldBe -1
   }
-//
-//  it should "compute prev cleared bit" in {
-//    var bitVector = BitVector.filled(125) - 46 - 49 - 100
-//
-//    bitVector.prevClearBit(47) shouldBe 46
-//    bitVector.prevClearBit(46) shouldBe -1
-//    bitVector.prevClearBit(45) shouldBe -1
-//    bitVector.prevClearBit(110) shouldBe 100
-//
-//    bitVector.prevClearBit(64) shouldBe 49
-//    bitVector.prevClearBit(63) shouldBe 49
-//
-//    bitVector -= 64
-//    bitVector.prevClearBit(65) shouldBe 64
-//    bitVector.prevClearBit(64) shouldBe 49
-//
-//    bitVector += 64
-//    bitVector -= 63
-//    bitVector.prevClearBit(65) shouldBe 63
-//    bitVector.prevClearBit(63) shouldBe 49
-//
-//  }
+  //
+  //  it should "compute prev cleared bit" in {
+  //    var bitVector = BitVector.filled(125) - 46 - 49 - 100
+  //
+  //    bitVector.prevClearBit(47) shouldBe 46
+  //    bitVector.prevClearBit(46) shouldBe -1
+  //    bitVector.prevClearBit(45) shouldBe -1
+  //    bitVector.prevClearBit(110) shouldBe 100
+  //
+  //    bitVector.prevClearBit(64) shouldBe 49
+  //    bitVector.prevClearBit(63) shouldBe 49
+  //
+  //    bitVector -= 64
+  //    bitVector.prevClearBit(65) shouldBe 64
+  //    bitVector.prevClearBit(64) shouldBe 49
+  //
+  //    bitVector += 64
+  //    bitVector -= 63
+  //    bitVector.prevClearBit(65) shouldBe 63
+  //    bitVector.prevClearBit(63) shouldBe 49
+  //
+  //  }
 
   it should "compute prev set bit" in {
     var bitVector = BitVector.empty + 46 + 49 + 100;
@@ -194,5 +203,14 @@ final class LargeBitVectorTest extends FlatSpec with Matchers {
     assert(bv3(59))
 
   }
+  it should "filter" in {
+    val bv = BitVector.empty + 127
+    val filt = bv.filter(_ % 2 == 1)
 
+    val bitVector = BitVector.filled(128)
+    val filtered = bitVector.filter(_ % 2 == 1)
+    filtered.cardinality shouldBe 64
+    filtered.lastSetBit shouldBe 127
+    filtered.nextSetBit(0) shouldBe 1
+  }
 }

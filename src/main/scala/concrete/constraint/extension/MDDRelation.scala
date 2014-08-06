@@ -31,13 +31,17 @@ final class MDDRelation(val mdd: MDD = MDD0, val timestamp: Timestamp = new Time
   }
 
   def filterTrie(f: (Int, Int) => Boolean, modified: List[Int]): MDDRelation = {
-    val m = new MDDRelation(mdd.filterTrie(timestamp.next(), f, modified, 0), timestamp)
+    val m = mdd.filterTrie(timestamp.next(), f, modified, 0)
 
     assert(m.forall { sup =>
       sup.zipWithIndex.forall { case (i, p) => f(p, i) }
     }, modified)
 
-    m
+    if (m eq mdd) {
+      this
+    } else {
+      new MDDRelation(m, timestamp)
+    }
   }
 
   def fillFound(f: (Int, Int) => Boolean, arity: Int): Traversable[Int] = {
@@ -45,6 +49,10 @@ final class MDDRelation(val mdd: MDD = MDD0, val timestamp: Timestamp = new Time
     mdd.fillFound(timestamp.next(), f, 0, l)
     l
   }
+  
+  override def isEmpty = mdd.isEmpty
+
+  def universal(scope: Array[Variable]) = mdd.universal(scope, timestamp.next())
 
   override def toString = s"$edges edges representing $lambda tuples"
 

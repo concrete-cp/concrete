@@ -44,10 +44,12 @@ object SimplDisj extends ConstraintCompilerNoData {
     val repl = if (validated) {
       Seq()
     } else {
-      val (scope, varParams) = (expressions zip params).collect {
-        case (v: CSPOMVariable[_], p) => (v, p)
-        case (s: CSPOMSeq[_], _) => throw new IllegalStateException
-      } unzip
+      val (scope, varParams) = (expressions zip params)
+        .collect {
+          case (v: CSPOMVariable[_], p) => (v, p)
+          case (s: CSPOMSeq[_], _) => throw new IllegalStateException
+        }
+        .unzip
 
       Seq(
         CSPOMConstraint('or, scope, Map("revsign" -> varParams)))

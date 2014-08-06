@@ -204,6 +204,8 @@ abstract class Constraint(val scope: Array[Variable])
     checkValues(valTuple)
   }
 
+  def dataSize: Int = ???
+
   def checkValues(tuple: Array[Int]): Boolean
 
   def simpleEvaluation: Int
@@ -240,7 +242,15 @@ abstract class Constraint(val scope: Array[Variable])
       }
     }
 
-  final def bigCardSize = scope.foldLeft(BigInt(1))(_ * _.dom.size)
+  final def scopeSize: Int = {
+    var size = 0
+    var p = arity - 1
+    while (p >= 0) {
+      size += scope(p).dom.size
+      p -= 1
+    }
+    size
+  }
 
   final def doubleCardSize: Double = {
     var size = 1.0
@@ -253,8 +263,6 @@ abstract class Constraint(val scope: Array[Variable])
   }
 
   final def hasChanged[A](l: Traversable[A], f: A => Boolean) = l.foldLeft(false)(_ | f(_))
-
-  def dataSize: Int = ???
 
   /**
    * A GAC constraint is entailed if it has zero or only one variable with domain size > 1
@@ -272,5 +280,11 @@ abstract class Constraint(val scope: Array[Variable])
       i -= 1
     }
     true
+  }
+
+  def controlAssignment: Boolean = {
+    scope.exists(_.dom.size > 1) || {
+      checkValues(scope.map(_.dom.firstValue).toArray)
+    }
   }
 }
