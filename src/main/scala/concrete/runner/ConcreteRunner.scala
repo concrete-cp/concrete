@@ -19,7 +19,7 @@ import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMVariable
 import concrete.SolverFactory
 
-trait ConcreteRunner {
+trait ConcreteRunner extends LazyLogging {
 
   def help = """
     Usage : Concrete file
@@ -72,7 +72,7 @@ trait ConcreteRunner {
   val statistics = new StatisticsManager()
 
   def run(args: Array[String]) {
-    val (opt, remaining) = try {
+    val (opt, other) = try {
       options(args.toList)
     } catch {
       case e: IllegalArgumentException =>
@@ -80,7 +80,11 @@ trait ConcreteRunner {
         println(help)
         sys.exit(1)
     }
+    
+    val (unknown, remaining) = other.partition(_.startsWith("-"))
 
+    logger.warn("Unknown options: " + remaining)
+    
     opt.get('D).collect {
       case p: Seq[_] => for ((option, value) <- p.map { _.asInstanceOf[(String, String)] }) {
         pm(option) = value
