@@ -21,7 +21,7 @@ trait CSPOMRunner extends ConcreteRunner {
   final def load(args: List[String]): Problem = {
     cspom = loadCSPOM(args)
     ProblemCompiler.compile(cspom, ConcretePatterns(pm))
-    
+
     //println(cspom)
     val pg = new ProblemGenerator(pm)
     statistics.register("problemGenerator", pg)
@@ -39,18 +39,14 @@ trait CSPOMRunner extends ConcreteRunner {
 
   def loadCSPOM(args: List[String]): CSPOM
 
-  def outputCSPOM(solution: Option[Map[String, Any]]): String = {
-    solution match {
-      case None => "UNSAT"
-      case Some(s) => s.map {
-        case (variable, value) => s"${variable} = $value"
-      }.mkString("\n")
-    }
-
+  def outputCSPOM(solution: Map[String, Any]): String = {
+    solution.map {
+      case (variable, value) => s"${variable} = $value"
+    }.mkString("\n")
   }
 
-  override final def output(sol: Option[Map[Variable, Any]]) =
-    outputCSPOM(sol.map(cspomSolver.solution(_)))
+  override final def output(sol: Map[Variable, Any]) =
+    outputCSPOM(cspomSolver.solution(sol))
 
   def controlCSPOM(solution: Map[String, Any]): Option[String]
 

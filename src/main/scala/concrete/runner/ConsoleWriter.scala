@@ -42,6 +42,8 @@ class ConsoleWriter extends ConcreteWriter {
   def disconnect() {
     if (sat) {
       Console.println("==========")
+    } else {
+      Console.println("=====UNSATISFIABLE=====")
     }
   }
 
