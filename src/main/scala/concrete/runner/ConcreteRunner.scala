@@ -55,6 +55,7 @@ trait ConcreteRunner extends LazyLogging {
       options(tail, o + ('SQL -> option), unknown)
     case "-control" :: tail => options(tail, o + ('Control -> None))
     case "-time" :: t :: tail => options(tail, o + ('Time -> t.toInt))
+    case u :: tail if u.startsWith("-") => options(tail, o + ('unknown -> u))
     //    case "-cl" :: tail => options(tail, o + ('CL -> None))
     case u :: tail => options(tail, o, u :: unknown)
   }
@@ -72,7 +73,7 @@ trait ConcreteRunner extends LazyLogging {
   val statistics = new StatisticsManager()
 
   def run(args: Array[String]) {
-    val (opt, other) = try {
+    val (opt, remaining) = try {
       options(args.toList)
     } catch {
       case e: IllegalArgumentException =>
@@ -80,11 +81,11 @@ trait ConcreteRunner extends LazyLogging {
         println(help)
         sys.exit(1)
     }
-    
-    val (unknown, remaining) = other.partition(_.startsWith("-"))
 
-    logger.warn("Unknown options: " + remaining)
-    
+    for (u <- opt.get('unknown)) {
+      logger.warn("Unknown options: " + u)
+    }
+
     opt.get('D).collect {
       case p: Seq[_] => for ((option, value) <- p.map { _.asInstanceOf[(String, String)] }) {
         pm(option) = value
