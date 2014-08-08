@@ -15,7 +15,7 @@ final class Sum(
   val constant: Int,
   val factors: Array[Int],
   scope: Array[Variable],
-  mode: SumMode) extends Constraint(scope) with BC
+  mode: SumMode) extends Constraint(scope)
   with LazyLogging {
 
   def this(constant: Int, scope: Array[Variable], mode: SumMode) =
@@ -41,7 +41,9 @@ final class Sum(
     case SumEQ => dom.intersectVal(itv)
   }
 
-  def shave(): List[Int] = {
+  def revise(): Traversable[Int] = {
+
+    var ch = new HashSet[Int]()
 
     var bounds = initBound
 
@@ -52,21 +54,28 @@ final class Sum(
       i -= 1
     }
 
-    var ch: List[Int] = Nil
-    i = arity - 1
-    while (i >= 0) {
-      val dom = scope(i).dom
-      val f = factors(i)
-      val myBounds = dom.valueInterval * f
+    var change = true
+    while (change) {
+      change = false
 
-      val boundsf = Interval(bounds.lb - myBounds.lb, bounds.ub - myBounds.ub) / -f
+      i = arity - 1
+      while (i >= 0) {
+        val dom = scope(i).dom
+        val f = factors(i)
+        val myBounds = dom.valueInterval * f
 
-      if (filter(dom, boundsf, f < 0)) {
-        ch ::= i
+        bounds = Interval(bounds.lb - myBounds.lb, bounds.ub - myBounds.ub)
+
+        if (filter(dom, bounds / -f, f < 0)) {
+          ch += i
+          change = true
+        }
+
+        bounds += dom.valueInterval * f
+
+        i -= 1
       }
-      i -= 1
     }
-
     ch
   }
 
