@@ -20,7 +20,7 @@ trait CSPOMRunner extends ConcreteRunner {
 
   final def load(args: List[String]): Problem = {
     cspom = loadCSPOM(args)
-    println(cspom)
+    // println(cspom)
     ProblemCompiler.compile(cspom, ConcretePatterns(pm))
 
     //println(cspom)

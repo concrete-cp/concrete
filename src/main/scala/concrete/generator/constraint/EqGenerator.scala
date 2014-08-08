@@ -27,8 +27,8 @@ final object EqGenerator extends Generator {
     val negFactor = if (neg) -1 else 1
     (a, b) match {
       case (Const(a), Const(b)) =>
-        require(negFactor * a + offset == b)
-        Seq()
+        if (negFactor * a + offset == b) Seq() else throw concrete.UNSATObject
+
       case (Var(a), Const(b)) =>
         require(a.dom.values.sameElements(Iterator((b - offset) * negFactor)),
           s"Domain of $a should be ($b - $offset) * $negFactor = ${(b - offset) * negFactor}")
