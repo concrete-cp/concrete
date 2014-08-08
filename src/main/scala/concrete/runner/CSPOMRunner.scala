@@ -28,7 +28,7 @@ trait CSPOMRunner extends ConcreteRunner {
     statistics.register("problemGenerator", pg)
     val (problem, vars) = pg.generate(cspom)
     variables = vars
-    //println(problem)
+    logger.info(problem.toString)
     problem
   }
 

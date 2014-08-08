@@ -23,11 +23,11 @@ object ACC extends LazyLogging {
   def control(problem: Problem) = {
     logger.debug("Control !")
     for (c <- problem.constraints) {
-      //val before = c.toString
+      val before = c.toString
       (0 until c.arity).foreach(c.advise)
       //val sizes = c.scope map (_.dom.size)
-      require(c.revise().isEmpty, s"$c was revised")
-      //      assert(c.revise().isEmpty, s"$c was revised (was $before)")
+      //require(c.revise().isEmpty, s"$c was revised")
+            assert(c.revise().isEmpty, s"$c was revised (was $before)")
       //      assert(
       //        sizes.sameElements(c.scope map (_.dom.size)),
       //        s"$c was revised and did not advertize it! (was $before)")

@@ -44,9 +44,9 @@ final object NeqGenerator extends Generator {
     (v0, v1) match {
       case (Const(v0), Const(v1)) =>
         if (v0 != v1) {
-          result.dom.setSingle(1)
+          result.dom.assign(1)
         } else {
-          result.dom.setSingle(0)
+          result.dom.assign(0)
         }
         Nil
       case (Var(v0), Const(v1)) =>

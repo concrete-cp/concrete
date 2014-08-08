@@ -6,21 +6,19 @@ import scala.collection.immutable.HashSet
 trait BC extends Constraint {
   def shave(): Seq[Int]
 
-  override def revise() = {
-//    if (intervalsOnly) {
-//      shave()
-//    } else {
-      fixPoint()
-    //}
+  override def revise(): Traversable[Int] = {
+    val ch = collection.mutable.Set[Int]()
+
+    while (true) {
+      val c = shave()
+      if (c.isEmpty) {
+        return ch
+      } else {
+        ch ++= c
+      }
+    }
+
+    throw new IllegalStateException()
   }
 
-  @tailrec
-  private def fixPoint(ch: Set[Int] = Set()): Set[Int] = {
-    val c = shave()
-    if (c.isEmpty) {
-      ch
-    } else {
-      fixPoint(ch ++ c)
-    }
-  }
 }
