@@ -7,11 +7,11 @@ trait BC extends Constraint {
   def shave(): Seq[Int]
 
   override def revise() = {
-    if (intervalsOnly) {
-      shave()
-    } else {
+//    if (intervalsOnly) {
+//      shave()
+//    } else {
       fixPoint()
-    }
+    //}
   }
 
   @tailrec
