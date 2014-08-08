@@ -33,7 +33,7 @@ libraryDependencies ++= Seq(
 	)
 
 scalacOptions ++= Seq("-optimise"
-	      , "-Xdisable-assertions"
+//	      , "-Xdisable-assertions"
 //	"-deprecation", 
 //	"-unchecked", 
 //	"-optimise", 

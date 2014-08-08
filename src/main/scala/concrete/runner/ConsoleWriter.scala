@@ -3,10 +3,12 @@ package concrete.runner
 import cspom.StatisticsManager
 import scala.xml.NodeSeq
 import concrete.Variable
+import concrete.UNSATException
 
 class ConsoleWriter extends ConcreteWriter {
 
   var sat = false
+  var error = false
 
   def parameters(params: NodeSeq) {
     for (p <- params \\ "p") {
@@ -34,13 +36,16 @@ class ConsoleWriter extends ConcreteWriter {
   }
 
   def error(e: Throwable) {
-    e.printStackTrace(Console.out)
+    error |= (!e.isInstanceOf[UNSATException])
+    e.printStackTrace(Console.err)
     //    Console.println(e)
     //    Console.println(e.getStackTrace().mkString("\n"))
   }
 
   def disconnect() {
-    if (sat) {
+    if (error) {
+      Console.println("=====UNKNOWN=====")
+    } else if (sat) {
       Console.println("==========")
     } else {
       Console.println("=====UNSATISFIABLE=====")
