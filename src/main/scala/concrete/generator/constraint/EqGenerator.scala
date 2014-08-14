@@ -43,13 +43,6 @@ final object EqGenerator extends Generator {
 
   }
 
-  override def genReversed(c: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] = {
-    val (neg, offset) = params(c)
-    require(!neg)
-    require(offset == 0)
-    NeqGenerator.gen(c)
-  }
-
   override def genFunctional(funcConstraint: CSPOMConstraint[_], r: C2Conc)(implicit variables: VarMap): Seq[Constraint] = {
     val Var(result) = r
     val Seq(a, b) = funcConstraint.arguments map cspom2concrete1D

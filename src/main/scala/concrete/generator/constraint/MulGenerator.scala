@@ -22,8 +22,7 @@ final object MulGenerator extends Generator {
     val Seq(v0, v1) = constraint.arguments map cspom2concrete1D
 
     (result, v0, v1) match {
-      case (Const(r), Const(v0), Const(v1)) =>
-        if (r == v0 * v1) Nil else throw UNSATObject
+
       case (Const(r), Var(v0), Var(v1)) =>
         val bc = Seq(new ConstProdBC(v0, v1, r))
         if (v0.dom.size + v1.dom.size < 1000) {
@@ -31,11 +30,14 @@ final object MulGenerator extends Generator {
         } else {
           bc
         }
+      case (Const(r), Const(v0), Const(v1)) =>
+        if (r == v0 * v1) Nil else throw UNSATObject
 
-      case (Var(r), Const(v0), Var(v1)) => Seq(
-        new Sum(0, Array(-1, v0), Array(r, v1), SumMode.SumEQ))
-      case (Var(r), Var(v0), Const(v1)) => Seq(
-        new Sum(0, Array(-1, v1), Array(r, v0), SumMode.SumEQ))
+      // Handled in CSPOM pattern
+      //      case (Var(r), Const(v0), Var(v1)) => Seq(
+      //        new Sum(0, Array(-1, v0), Array(r, v1), SumMode.SumEQ))
+      //      case (Var(r), Var(v0), Const(v1)) => Seq(
+      //        new Sum(0, Array(-1, v1), Array(r, v0), SumMode.SumEQ))
 
       case (Var(r), Var(v0), Var(v1)) => {
         val bc = Seq(new MulBC(r, v0, v1))
@@ -46,7 +48,7 @@ final object MulGenerator extends Generator {
         }
       }
 
-      case _ => throw new AssertionError("Unary multiplication is not supported")
+      case _ => throw new AssertionError("Unary or binary multiplication is not supported")
     }
 
   }

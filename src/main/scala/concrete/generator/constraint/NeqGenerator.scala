@@ -65,5 +65,7 @@ final object NeqGenerator extends Generator {
     }
 
   }
-
+  override def genReversed(c: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] = {
+    EqGenerator.gen(c)
+  }
 }

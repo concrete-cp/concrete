@@ -7,9 +7,6 @@ import concrete.UNSATException
 
 class ConsoleWriter extends ConcreteWriter {
 
-  var sat = false
-  var error = false
-
   def parameters(params: NodeSeq) {
     for (p <- params \\ "p") {
 
@@ -24,7 +21,6 @@ class ConsoleWriter extends ConcreteWriter {
   }
 
   def solution(sol: String) {
-    sat = true
     Console.println(sol)
   }
 
@@ -36,19 +32,14 @@ class ConsoleWriter extends ConcreteWriter {
   }
 
   def error(e: Throwable) {
-    error |= (!e.isInstanceOf[UNSATException])
     e.printStackTrace(Console.err)
-    //    Console.println(e)
-    //    Console.println(e.getStackTrace().mkString("\n"))
   }
 
-  def disconnect() {
-    if (error) {
-      Console.println("=====UNKNOWN=====")
-    } else if (sat) {
-      Console.println("==========")
-    } else {
-      Console.println("=====UNSATISFIABLE=====")
+  def disconnect(status: RunnerStatus) {
+    status match {
+      case Sat => Console.println("==========")
+      case Unsat => Console.println("=====UNSATISFIABLE=====")
+      case _ => Console.println("=====UNKNOWN=====")
     }
   }
 

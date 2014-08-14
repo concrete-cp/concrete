@@ -137,7 +137,12 @@ object FZConcrete extends CSPOMRunner with App {
 
   def controlCSPOM(solution: Map[String, Any]) = ???
 
-  run(args)
+  val status = run(args)
+
+  sys.exit(status match {
+    case Sat | Unsat => 0
+    case _ => 1
+  })
 
 }
 

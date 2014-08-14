@@ -73,7 +73,10 @@ trait ConcreteRunner extends LazyLogging {
   val pm = new ParameterManager
   val statistics = new StatisticsManager()
 
-  def run(args: Array[String]) {
+  def run(args: Array[String]): RunnerStatus = {
+
+    var status: RunnerStatus = Unknown
+
     val (opt, remaining) = try {
       options(args.toList)
     } catch {
@@ -145,27 +148,35 @@ trait ConcreteRunner extends LazyLogging {
 
       if (opt.contains('all)) {
         for (s <- solver) {
+          status = Sat
           solution(s, writer, opt)
         }
       } else if (solver.isOptimizer) {
         for (s <- solver.toIterable.lastOption) {
+          status = Sat
           solution(s, writer, opt)
         }
       } else {
         for (s <- solver.toIterable.headOption) {
+          status = Sat
           solution(s, writer, opt)
         }
       }
 
+      if (status == Unknown) {
+        status = Unsat
+      }
     } catch {
       case e: Throwable =>
         writer.error(e)
-
+        status = Error
+        return status
     } finally {
       waker.cancel()
       writer.write(statistics)
-      writer.disconnect()
+      writer.disconnect(status)
     }
+    status
   }
 
   final def solution(sol: Map[Variable, Any], writer: ConcreteWriter, opt: Map[Symbol, Any]): Unit = {

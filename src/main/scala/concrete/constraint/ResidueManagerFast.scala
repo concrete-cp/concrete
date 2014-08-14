@@ -1,9 +1,8 @@
 package concrete.constraint;
 
-import scala.annotation.tailrec
 import concrete.Variable
 
-final class ResidueManagerFast(scope: Array[Variable]) {
+final class ResidueManagerFast(scope: Array[Variable]) extends ResidueManager {
 
   val arity = scope.size
 
@@ -11,19 +10,19 @@ final class ResidueManagerFast(scope: Array[Variable]) {
 
   def getResidue(position: Int, index: Int) = last(position)(index)
 
-  @annotation.tailrec
-  def updateResidue(residue: Array[Int], i: Int = arity - 1) {
-    if (i >= 0) {
+  def updateResidue(residue: Array[Int]) {
+    var i = arity - 1
+    while (i >= 0) {
       last(i)(residue(i)) = residue
-      updateResidue(residue, i - 1)
+      i -= 1
     }
   }
 
-  @annotation.tailrec
-  def remove(residue: Array[Int], i: Int = arity - 1) {
-    if (i >= 0) {
+  def remove(residue: Array[Int]) {
+    var i = arity - 1
+    while (i >= 0) {
       last(i)(residue(i)) = null
-      remove(residue, i - 1)
+      i -= 1
     }
   }
 }

@@ -16,6 +16,7 @@ import concrete.CSPOMDriver
 import CSPOMDriver._
 import cspom.variable.BoolVariable
 import cspom.variable.IntVariable
+import cspom.variable.SimpleExpression
 
 object SetIn extends ConstraintCompilerNoData {
 
@@ -23,7 +24,7 @@ object SetIn extends ConstraintCompilerNoData {
     constraint.function == 'set_in && constraint.nonReified
 
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM) = {
-    val Seq(variable: CSPOMVariable[_], CSPOMConstant(set: Seq[Int] @unchecked)) = constraint.arguments
+    val Seq(variable: SimpleExpression[_], CSPOMConstant(set: Seq[Int] @unchecked)) = constraint.arguments
 
     replaceCtr(constraint, Nil, problem) ++
       replace(Seq(variable), variable.intersected(IntVariable.ofSeq(set: _*)), problem)

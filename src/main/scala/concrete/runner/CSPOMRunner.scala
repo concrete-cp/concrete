@@ -1,14 +1,16 @@
 package concrete.runner
 
-import concrete.generator.cspompatterns.ConcretePatterns
-import concrete.generator.ProblemGenerator
-import cspom.variable.CSPOMVariable
-import cspom.CSPOM
-import concrete.Variable
-import cspom.compiler.ProblemCompiler
-import concrete.Problem
 import concrete.CSPOMSolver
+import concrete.Problem
 import concrete.Solver
+import concrete.Variable
+import concrete.generator.ProblemGenerator
+import concrete.generator.cspompatterns.Bool2IntIsEq
+import concrete.generator.cspompatterns.ConcretePatterns
+import cspom.CSPOM
+import cspom.compiler.MergeEq
+import cspom.compiler.ProblemCompiler
+import cspom.variable.CSPOMVariable
 
 trait CSPOMRunner extends ConcreteRunner {
 
@@ -23,6 +25,8 @@ trait CSPOMRunner extends ConcreteRunner {
     // println(cspom)
     ProblemCompiler.compile(cspom, ConcretePatterns(pm))
 
+    ProblemCompiler.compile(cspom, Seq(Bool2IntIsEq))
+    
     //println(cspom)
     val pg = new ProblemGenerator(pm)
     statistics.register("problemGenerator", pg)

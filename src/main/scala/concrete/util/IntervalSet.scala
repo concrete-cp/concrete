@@ -67,14 +67,14 @@ final class IntervalSet(val domain: Interval) extends IntSet {
     case d: IntervalSet => first >= d.first && last <= d.last
   }
 
-  val toBitVector = {
+  lazy val toBitVector = {
 
     val bv = BitVector.intBv(first, last)
     assert(bv.cardinality == size, this + " -> " + bv)
     bv
   }
 
-  val bitVectorSet = new BitVectorSet(toBitVector, size)
+  def bitVectorSet = new BitVectorSet(toBitVector, size)
 
   def intersects(bv: BitVector) = bv.intersects(toBitVector)
   def intersects(bv: BitVector, part: Int) = bv.intersects(toBitVector, part)

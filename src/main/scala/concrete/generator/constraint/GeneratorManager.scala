@@ -18,7 +18,6 @@ class GeneratorManager(pm: ParameterManager) {
     'or -> DisjGenerator,
     'not -> DisjGenerator,
     'eq -> EqGenerator,
-    'bool2int -> EqGenerator,
     'gt -> GtGenerator,
     'ge -> GtGenerator,
     'mul -> MulGenerator,
@@ -33,8 +32,9 @@ class GeneratorManager(pm: ParameterManager) {
     'occurrence -> OccurrenceGenerator,
     'extension -> new ExtensionGenerator(pm),
     'sq -> SquareGenerator,
-    'inverse -> InverseGenerator,
-    'cumulative -> CumulativeGenerator)
+    'min -> MinGenerator,
+    'max -> MaxGenerator,
+    'element -> ElementGenerator)
 
   def register(entry: (Symbol, Generator)) {
     known += entry

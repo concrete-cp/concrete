@@ -18,6 +18,8 @@ final class Sum(
   mode: SumMode) extends Constraint(scope)
   with LazyLogging {
 
+  require(factors.forall(_ != 0), this)
+  
   def this(constant: Int, scope: Array[Variable], mode: SumMode) =
     this(constant, Array.fill(scope.length)(1), scope, mode)
 
