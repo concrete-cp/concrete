@@ -25,31 +25,33 @@ object Bool2IntDomains extends VariableCompiler('bool2int) {
     case CSPOMConstraint(CSPOMConstant(true), _, Seq(i0: SimpleExpression[_], i1: SimpleExpression[_]), params) =>
 
       val b = BoolVariable.boolExpression(i0)
-      val i = intExpression(i1)
+      
 
       val ii = b match {
         case CSPOMConstant(false) => RangeSet(IntInterval.singleton(0))
         case CSPOMConstant(true) => RangeSet(IntInterval.singleton(1))
         case _: BoolVariable => RangeSet(IntInterval(0, 1))
       }
+      
+      val iii = reduceDomain(intExpression(i1), ii)
 
       val bb =
-        if (ii.contains(Finite(0))) {
+        if (iii.contains(0)) {
           require(b.contains(false))
-          if (ii.contains(Finite(1))) {
+          if (iii.contains(1)) {
             require(b.contains(true))
             b
           } else {
             CSPOMConstant(false)
           }
-        } else if (ii.contains(Finite(1))) {
+        } else if (iii.contains(1)) {
           require(b.contains(true))
           CSPOMConstant(true)
         } else {
           throw new AssertionError()
         }
 
-      Map(i0 -> bb, i1 -> reduceDomain(i, ii))
+      Map(i0 -> bb, i1 -> iii)
 
   }
 }

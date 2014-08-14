@@ -5,7 +5,7 @@ name := "concrete"
 
 organization := "fr.univ-valenciennes.concrete"
 
-version := "1.2"
+version := "1.2.1"
 
 scalaVersion := "2.11.2"
 
