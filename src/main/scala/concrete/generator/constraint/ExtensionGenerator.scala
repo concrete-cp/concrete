@@ -37,33 +37,42 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
 
   val TIGHTNESS_LIMIT = 4;
 
-  private def cspomMDDtoCspfjMDD(
+  def boolOrIntIndex(d: Domain, v: Any) = {
+    v match {
+      case v: Int => d.index(v)
+      case true => 1
+      case false => 0
+    }
+
+  }
+
+  private def cspomMDDtoCspfjMDD[A](
     domains: List[Domain],
-    relation: cspom.extension.MDD[Int],
-    map: collection.mutable.Map[cspom.extension.MDD[Int], concrete.constraint.extension.MDD]): MDD = {
+    relation: cspom.extension.MDD[A],
+    map: collection.mutable.Map[cspom.extension.MDD[A], concrete.constraint.extension.MDD]): MDD = {
     relation match {
       case n if n eq cspom.extension.MDDLeaf => concrete.constraint.extension.MDDLeaf
-      case n: cspom.extension.MDDNode[Int] => map.getOrElseUpdate(n, {
+      case n: cspom.extension.MDDNode[A] => map.getOrElseUpdate(n, {
         val (domain, tail) = (domains.head, domains.tail)
         val trie = n.trie
 
         trie.toSeq match {
           case Seq() => MDD0
           case Seq((v, t)) =>
-            new MDD1(cspomMDDtoCspfjMDD(tail, t, map), domain.index(v))
+            new MDD1(cspomMDDtoCspfjMDD(tail, t, map), boolOrIntIndex(domain, v))
 
           case Seq((v1, t1), (v2, t2)) =>
             new MDD2(
-              cspomMDDtoCspfjMDD(tail, t1, map), domain.index(v1),
-              cspomMDDtoCspfjMDD(tail, t2, map), domain.index(v2))
+              cspomMDDtoCspfjMDD(tail, t1, map), boolOrIntIndex(domain, v1),
+              cspomMDDtoCspfjMDD(tail, t2, map), boolOrIntIndex(domain, v2))
 
           case trieSeq =>
-            val m = trieSeq.map(l => domain.index(l._1)).max
+            val m = trieSeq.map(l => boolOrIntIndex(domain, l._1)).max
             val concreteTrie = new Array[concrete.constraint.extension.MDD](m + 1)
             val indices = new Array[Int](trieSeq.size)
             var j = 0
             for ((v, t) <- trieSeq) {
-              val i = domain.index(v)
+              val i = boolOrIntIndex(domain, v)
               require(i >= 0, s"Could not find $v in $domain")
 
               concreteTrie(i) = cspomMDDtoCspfjMDD(tail, t, map)
@@ -101,7 +110,8 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
 
   private def gen(relation: cspom.extension.Relation[_], init: Boolean, domains: List[Domain]) = {
     if (relation.nonEmpty && relation.head.size == 2) {
-      new Matrix2D(domains(0).size, domains(1).size, init).setAll(value2Index(domains, relation).map(_.toArray).toTraversable, !init)
+      val matrix = new Matrix2D(domains(0).last + 1, domains(1).last + 1, init)
+      matrix.setAll(value2Index(domains, relation).map(_.toArray).toTraversable, !init)
     } else if (init) {
       new TupleTrieSet(relation2MDD(relation, domains), init)
     } else {
@@ -114,10 +124,10 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
 
   private def relation2MDD(relation: cspom.extension.Relation[_], domains: List[Domain]): MDDRelation = {
     val mdd = relation match {
-      case mdd: cspom.extension.MDD[_] =>
-        cspomMDDtoCspfjMDD(
+      case mdd: cspom.extension.MDD[Any] @unchecked =>
+        cspomMDDtoCspfjMDD[Any](
           domains,
-          mdd.asInstanceOf[cspom.extension.MDD[Int]],
+          mdd,
           new IdMap())
       case r => MDD(value2Index(domains, r).map(_.toArray))
     }
@@ -132,14 +142,14 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
         require(i >= 0, s"Could not find $v in $d")
         i
       }
-    } 
-//  filterNot {
-//      _.contains(-1)
-//    }
+    }
+  //  filterNot {
+  //      _.contains(-1)
+  //    }
 
   override def gen(extensionConstraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] = {
 
-    val solverVariables = extensionConstraint.arguments map cspom2concreteVar toList
+    val solverVariables = extensionConstraint.arguments.map(cspom2concreteVar).toList
 
     val Some(relation: cspom.extension.Relation[_]) = extensionConstraint.params.get("relation")
     val Some(init: Boolean) = extensionConstraint.params.get("init")

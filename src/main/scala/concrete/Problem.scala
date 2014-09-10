@@ -41,7 +41,6 @@ final class Problem(val variables: List[Variable]) {
   val variableMap: Map[String, Variable] = variables.map(v => v.name -> v).toMap
   private var _constraints: List[Constraint] = Nil
 
-  private var _maxDomainSize = -1
   private var _maxArity = 0
   private var _maxCId = 0
   private var _currentLevel = 0
@@ -95,18 +94,13 @@ final class Problem(val variables: List[Variable]) {
     s"Total ${variables.size} variables, ${_constraints.size - entailed} active constraints and $entailed entailed constraints"
   }
 
-  def maxDomainSize = {
-    if (_maxDomainSize < 0 && variables.nonEmpty) {
-      _maxDomainSize = variables map { _.dom.size } max
-    }
-    _maxDomainSize
-  }
+  val maxDomainSize = variables.iterator.map(_.dom.size).max
 
   def currentLevel = _currentLevel
   def maxArity = _maxArity
 
   def maxCId = _maxCId
-  def nd = variables map { _.dom.size } sum
+  def nd = variables.iterator.map(_.dom.size).sum
   def variable(name: String) = variableMap(name)
 
   def constraints = _constraints

@@ -120,10 +120,12 @@ object TrieSize extends App {
           level += 1
           constraint.setLvl(level)
 
-          val modified = (0 until arity).toList.filter {
-            p =>
-              domains(p).filter(i => RAND.nextDouble > .05)
-          } reverse
+          val modified = (0 until arity).toList
+            .filter {
+              p =>
+                domains(p).filter(i => RAND.nextDouble > .05)
+            }
+            .reverse
 
           //System.gc()
           time -= System.nanoTime()

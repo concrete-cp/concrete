@@ -27,8 +27,8 @@ final object EqGenerator extends Generator {
     val negFactor = if (neg) -1 else 1
     (a, b) match {
       case (Const(a), Const(b)) =>
-        require(negFactor * a + offset == b)
-        Seq()
+        if (negFactor * a + offset == b) Seq() else throw concrete.UNSATObject
+
       case (Var(a), Const(b)) =>
         require(a.dom.values.sameElements(Iterator((b - offset) * negFactor)),
           s"Domain of $a should be ($b - $offset) * $negFactor = ${(b - offset) * negFactor}")
@@ -43,13 +43,6 @@ final object EqGenerator extends Generator {
 
   }
 
-  override def genReversed(c: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] = {
-    val (neg, offset) = params(c)
-    require(!neg)
-    require(offset == 0)
-    NeqGenerator.gen(c)
-  }
-
   override def genFunctional(funcConstraint: CSPOMConstraint[_], r: C2Conc)(implicit variables: VarMap): Seq[Constraint] = {
     val Var(result) = r
     val Seq(a, b) = funcConstraint.arguments map cspom2concrete1D
@@ -57,13 +50,20 @@ final object EqGenerator extends Generator {
     require(!neg)
     require(offset == 0)
     (a, b) match {
-      case (Const(a), Const(b)) => ???
+      case (Const(a), Const(b)) =>
+        result.dom.assign(
+          if (a == b) { 1 } else { 0 })
+        Nil
       case (Const(a), Var(b)) => Seq(new ReifiedEquals(result, b, a))
       case (Var(a), Const(b)) => Seq(new ReifiedEquals(result, a, b))
       case (Var(a), Var(b)) => Seq(
         new ReifiedConstraint(
           result,
           new EqAC(a, b),
+          new Neq(a, b)),
+        new ReifiedConstraint(
+          result,
+          new EqBC(a, b),
           new Neq(a, b)))
     }
 

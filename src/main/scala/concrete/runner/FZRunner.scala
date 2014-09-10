@@ -115,32 +115,34 @@ object FZConcrete extends CSPOMRunner with App {
     case n: String => getConstant(n).getOrElse(throw new MatchError(s"could not find $n in $solution or $cspom"))
   }
 
-  override def outputCSPOM(solution: Option[Map[String, Any]]) =
-    solution.map { sol =>
-      val out: Iterable[String] = outputVars.map {
-        n => s"$n = ${sol(n)} ;"
-      } ++ outputArrays.map {
-        case (n, ranges) =>
-          val CSPOMSeq(_, initRange, _) =
-            cspom.namedExpressions.getOrElse(n, throw new MatchError(s"could not find $n in $cspom"))
-          require(initRange.size == flattenedSize(ranges))
-          val solutions = initRange.map(i => sol(s"$n[$i]"))
+  override def outputCSPOM(sol: Map[String, Any]) = {
+    val out: Iterable[String] = outputVars.map {
+      n => s"$n = ${sol(n)} ;"
+    } ++ outputArrays.map {
+      case (n, ranges) =>
+        val CSPOMSeq(_, initRange, _) =
+          cspom.namedExpressions.getOrElse(n, throw new MatchError(s"could not find $n in $cspom"))
+        require(initRange.size == flattenedSize(ranges))
+        val solutions = initRange.map(i => sol(s"$n[$i]"))
 
-          s"$n = array${ranges.size}d(${
-            ranges.map(range => s"${range.head}..${range.last}, ").mkString
-          }${solutions.mkString("[", ", ", "]")});"
+        s"$n = array${ranges.size}d(${
+          ranges.map(range => s"${range.head}..${range.last}, ").mkString
+        }${solutions.mkString("[", ", ", "]")});"
 
-      }
-
-      out.mkString("\n") + "\n----------\n"
-      //flatSolution(solution, variables).mkString(" ")
-    } getOrElse {
-      "\n=====UNSATISFIABLE=====\n"
     }
+
+    out.mkString("\n") + "\n----------\n"
+    //flatSolution(solution, variables).mkString(" ")
+  }
 
   def controlCSPOM(solution: Map[String, Any]) = ???
 
-  run(args)
+  val status = run(args)
+
+  sys.exit(status match {
+    case Sat | Unsat => 0
+    case _ => 1
+  })
 
 }
 

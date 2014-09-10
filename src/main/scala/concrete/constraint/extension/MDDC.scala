@@ -83,6 +83,8 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
         delta = i
       }
       true
+    } else if (g.isEmpty) {
+      false
     } else if (g.cache.timestamp == ts) {
       true
     } else if (gNo.contains(g.getId)) {
@@ -90,22 +92,20 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
     } else {
       var res = false
 
-      g.forSubtries {
-        (ak, gk) =>
-          if (scope(i).dom.present(ak) && seekSupports(ts, gk, i + 1)) {
-            res = true
-            unsupported(i) -= ak
+      var ak = scope(i).dom.first
+      while (ak >= 0 && delta > i) {
+        val gk = g.subMDD(ak)
 
-            if (i + 1 == delta && unsupported(i).isEmpty) {
-              delta = i
-              false
-            } else {
-              true
-            }
-          } else {
-            true
+        if (seekSupports(ts, gk, i + 1)) {
+          res = true
+          unsupported(i) -= ak
+
+          if (i + 1 == delta && unsupported(i).isEmpty) {
+            delta = i
           }
+        }
 
+        ak = scope(i).dom.next(ak)
       }
       if (res) {
         g.cache.timestamp = ts

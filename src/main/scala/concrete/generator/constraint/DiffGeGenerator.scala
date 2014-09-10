@@ -25,7 +25,6 @@ final object DiffGeGenerator extends Generator {
       } else { throw UNSATObject }
 
       case (Var(x), Const(y)) =>
-
         x.dom.filterValues(_ - y >= k)
         Nil
       case (Const(x), Var(y)) =>

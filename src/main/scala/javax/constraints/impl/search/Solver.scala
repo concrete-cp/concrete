@@ -35,7 +35,9 @@ class Solver(problem: javax.constraints.impl.Problem, params: ParameterManager) 
       concreteSolver
     } else {
       concreteSolver.take(maxNumberOfSolutions)
-    }) map (concreteSol) toArray
+    })
+      .map(concreteSol)
+      .toArray
 
   override def solutionIterator: SolutionIterator = new SolutionIterator {
     val itr = concreteSolver

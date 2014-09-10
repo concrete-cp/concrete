@@ -65,9 +65,9 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
   private val ngl = new NoGoodLearner(prob, addConstraint)
   statistics.register("nfr-learner", ngl)
 
-  var maxBacktracks =
+  var maxBacktracks: Int =
     if (restartLevel == 0) {
-      math.max(10, problem.maxDomainSize / 10)
+      math.max(10, math.log(problem.maxDomainSize).toInt)
     } else {
       restartLevel
     }
@@ -196,7 +196,7 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
       System.gc()
       System.gc()
       usedMem = math.max(usedMem, Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
-    } 
+    }
   }
 
   @Statistic

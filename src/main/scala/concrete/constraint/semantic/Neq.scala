@@ -30,6 +30,10 @@ final class Neq(v0: Variable, v1: Variable) extends Constraint(Array(v0, v1)) {
     } else false
   }
 
+  override def isConsistent = {
+    v0.dom.size > 1 || v1.dom.size > 1 || v0.dom.firstValue != v1.dom.firstValue
+  }
+
   override def toString = v0 + " /= " + v1
 
   def advise(p: Int) = if (scope(p).dom.size > 1) -1 else math.min(v0.dom.size, v1.dom.size)

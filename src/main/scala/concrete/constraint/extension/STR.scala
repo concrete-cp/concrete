@@ -92,6 +92,19 @@ final class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
   //    false
   //  }
 
+  def universal(scope: Array[Variable]): Boolean = {
+    var card = 1.0 / size
+    var i = scope.length - 1
+    while (i >= 0) {
+      card *= scope(i).dom.size
+      if (card > 1.0) {
+        return false
+      }
+      i -= 1
+    }
+    true
+  }
+
   override def size = bound
   def lambda = bound
 }

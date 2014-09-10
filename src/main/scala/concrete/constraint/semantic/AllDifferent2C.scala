@@ -30,8 +30,8 @@ import concrete.constraint.AdviseCount
 
 trait AllDiffChecker extends Constraint {
 
-  val offset = scope map { _.dom.firstValue } min
-  val max = scope map { _.dom.lastValue } max
+  val offset = scope.iterator.map(_.dom.firstValue).min
+  val max = scope.iterator.map(_.dom.lastValue).max
 
   def checkValues(t: Array[Int]): Boolean = {
     var union = collection.mutable.BitSet.empty

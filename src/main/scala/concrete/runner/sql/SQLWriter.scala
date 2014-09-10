@@ -39,6 +39,7 @@ import concrete.ParameterManager
 import MyPGDriver.simple._
 import concrete.Variable
 import scala.slick.jdbc.StaticQuery.interpolation
+import concrete.runner.RunnerStatus
 
 object SQLWriter {
 
@@ -173,7 +174,7 @@ final class SQLWriter(jdbcUri: URI, params: ParameterManager) extends ConcreteWr
 
   private var problemId: Option[Int] = None
 
-  private def version: String = s"${Solver.VERSION}/${CSPOM.VERSION}"
+  private def version: String = concrete.Info.version
 
   def parameters(params: NodeSeq) {
     configId = Some(config(params.toString))
@@ -267,7 +268,7 @@ final class SQLWriter(jdbcUri: URI, params: ParameterManager) extends ConcreteWr
     }
   }
 
-  def disconnect() {
+  def disconnect(status: RunnerStatus) {
     for (e <- executionId) {
       db.withSession { implicit session =>
         executions.filter(_.executionId === e).map(_.end).update(Some(SQLWriter.now.run))

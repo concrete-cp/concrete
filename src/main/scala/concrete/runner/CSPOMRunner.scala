@@ -1,14 +1,16 @@
 package concrete.runner
 
-import concrete.generator.cspompatterns.ConcretePatterns
-import concrete.generator.ProblemGenerator
-import cspom.variable.CSPOMVariable
-import cspom.CSPOM
-import concrete.Variable
-import cspom.compiler.ProblemCompiler
-import concrete.Problem
 import concrete.CSPOMSolver
+import concrete.Problem
 import concrete.Solver
+import concrete.Variable
+import concrete.generator.ProblemGenerator
+import concrete.generator.cspompatterns.Bool2IntIsEq
+import concrete.generator.cspompatterns.ConcretePatterns
+import cspom.CSPOM
+import cspom.compiler.MergeEq
+import cspom.compiler.ProblemCompiler
+import cspom.variable.CSPOMVariable
 
 trait CSPOMRunner extends ConcreteRunner {
 
@@ -20,13 +22,17 @@ trait CSPOMRunner extends ConcreteRunner {
 
   final def load(args: List[String]): Problem = {
     cspom = loadCSPOM(args)
+    // println(cspom)
     ProblemCompiler.compile(cspom, ConcretePatterns(pm))
+
+    ProblemCompiler.compile(cspom, Seq(Bool2IntIsEq))
     
     //println(cspom)
     val pg = new ProblemGenerator(pm)
     statistics.register("problemGenerator", pg)
     val (problem, vars) = pg.generate(cspom)
     variables = vars
+    logger.info(problem.toString)
     problem
   }
 
@@ -39,18 +45,14 @@ trait CSPOMRunner extends ConcreteRunner {
 
   def loadCSPOM(args: List[String]): CSPOM
 
-  def outputCSPOM(solution: Option[Map[String, Any]]): String = {
-    solution match {
-      case None => "UNSAT"
-      case Some(s) => s.map {
-        case (variable, value) => s"${variable} = $value"
-      }.mkString("\n")
-    }
-
+  def outputCSPOM(solution: Map[String, Any]): String = {
+    solution.map {
+      case (variable, value) => s"${variable} = $value"
+    }.mkString("\n")
   }
 
-  override final def output(sol: Option[Map[Variable, Any]]) =
-    outputCSPOM(sol.map(cspomSolver.solution(_)))
+  override final def output(sol: Map[Variable, Any]) =
+    outputCSPOM(cspomSolver.solution(sol))
 
   def controlCSPOM(solution: Map[String, Any]): Option[String]
 

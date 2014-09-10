@@ -17,18 +17,23 @@ import concrete.priorityqueues.PriorityQueue
 import concrete.heuristic.revision.Key
 import concrete.constraint.AdviseCounts
 import concrete.constraint.Advisable
+import concrete.constraint.Removals
 
 object ACC extends LazyLogging {
   def control(problem: Problem) = {
     logger.debug("Control !")
     for (c <- problem.constraints) {
+      val before = c.toString
       (0 until c.arity).foreach(c.advise)
-      //println(c)
+
       val sizes = c.scope map (_.dom.size)
-      require(c.revise().isEmpty, c + " was revised")
-      require(
+
+      assert(c.revise().isEmpty, s"$c was revised (was $before)")
+      assert(
         sizes.sameElements(c.scope map (_.dom.size)),
-        c + " was revised!")
+        s"$c was revised and did not advertize it! (was $before)")
+      require(c.controlAssignment, s"$c assignement is inconsistent")
+
     }
 
     true;
@@ -139,19 +144,24 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
       revisions += 1;
       //val sizes = constraint.sizes()
 
-      //val doms = domSizes(constraint)
+      logger.debug {
+        s"$constraint " + (
+          constraint match {
+            case r: Removals => s"(${r.modified}) "
+            case _ =>
+          })
+      }
 
       val mod = try {
         constraint.revise()
       } catch {
         case _: UNSATException =>
+          //println(s"$deb -> unsat")
           constraint.weight += 1
           return false
       }
 
-//      assert(
-//        mod.toSet == (0 until constraint.arity).filter(i => domSizes(constraint)(i) != doms(i)).toSet,
-//        s"$constraint returned $mod")
+      logger.debug(if (mod.isEmpty) "NOP" else s"-> $constraint")
 
       mod.foreach(i => updateQueue(constraint.scope(i), constraint))
 

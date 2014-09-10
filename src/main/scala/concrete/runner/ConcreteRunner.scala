@@ -19,7 +19,7 @@ import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMVariable
 import concrete.SolverFactory
 
-trait ConcreteRunner {
+trait ConcreteRunner extends LazyLogging {
 
   def help = """
     Usage : Concrete file
@@ -55,6 +55,8 @@ trait ConcreteRunner {
       options(tail, o + ('SQL -> option), unknown)
     case "-control" :: tail => options(tail, o + ('Control -> None))
     case "-time" :: t :: tail => options(tail, o + ('Time -> t.toInt))
+    case "-a" :: tail => options(tail, o + ('all -> Unit))
+    case u :: tail if u.startsWith("-") => options(tail, o + ('unknown -> u))
     //    case "-cl" :: tail => options(tail, o + ('CL -> None))
     case u :: tail => options(tail, o, u :: unknown)
   }
@@ -71,7 +73,10 @@ trait ConcreteRunner {
   val pm = new ParameterManager
   val statistics = new StatisticsManager()
 
-  def run(args: Array[String]) {
+  def run(args: Array[String]): RunnerStatus = {
+
+    var status: RunnerStatus = Unknown
+
     val (opt, remaining) = try {
       options(args.toList)
     } catch {
@@ -79,6 +84,10 @@ trait ConcreteRunner {
         println(e.getMessage)
         println(help)
         sys.exit(1)
+    }
+
+    for (u <- opt.get('unknown)) {
+      logger.warn("Unknown options: " + u)
     }
 
     opt.get('D).collect {
@@ -137,43 +146,52 @@ trait ConcreteRunner {
           solver.maximize(solver.problem.variable(optimizeVar.get))
       }
 
-      if (solver.isOptimizer) {
-        if (!solver.hasNext) {
-          solution(None, writer, opt)
-        } else for (s <- solver) {
-          solution(Some(s), writer, opt)
+      if (opt.contains('all)) {
+        for (s <- solver) {
+          status = Sat
+          solution(s, writer, opt)
+        }
+      } else if (solver.isOptimizer) {
+        for (s <- solver.toIterable.lastOption) {
+          status = Sat
+          solution(s, writer, opt)
         }
       } else {
-        solution(solver.toIterable.headOption, writer, opt)
+        for (s <- solver.toIterable.headOption) {
+          status = Sat
+          solution(s, writer, opt)
+        }
       }
 
+      if (status == Unknown) {
+        status = Unsat
+      }
     } catch {
       case e: Throwable =>
         writer.error(e)
-
+        status = Error
+        return status
     } finally {
       waker.cancel()
       writer.write(statistics)
-      writer.disconnect()
+      writer.disconnect(status)
     }
+    status
   }
 
-  final def solution(sol: Option[Map[Variable, Any]], writer: ConcreteWriter, opt: Map[Symbol, Any]): Unit = {
+  final def solution(sol: Map[Variable, Any], writer: ConcreteWriter, opt: Map[Symbol, Any]): Unit = {
     writer.solution(output(sol))
     if (opt.contains('Control)) {
-      for (s <- sol; failed <- control(s)) {
+      for (failed <- control(sol)) {
         throw new IllegalStateException("Falsified constraints : " + failed)
       }
     }
   }
 
-  def output(solution: Option[Map[Variable, Any]]): String = {
-    solution match {
-      case None => "UNSAT"
-      case Some(s) => s.map {
-        case (variable, value) => s"${variable.name} = $value"
-      }.mkString("\n")
-    }
+  def output(solution: Map[Variable, Any]): String = {
+    solution.map {
+      case (variable, value) => s"${variable.name} = $value"
+    }.mkString("\n")
 
   }
 

@@ -43,11 +43,15 @@ final class SmallBitVector(val word: Long) extends AnyVal with BitVector {
   }
 
   def nextSetBit(start: Int) = {
-    val next = word & (MASK << start);
-    if (next == 0) {
+    if (start >= WORD_SIZE) {
       -1
     } else {
-      java.lang.Long.numberOfTrailingZeros(next)
+      val next = word & (MASK << start);
+      if (next == 0) {
+        -1
+      } else {
+        java.lang.Long.numberOfTrailingZeros(next)
+      }
     }
   }
 
@@ -71,7 +75,7 @@ final class SmallBitVector(val word: Long) extends AnyVal with BitVector {
     }
   }
 
-   //  override def equals(o: Any) = o match {
+  //  override def equals(o: Any) = o match {
   //    case bv: BitVector => bv.getWord(0) == word && bv.nextSetBit(WORD_SIZE) == -1
   //    case _ => false
   //  }
@@ -87,7 +91,7 @@ final class SmallBitVector(val word: Long) extends AnyVal with BitVector {
   }
 
   def nbWords = 1
-  
+
   def getWords = Array(word)
 
   def ^(bv: BitVector) = {

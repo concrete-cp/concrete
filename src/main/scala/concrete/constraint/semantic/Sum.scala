@@ -15,9 +15,11 @@ final class Sum(
   val constant: Int,
   val factors: Array[Int],
   scope: Array[Variable],
-  mode: SumMode) extends Constraint(scope) with BC
+  mode: SumMode) extends Constraint(scope)
   with LazyLogging {
 
+  require(factors.forall(_ != 0), this)
+  
   def this(constant: Int, scope: Array[Variable], mode: SumMode) =
     this(constant, Array.fill(scope.length)(1), scope, mode)
 
@@ -36,13 +38,14 @@ final class Sum(
   val initBound = Interval(-constant, -constant)
 
   private def filter(dom: Domain, itv: Interval, neg: Boolean): Boolean = mode match {
-    case SumLE if neg => dom.removeToVal(itv.lb - 1)
-    case SumLE => dom.removeFromVal(itv.ub + 1)
+    case SumLE if neg => dom.removeUntilVal(itv.lb)
+    case SumLE => dom.removeAfterVal(itv.ub)
     case SumEQ => dom.intersectVal(itv)
-    //case SumNE => dom.removeValInterval(itv.lb, itv.ub)
   }
 
-  def shave(): List[Int] = {
+  def revise(): Traversable[Int] = {
+
+    var ch = new HashSet[Int]()
 
     var bounds = initBound
 
@@ -53,24 +56,27 @@ final class Sum(
       i -= 1
     }
 
-    //val bounds = domFact map { case (d, f) => d.valueInterval * f } reduce (_ + _)
+    var change = true
+    while (change) {
+      change = false
 
-    //reduce (_ + _)
-    //    val bounds = Interval(0, 0)
+      i = arity - 1
+      while (i >= 0) {
+        val dom = scope(i).dom
+        val f = factors(i)
+        val myBounds = dom.valueInterval * f
 
-    var ch: List[Int] = Nil
-    i = arity - 1
-    while (i >= 0) {
-      val dom = scope(i).dom
-      val f = factors(i)
-      val myBounds = dom.valueInterval * f
+        bounds = Interval(bounds.lb - myBounds.lb, bounds.ub - myBounds.ub)
 
-      val boundsf = Interval(bounds.lb - myBounds.lb, bounds.ub - myBounds.ub) / -f
+        if (filter(dom, bounds / -f, f < 0)) {
+          ch += i
+          change = true
+        }
 
-      if (filter(dom, boundsf, f < 0)) {
-        ch ::= i
+        bounds += dom.valueInterval * f
+
+        i -= 1
       }
-      i -= 1
     }
     ch
   }

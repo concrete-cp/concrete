@@ -5,7 +5,6 @@ import concrete.constraint.extension.BinaryExt
 import concrete.constraint.extension.ExtensionConstraintGeneral
 import concrete.constraint.extension.Matrix2D
 import concrete.constraint.Constraint
-import concrete.util.BitVectorIterator
 import concrete.constraint.extension.TupleTrieSet
 import cspom.Statistic;
 
@@ -120,10 +119,10 @@ final class NoGoodLearner(private val problem: Problem, val learnMethod: LearnMe
 
           val (base, varPos) = NoGoodLearner.makeBase(scope, tuple, constraint);
 
-          val newNogoods = new BitVectorIterator(changes) map { i =>
+          val newNogoods = changes.iterator.map { i =>
             base(varPos) = i
             constraint.removeTuples(base)
-          } sum
+          }.sum
 
           if (newNogoods > 0) {
             nbNoGoods += newNogoods;

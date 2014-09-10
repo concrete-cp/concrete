@@ -117,6 +117,7 @@ trait MDDLink extends Relation { //with Identified {
 
   def findSupport(scope: Array[Variable], p: Int, i: Int, support: Array[Int]): Option[Array[Int]] = ???
   def find(f: (Int, Int) => Boolean): Option[Array[Int]] = ???
+  def universal(scope: Array[Variable]) = ???
 }
 
 final object MDDLinkLeaf extends MDDLink {

@@ -49,7 +49,7 @@ class SolutionChecker(file: URL) {
   private val command = Seq("java", "-cp", jar, "abscon.instance.tools.SolutionChecker", instanceFileName)
 
   def checkSolution(solution: IndexedSeq[Int]): Option[String] = {
-    val r = (command ++ solution.map(_.toString)) !!
+    val r = (command ++ solution.map(_.toString)).!!
 
     if (r.contains("solutionCost 0")) {
       None

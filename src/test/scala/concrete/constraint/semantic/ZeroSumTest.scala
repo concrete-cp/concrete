@@ -67,5 +67,24 @@ final class ZeroSumTest {
     c.revise()
     assertEquals(0 to 1, v2.dom.values.toSeq)
   }
+  
+  @Test 
+  def testEq() {
+    val q43 = new Variable("q43", IntDomain(0 to 3))
+    val q44 = new Variable("q44", IntDomain(1 to 1))
+    val q45 = new Variable("q45", IntDomain(1 to 2))
+    val q46 = new Variable("q46", IntDomain(0 to 0))
+    val q47 = new Variable("q47", IntDomain(0 to 0))
+    val q48 = new Variable("q48", IntDomain(0 to 0))
+    
+    val c = new Sum(-6, Array(-1,-2,-3,-4,-5,-6), Array(q43, q44, q45, q46, q47, q48), SumEQ)
+    c.adviseAll()
+    c.revise()
+    
+    assertEquals(c.toString, Seq(1), q43.dom.values.toSeq)
+    
+    
+    // -1.Q[43] [0, 3] + -2.Q[44] [1] + -3.Q[45] [1, 2] + -4.Q[46] [0] + -5.Q[47] [0] + -6.Q[48] [0] eq -6 ()
+  }
 
 }

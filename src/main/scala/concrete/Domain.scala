@@ -39,6 +39,26 @@ abstract class Domain {
 
   def setSingle(index: Int): Unit
 
+  def assign(index: Int): Boolean = {
+    if (!present(index)) {
+      throw UNSATObject
+    } else if (size > 1) {
+      setSingle(index)
+      true
+    } else {
+      false
+    }
+  }
+
+  def assignVal(value: Int): Boolean = {
+    val i = index(value)
+    if (i < 0) {
+      throw UNSATObject
+    } else {
+      assign(i)
+    }
+  }
+
   def remove(index: Int): Unit
 
   def removeVal(v: Int): Boolean = {
@@ -59,8 +79,15 @@ abstract class Domain {
    */
   def removeFrom(lb: Int): Boolean
 
+  def removeAfter(lb: Int): Boolean = removeFrom(lb+1)
+
   def removeFromVal(lb: Int): Boolean = {
     val v = closestGeq(lb)
+    v >= 0 && removeFrom(v)
+  }
+
+  def removeAfterVal(lb: Int): Boolean = {
+    val v = closestGt(lb)
     v >= 0 && removeFrom(v)
   }
 
@@ -70,8 +97,15 @@ abstract class Domain {
    */
   def removeTo(ub: Int): Boolean
 
+  def removeUntil(ub: Int): Boolean = removeTo(ub - 1)
+
   def removeToVal(ub: Int): Boolean = {
     val v = closestLeq(ub)
+    v >= 0 && removeTo(v)
+  }
+
+  def removeUntilVal(ub: Int): Boolean = {
+    val v = closestLt(ub)
     v >= 0 && removeTo(v)
   }
 
@@ -126,26 +160,6 @@ abstract class Domain {
    */
   def closestGeq(value: Int): Int
 
-  //  val indices = new Traversable[Int] {
-  //    def foreach[B](f: Int => B) {
-  //      var i = first
-  //      while (i >= 0) {
-  //        f(i)
-  //        i = next(i)
-  //      }
-  //    }
-  //  }
-  //
-  //  def indices(from: Int): Traversable[Int] = new Traversable[Int] {
-  //    def foreach[B](f: Int => B) {
-  //      var i = if (present(from)) from else next(from)
-  //      while (i >= 0) {
-  //        f(i)
-  //        i = next(i)
-  //      }
-  //    }
-  //  }
-
   def indices: Iterator[Int] = indices(first)
 
   def indices(from: Int): Iterator[Int] = new Iterator[Int] {
@@ -186,37 +200,38 @@ abstract class Domain {
 
   def valueInterval: Interval = Interval(firstValue, lastValue)
 
-  def intersect(a: Int, b: Int): Boolean = removeTo(a - 1) | removeFrom(b + 1)
+  def intersect(a: Int, b: Int): Boolean = removeUntil(a) | removeAfter(b)
 
   def intersectVal(a: Int, b: Int): Boolean = {
-    val lb = closestLt(a)
-    val ub = closestGt(b)
-
-    (lb >= 0 && removeTo(lb)) | (ub >= 0 && removeFrom(ub))
-
+    removeUntilVal(a) | removeAfterVal(b)
   }
 
   def intersectVal(i: Interval): Boolean = intersectVal(i.lb, i.ub)
 
-//  def removeValInterval(lb: Int, ub: Int) = {
-//    var ch = false
-//    var i = closestGeq(lb)
-//    val end = closestLeq(ub)
-//
-//    if (end >= 0) {
-//      while (i >= 0 && i <= end) {
-//        if (present(i)) {
-//          remove(i)
-//          ch = true
-//        }
-//        i = next(i)
-//      }
-//    }
-//
-//    ch
-//  }
+  //  def removeValInterval(lb: Int, ub: Int) = {
+  //    var ch = false
+  //    var i = closestGeq(lb)
+  //    val end = closestLeq(ub)
+  //
+  //    if (end >= 0) {
+  //      while (i >= 0 && i <= end) {
+  //        if (present(i)) {
+  //          remove(i)
+  //          ch = true
+  //        }
+  //        i = next(i)
+  //      }
+  //    }
+  //
+  //    ch
+  //  }
 
-  def disjoint(d: Domain, i: Int = first): Boolean = i < 0 || {
+  final def disjoint(d: Domain): Boolean = {
+    lastValue < d.firstValue || firstValue > d.lastValue || disjoint(d, first)
+  }
+
+  @annotation.tailrec
+  private def disjoint(d: Domain, i: Int): Boolean = i < 0 || {
     val i2 = d.index(value(i))
     (i2 < 0 || !d.present(i2)) && disjoint(d, next(i))
   }
@@ -224,8 +239,9 @@ abstract class Domain {
   def intersects(bv: BitVector): Int
   def intersects(bv: BitVector, part: Int): Boolean
   def bound: Boolean
-  def intSet: IntSet
+  //def intSet: IntSet
 
   def boundVal = size == (1 + lastValue - firstValue)
 
+  def toBitVector: BitVector
 }

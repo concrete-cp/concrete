@@ -20,10 +20,7 @@ final class CrossHeuristic(params: ParameterManager) extends Heuristic {
   val valueHeuristic = valueHeuristicClass.getConstructor().newInstance()
 
   def selectPair(problem: Problem) = {
-    variableHeuristic.select(problem) match {
-      case None => None
-      case Some(v) => Some(Pair(v, valueHeuristic.selectIndex(v)))
-    }
+    variableHeuristic.select(problem).map( v=> Pair(v, valueHeuristic.selectIndex(v)))
   }
 
   def compute(problem: Problem) {

@@ -23,8 +23,7 @@ abstract class VariableHeuristic(params: ParameterManager) extends Ordering[Vari
 
   @tailrec
   private def select(list: Iterator[Variable], best: Variable, ties: Int, rand: Random): Variable = {
-    if (list.isEmpty) { best }
-    else {
+    if (list.hasNext) {
       val current = list.next
       val comp = compare(current, best)
 
@@ -40,6 +39,8 @@ abstract class VariableHeuristic(params: ParameterManager) extends Ordering[Vari
       } else {
         select(list, best, ties, rand)
       }
+    } else {
+      best
     }
   }
 

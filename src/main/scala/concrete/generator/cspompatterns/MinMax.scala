@@ -6,14 +6,15 @@ import cspom.CSPOM
 import cspom.compiler.ConstraintCompiler
 import cspom.variable.SimpleExpression
 import cspom.variable.CSPOMSeq
+import cspom.variable.CSPOMConstant
 
 object MinMax extends ConstraintCompiler {
 
   type A = Symbol
 
   override def constraintMatcher = {
-    case c: CSPOMConstraint[_] if c.function == 'max => 'ge
-    case c: CSPOMConstraint[_] if c.function == 'min => 'le
+    case CSPOMConstraint(CSPOMConstant(_), 'max, _, _) => 'ge
+    case CSPOMConstraint(CSPOMConstant(_), 'min, _, _) => 'le
   }
 
   def compile(c: CSPOMConstraint[_], p: CSPOM, mode: Symbol) = {

@@ -24,5 +24,6 @@ trait Relation extends Iterable[Array[Int]] {
   def copy: Self2
   def findSupport(scope: Array[Variable], p: Int, i: Int, support: Array[Int]): Option[Array[Int]]
   def lambda: BigInt
+  def universal(scope: Array[Variable]): Boolean
 
 }

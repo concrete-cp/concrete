@@ -15,6 +15,9 @@ import cspom.variable.IntVariable.arithmetics
 import cspom.variable.IntVariable.intExpression
 import cspom.variable.IntVariable.ranges
 import cspom.variable.SimpleExpression
+import cspom.compiler.ConstraintCompilerNoData
+import cspom.CSPOM
+import cspom.util.Finite
 
 object Bool2IntDomains extends VariableCompiler('bool2int) {
 
@@ -22,23 +25,47 @@ object Bool2IntDomains extends VariableCompiler('bool2int) {
     case CSPOMConstraint(CSPOMConstant(true), _, Seq(i0: SimpleExpression[_], i1: SimpleExpression[_]), params) =>
 
       val b = BoolVariable.boolExpression(i0)
-      val i = intExpression(i1)
+      
 
       val ii = b match {
         case CSPOMConstant(false) => RangeSet(IntInterval.singleton(0))
         case CSPOMConstant(true) => RangeSet(IntInterval.singleton(1))
         case _: BoolVariable => RangeSet(IntInterval(0, 1))
       }
+      
+      val iii = reduceDomain(intExpression(i1), ii)
 
-      val bb = if (b.isInstanceOf[BoolVariable]) {
-        i match {
-          case CSPOMConstant(0) => CSPOMConstant(false)
-          case CSPOMConstant(1) => CSPOMConstant(true)
-          case _ => b
+      val bb =
+        if (iii.contains(0)) {
+          require(b.contains(false))
+          if (iii.contains(1)) {
+            require(b.contains(true))
+            b
+          } else {
+            CSPOMConstant(false)
+          }
+        } else if (iii.contains(1)) {
+          require(b.contains(true))
+          CSPOMConstant(true)
+        } else {
+          throw new AssertionError()
         }
-      } else { b }
 
-      Map(i0 -> bb, i1 -> reduceDomain(i, ii))
+      Map(i0 -> bb, i1 -> iii)
 
   }
+}
+
+object Bool2IntIsEq extends ConstraintCompilerNoData {
+  def matchBool(c: CSPOMConstraint[_], p: CSPOM) = c.function == 'bool2int
+  def compile(c: CSPOMConstraint[_], p: CSPOM) = {
+    val b = c.arguments(0).asInstanceOf[SimpleExpression[_]]
+    val i = c.arguments(1).asInstanceOf[SimpleExpression[_]]
+    require(b.searchSpace == i.searchSpace &&
+      (!b.contains(false) || i.contains(0) || i.contains(false)) && (
+          !b.contains(true) || i.contains(1) || i.contains(true)))
+
+    replaceCtr(c, Nil, p) ++ replace(Seq(i), b, p)
+  }
+  def selfPropagation = true
 }

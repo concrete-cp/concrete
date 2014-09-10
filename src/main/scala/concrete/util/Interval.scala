@@ -1,8 +1,8 @@
 package concrete.util
 
 final case class Interval(val lb: Int, val ub: Int) {
-  assume(ub >= lb)
-  val size = ub - lb + 1
+  //assume(ub >= lb)
+  val size = math.max(0, ub - lb + 1)
   def contains(v: Int) = lb <= v && v <= ub
 
   def allValues = lb to ub
@@ -126,6 +126,10 @@ final case class Interval(val lb: Int, val ub: Int) {
     val u = math.min(ub, i.ub)
     if (l <= u) { Some(Interval(l, u)) }
     else { None }
+  }
+
+  def intersects(i: Interval) = {
+    math.max(lb, i.lb) <= math.min(ub, i.ub)
   }
 
   def union(i: Interval) = Interval(math.min(lb, i.lb), math.max(ub, i.ub))
