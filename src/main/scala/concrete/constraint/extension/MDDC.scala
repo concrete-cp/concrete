@@ -61,8 +61,8 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
 
     val oldGno = gNo
 
-    seekSupports(timestamp.next(), mdd, 0)
-    if (gNo(mdd.getId)) {
+    val sat = seekSupports(timestamp.next(), mdd, 0)
+    if (!sat) {
       throw UNSATObject
     }
 
@@ -91,8 +91,8 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
       false
     } else {
       var res = false
-
-      var ak = scope(i).dom.first
+      val dom = scope(i).dom
+      var ak = dom.first
       while (ak >= 0 && delta > i) {
         val gk = g.subMDD(ak)
 
@@ -105,7 +105,7 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
           }
         }
 
-        ak = scope(i).dom.next(ak)
+        ak = dom.next(ak)
       }
       if (res) {
         g.cache.timestamp = ts

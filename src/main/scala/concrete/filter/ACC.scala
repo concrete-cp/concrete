@@ -98,10 +98,14 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
   private def adviseAndEnqueueAll(c: Constraint) {
     var p = c.arity - 1
+    var max = -1
     while (p >= 0) {
       val a = c.advise(p)
-      if (a >= 0) queue.offer(c, key.getKey(c, a))
       p -= 1
+    }
+    if (max >= 0) {
+      println(max + " : " + c)
+      queue.offer(c, key.getKey(c, max))
     }
   }
 
@@ -140,6 +144,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
       true
     } else {
       val constraint = queue.poll();
+      //println(constraint)
 
       revisions += 1;
       //val sizes = constraint.sizes()
@@ -160,6 +165,8 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
           constraint.weight += 1
           return false
       }
+
+      //println(mod)
 
       logger.debug(if (mod.isEmpty) "NOP" else s"-> $constraint")
 

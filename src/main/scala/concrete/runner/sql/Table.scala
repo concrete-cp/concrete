@@ -36,8 +36,7 @@ object Table extends App {
     }
   }
 
-  val statistic :: v :: nature = args.toList
-  val version = v.toInt
+  val statistic :: version :: nature = args.toList
 
   case class Problem(
     problemId: Int,
@@ -59,7 +58,16 @@ object Table extends App {
 
   implicit val getProblemResult = GetResult(r => Problem(r.<<, r.<<, r.<<, r.<<, r.nextStringOption.map(_.split(",")).getOrElse(Array())))
 
-  implicit val getConfigResult = GetResult(r => Config(r.<<, xml.XML.loadString(r.nextString)))
+  implicit val getConfigResult = GetResult(r =>
+    Config(r.<<, {
+      val s = r.nextString;
+      try xml.XML.loadString(s"<config>$s</config>")
+      catch {
+        case e: Exception =>
+          System.err.println(s)
+          throw e
+      }
+    }))
 
   Database.forURL("jdbc:postgresql://localhost/concrete",
     user = "vion",
@@ -67,19 +75,19 @@ object Table extends App {
     driver = "org.postgresql.Driver") withSession { implicit session =>
 
       val problems = sql"""
-        SELECT "problemId", display, nbvars, nbcons, array_to_string(array_agg(tag), ',') as tags
+        SELECT "problemId", display, "nbVars", "nbCons", string_agg("problemTag", ',') as tags
         FROM "Problem" NATURAL LEFT JOIN "ProblemTag"
         WHERE "problemId" IN (
           SELECT "problemId" 
           FROM "Execution"
           WHERE version = $version and "configId" in (#${nature.mkString(",")}))
-        GROUP BY "problemId", display, nbvars, nbcons
+        GROUP BY "problemId", display, "nbVars", "nbCons"
         ORDER BY display
         """.as[Problem].list
 
       val configs = sql"""
         SELECT "configId", config
-        FROM "Configs" 
+        FROM "Config" 
         WHERE "configId" IN (#${nature.mkString(", ")}) 
         """.as[Config].list
 
@@ -154,10 +162,10 @@ object Table extends App {
                                 FROM Executions
                                 WHERE (version, problemId) = ($version, $problemId)"""
           case "rps" => sql"""
-                                SELECT configId, solution, 
-                                  cast(stat('filter.revisions', executionId) as real)/(cast(stat('solver.searchCpu', executionId) as real) + cast(stat('solver.preproCpu', executionId) as real))
-                                FROM Executions
-                                WHERE (version, problemId) = ($version, $problemId)"""
+                                SELECT "configId", solution, 
+                                  cast(stat('filter.revisions', "executionId") as real)/(cast(stat('solver.searchCpu', "executionId") as real) + cast(stat('solver.preproCpu', "executionId") as real))
+                                FROM "Execution"
+                                WHERE (version, "problemId") = ($version, $problemId)"""
 
         }
 

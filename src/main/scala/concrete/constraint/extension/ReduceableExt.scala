@@ -55,6 +55,7 @@ final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
   }
 
   def revise(mod: List[Int]) = {
+    //println(this)
     //logger.fine("Revising " + this + " : " + mod.toList)
     for (i <- 0 until scope.length) {
       unsupported(i) = scope(i).dom.toBitVector
@@ -104,7 +105,6 @@ final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
       // newTrie.foreach(t => println(t.toSeq))
       entail()
     }
-
     c
 
   }

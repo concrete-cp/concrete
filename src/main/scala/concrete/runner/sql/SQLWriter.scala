@@ -114,7 +114,7 @@ object SQLWriter {
 
   def findConfigByMD5 = configs.findBy(_.md5)
 
-  class Execution(tag: Tag) extends Table[(Int, String, Int, Int, Timestamp, Option[Timestamp], Option[String], Option[String])](tag, "Execution") {
+  class Execution(tag: Tag) extends Table[(Int, String, Int, Int, Timestamp, Option[Timestamp], Option[String], String, Option[String])](tag, "Execution") {
     def executionId = column[Int]("executionId", O.PrimaryKey, O.AutoInc)
     def version = column[String]("version")
     def configId = column[Int]("configId")
@@ -123,8 +123,9 @@ object SQLWriter {
     def end = column[Option[Timestamp]]("end")
     def hostname = column[Option[String]]("hostname")
     def solution = column[Option[String]]("solution")
+    def status = column[String]("status", O.Default("started"))
 
-    def * = (executionId, version, configId, problemId, start, end, hostname, solution)
+    def * = (executionId, version, configId, problemId, start, end, hostname, status, solution)
 
     def fkConfig = foreignKey("fkConfig", configId, configs)(_.configId, onDelete = ForeignKeyAction.Cascade)
     def fkProblem = foreignKey("fkProblem", problemId, problems)(_.problemId, onDelete = ForeignKeyAction.Cascade)
@@ -161,7 +162,7 @@ object SQLWriter {
 
 final class SQLWriter(jdbcUri: URI, params: ParameterManager) extends ConcreteWriter {
 
-  val createTables: Boolean = 
+  val createTables: Boolean =
     params.getOrElse("sql.createTables", false)
 
   lazy val db = SQLWriter.connection(jdbcUri, createTables)
@@ -258,12 +259,12 @@ final class SQLWriter(jdbcUri: URI, params: ParameterManager) extends ConcreteWr
     }
   }
 
-  def error(e: Throwable) {
+  def error(thrown: Throwable) {
     //println(e.toString)
-    e.printStackTrace()
+    thrown.printStackTrace()
     for (e <- executionId) {
       db.withSession { implicit session =>
-        executions.filter(_.executionId === e).map(_.solution).update(Some(e.toString))
+        executions.filter(_.executionId === e).map(_.solution).update(Some(thrown.toString))
       }
     }
   }
@@ -271,7 +272,9 @@ final class SQLWriter(jdbcUri: URI, params: ParameterManager) extends ConcreteWr
   def disconnect(status: RunnerStatus) {
     for (e <- executionId) {
       db.withSession { implicit session =>
-        executions.filter(_.executionId === e).map(_.end).update(Some(SQLWriter.now.run))
+        val dbexec = for (dbe <- executions if dbe.executionId === e) yield dbe
+        dbexec.map(_.end).update(Some(SQLWriter.now.run))
+        dbexec.map(_.status).update(status.toString())
       }
     }
   }

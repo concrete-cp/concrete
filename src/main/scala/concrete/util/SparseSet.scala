@@ -29,15 +29,16 @@ class SparseSet(
   }
 
   // Members declared in scala.collection.GenSetLike
-  def iterator: Iterator[Int] = new Iterator[Int] {
-    var c = members - 1
-    def hasNext = c >= 0
-    def next() = {
-      val v = sparse(dense(c))
-      c -= 1
-      v
-    }
-  }
+  def iterator: Iterator[Int] = dense.iterator.take(members) 
+//  new Iterator[Int] {
+//    var c = members - 1
+//    def hasNext = c >= 0
+//    def next() = {
+//      val v = dense(c)
+//      c -= 1
+//      v
+//    }
+//  }
 
   override def size = members
 

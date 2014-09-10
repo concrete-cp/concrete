@@ -46,13 +46,23 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
 
       val problem = new Problem(variables.values.toList.sortBy(_.name))
 
-      for (
-        cspomC <- cspom.constraints;
-        concreteC <- gm.generate(cspomC, variables, problem)
-      ) {
-        problem.addConstraint(concreteC)
-      }
+      //      val sorted = cspom.constraints.toSeq.sortBy {
+      //        c => (c.fullScope, c.function)
+      //      }
 
+      val constraints = for (
+        cspomC <- cspom.constraints;
+        constraint <- gm.generate(cspomC, variables, problem)
+      ) yield constraint
+
+      val sorted = constraints //.toSeq.sortBy[Iterable[String]](c => c.scope.map(_.name))
+      //      ) {
+      //        problem.addConstraint(concreteC)
+      //      }
+      sorted.foreach(problem.addConstraint)
+
+      //println(problem)
+      
       (problem, variables)
     } catch {
       case t: TimedException =>
@@ -90,7 +100,6 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
             IntDomain(v.asSortedSet)
           }
       }
-
 
       case _ => throw new IllegalArgumentException("Unhandled variable type")
     }

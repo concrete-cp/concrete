@@ -43,7 +43,9 @@ final class SolverFactory(val params: ParameterManager) {
     params.getOrElse("solver", classOf[MAC])
 
   def apply(problem: Problem): Solver = {
-    solverClass.getConstructor(classOf[Problem]).newInstance(problem);
+    solverClass
+      .getConstructor(classOf[Problem], classOf[ParameterManager])
+      .newInstance(problem, params);
   }
 
   def apply(cspom: CSPOM): CSPOMSolver = {

@@ -53,7 +53,7 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
   @Statistic
   var nbAssignments = 1;
 
-  def this(p: Problem) = this(p, new ParameterManager())
+  //def this(p: Problem) = this(p, new ParameterManager())
 
   //private var decisions: List[Pair] = Nil
 
