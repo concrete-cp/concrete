@@ -1,4 +1,4 @@
-package concrete.runner
+package concrete.runner.sql
 
 import scala.xml.Node
 import scala.xml.Text
@@ -61,26 +61,26 @@ object Table extends App {
 
   implicit val getConfigResult = GetResult(r => Config(r.<<, xml.XML.loadString(r.nextString)))
 
-  Database.forURL("jdbc:postgresql://raihmsvg/concrete",
-    user = "concrete",
-    password = "Wizcof25",
+  Database.forURL("jdbc:postgresql://localhost/concrete",
+    user = "vion",
+    password = "vion",
     driver = "org.postgresql.Driver") withSession { implicit session =>
 
       val problems = sql"""
-        SELECT problemId, display, nbvars, nbcons, array_to_string(array_agg(tag), ',') as tags
-        FROM Problems NATURAL LEFT JOIN ProblemTags
-        WHERE problemId IN (
-          SELECT problemId 
-          FROM Executions
-          WHERE version = $version and configId in (#${nature.mkString(",")}))
-        GROUP BY problemId, display, nbvars, nbcons
+        SELECT "problemId", display, nbvars, nbcons, array_to_string(array_agg(tag), ',') as tags
+        FROM "Problem" NATURAL LEFT JOIN "ProblemTag"
+        WHERE "problemId" IN (
+          SELECT "problemId" 
+          FROM "Execution"
+          WHERE version = $version and "configId" in (#${nature.mkString(",")}))
+        GROUP BY "problemId", display, nbvars, nbcons
         ORDER BY display
         """.as[Problem].list
 
       val configs = sql"""
-        SELECT configId, config
-        FROM configs 
-        WHERE configId IN (#${nature.mkString(", ")}) 
+        SELECT "configId", config
+        FROM "Configs" 
+        WHERE "configId" IN (#${nature.mkString(", ")}) 
         """.as[Config].list
 
       for (c <- configs) print("\t" + c.display)

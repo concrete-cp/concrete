@@ -5,7 +5,7 @@ name := "concrete"
 
 organization := "fr.univ-valenciennes.concrete"
 
-version := "1.2.1"
+version := "1.3-SNAPSHOT"
 
 scalaVersion := "2.11.2"
 
@@ -47,9 +47,19 @@ scalacOptions ++= Seq("-optimise"
 
 packageArchetype.java_application
 
-mainClass in Compile := Some("concrete.runner.FZConcrete")
+mainClass in Compile := Some("concrete.runner.XCSPConcrete")
 
 publishTo := Some(
 	Resolver.file("Concrete local repository",
 		new File(Path.userHome.absolutePath+"/concrete/repository")))
 		
+sourceGenerators in Compile <+= (sourceManaged in Compile, version, name) map { (d, v, n) =>
+  val file = d / "concrete" / "Info.scala"
+  IO.write(file, s"""package concrete
+    |object Info {
+    |  val version = "$v"
+    |  val name = "$n"
+    |}
+    |""".stripMargin)
+  Seq(file)
+}

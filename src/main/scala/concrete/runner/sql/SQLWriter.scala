@@ -174,7 +174,7 @@ final class SQLWriter(jdbcUri: URI, params: ParameterManager) extends ConcreteWr
 
   private var problemId: Option[Int] = None
 
-  private def version: String = s"${Solver.VERSION}/${CSPOM.VERSION}"
+  private def version: String = concrete.Info.version
 
   def parameters(params: NodeSeq) {
     configId = Some(config(params.toString))

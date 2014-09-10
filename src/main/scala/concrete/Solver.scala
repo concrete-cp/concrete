@@ -58,7 +58,6 @@ final class SolverFactory(val params: ParameterManager) {
 }
 
 object Solver {
-  val VERSION = s"Concrete 2.0-SNAPSHOT"
   def apply(cspom: CSPOM): CSPOMSolver = apply(cspom, new ParameterManager)
   def apply(cspom: CSPOM, pm: ParameterManager): CSPOMSolver = new SolverFactory(pm)(cspom)
   def apply(problem: Problem): Solver = apply(problem, new ParameterManager)
