@@ -93,7 +93,8 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
       var res = false
       val dom = scope(i).dom
       var ak = dom.first
-      while (ak >= 0 && delta > i) {
+      var continue = true
+      while (ak >= 0 && continue) {
         val gk = g.subMDD(ak)
 
         if (seekSupports(ts, gk, i + 1)) {
@@ -102,6 +103,7 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
 
           if (i + 1 == delta && unsupported(i).isEmpty) {
             delta = i
+            continue = false
           }
         }
 

@@ -21,7 +21,7 @@ testOptions in Test <+= (target in Test) map {
 
 
 libraryDependencies ++= Seq(
-	"fr.univ-valenciennes.concrete" %% "cspom" % "2.4",
+	"fr.univ-valenciennes.concrete" %% "cspom" % "2.4-SNAPSHOT",
 	"junit" % "junit" % "4.11" % "test",
 	"org.postgresql" % "postgresql" % "9.3-1101-jdbc41",
 	"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
