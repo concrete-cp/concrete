@@ -47,7 +47,7 @@ scalacOptions ++= Seq("-optimise"
 
 packageArchetype.java_application
 
-mainClass in Compile := Some("concrete.runner.XCSPConcrete")
+mainClass in Compile := Some("concrete.runner.FZConcrete")
 
 publishTo := Some(
 	Resolver.file("Concrete local repository",

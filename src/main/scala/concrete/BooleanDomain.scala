@@ -18,7 +18,8 @@ sealed trait Status {
   def canBe(b: Boolean): Boolean
   def removeFrom(lb: Int): Status
   def removeTo(ub: Int): Status
-  def lowest(value: Int): Int
+  def nextFrom(value: Int): Int
+  def prevFrom(value: Int): Int
   def prevAbsent(value: Int): Int
   def lastAbsent: Int
   def indices: Array[Int]
@@ -46,10 +47,16 @@ case object UNKNOWNBoolean extends Status {
     case 1 => EMPTY
     case _ => this
   }
-  def lowest(value: Int) =
+  def nextFrom(value: Int) =
     if (value > 1) { -1 }
     else if (value <= 0) { 0 }
     else { 1 }
+
+  def prevFrom(value: Int) = {
+    if (value >= 1) { 1 }
+    else if (value < 0) { -1 }
+    else { 0 }
+  }
 
   def lastAbsent = -1
   def prevAbsent(value: Int) = -1
@@ -70,7 +77,8 @@ case object TRUE extends Status {
   def canBe(b: Boolean) = b
   def removeFrom(lb: Int) = if (lb == 0) EMPTY else this
   def removeTo(ub: Int) = if (ub == 1) EMPTY else this
-  def lowest(value: Int) = if (value > 1) -1 else 1;
+  def nextFrom(value: Int) = if (value > 1) -1 else 1;
+  def prevFrom(value: Int) = if (value < 1) -1 else 1;
   def lastAbsent = 0
   def prevAbsent(value: Int) = if (value > 0) 0 else -1
   val indices = Array(1)
@@ -90,7 +98,8 @@ case object FALSE extends Status {
   def canBe(b: Boolean) = !b
   def removeFrom(lb: Int) = if (lb <= 1) EMPTY else this
   def removeTo(ub: Int) = if (ub == 0) EMPTY else this
-  def lowest(value: Int) = if (value > 0) -1 else 0;
+  def nextFrom(value: Int) = if (value > 0) -1 else 0;
+  def prevFrom(value: Int) = if (value < 0) -1 else 0;
   def lastAbsent = 1
   def prevAbsent(value: Int) = if (value > 0) 1 else -1
   val indices = Array(0)
@@ -110,7 +119,8 @@ case object EMPTY extends Status {
   def canBe(b: Boolean) = false
   def removeFrom(lb: Int) = this
   def removeTo(ub: Int) = this
-  def lowest(value: Int) = -1
+  def nextFrom(value: Int) = -1
+  def prevFrom(value: Int) = -1
   def lastAbsent = 1
   def prevAbsent(value: Int) = if (value >= 1) 0 else -1
   val indices = Array[Int]()
@@ -213,7 +223,7 @@ final class BooleanDomain(var _status: Status) extends Domain
 
   def canBe(b: Boolean) = status.canBe(b)
 
-  def closestLeq(value: Int) = throw new UnsupportedOperationException
+  def closestLeq(value: Int) = status.prevFrom(value)
 
   def removeFrom(lb: Int) = {
     val s = status.removeFrom(lb)
@@ -231,7 +241,7 @@ final class BooleanDomain(var _status: Status) extends Domain
     } else { false }
   }
 
-  def closestGeq(value: Int) = status.lowest(value)
+  def closestGeq(value: Int) = status.nextFrom(value)
 
   def closestGt(value: Int): Int = {
     if (value < 0) {

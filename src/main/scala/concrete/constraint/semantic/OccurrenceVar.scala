@@ -12,11 +12,6 @@ class OccurrenceVar(val result: Variable, val value: Int,
   def checkValues(tuple: Array[Int]) =
     offset + tuple(0) == (1 until arity).count(i => tuple(i) == value)
 
-  /**
-   *  As seen from class Occurrence, the missing signatures are as follows.
-   *   For convenience, these are usable as stub implementations.
-   */
-
   def advise(pos: Int): Int = arity
 
   def revise(): Traversable[Int] = {
