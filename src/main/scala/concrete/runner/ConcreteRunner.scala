@@ -174,6 +174,9 @@ trait ConcreteRunner extends LazyLogging {
     } finally {
       waker.cancel()
       writer.write(statistics)
+      for (s <- pm.parameters.keySet -- pm.used) {
+        logger.warn(s"Unused parameter : $s")
+      }
       writer.disconnect(status)
     }
     status

@@ -131,8 +131,9 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   val preprocessorClass: Option[Class[_ <: Filter]] =
     params.get[Class[_ <: Filter]]("preprocessor")
 
+  @Statistic
   val statistics = new StatisticsManager
-  statistics.register("solver", this)
+  //statistics.register("solver", this)
   //statistics.register("domains", IntDomain)
   statistics.register("enumerator", TupleEnumerator)
   statistics.register("relation", ReduceableExt)

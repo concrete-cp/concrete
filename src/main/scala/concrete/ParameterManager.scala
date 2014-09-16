@@ -17,6 +17,8 @@ final class ParameterManager {
 
   private val _parameters: HashMap[String, Any] = new HashMap()
 
+  val used = collection.mutable.Set[String]()
+
   /**
    * Updates some parameter, overriding default or previous value.
    *
@@ -33,10 +35,12 @@ final class ParameterManager {
 
   def get[T: TypeTag](name: String): Option[T] = {
     require(TypeTag.Nothing != typeTag[T], s"Please give a type for $name, was ${typeTag[T]}")
-    parameters.get(name).map {
+    val got = parameters.get(name).map {
       case s: String => parse(typeOf[T], s)
       case v: Any => v.asInstanceOf[T]
     }
+    if (got.isDefined) used += name
+    got
   }
 
   private def parse[T](fType: Type, value: String): T = {

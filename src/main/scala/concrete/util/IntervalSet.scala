@@ -53,8 +53,13 @@ final class IntervalSet(val domain: Interval) extends IntSet {
     else { IntSet.ofInterval(ub + 1, domain.ub) }
 
   def filter(f: Int => Boolean) = {
-    val nbv = bitVectorSet.filter(f)
-    if (bitVectorSet eq nbv) this else nbv
+    val bv = toBitVector
+    val nbv = bv.filter(f)
+    if (nbv == bv) {
+      this
+    } else {
+      IntSet.ofBV(nbv, nbv.cardinality)
+    }
   }
 
   def toString(id: Indexer) =
@@ -73,8 +78,6 @@ final class IntervalSet(val domain: Interval) extends IntSet {
     assert(bv.cardinality == size, this + " -> " + bv)
     bv
   }
-
-  def bitVectorSet = new BitVectorSet(toBitVector, size)
 
   def intersects(bv: BitVector) = bv.intersects(toBitVector)
   def intersects(bv: BitVector, part: Int) = bv.intersects(toBitVector, part)
