@@ -38,6 +38,9 @@ object Table extends App {
 
   val statistic :: version :: nature = args.toList
 
+  // Set display :
+  // update "Problem" set display = substring(name from '%/#"[^/]+#".xml.bz2' for '#')
+
   case class Problem(
     problemId: Int,
     problem: String,
@@ -53,8 +56,11 @@ object Table extends App {
   }
 
   case class Resultat[A](
+    status: String,
     solution: String,
-    statistic: A)
+    statistic: A) {
+    def solved = Set("Sat", "Unsat").contains(status)
+  }
 
   implicit val getProblemResult = GetResult(r => Problem(r.<<, r.<<, r.<<, r.<<, r.nextStringOption.map(_.split(",")).getOrElse(Array())))
 
@@ -98,11 +104,13 @@ object Table extends App {
 
       var d = Array.ofDim[Int](configs.size, configs.size)
 
-      val totals = new HashMap[String, Array[List[Double]]]()
-      val nbSolved = new HashMap[String, Array[Int]]()
+      val totals = new HashMap[(String, Int), List[Double]]().withDefaultValue(Nil)
+
+      val nbSolved = new HashMap[String, Array[Int]]().withDefaultValue {
+        Array.fill(configs.size)(0)
+      }
 
       for (Problem(problemId, problem, nbvars, nbcons, tags) <- problems) {
-
         val data = ListBuffer(s"$problem ($problemId)") //, nbvars, nbcons)
         //print("\\em %s & \\np{%d} & \\np{%d}".format(problem, nbvars, nbcons))
         //print("\\em %s ".format(problem))
@@ -135,61 +143,62 @@ object Table extends App {
 
         val sqlQuery = statistic match {
           case "mem" => sql"""
-                                SELECT configId, solution, cast(stat('solver.usedMem', executionId) as real)/1048576.0
+                                SELECT configId, status, solution, cast(stat('solver.usedMem', executionId) as real)/1048576.0
                                 FROM Executions
                                 WHERE (version, problemId) = ($version, $problemId)
                             """
 
           case "time" => sql"""
-                                SELECT configId, solution, case when totalTime > 1150 then 'inf' else totalTime end
+                                SELECT configId, status, solution, case when totalTime > 1150 then 'inf' else totalTime end
                                 FROM Times
                                 WHERE (version, problemId) = ($version, $problemId)
                             """
 
           case "nodes" => sql"""
-                                SELECT configId, solution, cast(stat('solver.nbAssignments', executionId) as real)
+                                SELECT configId, status, solution, cast(stat('solver.nbAssignments', executionId) as real)
                                 FROM Executions
                                 WHERE (version, problemId) = ($version, $problemId)
                             """
           case "domainChecks" => sql"""
-                                SELECT configId, solution, cast(stat('domain.checks', executionId) as real)
+                                SELECT configId, status, solution, cast(stat('domain.checks', executionId) as real)
                                 FROM Executions
                                 WHERE (version, problemId) = ($version, $problemId)
                             """
           case "nps" => sql"""
-                                SELECT configId, solution, 
+                                SELECT configId, status, solution, 
                                   cast(stat('solver.nbAssignments', executionId) as real)/(cast(stat('solver.searchCpu', executionId) as real) + cast(stat('solver.preproCpu', executionId) as real))
                                 FROM Executions
                                 WHERE (version, problemId) = ($version, $problemId)"""
           case "rps" => sql"""
-                                SELECT "configId", solution, 
-                                  cast(stat('filter.revisions', "executionId") as real)/(cast(stat('solver.searchCpu', "executionId") as real) + cast(stat('solver.preproCpu', "executionId") as real))
+                                SELECT "configId", status, solution, 
+                                  cast(stat('solver.filter.revisions', "executionId") as real)/(cast(stat('solver.searchCpu', "executionId") as real) + cast(stat('solver.preproCpu', "executionId") as real))
                                 FROM "Execution"
                                 WHERE (version, "problemId") = ($version, $problemId)"""
 
         }
 
-        val results = sqlQuery.as[(Int, String, Option[Double])].list
+        val results = sqlQuery.as[(Int, String, Option[String], Option[Double])].list
           .map {
-            case (config, solution, value) => config -> Resultat(solution, value.getOrElse(Double.NaN))
+            case (config, status, solution, value) =>
+              config -> Resultat(status, solution.getOrElse(""), value.getOrElse(Double.NaN))
           }
           .toMap
 
         for (
           i <- configs.indices;
-          j = results.getOrElse(configs(i).configId, Resultat(null, Double.NaN));
+          j = results.getOrElse(configs(i).configId, Resultat("not started", "", Double.NaN));
           tag <- tags
         ) {
-          totals.getOrElseUpdate(tag, Array.fill(configs.size)(Nil))(i) ::= {
-            if (statistic == "mem" && (j.solution ne null) && j.solution.contains("OutOfMemoryError")) {
+          totals(tag, i) ::= {
+            if (statistic == "mem" && j.solution.contains("OutOfMemoryError")) {
               Double.PositiveInfinity
             } else {
               j.statistic
             }
           }
-          val a = nbSolved.getOrElseUpdate(tag, Array.fill(configs.size)(0))
-          if (solved(j.solution)) {
-            a(i) += 1
+
+          if (j.solved) {
+            nbSolved(tag)(i) += 1
           }
         }
 
@@ -197,10 +206,10 @@ object Table extends App {
           i <- configs.indices; j <- configs.indices if i != j;
           ci = configs(i).configId;
           cj = configs(j).configId;
-          ri <- results.get(ci) if solved(ri.solution);
+          ri <- results.get(ci) if ri.solved;
           rj <- results.get(cj)
         ) {
-          if (!solved(rj.solution) || {
+          if (!rj.solved || {
             val trj = rj.statistic
             val tri = ri.statistic
             (trj - tri) / tri > .1 && (trj - tri) > 1
@@ -217,19 +226,17 @@ object Table extends App {
         configs foreach { c =>
           data.append(
             results.get(c.configId) match {
-              case Some(Resultat(result, time)) =>
+              case Some(r @ Resultat(status, solution, time)) =>
                 val e = engineer(time)
                 "%.1f%s".formatLocal(Locale.US, e._1, e._2.getOrElse("")) + (
-                  if (result == null) {
-                    "(null)"
-                  } else if (result.contains("OutOfMemoryError")) {
-                    "(mem)"
-                  } else if (result.contains("InterruptedException")) {
-                    "(exp)"
-                  } else if (!solved(result)) {
-                    s"($result)"
-                  } else {
+                  if (r.solved) {
                     ""
+                  } else if (solution.contains("OutOfMemoryError")) {
+                    "(mem)"
+                  } else if (solution.contains("InterruptedException")) {
+                    "(exp)"
+                  } else {
+                    s"(${status})"
                   })
               case None => "---"
             })
@@ -246,7 +253,15 @@ object Table extends App {
       //      }.mkString(" & "))
       //    }
 
-      for ((k, t) <- totals.toList.sortBy(_._1)) {
+      //println(totals)
+
+      val tagged = totals.groupBy(_._1._1).map {
+        case (tag, tot) => tag -> tot.map {
+          case ((tag, config), values) => config -> values
+        }
+      }
+
+      for ((k, t) <- tagged.toList.sortBy(_._1)) {
 
         val medians = configs.indices.map {
           i =>
@@ -296,7 +311,7 @@ object Table extends App {
       //      } mkString ("\n"))
     }
 
-  def solved(solution: String) = solution != null && ("UNSAT" == solution || """^[0-9\s]*$""".r.findFirstIn(solution).isDefined || "^Map".r.findFirstIn(solution).isDefined)
+  // solution != null && ("UNSAT" == solution || """^[0-9\s]*$""".r.findFirstIn(solution).isDefined || "^Map".r.findFirstIn(solution).isDefined)
 
   @tailrec
   def rank[B <% Ordered[B]](p: IndexedSeq[Array[B]], candidates: Seq[Int],

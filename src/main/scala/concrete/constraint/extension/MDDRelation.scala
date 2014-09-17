@@ -26,9 +26,7 @@ final class MDDRelation(val mdd: MDD = MDD0, val timestamp: Timestamp = new Time
     s
   }
 
-  def edges: Int = {
-    mdd.edges(timestamp.next())
-  }
+  lazy val edges: Int = mdd.edges(timestamp.next())
 
   def filterTrie(f: (Int, Int) => Boolean, modified: List[Int]): MDDRelation = {
     val m = mdd.filterTrie(timestamp.next(), f, modified, 0)
@@ -49,7 +47,7 @@ final class MDDRelation(val mdd: MDD = MDD0, val timestamp: Timestamp = new Time
     mdd.fillFound(timestamp.next(), f, 0, l)
     l
   }
-  
+
   override def isEmpty = mdd.isEmpty
 
   def universal(scope: Array[Variable]) = mdd.universal(scope, timestamp.next())
@@ -58,13 +56,15 @@ final class MDDRelation(val mdd: MDD = MDD0, val timestamp: Timestamp = new Time
 
   def copy: MDDRelation = new MDDRelation(mdd.copy(timestamp.next()))
 
-  def lambda = mdd.lambda
+  lazy val lambda = mdd.lambda
 
   override def size = {
     val lambda = mdd.lambda
-    require(lambda <= Int.MaxValue)
+    require(lambda.isValidInt)
     lambda.toInt
   }
+
+  lazy val identify = mdd.identify(timestamp.next())
 
   def iterator = mdd.iterator.map(_.toArray)
 

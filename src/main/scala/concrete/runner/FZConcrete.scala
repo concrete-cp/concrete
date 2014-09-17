@@ -35,7 +35,7 @@ object FZConcrete extends CSPOMRunner with App {
     file = if (f.getScheme() == null) {
       new URL("file:" + f)
     } else {
-      println(f.getScheme())
+      //println(f.getScheme())
       f.toURL
     }
 

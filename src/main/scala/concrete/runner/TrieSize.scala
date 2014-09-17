@@ -78,7 +78,7 @@ object TrieSize extends App {
 
       val constraint = algo match {
         case "MDDC" => {
-          new MDDC(variables, t.reduceable.asInstanceOf[MDDRelation].mdd)
+          new MDDC(variables, t.reduceable.asInstanceOf[MDDRelation])
         }
         case "Reduce" => {
           new ReduceableExt(variables, t.reduceable.copy)

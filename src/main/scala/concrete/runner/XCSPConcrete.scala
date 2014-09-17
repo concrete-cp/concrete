@@ -2,10 +2,9 @@ package concrete.runner
 
 import java.io.File
 import java.net.URL
-
 import scala.sys.process._
-
 import cspom.CSPOM
+import java.net.URI
 
 object XCSPConcrete extends CSPOMRunner with App {
 
@@ -15,7 +14,15 @@ object XCSPConcrete extends CSPOMRunner with App {
 
   def loadCSPOM(args: List[String]) = {
     val List(fn) = args
-    file = new URL(fn)
+    val f = new URI(fn)
+
+    file = if (f.getScheme() == null) {
+      new URL("file:" + f)
+    } else {
+      //println(f.getScheme())
+      f.toURL
+    }
+
     val cspom = CSPOM.load(file)
     declaredVariables = cspom._2('variables).asInstanceOf[Seq[String]]
     cspom._1
@@ -33,6 +40,10 @@ object XCSPConcrete extends CSPOMRunner with App {
 
   def controlCSPOM(solution: Map[String, Any], variables: Iterable[String], file: URL) = {
     new SolutionChecker(file).checkSolution(variables.map(v => solution(v).asInstanceOf[Int]).toIndexedSeq)
+  }
+
+  override def outputCSPOM(solution: Map[String, Any]): String = {
+    declaredVariables.map(solution).mkString(" ")
   }
 
   run(args)

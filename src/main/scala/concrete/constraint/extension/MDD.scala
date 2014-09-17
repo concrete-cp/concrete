@@ -37,6 +37,11 @@ trait MDD extends Identified with Iterable[Seq[Int]] with LazyLogging {
 
   val cache = new TSCache[MDD]()
 
+  def checkTimestamp(ts: Int): Unit = {
+    require(cache.timestamp < ts)
+    forSubtries { (i, m) => m.checkTimestamp(ts); true }
+  }
+
   private var _id: Int = _
   def getId = _id
 
@@ -446,7 +451,6 @@ final class MDDn(
       if ((newTrie(v) eq null) || (newTrie(v) eq MDD0)) {
         val ni = indices.padTo(nbIndices + 1, 0)
         ni(nbIndices) = v
-        (ni, nbIndices + 1)
         newTrie(v) = MDD0.addTrie(tuple, i + 1)
         new MDDn(newTrie, ni, nbIndices + 1)
       } else {

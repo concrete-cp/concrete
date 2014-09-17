@@ -10,7 +10,8 @@ import concrete.UNSATException
 import concrete.UNSATObject
 import concrete.util.Timestamp
 
-class MDDC(_scope: Array[Variable], private val mdd: MDD)
+/* MDDRelation comes with its own timestamp */
+class MDDC(_scope: Array[Variable], private val mdd: MDDRelation)
   extends Constraint(_scope) with Removals with Backtrackable[Set[Int]] {
 
   override def setLvl(l: Int) {
@@ -23,9 +24,7 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
     restoreLevel(l)
   }
 
-  private val timestamp = new Timestamp()
-
-  var gNo: Set[Int] = new SparseSet(mdd.identify(timestamp.next()) + 1)
+  var gNo: Set[Int] = new SparseSet(mdd.identify + 1)
 
   def restore(data: Set[Int]) {
     gNo = data
@@ -40,28 +39,28 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
   def simpleEvaluation: Int = math.min(Constraint.NP, scope.count(_.dom.size > 1))
 
   // Members declared in concrete.constraint.Removals
-  val prop = mdd.edges(timestamp.next()).toDouble / doubleCardSize
+  val prop = mdd.edges.toDouble / doubleCardSize
 
   def getEvaluation = (prop * doubleCardSize).toInt
 
-  private val unsupported = scope map (p => new collection.mutable.BitSet(p.dom.maxSize))
+  private val unsupported = scope.map(p => new collection.mutable.BitSet(p.dom.maxSize))
 
   var delta: Int = _
-  //mdd.registerTimestamp()
 
   def revise(modified: List[Int]) = {
     for (i <- scope.indices) {
       unsupported(i).clear()
-      for (j <- scope(i).dom.indices) {
-        unsupported(i) += j
-      }
+      unsupported(i) ++= scope(i).dom.indices
+      //      for (j <- scope(i).dom.indices) {
+      //        unsupported(i) += j
+      //      }
     }
 
     delta = arity
 
     val oldGno = gNo
 
-    val sat = seekSupports(timestamp.next(), mdd, 0)
+    val sat = seekSupports(mdd.timestamp.next(), mdd.mdd, 0)
     if (!sat) {
       throw UNSATObject
     }
@@ -83,7 +82,7 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
         delta = i
       }
       true
-    } else if (g.isEmpty) {
+    } else if (g eq MDD0) {
       false
     } else if (g.cache.timestamp == ts) {
       true
@@ -118,6 +117,6 @@ class MDDC(_scope: Array[Variable], private val mdd: MDD)
     }
   }
 
-  override def dataSize = mdd.edges(timestamp.next())
+  override def dataSize = mdd.edges
 
 }

@@ -26,6 +26,7 @@ import concrete.constraint.extension.TupleTrieSet
 import cspom.CSPOMConstraint
 import cspom.extension.IdMap
 import concrete.constraint.extension.UnaryExt
+import concrete.constraint.extension.Relation
 
 class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLogging {
 
@@ -169,13 +170,13 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
           case m: TupleTrieSet if (m.initialContent == false) => {
             consType match {
               case "MDDC" =>
-                new MDDC(scope, m.reduceable.asInstanceOf[MDDRelation].mdd)
+                new MDDC(scope, m.reduceable.asInstanceOf[MDDRelation])
 
               case "MDDC2" =>
                 new MDDC2(scope, m.reduceable.asInstanceOf[MDDRelation].mdd)
 
               case "Reduce" =>
-                val r = m.reduceable.copy
+                val r: Relation = m.reduceable.copy
                 new ReduceableExt(scope, r)
 
               case "Find" =>
