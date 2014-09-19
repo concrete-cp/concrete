@@ -34,6 +34,7 @@ libraryDependencies ++= Seq(
 
 scalacOptions ++= Seq("-optimise"
 	      , "-Xdisable-assertions"
+	      , "-target:jvm-1.7"
 //	"-deprecation", 
 //	"-unchecked", 
 //	"-optimise", 
@@ -43,7 +44,7 @@ scalacOptions ++= Seq("-optimise"
 //	"-Yinline-warnings"
 )
 
-
+javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
 
 packageArchetype.java_application
 

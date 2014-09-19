@@ -273,8 +273,9 @@ final class SQLWriter(jdbcUri: URI, params: ParameterManager) extends ConcreteWr
     for (e <- executionId) {
       db.withSession { implicit session =>
         val dbexec = for (dbe <- executions if dbe.executionId === e) yield dbe
-        dbexec.map(_.end).update(Some(SQLWriter.now.run))
-        dbexec.map(_.status).update(status.toString())
+
+        dbexec.map(e => (e.end, e.status)).update(
+          (Some(SQLWriter.now.run), status.toString))
       }
     }
   }
