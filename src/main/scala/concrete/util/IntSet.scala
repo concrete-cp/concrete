@@ -1,5 +1,7 @@
 package concrete.util
 
+import concrete.constraint.extension.Matrix
+
 object EmptyIntSet extends IntSet {
   def size = 0
   def first = -1

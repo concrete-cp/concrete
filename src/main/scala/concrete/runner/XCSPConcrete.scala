@@ -1,10 +1,11 @@
 package concrete.runner
 
-import java.io.File
 import java.net.URL
 import scala.sys.process._
 import cspom.CSPOM
+import scalax.io.Resource
 import java.net.URI
+import scalax.file.Path
 
 object XCSPConcrete extends CSPOMRunner with App {
 
@@ -51,13 +52,15 @@ object XCSPConcrete extends CSPOMRunner with App {
 }
 
 class SolutionChecker(file: URL) {
-  //println(file)
-  private val instanceFileName = new File(file.toURI).getAbsolutePath
-  require(new File(instanceFileName).exists(), "PROBLEM \t The file " + instanceFileName + " has not been found.")
 
-  private val jar = new File(classOf[SolutionChecker].getResource("Tools2008.jar").toURI()).getAbsolutePath
+  private val tmpPath = Path.createTempFile(suffix = Path(file.getFile, '/').name)
 
-  private val command = Seq("java", "-cp", jar, "abscon.instance.tools.SolutionChecker", instanceFileName)
+  Resource.fromURL(file).copyDataTo(tmpPath.outputStream())
+
+  private val jar = Path(classOf[SolutionChecker].getResource("Tools2008.jar").toURI).get.path
+
+  private val command: Seq[String] =
+    Seq("java", "-cp", jar, "abscon.instance.tools.SolutionChecker", tmpPath.path)
 
   def checkSolution(solution: IndexedSeq[Int]): Option[String] = {
     val r = (command ++ solution.map(_.toString)).!!

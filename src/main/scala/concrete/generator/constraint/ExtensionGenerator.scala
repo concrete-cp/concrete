@@ -27,6 +27,8 @@ import cspom.CSPOMConstraint
 import cspom.extension.IdMap
 import concrete.constraint.extension.UnaryExt
 import concrete.constraint.extension.Relation
+import concrete.constraint.extension.Matrix2D
+import concrete.constraint.extension.Matrix1D
 
 class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLogging {
 
@@ -110,7 +112,10 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
   }
 
   private def gen(relation: cspom.extension.Relation[_], init: Boolean, domains: List[Domain]) = {
-    if (relation.nonEmpty && relation.head.size == 2) {
+    if (relation.head.size == 1) {
+      val matrix = new Matrix1D(domains(0).last + 1, init)
+      matrix.setAll(value2Index(domains, relation).map(_.toArray).toTraversable, !init)
+    } else if (relation.nonEmpty && relation.head.size == 2) {
       val matrix = new Matrix2D(domains(0).last + 1, domains(1).last + 1, init)
       matrix.setAll(value2Index(domains, relation).map(_.toArray).toTraversable, !init)
     } else if (init) {
@@ -162,33 +167,31 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
 
       val matrix = generateMatrix(solverVariables, relation, init)
 
-      val constraint = if (scope.size == 1) {
-        new UnaryExt(scope.head, matrix, true)
-      } else {
-        matrix match {
-          case m: Matrix2D => BinaryExt(scope, m, true)
-          case m: TupleTrieSet if (m.initialContent == false) => {
-            consType match {
-              case "MDDC" =>
-                new MDDC(scope, m.reduceable.asInstanceOf[MDDRelation])
+      val constraint = matrix match {
+        case m: Matrix1D => new UnaryExt(scope.head, m, true)
+        case m: Matrix2D => BinaryExt(scope, m, true)
+        case m: TupleTrieSet if (m.initialContent == false) => {
+          consType match {
+            case "MDDC" =>
+              new MDDC(scope, m.reduceable.asInstanceOf[MDDRelation])
 
-              case "MDDC2" =>
-                new MDDC2(scope, m.reduceable.asInstanceOf[MDDRelation].mdd)
+            case "MDDC2" =>
+              new MDDC2(scope, m.reduceable.asInstanceOf[MDDRelation].mdd)
 
-              case "Reduce" =>
-                val r: Relation = m.reduceable.copy
-                new ReduceableExt(scope, r)
+            case "Reduce" =>
+              val r: Relation = m.reduceable.copy
+              new ReduceableExt(scope, r)
 
-              case "Find" =>
-                new FindSupportExt(scope, m, true)
+            case "Find" =>
+              new FindSupportExt(scope, m, true)
 
-              case "General" =>
-                new ExtensionConstraintGeneral(m, true, scope)
-            }
+            case "General" =>
+              new ExtensionConstraintGeneral(m, true, scope)
           }
-          case m: Matrix => new ExtensionConstraintGeneral(m, true, scope)
         }
+        case m: Matrix => new ExtensionConstraintGeneral(m, true, scope)
       }
+
       //      if (ExtensionGenerator.closeRelations) {
       //        extensionConstraint.closeRelation()
       //      }

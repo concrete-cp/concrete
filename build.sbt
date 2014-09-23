@@ -29,7 +29,8 @@ libraryDependencies ++= Seq(
 	"org.jcp" % "jsr331" % "1.1.1",
 	"org.scalatest" %% "scalatest" % "2.2.2" % "test",
 	"org.scalacheck" %% "scalacheck" % "1.11.5" % "test",
-	"com.storm-enroute" %% "scalameter" % "0.6" % "test"
+	"com.storm-enroute" %% "scalameter" % "0.6" % "test",
+	"com.github.scala-incubator.io" %% "scala-io-file" % "0.4.3"
 	)
 
 scalacOptions ++= Seq("-optimise"
