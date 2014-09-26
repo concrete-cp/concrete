@@ -3,21 +3,20 @@ package concrete.filter;
 import scala.annotation.tailrec
 import scala.reflect.runtime.universe
 import com.typesafe.scalalogging.LazyLogging
-import concrete.constraint.AdviseCount
 import concrete.ParameterManager
 import concrete.Problem
 import concrete.UNSATException
 import concrete.Variable
+import concrete.constraint.Advisable
+import concrete.constraint.AdviseCount
 import concrete.constraint.Constraint
+import concrete.constraint.Removals
 import concrete.heuristic.revision.Eval
-import concrete.priorityqueues.QuickFifos
 import cspom.Statistic
 import cspom.StatisticsManager
 import concrete.priorityqueues.PriorityQueue
+import concrete.priorityqueues.QuickFifos
 import concrete.heuristic.revision.Key
-import concrete.constraint.AdviseCounts
-import concrete.constraint.Advisable
-import concrete.constraint.Removals
 
 object ACC extends LazyLogging {
   def control(problem: Problem) = {
@@ -101,10 +100,11 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     var max = -1
     while (p >= 0) {
       val a = c.advise(p)
+      if (a > max) max = a
       p -= 1
     }
     if (max >= 0) {
-      println(max + " : " + c)
+      //println(max + " : " + c)
       queue.offer(c, key.getKey(c, max))
     }
   }

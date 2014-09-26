@@ -192,9 +192,6 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
         case m: Matrix => new ExtensionConstraintGeneral(m, true, scope)
       }
 
-      //      if (ExtensionGenerator.closeRelations) {
-      //        extensionConstraint.closeRelation()
-      //      }
       //println(extensionConstraint + " -> " + constraint);
       Seq(constraint)
 

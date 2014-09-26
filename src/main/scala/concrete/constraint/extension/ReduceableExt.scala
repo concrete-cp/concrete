@@ -121,8 +121,13 @@ final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
 
   override def checkIndices(t: Array[Int]) = trie.contains(t)
 
-  def checkValues(t: Array[Int]) = throw new UnsupportedOperationException
-
+  def checkValues(t: Array[Int]) = {
+    val indices = (t, scope).zipped.map {
+      (value, variable) => variable.dom.index(value)
+    }
+    checkIndices(indices)
+  }
+  
   private def matches(tuple: Array[Int], base: Array[Int]) = {
     assert(tuple.length == base.length);
     (base, tuple).zipped.forall { (b, t) => b < 0 || b == t }

@@ -40,7 +40,7 @@ object XCSPConcrete extends CSPOMRunner with App {
   }
 
   def controlCSPOM(solution: Map[String, Any], variables: Iterable[String], file: URL) = {
-    new SolutionChecker(file).checkSolution(variables.map(v => solution(v).asInstanceOf[Int]).toIndexedSeq)
+    new SolutionChecker(file).checkSolution(variables.map(solution).map { case i: Int => i }.toIndexedSeq)
   }
 
   override def outputCSPOM(solution: Map[String, Any]): String = {
