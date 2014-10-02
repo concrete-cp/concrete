@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<concretedb>
+	<url>jdbc:postgresql://raihmsvg/concrete</url>
+	<user>concrete</user>
+	<password>Wizcof25</password>
+	<driver>org.postgresql.Driver</driver>
+</concretedb>

@@ -12,6 +12,11 @@ import scala.collection.SortedMap
 import scala.slick.jdbc.StaticQuery.interpolation
 import scala.slick.jdbc.GetResult
 import scala.slick.driver.PostgresDriver.simple._
+import scala.xml.XML
+
+sealed trait ErrorHandling
+case object ErrorInfinity extends ErrorHandling
+case object ErrorKeep extends ErrorHandling
 
 object Table extends App {
 
@@ -34,6 +39,17 @@ object Table extends App {
       case "csv" => data.mkString(", ")
 
     }
+  }
+
+  lazy val DB = {
+    val dbconf = XML.load(Table.getClass.getResource("concretedb.xml"))
+
+    Database
+      .forURL(dbconf \ "url" text,
+        user = dbconf \ "user" text,
+        password = dbconf \ "password" text,
+        driver = dbconf \ "driver" text)
+
   }
 
   val statistic :: version :: nature = args.toList
@@ -75,12 +91,9 @@ object Table extends App {
       }
     }))
 
-  Database.forURL("jdbc:postgresql://localhost/concrete",
-    user = "vion",
-    password = "vion",
-    driver = "org.postgresql.Driver") withSession { implicit session =>
+  DB.withSession { implicit session =>
 
-      val problems = sql"""
+    val problems = sql"""
         SELECT "problemId", display, "nbVars", "nbCons", string_agg("problemTag", ',') as tags
         FROM "Problem" NATURAL LEFT JOIN "ProblemTag"
         WHERE "problemId" IN (
@@ -91,225 +104,234 @@ object Table extends App {
         ORDER BY display
         """.as[Problem].list
 
-      val configs = sql"""
+    val configs = sql"""
         SELECT "configId", config
         FROM "Config" 
         WHERE "configId" IN (#${nature.mkString(", ")}) 
         """.as[Config].list
 
-      for (c <- configs) print("\t" + c.display)
-      println()
+    for (c <- configs) print("\t" + c.display)
+    println()
 
-      val cIds = configs map (_.configId) mkString (", ")
+    val cIds = configs map (_.configId) mkString (", ")
 
-      var d = Array.ofDim[Int](configs.size, configs.size)
+    var d = Array.ofDim[Int](configs.size, configs.size)
 
-      val totals = new HashMap[(String, Int), List[Double]]().withDefaultValue(Nil)
+    val totals = new HashMap[(String, Int), List[Double]]().withDefaultValue(Nil)
 
-      val nbSolved = new HashMap[String, Array[Int]]().withDefaultValue {
-        Array.fill(configs.size)(0)
-      }
+    val nbSolved = new HashMap[String, Array[Int]]().withDefaultValue {
+      Array.fill(configs.size)(0)
+    }
 
-      for (Problem(problemId, problem, nbvars, nbcons, tags) <- problems) {
-        val data = ListBuffer(s"$problem ($problemId)") //, nbvars, nbcons)
-        //print("\\em %s & \\np{%d} & \\np{%d}".format(problem, nbvars, nbcons))
-        //print("\\em %s ".format(problem))
+    for (Problem(problemId, problem, nbvars, nbcons, tags) <- problems) {
+      val data = ListBuffer(s"$problem ($problemId)") //, nbvars, nbcons)
+      //print("\\em %s & \\np{%d} & \\np{%d}".format(problem, nbvars, nbcons))
+      //print("\\em %s ".format(problem))
 
-        //val name = List("solver.searchCpu", "filter.revisions", "solver.nbAssignments", "filter.substats.queue.pollSize")(3)
+      //val name = List("solver.searchCpu", "filter.revisions", "solver.nbAssignments", "filter.substats.queue.pollSize")(3)
 
-        //val formula = """(cast("filter.substats.queue.pollSize" as real) / cast("filter.substats.queue.nbPoll" as int))"""
+      //val formula = """(cast("filter.substats.queue.pollSize" as real) / cast("filter.substats.queue.nbPoll" as int))"""
 
-        //val formula = """cast("solver.nbAssignments" as real) / cast("solver.searchCpu" as real)"""
-        ///val formula = """cast("solver.nbAssignments" as real)"""
-        //val formula = """cast("solver.nbAssignments" as real) / (cast("solver.searchCpu" as real) + cast("solver.preproCpu" as real))"""
-        //val formula = """cast("solver.searchCpu" as real) + cast("solver.preproCpu" as real)"""
+      //val formula = """cast("solver.nbAssignments" as real) / cast("solver.searchCpu" as real)"""
+      ///val formula = """cast("solver.nbAssignments" as real)"""
+      //val formula = """cast("solver.nbAssignments" as real) / (cast("solver.searchCpu" as real) + cast("solver.preproCpu" as real))"""
+      //val formula = """cast("solver.searchCpu" as real) + cast("solver.preproCpu" as real)"""
 
-        //val formula = """cast("relation.checks" as bigint)"""
-        //val formula = """cast("concrete.generationTime" as real)"""
+      //val formula = """cast("relation.checks" as bigint)"""
+      //val formula = """cast("concrete.generationTime" as real)"""
 
-        //val formula = """cast("domains.presenceChecks" as bigint)"""
+      //val formula = """cast("domains.presenceChecks" as bigint)"""
 
-        //val stat = "cast(stat('solver.nbAssignments', executionId) as int)"
+      //val stat = "cast(stat('solver.nbAssignments', executionId) as int)"
 
-        //val stat = "cast(stat('solver.searchCpu', executionId) as real) + cast(stat('solver.preproCpu', executionId) as real)"
+      //val stat = "cast(stat('solver.searchCpu', executionId) as real) + cast(stat('solver.preproCpu', executionId) as real)"
 
-        val min = true
+      val min = true
 
-        //            val sqlQuery = """
-        //                        SELECT configId, solution, cast(stat('relation.checks', executionId) as real)
-        //                        FROM Executions
-        //                        WHERE (version, problemId) = (%d, %d)
-        //                    """.format(version, problemId)
+      //            val sqlQuery = """
+      //                        SELECT configId, solution, cast(stat('relation.checks', executionId) as real)
+      //                        FROM Executions
+      //                        WHERE (version, problemId) = (%d, %d)
+      //                    """.format(version, problemId)
 
-        val sqlQuery = statistic match {
-          case "mem" => sql"""
+      val sqlQuery = statistic match {
+        case "mem" => sql"""
                                 SELECT configId, status, solution, cast(stat('solver.usedMem', executionId) as real)/1048576.0
                                 FROM Executions
                                 WHERE (version, problemId) = ($version, $problemId)
                             """
 
-          case "time" => sql"""
-                                SELECT configId, status, solution, case when totalTime > 1150 then 'inf' else totalTime end
-                                FROM Times
-                                WHERE (version, problemId) = ($version, $problemId)
+        case "time" => sql"""
+                                SELECT "configId", status, solution, cast(stat('solver.searchCpu', "executionId") as real) + cast(stat('solver.preproCpu', "executionId") as real)
+                                FROM "Execution"
+                                WHERE (version, "problemId") = ($version, $problemId)
                             """
 
-          case "nodes" => sql"""
-                                SELECT configId, status, solution, cast(stat('solver.nbAssignments', executionId) as real)
-                                FROM Executions
-                                WHERE (version, problemId) = ($version, $problemId)
+        case "nodes" => sql"""
+                                SELECT "configId", status, solution, cast(stat('solver.nbAssignments', "executionId") as real)
+                                FROM "Execution"
+                                WHERE (version, "problemId") = ($version, $problemId)
                             """
-          case "domainChecks" => sql"""
+        case "domainChecks" => sql"""
                                 SELECT configId, status, solution, cast(stat('domain.checks', executionId) as real)
                                 FROM Executions
                                 WHERE (version, problemId) = ($version, $problemId)
                             """
-          case "nps" => sql"""
+        case "nps" => sql"""
                                 SELECT configId, status, solution, 
                                   cast(stat('solver.nbAssignments', executionId) as real)/(cast(stat('solver.searchCpu', executionId) as real) + cast(stat('solver.preproCpu', executionId) as real))
                                 FROM Executions
                                 WHERE (version, problemId) = ($version, $problemId)"""
-          case "rps" => sql"""
+        case "rps" => sql"""
                                 SELECT "configId", status, solution, 
                                   cast(stat('solver.filter.revisions', "executionId") as real)/(cast(stat('solver.searchCpu', "executionId") as real) + cast(stat('solver.preproCpu', "executionId") as real))
                                 FROM "Execution"
                                 WHERE (version, "problemId") = ($version, $problemId)"""
 
+      }
+
+      val errorHandling: ErrorHandling = statistic match {
+        case "rps" => ErrorKeep
+        case "nodes" => ErrorInfinity
+        case "time" => ErrorInfinity
+      }
+
+      val results = sqlQuery.as[(Int, String, Option[String], Option[Double])].list
+        .map {
+          case (config, status, solution, value) =>
+            config -> Resultat(status, solution.getOrElse(""), value.getOrElse(Double.NaN))
         }
+        .toMap
 
-        val results = sqlQuery.as[(Int, String, Option[String], Option[Double])].list
-          .map {
-            case (config, status, solution, value) =>
-              config -> Resultat(status, solution.getOrElse(""), value.getOrElse(Double.NaN))
-          }
-          .toMap
-
-        for (
-          i <- configs.indices;
-          j = results.getOrElse(configs(i).configId, Resultat("not started", "", Double.NaN));
-          tag <- tags
-        ) {
-          totals(tag, i) ::= {
-            if (statistic == "mem" && j.solution.contains("OutOfMemoryError")) {
-              Double.PositiveInfinity
-            } else {
-              j.statistic
+      for (
+        i <- configs.indices;
+        j = results.getOrElse(configs(i).configId, Resultat("not started", "", Double.NaN));
+        tag <- tags
+      ) {
+        totals(tag, i) ::= {
+          if (!j.solved) {
+            errorHandling match {
+              case ErrorInfinity => Double.PositiveInfinity
+              case ErrorKeep => j.statistic
             }
-          }
-
-          if (j.solved) {
-            nbSolved(tag)(i) += 1
+          } else {
+            j.statistic
           }
         }
 
-        for (
-          i <- configs.indices; j <- configs.indices if i != j;
-          ci = configs(i).configId;
-          cj = configs(j).configId;
-          ri <- results.get(ci) if ri.solved;
-          rj <- results.get(cj)
-        ) {
-          if (!rj.solved || {
-            val trj = rj.statistic
-            val tri = ri.statistic
-            (trj - tri) / tri > .1 && (trj - tri) > 1
-          }) {
-            d(i)(j) += 1
-          }
-        }
-
-        //      val extrem = results.values.map(_._2).toSeq match {
-        //        case Nil => None
-        //        case d: Seq[Double] => Some(if (min) d.min else d.max)
-        //      }
-
-        configs foreach { c =>
-          data.append(
-            results.get(c.configId) match {
-              case Some(r @ Resultat(status, solution, time)) =>
-                val e = engineer(time)
-                "%.1f%s".formatLocal(Locale.US, e._1, e._2.getOrElse("")) + (
-                  if (r.solved) {
-                    ""
-                  } else if (solution.contains("OutOfMemoryError")) {
-                    "(mem)"
-                  } else if (solution.contains("InterruptedException")) {
-                    "(exp)"
-                  } else {
-                    s"(${status})"
-                  })
-              case None => "---"
-            })
-        }
-
-        println(tabular(data.toSeq))
-      }
-
-      // println("\\midrule")
-
-      //    for ((k, t) <- totals.toList.sortBy(_._1)) {
-      //      println(k + " : " + configs.indices.map { i =>
-      //        t(i)
-      //      }.mkString(" & "))
-      //    }
-
-      //println(totals)
-
-      val tagged = totals.groupBy(_._1._1).map {
-        case (tag, tot) => tag -> tot.map {
-          case ((tag, config), values) => config -> values
+        if (j.solved) {
+          nbSolved(tag)(i) += 1
         }
       }
 
-      for ((k, t) <- tagged.toList.sortBy(_._1)) {
-
-        val medians = configs.indices.map {
-          i =>
-            if (t(i).exists(_.isNaN)) { Double.NaN }
-            else {
-              try StatisticsManager.median(t(i))
-              catch {
-                case e: NoSuchElementException => Double.NaN
-              }
-            }
+      for (
+        i <- configs.indices; j <- configs.indices if i != j;
+        ci = configs(i).configId;
+        cj = configs(j).configId;
+        ri <- results.get(ci) if ri.solved;
+        rj <- results.get(cj)
+      ) {
+        if (!rj.solved || {
+          val trj = rj.statistic
+          val tri = ri.statistic
+          (trj - tri) / tri > .1 && (trj - tri) > 1
+        }) {
+          d(i)(j) += 1
         }
-
-        val best = medians.min
-
-        println(s"$k," + medians.map { median =>
-          median.toString
-          //            val (v, m) = engineer(median)
-          //
-          //            (if (median < best * 1.1) "\\bf " else "") + (
-          //              m match {
-          //                case Some(m) => f"\\np[$m%s]{$v%.1f}"
-          //                case None => f"\\np{$v%.1f}"
-          //              })
-        }.mkString(",")) // + " \\\\")
       }
-      //println("\\midrule")
 
-      //      for ((k, counts) <- nbSolved.toList.sortBy(_._1)) {
-      //        val best = counts.max
-      //
-      //        println(s"\\em $k & " + counts.map {
-      //          i => if (i == best) s"\\bf $i" else s"$i"
-      //        }.mkString(" & ") + " \\\\")
+      //      val extrem = results.values.map(_._2).toSeq match {
+      //        case Nil => None
+      //        case d: Seq[Double] => Some(if (min) d.min else d.max)
       //      }
 
-      //    println(d.zipWithIndex map { case (r, i) => configs(i) + " " + r.mkString(" ") } mkString ("\n"))
-      //    println()
+      configs foreach { c =>
+        data.append(
+          results.get(c.configId) match {
+            case Some(r @ Resultat(status, solution, time)) =>
+              val e = engineer(time)
+              "%.1f%s".formatLocal(Locale.US, e._1, e._2.getOrElse("")) + (
+                if (r.solved) {
+                  ""
+                } else if (solution.contains("OutOfMemoryError")) {
+                  "(mem)"
+                } else if (solution.contains("InterruptedException")) {
+                  "(exp)"
+                } else {
+                  s"(${status})"
+                })
+            case None => "---"
+          })
+      }
 
-      //      val labels = configs.map(_.toString).toIndexedSeq
-      //
-      //      toGML(d, labels)
-      //
-      //      val s = schulze(winnerTakesAll(d))
-      //
-      //      println(rank(s, s.indices).toList.sortBy(_._1) map {
-      //        case (r, c) => "%d: %s".format(r, c.map(labels).mkString(" "))
-      //      } mkString ("\n"))
+      println(tabular(data.toSeq))
     }
+
+    // println("\\midrule")
+
+    //    for ((k, t) <- totals.toList.sortBy(_._1)) {
+    //      println(k + " : " + configs.indices.map { i =>
+    //        t(i)
+    //      }.mkString(" & "))
+    //    }
+
+    //println(totals)
+
+    val tagged = totals.groupBy(_._1._1).map {
+      case (tag, tot) => tag -> tot.map {
+        case ((tag, config), values) => config -> values
+      }
+    }
+
+    for ((k, t) <- tagged.toList.sortBy(_._1)) {
+
+      val medians = configs.indices.map {
+        i =>
+          if (t(i).exists(_.isNaN)) { Double.NaN }
+          else {
+            try StatisticsManager.median(t(i))
+            catch {
+              case e: NoSuchElementException => Double.NaN
+            }
+          }
+      }
+
+      val best = medians.min
+
+      println(s"$k," + medians.map { median =>
+        median.toString
+        //            val (v, m) = engineer(median)
+        //
+        //            (if (median < best * 1.1) "\\bf " else "") + (
+        //              m match {
+        //                case Some(m) => f"\\np[$m%s]{$v%.1f}"
+        //                case None => f"\\np{$v%.1f}"
+        //              })
+      }.mkString(",")) // + " \\\\")
+    }
+    //println("\\midrule")
+
+    //      for ((k, counts) <- nbSolved.toList.sortBy(_._1)) {
+    //        val best = counts.max
+    //
+    //        println(s"\\em $k & " + counts.map {
+    //          i => if (i == best) s"\\bf $i" else s"$i"
+    //        }.mkString(" & ") + " \\\\")
+    //      }
+
+    //    println(d.zipWithIndex map { case (r, i) => configs(i) + " " + r.mkString(" ") } mkString ("\n"))
+    //    println()
+
+    //      val labels = configs.map(_.toString).toIndexedSeq
+    //
+    //      toGML(d, labels)
+    //
+    //      val s = schulze(winnerTakesAll(d))
+    //
+    //      println(rank(s, s.indices).toList.sortBy(_._1) map {
+    //        case (r, c) => "%d: %s".format(r, c.map(labels).mkString(" "))
+    //      } mkString ("\n"))
+  }
 
   // solution != null && ("UNSAT" == solution || """^[0-9\s]*$""".r.findFirstIn(solution).isDefined || "^Map".r.findFirstIn(solution).isDefined)
 

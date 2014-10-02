@@ -71,6 +71,11 @@ object SQLWriter {
           executions.ddl ++
           problemTag.ddl ++
           statistic.ddl).create
+
+        slick.jdbc.StaticQuery.updateNA("""
+          CREATE FUNCTION stat(field text, execution int) RETURNS text AS $$
+            SELECT value FROM "Statistic" WHERE (name, "executionId") = ($1, $2);
+          $$ LANGUAGE sql""").execute
       }
     }
 
