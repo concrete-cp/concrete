@@ -50,19 +50,13 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
       //        c => (c.fullScope, c.function)
       //      }
 
-      val constraints = for (
+      for (
         cspomC <- cspom.constraints;
-        constraint <- gm.generate(cspomC, variables, problem)
-      ) yield constraint
+        constraint <- gm.generate(cspomC, variables)
+      ) {
+        problem.addConstraint(constraint)
+      }
 
-      val sorted = constraints //.toSeq.sortBy[Iterable[String]](c => c.scope.map(_.name))
-      //      ) {
-      //        problem.addConstraint(concreteC)
-      //      }
-      sorted.foreach(problem.addConstraint)
-
-      //println(problem)
-      
       (problem, variables)
     } catch {
       case t: TimedException =>

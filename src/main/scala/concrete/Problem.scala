@@ -83,8 +83,8 @@ final class Problem(val variables: List[Variable]) {
   }
 
   override def toString = {
-    variables.map(_.toString).sorted.mkString("\n") + "\n" +
-      _constraints.filter(!_.isEntailed).map(_.toString).sorted.mkString("\n") + "\n" +
+    variables.mkString("\n") + "\n" +
+      _constraints.filter(!_.isEntailed).mkString("\n") + "\n" +
       stats
   }
 

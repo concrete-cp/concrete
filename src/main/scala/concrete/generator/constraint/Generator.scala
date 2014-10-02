@@ -47,7 +47,7 @@ trait Generator {
   def genFunctional(constraint: CSPOMConstraint[_], result: C2Conc)(implicit variables: VarMap): Seq[Constraint] = ???
 
   @throws(classOf[FailedGenerationException])
-  final def generate[A](constraint: CSPOMConstraint[A], variables: VarMap, problem: Problem) = {
+  final def generate[A](constraint: CSPOMConstraint[A], variables: VarMap) = {
     constraint.result match {
       case CSPOMConstant(true) => gen(constraint.asInstanceOf[CSPOMConstraint[Boolean]])(variables)
       case CSPOMConstant(false) => genReversed(constraint.asInstanceOf[CSPOMConstraint[Boolean]])(variables)

@@ -28,9 +28,11 @@ trait CSPOMRunner extends ConcreteRunner {
     ProblemCompiler.compile(cspom, Seq(Bool2IntIsEq))
     
     //println(cspom)
+
     val pg = new ProblemGenerator(pm)
     statistics.register("problemGenerator", pg)
     val (problem, vars) = pg.generate(cspom)
+    //println(problem)
     variables = vars
     logger.info(problem.toString)
     problem
