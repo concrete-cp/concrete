@@ -114,16 +114,18 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
   private def gen(relation: cspom.extension.Relation[_], init: Boolean, domains: List[Domain]) = {
     if (relation.head.size == 1) {
       val matrix = new Matrix1D(domains(0).last + 1, init)
-      matrix.setAll(value2Index(domains, relation).map(_.toArray).toTraversable, !init)
+      matrix.setAll(value2Index(domains, relation.toSeq).map(_.toArray).toTraversable, !init)
     } else if (relation.nonEmpty && relation.head.size == 2) {
       val matrix = new Matrix2D(domains(0).last + 1, domains(1).last + 1, init)
-      matrix.setAll(value2Index(domains, relation).map(_.toArray).toTraversable, !init)
+      matrix.setAll(value2Index(domains, relation.toSeq).map(_.toArray).toTraversable, !init)
     } else if (init) {
       new TupleTrieSet(relation2MDD(relation, domains), init)
     } else {
       new TupleTrieSet(ds match {
-        case "MDD" => relation2MDD(relation, domains)
-        case "STR" => new STR() ++ value2Index(domains, relation).toIterable.map(_.toArray)
+        case "MDD" =>
+          val mdd = relation2MDD(relation, domains)
+          mdd
+        case "STR" => new STR() ++ value2Index(domains, relation.toSeq).map(_.toArray)
       }, init)
     }
   }
@@ -135,23 +137,20 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
           domains,
           mdd,
           new IdMap())
-      case r => MDD(value2Index(domains, r).map(_.toArray))
+      case r => MDD(value2Index(domains, r.toSeq).map(_.toArray))
     }
-    //println(mdd)
+
     new MDDRelation(mdd)
   }
 
-  private def value2Index(domains: Seq[Domain], relation: cspom.extension.Relation[_]): Seq[Seq[Int]] =
-    relation.toSeq.map { t =>
+  private def value2Index(domains: Seq[Domain], relation: Seq[Seq[_]]): Seq[Seq[Int]] =
+    relation.map { t =>
       (t, domains).zipped.map { (v, d) =>
         val i = d.index(v.asInstanceOf[Int])
         require(i >= 0, s"Could not find $v in $d")
         i
       }
     }
-  //  filterNot {
-  //      _.contains(-1)
-  //    }
 
   override def gen(extensionConstraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] = {
 
@@ -180,6 +179,9 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
 
             case "Reduce" =>
               val r: Relation = m.reduceable.copy
+              val mdd = r.asInstanceOf[MDDRelation]
+              logger.info("MDD stats: " + scope.map(_.dom.size).max + " " + scope.length + " " + mdd.edges + " " + mdd.lambda)
+
               new ReduceableExt(scope, r)
 
             case "Find" =>

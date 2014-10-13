@@ -69,11 +69,11 @@ object Solver {
 class CSPOMSolver(
   private val solver: Solver,
   private val cspom: CSPOM,
-  private val variables: Map[CSPOMVariable[_], Variable]) extends Iterator[Map[String, Any]] {
+  private val variables: Map[CSPOMVariable[_], Variable]) extends Iterator[CSPOMSolution] {
 
   def hasNext: Boolean = solver.hasNext
 
-  def next(): Map[String, Any] = new CSPOMSolution(solver.next)
+  def next() = new CSPOMSolution(cspom, variables, solver.next)
 
   def maximize(v: String) = solver.maximize(variables(cspom.variable(v)))
 
@@ -83,36 +83,39 @@ class CSPOMSolver(
 
   def statistics = solver.statistics
 
-  def solution(concreteSol: Map[Variable, Any]) = new CSPOMSolution(concreteSol)
+  def solution(concreteSol: Map[Variable, Any]) = new CSPOMSolution(cspom, variables, concreteSol)
 
-  class CSPOMSolution(private val concreteSol: Map[Variable, Any]) extends Map[String, Any] {
+}
 
-    lazy val apply = concrete2CspomSol(concreteSol)
+class CSPOMSolution(private val cspom: CSPOM, private val variables: Map[CSPOMVariable[_], Variable], private val concreteSol: Map[Variable, Any]) extends Map[String, Any] {
 
-    def concrete2CspomSol(sol: Map[Variable, Any]): Map[String, Any] = {
-      cspom.namedExpressions.iterator
-        .flatMap {
-          case (n, e) => concrete2CspomSol(n, e, sol)
-        }
-        .toMap
-    }
+  lazy val apply = concrete2CspomSol(concreteSol)
 
-    private def concrete2CspomSol(name: String, expr: CSPOMExpression[_], sol: Map[Variable, Any]): Seq[(String, Any)] = {
-      expr match {
-        case seq: CSPOMSeq[_] => (seq.values zip seq.definedIndices).flatMap {
-          case (v, i) => concrete2CspomSol(s"$name[$i]", v, sol)
-        }
-        case const: CSPOMConstant[_] => Seq(name -> const.value)
-        case variable: CSPOMVariable[_] => Seq(name -> sol(variables(variable)))
+  def concrete2CspomSol(sol: Map[Variable, Any]): Map[String, Any] = {
+    cspom.namedExpressions.iterator
+      .flatMap {
+        case (n, e) => concrete2CspomSol(n, e, sol)
       }
-    }
-
-    def +[B1 >: Any](kv: (String, B1)): Map[String, B1] = throw new UnsupportedOperationException
-    def -(key: String): Map[String, Any] = throw new UnsupportedOperationException
-    def get(key: String): Option[Any] = apply.get(key)
-    def iterator: Iterator[(String, Any)] = apply.iterator
-
+      .toMap
   }
+
+  private def concrete2CspomSol(name: String, expr: CSPOMExpression[_], sol: Map[Variable, Any]): Seq[(String, Any)] = {
+    expr match {
+      case seq: CSPOMSeq[_] =>
+        (name -> seq.values.map(v => concrete2CspomSol(name, v, sol))) +:
+          (seq.values zip seq.definedIndices).flatMap {
+            case (v, i) => concrete2CspomSol(s"$name[$i]", v, sol)
+          }
+      case const: CSPOMConstant[_] => Seq(name -> const.value)
+      case variable: CSPOMVariable[_] => Seq(name -> sol(variables(variable)))
+    }
+  }
+
+  def +[B1 >: Any](kv: (String, B1)): Map[String, B1] = throw new UnsupportedOperationException
+  def -(key: String): Map[String, Any] = throw new UnsupportedOperationException
+  def get(key: String): Option[Any] = apply.get(key)
+  def iterator: Iterator[(String, Any)] = apply.iterator
+
 }
 
 abstract class Solver(val problem: Problem, val params: ParameterManager) extends Iterator[Map[Variable, Any]] with LazyLogging {

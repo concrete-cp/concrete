@@ -34,6 +34,7 @@ trait AllDiffChecker extends Constraint {
   val max = scope.iterator.map(_.dom.lastValue).max
 
   def checkValues(t: Array[Int]): Boolean = {
+    //println(t.toSeq)
     var union = collection.mutable.BitSet.empty
 
     t.exists { v =>

@@ -20,17 +20,6 @@ final class MulAC(val result: Variable, val v0: Variable, val v1: Variable, val 
 
   def checkValues(t: Array[Int]) = t(0) == (t(1) * t(2));
 
-  private def reviseB(v: Variable, opp: Boolean, bounds: Interval) = {
-    val myBounds = v.dom.valueInterval
-
-    if (opp) {
-      v.dom.intersectVal(bounds.lb + myBounds.ub, bounds.ub + myBounds.lb)
-    } else {
-      v.dom.intersectVal(bounds.ub / myBounds.ub, bounds.lb / myBounds.lb)
-    }
-
-  }
-
   def findSupport(variablePosition: Int, index: Int) =
     variablePosition match {
       case 0 => findValidTuple0(index);

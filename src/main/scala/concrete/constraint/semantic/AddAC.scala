@@ -9,7 +9,7 @@ import com.typesafe.scalalogging.LazyLogging
 import concrete.constraint.BCCompanion
 
 final class AddAC(val result: Variable, val v0: Variable, val v1: Variable, val skipIntervals: Boolean = false)
-  extends Constraint(Array(result, v0, v1)) with Residues with BCCompanion with LazyLogging {
+  extends Constraint(result, v0, v1) with Residues with BCCompanion with LazyLogging {
 
   def checkValues(t: Array[Int]) = t(0) == t(1) + t(2)
 

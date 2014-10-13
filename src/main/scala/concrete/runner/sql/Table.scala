@@ -156,9 +156,9 @@ object Table extends App {
 
       val sqlQuery = statistic match {
         case "mem" => sql"""
-                                SELECT configId, status, solution, cast(stat('solver.usedMem', executionId) as real)/1048576.0
-                                FROM Executions
-                                WHERE (version, problemId) = ($version, $problemId)
+                                SELECT "configId", status, solution, cast(stat('solver.usedMem', "executionId") as real)/1048576.0
+                                FROM "Execution"
+                                WHERE (version, "problemId") = ($version, $problemId)
                             """
 
         case "time" => sql"""
@@ -188,12 +188,20 @@ object Table extends App {
                                 FROM "Execution"
                                 WHERE (version, "problemId") = ($version, $problemId)"""
 
+        case "revisions" => sql"""
+                                SELECT "configId", status, solution, 
+                                  cast(stat('solver.filter.revisions', "executionId") as int)
+                                FROM "Execution"
+                                WHERE (version, "problemId") = ($version, $problemId)"""
+
       }
 
       val errorHandling: ErrorHandling = statistic match {
         case "rps" => ErrorKeep
         case "nodes" => ErrorInfinity
-        case "time" => ErrorInfinity
+        case "time" => ErrorKeep
+        case "revisions" => ErrorKeep
+        case "mem" => ErrorKeep
       }
 
       val results = sqlQuery.as[(Int, String, Option[String], Option[Double])].list
@@ -289,7 +297,7 @@ object Table extends App {
         i =>
           if (t(i).exists(_.isNaN)) { Double.NaN }
           else {
-            try StatisticsManager.median(t(i))
+            try StatisticsManager.average(t(i))
             catch {
               case e: NoSuchElementException => Double.NaN
             }
