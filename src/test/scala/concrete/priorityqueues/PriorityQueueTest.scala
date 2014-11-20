@@ -14,7 +14,7 @@ object IntNode {
 }
 
 case class IntNode(val v: Int) extends Identified with PTag {
-  val getId = IntNode.id
+  val id = IntNode.id
   IntNode.id += 1
 }
 

@@ -189,7 +189,7 @@ public final class FibonacciHeap<T extends Identified> implements PriorityQueue<
 
     @Override
     public boolean offer(final T data, final int newKey) {
-        final int id = data.getId();
+        final int id = data.id();
 
         ensureCapacity(id + 1);
 

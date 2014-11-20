@@ -92,7 +92,7 @@ public final class BinaryHeap<T extends Identified> implements PriorityQueue<T> 
 
 	@Override
 	public boolean offer(final T arg0, final int eval) {
-		final int id = arg0.getId();
+		final int id = arg0.id();
 		ensureMapCapacity(id + 1);
 
 		if (inQueue[id] == iter) {
@@ -121,16 +121,16 @@ public final class BinaryHeap<T extends Identified> implements PriorityQueue<T> 
 			throw new NoSuchElementException();
 		case 1:
 			size = 0;
-			inQueue[content[0].getId()] = -1;
+			inQueue[content[0].id()] = -1;
 			return content[0];
 		default:
 			final T max = content[0];
 			size--;
 			content[0] = content[size];
 			keyValue[0] = keyValue[size];
-			queuePosition[content[0].getId()] = 0;
+			queuePosition[content[0].id()] = 0;
 			siftDown(0);
-			inQueue[max.getId()] = -1;
+			inQueue[max.id()] = -1;
 			return max;
 		}
 	}
@@ -152,8 +152,8 @@ public final class BinaryHeap<T extends Identified> implements PriorityQueue<T> 
 		final int tmp2 = keyValue[int0];
 		keyValue[int0] = keyValue[int1];
 		keyValue[int1] = tmp2;
-		queuePosition[content[int0].getId()] = int0;
-		queuePosition[content[int1].getId()] = int1;
+		queuePosition[content[int0].id()] = int0;
+		queuePosition[content[int1].id()] = int1;
 	}
 
 	private void siftDown(final int start) {

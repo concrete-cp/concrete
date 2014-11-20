@@ -3,40 +3,33 @@ package concrete.constraint.semantic;
 import concrete.constraint.Constraint
 import concrete.Domain
 import concrete.Variable
+import concrete.ReviseOutcome
+import concrete.Contradiction
+import concrete.Revised
+import concrete.constraint.Stateless
 
-final class Neq(v0: Variable, v1: Variable) extends Constraint(Array(v0, v1)) {
+final class Neq(v0: Variable, v1: Variable) extends Constraint(Array(v0, v1)) with Stateless {
 
-  def checkValues(t: Array[Int]) = t(0) != t(1)
+  def check(t: Array[Int]) = t(0) != t(1)
 
-  def revise() = {
-    var ch: List[Int] = Nil
-    if (revise(v0, v1)) {
-      ch ::= 1
-    }
-    if (revise(v1, v0)) {
-      ch ::= 0
-    }
+  def revise(domains: IndexedSeq[Domain]): ReviseOutcome[Unit] = {
+    val d0 = revise(domains(0), domains(1))
+    val d1 = revise(domains(1), domains(0))
 
-    if (!isEntailed && (v0.dom disjoint v1.dom)) entail()
-    ch
+    Revised(IndexedSeq(d0, d1), d0 disjoint d1)
   }
 
-  private def revise(variable: Variable, otherVar: Variable) = variable.dom.size == 1 && {
-    val index = otherVar.dom.index(variable.dom.firstValue)
-    if (index >= 0 && otherVar.dom.present(index)) {
-      otherVar.dom.remove(index)
-      entail()
-      true
-    } else false
+  private def revise(variable: Domain, otherVar: Domain): Domain = {
+    if (variable.size == 1) otherVar.remove(variable.head) else otherVar
   }
 
-  override def isConsistent = {
-    v0.dom.size > 1 || v1.dom.size > 1 || v0.dom.firstValue != v1.dom.firstValue
+  override def isConsistent(domains: IndexedSeq[Domain]) = {
+    domains(0).size > 1 || domains(1).size > 1 || domains(0).head != domains(1).head
   }
 
   override def toString = v0 + " /= " + v1
 
-  def advise(p: Int) = if (scope(p).dom.size > 1) -1 else math.min(v0.dom.size, v1.dom.size)
+  def advise(domains: IndexedSeq[Domain], p: Int) = if (domains(p).size > 1) -1 else 2
 
   val simpleEvaluation = 2
 }

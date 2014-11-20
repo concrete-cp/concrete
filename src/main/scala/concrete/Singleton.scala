@@ -1,28 +1,35 @@
-package concrete.util
+package concrete
 
-final class Singleton(val index: Int) extends IntSet {
+import concrete.util.BitVector
+import scala.collection.mutable.HashMap
+
+object Singleton {
+  val cache = new HashMap[Int, Singleton]
+  def apply(v: Int) = cache.getOrElseUpdate(v, new Singleton(v))
+}
+
+final class Singleton(val index: Int) extends IntDomain {
 
   require(index >= 0)
 
-  val size = 1
+  def length = 1
 
-  def first = index
+  override def head = index
 
-  def last = index
+  override def last = index
 
   def next(i: Int) = if (i < index) index else -1
 
   def prev(i: Int) = if (i > index) index else -1
 
-  def closestLeq(i: Int): Int =
+  def prevOrEq(i: Int): Int =
     if (i >= index) { index }
     else { -1 }
 
-  def closestGeq(i: Int): Int =
+  def nextOrEq(i: Int): Int =
     if (i <= index) { index }
     else { -1 }
 
-  def copy = this
 
   /**
    * @param index
@@ -31,28 +38,26 @@ final class Singleton(val index: Int) extends IntSet {
    */
   def present(i: Int) = i == index
 
-  def setSingle(index: Int) = throw new IllegalStateException
-
   def remove(i: Int) = {
     assert(index == i)
-    EmptyIntSet
+    EmptyIntDomain
   }
 
   def removeFrom(lb: Int) =
     if (lb > index) { this }
-    else { EmptyIntSet }
+    else { EmptyIntDomain }
 
   def removeTo(ub: Int) =
     if (ub < index) { this }
-    else { EmptyIntSet }
+    else { EmptyIntDomain }
 
-  def filter(f: Int => Boolean) =
+  override def filter(f: Int => Boolean) =
     if (f(index)) { this }
-    else { EmptyIntSet }
+    else { EmptyIntDomain }
 
-  def toString(id: Indexer) = "[" + id.value(index) + "]"
+  override def toString() = s"[$index]"
 
-  def subsetOf(d: IntSet) = d.present(index)
+  def subsetOf(d: IntDomain) = d.present(index)
 
   lazy val toBitVector = BitVector.empty + index
 
@@ -63,5 +68,5 @@ final class Singleton(val index: Int) extends IntSet {
 
   def intersects(bv: BitVector, part: Int) = bv(index)
   def bound = true
-  def isEmpty = false
+  override def isEmpty = false
 }

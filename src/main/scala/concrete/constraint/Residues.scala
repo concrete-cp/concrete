@@ -1,7 +1,8 @@
 package concrete.constraint;
 
-import concrete.Variable;
+import concrete.Variable
 import scala.annotation.tailrec
+import concrete.Domain
 
 trait ResidueManager {
   def getResidue(position: Int, index: Int): Array[Int]
@@ -12,7 +13,7 @@ trait ResidueManager {
 trait Residues extends VariablePerVariable {
 
   val residues: ResidueManager = {
-    if (this.scopeSize < 1000) {
+    if (scope.map(_.initDomain.last).sum < 1000) {
       new ResidueManagerFast(scope)
     } else {
       new ResidueManagerMap(scope)
@@ -20,12 +21,12 @@ trait Residues extends VariablePerVariable {
 
   }
 
-  def reviseVariable(position: Int, modified: List[Int]): Boolean =
-    scope(position).dom.filter { index =>
-      val residue = residues.getResidue(position, index)
+  def reviseVariable(domains: IndexedSeq[Domain], position: Int, modified: List[Int]): Domain =
+    domains(position).filter { value =>
+      val residue = residues.getResidue(position, value)
 
-      ((residue ne null) && controlTuplePresence(residue)) ||
-        (findSupport(position, index) match {
+      ((residue ne null) && controlTuplePresence(domains, residue)) ||
+        (findSupport(domains, position, value) match {
           case Some(tuple) => {
             residues.updateResidue(tuple)
             true
@@ -34,7 +35,7 @@ trait Residues extends VariablePerVariable {
         })
     }
 
-  def findSupport(variablePosition: Int, index: Int): Option[Array[Int]]
+  def findSupport(domains: IndexedSeq[Domain], position: Int, value: Int): Option[Array[Int]]
 
   //def getEvaluation = scope.map(_.dom.size).foldLeft(1.0)(_ * _)
 

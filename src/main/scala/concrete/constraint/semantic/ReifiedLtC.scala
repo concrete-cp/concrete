@@ -9,7 +9,7 @@ class ReifiedLtC(val b: Variable, val v: Variable, val c: Int, val strict: Boole
   extends Constraint(Array(b, v))
   with Residues with TupleEnumerator {
 
-  def checkValues(t: Array[Int]) = if (strict) {
+  def check(t: Array[Int]) = if (strict) {
     t(0) match {
       case 1 => t(1) < c
       case 0 => t(1) >= c

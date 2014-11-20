@@ -17,25 +17,39 @@ import cspom.StatisticsManager
 import concrete.priorityqueues.PriorityQueue
 import concrete.priorityqueues.QuickFifos
 import concrete.heuristic.revision.Key
+import concrete.Contradiction
+import concrete.Filtered
+import concrete.FilterOutcome
+import concrete.Revised
+import concrete.FilterOutcome
+import concrete.ProblemState
 
 object ACC extends LazyLogging {
-  def control(problem: Problem) = {
+  def control(problem: Problem, state: ProblemState): ProblemState = {
     logger.debug("Control !")
+    var s = state
     for (c <- problem.constraints) {
       val before = c.toString
-      (0 until c.arity).foreach(c.advise)
+      val id = c.id
 
-      val sizes = c.scope map (_.dom.size)
+      val oldState: c.State = s.constraintState(id).asInstanceOf[c.State]
+      val oldDomains = state.domains(c.scope)
+      c.adviseAll(oldDomains)
 
-      assert(c.revise().isEmpty, s"$c was revised (was $before)")
-      assert(
-        sizes.sameElements(c.scope map (_.dom.size)),
-        s"$c was revised and did not advertize it! (was $before)")
-      require(c.controlAssignment, s"$c assignement is inconsistent")
+      val sizes = oldDomains map (_.size)
+
+      c.revise(oldDomains, oldState) match {
+        case Contradiction => throw new AssertionError(s"$c is not consistent on $before")
+        case Revised(modified, entailed, finalState) =>
+          require((modified, oldDomains).zipped.forall(_ eq _), s"$c was revised ($oldDomains -> $modified)")
+          s = s.updatedCS(id, finalState)
+      }
+
+      require(c.controlAssignment(oldDomains), s"$c assignement is inconsistent")
 
     }
 
-    true;
+    s
   }
 
 }
@@ -69,80 +83,93 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
   @Statistic
   var revisions = 0;
 
-  def reduceAll() = {
+  def reduceAll(states: ProblemState): FilterOutcome = {
     advises.clear()
     queue.clear()
-    for (c <- problem.constraints if (!c.isEntailed))
-      adviseAndEnqueueAll(c)
 
-    reduce()
+    for (c <- problem.constraints)
+      if (!states.isEntailed(c)) {
+        adviseAndEnqueue(c, states)
+      }
+    //    
+    //    val advisedStates: ProblemState = states.updateConstraints {
+    //      (i, s) =>
+    //        val c = problem.constraints(i)
+    //        if (c.isEntailed) {
+    //          s
+    //        } else {
+    //          adviseAndEnqueue(c)(s.asInstanceOf[c.State])
+    //        }
+    //    }
+
+    reduce(states)
   }
 
-  def reduceFrom(modVar: Array[Int], modCons: Array[Int], cnt: Int) = {
+  def reduceFrom(modVar: Array[Int], modCons: Array[Int], cnt: Int, states: ProblemState): FilterOutcome = {
     //Removals.clear()
     queue.clear();
 
     for (
-      v <- problem.variables if (modVar(v.getId) > cnt)
+      v <- problem.variables
     ) {
-      updateQueue(v, null)
+      if (modVar(v.id) > cnt) updateQueue(v, null, states)
     }
 
-    if (modCons != null)
-      for (c <- problem.constraints if (modCons(c.getId) > cnt && !c.isEntailed))
-        adviseAndEnqueueAll(c)
-
-    reduce();
-  }
-
-  private def adviseAndEnqueueAll(c: Constraint) {
-    var p = c.arity - 1
-    var max = -1
-    while (p >= 0) {
-      val a = c.advise(p)
-      if (a > max) max = a
-      p -= 1
-    }
-    if (max >= 0) {
-      //println(max + " : " + c)
-      queue.offer(c, key.getKey(c, max))
-    }
-  }
-
-  def reduceAfter(variable: Variable) = variable == null || {
-    advises.clear()
-    queue.clear();
-    updateQueue(variable, null)
-    reduce();
-  }
-
-  private def updateQueue(modified: Variable, skip: Constraint) {
-    val constraints = modified.constraints
-
-    @tailrec
-    def upd(i: Int) {
-      if (i >= 0) {
-        val c = constraints(i)
-
-        if ((c ne skip) && !c.isEntailed) {
-          val a = c.advise(modified.positionInConstraint(i))
-          //logger.fine(c + ", " + modified.positionInConstraint(i) + " : " + a)
-          if (a >= 0) queue.offer(c, key.getKey(c, a))
+    if (modCons != null) {
+      for (i <- 0 until problem.constraints.length) {
+        val c = problem.constraints(i)
+        if (modCons(i) > cnt && !states.entailed(i)) {
+          adviseAndEnqueue(c, states)
         }
-
-        upd(i - 1)
       }
     }
 
-    upd(constraints.length - 1)
+    reduce(states);
   }
 
-  @tailrec
-  private def reduce(): Boolean = {
-    if (queue.isEmpty) {
-      assert(ACC.control(problem))
-      true
+  private def adviseAndEnqueue(c: Constraint, state: ProblemState): Unit = {
+    val max = c.adviseAll(state.domains(c.scope))
+    if (max >= 0) {
+      //println(max + " : " + c)
+      queue.offer(c, key.getKey(c, state, max))
+    }
+  }
+
+  def reduceAfter(variable: Variable, states: ProblemState) = {
+    if (variable == null) {
+      Filtered(states)
     } else {
+      advises.clear()
+      queue.clear();
+      updateQueue(variable, null, states)
+      reduce(states);
+    }
+  }
+
+  private def updateQueue(modified: Variable, skip: Constraint, states: ProblemState): Unit = {
+    val constraints = modified.constraints
+
+    var i = constraints.length - 1
+    while (i >= 0) {
+      val c = constraints(i)
+
+      if ((c ne skip) && !states.entailed(i)) {
+        val a = c.advise(states.domains(c.scope), modified.positionInConstraint(i))
+
+        //logger.fine(c + ", " + modified.positionInConstraint(i) + " : " + a)
+        if (a >= 0) queue.offer(c, key.getKey(c, states, a))
+      }
+
+      i -= 1
+
+    }
+
+  }
+
+  private def reduce(states: ProblemState): FilterOutcome = {
+
+    var s = states
+    while (!queue.isEmpty) {
       val constraint = queue.poll();
       //println(constraint)
 
@@ -153,43 +180,64 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
         s"$constraint " + (
           constraint match {
             case r: Removals => s"(${r.modified}) "
-            case _ =>
+            case _           =>
           })
       }
 
-      val mod = try {
-        constraint.revise()
-      } catch {
-        case _: UNSATException =>
-          //println(s"$deb -> unsat")
+      val constraintDomains = s.domains(constraint.scope)
+
+      try constraint.revise(constraintDomains, s(constraint)) match {
+        case Contradiction =>
           constraint.weight += 1
-          return false
+          return Contradiction
+
+        case Revised(mod, entail, newState) =>
+          logger.debug(if (mod.isEmpty) "NOP" else s"-> $constraint")
+          s = s.updatedCS(constraint, newState)
+          s = s.updatedDomains(constraint.scope, mod)
+          for (i <- 0 until constraint.arity) {
+            if (constraintDomains(i) ne mod(i)) {
+              updateQueue(constraint.scope(i), constraint, s)
+            }
+          }
+
+      }
+      catch {
+        case _: UNSATException =>
+          logger.warn(s"UNSATException was thrown when revising $constraint")
+          constraint.weight += 1
+          return Contradiction
       }
 
       //println(mod)
 
-      logger.debug(if (mod.isEmpty) "NOP" else s"-> $constraint")
-
-      mod.foreach(i => updateQueue(constraint.scope(i), constraint))
-
-      reduce()
     }
+
+    assert {
+      s = ACC.control(problem, states)
+      true
+    }
+    Filtered(s)
+
   }
 
-  def domSizes(c: Constraint) = c.scope.map(_.dom.size)
+  def domSizes(c: Constraint, state: ProblemState) = state.domains(c.scope).map(_.size)
 
   override def toString = "AC-cons+" + queue.getClass().getSimpleName();
 
   def getStatistics = Map("revisions" -> revisions)
 
-  def reduceAfter(constraints: Iterable[Constraint]) = {
+  def reduceAfter(constraints: Iterable[Constraint], states: ProblemState) = {
     advises.clear()
     queue.clear();
 
-    for (c <- constraints if !c.isEntailed)
-      adviseAndEnqueueAll(c)
+    for (c <- constraints) {
+      if (!states.isEntailed(c)) {
+        adviseAndEnqueue(c, states)
+      }
+    }
 
-    reduce();
+    reduce(states);
   }
 
 }

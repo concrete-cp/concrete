@@ -1,11 +1,13 @@
 package concrete.heuristic;
 
-import concrete.Variable;
+import concrete.Variable
 import concrete.Problem
+import concrete.Domain
+import cspom.StatisticsManager
 
 final class MedValue extends ValueHeuristic {
 
-  def score(variable: Variable, index: Int) = -index
+  def score(variable: Variable, domain: Domain, value: Int) = math.abs((domain.last + domain.head) / 2 - value)
 
   override def toString = "median";
 
@@ -13,9 +15,8 @@ final class MedValue extends ValueHeuristic {
     // Nothing to compute
   }
 
-  override def selectIndex(variable: Variable) = {
-    val skip = variable.dom.size / 2
-    variable.dom.indices.drop(skip).next
+  override def selectIndex(variable: Variable, domain: Domain) = {
+    StatisticsManager.median(domain.toSeq)
   }
 
 }

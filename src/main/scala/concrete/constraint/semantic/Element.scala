@@ -4,6 +4,12 @@ import concrete.Variable
 import concrete.constraint.Constraint
 import scala.collection.mutable.ArrayBuffer
 import concrete.constraint.BCCompanion
+import concrete.constraint.StatelessBC
+import concrete.constraint.Stateless
+import concrete.constraint.Removals
+import concrete.Revised
+import concrete.ReviseOutcome
+import concrete.Domain
 
 object Element {
   def apply(result: Variable, index: Variable, varsIdx: Seq[(Int, Variable)]) = {
@@ -30,44 +36,38 @@ class ElementBC(
   val vars: Array[Variable],
   val scopeIndex: Array[Int],
   scope: Array[Variable])
-  extends Constraint(scope) {
-  
-  def advise(pos: Int): Int = arity
-  
-  def checkValues(tuple: Array[Int]): Boolean = {
+  extends Constraint(scope) with StatelessBC {
+
+  def advise(domains: IndexedSeq[Domain], pos: Int): Int = arity
+
+  def check(tuple: Array[Int]): Boolean = {
     tuple(1) < arity - 2 && tuple(0) == tuple(tuple(1) + 2)
   }
-  def revise(): Traversable[Int] = {
+  def shave(domains: IndexedSeq[Domain]) = {
     var ch = List[Int]()
     /**
      * Revise indices
      */
-    if (index.dom.filterValues {
-      i =>
-        i >= 0 && i < vars.length && (vars(i) ne null) &&
-          (result.dom.valueInterval intersects vars(i).dom.valueInterval)
-    }) {
-      ch ::= 1
+    val index = domains(1).filter {
+      v =>
+        v >= 0 && v < vars.length && (vars(v) ne null) &&
+          (domains(0).span intersects domains(scopeIndex(v)).span)
     }
 
     /**
      * Revise result
      */
-    val union = index.dom.values.map(i => vars(i).dom.valueInterval).reduce(_ union _)
-    if (result.dom.intersectVal(union)) {
-      ch ::= 0
-    }
+    val union = index.map(v => domains(scopeIndex(v)).span).reduce(_ span _)
+    val result = domains(0) & union
 
     /**
      * Revise vars
      */
-    if (index.dom.size == 1) {
-      val i = index.dom.firstValue
-      if (vars(i).dom.intersectVal(result.dom.valueInterval)) {
-        ch ::= scopeIndex(i)
-      }
-    }
-    ch
+    val filtered = if (index.size == 1) {
+      val i = index.head
+      domains.updated(scopeIndex(i), domains(scopeIndex(i)) & result.span)
+    } else domains
+    Revised(result +: index +: filtered.drop(2))
   }
   def simpleEvaluation: Int = 2
 }
@@ -78,49 +78,46 @@ class ElementAC(
   val vars: Array[Variable],
   val scopeIndex: Array[Int],
   scope: Array[Variable])
-  extends Constraint(scope) with BCCompanion {
+  extends Constraint(scope) with Removals with BCCompanion {
 
-  def getEvaluation: Int = scopeSize
+  type State = Unit
 
-  def checkValues(tuple: Array[Int]): Boolean = {
+  def getEvaluation(domains: IndexedSeq[Domain]): Int = if (skip(domains)) -1 else scopeSize(domains)
+
+  def initState = Unit
+
+  def check(tuple: Array[Int]): Boolean = {
     tuple(1) < arity - 2 && tuple(0) == tuple(tuple(1) + 2)
   }
 
   def skipIntervals = false
 
-  def revise(modified: List[Int]): Traversable[Int] = {
-    var ch = List[Int]()
+  def revise(domains: IndexedSeq[Domain], modified: List[Int], s: Unit): ReviseOutcome[Unit] = {
     /**
      * Revise indices
      */
-    if (index.dom.filterValues {
+    val index = domains(1).filter {
       i =>
         i >= 0 && i < vars.length && (vars(i) ne null) &&
-          result.dom.values.exists(vars(i).dom.presentVal)
-    }) {
-      ch ::= 1
+          domains(0).exists(domains(scopeIndex(i)).present)
     }
 
     /**
      * Revise result
      */
-    val union = index.dom.values.foldLeft(Set[Int]()) {
-      (acc, i) => acc ++ vars(i).dom.values
+    val union = index.foldLeft(Set[Int]()) {
+      (acc, i) => acc ++ domains(scopeIndex(i))
     }
-    if (result.dom.filterValues(union)) {
-      ch ::= 0
-    }
+    val result = domains(0).filter(union)
 
     /**
      * Revise vars
      */
-    if (index.dom.size == 1) {
-      val i = index.dom.firstValue
-      if (vars(i).dom.filterValues(result.dom.presentVal)) {
-        ch ::= scopeIndex(i)
-      }
-    }
-    ch
+    val filtered = if (index.size == 1) {
+      val i = scopeIndex(index.head)
+      domains.updated(i, domains(i).filter(result.present))
+    } else domains
+    Revised(result +: index +: filtered.drop(2))
   }
   def simpleEvaluation: Int = 3
 }

@@ -1,26 +1,28 @@
 package concrete.constraint.semantic
 
+import concrete.Contradiction
+import concrete.Domain
+import concrete.Revised
 import concrete.Variable
 import concrete.constraint.Constraint
-import concrete.constraint.Residues
-import concrete.constraint.TupleEnumerator
-import concrete.UNSATObject
+import concrete.constraint.Stateless
+import concrete.Singleton
 
 class OccurrenceConst(val result: Int, val value: Int, val vars: Array[Variable])
-  extends Constraint(vars) {
+  extends Constraint(vars) with Stateless {
 
-  def checkValues(tuple: Array[Int]) =
+  def check(tuple: Array[Int]) =
     result == (0 until arity).count(i => tuple(i) == value)
 
-  def advise(pos: Int): Int = arity
+  def advise(domains: IndexedSeq[Domain],pos: Int): Int = arity
 
-  def revise(): Traversable[Int] = {
+  def revise(domains: IndexedSeq[Domain]) = {
     var affected = 0
     var canBeAffected = 0
 
-    for (v <- vars) {
-      if (v.dom.presentVal(value)) {
-        if (v.dom.size == 1) {
+    for (d <- domains) {
+      if (d.present(value)) {
+        if (d.size == 1) {
           affected += 1
         } else {
           canBeAffected += 1
@@ -29,21 +31,14 @@ class OccurrenceConst(val result: Int, val value: Int, val vars: Array[Variable]
     }
 
     if (affected + canBeAffected < result || affected > result) {
-      throw UNSATObject
-    }
-    if (affected == result && canBeAffected > 0) {
-      (0 until arity).filter(v => scope(v).dom.size > 1 && scope(v).dom.removeVal(value)) //.toList
+      Contradiction
+    } else if (affected == result && canBeAffected > 0) {
+      Revised(domains.map(d => if (d.size > 1) d.remove(value) else d))
     } else if (affected + canBeAffected == result) {
-      (0 until arity).filter(
-        p =>
-          if (scope(p).dom.size > 1 && scope(p).dom.present(value)) {
-            scope(p).dom.setSingle(value)
-            true
-          } else {
-            false
-          }) //.toList
+      Revised(domains.map(d =>
+        if (d.size > 1 && d.present(value)) Singleton(value) else d))
     } else {
-      Nil
+      Revised(domains)
     }
 
   }

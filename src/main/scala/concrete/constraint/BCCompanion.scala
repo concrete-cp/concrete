@@ -1,6 +1,8 @@
 package concrete.constraint
 
-trait BCCompanion extends Removals {
+import concrete.Domain
+
+trait BCCompanion extends Constraint {
   def skipIntervals: Boolean
 
   def sizeThreshold: Int = 1000
@@ -13,12 +15,6 @@ trait BCCompanion extends Removals {
   //    }
   //  }
 
-  override def advise(pos: Int): Int = {
-    if ((skipIntervals && intervalsOnly) || scopeSize > sizeThreshold) {
-      -1
-    } else {
-      super.advise(pos)
-    }
-  }
+  def skip(domains: IndexedSeq[Domain]): Boolean = (skipIntervals && intervalsOnly(domains)) || scopeSize(domains) > sizeThreshold
 
 }

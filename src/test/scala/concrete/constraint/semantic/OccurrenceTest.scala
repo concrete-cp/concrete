@@ -13,10 +13,15 @@ import concrete.Solver
 import cspom.compiler.ProblemCompiler
 import concrete.generator.cspompatterns.ConcretePatterns
 import cspom.variable.IntVariable
+import concrete.Revised
+import org.scalatest.Matchers
+import org.scalatest.FlatSpec
+import org.scalatest.Inspectors
+import concrete.Contradiction
 
-class OccurrenceTest {
-  @Test
-  def test() {
+class OccurrenceTest extends FlatSpec with Matchers with Inspectors {
+
+  "Occurrence" should "filter" in {
     val v1 = new Variable("1", IntDomain(7))
     val v2 = new Variable("2", IntDomain(6))
     val v3 = new Variable("3", IntDomain(7, 9))
@@ -27,14 +32,19 @@ class OccurrenceTest {
 
     val c = new OccurrenceVar(occ, 7, Array(v1, v2, v3, v4, v5))
 
-    assertEquals(Seq(0), c.revise())
+    def domains = Array(occ, v1, v2, v3, v4, v5).map(_.initDomain)
 
-    assertEquals(List(1, 2), occ.dom.values.toList)
+    val Revised(mod, _, _) = c.revise(domains)
+
+    forAll((mod zip domains).drop(1)) {
+      case (m, d) => m should be theSameInstanceAs d
+    }
+
+    mod(0) shouldBe Seq(1, 2)
 
   }
 
-  @Test(expected = classOf[UNSATException])
-  def test2() {
+  it should "detect contradiction" in {
     val v1 = new Variable("1", IntDomain(7))
     val v2 = new Variable("2", IntDomain(6))
     val v3 = new Variable("3", IntDomain(7, 9))
@@ -44,12 +54,13 @@ class OccurrenceTest {
     val occ = new Variable("occ", IntDomain(3, 4, 5))
 
     val c = new OccurrenceVar(occ, 7, Array(v1, v2, v3, v4, v5))
-    c.revise()
+    def domains = Array(occ, v1, v2, v3, v4, v5).map(_.initDomain)
+
+    c.revise(domains) shouldBe Contradiction
 
   }
 
-  @Test
-  def test3() {
+  it should "generate and filter" in {
     val problem = CSPOM { implicit problem =>
       val v1 = 7
       val v2 = 6
@@ -69,12 +80,19 @@ class OccurrenceTest {
         case c: OccurrenceVar => c
       }
       .get
-      
+
     val occ = s.concreteProblem.variable("occ")
 
-    assertEquals(Seq(0), c.revise())
+    val domains = c.scope.map(_.initDomain)
+    
+    val Revised(mod, _, _) = c.revise(domains)
 
-    assertEquals(List(1, 2), occ.dom.values.toList)
+    
+    forAll((mod zip domains).drop(1)) {
+      case (m, d) => m should be theSameInstanceAs d
+    }
+
+    mod(0) shouldBe Seq(1, 2)
 
   }
 

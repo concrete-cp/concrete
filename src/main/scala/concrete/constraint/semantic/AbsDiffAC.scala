@@ -12,64 +12,54 @@ import concrete.constraint.BCCompanion
 final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable, val skipIntervals: Boolean = false)
   extends Constraint(Array(result, v0, v1)) with Residues with BCCompanion {
 
-  def checkValues(t: Array[Int]) = t(0) == math.abs(t(1) - t(2))
+  def check(t: Array[Int]) = t(0) == math.abs(t(1) - t(2))
 
-  override def findSupport(position: Int, index: Int) =
+  override def findSupport(domains: IndexedSeq[Domain], position: Int, value: Int) =
     position match {
-      case 0 => findValidTuple0(index);
-      case 1 => findValidTupleV1(index);
-      case 2 => findValidTupleV2(index);
+      case 0 => findValidTuple0(value, domains(1), domains(2));
+      case 1 => findValidTupleV1(value, domains(0), domains(2));
+      case 2 => findValidTupleV2(value, domains(0), domains(1));
       case _ => throw new IndexOutOfBoundsException;
     }
 
-  def findValidTuple0(index: Int) = {
-    val val0 = scope(0).dom.value(index)
-    if (val0 < 0) None
-    else {
-      val dom1 = scope(1).dom
-      val dom2 = scope(2).dom
+  def findValidTuple0(val0: Int, dom1: Domain, dom2: Domain) = {
 
-      dom1.indices.find { i => dom2.presentVal(dom1.value(i) - val0) }.map { i =>
-        Array(index, i, dom2.index(dom1.value(i) - val0))
-      } orElse dom1.indices.find { i => dom2.presentVal(dom1.value(i) + val0) }.map { i =>
-        Array(index, i, dom2.index(dom1.value(i) + val0))
-      }
+    dom1.find { v => dom2.present(v - val0) }.map { v =>
+      Array(val0, v, v - val0)
+    } orElse dom1.find { v => dom2.present(v + val0) }.map { v =>
+      Array(val0, v, v + val0)
+    }
 
+  }
+
+  def findValidTupleV1(value: Int, result: Domain, dom: Domain): Option[Array[Int]] = {
+
+    dom.map { v =>
+      (v, math.abs(value - v))
+    } find {
+      case (_, res) => result.present(res)
+    } map {
+      case (v, res) => Array(res, value, v)
     }
   }
 
-  def findValidTupleV1(index: Int): Option[Array[Int]] = {
-    val result = this.result.dom
-    val value = scope(1).dom.value(index);
-    val dom = scope(2).dom;
-    dom.indices map { i =>
-      (i, result.index(math.abs(value - dom.value(i))))
-    } find {
-      case (_, resIndex) => resIndex >= 0 && result.present(resIndex)
-    } map {
-      case (i, resIndex) => Array(resIndex, index, i)
-    }
-  }
+  def findValidTupleV2(value: Int, result: Domain, dom: Domain): Option[Array[Int]] = {
 
-  def findValidTupleV2(index: Int): Option[Array[Int]] = {
-    val result = this.result.dom
-    val value = scope(2).dom.value(index);
-    val dom = scope(1).dom;
-    dom.indices map { i =>
-      (i, result.index(math.abs(value - dom.value(i))))
+    dom.map { v =>
+      (v, math.abs(value - v))
     } find {
-      case (_, resIndex) => resIndex >= 0 && result.present(resIndex)
+      case (_, res) => result.present(res)
     } map {
-      case (i, resIndex) => Array(resIndex, i, index)
+      case (v, res) => Array(res, v, value)
     }
   }
 
   override def toString = result + " =AC= |" + v0 + " - " + v1 + "|";
 
-  def getEvaluation = {
-    val d0 = result.dom.size
-    val d1 = v0.dom.size
-    val d2 = v1.dom.size
+  def getEvaluation(domains: IndexedSeq[Domain]) = if (skip(domains)) -1 else {
+    val d0 = domains(0).size
+    val d1 = domains(1).size
+    val d2 = domains(2).size
     d0 * d1 + d0 * d2 + d1 * d2;
   }
 

@@ -132,12 +132,12 @@ final case class Interval(val lb: Int, val ub: Int) {
     math.max(lb, i.lb) <= math.min(ub, i.ub)
   }
 
-  def union(i: Interval) = Interval(math.min(lb, i.lb), math.max(ub, i.ub))
+  def span(i: Interval) = Interval(math.min(lb, i.lb), math.max(ub, i.ub))
 
-  def negate = Interval(-ub, -lb)
+  def unary_- = Interval(-ub, -lb)
 
   def abs =
-    if (ub < 0) { negate }
+    if (ub < 0) { -this }
     else if (lb > 0) { this }
     else { Interval(0, math.max(-lb, ub)) }
 

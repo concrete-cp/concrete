@@ -22,12 +22,13 @@ package concrete.heuristic;
 import concrete.Problem
 import concrete.Variable;
 import concrete.ParameterManager
+import concrete.ProblemState
 
 final class LexVar(params: ParameterManager) extends VariableHeuristic(params) {
 
-  def score(variable: Variable) = variable.getId
+  def score(variable: Variable, state: ProblemState) = variable.id
 
-  override def select(problem: Problem) = problem.variables.find(_.dom.size > 1)
+  override def select(problem: Problem, state: ProblemState) = problem.variables.find(state(_).size > 1)
 
   override def toString = "min-dom"
 

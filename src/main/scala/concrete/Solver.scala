@@ -36,6 +36,8 @@ import cspom.variable.CSPOMVariable
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMConstant
+import concrete.constraint.semantic.GtC
+import concrete.constraint.semantic.LtC
 
 final class SolverFactory(val params: ParameterManager) {
 
@@ -106,7 +108,7 @@ class CSPOMSolution(private val cspom: CSPOM, private val variables: Map[CSPOMVa
           (seq.values zip seq.definedIndices).flatMap {
             case (v, i) => concrete2CspomSol(s"$name[$i]", v, sol)
           }
-      case const: CSPOMConstant[_] => Seq(name -> const.value)
+      case const: CSPOMConstant[_]    => Seq(name -> const.value)
       case variable: CSPOMVariable[_] => Seq(name -> sol(variables(variable)))
     }
   }
@@ -152,25 +154,17 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   def isOptimizer = _maximize.nonEmpty || _minimize.nonEmpty
 
   def next() = _next match {
-    case UNSAT => Iterator.empty.next
+    case UNSAT         => Iterator.empty.next
     case UNKNOWNResult => if (hasNext) next() else Iterator.empty.next
     case SAT(sol) =>
       _next = UNKNOWNResult
       for (v <- _maximize) {
         reset()
-        try {
-          v.dom.removeTo(v.dom.index(sol(v).asInstanceOf[Int]))
-        } catch {
-          case e: UNSATException => _next = UNSAT
-        }
+        problem.addConstraint(new GtC(v, sol(v).asInstanceOf[Int]))
       }
       for (v <- _minimize) {
         reset()
-        try {
-          v.dom.removeFrom(v.dom.index(sol(v).asInstanceOf[Int]))
-        } catch {
-          case e: UNSATException => _next = UNSAT
-        }
+        problem.addConstraint(new LtC(v, sol(v).asInstanceOf[Int]))
       }
       sol
     case RESTART => throw new IllegalStateException()
@@ -179,7 +173,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   protected def nextSolution(): SolverResult
 
   def hasNext = _next match {
-    case UNSAT => false
+    case UNSAT  => false
     case SAT(_) => true
     case UNKNOWNResult =>
       _next = nextSolution(); hasNext
@@ -205,14 +199,14 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
 
   def reset()
 
-  protected def extractSolution: Map[Variable, Any] = problem.variables
-    .map(v => (v, v.dom)).map {
-      case (variable, dom: IntDomain) => variable -> dom.firstValue
+  protected def extractSolution(state: ProblemState): Map[Variable, Any] = problem.variables
+    .map(v => (v, state(v))).map {
+      case (variable, dom: IntDomain)     => variable -> dom.head
       case (variable, dom: BooleanDomain) => variable -> dom.canBe(true)
     }
     .toMap
 
-  final def preprocess(filter: Filter): Boolean = {
+  final def preprocess(filter: Filter, state: ProblemState): FilterOutcome = {
 
     logger.info("Preprocessing");
 
@@ -227,11 +221,13 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
         filter
       }
 
-    val (r, t) = StatisticsManager.time(preprocessor.reduceAll());
+    val (r, t) = StatisticsManager.time(preprocessor.reduceAll(state));
 
-    preproRemoved = problem.variables
-      .map { v => v.dom.maxSize - v.dom.size }
-      .sum
+    r match {
+      case Filtered(newState) => preproRemoved = problem.variables
+        .map { v => v.initDomain.size - newState(v).size }
+        .sum
+    }
 
     this.preproCpu = t;
     r

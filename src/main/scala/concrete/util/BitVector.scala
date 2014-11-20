@@ -29,6 +29,8 @@ final object BitVector {
 
   def word(bit: Int) = bit >> ADDRESS_BITS_PER_WORD
 
+  def apply(v: Traversable[Int]) = v.foldLeft(empty)(_ + _)
+
 }
 
 trait BitVector extends Any {

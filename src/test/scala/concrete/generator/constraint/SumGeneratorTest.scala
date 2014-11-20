@@ -11,34 +11,34 @@ import concrete.util.Interval
 import cspom.CSPOM.ctr
 import cspom.compiler.ProblemCompiler
 import cspom.compiler.MergeEq
+import concrete.generator.cspompatterns.SumDomains
+import org.scalatest.Matchers
+import org.scalatest.FlatSpec
 
-class SumGeneratorTest {
+class SumGeneratorTest extends FlatSpec with Matchers {
 
-  @Test
-  def test(): Unit = {
-
+  "SumDomains" should "filter" in {
     val cspom = CSPOM { implicit problem =>
       val r = sumProd((1, IntVariable(0 to 5)), (2, IntVariable(10 to 15)), (3, CSPOMConstant(20))) as "test"
     }
 
+    ProblemCompiler.compile(cspom, Seq(SumDomains))
+
     var problem = new ProblemGenerator().generate(cspom)._1
 
-    assertEquals(Interval(80, 95), problem.variable("test").dom.valueInterval)
+    problem.variable("test").initDomain.span shouldBe Interval(80, 95)
 
   }
 
-  @Test
-  def test2(): Unit = {
-
+  it should "filter and merge" in {
     val cspom = CSPOM { implicit problem =>
       ctr(sumProd((1, IntVariable(0 to 5)), (2, IntVariable.free() as "test"), (3, CSPOMConstant(20))) === CSPOMConstant(5))
     }
 
-    ProblemCompiler.compile(cspom, Seq(MergeEq))
+    ProblemCompiler.compile(cspom, Seq(SumDomains, MergeEq))
 
     var problem = new ProblemGenerator().generate(cspom)._1
 
-    assertEquals(problem.toString, Interval(-30, -28), problem.variable("test").dom.valueInterval)
-
+    problem.variable("test").initDomain.span shouldBe Interval(-30, -28)
   }
 }

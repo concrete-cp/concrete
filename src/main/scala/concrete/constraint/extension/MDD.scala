@@ -9,11 +9,12 @@ import cspom.extension.IdMap
 import cspom.extension.IdSet
 import concrete.Variable
 import concrete.util.TSCache
+import concrete.Domain
 
 object MDD {
-  def apply(data: Seq[Array[Int]]): MDD = {
+  def apply(data: Traversable[Seq[Int]]): MDD = {
     data.foldLeft[MDD](MDD0)(
-      (acc, tuple) => acc + tuple) //.reduce(new IdMap[Seq[MDD], MDD]())
+      (acc, tuple) => acc + tuple.toArray) //.reduce(new IdMap[Seq[MDD], MDD]())
   }
 
   def newTrie(i: Int, v: MDD) = {
@@ -43,7 +44,7 @@ trait MDD extends Identified with Iterable[Seq[Int]] with LazyLogging {
   }
 
   private var _id: Int = _
-  def getId = _id
+  def id = _id
 
   def identify(ts: Int, i: Int = 1): Int = {
     if (this eq MDDLeaf) {
@@ -62,19 +63,22 @@ trait MDD extends Identified with Iterable[Seq[Int]] with LazyLogging {
     }
   }
 
-  def +(t: Array[Int]): MDD = if (contains(t)) MDD.this else addTrie(t, 0)
+  def +(t: Seq[Int]): MDD = {
+    val ta = t.toArray
+    if (contains(ta)) MDD.this else addTrie(ta, 0)
+  }
   def addTrie(t: Array[Int], i: Int): MDD
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]): MDD
   final def contains(t: Array[Int]): Boolean = contains(t, 0)
   def contains(t: Array[Int], i: Int): Boolean
 
-  def findSupport(ts: Int, scope: Array[Variable], p: Int, i: Int, support: Array[Int], depth: Int): Option[Array[Int]]
+  def findSupport(ts: Int, scope: IndexedSeq[Domain], p: Int, i: Int, support: Array[Int], depth: Int): Option[Array[Int]]
 
-  def checkSup(ts: Int, scope: Array[Variable], p: Int, i: Int, index: Int, next: MDD, support: Array[Int], depth: Int) = {
-    val ok = if (p == depth) { i == index } else scope(depth).dom.present(index)
+  def checkSup(ts: Int, domains: IndexedSeq[Domain], p: Int, i: Int, index: Int, next: MDD, support: Array[Int], depth: Int) = {
+    val ok = if (p == depth) { i == index } else domains(depth).present(index)
     if (ok) {
       support(depth) = index
-      next.findSupport(ts, scope, p, i, support, depth + 1)
+      next.findSupport(ts, domains, p, i, support, depth + 1)
     } else {
       None
     }
@@ -131,9 +135,9 @@ trait MDD extends Identified with Iterable[Seq[Int]] with LazyLogging {
     case _ => false
   }
 
-  def universal(scope: Array[Variable], timestamp: Int, position: Int = 0): Boolean = {
+  def universal(scope: IndexedSeq[Domain], timestamp: Int, position: Int = 0): Boolean = {
     (this ne MDD0) && ((this eq MDDLeaf) || cache(timestamp, true, {
-      scope(position).dom.indices.forall { i =>
+      scope(position).forall { i =>
         subMDD(i).universal(scope, timestamp, position + 1)
       }
     }))
@@ -144,7 +148,7 @@ trait MDD extends Identified with Iterable[Seq[Int]] with LazyLogging {
 }
 
 final object MDDLeaf extends MDD {
-  override def getId = 0
+  override def id = 0
   //override def size = 1
 
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]) = this
@@ -168,12 +172,12 @@ final object MDDLeaf extends MDD {
   }
   override def size = 1
   override def isEmpty = false
-  def findSupport(ts: Int, scope: Array[Variable], p: Int, i: Int, support: Array[Int], depth: Int) =
+  def findSupport(ts: Int, scope: IndexedSeq[Domain], p: Int, i: Int, support: Array[Int], depth: Int) =
     Some(support)
 
   override def equals(o: Any) = o match {
     case r: AnyRef => r eq MDDLeaf
-    case _ => false
+    case _         => false
   }
 
   def copy(ts: Int) = this
@@ -182,7 +186,7 @@ final object MDDLeaf extends MDD {
 }
 
 final object MDD0 extends MDD {
-  override def getId = throw new UnsupportedOperationException
+  override def id = throw new UnsupportedOperationException
 
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]) = MDD0
   def contains(tuple: Array[Int], i: Int) = false
@@ -206,7 +210,7 @@ final object MDD0 extends MDD {
 
   override def isEmpty = true
 
-  def findSupport(ts: Int, scope: Array[Variable], p: Int, i: Int, support: Array[Int], depth: Int) =
+  def findSupport(ts: Int, scope: IndexedSeq[Domain], p: Int, i: Int, support: Array[Int], depth: Int) =
     None
 
   def copy(ts: Int) = this
@@ -254,7 +258,7 @@ final class MDD1(private val child: MDD, private val index: Int) extends MDD {
 
   }
 
-  def findSupport(ts: Int, scope: Array[Variable], p: Int, i: Int, support: Array[Int], depth: Int) = {
+  def findSupport(ts: Int, scope: IndexedSeq[Domain], p: Int, i: Int, support: Array[Int], depth: Int) = {
     cache(ts, None,
       checkSup(ts, scope, p, i, index, child, support, depth))
   }
@@ -323,7 +327,7 @@ final class MDD2(
       MDDLeaf
     } else {
       t(i) match {
-        case `leftI` => new MDD2(left.addTrie(t, i + 1), leftI, right, rightI)
+        case `leftI`  => new MDD2(left.addTrie(t, i + 1), leftI, right, rightI)
         case `rightI` => new MDD2(left, leftI, right.addTrie(t, i + 1), rightI)
         case v: Int =>
           val newArray = MDD.newTrie((leftI, left), (rightI, right), (v, MDD0.addTrie(t, i + 1)))
@@ -333,9 +337,9 @@ final class MDD2(
     }
 
   def contains(t: Array[Int], i: Int): Boolean = t(i) match {
-    case `leftI` => left.contains(t, i + 1)
+    case `leftI`  => left.contains(t, i + 1)
     case `rightI` => right.contains(t, i + 1)
-    case _ => false
+    case _        => false
   }
 
   def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax): Unit =
@@ -408,7 +412,7 @@ final class MDD2(
 
   override def isEmpty = false
 
-  def findSupport(ts: Int, scope: Array[Variable], p: Int, i: Int, support: Array[Int], depth: Int) =
+  def findSupport(ts: Int, scope: IndexedSeq[Domain], p: Int, i: Int, support: Array[Int], depth: Int) =
     cache(ts, None,
       checkSup(ts, scope, p, i, leftI, left, support, depth).orElse(
         checkSup(ts, scope, p, i, rightI, right, support, depth)))
@@ -416,9 +420,9 @@ final class MDD2(
   def copy(ts: Int) = cache(ts, new MDD2(left.copy(ts), leftI, right.copy(ts), rightI))
 
   def subMDD(i: Int) = i match {
-    case `leftI` => left
+    case `leftI`  => left
     case `rightI` => right
-    case _ => MDD0
+    case _        => MDD0
   }
 }
 
@@ -596,7 +600,7 @@ final class MDDn(
 
   override def isEmpty = false
 
-  def findSupport(ts: Int, scope: Array[Variable], p: Int, i: Int, support: Array[Int], depth: Int) =
+  def findSupport(ts: Int, scope: IndexedSeq[Domain], p: Int, i: Int, support: Array[Int], depth: Int) =
     cache(ts, None, {
 
       if (depth == p) {
@@ -611,7 +615,7 @@ final class MDDn(
         var j = nbIndices - 1
         while (s.isEmpty && j >= 0) {
           val index = indices(j)
-          if (scope(depth).dom.present(index)) {
+          if (scope(depth).present(index)) {
             support(depth) = index
             s = trie(index).findSupport(ts, scope, p, i, support, depth + 1)
           }

@@ -30,7 +30,10 @@ final class DummySolver(prob: Problem, params: ParameterManager) extends Solver(
   private val filter = filterClass.getConstructor(classOf[Problem]).newInstance(problem);
   statistics.register("filter", filter);
 
-  def nextSolution() = if (preprocess(filter)) UNKNOWNResult else UNSAT
+  def nextSolution() = preprocess(filter, problem.initState) match {
+    case Contradiction => UNSAT
+    case Filtered(_) => UNKNOWNResult
+  }
 
   override def toString = "dummy"
 

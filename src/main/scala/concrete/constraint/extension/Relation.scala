@@ -3,6 +3,7 @@ package concrete.constraint.extension
 import concrete.util.BitVector
 import java.util.Arrays
 import concrete.Variable
+import concrete.Domain
 
 trait Relation extends Iterable[Array[Int]] {
   type Self2 <: Relation
@@ -13,17 +14,17 @@ trait Relation extends Iterable[Array[Int]] {
    * @param arity : arity of the relation
    * @return traversable of depths at which some values were not found
    */
-  def fillFound(f: (Int, Int) => Boolean, arity: Int): Traversable[Int]
+  def fillFound(f: (Int, Int) => Boolean, arity: Int): Set[Int]
 
   def contains(t: Array[Int]): Boolean
-  def +(t: Array[Int]): Self2
-  def -(t: Array[Int]): Self2
-  def ++(t: Iterable[Array[Int]]) = t.foldLeft(Relation.this)(_ + _)
-  def --(t: Iterable[Array[Int]]) = t.foldLeft(Relation.this)(_ - _)
+  def +(t: Seq[Int]): Self2
+  def -(t: Seq[Int]): Self2
+  def ++(t: Iterable[Seq[Int]]) = t.foldLeft(Relation.this)(_ + _)
+  def --(t: Iterable[Seq[Int]]) = t.foldLeft(Relation.this)(_ - _)
   def edges: Int
   def copy: Self2
-  def findSupport(scope: Array[Variable], p: Int, i: Int, support: Array[Int]): Option[Array[Int]]
+  def findSupport(scope: IndexedSeq[Domain], p: Int, i: Int, support: Array[Int]): Option[Array[Int]]
   def lambda: BigInt
-  def universal(scope: Array[Variable]): Boolean
+  def universal(scope: IndexedSeq[Domain]): Boolean
 
 }

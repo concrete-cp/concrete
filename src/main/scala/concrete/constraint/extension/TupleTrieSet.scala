@@ -16,7 +16,7 @@ final class TupleTrieSet(
   def check(tuple: Array[Int]) =
     _trie.contains(tuple) ^ initialContent;
 
-  def set(tuple: Array[Int], status: Boolean) {
+  def set(tuple: Seq[Int], status: Boolean) {
     if (status == initialContent) {
       _trie -= tuple
     } else {

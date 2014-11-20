@@ -28,11 +28,13 @@ final class Matrix2D(xSize: Int, ySize: Int, initialState: Boolean) extends Matr
 
   override def check(tuple: Array[Int]) = xMatrix(tuple(0))(tuple(1))
 
-  override def set(tuple: Array[Int], status: Boolean) {
-
-    if (tuple(0) < xMatrix.length && tuple(1) < yMatrix.length) {
-      xMatrix(tuple(0)) = xMatrix(tuple(0)).set(tuple(1), status);
-      yMatrix(tuple(1)) = yMatrix(tuple(1)).set(tuple(0), status);
+  override def set(tuple: Seq[Int], status: Boolean) {
+    val Seq(x, y) = tuple
+    require(x >= 0)
+    require(y >= 0)
+    if (x < xMatrix.length && y < yMatrix.length) {
+      xMatrix(x) = xMatrix(x).set(y, status);
+      yMatrix(y) = yMatrix(y).set(x, status);
       empty = false;
     } else {
       logger.info(s"Tuple ${tuple.mkString("(", ", ", ")")} is out of the scope of matrix $this")

@@ -8,6 +8,9 @@ import concrete.util.Interval
 import concrete.constraint.BC
 import concrete.constraint.BCCompanion
 import concrete.constraint.Removals
+import concrete.ProblemState
+import concrete.Revised
+import concrete.constraint.StatelessBC
 
 /**
  * Constraint (-)x + b = y.
@@ -27,29 +30,29 @@ final class EqAC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
   private def xValue(y: Int) =
     if (neg) b - y else y - b
 
-  def checkValues(t: Array[Int]) = (if (neg) -t(0) else t(0)) + b == t(1);
+  def check(t: Array[Int]) = (if (neg) -t(0) else t(0)) + b == t(1);
 
   def skipIntervals: Boolean = true
 
   def simpleEvaluation: Int = 2
 
-  def getEvaluation: Int = x.dom.size + y.dom.size
+  def getEvaluation(domains: IndexedSeq[Domain]): Int = if (skip(domains)) -1 else domains(0).size + domains(1).size
 
-  override def isConsistent() = {
-    x.dom.values.exists { xv =>
-      y.dom.presentVal(yValue(xv))
+  override def isConsistent(domains: IndexedSeq[Domain]) = {
+    domains(0).exists { xv =>
+      domains(1).present(yValue(xv))
     }
   }
 
-  def reviseVariable(position: Int, mod: List[Int]) = {
+  def reviseVariable(domains: IndexedSeq[Domain], position: Int, mod: List[Int]) = {
     position match {
 
-      case 0 => x.dom.filterValues { xv =>
-        y.dom.presentVal(yValue(xv))
+      case 0 => domains(0).filter { xv =>
+        domains(1).present(yValue(xv))
       }
 
-      case 1 => y.dom.filterValues { yv =>
-        x.dom.presentVal(xValue(yv))
+      case 1 => domains(1).filter { yv =>
+        domains(0).present(xValue(yv))
       }
 
       case _ => throw new IllegalArgumentException
@@ -62,7 +65,7 @@ final class EqAC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
 }
 
 final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
-  extends Constraint(Array(x, y)) with BC {
+  extends Constraint(Array(x, y)) with StatelessBC {
 
   //  val corresponding = Array(
   //    x.dom.allValues map { v => y.dom.index(a * v + b) },
@@ -80,36 +83,29 @@ final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
    */
   def this(x: Variable, y: Variable) = this(false, x, 0, y);
 
-  def checkValues(t: Array[Int]) = (if (neg) -t(0) else t(0)) + b == t(1);
+  def check(t: Array[Int]) = (if (neg) -t(0) else t(0)) + b == t(1);
 
-  def shave(): List[Int] = {
+  def shave(domains: IndexedSeq[Domain]) = {
     var mod: List[Int] = Nil
     if (neg) {
       // -x + b = y <=> x = -y + b 
-      if (scope(0).dom.intersectVal(scope(1).dom.valueInterval.negate + b)) {
-        mod ::= 0
-      }
-      if (scope(1).dom.intersectVal(scope(0).dom.valueInterval.negate + b)) {
-        mod ::= 1
-      }
+      Revised(Vector(
+        domains(0) & (-domains(1).span + b),
+        domains(1) & (-domains(0).span + b)))
     } else {
       // x + b = y <=> x = y - b
-      if (scope(0).dom.intersectVal(scope(1).dom.valueInterval - b)) {
-        mod ::= 0
-      }
-      if (scope(1).dom.intersectVal(scope(0).dom.valueInterval + b)) {
-        mod ::= 1
-      }
+      Revised(Vector(
+        domains(0) & (domains(1).span - b),
+        domains(1) & (domains(0).span + b)))
     }
-    mod
   }
 
-  override def isConsistent = x.dom.valueInterval.intersects(y.dom.valueInterval)
-  
+  def isConsistent(domains: IndexedSeq[Domain]) = domains(0).span intersects domains(1).span
+
   override def toString = (if (neg) "-" else "") + x +
     (if (b > 0) " + " + b else if (b < 0) " - " + (-b) else "") +
     " =BC= " + y
 
-  def advise(p: Int) = 3
+  def advise(domains: IndexedSeq[Domain],p: Int) = 3
   val simpleEvaluation = 2
 }

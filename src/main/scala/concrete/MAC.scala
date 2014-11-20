@@ -35,8 +35,8 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
 
   val btGrowth: Double = params.getOrElse("mac.btGrowth", 1.5)
 
-  def addConstraint: LearnMethod = LearnMethod(
-    params.getOrElse("mac.addConstraint", "BIN"))
+  //  def addConstraint: LearnMethod = LearnMethod(
+  //    params.getOrElse("mac.addConstraint", "BIN"))
 
   val filterClass: Class[_ <: Filter] =
     params.getOrElse("mac.filter", classOf[ACC])
@@ -62,12 +62,12 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
 
   var heuristic: Heuristic = heuristicClass.getConstructor(classOf[ParameterManager]).newInstance(params);
 
-  private val ngl = new NoGoodLearner(prob, addConstraint)
-  statistics.register("nfr-learner", ngl)
+  //  private val ngl = new NoGoodLearner(prob, addConstraint)
+  //  statistics.register("nfr-learner", ngl)
 
   var maxBacktracks: Int =
     if (restartLevel == 0) {
-      math.max(10, math.log(problem.maxDomainSize).toInt)
+      math.max(10, math.log(problem.variables.map(_.initDomain.size).max).toInt)
     } else {
       restartLevel
     }
@@ -79,43 +79,53 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
   private var restart = true
 
   @tailrec
-  def mac(modifiedVariable: Option[Variable], stack: List[Pair]): (SolverResult, List[Pair]) = {
+  def mac(modifiedVariable: Option[Variable], stack: List[Pair], stateStack: List[ProblemState]): (SolverResult, List[Pair], List[ProblemState]) = {
     if (Thread.interrupted()) throw new InterruptedException()
-    if (modifiedVariable.isEmpty || (
-      modifiedVariable.get.dom.size > 0 && filter.reduceAfter(modifiedVariable.get))) {
 
-      heuristic.selectPair(problem) match {
-        case None => (SAT(extractSolution), stack)
+    var s = stateStack.head
+
+    val continue = modifiedVariable.forall { v =>
+      s(v).nonEmpty && (
+        filter.reduceAfter(v, s) match {
+          case Contradiction => false
+          case Filtered(newStates) =>
+            s = newStates
+            true
+        })
+    }
+
+    if (continue) {
+
+      heuristic.selectPair(problem, s) match {
+        case None => (SAT(extractSolution(s)), stack, s :: stateStack.tail)
         case Some(pair) =>
 
           logger.info(s"${problem.currentLevel}: ${pair.variable} <- ${pair.value} ($nbBacktracks / $maxBacktracks)");
 
-          problem.push()
-
           nbAssignments += 1
 
-          pair.assign()
+          s = s.assign(pair)
 
-          mac(Some(pair.variable), pair :: stack)
+          mac(Some(pair.variable), pair :: stack, s :: stateStack)
 
       }
     } else if (stack == Nil) {
-      (UNSAT, Nil)
+      (UNSAT, Nil, Nil)
     } else if (maxBacktracks >= 0 && nbBacktracks >= maxBacktracks) {
-      (RESTART, stack)
+      (RESTART, stack, stateStack)
     } else {
-      problem.pop()
       nbBacktracks += 1
 
       logger.info(s"${problem.currentLevel}: ${stack.head} removed")
-      stack.head.remove()
-      mac(Some(stack.head.variable), stack.tail)
+
+      s = s.remove(stack.head.variable, stack.head.value)
+
+      mac(Some(stack.head.variable), stack.tail, stateStack.tail)
     }
 
   }
 
   def reset() {
-    problem.reset();
     //decisions = Nil
     restart = true
   }
@@ -124,13 +134,13 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
   var heuristicCpu = 0.0
 
   @tailrec
-  private def nextSolution(modifiedVar: Option[Variable], stack: List[Pair] = Nil): (SolverResult, List[Pair]) = {
+  private def nextSolution(modifiedVar: Option[Variable], stack: List[Pair] = Nil, stateStack: List[ProblemState]): (SolverResult, List[Pair], List[ProblemState]) = {
     logger.info("MAC with " + maxBacktracks + " bt")
 
     val nbBT = nbBacktracks
 
-    val ((sol, newStack), macTime) = try {
-      StatisticsManager.time(mac(modifiedVar, stack))
+    val ((sol, newStack, newStateStack), macTime) = try {
+      StatisticsManager.time(mac(modifiedVar, stack, stateStack))
     } catch {
       case e: TimedException =>
         searchCpu += e.time;
@@ -146,45 +156,46 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
     if (sol == RESTART) {
 
       //val modified = ngl.noGoods(newStack)
-      problem.reset();
 
       //      if (!filter.reduceAfter(modified)) {
       //        (UNSAT, Nil)
       //      } else {
       maxBacktracks = (maxBacktracks * btGrowth).toInt;
       nbBacktracks = 0
-      nextSolution(None)
+      nextSolution(None, Nil, List(problem.initState))
       //      }
 
-    } else { (sol, newStack) }
+    } else { (sol, newStack, newStateStack) }
   }
 
   var currentStack: List[Pair] = Nil
+  var currentStateStack: List[ProblemState] = _
 
   def nextSolution(): SolverResult = try {
 
     if (restart) {
       restart = false
-      if (!preprocess(filter)) {
-        UNSAT
-      } else {
+      preprocess(filter, problem.initState) match {
+        case Contradiction => UNSAT
+        case Filtered(state) =>
+          val (_, heuristicCpu) = StatisticsManager.time(heuristic.compute(problem))
 
-        val (_, heuristicCpu) = StatisticsManager.time(heuristic.compute(problem))
-
-        val (sol, stack) = nextSolution(None)
-        currentStack = stack
-        sol
+          val (sol, stack, stateStack) = nextSolution(None, Nil, List(state))
+          currentStack = stack
+          currentStateStack = stateStack
+          sol
       }
 
     } else if (currentStack == Nil) {
       UNSAT
     } else {
       maxBacktracks = -1
-      problem.pop()
-      currentStack.head.remove()
 
-      val (sol, stack) = nextSolution(Some(currentStack.head.variable), currentStack.tail)
+      val nextStateStack = currentStateStack.head.remove(currentStack.head) :: currentStateStack.tail
+
+      val (sol, stack, stateStack) = nextSolution(Some(currentStack.head.variable), currentStack.tail, nextStateStack)
       currentStack = stack
+      currentStateStack = stateStack
       sol
     }
 

@@ -4,9 +4,9 @@ import concrete.Variable
 
 final class ResidueManagerFast(scope: Array[Variable]) extends ResidueManager {
 
-  val arity = scope.size
+  val arity = scope.length
 
-  val last = scope map (v => new Array[Array[Int]](v.dom.last + 1))
+  val last = scope.map(v => new Array[Array[Int]](v.initDomain.last + 1))
 
   def getResidue(position: Int, index: Int) = last(position)(index)
 

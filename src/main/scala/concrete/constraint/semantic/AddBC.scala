@@ -7,40 +7,29 @@ import concrete.constraint.Residues
 import concrete.util.Interval
 import com.typesafe.scalalogging.LazyLogging
 import concrete.constraint.BC
+import concrete.constraint.StatelessBC
+import concrete.Revised
 
 final class AddBC(val result: Variable, val v0: Variable, val v1: Variable)
-  extends Constraint(Array(result, v0, v1)) with BC with LazyLogging {
+  extends Constraint(Array(result, v0, v1)) with StatelessBC with LazyLogging {
 
-  def checkValues(t: Array[Int]) = t(0) == t(1) + t(2)
+  def check(t: Array[Int]) = t(0) == t(1) + t(2)
 
-  def shave() = {
-    val bounds = v0.dom.valueInterval + v1.dom.valueInterval - result.dom.valueInterval
-    var mod: List[Int] = Nil
-    if (reviseResult(bounds)) {
-      mod ::= 0
-    }
-    if (reviseB(v0, bounds)) {
-      mod ::= 1
-    }
-    if (reviseB(v1, bounds)) {
-      mod ::= 2
-    }
-    mod
-  }
+  def shave(domains: IndexedSeq[Domain]) = {
+    val result = domains(0).span
+    val v0 = domains(1).span
+    val v1 = domains(2).span
+    val bounds = v0 + v1 - result
 
-  private def reviseResult(bounds: Interval) = {
-    val myBounds = result.dom.valueInterval
-    result.dom.intersectVal(bounds.lb + myBounds.ub, bounds.ub + myBounds.lb)
-  }
-
-  private def reviseB(v: Variable, bounds: Interval) = {
-    val myBounds = v.dom.valueInterval
-    v.dom.intersectVal(myBounds.ub - bounds.ub, myBounds.lb - bounds.lb)
+    Revised(Vector(
+      domains(0) & (bounds.lb + result.ub, bounds.ub + result.lb),
+      domains(1) & (v0.ub - bounds.ub, v0.lb - bounds.lb),
+      domains(2) & (v1.ub - bounds.ub, v1.lb - bounds.lb)))
   }
 
   override def toString = result + " = " + v0 + " + " + v1
 
-  def advise(pos: Int) = 4
+  def advise(domains: IndexedSeq[Domain], pos: Int) = 4
 
   def simpleEvaluation = 2
 }

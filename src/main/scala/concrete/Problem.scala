@@ -22,6 +22,8 @@ package concrete
 import concrete.constraint.Constraint
 import scala.collection.JavaConversions
 import scala.collection.mutable.ArrayBuffer
+import java.util.Arrays
+import scala.collection.immutable.VectorBuilder
 
 object Problem {
   @annotation.varargs
@@ -35,75 +37,66 @@ final class Problem(val variables: List[Variable]) {
   def this(variables: Variable*) = this(variables.toList)
 
   val nbVariables = variables.foldLeft(0) {
-    (acc, v) => v.getId = acc; acc + 1
+    (acc, v) => v.id = acc; acc + 1
   }
 
   val variableMap: Map[String, Variable] = variables.map(v => v.name -> v).toMap
-  private var _constraints: List[Constraint] = Nil
+  var constraints: Array[Constraint] = Array()
 
   private var _maxArity = 0
   private var _maxCId = 0
   private var _currentLevel = 0
 
-  def addConstraint(constraint: Constraint) {
-    _constraints ::= constraint;
-    _maxArity = math.max(_maxArity, constraint.arity)
-    _maxCId = math.max(_maxCId, constraint.getId)
-    constraint.scope foreach (v => v.addConstraint(constraint))
-    constraint.inCN = true
+  def addConstraint(constraint: Constraint): Unit = addConstraints(Seq(constraint))
+
+  def addConstraints(cs: Seq[Constraint]): Unit = {
+    val buffer: ArrayBuffer[Constraint] = new ArrayBuffer()
+    val hint = constraints.length + cs.size
+    buffer.sizeHint(hint)
+    buffer ++= constraints
+
+    val stateBuffer = new VectorBuilder[Any]()
+    stateBuffer.sizeHint(hint)
+    stateBuffer ++= initState.constraintStates
+
+    for (c <- cs) {
+      val i = buffer.size
+      buffer += c
+      c.id = i
+      _maxArity = math.max(_maxArity, c.arity)
+      c.scope.foreach(v => v.addConstraint(c))
+      stateBuffer += c.initState
+    }
+    constraints = buffer.toArray
+    initState = new ProblemState(initState.domains, stateBuffer.result, initState.entailed)
   }
 
-  def push() {
-    _currentLevel += 1;
-    setLevel(_currentLevel);
+  var initState = new ProblemState(variables.map(_.initDomain).toIndexedSeq, IndexedSeq(), Set()) //(0 until constraints.length).map(constraints(_).initState)
 
-  }
-
-  def pop() {
-    assert(currentLevel > 0)
-    _currentLevel -= 1;
-    restoreLevel(_currentLevel);
-
-  }
-
-  private def setLevel(level: Int) {
-    variables.foreach(_.dom.setLevel(level))
-    _constraints.foreach(_.setLvl(level))
-  }
-
-  private def restoreLevel(level: Int) {
-    variables.foreach(_.dom.restoreLevel(level))
-    _constraints.foreach(_.restoreLvl(level))
-  }
-
-  def reset() {
-    _currentLevel = 0;
-    variables.foreach(_.dom.restoreLevel(0))
-    _constraints.foreach(_.restoreLvl(0))
-  }
-
-  override def toString = {
+  def toString(state: ProblemState) = {
     variables.mkString("\n") + "\n" +
-      _constraints.filter(!_.isEntailed).mkString("\n") + "\n" +
-      stats
+      constraints.iterator
+      .map { c =>
+        if (state.isEntailed(c)) c.toString + " [entailed]" else c.toString
+      }
+      .mkString("\n") + "\n" + stats(state)
   }
 
-  def stats = {
-    val entailed = _constraints.count(_.isEntailed)
+  def stats(state: ProblemState) = {
+    val entailed = state.entailed.size
 
-    s"Total ${variables.size} variables, ${_constraints.size - entailed} active constraints and $entailed entailed constraints"
+    s"Total ${variables.size} variables, ${constraints.size - entailed} active constraints and $entailed entailed constraints"
   }
 
-  val maxDomainSize = variables.iterator.map(_.dom.size).max
+  //val maxDomainSize = variables.iterator.map(_.dom.size).max
 
   def currentLevel = _currentLevel
   def maxArity = _maxArity
 
   def maxCId = _maxCId
-  def nd = variables.iterator.map(_.dom.size).sum
+  // def nd = variables.iterator.map(_.dom.size).sum
   def variable(name: String) = variableMap(name)
 
-  def constraints = _constraints
   def getVariables = JavaConversions.seqAsJavaList(variables)
 
 }

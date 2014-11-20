@@ -19,63 +19,60 @@
 
 package concrete.constraint.semantic;
 
-import concrete.constraint.Constraint
 import concrete.Domain
-import concrete.Variable;
+import concrete.Revised
+import concrete.Variable
+import concrete.constraint.Constraint
+import concrete.constraint.Stateless
+
+final class GtC(val v: Variable, val constant: Int) extends Constraint(Array(v)) with Stateless {
+  def check(t: Array[Int]) = t(0) > constant
+  def advise(domains: IndexedSeq[Domain], p: Int) = 1
+  def revise(domains: IndexedSeq[Domain]) = {
+    Revised(Vector(domains(0).removeTo(constant)), true)
+  }
+  def simpleEvaluation = 1
+}
+
+final class LtC(val v: Variable, val constant: Int) extends Constraint(Array(v)) with Stateless {
+  def check(t: Array[Int]) = t(0) < constant
+  def advise(domains: IndexedSeq[Domain], p: Int) = 1
+  def revise(domains: IndexedSeq[Domain]) = {
+    Revised(Vector(domains(0).removeFrom(constant)), true)
+  }
+  def simpleEvaluation = 1
+}
 
 /**
  * Constraint v0 + constant >(=) v1
  */
 final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict: Boolean)
-  extends Constraint(Array(v0, v1)) {
+  extends Constraint(Array(v0, v1)) with Stateless {
 
   def this(v0: Variable, v1: Variable, strict: Boolean) =
     this(v0, 0, v1, strict);
 
-  override def checkValues(t: Array[Int]) =
+  override def check(t: Array[Int]) =
     if (strict) t(0) + constant > t(1);
     else t(0) + constant >= t(1);
 
-  private def min(position: Int) = scope(position).dom.firstValue;
+  def revise(domains: IndexedSeq[Domain]) = {
 
-  private def max(position: Int) = scope(position).dom.lastValue
-
-  private def removeGt(value: Int, position: Int) = {
-    val dom = scope(position).dom
-    val lb = if (strict) dom.closestGeq(value) else dom.closestGt(value)
-    lb >= 0 && dom.removeFrom(lb)
-  }
-
-  private def removeLt(value: Int, position: Int) = {
-    val dom = scope(position).dom;
-    val ub = if (strict) dom.closestLeq(value) else dom.closestLt(value)
-    ub >= 0 && dom.removeTo(ub)
-  }
-
-  def revise() = {
-    assert(scope(0).dom.size > 0 && scope(1).dom.size > 0)
-
-    var mod: List[Int] = Nil
-    if (removeLt(min(1) - constant, 0)) {
-      mod ::= 0
+    if (strict) {
+      val d0 = domains(0).removeTo(domains(1).head - constant)
+      val d1 = domains(1).removeFrom(domains(0).last + constant)
+      Revised(Vector(d0, d1), d1.last < d0.head + constant)
+    } else {
+      val d0 = domains(0).removeUntil(domains(1).head - constant)
+      val d1 = domains(1).removeAfter(domains(0).last + constant)
+      Revised(Vector(d0, d1), d1.last <= d0.head + constant)
     }
-    if (removeGt(max(0) + constant, 1)) {
-      mod ::= 1
-    }
-
-    val max1 = max(1);
-    val min0 = min(0) + constant;
-    if (max1 < min0 || !strict && min0 == max1) {
-      entail();
-    }
-
-    mod
 
   }
 
-  override def isConsistent() = {
-    val max0 = max(0) + constant;
-    val min1 = min(1)
+  override def isConsistent(domains: IndexedSeq[Domain]) = {
+    val max0 = domains(0).last + constant;
+    val min1 = domains(1).head
     max0 > min1 || !strict && max0 == min1;
   }
 
@@ -86,7 +83,7 @@ final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict
       " - " + (-constant)
     else "") + (if (strict) " > " else " >= ") + scope(1)
 
-  def advise(p: Int) = 2
+  def advise(domains: IndexedSeq[Domain], p: Int) = 2
 
   val simpleEvaluation = 1
 }

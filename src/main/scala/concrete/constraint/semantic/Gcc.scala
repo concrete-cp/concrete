@@ -9,12 +9,19 @@ import java.util.Arrays
 import scala.collection.mutable.Queue
 import concrete.UNSATObject
 import concrete.UNSATException
+import concrete.constraint.Stateless
+import concrete.Revised
+import scala.collection.mutable.BitSet
+import concrete.ReviseOutcome
+import concrete.Domain
+import concrete.Contradiction
+import concrete.Singleton
 
 final case class Bounds(val value: Int, val minCount: Int, val maxCount: Int) {
   override def toString = value + ": [" + minCount + ", " + maxCount + "]"
 }
 
-final class Gcc(scope: Array[Variable], bounds: Array[Bounds]) extends Constraint(scope) {
+final class Gcc(scope: Array[Variable], bounds: Array[Bounds]) extends Constraint(scope) with Stateless {
 
   val offset = bounds.map(_.value).min
 
@@ -25,10 +32,10 @@ final class Gcc(scope: Array[Variable], bounds: Array[Bounds]) extends Constrain
 
   def bound(v: Int) = _bounds2(v - offset)
 
-  val counts = Array.ofDim[Int](1 + scope.map(_.dom.values.max).max)
-  val singles = Array.ofDim[Int](1 + scope.map(_.dom.values.max).max)
+  val counts = Array.ofDim[Int](1 + scope.map(_.initDomain.max).max)
+  val singles = Array.ofDim[Int](1 + scope.map(_.initDomain.max).max)
 
-  def checkValues(t: Array[Int]): Boolean = {
+  def check(t: Array[Int]): Boolean = {
 
     var counts: Map[Int, Int] = Map.empty.withDefaultValue(0)
     for (v <- t) {
@@ -40,85 +47,76 @@ final class Gcc(scope: Array[Variable], bounds: Array[Bounds]) extends Constrain
     counts.forall { case (v, c) => c >= bound(v).minCount }
   }
 
-  private def filter(value: Int, q: Queue[Variable]) = {
-    var ch: List[Int] = Nil
-    for (p <- scope.indices) {
-      val v = scope(p)
-      if (v.dom.size > 1 && v.dom.removeVal(value)) {
-        ch ::= p
-        if (v.dom.size == 1) {
-          q.enqueue(v)
-        }
-      }
+  private def filter(domains: IndexedSeq[Domain], value: Int, q: Queue[Int]): IndexedSeq[Domain] = {
+
+    for (p <- domains.indices) yield {
+      val d = domains(p)
+      if (d.size > 1) {
+        val nd = d.remove(value)
+        if (nd.size == 1) q.enqueue(p)
+        nd
+      } else d
     }
-    ch
+
   }
 
-  private def upper() = {
-    val queue = new collection.mutable.Queue[Variable]()
-    for (v <- scope) {
-      if (v.dom.size == 1) {
-        queue.enqueue(v)
+  private def upper(domains: IndexedSeq[Domain]): ReviseOutcome[Unit] = {
+    val queue = new collection.mutable.Queue[Int]()
+    for (d <- domains.indices) {
+      if (domains(d).size == 1) {
+        queue.enqueue(d)
       }
     }
 
     //val singles: MultiMap[Int, Variable] = new HashMap[Int, collection.mutable.Set[Variable]] with MultiMap[Int, Variable]
     Arrays.fill(singles, 0)
 
-    var ch: List[Int] = Nil
+    var ch = domains
     do {
       while (queue.nonEmpty) {
-        singles(queue.dequeue.dom.firstValue) += 1
+        singles(domains(queue.dequeue).head) += 1
       }
 
       for (v <- singles.indices) {
         if (singles(v) > bound(v).maxCount) {
-          throw UNSATObject
+          return Contradiction
         } else if (singles(v) == bound(v).maxCount) {
-          ch ++= filter(v, queue)
+          ch = filter(ch, v, queue)
         }
       }
     } while (queue.nonEmpty)
-    ch
+    Revised(ch)
   }
 
-  private def assignAll(value: Int): List[Int] = {
-    var mod: List[Int] = Nil
-    for (p <- scope.indices) {
-      val v = scope(p)
-      val index = v.dom.index(value);
-      if (index >= 0 && v.dom.present(index)) {
-        mod ::= p
-        v.dom.setSingle(index)
-      }
+  private def assignAll(domains: IndexedSeq[Domain], value: Int): IndexedSeq[Domain] = {
+    for (d <- domains) yield {
+      if (d.present(value)) Singleton(value) else d
     }
-    mod
   }
 
-  private def lower() = {
-    var ch: List[Int] = Nil //false
+  private def lower(domains: IndexedSeq[Domain]): ReviseOutcome[Unit] = {
     Arrays.fill(counts, 0)
 
     //    val counts = scope.iterator.flatMap(_.dom.values).foldLeft(Map[Int, Int]().withDefaultValue(0)) {
     //      (acc, v) => acc + (v -> (acc(v) + 1))
     //    }
-    for (x <- scope; v <- x.dom.values) {
+    for (x <- domains; v <- x) {
       counts(v) += 1
     }
-
+    var ch = domains
     for (Bounds(v, min, _) <- bounds) {
       val c = counts(v)
       if (c < min) {
-        throw UNSATObject
+        return Contradiction
       } else if (c == min) {
-        ch ++= assignAll(v)
+        ch = assignAll(ch, v)
       }
     }
-    ch
+    Revised(ch)
   }
 
-  def revise() = (upper() ++ lower()).distinct
+  def revise(domains: IndexedSeq[Domain]) = upper(domains) andThen ((c, _) => lower(c))
 
-  def advise(p: Int) = arity * arity
+  def advise(domains: IndexedSeq[Domain],p: Int) = arity * arity
   val simpleEvaluation = 3
 }

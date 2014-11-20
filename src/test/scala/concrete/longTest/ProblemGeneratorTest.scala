@@ -12,6 +12,8 @@ import concrete.generator.cspompatterns.ConcretePatterns
 import org.scalatest.Assertions
 import org.scalatest.FlatSpec
 import concrete.ParameterManager
+import concrete.Contradiction
+import concrete.Filtered
 
 final class ProblemGeneratorTest extends FlatSpec with LazyLogging {
 
@@ -42,11 +44,10 @@ final class ProblemGeneratorTest extends FlatSpec with LazyLogging {
   // }
 
   private def generateTest(file: String) {
-    
+
     val pm = new ParameterManager()
     val cspom = CSPOM.load(classOf[ProblemGeneratorTest].getResource(file))._1;
 
-    
     logger.info(cspom + "\n" + cspom.referencedExpressions.size + " vars, " + cspom.constraints.size + " cons")
 
     ProblemCompiler.compile(cspom, ConcretePatterns(pm));
@@ -57,8 +58,10 @@ final class ProblemGeneratorTest extends FlatSpec with LazyLogging {
 
     logger.info(problem + "\n" + problem.variables.size + " vars, " + problem.constraints.size + " cons")
 
-    new ACC(problem, pm).reduceAll();
+    new ACC(problem, pm).reduceAll(problem.initState) match {
+      case Contradiction => logger.info("UNSAT")
+      case Filtered(newState) => logger.info(problem.toString(newState));
+    }
 
-    logger.info(problem.toString);
   }
 }

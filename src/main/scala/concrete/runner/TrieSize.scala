@@ -12,13 +12,14 @@ import concrete.Variable
 import concrete.constraint.extension.ReduceableExt
 import concrete.constraint.extension.MDD
 import concrete.constraint.extension.STR
-import concrete.util.BitVectorSet
-import concrete.util.DirectIndices
 import concrete.constraint.extension.TupleTrieSet
 import concrete.constraint.extension.MDDC
 import concrete.constraint.extension.ExtensionConstraintGeneral
 import concrete.constraint.extension.FindSupportExt
 import concrete.constraint.extension.MDDRelation
+import concrete.Revised
+import concrete.Contradiction
+import concrete.Domain
 
 object TrieSize extends App {
 
@@ -71,10 +72,7 @@ object TrieSize extends App {
 
       inits ::= initTime
 
-      val domains = Array.fill(arity)(
-        new IntDomain(new BitVectorSet(d), new DirectIndices(d)))
-
-      val variables = domains.map(new Variable(count2.toString, _))
+      val variables = Array.fill(arity)(new Variable(count2.toString, IntDomain(0 until d)))
 
       val constraint = algo match {
         case "MDDC" => {
@@ -102,44 +100,41 @@ object TrieSize extends App {
 
       nodes ::= t.reduceable.edges
 
-      var level = 0
+      var state = constraint.initState
       var time = -System.nanoTime()
-      try {
-        constraint.revise((arity - 1 to 0 by -1).toList)
-      } catch {
-        case _: UNSATException =>
+      var sat = true
+
+      var domains: IndexedSeq[Domain] = variables.map(_.initDomain)
+
+      constraint.revise(domains, (arity - 1 to 0 by -1).toList, state) match {
+        case Contradiction     => sat = false
+        case Revised(_, _, ns) => state = ns
       }
 
       time += System.nanoTime()
       timeFirst ::= time
       times ::= time
 
-      try {
-        var count = 19
-        while (count >= 0) {
-          level += 1
-          constraint.setLvl(level)
+      var count = 19
+      while (count >= 0 && sat) {
 
-          val modified = (0 until arity).toList
-            .filter {
-              p =>
-                domains(p).filter(i => RAND.nextDouble > .05)
-            }
-            .reverse
+        val newDomains = domains.map(_.filter(v => RAND.nextDouble > .05))
 
-          //System.gc()
-          time -= System.nanoTime()
-          try {
-            constraint.revise(modified)
-          } finally {
-            time += System.nanoTime()
-            times ::= time
-          }
-          count -= 1
+        val modified = (0 until arity).filter(p => domains(p) ne newDomains(p)).toList
+
+        //System.gc()
+        time -= System.nanoTime()
+
+        constraint.revise(newDomains, modified, state) match {
+          case Contradiction            => sat = false
+          case Revised(filtered, _, ns) => domains = filtered; state = ns
         }
-      } catch {
-        case _: UNSATException =>
+
+        time += System.nanoTime()
+        times ::= time
+        count -= 1
       }
+
       System.gc()
       System.gc()
       System.gc()
@@ -170,7 +165,7 @@ object TrieSize extends App {
 
   def name(s: Seq[Int], n: String) = s match {
     case Seq(v) => v.toString
-    case _ => n
+    case _      => n
   }
 
   def bench(ks: Seq[Int], ls: Seq[Double], ds: Seq[Int]) {
@@ -253,7 +248,7 @@ object TrieSize extends App {
       }
     }
 
-  def tuples(arity: Int, d: Int) = new Iterator[Array[Int]] {
+  def tuples(arity: Int, d: Int) = new Iterator[Seq[Int]] {
     var current = firstTuple(arity)
 
     def hasNext = current ne null

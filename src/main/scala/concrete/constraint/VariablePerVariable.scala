@@ -1,14 +1,38 @@
 package concrete.constraint;
 
 import scala.annotation.tailrec
-
 import concrete.Variable
 import com.typesafe.scalalogging.LazyLogging
+import concrete.Revised
+import concrete.ReviseOutcome
+import concrete.Contradiction
+import concrete.Domain
 
 /**
  * A constraint that can be revised one variable at a time
  */
-trait VariablePerVariable extends Constraint with Removals with LazyLogging {
+trait VariablePerVariable extends Removals with LazyLogging {
+  type State = Unit
+
+  def initState = Unit
+
+  def isConsistent(domains: IndexedSeq[Domain]): Boolean = revise(domains) != Contradiction
+  override def isConsistent(domains: IndexedSeq[Domain], s: State) = isConsistent(domains)
+  //
+  //  def isConsistent(): Boolean = {
+  //    scope foreach { v => v.dom.setLevel(v.dom.currentLevel + 1) }
+  //
+  //    val result = revise(modified, Unit)
+  //    scope foreach { v => v.dom.restoreLevel(v.dom.currentLevel - 1) }
+  //
+  //    result match {
+  //      case Contradiction => false
+  //      case _             => true
+  //
+  //    }
+  //  }
+  //
+  //  override final def isConsistent(s: State) = isConsistent()
 
   /**
    * Try to filter values from variable getVariable(position).
@@ -16,55 +40,24 @@ trait VariablePerVariable extends Constraint with Removals with LazyLogging {
    * @param position
    * @return true iff any value has been removed
    */
-  def reviseVariable(position: Int, modified: List[Int]): Boolean
+  def reviseVariable(domains: IndexedSeq[Domain], position: Int, modified: List[Int]): Domain
 
-  def revise(modified: List[Int]) = {
-    @tailrec
-    def reviseNS(i: Int = arity - 1, c: List[Int] = Nil): List[Int] =
-      if (i < 0) {
-        c
-      } else if (this.reviseVariable(i, modified)) {
-        reviseNS(i - 1, i :: c)
-      } else {
-        reviseNS(i - 1, c)
+  def revise(domains: IndexedSeq[Domain]): ReviseOutcome[State] = revise(domains, Unit)
+
+  def revise(domains: IndexedSeq[Domain], modified: List[Int], s: State): ReviseOutcome[State] = {
+    assert(modified.nonEmpty)
+    val tempDomains = domains.toArray
+    val skip = if (modified.tail.isEmpty) modified.head else -1
+
+    var p = arity - 1
+
+    while (p >= 0) {
+      if (p != skip) {
+        tempDomains(p) = reviseVariable(tempDomains, p, modified)
       }
-
-    @tailrec
-    def reviseS(skip: Int, i: Int = arity - 1, c: List[Int] = Nil): List[Int] =
-      if (i < 0) {
-        c
-      } else if (i == skip) {
-        reviseNS(i - 1, c)
-      } else if (this.reviseVariable(i, modified)) {
-        reviseS(skip, i - 1, i :: c)
-      } else {
-        reviseS(skip, i - 1, c)
-      }
-
-    val c =
-      if (modified.isEmpty) {
-        Nil
-      } else if (modified.tail.isEmpty) {
-        reviseS(modified.head)
-      } else {
-        reviseNS()
-      }
-
-    entailCheck()
-    c
-
-  }
-
-  @tailrec
-  final def entailCheck(i: Int = scope.length - 1, c: Boolean = false) {
-
-    if (i < 0) {
-      entail()
-    } else if (scope(i).dom.size <= 1) {
-      entailCheck(i - 1, c)
-    } else if (!c) {
-      entailCheck(i - 1, true)
     }
+
+    Revised(tempDomains.toIndexedSeq, isFree(domains))
 
   }
 

@@ -1,22 +1,21 @@
 package concrete.constraint.semantic
 
+import concrete.Domain
+import concrete.EMPTY
+import concrete.FALSE
+import concrete.Revised
+import concrete.TRUE
+import concrete.UNKNOWNBoolean
 import concrete.Variable
 import concrete.constraint.Constraint
-import concrete.constraint.TupleEnumerator
-import concrete.constraint.Residues
-import concrete.BooleanDomain
-import concrete.UNKNOWNBoolean
-import concrete.FALSE
-import concrete.TRUE
-import concrete.EMPTY
-import sun.java2d.pipe.SpanShapeRenderer.Simple
+import concrete.constraint.Stateless
+import concrete.Singleton
+import concrete.Contradiction
 
 class ReifiedEquals(val b: Variable, val v: Variable, val c: Int)
-  extends Constraint(Array(b, v)) {
+  extends Constraint(Array(b, v)) with Stateless {
 
-  val controlDomain = b.dom.asInstanceOf[BooleanDomain]
-
-  def checkValues(t: Array[Int]) = t(0) match {
+  def check(t: Array[Int]) = t(0) match {
     case 1 => t(1) == c
     case 0 => t(1) != c
     case _ => sys.error(s"$b must be boolean")
@@ -24,44 +23,38 @@ class ReifiedEquals(val b: Variable, val v: Variable, val c: Int)
 
   override def toString = s"$b = $v == $c"
 
-  val cIndex = v.dom.index(c)
-
-  def revise() = {
-    var ch = List[Int]()
-    controlDomain.status match {
+  def revise(domains: IndexedSeq[Domain]) = {
+    val d = domains(1)
+    domains(0) match {
       case UNKNOWNBoolean =>
-        if (v.dom.present(cIndex)) {
-          if (v.dom.size == 1) {
-            controlDomain.setTrue()
-            entail()
-            ch ::= 0
+        if (d.present(c)) {
+          if (d.size == 1) {
+            Revised(IndexedSeq(TRUE, d), true)
+          } else {
+            Revised(domains)
           }
         } else {
-          controlDomain.setFalse()
-          entail()
-          ch ::= 0
+          Revised(IndexedSeq(FALSE, d), true)
         }
 
       case TRUE =>
-        if (v.dom.assign(cIndex)) {
-          ch ::= 1
-        }
-        entail()
+        if (d.present(c))
+          Revised(IndexedSeq(TRUE, Singleton(c)), true)
+        else Contradiction
 
       case FALSE =>
-        if (v.dom.present(cIndex)) {
-          v.dom.remove(cIndex)
-          ch ::= 1
+        if (d.present(c)) {
+          Revised(IndexedSeq(FALSE, d.remove(c)), true)
+        } else {
+          Revised(domains, true)
         }
-        entail()
 
       case EMPTY => throw new AssertionError()
     }
 
-    ch
   }
 
-  def advise(pos:Int) = 1
+  def advise(domains: IndexedSeq[Domain], pos: Int) = 1
   def simpleEvaluation: Int = 1
-  
+
 }

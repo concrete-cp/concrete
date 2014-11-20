@@ -5,13 +5,13 @@ package concrete.priorityqueues;
  * obtained quickly. Identifiers should be generated upon object construction,
  * be consecutive and starting at 0. This is used to replace time-consuming
  * hashes and maps by arrays.
- * 
+ *
  * @author scand1sk
  */
-public interface Identified {
+trait Identified {
 
-	/**
-	 * @return the unique, integer identifier of the object.
-	 */
-	int getId();
+  /**
+   * @return the unique, integer identifier of the object.
+   */
+  def id: Int
 }

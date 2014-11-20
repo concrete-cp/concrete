@@ -20,24 +20,26 @@
 package concrete.constraint;
 
 import scala.annotation.tailrec
-import concrete.heuristic.Weighted
-import concrete.priorityqueues.Identified
+import concrete.Contradiction
 import concrete.UNSATException
-import concrete.priorityqueues.PTag
 import concrete.Variable
-import scala.collection.mutable.DoubleLinkedList
+import concrete.heuristic.Weighted
 import concrete.priorityqueues.DLNode
+import concrete.priorityqueues.Identified
+import concrete.priorityqueues.PTag
+import concrete.ReviseOutcome
+import concrete.Domain
 
 object Constraint {
 
-  private val cId = new ThreadLocal[Int];
-  cId.set(0)
-
-  def next(): Int = {
-    val r = cId.get
-    cId.set(r + 1)
-    r
-  }
+  //  private val cId = new ThreadLocal[Int];
+  //  cId.set(0)
+  //
+  //  def next(): Int = {
+  //    val r = cId.get
+  //    cId.set(r + 1)
+  //    r
+  //  }
 
   val UNARY = 1
   val BINARY = 2
@@ -46,12 +48,30 @@ object Constraint {
 
 }
 
+trait Stateless extends Constraint {
+  type State = Unit
+
+  def initState: State = Unit
+
+  def revise(domains: IndexedSeq[Domain]): ReviseOutcome[Unit]
+
+  def revise(domains: IndexedSeq[Domain], s: State): ReviseOutcome[State] = revise(domains)
+
+  def isConsistent(domains: IndexedSeq[Domain]): Boolean = revise(domains) != Contradiction
+
+  override final def isConsistent(domains: IndexedSeq[Domain], s: State): Boolean = isConsistent(domains)
+}
+
 abstract class Constraint(val scope: Array[Variable])
   extends DLNode[Constraint] with Weighted with Identified with PTag {
 
+  type State <: Any
+
   def this(scope: Variable*) = this(scope.toArray)
 
-  val getId = Constraint.next()
+  def initState: State
+
+  var id: Int = -1
 
   private var entailedAtLevel = -1;
 
@@ -70,78 +90,62 @@ abstract class Constraint(val scope: Array[Variable])
    */
   val position = scope.zipWithIndex.toMap
 
-  override def equals(o: Any) = o.asInstanceOf[Constraint].getId == getId
+  override def equals(o: Any) = o.asInstanceOf[Constraint].id == id
 
   /**
    * @return string description of the constraint
    */
   def getType = getClass.getSimpleName
 
-  private var _level = 0;
-
-  def level = _level
-
-  def setLvl(l: Int) {
-    _level = l
-  }
-
-  def restoreLvl(l: Int) {
-    if (entailedAtLevel > l) {
-      // LOGGER.finest("Disentailing " + this);
-      disEntail();
-    }
-    _level = l;
-  }
-
-  override def hashCode = getId
+  override def hashCode = id
 
   @tailrec
-  final def controlTuplePresence(tuple: Array[Int], i: Int = arity - 1): Boolean = {
+  final def controlTuplePresence(domains: IndexedSeq[Domain], tuple: Array[Int], i: Int = arity - 1): Boolean = {
     /** Need high optimization */
 
-    i < 0 || (scope(i).dom.present(tuple(i)) && controlTuplePresence(tuple, i - 1))
+    i < 0 || (domains(i).present(tuple(i)) && controlTuplePresence(domains, tuple, i - 1))
 
   }
 
   @tailrec
-  final def controlTuplePresence(tuple: Array[Int], mod: List[Int]): Boolean = {
+  final def controlTuplePresence(domains: IndexedSeq[Domain], tuple: Array[Int], mod: List[Int]): Boolean = {
     /** Need high optimization */
 
     if (mod eq Nil) {
-      assert(controlTuplePresence(tuple), tuple.mkString("(", ", ", ")") +
+      assert(controlTuplePresence(domains, tuple), tuple.mkString("(", ", ", ")") +
         " is not in " + this)
       true
     } else {
       val i = mod.head
-      scope(i).dom.present(tuple(i)) && controlTuplePresence(tuple, mod.tail)
+      domains(i).present(tuple(i)) && controlTuplePresence(domains, tuple, mod.tail)
     }
 
   }
 
-  final def isEntailed = entailedAtLevel >= 0
+  //  final def isEntailed = entailedAtLevel >= 0
 
-  var inCN = false
+  def inCN = id >= 0
 
-  final def disEntail() {
-    assert(isEntailed)
-    entailedAtLevel = -1
-    if (inCN) for (v <- scope) {
-      v.wDeg += weight
-    }
-  }
-
-  final def entail() {
-    if (!isEntailed) {
-      entailedAtLevel = level
-      if (inCN) for (v <- scope) {
-        v.wDeg -= weight
-      }
-    }
-
-  }
+  //  final def disEntail() {
+  //    assert(isEntailed)
+  //    entailedAtLevel = -1
+  //    if (inCN) for (v <- scope) {
+  //      v.wDeg += weight
+  //    }
+  //  }
+  //
+  //  final def entail() {
+  //    if (!isEntailed) {
+  //      entailedAtLevel = level
+  //      if (inCN) for (v <- scope) {
+  //        v.wDeg -= weight
+  //      }
+  //    }
+  //
+  //  }
 
   override def weight_=(w: Int) {
-    assert(!isEntailed)
+    //assert(!isEntailed)
     assert(inCN)
     val inc = w - weight
     for (v <- scope) {
@@ -157,30 +161,22 @@ abstract class Constraint(val scope: Array[Variable])
   //    case e: UNSATException => false
   //  }
 
-  def isConsistent(): Boolean = {
-    setLvl(level + 1)
-    scope foreach { _.dom.setLevel(level) }
-    try {
-      revise()
-      true
-    } catch {
-      case _: UNSATException => false
-    } finally {
-      restoreLvl(level - 1)
-      scope foreach { _.dom.restoreLevel(level) }
-    }
-  }
+  def isConsistent(domains: IndexedSeq[Domain], state: State): Boolean =
+    revise(domains, state) != Contradiction
 
-  def advise(pos: Int): Int
+  def advise(domains: IndexedSeq[Domain], pos: Int): Int
 
-  def advise(v: Variable): Int = advise(position(v))
+  def advise(domains: IndexedSeq[Domain], v: Variable): Int = advise(domains, position(v))
 
-  final def adviseAll(): Unit = {
+  final def adviseAll(domains: IndexedSeq[Domain]): Int = {
     var p = arity - 1
+    var i = -1
     while (p >= 0) {
-      advise(p)
+      val advOutcome = advise(domains, p)
+      i = math.max(i, advOutcome)
       p -= 1
     }
+    i
   }
 
   /**
@@ -188,25 +184,14 @@ abstract class Constraint(val scope: Array[Variable])
    *
    * @param revisator
    */
-  def revise(): Traversable[Int]
+  def revise(domains: IndexedSeq[Domain], state: State): ReviseOutcome[State]
 
-  private var valTuple = new Array[Int](arity)
+  def dataSize: Int = ???
 
   /**
    * @return true iff the constraint is satisfied by the given tuple
    */
-  def checkIndices(tuple: Array[Int]) = {
-    var i = arity - 1
-    while (i >= 0) {
-      valTuple(i) = scope(i).dom.value(tuple(i))
-      i -= 1
-    }
-    checkValues(valTuple)
-  }
-
-  def dataSize: Int = ???
-
-  def checkValues(tuple: Array[Int]): Boolean
+  def check(tuple: Array[Int]): Boolean
 
   def simpleEvaluation: Int
 
@@ -219,18 +204,18 @@ abstract class Constraint(val scope: Array[Variable])
   final def isInvolved(variable: Variable) = position.contains(variable)
 
   @tailrec
-  final def sizes(a: Array[Int] = new Array[Int](arity), i: Int = arity - 1): Array[Int] =
+  final def sizes(domains: IndexedSeq[Domain], a: Array[Int] = new Array[Int](arity), i: Int = arity - 1): Array[Int] =
     if (i < 0) {
       a
     } else {
-      a(i) = scope(i).dom.size
-      sizes(a, i - 1)
+      a(i) = domains(i).size
+      sizes(domains, a, i - 1)
     }
 
-  def intervalsOnly: Boolean = {
+  def intervalsOnly(domains: IndexedSeq[Domain]): Boolean = {
     var i = arity - 1
     while (i >= 0) {
-      if (!scope(i).dom.bound) {
+      if (!domains(i).bound) {
         return false
       }
       i -= 1
@@ -239,33 +224,33 @@ abstract class Constraint(val scope: Array[Variable])
   }
 
   @tailrec
-  final def cardSize(p: Int = arity - 1, size: Int = 1): Int =
+  final def cardSize(domains: IndexedSeq[Domain], p: Int = arity - 1, size: Int = 1): Int =
     if (p < 0) {
       size
     } else {
-      val s = scope(p).dom.size
+      val s = domains(p).size
       if (size > Int.MaxValue / s) {
         -1
       } else {
-        cardSize(p - 1, size * s)
+        cardSize(domains, p - 1, size * s)
       }
     }
 
-  final def scopeSize: Int = {
+  final def scopeSize(domains: IndexedSeq[Domain]): Int = {
     var size = 0
     var p = arity - 1
     while (p >= 0) {
-      size += scope(p).dom.size
+      size += domains(p).size
       p -= 1
     }
     size
   }
 
-  final def doubleCardSize: Double = {
+  final def doubleCardSize(domains: IndexedSeq[Domain]): Double = {
     var size = 1.0
     var p = arity - 1
     while (p >= 0) {
-      size *= scope(p).dom.size
+      size *= domains(p).size
       p -= 1
     }
     size
@@ -276,11 +261,11 @@ abstract class Constraint(val scope: Array[Variable])
   /**
    * A GAC constraint is entailed if it has zero or only one variable with domain size > 1
    */
-  def isFree: Boolean = {
+  def isFree(domains: IndexedSeq[Domain]): Boolean = {
     var one = false
     var i = arity - 1
     while (i >= 0) {
-      if (scope(i).dom.size > 1) {
+      if (domains(i).size > 1) {
         if (one) {
           return false
         }
@@ -291,9 +276,27 @@ abstract class Constraint(val scope: Array[Variable])
     true
   }
 
-  def controlAssignment: Boolean = {
-    scope.exists(_.dom.size > 1) || {
-      checkValues(scope.map(_.dom.firstValue).toArray)
+  def controlAssignment(domains: IndexedSeq[Domain]): Boolean = {
+    domains.exists(_.size > 1) || check(domains.map(_.head).toArray)
+
+  }
+
+  def changes(oldDomains: IndexedSeq[Domain], newDomains: IndexedSeq[Domain]): Seq[Int] = {
+    var i = arity - 1
+    var ch = List[Int]()
+    while (i >= 0) {
+      if (oldDomains(i) ne newDomains(i)) ch ::= i
+      i -= 1
     }
+    ch
+  }
+
+  def hasChanges(oldDomains: IndexedSeq[Domain], newDomains: IndexedSeq[Domain]): Boolean = {
+    var i = arity - 1
+    while (i >= 0) {
+      if (oldDomains(i) ne newDomains(i)) return true
+      i -= 1
+    }
+    false
   }
 }

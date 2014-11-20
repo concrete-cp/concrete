@@ -2,39 +2,20 @@ package concrete.constraint.semantic
 
 import concrete.constraint.Constraint
 import concrete.Variable
+import concrete.constraint.Stateless
+import concrete.Revised
+import concrete.Domain
+import concrete.util.Interval
 
-abstract class MinMax(result: Variable, vars: Array[Variable], constant: Option[Int]) extends Constraint(result +: vars) {
+abstract class MinMax(result: Variable, vars: Array[Variable], constant: Option[Int]) extends Constraint(result +: vars) with Stateless {
 
-  def advise(pos: Int): Int = arity
+  def advise(domains: IndexedSeq[Domain], pos: Int): Int = arity
 
-  def maxOfVars = {
-    var m = constant
-    for (v <- vars) {
-      val value = v.dom.lastValue
-      if (m.forall(_ < value)) {
-        m = Some(value)
-      }
-    }
-    m.get
-  }
-
-  def minOfVars = {
-    var m = constant
-    for (v <- vars) {
-      val value = v.dom.firstValue
-      if (m.forall(_ > value)) {
-        m = Some(value)
-      }
-    }
-    m.get
-  }
-
-  def in(): List[Int] = {
-    if (result.dom.removeAfterVal(maxOfVars) | result.dom.removeUntilVal(minOfVars)) {
-      List(0)
-    } else {
-      Nil
-    }
+  def in(dom: IndexedSeq[Domain]): IndexedSeq[Domain] = {
+    val span = dom.iterator.drop(1).map(_.span).reduce(_ span _)
+    val withConstant = constant.map(c => Interval(c, c) span span).getOrElse(span)
+    val result = dom(0) & withConstant
+    if (result ne dom(0)) dom.updated(0, result) else dom
   }
 
   def simpleEvaluation: Int = 2
@@ -47,21 +28,15 @@ final class Min(result: Variable, vars: Array[Variable], constant: Option[Int])
   def this(result: Variable, vars: Array[Variable]) = this(result, vars, None)
   def this(result: Variable, vars: Array[Variable], constant: Int) = this(result, vars, Some(constant))
 
-  def revise(): Traversable[Int] = {
-    var ch = in()
+  def revise(domains: IndexedSeq[Domain]) = {
+    var ch = in(domains)
 
-    val minValue = result.dom.firstValue
+    val minValue = ch(0).head
 
-    for (i <- 1 until arity) {
-      if (scope(i).dom.removeUntilVal(minValue)) {
-        ch ::= i
-      }
-    }
-
-    ch
+    Revised(ch.head +: ch.tail.map(_.removeUntil(minValue)))
   }
 
-  def checkValues(tuple: Array[Int]): Boolean = {
+  def check(tuple: Array[Int]): Boolean = {
     tuple(0) == (1 until arity).map(tuple).min
   }
 
@@ -74,21 +49,15 @@ final class Max(result: Variable, vars: Array[Variable], constant: Option[Int])
   def this(result: Variable, vars: Array[Variable]) = this(result, vars, None)
   def this(result: Variable, vars: Array[Variable], constant: Int) = this(result, vars, Some(constant))
 
-  def revise(): Traversable[Int] = {
-    var ch = in()
+  def revise(domains: IndexedSeq[Domain]) = {
+    var ch = in(domains)
 
-    val maxValue = result.dom.lastValue
+    val maxValue = ch(0).last
 
-    for (i <- 1 until arity) {
-      if (scope(i).dom.removeAfterVal(maxValue)) {
-        ch ::= i
-      }
-    }
-
-    ch
+    Revised(ch.head +: ch.tail.map(_.removeAfter(maxValue)))
   }
 
-  def checkValues(tuple: Array[Int]): Boolean = {
+  def check(tuple: Array[Int]): Boolean = {
     tuple(0) == (1 until arity).map(tuple).max
   }
 

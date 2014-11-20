@@ -26,7 +26,7 @@ class MDDRelationTest extends FlatSpec with Matchers with PropertyChecks with Op
     val v1 = new Variable("V1", IntDomain(0 to 3))
     val v2 = new Variable("V2", IntDomain(0 to 5))
 
-    val scope = Array(v0, v1, v2)
+    val scope = Array(v0.initDomain, v1.initDomain, v2.initDomain)
     val support = new Array[Int](scope.size)
     mdd.findSupport(scope, 0, 0, support) shouldBe None
     mdd.findSupport(scope, 0, 1, support) should contain oneOf (Array(1, 2, 3), Array(1, 3, 4), Array(1, 2, 5))
@@ -42,7 +42,8 @@ class MDDRelationTest extends FlatSpec with Matchers with PropertyChecks with Op
     mdd.findSupport(scope, 2, 4, support).value shouldBe Array(1, 3, 4)
     mdd.findSupport(scope, 2, 5, support) should contain oneOf (Array(1, 2, 5), Array(2, 3, 5))
 
-    v1.dom.remove(2)
+    scope(1) = scope(1).remove(2)
+
     mdd.findSupport(scope, 0, 0, support) shouldBe None
     mdd.findSupport(scope, 0, 1, support).value shouldBe Array(1, 3, 4)
     mdd.findSupport(scope, 0, 2, support).value shouldBe Array(2, 3, 5)
@@ -62,7 +63,7 @@ class MDDRelationTest extends FlatSpec with Matchers with PropertyChecks with Op
     val v59 = new Variable("V59", IntDomain(160))
     val v60 = new Variable("V60", IntDomain(0))
 
-    val scope = Array(v58, v60, v59)
+    val scope = IndexedSeq(v58, v60, v59).map(_.initDomain)
     val support = new Array[Int](scope.size)
     val mdd = MDDRelation(Seq(Array(160, 0, 0)))
 

@@ -6,172 +6,138 @@ import concrete.Variable
 import concrete.constraint.TupleEnumerator
 import concrete.UNSATException
 import concrete.UNSATObject
+import concrete.constraint.Stateless
+import concrete.Revised
+import concrete.ReviseOutcome
+import concrete.Domain
+import concrete.Contradiction
 
-final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x ++ y) {
+final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x ++ y) with Stateless {
   val size = x.length
   require(size == y.length)
 
-  def revise() = {
-    init()
-    change
+  private def groundEq(domains: IndexedSeq[Domain], i: Int) = {
+    domains(i).size == 1 && domains(i + size).size == 1 && domains(i).head == domains(i + size).head
   }
 
-  private def groundEq(i: Int) = {
-    x(i).dom.size == 1 && y(i).dom.size == 1 && x(i).dom.firstValue == y(i).dom.firstValue
+  def check(t: Array[Int]) = ???
+
+  private def notAlwaysLt(domains: IndexedSeq[Domain], i: Int) = domains(i).head <= domains(i + size).last
+
+  private def alwaysLeq(domains: IndexedSeq[Domain], i: Int) = domains(i).last <= domains(i + size).head
+
+  private def alwaysLt(domains: IndexedSeq[Domain], i: Int) = domains(i).last < domains(i + size).head
+
+  private def checkLex(domains: IndexedSeq[Domain], i: Int) = {
+    if (i == size - 1) alwaysLeq(domains, i)
+    else alwaysLt(domains, i)
   }
 
-  def checkValues(t: Array[Int]) = throw new UnsupportedOperationException
-
-  private def notAlwaysLt(i: Int) = min(x(i)) <= max(y(i))
-
-  private def alwaysLeq(i: Int) = max(x(i)) <= min(y(i))
-
-  private def alwaysLt(i: Int) = max(x(i)) < min(y(i))
-
-  private def checkLex(i: Int) = {
-    if (i == size - 1) alwaysLeq(i)
-    else alwaysLt(i)
-  }
-
-  var consistent = false
   var alpha = -1
   var beta = -1
-  var change: List[Int] = Nil
 
-  private def init() {
-    change = Nil
-    consistent = false
+  def revise(domains: IndexedSeq[Domain]): ReviseOutcome[Unit] = {
     var i = 0
-    while (i < size && groundEq(i)) i += 1
+    while (i < size && groundEq(domains, i)) i += 1
 
     if (i == size) {
-      consistent = true
+      Revised(domains)
     } else {
       alpha = i
 
-      if (checkLex(i)) {
-        consistent = true
-        return
-      }
+      if (checkLex(domains, i)) {
+        Revised(domains)
+      } else {
 
-      beta = -1
-      while (i != size && notAlwaysLt(i)) {
-        if (x(i).dom.firstValue == y(i).dom.lastValue) {
-          if (beta == -1) beta = i
-        } else {
-          beta = -1
+        beta = -1
+        while (i != size && notAlwaysLt(domains, i)) {
+          if (domains(i).head == domains(i + size).head) {
+            if (beta == -1) beta = i
+          } else {
+            beta = -1
+          }
+          i += 1
         }
-        i += 1
-      }
 
-      if (i == size) beta = Integer.MAX_VALUE
-      else if (beta == -1) beta = i
-      if (alpha >= beta) throw UNSATObject
-      gacLexLeq(alpha)
-    }
-  }
-
-  private def gacLexLeq(i: Int) {
-    if (i >= beta || consistent) return
-    if (i == alpha && i + 1 == beta) {
-      acLt(i)
-      if (checkLex(i)) {
-        consistent = true
-        return
+        if (i == size) beta = Integer.MAX_VALUE
+        else if (beta == -1) beta = i
+        if (alpha >= beta) {
+          Contradiction
+        } else {
+          gacLexLeq(domains, alpha)
+        }
       }
     }
-    if (i == alpha && i + 1 < beta) {
-      acLeq(i)
-      if (checkLex(i)) {
-        consistent = true
-        return
+  }
+
+  private def gacLexLeq(domains: IndexedSeq[Domain], i: Int): ReviseOutcome[Unit] = {
+    if (i >= beta) Revised(domains)
+    else {
+      var d = domains
+      if (i == alpha && i + 1 == beta) {
+        d = acLt(d, i)
+        if (checkLex(d, i)) {
+          return Revised(d)
+        }
       }
-      if (groundEq(i)) updateAlpha(i + 1)
-    }
-    if (alpha < i && i < beta) {
-      if ((i == beta - 1 && min(x(i)) == max(y(i))) || alwaysLt(i))
-        updateBeta(i + 1)
-    }
-  }
-
-  private def removeGt(value: Int, v: Variable) = {
-    val dom = v.dom
-    val lb = dom.closestGt(value)
-    lb >= 0 && dom.removeFrom(lb)
-  }
-
-  private def removeLt(value: Int, v: Variable) = {
-    val dom = v.dom;
-    val ub = dom.closestLt(value)
-    ub >= 0 && dom.removeTo(ub)
-  }
-
-  private def removeGeq(value: Int, v: Variable) = {
-    val dom = v.dom
-    val lb = dom.closestGeq(value)
-    lb >= 0 && dom.removeFrom(lb)
-  }
-
-  private def removeLeq(value: Int, v: Variable) = {
-    val dom = v.dom;
-    val ub = dom.closestLeq(value)
-    ub >= 0 && dom.removeTo(ub)
-  }
-
-  private def min(v: Variable) = v.dom.firstValue
-
-  private def max(v: Variable) = v.dom.lastValue
-
-  private def acLt(i: Int) {
-    if (removeLeq(min(x(i)), y(i))) {
-      change ::= i + size
-    }
-    if (removeGeq(max(y(i)), x(i))) {
-      change ::= i
-    }
-  }
-  private def acLeq(i: Int) {
-    if (removeLt(min(x(i)), y(i))) {
-      change ::= i + size
-    }
-    if (removeGt(max(y(i)), x(i))) {
-      change ::= i
+      if (i == alpha && i + 1 < beta) {
+        d = acLeq(d, i)
+        if (checkLex(d, i)) {
+          return Revised(d)
+        }
+        if (groundEq(d, i)) {
+          updateAlpha(d, i + 1) match {
+            case Contradiction      => return Contradiction
+            case Revised(mod, _, _) => d = mod
+          }
+        }
+      }
+      if (alpha < i && i < beta) {
+        if ((i == beta - 1 && d(i).head == d(i + size).last) || alwaysLt(d, i)) {
+          updateBeta(d, i + 1) match {
+            case Contradiction      => return Contradiction
+            case Revised(mod, _, _) => d = mod
+          }
+        }
+      }
+      Revised(d)
     }
   }
 
-  private def updateAlpha(i: Int) {
-    if (i == beta) throw UNSATObject
-    if (i == size) {
-      consistent = true
-      return
-    }
-    if (!groundEq(i)) {
+  private def acLt(domains: IndexedSeq[Domain], i: Int): IndexedSeq[Domain] = {
+    val d1 = domains.updated(i + size, domains(i + size).removeTo(domains(i).head))
+    d1.updated(i, d1(i).removeFrom(d1(i + size).last))
+  }
+
+  private def acLeq(domains: IndexedSeq[Domain], i: Int): IndexedSeq[Domain] = {
+    val d1 = domains.updated(i + size, domains(i + size).removeUntil(domains(i).head))
+    d1.updated(i, d1(i).removeAfter(d1(i + size).last))
+  }
+
+  private def updateAlpha(domains: IndexedSeq[Domain], i: Int): ReviseOutcome[Unit] = {
+    if (i == beta) {
+      Contradiction
+    } else if (i == size) {
+      Revised(domains)
+    } else if (!groundEq(domains, i)) {
       alpha = i
-      gacLexLeq(i)
-    } else updateAlpha(i + 1)
+      gacLexLeq(domains, i)
+    } else {
+      updateAlpha(domains, i + 1)
+    }
 
   }
 
-  private def updateBeta(i: Int) {
-    if (i + 1 == alpha) throw UNSATObject
-    if (min(x(i)) < max(y(i))) {
+  private def updateBeta(domains: IndexedSeq[Domain], i: Int): ReviseOutcome[Unit] = {
+    if (i + 1 == alpha) {
+      Contradiction
+    } else if (domains(i).head < domains(i + size).last) {
       beta = i + 1
-      if (notAlwaysLt(i)) gacLexLeq(i)
-    } else if (min(x(i)) == max(y(i))) updateBeta(i - 1)
+      if (notAlwaysLt(domains, i)) { gacLexLeq(domains, i) } else Revised(domains)
+    } else if (domains(i).head == domains(i + size).last) updateBeta(domains, i - 1) else Revised(domains)
   }
 
-  def advise(p: Int) = size
+  def advise(domains: IndexedSeq[Domain], p: Int) = size
   def simpleEvaluation = 2
-
-  // @Override
-  // public float getEvaluation() {
-  // return half;
-  // }
-  //
-  // @Override
-  // public boolean revise(RevisionHandler revisator, int reviseCount) {
-  // // TODO Auto-generated method stub
-  // return false;
-  // }
 
 }

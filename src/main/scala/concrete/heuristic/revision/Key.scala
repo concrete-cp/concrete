@@ -2,15 +2,16 @@ package concrete.heuristic.revision
 
 import concrete.Variable
 import scala.annotation.tailrec
+import concrete.ProblemState
 
 object Key {
 
-  def prod(num: Array[Variable]) = {
+  def prod(num: Array[Variable], s: ProblemState) = {
     @tailrec
     def p(i: Int, r: Int): Int =
       if (i < 0) r
       else {
-        val v = num(i).dom.size
+        val v = s(num(i)).size
         if (r > Int.MaxValue / v) Int.MaxValue
         else p(i - 1, r * v)
       }
@@ -21,8 +22,8 @@ object Key {
 }
 
 trait Key[T] {
-  def getKey(o: T, eval: Int): Int = getKey(o)
-  
-  def getKey(o: T): Int
+  def getKey(o: T, s: ProblemState, eval: Int): Int = getKey(o, s)
+
+  def getKey(o: T, s: ProblemState): Int
 }
 

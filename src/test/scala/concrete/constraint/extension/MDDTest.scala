@@ -42,7 +42,7 @@ final class MDDTest {
 
   @Test
   def testSize() {
-    assertEquals(3, ts.lambda);
+    assertEquals(BigInt(3), ts.lambda);
     //    ts -= (0, 0);
     //    assertEquals(2, ts.size);
     //    ts += (1, 1);
@@ -52,7 +52,7 @@ final class MDDTest {
   @Test
   def testTrie() {
     val t = MDD0 + Array(1, 2, 3) + Array(1, 3, 4) + Array(1, 2, 5) + Array(2, 3, 5)
-    assertEquals(4, t.lambda)
+    assertEquals(BigInt(4), t.lambda)
 
     assertTrue(t.contains(Array(1, 3, 4)))
     assertFalse(t.contains(Array(1, 2, 4)))

@@ -23,6 +23,8 @@ import concrete.Variable
 import concrete.constraint.VariablePerVariable
 import concrete.util.BitVector
 import cspom.Statistic
+import concrete.ProblemState
+import concrete.Domain
 
 object BinaryExt {
   @Statistic
@@ -36,7 +38,7 @@ object BinaryExt {
    * No need for residues if domain sizes <= MINIMUM_SIZE_FOR_LAST
    */
   def apply(scope: Array[Variable], matrix2d: Matrix2D, shared: Boolean) = {
-    if (scope.map(_.dom.maxSize).max > MINIMUM_SIZE_FOR_LAST) {
+    if (scope.map(_.initDomain.size).max > MINIMUM_SIZE_FOR_LAST) {
       new BinaryExtR(scope, matrix2d, shared)
     } else {
       new BinaryExtNR(scope, matrix2d, shared)
@@ -50,28 +52,31 @@ abstract class BinaryExt(
   shared: Boolean)
   extends ConflictCount(scope, matrix2d, shared)
   with VariablePerVariable {
+  
+  require(scope.forall(_.initDomain.head >= 0))
 
   private val GAIN_OVER_GENERAL = 3;
 
-  override def getEvaluation = (scope(0).dom.size * scope(1).dom.size) / GAIN_OVER_GENERAL
+  override def getEvaluation(domains: IndexedSeq[Domain]) = (domains(0).size * domains(1).size) / GAIN_OVER_GENERAL
 
   override def simpleEvaluation = 2
 
-  def reviseVariable(position: Int, mod: List[Int]) =
-    !supportCondition(position) && scope(position).dom.filter(i => hasSupport(position, i))
+  def reviseVariable(domains: IndexedSeq[Domain], position: Int, mod: List[Int]) =
+    if (supportCondition(domains, position)) { domains(position) }
+    else { domains(position).filter(i => hasSupport(domains, position, i)) }
 
   def removeTuple(tuple: Array[Int]) = {
-    disEntail();
+    ??? //disEntail()
     set(tuple, false)
   }
 
-  def removeTuples(base: Array[Int]) = tuples(base).count(removeTuple)
+  def removeTuples(base: Array[Int]) = ??? //tuples(base).count(removeTuple)
 
-  override def toString = "ext2d(" + scope(0) + ", " + scope(1) + ")" + (if (isEntailed) " [entailed]" else "");
+  override def toString() = "ext2d(" + scope(0) + ", " + scope(1) + ")"
 
-  def hasSupport(variablePosition: Int, index: Int): Boolean
+  def hasSupport(domains: IndexedSeq[Domain], variablePosition: Int, value: Int): Boolean
 
-  override def checkIndices(t: Array[Int]) = matrix.check(t)
+  override def check(t: Array[Int]) = matrix.check(t)
 
   override def unshareMatrix() = {
     matrix2d = super.unshareMatrix().asInstanceOf[Matrix2D]
@@ -81,11 +86,12 @@ abstract class BinaryExt(
   override def dataSize = matrix2d.size
 }
 final class BinaryExtR(scope: Array[Variable], matrix2d: Matrix2D, shared: Boolean) extends BinaryExt(scope, matrix2d, shared) {
-  private val residues: Array[Array[Int]] = Array(new Array[Int](scope(0).dom.maxSize), new Array[Int](scope(1).dom.maxSize))
+  private val residues: Array[Array[Int]] =
+    Array(new Array[Int](scope(0).initDomain.toBitVector.nbWords), new Array[Int](scope(1).initDomain.toBitVector.nbWords))
 
-  def hasSupport(variablePosition: Int, index: Int) = {
+  def hasSupport(domains: IndexedSeq[Domain], variablePosition: Int, index: Int) = {
     val matrixBV: BitVector = matrix2d.getBitVector(variablePosition, index)
-    val dom = scope(1 - variablePosition).dom
+    val dom = domains(1 - variablePosition)
     val part = residues(variablePosition)(index)
     BinaryExt.presenceChecks += 1
     (part >= 0 && dom.intersects(matrixBV, part)) || {
@@ -105,9 +111,9 @@ final class BinaryExtR(scope: Array[Variable], matrix2d: Matrix2D, shared: Boole
 }
 
 final class BinaryExtNR(scope: Array[Variable], matrix2d: Matrix2D, shared: Boolean) extends BinaryExt(scope, matrix2d, shared) {
-  def hasSupport(variablePosition: Int, index: Int) = {
+  def hasSupport(domains: IndexedSeq[Domain], variablePosition: Int, index: Int) = {
     val matrixBV: BitVector = matrix2d.getBitVector(variablePosition, index);
-    val intersection = scope(1 - variablePosition).dom.intersects(matrixBV)
+    val intersection = domains(1 - variablePosition).intersects(matrixBV)
 
     if (intersection >= 0) {
       BinaryExt.checks += 1 + intersection;

@@ -1,7 +1,9 @@
 package concrete.heuristic.revision
 
+import concrete.Domain
 import concrete.Variable
+import concrete.ProblemState
 
 final class Dom extends Key[Variable] {
-  def getKey(v: Variable) = v.dom.size
+  def getKey(d: Variable, s: ProblemState) = s(d).size
 }

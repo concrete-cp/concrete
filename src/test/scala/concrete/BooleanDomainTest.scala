@@ -5,116 +5,61 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.scalatest.Matchers
+import org.scalatest.FlatSpec
 
-final class BooleanDomainTest {
+final class BooleanDomainTest extends FlatSpec with Matchers {
 
-  private var domain: Domain = null;
+  private val domain = BooleanDomain()
 
-  @Before
-  def setup() {
-    domain = new BooleanDomain
+  "BooleanDomain" should "compute size" in {
+    domain should have size 2
+    val d2 = domain.remove(0)
+    d2 should have size 1
+    domain should have size 2
   }
 
-  @Test
-  def testSize() {
-    assertEquals(2, domain.size);
-    domain.setLevel(1);
-    domain.remove(0);
-    assertEquals(1, domain.size);
-    domain.restoreLevel(0);
-    assertEquals(2, domain.size);
-
+  it should "detect presence" in {
+    assert(domain.present(0))
+    val d2 = domain.remove(0)
+    assert(!d2.present(0))
+    assert(domain.present(0))
   }
 
-  @Test
-  def testIndex() {
-    assertEquals(1, domain.index(1));
+
+  it should "be persistent" in {
+    val d2 = domain.remove(1)
+    assert(!d2.present(1))
+    assert(domain.present(1))
+    val d3 = domain.remove(1)
+    assert(domain.present(1))
   }
 
-  @Test
-  def testPresent() {
-    assertTrue(domain.present(0));
-    domain.setLevel(1);
-    domain.remove(0);
-    assertFalse(domain.present(0));
-    domain.restoreLevel(0);
-    assertTrue(domain.present(0));
+  it should "find first value" in {
+    domain.head shouldBe 0
+    domain.head shouldBe 0
+    val d2 = domain.remove(0)
+    d2.head shouldBe 1
   }
 
-  @Test
-  def testAssign() {
-    domain.setSingle(0);
-    assertFalse(domain.present(1));
-    assertTrue(domain.present(0));
+  it should "list values" in {
+    domain shouldBe Seq(0, 1)
+    val d2 = domain.remove(1)
+    d2 shouldBe Seq(0)
   }
 
-  @Test
-  def testUnassign() {
-    domain.setLevel(1);
-    domain.setSingle(0);
-    domain.restoreLevel(0);
-    assertTrue(domain.present(1));
-    assertTrue(domain.present(0));
+  it should "find next value" in {
+    domain.next(0) shouldBe 1
+    a[NoSuchElementException] should be thrownBy domain.next(1)
+    val d2 = domain.remove(1)
+    a[NoSuchElementException] should be thrownBy d2.next(0)
   }
 
-  @Test
-  def testRestore() {
-    domain.setLevel(1);
-    domain.remove(1);
-    assertFalse(domain.present(1));
-
-    domain.restoreLevel(0);
-    assertTrue(domain.present(1));
-
-    domain.setLevel(3);
-    domain.remove(1);
-    domain.restoreLevel(0);
-    assertTrue(domain.present(1));
+  it should "find prev value" in {
+    domain.prev(1) shouldBe 0
+    a[NoSuchElementException] should be thrownBy domain.prev(0)
+    val d2 = domain.remove(0)
+    a[NoSuchElementException] should be thrownBy d2.prev(1)
   }
-
-  @Test
-  def testFirst() {
-    assertEquals(0, domain.first);
-    domain.remove(0);
-    assertEquals(1, domain.first);
-  }
-
-  //  @Test
-  //  def testLast() {
-  //    assertEquals(1, domain.lastIndex);
-  //    domain.remove(1);
-  //    assertEquals(0, domain.lastIndex);
-  //  }
-
-  @Test
-  def testCurrentIndexes() {
-    assertEquals(Seq(0, 1), domain.indices.toSeq);
-    domain.remove(1);
-    assertEquals(Seq(0), domain.indices.toSeq);
-  }
-
-  @Test
-  def testNext() {
-    assertEquals(1, domain.next(0))
-    assertEquals(-1, domain.next(1))
-    domain.remove(1)
-    assertEquals(-1, domain.next(0))
-  }
-
-  @Test
-  def testPrev() {
-    assertEquals(0, domain.prev(1));
-    assertEquals(-1, domain.prev(0));
-    domain.remove(0);
-    assertEquals(-1, domain.prev(1));
-
-  }
-
-  // @Test
-  // public void testClone() throws CloneNotSupportedException {
-  // final domain clone = domain.clone();
-  // assertNotSame(clone, domain);
-  // assertNotSame(clone.getBitDomain(), domain.getBitDomain());
-  // }
 
 }

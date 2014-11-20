@@ -4,24 +4,25 @@ import concrete.util.SetWithMax
 import concrete.Variable
 import scala.util.Random
 import concrete.util.Timestamp
+import concrete.Domain
 
 trait RelationGenerator {
-  def apply(data: Seq[Array[Int]]): Relation
+  def apply(data: Seq[Seq[Int]]): Relation
 }
 
 object MDDRelation extends RelationGenerator {
-  def apply(data: Seq[Array[Int]]): MDDRelation = new MDDRelation(MDD(data))
+  def apply(data: Seq[Seq[Int]]): MDDRelation = new MDDRelation(MDD(data))
 }
 
 final class MDDRelation(val mdd: MDD = MDD0, val timestamp: Timestamp = new Timestamp()) extends Relation {
   type Self2 = MDDRelation
 
-  def findSupport(scope: Array[Variable], p: Int, i: Int, support: Array[Int]): Option[Array[Int]] = {
-    assert(scope(p).dom.present(i))
-    val s = mdd.findSupport(timestamp.next(), scope, p, i, support, 0)
+  def findSupport(domains: IndexedSeq[Domain], p: Int, i: Int, support: Array[Int]): Option[Array[Int]] = {
+    assert(domains(p).present(i))
+    val s = mdd.findSupport(timestamp.next(), domains, p, i, support, 0)
     assert(s.forall(contains))
     assert(s.forall { sup =>
-      (sup zip scope).forall(a => a._2.dom.present(a._1))
+      (sup zip domains).forall(a => a._2.present(a._1))
     })
     s
   }
@@ -42,15 +43,15 @@ final class MDDRelation(val mdd: MDD = MDD0, val timestamp: Timestamp = new Time
     }
   }
 
-  def fillFound(f: (Int, Int) => Boolean, arity: Int): Traversable[Int] = {
+  def fillFound(f: (Int, Int) => Boolean, arity: Int): Set[Int] = {
     val l = new SetWithMax(arity)
     mdd.fillFound(timestamp.next(), f, 0, l)
-    l
+    l.toSet
   }
 
   override def isEmpty = mdd.isEmpty
 
-  def universal(scope: Array[Variable]) = mdd.universal(scope, timestamp.next())
+  def universal(domains: IndexedSeq[Domain]) = mdd.universal(domains, timestamp.next())
 
   override def toString = s"$edges edges representing $lambda tuples"
 
@@ -68,7 +69,7 @@ final class MDDRelation(val mdd: MDD = MDD0, val timestamp: Timestamp = new Time
 
   def iterator = mdd.iterator.map(_.toArray)
 
-  def -(t: Array[Int]) = throw new UnsupportedOperationException
-  def +(t: Array[Int]) = new MDDRelation(mdd + t)
+  def -(t: Seq[Int]) = throw new UnsupportedOperationException
+  def +(t: Seq[Int]) = new MDDRelation(mdd + t)
   def contains(t: Array[Int]): Boolean = mdd.contains(t)
 }

@@ -1,6 +1,7 @@
 package concrete.generator.constraint;
 
 import com.typesafe.scalalogging.LazyLogging
+
 import Generator.cspom2concreteVar
 import concrete.Domain
 import concrete.ParameterManager
@@ -15,20 +16,19 @@ import concrete.constraint.extension.MDD0
 import concrete.constraint.extension.MDD1
 import concrete.constraint.extension.MDD2
 import concrete.constraint.extension.MDDC
-import concrete.constraint.extension.MDDC2
 import concrete.constraint.extension.MDDRelation
 import concrete.constraint.extension.MDDn
 import concrete.constraint.extension.Matrix
+import concrete.constraint.extension.Matrix1D
+import concrete.constraint.extension.Matrix2D
 import concrete.constraint.extension.Matrix2D
 import concrete.constraint.extension.ReduceableExt
+import concrete.constraint.extension.Relation
 import concrete.constraint.extension.STR
 import concrete.constraint.extension.TupleTrieSet
+import concrete.constraint.extension.UnaryExt
 import cspom.CSPOMConstraint
 import cspom.extension.IdMap
-import concrete.constraint.extension.UnaryExt
-import concrete.constraint.extension.Relation
-import concrete.constraint.extension.Matrix2D
-import concrete.constraint.extension.Matrix1D
 
 class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLogging {
 
@@ -40,14 +40,19 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
 
   val TIGHTNESS_LIMIT = 4;
 
-  def boolOrIntIndex(d: Domain, v: Any) = {
+  private def any2Int(d: Domain, v: Any) = {
     v match {
-      case v: Int => d.index(v)
-      case true => 1
-      case false => 0
+      case v: Int => v
+      case true   => 1
+      case false  => 0
     }
 
   }
+
+  private def bool2Int(domains: Seq[Domain], relation: cspom.extension.Relation[_]): Set[Seq[Int]] =
+    relation.map { t =>
+      (domains, t).zipped.map(any2Int)
+    }
 
   private def cspomMDDtoCspfjMDD[A](
     domains: List[Domain],
@@ -62,20 +67,20 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
         trie.toSeq match {
           case Seq() => MDD0
           case Seq((v, t)) =>
-            new MDD1(cspomMDDtoCspfjMDD(tail, t, map), boolOrIntIndex(domain, v))
+            new MDD1(cspomMDDtoCspfjMDD(tail, t, map), any2Int(domain, v))
 
           case Seq((v1, t1), (v2, t2)) =>
             new MDD2(
-              cspomMDDtoCspfjMDD(tail, t1, map), boolOrIntIndex(domain, v1),
-              cspomMDDtoCspfjMDD(tail, t2, map), boolOrIntIndex(domain, v2))
+              cspomMDDtoCspfjMDD(tail, t1, map), any2Int(domain, v1),
+              cspomMDDtoCspfjMDD(tail, t2, map), any2Int(domain, v2))
 
           case trieSeq =>
-            val m = trieSeq.map(l => boolOrIntIndex(domain, l._1)).max
+            val m = trieSeq.map(l => any2Int(domain, l._1)).max
             val concreteTrie = new Array[concrete.constraint.extension.MDD](m + 1)
             val indices = new Array[Int](trieSeq.size)
             var j = 0
             for ((v, t) <- trieSeq) {
-              val i = boolOrIntIndex(domain, v)
+              val i = any2Int(domain, v)
               require(i >= 0, s"Could not find $v in $domain")
 
               concreteTrie(i) = cspomMDDtoCspfjMDD(tail, t, map)
@@ -90,7 +95,7 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
     }
   }
 
-  private case class Signature(domains: Seq[List[Int]], init: Boolean)
+  private case class Signature(domains: Seq[Domain], init: Boolean)
 
   /**
    * Used to cache value to indices conversion
@@ -98,11 +103,11 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
   private val vToICache = new IdMap[cspom.extension.Relation[_], collection.mutable.Map[Signature, Matrix]]()
 
   private def generateMatrix(variables: List[Variable], relation: cspom.extension.Relation[_], init: Boolean): Matrix = {
-    val domains = variables map (_.dom)
+    val domains = variables.map(_.initDomain)
 
     val map = vToICache.getOrElseUpdate(relation, collection.mutable.Map[Signature, Matrix]())
 
-    val signature = Signature(domains map (_.values.toList), init)
+    val signature = Signature(domains, init)
 
     map.getOrElseUpdate(signature, {
       logger.debug(s"Generating $relation for $signature ($variables) not found in $map")
@@ -114,10 +119,10 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
   private def gen(relation: cspom.extension.Relation[_], init: Boolean, domains: List[Domain]) = {
     if (relation.head.size == 1) {
       val matrix = new Matrix1D(domains(0).last + 1, init)
-      matrix.setAll(value2Index(domains, relation.toSeq).map(_.toArray).toTraversable, !init)
+      matrix.setAll(bool2Int(domains, relation), !init)
     } else if (relation.nonEmpty && relation.head.size == 2) {
       val matrix = new Matrix2D(domains(0).last + 1, domains(1).last + 1, init)
-      matrix.setAll(value2Index(domains, relation.toSeq).map(_.toArray).toTraversable, !init)
+      matrix.setAll(bool2Int(domains, relation), !init)
     } else if (init) {
       new TupleTrieSet(relation2MDD(relation, domains), init)
     } else {
@@ -125,7 +130,7 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
         case "MDD" =>
           val mdd = relation2MDD(relation, domains)
           mdd
-        case "STR" => new STR() ++ value2Index(domains, relation.toSeq).map(_.toArray)
+        case "STR" => new STR() ++ bool2Int(domains, relation)
       }, init)
     }
   }
@@ -137,20 +142,11 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
           domains,
           mdd,
           new IdMap())
-      case r => MDD(value2Index(domains, r.toSeq).map(_.toArray))
+      case r => MDD(bool2Int(domains, r))
     }
 
     new MDDRelation(mdd)
   }
-
-  private def value2Index(domains: Seq[Domain], relation: Seq[Seq[_]]): Seq[Seq[Int]] =
-    relation.map { t =>
-      (t, domains).zipped.map { (v, d) =>
-        val i = d.index(v.asInstanceOf[Int])
-        require(i >= 0, s"Could not find $v in $d")
-        i
-      }
-    }
 
   override def gen(extensionConstraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] = {
 
@@ -174,13 +170,10 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
             case "MDDC" =>
               new MDDC(scope, m.reduceable.asInstanceOf[MDDRelation])
 
-            case "MDDC2" =>
-              new MDDC2(scope, m.reduceable.asInstanceOf[MDDRelation].mdd)
-
             case "Reduce" =>
               val r: Relation = m.reduceable.copy
               val mdd = r.asInstanceOf[MDDRelation]
-              logger.info("MDD stats: " + scope.map(_.dom.size).max + " " + scope.length + " " + mdd.edges + " " + mdd.lambda)
+              logger.info("MDD stats: " + scope.map(_.initDomain.size).max + " " + scope.length + " " + mdd.edges + " " + mdd.lambda)
 
               new ReduceableExt(scope, r)
 

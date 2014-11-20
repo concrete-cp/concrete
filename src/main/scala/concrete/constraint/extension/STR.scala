@@ -4,10 +4,11 @@ import concrete.util.BitVector
 import java.util.Arrays
 import scala.annotation.tailrec
 import concrete.Variable
+import concrete.Domain
 
 object STR extends RelationGenerator {
-  def apply(data: Seq[Array[Int]]): STR = {
-    val d = data.toArray
+  def apply(data: Seq[Seq[Int]]): STR = {
+    val d = data.map(_.toArray).toArray
     new STR(d, d.length)
   }
 }
@@ -19,11 +20,11 @@ final class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
 
   def copy = new STR(array.clone, bound)
 
-  def +(t: Array[Int]) = new STR(t +: array, bound + 1)
+  def +(t: Seq[Int]) = new STR(t.toArray +: array, bound + 1)
 
-  override def ++(t: Iterable[Array[Int]]) = new STR(t ++: array, bound + t.size)
+  override def ++(t: Iterable[Seq[Int]]) = new STR(t.map(_.toArray) ++: array, bound + t.size)
 
-  def -(t: Array[Int]) = throw new UnsupportedOperationException
+  def -(t: Seq[Int]) = throw new UnsupportedOperationException
 
   def filterTrie(f: (Int, Int) => Boolean, modified: List[Int]) = {
     var b = bound
@@ -46,7 +47,7 @@ final class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
 
   @tailrec
   private def valid(modified: List[Int], f: (Int, Int) => Boolean, i: Int): Boolean = modified match {
-    case Nil => true
+    case Nil    => true
     case h :: t => f(h, array(i)(h)) && valid(t, f, i)
   }
 
@@ -71,7 +72,7 @@ final class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
       }
       i -= 1
     }
-    pos.sorted
+    pos.toSet
   }
 
   override def toString = s"$bound of ${array.size} tuples"
@@ -79,7 +80,7 @@ final class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
   def edges = if (array.isEmpty) 0 else bound * array(0).length
 
   def find(f: (Int, Int) => Boolean) = throw new UnsupportedOperationException
-  def findSupport(scope: Array[Variable], p: Int, i: Int, support: Array[Int]) = throw new UnsupportedOperationException
+  def findSupport(scope: IndexedSeq[Domain], p: Int, i: Int, support: Array[Int]) = throw new UnsupportedOperationException
 
   def iterator = array.iterator.take(bound)
 
@@ -91,11 +92,11 @@ final class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
     false
   }
 
-  def universal(scope: Array[Variable]): Boolean = {
+  def universal(scope: IndexedSeq[Domain]): Boolean = {
     var card = 1.0 / size
     var i = scope.length - 1
     while (i >= 0) {
-      card *= scope(i).dom.size
+      card *= scope(i).size
       if (card > 1.0) {
         return false
       }

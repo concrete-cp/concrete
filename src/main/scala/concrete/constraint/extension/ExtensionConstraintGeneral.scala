@@ -23,6 +23,7 @@ import concrete.Variable
 import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
 import concrete.UNSATException
+import concrete.Domain
 
 final class ExtensionConstraintGeneral(
   _matrix: Matrix,
@@ -30,23 +31,25 @@ final class ExtensionConstraintGeneral(
   scope: Array[Variable])
   extends ConflictCount(scope, _matrix, shared) with Residues {
 
+  require(scope.forall(_.initDomain.head >= 0))
+
   def removeTuple(tuple: Array[Int]) = {
-    disEntail();
+    ??? // disEntail();
     residues.remove(tuple);
     set(tuple, false)
   }
 
-  def removeTuples(base: Array[Int]) = tuples(base).count(removeTuple)
+  def removeTuples(base: Array[Int]) = ??? //tuples(base).count(removeTuple)
 
-  override def reviseVariable(position: Int, mod: List[Int]) = {
-    if (supportCondition(position)) {
-      assert(!super.reviseVariable(position, mod))
-      false
+  override def reviseVariable(domains: IndexedSeq[Domain], position: Int, mod: List[Int]) = {
+    if (supportCondition(domains, position)) {
+      assert(super.reviseVariable(domains, position, mod) eq domains(position))
+      domains(position)
     } else
-      super.reviseVariable(position, mod);
+      super.reviseVariable(domains, position, mod);
   }
 
-  override def checkIndices(tuple: Array[Int]) = matrix.check(tuple)
+  override def check(tuple: Array[Int]) = matrix.check(tuple)
 
   override def dataSize = _matrix.size
 }

@@ -21,7 +21,7 @@ package concrete.constraint.extension;
 
 import scala.annotation.tailrec
 import concrete.constraint.Constraint
-import concrete.util.Backtrackable
+import concrete.Domain
 import concrete.util.BitVector
 import com.typesafe.scalalogging.LazyLogging
 import concrete.Variable
@@ -29,36 +29,28 @@ import concrete.UNSATException
 import concrete.constraint.Removals
 import cspom.Statistic
 import concrete.UNSATObject
+import concrete.Revised
+import concrete.Contradiction
 
 object ReduceableExt {
   @Statistic
   var fills = 0l
 }
 
-final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
-  extends Constraint(_scope) with LazyLogging with Removals with Backtrackable[Relation] {
+final class ReduceableExt(_scope: Array[Variable], val initState: Relation)
+  extends Constraint(_scope) with LazyLogging with Removals {
 
-  var trie = _tts
+  type State = Relation
 
   //println("sizesR " + arity + " " + trie.lambda + " " + trie.edges)
 
   private val unsupported = new Array[BitVector](arity)
 
-  override def setLvl(l: Int) {
-    super.setLvl(l)
-    setLevel(l)
-  }
-
-  override def restoreLvl(l: Int) {
-    super.restoreLvl(l)
-    restoreLevel(l)
-  }
-
-  def revise(mod: List[Int]) = {
+  def revise(domains: IndexedSeq[Domain], mod: List[Int], trie: Relation) = {
     //println(this)
     //logger.fine("Revising " + this + " : " + mod.toList)
     for (i <- 0 until scope.length) {
-      unsupported(i) = scope(i).dom.toBitVector
+      unsupported(i) = domains(i).toBitVector
     }
     //found.foreach(_.fill(false))
 
@@ -67,7 +59,7 @@ final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
     //println(this + ": filtering " + oldSize)
 
     val newTrie = trie.filterTrie(
-      { (p, i) => scope(p).dom.present(i) }, mod)
+      { (p, i) => domains(p).present(i) }, mod)
 
     //println("filtered " + newTrie.size)
 
@@ -75,63 +67,37 @@ final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
 
     // val newSize = newTrie.size
 
-    if (newTrie.isEmpty) { throw UNSATObject }
+    if (newTrie.isEmpty) {
+      Contradiction
+    } else {
 
-    //assert(newSize <= oldSize)
+      //assert(newSize <= oldSize)
 
-    if (newTrie ne trie) {
-      trie = newTrie
-      altering()
+      //sizes(domSizes)
+
+      val unsup = newTrie
+        .fillFound({ (depth: Int, i: Int) =>
+          ReduceableExt.fills += 1
+          unsupported(depth) -= i
+          unsupported(depth).isEmpty
+        }, arity)
+
+      val c = (0 until arity).map(p => if (unsup(p)) domains(p).filter(v => !unsupported(p)(v)) else domains(p))
+
+      //    val card = cardSize()
+      //    assert(card < 0 || card >= trie.size, card + " < " + trie.size + "!")
+      //    if (card == trie.size) {
+      //      //logger.info("Entailing " + this)
+      //      entail()
+      //    }
+
+      Revised(c, isFree(c), newTrie)
+
     }
-    //sizes(domSizes)
-
-    val unsup = trie
-      .fillFound({ (depth: Int, i: Int) =>
-        ReduceableExt.fills += 1
-        unsupported(depth) -= i
-        unsupported(depth).isEmpty
-      }, arity)
-
-    val c = unsup.filter(p => scope(p).dom.filter(i => !unsupported(p)(i)))
-
-    //    val card = cardSize()
-    //    assert(card < 0 || card >= trie.size, card + " < " + trie.size + "!")
-    //    if (card == trie.size) {
-    //      //logger.info("Entailing " + this)
-    //      entail()
-    //    }
-    if (isFree) { //}trie.universal(scope)) {
-      //println(scope.toSeq)
-      // newTrie.foreach(t => println(t.toSeq))
-      entail()
-    }
-    c
 
   }
 
-  def save = {
-    //println(this + " <- " + trie.size)
-    trie
-  }
-
-  def restore(d: Relation) {
-    trie = d
-    //println(this + " -> " + trie.size)
-  }
-
-  override def checkIndices(t: Array[Int]) = trie.contains(t)
-
-  def checkValues(t: Array[Int]) = {
-    val indices = (t, scope).zipped.map {
-      (value, variable) => variable.dom.index(value)
-    }
-    checkIndices(indices)
-  }
-  
-  private def matches(tuple: Array[Int], base: Array[Int]) = {
-    assert(tuple.length == base.length);
-    (base, tuple).zipped.forall { (b, t) => b < 0 || b == t }
-  }
+  override def check(t: Array[Int]) = initState.contains(t)
 
   def removeTuples(base: Array[Int]) = {
     throw new UnsupportedOperationException
@@ -147,13 +113,13 @@ final class ReduceableExt(_scope: Array[Variable], private val _tts: Relation)
 
   //def matrixManager = matrixManager
 
-  val prop = _tts.edges.toDouble / doubleCardSize
+  val prop = initState.edges.toDouble / doubleCardSize(scope.map(_.initDomain))
 
-  def getEvaluation = (prop * doubleCardSize).toInt
+  def getEvaluation(domains: IndexedSeq[Domain]) = (prop * doubleCardSize(domains)).toInt
 
-  def simpleEvaluation = math.min(7, scope.count(_.dom.size > 1))
+  val simpleEvaluation = math.min(7, scope.count(_.initDomain.size > 1))
 
-  override def toString = scope.mkString("ExtReduce(", ", ", ") / ") + trie.toString
+  override def toString = scope.mkString("ExtReduce(", ", ", ") / ") + initState.toString
 
-  override def dataSize = trie.edges
+  override def dataSize = initState.edges
 }

@@ -1,116 +1,120 @@
 package concrete.constraint.semantic;
 
-import java.util.Arrays
-import concrete.constraint.Constraint
-import concrete.BooleanDomain
-import concrete.Variable
-import concrete.UNSATException
 import scala.annotation.tailrec
-import concrete.UNSATObject
+import concrete.BooleanDomain
+import concrete.Domain
+import concrete.FALSE
+import concrete.ReviseOutcome
+import concrete.Revised
+import concrete.TRUE
+import concrete.Variable
+import concrete.constraint.Constraint
+import concrete.constraint.Stateless
+import concrete.Contradiction
 
 final class Disjunction(scope: Array[Variable],
-  val reverses: IndexedSeq[Boolean]) extends Constraint(scope) {
+                        val reverses: IndexedSeq[Boolean]) extends Constraint(scope) with Stateless {
 
   require(reverses.size == scope.size, "reverses must cover all variables")
 
-  val domains = scope map (_.dom.asInstanceOf[BooleanDomain])
+  var watch1: Int = _
+  var watch2: Int = _
 
-  var watch1 = seekWatch(-1).get
-
-  var watch2 = seekWatch(watch1).getOrElse {
-    setTrue(watch1)
-    watch1
+  {
+    val init = scope.map(_.initDomain.asInstanceOf[BooleanDomain])
+    watch1 = seekWatch(init, -1).getOrElse(-1)
+    watch2 = seekWatch(init, watch1).getOrElse(-1)
   }
 
-  if (isTrue(watch1) || isTrue(watch2)) entail()
+  //if (isTrue(watch1) || isTrue(watch2)) entail()
 
-  def advise(p: Int) = if (p == watch1 || p == watch2) 1 else -1
+  def advise(domains: IndexedSeq[Domain],p: Int) = if (p == watch1 || p == watch2) 1 else -1
 
   def this(scope: Variable*) = this(scope.toArray, new Array[Boolean](scope.size))
 
-  override def checkIndices(t: Array[Int]) =
+  override def check(t: Array[Int]) =
     reverses.zip(t).exists(l => l._1 ^ l._2 == 1)
-
-  def checkValues(t: Array[Int]) = checkIndices(t)
 
   override def toString = "\\/" + (scope, reverses).zipped.map((v, r) => (if (r) "-" else "") + v).mkString("(", ", ", ")")
 
-  def revise(): List[Int] = {
-    if (isTrue(watch1) || isTrue(watch2)) entail()
-    else {
-      if (isFalse(watch1)) {
+  def revise(domains: IndexedSeq[Domain]): ReviseOutcome[Unit] = {
+    //println(this.toString + " " + watch1 + " " + watch2)
+    //val r: ReviseOutcome[Unit] = 
+    val d = domains.asInstanceOf[IndexedSeq[BooleanDomain]]
 
-        seekWatch(watch2) match {
+    if (watch1 < 0) Contradiction
+    else if (watch2 < 0) setTrue(d, watch1)
+    else if (isTrue(d, watch1) || isTrue(d, watch2)) Revised(domains, true)
+    else {
+      val r1: ReviseOutcome[Unit] = if (isFalse(d, watch1)) {
+
+        seekWatch(d, watch2) match {
           case Some(w) => {
             watch1 = w
-            if (isTrue(w)) {
-              entail()
-              return Nil
+            Revised(d, isTrue(d, w))
+          }
+          case None => {
+            setTrue(d, watch2)
+          }
+        }
+
+      } else {
+        Revised(d, false)
+      }
+
+      r1 andThen { (d2, _) =>
+        val d = d2.asInstanceOf[IndexedSeq[BooleanDomain]]
+
+        if (isFalse(d, watch2)) {
+
+          seekWatch(d, watch1) match {
+            case Some(w) => {
+              watch2 = w
+              Revised(d, isTrue(d, w))
+            }
+            case None => {
+              setTrue(d, watch1)
             }
           }
-          case None => {
-            setTrue(watch2)
-            entail()
-            return watch2 :: Nil
-          }
-        }
 
-      }
-
-      if (isFalse(watch2)) {
-
-        seekWatch(watch1) match {
-          case Some(w) => {
-            watch2 = w
-            if (isTrue(w)) entail()
-          }
-          case None => {
-            setTrue(watch1)
-            entail()
-            return watch1 :: Nil
-          }
-        }
-
-      }
-    }
-    Nil
-  }
-
-  private def isTrue(position: Int) = {
-    if (reverses(position)) domains(position).isFalse else domains(position).isTrue
-  }
-
-  private def isFalse(position: Int) =
-    if (reverses(position)) domains(position).isTrue else domains(position).isFalse
-
-  private def setTrue(position: Int) {
-    if (canBeTrue(position)) {
-
-      if (domains(position).isUnknown) {
-
-        if (reverses(position)) {
-          domains(position).setFalse()
         } else {
-          domains(position).setTrue()
+          Revised(d, false)
         }
 
       }
+    }
+  }
+
+  private def isTrue(domains: IndexedSeq[BooleanDomain], position: Int) = {
+    if (reverses(position)) domains(position) == FALSE else domains(position) == TRUE
+  }
+
+  private def isFalse(domains: IndexedSeq[BooleanDomain], position: Int) =
+    if (reverses(position)) domains(position) == TRUE else domains(position) == FALSE
+
+  private def setTrue(domains: IndexedSeq[BooleanDomain], position: Int): ReviseOutcome[Unit] = {
+    if (canBeTrue(domains, position)) {
+
+      if (reverses(position)) {
+        Revised(domains.updated(position, FALSE), true)
+      } else {
+        Revised(domains.updated(position, TRUE), true)
+      }
+
     } else {
-      throw UNSATObject
+      Contradiction
     }
 
   }
 
-  private def canBeTrue(position: Int) = domains(position).canBe(!reverses(position));
+  private def canBeTrue(domains: IndexedSeq[BooleanDomain], position: Int) = domains(position).canBe(!reverses(position));
 
-  private def seekWatch(excluding: Int) = {
-    @tailrec
-    def find(i: Int): Option[Int] =
-      if (i < 0) None
-      else if (i != excluding && canBeTrue(i)) Some(i)
-      else find(i - 1)
-
-    find(arity - 1)
+  @tailrec
+  private def seekWatch(domains: IndexedSeq[BooleanDomain], excluding: Int, i: Int = arity - 1): Option[Int] = {
+    if (i < 0) None
+    else if (i != excluding && canBeTrue(domains, i)) Some(i)
+    else seekWatch(domains, excluding, i - 1)
   }
+
   val simpleEvaluation = 3
 }

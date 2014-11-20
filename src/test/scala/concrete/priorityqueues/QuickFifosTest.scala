@@ -4,14 +4,17 @@ import concrete.constraint.Constraint
 import scala.util.Random
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
+import concrete.Revised
+import concrete.Domain
+import concrete.constraint.Stateless
 
 class QuickFifosTest extends FlatSpec with Matchers {
 
-  class TestConstraint(val eval: Int) extends Constraint {
-    def advise(p: Int) = eval
-    def revise() = Nil
+  class TestConstraint(val eval: Int) extends Constraint with Stateless {
+    def advise(domains: IndexedSeq[Domain], p: Int) = eval
+    def revise(domains: IndexedSeq[Domain]) = Revised(IndexedSeq())
     def simpleEvaluation = 1
-    def checkValues(t: Array[Int]) = true
+    def check(t: Array[Int]) = true
   }
 
   "QuickFifos" should "enqueue and dequeue" in {

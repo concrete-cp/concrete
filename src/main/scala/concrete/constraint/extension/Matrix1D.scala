@@ -16,9 +16,10 @@ final class Matrix1D(mSize: Int, initialState: Boolean) extends Matrix with Lazy
 
   override def check(tuple: Array[Int]) = set(tuple(0))
 
-  override def set(tuple: Array[Int], status: Boolean) {
-    if (tuple(0) < mSize) {
-      set = set.set(tuple(0), status);
+  override def set(tuple: Seq[Int], status: Boolean) {
+    val Seq(v) = tuple
+    if (v < mSize) {
+      set = set.set(v, status);
       empty = false;
     } else {
       logger.info(s"Tuple ${tuple.mkString("(", ", ", ")")} is out of the scope of matrix $this")

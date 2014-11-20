@@ -24,24 +24,27 @@ import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
 import concrete.UNSATException
 import concrete.constraint.Constraint
+import concrete.Domain
 
 final class FindSupportExt(scope: Array[Variable], tts: TupleTrieSet, shared: Boolean)
   extends ConflictCount(scope, tts, shared) with Residues {
 
   private val rel = tts.reduceable
 
-  override def findSupport(p: Int, i: Int) = {
+  override def findSupport(domains: IndexedSeq[Domain], p: Int, i: Int) = {
     val s = rel.findSupport(
-      scope, p, i, new Array[Int](arity))
+      domains, p, i, new Array[Int](arity))
 
     require(s.forall(rel.contains))
 
     s
   }
+  
+  private val edges = rel.edges
 
-  override val getEvaluation = rel.edges
+  override def getEvaluation(domains: IndexedSeq[Domain]) = edges 
 
-  override def checkIndices(tuple: Array[Int]) = rel.contains(tuple)
+  override def check(tuple: Array[Int]) = rel.contains(tuple)
 
   def removeTuple(t: Array[Int]) = throw new UnsupportedOperationException
   def removeTuples(t: Array[Int]) = throw new UnsupportedOperationException

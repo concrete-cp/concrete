@@ -12,25 +12,27 @@ import concrete.UNSATObject
 import Generator._
 import concrete.constraint.semantic.EqAC
 import concrete.constraint.semantic.EqBC
+import concrete.BooleanDomain
+import com.typesafe.scalalogging.LazyLogging
 
-final object NeqGenerator extends Generator {
+final object NeqGenerator extends Generator with LazyLogging {
 
   override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
 
-    val Seq(v0, v1) = constraint.arguments map cspom2concrete1D
-
-    (v0, v1) match {
-      case (Const(v0), Const(v1)) =>
-        if (v0 != v1) Nil else throw UNSATObject
-      case (Const(v0), Var(v1)) =>
-        v1.dom.removeVal(v0)
-        Nil
-      case (Var(v0), Const(v1)) =>
-        v0.dom.removeVal(v1)
-        Nil
-      case (Var(v0), Var(v1)) => Seq(new Neq(v0, v1))
-
-    }
+    val Seq(v0, v1) = constraint.arguments map cspom2concreteVar
+    Seq(new Neq(v0, v1))
+    //    (v0, v1) match {
+    //      case (Const(v0), Const(v1)) =>
+    //        if (v0 != v1) Nil else throw UNSATObject
+    //      case (Const(v0), Var(v1)) =>
+    //        v1.dom.removeVal(v0)
+    //        Nil
+    //      case (Var(v0), Const(v1)) =>
+    //        v0.dom.removeVal(v1)
+    //        Nil
+    //      case (Var(v0), Var(v1)) => 
+    //
+    //    }
 
   }
 
@@ -43,11 +45,8 @@ final object NeqGenerator extends Generator {
 
     (v0, v1) match {
       case (Const(v0), Const(v1)) =>
-        if (v0 != v1) {
-          result.dom.assign(1)
-        } else {
-          result.dom.assign(0)
-        }
+        require(result.initDomain == BooleanDomain(v0 != v1))
+        logger.warn("Useless constraint " + constraint)
         Nil
       case (Var(v0), Const(v1)) =>
         Seq(new ReifiedNeq(result, v0, v1))

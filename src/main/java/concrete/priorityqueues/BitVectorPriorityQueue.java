@@ -52,7 +52,7 @@ public final class BitVectorPriorityQueue<T extends Identified> implements
 
     @Override
     public boolean offer(final T e, final int eval) {
-        final int id = e.getId();
+        final int id = e.id();
         ensureCapacity(id + 1);
         values[id] = e;
         evals[id] = eval;

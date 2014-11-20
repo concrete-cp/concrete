@@ -1,23 +1,33 @@
 package concrete.constraint
 
 import scala.annotation.tailrec
+import concrete.ReviseOutcome
+import concrete.Contradiction
+import concrete.Revised
+import concrete.Domain
 
 trait BC extends Constraint {
-  def shave(): Seq[Int]
+  def shave(domains: IndexedSeq[Domain], state: State): ReviseOutcome[State]
 
-  override def revise(): Traversable[Int] = {
-    val ch = collection.mutable.BitSet()
-
-    while (true) {
-      val c = shave()
-      if (c.isEmpty) {
-        return ch
-      } else {
-        ch ++= c
-      }
+  @tailrec
+  override final def revise(domains: IndexedSeq[Domain], state: State): ReviseOutcome[State] = {
+    shave(domains, state) match {
+      case Contradiction => Contradiction
+      case ch @ Revised(nd, entailed, ns) =>
+        if (hasChanges(domains, nd) && !entailed) revise(nd, ns) else ch
     }
 
-    throw new IllegalStateException()
   }
+}
+
+trait StatelessBC extends BC {
+
+  type State = Unit
+
+  def initState: State = Unit
+
+  def shave(domains: IndexedSeq[Domain], state: State) = shave(domains)
+
+  def shave(domains: IndexedSeq[Domain]): ReviseOutcome[State]
 
 }

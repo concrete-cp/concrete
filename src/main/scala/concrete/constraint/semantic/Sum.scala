@@ -8,22 +8,25 @@ import concrete.Variable
 import com.typesafe.scalalogging.LazyLogging
 import scala.collection.mutable.HashSet
 import concrete.constraint.BC
-
 import SumMode._
+import concrete.constraint.StatelessBC
+import concrete.constraint.Stateless
+import concrete.Revised
 
 final class Sum(
   val constant: Int,
   val factors: Array[Int],
   scope: Array[Variable],
   mode: SumMode) extends Constraint(scope)
+  with Stateless
   with LazyLogging {
 
   require(factors.forall(_ != 0), this)
-  
+
   def this(constant: Int, scope: Array[Variable], mode: SumMode) =
     this(constant, Array.fill(scope.length)(1), scope, mode)
 
-  def checkValues(t: Array[Int]): Boolean = {
+  def check(t: Array[Int]): Boolean = {
     val sum = (0 until arity).map(i => t(i) * factors(i)).sum
     mode match {
       case SumLE => sum <= constant
@@ -33,26 +36,26 @@ final class Sum(
     }
   }
 
-  def advise(p: Int) = arity
+  def advise(domains: IndexedSeq[Domain],p: Int) = arity
 
-  val initBound = Interval(-constant, -constant)
+  private val initBound = Interval(-constant, -constant)
 
-  private def filter(dom: Domain, itv: Interval, neg: Boolean): Boolean = mode match {
-    case SumLE if neg => dom.removeUntilVal(itv.lb)
-    case SumLE => dom.removeAfterVal(itv.ub)
-    case SumEQ => dom.intersectVal(itv)
+  private def filter(dom: Domain, itv: Interval, neg: Boolean): Domain = mode match {
+    case SumLE => if (neg) dom.removeUntil(itv.lb) else dom.removeAfter(itv.ub)
+    case SumLT => if (neg) dom.removeTo(itv.lb) else dom.removeFrom(itv.ub)
+    case SumEQ => dom & itv
   }
 
-  def revise(): Traversable[Int] = {
+  def revise(domains: IndexedSeq[Domain]) = {
 
-    var ch = new HashSet[Int]()
+    val doms = domains.toArray
 
     var bounds = initBound
 
     var i = arity - 1
 
     while (i >= 0) {
-      bounds += scope(i).dom.valueInterval * factors(i)
+      bounds += doms(i).span * factors(i)
       i -= 1
     }
 
@@ -62,23 +65,24 @@ final class Sum(
 
       i = arity - 1
       while (i >= 0) {
-        val dom = scope(i).dom
+        val dom = doms(i)
         val f = factors(i)
-        val myBounds = dom.valueInterval * f
+        val myBounds = dom.span * f
 
-        bounds = Interval(bounds.lb - myBounds.lb, bounds.ub - myBounds.ub)
+        val thisBounds = Interval(bounds.lb - myBounds.lb, bounds.ub - myBounds.ub)
 
-        if (filter(dom, bounds / -f, f < 0)) {
-          ch += i
+        val newDom = filter(dom, thisBounds / -f, f < 0)
+
+        if (newDom ne dom) {
+          doms(i) = newDom
           change = true
+          bounds = thisBounds + newDom.span * f
         }
-
-        bounds += dom.valueInterval * f
 
         i -= 1
       }
     }
-    ch
+    Revised(doms)
   }
 
   override def toString = (scope, factors).zipped.map((v, f) => f + "." + v).mkString(" + ") + s" $mode $constant"

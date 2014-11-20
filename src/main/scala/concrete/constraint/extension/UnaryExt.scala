@@ -23,15 +23,18 @@ import concrete.Variable
 import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
 import concrete.UNSATException
+import concrete.constraint.Stateless
+import concrete.Revised
+import concrete.Domain
 
 final class UnaryExt(scope: Variable, matrix: Matrix, shared: Boolean)
-  extends ExtensionConstraint(Array(scope), matrix, shared) {
+  extends ExtensionConstraint(Array(scope), matrix, shared) with Stateless {
 
-
-  def revise() = if (scope.dom.filter { i => matrix.check(Array(i)) }) List(0) else Nil
+  def revise(domains: IndexedSeq[Domain]) =
+    Revised(Vector(domains(0).filter { i => matrix.check(Array(i)) }), true)
 
   def removeTuple(tuple: Array[Int]) = {
-    disEntail();
+    ??? //disEntail();
     unshareMatrix()
     if (matrix.check(tuple)) {
       matrix.set(tuple, false)
@@ -39,16 +42,18 @@ final class UnaryExt(scope: Variable, matrix: Matrix, shared: Boolean)
     } else false
   }
 
-  def removeTuples(base: Array[Int]) = base match {
-    case Array(-1) => scope.indices.count(i => removeTuple(Array(i)))
-    case Array(i) => if (removeTuple(Array(i))) 1 else 0
-    case _ => throw new IllegalArgumentException()
-  }
+  def removeTuples(base: Array[Int]) = ???
 
-  override def checkIndices(tuple: Array[Int]) = matrix.check(tuple)
+  //  base match {
+  //    case Array(-1) => scope.indices.count(i => removeTuple(Array(i)))
+  //    case Array(i)  => if (removeTuple(Array(i))) 1 else 0
+  //    case _         => throw new IllegalArgumentException()
+  //  }
+
+  override def check(tuple: Array[Int]) = matrix.check(tuple)
 
   def simpleEvaluation = 1
-  def advise(p: Int) = scope.dom.size
+  def advise(domains: IndexedSeq[Domain], p: Int) = domains(0).size
   override def dataSize = matrix.size
 
 }

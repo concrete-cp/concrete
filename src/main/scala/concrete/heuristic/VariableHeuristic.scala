@@ -7,60 +7,57 @@ import scala.math.Ordering.DoubleOrdering
 import scala.util.Random
 import scala.annotation.tailrec
 import concrete.ParameterManager
+import concrete.ProblemState
 
-abstract class VariableHeuristic(params: ParameterManager) extends Ordering[Variable] {
-  private val rb: Boolean =
-    params.getOrElse("variableHeuristic.randomBreak", true)
-  private val seed: Long =
-    params.getOrElse("randomBreak.seed", 0L)
+abstract class VariableHeuristic(params: ParameterManager) {
+  private val rand: Random = {
+    if (params.getOrElse("variableHeuristic.randomBreak", true)) {
+      val seed = params.getOrElse("randomBreak.seed", 0L)
+      new Random(seed)
+    } else null
 
-  private val rand = if (rb) Some(new Random(seed)) else None
+  }
 
   //def problem: Problem
 
-  def select(problem: Problem): Option[Variable] =
-    select(problem.variables.iterator.filter(_.dom.size > 1))
+  def select(problem: Problem, state: ProblemState): Option[Variable] =
+    select(problem.variables.iterator.filter(state(_).size > 1), state)
 
   @tailrec
-  private def select(list: Iterator[Variable], best: Variable, ties: Int, rand: Random): Variable = {
+  private def select(list: Iterator[Variable], best: Variable, ties: Int, rand: Random, state: ProblemState): Variable = {
     if (list.hasNext) {
       val current = list.next
-      val comp = compare(current, best)
+      val comp = score(current, state).compareTo(score(best, state))
 
       if (comp > 0) {
-        select(list, current, 2, rand)
+        select(list, current, 2, rand, state)
       } else if (comp == 0) {
         if (rand.nextDouble() * ties < 1) {
-          select(list, current, ties + 1, rand)
+          select(list, current, ties + 1, rand, state)
         } else {
-          select(list, best, ties + 1, rand)
+          select(list, best, ties + 1, rand, state)
         }
 
       } else {
-        select(list, best, ties, rand)
+        select(list, best, ties, rand, state)
       }
     } else {
       best
     }
   }
 
-  def select(itr: Iterator[Variable]): Option[Variable] = {
+  def select(itr: Iterator[Variable], state: ProblemState): Option[Variable] = {
     if (itr.isEmpty) {
       None
+    } else if (rand ne null) {
+      Some(select(itr, itr.next, 2, rand, state))
     } else {
-      rand.map {
-        rand => select(itr, itr.next, 2, rand)
-      } orElse {
-        Some(itr.maxBy(score))
-      }
+
+      Some(itr.maxBy(score(_, state)))
+
     }
   }
 
-  def score(variable: Variable): Double
-
-  def compare(v1: Variable, v2: Variable) = {
-    //println(v1 + ", " + v2 + " : " + score(v1).compare(score(v2)))
-    score(v1).compare(score(v2))
-  }
+  def score(variable: Variable, state: ProblemState): Double
 
 }

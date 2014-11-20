@@ -1,40 +1,32 @@
 package concrete.constraint.semantic;
 
-import org.junit.Assert.assertEquals
-import org.junit.Before
-import org.junit.Test
-
 import concrete.IntDomain
 import concrete.Variable
+import org.scalatest.Matchers
+import concrete.Revised
+import org.scalatest.FlatSpec
 
-final class GtTest {
-  var v1: Variable = null
-  var v2: Variable = null
+final class GtTest extends FlatSpec with Matchers {
 
-  @Before
-  def setUp() {
-    v1 = new Variable("v1", IntDomain(1 to 4));
-    v2 = new Variable("v2", IntDomain(3 to 5));
-  }
+  val v1: Variable = new Variable("v1", IntDomain(1 to 4));
+  val v2: Variable = new Variable("v2", IntDomain(3 to 5));
 
-  @Test
-  def testRevise1() {
+  val domains = IndexedSeq(v1.initDomain, v2.initDomain)
 
+  "Gt" should "strictly filter" in {
     val c = new Gt(v1, v2, true);
-    c.revise();
+    val Revised(mod, _, _) = c.revise(domains);
 
-    assertEquals(Seq(4), v1.dom.values.toSeq);
-    assertEquals(Seq(3), v2.dom.values.toSeq);
-
+    mod(0) shouldBe Seq(4)
+    mod(1) shouldBe Seq(3)
   }
 
-  @Test
-  def testRevise2() {
+  "Gt" should "not strictly filter" in {
     val c = new Gt(v1, v2, false);
-    c.revise();
+    val Revised(mod, _, _) = c.revise(domains);
 
-    assertEquals(Seq(3, 4), v1.dom.values.toSeq);
-    assertEquals(Seq(3, 4), v2.dom.values.toSeq);
+    mod(0) shouldBe Seq(3, 4)
+    mod(1) shouldBe Seq(3, 4)
 
   }
 

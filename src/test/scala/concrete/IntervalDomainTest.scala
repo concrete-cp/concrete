@@ -1,25 +1,17 @@
 package concrete
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import org.scalatest.Matchers
+import org.scalatest.FlatSpec
 
-class IntervalDomainTest {
+class IntervalDomainTest extends FlatSpec with Matchers {
 
-  @Test
-  def test() {
+  "IntervalDomain" should "test" in {
     val dom = IntDomain(10 to 20)
 
-    assertEquals(0, dom.first)
-    assertEquals(10, dom.last)
-
-    assertEquals((0 to 10).toSeq, dom.indices.toSeq)
-    assertEquals((10 to 20).toSeq, dom.values.toSeq)
-
-    dom.removeFrom(5)
-    assertEquals(4, dom.last)
-
-    dom.removeTo(3)
-    assertEquals(4, dom.first)
-
+    dom.head shouldBe 10
+    dom.last shouldBe 20
+    dom shouldBe (10 to 20)
+    dom.removeFrom(14).last shouldBe 13
+    dom.removeTo(13).head shouldBe 14
   }
 }

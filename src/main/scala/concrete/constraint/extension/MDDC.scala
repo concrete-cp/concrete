@@ -1,6 +1,5 @@
 package concrete.constraint.extension
 
-import concrete.util.Backtrackable
 import concrete.constraint.Removals
 import concrete.Variable
 import concrete.constraint.Constraint
@@ -9,48 +8,40 @@ import concrete.util.BitVector
 import concrete.UNSATException
 import concrete.UNSATObject
 import concrete.util.Timestamp
+import concrete.Revised
+import concrete.Contradiction
+import concrete.Domain
 
 /* MDDRelation comes with its own timestamp */
 class MDDC(_scope: Array[Variable], private val mdd: MDDRelation)
-  extends Constraint(_scope) with Removals with Backtrackable[Set[Int]] {
+  extends Constraint(_scope) with Removals {
 
-  override def setLvl(l: Int) {
-    super.setLvl(l)
-    setLevel(l)
-  }
+  type State = Set[Int]
 
-  override def restoreLvl(l: Int) {
-    super.restoreLvl(l)
-    restoreLevel(l)
-  }
-
-  var gNo: Set[Int] = new SparseSet(mdd.identify + 1)
-
-  def restore(data: Set[Int]) {
-    gNo = data
-  }
-  def save = gNo
+  def initState = new SparseSet(mdd.identify + 1)
 
   // Members declared in concrete.constraint.Constraint
-  override def checkIndices(t: Array[Int]) = mdd.contains(t)
+  override def check(t: Array[Int]) = mdd.contains(t)
 
   def checkValues(tuple: Array[Int]): Boolean = throw new UnsupportedOperationException
 
-  def simpleEvaluation: Int = math.min(Constraint.NP, scope.count(_.dom.size > 1))
+  def simpleEvaluation: Int = math.min(Constraint.NP, scope.count(_.initDomain.size > 1))
 
   // Members declared in concrete.constraint.Removals
-  val prop = mdd.edges.toDouble / doubleCardSize
+  val prop = mdd.edges.toDouble / doubleCardSize(scope.map(_.initDomain))
 
-  def getEvaluation = (prop * doubleCardSize).toInt
+  def getEvaluation(domains: IndexedSeq[Domain]) = (prop * doubleCardSize(domains)).toInt
 
-  private val unsupported = scope.map(p => new collection.mutable.BitSet(p.dom.maxSize))
+  private val unsupported = scope.map(p => new collection.mutable.BitSet(p.initDomain.size))
 
   var delta: Int = _
 
-  def revise(modified: List[Int]) = {
+  var gNo: Set[Int] = _
+
+  def revise(domains: IndexedSeq[Domain], modified: List[Int], oldGno: Set[Int]) = {
     for (i <- scope.indices) {
       unsupported(i).clear()
-      unsupported(i) ++= scope(i).dom.indices
+      unsupported(i) ++= domains(i)
       //      for (j <- scope(i).dom.indices) {
       //        unsupported(i) += j
       //      }
@@ -58,25 +49,18 @@ class MDDC(_scope: Array[Variable], private val mdd: MDDRelation)
 
     delta = arity
 
-    val oldGno = gNo
+    this.gNo = oldGno
 
-    val sat = seekSupports(mdd.timestamp.next(), mdd.mdd, 0)
+    val sat = seekSupports(domains, mdd.timestamp.next(), mdd.mdd, 0)
     if (!sat) {
-      throw UNSATObject
+      Contradiction
+    } else {
+      val c = (0 until arity).map(p => if (p < delta) domains(p).filter(i => !unsupported(p)(i)) else domains(p))
+      Revised(c, isFree(domains), this.gNo)
     }
-
-    if (gNo ne oldGno) {
-      altering()
-    }
-
-    val c = (delta - 1 to 0 by -1).filter(p => scope(p).dom.filter(i => !unsupported(p)(i)))
-    if (isFree) {
-      entail()
-    }
-    c
   }
 
-  private def seekSupports(ts: Int, g: MDD, i: Int): Boolean = {
+  private def seekSupports(domains: IndexedSeq[Domain], ts: Int, g: MDD, i: Int): Boolean = {
     if (g eq MDDLeaf) {
       if (i < delta) {
         delta = i
@@ -86,17 +70,17 @@ class MDDC(_scope: Array[Variable], private val mdd: MDDRelation)
       false
     } else if (g.cache.timestamp == ts) {
       true
-    } else if (gNo.contains(g.getId)) {
+    } else if (gNo.contains(g.id)) {
       false
     } else {
       var res = false
-      val dom = scope(i).dom
-      var ak = dom.first
+      val dom = domains(i)
+      var ak = dom.head
       var continue = true
-      while (ak >= 0 && continue) {
+      while (continue) {
         val gk = g.subMDD(ak)
 
-        if (seekSupports(ts, gk, i + 1)) {
+        if (seekSupports(domains, ts, gk, i + 1)) {
           res = true
           unsupported(i) -= ak
 
@@ -106,12 +90,16 @@ class MDDC(_scope: Array[Variable], private val mdd: MDDRelation)
           }
         }
 
-        ak = dom.next(ak)
+        if (ak == dom.last) {
+          continue = false
+        } else {
+          ak = dom.next(ak)
+        }
       }
       if (res) {
         g.cache.timestamp = ts
       } else {
-        gNo += g.getId
+        gNo += g.id
       }
       res
     }

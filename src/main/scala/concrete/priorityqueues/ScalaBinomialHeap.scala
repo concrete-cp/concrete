@@ -64,7 +64,7 @@ final class ScalaBinomialHeap[T <: Identified](initSize: Int) extends PriorityQu
   }
 
   def offer(arg0: T, newKey: Int) = {
-    val id = arg0.getId
+    val id = arg0.id
 
     var node =
       try map(id)
@@ -223,8 +223,8 @@ final class ScalaBinomialHeap[T <: Identified](initSize: Int) extends PriorityQu
 
     private def swap(node: BinomialHeapNode) {
       val data = this.data
-      map(data.getId) = node
-      map(node.data.getId) = this
+      map(data.id) = node
+      map(node.data.id) = this
       val key = this.key
       this.data = node.data
       this.key = node.key

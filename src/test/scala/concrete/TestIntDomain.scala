@@ -4,38 +4,44 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.scalatest.Matchers
+import org.scalatest.FlatSpec
 
-final class TestIntDomain {
+final class TestIntDomain extends FlatSpec with Matchers {
 
-  @Test
-  def testGreatest() {
+  "IntDomain" should "find next/prev" in {
     val b = IntDomain(1, 2, 7, 8)
-    assertEquals(1, b.closestLt(3));
-    assertEquals(2, b.closestGt(3));
-    assertEquals(3, b.closestLt(9));
-    assertEquals(-1, b.closestGt(9))
-    assertEquals(-1, b.closestLt(1))
-    assertEquals(-1, b.closestLt(0))
+    b.prev(3) shouldBe 2
+    b.prev(2) shouldBe 1
+    b.next(2) shouldBe 7
+    b.prev(9) shouldBe 8
+    a[NoSuchElementException] should be thrownBy b.next(9)
+    a[NoSuchElementException] should be thrownBy b.prev(1)
+    a[NoSuchElementException] should be thrownBy b.prev(0)
   }
 
-  @Test
-  def testPresent() {
+  it should "enumerate" in {
+    IntDomain(1, 2, 7, 8) shouldBe Seq(1, 2, 7, 8)
+  }
+
+  it should "detect presence" in {
     val domain = IntDomain(0, 1)
-    assertTrue(domain.present(0));
-    domain.setLevel(1);
-    domain.remove(0);
-    assertFalse(domain.present(0));
-    domain.restoreLevel(0);
-    assertTrue(domain.present(0));
+    assert(domain.present(0))
+
+    val d2 = domain.remove(0);
+    assert(!d2.present(0));
+
+    assert(domain.present(0));
   }
 
-  @Test
-  def testIntervals() {
+  it should "split" in {
     val domain = IntDomain(3, 4, 5, 7)
-    domain.removeToVal(4)
-    assertEquals(domain.toString, 5, domain.firstValue)
-
-    domain.removeFromVal(6)
-    assertEquals(domain.toString, 5, domain.lastValue)
+    domain.removeTo(4).head shouldBe 5
+    domain.removeFrom(6).last shouldBe 5
+    domain.removeFrom(0) shouldBe empty
+    domain.removeFrom(3) shouldBe empty
+    domain.removeTo(7) shouldBe empty
+    domain.removeTo(8) shouldBe empty
+    domain.removeFrom(-1) shouldBe empty
   }
 }

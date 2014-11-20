@@ -3,10 +3,11 @@ package concrete.heuristic;
 import concrete.Variable
 import concrete.Problem
 import scala.util.Random
+import concrete.Domain
 
 final class RandomValue extends ValueHeuristic {
 
-  def score(variable: Variable, index: Int) = -index
+  def score(variable: Variable, domain: Domain, index: Int) = -index
 
   override def toString = "lexico";
 
@@ -30,10 +31,8 @@ final class RandomValue extends ValueHeuristic {
     }
   }
 
-  override def selectIndex(variable: Variable) = {
-    val skip = rand.nextInt(variable.dom.size)
-    variable.dom.indices.drop(skip).next
-
+  override def selectIndex(variable: Variable, dom: Domain) = {
+    dom(rand.nextInt(dom.size))
   }
 
 }

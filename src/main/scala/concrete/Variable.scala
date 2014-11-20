@@ -28,10 +28,9 @@ import concrete.priorityqueues.DLNode
 
 final class Variable(
   val name: String,
-  val dom: Domain) extends Identified with PTag with DLNode[Variable] {
-  require(dom ne null)
+  val initDomain: Domain) extends Identified with PTag with DLNode[Variable] {
 
-  var getId = -1
+  var id = -1
 
   private var _constraints: Array[Constraint] = Array.empty
 
@@ -39,7 +38,9 @@ final class Variable(
 
   private var _positionInConstraint: Array[Int] = Array.empty
 
-  override def toString = s"$name $dom"
+  override def toString = s"$name $initDomain"
+
+  def toString(ps: ProblemState) = s"$name ${ps.domain(id)}"
 
   def constraints = _constraints
 
@@ -52,22 +53,17 @@ final class Variable(
     wDeg += newConstraint.weight
   }
 
-
   def dynamicConstraints = _extensionConstraints
   def positionInConstraint = _positionInConstraint
 
-  def indices = dom.indices
-
-  def values = dom.values
-
   var wDeg = 0
 
-  def getWDegFree = {
+  def getWDegFree(state: ProblemState) = {
     var i = constraints.length - 1
     var wDeg = 0
     while (i >= 0) {
       val c = constraints(i)
-      if (!c.isFree) wDeg += c.weight
+      if (!c.isFree(state.domains(c.scope))) wDeg += c.weight
       i -= 1
     }
     wDeg
@@ -79,21 +75,21 @@ final class Variable(
 
   //var dDeg = 0
 
-  def getDDegEntailed = {
+  def getDDegEntailed(state: ProblemState) = {
     var i = constraints.length - 1
     var dDeg = 0
     while (i >= 0) {
-      if (!constraints(i).isEntailed) dDeg += 1
+      if (!state.entailed(i)) dDeg += 1
       i -= 1
     }
     dDeg
   }
 
-  def getDDegFree = {
+  def getDDegFree(state: ProblemState) = {
     var i = constraints.length - 1
     var dDeg = 0
     while (i >= 0) {
-      if (!constraints(i).isFree) dDeg += 1
+      if (!constraints(i).isFree(state.domains(constraints(i).scope))) dDeg += 1
       i -= 1
     }
     dDeg

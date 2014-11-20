@@ -4,26 +4,28 @@ import concrete.constraint.Constraint
 import concrete.Variable
 import concrete.constraint.Residues
 import concrete.constraint.BCCompanion
-import concrete.constraint.BC
+import concrete.constraint.StatelessBC
+import concrete.Revised
+import concrete.Domain
 
 class ConstProdAC(v0: Variable, v1: Variable, r: Int) extends Constraint(Array(v0, v1)) with Residues
   with BCCompanion {
-  def checkValues(t: Array[Int]) = r == t(0) * t(1)
-  def simpleEvaluation = 1
-  def getEvaluation = scope(0).dom.size + scope(1).dom.size
+  def check(t: Array[Int]) = r == t(0) * t(1)
+  def simpleEvaluation = 2
+  def getEvaluation(domain: IndexedSeq[Domain]) = if (skip(domain)) -1 else domain(0).size + domain(1).size
   def skipIntervals = true
-  def findSupport(pos: Int, idx: Int) = {
+  def findSupport(domains: IndexedSeq[Domain], pos: Int, value: Int) = {
     val other = 1 - pos
-    val value = scope(pos).dom.value(idx)
+
     if (r % value != 0) {
       None
     } else {
       val sought = r / value
 
-      if (scope(other).dom.presentVal(sought)) {
+      if (domains(other).present(sought)) {
         val support = new Array[Int](2)
-        support(pos) = idx
-        support(other) = scope(other).dom.index(sought)
+        support(pos) = value
+        support(other) = sought
         Some(support)
       } else {
         None
@@ -33,24 +35,28 @@ class ConstProdAC(v0: Variable, v1: Variable, r: Int) extends Constraint(Array(v
   }
 }
 
-class ConstProdBC(v0: Variable, v1: Variable, r: Int) extends Constraint(Array(v0, v1)) with BC {
-  def checkValues(t: Array[Int]) = r == t(0) * t(1)
+class ConstProdBC(v0: Variable, v1: Variable, r: Int) extends Constraint(Array(v0, v1)) with StatelessBC {
+  def check(t: Array[Int]) = r == t(0) * t(1)
   def simpleEvaluation = 1
-  def advise(p: Int) = 2
+  def advise(domains: IndexedSeq[Domain],p: Int) = 2
 
-  def shave() = {
-    //val bounds = v0.dom.valueInterval * v1.dom.valueInterval - result.dom.valueInterval
-    var mod: List[Int] = Nil
-
-    val v1Interval = v1.dom.valueInterval
-    if (!v1Interval.contains(0) && v0.dom.intersectVal(r /: v1Interval)) {
-      mod ::= 0
-    }
-    val v0Interval = v0.dom.valueInterval
-    if (!v0Interval.contains(0) && v1.dom.intersectVal(r /: v0Interval)) {
-      mod ::= 1
-    }
-    mod
+  def shave(domains: IndexedSeq[Domain]) = {
+    val v1Interval = domains(1).span
+    val v0 = if (v1Interval.contains(0)) domains(0) else domains(0) & (r /: v1Interval)
+    val v0Interval = domains(0).span
+    val v1 = if (v0Interval.contains(0)) domains(1) else domains(1) & (r /: v0Interval)
+    //    //val bounds = v0.dom.valueInterval * v1.dom.valueInterval - result.dom.valueInterval
+    //    var mod: List[Int] = Nil
+    //
+    //    val v1Interval = v1.dom.valueInterval
+    //    if (!v1Interval.contains(0) && v0.dom.intersectVal(r /: v1Interval)) {
+    //      mod ::= 0
+    //    }
+    //    val v0Interval = v0.dom.valueInterval
+    //    if (!v0Interval.contains(0) && v1.dom.intersectVal(r /: v0Interval)) {
+    //      mod ::= 1
+    //    }
+    Revised(Vector(v0, v1))
   }
 
 }

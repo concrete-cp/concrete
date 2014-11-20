@@ -1,11 +1,12 @@
 package concrete.heuristic;
 
-import concrete.Variable;
+import concrete.Variable
 import concrete.Problem
+import concrete.Domain
 
 final class Lexico extends ValueHeuristic {
 
-  def score(variable: Variable, index: Int) = -index
+  def score(variable: Variable, domain: Domain, index: Int) = -index
 
   override def toString = "lexico";
 
@@ -13,6 +14,6 @@ final class Lexico extends ValueHeuristic {
     // Nothing to compute
   }
 
-  override def selectIndex(variable: Variable) = variable.dom.first
+  override def selectIndex(variable: Variable, dom: Domain) = dom.head
 
 }

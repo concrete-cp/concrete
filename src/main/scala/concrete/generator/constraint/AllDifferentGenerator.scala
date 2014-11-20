@@ -11,17 +11,17 @@ final object AllDifferentGenerator extends Generator {
   override def gen(constraint: CSPOMConstraint[Boolean])(implicit varMap: VarMap) = {
     val arguments = constraint.arguments.map(cspom2concrete(_))
 
-    val vars = arguments.collect { case Var(v) => v }
-
-    val constants = arguments.collect { case Const(i) => i }
-
-    require(constants.distinct.size == constants.size, "All-diff with equal constants: " + constraint)
-
-    for (
-      constant <- constants; v <- vars
-    ) {
-      v.dom.removeVal(constant)
-    }
+    val vars = arguments.map { case Var(v) => v }
+//
+//    val constants = arguments.collect { case Const(i) => i }
+//
+//    require(constants.distinct.size == constants.size, "All-diff with equal constants: " + constraint)
+//
+//    for (
+//      constant <- constants; v <- vars
+//    ) {
+//      v.dom.removeVal(constant)
+//    }
 
     vars match {
       case Seq() | Seq(_) => Seq()

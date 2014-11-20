@@ -1,11 +1,11 @@
 package concrete.heuristic;
 
-import java.lang.reflect.InvocationTargetException;
-
-import concrete.Pair;
-import concrete.ParameterManager;
-import concrete.Problem;
+import java.lang.reflect.InvocationTargetException
+import concrete.Pair
+import concrete.ParameterManager
+import concrete.Problem
 import concrete.Variable;
+import concrete.ProblemState
 
 final class CrossHeuristic(params: ParameterManager) extends Heuristic {
 
@@ -19,8 +19,8 @@ final class CrossHeuristic(params: ParameterManager) extends Heuristic {
 
   val valueHeuristic = valueHeuristicClass.getConstructor().newInstance()
 
-  def selectPair(problem: Problem) = {
-    variableHeuristic.select(problem).map( v=> Pair(v, valueHeuristic.selectIndex(v)))
+  def selectPair(problem: Problem, state: ProblemState) = {
+    variableHeuristic.select(problem, state).map(v => Pair(v, valueHeuristic.selectIndex(v, state(v))))
   }
 
   def compute(problem: Problem) {

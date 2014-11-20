@@ -1,23 +1,25 @@
 package concrete.constraint;
 
 import java.util.Arrays
+import concrete.ReviseOutcome
+import concrete.Domain
 
 trait Removals extends Constraint with AdviseCounts {
 
   val removals = new Array[Int](arity)
 
-  def advise(pos: Int) = {
+  def advise(domains: IndexedSeq[Domain], pos: Int) = {
     removals(pos) = adviseCount
-    getEvaluation
+    getEvaluation(domains)
   }
 
-  def revise() = {
-    val r = revise(modified)
+  def revise(domains: IndexedSeq[Domain], state: State): ReviseOutcome[State] = {
+    val r = revise(domains, modified, state)
     Arrays.fill(removals, -1)
     r
   }
 
-  def revise(modified: List[Int]): Traversable[Int]
+  def revise(domains: IndexedSeq[Domain], modified: List[Int], state: State): ReviseOutcome[State]
 
   // scope.iterator.zipWithIndex.zip(removals.iterator).filter(t => t._2 >= reviseCount).map(t => t._1)
 
@@ -33,7 +35,7 @@ trait Removals extends Constraint with AdviseCounts {
     mod
   }
 
-  def getEvaluation: Int
+  def getEvaluation(domains: IndexedSeq[Domain]): Int
 
   //scope.iterator.zip(removals.iterator).filter(t => t._2 >= reviseCount).map(t => t._1)
 

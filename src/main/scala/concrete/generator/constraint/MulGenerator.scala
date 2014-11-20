@@ -25,13 +25,13 @@ final object MulGenerator extends Generator {
 
       case (Const(r), Var(v0), Var(v1)) =>
         val bc = Seq(new ConstProdBC(v0, v1, r))
-        if (v0.dom.size + v1.dom.size < 1000) {
+        if (v0.initDomain.size + v1.initDomain.size < 1000) {
           new ConstProdAC(v0, v1, r) +: bc
         } else {
           bc
         }
-      case (Const(r), Const(v0), Const(v1)) =>
-        if (r == v0 * v1) Nil else throw UNSATObject
+      //      case (Const(r), Const(v0), Const(v1)) =>
+      //        if (r == v0 * v1) Nil else throw UNSATObject
 
       // Handled in CSPOM pattern
       //      case (Var(r), Const(v0), Var(v1)) => Seq(
@@ -41,7 +41,7 @@ final object MulGenerator extends Generator {
 
       case (Var(r), Var(v0), Var(v1)) => {
         val bc = Seq(new MulBC(r, v0, v1))
-        if (r.dom.size + v0.dom.size + v1.dom.size < 1000) {
+        if (r.initDomain.size + v0.initDomain.size + v1.initDomain.size < 1000) {
           new MulAC(r, v0, v1, true) +: bc
         } else {
           bc

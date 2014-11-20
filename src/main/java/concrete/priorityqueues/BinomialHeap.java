@@ -77,7 +77,7 @@ public final class BinomialHeap<T extends Identified> implements
 
     @Override
     public boolean offer(final T arg0, final int newKey) {
-        final int id = arg0.getId();
+        final int id = arg0.id();
 
         BinomialHeapNode<T> node;
         try {
@@ -240,8 +240,8 @@ public final class BinomialHeap<T extends Identified> implements
             final BinomialHeapNode<T> node2) {
         final T node1Data = node1.data;
         final int node1Key = node1.key;
-        map[node1Data.getId()] = node2;
-        map[node2.data.getId()] = node1;
+        map[node1Data.id()] = node2;
+        map[node2.data.id()] = node1;
         node1.data = node2.data;
         node1.key = node2.key;
         node2.data = node1Data;

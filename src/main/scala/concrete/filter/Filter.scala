@@ -20,29 +20,26 @@
 package concrete.filter;
 
 import concrete.constraint.Constraint
-import concrete.Variable;
+import concrete.Variable
 import concrete.Problem
+import concrete.FilterOutcome
+import concrete.ProblemState
 
 /**
  * @author scand1sk
  *
  */
 trait Filter {
-  
+
   def problem: Problem
 
   /**
    * @return false iff an inconsistency has been detected
    */
-  def reduceAll(): Boolean
+  def reduceAll(states: ProblemState): FilterOutcome
 
-  def reduceAfter(constraints: Iterable[Constraint]): Boolean;
+  def reduceAfter(constraints: Iterable[Constraint], states: ProblemState): FilterOutcome
 
-  def reduceAfter(variable: Variable): Boolean;
+  def reduceAfter(variable: Variable, states: ProblemState): FilterOutcome
 
-  // boolean reduceOnce(Variable variable);
-
-  def getStatistics: Map[String, Any]
-
-  // boolean ensureAC();
 }
