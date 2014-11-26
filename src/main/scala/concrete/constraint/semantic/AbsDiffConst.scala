@@ -36,7 +36,7 @@ final class AbsDiffConstAC(val result: Int, val v0: Variable, val v1: Variable)
 
   }
 
-  override def toString = result + " =AC= |" + v0 + " - " + v1 + "|";
+  override def toString(domains: IndexedSeq[Domain]) = domains(0) + " =AC= |" + domains(1) + " - " + domains(2) + "|";
 
   def getEvaluation(domains: IndexedSeq[Domain]) = if (skip(domains)) -1 else domains(0).size + domains(1).size
 
@@ -74,7 +74,7 @@ final class AbsDiffConstBC(val result: Int, val v0: Variable, val v1: Variable)
     }
   }
 
-  override def toString = result + " =BC= |" + v0 + " - " + v1 + "|";
+  override def toString(domains: IndexedSeq[Domain]) = domains(0) + " =BC= |" + domains(1) + " - " + domains(2) + "|";
 
   def advise(domains: IndexedSeq[Domain],p: Int) = 5
 

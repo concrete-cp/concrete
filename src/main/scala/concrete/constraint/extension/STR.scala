@@ -80,7 +80,7 @@ final class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
   def edges = if (array.isEmpty) 0 else bound * array(0).length
 
   def find(f: (Int, Int) => Boolean) = throw new UnsupportedOperationException
-  def findSupport(scope: IndexedSeq[Domain], p: Int, i: Int, support: Array[Int]) = throw new UnsupportedOperationException
+  def findSupport(scope: IndexedSeq[Domain], p: Int, i: Int) = throw new UnsupportedOperationException
 
   def iterator = array.iterator.take(bound)
 

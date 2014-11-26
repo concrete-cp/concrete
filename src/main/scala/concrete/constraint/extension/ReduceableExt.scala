@@ -119,7 +119,5 @@ final class ReduceableExt(_scope: Array[Variable], val initState: Relation)
 
   val simpleEvaluation = math.min(7, scope.count(_.initDomain.size > 1))
 
-  override def toString = scope.mkString("ExtReduce(", ", ", ") / ") + initState.toString
-
   override def dataSize = initState.edges
 }

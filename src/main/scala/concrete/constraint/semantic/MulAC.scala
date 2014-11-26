@@ -23,12 +23,9 @@ final class MulAC(val result: Variable, val v0: Variable, val v1: Variable, val 
   def findSupport(domains: IndexedSeq[Domain], position: Int, value: Int) =
     position match {
       case 0 => findValidTuple0(value, domains(1), domains(2));
-
       case 1 => findValidTupleV(domains(0), value, domains(2), 1);
       case 2 => findValidTupleV(domains(0), value, domains(1), 2);
-      case _ =>
-        throw new IndexOutOfBoundsException()
-
+      case _ => throw new IndexOutOfBoundsException()
     }
 
   private def findValidTuple0(val0: Int, dom1: Domain, dom2: Domain): Option[Array[Int]] = {
@@ -42,7 +39,7 @@ final class MulAC(val result: Variable, val v0: Variable, val v1: Variable, val 
       }
     } else {
       dom1
-        .find(val1 => val0 % val1 != 0 && dom2.present(val0 / val1))
+        .find(val1 => val1 != 0 && val0 % val1 == 0 && dom2.present(val0 / val1))
         .map(val1 => Array(val0, val1, val0 / val1))
     }
 
@@ -66,7 +63,7 @@ final class MulAC(val result: Variable, val v0: Variable, val v1: Variable, val 
 
   }
 
-  override def toString = result + " = " + v0 + " * " + v1
+  override def toString(domains: IndexedSeq[Domain]) = domains(0)+ " = " + domains(1)+ " * " + domains(2)
 
   def getEvaluation(dom: IndexedSeq[Domain]) = {
     val d0 = dom(0).size

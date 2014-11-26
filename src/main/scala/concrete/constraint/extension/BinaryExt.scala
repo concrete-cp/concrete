@@ -52,7 +52,7 @@ abstract class BinaryExt(
   shared: Boolean)
   extends ConflictCount(scope, matrix2d, shared)
   with VariablePerVariable {
-  
+
   require(scope.forall(_.initDomain.head >= 0))
 
   private val GAIN_OVER_GENERAL = 3;
@@ -72,7 +72,7 @@ abstract class BinaryExt(
 
   def removeTuples(base: Array[Int]) = ??? //tuples(base).count(removeTuple)
 
-  override def toString() = "ext2d(" + scope(0) + ", " + scope(1) + ")"
+  override def toString(domains: IndexedSeq[Domain]) = "ext2d(" + domains(0) + ", " + domains(1) + ")"
 
   def hasSupport(domains: IndexedSeq[Domain], variablePosition: Int, value: Int): Boolean
 

@@ -11,6 +11,7 @@ import cspom.variable.IntVariable
 import cspom.compiler.ProblemCompiler
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
+import concrete.generator.cspompatterns.SubToAdd
 
 class AbsDiffTest extends FlatSpec with Matchers {
 
@@ -29,10 +30,10 @@ class AbsDiffTest extends FlatSpec with Matchers {
 
     }
 
-    ProblemCompiler.compile(cspom, Seq(AbsDiff))
+    ProblemCompiler.compile(cspom, Seq(SubToAdd, AbsDiff))
 
+    cspom.constraints.toSeq should have size 1
     cspom.referencedExpressions should have size 3
-    cspom.constraints should have size 1
 
     val c = cspom.constraints.next
     c.function shouldEqual 'absdiff

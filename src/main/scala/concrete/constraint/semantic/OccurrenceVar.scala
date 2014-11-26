@@ -6,6 +6,7 @@ import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.Stateless
 import concrete.Singleton
+import concrete.Contradiction
 
 class OccurrenceVar(val result: Variable, val value: Int,
                     val vars: Array[Variable], val offset: Int = 0)
@@ -14,7 +15,7 @@ class OccurrenceVar(val result: Variable, val value: Int,
   def check(tuple: Array[Int]) =
     offset + tuple(0) == (1 until arity).count(i => tuple(i) == value)
 
-  def advise(domains: IndexedSeq[Domain],pos: Int): Int = arity
+  def advise(domains: IndexedSeq[Domain], pos: Int): Int = arity
 
   def revise(domains: IndexedSeq[Domain]) = {
     var affected = offset
@@ -32,7 +33,9 @@ class OccurrenceVar(val result: Variable, val value: Int,
 
     val result = domains.head & (affected, affected + canBeAffected)
 
-    if (affected == result.last && canBeAffected > 0) {
+    if (result.isEmpty) {
+      Contradiction
+    } else if (affected == result.last && canBeAffected > 0) {
       Revised(result +: (1 until arity).map { p =>
         val d = domains(p)
         if (d.size > 1) d.remove(value) else d
@@ -40,7 +43,7 @@ class OccurrenceVar(val result: Variable, val value: Int,
     } else if (result.head == affected + canBeAffected) {
       Revised(result +: (1 until arity).map { p =>
         val d = domains(p)
-        if (d.size > 1 && d.present(value)) Singleton(value) else d
+        if (d.size > 1 && d.present(value)) d.assign(value) else d
       })
 
     } else {

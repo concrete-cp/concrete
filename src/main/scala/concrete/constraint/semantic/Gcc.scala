@@ -90,7 +90,7 @@ final class Gcc(scope: Array[Variable], bounds: Array[Bounds]) extends Constrain
 
   private def assignAll(domains: IndexedSeq[Domain], value: Int): IndexedSeq[Domain] = {
     for (d <- domains) yield {
-      if (d.present(value)) Singleton(value) else d
+      if (d.present(value)) d.assign(value) else d
     }
   }
 

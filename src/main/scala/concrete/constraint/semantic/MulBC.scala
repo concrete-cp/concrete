@@ -44,7 +44,7 @@ final class MulBC(val result: Variable, val v0: Variable, val v1: Variable)
     Revised(Vector(result, v0, v1))
   }
 
-  override def toString = result + " = " + v0 + " * " + v1
+  override def toString(domains: IndexedSeq[Domain]) = domains(0) + " = " + domains(1)+ " * " + domains(2)
 
   def advise(dom: IndexedSeq[Domain], pos: Int) = 4
 

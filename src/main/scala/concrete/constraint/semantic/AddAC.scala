@@ -45,7 +45,7 @@ final class AddAC(val result: Variable, val v0: Variable, val v1: Variable, val 
       }
   }
 
-  override def toString = result + " = " + v0 + " + " + v1
+  override def toString(domains:IndexedSeq[Domain]) = domains(0) + " = " + domains(1) + " + " + domains(2)
 
   def getEvaluation(domains: IndexedSeq[Domain]) = if (skip(domains)) -1 else {
     val d0 = domains(0).size

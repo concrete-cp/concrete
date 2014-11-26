@@ -11,6 +11,7 @@ import concrete.constraint.Removals
 import concrete.ProblemState
 import concrete.Revised
 import concrete.constraint.StatelessBC
+import com.typesafe.scalalogging.LazyLogging
 
 /**
  * Constraint (-)x + b = y.
@@ -59,13 +60,13 @@ final class EqAC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
     }
   }
 
-  override def toString = (if (neg) "-" else "") + x +
-    (if (b > 0) " + " + b else if (b < 0) " - " + (-b) else "") +
-    " =AC= " + y
+  override def toString(domains: IndexedSeq[Domain]) = s"${if (neg) "-" else ""}$x ${domains(0)}${
+    if (b > 0) " + " + b else if (b < 0) " - " + (-b) else ""
+  } =AC= $y ${domains(1)}"
 }
 
 final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
-  extends Constraint(Array(x, y)) with StatelessBC {
+  extends Constraint(Array(x, y)) with StatelessBC with LazyLogging {
 
   //  val corresponding = Array(
   //    x.dom.allValues map { v => y.dom.index(a * v + b) },
@@ -87,25 +88,30 @@ final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
 
   def shave(domains: IndexedSeq[Domain]) = {
     var mod: List[Int] = Nil
-    if (neg) {
+    val nd = if (neg) {
       // -x + b = y <=> x = -y + b 
-      Revised(Vector(
+      Array(
         domains(0) & (-domains(1).span + b),
-        domains(1) & (-domains(0).span + b)))
+        domains(1) & (-domains(0).span + b))
+
     } else {
       // x + b = y <=> x = y - b
-      Revised(Vector(
+      Array(
         domains(0) & (domains(1).span - b),
-        domains(1) & (domains(0).span + b)))
+        domains(1) & (domains(0).span + b))
+
     }
+    Revised(nd, isFree(nd))
   }
 
-  def isConsistent(domains: IndexedSeq[Domain]) = domains(0).span intersects domains(1).span
+  override def isConsistent(domains: IndexedSeq[Domain]) = {
+    domains(0).span intersects domains(1).span
+  }
 
-  override def toString = (if (neg) "-" else "") + x +
-    (if (b > 0) " + " + b else if (b < 0) " - " + (-b) else "") +
-    " =BC= " + y
+  override def toString(domains: IndexedSeq[Domain]) = s"${if (neg) "-" else ""}$x ${domains(0)}${
+    if (b > 0) " + " + b else if (b < 0) " - " + (-b) else ""
+  } =BC= $y ${domains(1)}"
 
-  def advise(domains: IndexedSeq[Domain],p: Int) = 3
+  def advise(domains: IndexedSeq[Domain], p: Int) = 3
   val simpleEvaluation = 2
 }

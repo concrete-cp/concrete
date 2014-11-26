@@ -48,7 +48,7 @@ final class Sum(
 
   def revise(domains: IndexedSeq[Domain]) = {
 
-    val doms = domains.toArray
+    val doms = domains.toArray.clone
 
     var bounds = initBound
 
@@ -85,7 +85,7 @@ final class Sum(
     Revised(doms)
   }
 
-  override def toString = (scope, factors).zipped.map((v, f) => f + "." + v).mkString(" + ") + s" $mode $constant"
+  override def toString(domains: IndexedSeq[Domain]) = (domains, factors).zipped.map((v, f) => f + "." + v).mkString(" + ") + s" $mode $constant"
 
   val simpleEvaluation = 3
 }

@@ -1,16 +1,21 @@
 package concrete.constraint.semantic
 
+import scala.IndexedSeq
+import scala.annotation.elidable
+import scala.annotation.elidable.ASSERTION
+
+import concrete.Contradiction
 import concrete.Domain
 import concrete.EMPTY
 import concrete.FALSE
+import concrete.IntDomain
 import concrete.Revised
+import concrete.Singleton
 import concrete.TRUE
 import concrete.UNKNOWNBoolean
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.Stateless
-import concrete.Singleton
-import concrete.Contradiction
 
 class ReifiedEquals(val b: Variable, val v: Variable, val c: Int)
   extends Constraint(Array(b, v)) with Stateless {
@@ -21,7 +26,7 @@ class ReifiedEquals(val b: Variable, val v: Variable, val c: Int)
     case _ => sys.error(s"$b must be boolean")
   }
 
-  override def toString = s"$b = $v == $c"
+  override def toString(domains: IndexedSeq[Domain]) = s"${domains(0)} = ${domains(1)} == $c"
 
   def revise(domains: IndexedSeq[Domain]) = {
     val d = domains(1)
@@ -38,9 +43,9 @@ class ReifiedEquals(val b: Variable, val v: Variable, val c: Int)
         }
 
       case TRUE =>
-        if (d.present(c))
-          Revised(IndexedSeq(TRUE, Singleton(c)), true)
-        else Contradiction
+        if (d.present(c)) {
+          Revised(IndexedSeq(TRUE, d.assign(c)), true)
+        } else Contradiction
 
       case FALSE =>
         if (d.present(c)) {

@@ -14,22 +14,22 @@ final class LargeBitVectorTest extends FlatSpec with Matchers {
     bitVector.nextSetBit(0) shouldBe 0
 
     BitVector.empty.nextSetBit(0) shouldBe -1
-    
+
     BitVector.filled(0) shouldBe BitVector.empty
-    
+
     val bv2 = BitVector.empty + 0
     bv2.nextSetBit(0) shouldBe 0
     bv2.nextSetBit(1) shouldBe -1
-    
+
     val bv3 = BitVector.empty + 64
     bv3.nextSetBit(0) shouldBe 64
   }
 
   it should "compute correct number of words" in {
-    BitVector.nbWords(0) shouldBe 0
-    BitVector.nbWords(1) shouldBe 1
-    BitVector.nbWords(64) shouldBe 1
-    BitVector.nbWords(65) shouldBe 2
+    BitVector.word(0) shouldBe 0
+    BitVector.word(1) shouldBe 0
+    BitVector.word(64) shouldBe 1
+    BitVector.word(65) shouldBe 1
   }
 
   it should "set bits" in {

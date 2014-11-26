@@ -32,17 +32,16 @@ final class FindSupportExt(scope: Array[Variable], tts: TupleTrieSet, shared: Bo
   private val rel = tts.reduceable
 
   override def findSupport(domains: IndexedSeq[Domain], p: Int, i: Int) = {
-    val s = rel.findSupport(
-      domains, p, i, new Array[Int](arity))
+    val s = rel.findSupport(domains, p, i)
 
-    require(s.forall(rel.contains))
+    assert(s.forall(rel.contains))
 
     s
   }
-  
+
   private val edges = rel.edges
 
-  override def getEvaluation(domains: IndexedSeq[Domain]) = edges 
+  override def getEvaluation(domains: IndexedSeq[Domain]) = edges
 
   override def check(tuple: Array[Int]) = rel.contains(tuple)
 

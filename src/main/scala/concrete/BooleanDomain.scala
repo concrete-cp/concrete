@@ -105,12 +105,21 @@ sealed trait BooleanDomain extends Domain {
 
   def canBe(boolean: Boolean): Boolean
 
-  def intersects(bv: BitVector) = bv.intersects(toBitVector)
-  def intersects(bv: BitVector, part: Int) = bv.intersects(toBitVector, part)
   def bound = true
 
   def as01: IntDomain
 
+  def assign(value: Int) = {
+    assert(present(value))
+    value match {
+      case 0 => FALSE
+      case 1 => TRUE
+      case _ => throw new IllegalArgumentException
+    }
+  }
+
   def iterator = as01.iterator
+
+  def apply(i: Int) = as01.apply(i)
 }
 

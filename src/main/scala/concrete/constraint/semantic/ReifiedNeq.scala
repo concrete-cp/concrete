@@ -14,6 +14,7 @@ import concrete.constraint.Stateless
 import concrete.Domain
 import concrete.Singleton
 import concrete.Contradiction
+import concrete.IntDomain
 class ReifiedNeq(val b: Variable, val v: Variable, val c: Int)
   extends Constraint(Array(b, v)) with Stateless {
 
@@ -23,7 +24,7 @@ class ReifiedNeq(val b: Variable, val v: Variable, val c: Int)
     case _ => sys.error(s"$b must be boolean")
   }
 
-  override def toString = s"$b = $v != $c"
+  override def toString(domains: IndexedSeq[Domain]) = s"${domains(0)} = ${domains(1)} != $c"
 
   def revise(domains: IndexedSeq[Domain]) = {
     val d = domains(1)
@@ -40,9 +41,9 @@ class ReifiedNeq(val b: Variable, val v: Variable, val c: Int)
         }
 
       case FALSE =>
-        if (d.present(c))
-          Revised(IndexedSeq(TRUE, Singleton(c)), true)
-        else Contradiction
+        if (d.present(c)) {
+          Revised(IndexedSeq(TRUE, d.assign(c)), true)
+        } else Contradiction
 
       case TRUE =>
         if (d.present(c)) {

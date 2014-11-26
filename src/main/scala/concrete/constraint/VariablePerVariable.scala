@@ -18,6 +18,11 @@ trait VariablePerVariable extends Removals with LazyLogging {
 
   def isConsistent(domains: IndexedSeq[Domain]): Boolean = revise(domains) != Contradiction
   override def isConsistent(domains: IndexedSeq[Domain], s: State) = isConsistent(domains)
+
+  def toString(domains: IndexedSeq[Domain]): String = this.getClass.getSimpleName +
+    (scope, domains).zipped.map((v, d) => s"$v $d").mkString("(", ", ", ")")
+
+  override def toString(domains: IndexedSeq[Domain], s: State) = toString(domains)
   //
   //  def isConsistent(): Boolean = {
   //    scope foreach { v => v.dom.setLevel(v.dom.currentLevel + 1) }
@@ -46,7 +51,7 @@ trait VariablePerVariable extends Removals with LazyLogging {
 
   def revise(domains: IndexedSeq[Domain], modified: List[Int], s: State): ReviseOutcome[State] = {
     assert(modified.nonEmpty)
-    val tempDomains = domains.toArray
+    val tempDomains = domains.toArray.clone
     val skip = if (modified.tail.isEmpty) modified.head else -1
 
     var p = arity - 1
@@ -54,10 +59,12 @@ trait VariablePerVariable extends Removals with LazyLogging {
     while (p >= 0) {
       if (p != skip) {
         tempDomains(p) = reviseVariable(tempDomains, p, modified)
+        if (tempDomains(p).isEmpty) return Contradiction
       }
+      p -= 1
     }
 
-    Revised(tempDomains.toIndexedSeq, isFree(domains))
+    Revised(tempDomains.toIndexedSeq, isFree(tempDomains))
 
   }
 

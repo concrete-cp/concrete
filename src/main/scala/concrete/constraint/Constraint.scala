@@ -29,6 +29,7 @@ import concrete.priorityqueues.Identified
 import concrete.priorityqueues.PTag
 import concrete.ReviseOutcome
 import concrete.Domain
+import concrete.Revised
 
 object Constraint {
 
@@ -46,20 +47,6 @@ object Constraint {
   val TERNARY = 3
   val NP = 7
 
-}
-
-trait Stateless extends Constraint {
-  type State = Unit
-
-  def initState: State = Unit
-
-  def revise(domains: IndexedSeq[Domain]): ReviseOutcome[Unit]
-
-  def revise(domains: IndexedSeq[Domain], s: State): ReviseOutcome[State] = revise(domains)
-
-  def isConsistent(domains: IndexedSeq[Domain]): Boolean = revise(domains) != Contradiction
-
-  override final def isConsistent(domains: IndexedSeq[Domain], s: State): Boolean = isConsistent(domains)
 }
 
 abstract class Constraint(val scope: Array[Variable])
@@ -162,7 +149,10 @@ abstract class Constraint(val scope: Array[Variable])
   //  }
 
   def isConsistent(domains: IndexedSeq[Domain], state: State): Boolean =
-    revise(domains, state) != Contradiction
+    revise(domains, state) match {
+      case Contradiction      => false
+      case Revised(mod, _, _) => mod.forall(_.nonEmpty)
+    }
 
   def advise(domains: IndexedSeq[Domain], pos: Int): Int
 
@@ -195,7 +185,10 @@ abstract class Constraint(val scope: Array[Variable])
 
   def simpleEvaluation: Int
 
-  override def toString = this.getClass.getSimpleName + scope.mkString("(", ", ", ")")
+  override final def toString = this.getClass.getSimpleName + scope.mkString("(", ", ", ")")
+
+  def toString(domains: IndexedSeq[Domain], state: State) = this.getClass.getSimpleName +
+    (scope, domains).zipped.map((v, d) => s"$v $d").mkString("(", ", ", ")") + " - " + state
 
   /**
    * @param variable
@@ -280,23 +273,23 @@ abstract class Constraint(val scope: Array[Variable])
     domains.exists(_.size > 1) || check(domains.map(_.head).toArray)
 
   }
-
-  def changes(oldDomains: IndexedSeq[Domain], newDomains: IndexedSeq[Domain]): Seq[Int] = {
-    var i = arity - 1
-    var ch = List[Int]()
-    while (i >= 0) {
-      if (oldDomains(i) ne newDomains(i)) ch ::= i
-      i -= 1
-    }
-    ch
-  }
-
-  def hasChanges(oldDomains: IndexedSeq[Domain], newDomains: IndexedSeq[Domain]): Boolean = {
-    var i = arity - 1
-    while (i >= 0) {
-      if (oldDomains(i) ne newDomains(i)) return true
-      i -= 1
-    }
-    false
-  }
+  //
+  //  def changes(oldDomains: IndexedSeq[Domain], newDomains: IndexedSeq[Domain]): Seq[Int] = {
+  //    var i = arity - 1
+  //    var ch = List[Int]()
+  //    while (i >= 0) {
+  //      if (oldDomains(i) ne newDomains(i)) ch ::= i
+  //      i -= 1
+  //    }
+  //    ch
+  //  }
+  //
+  //  def hasChanges(oldDomains: IndexedSeq[Domain], newDomains: IndexedSeq[Domain]): Boolean = {
+  //    var i = arity - 1
+  //    while (i >= 0) {
+  //      if (oldDomains(i) ne newDomains(i)) return true
+  //      i -= 1
+  //    }
+  //    false
+  //  }
 }

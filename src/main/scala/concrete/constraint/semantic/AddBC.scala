@@ -27,7 +27,7 @@ final class AddBC(val result: Variable, val v0: Variable, val v1: Variable)
       domains(2) & (v1.ub - bounds.ub, v1.lb - bounds.lb)))
   }
 
-  override def toString = result + " = " + v0 + " + " + v1
+  override def toString(domains: IndexedSeq[Domain]) = domains(0) + " = " + domains(1) + " + " + domains(2)
 
   def advise(domains: IndexedSeq[Domain], pos: Int) = 4
 

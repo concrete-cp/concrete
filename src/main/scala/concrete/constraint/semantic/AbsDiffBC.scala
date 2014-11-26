@@ -80,7 +80,7 @@ final class AbsDiffBC(val result: Variable, val v0: Variable, val v1: Variable)
     //Revised(mod, false)
   }
 
-  override def toString = result + " =BC= |" + v0 + " - " + v1 + "|";
+  override def toString(domains:IndexedSeq[Domain]) = domains(0) + " =BC= |" + domains(1) + " - " + domains(2) + "|";
 
   def advise(domains: IndexedSeq[Domain], pos: Int) = 5
 

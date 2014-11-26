@@ -32,7 +32,7 @@ final class AbsBC(val result: Variable, val v0: Variable) extends Constraint(Arr
     Revised(nd, isFree(nd))
   }
 
-  override def toString = result + " = |" + v0 + "|";
+  override def toString(domains: IndexedSeq[Domain]) = domains(0) + " = |" + domains(1) + "|";
 
   def advise(domains: IndexedSeq[Domain], p: Int) = 6
 

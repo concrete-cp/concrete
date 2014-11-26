@@ -19,6 +19,7 @@ class AllDifferent2CTest extends FlatSpec with Matchers {
 
     val c = new AllDifferent2C(v1, v2, v3, v4, v5)
     val d = c.scope.map(_.initDomain)
+    c.register(new AdviseCount)
     c.adviseAll(d)
 
     c.revise(d) shouldBe Contradiction

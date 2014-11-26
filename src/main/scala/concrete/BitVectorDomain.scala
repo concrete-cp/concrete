@@ -1,7 +1,7 @@
 package concrete
 
 import concrete.util.BitVector
-
+import concrete.util.Math
 object BitVectorDomain {
   val DISPLAYED_VALUES = 5;
 
@@ -9,6 +9,8 @@ object BitVectorDomain {
 
 final class BitVectorDomain(val offset: Int, val bv: BitVector, override val length: Int) extends IntDomain {
   require(size >= 2, "BitVectorSets must have at least two elements")
+  Math.checkedAdd(offset, bv.lastSetBit)
+
   assert(bv.cardinality == size, bv + " : " + bv.cardinality + " != " + size)
 
   def this(size: Int) = {
@@ -16,7 +18,7 @@ final class BitVectorDomain(val offset: Int, val bv: BitVector, override val len
   }
 
   def this(lb: Int, ub: Int, hole: Int) = {
-    this(0, BitVector.intBvH(lb, ub, hole), ub - lb)
+    this(lb, BitVector.intBvH(0, ub - lb, hole - lb), ub - lb)
   }
 
   override val head = offset + bv.nextSetBit(0)
@@ -48,7 +50,10 @@ final class BitVectorDomain(val offset: Int, val bv: BitVector, override val len
    *            index to test
    * @return true iff index is present
    */
-  def present(value: Int) = bv(value - offset);
+  def present(value: Int) = {
+    val bit = value - offset
+    bit >= 0 && bv(value - offset)
+  }
 
   override def filter(f: Int => Boolean) = {
     val newBv = bv.filter(i => f(i + offset))
@@ -61,7 +66,7 @@ final class BitVectorDomain(val offset: Int, val bv: BitVector, override val len
 
   def remove(index: Int) = {
     if (present(index)) {
-      IntDomain.ofBV(offset, bv - index, size - 1)
+      IntDomain.ofBV(offset, bv - (index - offset), size - 1)
     } else { this }
   }
 
@@ -98,9 +103,15 @@ final class BitVectorDomain(val offset: Int, val bv: BitVector, override val len
     case d: IntervalDomain  => head >= d.head && last <= d.last
   }
 
-  def toBitVector = bv
-  def intersects(that: BitVector) = bv.intersects(that)
-  def intersects(that: BitVector, part: Int) = bv.intersects(that, part)
+  def toBitVector = {
+    require(offset == 0)
+    bv
+  }
+
+  def apply(i: Int) = iterator.drop(i - 1).next
+
+  //  def intersects(that: BitVector) = bv.intersects(that)
+  //  def intersects(that: BitVector, part: Int) = bv.intersects(that, part)
   def bound = false
   override def isEmpty = false
 }

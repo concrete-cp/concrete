@@ -28,14 +28,15 @@ final class Disjunction(scope: Array[Variable],
 
   //if (isTrue(watch1) || isTrue(watch2)) entail()
 
-  def advise(domains: IndexedSeq[Domain],p: Int) = if (p == watch1 || p == watch2) 1 else -1
+  def advise(domains: IndexedSeq[Domain], p: Int) = if (p == watch1 || p == watch2) 1 else -1
 
   def this(scope: Variable*) = this(scope.toArray, new Array[Boolean](scope.size))
 
   override def check(t: Array[Int]) =
     reverses.zip(t).exists(l => l._1 ^ l._2 == 1)
 
-  override def toString = "\\/" + (scope, reverses).zipped.map((v, r) => (if (r) "-" else "") + v).mkString("(", ", ", ")")
+  override def toString(domains: IndexedSeq[Domain]) =
+    "\\/" + (scope, domains, reverses).zipped.map((v, d, r) => (if (r) "-" else "") + v + " " + d).mkString("(", ", ", ")")
 
   def revise(domains: IndexedSeq[Domain]): ReviseOutcome[Unit] = {
     //println(this.toString + " " + watch1 + " " + watch2)

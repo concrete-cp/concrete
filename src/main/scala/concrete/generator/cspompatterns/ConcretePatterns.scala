@@ -18,7 +18,8 @@ object ConcretePatterns {
         UnaryOr, MergeNotDisj,
         NegToCNF, Xor, ReifiedDisj, ReifiedConj,
         NeqVec, SimplDisj,
-        LtToGt, SlidingSum, Regular, SetIn, In, MinMax, ConcreteTypes //, //SimplDisj//ConstToVar
+        LtToGt, SlidingSum, Regular, SetIn, In, MinMax, ConcreteTypes,
+        AllDiffConstant //, //SimplDisj//ConstToVar
         )
 
     val improveModel = params.getOrElse("improveModel", true)

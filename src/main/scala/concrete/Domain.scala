@@ -20,14 +20,14 @@ abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
   def prev(i: Int): Int
 
   def present(value: Int): Boolean
-  
-  def apply(i:Int) = throw new UnsupportedOperationException
 
   override def contains[A >: Int](value: A) = present(value.asInstanceOf[Int])
 
   override def indices = throw new AssertionError
 
   def remove(value: Int): Domain
+
+  def assign(value: Int): Domain
 
   /**
    * @param lb
@@ -69,8 +69,13 @@ abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
     last < d.head || head > d.last || forall(v => !d.present(v))
   }
 
-  def intersects(bv: BitVector): Int
-  def intersects(bv: BitVector, part: Int): Boolean
+  def subsetOf(d: Domain): Boolean = {
+    head >= d.head && last <= d.last && (d.bound || forall(d.present))
+  }
+
+  def intersects(bv: BitVector): Int = bv.intersects(toBitVector)
+  def intersects(bv: BitVector, part: Int): Boolean = bv.intersects(toBitVector, part)
+
   def bound: Boolean
 
   def toBitVector: BitVector

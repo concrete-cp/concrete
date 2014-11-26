@@ -23,12 +23,13 @@ final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable, 
     }
 
   def findValidTuple0(val0: Int, dom1: Domain, dom2: Domain) = {
-
-    dom1.find { v => dom2.present(v - val0) }.map { v =>
-      Array(val0, v, v - val0)
-    } orElse dom1.find { v => dom2.present(v + val0) }.map { v =>
-      Array(val0, v, v + val0)
-    }
+    if (val0 >= 0) {
+      dom1.find { v => dom2.present(v - val0) }.map { v =>
+        Array(val0, v, v - val0)
+      } orElse dom1.find { v => dom2.present(v + val0) }.map { v =>
+        Array(val0, v, v + val0)
+      }
+    } else None
 
   }
 
@@ -54,7 +55,7 @@ final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable, 
     }
   }
 
-  override def toString = result + " =AC= |" + v0 + " - " + v1 + "|";
+  override def toString(domains:IndexedSeq[Domain]) = domains(0) + " =AC= |" + domains(1) + " - " + domains(2) + "|";
 
   def getEvaluation(domains: IndexedSeq[Domain]) = if (skip(domains)) -1 else {
     val d0 = domains(0).size

@@ -26,10 +26,10 @@ import concrete.ProblemState
 
 object ACC extends LazyLogging {
   def control(problem: Problem, state: ProblemState): ProblemState = {
-    logger.debug("Control !")
+    logger.info("Control !")
     var s = state
     for (c <- problem.constraints) {
-      val before = c.toString
+
       val id = c.id
 
       val oldState: c.State = s.constraintState(id).asInstanceOf[c.State]
@@ -39,9 +39,10 @@ object ACC extends LazyLogging {
       val sizes = oldDomains map (_.size)
 
       c.revise(oldDomains, oldState) match {
-        case Contradiction => throw new AssertionError(s"$c is not consistent on $before")
+        case Contradiction => throw new AssertionError(s"${c.toString(oldDomains, oldState)} is not consistent")
         case Revised(modified, entailed, finalState) =>
-          require((modified, oldDomains).zipped.forall(_ eq _), s"$c was revised ($oldDomains -> $modified)")
+          require((modified, oldDomains).zipped.forall(_ eq _),
+            s"${c.toString(oldDomains, oldState)} was revised (-> $modified, $finalState)")
           s = s.updatedCS(id, finalState)
       }
 
@@ -185,28 +186,44 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
       }
 
       val constraintDomains = s.domains(constraint.scope)
+      val constraintState = s(constraint)
 
-      try constraint.revise(constraintDomains, s(constraint)) match {
+      constraint.revise(constraintDomains, constraintState) match {
         case Contradiction =>
           constraint.weight += 1
+          logger.info(constraint.toString(constraintDomains, constraintState) + " -> Contradiction")
           return Contradiction
 
         case Revised(mod, entail, newState) =>
-          logger.debug(if (mod.isEmpty) "NOP" else s"-> $constraint")
-          s = s.updatedCS(constraint, newState)
-          s = s.updatedDomains(constraint.scope, mod)
           for (i <- 0 until constraint.arity) {
-            if (constraintDomains(i) ne mod(i)) {
-              updateQueue(constraint.scope(i), constraint, s)
+            if (mod(i).isEmpty) {
+              constraint.weight += 1
+              logger.info(
+                s"${constraint.toString(constraintDomains, constraintState)} -> empty domain with state $newState")
+              return Contradiction
             }
           }
 
-      }
-      catch {
-        case _: UNSATException =>
-          logger.warn(s"UNSATException was thrown when revising $constraint")
-          constraint.weight += 1
-          return Contradiction
+          val ns = s.updatedDomains(constraint.scope, mod)
+          if (ns ne s) {
+            logger.info(
+              s"${constraint.toString(constraintDomains, constraintState)} -> ${constraint.toString(mod, newState)} ($entail)")
+            s = ns
+            for (i <- 0 until constraint.arity) {
+              assert(mod(i).subsetOf(constraintDomains(i)),
+                s"${constraint.toString(constraintDomains, constraintState)} -> ${constraint.toString(mod, newState)}")
+              if (constraintDomains(i) ne mod(i)) {
+                updateQueue(constraint.scope(i), constraint, s)
+              }
+            }
+          } else {
+            logger.info(
+              s"${constraint.toString(constraintDomains, constraintState)} -> NOP with state $newState ($entail)")
+          }
+          if (newState != constraintState) {
+            s = s.updatedCS(constraint, newState)
+          }
+
       }
 
       //println(mod)
@@ -214,7 +231,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     }
 
     assert {
-      s = ACC.control(problem, states)
+      s = ACC.control(problem, s)
       true
     }
     Filtered(s)

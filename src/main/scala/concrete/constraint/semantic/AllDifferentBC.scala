@@ -179,7 +179,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
     else i
 
   private def filterLower(domains: IndexedSeq[Domain]): ReviseOutcome[Unit] = {
-    val mod = domains.toArray
+    val mod = domains.toArray.clone
 
     var i = 1
     while (i <= nbBounds + 1) {

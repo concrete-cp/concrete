@@ -70,12 +70,12 @@ final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) w
 
   def revise(domains: IndexedSeq[Domain]): ReviseOutcome[Unit] = {
     // print(this)
-    var mod = domains.toArray
+    var mod = domains.toArray.clone
     while (q.nonEmpty) {
       val checkedVariable = q.head
       q = q.tail
 
-      val value = domains(checkedVariable).head
+      val value = mod(checkedVariable).head
 
       var p = arity - 1
       while (p >= 0) {
@@ -86,13 +86,13 @@ final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) w
             mod(p) = nd
             if (nd.size == 1) q ::= p
           }
-          p -= 1
         }
+        p -= 1
       }
 
     }
     // println(s" -> $this")
-    Revised(mod)
+    Revised(mod, isFree(mod))
   }
 
   var lastAdvise = -1

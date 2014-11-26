@@ -27,7 +27,7 @@ final class SquareBC(val x: Variable, val y: Variable)
     Revised(IndexedSeq(domains(0) & domains(1).span.sq, domains(1) & domains(0).span.sqrt))
   }
 
-  override def toString = s"$x == $y²"
+  override def toString(domains: IndexedSeq[Domain]) = s"${domains(0)} == ${domains(1)}²"
 
   def advise(domains: IndexedSeq[Domain], pos: Int) = 3 // else (x.dom.size + y.dom.size)
   val simpleEvaluation = 2
@@ -75,7 +75,7 @@ final class SquareAC(val x: Variable, val y: Variable)
     domains(0).exists(v => consistentX(v, domains(1))) && domains(1).exists(v => consistentY(v, domains(0)))
   }
 
-  override def toString = s"$x == $y²"
+  override def toString(domains: IndexedSeq[Domain]) = s"${domains(0)} == ${domains(1)}²"
 
   def getEvaluation(domains: IndexedSeq[Domain]) = domains(0).size + domains(1).size
   val simpleEvaluation = 2

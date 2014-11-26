@@ -4,6 +4,7 @@ import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.TupleEnumerator
 import concrete.constraint.Residues
+import concrete.Domain
 
 class ReifiedLtC(val b: Variable, val v: Variable, val c: Int, val strict: Boolean)
   extends Constraint(Array(b, v))
@@ -23,6 +24,6 @@ class ReifiedLtC(val b: Variable, val v: Variable, val c: Int, val strict: Boole
     }
   }
 
-  override def toString = s"$b = $v ${if (strict) "<" else "<="} $c"
+  override def toString(domains: IndexedSeq[Domain]) = s"${domains(0)} = ${domains(1)} ${if (strict) "<" else "<="} $c"
 
 }

@@ -82,45 +82,48 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
   def mac(modifiedVariable: Option[Variable], stack: List[Pair], stateStack: List[ProblemState]): (SolverResult, List[Pair], List[ProblemState]) = {
     if (Thread.interrupted()) throw new InterruptedException()
 
-    var s = stateStack.head
+    val currentState = stateStack.head
 
-    val continue = modifiedVariable.forall { v =>
-      s(v).nonEmpty && (
-        filter.reduceAfter(v, s) match {
-          case Contradiction => false
-          case Filtered(newStates) =>
-            s = newStates
-            true
-        })
+    val filtering = modifiedVariable match {
+      case None => Filtered(currentState)
+      case Some(v) =>
+        if (currentState(v).isEmpty) {
+          Contradiction
+        } else {
+          filter.reduceAfter(v, currentState)
+        }
     }
 
-    if (continue) {
+    filtering match {
+      case Filtered(filteredState) =>
+        heuristic.selectPair(problem, filteredState) match {
+          case None => (SAT(extractSolution(filteredState)), stack, filteredState :: stateStack.tail)
+          case Some(pair) =>
 
-      heuristic.selectPair(problem, s) match {
-        case None => (SAT(extractSolution(s)), stack, s :: stateStack.tail)
-        case Some(pair) =>
+            logger.info(s"${stack.length}: ${pair.variable.name}: ${filteredState(pair.variable)} <- ${pair.value} ($nbBacktracks / $maxBacktracks)");
 
-          logger.info(s"${problem.currentLevel}: ${pair.variable} <- ${pair.value} ($nbBacktracks / $maxBacktracks)");
+            nbAssignments += 1
 
-          nbAssignments += 1
+            val assignedState = filteredState.assign(pair)
 
-          s = s.assign(pair)
+            mac(Some(pair.variable), pair :: stack, assignedState :: filteredState :: stateStack.tail)
 
-          mac(Some(pair.variable), pair :: stack, s :: stateStack)
+        }
+      case Contradiction =>
+        if (stack == Nil) {
+          (UNSAT, Nil, Nil)
+        } else if (maxBacktracks >= 0 && nbBacktracks >= maxBacktracks) {
+          (RESTART, stack, stateStack)
+        } else {
+          nbBacktracks += 1
 
-      }
-    } else if (stack == Nil) {
-      (UNSAT, Nil, Nil)
-    } else if (maxBacktracks >= 0 && nbBacktracks >= maxBacktracks) {
-      (RESTART, stack, stateStack)
-    } else {
-      nbBacktracks += 1
+          logger.info(s"${stack.length}: ${stack.head} removed")
 
-      logger.info(s"${problem.currentLevel}: ${stack.head} removed")
+          val bt = stateStack.tail
+          val last = stack.head
 
-      s = s.remove(stack.head.variable, stack.head.value)
-
-      mac(Some(stack.head.variable), stack.tail, stateStack.tail)
+          mac(Some(last.variable), stack.tail, bt.head.remove(last) :: bt.tail)
+        }
     }
 
   }
@@ -162,20 +165,20 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
       //      } else {
       maxBacktracks = (maxBacktracks * btGrowth).toInt;
       nbBacktracks = 0
-      nextSolution(None, Nil, List(problem.initState))
+      nextSolution(None, Nil, List(newStateStack.last))
       //      }
 
     } else { (sol, newStack, newStateStack) }
   }
 
   var currentStack: List[Pair] = Nil
-  var currentStateStack: List[ProblemState] = _
+  var currentStateStack: List[ProblemState] = List(problem.initState)
 
   def nextSolution(): SolverResult = try {
 
     if (restart) {
       restart = false
-      preprocess(filter, problem.initState) match {
+      preprocess(filter, currentStateStack.last) match {
         case Contradiction => UNSAT
         case Filtered(state) =>
           val (_, heuristicCpu) = StatisticsManager.time(heuristic.compute(problem))
@@ -191,7 +194,9 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
     } else {
       maxBacktracks = -1
 
-      val nextStateStack = currentStateStack.head.remove(currentStack.head) :: currentStateStack.tail
+      val bt = currentStateStack.tail
+
+      val nextStateStack = bt.head.remove(currentStack.head) :: bt.tail
 
       val (sol, stack, stateStack) = nextSolution(Some(currentStack.head.variable), currentStack.tail, nextStateStack)
       currentStack = stack

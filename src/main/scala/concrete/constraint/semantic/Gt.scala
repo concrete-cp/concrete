@@ -76,12 +76,12 @@ final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict
     max0 > min1 || !strict && max0 == min1;
   }
 
-  override def toString = scope(0).toString + (
+  override def toString(domains: IndexedSeq[Domain]) = domains(0).toString + (
     if (constant > 0)
       " + " + constant
     else if (constant < 0)
       " - " + (-constant)
-    else "") + (if (strict) " > " else " >= ") + scope(1)
+    else "") + (if (strict) " > " else " >= ") + domains(1)
 
   def advise(domains: IndexedSeq[Domain], p: Int) = 2
 

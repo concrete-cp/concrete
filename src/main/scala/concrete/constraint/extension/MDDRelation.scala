@@ -17,8 +17,9 @@ object MDDRelation extends RelationGenerator {
 final class MDDRelation(val mdd: MDD = MDD0, val timestamp: Timestamp = new Timestamp()) extends Relation {
   type Self2 = MDDRelation
 
-  def findSupport(domains: IndexedSeq[Domain], p: Int, i: Int, support: Array[Int]): Option[Array[Int]] = {
+  def findSupport(domains: IndexedSeq[Domain], p: Int, i: Int): Option[Array[Int]] = {
     assert(domains(p).present(i))
+    val support = new Array[Int](domains.length)
     val s = mdd.findSupport(timestamp.next(), domains, p, i, support, 0)
     assert(s.forall(contains))
     assert(s.forall { sup =>

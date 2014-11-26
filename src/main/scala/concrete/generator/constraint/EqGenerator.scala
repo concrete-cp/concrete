@@ -9,6 +9,7 @@ import concrete.constraint.semantic.Neq
 import concrete.constraint.semantic.ReifiedConstraint
 import concrete.constraint.semantic.ReifiedEquals
 import cspom.CSPOMConstraint
+import concrete.BooleanDomain
 
 final object EqGenerator extends Generator {
 
@@ -20,25 +21,27 @@ final object EqGenerator extends Generator {
   }
 
   override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] = {
-    val Seq(a, b) = constraint.arguments.map(cspom2concreteVar)
+    val Seq(a, b) = constraint.arguments.map(cspom2concrete1D)
 
     val (neg, offset) = params(constraint)
     val negFactor = if (neg) -1 else 1
-    //    (a, b) match {
-    //      case (Const(a), Const(b)) =>
-    //        if (negFactor * a + offset == b) Seq() else throw concrete.UNSATObject
-    //
-    //      case (Var(a), Const(b)) =>
-    //        require(a.dom.values.sameElements(Iterator((b - offset) * negFactor)),
-    //          s"Domain of $a should be ($b - $offset) * $negFactor = ${(b - offset) * negFactor}")
-    //        Seq()
-    //      case (Const(a), Var(b)) =>
-    //        require(b.dom.values.sameElements(Iterator(negFactor * a + offset)),
-    //          s"Domain of $b should be $negFactor * $a + $offset = ${negFactor * a + offset}")
-    //        Seq()
-    //      case (Var(a), Var(b)) =>
-    Seq(new EqBC(neg, a, offset, b), new EqAC(neg, a, offset, b))
-    //    }
+    (a, b) match {
+      case (Const(a), Const(b)) =>
+        if (negFactor * a + offset == b) Seq() else throw concrete.UNSATObject
+      //
+      //      case (Var(a), Const(b)) =>
+      //        require(a.dom.values.sameElements(Iterator((b - offset) * negFactor)),
+      //          s"Domain of $a should be ($b - $offset) * $negFactor = ${(b - offset) * negFactor}")
+      //        Seq()
+      //      case (Const(a), Var(b)) =>
+      //        require(b.dom.values.sameElements(Iterator(negFactor * a + offset)),
+      //          s"Domain of $b should be $negFactor * $a + $offset = ${negFactor * a + offset}")
+      //        Seq()
+      case (Var(a), Var(b)) =>
+        Seq(new EqBC(neg, a, offset, b), new EqAC(neg, a, offset, b))
+
+      case _ => throw new UnsupportedOperationException(s"$constraint is not supported")
+    }
 
   }
 
@@ -49,6 +52,9 @@ final object EqGenerator extends Generator {
     require(!neg)
     require(offset == 0)
     (a, b) match {
+      case (Const(a), Const(b)) =>
+        require(result.initDomain == BooleanDomain(a == b))
+        Seq()
       case (Const(a), Var(b)) => Seq(new ReifiedEquals(result, b, a))
       case (Var(a), Const(b)) => Seq(new ReifiedEquals(result, a, b))
       case (Var(a), Var(b)) => Seq(

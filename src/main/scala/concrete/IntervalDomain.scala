@@ -54,13 +54,16 @@ final class IntervalDomain(val domain: Interval) extends IntDomain {
     else { IntDomain.ofInterval(ub + 1, domain.ub) }
 
   override def filter(f: Int => Boolean) = {
-    val bv = toBitVector
-    val nbv = bv.filter(f)
-    if (nbv == bv) {
+    val filt = toBVDomain.filter(f)
+    if (filt eq toBVDomain) {
       this
     } else {
-      IntDomain.ofBV(0, nbv, nbv.cardinality)
+      filt
     }
+  }
+
+  def apply(i: Int) = {
+    if (i < size) i + head else throw new IndexOutOfBoundsException
   }
 
   override def toString() = s"[$head, $last]"
@@ -70,6 +73,10 @@ final class IntervalDomain(val domain: Interval) extends IntDomain {
     case d: IntervalDomain  => head >= d.head && last <= d.last
   }
 
+  lazy val toBVDomain = {
+    new BitVectorDomain(head, BitVector.filled(size), size)
+  }
+
   lazy val toBitVector = {
     require(head >= 0)
     val bv = BitVector.intBv(head, last)
@@ -77,8 +84,6 @@ final class IntervalDomain(val domain: Interval) extends IntDomain {
     bv
   }
 
-  def intersects(bv: BitVector) = bv.intersects(toBitVector)
-  def intersects(bv: BitVector, part: Int) = bv.intersects(toBitVector, part)
   def bound = true
   override def isEmpty = false
 

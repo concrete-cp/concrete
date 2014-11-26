@@ -4,9 +4,7 @@ import scala.collection.mutable.WeakHashMap
 import scala.util.Random
 import scala.util.control.Breaks.break
 import scala.util.control.Breaks.breakable
-
 import com.typesafe.scalalogging.LazyLogging
-
 import cspom.CSPOM
 import cspom.CSPOMConstraint
 import cspom.VariableNames
@@ -14,6 +12,60 @@ import cspom.compiler.ConstraintCompiler
 import cspom.compiler.Delta
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMVariable
+import cspom.compiler.VariableCompiler
+import cspom.variable.CSPOMConstant
+import cspom.variable.IntVariable
+import cspom.util.RangeSet
+import cspom.util.Interval
+import cspom.util.IntInterval
+
+object AllDiffConstant extends ConstraintCompiler {
+  type A = (Seq[Int])
+
+  def selfPropagation = true
+
+  override def mtch(c: CSPOMConstraint[_], p: CSPOM): Option[A] = {
+    if (AllDiff.ALLDIFF_CONSTRAINT(c)) {
+      val constants = c.arguments.collect {
+        case CSPOMConstant(k: Int) => k
+      }
+      if (constants.isEmpty) {
+        None
+      } else {
+        Some(constants)
+      }
+    } else {
+      None
+    }
+
+  }
+
+  def compile(constraint: CSPOMConstraint[_], problem: CSPOM, constants: A) = {
+    val variables = constraint.arguments.collect {
+      case v: IntVariable => v
+    }
+    require(constants.size + variables.size == constraint.arguments.size)
+
+    val diff = RangeSet(constants.map(k => IntInterval.singleton(k)))
+
+    val filt = variables.map { v: IntVariable =>
+      val r = v.domain -- diff
+      if (r == v.domain) v else IntVariable(r)
+    }
+    problem.removeConstraint(constraint)
+    var delta = Delta().removed(constraint)
+
+    if (filt.length > 1) {
+      delta = delta.added(problem.ctr(CSPOMConstraint('allDifferent, filt)))
+    }
+
+    for ((v, f) <- (variables, filt).zipped) {
+      delta ++= replace(Seq(v), f, problem)
+    }
+
+    delta
+  }
+}
 
 object AllDiff extends ConstraintCompiler with LazyLogging {
   type A = Set[CSPOMVariable[_]]
@@ -68,7 +120,7 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
   //private val neighborsCache = new WeakHashMap[CSPOMVariable[_], Set[CSPOMVariable[_]]]
 
   def neighbors(v: CSPOMVariable[_], problem: CSPOM,
-    cache: WeakHashMap[CSPOMVariable[_], Set[CSPOMVariable[_]]]): Set[CSPOMVariable[_]] = {
+                cache: WeakHashMap[CSPOMVariable[_], Set[CSPOMVariable[_]]]): Set[CSPOMVariable[_]] = {
 
     cache.getOrElseUpdate(v,
       problem.constraints(v).filter(DIFF_CONSTRAINT).flatMap(_.arguments).collect {
@@ -81,7 +133,7 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
    * The pool contains all variables that can expand the base clique
    */
   private def populate(base: Set[CSPOMVariable[_]], problem: CSPOM,
-    cache: WeakHashMap[CSPOMVariable[_], Set[CSPOMVariable[_]]]): Set[CSPOMVariable[_]] = {
+                       cache: WeakHashMap[CSPOMVariable[_], Set[CSPOMVariable[_]]]): Set[CSPOMVariable[_]] = {
     val nb = base.iterator.map(neighbors(_, problem, cache))
 
     if (nb.isEmpty) {

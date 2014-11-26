@@ -11,6 +11,7 @@ import concrete.constraint.Residues
 import org.scalatest.prop.PropertyChecks
 import concrete.constraint.Constraint
 import concrete.constraint.TupleEnumerator
+import org.scalacheck.Gen
 
 final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
 
@@ -80,8 +81,32 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     assert(c.intervalsOnly(mod))
   }
 
+  val dom = Gen.nonEmptyListOf(Gen.choose(-1000, 1000))
+
   it should "filter the same as enumerator" in {
-    forAll { (x: Seq[Int], y: Seq[Int], z: Seq[Int]) =>
+    {
+      val vx = new Variable("x", IntDomain(0))
+      val vy = new Variable("y", IntDomain(0))
+      val vz = new Variable("z", IntDomain(-1))
+
+      val c = new AddAC(vx, vy, vz);
+
+      c.register(new AdviseCount())
+      val d = c.scope.map(_.initDomain)
+      c.adviseAll(d)
+      val r1 = c.revise(d)
+
+      val c2 = new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
+        def check(t: Array[Int]) = t(0) == t(1) + t(2);
+      };
+      c2.register(new AdviseCount())
+      c2.adviseAll(d)
+      val r2 = c2.revise(d)
+
+      r1 shouldBe r2
+    }
+
+    forAll(dom, dom, dom) { (x: Seq[Int], y: Seq[Int], z: Seq[Int]) =>
       val vx = new Variable("x", IntDomain(x: _*))
       val vy = new Variable("y", IntDomain(y: _*))
       val vz = new Variable("z", IntDomain(z: _*))
@@ -91,15 +116,17 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
       c.register(new AdviseCount())
       val d = c.scope.map(_.initDomain)
       c.adviseAll(d)
-      val Revised(d2, _, _) = c.revise(d, c.initState)
+      val r1 = c.revise(d)
 
       val c2 = new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
         def check(t: Array[Int]) = t(0) == t(1) + t(2);
       };
       c2.register(new AdviseCount())
-      c2.adviseAll(d2)
-      val Revised(d3, _, _) = c2.revise(d2)
-      assert((d2, d3).zipped.forall(_ eq _))
+      c2.adviseAll(d)
+      val r2 = c2.revise(d)
+
+      r1 shouldBe r2
     }
+
   }
 }

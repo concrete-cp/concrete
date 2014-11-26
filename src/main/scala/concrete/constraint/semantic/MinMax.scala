@@ -40,7 +40,7 @@ final class Min(result: Variable, vars: Array[Variable], constant: Option[Int])
     tuple(0) == (1 until arity).map(tuple).min
   }
 
-  override def toString = vars.mkString(result + " = min(", ", ", ")")
+  override def toString(domains: IndexedSeq[Domain]) = domains.mkString(result + " = min(", ", ", ")")
 }
 
 final class Max(result: Variable, vars: Array[Variable], constant: Option[Int])
@@ -61,5 +61,5 @@ final class Max(result: Variable, vars: Array[Variable], constant: Option[Int])
     tuple(0) == (1 until arity).map(tuple).max
   }
 
-  override def toString = vars.mkString(result + " = min(", ", ", ")")
+  override def toString(domains: IndexedSeq[Domain]) = domains.mkString(result + " = min(", ", ", ")")
 }

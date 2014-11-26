@@ -11,9 +11,7 @@ final class ProblemState(
 
   def apply(c: Constraint): c.State = constraintState(c.id).asInstanceOf[c.State]
 
-  def updatedCS(id: Int, newState: Any): ProblemState =
-    if (constraintStates(id) == newState) { this }
-    else { new ProblemState(domains, constraintStates.updated(id, newState), entailed) }
+  def updatedCS(id: Int, newState: Any): ProblemState = new ProblemState(domains, constraintStates.updated(id, newState), entailed)
 
   def updatedCS(c: Constraint, newState: Any): ProblemState = updatedCS(c.id, newState)
 
@@ -38,7 +36,6 @@ final class ProblemState(
     updatedDomain(v.id, newDomain)
 
   def updatedDomains(v: Array[Variable], newDomains: IndexedSeq[Domain]): ProblemState = {
-    var ch = false
     var i = v.length - 1
     var d = domains
     while (i >= 0) {
@@ -46,11 +43,10 @@ final class ProblemState(
       val nd = newDomains(i)
       if (d(id) ne nd) {
         d = d.updated(id, nd)
-        ch = true
       }
       i -= 1
     }
-    if (ch) new ProblemState(d, constraintStates, entailed) else this
+    if (d ne domains) new ProblemState(d, constraintStates, entailed) else this
   }
 
   def domain(id: Int): Domain = domains(id)
@@ -59,8 +55,7 @@ final class ProblemState(
 
   def assign(variable: Variable, value: Int): ProblemState = {
     val id = variable.id
-    require(domains(id).present(value))
-    updatedDomain(id, Singleton(value))
+    updatedDomain(id, domains(id).assign(value))
   }
 
   def remove(variable: Variable, value: Int): ProblemState = {

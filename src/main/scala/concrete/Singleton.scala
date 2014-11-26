@@ -8,65 +8,65 @@ object Singleton {
   def apply(v: Int) = cache.getOrElseUpdate(v, new Singleton(v))
 }
 
-final class Singleton(val index: Int) extends IntDomain {
-
-  require(index >= 0)
+final class Singleton(val value: Int) extends IntDomain {
 
   def length = 1
 
-  override def head = index
+  override def head = value
 
-  override def last = index
+  override def last = value
 
-  def next(i: Int) = if (i < index) index else -1
+  def next(i: Int) = if (i < value) value else throw new NoSuchElementException
 
-  def prev(i: Int) = if (i > index) index else -1
+  def prev(i: Int) = if (i > value) value else throw new NoSuchElementException
 
   def prevOrEq(i: Int): Int =
-    if (i >= index) { index }
-    else { -1 }
+    if (i >= value) { value }
+    else { throw new NoSuchElementException }
 
   def nextOrEq(i: Int): Int =
-    if (i <= index) { index }
-    else { -1 }
-
+    if (i <= value) { value }
+    else { throw new NoSuchElementException }
 
   /**
    * @param index
    *            index to test
    * @return true iff index is present
    */
-  def present(i: Int) = i == index
+  def present(i: Int) = i == value
 
   def remove(i: Int) = {
-    assert(index == i)
-    EmptyIntDomain
+    if (value == i) EmptyIntDomain else this
   }
 
   def removeFrom(lb: Int) =
-    if (lb > index) { this }
+    if (lb > value) { this }
     else { EmptyIntDomain }
 
   def removeTo(ub: Int) =
-    if (ub < index) { this }
+    if (ub < value) { this }
     else { EmptyIntDomain }
 
   override def filter(f: Int => Boolean) =
-    if (f(index)) { this }
+    if (f(value)) { this }
     else { EmptyIntDomain }
 
-  override def toString() = s"[$index]"
+  override def toString() = s"[$value]"
 
-  def subsetOf(d: IntDomain) = d.present(index)
+  def subsetOf(d: IntDomain) = d.present(value)
 
-  lazy val toBitVector = BitVector.empty + index
+  lazy val toBitVector = BitVector.empty + value
 
-  def intersects(bv: BitVector) = {
-    val part = index >> 6
-    if (bv(index)) part else -1
+  override def intersects(bv: BitVector) = {
+    val part = value >> 6
+    if (bv(value)) part else -1
   }
 
-  def intersects(bv: BitVector, part: Int) = bv(index)
+  def apply(i: Int) = if (i == 0) value else throw new IndexOutOfBoundsException
+
+  override def intersects(bv: BitVector, part: Int) = bv(value)
   def bound = true
   override def isEmpty = false
+
+  override def assign(v: Int) = throw new IllegalStateException("Trying to assign a singleton")
 }

@@ -18,98 +18,101 @@ import concrete.Filtered
 import concrete.Revised
 import concrete.Contradiction
 import concrete.Domain
+import com.typesafe.scalalogging.LazyLogging
 
 final class ReifiedConstraint(
   controlVariable: Variable,
   val positiveConstraint: Constraint,
   val negativeConstraint: Constraint)
   extends Constraint(controlVariable +: (positiveConstraint.scope ++ negativeConstraint.scope).distinct)
-  with Advisable {
+  with Advisable with LazyLogging {
 
   type State = (positiveConstraint.State, negativeConstraint.State)
 
   def initState = (positiveConstraint.initState, negativeConstraint.initState)
 
-  val positivePositions = {
+  private val positiveToReifiedPositions = positiveConstraint.scope.map(position)
+
+  private val reifiedToPositivePositions = {
     val a = Array.fill(arity)(-1)
     for (i <- 0 until positiveConstraint.arity) {
-      a(position(positiveConstraint.scope(i))) = i
+      a(positiveToReifiedPositions(i)) = i
     }
     a
   }
 
-  val negativePositions = {
+  private val negativeToReifiedPositions = negativeConstraint.scope.map(position)
+
+  private val reifiedToNegativePositions = {
     val a = Array.fill(arity)(-1)
     for (i <- 0 until negativeConstraint.arity) {
-      a(position(negativeConstraint.scope(i))) = i
+      a(negativeToReifiedPositions(i)) = i
     }
     a
   }
 
   private def controlDomain(domains: IndexedSeq[Domain]) = domains.head
 
-  private def positiveDomains(allDomains: IndexedSeq[Domain]) = positivePositions.map(allDomains)
-  private def negativeDomains(allDomains: IndexedSeq[Domain]) = negativePositions.map(allDomains)
+  private def positiveDomains(allDomains: IndexedSeq[Domain]) = positiveToReifiedPositions.map(allDomains)
+  private def negativeDomains(allDomains: IndexedSeq[Domain]) = negativeToReifiedPositions.map(allDomains)
 
   def revise(domains: IndexedSeq[Domain], state: State): ReviseOutcome[State] = {
-    val sizes = this.sizes(domains)
+
     controlDomain(domains) match {
       case UNKNOWNBoolean =>
-        val pd = positiveDomains(domains)
-        val nd = negativeDomains(domains)
-        val positive = positiveConstraint.isConsistent(pd, state._1)
-        val negative = negativeConstraint.isConsistent(nd, state._2)
 
-        if (positive) {
-          if (negative) {
+        if (positiveConstraint.isConsistent(positiveDomains(domains), state._1)) {
+          if (negativeConstraint.isConsistent(negativeDomains(domains), state._2)) {
             Revised(domains, false, state)
           } else {
-            noReifyRevise(true, pd, domains.updated(0, TRUE), state)
+            //noReifyRevise(true, pd, pd.updated(0, TRUE), state)
+            Revised(domains.updated(0, TRUE), true, state)
           }
         } else {
-          if (negative) {
-            noReifyRevise(false, nd, domains.updated(0, FALSE), state)
-          } else {
-            Contradiction
+          negativeRevise(domains.updated(0, FALSE), state) match {
+            case Contradiction => Contradiction
+            case Revised(mod, e, s) =>
+              if (!e) logger.warn(toString(domains, state) + " -> " + toString(mod, s) + " should be entailed")
+              Revised(mod, true, s)
           }
+
         }
 
-      case TRUE  => noReifyRevise(true, positiveDomains(domains), domains, state)
-      case FALSE => noReifyRevise(false, negativeDomains(domains), domains, state)
+      case TRUE  => positiveRevise(domains, state)
+      case FALSE => negativeRevise(domains, state)
 
       case EMPTY => throw new IllegalStateException
 
     }
 
   }
-  private def noReifyRevise(
-    positive: Boolean,
-    constraintDomains: IndexedSeq[Domain],
-    allDomains: IndexedSeq[Domain], state: State): ReviseOutcome[State] = {
 
-    if (positive) {
-      positiveConstraint.revise(constraintDomains, state._1) match {
-        case Contradiction => Contradiction
-        case Revised(mod, entail, ns) => Revised((0 until positiveConstraint.arity).foldLeft(allDomains) {
-          case (d, p) => d.updated(positivePositions(p), mod(p))
-        }, entail, (ns, state._2))
-      }
-    } else {
-      negativeConstraint.revise(constraintDomains, state._2) match {
-        case Contradiction => Contradiction
-        case Revised(mod, entail, ns) => Revised((0 until negativeConstraint.arity).foldLeft(allDomains) {
-          case (d, p) => d.updated(negativePositions(p), mod(p))
-        }, entail, (state._1, ns))
-      }
+  private def positiveRevise(domains: IndexedSeq[Domain], state: State): ReviseOutcome[State] = {
+    val constraintDomains = positiveDomains(domains)
+    positiveConstraint.revise(constraintDomains, state._1) match {
+      case Contradiction => Contradiction
+      case Revised(mod, entail, ns) => Revised((0 until positiveConstraint.arity).foldLeft(domains) {
+        case (d, p) => d.updated(positiveToReifiedPositions(p), mod(p))
+      }, entail, (ns, state._2))
     }
+  }
 
+  private def negativeRevise(domains: IndexedSeq[Domain], state: State): ReviseOutcome[State] = {
+    val constraintDomains = negativeDomains(domains)
+    negativeConstraint.revise(constraintDomains, state._2) match {
+      case Contradiction => Contradiction
+      case Revised(mod, entail, ns) => Revised((0 until negativeConstraint.arity).foldLeft(domains) {
+        case (d, p) => d.updated(negativeToReifiedPositions(p), mod(p))
+      }, entail, (state._1, ns))
+    }
   }
 
   override def check(t: Array[Int]) = {
-    (t(0) == 1) == positiveConstraint.check(positivePositions.map(t))
+    (t(0) == 1) == positiveConstraint.check(positiveToReifiedPositions.map(t))
   }
 
-  override def toString = scope(0) + " == (" + positiveConstraint + ")";
+  override def toString(domains: IndexedSeq[Domain], state: State) =
+    s"$controlVariable ${domains(0)} == (${positiveConstraint.toString(positiveDomains(domains), state._1)}) / != (${negativeConstraint.toString(negativeDomains(domains), state._2)}";
 
   //var controlRemovals = 0
 
@@ -131,8 +134,8 @@ final class ReifiedConstraint(
     } else {
       controlDomain(domains) match {
         case UNKNOWNBoolean => {
-          val p = positiveConstraint.advise(positiveDomains(domains), positivePositions(position))
-          val n = negativeConstraint.advise(negativeDomains(domains), negativePositions(position))
+          val p = positiveConstraint.advise(positiveDomains(domains), reifiedToPositivePositions(position))
+          val n = negativeConstraint.advise(negativeDomains(domains), reifiedToNegativePositions(position))
           if (p < 0) {
             if (n < 0) {
               -1
@@ -148,8 +151,8 @@ final class ReifiedConstraint(
           }
 
         }
-        case TRUE  => positiveConstraint.advise(positiveDomains(domains), positivePositions(position))
-        case FALSE => negativeConstraint.advise(negativeDomains(domains), negativePositions(position))
+        case TRUE  => positiveConstraint.advise(positiveDomains(domains), reifiedToPositivePositions(position))
+        case FALSE => negativeConstraint.advise(negativeDomains(domains), reifiedToNegativePositions(position))
         case EMPTY => throw new IllegalStateException
       }
     }

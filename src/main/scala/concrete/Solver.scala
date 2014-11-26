@@ -180,22 +180,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
     case RESTART => throw new IllegalStateException
   }
 
-  //  @tailrec
-  //  private def bestSolution(v: Variable, best: SolverResult): SolverResult = nextSolution() match {
-  //    case SAT(sol) =>
-  //      logger.info("New bound " + sol(v.name))
-  //      reset()
-  //      v.dom.removeTo(v.dom.index(sol(v.name)))
-  //      bestSolution(v, SAT(sol))
-  //    case UNSAT => if (best == UNKNOWNResult) UNSAT else best
-  //    case _ => best
-  //  }
-  //
-  //  def bestSolution(v: Variable): SolverResult = bestSolution(v, UNKNOWNResult)
-
   private var _maxBacktracks = -1
-
-  //var preproExpiration = -1
 
   def reset()
 
@@ -227,6 +212,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
       case Filtered(newState) => preproRemoved = problem.variables
         .map { v => v.initDomain.size - newState(v).size }
         .sum
+      case Contradiction => preproRemoved = -1
     }
 
     this.preproCpu = t;
@@ -244,7 +230,7 @@ sealed trait SolverResult {
   def getNum: Map[Variable, Number] = get map {
     case (s, i) => (s, i.asInstanceOf[Number])
   }
-  def getInteger: java.util.Map[Variable, java.lang.Integer] = JavaConversions.mapAsJavaMap(get map {
+  def getInteger: java.util.Map[Variable, java.lang.Integer] = JavaConversions.mapAsJavaMap(get.map {
     case (s, i) => (s, i.asInstanceOf[java.lang.Integer])
   })
 }

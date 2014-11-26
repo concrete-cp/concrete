@@ -6,14 +6,17 @@ final class ResidueManagerFast(scope: Array[Variable]) extends ResidueManager {
 
   val arity = scope.length
 
-  val last = scope.map(v => new Array[Array[Int]](v.initDomain.last + 1))
+  val offsets = scope.map(v => v.initDomain.head)
 
-  def getResidue(position: Int, index: Int) = last(position)(index)
+  val last = Array.tabulate(arity)(i => new Array[Array[Int]](scope(i).initDomain.last - offsets(i) + 1))
+
+  def getResidue(position: Int, value: Int) = last(position)(value - offsets(position))
 
   def updateResidue(residue: Array[Int]) {
+    //println(residue.toSeq)
     var i = arity - 1
     while (i >= 0) {
-      last(i)(residue(i)) = residue
+      last(i)(residue(i) - offsets(i)) = residue
       i -= 1
     }
   }
@@ -21,7 +24,7 @@ final class ResidueManagerFast(scope: Array[Variable]) extends ResidueManager {
   def remove(residue: Array[Int]) {
     var i = arity - 1
     while (i >= 0) {
-      last(i)(residue(i)) = null
+      last(i)(residue(i) - offsets(i)) = null
       i -= 1
     }
   }

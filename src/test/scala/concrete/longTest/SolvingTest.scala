@@ -24,11 +24,14 @@ class SolvingTest extends FlatSpec with SolvingBehaviors {
 trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this: FlatSpec =>
 
   val problemBank = LinkedHashMap[String, AnyVal](
-    "bqwh-18-141-47_glb.xml.bz2" -> 10,
+    "zebra.xml" -> 1,
     "crossword-m1-debug-05-01.xml" -> 48,
+
+    "bqwh-18-141-47_glb.xml.bz2" -> 10,
+
     "crossword-m2-debug-05-01.xml" -> 48,
     "queens-8.xml" -> 92,
-    "zebra.xml" -> 1,
+
     "scen11-f12.xml.bz2" -> 0,
     "scen11.xml.bz2" -> true,
     "bqwh-15-106-0_ext.xml" -> 182,
@@ -50,9 +53,9 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
       val test = p.contains(".xml")
 
       val expected: Boolean = r match {
-        case e: Int => e > 0
+        case e: Int     => e > 0
         case b: Boolean => b
-        case _ => throw new IllegalArgumentException
+        case _          => throw new IllegalArgumentException
       }
 
       it should "solve " + p taggedAs (SlowTest) in {
@@ -102,7 +105,7 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
   }
 
   def count(name: String, expectedResult: Int, parameters: ParameterManager = new ParameterManager(),
-    test: Boolean): Unit = {
+            test: Boolean): Unit = {
     val url = getClass.getResource(name)
 
     require(url != null, "Could not find resource " + name)

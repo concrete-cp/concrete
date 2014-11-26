@@ -19,17 +19,32 @@ final object BitVector {
 
   def filled(size: Int) = empty.set(0, size)
 
-  def nbWords(nbBits: Int) = {
-    if (nbBits % WORD_SIZE > 0) {
-      word(nbBits) + 1
-    } else {
-      word(nbBits)
-    }
-  }
+  //  def nbWords(nbBits: Int) = {
+  //    if (nbBits % WORD_SIZE > 0) {
+  //      word(nbBits) + 1
+  //    } else {
+  //      word(nbBits)
+  //    }
+  //  }
 
   def word(bit: Int) = bit >> ADDRESS_BITS_PER_WORD
 
-  def apply(v: Traversable[Int]) = v.foldLeft(empty)(_ + _)
+  def apply(v: Traversable[Int]) = {
+    require(v.forall(_ >= 0))
+    val bv = new Array[Long](1 + word(v.max))
+
+    for (i <- v) {
+      val wordPos = word(i)
+      bv(wordPos) |= (1L << i)
+    }
+
+    if (bv.length == 1) {
+      new SmallBitVector(bv(0))
+    } else {
+      new LargeBitVector(bv)
+    }
+
+  } //v.foldLeft(empty)(_ + _)
 
 }
 

@@ -50,7 +50,7 @@ final class NeqVec(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
     }
   }
 
-  override def toString = x.mkString("(", ", ", ")") + " /= " + y.mkString("(", ", ", ")")
+  override def toString(domains:IndexedSeq[Domain]) = domains.take(size).mkString("(", ", ", ")") + " /= " + domains.drop(size).mkString("(", ", ", ")")
 
   def advise(domains: IndexedSeq[Domain],p: Int) = arity
 

@@ -14,7 +14,7 @@ class OccurrenceConst(val result: Int, val value: Int, val vars: Array[Variable]
   def check(tuple: Array[Int]) =
     result == (0 until arity).count(i => tuple(i) == value)
 
-  def advise(domains: IndexedSeq[Domain],pos: Int): Int = arity
+  def advise(domains: IndexedSeq[Domain], pos: Int): Int = arity
 
   def revise(domains: IndexedSeq[Domain]) = {
     var affected = 0
@@ -35,8 +35,7 @@ class OccurrenceConst(val result: Int, val value: Int, val vars: Array[Variable]
     } else if (affected == result && canBeAffected > 0) {
       Revised(domains.map(d => if (d.size > 1) d.remove(value) else d))
     } else if (affected + canBeAffected == result) {
-      Revised(domains.map(d =>
-        if (d.size > 1 && d.present(value)) Singleton(value) else d))
+      Revised(domains.map(d => if (d.size > 1 && d.present(value)) d.assign(value) else d))
     } else {
       Revised(domains)
     }

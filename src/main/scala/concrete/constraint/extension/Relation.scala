@@ -23,7 +23,7 @@ trait Relation extends Iterable[Array[Int]] {
   def --(t: Iterable[Seq[Int]]) = t.foldLeft(Relation.this)(_ - _)
   def edges: Int
   def copy: Self2
-  def findSupport(scope: IndexedSeq[Domain], p: Int, i: Int, support: Array[Int]): Option[Array[Int]]
+  def findSupport(scope: IndexedSeq[Domain], p: Int, i: Int): Option[Array[Int]]
   def lambda: BigInt
   def universal(scope: IndexedSeq[Domain]): Boolean
 

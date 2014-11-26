@@ -15,16 +15,20 @@ object EmptyIntDomain extends IntDomain {
   def present(i: Int) = false
   def remove(i: Int) = this
   def removeFrom(lb: Int) = this
+  override def removeAfter(lb: Int) = this
   def removeTo(ub: Int) = this
+  override def removeUntil(ub: Int) = this
   override def filter(f: Int => Boolean) = this
   def setSingle(i: Int) = throw new AssertionError
   def subsetOf(d: IntDomain) = true
   override def toString = "[]"
   val toBitVector = BitVector.empty
-  def intersects(bv: BitVector) = -1
-  def intersects(bv: BitVector, part: Int) = false
+  override def intersects(bv: BitVector) = -1
+  override def intersects(bv: BitVector, part: Int) = false
   def bound = throw new IllegalStateException
   override def isEmpty = true
+  override def iterator = Iterator.empty
+  def apply(i: Int) = throw new NoSuchElementException
 }
 
 object IntDomain {
@@ -94,6 +98,11 @@ abstract class IntDomain extends Domain {
       //} else Iterator.empty.next()
 
     }
+  }
+
+  def assign(value: Int) = {
+    assert(present(value))
+    Singleton(value)
   }
 
 }

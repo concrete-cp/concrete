@@ -45,7 +45,6 @@ final class Problem(val variables: List[Variable]) {
 
   private var _maxArity = 0
   private var _maxCId = 0
-  private var _currentLevel = 0
 
   def addConstraint(constraint: Constraint): Unit = addConstraints(Seq(constraint))
 
@@ -90,7 +89,6 @@ final class Problem(val variables: List[Variable]) {
 
   //val maxDomainSize = variables.iterator.map(_.dom.size).max
 
-  def currentLevel = _currentLevel
   def maxArity = _maxArity
 
   def maxCId = _maxCId

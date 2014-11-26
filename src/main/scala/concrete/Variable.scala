@@ -38,7 +38,7 @@ final class Variable(
 
   private var _positionInConstraint: Array[Int] = Array.empty
 
-  override def toString = s"$name $initDomain"
+  override def toString = name
 
   def toString(ps: ProblemState) = s"$name ${ps.domain(id)}"
 
