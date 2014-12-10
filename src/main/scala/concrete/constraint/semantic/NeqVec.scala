@@ -5,10 +5,12 @@ import concrete.Domain
 import concrete.Revised
 import concrete.Variable
 import concrete.constraint.Constraint
-import concrete.constraint.Stateless
+
 import scala.collection.SeqView
 
-final class NeqVec(x: Array[Variable], y: Array[Variable]) extends Constraint(x ++ y) with Stateless {
+final class NeqVec(x: Array[Variable], y: Array[Variable]) extends Constraint(x ++ y) {
+  type State = Unit
+  def initState = Unit
   require(x.length == y.length)
 
   val zip = x.zip(y)
@@ -19,7 +21,7 @@ final class NeqVec(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
     t.view.splitAt(size).zipped.exists(_ != _)
   }
 
-  def revise(domains: IndexedSeq[Domain]) = {
+  def revise(domains: IndexedSeq[Domain], s: State) = {
     val p = singleFreeVariable(domains)
 
     if (p < 0) {
@@ -50,9 +52,9 @@ final class NeqVec(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
     }
   }
 
-  override def toString(domains:IndexedSeq[Domain]) = domains.take(size).mkString("(", ", ", ")") + " /= " + domains.drop(size).mkString("(", ", ", ")")
+  override def toString(domains: IndexedSeq[Domain], s: State) = domains.take(size).mkString("(", ", ", ")") + " /= " + domains.drop(size).mkString("(", ", ", ")")
 
-  def advise(domains: IndexedSeq[Domain],p: Int) = arity
+  def advise(domains: IndexedSeq[Domain], p: Int) = arity
 
   val simpleEvaluation = 2
 }

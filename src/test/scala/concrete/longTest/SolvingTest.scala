@@ -24,6 +24,10 @@ class SolvingTest extends FlatSpec with SolvingBehaviors {
 trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this: FlatSpec =>
 
   val problemBank = LinkedHashMap[String, AnyVal](
+    "alpha.fzn" -> true,
+    "frb35-17-1_ext.xml.bz2" -> 2,
+    "queens-12_ext.xml" -> 14200,
+    "queens-12.xml" -> 14200,
     "zebra.xml" -> 1,
     "crossword-m1-debug-05-01.xml" -> 48,
 
@@ -36,13 +40,13 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
     "scen11.xml.bz2" -> true,
     "bqwh-15-106-0_ext.xml" -> 182,
     "queensAllDiff-8.xml.bz2" -> 92,
-    "queens-12_ext.xml" -> 14200,
+
     "langford-2-4-ext.xml" -> 2,
     "flat30-1.cnf" -> true,
-    "frb35-17-1_ext.xml.bz2" -> 2,
+
     "series-15.xml.bz2" -> true,
     "e0ddr1-10-by-5-8.xml.bz2" -> true,
-    "queens-12.xml" -> 14200,
+
     "tsp-20-1_ext.xml.bz2" -> true,
     "bigleq-50.xml" -> 1,
     "test.fzn" -> true,

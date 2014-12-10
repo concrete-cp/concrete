@@ -55,9 +55,10 @@ final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable, 
     }
   }
 
-  override def toString(domains:IndexedSeq[Domain]) = domains(0) + " =AC= |" + domains(1) + " - " + domains(2) + "|";
+  override def toString(domains: IndexedSeq[Domain], s: State) =
+    s"$result ${domains(0)} =AC= |$v0 ${domains(1)} - $v1 ${domains(2)}|";
 
-  def getEvaluation(domains: IndexedSeq[Domain]) = if (skip(domains)) -1 else {
+  def getEvaluation(domains: IndexedSeq[Domain]) = {
     val d0 = domains(0).size
     val d1 = domains(1).size
     val d2 = domains(2).size

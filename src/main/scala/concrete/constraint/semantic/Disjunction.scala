@@ -9,11 +9,14 @@ import concrete.Revised
 import concrete.TRUE
 import concrete.Variable
 import concrete.constraint.Constraint
-import concrete.constraint.Stateless
+
 import concrete.Contradiction
 
 final class Disjunction(scope: Array[Variable],
-                        val reverses: IndexedSeq[Boolean]) extends Constraint(scope) with Stateless {
+                        val reverses: IndexedSeq[Boolean]) extends Constraint(scope) {
+
+  type State = Unit
+  def initState = Unit
 
   require(reverses.size == scope.size, "reverses must cover all variables")
 
@@ -22,8 +25,8 @@ final class Disjunction(scope: Array[Variable],
 
   {
     val init = scope.map(_.initDomain.asInstanceOf[BooleanDomain])
-    watch1 = seekWatch(init, -1).getOrElse(-1)
-    watch2 = seekWatch(init, watch1).getOrElse(-1)
+    watch1 = seekWatch(init, -1).get //OrElse(-1)
+    watch2 = seekWatch(init, watch1).get //OrElse(-1)
   }
 
   //if (isTrue(watch1) || isTrue(watch2)) entail()
@@ -35,17 +38,18 @@ final class Disjunction(scope: Array[Variable],
   override def check(t: Array[Int]) =
     reverses.zip(t).exists(l => l._1 ^ l._2 == 1)
 
-  override def toString(domains: IndexedSeq[Domain]) =
+  override def toString(domains: IndexedSeq[Domain], s: State) =
     "\\/" + (scope, domains, reverses).zipped.map((v, d, r) => (if (r) "-" else "") + v + " " + d).mkString("(", ", ", ")")
 
-  def revise(domains: IndexedSeq[Domain]): ReviseOutcome[Unit] = {
+  def revise(domains: IndexedSeq[Domain], s: State): ReviseOutcome[Unit] = {
     //println(this.toString + " " + watch1 + " " + watch2)
     //val r: ReviseOutcome[Unit] = 
     val d = domains.asInstanceOf[IndexedSeq[BooleanDomain]]
 
-    if (watch1 < 0) Contradiction
-    else if (watch2 < 0) setTrue(d, watch1)
-    else if (isTrue(d, watch1) || isTrue(d, watch2)) Revised(domains, true)
+    //if (watch1 < 0) Contradiction
+    //else if (watch2 < 0) setTrue(d, watch1)
+    //else 
+    if (isTrue(d, watch1) || isTrue(d, watch2)) Revised(domains, true)
     else {
       val r1: ReviseOutcome[Unit] = if (isFalse(d, watch1)) {
 

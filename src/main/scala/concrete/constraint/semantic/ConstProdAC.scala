@@ -4,9 +4,10 @@ import concrete.constraint.Constraint
 import concrete.Variable
 import concrete.constraint.Residues
 import concrete.constraint.BCCompanion
-import concrete.constraint.StatelessBC
+
 import concrete.Revised
 import concrete.Domain
+import concrete.constraint.BC
 
 class ConstProdAC(v0: Variable, v1: Variable, r: Int) extends Constraint(Array(v0, v1)) with Residues
   with BCCompanion {
@@ -35,12 +36,14 @@ class ConstProdAC(v0: Variable, v1: Variable, r: Int) extends Constraint(Array(v
   }
 }
 
-class ConstProdBC(v0: Variable, v1: Variable, r: Int) extends Constraint(Array(v0, v1)) with StatelessBC {
+class ConstProdBC(v0: Variable, v1: Variable, r: Int) extends Constraint(Array(v0, v1)) with BC {
+  type State = Unit
+  def initState = Unit
   def check(t: Array[Int]) = r == t(0) * t(1)
   def simpleEvaluation = 1
-  def advise(domains: IndexedSeq[Domain],p: Int) = 2
+  def advise(domains: IndexedSeq[Domain], p: Int) = 2
 
-  def shave(domains: IndexedSeq[Domain]) = {
+  def shave(domains: IndexedSeq[Domain], s: State) = {
     val v1Interval = domains(1).span
     val v0 = if (v1Interval.contains(0)) domains(0) else domains(0) & (r /: v1Interval)
     val v0Interval = domains(0).span

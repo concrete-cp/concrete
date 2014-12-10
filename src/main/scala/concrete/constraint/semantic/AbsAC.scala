@@ -1,16 +1,16 @@
 package concrete.constraint.semantic;
 
-import concrete.ReviseOutcome
 import concrete.Domain
+import concrete.ReviseOutcome
 import concrete.Revised
 import concrete.Variable
 import concrete.constraint.BCCompanion
 import concrete.constraint.Constraint
-import concrete.constraint.Stateless
 
 final class AbsAC(val result: Variable, val v0: Variable) extends Constraint(Array(result, v0))
-  with Stateless with BCCompanion {
-
+  with BCCompanion {
+  type State = Unit
+  def initState = Unit
   def skipIntervals = true
 
   //  val corresponding1 = result.dom.allValues map { v0.dom.index }
@@ -19,7 +19,7 @@ final class AbsAC(val result: Variable, val v0: Variable) extends Constraint(Arr
 
   def check(t: Array[Int]) = t(0) == math.abs(t(1))
 
-  def revise(domains: IndexedSeq[Domain]): ReviseOutcome[Unit] = {
+  def revise(domains: IndexedSeq[Domain], s:State): ReviseOutcome[Unit] = {
     val result = domains(0)
     val x = domains(1)
 
@@ -31,7 +31,7 @@ final class AbsAC(val result: Variable, val v0: Variable) extends Constraint(Arr
     Revised(nd, isFree(nd))
   }
 
-  override def toString(domains: IndexedSeq[Domain]) = domains(0) + " = |" + domains(1) + "|";
+  override def toString(domains: IndexedSeq[Domain], s: State) = domains(0) + " = |" + domains(1) + "|";
 
   def advise(domains: IndexedSeq[Domain], p: Int) = if (skip(domains)) -1 else domains(0).size * 3 / 2 + domains(1).size
 

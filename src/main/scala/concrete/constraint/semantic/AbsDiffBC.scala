@@ -1,11 +1,12 @@
 package concrete.constraint.semantic;
 
+import concrete.Contradiction
 import concrete.Domain
 import concrete.Revised
-import concrete.UNSATObject
 import concrete.Variable
 import concrete.constraint.Constraint
-import concrete.constraint.StatelessBC
+import concrete.constraint.BC
+import concrete.EmptyIntDomain
 import concrete.util.Interval
 
 //object AbsDiffBC {
@@ -28,59 +29,59 @@ import concrete.util.Interval
 //}
 
 final class AbsDiffBC(val result: Variable, val v0: Variable, val v1: Variable)
-  extends Constraint(Array(result, v0, v1)) with StatelessBC {
+  extends Constraint(Array(result, v0, v1)) with BC {
+  type State = Unit
 
+  def initState = Unit
   def check(t: Array[Int]) = t(0) == math.abs(t(1) - t(2))
 
-  def shave(domains: IndexedSeq[Domain]) = {
-
-    val r = domains(0) & (domains(1).span - domains(2).span).abs
-    val rspan = r.span
-    val d2span = domains(2).span
-    val i0 = domains(1) & ((d2span - rspan) span (d2span + rspan))
-    val d1span = i0.span
-    val i1 = domains(2) & ((d1span - rspan) span (d1span + rspan))
-
-    Revised(Array(r, i0, i1))
-
-    //    val i0 = v0.dom.valueInterval
-    //    val i1 = v1.dom.valueInterval
-    //
-    //    val diff = i0 - i1
-    //
-    //    var mod: List[Int] = Nil
-    //    if (result.dom.intersectVal(diff.abs)) {
-    //      mod ::= 0
-    //    }
-    //    val r = result.dom.valueInterval
-    //
-    //    if (diff.lb >= 0) {
-    //      if (v0.dom.intersectVal(i1 + r)) {
-    //        mod ::= 1
-    //      }
-    //      if (v1.dom.intersectVal(i0 - r)) {
-    //        mod ::= 2
-    //      }
-    //    } else if (diff.ub <= 0) {
-    //      if (v0.dom.intersectVal(i1 - r)) {
-    //        mod ::= 1
-    //      }
-    //      if (v1.dom.intersectVal(i0 + r)) {
-    //        mod ::= 2
-    //      }
-    //    } else {
-    //      if (AbsDiffBC.unionInter(v0.dom, i0, i1 + r, i0, i1 - r)) {
-    //        mod ::= 1
-    //      }
-    //      if (AbsDiffBC.unionInter(v1.dom, i1, i0 - r, i1, i0 + r)) {
-    //        mod ::= 2
-    //      }
-    //    }
-
-    //Revised(mod, false)
+  def union(i0: Option[Interval], i1: Option[Interval]): Option[Interval] = {
+    i0.map {
+      i: Interval =>
+        if (i1.isDefined) {
+          i span i1.get
+        } else {
+          i
+        }
+    }
+      .orElse(i1)
   }
 
-  override def toString(domains:IndexedSeq[Domain]) = domains(0) + " =BC= |" + domains(1) + " - " + domains(2) + "|";
+  def shave(domains: IndexedSeq[Domain], s: State) = {
+    val d2span = domains(2).span
+    val d1span = domains(1).span
+    val r = domains(0) & (d1span - d2span).abs
+    if (r.isEmpty) {
+      Contradiction
+    } else {
+      val rspan = r.span
+
+      union(d1span.intersect(d2span - rspan), d1span.intersect(d2span + rspan)) match {
+        case None => Contradiction
+        case Some(f) =>
+          val i0 = domains(1) & f
+
+          if (i0.isEmpty) {
+            Contradiction
+          } else {
+
+            val d1span = i0.span
+            union(
+              d2span.intersect(d1span - rspan),
+              d2span.intersect(d1span + rspan)) match {
+                case None => Contradiction
+                case Some(g) =>
+                  Revised(IndexedSeq(r, i0, domains(2) & g))
+              }
+
+          }
+      }
+    }
+
+  }
+
+  override def toString(domains: IndexedSeq[Domain], s: State) =
+    s"$result ${domains(0)} =BC= |$v0 ${domains(1)} - $v1 ${domains(2)}|";
 
   def advise(domains: IndexedSeq[Domain], pos: Int) = 5
 

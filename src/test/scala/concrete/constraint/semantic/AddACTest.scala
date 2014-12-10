@@ -27,7 +27,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     c.register(new AdviseCount)
     c.adviseAll(domains)
     assert(c.intervalsOnly(domains))
-    val Revised(mod, _, _) = c.revise(domains)
+    val Revised(mod, _, _) = c.revise(domains, c.initState)
 
     mod(0) should not be theSameInstanceAs(domains(0))
     mod(1) should be theSameInstanceAs domains(1)
@@ -50,7 +50,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     c.register(new AdviseCount)
     c.adviseAll(domains)
     assert(c.intervalsOnly(domains))
-    val Revised(mod, _, _) = c.revise(domains)
+    val Revised(mod, _, _) = c.revise(domains, c.initState)
     mod(0) should be theSameInstanceAs (domains(0))
     mod(1) should not be theSameInstanceAs(domains(1))
     mod(2) should be theSameInstanceAs domains(2)
@@ -72,7 +72,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     c.register(new AdviseCount)
     c.adviseAll(domains)
     assert(c.intervalsOnly(domains))
-    val Revised(mod, _, _) = c.revise(domains)
+    val Revised(mod, _, _) = c.revise(domains, Unit)
     mod(0) should be theSameInstanceAs (domains(0))
     mod(1) should be theSameInstanceAs (domains(1))
     mod(2) should not be theSameInstanceAs(domains(2))
@@ -94,14 +94,14 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
       c.register(new AdviseCount())
       val d = c.scope.map(_.initDomain)
       c.adviseAll(d)
-      val r1 = c.revise(d)
+      val r1 = c.revise(d, Unit)
 
       val c2 = new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
         def check(t: Array[Int]) = t(0) == t(1) + t(2);
       };
       c2.register(new AdviseCount())
       c2.adviseAll(d)
-      val r2 = c2.revise(d)
+      val r2 = c2.revise(d, Unit)
 
       r1 shouldBe r2
     }
@@ -116,14 +116,14 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
       c.register(new AdviseCount())
       val d = c.scope.map(_.initDomain)
       c.adviseAll(d)
-      val r1 = c.revise(d)
+      val r1 = c.revise(d, Unit)
 
       val c2 = new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
         def check(t: Array[Int]) = t(0) == t(1) + t(2);
       };
       c2.register(new AdviseCount())
       c2.adviseAll(d)
-      val r2 = c2.revise(d)
+      val r2 = c2.revise(d, Unit)
 
       r1 shouldBe r2
     }

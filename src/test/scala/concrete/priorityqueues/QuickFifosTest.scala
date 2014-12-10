@@ -6,13 +6,14 @@ import org.scalatest.Matchers
 import org.scalatest.FlatSpec
 import concrete.Revised
 import concrete.Domain
-import concrete.constraint.Stateless
 
 class QuickFifosTest extends FlatSpec with Matchers {
 
-  class TestConstraint(val eval: Int) extends Constraint with Stateless {
+  class TestConstraint(val eval: Int) extends Constraint {
+    type State = Unit
+    def initState = Unit
     def advise(domains: IndexedSeq[Domain], p: Int) = eval
-    def revise(domains: IndexedSeq[Domain]) = Revised(IndexedSeq())
+    def revise(domains: IndexedSeq[Domain], s: State) = Revised(IndexedSeq())
     def simpleEvaluation = 1
     def check(t: Array[Int]) = true
   }

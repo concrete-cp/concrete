@@ -24,14 +24,15 @@ import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
 import concrete.UNSATException
 import concrete.Domain
+import concrete.Revised
+import concrete.Contradiction
+import concrete.ReviseOutcome
 
 final class ExtensionConstraintGeneral(
   _matrix: Matrix,
   shared: Boolean,
   scope: Array[Variable])
   extends ConflictCount(scope, _matrix, shared) with Residues {
-
-  require(scope.forall(_.initDomain.head >= 0))
 
   def removeTuple(tuple: Array[Int]) = {
     ??? // disEntail();
@@ -41,15 +42,31 @@ final class ExtensionConstraintGeneral(
 
   def removeTuples(base: Array[Int]) = ??? //tuples(base).count(removeTuple)
 
-  override def reviseVariable(domains: IndexedSeq[Domain], position: Int, mod: List[Int]) = {
-    if (supportCondition(domains, position)) {
-      assert(super.reviseVariable(domains, position, mod) eq domains(position))
-      domains(position)
-    } else
-      super.reviseVariable(domains, position, mod);
+  override def revise(domains: IndexedSeq[Domain], mod: List[Int], state: State): ReviseOutcome[Unit] = {
+    val s = skip(mod)
+    val nd = for (position <- 0 until arity) yield {
+      if (position == s || supportCondition(domains, position)) {
+        domains(position)
+      } else {
+        val nd = reviseDomain(domains, position)
+        if (nd.isEmpty) return Contradiction
+        nd
+      }
+    }
+    Revised(nd, isFree(nd))
   }
+  //  
+  //  override def reviseVariable(domains: IndexedSeq[Domain], position: Int, mod: List[Int]) = {
+  //    if (supportCondition(domains, position)) {
+  //      assert(super.reviseVariable(domains, position, mod) eq domains(position))
+  //      domains(position)
+  //    } else
+  //      super.reviseVariable(domains, position, mod);
+  //  }
 
-  override def check(tuple: Array[Int]) = matrix.check(tuple)
+  override def check(tuple: Array[Int]) = {
+    matrix.check(tuple)
+  }
 
   override def dataSize = _matrix.size
 }

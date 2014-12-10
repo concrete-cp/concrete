@@ -44,7 +44,7 @@ object AllDiffConstant extends ConstraintCompiler {
     val variables = constraint.arguments.collect {
       case v: IntVariable => v
     }
-    require(constants.size + variables.size == constraint.arguments.size)
+    require(constants.distinct.size + variables.size == constraint.arguments.size)
 
     val diff = RangeSet(constants.map(k => IntInterval.singleton(k)))
 

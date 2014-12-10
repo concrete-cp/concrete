@@ -1,15 +1,14 @@
 package concrete.constraint.semantic
 
-import concrete.Variable
-import concrete.constraint.Constraint
 import scala.collection.mutable.ArrayBuffer
-import concrete.constraint.BCCompanion
-import concrete.constraint.StatelessBC
-import concrete.constraint.Stateless
-import concrete.constraint.Removals
-import concrete.Revised
-import concrete.ReviseOutcome
 import concrete.Domain
+import concrete.ReviseOutcome
+import concrete.Revised
+import concrete.Variable
+import concrete.constraint.BCCompanion
+import concrete.constraint.Constraint
+import concrete.constraint.Removals
+import concrete.constraint.BC
 
 object Element {
   def apply(result: Variable, index: Variable, varsIdx: Seq[(Int, Variable)]) = {
@@ -36,14 +35,17 @@ class ElementBC(
   val vars: Array[Variable],
   val scopeIndex: Array[Int],
   scope: Array[Variable])
-  extends Constraint(scope) with StatelessBC {
+  extends Constraint(scope) with BC {
+
+  type State = Unit
+  def initState = Unit
 
   def advise(domains: IndexedSeq[Domain], pos: Int): Int = arity
 
   def check(tuple: Array[Int]): Boolean = {
     tuple(1) < arity - 2 && tuple(0) == tuple(tuple(1) + 2)
   }
-  def shave(domains: IndexedSeq[Domain]) = {
+  def shave(domains: IndexedSeq[Domain], s: State) = {
     var ch = List[Int]()
     /**
      * Revise indices

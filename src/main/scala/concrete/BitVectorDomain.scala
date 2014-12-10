@@ -1,49 +1,48 @@
 package concrete
 
 import concrete.util.BitVector
+import concrete.util.Interval
 import concrete.util.Math
+import com.typesafe.scalalogging.LazyLogging
 object BitVectorDomain {
   val DISPLAYED_VALUES = 5;
 
 }
 
-final class BitVectorDomain(val offset: Int, val bv: BitVector, override val length: Int) extends IntDomain {
+final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override val length: Int)
+  extends IntDomain with LazyLogging {
   require(size >= 2, "BitVectorSets must have at least two elements")
-  Math.checkedAdd(offset, bv.lastSetBit)
+  Math.checkedAdd(offset, bitVector.lastSetBit)
 
-  assert(bv.cardinality == size, bv + " : " + bv.cardinality + " != " + size)
+  assert(bitVector.cardinality == size, bitVector + " : " + bitVector.cardinality + " != " + size)
 
-  def this(size: Int) = {
-    this(0, BitVector.filled(size), size)
-  }
+  //  def this(size: Int) = {
+  //    this(0, BitVector.filled(size), size)
+  //  }
 
-  def this(lb: Int, ub: Int, hole: Int) = {
-    this(lb, BitVector.intBvH(0, ub - lb, hole - lb), ub - lb)
-  }
-
-  override val head = offset + bv.nextSetBit(0)
+  override val head = offset + bitVector.nextSetBit(0)
 
   assert(head >= offset)
 
-  override val last = offset + bv.lastSetBit
+  override val last = offset + bitVector.lastSetBit
 
   assert(last >= offset)
 
   override def next(i: Int) = {
     val b = math.max(0, i - offset + 1)
-    val n = bv.nextSetBit(b)
+    val n = bitVector.nextSetBit(b)
     if (n < 0) throw new NoSuchElementException else offset + n
   }
 
   override def prev(i: Int) = {
     val b = math.max(0, i - offset)
-    val n = bv.prevSetBit(b)
+    val n = bitVector.prevSetBit(b)
     if (n < 0) throw new NoSuchElementException else offset + n
   }
 
-  def prevOrEq(i: Int): Int = offset + bv.prevSetBit(i - offset + 1)
+  def prevOrEq(i: Int): Int = offset + bitVector.prevSetBit(i - offset + 1)
 
-  def nextOrEq(i: Int): Int = offset + bv.nextSetBit(i - offset)
+  def nextOrEq(i: Int): Int = offset + bitVector.nextSetBit(i - offset)
 
   /**
    * @param index
@@ -52,43 +51,47 @@ final class BitVectorDomain(val offset: Int, val bv: BitVector, override val len
    */
   def present(value: Int) = {
     val bit = value - offset
-    bit >= 0 && bv(value - offset)
+    bit >= 0 && bitVector(value - offset)
   }
 
   override def filter(f: Int => Boolean) = {
-    val newBv = bv.filter(i => f(i + offset))
-    if (newBv == bv) {
+    val newbitVector = bitVector.filter(i => f(i + offset))
+    if (newbitVector == bitVector) {
       this
     } else {
-      IntDomain.ofBV(offset, newBv, newBv.cardinality)
+      IntDomain.ofBitVector(offset, newbitVector, newbitVector.cardinality)
     }
   }
 
   def remove(index: Int) = {
     if (present(index)) {
-      IntDomain.ofBV(offset, bv - (index - offset), size - 1)
+      IntDomain.ofBitVector(offset, bitVector - (index - offset), size - 1)
     } else { this }
   }
 
   def removeFrom(lb: Int) = {
     val b = math.max(0, lb - offset)
-    val newBv = bv.clearFrom(b)
-    if (newBv == bv) {
+    val newbitVector = bitVector.clearFrom(b)
+    if (newbitVector == bitVector) {
       this
     } else {
-      IntDomain.ofBV(offset, newBv, newBv.cardinality)
+      IntDomain.ofBitVector(offset, newbitVector, newbitVector.cardinality)
     }
   }
 
-  def removeTo(ub: Int) = {
+  def removeAfter(lb: Int) = removeFrom(lb + 1)
+
+  def removeUntil(ub: Int) = {
     val b = math.max(0, ub - offset)
-    val nbv = bv.clearUntil(b + 1)
-    if (nbv == bv) {
+    val nbitVector = bitVector.clearUntil(b)
+    if (nbitVector == bitVector) {
       this
     } else {
-      IntDomain.ofBV(offset, nbv, nbv.cardinality)
+      IntDomain.ofBitVector(offset, nbitVector, nbitVector.cardinality)
     }
   }
+
+  def removeTo(ub: Int) = removeUntil(ub + 1)
 
   override def toString =
     if (size <= BitVectorDomain.DISPLAYED_VALUES) {
@@ -99,19 +102,35 @@ final class BitVectorDomain(val offset: Int, val bv: BitVector, override val len
     }
 
   def subsetOf(d: IntDomain) = d match {
-    case d: BitVectorDomain => bv.subsetOf(d.bv)
+    case d: BitVectorDomain => bitVector.subsetOf(d.bitVector)
     case d: IntervalDomain  => head >= d.head && last <= d.last
-  }
-
-  def toBitVector = {
-    require(offset == 0)
-    bv
   }
 
   def apply(i: Int) = iterator.drop(i - 1).next
 
-  //  def intersects(that: BitVector) = bv.intersects(that)
-  //  def intersects(that: BitVector, part: Int) = bv.intersects(that, part)
+  var requestedOffset: Int = _
+  var requestedBV: BitVector = null
+
+  def bitVector(offset: Int) = {
+    if (offset == this.offset) {
+      bitVector
+    } else if (requestedBV != null && offset == requestedOffset) {
+      requestedBV
+    } else {
+      logger.info(s"generating BV from offset ${this.offset} to $offset")
+      requestedOffset = offset
+      requestedBV = BitVector.empty
+      for (v <- this) {
+        requestedBV += v - offset
+      }
+      requestedBV
+    }
+  }
+
+  lazy val span = Interval(head, last)
+
+  //  def intersects(that: BitVector) = bitVector.intersects(that)
+  //  def intersects(that: BitVector, part: Int) = bitVector.intersects(that, part)
   def bound = false
   override def isEmpty = false
 }

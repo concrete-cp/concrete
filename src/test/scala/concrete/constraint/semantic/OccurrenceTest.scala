@@ -34,7 +34,7 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors {
 
     def domains = Array(occ, v1, v2, v3, v4, v5).map(_.initDomain)
 
-    val Revised(mod, _, _) = c.revise(domains)
+    val Revised(mod, _, _) = c.revise(domains, Unit)
 
     forAll((mod zip domains).drop(1)) {
       case (m, d) => m should be theSameInstanceAs d
@@ -56,7 +56,7 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors {
     val c = new OccurrenceVar(occ, 7, Array(v1, v2, v3, v4, v5))
     def domains = Array(occ, v1, v2, v3, v4, v5).map(_.initDomain)
 
-    c.revise(domains) shouldBe Contradiction
+    c.revise(domains, Unit) shouldBe Contradiction
 
   }
 
@@ -84,10 +84,9 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors {
     val occ = s.concreteProblem.variable("occ")
 
     val domains = c.scope.map(_.initDomain)
-    
-    val Revised(mod, _, _) = c.revise(domains)
 
-    
+    val Revised(mod, _, _) = c.revise(domains, Unit)
+
     forAll((mod zip domains).drop(1)) {
       case (m, d) => m should be theSameInstanceAs d
     }

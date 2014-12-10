@@ -6,13 +6,15 @@ import concrete.Variable
 import concrete.constraint.TupleEnumerator
 import concrete.UNSATException
 import concrete.UNSATObject
-import concrete.constraint.Stateless
+
 import concrete.Revised
 import concrete.ReviseOutcome
 import concrete.Domain
 import concrete.Contradiction
 
-final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x ++ y) with Stateless {
+final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x ++ y) {
+  type State = Unit
+  def initState = Unit
   val size = x.length
   require(size == y.length)
 
@@ -36,7 +38,7 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
   var alpha = -1
   var beta = -1
 
-  def revise(domains: IndexedSeq[Domain]): ReviseOutcome[Unit] = {
+  def revise(domains: IndexedSeq[Domain], s: State): ReviseOutcome[Unit] = {
     var i = 0
     while (i < size && groundEq(domains, i)) i += 1
 

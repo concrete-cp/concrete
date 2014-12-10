@@ -47,7 +47,7 @@ final class AbsIntTest extends FlatSpec with Matchers {
     val domains = Array(x.initDomain, y.initDomain)
     c.adviseAll(domains)
     assert(c.intervalsOnly(domains))
-    val Revised(mod, _, _) = c.revise(domains)
+    val Revised(mod, _, _) = c.revise(domains, Unit)
 
     mod(0) should be theSameInstanceAs domains(0)
     mod(1) should not be theSameInstanceAs(domains(1))

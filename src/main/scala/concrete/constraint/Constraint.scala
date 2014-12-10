@@ -60,17 +60,10 @@ abstract class Constraint(val scope: Array[Variable])
 
   var id: Int = -1
 
-  private var entailedAtLevel = -1;
-
   /**
    * arity is the number of variables involved by the constraint
    */
   val arity = scope.size
-
-  /**
-   * @return the scope of the constraint as an unordered Set
-   */
-  val scopeSet = scope.toSet
 
   /**
    * @return a map containing the positions of variables in the scope of the constraint.
@@ -78,11 +71,6 @@ abstract class Constraint(val scope: Array[Variable])
   val position = scope.zipWithIndex.toMap
 
   override def equals(o: Any) = o.asInstanceOf[Constraint].id == id
-
-  /**
-   * @return string description of the constraint
-   */
-  def getType = getClass.getSimpleName
 
   override def hashCode = id
 
@@ -187,8 +175,10 @@ abstract class Constraint(val scope: Array[Variable])
 
   override final def toString = this.getClass.getSimpleName + scope.mkString("(", ", ", ")")
 
-  def toString(domains: IndexedSeq[Domain], state: State) = this.getClass.getSimpleName +
-    (scope, domains).zipped.map((v, d) => s"$v $d").mkString("(", ", ", ")") + " - " + state
+  def toString(domains: IndexedSeq[Domain], state: State) = id + ": " + this.getClass.getSimpleName +
+    (scope, domains).zipped.map((v, d) => s"$v $d").mkString("(", ", ", ")") + {
+      if (state == Unit) "" else " - " + state
+    }
 
   /**
    * @param variable
@@ -263,6 +253,17 @@ abstract class Constraint(val scope: Array[Variable])
           return false
         }
         one = true
+      }
+      i -= 1
+    }
+    true
+  }
+
+  def isAssigned(domains: IndexedSeq[Domain]): Boolean = {
+    var i = arity - 1
+    while (i >= 0) {
+      if (domains(i).size > 1) {
+        return false
       }
       i -= 1
     }

@@ -37,6 +37,8 @@ trait Removals extends Constraint with AdviseCounts {
 
   def getEvaluation(domains: IndexedSeq[Domain]): Int
 
+  def skip(modified: List[Int]) = if (modified.tail.isEmpty) modified.head else -1
+
   //scope.iterator.zip(removals.iterator).filter(t => t._2 >= reviseCount).map(t => t._1)
 
 }

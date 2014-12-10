@@ -9,7 +9,7 @@ import java.util.Arrays
 import scala.collection.mutable.Queue
 import concrete.UNSATObject
 import concrete.UNSATException
-import concrete.constraint.Stateless
+
 import concrete.Revised
 import scala.collection.mutable.BitSet
 import concrete.ReviseOutcome
@@ -21,8 +21,9 @@ final case class Bounds(val value: Int, val minCount: Int, val maxCount: Int) {
   override def toString = value + ": [" + minCount + ", " + maxCount + "]"
 }
 
-final class Gcc(scope: Array[Variable], bounds: Array[Bounds]) extends Constraint(scope) with Stateless {
-
+final class Gcc(scope: Array[Variable], bounds: Array[Bounds]) extends Constraint(scope) {
+  type State = Unit
+  def initState = Unit
   val offset = bounds.map(_.value).min
 
   val _bounds2 = new Array[Bounds](bounds.map(_.value).max - offset + 1)
@@ -115,8 +116,8 @@ final class Gcc(scope: Array[Variable], bounds: Array[Bounds]) extends Constrain
     Revised(ch)
   }
 
-  def revise(domains: IndexedSeq[Domain]) = upper(domains) andThen ((c, _) => lower(c))
+  def revise(domains: IndexedSeq[Domain], s: State) = upper(domains) andThen ((c, _) => lower(c))
 
-  def advise(domains: IndexedSeq[Domain],p: Int) = arity * arity
+  def advise(domains: IndexedSeq[Domain], p: Int) = arity * arity
   val simpleEvaluation = 3
 }

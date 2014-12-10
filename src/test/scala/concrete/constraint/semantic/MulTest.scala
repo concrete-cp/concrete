@@ -52,7 +52,7 @@ final class MulTest extends FlatSpec with Matchers with PropertyChecks with Insp
       val c = new MulAC(vx, vy, vz)
       c.register(new AdviseCount)
       c.adviseAll(domains)
-      val r1 = c.revise(domains)
+      val r1 = c.revise(domains, Unit)
 
       //val Revised(mod, _, _) = c.revise(domains)
 
@@ -61,7 +61,7 @@ final class MulTest extends FlatSpec with Matchers with PropertyChecks with Insp
       };
       c2.register(new AdviseCount)
       c2.adviseAll(domains)
-      val r2 = c2.revise(domains)
+      val r2 = c2.revise(domains, Unit)
       r1 shouldBe r2
 
       //      

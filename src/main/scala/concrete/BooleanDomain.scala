@@ -1,9 +1,10 @@
 package concrete
 
 import concrete.util.BitVector
+import concrete.util.Interval
 
 case object UNKNOWNBoolean extends BooleanDomain {
-  val toBitVector = BitVector.filled(2)
+  val bitVector = BitVector.filled(2)
   override def toString = "[f, t]"
   override def length = 2
   override def head = 0
@@ -12,16 +13,42 @@ case object UNKNOWNBoolean extends BooleanDomain {
   def prev(i: Int) = if (i >= 1) 0 else throw new NoSuchElementException
   def present(i: Int) = { Domain.checks + 1; true }
   def canBe(b: Boolean) = true
-  def removeFrom(lb: Int) = lb match {
-    case 0 => EMPTY
-    case 1 => FALSE
-    case _ => this
-  }
-  def removeTo(ub: Int) = ub match {
-    case 0 => TRUE
-    case 1 => EMPTY
-    case _ => this
-  }
+  def removeFrom(lb: Int) =
+    if (lb <= 0) {
+      EMPTY
+    } else if (lb == 1) {
+      FALSE
+    } else {
+      this
+    }
+
+  def removeAfter(lb: Int) =
+    if (lb < 0) {
+      EMPTY
+    } else if (lb == 0) {
+      FALSE
+    } else {
+      this
+    }
+
+  def removeTo(ub: Int) =
+    if (ub >= 1) {
+      EMPTY
+    } else if (ub == 0) {
+      TRUE
+    } else {
+      this
+    }
+
+  def removeUntil(ub: Int) =
+    if (ub > 1) {
+      EMPTY
+    } else if (ub == 1) {
+      TRUE
+    } else {
+      this
+    }
+
   def nextOrEq(value: Int) =
     if (value <= 0) 0
     else if (value <= 1) 1
@@ -39,11 +66,23 @@ case object UNKNOWNBoolean extends BooleanDomain {
     case _ => throw new AssertionError("Out of bounds")
   }
 
+  override def filter(f: Int => Boolean) =
+    if (f(0)) {
+      if (f(1)) {
+        this
+      } else {
+        FALSE
+      }
+    } else {
+      TRUE.filter(f)
+    }
+
   val as01 = IntDomain.ofInterval(0, 1)
+  val span = Interval(0, 1)
 }
 
 case object TRUE extends BooleanDomain {
-  val toBitVector = BitVector.empty + 1
+  val bitVector = BitVector.empty + 1
   override def toString = "[t]"
   def length = 1
   override def head = 1
@@ -52,16 +91,20 @@ case object TRUE extends BooleanDomain {
   def prev(i: Int) = throw new NoSuchElementException
   def present(i: Int) = { Domain.checks += 1; i == 1 }
   def canBe(b: Boolean) = b
-  def removeFrom(lb: Int) = if (lb == 0) EMPTY else this
-  def removeTo(ub: Int) = if (ub == 1) EMPTY else this
+  def removeFrom(lb: Int) = if (lb <= 1) EMPTY else this
+  def removeAfter(lb: Int) = if (lb < 1) EMPTY else this
+  def removeTo(ub: Int) = if (ub >= 1) EMPTY else this
+  def removeUntil(ub: Int) = if (ub > 1) EMPTY else this
   def nextOrEq(value: Int) = if (value > 1) throw new NoSuchElementException else 1;
   def prevOrEq(value: Int) = if (value < 1) throw new NoSuchElementException else 1;
   def remove(value: Int) = if (value == 1) EMPTY else this
   val as01 = new Singleton(1)
+  override def filter(f: Int => Boolean) = if (f(1)) this else EMPTY
+  val span = Interval(1, 1)
 }
 
 case object FALSE extends BooleanDomain {
-  val toBitVector = BitVector.empty + 0
+  val bitVector = BitVector.empty + 0
   override val toString = "[f]"
   def length = 1
   override def head = 0
@@ -70,16 +113,20 @@ case object FALSE extends BooleanDomain {
   def prev(i: Int) = throw new NoSuchElementException
   def present(i: Int) = { Domain.checks += 1; i == 0 }
   def canBe(b: Boolean) = !b
-  def removeFrom(lb: Int) = if (lb <= 1) EMPTY else this
-  def removeTo(ub: Int) = if (ub == 0) EMPTY else this
+  def removeFrom(lb: Int) = if (lb <= 0) EMPTY else this
+  def removeAfter(lb: Int) = if (lb < 0) EMPTY else this
+  def removeTo(ub: Int) = if (ub >= 0) EMPTY else this
+  def removeUntil(ub: Int) = if (ub > 0) EMPTY else this
   def nextOrEq(value: Int) = if (value > 0) throw new NoSuchElementException else 0;
   def prevOrEq(value: Int) = if (value < 0) throw new NoSuchElementException else 0;
   def remove(value: Int) = if (value == 0) EMPTY else this
   val as01 = new Singleton(0)
+  override def filter(f: Int => Boolean) = if (f(0)) this else EMPTY
+  val span = Interval(0, 0)
 }
 
 case object EMPTY extends BooleanDomain {
-  val toBitVector = BitVector.empty
+  val bitVector = BitVector.empty
   override val toString = "[]"
   def length = 0
   override def head = throw new NoSuchElementException
@@ -89,11 +136,15 @@ case object EMPTY extends BooleanDomain {
   def present(i: Int) = false
   def canBe(b: Boolean) = false
   def removeFrom(lb: Int) = this
+  def removeAfter(lb: Int) = this
   def removeTo(ub: Int) = this
+  def removeUntil(ub: Int) = this
   def nextOrEq(value: Int) = throw new NoSuchElementException
   def prevOrEq(value: Int) = throw new NoSuchElementException
   def remove(v: Int) = this
   val as01 = EmptyIntDomain
+  override def filter(f: Int => Boolean) = this
+  def span = throw new NoSuchElementException
 }
 
 object BooleanDomain {
@@ -121,5 +172,13 @@ sealed trait BooleanDomain extends Domain {
   def iterator = as01.iterator
 
   def apply(i: Int) = as01.apply(i)
+
+  def bitVector: BitVector
+
+  def bitVector(offset: Int) = {
+    require(offset == 0)
+    bitVector
+  }
+
 }
 

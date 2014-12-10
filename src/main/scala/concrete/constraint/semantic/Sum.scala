@@ -1,29 +1,38 @@
 package concrete.constraint.semantic
 
-import scala.annotation.tailrec
-import concrete.constraint.Constraint
-import concrete.Domain
-import concrete.util.Interval
-import concrete.Variable
 import com.typesafe.scalalogging.LazyLogging
-import scala.collection.mutable.HashSet
-import concrete.constraint.BC
-import SumMode._
-import concrete.constraint.StatelessBC
-import concrete.constraint.Stateless
+import concrete.Domain
 import concrete.Revised
+import concrete.Variable
+import concrete.constraint.Constraint
+import concrete.util.Interval
+import concrete.constraint.BC
+import concrete.Contradiction
+import concrete.ReviseOutcome
+
+object SumMode extends Enumeration {
+  type SumMode = Value
+  val SumLE = Value("le")
+  val SumLT = Value("lt")
+  val SumEQ = Value("eq")
+  //val SumNE = Value("ne")
+}
 
 final class Sum(
   val constant: Int,
   val factors: Array[Int],
   scope: Array[Variable],
-  mode: SumMode) extends Constraint(scope)
-  with Stateless
+  mode: SumMode.SumMode) extends Constraint(scope)
   with LazyLogging {
+
+  type State = Unit
+  def initState = Unit
+
+  import SumMode._
 
   require(factors.forall(_ != 0), this)
 
-  def this(constant: Int, scope: Array[Variable], mode: SumMode) =
+  def this(constant: Int, scope: Array[Variable], mode: SumMode.SumMode) =
     this(constant, Array.fill(scope.length)(1), scope, mode)
 
   def check(t: Array[Int]): Boolean = {
@@ -36,7 +45,7 @@ final class Sum(
     }
   }
 
-  def advise(domains: IndexedSeq[Domain],p: Int) = arity
+  def advise(domains: IndexedSeq[Domain], p: Int) = arity
 
   private val initBound = Interval(-constant, -constant)
 
@@ -46,7 +55,7 @@ final class Sum(
     case SumEQ => dom & itv
   }
 
-  def revise(domains: IndexedSeq[Domain]) = {
+  def revise(domains: IndexedSeq[Domain], s: State): ReviseOutcome[Unit] = {
 
     val doms = domains.toArray.clone
 
@@ -73,7 +82,9 @@ final class Sum(
 
         val newDom = filter(dom, thisBounds / -f, f < 0)
 
-        if (newDom ne dom) {
+        if (newDom.isEmpty) {
+          return Contradiction
+        } else if (newDom ne dom) {
           doms(i) = newDom
           change = true
           bounds = thisBounds + newDom.span * f
@@ -85,7 +96,8 @@ final class Sum(
     Revised(doms)
   }
 
-  override def toString(domains: IndexedSeq[Domain]) = (domains, factors).zipped.map((v, f) => f + "." + v).mkString(" + ") + s" $mode $constant"
+  override def toString(domains: IndexedSeq[Domain], s: State) =
+    (domains, factors).zipped.map((v, f) => f + "." + v).mkString(" + ") + s" $mode $constant"
 
   val simpleEvaluation = 3
 }

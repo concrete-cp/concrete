@@ -19,12 +19,11 @@
 
 package concrete
 
-import concrete.constraint.extension.ExtensionConstraint
 import concrete.constraint.Constraint
+import concrete.constraint.extension.ExtensionConstraint
+import concrete.priorityqueues.DLNode
 import concrete.priorityqueues.Identified
 import concrete.priorityqueues.PTag
-import scala.annotation.tailrec
-import concrete.priorityqueues.DLNode
 
 final class Variable(
   val name: String,
@@ -40,7 +39,7 @@ final class Variable(
 
   override def toString = name
 
-  def toString(ps: ProblemState) = s"$name ${ps.domain(id)}"
+  def toString(ps: ProblemState) = s"$name ${ps(this)}"
 
   def constraints = _constraints
 
@@ -54,7 +53,7 @@ final class Variable(
   }
 
   def dynamicConstraints = _extensionConstraints
-  def positionInConstraint = _positionInConstraint
+  def positionInConstraint(constraintPosition: Int) = _positionInConstraint(constraintPosition)
 
   var wDeg = 0
 

@@ -44,22 +44,36 @@ final class AbsDiffTest extends FlatSpec with Matchers with Inspectors with Prop
 
       r1 shouldBe r2
     }
+  }
 
-    {
-      val vx = new Variable("x", IntDomain(0, 2, 3))
-      val vy = new Variable("y", IntDomain(3, 4, 6, 7, 8))
-      val vz = new Variable("z", IntDomain(5))
-      val domains = IndexedSeq(vx.initDomain, vy.initDomain, vz.initDomain)
+  it should "filter correctly" in {
 
-      val c = new AbsDiffAC(vx, vy, vz)
-      c.register(new AdviseCount)
-      c.adviseAll(domains)
-      val Revised(doms, _, _) = c.revise(domains, c.initState)
+    val vx = new Variable("x", IntDomain(0, 2, 3))
+    val vy = new Variable("y", IntDomain(3, 4, 6, 7, 8))
+    val vz = new Variable("z", IntDomain(5))
+    val domains = IndexedSeq(vx.initDomain, vy.initDomain, vz.initDomain)
 
-      doms(0) should have size 2
-      doms(1) should have size 3
-      doms(2) should have size 1
-    }
+    val c = new AbsDiffAC(vx, vy, vz)
+    c.register(new AdviseCount)
+    c.adviseAll(domains)
+    val Revised(doms, _, _) = c.revise(domains, c.initState)
+
+    doms(0) should have size 2
+    doms(1) should have size 3
+    doms(2) should have size 1
+
+  }
+
+  "AbsDiffBC" should "filter correctly" in {
+    val vx = new Variable("x", IntDomain(5 to 7))
+    val vy = new Variable("y", IntDomain(4 to 5))
+    val vz = new Variable("z", IntDomain(9))
+
+    val c = new AbsDiffBC(vx, vy, vz)
+    val domains = c.scope.map(_.initDomain)
+    val Revised(r, e, s) = c.revise(domains, Unit)
+
+    r shouldBe IndexedSeq(IntDomain(5), IntDomain(4), IntDomain(9))
   }
 
 }

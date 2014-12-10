@@ -11,12 +11,12 @@ abstract class ExtensionConstraint(
   var shared: Boolean) extends Constraint(scope) {
 
   override def check(t: Array[Int]) = _matrix.check(t)
-//  def checkValues(t: Array[Int]) = {
-//    val indices = (t, scope).zipped.map {
-//      (value, variable) => variable.dom.index(value)
-//    }
-//    checkIndices(indices)
-//  }
+  //  def checkValues(t: Array[Int]) = {
+  //    val indices = (t, scope).zipped.map {
+  //      (value, variable) => variable.dom.index(value)
+  //    }
+  //    checkIndices(indices)
+  //  }
   def removeTuples(base: Array[Int]): Int
   def removeTuple(tuple: Array[Int]): Boolean
   def matrix = _matrix

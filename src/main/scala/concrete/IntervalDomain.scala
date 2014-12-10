@@ -2,22 +2,23 @@ package concrete
 
 import concrete.util.BitVector
 import concrete.util.Interval
+import com.typesafe.scalalogging.LazyLogging
 
-final class IntervalDomain(val domain: Interval) extends IntDomain {
+final class IntervalDomain(val span: Interval) extends IntDomain with LazyLogging {
 
   def this(lb: Int, ub: Int) = this(Interval(lb, ub))
 
-  val length = domain.size
+  val length = span.size
 
   require(size >= 2, "Intervals must have at least two elements, use Singleton instead")
 
-  override def head = domain.lb
+  override def head = span.lb
 
-  override def last = domain.ub
+  override def last = span.ub
 
-  def next(i: Int) = if (i >= domain.ub) throw new NoSuchElementException else i + 1
+  def next(i: Int) = if (i >= span.ub) throw new NoSuchElementException else i + 1
 
-  def prev(i: Int) = if (i <= domain.lb) throw new NoSuchElementException else i - 1
+  def prev(i: Int) = if (i <= span.lb) throw new NoSuchElementException else i - 1
 
   def prevOrEq(i: Int): Int =
     if (i < head) { -1 }
@@ -36,22 +37,30 @@ final class IntervalDomain(val domain: Interval) extends IntDomain {
    *            index to test
    * @return true iff index is present
    */
-  def present(index: Int) = domain.contains(index);
+  def present(index: Int) = span.contains(index);
 
   def remove(index: Int) = {
-    if (index == domain.lb) { IntDomain.ofInterval(domain.lb + 1, domain.ub) }
-    else if (index == domain.ub) { IntDomain.ofInterval(domain.lb, domain.ub - 1) }
-    else if (present(index)) { new BitVectorDomain(domain.lb, domain.ub, index) }
+    if (index == span.lb) { IntDomain.ofInterval(span.lb + 1, span.ub) }
+    else if (index == span.ub) { IntDomain.ofInterval(span.lb, span.ub - 1) }
+    else if (present(index)) { toBVDomain.remove(index) }
     else this
   }
 
   def removeFrom(lb: Int) =
-    if (lb > domain.ub) { this }
-    else { IntDomain.ofInterval(domain.lb, lb - 1) }
+    if (lb > span.ub) { this }
+    else { IntDomain.ofInterval(span.lb, lb - 1) }
+
+  def removeAfter(lb: Int) =
+    if (lb >= span.ub) { this }
+    else { IntDomain.ofInterval(span.lb, lb) }
 
   def removeTo(ub: Int) =
-    if (ub < domain.lb) { this }
-    else { IntDomain.ofInterval(ub + 1, domain.ub) }
+    if (ub < span.lb) { this }
+    else { IntDomain.ofInterval(ub + 1, span.ub) }
+
+  def removeUntil(ub: Int) =
+    if (ub <= span.lb) { this }
+    else { IntDomain.ofInterval(ub, span.ub) }
 
   override def filter(f: Int => Boolean) = {
     val filt = toBVDomain.filter(f)
@@ -74,14 +83,26 @@ final class IntervalDomain(val domain: Interval) extends IntDomain {
   }
 
   lazy val toBVDomain = {
-    new BitVectorDomain(head, BitVector.filled(size), size)
+    new BitVectorDomain(head, bitVector0, size)
   }
 
-  lazy val toBitVector = {
-    require(head >= 0)
-    val bv = BitVector.intBv(head, last)
-    assert(bv.cardinality == size, this + " -> " + bv)
-    bv
+  lazy val bitVector0 = BitVector.empty.set(0, size)
+
+  var requestedOffset: Int = _
+  var requestedBV: BitVector = null
+
+  def bitVector(offset: Int) = {
+    if (offset == head) {
+      bitVector0
+    } else if (requestedBV != null && offset == requestedOffset) {
+      requestedBV
+    } else {
+
+      requestedOffset = offset
+      requestedBV = BitVector.empty.set(head - offset, last - offset + 1)
+      logger.info(s"generating BV for $this offset $offset: $requestedBV")
+      requestedBV
+    }
   }
 
   def bound = true

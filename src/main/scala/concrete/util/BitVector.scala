@@ -7,14 +7,6 @@ final object BitVector {
   val WORD_SIZE = 1 << ADDRESS_BITS_PER_WORD
   val MASK = 0xFFFFFFFFFFFFFFFFL
 
-  def intBv(lb: Int, ub: Int) = {
-    BitVector.empty.set(lb, ub + 1)
-  }
-
-  def intBvH(lb: Int, ub: Int, hole: Int) = {
-    intBv(lb, ub) - hole
-  }
-
   val empty: BitVector = EmptyBitVector
 
   def filled(size: Int) = empty.set(0, size)

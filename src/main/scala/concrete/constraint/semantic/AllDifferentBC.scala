@@ -1,25 +1,13 @@
 package concrete.constraint.semantic;
 
-import java.util.Arrays
-import java.util.Comparator
+import scala.annotation.tailrec
+import concrete.Contradiction
+import concrete.Domain
+import concrete.ReviseOutcome
+import concrete.Revised
 import concrete.Variable
 import concrete.constraint.Constraint
-import concrete.util.BitVector
-import scala.annotation.tailrec
-import concrete.UNSATException
-import concrete.constraint.Removals
-import scala.collection.immutable.Queue
-import concrete.Domain
-import concrete.constraint.AdviseCount
-import scala.collection.mutable.HashSet
-import concrete.UNSATObject
-import concrete.UNSATException
 import concrete.constraint.BC
-import concrete.constraint.StatelessBC
-import concrete.Revised
-import concrete.Contradiction
-import concrete.ReviseOutcome
-import scala.collection.mutable.BitSet
 
 final case class HInterval(
   val pos: Int) {
@@ -27,7 +15,10 @@ final case class HInterval(
   var maxrank: Int = 0
 }
 
-final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) with StatelessBC with AllDiffChecker {
+final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) with BC with AllDiffChecker {
+
+  type State = Unit
+  def initState = Unit
 
   val t = new Array[Int](2 * arity + 2) // Tree links
   val d = new Array[Int](2 * arity + 2) // Diffs between critical capacities
@@ -266,7 +257,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
     Revised(mod)
   }
 
-  def shave(domains: IndexedSeq[Domain]) = {
+  def shave(domains: IndexedSeq[Domain], s: State) = {
     sortIt(domains)
     filterLower(domains) andThen ((d, _) => filterUpper(d))
   }

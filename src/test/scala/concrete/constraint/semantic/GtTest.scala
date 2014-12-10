@@ -15,7 +15,7 @@ final class GtTest extends FlatSpec with Matchers {
 
   "Gt" should "strictly filter" in {
     val c = new Gt(v1, v2, true);
-    val Revised(mod, _, _) = c.revise(domains);
+    val Revised(mod, _, _) = c.revise(domains, Unit);
 
     mod(0) shouldBe Seq(4)
     mod(1) shouldBe Seq(3)
@@ -23,7 +23,7 @@ final class GtTest extends FlatSpec with Matchers {
 
   "Gt" should "not strictly filter" in {
     val c = new Gt(v1, v2, false);
-    val Revised(mod, _, _) = c.revise(domains);
+    val Revised(mod, _, _) = c.revise(domains, Unit);
 
     mod(0) shouldBe Seq(3, 4)
     mod(1) shouldBe Seq(3, 4)

@@ -6,18 +6,18 @@ import concrete.ReviseOutcome
 import concrete.constraint.BC
 import concrete.Revised
 import concrete.Domain
-import concrete.constraint.StatelessBC
 
-final class AbsBC(val result: Variable, val v0: Variable) extends Constraint(Array(result, v0))
-  with StatelessBC {
+final class AbsBC(val result: Variable, val v0: Variable) extends Constraint(Array(result, v0)) with BC {
+  type State = Unit
 
+  def initState = Unit
   //  val corresponding1 = result.dom.allValues map { v0.dom.index }
   //  val corresponding2 = result.dom.allValues map { v => v0.dom.index(-v) }
   //  val correspondingR = v0.dom.allValues map { v => result.dom.index(math.abs(v)) }
 
   def check(t: Array[Int]) = t(0) == math.abs(t(1))
 
-  def shave(domains: IndexedSeq[Domain]): ReviseOutcome[Unit] = {
+  def shave(domains: IndexedSeq[Domain], s: State): ReviseOutcome[Unit] = {
     val result = domains(0)
     val v0 = domains(1)
 
@@ -32,7 +32,7 @@ final class AbsBC(val result: Variable, val v0: Variable) extends Constraint(Arr
     Revised(nd, isFree(nd))
   }
 
-  override def toString(domains: IndexedSeq[Domain]) = domains(0) + " = |" + domains(1) + "|";
+  override def toString(domains: IndexedSeq[Domain], state: Unit) = domains(0) + " = |" + domains(1) + "|";
 
   def advise(domains: IndexedSeq[Domain], p: Int) = 6
 

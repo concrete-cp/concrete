@@ -24,6 +24,7 @@ class ReifiedLtC(val b: Variable, val v: Variable, val c: Int, val strict: Boole
     }
   }
 
-  override def toString(domains: IndexedSeq[Domain]) = s"${domains(0)} = ${domains(1)} ${if (strict) "<" else "<="} $c"
+  override def toString(domains: IndexedSeq[Domain], s: State) =
+    s"$b ${domains(0)} = $v ${domains(1)} ${if (strict) "<" else "<="} $c"
 
 }

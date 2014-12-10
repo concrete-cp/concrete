@@ -19,8 +19,6 @@ import concrete.constraint.extension.MDDC
 import concrete.constraint.extension.MDDRelation
 import concrete.constraint.extension.MDDn
 import concrete.constraint.extension.Matrix
-import concrete.constraint.extension.Matrix1D
-import concrete.constraint.extension.Matrix2D
 import concrete.constraint.extension.Matrix2D
 import concrete.constraint.extension.ReduceableExt
 import concrete.constraint.extension.Relation
@@ -49,7 +47,7 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
 
   }
 
-  private def bool2Int(domains: Seq[Domain], relation: cspom.extension.Relation[_]): Set[Seq[Int]] =
+  private def any2Int(domains: Seq[Domain], relation: cspom.extension.Relation[_]): Set[Seq[Int]] =
     relation.map { t =>
       (domains, t).zipped.map(any2Int)
     }
@@ -117,20 +115,18 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
   }
 
   private def gen(relation: cspom.extension.Relation[_], init: Boolean, domains: List[Domain]) = {
-    if (relation.head.size == 1) {
-      val matrix = new Matrix1D(domains(0).last + 1, init)
-      matrix.setAll(bool2Int(domains, relation), !init)
-    } else if (relation.nonEmpty && relation.head.size == 2) {
-      val matrix = new Matrix2D(domains(0).last + 1, domains(1).last + 1, init)
-      matrix.setAll(bool2Int(domains, relation), !init)
-    } else if (init) {
+    if (relation.nonEmpty && relation.head.size == 2) {
+      val matrix = new Matrix2D(domains(0).span.size, domains(1).span.size,
+        domains(0).head, domains(1).head, init)
+      matrix.setAll(any2Int(domains, relation), !init)
+    } else if (init || relation.head.size == 1) {
       new TupleTrieSet(relation2MDD(relation, domains), init)
     } else {
       new TupleTrieSet(ds match {
         case "MDD" =>
           val mdd = relation2MDD(relation, domains)
           mdd
-        case "STR" => new STR() ++ bool2Int(domains, relation)
+        case "STR" => new STR() ++ any2Int(domains, relation)
       }, init)
     }
   }
@@ -142,7 +138,7 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
           domains,
           mdd,
           new IdMap())
-      case r => MDD(bool2Int(domains, r))
+      case r => MDD(any2Int(domains, r))
     }
 
     new MDDRelation(mdd)
@@ -163,8 +159,10 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
       val matrix = generateMatrix(solverVariables, relation, init)
 
       val constraint = matrix match {
-        case m: Matrix1D => new UnaryExt(scope.head, m, true)
         case m: Matrix2D => BinaryExt(scope, m, true)
+        case m: TupleTrieSet if (scope.size == 1) => {
+          new UnaryExt(scope.head, m, true)
+        }
         case m: TupleTrieSet if (m.initialContent == false) => {
           consType match {
             case "MDDC" =>

@@ -19,12 +19,13 @@
 
 package concrete.constraint.extension;
 
+import concrete.Domain
 import concrete.Variable
-import concrete.constraint.VariablePerVariable
 import concrete.util.BitVector
 import cspom.Statistic
-import concrete.ProblemState
-import concrete.Domain
+import concrete.constraint.Removals
+import concrete.Revised
+import concrete.Contradiction
 
 object BinaryExt {
   @Statistic
@@ -50,10 +51,11 @@ abstract class BinaryExt(
   scope: Array[Variable],
   private var matrix2d: Matrix2D,
   shared: Boolean)
-  extends ConflictCount(scope, matrix2d, shared)
-  with VariablePerVariable {
+  extends ConflictCount(scope, matrix2d, shared) with Removals {
 
-  require(scope.forall(_.initDomain.head >= 0))
+  type State = Unit
+
+  def initState = Unit
 
   private val GAIN_OVER_GENERAL = 3;
 
@@ -61,9 +63,27 @@ abstract class BinaryExt(
 
   override def simpleEvaluation = 2
 
-  def reviseVariable(domains: IndexedSeq[Domain], position: Int, mod: List[Int]) =
-    if (supportCondition(domains, position)) { domains(position) }
-    else { domains(position).filter(i => hasSupport(domains, position, i)) }
+  def revise(domains: IndexedSeq[Domain], mod: List[Int], s: State) = {
+    val s = skip(mod)
+    val d0 = if (s == 0 || supportCondition(domains, 0)) {
+      domains(0)
+    } else {
+      domains(0).filter(i => hasSupport(domains, 0, i))
+    }
+
+    if (d0.isEmpty) {
+      Contradiction
+    } else {
+      val d1 = if (s == 1 || supportCondition(domains, 1)) {
+        domains(1)
+      } else {
+        domains(1).filter(i => hasSupport(domains, 1, i))
+      }
+
+      Revised(Vector(d0, d1), d0.size == 1 || d1.size == 1)
+    }
+
+  }
 
   def removeTuple(tuple: Array[Int]) = {
     ??? //disEntail()
@@ -71,8 +91,6 @@ abstract class BinaryExt(
   }
 
   def removeTuples(base: Array[Int]) = ??? //tuples(base).count(removeTuple)
-
-  override def toString(domains: IndexedSeq[Domain]) = "ext2d(" + domains(0) + ", " + domains(1) + ")"
 
   def hasSupport(domains: IndexedSeq[Domain], variablePosition: Int, value: Int): Boolean
 
@@ -86,16 +104,22 @@ abstract class BinaryExt(
   override def dataSize = matrix2d.size
 }
 final class BinaryExtR(scope: Array[Variable], matrix2d: Matrix2D, shared: Boolean) extends BinaryExt(scope, matrix2d, shared) {
-  private val residues: Array[Array[Int]] =
-    Array(new Array[Int](scope(0).initDomain.toBitVector.nbWords), new Array[Int](scope(1).initDomain.toBitVector.nbWords))
+  private val offsets = Array(scope(0).initDomain.head, scope(1).initDomain.head)
 
-  def hasSupport(domains: IndexedSeq[Domain], variablePosition: Int, index: Int) = {
-    val matrixBV: BitVector = matrix2d.getBitVector(variablePosition, index)
-    val dom = domains(1 - variablePosition)
+  private val residues: Array[Array[Int]] =
+    Array(
+      new Array[Int](scope(0).initDomain.last - offsets(0) + 1),
+      new Array[Int](scope(1).initDomain.last - offsets(1) + 1))
+
+  def hasSupport(domains: IndexedSeq[Domain], variablePosition: Int, value: Int) = {
+    val matrixBV: BitVector = matrix2d.getBitVector(variablePosition, value)
+    val otherPosition = 1 - variablePosition
+    val otherDom = domains(otherPosition)
+    val index = value - offsets(variablePosition)
     val part = residues(variablePosition)(index)
     BinaryExt.presenceChecks += 1
-    (part >= 0 && dom.intersects(matrixBV, part)) || {
-      val intersection = dom.intersects(matrixBV)
+    (part >= 0 && otherDom.bitVector(matrix2d.offsets(otherPosition)).intersects(matrixBV, part)) || {
+      val intersection = otherDom.bitVector(matrix2d.offsets(otherPosition)).intersects(matrixBV)
 
       if (intersection >= 0) {
         BinaryExt.checks += 1 + intersection;
@@ -113,7 +137,8 @@ final class BinaryExtR(scope: Array[Variable], matrix2d: Matrix2D, shared: Boole
 final class BinaryExtNR(scope: Array[Variable], matrix2d: Matrix2D, shared: Boolean) extends BinaryExt(scope, matrix2d, shared) {
   def hasSupport(domains: IndexedSeq[Domain], variablePosition: Int, index: Int) = {
     val matrixBV: BitVector = matrix2d.getBitVector(variablePosition, index);
-    val intersection = domains(1 - variablePosition).intersects(matrixBV)
+    val otherPosition = 1 - variablePosition
+    val intersection = domains(otherPosition).bitVector(matrix2d.offsets(otherPosition)).intersects(matrixBV)
 
     if (intersection >= 0) {
       BinaryExt.checks += 1 + intersection;

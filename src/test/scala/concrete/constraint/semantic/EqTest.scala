@@ -15,7 +15,7 @@ final class EqTest extends FlatSpec with Matchers {
     c.register(new AdviseCount())
     val d = IndexedSeq(v0.initDomain, v1.initDomain)
     c.adviseAll(d)
-    val Revised(mod, _, _) = c.revise(d)
+    val Revised(mod, _, _) = c.revise(d, Unit)
 
     mod(0) shouldBe Seq(3)
     mod(1) shouldBe Seq(3)

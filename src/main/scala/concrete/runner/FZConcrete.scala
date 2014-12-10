@@ -3,7 +3,6 @@ package concrete.runner
 import java.net.URI
 import java.net.URL
 import java.security.InvalidParameterException
-
 import concrete.CSPOMSolver
 import concrete.Variable
 import cspom.CSPOM
@@ -16,6 +15,8 @@ import cspom.flatzinc.Minimize
 import cspom.flatzinc.Satisfy
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
+import cspom.StatisticsManager
+import cspom.Statistic
 
 object FZConcrete extends CSPOMRunner with App {
 
@@ -26,6 +27,9 @@ object FZConcrete extends CSPOMRunner with App {
   var outputArrays: Map[String, Seq[Seq[Int]]] = _
 
   var goal: FZSolve = _
+
+  @Statistic
+  var parseTime: Double = _
 
   override def loadCSPOM(args: List[String]) = {
     val List(fn) = args
@@ -41,12 +45,14 @@ object FZConcrete extends CSPOMRunner with App {
 
     //println(file)
 
-    val (cspom, data) = CSPOM.load(file)
+    val ((cspom, data), time) = StatisticsManager.time(CSPOM.load(file))
+
+    parseTime = time
 
     outputVars = cspom.namedExpressions.collect {
       case (n, e) if e.getSeqParam("fzAnnotations", classOf[FZAnnotation]).exists {
         case FZAnnotation("output_var", Seq()) => true
-        case _ => false
+        case _                                 => false
       } => n
     }.toSeq
 
@@ -57,7 +63,7 @@ object FZConcrete extends CSPOMRunner with App {
             val FZArrayExpr(array) = data
             val ranges = array.map {
               case FZSetConst(range) => range
-              case _ => throw new InvalidParameterException("An array of set constants is expected here: " + data)
+              case _                 => throw new InvalidParameterException("An array of set constants is expected here: " + data)
             }
             n -> ranges
         }
@@ -86,7 +92,7 @@ object FZConcrete extends CSPOMRunner with App {
   def description(args: List[String]) =
     args match {
       case List(fileName) => fileName
-      case _ => throw new IllegalArgumentException(args.toString)
+      case _              => throw new IllegalArgumentException(args.toString)
     }
 
   def flattenArrayExpr(ranges: Seq[Seq[Int]], name: String, solution: Map[String, Int]): Seq[Int] = {
@@ -141,7 +147,7 @@ object FZConcrete extends CSPOMRunner with App {
 
   sys.exit(status match {
     case Sat | Unsat => 0
-    case _ => 1
+    case _           => 1
   })
 
 }

@@ -35,17 +35,14 @@ abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
    */
   def removeFrom(lb: Int): Domain
 
-  def removeAfter(lb: Int): Domain = if (lb >= last) this else removeFrom(next(lb))
-
+  def removeAfter(lb: Int): Domain
   /**
    * @param ub
    * @return Removes all indexes up to given upper bound.
    */
   def removeTo(ub: Int): Domain
 
-  def removeUntil(ub: Int): Domain = {
-    if (ub <= head) this else removeTo(prev(ub))
-  }
+  def removeUntil(ub: Int): Domain
 
   /**
    * @param value
@@ -60,7 +57,7 @@ abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
    */
   def nextOrEq(value: Int): Int
 
-  def span: Interval = Interval(head, last)
+  def span: Interval // = Interval(head, last)
 
   def &(a: Int, b: Int): Domain = removeUntil(a).removeAfter(b)
   def &(i: Interval): Domain = this & (i.lb, i.ub)
@@ -73,10 +70,13 @@ abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
     head >= d.head && last <= d.last && (d.bound || forall(d.present))
   }
 
-  def intersects(bv: BitVector): Int = bv.intersects(toBitVector)
-  def intersects(bv: BitVector, part: Int): Boolean = bv.intersects(toBitVector, part)
+  //def intersects(bv: BitVector): Int = bv.intersects(toBitVector)
+  //def intersects(bv: BitVector, part: Int): Boolean = bv.intersects(toBitVector, part)
 
   def bound: Boolean
 
-  def toBitVector: BitVector
+  def bitVector(offset: Int): BitVector
+
+  override final def size = length
+
 }

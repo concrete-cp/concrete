@@ -25,16 +25,9 @@ import scala.collection.mutable.ArrayBuffer
 import java.util.Arrays
 import scala.collection.immutable.VectorBuilder
 
-object Problem {
-  @annotation.varargs
-  def apply(variables: Variable*) = new Problem(variables.toList)
-}
-
 final class Problem(val variables: List[Variable]) {
   //require(variables.nonEmpty, "A problem with no variables makes no sense")
   require(variables.map(_.name).distinct.size == variables.size, "Duplicates in variable names")
-
-  def this(variables: Variable*) = this(variables.toList)
 
   val nbVariables = variables.foldLeft(0) {
     (acc, v) => v.id = acc; acc + 1

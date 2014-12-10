@@ -31,6 +31,7 @@ import cspom.Statistic
 import concrete.UNSATObject
 import concrete.Revised
 import concrete.Contradiction
+import scala.collection.mutable.HashSet
 
 object ReduceableExt {
   @Statistic
@@ -44,13 +45,14 @@ final class ReduceableExt(_scope: Array[Variable], val initState: Relation)
 
   //println("sizesR " + arity + " " + trie.lambda + " " + trie.edges)
 
-  private val unsupported = new Array[BitVector](arity)
+  private val unsupported = Array.fill(arity)(new HashSet[Int]())
 
   def revise(domains: IndexedSeq[Domain], mod: List[Int], trie: Relation) = {
     //println(this)
     //logger.fine("Revising " + this + " : " + mod.toList)
     for (i <- 0 until scope.length) {
-      unsupported(i) = domains(i).toBitVector
+      unsupported(i).clear()
+      unsupported(i) ++= domains(i)
     }
     //found.foreach(_.fill(false))
 

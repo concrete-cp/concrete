@@ -7,9 +7,7 @@ final class ProblemState(
   val constraintStates: IndexedSeq[Any],
   val entailed: Set[Int]) {
 
-  def constraintState(id: Int): Any = constraintStates(id)
-
-  def apply(c: Constraint): c.State = constraintState(c.id).asInstanceOf[c.State]
+  def apply(c: Constraint): c.State = constraintStates(c.id).asInstanceOf[c.State]
 
   def updatedCS(id: Int, newState: Any): ProblemState = new ProblemState(domains, constraintStates.updated(id, newState), entailed)
 
@@ -67,5 +65,15 @@ final class ProblemState(
   def assign(p: Pair): ProblemState = assign(p.variable, p.value)
   def remove(p: Pair): ProblemState = remove(p.variable, p.value)
 
-  def domains(v: Array[Variable]) = v.map(apply)
+  def domains(v: Array[Variable]) = {
+    val d = new Array[Domain](v.length)
+    var i = v.length - 1
+    while (i >= 0) {
+      d(i) = domain(v(i).id)
+      i -= 1
+    }
+
+    d
+
+  }
 }

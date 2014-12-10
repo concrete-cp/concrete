@@ -27,7 +27,7 @@ import concrete.constraint.AdviseCount
 import scala.collection.mutable.HashSet
 import concrete.constraint.AdviseCounts
 import concrete.constraint.AdviseCount
-import concrete.constraint.Stateless
+
 import concrete.Revised
 import concrete.Domain
 import concrete.Contradiction
@@ -51,7 +51,10 @@ trait AllDiffChecker extends Constraint {
   }
 }
 
-final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) with Stateless with AllDiffChecker with AdviseCounts {
+final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) with AllDiffChecker with AdviseCounts {
+
+  type State = Unit
+  def initState = Unit
 
   var q: List[Int] = Nil
 
@@ -68,7 +71,7 @@ final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) w
 
   }
 
-  def revise(domains: IndexedSeq[Domain]): ReviseOutcome[Unit] = {
+  def revise(domains: IndexedSeq[Domain], s: State): ReviseOutcome[Unit] = {
     // print(this)
     var mod = domains.toArray.clone
     while (q.nonEmpty) {

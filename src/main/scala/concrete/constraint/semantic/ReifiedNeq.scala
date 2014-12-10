@@ -10,13 +10,16 @@ import concrete.UNKNOWNBoolean
 import concrete.BooleanDomain
 import concrete.EMPTY
 import concrete.Revised
-import concrete.constraint.Stateless
+
 import concrete.Domain
 import concrete.Singleton
 import concrete.Contradiction
 import concrete.IntDomain
 class ReifiedNeq(val b: Variable, val v: Variable, val c: Int)
-  extends Constraint(Array(b, v)) with Stateless {
+  extends Constraint(Array(b, v)) {
+
+  type State = Unit
+  def initState = Unit
 
   def check(t: Array[Int]) = t(0) match {
     case 0 => t(1) == c
@@ -24,9 +27,9 @@ class ReifiedNeq(val b: Variable, val v: Variable, val c: Int)
     case _ => sys.error(s"$b must be boolean")
   }
 
-  override def toString(domains: IndexedSeq[Domain]) = s"${domains(0)} = ${domains(1)} != $c"
+  override def toString(domains: IndexedSeq[Domain], s: State) = s"${domains(0)} = ${domains(1)} != $c"
 
-  def revise(domains: IndexedSeq[Domain]) = {
+  def revise(domains: IndexedSeq[Domain], s: State) = {
     val d = domains(1)
     domains(0) match {
       case UNKNOWNBoolean =>

@@ -106,20 +106,30 @@ class LargeBitVector(val words: Array[Long]) extends AnyVal with BitVector {
   }
 
   def clearFrom(from: Int) = {
-    val startWordIndex = word(from);
-
-    val newWords = words.take(startWordIndex + 1)
-
-    val w = newWords(startWordIndex);
-
-    newWords(startWordIndex) &= ~(MASK << from);
-
-    if (startWordIndex + 1 < nbWords || w != newWords(startWordIndex)) {
-      new LargeBitVector(newWords)
+    if (from <= 0) {
+      BitVector.empty
     } else {
-      this
-    }
+      val startWordIndex = word(from)
 
+      if (startWordIndex >= nbWords) {
+        this
+      } else if (startWordIndex == 0) {
+        new SmallBitVector(words(0) & ~(MASK << from))
+      } else {
+
+        val newWords = words.take(startWordIndex + 1)
+
+        val w = newWords(startWordIndex);
+
+        newWords(startWordIndex) &= ~(MASK << from);
+
+        if (newWords.length < nbWords || w != newWords(startWordIndex)) {
+          new LargeBitVector(newWords)
+        } else {
+          this
+        }
+      }
+    }
   }
 
   def clearUntil(until: Int) = {

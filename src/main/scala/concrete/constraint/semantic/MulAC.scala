@@ -63,7 +63,8 @@ final class MulAC(val result: Variable, val v0: Variable, val v1: Variable, val 
 
   }
 
-  override def toString(domains: IndexedSeq[Domain]) = domains(0)+ " = " + domains(1)+ " * " + domains(2)
+  override def toString(domains: IndexedSeq[Domain], s: State) =
+    s"$result ${domains(0)} = $v0 ${domains(1)} * $v1 ${domains(2)}"
 
   def getEvaluation(dom: IndexedSeq[Domain]) = {
     val d0 = dom(0).size

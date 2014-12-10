@@ -116,6 +116,13 @@ final class LargeBitVectorTest extends FlatSpec with Matchers {
   it should "correctly clear parts from bit" in {
     val bitVector = BitVector.empty + 46 + 49 + 100
     bitVector.clearFrom(101) shouldBe bitVector
+    bitVector.clearFrom(128) shouldBe bitVector
+    bitVector.clearFrom(1000) shouldBe bitVector
+
+    assert((BitVector.empty + 128).clearFrom(128).isEmpty)
+    assert((BitVector.empty + 129).clearFrom(128).isEmpty)
+    assert((BitVector.empty + 127).clearFrom(128)(127))
+
     val bv2 = bitVector.clearFrom(47)
     bv2 should not be bitVector
     bv2.cardinality shouldBe 1

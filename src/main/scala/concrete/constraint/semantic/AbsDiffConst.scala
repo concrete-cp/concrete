@@ -1,19 +1,16 @@
 package concrete.constraint.semantic;
 
-import concrete.constraint.Residues
-import concrete.Domain
-import concrete.Variable
-import concrete.constraint.Constraint
-import concrete.UNSATException
-import concrete.util.Interval
-import concrete.constraint.BC
-import concrete.UNSATObject
-import concrete.constraint.BCCompanion
-import concrete.constraint.Stateless
-import concrete.constraint.StatelessBC
-import concrete.Revised
-import concrete.ReviseOutcome
+import scala.Vector
+
 import concrete.Contradiction
+import concrete.Domain
+import concrete.ReviseOutcome
+import concrete.Revised
+import concrete.Variable
+import concrete.constraint.BCCompanion
+import concrete.constraint.Constraint
+import concrete.constraint.Residues
+import concrete.constraint.BC
 
 final class AbsDiffConstAC(val result: Int, val v0: Variable, val v1: Variable)
   extends Constraint(Array(v0, v1)) with BCCompanion with Residues {
@@ -36,7 +33,7 @@ final class AbsDiffConstAC(val result: Int, val v0: Variable, val v1: Variable)
 
   }
 
-  override def toString(domains: IndexedSeq[Domain]) = domains(0) + " =AC= |" + domains(1) + " - " + domains(2) + "|";
+  override def toString(domains: IndexedSeq[Domain], s: State) = domains(0) + " =AC= |" + domains(1) + " - " + domains(2) + "|";
 
   def getEvaluation(domains: IndexedSeq[Domain]) = if (skip(domains)) -1 else domains(0).size + domains(1).size
 
@@ -44,11 +41,14 @@ final class AbsDiffConstAC(val result: Int, val v0: Variable, val v1: Variable)
 }
 
 final class AbsDiffConstBC(val result: Int, val v0: Variable, val v1: Variable)
-  extends Constraint(Array(v0, v1)) with StatelessBC {
+  extends Constraint(Array(v0, v1)) with BC {
+
+  type State = Unit
+  def initState = Unit
 
   def check(t: Array[Int]) = result == math.abs(t(0) - t(1))
 
-  def shave(domains: IndexedSeq[Domain]): ReviseOutcome[Unit] = {
+  def shave(domains: IndexedSeq[Domain], s: State): ReviseOutcome[Unit] = {
     val i0 = domains(0).span
     val i1 = domains(1).span
 
@@ -74,9 +74,10 @@ final class AbsDiffConstBC(val result: Int, val v0: Variable, val v1: Variable)
     }
   }
 
-  override def toString(domains: IndexedSeq[Domain]) = domains(0) + " =BC= |" + domains(1) + " - " + domains(2) + "|";
+  override def toString(domains: IndexedSeq[Domain], s: State) =
+    s"$result ${domains(0)} =BC= |$v0 ${domains(1)} - $v1 ${domains(2)}|";
 
-  def advise(domains: IndexedSeq[Domain],p: Int) = 5
+  def advise(domains: IndexedSeq[Domain], p: Int) = 5
 
   def simpleEvaluation = 1
 }

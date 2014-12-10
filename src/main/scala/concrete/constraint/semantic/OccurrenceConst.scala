@@ -5,18 +5,21 @@ import concrete.Domain
 import concrete.Revised
 import concrete.Variable
 import concrete.constraint.Constraint
-import concrete.constraint.Stateless
+
 import concrete.Singleton
 
 class OccurrenceConst(val result: Int, val value: Int, val vars: Array[Variable])
-  extends Constraint(vars) with Stateless {
+  extends Constraint(vars) {
+
+  type State = Unit
+  def initState = Unit
 
   def check(tuple: Array[Int]) =
     result == (0 until arity).count(i => tuple(i) == value)
 
   def advise(domains: IndexedSeq[Domain], pos: Int): Int = arity
 
-  def revise(domains: IndexedSeq[Domain]) = {
+  def revise(domains: IndexedSeq[Domain], s: State) = {
     var affected = 0
     var canBeAffected = 0
 

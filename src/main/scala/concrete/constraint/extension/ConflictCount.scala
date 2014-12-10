@@ -17,25 +17,28 @@ abstract class ConflictCount(
     if (applicable && nbMaxConflicts == null) {
       countConflicts(domains);
     }
-    if (applicable) {
+    applicable &&
       getOtherSize(domains, position) > nbMaxConflicts(position)
-    } else false
   }
 
   private var nbInitConflicts: Array[Array[Long]] = null
+
+  private var offsets: Array[Int] = null
 
   private var nbMaxConflicts: Array[Long] = null
 
   private var applicable = true
 
   private def countConflicts(domains: IndexedSeq[Domain]) {
-    nbInitConflicts = nbConflicts(domains);
-    if (nbInitConflicts == null) {
-      applicable = false
-    } else {
-      nbMaxConflicts = new Array(arity);
-      updateMaxConflicts();
+    nbConflicts(domains) match {
+      case Some((o, c)) =>
+        nbInitConflicts = c
+        offsets = o
+        nbMaxConflicts = new Array(arity);
+        updateMaxConflicts()
+      case None => applicable = false
     }
+
   }
 
   private def updateMaxConflicts() {
@@ -60,14 +63,18 @@ abstract class ConflictCount(
 
   private def getOtherSize(domains: IndexedSeq[Domain], position: Int) = getOtherSizeR(domains, position, arity - 1, 1)
 
-  private def nbConflicts(domains: IndexedSeq[Domain]): Array[Array[Long]] = {
+  private def nbConflicts(domains: IndexedSeq[Domain]): Option[(Array[Int], Array[Array[Long]])] = {
     val size = cardSize(domains)
     if (size < 0) {
-      null;
+      None
     } else {
+      val offsets = domains.map {
+        d => d.head
+      }
+        .toArray
 
       val nbInitConflicts = domains.map {
-        d => new Array[Long](d.size)
+        d => new Array[Long](d.last - d.head + 1)
       }
         .toArray
 
@@ -75,31 +82,31 @@ abstract class ConflictCount(
         case tupleSet: TupleTrieSet =>
           if (tupleSet.initialContent) {
 
-            for (tuple <- tupleSet; p <- tuple.indices) nbInitConflicts(p)(tuple(p)) += 1;
+            for (tuple <- tupleSet; p <- tuple.indices) nbInitConflicts(p)(tuple(p) - offsets(p)) += 1;
 
           } else {
 
             for (p <- nbInitConflicts.indices) Arrays.fill(nbInitConflicts(p), getOtherSize(domains, p))
 
-            for (tuple <- tupleSet; p <- tuple.indices) nbInitConflicts(p)(tuple(p)) -= 1
+            for (tuple <- tupleSet; p <- tuple.indices) nbInitConflicts(p)(tuple(p) - offsets(p)) -= 1
 
           }
 
         case _ =>
           for (tuple <- tuples(domains) if (!check(tuple)); p <- tuple.indices) {
-            nbInitConflicts(p)(tuple(p)) += 1;
+            nbInitConflicts(p)(tuple(p) - offsets(p)) += 1;
           }
       }
 
-      nbInitConflicts
+      Some((offsets, nbInitConflicts))
     }
   }
 
   final def addConflict(tuple: Array[Int]) {
     if (nbInitConflicts != null) {
       for (p <- tuple.indices) {
-        nbInitConflicts(p)(tuple(p)) += 1
-        if (nbInitConflicts(p)(tuple(p)) > nbMaxConflicts(p)) {
+        nbInitConflicts(p)(tuple(p) - offsets(p)) += 1
+        if (nbInitConflicts(p)(tuple(p) - offsets(p)) > nbMaxConflicts(p)) {
           nbMaxConflicts(p) += 1
         }
       }

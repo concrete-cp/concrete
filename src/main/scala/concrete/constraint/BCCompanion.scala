@@ -15,6 +15,7 @@ trait BCCompanion extends Constraint {
   //    }
   //  }
 
-  def skip(domains: IndexedSeq[Domain]): Boolean = (skipIntervals && intervalsOnly(domains)) || scopeSize(domains) > sizeThreshold
+  def skip(domains: IndexedSeq[Domain]): Boolean =
+    (skipIntervals && intervalsOnly(domains)) || scopeSize(domains) > sizeThreshold
 
 }
