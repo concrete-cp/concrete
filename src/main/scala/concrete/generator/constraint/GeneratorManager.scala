@@ -21,7 +21,6 @@ class GeneratorManager(pm: ParameterManager) {
     'gt -> GtGenerator,
     'ge -> GtGenerator,
     'mul -> MulGenerator,
-    'ne -> NeqGenerator,
     'absdiff -> AbsDiffGenerator,
     'diffge -> DiffGeGenerator,
     'gcc -> GccGenerator,

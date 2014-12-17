@@ -1,6 +1,7 @@
 package concrete.constraint
 
 import concrete.Domain
+import concrete.ProblemState
 
 trait BCCompanion extends Constraint {
   def skipIntervals: Boolean
@@ -15,7 +16,7 @@ trait BCCompanion extends Constraint {
   //    }
   //  }
 
-  def skip(domains: IndexedSeq[Domain]): Boolean =
-    (skipIntervals && intervalsOnly(domains)) || scopeSize(domains) > sizeThreshold
+  def skip(ps: ProblemState): Boolean =
+    (skipIntervals && intervalsOnly(ps)) || scopeSize(ps) > sizeThreshold
 
 }

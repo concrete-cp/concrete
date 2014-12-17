@@ -20,18 +20,14 @@
 package concrete.constraint.extension;
 
 import concrete.Domain
-import concrete.Revised
 import concrete.Variable
+import concrete.ProblemState
 
 final class UnaryExt(scope: Variable, matrix: Matrix, shared: Boolean)
   extends ExtensionConstraint(Array(scope), matrix, shared) {
 
-  type State = Unit
-
-  def initState = Unit
-
-  def revise(domains: IndexedSeq[Domain], state: State) =
-    Revised(Vector(domains(0).filter { i => matrix.check(Array(i)) }), true)
+  def revise(ps: ProblemState) =
+    ps.filterDom(0)(v => matrix.check(Array(v))).entail(id)
 
   def removeTuple(tuple: Array[Int]) = {
     ??? //disEntail();

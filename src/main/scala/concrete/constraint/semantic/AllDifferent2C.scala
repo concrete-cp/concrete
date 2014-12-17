@@ -27,11 +27,10 @@ import concrete.constraint.AdviseCount
 import scala.collection.mutable.HashSet
 import concrete.constraint.AdviseCounts
 import concrete.constraint.AdviseCount
-
-import concrete.Revised
 import concrete.Domain
 import concrete.Contradiction
-import concrete.ReviseOutcome
+import concrete.ProblemState
+import concrete.Outcome
 
 trait AllDiffChecker extends Constraint {
 
@@ -53,63 +52,47 @@ trait AllDiffChecker extends Constraint {
 
 final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) with AllDiffChecker with AdviseCounts {
 
-  type State = Unit
-  def initState = Unit
+  var q: List[Variable] = Nil
 
-  var q: List[Int] = Nil
-
-  @tailrec
-  private def filter(domains: IndexedSeq[Domain], checkedVariable: Int, value: Int, i: Int = arity - 1, mod: List[Domain] = Nil): List[Domain] = {
-
-    if (i < 0) {
-      mod
-    } else if (i != checkedVariable && domains(i).present(value)) {
-      filter(domains, checkedVariable, value, i - 1, domains(i).remove(value) :: mod)
-    } else {
-      filter(domains, checkedVariable, value, i - 1, domains(i) :: mod)
-    }
-
-  }
-
-  def revise(domains: IndexedSeq[Domain], s: State): ReviseOutcome[Unit] = {
+  def revise(ps: ProblemState): Outcome = {
     // print(this)
-    var mod = domains.toArray.clone
+    var state = ps
     while (q.nonEmpty) {
       val checkedVariable = q.head
       q = q.tail
 
-      val value = mod(checkedVariable).head
+      val value = state.dom(checkedVariable).singleValue
 
-      var p = arity - 1
-      while (p >= 0) {
-        if (p != checkedVariable) {
-          val nd = mod(p).remove(value)
+      for (v <- scope) {
+        if (v != checkedVariable) {
+          val od = state.dom(v)
+          val nd = od.remove(value)
+
           if (nd.isEmpty) return Contradiction
-          if (mod(p) ne nd) {
-            mod(p) = nd
-            if (nd.size == 1) q ::= p
+          if (od ne nd) {
+            state = state.updateDomNonEmpty(v, nd)
+            if (nd.size == 1) q ::= v
           }
         }
-        p -= 1
       }
-
     }
-    // println(s" -> $this")
-    Revised(mod, isFree(mod))
+    state.entailIfFree(this)
+
   }
 
   var lastAdvise = -1
 
-  def advise(domains: IndexedSeq[Domain], p: Int) = {
+  def advise(ps: ProblemState, p: Int) = {
 
     if (lastAdvise != adviseCount) {
       q = Nil
       lastAdvise = adviseCount
     }
-    if (domains(p).size > 1) {
+    val v = scope(p)
+    if (ps.dom(v).size > 1) {
       -1
     } else {
-      q ::= p
+      q ::= v
       arity
     }
   }

@@ -19,30 +19,24 @@
 
 package concrete.constraint.semantic;
 
-import concrete.Domain
-import concrete.Revised
+import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Constraint
-import concrete.Contradiction
 
 final class GtC(val v: Variable, val constant: Int) extends Constraint(Array(v)) {
-  type State = Unit
-  def initState = Unit
   def check(t: Array[Int]) = t(0) > constant
-  def advise(domains: IndexedSeq[Domain], p: Int) = 1
-  def revise(domains: IndexedSeq[Domain], s: State) = {
-    Revised(Vector(domains(0).removeTo(constant)), true)
+  def advise(ps: ProblemState, p: Int) = 1
+  def revise(ps: ProblemState) = {
+    ps.removeTo(v, constant).entail(this)
   }
   def simpleEvaluation = 1
 }
 
 final class LtC(val v: Variable, val constant: Int) extends Constraint(Array(v)) {
-  type State = Unit
-  def initState = Unit
   def check(t: Array[Int]) = t(0) < constant
-  def advise(domains: IndexedSeq[Domain], p: Int) = 1
-  def revise(domains: IndexedSeq[Domain], s: State) = {
-    Revised(Vector(domains(0).removeFrom(constant)), true)
+  def advise(ps: ProblemState, p: Int) = 1
+  def revise(ps: ProblemState) = {
+    ps.removeFrom(v, constant).entail(this)
   }
   def simpleEvaluation = 1
 }
@@ -52,8 +46,6 @@ final class LtC(val v: Variable, val constant: Int) extends Constraint(Array(v))
  */
 final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict: Boolean)
   extends Constraint(Array(v0, v1)) {
-  type State = Unit
-  def initState = Unit
 
   def this(v0: Variable, v1: Variable, strict: Boolean) =
     this(v0, 0, v1, strict);
@@ -62,52 +54,50 @@ final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict
     if (strict) t(0) + constant > t(1);
     else t(0) + constant >= t(1);
 
-  def revise(domains: IndexedSeq[Domain], s: State) = {
+  def revise(ps: ProblemState) = {
 
     if (strict) {
-      val d0 = domains(0).removeTo(domains(1).head - constant)
-      if (d0.isEmpty) {
-        Contradiction
+      val mod = ps
+        .removeTo(v0, ps.dom(v1).head - constant)
+        .removeFrom(v1, ps.dom(v0).last + constant)
+
+      if (mod.dom(v1).last < mod.dom(v0).head + constant) {
+        mod.entail(this)
       } else {
-        val d1 = domains(1).removeFrom(domains(0).last + constant)
-        if (d1.isEmpty) {
-          Contradiction
-        } else {
-          Revised(Vector(d0, d1), d1.last < d0.head + constant)
-        }
+        mod
       }
+
     } else {
-      val d0 = domains(0).removeUntil(domains(1).head - constant)
-      if (d0.isEmpty) {
-        Contradiction
+
+      val mod = ps
+        .removeUntil(v0, ps.dom(v1).head - constant)
+        .removeAfter(v1, ps.dom(v0).last + constant)
+      if (mod.dom(v1).last <= mod.dom(v0).head + constant) {
+        mod.entail(this)
       } else {
-        val d1 = domains(1).removeAfter(domains(0).last + constant)
-        if (d1.isEmpty) {
-          Contradiction
-        } else {
-          Revised(Vector(d0, d1), d1.last <= d0.head + constant)
-        }
+        mod
       }
+
     }
 
   }
 
-  override def isConsistent(domains: IndexedSeq[Domain], s: Unit) = {
-    val max0 = domains(0).last + constant;
-    val min1 = domains(1).head
+  override def isConsistent(ps: ProblemState) = {
+    val max0 = ps.dom(v0).last + constant;
+    val min1 = ps.dom(v1).head
     max0 > min1 || !strict && max0 == min1;
   }
 
-  override def toString(domains: IndexedSeq[Domain], s: State) =
-    s"$v0 ${domains(0)} ${
+  override def toString(ps: ProblemState) =
+    s"${v0.toString(ps)} ${
       if (constant > 0)
         " + " + constant
       else if (constant < 0)
         " - " + (-constant)
       else ""
-    } ${if (strict) " > " else " >= "} $v1 ${domains(1)}"
+    } ${if (strict) " > " else " >= "} ${v1.toString(ps)}"
 
-  def advise(domains: IndexedSeq[Domain], p: Int) = 2
+  def advise(ps: ProblemState, p: Int) = 2
 
   val simpleEvaluation = 1
 }

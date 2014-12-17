@@ -39,7 +39,7 @@ final class Variable(
 
   override def toString = name
 
-  def toString(ps: ProblemState) = s"$name ${ps(this)}"
+  def toString(ps: ProblemState) = s"$name ${ps.dom(this)}"
 
   def constraints = _constraints
 
@@ -62,7 +62,7 @@ final class Variable(
     var wDeg = 0
     while (i >= 0) {
       val c = constraints(i)
-      if (!c.isFree(state.domains(c.scope))) wDeg += c.weight
+      if (!c.isFree(state)) wDeg += c.weight
       i -= 1
     }
     wDeg
@@ -88,7 +88,7 @@ final class Variable(
     var i = constraints.length - 1
     var dDeg = 0
     while (i >= 0) {
-      if (!constraints(i).isFree(state.domains(constraints(i).scope))) dDeg += 1
+      if (!constraints(i).isFree(state)) dDeg += 1
       i -= 1
     }
     dDeg

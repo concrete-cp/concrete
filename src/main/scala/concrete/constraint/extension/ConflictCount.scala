@@ -6,6 +6,7 @@ import scala.annotation.tailrec
 import concrete.constraint.TupleEnumerator
 import concrete.Variable
 import concrete.Domain
+import concrete.ProblemState
 
 abstract class ConflictCount(
   scope: Array[Variable],
@@ -13,12 +14,12 @@ abstract class ConflictCount(
   shared: Boolean)
   extends ExtensionConstraint(scope: Array[Variable], _matrix, shared) with TupleEnumerator {
 
-  def supportCondition(domains: IndexedSeq[Domain], position: Int): Boolean = {
+  def supportCondition(ps: ProblemState, position: Int): Boolean = {
     if (applicable && nbMaxConflicts == null) {
-      countConflicts(domains);
+      countConflicts(ps);
     }
     applicable &&
-      getOtherSize(domains, position) > nbMaxConflicts(position)
+      getOtherSize(ps, position) > nbMaxConflicts(position)
   }
 
   private var nbInitConflicts: Array[Array[Long]] = null
@@ -29,8 +30,8 @@ abstract class ConflictCount(
 
   private var applicable = true
 
-  private def countConflicts(domains: IndexedSeq[Domain]) {
-    nbConflicts(domains) match {
+  private def countConflicts(ps: ProblemState) {
+    nbConflicts(ps) match {
       case Some((o, c)) =>
         nbInitConflicts = c
         offsets = o
@@ -48,34 +49,30 @@ abstract class ConflictCount(
   }
 
   @tailrec
-  private def getOtherSizeR(domains: IndexedSeq[Domain], position: Int, i: Int, acc: Long): Long = {
+  private def getOtherSizeR(ps: ProblemState, position: Int, i: Int, acc: Long): Long = {
     if (i < 0) { acc }
-    else if (i == position) { getOtherSizeR(domains, position, i - 1, acc) }
+    else if (i == position) { getOtherSizeR(ps, position, i - 1, acc) }
     else {
-      val dSize = domains(i).size
+      val dSize = ps.dom(scope(i)).size
       if (acc > Long.MaxValue / dSize) {
         -1
       } else {
-        getOtherSizeR(domains, position, i - 1, acc * dSize)
+        getOtherSizeR(ps, position, i - 1, acc * dSize)
       }
     }
   }
 
-  private def getOtherSize(domains: IndexedSeq[Domain], position: Int) = getOtherSizeR(domains, position, arity - 1, 1)
+  private def getOtherSize(ps: ProblemState, position: Int) = getOtherSizeR(ps, position, arity - 1, 1)
 
-  private def nbConflicts(domains: IndexedSeq[Domain]): Option[(Array[Int], Array[Array[Long]])] = {
-    val size = cardSize(domains)
+  private def nbConflicts(ps: ProblemState): Option[(Array[Int], Array[Array[Long]])] = {
+    val size = cardSize(ps)
     if (size < 0) {
       None
     } else {
-      val offsets = domains.map {
-        d => d.head
-      }
-        .toArray
+      val offsets = ps.domains(scope).map(_.head).toArray
 
-      val nbInitConflicts = domains.map {
-        d => new Array[Long](d.last - d.head + 1)
-      }
+      val nbInitConflicts = ps.domains(scope).map(
+        d => new Array[Long](d.last - d.head + 1))
         .toArray
 
       matrix match {
@@ -86,14 +83,14 @@ abstract class ConflictCount(
 
           } else {
 
-            for (p <- nbInitConflicts.indices) Arrays.fill(nbInitConflicts(p), getOtherSize(domains, p))
+            for (p <- nbInitConflicts.indices) Arrays.fill(nbInitConflicts(p), getOtherSize(ps, p))
 
             for (tuple <- tupleSet; p <- tuple.indices) nbInitConflicts(p)(tuple(p) - offsets(p)) -= 1
 
           }
 
         case _ =>
-          for (tuple <- tuples(domains) if (!check(tuple)); p <- tuple.indices) {
+          for (tuple <- tuples(ps) if (!check(tuple)); p <- tuple.indices) {
             nbInitConflicts(p)(tuple(p) - offsets(p)) += 1;
           }
       }

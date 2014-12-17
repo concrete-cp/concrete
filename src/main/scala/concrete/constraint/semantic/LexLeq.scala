@@ -6,54 +6,54 @@ import concrete.Variable
 import concrete.constraint.TupleEnumerator
 import concrete.UNSATException
 import concrete.UNSATObject
-
-import concrete.Revised
-import concrete.ReviseOutcome
 import concrete.Domain
 import concrete.Contradiction
+import concrete.ProblemState
+import concrete.Outcome
 
 final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x ++ y) {
-  type State = Unit
-  def initState = Unit
+
   val size = x.length
   require(size == y.length)
 
-  private def groundEq(domains: IndexedSeq[Domain], i: Int) = {
-    domains(i).size == 1 && domains(i + size).size == 1 && domains(i).head == domains(i + size).head
+  private def groundEq(ps: ProblemState, i: Int) = {
+    val domX = ps.dom(scope(i))
+    val domY = ps.dom(scope(i + size))
+    domX.size == 1 && domY.size == 1 && domX.singleValue == domY.singleValue
   }
 
   def check(t: Array[Int]) = ???
 
-  private def notAlwaysLt(domains: IndexedSeq[Domain], i: Int) = domains(i).head <= domains(i + size).last
+  private def notAlwaysLt(ps: ProblemState, i: Int) = ps.dom(scope(i)).head <= ps.dom(scope(i + size)).last
 
-  private def alwaysLeq(domains: IndexedSeq[Domain], i: Int) = domains(i).last <= domains(i + size).head
+  private def alwaysLeq(ps: ProblemState, i: Int) = ps.dom(scope(i)).last <= ps.dom(scope(i + size)).head
 
-  private def alwaysLt(domains: IndexedSeq[Domain], i: Int) = domains(i).last < domains(i + size).head
+  private def alwaysLt(ps: ProblemState, i: Int) = ps.dom(scope(i)).last < ps.dom(scope(i + size)).head
 
-  private def checkLex(domains: IndexedSeq[Domain], i: Int) = {
-    if (i == size - 1) alwaysLeq(domains, i)
-    else alwaysLt(domains, i)
+  private def checkLex(ps: ProblemState, i: Int) = {
+    if (i == size - 1) alwaysLeq(ps, i)
+    else alwaysLt(ps, i)
   }
 
   var alpha = -1
   var beta = -1
 
-  def revise(domains: IndexedSeq[Domain], s: State): ReviseOutcome[Unit] = {
+  def revise(ps: ProblemState): Outcome = {
     var i = 0
-    while (i < size && groundEq(domains, i)) i += 1
+    while (i < size && groundEq(ps, i)) i += 1
 
     if (i == size) {
-      Revised(domains)
+      ps
     } else {
       alpha = i
 
-      if (checkLex(domains, i)) {
-        Revised(domains)
+      if (checkLex(ps, i)) {
+        ps
       } else {
 
         beta = -1
-        while (i != size && notAlwaysLt(domains, i)) {
-          if (domains(i).head == domains(i + size).head) {
+        while (i != size && notAlwaysLt(ps, i)) {
+          if (ps.dom(scope(i)).head == ps.dom(scope(i + size)).head) {
             if (beta == -1) beta = i
           } else {
             beta = -1
@@ -66,80 +66,91 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
         if (alpha >= beta) {
           Contradiction
         } else {
-          gacLexLeq(domains, alpha)
+          gacLexLeq(ps, alpha)
         }
       }
     }
   }
 
-  private def gacLexLeq(domains: IndexedSeq[Domain], i: Int): ReviseOutcome[Unit] = {
-    if (i >= beta) Revised(domains)
+  private def gacLexLeq(ps: ProblemState, i: Int): Outcome = {
+    if (i >= beta) ps
     else {
-      var d = domains
+      var mod = ps
       if (i == alpha && i + 1 == beta) {
-        d = acLt(d, i)
-        if (checkLex(d, i)) {
-          return Revised(d)
+        mod = acLt(mod, i)
+        if (checkLex(mod, i)) {
+          return mod
         }
       }
       if (i == alpha && i + 1 < beta) {
-        d = acLeq(d, i)
-        if (checkLex(d, i)) {
-          return Revised(d)
+        mod = acLeq(mod, i)
+        if (checkLex(mod, i)) {
+          return mod
         }
-        if (groundEq(d, i)) {
-          updateAlpha(d, i + 1) match {
-            case Contradiction      => return Contradiction
-            case Revised(mod, _, _) => d = mod
+        if (groundEq(mod, i)) {
+          updateAlpha(mod, i + 1) match {
+            case Contradiction   => return Contradiction
+            case s: ProblemState => mod = s
           }
         }
       }
       if (alpha < i && i < beta) {
-        if ((i == beta - 1 && d(i).head == d(i + size).last) || alwaysLt(d, i)) {
-          updateBeta(d, i + 1) match {
-            case Contradiction      => return Contradiction
-            case Revised(mod, _, _) => d = mod
+        if ((i == beta - 1 && mod.dom(scope(i)).head == mod.dom(scope(i + size)).last) || alwaysLt(mod, i)) {
+          updateBeta(mod, i + 1) match {
+            case Contradiction   => return Contradiction
+            case s: ProblemState => mod = s
           }
         }
       }
-      Revised(d)
+      mod
     }
   }
 
-  private def acLt(domains: IndexedSeq[Domain], i: Int): IndexedSeq[Domain] = {
-    val d1 = domains.updated(i + size, domains(i + size).removeTo(domains(i).head))
-    d1.updated(i, d1(i).removeFrom(d1(i + size).last))
+  private def acLt(ps: ProblemState, i: Int): ProblemState = {
+    val x = scope(i)
+    val y = scope(i + size)
+    ps.removeTo(y, ps.dom(x).head)
+      .removeFrom(x, ps.dom(y).last)
+      .asInstanceOf[ProblemState]
   }
 
-  private def acLeq(domains: IndexedSeq[Domain], i: Int): IndexedSeq[Domain] = {
-    val d1 = domains.updated(i + size, domains(i + size).removeUntil(domains(i).head))
-    d1.updated(i, d1(i).removeAfter(d1(i + size).last))
+  private def acLeq(ps: ProblemState, i: Int): ProblemState = {
+    val x = scope(i)
+    val y = scope(i + size)
+    ps.removeUntil(y, ps.dom(x).head)
+      .removeAfter(x, ps.dom(y).last)
+      .asInstanceOf[ProblemState]
+
   }
 
-  private def updateAlpha(domains: IndexedSeq[Domain], i: Int): ReviseOutcome[Unit] = {
+  private def updateAlpha(ps: ProblemState, i: Int): Outcome = {
     if (i == beta) {
       Contradiction
     } else if (i == size) {
-      Revised(domains)
-    } else if (!groundEq(domains, i)) {
+      ps
+    } else if (!groundEq(ps, i)) {
       alpha = i
-      gacLexLeq(domains, i)
+      gacLexLeq(ps, i)
     } else {
-      updateAlpha(domains, i + 1)
+      updateAlpha(ps, i + 1)
     }
 
   }
 
-  private def updateBeta(domains: IndexedSeq[Domain], i: Int): ReviseOutcome[Unit] = {
+  private def updateBeta(ps: ProblemState, i: Int): Outcome = {
     if (i + 1 == alpha) {
       Contradiction
-    } else if (domains(i).head < domains(i + size).last) {
+    } else if (notAlwaysLt(ps, i)) {
       beta = i + 1
-      if (notAlwaysLt(domains, i)) { gacLexLeq(domains, i) } else Revised(domains)
-    } else if (domains(i).head == domains(i + size).last) updateBeta(domains, i - 1) else Revised(domains)
+      gacLexLeq(ps, i)
+    } else if (ps.dom(scope(i)).head == ps.dom(scope(i + size)).last) {
+      updateBeta(ps, i - 1)
+    } else {
+      ps
+    }
   }
 
-  def advise(domains: IndexedSeq[Domain], p: Int) = size
+  def advise(ps: ProblemState, p: Int) = size
   def simpleEvaluation = 2
 
 }

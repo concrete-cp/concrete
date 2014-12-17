@@ -2,13 +2,13 @@ package concrete.constraint.semantic
 
 import scala.collection.mutable.ArrayBuffer
 import concrete.Domain
-import concrete.ReviseOutcome
-import concrete.Revised
 import concrete.Variable
 import concrete.constraint.BCCompanion
 import concrete.constraint.Constraint
 import concrete.constraint.Removals
 import concrete.constraint.BC
+import concrete.ProblemState
+import concrete.Outcome
 
 object Element {
   def apply(result: Variable, index: Variable, varsIdx: Seq[(Int, Variable)]) = {
@@ -16,16 +16,16 @@ object Element {
 
     val lastIndex = varsIdx.map(_._1).max
     val vars = Array.ofDim[Variable](lastIndex + 1)
-    val scopeIndex = Array.fill(lastIndex + 1)(-1)
-    for ((i, v) <- varsIdx) {
-      vars(i) = v
-      scopeIndex(i) = scope.size
-      scope += v
-    }
+    //    val scopeIndex = Array.fill(lastIndex + 1)(-1)
+    //    for ((i, v) <- varsIdx) {
+    //      vars(i) = v
+    //      scopeIndex(i) = scope.size
+    //      scope += v
+    //    }
 
     Seq(
-      new ElementBC(result, index, vars, scopeIndex, scope.toArray),
-      new ElementAC(result, index, vars, scopeIndex, scope.toArray))
+      new ElementBC(result, index, vars, scope.toArray),
+      new ElementAC(result, index, vars, scope.toArray))
   }
 }
 
@@ -33,7 +33,6 @@ class ElementBC(
   val result: Variable,
   val index: Variable,
   val vars: Array[Variable],
-  val scopeIndex: Array[Int],
   scope: Array[Variable])
   extends Constraint(scope) with BC {
 
@@ -45,31 +44,39 @@ class ElementBC(
   def check(tuple: Array[Int]): Boolean = {
     tuple(1) < arity - 2 && tuple(0) == tuple(tuple(1) + 2)
   }
-  def shave(domains: IndexedSeq[Domain], s: State) = {
+  def shave(ps: ProblemState) = {
     var ch = List[Int]()
+
+    val resultSpan = ps.span(result)
     /**
      * Revise indices
      */
-    val index = domains(1).filter {
-      v =>
+    ps.filterDom(index) {
+      v: Int =>
         v >= 0 && v < vars.length && (vars(v) ne null) &&
-          (domains(0).span intersects domains(scopeIndex(v)).span)
+          (resultSpan intersects ps.span(vars(v)))
     }
+      .andThen { ps =>
 
-    /**
-     * Revise result
-     */
-    val union = index.map(v => domains(scopeIndex(v)).span).reduce(_ span _)
-    val result = domains(0) & union
+        /**
+         * Revise result
+         */
+        val union = ps.dom(index).iterator.map(v => ps.span(vars(v))).reduce(_ span _)
+        ps.shaveDom(result, union)
+      }
+      .andThen { ps =>
+        /**
+         * Revise vars
+         */
+        val index = ps.dom(this.index)
+        if (index.size == 1) {
+          val i = index.singleValue
+          ps.shaveDom(scope(i), ps.span(this.result))
+        } else {
+          ps
+        }
+      }
 
-    /**
-     * Revise vars
-     */
-    val filtered = if (index.size == 1) {
-      val i = index.head
-      domains.updated(scopeIndex(i), domains(scopeIndex(i)) & result.span)
-    } else domains
-    Revised(result +: index +: filtered.drop(2))
   }
   def simpleEvaluation: Int = 2
 }
@@ -78,13 +85,12 @@ class ElementAC(
   val result: Variable,
   val index: Variable,
   val vars: Array[Variable],
-  val scopeIndex: Array[Int],
   scope: Array[Variable])
   extends Constraint(scope) with Removals with BCCompanion {
 
   type State = Unit
 
-  def getEvaluation(domains: IndexedSeq[Domain]): Int = if (skip(domains)) -1 else scopeSize(domains)
+  def getEvaluation(ps: ProblemState): Int = if (skip(ps)) -1 else scopeSize(ps)
 
   def initState = Unit
 
@@ -94,32 +100,34 @@ class ElementAC(
 
   def skipIntervals = false
 
-  def revise(domains: IndexedSeq[Domain], modified: List[Int], s: Unit): ReviseOutcome[Unit] = {
+  def revise(ps: ProblemState, modified: List[Int], s: Unit): Outcome = {
+    val resultDom = ps.dom(result)
     /**
      * Revise indices
      */
-    val index = domains(1).filter {
-      i =>
-        i >= 0 && i < vars.length && (vars(i) ne null) &&
-          domains(0).exists(domains(scopeIndex(i)).present)
+    ps.filterDom(this.index) { i =>
+      i >= 0 && i < vars.length && (vars(i) ne null) &&
+        resultDom.exists(ps.dom(vars(i)).present)
     }
+      .andThen { ps =>
+        /**
+         * Revise result
+         */
+        val union = ps.dom(index).foldLeft(Set[Int]()) {
+          (acc, i) => acc ++ ps.dom(vars(i))
+        }
+        ps.filterDom(result)(union)
+      }
+      .andThen { ps =>
+        /**
+         * Revise vars
+         */
+        val index = ps.dom(this.index)
+        if (index.size == 1) {
+          ps.filterDom(vars(index.singleValue))(ps.dom(result).present)
+        } else ps
+      }
 
-    /**
-     * Revise result
-     */
-    val union = index.foldLeft(Set[Int]()) {
-      (acc, i) => acc ++ domains(scopeIndex(i))
-    }
-    val result = domains(0).filter(union)
-
-    /**
-     * Revise vars
-     */
-    val filtered = if (index.size == 1) {
-      val i = scopeIndex(index.head)
-      domains.updated(i, domains(i).filter(result.present))
-    } else domains
-    Revised(result +: index +: filtered.drop(2))
   }
   def simpleEvaluation: Int = 3
 }

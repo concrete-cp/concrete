@@ -98,8 +98,8 @@ abstract class IntDomain extends Domain {
   }
 
   def assign(value: Int) = {
-    assert(present(value))
-    Singleton(value)
+    if (present(value)) Singleton(value)
+    else EmptyIntDomain
   }
 
 }

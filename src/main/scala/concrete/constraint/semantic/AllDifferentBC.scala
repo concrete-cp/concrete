@@ -3,22 +3,19 @@ package concrete.constraint.semantic;
 import scala.annotation.tailrec
 import concrete.Contradiction
 import concrete.Domain
-import concrete.ReviseOutcome
-import concrete.Revised
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.BC
+import concrete.ProblemState
+import concrete.Outcome
 
 final case class HInterval(
-  val pos: Int) {
+  val id: Int) {
   var minrank: Int = 0
   var maxrank: Int = 0
 }
 
 final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) with BC with AllDiffChecker {
-
-  type State = Unit
-  def initState = Unit
 
   val t = new Array[Int](2 * arity + 2) // Tree links
   val d = new Array[Int](2 * arity + 2) // Diffs between critical capacities
@@ -27,14 +24,14 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
 
   var nbBounds = 0
 
-  val intervals = (0 until arity).map(new HInterval(_)).toArray
+  val intervals = (0 until arity).map(p => new HInterval(scope(p).id)).toArray
   val minsorted = intervals.clone
   val maxsorted = intervals.clone
 
-  private def isSortedMax(domains: IndexedSeq[Domain], array: Array[HInterval], from: Int, to: Int): Boolean = {
+  private def isSortedMax(ps: ProblemState, array: Array[HInterval], from: Int, to: Int): Boolean = {
     var i = from + 1
     while (i <= to) {
-      if (domains(array(i - 1).pos).last > domains(array(i).pos).last) {
+      if (ps.dom(array(i - 1).id).last > ps.dom(array(i).id).last) {
         return false
       }
       i += 1
@@ -42,10 +39,10 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
     true
   }
 
-  private def isSortedMin(domains: IndexedSeq[Domain], array: Array[HInterval], from: Int, to: Int): Boolean = {
+  private def isSortedMin(ps: ProblemState, array: Array[HInterval], from: Int, to: Int): Boolean = {
     var i = from + 1
     while (i <= to) {
-      if (domains(array(i - 1).pos).head > domains(array(i).pos).head) {
+      if (ps.dom(array(i - 1).id).head > ps.dom(array(i).id).head) {
         return false
       }
       i += 1
@@ -59,18 +56,18 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
     array(j) = tmp
   }
 
-  private def qSortMax(domains: IndexedSeq[Domain], array: Array[HInterval], from: Int, to: Int) {
-    if (!isSortedMax(domains, array, from, to)) {
+  private def qSortMax(ps: ProblemState, array: Array[HInterval], from: Int, to: Int) {
+    if (!isSortedMax(ps, array, from, to)) {
       //if (to > from) {
       val pivotIndex = (from + to) / 2
-      val pivot = domains(array(pivotIndex).pos).last
+      val pivot = ps.dom(array(pivotIndex).id).last
       var left = from
       var right = to
       while (left <= right) {
-        while (domains(array(left).pos).last < pivot) {
+        while (ps.dom(array(left).id).last < pivot) {
           left += 1
         }
-        while (domains(array(right).pos).last > pivot) {
+        while (ps.dom(array(right).id).last > pivot) {
           right -= 1
         }
         if (left <= right) {
@@ -79,23 +76,23 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
           right -= 1
         }
       }
-      qSortMax(domains, array, from, right)
-      qSortMax(domains, array, left, to)
+      qSortMax(ps, array, from, right)
+      qSortMax(ps, array, left, to)
     }
   }
 
-  private def qSortMin(domains: IndexedSeq[Domain], array: Array[HInterval], from: Int, to: Int) {
-    if (!isSortedMin(domains, array, from, to)) {
+  private def qSortMin(ps: ProblemState, array: Array[HInterval], from: Int, to: Int) {
+    if (!isSortedMin(ps, array, from, to)) {
       //if (to > from) {
       val pivotIndex = (from + to) / 2
-      val pivot = domains(array(pivotIndex).pos).head
+      val pivot = ps.dom(array(pivotIndex).id).head
       var left = from
       var right = to
       while (left <= right) {
-        while (domains(array(left).pos).head < pivot) {
+        while (ps.dom(array(left).id).head < pivot) {
           left += 1
         }
-        while (domains(array(right).pos).head > pivot) {
+        while (ps.dom(array(right).id).head > pivot) {
           right -= 1
         }
         if (left <= right) {
@@ -104,16 +101,16 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
           right -= 1
         }
       }
-      qSortMin(domains, array, from, right)
-      qSortMin(domains, array, left, to)
+      qSortMin(ps, array, from, right)
+      qSortMin(ps, array, left, to)
     }
   }
 
-  private def sortIt(domains: IndexedSeq[Domain]) {
-    qSortMin(domains, minsorted, 0, minsorted.length - 1)
-    qSortMax(domains, maxsorted, 0, maxsorted.length - 1)
+  private def sortIt(ps: ProblemState) {
+    qSortMin(ps, minsorted, 0, minsorted.length - 1)
+    qSortMax(ps, maxsorted, 0, maxsorted.length - 1)
 
-    val min = domains(minsorted(0).pos).head
+    val min = ps.dom(minsorted.head.id).head
     var last = min - 2;
     var nb = 0;
     bounds(0) = last;
@@ -128,7 +125,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
         }
         minsorted(i).minrank = nb;
 
-        if (i < arity - 1) proceed(domains(minsorted(i + 1).pos).head, max, i + 1, j)
+        if (i < arity - 1) proceed(ps.dom(minsorted(i + 1).id).head, max, i + 1, j)
         else proceed(min, max, i + 1, j)
       } else {
         if (max != last) {
@@ -139,12 +136,12 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
         maxsorted(j).maxrank = nb;
 
         if (j < arity - 1) {
-          proceed(min, domains(maxsorted(j + 1).pos).last + 1, i, j + 1)
+          proceed(min, ps.dom(maxsorted(j + 1).id).last + 1, i, j + 1)
         }
       }
     }
 
-    proceed(min, domains(maxsorted(0).pos).last + 1, 0, 0)
+    proceed(min, ps.dom(maxsorted(0).id).last + 1, 0, 0)
 
     this.nbBounds = nb;
     bounds(nb + 1) = bounds(nb) + 2;
@@ -169,8 +166,9 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
     if (tab(i) > i) pathmax(tab, tab(i))
     else i
 
-  private def filterLower(domains: IndexedSeq[Domain]): ReviseOutcome[Unit] = {
-    val mod = domains.toArray.clone
+  private def filterLower(ps: ProblemState): Outcome = {
+
+    var mod = ps
 
     var i = 1
     while (i <= nbBounds + 1) {
@@ -201,7 +199,9 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
 
       if (h(x) > x) {
         var w = pathmax(h, h(x));
-        mod(maxsorted(i).pos) = domains(maxsorted(i).pos).removeTo(bounds(w) - 1)
+        val id = maxsorted(i).id
+        val dom = mod.dom(id).removeTo(bounds(w) - 1)
+        mod = mod.updateDomNonEmpty(id, dom)
         pathset(h, x, w, w);
       }
 
@@ -211,11 +211,11 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
       }
       i += 1
     }
-    Revised(mod)
+    mod
   }
 
-  private def filterUpper(domains: IndexedSeq[Domain]): ReviseOutcome[Unit] = {
-    val mod = domains.toArray
+  private def filterUpper(ps: ProblemState): Outcome = {
+    var mod = ps
     var i = 0
     while (i <= nbBounds) {
       t(i) = i + 1
@@ -245,7 +245,9 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
 
       if (h(x) < x) {
         val w = pathmin(h, h(x));
-        mod(minsorted(i).pos) = mod(minsorted(i).pos).removeFrom(bounds(w))
+        val id = minsorted(i).id
+        val dom = ps.dom(id).removeFrom(bounds(w))
+        mod = mod.updateDomNonEmpty(id, dom)
         pathset(h, x, w, w);
       }
       if (d(z) == bounds(y) - bounds(z)) {
@@ -254,17 +256,17 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
       }
       i -= 1
     }
-    Revised(mod)
+    mod
   }
 
-  def shave(domains: IndexedSeq[Domain], s: State) = {
-    sortIt(domains)
-    filterLower(domains) andThen ((d, _) => filterUpper(d))
+  def shave(ps: ProblemState) = {
+    sortIt(ps)
+    filterLower(ps) andThen filterUpper
   }
 
   private val eval: Int = (31 - Integer.numberOfLeadingZeros(arity)) * arity
 
-  def advise(domains: IndexedSeq[Domain], p: Int) = eval
+  def advise(ps: ProblemState, p: Int) = eval
 
   val simpleEvaluation = 3
 }

@@ -1,35 +1,31 @@
 package concrete.constraint.semantic;
 
-import scala.Vector
 import com.typesafe.scalalogging.LazyLogging
 import concrete.Domain
-import concrete.Revised
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.BC
+import concrete.ProblemState
 
 final class AddBC(val result: Variable, val v0: Variable, val v1: Variable)
   extends Constraint(Array(result, v0, v1)) with BC with LazyLogging {
 
-  type State = Unit
-  def initState = Unit
-
   def check(t: Array[Int]) = t(0) == t(1) + t(2)
 
-  def shave(domains: IndexedSeq[Domain], s: State) = {
-    val result = domains(0).span
-    val v0 = domains(1).span
-    val v1 = domains(2).span
-    val bounds = v0 + v1 - result
+  def shave(ps: ProblemState) = {
+    val result = ps.dom(this.result).span
+    val v0 = ps.dom(this.v0).span
+    val v1 = ps.dom(this.v1).span
 
-    Revised(Vector(
-      domains(0) & (bounds.lb + result.ub, bounds.ub + result.lb),
-      domains(1) & (v0.ub - bounds.ub, v0.lb - bounds.lb),
-      domains(2) & (v1.ub - bounds.ub, v1.lb - bounds.lb)))
+    ps
+      .shaveDom(this.result, v0 + v1)
+      .shaveDom(this.v0, result - v1)
+      .shaveDom(this.v1, result - v0)
+
   }
 
-  override def toString(domains: IndexedSeq[Domain], s: State) =
-    s"$result ${domains(0)} = $v0 ${domains(1)} + $v1 ${domains(2)}"
+  override def toString(ps: ProblemState) =
+    s"${result.toString(ps)} = ${v0.toString(ps)} + ${v1.toString(ps)}"
 
   def advise(domains: IndexedSeq[Domain], pos: Int) = 4
 

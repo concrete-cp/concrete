@@ -18,39 +18,29 @@ import concrete.priorityqueues.PriorityQueue
 import concrete.priorityqueues.QuickFifos
 import concrete.heuristic.revision.Key
 import concrete.Contradiction
-import concrete.Filtered
-import concrete.FilterOutcome
-import concrete.Revised
-import concrete.FilterOutcome
 import concrete.ProblemState
+import concrete.Outcome
 
 object ACC extends LazyLogging {
   def control(problem: Problem, state: ProblemState): ProblemState = {
     logger.info("Control !")
-    var s = state
-    for (c <- problem.constraints) {
+    problem.constraints.foldLeft(state) {
+      (s, c) =>
 
-      val id = c.id
+        c.adviseAll(s)
 
-      val oldState: c.State = s.constraintState(id).asInstanceOf[c.State]
-      val oldDomains = state.domains(c.scope)
-      c.adviseAll(oldDomains)
+        c.revise(s) match {
+          case Contradiction => throw new AssertionError(s"${c.toString(s)} is not consistent")
+          case finalState: ProblemState =>
+            require(c.scope.forall(v => s.dom(v) eq finalState.dom(v)),
+              s"${c.toString(state)} was revised (-> ${c.toString(finalState)}")
 
-      val sizes = oldDomains map (_.size)
-
-      c.revise(oldDomains, oldState) match {
-        case Contradiction => throw new AssertionError(s"${c.toString(oldDomains, oldState)} is not consistent")
-        case Revised(modified, entailed, finalState) =>
-          require((modified, oldDomains).zipped.forall(_ eq _),
-            s"${c.toString(oldDomains, oldState)} was revised (-> $modified, $finalState)")
-          s = s.updatedCS(id, finalState)
-      }
-
-      require(c.controlAssignment(oldDomains), s"$c assignement is inconsistent")
+            require(c.controlAssignment(finalState), s"$c assignement is inconsistent")
+            finalState
+        }
 
     }
 
-    s
   }
 
 }
@@ -84,7 +74,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
   @Statistic
   var revisions = 0;
 
-  def reduceAll(states: ProblemState): FilterOutcome = {
+  def reduceAll(states: ProblemState): Outcome = {
     advises.clear()
     queue.clear()
 
@@ -106,7 +96,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     reduce(states)
   }
 
-  def reduceFrom(modVar: Array[Int], modCons: Array[Int], cnt: Int, states: ProblemState): FilterOutcome = {
+  def reduceFrom(modVar: Array[Int], modCons: Array[Int], cnt: Int, states: ProblemState): Outcome = {
     //Removals.clear()
     queue.clear();
 
@@ -129,7 +119,8 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
   }
 
   private def adviseAndEnqueue(c: Constraint, state: ProblemState): Unit = {
-    val max = c.adviseAll(state.domains(c.scope))
+    val max = c.adviseAll(state)
+
     if (max >= 0) {
       //println(max + " : " + c)
       queue.offer(c, key.getKey(c, state, max))
@@ -138,7 +129,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
   def reduceAfter(variable: Variable, states: ProblemState) = {
     if (variable == null) {
-      Filtered(states)
+      states
     } else {
       advises.clear()
       queue.clear();
@@ -155,7 +146,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
       val c = constraints(i)
 
       if ((c ne skip) && !states.entailed(i)) {
-        val a = c.advise(states.domains(c.scope), modified.positionInConstraint(i))
+        val a = c.advise(states, modified.positionInConstraint(i))
 
         //logger.fine(c + ", " + modified.positionInConstraint(i) + " : " + a)
         if (a >= 0) queue.offer(c, key.getKey(c, states, a))
@@ -167,7 +158,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
   }
 
-  private def reduce(states: ProblemState): FilterOutcome = {
+  private def reduce(states: ProblemState): Outcome = {
 
     var s = states
     while (!queue.isEmpty) {
@@ -185,43 +176,40 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
           })
       }
 
-      val constraintDomains = s.domains(constraint.scope)
-      val constraintState = s(constraint)
-
-      constraint.revise(constraintDomains, constraintState) match {
+      constraint.revise(s) match {
         case Contradiction =>
           constraint.weight += 1
-          logger.info(constraint.toString(constraintDomains, constraintState) + " -> Contradiction")
+          logger.info(constraint.toString(s) + " -> Contradiction")
           return Contradiction
 
-        case Revised(mod, entail, newState) =>
-          for (i <- 0 until constraint.arity) {
-            if (mod(i).isEmpty) {
-              constraint.weight += 1
-              logger.info(
-                s"${constraint.toString(constraintDomains, constraintState)} -> empty domain with state $newState")
-              return Contradiction
-            }
-          }
+        case newState: ProblemState =>
+          assert(constraint.scope.map(newState.dom).forall(_.nonEmpty))
+          //          for (i <- 0 until constraint.arity) {
+          //            if (newState(constraint.scope(i)).isEmpty) {
+          //              constraint.weight += 1
+          //              logger.info(
+          //                s"${constraint.toString(s)} -> empty domain with state $newState")
+          //              return Contradiction
+          //            }
+          //          }
 
-          val ns = s.updatedDomains(constraint.scope, mod)
-          if (ns ne s) {
+          if (newState ne s) {
             logger.info(
-              s"${constraint.toString(constraintDomains, constraintState)} -> ${constraint.toString(mod, newState)} ($entail)")
-            s = ns
+              s"${constraint.toString(s)} -> ${constraint.toString(newState)}")
+
             for (i <- 0 until constraint.arity) {
-              assert(mod(i).subsetOf(constraintDomains(i)),
-                s"${constraint.toString(constraintDomains, constraintState)} -> ${constraint.toString(mod, newState)}")
-              if (constraintDomains(i) ne mod(i)) {
+              val v = constraint.scope(i)
+              val id = v.id
+              assert(newState.dom(id).subsetOf(s.dom(id)),
+                s"${constraint.toString(s)} -> ${constraint.toString(newState)}")
+              if (newState.dom(id) ne s.dom(id)) {
                 updateQueue(constraint.scope(i), constraint, s)
               }
             }
+            s = newState
           } else {
             logger.info(
-              s"${constraint.toString(constraintDomains, constraintState)} -> NOP with state $newState ($entail)")
-          }
-          if (newState != constraintState) {
-            s = s.updatedCS(constraint, newState)
+              s"${constraint.toString(s)} -> NOP")
           }
 
       }
@@ -234,7 +222,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
       s = ACC.control(problem, s)
       true
     }
-    Filtered(s)
+    s
 
   }
 

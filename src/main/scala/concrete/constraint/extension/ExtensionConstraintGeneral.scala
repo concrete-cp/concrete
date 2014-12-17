@@ -19,14 +19,13 @@
 
 package concrete.constraint.extension;
 
+import concrete.Contradiction
+import concrete.Domain
+import concrete.Outcome
+import concrete.ProblemState
+import concrete.UNSATException
 import concrete.Variable
 import concrete.constraint.Residues
-import concrete.constraint.TupleEnumerator
-import concrete.UNSATException
-import concrete.Domain
-import concrete.Revised
-import concrete.Contradiction
-import concrete.ReviseOutcome
 
 final class ExtensionConstraintGeneral(
   _matrix: Matrix,
@@ -42,21 +41,21 @@ final class ExtensionConstraintGeneral(
 
   def removeTuples(base: Array[Int]) = ??? //tuples(base).count(removeTuple)
 
-  override def revise(domains: IndexedSeq[Domain], mod: List[Int], state: State): ReviseOutcome[Unit] = {
-    val s = skip(mod)
-    val nd = for (position <- 0 until arity) yield {
-      if (position == s || supportCondition(domains, position)) {
-        domains(position)
-      } else {
-        val nd = reviseDomain(domains, position)
-        if (nd.isEmpty) return Contradiction
-        nd
+  override def revise(ps: ProblemState, mod: List[Int]): Outcome = {
+    val skip = this.skip(mod)
+    var cs = ps
+    for (position <- 0 until arity) {
+      if (position != skip && !supportCondition(cs, position)) {
+        cs.updateDom(scope(position), reviseDomain(cs, position)) match {
+          case Contradiction   => return Contradiction
+          case s: ProblemState => cs = s
+        }
       }
     }
-    Revised(nd, isFree(nd))
+    cs.entailIfFree(this)
   }
   //  
-  //  override def reviseVariable(domains: IndexedSeq[Domain], position: Int, mod: List[Int]) = {
+  //  override def reviseVariable(ps:ProblemState, position: Int, mod: List[Int]) = {
   //    if (supportCondition(domains, position)) {
   //      assert(super.reviseVariable(domains, position, mod) eq domains(position))
   //      domains(position)

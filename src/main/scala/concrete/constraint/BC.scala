@@ -1,44 +1,26 @@
 package concrete.constraint
 
 import scala.annotation.tailrec
-import concrete.ReviseOutcome
+
 import concrete.Contradiction
-import concrete.Revised
-import concrete.Domain
+import concrete.Outcome
+import concrete.ProblemState
 
 trait BC extends Constraint {
-  def shave(domains: IndexedSeq[Domain], state: State): ReviseOutcome[State]
+  def shave(state: ProblemState): Outcome
 
-  override final def revise(domains: IndexedSeq[Domain], state: State): ReviseOutcome[State] = {
-    var c = true
-    var cs = state
-    var cd = domains
-    while (c) {
-      c = false
-      shave(cd, cs) match {
-        case Contradiction => return Contradiction
-        case Revised(nd, entailed, ns) =>
-          if (entailed) {
-            return Revised(nd, true, ns)
-          } else {
-            for (i <- 0 until arity) {
-              val ndi = nd(i)
-              if (ndi.isEmpty) {
-                return Contradiction
-              } else {
-                c |= (cd(i) ne ndi)
-              }
-            }
+  @annotation.tailrec
+  override final def revise(state: ProblemState): Outcome = {
 
-            cd = nd
-            cs = ns
-
-          }
-
-      }
-
+    shave(state) match {
+      case Contradiction => Contradiction
+      case ns: ProblemState =>
+        if (ns.isEntailed(this)) {
+          ns
+        } else {
+          revise(ns)
+        }
     }
-    Revised(cd, false, cs)
 
   }
 }

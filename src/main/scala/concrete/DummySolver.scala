@@ -32,7 +32,7 @@ final class DummySolver(prob: Problem, params: ParameterManager) extends Solver(
 
   def nextSolution() = preprocess(filter, problem.initState) match {
     case Contradiction => UNSAT
-    case Filtered(_) => UNKNOWNResult
+    case _ => UNKNOWNResult
   }
 
   override def toString = "dummy"

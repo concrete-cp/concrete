@@ -14,9 +14,9 @@ import concrete.BooleanDomain
 final object EqGenerator extends Generator {
 
   def params(constraint: CSPOMConstraint[_]): (Boolean, Int) = {
-    val neg: Boolean = constraint.getParam("neg", classOf[Boolean]).getOrElse(false)
+    val neg: Boolean = constraint.getParam("neg").getOrElse(false)
 
-    val offset: Int = constraint.getParam("offset", classOf[Integer]).map(_.toInt).getOrElse(0)
+    val offset: Int = constraint.getParam("offset").getOrElse(0)
     (neg, offset)
   }
 
@@ -28,19 +28,25 @@ final object EqGenerator extends Generator {
     (a, b) match {
       case (Const(a), Const(b)) =>
         if (negFactor * a + offset == b) Seq() else throw concrete.UNSATObject
-      //
-      //      case (Var(a), Const(b)) =>
-      //        require(a.dom.values.sameElements(Iterator((b - offset) * negFactor)),
-      //          s"Domain of $a should be ($b - $offset) * $negFactor = ${(b - offset) * negFactor}")
-      //        Seq()
-      //      case (Const(a), Var(b)) =>
-      //        require(b.dom.values.sameElements(Iterator(negFactor * a + offset)),
-      //          s"Domain of $b should be $negFactor * $a + $offset = ${negFactor * a + offset}")
-      //        Seq()
       case (Var(a), Var(b)) =>
         Seq(new EqBC(neg, a, offset, b), new EqAC(neg, a, offset, b))
 
       case _ => throw new UnsupportedOperationException(s"$constraint is not supported")
+    }
+
+  }
+
+  override def genReversed(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] = {
+    val Seq(a, b) = constraint.arguments.map(cspom2concrete1D)
+
+    val (neg, offset) = params(constraint)
+    require(!neg)
+    require(offset == 0)
+    (a, b) match {
+      case (Const(a), Const(b)) if (a != b) => Seq()
+      case (Var(a), Var(b))                 => Seq(new Neq(a, b))
+
+      case _                                => throw new UnsupportedOperationException(s"$constraint is not supported")
     }
 
   }

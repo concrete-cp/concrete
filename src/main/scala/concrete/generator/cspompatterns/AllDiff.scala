@@ -71,11 +71,12 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
   type A = Set[CSPOMVariable[_]]
 
   def DIFF_CONSTRAINT(constraint: CSPOMConstraint[_]) =
-    (constraint.result.isTrue) &&
-      Set('ne, 'gt, 'lt, 'allDifferent)(constraint.function)
+    (constraint.result.isTrue &&
+      Set('gt, 'lt, 'allDifferent)(constraint.function)) ||
+      (constraint.result.isFalse && Set('eq, 'ge, 'le)(constraint.function))
 
   def ALLDIFF_CONSTRAINT(constraint: CSPOMConstraint[_]) =
-    (constraint.result.isTrue) && 'ne == constraint.function ||
+    (constraint.result.isFalse) && 'eq == constraint.function ||
       'allDifferent == constraint.function
 
   val ITER = 750;

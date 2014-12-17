@@ -161,11 +161,14 @@ sealed trait BooleanDomain extends Domain {
   def as01: IntDomain
 
   def assign(value: Int) = {
-    assert(present(value))
-    value match {
-      case 0 => FALSE
-      case 1 => TRUE
-      case _ => throw new IllegalArgumentException
+    if (present(value)) {
+      value match {
+        case 0 => FALSE
+        case 1 => TRUE
+        case _ => throw new IllegalArgumentException
+      }
+    } else {
+      EMPTY
     }
   }
 

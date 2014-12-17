@@ -2,34 +2,36 @@ package concrete.constraint.semantic;
 
 import concrete.constraint.Constraint
 import concrete.Variable
-import concrete.ReviseOutcome
 import concrete.constraint.BC
-import concrete.Revised
 import concrete.Domain
+import concrete.ProblemState
+import concrete.Outcome
+import concrete.util.Interval
+import concrete.Contradiction
 
 final class AbsBC(val result: Variable, val v0: Variable) extends Constraint(Array(result, v0)) with BC {
-  type State = Unit
-
-  def initState = Unit
   //  val corresponding1 = result.dom.allValues map { v0.dom.index }
   //  val corresponding2 = result.dom.allValues map { v => v0.dom.index(-v) }
   //  val correspondingR = v0.dom.allValues map { v => result.dom.index(math.abs(v)) }
 
   def check(t: Array[Int]) = t(0) == math.abs(t(1))
 
-  def shave(domains: IndexedSeq[Domain], s: State): ReviseOutcome[Unit] = {
-    val result = domains(0)
-    val v0 = domains(1)
+  def shave(ps: ProblemState): Outcome = {
 
-    val nr = result & v0.span.abs
+    ps.shaveDom(result, ps.dom(v0).span.abs)
+      .andThen { ps =>
 
-    val ri = result.span
+        val ri = ps.dom(result).span
+        val v0span = ps.dom(v0).span
 
-    val nv0 = v0 & (ri span -ri)
+        Interval.union(v0span intersect ri, v0span intersect -ri).map {
+          nv0 => ps.shaveDom(this.v0, nv0).entailIfFree(this)
+        }
+          .getOrElse {
+            Contradiction
+          }
 
-    val nd = Vector(nr, nv0)
-
-    Revised(nd, isFree(nd))
+      }
   }
 
   override def toString(domains: IndexedSeq[Domain], state: Unit) = domains(0) + " = |" + domains(1) + "|";

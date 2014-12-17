@@ -20,16 +20,15 @@
 package concrete.constraint;
 
 import scala.annotation.tailrec
+
 import concrete.Contradiction
-import concrete.UNSATException
+import concrete.Outcome
+import concrete.ProblemState
 import concrete.Variable
 import concrete.heuristic.Weighted
 import concrete.priorityqueues.DLNode
 import concrete.priorityqueues.Identified
 import concrete.priorityqueues.PTag
-import concrete.ReviseOutcome
-import concrete.Domain
-import concrete.Revised
 
 object Constraint {
 
@@ -49,14 +48,28 @@ object Constraint {
 
 }
 
+trait StatefulConstraint extends Constraint {
+  type State <: Any
+  def initState: State
+
+  def isConsistent(problemState: ProblemState, state: State): Boolean =
+    revise(problemState, state) match {
+      case Contradiction    => false
+      case ns: ProblemState => scope.forall(ns.dom(_).nonEmpty)
+    }
+
+  override final def isConsistent(problemState: ProblemState) = isConsistent(problemState, problemState(this))
+
+  def revise(problemState: ProblemState, state: State): Outcome
+  final def revise(problemState: ProblemState) = revise(problemState, problemState(this))
+
+  override def toString(problemState: ProblemState) = super.toString(problemState) + problemState(this)
+}
+
 abstract class Constraint(val scope: Array[Variable])
   extends DLNode[Constraint] with Weighted with Identified with PTag {
 
-  type State <: Any
-
   def this(scope: Variable*) = this(scope.toArray)
-
-  def initState: State
 
   var id: Int = -1
 
@@ -75,24 +88,24 @@ abstract class Constraint(val scope: Array[Variable])
   override def hashCode = id
 
   @tailrec
-  final def controlTuplePresence(domains: IndexedSeq[Domain], tuple: Array[Int], i: Int = arity - 1): Boolean = {
+  final def controlTuplePresence(problemState: ProblemState, tuple: Array[Int], i: Int = arity - 1): Boolean = {
     /** Need high optimization */
 
-    i < 0 || (domains(i).present(tuple(i)) && controlTuplePresence(domains, tuple, i - 1))
+    i < 0 || (problemState.dom(scope(i)).present(tuple(i)) && controlTuplePresence(problemState, tuple, i - 1))
 
   }
 
   @tailrec
-  final def controlTuplePresence(domains: IndexedSeq[Domain], tuple: Array[Int], mod: List[Int]): Boolean = {
+  final def controlTuplePresence(problemState: ProblemState, tuple: Array[Int], mod: List[Int]): Boolean = {
     /** Need high optimization */
 
     if (mod eq Nil) {
-      assert(controlTuplePresence(domains, tuple), tuple.mkString("(", ", ", ")") +
+      assert(controlTuplePresence(problemState, tuple), tuple.mkString("(", ", ", ")") +
         " is not in " + this)
       true
     } else {
       val i = mod.head
-      domains(i).present(tuple(i)) && controlTuplePresence(domains, tuple, mod.tail)
+      problemState.dom(scope(i)).present(tuple(i)) && controlTuplePresence(problemState, tuple, mod.tail)
     }
 
   }
@@ -136,21 +149,21 @@ abstract class Constraint(val scope: Array[Variable])
   //    case e: UNSATException => false
   //  }
 
-  def isConsistent(domains: IndexedSeq[Domain], state: State): Boolean =
-    revise(domains, state) match {
-      case Contradiction      => false
-      case Revised(mod, _, _) => mod.forall(_.nonEmpty)
+  def isConsistent(problemState: ProblemState): Boolean =
+    revise(problemState) match {
+      case Contradiction    => false
+      case ns: ProblemState => scope.forall(ns.dom(_).nonEmpty)
     }
 
-  def advise(domains: IndexedSeq[Domain], pos: Int): Int
+  def advise(problemState: ProblemState, pos: Int): Int
 
-  def advise(domains: IndexedSeq[Domain], v: Variable): Int = advise(domains, position(v))
+  def advise(problemState: ProblemState, v: Variable): Int = advise(problemState, position(v))
 
-  final def adviseAll(domains: IndexedSeq[Domain]): Int = {
+  final def adviseAll(problemState: ProblemState): Int = {
     var p = arity - 1
     var i = -1
     while (p >= 0) {
-      val advOutcome = advise(domains, p)
+      val advOutcome = advise(problemState, p)
       i = math.max(i, advOutcome)
       p -= 1
     }
@@ -158,11 +171,9 @@ abstract class Constraint(val scope: Array[Variable])
   }
 
   /**
-   * The constraint propagator. Returns true if any domain change was done.
-   *
-   * @param revisator
+   * The constraint propagator.
    */
-  def revise(domains: IndexedSeq[Domain], state: State): ReviseOutcome[State]
+  def revise(problemState: ProblemState): Outcome
 
   def dataSize: Int = ???
 
@@ -175,10 +186,8 @@ abstract class Constraint(val scope: Array[Variable])
 
   override final def toString = this.getClass.getSimpleName + scope.mkString("(", ", ", ")")
 
-  def toString(domains: IndexedSeq[Domain], state: State) = id + ": " + this.getClass.getSimpleName +
-    (scope, domains).zipped.map((v, d) => s"$v $d").mkString("(", ", ", ")") + {
-      if (state == Unit) "" else " - " + state
-    }
+  def toString(problemState: ProblemState) = id + ": " + this.getClass.getSimpleName +
+    scope.map(v => s"$v ${problemState.dom(v)}").mkString("(", ", ", ")")
 
   /**
    * @param variable
@@ -187,18 +196,18 @@ abstract class Constraint(val scope: Array[Variable])
   final def isInvolved(variable: Variable) = position.contains(variable)
 
   @tailrec
-  final def sizes(domains: IndexedSeq[Domain], a: Array[Int] = new Array[Int](arity), i: Int = arity - 1): Array[Int] =
+  final def sizes(problemState: ProblemState, a: Array[Int] = new Array[Int](arity), i: Int = arity - 1): Array[Int] =
     if (i < 0) {
       a
     } else {
-      a(i) = domains(i).size
-      sizes(domains, a, i - 1)
+      a(i) = problemState.dom(scope(i)).size
+      sizes(problemState, a, i - 1)
     }
 
-  def intervalsOnly(domains: IndexedSeq[Domain]): Boolean = {
+  def intervalsOnly(problemState: ProblemState): Boolean = {
     var i = arity - 1
     while (i >= 0) {
-      if (!domains(i).bound) {
+      if (!problemState.dom(scope(i)).bound) {
         return false
       }
       i -= 1
@@ -207,33 +216,33 @@ abstract class Constraint(val scope: Array[Variable])
   }
 
   @tailrec
-  final def cardSize(domains: IndexedSeq[Domain], p: Int = arity - 1, size: Int = 1): Int =
+  final def cardSize(problemState: ProblemState, p: Int = arity - 1, size: Int = 1): Int =
     if (p < 0) {
       size
     } else {
-      val s = domains(p).size
+      val s = problemState.dom(scope(p)).size
       if (size > Int.MaxValue / s) {
         -1
       } else {
-        cardSize(domains, p - 1, size * s)
+        cardSize(problemState, p - 1, size * s)
       }
     }
 
-  final def scopeSize(domains: IndexedSeq[Domain]): Int = {
+  final def scopeSize(problemState: ProblemState): Int = {
     var size = 0
     var p = arity - 1
     while (p >= 0) {
-      size += domains(p).size
+      size += problemState.dom(scope(p)).size
       p -= 1
     }
     size
   }
 
-  final def doubleCardSize(domains: IndexedSeq[Domain]): Double = {
+  final def doubleCardSize(problemState: ProblemState): Double = {
     var size = 1.0
     var p = arity - 1
     while (p >= 0) {
-      size *= domains(p).size
+      size *= problemState.dom(scope(p)).size
       p -= 1
     }
     size
@@ -244,11 +253,11 @@ abstract class Constraint(val scope: Array[Variable])
   /**
    * A GAC constraint is entailed if it has zero or only one variable with domain size > 1
    */
-  def isFree(domains: IndexedSeq[Domain]): Boolean = {
+  def isFree(problemState: ProblemState): Boolean = {
     var one = false
     var i = arity - 1
     while (i >= 0) {
-      if (domains(i).size > 1) {
+      if (problemState.dom(scope(i)).size > 1) {
         if (one) {
           return false
         }
@@ -259,10 +268,10 @@ abstract class Constraint(val scope: Array[Variable])
     true
   }
 
-  def isAssigned(domains: IndexedSeq[Domain]): Boolean = {
+  def isAssigned(problemState: ProblemState): Boolean = {
     var i = arity - 1
     while (i >= 0) {
-      if (domains(i).size > 1) {
+      if (problemState.dom(scope(i)).size > 1) {
         return false
       }
       i -= 1
@@ -270,25 +279,25 @@ abstract class Constraint(val scope: Array[Variable])
     true
   }
 
-  def controlAssignment(domains: IndexedSeq[Domain]): Boolean = {
-    domains.exists(_.size > 1) || check(domains.map(_.head).toArray)
+  def controlAssignment(problemState: ProblemState): Boolean = {
+    scope.exists(v => problemState.dom(v).size > 1) || check(scope.map(v => problemState.dom(v).head).toArray)
 
   }
   //
-  //  def changes(oldDomains: IndexedSeq[Domain], newDomains: IndexedSeq[Domain]): Seq[Int] = {
+  //  def changes(oldproblemState: ProblemState, newproblemState: ProblemState): Seq[Int] = {
   //    var i = arity - 1
   //    var ch = List[Int]()
   //    while (i >= 0) {
-  //      if (oldDomains(i) ne newDomains(i)) ch ::= i
+  //      if (oldproblemState(i) ne newproblemState(i)) ch ::= i
   //      i -= 1
   //    }
   //    ch
   //  }
   //
-  //  def hasChanges(oldDomains: IndexedSeq[Domain], newDomains: IndexedSeq[Domain]): Boolean = {
+  //  def hasChanges(oldproblemState: ProblemState, newproblemState: ProblemState): Boolean = {
   //    var i = arity - 1
   //    while (i >= 0) {
-  //      if (oldDomains(i) ne newDomains(i)) return true
+  //      if (oldproblemState(i) ne newproblemState(i)) return true
   //      i -= 1
   //    }
   //    false

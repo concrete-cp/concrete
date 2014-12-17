@@ -1,5 +1,19 @@
 package concrete.util
 
+object Interval {
+  def union(i0: Option[Interval], i1: Option[Interval]): Option[Interval] = {
+    i0.map {
+      i: Interval =>
+        if (i1.isDefined) {
+          i span i1.get
+        } else {
+          i
+        }
+    }
+      .orElse(i1)
+  }
+}
+
 final case class Interval(val lb: Int, val ub: Int) {
   //assume(ub >= lb)
   val size = math.max(0, ub - lb + 1)

@@ -1,11 +1,8 @@
 package concrete.constraint;
 
-import concrete.Variable
-import scala.annotation.tailrec
-import concrete.Domain
-import concrete.Revised
 import concrete.Contradiction
-import concrete.ReviseOutcome
+import concrete.Outcome
+import concrete.ProblemState
 
 trait ResidueManager {
   def getResidue(position: Int, index: Int): Array[Int]
@@ -28,12 +25,12 @@ trait Residues extends Removals {
 
   }
 
-  def reviseDomain(domains: IndexedSeq[Domain], position: Int) = {
-    domains(position).filter { value =>
+  def reviseDomain(state: ProblemState, position: Int) = {
+    state.dom(scope(position)).filter { value =>
       val residue = residues.getResidue(position, value)
 
-      ((residue ne null) && controlTuplePresence(domains, residue)) ||
-        (findSupport(domains, position, value) match {
+      ((residue ne null) && controlTuplePresence(state, residue)) ||
+        (findSupport(state, position, value) match {
           case Some(tuple) => {
             assert(check(tuple))
             residues.updateResidue(tuple)
@@ -44,22 +41,29 @@ trait Residues extends Removals {
     }
   }
 
-  def revise(domains: IndexedSeq[Domain], modified: List[Int], s: State): ReviseOutcome[Unit] = {
-    val s = skip(modified)
-    val mod = for (position <- 0 until arity) yield {
-      if (position == s) {
-        domains(position)
-      } else {
-        val nd = reviseDomain(domains, position)
-        if (nd.isEmpty) return Contradiction
-        nd
-      }
-    }
+  @annotation.tailrec
+  private def revise(state: ProblemState, skip: Int, p: Int): Outcome =
+    if (p < 0) { state }
+    else if (p == skip) revise(state, skip, p - 1)
+    else state.updateDom(scope(p), reviseDomain(state, p)).andThen(ps => revise(ps, skip, p - 1))
 
-    Revised(mod, isFree(mod))
+  def revise(state: ProblemState, modified: List[Int]): Outcome = // {
+    revise(state, skip(modified), arity - 1).entailIfFree(this)
+  //    val skip = this.skip(modified)
+  //    var cs = state
+  //    for (position <- 0 until arity) {
+  //      if (position != skip) {
+  //        cs = cs.updateDom(scope(position), reviseDomain(cs, position))
+  //        //        val nd = reviseDomain(cs, position)
+  //        //        if (nd.isEmpty) return Contradiction
+  //        //        cs = state.updateDom(position, nd)
+  //      }
+  //    }
+  //
+  //    cs.entailIfFree(this)
+  //
+  //  }
 
-  }
-
-  def findSupport(domains: IndexedSeq[Domain], position: Int, value: Int): Option[Array[Int]]
+  def findSupport(state: ProblemState, position: Int, value: Int): Option[Array[Int]]
 
 }

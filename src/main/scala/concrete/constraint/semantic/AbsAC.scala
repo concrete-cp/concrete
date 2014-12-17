@@ -1,16 +1,15 @@
 package concrete.constraint.semantic;
 
 import concrete.Domain
-import concrete.ReviseOutcome
-import concrete.Revised
 import concrete.Variable
 import concrete.constraint.BCCompanion
 import concrete.constraint.Constraint
+import concrete.ProblemState
+import concrete.Outcome
 
 final class AbsAC(val result: Variable, val v0: Variable) extends Constraint(Array(result, v0))
   with BCCompanion {
-  type State = Unit
-  def initState = Unit
+
   def skipIntervals = true
 
   //  val corresponding1 = result.dom.allValues map { v0.dom.index }
@@ -19,21 +18,19 @@ final class AbsAC(val result: Variable, val v0: Variable) extends Constraint(Arr
 
   def check(t: Array[Int]) = t(0) == math.abs(t(1))
 
-  def revise(domains: IndexedSeq[Domain], s:State): ReviseOutcome[Unit] = {
-    val result = domains(0)
-    val x = domains(1)
+  def revise(ps: ProblemState): Outcome = {
+    val result = ps.dom(this.result)
+    val x = ps.dom(v0)
 
-    val nr = result.filter(v => x.present(v) || x.present(-v))
-    val nx = x.filter(v => result.present(math.abs(v)))
-
-    val nd = Vector(nr, nx)
-
-    Revised(nd, isFree(nd))
+    ps.filterDom(this.result) { v: Int => x.present(v) || x.present(-v) }
+      .filterDom(v0) { v: Int => result.present(math.abs(v)) }
+      .entailIfFree(this)
   }
 
-  override def toString(domains: IndexedSeq[Domain], s: State) = domains(0) + " = |" + domains(1) + "|";
+  override def toString(ps: ProblemState) =
+    s"${result.toString(ps)} = |${v0.toString(ps)}|";
 
-  def advise(domains: IndexedSeq[Domain], p: Int) = if (skip(domains)) -1 else domains(0).size * 3 / 2 + domains(1).size
+  def advise(ps: ProblemState, p: Int) = if (skip(ps)) -1 else ps.dom(result).size * 3 / 2 + ps.dom(v0).size
 
   def simpleEvaluation = 1
 }

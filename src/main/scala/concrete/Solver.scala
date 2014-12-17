@@ -185,13 +185,13 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   def reset()
 
   protected def extractSolution(state: ProblemState): Map[Variable, Any] = problem.variables
-    .map(v => (v, state(v))).map {
+    .map(v => (v, state.dom(v))).map {
       case (variable, dom: IntDomain)     => variable -> dom.head
       case (variable, dom: BooleanDomain) => variable -> dom.canBe(true)
     }
     .toMap
 
-  final def preprocess(filter: Filter, state: ProblemState): FilterOutcome = {
+  final def preprocess(filter: Filter, state: ProblemState): Outcome = {
 
     logger.info("Preprocessing");
 
@@ -209,10 +209,11 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
     val (r, t) = StatisticsManager.time(preprocessor.reduceAll(state));
 
     r match {
-      case Filtered(newState) => preproRemoved = problem.variables
-        .map { v => v.initDomain.size - newState(v).size }
-        .sum
       case Contradiction => preproRemoved = -1
+      case newState: ProblemState => preproRemoved = problem.variables
+        .map { v => v.initDomain.size - newState.dom(v).size }
+        .sum
+
     }
 
     this.preproCpu = t;

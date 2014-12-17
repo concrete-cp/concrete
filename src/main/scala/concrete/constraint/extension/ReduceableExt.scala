@@ -29,9 +29,10 @@ import concrete.UNSATException
 import concrete.constraint.Removals
 import cspom.Statistic
 import concrete.UNSATObject
-import concrete.Revised
 import concrete.Contradiction
 import scala.collection.mutable.HashSet
+import concrete.ProblemState
+import concrete.Outcome
 
 object ReduceableExt {
   @Statistic
@@ -41,19 +42,12 @@ object ReduceableExt {
 final class ReduceableExt(_scope: Array[Variable], val initState: Relation)
   extends Constraint(_scope) with LazyLogging with Removals {
 
-  type State = Relation
-
   //println("sizesR " + arity + " " + trie.lambda + " " + trie.edges)
 
-  private val unsupported = Array.fill(arity)(new HashSet[Int]())
-
-  def revise(domains: IndexedSeq[Domain], mod: List[Int], trie: Relation) = {
-    //println(this)
-    //logger.fine("Revising " + this + " : " + mod.toList)
-    for (i <- 0 until scope.length) {
-      unsupported(i).clear()
-      unsupported(i) ++= domains(i)
-    }
+  def revise(ps: ProblemState, mod: List[Int]) = {
+    val domains = ps.domains(scope).toArray
+    val unsupported = domains.map(_.to[collection.mutable.Set])
+    val trie: Relation = ps(this)
     //found.foreach(_.fill(false))
 
     //val oldSize = trie.size
@@ -84,17 +78,11 @@ final class ReduceableExt(_scope: Array[Variable], val initState: Relation)
           unsupported(depth).isEmpty
         }, arity)
 
-      val c = (0 until arity).map(p => if (unsup(p)) domains(p).filter(v => !unsupported(p)(v)) else domains(p))
-
-      //    val card = cardSize()
-      //    assert(card < 0 || card >= trie.size, card + " < " + trie.size + "!")
-      //    if (card == trie.size) {
-      //      //logger.info("Entailing " + this)
-      //      entail()
-      //    }
-
-      Revised(c, isFree(c), newTrie)
-
+      var cs: Outcome = ps.updatedCS(id, newTrie)
+      for (p <- 0 until arity) {
+        if (unsup(p)) cs = cs.filterDom(p)(!unsupported(p)(_))
+      }
+      cs.entailIfFree(this)
     }
 
   }
@@ -115,9 +103,9 @@ final class ReduceableExt(_scope: Array[Variable], val initState: Relation)
 
   //def matrixManager = matrixManager
 
-  val prop = initState.edges.toDouble / doubleCardSize(scope.map(_.initDomain))
+  val prop = initState.edges.toDouble / scope.map(_.initDomain.size.toDouble).product
 
-  def getEvaluation(domains: IndexedSeq[Domain]) = (prop * doubleCardSize(domains)).toInt
+  def getEvaluation(ps: ProblemState) = (prop * doubleCardSize(ps)).toInt
 
   val simpleEvaluation = math.min(7, scope.count(_.initDomain.size > 1))
 

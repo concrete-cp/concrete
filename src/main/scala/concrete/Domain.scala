@@ -59,6 +59,8 @@ abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
 
   def span: Interval // = Interval(head, last)
 
+  def singleValue: Int
+
   def &(a: Int, b: Int): Domain = removeUntil(a).removeAfter(b)
   def &(i: Interval): Domain = this & (i.lb, i.ub)
 

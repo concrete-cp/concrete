@@ -8,15 +8,16 @@ import concrete.util.BitVector
 import concrete.UNSATException
 import concrete.UNSATObject
 import concrete.util.Timestamp
-import concrete.Revised
 import concrete.Contradiction
 import concrete.Domain
+import concrete.constraint.StatefulConstraint
+import concrete.ProblemState
+import scala.collection.mutable.HashSet
+import concrete.Outcome
 
 /* MDDRelation comes with its own timestamp */
 class MDDC(_scope: Array[Variable], private val mdd: MDDRelation)
   extends Constraint(_scope) with Removals {
-
-  type State = Set[Int]
 
   def initState = new SparseSet(mdd.identify + 1)
 
@@ -28,9 +29,9 @@ class MDDC(_scope: Array[Variable], private val mdd: MDDRelation)
   def simpleEvaluation: Int = math.min(Constraint.NP, scope.count(_.initDomain.size > 1))
 
   // Members declared in concrete.constraint.Removals
-  val prop = mdd.edges.toDouble / doubleCardSize(scope.map(_.initDomain))
+  val prop = mdd.edges.toDouble / scope.map(_.initDomain.size.toDouble).product
 
-  def getEvaluation(domains: IndexedSeq[Domain]) = (prop * doubleCardSize(domains)).toInt
+  def getEvaluation(ps: ProblemState) = (prop * doubleCardSize(ps)).toInt
 
   private val unsupported = scope.map(p => new collection.mutable.BitSet(p.initDomain.size))
 
@@ -38,14 +39,11 @@ class MDDC(_scope: Array[Variable], private val mdd: MDDRelation)
 
   var gNo: Set[Int] = _
 
-  def revise(domains: IndexedSeq[Domain], modified: List[Int], oldGno: Set[Int]) = {
-    for (i <- scope.indices) {
-      unsupported(i).clear()
-      unsupported(i) ++= domains(i)
-      //      for (j <- scope(i).dom.indices) {
-      //        unsupported(i) += j
-      //      }
-    }
+  def revise(ps: ProblemState, modified: List[Int]) = {
+
+    val oldGno: Set[Int] = ps(this)
+    val domains = ps.domains(scope).toArray
+    val unsupported = domains.map(_.to[collection.mutable.Set])
 
     delta = arity
 
@@ -55,12 +53,15 @@ class MDDC(_scope: Array[Variable], private val mdd: MDDRelation)
     if (!sat) {
       Contradiction
     } else {
-      val c = (0 until arity).map(p => if (p < delta) domains(p).filter(i => !unsupported(p)(i)) else domains(p))
-      Revised(c, isFree(domains), this.gNo)
+      var cs: Outcome = ps.updatedCS(id, gNo)
+      for (p <- 0 until delta) {
+        cs = cs.filterDom(p)(!unsupported(p)(_))
+      }
+      cs.entailIfFree(this)
     }
   }
 
-  private def seekSupports(domains: IndexedSeq[Domain], ts: Int, g: MDD, i: Int): Boolean = {
+  private def seekSupports(domains: Array[Domain], ts: Int, g: MDD, i: Int): Boolean = {
     if (g eq MDDLeaf) {
       if (i < delta) {
         delta = i

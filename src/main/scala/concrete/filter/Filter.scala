@@ -22,8 +22,8 @@ package concrete.filter;
 import concrete.constraint.Constraint
 import concrete.Variable
 import concrete.Problem
-import concrete.FilterOutcome
 import concrete.ProblemState
+import concrete.Outcome
 
 /**
  * @author scand1sk
@@ -36,10 +36,10 @@ trait Filter {
   /**
    * @return false iff an inconsistency has been detected
    */
-  def reduceAll(states: ProblemState): FilterOutcome
+  def reduceAll(states: ProblemState): Outcome
 
-  def reduceAfter(constraints: Iterable[Constraint], states: ProblemState): FilterOutcome
+  def reduceAfter(constraints: Iterable[Constraint], states: ProblemState): Outcome
 
-  def reduceAfter(variable: Variable, states: ProblemState): FilterOutcome
+  def reduceAfter(variable: Variable, states: ProblemState): Outcome
 
 }

@@ -50,7 +50,7 @@ object FZConcrete extends CSPOMRunner with App {
     parseTime = time
 
     outputVars = cspom.namedExpressions.collect {
-      case (n, e) if e.getSeqParam("fzAnnotations", classOf[FZAnnotation]).exists {
+      case (n, e) if e.getSeqParam[FZAnnotation]("fzAnnotations").exists {
         case FZAnnotation("output_var", Seq()) => true
         case _                                 => false
       } => n
@@ -58,7 +58,7 @@ object FZConcrete extends CSPOMRunner with App {
 
     outputArrays = cspom.namedExpressions.toMap.flatMap {
       case (n, e) =>
-        e.getSeqParam("fzAnnotations", classOf[FZAnnotation]).collectFirst {
+        e.getSeqParam[FZAnnotation]("fzAnnotations").collectFirst {
           case FZAnnotation("output_array", Seq(data: FZArrayExpr[_])) =>
             val FZArrayExpr(array) = data
             val ranges = array.map {
