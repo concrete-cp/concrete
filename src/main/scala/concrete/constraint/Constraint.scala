@@ -20,7 +20,6 @@
 package concrete.constraint;
 
 import scala.annotation.tailrec
-
 import concrete.Contradiction
 import concrete.Outcome
 import concrete.ProblemState
@@ -29,6 +28,7 @@ import concrete.heuristic.Weighted
 import concrete.priorityqueues.DLNode
 import concrete.priorityqueues.Identified
 import concrete.priorityqueues.PTag
+import concrete.UNSATException
 
 object Constraint {
 
@@ -110,27 +110,7 @@ abstract class Constraint(val scope: Array[Variable])
 
   }
 
-  //  final def isEntailed = entailedAtLevel >= 0
-
   def inCN = id >= 0
-
-  //  final def disEntail() {
-  //    assert(isEntailed)
-  //    entailedAtLevel = -1
-  //    if (inCN) for (v <- scope) {
-  //      v.wDeg += weight
-  //    }
-  //  }
-  //
-  //  final def entail() {
-  //    if (!isEntailed) {
-  //      entailedAtLevel = level
-  //      if (inCN) for (v <- scope) {
-  //        v.wDeg -= weight
-  //      }
-  //    }
-  //
-  //  }
 
   override def weight_=(w: Int) {
     //assert(!isEntailed)
@@ -141,13 +121,6 @@ abstract class Constraint(val scope: Array[Variable])
     }
     super.weight = w
   }
-
-  //  def consistentRevise() = try {
-  //    revise()
-  //    true
-  //  } catch {
-  //    case e: UNSATException => false
-  //  }
 
   def isConsistent(problemState: ProblemState): Boolean =
     revise(problemState) match {
@@ -174,6 +147,11 @@ abstract class Constraint(val scope: Array[Variable])
    * The constraint propagator.
    */
   def revise(problemState: ProblemState): Outcome
+
+  def consistentRevise(problemState: ProblemState): ProblemState = revise(problemState) match {
+    case Contradiction    => throw new UNSATException("Revision is inconsistent")
+    case ps: ProblemState => ps
+  }
 
   def dataSize: Int = ???
 

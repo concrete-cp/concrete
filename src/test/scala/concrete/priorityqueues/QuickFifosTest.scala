@@ -4,16 +4,14 @@ import concrete.constraint.Constraint
 import scala.util.Random
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
-import concrete.Revised
 import concrete.Domain
+import concrete.ProblemState
 
 class QuickFifosTest extends FlatSpec with Matchers {
 
   class TestConstraint(val eval: Int) extends Constraint {
-    type State = Unit
-    def initState = Unit
-    def advise(domains: IndexedSeq[Domain], p: Int) = eval
-    def revise(domains: IndexedSeq[Domain], s: State) = Revised(IndexedSeq())
+    def advise(ps: ProblemState, p: Int) = eval
+    def revise(ps: ProblemState) = ps
     def simpleEvaluation = 1
     def check(t: Array[Int]) = true
   }

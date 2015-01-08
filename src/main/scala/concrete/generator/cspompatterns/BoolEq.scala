@@ -11,9 +11,9 @@ import cspom.util.IntervalsArithmetic._
 import cspom.variable.BoolVariable
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMExpression
-import cspom.variable.IntVariable.arithmetics
-import cspom.variable.IntVariable.intExpression
-import cspom.variable.IntVariable.ranges
+import cspom.variable.IntExpression.implicits.arithmetics
+import cspom.variable.IntExpression
+import cspom.variable.IntExpression.implicits.ranges
 import cspom.variable.SimpleExpression
 
 object BoolEq extends ConstraintCompiler {

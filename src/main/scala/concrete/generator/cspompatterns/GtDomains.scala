@@ -4,9 +4,9 @@ import cspom.CSPOMConstraint
 import cspom.compiler.VariableCompiler
 import cspom.util.IntInterval
 import cspom.variable.BoolVariable.boolExpression
-import cspom.variable.IntVariable.arithmetics
-import cspom.variable.IntVariable.intExpression
-import cspom.variable.IntVariable.ranges
+import cspom.variable.IntExpression.implicits.arithmetics
+import cspom.variable.IntExpression
+import cspom.variable.IntExpression.implicits.ranges
 import cspom.variable.SimpleExpression
 import cspom.util.Finite
 import cspom.variable.CSPOMConstant
@@ -17,8 +17,8 @@ object GtDomains extends VariableCompiler('gt) {
   def compiler(c: CSPOMConstraint[_]) = c match {
     case CSPOMConstraint(r: SimpleExpression[_], _, Seq(i0: SimpleExpression[_], i1: SimpleExpression[_]), _) =>
       val iir = boolExpression(r)
-      val ii0 = intExpression(i0)
-      val ii1 = intExpression(i1)
+      val ii0 = IntExpression(i0)
+      val ii1 = IntExpression(i1)
 
       val ir = if (Infinitable.InfinitableOrdering.compare(ii0.lowerBound, ii1.upperBound) > 0) {
         CSPOMConstant(true)

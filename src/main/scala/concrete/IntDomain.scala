@@ -26,6 +26,7 @@ object EmptyIntDomain extends IntDomain {
   def apply(i: Int) = throw new NoSuchElementException
   def bitVector(offset: Int) = BitVector.empty
   def span = throw new NoSuchElementException
+  def singleValue = throw new NoSuchElementException
 }
 
 object IntDomain {

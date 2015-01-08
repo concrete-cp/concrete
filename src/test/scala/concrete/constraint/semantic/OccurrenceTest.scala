@@ -1,23 +1,20 @@
 package concrete.constraint.semantic
-import org.junit.Test
-import concrete.IntDomain
-import concrete.Variable
-import concrete.UNSATException
-import org.junit.Assert._
-import org.hamcrest.CoreMatchers._
-import cspom.CSPOM
-import CSPOM._
-import concrete.CSPOMDriver._
-import cspom.variable.CSPOMExpression
-import concrete.Solver
-import cspom.compiler.ProblemCompiler
-import concrete.generator.cspompatterns.ConcretePatterns
-import cspom.variable.IntVariable
-import concrete.Revised
-import org.scalatest.Matchers
+
+import org.scalatest.Finders
 import org.scalatest.FlatSpec
 import org.scalatest.Inspectors
+import org.scalatest.Matchers
+
+import concrete.CSPOMDriver.occurrence
 import concrete.Contradiction
+import concrete.IntDomain
+import concrete.Problem
+import concrete.Solver
+import concrete.Variable
+import cspom.CSPOM
+import cspom.CSPOM.constant
+import cspom.CSPOM.ctr
+import cspom.variable.IntVariable
 
 class OccurrenceTest extends FlatSpec with Matchers with Inspectors {
 
@@ -32,15 +29,15 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors {
 
     val c = new OccurrenceVar(occ, 7, Array(v1, v2, v3, v4, v5))
 
-    def domains = Array(occ, v1, v2, v3, v4, v5).map(_.initDomain)
+    val ps = Problem(occ, v1, v2, v3, v4, v5).initState
 
-    val Revised(mod, _, _) = c.revise(domains, Unit)
+    val mod = c.consistentRevise(ps)
 
-    forAll((mod zip domains).drop(1)) {
-      case (m, d) => m should be theSameInstanceAs d
+    forAll(c.scope.drop(1)) {
+      case v => mod.dom(v) should be theSameInstanceAs ps.dom(v)
     }
 
-    mod(0) shouldBe Seq(1, 2)
+    mod.dom(occ) shouldBe Seq(1, 2)
 
   }
 
@@ -54,9 +51,9 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors {
     val occ = new Variable("occ", IntDomain(3, 4, 5))
 
     val c = new OccurrenceVar(occ, 7, Array(v1, v2, v3, v4, v5))
-    def domains = Array(occ, v1, v2, v3, v4, v5).map(_.initDomain)
+    val ps = Problem(occ, v1, v2, v3, v4, v5).initState
 
-    c.revise(domains, Unit) shouldBe Contradiction
+    c.revise(ps) shouldBe Contradiction
 
   }
 
@@ -83,15 +80,13 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors {
 
     val occ = s.concreteProblem.variable("occ")
 
-    val domains = c.scope.map(_.initDomain)
+    val mod = c.revise(s.concreteProblem.initState)
 
-    val Revised(mod, _, _) = c.revise(domains, Unit)
-
-    forAll((mod zip domains).drop(1)) {
-      case (m, d) => m should be theSameInstanceAs d
+    forAll(s.concreteProblem.variables.drop(1)) {
+      case v => mod.dom(v) should be theSameInstanceAs s.concreteProblem.initState.dom(v)
     }
 
-    mod(0) shouldBe Seq(1, 2)
+    mod.dom(occ) shouldBe Seq(1, 2)
 
   }
 

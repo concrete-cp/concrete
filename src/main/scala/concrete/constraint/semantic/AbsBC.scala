@@ -34,9 +34,9 @@ final class AbsBC(val result: Variable, val v0: Variable) extends Constraint(Arr
       }
   }
 
-  override def toString(domains: IndexedSeq[Domain], state: Unit) = domains(0) + " = |" + domains(1) + "|";
+  override def toString(ps: ProblemState) = s"${result.toString(ps)} =BC= |${v0.toString(ps)}|";
 
-  def advise(domains: IndexedSeq[Domain], p: Int) = 6
+  def advise(ps: ProblemState, p: Int) = 6
 
   def simpleEvaluation = 1
 }

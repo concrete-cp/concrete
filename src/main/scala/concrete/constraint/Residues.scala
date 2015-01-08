@@ -12,10 +12,6 @@ trait ResidueManager {
 
 trait Residues extends Removals {
 
-  type State = Unit
-
-  def initState = Unit
-
   val residues: ResidueManager = {
     if (scope.map(v => v.initDomain.last - v.initDomain.head).sum < 10000) {
       new ResidueManagerFast(scope)
@@ -41,14 +37,26 @@ trait Residues extends Removals {
     }
   }
 
-  @annotation.tailrec
-  private def revise(state: ProblemState, skip: Int, p: Int): Outcome =
-    if (p < 0) { state }
-    else if (p == skip) revise(state, skip, p - 1)
-    else state.updateDom(scope(p), reviseDomain(state, p)).andThen(ps => revise(ps, skip, p - 1))
+  //@annotation.tailrec
+  private def revise(state: ProblemState, skip: Int): Outcome = {
+    var p = arity - 1
+    var current: Outcome = state
+    while (p >= 0) {
+      if (p != skip) {
+        current = current.updateDom(scope(p), reviseDomain(state, p))
+        if (current == Contradiction) return Contradiction
+      }
+      p -= 1
+    }
+    current
+    //    if (p < 0) { state }
+    //    else if (p == skip) revise(state, skip, p - 1)
+    //    else state.updateDom(scope(p), reviseDomain(state, p)).andThen(ps => revise(ps, skip, p - 1))
+
+  }
 
   def revise(state: ProblemState, modified: List[Int]): Outcome = // {
-    revise(state, skip(modified), arity - 1).entailIfFree(this)
+    revise(state, skip(modified)).entailIfFree(this)
   //    val skip = this.skip(modified)
   //    var cs = state
   //    for (position <- 0 until arity) {

@@ -1,10 +1,13 @@
 package concrete.constraint.semantic
+
+import org.scalatest.Finders
+import org.scalatest.FlatSpec
+import org.scalatest.Matchers
+
 import concrete.IntDomain
+import concrete.Problem
 import concrete.Variable
 import concrete.constraint.AdviseCount
-import org.scalatest.Matchers
-import concrete.Revised
-import org.scalatest.FlatSpec
 
 final class EqTest extends FlatSpec with Matchers {
 
@@ -13,11 +16,11 @@ final class EqTest extends FlatSpec with Matchers {
     val v1 = new Variable("v1", IntDomain(3, 4, 5))
     val c = new EqAC(v0, v1)
     c.register(new AdviseCount())
-    val d = IndexedSeq(v0.initDomain, v1.initDomain)
-    c.adviseAll(d)
-    val Revised(mod, _, _) = c.revise(d, Unit)
+    val ps = Problem(v0, v1).initState
+    c.adviseAll(ps)
+    val mod = c.revise(ps)
 
-    mod(0) shouldBe Seq(3)
-    mod(1) shouldBe Seq(3)
+    mod.dom(v0) shouldBe Seq(3)
+    mod.dom(v1) shouldBe Seq(3)
   }
 }

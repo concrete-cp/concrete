@@ -10,6 +10,7 @@ import concrete.constraint.semantic.ReifiedConstraint
 import concrete.constraint.semantic.ReifiedEquals
 import cspom.CSPOMConstraint
 import concrete.BooleanDomain
+import concrete.UNSATException
 
 final object EqGenerator extends Generator {
 
@@ -27,7 +28,7 @@ final object EqGenerator extends Generator {
     val negFactor = if (neg) -1 else 1
     (a, b) match {
       case (Const(a), Const(b)) =>
-        if (negFactor * a + offset == b) Seq() else throw concrete.UNSATObject
+        if (negFactor * a + offset == b) Seq() else throw new UNSATException("Inconsistent constraint: " + constraint)
       case (Var(a), Var(b)) =>
         Seq(new EqBC(neg, a, offset, b), new EqAC(neg, a, offset, b))
 

@@ -36,10 +36,7 @@ class ElementBC(
   scope: Array[Variable])
   extends Constraint(scope) with BC {
 
-  type State = Unit
-  def initState = Unit
-
-  def advise(domains: IndexedSeq[Domain], pos: Int): Int = arity
+  def advise(ps: ProblemState, pos: Int): Int = arity
 
   def check(tuple: Array[Int]): Boolean = {
     tuple(1) < arity - 2 && tuple(0) == tuple(tuple(1) + 2)
@@ -88,11 +85,7 @@ class ElementAC(
   scope: Array[Variable])
   extends Constraint(scope) with Removals with BCCompanion {
 
-  type State = Unit
-
   def getEvaluation(ps: ProblemState): Int = if (skip(ps)) -1 else scopeSize(ps)
-
-  def initState = Unit
 
   def check(tuple: Array[Int]): Boolean = {
     tuple(1) < arity - 2 && tuple(0) == tuple(tuple(1) + 2)
@@ -100,7 +93,7 @@ class ElementAC(
 
   def skipIntervals = false
 
-  def revise(ps: ProblemState, modified: List[Int], s: Unit): Outcome = {
+  def revise(ps: ProblemState, modified: List[Int]): Outcome = {
     val resultDom = ps.dom(result)
     /**
      * Revise indices

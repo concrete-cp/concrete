@@ -3,7 +3,6 @@ package concrete.generator.constraint;
 import com.typesafe.scalalogging.LazyLogging
 
 import Generator.cspom2concrete
-import concrete.UNSATObject
 import concrete.constraint.semantic.AbsAC
 import concrete.constraint.semantic.AbsBC
 import cspom.CSPOMConstraint

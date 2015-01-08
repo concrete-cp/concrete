@@ -11,7 +11,7 @@ import cspom.extension.MDDNode
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
-import cspom.variable.IntVariable.iterable
+import cspom.variable.IntExpression.implicits.iterable
 
 final object SlidingSum extends ConstraintCompilerNoData {
 

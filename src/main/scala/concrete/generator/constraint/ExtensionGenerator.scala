@@ -5,7 +5,7 @@ import com.typesafe.scalalogging.LazyLogging
 import Generator.cspom2concreteVar
 import concrete.Domain
 import concrete.ParameterManager
-import concrete.UNSATObject
+import concrete.UNSATException
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.extension.BinaryExt
@@ -152,7 +152,7 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
     val Some(init: Boolean) = extensionConstraint.params.get("init")
 
     if (relation.isEmpty) {
-      if (init == true) { Seq() } else { throw UNSATObject }
+      if (init == true) { Seq() } else { throw new UNSATException("Empty relation " + extensionConstraint) }
     } else {
       val scope = solverVariables.toArray
 

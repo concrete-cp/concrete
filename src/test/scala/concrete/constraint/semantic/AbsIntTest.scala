@@ -1,16 +1,15 @@
 package concrete.constraint.semantic
 
 import scala.Traversable
-
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
-
 import concrete.IntDomain
-import concrete.Revised
 import concrete.Variable
+import concrete.Problem
+import concrete.ProblemState
 
 final class AbsIntTest extends FlatSpec with Matchers {
 
@@ -21,17 +20,17 @@ final class AbsIntTest extends FlatSpec with Matchers {
 
     val c = new AbsBC(x, y)
 
-    val domains = Array(x.initDomain, y.initDomain)
-    c.adviseAll(domains)
+    val ps = Problem(x, y).initState
+    c.adviseAll(ps)
 
-    assert(c.intervalsOnly(domains))
+    assert(c.intervalsOnly(ps))
 
-    val Revised(mod, _, _) = c.revise(domains, c.initState)
+    val mod: ProblemState = c.consistentRevise(ps)
 
-    mod(0) should not be theSameInstanceAs(domains(0))
-    mod(1) should be theSameInstanceAs domains(1)
+    mod.dom(x) should not be theSameInstanceAs(ps.dom(x))
+    mod.dom(y) should be theSameInstanceAs ps.dom(y)
 
-    mod(0) shouldBe Seq(5)
+    mod.dom(x) shouldBe Seq(5)
 
     assert(c.intervalsOnly(mod))
 
@@ -44,18 +43,18 @@ final class AbsIntTest extends FlatSpec with Matchers {
 
     val c = new AbsAC(x, y)
 
-    val domains = Array(x.initDomain, y.initDomain)
-    c.adviseAll(domains)
-    assert(c.intervalsOnly(domains))
-    val Revised(mod, _, _) = c.revise(domains, Unit)
+    val ps = Problem(x, y).initState
+    c.adviseAll(ps)
+    assert(c.intervalsOnly(ps))
+    val mod = c.consistentRevise(ps)
 
-    mod(0) should be theSameInstanceAs domains(0)
-    mod(1) should not be theSameInstanceAs(domains(1))
+    mod.dom(x) should be theSameInstanceAs ps.dom(x)
+    mod.dom(y) should not be theSameInstanceAs(ps.dom(y))
 
-    mod(1) shouldBe Seq(-7, 7)
+    mod.dom(y) shouldBe Seq(-7, 7)
 
     assert(!c.intervalsOnly(mod))
-    assert(mod(0).bound)
+    assert(mod.dom(x).bound)
   }
 
 }

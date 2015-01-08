@@ -21,7 +21,7 @@ abstract class VariableHeuristic(params: ParameterManager) {
   //def problem: Problem
 
   def select(problem: Problem, state: ProblemState): Option[Variable] =
-    select(problem.variables.iterator.filter(state(_).size > 1), state)
+    select(problem.variables.iterator.filter(state.dom(_).size > 1), state)
 
   @tailrec
   private def select(list: Iterator[Variable], best: Variable, ties: Int, rand: Random, state: ProblemState): Variable = {

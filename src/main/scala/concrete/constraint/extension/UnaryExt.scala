@@ -27,7 +27,7 @@ final class UnaryExt(scope: Variable, matrix: Matrix, shared: Boolean)
   extends ExtensionConstraint(Array(scope), matrix, shared) {
 
   def revise(ps: ProblemState) =
-    ps.filterDom(0)(v => matrix.check(Array(v))).entail(id)
+    ps.filterDom(scope)(v => matrix.check(Array(v))).entail(this)
 
   def removeTuple(tuple: Array[Int]) = {
     ??? //disEntail();
@@ -49,7 +49,7 @@ final class UnaryExt(scope: Variable, matrix: Matrix, shared: Boolean)
   override def check(tuple: Array[Int]) = matrix.check(tuple)
 
   def simpleEvaluation = 1
-  def advise(domains: IndexedSeq[Domain], p: Int) = domains(0).size
+  def advise(ps: ProblemState, p: Int) = ps.dom(scope).size
   override def dataSize = matrix.size
 
 }

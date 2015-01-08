@@ -1,20 +1,19 @@
 package concrete.constraint.semantic
 
-import concrete.constraint.Constraint
-import concrete.Variable
-
-import concrete.Revised
 import concrete.Domain
+import concrete.Outcome
+import concrete.ProblemState
+import concrete.Variable
+import concrete.constraint.Constraint
 import concrete.util.Interval
 
 abstract class MinMax(result: Variable, vars: Array[Variable], constant: Option[Int]) extends Constraint(result +: vars) {
 
-  def advise(domains: IndexedSeq[Domain], pos: Int): Int = arity
+  def advise(ps: ProblemState, pos: Int): Int = arity
 
-  def in(dom: IndexedSeq[Domain]): Domain = {
-    val span = dom.iterator.drop(1).map(_.span).reduce(_ span _)
-    val withConstant = constant.map(c => Interval(c, c) span span).getOrElse(span)
-    dom(0) & withConstant
+  def in(dom: Iterator[Domain]): Interval = {
+    val span = dom.map(_.span).reduce(_ span _)
+    constant.map(c => Interval(c, c) span span).getOrElse(span)
   }
 
   def simpleEvaluation: Int = 2
@@ -23,44 +22,48 @@ abstract class MinMax(result: Variable, vars: Array[Variable], constant: Option[
 
 final class Min(result: Variable, vars: Array[Variable], constant: Option[Int])
   extends MinMax(result, vars, constant) {
-  type State = Unit
-  def initState = Unit
+
   def this(result: Variable, vars: Array[Variable]) = this(result, vars, None)
   def this(result: Variable, vars: Array[Variable], constant: Int) = this(result, vars, Some(constant))
 
-  def revise(domains: IndexedSeq[Domain], s: State) = {
-    val ch = in(domains)
+  def revise(ps: ProblemState): Outcome = {
+    val span = in(ps.domains(vars))
 
-    val minValue = ch.head
+    ps.shaveDom(result, span).andThen {
+      ps =>
+        val minValue = ps.dom(result).head
+        ps.updateAll(vars.iterator)(_.removeUntil(minValue))
+    }
 
-    Revised(ch +: domains.tail.map(_.removeUntil(minValue)))
   }
 
   def check(tuple: Array[Int]): Boolean = {
     tuple(0) == (1 until arity).map(tuple).min
   }
 
-  override def toString(domains: IndexedSeq[Domain], s: State) = domains.mkString(result + " = min(", ", ", ")")
+  override def toString(ps: ProblemState) = ps.domains(vars).mkString(ps.dom(result) + " = min(", ", ", ")")
 }
 
 final class Max(result: Variable, vars: Array[Variable], constant: Option[Int])
   extends MinMax(result, vars, constant) {
-  type State = Unit
-  def initState = Unit
+
   def this(result: Variable, vars: Array[Variable]) = this(result, vars, None)
   def this(result: Variable, vars: Array[Variable], constant: Int) = this(result, vars, Some(constant))
 
-  def revise(domains: IndexedSeq[Domain], s: State) = {
-    val ch = in(domains)
+  def revise(ps: ProblemState): Outcome = {
+    val span = in(ps.domains(vars))
 
-    val maxValue = ch.last
+    ps.shaveDom(result, span).andThen {
+      ps =>
+        val maxValue = ps.dom(result).last
+        ps.updateAll(vars.iterator)(_.removeAfter(maxValue))
+    }
 
-    Revised(ch +: domains.tail.map(_.removeAfter(maxValue)))
   }
 
   def check(tuple: Array[Int]): Boolean = {
     tuple(0) == (1 until arity).map(tuple).max
   }
 
-  override def toString(domains: IndexedSeq[Domain], s: State) = domains.mkString(result + " = min(", ", ", ")")
+  override def toString(ps: ProblemState) = ps.domains(vars).mkString(ps.dom(result) + " = min(", ", ", ")")
 }

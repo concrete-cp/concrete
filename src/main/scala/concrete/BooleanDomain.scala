@@ -5,6 +5,7 @@ import concrete.util.Interval
 
 case object UNKNOWNBoolean extends BooleanDomain {
   val bitVector = BitVector.filled(2)
+  def singleValue = throw new IllegalStateException
   override def toString = "[f, t]"
   override def length = 2
   override def head = 0
@@ -85,6 +86,7 @@ case object TRUE extends BooleanDomain {
   val bitVector = BitVector.empty + 1
   override def toString = "[t]"
   def length = 1
+  def singleValue = 1
   override def head = 1
   override def last = 1
   def next(i: Int) = throw new NoSuchElementException
@@ -107,6 +109,7 @@ case object FALSE extends BooleanDomain {
   val bitVector = BitVector.empty + 0
   override val toString = "[f]"
   def length = 1
+  def singleValue = 0
   override def head = 0
   override def last = 0
   def next(i: Int) = throw new NoSuchElementException
@@ -129,6 +132,7 @@ case object EMPTY extends BooleanDomain {
   val bitVector = BitVector.empty
   override val toString = "[]"
   def length = 0
+  def singleValue = throw new NoSuchElementException
   override def head = throw new NoSuchElementException
   override def last = throw new NoSuchElementException
   def next(i: Int) = throw new NoSuchElementException

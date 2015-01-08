@@ -7,6 +7,7 @@ import concrete.constraint.AdviseCount
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
 import concrete.Contradiction
+import concrete.Problem
 
 class AllDifferent2CTest extends FlatSpec with Matchers {
 
@@ -18,11 +19,12 @@ class AllDifferent2CTest extends FlatSpec with Matchers {
     val v5 = new Variable("5", IntDomain(8, 9))
 
     val c = new AllDifferent2C(v1, v2, v3, v4, v5)
-    val d = c.scope.map(_.initDomain)
-    c.register(new AdviseCount)
-    c.adviseAll(d)
+    val ps = Problem(v1, v2, v3, v4, v5).initState
 
-    c.revise(d, Unit) shouldBe Contradiction
+    c.register(new AdviseCount)
+    c.adviseAll(ps)
+
+    c.revise(ps) shouldBe Contradiction
   }
 
   it should "check correctly" in {

@@ -13,7 +13,7 @@ import org.scalatest.Assertions
 import org.scalatest.FlatSpec
 import concrete.ParameterManager
 import concrete.Contradiction
-import concrete.Filtered
+import concrete.ProblemState
 
 final class ProblemGeneratorTest extends FlatSpec with LazyLogging {
 
@@ -59,8 +59,8 @@ final class ProblemGeneratorTest extends FlatSpec with LazyLogging {
     logger.info(problem + "\n" + problem.variables.size + " vars, " + problem.constraints.size + " cons")
 
     new ACC(problem, pm).reduceAll(problem.initState) match {
-      case Contradiction => logger.info("UNSAT")
-      case Filtered(newState) => logger.info(problem.toString(newState));
+      case Contradiction          => logger.info("UNSAT")
+      case newState: ProblemState => logger.info(problem.toString(newState));
     }
 
   }

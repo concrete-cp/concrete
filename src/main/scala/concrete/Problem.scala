@@ -24,6 +24,11 @@ import scala.collection.JavaConversions
 import scala.collection.mutable.ArrayBuffer
 import java.util.Arrays
 import scala.collection.immutable.VectorBuilder
+import concrete.constraint.StatefulConstraint
+
+object Problem {
+  def apply(vars: Variable*) = new Problem(vars.toList)
+}
 
 final class Problem(val variables: List[Variable]) {
   //require(variables.nonEmpty, "A problem with no variables makes no sense")
@@ -57,7 +62,10 @@ final class Problem(val variables: List[Variable]) {
       c.id = i
       _maxArity = math.max(_maxArity, c.arity)
       c.scope.foreach(v => v.addConstraint(c))
-      stateBuffer += c.initState
+      stateBuffer += (c match {
+        case sc: StatefulConstraint => sc.initState
+        case _                      => null
+      })
     }
     constraints = buffer.toArray
     initState = new ProblemState(initState.domains, stateBuffer.result, initState.entailed)

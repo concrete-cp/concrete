@@ -32,8 +32,8 @@ object Table extends App {
         data.map {
           case d: String => d
           case d: Double => "\\np{%.1f}".format(d)
-          case d: Int => "\\np{%d}".format(d)
-          case _ => "---"
+          case d: Int    => "\\np{%d}".format(d)
+          case _         => "---"
         }.mkString(" & ") + "\\\\"
 
       case "csv" => data.mkString(", ")
@@ -45,10 +45,10 @@ object Table extends App {
     val dbconf = XML.load(Table.getClass.getResource("concretedb.xml"))
 
     Database
-      .forURL(dbconf \ "url" text,
-        user = dbconf \ "user" text,
-        password = dbconf \ "password" text,
-        driver = dbconf \ "driver" text)
+      .forURL((dbconf \ "url").text,
+        user = (dbconf \ "user").text,
+        password = (dbconf \ "password").text,
+        driver = (dbconf \ "driver").text)
 
   }
 
@@ -197,11 +197,11 @@ object Table extends App {
       }
 
       val errorHandling: ErrorHandling = statistic match {
-        case "rps" => ErrorKeep
-        case "nodes" => ErrorInfinity
-        case "time" => ErrorKeep
+        case "rps"       => ErrorKeep
+        case "nodes"     => ErrorInfinity
+        case "time"      => ErrorKeep
         case "revisions" => ErrorKeep
-        case "mem" => ErrorKeep
+        case "mem"       => ErrorKeep
       }
 
       val results = sqlQuery.as[(Int, String, Option[String], Option[Double])].list
@@ -220,7 +220,7 @@ object Table extends App {
           if (!j.solved) {
             errorHandling match {
               case ErrorInfinity => Double.PositiveInfinity
-              case ErrorKeep => j.statistic
+              case ErrorKeep     => j.statistic
             }
           } else {
             j.statistic
@@ -345,7 +345,7 @@ object Table extends App {
 
   @tailrec
   def rank[B <% Ordered[B]](p: IndexedSeq[Array[B]], candidates: Seq[Int],
-    cRank: Int = 1, ranking: SortedMap[Int, Seq[Int]] = SortedMap.empty): SortedMap[Int, Seq[Int]] =
+                            cRank: Int = 1, ranking: SortedMap[Int, Seq[Int]] = SortedMap.empty): SortedMap[Int, Seq[Int]] =
     if (candidates.isEmpty) {
       ranking
     } else {
@@ -421,7 +421,7 @@ object Table extends App {
   def className(n: NodeSeq) = {
     n.headOption match {
       case Some(conf) => conf.text.split('.').last
-      case None => "?"
+      case None       => "?"
     }
   }
 

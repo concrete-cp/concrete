@@ -20,7 +20,7 @@ final class CrossHeuristic(params: ParameterManager) extends Heuristic {
   val valueHeuristic = valueHeuristicClass.getConstructor().newInstance()
 
   def selectPair(problem: Problem, state: ProblemState) = {
-    variableHeuristic.select(problem, state).map(v => Pair(v, valueHeuristic.selectIndex(v, state(v))))
+    variableHeuristic.select(problem, state).map(v => Pair(v, valueHeuristic.selectIndex(v, state.dom(v))))
   }
 
   def compute(problem: Problem) {

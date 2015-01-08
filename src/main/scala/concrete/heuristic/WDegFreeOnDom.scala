@@ -25,7 +25,7 @@ import concrete.ParameterManager
 import concrete.ProblemState
 class WDegFreeOnDom(params: ParameterManager) extends VariableHeuristic(params) {
 
-  def score(variable: Variable, state: ProblemState) = variable.getWDegFree(state).toDouble / state(variable).size
+  def score(variable: Variable, state: ProblemState) = variable.getWDegFree(state).toDouble / state.dom(variable).size
 
   override def toString = "max-wdeg-free/dom"
 

@@ -1,32 +1,34 @@
 package concrete.constraint.semantic;
 
-import concrete.IntDomain
-import concrete.Variable
-import org.scalatest.Matchers
-import concrete.Revised
+import org.scalatest.Finders
 import org.scalatest.FlatSpec
+import org.scalatest.Matchers
+
+import concrete.IntDomain
+import concrete.Problem
+import concrete.Variable
 
 final class GtTest extends FlatSpec with Matchers {
 
   val v1: Variable = new Variable("v1", IntDomain(1 to 4));
   val v2: Variable = new Variable("v2", IntDomain(3 to 5));
 
-  val domains = IndexedSeq(v1.initDomain, v2.initDomain)
+  val ps = Problem(v1, v2).initState
 
   "Gt" should "strictly filter" in {
     val c = new Gt(v1, v2, true);
-    val Revised(mod, _, _) = c.revise(domains, Unit);
+    val mod = c.consistentRevise(ps);
 
-    mod(0) shouldBe Seq(4)
-    mod(1) shouldBe Seq(3)
+    mod.dom(v1) shouldBe Seq(4)
+    mod.dom(v2) shouldBe Seq(3)
   }
 
   "Gt" should "not strictly filter" in {
     val c = new Gt(v1, v2, false);
-    val Revised(mod, _, _) = c.revise(domains, Unit);
+    val mod = c.consistentRevise(ps);
 
-    mod(0) shouldBe Seq(3, 4)
-    mod(1) shouldBe Seq(3, 4)
+    mod.dom(0) shouldBe Seq(3, 4)
+    mod.dom(1) shouldBe Seq(3, 4)
 
   }
 

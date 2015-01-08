@@ -27,7 +27,7 @@ final class AddBC(val result: Variable, val v0: Variable, val v1: Variable)
   override def toString(ps: ProblemState) =
     s"${result.toString(ps)} = ${v0.toString(ps)} + ${v1.toString(ps)}"
 
-  def advise(domains: IndexedSeq[Domain], pos: Int) = 4
+  def advise(ps:ProblemState, pos: Int) = 4
 
   def simpleEvaluation = 2
 }

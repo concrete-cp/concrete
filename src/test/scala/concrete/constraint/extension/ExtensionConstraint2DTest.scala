@@ -1,10 +1,13 @@
 package concrete.constraint.extension;
 
+import org.scalatest.Finders
 import org.scalatest.FlatSpec
+
 import concrete.IntDomain
+import concrete.Problem
+import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.AdviseCount
-import concrete.Revised
 
 final class ExtensionConstraint2DTest extends FlatSpec {
 
@@ -17,17 +20,17 @@ final class ExtensionConstraint2DTest extends FlatSpec {
 
   val c = BinaryExt(Array(var1, var2), matrix2d, false)
 
-  val domains = IndexedSeq(var1.initDomain, var2.initDomain)
+  val ps = Problem(var1, var2).initState
 
   "ExtensionConstraint2D" should "find supports" in {
-    assert(c.hasSupport(domains, 0, 1))
-    assert(!c.hasSupport(domains, 0, 2))
-    assert(!c.hasSupport(domains, 0, 3))
+    assert(c.hasSupport(ps, 0, 1))
+    assert(!c.hasSupport(ps, 0, 2))
+    assert(!c.hasSupport(ps, 0, 3))
 
-    assert(c.hasSupport(domains, 1, 1))
-    assert(!c.hasSupport(domains, 1, 2))
-    assert(c.hasSupport(domains, 1, 3))
-    assert(!c.hasSupport(domains, 1, 4))
+    assert(c.hasSupport(ps, 1, 1))
+    assert(!c.hasSupport(ps, 1, 2))
+    assert(c.hasSupport(ps, 1, 3))
+    assert(!c.hasSupport(ps, 1, 4))
   }
 
   it should "check correctly" in {
@@ -38,7 +41,12 @@ final class ExtensionConstraint2DTest extends FlatSpec {
   it should "filter correctly" in {
     val v8 = new Variable("V8", IntDomain(0 to 16))
     val v16 = new Variable("V16", IntDomain(0 to 16))
-    val domains = IndexedSeq(v8.initDomain.filter(v => Set(0, 2, 9, 15).contains(v)), v16.initDomain.filter(v => Set(5, 7, 8).contains(v)))
+
+    val ps = Problem(v8, v16)
+      .initState
+      .filterDom(v8)(v => Set(0, 2, 9, 15).contains(v))
+      .filterDom(v16)(v => Set(5, 7, 8).contains(v))
+      .asInstanceOf[ProblemState]
 
     val ac = new AdviseCount
 
@@ -50,14 +58,12 @@ final class ExtensionConstraint2DTest extends FlatSpec {
     val c2 = new BinaryExtNR(Array(v8, v16), matrix2, false)
 
     c2.register(ac)
-    c2.adviseAll(domains)
+    c2.adviseAll(ps)
 
-    val Revised(mod, _, _) = c2.revise(domains, Unit)
-
-    println(mod)
+    val mod = c2.revise(ps).asInstanceOf[ProblemState]
 
     c2.adviseAll(mod)
-    println(c2.revise(mod, Unit))
+    c2.revise(mod)
     //    c.advise(domains, 0)
     //    println(c.revise(mod, Unit))
 

@@ -1,6 +1,6 @@
 package concrete
 
-import scala.reflect.ClassTag
+import scala.reflect.runtime.universe._
 
 import concrete.constraint.Constraint
 import concrete.constraint.StatefulConstraint
@@ -35,6 +35,18 @@ sealed trait Outcome {
   def updateDom(v: Variable, d: Domain): Outcome = updateDom(v.id, d)
   def updateDom(id: Int, d: Domain): Outcome
 
+  def updateAll(vars: Iterable[Variable])(f: Domain => Domain): Outcome = updateAll(vars.iterator)(f)
+  def updateAll(vars: Iterator[Variable])(f: Domain => Domain): Outcome = updateAllIds(vars.map(_.id))(f)
+  def updateAllIds(ids: Iterator[Int])(f: Domain => Domain): Outcome = {
+    var ch = this
+    while (ids.hasNext) {
+      if (ch eq Contradiction) return Contradiction
+      var id = ids.next
+      ch = ch.updateDom(id, dom(id))
+    }
+    ch
+  }
+
   def updateDomains(v: Array[Variable], newDomains: IndexedSeq[Domain]): Outcome = {
     var i = v.length - 1
     var ps = this
@@ -48,8 +60,8 @@ sealed trait Outcome {
   def assign(p: Pair): Outcome = assign(p.variable, p.value)
   def remove(p: Pair): Outcome = remove(p.variable, p.value)
 
-  def assign(v: Variable, value: Int): Outcome
-  def remove(v: Variable, value: Int): Outcome
+  def assign(v: Variable, value: Int): Outcome = assign(v.id, value)
+  def remove(v: Variable, value: Int): Outcome = remove(v.id, value)
 
   def assign(id: Int, value: Int): Outcome
   def remove(id: Int, value: Int): Outcome
@@ -81,7 +93,7 @@ case object Contradiction extends Outcome {
   def updateDom(id: Int, d: Domain): Outcome = Contradiction
   def assign(id: Int, value: Int): Outcome = Contradiction
   def remove(id: Int, value: Int): Outcome = Contradiction
-  def dom(id: Int): Domain = throw EmptyDomain
+  def dom(id: Int): Domain = throw new UNSATException("Tried to get a domain from a Contradiction")
   def boolDom(id: Int): BooleanDomain = EMPTY
 }
 
@@ -92,7 +104,7 @@ final case class ProblemState(
 
   def andThen(f: ProblemState => Outcome) = f(this)
 
-  def apply[A: ClassTag](c: Constraint): A = constraintStates(c.id).asInstanceOf[A]
+  def apply[A: TypeTag](c: Constraint): A = constraintStates(c.id).asInstanceOf[A]
 
   def updatedCS(id: Int, newState: Any): ProblemState =
     new ProblemState(domains, constraintStates.updated(id, newState), entailed)
@@ -157,6 +169,16 @@ final case class ProblemState(
   def filterDom(id: Int)(f: Int => Boolean) = updateDom(id, dom(id).filter(f))
 
   def shaveDom(id: Int, lb: Int, ub: Int): Outcome = updateDom(id, dom(id) & (lb, ub))
+//
+//  def updateAllIds(ids: Iterator[Int])(f: Domain => Domain): Outcome = {
+//    if (ids.hasNext) {
+//      val id = ids.next
+//      updateDom(id, dom(id)).andThen(_.updateAllIds(ids)(f))
+//    } else {
+//      this
+//    }
+//
+//  }
 
   def removeTo(id: Int, ub: Int): Outcome =
     updateDom(id, dom(id).removeTo(ub))

@@ -28,7 +28,7 @@ final class LexVar(params: ParameterManager) extends VariableHeuristic(params) {
 
   def score(variable: Variable, state: ProblemState) = variable.id
 
-  override def select(problem: Problem, state: ProblemState) = problem.variables.find(state(_).size > 1)
+  override def select(problem: Problem, state: ProblemState) = problem.variables.find(state.dom(_).size > 1)
 
   override def toString = "min-dom"
 

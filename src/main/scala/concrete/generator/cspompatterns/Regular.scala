@@ -10,7 +10,7 @@ import cspom.extension.MDDNode
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
-import cspom.variable.IntVariable.iterable
+import cspom.variable.IntExpression.implicits.iterable
 import cspom.compiler.Delta
 import cspom.variable.CSPOMExpression
 import cspom.variable.SimpleExpression

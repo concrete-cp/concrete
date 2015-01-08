@@ -36,8 +36,6 @@ class ConstProdAC(v0: Variable, v1: Variable, r: Int) extends Constraint(Array(v
 }
 
 class ConstProdBC(v0: Variable, v1: Variable, r: Int) extends Constraint(Array(v0, v1)) with BC {
-  type State = Unit
-  def initState = Unit
   def check(t: Array[Int]) = r == t(0) * t(1)
   def simpleEvaluation = 1
   def advise(ps: ProblemState, p: Int) = 2

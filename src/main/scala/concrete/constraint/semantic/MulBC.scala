@@ -1,11 +1,11 @@
 package concrete.constraint.semantic;
 
-import scala.Vector
 import concrete.Domain
-import concrete.Revised
+import concrete.Outcome
+import concrete.ProblemState
 import concrete.Variable
-import concrete.constraint.Constraint
 import concrete.constraint.BC
+import concrete.constraint.Constraint
 
 /**
  * Contrainte V0 = V1 * V2.
@@ -15,38 +15,32 @@ import concrete.constraint.BC
  */
 final class MulBC(val result: Variable, val v0: Variable, val v1: Variable)
   extends Constraint(Array(result, v0, v1)) with BC {
-  type State = Unit
-  def initState = Unit
 
   def check(t: Array[Int]) = t(0) == (t(1) * t(2));
 
-  def shave(dom: IndexedSeq[Domain], s: Unit) = {
+  def shave(ps: ProblemState): Outcome = {
 
-    val rspan = dom(0).span
-    val v0span = dom(1).span
-    val v1span = dom(2).span
+    val rspan = ps.span(result)
+    val v0span = ps.span(v0)
+    val v1span = ps.span(v1)
 
-    val result = dom(0) & (v0span * v1span)
+    var ch = ps.shaveDom(result, v0span * v1span)
 
-    val v0 = if (v1span.contains(0)) {
-      dom(1)
-    } else {
-      dom(1) & (rspan / v1span)
+    if (!v1span.contains(0)) {
+      ch = ch.shaveDom(v0, rspan / v1span)
     }
 
-    val v1 = if (v0span.contains(0)) {
-      dom(2)
-    } else {
-      dom(2) & (rspan / v0span)
+    if (!v0span.contains(0)) {
+      ch = ch.shaveDom(v1, rspan / v0span)
     }
 
-    Revised(Vector(result, v0, v1))
+    ch
   }
 
-  override def toString(domains: IndexedSeq[Domain], s: State) =
-    s"$result ${domains(0)} =BC= $v0 ${domains(1)} * $v1 ${domains(2)}"
+  override def toString(ps: ProblemState) =
+    s"${result.toString(ps)} =BC= ${v0.toString(ps)} * ${v1.toString(ps)}"
 
-  def advise(dom: IndexedSeq[Domain], pos: Int) = 4
+  def advise(ps: ProblemState, pos: Int) = 4
 
   val simpleEvaluation = 2
 }

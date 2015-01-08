@@ -6,6 +6,7 @@ import concrete.Domain
 import concrete.Variable
 import concrete.util.Interval
 import concrete.constraint.BCCompanion
+import concrete.ProblemState
 
 /**
  * Contrainte V0 = V1 * V2.
@@ -20,15 +21,15 @@ final class MulAC(val result: Variable, val v0: Variable, val v1: Variable, val 
 
   def check(t: Array[Int]) = t(0) == (t(1) * t(2));
 
-  def findSupport(domains: IndexedSeq[Domain], position: Int, value: Int) =
+  def findSupport(ps: ProblemState, position: Int, value: Int) =
     position match {
-      case 0 => findValidTuple0(value, domains(1), domains(2));
-      case 1 => findValidTupleV(domains(0), value, domains(2), 1);
-      case 2 => findValidTupleV(domains(0), value, domains(1), 2);
+      case 0 => findValidTupleResult(value, ps.dom(v0), ps.dom(v1));
+      case 1 => findValidTupleV(ps.dom(result), value, ps.dom(v1), 1);
+      case 2 => findValidTupleV(ps.dom(result), value, ps.dom(v0), 2);
       case _ => throw new IndexOutOfBoundsException()
     }
 
-  private def findValidTuple0(val0: Int, dom1: Domain, dom2: Domain): Option[Array[Int]] = {
+  private def findValidTupleResult(val0: Int, dom1: Domain, dom2: Domain): Option[Array[Int]] = {
     if (val0 == 0) {
       if (dom1.present(0)) {
         Some(Array(0, 0, dom2.head))
@@ -63,13 +64,13 @@ final class MulAC(val result: Variable, val v0: Variable, val v1: Variable, val 
 
   }
 
-  override def toString(domains: IndexedSeq[Domain], s: State) =
-    s"$result ${domains(0)} = $v0 ${domains(1)} * $v1 ${domains(2)}"
+  override def toString(ps: ProblemState) =
+    s"${result.toString(ps)} =AC= ${v0.toString(ps)} * ${v1.toString(ps)}"
 
-  def getEvaluation(dom: IndexedSeq[Domain]) = {
-    val d0 = dom(0).size
-    val d1 = dom(1).size
-    val d2 = dom(2).size
+  def getEvaluation(ps:ProblemState) = {
+    val d0 = ps.dom(result).size
+    val d1 = ps.dom(v0).size
+    val d2 = ps.dom(v1).size
     d0 * d1 + d0 * d2 + d1 * d2;
   }
 

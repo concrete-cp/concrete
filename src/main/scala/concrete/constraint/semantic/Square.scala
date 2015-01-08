@@ -2,19 +2,17 @@ package concrete.constraint.semantic;
 
 import scala.IndexedSeq
 import concrete.Domain
-import concrete.Revised
 import concrete.Variable
 import concrete.constraint.BCCompanion
 import concrete.constraint.Constraint
 import concrete.constraint.BC
 import concrete.constraint.Removals
 import concrete.Contradiction
+import concrete.ProblemState
 
 final class SquareBC(val x: Variable, val y: Variable)
   extends Constraint(Array(x, y)) with BC {
 
-  type State = Unit
-  def initState = Unit
   //  val corresponding = Array(
   //    x.dom.allValues map { v => y.dom.index(a * v + b) },
   //    y.dom.allValues map { v =>
@@ -24,13 +22,14 @@ final class SquareBC(val x: Variable, val y: Variable)
 
   def check(t: Array[Int]) = t(0) == t(1) * t(1)
 
-  def shave(domains: IndexedSeq[Domain], s: State) = {
-    Revised(IndexedSeq(domains(0) & domains(1).span.sq, domains(1) & domains(0).span.sqrt))
+  def shave(ps: ProblemState) = {
+    ps.shaveDom(x, ps.dom(y).span.sq)
+      .shaveDom(y, ps.dom(x).span.sqrt)
   }
 
-  override def toString(domains: IndexedSeq[Domain], s: State) = s"${domains(0)} == ${domains(1)}²"
+  override def toString(ps: ProblemState) = s"${x.toString(ps)} =BC= ${y.toString(ps)}²"
 
-  def advise(domains: IndexedSeq[Domain], pos: Int) = 3 // else (x.dom.size + y.dom.size)
+  def advise(ps: ProblemState, pos: Int) = 3 // else (x.dom.size + y.dom.size)
   val simpleEvaluation = 2
 }
 
@@ -42,8 +41,7 @@ final class SquareBC(val x: Variable, val y: Variable)
  */
 final class SquareAC(val x: Variable, val y: Variable)
   extends Constraint(Array(x, y)) with Removals with BCCompanion {
-  type State = Unit
-  def initState = Unit
+
   def skipIntervals = false
   //  val corresponding = Array(
   //    x.dom.allValues map { v => y.dom.index(a * v + b) },
@@ -65,28 +63,27 @@ final class SquareAC(val x: Variable, val y: Variable)
     math.abs(yValue) < Square.MAX_SQUARE && xDomain.present(yValue * yValue)
   }
 
-  def revise(domains: IndexedSeq[Domain], modified: List[Int], state: State) = {
+  def revise(ps: ProblemState, modified: List[Int]) = {
     val s = skip(modified)
-    val d0 = if (s == 0) { domains(0) } else {
-      domains(0).filter(v => consistentX(v, domains(1)))
+
+    val ps0 = if (s == 0) { ps } else {
+      ps.filterDom(x)(v => consistentX(v, ps.dom(y)))
     }
-    if (d0.isEmpty) {
-      Contradiction
-    } else {
-      val d1 = if (s == 1) { domains(1) } else {
-        domains(1).filter(v => consistentY(v, domains(0)))
-      }
-      Revised(Vector(d0, d1), d0.size == 1)
+
+    val ps1 = if (s == 1) { ps0 } else {
+      ps0.filterDom(y)(v => consistentY(v, ps0.dom(x)))
     }
+
+    ps1.entailIfFree(this)
   }
 
-  override def isConsistent(domains: IndexedSeq[Domain], s: State) = {
-    domains(0).exists(v => consistentX(v, domains(1))) && domains(1).exists(v => consistentY(v, domains(0)))
+  override def isConsistent(ps: ProblemState) = {
+    ps.dom(x).exists(v => consistentX(v, ps.dom(y))) && ps.dom(y).exists(v => consistentY(v, ps.dom(x)))
   }
 
-  override def toString(domains: IndexedSeq[Domain], s: State) = s"${domains(0)} == ${domains(1)}²"
+  override def toString(ps: ProblemState) = s"${x.toString(ps)} =AC= ${y.toString(ps)}²"
 
-  def getEvaluation(domains: IndexedSeq[Domain]) = domains(0).size + domains(1).size
+  def getEvaluation(ps: ProblemState) = ps.dom(x).size + ps.dom(y).size
   val simpleEvaluation = 2
 }
 

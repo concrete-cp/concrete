@@ -25,14 +25,15 @@ import concrete.constraint.TupleEnumerator
 import concrete.UNSATException
 import concrete.constraint.Constraint
 import concrete.Domain
+import concrete.ProblemState
 
 final class FindSupportExt(scope: Array[Variable], tts: TupleTrieSet, shared: Boolean)
   extends ConflictCount(scope, tts, shared) with Residues {
 
   private val rel = tts.reduceable
 
-  override def findSupport(domains: IndexedSeq[Domain], p: Int, i: Int) = {
-    val s = rel.findSupport(domains, p, i)
+  override def findSupport(ps: ProblemState, p: Int, i: Int) = {
+    val s = rel.findSupport(scope.map(ps.dom).toIndexedSeq, p, i)
 
     assert(s.forall(rel.contains))
 
@@ -41,7 +42,7 @@ final class FindSupportExt(scope: Array[Variable], tts: TupleTrieSet, shared: Bo
 
   private val edges = rel.edges
 
-  override def getEvaluation(domains: IndexedSeq[Domain]) = edges
+  override def getEvaluation(ps: ProblemState) = edges
 
   override def check(tuple: Array[Int]) = rel.contains(tuple)
 

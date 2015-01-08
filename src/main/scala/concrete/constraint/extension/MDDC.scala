@@ -1,19 +1,13 @@
 package concrete.constraint.extension
 
-import concrete.constraint.Removals
-import concrete.Variable
-import concrete.constraint.Constraint
-import concrete.util.SparseSet
-import concrete.util.BitVector
-import concrete.UNSATException
-import concrete.UNSATObject
-import concrete.util.Timestamp
 import concrete.Contradiction
 import concrete.Domain
-import concrete.constraint.StatefulConstraint
-import concrete.ProblemState
-import scala.collection.mutable.HashSet
 import concrete.Outcome
+import concrete.ProblemState
+import concrete.Variable
+import concrete.constraint.Constraint
+import concrete.constraint.Removals
+import concrete.util.SparseSet
 
 /* MDDRelation comes with its own timestamp */
 class MDDC(_scope: Array[Variable], private val mdd: MDDRelation)

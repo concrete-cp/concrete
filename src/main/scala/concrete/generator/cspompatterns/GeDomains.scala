@@ -5,9 +5,9 @@ import cspom.compiler.VariableCompiler
 import cspom.util.Finite
 import cspom.util.IntInterval
 import cspom.variable.BoolVariable.boolExpression
-import cspom.variable.IntVariable.arithmetics
-import cspom.variable.IntVariable.intExpression
-import cspom.variable.IntVariable.ranges
+import cspom.variable.IntExpression.implicits.arithmetics
+import cspom.variable.IntExpression
+import cspom.variable.IntExpression.implicits.ranges
 import cspom.variable.SimpleExpression
 
 object GeDomains extends VariableCompiler('ge) {
@@ -16,8 +16,8 @@ object GeDomains extends VariableCompiler('ge) {
     case CSPOMConstraint(r: SimpleExpression[_], _, Seq(i0: SimpleExpression[_], i1: SimpleExpression[_]), _) =>
       val ir = boolExpression(r)
 
-      val ii0 = intExpression(i0)
-      val ii1 = intExpression(i1)
+      val ii0 = IntExpression(i0)
+      val ii1 = IntExpression(i1)
 
       val ri0: SimpleExpression[Int] = ii1.lowerBound match {
         case Finite(l) if ir.isTrue => reduceDomain(ii0, IntInterval.atLeast(l))

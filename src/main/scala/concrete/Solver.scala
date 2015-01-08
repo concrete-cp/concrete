@@ -19,25 +19,26 @@
 
 package concrete;
 
-import java.util.logging.Logger
-import scala.annotation.tailrec
 import scala.collection.JavaConversions
+
 import com.typesafe.scalalogging.LazyLogging
+
 import concrete.constraint.TupleEnumerator
 import concrete.constraint.extension.ReduceableExt
+import concrete.constraint.semantic.GtC
+import concrete.constraint.semantic.LtC
 import concrete.filter.Filter
+import concrete.generator.FailedGenerationException
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
 import cspom.CSPOM
 import cspom.Statistic
 import cspom.StatisticsManager
 import cspom.compiler.ProblemCompiler
-import cspom.variable.CSPOMVariable
-import cspom.variable.CSPOMSeq
-import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMConstant
-import concrete.constraint.semantic.GtC
-import concrete.constraint.semantic.LtC
+import cspom.variable.CSPOMExpression
+import cspom.variable.CSPOMSeq
+import cspom.variable.CSPOMVariable
 
 final class SolverFactory(val params: ParameterManager) {
 

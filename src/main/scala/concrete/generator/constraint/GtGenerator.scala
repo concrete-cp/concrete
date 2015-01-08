@@ -1,19 +1,14 @@
 package concrete.generator.constraint;
 
+import Generator.cspom2concrete1D
+import concrete.BooleanDomain
 import concrete.constraint.Constraint
 import concrete.constraint.semantic.Gt
 import concrete.constraint.semantic.ReifiedConstraint
-import concrete.generator.FailedGenerationException
-import concrete.Problem
-import concrete.Variable
-import cspom.CSPOMConstraint
-import cspom.variable.CSPOMExpression
-import concrete.UNSATObject
 import concrete.constraint.semantic.ReifiedGtC
 import concrete.constraint.semantic.ReifiedLtC
-import concrete.constraint.Residues
-import concrete.constraint.TupleEnumerator
-import concrete.BooleanDomain
+import concrete.generator.FailedGenerationException
+import cspom.CSPOMConstraint
 
 final object GtGenerator extends Generator {
   import Generator._

@@ -2,9 +2,9 @@ package concrete.generator.cspompatterns
 
 import cspom.CSPOMConstraint
 import cspom.compiler.VariableCompiler
-import cspom.variable.IntVariable.arithmetics
-import cspom.variable.IntVariable.ranges
-import cspom.variable.IntVariable.intExpression
+import cspom.variable.IntExpression.implicits.arithmetics
+import cspom.variable.IntExpression.implicits.ranges
+import cspom.variable.IntExpression
 import cspom.variable.SimpleExpression
 import cspom.compiler.ConstraintCompiler
 import cspom.variable.CSPOMConstant
@@ -14,8 +14,8 @@ object AbsDomains extends VariableCompiler('abs) {
 
   def compiler(c: CSPOMConstraint[_]) = c match {
     case CSPOMConstraint(r: SimpleExpression[_], _, Seq(i: SimpleExpression[_]), _) =>
-      val ir = intExpression(r)
-      val ii = intExpression(i)
+      val ir = IntExpression(r)
+      val ii = IntExpression(i)
       Map(
         r -> reduceDomain(ir, ii.abs),
         i -> reduceDomain(ii, ir ++ -ir))
@@ -33,8 +33,8 @@ object ConstAbs extends ConstraintCompiler {
   
   def compile(c: CSPOMConstraint[_], cspom: CSPOM, d: A) = {
     val (r, i) = d
-    val ir = intExpression(r)
-    val ii = intExpression(i)
+    val ir = IntExpression(r)
+    val ii = IntExpression(i)
 
     require(!(ir & ii.abs).isEmpty, "Unconsistency detected for constraint " + c)
     require(!(ii & (ir ++ -ir)).isEmpty, "Unconsistency detected for constraint " + c)

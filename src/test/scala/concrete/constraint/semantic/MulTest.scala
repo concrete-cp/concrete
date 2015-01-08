@@ -1,19 +1,18 @@
 package concrete.constraint.semantic;
 
 import scala.IndexedSeq
-
 import org.scalacheck.Gen
 import org.scalatest.FlatSpec
 import org.scalatest.Inspectors
 import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
-
 import concrete.IntDomain
 import concrete.Variable
 import concrete.constraint.AdviseCount
 import concrete.constraint.Constraint
 import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
+import concrete.Problem
 
 final class MulTest extends FlatSpec with Matchers with PropertyChecks with Inspectors {
 
@@ -48,11 +47,11 @@ final class MulTest extends FlatSpec with Matchers with PropertyChecks with Insp
       val vy = new Variable("y", IntDomain(y: _*))
       val vz = new Variable("z", IntDomain(z: _*))
 
-      val domains = IndexedSeq(vx.initDomain, vy.initDomain, vz.initDomain)
+      val ps = Problem(vx, vy, vz).initState
       val c = new MulAC(vx, vy, vz)
       c.register(new AdviseCount)
-      c.adviseAll(domains)
-      val r1 = c.revise(domains, Unit)
+      c.adviseAll(ps)
+      val r1 = c.revise(ps)
 
       //val Revised(mod, _, _) = c.revise(domains)
 
@@ -60,8 +59,8 @@ final class MulTest extends FlatSpec with Matchers with PropertyChecks with Insp
         def check(t: Array[Int]) = t(0) == t(1) * t(2);
       };
       c2.register(new AdviseCount)
-      c2.adviseAll(domains)
-      val r2 = c2.revise(domains, Unit)
+      c2.adviseAll(ps)
+      val r2 = c2.revise(ps)
       r1 shouldBe r2
 
       //      

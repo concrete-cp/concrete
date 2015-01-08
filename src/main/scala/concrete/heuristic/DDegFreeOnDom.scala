@@ -11,7 +11,7 @@ import concrete.ProblemState
 final class DDegFreeOnDom(params: ParameterManager) extends VariableHeuristic(params) {
 
   def score(variable: Variable, state: ProblemState) =
-    variable.getDDegFree(state).toDouble / state(variable).size
+    variable.getDDegFree(state).toDouble / state.dom(variable).size
 
   override def toString = "max-ddeg-free/dom"
 

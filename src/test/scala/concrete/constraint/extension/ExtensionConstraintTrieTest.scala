@@ -1,16 +1,14 @@
 package concrete.constraint.extension;
 
-import org.junit.Assert.assertArrayEquals
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Test
-import concrete.IntDomain
-import concrete.Variable
-import concrete.Revised
-import concrete.constraint.AdviseCount
+import org.scalatest.Finders
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
+
+import concrete.IntDomain
+import concrete.Problem
+import concrete.ProblemState
+import concrete.Variable
+import concrete.constraint.AdviseCount
 
 final class ExtensionConstraintTrieTest extends FlatSpec with Matchers {
 
@@ -19,24 +17,27 @@ final class ExtensionConstraintTrieTest extends FlatSpec with Matchers {
   ta.set(Array(1, 1), true);
   ta.set(Array(2, 2), true);
 
-  val scope = Array(
-    new Variable("V0", IntDomain(0 to 1)),
-    new Variable("V1", IntDomain(0 to 2)))
+  val v0 =
+    new Variable("V0", IntDomain(0 to 1))
+  val v1 =
+    new Variable("V1", IntDomain(0 to 2))
 
-  val mmd = new ReduceableExt(scope, ta.reduceable);
+  val mmd = new ReduceableExt(Array(v0, v1), ta.reduceable);
   mmd.register(new AdviseCount())
 
   //println(content map (_.toSeq) mkString (", "))
 
   "ReduceableExt" should "filter" in {
-    val state = mmd.initState
-    mmd.adviseAll(scope.map(_.initDomain))
+    val problem = Problem(v0, v1)
+    problem.addConstraint(mmd)
+    val state = problem.initState
+    mmd.adviseAll(state)
 
-    val Revised(mod, _, newState) = mmd.revise(scope.map(_.initDomain), state)
+    val mod = mmd.consistentRevise(state)
 
-    mod(0) should be theSameInstanceAs (scope(0).initDomain)
-    mod(1) should not be theSameInstanceAs(scope(1).initDomain)
-    newState should have size 2
+    mod.dom(0) should be theSameInstanceAs (v0.initDomain)
+    mod.dom(1) should not be theSameInstanceAs(v1.initDomain)
+    mod[Relation](mmd) should have size 2
 
   }
 }

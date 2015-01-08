@@ -1,28 +1,21 @@
 package concrete.generator;
 
-import scala.annotation.tailrec
-import scala.reflect.runtime.universe
-
 import com.typesafe.scalalogging.LazyLogging
-
 import concrete.Domain
 import concrete.IntDomain
 import concrete.ParameterManager
 import concrete.Problem
 import concrete.Variable
 import concrete.generator.constraint.GeneratorManager
-import concrete.util.Interval
 import cspom.CSPOM
-import cspom.CSPOMConstraint
 import cspom.Statistic
 import cspom.StatisticsManager
 import cspom.TimedException
 import cspom.VariableNames
 import cspom.variable.BoolVariable
-import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMVariable
-import cspom.variable.FreeVariable
 import cspom.variable.IntVariable
+import cspom.variable.IntExpression
 
 final class ProblemGenerator(private val pm: ParameterManager = new ParameterManager()) extends LazyLogging {
 
@@ -82,15 +75,16 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
     cspomVar match {
       case bD: BoolVariable => concrete.BooleanDomain()
 
-      case v: IntVariable => IntVariable.iterable(v).toStream match {
+      case v: IntVariable => v.asSortedSet.toSeq match {
         case Seq(0) if intToBool    => concrete.BooleanDomain(false)
         case Seq(1) if intToBool    => concrete.BooleanDomain(true)
         case Seq(0, 1) if intToBool => concrete.BooleanDomain()
         case s =>
+          val sortedSet = v.asSortedSet
           if (v.isConvex) {
-            IntDomain.ofInterval(v.head, v.last)
+            IntDomain.ofInterval(sortedSet.head, sortedSet.last)
           } else {
-            IntDomain(v.asSortedSet)
+            IntDomain(sortedSet)
           }
       }
 

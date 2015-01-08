@@ -12,6 +12,8 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
 
   require(size >= 2, "Intervals must have at least two elements, use Singleton instead")
 
+  def singleValue = throw new IllegalStateException
+  
   override def head = span.lb
 
   override def last = span.ub

@@ -5,5 +5,5 @@ import concrete.Variable
 import concrete.ProblemState
 
 final class Dom extends Key[Variable] {
-  def getKey(d: Variable, s: ProblemState) = s(d).size
+  def getKey(d: Variable, s: ProblemState) = s.dom(d).size
 }

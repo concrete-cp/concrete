@@ -1,17 +1,18 @@
 package concrete.constraint.semantic
 
+import org.scalacheck.Gen
+import org.scalatest.Finders
+import org.scalatest.FlatSpec
+import org.scalatest.Matchers
+import org.scalatest.prop.PropertyChecks
+
 import concrete.IntDomain
 import concrete.Problem
-import concrete.Revised
 import concrete.Variable
 import concrete.constraint.AdviseCount
-import org.scalatest.Matchers
-import org.scalatest.FlatSpec
-import concrete.constraint.Residues
-import org.scalatest.prop.PropertyChecks
 import concrete.constraint.Constraint
+import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
-import org.scalacheck.Gen
 
 final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
 
@@ -22,18 +23,18 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
 
     val c = new AddAC(x, y, z)
 
-    val domains = IndexedSeq(x, y, z).map(_.initDomain)
+    val ps = Problem(x, y, z).initState
 
     c.register(new AdviseCount)
-    c.adviseAll(domains)
-    assert(c.intervalsOnly(domains))
-    val Revised(mod, _, _) = c.revise(domains, c.initState)
+    c.adviseAll(ps)
+    assert(c.intervalsOnly(ps))
+    val mod = c.consistentRevise(ps)
 
-    mod(0) should not be theSameInstanceAs(domains(0))
-    mod(1) should be theSameInstanceAs domains(1)
-    mod(2) should be theSameInstanceAs domains(2)
+    mod.dom(x) should not be theSameInstanceAs(ps.dom(x))
+    mod.dom(y) should be theSameInstanceAs ps.dom(y)
+    mod.dom(z) should be theSameInstanceAs ps.dom(z)
 
-    mod(0) shouldBe Seq(7)
+    mod.dom(x) shouldBe Seq(7)
 
     assert(c.intervalsOnly(mod))
 
@@ -45,17 +46,17 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     val z = new Variable("z", IntDomain(2))
 
     val c = new AddAC(x, y, z)
-    val domains = IndexedSeq(x, y, z).map(_.initDomain)
+    val ps = Problem(x, y, z).initState
 
     c.register(new AdviseCount)
-    c.adviseAll(domains)
-    assert(c.intervalsOnly(domains))
-    val Revised(mod, _, _) = c.revise(domains, c.initState)
-    mod(0) should be theSameInstanceAs (domains(0))
-    mod(1) should not be theSameInstanceAs(domains(1))
-    mod(2) should be theSameInstanceAs domains(2)
+    c.adviseAll(ps)
+    assert(c.intervalsOnly(ps))
+    val mod = c.consistentRevise(ps)
+    mod.dom(x) should be theSameInstanceAs (ps.dom(x))
+    mod.dom(y) should not be theSameInstanceAs(ps.dom(y))
+    mod.dom(z) should be theSameInstanceAs ps.dom(z)
 
-    mod(1) shouldBe Seq(5)
+    mod.dom(y) shouldBe Seq(5)
 
     assert(c.intervalsOnly(mod))
   }
@@ -67,18 +68,18 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     val z = new Variable("z", IntDomain(-100 to 100))
 
     val c = new AddAC(x, y, z)
-    val domains = IndexedSeq(x, y, z).map(_.initDomain)
+    val ps = Problem(x, y, z).initState
 
     c.register(new AdviseCount)
-    c.adviseAll(domains)
-    assert(c.intervalsOnly(domains))
-    val Revised(mod, _, _) = c.revise(domains, Unit)
-    mod(0) should be theSameInstanceAs (domains(0))
-    mod(1) should be theSameInstanceAs (domains(1))
-    mod(2) should not be theSameInstanceAs(domains(2))
+    c.adviseAll(ps)
+    assert(c.intervalsOnly(ps))
+    val mod = c.revise(ps)
+    mod.dom(x) should be theSameInstanceAs (ps.dom(x))
+    mod.dom(y) should be theSameInstanceAs (ps.dom(y))
+    mod.dom(z) should not be theSameInstanceAs(ps.dom(z))
 
-    mod(2) shouldBe (-29 to -10)
-    assert(c.intervalsOnly(mod))
+    mod.dom(z) shouldBe (-29 to -10)
+    assert(c.intervalsOnly(ps))
   }
 
   val dom = Gen.nonEmptyListOf(Gen.choose(-1000, 1000))
@@ -90,18 +91,17 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
       val vz = new Variable("z", IntDomain(-1))
 
       val c = new AddAC(vx, vy, vz);
-
+      val ps = Problem(vx, vy, vz).initState
       c.register(new AdviseCount())
-      val d = c.scope.map(_.initDomain)
-      c.adviseAll(d)
-      val r1 = c.revise(d, Unit)
+      c.adviseAll(ps)
+      val r1 = c.revise(ps)
 
       val c2 = new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
         def check(t: Array[Int]) = t(0) == t(1) + t(2);
       };
       c2.register(new AdviseCount())
-      c2.adviseAll(d)
-      val r2 = c2.revise(d, Unit)
+      c2.adviseAll(ps)
+      val r2 = c2.revise(ps)
 
       r1 shouldBe r2
     }
@@ -112,18 +112,19 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
       val vz = new Variable("z", IntDomain(z: _*))
 
       val c = new AddAC(vx, vy, vz);
+      val ps = Problem(vx, vy, vz).initState
 
       c.register(new AdviseCount())
       val d = c.scope.map(_.initDomain)
-      c.adviseAll(d)
-      val r1 = c.revise(d, Unit)
+      c.adviseAll(ps)
+      val r1 = c.revise(ps)
 
       val c2 = new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
         def check(t: Array[Int]) = t(0) == t(1) + t(2);
       };
       c2.register(new AdviseCount())
-      c2.adviseAll(d)
-      val r2 = c2.revise(d, Unit)
+      c2.adviseAll(ps)
+      val r2 = c2.revise(ps)
 
       r1 shouldBe r2
     }

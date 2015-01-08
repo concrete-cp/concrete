@@ -11,9 +11,9 @@ import cspom.variable.BoolVariable
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMExpression
 import cspom.variable.IntVariable
-import cspom.variable.IntVariable.arithmetics
-import cspom.variable.IntVariable.intExpression
-import cspom.variable.IntVariable.ranges
+import cspom.variable.IntExpression.implicits.arithmetics
+import cspom.variable.IntExpression
+import cspom.variable.IntExpression.implicits.ranges
 import cspom.variable.SimpleExpression
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.CSPOM
@@ -33,7 +33,7 @@ object Bool2IntDomains extends VariableCompiler('bool2int) {
         case _: BoolVariable => RangeSet(IntInterval(0, 1))
       }
       
-      val iii = reduceDomain(intExpression(i1), ii)
+      val iii = reduceDomain(IntExpression(i1), ii)
 
       val bb =
         if (iii.contains(0)) {

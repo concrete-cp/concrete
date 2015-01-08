@@ -1,9 +1,6 @@
 package concrete.generator.constraint;
 
-import Generator._
-import concrete.UNSATObject
-import concrete.Variable
-import concrete.constraint.semantic.Square
+import Generator.cspom2concreteVar
 import concrete.constraint.semantic.SquareAC
 import concrete.constraint.semantic.SquareBC
 import cspom.CSPOMConstraint

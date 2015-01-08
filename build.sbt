@@ -7,7 +7,7 @@ organization := "fr.univ-valenciennes.concrete"
 
 version := "2.0-SNAPSHOT"
 
-scalaVersion := "2.11.4"
+scalaVersion := "2.11.5"
 
 
 // For JSR331, CSPOM and its dependencies
@@ -27,7 +27,7 @@ libraryDependencies ++= Seq(
 	//"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
 	"com.typesafe.slick" %% "slick" % "2.1.0",
 	//"org.jcp" % "jsr331" % "1.1.1",
-	"org.scalatest" %% "scalatest" % "2.2.2" % "test",
+	"org.scalatest" %% "scalatest" % "2.2.3" % "test",
 	"org.scalacheck" %% "scalacheck" % "1.12.1" % "test",
 	"com.storm-enroute" %% "scalameter" % "0.6" % "test",
 	"com.github.scala-incubator.io" %% "scala-io-file" % "0.4.3"
@@ -35,7 +35,7 @@ libraryDependencies ++= Seq(
 
 scalacOptions ++= Seq("-optimise"
 	      , "-Xdisable-assertions"
-	      , "-target:jvm-1.7"
+	      , "-target:jvm-1.8"
 //	"-deprecation", 
 //	"-unchecked", 
 //	"-optimise", 
@@ -45,7 +45,7 @@ scalacOptions ++= Seq("-optimise"
 //	"-Yinline-warnings"
 )
 
-javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
+javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
 
 packageArchetype.java_application
 

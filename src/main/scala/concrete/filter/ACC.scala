@@ -1,25 +1,23 @@
 package concrete.filter;
 
-import scala.annotation.tailrec
-import scala.reflect.runtime.universe
+
 import com.typesafe.scalalogging.LazyLogging
+import concrete.Contradiction
+import concrete.Outcome
 import concrete.ParameterManager
 import concrete.Problem
-import concrete.UNSATException
+import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Advisable
 import concrete.constraint.AdviseCount
 import concrete.constraint.Constraint
 import concrete.constraint.Removals
 import concrete.heuristic.revision.Eval
+import concrete.priorityqueues.QuickFifos
 import cspom.Statistic
 import cspom.StatisticsManager
 import concrete.priorityqueues.PriorityQueue
-import concrete.priorityqueues.QuickFifos
 import concrete.heuristic.revision.Key
-import concrete.Contradiction
-import concrete.ProblemState
-import concrete.Outcome
 
 object ACC extends LazyLogging {
   def control(problem: Problem, state: ProblemState): ProblemState = {

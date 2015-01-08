@@ -1,28 +1,26 @@
 package concrete.constraint.semantic;
 
-import concrete.constraint.Residues
 import concrete.Domain
 import concrete.Variable
-import concrete.constraint.Constraint
-import concrete.UNSATException
-import concrete.util.Interval
-import concrete.UNSATObject
 import concrete.constraint.BCCompanion
+import concrete.constraint.Constraint
+import concrete.constraint.Residues
+import concrete.ProblemState
 
 final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable, val skipIntervals: Boolean = false)
   extends Constraint(Array(result, v0, v1)) with Residues with BCCompanion {
 
   def check(t: Array[Int]) = t(0) == math.abs(t(1) - t(2))
 
-  override def findSupport(domains: IndexedSeq[Domain], position: Int, value: Int) =
+  override def findSupport(ps: ProblemState, position: Int, value: Int) =
     position match {
-      case 0 => findValidTuple0(value, domains(1), domains(2));
-      case 1 => findValidTupleV1(value, domains(0), domains(2));
-      case 2 => findValidTupleV2(value, domains(0), domains(1));
+      case 0 => findValidTupleResult(value, ps.dom(v0), ps.dom(v1));
+      case 1 => findValidTupleV0(value, ps.dom(result), ps.dom(v1));
+      case 2 => findValidTupleV1(value, ps.dom(result), ps.dom(v0));
       case _ => throw new IndexOutOfBoundsException;
     }
 
-  def findValidTuple0(val0: Int, dom1: Domain, dom2: Domain) = {
+  def findValidTupleResult(val0: Int, dom1: Domain, dom2: Domain) = {
     if (val0 >= 0) {
       dom1.find { v => dom2.present(v - val0) }.map { v =>
         Array(val0, v, v - val0)
@@ -33,7 +31,7 @@ final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable, 
 
   }
 
-  def findValidTupleV1(value: Int, result: Domain, dom: Domain): Option[Array[Int]] = {
+  def findValidTupleV0(value: Int, result: Domain, dom: Domain): Option[Array[Int]] = {
 
     dom.map { v =>
       (v, math.abs(value - v))
@@ -44,7 +42,7 @@ final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable, 
     }
   }
 
-  def findValidTupleV2(value: Int, result: Domain, dom: Domain): Option[Array[Int]] = {
+  def findValidTupleV1(value: Int, result: Domain, dom: Domain): Option[Array[Int]] = {
 
     dom.map { v =>
       (v, math.abs(value - v))
@@ -55,13 +53,13 @@ final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable, 
     }
   }
 
-  override def toString(domains: IndexedSeq[Domain], s: State) =
-    s"$result ${domains(0)} =AC= |$v0 ${domains(1)} - $v1 ${domains(2)}|";
+  override def toString(ps: ProblemState) =
+    s"${result.toString(ps)} =AC= |${v0.toString(ps)} - ${v1.toString(ps)}|";
 
-  def getEvaluation(domains: IndexedSeq[Domain]) = {
-    val d0 = domains(0).size
-    val d1 = domains(1).size
-    val d2 = domains(2).size
+  def getEvaluation(ps: ProblemState) = {
+    val d0 = ps.dom(result).size
+    val d1 = ps.dom(v0).size
+    val d2 = ps.dom(v1).size
     d0 * d1 + d0 * d2 + d1 * d2;
   }
 

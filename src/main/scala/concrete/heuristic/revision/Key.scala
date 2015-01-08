@@ -11,7 +11,7 @@ object Key {
     def p(i: Int, r: Int): Int =
       if (i < 0) r
       else {
-        val v = s(num(i)).size
+        val v = s.dom(num(i)).size
         if (r > Int.MaxValue / v) Int.MaxValue
         else p(i - 1, r * v)
       }

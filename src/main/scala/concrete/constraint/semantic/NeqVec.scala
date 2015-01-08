@@ -1,16 +1,14 @@
 package concrete.constraint.semantic;
 
 import scala.annotation.tailrec
-import concrete.Domain
-import concrete.Revised
+
+import concrete.Outcome
+import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Constraint
 
-import scala.collection.SeqView
-
 final class NeqVec(x: Array[Variable], y: Array[Variable]) extends Constraint(x ++ y) {
-  type State = Unit
-  def initState = Unit
+
   require(x.length == y.length)
 
   val zip = x.zip(y)
@@ -21,40 +19,41 @@ final class NeqVec(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
     t.view.splitAt(size).zipped.exists(_ != _)
   }
 
-  def revise(domains: IndexedSeq[Domain], s: State) = {
-    val p = singleFreeVariable(domains)
+  def revise(ps: ProblemState): Outcome = {
+    val p = singleFreeVariable(ps)
 
     if (p < 0) {
-      Revised(domains)
+      ps
     } else if (p < size) {
-      Revised(domains.updated(p, domains(p).remove(domains(p + size).head)))
+      ps.remove(scope(p), ps.dom(scope(p + size)).head)
     } else {
-      Revised(domains.updated(p, domains(p).remove(domains(p - size).head)))
+      ps.remove(scope(p), ps.dom(scope(p - size)).head)
     }
   }
 
   @tailrec
   private def singleFreeVariable(
-    in: IndexedSeq[Domain],
+    ps: ProblemState,
     i: Int = 0,
     single: Int = -1): Int = {
 
     if (i >= arity) {
       single
-    } else if (in(i).size > 1) {
+    } else if (ps.dom(scope(i)).size > 1) {
       if (single < 0) {
-        singleFreeVariable(in, i + 1, i)
+        singleFreeVariable(ps, i + 1, i)
       } else {
         -1
       }
     } else {
-      singleFreeVariable(in, i + 1, single)
+      singleFreeVariable(ps, i + 1, single)
     }
   }
 
-  override def toString(domains: IndexedSeq[Domain], s: State) = domains.take(size).mkString("(", ", ", ")") + " /= " + domains.drop(size).mkString("(", ", ", ")")
+  override def toString(ps: ProblemState) =
+    x.map(_.toString(ps)).mkString("(", ", ", ")") + " /= " + y.map(_.toString(ps)).mkString("(", ", ", ")")
 
-  def advise(domains: IndexedSeq[Domain], p: Int) = arity
+  def advise(ps: ProblemState, p: Int) = arity
 
   val simpleEvaluation = 2
 }

@@ -1,14 +1,14 @@
 package concrete.constraint.semantic
 
 import com.typesafe.scalalogging.LazyLogging
+
+import concrete.Contradiction
 import concrete.Domain
-import concrete.Revised
+import concrete.Outcome
+import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.util.Interval
-import concrete.constraint.BC
-import concrete.Contradiction
-import concrete.ReviseOutcome
 
 object SumMode extends Enumeration {
   type SumMode = Value
@@ -24,9 +24,6 @@ final class Sum(
   scope: Array[Variable],
   mode: SumMode.SumMode) extends Constraint(scope)
   with LazyLogging {
-
-  type State = Unit
-  def initState = Unit
 
   import SumMode._
 
@@ -45,7 +42,7 @@ final class Sum(
     }
   }
 
-  def advise(domains: IndexedSeq[Domain], p: Int) = arity
+  def advise(ps: ProblemState, p: Int) = arity
 
   private val initBound = Interval(-constant, -constant)
 
@@ -55,16 +52,16 @@ final class Sum(
     case SumEQ => dom & itv
   }
 
-  def revise(domains: IndexedSeq[Domain], s: State): ReviseOutcome[Unit] = {
+  def revise(ps: ProblemState): Outcome = {
 
-    val doms = domains.toArray.clone
+    var filtered = ps
 
     var bounds = initBound
 
     var i = arity - 1
 
     while (i >= 0) {
-      bounds += doms(i).span * factors(i)
+      bounds += ps.span(scope(i)) * factors(i)
       i -= 1
     }
 
@@ -74,7 +71,7 @@ final class Sum(
 
       i = arity - 1
       while (i >= 0) {
-        val dom = doms(i)
+        val dom = filtered.dom(scope(i))
         val f = factors(i)
         val myBounds = dom.span * f
 
@@ -85,7 +82,7 @@ final class Sum(
         if (newDom.isEmpty) {
           return Contradiction
         } else if (newDom ne dom) {
-          doms(i) = newDom
+          filtered = filtered.updateDomNonEmpty(scope(i), newDom)
           change = true
           bounds = thisBounds + newDom.span * f
         }
@@ -93,11 +90,11 @@ final class Sum(
         i -= 1
       }
     }
-    Revised(doms)
+    filtered
   }
 
-  override def toString(domains: IndexedSeq[Domain], s: State) =
-    (domains, factors).zipped.map((v, f) => f + "." + v).mkString(" + ") + s" $mode $constant"
+  override def toString(ps: ProblemState) =
+    (scope, factors).zipped.map((v, f) => f + "." + v.toString(ps)).mkString(" + ") + s" $mode $constant"
 
   val simpleEvaluation = 3
 }

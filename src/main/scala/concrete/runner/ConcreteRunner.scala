@@ -10,7 +10,6 @@ import concrete.Solver
 import concrete.Variable
 import concrete.generator.ProblemGenerator
 import concrete.runner.sql.SQLWriter
-import concrete.util.Waker
 import cspom.Statistic
 import cspom.StatisticsManager
 import cspom.TimedException
@@ -18,6 +17,7 @@ import cspom.compiler.ProblemCompiler
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMVariable
 import concrete.SolverFactory
+import java.util.TimerTask
 
 trait ConcreteRunner extends LazyLogging {
 
@@ -53,12 +53,12 @@ trait ConcreteRunner extends LazyLogging {
     }
     case "-sql" :: option :: tail =>
       options(tail, o + ('SQL -> option), unknown)
-    case "-control" :: tail => options(tail, o + ('Control -> None))
-    case "-time" :: t :: tail => options(tail, o + ('Time -> t.toInt))
-    case "-a" :: tail => options(tail, o + ('all -> Unit))
+    case "-control" :: tail             => options(tail, o + ('Control -> None))
+    case "-time" :: t :: tail           => options(tail, o + ('Time -> t.toInt))
+    case "-a" :: tail                   => options(tail, o + ('all -> Unit))
     case u :: tail if u.startsWith("-") => options(tail, o + ('unknown -> u))
     //    case "-cl" :: tail => options(tail, o + ('CL -> None))
-    case u :: tail => options(tail, o, u :: unknown)
+    case u :: tail                      => options(tail, o, u :: unknown)
   }
 
   def load(args: List[String]): concrete.Problem
@@ -135,7 +135,12 @@ trait ConcreteRunner extends LazyLogging {
       //println(solver.problem)
 
       for (t <- opt.get('Time)) {
-        waker.schedule(new Waker(Thread.currentThread()), t.asInstanceOf[Int] * 1000);
+        val t = Thread.currentThread
+        waker.schedule(
+          new TimerTask {
+            def run = t.interrupt()
+          },
+          t.asInstanceOf[Int] * 1000);
       }
 
       optimize match {

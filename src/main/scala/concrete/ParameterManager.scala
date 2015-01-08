@@ -5,6 +5,7 @@ import java.util.Properties
 import scala.collection.JavaConversions
 import scala.collection.mutable.HashMap
 import scala.reflect.runtime.universe._
+
 import scala.xml.NodeSeq
 
 /**
@@ -37,7 +38,7 @@ final class ParameterManager {
     require(TypeTag.Nothing != typeTag[T], s"Please give a type for $name, was ${typeTag[T]}")
     val got = parameters.get(name).map {
       case s: String => parse(typeOf[T], s)
-      case v: Any => v.asInstanceOf[T]
+      case v: Any    => v.asInstanceOf[T]
     }
     if (got.isDefined) used += name
     got

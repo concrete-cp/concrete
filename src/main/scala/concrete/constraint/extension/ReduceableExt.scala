@@ -19,20 +19,15 @@
 
 package concrete.constraint.extension;
 
-import scala.annotation.tailrec
-import concrete.constraint.Constraint
-import concrete.Domain
-import concrete.util.BitVector
 import com.typesafe.scalalogging.LazyLogging
+
+import concrete.Contradiction
+import concrete.Outcome
+import concrete.ProblemState
 import concrete.Variable
-import concrete.UNSATException
+import concrete.constraint.Constraint
 import concrete.constraint.Removals
 import cspom.Statistic
-import concrete.UNSATObject
-import concrete.Contradiction
-import scala.collection.mutable.HashSet
-import concrete.ProblemState
-import concrete.Outcome
 
 object ReduceableExt {
   @Statistic

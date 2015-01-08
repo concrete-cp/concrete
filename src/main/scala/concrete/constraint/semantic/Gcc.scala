@@ -2,15 +2,11 @@ package concrete.constraint.semantic;
 
 import java.util.Arrays
 
-import scala.collection.mutable.MultiMap
 import scala.collection.mutable.Queue
 
 import concrete.Contradiction
-import concrete.Domain
 import concrete.Outcome
 import concrete.ProblemState
-import concrete.UNSATException
-import concrete.UNSATException
 import concrete.Variable
 import concrete.constraint.Constraint
 
@@ -71,7 +67,7 @@ final class Gcc(scope: Array[Variable], bounds: Array[Bounds]) extends Constrain
     var ch = ps
     do {
       while (queue.nonEmpty) {
-        singles(domains(queue.dequeue).head) += 1
+        singles(ps.dom(queue.dequeue).head) += 1
       }
 
       for (v <- singles.indices) {

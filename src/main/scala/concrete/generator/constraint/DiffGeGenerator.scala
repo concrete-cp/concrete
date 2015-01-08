@@ -1,14 +1,9 @@
 package concrete.generator.constraint;
 
-import concrete.constraint.semantic.{ ReifiedConstraint, Gt }
-import concrete.{ Variable, Problem }
+import Generator.cspom2concrete
+import concrete.constraint.semantic.Gt
+import concrete.constraint.semantic.ReifiedConstraint
 import cspom.CSPOMConstraint
-import cspom.variable.CSPOMConstant
-import cspom.variable.BoolVariable
-import concrete.UNSATObject
-import concrete.BooleanDomain
-import cspom.variable.CSPOMConstant
-import Generator._
 
 /**
  * Generator for "diffGe" constraints defined as x - y >= k (k must be a constant)

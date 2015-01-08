@@ -1,19 +1,11 @@
 package concrete.generator.constraint;
 
-import concrete.generator.FailedGenerationException
-import concrete.{ Variable, Problem, IntDomain }
-import cspom.CSPOMConstraint
-import concrete.UNSATObject
-import concrete.constraint.Residues
-import concrete.constraint.Constraint
-import concrete.constraint.TupleEnumerator
-import concrete.constraint.semantic.Sum
-import Generator._
+import Generator.cspom2concrete1D
 import concrete.constraint.semantic.ConstProdAC
-import concrete.constraint.semantic.SumMode
+import concrete.constraint.semantic.ConstProdBC
 import concrete.constraint.semantic.MulAC
 import concrete.constraint.semantic.MulBC
-import concrete.constraint.semantic.ConstProdBC
+import cspom.CSPOMConstraint
 
 final object MulGenerator extends Generator {
 

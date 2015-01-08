@@ -1,15 +1,10 @@
 package concrete.constraint.semantic;
 
-import concrete.constraint.Constraint
-import concrete.constraint.Residues
-import concrete.Variable
-import concrete.constraint.TupleEnumerator
-import concrete.UNSATException
-import concrete.UNSATObject
-import concrete.Domain
 import concrete.Contradiction
-import concrete.ProblemState
 import concrete.Outcome
+import concrete.ProblemState
+import concrete.Variable
+import concrete.constraint.Constraint
 
 final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x ++ y) {
 

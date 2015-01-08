@@ -1,13 +1,12 @@
 package concrete.constraint.semantic
 
 import scala.annotation.tailrec
-
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
-
 import concrete.Contradiction
 import concrete.IntDomain
 import concrete.Variable
+import concrete.Problem
 
 class AllDifferentBCTest extends FlatSpec with Matchers {
 
@@ -19,8 +18,9 @@ class AllDifferentBCTest extends FlatSpec with Matchers {
     val v5 = new Variable("5", IntDomain(8, 9))
 
     val c = new AllDifferentBC(v1, v2, v3, v4, v5)
+    val ps = Problem(v1, v2, v3, v4, v5).initState
 
-    c.revise(c.scope.map(_.initDomain), c.initState) shouldBe Contradiction
+    c.revise(ps) shouldBe Contradiction
   }
 
 }
