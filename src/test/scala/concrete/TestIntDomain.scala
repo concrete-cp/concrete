@@ -1,11 +1,7 @@
 package concrete
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Test
-import org.scalatest.Matchers
 import org.scalatest.FlatSpec
+import org.scalatest.Matchers
 
 final class TestIntDomain extends FlatSpec with Matchers {
 

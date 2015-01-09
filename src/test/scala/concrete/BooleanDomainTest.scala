@@ -1,12 +1,7 @@
 package concrete
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Before
-import org.junit.Test
-import org.scalatest.Matchers
 import org.scalatest.FlatSpec
+import org.scalatest.Matchers
 
 final class BooleanDomainTest extends FlatSpec with Matchers {
 
@@ -25,7 +20,6 @@ final class BooleanDomainTest extends FlatSpec with Matchers {
     assert(!d2.present(0))
     assert(domain.present(0))
   }
-
 
   it should "be persistent" in {
     val d2 = domain.remove(1)

@@ -1,15 +1,16 @@
 package concrete
-import org.junit.Test
-import org.junit.Assert
+
 import scala.annotation.tailrec
-import concrete.constraint.semantic.AllDifferentBC
-import concrete.heuristic.MedValue
-import concrete.constraint.semantic.AllDifferent2C
-import org.scalatest.Matchers
+
 import org.scalatest.FlatSpec
+import org.scalatest.Matchers
 import org.scalatest.Tag
-import concrete.constraint.semantic.EqBC
+
+import concrete.constraint.semantic.AllDifferent2C
+import concrete.constraint.semantic.AllDifferentBC
 import concrete.constraint.semantic.EqAC
+import concrete.constraint.semantic.EqBC
+import concrete.heuristic.MedValue
 
 object SlowTest extends Tag("concrete.SlowTest")
 

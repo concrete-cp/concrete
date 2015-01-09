@@ -8,14 +8,15 @@ import concrete.BooleanDomain
 import concrete.IntDomain
 import concrete.TRUE
 import concrete.Problem
+import concrete.UNKNOWNBoolean
 
 class ReifiedConstraintTest extends FlatSpec with Matchers {
 
   "Reified neq" should "be revised after advise" in {
-    val v0 = new Variable("v0", IntDomain(0))
-    val v1 = new Variable("v1", IntDomain(3, 4))
+    val v0 = new Variable("v0", IntDomain(2))
+    val v1 = new Variable("v1", IntDomain(0, 4))
     val control1 = new Variable("control1", BooleanDomain())
-    val control2 = new Variable("control1", BooleanDomain())
+    val control2 = new Variable("control2", BooleanDomain())
     val c1 = new ReifiedConstraint(
       control1,
       new Neq(v0, v1),
@@ -32,15 +33,18 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
 
     val ps = Problem(control1, control2, v0, v1).initState
 
-    c1.advise(ps, 2) should be < 0
+    c1.advise(ps, 2) should be >= 0
     c2.advise(ps, 2) should be >= 0
 
-    val mod = c1.consistentRevise(ps)
-    mod shouldBe ps
-    val m2 = c2.consistentRevise(mod)
+    val m2 = c2.consistentRevise(ps)
 
-    m2.dom(control2) shouldBe TRUE
-    assert(m2.isEntailed(c2))
+    val m1 = c1.consistentRevise(ps)
+
+    m1.dom(control1) shouldBe TRUE
+    assert(m1.isEntailed(c1))
+
+    m2.dom(control2) shouldBe UNKNOWNBoolean
+    assert(!m2.isEntailed(c2))
   }
 
 }

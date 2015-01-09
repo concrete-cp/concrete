@@ -1,9 +1,7 @@
 package concrete.generator.cspompatterns
 
 import cspom.compiler.VariableCompiler
-import cspom.util.IntervalsArithmetic.RangeArithmetics
-import cspom.variable.IntExpression.implicits.arithmetics
-import cspom.variable.IntExpression.implicits.ranges
+import cspom.variable.IntExpression.implicits._
 import cspom.variable.SimpleExpression
 import com.typesafe.scalalogging.LazyLogging
 import cspom.CSPOM
@@ -22,9 +20,9 @@ object AbsDiffDomains extends VariableCompiler('absdiff) with LazyLogging {
         Map()
       } else {
 
-        val nr = r & (i0 - i1).abs
-        val ni0 = i0 & ((i1 + nr) ++ (i1 - nr))
-        val ni1 = i1 & ((ni0 + nr) ++ (ni0 - nr))
+        val nr = ranges(r) & (arithmetics(i0) - i1).abs
+        val ni0 = ranges(i0) & ((i1 + nr) ++ (i1 - nr))
+        val ni1 = ranges(i1) & ((ni0 + nr) ++ (ni0 - nr))
 
         assert(nr == (nr & (ni0 - ni1).abs), s"$nr = |$ni0 - $ni1| still requires shaving (result is ${(ni0 - ni1).abs})")
         assert(ni0 == (ni0 & (ni1 + nr) ++ (ni1 - nr)), s"$ni0 still requires shaving")

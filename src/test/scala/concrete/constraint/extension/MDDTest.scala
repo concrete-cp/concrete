@@ -1,76 +1,45 @@
 package concrete.constraint.extension
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Before
-import org.junit.Test
+import org.scalatest.Matchers
+import org.scalatest.FlatSpec
+import org.scalatest.Inspectors
 
-final class MDDTest {
+final class MDDTest extends FlatSpec with Matchers with Inspectors {
 
-  private var ts: MDD = null
+  private val ts: MDD = MDD(Seq(Array(0, 0), Array(0, 1), Array(1, 0)))
 
-  @Before
-  def setUp() {
-    ts = MDD(Seq(Array(0, 0), Array(0, 1), Array(1, 0)))
-  }
+  val t = MDD0 + Array(1, 2, 3) + Array(1, 3, 4) + Array(1, 2, 5) + Array(2, 3, 5)
+  val s = MDD0 + Array(1, 2, 5) + Array(1, 3, 4) + Array(1, 2, 3) + Array(2, 3, 5)
 
-  @Test
-  def testContainsTuple() {
-    assertTrue(ts.contains(Array(0, 1)));
-    assertFalse(ts.contains(Array(1, 1)));
-  }
+  val u = MDD(Seq(
+    Array(1, 2, 3),
+    Array(1, 3, 4),
+    Array(1, 2, 5),
+    Array(2, 3, 5)))
 
-  //  @Test
-  //  def testRemoveTuple() {
-  //    ts -= Array(0, 1);
-  //    assertFalse(ts.contains(Array(0, 1)));
-  //    ts -= Array(1, 1);
-  //    assertEquals(2, ts.size)
-  //  }
+  "MDD" should "detect containment" in {
+    ts should contain(Array(0, 1))
+    ts should not contain (Array(1, 1))
 
-  @Test
-  def testIterator() {
-    var i = 0;
-    val itr = ts.iterator
-    while (itr.hasNext) {
-      itr.next();
-      i += 1;
+    t should contain(Array(1, 3, 4))
+    t should not contain (Array(1, 2, 4))
+
+    forAll(t.toSeq.map(_.toArray)) { tuple =>
+      s should contain(tuple)
+      u should contain(tuple)
     }
-    assertEquals(ts.lambda, i)
   }
 
-  @Test
-  def testSize() {
-    assertEquals(BigInt(3), ts.lambda);
-    //    ts -= (0, 0);
-    //    assertEquals(2, ts.size);
-    //    ts += (1, 1);
-    //    assertEquals(3, ts.size);
+  it should "iterate over all tuples" in {
+    ts.iterator.size shouldBe ts.lambda
   }
 
-  @Test
-  def testTrie() {
-    val t = MDD0 + Array(1, 2, 3) + Array(1, 3, 4) + Array(1, 2, 5) + Array(2, 3, 5)
-    assertEquals(BigInt(4), t.lambda)
+  it should "compute its size correctly" in {
+    ts.lambda shouldBe BigInt(3)
 
-    assertTrue(t.contains(Array(1, 3, 4)))
-    assertFalse(t.contains(Array(1, 2, 4)))
+    t.lambda shouldBe s.lambda
 
-    var s = MDD0 + Array(1, 2, 5) + Array(1, 3, 4) + Array(1, 2, 3)
-    s += Array(2, 3, 5)
-
-    assertTrue(t.lambda == s.lambda)
-    assertTrue(t.iterator.map(_.toArray).forall(s.contains))
-
-    var u = MDD(Seq(
-      Array(1, 2, 3),
-      Array(1, 3, 4),
-      Array(1, 2, 5),
-      Array(2, 3, 5)))
-
-    assertTrue(t.lambda == u.lambda)
-    assertTrue(t.iterator.map(_.toArray).forall(u.contains))
-
+    u.lambda shouldBe t.lambda
   }
+
 }

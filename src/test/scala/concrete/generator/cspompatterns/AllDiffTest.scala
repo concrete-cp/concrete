@@ -1,16 +1,15 @@
 package concrete.generator.cspompattern
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
-import cspom.CSPOM
-import cspom.CSPOM._
+import org.scalatest.Finders
+import org.scalatest.FlatSpec
+import org.scalatest.Matchers
+
 import concrete.generator.cspompatterns.AllDiff
-import concrete.CSPOMDriver._
+import cspom.CSPOM
+import cspom.CSPOM.ctr
 import cspom.compiler.MergeEq
 import cspom.compiler.ProblemCompiler
 import cspom.variable.IntVariable
-import org.scalatest.Matchers
-import org.scalatest.FlatSpec
 
 object AllDiffTest extends FlatSpec with Matchers {
 

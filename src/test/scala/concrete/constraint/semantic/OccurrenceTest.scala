@@ -82,11 +82,10 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors {
 
     val mod = c.revise(s.concreteProblem.initState)
 
-    forAll(s.concreteProblem.variables.drop(1)) {
-      case v => mod.dom(v) should be theSameInstanceAs s.concreteProblem.initState.dom(v)
+    forAll(s.concreteProblem.variables) {
+      case `occ` => mod.dom(occ) shouldBe Seq(1, 2)
+      case v     => mod.dom(v) should be theSameInstanceAs s.concreteProblem.initState.dom(v)
     }
-
-    mod.dom(occ) shouldBe Seq(1, 2)
 
   }
 

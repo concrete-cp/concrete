@@ -1,20 +1,18 @@
 package concrete.generator.cspompattern
 
-import cspom.CSPOM
-import cspom.CSPOM._
-import org.junit.Assert._
-import org.junit.Test
-import cspom.CSPOMConstraint
-import concrete.generator.cspompatterns.DiffGe
-import cspom.variable.CSPOMConstant
-import cspom.variable.BoolVariable
-import org.hamcrest.CoreMatchers._
-import concrete.CSPOMDriver._
-import cspom.compiler.ProblemCompiler
-import cspom.compiler.MergeEq
-import cspom.variable.IntVariable
-import org.scalatest.Matchers
+import org.scalatest.Finders
 import org.scalatest.FlatSpec
+import org.scalatest.Matchers
+
+import concrete.CSPOMDriver.CSPOMIntExpressionOperations
+import concrete.generator.cspompatterns.DiffGe
+import cspom.CSPOM
+import cspom.CSPOM.ctr
+import cspom.compiler.MergeEq
+import cspom.compiler.ProblemCompiler
+import cspom.variable.BoolVariable
+import cspom.variable.CSPOMConstant
+import cspom.variable.IntVariable
 
 class DiffGeTest extends FlatSpec with Matchers {
 
@@ -23,7 +21,7 @@ class DiffGeTest extends FlatSpec with Matchers {
     val cspom = CSPOM { implicit problem =>
 
       val r = IntVariable(1 to 3) - IntVariable(2 to 4)
-      assertTrue(r.hasParam("var_is_introduced"))
+      assert(r.hasParam("var_is_introduced"))
       ctr(r >= IntVariable(0 to 5))
 
     }
@@ -39,7 +37,7 @@ class DiffGeTest extends FlatSpec with Matchers {
 
     c.result match {
       case CSPOMConstant(true) =>
-      case _ => fail()
+      case _                   => fail()
     }
 
   }
@@ -59,7 +57,7 @@ class DiffGeTest extends FlatSpec with Matchers {
     cspom.constraints should have size 1
     val c = cspom.constraints.next
     c.function shouldEqual 'diffGe
-    c.result shouldBe a [BoolVariable]
+    c.result shouldBe a[BoolVariable]
   }
 
 }

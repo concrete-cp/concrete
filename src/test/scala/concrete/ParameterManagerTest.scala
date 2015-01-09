@@ -1,8 +1,7 @@
 package concrete;
 
 import java.math.BigInteger
-import org.junit.Assert.assertEquals
-import org.junit.Test
+
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 

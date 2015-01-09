@@ -48,20 +48,24 @@ object Constraint {
 
 }
 
+import scala.reflect.runtime.universe._
+
 trait StatefulConstraint extends Constraint {
   type State <: Any
   def initState: State
 
-  def isConsistent(problemState: ProblemState, state: State): Boolean =
-    revise(problemState, state) match {
-      case Contradiction    => false
-      case ns: ProblemState => scope.forall(ns.dom(_).nonEmpty)
-    }
+  //  def isConsistent(problemState: ProblemState, state: State): Boolean =
+  //    revise(problemState, state) match {
+  //      case Contradiction    => false
+  //      case ns: ProblemState => scope.forall(ns.dom(_).nonEmpty)
+  //    }
+  //
+  //  override final def isConsistent(problemState: ProblemState) = isConsistent(problemState, problemState(this))
 
-  override final def isConsistent(problemState: ProblemState) = isConsistent(problemState, problemState(this))
+  //  def revise(problemState: ProblemState, state: State): Outcome
+  //  final def revise(problemState: ProblemState) = revise(problemState, problemState(this))
 
-  def revise(problemState: ProblemState, state: State): Outcome
-  final def revise(problemState: ProblemState) = revise(problemState, problemState(this))
+  def state[T <: State: TypeTag](ps: ProblemState): State = ps[T](this)
 
   override def toString(problemState: ProblemState) = super.toString(problemState) + problemState(this)
 }

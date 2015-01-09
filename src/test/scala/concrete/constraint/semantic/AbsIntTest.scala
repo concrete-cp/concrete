@@ -1,15 +1,13 @@
 package concrete.constraint.semantic
 
-import scala.Traversable
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.scalatest.Finders
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
+
 import concrete.IntDomain
-import concrete.Variable
 import concrete.Problem
 import concrete.ProblemState
+import concrete.Variable
 
 final class AbsIntTest extends FlatSpec with Matchers {
 

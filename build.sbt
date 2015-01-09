@@ -22,7 +22,7 @@ testOptions in Test <+= (target in Test) map {
 
 libraryDependencies ++= Seq(
 	"fr.univ-valenciennes.concrete" %% "cspom" % "2.5-SNAPSHOT",
-	"junit" % "junit" % "4.12" % "test",
+	//"junit" % "junit" % "4.12" % "test",
 	"org.postgresql" % "postgresql" % "9.3-1102-jdbc41",
 	//"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
 	"com.typesafe.slick" %% "slick" % "2.1.0",
@@ -35,7 +35,7 @@ libraryDependencies ++= Seq(
 
 scalacOptions ++= Seq("-optimise"
 	      , "-Xdisable-assertions"
-	      , "-target:jvm-1.8"
+	      , "-target:jvm-1.7"
 //	"-deprecation", 
 //	"-unchecked", 
 //	"-optimise", 
@@ -45,7 +45,7 @@ scalacOptions ++= Seq("-optimise"
 //	"-Yinline-warnings"
 )
 
-javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
+javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
 
 packageArchetype.java_application
 

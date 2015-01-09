@@ -1,19 +1,19 @@
 package concrete.longTest;
 
-import java.util.logging.Level.WARNING
-import org.junit.Test
-import concrete.filter.ACC
-import concrete.generator.ProblemGenerator
-import com.typesafe.scalalogging.LazyLogging
-import cspom.compiler.ProblemCompiler
-import cspom.CSPOM
-import concrete.Solver
-import concrete.generator.cspompatterns.ConcretePatterns
-import org.scalatest.Assertions
+import org.scalatest.Finders
 import org.scalatest.FlatSpec
-import concrete.ParameterManager
+
+import com.typesafe.scalalogging.LazyLogging
+
 import concrete.Contradiction
+import concrete.ParameterManager
 import concrete.ProblemState
+import concrete.filter.ACC
+import concrete.generator.FailedGenerationException
+import concrete.generator.ProblemGenerator
+import concrete.generator.cspompatterns.ConcretePatterns
+import cspom.CSPOM
+import cspom.compiler.ProblemCompiler
 
 final class ProblemGeneratorTest extends FlatSpec with LazyLogging {
 

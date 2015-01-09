@@ -2,19 +2,13 @@ package concrete.generator.cspompatterns
 
 import cspom.CSPOMConstraint
 import cspom.compiler.VariableCompiler
+import cspom.util.IntInterval
+import cspom.variable.BoolVariable
+import cspom.variable.CSPOMConstant
+import cspom.variable.IntExpression
 import cspom.variable.IntExpression.implicits.arithmetics
 import cspom.variable.IntExpression.implicits.ranges
 import cspom.variable.SimpleExpression
-import cspom.util.IntervalsArithmetic._
-import cspom.variable.BoolVariable
-import cspom.variable.IntExpression
-import cspom.variable.CSPOMConstant
-import cspom.util.IntInterval._
-import cspom.variable.IntVariable
-import cspom.util.IntInterval
-import cspom.variable.CSPOMExpression
-import cspom.VariableNames
-import cspom.util.RangeSet
 
 object EqDomains extends VariableCompiler('eq) {
 
@@ -30,7 +24,8 @@ object EqDomains extends VariableCompiler('eq) {
       val br = BoolVariable.boolExpression(r)
       val ii0 = IntExpression(i0)
       val ii1 = IntExpression(i1)
-      val intersect = (ranges(ii0) * RangeSet(IntInterval.singleton(negFactor)) + RangeSet(IntInterval.singleton(offset))) & ii1
+
+      val intersect = (ii0 * IntInterval.singleton(negFactor) + IntInterval.singleton(offset)) & ii1
 
       val res = if (intersect.isEmpty) {
         reduceDomain(br, false)

@@ -1,19 +1,20 @@
 package concrete.generator.constraint
 
-import org.junit.Test
-import cspom.CSPOM
-import concrete.CSPOMDriver._
-import cspom.variable.IntVariable
-import concrete.generator.ProblemGenerator
-import cspom.variable.CSPOMConstant
-import org.junit.Assert.assertEquals
-import concrete.util.Interval
-import cspom.CSPOM.ctr
-import cspom.compiler.ProblemCompiler
-import cspom.compiler.MergeEq
-import concrete.generator.cspompatterns.SumDomains
-import org.scalatest.Matchers
+import org.scalatest.Finders
 import org.scalatest.FlatSpec
+import org.scalatest.Matchers
+
+import concrete.CSPOMDriver.sumProd
+import concrete.generator.FailedGenerationException
+import concrete.generator.ProblemGenerator
+import concrete.generator.cspompatterns.SumDomains
+import concrete.util.Interval
+import cspom.CSPOM
+import cspom.CSPOM.ctr
+import cspom.compiler.MergeEq
+import cspom.compiler.ProblemCompiler
+import cspom.variable.CSPOMConstant
+import cspom.variable.IntVariable
 
 class SumGeneratorTest extends FlatSpec with Matchers {
 

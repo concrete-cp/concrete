@@ -20,7 +20,6 @@
 package concrete.constraint.extension;
 
 import com.typesafe.scalalogging.LazyLogging
-
 import concrete.Contradiction
 import concrete.Outcome
 import concrete.ProblemState
@@ -28,21 +27,24 @@ import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.Removals
 import cspom.Statistic
+import concrete.constraint.StatefulConstraint
 
 object ReduceableExt {
   @Statistic
   var fills = 0l
 }
 
-final class ReduceableExt(_scope: Array[Variable], val initState: Relation)
-  extends Constraint(_scope) with LazyLogging with Removals {
+final class ReduceableExt(_scope: Array[Variable], override val initState: Relation)
+  extends Constraint(_scope) with LazyLogging with Removals with StatefulConstraint {
+
+  type State = Relation
 
   //println("sizesR " + arity + " " + trie.lambda + " " + trie.edges)
 
   def revise(ps: ProblemState, mod: List[Int]) = {
     val domains = ps.domains(scope).toArray
     val unsupported = domains.map(_.to[collection.mutable.Set])
-    val trie: Relation = ps(this)
+    val trie = state(ps)
     //found.foreach(_.fill(false))
 
     //val oldSize = trie.size

@@ -1,8 +1,5 @@
 package concrete.generator.constraint
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
 import concrete.generator.ProblemGenerator
 import concrete.Problem
 import cspom.CSPOM
@@ -11,11 +8,12 @@ import cspom.CSPOM._
 import cspom.variable.IntVariable
 import concrete.constraint.semantic.AbsDiffAC
 import concrete.constraint.semantic.AbsDiffBC
+import org.scalatest.Matchers
+import org.scalatest.FlatSpec
 
-final class AbsDiffGeneratorTest {
+final class AbsDiffGeneratorTest extends FlatSpec with Matchers {
 
-  @Test
-  def test() {
+  "AbsDiffGenerator" should "generate constraints" in {
 
     val cspom = CSPOM { implicit problem =>
 
@@ -28,8 +26,8 @@ final class AbsDiffGeneratorTest {
 
     val problem = new ProblemGenerator().generate(cspom)._1
 
-    assertEquals(2, problem.constraints.size)
-    assertEquals(Set(classOf[AbsDiffBC], classOf[AbsDiffAC]), problem.constraints.map(_.getClass()).toSet)
+    problem.constraints.map(_.getClass()).toSet shouldBe
+      Set(classOf[AbsDiffBC], classOf[AbsDiffAC])
 
   }
 }

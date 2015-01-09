@@ -15,9 +15,9 @@ import concrete.UNSATException
 final object EqGenerator extends Generator {
 
   def params(constraint: CSPOMConstraint[_]): (Boolean, Int) = {
-    val neg: Boolean = constraint.getParam("neg").getOrElse(false)
+    val neg: Boolean = constraint.getParam[Boolean]("neg").getOrElse(false)
 
-    val offset: Int = constraint.getParam("offset").getOrElse(0)
+    val offset: Int = constraint.getParam[Int]("offset").getOrElse(0)
     (neg, offset)
   }
 

@@ -1,17 +1,16 @@
 package concrete.generator.cspompattern
-import cspom.CSPOM
-import cspom.CSPOM._
-import concrete.CSPOMDriver._
-import org.junit.Assert._
-import org.junit.Test
-import cspom.CSPOMConstraint
-import concrete.generator.cspompatterns.AbsDiff
-import cspom.variable.BoolVariable
-import cspom.variable.IntVariable
-import cspom.compiler.ProblemCompiler
-import org.scalatest.Matchers
+
+import org.scalatest.Finders
 import org.scalatest.FlatSpec
+import org.scalatest.Matchers
+
+import concrete.CSPOMDriver.CSPOMIntExpressionOperations
+import concrete.CSPOMDriver.abs
+import concrete.generator.cspompatterns.AbsDiff
 import concrete.generator.cspompatterns.SubToAdd
+import cspom.CSPOM
+import cspom.compiler.ProblemCompiler
+import cspom.variable.IntVariable
 
 class AbsDiffTest extends FlatSpec with Matchers {
 
@@ -24,7 +23,7 @@ class AbsDiffTest extends FlatSpec with Matchers {
 
       val r = v0 - v1
 
-      assertTrue(r.hasParam("var_is_introduced"))
+      assert(r.hasParam("var_is_introduced"))
 
       val r2 = abs(r)
 

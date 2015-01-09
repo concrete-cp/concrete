@@ -1,19 +1,20 @@
 package concrete.util
 
-import org.junit.Test
-import org.junit.Assert._
+import org.scalatest.Matchers
+import org.scalatest.FlatSpec
 
-class IntervalTest {
-  @Test
-  def testDiv() {
-    assertTrue((Interval(1, 19) / 20).allValues.isEmpty)
-    assertEquals(Interval(0, 0), Interval(0, 19) / 20)
-    assertEquals(Interval(1, 1), Interval(1, 20) / 20)
-    assertEquals(Interval(0, 1), Interval(0, 20) / 20)
+class IntervalTest extends FlatSpec with Matchers {
 
-    assertTrue((Interval(1, 19) / -20).allValues.isEmpty)
-    assertEquals(Interval(0, 0), Interval(0, 19) / -20)
-    assertEquals(Interval(-1, -1), Interval(1, 20) / -20)
-    assertEquals(Interval(-1, 0), Interval(0, 20) / -20)
+  "Intervals" should "divide" in {
+    (Interval(1, 19) / 20).allValues shouldBe empty
+
+    (Interval(0, 19) / 20) shouldBe Interval(0, 0)
+    (Interval(1, 20) / 20) shouldBe Interval(1, 1)
+    (Interval(0, 20) / 20) shouldBe Interval(0, 1)
+
+    (Interval(1, 19) / -20).allValues shouldBe empty
+    (Interval(0, 19) / -20) shouldBe Interval(0, 0)
+    (Interval(1, 20) / -20) shouldBe Interval(-1, -1)
+    (Interval(0, 20) / -20) shouldBe Interval(-1, 0)
   }
 }
