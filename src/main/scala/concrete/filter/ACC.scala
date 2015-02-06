@@ -1,6 +1,5 @@
 package concrete.filter;
 
-
 import com.typesafe.scalalogging.LazyLogging
 import concrete.Contradiction
 import concrete.Outcome
@@ -28,10 +27,10 @@ object ACC extends LazyLogging {
         c.adviseAll(s)
 
         c.revise(s) match {
-          case Contradiction => throw new AssertionError(s"${c.toString(s)} is not consistent")
+          case Contradiction => throw new AssertionError(s"${c.toString(s)} is not consistent${if (s.isEntailed(c)) " - entailed" else ""}")
           case finalState: ProblemState =>
             require(c.scope.forall(v => s.dom(v) eq finalState.dom(v)),
-              s"${c.toString(state)} was revised (-> ${c.toString(finalState)}")
+              s"${c.toString(state)}${if (state.isEntailed(c)) " - entailed" else ""} was revised (-> ${c.toString(finalState)})")
 
             require(c.controlAssignment(finalState), s"$c assignement is inconsistent")
             finalState
@@ -137,13 +136,14 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
   }
 
   private def updateQueue(modified: Variable, skip: Constraint, states: ProblemState): Unit = {
+
     val constraints = modified.constraints
 
     var i = constraints.length - 1
     while (i >= 0) {
       val c = constraints(i)
 
-      if ((c ne skip) && !states.entailed(i)) {
+      if ((c ne skip) && !states.isEntailed(c)) {
         val a = c.advise(states, modified.positionInConstraint(i))
 
         //logger.fine(c + ", " + modified.positionInConstraint(i) + " : " + a)
@@ -157,7 +157,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
   }
 
   private def reduce(states: ProblemState): Outcome = {
-
+    lazy val varSet = problem.variables.toSet
     var s = states
     while (!queue.isEmpty) {
       val constraint = queue.poll();
@@ -166,22 +166,16 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
       revisions += 1;
       //val sizes = constraint.sizes()
 
-      logger.debug {
-        s"$constraint " + (
-          constraint match {
-            case r: Removals => s"(${r.modified}) "
-            case _           =>
-          })
-      }
-
       constraint.revise(s) match {
         case Contradiction =>
           constraint.weight += 1
-          logger.info(constraint.toString(s) + " -> Contradiction")
+          logger.debug(constraint.toString(s) + " -> Contradiction")
           return Contradiction
 
         case newState: ProblemState =>
           assert(constraint.scope.map(newState.dom).forall(_.nonEmpty))
+
+          assert(noChange(s, newState, varSet -- constraint.scope), s"$constraint changed a variable outside of its scope")
           //          for (i <- 0 until constraint.arity) {
           //            if (newState(constraint.scope(i)).isEmpty) {
           //              constraint.weight += 1
@@ -192,21 +186,22 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
           //          }
 
           if (newState ne s) {
-            logger.info(
-              s"${constraint.toString(s)} -> ${constraint.toString(newState)}")
+            logger.debug(
+              s"${constraint.toString(s)} -> ${constraint.toString(newState)}${if (newState.isEntailed(constraint)) " - entailed" else ""}")
 
             for (i <- 0 until constraint.arity) {
               val v = constraint.scope(i)
               val id = v.id
-              assert(newState.dom(id).subsetOf(s.dom(id)),
-                s"${constraint.toString(s)} -> ${constraint.toString(newState)}")
-              if (newState.dom(id) ne s.dom(id)) {
-                updateQueue(constraint.scope(i), constraint, s)
+              /* id will be < 0 if a fake variable is used by the constraint */
+              if (id >= 0 && (newState.dom(id) ne s.dom(id))) {
+                assert(newState.dom(id).subsetOf(s.dom(id)))
+
+                updateQueue(v, constraint, newState)
               }
             }
             s = newState
           } else {
-            logger.info(
+            logger.debug(
               s"${constraint.toString(s)} -> NOP")
           }
 
@@ -222,6 +217,10 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     }
     s
 
+  }
+
+  private def noChange(oldState: ProblemState, newState: ProblemState, variables: Set[Variable]): Boolean = {
+    variables.forall(v => oldState.dom(v) eq newState.dom(v))
   }
 
   def domSizes(c: Constraint, state: ProblemState) = state.domains(c.scope).map(_.size)

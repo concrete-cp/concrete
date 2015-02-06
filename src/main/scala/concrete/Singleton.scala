@@ -97,7 +97,6 @@ final class Singleton(val singleValue: Int) extends IntDomain with LazyLogging {
   override def isEmpty = false
 
   override def assign(v: Int) = {
-    require(v == singleValue)
-    this
+    if (v == singleValue) this else EmptyIntDomain
   }
 }

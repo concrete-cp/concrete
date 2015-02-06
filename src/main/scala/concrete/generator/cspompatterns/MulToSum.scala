@@ -18,10 +18,10 @@ object MulToSum extends ConstraintCompilerNoData {
 
     (c.result, v0, v1) match {
       case (r, CSPOMConstant(v0), v1) =>
-        replaceCtr(c, CSPOMConstraint('sum, Seq(new CSPOMSeq(Seq(r, v1)), CSPOMConstant(0)),
+        replaceCtr(c, CSPOMConstraint('sum, Seq(CSPOMSeq(r, v1), CSPOMConstant(0)),
           c.params ++ Map("coefficients" -> Seq(-1, v0), "mode" -> "eq")), in)
       case (r, v0, CSPOMConstant(v1)) =>
-        replaceCtr(c, CSPOMConstraint('sum, Seq(new CSPOMSeq(Seq(r, v0)), CSPOMConstant(0)),
+        replaceCtr(c, CSPOMConstraint('sum, Seq(CSPOMSeq(r, v0), CSPOMConstant(0)),
           c.params ++ Map("coefficients" -> Seq(-1, v1), "mode" -> "eq")), in)
       case _ => Delta()
     }

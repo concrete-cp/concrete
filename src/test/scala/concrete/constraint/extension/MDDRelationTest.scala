@@ -60,8 +60,8 @@ class MDDRelationTest extends FlatSpec with Matchers with PropertyChecks with Op
 
   it should "find single support" in {
     val v58 = new Variable("V58", IntDomain(0 to 160))
-    val v59 = new Variable("V59", IntDomain(160))
-    val v60 = new Variable("V60", IntDomain(0))
+    val v59 = new Variable("V59", IntDomain.ofSeq(160))
+    val v60 = new Variable("V60", IntDomain.ofSeq(0))
 
     val vars = IndexedSeq(v58, v59, v60)
 

@@ -5,6 +5,7 @@ import concrete.Variable
 import scala.util.Random
 import concrete.util.Timestamp
 import concrete.Domain
+import com.typesafe.scalalogging.LazyLogging
 
 trait RelationGenerator {
   def apply(data: Seq[Seq[Int]]): Relation
@@ -14,7 +15,7 @@ object MDDRelation extends RelationGenerator {
   def apply(data: Seq[Seq[Int]]): MDDRelation = new MDDRelation(MDD(data))
 }
 
-final class MDDRelation(val mdd: MDD = MDD0, val timestamp: Timestamp = new Timestamp()) extends Relation {
+final class MDDRelation(val mdd: MDD = MDD0, val timestamp: Timestamp = new Timestamp()) extends Relation with LazyLogging {
   type Self2 = MDDRelation
 
   def findSupport(domains: IndexedSeq[Domain], p: Int, i: Int): Option[Array[Int]] = {
@@ -34,8 +35,13 @@ final class MDDRelation(val mdd: MDD = MDD0, val timestamp: Timestamp = new Time
     val m = mdd.filterTrie(timestamp.next(), f, modified, 0)
 
     assert(m.forall { sup =>
-      sup.zipWithIndex.forall { case (i, p) => f(p, i) }
-    }, modified)
+      sup.zipWithIndex.forall {
+        case (i, p) =>
+          val r = f(p, i)
+          if (!r) logger.warn(s"($p, $i) should have been filtered")
+          r
+      }
+    }, modified + "\n" + m)
 
     if (m eq mdd) {
       this

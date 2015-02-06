@@ -27,7 +27,7 @@ object SumFactors extends ConstraintCompiler {
 
     replaceCtr(c,
       new CSPOMConstraint(c.result, 'sum,
-        Seq(new CSPOMSeq(fargs), result), c.params.updated("coefficients", fparams)),
+        Seq(CSPOMSeq(fargs: _*), result), c.params.updated("coefficients", fparams)),
       p)
   }
 

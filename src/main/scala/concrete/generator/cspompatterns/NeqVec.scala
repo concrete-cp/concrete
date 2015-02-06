@@ -30,8 +30,8 @@ object NeqVec extends ConstraintCompiler {
     }
 
     result collect {
-      case Seq(orConstraint @ CSPOMConstraint(CSPOMConstant(true), 'or, _, _)) =>
-        val orVariables = orConstraint.fullScope.toSet
+      case Seq(orConstraint @ CSPOMConstraint(CSPOMConstant(true), 'clause, Seq(positive: CSPOMSeq[_], negative: CSPOMSeq[_]), _)) if negative.isEmpty =>
+        val orVariables: Set[CSPOMExpression[_]] = positive.toSet
         val neConstraints = orVariables.flatMap(problem.constraints) - orConstraint
         (orConstraint, orVariables, neConstraints)
     } filter {
@@ -49,7 +49,7 @@ object NeqVec extends ConstraintCompiler {
       case _ => throw new IllegalArgumentException(s"$neConstraints contains malformed ne/nevec constraint")
     }
 
-    val newC = problem.ctr(CSPOMConstraint('nevec, Seq(new CSPOMSeq[Any](x), new CSPOMSeq[Any](y))))
+    val newC = problem.ctr(CSPOMConstraint('nevec, Seq(CSPOMSeq(x: _*), CSPOMSeq(y: _*))))
 
     replaceCtr(orConstraint +: neConstraints.toSeq, newC, problem)
 

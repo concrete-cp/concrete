@@ -9,13 +9,13 @@ import concrete.util.Interval
 sealed trait Outcome {
   def andThen(f: ProblemState => Outcome): Outcome
   def filterDom(id: Int)(f: Int => Boolean): Outcome
-  def filterDom(v: Variable)(f: Int => Boolean): Outcome = filterDom(v.id)(f)
+  def filterDom(v: Variable)(f: Int => Boolean): Outcome
 
   def shaveDom(id: Int, lb: Int, ub: Int): Outcome
   def shaveDom(id: Int, itv: Interval): Outcome = shaveDom(id, itv.lb, itv.ub)
 
-  def shaveDom(v: Variable, lb: Int, ub: Int): Outcome = shaveDom(v.id, lb, ub)
-  def shaveDom(v: Variable, itv: Interval): Outcome = shaveDom(v.id, itv.lb, itv.ub)
+  def shaveDom(v: Variable, lb: Int, ub: Int): Outcome
+  def shaveDom(v: Variable, itv: Interval): Outcome = shaveDom(v, itv.lb, itv.ub)
 
   def removeTo(v: Variable, ub: Int): Outcome = removeTo(v.id, ub)
   def removeFrom(v: Variable, lb: Int): Outcome = removeFrom(v.id, lb)
@@ -32,7 +32,7 @@ sealed trait Outcome {
 
   def entailIfFree(c: Constraint): Outcome
 
-  def updateDom(v: Variable, d: Domain): Outcome = updateDom(v.id, d)
+  def updateDom(v: Variable, d: Domain): Outcome
   def updateDom(id: Int, d: Domain): Outcome
 
   def updateAll(vars: Iterable[Variable])(f: Domain => Domain): Outcome = updateAll(vars.iterator)(f)
@@ -67,7 +67,7 @@ sealed trait Outcome {
   def remove(id: Int, value: Int): Outcome
 
   def dom(id: Int): Domain
-  def dom(v: Variable): Domain = dom(v.id)
+  def dom(v: Variable): Domain
 
   def span(id: Int): Interval = dom(id).span
   def span(v: Variable): Interval = dom(v).span
@@ -78,12 +78,20 @@ sealed trait Outcome {
   def domains(v: Iterable[Variable]): Iterator[Domain] = {
     v.iterator.map(dom)
   }
+
+  def updateState(id: Int, newState: AnyRef): Outcome
+
+  def updateState(c: Constraint, newState: AnyRef): Outcome =
+    updateState(c.id, newState)
+
 }
 
 case object Contradiction extends Outcome {
   def andThen(f: ProblemState => Outcome) = Contradiction
   def filterDom(id: Int)(f: Int => Boolean): Outcome = Contradiction
+  def filterDom(v: Variable)(f: Int => Boolean): Outcome = Contradiction
   def shaveDom(id: Int, lb: Int, ub: Int): Outcome = Contradiction
+  def shaveDom(v: Variable, lb: Int, ub: Int): Outcome = Contradiction
   def entailIfFree(c: Constraint): Outcome = Contradiction
   def entail(id: Int) = Contradiction
   def removeTo(id: Int, ub: Int): Outcome = Contradiction
@@ -91,26 +99,31 @@ case object Contradiction extends Outcome {
   def removeUntil(id: Int, ub: Int): Outcome = Contradiction
   def removeAfter(id: Int, ub: Int): Outcome = Contradiction
   def updateDom(id: Int, d: Domain): Outcome = Contradiction
+  def updateDom(v: Variable, d: Domain): Outcome = Contradiction
   def assign(id: Int, value: Int): Outcome = Contradiction
   def remove(id: Int, value: Int): Outcome = Contradiction
   def dom(id: Int): Domain = throw new UNSATException("Tried to get a domain from a Contradiction")
+  def dom(v: Variable): Domain = throw new UNSATException("Tried to get a domain from a Contradiction")
   def boolDom(id: Int): BooleanDomain = EMPTY
+  def updateState(id: Int, newState: AnyRef): Outcome = Contradiction
 }
 
 final case class ProblemState(
   val domains: IndexedSeq[Domain],
-  val constraintStates: IndexedSeq[Any],
+  val constraintStates: IndexedSeq[AnyRef],
   val entailed: Set[Int]) extends Outcome {
 
   def andThen(f: ProblemState => Outcome) = f(this)
 
   def apply[A: TypeTag](c: Constraint): A = constraintStates(c.id).asInstanceOf[A]
 
-  def updatedCS(id: Int, newState: Any): ProblemState =
-    new ProblemState(domains, constraintStates.updated(id, newState), entailed)
-
-  def updatedCS(c: Constraint, newState: Any): ProblemState =
-    updatedCS(c.id, newState)
+  def updateState(id: Int, newState: AnyRef): ProblemState = {
+    if (constraintStates(id) eq newState) {
+      this
+    } else {
+      new ProblemState(domains, constraintStates.updated(id, newState), entailed)
+    }
+  }
 
   //  def updateConstraints(f: (Int, Any) => Any) = {
   //    var i = constraintStates.length - 1
@@ -123,9 +136,9 @@ final case class ProblemState(
   //  }
 
   def padConstraints(constraints: IndexedSeq[Constraint]) = {
-    val padded = constraintStates ++: constraints.drop(constraintStates.size).map {
+    val padded: IndexedSeq[AnyRef] = constraintStates ++: constraints.drop(constraintStates.size).map {
       case c: StatefulConstraint => c.initState
-      case _                     => Unit
+      case _                     => null
     }
     if (padded eq constraintStates) this else new ProblemState(domains, padded, entailed)
   }
@@ -141,6 +154,16 @@ final case class ProblemState(
       updateDomNonEmpty(id, newDomain)
     }
 
+  def updateDom(v: Variable, newDomain: Domain): Outcome = {
+    if (newDomain.isEmpty) {
+      Contradiction
+    } else if (dom(v) eq newDomain) {
+      this
+    } else {
+      new ProblemState(domains.updated(v.id, newDomain), constraintStates, entailed)
+    }
+  }
+
   def updateDomNonEmpty(id: Int, newDomain: Domain): ProblemState = {
     assert(newDomain.nonEmpty)
     if (domains(id) eq newDomain) {
@@ -155,40 +178,42 @@ final case class ProblemState(
     updateDomNonEmpty(variable.id, newDomain)
 
   def dom(id: Int): Domain = domains(id)
+  def dom(v: Variable): Domain = {
+    val id = v.id
+    if (id < 0) v.initDomain else domains(id)
+  }
 
-  def boolDom(id: Int): BooleanDomain = dom(id).asInstanceOf[BooleanDomain]
+  def boolDom(id: Int): BooleanDomain = domains(id).asInstanceOf[BooleanDomain]
 
   def assign(id: Int, value: Int): Outcome = {
     updateDom(id, domains(id).assign(value))
   }
 
   def remove(id: Int, value: Int): Outcome = {
-    updateDom(id, dom(id).remove(value))
+    updateDom(id, domains(id).remove(value))
   }
 
-  def filterDom(id: Int)(f: Int => Boolean) = updateDom(id, dom(id).filter(f))
+  def filterDom(id: Int)(f: Int => Boolean) =
+    updateDom(id, domains(id).filter(f))
 
-  def shaveDom(id: Int, lb: Int, ub: Int): Outcome = updateDom(id, dom(id) & (lb, ub))
-//
-//  def updateAllIds(ids: Iterator[Int])(f: Domain => Domain): Outcome = {
-//    if (ids.hasNext) {
-//      val id = ids.next
-//      updateDom(id, dom(id)).andThen(_.updateAllIds(ids)(f))
-//    } else {
-//      this
-//    }
-//
-//  }
+  def filterDom(v: Variable)(f: Int => Boolean) =
+    updateDom(v, dom(v).filter(f))
+
+  def shaveDom(id: Int, lb: Int, ub: Int): Outcome =
+    updateDom(id, domains(id) & (lb, ub))
+
+  def shaveDom(v: Variable, lb: Int, ub: Int): Outcome =
+    updateDom(v, dom(v) & (lb, ub))
 
   def removeTo(id: Int, ub: Int): Outcome =
-    updateDom(id, dom(id).removeTo(ub))
+    updateDom(id, domains(id).removeTo(ub))
 
   def removeFrom(id: Int, lb: Int): Outcome =
-    updateDom(id, dom(id).removeFrom(lb))
+    updateDom(id, domains(id).removeFrom(lb))
   def removeUntil(id: Int, ub: Int): Outcome =
-    updateDom(id, dom(id).removeUntil(ub))
+    updateDom(id, domains(id).removeUntil(ub))
   def removeAfter(id: Int, lb: Int): Outcome =
-    updateDom(id, dom(id).removeAfter(lb))
+    updateDom(id, domains(id).removeAfter(lb))
 
   def entailIfFree(c: Constraint) = {
     if (c.isFree(this)) entail(c.id) else this

@@ -119,7 +119,7 @@ final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
     ps.span(x) intersects ps.span(y)
   }
 
-  override def toString(ps: ProblemState) = s"${if (neg) "-" else ""}${x.toString(ps)}}${
+  override def toString(ps: ProblemState) = s"${if (neg) "-" else ""}${x.toString(ps)}${
     if (b > 0) " + " + b else if (b < 0) " - " + (-b) else ""
   } =BC= ${y.toString(ps)}"
 

@@ -34,9 +34,9 @@ class ReifiedEquals(val b: Variable, val v: Variable, val c: Int)
           ps.updateDomNonEmpty(b, FALSE).entail(this)
         }
 
-      case TRUE  => ps.updateDom(v, d.assign(c)).entail(this)
+      case TRUE  => ps.assign(v, c).entail(this)
 
-      case FALSE => ps.updateDom(v, d.remove(c)).entail(this)
+      case FALSE => ps.remove(v, c).entail(this)
 
       case EMPTY => throw new AssertionError()
     }

@@ -79,7 +79,9 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
   private var restart = true
 
   @tailrec
-  def mac(modifiedVariable: Option[Variable], stack: List[Pair], currentState: Outcome, stateStack: List[ProblemState]): (SolverResult, List[Pair], List[ProblemState]) = {
+  def mac(
+    modifiedVariable: Option[Variable], stack: List[Pair],
+    currentState: Outcome, stateStack: List[ProblemState]): (SolverResult, List[Pair], List[ProblemState]) = {
     if (Thread.interrupted()) throw new InterruptedException()
 
     val filtering = currentState andThen {
@@ -106,12 +108,12 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
 
           val lastAssignment = stack.head
 
-          mac(Some(lastAssignment.variable), stack.tail, stateStack.head.remove(lastAssignment), stateStack)
+          mac(Some(lastAssignment.variable), stack.tail, stateStack.head.remove(lastAssignment), stateStack.tail)
         }
 
       case filteredState: ProblemState =>
         heuristic.selectPair(problem, filteredState) match {
-          case None => (SAT(extractSolution(filteredState)), stack, filteredState :: stateStack.tail)
+          case None => (SAT(extractSolution(filteredState)), stack, filteredState :: stateStack)
           case Some(pair) =>
 
             logger.info(s"${stack.length}: ${pair.variable.name}: ${filteredState.dom(pair.variable)} <- ${pair.value} ($nbBacktracks / $maxBacktracks)");
@@ -120,7 +122,7 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
 
             val assignedState = filteredState.assign(pair)
 
-            mac(Some(pair.variable), pair :: stack, assignedState, filteredState :: stateStack.tail)
+            mac(Some(pair.variable), pair :: stack, assignedState, filteredState :: stateStack)
 
         }
     }
@@ -136,7 +138,7 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
   var heuristicCpu = 0.0
 
   @tailrec
-  private def nextSolution(modifiedVar: Option[Variable], stack: List[Pair] = Nil, currentState: Outcome, stateStack: List[ProblemState]): (SolverResult, List[Pair], List[ProblemState]) = {
+  private def nextSolution(modifiedVar: Option[Variable], stack: List[Pair], currentState: Outcome, stateStack: List[ProblemState]): (SolverResult, List[Pair], List[ProblemState]) = {
     logger.info("MAC with " + maxBacktracks + " bt")
 
     val nbBT = nbBacktracks
@@ -174,9 +176,11 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
   var currentStateStack: List[ProblemState] = List(problem.initState)
 
   def nextSolution(): SolverResult = try {
+    // extends state stack for new constraints
     currentStateStack = currentStateStack.map(_.padConstraints(problem.constraints))
 
     if (restart) {
+      logger.info("RESTART")
       restart = false
       preprocess(filter, currentStateStack.last) match {
         case Contradiction => UNSAT
@@ -194,11 +198,12 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
     } else {
       maxBacktracks = -1
 
-      val nextState = currentStateStack.head.remove(currentStack.head)
+      // val nextState = currentStateStack.head.remove(currentStack.head)
+
+      /** Contradiction will trigger a backtrack */
 
       val (sol, stack, stateStack) =
-        nextSolution(Some(currentStack.head.variable), currentStack.tail, nextState,
-          currentStateStack)
+        nextSolution(None, currentStack, Contradiction, currentStateStack.tail)
       currentStack = stack
       currentStateStack = stateStack
       sol

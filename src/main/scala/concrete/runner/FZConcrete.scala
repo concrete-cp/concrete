@@ -17,6 +17,8 @@ import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
 import cspom.StatisticsManager
 import cspom.Statistic
+import java.net.URLDecoder
+import java.net.URLEncoder
 
 object FZConcrete extends CSPOMRunner with App {
 
@@ -34,7 +36,7 @@ object FZConcrete extends CSPOMRunner with App {
   override def loadCSPOM(args: List[String]) = {
     val List(fn) = args
 
-    val f = new URI(fn)
+    val f = URI.create(fn.replace(" ", "%20"))
 
     file = if (f.getScheme() == null) {
       new URL("file:" + f)
@@ -42,8 +44,6 @@ object FZConcrete extends CSPOMRunner with App {
       //println(f.getScheme())
       f.toURL
     }
-
-    //println(file)
 
     val ((cspom, data), time) = StatisticsManager.time(CSPOM.load(file))
 

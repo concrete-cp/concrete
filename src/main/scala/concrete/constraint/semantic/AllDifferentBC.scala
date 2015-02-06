@@ -170,14 +170,16 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
 
     var mod = ps
 
-    var i = 1
-    while (i <= nbBounds + 1) {
+    var i = nbBounds + 1
+    while (i >= 1) {
       t(i) = i - 1
       h(i) = i - 1
       d(i) = bounds(i) - bounds(i - 1)
-      i += 1
+      i -= 1
     }
-    i = 0
+
+    assert(i == 0)
+
     while (i < arity) {
       val x = maxsorted(i).minrank;
       val y = maxsorted(i).maxrank;
@@ -216,12 +218,12 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
 
   private def filterUpper(ps: ProblemState): Outcome = {
     var mod = ps
-    var i = 0
-    while (i <= nbBounds) {
+    var i = nbBounds
+    while (i >= 0) {
       t(i) = i + 1
       h(i) = i + 1;
       d(i) = bounds(i + 1) - bounds(i);
-      i += 1
+      i -= 1
     }
     i = arity - 1
     while (i >= 0) {
@@ -246,8 +248,11 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
       if (h(x) < x) {
         val w = pathmin(h, h(x));
         val id = minsorted(i).id
-        val dom = ps.dom(id).removeFrom(bounds(w))
-        mod = mod.updateDomNonEmpty(id, dom)
+        // val dom = ps.dom(id).removeFrom(bounds(w))
+        mod.removeFrom(minsorted(i).id, bounds(w)) match {
+          case Contradiction    => return Contradiction
+          case ps: ProblemState => mod = ps
+        }
         pathset(h, x, w, w);
       }
       if (d(z) == bounds(y) - bounds(z)) {

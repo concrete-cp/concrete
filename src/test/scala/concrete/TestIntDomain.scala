@@ -6,7 +6,7 @@ import org.scalatest.Matchers
 final class TestIntDomain extends FlatSpec with Matchers {
 
   "IntDomain" should "find next/prev" in {
-    val b = IntDomain(1, 2, 7, 8)
+    val b = IntDomain.ofSeq(1, 2, 7, 8)
     b.prev(3) shouldBe 2
     b.prev(2) shouldBe 1
     b.next(2) shouldBe 7
@@ -17,11 +17,11 @@ final class TestIntDomain extends FlatSpec with Matchers {
   }
 
   it should "enumerate" in {
-    IntDomain(1, 2, 7, 8) shouldBe Seq(1, 2, 7, 8)
+    IntDomain.ofSeq(1, 2, 7, 8) shouldBe Seq(1, 2, 7, 8)
   }
 
   it should "detect presence" in {
-    val domain = IntDomain(0, 1)
+    val domain = IntDomain.ofSeq(0, 1)
     assert(domain.present(0))
 
     val d2 = domain.remove(0);
@@ -31,7 +31,7 @@ final class TestIntDomain extends FlatSpec with Matchers {
   }
 
   it should "split" in {
-    val domain = IntDomain(3, 4, 5, 7)
+    val domain = IntDomain.ofSeq(3, 4, 5, 7)
     domain.removeTo(4).head shouldBe 5
     domain.removeFrom(6).last shouldBe 5
     domain.removeFrom(0) shouldBe empty
@@ -39,5 +39,8 @@ final class TestIntDomain extends FlatSpec with Matchers {
     domain.removeTo(7) shouldBe empty
     domain.removeTo(8) shouldBe empty
     domain.removeFrom(-1) shouldBe empty
+    domain.removeUntil(7) shouldBe Seq(7)
+    domain.removeUntil(400) shouldBe empty
+    domain.removeFrom(400) shouldBe domain
   }
 }

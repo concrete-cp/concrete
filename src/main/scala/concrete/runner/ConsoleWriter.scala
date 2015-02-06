@@ -5,7 +5,7 @@ import scala.xml.NodeSeq
 import concrete.Variable
 import concrete.UNSATException
 
-class ConsoleWriter extends ConcreteWriter {
+class ConsoleWriter(opts: Map[Symbol, Any]) extends ConcreteWriter {
 
   def parameters(params: NodeSeq) {
     for (p <- params \\ "p") {
@@ -17,6 +17,7 @@ class ConsoleWriter extends ConcreteWriter {
   }
 
   def problem(problem: String) {
+    if (opts.contains('stats))
     Console.println("% " + problem)
   }
 
@@ -25,6 +26,7 @@ class ConsoleWriter extends ConcreteWriter {
   }
 
   def write(stats: StatisticsManager) {
+    if (opts.contains('stats))
     for ((n, v) <- stats.digest.toSeq.sortBy(_._1)) {
       Console.println(s"% $n = $v")
     }
@@ -37,9 +39,9 @@ class ConsoleWriter extends ConcreteWriter {
 
   def disconnect(status: RunnerStatus) {
     status match {
-      case Sat => Console.println("==========")
+      case Sat   => Console.println("==========")
       case Unsat => Console.println("=====UNSATISFIABLE=====")
-      case _ => Console.println("=====UNKNOWN=====")
+      case _     => Console.println("=====UNKNOWN=====")
     }
   }
 

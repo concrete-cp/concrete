@@ -21,7 +21,7 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
   //  }
 
   def singleValue = throw new IllegalStateException
-  
+
   override val head = offset + bitVector.nextSetBit(0)
 
   assert(head >= offset)

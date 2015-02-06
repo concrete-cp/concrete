@@ -69,13 +69,13 @@ object IntDomain {
     if (r.step == 1 && r.size > 1) {
       ofInterval(r.start, r.last)
     } else {
-      apply(r: _*)
+      ofSeq(r: _*)
     }
 
   def apply(i: Interval): IntDomain = ofInterval(i.lb, i.ub)
 
   @annotation.varargs
-  def apply(d: Int*): IntDomain = apply(SortedSet[Int]() ++ d)
+  def ofSeq(d: Int*): IntDomain = apply(SortedSet[Int]() ++ d)
 
 }
 

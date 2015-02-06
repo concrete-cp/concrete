@@ -18,6 +18,7 @@ import cspom.variable.IntVariable
 import cspom.util.RangeSet
 import cspom.util.Interval
 import cspom.util.IntInterval
+import cspom.variable.IntExpression
 
 object AllDiffConstant extends ConstraintCompiler {
   type A = (Seq[Int])
@@ -46,17 +47,17 @@ object AllDiffConstant extends ConstraintCompiler {
     }
     require(constants.distinct.size + variables.size == constraint.arguments.size)
 
-    val diff = RangeSet(constants.map(k => IntInterval.singleton(k)))
+    val constantSet = RangeSet(constants.map(k => IntInterval.singleton(k)))
 
     val filt = variables.map { v: IntVariable =>
-      val r = v.domain -- diff
-      if (r == v.domain) v else IntVariable(r)
+      applyDomain(v, v.domain -- constantSet)
+      //if (r == v.domain) v else IntVariable(r)
     }
     problem.removeConstraint(constraint)
     var delta = Delta().removed(constraint)
 
     if (filt.length > 1) {
-      delta = delta.added(problem.ctr(CSPOMConstraint('allDifferent, filt)))
+      delta = delta.added(problem.ctr(CSPOMConstraint('alldifferent, filt)))
     }
 
     for ((v, f) <- (variables, filt).zipped) {
@@ -72,12 +73,12 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
 
   def DIFF_CONSTRAINT(constraint: CSPOMConstraint[_]) =
     (constraint.result.isTrue &&
-      Set('gt, 'lt, 'allDifferent)(constraint.function)) ||
+      Set('gt, 'lt, 'alldifferent)(constraint.function)) ||
       (constraint.result.isFalse && Set('eq, 'ge, 'le)(constraint.function))
 
   def ALLDIFF_CONSTRAINT(constraint: CSPOMConstraint[_]) =
     (constraint.result.isFalse) && 'eq == constraint.function ||
-      'allDifferent == constraint.function
+      'alldifferent == constraint.function
 
   val ITER = 750;
 
@@ -193,7 +194,7 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
    */
   private def newAllDiff(scope: Seq[CSPOMExpression[_]], problem: CSPOM): Delta = {
 
-    val allDiff = CSPOMConstraint('allDifferent, scope);
+    val allDiff = CSPOMConstraint('alldifferent, scope);
 
     val scopeSet = scope.toSet
 

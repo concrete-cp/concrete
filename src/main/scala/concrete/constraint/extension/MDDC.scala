@@ -47,7 +47,7 @@ class MDDC(_scope: Array[Variable], private val mdd: MDDRelation)
     if (!sat) {
       Contradiction
     } else {
-      var cs: Outcome = ps.updatedCS(id, gNo)
+      var cs: Outcome = ps.updateState(id, gNo)
       for (p <- 0 until delta) {
         cs = cs.filterDom(p)(!unsupported(p)(_))
       }

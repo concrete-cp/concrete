@@ -6,8 +6,8 @@ import cspom.variable.FreeVariable
 
 object ConcreteTypes extends Types {
   def types = Map(
-    'or -> { (c, p) =>
-      c.fullScope.collect {
+    'clause -> { (c, p) =>
+      c.fullScope.flatMap(_.flatten).collect {
         case fv: FreeVariable => fv
       } map { v =>
         replace(Seq(v), new BoolVariable, p)

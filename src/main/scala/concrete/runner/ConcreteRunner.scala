@@ -56,6 +56,7 @@ trait ConcreteRunner extends LazyLogging {
     case "-control" :: tail             => options(tail, o + ('Control -> None))
     case "-time" :: t :: tail           => options(tail, o + ('Time -> t.toInt))
     case "-a" :: tail                   => options(tail, o + ('all -> Unit))
+    case "-s" :: tail                   => options(tail, o + ('stats -> Unit))
     case u :: tail if u.startsWith("-") => options(tail, o + ('unknown -> u))
     //    case "-cl" :: tail => options(tail, o + ('CL -> None))
     case u :: tail                      => options(tail, o, u :: unknown)
@@ -102,7 +103,7 @@ trait ConcreteRunner extends LazyLogging {
 
     val writer: ConcreteWriter =
       opt.get('SQL).map(url => new SQLWriter(new URI(url.toString), pm)).getOrElse {
-        new ConsoleWriter()
+        new ConsoleWriter(opt)
       }
 
     writer.problem(description(remaining))

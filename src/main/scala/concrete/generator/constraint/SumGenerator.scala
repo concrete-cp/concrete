@@ -10,12 +10,19 @@ import cspom.variable.CSPOMSeq
 final object SumGenerator extends Generator {
 
   override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
-    val Seq(CSPOMSeq(vars, _, _), CSPOMConstant(const: Int)) = constraint.arguments //map cspom2concreteVar
+    val Seq(CSPOMSeq(vars, _, _), CSPOMConstant(c)) = constraint.arguments //map cspom2concreteVar
+
+    // For bool2int optimization
+    val const = c match {
+      case i: Int => i
+      case false  => 0
+      case true   => 1
+    }
 
     val params = constraint.params.get("coefficients") match {
       case Some(p: Seq[_]) => p.asInstanceOf[Seq[Int]]
-      case None => Seq.fill(vars.length)(1)
-      case _ => throw new IllegalArgumentException("Parameters for zero sum must be a sequence of integer values")
+      case None            => Seq.fill(vars.length)(1)
+      case _               => throw new IllegalArgumentException("Parameters for zero sum must be a sequence of integer values")
     }
 
     val (solverVariables, varParams) = (vars map cspom2concrete)

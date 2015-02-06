@@ -25,8 +25,10 @@ import scala.collection.mutable.ArrayBuffer
 import java.util.Arrays
 import scala.collection.immutable.VectorBuilder
 import concrete.constraint.StatefulConstraint
+import scala.annotation.varargs
 
 object Problem {
+  @varargs
   def apply(vars: Variable*) = new Problem(vars.toList)
 }
 
@@ -52,7 +54,7 @@ final class Problem(val variables: List[Variable]) {
     buffer.sizeHint(hint)
     buffer ++= constraints
 
-    val stateBuffer = new VectorBuilder[Any]()
+    val stateBuffer = new VectorBuilder[AnyRef]()
     stateBuffer.sizeHint(hint)
     stateBuffer ++= initState.constraintStates
 
@@ -74,10 +76,10 @@ final class Problem(val variables: List[Variable]) {
   var initState = new ProblemState(variables.map(_.initDomain).toIndexedSeq, IndexedSeq(), Set()) //(0 until constraints.length).map(constraints(_).initState)
 
   def toString(state: ProblemState) = {
-    variables.mkString("\n") + "\n" +
+    variables.map(_.toString(state)).mkString("\n") + "\n" +
       constraints.iterator
       .map { c =>
-        if (state.isEntailed(c)) c.toString + " [entailed]" else c.toString
+        if (state.isEntailed(c)) c.toString(state) + " [entailed]" else c.toString(state)
       }
       .mkString("\n") + "\n" + stats(state)
   }

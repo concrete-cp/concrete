@@ -19,13 +19,13 @@ import cspom.variable.IntVariable
 class OccurrenceTest extends FlatSpec with Matchers with Inspectors {
 
   "Occurrence" should "filter" in {
-    val v1 = new Variable("1", IntDomain(7))
-    val v2 = new Variable("2", IntDomain(6))
-    val v3 = new Variable("3", IntDomain(7, 9))
-    val v4 = new Variable("4", IntDomain(8))
-    val v5 = new Variable("5", IntDomain(8, 9))
+    val v1 = new Variable("1", IntDomain.ofSeq(7))
+    val v2 = new Variable("2", IntDomain.ofSeq(6))
+    val v3 = new Variable("3", IntDomain.ofSeq(7, 9))
+    val v4 = new Variable("4", IntDomain.ofSeq(8))
+    val v5 = new Variable("5", IntDomain.ofSeq(8, 9))
 
-    val occ = new Variable("occ", IntDomain(1, 2, 3))
+    val occ = new Variable("occ", IntDomain.ofSeq(1, 2, 3))
 
     val c = new OccurrenceVar(occ, 7, Array(v1, v2, v3, v4, v5))
 
@@ -42,13 +42,13 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors {
   }
 
   it should "detect contradiction" in {
-    val v1 = new Variable("1", IntDomain(7))
-    val v2 = new Variable("2", IntDomain(6))
-    val v3 = new Variable("3", IntDomain(7, 9))
-    val v4 = new Variable("4", IntDomain(8))
-    val v5 = new Variable("5", IntDomain(8, 9))
+    val v1 = new Variable("1", IntDomain.ofSeq(7))
+    val v2 = new Variable("2", IntDomain.ofSeq(6))
+    val v3 = new Variable("3", IntDomain.ofSeq(7, 9))
+    val v4 = new Variable("4", IntDomain.ofSeq(8))
+    val v5 = new Variable("5", IntDomain.ofSeq(8, 9))
 
-    val occ = new Variable("occ", IntDomain(3, 4, 5))
+    val occ = new Variable("occ", IntDomain.ofSeq(3, 4, 5))
 
     val c = new OccurrenceVar(occ, 7, Array(v1, v2, v3, v4, v5))
     val ps = Problem(occ, v1, v2, v3, v4, v5).initState

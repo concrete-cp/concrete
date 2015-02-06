@@ -137,24 +137,28 @@ class LargeBitVector(val words: Array[Long]) extends AnyVal with BitVector {
       this
     } else {
       val endWordIndex = word(until);
-      val newWords = words.clone
-      val w = newWords(endWordIndex)
-      // Handle first word
-      newWords(endWordIndex) &= (MASK << until);
-      var removed = w != newWords(endWordIndex);
-
-      // Handle intermediate words, if any
-      for (i <- 0 until endWordIndex) {
-        if (newWords(i) != 0) {
-          newWords(i) = 0;
-          removed = true;
-        }
-      }
-
-      if (removed) {
-        new LargeBitVector(newWords)
+      if (endWordIndex >= words.length) {
+        BitVector.empty
       } else {
-        this
+        val newWords = words.clone
+        val w = newWords(endWordIndex)
+        // Handle first word
+        newWords(endWordIndex) &= (MASK << until);
+        var removed = w != newWords(endWordIndex);
+
+        // Handle intermediate words, if any
+        for (i <- 0 until endWordIndex) {
+          if (newWords(i) != 0) {
+            newWords(i) = 0;
+            removed = true;
+          }
+        }
+
+        if (removed) {
+          new LargeBitVector(newWords)
+        } else {
+          this
+        }
       }
     }
   }

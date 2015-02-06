@@ -21,10 +21,10 @@ object MinMax extends ConstraintCompiler {
     val r = c.result
     val eq = c.arguments.map {
       case v: SimpleExpression[_] => CSPOMConstraint(mode, Seq(r, v))
-      case _ => ???
+      case _                      => ???
     }
 
-    replaceCtr(c, CSPOMConstraint('in, Seq(r, new CSPOMSeq(c.arguments))) +: eq, p)
+    replaceCtr(c, CSPOMConstraint('in, Seq(r, CSPOMSeq(c.arguments: _*))) +: eq, p)
   }
 
   def selfPropagation = false

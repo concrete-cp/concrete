@@ -20,6 +20,12 @@ final class ReifiedConstraint(
   extends Constraint(controlVariable +: (positiveConstraint.scope ++ negativeConstraint.scope).distinct)
   with Advisable with LazyLogging {
 
+  override def id_=(i: Int): Unit = { 
+    super.id_=(i)
+    positiveConstraint.id = i
+    negativeConstraint.id = i
+  }
+
   private val positiveToReifiedPositions = positiveConstraint.scope.map(position)
 
   private val reifiedToPositivePositions = {
@@ -44,20 +50,15 @@ final class ReifiedConstraint(
 
     ps.dom(controlVariable) match {
       case UNKNOWNBoolean =>
-
         if (positiveConstraint.isConsistent(ps)) {
           if (negativeConstraint.isConsistent(ps)) {
             ps
           } else {
             //noReifyRevise(true, pd, pd.updated(0, TRUE), state)
-            ps.updateDom(controlVariable, TRUE).entail(this)
+            ps.updateDomNonEmpty(controlVariable, TRUE).entail(this)
           }
         } else {
-          negativeConstraint.revise(ps.updateDomNonEmpty(controlVariable, FALSE)).andThen { ch =>
-            if (!ch.isEntailed(this)) logger.warn(scope.map(_.toString(ps)) + " -> " + scope.map(_.toString(ch)) + " should be entailed")
-            ch.entail(this)
-          }
-
+          ps.updateDomNonEmpty(controlVariable, FALSE).entail(this)
         }
 
       case TRUE  => positiveConstraint.revise(ps)

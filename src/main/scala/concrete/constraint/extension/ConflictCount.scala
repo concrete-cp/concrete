@@ -12,7 +12,7 @@ abstract class ConflictCount(
   scope: Array[Variable],
   _matrix: Matrix,
   shared: Boolean)
-  extends ExtensionConstraint(scope: Array[Variable], _matrix, shared) with TupleEnumerator {
+  extends ExtensionConstraint(scope, _matrix, shared) with TupleEnumerator {
 
   def supportCondition(ps: ProblemState, position: Int): Boolean = {
     if (applicable && nbMaxConflicts == null) {

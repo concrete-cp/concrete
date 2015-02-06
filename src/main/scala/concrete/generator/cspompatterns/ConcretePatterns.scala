@@ -10,25 +10,27 @@ import concrete.ParameterManager
 object ConcretePatterns {
 
   def apply(params: ParameterManager) = {
-    val standard = StandardCompilers() ++
+    val concreteDef =
       Seq(
         SubToAdd, AbsDiff, AbsDiffDomains, AddToEq, BoolEq,
-        AddDomains, EqDomains, AbsDomains, NeqToEq,
+        AddDomains, MulDomains, EqDomains, AbsDomains, NeqToEq,
         Bool2IntDomains, MulToSum, SumFactors, SumDomains,
-        UnaryOr, MergeNotDisj,
-        NegToCNF, Xor, ReifiedDisj, ReifiedConj,
-        NeqVec, SimplDisj,
+        UnaryClause, MergeNotDisj, DisjToClause,
+        NegToCNF, Xor, ReifiedClause, ReifiedConj,
+        NeqVec, SimplClause,
         LtToGt, SlidingSum, Regular, SetIn, In, MinMax, ConcreteTypes,
-        AllDiffConstant //, //SimplDisj//ConstToVar
+        AllDiffConstant //, ConstToVar
         )
+
+    val concreteImp = Seq(
+      AllDiff, SubsumedDiff, DiffGe, Square, GtDomains, GeDomains)
 
     val improveModel = params.getOrElse("improveModel", true)
 
     if (improveModel) {
-      StandardCompilers.improve() ++ standard ++ Seq(
-        AllDiff, SubsumedDiff, DiffGe, Square, GtDomains, GeDomains)
+      StandardCompilers() ++ StandardCompilers.improve() ++ concreteDef ++ concreteImp
     } else {
-      standard
+      StandardCompilers() ++ concreteDef
     }
   }
 

@@ -52,7 +52,7 @@ final object Regular extends ConstraintCompilerNoData {
 
     val regular = mdd(x.length, s, d, q0, f.toSet, collection.mutable.Map())
     //println(regular)
-    replaceCtr(constraint, CSPOM.table(regular, false, x), problem)
+    replaceCtr(constraint, CSPOM.SeqOperations(x) in regular, problem)
   }
 
   def mdd(level: Int, s: Int, d: IndexedSeq[IndexedSeq[Int]], q0: Int, f: Set[Int],

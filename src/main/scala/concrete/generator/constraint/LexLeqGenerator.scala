@@ -9,10 +9,11 @@ import Generator._
 
 final object LexLeqGenerator extends Generator {
   override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
-    val Seq(x, y) = constraint.arguments map cspom2concreteSeqVar map (_.toArray)
+    val Seq(x, y) = constraint.arguments map cspom2concreteSeq map (_.toArray)
     require(x.length == y.length)
+    
 
-    Seq(new LexLeq(x, y))
+    Seq(new LexLeq(x.map(_.asVariable), y.map(_.asVariable)))
   }
 
 }

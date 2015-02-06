@@ -72,13 +72,19 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
     else {
       var mod = ps
       if (i == alpha && i + 1 == beta) {
-        mod = acLt(mod, i)
+        acLt(mod, i) match {
+          case Contradiction   => return Contradiction
+          case s: ProblemState => mod = s
+        }
         if (checkLex(mod, i)) {
           return mod
         }
       }
       if (i == alpha && i + 1 < beta) {
-        mod = acLeq(mod, i)
+        acLeq(mod, i) match {
+          case Contradiction   => return Contradiction
+          case s: ProblemState => mod = s
+        }
         if (checkLex(mod, i)) {
           return mod
         }
@@ -101,21 +107,18 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
     }
   }
 
-  private def acLt(ps: ProblemState, i: Int): ProblemState = {
+  private def acLt(ps: ProblemState, i: Int): Outcome = {
     val x = scope(i)
     val y = scope(i + size)
     ps.removeTo(y, ps.dom(x).head)
       .removeFrom(x, ps.dom(y).last)
-      .asInstanceOf[ProblemState]
   }
 
-  private def acLeq(ps: ProblemState, i: Int): ProblemState = {
+  private def acLeq(ps: ProblemState, i: Int): Outcome = {
     val x = scope(i)
     val y = scope(i + size)
     ps.removeUntil(y, ps.dom(x).head)
       .removeAfter(x, ps.dom(y).last)
-      .asInstanceOf[ProblemState]
-
   }
 
   private def updateAlpha(ps: ProblemState, i: Int): Outcome = {

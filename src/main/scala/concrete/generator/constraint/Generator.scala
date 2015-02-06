@@ -30,7 +30,7 @@ final case class Var(v: Variable) extends C21D {
 final case class Const(i: Int) extends C21D {
   //def values = Seq(i)
   def is(o: Any) = o == i
-  def asVariable = new Variable(i.toString, IntDomain(i))
+  def asVariable = new Variable(i.toString, IntDomain.ofSeq(i))
 }
 final case class Sequence(s: Seq[C2Conc], i: Seq[Int]) extends C2Conc {
   def asVariable = throw new AssertionError

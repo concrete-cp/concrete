@@ -26,7 +26,7 @@ object In extends ConstraintCompiler {
       case i: CSPOMExpression[_] => CSPOMConstraint(new BoolVariable(), 'eq, Seq(i, v))
     }
 
-    val disj = CSPOMConstraint(r, 'or, eq.map(_.result))
+    val disj = CSPOMConstraint(r, 'clause, eq.map(_.result))
     replaceCtr(c, disj +: eq, p)
   }
 

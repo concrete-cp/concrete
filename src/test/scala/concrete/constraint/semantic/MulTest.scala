@@ -43,9 +43,9 @@ final class MulTest extends FlatSpec with Matchers with PropertyChecks with Insp
     //    }
 
     forAll(dom, dom, dom) { (x: Seq[Int], y: Seq[Int], z: Seq[Int]) =>
-      val vx = new Variable("x", IntDomain(x: _*))
-      val vy = new Variable("y", IntDomain(y: _*))
-      val vz = new Variable("z", IntDomain(z: _*))
+      val vx = new Variable("x", IntDomain.ofSeq(x: _*))
+      val vy = new Variable("y", IntDomain.ofSeq(y: _*))
+      val vz = new Variable("z", IntDomain.ofSeq(z: _*))
 
       val ps = Problem(vx, vy, vz).initState
       val c = new MulAC(vx, vy, vz)

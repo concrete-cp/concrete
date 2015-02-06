@@ -38,8 +38,8 @@ object BoolEq extends ConstraintCompiler {
     replace(Seq(a), na, problem) ++
       replace(Seq(b), nb, problem) ++
       replaceCtr(c, Seq(
-        CSPOMDriver.clause(Seq(na, nb), Seq(true, false)),
-        CSPOMDriver.clause(Seq(na, nb), Seq(false, true))), problem)
+        CSPOMDriver.clause(Seq(nb), Seq(na)),
+        CSPOMDriver.clause(Seq(na), Seq(nb))), problem)
 
   }
 

@@ -26,9 +26,9 @@ final class AbsDiffTest extends FlatSpec with Matchers with Inspectors with Prop
   "AbsDiff" should "behave the same as extensional constraint" in {
     forAll(dom, dom, dom) { (x: Seq[Int], y: Seq[Int], z: Seq[Int]) =>
       val RAND = new Random
-      val vx: Variable = new Variable("x", IntDomain(x: _*));
-      val vy: Variable = new Variable("y", IntDomain(y: _*));
-      val vz: Variable = new Variable("z", IntDomain(z: _*));
+      val vx: Variable = new Variable("x", IntDomain.ofSeq(x: _*));
+      val vy: Variable = new Variable("y", IntDomain.ofSeq(y: _*));
+      val vz: Variable = new Variable("z", IntDomain.ofSeq(z: _*));
 
       val ps = Problem(vx, vy, vz).initState
 
@@ -50,9 +50,9 @@ final class AbsDiffTest extends FlatSpec with Matchers with Inspectors with Prop
 
   it should "filter correctly" in {
 
-    val vx = new Variable("x", IntDomain(0, 2, 3))
-    val vy = new Variable("y", IntDomain(3, 4, 6, 7, 8))
-    val vz = new Variable("z", IntDomain(5))
+    val vx = new Variable("x", IntDomain.ofSeq(0, 2, 3))
+    val vy = new Variable("y", IntDomain.ofSeq(3, 4, 6, 7, 8))
+    val vz = new Variable("z", IntDomain.ofSeq(5))
     val ps = Problem(vx, vy, vz).initState
 
     val c = new AbsDiffAC(vx, vy, vz)
@@ -69,13 +69,13 @@ final class AbsDiffTest extends FlatSpec with Matchers with Inspectors with Prop
   "AbsDiffBC" should "filter correctly" in {
     val vx = new Variable("x", IntDomain(5 to 7))
     val vy = new Variable("y", IntDomain(4 to 5))
-    val vz = new Variable("z", IntDomain(9))
+    val vz = new Variable("z", IntDomain.ofSeq(9))
 
     val c = new AbsDiffBC(vx, vy, vz)
     val ps = Problem(vx, vy, vz).initState
     val mod = c.revise(ps).asInstanceOf[ProblemState]
 
-    mod.domains shouldBe IndexedSeq(IntDomain(5), IntDomain(4), IntDomain(9))
+    mod.domains shouldBe IndexedSeq(IntDomain.ofSeq(5), IntDomain.ofSeq(4), IntDomain.ofSeq(9))
   }
 
 }

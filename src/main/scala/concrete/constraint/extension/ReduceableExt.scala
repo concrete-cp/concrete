@@ -51,6 +51,8 @@ final class ReduceableExt(_scope: Array[Variable], override val initState: Relat
 
     //println(this + ": filtering " + oldSize)
 
+    logger.info("Filtering with " + _scope.toSeq.map(_.toString(ps)))
+
     val newTrie = trie.filterTrie(
       { (p, i) => domains(p).present(i) }, mod)
 
@@ -75,11 +77,11 @@ final class ReduceableExt(_scope: Array[Variable], override val initState: Relat
           unsupported(depth).isEmpty
         }, arity)
 
-      var cs: Outcome = ps.updatedCS(id, newTrie)
+      var cs: Outcome = ps
       for (p <- 0 until arity) {
-        if (unsup(p)) cs = cs.filterDom(p)(!unsupported(p)(_))
+        if (unsup(p)) cs = cs.filterDom(_scope(p))(!unsupported(p)(_))
       }
-      cs.entailIfFree(this)
+      cs.updateState(id, newTrie).entailIfFree(this)
     }
 
   }

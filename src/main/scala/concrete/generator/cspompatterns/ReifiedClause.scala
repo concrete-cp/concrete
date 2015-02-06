@@ -12,6 +12,7 @@ import cspom.variable.CSPOMConstant
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.variable.CSPOMExpression
 import cspom.variable.SimpleExpression
+import cspom.variable.CSPOMSeq
 
 /**
  * Reified disjunction is converted to CNF :
@@ -22,32 +23,27 @@ import cspom.variable.SimpleExpression
  *
  * (-a v b v c v d...) ^ (a v -b) ^ (a v -c) ^ (a v -d) ^ ...
  */
-object ReifiedDisj extends ConstraintCompiler {
+object ReifiedClause extends ConstraintCompiler {
 
   type A = SimpleExpression[_]
 
   override def constraintMatcher = {
-    case CSPOMConstraint(res: SimpleExpression[_], 'or, args, params) if (!res.isTrue) =>
+    case CSPOMConstraint(res: SimpleExpression[_], 'clause, args, params) if (!res.isTrue) =>
       res
   }
 
   def compile(fc: CSPOMConstraint[_], problem: CSPOM, res: SimpleExpression[_]) = {
-    val revsign = fc.params.get("revsign") match {
-      case Some(r: Seq[_]) => r.map(_.asInstanceOf[Boolean])
-      case None => Seq.fill(fc.arguments.size)(false)
-      case o => throw new MatchError(o)
+    val Seq(positive: CSPOMSeq[_], negative: CSPOMSeq[_]) = fc.arguments
+
+    val c1 = CSPOMConstraint('clause, Seq(positive, res +: negative))
+    val c2 = positive.map { v =>
+      CSPOMConstraint('clause, Seq(CSPOMSeq(res), CSPOMSeq(v)))
+    }
+    val c3 = negative.map { v =>
+      CSPOMConstraint('clause, Seq(CSPOMSeq(res, v), CSPOMSeq()))
     }
 
-    val reverses = true +: revsign
-
-    val newCtr =
-      CSPOMConstraint('or, res +: fc.arguments, fc.params + ("revsign" -> reverses)) +:
-        (fc.arguments zip revsign).map {
-          case (v, s) =>
-            CSPOMConstraint('or, Seq(res, v), Map("revsign" -> Seq(false, !s)))
-        }
-
-    replaceCtr(fc, newCtr, problem)
+    replaceCtr(fc, c1 +: (c2 ++ c3), problem)
 
   }
 

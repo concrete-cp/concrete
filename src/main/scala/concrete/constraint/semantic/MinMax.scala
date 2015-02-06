@@ -32,13 +32,13 @@ final class Min(result: Variable, vars: Array[Variable], constant: Option[Int])
     ps.shaveDom(result, span).andThen {
       ps =>
         val minValue = ps.dom(result).head
-        ps.updateAll(vars.iterator)(_.removeUntil(minValue))
+        ps.updateAll(vars)(_.removeUntil(minValue))
     }
 
   }
 
   def check(tuple: Array[Int]): Boolean = {
-    tuple(0) == (1 until arity).map(tuple).min
+    tuple(0) == tuple.view.slice(1, arity).min
   }
 
   override def toString(ps: ProblemState) = ps.domains(vars).mkString(ps.dom(result) + " = min(", ", ", ")")

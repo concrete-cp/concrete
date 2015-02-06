@@ -57,27 +57,29 @@ final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict
   def revise(ps: ProblemState) = {
 
     if (strict) {
-      val mod = ps
+      ps
         .removeTo(v0, ps.dom(v1).head - constant)
         .removeFrom(v1, ps.dom(v0).last + constant)
-
-      if (mod.dom(v1).last < mod.dom(v0).head + constant) {
-        mod.entail(this)
-      } else {
-        mod
-      }
+        .andThen { mod =>
+          if (mod.dom(v1).last < mod.dom(v0).head + constant) {
+            mod.entail(this)
+          } else {
+            mod
+          }
+        }
 
     } else {
 
-      val mod = ps
+      ps
         .removeUntil(v0, ps.dom(v1).head - constant)
         .removeAfter(v1, ps.dom(v0).last + constant)
-      if (mod.dom(v1).last <= mod.dom(v0).head + constant) {
-        mod.entail(this)
-      } else {
-        mod
-      }
-
+        .andThen { mod =>
+          if (mod.dom(v1).last <= mod.dom(v0).head + constant) {
+            mod.entail(this)
+          } else {
+            mod
+          }
+        }
     }
 
   }

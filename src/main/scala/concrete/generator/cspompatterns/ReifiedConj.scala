@@ -12,9 +12,10 @@ import cspom.variable.CSPOMConstant
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.variable.CSPOMExpression
 import cspom.variable.SimpleExpression
+import cspom.variable.CSPOMSeq
 
 /**
- * Reified conjunction is converted to CNF :
+ * Conjunction is converted to CNF :
  *
  * a = b ^ c ^ d...
  *
@@ -27,21 +28,17 @@ object ReifiedConj extends ConstraintCompiler {
   type A = CSPOMExpression[_]
 
   override def constraintMatcher = {
-    case CSPOMConstraint(res: SimpleExpression[_], 'and, args, params) if (!res.isTrue) =>
+    case CSPOMConstraint(res: SimpleExpression[_], 'and, args, params) =>
       res
   }
 
   def compile(fc: CSPOMConstraint[_], problem: CSPOM, res: CSPOMExpression[_]) = {
-    require(!fc.params.contains("revsign")) // Conjunctions should not be parameterized -- yet
-
-    val reverses = Seq(false).padTo(fc.arguments.size + 1, true)
-
     val c1 =
-      CSPOMConstraint('or, res +: fc.arguments, fc.params + ("revsign" -> reverses))
+      CSPOMConstraint('clause, Seq(CSPOMSeq(res), CSPOMSeq(fc.arguments: _*)), fc.params)
 
     val c2 = fc.arguments.map {
       case v =>
-        CSPOMConstraint('or, Seq(res, v), Map("revsign" -> Seq(true, false)))
+        CSPOMConstraint('clause, Seq(CSPOMSeq(v), CSPOMSeq(res)))
     }
 
     replaceCtr(fc, c1 +: c2, problem)

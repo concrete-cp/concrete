@@ -14,7 +14,7 @@ final class AbsIntTest extends FlatSpec with Matchers {
   "AbsInt" should "filter X" in {
 
     val x = new Variable("x", IntDomain(-100 to 100))
-    val y = new Variable("y", IntDomain(-5))
+    val y = new Variable("y", IntDomain.ofSeq(-5))
 
     val c = new AbsBC(x, y)
 
@@ -36,7 +36,7 @@ final class AbsIntTest extends FlatSpec with Matchers {
 
   it should "filter Y" in {
 
-    val x = new Variable("x", IntDomain(7))
+    val x = new Variable("x", IntDomain.ofSeq(7))
     val y = new Variable("y", IntDomain(-100 to 100))
 
     val c = new AbsAC(x, y)

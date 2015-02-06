@@ -1,7 +1,6 @@
 package concrete.constraint.semantic
 
 import com.typesafe.scalalogging.LazyLogging
-
 import concrete.Contradiction
 import concrete.Domain
 import concrete.Outcome
@@ -9,6 +8,7 @@ import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.util.Interval
+import concrete.constraint.ScopeIds
 
 object SumMode extends Enumeration {
   type SumMode = Value
@@ -22,7 +22,7 @@ final class Sum(
   val constant: Int,
   val factors: Array[Int],
   scope: Array[Variable],
-  mode: SumMode.SumMode) extends Constraint(scope)
+  mode: SumMode.SumMode) extends Constraint(scope) with ScopeIds
   with LazyLogging {
 
   import SumMode._
@@ -61,7 +61,7 @@ final class Sum(
     var i = arity - 1
 
     while (i >= 0) {
-      bounds += ps.span(scope(i)) * factors(i)
+      bounds += filtered.span(ids(i)) * factors(i)
       i -= 1
     }
 
@@ -71,7 +71,7 @@ final class Sum(
 
       i = arity - 1
       while (i >= 0) {
-        val dom = filtered.dom(scope(i))
+        val dom = filtered.dom(ids(i))
         val f = factors(i)
         val myBounds = dom.span * f
 
@@ -82,7 +82,7 @@ final class Sum(
         if (newDom.isEmpty) {
           return Contradiction
         } else if (newDom ne dom) {
-          filtered = filtered.updateDomNonEmpty(scope(i), newDom)
+          filtered = filtered.updateDomNonEmpty(ids(i), newDom)
           change = true
           bounds = thisBounds + newDom.span * f
         }

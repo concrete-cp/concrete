@@ -1,6 +1,9 @@
 package concrete.generator;
 
+import scala.reflect.runtime.universe
+
 import com.typesafe.scalalogging.LazyLogging
+
 import concrete.Domain
 import concrete.IntDomain
 import concrete.ParameterManager
@@ -15,7 +18,6 @@ import cspom.VariableNames
 import cspom.variable.BoolVariable
 import cspom.variable.CSPOMVariable
 import cspom.variable.IntVariable
-import cspom.variable.IntExpression
 
 final class ProblemGenerator(private val pm: ParameterManager = new ParameterManager()) extends LazyLogging {
 
@@ -45,7 +47,7 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
 
       for (
         cspomC <- cspom.constraints;
-        constraint <- gm.generate(cspomC, variables)
+        constraint <- gm.generate(cspomC, variables, new VariableNames(cspom))
       ) {
         problem.addConstraint(constraint)
       }

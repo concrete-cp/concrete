@@ -11,6 +11,7 @@ import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMConstant
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.variable.CSPOMExpression
+import cspom.variable.CSPOMSeq
 
 /**
  * Negation is converted to CNF :
@@ -36,11 +37,12 @@ object NegToCNF extends ConstraintCompiler {
   def compile(fc: CSPOMConstraint[_], problem: CSPOM, data: A) = {
 
     val (res, arg) = data
-    problem.removeConstraint(fc)
 
-    Delta().removed(fc).added(problem.ctr(
-      new CSPOMConstraint(CSPOMConstant(true), 'or, Seq(res, arg), fc.params))).added(problem.ctr(
-      new CSPOMConstraint(CSPOMConstant(true), 'or, Seq(res, arg), fc.params + ("revsign" -> Seq(true, true)))))
+    val newConstraints = Seq(
+      CSPOMConstraint('clause, Seq(CSPOMSeq(res, arg), CSPOMSeq())),
+      CSPOMConstraint('clause, Seq(CSPOMSeq(), CSPOMSeq(res, arg))))
+
+    replaceCtr(fc, newConstraints, problem)
 
   }
   def selfPropagation = false

@@ -13,8 +13,8 @@ import concrete.constraint.semantic.SumMode.SumLE
 final class SumTest extends FlatSpec with Matchers {
 
   "Sum" should "filter <= with negative coefficients" in {
-    val x = new Variable("x", IntDomain(0, 1))
-    val y = new Variable("y", IntDomain(0, 1))
+    val x = new Variable("x", IntDomain.ofSeq(0, 1))
+    val y = new Variable("y", IntDomain.ofSeq(0, 1))
     val c = new Sum(-19, Array(-20, -18), Array(x, y), SumLE)
     val ps = Problem(x, y).initState
     c.adviseAll(ps)
@@ -26,7 +26,7 @@ final class SumTest extends FlatSpec with Matchers {
 
   val v0 = new Variable("v0", IntDomain(1 to 4))
   val v1 = new Variable("v1", IntDomain(0 to 4))
-  val b = new Variable("b", IntDomain(1))
+  val b = new Variable("b", IntDomain.ofSeq(1))
 
   val ps = Problem(b, v0, v1).initState
 

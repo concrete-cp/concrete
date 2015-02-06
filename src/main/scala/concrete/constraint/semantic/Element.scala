@@ -12,29 +12,29 @@ import concrete.Outcome
 
 object Element {
   def apply(result: Variable, index: Variable, varsIdx: Seq[(Int, Variable)]) = {
-    val scope = ArrayBuffer(result, index)
+    //val scope = ArrayBuffer(result, index)
 
     val lastIndex = varsIdx.map(_._1).max
     val vars = Array.ofDim[Variable](lastIndex + 1)
+
     //    val scopeIndex = Array.fill(lastIndex + 1)(-1)
-    //    for ((i, v) <- varsIdx) {
-    //      vars(i) = v
-    //      scopeIndex(i) = scope.size
-    //      scope += v
-    //    }
+    for ((i, v) <- varsIdx) {
+      vars(i) = v
+      //      scopeIndex(i) = scope.size
+      //scope += v
+    }
 
     Seq(
-      new ElementBC(result, index, vars, scope.toArray),
-      new ElementAC(result, index, vars, scope.toArray))
+      new ElementBC(result, index, vars),
+      new ElementAC(result, index, vars))
   }
 }
 
 class ElementBC(
   val result: Variable,
   val index: Variable,
-  val vars: Array[Variable],
-  scope: Array[Variable])
-  extends Constraint(scope) with BC {
+  val vars: Array[Variable])
+  extends Constraint(result +: index +: vars.filter(_ ne null)) with BC {
 
   def advise(ps: ProblemState, pos: Int): Int = arity
 
@@ -54,7 +54,7 @@ class ElementBC(
           (resultSpan intersects ps.span(vars(v)))
     }
       .andThen { ps =>
-
+        println(s"Indices ${index.toString(ps)}, revising result")
         /**
          * Revise result
          */
@@ -62,6 +62,7 @@ class ElementBC(
         ps.shaveDom(result, union)
       }
       .andThen { ps =>
+        println(s"Result ${result.toString(ps)}, revising vars")
         /**
          * Revise vars
          */
@@ -76,14 +77,21 @@ class ElementBC(
 
   }
   def simpleEvaluation: Int = 2
+  override def toString(ps: ProblemState) = {
+    s"${result.toString(ps)} =BC= (${index.toString(ps)})th of ${
+      vars.toSeq.map {
+        case null => "{}"
+        case v    => v.toString(ps)
+      }
+    }"
+  }
 }
 
 class ElementAC(
   val result: Variable,
   val index: Variable,
-  val vars: Array[Variable],
-  scope: Array[Variable])
-  extends Constraint(scope) with Removals with BCCompanion {
+  val vars: Array[Variable])
+  extends Constraint(result +: index +: vars.filter(_ ne null)) with Removals with BCCompanion {
 
   def getEvaluation(ps: ProblemState): Int = if (skip(ps)) -1 else scopeSize(ps)
 
@@ -123,4 +131,13 @@ class ElementAC(
 
   }
   def simpleEvaluation: Int = 3
+
+  override def toString(ps: ProblemState) = {
+    s"${result.toString(ps)} =AC= (${index.toString(ps)})th of ${
+      vars.toSeq.map {
+        case null => "{}"
+        case v    => v.toString(ps)
+      }
+    }"
+  }
 }

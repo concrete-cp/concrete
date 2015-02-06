@@ -12,8 +12,8 @@ import concrete.constraint.AdviseCount
 final class EqTest extends FlatSpec with Matchers {
 
   "Eq" should "filter" in {
-    val v0 = new Variable("v0", IntDomain(1, 2, 3))
-    val v1 = new Variable("v1", IntDomain(3, 4, 5))
+    val v0 = new Variable("v0", IntDomain.ofSeq(1, 2, 3))
+    val v1 = new Variable("v1", IntDomain.ofSeq(3, 4, 5))
     val c = new EqAC(v0, v1)
     c.register(new AdviseCount())
     val ps = Problem(v0, v1).initState

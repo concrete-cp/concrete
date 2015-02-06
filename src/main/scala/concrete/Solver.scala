@@ -124,7 +124,7 @@ class CSPOMSolution(private val cspom: CSPOM, private val variables: Map[CSPOMVa
 abstract class Solver(val problem: Problem, val params: ParameterManager) extends Iterator[Map[Variable, Any]] with LazyLogging {
 
   @Statistic
-  var preproRemoved = 0
+  var preproRemoved = -1
   @Statistic
   var preproCpu = 0.0
 
@@ -209,16 +209,17 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
 
     val (r, t) = StatisticsManager.time(preprocessor.reduceAll(state));
 
-    r match {
-      case Contradiction => preproRemoved = -1
-      case newState: ProblemState => preproRemoved = problem.variables
+    this.preproCpu = t;
+    //println(Thread.currentThread().getStackTrace.toSeq)
+
+    r.andThen { newState =>
+      preproRemoved = problem.variables
         .map { v => v.initDomain.size - newState.dom(v).size }
         .sum
 
-    }
+      newState
 
-    this.preproCpu = t;
-    r
+    }
 
   }
 

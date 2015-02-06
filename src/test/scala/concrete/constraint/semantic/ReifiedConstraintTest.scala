@@ -13,8 +13,8 @@ import concrete.UNKNOWNBoolean
 class ReifiedConstraintTest extends FlatSpec with Matchers {
 
   "Reified neq" should "be revised after advise" in {
-    val v0 = new Variable("v0", IntDomain(2))
-    val v1 = new Variable("v1", IntDomain(0, 4))
+    val v0 = new Variable("v0", IntDomain.ofSeq(2))
+    val v1 = new Variable("v1", IntDomain.ofSeq(0, 4))
     val control1 = new Variable("control1", BooleanDomain())
     val control2 = new Variable("control2", BooleanDomain())
     val c1 = new ReifiedConstraint(

@@ -18,8 +18,8 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
 
   "AddAC" should "filter X" in {
     val x = new Variable("x", IntDomain(-100 to 100))
-    val y = new Variable("y", IntDomain(5))
-    val z = new Variable("z", IntDomain(2))
+    val y = new Variable("y", IntDomain.ofSeq(5))
+    val z = new Variable("z", IntDomain.ofSeq(2))
 
     val c = new AddAC(x, y, z)
 
@@ -41,9 +41,9 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
   }
 
   it should "filter Y" in {
-    val x = new Variable("x", IntDomain(7))
+    val x = new Variable("x", IntDomain.ofSeq(7))
     val y = new Variable("y", IntDomain(-100 to 100))
-    val z = new Variable("z", IntDomain(2))
+    val z = new Variable("z", IntDomain.ofSeq(2))
 
     val c = new AddAC(x, y, z)
     val ps = Problem(x, y, z).initState
@@ -86,9 +86,9 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
 
   it should "filter the same as enumerator" in {
     {
-      val vx = new Variable("x", IntDomain(0))
-      val vy = new Variable("y", IntDomain(0))
-      val vz = new Variable("z", IntDomain(-1))
+      val vx = new Variable("x", IntDomain.ofSeq(0))
+      val vy = new Variable("y", IntDomain.ofSeq(0))
+      val vz = new Variable("z", IntDomain.ofSeq(-1))
 
       val c = new AddAC(vx, vy, vz);
       val ps = Problem(vx, vy, vz).initState
@@ -107,9 +107,9 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     }
 
     forAll(dom, dom, dom) { (x: Seq[Int], y: Seq[Int], z: Seq[Int]) =>
-      val vx = new Variable("x", IntDomain(x: _*))
-      val vy = new Variable("y", IntDomain(y: _*))
-      val vz = new Variable("z", IntDomain(z: _*))
+      val vx = new Variable("x", IntDomain.ofSeq(x: _*))
+      val vy = new Variable("y", IntDomain.ofSeq(y: _*))
+      val vz = new Variable("z", IntDomain.ofSeq(z: _*))
 
       val c = new AddAC(vx, vy, vz);
       val ps = Problem(vx, vy, vz).initState

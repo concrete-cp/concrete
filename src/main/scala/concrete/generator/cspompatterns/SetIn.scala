@@ -28,14 +28,6 @@ object SetIn extends ConstraintCompilerNoData {
 
     replaceCtr(constraint, Nil, problem) ++
       replace(Seq(variable), variable.intersected(IntVariable.ofSeq(set: _*)), problem)
-    //
-    //    val constraints = for (v <- set) yield {
-    //      new CSPOMConstraint(new BoolVariable(), 'eq, Seq(variable, v))
-    //    }
-    //
-    //    val disjunction = CSPOMConstraint('or, constraints.map(_.result))
-    //
-    //    replaceCtr(constraint, disjunction +: constraints, problem)
 
   }
   def selfPropagation = false

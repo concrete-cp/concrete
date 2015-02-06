@@ -1,9 +1,9 @@
 package concrete.generator.constraint;
 
-import Generator._
-import concrete.Variable
+import Generator.cspom2concreteVar
 import concrete.constraint.semantic.AddAC
-import concrete.constraint.semantic.AddBC
+import concrete.constraint.semantic.Sum
+import concrete.constraint.semantic.SumMode
 import cspom.CSPOMConstraint
 
 final object AddGenerator extends Generator {
@@ -14,7 +14,7 @@ final object AddGenerator extends Generator {
 
     val Seq(v0, v1) = constraint.arguments map cspom2concreteVar
 
-    Seq(new AddBC(result, v0, v1), new AddAC(result, v0, v1, true))
+    Seq(new Sum(0, Array(1, 1, -1), Array(result, v0, v1), SumMode.SumEQ), new AddAC(result, v0, v1, true))
 
   }
 

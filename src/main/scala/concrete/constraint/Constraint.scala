@@ -51,7 +51,7 @@ object Constraint {
 import scala.reflect.runtime.universe._
 
 trait StatefulConstraint extends Constraint {
-  type State <: Any
+  type State <: AnyRef
   def initState: State
 
   //  def isConsistent(problemState: ProblemState, state: State): Boolean =
@@ -75,7 +75,10 @@ abstract class Constraint(val scope: Array[Variable])
 
   def this(scope: Variable*) = this(scope.toArray)
 
-  var id: Int = -1
+  private var _id: Int = -1
+
+  def id: Int = _id
+  def id_=(i: Int): Unit = { _id = i }
 
   /**
    * arity is the number of variables involved by the constraint
@@ -168,8 +171,9 @@ abstract class Constraint(val scope: Array[Variable])
 
   override final def toString = this.getClass.getSimpleName + scope.mkString("(", ", ", ")")
 
-  def toString(problemState: ProblemState) = id + ": " + this.getClass.getSimpleName +
+  def toString(problemState: ProblemState) = s"$id: ${this.getClass.getSimpleName}${
     scope.map(v => s"$v ${problemState.dom(v)}").mkString("(", ", ", ")")
+  }"
 
   /**
    * @param variable
