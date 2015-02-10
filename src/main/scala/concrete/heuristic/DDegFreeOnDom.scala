@@ -7,11 +7,12 @@ import concrete.Variable
 import scala.annotation.tailrec
 import concrete.ParameterManager
 import concrete.ProblemState
+import concrete.Domain
 
 final class DDegFreeOnDom(params: ParameterManager) extends VariableHeuristic(params) {
 
-  def score(variable: Variable, state: ProblemState) =
-    variable.getDDegFree(state).toDouble / state.dom(variable).size
+  def score(variable: Variable, dom: Domain, state: ProblemState) =
+    variable.getDDegFree(state).toDouble / dom.size
 
   override def toString = "max-ddeg-free/dom"
 

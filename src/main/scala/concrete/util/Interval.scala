@@ -136,10 +136,54 @@ final case class Interval(val lb: Int, val ub: Int) {
   }
 
   def intersect(i: Interval) = {
-    val l = math.max(lb, i.lb)
-    val u = math.min(ub, i.ub)
-    if (l <= u) { Some(Interval(l, u)) }
-    else { None }
+    if (i.lb <= lb) {
+      if (i.ub < lb) {
+        None
+      } else if (i.ub < ub) {
+        Some(Interval(lb, i.ub))
+      } else {
+        Some(this)
+      }
+    } else if (i.lb <= ub) {
+      if (i.ub <= ub) {
+        Some(i)
+      } else {
+        Some(Interval(i.lb, ub))
+      }
+    } else {
+      None
+    }
+    //    val l = math.max(lb, i.lb)
+    //    val u = math.min(ub, i.ub)
+    //    if (l <= u) {
+    //      if (l == lb && u == ub) {
+    //        Some(this)
+    //      } else {
+    //        Some(Interval(l, u))
+    //      }
+    //    } else {
+    //      None
+    //    }
+  }
+
+  def shaveLb(lb: Int): Option[Interval] = {
+    if (lb <= this.lb) {
+      Some(this)
+    } else if (lb > this.ub) {
+      None
+    } else {
+      Some(Interval(lb, this.ub))
+    }
+  }
+
+  def shaveUb(ub: Int): Option[Interval] = {
+    if (ub >= this.ub) {
+      Some(this)
+    } else if (ub < this.lb) {
+      None
+    } else {
+      Some(Interval(this.lb, ub))
+    }
   }
 
   def intersects(i: Interval) = {

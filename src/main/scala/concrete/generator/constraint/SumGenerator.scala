@@ -10,7 +10,7 @@ import cspom.variable.CSPOMSeq
 final object SumGenerator extends Generator {
 
   override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
-    val Seq(CSPOMSeq(vars, _, _), CSPOMConstant(c)) = constraint.arguments //map cspom2concreteVar
+    val Seq(CSPOMSeq(vars), CSPOMConstant(c)) = constraint.arguments //map cspom2concreteVar
 
     // For bool2int optimization
     val const = c match {

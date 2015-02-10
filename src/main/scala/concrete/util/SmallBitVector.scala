@@ -107,6 +107,11 @@ final class SmallBitVector(val word: Long) extends AnyVal with BitVector {
     }
   }
 
+  def |(bv: BitVector) = {
+    val newWord = (bv.getWord(0) | this.word) //& (MASK >>> -size)
+    bv.setWord(0, newWord)
+  }
+
   def isEmpty = word == 0L;
 
   def cardinality = java.lang.Long.bitCount(word);

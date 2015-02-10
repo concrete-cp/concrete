@@ -19,14 +19,15 @@
 
 package concrete.heuristic;
 
-import concrete.Problem
-import concrete.Variable;
 import concrete.ParameterManager
+import concrete.Problem
 import concrete.ProblemState
+import concrete.Variable
+import concrete.Domain
 
 final class LexVar(params: ParameterManager) extends VariableHeuristic(params) {
 
-  def score(variable: Variable, state: ProblemState) = variable.id
+  def score(variable: Variable, dom: Domain, state: ProblemState) = variable.id
 
   override def select(problem: Problem, state: ProblemState) = problem.variables.find(state.dom(_).size > 1)
 

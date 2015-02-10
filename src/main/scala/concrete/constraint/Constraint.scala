@@ -234,8 +234,6 @@ abstract class Constraint(val scope: Array[Variable])
     size
   }
 
-  final def hasChanged[A](l: Traversable[A], f: A => Boolean) = l.foldLeft(false)(_ | f(_))
-
   /**
    * A GAC constraint is entailed if it has zero or only one variable with domain size > 1
    */
@@ -254,38 +252,9 @@ abstract class Constraint(val scope: Array[Variable])
     true
   }
 
-  def isAssigned(problemState: ProblemState): Boolean = {
-    var i = arity - 1
-    while (i >= 0) {
-      if (problemState.dom(scope(i)).size > 1) {
-        return false
-      }
-      i -= 1
-    }
-    true
-  }
-
   def controlAssignment(problemState: ProblemState): Boolean = {
     scope.exists(v => problemState.dom(v).size > 1) || check(scope.map(v => problemState.dom(v).head).toArray)
 
   }
-  //
-  //  def changes(oldproblemState: ProblemState, newproblemState: ProblemState): Seq[Int] = {
-  //    var i = arity - 1
-  //    var ch = List[Int]()
-  //    while (i >= 0) {
-  //      if (oldproblemState(i) ne newproblemState(i)) ch ::= i
-  //      i -= 1
-  //    }
-  //    ch
-  //  }
-  //
-  //  def hasChanges(oldproblemState: ProblemState, newproblemState: ProblemState): Boolean = {
-  //    var i = arity - 1
-  //    while (i >= 0) {
-  //      if (oldproblemState(i) ne newproblemState(i)) return true
-  //      i -= 1
-  //    }
-  //    false
-  //  }
+
 }

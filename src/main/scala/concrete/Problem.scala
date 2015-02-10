@@ -26,6 +26,7 @@ import java.util.Arrays
 import scala.collection.immutable.VectorBuilder
 import concrete.constraint.StatefulConstraint
 import scala.annotation.varargs
+import scala.collection.immutable.BitSet
 
 object Problem {
   @varargs
@@ -73,7 +74,7 @@ final class Problem(val variables: List[Variable]) {
     initState = new ProblemState(initState.domains, stateBuffer.result, initState.entailed)
   }
 
-  var initState = new ProblemState(variables.map(_.initDomain).toIndexedSeq, IndexedSeq(), Set()) //(0 until constraints.length).map(constraints(_).initState)
+  var initState = new ProblemState(variables.map(_.initDomain).toIndexedSeq, IndexedSeq(), BitSet.empty) //(0 until constraints.length).map(constraints(_).initState)
 
   def toString(state: ProblemState) = {
     variables.map(_.toString(state)).mkString("\n") + "\n" +

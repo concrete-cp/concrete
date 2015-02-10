@@ -22,8 +22,7 @@ final class Sum(
   val constant: Int,
   val factors: Array[Int],
   scope: Array[Variable],
-  mode: SumMode.SumMode) extends Constraint(scope) with ScopeIds
-  with LazyLogging {
+  mode: SumMode.SumMode) extends Constraint(scope) with LazyLogging {
 
   import SumMode._
 
@@ -46,22 +45,23 @@ final class Sum(
 
   private val initBound = Interval(-constant, -constant)
 
-  private def filter(dom: Domain, itv: Interval, neg: Boolean): Domain = mode match {
-    case SumLE => if (neg) dom.removeUntil(itv.lb) else dom.removeAfter(itv.ub)
-    case SumLT => if (neg) dom.removeTo(itv.lb) else dom.removeFrom(itv.ub)
-    case SumEQ => dom & itv
+  private def filter(span: Interval, itv: Interval, neg: Boolean): Option[Interval] = mode match {
+    case SumLE => if (neg) span.shaveLb(itv.lb) else span.shaveUb(itv.ub)
+    case SumLT => if (neg) span.shaveLb(itv.lb + 1) else span.shaveUb(itv.ub - 1)
+    case SumEQ => span.intersect(itv)
   }
 
-  def revise(ps: ProblemState): Outcome = {
+  val doms = new Array[Interval](arity)
 
-    var filtered = ps
+  def revise(ps: ProblemState): Outcome = {
 
     var bounds = initBound
 
     var i = arity - 1
-
     while (i >= 0) {
-      bounds += filtered.span(ids(i)) * factors(i)
+      val d = ps.dom(scope(i)).span
+      doms(i) = d
+      bounds += d * factors(i)
       i -= 1
     }
 
@@ -69,24 +69,34 @@ final class Sum(
     while (change) {
       change = false
 
-      i = arity - 1
+      var i = 0
       while (i >= 0) {
-        val dom = filtered.dom(ids(i))
+        val span = doms(i)
         val f = factors(i)
-        val myBounds = dom.span * f
+
+        val myBounds = span * f
 
         val thisBounds = Interval(bounds.lb - myBounds.lb, bounds.ub - myBounds.ub)
 
-        val newDom = filter(dom, thisBounds / -f, f < 0)
-
-        if (newDom.isEmpty) {
-          return Contradiction
-        } else if (newDom ne dom) {
-          filtered = filtered.updateDomNonEmpty(ids(i), newDom)
-          change = true
-          bounds = thisBounds + newDom.span * f
+        filter(span, thisBounds / -f, f < 0) match {
+          case None => return Contradiction
+          case Some(newSpan) => if (newSpan ne span) {
+            change = true
+            bounds = thisBounds + newSpan * f
+            doms(i) = newSpan
+          }
         }
 
+        i -= 1
+      }
+
+    }
+
+    var filtered = ps
+    if (change) {
+      var i = arity - 1
+      while (i >= 0) {
+        filtered = filtered.shaveDomNonEmpty(scope(i), doms(i))
         i -= 1
       }
     }

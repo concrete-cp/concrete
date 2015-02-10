@@ -67,5 +67,5 @@ object Bool2IntIsEq extends ConstraintCompilerNoData {
 
     replaceCtr(c, Nil, p) ++ replace(Seq(i), b, p)
   }
-  def selfPropagation = true
+  def selfPropagation = false
 }

@@ -20,7 +20,7 @@ final object SlidingSum extends ConstraintCompilerNoData {
   }
 
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM) = {
-    val Seq(CSPOMConstant(low: Int), CSPOMConstant(up: Int), CSPOMConstant(seq: Int), CSPOMSeq(args: Seq[_], _, _)) = constraint.arguments
+    val Seq(CSPOMConstant(low: Int), CSPOMConstant(up: Int), CSPOMConstant(seq: Int), CSPOMSeq(args)) = constraint.arguments
 
     val vars = args.map(_.asInstanceOf[CSPOMVariable[Int]])
 

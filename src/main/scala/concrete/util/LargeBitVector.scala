@@ -105,6 +105,16 @@ class LargeBitVector(val words: Array[Long]) extends AnyVal with BitVector {
     new LargeBitVector(newWords)
   }
 
+  def |(bv: BitVector) = {
+    val newWords = words.padTo(bv.nbWords, 0L)
+    var i = bv.nbWords - 1
+    while (i >= 0) {
+      newWords(i) |= bv.getWord(i)
+      i -= 1
+    }
+    new LargeBitVector(newWords)
+  }
+
   def clearFrom(from: Int) = {
     if (from <= 0) {
       BitVector.empty

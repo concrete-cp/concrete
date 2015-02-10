@@ -1,10 +1,10 @@
 package concrete
 
 import scala.reflect.runtime.universe._
-
 import concrete.constraint.Constraint
 import concrete.constraint.StatefulConstraint
 import concrete.util.Interval
+import scala.collection.immutable.BitSet
 
 sealed trait Outcome {
   def andThen(f: ProblemState => Outcome): Outcome
@@ -111,7 +111,7 @@ case object Contradiction extends Outcome {
 final case class ProblemState(
   val domains: IndexedSeq[Domain],
   val constraintStates: IndexedSeq[AnyRef],
-  val entailed: Set[Int]) extends Outcome {
+  val entailed: BitSet) extends Outcome {
 
   def andThen(f: ProblemState => Outcome) = f(this)
 
@@ -176,6 +176,10 @@ final case class ProblemState(
 
   def updateDomNonEmpty(variable: Variable, newDomain: Domain): ProblemState =
     updateDomNonEmpty(variable.id, newDomain)
+
+  def shaveDomNonEmpty(variable: Variable, itv: Interval): ProblemState = {
+    updateDomNonEmpty(variable, dom(variable) & itv)
+  }
 
   def dom(id: Int): Domain = domains(id)
   def dom(v: Variable): Domain = {

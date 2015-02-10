@@ -20,12 +20,13 @@
 package concrete.heuristic;
 
 import concrete.Problem
-import concrete.Variable;
+import concrete.Variable
 import concrete.ParameterManager
 import concrete.ProblemState
+import concrete.Domain
 class WDegFreeOnDom(params: ParameterManager) extends VariableHeuristic(params) {
 
-  def score(variable: Variable, state: ProblemState) = variable.getWDegFree(state).toDouble / state.dom(variable).size
+  def score(variable: Variable, dom: Domain, state: ProblemState) = variable.getWDegFree(state).toDouble / dom.size
 
   override def toString = "max-wdeg-free/dom"
 

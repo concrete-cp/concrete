@@ -20,7 +20,7 @@ import cspom.util.Interval
 object SumDomains extends VariableCompiler('sum) {
 
   def compiler(c: CSPOMConstraint[_]) = c match {
-    case CSPOMConstraint(CSPOMConstant(true), _, Seq(CSPOMSeq(args, _, _), CSPOMConstant(result: Int)), params) =>
+    case CSPOMConstraint(CSPOMConstant(true), _, Seq(CSPOMSeq(args), CSPOMConstant(result: Int)), params) =>
 
       val iargs = args.map(IntExpression(_)).toIndexedSeq
 

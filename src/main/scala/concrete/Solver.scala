@@ -72,15 +72,22 @@ object Solver {
 class CSPOMSolver(
   private val solver: Solver,
   private val cspom: CSPOM,
-  private val variables: Map[CSPOMVariable[_], Variable]) extends Iterator[CSPOMSolution] {
+  private val variables: Map[CSPOMVariable[_], Variable]) extends Iterator[CSPOMSolution]
+  with LazyLogging {
 
   def hasNext: Boolean = solver.hasNext
 
   def next() = new CSPOMSolution(cspom, variables, solver.next)
 
-  def maximize(v: String) = solver.maximize(variables(cspom.variable(v)))
+  def maximize(v: String) = cspom.variable(v) match {
+    case Some(cv) => solver.maximize(variables(cv))
+    case _        => logger.warn(s"$v is not a variable, nothing to maximize")
+  }
 
-  def minimize(v: String) = solver.minimize(variables(cspom.variable(v)))
+  def minimize(v: String) = cspom.variable(v) match {
+    case Some(cv) => solver.minimize(variables(cv))
+    case _        => logger.warn(s"$v is not a variable, nothing to minimize")
+  }
 
   def concreteProblem = solver.problem
 

@@ -26,10 +26,11 @@ import concrete.Variable
 import scala.annotation.tailrec
 import concrete.ParameterManager
 import concrete.ProblemState
+import concrete.Domain
 
 final class WDeg(val problem: Problem, params: ParameterManager) extends VariableHeuristic(params) {
 
-  def score(variable: Variable, state: ProblemState) = variable.getWDegEntailed
+  def score(variable: Variable, dom: Domain, state: ProblemState) = variable.getWDegEntailed
 
   override def toString = "max-wdeg"
 

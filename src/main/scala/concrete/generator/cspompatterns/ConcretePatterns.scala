@@ -18,7 +18,7 @@ object ConcretePatterns {
         UnaryClause, MergeNotDisj, DisjToClause,
         NegToCNF, Xor, ReifiedClause, ReifiedConj,
         NeqVec, SimplClause,
-        LtToGt, SlidingSum, Regular, SetIn, In, MinMax, ConcreteTypes,
+        LtToGt, SlidingSum, Regular, SetIn, MinMax, ConcreteTypes,
         AllDiffConstant //, ConstToVar
         )
 

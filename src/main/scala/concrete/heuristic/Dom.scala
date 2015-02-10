@@ -23,10 +23,11 @@ import concrete.Problem
 import concrete.Variable
 import concrete.ParameterManager
 import concrete.ProblemState
+import concrete.Domain
 
 final class Dom(params: ParameterManager) extends VariableHeuristic(params) {
 
-  def score(variable: Variable, state: ProblemState) = -state.dom(variable).size
+  def score(variable: Variable, dom: Domain, state: ProblemState) = -dom.size
 
   override def toString = "min-dom"
 

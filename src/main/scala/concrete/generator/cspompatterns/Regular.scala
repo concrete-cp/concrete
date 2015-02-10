@@ -31,7 +31,7 @@ final object Regular extends ConstraintCompilerNoData {
 
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM) = {
     val Seq(
-      CSPOMSeq(x: Seq[SimpleExpression[Int]] @unchecked, _, _),
+      CSPOMSeq(x: Seq[SimpleExpression[Int]] @unchecked),
       CSPOMConstant(q: Int),
       CSPOMConstant(s: Int),
       fd: CSPOMSeq[_],

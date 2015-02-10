@@ -33,7 +33,8 @@ class GeneratorManager(pm: ParameterManager) {
     'sq -> SquareGenerator,
     'min -> MinGenerator,
     'max -> MaxGenerator,
-    'element -> ElementGenerator)
+    'element -> ElementGenerator,
+    'in -> SetInGenerator)
 
   def register(entry: (Symbol, Generator)) {
     known += entry

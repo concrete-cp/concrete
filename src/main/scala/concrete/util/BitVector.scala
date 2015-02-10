@@ -145,6 +145,8 @@ trait BitVector extends Any {
 
   def &(bv: BitVector): BitVector
 
+  def |(bv: BitVector): BitVector
+
   def isEmpty: Boolean
 
   def cardinality: Int
@@ -160,6 +162,7 @@ trait BitVector extends Any {
 
 object EmptyBitVector extends BitVector {
   def &(bv: concrete.util.BitVector) = this
+  def |(bv: concrete.util.BitVector) = bv
   def -(position: Int) = this
   def ^(bv: concrete.util.BitVector) = bv
   def apply(position: Int): Boolean = false

@@ -21,7 +21,7 @@ object SumFactors extends ConstraintCompiler {
   }
 
   def compile(c: CSPOMConstraint[_], p: CSPOM, params: A) = {
-    val Seq(CSPOMSeq(args, _, _), result) = c.arguments
+    val Seq(CSPOMSeq(args), result) = c.arguments
 
     val (fargs, fparams) = args.zip(params).filter(_._2 != 0).unzip
 

@@ -67,7 +67,9 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
 
   var maxBacktracks: Int =
     if (restartLevel == 0) {
-      math.max(10, math.log(problem.variables.map(_.initDomain.size).max).toInt)
+      if (problem.variables.isEmpty) 10
+      else
+        math.max(10, math.log(problem.variables.map(_.initDomain.size).max).toInt)
     } else {
       restartLevel
     }

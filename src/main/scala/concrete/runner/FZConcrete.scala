@@ -126,8 +126,11 @@ object FZConcrete extends CSPOMRunner with App {
       n => s"$n = ${sol(n)} ;"
     } ++ outputArrays.map {
       case (n, ranges) =>
-        val CSPOMSeq(_, initRange, _) =
+        val seq =
           cspom.namedExpressions.getOrElse(n, throw new MatchError(s"could not find $n in $cspom"))
+
+        val initRange = seq.asInstanceOf[CSPOMSeq[_]].definedIndices
+
         require(initRange.size == flattenedSize(ranges))
         val solutions = initRange.map(i => sol(s"$n[$i]"))
 

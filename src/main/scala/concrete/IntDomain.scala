@@ -30,14 +30,6 @@ object EmptyIntDomain extends IntDomain {
 }
 
 object IntDomain {
-  //  def apply(size: Int): IntDomain = {
-  //    size match {
-  //      case 0 => EmptyIntDomain
-  //      case 1 => new Singleton(0)
-  //      case s => new IntervalDomain(0, s - 1)
-  //    }
-  //  }
-
   def ofInterval(lb: Int, ub: Int): IntDomain =
     if (lb > ub) { EmptyIntDomain }
     else if (ub == lb) { new Singleton(lb) }
@@ -58,24 +50,22 @@ object IntDomain {
   }
 
   def apply(d: SortedSet[Int]): IntDomain = {
-    if (1 + d.last - d.head == d.size) ofInterval(d.head, d.last)
-    else {
-      val offset = d.head
-      ofBitVector(offset, BitVector(d.map(_ - offset)), d.size)
-    }
+    val offset = d.head
+    ofBitVector(offset, BitVector(d.view.map(_ - offset)), d.size)
   }
 
   def apply(r: Range): IntDomain =
-    if (r.step == 1 && r.size > 1) {
+    if (r.step == 1) {
       ofInterval(r.start, r.last)
     } else {
-      ofSeq(r: _*)
+      val offset = r.start
+      ofBitVector(offset, BitVector(r.map(_ - offset)), r.size)
     }
 
   def apply(i: Interval): IntDomain = ofInterval(i.lb, i.ub)
 
   @annotation.varargs
-  def ofSeq(d: Int*): IntDomain = apply(SortedSet[Int]() ++ d)
+  def ofSeq(d: Int*): IntDomain = apply(SortedSet(d: _*))
 
 }
 

@@ -9,6 +9,7 @@ import concrete.constraint.Removals
 import concrete.constraint.BC
 import concrete.ProblemState
 import concrete.Outcome
+import concrete.util.BitVector
 
 object Element {
   def apply(result: Variable, index: Variable, varsIdx: Seq[(Int, Variable)]) = {
@@ -50,11 +51,14 @@ class ElementBC(
      */
     ps.filterDom(index) {
       v: Int =>
-        v >= 0 && v < vars.length && (vars(v) ne null) &&
-          (resultSpan intersects ps.span(vars(v)))
+
+        val r = v >= 0 && v < vars.length && (vars(v) ne null) && (resultSpan intersects ps.span(vars(v)))
+
+        //println(s"0 <= $v < ${vars.length} & (${vars(v) ne null}) & $resultSpan intersects ${ps.span(vars(v))} : $r")
+        r
+
     }
       .andThen { ps =>
-        println(s"Indices ${index.toString(ps)}, revising result")
         /**
          * Revise result
          */
@@ -62,14 +66,12 @@ class ElementBC(
         ps.shaveDom(result, union)
       }
       .andThen { ps =>
-        println(s"Result ${result.toString(ps)}, revising vars")
         /**
          * Revise vars
          */
         val index = ps.dom(this.index)
         if (index.size == 1) {
-          val i = index.singleValue
-          ps.shaveDom(scope(i), ps.span(this.result))
+          ps.shaveDom(vars(index.singleValue), ps.span(this.result))
         } else {
           ps
         }
@@ -93,6 +95,8 @@ class ElementAC(
   val vars: Array[Variable])
   extends Constraint(result +: index +: vars.filter(_ ne null)) with Removals with BCCompanion {
 
+  val offset = vars.filter(_ ne null).map(_.initDomain.head).min
+  
   def getEvaluation(ps: ProblemState): Int = if (skip(ps)) -1 else scopeSize(ps)
 
   def check(tuple: Array[Int]): Boolean = {
@@ -114,10 +118,12 @@ class ElementAC(
         /**
          * Revise result
          */
-        val union = ps.dom(index).foldLeft(Set[Int]()) {
-          (acc, i) => acc ++ ps.dom(vars(i))
+        var union = BitVector.empty
+        for (i <- ps.dom(index)) {
+          union |= ps.dom(vars(i)).bitVector(offset)
         }
-        ps.filterDom(result)(union)
+
+        ps.filterDom(result)(v => union(v - offset))
       }
       .andThen { ps =>
         /**
