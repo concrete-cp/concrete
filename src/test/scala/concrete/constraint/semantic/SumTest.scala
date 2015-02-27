@@ -15,7 +15,7 @@ final class SumTest extends FlatSpec with Matchers {
   "Sum" should "filter <= with negative coefficients" in {
     val x = new Variable("x", IntDomain.ofSeq(0, 1))
     val y = new Variable("y", IntDomain.ofSeq(0, 1))
-    val c = new Sum(-19, Array(-20, -18), Array(x, y), SumLE)
+    val c = new SumBC(-19, Array(-20, -18), Array(x, y), SumLE)
     val ps = Problem(x, y).initState
     c.adviseAll(ps)
     val mod = c.consistentRevise(ps)
@@ -31,7 +31,7 @@ final class SumTest extends FlatSpec with Matchers {
   val ps = Problem(b, v0, v1).initState
 
   it should "filter =" in {
-    val c = new Sum(0, Array(4, -1, -1), Array(b, v0, v1), SumEQ);
+    val c = new SumBC(0, Array(4, -1, -1), Array(b, v0, v1), SumEQ);
     c.adviseAll(ps)
     val mod = c.consistentRevise(ps)
 
@@ -40,7 +40,7 @@ final class SumTest extends FlatSpec with Matchers {
   }
 
   it should "filter <= with positive and negative coefficients" in {
-    val c = new Sum(0, Array(4, -1, -1), Array(b, v0, v1), SumLE);
+    val c = new SumBC(0, Array(4, -1, -1), Array(b, v0, v1), SumLE);
     c.adviseAll(ps)
     val mod = c.consistentRevise(ps)
 
@@ -49,7 +49,7 @@ final class SumTest extends FlatSpec with Matchers {
   }
 
   it should "filter <= with positive coefficients" in {
-    val c = new Sum(3, Array(1, 1), Array(v0, v1), SumLE)
+    val c = new SumBC(3, Array(1, 1), Array(v0, v1), SumLE)
     c.adviseAll(ps)
     val mod = c.consistentRevise(ps)
     mod.dom(v0) shouldBe (1 to 3)
@@ -59,7 +59,7 @@ final class SumTest extends FlatSpec with Matchers {
   it should "filter <= with other negative coefficients and domains" in {
 
     val v2 = new Variable("v2", IntDomain(0 to 1))
-    val c = new Sum(-3, Array(-1, -1, -6), Array(
+    val c = new SumBC(-3, Array(-1, -1, -6), Array(
       new Variable("v0", IntDomain(0 to 1)),
       new Variable("v1", IntDomain(1 to 5)),
       v2), SumLE)
@@ -80,11 +80,25 @@ final class SumTest extends FlatSpec with Matchers {
     val q47 = new Variable("q47", IntDomain(0 to 0))
     val q48 = new Variable("q48", IntDomain(0 to 0))
 
-    val c = new Sum(-6, Array(-1, -2, -3, -4, -5, -6), Array(q43, q44, q45, q46, q47, q48), SumEQ)
+    val c = new SumBC(-6, Array(-1, -2, -3, -4, -5, -6), Array(q43, q44, q45, q46, q47, q48), SumEQ)
     val ps = Problem(c.scope: _*).initState
     c.adviseAll(ps)
     val mod = c.consistentRevise(ps)
     mod.dom(q43) shouldBe Seq(1)
+
+    // -1.Q[43] [0, 3] + -2.Q[44] [1] + -3.Q[45] [1, 2] + -4.Q[46] [0] + -5.Q[47] [0] + -6.Q[48] [0] eq -6 ()
+  }
+
+  it should "filter = with other particular parameters" in {
+    val x98 = new Variable("x98", IntDomain.ofSeq(0, 2))
+    val x1605 = new Variable("x1605", IntDomain(0 to 0))
+    val x985 = new Variable("x985", IntDomain(-1 to 1))
+
+    val c = new SumBC(0, Array(1, -1, -1), Array(x98, x1605, x985), SumEQ)
+    val ps = Problem(c.scope: _*).initState
+    c.adviseAll(ps)
+    val mod = c.consistentRevise(ps)
+    mod.dom(x985) shouldBe Seq(0)
 
     // -1.Q[43] [0, 3] + -2.Q[44] [1] + -3.Q[45] [1, 2] + -4.Q[46] [0] + -5.Q[47] [0] + -6.Q[48] [0] eq -6 ()
   }

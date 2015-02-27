@@ -1,10 +1,11 @@
 package concrete
 
-import scala.reflect.runtime.universe._
 import concrete.constraint.Constraint
 import concrete.constraint.StatefulConstraint
+import concrete.util.BitVector
 import concrete.util.Interval
-import scala.collection.immutable.BitSet
+import scala.reflect.runtime.universe._
+import cspom.UNSATException
 
 sealed trait Outcome {
   def andThen(f: ProblemState => Outcome): Outcome
@@ -36,13 +37,12 @@ sealed trait Outcome {
   def updateDom(id: Int, d: Domain): Outcome
 
   def updateAll(vars: Iterable[Variable])(f: Domain => Domain): Outcome = updateAll(vars.iterator)(f)
-  def updateAll(vars: Iterator[Variable])(f: Domain => Domain): Outcome = updateAllIds(vars.map(_.id))(f)
-  def updateAllIds(ids: Iterator[Int])(f: Domain => Domain): Outcome = {
+  def updateAll(vars: Iterator[Variable])(f: Domain => Domain): Outcome = {
     var ch = this
-    while (ids.hasNext) {
+    while (vars.hasNext) {
       if (ch eq Contradiction) return Contradiction
-      var id = ids.next
-      ch = ch.updateDom(id, dom(id))
+      var v = vars.next
+      ch = ch.updateDom(v, f(dom(v)))
     }
     ch
   }
@@ -84,6 +84,7 @@ sealed trait Outcome {
   def updateState(c: Constraint, newState: AnyRef): Outcome =
     updateState(c.id, newState)
 
+  def domainsOption: Option[IndexedSeq[Domain]]
 }
 
 case object Contradiction extends Outcome {
@@ -105,13 +106,16 @@ case object Contradiction extends Outcome {
   def dom(id: Int): Domain = throw new UNSATException("Tried to get a domain from a Contradiction")
   def dom(v: Variable): Domain = throw new UNSATException("Tried to get a domain from a Contradiction")
   def boolDom(id: Int): BooleanDomain = EMPTY
+
   def updateState(id: Int, newState: AnyRef): Outcome = Contradiction
+  def domainsOption(): Option[IndexedSeq[Domain]] = None
+
 }
 
 final case class ProblemState(
   val domains: IndexedSeq[Domain],
   val constraintStates: IndexedSeq[AnyRef],
-  val entailed: BitSet) extends Outcome {
+  val entailed: BitVector) extends Outcome {
 
   def andThen(f: ProblemState => Outcome) = f(this)
 
@@ -222,4 +226,7 @@ final case class ProblemState(
   def entailIfFree(c: Constraint) = {
     if (c.isFree(this)) entail(c.id) else this
   }
+
+  def domainsOption = Some(domains)
+
 }

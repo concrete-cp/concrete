@@ -106,7 +106,7 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
         } else {
           nbBacktracks += 1
 
-          logger.info(s"${stack.length}: ${stack.head} removed")
+          logger.info(s"${stack.length - 1}: ${stack.head} removed")
 
           val lastAssignment = stack.head
 
@@ -115,7 +115,11 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
 
       case filteredState: ProblemState =>
         heuristic.selectPair(problem, filteredState) match {
-          case None => (SAT(extractSolution(filteredState)), stack, filteredState :: stateStack)
+          case None =>
+            require(problem.variables.forall(v => filteredState.dom(v).size == 1),
+              s"Unassigned variables in:\n${problem.variables.map(_.toString(filteredState)).mkString("\n")}")
+            require(problem.constraints.forall(c => c.controlAssignment(filteredState)))
+            (SAT(extractSolution(filteredState)), stack, filteredState :: stateStack)
           case Some(pair) =>
 
             logger.info(s"${stack.length}: ${pair.variable.name}: ${filteredState.dom(pair.variable)} <- ${pair.value} ($nbBacktracks / $maxBacktracks)");
@@ -192,6 +196,7 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
           val (sol, stack, stateStack) = nextSolution(None, Nil, state, Nil)
           currentStack = stack
           currentStateStack = stateStack
+          logger.info(s"Search ended with $sol")
           sol
       }
 

@@ -16,6 +16,7 @@ import cspom.variable.IntExpression.implicits.arithmetics
 import cspom.variable.IntExpression.implicits.ranges
 import cspom.variable.SimpleExpression
 import cspom.util.Interval
+import scala.PartialFunction
 
 object SumDomains extends VariableCompiler('sum) {
 
@@ -30,27 +31,27 @@ object SumDomains extends VariableCompiler('sum) {
         case _               => throw new IllegalArgumentException("Parameters for zero sum must be a sequence of integer values")
       }
 
-      val mode = params.get("mode").collect {
-        case m: String => SumMode.withName(m)
-      }.get
+      val m: String = params("mode").asInstanceOf[String]
 
-      val initBound = mode match {
+      // Will do nothing (return empty map) if SumMode is SumNE
+      PartialFunction.condOpt(SumMode.withName(m)) {
         case SumLE => IntInterval.atMost(result)
         case SumLT => IntInterval.atMost(result - 1)
         case SumEQ => IntInterval.singleton(result)
-        //case SumNE => ???
       }
+        .toSeq.flatMap {
+          initBound =>
 
-      val coefspan = (iargs, coef).zipped.map((a, c) => IntExpression.span(a) * IntInterval.singleton(c)).toIndexedSeq
+            val coefspan = (iargs, coef).zipped.map((a, c) => IntExpression.span(a) * IntInterval.singleton(c)).toIndexedSeq
 
-      val map = for (i <- args.indices) yield {
-        val others = iargs.indices
-          .filter(_ != i)
-          .map(coefspan)
-          .foldLeft(initBound)(_ - _)
-        args(i) -> reduceDomain(iargs(i), others / coef(i))
-      }
-
-      map.toMap
+            for (i <- args.indices) yield {
+              val others = iargs.indices
+                .filter(_ != i)
+                .map(coefspan)
+                .foldLeft(initBound)(_ - _)
+              args(i) -> reduceDomain(iargs(i), others / coef(i))
+            }
+        }
+        .toMap
   }
 }

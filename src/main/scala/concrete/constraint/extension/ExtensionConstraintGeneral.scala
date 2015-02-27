@@ -23,7 +23,7 @@ import concrete.Contradiction
 import concrete.Domain
 import concrete.Outcome
 import concrete.ProblemState
-import concrete.UNSATException
+import cspom.UNSATException
 import concrete.Variable
 import concrete.constraint.Residues
 

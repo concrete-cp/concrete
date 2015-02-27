@@ -12,14 +12,14 @@ object ConcretePatterns {
   def apply(params: ParameterManager) = {
     val concreteDef =
       Seq(
-        SubToAdd, AbsDiff, AbsDiffDomains, AddToEq, BoolEq,
+        SubToAdd, DivToMul, AbsDiff, AbsDiffDomains, AddToEq, BoolEq,
         AddDomains, MulDomains, EqDomains, AbsDomains, NeqToEq,
         Bool2IntDomains, MulToSum, SumFactors, SumDomains,
         UnaryClause, MergeNotDisj, DisjToClause,
         NegToCNF, Xor, ReifiedClause, ReifiedConj,
         NeqVec, SimplClause,
-        LtToGt, SlidingSum, Regular, SetIn, MinMax, ConcreteTypes,
-        AllDiffConstant //, ConstToVar
+        LtToGt, ReversedGt, SlidingSum, Regular, SetIn, ConcreteTypes,
+        SumNe, AllDifferent, AllDiffConstant, CountEq //, ConstToVar
         )
 
     val concreteImp = Seq(

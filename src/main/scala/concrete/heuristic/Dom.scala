@@ -25,7 +25,7 @@ import concrete.ParameterManager
 import concrete.ProblemState
 import concrete.Domain
 
-final class Dom(params: ParameterManager) extends VariableHeuristic(params) {
+final class Dom(params: ParameterManager) extends ScoredVariableHeuristic(params) {
 
   def score(variable: Variable, dom: Domain, state: ProblemState) = -dom.size
 

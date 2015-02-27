@@ -1,35 +1,37 @@
 package concrete.constraint.semantic
 
-import concrete.Domain
 import concrete.Outcome
 import concrete.ProblemState
 import concrete.Variable
+import concrete.constraint.BC
 import concrete.constraint.Constraint
 import concrete.util.Interval
 
-abstract class MinMax(result: Variable, vars: Array[Variable], constant: Option[Int]) extends Constraint(result +: vars) {
+abstract class MinMax(result: Variable, vars: Array[Variable]) extends Constraint(result +: vars) with BC {
 
   def advise(ps: ProblemState, pos: Int): Int = arity
 
-  def in(dom: Iterator[Domain]): Interval = {
-    val span = dom.map(_.span).reduce(_ span _)
-    constant.map(c => Interval(c, c) span span).getOrElse(span)
-  }
-
   def simpleEvaluation: Int = 2
+
+  override def toString(ps: ProblemState) =
+    s"${result.toString(ps)} = ${this.getClass.getSimpleName}${vars.map(_.toString(ps)).mkString("(", ", ", ")")}"
 
 }
 
-final class Min(result: Variable, vars: Array[Variable], constant: Option[Int])
-  extends MinMax(result, vars, constant) {
+final class Min(result: Variable, vars: Array[Variable])
+  extends MinMax(result, vars) {
 
-  def this(result: Variable, vars: Array[Variable]) = this(result, vars, None)
-  def this(result: Variable, vars: Array[Variable], constant: Int) = this(result, vars, Some(constant))
+  def shave(ps: ProblemState): Outcome = {
 
-  def revise(ps: ProblemState): Outcome = {
-    val span = in(ps.domains(vars))
+    var lb = Int.MaxValue
+    var ub = Int.MaxValue
+    for (v <- vars) {
+      val dom = ps.dom(v)
+      lb = math.min(lb, dom.head)
+      ub = math.min(ub, dom.last)
+    }
 
-    ps.shaveDom(result, span).andThen {
+    ps.shaveDom(result, lb, ub).andThen {
       ps =>
         val minValue = ps.dom(result).head
         ps.updateAll(vars)(_.removeUntil(minValue))
@@ -41,29 +43,32 @@ final class Min(result: Variable, vars: Array[Variable], constant: Option[Int])
     tuple(0) == tuple.view.slice(1, arity).min
   }
 
-  override def toString(ps: ProblemState) = ps.domains(vars).mkString(ps.dom(result) + " = min(", ", ", ")")
 }
 
-final class Max(result: Variable, vars: Array[Variable], constant: Option[Int])
-  extends MinMax(result, vars, constant) {
+final class Max(result: Variable, vars: Array[Variable])
+  extends MinMax(result, vars) {
 
-  def this(result: Variable, vars: Array[Variable]) = this(result, vars, None)
-  def this(result: Variable, vars: Array[Variable], constant: Int) = this(result, vars, Some(constant))
+  def shave(ps: ProblemState): Outcome = {
 
-  def revise(ps: ProblemState): Outcome = {
-    val span = in(ps.domains(vars))
+    var lb = Int.MinValue
+    var ub = Int.MinValue
+    for (v <- vars) {
+      val dom = ps.dom(v)
+      lb = math.max(lb, dom.head)
+      ub = math.max(ub, dom.last)
+    }
 
-    ps.shaveDom(result, span).andThen {
+    ps.shaveDom(result, lb, ub).andThen {
       ps =>
         val maxValue = ps.dom(result).last
-        ps.updateAll(vars.iterator)(_.removeAfter(maxValue))
+
+        ps.updateAll(vars)(_.removeAfter(maxValue))
     }
 
   }
 
   def check(tuple: Array[Int]): Boolean = {
-    tuple(0) == (1 until arity).map(tuple).max
+    tuple(0) == tuple.view.slice(1, arity).max
   }
 
-  override def toString(ps: ProblemState) = ps.domains(vars).mkString(ps.dom(result) + " = min(", ", ", ")")
 }

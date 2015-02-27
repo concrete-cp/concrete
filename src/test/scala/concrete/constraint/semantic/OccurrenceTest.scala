@@ -4,7 +4,6 @@ import org.scalatest.Finders
 import org.scalatest.FlatSpec
 import org.scalatest.Inspectors
 import org.scalatest.Matchers
-
 import concrete.CSPOMDriver.occurrence
 import concrete.Contradiction
 import concrete.IntDomain
@@ -15,6 +14,7 @@ import cspom.CSPOM
 import cspom.CSPOM.constant
 import cspom.CSPOM.ctr
 import cspom.variable.IntVariable
+import concrete.constraint.AdviseCount
 
 class OccurrenceTest extends FlatSpec with Matchers with Inspectors {
 
@@ -28,8 +28,10 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors {
     val occ = new Variable("occ", IntDomain.ofSeq(1, 2, 3))
 
     val c = new OccurrenceVar(occ, 7, Array(v1, v2, v3, v4, v5))
-
-    val ps = Problem(occ, v1, v2, v3, v4, v5).initState
+    c.register(new AdviseCount())
+    val pb = Problem(occ, v1, v2, v3, v4, v5)
+    pb.addConstraint(c)
+    val ps = pb.initState
 
     val mod = c.consistentRevise(ps)
 
@@ -51,7 +53,11 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors {
     val occ = new Variable("occ", IntDomain.ofSeq(3, 4, 5))
 
     val c = new OccurrenceVar(occ, 7, Array(v1, v2, v3, v4, v5))
-    val ps = Problem(occ, v1, v2, v3, v4, v5).initState
+    c.register(new AdviseCount())
+
+    val pb = Problem(occ, v1, v2, v3, v4, v5)
+    pb.addConstraint(c)
+    val ps = pb.initState
 
     c.revise(ps) shouldBe Contradiction
 

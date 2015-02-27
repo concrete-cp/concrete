@@ -30,9 +30,12 @@ final class AbsDiffTest extends FlatSpec with Matchers with Inspectors with Prop
       val vy: Variable = new Variable("y", IntDomain.ofSeq(y: _*));
       val vz: Variable = new Variable("z", IntDomain.ofSeq(z: _*));
 
-      val ps = Problem(vx, vy, vz).initState
-
       val c = new AbsDiffAC(vx, vy, vz);
+
+      val pb = Problem(vx, vy, vz)
+      pb.addConstraint(c)
+      val ps = pb.initState
+
       c.register(new AdviseCount)
       c.adviseAll(ps)
       val r1 = c.revise(ps)
@@ -53,9 +56,11 @@ final class AbsDiffTest extends FlatSpec with Matchers with Inspectors with Prop
     val vx = new Variable("x", IntDomain.ofSeq(0, 2, 3))
     val vy = new Variable("y", IntDomain.ofSeq(3, 4, 6, 7, 8))
     val vz = new Variable("z", IntDomain.ofSeq(5))
-    val ps = Problem(vx, vy, vz).initState
+    val c = new AbsDiffAC(vx, vy, vz);
 
-    val c = new AbsDiffAC(vx, vy, vz)
+    val pb = Problem(vx, vy, vz)
+    pb.addConstraint(c)
+    val ps = pb.initState
     c.register(new AdviseCount)
     c.adviseAll(ps)
     val mod = c.revise(ps).asInstanceOf[ProblemState]

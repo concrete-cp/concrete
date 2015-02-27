@@ -33,13 +33,10 @@ final class QuickFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
 
   private val NB_LISTS = 8
 
-  private val FACTOR = {
-    val s = 31.0 / (NB_LISTS)
-    (1 until NB_LISTS).map(i => math.pow(2, i * s).toInt).toArray
-  }
+  private val FACTOR = Array(10, 100, 1000, 10000, 100000, 1000000, 10000000)
 
   private val queues: Array[DLNode[T]] = Array.fill(NB_LISTS)(new HeadDLNode())
-  
+
   private val presence = new Presence
 
   private var last = -1
@@ -58,7 +55,7 @@ final class QuickFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
     //println(e + " : " + eval + " -> " + list)
 
     val present = presence.isPresent(e)
-    
+
     if (present && list == e.currentList) false
     else {
       if (present) {

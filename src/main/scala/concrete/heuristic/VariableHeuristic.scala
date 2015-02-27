@@ -11,7 +11,7 @@ import concrete.ProblemState
 import concrete.Domain
 
 abstract class VariableHeuristic(params: ParameterManager) {
-  private val rand: Random = {
+  protected val rand: Random = {
     if (params.getOrElse("variableHeuristic.randomBreak", true)) {
       val seed = params.getOrElse("randomBreak.seed", 0L)
       new Random(seed)
@@ -21,53 +21,54 @@ abstract class VariableHeuristic(params: ParameterManager) {
 
   //def problem: Problem
 
-  def select(problem: Problem, state: ProblemState): Option[Variable] =
-    select(problem.variables, state)
+  final def select(problem: Problem, state: ProblemState): Option[Variable] =
+    select(problem.decisionVariables.dropWhile { v => state.dom(v).size == 1 }, state)
+      //.orElse(select(problem.variables.dropWhile { v => state.dom(v).size == 1 }, state))
 
   @tailrec
-  private def select(list: List[Variable], best: Variable, ties: Int, state: ProblemState): Variable = {
+  private def select(list: List[Variable], best: Variable, bestDomain: Domain, ties: Int, state: ProblemState): Variable = {
     if (list.isEmpty) {
       best
     } else {
       val current :: tail = list
       val dom = state.dom(current)
       if (dom.size == 1) {
-        select(tail, best, ties, state)
+        select(tail, best, bestDomain, ties, state)
       } else {
-        val comp = score(current, dom, state).compareTo(score(best, dom, state))
+        val comp = compare(current, dom, best, bestDomain, state)
 
         if (comp > 0) {
-          select(tail, current, 2, state)
+          select(tail, current, dom, 2, state)
         } else if (comp == 0) {
           if (rand.nextDouble() * ties < 1) {
-            select(tail, current, ties + 1, state)
+            select(tail, current, dom, ties + 1, state)
           } else {
-            select(tail, best, ties + 1, state)
+            select(tail, best, bestDomain, ties + 1, state)
           }
 
         } else {
-          select(tail, best, ties, state)
+          select(tail, best, bestDomain, ties, state)
         }
       }
     }
   }
 
   @tailrec
-  private def select(list: List[Variable], best: Variable, state: ProblemState): Variable = {
+  private def select(list: List[Variable], best: Variable, bestDomain: Domain, state: ProblemState): Variable = {
     if (list.isEmpty) {
       best
     } else {
       val current :: tail = list
       val dom = state.dom(current)
       if (dom.size == 1) {
-        select(tail, best, state)
+        select(tail, best, bestDomain, state)
       } else {
-        val comp = score(current, dom, state).compareTo(score(best, dom, state))
+        val comp = compare(current, dom, best, bestDomain, state) //score(current, dom, state).compareTo(score(best, dom, state))
 
         if (comp > 0) {
-          select(tail, current, state)
+          select(tail, current, dom, state)
         } else {
-          select(tail, best, state)
+          select(tail, best, bestDomain, state)
         }
       }
     }
@@ -77,12 +78,14 @@ abstract class VariableHeuristic(params: ParameterManager) {
     if (list.isEmpty) {
       None
     } else if (rand ne null) {
-      Some(select(list.tail, list.head, 2, state))
+      Some(select(list.tail, list.head, state.dom(list.head), 2, state))
     } else {
-      Some(select(list.tail, list.head, state))
+      Some(select(list.tail, list.head, state.dom(list.head), state))
     }
   }
 
-  def score(variable: Variable, domain: Domain, state: ProblemState): Double
+  def compare(v1: Variable, d1: Domain, v2: Variable, d2: Domain, state: ProblemState): Int
+
+  //def score(variable: Variable, domain: Domain, state: ProblemState): Double
 
 }

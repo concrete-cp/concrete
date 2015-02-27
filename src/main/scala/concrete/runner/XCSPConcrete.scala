@@ -13,7 +13,7 @@ object XCSPConcrete extends CSPOMRunner with App {
 
   var declaredVariables: Seq[String] = _
 
-  def loadCSPOM(args: List[String]) = {
+  def loadCSPOM(args: List[String], opt: Map[Symbol, Any]) = {
     val List(fn) = args
     val f = new URI(fn)
 
@@ -32,7 +32,7 @@ object XCSPConcrete extends CSPOMRunner with App {
   def description(args: List[String]) =
     args match {
       case List(fileName) => fileName
-      case _ => throw new IllegalArgumentException(args.toString)
+      case _              => throw new IllegalArgumentException(args.toString)
     }
 
   def controlCSPOM(solution: Map[String, Any]) = {

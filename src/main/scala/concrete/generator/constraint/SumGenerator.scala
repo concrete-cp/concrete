@@ -6,6 +6,9 @@ import concrete.constraint.semantic.SumMode
 import cspom.CSPOMConstraint
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
+import concrete.constraint.semantic.SumAC
+import concrete.constraint.semantic.SumBC
+import SumMode._
 
 final object SumGenerator extends Generator {
 
@@ -43,7 +46,24 @@ final object SumGenerator extends Generator {
       case m: String => SumMode.withName(m)
     }.get
 
-    Seq(new Sum(constant, varParams.toArray, solverVariables.toArray, mode))
+    if (solverVariables.isEmpty) {
+      mode match {
+        case SumEQ => require(constant == 0)
+        case SumLT => require(constant > 0)
+        case SumLE => require(constant >= 0, s"inconsistent sum $constraint")
+        case SumNE => require(constant != 0)
+      }
+      Seq()
+    } else {
+
+      val bc = new SumBC(constant, varParams.toArray, solverVariables.toArray, mode)
+
+      if (CSPOMSeq(constraint.arguments: _*).searchSpace < 1000) {
+        Seq(bc, new SumAC(constant, varParams.toArray, solverVariables.toArray, mode))
+      } else {
+        Seq(bc)
+      }
+    }
     //    
     //    undefinedVar(solverVariables: _*) match {
     //      case Seq() => go(constant, varParams, solverVariables, mode)

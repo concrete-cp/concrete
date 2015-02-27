@@ -1,24 +1,27 @@
 package concrete.runner
 
+import java.io.IOException
 import java.net.URI
 import java.net.URL
 import java.security.InvalidParameterException
+import scala.reflect.runtime.universe
 import concrete.CSPOMSolver
 import concrete.Variable
 import cspom.CSPOM
+import cspom.CSPParseException
+import cspom.Statistic
+import cspom.StatisticsManager
 import cspom.flatzinc.FZAnnotation
 import cspom.flatzinc.FZArrayExpr
 import cspom.flatzinc.FZSetConst
 import cspom.flatzinc.FZSolve
+import cspom.flatzinc.FZVarParId
 import cspom.flatzinc.Maximize
 import cspom.flatzinc.Minimize
 import cspom.flatzinc.Satisfy
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
-import cspom.StatisticsManager
-import cspom.Statistic
-import java.net.URLDecoder
-import java.net.URLEncoder
+import concrete.heuristic._
 
 object FZConcrete extends CSPOMRunner with App {
 
@@ -33,7 +36,14 @@ object FZConcrete extends CSPOMRunner with App {
   @Statistic
   var parseTime: Double = _
 
-  override def loadCSPOM(args: List[String]) = {
+  override def options(args: List[String], o: Map[Symbol, Any] = Map.empty, realArgs: List[String]): (Map[Symbol, Any], List[String]) = {
+    args match {
+      case "-f" :: tail => options(tail, o + ('free -> Unit), realArgs)
+      case e            => super.options(e, o, realArgs)
+    }
+  }
+
+  override def loadCSPOM(args: List[String], opt: Map[Symbol, Any]) = {
     val List(fn) = args
 
     val f = URI.create(fn.replace(" ", "%20"))
@@ -72,11 +82,40 @@ object FZConcrete extends CSPOMRunner with App {
     val Some(goal: FZSolve) = data.get('goal)
 
     this.goal = goal
+    goal.ann.foreach {
+      case a if a.predAnnId == "int_search" || a.predAnnId == "bool_search" =>
+        if (!opt.contains('free)) {
+          val Seq(_, FZVarParId(varchoiceannotation), FZVarParId(assignmentannotation), strategyannotation) = a.expr
+
+          varchoiceannotation match {
+            case "input_order" =>
+              pm("heuristic.variable") = classOf[LexVar]
+              pm("mac.restartLevel") = -1
+            case "first_fail"       => pm("heuristic.variable") = classOf[Dom]
+            case "antifirst_fail"   => pm("heuristic.variable") = classOf[MaxDom]
+            // case "smallest"
+            // case "largest"
+            case "occurrence"       => pm("heuristic.variable") = classOf[DDeg]
+            case "most_constrained" => pm("heuristic.variable") = classOf[Brelaz]
+            case h                  => logger.warn(s"Unsupported varchoice $h")
+          }
+
+          assignmentannotation match {
+            case "indomain_min"    => pm("heuristic.value") = classOf[Lexico]
+            case "indomain_max"    => pm("heuristic.value") = classOf[RevLexico]
+            case "indomain_middle" => pm("heuristic.value") = classOf[MedValue]
+            case "indomain_random" => pm("heuristic.value") = classOf[RandomValue]
+            case h                 => logger.warn(s"Unsupported assignment $h")
+          }
+        }
+
+      case a => logger.warn(s"Unsupported annotation $a")
+    }
 
     cspom
   }
 
-  override def applyParametersCSPOM(solver: CSPOMSolver) = {
+  override def applyParametersCSPOM(solver: CSPOMSolver, opt: Map[Symbol, Any]) = {
     goal.mode match {
       case Satisfy =>
       case Maximize(expr) =>
@@ -87,6 +126,20 @@ object FZConcrete extends CSPOMRunner with App {
         solver.minimize(cspom.namesOf(e).head)
       case _ => throw new InvalidParameterException("Cannot execute goal " + goal)
     }
+
+    goal.ann.foreach {
+      case a if a.predAnnId == "int_search" || a.predAnnId == "bool_search" =>
+        if (!opt.contains('free)) {
+          val Seq(vars, _, _, _) = a.expr
+
+          val CSPOMSeq(pool) = vars.toCSPOM(cspom.namedExpressions.toMap)
+
+          solver.decisionVariables(pool)
+        }
+
+      case a => logger.warn(s"Unsupported annotation $a")
+    }
+
   }
 
   def description(args: List[String]) =
@@ -139,6 +192,10 @@ object FZConcrete extends CSPOMRunner with App {
         }${solutions.mkString("[", ", ", "]")});"
 
     }
+    
+    //++ cspom.namedExpressions.keys.flatMap(_.split("\\|\\|")).map {
+    //  n => s"$n = ${sol(n)} ;"
+    //}
 
     out.mkString("\n") + "\n----------\n"
     //flatSolution(solution, variables).mkString(" ")

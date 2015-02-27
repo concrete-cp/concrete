@@ -28,7 +28,7 @@ import concrete.heuristic.Weighted
 import concrete.priorityqueues.DLNode
 import concrete.priorityqueues.Identified
 import concrete.priorityqueues.PTag
-import concrete.UNSATException
+import cspom.UNSATException
 
 object Constraint {
 
@@ -73,6 +73,8 @@ trait StatefulConstraint extends Constraint {
 abstract class Constraint(val scope: Array[Variable])
   extends DLNode[Constraint] with Weighted with Identified with PTag {
 
+  require(scope.nonEmpty)
+  
   def this(scope: Variable*) = this(scope.toArray)
 
   private var _id: Int = -1
@@ -117,23 +119,20 @@ abstract class Constraint(val scope: Array[Variable])
 
   }
 
-  def inCN = id >= 0
+  //def inCN = id >= 0
 
-  override def weight_=(w: Int) {
-    //assert(!isEntailed)
-    assert(inCN)
-    val inc = w - weight
-    for (v <- scope) {
-      v.wDeg += inc
-    }
-    super.weight = w
-  }
+  //  override def weight_=(w: Int) {
+  //    //assert(!isEntailed)
+  //    assert(inCN)
+  //    val inc = w - weight
+  //    for (v <- scope) {
+  //      v.wDeg += inc
+  //    }
+  //    super.weight = w
+  //  }
 
   def isConsistent(problemState: ProblemState): Boolean =
-    revise(problemState) match {
-      case Contradiction    => false
-      case ns: ProblemState => scope.forall(ns.dom(_).nonEmpty)
-    }
+    revise(problemState) ne Contradiction
 
   def advise(problemState: ProblemState, pos: Int): Int
 
@@ -169,7 +168,7 @@ abstract class Constraint(val scope: Array[Variable])
 
   def simpleEvaluation: Int
 
-  override final def toString = this.getClass.getSimpleName + scope.mkString("(", ", ", ")")
+  override def toString = this.getClass.getSimpleName + scope.mkString("(", ", ", ")")
 
   def toString(problemState: ProblemState) = s"$id: ${this.getClass.getSimpleName}${
     scope.map(v => s"$v ${problemState.dom(v)}").mkString("(", ", ", ")")

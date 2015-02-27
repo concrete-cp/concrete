@@ -70,8 +70,8 @@ object Solver {
 }
 
 class CSPOMSolver(
-  private val solver: Solver,
-  private val cspom: CSPOM,
+  val solver: Solver,
+  val cspom: CSPOM,
   private val variables: Map[CSPOMVariable[_], Variable]) extends Iterator[CSPOMSolution]
   with LazyLogging {
 
@@ -87,6 +87,12 @@ class CSPOMSolver(
   def minimize(v: String) = cspom.variable(v) match {
     case Some(cv) => solver.minimize(variables(cv))
     case _        => logger.warn(s"$v is not a variable, nothing to minimize")
+  }
+
+  def decisionVariables(dv: Seq[CSPOMExpression[_]]): Unit = {
+    solver.decisionVariables(dv.collect {
+      case e: CSPOMVariable[_] => variables(e)
+    })
   }
 
   def concreteProblem = solver.problem
@@ -143,6 +149,11 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
 
   val preprocessorClass: Option[Class[_ <: Filter]] =
     params.get[Class[_ <: Filter]]("preprocessor")
+
+  def decisionVariables(dv: Seq[Variable]): Unit = {
+    logger.info(s"Decision variables: $dv")
+    problem.decisionVariables = dv.toList
+  }
 
   @Statistic
   val statistics = new StatisticsManager

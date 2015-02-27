@@ -7,10 +7,14 @@ import concrete.constraint.semantic.EqAC
 import concrete.constraint.semantic.EqBC
 import concrete.constraint.semantic.Neq
 import concrete.constraint.semantic.ReifiedConstraint
-import concrete.constraint.semantic.ReifiedEquals
 import cspom.CSPOMConstraint
 import concrete.BooleanDomain
-import concrete.UNSATException
+import concrete.constraint.semantic.SumMode
+import concrete.constraint.semantic.SumBC
+import concrete.constraint.semantic.Sum
+import concrete.constraint.semantic.SumNE
+import concrete.constraint.semantic.SumAC
+import cspom.UNSATException
 
 final object EqGenerator extends Generator {
 
@@ -62,8 +66,14 @@ final object EqGenerator extends Generator {
       case (Const(a), Const(b)) =>
         require(result.initDomain == BooleanDomain(a == b))
         Seq()
-      case (Const(a), Var(b)) => Seq(new ReifiedEquals(result, b, a))
-      case (Var(a), Const(b)) => Seq(new ReifiedEquals(result, a, b))
+      case (Const(a), Var(b)) => Seq(
+        new ReifiedConstraint(result,
+          new SumBC(a, Array(1), Array(b), SumMode.SumEQ),
+          new SumNE(a, Array(1), Array(b))))
+      case (Var(a), Const(b)) => Seq(
+        new ReifiedConstraint(result,
+          new SumBC(b, Array(1), Array(a), SumMode.SumEQ),
+          new SumNE(b, Array(1), Array(a))))
       case (Var(a), Var(b)) => Seq(
         new ReifiedConstraint(
           result,

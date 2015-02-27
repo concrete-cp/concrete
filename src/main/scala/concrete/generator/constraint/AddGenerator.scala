@@ -1,10 +1,11 @@
 package concrete.generator.constraint;
 
 import Generator.cspom2concreteVar
-import concrete.constraint.semantic.AddAC
 import concrete.constraint.semantic.Sum
 import concrete.constraint.semantic.SumMode
 import cspom.CSPOMConstraint
+import concrete.constraint.semantic.SumBC
+import concrete.constraint.semantic.SumAC
 
 final object AddGenerator extends Generator {
 
@@ -14,7 +15,10 @@ final object AddGenerator extends Generator {
 
     val Seq(v0, v1) = constraint.arguments map cspom2concreteVar
 
-    Seq(new Sum(0, Array(1, 1, -1), Array(result, v0, v1), SumMode.SumEQ), new AddAC(result, v0, v1, true))
+    val factors = Array(-1, 1, 1)
+    val scope = Array(result, v0, v1)
+
+    Seq(new SumBC(0, factors, scope, SumMode.SumEQ), new SumAC(0, factors, scope, SumMode.SumEQ))
 
   }
 

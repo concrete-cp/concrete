@@ -19,7 +19,22 @@ import cspom.util.RangeSet
 import cspom.util.Interval
 import cspom.util.IntInterval
 import cspom.variable.IntExpression
+import cspom.compiler.ConstraintCompilerNoData
 
+/**
+ *  XCSP 2.0 uses a different case for alldifferent…
+ */
+object AllDifferent extends ConstraintCompilerNoData {
+  def matchBool(c: CSPOMConstraint[_], p: CSPOM) = c.function == 'allDifferent
+  def compile(c: CSPOMConstraint[_], p: CSPOM) = {
+    replaceCtr(c, CSPOMConstraint('alldifferent, c.arguments, c.params), p)
+  }
+  def selfPropagation = false
+}
+
+/**
+ * Removes constants from alldifferent constraints
+ */
 object AllDiffConstant extends ConstraintCompiler {
   type A = (Seq[Int])
 
@@ -68,6 +83,10 @@ object AllDiffConstant extends ConstraintCompiler {
   }
 }
 
+/**
+ * Aggregates cliques of alldifferent constraints. Uses a small tabu search engine
+ * to detect max-cliques.
+ */
 object AllDiff extends ConstraintCompiler with LazyLogging {
   type A = Set[CSPOMVariable[_]]
 

@@ -20,8 +20,8 @@ trait CSPOMRunner extends ConcreteRunner {
 
   var cspomSolver: CSPOMSolver = _
 
-  final def load(args: List[String]): Problem = {
-    cspom = loadCSPOM(args)
+  final def load(args: List[String], opt: Map[Symbol, Any]): Problem = {
+    cspom = loadCSPOM(args, opt)
     // println(cspom)
     ProblemCompiler.compile(cspom, ConcretePatterns(pm))
 
@@ -38,14 +38,14 @@ trait CSPOMRunner extends ConcreteRunner {
     problem
   }
 
-  override final def applyParameters(s: Solver) = {
+  override final def applyParameters(s: Solver, opt: Map[Symbol, Any]) = {
     cspomSolver = new CSPOMSolver(s, cspom, variables)
-    applyParametersCSPOM(cspomSolver)
+    applyParametersCSPOM(cspomSolver, opt)
   }
 
-  def applyParametersCSPOM(s: CSPOMSolver): Unit = {}
+  def applyParametersCSPOM(s: CSPOMSolver, opt: Map[Symbol, Any]): Unit = {}
 
-  def loadCSPOM(args: List[String]): CSPOM
+  def loadCSPOM(args: List[String], opt: Map[Symbol, Any]): CSPOM
 
   def outputCSPOM(solution: Map[String, Any]): String = {
     solution.map {

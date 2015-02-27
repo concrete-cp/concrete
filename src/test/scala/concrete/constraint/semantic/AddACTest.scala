@@ -1,13 +1,13 @@
 package concrete.constraint.semantic
 
 import org.scalacheck.Gen
-import org.scalatest.Finders
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
 
 import concrete.IntDomain
 import concrete.Problem
+import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.AdviseCount
 import concrete.constraint.Constraint
@@ -21,9 +21,11 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     val y = new Variable("y", IntDomain.ofSeq(5))
     val z = new Variable("z", IntDomain.ofSeq(2))
 
-    val c = new AddAC(x, y, z)
+    val c = new SumAC(0, Array(-1, 1, 1), Array(x, y, z), SumMode.SumEQ)
 
-    val ps = Problem(x, y, z).initState
+    val pb = Problem(x, y, z)
+    val ps = pb.initState
+    pb.addConstraint(c)
 
     c.register(new AdviseCount)
     c.adviseAll(ps)
@@ -45,8 +47,10 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     val y = new Variable("y", IntDomain(-100 to 100))
     val z = new Variable("z", IntDomain.ofSeq(2))
 
-    val c = new AddAC(x, y, z)
-    val ps = Problem(x, y, z).initState
+    val c = new SumAC(0, Array(-1, 1, 1), Array(x, y, z), SumMode.SumEQ)
+    val pb = Problem(x, y, z)
+    val ps = pb.initState
+    pb.addConstraint(c)
 
     c.register(new AdviseCount)
     c.adviseAll(ps)
@@ -66,9 +70,10 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     val x = new Variable("x", IntDomain(1 to 10))
     val y = new Variable("y", IntDomain(20 to 30))
     val z = new Variable("z", IntDomain(-100 to 100))
-
-    val c = new AddAC(x, y, z)
-    val ps = Problem(x, y, z).initState
+    val c = new SumAC(0, Array(-1, 1, 1), Array(x, y, z), SumMode.SumEQ)
+    val pb = Problem(x, y, z)
+    val ps = pb.initState
+    pb.addConstraint(c)
 
     c.register(new AdviseCount)
     c.adviseAll(ps)
@@ -89,9 +94,10 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
       val vx = new Variable("x", IntDomain.ofSeq(0))
       val vy = new Variable("y", IntDomain.ofSeq(0))
       val vz = new Variable("z", IntDomain.ofSeq(-1))
-
-      val c = new AddAC(vx, vy, vz);
-      val ps = Problem(vx, vy, vz).initState
+      val c = new SumAC(0, Array(-1, 1, 1), Array(vx, vy, vz), SumMode.SumEQ)
+      val pb = Problem(vx, vy, vz)
+      val ps = pb.initState
+      pb.addConstraint(c)
       c.register(new AdviseCount())
       c.adviseAll(ps)
       val r1 = c.revise(ps)
@@ -111,8 +117,10 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
       val vy = new Variable("y", IntDomain.ofSeq(y: _*))
       val vz = new Variable("z", IntDomain.ofSeq(z: _*))
 
-      val c = new AddAC(vx, vy, vz);
-      val ps = Problem(vx, vy, vz).initState
+      val c = new SumAC(0, Array(-1, 1, 1), Array(vx, vy, vz), SumMode.SumEQ)
+      val pb = Problem(vx, vy, vz)
+      val ps = pb.initState
+      pb.addConstraint(c)
 
       c.register(new AdviseCount())
       val d = c.scope.map(_.initDomain)
@@ -122,11 +130,14 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
       val c2 = new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
         def check(t: Array[Int]) = t(0) == t(1) + t(2);
       };
+
+      pb.addConstraint(c2)
       c2.register(new AdviseCount())
       c2.adviseAll(ps)
       val r2 = c2.revise(ps)
 
-      r1 shouldBe r2
+      r1.domainsOption shouldBe r2.domainsOption
+
     }
 
   }

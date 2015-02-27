@@ -19,19 +19,16 @@
 
 package concrete.heuristic;
 
-import scala.collection.JavaConversions
-import concrete.constraint.Constraint
 import concrete.Problem
 import concrete.Variable
-import scala.annotation.tailrec
 import concrete.ParameterManager
 import concrete.ProblemState
 import concrete.Domain
 
-final class WDeg(params: ParameterManager) extends ScoredVariableHeuristic(params) {
+final class MaxDom(params: ParameterManager) extends ScoredVariableHeuristic(params) {
 
-  def score(variable: Variable, dom: Domain, state: ProblemState) = variable.getWDegEntailed(state)
+  def score(variable: Variable, dom: Domain, state: ProblemState) = dom.size
 
-  override def toString = "max-wdeg"
+  override def toString = "max-dom"
 
 }

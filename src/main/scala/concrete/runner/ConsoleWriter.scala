@@ -1,9 +1,8 @@
 package concrete.runner
 
-import cspom.StatisticsManager
 import scala.xml.NodeSeq
-import concrete.Variable
-import concrete.UNSATException
+
+import cspom.StatisticsManager
 
 class ConsoleWriter(opts: Map[Symbol, Any]) extends ConcreteWriter {
 

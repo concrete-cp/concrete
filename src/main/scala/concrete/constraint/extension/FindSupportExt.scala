@@ -22,7 +22,7 @@ package concrete.constraint.extension;
 import concrete.Variable
 import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
-import concrete.UNSATException
+import cspom.UNSATException
 import concrete.constraint.Constraint
 import concrete.Domain
 import concrete.ProblemState

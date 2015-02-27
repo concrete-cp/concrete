@@ -47,8 +47,11 @@ final class MulTest extends FlatSpec with Matchers with PropertyChecks with Insp
       val vy = new Variable("y", IntDomain.ofSeq(y: _*))
       val vz = new Variable("z", IntDomain.ofSeq(z: _*))
 
-      val ps = Problem(vx, vy, vz).initState
+      val pb = Problem(vx, vy, vz)
       val c = new MulAC(vx, vy, vz)
+      pb.addConstraint(c)
+      val ps = pb.initState
+
       c.register(new AdviseCount)
       c.adviseAll(ps)
       val r1 = c.revise(ps)
@@ -58,10 +61,11 @@ final class MulTest extends FlatSpec with Matchers with PropertyChecks with Insp
       val c2 = new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
         def check(t: Array[Int]) = t(0) == t(1) * t(2);
       };
+      pb.addConstraint(c2)
       c2.register(new AdviseCount)
       c2.adviseAll(ps)
       val r2 = c2.revise(ps)
-      r1 shouldBe r2
+      r1.domainsOption shouldBe r2.domainsOption
 
       //      
       //      val Revised(mod2, _, _) = c2.revise(mod)

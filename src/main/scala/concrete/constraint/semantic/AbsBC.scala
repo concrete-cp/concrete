@@ -18,15 +18,16 @@ final class AbsBC(val result: Variable, val v0: Variable) extends Constraint(Arr
 
   def shave(ps: ProblemState): Outcome = {
 
-    ps.shaveDom(result, ps.dom(v0).span.abs)
+    ps.shaveDom(result, ps.span(v0).abs)
       .andThen { ps =>
 
-        val ri = ps.dom(result).span
-        val v0span = ps.dom(v0).span
+        val ri = ps.span(result)
+        val v0span = ps.span(v0)
 
-        Interval.union(v0span intersect ri, v0span intersect -ri).map {
-          nv0 => ps.shaveDom(this.v0, nv0).entailIfFree(this)
-        }
+        Interval.union(v0span intersect ri, v0span intersect -ri)
+          .map {
+            nv0 => ps.shaveDom(this.v0, nv0).entailIfFree(this)
+          }
           .getOrElse {
             Contradiction
           }

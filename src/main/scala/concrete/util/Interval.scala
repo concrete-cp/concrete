@@ -2,13 +2,9 @@ package concrete.util
 
 object Interval {
   def union(i0: Option[Interval], i1: Option[Interval]): Option[Interval] = {
-    i0.map {
-      i: Interval =>
-        if (i1.isDefined) {
-          i span i1.get
-        } else {
-          i
-        }
+    i0.map { i =>
+      i1.map { i1 => i span i1 }
+        .getOrElse(i)
     }
       .orElse(i1)
   }
@@ -38,8 +34,16 @@ final case class Interval(val lb: Int, val ub: Int) {
 
   def *(i: Interval) = {
     val Interval(c, d) = i
-    val prods = List(lb * c, lb * d, ub * c, ub * d)
-    Interval(prods.min, prods.max)
+
+    val p1 = lb * c
+    val p2 = lb * d
+    val p3 = ub * c
+    val p4 = ub * d
+
+    val l = math.min(p1, math.min(p2, math.min(p3, p4)))
+    val u = math.max(p1, math.max(p2, math.max(p3, p4)))
+
+    Interval(l, u)
   }
 
   def *(v: Int) = {
@@ -75,9 +79,14 @@ final case class Interval(val lb: Int, val ub: Int) {
   def /(i: Interval) = {
     if (i.contains(0)) throw new ArithmeticException
     val Interval(c, d) = i
-    Interval(
-      List(ceilDiv(lb, c), ceilDiv(lb, d), ceilDiv(ub, c), ceilDiv(ub, d)).min,
-      List(floorDiv(lb, c), floorDiv(lb, d), floorDiv(ub, c), floorDiv(ub, d)).max)
+
+    val l = math.min(
+      ceilDiv(lb, c), math.min(ceilDiv(lb, d), math.min(ceilDiv(ub, c), ceilDiv(ub, d))))
+
+    val u = math.max(
+      floorDiv(lb, c), math.max(floorDiv(lb, d), math.max(floorDiv(ub, c), floorDiv(ub, d))))
+
+    Interval(l, u)
   }
 
   def /(v: Int) = {

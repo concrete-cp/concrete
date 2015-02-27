@@ -45,26 +45,26 @@ trait ConcreteRunner extends LazyLogging {
       }
     }
 
-  def options(args: List[String], o: Map[Symbol, Any] = Map.empty, unknown: List[String] = Nil): (Map[Symbol, Any], List[String]) = args match {
-    case Nil => (o, unknown.reverse)
+  def options(args: List[String], o: Map[Symbol, Any] = Map.empty, realArgs: List[String]): (Map[Symbol, Any], List[String]) = args match {
+    case Nil => (o, realArgs.reverse)
     case "-P" :: opts :: tail => {
       val p = params(Nil, opts.split(":").toList)
-      options(tail, o + ('D -> p), unknown)
+      options(tail, o + ('D -> p), realArgs)
     }
     case "-sql" :: option :: tail =>
-      options(tail, o + ('SQL -> option), unknown)
-    case "-control" :: tail             => options(tail, o + ('Control -> None))
-    case "-time" :: t :: tail           => options(tail, o + ('Time -> t.toInt))
-    case "-a" :: tail                   => options(tail, o + ('all -> Unit))
-    case "-s" :: tail                   => options(tail, o + ('stats -> Unit))
-    case u :: tail if u.startsWith("-") => options(tail, o + ('unknown -> u))
+      options(tail, o + ('SQL -> option), realArgs)
+    case "-control" :: tail             => options(tail, o + ('Control -> None), realArgs)
+    case "-time" :: t :: tail           => options(tail, o + ('Time -> t.toInt), realArgs)
+    case "-a" :: tail                   => options(tail, o + ('all -> Unit), realArgs)
+    case "-s" :: tail                   => options(tail, o + ('stats -> Unit), realArgs)
+    case u :: tail if u.startsWith("-") => options(tail, o + ('unknown -> u), realArgs)
     //    case "-cl" :: tail => options(tail, o + ('CL -> None))
-    case u :: tail                      => options(tail, o, u :: unknown)
+    case u :: tail                      => options(tail, o, u :: realArgs)
   }
 
-  def load(args: List[String]): concrete.Problem
+  def load(args: List[String], opt: Map[Symbol, Any]): concrete.Problem
 
-  def applyParameters(s: Solver): Unit = {}
+  def applyParameters(s: Solver, opt: Map[Symbol, Any]): Unit = {}
 
   def description(args: List[String]): String
 
@@ -79,7 +79,7 @@ trait ConcreteRunner extends LazyLogging {
     var status: RunnerStatus = Unknown
 
     val (opt, remaining) = try {
-      options(args.toList)
+      options(args.toList, realArgs = Nil)
     } catch {
       case e: IllegalArgumentException =>
         println(e.getMessage)
@@ -119,7 +119,7 @@ trait ConcreteRunner extends LazyLogging {
 
       val problem = try {
         val (problem, lT) = StatisticsManager.time {
-          load(remaining)
+          load(remaining, opt)
         }
         loadTime = lT
         problem
@@ -132,7 +132,7 @@ trait ConcreteRunner extends LazyLogging {
       val solver = new SolverFactory(pm)(problem)
 
       statistics.register("solver", solver)
-      applyParameters(solver)
+      applyParameters(solver, opt)
       //println(solver.problem)
 
       for (t <- opt.get('Time)) {

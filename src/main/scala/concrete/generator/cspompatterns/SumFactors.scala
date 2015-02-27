@@ -6,6 +6,7 @@ import cspom.compiler.ConstraintCompiler
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
 
+/** Removes variables with coef 0 from sum constraints */
 object SumFactors extends ConstraintCompiler {
 
   type A = Seq[_]

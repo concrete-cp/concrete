@@ -1,13 +1,13 @@
 package concrete.constraint.semantic
 
-import concrete.IntDomain
-import concrete.Variable
-import concrete.UNSATException
-import concrete.constraint.AdviseCount
-import org.scalatest.Matchers
 import org.scalatest.FlatSpec
+import org.scalatest.Matchers
+
 import concrete.Contradiction
+import concrete.IntDomain
 import concrete.Problem
+import concrete.Variable
+import concrete.constraint.AdviseCount
 
 class AllDifferent2CTest extends FlatSpec with Matchers {
 

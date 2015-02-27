@@ -9,7 +9,7 @@ import concrete.ParameterManager
 import concrete.ProblemState
 import concrete.Domain
 
-final class DDegFreeOnDom(params: ParameterManager) extends VariableHeuristic(params) {
+final class DDegFreeOnDom(params: ParameterManager) extends ScoredVariableHeuristic(params) {
 
   def score(variable: Variable, dom: Domain, state: ProblemState) =
     variable.getDDegFree(state).toDouble / dom.size

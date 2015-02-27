@@ -7,11 +7,11 @@ import concrete.ParameterManager
 import concrete.ProblemState
 import concrete.Domain
 
-final class DDegOnDom(params: ParameterManager) extends ScoredVariableHeuristic(params) {
+final class DDeg(params: ParameterManager) extends ScoredVariableHeuristic(params) {
 
   def score(variable: Variable, dom: Domain, state: ProblemState) =
-    variable.getDDegEntailed(state).toDouble / dom.size
+    variable.getDDegEntailed(state).toDouble
 
-  override def toString = "max-ddeg/dom"
+  override def toString = "max-ddeg"
 
 }

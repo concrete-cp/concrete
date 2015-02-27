@@ -5,7 +5,6 @@ import com.typesafe.scalalogging.LazyLogging
 import Generator.cspom2concreteVar
 import concrete.Domain
 import concrete.ParameterManager
-import concrete.UNSATException
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.extension.BinaryExt
@@ -26,6 +25,7 @@ import concrete.constraint.extension.STR
 import concrete.constraint.extension.TupleTrieSet
 import concrete.constraint.extension.UnaryExt
 import cspom.CSPOMConstraint
+import cspom.UNSATException
 import cspom.extension.IdMap
 
 class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLogging {

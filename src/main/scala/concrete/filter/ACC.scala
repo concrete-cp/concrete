@@ -24,6 +24,8 @@ object ACC extends LazyLogging {
     problem.constraints.foldLeft(state) {
       (s, c) =>
 
+        //println(s"Controlling $c")
+
         c.adviseAll(s)
 
         c.revise(s) match {
@@ -173,7 +175,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
           return Contradiction
 
         case newState: ProblemState =>
-          assert(constraint.scope.map(newState.dom).forall(_.nonEmpty))
+          assert(constraint.scope.forall(v => newState.dom(v).nonEmpty))
 
           assert(noChange(s, newState, varSet -- constraint.scope), s"$constraint changed a variable outside of its scope")
           //          for (i <- 0 until constraint.arity) {

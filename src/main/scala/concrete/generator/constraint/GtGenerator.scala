@@ -5,10 +5,10 @@ import concrete.BooleanDomain
 import concrete.constraint.Constraint
 import concrete.constraint.semantic.Gt
 import concrete.constraint.semantic.ReifiedConstraint
-import concrete.constraint.semantic.ReifiedGtC
-import concrete.constraint.semantic.ReifiedLtC
 import concrete.generator.FailedGenerationException
 import cspom.CSPOMConstraint
+import concrete.constraint.semantic.SumMode
+import concrete.constraint.semantic.SumBC
 
 final object GtGenerator extends Generator {
   import Generator._
@@ -23,16 +23,16 @@ final object GtGenerator extends Generator {
 
   }
 
-  override def genReversed(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
-    val Seq(v0, v1) = constraint.arguments map cspom2concrete1D;
-
-    constraint.function match {
-      case 'gt => gte(v1, v0, false)
-      case 'ge => gte(v1, v0, true)
-      case _   => throw new FailedGenerationException("Unhandled constraint " + constraint);
-    }
-
-  }
+//  override def genReversed(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
+//    val Seq(v0, v1) = constraint.arguments map cspom2concrete1D;
+//
+//    constraint.function match {
+//      case 'gt => gte(v1, v0, false)
+//      case 'ge => gte(v1, v0, true)
+//      case _   => throw new FailedGenerationException("Unhandled constraint " + constraint);
+//    }
+//
+//  }
 
   private def gte(v0: C21D, v1: C21D, strict: Boolean): Seq[Constraint] = (v0, v1) match {
     case (Const(v0), Const(v1)) =>
@@ -75,9 +75,17 @@ final object GtGenerator extends Generator {
         require(result.initDomain == BooleanDomain(r), constraint)
         Nil
       case (Var(v0), Const(v1)) =>
-        Seq(new ReifiedGtC(result, v0, v1, strict))
+        Seq(new ReifiedConstraint(
+          result,
+          new SumBC(-v1, Array(-1), Array(v0), if (strict) SumMode.SumLT else SumMode.SumLE),
+          new SumBC(v1, Array(1), Array(v0), if (strict) SumMode.SumLE else SumMode.SumLT)))
       case (Const(v0), Var(v1)) =>
-        Seq(new ReifiedLtC(result, v1, v0, strict))
+        Seq(new ReifiedConstraint(
+          result,
+          new SumBC(v0, Array(1), Array(v1), if (strict) SumMode.SumLT else SumMode.SumLE),
+          new SumBC(-v0, Array(-1), Array(v1), if (strict) SumMode.SumLE else SumMode.SumLT)))
+
+      //Seq(new ReifiedLtC(result, v1, v0, strict))
 
       case (Var(v0), Var(v1)) => Seq(
         new ReifiedConstraint(

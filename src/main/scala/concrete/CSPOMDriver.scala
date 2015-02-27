@@ -46,8 +46,8 @@ object CSPOMDriver {
     CSPOMConstraint('gcc, v, Map("gcc" -> cardinalities))
   }
 
-  def occurrence[A](constant: CSPOMConstant[A], variables: SimpleExpression[A]*)(implicit problem: CSPOM): SimpleExpression[Int] = {
-    problem.isInt('occurrence, variables, Map("occurrence" -> constant))
+  def occurrence[A](value: SimpleExpression[A], variables: SimpleExpression[A]*)(implicit problem: CSPOM): SimpleExpression[Int] = {
+    problem.isInt('occurrence, Seq(value, variables))
   }
 
   def clause(positive: Seq[SimpleExpression[Boolean]], negative: Seq[SimpleExpression[Boolean]]): CSPOMConstraint[Boolean] = {
@@ -118,5 +118,9 @@ final class JCSPOMDriver extends CSPOM {
   def allDifferent(v: IntVariable*) = CSPOMDriver.allDifferent(v: _*)
 
   def abs(v: SimpleExpression[Int]) = CSPOMDriver.abs(v)
+
+  def seq[A](v: Array[CSPOMExpression[A]]): CSPOMSeq[A] = CSPOMSeq(v: _*)
+
+  //def nameArray(v: Array[CSPOMExpression[Any]], name:String) = problem.nameExpression(e, n)
 }
 

@@ -27,6 +27,7 @@ import scala.collection.immutable.VectorBuilder
 import concrete.constraint.StatefulConstraint
 import scala.annotation.varargs
 import scala.collection.immutable.BitSet
+import concrete.util.BitVector
 
 object Problem {
   @varargs
@@ -40,6 +41,8 @@ final class Problem(val variables: List[Variable]) {
   val nbVariables = variables.foldLeft(0) {
     (acc, v) => v.id = acc; acc + 1
   }
+
+  var decisionVariables: List[Variable] = variables
 
   val variableMap: Map[String, Variable] = variables.map(v => v.name -> v).toMap
   var constraints: Array[Constraint] = Array()
@@ -74,7 +77,7 @@ final class Problem(val variables: List[Variable]) {
     initState = new ProblemState(initState.domains, stateBuffer.result, initState.entailed)
   }
 
-  var initState = new ProblemState(variables.map(_.initDomain).toIndexedSeq, IndexedSeq(), BitSet.empty) //(0 until constraints.length).map(constraints(_).initState)
+  var initState = new ProblemState(variables.map(_.initDomain).toIndexedSeq, IndexedSeq(), BitVector.empty) //(0 until constraints.length).map(constraints(_).initState)
 
   def toString(state: ProblemState) = {
     variables.map(_.toString(state)).mkString("\n") + "\n" +
@@ -86,7 +89,7 @@ final class Problem(val variables: List[Variable]) {
   }
 
   def stats(state: ProblemState) = {
-    val entailed = state.entailed.size
+    val entailed = state.entailed.cardinality
 
     s"Total ${variables.size} variables, ${constraints.size - entailed} active constraints and $entailed entailed constraints"
   }

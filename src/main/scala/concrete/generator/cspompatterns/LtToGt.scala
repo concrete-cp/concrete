@@ -37,3 +37,20 @@ object LtToGt extends ConstraintCompiler {
   }
   def selfPropagation = false
 }
+
+object ReversedGt extends ConstraintCompiler {
+  type A = Boolean
+
+  override def constraintMatcher = {
+    case CSPOMConstraint(r, 'gt, _, _) if r.isFalse => true
+    case CSPOMConstraint(r, 'ge, _, _) if r.isFalse => false
+  }
+
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM, strict: Boolean) = {
+    replaceCtr(fc,
+      CSPOMConstraint((if (strict) 'ge else 'gt), fc.arguments.reverse, fc.params),
+      problem)
+
+  }
+  def selfPropagation = false
+}

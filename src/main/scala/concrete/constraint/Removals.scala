@@ -9,7 +9,9 @@ trait Removals extends Constraint with AdviseCounts {
 
   val removals = new Array[Int](arity)
 
-  def advise(problemState: ProblemState, pos: Int) = {
+  def advise(problemState: ProblemState, pos: Int): Int = {
+    assert(adviseCount >= 0)
+    //println(s"advising $this")
     removals(pos) = adviseCount
     getEvaluation(problemState)
   }
@@ -33,6 +35,7 @@ trait Removals extends Constraint with AdviseCounts {
       }
       i -= 1
     }
+    assert(mod.nonEmpty)
     mod
   }
 
