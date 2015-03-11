@@ -27,7 +27,9 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors {
 
     val occ = new Variable("occ", IntDomain.ofSeq(1, 2, 3))
 
-    val c = new OccurrenceVar(occ, 7, Array(v1, v2, v3, v4, v5))
+    val value = new Variable("value", IntDomain.ofSeq(7))
+
+    val c = new Occurrence(occ, value, Array(v1, v2, v3, v4, v5))
     c.register(new AdviseCount())
     val pb = Problem(occ, v1, v2, v3, v4, v5)
     pb.addConstraint(c)
@@ -52,7 +54,9 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors {
 
     val occ = new Variable("occ", IntDomain.ofSeq(3, 4, 5))
 
-    val c = new OccurrenceVar(occ, 7, Array(v1, v2, v3, v4, v5))
+    val value = new Variable("value", IntDomain.ofSeq(7))
+
+    val c = new Occurrence(occ, value, Array(v1, v2, v3, v4, v5))
     c.register(new AdviseCount())
 
     val pb = Problem(occ, v1, v2, v3, v4, v5)
@@ -80,7 +84,7 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors {
     val s = Solver(problem)
     val c = s.concreteProblem.constraints
       .collectFirst {
-        case c: OccurrenceVar => c
+        case c: Occurrence => c
       }
       .get
 
