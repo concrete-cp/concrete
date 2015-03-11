@@ -161,25 +161,28 @@ final case class ProblemState(
   def updateDom(v: Variable, newDomain: Domain): Outcome = {
     if (newDomain.isEmpty) {
       Contradiction
-    } else if (dom(v) eq newDomain) {
-      this
     } else {
-      new ProblemState(domains.updated(v.id, newDomain), constraintStates, entailed)
+      updateDomNonEmpty(v, newDomain)
     }
   }
 
-  def updateDomNonEmpty(id: Int, newDomain: Domain): ProblemState = {
+  private def updateDomNonEmpty(id: Int, oldDomain: Domain, newDomain: Domain): ProblemState = {
     assert(newDomain.nonEmpty)
-    if (domains(id) eq newDomain) {
+    if (oldDomain eq newDomain) {
       this
     } else {
-      assert(newDomain subsetOf domains(id))
+      assert(newDomain subsetOf oldDomain)
       new ProblemState(domains.updated(id, newDomain), constraintStates, entailed)
     }
   }
 
-  def updateDomNonEmpty(variable: Variable, newDomain: Domain): ProblemState =
-    updateDomNonEmpty(variable.id, newDomain)
+  def updateDomNonEmpty(id: Int, newDomain: Domain): ProblemState = {
+    updateDomNonEmpty(id, dom(id), newDomain)
+  }
+
+  def updateDomNonEmpty(variable: Variable, newDomain: Domain): ProblemState = {
+    updateDomNonEmpty(variable.id, dom(variable), newDomain)
+  }
 
   def shaveDomNonEmpty(variable: Variable, itv: Interval): ProblemState = {
     updateDomNonEmpty(variable, dom(variable) & itv)
