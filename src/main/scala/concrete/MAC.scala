@@ -118,7 +118,10 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
           case None =>
             require(problem.variables.forall(v => filteredState.dom(v).size == 1),
               s"Unassigned variables in:\n${problem.variables.map(_.toString(filteredState)).mkString("\n")}")
-            require(problem.constraints.forall(c => c.controlAssignment(filteredState)))
+            for (c <- problem.constraints.find(c => !c.controlAssignment(filteredState))) {
+              throw new IllegalStateException(s"${extractSolution(filteredState)} does not satisfy ${c.toString(filteredState)}")
+            }
+
             (SAT(extractSolution(filteredState)), stack, filteredState :: stateStack)
           case Some(pair) =>
 

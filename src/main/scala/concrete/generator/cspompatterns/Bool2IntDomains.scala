@@ -18,6 +18,7 @@ import cspom.variable.SimpleExpression
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.CSPOM
 import cspom.util.Finite
+import cspom.compiler.Delta
 
 object Bool2IntDomains extends VariableCompiler('bool2int) {
 
@@ -25,14 +26,13 @@ object Bool2IntDomains extends VariableCompiler('bool2int) {
     case CSPOMConstraint(CSPOMConstant(true), _, Seq(i0: SimpleExpression[_], i1: SimpleExpression[_]), params) =>
 
       val b = BoolVariable.boolExpression(i0)
-      
 
       val ii = b match {
         case CSPOMConstant(false) => RangeSet(IntInterval.singleton(0))
-        case CSPOMConstant(true) => RangeSet(IntInterval.singleton(1))
-        case _: BoolVariable => RangeSet(IntInterval(0, 1))
+        case CSPOMConstant(true)  => RangeSet(IntInterval.singleton(1))
+        case _: BoolVariable      => RangeSet(IntInterval(0, 1))
       }
-      
+
       val iii = reduceDomain(IntExpression(i1), ii)
 
       val bb =
@@ -59,13 +59,15 @@ object Bool2IntDomains extends VariableCompiler('bool2int) {
 object Bool2IntIsEq extends ConstraintCompilerNoData {
   def matchBool(c: CSPOMConstraint[_], p: CSPOM) = c.function == 'bool2int
   def compile(c: CSPOMConstraint[_], p: CSPOM) = {
-    val b = c.arguments(0).asInstanceOf[SimpleExpression[_]]
-    val i = c.arguments(1).asInstanceOf[SimpleExpression[_]]
+    val Seq(b, i) = c.arguments.map(_.asInstanceOf[SimpleExpression[_]])
+    //(0).asInstanceOf[SimpleExpression[_]]
+    // val i = c.arguments(1).asInstanceOf[SimpleExpression[_]]
     require(b.searchSpace == i.searchSpace &&
       (!b.contains(false) || i.contains(0) || i.contains(false)) && (
-          !b.contains(true) || i.contains(1) || i.contains(true)))
+        !b.contains(true) || i.contains(1) || i.contains(true)))
+    //println(s"removing $c")
+    removeCtr(c, p) ++ replace(Seq(i), b, p)
 
-    replaceCtr(c, Nil, p) ++ replace(Seq(i), b, p)
   }
   def selfPropagation = false
 }

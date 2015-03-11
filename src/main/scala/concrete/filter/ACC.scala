@@ -34,7 +34,7 @@ object ACC extends LazyLogging {
             require(c.scope.forall(v => s.dom(v) eq finalState.dom(v)),
               s"${c.toString(state)}${if (state.isEntailed(c)) " - entailed" else ""} was revised (-> ${c.toString(finalState)})")
 
-            require(c.controlAssignment(finalState), s"$c assignement is inconsistent")
+            require(c.controlAssignment(finalState), s"${c.toString(finalState)} assignement is inconsistent")
             finalState
         }
 
