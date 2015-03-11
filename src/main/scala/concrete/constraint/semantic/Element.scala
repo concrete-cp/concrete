@@ -31,17 +31,39 @@ object Element {
   }
 }
 
-class ElementBC(
-  val result: Variable,
-  val index: Variable,
-  val vars: Array[Variable])
-  extends Constraint(result +: index +: vars.filter(_ ne null)) with BC {
+abstract class Element(val result: Variable,
+                       val index: Variable,
+                       val vars: Array[Variable])
+  extends Constraint(result +: index +: vars.filter(_ ne null)) {
+
+  protected val varsOption = vars.map(Option.apply)
+
+  lazy val map: Map[Int, Int] = {
+    val scopeIndices = scope.zipWithIndex.toMap
+    vars.indices.map(i => i -> scopeIndices(vars(i))).toMap
+  }
+
+  def check(tuple: Array[Int]): Boolean = {
+    map.get(tuple(1)).forall(i => tuple(0) == tuple(i))
+    //tuple(1) < arity - 2 && tuple(0) == tuple(map(tuple(1)))
+  }
+
+  def toString(ps: ProblemState, consistency: String): String = {
+    s"${result.toString(ps)} =$consistency= (${index.toString(ps)})th of ${
+      vars.toSeq.map {
+        case null => "{}"
+        case v    => v.toString(ps)
+      }
+    }"
+  }
+}
+
+class ElementBC(result: Variable, index: Variable, vars: Array[Variable])
+  extends Element(result, index, vars)
+  with BC {
 
   def advise(ps: ProblemState, pos: Int): Int = arity
 
-  def check(tuple: Array[Int]): Boolean = {
-    tuple(1) < arity - 2 && tuple(0) == tuple(tuple(1) + 2)
-  }
   def shave(ps: ProblemState) = {
     var ch = List[Int]()
 
@@ -50,12 +72,11 @@ class ElementBC(
      * Revise indices
      */
     ps.filterDom(index) {
-      v: Int =>
+      i: Int =>
 
-        val r = v >= 0 && v < vars.length && (vars(v) ne null) && (resultSpan intersects ps.span(vars(v)))
-
-        //println(s"0 <= $v < ${vars.length} & (${vars(v) ne null}) & $resultSpan intersects ${ps.span(vars(v))} : $r")
-        r
+        i >= 0 && i < vars.length && varsOption(i).forall { v =>
+          resultSpan intersects ps.span(v)
+        }
 
     }
       .andThen { ps =>
@@ -79,29 +100,18 @@ class ElementBC(
 
   }
   def simpleEvaluation: Int = 2
-  override def toString(ps: ProblemState) = {
-    s"${result.toString(ps)} =BC= (${index.toString(ps)})th of ${
-      vars.toSeq.map {
-        case null => "{}"
-        case v    => v.toString(ps)
-      }
-    }"
-  }
+  override def toString(ps: ProblemState) = toString(ps, "BC")
 }
 
 class ElementAC(
-  val result: Variable,
-  val index: Variable,
-  val vars: Array[Variable])
-  extends Constraint(result +: index +: vars.filter(_ ne null)) with Removals with BCCompanion {
+  result: Variable,
+  index: Variable,
+  vars: Array[Variable])
+  extends Element(result, index, vars) with Removals with BCCompanion {
 
   val offset = vars.filter(_ ne null).map(_.initDomain.head).min
-  
-  def getEvaluation(ps: ProblemState): Int = if (skip(ps)) -1 else scopeSize(ps)
 
-  def check(tuple: Array[Int]): Boolean = {
-    tuple(1) < arity - 2 && tuple(0) == tuple(tuple(1) + 2)
-  }
+  def getEvaluation(ps: ProblemState): Int = if (skip(ps)) -1 else scopeSize(ps)
 
   def skipIntervals = false
 
@@ -111,8 +121,11 @@ class ElementAC(
      * Revise indices
      */
     ps.filterDom(this.index) { i =>
-      i >= 0 && i < vars.length && (vars(i) ne null) &&
-        resultDom.exists(ps.dom(vars(i)).present)
+      i >= 0 && i < vars.length && varsOption(i).forall { v =>
+        val d = ps.dom(v)
+        resultDom.exists(d.present)
+      }
+
     }
       .andThen { ps =>
         /**
@@ -138,12 +151,5 @@ class ElementAC(
   }
   def simpleEvaluation: Int = 3
 
-  override def toString(ps: ProblemState) = {
-    s"${result.toString(ps)} =AC= (${index.toString(ps)})th of ${
-      vars.toSeq.map {
-        case null => "{}"
-        case v    => v.toString(ps)
-      }
-    }"
-  }
+  override def toString(ps: ProblemState) = toString(ps, "AC")
 }
