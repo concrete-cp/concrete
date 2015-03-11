@@ -7,7 +7,7 @@ organization := "fr.univ-valenciennes.concrete"
 
 version := "2.0-SNAPSHOT"
 
-scalaVersion := "2.11.5"
+scalaVersion := "2.11.6"
 
 
 // For JSR331, CSPOM and its dependencies
@@ -22,18 +22,18 @@ testOptions in Test <+= (target in Test) map {
 
 libraryDependencies ++= Seq(
 	"fr.univ-valenciennes.concrete" %% "cspom" % "2.5-SNAPSHOT",
-	"org.postgresql" % "postgresql" % "9.3-1102-jdbc41",
+	"org.postgresql" % "postgresql" % "9.4-1201-jdbc41",
 	//"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
 	"com.typesafe.slick" %% "slick" % "2.1.0",
 	//"org.jcp" % "jsr331" % "1.1.1",
-	"org.scalatest" %% "scalatest" % "2.2.3" % "test",
-	"org.scalacheck" %% "scalacheck" % "1.12.1" % "test",
+	"org.scalatest" %% "scalatest" % "2.2.4" % "test",
+	"org.scalacheck" %% "scalacheck" % "1.12.2" % "test",
 	"com.storm-enroute" %% "scalameter" % "0.6" % "test",
 	"com.github.scala-incubator.io" %% "scala-io-file" % "0.4.3"
 	)
 
 scalacOptions ++= Seq("-optimise"
-//	      , "-Xdisable-assertions"
+	      , "-Xdisable-assertions"
 	      , "-target:jvm-1.7"
 //	"-deprecation", 
 //	"-unchecked", 
