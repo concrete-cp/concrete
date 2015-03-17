@@ -4,6 +4,9 @@
 %                     array[int] of var int: d,
 %                     array[int] of var int: r, var int: b);
 
+
+%predicate bool_lin_le(array[int] of par int: c, array[int] of var bool: x, par int: d);
+
 %-----------------------------------------------------------------------------%
 % Requires that a set of tasks given by start times 's', durations 'd', and
 % resource requirements 'r', never require more than a global resource bound
@@ -13,7 +16,7 @@
 %-----------------------------------------------------------------------------%
 predicate cumulative(array[int] of var int: s,
                      array[int] of var int: d,
-                     array[int] of var int: r, var int: b) =
+                     array[int] of par int: r, par int: b) =
     assert(index_set(s) == index_set(d) /\ index_set(s) == index_set(r),
         "cumulative: the 3 array arguments must have identical index sets",
         assert(lb_array(d) >= 0 /\ lb_array(r) >= 0,
@@ -25,19 +28,27 @@ predicate cumulative(array[int] of var int: s,
                   min([ lb(s[i]) | i in tasks ]) ..
                   max([ ub(s[i]) + ub(d[i]) | i in tasks ]) 
                 } 
-            in if card(times) < 1500 then
+            in if card(times) < 1000 then
 				% Time-indexed decomposition
                forall( t in times ) (
-                  b >= sum( i in tasks ) (
-                     bool2int( s[i] <= t /\ t < s[i] + d[i] ) * r[i]
-                  )
+                  bool_lin_le(
+                     [ r[i] | i in tasks ],
+                     [ s[i] <= t /\ t < s[i] + d[i] | i in tasks ],
+                     b  )
+%                  b >= sum( i in tasks ) (
+%                     bool2int( s[i] <= t /\ t < s[i] + d[i] ) * r[i]
+%                  )
                )
 			else
 				% Task decomposition
 				forall(i in tasks)(
-					b - r[i] >= sum(j in tasks where j != i)(
-						bool2int(s[j] <= s[i] /\ s[i] < s[j] + d[j]) * r[j]
-					)
+				    bool_lin_le( 
+				    	[ r[j] | j in tasks where j != i ], 
+				    	[ s[j] <= s[i] /\ s[i] < s[j] + d[j] | j in tasks where j != i ],
+				    	b - r[i])
+%					b - r[i] >= sum(j in tasks where j != i)(
+%						bool2int(s[j] <= s[i] /\ s[i] < s[j] + d[j]) * r[j]
+%					)
 				)
 			endif
         )

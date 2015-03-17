@@ -1,19 +1,4 @@
 %-----------------------------------------------------------------------------%
-% FlatZinc built-in redefinitions for linear solvers.
-%
-% Sebastian Brand
-%-----------------------------------------------------------------------------%
-
-%-----------------------------------------------------------------------------%
-% Strict inequality
-%
-% Uncomment the following redefinition for FlatZinc MIP solver interfaces that
-% do not support strict inequality.  Note that it does not preserve equivalence
-% (some solutions of the original problem may become invalid).
-
-% predicate float_lt(var float: x, var float: y) = x + 1e-06 <= y;
-
-%-----------------------------------------------------------------------------%
 %
 % Linear equations and inequations
 %
@@ -42,3 +27,5 @@ predicate int_lin_lt_reif(array[int] of int: c, array[int] of var int: x,
     int_lt_reif(n, d, b);
  
 
+
+predicate bool_lin_le(array[int] of par int: c, array[int] of var bool: x, par int: d);
