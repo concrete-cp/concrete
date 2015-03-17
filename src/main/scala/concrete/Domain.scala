@@ -81,4 +81,6 @@ abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
 
   override final def size = length
 
+  override def equals(o: Any) = this eq o.asInstanceOf[AnyRef]
+
 }
