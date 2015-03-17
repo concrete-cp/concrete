@@ -19,19 +19,16 @@ import cspom.compiler.ConstraintCompilerNoData
 import cspom.CSPOM
 import cspom.util.Finite
 import cspom.compiler.Delta
+import cspom.variable.BoolExpression
 
 object Bool2IntDomains extends VariableCompiler('bool2int) {
 
   def compiler(c: CSPOMConstraint[_]) = c match {
     case CSPOMConstraint(CSPOMConstant(true), _, Seq(i0: SimpleExpression[_], i1: SimpleExpression[_]), params) =>
 
-      val b = BoolVariable.boolExpression(i0)
+      val b = BoolExpression(i0)
 
-      val ii = b match {
-        case CSPOMConstant(false) => RangeSet(IntInterval.singleton(0))
-        case CSPOMConstant(true)  => RangeSet(IntInterval.singleton(1))
-        case _: BoolVariable      => RangeSet(IntInterval(0, 1))
-      }
+      val ii = BoolExpression.span(b)
 
       val iii = reduceDomain(IntExpression(i1), ii)
 

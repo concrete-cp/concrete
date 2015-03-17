@@ -3,7 +3,6 @@ package concrete.generator.cspompatterns
 import cspom.CSPOMConstraint
 import cspom.compiler.VariableCompiler
 import cspom.util.IntInterval
-import cspom.variable.BoolVariable.boolExpression
 import cspom.variable.IntExpression.implicits.arithmetics
 import cspom.variable.IntExpression
 import cspom.variable.IntExpression.implicits.ranges
@@ -11,12 +10,13 @@ import cspom.variable.SimpleExpression
 import cspom.util.Finite
 import cspom.variable.CSPOMConstant
 import cspom.util.Infinitable
+import cspom.variable.BoolExpression
 
 object GtDomains extends VariableCompiler('gt) {
 
   def compiler(c: CSPOMConstraint[_]) = c match {
     case CSPOMConstraint(r: SimpleExpression[_], _, Seq(i0: SimpleExpression[_], i1: SimpleExpression[_]), _) =>
-      val iir = boolExpression(r)
+      val iir = BoolExpression(r)
       val ii0 = IntExpression(i0)
       val ii1 = IntExpression(i1)
 

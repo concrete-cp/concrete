@@ -9,6 +9,7 @@ import cspom.variable.IntExpression
 import cspom.variable.IntExpression.implicits.arithmetics
 import cspom.variable.IntExpression.implicits.ranges
 import cspom.variable.SimpleExpression
+import cspom.variable.BoolExpression
 
 object EqDomains extends VariableCompiler('eq) {
 
@@ -21,7 +22,7 @@ object EqDomains extends VariableCompiler('eq) {
 
       val negFactor = if (neg) -1 else 1
 
-      val br = BoolVariable.boolExpression(r)
+      val br = BoolExpression(r)
       val ii0 = IntExpression(i0)
       val ii1 = IntExpression(i1)
 

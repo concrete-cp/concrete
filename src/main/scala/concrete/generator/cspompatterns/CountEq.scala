@@ -18,13 +18,12 @@ object CountEq extends ConstraintCompilerNoData {
   def selfPropagation: Boolean = false
 
   def compile(constraint: cspom.CSPOMConstraint[_], problem: cspom.CSPOM): cspom.compiler.Delta = {
-    val Seq(CSPOMSeq(args), value, count: SimpleExpression[Int]) = constraint.arguments
+    val Seq(CSPOMSeq(args), value, count: SimpleExpression[Int] @unchecked) = constraint.arguments
     val ncount = reduceDomain(count, Interval[Infinitable](Finite(0), Finite(args.size)))
 
-    problem.removeConstraint(constraint)
-    val nconstraint = problem.ctr(CSPOMConstraint(ncount, 'occurrence, Seq(value, CSPOMSeq(args: _*)), constraint.params))
+    val nconstraint = CSPOMConstraint(ncount, 'occurrence, Seq(value, CSPOMSeq(args: _*)), constraint.params)
 
-    Delta().removed(constraint) ++ Delta().added(nconstraint) ++ replace(Seq(count), ncount, problem)
+    replaceCtr(constraint, nconstraint, problem) ++ replace(Seq(count), ncount, problem)
 
     //replaceCtr(constraint, , problem)
   }

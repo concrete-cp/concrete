@@ -51,12 +51,12 @@ final object Regular extends ConstraintCompilerNoData {
     //println(d)
 
     val regular = mdd(x.length, s, d, q0, f.toSet, collection.mutable.Map())
-    //println(regular)
+    //println(s"generated MDD for $constraint with ${regular.edges} edges")
     replaceCtr(constraint, CSPOM.SeqOperations(x) in regular, problem)
   }
 
   def mdd(level: Int, s: Int, d: IndexedSeq[IndexedSeq[Int]], q0: Int, f: Set[Int],
-    cache: collection.mutable.Map[(Int, Int), MDD[Int]]): MDD[Int] = {
+          cache: collection.mutable.Map[(Int, Int), MDD[Int]]): MDD[Int] = {
     //println(level)
     if (q0 == 0) {
       MDD.empty
