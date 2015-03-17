@@ -27,6 +27,7 @@ class GeneratorManager(pm: ParameterManager) {
     'mod -> ModGenerator,
     'nevec -> NeqVecGenerator,
     'sum -> SumGenerator,
+    'pseudoboolean -> SumGenerator,
     'lexleq -> LexLeqGenerator,
     'occurrence -> OccurrenceGenerator,
     'extension -> new ExtensionGenerator(pm),
