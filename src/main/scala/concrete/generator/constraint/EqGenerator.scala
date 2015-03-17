@@ -64,7 +64,7 @@ final object EqGenerator extends Generator {
     require(offset == 0)
     (a, b) match {
       case (Const(a), Const(b)) =>
-        require(result.initDomain == BooleanDomain(a == b))
+        require(result.initDomain == BooleanDomain(a == b), s"$funcConstraint is inconsistent")
         Seq()
       case (Const(a), Var(b)) => Seq(
         new ReifiedConstraint(result,

@@ -51,7 +51,7 @@ final class ReduceableExt(_scope: Array[Variable], override val initState: Relat
 
     //println(this + ": filtering " + oldSize)
 
-    logger.info("Filtering with " + _scope.toSeq.map(_.toString(ps)))
+    logger.debug("Filtering with " + _scope.toSeq.map(_.toString(ps)))
 
     val newTrie = trie.filterTrie(
       { (p, i) => domains(p).present(i) }, mod)
