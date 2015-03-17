@@ -1,18 +1,17 @@
 package concrete.constraint.semantic
 
 import com.typesafe.scalalogging.LazyLogging
+
 import concrete.Contradiction
+import concrete.Domain
 import concrete.Outcome
 import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.Residues
-import concrete.constraint.ScopeIds
 import concrete.constraint.TupleEnumerator
 import concrete.util.BitVector
 import concrete.util.Interval
-
-import concrete.Domain
 
 object SumMode extends Enumeration {
   type SumMode = Value
@@ -72,6 +71,35 @@ trait SpanCalculator extends Sum {
     }
   }
 
+  def compute(ps: concrete.ProblemState): Option[BitVector]
+
+  override def isConsistent(ps: ProblemState) = {
+    compute(ps).isDefined
+  }
+
+  def revise(ps: ProblemState): Outcome = {
+
+    compute(ps) match {
+      case Some(hasChanged) =>
+        var filtered: ProblemState = ps
+        var i = hasChanged.nextSetBit(0)
+        while (i >= 0) {
+          filtered = filtered.updateDomNonEmpty(scope(i), doms(i))
+          i = hasChanged.nextSetBit(i + 1)
+        }
+        filtered
+      case None => Contradiction
+    }
+  }
+
+  override def toString() =
+    (scope, factors).zipped.map((v, f) => f + "." + v).mkString(" + ") + s" $mode $constant"
+
+  override def toString(ps: ProblemState) =
+    (scope, factors).zipped.map((v, f) => f + "." + v.toString(ps)).mkString(" + ") + s" $mode $constant"
+
+  def advise(ps: ProblemState, p: Int) = arity * 2
+  def simpleEvaluation: Int = 3
 }
 
 final class SumAC(
@@ -89,18 +117,15 @@ final class SumNE(
   constant: Int,
   factors: Array[Int],
   scope: Array[Variable]) extends Sum(constant, factors, scope, SumMode.SumNE) with SpanCalculator {
-  def advise(problemState: concrete.ProblemState, pos: Int): Int = arity * 2
-  def simpleEvaluation: Int = 3
 
   def this(constant: Int, scope: Array[Variable]) =
     this(constant, Array.fill(scope.length)(1), scope)
 
-  def revise(ps: concrete.ProblemState): concrete.Outcome = {
+  def compute(ps: concrete.ProblemState): Option[BitVector] = {
     updateDoms(ps)
     var bounds = totalSpan
-
-    var filtered: ProblemState = ps
     var change = true
+    var hasChanged = BitVector.empty
     while (change) {
       change = false
 
@@ -121,11 +146,10 @@ final class SumNE(
 
           if (newDom ne dom) {
             if (newDom.isEmpty) {
-              return Contradiction
+              return None
             } else {
-              filtered = filtered.updateDomNonEmpty(scope(i), newDom)
               doms(i) = newDom
-
+              hasChanged += i
               val newSpan = newDom.span
 
               if (newSpan != span) {
@@ -139,11 +163,11 @@ final class SumNE(
 
         i -= 1
       }
-
     }
 
-    filtered
+    Some(hasChanged)
   }
+
 }
 
 final class SumBC(
@@ -157,18 +181,15 @@ final class SumBC(
 
   require(mode != SumNE, s"SumNE is not supported by SumBC ($this)")
 
-  def advise(ps: ProblemState, p: Int) = arity * 2
-
   private def filter(dom: Domain, itv: Interval, neg: Boolean): Domain = mode match {
     case SumLE => if (neg) dom.removeUntil(itv.lb) else dom.removeAfter(itv.ub)
     case SumLT => if (neg) dom.removeTo(itv.lb) else dom.removeFrom(itv.ub)
     case SumEQ => dom & itv
   }
 
-  def revise(ps: ProblemState): Outcome = {
+  def compute(ps: ProblemState): Option[BitVector] = {
 
     updateDoms(ps)
-
     var bounds = totalSpan
 
     var hasChanged = BitVector.empty
@@ -190,7 +211,7 @@ final class SumBC(
 
         if (newDom ne dom) {
           if (newDom.isEmpty) {
-            return Contradiction
+            return None
           } else {
             doms(i) = newDom
             change = true
@@ -204,20 +225,7 @@ final class SumBC(
 
     }
 
-    var filtered: ProblemState = ps
-    var i = hasChanged.nextSetBit(0)
-    while (i >= 0) {
-      filtered = filtered.updateDomNonEmpty(scope(i), doms(i))
-      i = hasChanged.nextSetBit(i + 1)
-    }
-    filtered
+    Some(hasChanged)
   }
 
-  override def toString() =
-    (scope, factors).zipped.map((v, f) => f + "." + v).mkString(" + ") + s" $mode $constant"
-
-  override def toString(ps: ProblemState) =
-    (scope, factors).zipped.map((v, f) => f + "." + v.toString(ps)).mkString(" + ") + s" $mode $constant"
-
-  val simpleEvaluation = 3
 }
