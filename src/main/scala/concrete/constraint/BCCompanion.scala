@@ -19,4 +19,8 @@ trait BCCompanion extends Constraint {
   def skip(ps: ProblemState): Boolean =
     (skipIntervals && intervalsOnly(ps)) || scopeSize(ps) > sizeThreshold
 
+  def skip(ps: ProblemState, scopeSize: Int): Boolean = {
+    (skipIntervals && intervalsOnly(ps)) || scopeSize > sizeThreshold
+  }
+
 }

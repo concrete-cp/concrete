@@ -111,7 +111,10 @@ class ElementAC(
 
   val offset = vars.filter(_ ne null).map(_.initDomain.head).min
 
-  def getEvaluation(ps: ProblemState): Int = if (skip(ps)) -1 else scopeSize(ps)
+  def getEvaluation(ps: ProblemState): Int = {
+    val scopeSize = this.scopeSize(ps)
+    if (skip(ps, scopeSize)) -1 else scopeSize
+  }
 
   def skipIntervals = false
 
