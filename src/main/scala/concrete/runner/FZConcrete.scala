@@ -22,8 +22,11 @@ import cspom.flatzinc.Satisfy
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
 import concrete.heuristic._
+import cspom.flatzinc.FZAnnotation
+import cspom.flatzinc.FZExpr
+import cspom.variable.CSPOMExpression
 
-object FZConcrete extends CSPOMRunner with App {
+object FZConcrete extends CSPOMRunner {
 
   var file: URL = _
 
@@ -60,7 +63,7 @@ object FZConcrete extends CSPOMRunner with App {
     parseTime = time
 
     outputVars = cspom.namedExpressions.collect {
-      case (n, e) if e.getSeqParam[FZAnnotation]("fzAnnotations").exists {
+      case (n, e) if cspom.getAnnotations(n).getSeqParam[FZAnnotation]("fzAnnotations").exists {
         case FZAnnotation("output_var", Seq()) => true
         case _                                 => false
       } => n
@@ -68,7 +71,7 @@ object FZConcrete extends CSPOMRunner with App {
 
     outputArrays = cspom.namedExpressions.toMap.flatMap {
       case (n, e) =>
-        e.getSeqParam[FZAnnotation]("fzAnnotations").collectFirst {
+        cspom.getAnnotations(n).getSeqParam[FZAnnotation]("fzAnnotations").collectFirst {
           case FZAnnotation("output_array", Seq(data: FZArrayExpr[_])) =>
             val FZArrayExpr(array) = data
             val ranges = array.map {
@@ -85,7 +88,9 @@ object FZConcrete extends CSPOMRunner with App {
     goal.ann.foreach {
       case a if a.predAnnId == "int_search" || a.predAnnId == "bool_search" =>
         if (!opt.contains('free)) {
-          val Seq(_, FZVarParId(varchoiceannotation), FZVarParId(assignmentannotation), strategyannotation) = a.expr
+          val Seq(_, vca, aa, strategyannotation) = a.expr
+
+          val FZAnnotation(varchoiceannotation, _) = vca
 
           varchoiceannotation match {
             case "input_order" =>
@@ -99,6 +104,8 @@ object FZConcrete extends CSPOMRunner with App {
             case "most_constrained" => pm("heuristic.variable") = classOf[Brelaz]
             case h                  => logger.warn(s"Unsupported varchoice $h")
           }
+
+          val FZAnnotation(assignmentannotation, _) = aa
 
           assignmentannotation match {
             case "indomain_min"    => pm("heuristic.value") = classOf[Lexico]
@@ -130,16 +137,22 @@ object FZConcrete extends CSPOMRunner with App {
     goal.ann.foreach {
       case a if a.predAnnId == "int_search" || a.predAnnId == "bool_search" =>
         if (!opt.contains('free)) {
-          val Seq(vars, _, _, _) = a.expr
-
-          val CSPOMSeq(pool) = vars.toCSPOM(cspom.namedExpressions.toMap)
-
+          val Seq(e, _, _, _) = a.expr
+          val CSPOMSeq(pool) = ann2expr(e)
           solver.decisionVariables(pool)
         }
 
       case a => logger.warn(s"Unsupported annotation $a")
     }
 
+  }
+
+  private def ann2expr(e: FZExpr[_]): CSPOMExpression[_] = e match {
+    case FZAnnotation(vars, Seq()) => cspom.expression(vars).get
+
+    case FZArrayExpr(list)         => CSPOMSeq(list.map(ann2expr): _*)
+
+    case e                         => throw new InvalidParameterException("Cannot read search variable list in " + e)
   }
 
   def description(args: List[String]) =
@@ -164,15 +177,15 @@ object FZConcrete extends CSPOMRunner with App {
       ranges.head.size * flattenedSize(ranges.tail)
     }
 
-  private def getConstant(n: String): Option[Any] = {
-    cspom.expression(n).collect {
-      case CSPOMConstant(v) => v
-    }
-  }
+  //  private def getConstant(n: String): Option[Any] = {
+  //    cspom.expression(n).collect {
+  //      case CSPOMConstant(v) => v
+  //    }
+  //  }
 
-  def constantOrErr(solution: Map[Variable, Any]): PartialFunction[String, Any] = {
-    case n: String => getConstant(n).getOrElse(throw new MatchError(s"could not find $n in $solution or $cspom"))
-  }
+  //  def constantOrErr(solution: Map[Variable, Any]): PartialFunction[String, Any] = {
+  //    case n: String => getConstant(n).getOrElse(throw new MatchError(s"could not find $n in $solution or $cspom"))
+  //  }
 
   override def outputCSPOM(sol: Map[String, Any]) = {
     val out: Iterable[String] = outputVars.map {
@@ -180,7 +193,7 @@ object FZConcrete extends CSPOMRunner with App {
     } ++ outputArrays.map {
       case (n, ranges) =>
         val seq =
-          cspom.namedExpressions.getOrElse(n, throw new MatchError(s"could not find $n in $cspom"))
+          cspom.expression(n).getOrElse(throw new MatchError(s"could not find $n in $cspom"))
 
         val initRange = seq.asInstanceOf[CSPOMSeq[_]].definedIndices
 
@@ -192,7 +205,7 @@ object FZConcrete extends CSPOMRunner with App {
         }${solutions.mkString("[", ", ", "]")});"
 
     }
-    
+
     //++ cspom.namedExpressions.keys.flatMap(_.split("\\|\\|")).map {
     //  n => s"$n = ${sol(n)} ;"
     //}
@@ -203,12 +216,14 @@ object FZConcrete extends CSPOMRunner with App {
 
   def controlCSPOM(solution: Map[String, Any]) = ???
 
-  val status = run(args)
+  def main(args: Array[String]): Unit = {
+    val status = run(args)
 
-  sys.exit(status match {
-    case Sat | Unsat => 0
-    case _           => 1
-  })
+    sys.exit(status match {
+      case Sat | Unsat => 0
+      case _           => 1
+    })
+  }
 
 }
 
