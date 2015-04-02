@@ -17,7 +17,11 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
     domX.size == 1 && domY.size == 1 && domX.singleValue == domY.singleValue
   }
 
-  def check(t: Array[Int]) = ???
+  def check(t: Array[Int]) = check(t, 0)
+
+  private def check(t: Array[Int], i: Int): Boolean =
+    i >= size ||
+      t(i) < t(i + size) || (t(i) == t(i + size) && check(t, i + 1))
 
   private def notAlwaysLt(ps: ProblemState, i: Int) = ps.dom(scope(i)).head <= ps.dom(scope(i + size)).last
 
