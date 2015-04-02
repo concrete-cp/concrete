@@ -40,7 +40,8 @@ abstract class Element(val result: Variable,
 
   lazy val map: Map[Int, Int] = {
     val scopeIndices = scope.zipWithIndex.toMap
-    vars.indices.map(i => i -> scopeIndices(vars(i))).toMap
+    vars.indices.flatMap(i =>
+      Option(vars(i)).map(i -> scopeIndices(_))).toMap
   }
 
   def check(tuple: Array[Int]): Boolean = {
