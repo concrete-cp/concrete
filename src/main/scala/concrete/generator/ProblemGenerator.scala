@@ -68,6 +68,7 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
     cspom.referencedExpressions.flatMap(_.flatten).collect {
       case v: CSPOMVariable[_] =>
         require(v.fullyDefined, s"${vn.names(v)} has no bounds. Involved by ${cspom.constraints(v)}")
+        assert(cspom.deepConstraints(v).nonEmpty, s"${vn.names(v)} ($v) is not involved by constraints")
         v -> new Variable(vn.names(v), generateDomain(v))
     }.toMap
   }
