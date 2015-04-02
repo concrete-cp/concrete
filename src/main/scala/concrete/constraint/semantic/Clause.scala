@@ -41,51 +41,44 @@ final class Clause(positive: Array[Variable], negative: Array[Variable]) extends
   override def toString(ps: ProblemState) =
     "\\/" + (positive.map(_.toString(ps)) ++ negative.map(v => "-" + v.toString(ps))).mkString("(", ", ", ")")
 
-  def revise(ps: ProblemState): Outcome = {
+  def reviseW2(ps: ProblemState): Outcome = {
+    if (watch2 < 0 || isFalse(ps, watch2)) {
+      val w = seekWatch(ps, watch1)
+      if (w < 0) {
+        enforce(ps, watch1).entail(this)
+      } else {
+        watch2 = w
+        reviseW1(ps)
+      }
+    } else {
+      reviseW1(ps)
+    }
+  }
 
-    if (isTrue(ps, watch1)) ps.entail(this)
-    else {
-      val ps0: Outcome =
-        if (watch2 < 0 || isFalse(ps, watch2)) {
-          val w = seekWatch(ps, watch1)
-          if (w < 0) {
-            enforce(ps, watch1).entail(this)
-          } else {
-            watch2 = w
-            if (isTrue(ps, w)) {
-              ps.entail(this)
-            } else {
-              ps
-            }
-
-          }
+  def reviseW1(ps: ProblemState): Outcome = {
+    if (isTrue(ps, watch2)) {
+      ps.entail(this)
+    } else if (isFalse(ps, watch1)) {
+      val w = seekWatch(ps, watch2)
+      if (w < 0) {
+        enforce(ps, watch2).entail(this)
+      } else {
+        watch1 = w
+        if (isTrue(ps, w)) {
+          ps.entail(this)
         } else {
           ps
         }
-
-      ps0 andThen {
-        ps =>
-          if (isTrue(ps, watch2)) ps.entail(this)
-          else if (isFalse(ps, watch1)) {
-            val w = seekWatch(ps, watch2)
-            if (w < 0) {
-              enforce(ps, watch2).entail(this)
-            } else {
-              watch1 = w
-              if (isTrue(ps, w)) {
-                ps.entail(this)
-              } else {
-                ps
-              }
-            }
-
-          } else {
-            ps
-          }
       }
 
+    } else {
+      ps
     }
+  }
 
+  def revise(ps: ProblemState): Outcome = {
+    if (isTrue(ps, watch1)) { ps.entail(this) }
+    else { reviseW2(ps) }
   }
 
   private def enforce(ps: ProblemState, position: Int): Outcome = {
@@ -129,5 +122,5 @@ final class Clause(positive: Array[Variable], negative: Array[Variable]) extends
     -1
   }
 
-  val simpleEvaluation = 3
+  val simpleEvaluation = 1
 }
