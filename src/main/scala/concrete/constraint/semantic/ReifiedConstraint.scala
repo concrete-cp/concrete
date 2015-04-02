@@ -20,7 +20,7 @@ final class ReifiedConstraint(
   extends Constraint(controlVariable +: (positiveConstraint.scope ++ negativeConstraint.scope).distinct)
   with Advisable with LazyLogging {
 
-  override def id_=(i: Int): Unit = { 
+  override def id_=(i: Int): Unit = {
     super.id_=(i)
     positiveConstraint.id = i
     negativeConstraint.id = i
@@ -71,7 +71,12 @@ final class ReifiedConstraint(
   }
 
   override def check(t: Array[Int]) = {
-    (t(0) == 1) == positiveConstraint.check(positiveToReifiedPositions.map(t))
+    val rp = (t(0) == 1) == positiveConstraint.check(positiveToReifiedPositions.map(t))
+
+    assert(rp == ((t(0) == 0) == negativeConstraint.check(negativeToReifiedPositions.map(t))))
+
+    rp
+
   }
 
   override def toString(ps: ProblemState) =
