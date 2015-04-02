@@ -23,7 +23,7 @@ class AbsDiffTest extends FlatSpec with Matchers {
 
       val r = v0 - v1
 
-      assert(r.hasParam("var_is_introduced"))
+      assert(problem.namesOf(r).isEmpty)
 
       val r2 = abs(r)
 

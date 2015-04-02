@@ -21,7 +21,7 @@ class DiffGeTest extends FlatSpec with Matchers {
     val cspom = CSPOM { implicit problem =>
 
       val r = IntVariable(1 to 3) - IntVariable(2 to 4)
-      assert(r.hasParam("var_is_introduced"))
+
       ctr(r >= IntVariable(0 to 5))
 
     }
