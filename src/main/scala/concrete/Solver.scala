@@ -20,6 +20,7 @@
 package concrete;
 
 import scala.collection.JavaConversions
+import scala.reflect.runtime.universe
 
 import com.typesafe.scalalogging.LazyLogging
 
@@ -103,23 +104,28 @@ class CSPOMSolver(
 
 }
 
-class CSPOMSolution(private val cspom: CSPOM, private val variables: Map[CSPOMVariable[_], Variable], private val concreteSol: Map[Variable, Any]) extends Map[String, Any] {
+class CSPOMSolution(private val cspom: CSPOM, private val variables: Map[CSPOMVariable[_], Variable], private val concreteSol: Map[Variable, Any])
+  extends Map[String, Any]
+  with LazyLogging {
 
   lazy val apply = concrete2CspomSol(concreteSol)
 
   def concrete2CspomSol(sol: Map[Variable, Any]): Map[String, Any] = {
-    cspom.namedExpressions.iterator
+    val cspomsol = cspom.namedExpressions.iterator
       .flatMap {
         case (n, e) => concrete2CspomSol(n, e, sol)
       }
       .toMap
+
+    logger.info("CSPOM solution: " + cspomsol.toSeq.sortBy(_._1))
+    cspomsol
   }
 
   private def concrete2CspomSol(name: String, expr: CSPOMExpression[_], sol: Map[Variable, Any]): Seq[(String, Any)] = {
     expr match {
       case seq: CSPOMSeq[_] =>
         (name -> seq.values.map(v => concrete2CspomSol(name, v, sol))) +:
-          (seq.values zip seq.definedIndices).flatMap {
+          seq.withIndex.flatMap {
             case (v, i) => concrete2CspomSol(s"$name[$i]", v, sol)
           }
       case const: CSPOMConstant[_]    => Seq(name -> const.value)
