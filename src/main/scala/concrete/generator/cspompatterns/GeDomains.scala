@@ -11,6 +11,7 @@ import cspom.variable.SimpleExpression
 import cspom.variable.CSPOMConstant
 import cspom.util.Infinitable
 import cspom.variable.BoolExpression
+import cspom.variable.CSPOMExpression
 
 object GeDomains extends VariableCompiler('ge) {
 
@@ -41,9 +42,13 @@ object GeDomains extends VariableCompiler('ge) {
         br
       }
 
-      Map(
+      val f: Map[CSPOMExpression[_], CSPOMExpression[_]] = Map(
         r -> rr,
         i0 -> ri0,
         i1 -> ri1)
+
+//      val filter = f.filter { case (k, v) => k != v }
+//      if (filter.nonEmpty) println(s"% $c: $filter")
+      f
   }
 }

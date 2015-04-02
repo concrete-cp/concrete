@@ -28,18 +28,16 @@ object ReifiedConj extends ConstraintCompiler {
   type A = CSPOMExpression[_]
 
   override def constraintMatcher = {
-    case CSPOMConstraint(res: SimpleExpression[_], 'and, args, params) =>
+    case CSPOMConstraint(res: SimpleExpression[_], 'and, _, _) =>
       res
   }
 
   def compile(fc: CSPOMConstraint[_], problem: CSPOM, res: CSPOMExpression[_]) = {
     val c1 =
-      CSPOMConstraint('clause, Seq(CSPOMSeq(res), CSPOMSeq(fc.arguments: _*)), fc.params)
+      CSPOMConstraint('clause, Seq(CSPOMSeq(res), CSPOMSeq(fc.arguments: _*)))
 
-    val c2 = fc.arguments.map {
-      case v =>
-        CSPOMConstraint('clause, Seq(CSPOMSeq(v), CSPOMSeq(res)))
-    }
+    val c2 = fc.arguments.map(v =>
+      CSPOMConstraint('clause, Seq(CSPOMSeq(v), CSPOMSeq(res))))
 
     replaceCtr(fc, c1 +: c2, problem)
 

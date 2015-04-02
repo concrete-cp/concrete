@@ -31,7 +31,7 @@ object UnaryClause extends ConstraintCompiler {
 
     val (res, arg) = data
 
-    replaceCtr(fc, Seq(), problem) ++ replace(Seq(arg), CSPOMConstant(res), problem)
+    removeCtr(fc, problem) ++ replace(arg, CSPOMConstant(res), problem)
 
   }
 

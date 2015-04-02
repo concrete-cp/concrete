@@ -23,7 +23,7 @@ object CountEq extends ConstraintCompilerNoData {
 
     val nconstraint = CSPOMConstraint(ncount, 'occurrence, Seq(value, CSPOMSeq(args: _*)), constraint.params)
 
-    replaceCtr(constraint, nconstraint, problem) ++ replace(Seq(count), ncount, problem)
+    replaceCtr(constraint, nconstraint, problem) ++ replace(count, ncount, problem)
 
     //replaceCtr(constraint, , problem)
   }

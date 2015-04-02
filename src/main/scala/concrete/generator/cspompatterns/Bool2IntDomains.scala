@@ -63,7 +63,7 @@ object Bool2IntIsEq extends ConstraintCompilerNoData {
       (!b.contains(false) || i.contains(0) || i.contains(false)) && (
         !b.contains(true) || i.contains(1) || i.contains(true)))
     //println(s"removing $c")
-    removeCtr(c, p) ++ replace(Seq(i), b, p)
+    removeCtr(c, p) ++ replace(i, b, p)
 
   }
   def selfPropagation = false

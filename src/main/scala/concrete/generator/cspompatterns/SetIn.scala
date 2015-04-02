@@ -27,7 +27,7 @@ object SetIn extends ConstraintCompilerNoData {
     val Seq(variable: SimpleExpression[_], CSPOMConstant(set: Seq[Int] @unchecked)) = constraint.arguments
 
     replaceCtr(constraint, Nil, problem) ++
-      replace(Seq(variable), variable.intersected(IntVariable.ofSeq(set: _*)), problem)
+      replace(variable, variable.intersected(IntVariable.ofSeq(set)), problem)
 
   }
   def selfPropagation = false

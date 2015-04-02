@@ -68,15 +68,15 @@ object AllDiffConstant extends ConstraintCompiler {
       applyDomain(v, v.domain -- constantSet)
       //if (r == v.domain) v else IntVariable(r)
     }
-    problem.removeConstraint(constraint)
-    var delta = Delta().removed(constraint)
+
+    var delta = removeCtr(constraint, problem)
 
     if (filt.length > 1) {
-      delta = delta.added(problem.ctr(CSPOMConstraint('alldifferent, filt)))
+      delta ++= addCtr(CSPOMConstraint('alldifferent, filt), problem)
     }
 
     for ((v, f) <- (variables, filt).zipped) {
-      delta ++= replace(Seq(v), f, problem)
+      delta ++= replace(v, f, problem)
     }
 
     delta

@@ -17,6 +17,17 @@ import cspom.variable.IntExpression.implicits.ranges
 import cspom.variable.SimpleExpression
 import cspom.variable.BoolExpression
 
+/**
+ * Reified boolean equality:
+ * 
+ * r <-> (a <-> b) 
+ * 
+ * is
+ * 
+ *  r -> (a \/ -b),  r -> (-a \/  b),
+ * -r -> (a \/  b), -r -> (-a \/ -b)
+ * 
+ */
 object BoolEq extends ConstraintCompiler {
 
   type A = (SimpleExpression[_], SimpleExpression[_], SimpleExpression[_])
@@ -37,12 +48,12 @@ object BoolEq extends ConstraintCompiler {
     val na = BoolExpression(a)
     val nb = BoolExpression(b)
 
-    replace(Seq(a), na, problem) ++
-      replace(Seq(b), nb, problem) ++
-      replace(Seq(r), nr, problem) ++
+    replace(a, na, problem) ++
+      replace(b, nb, problem) ++
+      replace(r, nr, problem) ++
       replaceCtr(c, Seq(
         CSPOMDriver.clause(Seq(nb), Seq(nr, na)),
-        CSPOMDriver.clause(Seq(na), Seq(nr, na)),
+        CSPOMDriver.clause(Seq(na), Seq(nr, nb)),
         CSPOMDriver.clause(Seq(nr, na, nb), Seq()),
         CSPOMDriver.clause(Seq(nr), Seq(na, nb))), problem)
 

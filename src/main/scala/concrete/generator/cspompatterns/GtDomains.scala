@@ -11,6 +11,7 @@ import cspom.util.Finite
 import cspom.variable.CSPOMConstant
 import cspom.util.Infinitable
 import cspom.variable.BoolExpression
+import cspom.variable.CSPOMExpression
 
 object GtDomains extends VariableCompiler('gt) {
 
@@ -20,11 +21,12 @@ object GtDomains extends VariableCompiler('gt) {
       val ii0 = IntExpression(i0)
       val ii1 = IntExpression(i1)
 
-      val o = Infinitable.InfinitableOrdering
+      import Infinitable.InfinitableOrdering
+      import Ordered.orderingToOrdered
 
-      val ir = if (o.compare(ii0.lowerBound, ii1.upperBound) > 0) {
+      val ir = if (ii0.lowerBound > ii1.upperBound) {
         CSPOMConstant(true)
-      } else if (o.compare(ii0.upperBound, ii1.lowerBound) <= 0) {
+      } else if (ii0.upperBound <= ii1.lowerBound) {
         CSPOMConstant(false)
       } else {
         iir
@@ -40,9 +42,14 @@ object GtDomains extends VariableCompiler('gt) {
         case _                      => ii1
       }
 
-      Map(
+      val f: Map[CSPOMExpression[_], CSPOMExpression[_]] = Map(
         r -> ir,
         i0 -> ri0,
         i1 -> ri1)
+
+      //      val filter = f.filter { case (k, v) => k != v }
+      //      if (filter.nonEmpty) println(s"% $c: $filter")
+      f
+
   }
 }

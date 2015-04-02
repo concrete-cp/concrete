@@ -10,7 +10,7 @@ object ConcreteTypes extends Types {
       c.fullScope.flatMap(_.flatten).collect {
         case fv: FreeVariable => fv
       } map { v =>
-        replace(Seq(v), new BoolVariable, p)
+        replace(v, new BoolVariable, p)
       } reduce (_ ++ _)
     })
 }

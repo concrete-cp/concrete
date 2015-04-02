@@ -19,7 +19,7 @@ import cspom.variable.CSPOMSeq
 object SimplClause extends ConstraintCompilerNoData {
 
   def matchBool(fc: CSPOMConstraint[_], problem: CSPOM) = fc match {
-    case CSPOMConstraint(CSPOMConstant(true), 'clause, Seq(positive: CSPOMSeq[_], negative: CSPOMSeq[_]), _) =>
+    case CSPOMConstraint(_, 'clause, Seq(positive: CSPOMSeq[_], negative: CSPOMSeq[_]), _) =>
       (positive.iterator ++ negative.iterator).exists(_.isInstanceOf[CSPOMConstant[_]])
 
     case _ => false
@@ -34,7 +34,7 @@ object SimplClause extends ConstraintCompilerNoData {
     } else {
       val newP = CSPOMSeq(positive.filterNot(_.isFalse): _*)
       val newN = CSPOMSeq(negative.filterNot(_.isTrue): _*)
-      replaceCtr(fc, CSPOMConstraint('clause, Seq(newP, newN), fc.params), problem)
+      replaceCtr(fc, CSPOMConstraint(fc.result, 'clause, Seq(newP, newN), fc.params), problem)
     }
 
   }
