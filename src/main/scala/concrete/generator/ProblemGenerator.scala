@@ -33,6 +33,7 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
   def generate(cspom: CSPOM): (Problem, Map[CSPOMVariable[_], Variable]) = {
     val (result, time) = try StatisticsManager.time {
 
+      //println(cspom)
       // new ProblemCompiler(cspom).compile();
 
       //val problem = new Problem();
@@ -51,6 +52,8 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
       ) {
         problem.addConstraint(constraint)
       }
+      
+      //println(problem.toString(problem.initState))
 
       (problem, variables)
     } catch {
@@ -68,7 +71,7 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
     cspom.referencedExpressions.flatMap(_.flatten).collect {
       case v: CSPOMVariable[_] =>
         require(v.fullyDefined, s"${vn.names(v)} has no bounds. Involved by ${cspom.constraints(v)}")
-        assert(cspom.deepConstraints(v).nonEmpty, s"${vn.names(v)} ($v) is not involved by constraints")
+        assert(cspom.isReferenced(v), s"${vn.names(v)} ($v) is not referenced by constraints")
         v -> new Variable(vn.names(v), generateDomain(v))
     }.toMap
   }

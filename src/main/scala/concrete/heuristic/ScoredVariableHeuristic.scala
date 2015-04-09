@@ -21,7 +21,7 @@ abstract class ScoredVariableHeuristic(params: ParameterManager) extends Variabl
     } else {
       val current :: tail = list
       val dom = state.dom(current)
-      if (dom.size == 1) {
+      if (dom.length == 1) {
         select(tail, best, bestScore, ties, state)
       } else {
         val s = score(current, dom, state)
@@ -50,7 +50,7 @@ abstract class ScoredVariableHeuristic(params: ParameterManager) extends Variabl
     } else {
       val current :: tail = list
       val dom = state.dom(current)
-      if (dom.size == 1) {
+      if (dom.length == 1) {
         select(tail, best, bestScore, state)
       } else {
         val s = score(current, dom, state)

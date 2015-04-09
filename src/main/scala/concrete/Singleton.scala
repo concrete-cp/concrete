@@ -99,4 +99,6 @@ final class Singleton(val singleValue: Int) extends IntDomain with LazyLogging {
   override def assign(v: Int) = {
     if (v == singleValue) this else EmptyIntDomain
   }
+  
+  def iterator = Iterator.single(singleValue)
 }

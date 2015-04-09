@@ -71,23 +71,6 @@ object IntDomain {
 
 abstract class IntDomain extends Domain {
 
-  def iterator = new Iterator[Int] {
-    var current = IntDomain.this.head
-    var end = false
-    def hasNext = !end
-    def next() = {
-      val c = current
-      if (current == last) {
-        end = true
-      } else {
-        current = IntDomain.this.next(current)
-      }
-      c
-      //} else Iterator.empty.next()
-
-    }
-  }
-
   def assign(value: Int) = {
     if (present(value)) Singleton(value)
     else EmptyIntDomain

@@ -26,7 +26,7 @@ import concrete.ProblemState
 import concrete.Domain
 class WDegOnDom(params: ParameterManager) extends ScoredVariableHeuristic(params) {
 
-  def score(variable: Variable, dom: Domain, state: ProblemState) = variable.getWDegEntailed(state).toDouble / dom.size
+  def score(variable: Variable, dom: Domain, state: ProblemState) = variable.getWDegEntailed(state).toDouble / dom.length
 
   override def toString = "max-wdeg/dom"
 

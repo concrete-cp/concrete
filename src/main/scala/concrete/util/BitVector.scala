@@ -22,20 +22,22 @@ final object BitVector {
   def word(bit: Int) = bit >> ADDRESS_BITS_PER_WORD
 
   def apply(v: Traversable[Int]) = {
-    require(v.forall(_ >= 0))
-    val bv = new Array[Long](1 + word(v.max))
+    if (v.isEmpty) { empty }
+    else {
+      assert(v.forall(_ >= 0))
+      val bv = new Array[Long](1 + word(v.max))
 
-    for (i <- v) {
-      val wordPos = word(i)
-      bv(wordPos) |= (1L << i)
+      for (i <- v) {
+        val wordPos = word(i)
+        bv(wordPos) |= (1L << i)
+      }
+
+      if (bv.length == 1) {
+        new SmallBitVector(bv(0))
+      } else {
+        new LargeBitVector(bv)
+      }
     }
-
-    if (bv.length == 1) {
-      new SmallBitVector(bv(0))
-    } else {
-      new LargeBitVector(bv)
-    }
-
   } //v.foldLeft(empty)(_ + _)
 
 }

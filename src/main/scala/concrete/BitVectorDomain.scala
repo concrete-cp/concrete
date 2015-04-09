@@ -135,4 +135,22 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
   //  def intersects(that: BitVector, part: Int) = bitVector.intersects(that, part)
   def bound = false
   override def isEmpty = false
+
+  def iterator = new Iterator[Int] {
+    var current = BitVectorDomain.this.head
+    // Assumes domain is not empty
+    var hasNext = true
+    def next() = {
+      val c = current
+      if (current == last) {
+        hasNext = false
+      } else {
+        current = BitVectorDomain.this.next(current)
+      }
+      c
+      //} else Iterator.empty.next()
+
+    }
+  }
+
 }

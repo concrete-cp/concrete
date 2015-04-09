@@ -111,7 +111,7 @@ class CSPOMSolution(private val cspom: CSPOM, private val variables: Map[CSPOMVa
   lazy val apply = concrete2CspomSol(concreteSol)
 
   def concrete2CspomSol(sol: Map[Variable, Any]): Map[String, Any] = {
-    val cspomsol = cspom.namedExpressions.iterator
+    val cspomsol = cspom.expressionsWithNames.iterator
       .flatMap {
         case (n, e) => concrete2CspomSol(n, e, sol)
       }

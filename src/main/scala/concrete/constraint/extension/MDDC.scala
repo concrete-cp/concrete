@@ -20,7 +20,7 @@ class MDDC(_scope: Array[Variable], private val mdd: MDDRelation)
 
   def checkValues(tuple: Array[Int]): Boolean = throw new UnsupportedOperationException
 
-  def simpleEvaluation: Int = math.min(Constraint.NP, scope.count(_.initDomain.size > 1))
+  val simpleEvaluation: Int = math.min(Constraint.NP, scope.count(_.initDomain.length > 1))
 
   // Members declared in concrete.constraint.Removals
   val prop = mdd.edges.toDouble / scope.map(_.initDomain.size.toDouble).product

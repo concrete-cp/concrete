@@ -58,26 +58,24 @@ final class Problem(val variables: List[Variable]) {
     buffer.sizeHint(hint)
     buffer ++= constraints
 
-    val stateBuffer = new VectorBuilder[AnyRef]()
-    stateBuffer.sizeHint(hint)
-    stateBuffer ++= initState.constraintStates
-
     for (c <- cs) {
       val i = buffer.size
       buffer += c
       c.id = i
       _maxArity = math.max(_maxArity, c.arity)
       c.scope.foreach(v => v.addConstraint(c))
-      stateBuffer += (c match {
-        case sc: StatefulConstraint => sc.initState
-        case _                      => null
-      })
     }
+
     constraints = buffer.toArray
-    initState = new ProblemState(initState.domains, stateBuffer.result, initState.entailed)
+    initState = ProblemState(initState.domains, initState.constraintStates ++ cs.map(constraintInitState), initState.entailed)
   }
 
-  var initState = new ProblemState(variables.map(_.initDomain).toIndexedSeq, IndexedSeq(), BitVector.empty) //(0 until constraints.length).map(constraints(_).initState)
+  def constraintInitState(c: Constraint) = c match {
+    case sc: StatefulConstraint => sc.initState
+    case _                      => null
+  }
+
+  var initState = ProblemState(variables.map(_.initDomain), constraints.map(constraintInitState), Set()) //(0 until constraints.length).map(constraints(_).initState)
 
   def toString(state: ProblemState) = {
     variables.map(_.toString(state)).mkString("\n") + "\n" +

@@ -25,7 +25,7 @@ object AbsDiff extends ConstraintCompiler {
       if (addConstraints.isEmpty) {
         None
       } else {
-        Some((absConstraint, absArg, addConstraints))
+        Some((absConstraint, absArg, addConstraints.toSet))
       }
     case _ => None
   }

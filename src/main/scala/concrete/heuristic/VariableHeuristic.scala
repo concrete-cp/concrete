@@ -22,7 +22,7 @@ abstract class VariableHeuristic(params: ParameterManager) {
   //def problem: Problem
 
   final def select(problem: Problem, state: ProblemState): Option[Variable] =
-    select(problem.decisionVariables.dropWhile { v => state.dom(v).size == 1 }, state)
+    select(problem.decisionVariables.dropWhile { v => state.dom(v).length == 1 }, state)
       //.orElse(select(problem.variables.dropWhile { v => state.dom(v).size == 1 }, state))
 
   @tailrec
@@ -32,7 +32,7 @@ abstract class VariableHeuristic(params: ParameterManager) {
     } else {
       val current :: tail = list
       val dom = state.dom(current)
-      if (dom.size == 1) {
+      if (dom.length == 1) {
         select(tail, best, bestDomain, ties, state)
       } else {
         val comp = compare(current, dom, best, bestDomain, state)
@@ -60,7 +60,7 @@ abstract class VariableHeuristic(params: ParameterManager) {
     } else {
       val current :: tail = list
       val dom = state.dom(current)
-      if (dom.size == 1) {
+      if (dom.length == 1) {
         select(tail, best, bestDomain, state)
       } else {
         val comp = compare(current, dom, best, bestDomain, state) //score(current, dom, state).compareTo(score(best, dom, state))

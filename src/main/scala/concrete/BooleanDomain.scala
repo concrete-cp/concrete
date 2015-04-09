@@ -10,8 +10,8 @@ case object UNKNOWNBoolean extends BooleanDomain {
   override def length = 2
   override def head = 0
   override def last = 1
-  def next(i: Int) = if (i <= 0) 1 else throw new NoSuchElementException
-  def prev(i: Int) = if (i >= 1) 0 else throw new NoSuchElementException
+  def next(i: Int) = if (i == 0) 1 else if (i < 0) 0 else throw new NoSuchElementException
+  def prev(i: Int) = if (i == 1) 0 else if (i > 1) 1 else throw new NoSuchElementException
   def present(i: Int) = { Domain.checks + 1; true }
   def canBe(b: Boolean) = true
   def removeFrom(lb: Int) =

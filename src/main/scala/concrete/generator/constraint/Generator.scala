@@ -40,9 +40,11 @@ trait Generator {
 
   type VarMap = Map[CSPOMVariable[_], Variable]
 
-  def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] = ???
+  def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] =
+    genFunctional(constraint, Generator.cspom2concrete(constraint.result))
 
-  def genReversed(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] = ???
+  def genReversed(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] = 
+    genFunctional(constraint, Generator.cspom2concrete(constraint.result))
 
   def genFunctional(constraint: CSPOMConstraint[_], result: C2Conc)(implicit variables: VarMap): Seq[Constraint] = ???
 

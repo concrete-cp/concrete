@@ -37,8 +37,9 @@ final class EqAC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
   def getEvaluation(ps: ProblemState): Int = if (skip(ps)) -1 else ps.dom(x).size + ps.dom(y).size
 
   override def isConsistent(ps: ProblemState) = {
+    val yDom = ps.dom(y)
     ps.dom(x).exists { xv =>
-      ps.dom(y).present(yValue(xv))
+      yDom.present(yValue(xv))
     }
   }
 

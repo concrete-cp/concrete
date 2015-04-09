@@ -62,14 +62,14 @@ object FZConcrete extends CSPOMRunner {
 
     parseTime = time
 
-    outputVars = cspom.namedExpressions.collect {
+    outputVars = cspom.expressionsWithNames.collect {
       case (n, e) if cspom.getAnnotations(n).getSeqParam[FZAnnotation]("fzAnnotations").exists {
         case FZAnnotation("output_var", Seq()) => true
         case _                                 => false
       } => n
     }.toSeq
 
-    outputArrays = cspom.namedExpressions.toMap.flatMap {
+    outputArrays = cspom.expressionsWithNames.toMap.flatMap {
       case (n, e) =>
         cspom.getAnnotations(n).getSeqParam[FZAnnotation]("fzAnnotations").collectFirst {
           case FZAnnotation("output_array", Seq(data: FZArrayExpr[_])) =>
@@ -126,10 +126,10 @@ object FZConcrete extends CSPOMRunner {
     goal.mode match {
       case Satisfy =>
       case Maximize(expr) =>
-        val e = expr.toCSPOM(cspom.namedExpressions.toMap)
+        val e = expr.toCSPOM(cspom.expressionsWithNames.toMap)
         solver.maximize(cspom.namesOf(e).head)
       case Minimize(expr) =>
-        val e = expr.toCSPOM(cspom.namedExpressions.toMap)
+        val e = expr.toCSPOM(cspom.expressionsWithNames.toMap)
         solver.minimize(cspom.namesOf(e).head)
       case _ => throw new InvalidParameterException("Cannot execute goal " + goal)
     }

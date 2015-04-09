@@ -217,7 +217,7 @@ abstract class Constraint(val scope: Array[Variable])
     var size = 0
     var p = arity - 1
     while (p >= 0) {
-      size += problemState.dom(scope(p)).size
+      size += problemState.dom(scope(p)).length
       p -= 1
     }
     size

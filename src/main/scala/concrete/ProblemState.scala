@@ -6,6 +6,7 @@ import concrete.util.BitVector
 import concrete.util.Interval
 import scala.reflect.runtime.universe._
 import cspom.UNSATException
+import concrete.util.Vector
 
 sealed trait Outcome {
   def andThen(f: ProblemState => Outcome): Outcome
@@ -69,6 +70,9 @@ sealed trait Outcome {
   def dom(id: Int): Domain
   def dom(v: Variable): Domain
 
+  def card(id: Int) = dom(id).length
+  def card(v: Variable) = dom(v).length
+
   def span(id: Int): Interval = dom(id).span
   def span(v: Variable): Interval = dom(v).span
 
@@ -112,9 +116,14 @@ case object Contradiction extends Outcome {
 
 }
 
+object ProblemState {
+  def apply(domains: Seq[Domain], constraintStates: Seq[AnyRef], entailed: Traversable[Int]): ProblemState =
+    ProblemState(Vector(domains: _*), Vector(constraintStates: _*), BitVector(entailed))
+}
+
 final case class ProblemState(
-  val domains: IndexedSeq[Domain],
-  val constraintStates: IndexedSeq[AnyRef],
+  val domains: Vector[Domain],
+  val constraintStates: Vector[AnyRef],
   val entailed: BitVector) extends Outcome {
 
   def andThen(f: ProblemState => Outcome) = f(this)
@@ -139,11 +148,12 @@ final case class ProblemState(
   //    new ProblemState(domains, builder.result, entailed)
   //  }
 
-  def padConstraints(constraints: IndexedSeq[Constraint]) = {
-    val padded: IndexedSeq[AnyRef] = constraintStates ++: constraints.drop(constraintStates.size).map {
+  def padConstraints(constraints: Seq[Constraint]) = {
+    val padded: Vector[AnyRef] = constraints.drop(constraintStates.size).map {
       case c: StatefulConstraint => c.initState
       case _                     => null
     }
+      .foldLeft(constraintStates)(_ :+ _)
     if (padded eq constraintStates) this else new ProblemState(domains, padded, entailed)
   }
 
