@@ -14,9 +14,7 @@ import cspom.VariableNames
 class GeneratorManager(pm: ParameterManager) {
   private var known: Map[Symbol, Generator] = Map(
     'abs -> AbsGenerator,
-    'add -> AddGenerator,
     'alldifferent -> AllDifferentGenerator,
-    'clause -> ClauseGenerator,
     'eq -> EqGenerator,
     'gt -> GtGenerator,
     'ge -> GtGenerator,
@@ -27,7 +25,7 @@ class GeneratorManager(pm: ParameterManager) {
     'mod -> ModGenerator,
     'nevec -> NeqVecGenerator,
     'sum -> SumGenerator,
-    'pseudoboolean -> SumGenerator,
+    //'pseudoboolean -> SumGenerator,
     'lexleq -> LexLeqGenerator,
     'occurrence -> OccurrenceGenerator,
     'extension -> new ExtensionGenerator(pm),
