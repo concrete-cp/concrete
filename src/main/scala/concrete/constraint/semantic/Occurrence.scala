@@ -19,7 +19,10 @@ class Occurrence(val result: Variable, val value: Variable,
 
   type State = (Map[Int, Int], Map[Int, BitVector])
 
-  def initState = (value.initDomain.map(i => i -> 0).toMap, value.initDomain.map(i => i -> BitVector.filled(vars.length)).toMap)
+  override def init(ps: ProblemState) =
+    ps.updateState(id, (
+      value.initDomain.map(i => i -> 0).toMap,
+      value.initDomain.map(i => i -> BitVector.filled(vars.length)).toMap))
 
   def check(tuple: Array[Int]) = {
     tuple(0) == (2 until arity).count(i => tuple(i) == tuple(1))
@@ -32,7 +35,7 @@ class Occurrence(val result: Variable, val value: Variable,
   override def toString(ps: ProblemState) = s"${result.toString(ps)} occurrences of ${value.toString(ps)} in (${vars.map(_.toString(ps)).mkString(", ")})"
 
   private def updateState(ps: ProblemState, mod: List[Int], currentValues: Domain): (Map[Int, Int], Map[Int, BitVector]) = {
-    var (affected, canBeAffectedSet) = state(ps)
+    var (affected, canBeAffectedSet) = ps(this)
 
     for (sm <- mod) {
       val m = sm - 2

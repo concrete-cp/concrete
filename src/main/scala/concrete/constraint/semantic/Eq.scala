@@ -10,6 +10,12 @@ import concrete.constraint.BCCompanion
 import concrete.constraint.Constraint
 import concrete.constraint.Removals
 
+object Eq {
+  def apply(neg: Boolean, x: Variable, b: Int, y: Variable) = Seq(
+    new EqAC(neg, x, b, y),
+    new EqBC(neg, x, b, y))
+}
+
 /**
  * Constraint (-)x + b = y.
  *
@@ -37,10 +43,14 @@ final class EqAC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
   def getEvaluation(ps: ProblemState): Int = if (skip(ps)) -1 else ps.dom(x).size + ps.dom(y).size
 
   override def isConsistent(ps: ProblemState) = {
+    val xDom = ps.dom(x)
     val yDom = ps.dom(y)
-    ps.dom(x).exists { xv =>
-      yDom.present(yValue(xv))
+    if (xDom.size < yDom.size) {
+      xDom.exists(xv => yDom.present(yValue(xv)))
+    } else {
+      yDom.exists(yv => xDom.present(xValue(yv)))
     }
+
   }
 
   def revise(ps: ProblemState, modified: List[Int]) = {

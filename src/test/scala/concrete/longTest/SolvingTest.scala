@@ -11,6 +11,9 @@ import concrete.heuristic.revision.DomCtr
 import concrete.runner.XCSPConcrete
 import cspom.CSPOM
 import scala.collection.mutable.LinkedHashMap
+import scala.util.Failure
+import org.scalatest.TryValues
+import concrete.Solver
 
 //import SolvingTest._
 
@@ -21,9 +24,10 @@ class SolvingTest extends FlatSpec with SolvingBehaviors {
   it should behave like test()
 }
 
-trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this: FlatSpec =>
+trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging with TryValues { this: FlatSpec =>
 
   val problemBank = LinkedHashMap[String, AnyVal](
+    "flat30-1.cnf" -> true,
     "alpha.fzn" -> true,
     "frb35-17-1_ext.xml.bz2" -> 2,
     "queens-12_ext.xml" -> 14200,
@@ -42,7 +46,6 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
     "queensAllDiff-8.xml.bz2" -> 92,
 
     "langford-2-4-ext.xml" -> 2,
-    "flat30-1.cnf" -> true,
 
     "series-15.xml.bz2" -> true,
     "e0ddr1-10-by-5-8.xml.bz2" -> true,
@@ -81,30 +84,32 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
 
     require(url != null, "Could not find resource " + name)
 
-    val (cspomProblem, data) = CSPOM.load(url);
+    (for {
+      (cspomProblem, data) <- CSPOM.load(url)
+      solver <- Solver(cspomProblem, parameters)
+    } yield {
 
-    val solver = new SolverFactory(parameters)(cspomProblem)
+      //    println(solver.concreteProblem)
 
-    //    println(solver.concreteProblem)
+      val solvIt = solver.toIterable
 
-    val solvIt = solver.toIterable
+      if (expectedResult) {
+        solvIt should not be 'empty
+      } else {
+        solvIt shouldBe 'empty
+      }
 
-    if (expectedResult) {
-      solvIt should not be 'empty
-    } else {
-      solvIt shouldBe 'empty
-    }
+      // println(solver.concreteProblem.toString)
 
-    // println(solver.concreteProblem.toString)
-
-    if (test) {
-      for (sol <- solver.toIterable.headOption) {
-        val failed = XCSPConcrete.controlCSPOM(sol, data('variables).asInstanceOf[Seq[String]], url)
-        withClue(sol) {
-          failed shouldBe 'empty
+      if (test) {
+        for (sol <- solver.toIterable.headOption) {
+          val failed = XCSPConcrete.controlCSPOM(sol, data('variables).asInstanceOf[Seq[String]], url)
+          withClue(sol) {
+            failed shouldBe 'empty
+          }
         }
       }
-    }
+    }) should be a 'success
 
   }
 
@@ -114,9 +119,9 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
 
     require(url != null, "Could not find resource " + name)
 
-    val (cspomProblem, data) = CSPOM.load(url);
+    val (cspomProblem, data) = CSPOM.load(url).success.value
 
-    val solver = new SolverFactory(parameters)(cspomProblem)
+    val solver = Solver(cspomProblem, parameters).success.value
 
     val sols = solver.toStream.take(expectedResult + 1)
 
@@ -128,5 +133,6 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
     }
 
     sols should have size expectedResult
+
   }
 }

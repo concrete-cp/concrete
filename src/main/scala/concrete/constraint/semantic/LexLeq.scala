@@ -5,154 +5,166 @@ import concrete.Outcome
 import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Constraint
+import concrete.constraint.StatefulConstraint
+import concrete.Domain
+import cspom.UNSATException
+import concrete.constraint.Removals
 
-final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x ++ y) {
+final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x ++ y)
+  with StatefulConstraint with Removals {
 
-  val size = x.length
-  require(size == y.length)
+  type State = (Int, Int)
 
-  private def groundEq(ps: ProblemState, i: Int) = {
-    val domX = ps.dom(scope(i))
-    val domY = ps.dom(scope(i + size))
-    domX.size == 1 && domY.size == 1 && domX.singleValue == domY.singleValue
-  }
+  val n = x.length
+  require(n == y.length)
 
   def check(t: Array[Int]) = check(t, 0)
 
+  @annotation.tailrec
   private def check(t: Array[Int], i: Int): Boolean =
-    i >= size ||
-      t(i) < t(i + size) || (t(i) == t(i + size) && check(t, i + 1))
+    i >= n ||
+      t(i) < t(i + n) || (t(i) == t(i + n) && check(t, i + 1))
 
-  private def notAlwaysLt(ps: ProblemState, i: Int) = ps.dom(scope(i)).head <= ps.dom(scope(i + size)).last
-
-  private def alwaysLeq(ps: ProblemState, i: Int) = ps.dom(scope(i)).last <= ps.dom(scope(i + size)).head
-
-  private def alwaysLt(ps: ProblemState, i: Int) = ps.dom(scope(i)).last < ps.dom(scope(i + size)).head
-
-  private def checkLex(ps: ProblemState, i: Int) = {
-    if (i == size - 1) alwaysLeq(ps, i)
-    else alwaysLt(ps, i)
+  def groundEq(x: Variable, y: Variable, ps: ProblemState): Boolean = {
+    val xdom = ps.dom(x)
+    xdom.size == 1 && {
+      val ydom = ps.dom(y)
+      ydom.size == 1 && xdom.singleValue == ydom.singleValue
+    }
+  }
+  override def toString(ps: ProblemState) = {
+    val (alpha, beta) = ps(this)
+    s"$id: ${x.map(ps.dom).mkString("[", ", ", "]")} <= ${y.map(ps.dom).mkString("[", ", ", "]")} / alpha = $alpha, beta = $beta"
   }
 
-  var alpha = -1
-  var beta = -1
+  override def init(ps: ProblemState) = {
 
-  def revise(ps: ProblemState): Outcome = {
-    var i = 0
-    while (i < size && groundEq(ps, i)) i += 1
+    var alpha = 0
+    while (alpha < n && groundEq(x(alpha), y(alpha), ps)) {
+      alpha += 1
+    }
 
-    if (i == size) {
-      ps
+    if (alpha == n) {
+      ps.updateState(id, (alpha, n + 1))
     } else {
-      alpha = i
-
-      if (checkLex(ps, i)) {
-        ps
-      } else {
-
-        beta = -1
-        while (i != size && notAlwaysLt(ps, i)) {
-          if (ps.dom(scope(i)).head == ps.dom(scope(i + size)).head) {
-            if (beta == -1) beta = i
-          } else {
-            beta = -1
-          }
-          i += 1
-        }
-
-        if (i == size) beta = Integer.MAX_VALUE
-        else if (beta == -1) beta = i
-        if (alpha >= beta) {
-          Contradiction
+      var i = alpha
+      var beta = -1
+      while (i != n && min(x(i), ps) <= max(y(i), ps)) {
+        if (min(x(i), ps) == max(y(i), ps)) {
+          if (beta == -1) beta = i
         } else {
-          gacLexLeq(ps, alpha)
+          beta = -1
         }
+        i += 1
+      }
+      if (i == n) {
+        beta = n + 1
+      } else if (beta == -1) {
+        beta = i
+      }
+
+      if (alpha == beta) {
+        Contradiction
+      } else {
+        reEstablishGAC(alpha, ps.updateState(id, (alpha, beta)))
       }
     }
+
   }
 
-  private def gacLexLeq(ps: ProblemState, i: Int): Outcome = {
-    if (i >= beta) ps
-    else {
-      var mod = ps
-      if (i == alpha && i + 1 == beta) {
-        acLt(mod, i) match {
-          case Contradiction   => return Contradiction
-          case s: ProblemState => mod = s
+  def revise(ps: ProblemState, mod: List[Int]): Outcome = {
+    val (x, y) = mod.span(_ < n)
+    val r = reviseN(ps, (x ++ y.map(_ - n)).distinct)
+    //    val out = r match {
+    //      case Contradiction    => "Contradiction"
+    //      case ns: ProblemState => if (ns eq ps) "NOP" else if (ns.domains eq ps.domains) ns(this) else toString(ns)
+    //    }
+    //    println(s"${toString(ps)}, $mod -> $out")
+    r
+  }
+
+  private def reviseN(ps: ProblemState, mod: List[Int]): Outcome = mod match {
+    case Nil => ps
+    case head :: tail =>
+      reEstablishGAC(head, ps).andThen(ps => reviseN(ps, tail))
+  }
+
+  private def min(v: Variable, ps: ProblemState) = ps.dom(v).head
+  private def max(v: Variable, ps: ProblemState) = ps.dom(v).last
+
+  /**
+   * Triggered when min(x(i)) or max(y(i)) changes
+   */
+  private def reEstablishGAC(i: Int, ps: ProblemState): Outcome = {
+    val (alpha, beta) = ps(this)
+
+    if (i == alpha) {
+      if (i + 1 == beta) {
+        establishAC(x(i), y(i), true, ps)
+      } else if (i + 1 < beta) {
+        establishAC(x(i), y(i), false, ps).andThen {
+          ps =>
+            if (groundEq(x(i), y(i), ps)) {
+              updateAlpha(alpha + 1, beta, ps)
+            } else {
+              ps
+            }
         }
-        if (checkLex(mod, i)) {
-          return mod
-        }
+      } else {
+        ps
       }
-      if (i == alpha && i + 1 < beta) {
-        acLeq(mod, i) match {
-          case Contradiction   => return Contradiction
-          case s: ProblemState => mod = s
-        }
-        if (checkLex(mod, i)) {
-          return mod
-        }
-        if (groundEq(mod, i)) {
-          updateAlpha(mod, i + 1) match {
-            case Contradiction   => return Contradiction
-            case s: ProblemState => mod = s
-          }
-        }
+    } else if (alpha < i && i < beta) {
+      val minxi = min(x(i), ps)
+      val maxyi = max(y(i), ps)
+      if ((i == beta - 1 && minxi == maxyi) || minxi > maxyi) {
+        updateBeta(i - 1, alpha, ps)
+      } else {
+        ps
       }
-      if (alpha < i && i < beta) {
-        if ((i == beta - 1 && mod.dom(scope(i)).head == mod.dom(scope(i + size)).last) || alwaysLt(mod, i)) {
-          updateBeta(mod, i + 1) match {
-            case Contradiction   => return Contradiction
-            case s: ProblemState => mod = s
-          }
-        }
-      }
-      mod
-    }
-  }
-
-  private def acLt(ps: ProblemState, i: Int): Outcome = {
-    val x = scope(i)
-    val y = scope(i + size)
-    ps.removeTo(y, ps.dom(x).head)
-      .removeFrom(x, ps.dom(y).last)
-  }
-
-  private def acLeq(ps: ProblemState, i: Int): Outcome = {
-    val x = scope(i)
-    val y = scope(i + size)
-    ps.removeUntil(y, ps.dom(x).head)
-      .removeAfter(x, ps.dom(y).last)
-  }
-
-  private def updateAlpha(ps: ProblemState, i: Int): Outcome = {
-    if (i == beta) {
-      Contradiction
-    } else if (i == size) {
-      ps
-    } else if (!groundEq(ps, i)) {
-      alpha = i
-      gacLexLeq(ps, i)
-    } else {
-      updateAlpha(ps, i + 1)
-    }
-
-  }
-
-  private def updateBeta(ps: ProblemState, i: Int): Outcome = {
-    if (i + 1 == alpha) {
-      Contradiction
-    } else if (notAlwaysLt(ps, i)) {
-      beta = i + 1
-      gacLexLeq(ps, i)
-    } else if (ps.dom(scope(i)).head == ps.dom(scope(i + size)).last) {
-      updateBeta(ps, i - 1)
     } else {
       ps
     }
   }
 
-  def advise(ps: ProblemState, p: Int) = size
+  private def establishAC(x: Variable, y: Variable, strict: Boolean, ps: ProblemState): Outcome = {
+    if (strict) {
+      ps.removeTo(y, min(x, ps))
+        .removeFrom(x, max(y, ps))
+    } else {
+      ps.removeUntil(y, min(x, ps))
+        .removeAfter(x, max(y, ps))
+    }
+  }
+
+  private def updateAlpha(alpha: Int, beta: Int, ps: ProblemState): Outcome = {
+    if (alpha == n) {
+      ps.updateState(id, (alpha, beta))
+    } else if (alpha == beta) {
+      Contradiction
+    } else if (groundEq(x(alpha), y(alpha), ps)) {
+      updateAlpha(alpha + 1, beta, ps)
+    } else {
+      reEstablishGAC(alpha, ps.updateState(id, (alpha, beta)))
+    }
+  }
+
+  private def updateBeta(i: Int, alpha: Int, ps: ProblemState): Outcome = {
+    val beta = i + 1
+    if (alpha == beta) {
+      Contradiction
+    } else if (min(x(i), ps) < max(y(i), ps)) {
+      if (i == alpha) {
+        establishAC(x(i), y(i), true, ps.updateState(id, (alpha, beta)))
+      } else {
+        ps.updateState(id, (alpha, beta))
+      }
+    } else {
+      updateBeta(i - 1, alpha, ps)
+    }
+
+  }
+
+  def getEvaluation(ps: ProblemState) = n
   def simpleEvaluation = 2
 
 }

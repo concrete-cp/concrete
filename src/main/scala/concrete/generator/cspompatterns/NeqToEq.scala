@@ -8,6 +8,7 @@ import cspom.variable.BoolVariable
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMVariable
 import cspom.variable.SimpleExpression
+import cspom.variable.CSPOMExpression
 
 object NeqToEq extends ConstraintCompilerNoData {
 
@@ -20,7 +21,7 @@ object NeqToEq extends ConstraintCompilerNoData {
     val opposite: SimpleExpression[Boolean] = c.result match {
       case CSPOMConstant(true)  => CSPOMConstant(false)
       case CSPOMConstant(false) => CSPOMConstant(true)
-      case v: CSPOMVariable[_] =>
+      case v =>
         val aux = new BoolVariable()
         delta = delta.added(problem.ctr(new CSPOMConstraint(aux, 'not, Seq(v))))
         aux

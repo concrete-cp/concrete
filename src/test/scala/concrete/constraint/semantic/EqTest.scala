@@ -18,7 +18,7 @@ final class EqTest extends FlatSpec with Matchers {
     c.register(new AdviseCount())
     val pb = Problem(v0,v1)
     pb.addConstraint(c)
-    val ps = pb.initState
+    val ps = pb.initState.toState
     c.adviseAll(ps)
     val mod = c.revise(ps)
 

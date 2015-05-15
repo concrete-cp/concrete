@@ -78,7 +78,7 @@ trait SpanCalculator extends Sum {
   }
 
   def revise(ps: ProblemState): Outcome = {
-
+    //println(toString(ps))
     compute(ps) match {
       case Some(hasChanged) =>
         var filtered: ProblemState = ps

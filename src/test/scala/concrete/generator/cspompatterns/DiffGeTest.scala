@@ -1,15 +1,13 @@
-package concrete.generator.cspompattern
+package concrete.generator.cspompatterns
 
-import org.scalatest.Finders
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 
 import concrete.CSPOMDriver.CSPOMIntExpressionOperations
-import concrete.generator.cspompatterns.DiffGe
 import cspom.CSPOM
 import cspom.CSPOM.ctr
+import cspom.compiler.CSPOMCompiler
 import cspom.compiler.MergeEq
-import cspom.compiler.ProblemCompiler
 import cspom.variable.BoolVariable
 import cspom.variable.CSPOMConstant
 import cspom.variable.IntVariable
@@ -26,7 +24,7 @@ class DiffGeTest extends FlatSpec with Matchers {
 
     }
 
-    ProblemCompiler.compile(cspom, Seq(MergeEq, DiffGe))
+    CSPOMCompiler.compile(cspom, Seq(MergeEq, DiffGe))
 
     cspom.referencedExpressions should have size 4
     cspom.constraints should have size 1
@@ -51,7 +49,7 @@ class DiffGeTest extends FlatSpec with Matchers {
 
     }
 
-    ProblemCompiler.compile(cspom, Seq(DiffGe))
+    CSPOMCompiler.compile(cspom, Seq(DiffGe))
 
     cspom.referencedExpressions should have size 4
     cspom.constraints should have size 1

@@ -10,8 +10,9 @@ import concrete.constraint.semantic.AbsDiffAC
 import concrete.constraint.semantic.AbsDiffBC
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
+import org.scalatest.TryValues
 
-final class AbsDiffGeneratorTest extends FlatSpec with Matchers {
+final class AbsDiffGeneratorTest extends FlatSpec with Matchers with TryValues {
 
   "AbsDiffGenerator" should "generate constraints" in {
 
@@ -24,7 +25,7 @@ final class AbsDiffGeneratorTest extends FlatSpec with Matchers {
       ctr(CSPOMConstraint(v0, 'absdiff, Seq(v1, v2)))
     }
 
-    val problem = new ProblemGenerator().generate(cspom)._1
+    val problem = new ProblemGenerator().generate(cspom).success.value._1
 
     problem.constraints.map(_.getClass()).toSet shouldBe
       Set(classOf[AbsDiffBC], classOf[AbsDiffAC])

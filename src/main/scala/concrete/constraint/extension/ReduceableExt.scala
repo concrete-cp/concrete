@@ -34,17 +34,19 @@ object ReduceableExt {
   var fills = 0l
 }
 
-final class ReduceableExt(_scope: Array[Variable], override val initState: Relation)
+final class ReduceableExt(_scope: Array[Variable], val relation: Relation)
   extends Constraint(_scope) with LazyLogging with Removals with StatefulConstraint {
 
   type State = Relation
+  
+  override def init(ps:ProblemState) = ps.updateState(id, relation)
 
   //println("sizesR " + arity + " " + trie.lambda + " " + trie.edges)
 
   def revise(ps: ProblemState, mod: List[Int]) = {
     val domains = ps.domains(scope).toArray
     val unsupported = domains.map(_.to[collection.mutable.Set])
-    val trie = state(ps)
+    val trie = ps(this)
     //found.foreach(_.fill(false))
 
     //val oldSize = trie.size
@@ -86,7 +88,7 @@ final class ReduceableExt(_scope: Array[Variable], override val initState: Relat
 
   }
 
-  override def check(t: Array[Int]) = initState.contains(t)
+  override def check(t: Array[Int]) = relation.contains(t)
 
   def removeTuples(base: Array[Int]) = {
     throw new UnsupportedOperationException
@@ -102,11 +104,11 @@ final class ReduceableExt(_scope: Array[Variable], override val initState: Relat
 
   //def matrixManager = matrixManager
 
-  val prop = initState.edges.toDouble / scope.map(_.initDomain.size.toDouble).product
+  val prop = relation.edges.toDouble / scope.map(_.initDomain.size.toDouble).product
 
   def getEvaluation(ps: ProblemState) = (prop * doubleCardSize(ps)).toInt
 
   val simpleEvaluation = math.min(7, scope.count(_.initDomain.size > 1))
 
-  override def dataSize = initState.edges
+  override def dataSize = relation.edges
 }

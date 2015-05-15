@@ -14,17 +14,15 @@ import cspom.variable.BoolExpression
 object EqDomains extends VariableCompiler('eq) {
 
   def compiler(c: CSPOMConstraint[_]) = c match {
-    case CSPOMConstraint(r: SimpleExpression[_], _,
-      Seq(i0: SimpleExpression[_], i1: SimpleExpression[_]),
-      params) if (IntExpression.isInt(i0) || IntExpression.isInt(i1)) =>
+    case CSPOMConstraint(r: SimpleExpression[_], _, Seq(IntExpression(i0), IntExpression(i1)), params) =>
       val neg: Boolean = params.get("neg").map { case n: Boolean => n }.getOrElse(false)
       val offset: Int = params.get("offset").map { case o: Int => o }.getOrElse(0)
 
       val negFactor = if (neg) -1 else 1
 
-      val br = BoolExpression(r)
-      val ii0 = IntExpression(i0)
-      val ii1 = IntExpression(i1)
+      val br = BoolExpression.coerce(r)
+      val ii0 = IntExpression.coerce(i0)
+      val ii1 = IntExpression.coerce(i1)
 
       val intersect = (ii0 * IntInterval.singleton(negFactor) + IntInterval.singleton(offset)) & ii1
 

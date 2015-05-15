@@ -24,7 +24,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     val c = new SumAC(0, Array(-1, 1, 1), Array(x, y, z), SumMode.SumEQ)
 
     val pb = Problem(x, y, z)
-    val ps = pb.initState
+    val ps = pb.initState.toState
     pb.addConstraint(c)
 
     c.register(new AdviseCount)
@@ -49,7 +49,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
 
     val c = new SumAC(0, Array(-1, 1, 1), Array(x, y, z), SumMode.SumEQ)
     val pb = Problem(x, y, z)
-    val ps = pb.initState
+    val ps = pb.initState.toState
     pb.addConstraint(c)
 
     c.register(new AdviseCount)
@@ -72,7 +72,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     val z = new Variable("z", IntDomain(-100 to 100))
     val c = new SumAC(0, Array(-1, 1, 1), Array(x, y, z), SumMode.SumEQ)
     val pb = Problem(x, y, z)
-    val ps = pb.initState
+    val ps = pb.initState.toState
     pb.addConstraint(c)
 
     c.register(new AdviseCount)
@@ -96,7 +96,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
       val vz = new Variable("z", IntDomain.ofSeq(-1))
       val c = new SumAC(0, Array(-1, 1, 1), Array(vx, vy, vz), SumMode.SumEQ)
       val pb = Problem(vx, vy, vz)
-      val ps = pb.initState
+      val ps = pb.initState.toState
       pb.addConstraint(c)
       c.register(new AdviseCount())
       c.adviseAll(ps)
@@ -119,7 +119,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
 
       val c = new SumAC(0, Array(-1, 1, 1), Array(vx, vy, vz), SumMode.SumEQ)
       val pb = Problem(vx, vy, vz)
-      val ps = pb.initState
+      val ps = pb.initState.toState
       pb.addConstraint(c)
 
       c.register(new AdviseCount())

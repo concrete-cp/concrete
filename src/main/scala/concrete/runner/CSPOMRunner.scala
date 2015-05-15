@@ -9,8 +9,9 @@ import concrete.generator.cspompatterns.Bool2IntIsEq
 import concrete.generator.cspompatterns.ConcretePatterns
 import cspom.CSPOM
 import cspom.compiler.MergeEq
-import cspom.compiler.ProblemCompiler
+import cspom.compiler.CSPOMCompiler
 import cspom.variable.CSPOMVariable
+import scala.util.Try
 
 trait CSPOMRunner extends ConcreteRunner {
 
@@ -20,22 +21,28 @@ trait CSPOMRunner extends ConcreteRunner {
 
   var cspomSolver: CSPOMSolver = _
 
-  final def load(args: List[String], opt: Map[Symbol, Any]): Problem = {
-    cspom = loadCSPOM(args, opt)
-    // println(cspom)
-    ProblemCompiler.compile(cspom, ConcretePatterns(pm))
+  final def load(args: List[String], opt: Map[Symbol, Any]): Try[Problem] = {
+    loadCSPOM(args, opt)
+      .flatMap { cspom =>
+        this.cspom = cspom
+        // println(cspom)
+        CSPOMCompiler.compile(cspom, ConcretePatterns(pm))
 
-    ProblemCompiler.compile(cspom, Seq(Bool2IntIsEq))
+        CSPOMCompiler.compile(cspom, Seq(Bool2IntIsEq))
 
-    //println(cspom)
+        //println(cspom)
 
-    val pg = new ProblemGenerator(pm)
-    statistics.register("problemGenerator", pg)
-    val (problem, vars) = pg.generate(cspom)
-    //println(problem)
-    variables = vars
-    logger.info(problem.toString(problem.initState).lines.map("% " + _).mkString("\n"))
-    problem
+        val pg = new ProblemGenerator(pm)
+        statistics.register("problemGenerator", pg)
+        pg.generate(cspom)
+      }
+      .map {
+        case (problem, vars) =>
+          //println(problem)
+          variables = vars
+          logger.info(problem.initState.toString(problem).lines.map("% " + _).mkString("\n"))
+          problem
+      }
   }
 
   override final def applyParameters(s: Solver, opt: Map[Symbol, Any]) = {
@@ -45,7 +52,7 @@ trait CSPOMRunner extends ConcreteRunner {
 
   def applyParametersCSPOM(s: CSPOMSolver, opt: Map[Symbol, Any]): Unit = {}
 
-  def loadCSPOM(args: List[String], opt: Map[Symbol, Any]): CSPOM
+  def loadCSPOM(args: List[String], opt: Map[Symbol, Any]): Try[CSPOM]
 
   def outputCSPOM(solution: Map[String, Any]): String = {
     solution.map {

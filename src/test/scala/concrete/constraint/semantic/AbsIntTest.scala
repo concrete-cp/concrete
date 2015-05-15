@@ -20,7 +20,7 @@ final class AbsIntTest extends FlatSpec with Matchers {
 
     val pb = Problem(x, y)
     pb.addConstraint(c)
-    val ps = pb.initState
+    val ps = pb.initState.toState
     c.adviseAll(ps)
 
     assert(c.intervalsOnly(ps))
@@ -45,7 +45,7 @@ final class AbsIntTest extends FlatSpec with Matchers {
 
     val pb = Problem(x, y)
     pb.addConstraint(c)
-    val ps = pb.initState
+    val ps = pb.initState.toState
     c.adviseAll(ps)
     assert(c.intervalsOnly(ps))
     val mod = c.consistentRevise(ps)

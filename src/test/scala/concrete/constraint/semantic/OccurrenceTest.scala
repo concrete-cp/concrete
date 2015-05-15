@@ -15,8 +15,9 @@ import cspom.CSPOM.constant
 import cspom.CSPOM.ctr
 import cspom.variable.IntVariable
 import concrete.constraint.AdviseCount
+import org.scalatest.TryValues
 
-class OccurrenceTest extends FlatSpec with Matchers with Inspectors {
+class OccurrenceTest extends FlatSpec with Matchers with Inspectors with TryValues {
 
   "Occurrence" should "filter" in {
     val v1 = new Variable("1", IntDomain.ofSeq(7))
@@ -33,7 +34,7 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors {
     c.register(new AdviseCount())
     val pb = Problem(occ, v1, v2, v3, v4, v5)
     pb.addConstraint(c)
-    val ps = pb.initState
+    val ps = pb.initState.toState
 
     val mod = c.consistentRevise(ps)
 
@@ -61,7 +62,7 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors {
 
     val pb = Problem(occ, v1, v2, v3, v4, v5)
     pb.addConstraint(c)
-    val ps = pb.initState
+    val ps = pb.initState.toState
 
     c.revise(ps) shouldBe Contradiction
 
@@ -81,7 +82,7 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors {
       ctr(occ === occurrence(7, v1, v2, v3, v4, v5))
     }
 
-    val s = Solver(problem)
+    val s = Solver(problem).success.value
     val c = s.concreteProblem.constraints
       .collectFirst {
         case c: Occurrence => c
@@ -90,7 +91,7 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors {
 
     val occ = s.concreteProblem.variable("occ")
 
-    val mod = c.revise(s.concreteProblem.initState)
+    val mod = c.revise(s.concreteProblem.initState.toState)
 
     forAll(s.concreteProblem.variables) {
       case `occ` => mod.dom(occ) shouldBe Seq(1, 2)

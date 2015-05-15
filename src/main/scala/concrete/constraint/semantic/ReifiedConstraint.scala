@@ -26,7 +26,9 @@ final class ReifiedConstraint(
     negativeConstraint.id = i
   }
 
-  private val positiveToReifiedPositions = positiveConstraint.scope.map(position)
+  private val positiveToReifiedPositions = positiveConstraint.scope.map(position).map {
+    case Seq(i) => i
+  }
 
   private val reifiedToPositivePositions = {
     val a = Array.fill(arity)(-1)
@@ -36,7 +38,9 @@ final class ReifiedConstraint(
     a
   }
 
-  private val negativeToReifiedPositions = negativeConstraint.scope.map(position)
+  private val negativeToReifiedPositions = negativeConstraint.scope.map(position).map {
+    case Seq(i) => i
+  }
 
   private val reifiedToNegativePositions = {
     val a = Array.fill(arity)(-1)

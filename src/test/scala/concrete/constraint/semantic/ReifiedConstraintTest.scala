@@ -33,7 +33,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
 
     val pb = Problem(control1, control2, v0, v1)
     pb.addConstraints(Seq(c1, c2))
-    val ps = pb.initState
+    val ps = pb.initState.toState
 
     c1.advise(ps, 2) should be >= 0
     c2.advise(ps, 2) should be >= 0

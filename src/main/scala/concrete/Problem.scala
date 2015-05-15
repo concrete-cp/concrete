@@ -67,15 +67,9 @@ final class Problem(val variables: List[Variable]) {
     }
 
     constraints = buffer.toArray
-    initState = ProblemState(initState.domains, initState.constraintStates ++ cs.map(constraintInitState), initState.entailed)
   }
 
-  def constraintInitState(c: Constraint) = c match {
-    case sc: StatefulConstraint => sc.initState
-    case _                      => null
-  }
-
-  var initState = ProblemState(variables.map(_.initDomain), constraints.map(constraintInitState), Set()) //(0 until constraints.length).map(constraints(_).initState)
+  def initState = ProblemState(this)
 
   def toString(state: ProblemState) = {
     variables.map(_.toString(state)).mkString("\n") + "\n" +

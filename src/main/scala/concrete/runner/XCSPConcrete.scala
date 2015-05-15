@@ -24,9 +24,10 @@ object XCSPConcrete extends CSPOMRunner with App {
       f.toURL
     }
 
-    val cspom = CSPOM.load(file)
-    declaredVariables = cspom._2('variables).asInstanceOf[Seq[String]]
-    cspom._1
+    for ((cspom, data) <- CSPOM.load(file)) yield {
+      declaredVariables = data('variables).asInstanceOf[Seq[String]]
+      cspom
+    }
   }
 
   def description(args: List[String]) =

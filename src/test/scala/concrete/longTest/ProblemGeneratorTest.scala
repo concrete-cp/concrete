@@ -1,10 +1,7 @@
 package concrete.longTest;
 
-import org.scalatest.Finders
 import org.scalatest.FlatSpec
-
 import com.typesafe.scalalogging.LazyLogging
-
 import concrete.Contradiction
 import concrete.ParameterManager
 import concrete.ProblemState
@@ -13,9 +10,10 @@ import concrete.generator.FailedGenerationException
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
 import cspom.CSPOM
-import cspom.compiler.ProblemCompiler
+import cspom.compiler.CSPOMCompiler
+import org.scalatest.TryValues
 
-final class ProblemGeneratorTest extends FlatSpec with LazyLogging {
+final class ProblemGeneratorTest extends FlatSpec with LazyLogging with TryValues {
 
   "ProblemGenerator" should "generate zebra" in {
     generateTest("zebra.xml");
@@ -46,19 +44,19 @@ final class ProblemGeneratorTest extends FlatSpec with LazyLogging {
   private def generateTest(file: String) {
 
     val pm = new ParameterManager()
-    val cspom = CSPOM.load(classOf[ProblemGeneratorTest].getResource(file))._1;
+    val cspom = CSPOM.load(classOf[ProblemGeneratorTest].getResource(file)).success.value._1;
 
     logger.info(cspom + "\n" + cspom.referencedExpressions.size + " vars, " + cspom.constraints.size + " cons")
 
-    ProblemCompiler.compile(cspom, ConcretePatterns(pm));
+    CSPOMCompiler.compile(cspom, ConcretePatterns(pm));
 
     logger.info(cspom + "\n" + cspom.referencedExpressions.size + " vars, " + cspom.constraints.size + " cons")
 
-    val problem = new ProblemGenerator(pm).generate(cspom)._1;
+    val problem = new ProblemGenerator(pm).generate(cspom).success.value._1;
 
     logger.info(problem + "\n" + problem.variables.size + " vars, " + problem.constraints.size + " cons")
 
-    new ACC(problem, pm).reduceAll(problem.initState) match {
+    new ACC(problem, pm).reduceAll(problem.initState.toState) match {
       case Contradiction          => logger.info("UNSAT")
       case newState: ProblemState => logger.info(problem.toString(newState));
     }

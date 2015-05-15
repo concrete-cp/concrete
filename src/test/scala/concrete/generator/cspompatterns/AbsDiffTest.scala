@@ -1,15 +1,12 @@
-package concrete.generator.cspompattern
+package concrete.generator.cspompatterns
 
-import org.scalatest.Finders
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 
 import concrete.CSPOMDriver.CSPOMIntExpressionOperations
 import concrete.CSPOMDriver.abs
-import concrete.generator.cspompatterns.AbsDiff
-import concrete.generator.cspompatterns.SubToAdd
 import cspom.CSPOM
-import cspom.compiler.ProblemCompiler
+import cspom.compiler.CSPOMCompiler
 import cspom.variable.IntVariable
 
 class AbsDiffTest extends FlatSpec with Matchers {
@@ -29,7 +26,7 @@ class AbsDiffTest extends FlatSpec with Matchers {
 
     }
 
-    ProblemCompiler.compile(cspom, Seq(SubToAdd, AbsDiff))
+    CSPOMCompiler.compile(cspom, Seq(AbsDiff))
 
     cspom.constraints.toSeq should have size 1
     cspom.referencedExpressions should have size 3

@@ -8,12 +8,15 @@ import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.Removals
 import concrete.util.SparseSet
+import concrete.constraint.StatefulConstraint
 
 /* MDDRelation comes with its own timestamp */
 class MDDC(_scope: Array[Variable], private val mdd: MDDRelation)
-  extends Constraint(_scope) with Removals {
+  extends Constraint(_scope) with Removals with StatefulConstraint {
+  
+  type State = SparseSet
 
-  def initState = new SparseSet(mdd.identify + 1)
+  override def init(ps: ProblemState) = ps.updateState(id, new SparseSet(mdd.identify + 1))
 
   // Members declared in concrete.constraint.Constraint
   override def check(t: Array[Int]) = mdd.contains(t)

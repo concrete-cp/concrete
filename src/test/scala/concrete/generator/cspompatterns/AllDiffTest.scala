@@ -1,14 +1,12 @@
-package concrete.generator.cspompattern
+package concrete.generator.cspompatterns
 
-import org.scalatest.Finders
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 
-import concrete.generator.cspompatterns.AllDiff
 import cspom.CSPOM
 import cspom.CSPOM.ctr
+import cspom.compiler.CSPOMCompiler
 import cspom.compiler.MergeEq
-import cspom.compiler.ProblemCompiler
 import cspom.variable.IntVariable
 
 object AllDiffTest extends FlatSpec with Matchers {
@@ -26,7 +24,7 @@ object AllDiffTest extends FlatSpec with Matchers {
       }
     }
 
-    ProblemCompiler.compile(cspom, Seq(MergeEq, AllDiff))
+    CSPOMCompiler.compile(cspom, Seq(MergeEq, AllDiff))
 
     //println(cspom)
     cspom.constraints should have size 1

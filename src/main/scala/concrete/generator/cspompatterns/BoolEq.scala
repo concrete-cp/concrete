@@ -44,9 +44,9 @@ object BoolEq extends ConstraintCompiler {
 
     val (r, a, b) = data
 
-    val nr = BoolExpression(r)
-    val na = BoolExpression(a)
-    val nb = BoolExpression(b)
+    val nr = BoolExpression.coerce(r)
+    val na = BoolExpression.coerce(a)
+    val nb = BoolExpression.coerce(b)
 
     replace(a, na, problem) ++
       replace(b, nb, problem) ++

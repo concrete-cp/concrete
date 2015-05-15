@@ -12,9 +12,9 @@ object AbsDiffDomains extends VariableCompiler('absdiff) with LazyLogging {
 
   def compiler(c: CSPOMConstraint[_]) = c match {
     case CSPOMConstraint(ir: SimpleExpression[_], _, Seq(ii0: SimpleExpression[_], ii1: SimpleExpression[_]), _) =>
-      val r = IntExpression(ir)
-      val i0 = IntExpression(ii0)
-      val i1 = IntExpression(ii1)
+      val r = IntExpression.coerce(ir)
+      val i0 = IntExpression.coerce(ii0)
+      val i1 = IntExpression.coerce(ii1)
 
       if (r.fullyDefined && i0.fullyDefined && i1.fullyDefined) {
         Map()

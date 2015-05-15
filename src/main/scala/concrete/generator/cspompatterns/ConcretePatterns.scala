@@ -6,24 +6,26 @@ import cspom.compiler.MergeSame
 import cspom.compiler.MergeEq
 import cspom.compiler.RemoveUselessEq
 import cspom.compiler.SplitEqVec
+import cspom.compiler.ConstraintCompiler
 
 object ConcretePatterns {
 
-  def apply(params: ParameterManager) = {
+  def apply(params: ParameterManager): Seq[ConstraintCompiler] = {
     val concreteDef =
       Seq(
-        SubToAdd, DivToMul, AbsDiff, AbsDiffDomains, AddToEq, BoolEq,
-        AddDomains, MulDomains, EqDomains, AbsDomains, NeqToEq,
-        Bool2IntDomains, MulToSum, SumFactors, SumDomains,
-        MergeNotDisj, DisjToClause,
+        XCSPPatterns(),
+        DivToMul, AbsDiff, AbsDiffDomains, BoolEq,
+        MulDomains, EqDomains, AbsDomains, NeqToEq,
+        Bool2IntDomains, MulToSum, SumFactors, SumConstants, SumDomains, PseudoBool,
+        MergeNotDisj,
         NegToCNF, Xor, ReifiedConj, ReifiedClause,
         NeqVec, SimplClause,
-        LtToGt, ReversedGt, SlidingSum, Regular, SetIn, ConcreteTypes,
+        SlidingSum, Regular, SetIn, ConcreteTypes,
         SumNe, AllDifferent, AllDiffConstant, CountEq //, ConstToVar
         )
 
     val concreteImp = Seq(
-      AllDiff, SubsumedDiff, DiffGe, Square, GtDomains, GeDomains, UnaryClause)
+      AllDiff, SubsumedDiff, DiffGe, Square, UnaryClause) //, LexLeq2SAT)
 
     val improveModel = params.getOrElse("improveModel", true)
 
@@ -32,8 +34,6 @@ object ConcretePatterns {
     } else {
       StandardCompilers() ++ concreteDef
     }
-        
-        
 
   }
 

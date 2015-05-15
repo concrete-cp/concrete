@@ -1,9 +1,7 @@
 package concrete.generator;
 
 import scala.reflect.runtime.universe
-
 import com.typesafe.scalalogging.LazyLogging
-
 import concrete.Domain
 import concrete.IntDomain
 import concrete.ParameterManager
@@ -18,6 +16,18 @@ import cspom.VariableNames
 import cspom.variable.BoolVariable
 import cspom.variable.CSPOMVariable
 import cspom.variable.IntVariable
+import cspom.variable.CSPOMSeq
+import cspom.variable.CSPOMConstant
+import concrete.generator.constraint.Generator
+import concrete.constraint.semantic.Clause
+import concrete.constraint.semantic.SAT
+import concrete.constraint.semantic.PseudoBoolean
+import concrete.generator.constraint.Var
+import concrete.constraint.semantic.SumMode
+import concrete.generator.constraint.Const
+import concrete.constraint.semantic.SumMode._
+import concrete.generator.constraint.SumGenerator
+import scala.util.Try
 
 final class ProblemGenerator(private val pm: ParameterManager = new ParameterManager()) extends LazyLogging {
 
@@ -29,38 +39,49 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
   @Statistic
   var genTime: Double = 0.0
 
-  @throws(classOf[FailedGenerationException])
-  def generate(cspom: CSPOM): (Problem, Map[CSPOMVariable[_], Variable]) = {
-    val (result, time) = try StatisticsManager.time {
-
-      //println(cspom)
-      // new ProblemCompiler(cspom).compile();
-
-      //val problem = new Problem();
+  def generate(cspom: CSPOM): Try[(Problem, Map[CSPOMVariable[_], Variable])] = {
+    val (result, time) = StatisticsManager.time {
 
       val variables = generateVariables(cspom)
 
       val problem = new Problem(variables.values.toList.sortBy(_.name))
 
-      //      val sorted = cspom.constraints.toSeq.sortBy {
-      //        c => (c.fullScope, c.function)
-      //      }
+      val vn = new VariableNames(cspom)
 
-      for (
-        cspomC <- cspom.constraints;
-        constraint <- gm.generate(cspomC, variables, new VariableNames(cspom))
-      ) {
-        problem.addConstraint(constraint)
+      var clauses: Seq[Clause] = Seq()
+      var pb: Seq[PseudoBoolean] = Seq()
+
+      cspom.constraints.foreach {
+        case c if c.function == 'clause =>
+          val Seq(pos: CSPOMSeq[_], neg: CSPOMSeq[_]) = c.arguments
+          if (pos.contains(CSPOMConstant(true)) || neg.contains(CSPOMConstant(false))) {
+            // Useless clause
+          } else {
+            val posConc = pos.collect { case v: BoolVariable => Generator.cspom2concreteVar(v)(variables) }.toArray
+            val negConc = neg.collect { case v: BoolVariable => Generator.cspom2concreteVar(v)(variables) }.toArray
+            clauses +:= Clause(posConc, negConc)
+          }
+        case constraint if constraint.function == 'pseudoboolean =>
+
+          val (solverVariables, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)(variables)
+
+          if (solverVariables.nonEmpty) {
+            pb +:= PseudoBoolean(solverVariables, varParams, mode, constant)
+          }
+        case c => for (
+          constraint <- gm.generate(c, variables, vn)
+        ) {
+          problem.addConstraint(constraint)
+        }
       }
-      
+
+      SAT(clauses, pb, pm).foreach(problem.addConstraint)
+
       //println(problem.toString(problem.initState))
 
       (problem, variables)
-    } catch {
-      case t: TimedException =>
-        genTime += t.time
-        throw t.getCause()
     }
+
     genTime += time
     result
   }

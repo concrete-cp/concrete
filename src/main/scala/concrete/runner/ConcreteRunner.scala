@@ -13,11 +13,12 @@ import concrete.runner.sql.SQLWriter
 import cspom.Statistic
 import cspom.StatisticsManager
 import cspom.TimedException
-import cspom.compiler.ProblemCompiler
+import cspom.compiler.CSPOMCompiler
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMVariable
 import concrete.SolverFactory
 import java.util.TimerTask
+import scala.util.Try
 
 trait ConcreteRunner extends LazyLogging {
 
@@ -62,7 +63,7 @@ trait ConcreteRunner extends LazyLogging {
     case u :: tail                      => options(tail, o, u :: realArgs)
   }
 
-  def load(args: List[String], opt: Map[Symbol, Any]): concrete.Problem
+  def load(args: List[String], opt: Map[Symbol, Any]): Try[concrete.Problem]
 
   def applyParameters(s: Solver, opt: Map[Symbol, Any]): Unit = {}
 
@@ -109,7 +110,7 @@ trait ConcreteRunner extends LazyLogging {
     writer.problem(description(remaining))
 
     statistics.register("runner", this)
-    statistics.register("problemCompiler", ProblemCompiler)
+    statistics.register("CSPOMCompiler", CSPOMCompiler)
     //statistics.register("problemGenerator", ProblemGenerator)
 
     writer.parameters(pm.toXML)
@@ -117,66 +118,61 @@ trait ConcreteRunner extends LazyLogging {
     val waker = new Timer()
     try {
 
-      val problem = try {
-        val (problem, lT) = StatisticsManager.time {
-          load(remaining, opt)
-        }
-        loadTime = lT
-        problem
-      } catch {
-        case e: TimedException =>
-          loadTime = e.time
-          throw e.getCause()
+      val (tryLoad, lT) = StatisticsManager.timeTry {
+        load(remaining, opt)
       }
+      loadTime = lT
 
-      val solver = new SolverFactory(pm)(problem)
+      for (problem <- tryLoad) {
 
-      statistics.register("solver", solver)
-      applyParameters(solver, opt)
-      //println(solver.problem)
+        val solver = new SolverFactory(pm)(problem)
 
-      for (t <- opt.get('Time)) {
-        val t = Thread.currentThread
-        waker.schedule(
-          new TimerTask {
-            def run = t.interrupt()
-          },
-          t.asInstanceOf[Int] * 1000);
-      }
+        statistics.register("solver", solver)
+        applyParameters(solver, opt)
+        //println(solver.problem)
 
-      optimize match {
-        case "sat" =>
-        case "min" =>
-          solver.minimize(solver.problem.variable(optimizeVar.get))
-        case "max" =>
-          solver.maximize(solver.problem.variable(optimizeVar.get))
-      }
-
-      if (opt.contains('all)) {
-        for (s <- solver) {
-          status = Sat
-          solution(s, writer, opt)
+        for (t <- opt.get('Time)) {
+          val t = Thread.currentThread
+          waker.schedule(
+            new TimerTask {
+              def run = t.interrupt()
+            },
+            t.asInstanceOf[Int] * 1000);
         }
-      } else if (solver.isOptimizer) {
-        for (s <- solver.toIterable.lastOption) {
-          status = Sat
-          solution(s, writer, opt)
-        }
-      } else {
-        for (s <- solver.toIterable.headOption) {
-          status = Sat
-          solution(s, writer, opt)
-        }
-      }
 
-      if (status == Unknown) {
-        status = Unsat
+        optimize match {
+          case "sat" =>
+          case "min" =>
+            solver.minimize(solver.problem.variable(optimizeVar.get))
+          case "max" =>
+            solver.maximize(solver.problem.variable(optimizeVar.get))
+        }
+
+        if (opt.contains('all)) {
+          for (s <- solver) {
+            status = Sat
+            solution(s, writer, opt)
+          }
+        } else if (solver.isOptimizer) {
+          for (s <- solver.toIterable.lastOption) {
+            status = Sat
+            solution(s, writer, opt)
+          }
+        } else {
+          for (s <- solver.toIterable.headOption) {
+            status = Sat
+            solution(s, writer, opt)
+          }
+        }
+
+        if (status == Unknown) {
+          status = Unsat
+        }
       }
     } catch {
       case e: Throwable =>
         writer.error(e)
         status = Error
-        return status
     } finally {
       waker.cancel()
       writer.write(statistics)

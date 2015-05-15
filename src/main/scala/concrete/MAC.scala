@@ -30,6 +30,7 @@ import cspom.Statistic
 import cspom.StatisticsManager
 import scala.annotation.tailrec
 import cspom.TimedException
+import cspom.UNSATException
 
 final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, params) with LazyLogging {
 
@@ -152,15 +153,12 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
 
     val nbBT = nbBacktracks
 
-    val ((sol, newStack, newStateStack), macTime) = try {
+    val (macResult, macTime) =
       StatisticsManager.time(mac(modifiedVar, stack, currentState, stateStack))
-    } catch {
-      case e: TimedException =>
-        searchCpu += e.time;
-        throw e.getCause
-    }
 
     searchCpu += macTime
+
+    val (sol, newStack, newStateStack) = macResult.get
 
     logger.info("Took " + macTime + "s ("
       + ((nbBacktracks - nbBT) / macTime)
@@ -182,11 +180,12 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
   }
 
   var currentStack: List[Pair] = Nil
-  var currentStateStack: List[ProblemState] = List(problem.initState)
+  var currentStateStack: List[ProblemState] = List(problem.initState.toState)
 
   def nextSolution(): SolverResult = try {
     // extends state stack for new constraints
-    currentStateStack = currentStateStack.map(_.padConstraints(problem.constraints))
+    currentStateStack = currentStateStack.map(s =>
+      s.padConstraints(problem.constraints).toState)
 
     if (restart) {
       logger.info("RESTART")

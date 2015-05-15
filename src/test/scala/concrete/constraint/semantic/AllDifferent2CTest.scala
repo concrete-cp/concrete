@@ -19,7 +19,7 @@ class AllDifferent2CTest extends FlatSpec with Matchers {
     val v5 = new Variable("5", IntDomain.ofSeq(8, 9))
 
     val c = new AllDifferent2C(v1, v2, v3, v4, v5)
-    val ps = Problem(v1, v2, v3, v4, v5).initState
+    val ps = Problem(v1, v2, v3, v4, v5).initState.toState
 
     c.register(new AdviseCount)
     c.adviseAll(ps)

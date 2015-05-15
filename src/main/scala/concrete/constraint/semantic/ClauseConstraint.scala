@@ -10,13 +10,13 @@ import concrete.constraint.Constraint
 import concrete.Contradiction
 import concrete.ProblemState
 import concrete.Outcome
-import concrete.constraint.AdviseCount
-import concrete.constraint.AdviseCounts
 
-final class Clause(positive: Array[Variable], negative: Array[Variable]) extends Constraint(positive ++ negative)
-  with AdviseCounts {
+final class ClauseConstraint(clause: Clause) extends Constraint(clause.vars: _*) {
 
-  val posLength = positive.length
+  private val positive = clause.positive.toArray
+  private val negative = clause.negative.toArray
+
+  private val posLength = positive.length
 
   //require(reverses.size == scope.size, "reverses must cover all variables")
 
@@ -24,22 +24,18 @@ final class Clause(positive: Array[Variable], negative: Array[Variable]) extends
 
   private var watch2: Int = _
 
-  private var modW1: Int = -1
-  private var modW2: Int = -1
-
   override def init(ps: ProblemState): Outcome = {
     watch1 = seekWatch(ps, -1)
 
     if (watch1 < 0) {
       Contradiction
-    } else if (isTrue(ps.dom(watch1), watch1)) {
+    } else if (isTrue(ps, watch1)) {
       ps.entail(this)
     } else {
-
       watch2 = seekWatch(ps, watch1)
       if (watch2 < 0) {
         enforce(ps, watch1).entail(this)
-      } else if (isTrue(ps.dom(watch2), watch2)) {
+      } else if (isTrue(ps, watch2)) {
         ps.entail(this)
       } else {
         ps
@@ -52,19 +48,10 @@ final class Clause(positive: Array[Variable], negative: Array[Variable]) extends
 
   //if (isTrue(watch1) || isTrue(watch2)) entail()
 
-  def advise(ps: ProblemState, p: Int) =
-    if (p == watch1) {
-      modW1 = adviseCount
-      1
-    } else if (p == watch2) {
-      modW2 = adviseCount
-      1
-    } else {
-      -1
-    }
+  def advise(ps: ProblemState, p: Int) = if (p == watch1 || p == watch2) 1 else -1
 
   override def check(t: Array[Int]) = {
-    val (p, n) = t.view.splitAt(positive.length)
+    val (p, n) = t.view.splitAt(posLength)
     p.contains(1) || n.contains(0)
   }
 
@@ -72,23 +59,14 @@ final class Clause(positive: Array[Variable], negative: Array[Variable]) extends
     "\\/" + (positive.map(_.toString(ps)) ++ negative.map(v => "-" + v.toString(ps))).mkString("(", ", ", ")")
 
   def reviseW2(ps: ProblemState): Outcome = {
-    if (modW2 == adviseCount) {
-      modW2 = -1
-      val domW2 = ps.dom(watch2)
-      if (isTrue(domW2, watch2)) {
-        ps.entail(this)
-      } else if (isFalse(domW2, watch2)) {
-        val w = seekWatch(ps, watch1)
-        if (w < 0) {
-          enforce(ps, watch1).entail(this)
-        } else if (isTrue(ps.dom(w), w)) {
-          ps.entail(this)
-        } else {
-          watch2 = w
-          reviseW1(ps)
-        }
-
+    if (isTrue(ps, watch2)) {
+      ps.entail(this)
+    } else if (isFalse(ps, watch2)) {
+      val w = seekWatch(ps, watch1)
+      if (w < 0) {
+        enforce(ps, watch1).entail(this)
       } else {
+        watch2 = w
         reviseW1(ps)
       }
     } else {
@@ -97,25 +75,21 @@ final class Clause(positive: Array[Variable], negative: Array[Variable]) extends
   }
 
   def reviseW1(ps: ProblemState): Outcome = {
-    if (modW1 == adviseCount) {
-      modW1 = -1
-      val domW1 = ps.dom(watch1)
-      if (isTrue(domW1, watch1)) {
-        ps.entail(this)
-      } else if (isFalse(domW1, watch1)) {
-        val w = seekWatch(ps, watch2)
-        if (w < 0) {
-          enforce(ps, watch2).entail(this)
-        } else if (isTrue(ps.dom(w), w)) {
+    if (isTrue(ps, watch1)) {
+      ps.entail(this)
+    } else if (isFalse(ps, watch1)) {
+      val w = seekWatch(ps, watch2)
+      if (w < 0) {
+        enforce(ps, watch2).entail(this)
+      } else {
+        watch1 = w
+        if (isTrue(ps, w)) {
           ps.entail(this)
         } else {
-          watch1 = w
           ps
         }
-
-      } else {
-        ps
       }
+
     } else {
       ps
     }
@@ -123,7 +97,6 @@ final class Clause(positive: Array[Variable], negative: Array[Variable]) extends
 
   def revise(ps: ProblemState): Outcome = {
     reviseW2(ps)
-
   }
 
   private def enforce(ps: ProblemState, position: Int): Outcome = {
@@ -134,19 +107,19 @@ final class Clause(positive: Array[Variable], negative: Array[Variable]) extends
     }
   }
 
-  private def isTrue(dom: Domain, pos: Int): Boolean = {
+  private def isTrue(ps: ProblemState, pos: Int): Boolean = {
     if (pos < posLength) {
-      dom == TRUE
+      ps.dom(ids(pos)) == TRUE
     } else {
-      dom == FALSE
+      ps.dom(ids(pos)) == FALSE
     }
   }
 
-  private def isFalse(dom: Domain, pos: Int): Boolean = {
+  private def isFalse(ps: ProblemState, pos: Int): Boolean = {
     if (pos < posLength) {
-      dom == FALSE
+      ps.dom(ids(pos)) == FALSE
     } else {
-      dom == TRUE
+      ps.dom(ids(pos)) == TRUE
     }
   }
 

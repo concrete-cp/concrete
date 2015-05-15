@@ -14,8 +14,8 @@ object AbsDomains extends VariableCompiler('abs) {
 
   def compiler(c: CSPOMConstraint[_]) = c match {
     case CSPOMConstraint(r: SimpleExpression[_], _, Seq(i: SimpleExpression[_]), _) =>
-      val ir = IntExpression(r)
-      val ii = IntExpression(i)
+      val ir = IntExpression.coerce(r)
+      val ii = IntExpression.coerce(i)
       Map(
         r -> reduceDomain(ir, ii.abs),
         i -> reduceDomain(ii, ir ++ -ir))
@@ -33,8 +33,8 @@ object ConstAbs extends ConstraintCompiler {
   
   def compile(c: CSPOMConstraint[_], cspom: CSPOM, d: A) = {
     val (r, i) = d
-    val ir = IntExpression(r)
-    val ii = IntExpression(i)
+    val ir = IntExpression.coerce(r)
+    val ii = IntExpression.coerce(i)
 
     require(!(ir & ii.abs).isEmpty, "Unconsistency detected for constraint " + c)
     require(!(ii & (ir ++ -ir)).isEmpty, "Unconsistency detected for constraint " + c)

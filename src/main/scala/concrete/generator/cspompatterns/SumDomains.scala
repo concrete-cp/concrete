@@ -26,7 +26,7 @@ object SumDomains extends VariableCompiler('sum) {
   def compiler(c: CSPOMConstraint[_]) = c match {
     case CSPOMConstraint(CSPOMConstant(true), _, Seq(CSPOMSeq(args), CSPOMConstant(result: Int)), params) =>
 
-      val iargs = args.map(IntExpression(_)).toIndexedSeq
+      val iargs = args.map(IntExpression.coerce(_)).toIndexedSeq
 
       val coef = params.get("coefficients") match {
         case Some(p: Seq[_]) => p.asInstanceOf[Seq[Int]]
@@ -56,6 +56,8 @@ object SumDomains extends VariableCompiler('sum) {
             }
         }
         .toMap
+
+    case _ => Map()
   }
 }
 
@@ -63,7 +65,7 @@ object PseudoBoolDomains extends VariableCompiler('pseudoboolean) {
   def compiler(c: CSPOMConstraint[_]) = c match {
     case CSPOMConstraint(CSPOMConstant(true), _, Seq(CSPOMSeq(args), CSPOMConstant(result: Int)), params) =>
 
-      val iargs = args.map(BoolExpression(_)).toIndexedSeq
+      val iargs = args.map(BoolExpression.coerce(_)).toIndexedSeq
 
       val coef = params.get("coefficients") match {
         case Some(p: Seq[_]) => p.asInstanceOf[Seq[Int]]

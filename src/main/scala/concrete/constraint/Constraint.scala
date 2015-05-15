@@ -52,29 +52,17 @@ import scala.reflect.runtime.universe._
 
 trait StatefulConstraint extends Constraint {
   type State <: AnyRef
-  def initState: State
 
-  //  def isConsistent(problemState: ProblemState, state: State): Boolean =
-  //    revise(problemState, state) match {
-  //      case Contradiction    => false
-  //      case ns: ProblemState => scope.forall(ns.dom(_).nonEmpty)
-  //    }
-  //
-  //  override final def isConsistent(problemState: ProblemState) = isConsistent(problemState, problemState(this))
+  override def init(ps: ProblemState): Outcome
 
-  //  def revise(problemState: ProblemState, state: State): Outcome
-  //  final def revise(problemState: ProblemState) = revise(problemState, problemState(this))
-
-  def state[T <: State: TypeTag](ps: ProblemState): State = ps[T](this)
-
-  override def toString(problemState: ProblemState) = super.toString(problemState) + problemState(this)
+  override def toString(problemState: ProblemState) = s"${super.toString(problemState)} / ${problemState(this)}"
 }
 
 abstract class Constraint(val scope: Array[Variable])
   extends DLNode[Constraint] with Weighted with Identified with PTag {
 
   require(scope.nonEmpty)
-  
+
   def this(scope: Variable*) = this(scope.toArray)
 
   private var _id: Int = -1
@@ -90,7 +78,11 @@ abstract class Constraint(val scope: Array[Variable])
   /**
    * @return a map containing the positions of variables in the scope of the constraint.
    */
-  val position = scope.zipWithIndex.toMap
+  val position: Map[Variable, Seq[Int]] = {
+    scope.zipWithIndex.foldLeft(Map[Variable, Seq[Int]]()) {
+      case (map, (v, i)) => map + (v -> (map.getOrElse(v, Seq[Int]()) :+ i))
+    }
+  }
 
   override def equals(o: Any) = o.asInstanceOf[Constraint].id == id
 
@@ -136,18 +128,19 @@ abstract class Constraint(val scope: Array[Variable])
 
   def advise(problemState: ProblemState, pos: Int): Int
 
-  def advise(problemState: ProblemState, v: Variable): Int = advise(problemState, position(v))
-
-  final def adviseAll(problemState: ProblemState): Int = {
-    var p = arity - 1
+  def advise(problemState: ProblemState, pos: Seq[Int]): Int = {
     var i = -1
-    while (p >= 0) {
-      val advOutcome = advise(problemState, p)
-      i = math.max(i, advOutcome)
-      p -= 1
+    for (p <- pos) {
+      i = math.max(i, advise(problemState, p))
     }
     i
   }
+
+  def advise(problemState: ProblemState, v: Variable): Int = advise(problemState, position(v))
+
+  final def adviseAll(problemState: ProblemState): Int = advise(problemState, 0 until arity)
+
+  def init(ps: ProblemState): Outcome = ps
 
   /**
    * The constraint propagator.

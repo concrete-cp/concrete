@@ -89,6 +89,9 @@ sealed trait Outcome {
     updateState(c.id, newState)
 
   def domainsOption: Option[IndexedSeq[Domain]]
+
+  def toString(problem: Problem): String
+  def toState: ProblemState
 }
 
 case object Contradiction extends Outcome {
@@ -113,12 +116,18 @@ case object Contradiction extends Outcome {
 
   def updateState(id: Int, newState: AnyRef): Outcome = Contradiction
   def domainsOption(): Option[IndexedSeq[Domain]] = None
-
+  def toString(problem: Problem) = "Contradiction"
+  def toState = throw new UNSATException("Tried to get state from a Contradiction")
 }
 
 object ProblemState {
-  def apply(domains: Seq[Domain], constraintStates: Seq[AnyRef], entailed: Traversable[Int]): ProblemState =
-    ProblemState(Vector(domains: _*), Vector(constraintStates: _*), BitVector(entailed))
+  //  def apply(domains: Seq[Domain], constraintStates: Seq[AnyRef], entailed: Traversable[Int]): ProblemState =
+  //    ProblemState(Vector(domains: _*), Vector(constraintStates: _*), BitVector(entailed))
+
+  def apply(problem: Problem): Outcome = {
+    ProblemState(Vector(problem.variables.map(_.initDomain): _*), Vector(), BitVector.empty)
+      .padConstraints(problem.constraints)
+  }
 }
 
 final case class ProblemState(
@@ -128,7 +137,7 @@ final case class ProblemState(
 
   def andThen(f: ProblemState => Outcome) = f(this)
 
-  def apply[A: TypeTag](c: Constraint): A = constraintStates(c.id).asInstanceOf[A]
+  def apply(c: StatefulConstraint): c.State = constraintStates(c.id).asInstanceOf[c.State]
 
   def updateState(id: Int, newState: AnyRef): ProblemState = {
     if (constraintStates(id) eq newState) {
@@ -148,13 +157,16 @@ final case class ProblemState(
   //    new ProblemState(domains, builder.result, entailed)
   //  }
 
-  def padConstraints(constraints: Seq[Constraint]) = {
-    val padded: Vector[AnyRef] = constraints.drop(constraintStates.size).map {
-      case c: StatefulConstraint => c.initState
-      case _                     => null
+  def padConstraints(constraints: Seq[Constraint]): Outcome = {
+    val padded = constraintStates.padTo(constraints.size, null)
+    var ps = ProblemState(domains, padded, entailed)
+    for (c <- constraints.drop(constraintStates.size)) {
+      c.init(ps) match {
+        case Contradiction          => return Contradiction
+        case newState: ProblemState => ps = newState
+      }
     }
-      .foldLeft(constraintStates)(_ :+ _)
-    if (padded eq constraintStates) this else new ProblemState(domains, padded, entailed)
+    ps
   }
 
   def entail(id: Int): ProblemState = new ProblemState(domains, constraintStates, entailed + id)
@@ -241,5 +253,8 @@ final case class ProblemState(
   }
 
   def domainsOption = Some(domains)
+
+  def toString(problem: Problem) = problem.toString(this)
+  def toState: ProblemState = this
 
 }

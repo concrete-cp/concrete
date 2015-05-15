@@ -18,7 +18,7 @@ final class GtTest extends FlatSpec with Matchers {
     val pb = Problem(v1, v2)
     val c = new Gt(v1, v2, true);
     pb.addConstraint(c)
-    val ps = pb.initState
+    val ps = pb.initState.toState
 
     val mod = c.consistentRevise(ps);
 
@@ -30,7 +30,7 @@ final class GtTest extends FlatSpec with Matchers {
     val pb = Problem(v1, v2)
     val c = new Gt(v1, v2, false);
     pb.addConstraint(c)
-    val ps = pb.initState
+    val ps = pb.initState.toState
 
     val mod = c.consistentRevise(ps);
 

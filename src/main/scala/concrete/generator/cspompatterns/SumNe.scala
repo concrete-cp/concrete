@@ -14,7 +14,8 @@ object SumNe extends ConstraintCompiler {
   type A = Seq[CSPOMExpression[_]]
 
   override def mtch(c: CSPOMConstraint[_], p: CSPOM) = {
-    if (c.function == 'sum && c.params.get("mode").contains("ne") && c.params.get("coefficients").contains(Seq(1, -1))) {
+    if (c.function == 'sum && c.params.get("mode").contains("ne") && c.params.get("coefficients").exists(
+      c => c == Seq(1, -1) || c == Seq(-1, 1))) {
       val Seq(CSPOMSeq(args), CSPOMConstant(result)) = c.arguments
       if (result == 0) {
         Some(args)

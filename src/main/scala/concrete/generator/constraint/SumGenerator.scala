@@ -1,22 +1,27 @@
 package concrete.generator.constraint;
 
-import Generator.cspom2concrete
-import concrete.constraint.semantic.Sum
+import scala.reflect.runtime.universe
+
+import com.typesafe.scalalogging.LazyLogging
+
+import Generator.cspom2concreteVar
+import concrete.constraint.semantic.Eq
+import concrete.constraint.semantic.Gt
+import concrete.constraint.semantic.Neq
+import concrete.constraint.semantic.SumAC
+import concrete.constraint.semantic.SumBC
 import concrete.constraint.semantic.SumMode
 import cspom.CSPOMConstraint
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
-import concrete.constraint.semantic.SumAC
-import concrete.constraint.semantic.SumBC
-import SumMode._
 
-final object SumGenerator extends Generator {
+final object SumGenerator extends Generator with LazyLogging {
 
-  override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
+  def readCSPOM(constraint: CSPOMConstraint[_])(implicit variables: VarMap) = {
     val Seq(CSPOMSeq(vars), CSPOMConstant(c)) = constraint.arguments //map cspom2concreteVar
 
     // For bool2int optimization
-    val const = c match {
+    val constant = c match {
       case i: Int => i
       case false  => 0
       case true   => 1
@@ -28,53 +33,49 @@ final object SumGenerator extends Generator {
       case _               => throw new IllegalArgumentException("Parameters for zero sum must be a sequence of integer values")
     }
 
-    val (solverVariables, varParams) = (vars map cspom2concrete)
-      .zip(params)
-      .collect {
-        case (Var(v), p) => (v, p)
-      }
-      .unzip
-
-    val constant = const - (vars map cspom2concrete)
-      .zip(params)
-      .collect {
-        case (Const(c), p) => c * p
-      }
-      .sum
+    val solverVariables = vars.map(cspom2concreteVar)
 
     val mode = constraint.params.get("mode").collect {
       case m: String => SumMode.withName(m)
     }.get
 
-    if (solverVariables.isEmpty) {
-      mode match {
-        case SumEQ => require(constant == 0)
-        case SumLT => require(constant > 0)
-        case SumLE => require(constant >= 0, s"inconsistent sum $constraint")
-        case SumNE => require(constant != 0)
-      }
-      Seq()
-    } else {
+    (solverVariables, params, constant, mode)
 
+  }
+
+  override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
+
+    val (solverVariables, varParams, constant, mode) = readCSPOM(constraint)
+
+    if (solverVariables.size == 2) {
+      val Seq(x, y) = solverVariables
+      (varParams, mode, constant) match {
+        case (Seq(1, -1), SumMode.SumLE, k) => Seq(new Gt(y, k, x, false))
+        case (Seq(1, -1), SumMode.SumLT, k) => Seq(new Gt(y, k, x, true))
+        case (Seq(-1, 1), SumMode.SumLE, k) => Seq(new Gt(x, k, y, false))
+        case (Seq(-1, 1), SumMode.SumLT, k) => Seq(new Gt(x, k, y, true))
+        case (Seq(-1, 1) | Seq(1, -1), SumMode.SumNE, 0) =>
+          throw new AssertionError("Not-Equal linear constraint should be captured by SumNe CSPOM pattern")
+        case (Seq(1, -1), SumMode.SumEQ, k)  => Eq(false, x, -k, y)
+        case (Seq(-1, -1), SumMode.SumEQ, k) => Eq(true, x, -k, y)
+        case (Seq(-1, 1), SumMode.SumEQ, k)  => Eq(false, x, k, y)
+        case (Seq(1, 1), SumMode.SumEQ, k)   => Eq(true, x, k, y)
+        case _ =>
+          logger.warn(s"$constraint is non-specialized binary linear constraint")
+          Seq(new SumBC(constant, varParams.toArray, solverVariables.toArray, mode))
+      }
+
+    } else {
       val bc = new SumBC(constant, varParams.toArray, solverVariables.toArray, mode)
 
-      if (CSPOMSeq(constraint.arguments: _*).searchSpace < 1000) {
+      val ss = CSPOMSeq(constraint.arguments: _*).searchSpace
+      //println(ss)
+
+      if (ss < 10000) {
         Seq(bc, new SumAC(constant, varParams.toArray, solverVariables.toArray, mode))
       } else {
         Seq(bc)
       }
     }
-    //    
-    //    undefinedVar(solverVariables: _*) match {
-    //      case Seq() => go(constant, varParams, solverVariables, mode)
-    //      case Seq(uv) if mode == FilterSum.SumEQ =>
-    //        val min = (solverVariables zip varParams).map { case (v, p) => if (v eq uv) 0 else v.dom.headValue * p }.sum
-    //        val max = (solverVariables zip varParams).map { case (v, p) => if (v eq uv) 0 else v.dom.lastValue * p }.sum
-    //        val factor = varParams(solverVariables.indexOf(uv))
-    //        Generator.restrictDomain(uv, ((Interval(min, max) - constant) / -factor).range.iterator)
-    //        go(constant, varParams, solverVariables, mode)
-    //      case _ => None
-    //    }
-
   }
 }

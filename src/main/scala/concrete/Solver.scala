@@ -21,9 +21,7 @@ package concrete;
 
 import scala.collection.JavaConversions
 import scala.reflect.runtime.universe
-
 import com.typesafe.scalalogging.LazyLogging
-
 import concrete.constraint.TupleEnumerator
 import concrete.constraint.extension.ReduceableExt
 import concrete.constraint.semantic.GtC
@@ -35,11 +33,12 @@ import concrete.generator.cspompatterns.ConcretePatterns
 import cspom.CSPOM
 import cspom.Statistic
 import cspom.StatisticsManager
-import cspom.compiler.ProblemCompiler
+import cspom.compiler.CSPOMCompiler
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
+import scala.util.Try
 
 final class SolverFactory(val params: ParameterManager) {
 
@@ -52,20 +51,21 @@ final class SolverFactory(val params: ParameterManager) {
       .newInstance(problem, params);
   }
 
-  def apply(cspom: CSPOM): CSPOMSolver = {
-    ProblemCompiler.compile(cspom, ConcretePatterns(params))
+  def apply(cspom: CSPOM): Try[CSPOMSolver] = {
+    CSPOMCompiler.compile(cspom, ConcretePatterns(params))
     val pg = new ProblemGenerator(params)
-    val (problem, variables) = pg.generate(cspom)
-    val solver = apply(problem)
-    solver.statistics.register("compiler", ProblemCompiler)
-    solver.statistics.register("generator", pg)
-    new CSPOMSolver(solver, cspom, variables)
+    for ((problem, variables) <- pg.generate(cspom)) yield {
+      val solver = apply(problem)
+      solver.statistics.register("compiler", CSPOMCompiler)
+      solver.statistics.register("generator", pg)
+      new CSPOMSolver(solver, cspom, variables)
+    }
   }
 }
 
 object Solver {
-  def apply(cspom: CSPOM): CSPOMSolver = apply(cspom, new ParameterManager)
-  def apply(cspom: CSPOM, pm: ParameterManager): CSPOMSolver = new SolverFactory(pm)(cspom)
+  def apply(cspom: CSPOM): Try[CSPOMSolver] = apply(cspom, new ParameterManager)
+  def apply(cspom: CSPOM, pm: ParameterManager): Try[CSPOMSolver] = new SolverFactory(pm)(cspom)
   def apply(problem: Problem): Solver = apply(problem, new ParameterManager)
   def apply(problem: Problem, pm: ParameterManager): Solver = new SolverFactory(pm)(problem)
 }
@@ -236,7 +236,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
     this.preproCpu = t;
     //println(Thread.currentThread().getStackTrace.toSeq)
 
-    r.andThen { newState =>
+    r.get.andThen { newState =>
       preproRemoved = problem.variables
         .map { v => v.initDomain.size - newState.dom(v).size }
         .sum

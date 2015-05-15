@@ -20,7 +20,7 @@ final class ExtensionConstraint2DTest extends FlatSpec {
 
   val c = BinaryExt(Array(var1, var2), matrix2d, false)
 
-  val ps = Problem(var1, var2).initState
+  val ps = Problem(var1, var2).initState.toState
 
   "ExtensionConstraint2D" should "find supports" in {
     assert(c.hasSupport(ps, 0, 1))

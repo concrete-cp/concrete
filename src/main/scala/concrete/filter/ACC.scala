@@ -17,6 +17,7 @@ import cspom.Statistic
 import cspom.StatisticsManager
 import concrete.priorityqueues.PriorityQueue
 import concrete.heuristic.revision.Key
+import concrete.constraint.StatefulConstraint
 
 object ACC extends LazyLogging {
   def control(problem: Problem, state: ProblemState): ProblemState = {
@@ -34,7 +35,6 @@ object ACC extends LazyLogging {
             require(c.scope.forall(v => s.dom(v) eq finalState.dom(v)),
               s"${c.toString(state)}${if (state.isEntailed(c)) " - entailed" else ""} was revised (-> ${c.toString(finalState)})")
 
-            require(c.controlAssignment(finalState), s"${c.toString(finalState)} assignement is inconsistent")
             finalState
         }
 
@@ -145,11 +145,16 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     while (i >= 0) {
       val c = constraints(i)
 
-      if ((c ne skip) && !states.isEntailed(c)) {
-        val a = c.advise(states, modified.positionInConstraint(i))
+      if (!states.isEntailed(c)) {
+        val positions = modified.positionInConstraint(i)
 
-        //logger.fine(c + ", " + modified.positionInConstraint(i) + " : " + a)
-        if (a >= 0) queue.offer(c, key.getKey(c, states, a))
+        /** Requeue the constraint if the modified variable is involved several times in its scope */
+        if ((c ne skip) || positions.tail.nonEmpty) {
+          val a = c.advise(states, positions)
+
+          //logger.fine(c + ", " + modified.positionInConstraint(i) + " : " + a)
+          if (a >= 0) queue.offer(c, key.getKey(c, states, a))
+        }
       }
 
       i -= 1
@@ -178,6 +183,8 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
           assert(constraint.scope.forall(v => newState.dom(v).nonEmpty))
 
           assert(noChange(s, newState, varSet -- constraint.scope), s"$constraint changed a variable outside of its scope")
+
+          assert(constraint.controlAssignment(newState), s"${constraint.toString(newState)} assignement is inconsistent")
           //          for (i <- 0 until constraint.arity) {
           //            if (newState(constraint.scope(i)).isEmpty) {
           //              constraint.weight += 1
@@ -187,12 +194,11 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
           //            }
           //          }
 
-          if (newState ne s) {
+          if (newState.domains ne s.domains) {
             logger.debug(
               s"${constraint.toString(s)} -> ${constraint.toString(newState)}${if (newState.isEntailed(constraint)) " - entailed" else ""}")
 
-            for (i <- 0 until constraint.arity) {
-              val v = constraint.scope(i)
+            for (v <- constraint.scope) {
               val id = v.id
               /* id will be < 0 if a fake variable is used by the constraint */
               if (id >= 0 && (newState.dom(id) ne s.dom(id))) {
@@ -202,6 +208,16 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
               }
             }
             s = newState
+          } else if (newState ne s) {
+
+            logger.debug(s"${constraint.toString(s)} -> ${
+              constraint match {
+                case sc: StatefulConstraint => s"new state: ${newState(sc)}, "
+                case _                      => ""
+              }
+            }, entailed: ${newState.isEntailed(constraint)}")
+            s = newState
+
           } else {
             logger.debug(
               s"${constraint.toString(s)} -> NOP")

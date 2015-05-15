@@ -26,11 +26,11 @@ object Bool2IntDomains extends VariableCompiler('bool2int) {
   def compiler(c: CSPOMConstraint[_]) = c match {
     case CSPOMConstraint(CSPOMConstant(true), _, Seq(i0: SimpleExpression[_], i1: SimpleExpression[_]), params) =>
 
-      val b = BoolExpression(i0)
+      val b = BoolExpression.coerce(i0)
 
       val ii = BoolExpression.span(b)
 
-      val iii = reduceDomain(IntExpression(i1), ii)
+      val iii = reduceDomain(IntExpression.coerce(i1), ii)
 
       val bb =
         if (iii.contains(0)) {

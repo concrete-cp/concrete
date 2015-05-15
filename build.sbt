@@ -23,7 +23,9 @@ testOptions in Test <+= (target in Test) map {
 libraryDependencies ++= Seq(
 	"fr.univ-valenciennes.concrete" %% "cspom" % "2.5-SNAPSHOT",
 	"org.postgresql" % "postgresql" % "9.4-1201-jdbc41",
-	//"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
+	//%"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
+	"org.ow2.sat4j" % "org.ow2.sat4j.pb" % "2.3.5",
+	
 	"com.typesafe.slick" %% "slick" % "2.1.0",
 	//"org.jcp" % "jsr331" % "1.1.1",
 	"org.scalatest" %% "scalatest" % "2.2.4" % "test",

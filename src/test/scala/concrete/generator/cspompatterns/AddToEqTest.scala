@@ -7,7 +7,7 @@ import cspom.CSPOM
 import cspom.CSPOM._
 import cspom.variable.CSPOMVariable
 import cspom.variable.IntVariable
-import cspom.compiler.ProblemCompiler
+import cspom.compiler.CSPOMCompiler
 import concrete.ParameterManager
 import concrete.Solver
 
@@ -27,9 +27,9 @@ class AddToEqTest extends FlatSpec with Matchers {
     
     val pm = new ParameterManager
 
-    ProblemCompiler.compile(problem, ConcretePatterns(pm))
+    CSPOMCompiler.compile(problem, ConcretePatterns(pm))
     
-    //println(problem)
+    println(problem)
     
     //val s = Solver(problem, pm)
     //println(s.next)

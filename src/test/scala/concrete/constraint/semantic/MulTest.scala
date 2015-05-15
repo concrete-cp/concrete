@@ -50,7 +50,7 @@ final class MulTest extends FlatSpec with Matchers with PropertyChecks with Insp
       val pb = Problem(vx, vy, vz)
       val c = new MulAC(vx, vy, vz)
       pb.addConstraint(c)
-      val ps = pb.initState
+      val ps = pb.initState.toState
 
       c.register(new AdviseCount)
       c.adviseAll(ps)

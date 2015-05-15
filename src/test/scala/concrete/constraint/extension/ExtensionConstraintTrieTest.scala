@@ -30,14 +30,14 @@ final class ExtensionConstraintTrieTest extends FlatSpec with Matchers {
   "ReduceableExt" should "filter" in {
     val problem = Problem(v0, v1)
     problem.addConstraint(mmd)
-    val state = problem.initState
+    val state = problem.initState.toState
     mmd.adviseAll(state)
 
     val mod = mmd.consistentRevise(state)
 
     mod.dom(0) should be theSameInstanceAs (v0.initDomain)
     mod.dom(1) should not be theSameInstanceAs(v1.initDomain)
-    mod[Relation](mmd) should have size 2
+    mod(mmd) should have size 2
 
   }
 }

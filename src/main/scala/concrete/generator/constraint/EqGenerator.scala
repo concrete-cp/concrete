@@ -15,6 +15,7 @@ import concrete.constraint.semantic.Sum
 import concrete.constraint.semantic.SumNE
 import concrete.constraint.semantic.SumAC
 import cspom.UNSATException
+import concrete.constraint.semantic.Eq
 
 final object EqGenerator extends Generator {
 
@@ -33,10 +34,9 @@ final object EqGenerator extends Generator {
     (a, b) match {
       case (Const(a), Const(b)) =>
         if (negFactor * a + offset == b) Seq() else throw new UNSATException("Inconsistent constraint: " + constraint)
-      case (Var(a), Var(b)) =>
-        Seq(new EqBC(neg, a, offset, b), new EqAC(neg, a, offset, b))
+      case (Var(a), Var(b)) => Eq(neg, a, offset, b)
 
-      case _ => throw new UnsupportedOperationException(s"$constraint is not supported")
+      case _                => throw new UnsupportedOperationException(s"$constraint is not supported")
     }
 
   }
