@@ -2,6 +2,7 @@ package concrete.runner
 import cspom.StatisticsManager
 import scala.xml.NodeSeq
 import concrete.Variable
+import scala.util.Try
 
 trait ConcreteWriter {
 
@@ -12,5 +13,5 @@ trait ConcreteWriter {
   def write(stats: StatisticsManager): Unit
   def error(e: Throwable): Unit
 
-  def disconnect(status: RunnerStatus): Unit
+  def disconnect(status: Try[Boolean]): Unit
 }

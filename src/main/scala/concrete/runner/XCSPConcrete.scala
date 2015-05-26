@@ -6,6 +6,7 @@ import cspom.CSPOM
 import scalax.io.Resource
 import java.net.URI
 import scalax.file.Path
+import cspom.xcsp.XCSPParser
 
 object XCSPConcrete extends CSPOMRunner with App {
 
@@ -15,16 +16,8 @@ object XCSPConcrete extends CSPOMRunner with App {
 
   def loadCSPOM(args: List[String], opt: Map[Symbol, Any]) = {
     val List(fn) = args
-    val f = new URI(fn)
-
-    file = if (f.getScheme() == null) {
-      new URL("file:" + f)
-    } else {
-      //println(f.getScheme())
-      f.toURL
-    }
-
-    for ((cspom, data) <- CSPOM.load(file)) yield {
+    file = CSPOM.file2url(fn)
+    for ((cspom, data) <- CSPOM.load(file, XCSPParser)) yield {
       declaredVariables = data('variables).asInstanceOf[Seq[String]]
       cspom
     }

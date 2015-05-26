@@ -1,7 +1,7 @@
 package concrete.runner.sql
-import scala.slick.jdbc.StaticQuery.interpolation
-import scala.slick.driver.PostgresDriver.simple._
-import scala.slick.jdbc.GetResult
+import slick.jdbc.StaticQuery.interpolation
+import slick.driver.PostgresDriver.simple._
+import slick.jdbc.GetResult
 import scalax.file.Path
 import java.net.URI
 

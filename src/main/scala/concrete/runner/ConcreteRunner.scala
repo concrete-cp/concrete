@@ -19,6 +19,9 @@ import cspom.variable.CSPOMVariable
 import concrete.SolverFactory
 import java.util.TimerTask
 import scala.util.Try
+import scala.util.Failure
+import scala.util.Success
+import cspom.UNSATException
 
 trait ConcreteRunner extends LazyLogging {
 
@@ -75,9 +78,9 @@ trait ConcreteRunner extends LazyLogging {
   val pm = new ParameterManager
   val statistics = new StatisticsManager()
 
-  def run(args: Array[String]): RunnerStatus = {
+  def run(args: Array[String]): Try[Boolean] = {
 
-    var status: RunnerStatus = Unknown
+    //var status: RunnerStatus = Unknown
 
     val (opt, remaining) = try {
       options(args.toList, realArgs = Nil)
@@ -116,14 +119,15 @@ trait ConcreteRunner extends LazyLogging {
     writer.parameters(pm.toXML)
 
     val waker = new Timer()
-    try {
+    //try {
 
-      val (tryLoad, lT) = StatisticsManager.timeTry {
-        load(remaining, opt)
-      }
-      loadTime = lT
+    val (tryLoad, lT) = StatisticsManager.timeTry {
+      load(remaining, opt)
+    }
+    loadTime = lT
 
-      for (problem <- tryLoad) {
+    val status = tryLoad
+      .map { problem =>
 
         val solver = new SolverFactory(pm)(problem)
 
@@ -131,13 +135,13 @@ trait ConcreteRunner extends LazyLogging {
         applyParameters(solver, opt)
         //println(solver.problem)
 
-        for (t <- opt.get('Time)) {
-          val t = Thread.currentThread
+        for (time <- opt.get('Time)) {
+          val thread = Thread.currentThread
           waker.schedule(
             new TimerTask {
-              def run = t.interrupt()
+              def run = thread.interrupt()
             },
-            t.asInstanceOf[Int] * 1000);
+            time.asInstanceOf[Int] * 1000);
         }
 
         optimize match {
@@ -148,39 +152,37 @@ trait ConcreteRunner extends LazyLogging {
             solver.maximize(solver.problem.variable(optimizeVar.get))
         }
 
+        val result = solver.nonEmpty
         if (opt.contains('all)) {
           for (s <- solver) {
-            status = Sat
             solution(s, writer, opt)
           }
         } else if (solver.isOptimizer) {
           for (s <- solver.toIterable.lastOption) {
-            status = Sat
             solution(s, writer, opt)
           }
         } else {
           for (s <- solver.toIterable.headOption) {
-            status = Sat
             solution(s, writer, opt)
           }
         }
+        result
+      }
+      .recoverWith {
+        case e: UNSATException =>
+          writer.error(e)
+          Success(false)
+        case e: Throwable =>
+          writer.error(e)
+          Failure(e)
+      }
 
-        if (status == Unknown) {
-          status = Unsat
-        }
-      }
-    } catch {
-      case e: Throwable =>
-        writer.error(e)
-        status = Error
-    } finally {
-      waker.cancel()
-      writer.write(statistics)
-      for (s <- pm.parameters.keySet -- pm.used) {
-        logger.warn(s"Unused parameter : $s")
-      }
-      writer.disconnect(status)
+    waker.cancel()
+    writer.write(statistics)
+    for (s <- pm.unused) {
+      logger.warn(s"Unused parameter : $s")
     }
+    writer.disconnect(status)
     status
   }
 

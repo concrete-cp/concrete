@@ -1,8 +1,10 @@
 package concrete.runner
 
 import scala.xml.NodeSeq
-
 import cspom.StatisticsManager
+import scala.util.Try
+import scala.util.Success
+import scala.util.Failure
 
 class ConsoleWriter(opts: Map[Symbol, Any]) extends ConcreteWriter {
 
@@ -17,7 +19,7 @@ class ConsoleWriter(opts: Map[Symbol, Any]) extends ConcreteWriter {
 
   def problem(problem: String) {
     if (opts.contains('stats))
-    Console.println("% " + problem)
+      Console.println("% " + problem)
   }
 
   def solution(sol: String) {
@@ -26,9 +28,9 @@ class ConsoleWriter(opts: Map[Symbol, Any]) extends ConcreteWriter {
 
   def write(stats: StatisticsManager) {
     if (opts.contains('stats))
-    for ((n, v) <- stats.digest.toSeq.sortBy(_._1)) {
-      Console.println(s"% $n = $v")
-    }
+      for ((n, v) <- stats.digest.toSeq.sortBy(_._1)) {
+        Console.println(s"% $n = $v")
+      }
 
   }
 
@@ -36,11 +38,11 @@ class ConsoleWriter(opts: Map[Symbol, Any]) extends ConcreteWriter {
     e.printStackTrace(Console.err)
   }
 
-  def disconnect(status: RunnerStatus) {
+  def disconnect(status: Try[Boolean]) {
     status match {
-      case Sat   => Console.println("==========")
-      case Unsat => Console.println("=====UNSATISFIABLE=====")
-      case _     => Console.println("=====UNKNOWN=====")
+      case Success(true)  => Console.println("==========")
+      case Success(false) => Console.println("=====UNSATISFIABLE=====")
+      case Failure(_)     => Console.println("=====UNKNOWN=====")
     }
   }
 

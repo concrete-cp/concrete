@@ -9,9 +9,9 @@ import java.util.Locale
 import scala.collection.mutable.HashMap
 import scala.annotation.tailrec
 import scala.collection.SortedMap
-import scala.slick.jdbc.StaticQuery.interpolation
-import scala.slick.jdbc.GetResult
-import scala.slick.driver.PostgresDriver.simple._
+import slick.jdbc.StaticQuery.interpolation
+import slick.jdbc.GetResult
+import slick.driver.PostgresDriver.simple._
 import scala.xml.XML
 
 sealed trait ErrorHandling

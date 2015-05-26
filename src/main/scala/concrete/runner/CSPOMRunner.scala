@@ -27,11 +27,11 @@ trait CSPOMRunner extends ConcreteRunner {
         this.cspom = cspom
         // println(cspom)
         CSPOMCompiler.compile(cspom, ConcretePatterns(pm))
-
+      }
+      .flatMap { cspom =>
         CSPOMCompiler.compile(cspom, Seq(Bool2IntIsEq))
-
-        //println(cspom)
-
+      }
+      .flatMap { cspom =>
         val pg = new ProblemGenerator(pm)
         statistics.register("problemGenerator", pg)
         pg.generate(cspom)

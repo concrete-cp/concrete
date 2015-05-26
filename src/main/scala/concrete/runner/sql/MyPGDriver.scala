@@ -1,12 +1,13 @@
 package concrete.runner.sql
 
-import scala.slick.driver.PostgresDriver
-import scala.slick.jdbc.JdbcType
+import slick.driver.PostgresDriver
+import slick.jdbc.JdbcType
+import slick.profile.RelationalProfile
 
 trait MyPGDriver extends PostgresDriver {
-  override def defaultSqlTypeName(tmd: JdbcType[_]): String = tmd.sqlType match {
+  override def defaultSqlTypeName(tmd: JdbcType[_], size: Option[RelationalProfile.ColumnOption.Length]): String = tmd.sqlType match {
     case java.sql.Types.VARCHAR => "TEXT"
-    case _ => super.defaultSqlTypeName(tmd)
+    case _ => super.defaultSqlTypeName(tmd, size)
   }
 }
 

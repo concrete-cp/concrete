@@ -25,6 +25,7 @@ import concrete.heuristic._
 import cspom.flatzinc.FZAnnotation
 import cspom.flatzinc.FZExpr
 import cspom.variable.CSPOMExpression
+import cspom.flatzinc.FlatZincParser
 
 object FZConcrete extends CSPOMRunner {
 
@@ -48,17 +49,9 @@ object FZConcrete extends CSPOMRunner {
 
   override def loadCSPOM(args: List[String], opt: Map[Symbol, Any]) = {
     val List(fn) = args
+    file = CSPOM.file2url(fn.replace(" ", "%20"))
 
-    val f = URI.create(fn.replace(" ", "%20"))
-
-    file = if (f.getScheme() == null) {
-      new URL("file:" + f)
-    } else {
-      //println(f.getScheme())
-      f.toURL
-    }
-
-    val (tryLoad, time) = StatisticsManager.timeTry(CSPOM.load(file))
+    val (tryLoad, time) = StatisticsManager.timeTry(CSPOM.load(file, FlatZincParser))
 
     parseTime = time
 
@@ -222,10 +215,8 @@ object FZConcrete extends CSPOMRunner {
   def main(args: Array[String]): Unit = {
     val status = run(args)
 
-    sys.exit(status match {
-      case Sat | Unsat => 0
-      case _           => 1
-    })
+    sys.exit(
+      if (status.isSuccess) 0 else 1)
   }
 
 }
