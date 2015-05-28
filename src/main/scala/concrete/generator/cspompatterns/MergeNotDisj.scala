@@ -17,19 +17,16 @@ import cspom.variable.CSPOMSeq
 object MergeNotDisj extends ConstraintCompiler {
   type A = CSPOMConstraint[_]
 
-  override def mtch(fc: CSPOMConstraint[_], problem: CSPOM) = fc match {
-    case CSPOMConstraint(v: CSPOMExpression[_], 'not, Seq(a: CSPOMExpression[_]), _) =>
-      val clauses = problem.constraints(v).toSeq.collect {
-        case c: CSPOMConstraint[_] if c.function == 'clause => c
+  override def mtch(fc: CSPOMConstraint[_], problem: CSPOM) =
+    PartialFunction.condOpt(fc) {
+      case CSPOMConstraint(v: CSPOMExpression[_], 'not, Seq(a: CSPOMExpression[_]), _) =>
+        problem.constraints(v).toSeq.collect {
+          case c: CSPOMConstraint[_] if c.function == 'clause => c
+        }
+    }
+      .collect {
+        case Seq(orConstraint) => orConstraint
       }
-
-      clauses match {
-        case Seq(orConstraint) => Some(orConstraint)
-        case _                 => None
-      }
-    case _ => None
-
-  }
 
   def compile(fc: CSPOMConstraint[_], problem: CSPOM, clause: A) = {
     val Seq(a: CSPOMExpression[_]) = fc.arguments

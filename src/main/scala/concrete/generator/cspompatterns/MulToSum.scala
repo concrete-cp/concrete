@@ -10,7 +10,7 @@ import cspom.variable.CSPOMSeq
 object MulToSum extends ConstraintCompilerNoData {
 
   def matchBool(c: CSPOMConstraint[_], p: CSPOM) = {
-    c.function == 'mul && c.arguments.count(_.isInstanceOf[CSPOMConstant[_]]) == 1
+    c.function == 'mul && c.arguments.count(PartialFunction.cond(_) { case CSPOMConstant(_) => true }) == 1
   }
 
   def compile(c: CSPOMConstraint[_], in: CSPOM) = {

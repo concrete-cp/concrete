@@ -11,6 +11,10 @@ import scala.collection.mutable.Builder
 object Domain {
   @Statistic
   var checks = 0L
+
+  def searchSpace(s: Seq[Domain]) = {
+    s.foldLeft(1.0)(_ * _.size)
+  }
 }
 
 abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {

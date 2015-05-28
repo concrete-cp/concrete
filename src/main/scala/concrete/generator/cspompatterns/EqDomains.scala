@@ -15,26 +15,27 @@ object EqDomains extends VariableCompiler('eq) {
 
   def compiler(c: CSPOMConstraint[_]) = c match {
     case CSPOMConstraint(r: SimpleExpression[_], _, Seq(IntExpression(i0), IntExpression(i1)), params) =>
-      val neg: Boolean = params.get("neg").map { case n: Boolean => n }.getOrElse(false)
-      val offset: Int = params.get("offset").map { case o: Int => o }.getOrElse(0)
-
-      val negFactor = if (neg) -1 else 1
+      require(!params.contains("neg") && !params.contains("offset"), "Neg/offset parameters are deprecated")
+      //      val neg: Boolean = params.get("neg").map { case n: Boolean => n }.getOrElse(false)
+      //      val offset: Int = params.get("offset").map { case o: Int => o }.getOrElse(0)
+      //
+      //      val negFactor = if (neg) -1 else 1
 
       val br = BoolExpression.coerce(r)
       val ii0 = IntExpression.coerce(i0)
       val ii1 = IntExpression.coerce(i1)
 
-      val intersect = (ii0 * IntInterval.singleton(negFactor) + IntInterval.singleton(offset)) & ii1
+      val intersect = ii0 & ii1
 
       val res = if (intersect.isEmpty) {
         reduceDomain(br, false)
       } else (ii0, ii1) match {
-        case (CSPOMConstant(i), CSPOMConstant(j)) => reduceDomain(br, i * negFactor + offset == j)
+        case (CSPOMConstant(i), CSPOMConstant(j)) => reduceDomain(br, i == j)
         case _                                    => br
       }
 
       val ri0 = if (res.isTrue) {
-        reduceDomain(ii0, (intersect - IntInterval.singleton(offset)) * IntInterval.singleton(negFactor))
+        reduceDomain(ii0, intersect)
       } else {
         ii0
       }

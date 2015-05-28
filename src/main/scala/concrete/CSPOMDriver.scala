@@ -58,7 +58,11 @@ object CSPOMDriver {
     problem.isInt('occurrence, Seq(value, seq2CSPOMSeq(variables)))
   }
 
-  def clause(positive: Seq[SimpleExpression[Boolean]], negative: Seq[SimpleExpression[Boolean]]): CSPOMConstraint[Boolean] = {
+  //  def clause(positive: Seq[SimpleExpression[Boolean]], negative: Seq[SimpleExpression[Boolean]]): CSPOMConstraint[Boolean] = {
+  //    CSPOMConstraint('clause, Seq(positive, negative))
+  //  }
+
+  def clause(positive: SimpleExpression[Boolean]*)(negative: SimpleExpression[Boolean]*): CSPOMConstraint[Boolean] = {
     CSPOMConstraint('clause, Seq(positive, negative))
   }
 

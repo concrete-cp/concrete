@@ -34,7 +34,7 @@ object DivToMul extends ConstraintCompiler {
   def compile(fc: CSPOMConstraint[_], problem: CSPOM, a: CSPOMExpression[_]) = {
 
     val Seq(b, c) = fc.arguments
-
+    
     val mul = IntVariable.free()
 
     val remainder = IntVariable.free()

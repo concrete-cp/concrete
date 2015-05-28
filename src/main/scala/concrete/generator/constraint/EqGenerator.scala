@@ -20,6 +20,8 @@ import concrete.constraint.semantic.Eq
 final object EqGenerator extends Generator {
 
   def params(constraint: CSPOMConstraint[_]): (Boolean, Int) = {
+    require(constraint.getParam("neg").isEmpty, "Neg parameter is deprecated")
+    require(constraint.getParam("offset").isEmpty, "Offset parameter is deprecated")
     val neg: Boolean = constraint.getParam[Boolean]("neg").getOrElse(false)
 
     val offset: Int = constraint.getParam[Int]("offset").getOrElse(0)

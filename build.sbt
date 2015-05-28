@@ -1,6 +1,3 @@
-import com.typesafe.sbt.SbtNativePackager._
-import NativePackagerKeys._
-
 name := "concrete"
 
 organization := "fr.univ-valenciennes.concrete"
@@ -23,12 +20,12 @@ testOptions in Test <+= (target in Test) map {
 libraryDependencies ++= Seq(
 	"fr.univ-valenciennes.concrete" %% "cspom" % "2.5-SNAPSHOT",
 	"org.postgresql" % "postgresql" % "9.4-1201-jdbc41",
-	//%"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
+	//"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
 	"org.ow2.sat4j" % "org.ow2.sat4j.pb" % "2.3.5",
 	
-	"com.typesafe.slick" %% "slick" % "2.1.0",
+	"com.typesafe.slick" %% "slick" % "3.0.0",
 	//"org.jcp" % "jsr331" % "1.1.1",
-	"org.scalatest" %% "scalatest" % "2.2.4" % "test",
+	"org.scalatest" %% "scalatest" % "2.2.5" % "test",
 	"org.scalacheck" %% "scalacheck" % "1.12.2" % "test",
 	"com.storm-enroute" %% "scalameter" % "0.6" % "test",
 	"com.github.scala-incubator.io" %% "scala-io-file" % "0.4.3"
@@ -46,9 +43,9 @@ scalacOptions ++= Seq("-optimise"
 //	"-Yinline-warnings"
 )
 
-javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
+//javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
 
-packageArchetype.java_application
+enablePlugins(JavaAppPackaging)
 
 mainClass in Compile := Some("concrete.runner.FZConcrete")
 
@@ -66,3 +63,7 @@ sourceGenerators in Compile <+= (sourceManaged in Compile, version, name) map { 
     |""".stripMargin)
   Seq(file)
 }
+
+
+EclipseKeys.eclipseOutput in Compile := Some("target/scala-2.11/classes")
+EclipseKeys.eclipseOutput in Test := Some("target/scala-2.11/test-classes")

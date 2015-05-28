@@ -43,7 +43,8 @@ object SumFactors extends ConstraintCompiler {
 
   def selfPropagation = false
 
-  def gcd(a: Seq[Int]): BigInt = a.map(BigInt(_)).reduce(_.gcd(_))
+  /** Make sure not to divide by some negative number as it would reverse the inequality **/
+  def gcd(a: Seq[Int]): BigInt = a.map(BigInt(_)).reduce(_.gcd(_)).abs
 
   def gcd(ia: Int, ib: Int): Int = {
     var d = 0

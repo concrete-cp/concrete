@@ -19,10 +19,10 @@ sealed trait Outcome {
   def shaveDom(v: Variable, lb: Int, ub: Int): Outcome
   def shaveDom(v: Variable, itv: Interval): Outcome = shaveDom(v, itv.lb, itv.ub)
 
-  def removeTo(v: Variable, ub: Int): Outcome = removeTo(v.id, ub)
-  def removeFrom(v: Variable, lb: Int): Outcome = removeFrom(v.id, lb)
-  def removeUntil(v: Variable, ub: Int): Outcome = removeUntil(v.id, ub)
-  def removeAfter(v: Variable, lb: Int): Outcome = removeAfter(v.id, lb)
+  def removeTo(v: Variable, ub: Int): Outcome
+  def removeFrom(v: Variable, lb: Int): Outcome
+  def removeUntil(v: Variable, ub: Int): Outcome
+  def removeAfter(v: Variable, lb: Int): Outcome
 
   def removeTo(id: Int, ub: Int): Outcome
   def removeFrom(id: Int, lb: Int): Outcome
@@ -106,6 +106,10 @@ case object Contradiction extends Outcome {
   def removeFrom(id: Int, lb: Int): Outcome = Contradiction
   def removeUntil(id: Int, ub: Int): Outcome = Contradiction
   def removeAfter(id: Int, ub: Int): Outcome = Contradiction
+  def removeTo(v: Variable, ub: Int): Outcome = Contradiction
+  def removeFrom(v: Variable, lb: Int): Outcome = Contradiction
+  def removeUntil(v: Variable, ub: Int): Outcome = Contradiction
+  def removeAfter(v: Variable, lb: Int): Outcome = Contradiction
   def updateDom(id: Int, d: Domain): Outcome = Contradiction
   def updateDom(v: Variable, d: Domain): Outcome = Contradiction
   def assign(id: Int, value: Int): Outcome = Contradiction
@@ -131,9 +135,9 @@ object ProblemState {
 }
 
 final case class ProblemState(
-  val domains: Vector[Domain],
-  val constraintStates: Vector[AnyRef],
-  val entailed: BitVector) extends Outcome {
+    val domains: Vector[Domain],
+    val constraintStates: Vector[AnyRef],
+    val entailed: BitVector) extends Outcome {
 
   def andThen(f: ProblemState => Outcome) = f(this)
 
@@ -241,12 +245,26 @@ final case class ProblemState(
   def removeTo(id: Int, ub: Int): Outcome =
     updateDom(id, domains(id).removeTo(ub))
 
+  def removeTo(v: Variable, ub: Int): Outcome =
+    updateDom(v, dom(v).removeTo(ub))
+
   def removeFrom(id: Int, lb: Int): Outcome =
     updateDom(id, domains(id).removeFrom(lb))
+
+  override def removeFrom(v: Variable, lb: Int): Outcome =
+    updateDom(v, dom(v).removeFrom(lb))
+
   def removeUntil(id: Int, ub: Int): Outcome =
     updateDom(id, domains(id).removeUntil(ub))
+
+  override def removeUntil(v: Variable, ub: Int): Outcome =
+    updateDom(v, dom(v).removeUntil(ub))
+
   def removeAfter(id: Int, lb: Int): Outcome =
     updateDom(id, domains(id).removeAfter(lb))
+
+  override def removeAfter(v: Variable, lb: Int): Outcome =
+    updateDom(v, dom(v).removeAfter(lb))
 
   def entailIfFree(c: Constraint) = {
     if (c.isFree(this)) entail(c.id) else this

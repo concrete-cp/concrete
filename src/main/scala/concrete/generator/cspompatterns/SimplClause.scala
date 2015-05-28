@@ -20,7 +20,7 @@ object SimplClause extends ConstraintCompilerNoData {
 
   def matchBool(fc: CSPOMConstraint[_], problem: CSPOM) = fc match {
     case CSPOMConstraint(_, 'clause, Seq(positive: CSPOMSeq[_], negative: CSPOMSeq[_]), _) =>
-      (positive.iterator ++ negative.iterator).exists(_.isInstanceOf[CSPOMConstant[_]])
+      (positive.iterator ++ negative).exists(_.isInstanceOf[CSPOMConstant[_]])
 
     case _ => false
 

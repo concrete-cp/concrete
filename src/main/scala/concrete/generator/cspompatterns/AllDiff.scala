@@ -96,7 +96,7 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
       (constraint.result.isFalse && Set('eq, 'ge, 'le)(constraint.function))
 
   def ALLDIFF_CONSTRAINT(constraint: CSPOMConstraint[_]) =
-    (constraint.result.isFalse) && 'eq == constraint.function ||
+    (constraint.result.isFalse && 'eq == constraint.function) ||
       'alldifferent == constraint.function
 
   val ITER = 750;

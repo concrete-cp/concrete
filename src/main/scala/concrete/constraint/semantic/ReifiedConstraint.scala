@@ -1,7 +1,6 @@
 package concrete.constraint.semantic;
 
 import com.typesafe.scalalogging.LazyLogging
-
 import concrete.EMPTY
 import concrete.FALSE
 import concrete.Outcome
@@ -12,13 +11,16 @@ import concrete.Variable
 import concrete.constraint.Advisable
 import concrete.constraint.AdviseCount
 import concrete.constraint.Constraint
+import concrete.BooleanDomain
 
 final class ReifiedConstraint(
   controlVariable: Variable,
   val positiveConstraint: Constraint,
   val negativeConstraint: Constraint)
-  extends Constraint(controlVariable +: (positiveConstraint.scope ++ negativeConstraint.scope).distinct)
-  with Advisable with LazyLogging {
+    extends Constraint(controlVariable +: (positiveConstraint.scope ++ negativeConstraint.scope).distinct)
+    with Advisable with LazyLogging {
+
+  require(controlVariable.initDomain.isInstanceOf[BooleanDomain])
 
   override def id_=(i: Int): Unit = {
     super.id_=(i)
@@ -101,7 +103,7 @@ final class ReifiedConstraint(
         case TRUE           => positiveConstraint.adviseAll(ps)
         case FALSE          => negativeConstraint.adviseAll(ps)
         case UNKNOWNBoolean => -1
-        case _              => throw new IllegalStateException
+        case d              => throw new IllegalStateException(s"$d is not a valid boolean state")
       }
     } else {
       ps.dom(controlVariable) match {

@@ -28,11 +28,7 @@ object SumDomains extends VariableCompiler('sum) {
 
       val iargs = args.map(IntExpression.coerce(_)).toIndexedSeq
 
-      val coef = params.get("coefficients") match {
-        case Some(p: Seq[_]) => p.asInstanceOf[Seq[Int]]
-        case None            => Seq.fill(args.length)(1)
-        case _               => throw new IllegalArgumentException("Parameters for zero sum must be a sequence of integer values")
-      }
+      val coef = params.get("coefficients").map(_.asInstanceOf[Seq[Int]]).getOrElse(Seq.fill(args.length)(1))
 
       val m: String = params("mode").asInstanceOf[String]
 
@@ -42,21 +38,19 @@ object SumDomains extends VariableCompiler('sum) {
         case SumLT => IntInterval.atMost(result - 1)
         case SumEQ => IntInterval.singleton(result)
       }
-        .toSeq.flatMap {
-          initBound =>
+        .toSeq.flatMap { initBound =>
 
-            val coefspan = (iargs, coef).zipped.map((a, c) => IntExpression.span(a) * IntInterval.singleton(c)).toIndexedSeq
+          val coefspan = (iargs, coef).zipped.map((a, c) => IntExpression.span(a) * IntInterval.singleton(c)).toIndexedSeq
 
-            for (i <- args.indices) yield {
-              val others = iargs.indices
-                .filter(_ != i)
-                .map(coefspan)
-                .foldLeft(initBound)(_ - _)
-              args(i) -> reduceDomain(iargs(i), others / coef(i))
-            }
+          for (i <- args.indices) yield {
+            val others = iargs.indices
+              .filter(_ != i)
+              .map(coefspan)
+              .foldLeft(initBound)(_ - _)
+            args(i) -> reduceDomain(iargs(i), others / coef(i))
+          }
         }
         .toMap
-
     case _ => Map()
   }
 }
@@ -67,11 +61,7 @@ object PseudoBoolDomains extends VariableCompiler('pseudoboolean) {
 
       val iargs = args.map(BoolExpression.coerce(_)).toIndexedSeq
 
-      val coef = params.get("coefficients") match {
-        case Some(p: Seq[_]) => p.asInstanceOf[Seq[Int]]
-        case None            => Seq.fill(args.length)(1)
-        case _               => throw new IllegalArgumentException("Parameters for zero sum must be a sequence of integer values")
-      }
+      val coef = params.get("coefficients").map(_.asInstanceOf[Seq[Int]]).getOrElse(Seq.fill(args.length)(1))
 
       val m: String = params("mode").asInstanceOf[String]
 

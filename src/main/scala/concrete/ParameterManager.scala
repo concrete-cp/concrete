@@ -43,6 +43,8 @@ final class ParameterManager {
     if (got.isDefined) used += name
     got
   }
+  
+  def unused = parameters.keySet -- used
 
   private def parse[T](fType: Type, value: String): T = {
     (if (fType <:< typeOf[Int]) {

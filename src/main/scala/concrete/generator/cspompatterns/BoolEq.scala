@@ -19,24 +19,23 @@ import cspom.variable.BoolExpression
 
 /**
  * Reified boolean equality:
- * 
- * r <-> (a <-> b) 
- * 
+ *
+ * r <-> (a <-> b)
+ *
  * is
- * 
+ *
  *  r -> (a \/ -b),  r -> (-a \/  b),
  * -r -> (a \/  b), -r -> (-a \/ -b)
- * 
+ *
  */
 object BoolEq extends ConstraintCompiler {
 
-  type A = (SimpleExpression[_], SimpleExpression[_], SimpleExpression[_])
+  type A = (SimpleExpression[_], SimpleExpression[Boolean], SimpleExpression[Boolean])
 
   override def constraintMatcher = {
     case CSPOMConstraint(
       r: SimpleExpression[_], 'eq,
-      Seq(a: SimpleExpression[_], b: SimpleExpression[_]), _) if (
-      a.isInstanceOf[BoolVariable] || b.isInstanceOf[BoolVariable]) =>
+      Seq(BoolExpression(a), BoolExpression(b)), _) =>
       (r, a, b)
   }
 
@@ -45,17 +44,13 @@ object BoolEq extends ConstraintCompiler {
     val (r, a, b) = data
 
     val nr = BoolExpression.coerce(r)
-    val na = BoolExpression.coerce(a)
-    val nb = BoolExpression.coerce(b)
 
-    replace(a, na, problem) ++
-      replace(b, nb, problem) ++
-      replace(r, nr, problem) ++
+    replace(r, nr, problem) ++
       replaceCtr(c, Seq(
-        CSPOMDriver.clause(Seq(nb), Seq(nr, na)),
-        CSPOMDriver.clause(Seq(na), Seq(nr, nb)),
-        CSPOMDriver.clause(Seq(nr, na, nb), Seq()),
-        CSPOMDriver.clause(Seq(nr), Seq(na, nb))), problem)
+        CSPOMDriver.clause(b)(nr, a),
+        CSPOMDriver.clause(a)(nr, b),
+        CSPOMDriver.clause(nr, a, b)(),
+        CSPOMDriver.clause(nr)(a, b)), problem)
 
   }
 

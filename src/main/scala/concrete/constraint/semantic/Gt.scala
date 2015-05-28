@@ -45,7 +45,7 @@ final class LtC(val v: Variable, val constant: Int) extends Constraint(Array(v))
  * Constraint v0 + constant >(=) v1
  */
 final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict: Boolean)
-  extends Constraint(Array(v0, v1)) {
+    extends Constraint(Array(v0, v1)) {
 
   def this(v0: Variable, v1: Variable, strict: Boolean) =
     this(v0, 0, v1, strict);
@@ -55,7 +55,7 @@ final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict
     else t(0) + constant >= t(1);
 
   def revise(ps: ProblemState) = {
-
+    //println(toString(ps))
     if (strict) {
       ps
         .removeTo(v0, ps.dom(v1).head - constant)
