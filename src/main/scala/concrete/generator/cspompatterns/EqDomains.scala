@@ -10,10 +10,13 @@ import cspom.variable.IntExpression.implicits.arithmetics
 import cspom.variable.IntExpression.implicits.ranges
 import cspom.variable.SimpleExpression
 import cspom.variable.BoolExpression
+import cspom.variable.CSPOMSeq
 
 object EqDomains extends VariableCompiler('eq) {
 
-  def compiler(c: CSPOMConstraint[_]) = c match {
+  def compiler(c: CSPOMConstraint[_]) = ???
+
+  override def compilerWEntail(c: CSPOMConstraint[_]) = c match {
     case CSPOMConstraint(r: SimpleExpression[_], _, Seq(IntExpression(i0), IntExpression(i1)), params) =>
       require(!params.contains("neg") && !params.contains("offset"), "Neg/offset parameters are deprecated")
       //      val neg: Boolean = params.get("neg").map { case n: Boolean => n }.getOrElse(false)
@@ -22,31 +25,32 @@ object EqDomains extends VariableCompiler('eq) {
       //      val negFactor = if (neg) -1 else 1
 
       val br = BoolExpression.coerce(r)
-      val ii0 = IntExpression.coerce(i0)
-      val ii1 = IntExpression.coerce(i1)
 
-      val intersect = ii0 & ii1
+      val intersect = i0 & i1
 
-      val res = if (intersect.isEmpty) {
-        reduceDomain(br, false)
-      } else (ii0, ii1) match {
-        case (CSPOMConstant(i), CSPOMConstant(j)) => reduceDomain(br, i == j)
-        case _                                    => br
-      }
+      val res =
+        if (intersect.isEmpty) {
+          reduceDomain(br, false)
+        } else {
+          (i0, i1) match {
+            case (CSPOMConstant(i), CSPOMConstant(j)) => reduceDomain(br, i == j)
+            case _                                    => br
+          }
+        }
 
       val ri0 = if (res.isTrue) {
-        reduceDomain(ii0, intersect)
+        reduceDomain(i0, intersect)
       } else {
-        ii0
+        i0
       }
 
       val ri1 = if (res.isTrue) {
-        reduceDomain(ii1, intersect)
+        reduceDomain(i1, intersect)
       } else {
-        ii1
+        i1
       }
 
-      Map(r -> res, i0 -> ri0, i1 -> ri1)
-    case _ => Map()
+      (Map(r -> res, i0 -> ri0, i1 -> ri1), CSPOMSeq(res, ri0, ri1).searchSpace == 1)
+    case _ => (Map(), false)
   }
 }

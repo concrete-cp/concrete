@@ -2,7 +2,7 @@ name := "concrete"
 
 organization := "fr.univ-valenciennes.concrete"
 
-version := "2.0-SNAPSHOT"
+version := "2.0-A1"
 
 scalaVersion := "2.11.6"
 
@@ -18,7 +18,7 @@ testOptions in Test <+= (target in Test) map {
 
 
 libraryDependencies ++= Seq(
-	"fr.univ-valenciennes.concrete" %% "cspom" % "2.5-SNAPSHOT",
+	"fr.univ-valenciennes.concrete" %% "cspom" % "2.5",
 	"org.postgresql" % "postgresql" % "9.4-1201-jdbc41",
 	//"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
 	"org.ow2.sat4j" % "org.ow2.sat4j.pb" % "2.3.5",
