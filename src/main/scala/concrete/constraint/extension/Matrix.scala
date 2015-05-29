@@ -2,9 +2,12 @@ package concrete.constraint.extension;
 
 trait Matrix {
 
-  def set(tuple: Seq[Int], status: Boolean)
+  def set(tuple: Seq[Int], status: Boolean): Unit
 
-  def setAll(tuple: Traversable[Seq[Int]], status: Boolean) = {
+  @annotation.varargs
+  def set(status: Boolean, tuple: Int*): Unit = set(tuple, status)
+
+  def setAll(tuple: Traversable[Seq[Int]], status: Boolean): Matrix = {
     for (t <- tuple) set(t, status)
     this
   }

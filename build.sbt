@@ -2,7 +2,7 @@ name := "concrete"
 
 organization := "fr.univ-valenciennes.concrete"
 
-version := "2.0-A1"
+version := "2.0-B1-SNAPSHOT"
 
 scalaVersion := "2.11.6"
 
@@ -18,7 +18,7 @@ testOptions in Test <+= (target in Test) map {
 
 
 libraryDependencies ++= Seq(
-	"fr.univ-valenciennes.concrete" %% "cspom" % "2.5",
+	"fr.univ-valenciennes.concrete" %% "cspom" % "2.6-SNAPSHOT",
 	"org.postgresql" % "postgresql" % "9.4-1201-jdbc41",
 	//"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
 	"org.ow2.sat4j" % "org.ow2.sat4j.pb" % "2.3.5",
@@ -63,6 +63,8 @@ sourceGenerators in Compile <+= (sourceManaged in Compile, version, name) map { 
     |""".stripMargin)
   Seq(file)
 }
+
+excludeFilter in packageBin in unmanagedResources := "logback.xml"
 
 
 EclipseKeys.eclipseOutput in Compile := Some("target/scala-2.11/classes")

@@ -28,8 +28,12 @@ final class Matrix2D(xSize: Int, ySize: Int, val xOffset: Int, val yOffset: Int,
 
   override def check(tuple: Array[Int]) = xMatrix(tuple(0) - xOffset)(tuple(1) - yOffset)
 
-  override def set(tuple: Seq[Int], status: Boolean) {
+  override def set(tuple: Seq[Int], status: Boolean): Unit = {
     val Seq(rx, ry) = tuple
+    set(rx, ry, status)
+  }
+
+  def set(rx: Int, ry: Int, status: Boolean): Unit = {
     val x = rx - xOffset
     val y = ry - yOffset
     require(x >= 0)
@@ -39,7 +43,7 @@ final class Matrix2D(xSize: Int, ySize: Int, val xOffset: Int, val yOffset: Int,
       yMatrix(y) = yMatrix(y).set(x, status);
       empty = false;
     } else {
-      logger.info(s"Tuple ${tuple.mkString("(", ", ", ")")} is out of the scope of matrix $this")
+      logger.info(s"Tuple ($rx, $ry) is out of the scope of matrix $this")
     }
 
   }

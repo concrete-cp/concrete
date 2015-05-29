@@ -19,7 +19,7 @@
 
 package concrete;
 
-import scala.collection.JavaConversions
+import scala.collection.JavaConverters._
 import scala.reflect.runtime.universe
 import com.typesafe.scalalogging.LazyLogging
 import concrete.constraint.TupleEnumerator
@@ -74,7 +74,7 @@ class CSPOMSolver(
   val solver: Solver,
   val cspom: CSPOM,
   private val variables: Map[CSPOMVariable[_], Variable]) extends Iterator[CSPOMSolution]
-  with LazyLogging {
+    with LazyLogging {
 
   def hasNext: Boolean = solver.hasNext
 
@@ -105,8 +105,8 @@ class CSPOMSolver(
 }
 
 class CSPOMSolution(private val cspom: CSPOM, private val variables: Map[CSPOMVariable[_], Variable], private val concreteSol: Map[Variable, Any])
-  extends Map[String, Any]
-  with LazyLogging {
+    extends Map[String, Any]
+    with LazyLogging {
 
   lazy val apply = concrete2CspomSol(concreteSol)
 
@@ -178,7 +178,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
 
   def isOptimizer = _maximize.nonEmpty || _minimize.nonEmpty
 
-  def next() = _next match {
+  def next(): Map[Variable, Any] = _next match {
     case UNSAT         => Iterator.empty.next
     case UNKNOWNResult => if (hasNext) next() else Iterator.empty.next
     case SAT(sol) =>
@@ -194,6 +194,24 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
       sol
     case RESTART => throw new IllegalStateException()
   }
+
+  def nextJava(): java.util.Map[Variable, java.lang.Integer] = next()
+    .map {
+      case (v, i: Int) => (v, i: java.lang.Integer)
+    }
+    .asJava
+
+  def integerIterator: Iterator[java.util.Map[Variable, java.lang.Integer]] = this.map {
+    s =>
+      s.map {
+        case (v, i: Int) => (v, i: java.lang.Integer)
+      }
+        .asJava
+  }
+
+  def javaIterator: java.util.Iterator[java.util.Map[Variable, java.lang.Integer]] = integerIterator.asJava
+
+  def javaCollection: java.util.List[java.util.Map[Variable, java.lang.Integer]] = integerIterator.toSeq.asJava
 
   protected def nextSolution(): SolverResult
 
@@ -255,11 +273,13 @@ sealed trait SolverResult {
   def isSat: Boolean
   def get: Map[Variable, Any]
   def getNum: Map[Variable, Number] = get map {
-    case (s, i) => (s, i.asInstanceOf[Number])
+    case (s, i: Number) => (s, i: java.lang.Number)
   }
-  def getInteger: java.util.Map[Variable, java.lang.Integer] = JavaConversions.mapAsJavaMap(get.map {
-    case (s, i) => (s, i.asInstanceOf[java.lang.Integer])
-  })
+  def getInteger: java.util.Map[Variable, java.lang.Integer] =
+    get.map {
+      case (s, i: Int) => (s, i: java.lang.Integer)
+    }
+      .asJava
 }
 
 case class SAT(val solution: Map[Variable, Any]) extends SolverResult {
