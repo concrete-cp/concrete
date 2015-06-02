@@ -5,7 +5,7 @@ import scala.annotation.tailrec
 final class TupleTrieSet(
   private var _trie: Relation,
   val initialContent: Boolean)
-  extends Matrix with Iterable[Array[Int]] {
+    extends Matrix with Iterable[Array[Int]] {
 
   def this(initialContent: Boolean) = this(new MDDRelation(), initialContent)
 
@@ -31,7 +31,10 @@ final class TupleTrieSet(
   //      _trie ++= tuples
   //  }
 
-  def arrayTrie = _trie
+  def allowed() = {
+    require(initialContent == false)
+    iterator
+  }
 
   override def isEmpty = _trie.isEmpty && !initialContent;
 

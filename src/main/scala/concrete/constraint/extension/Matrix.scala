@@ -2,6 +2,8 @@ package concrete.constraint.extension;
 
 trait Matrix {
 
+  def allowed: Iterator[Array[Int]]
+
   def set(tuple: Seq[Int], status: Boolean): Unit
 
   @annotation.varargs

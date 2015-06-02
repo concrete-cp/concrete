@@ -30,6 +30,9 @@ import concrete.priorityqueues.Identified
 import concrete.priorityqueues.PTag
 import cspom.UNSATException
 
+import scala.reflect.runtime.universe._
+import com.typesafe.scalalogging.LazyLogging
+
 object Constraint {
 
   //  private val cId = new ThreadLocal[Int];
@@ -48,8 +51,6 @@ object Constraint {
 
 }
 
-import scala.reflect.runtime.universe._
-
 trait StatefulConstraint extends Constraint {
   type State <: AnyRef
 
@@ -59,9 +60,13 @@ trait StatefulConstraint extends Constraint {
 }
 
 abstract class Constraint(val scope: Array[Variable])
-  extends DLNode[Constraint] with Weighted with Identified with PTag {
+    extends DLNode[Constraint] with Weighted with Identified with PTag with LazyLogging {
 
   require(scope.nonEmpty)
+
+  if (!scope.distinct.sameElements(scope)) {
+    logger.warn(s"$this has duplicates in its scope")
+  }
 
   def this(scope: Variable*) = this(scope.toArray)
 

@@ -85,4 +85,13 @@ final class Matrix2D(xSize: Int, ySize: Int, val xOffset: Int, val yOffset: Int,
 
   def isEmpty = empty
 
+  def allowed: Iterator[Array[Int]] = {
+    for {
+      x <- (0 until xSize).iterator
+      y <- xMatrix(x).iterator
+    } yield {
+      Array(x + xOffset, y + yOffset)
+    }
+  }
+
 }

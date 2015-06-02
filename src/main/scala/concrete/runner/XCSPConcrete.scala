@@ -1,12 +1,16 @@
 package concrete.runner
 
-import java.net.URL
-import scala.sys.process._
-import cspom.CSPOM
-import scalax.io.Resource
 import java.net.URI
-import scalax.file.Path
+import java.net.URL
+
+import scala.sys.process._
+
+import concrete.generator.cspompatterns.XCSPPatterns
+import cspom.CSPOM
+import cspom.compiler.CSPOMCompiler
 import cspom.xcsp.XCSPParser
+import scalax.file.Path
+import scalax.io.Resource
 
 object XCSPConcrete extends CSPOMRunner with App {
 
@@ -17,10 +21,16 @@ object XCSPConcrete extends CSPOMRunner with App {
   def loadCSPOM(args: List[String], opt: Map[Symbol, Any]) = {
     val List(fn) = args
     file = CSPOM.file2url(fn)
-    for ((cspom, data) <- CSPOM.load(file, XCSPParser)) yield {
-      declaredVariables = data('variables).asInstanceOf[Seq[String]]
-      cspom
-    }
+
+    CSPOM.load(file, XCSPParser)
+      .map {
+        case (cspom, data) =>
+          declaredVariables = data('variables).asInstanceOf[Seq[String]]
+          cspom
+      }
+      .flatMap { cspom =>
+        CSPOMCompiler.compile(cspom, Seq(XCSPPatterns()))
+      }
   }
 
   def description(args: List[String]) =

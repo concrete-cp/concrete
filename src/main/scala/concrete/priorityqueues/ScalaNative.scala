@@ -4,11 +4,13 @@ import scala.collection.JavaConversions
 
 final class ScalaNative[T <: PTag] extends PriorityQueue[T] {
 
-  implicit private val EOrdering = Ordering.by { e: E => e.eval }
+  private val EOrdering = Ordering
+    .by { e: E => e.eval }
+    .reverse
 
   private final case class E(elt: T, eval: Int)
 
-  private val queue = new collection.mutable.PriorityQueue[E]()
+  private val queue = new collection.mutable.PriorityQueue[E]()(EOrdering)
 
   private val presence = new Presence
 

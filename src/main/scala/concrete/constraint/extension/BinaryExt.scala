@@ -52,7 +52,7 @@ abstract class BinaryExt(
   scope: Array[Variable],
   private var matrix2d: Matrix2D,
   shared: Boolean)
-  extends ConflictCount(scope, matrix2d, shared) with Removals {
+    extends ConflictCount(scope, matrix2d, shared) with Removals {
 
   val idx = scope(0).id
   val idy = scope(1).id
@@ -84,11 +84,18 @@ abstract class BinaryExt(
   }
 
   def removeTuple(tuple: Array[Int]) = {
-    ??? //disEntail()
     set(tuple, false)
   }
 
-  def removeTuples(base: Array[Int]) = ??? //tuples(base).count(removeTuple)
+  def removeTuples(base: Array[Int]) = {
+    matrix2d
+      .allowed
+      .count { tuple =>
+        (tuple, base).zipped.forall { (t, b) => b < 0 || t == b } &&
+          removeTuple(tuple)
+      }
+
+  }
 
   def hasSupport(ps: ProblemState, variablePosition: Int, value: Int): Boolean
 
@@ -101,6 +108,7 @@ abstract class BinaryExt(
 
   override def dataSize = matrix2d.size
 }
+
 final class BinaryExtR(scope: Array[Variable], matrix2d: Matrix2D, shared: Boolean) extends BinaryExt(scope, matrix2d, shared) {
   private val offsets = Array(scope(0).initDomain.head, scope(1).initDomain.head)
 

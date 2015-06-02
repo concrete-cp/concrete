@@ -1,7 +1,6 @@
 package concrete.priorityqueues
 
 import scala.util.Random
-
 import org.scalatest.Finders
 import org.scalatest.FlatSpec
 import org.scalatest.Inspectors
@@ -9,6 +8,7 @@ import org.scalatest.Matchers
 import org.scalatest.concurrent.Timeouts
 import org.scalatest.time.Seconds
 import org.scalatest.time.Span
+import org.scalatest.prop.PropertyChecks
 
 object IntNode {
   var id: Int = 0
@@ -19,21 +19,21 @@ case class IntNode(val v: Int) extends Identified with PTag {
   IntNode.id += 1
 }
 
-final class PriorityQueueTest extends FlatSpec with Matchers with Timeouts with Inspectors {
+final class PriorityQueueTest extends FlatSpec with Matchers with Timeouts with Inspectors with PropertyChecks {
 
-  private val RANDOM = new Random(0);
+  //  private val RANDOM = new Random(0);
+  //
+  //  private val INTS = Seq.fill(100000)(IntNode(RANDOM.nextInt(5000000)))
 
-  private val INTS = Seq.fill(100000)(IntNode(RANDOM.nextInt(5000000)))
+  "ScalaNative" should "be correctly ordered" in test(new ScalaNative[IntNode]())
 
-  "ScalaNative" should behave like test(new ScalaNative[IntNode]())
+  "JavaNative" should "be correctly ordered" in test(new JavaNative[IntNode]())
 
-  "JavaNative" should behave like test(new JavaNative[IntNode]())
+  "BinaryHeap" should "be correctly ordered" in test(new BinaryHeap[IntNode]())
 
-  "BinaryHeap" should behave like test(new BinaryHeap[IntNode]())
+  "BinomialHeap" should "be correctly ordered" in test(new BinomialHeap[IntNode]())
 
-  "BinomialHeap" should behave like test(new BinomialHeap[IntNode]())
-
-  "FibonacciHeap" should behave like test(new FibonacciHeap[IntNode]())
+  "FibonacciHeap" should "be correctly ordered" in test(new FibonacciHeap[IntNode]())
 
   //  @Test(timeout = 5000)
   //  def testScalaFibonacciHeap() {
@@ -47,30 +47,35 @@ final class PriorityQueueTest extends FlatSpec with Matchers with Timeouts with 
   def test(q: PriorityQueue[IntNode]) {
     //for (j <- 3001 to 5000) {
     //INTS.foreach(i => i.unsetPresent())
-    failAfter(Span(5, Seconds)) {
-      var j = 100
-      while (j <= INTS.size) {
+    forAll { data: Seq[Int] =>
+      whenever(data.nonEmpty) {
+        failAfter(Span(5, Seconds)) {
 
-        q.clear()
+          q.clear()
 
-        q shouldBe empty
+          q shouldBe empty
 
-        forAll(INTS.take(j)) { i => assert(q.offer(i, i.v)) }
+          forAll(data) { i =>
+            val n = IntNode(i)
+            q.offer(n, n.v)
+          }
 
-        //assertEquals(j, q.size);
-        //println(j)
-        var i = 1
-        var last = q.poll().v;
-        while (!q.isEmpty) {
-          val current = q.poll().v;
-          i += 1
-          current should be >= last
-          last = current;
+          //assertEquals(j, q.size);
+          //println(j)
+          var i = 1
+          var last = q.poll().v;
+          while (!q.isEmpty) {
+            val current = q.poll().v;
+            i += 1
+            current should be >= last
+            last = current;
+          }
+
+          i shouldBe data.size
+
         }
-
-        j = (j * 10).toInt
+        //}
       }
-      //}
     }
 
   }

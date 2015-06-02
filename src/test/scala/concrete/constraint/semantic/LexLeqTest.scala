@@ -2,10 +2,13 @@ package concrete.constraint.semantic
 
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
+
 import concrete.Problem
 import concrete.Variable
-import concrete.BooleanDomain
 import concrete.constraint.AdviseCount
+import concrete.BooleanDomain
+import concrete.TRUE
+
 
 class LexLeqTest extends FlatSpec with Matchers {
   "lexleq" should "update alpha" in {
@@ -14,24 +17,25 @@ class LexLeqTest extends FlatSpec with Matchers {
       new Variable("x1", BooleanDomain()))
 
     val y = Array(
-      x(0),
+      new Variable("y0", BooleanDomain()),
       new Variable("y1", BooleanDomain()))
 
-    val problem = new Problem(x.toList :+ y(1))
+    val problem = new Problem(x.toList ++ y)
 
     val c = new LexLeq(x, y)
     c.register(new AdviseCount)
     problem.addConstraint(c)
 
     val ps = problem.initState.toState
-    println(c.toString(ps))
+
+    ps(c) shouldBe (0, 3)
 
     val ps2 = ps.assign(x(0), 1).toState
-    c.advise(ps2, Seq(0, 2))
+    c.advise(ps2, Seq(0))
     val ps3 = c.revise(ps2).toState
-    println(c.toString(ps3))
-    
 
+    ps3(c) shouldBe (1, 3)
+    ps3.dom(y(0)) shouldBe TRUE
 
   }
 }
