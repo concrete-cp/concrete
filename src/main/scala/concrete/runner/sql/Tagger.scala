@@ -2,7 +2,6 @@ package concrete.runner.sql
 import slick.jdbc.StaticQuery.interpolation
 import slick.driver.PostgresDriver.simple._
 import slick.jdbc.GetResult
-import scalax.file.Path
 import java.net.URI
 
 object Tagger extends App {
@@ -26,14 +25,14 @@ object Tagger extends App {
         """.as[Problem].list
 
     for (p <- problems) {
-      val path = Path.apply(new URI(p.name).getPath, '/').segments
+      val path = new URI(p.name).getPath.split('/')
       val name = path.last
       val cats = path.init
 
       if (p.display.isEmpty) {
         sqlu"""UPDATE "Problem" SET display = $name WHERE "problemId" = ${p.problemId}""".first
       }
-      
+
       for (c <- cats if !p.tags.contains(c)) {
         sqlu"""INSERT INTO "ProblemTag" VALUES ($c, ${p.problemId})""".first
       }
