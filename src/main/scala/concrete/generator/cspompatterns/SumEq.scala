@@ -14,7 +14,7 @@ object SumEq extends ConstraintCompiler {
   type A = (CSPOMExpression[_], Seq[CSPOMExpression[_]])
 
   override def mtch(c: CSPOMConstraint[_], p: CSPOM) = c match {
-    case CSPOMConstraint(r, 'sum, Seq(CSPOMSeq(args), CSPOMConstant(0)), p) if (p.get("mode").contains("eq") && p.get("coefficients").exists(
+    case CSPOMConstraint(r @ CSPOMConstant(true), 'sum, Seq(CSPOMSeq(args), CSPOMConstant(0)), p) if (p.get("mode").contains("eq") && p.get("coefficients").exists(
       c => c == Seq(1, -1) || c == Seq(-1, 1))) =>
       Some(r, args)
     case _ => None

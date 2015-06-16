@@ -19,8 +19,8 @@ final class SumTest extends FlatSpec with Matchers {
     val ps = Problem(x, y).initState.toState
     c.adviseAll(ps)
     val mod = c.consistentRevise(ps)
-    mod.dom(x) shouldBe Seq(1)
-    mod.dom(y) shouldBe Seq(0, 1)
+    mod.dom(x) should contain theSameElementsAs Seq(1)
+    mod.dom(y) should contain theSameElementsAs Seq(0, 1)
 
   }
 
@@ -35,8 +35,8 @@ final class SumTest extends FlatSpec with Matchers {
     c.adviseAll(ps)
     val mod = c.consistentRevise(ps)
 
-    mod.dom(v0) shouldBe Seq(1, 2, 3, 4)
-    mod.dom(v1) shouldBe Seq(0, 1, 2, 3)
+    mod.dom(v0) should contain theSameElementsAs Seq(1, 2, 3, 4)
+    mod.dom(v1) should contain theSameElementsAs Seq(0, 1, 2, 3)
   }
 
   it should "filter <= with positive and negative coefficients" in {
@@ -44,16 +44,16 @@ final class SumTest extends FlatSpec with Matchers {
     c.adviseAll(ps)
     val mod = c.consistentRevise(ps)
 
-    mod.dom(v0) shouldBe Seq(1, 2, 3, 4)
-    mod.dom(v1) shouldBe (0 to 4)
+    mod.dom(v0) should contain theSameElementsAs Seq(1, 2, 3, 4)
+    mod.dom(v1) should contain theSameElementsAs (0 to 4)
   }
 
   it should "filter <= with positive coefficients" in {
     val c = new SumBC(3, Array(1, 1), Array(v0, v1), SumLE)
     c.adviseAll(ps)
     val mod = c.consistentRevise(ps)
-    mod.dom(v0) shouldBe (1 to 3)
-    mod.dom(v1) shouldBe (0 to 2)
+    mod.dom(v0) should contain theSameElementsAs (1 to 3)
+    mod.dom(v1) should contain theSameElementsAs (0 to 2)
   }
 
   it should "filter <= with other negative coefficients and domains" in {
@@ -68,7 +68,7 @@ final class SumTest extends FlatSpec with Matchers {
 
     c.adviseAll(ps)
     val mod = c.consistentRevise(ps)
-    mod.dom(v2) shouldBe (0 to 1)
+    mod.dom(v2) should contain theSameElementsAs (0 to 1)
 
   }
 
@@ -84,7 +84,7 @@ final class SumTest extends FlatSpec with Matchers {
     val ps = Problem(c.scope: _*).initState.toState
     c.adviseAll(ps)
     val mod = c.consistentRevise(ps)
-    mod.dom(q43) shouldBe Seq(1)
+    mod.dom(q43) should contain theSameElementsAs Seq(1)
 
     // -1.Q[43] [0, 3] + -2.Q[44] [1] + -3.Q[45] [1, 2] + -4.Q[46] [0] + -5.Q[47] [0] + -6.Q[48] [0] eq -6 ()
   }
@@ -98,7 +98,7 @@ final class SumTest extends FlatSpec with Matchers {
     val ps = Problem(c.scope: _*).initState.toState
     c.adviseAll(ps)
     val mod = c.consistentRevise(ps)
-    mod.dom(x985) shouldBe Seq(0)
+    mod.dom(x985) should contain theSameElementsAs Seq(0)
 
     // -1.Q[43] [0, 3] + -2.Q[44] [1] + -3.Q[45] [1, 2] + -4.Q[46] [0] + -5.Q[47] [0] + -6.Q[48] [0] eq -6 ()
   }

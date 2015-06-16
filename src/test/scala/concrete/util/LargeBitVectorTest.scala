@@ -2,8 +2,9 @@ package concrete.util;
 
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
+import org.scalatest.Inspectors
 
-final class LargeBitVectorTest extends FlatSpec with Matchers {
+final class LargeBitVectorTest extends FlatSpec with Matchers with Inspectors {
 
   "LargeBitVectors" should "be filled" in {
     val bitVector = BitVector.filled(125)
@@ -219,5 +220,19 @@ final class LargeBitVectorTest extends FlatSpec with Matchers {
     filtered.cardinality shouldBe 64
     filtered.lastSetBit shouldBe 127
     filtered.nextSetBit(0) shouldBe 1
+  }
+
+  it should "retrieve entries" in {
+    var bv = BitVector.empty
+    bv += 203
+    bv += 202
+    bv += 134
+    bv += 104
+    bv += 86
+    bv += 50
+    bv += 38
+    bv += 26
+
+    forAll(Seq(203, 202, 134, 104, 86, 50, 38, 26)) { e => assert(bv(e)) }
   }
 }

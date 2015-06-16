@@ -10,6 +10,8 @@ import concrete.Variable
 import concrete.ParameterManager
 import cspom.CSPOM
 import cspom.VariableNames
+import scala.util.Try
+import scala.util.Failure
 
 class GeneratorManager(pm: ParameterManager) {
   private var known: Map[Symbol, Generator] = Map(
@@ -38,16 +40,17 @@ class GeneratorManager(pm: ParameterManager) {
     known += entry
   }
 
-  @throws(classOf[FailedGenerationException])
-  def generate[A](constraint: CSPOMConstraint[A], variables: Map[CSPOMVariable[_], Variable], vn: VariableNames): Seq[Constraint] = {
+  def generate[A](constraint: CSPOMConstraint[A], variables: Map[CSPOMVariable[_], Variable], vn: VariableNames): Try[Seq[Constraint]] = {
     val candidate = known.getOrElse(constraint.function,
       throw new FailedGenerationException(s"No candidate constraint for $constraint"))
 
-    try { candidate.generate(constraint, variables: Map[CSPOMVariable[_], Variable]) }
-    catch {
-      case e: Exception =>
-        throw new FailedGenerationException("Failed to generate " + constraint.toString(vn), e)
+    Try {
+      candidate.generate(constraint, variables: Map[CSPOMVariable[_], Variable])
     }
+      .recoverWith {
+        case e =>
+          Failure(new FailedGenerationException("Failed to generate " + constraint.toString(vn), e))
+      }
   }
 
 }

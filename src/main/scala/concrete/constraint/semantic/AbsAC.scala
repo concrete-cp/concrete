@@ -28,7 +28,7 @@ final class AbsAC(val result: Variable, val v0: Variable) extends Constraint(Arr
   }
 
   override def toString(ps: ProblemState) =
-    s"${result.toString(ps)} = |${v0.toString(ps)}|";
+    s"${result.toString(ps)} =AC= |${v0.toString(ps)}|";
 
   def advise(ps: ProblemState, p: Int) = if (skip(ps)) -1 else ps.dom(result).size * 3 / 2 + ps.dom(v0).size
 

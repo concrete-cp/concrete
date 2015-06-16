@@ -1,12 +1,13 @@
 package concrete
 
+import com.typesafe.scalalogging.LazyLogging
+
 import concrete.constraint.Constraint
 import concrete.constraint.StatefulConstraint
 import concrete.util.BitVector
 import concrete.util.Interval
-import scala.reflect.runtime.universe._
-import cspom.UNSATException
 import concrete.util.Vector
+import cspom.UNSATException
 
 sealed trait Outcome {
   def andThen(f: ProblemState => Outcome): Outcome
@@ -92,6 +93,9 @@ sealed trait Outcome {
 
   def toString(problem: Problem): String
   def toState: ProblemState
+
+  def isEntailed(id: Int): Boolean
+  def isEntailed(c: Constraint): Boolean = isEntailed(c.id)
 }
 
 case object Contradiction extends Outcome {
@@ -116,12 +120,13 @@ case object Contradiction extends Outcome {
   def remove(id: Int, value: Int): Outcome = Contradiction
   def dom(id: Int): Domain = throw new UNSATException("Tried to get a domain from a Contradiction")
   def dom(v: Variable): Domain = throw new UNSATException("Tried to get a domain from a Contradiction")
-  def boolDom(id: Int): BooleanDomain = EMPTY
+  def boolDom(id: Int): BooleanDomain = throw new UNSATException("Tried to get a domain from a Contradiction")
 
   def updateState(id: Int, newState: AnyRef): Outcome = Contradiction
   def domainsOption(): Option[IndexedSeq[Domain]] = None
   def toString(problem: Problem) = "Contradiction"
   def toState = throw new UNSATException("Tried to get state from a Contradiction")
+  def isEntailed(id: Int) = throw new UNSATException("Tried to get entailement info from a Contradiction")
 }
 
 object ProblemState {
@@ -130,14 +135,15 @@ object ProblemState {
 
   def apply(problem: Problem): Outcome = {
     ProblemState(Vector(problem.variables.map(_.initDomain): _*), Vector(), BitVector.empty)
-      .padConstraints(problem.constraints)
+      .padConstraints(problem.constraints, problem.maxCId)
   }
 }
 
 final case class ProblemState(
-    val domains: Vector[Domain],
-    val constraintStates: Vector[AnyRef],
-    val entailed: BitVector) extends Outcome {
+  val domains: Vector[Domain],
+  val constraintStates: Vector[AnyRef],
+  val entailed: BitVector) extends Outcome
+    with LazyLogging {
 
   def andThen(f: ProblemState => Outcome) = f(this)
 
@@ -161,21 +167,29 @@ final case class ProblemState(
   //    new ProblemState(domains, builder.result, entailed)
   //  }
 
-  def padConstraints(constraints: Seq[Constraint]): Outcome = {
-    val padded = constraintStates.padTo(constraints.size, null)
+  def padConstraints(constraints: Seq[Constraint], lastId: Int): Outcome = {
+    val padded = constraintStates.padTo(lastId + 1, null)
     var ps = ProblemState(domains, padded, entailed)
     for (c <- constraints.drop(constraintStates.size)) {
       c.init(ps) match {
-        case Contradiction          => return Contradiction
-        case newState: ProblemState => ps = newState
+        case Contradiction => return Contradiction
+        case newState: ProblemState =>
+          if (ps ne newState) {
+            logger.debug(s"Initializing ${c.toString(ps)} -> ${c.toString(newState)}")
+          }
+
+          ps = newState
       }
     }
     ps
   }
 
-  def entail(id: Int): ProblemState = new ProblemState(domains, constraintStates, entailed + id)
+  def entail(id: Int): ProblemState = {
+    //logger.warn(s"constraint $id is already entailed")
+    new ProblemState(domains, constraintStates, entailed + id)
+  }
 
-  def isEntailed(c: Constraint): Boolean = entailed(c.id)
+  def isEntailed(id: Int): Boolean = entailed(id)
 
   def updateDom(id: Int, newDomain: Domain): Outcome =
     if (newDomain.isEmpty) {

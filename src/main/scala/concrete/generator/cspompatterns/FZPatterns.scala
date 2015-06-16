@@ -15,10 +15,28 @@ import cspom.variable.CSPOMVariable
 import cspom.variable.CSPOMConstant
 import cspom.variable.SimpleExpression
 import CSPOM.seq2CSPOMSeq
+import cspom.variable.BoolVariable
 
 object FZPatterns {
   def apply() = Seq(
-    new GlobalCompiler(mtch) { def selfPropagation = false })
+    new GlobalCompiler(mtch) { def selfPropagation = false },
+    new ConstraintCompilerNoData {
+      /**
+       * (a = b) ↔ r
+       * int_ne_reif(var int: a, var int: b, var bool: r)
+       */
+      def matchBool(c: CSPOMConstraint[_], p: CSPOM) = c.function == 'int_ne_reif
+
+      def compile(c: CSPOMConstraint[_], p: CSPOM) = {
+        val Ctr('int_ne_reif, Seq(a, b, r), params) = c
+        val n = new BoolVariable()
+        val c1 = CSPOMConstraint(n, 'not, Seq(r))
+        val c2 = CSPOMConstraint(n, 'eq, Seq(a, b), params)
+        replaceCtr(Seq(c), Seq(c1, c2), p)
+      }
+
+      def selfPropagation = false
+    })
 
   //  val debug = new PartialFunction[CSPOMConstraint[_], CSPOMConstraint[_]] {
   //    def isDefinedAt(c: CSPOMConstraint[_]) = {
@@ -50,6 +68,8 @@ object FZPatterns {
      * (∃ i ∈ 1..n : as[i]) ↔ r where n is the length of as
      * array_bool_or(array [int] of var bool: as, var bool: r)
      */
+    case Ctr('array_bool_or, Seq(as, r), p) =>
+      CSPOMConstraint(r, 'clause, Seq(as, CSPOMSeq.empty), p)
 
     /**
      * (((i ∈ 1..n : as[i]) mod 2) = 1) where n is the length of as
@@ -64,8 +84,7 @@ object FZPatterns {
      * b ∈ 1..n ∧ as[b] = c where n is the length of as
      * array_int_element(var int: b, array [int] of int: as, var int: c)
      */
-    case Ctr('array_int_element, args, p) => {
-      val Seq(b: CSPOMExpression[_], as: CSPOMSeq[_], c: CSPOMExpression[_]) = args
+    case Ctr('array_int_element, Seq(b, as, c), p) => {
       CSPOMConstraint(c, 'element, Seq(as, b), p)
     }
     /**
@@ -76,8 +95,7 @@ object FZPatterns {
      * b ∈ 1..n ∧ as[b] = c where n is the length of as
      * array_var_bool_element(var int: b, array [int] of var bool: as, var bool: c)
      */
-    case Ctr('array_var_bool_element, args, p) => {
-      val Seq(b: CSPOMExpression[_], as: CSPOMSeq[_], c: CSPOMExpression[_]) = args
+    case Ctr('array_var_bool_element, Seq(b, as, c), p) => {
       CSPOMConstraint(c, 'element, Seq(as, b), p)
     }
     /**
@@ -89,7 +107,7 @@ object FZPatterns {
      * array_var_int_element(var int: b, array [int] of var int: as, var int: c)
      */
     case Ctr('array_var_int_element, args, p) => {
-      val Seq(b: CSPOMExpression[_], as: CSPOMSeq[_], c: CSPOMExpression[_]) = args
+      val Seq(b, as, c) = args
       CSPOMConstraint(c, 'element, Seq(as, b), p)
     }
     /**
@@ -106,14 +124,14 @@ object FZPatterns {
      * (a ∧ b) ↔ r
      * bool_and(var bool: a, var bool: b, var bool: r)
      */
-    case Ctr('bool_and, Seq(a: CSPOMExpression[_], b: CSPOMExpression[_], r: CSPOMExpression[_]), p) =>
+    case Ctr('bool_and, Seq(a, b, r), p) =>
       CSPOMConstraint(r, 'and, Seq(a, b), p)
     /**
      * (∃ i ∈ 1..nas : as[i]) ∨ (∃ i ∈ 1..nbs : ¬bs[i]) where n is the length of as
      * bool_clause(array [int] of var bool: as, array [int] of var bool: bs)
      */
-    case Ctr('bool_clause, Seq(CSPOMSeq(as), CSPOMSeq(bs)), p) =>
-      CSPOMConstraint('clause, Seq(seq2CSPOMSeq(as), seq2CSPOMSeq(bs)), p)
+    case Ctr('bool_clause, Seq(as, bs), p) =>
+      CSPOMConstraint('clause, Seq(as, bs), p)
     /**
      * a = b
      * bool_eq(var bool: a, var bool: b)
@@ -166,8 +184,15 @@ object FZPatterns {
      * (a = b) ↔ r
      * bool_xor(var bool: a, var bool: b, var bool: r)
      */
-    case Ctr('bool_xor, Seq(a: SimpleExpression[_], b: SimpleExpression[_], r: SimpleExpression[_]), p) =>
-      new CSPOMConstraint(r, 'xor, Seq(a, b), p)
+    case Ctr('bool_xor, Seq(a, b, r), p) =>
+      CSPOMConstraint(r, 'xor, Seq(a, b), p)
+
+    /**
+     * count_eq(array[int] of var int: x, var int: y, var int: c)
+     *
+     */
+    case Ctr('count_eq, Seq(x, y, c), p) =>
+      CSPOMConstraint(c, 'occurrence, Seq(y, x), p)
     /**
      * |a| = b
      * float_abs(var float: a, var float: b)
@@ -415,12 +440,6 @@ object FZPatterns {
      */
     case Ctr('int_ne, Seq(a, b), p) => CSPOMConstraint(CSPOMConstant(false), 'eq, Seq(a, b), p)
     /**
-     * (a = b) ↔ r
-     * int_ne_reif(var int: a, var int: b, var bool: r)
-     */
-    //    case Ctr('int_ne_reif, Seq(a, b, r), p) =>
-    //      new CSPOMConstraint(r, 'ne, Seq(a, b), p)
-    /**
      * a+b = c
      * int_plus(var int: a, var int: b, var int: c)
      */
@@ -514,8 +533,8 @@ object FZPatterns {
      *  Constrains 'c' to be the number of occurrences of 'y' in 'x'.
      *  No support for variable y yet in Concrete…
      */
-    //    case Ctr('count_eq, Seq(x, y, c), p) =>
-    //      CSPOMConstraint(c, 'occurrence, Seq(x, y), p)
+    case Ctr('count_eq, Seq(x, y, c), p) =>
+      CSPOMConstraint(c, 'occurrence, Seq(x, y), p)
 
     /**
      *  predicate all_different_int(array[int] of var int: x);

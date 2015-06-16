@@ -2,7 +2,7 @@ package concrete.generator.constraint;
 
 import com.typesafe.scalalogging.LazyLogging
 
-import Generator.cspom2concreteVar
+import Generator.cspom2concrete1D
 import concrete.Domain
 import concrete.ParameterManager
 import concrete.Variable
@@ -100,8 +100,8 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
    */
   private val vToICache = new IdMap[cspom.extension.Relation[_], collection.mutable.Map[Signature, Matrix]]()
 
-  private def generateMatrix(variables: List[Variable], relation: cspom.extension.Relation[_], init: Boolean): Matrix = {
-    val domains = variables.map(_.initDomain)
+  private def generateMatrix(variables: Seq[Variable], relation: cspom.extension.Relation[_], init: Boolean): Matrix = {
+    val domains = variables.map(_.initDomain).toList
 
     val map = vToICache.getOrElseUpdate(relation, collection.mutable.Map[Signature, Matrix]())
 
@@ -146,7 +146,7 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
 
   override def gen(extensionConstraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] = {
 
-    val solverVariables = extensionConstraint.arguments.map(cspom2concreteVar).toList
+    val solverVariables = extensionConstraint.arguments.map(cspom2concrete1D).toList
 
     val Some(relation: cspom.extension.Relation[_]) = extensionConstraint.params.get("relation")
     val Some(init: Boolean) = extensionConstraint.params.get("init")
@@ -154,9 +154,9 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
     if (relation.isEmpty) {
       if (init == true) { Seq() } else { throw new UNSATException("Empty relation " + extensionConstraint) }
     } else {
-      val scope = solverVariables.toArray
+      val scope = solverVariables.map(_.asVariable).toArray
 
-      val matrix = generateMatrix(solverVariables, relation, init)
+      val matrix = generateMatrix(scope, relation, init)
 
       val constraint = matrix match {
         case m: Matrix2D => BinaryExt(scope, m, true)

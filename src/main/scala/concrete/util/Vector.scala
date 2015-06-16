@@ -61,7 +61,7 @@ class Vector[+T] private[util] (val length: Int, trie: Case, tail: Array[AnyRef]
   override def companion = Vector
 
   /*
-   * The design of this data structure inherantly requires heterogenous arrays.
+   * The design of this data structure inherently requires heterogeneous arrays.
    * It is *possible* to design around this, but the result is comparatively
    * quite inefficient.  With respect to this fact, I have left the original
    * (somewhat dynamically-typed) implementation in place.
@@ -74,7 +74,7 @@ class Vector[+T] private[util] (val length: Int, trie: Case, tail: Array[AnyRef]
       if (i >= tailOff) {
         tail(i & 0x01f).asInstanceOf[T]
       } else {
-        var arr = trie(i)
+        val arr = trie(i)
         arr(i & 0x01f).asInstanceOf[T]
       }
     } else throw new IndexOutOfBoundsException(i.toString)

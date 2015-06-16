@@ -13,19 +13,21 @@ object ConcretePatterns {
   def apply(params: ParameterManager): Seq[ConstraintCompiler] = {
     val concreteDef =
       Seq(
-        DivToMul, BoolEq,
-        MulDomains, EqDomains, AbsDomains,
+        DivToMul, OccurrenceDomains, BoolEq,
+        MulDomains, AbsDomains,
         Bool2IntDomains, MulToSum,
         SumDomains,
         NegToCNF, Xor, ReifiedConj, ReifiedClause,
         NeqVec,
         SlidingSum, Regular, SetIn, ConcreteTypes,
-        AllDifferent, AllDiffConstant, CountEq //, ConstToVar
+        AllDifferent, AllDiffConstant,
+        // Clause does not support constants
+        SimplClause 
         )
 
     val concreteImp = Seq(
       AbsDiff, AbsDiffDomains, AllDiff, SubsumedDiff, Square, SumConstants, SumDuplicates, PseudoBool,
-      MergeNotDisj, SimplClause, UnaryClause, SumFactors, SumEq, SumNe) //, LexLeq2SAT)
+      MergeNotDisj, UnaryClause, SumFactors, SumEq, SumNe) //, LexLeq2SAT)
 
     val improveModel = params.getOrElse("improveModel", false)
 

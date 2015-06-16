@@ -5,18 +5,30 @@ import cspom.compiler.GlobalCompiler
 import cspom.variable.CSPOMConstant
 import cspom.compiler.Ctr
 import cspom.variable.CSPOMSeq
+import cspom.compiler.ConstraintCompiler
+import cspom.compiler.ConstraintCompilerNoData
+import cspom.CSPOM
+import cspom.variable.BoolExpression
+import cspom.variable.BoolVariable
 
 object XCSPPatterns {
-  def apply() = new GlobalCompiler(mtch) { def selfPropagation = true }
+  def apply() = Seq(
+    new GlobalCompiler(mtch) { def selfPropagation = true },
+    new ConstraintCompilerNoData {
+      def matchBool(c: CSPOMConstraint[_], problem: CSPOM) = c.function == 'ne
+      def compile(constraint: CSPOMConstraint[_], problem: CSPOM) = {
+        val CSPOMConstraint(a, _, args, params) = constraint
 
-  //  val debug = new PartialFunction[CSPOMConstraint[_], CSPOMConstraint[_]] {
-  //    def isDefinedAt(c: CSPOMConstraint[_]) = {
-  //      println(c)
-  //      false
-  //    }
-  //
-  //    def apply(c: CSPOMConstraint[_]) = sys.error("")
-  //  }
+        val n = new BoolVariable()
+        val c1 = CSPOMConstraint(n, 'not, Seq(a))
+        val c2 = CSPOMConstraint(n, 'eq, args, params)
+
+        replaceCtr(Seq(constraint), Seq(c1, c2), problem)
+
+      }
+
+      def selfPropagation: Boolean = false
+    })
 
   val mtch: PartialFunction[CSPOMConstraint[_], CSPOMConstraint[_]] = {
     case CSPOMConstraint(a, 'sub, Seq(b, c), p) =>

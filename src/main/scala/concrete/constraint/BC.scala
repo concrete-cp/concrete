@@ -15,7 +15,13 @@ trait BC extends Constraint {
     shave(state) match {
       case Contradiction => Contradiction
       case ns: ProblemState =>
-        if ((ns eq state) || ns.isEntailed(this)) {
+        if (ns eq state) {
+          if (ns.isEntailed(this)) {
+            ns
+          } else {
+            ns.entailIfFree(this)
+          }
+        } else if (ns.isEntailed(this)) {
           ns
         } else {
           revise(ns)

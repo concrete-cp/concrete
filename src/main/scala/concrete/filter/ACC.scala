@@ -22,23 +22,26 @@ import concrete.constraint.StatefulConstraint
 object ACC extends LazyLogging {
   def control(problem: Problem, state: ProblemState): ProblemState = {
     logger.info("Control !")
-    problem.constraints.foldLeft(state) {
-      (s, c) =>
 
-        //println(s"Controlling $c")
-
-        c.adviseAll(s)
-
-        c.revise(s) match {
-          case Contradiction => throw new AssertionError(s"${c.toString(s)} is not consistent${if (s.isEntailed(c)) " - entailed" else ""}")
-          case finalState: ProblemState =>
-            require(c.scope.forall(v => s.dom(v) eq finalState.dom(v)),
-              s"${c.toString(state)}${if (state.isEntailed(c)) " - entailed" else ""} was revised (-> ${c.toString(finalState)})")
-
-            finalState
-        }
-
-    }
+    problem.constraints.foreach(_.controlRevision(state))
+    state
+    //    {
+    //      (s, c) =>
+    //
+    //        //println(s"Controlling $c")
+    //
+    //        c.adviseAll(s)
+    //
+    //        c.revise(s) match {
+    //          case Contradiction => throw new AssertionError(s"${c.toString(s)} is not consistent${if (s.isEntailed(c)) " - entailed" else ""}")
+    //          case finalState: ProblemState =>
+    //            require(c.scope.forall(v => s.dom(v) eq finalState.dom(v)),
+    //              s"${c.toString(state)}${if (state.isEntailed(c)) " - entailed" else ""} was revised (-> ${c.toString(finalState)})")
+    //
+    //            finalState
+    //        }
+    //
+    //    }
 
   }
 
@@ -139,6 +142,8 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
   private def updateQueue(modified: Variable, skip: Constraint, states: ProblemState): Unit = {
 
+    // logger.debug(s"Modified $modified, queueing ${modified.constraints.map(_.toString(states)).mkString("{", ", ", "}")}, skipping ${skip.toString(states)}")
+
     val constraints = modified.constraints
 
     var i = constraints.length - 1
@@ -150,11 +155,14 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
         /** Requeue the constraint if the modified variable is involved several times in its scope */
         if ((c ne skip) || positions.tail.nonEmpty) {
-          val a = c.advise(states, positions)
 
+          val a = c.advise(states, positions)
+          logger.trace(s"Queueing ${c.toString(states)}, positions = $positions, advise = $a")
           //logger.fine(c + ", " + modified.positionInConstraint(i) + " : " + a)
           if (a >= 0) queue.offer(c, key.getKey(c, states, a))
         }
+      } else {
+        logger.trace(s"${c.toString(states)} was entailed")
       }
 
       i -= 1
@@ -172,6 +180,8 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
       revisions += 1;
       //val sizes = constraint.sizes()
+      
+      logger.trace(constraint.toString(s))
 
       constraint.revise(s) match {
         case Contradiction =>
@@ -180,23 +190,17 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
           return Contradiction
 
         case newState: ProblemState =>
-          assert(constraint.scope.forall(v => newState.dom(v).nonEmpty))
-
-          assert(noChange(s, newState, varSet -- constraint.scope), s"$constraint changed a variable outside of its scope")
-
-          assert(constraint.controlAssignment(newState), s"${constraint.toString(newState)} assignement is inconsistent")
-          //          for (i <- 0 until constraint.arity) {
-          //            if (newState(constraint.scope(i)).isEmpty) {
-          //              constraint.weight += 1
-          //              logger.info(
-          //                s"${constraint.toString(s)} -> empty domain with state $newState")
-          //              return Contradiction
-          //            }
-          //          }
-
           if (newState.domains ne s.domains) {
             logger.debug(
               s"${constraint.toString(s)} -> ${constraint.toString(newState)}${if (newState.isEntailed(constraint)) " - entailed" else ""}")
+
+            assert(constraint.scope.forall(v => newState.dom(v).nonEmpty))
+
+            assert(noChange(s, newState, varSet -- constraint.scope), s"$constraint changed a variable outside of its scope")
+
+            assert(constraint.controlAssignment(newState), s"${constraint.toString(newState)} assignement is inconsistent")
+
+            assert(constraint.controlRevision(newState))
 
             for (v <- constraint.scope) {
               val id = v.id
@@ -210,12 +214,15 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
             s = newState
           } else if (newState ne s) {
 
-            logger.debug(s"${constraint.toString(s)} -> ${
+            logger.debug(s"${constraint.id}. ${constraint.toString(s)} -> ${
               constraint match {
-                case sc: StatefulConstraint => s"new state: ${newState(sc)}, "
-                case _                      => ""
+                case sc: StatefulConstraint => s"new state: ${newState(sc)}"
+                case _                      => "NOP"
               }
             }, entailed: ${newState.isEntailed(constraint)}")
+
+            assert(constraint.controlRevision(newState))
+
             s = newState
 
           } else {

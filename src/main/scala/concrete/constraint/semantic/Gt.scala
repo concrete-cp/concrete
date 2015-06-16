@@ -22,6 +22,7 @@ package concrete.constraint.semantic;
 import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Constraint
+import concrete.constraint.BC
 
 final class GtC(val v: Variable, val constant: Int) extends Constraint(Array(v)) {
   def check(t: Array[Int]) = t(0) > constant

@@ -16,13 +16,27 @@ final class EqTest extends FlatSpec with Matchers {
     val v1 = new Variable("v1", IntDomain.ofSeq(3, 4, 5))
     val c = new EqAC(v0, v1)
     c.register(new AdviseCount())
-    val pb = Problem(v0,v1)
+    val pb = Problem(v0, v1)
     pb.addConstraint(c)
     val ps = pb.initState.toState
     c.adviseAll(ps)
     val mod = c.revise(ps)
 
-    mod.dom(v0) shouldBe Seq(3)
-    mod.dom(v1) shouldBe Seq(3)
+    mod.dom(v0) should contain theSameElementsAs Seq(3)
+    mod.dom(v1) should contain theSameElementsAs Seq(3)
+  }
+
+  "EqBC" should "filter" in {
+    val v0 = new Variable("v0", IntDomain.ofInterval(2, 3))
+    val v1 = new Variable("v1", IntDomain.ofSeq(0, 2, 3))
+    val c = new EqBC(false, v0, -1, v1)
+    val pb = Problem(v0, v1)
+    pb.addConstraint(c)
+    val ps = pb.initState.toState
+    c.adviseAll(ps)
+    val mod = c.revise(ps)
+
+    mod.dom(v0) should contain theSameElementsAs Seq(3)
+    mod.dom(v1) should contain theSameElementsAs Seq(2)
   }
 }

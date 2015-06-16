@@ -3,13 +3,15 @@ package concrete.constraint.semantic
 import org.scalatest.Finders
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
-
 import concrete.IntDomain
 import concrete.Problem
 import concrete.ProblemState
 import concrete.Variable
+import org.scalatest.concurrent.Timeouts
+import org.scalatest.time.Second
+import org.scalatest.time.Span
 
-final class AbsIntTest extends FlatSpec with Matchers {
+final class AbsIntTest extends FlatSpec with Matchers with Timeouts {
 
   "AbsInt" should "filter X" in {
 
@@ -30,7 +32,7 @@ final class AbsIntTest extends FlatSpec with Matchers {
     mod.dom(x) should not be theSameInstanceAs(ps.dom(x))
     mod.dom(y) should be theSameInstanceAs ps.dom(y)
 
-    mod.dom(x) shouldBe Seq(5)
+    mod.dom(x) should contain theSameElementsAs Seq(5)
 
     assert(c.intervalsOnly(mod))
 
@@ -53,10 +55,29 @@ final class AbsIntTest extends FlatSpec with Matchers {
     mod.dom(x) should be theSameInstanceAs ps.dom(x)
     mod.dom(y) should not be theSameInstanceAs(ps.dom(y))
 
-    mod.dom(y) shouldBe Seq(-7, 7)
+    mod.dom(y) should contain theSameElementsAs Seq(-7, 7)
 
     assert(!c.intervalsOnly(mod))
     assert(mod.dom(x).bound)
+  }
+
+  it should "not hang" in {
+    val x = new Variable("x", IntDomain.ofSeq(57, 224))
+    val y = new Variable("y", IntDomain.ofSeq(-224))
+
+    val c = new AbsBC(x, y)
+    val pb = Problem(x, y)
+    pb.addConstraint(c)
+
+    failAfter(Span(1, Second)) {
+      val ps = pb.initState.toState
+
+      val mod = c.consistentRevise(ps)
+
+      mod.dom(x) should contain theSameElementsAs Seq(224)
+      mod.dom(y) should be theSameInstanceAs ps.dom(y)
+    }
+
   }
 
 }

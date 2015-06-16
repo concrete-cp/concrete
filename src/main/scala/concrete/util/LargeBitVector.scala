@@ -245,7 +245,7 @@ class LargeBitVector(val words: Array[Long]) extends AnyVal with BitVector {
   }
 
   def setWord(pos: Int, word: Long) = {
-    val newWords = Arrays.copyOf(words, pos + 1) //, x$2)words.padTo(pos + 1, 0L)
+    val newWords = Arrays.copyOf(words, math.max(words.length, pos + 1)) //, x$2)words.padTo(pos + 1, 0L)
     newWords(pos) = word;
     new LargeBitVector(newWords)
   }

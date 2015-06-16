@@ -22,6 +22,10 @@ import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
 import cspom.UNSATException
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 trait ConcreteRunner extends LazyLogging {
 
@@ -118,7 +122,7 @@ trait ConcreteRunner extends LazyLogging {
 
     writer.parameters(pm.toXML)
 
-    val waker = new Timer()
+    //val waker = new Timer()
     //try {
 
     val (tryLoad, lT) = StatisticsManager.timeTry {
@@ -128,45 +132,48 @@ trait ConcreteRunner extends LazyLogging {
 
     val status = tryLoad
       .map { problem =>
+        val f = Future {
+          val solver = new SolverFactory(pm)(problem)
 
-        val solver = new SolverFactory(pm)(problem)
+          statistics.register("solver", solver)
+          applyParameters(solver, opt)
+          //println(solver.problem)
 
-        statistics.register("solver", solver)
-        applyParameters(solver, opt)
-        //println(solver.problem)
+          //        for (time <- opt.get('Time)) {
+          //          val thread = Thread.currentThread
+          //          waker.schedule(
+          //            new TimerTask {
+          //              def run = thread.interrupt()
+          //            },
+          //            time.asInstanceOf[Int] * 1000);
+          //        }
 
-        for (time <- opt.get('Time)) {
-          val thread = Thread.currentThread
-          waker.schedule(
-            new TimerTask {
-              def run = thread.interrupt()
-            },
-            time.asInstanceOf[Int] * 1000);
-        }
-
-        optimize match {
-          case "sat" =>
-          case "min" =>
-            solver.minimize(solver.problem.variable(optimizeVar.get))
-          case "max" =>
-            solver.maximize(solver.problem.variable(optimizeVar.get))
-        }
-
-        val result = solver.nonEmpty
-        if (opt.contains('all)) {
-          for (s <- solver) {
-            solution(s, writer, opt)
+          optimize match {
+            case "sat" =>
+            case "min" =>
+              solver.minimize(solver.problem.variable(optimizeVar.get))
+            case "max" =>
+              solver.maximize(solver.problem.variable(optimizeVar.get))
           }
-        } else if (solver.isOptimizer) {
-          for (s <- solver.toIterable.lastOption) {
-            solution(s, writer, opt)
+
+          val result = solver.nonEmpty
+          if (opt.contains('all)) {
+            for (s <- solver) {
+              solution(s, writer, opt)
+            }
+          } else if (solver.isOptimizer) {
+            for (s <- solver.toIterable.lastOption) {
+              solution(s, writer, opt)
+            }
+          } else {
+            for (s <- solver.toIterable.headOption) {
+              solution(s, writer, opt)
+            }
           }
-        } else {
-          for (s <- solver.toIterable.headOption) {
-            solution(s, writer, opt)
-          }
+          result
         }
-        result
+        concurrent.Await.result(f, opt.get('Time).map(_.asInstanceOf[Int].milliseconds).getOrElse(Duration.Inf))
+
       }
       .recoverWith {
         case e: UNSATException =>
@@ -177,7 +184,7 @@ trait ConcreteRunner extends LazyLogging {
           Failure(e)
       }
 
-    waker.cancel()
+    //waker.cancel()
     writer.write(statistics)
     for (s <- pm.unused) {
       logger.warn(s"Unused parameter : $s")

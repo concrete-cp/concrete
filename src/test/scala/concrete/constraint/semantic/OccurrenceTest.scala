@@ -16,6 +16,8 @@ import cspom.CSPOM.ctr
 import cspom.variable.IntVariable
 import concrete.constraint.AdviseCount
 import org.scalatest.TryValues
+import concrete.filter.ACC
+import concrete.ParameterManager
 
 class OccurrenceTest extends FlatSpec with Matchers with Inspectors with TryValues {
 
@@ -42,7 +44,7 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors with TryValu
       case v => mod.dom(v) should be theSameInstanceAs ps.dom(v)
     }
 
-    mod.dom(occ) shouldBe Seq(1, 2)
+    mod.dom(occ) should contain theSameElementsAs Seq(1, 2)
 
   }
 
@@ -69,7 +71,7 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors with TryValu
   }
 
   it should "generate and filter" in {
-    val problem = CSPOM { implicit problem =>
+    val cspom = CSPOM { implicit problem =>
       val v1 = 7
       val v2 = 6
 
@@ -79,23 +81,25 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors with TryValu
 
       val occ = IntVariable(1 to 3) as "occ"
 
-      ctr(occ === occurrence(7, v1, v2, v3, v4, v5))
+      ctr(occ === occurrence(7)(v1, v2, v3, v4, v5))
     }
 
-    val s = Solver(problem).success.value
-    val c = s.concreteProblem.constraints
+    val problem = Solver(cspom).get.concreteProblem
+
+    val c = problem.constraints
       .collectFirst {
         case c: Occurrence => c
       }
       .get
 
-    val occ = s.concreteProblem.variable("occ")
+    val occ = problem.variable("occ")
+    val initState = problem.initState
 
-    val mod = c.revise(s.concreteProblem.initState.toState)
+    val mod = new ACC(problem, new ParameterManager()).reduceAll(initState.toState)
 
-    forAll(s.concreteProblem.variables) {
-      case `occ` => mod.dom(occ) shouldBe Seq(1, 2)
-      case v     => mod.dom(v) should be theSameInstanceAs s.concreteProblem.initState.dom(v)
+    forAll(problem.variables) {
+      case `occ` => mod.dom(occ) should contain theSameElementsAs Seq(1, 2)
+      case v     => mod.dom(v) should be theSameInstanceAs initState.dom(v)
     }
 
   }

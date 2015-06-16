@@ -2,14 +2,12 @@ package concrete.constraint.semantic;
 
 import scala.IndexedSeq
 import scala.util.Random
-
 import org.scalacheck.Gen
 import org.scalatest.Finders
 import org.scalatest.FlatSpec
 import org.scalatest.Inspectors
 import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
-
 import concrete.IntDomain
 import concrete.Problem
 import concrete.ProblemState
@@ -18,6 +16,8 @@ import concrete.constraint.AdviseCount
 import concrete.constraint.Constraint
 import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
+import concrete.Contradiction
+import concrete.Domain
 
 final class AbsDiffTest extends FlatSpec with Matchers with Inspectors with PropertyChecks {
 
@@ -30,24 +30,13 @@ final class AbsDiffTest extends FlatSpec with Matchers with Inspectors with Prop
       val vy: Variable = new Variable("y", IntDomain.ofSeq(y: _*));
       val vz: Variable = new Variable("z", IntDomain.ofSeq(z: _*));
 
-      val c = new AbsDiffAC(vx, vy, vz);
+      ConstraintComparator.compare(
+        List(vx, vy, vz),
+        new AbsDiffAC(vx, vy, vz),
+        new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
+          def check(t: Array[Int]) = t(0) == math.abs(t(1) - t(2));
+        })
 
-      val pb = Problem(vx, vy, vz)
-      pb.addConstraint(c)
-      val ps = pb.initState.toState
-
-      c.register(new AdviseCount)
-      c.adviseAll(ps)
-      val r1 = c.revise(ps)
-
-      val c2 = new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
-        def check(t: Array[Int]) = t(0) == math.abs(t(1) - t(2));
-      };
-      c2.register(new AdviseCount)
-      c2.adviseAll(ps)
-      val r2 = c2.revise(ps)
-
-      r1 shouldBe r2
     }
   }
 
@@ -80,7 +69,12 @@ final class AbsDiffTest extends FlatSpec with Matchers with Inspectors with Prop
     val ps = Problem(vx, vy, vz).initState.toState
     val mod = c.revise(ps).asInstanceOf[ProblemState]
 
-    mod.domains shouldBe IndexedSeq(IntDomain.ofSeq(5), IntDomain.ofSeq(4), IntDomain.ofSeq(9))
+    val IndexedSeq(dx, dy, dz) = mod.domains
+
+    dx should contain theSameElementsAs Seq(5)
+    dy should contain theSameElementsAs Seq(4)
+    dz should contain theSameElementsAs Seq(9)
+
   }
 
 }

@@ -68,11 +68,15 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
           if (solverVariables.nonEmpty) {
             pb +:= PseudoBoolean(solverVariables, varParams, mode, constant)
           }
-        case c => for (
-          constraint <- gm.generate(c, variables, vn)
-        ) {
-          problem.addConstraint(constraint)
-        }
+        case c =>
+          val constraints = gm.generate(c, variables, vn).get
+          logger.debug(s"Generating $constraints from $c")
+          for (
+            constraint <- constraints
+          ) {
+
+            problem.addConstraint(constraint)
+          }
       }
 
       SAT(clauses, pb, pm).foreach(problem.addConstraint)

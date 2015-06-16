@@ -14,6 +14,11 @@ import scala.collection.mutable.LinkedHashMap
 import scala.util.Failure
 import org.scalatest.TryValues
 import concrete.Solver
+import concrete.generator.cspompatterns.FZPatterns
+import concrete.generator.cspompatterns.XCSPPatterns
+import cspom.compiler.CSPOMCompiler
+import cspom.xcsp.XCSPParser
+import cspom.flatzinc.FlatZincParser
 
 //import SolvingTest._
 
@@ -24,9 +29,10 @@ class SolvingTest extends FlatSpec with SolvingBehaviors {
   it should behave like test()
 }
 
-trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging with TryValues { this: FlatSpec =>
+trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this: FlatSpec =>
 
   val problemBank = LinkedHashMap[String, AnyVal](
+    "battleships_2.fzn" -> 36,
     "flat30-1.cnf" -> true,
     "alpha.fzn" -> true,
     "frb35-17-1_ext.xml.bz2" -> 2,
@@ -57,8 +63,6 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging with Tr
 
   def test(parameters: ParameterManager = new ParameterManager()): Unit = {
     for ((p, r) <- problemBank) {
-      val test = p.contains(".xml")
-
       val expected: Boolean = r match {
         case e: Int     => e > 0
         case b: Boolean => b
@@ -66,7 +70,7 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging with Tr
       }
 
       it should "solve " + p taggedAs (SlowTest) in {
-        solve(p, expected, parameters, test)
+        solve(p, expected, parameters)
       }
       r match {
         case e: Int if e > 0 => it should s"find $e solutions to $p" taggedAs (SlowTest) in {
@@ -78,39 +82,52 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging with Tr
     }
   }
 
-  def solve(name: String, expectedResult: Boolean, parameters: ParameterManager, test: Boolean = true): Unit = {
+  def solve(name: String, expectedResult: Boolean, parameters: ParameterManager): Unit = {
 
     val url = getClass.getResource(name)
 
     require(url != null, "Could not find resource " + name)
 
-    (for {
-      (cspomProblem, data) <- CSPOM.load(url)
-      solver <- Solver(cspomProblem, parameters)
-    } yield {
+    val parser = CSPOM.autoParser(url).get
 
-      //    println(solver.concreteProblem)
+    CSPOM.load(url, parser).flatMap {
+      case (cspomProblem, data) =>
+        val test = parser match {
+          case FlatZincParser =>
+            CSPOMCompiler.compile(cspomProblem, FZPatterns())
+            false
+          case XCSPParser =>
+            CSPOMCompiler.compile(cspomProblem, XCSPPatterns())
+            true
+          case _ =>
+            false
+        }
 
-      val solvIt = solver.toIterable
+        Solver(cspomProblem, parameters).map { solver =>
 
-      if (expectedResult) {
-        solvIt should not be 'empty
-      } else {
-        solvIt shouldBe 'empty
-      }
+          //    println(solver.concreteProblem)
 
-      // println(solver.concreteProblem.toString)
+          val solvIt = solver.toIterable
 
-      if (test) {
-        for (sol <- solver.toIterable.headOption) {
-          val failed = XCSPConcrete.controlCSPOM(sol, data('variables).asInstanceOf[Seq[String]], url)
-          withClue(sol) {
-            failed shouldBe 'empty
+          if (expectedResult) {
+            solvIt should not be 'empty
+          } else {
+            solvIt shouldBe 'empty
+          }
+
+          // println(solver.concreteProblem.toString)
+
+          if (test) {
+            for (sol <- solver.toIterable.headOption) {
+              val failed = XCSPConcrete.controlCSPOM(sol, data('variables).asInstanceOf[Seq[String]], url)
+              withClue(sol) {
+                failed shouldBe 'empty
+              }
+            }
           }
         }
-      }
-    }) should be a 'success
-
+    }
+      .get
   }
 
   def count(name: String, expectedResult: Int, parameters: ParameterManager = new ParameterManager(),
@@ -118,21 +135,36 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging with Tr
     val url = getClass.getResource(name)
 
     require(url != null, "Could not find resource " + name)
+    val parser = CSPOM.autoParser(url).get
 
-    val (cspomProblem, data) = CSPOM.load(url).success.value
+    CSPOM.load(url, parser).flatMap {
+      case (cspomProblem, data) =>
+        val test = parser match {
+          case FlatZincParser =>
+            CSPOMCompiler.compile(cspomProblem, FZPatterns())
+            false
+          case XCSPParser =>
+            CSPOMCompiler.compile(cspomProblem, XCSPPatterns())
+            true
+          case _ =>
+            false
+        }
 
-    val solver = Solver(cspomProblem, parameters).success.value
+        Solver(cspomProblem, parameters).map { solver =>
 
-    val sols = solver.toStream.take(expectedResult + 1)
+          val sols = solver.toStream.take(expectedResult + 1)
 
-    if (test) {
-      forAll(sols) { sol =>
-        val failed = XCSPConcrete.controlCSPOM(sol, data('variables).asInstanceOf[Seq[String]], url)
-        failed shouldBe 'empty
-      }
-    }
+          if (test) {
+            forAll(sols.take(100)) { sol =>
+              val failed = XCSPConcrete.controlCSPOM(sol, data('variables).asInstanceOf[Seq[String]], url)
+              failed shouldBe 'empty
+            }
+          }
 
-    sols should have size expectedResult
+          sols should have size expectedResult
+
+        }
+    } should be a 'success
 
   }
 }

@@ -54,7 +54,7 @@ object CSPOMDriver {
     CSPOMConstraint('gcc, v, Map("gcc" -> cardinalities))
   }
 
-  def occurrence[A: TypeTag](value: SimpleExpression[A], variables: SimpleExpression[A]*)(implicit problem: CSPOM): SimpleExpression[Int] = {
+  def occurrence[A: TypeTag](value: SimpleExpression[A])(variables: SimpleExpression[A]*)(implicit problem: CSPOM): SimpleExpression[Int] = {
     problem.isInt('occurrence, Seq(value, seq2CSPOMSeq(variables)))
   }
 

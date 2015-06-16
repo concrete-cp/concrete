@@ -26,13 +26,12 @@ libraryDependencies ++= Seq(
 	"com.typesafe.slick" %% "slick" % "3.0.0",
 	//"org.jcp" % "jsr331" % "1.1.1",
 	"org.scalatest" %% "scalatest" % "2.2.5" % "test",
-	"org.scalacheck" %% "scalacheck" % "1.12.2" % "test",
-	"com.storm-enroute" %% "scalameter" % "0.6" % "test",
-	"com.github.scala-incubator.io" %% "scala-io-file" % "0.4.3"
+	"org.scalacheck" %% "scalacheck" % "1.12.4" % "test",
+	"com.storm-enroute" %% "scalameter" % "0.6" % "test"
 	)
 
 scalacOptions ++= Seq("-optimise"
-	      , "-Xdisable-assertions"
+//	      , "-Xdisable-assertions"
 	      , "-target:jvm-1.7"
 //	"-deprecation", 
 //	"-unchecked", 

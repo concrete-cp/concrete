@@ -12,6 +12,9 @@ import concrete.generator.cspompatterns.ConcretePatterns
 import cspom.CSPOM
 import cspom.compiler.CSPOMCompiler
 import org.scalatest.TryValues
+import scala.util.Failure
+import scala.util.Success
+import concrete.runner.XCSPConcrete
 
 final class ProblemGeneratorTest extends FlatSpec with LazyLogging with TryValues {
 
@@ -44,7 +47,12 @@ final class ProblemGeneratorTest extends FlatSpec with LazyLogging with TryValue
   private def generateTest(file: String) {
 
     val pm = new ParameterManager()
-    val cspom = CSPOM.load(classOf[ProblemGeneratorTest].getResource(file)).success.value._1;
+    val cspom = XCSPConcrete.loadCSPOMURL(classOf[ProblemGeneratorTest].getResource(file)) match {
+      case Success((_, cspom)) => cspom
+      case Failure(e) =>
+        e.printStackTrace()
+        fail(e)
+    }
 
     logger.info(cspom + "\n" + cspom.referencedExpressions.size + " vars, " + cspom.constraints.size + " cons")
 
@@ -52,7 +60,10 @@ final class ProblemGeneratorTest extends FlatSpec with LazyLogging with TryValue
 
     logger.info(cspom + "\n" + cspom.referencedExpressions.size + " vars, " + cspom.constraints.size + " cons")
 
-    val problem = new ProblemGenerator(pm).generate(cspom).success.value._1;
+    val problem = new ProblemGenerator(pm).generate(cspom) match {
+      case Success((problem, _)) => problem
+      case Failure(e)            => fail(e)
+    }
 
     logger.info(problem + "\n" + problem.variables.size + " vars, " + problem.constraints.size + " cons")
 

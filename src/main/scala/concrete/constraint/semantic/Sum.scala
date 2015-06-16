@@ -1,7 +1,6 @@
 package concrete.constraint.semantic
 
 import com.typesafe.scalalogging.LazyLogging
-
 import concrete.Contradiction
 import concrete.Domain
 import concrete.Outcome
@@ -12,6 +11,8 @@ import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
 import concrete.util.BitVector
 import concrete.util.Interval
+
+import concrete.constraint.BC
 
 object SumMode extends Enumeration {
   type SumMode = Value
@@ -24,10 +25,10 @@ object SumMode extends Enumeration {
 import SumMode._
 
 abstract class Sum(
-  val constant: Int,
-  val factors: Array[Int],
-  scope: Array[Variable],
-  val mode: SumMode.SumMode) extends Constraint(scope) {
+    val constant: Int,
+    val factors: Array[Int],
+    scope: Array[Variable],
+    val mode: SumMode.SumMode) extends Constraint(scope) {
 
   require(factors.forall(_ != 0), this)
   require(factors.size == scope.size)
@@ -77,7 +78,9 @@ trait SpanCalculator extends Sum {
     compute(ps).isDefined
   }
 
-  def revise(ps: ProblemState): Outcome = {
+  def shave(ps: ProblemState) = throw new IllegalStateException
+
+  override def revise(ps: ProblemState): Outcome = {
     //println(toString(ps))
     compute(ps) match {
       case Some(hasChanged) =>
@@ -87,7 +90,7 @@ trait SpanCalculator extends Sum {
           filtered = filtered.updateDomNonEmpty(scope(i), doms(i))
           i = hasChanged.nextSetBit(i + 1)
         }
-        filtered
+        filtered.entailIfFree(this)
       case None => Contradiction
     }
   }
@@ -103,10 +106,10 @@ trait SpanCalculator extends Sum {
 }
 
 final class SumAC(
-  constant: Int,
-  factors: Array[Int],
-  scope: Array[Variable],
-  mode: SumMode.SumMode) extends Sum(constant, factors, scope, mode) with Residues with TupleEnumerator {
+    constant: Int,
+    factors: Array[Int],
+    scope: Array[Variable],
+    mode: SumMode.SumMode) extends Sum(constant, factors, scope, mode) with Residues with TupleEnumerator {
 
   def this(constant: Int, scope: Array[Variable], mode: SumMode.SumMode) =
     this(constant, Array.fill(scope.length)(1), scope, mode)
@@ -114,9 +117,9 @@ final class SumAC(
 }
 
 final class SumNE(
-  constant: Int,
-  factors: Array[Int],
-  scope: Array[Variable]) extends Sum(constant, factors, scope, SumMode.SumNE) with SpanCalculator {
+    constant: Int,
+    factors: Array[Int],
+    scope: Array[Variable]) extends Sum(constant, factors, scope, SumMode.SumNE) with SpanCalculator {
 
   def this(constant: Int, scope: Array[Variable]) =
     this(constant, Array.fill(scope.length)(1), scope)
@@ -171,10 +174,10 @@ final class SumNE(
 }
 
 final class SumBC(
-  constant: Int,
-  factors: Array[Int],
-  scope: Array[Variable],
-  mode: SumMode.SumMode) extends Sum(constant, factors, scope, mode) with SpanCalculator with LazyLogging {
+    constant: Int,
+    factors: Array[Int],
+    scope: Array[Variable],
+    mode: SumMode.SumMode) extends Sum(constant, factors, scope, mode) with SpanCalculator with LazyLogging {
 
   def this(constant: Int, scope: Array[Variable], mode: SumMode.SumMode) =
     this(constant, Array.fill(scope.length)(1), scope, mode)

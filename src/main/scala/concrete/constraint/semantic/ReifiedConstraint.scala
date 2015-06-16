@@ -22,10 +22,8 @@ final class ReifiedConstraint(
 
   require(controlVariable.initDomain.isInstanceOf[BooleanDomain])
 
-  override def id_=(i: Int): Unit = {
-    super.id_=(i)
-    positiveConstraint.id = i
-    negativeConstraint.id = i
+  override def identify(i: Int): Int = {
+    negativeConstraint.identify(positiveConstraint.identify(super.identify(i)))
   }
 
   private val positiveToReifiedPositions = positiveConstraint.scope.map(position).map {
@@ -86,7 +84,10 @@ final class ReifiedConstraint(
   }
 
   override def toString(ps: ProblemState) =
-    s"${controlVariable.toString(ps)} == (${positiveConstraint.toString(ps)}) / != (${negativeConstraint.toString(ps)}";
+    s"${controlVariable.toString(ps)} == (${positiveConstraint.toString(ps)})" // / != (${negativeConstraint.toString(ps)}";
+
+  override def toString =
+    s"${controlVariable} == (${positiveConstraint})"
 
   //var controlRemovals = 0
 
@@ -97,8 +98,10 @@ final class ReifiedConstraint(
   }
 
   def advise(ps: ProblemState, position: Int) = {
+    //logger.debug(s"Advise ${toString(ps)} : $position")
     if (position == 0) {
       //   controlRemovals = position
+
       ps.dom(controlVariable) match {
         case TRUE           => positiveConstraint.adviseAll(ps)
         case FALSE          => negativeConstraint.adviseAll(ps)

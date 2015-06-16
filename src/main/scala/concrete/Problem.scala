@@ -53,20 +53,13 @@ final class Problem(val variables: List[Variable]) {
   def addConstraint(constraint: Constraint): Unit = addConstraints(Seq(constraint))
 
   def addConstraints(cs: Seq[Constraint]): Unit = {
-    val buffer: ArrayBuffer[Constraint] = new ArrayBuffer()
-    val hint = constraints.length + cs.size
-    buffer.sizeHint(hint)
-    buffer ++= constraints
+    constraints ++= cs
 
     for (c <- cs) {
-      val i = buffer.size
-      buffer += c
-      c.id = i
+      _maxCId = c.identify(_maxCId)
       _maxArity = math.max(_maxArity, c.arity)
       c.scope.foreach(v => v.addConstraint(c))
     }
-
-    constraints = buffer.toArray
   }
 
   def initState = ProblemState(this)
@@ -75,7 +68,8 @@ final class Problem(val variables: List[Variable]) {
     variables.map(_.toString(state)).mkString("\n") + "\n" +
       constraints.iterator
       .map { c =>
-        if (state.isEntailed(c)) c.toString(state) + " [entailed]" else c.toString(state)
+        c.id + ". " + (
+          if (state.isEntailed(c)) c.toString(state) + " [entailed]" else c.toString(state))
       }
       .mkString("\n") + "\n" + stats(state)
   }

@@ -9,6 +9,9 @@ import concrete.IntDomain
 import concrete.TRUE
 import concrete.Problem
 import concrete.UNKNOWNBoolean
+import concrete.Singleton
+import concrete.Contradiction
+import concrete.ProblemState
 
 class ReifiedConstraintTest extends FlatSpec with Matchers {
 
@@ -47,6 +50,24 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
 
     m2.dom(control2) shouldBe UNKNOWNBoolean
     assert(!m2.isEntailed(c2))
+  }
+
+  "Reified bound consistency eq" should "detect consistency" in {
+    val v0 = new Variable("v0", IntDomain.ofInterval(1, 3))
+    val v1 = new Variable("v1", Singleton(0))
+    val control = new Variable("control", BooleanDomain())
+    val constraint = new ReifiedConstraint(
+      control,
+      new EqBC(false, v0, -1, v1),
+      new SumNE(1, Array(1, -1), Array(v0, v1)))
+    val pb = Problem(v0, v1, control)
+    pb.addConstraint(constraint)
+    val state = pb.initState.toState
+    constraint.adviseAll(state)
+    constraint.revise(state) match {
+      case Contradiction    => fail()
+      case ns: ProblemState => ns.dom(control) shouldBe UNKNOWNBoolean
+    }
   }
 
 }

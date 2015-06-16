@@ -26,7 +26,7 @@ final class AbsBC(val result: Variable, val v0: Variable) extends Constraint(Arr
 
         Interval.union(v0span intersect ri, v0span intersect -ri)
           .map {
-            nv0 => ps.shaveDom(this.v0, nv0).entailIfFree(this)
+            nv0 => ps.shaveDom(this.v0, nv0)
           }
           .getOrElse {
             Contradiction

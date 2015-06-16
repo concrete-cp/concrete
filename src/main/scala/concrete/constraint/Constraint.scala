@@ -73,7 +73,10 @@ abstract class Constraint(val scope: Array[Variable])
   private var _id: Int = -1
 
   def id: Int = _id
-  def id_=(i: Int): Unit = { _id = i }
+  def identify(i: Int): Int = {
+    _id = i
+    i + 1
+  }
 
   /**
    * arity is the number of variables involved by the constraint
@@ -134,11 +137,9 @@ abstract class Constraint(val scope: Array[Variable])
   def advise(problemState: ProblemState, pos: Int): Int
 
   def advise(problemState: ProblemState, pos: Seq[Int]): Int = {
-    var i = -1
-    for (p <- pos) {
-      i = math.max(i, advise(problemState, p))
+    pos.foldLeft(-1) { (max, p) =>
+      math.max(max, advise(problemState, p))
     }
-    i
   }
 
   def advise(problemState: ProblemState, v: Variable): Int = advise(problemState, position(v))
@@ -252,6 +253,23 @@ abstract class Constraint(val scope: Array[Variable])
   def controlAssignment(problemState: ProblemState): Boolean = {
     scope.exists(v => problemState.dom(v).size > 1) || check(scope.map(v => problemState.dom(v).head).toArray)
 
+  }
+
+  def controlRevision(ps: ProblemState): Boolean = {
+    val adv = adviseAll(ps)
+    revise(ps) match {
+      case Contradiction => throw new AssertionError(s"${toString(ps)} is not consistent${if (ps.isEntailed(this)) " - entailed" else ""}")
+      case finalState: ProblemState =>
+        require(scope.forall(v => ps.dom(v) eq finalState.dom(v)),
+          s"${toString(ps)}${if (ps.isEntailed(this)) " - entailed" else ""} was revised (-> ${toString(finalState)})")
+
+        require(adv < 0 || ps.isEntailed(this) == finalState.isEntailed(this),
+          s"${toString(ps)}: entailment detected")
+      //        require(ps eq finalState,
+      //          s"${toString(ps)}${if (ps.isEntailed(this)) " - entailed" else ""} triggered state change")
+
+    }
+    true
   }
 
 }

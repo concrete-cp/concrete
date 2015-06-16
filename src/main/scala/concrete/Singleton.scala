@@ -1,9 +1,11 @@
 package concrete
 
-import concrete.util.BitVector
 import scala.collection.mutable.HashMap
-import concrete.util.Interval
+
 import com.typesafe.scalalogging.LazyLogging
+
+import concrete.util.BitVector
+import concrete.util.Interval
 
 object Singleton {
   val cache = new HashMap[Int, Singleton]

@@ -22,8 +22,8 @@ final class GtTest extends FlatSpec with Matchers {
 
     val mod = c.consistentRevise(ps);
 
-    mod.dom(v1) shouldBe Seq(4)
-    mod.dom(v2) shouldBe Seq(3)
+    mod.dom(v1) should contain theSameElementsAs Seq(4)
+    mod.dom(v2) should contain theSameElementsAs Seq(3)
   }
 
   "Gt" should "not strictly filter" in {
@@ -34,8 +34,8 @@ final class GtTest extends FlatSpec with Matchers {
 
     val mod = c.consistentRevise(ps);
 
-    mod.dom(0) shouldBe Seq(3, 4)
-    mod.dom(1) shouldBe Seq(3, 4)
+    mod.dom(0) should contain theSameElementsAs Seq(3, 4)
+    mod.dom(1) should contain theSameElementsAs Seq(3, 4)
 
   }
 

@@ -3,7 +3,7 @@ package concrete
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 
-final class TestIntDomain extends FlatSpec with Matchers {
+final class IntDomainTest extends FlatSpec with Matchers {
 
   "IntDomain" should "find next/prev" in {
     val b = IntDomain.ofSeq(1, 2, 7, 8)
@@ -17,7 +17,7 @@ final class TestIntDomain extends FlatSpec with Matchers {
   }
 
   it should "enumerate" in {
-    IntDomain.ofSeq(1, 2, 7, 8) shouldBe Seq(1, 2, 7, 8)
+    IntDomain.ofSeq(1, 2, 7, 8) should contain theSameElementsAs Seq(1, 2, 7, 8)
   }
 
   it should "detect presence" in {
@@ -39,7 +39,7 @@ final class TestIntDomain extends FlatSpec with Matchers {
     domain.removeTo(7) shouldBe empty
     domain.removeTo(8) shouldBe empty
     domain.removeFrom(-1) shouldBe empty
-    domain.removeUntil(7) shouldBe Seq(7)
+    domain.removeUntil(7) should contain theSameElementsAs Seq(7)
     domain.removeUntil(400) shouldBe empty
     domain.removeFrom(400) shouldBe domain
   }

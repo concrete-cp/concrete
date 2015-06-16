@@ -9,7 +9,7 @@ import cspom.CSPOM
 import cspom.compiler.CSPOMCompiler
 import cspom.variable.IntVariable
 
-class AbsDiffTest extends FlatSpec with Matchers {
+class AbsDiffCompilerTest extends FlatSpec with Matchers {
 
   "AbsDiff compiler" should "compile" in {
 

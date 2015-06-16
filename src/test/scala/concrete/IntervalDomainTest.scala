@@ -10,7 +10,7 @@ class IntervalDomainTest extends FlatSpec with Matchers {
 
     dom.head shouldBe 10
     dom.last shouldBe 20
-    dom shouldBe (10 to 20)
+    dom should contain theSameElementsAs (10 to 20)
     dom.removeFrom(14).last shouldBe 13
     dom.removeTo(13).head shouldBe 14
   }

@@ -19,7 +19,7 @@
 
 package concrete.generator;
 
-final class FailedGenerationException(message: String, cause: Exception)
+final class FailedGenerationException(message: String, cause: Throwable)
   extends Exception(message, cause) {
 
   def this(message: String) = this(message, null)

@@ -1,16 +1,17 @@
 package concrete.runner
 
-import java.net.URI
+import java.io.File
 import java.net.URL
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
-import scala.sys.process._
+import scala.sys.process.stringSeqToProcess
+import scala.util.Try
 
 import concrete.generator.cspompatterns.XCSPPatterns
 import cspom.CSPOM
 import cspom.compiler.CSPOMCompiler
 import cspom.xcsp.XCSPParser
-import scalax.file.Path
-import scalax.io.Resource
 
 object XCSPConcrete extends CSPOMRunner with App {
 
@@ -21,16 +22,17 @@ object XCSPConcrete extends CSPOMRunner with App {
   def loadCSPOM(args: List[String], opt: Map[Symbol, Any]) = {
     val List(fn) = args
     file = CSPOM.file2url(fn)
+    for ((vars, cspom) <- loadCSPOMURL(file)) yield {
+      declaredVariables = vars
+      cspom
+    }
+  }
 
-    CSPOM.load(file, XCSPParser)
-      .map {
-        case (cspom, data) =>
-          declaredVariables = data('variables).asInstanceOf[Seq[String]]
-          cspom
-      }
-      .flatMap { cspom =>
-        CSPOMCompiler.compile(cspom, Seq(XCSPPatterns()))
-      }
+  def loadCSPOMURL(file: URL): Try[(Seq[String], CSPOM)] = {
+    for ((cspom, data) <- CSPOM.load(file, XCSPParser)) yield {
+      CSPOMCompiler.compile(cspom, XCSPPatterns())
+      (data('variables).asInstanceOf[Seq[String]], cspom)
+    }
   }
 
   def description(args: List[String]) =
@@ -55,16 +57,37 @@ object XCSPConcrete extends CSPOMRunner with App {
 
 }
 
+object TryWith {
+  def apply[T <: AutoCloseable, Result](resGen: => T)(r: T => Result): Try[Result] = {
+
+    Try(resGen).flatMap { closeable =>
+
+      val res = Try(r(closeable))
+
+      Try(closeable.close())
+        .flatMap(_ => res)
+
+    }
+  }
+}
+
 class SolutionChecker(file: URL) {
 
-  private val tmpPath = Path.createTempFile(suffix = Path(file.getFile, '/').name)
+  val temp: File = File.createTempFile("xcsp", new File(file.getFile).getName)
+  temp.deleteOnExit()
 
-  Resource.fromURL(file).copyDataTo(tmpPath.outputStream())
+  val r = TryWith(file.openStream) { in =>
+    Files.copy(in, temp.toPath, StandardCopyOption.REPLACE_EXISTING)
+  }
 
-  private val jar = Path(classOf[SolutionChecker].getResource("Tools2008.jar").toURI).get.path
+  //file.openStream()
+
+  //Resource.fromURL(file).copyDataTo(tmpPath.outputStream())
+
+  private val jar = classOf[SolutionChecker].getResource("Tools2008.jar").getFile
 
   private val command: Seq[String] =
-    Seq("java", "-cp", jar, "abscon.instance.tools.SolutionChecker", tmpPath.path)
+    Seq("java", "-cp", jar, "abscon.instance.tools.SolutionChecker", temp.getPath)
 
   def checkSolution(solution: IndexedSeq[Int]): Option[String] = {
     val r = (command ++ solution.map(_.toString)).!!

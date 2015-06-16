@@ -85,7 +85,7 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
   def mac(
     modifiedVariable: Option[Variable], stack: List[Pair],
     currentState: Outcome, stateStack: List[ProblemState]): (SolverResult, List[Pair], List[ProblemState]) = {
-    if (Thread.interrupted()) throw new InterruptedException()
+    //if (Thread.interrupted()) throw new InterruptedException()
 
     val filtering = currentState andThen {
       s =>
@@ -120,7 +120,7 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
             require(problem.variables.forall(v => filteredState.dom(v).size == 1),
               s"Unassigned variables in:\n${problem.variables.map(_.toString(filteredState)).mkString("\n")}")
             for (c <- problem.constraints.find(c => !c.controlAssignment(filteredState))) {
-              throw new IllegalStateException(s"${extractSolution(filteredState)} does not satisfy ${c.toString(filteredState)}")
+              throw new IllegalStateException(s"solution does not satisfy ${c.toString(filteredState)}")
             }
 
             (SAT(extractSolution(filteredState)), stack, filteredState :: stateStack)
@@ -185,7 +185,7 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
   def nextSolution(): SolverResult = try {
     // extends state stack for new constraints
     currentStateStack = currentStateStack.map(s =>
-      s.padConstraints(problem.constraints).toState)
+      s.padConstraints(problem.constraints, problem.maxCId).toState)
 
     if (restart) {
       logger.info("RESTART")

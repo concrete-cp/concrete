@@ -16,7 +16,7 @@ import cspom.variable.CSPOMConstant
 import cspom.variable.IntVariable
 import org.scalatest.TryValues
 
-class SumGeneratorTest extends FlatSpec with Matchers with TryValues {
+class SumGeneratorTest extends FlatSpec with Matchers {
 
   "SumDomains" should "filter" in {
     val cspom = CSPOM { implicit problem =>
@@ -25,7 +25,7 @@ class SumGeneratorTest extends FlatSpec with Matchers with TryValues {
 
     CSPOMCompiler.compile(cspom, Seq(SumDomains))
 
-    var problem = new ProblemGenerator().generate(cspom).success.value._1
+    var problem = new ProblemGenerator().generate(cspom).get._1
 
     problem.variable("test").initDomain.span shouldBe Interval(80, 95)
 
@@ -38,7 +38,7 @@ class SumGeneratorTest extends FlatSpec with Matchers with TryValues {
 
     CSPOMCompiler.compile(cspom, Seq(SumDomains, MergeEq))
 
-    var problem = new ProblemGenerator().generate(cspom).success.value._1
+    var problem = new ProblemGenerator().generate(cspom).get._1
 
     problem.variable("test").initDomain.span shouldBe Interval(-30, -28)
   }

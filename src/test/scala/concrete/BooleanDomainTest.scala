@@ -37,9 +37,8 @@ final class BooleanDomainTest extends FlatSpec with Matchers {
   }
 
   it should "list values" in {
-    domain shouldBe Seq(0, 1)
-    val d2 = domain.remove(1)
-    d2 shouldBe Seq(0)
+    domain should contain theSameElementsAs Seq(0, 1)
+    domain.remove(1) should contain theSameElementsAs Seq(0)
   }
 
   it should "find next value" in {
