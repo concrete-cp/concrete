@@ -20,7 +20,7 @@ final class ReifiedConstraint(
     extends Constraint(controlVariable +: (positiveConstraint.scope ++ negativeConstraint.scope).distinct)
     with Advisable with LazyLogging {
 
-  require(controlVariable.initDomain.isInstanceOf[BooleanDomain])
+  require(controlVariable.initDomain.isInstanceOf[BooleanDomain], s"${controlVariable} init domain ${controlVariable.initDomain} is not boolean")
 
   override def identify(i: Int): Int = {
     negativeConstraint.identify(positiveConstraint.identify(super.identify(i)))

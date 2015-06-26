@@ -16,7 +16,8 @@ final object MinGenerator extends Generator {
       case Var(v) => v
     } ++
       args.collect {
-        case Const(c) => c
+        case Const(c: Int) => c
+        case o @ Const(_)  => throw new IllegalArgumentException(s"$o has not a valid type for min constraint")
       }
       .reduceOption(math.min)
       .map(c => Const(c).asVariable)
@@ -35,7 +36,8 @@ final object MaxGenerator extends Generator {
       case Var(v) => v
     } ++
       args.collect {
-        case Const(c) => c
+        case Const(c: Int) => c
+        case o @ Const(_)  => throw new IllegalArgumentException(s"$o has not a valid type for min constraint")
       }
       .reduceOption(math.max)
       .map(c => Const(c).asVariable)

@@ -21,17 +21,17 @@ final object GtGenerator extends Generator {
       case _   => throw new FailedGenerationException("Unhandled constraint " + constraint);
     }
     (v0, v1) match {
-      case (Const(v0), Const(v1)) =>
+      case (Const(v0: Int), Const(v1: Int)) =>
         require(v0 > v1 || (!strict && v0 >= v1))
         Nil
-      case (Var(v0), Const(v1)) =>
+      case (Var(v0), Const(v1: Int)) =>
         if (strict) {
           require(v0.initDomain.head > v1)
         } else {
           require(v0.initDomain.head >= v1)
         }
         Nil
-      case (Const(v0), Var(v1)) =>
+      case (Const(v0: Int), Var(v1)) =>
         if (strict) {
           require(v0 > v1.initDomain.last)
         } else {
@@ -41,6 +41,7 @@ final object GtGenerator extends Generator {
       case (Var(v0), Var(v1)) =>
         Seq(
           new Gt(v0, v1, strict))
+      case o => throw new IllegalArgumentException(s"$o contains unsupported domain types")
     }
   }
 
@@ -57,15 +58,15 @@ final object GtGenerator extends Generator {
     }
 
     (v0, v1) match {
-      case (Const(v0), Const(v1)) =>
+      case (Const(v0: Int), Const(v1: Int)) =>
         require(result.initDomain == BooleanDomain(v0 > v1 || (!strict && v0 >= v1)), constraint)
         Nil
-      case (Var(v0), Const(v1)) =>
+      case (Var(v0), Const(v1: Int)) =>
         Seq(new ReifiedConstraint(
           result,
           new SumBC(-v1, Array(-1), Array(v0), if (strict) SumMode.SumLT else SumMode.SumLE),
           new SumBC(v1, Array(1), Array(v0), if (strict) SumMode.SumLE else SumMode.SumLT)))
-      case (Const(v0), Var(v1)) =>
+      case (Const(v0: Int), Var(v1)) =>
         Seq(new ReifiedConstraint(
           result,
           new SumBC(v0, Array(1), Array(v1), if (strict) SumMode.SumLT else SumMode.SumLE),
@@ -78,6 +79,7 @@ final object GtGenerator extends Generator {
           result,
           new Gt(v0, v1, strict),
           new Gt(v1, v0, !strict)))
+      case o => throw new IllegalArgumentException(s"$o contains unsupported domain types")
     }
 
   }

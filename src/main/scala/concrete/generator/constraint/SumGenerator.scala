@@ -95,15 +95,16 @@ final object SumGenerator extends Generator with LazyLogging {
     if (solverVariables.size == 2) {
       val Seq(x, y) = solverVariables
       (varParams, mode, constant) match {
-        case (Seq(1, -1), SumLE, k)              => ACBC().withBC(new Gt(y, k, x, false))
-        case (Seq(1, -1), SumLT, k)              => ACBC().withBC(new Gt(y, k, x, true))
-        case (Seq(-1, 1), SumLE, k)              => ACBC().withBC(new Gt(x, k, y, false))
-        case (Seq(-1, 1), SumLT, k)              => ACBC().withBC(new Gt(x, k, y, true))
-        case (Seq(-1, 1) | Seq(1, -1), SumNE, 0) => ACBC().withAC(new Neq(x, y))
-        case (Seq(1, -1), SumEQ, k)              => eq(false, x, -k, y)
-        case (Seq(-1, -1), SumEQ, k)             => eq(true, x, -k, y)
-        case (Seq(-1, 1), SumEQ, k)              => eq(false, x, k, y)
-        case (Seq(1, 1), SumEQ, k)               => eq(true, x, k, y)
+        case (Seq(1, -1), SumLE, k)  => ACBC().withBC(new Gt(y, k, x, false))
+        case (Seq(1, -1), SumLT, k)  => ACBC().withBC(new Gt(y, k, x, true))
+        case (Seq(-1, 1), SumLE, k)  => ACBC().withBC(new Gt(x, k, y, false))
+        case (Seq(-1, 1), SumLT, k)  => ACBC().withBC(new Gt(x, k, y, true))
+        case (Seq(1, -1), SumNE, k)  => ACBC().withAC(new Neq(x, y, k))
+        case (Seq(-1, 1), SumNE, k)  => ACBC().withAC(new Neq(x, y, -k))
+        case (Seq(1, -1), SumEQ, k)  => eq(false, x, -k, y)
+        case (Seq(-1, -1), SumEQ, k) => eq(true, x, -k, y)
+        case (Seq(-1, 1), SumEQ, k)  => eq(false, x, k, y)
+        case (Seq(1, 1), SumEQ, k)   => eq(true, x, k, y)
         case _ =>
           logger.warn(s"${(varParams, mode, constant)} is non-specialized binary linear constraint")
           general(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode.SumMode)
@@ -130,6 +131,7 @@ final object SumGenerator extends Generator with LazyLogging {
 
   override def genFunctional(constraint: CSPOMConstraint[_], result: C2Conc)(implicit variables: VarMap) = {
     val r = result.asVariable
+
     val (solverVariables, varParams, constant, mode) = readCSPOM(constraint)
     val positive = withBinSpec(solverVariables, varParams, constant, mode)
     val (negParams, negConstant, negMode) = reverse(varParams, constant, mode)
@@ -149,7 +151,7 @@ final object SumGenerator extends Generator with LazyLogging {
         })
         .toSeq
 
-    require(reified.nonEmpty)
+    require(reified.nonEmpty, s"$positive resulted in no reified constraints")
     reified
 
   }

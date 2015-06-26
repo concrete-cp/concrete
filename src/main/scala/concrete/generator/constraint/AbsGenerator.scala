@@ -11,20 +11,20 @@ final object AbsGenerator extends Generator with LazyLogging {
 
   override def genFunctional(constraint: CSPOMConstraint[_], result: C2Conc)(implicit variables: VarMap) = {
     val Seq(v0) = constraint.arguments.map(cspom2concrete1D(_))
-    
+
     (result, v0) match {
-      case (Const(r), Const(v)) =>
+      case (Const(r: Int), Const(v: Int)) =>
         require(r == math.abs(v))
         Seq()
-      case (Const(r), Var(v)) =>
+      case (Const(r: Int), Var(v)) =>
         require(v.initDomain.sameElements(Seq(-r, r)))
         Seq()
-      case (Var(r), Const(v)) =>
+      case (Var(r), Const(v: Int)) =>
         require(r.initDomain.sameElements(Seq(math.abs(v))))
         Seq()
       case (Var(r), Var(v)) =>
         Seq(new AbsAC(r, v), new AbsBC(r, v))
-      case _ => throw new IllegalArgumentException("Abs only accept simple expressions")
+      case _ => throw new IllegalArgumentException("Abs only accept simple integer expressions")
     }
 
     //    val (Var(result), Var(v0)) match {

@@ -64,11 +64,11 @@ final object EqGenerator extends Generator with LazyLogging {
       case (Const(a), Const(b)) =>
         require(result.initDomain == BooleanDomain(a == b), s"$funcConstraint is inconsistent")
         Seq()
-      case (Const(a), Var(b)) => Seq(
+      case (Const(a: Int), Var(b)) => Seq(
         new ReifiedConstraint(result,
           new SumBC(a, Array(1), Array(b), SumMode.SumEQ),
           new SumNE(a, Array(1), Array(b))))
-      case (Var(a), Const(b)) => Seq(
+      case (Var(a), Const(b: Int)) => Seq(
         new ReifiedConstraint(result,
           new SumBC(b, Array(1), Array(a), SumMode.SumEQ),
           new SumNE(b, Array(1), Array(a))))
@@ -81,6 +81,7 @@ final object EqGenerator extends Generator with LazyLogging {
           result,
           new EqBC(a, b),
           new Neq(a, b)))
+      case e => throw new IllegalArgumentException(s"$e contain unsupported domain types")
     }
 
   }

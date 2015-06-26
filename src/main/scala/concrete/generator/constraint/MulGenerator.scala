@@ -15,7 +15,7 @@ final object MulGenerator extends Generator {
 
     (result, v0, v1) match {
 
-      case (Const(r), Var(v0), Var(v1)) =>
+      case (Const(r: Int), Var(v0), Var(v1)) =>
         val bc = Seq(new ConstProdBC(v0, v1, r))
         if (v0.initDomain.size + v1.initDomain.size < 1000) {
           new ConstProdAC(v0, v1, r) +: bc
