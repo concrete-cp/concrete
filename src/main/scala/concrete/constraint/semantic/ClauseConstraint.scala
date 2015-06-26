@@ -25,26 +25,25 @@ final class ClauseConstraint(clause: Clause) extends Constraint(clause.vars: _*)
   private var watch2: Int = _
 
   override def init(ps: ProblemState): Outcome = {
-    if (seekEntailment(ps)) {
-      assert {
-        watch1 = seekWatch(ps, -1)
-        watch1 >= 0
+    seekEntailment(ps)
+      .map { i =>
+        assert { watch1 = i; watch1 >= 0 }
+        ps.entail(this)
       }
-      ps.entail(this)
-    } else {
-      watch1 = seekWatch(ps, -1)
+      .getOrElse {
+        watch1 = seekWatch(ps, -1)
 
-      if (watch1 < 0) {
-        Contradiction
-      } else {
-        watch2 = seekWatch(ps, watch1)
-        if (watch2 < 0) {
-          enforce(ps, watch1).entail(this)
+        if (watch1 < 0) {
+          Contradiction
         } else {
-          ps
+          watch2 = seekWatch(ps, watch1)
+          if (watch2 < 0) {
+            enforce(ps, watch1).entail(this)
+          } else {
+            ps
+          }
         }
       }
-    }
   }
 
   private val ids = scope.map(_.id)
@@ -205,21 +204,27 @@ final class ClauseConstraint(clause: Clause) extends Constraint(clause.vars: _*)
     -1
   }
 
-  private def seekEntailment(ps: ProblemState): Boolean = {
-    var i = 0
-    while (i < posLength) {
-      if (ps.dom(ids(i)) == TRUE) {
-        return true
+  private def seekEntailment(ps: ProblemState): Option[Int] = {
+    (0 until posLength)
+      .find(i => ps.dom(ids(i)) == TRUE)
+      .orElse {
+        (posLength until arity)
+          .find(i => ps.dom(ids(i)) == FALSE)
       }
-      i += 1
-    }
-    while (i < arity) {
-      if (ps.dom(ids(i)) == FALSE) {
-        return true
-      }
-      i += 1
-    }
-    false
+    //    var i = 0
+    //    while (i < posLength) {
+    //      if (ps.dom(ids(i)) == TRUE) {
+    //        return Some(i)
+    //      }
+    //      i += 1
+    //    }
+    //    while (i < arity) {
+    //      if (ps.dom(ids(i)) == FALSE) {
+    //        return Some(i)
+    //      }
+    //      i += 1
+    //    }
+    //    None
   }
 
   val simpleEvaluation = 1
