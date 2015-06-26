@@ -175,7 +175,7 @@ final case class ProblemState(
         case Contradiction => return Contradiction
         case newState: ProblemState =>
           if (ps ne newState) {
-            logger.debug(s"Initializing ${c.toString(ps)} -> ${c.toString(newState)}")
+            logger.debug(s"Initializing ${c.toString(ps)} -> ${c.toString(newState)}, entailed = ${newState.isEntailed(c)}")
           }
 
           ps = newState
