@@ -10,12 +10,12 @@ object Interval {
   }
 }
 
-final case class Interval(val lb: Int, val ub: Int) {
+case class Interval(val lb: Int, val ub: Int) {
   //assume(ub >= lb)
-  val size = math.max(0, ub - lb + 1)
-  def contains(v: Int) = lb <= v && v <= ub
+  val size: Int = math.max(0, ub - lb + 1)
+  def contains(v: Int): Boolean = lb <= v && v <= ub
 
-  def allValues = lb to ub
+  def allValues: Range = lb to ub
 
   /**
    * [a, b] + [c, d] = [a + c, b + d]
@@ -24,15 +24,15 @@ final case class Interval(val lb: Int, val ub: Int) {
    * [a, b] ÷ [c, d] = [min (a ÷ c, a ÷ d, b ÷ c, b ÷ d), max (a ÷ c, a ÷ d, b ÷ c, b ÷ d)] when 0 is not in [c, d].
    */
 
-  def +(i: Interval) = Interval(lb + i.lb, ub + i.ub)
+  def +(i: Interval): Interval = Interval(lb + i.lb, ub + i.ub)
 
-  def +(v: Int) = Interval(lb + v, ub + v)
+  def +(v: Int): Interval = Interval(lb + v, ub + v)
 
-  def -(i: Interval) = Interval(lb - i.ub, ub - i.lb)
+  def -(i: Interval): Interval = Interval(lb - i.ub, ub - i.lb)
 
-  def -(v: Int) = this + -v
+  def -(v: Int): Interval = this + -v
 
-  def *(i: Interval) = {
+  def *(i: Interval): Interval = {
     val Interval(c, d) = i
 
     val p1 = lb * c
@@ -46,7 +46,7 @@ final case class Interval(val lb: Int, val ub: Int) {
     Interval(l, u)
   }
 
-  def *(v: Int) = {
+  def *(v: Int): Interval = {
     val lbv = lb * v
     val ubv = ub * v
     if (lbv < ubv) {
@@ -56,7 +56,7 @@ final case class Interval(val lb: Int, val ub: Int) {
     }
   }
 
-  def sq() = {
+  def sq(): Interval = {
     val lb2 = lb * lb
     val ub2 = ub * ub
     if (contains(0)) {
@@ -70,13 +70,13 @@ final case class Interval(val lb: Int, val ub: Int) {
     }
   }
 
-  def sqrt() = {
+  def sqrt(): Interval = {
     require(lb >= 0)
     val root = math.sqrt(ub).toInt
     Interval(-root, root)
   }
 
-  def /(i: Interval) = {
+  def /(i: Interval): Interval = {
     if (i.contains(0)) throw new ArithmeticException
     val Interval(c, d) = i
 
@@ -89,7 +89,7 @@ final case class Interval(val lb: Int, val ub: Int) {
     Interval(l, u)
   }
 
-  def /(v: Int) = {
+  def /(v: Int): Interval = {
     if (v >= 0) {
       Interval(ceilDiv(lb, v), floorDiv(ub, v))
     } else {
@@ -99,7 +99,7 @@ final case class Interval(val lb: Int, val ub: Int) {
     //    if (l < u) Interval(l, u) else Interval(u, l)
   }
 
-  def /:(v: Int) = {
+  def /:(v: Int): Interval = {
     /** v / this **/
     if (this.contains(0)) throw new ArithmeticException
     Interval(
@@ -107,7 +107,7 @@ final case class Interval(val lb: Int, val ub: Int) {
       math.max(floorDiv(v, lb), floorDiv(v, ub)))
   }
 
-  def floorDiv(dividend: Int, divisor: Int) = {
+  private def floorDiv(dividend: Int, divisor: Int): Int = {
     val roundedTowardsZeroQuotient = dividend / divisor;
     val dividedEvenly = (dividend % divisor) == 0;
     if (dividedEvenly) {
@@ -125,7 +125,7 @@ final case class Interval(val lb: Int, val ub: Int) {
     }
   }
 
-  def ceilDiv(dividend: Int, divisor: Int) = {
+  private def ceilDiv(dividend: Int, divisor: Int): Int = {
 
     val roundedTowardsZeroQuotient = dividend / divisor;
     val dividedEvenly = (dividend % divisor) == 0;
@@ -144,7 +144,7 @@ final case class Interval(val lb: Int, val ub: Int) {
     }
   }
 
-  def intersect(i: Interval) = {
+  def intersect(i: Interval): Option[Interval] = {
     if (i.lb <= lb) {
       if (i.ub < lb) {
         None
@@ -195,15 +195,15 @@ final case class Interval(val lb: Int, val ub: Int) {
     }
   }
 
-  def intersects(i: Interval) = {
+  def intersects(i: Interval): Boolean = {
     math.max(lb, i.lb) <= math.min(ub, i.ub)
   }
 
-  def span(i: Interval) = Interval(math.min(lb, i.lb), math.max(ub, i.ub))
+  def span(i: Interval): Interval = Interval(math.min(lb, i.lb), math.max(ub, i.ub))
 
-  def unary_- = Interval(-ub, -lb)
+  def unary_- : Interval = Interval(-ub, -lb)
 
-  def abs =
+  def abs: Interval =
     if (ub < 0) { -this }
     else if (lb > 0) { this }
     else { Interval(0, math.max(-lb, ub)) }
