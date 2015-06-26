@@ -22,8 +22,9 @@ class AbsDiffCompilerTest extends FlatSpec with Matchers {
 
       assert(problem.namesOf(r).isEmpty)
 
-      val r2 = abs(r)
+      val r2 = abs(r) as "r2"
 
+      
     }
 
     CSPOMCompiler.compile(cspom, Seq(AbsDiff))
