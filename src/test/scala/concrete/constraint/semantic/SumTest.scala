@@ -16,7 +16,9 @@ final class SumTest extends FlatSpec with Matchers {
     val x = new Variable("x", IntDomain.ofSeq(0, 1))
     val y = new Variable("y", IntDomain.ofSeq(0, 1))
     val c = new SumBC(-19, Array(-20, -18), Array(x, y), SumLE)
-    val ps = Problem(x, y).initState.toState
+    val pb = Problem(x, y)
+    pb.addConstraint(c)
+    val ps = pb.initState.toState
     c.adviseAll(ps)
     val mod = c.consistentRevise(ps)
     mod.dom(x) should contain theSameElementsAs Seq(1)
@@ -64,7 +66,9 @@ final class SumTest extends FlatSpec with Matchers {
       new Variable("v1", IntDomain(1 to 5)),
       v2), SumLE)
 
-    val ps = Problem(c.scope: _*).initState.toState
+    val pb = Problem(c.scope: _*)
+    pb.addConstraint(c)
+    val ps = pb.initState.toState
 
     c.adviseAll(ps)
     val mod = c.consistentRevise(ps)
@@ -81,7 +85,9 @@ final class SumTest extends FlatSpec with Matchers {
     val q48 = new Variable("q48", IntDomain(0 to 0))
 
     val c = new SumBC(-6, Array(-1, -2, -3, -4, -5, -6), Array(q43, q44, q45, q46, q47, q48), SumEQ)
-    val ps = Problem(c.scope: _*).initState.toState
+    val pb = Problem(c.scope: _*)
+    pb.addConstraint(c)
+    val ps = pb.initState.toState
     c.adviseAll(ps)
     val mod = c.consistentRevise(ps)
     mod.dom(q43) should contain theSameElementsAs Seq(1)
@@ -95,7 +101,9 @@ final class SumTest extends FlatSpec with Matchers {
     val x985 = new Variable("x985", IntDomain(-1 to 1))
 
     val c = new SumBC(0, Array(1, -1, -1), Array(x98, x1605, x985), SumEQ)
-    val ps = Problem(c.scope: _*).initState.toState
+    val pb = Problem(c.scope: _*)
+    pb.addConstraint(c)
+    val ps = pb.initState.toState
     c.adviseAll(ps)
     val mod = c.consistentRevise(ps)
     mod.dom(x985) should contain theSameElementsAs Seq(0)
