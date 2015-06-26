@@ -4,7 +4,7 @@ organization := "fr.univ-valenciennes.concrete"
 
 version := "2.0-B1-SNAPSHOT"
 
-scalaVersion := "2.11.6"
+scalaVersion := "2.11.7"
 
 
 // For JSR331, CSPOM and its dependencies
@@ -64,7 +64,3 @@ sourceGenerators in Compile <+= (sourceManaged in Compile, version, name) map { 
 }
 
 excludeFilter in packageBin in unmanagedResources := "logback.xml"
-
-
-EclipseKeys.eclipseOutput in Compile := Some("target/scala-2.11/classes")
-EclipseKeys.eclipseOutput in Test := Some("target/scala-2.11/test-classes")
