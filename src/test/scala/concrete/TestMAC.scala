@@ -53,10 +53,10 @@ class TestMAC extends FlatSpec with Matchers {
   def view(queens: Seq[Variable], solution: Map[String, Int]) =
     queens.map(q => q.name + " = " + solution.get(q.name)).mkString(", ")
 
-  val sols = Map(
+  val sols = List(
     4 -> 2,
     8 -> 92,
-    12 -> 14200);
+    12 -> 14200)
 
   val pm = new ParameterManager
   pm("heuristic.value") = classOf[MedValue]

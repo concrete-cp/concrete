@@ -47,10 +47,10 @@ final object EqGenerator extends Generator with LazyLogging {
     params(constraint)
 
     (a, b) match {
-      case (Const(a), Const(b)) if (a != b) => Seq()
-      case (Var(a), Var(b))                 => Seq(new Neq(a, b))
+      case (Const(a: Int), Const(b: Int)) if (a != b) => Seq()
+      case (Var(a), Var(b)) => Seq(new Neq(a, b))
 
-      case _                                => throw new UnsupportedOperationException(s"$constraint is not supported")
+      case _ => throw new UnsupportedOperationException(s"$constraint is not supported")
     }
 
   }
@@ -61,7 +61,7 @@ final object EqGenerator extends Generator with LazyLogging {
     params(funcConstraint)
 
     (a, b) match {
-      case (Const(a), Const(b)) =>
+      case (Const(a: Int), Const(b: Int)) =>
         require(result.initDomain == BooleanDomain(a == b), s"$funcConstraint is inconsistent")
         Seq()
       case (Const(a: Int), Var(b)) => Seq(
