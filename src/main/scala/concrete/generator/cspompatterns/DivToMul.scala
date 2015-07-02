@@ -14,6 +14,8 @@ import cspom.variable.IntVariable
 import cspom.util.Interval
 import cspom.util.IntInterval
 import cspom.variable.CSPOMSeq
+import concrete.CSPOMDriver
+import cspom.variable.IntExpression
 
 /**
  * Integer division is converted to multiplication :
@@ -34,7 +36,7 @@ object DivToMul extends ConstraintCompiler {
 
   def compile(fc: CSPOMConstraint[_], problem: CSPOM, a: CSPOMExpression[_]) = {
 
-    val Seq(b, c) = fc.arguments
+    val Seq(IntExpression(b), c) = fc.arguments
 
     val mul = IntVariable.free()
 
@@ -46,7 +48,7 @@ object DivToMul extends ConstraintCompiler {
      * remainder = b % c
      */
     val c1 = CSPOMConstraint(mul, 'mul, Seq(a, c))
-    val c2 = CSPOMConstraint('sum, Seq(CSPOMSeq(mul, remainder, b), CSPOMConstant(0)), Map("coefficients" -> Seq(1, 1, -1), "mode" -> "eq"))
+    val c2 = CSPOMDriver.linear(Seq((1, mul), (1, remainder), (-1, b)), "eq", 0)
     val c3 = CSPOMConstraint(remainder, 'mod, Seq(b, c))
 
     replaceCtr(fc, Seq(c1, c2, c3), problem)

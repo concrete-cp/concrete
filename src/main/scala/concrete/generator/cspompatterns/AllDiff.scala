@@ -20,6 +20,8 @@ import cspom.util.Interval
 import cspom.util.IntInterval
 import cspom.variable.IntExpression
 import cspom.compiler.ConstraintCompilerNoData
+import concrete.CSPOMDriver
+import cspom.variable.SimpleExpression
 
 /**
  *  XCSP 2.0 uses a different case for alldifferent…
@@ -27,7 +29,8 @@ import cspom.compiler.ConstraintCompilerNoData
 object AllDifferent extends ConstraintCompilerNoData {
   def matchBool(c: CSPOMConstraint[_], p: CSPOM) = c.function == 'allDifferent
   def compile(c: CSPOMConstraint[_], p: CSPOM) = {
-    replaceCtr(c, CSPOMConstraint('alldifferent, c.arguments, c.params), p)
+    val IntExpression.simpleSeq(args) = c.arguments
+    replaceCtr(c, CSPOMDriver.allDifferent(args: _*) withParams c.params, p)
   }
   def selfPropagation = false
 }
@@ -72,7 +75,7 @@ object AllDiffConstant extends ConstraintCompiler {
     var delta = removeCtr(constraint, problem)
 
     if (filt.length > 1) {
-      delta ++= addCtr(CSPOMConstraint('alldifferent, filt), problem)
+      delta ++= addCtr(CSPOMDriver.allDifferent(filt: _*), problem)
     }
 
     for ((v, f) <- (variables, filt).zipped) {
@@ -88,7 +91,7 @@ object AllDiffConstant extends ConstraintCompiler {
  * to detect max-cliques.
  */
 object AllDiff extends ConstraintCompiler with LazyLogging {
-  type A = Set[CSPOMVariable[_]]
+  type A = Set[CSPOMVariable[Int]]
 
   def DIFF_CONSTRAINT(constraint: CSPOMConstraint[_]) =
     (constraint.result.isTrue &&
@@ -107,7 +110,7 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
 
     constraint match {
       case c @ CSPOMConstraint(_, func, args: Seq[_], _) if DIFF_CONSTRAINT(c) =>
-        val clique = expand(args.collect { case v: CSPOMVariable[_] => v }.toSet, problem)
+        val clique = expand(args.collect { case v: IntVariable => v }.toSet, problem)
         if (clique.size > constraint.arguments.size) {
           Some(clique)
         } else {
@@ -124,7 +127,7 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
    *
    * @param constraint
    */
-  def compile(constraint: CSPOMConstraint[_], problem: CSPOM, clique: Set[CSPOMVariable[_]]) = {
+  def compile(constraint: CSPOMConstraint[_], problem: CSPOM, clique: Set[CSPOMVariable[Int]]) = {
 
     val delta =
       if (ALLDIFF_CONSTRAINT(constraint)) {
@@ -140,12 +143,12 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
 
   //private val neighborsCache = new WeakHashMap[CSPOMVariable[_], Set[CSPOMVariable[_]]]
 
-  def neighbors(v: CSPOMVariable[_], problem: CSPOM,
-                cache: WeakHashMap[CSPOMVariable[_], Set[CSPOMVariable[_]]]): Set[CSPOMVariable[_]] = {
+  def neighbors(v: CSPOMVariable[Int], problem: CSPOM,
+                cache: WeakHashMap[CSPOMVariable[Int], Set[CSPOMVariable[Int]]]): Set[CSPOMVariable[Int]] = {
 
     cache.getOrElseUpdate(v,
       problem.constraints(v).filter(DIFF_CONSTRAINT).flatMap(_.arguments).collect {
-        case v: CSPOMVariable[_] => v
+        case v: IntVariable => v
       }.toSet - v)
 
   }
@@ -153,8 +156,8 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
   /**
    * The pool contains all variables that can expand the base clique
    */
-  private def populate(base: Set[CSPOMVariable[_]], problem: CSPOM,
-                       cache: WeakHashMap[CSPOMVariable[_], Set[CSPOMVariable[_]]]): Set[CSPOMVariable[_]] = {
+  private def populate(base: Set[CSPOMVariable[Int]], problem: CSPOM,
+                       cache: WeakHashMap[CSPOMVariable[Int], Set[CSPOMVariable[Int]]]): Set[CSPOMVariable[Int]] = {
     val nb = base.iterator.map(neighbors(_, problem, cache))
 
     if (nb.isEmpty) {
@@ -164,9 +167,9 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
     }
   }
 
-  private def expand(base: Set[CSPOMVariable[_]], problem: CSPOM) = {
+  private def expand(base: Set[CSPOMVariable[Int]], problem: CSPOM) = {
 
-    val cache = new WeakHashMap[CSPOMVariable[_], Set[CSPOMVariable[_]]]
+    val cache = new WeakHashMap[CSPOMVariable[Int], Set[CSPOMVariable[Int]]]
 
     var largest = base
     var clique = base
@@ -175,7 +178,7 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
 
     //final Set<CSPOMVariable[_]> base = new HashSet<CSPOMVariable[_]>(clique);
 
-    var tabu: Map[CSPOMVariable[_], Int] = Map.empty
+    var tabu: Map[CSPOMVariable[Int], Int] = Map.empty
 
     breakable {
       for (i <- 1 to ITER) {
@@ -211,9 +214,9 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
    *
    * @param scope
    */
-  private def newAllDiff(scope: Seq[CSPOMExpression[_]], problem: CSPOM): Delta = {
+  private def newAllDiff(scope: Seq[SimpleExpression[Int]], problem: CSPOM): Delta = {
 
-    val allDiff = CSPOMConstraint('alldifferent, scope);
+    val allDiff = CSPOMDriver.allDifferent(scope: _*)
 
     val scopeSet = scope.toSet
 

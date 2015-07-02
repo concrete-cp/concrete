@@ -12,6 +12,9 @@ import cspom.variable.CSPOMConstant
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
+import concrete.CSPOMDriver
+import cspom.variable.BoolExpression
+import cspom.variable.SimpleExpression
 
 /**
  * Negation is converted to CNF :
@@ -26,10 +29,10 @@ import cspom.variable.CSPOMSeq
 //  }
 object NegToCNF extends ConstraintCompiler {
 
-  type A = (CSPOMExpression[_], CSPOMExpression[_])
+  type A = (SimpleExpression[Boolean], SimpleExpression[Boolean])
 
   override def constraintMatcher = {
-    case CSPOMConstraint(res: CSPOMExpression[_], 'not, Seq(arg: CSPOMExpression[_]), params) =>
+    case CSPOMConstraint(BoolExpression(res), 'not, Seq(BoolExpression(arg)), params) =>
       (res, arg)
 
   }
@@ -39,8 +42,8 @@ object NegToCNF extends ConstraintCompiler {
     val (res, arg) = data
 
     val newConstraints = Seq(
-      CSPOMConstraint('clause, Seq(CSPOMSeq(res, arg), CSPOMSeq())),
-      CSPOMConstraint('clause, Seq(CSPOMSeq(), CSPOMSeq(res, arg))))
+      CSPOMDriver.clause(res, arg)(),
+      CSPOMDriver.clause()(res, arg))
 
     replaceCtr(fc, newConstraints, problem)
 

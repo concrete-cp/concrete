@@ -11,6 +11,8 @@ import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
 import SumMode._
 import cspom.variable.CSPOMExpression
+import concrete.CSPOMDriver
+import cspom.variable.IntExpression
 
 /**
  *  Merge duplicates in linear constraints (x + x = 0 -> 2.x = 0). Also remove variables with factor = 0.
@@ -50,12 +52,15 @@ object SumDuplicates extends ConstraintCompiler {
 
   def compile(constraint: CSPOMConstraint[_], p: CSPOM, data: A) = {
     val (args, const) = data
-    val (variables, factors) = args.filter(_._2 != 0).unzip
+    val (IntExpression.seq(variables), factors) = args.filter(_._2 != 0).unzip
 
-    val newConstraint = CSPOMConstraint(
-      'sum,
-      Seq(CSPOMSeq(variables.toSeq: _*), CSPOMConstant(const)),
-      constraint.params + ("coefficients" -> factors.toSeq))
+    val newConstraint =
+      CSPOMDriver.linear(variables, factors.toSeq, constraint.getParam[String]("mode").get, const)
+
+    //      CSPOMConstraint(
+    //      'sum,
+    //      Seq(CSPOMSeq(variables.toSeq: _*), CSPOMConstant(const)),
+    //      constraint.params + ("coefficients" -> factors.toSeq))
 
     //println(s"replacing $constraint with $newConstraint")
     replaceCtr(constraint, newConstraint, p)

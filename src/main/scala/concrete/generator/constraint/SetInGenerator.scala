@@ -6,6 +6,7 @@ import concrete.constraint.semantic.SetIn
 import cspom.CSPOMConstraint
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
+import cspom.variable.IntExpression
 
 final object SetInGenerator extends Generator {
 
@@ -42,15 +43,11 @@ final object SetInGenerator extends Generator {
 
   override def genFunctional(funcConstraint: CSPOMConstraint[_], r: C2Conc)(implicit variables: VarMap): Seq[Constraint] = {
     val Var(result) = r
-    val Seq(a, CSPOMSeq(b)) = funcConstraint.arguments
+    val Seq(a, IntExpression.constSeq(constants)) = funcConstraint.arguments
 
     val variable = cspom2concreteVar(a)
-    val constants = b.map {
-      case CSPOMConstant(c: Int) => c
-    }
-      .toSet
 
-    Seq(new SetIn(result, variable, constants))
+    Seq(new concrete.constraint.semantic.SetIn(result, variable, constants.toSet))
     //
     //    (a, b) match {
     //      case (Const(a), Const(b)) =>

@@ -24,15 +24,15 @@ final object SlidingSum extends ConstraintCompilerNoData {
 
     val vars = args.map(_.asInstanceOf[CSPOMVariable[Int]])
 
-    val b = mdd(low, up, seq, vars.map(iterable).toIndexedSeq)
     //println(s"sizeR ${b.apply.lambda} ${b.apply.edges}")
+
     replaceCtr(constraint,
-      CSPOMConstraint('extension, vars, constraint.params ++ Map("init" -> false, "relation" -> b)),
+      CSPOM.SeqOperations(vars) in mdd(low, up, seq, vars.map(iterable).toIndexedSeq),
       problem)
   }
 
   def mdd(low: Int, up: Int, seq: Int, domains: IndexedSeq[Iterable[Int]], k: Int = 0, queue: Queue[Int] = Queue.empty,
-    nodes: HashMap[(Int, Queue[Int]), MDD[Int]] = new HashMap()): MDD[Int] = {
+          nodes: HashMap[(Int, Queue[Int]), MDD[Int]] = new HashMap()): MDD[Int] = {
     val current = queue.sum
     val nextDomains = domains.view.slice(k, k + seq - queue.size)
     if (current + nextDomains.map(_.min).sum > up) {

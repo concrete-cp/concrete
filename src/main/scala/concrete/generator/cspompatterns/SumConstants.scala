@@ -10,6 +10,8 @@ import concrete.constraint.semantic.SumNE
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
 import SumMode._
+import cspom.variable.IntExpression
+import concrete.CSPOMDriver
 
 /**
  *  Remove constants from linear constraints
@@ -59,14 +61,15 @@ object SumConstants extends ConstraintCompilerNoData {
           case SumNE => require(constant != 0)
         }
         removeCtr(constraint, p)
-        
-        
 
-      case solverVariables =>
-        val newConstraint = CSPOMConstraint(
-          'sum,
-          Seq(CSPOMSeq(solverVariables: _*), CSPOMConstant(constant)),
-          constraint.params + ("coefficients" -> varParams))
+      case IntExpression.seq(solverVariables) =>
+        val newConstraint = CSPOMDriver.linear(solverVariables, varParams, mode.toString(), constant) withParams
+          (constraint.params - "coefficients" - "mode")
+
+        //        CSPOMConstraint(
+        //          'sum,
+        //          Seq(CSPOMSeq(solverVariables: _*), CSPOMConstant(constant)),
+        //          constraint.params + ("coefficients" -> varParams))
 
         //println(s"replacing $constraint with $newConstraint")
         replaceCtr(constraint, newConstraint, p)

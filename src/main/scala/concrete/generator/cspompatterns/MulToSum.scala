@@ -6,6 +6,8 @@ import cspom.compiler.ConstraintCompilerNoData
 import cspom.compiler.Delta
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
+import concrete.CSPOMDriver
+import cspom.variable.IntExpression
 
 object MulToSum extends ConstraintCompilerNoData {
 
@@ -17,12 +19,12 @@ object MulToSum extends ConstraintCompilerNoData {
     val Seq(v0, v1) = c.arguments
 
     (c.result, v0, v1) match {
-      case (r, CSPOMConstant(v0), v1) =>
-        replaceCtr(c, CSPOMConstraint('sum, Seq(CSPOMSeq(r, v1), CSPOMConstant(0)),
-          c.params ++ Map("coefficients" -> Seq(-1, v0), "mode" -> "eq")), in)
-      case (r, v0, CSPOMConstant(v1)) =>
-        replaceCtr(c, CSPOMConstraint('sum, Seq(CSPOMSeq(r, v0), CSPOMConstant(0)),
-          c.params ++ Map("coefficients" -> Seq(-1, v1), "mode" -> "eq")), in)
+      case (IntExpression(r), CSPOMConstant(v0: Int), IntExpression(v1)) =>
+        replaceCtr(c, CSPOMDriver.linear(Seq((-1, r), (v0, v1)), "eq", 0), in)
+        
+      case (IntExpression(r), IntExpression(v0), CSPOMConstant(v1: Int)) =>
+        replaceCtr(c, CSPOMDriver.linear(Seq((-1, r), (v1, v0)), "eq", 0), in)
+        
       case _ => Delta()
     }
   }

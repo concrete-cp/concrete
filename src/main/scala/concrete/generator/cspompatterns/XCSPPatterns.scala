@@ -10,6 +10,8 @@ import cspom.compiler.ConstraintCompilerNoData
 import cspom.CSPOM
 import cspom.variable.BoolExpression
 import cspom.variable.BoolVariable
+import concrete.CSPOMDriver._
+import cspom.variable.IntExpression
 
 object XCSPPatterns {
   def apply() = Seq(
@@ -31,33 +33,23 @@ object XCSPPatterns {
     })
 
   val mtch: PartialFunction[CSPOMConstraint[_], CSPOMConstraint[_]] = {
-    case CSPOMConstraint(a, 'sub, Seq(b, c), p) =>
-      CSPOMConstraint(
-        'sum,
-        Seq(CSPOMSeq(a, b, c), CSPOMConstant(0)),
-        p + ("coefficients" -> Seq(-1, 1, -1)) + ("mode" -> "eq"))
+    case CSPOMConstraint(IntExpression(a), 'sub, Seq(IntExpression(b), IntExpression(c)), p) =>
+      linear(Seq((-1, a), (1, b), (-1, c)), "eq", 0) withParams p
 
-    case CSPOMConstraint(a, 'add, Seq(b, c), p) =>
-      CSPOMConstraint(
-        'sum,
-        Seq(CSPOMSeq(a, b, c), CSPOMConstant(0)),
-        p + ("coefficients" -> Seq(-1, 1, 1)) + ("mode" -> "eq"))
+    case CSPOMConstraint(IntExpression(a), 'add, Seq(IntExpression(b), IntExpression(c)), p) =>
+      linear(Seq((-1, a), (1, b), (1, c)), "eq", 0) withParams p
 
-    case CSPOMConstraint(r, 'lt, Seq(a, b), p) =>
-      CSPOMConstraint(r, 'sum, Seq(CSPOMSeq(a, b), CSPOMConstant(0)),
-        p + ("coefficients" -> Seq(1, -1)) + ("mode" -> "lt"))
+    case CSPOMConstraint(r, 'lt, Seq(IntExpression(a), IntExpression(b)), p) =>
+      linear(Seq((1, a), (-1, b)), "lt", 0) withParams p
 
-    case CSPOMConstraint(r, 'le, Seq(a, b), p) =>
-      CSPOMConstraint(r, 'sum, Seq(CSPOMSeq(a, b), CSPOMConstant(0)),
-        p + ("coefficients" -> Seq(1, -1)) + ("mode" -> "le"))
-
-    case CSPOMConstraint(r, 'gt, Seq(a, b), p) =>
-      CSPOMConstraint(r, 'sum, Seq(CSPOMSeq(a, b), CSPOMConstant(0)),
-        p + ("coefficients" -> Seq(-1, 1)) + ("mode" -> "lt"))
-
-    case CSPOMConstraint(r, 'ge, Seq(a, b), p) =>
-      CSPOMConstraint(r, 'sum, Seq(CSPOMSeq(a, b), CSPOMConstant(0)),
-        p + ("coefficients" -> Seq(-1, 1)) + ("mode" -> "le"))
+    case CSPOMConstraint(r, 'le, Seq(IntExpression(a), IntExpression(b)), p) =>
+      linear(Seq((1, a), (-1, b)), "le", 0) withParams p
+      
+    case CSPOMConstraint(r, 'gt, Seq(IntExpression(a), IntExpression(b)), p) =>
+      linear(Seq((-1, a), (1, b)), "lt", 0) withParams p
+      
+    case CSPOMConstraint(r, 'ge, Seq(IntExpression(a), IntExpression(b)), p) =>
+      linear(Seq((-1, a), (1, b)), "le", 0) withParams p
 
     case CSPOMConstraint(r, 'or, a, p) =>
       CSPOMConstraint(r, 'clause, Seq(CSPOMSeq(a: _*), CSPOMSeq()), p)

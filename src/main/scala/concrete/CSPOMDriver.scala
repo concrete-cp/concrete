@@ -30,17 +30,20 @@ object CSPOMDriver {
     linear(vars, coefs, mode, constant)
   }
 
-  def linear(vars: Seq[SimpleExpression[Int]], coefs: Seq[Int], mode: String, constant: Int): CSPOMConstraint[Boolean] = {
-    CSPOMConstraint('sum)(CSPOMSeq(vars: _*), CSPOMConstant(constant)) withParam
-      ("mode" -> "eq", "coefficients" -> coefs)
-  }
+  def linear(vars: CSPOMSeq[Int], coefs: Seq[Int], mode: String, constant: Int): CSPOMConstraint[Boolean] =
+    CSPOMConstraint('sum)(vars, CSPOMConstant(constant)) withParam
+      ("mode" -> mode, "coefficients" -> coefs)
+
+  def pseudoBoolean(vars: CSPOMSeq[Boolean], coefs: Seq[Int], mode: String, constant: Int): CSPOMConstraint[Boolean] =
+    CSPOMConstraint('pseudoboolean)(vars, CSPOMConstant(constant)) withParam
+      ("mode" -> mode, "coefficients" -> coefs)
 
   def abs(variable: SimpleExpression[Int])(implicit problem: CSPOM): SimpleExpression[Int] = {
-    problem.isInt('abs, Seq(variable))
+    problem.defineInt(r => CSPOMConstraint(r)('abs)(variable))
   }
 
   def sq(v: SimpleExpression[Int])(implicit problem: CSPOM): SimpleExpression[Int] = {
-    problem.isInt('sq, Seq(v))
+    problem.defineInt(r => CSPOMConstraint(r)('sq)(v))
   }
 
   def allDifferent(v: SimpleExpression[Int]*): CSPOMConstraint[Boolean] = {
@@ -52,34 +55,42 @@ object CSPOMDriver {
   }
 
   def occurrence[A: TypeTag](value: SimpleExpression[A])(variables: SimpleExpression[A]*)(implicit problem: CSPOM): SimpleExpression[Int] = {
-    problem.isInt('occurrence, Seq(value, seq2CSPOMSeq(variables)))
+    problem.defineInt(r => CSPOMConstraint(r)('occurrence)(value, seq2CSPOMSeq(variables)))
   }
 
   def clause(positive: SimpleExpression[Boolean]*)(negative: SimpleExpression[Boolean]*): CSPOMConstraint[Boolean] = {
+    clause(positive, negative)
+  }
+
+  def clause(positive: CSPOMSeq[Boolean], negative: CSPOMSeq[Boolean]): CSPOMConstraint[Boolean] = {
     CSPOMConstraint('clause)(positive, negative)
   }
 
   def and(vars: SimpleExpression[Boolean]*)(implicit problem: CSPOM): SimpleExpression[Boolean] = {
-    problem.isBool('and, vars)
+    problem.defineBool(r => CSPOMConstraint(r)('and)(vars: _*))
   }
 
   def or(vars: SimpleExpression[Boolean]*)(implicit problem: CSPOM): SimpleExpression[Boolean] = {
-    problem.isBool('clause, Seq(vars, CSPOMSeq()))
+    problem.defineBool(r => CSPOMConstraint(r)('clause)(vars, CSPOMSeq()))
   }
 
   implicit class CSPOMSeqOperations[+A](e: CSPOMSeq[A]) {
-    def apply(idx: CSPOMVariable[Int])(implicit problem: CSPOM) = problem.is('element, Seq(e, idx))
+    def apply(idx: CSPOMVariable[Int])(implicit problem: CSPOM) =
+      problem.defineFree(r => CSPOMConstraint(r)('element)(e, idx))
 
-    def min(implicit problem: CSPOM) = problem.is('min, Seq(e))
+    def min(implicit problem: CSPOM) =
+      problem.defineFree(r => CSPOMConstraint(r)('min)(e: _*))
 
-    def max(implicit problem: CSPOM) = problem.is('max, Seq(e))
+    def max(implicit problem: CSPOM) =
+      problem.defineFree(r => CSPOMConstraint(r)('max)(e: _*))
 
     def <=[B >: A](that: CSPOMSeq[B])(implicit problem: CSPOM) = {
       require(e.size == that.size)
-      problem.isBool('lexleq, Seq(e, that))
+      problem.defineBool(r => CSPOMConstraint(r)('lexleq)(e, that))
     }
 
-    def contains[B >: A](v: SimpleExpression[B])(implicit problem: CSPOM) = problem.isBool('in, Seq(v, e))
+    def contains[B >: A](v: SimpleExpression[B])(implicit problem: CSPOM) =
+      problem.defineBool(r => CSPOMConstraint(r)('in)(v, e))
   }
 
   implicit class CSPOMIntExpressionOperations(e: SimpleExpression[Int]) {
@@ -118,17 +129,17 @@ object CSPOMDriver {
 
   implicit class CSPOMBoolExpressionOperations(e: SimpleExpression[Boolean]) {
     def |(other: SimpleExpression[Boolean])(implicit problem: CSPOM): SimpleExpression[Boolean] =
-      problem.isBool('clause, Seq(Seq(e, other), CSPOMSeq.empty))
+      problem.defineBool(r => CSPOMConstraint(r)('clause)(Seq(e, other), CSPOMSeq.empty))
 
     def &(other: SimpleExpression[Boolean])(implicit problem: CSPOM): SimpleExpression[Boolean] =
-      problem.isBool('and, Seq(e, other))
+      problem.defineBool(r => CSPOMConstraint(r)('and)(e, other))
 
     def unary_!(implicit problem: CSPOM): SimpleExpression[Boolean] = {
-      problem.isBool('not, Seq(e))
+      problem.defineBool(r => CSPOMConstraint(r)('not)(e))
     }
 
     def ==>(other: SimpleExpression[Boolean])(implicit problem: CSPOM): SimpleExpression[Boolean] =
-      problem.isBool('clause, Seq(Seq(other), Seq(e)))
+      problem.defineBool(r => CSPOMConstraint('clause)(Seq(other), Seq(e)))
   }
 }
 

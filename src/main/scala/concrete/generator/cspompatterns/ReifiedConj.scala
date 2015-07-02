@@ -13,6 +13,8 @@ import cspom.compiler.ConstraintCompilerNoData
 import cspom.variable.CSPOMExpression
 import cspom.variable.SimpleExpression
 import cspom.variable.CSPOMSeq
+import cspom.variable.BoolExpression
+import concrete.CSPOMDriver
 
 /**
  * Conjunction is converted to CNF :
@@ -25,19 +27,20 @@ import cspom.variable.CSPOMSeq
  */
 object ReifiedConj extends ConstraintCompiler {
 
-  type A = CSPOMExpression[_]
+  type A = (SimpleExpression[Boolean], Seq[SimpleExpression[Boolean]])
 
   override def constraintMatcher = {
-    case CSPOMConstraint(res: SimpleExpression[_], 'and, _, _) =>
-      res
+    case CSPOMConstraint(BoolExpression(res), 'and, BoolExpression.simpleSeq(args), _) =>
+      (res, args)
   }
 
-  def compile(fc: CSPOMConstraint[_], problem: CSPOM, res: CSPOMExpression[_]) = {
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM, data: A) = {
+    val (res, args) = data
     val c1 =
-      CSPOMConstraint('clause, Seq(CSPOMSeq(res), CSPOMSeq(fc.arguments: _*)))
+      CSPOMDriver.clause(res)(args: _*)
 
-    val c2 = fc.arguments.map(v =>
-      CSPOMConstraint('clause, Seq(CSPOMSeq(v), CSPOMSeq(res))))
+    val c2 = args.map(v =>
+      CSPOMDriver.clause(v)(res))
 
     replaceCtr(fc, c1 +: c2, problem)
 

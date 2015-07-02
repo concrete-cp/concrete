@@ -14,6 +14,7 @@ import cspom.variable.IntExpression.implicits.iterable
 import cspom.compiler.Delta
 import cspom.variable.CSPOMExpression
 import cspom.variable.SimpleExpression
+import cspom.variable.IntExpression
 
 final object Regular extends ConstraintCompilerNoData {
 
@@ -34,17 +35,13 @@ final object Regular extends ConstraintCompilerNoData {
       CSPOMSeq(x: Seq[SimpleExpression[Int]] @unchecked),
       CSPOMConstant(q: Int),
       CSPOMConstant(s: Int),
-      fd: CSPOMSeq[_],
+      IntExpression.constSeq(fd), //: CSPOMSeq[_],
       CSPOMConstant(q0: Int),
       CSPOMConstant(f: Seq[Int] @unchecked)) = constraint.arguments
 
     val d: IndexedSeq[IndexedSeq[Int]] =
-      fd.grouped(s).map { s =>
-        s.map {
-          case CSPOMConstant(c: Int) => c
-        }
-          .toIndexedSeq
-      }
+      fd.grouped(s)
+        .map { s => s.toIndexedSeq }
         .toIndexedSeq
 
     require(d.size == q, "Invalid transition matrix for constraint " + constraint)
