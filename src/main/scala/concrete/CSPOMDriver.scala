@@ -47,7 +47,7 @@ object CSPOMDriver {
   }
 
   def allDifferent(v: SimpleExpression[Int]*): CSPOMConstraint[Boolean] = {
-    CSPOMConstraint('allDifferent)(v: _*)
+    CSPOMConstraint('alldifferent)(v: _*)
   }
 
   def gcc(cardinalities: Seq[(Int, Int, Int)], v: SimpleExpression[Int]*): CSPOMConstraint[Boolean] = {

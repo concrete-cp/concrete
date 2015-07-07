@@ -1,6 +1,6 @@
 package concrete
 
-import concrete.util.BitVector
+import cspom.util.BitVector
 import concrete.util.Interval
 
 case object UNKNOWNBoolean extends BooleanDomain {

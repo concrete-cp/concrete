@@ -35,7 +35,8 @@ object FZPatterns {
       }
 
       def selfPropagation = false
-    })
+    },
+    Bool2IntDomains)
 
   //  val debug = new PartialFunction[CSPOMConstraint[_], CSPOMConstraint[_]] {
   //    def isDefinedAt(c: CSPOMConstraint[_]) = {

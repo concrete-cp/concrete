@@ -1,6 +1,6 @@
 package concrete.constraint.extension
 
-import concrete.util.BitVector
+import cspom.util.BitVector
 import java.util.Arrays
 import scala.annotation.tailrec
 import concrete.Variable

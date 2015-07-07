@@ -1,6 +1,6 @@
 package concrete
 
-import concrete.util.BitVector
+import cspom.util.BitVector
 import scala.collection.SortedSet
 import concrete.util.Interval
 

@@ -2,7 +2,7 @@ package concrete
 
 import scala.collection.AbstractSeq
 import scala.collection.TraversableLike
-import concrete.util.BitVector
+import cspom.util.BitVector
 import concrete.util.Interval
 import cspom.Statistic
 import scala.collection.IterableLike

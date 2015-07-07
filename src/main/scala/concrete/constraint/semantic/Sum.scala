@@ -9,7 +9,7 @@ import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
-import concrete.util.BitVector
+import cspom.util.BitVector
 import concrete.util.Interval
 
 import concrete.constraint.BC

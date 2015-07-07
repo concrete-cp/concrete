@@ -21,7 +21,7 @@ package concrete.constraint.extension;
 
 import concrete.Domain
 import concrete.Variable
-import concrete.util.BitVector
+import cspom.util.BitVector
 import cspom.Statistic
 import concrete.constraint.Removals
 import concrete.Contradiction

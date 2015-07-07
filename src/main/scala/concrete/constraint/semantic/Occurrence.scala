@@ -9,7 +9,7 @@ import concrete.ProblemState
 import concrete.Outcome
 import concrete.constraint.StatefulConstraint
 import concrete.constraint.Removals
-import concrete.util.BitVector
+import cspom.util.BitVector
 import com.typesafe.scalalogging.LazyLogging
 import concrete.util.Interval
 

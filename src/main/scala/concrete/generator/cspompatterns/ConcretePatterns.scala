@@ -7,6 +7,7 @@ import cspom.compiler.MergeEq
 import cspom.compiler.RemoveUselessEq
 import cspom.compiler.SplitEqVec
 import cspom.compiler.ConstraintCompiler
+import cspom.compiler.CSPOMTypes
 
 object ConcretePatterns {
 
@@ -15,15 +16,14 @@ object ConcretePatterns {
       Seq(
         DivToMul, OccurrenceDomains, BoolEq,
         MulDomains, AbsDomains,
-        Bool2IntDomains, MulToSum,
+        MulToSum,
         SumDomains,
         NegToCNF, Xor, ReifiedConj, ReifiedClause,
         NeqVec,
-        SlidingSum, Regular, SetIn, ConcreteTypes,
+        SlidingSum, Regular, SetIn, CSPOMTypes,
         AllDifferent, AllDiffConstant,
         // Clause does not support constants
-        SimplClause 
-        )
+        SimplClause)
 
     val concreteImp = Seq(
       AbsDiff, AbsDiffDomains, AllDiff, SubsumedDiff, Square, SumConstants, SumDuplicates, PseudoBool,

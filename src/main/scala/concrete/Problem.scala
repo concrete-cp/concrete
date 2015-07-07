@@ -27,7 +27,7 @@ import scala.collection.immutable.VectorBuilder
 import concrete.constraint.StatefulConstraint
 import scala.annotation.varargs
 import scala.collection.immutable.BitSet
-import concrete.util.BitVector
+import cspom.util.BitVector
 
 object Problem {
   @varargs

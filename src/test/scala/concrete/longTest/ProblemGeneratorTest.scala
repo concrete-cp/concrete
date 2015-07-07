@@ -56,7 +56,7 @@ final class ProblemGeneratorTest extends FlatSpec with LazyLogging with TryValue
 
     logger.info(cspom + "\n" + cspom.referencedExpressions.size + " vars, " + cspom.constraints.size + " cons")
 
-    CSPOMCompiler.compile(cspom, ConcretePatterns(pm));
+    CSPOMCompiler.compile(cspom, ConcretePatterns(pm)).get
 
     logger.info(cspom + "\n" + cspom.referencedExpressions.size + " vars, " + cspom.constraints.size + " cons")
 

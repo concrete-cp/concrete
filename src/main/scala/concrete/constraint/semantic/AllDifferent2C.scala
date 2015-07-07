@@ -21,7 +21,7 @@ package concrete.constraint.semantic;
 
 import scala.annotation.tailrec
 import concrete.constraint.Constraint
-import concrete.util.BitVector
+import cspom.util.BitVector
 import concrete.Variable
 import concrete.constraint.AdviseCount
 import scala.collection.mutable.HashSet

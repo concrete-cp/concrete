@@ -4,7 +4,7 @@ import scala.collection.mutable.HashMap
 
 import com.typesafe.scalalogging.LazyLogging
 
-import concrete.util.BitVector
+import cspom.util.BitVector
 import concrete.util.Interval
 
 object Singleton {

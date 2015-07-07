@@ -20,14 +20,14 @@ class SumDuplicatesTest extends FlatSpec with Matchers {
     }
 
     CSPOMCompiler.compile(problem, Seq(SumDuplicates, MergeEq))
-    
-    println(problem)
 
-    val Seq(constraint) = problem.constraints.toSeq
-    
-    val Seq(CSPOMSeq(args), CSPOMConstant(const)) = constraint.arguments
-    
-    args should have size 2
+    withClue(problem) {
+      val Seq(constraint) = problem.constraints.toSeq
+
+      val Seq(CSPOMSeq(args), CSPOMConstant(const)) = constraint.arguments
+
+      args should have size 2
+    }
 
   }
 }

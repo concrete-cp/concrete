@@ -9,7 +9,7 @@ import concrete.constraint.Removals
 import concrete.constraint.BC
 import concrete.ProblemState
 import concrete.Outcome
-import concrete.util.BitVector
+import cspom.util.BitVector
 
 object Element {
   def apply(result: Variable, index: Variable, varsIdx: Seq[(Int, Variable)]) = {
