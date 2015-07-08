@@ -32,12 +32,13 @@ class SolvingTest extends FlatSpec with SolvingBehaviors {
 trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this: FlatSpec =>
 
   val problemBank = LinkedHashMap[String, AnyVal](
+    "bigleq-50.xml" -> 1,
     "battleships_2.fzn" -> 36,
     "flat30-1.cnf" -> true,
     "alpha.fzn" -> true,
     "frb35-17-1_ext.xml.bz2" -> 2,
     "queens-12_ext.xml" -> 14200,
-    "queens-12.xml" -> 14200,
+
     "zebra.xml" -> 1,
     "crossword-m1-debug-05-01.xml" -> 48,
 
@@ -57,9 +58,10 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
     "e0ddr1-10-by-5-8.xml.bz2" -> true,
 
     "tsp-20-1_ext.xml.bz2" -> true,
-    "bigleq-50.xml" -> 1,
+
     "test.fzn" -> true,
-    "1d_rubiks_cube.fzn" -> true)
+    "1d_rubiks_cube.fzn" -> true,
+    "queens-12.xml" -> 14200)
 
   def test(parameters: ParameterManager = new ParameterManager()): Unit = {
     for ((p, r) <- problemBank) {
@@ -94,14 +96,16 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
       case (cspomProblem, data) =>
         val test = parser match {
           case FlatZincParser =>
-            CSPOMCompiler.compile(cspomProblem, FZPatterns())
+            CSPOMCompiler.compile(cspomProblem, FZPatterns()).get
             false
           case XCSPParser =>
-            CSPOMCompiler.compile(cspomProblem, XCSPPatterns())
+            CSPOMCompiler.compile(cspomProblem, XCSPPatterns()).get
             true
           case _ =>
             false
         }
+
+        logger.info(cspomProblem.toString)
 
         Solver(cspomProblem, parameters).map { solver =>
 
@@ -118,7 +122,7 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
           // println(solver.concreteProblem.toString)
 
           if (test) {
-            for (sol <- solver.toIterable.headOption) {
+            for (sol <- solvIt.headOption) {
               val failed = XCSPConcrete.controlCSPOM(sol, data('variables).asInstanceOf[Seq[String]], url)
               withClue(sol) {
                 failed shouldBe 'empty
@@ -141,14 +145,16 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
       case (cspomProblem, data) =>
         val test = parser match {
           case FlatZincParser =>
-            CSPOMCompiler.compile(cspomProblem, FZPatterns())
+            CSPOMCompiler.compile(cspomProblem, FZPatterns()).get
             false
           case XCSPParser =>
-            CSPOMCompiler.compile(cspomProblem, XCSPPatterns())
+            CSPOMCompiler.compile(cspomProblem, XCSPPatterns()).get
             true
           case _ =>
             false
         }
+
+        logger.info(cspomProblem.toString)
 
         Solver(cspomProblem, parameters).map { solver =>
 
