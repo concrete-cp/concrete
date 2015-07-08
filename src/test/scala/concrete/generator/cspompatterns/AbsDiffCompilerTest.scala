@@ -15,8 +15,8 @@ class AbsDiffCompilerTest extends FlatSpec with Matchers {
 
     val cspom = CSPOM { implicit problem =>
 
-      val v0 = IntVariable(1 to 3)
-      val v1 = IntVariable(2 to 4)
+      val v0 = IntVariable(1 to 3) as "v0"
+      val v1 = IntVariable(2 to 4) as "v1"
 
       val r = v0 - v1
 
@@ -24,16 +24,19 @@ class AbsDiffCompilerTest extends FlatSpec with Matchers {
 
     }
 
-    CSPOMCompiler.compile(cspom, Seq(AbsDiff))
+    CSPOMCompiler.compile(cspom, Seq(AbsDiff)).get
 
     withClue(cspom.toString) {
       cspom.getPostponed shouldBe empty
       cspom.constraints.toSeq should have size 1
       cspom.referencedExpressions should have size 3
 
-      val c = cspom.constraints.next
-      c.function shouldEqual 'absdiff
-      c.result shouldBe an[IntVariable]
+      val v0 = cspom.variable("v0").get
+      val v1 = cspom.variable("v1").get
+      val r2 = cspom.variable("r2").get
+
+      val Seq(CSPOMConstraint(`r2`, 'absdiff, Seq(`v0`, `v1`), _)) = cspom.constraints.toSeq
+
     }
   }
 }
