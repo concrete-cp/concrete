@@ -53,13 +53,15 @@ final class SolverFactory(val params: ParameterManager) {
 
   def apply(cspom: CSPOM): Try[CSPOMSolver] = {
     CSPOMCompiler.compile(cspom, ConcretePatterns(params))
-    val pg = new ProblemGenerator(params)
-    for ((problem, variables) <- pg.generate(cspom)) yield {
-      val solver = apply(problem)
-      solver.statistics.register("compiler", CSPOMCompiler)
-      solver.statistics.register("generator", pg)
-      new CSPOMSolver(solver, cspom, variables)
-    }
+      .flatMap { cspom =>
+        val pg = new ProblemGenerator(params)
+        for ((problem, variables) <- pg.generate(cspom)) yield {
+          val solver = apply(problem)
+          solver.statistics.register("compiler", CSPOMCompiler)
+          solver.statistics.register("generator", pg)
+          new CSPOMSolver(solver, cspom, variables)
+        }
+      }
   }
 }
 
