@@ -19,18 +19,14 @@ import cspom.variable.IntExpression
  */
 object SumDuplicates extends ConstraintCompiler {
 
-  type A = (collection.Map[CSPOMExpression[_], Int], Int)
+  type A = (CSPOMExpression[_], collection.Map[CSPOMExpression[_], Int], CSPOMExpression[_])
 
   override def mtch(c: CSPOMConstraint[_], p: CSPOM) = PartialFunction.condOpt(c) {
-    case CSPOMConstraint(CSPOMConstant(true), 'sum, Seq(CSPOMSeq(vars), CSPOMConstant(const: Int)), p) =>
-
-      val params = p.get("coefficients")
-        .map(_.asInstanceOf[Seq[Int]])
-        .getOrElse(Seq.fill(vars.length)(1))
+    case CSPOMConstraint(r, 'sum, Seq(IntExpression.constSeq(coefs), CSPOMSeq(vars), const), p) =>
 
       var duplicates = false
       var factors = collection.mutable.Map[CSPOMExpression[_], Int]()
-      for ((v, c) <- (vars, params).zipped) {
+      for ((v, c) <- (vars, coefs).zipped) {
         factors.get(v) match {
           case Some(i) =>
             duplicates = true
@@ -41,8 +37,8 @@ object SumDuplicates extends ConstraintCompiler {
         }
       }
 
-      if (duplicates) {
-        Some((factors, const))
+      if (duplicates || coefs.contains(0)) {
+        Some((r, factors, const))
       } else {
         None
       }
@@ -51,16 +47,11 @@ object SumDuplicates extends ConstraintCompiler {
     .flatten
 
   def compile(constraint: CSPOMConstraint[_], p: CSPOM, data: A) = {
-    val (args, const) = data
-    val (IntExpression.seq(variables), factors) = args.filter(_._2 != 0).unzip
+    val (r, args, const) = data
+    val (variables, factors) = args.filter(_._2 != 0).unzip
 
     val newConstraint =
-      CSPOMDriver.linear(variables, factors.toSeq, constraint.getParam[String]("mode").get, const)
-
-    //      CSPOMConstraint(
-    //      'sum,
-    //      Seq(CSPOMSeq(variables.toSeq: _*), CSPOMConstant(const)),
-    //      constraint.params + ("coefficients" -> factors.toSeq))
+      CSPOMConstraint(r)('sum)(CSPOMConstant.ofSeq(factors.toSeq), CSPOMSeq(variables.toSeq: _*), const) withParams constraint.params
 
     //println(s"replacing $constraint with $newConstraint")
     replaceCtr(constraint, newConstraint, p)

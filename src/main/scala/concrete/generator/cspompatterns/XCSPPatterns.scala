@@ -45,16 +45,16 @@ object XCSPPatterns {
       linear(Seq((-1, a), (1, b), (1, c)), "eq", 0) withParams p
 
     case CSPOMConstraint(r, 'lt, Seq(a, b), p) =>
-      CSPOMConstraint(r)('sum)(Seq(a, b), 0) withParams p + ("coefficients" -> Seq(1, -1), "mode" -> "lt")
+      CSPOMConstraint(r)('sum)(Seq(1, -1), Seq(a, b), 0) withParams p + ("mode" -> "lt")
 
     case CSPOMConstraint(r, 'le, Seq(a, b), p) =>
-      CSPOMConstraint(r)('sum)(Seq(a, b), 0) withParams p + ("coefficients" -> Seq(1, -1), "mode" -> "le")
+      CSPOMConstraint(r)('sum)(Seq(1, -1), Seq(a, b), 0) withParams p + ("mode" -> "le")
 
     case CSPOMConstraint(r, 'gt, Seq(a, b), p) =>
-      CSPOMConstraint(r)('sum)(Seq(a, b), 0) withParams p + ("coefficients" -> Seq(-1, 1), "mode" -> "lt")
+      CSPOMConstraint(r)('sum)(Seq(-1, 1), Seq(a, b), 0) withParams p + ("mode" -> "lt")
 
     case CSPOMConstraint(r, 'ge, Seq(a, b), p) =>
-      CSPOMConstraint(r)('sum)(Seq(a, b), 0) withParams p + ("coefficients" -> Seq(-1, 1), "mode" -> "le")
+      CSPOMConstraint(r)('sum)(Seq(-1, 1), Seq(a, b), 0) withParams p + ("mode" -> "le")
 
     case CSPOMConstraint(r, 'or, a, p) =>
       CSPOMConstraint(r)('clause)(CSPOMSeq(a: _*), CSPOMSeq()) withParams p

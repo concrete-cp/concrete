@@ -9,6 +9,7 @@ import cspom.variable.IntVariable
 import cspom.compiler.MergeEq
 import cspom.compiler.CSPOMCompiler
 import cspom.variable.CSPOMConstant
+import concrete.generator.constraint.SumGenerator
 
 class SumFactorsTest extends FlatSpec with Matchers {
   "SumFactors" should "canonize" in {
@@ -20,9 +21,10 @@ class SumFactorsTest extends FlatSpec with Matchers {
 
     CSPOMCompiler.compile(problem, Seq(SumFactors, MergeEq))
     val Seq(constraint) = problem.constraints.toSeq
-    val params = constraint.params("coefficients")
 
-    params shouldBe Seq(2, -2, 1)
-    constraint.arguments(1) shouldBe CSPOMConstant(-1)
+    val (vars, coefs, constant, mode) = SumGenerator.readCSPOM(constraint)
+
+    coefs shouldBe Seq(2, -2, 1)
+    constant shouldBe -1
   }
 }

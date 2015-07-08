@@ -12,6 +12,7 @@ import cspom.variable.CSPOMVariable
 import SumMode._
 import cspom.variable.IntExpression
 import concrete.CSPOMDriver
+import concrete.generator.constraint.SumGenerator
 
 /**
  *  Remove constants from linear constraints
@@ -20,7 +21,7 @@ object SumConstants extends ConstraintCompilerNoData {
 
   def matchBool(c: CSPOMConstraint[_], p: CSPOM) = {
     c.function == 'sum && c.result.isTrue && {
-      val Seq(CSPOMSeq(vars), _) = c.arguments
+      val (vars, coefs, const, mode) = SumGenerator.readCSPOM(c)
       vars
         .collectFirst {
           case c: CSPOMConstant[_] => Unit
@@ -30,29 +31,21 @@ object SumConstants extends ConstraintCompilerNoData {
   }
 
   def compile(constraint: CSPOMConstraint[_], p: CSPOM) = {
-    val Seq(CSPOMSeq(vars), CSPOMConstant(const: Int)) = constraint.arguments //map cspom2concreteVar
+    val (expr, coefs, const, mode) = SumGenerator.readCSPOM(constraint)
 
-    val params = constraint.params.get("coefficients")
-      .map(_.asInstanceOf[Seq[Int]])
-      .getOrElse(Seq.fill(vars.length)(1))
-
-    val (solverVariables, varParams) = vars.zip(params)
+    val (vars, varCoefs) = expr.zip(coefs)
       .collect {
-        case (v: CSPOMVariable[_], p) => (v, p)
+        case (v: CSPOMVariable[Int], p) => (v, p)
       }
       .unzip
 
-    val constant = const - vars.zip(params)
+    val constant = const - expr.zip(coefs)
       .collect {
         case (CSPOMConstant(c: Int), p) => c * p
       }
       .sum
 
-    val mode = constraint.params.get("mode").collect {
-      case m: String => SumMode.withName(m)
-    }.get
-
-    solverVariables match {
+    vars match {
       case Seq() =>
         mode match {
           case SumEQ => require(constant == 0)
@@ -63,13 +56,9 @@ object SumConstants extends ConstraintCompilerNoData {
         removeCtr(constraint, p)
 
       case IntExpression.seq(solverVariables) =>
-        val newConstraint = CSPOMDriver.linear(solverVariables, varParams, mode.toString(), constant) withParams
-          (constraint.params - "coefficients" - "mode")
-
-        //        CSPOMConstraint(
-        //          'sum,
-        //          Seq(CSPOMSeq(solverVariables: _*), CSPOMConstant(constant)),
-        //          constraint.params + ("coefficients" -> varParams))
+        val newConstraint =
+          CSPOMDriver.linear(CSPOMSeq(vars: _*), varCoefs, mode.toString(), constant) withParams
+            (constraint.params - "mode")
 
         //println(s"replacing $constraint with $newConstraint")
         replaceCtr(constraint, newConstraint, p)

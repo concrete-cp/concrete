@@ -63,9 +63,10 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
           }
         case constraint if constraint.function == 'pseudoboolean =>
 
-          val (solverVariables, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)(variables)
+          val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
 
-          if (solverVariables.nonEmpty) {
+          if (vars.nonEmpty) {
+            val solverVariables = vars.map(Generator.cspom2concreteVar(_)(variables))
             pb +:= PseudoBoolean(solverVariables, varParams, mode, constant)
           }
         case c =>

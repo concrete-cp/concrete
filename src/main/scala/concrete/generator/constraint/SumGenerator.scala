@@ -22,6 +22,7 @@ import concrete.constraint.BC
 import concrete.constraint.Constraint
 import concrete.constraint.semantic.EqAC
 import concrete.constraint.semantic.EqBC
+import cspom.variable.IntExpression
 
 final object SumGenerator extends Generator with LazyLogging {
 
@@ -47,8 +48,8 @@ final object SumGenerator extends Generator with LazyLogging {
     ac = Some(new EqAC(neg, x, b, y)),
     bc = Some(new EqBC(neg, x, b, y)))
 
-  def readCSPOM(constraint: CSPOMConstraint[_])(implicit variables: VarMap) = {
-    val Seq(CSPOMSeq(vars), CSPOMConstant(c)) = constraint.arguments //map cspom2concreteVar
+  def readCSPOM(constraint: CSPOMConstraint[_]) = {
+    val Seq(IntExpression.constSeq(coefs), IntExpression.seq(vars), CSPOMConstant(c)) = constraint.arguments //map cspom2concreteVar
 
     // For bool2int optimization
     val constant = c match {
@@ -57,19 +58,13 @@ final object SumGenerator extends Generator with LazyLogging {
       case true   => 1
     }
 
-    val params = constraint.params.get("coefficients") match {
-      case Some(p: Seq[_]) => p.asInstanceOf[Seq[Int]]
-      case None            => Seq.fill(vars.length)(1)
-      case _               => throw new IllegalArgumentException("Parameters for zero sum must be a sequence of integer values")
-    }
+    require(!constraint.params.contains("coefficients"), "coefficients parameter is deprecated")
 
-    val solverVariables = vars.map(cspom2concrete1D).map(_.asVariable)
+    val mode = constraint.getParam[String]("mode")
+      .map(SumMode.withName)
+      .get
 
-    val mode = constraint.params.get("mode").collect {
-      case m: String => SumMode.withName(m)
-    }.get
-
-    (solverVariables, params, constant, mode)
+    (vars, coefs, constant, mode)
 
   }
 
@@ -125,14 +120,16 @@ final object SumGenerator extends Generator with LazyLogging {
   }
 
   override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
-    val (solverVariables, varParams, constant, mode) = readCSPOM(constraint)
+    val (vars, varParams, constant, mode) = readCSPOM(constraint)
+    val solverVariables = vars.map(cspom2concrete1D).map(_.asVariable)
     withBinSpec(solverVariables, varParams, constant, mode).toSeq
   }
 
   override def genFunctional(constraint: CSPOMConstraint[_], result: C2Conc)(implicit variables: VarMap) = {
     val r = result.asVariable
 
-    val (solverVariables, varParams, constant, mode) = readCSPOM(constraint)
+    val (vars, varParams, constant, mode) = readCSPOM(constraint)
+    val solverVariables = vars.map(cspom2concrete1D).map(_.asVariable)
     val positive = withBinSpec(solverVariables, varParams, constant, mode)
     val (negParams, negConstant, negMode) = reverse(varParams, constant, mode)
     val negative = withBinSpec(solverVariables, negParams, negConstant, negMode)

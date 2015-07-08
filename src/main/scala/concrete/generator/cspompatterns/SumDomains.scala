@@ -24,13 +24,11 @@ import cspom.UNSATException
 object SumDomains extends VariableCompiler('sum) {
 
   def compiler(c: CSPOMConstraint[_]) = c match {
-    case CSPOMConstraint(CSPOMConstant(true), _, Seq(CSPOMSeq(args), CSPOMConstant(result: Int)), params) =>
+    case CSPOMConstraint(CSPOMConstant(true), _, Seq(IntExpression.constSeq(coef), CSPOMSeq(args), CSPOMConstant(result: Int)), _) =>
 
       val iargs = args.map(IntExpression.coerce(_)).toIndexedSeq
 
-      val coef = params.get("coefficients").map(_.asInstanceOf[Seq[Int]]).getOrElse(Seq.fill(args.length)(1))
-
-      val m: String = params("mode").asInstanceOf[String]
+      val m: String = c.getParam("mode").get
 
       // Will do nothing (return empty map) if SumMode is SumNE
       PartialFunction.condOpt(SumMode.withName(m)) {
@@ -57,13 +55,11 @@ object SumDomains extends VariableCompiler('sum) {
 
 object PseudoBoolDomains extends VariableCompiler('pseudoboolean) {
   def compiler(c: CSPOMConstraint[_]) = c match {
-    case CSPOMConstraint(CSPOMConstant(true), _, Seq(CSPOMSeq(args), CSPOMConstant(result: Int)), params) =>
+    case CSPOMConstraint(CSPOMConstant(true), _, Seq(IntExpression.constSeq(coef), CSPOMSeq(args), CSPOMConstant(result: Int)), _) =>
 
       val iargs = args.map(BoolExpression.coerce(_)).toIndexedSeq
 
-      val coef = params.get("coefficients").map(_.asInstanceOf[Seq[Int]]).getOrElse(Seq.fill(args.length)(1))
-
-      val m: String = params("mode").asInstanceOf[String]
+      val m: String = c.getParam("mode").get
 
       // Will do nothing (return empty map) if SumMode is SumNE
       PartialFunction.condOpt(SumMode.withName(m)) {

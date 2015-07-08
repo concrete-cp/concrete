@@ -10,6 +10,7 @@ import cspom.compiler.CSPOMCompiler
 import cspom.compiler.MergeEq
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
+import cspom.variable.IntExpression
 
 class SumDuplicatesTest extends FlatSpec with Matchers {
   "SumDuplicates" should "merge" in {
@@ -24,8 +25,9 @@ class SumDuplicatesTest extends FlatSpec with Matchers {
     withClue(problem) {
       val Seq(constraint) = problem.constraints.toSeq
 
-      val Seq(CSPOMSeq(args), CSPOMConstant(const)) = constraint.arguments
+      val Seq(IntExpression.constSeq(coefs), CSPOMSeq(args), CSPOMConstant(const)) = constraint.arguments
 
+      coefs should have size 2
       args should have size 2
     }
 
