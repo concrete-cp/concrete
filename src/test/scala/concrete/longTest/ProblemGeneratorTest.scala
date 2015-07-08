@@ -44,7 +44,7 @@ final class ProblemGeneratorTest extends FlatSpec with LazyLogging with TryValue
   // generateTest("fapp01-0200-0.xml");
   // }
 
-  private def generateTest(file: String) {
+  private def generateTest(file: String): Unit = {
 
     val pm = new ParameterManager()
     val cspom = XCSPConcrete.loadCSPOMURL(classOf[ProblemGeneratorTest].getResource(file)) match {

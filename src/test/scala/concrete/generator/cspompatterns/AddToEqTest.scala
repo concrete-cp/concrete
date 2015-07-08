@@ -19,18 +19,16 @@ class AddToEqTest extends FlatSpec with Matchers {
       val v6 = IntVariable(1 to 5) as "V6"
       // C17
       ctr(v19 === v6 + 1 | v19 === v6 - 1)
-      
+
       // C14
       val v2 = IntVariable(1 to 5) as "V2"
       ctr(v6 === v2)
     }
-    
+
     val pm = new ParameterManager
 
-    CSPOMCompiler.compile(problem, ConcretePatterns(pm))
-    
-    println(problem)
-    
+    CSPOMCompiler.compile(problem, ConcretePatterns(pm)).get
+
     //val s = Solver(problem, pm)
     //println(s.next)
   }
