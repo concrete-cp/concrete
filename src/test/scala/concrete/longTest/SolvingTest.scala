@@ -19,6 +19,8 @@ import concrete.generator.cspompatterns.XCSPPatterns
 import cspom.compiler.CSPOMCompiler
 import cspom.xcsp.XCSPParser
 import cspom.flatzinc.FlatZincParser
+import concrete.runner.FZConcrete
+import cspom.flatzinc.FZSolve
 
 //import SolvingTest._
 
@@ -32,6 +34,7 @@ class SolvingTest extends FlatSpec with SolvingBehaviors {
 trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this: FlatSpec =>
 
   val problemBank = LinkedHashMap[String, AnyVal](
+    "crossword-m1-debug-05-01.xml" -> 48,
     "bigleq-50.xml" -> 1,
     "battleships_2.fzn" -> 36,
     "flat30-1.cnf" -> true,
@@ -40,7 +43,6 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
     "queens-12_ext.xml" -> 14200,
 
     "zebra.xml" -> 1,
-    "crossword-m1-debug-05-01.xml" -> 48,
 
     "bqwh-18-141-47_glb.xml.bz2" -> 10,
 
@@ -92,11 +94,18 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
 
     val parser = CSPOM.autoParser(url).get
 
+    var goal: Option[FZSolve] = None
+
     CSPOM.load(url, parser).flatMap {
       case (cspomProblem, data) =>
         val test = parser match {
           case FlatZincParser =>
             CSPOMCompiler.compile(cspomProblem, FZPatterns()).get
+            goal = data.get('goal).collect {
+              case g: FZSolve =>
+                FZConcrete.parseGoal(g, false, parameters)
+                g
+            }
             false
           case XCSPParser =>
             CSPOMCompiler.compile(cspomProblem, XCSPPatterns()).get
@@ -105,9 +114,13 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
             false
         }
 
-        logger.info(cspomProblem.toString)
+        //logger.info(cspomProblem.toString)
 
         Solver(cspomProblem, parameters).map { solver =>
+
+          for (g <- goal) {
+            FZConcrete.parseSearchMode(g, solver, false)
+          }
 
           //    println(solver.concreteProblem)
 
