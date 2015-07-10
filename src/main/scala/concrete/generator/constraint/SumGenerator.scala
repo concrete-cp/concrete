@@ -134,19 +134,30 @@ final object SumGenerator extends Generator with LazyLogging {
     val (negParams, negConstant, negMode) = reverse(varParams, constant, mode)
     val negative = withBinSpec(solverVariables, negParams, negConstant, negMode)
 
-    val reified =
-      ACBC(
-        ac = positive.ac.map {
-          pac =>
-            val neg = negative.ac.orElse(negative.bc).get
-            new ReifiedConstraint(r, pac, neg)
-        },
-        bc = positive.bc.map {
-          pbc =>
-            val neg = negative.bc.orElse(negative.ac).get
-            new ReifiedConstraint(r, pbc, neg)
-        })
-        .toSeq
+    
+    val ac = positive.ac
+      .map { pac =>
+        val neg = negative.ac.orElse(negative.bc).get
+        new ReifiedConstraint(r, pac, neg)
+      }
+      .orElse {
+        for (
+          pbc <- positive.bc;
+          nac <- negative.ac
+        ) yield new ReifiedConstraint(r, pbc, nac)
+      }
+
+    val bc = positive.bc
+      .map {
+        pbc =>
+          val neg = negative.bc.orElse(negative.ac).get
+          new ReifiedConstraint(r, pbc, neg)
+      }
+      .orElse {
+        for (pac <- positive.ac; nbc <- negative.bc) yield new ReifiedConstraint(r, pac, nbc)
+      }
+
+    val reified = ACBC(ac, bc).toSeq
 
     require(reified.nonEmpty, s"$positive resulted in no reified constraints")
     reified
