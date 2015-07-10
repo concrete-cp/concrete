@@ -48,6 +48,8 @@ abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
 
   def removeUntil(ub: Int): Domain
 
+  def removeItv(from: Int, to: Int): Domain = (from to to).foldLeft[Domain](this)((d, i) => d.remove(i))
+
   /**
    * @param value
    * @return the index of the closest value lower or equal to the given value.

@@ -24,13 +24,19 @@ final class AbsBC(val result: Variable, val v0: Variable) extends Constraint(Arr
         val ri = ps.span(result)
         val v0span = ps.span(v0)
 
-        Interval.union(v0span intersect ri, v0span intersect -ri)
-          .map {
-            nv0 => ps.shaveDom(this.v0, nv0)
-          }
-          .getOrElse {
-            Contradiction
-          }
+        Interval.realUnion(v0span intersect ri, v0span intersect -ri) match {
+          case Seq(i, j) =>
+            val d0 = ps.dom(v0)
+              .removeUntil(i.lb)
+              .removeAfter(j.ub)
+              .removeItv(i.ub + 1, j.lb - 1)
+
+            ps.updateDom(v0, d0)
+
+          case Seq(i) => ps.shaveDom(v0, i)
+          case Seq()  => Contradiction
+          case _      => throw new AssertionError
+        }
 
       }
   }
