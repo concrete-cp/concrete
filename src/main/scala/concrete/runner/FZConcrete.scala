@@ -28,6 +28,7 @@ import cspom.variable.CSPOMExpression
 import cspom.flatzinc.FlatZincParser
 import cspom.compiler.CSPOMCompiler
 import concrete.generator.cspompatterns.FZPatterns
+import concrete.ParameterManager
 
 object FZConcrete extends CSPOMRunner {
 
@@ -47,6 +48,43 @@ object FZConcrete extends CSPOMRunner {
       case "-f" :: tail => options(tail, o + ('free -> Unit), realArgs)
       case e            => super.options(e, o, realArgs)
     }
+  }
+
+  def parseGoal(goal: FZSolve, freeSearch: Boolean, pm: ParameterManager): ParameterManager = {
+    goal.ann.foreach {
+      case a if a.predAnnId == "int_search" || a.predAnnId == "bool_search" =>
+        if (!freeSearch) {
+          val Seq(_, vca, aa, strategyannotation) = a.expr
+
+          val FZAnnotation(varchoiceannotation, _) = vca
+
+          varchoiceannotation match {
+            case "input_order" =>
+              pm("heuristic.variable") = classOf[LexVar]
+              pm("mac.restartLevel") = -1
+            case "first_fail"       => pm("heuristic.variable") = classOf[Dom]
+            case "antifirst_fail"   => pm("heuristic.variable") = classOf[MaxDom]
+            // case "smallest"
+            // case "largest"
+            case "occurrence"       => pm("heuristic.variable") = classOf[DDeg]
+            case "most_constrained" => pm("heuristic.variable") = classOf[Brelaz]
+            case h                  => logger.warn(s"Unsupported varchoice $h")
+          }
+
+          val FZAnnotation(assignmentannotation, _) = aa
+
+          assignmentannotation match {
+            case "indomain_min"    => pm("heuristic.value") = classOf[Lexico]
+            case "indomain_max"    => pm("heuristic.value") = classOf[RevLexico]
+            case "indomain_middle" => pm("heuristic.value") = classOf[MedValue]
+            case "indomain_random" => pm("heuristic.value") = classOf[RandomValue]
+            case h                 => logger.warn(s"Unsupported assignment $h")
+          }
+        }
+
+      case a => logger.warn(s"Unsupported annotation $a")
+    }
+    pm
   }
 
   override def loadCSPOM(args: List[String], opt: Map[Symbol, Any]) = {
@@ -83,39 +121,7 @@ object FZConcrete extends CSPOMRunner {
         val Some(goal: FZSolve) = data.get('goal)
 
         this.goal = goal
-        goal.ann.foreach {
-          case a if a.predAnnId == "int_search" || a.predAnnId == "bool_search" =>
-            if (!opt.contains('free)) {
-              val Seq(_, vca, aa, strategyannotation) = a.expr
-
-              val FZAnnotation(varchoiceannotation, _) = vca
-
-              varchoiceannotation match {
-                case "input_order" =>
-                  pm("heuristic.variable") = classOf[LexVar]
-                  pm("mac.restartLevel") = -1
-                case "first_fail"       => pm("heuristic.variable") = classOf[Dom]
-                case "antifirst_fail"   => pm("heuristic.variable") = classOf[MaxDom]
-                // case "smallest"
-                // case "largest"
-                case "occurrence"       => pm("heuristic.variable") = classOf[DDeg]
-                case "most_constrained" => pm("heuristic.variable") = classOf[Brelaz]
-                case h                  => logger.warn(s"Unsupported varchoice $h")
-              }
-
-              val FZAnnotation(assignmentannotation, _) = aa
-
-              assignmentannotation match {
-                case "indomain_min"    => pm("heuristic.value") = classOf[Lexico]
-                case "indomain_max"    => pm("heuristic.value") = classOf[RevLexico]
-                case "indomain_middle" => pm("heuristic.value") = classOf[MedValue]
-                case "indomain_random" => pm("heuristic.value") = classOf[RandomValue]
-                case h                 => logger.warn(s"Unsupported assignment $h")
-              }
-            }
-
-          case a => logger.warn(s"Unsupported annotation $a")
-        }
+        parseGoal(goal, opt.contains('free), pm)
 
         cspom
     }
@@ -124,7 +130,8 @@ object FZConcrete extends CSPOMRunner {
       }
   }
 
-  override def applyParametersCSPOM(solver: CSPOMSolver, opt: Map[Symbol, Any]) = {
+  def parseSearchMode(goal: FZSolve, solver: CSPOMSolver, freeSearch: Boolean): Unit = {
+    val cspom = solver.cspom
     goal.mode match {
       case Satisfy =>
       case Maximize(expr) =>
@@ -138,21 +145,24 @@ object FZConcrete extends CSPOMRunner {
 
     goal.ann.foreach {
       case a if a.predAnnId == "int_search" || a.predAnnId == "bool_search" =>
-        if (!opt.contains('free)) {
+        if (!freeSearch) {
           val Seq(e, _, _, _) = a.expr
-          val CSPOMSeq(pool) = ann2expr(e)
+          val CSPOMSeq(pool) = ann2expr(cspom, e)
           solver.decisionVariables(pool)
         }
 
       case a => logger.warn(s"Unsupported annotation $a")
     }
-
   }
 
-  private def ann2expr(e: FZExpr[_]): CSPOMExpression[_] = e match {
+  override def applyParametersCSPOM(solver: CSPOMSolver, opt: Map[Symbol, Any]): Unit = {
+    parseSearchMode(goal, solver, opt.contains('free))
+  }
+
+  private def ann2expr(cspom: CSPOM, e: FZExpr[_]): CSPOMExpression[_] = e match {
     case FZAnnotation(vars, Seq()) => cspom.expression(vars).get
 
-    case FZArrayExpr(list)         => CSPOMSeq(list.map(ann2expr): _*)
+    case FZArrayExpr(list)         => CSPOMSeq(list.map(ann2expr(cspom, _)): _*)
 
     case e                         => throw new InvalidParameterException("Cannot read search variable list in " + e)
   }
@@ -163,7 +173,7 @@ object FZConcrete extends CSPOMRunner {
       case _              => throw new IllegalArgumentException(args.toString)
     }
 
-  def flattenArrayExpr(ranges: Seq[Seq[Int]], name: String, solution: Map[String, Int]): Seq[Int] = {
+  private def flattenArrayExpr(ranges: Seq[Seq[Int]], name: String, solution: Map[String, Int]): Seq[Int] = {
     if (ranges.isEmpty) {
       Seq(solution(name))
     } else {
@@ -172,7 +182,7 @@ object FZConcrete extends CSPOMRunner {
     }
   }
 
-  def flattenedSize(ranges: Seq[Seq[Int]]): Int =
+  private def flattenedSize(ranges: Seq[Seq[Int]]): Int =
     if (ranges.isEmpty) {
       1
     } else {
