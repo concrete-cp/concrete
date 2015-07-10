@@ -38,7 +38,11 @@ final class Neq(v0: Variable, v1: Variable, c: Int = 0) extends Constraint(Array
   }
 
   override def isConsistent(ps: ProblemState) = {
-    ps.dom(v0).size > 1 || ps.dom(v1).size > 1 || ps.dom(v0).head != ps.dom(v1).head
+    val v0dom = ps.dom(v0)
+    v0dom.size > 1 || {
+      val v1dom = ps.dom(v1)
+      v1dom.size > 1 || (v0dom.head - v1dom.head != c)
+    }
   }
 
   override def toString(ps: ProblemState) = s"${v0.toString(ps)} /= ${v1.toString(ps)}${

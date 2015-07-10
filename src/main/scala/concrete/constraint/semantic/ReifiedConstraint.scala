@@ -84,7 +84,7 @@ final class ReifiedConstraint(
   }
 
   override def toString(ps: ProblemState) =
-    s"${controlVariable.toString(ps)} == (${positiveConstraint.toString(ps)})" // / != (${negativeConstraint.toString(ps)}";
+    s"${controlVariable.toString(ps)} == (${positiveConstraint.toString(ps)}) / != (${negativeConstraint.toString(ps)}";
 
   override def toString =
     s"${controlVariable} == (${positiveConstraint})"
