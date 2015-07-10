@@ -1,20 +1,21 @@
 package concrete.generator.constraint
 
-import org.scalatest.Finders
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
+
 import concrete.CSPOMDriver.sumProd
 import concrete.generator.FailedGenerationException
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.SumDomains
 import concrete.util.Interval
 import cspom.CSPOM
+import cspom.CSPOM._
 import cspom.CSPOM.ctr
-import cspom.compiler.MergeEq
+import cspom.CSPOMConstraint
 import cspom.compiler.CSPOMCompiler
+import cspom.compiler.MergeEq
 import cspom.variable.CSPOMConstant
 import cspom.variable.IntVariable
-import org.scalatest.TryValues
 
 class SumGeneratorTest extends FlatSpec with Matchers {
 
@@ -41,5 +42,22 @@ class SumGeneratorTest extends FlatSpec with Matchers {
     var problem = new ProblemGenerator().generate(cspom).get._1
 
     problem.variable("test").initDomain.span shouldBe Interval(-30, -28)
+  }
+
+  "SumGenerator" should "generate AC/BC variants" in {
+    val cspom = CSPOM { implicit problem =>
+      val v0 = IntVariable(0 to 10)
+      val v1 = IntVariable(0 to 10)
+      val r = problem.defineBool { r => CSPOMConstraint(r)('sum)(Seq(-1, 1), Seq(v0, v1), CSPOMConstant(0)) withParam ("mode" -> "eq") } as "r"
+    }
+
+    CSPOMCompiler.compile(cspom, Seq(MergeEq)).get
+
+    val (problem, variables) = new ProblemGenerator().generate(cspom).get
+
+    withClue(problem.toString(problem.initState.toState)) {
+      problem.constraints.size shouldBe 2
+    }
+
   }
 }
