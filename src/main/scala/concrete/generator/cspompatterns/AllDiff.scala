@@ -22,6 +22,7 @@ import cspom.variable.IntExpression
 import cspom.compiler.ConstraintCompilerNoData
 import concrete.CSPOMDriver
 import cspom.variable.SimpleExpression
+import cspom.variable.CSPOMSeq
 
 /**
  *  XCSP 2.0 uses a different case for alldifferent…
@@ -44,7 +45,9 @@ object AllDiffConstant extends ConstraintCompiler {
   def selfPropagation = true
 
   override def mtch(c: CSPOMConstraint[_], p: CSPOM): Option[A] = {
-    if (AllDiff.ALLDIFF_CONSTRAINT(c)) {
+
+    if (c.function == 'alldifferent) {
+      require(c.result == CSPOMConstant(true))
       val constants = c.arguments.collect {
         case CSPOMConstant(k: Int) => k
       }
@@ -93,30 +96,38 @@ object AllDiffConstant extends ConstraintCompiler {
 object AllDiff extends ConstraintCompiler with LazyLogging {
   type A = Set[CSPOMVariable[Int]]
 
-  def DIFF_CONSTRAINT(constraint: CSPOMConstraint[_]) =
-    (constraint.result.isTrue &&
-      Set('gt, 'lt, 'alldifferent)(constraint.function)) ||
-      (constraint.result.isFalse && Set('eq, 'ge, 'le)(constraint.function))
+  def DIFF_CONSTRAINT(constraint: CSPOMConstraint[_]): Option[Seq[CSPOMExpression[_]]] =
+    PartialFunction.condOpt(constraint) {
+      case CSPOMConstraint(CSPOMConstant(true), 'sum, Seq(IntExpression.constSeq(coefs), CSPOMSeq(args), CSPOMConstant(constant)), p) if (p.get("mode").contains("lt")) &&
+        { coefs == Seq(-1, 1) || coefs == Seq(1, -1) } &&
+        constant == 0 => args
+    }
+      .orElse(ALLDIFF_CONSTRAINT(constraint))
 
-  def ALLDIFF_CONSTRAINT(constraint: CSPOMConstraint[_]) =
-    (constraint.result.isFalse && 'eq == constraint.function) ||
-      'alldifferent == constraint.function
+  //  (constraint.result.isTrue &&
+  //    Set('gt, 'lt)(constraint.function)) ||
+  //    (constraint.result.isFalse && Set('ge, 'le)(constraint.function)) ||
+  //    ALLDIFF_CONSTRAINT(constraint)
+
+  def ALLDIFF_CONSTRAINT(constraint: CSPOMConstraint[_]): Option[Seq[CSPOMExpression[_]]] = PartialFunction.condOpt(constraint) {
+    case CSPOMConstraint(CSPOMConstant(true), 'alldifferent, args, _) => args
+    case CSPOMConstraint(CSPOMConstant(true), 'sum, Seq(IntExpression.constSeq(coefs), CSPOMSeq(args), CSPOMConstant(constant)), p) if p.get("mode").contains("ne") &&
+      constant == 0 && (coefs == Seq(-1, 1) || coefs == Seq(1, -1)) => args
+    case CSPOMConstraint(CSPOMConstant(false), 'eq, args, _) => args
+  }
 
   val ITER = 750;
 
   val TABU_SIZE = 15;
 
   override def mtch(constraint: CSPOMConstraint[_], problem: CSPOM) = {
-
-    constraint match {
-      case c @ CSPOMConstraint(_, func, args: Seq[_], _) if DIFF_CONSTRAINT(c) =>
-        val clique = expand(args.collect { case v: IntVariable => v }.toSet, problem)
-        if (clique.size > constraint.arguments.size) {
-          Some(clique)
-        } else {
-          None
-        }
-      case _ => None
+    DIFF_CONSTRAINT(constraint).flatMap { args =>
+      val clique = expand(args.collect { case v: IntVariable => v }.toSet, problem)
+      if (clique.size > args.size) {
+        Some(clique)
+      } else {
+        None
+      }
     }
 
   }
@@ -130,9 +141,8 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM, clique: Set[CSPOMVariable[Int]]) = {
 
     val delta =
-      if (ALLDIFF_CONSTRAINT(constraint)) {
-        problem.removeConstraint(constraint)
-        Delta().removed(constraint)
+      if (ALLDIFF_CONSTRAINT(constraint).isDefined) {
+        removeCtr(constraint, problem)
       } else {
         Delta()
       }
@@ -147,7 +157,7 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
                 cache: WeakHashMap[CSPOMVariable[Int], Set[CSPOMVariable[Int]]]): Set[CSPOMVariable[Int]] = {
 
     cache.getOrElseUpdate(v,
-      problem.constraints(v).filter(DIFF_CONSTRAINT).flatMap(_.arguments).collect {
+      problem.deepConstraints(v).flatMap(DIFF_CONSTRAINT).flatten.collect {
         case v: IntVariable => v
       }.toSet - v)
 
@@ -223,21 +233,18 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
     var delta = Delta()
 
     if (!scope.flatMap(problem.constraints).exists(c => isSubsumed(allDiff, c))) {
-      problem.ctr(allDiff);
       logger.debug("New alldiff: " + allDiff.toString(new VariableNames(problem)))
-
-      delta = delta.added(allDiff)
-      //      val constraints =
-      //        scope.foldLeft(Set[CSPOMConstraint]())((acc, v) => acc ++ v.constraints) - allDiff;
+      delta ++= addCtr(allDiff, problem)
 
       var removed = 0
       /* Remove newly subsumed neq/alldiff constraints. */
 
-      scope.iterator.flatMap(problem.constraints).filter(c => isSubsumed(c, allDiff)).foreach {
-        c =>
-          removed += 1
-          problem.removeConstraint(c);
-          delta = delta.removed(c)
+      for (
+        v <- scope;
+        c <- problem.constraints(v) if isSubsumed(c, allDiff)
+      ) {
+        removed += 1
+        delta ++= removeCtr(c, problem)
       }
       logger.debug("removed " + removed + " constraints, " + problem.constraints.size + " left")
     }
@@ -245,7 +252,7 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
   }
 
   private def isSubsumed(c: CSPOMConstraint[_], by: CSPOMConstraint[_]): Boolean = {
-    (by ne c) && DIFF_CONSTRAINT(by) && ALLDIFF_CONSTRAINT(c) && c.arguments.forall(by.arguments.contains)
+    (by ne c) && DIFF_CONSTRAINT(by).isDefined && ALLDIFF_CONSTRAINT(c).exists(_.forall(by.arguments.contains))
   }
 
   val RAND = new Random(0);

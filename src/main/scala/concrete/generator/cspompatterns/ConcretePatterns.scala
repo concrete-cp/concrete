@@ -27,7 +27,7 @@ object ConcretePatterns {
 
     val concreteImp = Seq(
       AbsDiff, AbsDiffDomains, AllDiff, SubsumedDiff, Square, SumConstants, SumDuplicates, PseudoBool,
-      MergeNotDisj, UnaryClause, SumFactors, SumEq, SumNe) //, LexLeq2SAT)
+      MergeNotDisj, UnaryClause, SumFactors, SumEq, SumFalse) //, LexLeq2SAT)
 
     val improveModel = params.getOrElse("improveModel", false)
 

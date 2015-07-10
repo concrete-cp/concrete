@@ -14,7 +14,7 @@ import cspom.compiler.Delta
 object SubsumedDiff extends ConstraintCompilerNoData {
 
   def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM) =
-    AllDiff.ALLDIFF_CONSTRAINT(constraint) && haveSubsumingConstraint(constraint, problem)
+    AllDiff.ALLDIFF_CONSTRAINT(constraint).isDefined && haveSubsumingConstraint(constraint, problem)
 
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM) = {
     removeCtr(constraint, problem)
@@ -25,7 +25,7 @@ object SubsumedDiff extends ConstraintCompilerNoData {
     val smallestDegree = constraint.fullScope.minBy(problem.constraints(_).size)
 
     problem.constraints(smallestDegree).exists(
-      c => c != constraint && AllDiff.DIFF_CONSTRAINT(c) && constraint.fullScope.toSet.subsetOf(c.fullScope.toSet))
+      c => c != constraint && AllDiff.DIFF_CONSTRAINT(c).exists(_.toSet.subsetOf(c.fullScope.toSet)))
   }
 
   def selfPropagation = false

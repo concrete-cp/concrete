@@ -20,22 +20,7 @@ import cspom.variable.BoolExpression
 object XCSPPatterns {
   def apply() = Seq(
     XCSPTypes,
-    new GlobalCompiler(mtch) { def selfPropagation = true },
-    new ConstraintCompilerNoData {
-      def matchBool(c: CSPOMConstraint[_], problem: CSPOM) = c.function == 'ne
-      def compile(constraint: CSPOMConstraint[_], problem: CSPOM) = {
-        val CSPOMConstraint(a, _, args, params) = constraint
-
-        val n = new BoolVariable()
-        val c1 = CSPOMConstraint(n, 'not, Seq(a))
-        val c2 = CSPOMConstraint(n, 'eq, args, params)
-
-        replaceCtr(Seq(constraint), Seq(c1, c2), problem)
-
-      }
-
-      def selfPropagation: Boolean = false
-    })
+    new GlobalCompiler(mtch) { def selfPropagation = true })
 
   val mtch: PartialFunction[CSPOMConstraint[_], CSPOMConstraint[_]] = {
     case CSPOMConstraint(IntExpression(a), 'sub, Seq(IntExpression(b), IntExpression(c)), p) =>
@@ -43,6 +28,9 @@ object XCSPPatterns {
 
     case CSPOMConstraint(IntExpression(a), 'add, Seq(IntExpression(b), IntExpression(c)), p) =>
       linear(Seq((-1, a), (1, b), (1, c)), "eq", 0) withParams p
+
+    case CSPOMConstraint(r, 'ne, Seq(a, b), p) =>
+      CSPOMConstraint(r)('sum)(Seq(1, -1), Seq(a, b), 0) withParams p + ("mode" -> "ne")
 
     case CSPOMConstraint(r, 'lt, Seq(a, b), p) =>
       CSPOMConstraint(r)('sum)(Seq(1, -1), Seq(a, b), 0) withParams p + ("mode" -> "lt")

@@ -19,23 +19,23 @@ import cspom.variable.SimpleExpression
 object FZPatterns {
   def apply() = Seq(
     new GlobalCompiler(mtch) { def selfPropagation = false },
-    new ConstraintCompilerNoData {
-      /**
-       * (a = b) ↔ r
-       * int_ne_reif(var int: a, var int: b, var bool: r)
-       */
-      def matchBool(c: CSPOMConstraint[_], p: CSPOM) = c.function == 'int_ne_reif
-
-      def compile(c: CSPOMConstraint[_], p: CSPOM) = {
-        val Ctr('int_ne_reif, Seq(a, b, r), params) = c
-        val n = new BoolVariable()
-        val c1 = CSPOMConstraint(n, 'not, Seq(r))
-        val c2 = CSPOMConstraint(n, 'eq, Seq(a, b), params)
-        replaceCtr(Seq(c), Seq(c1, c2), p)
-      }
-
-      def selfPropagation = false
-    },
+    //    new ConstraintCompilerNoData {
+    //      /**
+    //       * (a = b) ↔ r
+    //       * int_ne_reif(var int: a, var int: b, var bool: r)
+    //       */
+    //      def matchBool(c: CSPOMConstraint[_], p: CSPOM) = c.function == 'int_ne_reif
+    //
+    //      def compile(c: CSPOMConstraint[_], p: CSPOM) = {
+    //        val Ctr('int_ne_reif, Seq(a, b, r), params) = c
+    //        val n = new BoolVariable()
+    //        val c1 = CSPOMConstraint(n, 'not, Seq(r))
+    //        val c2 = CSPOMConstraint(n, 'eq, Seq(a, b), params)
+    //        replaceCtr(Seq(c), Seq(c1, c2), p)
+    //      }
+    //
+    //      def selfPropagation = false
+    //    },
     Bool2IntDomains)
 
   //  val debug = new PartialFunction[CSPOMConstraint[_], CSPOMConstraint[_]] {
@@ -439,7 +439,12 @@ object FZPatterns {
      * a = b
      * int_ne(var int: a, var int: b)
      */
-    case Ctr('int_ne, Seq(a, b), p) => CSPOMConstraint(CSPOMConstant(false), 'eq, Seq(a, b), p)
+    case Ctr('int_ne, Seq(a, b), p)         => CSPOMConstraint(CSPOMConstant(false), 'eq, Seq(a, b), p)
+    /**
+     * (a = b) ↔ r
+     * int_ne_reif(var int: a, var int: b, var bool: r)
+     */
+    case Ctr('int_ne_reif, Seq(a, b, r), p) => CSPOMConstraint(r)('sum)(Seq(-1, 1), Seq(a, b), 0) withParams p + ("mode" -> "ne")
     /**
      * a+b = c
      * int_plus(var int: a, var int: b, var int: c)
