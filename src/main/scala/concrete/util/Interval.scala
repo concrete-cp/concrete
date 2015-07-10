@@ -8,6 +8,22 @@ object Interval {
     }
       .orElse(i1)
   }
+
+  def realUnion(i0: Option[Interval], i1: Option[Interval]): Seq[Interval] = {
+    i0 match {
+      case Some(i0) =>
+        i1 match {
+          case Some(i1) =>
+            if (i1 intersects i0) Seq(i0 span i1)
+            else if (i0.lb < i1.lb) Seq(i0, i1)
+            else Seq(i1, i0)
+          case None => Seq(i0)
+        }
+      case None => i1.toSeq
+    }
+
+  }
+
 }
 
 case class Interval(val lb: Int, val ub: Int) {
