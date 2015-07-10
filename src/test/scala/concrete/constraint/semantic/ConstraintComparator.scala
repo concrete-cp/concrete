@@ -15,7 +15,7 @@ import org.scalatest.Inspectors
 /**
  * @author vion
  */
-object ConstraintComparator extends FlatSpec with Matchers with Inspectors {
+object ConstraintComparator extends Matchers with Inspectors {
 
   def compare(vars: List[Variable], c1: Constraint, c2: Constraint): Unit = {
     val problem = new Problem(vars)
