@@ -96,10 +96,10 @@ trait SpanCalculator extends Sum {
   }
 
   override def toString() =
-    (scope, factors).zipped.map((v, f) => f + "." + v).mkString(" + ") + s" $mode $constant"
+    (scope, factors).zipped.map((v, f) => f + "." + v).mkString(" + ") + s" ${mode}BC $constant"
 
   override def toString(ps: ProblemState) =
-    (scope, factors).zipped.map((v, f) => f + "." + v.toString(ps)).mkString(" + ") + s" $mode $constant"
+    (scope, factors).zipped.map((v, f) => f + "." + v.toString(ps)).mkString(" + ") + s" ${mode}BC $constant"
 
   def advise(ps: ProblemState, p: Int) = arity * 2
   def simpleEvaluation: Int = 3
@@ -113,6 +113,12 @@ final class SumAC(
 
   def this(constant: Int, scope: Array[Variable], mode: SumMode.SumMode) =
     this(constant, Array.fill(scope.length)(1), scope, mode)
+
+  override def toString() =
+    (scope, factors).zipped.map((v, f) => f + "." + v).mkString(" + ") + s" ${mode}AC $constant"
+
+  override def toString(ps: ProblemState) =
+    (scope, factors).zipped.map((v, f) => f + "." + v.toString(ps)).mkString(" + ") + s" ${mode}AC $constant"
 
 }
 
