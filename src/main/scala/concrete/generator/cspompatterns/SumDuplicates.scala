@@ -13,16 +13,17 @@ import SumMode._
 import cspom.variable.CSPOMExpression
 import concrete.CSPOMDriver
 import cspom.variable.IntExpression
+import cspom.variable.BoolExpression
 
 /**
  *  Merge duplicates in linear constraints (x + x = 0 -> 2.x = 0). Also remove variables with factor = 0.
  */
 object SumDuplicates extends ConstraintCompiler {
 
-  type A = (CSPOMExpression[_], collection.Map[CSPOMExpression[_], Int], CSPOMExpression[_])
+  type A = (CSPOMExpression[_], collection.Map[CSPOMExpression[_], Int], Int)
 
   override def mtch(c: CSPOMConstraint[_], p: CSPOM) = PartialFunction.condOpt(c) {
-    case CSPOMConstraint(r, 'sum, Seq(IntExpression.constSeq(coefs), CSPOMSeq(vars), const), p) =>
+    case CSPOMConstraint(r, 'sum, Seq(IntExpression.constSeq(coefs), CSPOMSeq(vars), CSPOMConstant(const: Int)), p) =>
 
       var duplicates = false
       var factors = collection.mutable.Map[CSPOMExpression[_], Int]()
@@ -48,13 +49,29 @@ object SumDuplicates extends ConstraintCompiler {
 
   def compile(constraint: CSPOMConstraint[_], p: CSPOM, data: A) = {
     val (r, args, const) = data
+    val mode = constraint.getParam[String]("mode").map(SumMode.withName(_)).get
     val (variables, factors) = args.filter(_._2 != 0).unzip
 
-    val newConstraint =
-      CSPOMConstraint(r)('sum)(CSPOMConstant.ofSeq(factors.toSeq), CSPOMSeq(variables.toSeq: _*), const) withParams constraint.params
+    if (factors.isEmpty) {
+      val truth = mode match {
+        case SumEQ => const == 0
+        case SumLT => 0 > const
+        case SumLE => 0 >= const
+        case SumNE => const != 0
+      }
+      logger.warn(s"Linear constraint with no variables: $constraint, entailed to $truth")
 
-    //println(s"replacing $constraint with $newConstraint")
-    replaceCtr(constraint, newConstraint, p)
+      val nr = reduceDomain(BoolExpression.coerce(constraint.result), truth)
+      removeCtr(constraint, p) ++ replace(constraint.result, nr, p)
+
+    } else {
+      val newConstraint =
+        CSPOMConstraint(r)('sum)(CSPOMConstant.ofSeq(factors.toSeq), CSPOMSeq(variables.toSeq: _*), CSPOMConstant(const)) withParams constraint.params
+
+      //println(s"replacing $constraint with $newConstraint")
+      replaceCtr(constraint, newConstraint, p)
+
+    }
 
   }
 
