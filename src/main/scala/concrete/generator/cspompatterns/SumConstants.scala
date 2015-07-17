@@ -13,6 +13,7 @@ import SumMode._
 import cspom.variable.IntExpression
 import concrete.CSPOMDriver
 import concrete.generator.constraint.SumGenerator
+import cspom.variable.BoolExpression
 
 /**
  *  Remove constants from linear constraints
@@ -20,7 +21,7 @@ import concrete.generator.constraint.SumGenerator
 object SumConstants extends ConstraintCompilerNoData {
 
   def matchBool(c: CSPOMConstraint[_], p: CSPOM) = {
-    c.function == 'sum && c.result.isTrue && {
+    c.function == 'sum && {
       val (vars, coefs, const, mode) = SumGenerator.readCSPOM(c)
       vars
         .collectFirst {
@@ -47,18 +48,20 @@ object SumConstants extends ConstraintCompilerNoData {
 
     vars match {
       case Seq() =>
-        mode match {
-          case SumEQ => require(constant == 0)
-          case SumLT => require(constant > 0)
-          case SumLE => require(constant >= 0, s"inconsistent sum $constraint")
-          case SumNE => require(constant != 0)
+        val truth = mode match {
+          case SumEQ => constant == 0
+          case SumLT => 0 > constant
+          case SumLE => 0 >= constant
+          case SumNE => constant != 0
         }
-        removeCtr(constraint, p)
+        logger.warn(s"Linear constraint with no variables: $constraint, entailed to $truth")
+        val nr = reduceDomain(BoolExpression.coerce(constraint.result), truth)
+        removeCtr(constraint, p) ++ replace(constraint.result, nr, p)
 
-      case IntExpression.seq(solverVariables) =>
+      case solverVariables =>
         val newConstraint =
-          CSPOMDriver.linear(CSPOMSeq(vars: _*), varCoefs, mode.toString(), constant) withParams
-            (constraint.params - "mode")
+          CSPOMConstraint(constraint.result)('sum)(CSPOMConstant.ofSeq(varCoefs), CSPOMSeq(solverVariables: _*), CSPOMConstant(constant)) withParams
+            constraint.params
 
         //println(s"replacing $constraint with $newConstraint")
         replaceCtr(constraint, newConstraint, p)
