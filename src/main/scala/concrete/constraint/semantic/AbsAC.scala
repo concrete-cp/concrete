@@ -8,7 +8,7 @@ import concrete.ProblemState
 import concrete.Outcome
 
 final class AbsAC(val result: Variable, val v0: Variable) extends Constraint(Array(result, v0))
-  with BCCompanion {
+    with BCCompanion {
 
   def skipIntervals = true
 
@@ -22,7 +22,7 @@ final class AbsAC(val result: Variable, val v0: Variable) extends Constraint(Arr
     val result = ps.dom(this.result)
     val x = ps.dom(v0)
 
-    ps.filterDom(this.result) { v: Int => x.present(v) || x.present(-v) }
+    ps.filterDom(this.result) { v: Int => v >= 0 && (x.present(v) || x.present(-v)) }
       .filterDom(v0) { v: Int => result.present(math.abs(v)) }
       .entailIfFree(this)
   }
