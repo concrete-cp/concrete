@@ -17,15 +17,16 @@ import cspom.variable.CSPOMSeq
  * x=absdiff(y,z). No other constraint may imply the auxiliary constraint a.
  */
 object AbsDiff extends ConstraintCompiler {
-  type A = (CSPOMConstraint[Any], CSPOMExpression[_], Set[(CSPOMConstraint[Any], CSPOMExpression[_], CSPOMExpression[_])])
+  type A = (CSPOMConstraint[Any], CSPOMExpression[_], Set[(CSPOMConstraint[Any], Seq[CSPOMExpression[_]])])
 
   override def mtch(c: CSPOMConstraint[_], problem: CSPOM) = c match {
     case absConstraint @ CSPOMConstraint(_, 'abs, Seq(absArg), _) =>
 
       val addConstraints = problem.deepConstraints(absArg).collect {
         case addConstraint @ CSPOMConstraint(CSPOMConstant(true), 'sum, Seq(
-          IntExpression.constSeq(Seq(1, -1, -1)), CSPOMSeq(Seq(a, b, `absArg`)), CSPOMConstant(0)), _) if addConstraint.getParam("mode").contains("eq") =>
-          (addConstraint, a, b)
+          IntExpression.constSeq(coefs), CSPOMSeq(args), CSPOMConstant(0)), _) if addConstraint.getParam("mode").contains("eq") &&
+          coefs.sorted == Seq(-1, -1, 1) && (args zip coefs).find(_._1 == absArg).exists(_._2 == -1) =>
+          (addConstraint, args.filter(_ != absArg))
       }
 
       if (addConstraints.isEmpty) {
@@ -39,14 +40,15 @@ object AbsDiff extends ConstraintCompiler {
   def compile(c: CSPOMConstraint[_], problem: CSPOM, data: A) = {
     val (absConstraint, absArg, addConstraints) = data
     val delta = addConstraints.foldLeft(Delta()) {
-      case (acc, (addConstraint, a, b)) =>
+      case (acc, (addConstraint, other)) =>
+
         /**
-         * We have  absConstraint.result = |absArg| and addConstraint.result = absArg + other
+         * We have  absConstraint.result = |absArg| and absArg = other
          *
-         * so absConstraint.result = |addConstraint.result - other|
+         * so absConstraint.result = |other|
          */
 
-        val nc = CSPOMConstraint(absConstraint.result, 'absdiff, Seq(a, b))
+        val nc = CSPOMConstraint(absConstraint.result, 'absdiff, other)
         val delta = acc ++ addCtr(nc, problem) //acc.added(problem.ctr(nc))
         /**
          *  Remove addConstraint if absArg is not referenced

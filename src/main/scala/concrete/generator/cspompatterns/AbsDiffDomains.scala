@@ -37,9 +37,13 @@ object AbsDiffDomains extends VariableCompiler('absdiff) with LazyLogging {
   }
 
   override def compile(c: CSPOMConstraint[_], problem: CSPOM, data: A) = {
-    val e = problem.referencedExpressions
-    val ct = e.count(_.fullyDefined)
-    logger.info(s"$ct/${e.size}")
+
+    logger.info {
+      val e = problem.referencedExpressions
+      val ct = e.count(_.fullyDefined)
+      s"$ct/${e.size}"
+    }
+
     super.compile(c, problem, data)
   }
 }
