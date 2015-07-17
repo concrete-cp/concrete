@@ -1,7 +1,6 @@
 package concrete.generator.cspompatterns
 
 import scala.reflect.runtime.universe
-
 import concrete.constraint.semantic.SumMode.SumEQ
 import concrete.constraint.semantic.SumMode.SumLE
 import concrete.constraint.semantic.SumMode.SumLT
@@ -11,6 +10,7 @@ import cspom.CSPOM
 import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.variable.CSPOMConstant
+import cspom.variable.CSPOMSeq
 
 object SumFalse extends ConstraintCompilerNoData {
 
@@ -31,7 +31,7 @@ object SumFalse extends ConstraintCompilerNoData {
 
     replaceCtr(
       c,
-      CSPOMConstraint('sum)(CSPOMConstant.ofSeq(revCoefs), vars, CSPOMConstant(revConstant)) withParams c.params + ("mode" -> revMode.toString),
+      CSPOMConstraint('sum)(CSPOMConstant.ofSeq(revCoefs), CSPOMSeq(vars: _*), CSPOMConstant(revConstant)) withParams c.params + ("mode" -> revMode.toString),
       p)
   }
 

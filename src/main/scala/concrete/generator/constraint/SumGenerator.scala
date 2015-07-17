@@ -23,6 +23,7 @@ import concrete.constraint.Constraint
 import concrete.constraint.semantic.EqAC
 import concrete.constraint.semantic.EqBC
 import cspom.variable.IntExpression
+import cspom.variable.SimpleExpression
 
 final object SumGenerator extends Generator with LazyLogging {
 
@@ -51,7 +52,7 @@ final object SumGenerator extends Generator with LazyLogging {
   }
 
   def readCSPOM(constraint: CSPOMConstraint[_]) = {
-    val Seq(IntExpression.constSeq(coefs), IntExpression.seq(vars), CSPOMConstant(c)) = constraint.arguments //map cspom2concreteVar
+    val Seq(IntExpression.constSeq(coefs), SimpleExpression.seq(vars), CSPOMConstant(c)) = constraint.arguments //map cspom2concreteVar
 
     // For bool2int optimization
     val constant = c match {
