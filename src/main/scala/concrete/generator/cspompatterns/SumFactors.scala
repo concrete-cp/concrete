@@ -18,6 +18,7 @@ object SumFactors extends ConstraintCompiler {
       case CSPOMConstraint(_, 'sum, Seq(IntExpression.constSeq(coefs), CSPOMSeq(args), CSPOMConstant(result: Int)), _) =>
 
         val (fargs, fparams) = args.zip(coefs).filter(_._2 != 0).unzip
+        require(fparams.nonEmpty, c)
         val gcd = concrete.util.Math.gcd(fparams).abs.toInt
         val rparams = fparams.map(_ / gcd)
         val rresult = result / gcd
