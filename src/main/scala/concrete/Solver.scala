@@ -98,6 +98,10 @@ class CSPOMSolver(
     })
   }
 
+  def optimizes: Option[CSPOMVariable[_]] = solver.optimises.map {
+    case variable => variables.find(_._2 == variable).get._1
+  }
+
   def concreteProblem = solver.problem
 
   def statistics = solver.statistics
@@ -112,7 +116,7 @@ class CSPOMSolution(private val cspom: CSPOM, private val variables: Map[CSPOMVa
 
   lazy val apply = concrete2CspomSol(concreteSol)
 
-  def concrete2CspomSol(sol: Map[Variable, Any]): Map[String, Any] = {
+  private def concrete2CspomSol(sol: Map[Variable, Any]): Map[String, Any] = {
     val cspomsol = cspom.expressionsWithNames.iterator
       .flatMap {
         case (n, e) => concrete2CspomSol(n, e, sol)
@@ -132,6 +136,14 @@ class CSPOMSolution(private val cspom: CSPOM, private val variables: Map[CSPOMVa
           }
       case const: CSPOMConstant[_]    => Seq(name -> const.value)
       case variable: CSPOMVariable[_] => Seq(name -> sol(variables(variable)))
+    }
+  }
+
+  def get(key: CSPOMExpression[_]): Option[Any] = {
+    key match {
+      case const: CSPOMConstant[_]    => Some(const.value)
+      case variable: CSPOMVariable[_] => variables.get(variable).map(concreteSol)
+      case _                          => throw new AssertionError(s"Cannot obtain solution for $key")
     }
   }
 
@@ -161,6 +173,9 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   def decisionVariables(dv: Seq[Variable]): Unit = {
     logger.info(s"Decision variables: $dv")
     problem.decisionVariables = dv.toList
+    for (v <- optimises) {
+      if (!problem.decisionVariables.contains(v)) problem.decisionVariables +:= v
+    }
   }
 
   @Statistic
@@ -175,10 +190,18 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
 
   private var _minimize: Option[Variable] = None
   private var _maximize: Option[Variable] = None
-  def minimize(v: Variable) { _maximize = None; _minimize = Some(v) }
-  def maximize(v: Variable) { _minimize = None; _maximize = Some(v) }
+  def minimize(v: Variable) {
+    _maximize = None; _minimize = Some(v)
+    if (!problem.decisionVariables.contains(v)) problem.decisionVariables +:= v
+  }
+  def maximize(v: Variable) {
+    _minimize = None; _maximize = Some(v)
+    if (!problem.decisionVariables.contains(v)) problem.decisionVariables +:= v
+  }
 
-  def isOptimizer = _maximize.nonEmpty || _minimize.nonEmpty
+  def isOptimizer: Boolean = _maximize.nonEmpty || _minimize.nonEmpty
+
+  def optimises: Option[Variable] = _maximize orElse _minimize
 
   def next(): Map[Variable, Any] = _next match {
     case UNSAT         => Iterator.empty.next
