@@ -55,8 +55,8 @@ object SumDuplicates extends ConstraintCompiler {
     if (factors.isEmpty) {
       val truth = mode match {
         case SumEQ => const == 0
-        case SumLT => 0 > const
-        case SumLE => 0 >= const
+        case SumLT => 0 < const
+        case SumLE => 0 <= const
         case SumNE => const != 0
       }
       logger.warn(s"Linear constraint with no variables: $constraint, entailed to $truth")

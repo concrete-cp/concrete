@@ -36,7 +36,7 @@ object SumConstants extends ConstraintCompilerNoData {
 
     val (vars, varCoefs) = expr.zip(coefs)
       .collect {
-        case (v: CSPOMVariable[Int], p) => (v, p)
+        case (v: CSPOMVariable[_], p) => (v, p)
       }
       .unzip
 
@@ -49,12 +49,12 @@ object SumConstants extends ConstraintCompilerNoData {
     vars match {
       case Seq() =>
         val truth = mode match {
-          case SumEQ => constant == 0
-          case SumLT => 0 > constant
-          case SumLE => 0 >= constant
-          case SumNE => constant != 0
+          case SumEQ => 0 == constant
+          case SumLT => 0 < constant
+          case SumLE => 0 <= constant
+          case SumNE => 0 != constant
         }
-        logger.warn(s"Linear constraint with no variables: $constraint, entailed to $truth")
+        //logger.warn(s"Linear constraint with no variables: $constraint, entailed to $truth")
         val nr = reduceDomain(BoolExpression.coerce(constraint.result), truth)
         removeCtr(constraint, p) ++ replace(constraint.result, nr, p)
 
