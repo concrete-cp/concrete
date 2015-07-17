@@ -82,7 +82,7 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
 
       SAT(clauses, pb, pm).foreach(problem.addConstraint)
 
-      //println(problem.toString(problem.initState))
+      logger.info(problem.toString(problem.initState.toState))
 
       (problem, variables)
     }
