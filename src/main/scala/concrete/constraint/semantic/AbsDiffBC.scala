@@ -8,21 +8,9 @@ import concrete.constraint.Constraint
 import concrete.util.Interval
 
 final class AbsDiffBC(val result: Variable, val v0: Variable, val v1: Variable)
-  extends Constraint(Array(result, v0, v1)) with BC {
+    extends Constraint(Array(result, v0, v1)) with BC {
 
   def check(t: Array[Int]) = t(0) == math.abs(t(1) - t(2))
-
-  private def union(i0: Option[Interval], i1: Option[Interval]): Option[Interval] = {
-    i0.map {
-      i: Interval =>
-        if (i1.isDefined) {
-          i span i1.get
-        } else {
-          i
-        }
-    }
-      .orElse(i1)
-  }
 
   def shave(ps: ProblemState) = {
     val rspan = ps.span(result)
@@ -34,18 +22,18 @@ final class AbsDiffBC(val result: Variable, val v0: Variable, val v1: Variable)
 
         val rspan = ps.dom(result).span
 
-        union(v0span.intersect(v1span - rspan), v0span.intersect(v1span + rspan)) match {
-          case None => Contradiction
-          case Some(v0span) =>
+        Interval.union(v0span.intersect(v1span - rspan), v0span.intersect(v1span + rspan))
+          .map { v0span =>
             ps.shaveDom(v0, v0span).andThen { ps =>
-              union(
+              Interval.union(
                 v1span.intersect(v0span - rspan),
-                v1span.intersect(v0span + rspan)) match {
-                  case None    => Contradiction
-                  case Some(g) => ps.shaveDom(v1, g)
-                }
+                v1span.intersect(v0span + rspan))
+                .map(g => ps.shaveDom(v1, g))
+                .getOrElse(Contradiction)
             }
-        }
+
+          }
+          .getOrElse(Contradiction)
       }
 
   }
