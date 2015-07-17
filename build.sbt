@@ -22,17 +22,16 @@ libraryDependencies ++= Seq(
 	"org.postgresql" % "postgresql" % "9.4-1201-jdbc41",
 	//"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
 	"org.ow2.sat4j" % "org.ow2.sat4j.pb" % "2.3.5",
-	
 	"com.typesafe.slick" %% "slick" % "3.0.0",
 	//"org.jcp" % "jsr331" % "1.1.1",
 	"org.scalatest" %% "scalatest" % "2.2.5" % "test",
 	"org.scalacheck" %% "scalacheck" % "1.12.4" % "test",
-	"com.storm-enroute" %% "scalameter" % "0.6" % "test"
+	"com.storm-enroute" %% "scalameter" % "0.6" % "test",
+	"org.codehaus.janino" % "janino" % "2.7.8"
 	)
 
 scalacOptions ++= Seq("-optimise"
 //	      , "-Xdisable-assertions"
-	      , "-target:jvm-1.7"
 //	"-deprecation", 
 //	"-unchecked", 
 //	"-optimise", 
@@ -41,8 +40,6 @@ scalacOptions ++= Seq("-optimise"
 //	"-feature",
 //	"-Yinline-warnings"
 )
-
-//javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
 
 enablePlugins(JavaAppPackaging)
 
