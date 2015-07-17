@@ -29,6 +29,7 @@ import cspom.flatzinc.FlatZincParser
 import cspom.compiler.CSPOMCompiler
 import concrete.generator.cspompatterns.FZPatterns
 import concrete.ParameterManager
+import cspom.flatzinc.FZArrayIdx
 
 object FZConcrete extends CSPOMRunner {
 
@@ -164,7 +165,13 @@ object FZConcrete extends CSPOMRunner {
 
     case FZArrayExpr(list)         => CSPOMSeq(list.map(ann2expr(cspom, _)): _*)
 
-    case e                         => throw new InvalidParameterException("Cannot read search variable list in " + e)
+    case FZArrayIdx(array, idx) => cspom.expression(array)
+      .collect {
+        case s: CSPOMSeq[_] => s(idx)
+      }
+      .get
+
+    case e => throw new InvalidParameterException("Cannot read search variable list in " + e)
   }
 
   def description(args: List[String]) =
