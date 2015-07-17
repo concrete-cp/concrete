@@ -25,7 +25,7 @@ abstract class ScoredVariableHeuristic(params: ParameterManager) extends Variabl
         select(tail, best, bestScore, ties, state)
       } else {
         val s = score(current, dom, state)
-        val comp = s.compareTo(bestScore)
+        val comp = java.lang.Double.compare(s, bestScore)
 
         if (comp > 0) {
           select(tail, current, s, 2, state)
@@ -54,7 +54,7 @@ abstract class ScoredVariableHeuristic(params: ParameterManager) extends Variabl
         select(tail, best, bestScore, state)
       } else {
         val s = score(current, dom, state)
-        val comp = s.compareTo(bestScore)
+        val comp = java.lang.Double.compare(s, bestScore)
         if (comp > 0) {
           select(tail, current, s, state)
         } else {
@@ -77,7 +77,7 @@ abstract class ScoredVariableHeuristic(params: ParameterManager) extends Variabl
   }
 
   def compare(v1: Variable, d1: Domain, v2: Variable, d2: Domain, state: ProblemState): Int =
-    score(v1, d1, state).compareTo(score(v2, d2, state))
+    java.lang.Double.compare(score(v1, d1, state), score(v2, d2, state))
 
   def score(variable: Variable, domain: Domain, state: ProblemState): Double
 
