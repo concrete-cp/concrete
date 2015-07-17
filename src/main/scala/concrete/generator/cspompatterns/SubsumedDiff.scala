@@ -25,7 +25,7 @@ object SubsumedDiff extends ConstraintCompilerNoData {
     val smallestDegree = constraint.fullScope.minBy(problem.constraints(_).size)
 
     problem.constraints(smallestDegree).exists(
-      c => c != constraint && AllDiff.DIFF_CONSTRAINT(c).exists(_.toSet.subsetOf(c.fullScope.toSet)))
+      c => c != constraint && AllDiff.DIFF_CONSTRAINT(c).exists(cScope => constraint.fullScope.toSet.subsetOf(cScope.toSet)))
   }
 
   def selfPropagation = false
