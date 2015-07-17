@@ -10,8 +10,13 @@ import concrete.Variable
 import org.scalatest.concurrent.Timeouts
 import org.scalatest.time.Second
 import org.scalatest.time.Span
+import org.scalatest.prop.PropertyChecks
+import concrete.constraint.Residues
+import org.scalacheck.Gen
+import concrete.constraint.Constraint
+import concrete.constraint.TupleEnumerator
 
-final class AbsIntTest extends FlatSpec with Matchers with Timeouts {
+final class AbsIntTest extends FlatSpec with Matchers with Timeouts with PropertyChecks {
 
   "AbsInt" should "filter X" in {
 
@@ -76,6 +81,25 @@ final class AbsIntTest extends FlatSpec with Matchers with Timeouts {
 
       mod.dom(x) should contain theSameElementsAs Seq(224)
       mod.dom(y) should be theSameInstanceAs ps.dom(y)
+    }
+
+  }
+
+  val dom = Gen.nonEmptyListOf(Gen.choose(-1000, 1000))
+
+  it should "filter the same as enumerator" in {
+
+    forAll(dom, dom) { (x: Seq[Int], y: Seq[Int]) =>
+      val vx = new Variable("x", IntDomain.ofSeq(x: _*))
+      val vy = new Variable("y", IntDomain.ofSeq(y: _*))
+
+      ConstraintComparator.compare(
+        List(vx, vy),
+        new AbsAC(vx, vy),
+        new Constraint(Array(vx, vy)) with Residues with TupleEnumerator {
+          def check(t: Array[Int]) = t(0) == math.abs(t(1))
+        })
+
     }
 
   }
