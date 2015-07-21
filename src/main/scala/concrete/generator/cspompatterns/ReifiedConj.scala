@@ -28,7 +28,7 @@ object ReifiedConj extends ConstraintCompiler {
 
   override def mtch(c: CSPOMConstraint[_], p: CSPOM) = PartialFunction.condOpt(c) {
     case CSPOMConstraint(BoolExpression(res), 'and, a, _) =>
-      CSPOMSeq.collectAll(a) {
+      CSPOMSeq.collectAll(a.toIndexedSeq) {
         case BoolExpression(e) => e
       }
         .map((res, _))

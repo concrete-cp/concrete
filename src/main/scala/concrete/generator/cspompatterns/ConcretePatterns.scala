@@ -17,13 +17,14 @@ object ConcretePatterns {
         DivToMul, OccurrenceDomains, BoolEq,
         MulDomains, AbsDomains,
         MulToSum,
-        SumDomains,
+        SumDomains, NeDomains,
         NegToCNF, Xor, ReifiedConj, ReifiedClause,
         NeqVec,
         SlidingSum, Regular, SetIn, CSPOMTypes,
         AllDifferent, AllDiffConstant,
         // Clause does not support constants
-        SimplClause)
+        SimplClause,
+    Bool2IntDomains)
 
     val concreteImp = Seq(
       //AbsDiff, AbsDiffDomains,

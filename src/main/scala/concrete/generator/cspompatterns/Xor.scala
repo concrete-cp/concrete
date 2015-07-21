@@ -13,6 +13,7 @@ import cspom.compiler.ConstraintCompilerNoData
 import cspom.variable.CSPOMExpression
 import cspom.variable.SimpleExpression
 import cspom.variable.CSPOMSeq
+import CSPOM._
 
 /**
  * Reified conjunction is converted to CNF :
@@ -30,11 +31,11 @@ object Xor extends ConstraintCompilerNoData {
   def compile(fc: CSPOMConstraint[_], problem: CSPOM) = {
 
     val Seq(a: SimpleExpression[_], b: SimpleExpression[_]) = fc.arguments
-    val res = fc.result.asInstanceOf[SimpleExpression[Boolean]]
+    val res = fc.result
 
-    val alt1 = CSPOMConstraint(new BoolVariable(), 'clause, Seq(CSPOMSeq(a, b), CSPOMSeq()))
-    val alt2 = CSPOMConstraint(new BoolVariable(), 'clause, Seq(CSPOMSeq(), CSPOMSeq(a, b)))
-    val conj = CSPOMConstraint(res, 'and, Seq(alt1.result, alt2.result))
+    val alt1 = CSPOMConstraint(new BoolVariable())('clause)(Seq(a, b), Seq[SimpleExpression[Boolean]]())
+    val alt2 = CSPOMConstraint(new BoolVariable())('clause)(Seq[SimpleExpression[Boolean]](), Seq(a, b))
+    val conj = CSPOMConstraint(res)('and)(alt1.result, alt2.result)
 
     replaceCtr(fc, Seq(alt1, alt2, conj), problem)
 

@@ -1,6 +1,6 @@
 name := "concrete"
 
-organization := "fr.univ-valenciennes.concrete"
+organization := "fr.univ-valenciennes"
 
 version := "2.0-B1-SNAPSHOT"
 
@@ -8,7 +8,7 @@ scalaVersion := "2.11.7"
 
 
 // For JSR331, CSPOM and its dependencies
-resolvers += "Concrete repository" at "http://concrete-cp.github.io/concrete/repository"
+// resolvers += "Concrete repository" at "http://concrete-cp.github.io/concrete/repository"
 
 
 
@@ -18,7 +18,7 @@ testOptions in Test <+= (target in Test) map {
 
 
 libraryDependencies ++= Seq(
-	"fr.univ-valenciennes.concrete" %% "cspom" % "2.6-SNAPSHOT",
+	"fr.univ-valenciennes" %% "cspom" % "2.6-SNAPSHOT",
 	"org.postgresql" % "postgresql" % "9.4-1201-jdbc41",
 	//"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
 	"org.ow2.sat4j" % "org.ow2.sat4j.pb" % "2.3.5",

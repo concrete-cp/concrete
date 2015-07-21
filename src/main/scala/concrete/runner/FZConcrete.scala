@@ -30,6 +30,7 @@ import cspom.compiler.CSPOMCompiler
 import concrete.generator.cspompatterns.FZPatterns
 import concrete.ParameterManager
 import cspom.flatzinc.FZArrayIdx
+import CSPOM._
 
 object FZConcrete extends CSPOMRunner {
 
@@ -79,7 +80,7 @@ object FZConcrete extends CSPOMRunner {
             case "indomain_max"    => pm("heuristic.value") = classOf[RevLexico]
             case "indomain_middle" => pm("heuristic.value") = classOf[MedValue]
             case "indomain_random" => pm("heuristic.value") = classOf[RandomValue]
-            case h                 => logger.warn(s"Unsupported assignment $h")
+            case h                 => logger.warn(s"Unsupported assignment heuristic $h")
           }
         }
 
@@ -163,7 +164,7 @@ object FZConcrete extends CSPOMRunner {
   private def ann2expr(cspom: CSPOM, e: FZExpr[_]): CSPOMExpression[_] = e match {
     case FZAnnotation(vars, Seq()) => cspom.expression(vars).get
 
-    case FZArrayExpr(list)         => CSPOMSeq(list.map(ann2expr(cspom, _)): _*)
+    case FZArrayExpr(list)         => list.map(ann2expr(cspom, _))
 
     case FZArrayIdx(array, idx) => cspom.expression(array)
       .collect {

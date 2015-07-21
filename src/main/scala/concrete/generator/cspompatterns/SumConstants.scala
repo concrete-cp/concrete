@@ -14,6 +14,7 @@ import cspom.variable.IntExpression
 import concrete.CSPOMDriver
 import concrete.generator.constraint.SumGenerator
 import cspom.variable.BoolExpression
+import CSPOM._
 
 /**
  *  Remove constants from linear constraints
@@ -31,8 +32,17 @@ object SumConstants extends ConstraintCompilerNoData {
     }
   }
 
+  def checkConstant(constant: Int, mode: SumMode): Boolean = {
+    mode match {
+      case SumEQ => 0 == constant
+      case SumLT => 0 < constant
+      case SumLE => 0 <= constant
+      case SumNE => 0 != constant
+    }
+  }
+
   def compile(constraint: CSPOMConstraint[_], p: CSPOM) = {
-    val (expr, coefs, const, mode) = SumGenerator.readCSPOM(constraint)
+    val (expr, coefs, originalConst, mode) = SumGenerator.readCSPOM(constraint)
 
     val (vars, varCoefs) = expr.zip(coefs)
       .collect {
@@ -40,7 +50,7 @@ object SumConstants extends ConstraintCompilerNoData {
       }
       .unzip
 
-    val constant = const - expr.zip(coefs)
+    val const = originalConst - expr.zip(coefs)
       .collect {
         case (CSPOMConstant(c: Int), p) => c * p
       }
@@ -48,19 +58,14 @@ object SumConstants extends ConstraintCompilerNoData {
 
     vars match {
       case Seq() =>
-        val truth = mode match {
-          case SumEQ => 0 == constant
-          case SumLT => 0 < constant
-          case SumLE => 0 <= constant
-          case SumNE => 0 != constant
-        }
+
         //logger.warn(s"Linear constraint with no variables: $constraint, entailed to $truth")
-        val nr = reduceDomain(BoolExpression.coerce(constraint.result), truth)
+        val nr = reduceDomain(BoolExpression.coerce(constraint.result), checkConstant(const, mode))
         removeCtr(constraint, p) ++ replace(constraint.result, nr, p)
 
       case solverVariables =>
         val newConstraint =
-          CSPOMConstraint(constraint.result)('sum)(CSPOMConstant.ofSeq(varCoefs), CSPOMSeq(solverVariables: _*), CSPOMConstant(constant)) withParams
+          CSPOMConstraint(constraint.result)('sum)(varCoefs, solverVariables, const) withParams
             constraint.params
 
         //println(s"replacing $constraint with $newConstraint")

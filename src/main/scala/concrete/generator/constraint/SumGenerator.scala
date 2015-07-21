@@ -52,7 +52,7 @@ final object SumGenerator extends Generator with LazyLogging {
   }
 
   def readCSPOM(constraint: CSPOMConstraint[_]) = {
-    val Seq(IntExpression.constSeq(coefs), SimpleExpression.seq(vars), CSPOMConstant(c)) = constraint.arguments //map cspom2concreteVar
+    val Seq(IntExpression.constSeq(coefs), SimpleExpression.simpleSeq(vars), CSPOMConstant(c)) = constraint.arguments //map cspom2concreteVar
 
     // For bool2int optimization
     val constant = c match {

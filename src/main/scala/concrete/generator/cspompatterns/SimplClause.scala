@@ -12,6 +12,7 @@ import cspom.variable.CSPOMConstant
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
+import CSPOM._
 
 /**
  * Removes constants from clauses
@@ -32,8 +33,8 @@ object SimplClause extends ConstraintCompilerNoData {
     if (positive.exists(_.isTrue) || negative.exists(_.isFalse)) {
       replaceCtr(fc, Seq(), problem)
     } else {
-      val newP = CSPOMSeq(positive.filterNot(_.isFalse): _*)
-      val newN = CSPOMSeq(negative.filterNot(_.isTrue): _*)
+      val newP = positive.filterNot(_.isFalse)
+      val newN = negative.filterNot(_.isTrue)
       replaceCtr(fc, CSPOMConstraint(fc.result, 'clause, Seq(newP, newN), fc.params), problem)
     }
 

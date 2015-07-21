@@ -7,11 +7,12 @@ import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
 import cspom.variable.IntExpression
+import CSPOM._
 
 /** Removes variables with coef 0 from sum constraints and simplifies factors */
 object SumFactors extends ConstraintCompiler {
 
-  type A = (Seq[CSPOMExpression[_]], Seq[Int], Int)
+  type A = (Seq[CSPOMExpression[Any]], Seq[Int], Int)
 
   override def mtch(c: CSPOMConstraint[_], p: CSPOM) = {
     c match {
@@ -36,7 +37,7 @@ object SumFactors extends ConstraintCompiler {
     val (args, coefs, result) = data
 
     replaceCtr(c,
-      CSPOMConstraint(c.result)('sum)(CSPOMConstant.ofSeq(coefs), CSPOMSeq(args: _*), CSPOMConstant(result)) withParams c.params,
+      CSPOMConstraint(c.result)('sum)(coefs, args, result) withParams c.params,
       p)
   }
 

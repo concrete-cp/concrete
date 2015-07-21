@@ -210,7 +210,11 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
       _next = UNKNOWNResult
       for (v <- _maximize) {
         reset()
-        problem.addConstraint(new GtC(v, sol(v).asInstanceOf[Int]))
+        val opt = sol(v) match {
+          case i: Int => problem.addConstraint(new GtC(v, i))
+          case o      => throw new AssertionError(s"$v has value $o which is not an int")
+        }
+
       }
       for (v <- _minimize) {
         reset()

@@ -24,6 +24,10 @@ import cspom.flatzinc.FZSolve
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import concrete.generator.cspompatterns.Bool2IntIsEq
+import concrete.generator.ProblemGenerator
+import concrete.generator.cspompatterns.ConcretePatterns
+import concrete.CSPOMSolver
 //import SolvingTest._
 
 class SolvingTest extends FlatSpec with SolvingBehaviors {
@@ -37,6 +41,8 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
 
   val problemBank = LinkedHashMap[String, AnyVal](
     "1d_rubiks_cube.fzn" -> 12,
+    "photo.fzn" -> 8,
+
     "scen11-f12.xml.bz2" -> 0,
     "crossword-m1-debug-05-01.xml" -> 48,
     "bigleq-50.xml" -> 1,
@@ -122,39 +128,51 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
         }
 
         //logger.info(cspomProblem.toString)
-
-        Solver(cspomProblem, pm).map { solver =>
-
-          for (g <- goal) {
-            FZConcrete.parseSearchMode(g, solver, false)
+        CSPOMCompiler.compile(cspomProblem, ConcretePatterns(pm))
+          .flatMap { cspom =>
+            CSPOMCompiler.compile(cspom, Seq(Bool2IntIsEq))
           }
+          .flatMap { cspom =>
+            val pg = new ProblemGenerator(pm)
+            for ((problem, variables) <- pg.generate(cspom)) yield {
+              val solver = Solver(problem)
+              solver.statistics.register("compiler", CSPOMCompiler)
+              solver.statistics.register("generator", pg)
+              new CSPOMSolver(solver, cspom, variables)
+            }
+          }
+          .map { solver =>
+            for (g <- goal) {
 
-          //    println(solver.concreteProblem)
-
-          val f = Future {
-
-            val solvIt = solver.toIterable
-
-            if (expectedResult) {
-              solvIt should not be 'empty
-            } else {
-              solvIt shouldBe 'empty
+              FZConcrete.parseSearchMode(g, solver, false)
             }
 
-            // println(solver.concreteProblem.toString)
+            //    println(solver.concreteProblem)
 
-            if (test) {
-              for (sol <- solvIt.headOption) {
-                val failed = XCSPConcrete.controlCSPOM(sol, data('variables).asInstanceOf[Seq[String]], url)
-                withClue(sol) {
-                  failed shouldBe 'empty
+            val f = Future {
+
+              val solvIt = solver.toIterable
+
+              if (expectedResult) {
+                solvIt should not be 'empty
+              } else {
+                solvIt shouldBe 'empty
+              }
+
+              // println(solver.concreteProblem.toString)
+
+              if (test) {
+                for (sol <- solvIt.headOption) {
+                  val failed = XCSPConcrete.controlCSPOM(sol, data('variables).asInstanceOf[Seq[String]], url)
+                  withClue(sol) {
+                    failed shouldBe 'empty
+                  }
                 }
               }
             }
-          }
 
-          concurrent.Await.result(f, 1000.seconds)
-        }
+            concurrent.Await.result(f, 1000.seconds)
+          }
     }
       .get
   }
@@ -169,6 +187,7 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
     var goal: Option[FZSolve] = None
 
     val pm = new ParameterManager
+    parameters.foreach(s => pm.update(s._1, s._2))
 
     CSPOM.load(url, parser).flatMap {
       case (cspomProblem, data) =>
@@ -188,38 +207,49 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
             false
         }
 
-        logger.info(cspomProblem.toString)
+        //logger.info(cspomProblem.toString)
 
-        parameters.foreach(s => pm.update(s._1, s._2))
-
-        Solver(cspomProblem, pm).map { solver =>
-
-          for (g <- goal) {
-            FZConcrete.parseSearchMode(g, solver, false)
+        CSPOMCompiler.compile(cspomProblem, ConcretePatterns(pm))
+          .flatMap { cspom =>
+            CSPOMCompiler.compile(cspom, Seq(Bool2IntIsEq))
           }
+          .flatMap { cspom =>
+            val pg = new ProblemGenerator(pm)
+            for ((problem, variables) <- pg.generate(cspom)) yield {
+              val solver = Solver(problem)
+              solver.statistics.register("compiler", CSPOMCompiler)
+              solver.statistics.register("generator", pg)
+              new CSPOMSolver(solver, cspom, variables)
+            }
+          }
+          .map { solver =>
 
-          val f = Future {
-            solver.optimizes match {
-              case Some(v) =>
-                val opt = solver.toIterable.last
-                opt.get(v).get shouldBe expectedResult
-
-              case None =>
-                val sols = solver.toStream.take(expectedResult + 1)
-
-                if (test) {
-                  forAll(sols.take(100)) { sol =>
-                    val failed = XCSPConcrete.controlCSPOM(sol, data('variables).asInstanceOf[Seq[String]], url)
-                    failed shouldBe 'empty
-                  }
-                }
-
-                sols should have size expectedResult
+            for (g <- goal) {
+              FZConcrete.parseSearchMode(g, solver, false)
             }
 
+            val f = Future {
+              solver.optimizes match {
+                case Some(v) =>
+                  val opt = solver.toIterable.last
+                  opt.get(v).get shouldBe expectedResult
+
+                case None =>
+                  val sols = solver.toStream.take(expectedResult + 1)
+
+                  if (test) {
+                    forAll(sols.take(100)) { sol =>
+                      val failed = XCSPConcrete.controlCSPOM(sol, data('variables).asInstanceOf[Seq[String]], url)
+                      failed shouldBe 'empty
+                    }
+                  }
+
+                  sols should have size expectedResult
+              }
+
+            }
+            concurrent.Await.result(f, 1000.seconds)
           }
-          concurrent.Await.result(f, 1000.seconds)
-        }
 
     } should be a 'success
 

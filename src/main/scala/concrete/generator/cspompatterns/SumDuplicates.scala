@@ -14,13 +14,14 @@ import cspom.variable.CSPOMExpression
 import concrete.CSPOMDriver
 import cspom.variable.IntExpression
 import cspom.variable.BoolExpression
+import CSPOM._
 
 /**
  *  Merge duplicates in linear constraints (x + x = 0 -> 2.x = 0). Also remove variables with factor = 0.
  */
 object SumDuplicates extends ConstraintCompiler {
 
-  type A = (CSPOMExpression[_], collection.Map[CSPOMExpression[_], Int], Int)
+  type A = (CSPOMExpression[_], collection.Map[CSPOMExpression[Any], Int], Int)
 
   override def mtch(c: CSPOMConstraint[_], p: CSPOM) = PartialFunction.condOpt(c) {
     case CSPOMConstraint(r, 'sum, Seq(IntExpression.constSeq(coefs), CSPOMSeq(vars), CSPOMConstant(const: Int)), p) =>
@@ -53,20 +54,15 @@ object SumDuplicates extends ConstraintCompiler {
     val (variables, factors) = args.filter(_._2 != 0).unzip
 
     if (factors.isEmpty) {
-      val truth = mode match {
-        case SumEQ => const == 0
-        case SumLT => 0 < const
-        case SumLE => 0 <= const
-        case SumNE => const != 0
-      }
-      logger.warn(s"Linear constraint with no variables: $constraint, entailed to $truth")
+      val truth = SumConstants.checkConstant(const, mode)
+      logger.info(s"Linear constraint with no variables: $constraint, entailed to $truth")
 
       val nr = reduceDomain(BoolExpression.coerce(constraint.result), truth)
       removeCtr(constraint, p) ++ replace(constraint.result, nr, p)
 
     } else {
       val newConstraint =
-        CSPOMConstraint(r)('sum)(CSPOMConstant.ofSeq(factors.toSeq), CSPOMSeq(variables.toSeq: _*), CSPOMConstant(const)) withParams constraint.params
+        CSPOMConstraint(r)('sum)(factors.toSeq, variables.toSeq, const) withParams constraint.params
 
       //println(s"replacing $constraint with $newConstraint")
       replaceCtr(constraint, newConstraint, p)

@@ -18,8 +18,7 @@ import concrete.UNKNOWNBoolean
 import concrete.Variable
 import concrete.constraint.AdviseCount
 import cspom.CSPOM
-import cspom.CSPOM.constant
-import cspom.CSPOM.ctr
+import cspom.CSPOM._
 import cspom.CSPOMConstraint
 import cspom.variable.BoolVariable
 import cspom.variable.CSPOMSeq
@@ -59,7 +58,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
 
     m2.dom(control2) shouldBe TRUE
     assert(m2.isEntailed(c2))
-    
+
     m1.dom(control1) shouldBe TRUE
     assert(m1.isEntailed(c1))
 
@@ -88,7 +87,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
       val r = new BoolVariable() as "r"
       val v0 = IntVariable(1 to 3) as "v0"
       val v1 = IntVariable(0 to 3) as "v1"
-      ctr(CSPOMConstraint(r)('sum)(CSPOMSeq(1, -1), CSPOMSeq(v0, v1), 1) withParam ("mode" -> "eq"))
+      ctr(CSPOMConstraint(r)('sum)(Seq(1, -1), Seq(v0, v1), 1) withParam ("mode" -> "eq"))
     }
 
     val s = Solver(cspom).get

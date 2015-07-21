@@ -16,6 +16,7 @@ import cspom.variable.CSPOMVariable
 import cspom.variable.CSPOMExpression
 import CSPOM._
 import cspom.variable.BoolExpression
+import cspom.variable.SimpleExpression
 
 object XCSPPatterns {
   def apply() = Seq(
@@ -45,7 +46,7 @@ object XCSPPatterns {
       CSPOMConstraint(r)('sum)(Seq(-1, 1), Seq(a, b), 0) withParams p + ("mode" -> "le")
 
     case CSPOMConstraint(r, 'or, a, p) =>
-      CSPOMConstraint(r)('clause)(CSPOMSeq(a: _*), CSPOMSeq()) withParams p
+      CSPOMConstraint(r)('clause)(a, Seq[SimpleExpression[Boolean]]()) withParams p
 
     case CSPOMConstraint(r, 'allDifferent, a, p) =>
       CSPOMConstraint(r)('alldifferent)(a: _*) withParams p

@@ -11,6 +11,7 @@ import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
+import CSPOM._
 
 object SumFalse extends ConstraintCompilerNoData {
 
@@ -20,18 +21,18 @@ object SumFalse extends ConstraintCompilerNoData {
   }
 
   def compile(c: CSPOMConstraint[_], p: CSPOM) = {
-    val (vars, coefs, constant, mode) = SumGenerator.readCSPOM(c)
+    val (vars, coefs, const, mode) = SumGenerator.readCSPOM(c)
 
     val (revCoefs: Seq[Int], revConstant, revMode) = mode match {
-      case SumNE => (coefs, constant, SumEQ)
-      case SumEQ => (coefs, constant, SumNE)
-      case SumLT => (coefs.map(-_), -constant, SumLE)
-      case SumLE => (coefs.map(-_), -constant, SumLT)
+      case SumNE => (coefs, const, SumEQ)
+      case SumEQ => (coefs, const, SumNE)
+      case SumLT => (coefs.map(-_), -const, SumLE)
+      case SumLE => (coefs.map(-_), -const, SumLT)
     }
 
     replaceCtr(
       c,
-      CSPOMConstraint('sum)(CSPOMConstant.ofSeq(revCoefs), CSPOMSeq(vars: _*), CSPOMConstant(revConstant)) withParams c.params + ("mode" -> revMode.toString),
+      CSPOMConstraint('sum)(revCoefs, vars, revConstant) withParams c.params + ("mode" -> revMode.toString),
       p)
   }
 

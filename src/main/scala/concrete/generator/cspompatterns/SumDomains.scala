@@ -54,6 +54,24 @@ object SumDomains extends VariableCompiler('sum) {
   }
 }
 
+object NeDomains extends VariableCompiler('eq) {
+  def compiler(c: CSPOMConstraint[_]) = ???
+  override def compilerWEntail(c: CSPOMConstraint[_]) = c match {
+    case CSPOMConstraint(CSPOMConstant(false), _, Seq(IntExpression(a), IntExpression(b)), _) =>
+
+      val initBound = RangeSet.allInt -- IntInterval.singleton(0)
+
+      val na = reduceDomain(a, initBound + IntExpression.implicits.ranges(b))
+      val nb = reduceDomain(b, initBound + IntExpression.implicits.ranges(a))
+
+      (
+        Map(a -> na, b -> nb),
+        na.searchSpace <= 1 || nb.searchSpace <= 1)
+
+    case _ => (Map(), false)
+  }
+}
+
 object PseudoBoolDomains extends VariableCompiler('pseudoboolean) {
   def compiler(c: CSPOMConstraint[_]) = ???
   override def compilerWEntail(c: CSPOMConstraint[_]) = c match {

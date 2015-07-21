@@ -18,25 +18,7 @@ import cspom.variable.SimpleExpression
 
 object FZPatterns {
   def apply() = Seq(
-    new GlobalCompiler(mtch) { def selfPropagation = false },
-    //    new ConstraintCompilerNoData {
-    //      /**
-    //       * (a = b) ↔ r
-    //       * int_ne_reif(var int: a, var int: b, var bool: r)
-    //       */
-    //      def matchBool(c: CSPOMConstraint[_], p: CSPOM) = c.function == 'int_ne_reif
-    //
-    //      def compile(c: CSPOMConstraint[_], p: CSPOM) = {
-    //        val Ctr('int_ne_reif, Seq(a, b, r), params) = c
-    //        val n = new BoolVariable()
-    //        val c1 = CSPOMConstraint(n, 'not, Seq(r))
-    //        val c2 = CSPOMConstraint(n, 'eq, Seq(a, b), params)
-    //        replaceCtr(Seq(c), Seq(c1, c2), p)
-    //      }
-    //
-    //      def selfPropagation = false
-    //    },
-    Bool2IntDomains)
+    new GlobalCompiler(mtch) { def selfPropagation = false })
 
   //  val debug = new PartialFunction[CSPOMConstraint[_], CSPOMConstraint[_]] {
   //    def isDefinedAt(c: CSPOMConstraint[_]) = {
@@ -362,13 +344,13 @@ object FZPatterns {
      * int_le_reif(var int: a, var int: b, var bool: r)
      */
     case Ctr('int_le_reif, Seq(a, b, r), p) =>
-      CSPOMConstraint(r)('sum)(CSPOMSeq(1, -1), CSPOMSeq(a, b), CSPOMConstant(0)) withParams (p + ("mode" -> "le"))
+      CSPOMConstraint(r)('sum)(Seq(1, -1), Seq(a, b), CSPOMConstant(0)) withParams (p + ("mode" -> "le"))
 
     /**
      * i ∈ 1..n : as[i].bs[i] = c where n is the common length of as and bs
      * int_lin_eq(array [int] of int: as, array [int] of var int: bs, int: c)
      */
-    case Ctr('int_lin_eq, Seq(IntExpression.constSeq(as), IntExpression.seq(bs), CSPOMConstant(c: Int)), p) =>
+    case Ctr('int_lin_eq, Seq(IntExpression.constSeq(as), IntExpression.simpleSeq(bs), CSPOMConstant(c: Int)), p) =>
       linear(bs, as, "eq", c) withParams (p)
 
     /**
@@ -382,10 +364,10 @@ object FZPatterns {
      * i ∈ 1..n : as[i].bs[i] ≤ c where n is the common length of as and bs
      * int_lin_le(array [int] of int: as, array [int] of var int: bs, int: c)
      */
-    case Ctr('int_lin_le, Seq(IntExpression.constSeq(as), IntExpression.seq(bs), CSPOMConstant(c: Int)), p) =>
+    case Ctr('int_lin_le, Seq(IntExpression.constSeq(as), IntExpression.simpleSeq(bs), CSPOMConstant(c: Int)), p) =>
       linear(bs, as, "le", c) withParams p
 
-    case Ctr('bool_lin_le, Seq(IntExpression.constSeq(as), BoolExpression.seq(bs), CSPOMConstant(c: Int)), p) =>
+    case Ctr('bool_lin_le, Seq(IntExpression.constSeq(as), BoolExpression.simpleSeq(bs), CSPOMConstant(c: Int)), p) =>
       pseudoBoolean(bs, as, "le", c) withParams p
 
     /**
@@ -399,7 +381,7 @@ object FZPatterns {
      * i ∈ 1..n : as[i].bs[i] = c where n is the common length of as and bs
      * int_lin_ne(array [int] of int: as, array [int] of var int: bs, int: c)
      */
-    case Ctr('int_lin_ne, Seq(IntExpression.constSeq(as), IntExpression.seq(bs), CSPOMConstant(c: Int)), p) =>
+    case Ctr('int_lin_ne, Seq(IntExpression.constSeq(as), IntExpression.simpleSeq(bs), CSPOMConstant(c: Int)), p) =>
       linear(bs, as, "ne", c) withParams p
     /**
      * (i ∈ 1..n : as[i].bs[i] = c) ↔ r where n is the common length of as and bs
@@ -418,7 +400,7 @@ object FZPatterns {
      * int_lt_reif(var int: a, var int: b, var bool: r)
      */
     case Ctr('int_lt_reif, Seq(a, b, r), p) =>
-      CSPOMConstraint(r)('sum)(CSPOMSeq(1, -1), CSPOMSeq(a, b), CSPOMConstant(0)) withParams p + ("mode" -> "lt")
+      CSPOMConstraint(r)('sum)(Seq(1, -1), Seq(a, b), CSPOMConstant(0)) withParams p + ("mode" -> "lt")
     /**
      * max(a, b) = c
      * int_max(var int: a, var int: b, var int: c)
