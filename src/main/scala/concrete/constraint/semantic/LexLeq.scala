@@ -11,7 +11,7 @@ import cspom.UNSATException
 import concrete.constraint.Removals
 
 final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x ++ y)
-  with StatefulConstraint with Removals {
+    with StatefulConstraint[(Int, Int)] with Removals {
 
   type State = (Int, Int)
 
