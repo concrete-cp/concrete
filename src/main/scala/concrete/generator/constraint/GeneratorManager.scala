@@ -23,6 +23,7 @@ class GeneratorManager(pm: ParameterManager) {
     'mul -> MulGenerator,
     'absdiff -> AbsDiffGenerator,
     'gcc -> GccGenerator,
+    'div -> DivGenerator,
     'mod -> ModGenerator,
     'nevec -> NeqVecGenerator,
     'sum -> SumGenerator,

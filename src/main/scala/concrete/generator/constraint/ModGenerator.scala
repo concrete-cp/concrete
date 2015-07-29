@@ -8,6 +8,8 @@ import concrete.Problem
 import concrete.Variable
 import cspom.CSPOMConstraint
 import Generator._
+import concrete.constraint.semantic.ModAC
+import concrete.constraint.semantic.ModBC
 
 final object ModGenerator extends Generator {
 
@@ -15,9 +17,7 @@ final object ModGenerator extends Generator {
     val result = r.asVariable
     val Seq(v0, v1) = constraint.arguments.map(c => cspom2concrete1D(c).asVariable)
 
-    Seq(new Constraint(Array(result, v0, v1)) with Residues with TupleEnumerator {
-      def check(t: Array[Int]) = { t(0) == t(1) % t(2) }
-    })
+    Seq(new ModBC(v0, v1, result), new ModAC(v0, v1, result))
   }
 
 }
