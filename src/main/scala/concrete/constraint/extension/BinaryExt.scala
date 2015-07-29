@@ -59,7 +59,14 @@ abstract class BinaryExt(
 
   private val GAIN_OVER_GENERAL = 3;
 
-  override def getEvaluation(ps: ProblemState) = (ps.dom(idx).size * ps.dom(idy).size) / GAIN_OVER_GENERAL
+  private var staticEvaluation: Int = _
+
+  override def getEvaluation(ps: ProblemState) = staticEvaluation
+
+  override def init(ps: ProblemState) = {
+    staticEvaluation = (ps.dom(idx).size * ps.dom(idy).size) / GAIN_OVER_GENERAL
+    ps
+  }
 
   override def simpleEvaluation = 2
 
@@ -124,8 +131,8 @@ final class BinaryExtR(scope: Array[Variable], matrix2d: Matrix2D, shared: Boole
     val index = value - offsets(variablePosition)
     val part = residues(variablePosition)(index)
     BinaryExt.presenceChecks += 1
-    (part >= 0 && otherDom.bitVector(matrix2d.offsets(otherPosition)).intersects(matrixBV, part)) || {
-      val intersection = otherDom.bitVector(matrix2d.offsets(otherPosition)).intersects(matrixBV)
+    (part >= 0 && otherDom.toBitVector(matrix2d.offsets(otherPosition)).intersects(matrixBV, part)) || {
+      val intersection = otherDom.toBitVector(matrix2d.offsets(otherPosition)).intersects(matrixBV)
 
       if (intersection >= 0) {
         BinaryExt.checks += 1 + intersection;
@@ -144,7 +151,7 @@ final class BinaryExtNR(scope: Array[Variable], matrix2d: Matrix2D, shared: Bool
   def hasSupport(ps: ProblemState, variablePosition: Int, index: Int) = {
     val matrixBV: BitVector = matrix2d.getBitVector(variablePosition, index);
     val otherPosition = 1 - variablePosition
-    val intersection = ps.dom(scope(otherPosition)).bitVector(matrix2d.offsets(otherPosition)).intersects(matrixBV)
+    val intersection = ps.dom(scope(otherPosition)).toBitVector(matrix2d.offsets(otherPosition)).intersects(matrixBV)
 
     if (intersection >= 0) {
       BinaryExt.checks += 1 + intersection;
