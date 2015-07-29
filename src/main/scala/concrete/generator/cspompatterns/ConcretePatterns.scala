@@ -14,7 +14,7 @@ object ConcretePatterns {
   def apply(params: ParameterManager): Seq[ConstraintCompiler] = {
     val concreteDef =
       Seq(
-        DivToMul, OccurrenceDomains, BoolEq,
+        OccurrenceDomains, BoolEq,
         MulDomains, AbsDomains,
         MulToSum,
         SumDomains, NeDomains,
@@ -23,8 +23,8 @@ object ConcretePatterns {
         SlidingSum, Regular, SetIn, CSPOMTypes,
         AllDifferent, AllDiffConstant,
         // Clause does not support constants
-        SimplClause,
-    Bool2IntDomains)
+        SimplClause, PBConstants,
+        Bool2IntDomains)
 
     val concreteImp = Seq(
       //AbsDiff, AbsDiffDomains,
