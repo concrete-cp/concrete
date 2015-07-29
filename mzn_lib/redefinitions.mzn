@@ -1,4 +1,4 @@
-predicate bool_lin_le(array[int] of par int: c, array[int] of var bool: x, par int: d);
+predicate bool_lin_le(array[int] of par int: c, array[int] of var bool: x, var int: d);
 
 predicate array_bool_or(array[int] of var bool: v, var bool: r) = 
 	bool_clause_reif(v, [], r);
