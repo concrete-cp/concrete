@@ -77,10 +77,10 @@ final object SumGenerator extends Generator with LazyLogging {
       case m     => new SumBC(constant, varParams.toArray, solverVariables.toArray, mode)
     })
 
-    val ss = Domain.searchSpace(solverVariables.map(_.initDomain))
+    lazy val ss = Domain.searchSpace(solverVariables.map(_.initDomain))
     //println(ss)
 
-    if (ss < 10000) {
+    if ((mode == SumEQ || mode == SumNE) && ss < 10000) {
       constraints.withAC(
         new SumAC(constant, varParams.toArray, solverVariables.toArray, mode))
     } else {
@@ -104,7 +104,7 @@ final object SumGenerator extends Generator with LazyLogging {
         case (Seq(-1, 1), SumEQ, k)  => eq(false, x, k, y)
         case (Seq(1, 1), SumEQ, k)   => eq(true, x, k, y)
         case _ =>
-          logger.warn(s"${(varParams, mode, constant)} is non-specialized binary linear constraint")
+          logger.info(s"${(varParams, mode, constant)} is non-specialized binary linear constraint")
           general(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode.SumMode)
       }
 
