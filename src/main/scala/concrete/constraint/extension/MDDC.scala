@@ -7,14 +7,14 @@ import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.Removals
-import concrete.util.SparseSet
 import concrete.constraint.StatefulConstraint
+import concrete.util.SparseSet
+import concrete.EmptyIntDomain
+import concrete.IntDomain
 
 /* MDDRelation comes with its own timestamp */
 class MDDC(_scope: Array[Variable], private val mdd: MDDRelation)
-  extends Constraint(_scope) with Removals with StatefulConstraint {
-  
-  type State = SparseSet
+    extends Constraint(_scope) with Removals with StatefulConstraint[SparseSet] {
 
   override def init(ps: ProblemState) = ps.updateState(id, new SparseSet(mdd.identify + 1))
 
@@ -30,8 +30,6 @@ class MDDC(_scope: Array[Variable], private val mdd: MDDRelation)
 
   def getEvaluation(ps: ProblemState) = (prop * doubleCardSize(ps)).toInt
 
-  private val unsupported = scope.map(p => new collection.mutable.BitSet(p.initDomain.size))
-
   var delta: Int = _
 
   var gNo: Set[Int] = _
@@ -39,26 +37,28 @@ class MDDC(_scope: Array[Variable], private val mdd: MDDRelation)
   def revise(ps: ProblemState, modified: List[Int]) = {
 
     val oldGno: Set[Int] = ps(this)
-    val domains = ps.domains(scope).toArray
-    val unsupported = domains.map(_.to[collection.mutable.Set])
+    val domains = Array.tabulate(arity)(p => ps.dom(scope(p)))
+    val supported = Array.fill[IntDomain](arity)(EmptyIntDomain)
+
+    // val unsupported = domains.map(_.to[collection.mutable.Set])
 
     delta = arity
 
     this.gNo = oldGno
 
-    val sat = seekSupports(domains, mdd.timestamp.next(), mdd.mdd, 0)
+    val sat = seekSupports(domains, supported, mdd.timestamp.next(), mdd.mdd, 0)
     if (!sat) {
       Contradiction
     } else {
-      var cs: Outcome = ps.updateState(id, gNo)
+      var cs: ProblemState = ps.updateState(id, gNo)
       for (p <- 0 until delta) {
-        cs = cs.filterDom(p)(!unsupported(p)(_))
+        cs = cs.updateDomNonEmpty(scope(p), supported(p))
       }
       cs.entailIfFree(this)
     }
   }
 
-  private def seekSupports(domains: Array[Domain], ts: Int, g: MDD, i: Int): Boolean = {
+  private def seekSupports(domains: Array[Domain], supported: Array[IntDomain], ts: Int, g: MDD, i: Int): Boolean = {
     if (g eq MDDLeaf) {
       if (i < delta) {
         delta = i
@@ -78,11 +78,12 @@ class MDDC(_scope: Array[Variable], private val mdd: MDDRelation)
       while (continue) {
         val gk = g.subMDD(ak)
 
-        if (seekSupports(domains, ts, gk, i + 1)) {
+        if (seekSupports(domains, supported, ts, gk, i + 1)) {
           res = true
-          unsupported(i) -= ak
+          supported(i) |= ak
+          // unsupported(i) -= ak
 
-          if (i + 1 == delta && unsupported(i).isEmpty) {
+          if (i + 1 == delta && supported(i).length == domains(i).length) {
             delta = i
             continue = false
           }

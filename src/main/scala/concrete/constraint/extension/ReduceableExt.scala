@@ -21,13 +21,15 @@ package concrete.constraint.extension;
 
 import com.typesafe.scalalogging.LazyLogging
 import concrete.Contradiction
+import concrete.EmptyIntDomain
 import concrete.Outcome
 import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.Removals
-import cspom.Statistic
 import concrete.constraint.StatefulConstraint
+import cspom.Statistic
+import concrete.IntDomain
 
 object ReduceableExt {
   @Statistic
@@ -35,17 +37,15 @@ object ReduceableExt {
 }
 
 final class ReduceableExt(_scope: Array[Variable], val relation: Relation)
-  extends Constraint(_scope) with LazyLogging with Removals with StatefulConstraint {
+    extends Constraint(_scope) with LazyLogging with Removals with StatefulConstraint[Relation] {
 
-  type State = Relation
-  
-  override def init(ps:ProblemState) = ps.updateState(id, relation)
+  override def init(ps: ProblemState) = ps.updateState(id, relation)
 
   //println("sizesR " + arity + " " + trie.lambda + " " + trie.edges)
 
   def revise(ps: ProblemState, mod: List[Int]) = {
-    val domains = ps.domains(scope).toArray
-    val unsupported = domains.map(_.to[collection.mutable.Set])
+    val domains = Array.tabulate(arity)(p => ps.dom(scope(p)))
+
     val trie = ps(this)
     //found.foreach(_.fill(false))
 
@@ -72,16 +72,18 @@ final class ReduceableExt(_scope: Array[Variable], val relation: Relation)
 
       //sizes(domSizes)
 
+      val newDomains = Array.fill[IntDomain](arity)(EmptyIntDomain)
+
       val unsup = newTrie
         .fillFound({ (depth: Int, i: Int) =>
           ReduceableExt.fills += 1
-          unsupported(depth) -= i
-          unsupported(depth).isEmpty
+          newDomains(depth) = newDomains(depth) | i
+          newDomains(depth).length == domains(depth).length
         }, arity)
 
-      var cs: Outcome = ps
+      var cs: ProblemState = ps
       for (p <- 0 until arity) {
-        if (unsup(p)) cs = cs.filterDom(_scope(p))(!unsupported(p)(_))
+        if (unsup(p)) cs = cs.updateDomNonEmpty(_scope(p), newDomains(p)) //(!domains(p).present(_))
       }
       cs.updateState(id, newTrie).entailIfFree(this)
     }
