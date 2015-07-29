@@ -10,7 +10,7 @@ object BitVectorDomain {
 }
 
 final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override val length: Int)
-  extends IntDomain with LazyLogging {
+    extends IntDomain with LazyLogging {
   require(size >= 2, "BitVectorSets must have at least two elements")
   Math.checkedAdd(offset, bitVector.lastSetBit)
 
@@ -33,7 +33,7 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
   override def next(i: Int) = {
     val b = math.max(0, i - offset + 1)
     val n = bitVector.nextSetBit(b)
-    if (n < 0) throw new NoSuchElementException else offset + n
+    if (n < 0) throw new NoSuchElementException(s"${bitVector.getClass()}${bitVector}.next($i) with last = ${bitVector.lastSetBit}") else offset + n
   }
 
   override def prev(i: Int) = {
@@ -65,15 +65,8 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
     }
   }
 
-  def remove(index: Int) = {
-    if (present(index)) {
-      IntDomain.ofBitVector(offset, bitVector - (index - offset), size - 1)
-    } else { this }
-  }
-
-  def removeFrom(lb: Int) = {
-    val b = math.max(0, lb - offset)
-    val newbitVector = bitVector.clearFrom(b)
+  override def filterBounds(f: Int => Boolean) = {
+    val newbitVector = bitVector.filterBounds(i => f(i + offset))
     if (newbitVector == bitVector) {
       this
     } else {
@@ -81,15 +74,49 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
     }
   }
 
+  def remove(index: Int) = {
+    if (present(index)) {
+      IntDomain.ofBitVector(offset, bitVector - (index - offset), size - 1)
+    } else { this }
+  }
+
+  def removeFrom(lb: Int) = {
+    val b = lb - offset
+    if (b <= bitVector.nextSetBit(0)) {
+      EmptyIntDomain
+    } else if (b > bitVector.lastSetBit) {
+      this
+    } else {
+      val newbitVector = bitVector.clearFrom(b)
+      IntDomain.ofBitVector(offset, newbitVector, newbitVector.cardinality)
+    }
+  }
+
   def removeAfter(lb: Int) = removeFrom(lb + 1)
 
   def removeUntil(ub: Int) = {
-    val b = math.max(0, ub - offset)
-    val nbitVector = bitVector.clearUntil(b)
-    if (nbitVector == bitVector) {
+    val b = ub - offset
+    if (b <= bitVector.nextSetBit(0)) {
+      this
+    } else if (b > bitVector.lastSetBit) {
+      EmptyIntDomain
+    } else {
+      val nbitVector = bitVector.clearUntil(b)
+      IntDomain.ofBitVector(offset, nbitVector, nbitVector.cardinality)
+    }
+  }
+
+  def &(lb: Int, ub: Int) = {
+    val blb = lb - offset
+    val removeUntil = bitVector.clearUntil(blb)
+
+    val bub = ub - offset + 1
+    val removeAfter = removeUntil.clearFrom(bub)
+
+    if (removeAfter == bitVector) {
       this
     } else {
-      IntDomain.ofBitVector(offset, nbitVector, nbitVector.cardinality)
+      IntDomain.ofBitVector(offset, removeAfter, removeAfter.cardinality)
     }
   }
 
@@ -111,9 +138,9 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
   def apply(i: Int) = iterator.drop(i - 1).next
 
   var requestedOffset: Int = _
-  var requestedBV: BitVector = null
+  var requestedBV: BitVector = _
 
-  def bitVector(offset: Int) = {
+  def toBitVector(offset: Int) = {
     if (offset == this.offset) {
       bitVector
     } else if (requestedBV != null && offset == requestedOffset) {
@@ -127,6 +154,63 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
       }
       requestedBV
     }
+  }
+
+  override def &(d: Domain) = d match {
+    case id: IntervalDomain => this & id.span
+    case s: Singleton       => if (present(s.singleValue)) s else EmptyIntDomain
+    case bd: BitVectorDomain =>
+      val newOffset = math.min(offset, bd.offset)
+
+      val thisBV = toBitVector(newOffset)
+      val bdBV = bd.toBitVector(newOffset)
+
+      val newBV = thisBV & bdBV
+
+      val newCard = newBV.cardinality
+
+      if (newCard == size) {
+        this
+      } else if (newCard == d.size) {
+        bd
+      } else {
+        IntDomain.ofBitVector(newOffset, newBV, newBV.cardinality)
+      }
+    case EmptyIntDomain   => EmptyIntDomain
+    case b: BooleanDomain => ???
+  }
+
+  override def |(d: Domain) = {
+    d match {
+      case s: Singleton       => this | s.singleValue
+
+      case id: IntervalDomain => this | id.span
+
+      case bv: BitVectorDomain =>
+        val newOffset = math.min(offset, bv.offset)
+        val union = toBitVector(newOffset) | bv.toBitVector(newOffset)
+        IntDomain.ofBitVector(newOffset, union, union.cardinality)
+
+      case EmptyIntDomain   => this
+
+      case b: BooleanDomain => this | b.span
+    }
+  }
+
+  def |(value: Int) = {
+    if (present(value)) {
+      this
+    } else {
+      val newOffset = math.min(value, offset)
+      IntDomain.ofBitVector(newOffset, toBitVector(newOffset) + (value - newOffset), size + 1)
+    }
+  }
+
+  def |(span: Interval) = {
+    val lb = span.lb
+    val offset = math.min(lb, this.offset)
+    val union = toBitVector(offset).set(lb - offset, span.ub - offset + 1)
+    IntDomain.ofBitVector(offset, union, union.cardinality)
   }
 
   lazy val span = Interval(head, last)

@@ -13,7 +13,7 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
   require(size >= 2, "Intervals must have at least two elements, use Singleton instead")
 
   def singleValue = throw new IllegalStateException
-  
+
   override def head = span.lb
 
   override def last = span.ub
@@ -73,6 +73,22 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
     }
   }
 
+  def filterBounds(f: Int => Boolean) = {
+    var lb = head
+    var ub = last
+    while (lb <= ub && !f(lb)) {
+      lb += 1
+    }
+    while (ub > lb && !f(ub)) {
+      ub -= 1
+    }
+    if (lb == head && ub == last) {
+      this
+    } else {
+      IntDomain.ofInterval(lb, ub)
+    }
+  }
+
   def apply(i: Int) = {
     if (i < size) i + head else throw new IndexOutOfBoundsException
   }
@@ -93,7 +109,7 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
   var requestedOffset: Int = _
   var requestedBV: BitVector = null
 
-  def bitVector(offset: Int) = {
+  def toBitVector(offset: Int) = {
     if (offset == head) {
       bitVector0
     } else if (requestedBV != null && offset == requestedOffset) {
@@ -107,9 +123,73 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
     }
   }
 
+  def &(d: Domain): Domain = d match {
+    case id: IntervalDomain => this & id.span
+    case s: Singleton       => if (present(s.singleValue)) s else EmptyIntDomain
+    case bd: BitVectorDomain =>
+      val domain = bd & span
+      if (domain.size == size) {
+        this
+      } else {
+        domain
+      }
+    case EmptyIntDomain   => EmptyIntDomain
+    case b: BooleanDomain => ???
+  }
+
+  def &(lb: Int, ub: Int) = {
+    val nlb = math.max(span.lb, lb)
+    val nub = math.min(span.ub, ub)
+    if (nlb == span.lb && nub == span.ub) {
+      this
+    } else {
+      IntDomain.ofInterval(nlb, nub)
+    }
+  }
+
+  def |(d: Domain): Domain = d match {
+    case id: IntervalDomain  => this | id.span
+
+    case s: Singleton        => this | s.singleValue
+
+    case bv: BitVectorDomain => bv | span
+
+    case EmptyIntDomain      => this
+
+    case b: BooleanDomain    => this | b.span
+  }
+
+  def |(i1: Interval) = {
+    val i2 = span
+
+    if (i1 connected i2) {
+      new IntervalDomain(i1 span i2)
+    } else {
+      val offset = math.min(i1.lb, i2.lb)
+      val union = toBitVector(offset).set(i1.lb - offset, i1.ub - offset + 1)
+      IntDomain.ofBitVector(offset, union, union.cardinality)
+    }
+  }
+
+  def |(value: Int): IntDomain = {
+    if (present(value)) {
+      this
+    } else {
+      if (value == head - 1) {
+        IntDomain.ofInterval(value, last)
+      } else if (value == last + 1) {
+        IntDomain.ofInterval(head, value)
+      } else {
+        val offset = math.min(value, head)
+        val union = toBitVector(offset) + (value - offset)
+        IntDomain.ofBitVector(offset, union, size + 1)
+      }
+    }
+  }
+
   def bound = true
   override def isEmpty = false
-  
+
   def iterator = span.allValues.iterator
 
 }

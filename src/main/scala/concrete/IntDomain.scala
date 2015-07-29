@@ -19,25 +19,37 @@ object EmptyIntDomain extends IntDomain {
   def removeTo(ub: Int) = this
   override def removeUntil(ub: Int) = this
   override def filter(f: Int => Boolean) = this
+  def filterBounds(f: Int => Boolean) = this
   override def toString = "[]"
   def bound = throw new IllegalStateException
   override def isEmpty = true
   override def iterator = Iterator.empty
   def apply(i: Int) = throw new NoSuchElementException
-  def bitVector(offset: Int) = BitVector.empty
+  def toBitVector(offset: Int) = BitVector.empty
   def span = throw new NoSuchElementException
   def singleValue = throw new NoSuchElementException
+  def &(d: Domain): Domain = EmptyIntDomain
+  def |(d: Domain): Domain = d
+  def |(v: Int): IntDomain = Singleton(v)
+  def &(lb: Int, ub: Int): Domain = EmptyIntDomain
 }
 
 object IntDomain {
   def ofInterval(lb: Int, ub: Int): IntDomain =
     if (lb > ub) { EmptyIntDomain }
-    else if (ub == lb) { new Singleton(lb) }
+    else if (ub == lb) { Singleton(lb) }
     else { new IntervalDomain(lb, ub) }
+
+  def ofInterval(i: Interval): IntDomain = i.size match {
+    case 0 => EmptyIntDomain
+    case 1 => Singleton(i.lb)
+    case _ => new IntervalDomain(i)
+
+  }
 
   def ofBitVector(offset: Int, bv: BitVector, s: Int): IntDomain = s match {
     case 0 => EmptyIntDomain
-    case 1 => new Singleton(offset + bv.nextSetBit(0))
+    case 1 => Singleton(offset + bv.nextSetBit(0))
     case s: Int => {
       val lb = bv.nextSetBit(0)
       val ub = bv.lastSetBit
@@ -76,5 +88,6 @@ abstract class IntDomain extends Domain {
     else EmptyIntDomain
   }
 
+  def |(value: Int): IntDomain
 
 }

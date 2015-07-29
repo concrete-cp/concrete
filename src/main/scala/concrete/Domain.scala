@@ -67,8 +67,10 @@ abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
 
   def singleValue: Int
 
-  def &(a: Int, b: Int): Domain = removeUntil(a).removeAfter(b)
+  def &(a: Int, b: Int): Domain // = removeUntil(a).removeAfter(b)
   def &(i: Interval): Domain = this & (i.lb, i.ub)
+  def &(d: Domain): Domain
+  def |(d: Domain): Domain
 
   final def disjoint(d: Domain): Boolean = {
     last < d.head || head > d.last || forall(v => !d.present(v))
@@ -83,10 +85,11 @@ abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
 
   def bound: Boolean
 
-  def bitVector(offset: Int): BitVector
+  def toBitVector(offset: Int): BitVector
 
   override final def size = length
 
   override def equals(o: Any) = this eq o.asInstanceOf[AnyRef]
 
+  def filterBounds(f: Int => Boolean): Domain
 }

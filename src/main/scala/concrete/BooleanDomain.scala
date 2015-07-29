@@ -12,7 +12,7 @@ case object UNKNOWNBoolean extends BooleanDomain {
   override def last = 1
   def next(i: Int) = if (i == 0) 1 else if (i < 0) 0 else throw new NoSuchElementException
   def prev(i: Int) = if (i == 1) 0 else if (i > 1) 1 else throw new NoSuchElementException
-  def present(i: Int) = { Domain.checks + 1; true }
+  def present(i: Int) = { Domain.checks + 1; i <= 1 }
   def canBe(b: Boolean) = true
   def removeFrom(lb: Int) =
     if (lb <= 0) {
@@ -100,7 +100,7 @@ case object TRUE extends BooleanDomain {
   def nextOrEq(value: Int) = if (value > 1) throw new NoSuchElementException else 1;
   def prevOrEq(value: Int) = if (value < 1) throw new NoSuchElementException else 1;
   def remove(value: Int) = if (value == 1) EMPTY else this
-  val as01 = new Singleton(1)
+  val as01 = Singleton(1)
   override def filter(f: Int => Boolean) = if (f(1)) this else EMPTY
   val span = Interval(1, 1)
 }
@@ -123,7 +123,7 @@ case object FALSE extends BooleanDomain {
   def nextOrEq(value: Int) = if (value > 0) throw new NoSuchElementException else 0;
   def prevOrEq(value: Int) = if (value < 0) throw new NoSuchElementException else 0;
   def remove(value: Int) = if (value == 0) EMPTY else this
-  val as01 = new Singleton(0)
+  val as01 = Singleton(0)
   override def filter(f: Int => Boolean) = if (f(0)) this else EMPTY
   val span = Interval(0, 0)
 }
@@ -182,10 +182,17 @@ sealed trait BooleanDomain extends Domain {
 
   def bitVector: BitVector
 
-  def bitVector(offset: Int) = {
+  def toBitVector(offset: Int) = {
     require(offset == 0)
     bitVector
   }
 
+  def &(lb: Int, ub: Int) = removeUntil(lb).removeAfter(ub)
+
+  def &(d: Domain) = filter(d.contains)
+
+  def |(d: Domain) = as01 | d
+
+  def filterBounds(f: Int => Boolean) = filter(f)
 }
 

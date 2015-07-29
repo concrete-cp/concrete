@@ -12,7 +12,7 @@ object Singleton {
   def apply(v: Int) = cache.getOrElseUpdate(v, new Singleton(v))
 }
 
-final class Singleton(val singleValue: Int) extends IntDomain with LazyLogging {
+final class Singleton private (val singleValue: Int) extends IntDomain with LazyLogging {
 
   def length = 1
 
@@ -67,11 +67,13 @@ final class Singleton(val singleValue: Int) extends IntDomain with LazyLogging {
     if (f(singleValue)) { this }
     else { EmptyIntDomain }
 
+  def filterBounds(f: Int => Boolean) = filter(f)
+
   override def toString() = s"[$singleValue]"
 
   def subsetOf(d: IntDomain) = d.present(singleValue)
 
-  lazy val toBitVector = BitVector.empty + singleValue
+  lazy val bitVector = BitVector.empty + singleValue
 
   //  override def intersects(bv: BitVector) = {
   //    val part = value >> 6
@@ -81,9 +83,9 @@ final class Singleton(val singleValue: Int) extends IntDomain with LazyLogging {
   var requestedOffset: Int = _
   var requestedBV: BitVector = null
 
-  def bitVector(offset: Int) =
+  def toBitVector(offset: Int) =
     if (offset == 0)
-      toBitVector
+      bitVector
     else if (requestedBV != null && offset == requestedOffset) {
       requestedBV
     } else {
@@ -91,6 +93,32 @@ final class Singleton(val singleValue: Int) extends IntDomain with LazyLogging {
       requestedBV = BitVector.empty + (singleValue - offset)
       requestedBV
     }
+
+  def &(d: Domain) = if (d.present(singleValue)) this else EmptyIntDomain
+
+  def &(lb: Int, ub: Int) = if (lb <= singleValue && singleValue <= ub) this else EmptyIntDomain
+
+  def |(d: Domain) = d match {
+    case bv: BitVectorDomain => bv | singleValue
+
+    case s: Singleton        => s | singleValue
+
+    case i: IntervalDomain   => i | singleValue
+
+    case EmptyIntDomain      => this
+
+    case bd: BooleanDomain   => bd.as01 | singleValue
+  }
+
+  def |(v: Int) = {
+    if (v == singleValue) {
+      this
+    } else {
+      val offset = math.min(singleValue, v)
+      val union = toBitVector(offset) + (v - offset)
+      IntDomain.ofBitVector(offset, union, 2)
+    }
+  }
 
   def apply(i: Int) = if (i == 0) singleValue else throw new IndexOutOfBoundsException
   //
@@ -101,6 +129,6 @@ final class Singleton(val singleValue: Int) extends IntDomain with LazyLogging {
   override def assign(v: Int) = {
     if (v == singleValue) this else EmptyIntDomain
   }
-  
+
   def iterator = Iterator.single(singleValue)
 }
