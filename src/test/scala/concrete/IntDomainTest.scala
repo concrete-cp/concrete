@@ -43,4 +43,127 @@ final class IntDomainTest extends FlatSpec with Matchers {
     domain.removeUntil(400) shouldBe empty
     domain.removeFrom(400) shouldBe domain
   }
+
+  it should "convert bit vector to interval" in {
+    IntDomain.ofSeq(5, 6, 7) shouldBe an[IntervalDomain]
+  }
+
+  it should "compute unions from intervals" in {
+    val d1 = IntDomain.ofInterval(5, 10)
+    d1 should contain theSameElementsAs (5 to 10)
+
+    val u1 = d1 | IntDomain.ofSeq(12, 15)
+
+    u1 should contain theSameElementsAs (5 to 10) ++ Seq(12, 15)
+    u1 shouldBe a[BitVectorDomain]
+
+    val u2 = d1 | IntDomain.ofInterval(12, 15)
+    u2 should contain theSameElementsAs (5 to 10) ++ (12 to 15)
+    u2 shouldBe a[BitVectorDomain]
+
+    val u3 = d1 | IntDomain.ofInterval(10, 15)
+    u3 should contain theSameElementsAs (5 to 15)
+    u3 shouldBe an[IntervalDomain]
+
+    val u4 = d1 | IntDomain.ofInterval(8, 10)
+    u4 should contain theSameElementsAs d1
+    u4 shouldBe an[IntervalDomain]
+
+    val u5 = d1 | IntDomain.ofInterval(11, 15)
+    u5 should contain theSameElementsAs (5 to 15)
+    u5 shouldBe an[IntervalDomain]
+
+    val u6 = d1 | Singleton(15)
+    u6 should contain theSameElementsAs (5 to 10) ++ Seq(15)
+    u6 shouldBe a[BitVectorDomain]
+
+    val u7 = d1 | Singleton(11)
+    u7 should contain theSameElementsAs (5 to 11)
+    u7 shouldBe an[IntervalDomain]
+
+    d1 | Singleton(10) should be theSameInstanceAs d1
+
+    d1 | EmptyIntDomain should be theSameInstanceAs d1
+
+  }
+
+  it should "compute intersections from intervals" in {
+    val d1 = IntDomain.ofInterval(5, 10)
+
+    d1 & IntDomain.ofSeq(7, 15) shouldBe Singleton(7)
+
+    d1 & IntDomain.ofSeq(12, 15) shouldBe EmptyIntDomain
+
+    d1 & IntDomain.ofInterval(12, 15) shouldBe EmptyIntDomain
+
+    d1 & IntDomain.ofInterval(10, 15) shouldBe Singleton(10)
+
+    val i1 = d1 & IntDomain.ofInterval(7, 15)
+    i1 should contain theSameElementsAs (7 to 10)
+    i1 shouldBe an[IntervalDomain]
+
+    d1 & IntDomain.ofInterval(0, 10) shouldBe d1
+
+    d1 & IntDomain.ofSeq(3, 5, 6, 7, 8, 9, 10) shouldBe d1
+  }
+
+  it should "compute unions from bit vectors" in {
+    val d1 = IntDomain.ofSeq(5, 7, 10)
+
+    val u1 = d1 | IntDomain.ofSeq(12, 15)
+
+    u1 should contain theSameElementsAs Seq(5, 7, 10) ++ Seq(12, 15)
+    u1 shouldBe a[BitVectorDomain]
+
+    val u2 = d1 | IntDomain.ofInterval(10, 15)
+    u2 should contain theSameElementsAs Seq(5, 7) ++ (10 to 15)
+    u2 shouldBe a[BitVectorDomain]
+
+    val u3 = d1 | IntDomain.ofInterval(5, 15)
+    u3 should contain theSameElementsAs (5 to 15)
+    u3 shouldBe an[IntervalDomain]
+
+    val u6 = d1 | Singleton(15)
+    u6 should contain theSameElementsAs Seq(5, 7, 10, 15)
+    u6 shouldBe a[BitVectorDomain]
+
+    d1 | Singleton(10) should be theSameInstanceAs d1
+
+    d1 | EmptyIntDomain should be theSameInstanceAs d1
+
+  }
+
+  it should "compute intersections from bit vectors" in {
+    val d1 = IntDomain.ofSeq(5, 7, 10)
+
+    d1 & IntDomain.ofSeq(7, 15) shouldBe Singleton(7)
+
+    d1 & IntDomain.ofSeq(12, 15) shouldBe EmptyIntDomain
+
+    d1 & IntDomain.ofInterval(12, 15) shouldBe EmptyIntDomain
+
+    d1 & IntDomain.ofInterval(10, 15) shouldBe Singleton(10)
+
+    val i1 = d1 & IntDomain.ofInterval(7, 15)
+    i1 should contain theSameElementsAs Seq(7, 10)
+    i1 shouldBe a[BitVectorDomain]
+
+    d1 & IntDomain.ofInterval(0, 10) shouldBe d1
+
+    d1 & IntDomain.ofSeq(5, 7, 10) shouldBe d1
+  }
+
+  it should "compute unions from singletons" in {
+    val d1 = Singleton(10)
+
+    d1 | Singleton(10) should be theSameInstanceAs d1
+    d1 | EmptyIntDomain should be theSameInstanceAs d1
+    val u1 = d1 | Singleton(11)
+    u1 should contain theSameElementsAs (10 to 11)
+    u1 shouldBe an[IntervalDomain]
+
+    val u2 = d1 | Singleton(12)
+    u2 should contain theSameElementsAs Seq(10, 12)
+    u2 shouldBe a[BitVectorDomain]
+  }
 }
