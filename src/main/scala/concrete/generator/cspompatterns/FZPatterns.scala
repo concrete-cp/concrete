@@ -469,8 +469,8 @@ object FZPatterns {
      * (a ∈ b) ↔ r
      * set_in_reif(var int: a, var set of int: b, var bool: r)
      */
-    case Ctr('set_in_reif, Seq(a, CSPOMConstant.seq(b), r), p) => {
-      new CSPOMConstraint(r, 'in, Seq(a, b.map(CSPOMConstant(_))), p)
+    case Ctr('set_in_reif, Seq(a, CSPOMConstant(b: Seq[_]), r), p) => {
+      new CSPOMConstraint(r, 'in, Seq(a, b.map { case i: Int => CSPOMConstant(i) }), p)
     }
     /**
      * a∩b = c
