@@ -28,6 +28,7 @@ import concrete.generator.constraint.Const
 import concrete.constraint.semantic.SumMode._
 import concrete.generator.constraint.SumGenerator
 import scala.util.Try
+import cspom.util.Finite
 
 final class ProblemGenerator(private val pm: ParameterManager = new ParameterManager()) extends LazyLogging {
 
@@ -82,7 +83,7 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
 
       SAT(clauses, pb, pm).foreach(problem.addConstraint)
 
-      logger.info(problem.toString(problem.initState.toState))
+      logger.info(problem.toString(problem.initState.toState).split("\n").map(l => s"% $l").mkString("\n"))
 
       (problem, variables)
     }
@@ -96,8 +97,8 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
 
     cspom.referencedExpressions.flatMap(_.flatten).collect {
       case v: CSPOMVariable[_] =>
-        require(v.fullyDefined, s"${vn.names(v)} has no bounds. Involved by ${cspom.constraints(v)}")
-        assert(cspom.isReferenced(v), s"${vn.names(v)} ($v) is not referenced by constraints")
+        require(v.fullyDefined, s"${vn.names(v)} has no bounds. Involved by ${cspom.deepConstraints(v)}")
+        assert(cspom.isReferenced(v), s"${vn.names(v)} ($v) is not referenced by constraints $cspom}")
         v -> new Variable(vn.names(v), generateDomain(v))
     }.toMap
   }
@@ -107,18 +108,17 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
     cspomVar match {
       case bD: BoolVariable => concrete.BooleanDomain()
 
-      case v: IntVariable => v.asSortedSet.toSeq match {
-        case Seq(0) if intToBool    => concrete.BooleanDomain(false)
-        case Seq(1) if intToBool    => concrete.BooleanDomain(true)
-        case Seq(0, 1) if intToBool => concrete.BooleanDomain()
-        case s =>
-          val sortedSet = v.asSortedSet
-          if (v.isConvex) {
-            IntDomain.ofInterval(sortedSet.head, sortedSet.last)
-          } else {
-            IntDomain(sortedSet)
+      case v: IntVariable =>
+        if (v.isConvex) {
+          (v.domain.lowerBound, v.domain.upperBound) match {
+            case (Finite(0), Finite(0)) if intToBool => concrete.BooleanDomain(false)
+            case (Finite(1), Finite(1)) if intToBool => concrete.BooleanDomain(true)
+            case (Finite(0), Finite(1)) if intToBool => concrete.BooleanDomain()
+            case (Finite(lb), Finite(ub))            => IntDomain.ofInterval(lb, ub)
           }
-      }
+        } else {
+          IntDomain(v.asSortedSet)
+        }
 
       case _ => throw new IllegalArgumentException("Unhandled variable type")
     }
