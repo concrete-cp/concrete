@@ -20,11 +20,11 @@ import concrete.heuristic.revision.Key
 import concrete.constraint.StatefulConstraint
 
 object ACC extends LazyLogging {
-  def control(problem: Problem, state: ProblemState): ProblemState = {
+  def control(problem: Problem, state: ProblemState): Option[Constraint] = {
     logger.info("Control !")
 
-    problem.constraints.foreach(_.controlRevision(state))
-    state
+    problem.constraints.find(c => !c.controlRevision(state))
+
     //    {
     //      (s, c) =>
     //
@@ -154,7 +154,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
         val positions = modified.positionInConstraint(i)
 
         /** Requeue the constraint if the modified variable is involved several times in its scope */
-        if ((c ne skip) || positions.tail.nonEmpty) {
+        if ((c ne skip) || positions.length > 1) {
 
           val a = c.advise(states, positions)
           logger.trace(s"Queueing ${c.toString(states)}, positions = $positions, advise = $a")
@@ -180,7 +180,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
       revisions += 1;
       //val sizes = constraint.sizes()
-      
+
       logger.trace(constraint.toString(s))
 
       constraint.revise(s) match {
@@ -200,7 +200,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
             assert(constraint.controlAssignment(newState), s"${constraint.toString(newState)} assignement is inconsistent")
 
-            assert(constraint.controlRevision(newState))
+            assert(constraint.controlRevision(newState), s"Revision control failed for ${constraint.toString(s)}")
 
             for (v <- constraint.scope) {
               val id = v.id
@@ -216,8 +216,8 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
             logger.debug(s"${constraint.id}. ${constraint.toString(s)} -> ${
               constraint match {
-                case sc: StatefulConstraint => s"new state: ${newState(sc)}"
-                case _                      => "NOP"
+                case sc: StatefulConstraint[_] => s"new state: ${newState(sc)}"
+                case _                         => "NOP"
               }
             }, entailed: ${newState.isEntailed(constraint)}")
 
@@ -237,8 +237,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     }
 
     assert {
-      s = ACC.control(problem, s)
-      true
+      ACC.control(problem, s).isEmpty
     }
     s
 
@@ -248,7 +247,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     variables.forall(v => oldState.dom(v) eq newState.dom(v))
   }
 
-  def domSizes(c: Constraint, state: ProblemState) = state.domains(c.scope).map(_.size)
+  def domSizes(c: Constraint, state: ProblemState) = Array.tabulate(c.arity)(p => state.dom(c.scope(p)).size)
 
   override def toString = "AC-cons+" + queue.getClass().getSimpleName();
 
