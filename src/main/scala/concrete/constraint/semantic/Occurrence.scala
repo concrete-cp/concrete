@@ -1,23 +1,19 @@
 package concrete.constraint.semantic
 
+import com.typesafe.scalalogging.LazyLogging
+
 import concrete.Domain
+import concrete.Outcome
+import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Constraint
-import concrete.Singleton
-import concrete.Contradiction
-import concrete.ProblemState
-import concrete.Outcome
-import concrete.constraint.StatefulConstraint
 import concrete.constraint.Removals
+import concrete.constraint.StatefulConstraint
 import cspom.util.BitVector
-import com.typesafe.scalalogging.LazyLogging
-import concrete.util.Interval
 
 class Occurrence(val result: Variable, val value: Variable,
                  val vars: Array[Variable])
-  extends Constraint(result +: value +: vars) with StatefulConstraint with Removals with LazyLogging {
-
-  type State = (Map[Int, Int], Map[Int, BitVector])
+    extends Constraint(result +: value +: vars) with StatefulConstraint[(Map[Int, Int], Map[Int, BitVector])] with Removals with LazyLogging {
 
   override def init(ps: ProblemState) =
     ps.updateState(id, (
@@ -28,7 +24,14 @@ class Occurrence(val result: Variable, val value: Variable,
     tuple(0) == (2 until arity).count(i => tuple(i) == tuple(1))
   }
 
-  def getEvaluation(ps: ProblemState): Int = scopeSize(ps)
+  def getEvaluation(ps: ProblemState): Int = {
+    val (_, cba) = ps(this)
+    var s = 0
+    for ((k, v) <- cba) {
+      s += v.cardinality
+    }
+    s
+  }
 
   override def toString = s"$result occurrences of $value in (${vars.mkString(", ")})"
 
