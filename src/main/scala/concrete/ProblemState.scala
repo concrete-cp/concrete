@@ -33,7 +33,9 @@ sealed trait Outcome {
   def entail(id: Int): Outcome
   def entail(c: Constraint): Outcome = entail(c.id)
 
-  def entailIfFree(c: Constraint): Outcome
+  def entailIfFree(c: Constraint): Outcome = entailIf(c, c.isFree)
+
+  def entailIf(c: Constraint, f: ProblemState => Boolean): Outcome
 
   def updateDom(v: Variable, d: Domain): Outcome
   def updateDom(id: Int, d: Domain): Outcome
@@ -63,7 +65,12 @@ sealed trait Outcome {
   def remove(p: Pair): Outcome = remove(p.variable, p.value)
 
   def assign(v: Variable, value: Int): Outcome = assign(v.id, value)
-  def remove(v: Variable, value: Int): Outcome = remove(v.id, value)
+  def remove(v: Variable, value: Int): Outcome
+  //  = try remove(v.id, value)
+  //  catch {
+  //    case e: IndexOutOfBoundsException =>
+  //      throw new IllegalArgumentException(s"Variable ${v.toString(toState)} is not a problem variable, trying to remove $value", e)
+  //  }
 
   def assign(id: Int, value: Int): Outcome
   def remove(id: Int, value: Int): Outcome
@@ -80,13 +87,9 @@ sealed trait Outcome {
   def boolDom(id: Int): BooleanDomain
   def boolDom(v: Variable): BooleanDomain = boolDom(v.id)
 
-  def domains(v: Iterable[Variable]): Iterator[Domain] = {
-    v.iterator.map(dom)
-  }
-
   def updateState(id: Int, newState: AnyRef): Outcome
 
-  def updateState(c: Constraint, newState: AnyRef): Outcome =
+  def updateState[S <: AnyRef](c: StatefulConstraint[S], newState: S): Outcome =
     updateState(c.id, newState)
 
   def domainsOption: Option[IndexedSeq[Domain]]
@@ -104,8 +107,8 @@ case object Contradiction extends Outcome {
   def filterDom(v: Variable)(f: Int => Boolean): Outcome = Contradiction
   def shaveDom(id: Int, lb: Int, ub: Int): Outcome = Contradiction
   def shaveDom(v: Variable, lb: Int, ub: Int): Outcome = Contradiction
-  def entailIfFree(c: Constraint): Outcome = Contradiction
-  def entail(id: Int) = Contradiction
+  def entailIf(c: Constraint, f: ProblemState => Boolean): Outcome = Contradiction
+  def entail(id: Int): Outcome = Contradiction
   def removeTo(id: Int, ub: Int): Outcome = Contradiction
   def removeFrom(id: Int, lb: Int): Outcome = Contradiction
   def removeUntil(id: Int, ub: Int): Outcome = Contradiction
@@ -117,6 +120,7 @@ case object Contradiction extends Outcome {
   def updateDom(id: Int, d: Domain): Outcome = Contradiction
   def updateDom(v: Variable, d: Domain): Outcome = Contradiction
   def assign(id: Int, value: Int): Outcome = Contradiction
+  def remove(v: Variable, value: Int): Outcome = Contradiction
   def remove(id: Int, value: Int): Outcome = Contradiction
   def dom(id: Int): Domain = throw new UNSATException("Tried to get a domain from a Contradiction")
   def dom(v: Variable): Domain = throw new UNSATException("Tried to get a domain from a Contradiction")
@@ -147,7 +151,7 @@ final case class ProblemState(
 
   def andThen(f: ProblemState => Outcome) = f(this)
 
-  def apply(c: StatefulConstraint): c.State = constraintStates(c.id).asInstanceOf[c.State]
+  def apply[S <: AnyRef](c: StatefulConstraint[S]): S = constraintStates(c.id).asInstanceOf[S]
 
   def updateState(id: Int, newState: AnyRef): ProblemState = {
     if (constraintStates(id) eq newState) {
@@ -221,6 +225,7 @@ final case class ProblemState(
   }
 
   def updateDomNonEmpty(variable: Variable, newDomain: Domain): ProblemState = {
+    assert(variable.id >= 0 || (dom(variable) eq newDomain), s"$variable updated to $newDomain is not a problem variable")
     updateDomNonEmpty(variable.id, dom(variable), newDomain)
   }
 
@@ -238,6 +243,10 @@ final case class ProblemState(
 
   def assign(id: Int, value: Int): Outcome = {
     updateDom(id, domains(id).assign(value))
+  }
+
+  def remove(v: Variable, value: Int): Outcome = {
+    updateDom(v, dom(v).remove(value))
   }
 
   def remove(id: Int, value: Int): Outcome = {
@@ -280,8 +289,8 @@ final case class ProblemState(
   override def removeAfter(v: Variable, lb: Int): Outcome =
     updateDom(v, dom(v).removeAfter(lb))
 
-  def entailIfFree(c: Constraint) = {
-    if (c.isFree(this)) entail(c.id) else this
+  def entailIf(c: Constraint, f: ProblemState => Boolean) = {
+    if (f(this)) entail(c.id) else this
   }
 
   def domainsOption = Some(domains)
