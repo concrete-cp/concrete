@@ -67,5 +67,5 @@ object Bool2IntIsEq extends ConstraintCompilerNoData {
     removeCtr(c, p) ++ (if (CSPOMSeq.searchSpace(c.arguments) > 1) replace(i, b, p) else Delta.empty)
 
   }
-  def selfPropagation = false
+  def selfPropagation = true
 }
