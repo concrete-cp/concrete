@@ -12,7 +12,7 @@ final class ResidueManagerFast(scope: Array[Variable]) extends ResidueManager {
 
   def getResidue(position: Int, value: Int) = last(position)(value - offsets(position))
 
-  def updateResidue(residue: Array[Int]) {
+  def updateResidue(residue: Array[Int]): Unit = {
     //println(residue.toSeq)
     var i = arity - 1
     while (i >= 0) {
