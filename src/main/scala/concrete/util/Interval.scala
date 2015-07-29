@@ -215,6 +215,12 @@ case class Interval(val lb: Int, val ub: Int) {
     math.max(lb, i.lb) <= math.min(ub, i.ub)
   }
 
+  def connected(i: Interval): Boolean = {
+    val iAfterThis = i.lb > this.ub + 1
+
+    !(iAfterThis || i.ub < this.lb - 1)
+  }
+
   def span(i: Interval): Interval = Interval(math.min(lb, i.lb), math.max(ub, i.ub))
 
   def unary_- : Interval = Interval(-ub, -lb)
