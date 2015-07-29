@@ -24,15 +24,15 @@ import cspom.variable.SimpleExpression
  */
 object ReifiedClause extends ConstraintCompiler {
 
-  type A = SimpleExpression[Boolean]
+  type A = (SimpleExpression[Boolean], Seq[SimpleExpression[Boolean]], Seq[SimpleExpression[Boolean]])
 
   override def constraintMatcher = {
-    case CSPOMConstraint(BoolExpression(res), 'clause, args, params) if (!res.isTrue) =>
-      res
+    case CSPOMConstraint(BoolExpression(res), 'clause, Seq(BoolExpression.simpleSeq(p), BoolExpression.simpleSeq(n)), params) if (!res.isTrue) =>
+      (res, p, n)
   }
 
-  def compile(fc: CSPOMConstraint[_], problem: CSPOM, res: SimpleExpression[Boolean]) = {
-    val Seq(BoolExpression.simpleSeq(positive), BoolExpression.simpleSeq(negative)) = fc.arguments
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM, data: A) = {
+    val (res, positive, negative) = data
 
     val c1 = CSPOMDriver.clause(positive: _*)(res +: negative: _*)
     val c2 = positive.map {
