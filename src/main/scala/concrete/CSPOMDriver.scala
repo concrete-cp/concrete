@@ -123,6 +123,9 @@ object CSPOMDriver {
 
     def /(other: SimpleExpression[Int])(implicit problem: CSPOM): SimpleExpression[Int] =
       problem.defineInt(result => CSPOMConstraint(result)('div)(e, other))
+
+    def %(other: SimpleExpression[Int])(implicit problem: CSPOM): SimpleExpression[Int] =
+      problem.defineInt(result => CSPOMConstraint(result)('mod)(e, other))
   }
 
   implicit class CSPOMBoolExpressionOperations(e: SimpleExpression[Boolean]) {
