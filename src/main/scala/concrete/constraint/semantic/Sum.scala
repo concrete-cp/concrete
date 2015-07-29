@@ -33,6 +33,14 @@ abstract class Sum(
   require(factors.forall(_ != 0), this)
   require(factors.size == scope.size)
 
+  val checkSum: Function[Int, Boolean] =
+    mode match {
+      case SumLE => _ <= constant
+      case SumLT => _ < constant
+      case SumEQ => _ == constant
+      case SumNE => _ != constant
+    }
+
   def check(t: Array[Int]): Boolean = {
     var i = arity - 1
     var sum = 0
@@ -40,12 +48,7 @@ abstract class Sum(
       sum += t(i) * factors(i)
       i -= 1
     }
-    mode match {
-      case SumLE => sum <= constant
-      case SumLT => sum < constant
-      case SumEQ => sum == constant
-      case SumNE => sum != constant
-    }
+    checkSum(sum)
   }
 
 }
