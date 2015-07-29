@@ -12,7 +12,7 @@ abstract class ConflictCount(
   scope: Array[Variable],
   _matrix: Matrix,
   shared: Boolean)
-  extends ExtensionConstraint(scope, _matrix, shared) with TupleEnumerator {
+    extends ExtensionConstraint(scope, _matrix, shared) with TupleEnumerator {
 
   def supportCondition(ps: ProblemState, position: Int): Boolean = {
     if (applicable && nbMaxConflicts == null) {
@@ -69,11 +69,12 @@ abstract class ConflictCount(
     if (size < 0) {
       None
     } else {
-      val offsets = ps.domains(scope).map(_.head).toArray
+      val offsets = Array.tabulate(arity)(p => ps.dom(scope(p)).head)
 
-      val nbInitConflicts = ps.domains(scope).map(
-        d => new Array[Long](d.last - d.head + 1))
-        .toArray
+      val nbInitConflicts = Array.tabulate(arity) { p =>
+        val d = ps.dom(scope(p))
+        new Array[Long](d.last - d.head + 1)
+      }
 
       matrix match {
         case tupleSet: TupleTrieSet =>
