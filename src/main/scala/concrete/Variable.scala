@@ -35,7 +35,7 @@ final class Variable(
 
   private var _extensionConstraints: List[ExtensionConstraint] = Nil
 
-  private var _positionInConstraint: Array[Seq[Int]] = Array.empty
+  private var _positionInConstraint: Array[Array[Int]] = Array.empty
 
   override def toString = name
 
