@@ -29,6 +29,7 @@ trait CSPOMRunner extends ConcreteRunner {
         CSPOMCompiler.compile(cspom, ConcretePatterns(pm))
       }
       .flatMap { cspom =>
+        // println("BOOL2INTISEQ")
         CSPOMCompiler.compile(cspom, Seq(Bool2IntIsEq))
       }
       .flatMap { cspom =>
@@ -45,7 +46,7 @@ trait CSPOMRunner extends ConcreteRunner {
       }
   }
 
-  override final def applyParameters(s: Solver, opt: Map[Symbol, Any]) = {
+  override final def applyParametersPost(s: Solver, opt: Map[Symbol, Any]) = {
     cspomSolver = new CSPOMSolver(s, cspom, variables)
     applyParametersCSPOM(cspomSolver, opt)
   }

@@ -72,7 +72,9 @@ trait ConcreteRunner extends LazyLogging {
 
   def load(args: List[String], opt: Map[Symbol, Any]): Try[concrete.Problem]
 
-  def applyParameters(s: Solver, opt: Map[Symbol, Any]): Unit = {}
+  def applyParametersPre(opt: Map[Symbol, Any]): Unit = {}
+
+  def applyParametersPost(s: Solver, opt: Map[Symbol, Any]): Unit = {}
 
   def description(args: List[String]): String
 
@@ -133,10 +135,11 @@ trait ConcreteRunner extends LazyLogging {
     val status = tryLoad
       .map { problem =>
         val f = Future {
+          applyParametersPre(opt)
           val solver = new SolverFactory(pm)(problem)
 
           statistics.register("solver", solver)
-          applyParameters(solver, opt)
+          applyParametersPost(solver, opt)
           //println(solver.problem)
 
           //        for (time <- opt.get('Time)) {

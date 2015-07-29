@@ -31,8 +31,11 @@ import concrete.generator.cspompatterns.FZPatterns
 import concrete.ParameterManager
 import cspom.flatzinc.FZArrayIdx
 import CSPOM._
+import cspom.variable.CSPOMVariable
+import cspom.flatzinc.FZArray
+import com.typesafe.scalalogging.LazyLogging
 
-object FZConcrete extends CSPOMRunner {
+object FZConcrete extends CSPOMRunner with LazyLogging {
 
   var file: URL = _
 
@@ -52,41 +55,67 @@ object FZConcrete extends CSPOMRunner {
     }
   }
 
-  def parseGoal(goal: FZSolve, freeSearch: Boolean, pm: ParameterManager): ParameterManager = {
-    goal.ann.foreach {
+  private def parseGoalAnnotation(ann: FZAnnotation, variables: Map[CSPOMVariable[_], Variable]): Option[Heuristic] = {
+    PartialFunction.condOpt(ann) {
+      case a if a.predAnnId == "seq_search" =>
+        val Seq(strategies: FZArrayExpr[_]) = a.expr
+        new SeqHeuristic(
+          strategies.value.flatMap {
+            case a: FZAnnotation => parseGoalAnnotation(a, variables)
+            case a               => sys.error(s"Annotation expected in $strategies, found $a")
+          }
+            .toList)
       case a if a.predAnnId == "int_search" || a.predAnnId == "bool_search" =>
-        if (!freeSearch) {
-          val Seq(_, vca, aa, strategyannotation) = a.expr
+        val Seq(p, vca, aa, strategyannotation) = a.expr
+        val CSPOMSeq(pool) = ann2expr(cspom, p)
+        val decisionVariables = pool.collect {
+          case v: CSPOMVariable[_] => variables(v)
+        }
+          .toList
 
-          val FZAnnotation(varchoiceannotation, _) = vca
+        val FZAnnotation(varchoiceannotation, _) = vca
 
-          varchoiceannotation match {
-            case "input_order" =>
-              pm("heuristic.variable") = classOf[LexVar]
-              pm("mac.restartLevel") = -1
-            case "first_fail"       => pm("heuristic.variable") = classOf[Dom]
-            case "antifirst_fail"   => pm("heuristic.variable") = classOf[MaxDom]
-            // case "smallest"
-            // case "largest"
-            case "occurrence"       => pm("heuristic.variable") = classOf[DDeg]
-            case "most_constrained" => pm("heuristic.variable") = classOf[Brelaz]
-            case h                  => logger.warn(s"Unsupported varchoice $h")
-          }
+        val varh: VariableHeuristic = varchoiceannotation match {
+          case "input_order" =>
+            new LexVar(pm, decisionVariables)
+          case "first_fail" =>
+            new Dom(pm, decisionVariables)
+          case "antifirst_fail" =>
+            new MaxDom(pm, decisionVariables)
+          // case "smallest"
+          // case "largest"
+          case "occurrence" =>
+            new DDeg(pm, decisionVariables)
+          case "most_constrained" =>
+            new Brelaz(pm, decisionVariables)
+          case h =>
+            logger.warn(s"Unsupported varchoice $h")
+            CrossHeuristic.defaultVar(pm, decisionVariables)
 
-          val FZAnnotation(assignmentannotation, _) = aa
-
-          assignmentannotation match {
-            case "indomain_min"    => pm("heuristic.value") = classOf[Lexico]
-            case "indomain_max"    => pm("heuristic.value") = classOf[RevLexico]
-            case "indomain_middle" => pm("heuristic.value") = classOf[MedValue]
-            case "indomain_random" => pm("heuristic.value") = classOf[RandomValue]
-            case h                 => logger.warn(s"Unsupported assignment heuristic $h")
-          }
         }
 
-      case a => logger.warn(s"Unsupported annotation $a")
+        val FZAnnotation(assignmentannotation, _) = aa
+
+        val valh = assignmentannotation match {
+          case "indomain_min"    => new Lexico()
+          case "indomain_max"    => new RevLexico()
+          case "indomain_middle" => new MedValue()
+          case "indomain_random" => new RandomValue()
+          case h =>
+            logger.warn(s"Unsupported assignment heuristic $h")
+            CrossHeuristic.defaultVal(pm)
+        }
+
+        new CrossHeuristic(pm, varh, valh)
     }
-    pm
+  }
+
+  def parseGoal(goal: FZSolve, freeSearch: Boolean, variables: Map[CSPOMVariable[_], Variable]): Seq[Heuristic] = {
+    if (freeSearch) {
+      Seq()
+    } else {
+      goal.ann.flatMap(parseGoalAnnotation(_, variables))
+    }
   }
 
   override def loadCSPOM(args: List[String], opt: Map[Symbol, Any]) = {
@@ -121,10 +150,7 @@ object FZConcrete extends CSPOMRunner {
         }
 
         val Some(goal: FZSolve) = data.get('goal)
-
         this.goal = goal
-        parseGoal(goal, opt.contains('free), pm)
-
         cspom
     }
       .flatMap { cspom =>
@@ -145,16 +171,30 @@ object FZConcrete extends CSPOMRunner {
       case _ => throw new InvalidParameterException("Cannot execute goal " + goal)
     }
 
-    goal.ann.foreach {
-      case a if a.predAnnId == "int_search" || a.predAnnId == "bool_search" =>
-        if (!freeSearch) {
-          val Seq(e, _, _, _) = a.expr
-          val CSPOMSeq(pool) = ann2expr(cspom, e)
-          solver.decisionVariables(pool)
-        }
+  }
 
-      case a => logger.warn(s"Unsupported annotation $a")
-    }
+  override def applyParametersPre(opt: Map[Symbol, Any]): Unit = {
+    val heuristics = parseGoal(goal, opt.contains('free), variables)
+    val decisionVariables = heuristics
+      .collect {
+        case c: CrossHeuristic => c.variableHeuristic.decisionVariables
+      }
+      .flatten.distinct
+
+    val heuristic =
+      if (decisionVariables.size < variables.size) {
+        new SeqHeuristic(heuristics.toList :+ CrossHeuristic(pm, variables.values.toList))
+      } else {
+        heuristics match {
+          case Seq(h) => h
+          case m      => new SeqHeuristic(m.toList)
+        }
+      }
+
+    logger.info(heuristic.toString + ", should restart: " + heuristic.shouldRestart)
+    // println(heuristic)
+    pm("mac.heuristic") = heuristic
+
   }
 
   override def applyParametersCSPOM(solver: CSPOMSolver, opt: Map[Symbol, Any]): Unit = {
