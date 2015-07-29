@@ -29,9 +29,10 @@ import concrete.priorityqueues.DLNode
 import concrete.priorityqueues.Identified
 import concrete.priorityqueues.PTag
 import cspom.UNSATException
-
 import scala.reflect.runtime.universe._
 import com.typesafe.scalalogging.LazyLogging
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
 
 object Constraint {
 
@@ -51,9 +52,7 @@ object Constraint {
 
 }
 
-trait StatefulConstraint extends Constraint {
-  type State <: AnyRef
-
+trait StatefulConstraint[State <: AnyRef] extends Constraint {
   override def init(ps: ProblemState): Outcome
 
   override def toString(problemState: ProblemState) = s"${super.toString(problemState)} / ${problemState(this)}"
@@ -65,7 +64,7 @@ abstract class Constraint(val scope: Array[Variable])
   require(scope.nonEmpty)
 
   if (!scope.distinct.sameElements(scope)) {
-    logger.warn(s"$this has duplicates in its scope")
+    logger.info(s"$this has duplicates in its scope")
   }
 
   def this(scope: Variable*) = this(scope.toArray)
@@ -86,10 +85,15 @@ abstract class Constraint(val scope: Array[Variable])
   /**
    * @return a map containing the positions of variables in the scope of the constraint.
    */
-  val position: Map[Variable, Seq[Int]] = {
-    scope.zipWithIndex.foldLeft(Map[Variable, Seq[Int]]()) {
-      case (map, (v, i)) => map + (v -> (map.getOrElse(v, Seq[Int]()) :+ i))
+  val position: Map[Variable, Array[Int]] = {
+    val pos = new HashMap[Variable, ArrayBuffer[Int]]()
+
+    for ((v, p) <- scope.zipWithIndex) {
+      pos.getOrElseUpdate(v, new ArrayBuffer()) += p
     }
+
+    pos.toMap.map { case (k, v) => k -> v.toArray }
+
   }
 
   override def equals(o: Any) = o.asInstanceOf[Constraint].id == id
@@ -136,17 +140,29 @@ abstract class Constraint(val scope: Array[Variable])
 
   def advise(problemState: ProblemState, pos: Int): Int
 
-  def advise(problemState: ProblemState, pos: Seq[Int]): Int = {
-    pos.foldLeft(-1) { (max, p) =>
-      math.max(max, advise(problemState, p))
+  def advise(problemState: ProblemState, pos: Array[Int]): Int = {
+    var max = -1
+    var i = pos.length - 1
+    while (i >= 0) {
+      max = math.max(max, advise(problemState, pos(i)))
+      i -= 1
     }
+    max
   }
 
   def advise(problemState: ProblemState, v: Variable): Int = advise(problemState, position(v))
 
-  final def adviseAll(problemState: ProblemState): Int = advise(problemState, 0 until arity)
+  final def adviseAll(problemState: ProblemState): Int = {
+    var max = -1
+    var i = arity - 1
+    while (i >= 0) {
+      max = math.max(max, advise(problemState, i))
+      i -= 1
+    }
+    max
+  }
 
-  def init(ps: ProblemState): Outcome = ps
+  def init(ps: ProblemState): Outcome = ps  
 
   /**
    * The constraint propagator.
@@ -257,19 +273,27 @@ abstract class Constraint(val scope: Array[Variable])
 
   def controlRevision(ps: ProblemState): Boolean = {
     val adv = adviseAll(ps)
-    revise(ps) match {
-      case Contradiction => throw new AssertionError(s"${toString(ps)} is not consistent${if (ps.isEntailed(this)) " - entailed" else ""}")
-      case finalState: ProblemState =>
-        require(scope.forall(v => ps.dom(v) eq finalState.dom(v)),
-          s"${toString(ps)}${if (ps.isEntailed(this)) " - entailed" else ""} was revised (-> ${toString(finalState)})")
-
-        require(adv < 0 || ps.isEntailed(this) == finalState.isEntailed(this),
-          s"${toString(ps)}: entailment detected")
-      //        require(ps eq finalState,
-      //          s"${toString(ps)}${if (ps.isEntailed(this)) " - entailed" else ""} triggered state change")
-
+    if (!controlAssignment(ps)) {
+      logger.error(s"Assignment of ${toString(ps)} is inconsistent")
+      false
+    } else {
+      revise(ps) match {
+        case Contradiction =>
+          logger.error(s"${toString(ps)} is not consistent${if (ps.isEntailed(this)) " - entailed" else ""}")
+          false
+        case finalState: ProblemState =>
+          if (!scope.forall(v => ps.dom(v) eq finalState.dom(v))) {
+            logger.error(s"${toString(ps)}${if (ps.isEntailed(this)) " - entailed" else ""} was revised (-> ${toString(finalState)})")
+            false
+          } else if (!(adv < 0 || ps.isEntailed(this) == finalState.isEntailed(this))) {
+            logger.error(s"${toString(ps)}: entailment detected")
+            false
+          } else {
+            true
+          }
+      }
     }
-    true
+
   }
 
 }
