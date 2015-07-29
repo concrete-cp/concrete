@@ -20,5 +20,5 @@ final class RandomValue extends ValueHeuristic {
   override def selectIndex(variable: Variable, dom: Domain) = {
     dom(rand.nextInt(dom.size))
   }
-
+  def shouldRestart = true
 }

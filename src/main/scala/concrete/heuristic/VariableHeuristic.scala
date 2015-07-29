@@ -10,7 +10,7 @@ import concrete.ParameterManager
 import concrete.ProblemState
 import concrete.Domain
 
-abstract class VariableHeuristic(params: ParameterManager) {
+abstract class VariableHeuristic(params: ParameterManager, val decisionVariables: List[Variable]) {
   protected val rand: Random = {
     if (params.getOrElse("heuristic.variable.randomBreak", true)) {
       val seed = params.getOrElse("randomBreak.seed", 0L)
@@ -21,9 +21,9 @@ abstract class VariableHeuristic(params: ParameterManager) {
 
   //def problem: Problem
 
-  final def select(problem: Problem, state: ProblemState): Option[Variable] =
-    select(problem.decisionVariables.dropWhile { v => state.dom(v).length == 1 }, state)
-      //.orElse(select(problem.variables.dropWhile { v => state.dom(v).size == 1 }, state))
+  final def select(state: ProblemState): Option[Variable] =
+    select(decisionVariables.dropWhile { v => state.dom(v).length == 1 }, state)
+  //.orElse(select(problem.variables.dropWhile { v => state.dom(v).size == 1 }, state))
 
   @tailrec
   private def select(list: List[Variable], best: Variable, bestDomain: Domain, ties: Int, state: ProblemState): Variable = {
@@ -74,18 +74,20 @@ abstract class VariableHeuristic(params: ParameterManager) {
     }
   }
 
-  def select(list: List[Variable], state: ProblemState): Option[Variable] = {
-    if (list.isEmpty) {
+  protected def select(list: List[Variable], state: ProblemState): Option[Variable] = list match {
+    case Nil =>
       None
-    } else if (rand ne null) {
-      Some(select(list.tail, list.head, state.dom(list.head), 2, state))
-    } else {
-      Some(select(list.tail, list.head, state.dom(list.head), state))
-    }
+    case h :: t =>
+      if (rand ne null) {
+        Some(select(t, h, state.dom(h), 2, state))
+      } else {
+        Some(select(t, h, state.dom(h), state))
+      }
   }
 
   def compare(v1: Variable, d1: Domain, v2: Variable, d2: Domain, state: ProblemState): Int
 
+  def shouldRestart = rand ne null
   //def score(variable: Variable, domain: Domain, state: ProblemState): Double
 
 }

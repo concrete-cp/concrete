@@ -32,24 +32,33 @@ import scala.annotation.tailrec
 import cspom.TimedException
 import cspom.UNSATException
 
-final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, params) with LazyLogging {
+object MAC {
+  def apply(prob: Problem, params: ParameterManager): MAC = {
+    val heuristic: Heuristic = params.get[Any]("mac.heuristic").getOrElse(classOf[CrossHeuristic]) match {
+      case heuristicClass: Class[_] =>
+        heuristicClass
+          .getMethod("apply", classOf[ParameterManager], classOf[List[Variable]])
+          .invoke(null, params, prob.variables)
+          .asInstanceOf[Heuristic]
+      case heuristic: Heuristic => heuristic
+    }
+
+    new MAC(prob, params, heuristic)
+  }
+}
+
+final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristic) extends Solver(prob, params) with LazyLogging {
 
   val btGrowth: Double = params.getOrElse("mac.btGrowth", 1.5)
 
   //  def addConstraint: LearnMethod = LearnMethod(
   //    params.getOrElse("mac.addConstraint", "BIN"))
 
-  val filterClass: Class[_ <: Filter] =
-    params.getOrElse("mac.filter", classOf[ACC])
+  val filterClass: Class[_ <: Filter] = params.getOrElse("mac.filter", classOf[ACC])
 
-  val heuristicClass: Class[_ <: Heuristic] =
-    params.getOrElse("mac.heuristic", classOf[CrossHeuristic])
+  val restartLevel = params.getOrElse("mac.restartLevel", if (heuristic.shouldRestart) 0 else -1)
 
-  val restartLevel =
-    params.getOrElse("mac.restartLevel", 0)
-
-  val measureMem: Boolean =
-    params.getOrElse("mac.measureMem", false)
+  val measureMem: Boolean = params.getOrElse("mac.measureMem", false)
 
   @Statistic
   var nbAssignments = 1;
@@ -60,8 +69,6 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
 
   private val filter: Filter = filterClass.getConstructor(classOf[Problem], classOf[ParameterManager]).newInstance(problem, params);
   statistics.register("filter", filter);
-
-  var heuristic: Heuristic = heuristicClass.getConstructor(classOf[ParameterManager]).newInstance(params);
 
   //  private val ngl = new NoGoodLearner(prob, addConstraint)
   //  statistics.register("nfr-learner", ngl)
@@ -115,7 +122,7 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
         }
 
       case filteredState: ProblemState =>
-        heuristic.selectPair(problem, filteredState) match {
+        heuristic.selectPair(filteredState) match {
           case None =>
             require(problem.variables.forall(v => filteredState.dom(v).size == 1),
               s"Unassigned variables in:\n${problem.toString(filteredState)}")
@@ -144,9 +151,6 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
     //decisions = Nil
     restart = true
   }
-
-  @Statistic
-  var heuristicCpu = 0.0
 
   @tailrec
   private def nextSolution(modifiedVar: Option[Variable], stack: List[Pair], currentState: Outcome, stateStack: List[ProblemState]): (SolverResult, List[Pair], List[ProblemState]) = {
@@ -194,8 +198,6 @@ final class MAC(prob: Problem, params: ParameterManager) extends Solver(prob, pa
       preprocess(filter, currentStateStack.last) match {
         case Contradiction => UNSAT
         case state: ProblemState =>
-          val (_, heuristicCpu) = StatisticsManager.time(heuristic.compute(problem))
-
           val (sol, stack, stateStack) = nextSolution(None, Nil, state, Nil)
           currentStack = stack
           currentStateStack = stateStack

@@ -39,6 +39,7 @@ import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
 import scala.util.Try
+import concrete.heuristic.Heuristic
 
 final class SolverFactory(val params: ParameterManager) {
 
@@ -47,8 +48,9 @@ final class SolverFactory(val params: ParameterManager) {
 
   def apply(problem: Problem): Solver = {
     solverClass
-      .getConstructor(classOf[Problem], classOf[ParameterManager])
-      .newInstance(problem, params);
+      .getMethod("apply", classOf[Problem], classOf[ParameterManager])
+      .invoke(null, problem, params)
+      .asInstanceOf[Solver]
   }
 
   def apply(cspom: CSPOM): Try[CSPOMSolver] = {
@@ -75,7 +77,7 @@ object Solver {
 class CSPOMSolver(
   val solver: Solver,
   val cspom: CSPOM,
-  private val variables: Map[CSPOMVariable[_], Variable]) extends Iterator[CSPOMSolution]
+  val variables: Map[CSPOMVariable[_], Variable]) extends Iterator[CSPOMSolution]
     with LazyLogging {
 
   def hasNext: Boolean = solver.hasNext
@@ -92,11 +94,11 @@ class CSPOMSolver(
     case _        => logger.warn(s"$v is not a variable, nothing to minimize")
   }
 
-  def decisionVariables(dv: Seq[CSPOMExpression[_]]): Unit = {
-    solver.decisionVariables(dv.collect {
-      case e: CSPOMVariable[_] => variables(e)
-    })
-  }
+  //  def decisionVariables(dv: Seq[CSPOMExpression[_]]): Unit = {
+  //    solver.decisionVariables(dv.collect {
+  //      case e: CSPOMVariable[_] => variables(e)
+  //    })
+  //  }
 
   def optimizes: Option[CSPOMVariable[_]] = solver.optimises.map {
     case variable => variables.find(_._2 == variable).get._1
@@ -157,7 +159,7 @@ class CSPOMSolution(private val cspom: CSPOM, private val variables: Map[CSPOMVa
 abstract class Solver(val problem: Problem, val params: ParameterManager) extends Iterator[Map[Variable, Any]] with LazyLogging {
 
   @Statistic
-  var preproRemoved = -1
+  var preproRemoved: Long = -1L
   @Statistic
   var preproCpu = 0.0
 
@@ -170,13 +172,13 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   val preprocessorClass: Option[Class[_ <: Filter]] =
     params.get[Class[_ <: Filter]]("preprocessor")
 
-  def decisionVariables(dv: Seq[Variable]): Unit = {
-    logger.info(s"Decision variables: $dv")
-    problem.decisionVariables = dv.toList
-    for (v <- optimises) {
-      if (!problem.decisionVariables.contains(v)) problem.decisionVariables +:= v
-    }
-  }
+  //  def decisionVariables(dv: Seq[Variable]): Unit = {
+  //    logger.info(s"Decision variables: $dv")
+  //    problem.decisionVariables = dv.toList
+  //    for (v <- optimises) {
+  //      if (!problem.decisionVariables.contains(v)) problem.decisionVariables +:= v
+  //    }
+  //  }
 
   @Statistic
   val statistics = new StatisticsManager
@@ -192,11 +194,11 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   private var _maximize: Option[Variable] = None
   def minimize(v: Variable) {
     _maximize = None; _minimize = Some(v)
-    if (!problem.decisionVariables.contains(v)) problem.decisionVariables +:= v
+    //if (!problem.decisionVariables.contains(v)) problem.decisionVariables +:= v
   }
   def maximize(v: Variable) {
     _minimize = None; _maximize = Some(v)
-    if (!problem.decisionVariables.contains(v)) problem.decisionVariables +:= v
+    // if (!problem.decisionVariables.contains(v)) problem.decisionVariables +:= v
   }
 
   def isOptimizer: Boolean = _maximize.nonEmpty || _minimize.nonEmpty
@@ -285,7 +287,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
 
     r.get.andThen { newState =>
       preproRemoved = problem.variables
-        .map { v => v.initDomain.size - newState.dom(v).size }
+        .map { v => v.initDomain.size.toLong - newState.dom(v).size }
         .sum
 
       newState

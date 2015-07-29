@@ -15,5 +15,7 @@ final class Lexico extends ValueHeuristic {
   }
 
   override def selectIndex(variable: Variable, dom: Domain) = dom.head
+  
+  def shouldRestart = false
 
 }

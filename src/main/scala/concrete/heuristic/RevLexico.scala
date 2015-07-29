@@ -15,5 +15,5 @@ final class RevLexico extends ValueHeuristic {
   }
 
   override def selectIndex(variable: Variable, dom: Domain) = dom.last
-
+  def shouldRestart = false
 }

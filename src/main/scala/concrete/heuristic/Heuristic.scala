@@ -5,6 +5,6 @@ import concrete.Problem;
 import concrete.ProblemState
 
 trait Heuristic {
-  def selectPair(problem: Problem, state: ProblemState): Option[Pair]
-  def compute(problem: Problem): Unit
+  def selectPair(state: ProblemState): Option[Pair]
+  def shouldRestart: Boolean
 }

@@ -9,5 +9,7 @@ trait ValueHeuristic {
 
   def score(variable: Variable, domain: Domain, value: Int): Double
 
-  def compute(problem: Problem)
+  def compute(problem: Problem): Unit
+
+  def shouldRestart: Boolean
 }

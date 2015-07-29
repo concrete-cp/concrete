@@ -10,7 +10,7 @@ import concrete.ParameterManager
 import concrete.ProblemState
 import concrete.Domain
 
-abstract class ScoredVariableHeuristic(params: ParameterManager) extends VariableHeuristic(params) {
+abstract class ScoredVariableHeuristic(params: ParameterManager, decisionVariables: List[Variable]) extends VariableHeuristic(params, decisionVariables) {
 
   //def problem: Problem
 
@@ -64,16 +64,14 @@ abstract class ScoredVariableHeuristic(params: ParameterManager) extends Variabl
     }
   }
 
-  override def select(list: List[Variable], state: ProblemState): Option[Variable] = {
-    if (list.isEmpty) {
-      None
-    } else if (rand ne null) {
-      val h :: t = list
-      Some(select(t, h, score(h, state.dom(h), state), 2, state))
-    } else {
-      val h :: t = list
-      Some(select(t, h, score(h, state.dom(h), state), state))
-    }
+  override def select(list: List[Variable], state: ProblemState): Option[Variable] = list match {
+    case Nil => None
+    case h :: t =>
+      if (rand ne null) {
+        Some(select(t, h, score(h, state.dom(h), state), 2, state))
+      } else {
+        Some(select(t, h, score(h, state.dom(h), state), state))
+      }
   }
 
   def compare(v1: Variable, d1: Domain, v2: Variable, d2: Domain, state: ProblemState): Int =

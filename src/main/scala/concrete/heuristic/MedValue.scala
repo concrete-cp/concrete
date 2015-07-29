@@ -18,5 +18,5 @@ final class MedValue extends ValueHeuristic {
   override def selectIndex(variable: Variable, domain: Domain) = {
     StatisticsManager.median(domain.toStream)
   }
-
+  def shouldRestart = false
 }

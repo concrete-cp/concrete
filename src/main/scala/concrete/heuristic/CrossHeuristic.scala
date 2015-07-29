@@ -7,20 +7,33 @@ import concrete.Problem
 import concrete.Variable;
 import concrete.ProblemState
 
-final class CrossHeuristic(params: ParameterManager) extends Heuristic {
+object CrossHeuristic {
+  def apply(params: ParameterManager, decisionVariables: List[Variable]) = {
+    new CrossHeuristic(params, defaultVar(params, decisionVariables), defaultVal(params))
+  }
 
-  private val variableHeuristicClass: Class[_ <: VariableHeuristic] =
-    params.getOrElse("heuristic.variable", classOf[WDegOnDom])
+  def defaultVar(params: ParameterManager, decisionVariables: List[Variable]) = {
+    val variableHeuristicClass: Class[_ <: VariableHeuristic] =
+      params.getOrElse("heuristic.variable", classOf[WDegOnDom])
+    variableHeuristicClass.getConstructor(classOf[ParameterManager], classOf[List[Variable]]).newInstance(params, decisionVariables)
+  }
 
-  private val valueHeuristicClass: Class[_ <: ValueHeuristic] =
-    params.getOrElse("heuristic.value", classOf[Lexico])
+  def defaultVal(params: ParameterManager) = {
+    val valueHeuristicClass: Class[_ <: ValueHeuristic] =
+      params.getOrElse("heuristic.value", classOf[Lexico])
 
-  val variableHeuristic = variableHeuristicClass.getConstructor(classOf[ParameterManager]).newInstance(params)
+    valueHeuristicClass.getConstructor().newInstance()
 
-  val valueHeuristic = valueHeuristicClass.getConstructor().newInstance()
+  }
+}
 
-  def selectPair(problem: Problem, state: ProblemState) = {
-    variableHeuristic.select(problem, state).map(v => Pair(v, valueHeuristic.selectIndex(v, state.dom(v))))
+final class CrossHeuristic(
+    params: ParameterManager,
+    val variableHeuristic: VariableHeuristic,
+    val valueHeuristic: ValueHeuristic) extends Heuristic {
+
+  def selectPair(state: ProblemState) = {
+    variableHeuristic.select(state).map(v => Pair(v, valueHeuristic.selectIndex(v, state.dom(v))))
   }
 
   def compute(problem: Problem) {
@@ -29,6 +42,7 @@ final class CrossHeuristic(params: ParameterManager) extends Heuristic {
   }
 
   override def toString =
-    "Crossed " + variableHeuristic + ", " + valueHeuristic;
+    "Crossed (" + variableHeuristic + ", " + valueHeuristic + ")";
 
+  def shouldRestart = variableHeuristic.shouldRestart || valueHeuristic.shouldRestart
 }

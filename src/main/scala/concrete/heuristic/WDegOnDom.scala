@@ -24,7 +24,7 @@ import concrete.Variable
 import concrete.ParameterManager
 import concrete.ProblemState
 import concrete.Domain
-class WDegOnDom(params: ParameterManager) extends ScoredVariableHeuristic(params) {
+class WDegOnDom(params: ParameterManager, decisionVariables: List[Variable]) extends ScoredVariableHeuristic(params, decisionVariables) {
 
   def score(variable: Variable, dom: Domain, state: ProblemState) = variable.getWDegEntailed(state).toDouble / dom.length
 

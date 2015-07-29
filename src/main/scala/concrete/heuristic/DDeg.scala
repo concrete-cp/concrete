@@ -7,7 +7,7 @@ import concrete.ParameterManager
 import concrete.ProblemState
 import concrete.Domain
 
-final class DDeg(params: ParameterManager) extends ScoredVariableHeuristic(params) {
+final class DDeg(params: ParameterManager, decisionVariables: List[Variable]) extends ScoredVariableHeuristic(params, decisionVariables) {
 
   def score(variable: Variable, dom: Domain, state: ProblemState) =
     variable.getDDegEntailed(state).toDouble

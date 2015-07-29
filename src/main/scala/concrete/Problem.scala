@@ -42,13 +42,11 @@ final class Problem(val variables: List[Variable]) {
     (acc, v) => v.id = acc; acc + 1
   }
 
-  var decisionVariables: List[Variable] = variables
-
   val variableMap: Map[String, Variable] = variables.map(v => v.name -> v).toMap
   var constraints: Array[Constraint] = Array()
 
   private var _maxArity = 0
-  private var _maxCId = 0
+  private var _nextCId = 0
 
   def addConstraint(constraint: Constraint): Unit = addConstraints(Seq(constraint))
 
@@ -56,7 +54,7 @@ final class Problem(val variables: List[Variable]) {
     constraints ++= cs
 
     for (c <- cs) {
-      _maxCId = c.identify(_maxCId)
+      _nextCId = c.identify(_nextCId)
       _maxArity = math.max(_maxArity, c.arity)
       c.scope.foreach(v => v.addConstraint(c))
     }
@@ -74,6 +72,8 @@ final class Problem(val variables: List[Variable]) {
       .mkString("\n") + "\n" + stats(state)
   }
 
+  override def toString = toString(initState.toState)
+
   def stats(state: ProblemState) = {
     val entailed = state.entailed.cardinality
 
@@ -84,7 +84,7 @@ final class Problem(val variables: List[Variable]) {
 
   def maxArity = _maxArity
 
-  def maxCId = _maxCId
+  def maxCId = _nextCId - 1
   // def nd = variables.iterator.map(_.dom.size).sum
   def variable(name: String) = variableMap(name)
 
