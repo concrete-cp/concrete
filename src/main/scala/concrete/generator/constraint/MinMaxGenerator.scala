@@ -22,7 +22,7 @@ final object MinGenerator extends Generator {
       .reduceOption(math.min)
       .map(c => Const(c).asVariable)
 
-    Seq(new Min(r.asVariable, vars.toArray))
+    Seq(Min(r.asVariable, vars))
   }
 
 }
@@ -42,7 +42,7 @@ final object MaxGenerator extends Generator {
       .reduceOption(math.max)
       .map(c => Const(c).asVariable)
 
-    Seq(new Max(r.asVariable, vars.toArray))
+    Seq(Max(r.asVariable, vars))
   }
 
 }
