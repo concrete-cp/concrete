@@ -26,9 +26,9 @@ final class ProblemGeneratorTest extends FlatSpec with LazyLogging with TryValue
     generateTest("queens-12.xml");
   }
 
-  it should "generate scen11-f12" in {
-    generateTest("scen11-f12.xml.bz2");
-  }
+//  it should "generate scen11-f12" in {
+//    generateTest("scen11-f12.xml.bz2");
+//  }
 
   it should "generate crosswordm2" in {
     generateTest("crossword-m2-debug-05-01.xml");

@@ -39,7 +39,7 @@ class AbsDiffCompilerTest extends FlatSpec with Matchers {
 
       val Seq(CSPOMConstraint(`r2`, 'absdiff, Seq(`v0`, `v1`), _)) = cspom.constraints.toSeq
 
-      println(cspom)
+     // println(cspom)
     }
   }
 
@@ -83,14 +83,13 @@ class AbsDiffCompilerTest extends FlatSpec with Matchers {
     val p4 = for {
       (p1, data) <- XCSPParser(miniScen)
       p2 <- CSPOMCompiler.compile(p1, XCSPPatterns())
-      p3 <- CSPOMCompiler.compile(p2, ConcretePatterns(new ParameterManager()))
+      p3 <- CSPOMCompiler.compile(p2, ConcretePatterns(new ParameterManager()) :+ AbsDiff)
     } yield p3
 
     val problem = p4.get
     withClue(problem) {
       problem.getPostponed shouldBe empty
-      problem.constraints.toSeq should have size 3
-      println(problem)
+      problem.constraints.toSeq should have size 2
     }
 
   }

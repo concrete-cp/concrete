@@ -16,14 +16,14 @@ class ScoredVariableHeuristicTest extends FlatSpec with Matchers {
     val pm = new ParameterManager()
     //    pm("variableHeuristic.randomBreak") = false
 
-    val h = new Dom(pm)
-
     val variables = List.tabulate(10)(n => new Variable(n.toString, IntDomain(0 to 10)))
+
+    val h = new Dom(pm, variables)
 
     val problem = new Problem(variables)
     val state = problem.initState.toState
 
-    val select = List.fill(100)(h.select(problem, state).get).distinct
+    val select = List.fill(100)(h.select( state).get).distinct
 
     select.size should be > 1
 
