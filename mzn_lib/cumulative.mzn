@@ -5,8 +5,6 @@
 %                     array[int] of var int: r, var int: b);
 
 
-%predicate bool_lin_le(array[int] of par int: c, array[int] of var bool: x, par int: d);
-
 %-----------------------------------------------------------------------------%
 % Requires that a set of tasks given by start times 's', durations 'd', and
 % resource requirements 'r', never require more than a global resource bound

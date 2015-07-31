@@ -50,8 +50,9 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
 
   override def options(args: List[String], o: Map[Symbol, Any] = Map.empty, realArgs: List[String]): (Map[Symbol, Any], List[String]) = {
     args match {
-      case "-f" :: tail => options(tail, o + ('free -> Unit), realArgs)
-      case e            => super.options(e, o, realArgs)
+      case "-f" :: tail           => options(tail, o + ('free -> Unit), realArgs)
+      case "-p" :: option :: tail => options(tail, o + ('par -> option.toInt), realArgs)
+      case e                      => super.options(e, o, realArgs)
     }
   }
 
