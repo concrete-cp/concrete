@@ -94,8 +94,12 @@ final class Singleton private (val singleValue: Int) extends IntDomain with Lazy
       requestedBV
     }
 
-  def &(d: Domain) = if (d.present(singleValue)) this else EmptyIntDomain
-
+  def &(d: Domain) = d match {
+    case bd: BooleanDomain             => bd & this
+    case d if (d.present(singleValue)) => this
+    case _                             => EmptyIntDomain
+  }
+  
   def &(lb: Int, ub: Int) = if (lb <= singleValue && singleValue <= ub) this else EmptyIntDomain
 
   def |(d: Domain) = d match {

@@ -216,6 +216,8 @@ final case class ProblemState(
       this
     } else {
       assert(newDomain subsetOf oldDomain)
+      assert(!oldDomain.isInstanceOf[BooleanDomain] || newDomain.isInstanceOf[BooleanDomain])
+      assert(!oldDomain.isInstanceOf[IntDomain] || newDomain.isInstanceOf[IntDomain])
       new ProblemState(domains.updated(id, newDomain), constraintStates, entailed)
     }
   }

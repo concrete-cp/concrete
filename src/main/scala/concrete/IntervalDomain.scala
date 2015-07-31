@@ -134,7 +134,7 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
         domain
       }
     case EmptyIntDomain   => EmptyIntDomain
-    case b: BooleanDomain => ???
+    case b: BooleanDomain => b & this
   }
 
   def &(lb: Int, ub: Int) = {

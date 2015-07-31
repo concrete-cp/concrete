@@ -177,7 +177,7 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
         IntDomain.ofBitVector(newOffset, newBV, newBV.cardinality)
       }
     case EmptyIntDomain   => EmptyIntDomain
-    case b: BooleanDomain => ???
+    case b: BooleanDomain => b & this
   }
 
   override def |(d: Domain) = {

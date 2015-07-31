@@ -80,6 +80,8 @@ case object UNKNOWNBoolean extends BooleanDomain {
 
   val as01 = IntDomain.ofInterval(0, 1)
   val span = Interval(0, 1)
+
+  def union(bd: BooleanDomain) = UNKNOWNBoolean
 }
 
 case object TRUE extends BooleanDomain {
@@ -103,6 +105,10 @@ case object TRUE extends BooleanDomain {
   val as01 = Singleton(1)
   override def filter(f: Int => Boolean) = if (f(1)) this else EMPTY
   val span = Interval(1, 1)
+  def union(bd: BooleanDomain) = bd match {
+    case FALSE | UNKNOWNBoolean => UNKNOWNBoolean
+    case _                      => TRUE
+  }
 }
 
 case object FALSE extends BooleanDomain {
@@ -126,6 +132,10 @@ case object FALSE extends BooleanDomain {
   val as01 = Singleton(0)
   override def filter(f: Int => Boolean) = if (f(0)) this else EMPTY
   val span = Interval(0, 0)
+  def union(bd: BooleanDomain) = bd match {
+    case TRUE | UNKNOWNBoolean => UNKNOWNBoolean
+    case _                     => FALSE
+  }
 }
 
 case object EMPTY extends BooleanDomain {
@@ -149,6 +159,7 @@ case object EMPTY extends BooleanDomain {
   val as01 = EmptyIntDomain
   override def filter(f: Int => Boolean) = this
   def span = throw new NoSuchElementException
+  def union(bd: BooleanDomain) = bd
 }
 
 object BooleanDomain {
@@ -191,7 +202,12 @@ sealed trait BooleanDomain extends Domain {
 
   def &(d: Domain) = filter(d.contains)
 
-  def |(d: Domain) = as01 | d
+  def union(bd: BooleanDomain): BooleanDomain
+
+  def |(d: Domain) = d match {
+    case bd: BooleanDomain => this union bd
+    case d                 => as01 | d
+  }
 
   def filterBounds(f: Int => Boolean) = filter(f)
 }

@@ -18,15 +18,17 @@ import concrete.constraint.Constraint
 import concrete.constraint.Residues
 import scala.collection.JavaConversions
 import concrete.ParameterManager
+import concrete.BooleanDomain
 
 case class Clause(positive: Seq[Variable], negative: Seq[Variable]) {
+  require(vars.forall(v => v.initDomain.isInstanceOf[BooleanDomain]))
   def size = positive.size + negative.size
   def vars = positive ++ negative
 }
 
 case class PseudoBoolean(
-  vars: Seq[Variable], coefs: Seq[Int],
-  mode: SumMode.SumMode, constant: Int) {
+    vars: Seq[Variable], coefs: Seq[Int],
+    mode: SumMode.SumMode, constant: Int) {
   def size = vars.size
 }
 
