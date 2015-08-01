@@ -97,6 +97,8 @@ trait ConcreteRunner extends LazyLogging {
         sys.exit(1)
     }
 
+    logger.info(opt.toString())
+
     for (u <- opt.get('unknown)) {
       logger.warn("Unknown options: " + u)
     }
