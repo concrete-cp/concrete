@@ -3,9 +3,9 @@ package concrete.util
 import java.util.Arrays
 
 class SparseSet(
-  val dense: Array[Int],
-  private val sparse: Array[Int],
-  private val members: Int) extends Set[Int] {
+    val dense: Array[Int],
+    private val sparse: Array[Int],
+    private val members: Int) extends Set[Int] {
 
   def this(s: Int) = this(new Array[Int](s), new Array[Int](s), 0)
 
@@ -28,21 +28,29 @@ class SparseSet(
     }
   }
 
-  // Members declared in scala.collection.GenSetLike
-  def iterator: Iterator[Int] = dense.iterator.take(members) 
-//  new Iterator[Int] {
-//    var c = members - 1
-//    def hasNext = c >= 0
-//    def next() = {
-//      val v = dense(c)
-//      c -= 1
-//      v
-//    }
-//  }
+  def iterator: Iterator[Int] = dense.iterator.take(members)
 
   override def size = members
 
-  // Members  declared in scala.collection.SetLike 
-  def -(elem: Int): scala.collection.immutable.Set[Int] = ???
+  private def swap(elem: Int, a: Int, end: Int): Unit = {
+    val t = dense(a)
+    dense(a) = dense(end)
+    dense(end) = t
+    sparse(elem) = end
+    sparse(end) = a
+
+  }
+
+  def -(elem: Int): SparseSet = {
+    val a = sparse(elem)
+    if (a < members && dense(a) == elem) {
+      val end = members - 1
+      swap(elem, a, end)
+      new SparseSet(dense, sparse, end)
+    } else {
+      this
+    }
+
+  }
 
 }

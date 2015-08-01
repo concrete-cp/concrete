@@ -1,9 +1,12 @@
 package concrete.util
 
-import org.scalatest.Matchers
 import org.scalatest.FlatSpec
+import org.scalatest.Matchers
+import org.scalatest.prop.PropertyChecks
+import org.scalacheck.Gen
+import org.scalatest.Inspectors
 
-class SparseSetTest extends FlatSpec with Matchers {
+class SparseSetTest extends FlatSpec with Matchers with PropertyChecks {
 
   "SparseSet" should "detect containment" in {
 
@@ -16,5 +19,42 @@ class SparseSetTest extends FlatSpec with Matchers {
     map2 should not contain (1)
     map should not contain (6)
 
+  }
+
+  it should "have a Set behavior, test case" in {
+    val g = Seq((549, true), (1, true), (549, false))
+
+    var set = Set.empty[Int]
+    var sparseSet = new SparseSet(math.max(g.size, 1001))
+
+    for ((n, b) <- g) {
+      if (b) {
+        set += n
+        sparseSet += n
+      } else {
+        set -= n
+        sparseSet -= n
+      }
+      sparseSet should contain theSameElementsAs set
+    }
+
+  }
+
+  it should "have a Set behavior" in {
+    forAll(Gen.nonEmptyListOf(Gen.zip(Gen.choose(0, 1000), Gen.oneOf(true, false)))) { g =>
+      var set = Set.empty[Int]
+      var sparseSet = new SparseSet(math.max(g.size, 1001))
+
+      for ((n, b) <- g) {
+        if (b) {
+          set += n
+          sparseSet += n
+        } else {
+          set -= n
+          sparseSet -= n
+        }
+        sparseSet should contain theSameElementsAs set
+      }
+    }
   }
 }
