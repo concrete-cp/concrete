@@ -6,19 +6,13 @@ version := "3.0-B1"
 
 scalaVersion := "2.11.7"
 
-
-// For JSR331, CSPOM and its dependencies
-// resolvers += "Concrete repository" at "http://concrete-cp.github.io/concrete/repository"
-
-
-
 testOptions in Test <+= (target in Test) map {
   t => Tests.Argument(TestFrameworks.ScalaTest, "-u", s"${t / "test-reports"}")
 }
 
 
 libraryDependencies ++= Seq(
-	"fr.univ-valenciennes" %% "cspom" % "2.6",
+	"fr.univ-valenciennes" %% "cspom" % "2.6.1",
 	"org.postgresql" % "postgresql" % "9.4-1201-jdbc41",
 	//"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
 	"org.ow2.sat4j" % "org.ow2.sat4j.pb" % "2.3.5",
@@ -44,9 +38,39 @@ enablePlugins(JavaAppPackaging)
 
 mainClass in Compile := Some("concrete.runner.FZConcrete")
 
-publishTo := Some(
-	Resolver.file("Concrete local repository",
-		new File(Path.userHome.absolutePath+"/concrete/repository")))
+
+
+publishTo :=  {
+  val nexus = "https://oss.sonatype.org/"
+  if (isSnapshot.value)
+    Some("snapshots" at nexus + "content/repositories/snapshots")
+  else
+    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+}
+
+publishArtifact in Test := false
+
+licenses := Seq("LGPL 3.0" -> url("https://www.gnu.org/licenses/lgpl-3.0.txt"))
+
+homepage := Some(url("https://github.com/concrete-cp/concrete"))
+
+publishMavenStyle := true
+
+pomExtra in Global := {
+  <scm>
+    <connection>scm:git:github.com/concrete-cp/concrete.git</connection>
+    <url>github.com/concrete-cp/concrete.git</url>
+  </scm>
+
+  <developers>
+    <developer>
+      <id>scand1sk</id>
+      <name>Julien Vion</name>
+      <url>http://vion.free.fr/perso</url>
+    </developer>
+  </developers>
+}
+
 		
 sourceGenerators in Compile <+= (sourceManaged in Compile, version, name) map { (d, v, n) =>
   val file = d / "concrete" / "Info.scala"
