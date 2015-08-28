@@ -8,17 +8,10 @@
 			</pattern>
 		</encoder>
 
-		<!-- <filter class="ch.qos.logback.core.filter.EvaluatorFilter"> -->
-		<!-- <evaluator> defaults to type ch.qos.logback.classic.boolex.JaninoEventEvaluator -->
-		<!-- <expression>return logger.startsWith("concrete");</expression> -->
-		<!-- </evaluator> -->
-		<!-- <OnMismatch>DENY</OnMismatch> -->
-		<!-- <OnMatch>NEUTRAL</OnMatch> -->
-		<!-- </filter> -->
-
 	</appender>
 
-
+	<logger name="concrete" level="warn" />
+	<logger name="cspom" level="warn" />
 
 	<root level="warn">
 		<appender-ref ref="STDOUT" />
