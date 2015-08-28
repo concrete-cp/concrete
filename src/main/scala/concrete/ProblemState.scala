@@ -11,6 +11,7 @@ import cspom.UNSATException
 
 sealed trait Outcome {
   def andThen(f: ProblemState => Outcome): Outcome
+  def orElse(f: => Outcome): Outcome
   def filterDom(id: Int)(f: Int => Boolean): Outcome
   def filterDom(v: Variable)(f: Int => Boolean): Outcome
 
@@ -99,10 +100,15 @@ sealed trait Outcome {
 
   def isEntailed(id: Int): Boolean
   def isEntailed(c: Constraint): Boolean = isEntailed(c.id)
+
+  def apply[S <: AnyRef](c: StatefulConstraint[S]): S = apply(c.id).asInstanceOf[S]
+
+  def apply(id: Int): AnyRef
 }
 
 case object Contradiction extends Outcome {
   def andThen(f: ProblemState => Outcome) = Contradiction
+  def orElse(f: => Outcome) = f
   def filterDom(id: Int)(f: Int => Boolean): Outcome = Contradiction
   def filterDom(v: Variable)(f: Int => Boolean): Outcome = Contradiction
   def shaveDom(id: Int, lb: Int, ub: Int): Outcome = Contradiction
@@ -131,6 +137,7 @@ case object Contradiction extends Outcome {
   def toString(problem: Problem) = "Contradiction"
   def toState = throw new UNSATException("Tried to get state from a Contradiction")
   def isEntailed(id: Int) = throw new UNSATException("Tried to get entailement info from a Contradiction")
+  def apply(id: Int) = throw new UNSATException("Tried to get a constraint state from a Contradiction")
 }
 
 object ProblemState {
@@ -151,7 +158,9 @@ final case class ProblemState(
 
   def andThen(f: ProblemState => Outcome) = f(this)
 
-  def apply[S <: AnyRef](c: StatefulConstraint[S]): S = constraintStates(c.id).asInstanceOf[S]
+  def orElse(f: => Outcome) = this
+
+  def apply(id: Int): AnyRef = constraintStates(id)
 
   def updateState(id: Int, newState: AnyRef): ProblemState = {
     if (constraintStates(id) eq newState) {
