@@ -10,6 +10,7 @@ testOptions in Test <+= (target in Test) map {
   t => Tests.Argument(TestFrameworks.ScalaTest, "-u", s"${t / "test-reports"}")
 }
 
+resolvers += Resolver.sonatypeRepo("snapshots")
 
 libraryDependencies ++= Seq(
 	"fr.univ-valenciennes" %% "cspom" % "2.6.2-SNAPSHOT",
