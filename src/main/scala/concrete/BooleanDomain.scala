@@ -171,7 +171,7 @@ sealed trait BooleanDomain extends Domain {
 
   def canBe(boolean: Boolean): Boolean
 
-  def bound = true
+  def convex = true
 
   def as01: IntDomain
 

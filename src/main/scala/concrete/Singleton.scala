@@ -127,7 +127,7 @@ final class Singleton private (val singleValue: Int) extends IntDomain with Lazy
   def apply(i: Int) = if (i == 0) singleValue else throw new IndexOutOfBoundsException
   //
   //  override def intersects(bv: BitVector, part: Int) = bv(value)
-  def bound = true
+  def convex = true
   override def isEmpty = false
 
   override def assign(v: Int) = {

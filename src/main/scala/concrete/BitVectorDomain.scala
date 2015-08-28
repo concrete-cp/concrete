@@ -217,7 +217,7 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
 
   //  def intersects(that: BitVector) = bitVector.intersects(that)
   //  def intersects(that: BitVector, part: Int) = bitVector.intersects(that, part)
-  def bound = false
+  def convex = false
   override def isEmpty = false
 
   def iterator = new Iterator[Int] {

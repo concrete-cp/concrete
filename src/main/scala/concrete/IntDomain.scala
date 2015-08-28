@@ -21,7 +21,7 @@ object EmptyIntDomain extends IntDomain {
   override def filter(f: Int => Boolean) = this
   def filterBounds(f: Int => Boolean) = this
   override def toString = "[]"
-  def bound = throw new IllegalStateException
+  def convex = throw new IllegalStateException
   override def isEmpty = true
   override def iterator = Iterator.empty
   def apply(i: Int) = throw new NoSuchElementException

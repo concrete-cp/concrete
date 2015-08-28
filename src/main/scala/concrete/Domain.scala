@@ -77,13 +77,13 @@ abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
   }
 
   def subsetOf(d: Domain): Boolean = {
-    head >= d.head && last <= d.last && (d.bound || forall(d.present))
+    head >= d.head && last <= d.last && (d.convex || forall(d.present))
   }
 
   //def intersects(bv: BitVector): Int = bv.intersects(toBitVector)
   //def intersects(bv: BitVector, part: Int): Boolean = bv.intersects(toBitVector, part)
 
-  def bound: Boolean
+  def convex: Boolean
 
   def toBitVector(offset: Int): BitVector
 

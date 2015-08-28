@@ -187,7 +187,7 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
     }
   }
 
-  def bound = true
+  def convex = true
   override def isEmpty = false
 
   def iterator = span.allValues.iterator
