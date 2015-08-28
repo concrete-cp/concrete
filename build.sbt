@@ -2,7 +2,7 @@ name := "concrete"
 
 organization := "fr.univ-valenciennes"
 
-version := "3.0-B1"
+version := "3.0-B2-SNAPSHOT"
 
 scalaVersion := "2.11.7"
 
@@ -12,15 +12,15 @@ testOptions in Test <+= (target in Test) map {
 
 
 libraryDependencies ++= Seq(
-	"fr.univ-valenciennes" %% "cspom" % "2.6.1",
+	"fr.univ-valenciennes" %% "cspom" % "2.6.2-SNAPSHOT",
 	"org.postgresql" % "postgresql" % "9.4-1201-jdbc41",
 	//"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
 	"org.ow2.sat4j" % "org.ow2.sat4j.pb" % "2.3.5",
-	"com.typesafe.slick" %% "slick" % "3.0.0",
+	"com.typesafe.slick" %% "slick" % "3.0.2",
 	//"org.jcp" % "jsr331" % "1.1.1",
 	"org.scalatest" %% "scalatest" % "2.2.5" % "test",
 	"org.scalacheck" %% "scalacheck" % "1.12.4" % "test",
-	"com.storm-enroute" %% "scalameter" % "0.6" % "test"
+	"com.storm-enroute" %% "scalameter" % "0.7" % "test"
 	)
 
 scalacOptions ++= Seq("-optimise"
