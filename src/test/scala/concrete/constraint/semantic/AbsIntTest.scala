@@ -63,7 +63,7 @@ final class AbsIntTest extends FlatSpec with Matchers with Timeouts with Propert
     mod.dom(y) should contain theSameElementsAs Seq(-7, 7)
 
     assert(!c.intervalsOnly(mod))
-    assert(mod.dom(x).bound)
+    assert(mod.dom(x).convex)
   }
 
   it should "not hang" in {

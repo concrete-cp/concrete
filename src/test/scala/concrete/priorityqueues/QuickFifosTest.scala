@@ -12,6 +12,7 @@ import concrete.IntDomain
 class QuickFifosTest extends FlatSpec with Matchers {
 
   class TestConstraint(val eval: Int, val variable: Variable) extends Constraint(variable) {
+    def init(ps: ProblemState) = ps
     def advise(ps: ProblemState, p: Int) = eval
     def revise(ps: ProblemState) = ps
     def simpleEvaluation = 1

@@ -41,6 +41,7 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
 
   val problemBank = LinkedHashMap[String, AnyVal](
     //"1d_rubiks_cube.fzn" -> 12,
+    "battleships10.fzn" -> 1,
     "photo.fzn" -> 8,
 
     "scen11-f12.xml.bz2" -> 0,
@@ -139,7 +140,7 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
           .map { solver =>
             data.get('goal) match {
               case Some(g: FZSolve) => FZConcrete.parseSearchMode(g, solver, false)
-              case _ =>
+              case _                =>
             }
 
             //    println(solver.concreteProblem)
@@ -214,7 +215,7 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
 
             data.get('goal) match {
               case Some(g: FZSolve) => FZConcrete.parseSearchMode(g, solver, false)
-              case _ => None
+              case _                => None
             }
 
             val f = Future {

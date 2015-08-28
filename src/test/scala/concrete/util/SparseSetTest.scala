@@ -22,7 +22,7 @@ class SparseSetTest extends FlatSpec with Matchers with PropertyChecks {
   }
 
   it should "have a Set behavior, test case" in {
-    val g = Seq((549, true), (1, true), (549, false))
+    val g = Seq((549, true), (1, true), (1, false), (549, false))
 
     var set = Set.empty[Int]
     var sparseSet = new SparseSet(math.max(g.size, 1001))

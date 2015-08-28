@@ -2,10 +2,8 @@ package concrete.constraint.semantic
 
 import scala.annotation.varargs
 import scala.reflect.runtime.universe
-
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
-
 import concrete.BooleanDomain
 import concrete.Contradiction
 import concrete.IntDomain
@@ -71,7 +69,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
     val constraint = new ReifiedConstraint(
       control,
       new EqBC(false, v0, -1, v1),
-      new SumNE(1, Array(1, -1), Array(v0, v1)))
+      new LinearNe(1, Array(1, -1), Array(v0, v1)))
     val pb = Problem(v0, v1, control)
     pb.addConstraint(constraint)
     val state = pb.initState.toState
@@ -119,5 +117,77 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
       }
     }
   }
+
+  it should "filter" in {
+    val cspom = CSPOM { implicit cspom =>
+      val r = new BoolVariable() as "r"
+      val v0 = IntVariable(0 to 3) as "v0"
+      val v1 = IntVariable(0) as "v1"
+      val v2 = IntVariable(0) as "v2"
+      ctr(CSPOMConstraint(r)('sum)(Seq(1, 1, 1), Seq(v0, v1, v2), 0) withParam ("mode" -> "eq"))
+    }
+
+    val s = Solver(cspom).get
+
+    val problem = s.concreteProblem
+
+    val r = problem.variable("r")
+    val v0 = problem.variable("v0")
+
+    val state = problem.initState
+      .toState
+
+    withClue(problem.toString(state)) {
+      val Array(ac, bc) = problem.constraints
+
+      //    ac.adviseAll(state)
+      //    ac.revise(state) match {
+      //      case Contradiction    => fail()
+      //      case ns: ProblemState => ns.dom(r) shouldBe TRUE
+      //    }
+
+      bc.adviseAll(state)
+      val ns = bc.revise(state) match {
+        case Contradiction => fail()
+        case ns: ProblemState =>
+          ns.domains shouldBe state.domains
+          ns
+      }
+
+      ns.assign(r, 1).andThen { ps =>
+        bc.advise(ps, 0) should be >= 0
+        bc.revise(ps)
+      } match {
+        case Contradiction    => fail()
+        case ns: ProblemState => ns.dom(v0) should contain theSameElementsAs Seq(0)
+      }
+    }
+  }
+
+  it should "not filter" in {
+    val cspom = CSPOM { implicit cspom =>
+      val r = new BoolVariable() as "r"
+      val v0 = IntVariable(0 to 3) as "v0"
+      ctr(CSPOMConstraint(r)('sum)(Seq(-1), Seq(v0), -1) withParam ("mode" -> "le"))
+    }
+
+    val s = Solver(cspom).get
+
+    val problem = s.concreteProblem
+
+    val state = problem.initState.toState
+
+    val Array(bc) = problem.constraints
+
+    bc.adviseAll(state)
+    val ns = bc.revise(state) match {
+      case Contradiction => fail()
+      case ns: ProblemState =>
+        ns.domains shouldBe state.domains
+        ns
+    }
+
+  }
+  
 
 }
