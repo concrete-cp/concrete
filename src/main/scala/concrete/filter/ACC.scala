@@ -202,7 +202,10 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
             assert(constraint.controlRevision(newState), s"Revision control failed for ${constraint.toString(s)}")
 
-            for (v <- constraint.scope) {
+            var p = constraint.arity - 1
+            val scope = constraint.scope
+            while (p >= 0) {
+              val v = scope(p)
               val id = v.id
               /* id will be < 0 if a fake variable is used by the constraint */
               if (id >= 0 && (newState.dom(id) ne s.dom(id))) {
@@ -210,6 +213,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
                 updateQueue(v, constraint, newState)
               }
+              p -= 1
             }
             s = newState
           } else if (newState ne s) {
