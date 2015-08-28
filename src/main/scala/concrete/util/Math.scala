@@ -51,4 +51,41 @@ object Math {
   }
 
   def even(a: Int) = (a & 0x1) == 0
+
+  def floorDiv(dividend: Int, divisor: Int): Int = {
+    val roundedTowardsZeroQuotient = dividend / divisor;
+    val dividedEvenly = (dividend % divisor) == 0;
+    if (dividedEvenly) {
+      roundedTowardsZeroQuotient;
+    } else {
+      // If they're of opposite sign then we rounded 
+      // UP towards zero so we rem one. If they're of the same sign then 
+      // we rounded DOWN towards zero, so we are done.
+
+      if (divisor.signum == dividend.signum) {
+        roundedTowardsZeroQuotient;
+      } else {
+        roundedTowardsZeroQuotient - 1;
+      }
+    }
+  }
+
+  def ceilDiv(dividend: Int, divisor: Int): Int = {
+
+    val roundedTowardsZeroQuotient = dividend / divisor;
+    val dividedEvenly = (dividend % divisor) == 0;
+    if (dividedEvenly) {
+      roundedTowardsZeroQuotient;
+    } else {
+      // If they're of opposite sign then we rounded 
+      // UP towards zero so we're done. If they're of the same sign then 
+      // we rounded DOWN towards zero, so we need to add one.
+
+      if (divisor.signum == dividend.signum) {
+        roundedTowardsZeroQuotient + 1;
+      } else {
+        roundedTowardsZeroQuotient;
+      }
+    }
+  }
 }

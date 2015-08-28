@@ -97,19 +97,19 @@ case class Interval(val lb: Int, val ub: Int) {
     val Interval(c, d) = i
 
     val l = math.min(
-      ceilDiv(lb, c), math.min(ceilDiv(lb, d), math.min(ceilDiv(ub, c), ceilDiv(ub, d))))
+      Math.ceilDiv(lb, c), math.min(Math.ceilDiv(lb, d), math.min(Math.ceilDiv(ub, c), Math.ceilDiv(ub, d))))
 
     val u = math.max(
-      floorDiv(lb, c), math.max(floorDiv(lb, d), math.max(floorDiv(ub, c), floorDiv(ub, d))))
+      Math.floorDiv(lb, c), math.max(Math.floorDiv(lb, d), math.max(Math.floorDiv(ub, c), Math.floorDiv(ub, d))))
 
     Interval(l, u)
   }
 
   def /(v: Int): Interval = {
     if (v >= 0) {
-      Interval(ceilDiv(lb, v), floorDiv(ub, v))
+      Interval(Math.ceilDiv(lb, v), Math.floorDiv(ub, v))
     } else {
-      Interval(ceilDiv(ub, v), floorDiv(lb, v))
+      Interval(Math.ceilDiv(ub, v), Math.floorDiv(lb, v))
     }
 
     //    if (l < u) Interval(l, u) else Interval(u, l)
@@ -119,45 +119,8 @@ case class Interval(val lb: Int, val ub: Int) {
     /** v / this **/
     if (this.contains(0)) throw new ArithmeticException
     Interval(
-      math.min(ceilDiv(v, lb), ceilDiv(v, ub)),
-      math.max(floorDiv(v, lb), floorDiv(v, ub)))
-  }
-
-  private def floorDiv(dividend: Int, divisor: Int): Int = {
-    val roundedTowardsZeroQuotient = dividend / divisor;
-    val dividedEvenly = (dividend % divisor) == 0;
-    if (dividedEvenly) {
-      roundedTowardsZeroQuotient;
-    } else {
-      // If they're of opposite sign then we rounded 
-      // UP towards zero so we rem one. If they're of the same sign then 
-      // we rounded DOWN towards zero, so we are done.
-
-      if (divisor.signum == dividend.signum) {
-        roundedTowardsZeroQuotient;
-      } else {
-        roundedTowardsZeroQuotient - 1;
-      }
-    }
-  }
-
-  private def ceilDiv(dividend: Int, divisor: Int): Int = {
-
-    val roundedTowardsZeroQuotient = dividend / divisor;
-    val dividedEvenly = (dividend % divisor) == 0;
-    if (dividedEvenly) {
-      roundedTowardsZeroQuotient;
-    } else {
-      // If they're of opposite sign then we rounded 
-      // UP towards zero so we're done. If they're of the same sign then 
-      // we rounded DOWN towards zero, so we need to add one.
-
-      if (divisor.signum == dividend.signum) {
-        roundedTowardsZeroQuotient + 1;
-      } else {
-        roundedTowardsZeroQuotient;
-      }
-    }
+      math.min(Math.ceilDiv(v, lb), Math.ceilDiv(v, ub)),
+      math.max(Math.floorDiv(v, lb), Math.floorDiv(v, ub)))
   }
 
   def intersect(i: Interval): Option[Interval] = {
