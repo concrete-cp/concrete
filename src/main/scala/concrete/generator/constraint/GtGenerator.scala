@@ -2,13 +2,11 @@ package concrete.generator.constraint;
 
 import Generator.cspom2concrete1D
 import concrete.BooleanDomain
-import concrete.constraint.Constraint
 import concrete.constraint.semantic.Gt
+import concrete.constraint.semantic.LinearLe
 import concrete.constraint.semantic.ReifiedConstraint
 import concrete.generator.FailedGenerationException
 import cspom.CSPOMConstraint
-import concrete.constraint.semantic.SumMode
-import concrete.constraint.semantic.SumBC
 
 final object GtGenerator extends Generator {
   import Generator._
@@ -64,13 +62,13 @@ final object GtGenerator extends Generator {
       case (Var(v0), Const(v1: Int)) =>
         Seq(new ReifiedConstraint(
           result,
-          new SumBC(-v1, Array(-1), Array(v0), if (strict) SumMode.SumLT else SumMode.SumLE),
-          new SumBC(v1, Array(1), Array(v0), if (strict) SumMode.SumLE else SumMode.SumLT)))
+          LinearLe(-v1, Array(-1), Array(v0), strict),
+          LinearLe(v1, Array(1), Array(v0), !strict)))
       case (Const(v0: Int), Var(v1)) =>
         Seq(new ReifiedConstraint(
           result,
-          new SumBC(v0, Array(1), Array(v1), if (strict) SumMode.SumLT else SumMode.SumLE),
-          new SumBC(-v0, Array(-1), Array(v1), if (strict) SumMode.SumLE else SumMode.SumLT)))
+          LinearLe(v0, Array(1), Array(v1), strict),
+          LinearLe(-v0, Array(-1), Array(v1), !strict)))
 
       //Seq(new ReifiedLtC(result, v1, v0, strict))
 

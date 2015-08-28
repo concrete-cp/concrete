@@ -6,7 +6,6 @@ import cspom.CSPOM
 import cspom.CSPOMConstraint
 import cspom.variable.CSPOMConstant
 import concrete.constraint.semantic.SumMode
-import concrete.constraint.semantic.SumNE
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
 import SumMode._

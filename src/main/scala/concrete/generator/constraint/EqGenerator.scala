@@ -9,14 +9,13 @@ import concrete.constraint.semantic.Neq
 import concrete.constraint.semantic.ReifiedConstraint
 import cspom.CSPOMConstraint
 import concrete.BooleanDomain
-import concrete.constraint.semantic.SumMode
-import concrete.constraint.semantic.SumBC
 import concrete.constraint.semantic.Sum
-import concrete.constraint.semantic.SumNE
 import concrete.constraint.semantic.SumAC
 import cspom.UNSATException
 import concrete.constraint.semantic.Eq
 import com.typesafe.scalalogging.LazyLogging
+import concrete.constraint.semantic.LinearNe
+import concrete.constraint.semantic.LinearEq
 
 final object EqGenerator extends Generator with LazyLogging {
 
@@ -66,12 +65,12 @@ final object EqGenerator extends Generator with LazyLogging {
         Seq()
       case (Const(a: Int), Var(b)) => Seq(
         new ReifiedConstraint(result,
-          new SumBC(a, Array(1), Array(b), SumMode.SumEQ),
-          new SumNE(a, Array(1), Array(b))))
+          new LinearEq(a, Array(1), Array(b)),
+          new LinearNe(a, Array(1), Array(b))))
       case (Var(a), Const(b: Int)) => Seq(
         new ReifiedConstraint(result,
-          new SumBC(b, Array(1), Array(a), SumMode.SumEQ),
-          new SumNE(b, Array(1), Array(a))))
+          new LinearEq(b, Array(1), Array(a)),
+          new LinearNe(b, Array(1), Array(a))))
       case (Var(a), Var(b)) => Seq(
         new ReifiedConstraint(
           result,
