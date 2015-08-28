@@ -14,6 +14,8 @@ final class AbsBC(val result: Variable, val v0: Variable) extends Constraint(Arr
   //  val corresponding2 = result.dom.allValues map { v => v0.dom.index(-v) }
   //  val correspondingR = v0.dom.allValues map { v => result.dom.index(math.abs(v)) }
 
+  def init(ps: ProblemState) = ps
+
   def check(t: Array[Int]) = t(0) == math.abs(t(1))
 
   def shave(ps: ProblemState): Outcome = {

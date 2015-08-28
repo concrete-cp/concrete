@@ -135,8 +135,8 @@ abstract class Constraint(val scope: Array[Variable])
   //    super.weight = w
   //  }
 
-  def isConsistent(problemState: ProblemState): Boolean =
-    revise(problemState) ne Contradiction
+  def isConsistent(problemState: ProblemState): Outcome =
+    revise(problemState).andThen(_ => problemState)
 
   def advise(problemState: ProblemState, pos: Int): Int
 
@@ -162,7 +162,7 @@ abstract class Constraint(val scope: Array[Variable])
     max
   }
 
-  def init(ps: ProblemState): Outcome = ps  
+  def init(ps: ProblemState): Outcome // = ps  
 
   /**
    * The constraint propagator.
@@ -207,7 +207,7 @@ abstract class Constraint(val scope: Array[Variable])
   def intervalsOnly(problemState: ProblemState): Boolean = {
     var i = arity - 1
     while (i >= 0) {
-      if (!problemState.dom(scope(i)).bound) {
+      if (!problemState.dom(scope(i)).convex) {
         return false
       }
       i -= 1

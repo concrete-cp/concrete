@@ -10,6 +10,8 @@ import concrete.util.Interval
 final class AbsDiffBC(val result: Variable, val v0: Variable, val v1: Variable)
     extends Constraint(Array(result, v0, v1)) with BC {
 
+  def init(ps: ProblemState) = ps
+
   def check(t: Array[Int]) = t(0) == math.abs(t(1) - t(2))
 
   def shave(ps: ProblemState) = {

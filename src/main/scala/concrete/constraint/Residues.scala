@@ -12,6 +12,8 @@ trait ResidueManager {
 
 trait Residues extends Removals {
 
+  def init(ps: ProblemState): Outcome = ps
+
   val residues: ResidueManager = {
     if (scope.map(v => v.initDomain.last - v.initDomain.head).sum < 10000) {
       new ResidueManagerFast(scope)

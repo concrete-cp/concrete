@@ -23,22 +23,31 @@ import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.BC
+import concrete.Contradiction
 
-final class GtC(val v: Variable, val constant: Int) extends Constraint(Array(v)) {
-  def check(t: Array[Int]) = t(0) > constant
+final class LeC(val v: Variable, val constant: Int) extends Constraint(Array(v)) {
+  def init(ps: ProblemState) = ps
+  def check(t: Array[Int]) = t(0) <= constant
   def advise(ps: ProblemState, p: Int) = 1
-  def revise(ps: ProblemState) = {
-    ps.removeTo(v, constant).entail(this)
-  }
+  def revise(ps: ProblemState) = ps.removeAfter(v, constant).entail(this)
   def simpleEvaluation = 1
+  override def toString(ps: ProblemState) = s"${v.toString(ps)} <= $constant"
 }
 
 final class LtC(val v: Variable, val constant: Int) extends Constraint(Array(v)) {
+  def init(ps: ProblemState) = ps
   def check(t: Array[Int]) = t(0) < constant
   def advise(ps: ProblemState, p: Int) = 1
-  def revise(ps: ProblemState) = {
-    ps.removeFrom(v, constant).entail(this)
-  }
+  def revise(ps: ProblemState) = ps.removeFrom(v, constant).entail(this)
+  def simpleEvaluation = 1
+  override def toString(ps: ProblemState) = s"${v.toString(ps)} < $constant"
+}
+
+final class GtC(val v: Variable, val constant: Int) extends Constraint(Array(v)) {
+  def init(ps: ProblemState) = ps
+  def check(t: Array[Int]) = t(0) > constant
+  def advise(ps: ProblemState, p: Int) = 1
+  def revise(ps: ProblemState) = ps.removeTo(v, constant).entail(this)
   def simpleEvaluation = 1
 }
 
@@ -47,6 +56,8 @@ final class LtC(val v: Variable, val constant: Int) extends Constraint(Array(v))
  */
 final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict: Boolean)
     extends Constraint(Array(v0, v1)) {
+
+  def init(ps: ProblemState) = ps
 
   def this(v0: Variable, v1: Variable, strict: Boolean) =
     this(v0, 0, v1, strict);
@@ -88,7 +99,8 @@ final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict
   override def isConsistent(ps: ProblemState) = {
     val max0 = ps.dom(v0).last + constant;
     val min1 = ps.dom(v1).head
-    max0 > min1 || !strict && max0 == min1;
+
+    if (max0 > min1 || !strict && max0 == min1) ps else Contradiction
   }
 
   override def toString(ps: ProblemState) =

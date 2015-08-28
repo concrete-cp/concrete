@@ -11,7 +11,7 @@ import concrete.ProblemState
 import concrete.Outcome
 
 final class AbsDiffConstAC(val result: Int, val v0: Variable, val v1: Variable)
-  extends Constraint(Array(v0, v1)) with BCCompanion with Residues {
+    extends Constraint(Array(v0, v1)) with BCCompanion with Residues {
 
   def skipIntervals = false
 
@@ -51,7 +51,9 @@ final class AbsDiffConstAC(val result: Int, val v0: Variable, val v1: Variable)
 }
 
 final class AbsDiffConstBC(val result: Int, val v0: Variable, val v1: Variable)
-  extends Constraint(Array(v0, v1)) with BC {
+    extends Constraint(Array(v0, v1)) with BC {
+
+  def init(ps: ProblemState) = ps
 
   def check(t: Array[Int]) = result == math.abs(t(0) - t(1))
 

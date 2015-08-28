@@ -53,20 +53,18 @@ object Div {
  * x / y = z
  */
 class DivBC(x: Variable, y: Variable, z: Variable) extends Constraint(x, y, z) with BC {
-  override def init(ps: ProblemState): Outcome = {
-    super.init(ps).remove(y, 0)
-  }
+  def init(ps: ProblemState): Outcome = ps.remove(y, 0)
 
   // TODO : to finish, doesn't work
   def shave(ps: ProblemState): Outcome = {
-    
+
     val xSpan = ps.span(x)
     val ySpan = ps.span(y)
     val zSpan = ps.span(z)
     val reminder = Div.reminder(xSpan, ySpan)
 
     val newY = Div.div(xSpan, zSpan - reminder)
-    
+
     ps.shaveDom(z, Div.div(xSpan, ySpan))
       .shaveDom(y, newY)
       .andThen { ps =>

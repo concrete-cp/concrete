@@ -1,7 +1,6 @@
 package concrete.constraint.semantic;
 
 import com.typesafe.scalalogging.LazyLogging
-
 import concrete.Domain
 import concrete.ProblemState
 import concrete.Variable
@@ -9,6 +8,7 @@ import concrete.constraint.BC
 import concrete.constraint.BCCompanion
 import concrete.constraint.Constraint
 import concrete.constraint.Removals
+import concrete.Contradiction
 
 object Eq {
   def apply(neg: Boolean, x: Variable, b: Int, y: Variable) = Seq(
@@ -26,6 +26,9 @@ object Eq {
  */
 final class EqAC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable, val skipIntervals: Boolean = true)
     extends Constraint(Array(x, y)) with Removals with BCCompanion {
+
+  def init(ps: ProblemState) = ps
+
   def this(x: Variable, y: Variable, skipIntervals: Boolean) = this(false, x, 0, y, skipIntervals)
   def this(x: Variable, y: Variable) = this(x, y, true)
 
@@ -44,11 +47,13 @@ final class EqAC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable,
   override def isConsistent(ps: ProblemState) = {
     val xDom = ps.dom(x)
     val yDom = ps.dom(y)
-    if (xDom.size < yDom.size) {
+    val r = if (xDom.size < yDom.size) {
       xDom.exists(xv => yDom.present(yValue(xv)))
     } else {
       yDom.exists(yv => xDom.present(xValue(yv)))
     }
+
+    if (r) ps else Contradiction
 
   }
 
@@ -90,6 +95,8 @@ final class EqAC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable,
 final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
     extends Constraint(Array(x, y)) with BC with LazyLogging {
 
+  def init(ps: ProblemState) = ps
+
   //  val corresponding = Array(
   //    x.dom.allValues map { v => y.dom.index(a * v + b) },
   //    y.dom.allValues map { v =>
@@ -128,7 +135,7 @@ final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
 
     val negX = if (neg) -xSpan else xSpan
 
-    (negX + b) intersects ps.span(y)
+    if ((negX + b) intersects ps.span(y)) ps else Contradiction
   }
 
   override def toString(ps: ProblemState) = s"${if (neg) "-" else ""}${x.toString(ps)}${

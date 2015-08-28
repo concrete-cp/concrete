@@ -11,6 +11,8 @@ final class NeqVec(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
 
   require(x.length == y.length)
 
+  def init(ps: ProblemState) = ps
+
   val zip = x.zip(y)
 
   val size = arity / 2

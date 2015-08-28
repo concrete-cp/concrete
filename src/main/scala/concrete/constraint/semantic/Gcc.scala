@@ -16,6 +16,8 @@ final case class Bounds(val value: Int, val minCount: Int, val maxCount: Int) {
 
 final class Gcc(scope: Array[Variable], bounds: Array[Bounds]) extends Constraint(scope) {
 
+  def init(ps: ProblemState) = ps
+  
   val offset = bounds.map(_.value).min
 
   val _bounds2 = new Array[Bounds](bounds.map(_.value).max - offset + 1)

@@ -10,12 +10,14 @@ import concrete.ProblemState
 import concrete.Outcome
 
 final case class HInterval(
-  val id: Int) {
+    val id: Int) {
   var minrank: Int = 0
   var maxrank: Int = 0
 }
 
 final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) with BC with AllDiffChecker {
+
+  def init(ps: ProblemState) = ps
 
   val t = new Array[Int](2 * arity + 2) // Tree links
   val d = new Array[Int](2 * arity + 2) // Diffs between critical capacities

@@ -14,7 +14,8 @@ import concrete.constraint.Constraint
  *
  */
 final class MulBC(val result: Variable, val v0: Variable, val v1: Variable)
-  extends Constraint(Array(result, v0, v1)) with BC {
+    extends Constraint(Array(result, v0, v1)) with BC {
+  def init(ps: ProblemState) = ps
 
   def check(t: Array[Int]) = t(0) == (t(1) * t(2));
 

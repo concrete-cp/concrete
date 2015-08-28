@@ -10,6 +10,8 @@ import concrete.Outcome
 final class AbsAC(val result: Variable, val v0: Variable) extends Constraint(Array(result, v0))
     with BCCompanion {
 
+  def init(ps: ProblemState) = ps
+
   def skipIntervals = true
 
   //  val corresponding1 = result.dom.allValues map { v0.dom.index }

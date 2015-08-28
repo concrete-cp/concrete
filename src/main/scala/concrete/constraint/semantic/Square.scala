@@ -11,8 +11,9 @@ import concrete.Contradiction
 import concrete.ProblemState
 
 final class SquareBC(val x: Variable, val y: Variable)
-  extends Constraint(Array(x, y)) with BC {
+    extends Constraint(Array(x, y)) with BC {
 
+  def init(ps: ProblemState) = ps
   //  val corresponding = Array(
   //    x.dom.allValues map { v => y.dom.index(a * v + b) },
   //    y.dom.allValues map { v =>
@@ -40,7 +41,8 @@ final class SquareBC(val x: Variable, val y: Variable)
  * @param y
  */
 final class SquareAC(val x: Variable, val y: Variable)
-  extends Constraint(Array(x, y)) with Removals with BCCompanion {
+    extends Constraint(Array(x, y)) with Removals with BCCompanion {
+  def init(ps: ProblemState) = ps
 
   def skipIntervals = false
   //  val corresponding = Array(
@@ -77,9 +79,11 @@ final class SquareAC(val x: Variable, val y: Variable)
     ps1.entailIfFree(this)
   }
 
-  override def isConsistent(ps: ProblemState) = {
-    ps.dom(x).exists(v => consistentX(v, ps.dom(y))) && ps.dom(y).exists(v => consistentY(v, ps.dom(x)))
-  }
+  override def isConsistent(ps: ProblemState) =
+    if (ps.dom(x).exists(v => consistentX(v, ps.dom(y))) && ps.dom(y).exists(v => consistentY(v, ps.dom(x))))
+      ps
+    else
+      Contradiction
 
   override def toString(ps: ProblemState) = s"${x.toString(ps)} =AC= ${y.toString(ps)}²"
 

@@ -12,6 +12,7 @@ import concrete.constraint.Advisable
 import concrete.constraint.AdviseCount
 import concrete.constraint.Constraint
 import concrete.BooleanDomain
+import concrete.Contradiction
 
 final class ReifiedConstraint(
   controlVariable: Variable,
@@ -21,6 +22,17 @@ final class ReifiedConstraint(
     with Advisable with LazyLogging {
 
   require(controlVariable.initDomain.isInstanceOf[BooleanDomain], s"${controlVariable} init domain ${controlVariable.initDomain} is not boolean")
+
+  def init(ps: ProblemState) = initCons(positiveConstraint, ps).andThen(initCons(negativeConstraint, _))
+
+  /**
+   *  Only initializes constraint states as some constraints' init may remove values from domains
+   */
+  private def initCons(c: Constraint, ps: ProblemState): Outcome = {
+    c.init(ps).andThen { consistent =>
+      ps.updateState(c.id, consistent(c.id))
+    }
+  }
 
   override def identify(i: Int): Int = {
     negativeConstraint.identify(positiveConstraint.identify(super.identify(i)))
@@ -54,16 +66,18 @@ final class ReifiedConstraint(
 
     ps.dom(controlVariable) match {
       case UNKNOWNBoolean =>
-        if (positiveConstraint.isConsistent(ps)) {
-          if (negativeConstraint.isConsistent(ps)) {
-            ps
-          } else {
-            //noReifyRevise(true, pd, pd.updated(0, TRUE), state)
-            ps.updateDomNonEmpty(controlVariable, TRUE).entail(this)
+        positiveConstraint
+          .isConsistent(ps)
+          .andThen { posCons =>
+            negativeConstraint
+              .isConsistent(posCons)
+              .orElse {
+                posCons.updateDomNonEmpty(controlVariable, TRUE).entail(this)
+              }
           }
-        } else {
-          ps.updateDomNonEmpty(controlVariable, FALSE).entail(this)
-        }
+          .orElse {
+            ps.updateDomNonEmpty(controlVariable, FALSE).entail(this)
+          }
 
       case TRUE  => positiveConstraint.revise(ps)
       case FALSE => negativeConstraint.revise(ps)
@@ -84,14 +98,14 @@ final class ReifiedConstraint(
   }
 
   override def toString(ps: ProblemState) =
-    s"${controlVariable.toString(ps)} == (${positiveConstraint.toString(ps)}) / != (${negativeConstraint.toString(ps)}";
+    s"${controlVariable.toString(ps)} == (${positiveConstraint.toString(ps)}) / != (${negativeConstraint.toString(ps)})";
 
   override def toString =
     s"${controlVariable} == (${positiveConstraint})"
 
   //var controlRemovals = 0
 
-  def register(ac: AdviseCount) {
+  def register(ac: AdviseCount): Unit = {
     Seq(positiveConstraint, negativeConstraint).collect {
       case c: Advisable => c.register(ac)
     }
@@ -100,8 +114,6 @@ final class ReifiedConstraint(
   def advise(ps: ProblemState, position: Int) = {
     //logger.debug(s"Advise ${toString(ps)} : $position")
     if (position == 0) {
-      //   controlRemovals = position
-
       ps.dom(controlVariable) match {
         case TRUE           => positiveConstraint.adviseAll(ps)
         case FALSE          => negativeConstraint.adviseAll(ps)
@@ -110,30 +122,19 @@ final class ReifiedConstraint(
       }
     } else {
       ps.dom(controlVariable) match {
-        case UNKNOWNBoolean => {
+        case UNKNOWNBoolean =>
           val p = positiveConstraint.advise(ps, reifiedToPositivePositions(position))
           val n = negativeConstraint.advise(ps, reifiedToNegativePositions(position))
           if (p < 0) {
-            if (n < 0) {
-              -1
-            } else {
-              n
-            }
+            if (n < 0) -1 else n
           } else {
-            if (n < 0) {
-              p
-            } else {
-              p + n
-            }
+            if (n < 0) p else p + n
           }
-
-        }
         case TRUE  => positiveConstraint.advise(ps, reifiedToPositivePositions(position))
         case FALSE => negativeConstraint.advise(ps, reifiedToNegativePositions(position))
         case EMPTY => throw new IllegalStateException
       }
     }
-
   }
 
   val simpleEvaluation = positiveConstraint.simpleEvaluation + negativeConstraint.simpleEvaluation

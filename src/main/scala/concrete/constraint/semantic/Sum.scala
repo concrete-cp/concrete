@@ -1,18 +1,20 @@
 package concrete.constraint.semantic
 
 import com.typesafe.scalalogging.LazyLogging
+
 import concrete.Contradiction
 import concrete.Domain
 import concrete.Outcome
 import concrete.ProblemState
+import concrete.Singleton
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.Residues
+import concrete.constraint.StatefulConstraint
 import concrete.constraint.TupleEnumerator
-import cspom.util.BitVector
 import concrete.util.Interval
-
-import concrete.constraint.BC
+import concrete.util.Math
+import cspom.util.BitVector
 
 object SumMode extends Enumeration {
   type SumMode = Value
@@ -24,6 +26,16 @@ object SumMode extends Enumeration {
 
 import SumMode._
 
+object Linear {
+  def apply(constant: Int, factors: Array[Int], scope: Array[Variable], mode: SumMode.SumMode) = mode match {
+    case SumLE => LinearLe(constant, factors, scope, false)
+    case SumLT => LinearLe(constant, factors, scope, true)
+    case SumEQ => new LinearEq(constant, factors, scope)
+    case SumNE => new LinearNe(constant, factors, scope)
+  }
+
+}
+
 abstract class Sum(
     val constant: Int,
     val factors: Array[Int],
@@ -33,12 +45,12 @@ abstract class Sum(
   require(factors.forall(_ != 0), this)
   require(factors.size == scope.size)
 
-  val checkSum: Function[Int, Boolean] =
+  private val checkSum: Function[Int, Boolean] =
     mode match {
-      case SumLE => _ <= constant
-      case SumLT => _ < constant
-      case SumEQ => _ == constant
-      case SumNE => _ != constant
+      case SumLE => 0 <= _
+      case SumLT => 0 < _
+      case SumEQ => 0 == _
+      case SumNE => 0 != _
     }
 
   def check(t: Array[Int]): Boolean = {
@@ -48,64 +60,16 @@ abstract class Sum(
       sum += t(i) * factors(i)
       i -= 1
     }
-    checkSum(sum)
+    checkSum(constant - sum)
   }
 
-}
-
-trait SpanCalculator extends Sum {
-  private val initBound = Interval(-constant, -constant)
-  val doms = new Array[Domain](arity)
-
-  def totalSpan(): Interval = {
-    var bounds = initBound
-    var i = arity - 1
-    while (i >= 0) {
-      bounds += doms(i).span * factors(i)
-      i -= 1
-    }
-    bounds
+  def toString(operator: String) = {
+    (scope, factors).zipped.map((v, f) => f + "." + v).mkString(" + ") + s" $operator $constant"
   }
 
-  def updateDoms(ps: ProblemState): Unit = {
-    var i = arity - 1
-    while (i >= 0) {
-      doms(i) = ps.dom(scope(i))
-      i -= 1
-    }
+  def toString(ps: ProblemState, operator: String) = {
+    (scope, factors).zipped.map((v, f) => f + "." + v.toString(ps)).mkString(" + ") + s" $operator $constant"
   }
-
-  def compute(ps: concrete.ProblemState): Option[BitVector]
-
-  override def isConsistent(ps: ProblemState) = {
-    compute(ps).isDefined
-  }
-
-  def shave(ps: ProblemState) = throw new IllegalStateException
-
-  override def revise(ps: ProblemState): Outcome = {
-    //println(toString(ps))
-    compute(ps) match {
-      case Some(hasChanged) =>
-        var filtered: ProblemState = ps
-        var i = hasChanged.nextSetBit(0)
-        while (i >= 0) {
-          filtered = filtered.updateDomNonEmpty(scope(i), doms(i))
-          i = hasChanged.nextSetBit(i + 1)
-        }
-        filtered.entailIfFree(this)
-      case None => Contradiction
-    }
-  }
-
-  override def toString() =
-    (scope, factors).zipped.map((v, f) => f + "." + v).mkString(" + ") + s" ${mode}BC $constant"
-
-  override def toString(ps: ProblemState) =
-    (scope, factors).zipped.map((v, f) => f + "." + v.toString(ps)).mkString(" + ") + s" ${mode}BC $constant"
-
-  def advise(ps: ProblemState, p: Int) = arity * 2
-  def simpleEvaluation: Int = 3
 }
 
 final class SumAC(
@@ -114,130 +78,313 @@ final class SumAC(
     scope: Array[Variable],
     mode: SumMode.SumMode) extends Sum(constant, factors, scope, mode) with Residues with TupleEnumerator {
 
-  def this(constant: Int, scope: Array[Variable], mode: SumMode.SumMode) =
-    this(constant, Array.fill(scope.length)(1), scope, mode)
+  override def toString() = toString(s"${mode}AC")
 
-  override def toString() =
-    (scope, factors).zipped.map((v, f) => f + "." + v).mkString(" + ") + s" ${mode}AC $constant"
-
-  override def toString(ps: ProblemState) =
-    (scope, factors).zipped.map((v, f) => f + "." + v.toString(ps)).mkString(" + ") + s" ${mode}AC $constant"
-
+  override def toString(ps: ProblemState) = toString(ps, s"${mode}AC")
 }
 
-final class SumNE(
+trait DomCache extends Constraint {
+  def arity: Int
+  def scope: Array[Variable]
+
+  protected val doms = new Array[Domain](arity)
+
+  protected def updateDoms(ps: ProblemState, variables: Iterator[Int]): Unit = {
+    for (i <- variables) {
+      doms(i) = ps.dom(scope(i))
+    }
+  }
+
+  protected def filter(changed: BitVector, ps: ProblemState): Outcome = {
+    var filtered: ProblemState = ps //.updateState(id, (cons, vars))
+    var i = changed.nextSetBit(0)
+    while (i >= 0) {
+      filtered = filtered.updateDomNonEmpty(scope(i), doms(i))
+      i = changed.nextSetBit(i + 1)
+    }
+    filtered.entailIfFree(this)
+  }
+}
+
+final class LinearNe(
     constant: Int,
     factors: Array[Int],
-    scope: Array[Variable]) extends Sum(constant, factors, scope, SumMode.SumNE) with SpanCalculator {
+    scope: Array[Variable]) extends Sum(constant, factors, scope, SumNE) with StatefulConstraint[(Int, BitVector)] with DomCache with LazyLogging {
 
-  def this(constant: Int, scope: Array[Variable]) =
-    this(constant, Array.fill(scope.length)(1), scope)
-
-  def compute(ps: concrete.ProblemState): Option[BitVector] = {
-    updateDoms(ps)
-    var bounds = totalSpan
-    var change = true
-    var hasChanged = BitVector.empty
-    while (change) {
-      change = false
-
-      var i = arity - 1
-      while (i >= 0) {
-        val dom = doms(i)
-        val span = dom.span
-        val f = factors(i)
-
-        val myBounds = span * f
-
-        val thisBounds = Interval(bounds.lb - myBounds.lb, bounds.ub - myBounds.ub)
-
-        val thisBoundsOnF = thisBounds / -f
-
-        if (thisBoundsOnF.size == 1) {
-          val newDom = dom.remove(thisBoundsOnF.lb)
-
-          if (newDom ne dom) {
-            if (newDom.isEmpty) {
-              return None
-            } else {
-              doms(i) = newDom
-              hasChanged += i
-              val newSpan = newDom.span
-
-              if (newSpan != span) {
-                bounds = thisBounds + newDom.span * f
-                change = true
-              }
-            }
-          }
-
-        }
-
-        i -= 1
+  private def totalSpan(constant: Int, variables: BitVector): (BitVector, Int) = {
+    var cons = constant
+    val newVar = variables.filter { i =>
+      val dom = doms(i)
+      if (dom.size == 1) {
+        cons -= dom.head * factors(i)
+        false
+      } else {
+        true
       }
     }
+    (newVar, cons)
+  }
 
-    Some(hasChanged)
+  override def isConsistent(ps: ProblemState) = {
+    val (oldCons, oldVar) = ps(this)
+    updateDoms(ps, oldVar.iterator)
+    val (newVar, newCons) = totalSpan(oldCons, oldVar)
+
+    if (newVar.isEmpty && newCons == 0) {
+      Contradiction
+    } else if (oldVar == newVar) {
+      ps
+    } else {
+      ps.updateState(this, (newCons, newVar))
+    }
+  }
+
+  override def revise(ps: ProblemState): Outcome = {
+    val (oldCons, oldVar) = ps(this)
+    updateDoms(ps, oldVar.iterator)
+    val (newVar, newCons) = totalSpan(oldCons, oldVar)
+
+    newVar.cardinality match {
+      case 0 if (newCons == 0) => Contradiction
+      case 1 =>
+        val p = newVar.nextSetBit(0)
+        ps.remove(scope(p), newCons / factors(p)).entail(this)
+      case _ => ps.updateState(this, (newCons, newVar))
+    }
+  }
+
+  override def toString() = toString("!=BC")
+
+  override def toString(ps: ProblemState) = toString(ps, "!=BC")
+
+  def advise(ps: ProblemState, p: Int) = arity * 2
+
+  def simpleEvaluation: Int = 3
+
+  override def init(ps: ProblemState) = {
+    ps.updateState(this, (constant, BitVector.filled(arity)))
+  }
+}
+
+object LinearEq {
+  val initBound = Interval(0, 0)
+}
+
+final class LinearEq(
+    constant: Int,
+    factors: Array[Int],
+    scope: Array[Variable]) extends Sum(constant, factors, scope, SumEQ) with StatefulConstraint[(Int, BitVector)] with DomCache with LazyLogging {
+
+  private def totalSpan(constant: Int, variables: BitVector): (Interval, BitVector, Int) = {
+    var bounds = LinearEq.initBound
+    var cons = constant
+    val newVar = variables.filter { i =>
+      val dom = doms(i)
+      if (dom.size == 1) {
+        cons -= dom.head * factors(i)
+        false
+      } else {
+        bounds += dom.span * factors(i)
+        true
+      }
+    }
+    (bounds - cons, newVar, cons)
+  }
+
+  override def isConsistent(ps: ProblemState) = {
+    val (oldCons, oldVar) = ps(this)
+    updateDoms(ps, oldVar.iterator)
+    val (bounds, newVar, newCons) = totalSpan(oldCons, oldVar)
+
+    if (bounds.contains(0)) {
+      ps.updateState(this, (newCons, newVar))
+    } else {
+      Contradiction
+    }
+  }
+
+  override def revise(ps: ProblemState): Outcome = {
+    val (oldCons, oldVar) = ps(this)
+    updateDoms(ps, oldVar.iterator)
+    val (bounds, newVar, newCons) = totalSpan(oldCons, oldVar)
+
+    process(newVar.nextSetBit(0), newVar, newCons, bounds, ps)
+  }
+
+  override def toString() = toString("=BC=")
+
+  override def toString(ps: ProblemState) = toString(ps, "=BC=")
+
+  def advise(ps: ProblemState, p: Int) = arity * 2
+
+  def simpleEvaluation: Int = 3
+
+  override def init(ps: ProblemState) = {
+    ps.updateState(this, (constant, BitVector.filled(arity)))
+  }
+
+  @annotation.tailrec
+  private def process(
+    i: Int,
+    vars: BitVector,
+    cons: Int,
+    bounds: Interval,
+    ps: ProblemState,
+    mark: Int = -1,
+    hasChanged: BitVector = BitVector.empty): Outcome = {
+    if (i < 0) {
+      if (cons == 0) {
+        filter(hasChanged, ps.updateState(id, (cons, vars)))
+      } else {
+        Contradiction
+      }
+    } else if (mark == i) {
+      filter(hasChanged, ps.updateState(id, (cons, vars)))
+    } else {
+      val dom = doms(i)
+
+      val f = factors(i)
+
+      val myBounds = dom.span * f
+
+      val thisBounds = Interval(bounds.lb - myBounds.lb, bounds.ub - myBounds.ub)
+
+      val newDom = dom & (thisBounds / -f)
+
+      if (newDom eq dom) {
+        process(vars.nextOrLoop(i + 1), vars, cons, bounds, ps, if (mark < 0) i else mark, hasChanged)
+      } else if (newDom.isEmpty) {
+        Contradiction
+      } else {
+        doms(i) = newDom
+        if (newDom.size == 1) {
+          val prod = newDom.head * f
+          val newVars = vars - i
+          process(newVars.nextOrLoop(i + 1), newVars, cons - prod, thisBounds + prod, ps, -1, hasChanged + i)
+        } else {
+          process(vars.nextOrLoop(i + 1), vars, cons, thisBounds + newDom.span * f, ps, i, hasChanged + i)
+        }
+
+      }
+
+    }
   }
 
 }
 
-final class SumBC(
+object LinearLe {
+  def apply(constant: Int, factors: Array[Int], scope: Array[Variable], strict: Boolean) = {
+    if (strict) {
+      new LinearLe(constant - 1, factors, scope)
+    } else {
+      new LinearLe(constant, factors, scope)
+    }
+  }
+}
+
+final class LinearLe(
     constant: Int,
     factors: Array[Int],
-    scope: Array[Variable],
-    mode: SumMode.SumMode) extends Sum(constant, factors, scope, mode) with SpanCalculator with LazyLogging {
+    scope: Array[Variable]) extends Sum(constant, factors, scope, SumLE) with StatefulConstraint[(Int, BitVector)] with DomCache with LazyLogging {
 
-  def this(constant: Int, scope: Array[Variable], mode: SumMode.SumMode) =
-    this(constant, Array.fill(scope.length)(1), scope, mode)
-
-  require(mode != SumNE, s"SumNE is not supported by SumBC ($this)")
-
-  private def filter(dom: Domain, itv: Interval, neg: Boolean): Domain = mode match {
-    case SumLE => if (neg) dom.removeUntil(itv.lb) else dom.removeAfter(itv.ub)
-    case SumLT => if (neg) dom.removeTo(itv.lb) else dom.removeFrom(itv.ub)
-    case SumEQ => dom & itv
+  private def totalSpan(constant: Int, variables: BitVector): (Int, BitVector, Int) = {
+    var bounds = 0
+    var cons = constant
+    val newVar = variables.filter { i =>
+      val dom = doms(i)
+      val f = factors(i)
+      if (dom.size == 1) {
+        cons -= dom.head * f
+        false
+      } else {
+        bounds += minTimes(dom, f)
+        true
+      }
+    }
+    (bounds - cons, newVar, cons)
   }
 
-  def compute(ps: ProblemState): Option[BitVector] = {
+  override def isConsistent(ps: ProblemState) = {
+    val (oldCons, oldVar) = ps(this)
+    updateDoms(ps, oldVar.iterator)
+    val (bounds, newVar, newCons) = totalSpan(oldCons, oldVar)
 
-    updateDoms(ps)
-    var bounds = totalSpan
+    if (bounds <= 0) {
+      ps.updateState(this, (newCons, newVar))
+    } else {
+      Contradiction
+    }
+  }
 
-    var hasChanged = BitVector.empty
-    var change = true
-    while (change) {
-      change = false
+  override def revise(ps: ProblemState): Outcome = {
+    val (oldCons, oldVar) = ps(this)
+    updateDoms(ps, oldVar.iterator)
+    val (bounds, newVar, newCons) = totalSpan(oldCons, oldVar)
 
-      var i = arity - 1
-      while (i >= 0) {
-        val dom = doms(i)
+    process(newVar.nextSetBit(0), newVar, newCons, bounds, ps)
+  }
 
-        val f = factors(i)
+  override def toString() = toString("<=BC")
 
-        val myBounds = dom.span * f
+  override def toString(ps: ProblemState) = toString(ps, "<=BC")
 
-        val thisBounds = Interval(bounds.lb - myBounds.lb, bounds.ub - myBounds.ub)
+  def advise(ps: ProblemState, p: Int) = arity * 2
 
-        val newDom = filter(dom, thisBounds / -f, f < 0)
+  def simpleEvaluation: Int = 3
 
-        if (newDom ne dom) {
-          if (newDom.isEmpty) {
-            return None
-          } else {
-            doms(i) = newDom
-            change = true
-            bounds = thisBounds + newDom.span * f
-            hasChanged += i
-          }
+  override def init(ps: ProblemState) = {
+    ps.updateState(this, (constant, BitVector.filled(arity)))
+  }
+
+  @annotation.tailrec
+  private def process(
+    i: Int,
+    vars: BitVector,
+    cons: Int,
+    min: Int,
+    ps: ProblemState,
+    mark: Int = -1,
+    hasChanged: BitVector = BitVector.empty): Outcome = {
+
+    if (i < 0) {
+      // All variables are instantiated
+      assert(doms.forall(_.size == 1))
+      if (0 <= cons) {
+        filter(hasChanged, ps.updateState(id, (cons, vars)))
+      } else {
+        Contradiction
+      }
+    } else if (mark == i) {
+      filter(hasChanged, ps.updateState(id, (cons, vars)))
+    } else {
+      val dom = doms(i)
+
+      val f = factors(i)
+
+      val thisBounds = min - minTimes(dom, f)
+
+      val newDom = if (f < 0) dom.removeUntil(Math.ceilDiv(thisBounds, -f)) else dom.removeAfter(Math.floorDiv(thisBounds, -f))
+
+      if (newDom eq dom) {
+        process(vars.nextOrLoop(i + 1), vars, cons, min, ps, if (mark < 0) i else mark, hasChanged)
+      } else if (newDom.isEmpty) {
+        Contradiction
+      } else {
+        doms(i) = newDom
+        if (newDom.size == 1) {
+          val prod = newDom.head * f
+          val newVars = vars - i
+          process(newVars.nextOrLoop(i + 1), newVars, cons - prod, thisBounds + prod, ps, -1, hasChanged + i)
+        } else {
+          process(vars.nextOrLoop(i + 1), vars, cons, thisBounds + minTimes(newDom, f), ps, i, hasChanged + i)
         }
-
-        i -= 1
       }
 
     }
+  }
 
-    Some(hasChanged)
+  private def minTimes(dom: Domain, f: Int) = {
+    if (f >= 0) dom.head * f else dom.last * f
   }
 
 }

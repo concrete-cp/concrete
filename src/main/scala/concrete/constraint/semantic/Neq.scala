@@ -5,6 +5,7 @@ import concrete.Outcome
 import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Constraint
+import concrete.Contradiction
 
 /**
  * v0 - v1 != c
@@ -14,6 +15,7 @@ import concrete.constraint.Constraint
  * v0 != v1 + c
  */
 final class Neq(v0: Variable, v1: Variable, c: Int = 0) extends Constraint(Array(v0, v1)) {
+  def init(ps: ProblemState) = ps
 
   def check(t: Array[Int]) = (t(0) - t(1) != c)
 
@@ -23,14 +25,7 @@ final class Neq(v0: Variable, v1: Variable, c: Int = 0) extends Constraint(Array
     ps
       .updateDom(v0, revise(d0, d1, c))
       .updateDom(v1, revise(d1, d0, -c))
-      .andThen { ch =>
-        if (ch.dom(v0) disjoint ch.dom(v1)) {
-          ch.entail(this)
-        } else {
-          ch
-        }
-      }
-
+      .entailIf(this, ch => ch.dom(v0) disjoint ch.dom(v1))
   }
 
   private def revise(variable: Domain, otherVar: Domain, c: Int): Domain = {
@@ -39,10 +34,12 @@ final class Neq(v0: Variable, v1: Variable, c: Int = 0) extends Constraint(Array
 
   override def isConsistent(ps: ProblemState) = {
     val v0dom = ps.dom(v0)
-    v0dom.size > 1 || {
+    val r = v0dom.size > 1 || {
       val v1dom = ps.dom(v1)
       v1dom.size > 1 || (v0dom.head - v1dom.head != c)
     }
+
+    if (r) ps else Contradiction
   }
 
   override def toString(ps: ProblemState) = s"${v0.toString(ps)} /= ${v1.toString(ps)}${

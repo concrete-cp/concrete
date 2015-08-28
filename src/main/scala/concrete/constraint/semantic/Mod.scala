@@ -15,9 +15,7 @@ import concrete.constraint.TupleEnumerator
  * x % y = z
  */
 class ModBC(x: Variable, y: Variable, z: Variable) extends Constraint(x, y, z) with BC {
-  override def init(ps: ProblemState): Outcome = {
-    super.init(ps).remove(y, 0)
-  }
+  override def init(ps: ProblemState): Outcome = ps.remove(y, 0)
 
   // Members declared in concrete.constraint.BC
   def shave(ps0: ProblemState): Outcome = {
