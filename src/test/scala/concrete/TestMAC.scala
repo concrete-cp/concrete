@@ -1,16 +1,16 @@
 package concrete
 
 import scala.annotation.tailrec
-
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 import org.scalatest.Tag
-
 import concrete.constraint.semantic.AllDifferent2C
 import concrete.constraint.semantic.AllDifferentBC
 import concrete.constraint.semantic.EqAC
 import concrete.constraint.semantic.EqBC
 import concrete.heuristic.MedValue
+import cspom.StatisticsManager
+import concrete.heuristic.Split
 
 object SlowTest extends Tag("concrete.SlowTest")
 
@@ -68,6 +68,9 @@ class TestMAC extends FlatSpec with Matchers {
       val problem = qp(size)
 
       val solver = MAC(problem, pm)
+
+      val stats = new StatisticsManager
+      stats.register("mac", solver)
 
       solver.size shouldBe nb
     }

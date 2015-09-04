@@ -1,29 +1,41 @@
 package concrete.constraint.semantic;
 
-import org.scalatest.Finders
 import org.scalatest.FlatSpec
+import org.scalatest.Inspectors
 import org.scalatest.Matchers
+
+import concrete.Contradiction
 import concrete.IntDomain
+import concrete.ParameterManager
 import concrete.Problem
+import concrete.ProblemState
+import concrete.Singleton
+import concrete.Solver
 import concrete.Variable
 import concrete.constraint.semantic.SumMode._
-import concrete.Singleton
-import concrete.Contradiction
-import org.scalatest.Inspectors
-import cspom.variable.BoolVariable
 import cspom.CSPOM
-import cspom.variable.IntVariable
+import cspom.CSPOM._
 import cspom.CSPOMConstraint
-import concrete.ProblemState
-import concrete.Solver
-import CSPOM._
+import cspom.variable.BoolVariable
+import cspom.variable.IntVariable
 
 final class SumTest extends FlatSpec with Matchers with Inspectors {
+
+  import org.scalameter._
+  val measure = config(
+    Key.exec.benchRuns -> 20,
+    Key.verbose -> true)
+    .withWarmer {
+      new Warmer.Default
+    }
+
+  val pm = new ParameterManager()
+  pm("linear.stateless") = true
 
   "Sum" should "filter <= with negative coefficients" in {
     val x = new Variable("x", IntDomain.ofSeq(0, 1))
     val y = new Variable("y", IntDomain.ofSeq(0, 1))
-    val c = new LinearLe(-19, Array(-20, -18), Array(x, y))
+    val c = LinearLe(-19, Array(-20, -18), Array(x, y), false, pm)
     val pb = Problem(x, y)
     pb.addConstraint(c)
     val ps = pb.initState.toState
@@ -51,7 +63,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
   }
 
   it should "filter <= with positive and negative coefficients" in {
-    val c = new LinearLe(0, Array(4, -1, -1), Array(b, v0, v1));
+    val c = LinearLe(0, Array(4, -1, -1), Array(b, v0, v1), false, pm)
     val pb = Problem(b, v0, v1)
     pb.addConstraint(c)
     val ps = pb.initState.toState
@@ -63,7 +75,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
   }
 
   it should "filter <= with positive coefficients" in {
-    val c = new LinearLe(3, Array(1, 1), Array(v0, v1))
+    val c = LinearLe(3, Array(1, 1), Array(v0, v1), false, pm)
     val pb = Problem(b, v0, v1)
     pb.addConstraint(c)
     val ps = pb.initState.toState
@@ -76,10 +88,10 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
   it should "filter <= with other negative coefficients and domains" in {
 
     val v2 = new Variable("v2", IntDomain(0 to 1))
-    val c = new LinearLe(-3, Array(-1, -1, -6), Array(
+    val c = LinearLe(-3, Array(-1, -1, -6), Array(
       new Variable("v0", IntDomain(0 to 1)),
       new Variable("v1", IntDomain(1 to 5)),
-      v2))
+      v2), false, pm)
 
     val pb = Problem(c.scope: _*)
     pb.addConstraint(c)
@@ -96,7 +108,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     val pb = Problem(v0)
 
     forAll(Seq(
-      new LinearLe(0, Array(1), Array(v0)),
+      LinearLe(0, Array(1), Array(v0), false, pm),
       new LinearNe(1, Array(1), Array(v0)),
       new LinearEq(0, Array(1), Array(v0)))) { c =>
       pb.addConstraint(c)
