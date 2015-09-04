@@ -43,7 +43,13 @@ final class ParameterManager {
     if (got.isDefined) used += name
     got
   }
-  
+
+  def contains(name: String) = {
+    val c = parameters.contains(name)
+    if (c) used += name
+    c
+  }
+
   def unused = parameters.keySet -- used
 
   private def parse[T](fType: Type, value: String): T = {
@@ -78,7 +84,10 @@ final class ParameterManager {
    *
    * @return
    */
-  override def toString = _parameters.iterator.map { case (k, v) => k + "=" + v }.mkString(", ")
+  override def toString = _parameters.iterator.map {
+    case (k, Unit) => k.toString
+    case (k, v)    => s"$k = $v"
+  }.mkString(", ")
 
   def parameters: collection.immutable.Map[String, Any] = _parameters.toMap
   //  ++ pending.iterator.map {
