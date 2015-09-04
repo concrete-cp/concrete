@@ -237,4 +237,6 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
     }
   }
 
+  def median = iterator.drop(size / 2).next
+
 }

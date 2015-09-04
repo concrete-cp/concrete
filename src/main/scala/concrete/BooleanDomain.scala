@@ -82,6 +82,8 @@ case object UNKNOWNBoolean extends BooleanDomain {
   val span = Interval(0, 1)
 
   def union(bd: BooleanDomain) = UNKNOWNBoolean
+  
+  def median = 1
 }
 
 case object TRUE extends BooleanDomain {
@@ -109,6 +111,7 @@ case object TRUE extends BooleanDomain {
     case FALSE | UNKNOWNBoolean => UNKNOWNBoolean
     case _                      => TRUE
   }
+  def median = 1
 }
 
 case object FALSE extends BooleanDomain {
@@ -136,6 +139,7 @@ case object FALSE extends BooleanDomain {
     case TRUE | UNKNOWNBoolean => UNKNOWNBoolean
     case _                     => FALSE
   }
+  def median = 0
 }
 
 case object EMPTY extends BooleanDomain {
@@ -160,6 +164,7 @@ case object EMPTY extends BooleanDomain {
   override def filter(f: Int => Boolean) = this
   def span = throw new NoSuchElementException
   def union(bd: BooleanDomain) = bd
+  def median = throw new NoSuchElementException
 }
 
 object BooleanDomain {

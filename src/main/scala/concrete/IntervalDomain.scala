@@ -192,4 +192,6 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
 
   def iterator = span.allValues.iterator
 
+  def median = (head + last + 1) / 2
+
 }

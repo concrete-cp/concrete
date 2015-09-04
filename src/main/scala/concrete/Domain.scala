@@ -19,11 +19,32 @@ object Domain {
 
 abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
   override def newBuilder: Builder[Int, Domain] = ???
+  
   def next(i: Int): Int
 
+  def nextOption(i: Int): Option[Int] = {
+    val n = next(i)
+    if (n < 0) {
+      None
+    } else {
+      Some(n)
+    }
+  }
+
   def prev(i: Int): Int
+  
+  def prevOption(i: Int): Option[Int] = {
+    val p = prev(i)
+    if (p < 0) {
+      None
+    } else {
+      Some(p)
+    }
+  }
 
   def present(value: Int): Boolean
+
+  def median: Int
 
   override def contains[A >: Int](value: A) = present(value.asInstanceOf[Int])
 

@@ -135,4 +135,6 @@ final class Singleton private (val singleValue: Int) extends IntDomain with Lazy
   }
 
   def iterator = Iterator.single(singleValue)
+  
+  def median = singleValue
 }
