@@ -7,8 +7,9 @@ import concrete.constraint.semantic.LinearLe
 import concrete.constraint.semantic.ReifiedConstraint
 import concrete.generator.FailedGenerationException
 import cspom.CSPOMConstraint
+import concrete.ParameterManager
 
-final object GtGenerator extends Generator {
+final class GtGenerator(pm: ParameterManager) extends Generator {
   import Generator._
   override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
     val Seq(v0, v1) = constraint.arguments map cspom2concrete1D;
@@ -62,13 +63,13 @@ final object GtGenerator extends Generator {
       case (Var(v0), Const(v1: Int)) =>
         Seq(new ReifiedConstraint(
           result,
-          LinearLe(-v1, Array(-1), Array(v0), strict),
-          LinearLe(v1, Array(1), Array(v0), !strict)))
+          LinearLe(-v1, Array(-1), Array(v0), strict, pm),
+          LinearLe(v1, Array(1), Array(v0), !strict, pm)))
       case (Const(v0: Int), Var(v1)) =>
         Seq(new ReifiedConstraint(
           result,
-          LinearLe(v0, Array(1), Array(v1), strict),
-          LinearLe(-v0, Array(-1), Array(v1), !strict)))
+          LinearLe(v0, Array(1), Array(v1), strict, pm),
+          LinearLe(-v0, Array(-1), Array(v1), !strict, pm)))
 
       //Seq(new ReifiedLtC(result, v1, v0, strict))
 

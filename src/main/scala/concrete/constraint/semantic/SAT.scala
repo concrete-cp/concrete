@@ -41,7 +41,7 @@ object SAT extends LazyLogging {
       genSAT(clauses, pb)
     } else {
       (for (c <- clauses) yield new ClauseConstraint(c)) ++
-        (for (p <- pb) yield Linear(p.constant, p.coefs.toArray, p.vars.toArray, p.mode))
+        (for (p <- pb) yield Linear(p.constant, p.coefs.toArray, p.vars.toArray, p.mode, pm))
 
     }
   }

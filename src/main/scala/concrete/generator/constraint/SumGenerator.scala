@@ -1,9 +1,7 @@
 package concrete.generator.constraint;
 
 import scala.reflect.runtime.universe
-
 import com.typesafe.scalalogging.LazyLogging
-
 import Generator.cspom2concrete1D
 import Generator.cspom2concreteVar
 import concrete.Domain
@@ -24,8 +22,31 @@ import cspom.CSPOMConstraint
 import cspom.variable.CSPOMConstant
 import cspom.variable.IntExpression
 import cspom.variable.SimpleExpression
+import concrete.ParameterManager
 
-final object SumGenerator extends Generator with LazyLogging {
+object SumGenerator {
+  def readCSPOM(constraint: CSPOMConstraint[_]) = {
+    val Seq(IntExpression.constSeq(coefs), SimpleExpression.simpleSeq(vars), CSPOMConstant(c)) = constraint.arguments //map cspom2concreteVar
+
+    // For bool2int optimization
+    val constant = c match {
+      case i: Int => i
+      case false  => 0
+      case true   => 1
+    }
+
+    require(!constraint.params.contains("coefficients"), "coefficients parameter is deprecated")
+
+    val mode = constraint.getParam[String]("mode")
+      .map(SumMode.withName)
+      .get
+
+    (vars, coefs, constant, mode)
+
+  }
+}
+
+final class SumGenerator(pm: ParameterManager) extends Generator with LazyLogging {
 
   object ACBC {
     val empty: ACBC = ACBC(None, None)
@@ -51,29 +72,9 @@ final object SumGenerator extends Generator with LazyLogging {
       bc = Some(new EqBC(neg, x, b, y)))
   }
 
-  def readCSPOM(constraint: CSPOMConstraint[_]) = {
-    val Seq(IntExpression.constSeq(coefs), SimpleExpression.simpleSeq(vars), CSPOMConstant(c)) = constraint.arguments //map cspom2concreteVar
-
-    // For bool2int optimization
-    val constant = c match {
-      case i: Int => i
-      case false  => 0
-      case true   => 1
-    }
-
-    require(!constraint.params.contains("coefficients"), "coefficients parameter is deprecated")
-
-    val mode = constraint.getParam[String]("mode")
-      .map(SumMode.withName)
-      .get
-
-    (vars, coefs, constant, mode)
-
-  }
-
   def general(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode.SumMode): ACBC = {
     val constraints = ACBC().withBC(
-      Linear(constant, varParams.toArray, solverVariables.toArray, mode))
+      Linear(constant, varParams.toArray, solverVariables.toArray, mode, pm))
 
     lazy val ss = Domain.searchSpace(solverVariables.map(_.initDomain))
     //println(ss)
@@ -131,7 +132,7 @@ final object SumGenerator extends Generator with LazyLogging {
   }
 
   override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
-    val (vars, varParams, constant, mode) = readCSPOM(constraint)
+    val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
     val solverVariables = vars.map(cspom2concrete1D).map(_.asVariable)
     val generated = withBinSpec(solverVariables, varParams, constant, mode).toSeq
     assert(generated.forall {
@@ -144,7 +145,7 @@ final object SumGenerator extends Generator with LazyLogging {
   override def genFunctional(constraint: CSPOMConstraint[_], result: C2Conc)(implicit variables: VarMap) = {
     val r = result.asVariable
 
-    val (vars, varParams, constant, mode) = readCSPOM(constraint)
+    val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
     val solverVariables = vars.map(cspom2concrete1D).map(_.asVariable)
     val positive = withBinSpec(solverVariables, varParams, constant, mode)
     val (negParams, negConstant, negMode) = reverse(varParams, constant, mode)
