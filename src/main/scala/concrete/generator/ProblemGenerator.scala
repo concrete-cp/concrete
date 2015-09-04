@@ -29,6 +29,7 @@ import concrete.constraint.semantic.SumMode._
 import concrete.generator.constraint.SumGenerator
 import scala.util.Try
 import cspom.util.Finite
+import org.scalameter.Quantity
 
 final class ProblemGenerator(private val pm: ParameterManager = new ParameterManager()) extends LazyLogging {
 
@@ -38,10 +39,10 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
   private val gm = new GeneratorManager(pm)
 
   @Statistic
-  var genTime: Double = 0.0
+  var genTime: Quantity[Double] = _
 
   def generate(cspom: CSPOM): Try[(Problem, Map[CSPOMVariable[_], Variable])] = {
-    val (result, time) = StatisticsManager.time {
+    val (result, time) = StatisticsManager.measure {
 
       val variables = generateVariables(cspom)
 
@@ -88,7 +89,7 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
       (problem, variables)
     }
 
-    genTime += time
+    genTime = time
     result
   }
 

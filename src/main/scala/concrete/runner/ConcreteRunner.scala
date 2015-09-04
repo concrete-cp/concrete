@@ -41,22 +41,18 @@ trait ConcreteRunner extends LazyLogging {
 
   //logger.addHandler(new MsLogHandler)
 
-  private def params(o: List[(String, String)], options: List[String]): List[(String, String)] =
-    if (options.isEmpty) {
-      o
-    } else {
-      try {
-        val Array(key, value) = options.head.split("=")
-        params((key, value) :: o, options.tail)
-      } catch {
-        case e: MatchError => throw new InvalidParameterException(options.toString)
-      }
-    }
-
   def options(args: List[String], o: Map[Symbol, Any] = Map.empty, realArgs: List[String]): (Map[Symbol, Any], List[String]) = args match {
     case Nil => (o, realArgs.reverse)
     case "-P" :: opts :: tail => {
-      val p = params(Nil, opts.split(":").toList)
+      val p = opts.split(":")
+        .map(_.split("="))
+        .map {
+          case Array(key, value) => (key, value)
+          case Array(tag)        => (tag, Unit)
+          case e                 => throw new InvalidParameterException(e.toString)
+        }
+        .toSeq
+
       options(tail, o + ('D -> p), realArgs)
     }
     case "-sql" :: option :: tail =>
@@ -79,10 +75,13 @@ trait ConcreteRunner extends LazyLogging {
   def description(args: List[String]): String
 
   @Statistic
-  var loadTime: Double = _
+  var loadTime: Quantity[Double] = _
 
   val pm = new ParameterManager
   val statistics = new StatisticsManager()
+
+  @Statistic
+  var benchTime: Quantity[Double] = _
 
   def run(args: Array[String]): Try[Boolean] = {
 
@@ -103,10 +102,11 @@ trait ConcreteRunner extends LazyLogging {
       logger.warn("Unknown options: " + u)
     }
 
-    opt.get('D).collect {
-      case p: Seq[_] => for ((option, value) <- p.map { _.asInstanceOf[(String, String)] }) {
-        pm(option) = value
-      }
+    opt.get('D).map {
+      case p: Seq[_] =>
+        for ((option, value) <- p.map { _.asInstanceOf[(String, Any)] }) {
+          pm(option) = value
+        }
     }
 
     val optimize: String = pm.getOrElse("optimize", "sat")
@@ -129,54 +129,53 @@ trait ConcreteRunner extends LazyLogging {
     //val waker = new Timer()
     //try {
 
-    val (tryLoad, lT) = StatisticsManager.timeTry {
+    val (tryLoad, lT) = StatisticsManager.measureTry {
       load(remaining, opt)
     }
     loadTime = lT
 
     val status = tryLoad
-      .map { problem =>
+      .flatMap { problem =>
+
+        applyParametersPre(opt)
+
         val f = Future {
-          applyParametersPre(opt)
-          val solver = new SolverFactory(pm)(problem)
+          val (result, time) = StatisticsManager.measure {
 
-          statistics.register("solver", solver)
-          applyParametersPost(solver, opt)
-          //println(solver.problem)
+            val solver = new SolverFactory(pm)(problem)
 
-          //        for (time <- opt.get('Time)) {
-          //          val thread = Thread.currentThread
-          //          waker.schedule(
-          //            new TimerTask {
-          //              def run = thread.interrupt()
-          //            },
-          //            time.asInstanceOf[Int] * 1000);
-          //        }
+            statistics.register("solver", solver)
+            applyParametersPost(solver, opt)
 
-          optimize match {
-            case "sat" =>
-            case "min" =>
-              solver.minimize(solver.problem.variable(optimizeVar.get))
-            case "max" =>
-              solver.maximize(solver.problem.variable(optimizeVar.get))
+            optimize match {
+              case "sat" =>
+              case "min" =>
+                solver.minimize(solver.problem.variable(optimizeVar.get))
+              case "max" =>
+                solver.maximize(solver.problem.variable(optimizeVar.get))
+            }
+
+            val r = solver.nonEmpty
+            if (opt.contains('all)) {
+              for (s <- solver) {
+                solution(s, writer, opt)
+              }
+            } else if (solver.isOptimizer) {
+              for (s <- solver.toIterable.lastOption) {
+                solution(s, writer, opt)
+              }
+            } else {
+              for (s <- solver.toIterable.headOption) {
+                solution(s, writer, opt)
+              }
+            }
+
+            r
           }
-
-          val result = solver.nonEmpty
-          if (opt.contains('all)) {
-            for (s <- solver) {
-              solution(s, writer, opt)
-            }
-          } else if (solver.isOptimizer) {
-            for (s <- solver.toIterable.lastOption) {
-              solution(s, writer, opt)
-            }
-          } else {
-            for (s <- solver.toIterable.headOption) {
-              solution(s, writer, opt)
-            }
-          }
+          benchTime = time
           result
         }
+
         concurrent.Await.result(f, opt.get('Time).map(_.asInstanceOf[Int].milliseconds).getOrElse(Duration.Inf))
 
       }

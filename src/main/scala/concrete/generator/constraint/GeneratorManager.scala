@@ -12,6 +12,7 @@ import cspom.CSPOM
 import cspom.VariableNames
 import scala.util.Try
 import scala.util.Failure
+import scala.util.Success
 
 class GeneratorManager(pm: ParameterManager) {
   private var known: Map[Symbol, Generator] = Map(
@@ -26,8 +27,8 @@ class GeneratorManager(pm: ParameterManager) {
     'div -> DivGenerator,
     'mod -> ModGenerator,
     'nevec -> NeqVecGenerator,
-    'sum -> SumGenerator,
-    'pseudoboolean -> SumGenerator,
+    'sum -> new SumGenerator(pm),
+    'pseudoboolean -> new SumGenerator(pm),
     'lexleq -> LexLeqGenerator,
     'occurrence -> OccurrenceGenerator,
     'extension -> new ExtensionGenerator(pm),
@@ -42,15 +43,16 @@ class GeneratorManager(pm: ParameterManager) {
   }
 
   def generate[A](constraint: CSPOMConstraint[A], variables: Map[CSPOMVariable[_], Variable], vn: VariableNames): Try[Seq[Constraint]] = {
-    val candidate = known.getOrElse(constraint.function,
-      throw new FailedGenerationException(s"No candidate constraint for $constraint"))
-
-    Try {
-      candidate.generate(constraint, variables: Map[CSPOMVariable[_], Variable])
-    }
-      .recoverWith {
-        case e =>
-          Failure(new FailedGenerationException("Failed to generate " + constraint.toString(vn), e))
+    known.get(constraint.function).map(Success(_))
+      .getOrElse(Failure(new FailedGenerationException(s"No candidate constraint for $constraint")))
+      .flatMap { candidate =>
+        Try {
+          candidate.generate(constraint, variables: Map[CSPOMVariable[_], Variable])
+        }
+          .recoverWith {
+            case e =>
+              Failure(new FailedGenerationException("Failed to generate " + constraint.toString(vn), e))
+          }
       }
   }
 

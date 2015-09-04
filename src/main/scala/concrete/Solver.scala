@@ -21,7 +21,12 @@ package concrete;
 
 import scala.collection.JavaConverters._
 import scala.reflect.runtime.universe
+import scala.util.Try
+
+import org.scalameter.Quantity
+
 import com.typesafe.scalalogging.LazyLogging
+
 import concrete.constraint.TupleEnumerator
 import concrete.constraint.extension.ReduceableExt
 import concrete.constraint.semantic.GtC
@@ -30,6 +35,7 @@ import concrete.filter.Filter
 import concrete.generator.FailedGenerationException
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
+import concrete.heuristic.Heuristic
 import cspom.CSPOM
 import cspom.Statistic
 import cspom.StatisticsManager
@@ -38,8 +44,6 @@ import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
-import scala.util.Try
-import concrete.heuristic.Heuristic
 
 final class SolverFactory(val params: ParameterManager) {
 
@@ -65,6 +69,7 @@ final class SolverFactory(val params: ParameterManager) {
         }
       }
   }
+
 }
 
 object Solver {
@@ -160,8 +165,16 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
 
   @Statistic
   var preproRemoved: Long = -1L
+
+  implicit class QuantityMath[T](quantity: Quantity[T])(implicit num: Numeric[T]) {
+    def +(q: Quantity[T]): Quantity[T] = {
+      require(q.units == quantity.units)
+      Quantity(num.plus(q.value, quantity.value), q.units)
+    }
+  }
+
   @Statistic
-  var preproCpu = 0.0
+  var preproCpu: Quantity[Double] = _
 
   @Statistic
   val nbConstraints = problem.constraints.size
@@ -280,7 +293,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
         filter
       }
 
-    val (r, t) = StatisticsManager.time(preprocessor.reduceAll(state));
+    val (r, t) = StatisticsManager.measure(preprocessor.reduceAll(state));
 
     this.preproCpu = t;
     //println(Thread.currentThread().getStackTrace.toSeq)
