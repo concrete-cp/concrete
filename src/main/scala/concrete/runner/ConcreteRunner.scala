@@ -26,6 +26,7 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import org.scalameter.Quantity
 
 trait ConcreteRunner extends LazyLogging {
 
