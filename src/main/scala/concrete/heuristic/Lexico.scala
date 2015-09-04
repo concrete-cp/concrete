@@ -3,10 +3,9 @@ package concrete.heuristic;
 import concrete.Variable
 import concrete.Problem
 import concrete.Domain
+import concrete.ProblemState
 
-final class Lexico extends ValueHeuristic {
-
-  def score(variable: Variable, domain: Domain, index: Int) = -index
+final class Lexico extends BranchHeuristic {
 
   override def toString = "lexico";
 
@@ -14,8 +13,16 @@ final class Lexico extends ValueHeuristic {
     // Nothing to compute
   }
 
-  override def selectIndex(variable: Variable, dom: Domain) = dom.head
-  
+  override def branch(variable: Variable, dom: Domain, ps: ProblemState) = {
+    val h = dom.head
+    new Branch(
+      ps.assign(variable, h).toState,
+      ps.remove(variable, h).toState,
+      Seq(variable),
+      s"${variable.toString(ps)} = $h",
+      s"${variable.toString(ps)} /= $h")
+  }
+
   def shouldRestart = false
 
 }

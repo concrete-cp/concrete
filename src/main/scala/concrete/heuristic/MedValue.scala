@@ -7,7 +7,7 @@ import cspom.StatisticsManager
 
 final class MedValue extends ValueHeuristic {
 
-  def score(variable: Variable, domain: Domain, value: Int) = math.abs((domain.last + domain.head) / 2 - value)
+  def score(variable: Variable, domain: Domain, value: Int) = domain.median - value
 
   override def toString = "median";
 
@@ -15,8 +15,7 @@ final class MedValue extends ValueHeuristic {
     // Nothing to compute
   }
 
-  override def selectIndex(variable: Variable, domain: Domain) = {
-    StatisticsManager.median(domain.toStream)
-  }
+  override def selectIndex(variable: Variable, domain: Domain) = domain.median
+
   def shouldRestart = false
 }

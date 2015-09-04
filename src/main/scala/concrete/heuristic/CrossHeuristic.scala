@@ -1,11 +1,9 @@
 package concrete.heuristic;
 
-import java.lang.reflect.InvocationTargetException
-import concrete.Pair
 import concrete.ParameterManager
 import concrete.Problem
-import concrete.Variable;
 import concrete.ProblemState
+import concrete.Variable
 
 object CrossHeuristic {
   def apply(params: ParameterManager, decisionVariables: List[Variable]) = {
@@ -19,7 +17,7 @@ object CrossHeuristic {
   }
 
   def defaultVal(params: ParameterManager) = {
-    val valueHeuristicClass: Class[_ <: ValueHeuristic] =
+    val valueHeuristicClass: Class[_ <: BranchHeuristic] =
       params.getOrElse("heuristic.value", classOf[Lexico])
 
     valueHeuristicClass.getConstructor().newInstance()
@@ -30,10 +28,10 @@ object CrossHeuristic {
 final class CrossHeuristic(
     params: ParameterManager,
     val variableHeuristic: VariableHeuristic,
-    val valueHeuristic: ValueHeuristic) extends Heuristic {
+    val valueHeuristic: BranchHeuristic) extends Heuristic {
 
-  def selectPair(state: ProblemState) = {
-    variableHeuristic.select(state).map(v => Pair(v, valueHeuristic.selectIndex(v, state.dom(v))))
+  def branch(state: ProblemState) = {
+    variableHeuristic.select(state).map(v => valueHeuristic.branch(v, state.dom(v), state))
   }
 
   def compute(problem: Problem) {

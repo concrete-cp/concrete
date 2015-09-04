@@ -34,6 +34,7 @@ import CSPOM._
 import cspom.variable.CSPOMVariable
 import cspom.flatzinc.FZArray
 import com.typesafe.scalalogging.LazyLogging
+import org.scalameter.Quantity
 
 object FZConcrete extends CSPOMRunner with LazyLogging {
 
@@ -46,7 +47,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
   var goal: FZSolve = _
 
   @Statistic
-  var parseTime: Double = _
+  var parseTime: Quantity[Double] = _
 
   override def options(args: List[String], o: Map[Symbol, Any] = Map.empty, realArgs: List[String]): (Map[Symbol, Any], List[String]) = {
     args match {
@@ -61,10 +62,11 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
       case a if a.predAnnId == "seq_search" =>
         val Seq(strategies: FZArrayExpr[_]) = a.expr
         new SeqHeuristic(
-          strategies.value.flatMap {
-            case a: FZAnnotation => parseGoalAnnotation(a, variables)
-            case a               => sys.error(s"Annotation expected in $strategies, found $a")
-          }
+          strategies.value
+            .flatMap {
+              case a: FZAnnotation => parseGoalAnnotation(a, variables)
+              case a               => sys.error(s"Annotation expected in $strategies, found $a")
+            }
             .toList)
       case a if a.predAnnId == "int_search" || a.predAnnId == "bool_search" =>
         val Seq(p, vca, aa, strategyannotation) = a.expr
@@ -77,18 +79,14 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
         val FZAnnotation(varchoiceannotation, _) = vca
 
         val varh: VariableHeuristic = varchoiceannotation match {
-          case "input_order" =>
-            new LexVar(pm, decisionVariables)
-          case "first_fail" =>
-            new Dom(pm, decisionVariables)
-          case "antifirst_fail" =>
-            new MaxDom(pm, decisionVariables)
-          // case "smallest"
-          // case "largest"
-          case "occurrence" =>
-            new DDeg(pm, decisionVariables)
-          case "most_constrained" =>
-            new Brelaz(pm, decisionVariables)
+          case "input_order"      => new LexVar(pm, decisionVariables)
+          case "first_fail"       => new Dom(pm, decisionVariables)
+          case "antifirst_fail"   => new MaxDom(pm, decisionVariables)
+          case "smallest"         => new SmallestValue(pm, decisionVariables)
+          case "largest"          => new LargestValue(pm, decisionVariables)
+          case "occurrence"       => new DDeg(pm, decisionVariables)
+          case "most_constrained" => new Brelaz(pm, decisionVariables)
+          case "max_regret"       => new MaxRegret(pm, decisionVariables)
           case h =>
             logger.warn(s"Unsupported varchoice $h")
             CrossHeuristic.defaultVar(pm, decisionVariables)
@@ -98,10 +96,14 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
         val FZAnnotation(assignmentannotation, _) = aa
 
         val valh = assignmentannotation match {
-          case "indomain_min"    => new Lexico()
-          case "indomain_max"    => new RevLexico()
-          case "indomain_middle" => new MedValue()
-          case "indomain_random" => new RandomValue()
+          case "indomain"               => new Lexico()
+          case "indomain_min"           => new Lexico()
+          case "indomain_max"           => new RevLexico()
+          case "indomain_median"        => new MedValue()
+          case "indomain_random"        => new RandomValue()
+          case "indomain_split"         => new Split()
+          case "indomain_reverse_split" => new RevSplit()
+          case "indomain_interval"      => new IntervalBranch()
           case h =>
             logger.warn(s"Unsupported assignment heuristic $h")
             CrossHeuristic.defaultVal(pm)
@@ -123,7 +125,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
     val List(fn) = args
     file = CSPOM.file2url(fn.replace(" ", "%20"))
 
-    val (tryLoad, time) = StatisticsManager.timeTry(CSPOM.load(file, FlatZincParser))
+    val (tryLoad, time) = StatisticsManager.measureTry(CSPOM.load(file, FlatZincParser))
 
     parseTime = time
 

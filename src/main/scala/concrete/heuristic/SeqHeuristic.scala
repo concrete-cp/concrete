@@ -1,17 +1,14 @@
 package concrete.heuristic;
 
-import java.lang.reflect.InvocationTargetException
-import concrete.Pair
 import concrete.ParameterManager
-import concrete.Problem
-import concrete.Variable;
 import concrete.ProblemState
+import concrete.Variable
 
 final class SeqHeuristic(heuristics: List[Heuristic]) extends Heuristic {
 
-  def selectPair(state: ProblemState) = {
-    heuristics.iterator.map(_.selectPair(state)).collectFirst {
-      case Some(pair) => pair
+  def branch(state: ProblemState) = {
+    heuristics.iterator.map(_.branch(state)).collectFirst {
+      case Some(branching) => branching
     }
   }
 
