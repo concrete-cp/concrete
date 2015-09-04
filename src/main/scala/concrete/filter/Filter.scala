@@ -40,6 +40,6 @@ trait Filter {
 
   def reduceAfter(constraints: Iterable[Constraint], states: ProblemState): Outcome
 
-  def reduceAfter(variable: Variable, states: ProblemState): Outcome
+  def reduceAfter(variable: Seq[Variable], states: ProblemState): Outcome
 
 }

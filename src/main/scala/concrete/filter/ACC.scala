@@ -129,15 +129,13 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     }
   }
 
-  def reduceAfter(variable: Variable, states: ProblemState) = {
-    if (variable == null) {
-      states
-    } else {
-      advises.clear()
-      queue.clear();
-      updateQueue(variable, null, states)
-      reduce(states);
+  def reduceAfter(variables: Seq[Variable], states: ProblemState) = {
+    advises.clear()
+    queue.clear();
+    for (v <- variables) {
+      updateQueue(v, null, states)
     }
+    reduce(states);
   }
 
   private def updateQueue(modified: Variable, skip: Constraint, states: ProblemState): Unit = {
