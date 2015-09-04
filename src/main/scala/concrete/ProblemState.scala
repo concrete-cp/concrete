@@ -62,16 +62,8 @@ sealed trait Outcome {
     ps
   }
 
-  def assign(p: Pair): Outcome = assign(p.variable, p.value)
-  def remove(p: Pair): Outcome = remove(p.variable, p.value)
-
   def assign(v: Variable, value: Int): Outcome = assign(v.id, value)
   def remove(v: Variable, value: Int): Outcome
-  //  = try remove(v.id, value)
-  //  catch {
-  //    case e: IndexOutOfBoundsException =>
-  //      throw new IllegalArgumentException(s"Variable ${v.toString(toState)} is not a problem variable, trying to remove $value", e)
-  //  }
 
   def assign(id: Int, value: Int): Outcome
   def remove(id: Int, value: Int): Outcome
