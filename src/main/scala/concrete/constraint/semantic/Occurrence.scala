@@ -37,7 +37,7 @@ class Occurrence(val result: Variable, val value: Variable,
 
   override def toString(ps: ProblemState) = s"${result.toString(ps)} occurrences of ${value.toString(ps)} in (${vars.map(_.toString(ps)).mkString(", ")})"
 
-  private def updateState(ps: ProblemState, mod: List[Int], currentValues: Domain): (Map[Int, Int], Map[Int, BitVector]) = {
+  private def updateState(ps: ProblemState, mod: Seq[Int], currentValues: Domain): (Map[Int, Int], Map[Int, BitVector]) = {
     var (affected, canBeAffectedSet) = ps(this)
 
     for (sm <- mod) {
@@ -112,7 +112,7 @@ class Occurrence(val result: Variable, val value: Variable,
     }
   }
 
-  def revise(ps: ProblemState, mod: List[Int]): Outcome = {
+  def revise(ps: ProblemState, mod: Seq[Int]): Outcome = {
     //println(toString(ps))
 
     val currentValues = ps.dom(value)

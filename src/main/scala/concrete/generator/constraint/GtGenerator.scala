@@ -2,12 +2,12 @@ package concrete.generator.constraint;
 
 import Generator.cspom2concrete1D
 import concrete.BooleanDomain
+import concrete.ParameterManager
+import concrete.constraint.linear.LinearLe
 import concrete.constraint.semantic.Gt
-import concrete.constraint.semantic.LinearLe
 import concrete.constraint.semantic.ReifiedConstraint
 import concrete.generator.FailedGenerationException
 import cspom.CSPOMConstraint
-import concrete.ParameterManager
 
 final class GtGenerator(pm: ParameterManager) extends Generator {
   import Generator._

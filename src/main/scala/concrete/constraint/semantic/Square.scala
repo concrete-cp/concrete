@@ -9,6 +9,7 @@ import concrete.constraint.BC
 import concrete.constraint.Removals
 import concrete.Contradiction
 import concrete.ProblemState
+import concrete.Outcome
 
 final class SquareBC(val x: Variable, val y: Variable)
     extends Constraint(Array(x, y)) with BC {
@@ -65,7 +66,7 @@ final class SquareAC(val x: Variable, val y: Variable)
     math.abs(yValue) < Square.MAX_SQUARE && xDomain.present(yValue * yValue)
   }
 
-  def revise(ps: ProblemState, modified: List[Int]) = {
+  def revise(ps: ProblemState, modified: Seq[Int]): Outcome = {
     val s = skip(modified)
 
     val ps0 = if (s == 0) { ps } else {

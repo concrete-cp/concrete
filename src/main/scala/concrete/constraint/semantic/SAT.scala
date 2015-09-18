@@ -3,22 +3,25 @@ package concrete.constraint.semantic
 import java.math.BigInteger
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import scala.reflect.runtime.universe
 import org.sat4j.core.Vec
 import org.sat4j.core.VecInt
 import org.sat4j.specs.ContradictionException
-import org.sat4j.specs.ISolver
 import com.typesafe.scalalogging.LazyLogging
+import concrete.BooleanDomain
 import concrete.Contradiction
 import concrete.FALSE
 import concrete.Outcome
+import concrete.ParameterManager
 import concrete.ProblemState
 import concrete.TRUE
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.Residues
-import scala.collection.JavaConversions
-import concrete.ParameterManager
-import concrete.BooleanDomain
+import concrete.constraint.linear.SumEQ
+import concrete.constraint.linear.SumLE
+import concrete.constraint.linear.SumMode
+import concrete.constraint.linear.Linear
 
 case class Clause(positive: Seq[Variable], negative: Seq[Variable]) {
   require(vars.forall(v => v.initDomain.isInstanceOf[BooleanDomain]))
@@ -28,7 +31,7 @@ case class Clause(positive: Seq[Variable], negative: Seq[Variable]) {
 
 case class PseudoBoolean(
     vars: Seq[Variable], coefs: Seq[Int],
-    mode: SumMode.SumMode, constant: Int) {
+    mode: SumMode, constant: Int) {
   def size = vars.size
 }
 
@@ -119,13 +122,13 @@ class SAT(vars: Array[Variable], clauses: Seq[Clause], pseudo: Seq[PseudoBoolean
         solver.setExpectedNumberOfClauses(clauses.size + pseudo.size)
         for (p <- pseudo) {
           p.mode match {
-            case SumMode.SumLE =>
+            case SumLE =>
               solver.addPseudoBoolean(
                 new VecInt(p.vars.map(v => position(v).head + 1).toArray),
                 new Vec(p.coefs.map(BigInteger.valueOf(_)).toArray),
                 false,
                 BigInteger.valueOf(p.constant))
-            case SumMode.SumEQ =>
+            case SumEQ =>
               solver.addPseudoBoolean(
                 new VecInt(p.vars.map(v => position(v).head + 1).toArray),
                 new Vec(p.coefs.map(BigInteger.valueOf(_)).toArray),

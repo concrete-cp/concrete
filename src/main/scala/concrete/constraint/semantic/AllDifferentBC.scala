@@ -271,7 +271,9 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
     filterLower(ps) andThen filterUpper
   }
 
-  private val eval: Int = (31 - Integer.numberOfLeadingZeros(arity)) * arity
+  private val eval: Int = {
+    (31 - Integer.numberOfLeadingZeros(arity)) * arity
+  }
 
   def advise(ps: ProblemState, p: Int) = eval
 

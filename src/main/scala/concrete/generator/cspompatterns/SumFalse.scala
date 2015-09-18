@@ -1,17 +1,19 @@
 package concrete.generator.cspompatterns
 
 import scala.reflect.runtime.universe
-import concrete.constraint.semantic.SumMode.SumEQ
-import concrete.constraint.semantic.SumMode.SumLE
-import concrete.constraint.semantic.SumMode.SumLT
-import concrete.constraint.semantic.SumMode.SumNE
+
+import concrete.constraint.linear.SumEQ
+import concrete.constraint.linear.SumLE
+import concrete.constraint.linear.SumLT
+import concrete.constraint.linear.SumNE
 import concrete.generator.constraint.SumGenerator
 import cspom.CSPOM
+import cspom.CSPOM.constant
+import cspom.CSPOM.constantSeq
+import cspom.CSPOM.seq2CSPOMSeq
 import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.variable.CSPOMConstant
-import cspom.variable.CSPOMSeq
-import CSPOM._
 
 object SumFalse extends ConstraintCompilerNoData {
 

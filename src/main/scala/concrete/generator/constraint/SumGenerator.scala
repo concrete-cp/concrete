@@ -1,28 +1,30 @@
 package concrete.generator.constraint;
 
 import scala.reflect.runtime.universe
+
 import com.typesafe.scalalogging.LazyLogging
+
 import Generator.cspom2concrete1D
-import Generator.cspom2concreteVar
-import concrete.Domain
+import concrete.ParameterManager
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.semantic.EqAC
 import concrete.constraint.semantic.EqBC
 import concrete.constraint.semantic.Gt
 import concrete.constraint.semantic.LeC
-import concrete.constraint.semantic.Linear
 import concrete.constraint.semantic.LtC
 import concrete.constraint.semantic.Neq
 import concrete.constraint.semantic.ReifiedConstraint
-import concrete.constraint.semantic.SumAC
-import concrete.constraint.semantic.SumMode
-import concrete.constraint.semantic.SumMode._
+import concrete.constraint.linear.Linear
+import concrete.constraint.linear.SumEQ
+import concrete.constraint.linear.SumLE
+import concrete.constraint.linear.SumLT
+import concrete.constraint.linear.SumMode
+import concrete.constraint.linear.SumNE
 import cspom.CSPOMConstraint
 import cspom.variable.CSPOMConstant
 import cspom.variable.IntExpression
 import cspom.variable.SimpleExpression
-import concrete.ParameterManager
 
 object SumGenerator {
   def readCSPOM(constraint: CSPOMConstraint[_]) = {
@@ -38,7 +40,7 @@ object SumGenerator {
     require(!constraint.params.contains("coefficients"), "coefficients parameter is deprecated")
 
     val mode = constraint.getParam[String]("mode")
-      .map(SumMode.withName)
+      .flatMap(SumMode.withName)
       .get
 
     (vars, coefs, constant, mode)
@@ -72,23 +74,23 @@ final class SumGenerator(pm: ParameterManager) extends Generator with LazyLoggin
       bc = Some(new EqBC(neg, x, b, y)))
   }
 
-  def general(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode.SumMode): ACBC = {
+  def general(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode): ACBC = {
     val constraints = ACBC().withBC(
       Linear(constant, varParams.toArray, solverVariables.toArray, mode, pm))
 
-    lazy val ss = Domain.searchSpace(solverVariables.map(_.initDomain))
+    //   lazy val ss = Domain.searchSpace(solverVariables.map(_.initDomain))
     //println(ss)
 
-    if ((mode == SumEQ || mode == SumNE) && ss < 10000) {
-      constraints.withAC(
-        new SumAC(constant, varParams.toArray, solverVariables.toArray, mode))
-    } else {
-      constraints
-    }
+    //    if ((mode == SumEQ || mode == SumNE)) { //} && ss < 0) {
+    //      constraints.withAC(
+    //        new SumAC(constant, varParams.toArray, solverVariables.toArray, mode))
+    //    } else {
+    constraints
+    //    }
 
   }
 
-  def withBinSpec(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode.SumMode) =
+  def withBinSpec(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode) =
     solverVariables.size match {
       case 1 =>
         val Seq(x) = solverVariables
@@ -97,7 +99,7 @@ final class SumGenerator(pm: ParameterManager) extends Generator with LazyLoggin
           case (Seq(1), SumLT, k) => ACBC().withBC(new LtC(x, k))
           case _ =>
             logger.info(s"${(varParams, mode, constant)} is non-specialized unary linear constraint")
-            general(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode.SumMode)
+            general(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode)
         }
       case 2 =>
         val Seq(x, y) = solverVariables
@@ -114,15 +116,15 @@ final class SumGenerator(pm: ParameterManager) extends Generator with LazyLoggin
           case (Seq(1, 1), SumEQ, k)   => eq(true, x, k, y)
           case _ =>
             logger.info(s"${(varParams, mode, constant)} is non-specialized binary linear constraint")
-            general(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode.SumMode)
+            general(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode)
         }
 
       case _ =>
-        general(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode.SumMode)
+        general(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode)
 
     }
 
-  def reverse(varParams: Seq[Int], constant: Int, mode: SumMode.SumMode) = {
+  def reverse(varParams: Seq[Int], constant: Int, mode: SumMode) = {
     mode match {
       case SumEQ => (varParams, constant, SumNE)
       case SumNE => (varParams, constant, SumEQ)
@@ -134,7 +136,10 @@ final class SumGenerator(pm: ParameterManager) extends Generator with LazyLoggin
   override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
     val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
     val solverVariables = vars.map(cspom2concrete1D).map(_.asVariable)
-    val generated = withBinSpec(solverVariables, varParams, constant, mode).toSeq
+
+    val generated =
+      withBinSpec(solverVariables, varParams, constant, mode).toSeq
+
     assert(generated.forall {
       case c: EqAC => c.neg || c.b != 0
       case _       => true

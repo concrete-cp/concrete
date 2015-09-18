@@ -68,7 +68,7 @@ class Element(val result: Variable,
     ps.shaveDom(index, 0, vars.length)
   }
 
-  def revise(ps: ProblemState, modified: List[Int]): Outcome = {
+  def revise(ps: ProblemState, modified: Seq[Int]): Outcome = {
     val resultDom = ps.dom(result)
     /**
      * Revise indices

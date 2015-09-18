@@ -1,21 +1,19 @@
 package concrete.generator.constraint;
 
+import scala.reflect.runtime.universe
+import com.typesafe.scalalogging.LazyLogging
 import Generator.cspom2concrete1D
-import Generator.cspom2concreteVar
+import concrete.BooleanDomain
 import concrete.constraint.Constraint
+import concrete.constraint.semantic.Eq
 import concrete.constraint.semantic.EqAC
 import concrete.constraint.semantic.EqBC
 import concrete.constraint.semantic.Neq
 import concrete.constraint.semantic.ReifiedConstraint
 import cspom.CSPOMConstraint
-import concrete.BooleanDomain
-import concrete.constraint.semantic.Sum
-import concrete.constraint.semantic.SumAC
 import cspom.UNSATException
-import concrete.constraint.semantic.Eq
-import com.typesafe.scalalogging.LazyLogging
-import concrete.constraint.semantic.LinearNe
-import concrete.constraint.semantic.LinearEq
+import concrete.constraint.linear.LinearNe
+import concrete.constraint.linear.LinearEq
 
 final object EqGenerator extends Generator with LazyLogging {
 
@@ -65,11 +63,11 @@ final object EqGenerator extends Generator with LazyLogging {
         Seq()
       case (Const(a: Int), Var(b)) => Seq(
         new ReifiedConstraint(result,
-          new LinearEq(a, Array(1), Array(b)),
+          LinearEq(a, Array(1), Array(b)),
           new LinearNe(a, Array(1), Array(b))))
       case (Var(a), Const(b: Int)) => Seq(
         new ReifiedConstraint(result,
-          new LinearEq(b, Array(1), Array(a)),
+          LinearEq(b, Array(1), Array(a)),
           new LinearNe(b, Array(1), Array(a))))
       case (Var(a), Var(b)) => Seq(
         new ReifiedConstraint(

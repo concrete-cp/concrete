@@ -1,26 +1,23 @@
 package concrete.generator.cspompatterns
 
-import concrete.constraint.semantic.SumMode
-import concrete.constraint.semantic.SumMode._
+import scala.reflect.runtime.universe
+
+import concrete.constraint.linear.SumEQ
+import concrete.constraint.linear.SumLE
+import concrete.constraint.linear.SumLT
+import concrete.constraint.linear.SumMode
+import concrete.constraint.linear.SumNE
 import cspom.CSPOMConstraint
-import cspom.VariableNames
+import cspom.UNSATException
 import cspom.compiler.VariableCompiler
+import cspom.util.IntInterval
+import cspom.util.RangeSet
+import cspom.variable.BoolExpression
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
 import cspom.variable.IntExpression
 import cspom.variable.IntExpression.implicits.arithmetics
-import cspom.variable.IntExpression.implicits.ranges
-import cspom.variable.SimpleExpression
-import cspom.util.Interval
-import scala.PartialFunction
-import cspom.variable.BoolExpression
-import cspom.variable.BoolVariable
-import cspom.UNSATException
-import cspom.CSPOM
-import cspom.compiler.Delta
-import cspom.util.RangeSet
-import cspom.util.IntInterval
 
 object SumDomains extends VariableCompiler('sum) {
   def compiler(c: CSPOMConstraint[_]) = ???
@@ -31,12 +28,14 @@ object SumDomains extends VariableCompiler('sum) {
 
       val m: String = c.getParam("mode").get
 
-      val initBound = SumMode.withName(m) match {
-        case SumLE => RangeSet(IntInterval.atMost(result))
-        case SumLT => RangeSet(IntInterval.atMost(result - 1))
-        case SumEQ => RangeSet(IntInterval.singleton(result))
-        case SumNE => RangeSet.allInt -- IntInterval.singleton(result)
-      }
+      val initBound = SumMode.withName(m)
+        .map {
+          case SumLE => RangeSet(IntInterval.atMost(result))
+          case SumLT => RangeSet(IntInterval.atMost(result - 1))
+          case SumEQ => RangeSet(IntInterval.singleton(result))
+          case SumNE => RangeSet.allInt -- IntInterval.singleton(result)
+        }
+        .get
 
       val coefspan = (iargs, coef).zipped.map((a, c) => RangeSet(IntExpression.span(a)) * RangeSet(IntInterval.singleton(c))).toIndexedSeq
 
@@ -81,12 +80,14 @@ object PseudoBoolDomains extends VariableCompiler('pseudoboolean) {
 
       val m: String = c.getParam("mode").get
 
-      val initBound = SumMode.withName(m) match {
-        case SumLE => RangeSet(IntInterval.atMost(result))
-        case SumLT => RangeSet(IntInterval.atMost(result - 1))
-        case SumEQ => RangeSet(IntInterval.singleton(result))
-        case SumNE => RangeSet.allInt -- IntInterval.singleton(result)
-      }
+      val initBound = SumMode.withName(m)
+        .map {
+          case SumLE => RangeSet(IntInterval.atMost(result))
+          case SumLT => RangeSet(IntInterval.atMost(result - 1))
+          case SumEQ => RangeSet(IntInterval.singleton(result))
+          case SumNE => RangeSet.allInt -- IntInterval.singleton(result)
+        }
+        .get
 
       val coefspan = (iargs, coef).zipped.map((a, c) => RangeSet(BoolExpression.span(a)) * RangeSet(IntInterval.singleton(c))).toIndexedSeq
 

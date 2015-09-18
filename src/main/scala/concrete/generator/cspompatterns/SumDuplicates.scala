@@ -1,19 +1,19 @@
 package concrete.generator.cspompatterns
 
-import cspom.compiler.ConstraintCompiler
-import cspom.compiler.ConstraintCompilerNoData
-import cspom.CSPOM
+import scala.reflect.runtime.universe
+import scala.runtime.ZippedTraversable2.zippedTraversable2ToTraversable
+import concrete.constraint.linear.SumMode
+import cspom.CSPOM.constant
+import cspom.CSPOM.constantSeq
+import cspom.CSPOM.seq2CSPOMSeq
 import cspom.CSPOMConstraint
-import cspom.variable.CSPOMConstant
-import concrete.constraint.semantic.SumMode
-import cspom.variable.CSPOMSeq
-import cspom.variable.CSPOMVariable
-import SumMode._
-import cspom.variable.CSPOMExpression
-import concrete.CSPOMDriver
-import cspom.variable.IntExpression
+import cspom.compiler.ConstraintCompiler
 import cspom.variable.BoolExpression
-import CSPOM._
+import cspom.variable.CSPOMConstant
+import cspom.variable.CSPOMExpression
+import cspom.variable.CSPOMSeq
+import cspom.variable.IntExpression
+import cspom.CSPOM
 
 /**
  *  Merge duplicates in linear constraints (x + x = 0 -> 2.x = 0). Also remove variables with factor = 0.
@@ -49,7 +49,7 @@ object SumDuplicates extends ConstraintCompiler {
 
   def compile(constraint: CSPOMConstraint[_], p: CSPOM, data: A) = {
     val (r, args, const) = data
-    val mode = constraint.getParam[String]("mode").map(SumMode.withName(_)).get
+    val mode = constraint.getParam[String]("mode").flatMap(SumMode.withName).get
     val (variables, factors) = args.filter(_._2 != 0).unzip
 
     if (factors.isEmpty) {

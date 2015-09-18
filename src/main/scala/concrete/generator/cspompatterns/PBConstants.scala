@@ -5,10 +5,10 @@ import cspom.compiler.ConstraintCompilerNoData
 import cspom.CSPOM
 import cspom.CSPOMConstraint
 import cspom.variable.CSPOMConstant
-import concrete.constraint.semantic.SumMode
+import concrete.constraint.linear.SumMode
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
-import SumMode._
+
 import cspom.variable.IntExpression
 import concrete.CSPOMDriver
 import concrete.generator.constraint.SumGenerator

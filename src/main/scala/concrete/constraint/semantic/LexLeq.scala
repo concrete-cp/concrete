@@ -72,7 +72,7 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
 
   }
 
-  def revise(ps: ProblemState, mod: List[Int]): Outcome = {
+  def revise(ps: ProblemState, mod: Seq[Int]): Outcome = {
     val (x, y) = mod.span(_ < n)
     val r = reviseN(ps, (x ++ y.map(_ - n)).distinct)
     //    val out = r match {
@@ -83,7 +83,7 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
     r
   }
 
-  private def reviseN(ps: ProblemState, mod: List[Int]): Outcome = mod match {
+  private def reviseN(ps: ProblemState, mod: Seq[Int]): Outcome = mod match {
     case Nil => ps
     case head :: tail =>
       reEstablishGAC(head, ps).andThen(ps => reviseN(ps, tail))

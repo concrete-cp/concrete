@@ -57,7 +57,7 @@ final class EqAC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable,
 
   }
 
-  def revise(ps: ProblemState, modified: List[Int]) = {
+  def revise(ps: ProblemState, modified: Seq[Int]) = {
     val skip = this.skip(modified)
 
     {
