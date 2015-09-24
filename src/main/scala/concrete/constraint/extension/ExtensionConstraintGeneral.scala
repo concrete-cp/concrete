@@ -41,7 +41,7 @@ final class ExtensionConstraintGeneral(
 
   def removeTuples(base: Array[Int]) = ??? //tuples(base).count(removeTuple)
 
-  override def revise(ps: ProblemState, mod: List[Int]): Outcome = {
+  override def revise(ps: ProblemState, mod: Seq[Int]): Outcome = {
     val skip = this.skip(mod)
     var cs = ps
     for (position <- 0 until arity) {

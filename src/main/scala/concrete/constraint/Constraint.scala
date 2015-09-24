@@ -52,7 +52,7 @@ object Constraint {
 
 }
 
-trait StatefulConstraint[State <: AnyRef] extends Constraint {
+trait StatefulConstraint[State] extends Constraint {
   override def init(ps: ProblemState): Outcome
 
   override def toString(problemState: ProblemState) = s"${super.toString(problemState)} / ${problemState(this)}"
@@ -140,7 +140,7 @@ abstract class Constraint(val scope: Array[Variable])
 
   def advise(problemState: ProblemState, pos: Int): Int
 
-  def advise(problemState: ProblemState, pos: Array[Int]): Int = {
+  def adviseArray(problemState: ProblemState, pos: Array[Int]): Int = {
     var max = -1
     var i = pos.length - 1
     while (i >= 0) {
@@ -150,7 +150,8 @@ abstract class Constraint(val scope: Array[Variable])
     max
   }
 
-  def advise(problemState: ProblemState, v: Variable): Int = advise(problemState, position(v))
+  def adviseVar(problemState: ProblemState, v: Variable): Int =
+    adviseArray(problemState, position(v))
 
   final def adviseAll(problemState: ProblemState): Int = {
     var max = -1
@@ -168,11 +169,6 @@ abstract class Constraint(val scope: Array[Variable])
    * The constraint propagator.
    */
   def revise(problemState: ProblemState): Outcome
-
-  def consistentRevise(problemState: ProblemState): ProblemState = revise(problemState) match {
-    case Contradiction    => throw new UNSATException("Revision is inconsistent")
-    case ps: ProblemState => ps
-  }
 
   def dataSize: Int = ???
 
@@ -295,5 +291,7 @@ abstract class Constraint(val scope: Array[Variable])
     }
 
   }
+
+  def entailable: Boolean = true
 
 }

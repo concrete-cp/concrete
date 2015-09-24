@@ -22,66 +22,44 @@ import concrete.constraint.linear.SumEQ
 import concrete.constraint.linear.SumLE
 import concrete.constraint.linear.SumMode
 import concrete.constraint.linear.Linear
+import concrete.generator.LinearConstraint
+import concrete.generator.Arc
 
-case class Clause(positive: Seq[Variable], negative: Seq[Variable]) {
+case class Clause(positive: Seq[Variable], negative: Seq[Variable]) extends Arc {
   require(vars.forall(v => v.initDomain.isInstanceOf[BooleanDomain]))
   def size = positive.size + negative.size
   def vars = positive ++ negative
 }
 
-case class PseudoBoolean(
-    vars: Seq[Variable], coefs: Seq[Int],
-    mode: SumMode, constant: Int) {
-  def size = vars.size
-}
+class PseudoBoolean(
+  vars: Seq[Variable], coefs: Seq[Int],
+  mode: SumMode, constant: Int)
+    extends LinearConstraint(vars, coefs, mode, constant)
 
 object SAT extends LazyLogging {
 
-  def apply(clauses: Seq[Clause], pb: Seq[PseudoBoolean], pm: ParameterManager): Seq[Constraint] = {
-    val useSAT: Boolean = pm.getOrElse("sat", false)
+  //  def apply(clauses: Seq[Clause], pb: Seq[PseudoBoolean], pm: ParameterManager): Seq[Constraint] = {
+  //    val useSAT: Boolean = pm.getOrElse("sat", false)
+  //
+  //    if (useSAT) {
+  //      genSAT(clauses, pb)
+  //    } else {
+  //      (for (c <- clauses) yield new ClauseConstraint(c)) ++
+  //        (for (p <- pb) yield Linear(p.constant, p.coefs.toArray, p.vars.toArray, p.mode, pm))
+  //
+  //    }
+  //  }
 
-    if (useSAT) {
-      genSAT(clauses, pb)
-    } else {
-      (for (c <- clauses) yield new ClauseConstraint(c)) ++
-        (for (p <- pb) yield Linear(p.constant, p.coefs.toArray, p.vars.toArray, p.mode, pm))
-
-    }
-  }
-
-  private def genSAT(clauses: Seq[Clause], pb: Seq[PseudoBoolean]): Seq[Constraint] = {
+  def apply(clauses: Seq[Clause], pb: Seq[PseudoBoolean]): Seq[Constraint] = {
     logger.info("Computing SAT components")
 
-    var neighbours = new HashMap[Variable, Set[Variable]]().withDefaultValue(Set())
-    for (c <- clauses) {
-      for (Seq(v1, v2) <- c.vars.combinations(2)) {
-        neighbours(v1) += v2
-        neighbours(v2) += v1
-      }
-    }
-    for (c <- pb) {
-      for (Seq(v1, v2) <- c.vars.combinations(2)) {
-        neighbours(v1) += v2
-        neighbours(v2) += v1
-      }
-    }
+    val comp = Arc.components(clauses ++ pb)
 
-    val neighb = neighbours.toMap
+    for ((vars, arcs) <- comp) yield {
+      val c = arcs.collect { case c: Clause => c }
+      val p = arcs.collect { case pb: PseudoBoolean => pb }
 
-    var visited: Set[Variable] = Set()
-    var components: Seq[Set[Variable]] = Seq()
-
-    for (v <- neighbours.keys) {
-      val component = crawlVariables(v, neighb, visited)
-      if (component.nonEmpty) {
-        components +:= component
-        visited ++= component
-      }
-    }
-
-    for (vars <- components) yield {
-      val c = clauses.filter(c => c.vars.exists(vars))
-      val p = pb.filter(c => c.vars.exists(vars))
+      assert(c.size + p.size == arcs.size)
 
       (c, p) match {
         case (Seq(singleClause), Seq()) => new ClauseConstraint(singleClause)
@@ -90,16 +68,6 @@ object SAT extends LazyLogging {
     }
   }
 
-  def crawlVariables(root: Variable, neighbours: Map[Variable, Set[Variable]], visited: Set[Variable]): Set[Variable] = {
-    if (visited(root)) {
-      Set()
-    } else {
-      neighbours(root).foldLeft(visited + root) {
-        (visit, n) => visit ++ crawlVariables(n, neighbours, visit)
-      }
-
-    }
-  }
 }
 
 class SAT(vars: Array[Variable], clauses: Seq[Clause], pseudo: Seq[PseudoBoolean]) extends Constraint(vars) with Residues with LazyLogging {
@@ -125,18 +93,18 @@ class SAT(vars: Array[Variable], clauses: Seq[Clause], pseudo: Seq[PseudoBoolean
             case SumLE =>
               solver.addPseudoBoolean(
                 new VecInt(p.vars.map(v => position(v).head + 1).toArray),
-                new Vec(p.coefs.map(BigInteger.valueOf(_)).toArray),
+                new Vec(p.factors.map(BigInteger.valueOf(_)).toArray),
                 false,
                 BigInteger.valueOf(p.constant))
             case SumEQ =>
               solver.addPseudoBoolean(
                 new VecInt(p.vars.map(v => position(v).head + 1).toArray),
-                new Vec(p.coefs.map(BigInteger.valueOf(_)).toArray),
+                new Vec(p.factors.map(BigInteger.valueOf(_)).toArray),
                 false,
                 BigInteger.valueOf(p.constant))
               solver.addPseudoBoolean(
                 new VecInt(p.vars.map(v => position(v).head + 1).toArray),
-                new Vec(p.coefs.map(BigInteger.valueOf(_)).toArray),
+                new Vec(p.factors.map(BigInteger.valueOf(_)).toArray),
                 true,
                 BigInteger.valueOf(p.constant))
             case other => throw new IllegalArgumentException(s"$other mode is not supported for SAT PB constraint")

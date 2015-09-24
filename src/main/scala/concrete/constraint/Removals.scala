@@ -4,6 +4,7 @@ import java.util.Arrays
 import concrete.Domain
 import concrete.ProblemState
 import concrete.Outcome
+import scala.collection.mutable.ArrayBuffer
 
 trait Removals extends Constraint with AdviseCounts {
 
@@ -18,20 +19,30 @@ trait Removals extends Constraint with AdviseCounts {
 
   def revise(problemState: ProblemState): Outcome = {
     val r = revise(problemState, modified)
-    Arrays.fill(removals, -1)
+    clearMod()
     r
   }
 
-  def revise(problemState: ProblemState, modified: List[Int]): Outcome
+  def revise(problemState: ProblemState, modified: Seq[Int]): Outcome
+
+  override def isConsistent(problemState: ProblemState): Outcome = {
+    isConsistent(problemState, modified)
+  }
+
+  def clearMod(): Unit = Arrays.fill(removals, -1)
+
+  def isConsistent(ps: ProblemState, mod: Seq[Int]): Outcome = {
+    revise(ps, mod).andThen(_ => ps)
+  }
 
   // scope.iterator.zipWithIndex.zip(removals.iterator).filter(t => t._2 >= reviseCount).map(t => t._1)
 
-  def modified: List[Int] = {
+  def modified: Seq[Int] = {
     var i = arity - 1
-    var mod: List[Int] = Nil
+    var mod = new ArrayBuffer[Int](arity)
     while (i >= 0) {
       if (removals(i) == adviseCount) {
-        mod ::= i
+        mod += i
       }
       i -= 1
     }
@@ -41,7 +52,7 @@ trait Removals extends Constraint with AdviseCounts {
 
   def getEvaluation(problemState: ProblemState): Int
 
-  def skip(modified: List[Int]) = if (modified.tail.isEmpty) modified.head else -1
+  def skip(modified: Seq[Int]) = if (modified.size == 1) modified.head else -1
 
   //scope.iterator.zip(removals.iterator).filter(t => t._2 >= reviseCount).map(t => t._1)
 

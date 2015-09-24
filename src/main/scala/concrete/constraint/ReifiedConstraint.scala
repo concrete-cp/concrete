@@ -1,6 +1,8 @@
-package concrete.constraint.semantic;
+package concrete.constraint
 
 import com.typesafe.scalalogging.LazyLogging
+
+import concrete.BooleanDomain
 import concrete.EMPTY
 import concrete.FALSE
 import concrete.Outcome
@@ -8,11 +10,6 @@ import concrete.ProblemState
 import concrete.TRUE
 import concrete.UNKNOWNBoolean
 import concrete.Variable
-import concrete.constraint.Advisable
-import concrete.constraint.AdviseCount
-import concrete.constraint.Constraint
-import concrete.BooleanDomain
-import concrete.Contradiction
 
 final class ReifiedConstraint(
   controlVariable: Variable,

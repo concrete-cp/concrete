@@ -70,7 +70,7 @@ abstract class BinaryExt(
 
   override def simpleEvaluation = 2
 
-  def revise(ps: ProblemState, mod: List[Int]): Outcome = {
+  def revise(ps: ProblemState, mod: Seq[Int]): Outcome = {
     val skip = this.skip(mod)
 
     {

@@ -42,15 +42,15 @@ final class LinearLe(
   import LinearLe._
   import IncrementalBoundPropagation._
 
-  //  override def isConsistent(ps: ProblemState) = {
-  //    val (doms, f, vars) = updateF(ps)
-  //
-  //    if (f.lb <= 0) {
-  //      ps.updateState(this, (doms, f, vars))
-  //    } else {
-  //      Contradiction
-  //    }
-  //  }
+  override def isConsistent(ps: ProblemState, mod: Seq[Int]) = {
+    val (doms, f, vars, max) = updateF(ps, mod)
+    clearMod()
+    if (f.lb <= 0) {
+      ps.updateState(this, (doms, f, vars, max))
+    } else {
+      Contradiction
+    }
+  }
 
   override def revise(ps: ProblemState, mod: Seq[Int]): Outcome = {
     val (doms, f, vars, max) = updateF(ps, mod)

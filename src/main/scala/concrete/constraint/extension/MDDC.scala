@@ -34,7 +34,7 @@ class MDDC(_scope: Array[Variable], private val mdd: MDDRelation)
 
   var gNo: Set[Int] = _
 
-  def revise(ps: ProblemState, modified: List[Int]) = {
+  def revise(ps: ProblemState, modified: Seq[Int]) = {
 
     val oldGno: Set[Int] = ps(this)
     val domains = Array.tabulate(arity)(p => ps.dom(scope(p)))

@@ -57,7 +57,7 @@ trait Residues extends Removals {
 
   }
 
-  def revise(state: ProblemState, modified: List[Int]): Outcome = // {
+  def revise(state: ProblemState, modified: Seq[Int]): Outcome = // {
     revise(state, skip(modified)).entailIfFree(this)
   //    val skip = this.skip(modified)
   //    var cs = state

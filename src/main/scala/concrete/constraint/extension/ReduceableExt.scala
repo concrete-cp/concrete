@@ -43,7 +43,7 @@ final class ReduceableExt(_scope: Array[Variable], val relation: Relation)
 
   //println("sizesR " + arity + " " + trie.lambda + " " + trie.edges)
 
-  def revise(ps: ProblemState, mod: List[Int]) = {
+  def revise(ps: ProblemState, mod: Seq[Int]) = {
     val domains = Array.tabulate(arity)(p => ps.dom(scope(p)))
 
     val trie = ps(this)
@@ -56,7 +56,7 @@ final class ReduceableExt(_scope: Array[Variable], val relation: Relation)
     logger.debug("Filtering with " + _scope.toSeq.map(_.toString(ps)))
 
     val newTrie = trie.filterTrie(
-      { (p, i) => domains(p).present(i) }, mod)
+      { (p, i) => domains(p).present(i) }, mod.toList)
 
     //println("filtered " + newTrie.size)
 

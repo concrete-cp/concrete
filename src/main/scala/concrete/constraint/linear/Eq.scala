@@ -1,4 +1,4 @@
-package concrete.constraint.semantic;
+package concrete.constraint.linear;
 
 import com.typesafe.scalalogging.LazyLogging
 import concrete.Domain

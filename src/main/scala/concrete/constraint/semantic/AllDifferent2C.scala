@@ -53,7 +53,7 @@ trait AllDiffChecker extends Constraint {
 final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) with AllDiffChecker with AdviseCounts {
 
   def init(ps: ProblemState) = ps
-  
+
   var q: List[Variable] = Nil
 
   def revise(ps: ProblemState): Outcome = {
@@ -73,7 +73,7 @@ final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) w
           if (nd.isEmpty) return Contradiction
           if (od ne nd) {
             state = state.updateDomNonEmpty(v, nd)
-            if (nd.size == 1) q ::= v
+            if (nd.isAssigned) q ::= v
           }
         }
       }
@@ -91,11 +91,11 @@ final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) w
       lastAdvise = adviseCount
     }
     val v = scope(p)
-    if (ps.dom(v).size > 1) {
-      -1
-    } else {
+    if (ps.assigned(v)) {
       q ::= v
       arity
+    } else {
+      -1
     }
   }
   val simpleEvaluation = 3
