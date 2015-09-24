@@ -4,8 +4,9 @@ import concrete.Variable
 import concrete.Problem
 import concrete.Domain
 import cspom.StatisticsManager
+import concrete.ParameterManager
 
-final class MidValue extends ValueHeuristic {
+final class MidValue(pm: ParameterManager) extends ValueHeuristic {
 
   def score(variable: Variable, domain: Domain, value: Int) = ((domain.head + domain.last) / 2) - value
 

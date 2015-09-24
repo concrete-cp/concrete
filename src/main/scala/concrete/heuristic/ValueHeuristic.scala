@@ -9,8 +9,12 @@ trait ValueHeuristic extends BranchHeuristic {
   def branch(variable: Variable, domain: Domain, ps: ProblemState): Branch = {
     val selected = selectIndex(variable, domain)
     new Branch(
-      ps.assign(variable, selected).toState,
-      ps.remove(variable, selected).toState,
+      try { ps.assign(variable, selected).toState } catch {
+        case e: Exception => throw new IllegalStateException(s"${variable.toString(ps)} = $selected is inconsistent", e)
+      },
+      try { ps.remove(variable, selected).toState } catch {
+        case e: Exception => throw new IllegalStateException(s"${variable.toString(ps)} /= $selected is inconsistent", e)
+      },
       Seq(variable),
       s"${variable.toString(ps)} = $selected",
       s"${variable.toString(ps)} /= $selected")

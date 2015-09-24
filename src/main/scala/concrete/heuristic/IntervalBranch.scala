@@ -5,8 +5,9 @@ import concrete.Problem
 import concrete.Domain
 import cspom.StatisticsManager
 import concrete.ProblemState
+import concrete.ParameterManager
 
-final class IntervalBranch extends BranchHeuristic {
+final class IntervalBranch(pm: ParameterManager) extends BranchHeuristic {
 
   override def toString = "split";
 
@@ -14,7 +15,7 @@ final class IntervalBranch extends BranchHeuristic {
     // Nothing to compute
   }
 
-  private val split = new Split()
+  private val split = new Split(pm)
 
   override def branch(variable: Variable, domain: Domain, ps: ProblemState) = {
     if (domain.convex) {

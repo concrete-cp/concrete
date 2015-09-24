@@ -25,12 +25,16 @@ import concrete.ProblemState
 import concrete.Variable
 import concrete.Domain
 
-final class LexVar(params: ParameterManager, decisionVariables: List[Variable]) extends ScoredVariableHeuristic(params, decisionVariables) {
+final class LexVar(params: ParameterManager, dv: Array[Variable]) extends VariableHeuristic(params, dv.reverse) {
+  
+  override final val rand = None
 
-  def score(variable: Variable, dom: Domain, state: ProblemState) = ??? //variable.id
+  override def select(i: Int, state: ProblemState): Variable = {
+    decisionVariables(i)
+  }
 
-  override def select(list: List[Variable], state: ProblemState): Option[Variable] = list.find(state.dom(_).size > 1)
+  override def toString = "lex-var"
 
-  override def toString = "min-dom"
+  def compare(v1: Variable, d1: Domain, v2: Variable, d2: Domain, state: ProblemState): Int = ???
 
 }

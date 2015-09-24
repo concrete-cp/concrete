@@ -4,8 +4,9 @@ import concrete.Variable
 import concrete.Problem
 import concrete.Domain
 import cspom.StatisticsManager
+import concrete.ParameterManager
 
-final class MedValue extends ValueHeuristic {
+final class MedValue(pm: ParameterManager) extends ValueHeuristic {
 
   def score(variable: Variable, domain: Domain, value: Int) = domain.median - value
 

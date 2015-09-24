@@ -5,6 +5,7 @@ import concrete.Problem
 import concrete.Domain
 import cspom.StatisticsManager
 import concrete.ProblemState
+import concrete.ParameterManager
 
 object Split {
   def splitAt(variable: Variable, med: Int, ps: ProblemState) = {
@@ -16,7 +17,7 @@ object Split {
   }
 }
 
-final class Split extends BranchHeuristic {
+final class Split(pm: ParameterManager) extends BranchHeuristic {
 
   override def toString = "split";
 

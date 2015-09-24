@@ -10,67 +10,68 @@ import concrete.ParameterManager
 import concrete.ProblemState
 import concrete.Domain
 
-abstract class ScoredVariableHeuristic(params: ParameterManager, decisionVariables: List[Variable]) extends VariableHeuristic(params, decisionVariables) {
+abstract class ScoredVariableHeuristic(params: ParameterManager, decisionVariables: Array[Variable]) extends VariableHeuristic(params, decisionVariables) {
 
   //def problem: Problem
 
   @tailrec
-  private def select(list: List[Variable], best: Variable, bestScore: Double, ties: Int, state: ProblemState): Variable = {
-    if (list.isEmpty) {
+  private def select(i: Int, best: Variable, bestScore: Double, ties: Int, state: ProblemState, rand: Random): Variable = {
+    if (i < 0) {
       best
     } else {
-      val current :: tail = list
+      val current = decisionVariables(i)
       val dom = state.dom(current)
       if (dom.length == 1) {
-        select(tail, best, bestScore, ties, state)
+        select(i - 1, best, bestScore, ties, state, rand)
       } else {
         val s = score(current, dom, state)
         val comp = java.lang.Double.compare(s, bestScore)
 
         if (comp > 0) {
-          select(tail, current, s, 2, state)
+          select(i - 1, current, s, 2, state, rand)
         } else if (comp == 0) {
           if (rand.nextDouble() * ties < 1) {
-            select(tail, current, s, ties + 1, state)
+            select(i - 1, current, s, ties + 1, state, rand)
           } else {
-            select(tail, best, bestScore, ties + 1, state)
+            select(i - 1, best, bestScore, ties + 1, state, rand)
           }
 
         } else {
-          select(tail, best, bestScore, ties, state)
+          select(i - 1, best, bestScore, ties, state, rand)
         }
       }
     }
   }
 
   @tailrec
-  private def select(list: List[Variable], best: Variable, bestScore: Double, state: ProblemState): Variable = {
-    if (list.isEmpty) {
+  private def select(i: Int, best: Variable, bestScore: Double, state: ProblemState): Variable = {
+    if (i < 0) {
       best
     } else {
-      val current :: tail = list
+      val current = decisionVariables(i)
       val dom = state.dom(current)
       if (dom.length == 1) {
-        select(tail, best, bestScore, state)
+        select(i - 1, best, bestScore, state)
       } else {
         val s = score(current, dom, state)
         val comp = java.lang.Double.compare(s, bestScore)
         if (comp > 0) {
-          select(tail, current, s, state)
+          select(i - 1, current, s, state)
         } else {
-          select(tail, best, bestScore, state)
+          select(i - 1, best, bestScore, state)
         }
       }
     }
   }
 
-  override def select(list: List[Variable], state: ProblemState): Option[Variable] = list match {
-    case Nil => None
-    case h :: t =>
-      if (rand ne null) {
-        Some(select(t, h, score(h, state.dom(h), state), 2, state))
-      } else {
-        Some(select(t, h, score(h, state.dom(h), state), state))
+  override def select(i: Int, state: ProblemState): Variable = {
+    val v = decisionVariables(i)
+    rand
+      .map { r =>
+        select(i - 1, v, score(v, state.dom(v), state), 2, state, r)
+      }
+      .getOrElse {
+        select(i - 1, v, score(v, state.dom(v), state), state)
       }
   }
 

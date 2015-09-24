@@ -3,8 +3,9 @@ package concrete.heuristic;
 import concrete.Variable
 import concrete.Problem
 import concrete.Domain
+import concrete.ParameterManager
 
-final class RevLexico extends ValueHeuristic {
+final class RevLexico(pm: ParameterManager) extends ValueHeuristic {
 
   def score(variable: Variable, dom: Domain, value: Int) = value
 

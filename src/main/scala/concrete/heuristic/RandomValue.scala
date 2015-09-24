@@ -4,12 +4,13 @@ import concrete.Variable
 import concrete.Problem
 import scala.util.Random
 import concrete.Domain
+import concrete.ParameterManager
 
-final class RandomValue extends ValueHeuristic {
+final class RandomValue(pm: ParameterManager) extends ValueHeuristic {
 
   def score(variable: Variable, domain: Domain, index: Int) = -index
 
-  override def toString = "lexico";
+  override def toString = "random";
 
   def compute(p: Problem) {
     // Nothing to compute

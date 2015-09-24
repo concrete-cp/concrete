@@ -5,8 +5,9 @@ import concrete.Problem
 import concrete.Domain
 import cspom.StatisticsManager
 import concrete.ProblemState
+import concrete.ParameterManager
 
-final class RevSplit extends BranchHeuristic {
+final class RevSplit(pm: ParameterManager) extends BranchHeuristic {
 
   override def toString = "rev-split";
 

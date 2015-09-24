@@ -25,10 +25,10 @@ import concrete.ParameterManager
 import concrete.ProblemState
 import concrete.Domain
 
-final class SmallestValue(params: ParameterManager, decisionVariables: List[Variable]) extends ScoredVariableHeuristic(params, decisionVariables) {
+final class SmallestValue(params: ParameterManager, decisionVariables: Array[Variable]) extends ScoredVariableHeuristic(params, decisionVariables) {
 
   def score(variable: Variable, dom: Domain, state: ProblemState) = -dom.head
 
-  override def toString = "min-dom"
+  override def toString = "smallest-value"
 
 }

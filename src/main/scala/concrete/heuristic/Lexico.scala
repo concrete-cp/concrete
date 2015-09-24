@@ -4,8 +4,9 @@ import concrete.Variable
 import concrete.Problem
 import concrete.Domain
 import concrete.ProblemState
+import concrete.ParameterManager
 
-final class Lexico extends BranchHeuristic {
+final class Lexico(pm: ParameterManager) extends ValueHeuristic {
 
   override def toString = "lexico";
 
@@ -13,15 +14,7 @@ final class Lexico extends BranchHeuristic {
     // Nothing to compute
   }
 
-  override def branch(variable: Variable, dom: Domain, ps: ProblemState) = {
-    val h = dom.head
-    new Branch(
-      ps.assign(variable, h).toState,
-      ps.remove(variable, h).toState,
-      Seq(variable),
-      s"${variable.toString(ps)} = $h",
-      s"${variable.toString(ps)} /= $h")
-  }
+  override def selectIndex(variable: Variable, dom: Domain) = dom.head
 
   def shouldRestart = false
 
