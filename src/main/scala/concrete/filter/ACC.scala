@@ -151,14 +151,18 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
       if (!states.isEntailed(c)) {
         val positions = modified.positionInConstraint(i)
 
-        /** Requeue the constraint if the modified variable is involved several times in its scope */
-        if ((c ne skip) || positions.length > 1) {
-
-          val a = c.advise(states, positions)
-          logger.trace(s"Queueing ${c.toString(states)}, positions = $positions, advise = $a")
-          //logger.fine(c + ", " + modified.positionInConstraint(i) + " : " + a)
-          if (a >= 0) queue.offer(c, key.getKey(c, states, a))
+        val a = if (positions.length > 1) {
+          c.adviseArray(states, positions)
+        } else if (c ne skip) {
+          c.advise(states, positions(0))
+        } else {
+          -1
         }
+
+        logger.trace(s"Queueing ${c.toString(states)}, positions = $positions, advise = $a")
+        //logger.fine(c + ", " + modified.positionInConstraint(i) + " : " + a)
+        if (a >= 0) queue.offer(c, key.getKey(c, states, a))
+
       } else {
         logger.trace(s"${c.toString(states)} was entailed")
       }
