@@ -19,23 +19,22 @@
 
 package concrete;
 
-import scala.collection.JavaConverters._
+import scala.collection.JavaConverters.asJavaIteratorConverter
+import scala.collection.JavaConverters.mapAsJavaMapConverter
+import scala.collection.JavaConverters.seqAsJavaListConverter
 import scala.reflect.runtime.universe
 import scala.util.Try
-
 import org.scalameter.Quantity
-
 import com.typesafe.scalalogging.LazyLogging
-
 import concrete.constraint.TupleEnumerator
 import concrete.constraint.extension.ReduceableExt
-import concrete.constraint.semantic.GtC
-import concrete.constraint.semantic.LtC
+import concrete.constraint.linear.LinearLe
+import concrete.constraint.linear.GtC
+import concrete.constraint.linear.LtC
 import concrete.filter.Filter
-import concrete.generator.FailedGenerationException
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
-import concrete.heuristic.Heuristic
+import concrete.heuristic.BestValue
 import cspom.CSPOM
 import cspom.Statistic
 import cspom.StatisticsManager
@@ -44,6 +43,7 @@ import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
+import concrete.constraint.linear.Simplex
 
 final class SolverFactory(val params: ParameterManager) {
 
@@ -200,6 +200,8 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   statistics.register("enumerator", TupleEnumerator)
   statistics.register("relation", ReduceableExt)
   statistics.register("domain", Domain)
+  statistics.register("linear", LinearLe)
+  statistics.register("simplex", Simplex)
 
   private var _next: SolverResult = UNKNOWNResult
 
@@ -214,8 +216,6 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
     // if (!problem.decisionVariables.contains(v)) problem.decisionVariables +:= v
   }
 
-  def isOptimizer: Boolean = _maximize.nonEmpty || _minimize.nonEmpty
-
   def optimises: Option[Variable] = _maximize orElse _minimize
 
   def next(): Map[Variable, Any] = _next match {
@@ -223,6 +223,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
     case UNKNOWNResult => if (hasNext) next() else Iterator.empty.next
     case SAT(sol) =>
       _next = UNKNOWNResult
+      BestValue.newSolution(sol)
       for (v <- _maximize) {
         reset()
         val opt = sol(v) match {

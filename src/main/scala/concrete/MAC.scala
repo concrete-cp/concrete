@@ -41,8 +41,8 @@ object MAC {
     val heuristic: Heuristic = params.get[Any]("mac.heuristic").getOrElse(classOf[CrossHeuristic]) match {
       case heuristicClass: Class[_] =>
         heuristicClass
-          .getMethod("apply", classOf[ParameterManager], classOf[List[Variable]])
-          .invoke(null, params, prob.variables)
+          .getMethod("apply", classOf[ParameterManager], classOf[Array[Variable]])
+          .invoke(null, params, prob.variables.toArray)
           .asInstanceOf[Heuristic]
       case heuristic: Heuristic => heuristic
     }
@@ -67,17 +67,12 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
   @Statistic
   var nbAssignments = 1;
 
-  //def this(p: Problem) = this(p, new ParameterManager())
-
-  //private var decisions: List[Pair] = Nil
-
   private val filter: Filter = filterClass.getConstructor(classOf[Problem], classOf[ParameterManager]).newInstance(problem, params);
   statistics.register("filter", filter);
 
-  //  private val ngl = new NoGoodLearner(prob, addConstraint)
-  //  statistics.register("nfr-learner", ngl)
+  var maxBacktracks: Int = initBT()
 
-  var maxBacktracks: Int =
+  private def initBT(): Int =
     if (restartLevel == 0) {
       if (problem.variables.isEmpty) 10
       else
@@ -85,8 +80,6 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
     } else {
       restartLevel
     }
-
-  //private var prepared = false
 
   private var restart = true
 
@@ -146,6 +139,8 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
   def reset() {
     //decisions = Nil
     restart = true
+    maxBacktracks = initBT()
+    nbBacktracks = 0
   }
 
   val searchMeasurer = org.scalameter.`package`

@@ -161,7 +161,7 @@ trait ConcreteRunner extends LazyLogging {
               for (s <- solver) {
                 solution(s, writer, opt)
               }
-            } else if (solver.isOptimizer) {
+            } else if (solver.optimises.nonEmpty) {
               for (s <- solver.toIterable.lastOption) {
                 solution(s, writer, opt)
               }

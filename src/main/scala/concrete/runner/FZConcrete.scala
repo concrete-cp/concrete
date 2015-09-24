@@ -74,7 +74,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
         val decisionVariables = pool.collect {
           case v: CSPOMVariable[_] => variables(v)
         }
-          .toList
+          .toArray
 
         val FZAnnotation(varchoiceannotation, _) = vca
 
@@ -96,14 +96,14 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
         val FZAnnotation(assignmentannotation, _) = aa
 
         val valh = assignmentannotation match {
-          case "indomain"               => new Lexico()
-          case "indomain_min"           => new Lexico()
-          case "indomain_max"           => new RevLexico()
-          case "indomain_median"        => new MedValue()
-          case "indomain_random"        => new RandomValue()
-          case "indomain_split"         => new Split()
-          case "indomain_reverse_split" => new RevSplit()
-          case "indomain_interval"      => new IntervalBranch()
+          case "indomain"               => new Lexico(pm)
+          case "indomain_min"           => new Lexico(pm)
+          case "indomain_max"           => new RevLexico(pm)
+          case "indomain_median"        => new MedValue(pm)
+          case "indomain_random"        => new RandomValue(pm)
+          case "indomain_split"         => new Split(pm)
+          case "indomain_reverse_split" => new RevSplit(pm)
+          case "indomain_interval"      => new IntervalBranch(pm)
           case h =>
             logger.warn(s"Unsupported assignment heuristic $h")
             CrossHeuristic.defaultVal(pm)
@@ -186,7 +186,17 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
 
     val heuristic =
       if (decisionVariables.size < variables.size) {
-        new SeqHeuristic(heuristics.toList :+ CrossHeuristic(pm, variables.values.toList))
+        val remainingVariables = (variables.values.toSet -- decisionVariables).toArray
+        
+        val shouldRestart = heuristics.exists(_.shouldRestart)
+        
+        val additional =
+          if (shouldRestart) {
+            CrossHeuristic(pm, remainingVariables)
+          } else {
+            new CrossHeuristic(pm, new WDegOnDom(pm, remainingVariables) { override def shouldRestart = false }, new Lexico(pm))
+          }
+        new SeqHeuristic(heuristics.toList :+ additional)
       } else {
         heuristics match {
           case Seq(h) => h
