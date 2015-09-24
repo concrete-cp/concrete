@@ -2,7 +2,7 @@ package concrete.generator.constraint;
 
 import concrete.constraint.Constraint
 import concrete.constraint.semantic.Neq
-import concrete.constraint.semantic.ReifiedConstraint
+import concrete.constraint.ReifiedConstraint
 import concrete.generator.FailedGenerationException
 import concrete.Problem
 import concrete.Variable

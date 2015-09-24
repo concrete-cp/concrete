@@ -1,4 +1,4 @@
-package concrete.constraint.semantic;
+package concrete.constraint.linear;
 
 import org.scalatest.Finders
 import org.scalatest.FlatSpec
@@ -20,7 +20,7 @@ final class GtTest extends FlatSpec with Matchers {
     pb.addConstraint(c)
     val ps = pb.initState.toState
 
-    val mod = c.consistentRevise(ps);
+    val mod = c.revise(ps).toState;
 
     mod.dom(v1) should contain theSameElementsAs Seq(4)
     mod.dom(v2) should contain theSameElementsAs Seq(3)
@@ -32,7 +32,7 @@ final class GtTest extends FlatSpec with Matchers {
     pb.addConstraint(c)
     val ps = pb.initState.toState
 
-    val mod = c.consistentRevise(ps);
+    val mod = c.revise(ps).toState;
 
     mod.dom(0) should contain theSameElementsAs Seq(3, 4)
     mod.dom(1) should contain theSameElementsAs Seq(3, 4)

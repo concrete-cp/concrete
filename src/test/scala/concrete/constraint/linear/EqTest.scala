@@ -1,9 +1,8 @@
-package concrete.constraint.semantic
+package concrete.constraint.linear
 
 import org.scalatest.Finders
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
-
 import concrete.IntDomain
 import concrete.Problem
 import concrete.Variable

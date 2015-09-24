@@ -4,8 +4,8 @@ import Generator.cspom2concrete1D
 import concrete.BooleanDomain
 import concrete.ParameterManager
 import concrete.constraint.linear.LinearLe
-import concrete.constraint.semantic.Gt
-import concrete.constraint.semantic.ReifiedConstraint
+import concrete.constraint.linear.Gt
+import concrete.constraint.ReifiedConstraint
 import concrete.generator.FailedGenerationException
 import cspom.CSPOMConstraint
 

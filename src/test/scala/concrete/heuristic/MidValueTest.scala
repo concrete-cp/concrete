@@ -2,9 +2,9 @@ package concrete.heuristic
 
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
-
 import concrete.IntDomain
 import concrete.Variable
+import concrete.ParameterManager
 
 /**
  * @author vion
@@ -16,7 +16,7 @@ class MidValueTest extends FlatSpec with Matchers {
     val d = i | j
 
     val v = new Variable("v", d)
-    val h = new concrete.heuristic.MidValue()
+    val h = new concrete.heuristic.MidValue(new ParameterManager)
 
     h.selectIndex(v, d) shouldBe (9998)
   }

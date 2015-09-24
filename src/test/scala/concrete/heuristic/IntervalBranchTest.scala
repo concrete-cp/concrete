@@ -7,6 +7,7 @@ import concrete.Variable
 import concrete.ProblemState
 import cspom.util.BitVector
 import concrete.util.Vector
+import concrete.ParameterManager
 
 /**
  * @author vion
@@ -21,7 +22,7 @@ class IntervalBranchTest extends FlatSpec with Matchers {
     v.id = 0
     val ps = new ProblemState(Vector(d), Vector(), BitVector.empty)
 
-    val h = new concrete.heuristic.IntervalBranch()
+    val h = new concrete.heuristic.IntervalBranch(new ParameterManager)
 
     val b = h.branch(v, d, ps)
 
@@ -29,7 +30,7 @@ class IntervalBranchTest extends FlatSpec with Matchers {
     b.b2.dom(v) should contain theSameElementsAs (10 to 15)
 
   }
-  
+
   it should "split single interval" in {
     val d = IntDomain.ofInterval(0, 5)
 
@@ -37,7 +38,7 @@ class IntervalBranchTest extends FlatSpec with Matchers {
     v.id = 0
     val ps = new ProblemState(Vector(d), Vector(), BitVector.empty)
 
-    val h = new concrete.heuristic.IntervalBranch()
+    val h = new concrete.heuristic.IntervalBranch(new ParameterManager)
 
     val b = h.branch(v, d, ps)
 

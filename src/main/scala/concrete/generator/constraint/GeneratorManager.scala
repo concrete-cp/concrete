@@ -15,28 +15,32 @@ import scala.util.Failure
 import scala.util.Success
 
 class GeneratorManager(pm: ParameterManager) {
-  private var known: Map[Symbol, Generator] = Map(
-    'abs -> AbsGenerator,
-    'alldifferent -> AllDifferentGenerator,
-    'eq -> EqGenerator,
-    //'gt -> GtGenerator,
-    //'ge -> GtGenerator,
-    'mul -> MulGenerator,
-    'absdiff -> AbsDiffGenerator,
-    'gcc -> GccGenerator,
-    'div -> DivGenerator,
-    'mod -> ModGenerator,
-    'nevec -> NeqVecGenerator,
-    'sum -> new SumGenerator(pm),
-    'pseudoboolean -> new SumGenerator(pm),
-    'lexleq -> LexLeqGenerator,
-    'occurrence -> OccurrenceGenerator,
-    'extension -> new ExtensionGenerator(pm),
-    'sq -> SquareGenerator,
-    'min -> MinGenerator,
-    'max -> MaxGenerator,
-    'element -> ElementGenerator,
-    'in -> SetInGenerator)
+
+  private var known: Map[Symbol, Generator] = {
+    val sg = new SumGenerator(pm)
+    Map(
+      'abs -> AbsGenerator,
+      'alldifferent -> AllDifferentGenerator,
+      'eq -> EqGenerator,
+      //'gt -> GtGenerator,
+      //'ge -> GtGenerator,
+      'mul -> MulGenerator,
+      'absdiff -> AbsDiffGenerator,
+      'gcc -> GccGenerator,
+      'div -> DivGenerator,
+      'mod -> ModGenerator,
+      'nevec -> NeqVecGenerator,
+      'sum -> sg,
+      'pseudoboolean -> sg,
+      'lexleq -> LexLeqGenerator,
+      'occurrence -> OccurrenceGenerator,
+      'extension -> new ExtensionGenerator(pm),
+      'sq -> SquareGenerator,
+      'min -> MinGenerator,
+      'max -> MaxGenerator,
+      'element -> ElementGenerator,
+      'in -> SetInGenerator)
+  }
 
   def register(entry: (Symbol, Generator)) {
     known += entry

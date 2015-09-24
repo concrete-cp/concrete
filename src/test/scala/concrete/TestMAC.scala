@@ -6,8 +6,8 @@ import org.scalatest.Matchers
 import org.scalatest.Tag
 import concrete.constraint.semantic.AllDifferent2C
 import concrete.constraint.semantic.AllDifferentBC
-import concrete.constraint.semantic.EqAC
-import concrete.constraint.semantic.EqBC
+import concrete.constraint.linear.EqAC
+import concrete.constraint.linear.EqBC
 import concrete.heuristic.MedValue
 import cspom.StatisticsManager
 import concrete.heuristic.Split

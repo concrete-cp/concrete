@@ -12,6 +12,7 @@ import concrete.constraint.Constraint
 import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
 import concrete.Problem
+import concrete.constraint.ConstraintComparator
 
 final class MulTest extends FlatSpec with Matchers with PropertyChecks with Inspectors {
 

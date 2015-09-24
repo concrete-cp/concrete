@@ -5,11 +5,11 @@ import com.typesafe.scalalogging.LazyLogging
 import Generator.cspom2concrete1D
 import concrete.BooleanDomain
 import concrete.constraint.Constraint
-import concrete.constraint.semantic.Eq
-import concrete.constraint.semantic.EqAC
-import concrete.constraint.semantic.EqBC
+import concrete.constraint.linear.Eq
+import concrete.constraint.linear.EqAC
+import concrete.constraint.linear.EqBC
 import concrete.constraint.semantic.Neq
-import concrete.constraint.semantic.ReifiedConstraint
+import concrete.constraint.ReifiedConstraint
 import cspom.CSPOMConstraint
 import cspom.UNSATException
 import concrete.constraint.linear.LinearNe

@@ -1,18 +1,17 @@
-package concrete.constraint.semantic
+package concrete.constraint.linear
 
 import org.scalacheck.Gen
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
-
 import concrete.IntDomain
 import concrete.Problem
-import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.AdviseCount
 import concrete.constraint.Constraint
 import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
+import concrete.constraint.ConstraintComparator
 
 final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
 
@@ -21,7 +20,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     val y = new Variable("y", IntDomain.ofSeq(5))
     val z = new Variable("z", IntDomain.ofSeq(2))
 
-    val c = new SumAC(0, Array(-1, 1, 1), Array(x, y, z), SumMode.SumEQ)
+    val c = new SumAC(0, Array(-1, 1, 1), Array(x, y, z), SumEQ)
 
     val pb = Problem(x, y, z)
     val ps = pb.initState.toState
@@ -30,7 +29,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     c.register(new AdviseCount)
     c.adviseAll(ps)
     assert(c.intervalsOnly(ps))
-    val mod = c.consistentRevise(ps)
+    val mod = c.revise(ps).toState
 
     mod.dom(x) should not be theSameInstanceAs(ps.dom(x))
     mod.dom(y) should be theSameInstanceAs ps.dom(y)
@@ -47,7 +46,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     val y = new Variable("y", IntDomain(-100 to 100))
     val z = new Variable("z", IntDomain.ofSeq(2))
 
-    val c = new SumAC(0, Array(-1, 1, 1), Array(x, y, z), SumMode.SumEQ)
+    val c = new SumAC(0, Array(-1, 1, 1), Array(x, y, z), SumEQ)
     val pb = Problem(x, y, z)
     val ps = pb.initState.toState
     pb.addConstraint(c)
@@ -55,7 +54,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     c.register(new AdviseCount)
     c.adviseAll(ps)
     assert(c.intervalsOnly(ps))
-    val mod = c.consistentRevise(ps)
+    val mod = c.revise(ps).toState
     mod.dom(x) should be theSameInstanceAs (ps.dom(x))
     mod.dom(y) should not be theSameInstanceAs(ps.dom(y))
     mod.dom(z) should be theSameInstanceAs ps.dom(z)
@@ -70,7 +69,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     val x = new Variable("x", IntDomain(1 to 10))
     val y = new Variable("y", IntDomain(20 to 30))
     val z = new Variable("z", IntDomain(-100 to 100))
-    val c = new SumAC(0, Array(-1, 1, 1), Array(x, y, z), SumMode.SumEQ)
+    val c = new SumAC(0, Array(-1, 1, 1), Array(x, y, z), SumEQ)
     val pb = Problem(x, y, z)
     val ps = pb.initState.toState
     pb.addConstraint(c)
@@ -81,9 +80,10 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     val mod = c.revise(ps)
     mod.dom(x) should be theSameInstanceAs (ps.dom(x))
     mod.dom(y) should be theSameInstanceAs (ps.dom(y))
+    
     mod.dom(z) should not be theSameInstanceAs(ps.dom(z))
-
     mod.dom(z) should contain theSameElementsAs (-29 to -10)
+    
     assert(c.intervalsOnly(ps))
   }
 
@@ -97,7 +97,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
 
       ConstraintComparator.compare(
         List(vx, vy, vz),
-        new SumAC(0, Array(-1, 1, 1), Array(vx, vy, vz), SumMode.SumEQ),
+        new SumAC(0, Array(-1, 1, 1), Array(vx, vy, vz), SumEQ),
         new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
           def check(t: Array[Int]) = t(0) == t(1) + t(2);
         })
@@ -111,7 +111,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
 
       ConstraintComparator.compare(
         List(vx, vy, vz),
-        new SumAC(0, Array(-1, 1, 1), Array(vx, vy, vz), SumMode.SumEQ),
+        new SumAC(0, Array(-1, 1, 1), Array(vx, vy, vz), SumEQ),
         new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
           def check(t: Array[Int]) = t(0) == t(1) + t(2);
         })

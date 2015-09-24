@@ -18,6 +18,7 @@ import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
 import concrete.Contradiction
 import concrete.Domain
+import concrete.constraint.ConstraintComparator
 
 final class AbsDiffTest extends FlatSpec with Matchers with Inspectors with PropertyChecks {
 

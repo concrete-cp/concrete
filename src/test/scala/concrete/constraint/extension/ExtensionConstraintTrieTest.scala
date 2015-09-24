@@ -33,7 +33,7 @@ final class ExtensionConstraintTrieTest extends FlatSpec with Matchers {
     val state = problem.initState.toState
     mmd.adviseAll(state)
 
-    val mod = mmd.consistentRevise(state)
+    val mod = mmd.revise(state).toState
 
     mod.dom(0) should be theSameInstanceAs (v0.initDomain)
     mod.dom(1) should not be theSameInstanceAs(v1.initDomain)

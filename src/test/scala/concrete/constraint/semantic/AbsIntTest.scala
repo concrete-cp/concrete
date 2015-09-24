@@ -15,6 +15,7 @@ import concrete.constraint.Residues
 import org.scalacheck.Gen
 import concrete.constraint.Constraint
 import concrete.constraint.TupleEnumerator
+import concrete.constraint.ConstraintComparator
 
 final class AbsIntTest extends FlatSpec with Matchers with Timeouts with PropertyChecks {
 
@@ -32,7 +33,7 @@ final class AbsIntTest extends FlatSpec with Matchers with Timeouts with Propert
 
     assert(c.intervalsOnly(ps))
 
-    val mod: ProblemState = c.consistentRevise(ps)
+    val mod: ProblemState = c.revise(ps).toState
 
     mod.dom(x) should not be theSameInstanceAs(ps.dom(x))
     mod.dom(y) should be theSameInstanceAs ps.dom(y)
@@ -55,7 +56,7 @@ final class AbsIntTest extends FlatSpec with Matchers with Timeouts with Propert
     val ps = pb.initState.toState
     c.adviseAll(ps)
     assert(c.intervalsOnly(ps))
-    val mod = c.consistentRevise(ps)
+    val mod = c.revise(ps).toState
 
     mod.dom(x) should be theSameInstanceAs ps.dom(x)
     mod.dom(y) should not be theSameInstanceAs(ps.dom(y))
@@ -77,7 +78,7 @@ final class AbsIntTest extends FlatSpec with Matchers with Timeouts with Propert
     failAfter(Span(1, Second)) {
       val ps = pb.initState.toState
 
-      val mod = c.consistentRevise(ps)
+      val mod = c.revise(ps).toState
 
       mod.dom(x) should contain theSameElementsAs Seq(224)
       mod.dom(y) should be theSameInstanceAs ps.dom(y)

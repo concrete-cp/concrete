@@ -21,6 +21,13 @@ import cspom.CSPOMConstraint
 import cspom.variable.BoolVariable
 import cspom.variable.CSPOMSeq
 import cspom.variable.IntVariable
+import concrete.constraint.linear.LinearNe
+import concrete.constraint.linear.LinearEq
+import concrete.constraint.linear.Eq
+import concrete.constraint.linear.EqAC
+import concrete.constraint.linear.Eq
+import concrete.constraint.linear.EqBC
+import concrete.constraint.ReifiedConstraint
 
 class ReifiedConstraintTest extends FlatSpec with Matchers {
 
@@ -50,9 +57,9 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
     //c1.advise(ps, 2) should be >= 0
     c2.advise(ps, 2) should be >= 0
 
-    val m2 = c2.consistentRevise(ps)
+    val m2 = c2.revise(ps).toState
 
-    val m1 = c1.consistentRevise(ps)
+    val m1 = c1.revise(ps).toState
 
     m2.dom(control2) shouldBe TRUE
     assert(m2.isEntailed(c2))
@@ -102,8 +109,10 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
       .toState
 
     withClue(problem.toString(state)) {
-      val Array(ac, bc) = problem.constraints
 
+      val Seq(bc) = problem.constraints.toSeq.collect {
+        case c: ReifiedConstraint if c.positiveConstraint.isInstanceOf[EqBC] => c
+      }
       //    ac.adviseAll(state)
       //    ac.revise(state) match {
       //      case Contradiction    => fail()
@@ -138,7 +147,9 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
       .toState
 
     withClue(problem.toString(state)) {
-      val Array(ac, bc) = problem.constraints
+      val Seq(bc) = problem.constraints.toSeq.collect {
+        case c: ReifiedConstraint if c.positiveConstraint.isInstanceOf[LinearEq] => c
+      }
 
       //    ac.adviseAll(state)
       //    ac.revise(state) match {
@@ -177,7 +188,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
 
     val state = problem.initState.toState
 
-    val Array(bc) = problem.constraints
+    val Seq(bc) = problem.constraints.toSeq
 
     bc.adviseAll(state)
     val ns = bc.revise(state) match {
@@ -188,6 +199,5 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
     }
 
   }
-  
 
 }

@@ -38,7 +38,7 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors with TryValu
     pb.addConstraint(c)
     val ps = pb.initState.toState
 
-    val mod = c.consistentRevise(ps)
+    val mod = c.revise(ps).toState
 
     forAll(c.scope.drop(1)) {
       case v => mod.dom(v) should be theSameInstanceAs ps.dom(v)

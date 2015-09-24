@@ -1,16 +1,13 @@
-package concrete.constraint.semantic
+package concrete.constraint
 
-import org.scalatest.Matchers
-import org.scalatest.FlatSpec
-import concrete.Variable
-import concrete.constraint.Constraint
-import concrete.Problem
-import concrete.constraint.AdviseCount
-import concrete.constraint.Advisable
-import concrete.Domain
-import concrete.Contradiction
-import concrete.ProblemState
 import org.scalatest.Inspectors
+import org.scalatest.Matchers
+
+import concrete.Contradiction
+import concrete.Domain
+import concrete.Problem
+import concrete.ProblemState
+import concrete.Variable
 
 /**
  * @author vion
