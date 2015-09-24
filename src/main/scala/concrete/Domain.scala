@@ -19,7 +19,7 @@ object Domain {
 
 abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
   override def newBuilder: Builder[Int, Domain] = ???
-  
+
   def next(i: Int): Int
 
   def nextOption(i: Int): Option[Int] = {
@@ -32,7 +32,7 @@ abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
   }
 
   def prev(i: Int): Int
-  
+
   def prevOption(i: Int): Option[Int] = {
     val p = prev(i)
     if (p < 0) {
@@ -53,6 +53,8 @@ abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
   def remove(value: Int): Domain
 
   def assign(value: Int): Domain
+
+  def isAssigned: Boolean
 
   /**
    * @param lb

@@ -33,6 +33,7 @@ object EmptyIntDomain extends IntDomain {
   def |(v: Int): IntDomain = Singleton(v)
   def &(lb: Int, ub: Int): Domain = EmptyIntDomain
   def median = throw new NoSuchElementException
+  def isAssigned = throw new UnsupportedOperationException
 }
 
 object IntDomain {

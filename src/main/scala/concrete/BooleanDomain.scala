@@ -84,6 +84,8 @@ case object UNKNOWNBoolean extends BooleanDomain {
   def union(bd: BooleanDomain) = UNKNOWNBoolean
   
   def median = 1
+  
+  def isAssigned = false
 }
 
 case object TRUE extends BooleanDomain {
@@ -112,6 +114,7 @@ case object TRUE extends BooleanDomain {
     case _                      => TRUE
   }
   def median = 1
+  def isAssigned = true
 }
 
 case object FALSE extends BooleanDomain {
@@ -140,6 +143,7 @@ case object FALSE extends BooleanDomain {
     case _                     => FALSE
   }
   def median = 0
+  def isAssigned = true
 }
 
 case object EMPTY extends BooleanDomain {
@@ -165,6 +169,7 @@ case object EMPTY extends BooleanDomain {
   def span = throw new NoSuchElementException
   def union(bd: BooleanDomain) = bd
   def median = throw new NoSuchElementException
+  def isAssigned = throw new UnsupportedOperationException
 }
 
 object BooleanDomain {

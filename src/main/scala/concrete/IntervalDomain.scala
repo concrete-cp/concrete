@@ -33,6 +33,8 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
     else { i }
 
   def copy = this
+  
+  def isAssigned = false
 
   /**
    * @param index

@@ -55,6 +55,8 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
     val bit = value - offset
     bit >= 0 && bitVector(value - offset)
   }
+  
+  def isAssigned = false
 
   override def filter(f: Int => Boolean) = {
     val newbitVector = bitVector.filter(i => f(i + offset))
@@ -108,15 +110,14 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
 
   def &(lb: Int, ub: Int) = {
     val blb = lb - offset
-    val removeUntil = bitVector.clearUntil(blb)
-
     val bub = ub - offset + 1
-    val removeAfter = removeUntil.clearFrom(bub)
 
-    if (removeAfter == bitVector) {
+    val newBV = bitVector.clearUntil(blb).clearFrom(bub)
+
+    if (newBV == bitVector) {
       this
     } else {
-      IntDomain.ofBitVector(offset, removeAfter, removeAfter.cardinality)
+      IntDomain.ofBitVector(offset, newBV, newBV.cardinality)
     }
   }
 
