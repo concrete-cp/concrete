@@ -44,6 +44,8 @@ case class Interval(val lb: Int, val ub: Int) {
 
   def +(v: Int): Interval = Interval(lb + v, ub + v)
 
+  def shrink(i: Interval): Interval = Interval(lb - i.lb, ub - i.ub)
+
   def -(i: Interval): Interval = Interval(lb - i.ub, ub - i.lb)
 
   def -(v: Int): Interval = this + -v
