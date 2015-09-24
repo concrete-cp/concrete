@@ -2,7 +2,7 @@ name := "concrete"
 
 organization := "fr.univ-valenciennes"
 
-version := "3.0-B2-SNAPSHOT"
+version := "3.0-B3-SNAPSHOT"
 
 scalaVersion := "2.11.7"
 
