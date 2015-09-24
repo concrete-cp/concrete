@@ -18,10 +18,12 @@ libraryDependencies ++= Seq(
 	//"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
 	"org.ow2.sat4j" % "org.ow2.sat4j.pb" % "2.3.5",
 	"com.typesafe.slick" %% "slick" % "3.0.2",
+	"org.apache.commons" % "commons-math3" % "3.5",
 	//"org.jcp" % "jsr331" % "1.1.1",
 	"org.scalatest" %% "scalatest" % "2.2.5" % "test",
 	"org.scalacheck" %% "scalacheck" % "1.12.4" % "test",
 	"com.storm-enroute" %% "scalameter" % "0.7" % "test"
+	
 	)
 
 scalacOptions ++= Seq("-optimise"
