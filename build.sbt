@@ -14,14 +14,14 @@ resolvers += Resolver.sonatypeRepo("snapshots")
 
 libraryDependencies ++= Seq(
 	"fr.univ-valenciennes" %% "cspom" % "2.6.2-SNAPSHOT",
-	"org.postgresql" % "postgresql" % "9.4-1201-jdbc41",
+	"org.postgresql" % "postgresql" % "9.4-1204-jdbc42",
 	//"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
 	"org.ow2.sat4j" % "org.ow2.sat4j.pb" % "2.3.5",
-	"com.typesafe.slick" %% "slick" % "3.0.2",
+	"com.typesafe.slick" %% "slick" % "3.0.3",
 	"org.apache.commons" % "commons-math3" % "3.5",
 	//"org.jcp" % "jsr331" % "1.1.1",
 	"org.scalatest" %% "scalatest" % "2.2.5" % "test",
-	"org.scalacheck" %% "scalacheck" % "1.12.4" % "test",
+	"org.scalacheck" %% "scalacheck" % "1.12.5" % "test",
 	"com.storm-enroute" %% "scalameter" % "0.7" % "test"
 	
 	)
