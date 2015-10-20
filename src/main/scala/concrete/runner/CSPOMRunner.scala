@@ -29,9 +29,8 @@ trait CSPOMRunner extends ConcreteRunner {
 
   override def options(args: List[String], o: Map[Symbol, Any] = Map.empty, realArgs: List[String]): (Map[Symbol, Any], List[String]) =
     args match {
-      case "-gml" :: t :: tail   => options(tail, o + ('gml -> t), realArgs)
-      case "-gephi" :: t :: tail => options(tail, o + ('gephi -> t), realArgs)
-      case _                     => super.options(args, o, realArgs)
+      case "-gml" :: t :: tail => options(tail, o + ('gml -> t), realArgs)
+      case _                   => super.options(args, o, realArgs)
     }
 
   final def load(args: List[String], opt: Map[Symbol, Any]): Try[Problem] = {
@@ -51,10 +50,6 @@ trait CSPOMRunner extends ConcreteRunner {
           Files.write(
             Paths.get(f.toString),
             GML(cspom).getBytes(StandardCharsets.UTF_8))
-        }
-
-        for (f <- opt.get('gephi)) {
-          Gephi(cspom, new File(f.toString))
         }
 
         val pg = new ProblemGenerator(pm)

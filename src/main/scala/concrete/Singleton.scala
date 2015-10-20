@@ -81,7 +81,7 @@ final class Singleton private (val singleValue: Int) extends IntDomain with Lazy
   //  }
 
   var requestedOffset: Int = _
-  var requestedBV: BitVector = null
+  var requestedBV: BitVector = _
   
   def isAssigned = true
 

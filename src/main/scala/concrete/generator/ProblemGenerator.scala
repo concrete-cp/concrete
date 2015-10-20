@@ -29,6 +29,7 @@ import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
 import cspom.variable.IntVariable
 import scala.collection.mutable.HashMap
+import concrete.cluster.Arc
 
 case class LinearConstraint(
     vars: Seq[Variable], factors: Seq[Int],
@@ -40,46 +41,7 @@ case class LinearConstraint(
 
 object Arc {
 
-  def components[T <: Arc](arcs: Seq[T]): Seq[(Set[Variable], Seq[T])] = {
-    var edges = Map[Variable, Set[T]]().withDefaultValue(Set())
 
-    for (a <- arcs; v <- a.vars) {
-      edges += v -> (edges(v) + a)
-    }
-
-    val neighb = edges.mapValues { e => e.map(_.varSet).flatten }
-
-    var visited: Set[Variable] = Set()
-    var components: Seq[Set[Variable]] = Seq()
-
-    for (v <- neighb.keys) {
-      val component = crawlVariables(v, neighb, visited)
-      if (component.nonEmpty) {
-        components +:= component
-        visited ++= component
-      }
-    }
-
-    for (vars <- components) yield {
-      (vars, vars.flatMap(edges).toSeq)
-    }
-  }
-
-  def crawlVariables(root: Variable, neighbours: Map[Variable, Set[Variable]], visited: Set[Variable]): Set[Variable] = {
-    if (visited(root)) {
-      Set()
-    } else {
-      neighbours(root).foldLeft(visited + root) {
-        (visit, n) => visit ++ crawlVariables(n, neighbours, visit)
-      }
-
-    }
-  }
-}
-
-trait Arc {
-  def vars: Seq[Variable]
-  lazy val varSet = vars.toSet
 }
 
 final class ProblemGenerator(private val pm: ParameterManager = new ParameterManager()) extends LazyLogging {

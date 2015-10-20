@@ -39,7 +39,7 @@ trait Removals extends Constraint with AdviseCounts {
 
   def modified: Seq[Int] = {
     var i = 0
-    var mod = new ArrayBuffer[Int](arity)
+    val mod = new ArrayBuffer[Int](arity)
     while (i < arity) {
       if (removals(i) == adviseCount) {
         mod += i

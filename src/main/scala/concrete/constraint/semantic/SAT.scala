@@ -24,6 +24,8 @@ import concrete.constraint.linear.SumMode
 import concrete.constraint.linear.Linear
 import concrete.generator.LinearConstraint
 import concrete.generator.Arc
+import concrete.cluster.ConnectedComponents
+import concrete.cluster.Arc
 
 case class Clause(positive: Seq[Variable], negative: Seq[Variable]) extends Arc {
   require(vars.forall(v => v.initDomain.isInstanceOf[BooleanDomain]))
@@ -53,9 +55,9 @@ object SAT extends LazyLogging {
   def apply(clauses: Seq[Clause], pb: Seq[PseudoBoolean]): Seq[Constraint] = {
     logger.info("Computing SAT components")
 
-    val comp = Arc.components(clauses ++ pb)
+    val comp = ConnectedComponents(clauses ++ pb)
 
-    for ((vars, arcs) <- comp) yield {
+    for (arcs <- comp) yield {
       val c = arcs.collect { case c: Clause => c }
       val p = arcs.collect { case pb: PseudoBoolean => pb }
 
@@ -63,7 +65,7 @@ object SAT extends LazyLogging {
 
       (c, p) match {
         case (Seq(singleClause), Seq()) => new ClauseConstraint(singleClause)
-        case (clauses, pb)              => new SAT(vars.toArray, clauses, pb)
+        case (clauses, pb)              => new SAT(clauses.flatMap(_.vars).distinct.toArray, clauses, pb)
       }
     }
   }

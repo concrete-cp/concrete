@@ -36,7 +36,7 @@ sealed trait Outcome {
     var ch = this
     while (vars.hasNext) {
       if (ch eq Contradiction) return Contradiction
-      var v = vars.next
+      val v = vars.next
       ch = ch.updateDom(v, f(dom(v)))
     }
     ch
@@ -109,7 +109,7 @@ object ProblemState {
   }
 }
 
-final case class ProblemState(
+case class ProblemState(
   val domains: Vector[Domain],
   val constraintStates: Vector[AnyRef],
   val entailed: BitVector) extends Outcome

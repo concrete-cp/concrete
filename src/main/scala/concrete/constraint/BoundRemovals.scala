@@ -13,7 +13,7 @@ trait BoundRemovals[A] extends Constraint with Removals with StatefulConstraint[
     val lastDoms = state._1
 
     val (doms, boundMod) =
-      if (lastDoms == null) {
+      if (lastDoms eq null) {
         (scope.map(problemState.dom), mod)
       } else {
         val doms = lastDoms.clone
