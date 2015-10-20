@@ -16,7 +16,7 @@ class Occurrence(val result: Variable, val value: Variable,
     extends Constraint(result +: value +: vars) with StatefulConstraint[(Map[Int, Int], Map[Int, BitVector])] with Removals with LazyLogging {
 
   override def init(ps: ProblemState) =
-    ps.updateState(id, (
+    ps.updateState(this, (
       value.initDomain.map(i => i -> 0).toMap,
       value.initDomain.map(i => i -> BitVector.filled(vars.length)).toMap))
 

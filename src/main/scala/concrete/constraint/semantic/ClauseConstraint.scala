@@ -46,8 +46,6 @@ final class ClauseConstraint(clause: Clause) extends Constraint(clause.vars: _*)
       }
   }
 
-  private val ids = scope.map(_.id)
-
   //if (isTrue(watch1) || isTrue(watch2)) entail()
 
   def advise(ps: ProblemState, p: Int) = if (p == watch1 || p == watch2) 1 else -1
@@ -132,33 +130,33 @@ final class ClauseConstraint(clause: Clause) extends Constraint(clause.vars: _*)
 
   private def enforce(ps: ProblemState, position: Int): Outcome = {
     if (position < posLength) {
-      ps.assign(ids(position), 1)
+      ps.assign(scope(position), 1)
     } else {
-      ps.assign(ids(position), 0)
+      ps.assign(scope(position), 0)
     }
   }
 
   private def isTrue(ps: ProblemState, pos: Int): Boolean = {
     if (pos < posLength) {
-      ps.dom(ids(pos)) == TRUE
+      ps.dom(scope(pos)) == TRUE
     } else {
-      ps.dom(ids(pos)) == FALSE
+      ps.dom(scope(pos)) == FALSE
     }
   }
 
   private def isFalse(ps: ProblemState, pos: Int): Boolean = {
     if (pos < posLength) {
-      ps.dom(ids(pos)) == FALSE
+      ps.dom(scope(pos)) == FALSE
     } else {
-      ps.dom(ids(pos)) == TRUE
+      ps.dom(scope(pos)) == TRUE
     }
   }
 
   private def reversed(ps: ProblemState, pos: Int): BooleanDomain = {
     if (pos < posLength) {
-      ps.boolDom(ids(pos))
+      ps.boolDom(scope(pos))
     } else {
-      ps.boolDom(ids(pos)) match {
+      ps.boolDom(scope(pos)) match {
         case TRUE  => FALSE
         case FALSE => TRUE
         case e     => e
@@ -167,19 +165,19 @@ final class ClauseConstraint(clause: Clause) extends Constraint(clause.vars: _*)
   }
 
   private def canBeTrue(ps: ProblemState, p: Int) = {
-    ps.boolDom(ids(p)).canBe(p < posLength)
+    ps.boolDom(scope(p)).canBe(p < posLength)
   }
 
   private def seekWatch(ps: ProblemState, excluding: Int): Int = {
     var i = 0
     while (i < posLength) {
-      if (i != excluding && ps.boolDom(ids(i)).canBe(true)) {
+      if (i != excluding && ps.boolDom(scope(i)).canBe(true)) {
         return i
       }
       i += 1
     }
     while (i < arity) {
-      if (i != excluding && ps.boolDom(ids(i)).canBe(false)) {
+      if (i != excluding && ps.boolDom(scope(i)).canBe(false)) {
         return i
       }
       i += 1
@@ -190,13 +188,13 @@ final class ClauseConstraint(clause: Clause) extends Constraint(clause.vars: _*)
   private def seekWatchFrom(ps: ProblemState, startAt: Int): Int = {
     var i = startAt
     while (i < posLength) {
-      if (ps.boolDom(ids(i)).canBe(true)) {
+      if (ps.boolDom(scope(i)).canBe(true)) {
         return i
       }
       i += 1
     }
     while (i < arity) {
-      if (ps.boolDom(ids(i)).canBe(false)) {
+      if (ps.boolDom(scope(i)).canBe(false)) {
         return i
       }
       i += 1
@@ -206,10 +204,10 @@ final class ClauseConstraint(clause: Clause) extends Constraint(clause.vars: _*)
 
   private def seekEntailment(ps: ProblemState): Option[Int] = {
     (0 until posLength)
-      .find(i => ps.dom(ids(i)) == TRUE)
+      .find(i => ps.dom(scope(i)) == TRUE)
       .orElse {
         (posLength until arity)
-          .find(i => ps.dom(ids(i)) == FALSE)
+          .find(i => ps.dom(scope(i)) == FALSE)
       }
     //    var i = 0
     //    while (i < posLength) {

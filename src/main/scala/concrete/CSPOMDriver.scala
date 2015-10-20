@@ -160,7 +160,9 @@ final class JCSPOMDriver extends CSPOM {
 
   def abs(v: SimpleExpression[Int]) = CSPOMDriver.abs(v)
 
-  def seq[A: TypeTag](v: Array[CSPOMExpression[A]]): CSPOMSeq[A] = v.toSeq
+  def seq(v: Array[CSPOMExpression[Int]]): CSPOMSeq[Int] = {
+    seq2CSPOMSeq(v)
+  }
 
   //def nameArray(v: Array[CSPOMExpression[Any]], name:String) = problem.nameExpression(e, n)
 }

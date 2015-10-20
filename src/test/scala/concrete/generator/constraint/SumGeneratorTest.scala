@@ -1,16 +1,20 @@
 package concrete.generator.constraint
 
+import scala.reflect.runtime.universe
+
+import org.scalatest.Finders
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 
 import concrete.CSPOMDriver.sumProd
-import concrete.generator.FailedGenerationException
 import concrete.generator.ProblemGenerator
+import concrete.generator.cspompatterns.SumConstants
 import concrete.generator.cspompatterns.SumDomains
 import concrete.util.Interval
 import cspom.CSPOM
-import cspom.CSPOM._
+import cspom.CSPOM.constantSeq
 import cspom.CSPOM.ctr
+import cspom.CSPOM.seq2CSPOMSeq
 import cspom.CSPOMConstraint
 import cspom.compiler.CSPOMCompiler
 import cspom.compiler.MergeEq
@@ -24,7 +28,7 @@ class SumGeneratorTest extends FlatSpec with Matchers {
       val r = sumProd((1, IntVariable(0 to 5)), (2, IntVariable(10 to 15)), (3, CSPOMConstant(20))) as "test"
     }
 
-    CSPOMCompiler.compile(cspom, Seq(SumDomains))
+    CSPOMCompiler.compile(cspom, Seq(SumDomains, SumConstants))
 
     var problem = new ProblemGenerator().generate(cspom).get._1
 
@@ -37,7 +41,7 @@ class SumGeneratorTest extends FlatSpec with Matchers {
       ctr(sumProd((1, IntVariable(0 to 5)), (2, IntVariable.free() as "test"), (3, CSPOMConstant(20))) === CSPOMConstant(5))
     }
 
-    CSPOMCompiler.compile(cspom, Seq(SumDomains, MergeEq))
+    CSPOMCompiler.compile(cspom, Seq(SumDomains, SumConstants, MergeEq))
 
     var problem = new ProblemGenerator().generate(cspom).get._1
 

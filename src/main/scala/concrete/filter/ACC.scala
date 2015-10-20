@@ -208,10 +208,9 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
             val scope = constraint.scope
             while (p >= 0) {
               val v = scope(p)
-              val id = v.id
-              /* id will be < 0 if a fake variable is used by the constraint */
-              if (id >= 0 && (newState.dom(id) ne s.dom(id))) {
-                assert(newState.dom(id).subsetOf(s.dom(id)))
+
+              if (newState.dom(v) ne s.dom(v)) {
+                assert(newState.dom(v).subsetOf(s.dom(v)))
 
                 updateQueue(v, constraint, newState)
               }

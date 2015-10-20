@@ -16,7 +16,7 @@ import concrete.IntDomain
 class MDDC(_scope: Array[Variable], private val mdd: MDDRelation)
     extends Constraint(_scope) with Removals with StatefulConstraint[SparseSet] {
 
-  override def init(ps: ProblemState) = ps.updateState(id, new SparseSet(mdd.identify + 1))
+  override def init(ps: ProblemState) = ps.updateState(this, new SparseSet(mdd.identify + 1))
 
   // Members declared in concrete.constraint.Constraint
   override def check(t: Array[Int]) = mdd.contains(t)
@@ -32,11 +32,11 @@ class MDDC(_scope: Array[Variable], private val mdd: MDDRelation)
 
   var delta: Int = _
 
-  var gNo: Set[Int] = _
+  var gNo: SparseSet = _
 
   def revise(ps: ProblemState, modified: Seq[Int]) = {
 
-    val oldGno: Set[Int] = ps(this)
+    val oldGno = ps(this)
     val domains = Array.tabulate(arity)(p => ps.dom(scope(p)))
     val supported = Array.fill[IntDomain](arity)(EmptyIntDomain)
 
@@ -50,7 +50,7 @@ class MDDC(_scope: Array[Variable], private val mdd: MDDRelation)
     if (!sat) {
       Contradiction
     } else {
-      var cs: ProblemState = ps.updateState(id, gNo)
+      var cs: ProblemState = ps.updateState(this, gNo)
       for (p <- 0 until delta) {
         cs = cs.updateDomNonEmpty(scope(p), supported(p))
       }

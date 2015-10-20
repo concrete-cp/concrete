@@ -70,7 +70,7 @@ object SumConstants extends ConstraintCompilerNoData {
           CSPOMConstraint(constraint.result)('sum)(varCoefs, solverVariables, const) withParams
             constraint.params
 
-        //println(s"replacing $constraint with $newConstraint")
+        println(s"replacing $constraint with $newConstraint")
         replaceCtr(constraint, newConstraint, p)
     }
 

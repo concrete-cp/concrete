@@ -34,7 +34,7 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors with TryValu
 
     val c = new Occurrence(occ, value, Array(v1, v2, v3, v4, v5))
     c.register(new AdviseCount())
-    val pb = Problem(occ, v1, v2, v3, v4, v5)
+    val pb = Problem(occ, value, v1, v2, v3, v4, v5)
     pb.addConstraint(c)
     val ps = pb.initState.toState
 

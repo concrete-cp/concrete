@@ -35,6 +35,7 @@ import cspom.variable.CSPOMVariable
 import cspom.flatzinc.FZArray
 import com.typesafe.scalalogging.LazyLogging
 import org.scalameter.Quantity
+import cspom.GML
 
 object FZConcrete extends CSPOMRunner with LazyLogging {
 
@@ -177,6 +178,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
   }
 
   override def applyParametersPre(opt: Map[Symbol, Any]): Unit = {
+    
     val heuristics = parseGoal(goal, opt.contains('free), variables)
     val decisionVariables = heuristics
       .collect {
@@ -187,9 +189,9 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
     val heuristic =
       if (decisionVariables.size < variables.size) {
         val remainingVariables = (variables.values.toSet -- decisionVariables).toArray
-        
+
         val shouldRestart = heuristics.exists(_.shouldRestart)
-        
+
         val additional =
           if (shouldRestart) {
             CrossHeuristic(pm, remainingVariables)

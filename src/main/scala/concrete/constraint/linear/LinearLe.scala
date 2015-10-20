@@ -19,13 +19,6 @@ object LinearLe {
     new LinearLe(actualConstant, sf, ss, si)
   }
 
-  def minTimes(dom: Domain, f: Int) = {
-    if (f >= 0) dom.head * f else dom.last * f
-  }
-
-  def maxTimes(dom: Domain, f: Int) = {
-    if (f >= 0) dom.last * f else dom.head * f
-  }
 
   @Statistic
   var shaves = 0l
@@ -43,9 +36,9 @@ final class LinearLe(
   import IncrementalBoundPropagation._
 
   override def isConsistent(ps: ProblemState, mod: Seq[Int]) = {
-    val (doms, f, vars, max) = updateF(ps, mod)
+    val (doms, f, vars, max, bc) = updateF(ps, mod)
     clearMod()
-    if (f.lb <= 0) {
+    if (!bc || f.lb <= 0) {
       ps.updateState(this, (doms, f, vars, max))
     } else {
       Contradiction
@@ -53,8 +46,10 @@ final class LinearLe(
   }
 
   override def revise(ps: ProblemState, mod: Seq[Int]): Outcome = {
-    val (doms, f, vars, max) = updateF(ps, mod)
-    if (f.ub <= 0) {
+    val (doms, f, vars, max, bc) = updateF(ps, mod)
+    if (!bc) {
+      ps.updateState(this, (doms, f, vars, max))
+    } else if (f.ub <= 0) {
       ps.entail(this)
     } else if (max <= -f.lb) {
       ps.updateState(this, (doms, f, vars, max))
@@ -83,4 +78,5 @@ final class LinearLe(
   def simpleEvaluation: Int = 3
 
   override def init(ps: ProblemState) = initData(ps)
+
 }

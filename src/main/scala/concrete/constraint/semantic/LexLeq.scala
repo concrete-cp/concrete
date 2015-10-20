@@ -45,7 +45,7 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
     }
 
     if (alpha == n) {
-      ps.updateState(id, (alpha, n + 1))
+      ps.updateState(this, (alpha, n + 1))
     } else {
       var i = alpha
       var beta = -1
@@ -66,7 +66,7 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
       if (alpha == beta) {
         Contradiction
       } else {
-        reEstablishGAC(alpha, ps.updateState(id, (alpha, beta)))
+        reEstablishGAC(alpha, ps.updateState(this, (alpha, beta)))
       }
     }
 
@@ -83,11 +83,18 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
     r
   }
 
-  private def reviseN(ps: ProblemState, mod: Seq[Int]): Outcome = mod match {
-    case Nil => ps
-    case head :: tail =>
-      reEstablishGAC(head, ps).andThen(ps => reviseN(ps, tail))
+  private def reviseN(ps: ProblemState, mod: Seq[Int]): Outcome = {
+    if (mod.length <= 1) ps
+    else {
+      reEstablishGAC(mod.head, ps).andThen {
+        ps => reviseN(ps, mod.view.tail)
+      }
+    }
   }
+  //    case Nil => ps
+  //    case head :: tail =>
+  //      reEstablishGAC(head, ps).andThen(ps => reviseN(ps, tail))
+  //  }
 
   private def min(v: Variable, ps: ProblemState) = ps.dom(v).head
   private def max(v: Variable, ps: ProblemState) = ps.dom(v).last
@@ -138,13 +145,13 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
 
   private def updateAlpha(alpha: Int, beta: Int, ps: ProblemState): Outcome = {
     if (alpha == n) {
-      ps.updateState(id, (alpha, beta))
+      ps.updateState(this, (alpha, beta))
     } else if (alpha == beta) {
       Contradiction
     } else if (groundEq(x(alpha), y(alpha), ps)) {
       updateAlpha(alpha + 1, beta, ps)
     } else {
-      reEstablishGAC(alpha, ps.updateState(id, (alpha, beta)))
+      reEstablishGAC(alpha, ps.updateState(this, (alpha, beta)))
     }
   }
 
@@ -154,9 +161,9 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
       Contradiction
     } else if (min(x(i), ps) < max(y(i), ps)) {
       if (i == alpha) {
-        establishAC(x(i), y(i), true, ps.updateState(id, (alpha, beta)))
+        establishAC(x(i), y(i), true, ps.updateState(this, (alpha, beta)))
       } else {
-        ps.updateState(id, (alpha, beta))
+        ps.updateState(this, (alpha, beta))
       }
     } else {
       updateBeta(i - 1, alpha, ps)

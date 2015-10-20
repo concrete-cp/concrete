@@ -34,8 +34,8 @@ final class GtTest extends FlatSpec with Matchers {
 
     val mod = c.revise(ps).toState;
 
-    mod.dom(0) should contain theSameElementsAs Seq(3, 4)
-    mod.dom(1) should contain theSameElementsAs Seq(3, 4)
+    mod.dom(v1) should contain theSameElementsAs Seq(3, 4)
+    mod.dom(v2) should contain theSameElementsAs Seq(3, 4)
 
   }
 

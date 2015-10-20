@@ -11,8 +11,6 @@ import concrete.Domain
 import concrete.util.Interval
 
 object LinearEq {
-  val initBound = Interval(0, 0)
-
   def apply(constant: Int, factors: Array[Int], scope: Array[Variable]) = {
     val (sf, ss, si) = Linear.sortIntervals(factors, scope)
     new LinearEq(constant, sf, ss, si)
@@ -35,9 +33,9 @@ final class LinearEq(
   private val negFactors = factors.map(-_)
 
   override def isConsistent(ps: ProblemState, mod: Seq[Int]) = {
-    val (doms, f, vars, max) = updateF(ps, mod)
+    val (doms, f, vars, max, bc) = updateF(ps, mod)
     clearMod()
-    if (f.contains(0)) {
+    if (!bc || f.contains(0)) {
       ps.updateState(this, (doms, f, vars, max))
     } else {
       Contradiction
@@ -68,9 +66,13 @@ final class LinearEq(
   }
 
   override def revise(ps: ProblemState, mod: Seq[Int]): Outcome = {
-    val (doms, f, vars, max) = updateF(ps, mod)
+    val (doms, f, vars, max, bc) = updateF(ps, mod)
 
-    altRevise(ps, doms, BitVector.empty, f, vars, false, false, max)
+    if (bc) {
+      altRevise(ps, doms, BitVector.empty, f, vars, false, false, max)
+    } else {
+      ps.updateState(this, (doms, f, vars, max))
+    }
   }
 
   def end(ps: ProblemState, doms: Array[Domain], changed: BitVector, f: Interval, vars: BitVector, max: Int) = {

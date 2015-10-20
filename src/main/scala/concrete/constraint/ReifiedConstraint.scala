@@ -26,8 +26,13 @@ final class ReifiedConstraint(
    *  Only initializes constraint states as some constraints' init may remove values from domains
    */
   private def initCons(c: Constraint, ps: ProblemState): Outcome = {
+    // Keep state but restore domains. Probably won't work :(
     c.init(ps).andThen { consistent =>
-      ps.updateState(c.id, consistent(c.id))
+      c match {
+        case sc: StatefulConstraint[AnyRef] => ps.updateState(sc, consistent(sc))
+        case _                              => ps
+      }
+
     }
   }
 

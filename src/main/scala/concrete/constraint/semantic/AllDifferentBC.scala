@@ -10,9 +10,10 @@ import concrete.ProblemState
 import concrete.Outcome
 
 final case class HInterval(
-    val id: Int) {
+    val v: Variable) {
   var minrank: Int = 0
   var maxrank: Int = 0
+  def dom(ps: ProblemState) = ps.dom(v)
 }
 
 final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) with BC with AllDiffChecker {
@@ -26,14 +27,14 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
 
   var nbBounds = 0
 
-  val intervals = (0 until arity).map(p => new HInterval(scope(p).id)).toArray
+  val intervals = (0 until arity).map(p => new HInterval(scope(p))).toArray
   val minsorted = intervals.clone
   val maxsorted = intervals.clone
 
   private def isSortedMax(ps: ProblemState, array: Array[HInterval], from: Int, to: Int): Boolean = {
     var i = from + 1
     while (i <= to) {
-      if (ps.dom(array(i - 1).id).last > ps.dom(array(i).id).last) {
+      if (ps.dom(array(i - 1).v).last > ps.dom(array(i).v).last) {
         return false
       }
       i += 1
@@ -44,7 +45,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
   private def isSortedMin(ps: ProblemState, array: Array[HInterval], from: Int, to: Int): Boolean = {
     var i = from + 1
     while (i <= to) {
-      if (ps.dom(array(i - 1).id).head > ps.dom(array(i).id).head) {
+      if (ps.dom(array(i - 1).v).head > ps.dom(array(i).v).head) {
         return false
       }
       i += 1
@@ -62,14 +63,14 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
     if (!isSortedMax(ps, array, from, to)) {
       //if (to > from) {
       val pivotIndex = (from + to) / 2
-      val pivot = ps.dom(array(pivotIndex).id).last
+      val pivot = ps.dom(array(pivotIndex).v).last
       var left = from
       var right = to
       while (left <= right) {
-        while (ps.dom(array(left).id).last < pivot) {
+        while (array(left).dom(ps).last < pivot) {
           left += 1
         }
-        while (ps.dom(array(right).id).last > pivot) {
+        while (array(right).dom(ps).last > pivot) {
           right -= 1
         }
         if (left <= right) {
@@ -87,14 +88,14 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
     if (!isSortedMin(ps, array, from, to)) {
       //if (to > from) {
       val pivotIndex = (from + to) / 2
-      val pivot = ps.dom(array(pivotIndex).id).head
+      val pivot = array(pivotIndex).dom(ps).head
       var left = from
       var right = to
       while (left <= right) {
-        while (ps.dom(array(left).id).head < pivot) {
+        while (array(left).dom(ps).head < pivot) {
           left += 1
         }
-        while (ps.dom(array(right).id).head > pivot) {
+        while (array(right).dom(ps).head > pivot) {
           right -= 1
         }
         if (left <= right) {
@@ -112,7 +113,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
     qSortMin(ps, minsorted, 0, minsorted.length - 1)
     qSortMax(ps, maxsorted, 0, maxsorted.length - 1)
 
-    val min = ps.dom(minsorted.head.id).head
+    val min = minsorted.head.dom(ps).head
     var last = min - 2;
     var nb = 0;
     bounds(0) = last;
@@ -127,7 +128,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
         }
         minsorted(i).minrank = nb;
 
-        if (i < arity - 1) proceed(ps.dom(minsorted(i + 1).id).head, max, i + 1, j)
+        if (i < arity - 1) proceed(minsorted(i + 1).dom(ps).head, max, i + 1, j)
         else proceed(min, max, i + 1, j)
       } else {
         if (max != last) {
@@ -138,12 +139,12 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
         maxsorted(j).maxrank = nb;
 
         if (j < arity - 1) {
-          proceed(min, ps.dom(maxsorted(j + 1).id).last + 1, i, j + 1)
+          proceed(min, maxsorted(j + 1).dom(ps).last + 1, i, j + 1)
         }
       }
     }
 
-    proceed(min, ps.dom(maxsorted(0).id).last + 1, 0, 0)
+    proceed(min, maxsorted(0).dom(ps).last + 1, 0, 0)
 
     this.nbBounds = nb;
     bounds(nb + 1) = bounds(nb) + 2;
@@ -203,9 +204,9 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
 
       if (h(x) > x) {
         var w = pathmax(h, h(x));
-        val id = maxsorted(i).id
-        val dom = mod.dom(id).removeTo(bounds(w) - 1)
-        mod = mod.updateDomNonEmpty(id, dom)
+        val v = maxsorted(i).v
+        val dom = ps.dom(v).removeTo(bounds(w) - 1)
+        mod = mod.updateDomNonEmpty(v, dom)
         pathset(h, x, w, w);
       }
 
@@ -249,9 +250,8 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
 
       if (h(x) < x) {
         val w = pathmin(h, h(x));
-        val id = minsorted(i).id
         // val dom = ps.dom(id).removeFrom(bounds(w))
-        mod.removeFrom(minsorted(i).id, bounds(w)) match {
+        mod.removeFrom(minsorted(i).v, bounds(w)) match {
           case Contradiction    => return Contradiction
           case ps: ProblemState => mod = ps
         }

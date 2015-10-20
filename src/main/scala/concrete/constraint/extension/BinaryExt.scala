@@ -54,8 +54,8 @@ abstract class BinaryExt(
   shared: Boolean)
     extends ConflictCount(scope, matrix2d, shared) with Removals {
 
-  val idx = scope(0).id
-  val idy = scope(1).id
+  private val x = scope(0)
+  private val y = scope(1)
 
   private val GAIN_OVER_GENERAL = 3;
 
@@ -64,7 +64,7 @@ abstract class BinaryExt(
   override def getEvaluation(ps: ProblemState) = staticEvaluation
 
   override def init(ps: ProblemState) = {
-    staticEvaluation = (ps.dom(idx).size * ps.dom(idy).size) / GAIN_OVER_GENERAL
+    staticEvaluation = (ps.card(x) * ps.card(y)) / GAIN_OVER_GENERAL
     ps
   }
 
@@ -77,14 +77,14 @@ abstract class BinaryExt(
       if (skip == 0 || supportCondition(ps, 0)) {
         ps
       } else {
-        ps.filterDom(idx)(hasSupport(ps, 0, _))
+        ps.filterDom(x)(hasSupport(ps, 0, _))
       }
     }
       .andThen { ps0 =>
         if (skip == 1 || supportCondition(ps0, 1)) {
           ps0
         } else {
-          ps0.filterDom(idy)(hasSupport(ps0, 1, _))
+          ps0.filterDom(y)(hasSupport(ps0, 1, _))
         }
       }
       .entailIfFree(this)

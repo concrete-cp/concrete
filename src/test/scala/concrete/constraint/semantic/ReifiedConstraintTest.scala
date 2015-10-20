@@ -28,6 +28,9 @@ import concrete.constraint.linear.EqAC
 import concrete.constraint.linear.Eq
 import concrete.constraint.linear.EqBC
 import concrete.constraint.ReifiedConstraint
+import concrete.constraint.linear.StatelessLinearEq
+import scala.util.Try
+import scala.util.Success
 
 class ReifiedConstraintTest extends FlatSpec with Matchers {
 
@@ -147,9 +150,14 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
       .toState
 
     withClue(problem.toString(state)) {
-      val Seq(bc) = problem.constraints.toSeq.collect {
-        case c: ReifiedConstraint if c.positiveConstraint.isInstanceOf[LinearEq] => c
+      val bc = Try {
+        val Seq(bc) = problem.constraints.toSeq.collect {
+          case c: ReifiedConstraint if c.positiveConstraint.isInstanceOf[StatelessLinearEq] => c
+        }
+        bc
       }
+        .recover { case e => fail(e) }
+        .get
 
       //    ac.adviseAll(state)
       //    ac.revise(state) match {

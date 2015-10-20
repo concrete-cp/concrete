@@ -38,13 +38,13 @@ trait Removals extends Constraint with AdviseCounts {
   // scope.iterator.zipWithIndex.zip(removals.iterator).filter(t => t._2 >= reviseCount).map(t => t._1)
 
   def modified: Seq[Int] = {
-    var i = arity - 1
+    var i = 0
     var mod = new ArrayBuffer[Int](arity)
-    while (i >= 0) {
+    while (i < arity) {
       if (removals(i) == adviseCount) {
         mod += i
       }
-      i -= 1
+      i += 1
     }
     assert(mod.nonEmpty)
     mod

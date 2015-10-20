@@ -1,5 +1,12 @@
 package concrete.runner
 
+import java.io.File
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.Paths
+
+import scala.util.Try
+
 import concrete.CSPOMSolver
 import concrete.Problem
 import concrete.Solver
@@ -8,10 +15,9 @@ import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.Bool2IntIsEq
 import concrete.generator.cspompatterns.ConcretePatterns
 import cspom.CSPOM
-import cspom.compiler.MergeEq
+import cspom.GML
 import cspom.compiler.CSPOMCompiler
 import cspom.variable.CSPOMVariable
-import scala.util.Try
 
 trait CSPOMRunner extends ConcreteRunner {
 
@@ -20,6 +26,13 @@ trait CSPOMRunner extends ConcreteRunner {
   var variables: Map[CSPOMVariable[_], Variable] = _
 
   var cspomSolver: CSPOMSolver = _
+
+  override def options(args: List[String], o: Map[Symbol, Any] = Map.empty, realArgs: List[String]): (Map[Symbol, Any], List[String]) =
+    args match {
+      case "-gml" :: t :: tail   => options(tail, o + ('gml -> t), realArgs)
+      case "-gephi" :: t :: tail => options(tail, o + ('gephi -> t), realArgs)
+      case _                     => super.options(args, o, realArgs)
+    }
 
   final def load(args: List[String], opt: Map[Symbol, Any]): Try[Problem] = {
     loadCSPOM(args, opt)
@@ -33,6 +46,17 @@ trait CSPOMRunner extends ConcreteRunner {
         CSPOMCompiler.compile(cspom, Seq(Bool2IntIsEq))
       }
       .flatMap { cspom =>
+
+        for (f <- opt.get('gml)) {
+          Files.write(
+            Paths.get(f.toString),
+            GML(cspom).getBytes(StandardCharsets.UTF_8))
+        }
+
+        for (f <- opt.get('gephi)) {
+          Gephi(cspom, new File(f.toString))
+        }
+
         val pg = new ProblemGenerator(pm)
         statistics.register("problemGenerator", pg)
         pg.generate(cspom)

@@ -39,7 +39,7 @@ object ReduceableExt {
 final class ReduceableExt(_scope: Array[Variable], val relation: Relation)
     extends Constraint(_scope) with LazyLogging with Removals with StatefulConstraint[Relation] {
 
-  override def init(ps: ProblemState) = ps.updateState(id, relation)
+  override def init(ps: ProblemState) = ps.updateState(this, relation)
 
   //println("sizesR " + arity + " " + trie.lambda + " " + trie.edges)
 
@@ -85,7 +85,7 @@ final class ReduceableExt(_scope: Array[Variable], val relation: Relation)
       for (p <- 0 until arity) {
         if (unsup(p)) cs = cs.updateDomNonEmpty(_scope(p), newDomains(p)) //(!domains(p).present(_))
       }
-      cs.updateState(id, newTrie).entailIfFree(this)
+      cs.updateState(this, newTrie).entailIfFree(this)
     }
 
   }

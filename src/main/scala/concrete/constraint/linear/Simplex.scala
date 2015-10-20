@@ -24,17 +24,87 @@ import scala.collection.JavaConverters._
 import concrete.constraint.Removals
 import concrete.constraint.BoundRemovals
 import concrete.Domain
+import org.gephi.preview.api.PreviewController
+import org.gephi.project.api.ProjectController
+import org.gephi.partition.api.PartitionController
+import org.gephi.data.attributes.api.AttributeController
+import org.gephi.ranking.api.RankingController
+import org.gephi.statistics.plugin.Modularity
+import org.gephi.graph.api.GraphController
+import org.openide.util.Lookup
+import org.gephi.graph.api.Node
+
+trait Cluster {
+  def apply[A <: Arc](lin: Seq[A]): Seq[Seq[A]]
+}
+
+object ModularityCluster extends Cluster {
+  def apply[A <: Arc](lin: Seq[A]) = {
+    //Init a project - and therefore a workspace
+    val pc = Lookup.getDefault().lookup(classOf[ProjectController]);
+    pc.newProject();
+    val workspace = pc.getCurrentWorkspace();
+
+    val attributeModel = Lookup.getDefault().lookup(classOf[AttributeController]).getModel();
+    val graphModel = Lookup.getDefault().lookup(classOf[GraphController]).getModel();
+    val model = Lookup.getDefault().lookup(classOf[PreviewController]).getModel();
+
+    val rankingController = Lookup.getDefault().lookup(classOf[RankingController]);
+
+    val vars = lin.flatMap(_.vars)
+      .distinct
+      .map { v => v -> graphModel.factory().newNode(s"v${v.id}") }
+      .toMap
+
+    val constraints = lin.zipWithIndex
+      .map {
+        case (c, i) =>
+          val n = graphModel.factory().newNode(s"c$i")
+          c -> n
+      }
+      .toMap
+
+    val cNode = constraints.map(_.swap).toMap
+
+    val edges = lin.flatMap { c =>
+      val n = constraints(c)
+      c.vars.map { v =>
+        graphModel.factory().newEdge(n, vars(v))
+      }
+    }
+
+    val graph = graphModel.getUndirectedGraph()
+    vars.values.foreach(graph.addNode)
+    constraints.values.foreach(graph.addNode)
+    edges.foreach(graph.addEdge)
+
+    val partitionController = Lookup.getDefault().lookup(classOf[PartitionController]);
+
+    val modularity = new Modularity()
+    modularity.setResolution(1)
+    modularity.execute(graphModel, attributeModel)
+    val modColumn = attributeModel.getNodeTable().getColumn(Modularity.MODULARITY_CLASS);
+    val p2 = partitionController.buildPartition(modColumn, graph);
+
+    p2.getParts
+      .map { p =>
+        p.getObjects.toSeq.collect { case n: Node => n }.flatMap(cNode.get(_))
+      }
+      .filter(_.nonEmpty)
+      .toSeq
+  }
+}
 
 object Simplex {
   def apply(lin: Seq[LinearConstraint], pm: ParameterManager): Seq[Constraint] = {
-    val components = Arc.components(lin)
-
-    for ((vars, lin) <- components) yield {
+    val components = ModularityCluster(lin)
+    for (lin <- components) yield {
+      println(lin.size)
       if (lin.size == 1) {
         val l = lin.head
         Linear(l.constant, l.factors.toArray, l.vars.toArray, l.mode, pm)
       } else {
-        val varArray = vars.toArray
+        val varArray = lin.flatMap { _.vars }.distinct.toArray
         val varMap = varArray.zipWithIndex.toMap
 
         val constraints = for (l <- lin) yield {
@@ -111,6 +181,10 @@ class Simplex(
     g
   }
 
+  //println(graph.mkString("\n"))
+
+  //  val graph = Array.tabulate(arity)(p => BitVector.filled(arity) - p)
+
   val allConstraints =
     Array.ofDim[ApacheConstraint](2 * arity) ++ this.constraints
 
@@ -119,7 +193,7 @@ class Simplex(
     mod: Seq[Int],
     doms: Array[Domain],
     data: Unit): Outcome = {
-    println(s"Revising $id due to $mod")
+    //println(s"% Revising $id due to $mod")
 
     val queue = mod.map(graph).reduce(_ | _).filter(p => !doms(p).isAssigned)
 
@@ -162,18 +236,19 @@ class Simplex(
       val newDom = dom & filt
 
       if (newDom eq dom) {
-        println(s"$p : $dom -> NOP")
+        //println(s"% $p : $dom -> NOP")
         val newQueue = queue - p
         filter(ps, doms, newQueue, newQueue.nextOrLoop(p))
       } else if (newDom.isEmpty) {
-        println(s"$p : Contradiction")
+        //println(s"% $p : Contradiction")
         Contradiction
       } else {
-        println(s"$p : $dom -> $newDom")
+        //println(s"% $p : $dom -> $newDom")
         val diag = diagonal(p)
         allConstraints(2 * p) = new ApacheConstraint(diag, Relationship.GEQ, newDom.head)
         allConstraints(2 * p + 1) = new ApacheConstraint(diag, Relationship.LEQ, newDom.last)
 
+        //val newQueue = (BitVector.filled(arity) - p).filter(p => !ps.assigned(scope(p))) 
         val newQueue = (queue - p) | graph(p).filter(p => !ps.assigned(scope(p)))
 
         doms(p) = newDom
