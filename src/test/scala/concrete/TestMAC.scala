@@ -20,7 +20,6 @@ class TestMAC extends FlatSpec with Matchers {
 
     val queens = (0 until size)
       .map(q => new Variable("q" + q, IntDomain(0 until size)))
-      .toList
 
     val qd1 = queens.zipWithIndex map {
       case (q, i) => new Variable("d1_" + q.name, IntDomain(-i until size - i))
@@ -30,7 +29,7 @@ class TestMAC extends FlatSpec with Matchers {
       case (q, i) => new Variable("d2_" + q.name, IntDomain(i until size + i))
     }
 
-    val problem = new Problem(queens ::: qd1 ::: qd2)
+    val problem = Problem(queens ++ qd1 ++ qd2: _*)
 
     for (((q, q1, q2), i) <- (queens, qd1, qd2).zipped.toIterable.zipWithIndex) {
       problem.addConstraint(new EqAC(false, q, -i, q1))

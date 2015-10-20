@@ -32,7 +32,7 @@ final class AbsDiffTest extends FlatSpec with Matchers with Inspectors with Prop
       val vz: Variable = new Variable("z", IntDomain.ofSeq(z: _*));
 
       ConstraintComparator.compare(
-        List(vx, vy, vz),
+        Array(vx, vy, vz),
         new AbsDiffAC(vx, vy, vz),
         new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
           def check(t: Array[Int]) = t(0) == math.abs(t(1) - t(2));

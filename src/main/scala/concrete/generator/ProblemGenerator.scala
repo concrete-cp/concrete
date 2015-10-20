@@ -97,7 +97,7 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
 
       val variables = generateVariables(cspom)
 
-      val problem = new Problem(variables.values.toList.sortBy(_.name))
+      val problem = new Problem(variables.values.toArray.sortBy(_.name))
 
       val vn = new VariableNames(cspom)
 

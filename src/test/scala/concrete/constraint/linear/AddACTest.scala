@@ -96,7 +96,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
       val vz = new Variable("z", IntDomain.ofSeq(-1))
 
       ConstraintComparator.compare(
-        List(vx, vy, vz),
+        Array(vx, vy, vz),
         new SumAC(0, Array(-1, 1, 1), Array(vx, vy, vz), SumEQ),
         new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
           def check(t: Array[Int]) = t(0) == t(1) + t(2);
@@ -110,7 +110,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
       val vz = new Variable("z", IntDomain.ofSeq(z: _*))
 
       ConstraintComparator.compare(
-        List(vx, vy, vz),
+        Array(vx, vy, vz),
         new SumAC(0, Array(-1, 1, 1), Array(vx, vy, vz), SumEQ),
         new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
           def check(t: Array[Int]) = t(0) == t(1) + t(2);

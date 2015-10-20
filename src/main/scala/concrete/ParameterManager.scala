@@ -1,12 +1,11 @@
 package concrete;
 
 import java.util.Properties
-
 import scala.collection.JavaConversions
 import scala.collection.mutable.HashMap
 import scala.reflect.runtime.universe._
-
 import scala.xml.NodeSeq
+import scala.collection.mutable.HashSet
 
 /**
  * This class is intended to hold Concrete's various parameters.
@@ -18,7 +17,7 @@ final class ParameterManager {
 
   private val _parameters: HashMap[String, Any] = new HashMap()
 
-  val used = collection.mutable.Set[String]()
+  val used = new HashSet[String]()
 
   /**
    * Updates some parameter, overriding default or previous value.
@@ -60,7 +59,7 @@ final class ParameterManager {
     } else if (fType <:< typeOf[Double]) {
       value.toDouble
     } else if (fType <:< typeOf[String]) {
-      value.toString
+      value
     } else if (fType <:< typeOf[Class[_]]) {
       Class.forName(value)
     } else {
@@ -85,7 +84,7 @@ final class ParameterManager {
    * @return
    */
   override def toString = _parameters.iterator.map {
-    case (k, Unit) => k.toString
+    case (k, Unit) => k
     case (k, v)    => s"$k = $v"
   }.mkString(", ")
 

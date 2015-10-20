@@ -38,6 +38,6 @@ final class DummySolver(prob: Problem, params: ParameterManager) extends Solver(
 
   override def toString = "dummy"
 
-  def reset() {}
+  def reset(): Unit = {}
 
 }

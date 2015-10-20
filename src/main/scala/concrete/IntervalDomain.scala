@@ -109,7 +109,7 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
   lazy val bitVector0 = BitVector.empty.set(0, size)
 
   var requestedOffset: Int = _
-  var requestedBV: BitVector = null
+  var requestedBV: BitVector = _
 
   def toBitVector(offset: Int) = {
     if (offset == head) {

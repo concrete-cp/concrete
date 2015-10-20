@@ -7,7 +7,6 @@ import cspom.CSPOM
 import cspom.CSPOM._
 import cspom.CSPOMConstraint
 import cspom.variable.BoolVariable
-import cspom.variable.BoolVariable
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
@@ -69,7 +68,7 @@ object CSPOMDriver {
   }
 
   def or(vars: SimpleExpression[Boolean]*)(implicit problem: CSPOM): SimpleExpression[Boolean] = {
-    problem.defineBool(r => CSPOMConstraint(r)('clause)(vars, seq2CSPOMSeq(Seq())))
+    problem.defineBool(r => CSPOMConstraint(r)('clause)(vars, seq2CSPOMSeq(Seq.empty)))
   }
 
   implicit class CSPOMSeqOperations[+A](e: CSPOMSeq[A]) {

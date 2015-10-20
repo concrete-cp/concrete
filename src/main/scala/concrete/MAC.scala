@@ -97,7 +97,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
     filtering match {
 
       case Contradiction =>
-        if (stack == Nil) {
+        if (stack.isEmpty) {
           (UNSAT, Nil, Nil, nbBacktracks, nbAssignments)
         } else if (maxBacktracks >= 0 && nbBacktracks >= maxBacktracks) {
           (RESTART, stack, stateStack, nbBacktracks, nbAssignments)
@@ -214,7 +214,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
           sol
       }
 
-    } else if (currentStack == Nil) {
+    } else if (currentStack.isEmpty) {
       UNSAT
     } else {
       maxBacktracks = -1

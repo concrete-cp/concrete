@@ -31,10 +31,10 @@ import cspom.util.BitVector
 
 object Problem {
   @varargs
-  def apply(vars: Variable*) = new Problem(vars.toList)
+  def apply(vars: Variable*) = new Problem(vars.toArray)
 }
 
-final class Problem(val variables: List[Variable]) {
+final class Problem(val variables: Array[Variable]) {
   //require(variables.nonEmpty, "A problem with no variables makes no sense")
   require(variables.map(_.name).distinct.size == variables.size, "Duplicates in variable names")
 

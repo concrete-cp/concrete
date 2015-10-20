@@ -14,7 +14,7 @@ import concrete.Variable
  */
 object ConstraintComparator extends Matchers with Inspectors {
 
-  def compare(vars: List[Variable], c1: Constraint, c2: Constraint): Unit = {
+  def compare(vars: Array[Variable], c1: Constraint, c2: Constraint): Unit = {
     val problem = new Problem(vars)
     problem.addConstraint(c1)
     problem.addConstraint(c2)

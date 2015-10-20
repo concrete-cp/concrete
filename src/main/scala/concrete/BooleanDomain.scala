@@ -82,9 +82,9 @@ case object UNKNOWNBoolean extends BooleanDomain {
   val span = Interval(0, 1)
 
   def union(bd: BooleanDomain) = UNKNOWNBoolean
-  
+
   def median = 1
-  
+
   def isAssigned = false
 }
 
@@ -210,7 +210,7 @@ sealed trait BooleanDomain extends Domain {
 
   def &(lb: Int, ub: Int) = removeUntil(lb).removeAfter(ub)
 
-  def &(d: Domain) = filter(d.contains)
+  def &(d: Domain) = filter(i => d.contains(i))
 
   def union(bd: BooleanDomain): BooleanDomain
 

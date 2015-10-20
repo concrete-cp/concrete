@@ -24,11 +24,11 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
 
   override val head = offset + bitVector.nextSetBit(0)
 
-  assert(head >= offset)
+  assert(headOption.exists(_ >= offset))
 
   override val last = offset + bitVector.lastSetBit
 
-  assert(last >= offset)
+  assert(lastOption.exists(_ >= offset))
 
   override def next(i: Int) = {
     val b = math.max(0, i - offset + 1)
@@ -55,7 +55,7 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
     val bit = value - offset
     bit >= 0 && bitVector(value - offset)
   }
-  
+
   def isAssigned = false
 
   override def filter(f: Int => Boolean) = {

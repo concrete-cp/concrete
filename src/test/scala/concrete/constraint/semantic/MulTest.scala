@@ -26,7 +26,7 @@ final class MulTest extends FlatSpec with Matchers with PropertyChecks with Insp
       val vz = new Variable("z", IntDomain.ofSeq(z: _*))
 
       ConstraintComparator.compare(
-        List(vx, vy, vz),
+        Array(vx, vy, vz),
         new MulAC(vx, vy, vz),
         new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
           def check(t: Array[Int]) = t(0) == t(1) * t(2);

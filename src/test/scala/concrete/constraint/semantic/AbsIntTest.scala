@@ -95,7 +95,7 @@ final class AbsIntTest extends FlatSpec with Matchers with Timeouts with Propert
       val vy = new Variable("y", IntDomain.ofSeq(y: _*))
 
       ConstraintComparator.compare(
-        List(vx, vy),
+        Array(vx, vy),
         new AbsAC(vx, vy),
         new Constraint(Array(vx, vy)) with Residues with TupleEnumerator {
           def check(t: Array[Int]) = t(0) == math.abs(t(1))

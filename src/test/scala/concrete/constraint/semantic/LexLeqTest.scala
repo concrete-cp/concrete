@@ -20,7 +20,7 @@ class LexLeqTest extends FlatSpec with Matchers {
       new Variable("y0", BooleanDomain()),
       new Variable("y1", BooleanDomain()))
 
-    val problem = new Problem(x.toList ++ y)
+    val problem = new Problem(x ++ y)
 
     val c = new LexLeq(x, y)
     c.register(new AdviseCount)
