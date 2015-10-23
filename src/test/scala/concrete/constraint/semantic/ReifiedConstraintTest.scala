@@ -24,7 +24,7 @@ import cspom.variable.IntVariable
 import concrete.constraint.linear.LinearNe
 import concrete.constraint.linear.LinearEq
 import concrete.constraint.linear.Eq
-import concrete.constraint.linear.EqAC
+import concrete.constraint.linear.EqACFast
 import concrete.constraint.linear.Eq
 import concrete.constraint.linear.EqBC
 import concrete.constraint.ReifiedConstraint
@@ -42,7 +42,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
     val c1 = new ReifiedConstraint(
       control1,
       new Neq(v0, v1),
-      new EqAC(v0, v1))
+      new EqACFast(v0, v1))
 
     val c2 = new ReifiedConstraint(
       control2,
@@ -113,9 +113,10 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
 
     withClue(problem.toString(state)) {
 
-      val Seq(bc) = problem.constraints.toSeq.collect {
-        case c: ReifiedConstraint if c.positiveConstraint.isInstanceOf[EqBC] => c
+      val bc = problem.constraints.toSeq.collect {
+        case c: ReifiedConstraint => c
       }
+        .head
       //    ac.adviseAll(state)
       //    ac.revise(state) match {
       //      case Contradiction    => fail()

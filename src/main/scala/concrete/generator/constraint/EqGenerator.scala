@@ -1,19 +1,20 @@
 package concrete.generator.constraint;
 
 import scala.reflect.runtime.universe
+
 import com.typesafe.scalalogging.LazyLogging
+
 import Generator.cspom2concrete1D
 import concrete.BooleanDomain
 import concrete.constraint.Constraint
-import concrete.constraint.linear.Eq
-import concrete.constraint.linear.EqAC
-import concrete.constraint.linear.EqBC
-import concrete.constraint.semantic.Neq
 import concrete.constraint.ReifiedConstraint
+import concrete.constraint.linear.Eq
+import concrete.constraint.linear.EqACFast
+import concrete.constraint.linear.LinearEq
+import concrete.constraint.linear.LinearNe
+import concrete.constraint.semantic.Neq
 import cspom.CSPOMConstraint
 import cspom.UNSATException
-import concrete.constraint.linear.LinearNe
-import concrete.constraint.linear.LinearEq
 
 final object EqGenerator extends Generator with LazyLogging {
 
@@ -31,7 +32,7 @@ final object EqGenerator extends Generator with LazyLogging {
     (a, b) match {
       case (Const(a), Const(b)) =>
         if (a == b) Seq() else throw new UNSATException("Inconsistent constraint: " + constraint)
-      case (Var(a), Var(b)) => Eq(false, a, 0, b)
+      case (Var(a), Var(b)) => Eq(false, a, 0, b).toSeq
 
       case _                => throw new UnsupportedOperationException(s"$constraint is not supported")
     }
@@ -72,11 +73,7 @@ final object EqGenerator extends Generator with LazyLogging {
       case (Var(a), Var(b)) => Seq(
         new ReifiedConstraint(
           result,
-          new EqAC(a, b),
-          new Neq(a, b)),
-        new ReifiedConstraint(
-          result,
-          new EqBC(a, b),
+          new EqACFast(a, b),
           new Neq(a, b)))
       case e => throw new IllegalArgumentException(s"$e contain unsupported domain types")
     }

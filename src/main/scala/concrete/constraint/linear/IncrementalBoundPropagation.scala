@@ -29,13 +29,16 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
   def is: Array[Int]
 
   def updateF(ps: ProblemState, mod: Seq[Int]) = {
-    var (doms, f, vars, maxI) = ps(this)
+    val (doms, f, vars, maxI) = ps(this)
 
     val newDoms = doms.clone
 
     var i = mod.length - 1
 
     var boundchange = false
+
+    var newF = f
+    var newVars = vars
 
     while (i >= 0) {
       val p = mod(i)
@@ -52,10 +55,10 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
 
         val factor = factors(p)
 
-        f = f.shrink(oldspan * factor) + (newspan * factor)
+        newF = newF.shrink(oldspan * factor) + (newspan * factor)
 
         if (nd.size == 1) {
-          vars -= p
+          newVars -= p
         }
       }
 
@@ -63,7 +66,7 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
 
     }
 
-    (newDoms, f, vars, maxI, boundchange)
+    (newDoms, newF, newVars, maxI, boundchange)
 
   }
 

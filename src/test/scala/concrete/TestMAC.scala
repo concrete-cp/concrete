@@ -1,16 +1,17 @@
 package concrete
 
-import scala.annotation.tailrec
+import scala.annotation.varargs
+import scala.runtime.ZippedTraversable3.zippedTraversable3ToTraversable
+
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 import org.scalatest.Tag
+
+import concrete.constraint.linear.Eq
 import concrete.constraint.semantic.AllDifferent2C
 import concrete.constraint.semantic.AllDifferentBC
-import concrete.constraint.linear.EqAC
-import concrete.constraint.linear.EqBC
 import concrete.heuristic.MedValue
 import cspom.StatisticsManager
-import concrete.heuristic.Split
 
 object SlowTest extends Tag("concrete.SlowTest")
 
@@ -31,11 +32,11 @@ class TestMAC extends FlatSpec with Matchers {
 
     val problem = Problem(queens ++ qd1 ++ qd2: _*)
 
-    for (((q, q1, q2), i) <- (queens, qd1, qd2).zipped.toIterable.zipWithIndex) {
-      problem.addConstraint(new EqAC(false, q, -i, q1))
-      problem.addConstraint(new EqAC(false, q, i, q2))
-      problem.addConstraint(new EqBC(false, q, -i, q1))
-      problem.addConstraint(new EqBC(false, q, i, q2))
+    for (
+      ((q, q1, q2), i) <- (queens, qd1, qd2).zipped.toIterable.zipWithIndex
+    ) {
+      Eq(false, q, -i, q1).foreach(problem.addConstraint)
+      Eq(false, q, i, q2).foreach(problem.addConstraint)
     }
 
     allDiff(problem, queens)
@@ -55,7 +56,9 @@ class TestMAC extends FlatSpec with Matchers {
   val sols = List(
     4 -> 2,
     8 -> 92,
-    12 -> 14200)
+    12 -> 14200,
+    13 -> 73712,
+    14 -> 365596)
 
   val pm = new ParameterManager
   pm("heuristic.value") = classOf[MedValue]

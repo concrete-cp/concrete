@@ -1,14 +1,20 @@
 package concrete.generator;
 
+import scala.annotation.elidable
+
 import scala.reflect.runtime.universe
 import scala.util.Try
+
 import org.scalameter.Quantity
+
 import com.typesafe.scalalogging.LazyLogging
+
 import concrete.Domain
 import concrete.IntDomain
 import concrete.ParameterManager
 import concrete.Problem
 import concrete.Variable
+import concrete.cluster.Arc
 import concrete.constraint.linear.Simplex
 import concrete.constraint.linear.SumMode
 import concrete.constraint.semantic.Clause
@@ -28,19 +34,12 @@ import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
 import cspom.variable.IntVariable
-import scala.collection.mutable.HashMap
-import concrete.cluster.Arc
 
 case class LinearConstraint(
     vars: Seq[Variable], factors: Seq[Int],
     mode: SumMode, constant: Int) extends Arc {
 
   def size = vars.size
-
-}
-
-object Arc {
-
 
 }
 
@@ -63,22 +62,20 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
 
       val vn = new VariableNames(cspom)
 
-      var clauses: Seq[Clause] = Seq()
-      var pb: Seq[PseudoBoolean] = Seq()
-      var lin: Seq[LinearConstraint] = Seq()
+      var clauses: Seq[Clause] = Seq.empty
+      var pb: Seq[PseudoBoolean] = Seq.empty
+      var lin: Seq[LinearConstraint] = Seq.empty
 
       cspom.constraints.foreach {
         case c if c.function == 'clause =>
           val Seq(pos: CSPOMSeq[_], neg: CSPOMSeq[_]) = c.arguments
-          if (pos.contains(CSPOMConstant(true)) || neg.contains(CSPOMConstant(false))) {
-            // Useless clause
-          } else {
+          if (!pos.contains(CSPOMConstant(true)) && !neg.contains(CSPOMConstant(false))) {
             val posConc = pos.collect { case v: BoolVariable => Generator.cspom2concreteVar(v)(variables) }.toArray
             val negConc = neg.collect { case v: BoolVariable => Generator.cspom2concreteVar(v)(variables) }.toArray
             clauses +:= Clause(posConc, negConc)
           }
-        case constraint if constraint.function == 'pseudoboolean && constraint.nonReified =>
 
+        case constraint if constraint.function == 'pseudoboolean && constraint.nonReified =>
           val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
 
           if (vars.nonEmpty) {
@@ -87,7 +84,6 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
           }
 
         case constraint if constraint.function == 'sum && constraint.nonReified =>
-
           val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
 
           if (vars.nonEmpty) {
@@ -110,12 +106,12 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
           SAT(clauses, pb).foreach(problem.addConstraint)
         } else {
           lin ++:= pb
-          SAT(clauses, Seq()).foreach(problem.addConstraint)
+          SAT(clauses = clauses).foreach(problem.addConstraint)
         }
       } else {
         clauses.map(new ClauseConstraint(_)).foreach(problem.addConstraint(_))
         if (pm.contains("sat4pb")) {
-          SAT(Seq(), pb).foreach(problem.addConstraint)
+          SAT(pb = pb).foreach(problem.addConstraint)
         } else {
           lin ++:= pb
         }

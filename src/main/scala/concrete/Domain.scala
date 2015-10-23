@@ -115,4 +115,6 @@ abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
   override def equals(o: Any) = this eq o.asInstanceOf[AnyRef]
 
   def filterBounds(f: Int => Boolean): Domain
+
+  def offset(o: Int): Domain
 }

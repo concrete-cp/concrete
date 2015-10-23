@@ -105,7 +105,7 @@ final class Min private (result: Variable, _vars: Array[Variable])
           while ((state ne Contradiction) && i < vars.length) {
             val v = vars(i)
             val d = ps.dom(v)
-            var f = d.removeUntil(minDom.head)
+            val f = d.removeUntil(minDom.head)
 
             if (f.isEmpty) {
               state = Contradiction
@@ -222,7 +222,7 @@ final class Max private (result: Variable, _vars: Array[Variable])
           while ((state ne Contradiction) && i < vars.length) {
             val v = vars(i)
             val d = ps.dom(v)
-            var f = d.removeAfter(maxDom.last)
+            val f = d.removeAfter(maxDom.last)
 
             if (f.isEmpty) {
               state = Contradiction

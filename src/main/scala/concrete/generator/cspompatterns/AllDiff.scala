@@ -98,7 +98,11 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
 
   def DIFF_CONSTRAINT(constraint: CSPOMConstraint[_]): Option[Seq[CSPOMExpression[_]]] =
     PartialFunction.condOpt(constraint) {
-      case CSPOMConstraint(CSPOMConstant(true), 'sum, Seq(IntExpression.constSeq(coefs), CSPOMSeq(args), CSPOMConstant(constant)), p) if (p.get("mode").contains("lt")) &&
+      case CSPOMConstraint(
+        CSPOMConstant(true),
+        'sum,
+        Seq(IntExpression.constSeq(coefs), CSPOMSeq(args), CSPOMConstant(constant: Int)),
+        p) if (p.get("mode").contains("lt")) &&
         { coefs == Seq(-1, 1) || coefs == Seq(1, -1) } &&
         constant == 0 => args
     }
@@ -111,7 +115,9 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
 
   def ALLDIFF_CONSTRAINT(constraint: CSPOMConstraint[_]): Option[Seq[CSPOMExpression[_]]] = PartialFunction.condOpt(constraint) {
     case CSPOMConstraint(CSPOMConstant(true), 'alldifferent, args, _) => args
-    case CSPOMConstraint(CSPOMConstant(true), 'sum, Seq(IntExpression.constSeq(coefs), CSPOMSeq(args), CSPOMConstant(constant)), p) if p.get("mode").contains("ne") &&
+    case CSPOMConstraint(CSPOMConstant(true), 'sum,
+      Seq(IntExpression.constSeq(coefs), CSPOMSeq(args), CSPOMConstant(constant: Int)),
+      p) if p.get("mode").contains("ne") &&
       constant == 0 && (coefs == Seq(-1, 1) || coefs == Seq(1, -1)) => args
     case CSPOMConstraint(CSPOMConstant(false), 'eq, args, _) => args
   }
@@ -171,7 +177,7 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
     val nb = base.iterator.map(neighbors(_, problem, cache))
 
     if (nb.isEmpty) {
-      Set()
+      Set.empty
     } else {
       nb.reduceLeft(_ & _)
     }

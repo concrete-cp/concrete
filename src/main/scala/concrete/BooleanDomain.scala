@@ -220,5 +220,7 @@ sealed trait BooleanDomain extends Domain {
   }
 
   def filterBounds(f: Int => Boolean) = filter(f)
+  
+  def offset(o:Int) = throw new UnsupportedOperationException
 }
 

@@ -19,7 +19,7 @@ trait BC extends Constraint {
           if (ns.isEntailed(this)) {
             ns
           } else {
-            ns.entailIfFree(this)
+            ns
           }
         } else if (ns.isEntailed(this)) {
           ns

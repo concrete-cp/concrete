@@ -82,7 +82,7 @@ final class Singleton private (val singleValue: Int) extends IntDomain with Lazy
 
   var requestedOffset: Int = _
   var requestedBV: BitVector = _
-  
+
   def isAssigned = true
 
   def toBitVector(offset: Int) =
@@ -101,7 +101,7 @@ final class Singleton private (val singleValue: Int) extends IntDomain with Lazy
     case d if (d.present(singleValue)) => this
     case _                             => EmptyIntDomain
   }
-  
+
   def &(lb: Int, ub: Int) = if (lb <= singleValue && singleValue <= ub) this else EmptyIntDomain
 
   def |(d: Domain) = d match {
@@ -137,6 +137,9 @@ final class Singleton private (val singleValue: Int) extends IntDomain with Lazy
   }
 
   def iterator = Iterator.single(singleValue)
-  
+
   def median = singleValue
+
+  def offset(o: Int) = if (o == 0) this else
+    Singleton(singleValue + o)
 }

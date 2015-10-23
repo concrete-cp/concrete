@@ -1,31 +1,30 @@
 package concrete.constraint.semantic
 
 import java.math.BigInteger
+
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-import scala.reflect.runtime.universe
+
 import org.sat4j.core.Vec
 import org.sat4j.core.VecInt
 import org.sat4j.specs.ContradictionException
+
 import com.typesafe.scalalogging.LazyLogging
+
 import concrete.BooleanDomain
 import concrete.Contradiction
 import concrete.FALSE
 import concrete.Outcome
-import concrete.ParameterManager
 import concrete.ProblemState
 import concrete.TRUE
 import concrete.Variable
+import concrete.cluster.Arc
+import concrete.cluster.ConnectedComponents
 import concrete.constraint.Constraint
 import concrete.constraint.Residues
 import concrete.constraint.linear.SumEQ
 import concrete.constraint.linear.SumLE
 import concrete.constraint.linear.SumMode
-import concrete.constraint.linear.Linear
 import concrete.generator.LinearConstraint
-import concrete.generator.Arc
-import concrete.cluster.ConnectedComponents
-import concrete.cluster.Arc
 
 case class Clause(positive: Seq[Variable], negative: Seq[Variable]) extends Arc {
   require(vars.forall(v => v.initDomain.isInstanceOf[BooleanDomain]))
@@ -52,7 +51,7 @@ object SAT extends LazyLogging {
   //    }
   //  }
 
-  def apply(clauses: Seq[Clause], pb: Seq[PseudoBoolean]): Seq[Constraint] = {
+  def apply(clauses: Seq[Clause] = Seq.empty, pb: Seq[PseudoBoolean] = Seq.empty): Seq[Constraint] = {
     logger.info("Computing SAT components")
 
     val comp = ConnectedComponents(clauses ++ pb)

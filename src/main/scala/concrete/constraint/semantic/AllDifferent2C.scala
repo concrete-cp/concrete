@@ -19,18 +19,12 @@
 
 package concrete.constraint.semantic;
 
-import scala.annotation.tailrec
-import concrete.constraint.Constraint
-import cspom.util.BitVector
-import concrete.Variable
-import concrete.constraint.AdviseCount
-import scala.collection.mutable.HashSet
-import concrete.constraint.AdviseCounts
-import concrete.constraint.AdviseCount
-import concrete.Domain
 import concrete.Contradiction
-import concrete.ProblemState
 import concrete.Outcome
+import concrete.ProblemState
+import concrete.Variable
+import concrete.constraint.AdviseCounts
+import concrete.constraint.Constraint
 
 trait AllDiffChecker extends Constraint {
 
@@ -39,7 +33,7 @@ trait AllDiffChecker extends Constraint {
 
   def check(t: Array[Int]): Boolean = {
     //println(t.toSeq)
-    var union = collection.mutable.BitSet.empty
+    val union = collection.mutable.BitSet.empty
 
     !t.exists { v =>
       union(v - offset) || {
@@ -54,7 +48,7 @@ final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) w
 
   def init(ps: ProblemState) = ps
 
-  var q: List[Variable] = Nil
+  var q: List[Int] = Nil
 
   def revise(ps: ProblemState): Outcome = {
     // print(this)
@@ -63,19 +57,23 @@ final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) w
       val checkedVariable = q.head
       q = q.tail
 
-      val value = state.dom(checkedVariable).singleValue
+      val value = state.dom(scope(checkedVariable)).singleValue
 
-      for (v <- scope) {
-        if (v != checkedVariable) {
+      var i = arity - 1
+      while (i >= 0) {
+
+        if (i != checkedVariable) {
+          val v = scope(i)
           val od = state.dom(v)
           val nd = od.remove(value)
 
           if (nd.isEmpty) return Contradiction
           if (od ne nd) {
             state = state.updateDomNonEmpty(v, nd)
-            if (nd.isAssigned) q ::= v
+            if (nd.isAssigned) q ::= i
           }
         }
+        i -= 1
       }
     }
     state.entailIfFree(this)
@@ -90,9 +88,9 @@ final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) w
       q = Nil
       lastAdvise = adviseCount
     }
-    val v = scope(p)
-    if (ps.assigned(v)) {
-      q ::= v
+
+    if (ps.assigned(scope(p))) {
+      q ::= p
       arity
     } else {
       -1

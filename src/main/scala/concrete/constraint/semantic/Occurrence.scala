@@ -87,7 +87,7 @@ class Occurrence(val result: Variable, val value: Variable,
       var state = ps
       if (a == result.last && cba > 0) {
         // Maximum of values are affected, removing from other variables
-        var cba = canBeAffectedSet(value)
+        val cba = canBeAffectedSet(value)
         for (p <- cba.iterator) {
           val v = vars(p)
           state = state.updateDomNonEmpty(v, state.dom(v).remove(value))

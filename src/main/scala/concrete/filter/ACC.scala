@@ -173,15 +173,17 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
   }
 
-  private def reduce(states: ProblemState): Outcome = {
-    lazy val varSet = problem.variables.toSet
-    var s = states
-    while (!queue.isEmpty) {
-      val constraint = queue.poll();
-      //println(constraint)
+  @annotation.tailrec
+  private def reduce(s: ProblemState): Outcome = {
+    if (queue.isEmpty) {
+      assert {
+        ACC.control(problem, s).isEmpty
+      }
+      s
+    } else {
+      val constraint = queue.poll()
 
       revisions += 1;
-      //val sizes = constraint.sizes()
 
       logger.trace(constraint.toString(s))
 
@@ -189,7 +191,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
         case Contradiction =>
           constraint.weight += 1
           logger.debug(constraint.toString(s) + " -> Contradiction")
-          return Contradiction
+          Contradiction
 
         case newState: ProblemState =>
           if (newState.domains ne s.domains) {
@@ -197,8 +199,6 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
               s"${constraint.toString(s)} -> ${constraint.toString(newState)}${if (newState.isEntailed(constraint)) " - entailed" else ""}")
 
             assert(constraint.scope.forall(v => newState.dom(v).nonEmpty))
-
-            assert(noChange(s, newState, varSet -- constraint.scope), s"$constraint changed a variable outside of its scope")
 
             assert(constraint.controlAssignment(newState), s"${constraint.toString(newState)} assignement is inconsistent")
 
@@ -216,7 +216,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
               }
               p -= 1
             }
-            s = newState
+
           } else if (newState ne s) {
 
             logger.debug(s"${constraint.id}. ${constraint.toString(s)} -> ${
@@ -228,23 +228,18 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
             assert(constraint.controlRevision(newState))
 
-            s = newState
-
           } else {
             logger.debug(
               s"${constraint.toString(s)} -> NOP")
+
           }
+          reduce(newState)
 
       }
 
       //println(mod)
 
     }
-
-    assert {
-      ACC.control(problem, s).isEmpty
-    }
-    s
 
   }
 

@@ -10,21 +10,6 @@ import concrete.constraint.AdviseCount
 
 final class EqTest extends FlatSpec with Matchers {
 
-  "Eq" should "filter" in {
-    val v0 = new Variable("v0", IntDomain.ofSeq(1, 2, 3))
-    val v1 = new Variable("v1", IntDomain.ofSeq(3, 4, 5))
-    val c = new EqAC(v0, v1)
-    c.register(new AdviseCount())
-    val pb = Problem(v0, v1)
-    pb.addConstraint(c)
-    val ps = pb.initState.toState
-    c.adviseAll(ps)
-    val mod = c.revise(ps)
-
-    mod.dom(v0) should contain theSameElementsAs Seq(3)
-    mod.dom(v1) should contain theSameElementsAs Seq(3)
-  }
-
   "EqBC" should "filter" in {
     val v0 = new Variable("v0", IntDomain.ofInterval(2, 3))
     val v1 = new Variable("v1", IntDomain.ofSeq(0, 2, 3))
@@ -37,5 +22,20 @@ final class EqTest extends FlatSpec with Matchers {
 
     mod.dom(v0) should contain theSameElementsAs Seq(3)
     mod.dom(v1) should contain theSameElementsAs Seq(2)
+  }
+
+  "EqACFast" should "filter" in {
+    val v0 = new Variable("v0", IntDomain.ofSeq(1, 2, 3))
+    val v1 = new Variable("v1", IntDomain.ofSeq(4, 5, 7))
+    val c = new EqACFast(v0, 1, v1)
+    // c.register(new AdviseCount())
+    val pb = Problem(v0, v1)
+    pb.addConstraint(c)
+    val ps = pb.initState.toState
+    c.adviseAll(ps)
+    val mod = c.revise(ps)
+
+    mod.dom(v0) should contain theSameElementsAs Seq(3)
+    mod.dom(v1) should contain theSameElementsAs Seq(4)
   }
 }

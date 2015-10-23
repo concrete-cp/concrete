@@ -1,48 +1,98 @@
 package concrete.constraint.linear;
 
 import com.typesafe.scalalogging.LazyLogging
-import concrete.Domain
+import concrete.Contradiction
 import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.BC
 import concrete.constraint.BCCompanion
 import concrete.constraint.Constraint
 import concrete.constraint.Removals
-import concrete.Contradiction
+import concrete.Outcome
+import concrete.generator.constraint.ACBC
 
 object Eq {
-  def apply(neg: Boolean, x: Variable, b: Int, y: Variable) = Seq(
-    new EqAC(neg, x, b, y),
-    new EqBC(neg, x, b, y))
+  def apply(neg: Boolean, x: Variable, b: Int, y: Variable): ACBC =
+    if (neg) {
+      ACBC
+        .withAC(new EqACNeg(x, y, b))
+        .withBC(new EqBC(neg, x, b, y))
+    } else {
+      ACBC
+        .withAC(new EqACFast(x, b, y))
+    }
 }
 
 /**
- * Constraint (-)x + b = y.
+ * Constraint x + b = y
+ */
+final class EqACFast(val x: Variable, val b: Int, val y: Variable)
+    extends Constraint(Array(x, y)) {
+
+  def this(x: Variable, y: Variable) = this(x, 0, y)
+
+  var staticEvaluation: Int = _
+
+  def advise(problemState: ProblemState, pos: Int): Int = 2
+
+  def check(tuple: Array[Int]): Boolean = (tuple(0) + b == tuple(1))
+
+  def init(ps: ProblemState): Outcome = {
+    staticEvaluation = ps.card(x) + ps.card(y)
+    ps
+  }
+
+  def revise(ps: concrete.ProblemState): Outcome = {
+    val oldX = ps.dom(x)
+    val oldY = ps.dom(y)
+    val newX = oldX & oldY.offset(-b)
+
+    ps.updateDom(x, newX)
+      .andThen { ps =>
+        val newY = newX.offset(b)
+        /**
+         * ProblemState does not detect NOP after two
+         * complementary offset operations
+         */
+        if (newY.length < oldY.length) {
+          ps.updateDom(y, newY)
+        } else {
+          ps
+        }
+      }
+
+  }
+  def simpleEvaluation: Int = 1
+  override def toString(ps: ProblemState) = s"${x.toString(ps)}${
+    if (b > 0) " + " + b else if (b < 0) " - " + (-b) else ""
+  } =FAC= ${y.toString(ps)}"
+}
+
+/**
+ * Constraint x + y = b
  *
  * @param a
  * @param x
  * @param b
  * @param y
  */
-final class EqAC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable, val skipIntervals: Boolean = true)
+final class EqACNeg private[linear] (val x: Variable, val y: Variable, val b: Int, val skipIntervals: Boolean = true)
     extends Constraint(Array(x, y)) with Removals with BCCompanion {
 
   def init(ps: ProblemState) = ps
 
-  def this(x: Variable, y: Variable, skipIntervals: Boolean) = this(false, x, 0, y, skipIntervals)
-  def this(x: Variable, y: Variable) = this(x, y, true)
+  def this(x: Variable, y: Variable) = this(x, y, 0, true)
 
-  private def yValue(x: Int) =
-    if (neg) -x + b else x + b
+  private def yValue(x: Int) = b - x
 
-  private def xValue(y: Int) =
-    if (neg) b - y else y - b
+  private def xValue(y: Int) = b - y
 
-  def check(t: Array[Int]) = (if (neg) -t(0) else t(0)) + b == t(1);
+  def check(t: Array[Int]) = t(0) + t(1) == b
 
   def simpleEvaluation: Int = 2
 
-  def getEvaluation(ps: ProblemState): Int = if (skip(ps)) -1 else ps.dom(x).size + ps.dom(y).size
+  def getEvaluation(ps: ProblemState): Int =
+    if (skip(ps)) -1 else ps.card(x) + ps.card(y)
 
   override def isConsistent(ps: ProblemState) = {
     val xDom = ps.dom(x)
@@ -64,32 +114,28 @@ final class EqAC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable,
       if (skip == 0) {
         ps
       } else {
+        val domY = ps.dom(y)
         ps.filterDom(x) { xv: Int =>
-          ps.dom(y).present(yValue(xv))
+          domY.present(yValue(xv))
         }
-      }
-    } andThen { ps =>
-      if (skip == 1) {
-        ps
-      } else {
-        ps.filterDom(y) { yv: Int =>
-          ps.dom(x).present(xValue(yv))
-        }
-      }
-
-    } andThen { ps =>
-      if (ps.dom(x).size == 1) {
-        ps.entail(this)
-      } else {
-        ps
       }
     }
+      .andThen { ps =>
+        if (skip == 1) {
+          ps
+        } else {
+          val domX = ps.dom(x)
+          ps.filterDom(y) { yv: Int =>
+            domX.present(xValue(yv))
+          }
+        }
+
+      }
+      .entailIf(this, _.dom(x).isAssigned)
 
   }
 
-  override def toString(ps: ProblemState) = s"${if (neg) "-" else ""}${x.toString(ps)}${
-    if (b > 0) " + " + b else if (b < 0) " - " + (-b) else ""
-  } =AC= ${y.toString(ps)}"
+  override def toString(ps: ProblemState) = s"${x.toString(ps)} + ${y.toString(ps)} = $b"
 }
 
 final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)

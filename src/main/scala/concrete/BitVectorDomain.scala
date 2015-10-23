@@ -157,6 +157,9 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
     }
   }
 
+  def offset(o: Int) = if (o == 0) this else
+    new BitVectorDomain(offset + o, bitVector, length)
+
   override def &(d: Domain) = d match {
     case id: IntervalDomain => this & id.span
     case s: Singleton       => if (present(s.singleValue)) s else EmptyIntDomain
@@ -170,9 +173,9 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
 
       val newCard = newBV.cardinality
 
-      if (newCard == size) {
+      if (newCard == length) {
         this
-      } else if (newCard == d.size) {
+      } else if (newCard == bd.length) {
         bd
       } else {
         IntDomain.ofBitVector(newOffset, newBV, newBV.cardinality)

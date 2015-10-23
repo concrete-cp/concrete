@@ -15,7 +15,7 @@ import cspom.UNSATException
 import concrete.ProblemState
 import concrete.Outcome
 import org.apache.commons.math3.util.FastMath
-import concrete.generator.Arc
+
 import concrete.ParameterManager
 import cspom.Statistic
 import cspom.util.BitVector

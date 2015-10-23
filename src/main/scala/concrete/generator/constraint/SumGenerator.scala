@@ -8,19 +8,18 @@ import Generator.cspom2concrete1D
 import concrete.ParameterManager
 import concrete.Variable
 import concrete.constraint.Constraint
-import concrete.constraint.linear.EqAC
-import concrete.constraint.linear.EqBC
+import concrete.constraint.ReifiedConstraint
+import concrete.constraint.linear.Eq
 import concrete.constraint.linear.Gt
 import concrete.constraint.linear.LeC
-import concrete.constraint.linear.LtC
-import concrete.constraint.semantic.Neq
-import concrete.constraint.ReifiedConstraint
 import concrete.constraint.linear.Linear
+import concrete.constraint.linear.LtC
 import concrete.constraint.linear.SumEQ
 import concrete.constraint.linear.SumLE
 import concrete.constraint.linear.SumLT
 import concrete.constraint.linear.SumMode
 import concrete.constraint.linear.SumNE
+import concrete.constraint.semantic.Neq
 import cspom.CSPOMConstraint
 import cspom.variable.CSPOMConstant
 import cspom.variable.IntExpression
@@ -48,34 +47,38 @@ object SumGenerator {
   }
 }
 
+object ACBC {
+  private val empty: ACBC = ACBC(None, None)
+  def withAC(c: Constraint) = empty.withAC(c)
+  def withBC(c: Constraint) = empty.withBC(c)
+}
+
+case class ACBC(ac: Option[Constraint], bc: Option[Constraint]) {
+  def toSeq = ac.toSeq ++ bc.toSeq
+  def withAC(c: Constraint) = {
+    require(ac.isEmpty)
+    ACBC(Some(c), bc)
+  }
+
+  def withBC(c: Constraint) = {
+    require(bc.isEmpty)
+    ACBC(ac, Some(c))
+  }
+
+  def foreach[U](f: Constraint => U) = {
+    ac.foreach(f)
+    bc.foreach(f)
+  }
+
+}
+
 final class SumGenerator(pm: ParameterManager) extends Generator with LazyLogging {
 
-  object ACBC {
-    val empty: ACBC = ACBC(None, None)
-    def apply(): ACBC = empty
-  }
-
-  case class ACBC(ac: Option[Constraint], bc: Option[Constraint]) {
-    def toSeq = ac.toSeq ++ bc.toSeq
-    def withAC(c: Constraint) = {
-      require(ac.isEmpty)
-      ACBC(Some(c), bc)
-    }
-
-    def withBC(c: Constraint) = {
-      require(bc.isEmpty)
-      ACBC(ac, Some(c))
-    }
-  }
-
-  def eq(neg: Boolean, x: Variable, b: Int, y: Variable) = {
-    ACBC(
-      ac = Some(new EqAC(neg, x, b, y)),
-      bc = Some(new EqBC(neg, x, b, y)))
-  }
+  def eq(neg: Boolean, x: Variable, b: Int, y: Variable): ACBC =
+    Eq(neg, x, b, y)
 
   def general(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode): ACBC = {
-    val constraints = ACBC().withBC(
+    val constraints = ACBC.withBC(
       Linear(constant, varParams.toArray, solverVariables.toArray, mode, pm))
 
     //   lazy val ss = Domain.searchSpace(solverVariables.map(_.initDomain))
@@ -95,8 +98,8 @@ final class SumGenerator(pm: ParameterManager) extends Generator with LazyLoggin
       case 1 =>
         val Seq(x) = solverVariables
         (varParams, mode, constant) match {
-          case (Seq(1), SumLE, k) => ACBC().withBC(new LeC(x, k))
-          case (Seq(1), SumLT, k) => ACBC().withBC(new LtC(x, k))
+          case (Seq(1), SumLE, k) => ACBC.withBC(new LeC(x, k))
+          case (Seq(1), SumLT, k) => ACBC.withBC(new LtC(x, k))
           case _ =>
             logger.info(s"${(varParams, mode, constant)} is non-specialized unary linear constraint")
             general(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode)
@@ -104,12 +107,12 @@ final class SumGenerator(pm: ParameterManager) extends Generator with LazyLoggin
       case 2 =>
         val Seq(x, y) = solverVariables
         (varParams, mode, constant) match {
-          case (Seq(1, -1), SumLE, k)  => ACBC().withBC(new Gt(y, k, x, false))
-          case (Seq(1, -1), SumLT, k)  => ACBC().withBC(new Gt(y, k, x, true))
-          case (Seq(-1, 1), SumLE, k)  => ACBC().withBC(new Gt(x, k, y, false))
-          case (Seq(-1, 1), SumLT, k)  => ACBC().withBC(new Gt(x, k, y, true))
-          case (Seq(1, -1), SumNE, k)  => ACBC().withAC(new Neq(x, y, k))
-          case (Seq(-1, 1), SumNE, k)  => ACBC().withAC(new Neq(x, y, -k))
+          case (Seq(1, -1), SumLE, k)  => ACBC.withBC(new Gt(y, k, x, false))
+          case (Seq(1, -1), SumLT, k)  => ACBC.withBC(new Gt(y, k, x, true))
+          case (Seq(-1, 1), SumLE, k)  => ACBC.withBC(new Gt(x, k, y, false))
+          case (Seq(-1, 1), SumLT, k)  => ACBC.withBC(new Gt(x, k, y, true))
+          case (Seq(1, -1), SumNE, k)  => ACBC.withAC(new Neq(x, y, k))
+          case (Seq(-1, 1), SumNE, k)  => ACBC.withAC(new Neq(x, y, -k))
           case (Seq(1, -1), SumEQ, k)  => eq(false, x, -k, y)
           case (Seq(-1, -1), SumEQ, k) => eq(true, x, -k, y)
           case (Seq(-1, 1), SumEQ, k)  => eq(false, x, k, y)
@@ -137,14 +140,7 @@ final class SumGenerator(pm: ParameterManager) extends Generator with LazyLoggin
     val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
     val solverVariables = vars.map(cspom2concrete1D).map(_.asVariable)
 
-    val generated =
-      withBinSpec(solverVariables, varParams, constant, mode).toSeq
-
-    assert(generated.forall {
-      case c: EqAC => c.neg || c.b != 0
-      case _       => true
-    }, generated)
-    generated
+    withBinSpec(solverVariables, varParams, constant, mode).toSeq
   }
 
   override def genFunctional(constraint: CSPOMConstraint[_], result: C2Conc)(implicit variables: VarMap) = {

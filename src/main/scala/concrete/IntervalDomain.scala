@@ -33,7 +33,7 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
     else { i }
 
   def copy = this
-  
+
   def isAssigned = false
 
   /**
@@ -124,6 +124,9 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
       requestedBV
     }
   }
+
+  def offset(o: Int) = if (o == 0) this else
+    new IntervalDomain(span + o)
 
   def &(d: Domain): Domain = d match {
     case id: IntervalDomain => this & id.span

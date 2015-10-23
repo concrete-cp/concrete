@@ -242,19 +242,9 @@ final class MDD1(private val child: MDD, private val index: Int) extends MDD {
   }
 
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]): MDD = {
-
-    //    } else if (mdds.contains(trie)) {
-    //      this
-    //    } else
-
-    var b = child.reduce(mdds)
-    //
-    //    if (b eq EmptyMDD) {
-    //      EmptyMDD
-    //    } else {
+    val b = child.reduce(mdds)
     val newArray = MDD.newTrie(index, b)
     mdds.getOrElseUpdate(newArray, new MDD1(b, index))
-    //}
 
   }
 
@@ -313,8 +303,8 @@ final class MDD1(private val child: MDD, private val index: Int) extends MDD {
 }
 
 final class MDD2(
-  private val left: MDD, private val leftI: Int,
-  private val right: MDD, private val rightI: Int) extends MDD {
+    private val left: MDD, private val leftI: Int,
+    private val right: MDD, private val rightI: Int) extends MDD {
   assert(right ne MDD0)
   assert(left ne MDD0)
 
@@ -402,8 +392,8 @@ final class MDD2(
   def edges(ts: Int): Int = cache(ts, 0, 2 + left.edges(ts) + right.edges(ts))
 
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]): MDD = {
-    var bL = left.reduce(mdds)
-    var bR = right.reduce(mdds)
+    val bL = left.reduce(mdds)
+    val bR = right.reduce(mdds)
 
     val nT = MDD.newTrie((leftI, bL), (rightI, bR))
 
@@ -427,9 +417,9 @@ final class MDD2(
 }
 
 final class MDDn(
-  private val trie: Array[MDD],
-  private val indices: Array[Int],
-  private val nbIndices: Int) extends MDD {
+    private val trie: Array[MDD],
+    private val indices: Array[Int],
+    private val nbIndices: Int) extends MDD {
 
   def copy(ts: Int) = cache(ts, new MDDn(trie map (t => if (t eq null) null else t.copy(ts)), indices.clone, nbIndices))
 
@@ -466,8 +456,7 @@ final class MDDn(
   }
 
   def reduce(mdds: collection.mutable.Map[Seq[MDD], MDD]): MDD = {
-
-    var b = MDD.newTrie(indices.take(nbIndices).map(i => (i, trie(i).reduce(mdds))): _*)
+    val b = MDD.newTrie(indices.take(nbIndices).map(i => (i, trie(i).reduce(mdds))): _*)
     mdds.getOrElseUpdate(b, new MDDn(b, indices, nbIndices))
   }
 
