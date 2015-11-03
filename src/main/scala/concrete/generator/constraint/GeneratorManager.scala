@@ -20,7 +20,7 @@ class GeneratorManager(pm: ParameterManager) {
     val sg = new SumGenerator(pm)
     Map(
       'abs -> AbsGenerator,
-      'alldifferent -> AllDifferentGenerator,
+      'alldifferent -> new AllDifferentGenerator(pm),
       'eq -> EqGenerator,
       //'gt -> GtGenerator,
       //'ge -> GtGenerator,

@@ -36,6 +36,8 @@ object BinaryExt {
 
   val MINIMUM_SIZE_FOR_LAST = 3 * java.lang.Long.SIZE;
 
+  val GAIN_OVER_GENERAL = 3;
+
   /**
    * No need for residues if domain sizes <= MINIMUM_SIZE_FOR_LAST
    */
@@ -57,14 +59,12 @@ abstract class BinaryExt(
   private val x = scope(0)
   private val y = scope(1)
 
-  private val GAIN_OVER_GENERAL = 3;
-
   private var staticEvaluation: Int = _
 
   override def getEvaluation(ps: ProblemState) = staticEvaluation
 
   override def init(ps: ProblemState) = {
-    staticEvaluation = (ps.card(x) * ps.card(y)) / GAIN_OVER_GENERAL
+    staticEvaluation = (ps.card(x) * ps.card(y)) / BinaryExt.GAIN_OVER_GENERAL
     ps
   }
 

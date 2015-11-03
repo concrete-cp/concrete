@@ -148,7 +148,9 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     while (i >= 0) {
       val c = constraints(i)
 
-      if (!states.isEntailed(c)) {
+      if (states.isEntailed(c)) {
+        logger.trace(s"${c.toString(states)} was entailed")
+      } else {
         val positions = modified.positionInConstraint(i)
 
         val a = if (positions.length > 1) {
@@ -163,8 +165,6 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
         //logger.fine(c + ", " + modified.positionInConstraint(i) + " : " + a)
         if (a >= 0) queue.offer(c, key.getKey(c, states, a))
 
-      } else {
-        logger.trace(s"${c.toString(states)} was entailed")
       }
 
       i -= 1

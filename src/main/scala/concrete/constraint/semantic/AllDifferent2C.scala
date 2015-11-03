@@ -28,8 +28,7 @@ import concrete.constraint.Constraint
 
 trait AllDiffChecker extends Constraint {
 
-  val offset = scope.iterator.map(_.initDomain.head).min
-  val max = scope.iterator.map(_.initDomain.last).max
+  private val offset = scope.iterator.map(_.initDomain.head).min
 
   def check(t: Array[Int]): Boolean = {
     //println(t.toSeq)
@@ -51,44 +50,44 @@ final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) w
   var q: List[Int] = Nil
 
   def revise(ps: ProblemState): Outcome = {
-    // print(this)
-    var state = ps
-    while (q.nonEmpty) {
-      val checkedVariable = q.head
-      q = q.tail
+    val out = revise(ps, q).entailIfFree(this)
+    q = Nil
+    out
+  }
 
-      val value = state.dom(scope(checkedVariable)).singleValue
+  def revise(ps: ProblemState, queue: List[Int]): Outcome = queue match {
+    case Nil => ps
+    case head :: tail =>
+      var state = ps
+      var q = tail
+      val value = ps.dom(scope(head)).singleValue
 
       var i = arity - 1
       while (i >= 0) {
-
-        if (i != checkedVariable) {
+        if (i != head) {
           val v = scope(i)
           val od = state.dom(v)
           val nd = od.remove(value)
 
-          if (nd.isEmpty) return Contradiction
           if (od ne nd) {
+            if (nd.isEmpty) return Contradiction
             state = state.updateDomNonEmpty(v, nd)
             if (nd.isAssigned) q ::= i
           }
         }
         i -= 1
       }
-    }
-    state.entailIfFree(this)
 
+      revise(state, q)
   }
 
   var lastAdvise = -1
 
   def advise(ps: ProblemState, p: Int) = {
-
     if (lastAdvise != adviseCount) {
       q = Nil
       lastAdvise = adviseCount
     }
-
     if (ps.assigned(scope(p))) {
       q ::= p
       arity
@@ -96,5 +95,6 @@ final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) w
       -1
     }
   }
+
   val simpleEvaluation = 3
 }

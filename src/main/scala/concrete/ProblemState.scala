@@ -119,7 +119,8 @@ case class ProblemState(
 
   def orElse(f: => Outcome) = this
 
-  def apply[S](c: StatefulConstraint[S]): S = constraintStates(c.id).asInstanceOf[S]
+  def apply[S](c: StatefulConstraint[S]): S =
+    constraintStates(c.id).asInstanceOf[S]
 
   def updateState[S <: AnyRef](c: StatefulConstraint[S], newState: S): ProblemState = {
     val id = c.id
@@ -141,20 +142,27 @@ case class ProblemState(
   //  }
 
   def padConstraints(constraints: Seq[Constraint], lastId: Int): Outcome = {
-    val padded = constraintStates.padTo(lastId + 1, null)
-    var ps = ProblemState(domains, padded, entailed)
-    for (c <- constraints.drop(constraintStates.size)) {
-      c.init(ps) match {
-        case Contradiction => return Contradiction
-        case newState: ProblemState =>
-          if (ps ne newState) {
-            logger.debug(s"Initializing ${c.toString(ps)} -> ${c.toString(newState)}, entailed = ${newState.isEntailed(c)}")
-          }
+    if (constraintStates.length > lastId) {
+      require(lastId < 0 || constraintStates.isDefinedAt(lastId),
+        s"$constraintStates($lastId) is not defined")
 
-          ps = newState
+      this
+    } else {
+      val padded = constraintStates.padTo(lastId + 1, null)
+      var ps = ProblemState(domains, padded, entailed)
+      for (c <- constraints.view.drop(constraintStates.size)) {
+        c.init(ps) match {
+          case Contradiction => return Contradiction
+          case newState: ProblemState =>
+            if (ps ne newState) {
+              logger.debug(s"Initializing ${c.toString(ps)} -> ${c.toString(newState)}, entailed = ${newState.isEntailed(c)}")
+            }
+
+            ps = newState
+        }
       }
+      ps
     }
-    ps
   }
 
   def entail(c: Constraint): ProblemState = {

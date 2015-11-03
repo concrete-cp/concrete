@@ -2,16 +2,15 @@ package concrete
 
 import scala.annotation.varargs
 import scala.runtime.ZippedTraversable3.zippedTraversable3ToTraversable
-
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 import org.scalatest.Tag
-
 import concrete.constraint.linear.Eq
-import concrete.constraint.semantic.AllDifferent2C
 import concrete.constraint.semantic.AllDifferentBC
 import concrete.heuristic.MedValue
 import cspom.StatisticsManager
+import concrete.constraint.semantic.Neq
+import concrete.constraint.semantic.AllDifferent2C
 
 object SlowTest extends Tag("concrete.SlowTest")
 
@@ -47,7 +46,10 @@ class TestMAC extends FlatSpec with Matchers {
 
   def allDiff(p: Problem, q: Seq[Variable]) {
     p.addConstraint(new AllDifferentBC(q: _*))
-    p.addConstraint(new AllDifferent2C(q: _*))
+        for (Seq(x, y) <- q.combinations(2)) {
+          p.addConstraint(new Neq(x, y))
+        }
+//    p.addConstraint(new AllDifferent2C(q: _*))
   }
 
   def view(queens: Seq[Variable], solution: Map[String, Int]) =

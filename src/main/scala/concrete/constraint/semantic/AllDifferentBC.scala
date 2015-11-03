@@ -10,7 +10,21 @@ import concrete.ProblemState
 import concrete.Outcome
 import concrete.util.Interval
 
-final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) with BC with AllDiffChecker {
+final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) with BC {
+
+  private val offset = scope.iterator.map(_.initDomain.head).min
+
+  def check(t: Array[Int]): Boolean = {
+    //println(t.toSeq)
+    val union = collection.mutable.BitSet.empty
+
+    !t.exists { v =>
+      union(v - offset) || {
+        union += (v - offset)
+        false
+      }
+    }
+  }
 
   case class HInterval(val p: Int) {
     var minrank: Int = 0
@@ -260,21 +274,21 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
     sortIt(doms)
     filterLower(ps, doms)
       .andThen(ps => filterUpper(ps, doms))
-//      .andThen { ps =>
-//        assert(
-//          scope.forall { v =>
-//            val d = ps.dom(v)
-//            !d.isAssigned || {
-//              val s = d.singleValue
-//              scope.forall { w =>
-//                (v eq w) || (ps.dom(w).head != s && ps.dom(w).last != s)
-//              }
-//            }
-//
-//          },
-//          toString(ps) + " -> " + toString(ps))
-//        ps
-//      }
+    //      .andThen { ps =>
+    //        assert(
+    //          scope.forall { v =>
+    //            val d = ps.dom(v)
+    //            !d.isAssigned || {
+    //              val s = d.singleValue
+    //              scope.forall { w =>
+    //                (v eq w) || (ps.dom(w).head != s && ps.dom(w).last != s)
+    //              }
+    //            }
+    //
+    //          },
+    //          toString(ps) + " -> " + toString(ps))
+    //        ps
+    //      }
   }
 
   private val eval: Int = {

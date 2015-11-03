@@ -39,8 +39,13 @@ final class Matrix2D(xSize: Int, ySize: Int, val xOffset: Int, val yOffset: Int,
     require(x >= 0)
     require(y >= 0)
     if (x < xMatrix.length && y < yMatrix.length) {
-      xMatrix(x) = xMatrix(x).set(y, status);
-      yMatrix(y) = yMatrix(y).set(x, status);
+      if (status) {
+        xMatrix(x) += y
+        yMatrix(y) += x
+      } else {
+        xMatrix(x) -= y
+        yMatrix(y) -= x
+      }
       empty = false;
     } else {
       logger.info(s"Tuple ($rx, $ry) is out of the scope of matrix $this")

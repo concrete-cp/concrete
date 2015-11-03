@@ -142,4 +142,6 @@ final class Singleton private (val singleValue: Int) extends IntDomain with Lazy
 
   def offset(o: Int) = if (o == 0) this else
     Singleton(singleValue + o)
+
+  def disjoint(d: Domain) = !d.present(singleValue)
 }

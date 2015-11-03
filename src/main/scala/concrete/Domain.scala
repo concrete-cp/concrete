@@ -95,9 +95,11 @@ abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
   def &(d: Domain): Domain
   def |(d: Domain): Domain
 
-  final def disjoint(d: Domain): Boolean = {
-    last < d.head || head > d.last || forall(v => !d.present(v))
-  }
+  def disjoint(d: Domain): Boolean // = (this & d).isEmpty
+
+  //  = {
+  //    last < d.head || head > d.last || forall(v => !d.present(v))
+  //  }
 
   def subsetOf(d: Domain): Boolean = {
     head >= d.head && last <= d.last && (d.convex || forall(d.present))

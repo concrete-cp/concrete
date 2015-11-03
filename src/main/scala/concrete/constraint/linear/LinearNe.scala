@@ -55,9 +55,9 @@ final class LinearNe(
     }
   }
 
-  override def toString() = toString("!=BC")
+  override def toString() = toString("!=")
 
-  override def toString(ps: ProblemState) = toString(ps, "!=BC")
+  override def toString(ps: ProblemState) = toString(ps, "!=")
 
   def advise(ps: ProblemState, p: Int) = arity * 2
 

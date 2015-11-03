@@ -3,6 +3,7 @@ package concrete
 import cspom.util.BitVector
 import concrete.util.Interval
 import com.typesafe.scalalogging.LazyLogging
+import concrete.util.CacheOne
 
 final class IntervalDomain(val span: Interval) extends IntDomain with LazyLogging {
 
@@ -106,22 +107,21 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
     new BitVectorDomain(head, bitVector0, size)
   }
 
-  lazy val bitVector0 = BitVector.empty.set(0, size)
+  lazy val bitVector0 = BitVector.filled(size)
 
-  var requestedOffset: Int = _
-  var requestedBV: BitVector = _
+  private val offsetBV = new CacheOne[Int, BitVector]()
+  //  
+  //  var requestedOffset: Int = _
+  //  var requestedBV: BitVector = _
 
   def toBitVector(offset: Int) = {
     if (offset == head) {
       bitVector0
-    } else if (requestedBV != null && offset == requestedOffset) {
-      requestedBV
     } else {
-
-      requestedOffset = offset
-      requestedBV = BitVector.empty.set(head - offset, last - offset + 1)
-      logger.info(s"generating BV for $this offset $offset: $requestedBV")
-      requestedBV
+      offsetBV(offset, {
+        logger.info(s"generating BV for $this offset $offset")
+        BitVector.empty.set(head - offset, last - offset + 1)
+      })
     }
   }
 
@@ -141,6 +141,8 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
     case EmptyIntDomain   => EmptyIntDomain
     case b: BooleanDomain => b & this
   }
+
+  def disjoint(d: Domain): Boolean = last < d.head || head > d.last
 
   def &(lb: Int, ub: Int) = {
     val nlb = math.max(span.lb, lb)

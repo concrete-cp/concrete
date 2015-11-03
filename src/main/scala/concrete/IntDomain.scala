@@ -35,6 +35,7 @@ object EmptyIntDomain extends IntDomain {
   def median = throw new NoSuchElementException
   def isAssigned = throw new UnsupportedOperationException
   def offset(o: Int) = EmptyIntDomain
+  def disjoint(d: Domain) = true
 }
 
 object IntDomain {

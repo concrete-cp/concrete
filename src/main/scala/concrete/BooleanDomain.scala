@@ -86,6 +86,8 @@ case object UNKNOWNBoolean extends BooleanDomain {
   def median = 1
 
   def isAssigned = false
+
+  def disjoint(d: Domain) = !(d.present(0) || d.present(1))
 }
 
 case object TRUE extends BooleanDomain {
@@ -115,6 +117,7 @@ case object TRUE extends BooleanDomain {
   }
   def median = 1
   def isAssigned = true
+  def disjoint(d: Domain) = !d.present(1)
 }
 
 case object FALSE extends BooleanDomain {
@@ -144,6 +147,7 @@ case object FALSE extends BooleanDomain {
   }
   def median = 0
   def isAssigned = true
+  def disjoint(d: Domain) = !d.present(0)
 }
 
 case object EMPTY extends BooleanDomain {
@@ -170,6 +174,7 @@ case object EMPTY extends BooleanDomain {
   def union(bd: BooleanDomain) = bd
   def median = throw new NoSuchElementException
   def isAssigned = throw new UnsupportedOperationException
+  def disjoint(d: Domain): Boolean = true
 }
 
 object BooleanDomain {
@@ -220,7 +225,7 @@ sealed trait BooleanDomain extends Domain {
   }
 
   def filterBounds(f: Int => Boolean) = filter(f)
-  
-  def offset(o:Int) = throw new UnsupportedOperationException
+
+  def offset(o: Int) = throw new UnsupportedOperationException
 }
 

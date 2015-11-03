@@ -10,6 +10,7 @@ import concrete.constraint.Constraint
 import concrete.constraint.Removals
 import concrete.Outcome
 import concrete.generator.constraint.ACBC
+import concrete.constraint.extension.BinaryExt
 
 object Eq {
   def apply(neg: Boolean, x: Variable, b: Int, y: Variable): ACBC =
@@ -38,7 +39,7 @@ final class EqACFast(val x: Variable, val b: Int, val y: Variable)
   def check(tuple: Array[Int]): Boolean = (tuple(0) + b == tuple(1))
 
   def init(ps: ProblemState): Outcome = {
-    staticEvaluation = ps.card(x) + ps.card(y)
+    staticEvaluation = (ps.card(x) + ps.card(y)) / BinaryExt.GAIN_OVER_GENERAL
     ps
   }
 
@@ -76,16 +77,16 @@ final class EqACFast(val x: Variable, val b: Int, val y: Variable)
  * @param b
  * @param y
  */
-final class EqACNeg private[linear] (val x: Variable, val y: Variable, val b: Int, val skipIntervals: Boolean = true)
+final class EqACNeg private[linear] (
+  val x: Variable,
+  val y: Variable,
+  val b: Int,
+  val skipIntervals: Boolean = true)
     extends Constraint(Array(x, y)) with Removals with BCCompanion {
 
   def init(ps: ProblemState) = ps
 
   def this(x: Variable, y: Variable) = this(x, y, 0, true)
-
-  private def yValue(x: Int) = b - x
-
-  private def xValue(y: Int) = b - y
 
   def check(t: Array[Int]) = t(0) + t(1) == b
 
@@ -98,9 +99,9 @@ final class EqACNeg private[linear] (val x: Variable, val y: Variable, val b: In
     val xDom = ps.dom(x)
     val yDom = ps.dom(y)
     val r = if (xDom.size < yDom.size) {
-      xDom.exists(xv => yDom.present(yValue(xv)))
+      xDom.exists(xv => yDom.present(b - xv))
     } else {
-      yDom.exists(yv => xDom.present(xValue(yv)))
+      yDom.exists(yv => xDom.present(b - yv))
     }
 
     if (r) ps else Contradiction
@@ -115,9 +116,7 @@ final class EqACNeg private[linear] (val x: Variable, val y: Variable, val b: In
         ps
       } else {
         val domY = ps.dom(y)
-        ps.filterDom(x) { xv: Int =>
-          domY.present(yValue(xv))
-        }
+        ps.filterDom(x)(xv => domY.present(b - xv))
       }
     }
       .andThen { ps =>
@@ -125,17 +124,14 @@ final class EqACNeg private[linear] (val x: Variable, val y: Variable, val b: In
           ps
         } else {
           val domX = ps.dom(x)
-          ps.filterDom(y) { yv: Int =>
-            domX.present(xValue(yv))
-          }
+          ps.filterDom(y)(yv => domX.present(b - yv))
         }
 
       }
-      .entailIf(this, _.dom(x).isAssigned)
 
   }
 
-  override def toString(ps: ProblemState) = s"${x.toString(ps)} + ${y.toString(ps)} = $b"
+  override def toString(ps: ProblemState) = s"${x.toString(ps)} + ${y.toString(ps)} =AC= $b"
 }
 
 final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)

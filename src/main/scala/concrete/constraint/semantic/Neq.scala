@@ -29,14 +29,17 @@ final class Neq(v0: Variable, v1: Variable, c: Int = 0) extends Constraint(Array
   }
 
   private def revise(variable: Domain, otherVar: Domain, c: Int): Domain = {
-    if (otherVar.size == 1) variable.remove(otherVar.head + c) else variable
+    if (otherVar.isAssigned)
+      variable.remove(otherVar.singleValue + c)
+    else
+      variable
   }
 
   override def isConsistent(ps: ProblemState) = {
     val v0dom = ps.dom(v0)
-    val r = v0dom.size > 1 || {
+    val r = !v0dom.isAssigned || {
       val v1dom = ps.dom(v1)
-      v1dom.size > 1 || (v0dom.head - v1dom.head != c)
+      !v1dom.isAssigned || (v0dom.head - v1dom.head != c)
     }
 
     if (r) ps else Contradiction
@@ -48,7 +51,8 @@ final class Neq(v0: Variable, v1: Variable, c: Int = 0) extends Constraint(Array
     else ""
   }"
 
-  def advise(ps: ProblemState, p: Int) = if (ps.dom(scope(p)).size > 1) -1 else 2
+  def advise(ps: ProblemState, p: Int) =
+    if (ps.assigned(scope(p))) 2 else -1
 
   val simpleEvaluation = 2
 }

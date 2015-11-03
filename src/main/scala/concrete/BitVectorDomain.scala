@@ -4,6 +4,7 @@ import cspom.util.BitVector
 import concrete.util.Interval
 import concrete.util.Math
 import com.typesafe.scalalogging.LazyLogging
+import concrete.util.CacheOne
 object BitVectorDomain {
   val DISPLAYED_VALUES = 5;
 
@@ -138,22 +139,30 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
 
   def apply(i: Int) = iterator.drop(i - 1).next
 
-  var requestedOffset: Int = _
-  var requestedBV: BitVector = _
+  //  var requestedOffset: Int = _
+  //  var requestedBV: BitVector = _
+
+  private val bvOffset = new CacheOne[Int, BitVector]()
 
   def toBitVector(offset: Int) = {
     if (offset == this.offset) {
       bitVector
-    } else if (requestedBV != null && offset == requestedOffset) {
-      requestedBV
     } else {
-      logger.info(s"generating BV from offset ${this.offset} to $offset")
-      requestedOffset = offset
-      requestedBV = BitVector.empty
-      for (v <- this) {
-        requestedBV += v - offset
-      }
-      requestedBV
+      //      if (requestedBV != null && offset == requestedOffset) {
+      //    }
+      //      requestedBV
+      //    } else {
+
+      bvOffset(offset, {
+        logger.info(s"generating BV from offset ${this.offset} to $offset")
+        // requestedOffset = offset
+        bitVector.shift(this.offset - offset)
+        //        BitVector(this.view.map(_ - offset))
+        //        //        for (v <- this) {
+        //        //          requestedBV += v - offset
+        //        //        }
+        //        requestedBV
+      })
     }
   }
 
@@ -182,6 +191,18 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
       }
     case EmptyIntDomain   => EmptyIntDomain
     case b: BooleanDomain => b & this
+  }
+
+  def disjoint(d: Domain) = d match {
+    case id: IntervalDomain => id.disjoint(this)
+    case s: Singleton       => s.disjoint(this)
+    case bd: BitVectorDomain =>
+      val newOffset = math.min(offset, bd.offset)
+      toBitVector(newOffset).intersects(bd.toBitVector(newOffset)) < 0
+
+    case EmptyIntDomain   => true
+    case b: BooleanDomain => b.disjoint(this)
+
   }
 
   override def |(d: Domain) = {
