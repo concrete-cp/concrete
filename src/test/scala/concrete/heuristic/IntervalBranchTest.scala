@@ -20,7 +20,7 @@ class IntervalBranchTest extends FlatSpec with Matchers {
 
     val v = new Variable("v", d)
     v.id = 0
-    val ps = new ProblemState(Vector(d), Vector(), BitVector.empty)
+    val ps = new ProblemState(Vector(d), Vector(), Vector(), BitVector.empty)
 
     val h = new concrete.heuristic.IntervalBranch(new ParameterManager)
 
@@ -36,7 +36,7 @@ class IntervalBranchTest extends FlatSpec with Matchers {
 
     val v = new Variable("v", d)
     v.id = 0
-    val ps = new ProblemState(Vector(d), Vector(), BitVector.empty)
+    val ps = new ProblemState(Vector(d), Vector(), Vector(), BitVector.empty)
 
     val h = new concrete.heuristic.IntervalBranch(new ParameterManager)
 

@@ -71,8 +71,10 @@ sealed trait Outcome {
   def toState: ProblemState
 
   def isEntailed(c: Constraint): Boolean
+  def activeConstraints(v: Variable): BitVector
 
   def apply[S](c: StatefulConstraint[S]): S
+
 }
 
 case object Contradiction extends Outcome {
@@ -96,6 +98,7 @@ case object Contradiction extends Outcome {
   def assign(v: Variable, value: Int): concrete.Outcome = Contradiction
   def entail(c: Constraint): concrete.Outcome = Contradiction
   def isEntailed(c: Constraint): Boolean = throw new UNSATException("Tried to get state from a Contradiction")
+  def activeConstraints(v: Variable): BitVector = throw new UNSATException("Tried to get state from a Contradiction")
   def updateState[S](c: StatefulConstraint[S], newState: S): concrete.Outcome = Contradiction
 }
 
@@ -104,7 +107,11 @@ object ProblemState {
   //    ProblemState(Vector(domains: _*), Vector(constraintStates: _*), BitVector(entailed))
 
   def apply(problem: Problem): Outcome = {
-    ProblemState(Vector(problem.variables.map(_.initDomain): _*), Vector(), BitVector.empty)
+    ProblemState(
+      Vector(problem.variables.map(_.initDomain): _*),
+      Vector(),
+      Vector(problem.variables.map(v => BitVector.filled(v.constraints.length)): _*),
+      BitVector.empty)
       .padConstraints(problem.constraints, problem.maxCId)
   }
 }
@@ -112,6 +119,7 @@ object ProblemState {
 case class ProblemState(
   val domains: Vector[Domain],
   val constraintStates: Vector[AnyRef],
+  val activeConstraints: Vector[BitVector],
   val entailed: BitVector) extends Outcome
     with LazyLogging {
 
@@ -127,7 +135,7 @@ case class ProblemState(
     if (constraintStates(id) eq newState) {
       this
     } else {
-      new ProblemState(domains, constraintStates.updated(id, newState), entailed)
+      new ProblemState(domains, constraintStates.updated(id, newState), activeConstraints, entailed)
     }
   }
 
@@ -149,30 +157,58 @@ case class ProblemState(
       this
     } else {
       val padded = constraintStates.padTo(lastId + 1, null)
-      var ps = ProblemState(domains, padded, entailed)
+      var ps = ProblemState(domains, padded, activeConstraints, entailed)
       for (c <- constraints.view.drop(constraintStates.size)) {
         c.init(ps) match {
           case Contradiction => return Contradiction
           case newState: ProblemState =>
             if (ps ne newState) {
-              logger.debug(s"Initializing ${c.toString(ps)} -> ${c.toString(newState)}, entailed = ${newState.isEntailed(c)}")
+              logger.debug(s"Initializing ${c.toString(ps)} -> ${c.toString(newState)}")
             }
 
             ps = newState
+        }
+
+        if (!ps.isEntailed(c)) {
+          var ac = ps.activeConstraints
+          for (i <- c.scope.indices) {
+            val vid = c.scope(i).id
+            /** Fake variables (constants) may appear in constraints */
+            if (vid >= 0) {
+              ac = ac.updated(vid, ac(vid) + c.positionInVariable(i))
+            }
+          }
+
+          ps = ProblemState(ps.domains, ps.constraintStates, ac, ps.entailed)
         }
       }
       ps
     }
   }
 
+  def isEntailed(c: Constraint): Boolean = entailed(c.id)
+
   def entail(c: Constraint): ProblemState = {
-    val id = c.id
-    if (id >= 0)
-      new ProblemState(domains, constraintStates, entailed + id)
-    else this
+    var ac = activeConstraints
+    var i = c.arity - 1
+    while (i >= 0) {
+      val vid = c.scope(i).id
+      /** Fake variables (constants) may appear in constraints */
+      if (vid >= 0) {
+        ac = ac.updated(vid, ac(vid) - c.positionInVariable(i))
+      }
+      i -= 1
+    }
+    //    val id = c.id
+    //    if (id >= 0)
+    new ProblemState(domains, constraintStates, ac, entailed + c.id)
+    //else this
   }
 
-  def isEntailed(c: Constraint): Boolean = entailed(c.id)
+  def activeConstraints(v: Variable): BitVector =
+    activeConstraints(v.id)
+
+  //def isEntailed(c: Constraint): Boolean = entailed(c.id)
 
   def updateDom(v: Variable, newDomain: Domain): Outcome = {
     if (newDomain.isEmpty) {
@@ -193,7 +229,7 @@ case class ProblemState(
       assert(newDomain subsetOf oldDomain)
       assert(!oldDomain.isInstanceOf[BooleanDomain] || newDomain.isInstanceOf[BooleanDomain])
       assert(!oldDomain.isInstanceOf[IntDomain] || newDomain.isInstanceOf[IntDomain])
-      new ProblemState(domains.updated(id, newDomain), constraintStates, entailed)
+      new ProblemState(domains.updated(id, newDomain), constraintStates, activeConstraints, entailed)
     }
   }
 

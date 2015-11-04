@@ -16,13 +16,9 @@ trait BC extends Constraint {
       case Contradiction => Contradiction
       case ns: ProblemState =>
         if (ns eq state) {
-          if (ns.isEntailed(this)) {
-            ns
-          } else {
-            ns
-          }
-        } else if (ns.isEntailed(this)) {
           ns
+// TODO       } else if (ns.isEntailed(this)) {
+//          ns
         } else {
           revise(ns)
         }

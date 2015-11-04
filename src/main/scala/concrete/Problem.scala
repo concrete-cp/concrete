@@ -56,7 +56,11 @@ final class Problem(val variables: Array[Variable]) {
     for (c <- cs) {
       _nextCId = c.identify(_nextCId)
       _maxArity = math.max(_maxArity, c.arity)
-      c.scope.foreach(v => v.addConstraint(c))
+      for (p <- 0 until c.arity) {
+        val v = c.scope(p)
+        val pc = v.addConstraint(c)
+        c.positionInVariable(p) = pc
+      }
     }
   }
 
@@ -75,7 +79,7 @@ final class Problem(val variables: Array[Variable]) {
   override def toString = toString(initState.toState)
 
   def stats(state: ProblemState) = {
-    val entailed = state.entailed.cardinality
+    val entailed = -1 //state.entailed.cardinality
 
     s"Total ${variables.size} variables, ${constraints.size - entailed} active constraints and $entailed entailed constraints"
   }

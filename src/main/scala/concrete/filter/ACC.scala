@@ -61,17 +61,15 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
   private val advises = new AdviseCount()
 
-  problem.constraints.iterator.collect {
-    case c: Advisable => c
-  } foreach {
-    _.register(advises)
-  }
+  problem.constraints.iterator
+    .collect {
+      case c: Advisable => c
+    }
+    .foreach(_.register(advises))
 
   @Statistic
   val substats = new StatisticsManager
   substats.register("queue", queue);
-  // private static final Logger LOGGER = Logger.getLogger(Filter.class
-  // .getSimpleName());
 
   @Statistic
   var revisions = 0;
@@ -80,20 +78,11 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     advises.clear()
     queue.clear()
 
-    for (c <- problem.constraints)
+    for (c <- problem.constraints) {
       if (!states.isEntailed(c)) {
         adviseAndEnqueue(c, states)
       }
-    //    
-    //    val advisedStates: ProblemState = states.updateConstraints {
-    //      (i, s) =>
-    //        val c = problem.constraints(i)
-    //        if (c.isEntailed) {
-    //          s
-    //        } else {
-    //          adviseAndEnqueue(c)(s.asInstanceOf[c.State])
-    //        }
-    //    }
+    }
 
     reduce(states)
   }
@@ -111,7 +100,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     if (modCons != null) {
       for (i <- 0 until problem.constraints.length) {
         val c = problem.constraints(i)
-        if (modCons(i) > cnt && !states.entailed(i)) {
+        if (modCons(i) > cnt && !states.isEntailed(c)) {
           adviseAndEnqueue(c, states)
         }
       }
@@ -144,30 +133,22 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
     val constraints = modified.constraints
 
-    var i = constraints.length - 1
-    while (i >= 0) {
+    for (i <- states.activeConstraints(modified)) {
       val c = constraints(i)
 
-      if (states.isEntailed(c)) {
-        logger.trace(s"${c.toString(states)} was entailed")
+      val positions = modified.positionInConstraint(i)
+
+      val a = if (positions.length > 1) {
+        c.adviseArray(states, positions)
+      } else if (c ne skip) {
+        c.advise(states, positions(0))
       } else {
-        val positions = modified.positionInConstraint(i)
-
-        val a = if (positions.length > 1) {
-          c.adviseArray(states, positions)
-        } else if (c ne skip) {
-          c.advise(states, positions(0))
-        } else {
-          -1
-        }
-
-        logger.trace(s"Queueing ${c.toString(states)}, positions = $positions, advise = $a")
-        //logger.fine(c + ", " + modified.positionInConstraint(i) + " : " + a)
-        if (a >= 0) queue.offer(c, key.getKey(c, states, a))
-
+        -1
       }
 
-      i -= 1
+      logger.trace(s"Queueing ${c.toString(states)}, positions = $positions, advise = $a")
+      //logger.fine(c + ", " + modified.positionInConstraint(i) + " : " + a)
+      if (a >= 0) queue.offer(c, key.getKey(c, states, a))
 
     }
 
@@ -242,12 +223,6 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     }
 
   }
-
-  private def noChange(oldState: ProblemState, newState: ProblemState, variables: Set[Variable]): Boolean = {
-    variables.forall(v => oldState.dom(v) eq newState.dom(v))
-  }
-
-  def domSizes(c: Constraint, state: ProblemState) = Array.tabulate(c.arity)(p => state.dom(c.scope(p)).size)
 
   override def toString = "AC-cons+" + queue.getClass().getSimpleName();
 

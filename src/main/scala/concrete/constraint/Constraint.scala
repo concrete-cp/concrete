@@ -96,6 +96,9 @@ abstract class Constraint(val scope: Array[Variable])
 
   }
 
+  val positionInVariable: Array[Int] =
+    Array.fill(arity)(-1)
+
   override def equals(o: Any) = o.asInstanceOf[Constraint].id == id
 
   override def hashCode = id
@@ -275,11 +278,11 @@ abstract class Constraint(val scope: Array[Variable])
     } else {
       revise(ps) match {
         case Contradiction =>
-          logger.error(s"${toString(ps)} is not consistent${if (ps.isEntailed(this)) " - entailed" else ""}")
+          logger.error(s"${toString(ps)} is not consistent")
           false
         case finalState: ProblemState =>
           if (!scope.forall(v => ps.dom(v) eq finalState.dom(v))) {
-            logger.error(s"${toString(ps)}${if (ps.isEntailed(this)) " - entailed" else ""} was revised (-> ${toString(finalState)})")
+            logger.error(s"${toString(ps)}} was revised (-> ${toString(finalState)})")
             false
           } else if (!(adv < 0 || ps.isEntailed(this) == finalState.isEntailed(this))) {
             logger.error(s"${toString(ps)}: entailment detected")

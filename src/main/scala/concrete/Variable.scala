@@ -26,8 +26,8 @@ import concrete.priorityqueues.Identified
 import concrete.priorityqueues.PTag
 
 final class Variable(
-  val name: String,
-  val initDomain: Domain) extends Identified with PTag with DLNode[Variable] {
+    val name: String,
+    val initDomain: Domain) extends Identified with PTag with DLNode[Variable] {
 
   var id = -1
 
@@ -43,12 +43,15 @@ final class Variable(
 
   def constraints = _constraints
 
-  def addConstraint(newConstraint: Constraint) {
+  def addConstraint(newConstraint: Constraint): Int = {
+    val position = _constraints.length
     _constraints :+= newConstraint
+
     if (newConstraint.isInstanceOf[ExtensionConstraint]) {
       _extensionConstraints ::= newConstraint.asInstanceOf[ExtensionConstraint]
     }
     _positionInConstraint :+= newConstraint.position(this)
+    position
   }
 
   def dynamicConstraints = _extensionConstraints
@@ -68,13 +71,17 @@ final class Variable(
   }
 
   def getWDegEntailed(state: ProblemState) = {
-    var i = constraints.length - 1
+
+    //var i = constraints.length - 1
     var wDeg = 0
-    while (i >= 0) {
-      val c = constraints(i)
-      if (!state.isEntailed(c)) wDeg += c.weight
-      i -= 1
+    for (i <- state.activeConstraints(this)) {
+      wDeg += constraints(i).weight
     }
+    //    while (i >= 0) {
+    //      val c = constraints(i)
+    //      if (!state.isEntailed(c)) wDeg += c.weight
+    //      i -= 1
+    //    }
     wDeg
   }
 
