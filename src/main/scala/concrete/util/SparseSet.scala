@@ -33,11 +33,11 @@ class SparseSet(
   override def size = members
 
   private def swap(elem: Int, a: Int, end: Int): Unit = {
-    val t = dense(a)
-    dense(a) = dense(end)
-    dense(end) = t
+    val swapped = dense(end)
+    dense(a) = swapped
+    dense(end) = elem
     sparse(elem) = end
-    sparse(end) = a
+    sparse(swapped) = a
 
   }
 

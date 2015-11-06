@@ -166,7 +166,7 @@ object SQLWriter {
   val statistic = TableQuery[Statistic]
 }
 
-final class SQLWriter(jdbcUri: URI, params: ParameterManager) extends ConcreteWriter {
+final class SQLWriter(jdbcUri: URI, params: ParameterManager, val stats: StatisticsManager) extends ConcreteWriter {
 
   val createTables: Boolean =
     params.getOrElse("sql.createTables", false)
@@ -264,17 +264,6 @@ final class SQLWriter(jdbcUri: URI, params: ParameterManager) extends ConcreteWr
     }
   }
 
-  def write(stats: StatisticsManager) {
-    executionId.onSuccess {
-
-      case e =>
-        for ((key, value) <- stats.digest) {
-          statistic += ((key, e, value.toString))
-        }
-
-    }
-  }
-
   def error(thrown: Throwable) {
     //println(e.toString)
     thrown.printStackTrace()
@@ -288,6 +277,10 @@ final class SQLWriter(jdbcUri: URI, params: ParameterManager) extends ConcreteWr
   def disconnect(status: Try[Boolean]) {
     executionId.onSuccess {
       case e =>
+        for ((key, value) <- stats.digest) {
+          statistic += ((key, e, value.toString))
+        }
+
         val dbexec = for (dbe <- executions if dbe.executionId === e) yield dbe
 
         dbexec.map(e => (e.end, e.status)).update(

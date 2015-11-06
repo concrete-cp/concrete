@@ -115,8 +115,8 @@ trait ConcreteRunner extends LazyLogging {
     val optimizeVar: Option[String] = pm.get[String]("optimizeVar")
 
     val writer: ConcreteWriter =
-      opt.get('SQL).map(url => new SQLWriter(new URI(url.toString), pm)).getOrElse {
-        new ConsoleWriter(opt)
+      opt.get('SQL).map(url => new SQLWriter(new URI(url.toString), pm, statistics)).getOrElse {
+        new ConsoleWriter(opt, statistics)
       }
 
     writer.problem(description(remaining))
@@ -189,8 +189,6 @@ trait ConcreteRunner extends LazyLogging {
           Failure(e)
       }
 
-    //waker.cancel()
-    writer.write(statistics)
     for (s <- pm.unused) {
       logger.warn(s"Unused parameter : $s")
     }

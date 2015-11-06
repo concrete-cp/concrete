@@ -41,6 +41,11 @@ class SparseSetTest extends FlatSpec with Matchers with PropertyChecks {
   }
 
   it should "have a Set behavior" in {
+
+    new SparseSet(10) + 0 should contain theSameElementsAs Seq(0)
+
+    (new SparseSet(1000) + 154 + 995 - 154 + 995) should contain theSameElementsAs Set(995)
+
     forAll(Gen.nonEmptyListOf(Gen.zip(Gen.choose(0, 1000), Gen.oneOf(true, false)))) { g =>
       var set = Set.empty[Int]
       var sparseSet = new SparseSet(math.max(g.size, 1001))

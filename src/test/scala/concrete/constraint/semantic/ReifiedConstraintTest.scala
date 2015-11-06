@@ -35,7 +35,7 @@ import scala.util.Success
 class ReifiedConstraintTest extends FlatSpec with Matchers {
 
   "Reified neq" should "be revised after advise" in {
-    val v0 = new Variable("v0", IntDomain.ofSeq(0))
+    val v0 = new Variable("v0", IntDomain.ofSeq(0, 1))
     val v1 = new Variable("v1", IntDomain.ofSeq(3, 4))
     val control1 = new Variable("control1", BooleanDomain())
     val control2 = new Variable("control2", BooleanDomain())
@@ -55,7 +55,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
 
     val pb = Problem(control1, control2, v0, v1)
     pb.addConstraints(Seq(c1, c2))
-    val ps = pb.initState.toState
+    val ps = pb.initState.assign(v0, 0).toState
 
     //c1.advise(ps, 2) should be >= 0
     c2.advise(ps, 2) should be >= 0
@@ -135,8 +135,8 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
     val cspom = CSPOM { implicit cspom =>
       val r = new BoolVariable() as "r"
       val v0 = IntVariable(0 to 3) as "v0"
-      val v1 = IntVariable(0) as "v1"
-      val v2 = IntVariable(0) as "v2"
+      val v1 = IntVariable(0, 1) as "v1"
+      val v2 = IntVariable(0, 1) as "v2"
       ctr(CSPOMConstraint(r)('sum)(Seq(1, 1, 1), Seq(v0, v1, v2), 0) withParam ("mode" -> "eq"))
     }
 
@@ -146,8 +146,12 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
 
     val r = problem.variable("r")
     val v0 = problem.variable("v0")
+    val v1 = problem.variable("v1")
+    val v2 = problem.variable("v2")
 
     val state = problem.initState
+      .assign(v1, 0)
+      .assign(v2, 0)
       .toState
 
     withClue(problem.toString(state)) {

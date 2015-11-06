@@ -46,10 +46,10 @@ class TestMAC extends FlatSpec with Matchers {
 
   def allDiff(p: Problem, q: Seq[Variable]) {
     p.addConstraint(new AllDifferentBC(q: _*))
-        for (Seq(x, y) <- q.combinations(2)) {
-          p.addConstraint(new Neq(x, y))
-        }
-//    p.addConstraint(new AllDifferent2C(q: _*))
+    for (Seq(x, y) <- q.combinations(2)) {
+      p.addConstraint(new Neq(x, y))
+    }
+    //    p.addConstraint(new AllDifferent2C(q: _*))
   }
 
   def view(queens: Seq[Variable], solution: Map[String, Int]) =
@@ -59,9 +59,10 @@ class TestMAC extends FlatSpec with Matchers {
     4 -> 2,
     8 -> 92,
     12 -> 14200,
-    13 -> 73712,
-    14 -> 365596)
-
+    13 -> 73712 //,
+    // 14 -> 365596)
+    )
+    
   val pm = new ParameterManager
   pm("heuristic.value") = classOf[MedValue]
 

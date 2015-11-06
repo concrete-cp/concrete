@@ -6,7 +6,7 @@ import scala.util.Try
 import scala.util.Success
 import scala.util.Failure
 
-class ConsoleWriter(opts: Map[Symbol, Any]) extends ConcreteWriter {
+class ConsoleWriter(val opts: Map[Symbol, Any], val stats: StatisticsManager) extends ConcreteWriter {
 
   def parameters(params: NodeSeq) {
     for (p <- params \\ "p") {
@@ -23,26 +23,33 @@ class ConsoleWriter(opts: Map[Symbol, Any]) extends ConcreteWriter {
   }
 
   def solution(sol: String) {
-    Console.println(sol)
-  }
-
-  def write(stats: StatisticsManager) {
     if (opts.contains('stats))
       for ((n, v) <- stats.digest.toSeq.sortBy(_._1)) {
         Console.println(s"% $n = $v")
       }
-
+    Console.println(sol)
   }
 
   def error(e: Throwable) {
     e.printStackTrace(Console.err)
   }
 
+  private def writeStats(): Unit = {
+    if (opts.contains('stats))
+      for ((n, v) <- stats.digest.toSeq.sortBy(_._1)) {
+        Console.println(s"% $n = $v")
+      }
+  }
+
   def disconnect(status: Try[Boolean]) {
     status match {
-      case Success(true)  => Console.println("==========")
-      case Success(false) => Console.println("=====UNSATISFIABLE=====")
-      case Failure(_)     => Console.println("=====UNKNOWN=====")
+      case Success(true) => Console.println("==========")
+      case Success(false) =>
+        writeStats()
+        Console.println("=====UNSATISFIABLE=====")
+      case Failure(_) =>
+        writeStats()
+        Console.println("=====UNKNOWN=====")
     }
   }
 
