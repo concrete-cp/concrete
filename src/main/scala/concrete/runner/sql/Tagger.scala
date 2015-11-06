@@ -1,8 +1,9 @@
 package concrete.runner.sql
-import slick.jdbc.StaticQuery.interpolation
-import slick.driver.PostgresDriver.simple._
+
+import slick.driver.PostgresDriver.api._
 import slick.jdbc.GetResult
 import java.net.URI
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object Tagger extends App {
 
@@ -15,28 +16,42 @@ object Tagger extends App {
   implicit val getProblemResult = GetResult(r =>
     Problem(r.<<, r.<<, r.<<, r.nextStringOption.map(_.split(",").toSeq).getOrElse(Seq())))
 
-  Table.DB.withSession { implicit session =>
+  val DB = Table.DB
+  try {
 
-    val problems = sql"""
+    DB.run(sql"""
         SELECT "problemId", name, display, string_agg("problemTag", ',') as tags
         FROM "Problem" NATURAL LEFT JOIN "ProblemTag"
         GROUP BY "problemId", display, "nbVars", "nbCons"
         ORDER BY display
-        """.as[Problem].list
+        """.as[Problem])
+      .onSuccess {
+        case problems =>
 
-    for (p <- problems) {
-      val path = new URI(p.name).getPath.split('/')
-      val name = path.last
-      val cats = path.init
+          val upd: Seq[DBIO[Int]] = problems.flatMap { p =>
+            val path = new URI(p.name).getPath.split('/')
+            val name = path.last
+            val cats = path.init
 
-      if (p.display.isEmpty) {
-        sqlu"""UPDATE "Problem" SET display = $name WHERE "problemId" = ${p.problemId}""".first
+            val display: Seq[DBIO[Int]] = if (p.display.isEmpty) {
+              Seq(sqlu"""UPDATE "Problem" SET display = $name WHERE "problemId" = ${p.problemId}""")
+            } else {
+              Seq()
+            }
+
+            val tags: Seq[DBIO[Int]] = for (c <- cats if !p.tags.contains(c)) yield {
+              sqlu"""INSERT INTO "ProblemTag" VALUES ($c, ${p.problemId})"""
+            }
+
+            display ++: tags
+
+          }
+          
+          DB.run(DBIO.sequence(upd))
+
       }
-
-      for (c <- cats if !p.tags.contains(c)) {
-        sqlu"""INSERT INTO "ProblemTag" VALUES ($c, ${p.problemId})""".first
-      }
-
-    }
+  } finally {
+    DB.close()
   }
+
 }

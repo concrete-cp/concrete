@@ -56,9 +56,9 @@ trait ConcreteRunner extends LazyLogging {
 
       options(tail, o + ('D -> p), realArgs)
     }
-    case "-sql" :: option :: tail =>
-      options(tail, o + ('SQL -> option), realArgs)
-    case "-control" :: tail             => options(tail, o + ('Control -> None), realArgs)
+    case "-sql" :: tail =>
+      options(tail, o + ('SQL -> Unit), realArgs)
+    case "-control" :: tail             => options(tail, o + ('Control -> Unit), realArgs)
     case "-time" :: t :: tail           => options(tail, o + ('Time -> t.toInt), realArgs)
     case "-a" :: tail                   => options(tail, o + ('all -> Unit), realArgs)
     case "-s" :: tail                   => options(tail, o + ('stats -> Unit), realArgs)
@@ -97,7 +97,7 @@ trait ConcreteRunner extends LazyLogging {
         sys.exit(1)
     }
 
-    logger.info(opt.toString())
+    logger.info((opt, remaining).toString)
 
     for (u <- opt.get('unknown)) {
       logger.warn("Unknown options: " + u)
@@ -115,7 +115,9 @@ trait ConcreteRunner extends LazyLogging {
     val optimizeVar: Option[String] = pm.get[String]("optimizeVar")
 
     val writer: ConcreteWriter =
-      opt.get('SQL).map(url => new SQLWriter(new URI(url.toString), pm, statistics)).getOrElse {
+      if (opt.contains('SQL)) {
+        new SQLWriter(pm, statistics)
+      } else {
         new ConsoleWriter(opt, statistics)
       }
 

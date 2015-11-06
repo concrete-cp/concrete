@@ -37,29 +37,15 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import java.util.Date
 import scala.util.Try
+import com.typesafe.scalalogging.LazyLogging
+import java.sql.SQLException
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 object SQLWriter {
 
-  def connection(uri: URI, createTables: Boolean) = {
-    require(!uri.isOpaque, "Opaque connection URI : " + uri.toString)
-
-    val driver = uri.getScheme match {
-      // case "mysql" => "com.mysql.jdbc.Driver"
-
-      case "postgresql" => "org.postgresql.Driver"
-
-      case _            => throw new InvalidParameterException
-    }
-
-    val userInfo: IndexedSeq[String] = uri.getUserInfo match {
-      case null         => IndexedSeq[String]()
-      case info: String => info.split(":");
-    }
-
-    val db = Database.forURL(s"jdbc:${uri.getScheme}://${uri.getHost}${uri.getPath}",
-      user = userInfo.applyOrElse(0, { _: Int => null }),
-      password = userInfo.applyOrElse(1, { _: Int => null }),
-      driver = driver)
+  def connection(createTables: Boolean): Database = {
+    val db = Database.forConfig("database")
 
     if (createTables) {
       val setup = DBIO.seq(
@@ -166,47 +152,79 @@ object SQLWriter {
   val statistic = TableQuery[Statistic]
 }
 
-final class SQLWriter(jdbcUri: URI, params: ParameterManager, val stats: StatisticsManager) extends ConcreteWriter {
+final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
+    extends ConcreteWriter with LazyLogging {
 
-  val createTables: Boolean =
-    params.getOrElse("sql.createTables", false)
+  private lazy val db = Database.forConfig("database")
 
-  private lazy val db = SQLWriter.connection(jdbcUri, createTables)
+  private val initDB: Future[Any] = {
+    if (params.contains("sql.createTables")) {
+      db.run(
+        (problems.schema ++
+          configs.schema ++
+          executions.schema ++
+          problemTag.schema ++
+          statistic.schema).create)
+        .flatMap {
+          case _ =>
+            db.run(
+              sqlu"""CREATE FUNCTION stat(field text, execution int) RETURNS text AS $$$$
+                 SELECT value FROM "Statistic" WHERE (name, "executionId") = ($$1, $$2);
+                $$$$ LANGUAGE sql""")
+        }
 
-  //createTables()
+    } else {
+      Future.successful(Unit)
+    }
+  }
 
-  private var executionId: Future[Int] = Future.failed(new NoSuchElementException("executionId not initialized"))
+  private var executionId: Option[Int] = None
 
-  private var configId: Future[Int] = Future.failed(new NoSuchElementException("configId not initialized"))
+  private var configId: Future[Int] = _
 
-  private var problemId: Future[Int] = Future.failed(new NoSuchElementException("problemId not initialized"))
+  private var problemId: Future[Int] = _
 
   private def version: String = concrete.Info.version
 
   def parameters(params: NodeSeq) {
-    configId = config(params.toString)
-    executionId = for (
+
+    configId = initDB
+      .recover {
+        case e: SQLException =>
+          logger.warn("Table creation failed", e)
+
+      }
+      .flatMap { case _ => config(params.toString) }
+
+    configId.onFailure {
+      case pf =>
+        logger.error("Failed to obtain configId", pf)
+        throw pf
+    }
+
+    val ef = for (
       c <- configId;
       p <- problemId;
       e <- execution(p, c, version)
     ) yield e
 
+    executionId =
+      Some(Await.result(ef, Duration.Inf))
   }
 
   def problem(name: String) {
-    val action = problems.filter(_.name === name).map(_.problemId).result.headOption
-    val result = db.run(action)
 
-    problemId = result.flatMap {
-      case Some(c) => Future.successful(c)
-      case None    => db.run(problems.map(p => p.name) returning problems.map(_.problemId) += name)
+    problemId = db.run(problems.filter(_.name === name).map(_.problemId).result.headOption)
+      .flatMap {
+        case Some(c) => Future.successful(c)
+        case None    => db.run(problems.map(p => p.name) returning problems.map(_.problemId) += name)
+      }
+
+    problemId.onFailure {
+      case pf =>
+        logger.error("Failed to obtain problemId", pf)
+        throw pf
     }
-
-    executionId = for (
-      c <- configId;
-      p <- problemId;
-      e <- execution(p, c, version)
-    ) yield e
 
   }
 
@@ -242,8 +260,6 @@ final class SQLWriter(jdbcUri: URI, params: ParameterManager, val stats: Statist
 
   private def execution(p: Int, c: Int, version: String) = {
 
-    print(s"Problem $p, config $c, version $version")
-
     val executionId = db.run(
       executions.map(e =>
         (e.problemId, e.configId, e.version, e.start, e.hostname)) returning
@@ -251,42 +267,49 @@ final class SQLWriter(jdbcUri: URI, params: ParameterManager, val stats: Statist
           p, c, version, now,
           Some(InetAddress.getLocalHost.getHostName))))
 
-    println(s", execution $executionId")
+    executionId.onSuccess {
+      case e =>
+        print(s"Problem $p, config $c, version $version, execution $e")
+    }
+
     executionId
 
   }
 
   def solution(solution: String) {
     //require(executionId.nonEmpty, "Problem description or parameters were not defined")
-    executionId.onSuccess {
-      case e => executions.filter(_.executionId === e).map(_.solution).update(Some(solution))
-
+    db.run {
+      executions.filter(_.executionId === executionId.get).map(_.solution).update(Some(solution))
     }
   }
 
   def error(thrown: Throwable) {
     //println(e.toString)
     thrown.printStackTrace()
-    executionId.onSuccess {
-      case e =>
-        executions.filter(_.executionId === e).map(_.solution).update(Some(thrown.toString))
-
+    db.run {
+      executions.filter(_.executionId === executionId.get).map(_.solution).update(Some(thrown.toString))
     }
   }
 
   def disconnect(status: Try[Boolean]) {
-    executionId.onSuccess {
-      case e =>
-        for ((key, value) <- stats.digest) {
+
+    for (e <- executionId) {
+      for ((key, value) <- stats.digest) {
+        db.run {
           statistic += ((key, e, value.toString))
         }
+      }
 
-        val dbexec = for (dbe <- executions if dbe.executionId === e) yield dbe
+      val dbexec = for (dbe <- executions if dbe.executionId === e) yield dbe
 
+      db.run {
         dbexec.map(e => (e.end, e.status)).update(
           (Some(SQLWriter.now), status.toString))
-
+      }
     }
+
+    db.close()
+
   }
 
 }

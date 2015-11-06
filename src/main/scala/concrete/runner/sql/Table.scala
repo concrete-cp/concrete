@@ -9,10 +9,11 @@ import java.util.Locale
 import scala.collection.mutable.HashMap
 import scala.annotation.tailrec
 import scala.collection.SortedMap
-import slick.jdbc.StaticQuery.interpolation
 import slick.jdbc.GetResult
-import slick.driver.PostgresDriver.simple._
-import scala.xml.XML
+import slick.driver.PostgresDriver.api._
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
 
 sealed trait ErrorHandling
 case object ErrorInfinity extends ErrorHandling
@@ -41,59 +42,49 @@ object Table extends App {
     }
   }
 
-  lazy val DB = {
-    val dbconf = XML.load(Table.getClass.getResource("concretedb.xml"))
+  val DB = Database.forConfig("database")
+  try {
 
-    Database
-      .forURL((dbconf \ "url").text,
-        user = (dbconf \ "user").text,
-        password = (dbconf \ "password").text,
-        driver = (dbconf \ "driver").text)
+    val statistic :: version :: nature = args.toList
 
-  }
+    // Set display :
+    // update "Problem" set display = substring(name from '%/#"[^/]+#".xml.bz2' for '#')
 
-  val statistic :: version :: nature = args.toList
+    case class Problem(
+      problemId: Int,
+      problem: String,
+      nbVars: Int,
+      nbCons: Int,
+      tags: Array[String])
 
-  // Set display :
-  // update "Problem" set display = substring(name from '%/#"[^/]+#".xml.bz2' for '#')
+    case class Config(
+        configId: Int,
+        config: Node) {
+      def display = config \\ "p" map (n => className(n)) mkString ("/")
+      override def toString = configId + "." + display
+    }
 
-  case class Problem(
-    problemId: Int,
-    problem: String,
-    nbVars: Int,
-    nbCons: Int,
-    tags: Array[String])
+    case class Resultat[A](
+        status: String,
+        solution: String,
+        statistic: A) {
+      def solved = Set("Sat", "Unsat").contains(status)
+    }
 
-  case class Config(
-    configId: Int,
-    config: Node) {
-    def display = config \\ "p" map (n => className(n)) mkString ("/")
-    override def toString = configId + "." + display
-  }
+    implicit val getProblemResult = GetResult(r => Problem(r.<<, r.<<, r.<<, r.<<, r.nextStringOption.map(_.split(",")).getOrElse(Array())))
 
-  case class Resultat[A](
-    status: String,
-    solution: String,
-    statistic: A) {
-    def solved = Set("Sat", "Unsat").contains(status)
-  }
+    implicit val getConfigResult = GetResult(r =>
+      Config(r.<<, {
+        val s = r.nextString;
+        try xml.XML.loadString(s"<config>$s</config>")
+        catch {
+          case e: Exception =>
+            System.err.println(s)
+            throw e
+        }
+      }))
 
-  implicit val getProblemResult = GetResult(r => Problem(r.<<, r.<<, r.<<, r.<<, r.nextStringOption.map(_.split(",")).getOrElse(Array())))
-
-  implicit val getConfigResult = GetResult(r =>
-    Config(r.<<, {
-      val s = r.nextString;
-      try xml.XML.loadString(s"<config>$s</config>")
-      catch {
-        case e: Exception =>
-          System.err.println(s)
-          throw e
-      }
-    }))
-
-  DB.withSession { implicit session =>
-
-    val problems = sql"""
+    val problemsQ = sql"""
         SELECT "problemId", display, "nbVars", "nbCons", string_agg("problemTag", ',') as tags
         FROM "Problem" NATURAL LEFT JOIN "ProblemTag"
         WHERE "problemId" IN (
@@ -102,18 +93,20 @@ object Table extends App {
           WHERE version = $version and "configId" in (#${nature.mkString(",")}))
         GROUP BY "problemId", display, "nbVars", "nbCons"
         ORDER BY display
-        """.as[Problem].list
+        """.as[Problem]
 
-    val configs = sql"""
+    val configsQ = sql"""
         SELECT "configId", config
         FROM "Config" 
         WHERE "configId" IN (#${nature.mkString(", ")}) 
-        """.as[Config].list
+        """.as[Config]
+
+    val (problems, configs) = Await.result(DB.run(problemsQ).zip(DB.run(configsQ)), Duration.Inf)
 
     for (c <- configs) print("\t" + c.display)
     println()
 
-    val cIds = configs map (_.configId) mkString (", ")
+    val cIds = configs.map(_.configId).mkString(", ")
 
     var d = Array.ofDim[Int](configs.size, configs.size)
 
@@ -204,12 +197,16 @@ object Table extends App {
         case "mem"       => ErrorKeep
       }
 
-      val results = sqlQuery.as[(Int, String, Option[String], Option[Double])].list
+      val resultsQ = DB.run(sqlQuery.as[(Int, String, Option[String], Option[Double])])
         .map {
-          case (config, status, solution, value) =>
-            config -> Resultat(status, solution.getOrElse(""), value.getOrElse(Double.NaN))
+          _.map {
+            case (config, status, solution, value) =>
+              config -> Resultat(status, solution.getOrElse(""), value.getOrElse(Double.NaN))
+          }
+            .toMap
         }
-        .toMap
+
+      val results = Await.result(resultsQ, Duration.Inf)
 
       for (
         i <- configs.indices;
@@ -273,73 +270,74 @@ object Table extends App {
       }
 
       println(tabular(data.toSeq))
-    }
 
-    // println("\\midrule")
+      // println("\\midrule")
 
-    //    for ((k, t) <- totals.toList.sortBy(_._1)) {
-    //      println(k + " : " + configs.indices.map { i =>
-    //        t(i)
-    //      }.mkString(" & "))
-    //    }
+      //    for ((k, t) <- totals.toList.sortBy(_._1)) {
+      //      println(k + " : " + configs.indices.map { i =>
+      //        t(i)
+      //      }.mkString(" & "))
+      //    }
 
-    //println(totals)
+      //println(totals)
 
-    val tagged = totals.groupBy(_._1._1).map {
-      case (tag, tot) => tag -> tot.map {
-        case ((tag, config), values) => config -> values
+      val tagged = totals.groupBy(_._1._1).map {
+        case (tag, tot) => tag -> tot.map {
+          case ((tag, config), values) => config -> values
+        }
       }
-    }
 
-    for ((k, t) <- tagged.toList.sortBy(_._1)) {
+      for ((k, t) <- tagged.toList.sortBy(_._1)) {
 
-      val medians = configs.indices.map {
-        i =>
-          if (t(i).exists(_.isNaN)) { Double.NaN }
-          else {
-            try StatisticsManager.average(t(i))
-            catch {
-              case e: NoSuchElementException => Double.NaN
+        val medians = configs.indices.map {
+          i =>
+            if (t(i).exists(_.isNaN)) { Double.NaN }
+            else {
+              try StatisticsManager.average(t(i))
+              catch {
+                case e: NoSuchElementException => Double.NaN
+              }
             }
-          }
+        }
+
+        val best = medians.min
+
+        println(s"$k," + medians.map { median =>
+          median.toString
+          //            val (v, m) = engineer(median)
+          //
+          //            (if (median < best * 1.1) "\\bf " else "") + (
+          //              m match {
+          //                case Some(m) => f"\\np[$m%s]{$v%.1f}"
+          //                case None => f"\\np{$v%.1f}"
+          //              })
+        }.mkString(",")) // + " \\\\")
       }
-
-      val best = medians.min
-
-      println(s"$k," + medians.map { median =>
-        median.toString
-        //            val (v, m) = engineer(median)
-        //
-        //            (if (median < best * 1.1) "\\bf " else "") + (
-        //              m match {
-        //                case Some(m) => f"\\np[$m%s]{$v%.1f}"
-        //                case None => f"\\np{$v%.1f}"
-        //              })
-      }.mkString(",")) // + " \\\\")
     }
-    //println("\\midrule")
+  } finally DB.close()
 
-    //      for ((k, counts) <- nbSolved.toList.sortBy(_._1)) {
-    //        val best = counts.max
-    //
-    //        println(s"\\em $k & " + counts.map {
-    //          i => if (i == best) s"\\bf $i" else s"$i"
-    //        }.mkString(" & ") + " \\\\")
-    //      }
+  //println("\\midrule")
 
-    //    println(d.zipWithIndex map { case (r, i) => configs(i) + " " + r.mkString(" ") } mkString ("\n"))
-    //    println()
+  //      for ((k, counts) <- nbSolved.toList.sortBy(_._1)) {
+  //        val best = counts.max
+  //
+  //        println(s"\\em $k & " + counts.map {
+  //          i => if (i == best) s"\\bf $i" else s"$i"
+  //        }.mkString(" & ") + " \\\\")
+  //      }
 
-    //      val labels = configs.map(_.toString).toIndexedSeq
-    //
-    //      toGML(d, labels)
-    //
-    //      val s = schulze(winnerTakesAll(d))
-    //
-    //      println(rank(s, s.indices).toList.sortBy(_._1) map {
-    //        case (r, c) => "%d: %s".format(r, c.map(labels).mkString(" "))
-    //      } mkString ("\n"))
-  }
+  //    println(d.zipWithIndex map { case (r, i) => configs(i) + " " + r.mkString(" ") } mkString ("\n"))
+  //    println()
+
+  //      val labels = configs.map(_.toString).toIndexedSeq
+  //
+  //      toGML(d, labels)
+  //
+  //      val s = schulze(winnerTakesAll(d))
+  //
+  //      println(rank(s, s.indices).toList.sortBy(_._1) map {
+  //        case (r, c) => "%d: %s".format(r, c.map(labels).mkString(" "))
+  //      } mkString ("\n"))
 
   // solution != null && ("UNSAT" == solution || """^[0-9\s]*$""".r.findFirstIn(solution).isDefined || "^Map".r.findFirstIn(solution).isDefined)
 
