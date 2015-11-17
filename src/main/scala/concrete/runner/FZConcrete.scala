@@ -1,41 +1,53 @@
 package concrete.runner
 
-import java.io.IOException
-import java.net.URI
 import java.net.URL
 import java.security.InvalidParameterException
+
+import scala.annotation.migration
 import scala.reflect.runtime.universe
+
+import org.scalameter.Quantity
+
+import com.typesafe.scalalogging.LazyLogging
+
 import concrete.CSPOMSolver
 import concrete.Variable
+import concrete.generator.cspompatterns.FZPatterns
+import concrete.heuristic.Brelaz
+import concrete.heuristic.CrossHeuristic
+import concrete.heuristic.DDeg
+import concrete.heuristic.Dom
+import concrete.heuristic.Heuristic
+import concrete.heuristic.IntervalBranch
+import concrete.heuristic.LargestValue
+import concrete.heuristic.LexVar
+import concrete.heuristic.Lexico
+import concrete.heuristic.MaxDom
+import concrete.heuristic.MaxRegret
+import concrete.heuristic.MedValue
+import concrete.heuristic.RandomValue
+import concrete.heuristic.RevLexico
+import concrete.heuristic.RevSplit
+import concrete.heuristic.SeqHeuristic
+import concrete.heuristic.SmallestValue
+import concrete.heuristic.Split
+import concrete.heuristic.VariableHeuristic
+import concrete.heuristic.WDegOnDom
 import cspom.CSPOM
-import cspom.CSPParseException
+import cspom.CSPOM.seq2CSPOMSeq
+import cspom.CSPOMGoal
 import cspom.Statistic
 import cspom.StatisticsManager
+import cspom.compiler.CSPOMCompiler
 import cspom.flatzinc.FZAnnotation
 import cspom.flatzinc.FZArrayExpr
-import cspom.flatzinc.FZSetConst
-import cspom.flatzinc.FZSolve
-import cspom.flatzinc.FZVarParId
-import cspom.flatzinc.Maximize
-import cspom.flatzinc.Minimize
-import cspom.flatzinc.Satisfy
-import cspom.variable.CSPOMConstant
-import cspom.variable.CSPOMSeq
-import concrete.heuristic._
-import cspom.flatzinc.FZAnnotation
-import cspom.flatzinc.FZExpr
-import cspom.variable.CSPOMExpression
-import cspom.flatzinc.FlatZincParser
-import cspom.compiler.CSPOMCompiler
-import concrete.generator.cspompatterns.FZPatterns
-import concrete.ParameterManager
 import cspom.flatzinc.FZArrayIdx
-import CSPOM._
+import cspom.flatzinc.FZExpr
+import cspom.flatzinc.FZSetConst
+import cspom.flatzinc.FlatZincParser
+import cspom.variable.CSPOMExpression
+import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
-import cspom.flatzinc.FZArray
-import com.typesafe.scalalogging.LazyLogging
-import org.scalameter.Quantity
-import cspom.GML
 
 object FZConcrete extends CSPOMRunner with LazyLogging {
 
@@ -44,8 +56,6 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
   var outputVars: Seq[String] = _
 
   var outputArrays: Map[String, Seq[Seq[Int]]] = _
-
-  var goal: FZSolve = _
 
   @Statistic
   var parseTime: Quantity[Double] = _
@@ -114,11 +124,15 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
     }
   }
 
-  def parseGoal(goal: FZSolve, freeSearch: Boolean, variables: Map[CSPOMVariable[_], Variable]): Seq[Heuristic] = {
+  def parseGoal(goal: CSPOMGoal, freeSearch: Boolean, variables: Map[CSPOMVariable[_], Variable]): Seq[Heuristic] = {
     if (freeSearch) {
       Seq()
     } else {
-      goal.ann.flatMap(parseGoalAnnotation(_, variables))
+      val ann: Seq[FZAnnotation] = goal.getSeqParam("fzSolve")
+
+      ann.flatMap(fzAnnotation =>
+        parseGoalAnnotation(fzAnnotation, variables))
+
     }
   }
 
@@ -130,56 +144,52 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
 
     parseTime = time
 
-    tryLoad.map {
-      case (cspom, data) =>
+    tryLoad.map { cspom =>
 
-        outputVars = cspom.expressionsWithNames.collect {
-          case (n, e) if cspom.getAnnotations(n).getSeqParam[FZAnnotation]("fzAnnotations").exists {
-            case FZAnnotation("output_var", Seq()) => true
-            case _                                 => false
-          } => n
-        }.toSeq
+      outputVars = cspom.expressionsWithNames.collect {
+        case (n, e) if cspom.getAnnotations(n).getSeqParam[FZAnnotation]("fzAnnotations").exists {
+          case FZAnnotation("output_var", Seq()) => true
+          case _                                 => false
+        } => n
+      }.toSeq
 
-        outputArrays = cspom.expressionsWithNames.toMap.flatMap {
-          case (n, e) =>
-            cspom.getAnnotations(n).getSeqParam[FZAnnotation]("fzAnnotations").collectFirst {
-              case FZAnnotation("output_array", Seq(data: FZArrayExpr[_])) =>
-                val FZArrayExpr(array) = data
-                val ranges = array.map {
-                  case FZSetConst(range) => range
-                  case _                 => throw new InvalidParameterException("An array of set constants is expected here: " + data)
-                }
-                n -> ranges
-            }
-        }
+      outputArrays = cspom.expressionsWithNames.toMap.flatMap {
+        case (n, e) =>
+          cspom.getAnnotations(n).getSeqParam[FZAnnotation]("fzAnnotations").collectFirst {
+            case FZAnnotation("output_array", Seq(data: FZArrayExpr[_])) =>
+              val FZArrayExpr(array) = data
+              val ranges = array.map {
+                case FZSetConst(range) => range
+                case _                 => throw new InvalidParameterException("An array of set constants is expected here: " + data)
+              }
+              n -> ranges
+          }
+      }
 
-        val Some(goal: FZSolve) = data.get('goal)
-        this.goal = goal
-        cspom
+      cspom
     }
       .flatMap { cspom =>
         CSPOMCompiler.compile(cspom, FZPatterns())
       }
   }
 
-  def parseSearchMode(goal: FZSolve, solver: CSPOMSolver, freeSearch: Boolean): Unit = {
+  def parseSearchMode(solver: CSPOMSolver, freeSearch: Boolean): Unit = {
     val cspom = solver.cspom
-    goal.mode match {
-      case Satisfy =>
-      case Maximize(expr) =>
-        val e = expr.toCSPOM(cspom.expressionsWithNames.toMap)
-        solver.maximize(cspom.namesOf(e).head)
-      case Minimize(expr) =>
-        val e = expr.toCSPOM(cspom.expressionsWithNames.toMap)
-        solver.minimize(cspom.namesOf(e).head)
+    val goal = cspom.goal.get
+    goal match {
+      case CSPOMGoal.Satisfy(_) =>
+      case CSPOMGoal.Maximize(expr, _) =>
+        solver.maximize(cspom.namesOf(expr).head)
+      case CSPOMGoal.Minimize(expr, _) =>
+        solver.minimize(cspom.namesOf(expr).head)
       case _ => throw new InvalidParameterException("Cannot execute goal " + goal)
     }
 
   }
 
   override def applyParametersPre(opt: Map[Symbol, Any]): Unit = {
-    
-    val heuristics = parseGoal(goal, opt.contains('free), variables)
+
+    val heuristics = parseGoal(cspom.goal.get, opt.contains('free), variables)
     val decisionVariables = heuristics
       .collect {
         case c: CrossHeuristic => c.variableHeuristic.decisionVariables
@@ -213,7 +223,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
   }
 
   override def applyParametersCSPOM(solver: CSPOMSolver, opt: Map[Symbol, Any]): Unit = {
-    parseSearchMode(goal, solver, opt.contains('free))
+    parseSearchMode(solver, opt.contains('free))
   }
 
   private def ann2expr(cspom: CSPOM, e: FZExpr[_]): CSPOMExpression[_] = e match {

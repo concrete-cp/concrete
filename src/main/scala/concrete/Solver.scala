@@ -146,13 +146,20 @@ class CSPOMSolution(private val cspom: CSPOM, private val variables: Map[CSPOMVa
     }
   }
 
-  def get(key: CSPOMExpression[_]): Option[Any] = {
+  def get[T](key: CSPOMExpression[T]): Option[T] = {
     key match {
-      case const: CSPOMConstant[_]    => Some(const.value)
-      case variable: CSPOMVariable[_] => variables.get(variable).map(concreteSol)
-      case _                          => throw new AssertionError(s"Cannot obtain solution for $key")
+      case const: CSPOMConstant[T] => Some(const.value)
+      case variable: CSPOMVariable[T] =>
+        variables
+          .get(variable)
+          .map(concreteSol)
+          .map(_.asInstanceOf[T])
+      case _ => throw new AssertionError(s"Cannot obtain solution for $key")
     }
   }
+
+  def apply[T](key: CSPOMExpression[T]): T = get(key).get
+  //def apply(key: String): Any = get(key).get
 
   def +[B1 >: Any](kv: (String, B1)): Map[String, B1] = throw new UnsupportedOperationException
   def -(key: String): Map[String, Any] = throw new UnsupportedOperationException

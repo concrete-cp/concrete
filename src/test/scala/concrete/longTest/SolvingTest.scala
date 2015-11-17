@@ -110,65 +110,63 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
 
     var goal: Option[FZSolve] = None
 
-    CSPOM.load(url, parser).flatMap {
-      case (cspomProblem, data) =>
-        val test = parser match {
-          case FlatZincParser =>
-            CSPOMCompiler.compile(cspomProblem, FZPatterns()).get
-            false
-          case XCSPParser =>
-            CSPOMCompiler.compile(cspomProblem, XCSPPatterns()).get
-            true
-          case _ =>
-            false
+    CSPOM.load(url, parser).flatMap { cspomProblem =>
+      val test = parser match {
+        case FlatZincParser =>
+          CSPOMCompiler.compile(cspomProblem, FZPatterns()).get
+          false
+        case XCSPParser =>
+          CSPOMCompiler.compile(cspomProblem, XCSPPatterns()).get
+          true
+        case _ =>
+          false
+      }
+
+      //logger.info(cspomProblem.toString)
+      CSPOMCompiler.compile(cspomProblem, ConcretePatterns(pm))
+        .flatMap { cspom =>
+          CSPOMCompiler.compile(cspom, Seq(Bool2IntIsEq))
         }
-
-        //logger.info(cspomProblem.toString)
-        CSPOMCompiler.compile(cspomProblem, ConcretePatterns(pm))
-          .flatMap { cspom =>
-            CSPOMCompiler.compile(cspom, Seq(Bool2IntIsEq))
+        .flatMap { cspom =>
+          val pg = new ProblemGenerator(pm)
+          for ((problem, variables) <- pg.generate(cspom)) yield {
+            val solver = Solver(problem)
+            solver.statistics.register("compiler", CSPOMCompiler)
+            solver.statistics.register("generator", pg)
+            new CSPOMSolver(solver, cspom, variables)
           }
-          .flatMap { cspom =>
-            val pg = new ProblemGenerator(pm)
-            for ((problem, variables) <- pg.generate(cspom)) yield {
-              val solver = Solver(problem)
-              solver.statistics.register("compiler", CSPOMCompiler)
-              solver.statistics.register("generator", pg)
-              new CSPOMSolver(solver, cspom, variables)
+        }
+        .map { solver =>
+          FZConcrete.parseSearchMode(solver, false)
+
+          //    println(solver.concreteProblem)
+
+          val f = Future {
+
+            val solvIt = solver.toIterable
+
+            if (expectedResult) {
+              solvIt should not be 'empty
+            } else {
+              solvIt shouldBe 'empty
             }
-          }
-          .map { solver =>
-            data.get('goal) match {
-              case Some(g: FZSolve) => FZConcrete.parseSearchMode(g, solver, false)
-              case _                =>
-            }
 
-            //    println(solver.concreteProblem)
+            // println(solver.concreteProblem.toString)
 
-            val f = Future {
-
-              val solvIt = solver.toIterable
-
-              if (expectedResult) {
-                solvIt should not be 'empty
-              } else {
-                solvIt shouldBe 'empty
-              }
-
-              // println(solver.concreteProblem.toString)
-
-              if (test) {
-                for (sol <- solvIt.headOption) {
-                  val failed = XCSPConcrete.controlCSPOM(sol, data('variables).asInstanceOf[Seq[String]], url)
-                  withClue(sol) {
-                    failed shouldBe 'empty
-                  }
+            if (test) {
+              for (sol <- solvIt.headOption) {
+                val variables: Seq[String] =
+                  solver.cspom.goal.get.getSeqParam("variables")
+                val failed = XCSPConcrete.controlCSPOM(sol, variables, url)
+                withClue(sol) {
+                  failed shouldBe 'empty
                 }
               }
             }
-
-            concurrent.Await.result(f, 1000.seconds)
           }
+
+          concurrent.Await.result(f, 1000.seconds)
+        }
     }
       .get
   }
@@ -184,7 +182,7 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
     parameters.foreach(s => pm.update(s._1, s._2))
 
     CSPOM.load(url, parser).flatMap {
-      case (cspomProblem, data) =>
+      case cspomProblem =>
         val test = parser match {
           case FlatZincParser =>
             CSPOMCompiler.compile(cspomProblem, FZPatterns()).get
@@ -213,10 +211,7 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
           }
           .map { solver =>
 
-            data.get('goal) match {
-              case Some(g: FZSolve) => FZConcrete.parseSearchMode(g, solver, false)
-              case _                => None
-            }
+            FZConcrete.parseSearchMode(solver, false)
 
             val f = Future {
               solver.optimizes match {
@@ -229,7 +224,9 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
 
                   if (test) {
                     forAll(sols.take(100)) { sol =>
-                      val failed = XCSPConcrete.controlCSPOM(sol, data('variables).asInstanceOf[Seq[String]], url)
+                      val variables: Seq[String] =
+                        solver.cspom.goal.get.getSeqParam("variables")
+                      val failed = XCSPConcrete.controlCSPOM(sol, variables, url)
                       failed shouldBe 'empty
                     }
                   }

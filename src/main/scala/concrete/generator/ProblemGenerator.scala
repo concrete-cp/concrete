@@ -66,7 +66,7 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
       var pb: Seq[PseudoBoolean] = Seq.empty
       var lin: Seq[LinearConstraint] = Seq.empty
 
-      cspom.constraints.foreach {
+      val constraints = cspom.constraints.flatMap {
         case c if c.function == 'clause =>
           val Seq(pos: CSPOMSeq[_], neg: CSPOMSeq[_]) = c.arguments
           if (!pos.contains(CSPOMConstant(true)) && !neg.contains(CSPOMConstant(false))) {
@@ -74,6 +74,7 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
             val negConc = neg.collect { case v: BoolVariable => Generator.cspom2concreteVar(v)(variables) }.toArray
             clauses +:= Clause(posConc, negConc)
           }
+          Seq()
 
         case constraint if constraint.function == 'pseudoboolean && constraint.nonReified =>
           val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
@@ -82,6 +83,7 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
             val solverVariables = vars.map(Generator.cspom2concreteVar(_)(variables))
             pb +:= new PseudoBoolean(solverVariables, varParams, mode, constant)
           }
+          Seq()
 
         case constraint if constraint.function == 'sum && constraint.nonReified =>
           val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
@@ -90,40 +92,43 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
             val solverVariables = vars.map(Generator.cspom2concreteVar(_)(variables))
             lin +:= new LinearConstraint(solverVariables, varParams, mode, constant)
           }
+          Seq()
 
         case c =>
-          val constraints = gm.generate(c, variables, vn).get
-          logger.debug(s"Generating $constraints from $c")
-          for (
-            constraint <- constraints
-          ) {
-            problem.addConstraint(constraint)
-          }
+          gm.generate(c, variables, vn).get
       }
+
+      problem.addConstraints(constraints.toSeq)
 
       if (pm.contains("sat4clauses")) {
         if (pm.contains("sat4pb")) {
-          SAT(clauses, pb).foreach(problem.addConstraint)
+          problem.addConstraints(
+            SAT(clauses, pb))
         } else {
           lin ++:= pb
-          SAT(clauses = clauses).foreach(problem.addConstraint)
+          problem.addConstraints(
+            SAT(clauses = clauses))
         }
       } else {
-        clauses.map(new ClauseConstraint(_)).foreach(problem.addConstraint(_))
+        problem.addConstraints(
+          clauses.map(new ClauseConstraint(_)))
         if (pm.contains("sat4pb")) {
-          SAT(pb = pb).foreach(problem.addConstraint)
+          problem.addConstraints(
+            SAT(pb = pb))
         } else {
           lin ++:= pb
         }
       }
 
       if (pm.contains("simplex")) {
-        Simplex(lin, pm).foreach(problem.addConstraint(_))
+        problem.addConstraints(
+          Simplex(lin, pm))
       } else {
         val sg = new SumGenerator(pm)
-        for (l <- lin) {
-          sg.general(l.vars, l.factors, l.constant, l.mode).toSeq.foreach(problem.addConstraint(_))
-        }
+        problem.addConstraints(
+          lin.flatMap(l =>
+            sg.general(l.vars, l.factors, l.constant, l.mode).toSeq))
+
       }
 
       logger.info(problem.toString(problem.initState.toState).split("\n").map(l => s"% $l").mkString("\n"))

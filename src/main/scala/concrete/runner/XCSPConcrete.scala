@@ -4,14 +4,15 @@ import java.io.File
 import java.net.URL
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
-
 import scala.sys.process.stringSeqToProcess
 import scala.util.Try
-
 import concrete.generator.cspompatterns.XCSPPatterns
 import cspom.CSPOM
 import cspom.compiler.CSPOMCompiler
 import cspom.xcsp.XCSPParser
+import cspom.CSPOMGoal
+import scala.util.Failure
+import scala.util.Success
 
 object XCSPConcrete extends CSPOMRunner with App {
 
@@ -19,20 +20,25 @@ object XCSPConcrete extends CSPOMRunner with App {
 
   var declaredVariables: Seq[String] = _
 
-  def loadCSPOM(args: List[String], opt: Map[Symbol, Any]) = {
+  def loadCSPOM(args: List[String], opt: Map[Symbol, Any]): Try[CSPOM] = {
     val List(fn) = args
     file = CSPOM.file2url(fn)
-    for ((vars, cspom) <- loadCSPOMURL(file)) yield {
-      declaredVariables = vars
-      cspom
+    loadCSPOMURL(file).flatMap { cspom =>
+      declaredVariables = cspom.goal.get match {
+        case s: CSPOMGoal.Satisfy =>
+          s.getSeqParam("variables")
+        case _ =>
+          return Failure(new IllegalArgumentException("Variable sequence not available"))
+      }
+      Success(cspom)
     }
   }
 
-  def loadCSPOMURL(file: URL): Try[(Seq[String], CSPOM)] = {
-    for ((cspom, data) <- CSPOM.load(file, XCSPParser)) yield {
-      CSPOMCompiler.compile(cspom, XCSPPatterns())
-      (data('variables).asInstanceOf[Seq[String]], cspom)
-    }
+  def loadCSPOMURL(file: URL): Try[CSPOM] = {
+    CSPOM.load(file, XCSPParser)
+      .flatMap { cspom =>
+        CSPOMCompiler.compile(cspom, XCSPPatterns())
+      }
   }
 
   def description(args: List[String]) =
@@ -46,7 +52,8 @@ object XCSPConcrete extends CSPOMRunner with App {
   }
 
   def controlCSPOM(solution: Map[String, Any], variables: Iterable[String], file: URL) = {
-    new SolutionChecker(file).checkSolution(variables.map(solution).map { case i: Int => i }.toIndexedSeq)
+    new SolutionChecker(file).checkSolution(
+      variables.map(solution).map { case i: Int => i }.toIndexedSeq)
   }
 
   override def outputCSPOM(solution: Map[String, Any]): String = {

@@ -26,9 +26,9 @@ final class ProblemGeneratorTest extends FlatSpec with LazyLogging with TryValue
     generateTest("queens-12.xml");
   }
 
-//  it should "generate scen11-f12" in {
-//    generateTest("scen11-f12.xml.bz2");
-//  }
+  //  it should "generate scen11-f12" in {
+  //    generateTest("scen11-f12.xml.bz2");
+  //  }
 
   it should "generate crosswordm2" in {
     generateTest("crossword-m2-debug-05-01.xml");
@@ -47,12 +47,14 @@ final class ProblemGeneratorTest extends FlatSpec with LazyLogging with TryValue
   private def generateTest(file: String): Unit = {
 
     val pm = new ParameterManager()
-    val cspom = XCSPConcrete.loadCSPOMURL(classOf[ProblemGeneratorTest].getResource(file)) match {
-      case Success((_, cspom)) => cspom
-      case Failure(e) =>
-        e.printStackTrace()
-        fail(e)
-    }
+    val cspom = XCSPConcrete.loadCSPOMURL(classOf[ProblemGeneratorTest]
+      .getResource(file))
+      .recover {
+        case e =>
+          e.printStackTrace()
+          fail(e)
+      }
+      .get
 
     logger.info(cspom + "\n" + cspom.referencedExpressions.size + " vars, " + cspom.constraints.size + " cons")
 

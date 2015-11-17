@@ -64,11 +64,23 @@ object CSPOMDriver {
   }
 
   def and(vars: SimpleExpression[Boolean]*)(implicit problem: CSPOM): SimpleExpression[Boolean] = {
-    problem.defineBool(r => CSPOMConstraint(r)('and)(vars: _*))
+    val r = problem.defineBool(r => CSPOMDriver.clause(r)(vars: _*))
+    for (v <- vars) {
+      problem.postpone(CSPOMDriver.clause(v)(r))
+    }
+    r
   }
 
   def or(vars: SimpleExpression[Boolean]*)(implicit problem: CSPOM): SimpleExpression[Boolean] = {
-    problem.defineBool(r => CSPOMConstraint(r)('clause)(vars, seq2CSPOMSeq(Seq.empty)))
+    val r = problem.defineBool(r => CSPOMDriver.clause(vars: _*)(r))
+    for (v <- vars) {
+      problem.postpone(CSPOMDriver.clause(r)(v))
+    }
+    r
+  }
+
+  def nogood(vars: SimpleExpression[Boolean]*): CSPOMConstraint[Boolean] = {
+    clause()(vars: _*)
   }
 
   implicit class CSPOMSeqOperations[+A](e: CSPOMSeq[A]) {
@@ -129,10 +141,10 @@ object CSPOMDriver {
 
   implicit class CSPOMBoolExpressionOperations(e: SimpleExpression[Boolean]) {
     def |(other: SimpleExpression[Boolean])(implicit problem: CSPOM): SimpleExpression[Boolean] =
-      problem.defineBool(r => CSPOMConstraint(r)('clause)(Seq(e, other), CSPOMSeq.empty))
+      or(e, other)
 
     def &(other: SimpleExpression[Boolean])(implicit problem: CSPOM): SimpleExpression[Boolean] =
-      problem.defineBool(r => CSPOMConstraint(r)('and)(e, other))
+      and(e, other)
 
     def unary_!(implicit problem: CSPOM): SimpleExpression[Boolean] = {
       problem.defineBool(r => CSPOMConstraint(r)('not)(e))
