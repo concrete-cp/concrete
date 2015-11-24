@@ -62,6 +62,14 @@ final class Problem(val variables: Array[Variable]) {
         c.positionInVariable(p) = pc
       }
     }
+
+//    for (c <- constraints) {
+//      require(c.id >= 0)
+//      for (v <- 0 until c.arity) {
+//        val cPos = c.positionInVariable(v)
+//        require(c.scope(v).constraints(cPos) eq c)
+//      }
+//    }
   }
 
   def initState = ProblemState(this)

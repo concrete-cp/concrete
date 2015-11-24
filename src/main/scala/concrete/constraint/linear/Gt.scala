@@ -57,7 +57,9 @@ final class GtC(val v: Variable, val constant: Int) extends Constraint(Array(v))
 final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict: Boolean)
     extends Constraint(Array(v0, v1)) {
 
-  def init(ps: ProblemState) = ps
+  def init(ps: ProblemState) = {
+    ps
+  }
 
   def this(v0: Variable, v1: Variable, strict: Boolean) =
     this(v0, 0, v1, strict);
@@ -67,31 +69,18 @@ final class Gt(val v0: Variable, val constant: Int, val v1: Variable, val strict
     else t(0) + constant >= t(1);
 
   def revise(ps: ProblemState) = {
-    //println(toString(ps))
     if (strict) {
       ps
         .removeTo(v0, ps.dom(v1).head - constant)
         .removeFrom(v1, ps.dom(v0).last + constant)
-        .andThen { mod =>
-          if (mod.dom(v1).last < mod.dom(v0).head + constant) {
-            mod.entail(this)
-          } else {
-            mod
-          }
-        }
-
+        .entailIf(this, (mod =>
+          mod.dom(v1).last < mod.dom(v0).head + constant))
     } else {
-
       ps
         .removeUntil(v0, ps.dom(v1).head - constant)
         .removeAfter(v1, ps.dom(v0).last + constant)
-        .andThen { mod =>
-          if (mod.dom(v1).last <= mod.dom(v0).head + constant) {
-            mod.entail(this)
-          } else {
-            mod
-          }
-        }
+        .entailIf(this, (mod =>
+          mod.dom(v1).last <= mod.dom(v0).head + constant))
     }
 
   }

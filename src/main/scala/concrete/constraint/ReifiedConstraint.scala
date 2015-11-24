@@ -26,7 +26,9 @@ final class ReifiedConstraint(
    *  Only initializes constraint states as some constraints' init may remove values from domains
    */
   private def initCons(c: Constraint, ps: ProblemState): Outcome = {
-    // Keep state but restore domains. Probably won't work :(
+    /**
+     *  Keep state but restore domains. Probably won't work if constraint state depends on domain state :(
+     */
     c.init(ps).andThen { consistent =>
       c match {
         case sc: StatefulConstraint[AnyRef] => ps.updateState(sc, consistent(sc))
@@ -81,8 +83,12 @@ final class ReifiedConstraint(
             ps.updateDomNonEmpty(controlVariable, FALSE).entail(this)
           }
 
-      case TRUE  => positiveConstraint.revise(ps)
-      case FALSE => negativeConstraint.revise(ps)
+      case TRUE =>
+        positiveConstraint.revise(ps)
+          .entailIf(this, mod => mod.isEntailed(positiveConstraint))
+      case FALSE =>
+        negativeConstraint.revise(ps)
+          .entailIf(this, mod => mod.isEntailed(negativeConstraint))
 
       case EMPTY => throw new IllegalStateException
 

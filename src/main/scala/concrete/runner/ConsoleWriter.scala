@@ -42,13 +42,12 @@ class ConsoleWriter(val opts: Map[Symbol, Any], val stats: StatisticsManager) ex
   }
 
   def disconnect(status: Try[Boolean]) {
+    writeStats()
     status match {
       case Success(true) => Console.println("==========")
       case Success(false) =>
-        writeStats()
         Console.println("=====UNSATISFIABLE=====")
       case Failure(_) =>
-        writeStats()
         Console.println("=====UNKNOWN=====")
     }
   }

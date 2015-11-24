@@ -18,9 +18,10 @@ class GeneratorManager(pm: ParameterManager) {
 
   private var known: Map[Symbol, Generator] = {
     val sg = new SumGenerator(pm)
+    val adg = new AllDifferentGenerator(pm)
     Map(
       'abs -> AbsGenerator,
-      'alldifferent -> new AllDifferentGenerator(pm),
+      'alldifferent -> adg,
       'eq -> EqGenerator,
       //'gt -> GtGenerator,
       //'ge -> GtGenerator,
@@ -39,7 +40,8 @@ class GeneratorManager(pm: ParameterManager) {
       'min -> MinGenerator,
       'max -> MaxGenerator,
       'element -> ElementGenerator,
-      'in -> SetInGenerator)
+      'in -> SetInGenerator,
+      'circuit -> new CircuitGenerator(adg))
   }
 
   def register(entry: (Symbol, Generator)) {

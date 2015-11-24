@@ -234,14 +234,17 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
       for (v <- _maximize) {
         reset()
         val opt = sol(v) match {
-          case i: Int => problem.addConstraint(new GtC(v, i))
-          case o      => throw new AssertionError(s"$v has value $o which is not an int")
+          case i: Int =>
+            problem.addConstraint(new GtC(v, i))
+
+          case o => throw new AssertionError(s"$v has value $o which is not an int")
         }
 
       }
       for (v <- _minimize) {
         reset()
         problem.addConstraint(new LtC(v, sol(v).asInstanceOf[Int]))
+        require(problem.constraints.forall(_.positionInVariable.forall(_ >= 0)))
       }
       sol
     case RESTART => throw new IllegalStateException()

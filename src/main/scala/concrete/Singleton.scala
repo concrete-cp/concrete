@@ -138,6 +138,8 @@ final class Singleton private (val singleValue: Int) extends IntDomain with Lazy
 
   def iterator = Iterator.single(singleValue)
 
+  override def foreach[U](f: Int => U): Unit = f(singleValue)
+
   def median = singleValue
 
   def offset(o: Int) = if (o == 0) this else

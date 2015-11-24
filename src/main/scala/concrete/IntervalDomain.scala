@@ -199,6 +199,10 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
 
   def iterator = span.allValues.iterator
 
+  override def foreach[U](f: Int => U): Unit = {
+    span.allValues.foreach(f)
+  }
+
   def median = (head + last + 1) / 2
 
 }

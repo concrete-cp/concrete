@@ -74,6 +74,8 @@ sealed trait Outcome {
   def activeConstraints(v: Variable): BitVector
 
   def apply[S](c: StatefulConstraint[S]): S
+  
+  def isState = this ne Contradiction
 
 }
 
@@ -195,7 +197,11 @@ case class ProblemState(
       val vid = c.scope(i).id
       /** Fake variables (constants) may appear in constraints */
       if (vid >= 0) {
-        ac = ac.updated(vid, ac(vid) - c.positionInVariable(i))
+        val pos = c.positionInVariable(i)
+        /** Reified constraints are not directly related to variables */
+        if (pos >= 0) {
+          ac = ac.updated(vid, ac(vid) - c.positionInVariable(i))
+        }
       }
       i -= 1
     }

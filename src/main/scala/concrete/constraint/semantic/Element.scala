@@ -60,11 +60,11 @@ class Element(val result: Variable,
   }
 
   def getEvaluation(ps: ProblemState): Int = {
-    card * ps.dom(index).size
+    card * ps.card(index)
   }
 
   override def init(ps: ProblemState) = {
-    card = varsOption.flatten.map(ps.dom).map(_.size).max
+    card = varsOption.flatten.map(ps.dom(_).size).max
     ps.shaveDom(index, 0, vars.length)
   }
 
@@ -74,12 +74,12 @@ class Element(val result: Variable,
      * Revise indices
      */
     ps.filterDom(this.index) { i =>
-      varsOption(i).exists { v => (resultDom & ps.dom(v)).nonEmpty }
+      varsOption(i).exists { v => !resultDom.disjoint(ps.dom(v)) }
     }
       .andThen { ps =>
         val index = ps.dom(this.index)
 
-        if (index.size == 1) {
+        if (index.isAssigned) {
           val selectedVar = vars(index.singleValue)
           //println(selectedVar.toString(ps))
           val intersect = ps.dom(selectedVar) & resultDom
@@ -90,12 +90,16 @@ class Element(val result: Variable,
           /**
            * Revise result
            */
- 
-          val it = index.iterator
-          var union = ps.dom(vars(it.next()))
-          while (it.hasNext) {
-            union |= ps.dom(vars(it.next()))
+          var union: Domain = null
+          for (i <- index) {
+            if (null == union) union = ps.dom(vars(i))
+            else union |= ps.dom(vars(i))
           }
+//          val it = index.iterator
+//          var union = ps.dom(vars(it.next()))
+//          while (it.hasNext) {
+//            union |= ps.dom(vars(it.next()))
+//          }
           //.map(i => ps.dom(vars(i))).reduce(_ | _) //reduceLeft((union, i) => union | ps.dom(vars(i)))
 
           ps.updateDom(result, resultDom & union)

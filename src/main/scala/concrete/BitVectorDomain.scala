@@ -262,6 +262,12 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
     }
   }
 
+  override def foreach[U](f: Int => U): Unit = {
+    for (i <- bitVector) {
+      f(i + offset)
+    }
+  }
+
   def median = iterator.drop(size / 2).next
 
 }
