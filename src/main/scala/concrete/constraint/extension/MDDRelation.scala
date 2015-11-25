@@ -7,9 +7,7 @@ import concrete.util.Timestamp
 import concrete.Domain
 import com.typesafe.scalalogging.LazyLogging
 
-trait RelationGenerator {
-  def apply(data: Seq[Seq[Int]]): Relation
-}
+
 
 object MDDRelation extends RelationGenerator {
   def apply(data: Seq[Seq[Int]]): MDDRelation = new MDDRelation(MDD(data))

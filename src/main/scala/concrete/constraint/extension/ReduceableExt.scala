@@ -30,6 +30,7 @@ import concrete.constraint.Removals
 import concrete.constraint.StatefulConstraint
 import cspom.Statistic
 import concrete.IntDomain
+import concrete.Domain
 
 object ReduceableExt {
   @Statistic
@@ -43,6 +44,8 @@ final class ReduceableExt(_scope: Array[Variable], val relation: Relation)
 
   //println("sizesR " + arity + " " + trie.lambda + " " + trie.edges)
 
+  private val newDomains = new Array[Domain](arity)
+
   def revise(ps: ProblemState, mod: Seq[Int]) = {
     val domains = Array.tabulate(arity)(p => ps.dom(scope(p)))
 
@@ -55,8 +58,9 @@ final class ReduceableExt(_scope: Array[Variable], val relation: Relation)
 
     logger.debug("Filtering with " + _scope.toSeq.map(_.toString(ps)))
 
-    val newTrie = trie.filterTrie(
-      { (p, i) => domains(p).present(i) }, mod.toList)
+    def validityCheck(p: Int, i: Int) = domains(p).present(i)
+
+    val newTrie = trie.filterTrie(validityCheck, mod.toList)
 
     //println("filtered " + newTrie.size)
 
@@ -74,12 +78,13 @@ final class ReduceableExt(_scope: Array[Variable], val relation: Relation)
 
       val newDomains = Array.fill[IntDomain](arity)(EmptyIntDomain)
 
-      val unsup = newTrie
-        .fillFound({ (depth: Int, i: Int) =>
-          ReduceableExt.fills += 1
-          newDomains(depth) = newDomains(depth) | i
-          newDomains(depth).length == domains(depth).length
-        }, arity)
+      def updNewDomains(depth: Int, i: Int) = {
+        ReduceableExt.fills += 1
+        newDomains(depth) |= i
+        newDomains(depth).length == domains(depth).length
+      }
+
+      val unsup = newTrie.fillFound(updNewDomains, arity)
 
       var cs: ProblemState = ps
       for (p <- 0 until arity) {

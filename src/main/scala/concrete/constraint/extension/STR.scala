@@ -9,20 +9,26 @@ import concrete.Domain
 object STR extends RelationGenerator {
   def apply(data: Seq[Seq[Int]]): STR = {
     val d = data.map(_.toArray).toArray
-    new STR(d, d.length)
+    new STR(d.headOption.getOrElse(Array()).size, d, d.length)
   }
 }
 
-final class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
+final class STR(arity: Int, val array: Array[Array[Int]], val bound: Int) extends Relation {
   type Self2 = STR
 
-  def this() = this(Array(), 0)
+  def this(arity: Int) = this(arity, Array(), 0)
 
-  def copy = new STR(array.clone, bound)
+  def copy = new STR(arity, array.clone, bound)
 
-  def +(t: Seq[Int]) = new STR(t.toArray +: array, bound + 1)
+  def +(t: Seq[Int]) = {
+    require(t.length == arity)
+    new STR(arity, t.toArray +: array, bound + 1)
+  }
 
-  override def ++(t: Iterable[Seq[Int]]) = new STR(t.map(_.toArray) ++: array, bound + t.size)
+  override def ++(t: Iterable[Seq[Int]]) = {
+    require(t.forall(_.length == arity))
+    new STR(arity, t.map(_.toArray) ++: array, bound + t.size)
+  }
 
   def -(t: Seq[Int]) = throw new UnsupportedOperationException
 
@@ -30,7 +36,7 @@ final class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
     var b = bound
     var i = b - 1
     while (i >= 0) {
-      if (!valid(modified, f, i)) {
+      if (!valid(modified, f, array(i))) {
         b -= 1
         val tmp = array(i)
         array(i) = array(b)
@@ -41,26 +47,21 @@ final class STR(val array: Array[Array[Int]], var bound: Int) extends Relation {
     if (b == bound) {
       this
     } else {
-      new STR(array, b)
+      new STR(arity, array, b)
     }
   }
 
   @tailrec
-  private def valid(modified: List[Int], f: (Int, Int) => Boolean, i: Int): Boolean = modified match {
-    case Nil    => true
-    case h :: t => f(h, array(i)(h)) && valid(t, f, i)
+  private def valid(modified: List[Int], f: (Int, Int) => Boolean, t: Array[Int]): Boolean = {
+    modified.isEmpty || (f(modified.head, t(modified.head)) && valid(modified.tail, f, t))
   }
 
-  private var pos: MutableList = _
+  private val pos: MutableList = new MutableList(arity)
 
   def fillFound(f: (Int, Int) => Boolean, arity: Int) = {
-    try {
-      pos.refill()
-    } catch {
-      case e: NullPointerException =>
-        pos = new MutableList(arity)
-        pos.refill()
-    }
+
+    pos.refill()
+
     var i = bound - 1
     while (i >= 0) {
       val tuple = array(i)
