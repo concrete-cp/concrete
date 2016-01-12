@@ -12,8 +12,8 @@ object BitVectorDomain {
 
 final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override val length: Int)
     extends IntDomain with LazyLogging {
-  require(size >= 2, "BitVectorSets must have at least two elements")
-  Math.checkedAdd(offset, bitVector.lastSetBit)
+  assert(size >= 2, "BitVectorSets must have at least two elements")
+  assert(Math.checkedAdd(offset, bitVector.lastSetBit) == offset + bitVector.lastSetBit)
 
   assert(bitVector.cardinality == size, bitVector + " : " + bitVector.cardinality + " != " + size)
 
