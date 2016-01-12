@@ -74,7 +74,7 @@ sealed trait Outcome {
   def activeConstraints(v: Variable): BitVector
 
   def apply[S](c: StatefulConstraint[S]): S
-  
+
   def isState = this ne Contradiction
 
 }
@@ -225,18 +225,24 @@ case class ProblemState(
   }
 
   def updateDomNonEmpty(variable: Variable, newDomain: Domain): ProblemState = {
-    assert(newDomain.nonEmpty)
+
     val oldDomain = dom(variable)
     if (oldDomain eq newDomain) {
       this
     } else {
-      val id = variable.id
-      assert(id >= 0 || (dom(variable) eq newDomain), s"$variable updated to $newDomain is not a problem variable")
       assert(newDomain subsetOf oldDomain)
       assert(!oldDomain.isInstanceOf[BooleanDomain] || newDomain.isInstanceOf[BooleanDomain])
       assert(!oldDomain.isInstanceOf[IntDomain] || newDomain.isInstanceOf[IntDomain])
-      new ProblemState(domains.updated(id, newDomain), constraintStates, activeConstraints, entailed)
+      updateDomNonEmptyNoCheck(variable, newDomain)
     }
+  }
+
+  def updateDomNonEmptyNoCheck(variable: Variable, newDomain: Domain): ProblemState = {
+    assert(newDomain.nonEmpty)
+    assert(dom(variable) ne newDomain)
+    val id = variable.id
+    assert(id >= 0 || (dom(variable) eq newDomain), s"$variable updated to $newDomain is not a problem variable")
+    new ProblemState(domains.updated(id, newDomain), constraintStates, activeConstraints, entailed)
   }
 
   def shaveDomNonEmpty(variable: Variable, itv: Interval): ProblemState = {
