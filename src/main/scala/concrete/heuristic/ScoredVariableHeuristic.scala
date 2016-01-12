@@ -9,14 +9,17 @@ import scala.annotation.tailrec
 import concrete.ParameterManager
 import concrete.ProblemState
 import concrete.Domain
+import com.typesafe.scalalogging.LazyLogging
 
-abstract class ScoredVariableHeuristic(params: ParameterManager, decisionVariables: Array[Variable]) extends VariableHeuristic(params, decisionVariables) {
+abstract class ScoredVariableHeuristic(params: ParameterManager, decisionVariables: Array[Variable]) extends VariableHeuristic(params, decisionVariables)
+    with LazyLogging {
 
   //def problem: Problem
 
   @tailrec
   private def select(i: Int, best: Variable, bestScore: Double, ties: Int, state: ProblemState, rand: Random): Variable = {
     if (i < 0) {
+      logger.debug(s"$best: $bestScore")
       best
     } else {
       val current = decisionVariables(i)
@@ -32,7 +35,7 @@ abstract class ScoredVariableHeuristic(params: ParameterManager, decisionVariabl
         } else if (comp == 0) {
           if (rand.nextDouble() * ties < 1) {
             select(i - 1, current, s, ties + 1, state, rand)
-          } else {
+          }   else {
             select(i - 1, best, bestScore, ties + 1, state, rand)
           }
 
