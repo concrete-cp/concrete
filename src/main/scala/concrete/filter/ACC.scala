@@ -146,7 +146,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
         -1
       }
 
-      logger.trace(s"Queueing ${c.toString(states)}, positions = $positions, advise = $a")
+      logger.debug(s"Queueing ${c.id}. ${c.toString(states)}, positions = ${positions.mkString("[", ", ", "]")}, advise = $a")
       //logger.fine(c + ", " + modified.positionInConstraint(i) + " : " + a)
       if (a >= 0) queue.offer(c, key.getKey(c, states, a))
 
@@ -170,14 +170,14 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
       constraint.revise(s) match {
         case Contradiction =>
+          logger.debug(s"${constraint.id}.${constraint.weight}. ${constraint.toString(s)} -> Contradiction")
           constraint.weight += 1
-          logger.debug(constraint.toString(s) + " -> Contradiction")
           Contradiction
 
         case newState: ProblemState =>
           if (newState.domains ne s.domains) {
             logger.debug(
-              s"${constraint.toString(s)} -> ${constraint.toString(newState)}${if (newState.isEntailed(constraint)) " - entailed" else ""}")
+              s"${constraint.id}.${constraint.weight}. ${constraint.toString(s)} -> ${constraint.toString(newState)}${if (newState.isEntailed(constraint)) " - entailed" else ""}")
 
             assert(constraint.scope.forall(v => newState.dom(v).nonEmpty))
 
@@ -200,18 +200,18 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
           } else if (newState ne s) {
 
-            logger.debug(s"${constraint.id}. ${constraint.toString(s)} -> ${
+            logger.debug(s"${constraint.id}.${constraint.weight}. ${constraint.toString(s)} -> ${
               constraint match {
                 case sc: StatefulConstraint[_] => s"new state: ${newState(sc)}"
                 case _                         => "NOP"
               }
-            }, entailed: ${newState.isEntailed(constraint)}")
+            }${if (newState.isEntailed(constraint)) " - entailed" else ""}")
 
             assert(constraint.controlRevision(newState))
 
           } else {
             logger.debug(
-              s"${constraint.toString(s)} -> NOP")
+              s"${constraint.id}.${constraint.weight}. ${constraint.toString(s)} -> NOP")
 
           }
           reduce(newState)

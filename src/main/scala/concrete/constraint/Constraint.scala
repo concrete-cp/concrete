@@ -184,7 +184,7 @@ abstract class Constraint(val scope: Array[Variable])
 
   override def toString = this.getClass.getSimpleName + scope.mkString("(", ", ", ")")
 
-  def toString(problemState: ProblemState) = s"$id: ${this.getClass.getSimpleName}${
+  def toString(problemState: ProblemState) = s"${this.getClass.getSimpleName}${
     scope.map(v => s"$v ${problemState.dom(v)}").mkString("(", ", ", ")")
   }"
 
