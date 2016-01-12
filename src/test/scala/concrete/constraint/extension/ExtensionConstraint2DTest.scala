@@ -18,7 +18,7 @@ final class ExtensionConstraint2DTest extends FlatSpec {
   matrix2d.set(Array(1, 1), true);
   matrix2d.set(Array(1, 3), true);
 
-  val c = BinaryExt(Array(var1, var2), matrix2d, false)
+  val c = BinaryExt(Array(var1, var2), matrix2d)
 
   val ps = Problem(var1, var2).initState.toState
 
@@ -55,7 +55,7 @@ final class ExtensionConstraint2DTest extends FlatSpec {
 
     val matrix2 = new Matrix2D(17, 17, 0, 0, true)
     matrix2.setAll(nogoods2, false)
-    val c2 = new BinaryExtNR(Array(v8, v16), matrix2, false)
+    val c2 = new BinaryExtNR(Array(v8, v16), matrix2)
 
     c2.register(ac)
     c2.adviseAll(ps)

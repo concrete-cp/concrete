@@ -27,29 +27,29 @@ import concrete.constraint.Constraint
 import concrete.Domain
 import concrete.ProblemState
 
-final class FindSupportExt(scope: Array[Variable], tts: TupleTrieSet, shared: Boolean)
-  extends ConflictCount(scope, tts, shared) with Residues {
+final class FindSupportExt(scope: Array[Variable], tts: Relation)
+    extends ExtensionConstraint(scope) with ConflictCount with Residues {
 
-  private val rel = tts.reduceable
+  var matrix: Matrix = new TupleTrieSet(tts, false)
 
   override def findSupport(ps: ProblemState, p: Int, i: Int) = {
-    val s = rel.findSupport(scope.map(ps.dom).toIndexedSeq, p, i)
+    val s = tts.findSupport(scope.map(ps.dom).toIndexedSeq, p, i)
 
-    assert(s.forall(rel.contains))
+    assert(s.forall(tts.contains))
 
     s
   }
 
-  private val edges = rel.edges
+  private val edges = tts.edges
 
   override def getEvaluation(ps: ProblemState) = edges
 
-  override def check(tuple: Array[Int]) = rel.contains(tuple)
+  override def check(tuple: Array[Int]) = tts.contains(tuple)
 
   def removeTuple(t: Array[Int]) = throw new UnsupportedOperationException
   def removeTuples(t: Array[Int]) = throw new UnsupportedOperationException
 
   override def simpleEvaluation = 6
 
-  override def dataSize = rel.edges
+  override def dataSize = tts.edges
 }

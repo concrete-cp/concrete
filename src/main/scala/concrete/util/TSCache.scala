@@ -5,7 +5,7 @@ final class TSCache[A] {
 
   var cached: A = _
 
-  def apply(ts: Int, op: => A): A = {
+  def apply(ts: Int)(op: => A): A = {
     if (timestamp == ts) {
       cached
     } else {

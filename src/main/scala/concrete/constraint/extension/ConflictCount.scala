@@ -8,11 +8,11 @@ import concrete.Variable
 import concrete.Domain
 import concrete.ProblemState
 
-abstract class ConflictCount(
-  scope: Array[Variable],
-  _matrix: Matrix,
-  shared: Boolean)
-    extends ExtensionConstraint(scope, _matrix, shared) with TupleEnumerator {
+trait ConflictCount
+    extends ExtensionConstraint with TupleEnumerator {
+
+  def matrix: Matrix
+  //def matrix_=(m: Matrix): Unit
 
   def supportCondition(ps: ProblemState, position: Int): Boolean = {
     applicable && {
@@ -82,13 +82,13 @@ abstract class ConflictCount(
         case tupleSet: TupleTrieSet =>
           if (tupleSet.initialContent) {
 
-            for (tuple <- tupleSet; p <- tuple.indices) nbInitConflicts(p)(tuple(p) - offsets(p)) += 1;
+            for (tuple <- tupleSet.relation; p <- tuple.indices) nbInitConflicts(p)(tuple(p) - offsets(p)) += 1;
 
           } else {
 
             for (p <- nbInitConflicts.indices) Arrays.fill(nbInitConflicts(p), getOtherSize(ps, p))
 
-            for (tuple <- tupleSet; p <- tuple.indices) nbInitConflicts(p)(tuple(p) - offsets(p)) -= 1
+            for (tuple <- tupleSet.relation; p <- tuple.indices) nbInitConflicts(p)(tuple(p) - offsets(p)) -= 1
 
           }
 
@@ -116,7 +116,6 @@ abstract class ConflictCount(
   final def set(tuple: Array[Int], status: Boolean) =
     if (matrix.check(tuple) == status) { false }
     else {
-      unshareMatrix();
       matrix.set(tuple, status);
       if (!status) {
         addConflict(tuple);

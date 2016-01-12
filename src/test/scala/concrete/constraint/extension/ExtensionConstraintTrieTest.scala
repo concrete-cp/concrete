@@ -12,7 +12,7 @@ import concrete.constraint.AdviseCount
 
 final class ExtensionConstraintTrieTest extends FlatSpec with Matchers {
 
-  val ta = new TupleTrieSet(new MDDRelation(), false);
+  val ta = new TupleTrieSet(new MDDRelation(MDD0), false);
   ta.set(Array(0, 0), true);
   ta.set(Array(1, 1), true);
   ta.set(Array(2, 2), true);
@@ -20,7 +20,7 @@ final class ExtensionConstraintTrieTest extends FlatSpec with Matchers {
   val v0 = new Variable("V0", IntDomain(0 to 1))
   val v1 = new Variable("V1", IntDomain(0 to 2))
 
-  val mmd = new ReduceableExt(Array(v0, v1), ta.reduceable);
+  val mmd = new ReduceableExt(Array(v0, v1), ta.relation);
   mmd.register(new AdviseCount())
 
   //println(content map (_.toSeq) mkString (", "))

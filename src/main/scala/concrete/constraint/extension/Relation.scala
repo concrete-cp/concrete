@@ -7,7 +7,7 @@ import concrete.Domain
 
 trait Relation extends Iterable[Array[Int]] {
   type Self2 <: Relation
-  def filterTrie(f: (Int, Int) => Boolean, modified: List[Int]): Self2
+  def filterTrie(doms: Array[Domain], modified: List[Int]): Self2
 
   /**
    * @param f(depth, i) : function called while traversing the trie, given depth and index. Returns true if traversing can be stopped at given level.

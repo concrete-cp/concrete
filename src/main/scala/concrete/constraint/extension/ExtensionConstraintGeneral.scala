@@ -28,10 +28,10 @@ import concrete.Variable
 import concrete.constraint.Residues
 
 final class ExtensionConstraintGeneral(
-  _matrix: Matrix,
+  var matrix: Matrix,
   shared: Boolean,
   scope: Array[Variable])
-  extends ConflictCount(scope, _matrix, shared) with Residues {
+    extends ExtensionConstraint(scope) with ConflictCount with Residues {
 
   def removeTuple(tuple: Array[Int]) = {
     ??? // disEntail();
@@ -42,6 +42,7 @@ final class ExtensionConstraintGeneral(
   def removeTuples(base: Array[Int]) = ??? //tuples(base).count(removeTuple)
 
   override def revise(ps: ProblemState, mod: Seq[Int]): Outcome = {
+
     val skip = this.skip(mod)
     var cs = ps
     for (position <- 0 until arity) {
@@ -67,5 +68,5 @@ final class ExtensionConstraintGeneral(
     matrix.check(tuple)
   }
 
-  override def dataSize = _matrix.size
+  override def dataSize = matrix.size
 }

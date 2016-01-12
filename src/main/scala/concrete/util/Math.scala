@@ -6,7 +6,7 @@ object Math {
    *
    * @throws ArithmeticException if {@code a * b} overflows in signed {@code int} arithmetic
    */
-  def checkedMultiply(a: Int, b: Int) {
+  def checkedMultiply(a: Int, b: Int): Int = {
     val result = a.toLong * b;
     if (result != result.toInt) throw new ArithmeticException("overflow")
     result.toInt;
@@ -17,7 +17,7 @@ object Math {
    *
    * @throws ArithmeticException if {@code a + b} overflows in signed {@code int} arithmetic
    */
-  def checkedAdd(a: Int, b: Int) {
+  def checkedAdd(a: Int, b: Int): Int = {
     val result = a.toLong + b;
     if (result != result.toInt) throw new ArithmeticException("overflow")
     result.toInt;

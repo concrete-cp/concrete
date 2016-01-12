@@ -7,7 +7,7 @@ import concrete.Variable
 import concrete.Domain
 
 object STR extends RelationGenerator {
-  def apply(data: Seq[Seq[Int]]): STR = {
+  def apply(data: Iterable[Seq[Int]]): STR = {
     val d = data.map(_.toArray).toArray
     new STR(d.headOption.getOrElse(Array()).size, d, d.length)
   }
@@ -32,11 +32,11 @@ final class STR(arity: Int, val array: Array[Array[Int]], val bound: Int) extend
 
   def -(t: Seq[Int]) = throw new UnsupportedOperationException
 
-  def filterTrie(f: (Int, Int) => Boolean, modified: List[Int]) = {
+  def filterTrie(doms: Array[Domain], modified: List[Int]) = {
     var b = bound
     var i = b - 1
     while (i >= 0) {
-      if (!valid(modified, f, array(i))) {
+      if (!valid(modified, doms, array(i))) {
         b -= 1
         val tmp = array(i)
         array(i) = array(b)
@@ -52,8 +52,8 @@ final class STR(arity: Int, val array: Array[Array[Int]], val bound: Int) extend
   }
 
   @tailrec
-  private def valid(modified: List[Int], f: (Int, Int) => Boolean, t: Array[Int]): Boolean = {
-    modified.isEmpty || (f(modified.head, t(modified.head)) && valid(modified.tail, f, t))
+  private def valid(modified: List[Int], doms: Array[Domain], t: Array[Int]): Boolean = {
+    modified.isEmpty || (doms(modified.head).present(t(modified.head)) && valid(modified.tail, doms, t))
   }
 
   private val pos: MutableList = new MutableList(arity)
@@ -81,7 +81,9 @@ final class STR(arity: Int, val array: Array[Array[Int]], val bound: Int) extend
   def edges = if (array.isEmpty) 0 else bound * array(0).length
 
   def find(f: (Int, Int) => Boolean) = throw new UnsupportedOperationException
-  def findSupport(scope: IndexedSeq[Domain], p: Int, i: Int) = throw new UnsupportedOperationException
+
+  def findSupport(scope: IndexedSeq[Domain], p: Int, i: Int) =
+    iterator.find(t => t(p) == i && (0 until arity).forall(p => scope(p).present(t(p))))
 
   def iterator = array.iterator.take(bound)
 

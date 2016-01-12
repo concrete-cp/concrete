@@ -7,12 +7,12 @@ import concrete.util.Timestamp
 import concrete.Domain
 import com.typesafe.scalalogging.LazyLogging
 
-object MDDRelation extends RelationGenerator {
-  def apply(data: Iterable[Seq[Int]]): MDDRelation = new MDDRelation(MDD(data))
+object MDDLinkRelation extends RelationGenerator {
+  def apply(data: Iterable[Seq[Int]]): MDDLinkRelation = new MDDLinkRelation(MDDLink(data.map(_.toList)))
 }
 
-final class MDDRelation(val mdd: MDD, val timestamp: Timestamp = new Timestamp()) extends Relation with LazyLogging {
-  type Self2 = MDDRelation
+final class MDDLinkRelation(val mdd: MDDLink, val timestamp: Timestamp = new Timestamp()) extends Relation with LazyLogging {
+  type Self2 = MDDLinkRelation
 
   def findSupport(domains: IndexedSeq[Domain], p: Int, i: Int): Option[Array[Int]] = {
     assert(domains(p).present(i))
@@ -25,9 +25,9 @@ final class MDDRelation(val mdd: MDD, val timestamp: Timestamp = new Timestamp()
     s
   }
 
-  lazy val edges: Int = mdd.edges(timestamp.next())
+  def edges: Int = mdd.edges(timestamp.next())
 
-  def filterTrie(doms: Array[Domain], modified: List[Int]): MDDRelation = {
+  def filterTrie(doms: Array[Domain], modified: List[Int]): MDDLinkRelation = {
     val m = mdd.filterTrie(timestamp.next(), doms, modified, 0)
 
     assert(m.forall { sup =>
@@ -42,7 +42,7 @@ final class MDDRelation(val mdd: MDD, val timestamp: Timestamp = new Timestamp()
     if (m eq mdd) {
       this
     } else {
-      new MDDRelation(m, timestamp)
+      new MDDLinkRelation(m, timestamp)
     }
   }
 
@@ -56,23 +56,23 @@ final class MDDRelation(val mdd: MDD, val timestamp: Timestamp = new Timestamp()
 
   def universal(domains: IndexedSeq[Domain]) = mdd.universal(domains, timestamp.next())
 
-  override def toString = s"$edges e for $lambda t"
+  override def toString = s"link, $edges e for $lambda t"
 
-  def copy: MDDRelation = new MDDRelation(mdd.copy(timestamp.next()))
+  def copy: MDDLinkRelation = this
 
-  lazy val lambda = mdd.lambda
+  lazy val lambda = mdd.lambda()
 
   override def size = {
-    val lambda = mdd.lambda
+    val lambda = mdd.lambda()
     require(lambda.isValidInt)
     lambda.toInt
   }
 
-  def identify() = mdd.identify(0)
+  def identify(): Int = mdd.identify()
 
   def iterator = mdd.iterator.map(_.toArray)
 
   def -(t: Seq[Int]) = throw new UnsupportedOperationException
-  def +(t: Seq[Int]) = new MDDRelation(mdd + t)
+  def +(t: Seq[Int]) = new MDDLinkRelation(mdd + t.toList)
   def contains(t: Array[Int]): Boolean = mdd.contains(t)
 }

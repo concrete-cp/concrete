@@ -23,8 +23,8 @@ import concrete.Domain
 import concrete.Variable
 import concrete.ProblemState
 
-final class UnaryExt(scope: Variable, matrix: Matrix, shared: Boolean)
-    extends ExtensionConstraint(Array(scope), matrix, shared) {
+final class UnaryExt(scope: Variable, var matrix: Matrix)
+    extends ExtensionConstraint(Array(scope)) {
 
   def init(ps: ProblemState) = ps.filterDom(scope)(v => matrix.check(Array(v))).entail(this)
 
@@ -35,7 +35,6 @@ final class UnaryExt(scope: Variable, matrix: Matrix, shared: Boolean)
 
   def removeTuple(tuple: Array[Int]) = {
     ??? //disEntail();
-    unshareMatrix()
     if (matrix.check(tuple)) {
       matrix.set(tuple, false)
       true

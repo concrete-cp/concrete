@@ -37,14 +37,14 @@ object ReduceableExt {
   var fills = 0l
 }
 
-final class ReduceableExt(_scope: Array[Variable], val relation: Relation)
-    extends Constraint(_scope) with LazyLogging with Removals with StatefulConstraint[Relation] {
+final class ReduceableExt(scope: Array[Variable], val relation: Relation)
+    extends Constraint(scope) with LazyLogging with Removals with StatefulConstraint[Relation] {
 
   override def init(ps: ProblemState) = ps.updateState(this, relation)
 
   //println("sizesR " + arity + " " + trie.lambda + " " + trie.edges)
 
-  private val newDomains = new Array[Domain](arity)
+  //private val newDomains = new Array[Domain](arity)
 
   def revise(ps: ProblemState, mod: Seq[Int]) = {
     val domains = Array.tabulate(arity)(p => ps.dom(scope(p)))
@@ -56,11 +56,9 @@ final class ReduceableExt(_scope: Array[Variable], val relation: Relation)
 
     //println(this + ": filtering " + oldSize)
 
-    logger.debug("Filtering with " + _scope.toSeq.map(_.toString(ps)))
+    logger.trace("Filtering with " + scope.toSeq.map(_.toString(ps)))
 
-    def validityCheck(p: Int, i: Int) = domains(p).present(i)
-
-    val newTrie = trie.filterTrie(validityCheck, mod.toList)
+    val newTrie = trie.filterTrie(domains, mod.toList)
 
     //println("filtered " + newTrie.size)
 
@@ -86,11 +84,14 @@ final class ReduceableExt(_scope: Array[Variable], val relation: Relation)
 
       val unsup = newTrie.fillFound(updNewDomains, arity)
 
-      var cs: ProblemState = ps
+      var cs: ProblemState = ps.updateState(this, newTrie)
       for (p <- 0 until arity) {
-        if (unsup(p)) cs = cs.updateDomNonEmpty(_scope(p), newDomains(p)) //(!domains(p).present(_))
+        if (unsup(p)) {
+          assert(newDomains(p).length < domains(p).length)
+          cs = cs.updateDomNonEmptyNoCheck(scope(p), newDomains(p)) //(!domains(p).present(_))
+        }
       }
-      cs.updateState(this, newTrie).entailIfFree(this)
+      cs.entailIfFree(this)
     }
 
   }

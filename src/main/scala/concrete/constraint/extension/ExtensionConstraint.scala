@@ -5,12 +5,11 @@ import scala.annotation.tailrec
 import concrete.Variable
 import concrete.constraint.Constraint
 
-abstract class ExtensionConstraint(
-  scope: Array[Variable],
-  private var _matrix: Matrix,
-  var shared: Boolean) extends Constraint(scope) {
+abstract class ExtensionConstraint(scope: Array[Variable]) extends Constraint(scope) {
 
-  override def check(t: Array[Int]) = _matrix.check(t)
+  def matrix: Matrix
+
+  override def check(t: Array[Int]) = matrix.check(t)
   //  def checkValues(t: Array[Int]) = {
   //    val indices = (t, scope).zipped.map {
   //      (value, variable) => variable.dom.index(value)
@@ -19,15 +18,6 @@ abstract class ExtensionConstraint(
   //  }
   def removeTuples(base: Array[Int]): Int
   def removeTuple(tuple: Array[Int]): Boolean
-  def matrix = _matrix
-
-  def unshareMatrix() = {
-    if (shared) {
-      _matrix = matrix.copy
-      shared = false
-    }
-    _matrix
-  }
 
 }
 

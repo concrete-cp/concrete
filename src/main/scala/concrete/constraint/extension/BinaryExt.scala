@@ -41,20 +41,19 @@ object BinaryExt {
   /**
    * No need for residues if domain sizes <= MINIMUM_SIZE_FOR_LAST
    */
-  def apply(scope: Array[Variable], matrix2d: Matrix2D, shared: Boolean) = {
+  def apply(scope: Array[Variable], matrix2d: Matrix2D) = {
     if (scope.map(_.initDomain.size).max > MINIMUM_SIZE_FOR_LAST) {
-      new BinaryExtR(scope, matrix2d, shared)
+      new BinaryExtR(scope, matrix2d)
     } else {
-      new BinaryExtNR(scope, matrix2d, shared)
+      new BinaryExtNR(scope, matrix2d)
     }
   }
 }
 
 abstract class BinaryExt(
   scope: Array[Variable],
-  private var matrix2d: Matrix2D,
-  shared: Boolean)
-    extends ConflictCount(scope, matrix2d, shared) with Removals {
+  var matrix: Matrix2D)
+    extends ExtensionConstraint(scope) with ConflictCount with Removals {
 
   private val x = scope(0)
   private val y = scope(1)
@@ -95,7 +94,7 @@ abstract class BinaryExt(
   }
 
   def removeTuples(base: Array[Int]) = {
-    matrix2d
+    matrix
       .allowed
       .count { tuple =>
         (tuple, base).zipped.forall { (t, b) => b < 0 || t == b } &&
@@ -108,15 +107,15 @@ abstract class BinaryExt(
 
   override def check(t: Array[Int]) = matrix.check(t)
 
-  override def unshareMatrix() = {
-    matrix2d = super.unshareMatrix().asInstanceOf[Matrix2D]
-    matrix2d
-  }
+  //  override def unshareMatrix() = {
+  //    matrix = super.unshareMatrix().asInstanceOf[Matrix2D]
+  //    matrix
+  //  }
 
-  override def dataSize = matrix2d.size
+  override def dataSize = matrix.size
 }
 
-final class BinaryExtR(scope: Array[Variable], matrix2d: Matrix2D, shared: Boolean) extends BinaryExt(scope, matrix2d, shared) {
+final class BinaryExtR(scope: Array[Variable], matrix: Matrix2D) extends BinaryExt(scope, matrix) {
   private val offsets = Array(scope(0).initDomain.head, scope(1).initDomain.head)
 
   private val residues: Array[Array[Int]] =
@@ -125,14 +124,14 @@ final class BinaryExtR(scope: Array[Variable], matrix2d: Matrix2D, shared: Boole
       new Array[Int](scope(1).initDomain.last - offsets(1) + 1))
 
   def hasSupport(ps: ProblemState, variablePosition: Int, value: Int) = {
-    val matrixBV: BitVector = matrix2d.getBitVector(variablePosition, value)
+    val matrixBV: BitVector = matrix.getBitVector(variablePosition, value)
     val otherPosition = 1 - variablePosition
     val otherDom = ps.dom(scope(otherPosition))
     val index = value - offsets(variablePosition)
     val part = residues(variablePosition)(index)
     BinaryExt.presenceChecks += 1
-    (part >= 0 && otherDom.toBitVector(matrix2d.offsets(otherPosition)).intersects(matrixBV, part)) || {
-      val intersection = otherDom.toBitVector(matrix2d.offsets(otherPosition)).intersects(matrixBV)
+    (part >= 0 && otherDom.toBitVector(matrix.offsets(otherPosition)).intersects(matrixBV, part)) || {
+      val intersection = otherDom.toBitVector(matrix.offsets(otherPosition)).intersects(matrixBV)
 
       if (intersection >= 0) {
         BinaryExt.checks += 1 + intersection;
@@ -147,11 +146,11 @@ final class BinaryExtR(scope: Array[Variable], matrix2d: Matrix2D, shared: Boole
 
 }
 
-final class BinaryExtNR(scope: Array[Variable], matrix2d: Matrix2D, shared: Boolean) extends BinaryExt(scope, matrix2d, shared) {
+final class BinaryExtNR(scope: Array[Variable], matrix: Matrix2D) extends BinaryExt(scope, matrix) {
   def hasSupport(ps: ProblemState, variablePosition: Int, index: Int) = {
-    val matrixBV: BitVector = matrix2d.getBitVector(variablePosition, index);
+    val matrixBV: BitVector = matrix.getBitVector(variablePosition, index);
     val otherPosition = 1 - variablePosition
-    val intersection = ps.dom(scope(otherPosition)).toBitVector(matrix2d.offsets(otherPosition)).intersects(matrixBV)
+    val intersection = ps.dom(scope(otherPosition)).toBitVector(matrix.offsets(otherPosition)).intersects(matrixBV)
 
     if (intersection >= 0) {
       BinaryExt.checks += 1 + intersection;
