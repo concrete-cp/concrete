@@ -4,7 +4,7 @@ organization := "fr.univ-valenciennes"
 
 version := "3.0-B3-SNAPSHOT"
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.8"
 
 testOptions in Test <+= (target in Test) map {
   t => Tests.Argument(TestFrameworks.ScalaTest, "-u", s"${t / "test-reports"}")
@@ -14,28 +14,28 @@ resolvers += Resolver.sonatypeRepo("snapshots")
 
 libraryDependencies ++= Seq(
 	"fr.univ-valenciennes" %% "cspom" % "2.7-SNAPSHOT",
-	"org.postgresql" % "postgresql" % "9.4-1205-jdbc42",
+	"org.postgresql" % "postgresql" % "9.4.1208",
 	//"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
 	"org.ow2.sat4j" % "org.ow2.sat4j.pb" % "2.3.5",
-	"com.typesafe.slick" %% "slick" % "3.1.0",
+	"com.typesafe.slick" %% "slick" % "3.1.1",
 	"com.typesafe" % "config" % "1.3.0",
-	"org.apache.commons" % "commons-math3" % "3.5",
+	"org.apache.commons" % "commons-math3" % "3.6",
 	//"org.jcp" % "jsr331" % "1.1.1",
-	"org.scalatest" %% "scalatest" % "2.2.5" % "test",
+	"org.scalatest" %% "scalatest" % "2.2.6" % "test",
 	"org.scalacheck" %% "scalacheck" % "1.12.5" % "test",
 	"com.storm-enroute" %% "scalameter" % "0.7" % "test"
 	
 	)
 
-scalacOptions ++= Seq("-optimise"
-	      , "-Xdisable-assertions"
+scalacOptions ++= Seq(
+  "-optimise"
+, "-Xdisable-assertions"
 //	"-deprecation", 
 //	"-unchecked", 
-//	"-optimise", 
-//	"-Xlint", 
-//	
+,	"-optimise"
+,	"-Xlint" 
 //	"-feature",
-//	"-Yinline-warnings"
+, 	"-Ywarn-unused-import"
 )
 
 enablePlugins(JavaAppPackaging)
@@ -99,4 +99,12 @@ sourceGenerators in Scapegoat <+= (sourceManaged in Compile, version, name) map 
 }
 
 
-excludeFilter in packageBin in unmanagedResources := "logback.xml"
+excludeFilter in packageBin in unmanagedResources := "logback.xml" || "reference.conf"
+
+mappings in Universal ++= Seq(
+    (resourceDirectory in Compile).value / "conf"/"application.conf" -> "conf/application.conf",
+    (resourceDirectory in Compile).value / "conf"/"logback.xml" -> "conf/logback.xml",
+    (resourceDirectory in Compile).value / "conf"/"application.ini" -> "conf/application.ini"
+   )
+
+scapegoatVersion := "1.2.0"
