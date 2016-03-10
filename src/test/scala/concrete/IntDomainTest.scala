@@ -2,8 +2,10 @@ package concrete
 
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
+import org.scalatest.prop.PropertyChecks
+import org.scalacheck.Gen
 
-final class IntDomainTest extends FlatSpec with Matchers {
+final class IntDomainTest extends FlatSpec with Matchers with PropertyChecks {
 
   "IntDomain" should "find next/prev" in {
     val b = IntDomain.ofSeq(1, 2, 7, 8)
@@ -14,6 +16,17 @@ final class IntDomainTest extends FlatSpec with Matchers {
     a[NoSuchElementException] should be thrownBy b.next(9)
     a[NoSuchElementException] should be thrownBy b.prev(1)
     a[NoSuchElementException] should be thrownBy b.prev(0)
+  }
+
+  it should "behave as sets" in {
+    forAll(Gen.containerOf[Set, Int](Gen.choose(-10000, 10000))) { s =>
+      val s2 = s.foldLeft[IntDomain](EmptyIntDomain)(_ | _)
+      s2 should contain theSameElementsAs s
+    }
+    forAll(Gen.containerOf[Set, Int](Gen.choose(0, 63))) { s =>
+      val s2 = s.foldLeft[IntDomain](EmptyIntDomain)(_ | _)
+      s2 should contain theSameElementsAs s
+    }
   }
 
   it should "enumerate" in {

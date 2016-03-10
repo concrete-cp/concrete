@@ -4,6 +4,9 @@ import org.scalatest.Matchers
 import org.scalatest.FlatSpec
 import org.scalatest.Inspectors
 import scala.util.Random
+import cspom.extension.IdMap
+import concrete.IntDomain
+import concrete.Singleton
 
 final class MDDTest extends FlatSpec with Matchers with Inspectors {
 
@@ -68,5 +71,27 @@ final class MDDTest extends FlatSpec with Matchers with Inspectors {
     mdd should contain theSameElementsAs cspomMdd
     
     mdd.edges(1) shouldBe cspomMdd.edges
+  }
+  
+    it should "have correct number of nodes" in {
+    val m = MDD(Seq(
+      Seq(2, 3, 2),
+      Seq(1, 2, 1),
+      Seq(1, 1, 1),
+      Seq(1, 1, 3),
+      Seq(3, 1, 1),
+      Seq(3, 1, 3)))
+      .reduce()
+
+    val map = m.nodes(new IdMap())
+
+    map.size shouldBe 7
+
+    val m2 = m.filterTrie(5, Array(IntDomain(1 to 3), Singleton(1), IntDomain(1 to 3)), List(1), 0)
+    
+    m2.lambda shouldBe 4
+    
+    m2.nodes(map).size shouldBe 9
+
   }
 }

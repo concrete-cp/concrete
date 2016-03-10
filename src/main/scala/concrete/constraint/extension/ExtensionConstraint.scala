@@ -1,7 +1,5 @@
 package concrete.constraint.extension;
 
-import scala.annotation.tailrec
-
 import concrete.Variable
 import concrete.constraint.Constraint
 

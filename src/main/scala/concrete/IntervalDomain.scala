@@ -125,7 +125,7 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
     }
   }
 
-  def offset(o: Int) = if (o == 0) this else
+  def shift(o: Int) = if (o == 0) this else
     new IntervalDomain(span + o)
 
   def &(d: Domain): Domain = d match {
@@ -168,8 +168,9 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
 
   def |(i1: Interval) = {
     val i2 = span
-
-    if (i1 connected i2) {
+    if (i1 subsetOf i2) {
+      this
+    } else if (i1 connected i2) {
       new IntervalDomain(i1 span i2)
     } else {
       val offset = math.min(i1.lb, i2.lb)

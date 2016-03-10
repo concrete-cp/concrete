@@ -20,6 +20,11 @@
 package concrete.constraint;
 
 import scala.annotation.tailrec
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
+
+import com.typesafe.scalalogging.LazyLogging
+
 import concrete.Contradiction
 import concrete.Outcome
 import concrete.ProblemState
@@ -28,11 +33,6 @@ import concrete.heuristic.Weighted
 import concrete.priorityqueues.DLNode
 import concrete.priorityqueues.Identified
 import concrete.priorityqueues.PTag
-import cspom.UNSATException
-import scala.reflect.runtime.universe._
-import com.typesafe.scalalogging.LazyLogging
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
 
 object Constraint {
 
@@ -56,6 +56,8 @@ trait StatefulConstraint[State] extends Constraint {
   override def init(ps: ProblemState): Outcome
 
   override def toString(problemState: ProblemState) = s"${super.toString(problemState)} / ${problemState(this)}"
+
+  def data(ps: ProblemState) = ps(this)
 }
 
 abstract class Constraint(val scope: Array[Variable])

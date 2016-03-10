@@ -1,15 +1,15 @@
 package concrete.generator.cspompatterns
 
-import scala.util.control.Breaks._
+import scala.reflect.runtime.universe
+
 import cspom.CSPOM
+import cspom.CSPOM.seq2CSPOMSeq
 import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompiler
-import cspom.compiler.Delta
+import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
-import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMVariable
-import CSPOM._
 
 /**
  * Transforms x = (a, b, ...) ne (c, d, ...), y = (e, f, ...) ne (g, h, ...), ..., x \/ y \/ ...

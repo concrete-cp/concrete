@@ -1,13 +1,10 @@
 package concrete.constraint.semantic
 
+import concrete.Outcome
+import concrete.ProblemState
+import concrete.Variable
 import concrete.constraint.BC
 import concrete.constraint.Constraint
-import concrete.Variable
-import concrete.ProblemState
-import concrete.Outcome
-import concrete.IntervalDomain
-import concrete.util.Interval
-import concrete.IntervalDomain
 import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
 /**

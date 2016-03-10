@@ -1,16 +1,15 @@
 package concrete.generator.cspompatterns
+
+import scala.reflect.runtime.universe
+
 import cspom.CSPOM
-import cspom.compiler.ConstraintCompiler
 import cspom.CSPOMConstraint
-import cspom.variable.CSPOMVariable
+import cspom.compiler.ConstraintCompiler
 import cspom.compiler.Delta
-import cspom.util.IntervalsArithmetic._
-import cspom.variable.CSPOMExpression
-import cspom.variable.SimpleExpression
 import cspom.variable.CSPOMConstant
-import CSPOM.constant
-import cspom.variable.IntExpression
+import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
+import cspom.variable.IntExpression
 
 /**
  * If constraint is the sub() constraint, converts a=sub(y,z), x=abs(a) to

@@ -10,10 +10,8 @@ class SparseSet(
   def this(s: Int) = this(new Array[Int](s), new Array[Int](s), 0)
 
   def contains(k: Int) = {
-
     val a = sparse(k)
     a < members && dense(a) == k
-
   }
 
   def +(k: Int): SparseSet = {
@@ -28,6 +26,7 @@ class SparseSet(
     }
   }
 
+  
   def iterator: Iterator[Int] = dense.iterator.take(members)
 
   override def size = members
@@ -38,7 +37,6 @@ class SparseSet(
     dense(end) = elem
     sparse(elem) = end
     sparse(swapped) = a
-
   }
 
   def -(elem: Int): SparseSet = {
@@ -50,7 +48,6 @@ class SparseSet(
     } else {
       this
     }
-
   }
 
 }

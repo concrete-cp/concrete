@@ -39,6 +39,8 @@ object ReduceableExt {
 
 final class ReduceableExt(scope: Array[Variable], val relation: Relation)
     extends Constraint(scope) with LazyLogging with Removals with StatefulConstraint[Relation] {
+  
+  require(scope.toSet.size == arity, "Variables must be distinct")
 
   override def init(ps: ProblemState) = ps.updateState(this, relation)
 
@@ -47,7 +49,7 @@ final class ReduceableExt(scope: Array[Variable], val relation: Relation)
   //private val newDomains = new Array[Domain](arity)
 
   def revise(ps: ProblemState, mod: Seq[Int]) = {
-    val domains = Array.tabulate(arity)(p => ps.dom(scope(p)))
+    val domains = ps.doms(scope) //Array.tabulate(arity)(p => ps.dom(scope(p)))
 
     val trie = ps(this)
     //found.foreach(_.fill(false))
@@ -74,20 +76,13 @@ final class ReduceableExt(scope: Array[Variable], val relation: Relation)
 
       //sizes(domSizes)
 
-      val newDomains = Array.fill[IntDomain](arity)(EmptyIntDomain)
-
-      def updNewDomains(depth: Int, i: Int) = {
-        ReduceableExt.fills += 1
-        newDomains(depth) |= i
-        newDomains(depth).length == domains(depth).length
-      }
-
-      val unsup = newTrie.fillFound(updNewDomains, arity)
+      val newDomains = newTrie.supported(domains)
 
       var cs: ProblemState = ps.updateState(this, newTrie)
       for (p <- 0 until arity) {
-        if (unsup(p)) {
-          assert(newDomains(p).length < domains(p).length)
+        //println(s"$p: ${scope(p)}: ${domains(p)} -> ${newDomains(p)}")
+        if (newDomains(p).length < domains(p).length) {
+
           cs = cs.updateDomNonEmptyNoCheck(scope(p), newDomains(p)) //(!domains(p).present(_))
         }
       }

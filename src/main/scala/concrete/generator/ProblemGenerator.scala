@@ -146,14 +146,15 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
     cspom.referencedExpressions.flatMap(_.flatten).collect {
       case v: CSPOMVariable[_] =>
         require(v.fullyDefined, s"${vn.names(v)} has no bounds. Involved by ${cspom.deepConstraints(v)}")
-        assert(cspom.isReferenced(v), s"${vn.names(v)} ($v) is not referenced by constraints $cspom}")
+        require(v.searchSpace > 0, s"${vn.names(v)} has empty domain. Involved by ${cspom.deepConstraints(v)}")
+        if (!cspom.isReferenced(v)) logger.warn(s"${vn.names(v)} ($v) is not referenced by constraints $cspom}")
         v -> new Variable(vn.names(v), generateDomain(v))
     }.toMap
   }
 
   def generateDomain[T](cspomVar: CSPOMVariable[_]): Domain = {
 
-    cspomVar match {
+    val dom = cspomVar match {
       case bD: BoolVariable => concrete.BooleanDomain()
 
       case v: IntVariable =>
@@ -165,10 +166,14 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
             case (Finite(lb), Finite(ub))            => IntDomain.ofInterval(lb, ub)
           }
         } else {
-          IntDomain(v.asSortedSet)
+          IntDomain(v.domain)
         }
 
       case _ => throw new IllegalArgumentException("Unhandled variable type")
     }
+
+    require(cspomVar.searchSpace == dom.size, s"$cspomVar -> $dom")
+    
+    dom
   }
 }

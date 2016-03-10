@@ -80,10 +80,10 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     val mod = c.revise(ps)
     mod.dom(x) should be theSameInstanceAs (ps.dom(x))
     mod.dom(y) should be theSameInstanceAs (ps.dom(y))
-    
+
     mod.dom(z) should not be theSameInstanceAs(ps.dom(z))
     mod.dom(z) should contain theSameElementsAs (-29 to -10)
-    
+
     assert(c.intervalsOnly(ps))
   }
 
@@ -91,9 +91,9 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
 
   it should "filter the same as enumerator" in {
     {
-      val vx = new Variable("x", IntDomain.ofSeq(0))
+      val vx = new Variable("x", IntDomain.ofSeq(0, 0))
       val vy = new Variable("y", IntDomain.ofSeq(0))
-      val vz = new Variable("z", IntDomain.ofSeq(-1))
+      val vz = new Variable("z", IntDomain.ofSeq(0))
 
       ConstraintComparator.compare(
         Array(vx, vy, vz),

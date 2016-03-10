@@ -1,17 +1,8 @@
 package concrete.generator.constraint;
 
-import concrete.constraint.Constraint
-import concrete.constraint.Residues
-import concrete.constraint.TupleEnumerator
-import concrete.IntDomain
-import concrete.Problem
-import concrete.Variable
-import cspom.CSPOMConstraint
-import Generator._
-import concrete.constraint.semantic.ModAC
-import concrete.constraint.semantic.ModBC
+import Generator.cspom2concrete1D
 import concrete.constraint.semantic.DivAC
-import concrete.constraint.semantic.DivBC
+import cspom.CSPOMConstraint
 
 final object DivGenerator extends Generator {
 

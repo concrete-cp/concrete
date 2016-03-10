@@ -15,7 +15,7 @@ import scala.collection.mutable.BitSet
 import cspom.util.BitVector
 
 /* MDDRelation comes with its own timestamp */
-class MDDCLink(_scope: Array[Variable], val mdd: MDDLinkRelation)
+class MDDCLink(_scope: Array[Variable], val mdd: BDDRelation)
     extends Constraint(_scope) with Removals with StatefulConstraint[BitSet] {
 
   override def init(ps: ProblemState) = {
@@ -50,7 +50,7 @@ class MDDCLink(_scope: Array[Variable], val mdd: MDDLinkRelation)
     val ts = mdd.timestamp.next
 
     @inline
-    def seekSupports(g: MDDLink, i: Int): Boolean = {
+    def seekSupports(g: BDD, i: Int): Boolean = {
       if (g eq MDDLinkLeaf) {
         if (i < delta) {
           delta = i
@@ -83,7 +83,7 @@ class MDDCLink(_scope: Array[Variable], val mdd: MDDLinkRelation)
       }
     }
 
-    val sat = seekSupports(mdd.mdd, 0)
+    val sat = seekSupports(mdd.bdd, 0)
     if (!sat) {
       Contradiction
     } else {

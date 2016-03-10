@@ -46,11 +46,12 @@ final class EqACFast(val x: Variable, val b: Int, val y: Variable)
   def revise(ps: concrete.ProblemState): Outcome = {
     val oldX = ps.dom(x)
     val oldY = ps.dom(y)
-    val newX = oldX & oldY.offset(-b)
+    val newX = oldX & oldY.shift(-b)
 
+    
     ps.updateDom(x, newX)
       .andThen { ps =>
-        val newY = newX.offset(b)
+        val newY = newX.shift(b)
         /**
          * ProblemState does not detect NOP after two
          * complementary offset operations

@@ -1,26 +1,17 @@
 package concrete.generator.cspompatterns
 
-import cspom.CSPOMConstraint
-import cspom.VariableNames
-import cspom.compiler.VariableCompiler
-import cspom.util.IntInterval._
-import cspom.util.IntInterval
-import cspom.util.IntervalsArithmetic._
-import cspom.util.RangeSet
-import cspom.variable.BoolVariable
-import cspom.variable.CSPOMConstant
-import cspom.variable.CSPOMExpression
-import cspom.variable.IntVariable
-import cspom.variable.IntExpression.implicits.arithmetics
-import cspom.variable.IntExpression
-import cspom.variable.IntExpression.implicits.ranges
-import cspom.variable.SimpleExpression
-import cspom.compiler.ConstraintCompilerNoData
+import scala.reflect.runtime.universe
+
 import cspom.CSPOM
-import cspom.util.Finite
+import cspom.CSPOMConstraint
+import cspom.compiler.ConstraintCompilerNoData
 import cspom.compiler.Delta
+import cspom.compiler.VariableCompiler
 import cspom.variable.BoolExpression
+import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
+import cspom.variable.IntExpression
+import cspom.variable.SimpleExpression
 
 object Bool2IntDomains extends VariableCompiler('bool2int) {
 

@@ -17,51 +17,47 @@ abstract class ScoredVariableHeuristic(params: ParameterManager, decisionVariabl
   //def problem: Problem
 
   @tailrec
-  private def select(i: Int, best: Variable, bestScore: Double, ties: Int, state: ProblemState, rand: Random): Variable = {
+  private def selectRand(i: Int, best: Variable, bestScore: Double, ties: Int, state: ProblemState, rand: Random): Variable = {
     if (i < 0) {
       logger.debug(s"$best: $bestScore")
       best
     } else {
       val current = decisionVariables(i)
       val dom = state.dom(current)
-      if (dom.length == 1) {
-        select(i - 1, best, bestScore, ties, state, rand)
+      if (dom.isAssigned) {
+        selectRand(i - 1, best, bestScore, ties, state, rand)
       } else {
         val s = score(current, dom, state)
-        val comp = java.lang.Double.compare(s, bestScore)
 
-        if (comp > 0) {
-          select(i - 1, current, s, 2, state, rand)
-        } else if (comp == 0) {
-          if (rand.nextDouble() * ties < 1) {
-            select(i - 1, current, s, ties + 1, state, rand)
-          }   else {
-            select(i - 1, best, bestScore, ties + 1, state, rand)
-          }
-
+        if (s > bestScore) {
+          selectRand(i - 1, current, s, 2, state, rand)
+        } else if (s < bestScore) {
+          selectRand(i - 1, best, bestScore, ties, state, rand)
+        } else if (rand.nextDouble() * ties < 1) {
+          selectRand(i - 1, current, s, ties + 1, state, rand)
         } else {
-          select(i - 1, best, bestScore, ties, state, rand)
+          selectRand(i - 1, best, bestScore, ties + 1, state, rand)
         }
+
       }
     }
   }
 
   @tailrec
-  private def select(i: Int, best: Variable, bestScore: Double, state: ProblemState): Variable = {
+  private def selectFirst(i: Int, best: Variable, bestScore: Double, state: ProblemState): Variable = {
     if (i < 0) {
       best
     } else {
       val current = decisionVariables(i)
       val dom = state.dom(current)
-      if (dom.length == 1) {
-        select(i - 1, best, bestScore, state)
+      if (dom.isAssigned) {
+        selectFirst(i - 1, best, bestScore, state)
       } else {
         val s = score(current, dom, state)
-        val comp = java.lang.Double.compare(s, bestScore)
-        if (comp > 0) {
-          select(i - 1, current, s, state)
+        if (s > bestScore) {
+          selectFirst(i - 1, current, s, state)
         } else {
-          select(i - 1, best, bestScore, state)
+          selectFirst(i - 1, best, bestScore, state)
         }
       }
     }
@@ -71,10 +67,10 @@ abstract class ScoredVariableHeuristic(params: ParameterManager, decisionVariabl
     val v = decisionVariables(i)
     rand
       .map { r =>
-        select(i - 1, v, score(v, state.dom(v), state), 2, state, r)
+        selectRand(i - 1, v, score(v, state.dom(v), state), 2, state, r)
       }
       .getOrElse {
-        select(i - 1, v, score(v, state.dom(v), state), state)
+        selectFirst(i - 1, v, score(v, state.dom(v), state), state)
       }
   }
 

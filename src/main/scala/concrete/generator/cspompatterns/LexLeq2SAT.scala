@@ -1,17 +1,18 @@
 package concrete.generator.cspompatterns
 
-import concrete.CSPOMDriver._
-import concrete.Variable
+import concrete.CSPOMDriver.CSPOMBoolExpressionOperations
+import concrete.CSPOMDriver.CSPOMIntExpressionOperations
+import concrete.CSPOMDriver.and
+import concrete.CSPOMDriver.or
 import cspom.CSPOM
-import cspom.CSPOM._
 import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.variable.BoolExpression
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
-import cspom.variable.SimpleExpression
 import cspom.variable.IntExpression
+import cspom.variable.SimpleExpression
 
 object LexLeq2SAT extends ConstraintCompilerNoData {
 

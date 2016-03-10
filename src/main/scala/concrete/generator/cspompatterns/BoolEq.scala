@@ -1,21 +1,13 @@
 package concrete.generator.cspompatterns
 
+import scala.reflect.runtime.universe
+
 import concrete.CSPOMDriver
 import cspom.CSPOM
 import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompiler
-import cspom.compiler.ConstraintCompilerNoData
-import cspom.compiler.Delta
-import cspom.compiler.VariableCompiler
-import cspom.util.IntervalsArithmetic._
-import cspom.variable.BoolVariable
-import cspom.variable.CSPOMConstant
-import cspom.variable.CSPOMExpression
-import cspom.variable.IntExpression.implicits.arithmetics
-import cspom.variable.IntExpression
-import cspom.variable.IntExpression.implicits.ranges
-import cspom.variable.SimpleExpression
 import cspom.variable.BoolExpression
+import cspom.variable.SimpleExpression
 
 /**
  * Reified boolean equality:

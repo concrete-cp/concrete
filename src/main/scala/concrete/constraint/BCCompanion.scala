@@ -1,6 +1,5 @@
 package concrete.constraint
 
-import concrete.Domain
 import concrete.ProblemState
 
 trait BCCompanion extends Constraint {

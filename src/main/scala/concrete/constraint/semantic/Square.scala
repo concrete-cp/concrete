@@ -25,8 +25,8 @@ final class SquareBC(val x: Variable, val y: Variable)
   def check(t: Array[Int]) = t(0) == t(1) * t(1)
 
   def shave(ps: ProblemState) = {
-    ps.shaveDom(x, ps.dom(y).span.sq)
-      .shaveDom(y, ps.dom(x).span.sqrt)
+    ps.shaveDom(x, ps.span(y).sq)
+      .shaveDom(y, ps.span(x).sqrt)
   }
 
   override def toString(ps: ProblemState) = s"${x.toString(ps)} =BC= ${y.toString(ps)}²"
@@ -43,7 +43,7 @@ final class SquareBC(val x: Variable, val y: Variable)
  */
 final class SquareAC(val x: Variable, val y: Variable)
     extends Constraint(Array(x, y)) with Removals with BCCompanion {
-  def init(ps: ProblemState) = ps
+  def init(ps: ProblemState) = ps.removeUntil(x, 0)
 
   def skipIntervals = false
   //  val corresponding = Array(
@@ -69,26 +69,34 @@ final class SquareAC(val x: Variable, val y: Variable)
   def revise(ps: ProblemState, modified: Seq[Int]): Outcome = {
     val s = skip(modified)
 
-    val ps0 = if (s == 0) { ps } else {
-      ps.filterDom(x)(v => consistentX(v, ps.dom(y)))
-    }
-
-    val ps1 = if (s == 1) { ps0 } else {
-      ps0.filterDom(y)(v => consistentY(v, ps0.dom(x)))
-    }
-
-    ps1.entailIfFree(this)
+    (if (s == 0) { ps } else {
+      val domY = ps.dom(y)
+      ps.filterDom(x)(v => consistentX(v, domY))
+    })
+      .andThen { ps0 =>
+        if (s == 1) { ps0 } else {
+          val domX = ps0.dom(x)
+          ps0.filterDom(y)(v => consistentY(v, ps0.dom(x)))
+        }
+      }
+      .entailIfFree(this)
   }
 
-  override def isConsistent(ps: ProblemState) =
-    if (ps.dom(x).exists(v => consistentX(v, ps.dom(y))) && ps.dom(y).exists(v => consistentY(v, ps.dom(x))))
+  override def isConsistent(ps: ProblemState) = {
+    val domY = ps.dom(y)
+    val domX = ps.dom(x)
+    if (domX.exists(v => consistentX(v, domY)) && domY.exists(v => consistentY(v, domX)))
       ps
     else
       Contradiction
+  }
 
   override def toString(ps: ProblemState) = s"${x.toString(ps)} =AC= ${y.toString(ps)}²"
 
-  def getEvaluation(ps: ProblemState) = ps.dom(x).size + ps.dom(y).size
+  def getEvaluation(ps: ProblemState) = {
+    val e = ps.card(x) + ps.card(y)
+    if (skip(ps, e)) -1 else e
+  }
   val simpleEvaluation = 2
 }
 

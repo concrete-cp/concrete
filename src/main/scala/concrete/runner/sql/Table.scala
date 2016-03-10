@@ -14,6 +14,8 @@ import slick.driver.PostgresDriver.api._
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
+import com.typesafe.config.ConfigFactory
+import java.io.File
 
 sealed trait ErrorHandling
 case object ErrorInfinity extends ErrorHandling
@@ -42,279 +44,289 @@ object Table extends App {
     }
   }
 
-  val DB = Database.forConfig("database")
-  try {
+  lazy val baseConfig = ConfigFactory.load //defaults from src/resources
 
-    val statistic :: version :: nature = args.toList
+  val systemConfig = Option(System.getProperty("concrete.config")) match {
+    case Some(cfile) => ConfigFactory.parseFile(new File(cfile)).withFallback(baseConfig)
+    case None        => baseConfig
+  }
 
-    // Set display :
-    // update "Problem" set display = substring(name from '%/#"[^/]+#".xml.bz2' for '#')
+  lazy val DB = Database.forConfig("database", systemConfig)
 
-    case class Problem(
-      problemId: Int,
-      problem: String,
-      nbVars: Int,
-      nbCons: Int,
-      tags: Array[String])
+  val statistic :: version :: nature = args.toList
 
-    case class Config(
-        configId: Int,
-        config: Node) {
-      def display = config \\ "p" map (n => className(n)) mkString ("/")
-      override def toString = configId + "." + display
-    }
+  // Set display :
+  // update "Problem" set display = substring(name from '%/#"[^/]+#".xml.bz2' for '#')
 
-    case class Resultat[A](
-        status: String,
-        solution: String,
-        statistic: A) {
-      def solved = Set("Sat", "Unsat").contains(status)
-    }
+  case class Problem(
+    problemId: Int,
+    problem: String,
+    nbVars: Int,
+    nbCons: Int,
+    tags: Array[String])
 
-    implicit val getProblemResult = GetResult(r => Problem(r.<<, r.<<, r.<<, r.<<, r.nextStringOption.map(_.split(",")).getOrElse(Array())))
+  case class Config(
+      configId: Int,
+      config: Node) {
+    def display = config \\ "p" map (n => className(n)) mkString ("/")
+    override def toString = configId + "." + display
+  }
 
-    implicit val getConfigResult = GetResult(r =>
-      Config(r.<<, {
-        val s = r.nextString;
-        try xml.XML.loadString(s"<config>$s</config>")
-        catch {
-          case e: Exception =>
-            System.err.println(s)
-            throw e
-        }
-      }))
+  case class Resultat[A](
+      status: String,
+      statistic: A) {
+    def solved = status.startsWith("Success")
+  }
 
-    val problemsQ = sql"""
+  implicit val getProblemResult = GetResult(r => Problem(r.<<, r.<<, r.<<, r.<<, r.nextStringOption.map(_.split(",")).getOrElse(Array())))
+
+  implicit val getConfigResult = GetResult(r =>
+    Config(r.<<, {
+      val s = r.nextString;
+      try xml.XML.loadString(s"<config>$s</config>")
+      catch {
+        case e: Exception =>
+          System.err.println(s)
+          throw e
+      }
+    }))
+
+  val problemsQ = sql"""
         SELECT "problemId", display, "nbVars", "nbCons", string_agg("problemTag", ',') as tags
         FROM "Problem" NATURAL LEFT JOIN "ProblemTag"
         WHERE "problemId" IN (
           SELECT "problemId" 
           FROM "Execution"
           WHERE version = $version and "configId" in (#${nature.mkString(",")}))
+          -- AND "problemTag" = 'modifiedRenault'
         GROUP BY "problemId", display, "nbVars", "nbCons"
         ORDER BY display
         """.as[Problem]
 
-    val configsQ = sql"""
+  val configsQ = sql"""
         SELECT "configId", config
         FROM "Config" 
         WHERE "configId" IN (#${nature.mkString(", ")}) 
         """.as[Config]
 
-    val (problems, configs) = Await.result(DB.run(problemsQ).zip(DB.run(configsQ)), Duration.Inf)
+  val problems = Await.result(DB.run(problemsQ), Duration.Inf)
+  println("problems")
+  val configs = Await.result(DB.run(configsQ), Duration.Inf)
 
-    for (c <- configs) print("\t" + c.display)
-    println()
+  for (c <- configs) print("\t" + c.display)
+  println()
 
-    val cIds = configs.map(_.configId).mkString(", ")
+  val cIds = configs.map(_.configId).mkString(", ")
 
-    var d = Array.ofDim[Int](configs.size, configs.size)
+  //var d = Array.ofDim[Int](configs.size, configs.size)
 
-    val totals = new HashMap[(String, Int), List[Double]]().withDefaultValue(Nil)
+  val totals = new HashMap[(String, Int), List[Double]]().withDefaultValue(Nil)
 
-    val nbSolved = new HashMap[String, Array[Int]]().withDefaultValue {
-      Array.fill(configs.size)(0)
-    }
+  val nbSolved = new HashMap[String, Array[Int]]().withDefaultValue {
+    Array.fill(configs.size)(0)
+  }
 
-    for (Problem(problemId, problem, nbvars, nbcons, tags) <- problems) {
-      val data = ListBuffer(s"$problem ($problemId)") //, nbvars, nbcons)
-      //print("\\em %s & \\np{%d} & \\np{%d}".format(problem, nbvars, nbcons))
-      //print("\\em %s ".format(problem))
+  val errorHandling: ErrorHandling = statistic match {
+    case "rps"       => ErrorKeep
+    case "nodes"     => ErrorInfinity
+    case "time"      => ErrorInfinity
+    case "revisions" => ErrorKeep
+    case "mem"       => ErrorKeep
+  }
 
-      //val name = List("solver.searchCpu", "filter.revisions", "solver.nbAssignments", "filter.substats.queue.pollSize")(3)
+  val ignoreNaN = true
 
-      //val formula = """(cast("filter.substats.queue.pollSize" as real) / cast("filter.substats.queue.nbPoll" as int))"""
+  val aggregator = StatisticsManager.median[Double](_)
 
-      //val formula = """cast("solver.nbAssignments" as real) / cast("solver.searchCpu" as real)"""
-      ///val formula = """cast("solver.nbAssignments" as real)"""
-      //val formula = """cast("solver.nbAssignments" as real) / (cast("solver.searchCpu" as real) + cast("solver.preproCpu" as real))"""
-      //val formula = """cast("solver.searchCpu" as real) + cast("solver.preproCpu" as real)"""
+  for (Problem(problemId, problem, nbvars, nbcons, tags) <- problems) {
+    val data = ListBuffer(s"$problem ($problemId)") //, nbvars, nbcons)
+    //print("\\em %s & \\np{%d} & \\np{%d}".format(problem, nbvars, nbcons))
+    //print("\\em %s ".format(problem))
 
-      //val formula = """cast("relation.checks" as bigint)"""
-      //val formula = """cast("concrete.generationTime" as real)"""
+    //val name = List("solver.searchCpu", "filter.revisions", "solver.nbAssignments", "filter.substats.queue.pollSize")(3)
 
-      //val formula = """cast("domains.presenceChecks" as bigint)"""
+    //val formula = """(cast("filter.substats.queue.pollSize" as real) / cast("filter.substats.queue.nbPoll" as int))"""
 
-      //val stat = "cast(stat('solver.nbAssignments', executionId) as int)"
+    //val formula = """cast("solver.nbAssignments" as real) / cast("solver.searchCpu" as real)"""
+    ///val formula = """cast("solver.nbAssignments" as real)"""
+    //val formula = """cast("solver.nbAssignments" as real) / (cast("solver.searchCpu" as real) + cast("solver.preproCpu" as real))"""
+    //val formula = """cast("solver.searchCpu" as real) + cast("solver.preproCpu" as real)"""
 
-      //val stat = "cast(stat('solver.searchCpu', executionId) as real) + cast(stat('solver.preproCpu', executionId) as real)"
+    //val formula = """cast("relation.checks" as bigint)"""
+    //val formula = """cast("concrete.generationTime" as real)"""
 
-      val min = true
+    //val formula = """cast("domains.presenceChecks" as bigint)"""
 
-      //            val sqlQuery = """
-      //                        SELECT configId, solution, cast(stat('relation.checks', executionId) as real)
-      //                        FROM Executions
-      //                        WHERE (version, problemId) = (%d, %d)
-      //                    """.format(version, problemId)
+    //val stat = "cast(stat('solver.nbAssignments', executionId) as int)"
 
-      val sqlQuery = statistic match {
-        case "mem" => sql"""
+    //val stat = "cast(stat('solver.searchCpu', executionId) as real) + cast(stat('solver.preproCpu', executionId) as real)"
+
+    //val min = true
+
+    //            val sqlQuery = """
+    //                        SELECT configId, solution, cast(stat('relation.checks', executionId) as real)
+    //                        FROM Executions
+    //                        WHERE (version, problemId) = (%d, %d)
+    //                    """.format(version, problemId)
+
+    val sqlQuery = statistic match {
+      case "mem" => sql"""
                                 SELECT "configId", status, solution, cast(stat('solver.usedMem', "executionId") as real)/1048576.0
                                 FROM "Execution"
                                 WHERE (version, "problemId") = ($version, $problemId)
                             """
 
-        case "time" => sql"""
-                                SELECT "configId", status, solution, cast(stat('solver.searchCpu', "executionId") as real) + cast(stat('solver.preproCpu', "executionId") as real)
+      case "time" => sql"""
+                                SELECT "configId", status, solution, totalTime('{solver.searchCpu, solver.preproCpu}', "executionId")
                                 FROM "Execution"
                                 WHERE (version, "problemId") = ($version, $problemId)
                             """
 
-        case "nodes" => sql"""
+      case "nodes" => sql"""
                                 SELECT "configId", status, solution, cast(stat('solver.nbAssignments', "executionId") as real)
                                 FROM "Execution"
                                 WHERE (version, "problemId") = ($version, $problemId)
                             """
-        case "domainChecks" => sql"""
+      case "domainChecks" => sql"""
                                 SELECT configId, status, solution, cast(stat('domain.checks', executionId) as real)
                                 FROM Executions
                                 WHERE (version, problemId) = ($version, $problemId)
                             """
-        case "nps" => sql"""
+      case "nps" => sql"""
                                 SELECT configId, status, solution, 
                                   cast(stat('solver.nbAssignments', executionId) as real)/(cast(stat('solver.searchCpu', executionId) as real) + cast(stat('solver.preproCpu', executionId) as real))
                                 FROM Executions
                                 WHERE (version, problemId) = ($version, $problemId)"""
-        case "rps" => sql"""
+      case "rps" => sql"""
                                 SELECT "configId", status, solution, 
-                                  cast(stat('solver.filter.revisions', "executionId") as real)/(cast(stat('solver.searchCpu', "executionId") as real) + cast(stat('solver.preproCpu', "executionId") as real))
+                                  cast(stat('solver.filter.revisions', "executionId") as real)/totalTime('{solver.searchCpu, solver.preproCpu}', "executionId")
                                 FROM "Execution"
                                 WHERE (version, "problemId") = ($version, $problemId)"""
 
-        case "revisions" => sql"""
+      case "revisions" => sql"""
                                 SELECT "configId", status, solution, 
                                   cast(stat('solver.filter.revisions', "executionId") as int)
                                 FROM "Execution"
                                 WHERE (version, "problemId") = ($version, $problemId)"""
 
+    }
+
+    val resultsQ = DB.run(sqlQuery.as[(Int, String, Option[String], Option[Double])])
+      .map {
+        _.map {
+          case (config, status, solution, value) =>
+            config -> Resultat(status, value.getOrElse(Double.NaN))
+        }
+          .toMap
       }
 
-      val errorHandling: ErrorHandling = statistic match {
-        case "rps"       => ErrorKeep
-        case "nodes"     => ErrorInfinity
-        case "time"      => ErrorKeep
-        case "revisions" => ErrorKeep
-        case "mem"       => ErrorKeep
-      }
+    val results = Await.result(resultsQ, Duration.Inf)
 
-      val resultsQ = DB.run(sqlQuery.as[(Int, String, Option[String], Option[Double])])
-        .map {
-          _.map {
-            case (config, status, solution, value) =>
-              config -> Resultat(status, solution.getOrElse(""), value.getOrElse(Double.NaN))
-          }
-            .toMap
-        }
-
-      val results = Await.result(resultsQ, Duration.Inf)
-
-      for (
-        i <- configs.indices;
-        j = results.getOrElse(configs(i).configId, Resultat("not started", "", Double.NaN));
-        tag <- tags
-      ) {
-        totals(tag, i) ::= {
-          if (!j.solved) {
-            errorHandling match {
-              case ErrorInfinity => Double.PositiveInfinity
-              case ErrorKeep     => j.statistic
-            }
-          } else {
-            j.statistic
-          }
-        }
-
-        if (j.solved) {
-          nbSolved(tag)(i) += 1
-        }
-      }
-
-      for (
-        i <- configs.indices; j <- configs.indices if i != j;
-        ci = configs(i).configId;
-        cj = configs(j).configId;
-        ri <- results.get(ci) if ri.solved;
-        rj <- results.get(cj)
-      ) {
-        if (!rj.solved || {
-          val trj = rj.statistic
-          val tri = ri.statistic
-          (trj - tri) / tri > .1 && (trj - tri) > 1
-        }) {
-          d(i)(j) += 1
-        }
-      }
-
-      //      val extrem = results.values.map(_._2).toSeq match {
-      //        case Nil => None
-      //        case d: Seq[Double] => Some(if (min) d.min else d.max)
-      //      }
-
-      configs foreach { c =>
-        data.append(
-          results.get(c.configId) match {
-            case Some(r @ Resultat(status, solution, time)) =>
-              val e = engineer(time)
-              "%.1f%s".formatLocal(Locale.US, e._1, e._2.getOrElse("")) + (
-                if (r.solved) {
-                  ""
-                } else if (solution.contains("OutOfMemoryError")) {
-                  "(mem)"
-                } else if (solution.contains("InterruptedException")) {
-                  "(exp)"
-                } else {
-                  s"(${status})"
-                })
-            case None => "---"
-          })
-      }
-
-      println(tabular(data.toSeq))
-
-      // println("\\midrule")
-
-      //    for ((k, t) <- totals.toList.sortBy(_._1)) {
-      //      println(k + " : " + configs.indices.map { i =>
-      //        t(i)
-      //      }.mkString(" & "))
-      //    }
-
-      //println(totals)
-
-      val tagged = totals.groupBy(_._1._1).map {
-        case (tag, tot) => tag -> tot.map {
-          case ((tag, config), values) => config -> values
-        }
-      }
-
-      for ((k, t) <- tagged.toList.sortBy(_._1)) {
-
-        val medians = configs.indices.map {
-          i =>
-            if (t(i).exists(_.isNaN)) { Double.NaN }
-            else {
-              try StatisticsManager.average(t(i))
-              catch {
-                case e: NoSuchElementException => Double.NaN
-              }
-            }
-        }
-
-        val best = medians.min
-
-        println(s"$k," + medians.map { median =>
-          median.toString
-          //            val (v, m) = engineer(median)
-          //
-          //            (if (median < best * 1.1) "\\bf " else "") + (
-          //              m match {
-          //                case Some(m) => f"\\np[$m%s]{$v%.1f}"
-          //                case None => f"\\np{$v%.1f}"
-          //              })
-        }.mkString(",")) // + " \\\\")
+    for {
+      i <- configs.indices
+      j = results.getOrElse(configs(i).configId, Resultat("not started", Double.NaN))
+      tag <- tags
+    } {
+      if (j.solved) {
+        nbSolved(tag)(i) += 1
+        totals((tag, i)) ::= j.statistic
+      } else {
+        println(s"$problemId. $problem, ${configs(i)}: $j")
+        totals((tag, i)) ::= (errorHandling match {
+          case ErrorInfinity => Double.PositiveInfinity
+          case ErrorKeep     => j.statistic
+        })
       }
     }
-  } finally DB.close()
+
+    //    for (
+    //      i <- configs.indices; j <- configs.indices if i != j;
+    //      ci = configs(i).configId;
+    //      cj = configs(j).configId;
+    //      ri <- results.get(ci) if ri.solved;
+    //      rj <- results.get(cj)
+    //    ) {
+    //      if (!rj.solved || {
+    //        val trj = rj.statistic
+    //        val tri = ri.statistic
+    //        (trj - tri) / tri > .1 && (trj - tri) > 1
+    //      }) {
+    //        d(i)(j) += 1
+    //      }
+    //    }
+
+    //      val extrem = results.values.map(_._2).toSeq match {
+    //        case Nil => None
+    //        case d: Seq[Double] => Some(if (min) d.min else d.max)
+    //      }
+
+    //    configs foreach { c =>
+    //      data.append(
+    //        results.get(c.configId) match {
+    //          case Some(r @ Resultat(status, solution, time)) =>
+    //            val e = engineer(time)
+    //            "%.1f%s".formatLocal(Locale.US, e._1, e._2.getOrElse("")) + (
+    //              if (r.solved) {
+    //                ""
+    //              } else if (solution.contains("OutOfMemoryError")) {
+    //                "(mem)"
+    //              } else if (solution.contains("InterruptedException")) {
+    //                "(exp)"
+    //              } else {
+    //                s"(${status})"
+    //              })
+    //          case None => "---"
+    //        })
+    //    }
+
+    //println(tabular(data.toSeq))
+
+    // println("\\midrule")
+
+    //    for ((k, t) <- totals.toList.sortBy(_._1)) {
+    //      println(k + " : " + configs.indices.map { i =>
+    //        t(i)
+    //      }.mkString(" & "))
+    //    }
+
+    //println(totals)
+  }
+
+  val tagged = totals.groupBy(_._1._1).map {
+    case (tag, tot) => tag -> tot.map {
+      case ((tag, config), values) => config -> values
+    }
+  }
+
+  for ((k, t) <- tagged.toList.sortBy(_._1)) {
+    //println(s"$k: $t")
+    val medians = configs.indices.map {
+      i =>
+        if (ignoreNaN) {
+          aggregator(t(i).filterNot(_.isNaN))
+        } else if (t(i).exists(_.isNaN)) {
+          Double.NaN
+        } else {
+          try aggregator(t(i))
+          catch {
+            case e: NoSuchElementException => Double.NaN
+          }
+        }
+
+    }
+
+    println(s"$k," + medians.map { median =>
+      median.toString
+      //            val (v, m) = engineer(median)
+      //
+      //            (if (median < best * 1.1) "\\bf " else "") + (
+      //              m match {
+      //                case Some(m) => f"\\np[$m%s]{$v%.1f}"
+      //                case None => f"\\np{$v%.1f}"
+      //              })
+    }.mkString(",")) // + " \\\\")
+
+  }
 
   //println("\\midrule")
 

@@ -1,12 +1,11 @@
 package concrete.constraint.extension
 
 import java.util.Arrays
-import scala.Array.canBuildFrom
+
 import scala.annotation.tailrec
-import concrete.constraint.TupleEnumerator
-import concrete.Variable
-import concrete.Domain
+
 import concrete.ProblemState
+import concrete.constraint.TupleEnumerator
 
 trait ConflictCount
     extends ExtensionConstraint with TupleEnumerator {
@@ -71,10 +70,10 @@ trait ConflictCount
     if (size < 0) {
       None
     } else {
-      val offsets = Array.tabulate(arity)(p => ps.dom(scope(p)).head)
+      val doms = ps.doms(scope)
+      val offsets = doms.map(_.head)
 
-      val nbInitConflicts = Array.tabulate(arity) { p =>
-        val d = ps.dom(scope(p))
+      val nbInitConflicts = doms.map { d =>
         new Array[Long](d.last - d.head + 1)
       }
 
@@ -82,7 +81,13 @@ trait ConflictCount
         case tupleSet: TupleTrieSet =>
           if (tupleSet.initialContent) {
 
-            for (tuple <- tupleSet.relation; p <- tuple.indices) nbInitConflicts(p)(tuple(p) - offsets(p)) += 1;
+            for {
+              tuple <- tupleSet.relation
+              p <- tuple.indices
+              if (doms(p).contains(tuple(p)))
+            } {
+              nbInitConflicts(p)(tuple(p) - offsets(p)) += 1
+            }
 
           } else {
 

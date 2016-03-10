@@ -18,6 +18,10 @@ sealed trait Outcome {
   def shaveDom(v: Variable, lb: Int, ub: Int): Outcome
   def shaveDom(v: Variable, itv: Interval): Outcome = shaveDom(v, itv.lb, itv.ub)
 
+  def intersectDom(v: Variable, d: Domain): Outcome = {
+    updateDom(v, dom(v) & d)
+  }
+
   def removeTo(v: Variable, ub: Int): Outcome
   def removeFrom(v: Variable, lb: Int): Outcome
   def removeUntil(v: Variable, ub: Int): Outcome
@@ -54,6 +58,8 @@ sealed trait Outcome {
 
   def assign(v: Variable, value: Int): Outcome
   def remove(v: Variable, value: Int): Outcome
+
+  def doms(vs: Array[Variable]) = vs.map(dom(_))
 
   def dom(v: Variable): Domain
 
@@ -230,6 +236,7 @@ case class ProblemState(
     if (oldDomain eq newDomain) {
       this
     } else {
+      assert(newDomain.size < oldDomain.size, s"replacing $oldDomain with $newDomain, same size but different instance")
       assert(newDomain subsetOf oldDomain)
       assert(!oldDomain.isInstanceOf[BooleanDomain] || newDomain.isInstanceOf[BooleanDomain])
       assert(!oldDomain.isInstanceOf[IntDomain] || newDomain.isInstanceOf[IntDomain])

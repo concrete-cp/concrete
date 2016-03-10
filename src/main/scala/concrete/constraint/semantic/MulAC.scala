@@ -15,9 +15,9 @@ import concrete.ProblemState
  *
  */
 final class MulAC(val result: Variable, val v0: Variable, val v1: Variable, val skipIntervals: Boolean = false)
-  extends Constraint(Array(result, v0, v1))
-  with Residues
-  with BCCompanion {
+    extends Constraint(Array(result, v0, v1))
+    with Residues
+    with BCCompanion {
 
   def check(t: Array[Int]) = t(0) == (t(1) * t(2));
 
@@ -67,11 +67,12 @@ final class MulAC(val result: Variable, val v0: Variable, val v1: Variable, val 
   override def toString(ps: ProblemState) =
     s"${result.toString(ps)} =AC= ${v0.toString(ps)} * ${v1.toString(ps)}"
 
-  def getEvaluation(ps:ProblemState) = {
-    val d0 = ps.dom(result).size
-    val d1 = ps.dom(v0).size
-    val d2 = ps.dom(v1).size
-    d0 * d1 + d0 * d2 + d1 * d2;
+  def getEvaluation(ps: ProblemState) = {
+    val d0 = ps.card(result)
+    val d1 = ps.card(v0)
+    val d2 = ps.card(v1)
+    val e = d0 * d1 + d0 * d2 + d1 * d2
+    if (skip(ps, e)) -1 else e
   }
 
   val simpleEvaluation = 2

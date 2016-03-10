@@ -186,6 +186,10 @@ case class Interval(val lb: Int, val ub: Int) {
     !(iAfterThis || i.ub < this.lb - 1)
   }
 
+  def subsetOf(i2: Interval): Boolean = {
+    i2.lb <= lb && ub <= i2.ub
+  }
+
   def span(i: Interval): Interval = Interval(math.min(lb, i.lb), math.max(ub, i.ub))
 
   def unary_- : Interval = Interval(-ub, -lb)

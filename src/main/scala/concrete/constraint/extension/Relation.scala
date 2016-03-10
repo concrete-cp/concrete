@@ -1,9 +1,8 @@
 package concrete.constraint.extension
 
-import cspom.util.BitVector
-import java.util.Arrays
-import concrete.Variable
 import concrete.Domain
+import concrete.EmptyIntDomain
+import concrete.IntDomain
 
 trait Relation extends Iterable[Array[Int]] {
   type Self2 <: Relation
@@ -15,6 +14,26 @@ trait Relation extends Iterable[Array[Int]] {
    * @return traversable of depths at which some values were not found
    */
   def fillFound(f: (Int, Int) => Boolean, arity: Int): Set[Int]
+
+  def supported(domains: Array[Domain]): Array[IntDomain] = {
+    val arity = domains.length
+    val newDomains = Array.fill[IntDomain](arity)(EmptyIntDomain)
+
+    //print(s"Searching for supports of ${domains.toSeq}")
+    
+    def updNewDomains(depth: Int, i: Int) = {
+      ReduceableExt.fills += 1
+      //print(s"$depth: ${newDomains(depth)} | $i = ")
+      newDomains(depth) |= i
+      //println(newDomains(depth))
+      newDomains(depth).length == domains(depth).length
+    }
+
+    fillFound(updNewDomains, arity)
+    //println(s" = ${newDomains.toSeq}")
+
+    newDomains
+  }
 
   def contains(t: Array[Int]): Boolean
   def +(t: Seq[Int]): Self2

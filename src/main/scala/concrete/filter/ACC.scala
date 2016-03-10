@@ -24,25 +24,6 @@ object ACC extends LazyLogging {
     logger.info("Control !")
 
     problem.constraints.find(c => !c.controlRevision(state))
-
-    //    {
-    //      (s, c) =>
-    //
-    //        //println(s"Controlling $c")
-    //
-    //        c.adviseAll(s)
-    //
-    //        c.revise(s) match {
-    //          case Contradiction => throw new AssertionError(s"${c.toString(s)} is not consistent${if (s.isEntailed(c)) " - entailed" else ""}")
-    //          case finalState: ProblemState =>
-    //            require(c.scope.forall(v => s.dom(v) eq finalState.dom(v)),
-    //              s"${c.toString(state)}${if (state.isEntailed(c)) " - entailed" else ""} was revised (-> ${c.toString(finalState)})")
-    //
-    //            finalState
-    //        }
-    //
-    //    }
-
   }
 
 }
@@ -72,7 +53,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
   substats.register("queue", queue);
 
   @Statistic
-  var revisions = 0;
+  var revisions = 0L;
 
   def reduceAll(states: ProblemState): Outcome = {
     advises.clear()
@@ -158,15 +139,15 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
   private def reduce(s: ProblemState): Outcome = {
     if (queue.isEmpty) {
       assert {
-        ACC.control(problem, s).isEmpty
+        val errors = ACC.control(problem, s)
+        errors.foreach(c => logger.error(s"ACC control failed on ${c.toString(s)}"))
+        errors.isEmpty
       }
       s
     } else {
       val constraint = queue.poll()
 
       revisions += 1;
-
-      logger.trace(constraint.toString(s))
 
       constraint.revise(s) match {
         case Contradiction =>
@@ -225,8 +206,6 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
   }
 
   override def toString = "AC-cons+" + queue.getClass().getSimpleName();
-
-  def getStatistics = Map("revisions" -> revisions)
 
   def reduceAfter(constraints: Iterable[Constraint], states: ProblemState) = {
     advises.clear()

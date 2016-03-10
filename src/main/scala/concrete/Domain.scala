@@ -23,23 +23,13 @@ abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
   def next(i: Int): Int
 
   def nextOption(i: Int): Option[Int] = {
-    val n = next(i)
-    if (n < 0) {
-      None
-    } else {
-      Some(n)
-    }
+    if (i == last) None else Some(next(i))
   }
 
   def prev(i: Int): Int
 
   def prevOption(i: Int): Option[Int] = {
-    val p = prev(i)
-    if (p < 0) {
-      None
-    } else {
-      Some(p)
-    }
+    if (i == head) None else Some(prev(i))
   }
 
   def present(value: Int): Boolean
@@ -71,7 +61,7 @@ abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
 
   def removeUntil(ub: Int): Domain
 
-  def removeItv(from: Int, to: Int): Domain = (from to to).foldLeft[Domain](this)((d, i) => d.remove(i))
+  def removeItv(from: Int, to: Int): Domain
 
   /**
    * @param value
@@ -102,7 +92,7 @@ abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
   //  }
 
   def subsetOf(d: Domain): Boolean = {
-    head >= d.head && last <= d.last && (d.convex || forall(d.present))
+    (this | d).size == d.size //head >= d.head && last <= d.last && (d.convex || forall(d.present))
   }
 
   //def intersects(bv: BitVector): Int = bv.intersects(toBitVector)
@@ -118,5 +108,6 @@ abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
 
   def filterBounds(f: Int => Boolean): Domain
 
-  def offset(o: Int): Domain
+  def shift(o: Int): Domain
+
 }

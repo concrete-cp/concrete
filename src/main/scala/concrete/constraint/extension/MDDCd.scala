@@ -20,7 +20,7 @@ class MDDCd(_scope: Array[Variable], val mdd: MDDRelation)
 
   override def init(ps: ProblemState) = {
     val max = mdd.identify() + 1
-    ps.updateState(this, new BitSet(max)) //new SparseSet(mdd.identify + 1))
+    ps.updateState(this, new BitSet(max)) //new SparseSet(max))
   }
 
   // Members declared in concrete.constraint.Constraint
@@ -37,19 +37,19 @@ class MDDCd(_scope: Array[Variable], val mdd: MDDRelation)
 
   def revise(ps: ProblemState, modified: Seq[Int]) = {
 
-    val oldGno = ps(this)
-    val domains = Array.tabulate(arity)(p => ps.dom(scope(p)))
+    val domains = ps.doms(scope) //Array.tabulate(arity)(p => ps.dom(scope(p)))
     val supported = Array.fill[IntDomain](arity)(EmptyIntDomain)
 
     // val unsupported = domains.map(_.to[collection.mutable.Set])
 
     var delta = arity
 
-    var gNo = oldGno.clone()
+    val gNo = ps(this).clone()
+
+    var gNoChange = false
 
     val ts = mdd.timestamp.next
 
-    @inline
     def seekSupports(g: MDD, i: Int): Boolean = {
 
       @inline
@@ -69,7 +69,7 @@ class MDDCd(_scope: Array[Variable], val mdd: MDDRelation)
 
         }
 
-        return res
+        res
 
       }
 
@@ -88,24 +88,25 @@ class MDDCd(_scope: Array[Variable], val mdd: MDDRelation)
         g.cache.timestamp = ts
         true
       } else {
-        gNo.add(g.id)
+        gNo += g.id
+        gNoChange = true
         false
       }
 
     }
 
     val sat = seekSupports(mdd.mdd, 0)
-    if (!sat) {
-      Contradiction
-    } else {
+    if (sat) {
       var cs: ProblemState =
-        if (gNo.size == oldGno.size) ps else ps.updateState(this, gNo)
+        if (gNoChange) ps.updateState(this, gNo) else ps
       for (p <- 0 until delta) {
         if (supported(p).length < domains(p).length) {
           cs = cs.updateDomNonEmptyNoCheck(scope(p), supported(p))
         }
       }
       cs.entailIfFree(this)
+    } else {
+      Contradiction
     }
   }
 

@@ -44,6 +44,14 @@ object MDD {
     }
   }
 
+  def same(t1: Map[Int, MDD], t2: Map[Int, MDD]): Boolean = {
+    //t1.hashCode == t2.hashCode &&
+    t1.size == t2.size &&
+      t1.forall {
+        case (k1, v1) => t2.get(k1).exists(v1 eq _)
+      }
+  }
+
 }
 
 trait MDD extends Identified with Iterable[Seq[Int]] with LazyLogging {
@@ -139,14 +147,6 @@ trait MDD extends Identified with Iterable[Seq[Int]] with LazyLogging {
 
   }
 
-  private def same(t1: Map[Int, MDD], t2: Map[Int, MDD]): Boolean = {
-    //t1.hashCode == t2.hashCode &&
-    t1.size == t2.size &&
-      t1.forall {
-        case (k1, v1) => t2.get(k1).exists(v1 eq _)
-      }
-  }
-
   final def contains(t: Array[Int]): Boolean = contains(t, 0)
   def contains(t: Array[Int], i: Int): Boolean
 
@@ -191,7 +191,7 @@ trait MDD extends Identified with Iterable[Seq[Int]] with LazyLogging {
     MurmurHash3.unorderedHash(traverseST)
   }
 
-  private def traverseST: Traversable[(Int, MDD)] = new Traversable[(Int, MDD)] {
+  def traverseST: Traversable[(Int, MDD)] = new Traversable[(Int, MDD)] {
     def foreach[A](f: ((Int, MDD)) => A) {
       forSubtries { (i, mdd) => f((i, mdd)); true }
     }
@@ -204,7 +204,7 @@ trait MDD extends Identified with Iterable[Seq[Int]] with LazyLogging {
         val t1 = t.traverseST.toMap
         val t2 = traverseST.toMap
 
-        same(t1, t2)
+        MDD.same(t1, t2)
       }
     //
     //      t.traverseST.toIterable.zip(traverseST.toIterable).forall {
@@ -224,6 +224,17 @@ trait MDD extends Identified with Iterable[Seq[Int]] with LazyLogging {
   def subMDD(i: Int): MDD
 
   override def toString = System.identityHashCode(this).toString
+
+  def nodes(map: IdMap[MDD, Unit]): IdMap[MDD, Unit] = {
+    if (map.contains(this)) {
+      map
+    } else {
+      traverseST.foldLeft(map += ((this, ()))) {
+        case (map, (_, MDDLeaf)) => map
+        case (map, (_, n))       => n.nodes(map)
+      }
+    }
+  }
 }
 
 final object MDDLeaf extends MDD {
@@ -265,6 +276,7 @@ final object MDDLeaf extends MDD {
   def copy(ts: Int) = this
 
   def subMDD(i: Int) = MDDLeaf
+
 }
 
 final object MDD0 extends MDD {

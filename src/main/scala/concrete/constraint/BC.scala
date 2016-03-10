@@ -1,7 +1,5 @@
 package concrete.constraint
 
-import scala.annotation.tailrec
-
 import concrete.Contradiction
 import concrete.Outcome
 import concrete.ProblemState
@@ -17,8 +15,8 @@ trait BC extends Constraint {
       case ns: ProblemState =>
         if (ns eq state) {
           ns
-// TODO       } else if (ns.isEntailed(this)) {
-//          ns
+          // TODO       } else if (ns.isEntailed(this)) {
+          //          ns
         } else {
           revise(ns)
         }

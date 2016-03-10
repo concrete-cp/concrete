@@ -41,11 +41,20 @@ import com.typesafe.scalalogging.LazyLogging
 import java.sql.SQLException
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import com.typesafe.config.ConfigFactory
+import java.io.File
 
 object SQLWriter {
 
+  lazy val baseConfig = ConfigFactory.load //defaults from src/resources
+
+  val systemConfig = Option(System.getProperty("concrete.config")) match {
+    case Some(cfile) => ConfigFactory.parseFile(new File(cfile)).withFallback(baseConfig)
+    case None        => baseConfig
+  }
+
   def connection(createTables: Boolean): Database = {
-    val db = Database.forConfig("database")
+    val db = Database.forConfig("database", systemConfig)
 
     if (createTables) {
       val setup = DBIO.seq(
@@ -56,7 +65,11 @@ object SQLWriter {
           statistic.schema).create,
         sqlu"""CREATE FUNCTION stat(field text, execution int) RETURNS text AS ${"$$"}
                  SELECT value FROM "Statistic" WHERE (name, "executionId") = (${"$"}1, ${"$"}2);
-                ${"$$"} LANGUAGE sql""")
+                ${"$$"} LANGUAGE sql""",
+
+        sqlu"""CREATE FUNCTION totalTime(fields text[], executionId int) RETUNS real AS ${"$$"}
+	               SELECT sum(cast(split_part(stat(unnest, executionId), ' ', 1) AS real)) FROM unnest(fields)
+                ${"$$"} language sql;""")
 
       //          ,
       //        sqlu"""
@@ -286,29 +299,35 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
   def error(thrown: Throwable) {
     //println(e.toString)
     thrown.printStackTrace()
-    db.run {
-      executions.filter(_.executionId === executionId.get).map(_.solution).update(Some(thrown.toString))
+    for (e <- executionId) {
+      db.run {
+        executions.filter(_.executionId === e).map(_.solution).update(Some(thrown.getStackTrace.mkString("\n")))
+      }
     }
   }
 
   def disconnect(status: Try[Boolean]) {
+    try {
+      for (e <- executionId) {
 
-    for (e <- executionId) {
-      for ((key, value) <- stats.digest) {
-        db.run {
-          statistic += ((key, e, value.toString))
+        val dbexec = for (dbe <- executions if dbe.executionId === e) yield dbe
+
+        val r0 = db.run {
+          dbexec.map(e => (e.end, e.status)).update(
+            (Some(SQLWriter.now), status.toString))
         }
-      }
 
-      val dbexec = for (dbe <- executions if dbe.executionId === e) yield dbe
+        val r = for ((key, value) <- stats.digest) yield {
+          db.run {
+            statistic += ((key, e, Option(value).map(_.toString).getOrElse("None")))
+          }
+        }
 
-      db.run {
-        dbexec.map(e => (e.end, e.status)).update(
-          (Some(SQLWriter.now), status.toString))
+        Await.ready(Future.sequence(r0 +: r.toSeq), Duration.Inf)
       }
+    } finally {
+      db.close()
     }
-
-    db.close()
 
   }
 

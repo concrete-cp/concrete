@@ -29,12 +29,12 @@ import com.typesafe.scalalogging.LazyLogging
 import cspom.Statistic
 import cspom.StatisticsManager
 import scala.annotation.tailrec
-import cspom.TimedException
 import cspom.UNSATException
 import concrete.heuristic.Branch
 import org.scalameter.Quantity
 import org.scalameter.Key
 import org.scalameter.Warmer
+import java.util.concurrent.TimeoutException
 
 object MAC {
   def apply(prob: Problem, params: ParameterManager): MAC = {
@@ -88,7 +88,10 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
     modifiedVariable: Seq[Variable], stack: List[Branch],
     currentState: Outcome, stateStack: List[ProblemState],
     nbBacktracks: Int, maxBacktracks: Int, nbAssignments: Int): (SolverResult, List[Branch], List[ProblemState], Int, Int) = {
-    //if (Thread.interrupted()) throw new InterruptedException()
+    if (Thread.interrupted()) {
+      logger.warn("Interrupted")
+      throw new TimeoutException()
+    }
 
     val filtering = currentState andThen {
       s => filter.reduceAfter(modifiedVariable, s)
@@ -159,6 +162,8 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
 
     logger.info("MAC with " + maxBacktracks + " bt")
 
+    running = true
+
     val (macResult, macTime) =
       StatisticsManager.measure(
         mac(modifiedVar, stack, currentState, stateStack, nbBacktracks, maxBacktracks, nbAssignments),
@@ -170,6 +175,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
           }))
 
     searchCpu += macTime
+    running = false
 
     val (sol, newStack, newStateStack, newBack, newAss) = macResult.get
 
@@ -232,12 +238,13 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
 
   } finally {
     if (measureMem || usedMem == 0L) {
+      val runtime = Runtime.getRuntime()
       System.gc()
       System.gc()
       System.gc()
       System.gc()
       System.gc()
-      usedMem = math.max(usedMem, Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
+      usedMem = math.max(usedMem, runtime.totalMemory - runtime.freeMemory)
     }
   }
 

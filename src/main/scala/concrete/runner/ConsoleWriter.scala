@@ -1,10 +1,11 @@
 package concrete.runner
 
-import scala.xml.NodeSeq
-import cspom.StatisticsManager
-import scala.util.Try
-import scala.util.Success
 import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+import scala.xml.NodeSeq
+
+import cspom.StatisticsManager
 
 class ConsoleWriter(val opts: Map[Symbol, Any], val stats: StatisticsManager) extends ConcreteWriter {
 

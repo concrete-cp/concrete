@@ -22,7 +22,12 @@ final class NeqTest extends FlatSpec with Matchers with PropertyChecks {
       pb.addConstraint(c)
       val ps = pb.initState.toState
       c.adviseAll(ps)
-      c.revise(ps) shouldBe ps
+      val revised = c.revise(ps)
+      revised.domainsOption shouldBe ps.domainsOption
+
+      whenever(k > 0 || k < -4) {
+        assert(revised.isEntailed(c))
+      }
       //
       //      mod.dom(v0) should contain theSameElementsAs Seq(3)
       //      mod.dom(v1) should contain theSameElementsAs Seq(3)
@@ -46,6 +51,7 @@ final class NeqTest extends FlatSpec with Matchers with PropertyChecks {
       val mod = c.revise(ps)
 
       (ps.dom(v0).toSet -- mod.dom(v0)) should contain theSameElementsAs Seq(-5 + k)
+      assert(mod.isEntailed(c))
     }
 
     {
@@ -57,6 +63,7 @@ final class NeqTest extends FlatSpec with Matchers with PropertyChecks {
       val mod = c.revise(ps)
 
       (ps.dom(v0).toSet -- mod.dom(v0)) should contain theSameElementsAs Seq(-5 - k)
+      assert(mod.isEntailed(c))
     }
 
   }

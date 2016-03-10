@@ -83,8 +83,11 @@ final class LinearEq(
   override def toString() = toString("=BC=")
 
   override def toString(ps: ProblemState) = {
-    val (doms, f, vars, maxI) = ps(this)
-    toString(ps, "=BC=") + " " + (doms.toSeq, f, vars, maxI)
+    toString(ps, "=BC=") + " " + Option(ps(this))
+      .map {
+        case (doms, f, vars, maxI) => (doms.toSeq, f, vars, maxI).toString
+      }
+      .getOrElse("uninitialized")
   }
 
   //def advise(ps: ProblemState, p: Int) = getEvaluation(ps)

@@ -62,10 +62,11 @@ final class ProblemGeneratorTest extends FlatSpec with LazyLogging with TryValue
 
     logger.info(cspom + "\n" + cspom.referencedExpressions.size + " vars, " + cspom.constraints.size + " cons")
 
-    val problem = new ProblemGenerator(pm).generate(cspom) match {
-      case Success((problem, _)) => problem
-      case Failure(e)            => fail(e)
-    }
+    val problem = new ProblemGenerator(pm).generate(cspom).get._1 
+//    match {
+//      case Success((problem, _)) => problem
+//      case Failure(e)            => fail(e)
+//    }
 
     logger.info(problem + "\n" + problem.variables.size + " vars, " + problem.constraints.size + " cons")
 

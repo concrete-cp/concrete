@@ -118,6 +118,7 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
     if (newBV == bitVector) {
       this
     } else {
+      assert(newBV.cardinality < size, s"$this (offset $offset) & ($lb, $ub) / $bitVector & ($blb, $bub) : no filtering but different instance $newBV")
       IntDomain.ofBitVector(offset, newBV, newBV.cardinality)
     }
   }
@@ -166,7 +167,7 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
     }
   }
 
-  def offset(o: Int) = if (o == 0) this else
+  def shift(o: Int) = if (o == 0) this else
     new BitVectorDomain(offset + o, bitVector, length)
 
   override def &(d: Domain) = d match {
@@ -234,7 +235,8 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
   def |(span: Interval) = {
     val lb = span.lb
     val offset = math.min(lb, this.offset)
-    val union = toBitVector(offset).set(lb - offset, span.ub - offset + 1)
+    val bv = toBitVector(offset)
+    val union = bv.set(lb - offset, span.ub - offset + 1)
     IntDomain.ofBitVector(offset, union, union.cardinality)
   }
 

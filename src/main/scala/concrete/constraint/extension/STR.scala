@@ -65,18 +65,19 @@ final class STR(arity: Int, val array: Array[Array[Int]], val bound: Int) extend
     var i = bound - 1
     while (i >= 0) {
       val tuple = array(i)
-      var pi = pos.nb - 1
-      while (pi >= 0) {
-        val p = pos(pi)
-        if (f(p, tuple(p))) pos.remove(pi)
-        pi -= 1
-      }
+      pos.filter(p => !f(p, tuple(p)))
+      //      var pi = pos.size - 1
+      //      while (pi >= 0) {
+      //        val p = pos(pi)
+      //        if (f(p, tuple(p))) pos.remove(pi)
+      //        pi -= 1
+      //      }
       i -= 1
     }
     pos.toSet
   }
 
-  override def toString = s"$bound of ${array.size} tuples"
+  override def toString = s"$bound of ${array.size} tuples:\n" + iterator.map(_.mkString(" ")).mkString("\n")
 
   def edges = if (array.isEmpty) 0 else bound * array(0).length
 
@@ -88,9 +89,10 @@ final class STR(arity: Int, val array: Array[Array[Int]], val bound: Int) extend
   def iterator = array.iterator.take(bound)
 
   def contains(t: Array[Int]): Boolean = {
-    val i = bound - 1
+    var i = bound - 1
     while (i >= 0) {
       if (Arrays.equals(t, array(i))) return true
+      i -= 1
     }
     false
   }
@@ -112,10 +114,13 @@ final class STR(arity: Int, val array: Array[Array[Int]], val bound: Int) extend
   def lambda = bound
 }
 
-final class MutableList(size: Int) extends Traversable[Int] {
+final class MutableList(var nb: Int) extends Traversable[Int] {
   private val data = new Array[Int](size)
 
+  override def size = nb
+
   def refill() {
+    nb = data.length
     var i = size - 1
     while (i >= 0) {
       data(i) = i
@@ -123,23 +128,31 @@ final class MutableList(size: Int) extends Traversable[Int] {
     }
   }
 
-  private var _nb = size
-
   def apply(index: Int) = data(index)
 
   def remove(index: Int) {
-    _nb -= 1
-    data(index) = data(_nb)
+    nb -= 1
+    data(index) = data(size)
   }
 
-  def nb = _nb
-
   def foreach[U](f: Int => U) {
-    var i = _nb - 1
+    var i = size - 1
     while (i >= 0) {
       f(data(i))
       i -= 1
     }
+  }
+
+  override def filter(f: Int => Boolean) = {
+    var i = 0
+    while (i < size) {
+      if (!f(data(i))) {
+        remove(i)
+      } else {
+        i += 1
+      }
+    }
+    this
   }
 
   def sorted = {

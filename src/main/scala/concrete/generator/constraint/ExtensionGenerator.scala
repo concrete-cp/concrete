@@ -28,12 +28,12 @@ import cspom.UNSATException
 import cspom.extension.IdMap
 import concrete.constraint.extension.HashTable
 import concrete.constraint.extension.IndexedTable
-import concrete.constraint.extension.MDDCnu
 import concrete.constraint.extension.MDDLink
 import concrete.constraint.extension.MDDLink0
 import concrete.constraint.extension.MDDLinkNode
-import concrete.constraint.extension.MDDLinkRelation
+import concrete.constraint.extension.BDDRelation
 import scala.collection.mutable.HashMap
+import concrete.constraint.extension.MDDCLink
 
 class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLogging {
 
@@ -100,7 +100,7 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
     relation match {
       case n if n eq cspom.extension.MDDLeaf => concrete.constraint.extension.MDDLinkLeaf
       case n: cspom.extension.MDDNode[Int] => map.getOrElseUpdate(n, {
-        n.trie.foldLeft[MDDLink](MDDLink0) {
+        n.trie.toSeq.sortBy(-_._1).foldLeft[MDDLink](MDDLink0) {
           case (acc, (v, st)) =>
             new MDDLinkNode(any2Int(v),
               cspomMDDtoMDDLink(st, map),
@@ -161,14 +161,14 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
     new MDDRelation(mdd)
   }
 
-  private def relation2MDDLink(relation: cspom.extension.Relation[_]): MDDLinkRelation = {
+  private def relation2MDDLink(relation: cspom.extension.Relation[_]): BDDRelation = {
     val mdd = relation match {
       case mdd: cspom.extension.MDD[Int] @unchecked =>
         cspomMDDtoMDDLink(mdd)
       case r => MDDLink(any2Int(r).map(_.toList))
     }
 
-    new MDDLinkRelation(mdd.reduce())
+    new BDDRelation(bdd = mdd.reduce(), cache = null)
   }
 
   override def gen(extensionConstraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] = {
@@ -196,7 +196,7 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
               new MDDCd(scope, m.relation.asInstanceOf[MDDRelation])
 
             case "MDDCnu" =>
-              new MDDCnu(scope, m.relation.asInstanceOf[MDDRelation])
+              new MDDCLink(scope, m.relation.asInstanceOf[BDDRelation])
 
             case "Reduce" =>
               val r: Relation = m.relation.copy

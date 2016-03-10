@@ -8,15 +8,36 @@ import concrete.util.SetWithMax
 import scala.collection.mutable.ArrayBuffer
 
 object MDDLink {
-  def apply(t: Traversable[List[Int]]): MDDLink = t.foldLeft[MDDLink](MDDLink0)(_ + _)
+  def apply(t: Traversable[List[Int]]): MDDLink = {
+    implicit def cache = null
+    t.foldLeft[MDDLink](MDDLink0)(_ + _)
+  }
+
+  def apply(mdd: MDD): MDDLink = {
+
+    val map: IdMap[MDD, MDDLink] = new IdMap()
+
+    def mdd2mddLink(n: MDD): MDDLink = {
+      if (n eq MDDLeaf) MDDLinkLeaf
+      else {
+        map.getOrElseUpdate(n, {
+          n.traverseST.toSeq.sortBy(-_._1).foldLeft[MDDLink](MDDLink0) {
+            case (acc, (i, m)) => new MDDLinkNode(i, mdd2mddLink(m), acc)
+          }
+        })
+      }
+    }
+
+    mdd2mddLink(mdd)
+  }
+
 }
 
-sealed trait MDDLink extends Iterable[Seq[Int]] {
+sealed trait MDDLink extends BDD {
   var id: Int = _
 
-  def +(e: List[Int]): MDDLink
-  def lambda(map: IdMap[MDDLink, BigInt] = new IdMap()): BigInt
-  def contains(e: Seq[Int]): Boolean
+  override def +(e: List[Int])(implicit cache: Cache): MDDLink
+
   def reduce(): MDDLink = {
 
     val i = identify()
@@ -39,19 +60,10 @@ sealed trait MDDLink extends Iterable[Seq[Int]] {
     step2(this)
 
   }
-  def edges(ts: Int): Int
 
-  def filterTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): MDDLink
-  protected[extension] def passTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): MDDLink
-  protected[extension] def filterModifiedTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): MDDLink
-
-  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax): Unit
-
-  def findSupport(ts: Int, scope: IndexedSeq[Domain], p: Int, i: Int, support: Array[Int], depth: Int): Option[Array[Int]] = {
-    ???
-  }
-
-  def universal(scope: IndexedSeq[Domain], timestamp: Int): Boolean = ???
+  def filterTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int, cache: Cache): MDDLink
+  protected[extension] def passTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int, cache: Cache): MDDLink
+  protected[extension] def filterModifiedTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int, cache: Cache): MDDLink
 
   def identify(): Int = {
     val cache = new HashMap[(Int, Int, Int), MDDLink]()
@@ -82,56 +94,58 @@ sealed trait MDDLink extends Iterable[Seq[Int]] {
 
     traverse(this, 2)
   }
+
 }
 
 object MDDLink0 extends MDDLink {
   id = 0
   def iterator = Iterator.empty
-  def +(e: List[Int]): MDDLink = e match {
+  def +(e: List[Int])(implicit cache: Cache): MDDLink = e match {
     case Nil    => MDDLinkLeaf
     case h :: t => new MDDLinkNode(h, MDDLink0 + t, MDDLink0)
   }
-  def lambda(map: IdMap[MDDLink, BigInt]) = 0
+  def lambda(map: IdMap[BDD, BigInt]) = 0
   def contains(e: Seq[Int]) = false
   def reduce(cache: collection.mutable.Map[MDDLink, MDDLink]) = MDDLink0
   def edges(ts: Int) = 0
 
-  def filterTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): MDDLink =
+  def filterTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int, cache: Cache): MDDLink =
     this
-  def passTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): MDDLink =
+  def passTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int, cache: Cache): MDDLink =
     this
-  def filterModifiedTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): MDDLink =
+  def filterModifiedTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int, cache: Cache): MDDLink =
     this
 
   def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax): Unit = ()
   def identify(i: Int) = id
 
+  def nodes(map: IdMap[BDD, Unit]) = map
 }
 
 object MDDLinkLeaf extends MDDLink {
   id = 1
   def iterator = Iterator(Seq())
-  def +(e: List[Int]): MDDLink = {
+  def +(e: List[Int])(implicit cache: Cache): MDDLink = {
     require(e.isEmpty)
     this
   }
-  def lambda(map: IdMap[MDDLink, BigInt]) = 1
+  def lambda(map: IdMap[BDD, BigInt]) = 1
   def contains(e: Seq[Int]) = true
   def reduce(cache: collection.mutable.Map[MDDLink, MDDLink]) = MDDLinkLeaf
   def edges(ts: Int) = 0
-  def filterTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): MDDLink = {
+  def filterTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int, cache: Cache): MDDLink = {
     this
   }
-  def passTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): MDDLink =
+  def passTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int, cache: Cache): MDDLink =
     this
-  def filterModifiedTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): MDDLink =
+  def filterModifiedTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int, cache: Cache): MDDLink =
     this
   def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax): Unit = {
     l.clearFrom(depth)
   }
 
   override def isEmpty = false
-
+  def nodes(map: IdMap[BDD, Unit]) = map
 }
 
 class MDDLinkNode(val index: Int, val child: MDDLink, val sibling: MDDLink) extends MDDLink {
@@ -141,7 +155,7 @@ class MDDLinkNode(val index: Int, val child: MDDLink, val sibling: MDDLink) exte
 
   def iterator = child.iterator.map(index +: _) ++ sibling.iterator
 
-  def +(e: List[Int]): MDDLink = {
+  def +(e: List[Int])(implicit cache: Cache): MDDLink = {
     val h :: t = e
     if (index > h) {
       new MDDLinkNode(h, MDDLink0 + t, this)
@@ -152,7 +166,7 @@ class MDDLinkNode(val index: Int, val child: MDDLink, val sibling: MDDLink) exte
     }
   }
 
-  def lambda(map: IdMap[MDDLink, BigInt]) =
+  def lambda(map: IdMap[BDD, BigInt]) =
     map.getOrElseUpdate(this, child.lambda(map) + sibling.lambda(map))
 
   def contains(e: Seq[Int]) = {
@@ -166,9 +180,7 @@ class MDDLinkNode(val index: Int, val child: MDDLink, val sibling: MDDLink) exte
     }
   }
 
-  override lazy val hashCode = {
-    (index, child, sibling).hashCode
-  }
+  override def hashCode = ???
 
   override def equals(o: Any) = o match {
     case n: MDDLinkNode => (n.index == index) && (n.child eq child) && (n.sibling eq sibling)
@@ -180,36 +192,40 @@ class MDDLinkNode(val index: Int, val child: MDDLink, val sibling: MDDLink) exte
       1 + child.edges(ts) + sibling.edges(ts))
   }
 
-  def filterTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): MDDLink = {
+  def filterTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int, nodeCache: Cache): MDDLink = {
     if (modified.isEmpty) {
       this
     } else if (modified.head == depth) {
-      filterModifiedTrie(ts, doms, modified.tail, depth)
+      filterModifiedTrie(ts, doms, modified.tail, depth, nodeCache)
     } else {
-      passTrie(ts, doms, modified, depth)
+      passTrie(ts, doms, modified, depth, nodeCache)
     }
 
   }
 
-  def passTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): MDDLink = {
+  def passTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int, nodeCache: Cache): MDDLink = {
     cache(ts) {
-      val newChild = child.filterTrie(ts, doms, modified, depth + 1)
-      val newSibling = sibling.passTrie(ts, doms, modified, depth)
+      val newChild = child.filterTrie(ts, doms, modified, depth + 1, nodeCache)
+      val newSibling = sibling.passTrie(ts, doms, modified, depth, nodeCache)
       if (newChild.isEmpty) {
         newSibling
+      } else if ((child eq newChild) && (sibling eq newSibling)) {
+        this
       } else {
         new MDDLinkNode(index, newChild, newSibling)
       }
     }
   }
 
-  def filterModifiedTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): MDDLink = {
+  def filterModifiedTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int, nodeCache: Cache): MDDLink = {
     cache(ts) {
-      val newSibling = sibling.filterModifiedTrie(ts, doms, modified, depth)
+      val newSibling = sibling.filterModifiedTrie(ts, doms, modified, depth, nodeCache)
       if (doms(depth).present(index)) {
-        val newChild = child.filterTrie(ts, doms, modified, depth + 1)
+        val newChild = child.filterTrie(ts, doms, modified, depth + 1, nodeCache)
         if (newChild.isEmpty) {
           newSibling
+        } else if ((child eq newChild) && (sibling eq newSibling)) {
+          this
         } else {
           new MDDLinkNode(index, newChild, newSibling)
         }
@@ -232,5 +248,13 @@ class MDDLinkNode(val index: Int, val child: MDDLink, val sibling: MDDLink) exte
   }
 
   override def isEmpty = false
+
+  def nodes(map: IdMap[BDD, Unit]) = {
+    if (map.contains(this)) {
+      map
+    } else {
+      sibling.nodes(child.nodes(map += ((this, ()))))
+    }
+  }
 
 }

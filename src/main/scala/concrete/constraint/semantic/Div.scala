@@ -43,36 +43,36 @@ object Div {
     }
   }
 }
-/**
- * @author vion
- * x / y = z
- */
-class DivBC(x: Variable, y: Variable, z: Variable) extends Constraint(x, y, z) with BC {
-  def init(ps: ProblemState): Outcome = ps.remove(y, 0)
-
-  // TODO : to finish, doesn't work
-  def shave(ps: ProblemState): Outcome = {
-
-    val xSpan = ps.span(x)
-    val ySpan = ps.span(y)
-    val zSpan = ps.span(z)
-    val reminder = Div.reminder(xSpan, ySpan)
-
-    val newY = Div.div(xSpan, zSpan - reminder)
-
-    ps.shaveDom(z, Div.div(xSpan, ySpan))
-      .shaveDom(y, newY)
-      .andThen { ps =>
-        val xBounds = zSpan * ySpan
-        val r = xSpan - xBounds
-        ps.shaveDom(x, xBounds + r)
-      }
-  }
-
-  def advise(problemState: ProblemState, pos: Int): Int = 3
-  def check(tuple: Array[Int]): Boolean = tuple(0) % tuple(1) == tuple(2)
-  def simpleEvaluation: Int = 1
-}
+///**
+// * @author vion
+// * x / y = z
+// */
+//class DivBC(x: Variable, y: Variable, z: Variable) extends Constraint(x, y, z) with BC {
+//  def init(ps: ProblemState): Outcome = ps.remove(y, 0)
+//
+//  // TODO : to finish, doesn't work
+//  def shave(ps: ProblemState): Outcome = {
+//
+//    val xSpan = ps.span(x)
+//    val ySpan = ps.span(y)
+//    val zSpan = ps.span(z)
+//    val reminder = Div.reminder(xSpan, ySpan)
+//
+//    val newY = Div.div(xSpan, zSpan - reminder)
+//
+//    ps.shaveDom(z, Div.div(xSpan, ySpan))
+//      .shaveDom(y, newY)
+//      .andThen { ps =>
+//        val xBounds = zSpan * ySpan
+//        val r = xSpan - xBounds
+//        ps.shaveDom(x, xBounds + r)
+//      }
+//  }
+//
+//  def advise(problemState: ProblemState, pos: Int): Int = 3
+//  def check(tuple: Array[Int]): Boolean = tuple(0) % tuple(1) == tuple(2)
+//  def simpleEvaluation: Int = 1
+//}
 
 class DivAC(v0: Variable, v1: Variable, result: Variable) extends Constraint(v0, v1, result) with Residues with TupleEnumerator {
   def check(t: Array[Int]) = {

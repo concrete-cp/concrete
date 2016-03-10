@@ -1,14 +1,14 @@
 package concrete.constraint.linear
 
-import concrete.ParameterManager
 import com.typesafe.scalalogging.LazyLogging
-import concrete.constraint.Removals
+
 import concrete.Contradiction
-import concrete.Variable
-import concrete.ProblemState
-import cspom.Statistic
 import concrete.Outcome
-import concrete.Domain
+import concrete.ParameterManager
+import concrete.ProblemState
+import concrete.Variable
+import concrete.constraint.Removals
+import cspom.Statistic
 
 object LinearLe {
   def apply(constant: Int, factors: Array[Int], scope: Array[Variable], strict: Boolean, pm: ParameterManager) = {

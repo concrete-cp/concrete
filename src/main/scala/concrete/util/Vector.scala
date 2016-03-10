@@ -52,9 +52,9 @@ import VectorCases._
  * @author Rich Hickey
  */
 class Vector[+T] private[util] (val length: Int, trie: Case, tail: Array[AnyRef])
-  extends IndexedSeq[T]
-  with GenericTraversableTemplate[T, Vector]
-  with IndexedSeqLike[T, Vector[T]] { outer =>
+    extends IndexedSeq[T]
+    with GenericTraversableTemplate[T, Vector]
+    with IndexedSeqLike[T, Vector[T]] { outer =>
 
   private val tailOff = length - tail.length
 
@@ -111,20 +111,18 @@ class Vector[+T] private[util] (val length: Int, trie: Case, tail: Array[AnyRef]
   /**
    * Removes the <i>tail</i> element of this vector.
    */
-  def pop: Vector[T] = {
-    if (length == 0) {
-      throw new IllegalStateException("Can't pop empty vector")
-    } else if (length == 1) {
-      Vector.empty
-    } else if (tail.length > 1) {
+  def pop: Vector[T] = length match {
+    case 0 => throw new IllegalStateException("Can't pop empty vector")
+    case 1 => Vector.empty
+    
+    case l if l > 1 =>
       val tail2 = new Array[AnyRef](tail.length - 1)
       Array.copy(tail, 0, tail2, 0, tail2.length)
-
       new Vector[T](length - 1, trie, tail2)
-    } else {
+
+    case _ =>
       val (trie2, tail2) = trie.pop
       new Vector[T](length - 1, trie2, tail2)
-    }
   }
 }
 

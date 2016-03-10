@@ -1,12 +1,11 @@
 package concrete.generator.cspompatterns
 
+import concrete.CSPOMDriver
 import cspom.CSPOM
 import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.compiler.Delta
 import cspom.variable.CSPOMConstant
-import cspom.variable.CSPOMSeq
-import concrete.CSPOMDriver
 import cspom.variable.IntExpression
 
 object MulToSum extends ConstraintCompilerNoData {

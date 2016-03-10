@@ -9,6 +9,7 @@ import concrete.constraint.StatefulConstraint
 import concrete.Domain
 import cspom.UNSATException
 import concrete.constraint.Removals
+import cspom.util.BitVector
 
 final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x ++ y)
     with StatefulConstraint[(Int, Int)] with Removals {
@@ -33,8 +34,13 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
     }
   }
   override def toString(ps: ProblemState) = {
-    val (alpha, beta) = ps(this)
-    s"$id: ${x.map(ps.dom).mkString("[", ", ", "]")} <= ${y.map(ps.dom).mkString("[", ", ", "]")} / alpha = $alpha, beta = $beta"
+    s"$id: ${x.map(ps.dom).mkString("[", ", ", "]")} <= ${y.map(ps.dom).mkString("[", ", ", "]")} / " +
+      (Option(ps(this))
+        .map {
+          case (alpha, beta) => s"alpha = $alpha, beta = $beta"
+        }
+        .getOrElse("uninitalized"))
+
   }
 
   override def init(ps: ProblemState) = {
@@ -72,25 +78,30 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
 
   }
 
-  def revise(ps: ProblemState, mod: Seq[Int]): Outcome = {
-    val (x, y) = mod.span(_ < n)
-    val r = reviseN(ps, (x ++ y.map(_ - n)).distinct)
+  def revise(ps: ProblemState, cmod: Seq[Int]): Outcome = {
+    val mod = cmod.foldLeft(BitVector.empty) {
+      case (bv, m) => if (m < n) bv + m else bv + (m - n)
+    }
+
+    def reviseN(ps: ProblemState, i: Int): Outcome = {
+      if (i < 0) ps
+      else {
+        reEstablishGAC(i, ps)
+          .andThen {
+            ps => reviseN(ps, mod.nextSetBit(i + 1))
+          }
+      }
+    }
+
+    reviseN(ps, mod.nextSetBit(0))
     //    val out = r match {
     //      case Contradiction    => "Contradiction"
     //      case ns: ProblemState => if (ns eq ps) "NOP" else if (ns.domains eq ps.domains) ns(this) else toString(ns)
     //    }
     //    println(s"${toString(ps)}, $mod -> $out")
-    r
+
   }
 
-  private def reviseN(ps: ProblemState, mod: Seq[Int]): Outcome = {
-    if (mod.length <= 1) ps
-    else {
-      reEstablishGAC(mod.head, ps).andThen {
-        ps => reviseN(ps, mod.view.tail)
-      }
-    }
-  }
   //    case Nil => ps
   //    case head :: tail =>
   //      reEstablishGAC(head, ps).andThen(ps => reviseN(ps, tail))

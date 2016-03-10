@@ -1,32 +1,25 @@
 package concrete.runner
 
-import java.net.URI
 import java.security.InvalidParameterException
-import java.util.Timer
 import com.typesafe.scalalogging.LazyLogging
 import concrete.ParameterManager
-import concrete.Problem
 import concrete.Solver
 import concrete.Variable
-import concrete.generator.ProblemGenerator
 import concrete.runner.sql.SQLWriter
 import cspom.Statistic
 import cspom.StatisticsManager
-import cspom.TimedException
 import cspom.compiler.CSPOMCompiler
-import cspom.variable.CSPOMExpression
-import cspom.variable.CSPOMVariable
 import concrete.SolverFactory
-import java.util.TimerTask
 import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
 import cspom.UNSATException
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Await
 import scala.concurrent.duration._
 import org.scalameter.Quantity
+import concrete.util.KlangCancellableFuture
+import java.util.concurrent.TimeoutException
 
 trait ConcreteRunner extends LazyLogging {
 
@@ -132,56 +125,74 @@ trait ConcreteRunner extends LazyLogging {
     //val waker = new Timer()
     //try {
 
-    val (tryLoad, lT) = StatisticsManager.measureTry {
-      load(remaining, opt)
-    }
-    loadTime = lT
+    var solver: Option[Solver] = None
 
-    val status = tryLoad
-      .flatMap { problem =>
+    val f = KlangCancellableFuture {
+
+      val (tryLoad, lT) = StatisticsManager.measureTry {
+        load(remaining, opt)
+      }
+      loadTime = lT
+
+      tryLoad.map { problem =>
 
         applyParametersPre(opt)
 
-        val f = Future {
-          val (result, time) = StatisticsManager.measure {
+        val solver = new SolverFactory(pm)(problem)
 
-            val solver = new SolverFactory(pm)(problem)
+        statistics.register("solver", solver)
+        applyParametersPost(solver, opt)
 
-            statistics.register("solver", solver)
-            applyParametersPost(solver, opt)
-
-            optimize match {
-              case "sat" =>
-              case "min" =>
-                solver.minimize(solver.problem.variable(optimizeVar.get))
-              case "max" =>
-                solver.maximize(solver.problem.variable(optimizeVar.get))
-            }
-
-            val r = solver.nonEmpty
-            if (opt.contains('all)) {
-              for (s <- solver) {
-                solution(s, writer, opt)
-              }
-            } else if (solver.optimises.nonEmpty) {
-              for (s <- solver.toIterable.lastOption) {
-                solution(s, writer, opt)
-              }
-            } else {
-              for (s <- solver.toIterable.headOption) {
-                solution(s, writer, opt)
-              }
-            }
-
-            r
-          }
-          benchTime = time
-          result
+        optimize match {
+          case "sat" =>
+          case "min" =>
+            solver.minimize(solver.problem.variable(optimizeVar.get))
+          case "max" =>
+            solver.maximize(solver.problem.variable(optimizeVar.get))
         }
 
-        concurrent.Await.result(f, opt.get('Time).map(_.asInstanceOf[Int].milliseconds).getOrElse(Duration.Inf))
+        solver
+      }
+        .map { solv =>
+          solver = Some(solv)
+          val result = solv.nonEmpty
+          if (opt.contains('all)) {
+            for (s <- solv) {
+              solution(s, writer, opt)
+            }
+          } else if (solv.optimises.nonEmpty) {
+            for (s <- solv.toIterable.lastOption) {
+              solution(s, writer, opt)
+            }
+          } else {
+            for (s <- solv.toIterable.headOption) {
+              solution(s, writer, opt)
+            }
+          }
+          result
+        }
+    }
+
+    val r = Try(concurrent.Await.result(f, opt.get('Time).map(_.asInstanceOf[Int].seconds).getOrElse(Duration.Inf)))
+      .recoverWith {
+        case e: TimeoutException =>
+          logger.info("Cancelling")
+          f.cancel()
+          var tries = 100
+          while (tries > 0 && solver.exists(_.running)) {
+            logger.info("Waiting for interruption")
+            Thread.sleep(100)
+            tries -= 1
+          }
+          if (tries >= 0) {
+            Failure(e)
+          } else {
+            Failure(new IllegalStateException("Could not interrupt search process", e))
+          }
 
       }
+
+    val status = r.flatten
       .recoverWith {
         case e: UNSATException =>
           writer.error(e)

@@ -25,7 +25,7 @@ final class Neq(v0: Variable, v1: Variable, c: Int = 0) extends Constraint(Array
     ps
       .updateDom(v0, revise(d0, d1, c))
       .updateDom(v1, revise(d1, d0, -c))
-      .entailIf(this, ch => ch.dom(v0) disjoint ch.dom(v1))
+      .entailIf(this, ch => ch.dom(v0) disjoint ch.dom(v1).shift(c))
   }
 
   private def revise(variable: Domain, otherVar: Domain, c: Int): Domain = {

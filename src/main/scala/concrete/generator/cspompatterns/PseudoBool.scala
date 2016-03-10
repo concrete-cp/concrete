@@ -2,12 +2,9 @@ package concrete.generator.cspompatterns
 
 import cspom.CSPOM
 import cspom.CSPOMConstraint
-import cspom.compiler.ConstraintCompiler
-import cspom.variable.CSPOMConstant
-import cspom.variable.CSPOMSeq
-import cspom.variable.SimpleExpression
-import cspom.variable.BoolExpression
 import cspom.compiler.ConstraintCompilerNoData
+import cspom.variable.BoolExpression
+import cspom.variable.CSPOMSeq
 
 object PseudoBool extends ConstraintCompilerNoData {
 

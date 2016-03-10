@@ -225,6 +225,8 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
 
   def optimises: Option[Variable] = _maximize orElse _minimize
 
+  var running = false
+
   def next(): Map[Variable, Any] = _next match {
     case UNSAT         => Iterator.empty.next
     case UNKNOWNResult => if (hasNext) next() else Iterator.empty.next

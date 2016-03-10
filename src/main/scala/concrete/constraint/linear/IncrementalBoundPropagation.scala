@@ -1,20 +1,15 @@
 package concrete.constraint.linear
 
-import com.typesafe.scalalogging.LazyLogging
-import IncrementalBoundPropagation.PContradiction
 import IncrementalBoundPropagation.PFiltered
-import IncrementalBoundPropagation.POutcome
 import Linear.maxTimes
 import Linear.minTimes
 import concrete.Domain
-import concrete.Outcome
+import concrete.IntDomain
 import concrete.ProblemState
-import concrete.Variable
 import concrete.constraint.StatefulConstraint
 import concrete.util.Interval
 import concrete.util.Math
 import cspom.util.BitVector
-import concrete.IntDomain
 
 object IncrementalBoundPropagation {
   sealed trait POutcome

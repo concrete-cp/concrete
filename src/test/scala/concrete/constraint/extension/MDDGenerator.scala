@@ -3,6 +3,7 @@ package concrete.constraint.extension
 import scala.util.Random
 import cspom.extension.MDDNode
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.ArrayBuffer
 
 object MDDGenerator {
   /**
@@ -66,9 +67,33 @@ object MDDGenerator {
     data
   }
 
-  def apply(d: Int, k: Int, l: Double, q: Double, rand: Random) = {
-    val existing = Array.fill(k + 1)(new HashMap[cspom.extension.MDD[Int], cspom.extension.MDD[Int]]())
-    generate(d, k, l, q, rand, existing)
+  def giveStructure(mdd: MDD, q: Double, rand: Random, ts: Int) = {
+    val existing = new HashMap[Int, ArrayBuffer[MDD]]()
+
+    def giveStruct(n: MDD, k: Int): MDD = {
+      if (n eq MDDLeaf) {
+        n
+      } else n.cache(ts) {
+        val e = existing.getOrElseUpdate(k, new ArrayBuffer())
+        if (e.nonEmpty && rand.nextDouble() < q) {
+          e(rand.nextInt(e.size))
+        } else {
+          val newMDD = MDD(
+            n.traverseST
+              .map {
+                case (i, m) => i -> giveStruct(m, k + 1)
+              }
+              .toMap)
+
+          val r = if (newMDD == n) n else newMDD
+          e += r
+          r
+        }
+
+      }
+    }
+
+    giveStruct(mdd, 0)
   }
 
   private def generate(d: Int, k: Int, l: Double, q: Double, rand: Random,

@@ -13,23 +13,25 @@ import concrete.generator.constraint.ExtensionGenerator
 import concrete.ParameterManager
 import scala.collection.mutable.HashMap
 import cspom.extension.IdMap
+import java.lang.ref.WeakReference
+import scala.collection.mutable.WeakHashMap
 
-final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
+final class BDDRTest extends FlatSpec with Matchers with Inspectors {
 
-  implicit def cache: BDD.Cache = null
+  implicit val cache: BDD.Cache = new WeakHashMap[BDDRNode, WeakReference[BDDRNode]]()
 
-  private val ts: MDDLink = MDDLink(Seq(List(0, 0), List(0, 1), List(1, 0)))
+  "BDDR" should "detect containment" in {
+    val ts: BDDR = BDDR(Seq(List(0, 0), List(0, 1), List(1, 0)))
 
-  val t = MDDLink0 + List(1, 2, 3) + List(1, 3, 4) + List(1, 2, 5) + List(2, 3, 5)
-  val s = MDDLink0 + List(1, 2, 5) + List(1, 3, 4) + List(1, 2, 3) + List(2, 3, 5)
+    val t = BDDR0 + List(1, 2, 3) + List(1, 3, 4) + List(1, 2, 5) + List(2, 3, 5)
+    val s = BDDR0 + List(1, 2, 5) + List(1, 3, 4) + List(1, 2, 3) + List(2, 3, 5)
 
-  val u = MDDLink(Seq(
-    List(1, 2, 3),
-    List(1, 3, 4),
-    List(1, 2, 5),
-    List(2, 3, 5)))
+    val u = BDDR(Seq(
+      List(1, 2, 3),
+      List(1, 3, 4),
+      List(1, 2, 5),
+      List(2, 3, 5)))
 
-  "MDD" should "detect containment" in {
     ts should contain(Array(0, 1))
     ts should not contain (Array(1, 1))
 
@@ -43,10 +45,23 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
   }
 
   it should "iterate over all tuples" in {
+    val ts: BDDR = BDDR(Seq(List(0, 0), List(0, 1), List(1, 0)))
+
     ts.iterator.size shouldBe ts.lambda
   }
 
   it should "compute its size correctly" in {
+    val ts: BDDR = BDDR(Seq(List(0, 0), List(0, 1), List(1, 0)))
+
+    val t = BDDR0 + List(1, 2, 3) + List(1, 3, 4) + List(1, 2, 5) + List(2, 3, 5)
+    val s = BDDR0 + List(1, 2, 5) + List(1, 3, 4) + List(1, 2, 3) + List(2, 3, 5)
+
+    val u = BDDR(Seq(
+      List(1, 2, 3),
+      List(1, 3, 4),
+      List(1, 2, 5),
+      List(2, 3, 5)))
+
     ts.lambda shouldBe BigInt(3)
 
     t.lambda shouldBe s.lambda
@@ -55,19 +70,13 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
   }
 
   it should "reduce" in {
-    val m0 = MDDLink(Seq(
+    val m = BDDR(Seq(
       List(2, 3, 2),
       List(1, 2, 1),
       List(1, 1, 1),
       List(1, 1, 3),
       List(3, 1, 1),
       List(3, 1, 3)))
-
-    println(m0.edges(6))
-
-    m0.lambda shouldBe BigInt(6)
-
-    val m = m0.reduce()
 
     withClue(m) {
       m.lambda shouldBe BigInt(6)
@@ -76,11 +85,11 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
 
   }
 
-  def mddl(d: Int, k: Int, i: Int = 0): MDDLink = {
-    if (i >= d) { MDDLink0 }
-    else if (k <= 0) { MDDLinkLeaf }
+  def mddl(d: Int, k: Int, i: Int = 0): BDDR = {
+    if (i >= d) { BDDR0 }
+    else if (k <= 0) { BDDRLeaf }
     else {
-      new MDDLinkNode(i, mddl(d, k - 1), mddl(d, k, i + 1))
+      BDDR(i, mddl(d, k - 1), mddl(d, k, i + 1), cache)
     }
   }
 
@@ -99,16 +108,7 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
     val m1 = mddl(d, k)
 
     m1.lambda shouldBe BigInt(d).pow(k)
-    m1.edges(1) shouldBe (1 - BigInt(d).pow(k + 1)) / (1 - d) - 1
-
-    val t = System.nanoTime()
-    val m = m1.reduce()
-    val e = System.nanoTime()
-
-    //println((e - t) / 1e9)
-
-    m.lambda shouldBe BigInt(d).pow(k)
-    m.edges(2) shouldBe d * k
+    m1.edges(1) shouldBe d * k
 
     val m2 = mdd(d, k)
     m2.lambda shouldBe BigInt(d).pow(k)
@@ -126,7 +126,7 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
   }
 
   it should "filter" in {
-    val m = MDDLink(Seq(
+    val m = BDDR(Seq(
       List(2, 3, 2),
       List(1, 2, 1),
       List(1, 1, 1),
@@ -164,11 +164,18 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
     val rand = new Random(0)
     val mdd = MDDGenerator(15, 5, 600000, rand)
     val mddf = mdd.reduce()
-    val mddl = MDDLink(mdd.map(_.toList)).reduce()
+    val mddl = BDDR(mdd.map(_.toList))
     val ef = mddf.edges(5)
     val el = mddl.edges(5)
     ef should be >= el
     println(ef, el)
+    System.gc()
+
+    System.gc()
+    System.gc()
+    System.gc()
+
+    // BDDR.cache.size shouldBe el
 
   }
 
@@ -179,9 +186,9 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
     val l = .28
     val lambda = (l * math.pow(d, k)).toInt
     var mddr = MDDGenerator(d, k, lambda, rand).reduce
-    var mddl = MDDLink(mddr)
+    var mddl = BDDR(mddr, cache)
 
-    mddr.edges(-2) shouldBe mddl.edges(-1)
+    mddr.edges(-2) should be >= mddl.edges(-1)
 
     val doms = Array.fill[Domain](k)(IntDomain(0 until d))
 
@@ -209,7 +216,7 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
     assert(mddl.isEmpty)
   }
 
-  it should "convert MDD to MDDLink" in {
+  it should "convert MDD to BDDR" in {
     val m = MDD(Seq(
       Seq(2, 3, 2),
       Seq(1, 2, 1),
@@ -219,7 +226,7 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
       Seq(3, 1, 3)))
       .reduce()
 
-    val ml = MDDLink(m)
+    val ml = BDDR(m, cache)
 
     m.edges(5) shouldBe ml.edges(10)
     m.toSet shouldBe ml.toSet
@@ -229,7 +236,7 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
   }
 
   it should "have correct number of nodes" in {
-    val m = MDDLink(Seq(
+    val m = BDDR(Seq(
       List(2, 3, 2),
       List(1, 2, 1),
       List(1, 1, 1),
@@ -246,7 +253,7 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
 
     println(m2.toList)
 
-    m2.nodes(map).size shouldBe 13
+    m2.nodes(map).size shouldBe 12
 
   }
 }

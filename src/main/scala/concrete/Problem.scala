@@ -19,15 +19,10 @@
 
 package concrete
 
-import concrete.constraint.Constraint
-import scala.collection.JavaConversions
-import scala.collection.mutable.ArrayBuffer
-import java.util.Arrays
-import scala.collection.immutable.VectorBuilder
-import concrete.constraint.StatefulConstraint
 import scala.annotation.varargs
-import scala.collection.immutable.BitSet
-import cspom.util.BitVector
+import scala.collection.JavaConversions
+
+import concrete.constraint.Constraint
 
 object Problem {
   @varargs

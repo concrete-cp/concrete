@@ -3,6 +3,10 @@ package concrete
 import cspom.util.BitVector
 import scala.collection.SortedSet
 import concrete.util.Interval
+import cspom.util.RangeSet
+import cspom.util.Infinitable
+import cspom.util.Finite
+import cspom.util.FiniteIntInterval
 
 object EmptyIntDomain extends IntDomain {
   def length = 0
@@ -34,11 +38,13 @@ object EmptyIntDomain extends IntDomain {
   def &(lb: Int, ub: Int): Domain = EmptyIntDomain
   def median = throw new NoSuchElementException
   def isAssigned = throw new UnsupportedOperationException
-  def offset(o: Int) = EmptyIntDomain
+  def shift(o: Int) = EmptyIntDomain
   def disjoint(d: Domain) = true
+
 }
 
 object IntDomain {
+
   def ofInterval(lb: Int, ub: Int): IntDomain =
     if (lb > ub) { EmptyIntDomain }
     else if (ub == lb) { Singleton(lb) }
@@ -57,17 +63,33 @@ object IntDomain {
     case s: Int => {
       val lb = bv.nextSetBit(0)
       val ub = bv.lastSetBit
+      assert(s == bv.cardinality)
       if (ub - lb == s - 1) {
         new IntervalDomain(offset + lb, offset + ub)
       } else {
-        new BitVectorDomain(offset, bv, s)
+        if (lb >= BitVector.WORD_SIZE) {
+          new BitVectorDomain(offset + lb, bv.shift(-lb), s)
+        } else {
+          new BitVectorDomain(offset, bv, s)
+        }
       }
     }
   }
 
-  def apply(d: SortedSet[Int]): IntDomain = {
-    val offset = d.head
-    ofBitVector(offset, BitVector(d.view.map(_ - offset)), d.size)
+  def apply(d: RangeSet[Infinitable]): IntDomain = {
+    val cspom.util.Interval(Finite(offset), Finite(ub)) = d.span
+
+    offset - ub - 1 match {
+      case 0 => EmptyIntDomain
+      case 1 => Singleton(offset)
+      case _ =>
+        val finite = d.ranges.toSeq.map {
+          case FiniteIntInterval(l, u) => (l - offset, u - offset)
+        }
+        val bv = BitVector.fromIntervals(finite)
+        val s = finite.map { case (l, u) => u - l + 1 }.sum
+        ofBitVector(offset, bv, s)
+    }
   }
 
   def apply(r: Range): IntDomain =
@@ -81,7 +103,12 @@ object IntDomain {
   def apply(i: Interval): IntDomain = ofInterval(i.lb, i.ub)
 
   @annotation.varargs
-  def ofSeq(d: Int*): IntDomain = apply(SortedSet(d: _*))
+  def ofSeq(d: Int*): IntDomain = {
+    val offset = d.min
+    val bv = BitVector(d.view.map(_ - offset))
+    // d may contain the same element twice
+    ofBitVector(offset, bv, bv.cardinality)
+  }
 
 }
 
@@ -93,5 +120,10 @@ abstract class IntDomain extends Domain {
   }
 
   def |(value: Int): IntDomain
+
+  def removeItv(from: Int, to: Int) = {
+    val removed = removeFrom(from) | removeTo(to)
+    if (removed.size == size) this else removed
+  }
 
 }

@@ -1,8 +1,9 @@
 package concrete.runner
-import cspom.StatisticsManager
-import scala.xml.NodeSeq
-import concrete.Variable
+
 import scala.util.Try
+import scala.xml.NodeSeq
+
+import cspom.StatisticsManager
 
 trait ConcreteWriter {
 
