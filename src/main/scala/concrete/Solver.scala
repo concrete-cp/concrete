@@ -210,7 +210,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   statistics.register("linear", LinearLe)
   statistics.register("simplex", Simplex)
 
-  private var _next: SolverResult = UNKNOWNResult
+  private var _next: SolverResult = UNKNOWNResult(None)
 
   private var _minimize: Option[Variable] = None
   private var _maximize: Option[Variable] = None
@@ -228,10 +228,10 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   var running = false
 
   def next(): Map[Variable, Any] = _next match {
-    case UNSAT         => Iterator.empty.next
-    case UNKNOWNResult => if (hasNext) next() else Iterator.empty.next
+    case UNSAT               => Iterator.empty.next
+    case UNKNOWNResult(None) => if (hasNext) next() else Iterator.empty.next
     case SAT(sol) =>
-      _next = UNKNOWNResult
+      _next = UNKNOWNResult(None)
       BestValue.newSolution(sol)
       for (v <- _maximize) {
         reset()
@@ -275,7 +275,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   def hasNext = _next match {
     case UNSAT  => false
     case SAT(_) => true
-    case UNKNOWNResult =>
+    case UNKNOWNResult(None) =>
       _next = nextSolution(); hasNext
     case RESTART => throw new IllegalStateException
   }
@@ -349,7 +349,11 @@ case object UNSAT extends SolverResult {
   def get = throw new NoSuchElementException
   override def toString = "UNSAT"
 }
-case object UNKNOWNResult extends SolverResult {
+object UNKNOWNResult {
+  def apply(cause: Throwable): UNKNOWNResult = UNKNOWNResult(Some(cause))
+}
+
+case class UNKNOWNResult(cause: Option[Throwable]) extends SolverResult {
   def isSat = false
   def get = throw new NoSuchElementException
   override def toString = "UNKNOWN"

@@ -33,7 +33,7 @@ final class DummySolver(prob: Problem, params: ParameterManager) extends Solver(
   def nextSolution() =
     problem.initState.andThen(preprocess(filter, _)) match {
       case Contradiction => UNSAT
-      case _             => UNKNOWNResult
+      case _             => UNKNOWNResult(None)
     }
 
   override def toString = "dummy"

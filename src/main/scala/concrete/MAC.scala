@@ -89,52 +89,52 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
     currentState: Outcome, stateStack: List[ProblemState],
     nbBacktracks: Int, maxBacktracks: Int, nbAssignments: Int): (SolverResult, List[Branch], List[ProblemState], Int, Int) = {
     if (Thread.interrupted()) {
-      logger.warn("Interrupted")
-      throw new TimeoutException()
-    }
+      (UNKNOWNResult(new TimeoutException()), stack, stateStack, nbBacktracks, nbAssignments)
+    } else {
 
-    val filtering = currentState andThen {
-      s => filter.reduceAfter(modifiedVariable, s)
-    }
+      val filtering = currentState andThen {
+        s => filter.reduceAfter(modifiedVariable, s)
+      }
 
-    filtering match {
+      filtering match {
 
-      case Contradiction =>
-        if (stack.isEmpty) {
-          (UNSAT, Nil, Nil, nbBacktracks, nbAssignments)
-        } else if (maxBacktracks >= 0 && nbBacktracks >= maxBacktracks) {
-          (RESTART, stack, stateStack, nbBacktracks, nbAssignments)
-        } else {
-          val lastBranch = stack.head
+        case Contradiction =>
+          if (stack.isEmpty) {
+            (UNSAT, Nil, Nil, nbBacktracks, nbAssignments)
+          } else if (maxBacktracks >= 0 && nbBacktracks >= maxBacktracks) {
+            (RESTART, stack, stateStack, nbBacktracks, nbAssignments)
+          } else {
+            val lastBranch = stack.head
 
-          logger.info(s"${stack.length - 1}: ${lastBranch.b2Desc}")
+            logger.info(s"${stack.length - 1}: ${lastBranch.b2Desc}")
 
-          mac(lastBranch.changed, stack.tail, lastBranch.b2, stateStack.tail, nbBacktracks + 1, maxBacktracks, nbAssignments)
-        }
+            mac(lastBranch.changed, stack.tail, lastBranch.b2, stateStack.tail, nbBacktracks + 1, maxBacktracks, nbAssignments)
+          }
 
-      case filteredState: ProblemState =>
-        heuristic.branch(filteredState) match {
-          case None =>
-            require(problem.variables.forall(v => filteredState.dom(v).size == 1),
-              s"Unassigned variables in:\n${problem.toString(filteredState)}")
+        case filteredState: ProblemState =>
+          heuristic.branch(filteredState) match {
+            case None =>
+              require(problem.variables.forall(v => filteredState.dom(v).size == 1),
+                s"Unassigned variables in:\n${problem.toString(filteredState)}")
 
-            assert {
-              for (c <- problem.constraints.find(c => !c.controlAssignment(filteredState))) {
-                throw new AssertionError(s"solution does not satisfy ${c.toString(filteredState)}")
+              assert {
+                for (c <- problem.constraints.find(c => !c.controlAssignment(filteredState))) {
+                  throw new AssertionError(s"solution does not satisfy ${c.toString(filteredState)}")
+                }
+                true
               }
-              true
-            }
 
-            (SAT(extractSolution(filteredState)), stack, filteredState :: stateStack, nbBacktracks, nbAssignments)
-          case Some(branching) =>
+              (SAT(extractSolution(filteredState)), stack, filteredState :: stateStack, nbBacktracks, nbAssignments)
+            case Some(branching) =>
 
-            logger.info(s"${stack.length}: ${branching.b1Desc} ($nbBacktracks / $maxBacktracks)");
+              logger.info(s"${stack.length}: ${branching.b1Desc} ($nbBacktracks / $maxBacktracks)");
 
-            // val assignedState = filteredState.assign(pair)
+              // val assignedState = filteredState.assign(pair)
 
-            mac(branching.changed, branching :: stack, branching.b1, filteredState :: stateStack, nbBacktracks, maxBacktracks, nbAssignments + 1)
+              mac(branching.changed, branching :: stack, branching.b1, filteredState :: stateStack, nbBacktracks, maxBacktracks, nbAssignments + 1)
 
-        }
+          }
+      }
     }
 
   }
@@ -149,7 +149,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
   val searchMeasurer = org.scalameter.`package`
     .config(
       Key.exec.benchRuns -> params.getOrElse("mac.benchRuns", 1),
-      Key.verbose -> logger.underlying.isInfoEnabled())
+      Key.verbose -> false)
 
   var nbBacktracks = 0
 
@@ -227,7 +227,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
 
       // val nextState = currentStateStack.head.remove(currentStack.head)
 
-      /** Contradiction will trigger a backtrack */
+      /* Contradiction will trigger a backtrack */
 
       val (sol, stack, stateStack) =
         nextSolution(Seq.empty, currentStack, Contradiction, currentStateStack.tail)
