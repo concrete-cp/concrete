@@ -1,7 +1,5 @@
 package concrete.util
 
-import java.util.Arrays
-
 class SparseSet(
     val dense: Array[Int],
     private val sparse: Array[Int],

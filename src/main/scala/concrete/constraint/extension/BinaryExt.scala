@@ -115,7 +115,7 @@ abstract class BinaryExt(
   override def dataSize = matrix.size
 }
 
-final class BinaryExtR(scope: Array[Variable], matrix: Matrix2D) extends BinaryExt(scope, matrix) {
+final class BinaryExtR(scope: Array[Variable], matrix2d: Matrix2D) extends BinaryExt(scope, matrix2d) {
   private val offsets = Array(scope(0).initDomain.head, scope(1).initDomain.head)
 
   private val residues: Array[Array[Int]] =
@@ -124,14 +124,14 @@ final class BinaryExtR(scope: Array[Variable], matrix: Matrix2D) extends BinaryE
       new Array[Int](scope(1).initDomain.last - offsets(1) + 1))
 
   def hasSupport(ps: ProblemState, variablePosition: Int, value: Int) = {
-    val matrixBV: BitVector = matrix.getBitVector(variablePosition, value)
+    val matrixBV: BitVector = matrix2d.getBitVector(variablePosition, value)
     val otherPosition = 1 - variablePosition
     val otherDom = ps.dom(scope(otherPosition))
     val index = value - offsets(variablePosition)
     val part = residues(variablePosition)(index)
     BinaryExt.presenceChecks += 1
-    (part >= 0 && otherDom.toBitVector(matrix.offsets(otherPosition)).intersects(matrixBV, part)) || {
-      val intersection = otherDom.toBitVector(matrix.offsets(otherPosition)).intersects(matrixBV)
+    (part >= 0 && otherDom.toBitVector(matrix2d.offsets(otherPosition)).intersects(matrixBV, part)) || {
+      val intersection = otherDom.toBitVector(matrix2d.offsets(otherPosition)).intersects(matrixBV)
 
       if (intersection >= 0) {
         BinaryExt.checks += 1 + intersection;
@@ -146,11 +146,11 @@ final class BinaryExtR(scope: Array[Variable], matrix: Matrix2D) extends BinaryE
 
 }
 
-final class BinaryExtNR(scope: Array[Variable], matrix: Matrix2D) extends BinaryExt(scope, matrix) {
+final class BinaryExtNR(scope: Array[Variable], matrix2d: Matrix2D) extends BinaryExt(scope, matrix2d) {
   def hasSupport(ps: ProblemState, variablePosition: Int, index: Int) = {
-    val matrixBV: BitVector = matrix.getBitVector(variablePosition, index);
+    val matrixBV: BitVector = matrix2d.getBitVector(variablePosition, index);
     val otherPosition = 1 - variablePosition
-    val intersection = ps.dom(scope(otherPosition)).toBitVector(matrix.offsets(otherPosition)).intersects(matrixBV)
+    val intersection = ps.dom(scope(otherPosition)).toBitVector(matrix2d.offsets(otherPosition)).intersects(matrixBV)
 
     if (intersection >= 0) {
       BinaryExt.checks += 1 + intersection;

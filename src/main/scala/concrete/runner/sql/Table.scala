@@ -127,11 +127,13 @@ object Table extends App {
   }
 
   val errorHandling: ErrorHandling = statistic match {
-    case "rps"       => ErrorKeep
-    case "nodes"     => ErrorInfinity
-    case "time"      => ErrorInfinity
-    case "revisions" => ErrorKeep
-    case "mem"       => ErrorKeep
+    case "rps"          => ErrorKeep
+    case "nodes"        => ErrorInfinity
+    case "time"         => ErrorInfinity
+    case "revisions"    => ErrorInfinity
+    case "mem"          => ErrorKeep
+    case "domainChecks" => ErrorInfinity
+    case "nps"          => ErrorKeep
   }
 
   val ignoreNaN = true
@@ -177,7 +179,7 @@ object Table extends App {
                             """
 
       case "time" => sql"""
-                                SELECT "configId", status, solution, totalTime('{solver.searchCpu, solver.preproCpu}', "executionId")
+                                SELECT "configId", status, solution, totalTime('{solver.searchCpu, solver.preproCpu}', "executionId")/1e3
                                 FROM "Execution"
                                 WHERE (version, "problemId") = ($version, $problemId)
                             """
@@ -188,18 +190,18 @@ object Table extends App {
                                 WHERE (version, "problemId") = ($version, $problemId)
                             """
       case "domainChecks" => sql"""
-                                SELECT configId, status, solution, cast(stat('domain.checks', executionId) as real)
-                                FROM Executions
-                                WHERE (version, problemId) = ($version, $problemId)
+                                SELECT "configId", status, solution, cast(stat('solver.domain.checks', "executionId") as real)
+                                FROM "Execution"
+                                WHERE (version, "problemId") = ($version, $problemId)
                             """
       case "nps" => sql"""
-                                SELECT configId, status, solution, 
-                                  cast(stat('solver.nbAssignments', executionId) as real)/(cast(stat('solver.searchCpu', executionId) as real) + cast(stat('solver.preproCpu', executionId) as real))
-                                FROM Executions
-                                WHERE (version, problemId) = ($version, $problemId)"""
+                                SELECT "configId", status, solution, 
+                                  cast(stat('solver.nbAssignments', "executionId") as real)/totalTime('{solver.searchCpu, solver.preproCpu}', "executionId")*1e3
+                                FROM "Execution"
+                                WHERE (version, "problemId") = ($version, $problemId)"""
       case "rps" => sql"""
                                 SELECT "configId", status, solution, 
-                                  cast(stat('solver.filter.revisions', "executionId") as real)/totalTime('{solver.searchCpu, solver.preproCpu}', "executionId")
+                                  cast(stat('solver.filter.revisions', "executionId") as real)/totalTime('{solver.searchCpu, solver.preproCpu}', "executionId")*1e3
                                 FROM "Execution"
                                 WHERE (version, "problemId") = ($version, $problemId)"""
 

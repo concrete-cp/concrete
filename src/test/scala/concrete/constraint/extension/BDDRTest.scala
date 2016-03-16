@@ -15,6 +15,7 @@ import scala.collection.mutable.HashMap
 import cspom.extension.IdMap
 import java.lang.ref.WeakReference
 import scala.collection.mutable.WeakHashMap
+import concrete.util.MDDGenerator
 
 final class BDDRTest extends FlatSpec with Matchers with Inspectors {
 

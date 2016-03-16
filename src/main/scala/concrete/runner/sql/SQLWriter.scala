@@ -282,6 +282,7 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
 
     executionId.onSuccess {
       case e =>
+
         print(s"Problem $p, config $c, version $version, execution $e")
     }
 

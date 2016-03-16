@@ -306,6 +306,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
 
     sys.exit(
       if (status.isSuccess) 0 else 1)
+//    run(args)
   }
 
 }

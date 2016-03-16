@@ -29,7 +29,7 @@ final class TupleTrieSet(
   //      relation ++= tuples
   //  }
 
-  def allowed() = {
+  def allowed = {
     require(initialContent == false)
     relation.iterator
   }

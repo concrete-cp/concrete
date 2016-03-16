@@ -202,8 +202,10 @@ trait ConcreteRunner extends LazyLogging {
           Failure(e)
       }
 
-    for (s <- pm.unused) {
-      logger.warn(s"Unused parameter : $s")
+    status.foreach { _ =>
+      for (s <- pm.unused) {
+        logger.warn(s"Unused parameter : $s")
+      }
     }
     writer.disconnect(status)
     status

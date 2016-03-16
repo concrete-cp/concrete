@@ -99,7 +99,7 @@ case object Contradiction extends Outcome {
   def updateDom(v: Variable, d: Domain): Outcome = Contradiction
   def remove(v: Variable, value: Int): Outcome = Contradiction
   def dom(v: Variable): Domain = throw new UNSATException("Tried to get a domain from a Contradiction")
-  def domainsOption(): Option[IndexedSeq[Domain]] = None
+  def domainsOption: Option[IndexedSeq[Domain]] = None
   def toString(problem: Problem) = "Contradiction"
   def toState = throw new UNSATException("Tried to get state from a Contradiction")
   def apply[S](c: StatefulConstraint[S]): S = throw new UNSATException("Tried to get state from a Contradiction")
@@ -181,7 +181,7 @@ case class ProblemState(
           var ac = ps.activeConstraints
           for (i <- c.scope.indices) {
             val vid = c.scope(i).id
-            /** Fake variables (constants) may appear in constraints */
+            /* Fake variables (constants) may appear in constraints */
             if (vid >= 0) {
               ac = ac.updated(vid, ac(vid) + c.positionInVariable(i))
             }
@@ -201,10 +201,10 @@ case class ProblemState(
     var i = c.arity - 1
     while (i >= 0) {
       val vid = c.scope(i).id
-      /** Fake variables (constants) may appear in constraints */
+      /* Fake variables (constants) may appear in constraints */
       if (vid >= 0) {
         val pos = c.positionInVariable(i)
-        /** Reified constraints are not directly related to variables */
+        /* Reified constraints are not directly related to variables */
         if (pos >= 0) {
           ac = ac.updated(vid, ac(vid) - c.positionInVariable(i))
         }

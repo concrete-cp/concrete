@@ -2,7 +2,6 @@ package concrete.generator.cspompatterns
 
 import scala.collection.immutable.Queue
 import scala.collection.mutable.HashMap
-
 import cspom.CSPOM
 import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompilerNoData
@@ -12,17 +11,18 @@ import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
 import cspom.variable.IntExpression.implicits.iterable
+import cspom.variable.SimpleExpression
 
 final object SlidingSum extends ConstraintCompilerNoData {
 
   override def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM) = {
-    constraint.function == 'slidingSum && constraint.result.isTrue
+    constraint.function == 'slidingSum && constraint.result.isTrue && constraint.arguments.forall(_.fullyDefined)
   }
 
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM) = {
     val Seq(CSPOMConstant(low: Int), CSPOMConstant(up: Int), CSPOMConstant(seq: Int), CSPOMSeq(args)) = constraint.arguments
 
-    val vars = args.map(_.asInstanceOf[CSPOMVariable[Int]])
+    val vars = args.map(_.asInstanceOf[SimpleExpression[Int]])
 
     //println(s"sizeR ${b.apply.lambda} ${b.apply.edges}")
 

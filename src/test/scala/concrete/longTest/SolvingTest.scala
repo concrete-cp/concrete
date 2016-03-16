@@ -41,7 +41,7 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
 
   val problemBank = LinkedHashMap[String, AnyVal](
     //"1d_rubiks_cube.fzn" -> 12,
-    "normalized-renault-mod-0_ext.xml.bz2" -> 1,
+    "normalized-renault-mod-0_ext.xml.bz2" -> true,
     "scen11-f12.xml.bz2" -> 0,
     "battleships10.fzn" -> 1,
     "photo.fzn" -> 8,
