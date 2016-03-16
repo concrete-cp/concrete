@@ -16,7 +16,10 @@ object EmptyIntDomain extends IntDomain {
   def prev(i: Int) = throw new NoSuchElementException
   def prevOrEq(i: Int) = throw new NoSuchElementException
   def nextOrEq(i: Int) = throw new NoSuchElementException
-  def present(i: Int) = false
+  def present(i: Int) = {
+    Domain.checks += 1
+    false
+  }
   def remove(i: Int) = this
   def removeFrom(lb: Int) = this
   override def removeAfter(lb: Int) = this

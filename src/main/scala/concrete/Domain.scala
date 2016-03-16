@@ -1,12 +1,12 @@
 package concrete
 
 import scala.collection.AbstractSeq
-import scala.collection.TraversableLike
-import cspom.util.BitVector
-import concrete.util.Interval
-import cspom.Statistic
 import scala.collection.IterableLike
 import scala.collection.mutable.Builder
+
+import concrete.util.Interval
+import cspom.Statistic
+import cspom.util.BitVector
 
 object Domain {
   @Statistic

@@ -42,7 +42,10 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
    *            index to test
    * @return true iff index is present
    */
-  def present(index: Int) = span.contains(index);
+  def present(index: Int) = {
+    Domain.checks += 1
+    span.contains(index)
+  }
 
   def remove(index: Int) = {
     if (index == span.lb) { IntDomain.ofInterval(span.lb + 1, span.ub) }

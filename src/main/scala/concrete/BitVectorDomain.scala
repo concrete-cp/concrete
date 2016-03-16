@@ -53,8 +53,9 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
    * @return true iff index is present
    */
   def present(value: Int) = {
+    Domain.checks += 1
     val bit = value - offset
-    bit >= 0 && bitVector(value - offset)
+    bit >= 0 && bitVector(bit)
   }
 
   def isAssigned = false
