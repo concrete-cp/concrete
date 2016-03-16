@@ -7,7 +7,6 @@ import concrete.priorityqueues.Identified
 import concrete.util.SetWithMax
 import cspom.extension.IdMap
 import cspom.extension.IdSet
-import concrete.Variable
 import concrete.util.TSCache
 import concrete.Domain
 import scala.collection.mutable.HashMap
@@ -112,7 +111,7 @@ trait MDD extends Identified with Iterable[Seq[Int]] with LazyLogging {
 
     def step1(n: MDD): Unit = n match {
       case MDD0 | MDDLeaf => ()
-      case n =>
+      case n if !id.contains(n) =>
         for ((_, c) <- n.traverseST) step1(c)
 
         val idc = n.traverseST
@@ -125,6 +124,7 @@ trait MDD extends Identified with Iterable[Seq[Int]] with LazyLogging {
         }
 
         cache.update(idc, n)
+      case _ => ()
     }
 
     step1(this)

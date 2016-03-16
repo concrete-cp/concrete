@@ -13,6 +13,7 @@ import concrete.generator.constraint.ExtensionGenerator
 import concrete.ParameterManager
 import scala.collection.mutable.HashMap
 import cspom.extension.IdMap
+import concrete.util.MDDGenerator
 
 final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
 
@@ -168,7 +169,6 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
     val ef = mddf.edges(5)
     val el = mddl.edges(5)
     ef should be >= el
-    println(ef, el)
 
   }
 
@@ -199,7 +199,7 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
         }
         doms(pos) = newd
       }
-      println(mod, doms.toSeq)
+ 
       mddr = mddr.filterTrie(ts, doms, mod, 0)
       mddl = mddl.filterTrie(ts, doms, mod, 0, cache)
       ts += 1

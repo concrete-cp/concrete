@@ -34,7 +34,7 @@ object MDDLink {
 }
 
 sealed trait MDDLink extends BDD {
-  var id: Int = _
+  var id: Int = -1
 
   override def +(e: List[Int])(implicit cache: Cache): MDDLink
 
@@ -70,8 +70,7 @@ sealed trait MDDLink extends BDD {
 
     def traverse(n: MDDLink, i: Int): Int = {
       n match {
-        case nt: MDDLinkNode =>
-
+        case nt: MDDLinkNode if (nt.id < 0) =>
           val is = traverse(nt.sibling, traverse(nt.child, i))
 
           val idc = nt.child.id
@@ -88,7 +87,7 @@ sealed trait MDDLink extends BDD {
 
           cache((nt.index, idc, ids)) = n
           in
-        case e => i
+        case _ => i
       }
     }
 
