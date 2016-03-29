@@ -26,7 +26,9 @@ import CSPOM._
  */
 object Xor extends ConstraintCompilerNoData {
 
-  override def matchBool(c: CSPOMConstraint[_], p: CSPOM) = c.function == 'xor
+  override def matchBool(c: CSPOMConstraint[_], p: CSPOM) = {
+    c.function == 'xor && !c.result.isTrue && c.arguments.length == 2
+  }
 
   def compile(fc: CSPOMConstraint[_], problem: CSPOM) = {
 
