@@ -1,13 +1,11 @@
 package concrete.generator.cspompatterns
 
+import scala.reflect.runtime.universe
+
 import concrete.ParameterManager
-import cspom.compiler.StandardCompilers
-import cspom.compiler.MergeSame
-import cspom.compiler.MergeEq
-import cspom.compiler.RemoveUselessEq
-import cspom.compiler.SplitEqVec
-import cspom.compiler.ConstraintCompiler
 import cspom.compiler.CSPOMTypes
+import cspom.compiler.ConstraintCompiler
+import cspom.compiler.StandardCompilers
 
 object ConcretePatterns {
 

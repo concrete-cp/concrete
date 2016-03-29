@@ -1,26 +1,23 @@
 package concrete.constraint.extension
 
+import scala.collection.mutable.BitSet
 import concrete.Contradiction
-import concrete.Domain
-import concrete.Outcome
+import concrete.EmptyIntDomain
+import concrete.IntDomain
 import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.Removals
 import concrete.constraint.StatefulConstraint
 import concrete.util.SparseSet
-import concrete.EmptyIntDomain
-import concrete.IntDomain
-import scala.collection.mutable.BitSet
-import cspom.util.BitVector
 
 /* MDDRelation comes with its own timestamp */
 class MDDCLink(_scope: Array[Variable], val mdd: BDDRelation)
-    extends Constraint(_scope) with Removals with StatefulConstraint[BitSet] {
+    extends Constraint(_scope) with Removals with StatefulConstraint[SparseSet] {
 
   override def init(ps: ProblemState) = {
     val max = mdd.identify() + 1
-    ps.updateState(this, new BitSet(max)) //new SparseSet(mdd.identify + 1))
+    ps.updateState(this, new SparseSet(max))
   }
 
   // Members declared in concrete.constraint.Constraint
@@ -45,7 +42,7 @@ class MDDCLink(_scope: Array[Variable], val mdd: BDDRelation)
 
     var delta = arity
 
-    var gNo = oldGno.clone()
+    var gNo = oldGno //.clone()
 
     val ts = mdd.timestamp.next
 
@@ -77,7 +74,7 @@ class MDDCLink(_scope: Array[Variable], val mdd: BDDRelation)
           ng.cache.timestamp = ts
           true
         } else {
-          gNo.add(g.id)
+          gNo += g.id
           false
         }
       }

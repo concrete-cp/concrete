@@ -1,11 +1,11 @@
 package concrete.constraint.extension
 
-import cspom.util.BitVector
-import java.util.Arrays
 import scala.annotation.tailrec
-import concrete.Variable
+import scala.math.BigInt.int2bigInt
 import concrete.Domain
 import concrete.util.ArraySet
+import concrete.EmptyIntDomain
+import concrete.IntDomain
 
 object HashTable extends RelationGenerator {
   def apply(data: Iterable[Seq[Int]]): HashTable = {
@@ -52,19 +52,23 @@ final class HashTable(arity: Int, val table: ArraySet[Int]) extends Relation {
     modified.isEmpty || (doms(modified.head).present(t(modified.head)) && valid(modified.tail, doms, t))
   }
 
-  def fillFound(f: (Int, Int) => Boolean, arity: Int) = {
+  def supported(domains: Array[Domain]): Array[IntDomain] = {
+    val arity = domains.length
+    val newDomains = Array.fill[IntDomain](arity)(EmptyIntDomain)
+
     val pos = new MutableList(arity)
     pos.refill()
 
     for (tuple <- table) {
-      var pi = pos.nb - 1
-      while (pi >= 0) {
-        val p = pos(pi)
-        if (f(p, tuple(p))) pos.remove(pi)
-        pi -= 1
+      pos.filter { p =>
+        ReduceableExt.fills += 1
+        newDomains(p) |= tuple(p)
+        newDomains(p).length != domains(p).length
       }
     }
-    pos.toSet
+
+    newDomains
+
   }
 
   override def toString = s"${table.size} tuples"

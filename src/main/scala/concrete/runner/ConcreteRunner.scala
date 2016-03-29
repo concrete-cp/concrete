@@ -20,6 +20,7 @@ import scala.concurrent.duration._
 import org.scalameter.Quantity
 import concrete.util.KlangCancellableFuture
 import java.util.concurrent.TimeoutException
+import concrete.Problem
 
 trait ConcreteRunner extends LazyLogging {
 
@@ -32,6 +33,7 @@ trait ConcreteRunner extends LazyLogging {
   'D
   'Control
   'Time
+  'iteration
 
   //logger.addHandler(new MsLogHandler)
 
@@ -55,6 +57,7 @@ trait ConcreteRunner extends LazyLogging {
     case "-time" :: t :: tail           => options(tail, o + ('Time -> t.toInt), realArgs)
     case "-a" :: tail                   => options(tail, o + ('all -> Unit), realArgs)
     case "-s" :: tail                   => options(tail, o + ('stats -> Unit), realArgs)
+    case "-it" :: it :: tail            => options(tail, o + ('iteration -> it.toInt), realArgs)
     case u :: tail if u.startsWith("-") => options(tail, o + ('unknown -> u), realArgs)
     //    case "-cl" :: tail => options(tail, o + ('CL -> None))
     case u :: tail                      => options(tail, o, u :: realArgs)
@@ -62,7 +65,7 @@ trait ConcreteRunner extends LazyLogging {
 
   def load(args: List[String], opt: Map[Symbol, Any]): Try[concrete.Problem]
 
-  def applyParametersPre(opt: Map[Symbol, Any]): Unit = {}
+  def applyParametersPre(p: Problem, opt: Map[Symbol, Any]): Unit = {}
 
   def applyParametersPost(s: Solver, opt: Map[Symbol, Any]): Unit = {}
 
@@ -114,13 +117,15 @@ trait ConcreteRunner extends LazyLogging {
         new ConsoleWriter(opt, statistics)
       }
 
+    val iteration = opt.get('iteration).map { case i: Int => i }.getOrElse(0)
+    
     writer.problem(description(remaining))
 
     statistics.register("runner", this)
     statistics.register("CSPOMCompiler", CSPOMCompiler)
     //statistics.register("problemGenerator", ProblemGenerator)
 
-    writer.parameters(pm.toXML)
+    writer.parameters(pm.toXML, iteration)
 
     //val waker = new Timer()
     //try {
@@ -128,52 +133,58 @@ trait ConcreteRunner extends LazyLogging {
     var solver: Option[Solver] = None
 
     val f = KlangCancellableFuture {
-
-      val (tryLoad, lT) = StatisticsManager.measureTry {
-        load(remaining, opt)
-      }
-      loadTime = lT
-
-      tryLoad.map { problem =>
-
-        applyParametersPre(opt)
-
-        val solver = new SolverFactory(pm)(problem)
-
-        statistics.register("solver", solver)
-        applyParametersPost(solver, opt)
-
-        optimize match {
-          case "sat" =>
-          case "min" =>
-            solver.minimize(solver.problem.variable(optimizeVar.get))
-          case "max" =>
-            solver.maximize(solver.problem.variable(optimizeVar.get))
+      try {
+        val (tryLoad, lT) = StatisticsManager.measureTry {
+          load(remaining, opt)
         }
+        loadTime = lT
 
-        solver
-      }
-        .map { solv =>
-          solver = Some(solv)
-          val result = solv.nonEmpty
-          if (opt.contains('all)) {
-            for (s <- solv) {
-              solution(s, writer, opt)
-            }
-          } else if (solv.optimises.nonEmpty) {
-            for (s <- solv.toIterable.lastOption) {
-              solution(s, writer, opt)
-            }
-          } else {
-            for (s <- solv.toIterable.headOption) {
-              solution(s, writer, opt)
-            }
+        tryLoad.map { problem =>
+
+          applyParametersPre(problem, opt)
+
+          val solver = new SolverFactory(pm)(problem)
+
+          statistics.register("solver", solver)
+          applyParametersPost(solver, opt)
+
+          optimize match {
+            case "sat" =>
+            case "min" =>
+              solver.minimize(solver.problem.variable(optimizeVar.get))
+            case "max" =>
+              solver.maximize(solver.problem.variable(optimizeVar.get))
           }
-          result
+
+          solver
         }
+          .map { solv =>
+            solver = Some(solv)
+            val result = solv.nonEmpty
+            if (opt.contains('all)) {
+              for (s <- solv) {
+                solution(s, writer, opt)
+              }
+            } else if (solv.optimises.nonEmpty) {
+              for (s <- solv.toIterable.lastOption) {
+                solution(s, writer, opt)
+              }
+            } else {
+              for (s <- solv.toIterable.headOption) {
+                solution(s, writer, opt)
+              }
+            }
+            result
+          }
+      } catch {
+        // Avoids hanging in case of fatal error
+        case any: Throwable => Failure(any)
+      }
     }
 
-    val r = Try(concurrent.Await.result(f, opt.get('Time).map(_.asInstanceOf[Int].seconds).getOrElse(Duration.Inf)))
+    val timeout = opt.get('Time).map(_.asInstanceOf[Int].seconds).getOrElse(Duration.Inf)
+
+    val r = Try(concurrent.Await.result(f, timeout))
       .recoverWith {
         case e: TimeoutException =>
           logger.info("Cancelling")

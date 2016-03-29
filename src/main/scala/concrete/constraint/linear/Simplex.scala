@@ -21,7 +21,6 @@ import cspom.Statistic
 import cspom.util.BitVector
 import concrete.util.Interval
 import scala.collection.JavaConverters._
-import concrete.constraint.Removals
 import concrete.constraint.BoundRemovals
 import concrete.Domain
 import concrete.cluster.ConnectedComponents

@@ -1,17 +1,13 @@
 package concrete.constraint.semantic
 
-import scala.runtime.RichInt
 import concrete.Contradiction
 import concrete.Domain
 import concrete.EmptyIntDomain
 import concrete.Outcome
 import concrete.ProblemState
 import concrete.Variable
-import concrete.constraint.BC
 import concrete.constraint.Constraint
 import concrete.constraint.StatefulConstraint
-import cspom.util.IntInterval
-import concrete.IntDomain
 
 abstract class MinMax(protected val result: Variable, protected val vars: Array[Variable]) extends Constraint(result +: vars) {
 
@@ -50,14 +46,14 @@ final class Min private (result: Variable, _vars: Array[Variable])
 
   def revise(ps: ProblemState): Outcome = {
 
-    /**
+    /*
      * Vars before "first" are strictly higher than minimum variable
      * (i.e., var.head > result.last)
      */
     var first: Int = ps(this).intValue
 
     val resultDom = ps.dom(result)
-    /**
+    /*
      * Compute lb, ub
      */
     var lb = resultDom.last + 1
@@ -83,7 +79,7 @@ final class Min private (result: Variable, _vars: Array[Variable])
       Contradiction
     } else {
 
-      /**
+      /*
        * Result must take values in variables' domain
        */
       var union: Domain = EmptyIntDomain
@@ -99,7 +95,7 @@ final class Min private (result: Variable, _vars: Array[Variable])
           var state: Outcome = ps
           var i = first
 
-          /**
+          /*
            * Filter variables
            */
           while ((state ne Contradiction) && i < vars.length) {
@@ -119,7 +115,7 @@ final class Min private (result: Variable, _vars: Array[Variable])
             i += 1
           }
 
-          /**
+          /*
            * Handle case where only one variable can be the minimum
            */
           if ((state ne Contradiction) && (first until vars.length).iterator.filter(p => (state.dom(vars(p)) & minDom).nonEmpty).take(2).size == 1) {
@@ -167,14 +163,14 @@ final class Max private (result: Variable, _vars: Array[Variable])
 
   def revise(ps: ProblemState): Outcome = {
 
-    /**
+    /*
      * Vars before "first" are strictly lower than maximum variable
      * (i.e., var.last < result.head)
      */
     var first: Int = ps(this).intValue
 
     val resultDom = ps.dom(result)
-    /**
+    /*
      * Compute lb, ub
      */
     var lb = Int.MinValue
@@ -200,7 +196,7 @@ final class Max private (result: Variable, _vars: Array[Variable])
       Contradiction
     } else {
 
-      /**
+      /*
        * Result must take values in variables' domain
        */
       var union: Domain = EmptyIntDomain
@@ -216,7 +212,7 @@ final class Max private (result: Variable, _vars: Array[Variable])
           var state: Outcome = ps
           var i = first
 
-          /**
+          /*
            * Filter variables
            */
           while ((state ne Contradiction) && i < vars.length) {
@@ -236,7 +232,7 @@ final class Max private (result: Variable, _vars: Array[Variable])
             i += 1
           }
 
-          /**
+          /*
            * Handle case where only one variable can be the minimum
            */
           if ((state ne Contradiction) && (first until vars.length).iterator.filter(p => (state.dom(vars(p)) & maxDom).nonEmpty).take(2).size == 1) {

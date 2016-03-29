@@ -1,12 +1,10 @@
 package concrete.constraint.extension
 
-import cspom.util.BitVector
-import java.util.Arrays
-import scala.annotation.tailrec
-import concrete.Variable
+import scala.math.BigInt.int2bigInt
 import concrete.Domain
-import cspom.util.VecMap
 import concrete.util.ArraySet
+import cspom.util.VecMap
+import concrete.IntDomain
 
 object IndexedTable extends RelationGenerator {
   def apply(data: Iterable[Seq[Int]]): IndexedTable = {
@@ -38,7 +36,7 @@ final class IndexedTable(val tables: Array[VecMap[ArraySet[Int]]]) extends Relat
 
   def filterTrie(doms: Array[Domain], modified: List[Int]) = ???
 
-  def fillFound(f: (Int, Int) => Boolean, arity: Int) = ???
+  def supported(domains: Array[Domain]): Array[IntDomain] = ???
 
   override def toString = s"indexed table"
 

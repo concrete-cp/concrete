@@ -1,15 +1,14 @@
 package concrete.heuristic;
 
-import java.util.Comparator
-import concrete.Variable
-import concrete.Problem
-import scala.math.Ordering.DoubleOrdering
-import scala.util.Random
 import scala.annotation.tailrec
+import scala.util.Random
+
+import com.typesafe.scalalogging.LazyLogging
+
+import concrete.Domain
 import concrete.ParameterManager
 import concrete.ProblemState
-import concrete.Domain
-import com.typesafe.scalalogging.LazyLogging
+import concrete.Variable
 
 abstract class ScoredVariableHeuristic(params: ParameterManager, decisionVariables: Array[Variable]) extends VariableHeuristic(params, decisionVariables)
     with LazyLogging {

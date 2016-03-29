@@ -16,7 +16,10 @@ final class RandomValue(pm: ParameterManager) extends ValueHeuristic {
     // Nothing to compute
   }
 
-  private val rand = new Random(0)
+  private val rand = {
+    val seed = pm.getOrElse("heuristic.value.seed", 0L)
+    new Random(seed)
+  }
 
   override def selectIndex(variable: Variable, dom: Domain) = {
     dom(rand.nextInt(dom.size))

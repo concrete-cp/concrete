@@ -10,6 +10,8 @@ import cspom.extension.IdSet
 import concrete.util.TSCache
 import concrete.Domain
 import scala.collection.mutable.HashMap
+import concrete.IntDomain
+import concrete.util.SparseSeq
 
 object MDD {
   def apply(data: Traversable[Seq[Int]]): MDD = {
@@ -38,8 +40,8 @@ object MDD {
       case Seq((index, child))     => new MDD1(child, index)
       case Seq((i1, c1), (i2, c2)) => new MDD2(c1, i1, c2, i2)
       case e =>
-        val indices = t.map(_._1).toArray
-        new MDDn(newTrie(e: _*), indices, indices.length)
+        val indices = SparseSeq(t.map(_._1).toArray)
+        new MDDn(newTrie(e: _*), indices)
     }
   }
 
@@ -166,7 +168,7 @@ trait MDD extends Identified with Iterable[Seq[Int]] with LazyLogging {
 
   def filterTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): MDD
 
-  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax): Unit
+  def supported(ts: Int, doms: Array[Domain], newDomains: Array[IntDomain], depth: Int, l: SetWithMax): Unit
 
   final def lambda: BigInt = {
     lambda(new IdMap())
@@ -250,11 +252,12 @@ final object MDDLeaf extends MDD {
     assert(modified.isEmpty)
     this
   }
-  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax) = {
+  def supported(ts: Int, doms: Array[Domain], newDoms: Array[IntDomain], depth: Int, l: SetWithMax) = {
     //assert(depth > l.max)
     //println("leaf at depth " + depth)
     l.clearFrom(depth)
   }
+  
   def addTrie(tuple: Array[Int], i: Int) = {
     require(i >= tuple.length)
     this //throw new UnsupportedOperationException
@@ -287,7 +290,7 @@ final object MDD0 extends MDD {
   def iterator = Iterator()
   def edges(ts: Int) = 0
   def filterTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int) = MDD0
-  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax) {
+  def supported(ts: Int, doms: Array[Domain], nd: Array[IntDomain], depth: Int, l: SetWithMax) = {
     throw new UnsupportedOperationException
   }
   def addTrie(tuple: Array[Int], i: Int) = {
@@ -354,11 +357,12 @@ final class MDD1(private val child: MDD, private val index: Int) extends MDD {
       checkSup(ts, scope, p, i, index, child, support, depth))
   }
 
-  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax): Unit = {
+  def supported(ts: Int, doms: Array[Domain], newDomains: Array[IntDomain], depth: Int, l: SetWithMax): Unit = {
     cache(ts, (), {
       if (depth <= l.max) {
-        if (f(depth, index)) l -= depth
-        child.fillFound(ts, f, depth + 1, l)
+        newDomains(depth) |= index
+        if (newDomains(depth).length == doms(depth).length) l -= depth
+        child.supported(ts, doms, newDomains, depth + 1, l)
       }
     })
   }
@@ -434,7 +438,7 @@ final class MDD2(
           }
         case v: Int =>
           val newArray = MDD.newTrie((leftI, left), (rightI, right), (v, MDD0.addTrie(t, i + 1)))
-          new MDDn(newArray, Array(leftI, rightI, v), 3)
+          new MDDn(newArray, SparseSeq(Array(leftI, rightI, v)))
 
       }
     }
@@ -445,13 +449,14 @@ final class MDD2(
     case _        => false
   }
 
-  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax): Unit =
+  def supported(ts: Int, doms: Array[Domain], newDoms: Array[IntDomain], depth: Int, l: SetWithMax): Unit =
     cache(ts, (), {
       if (depth <= l.max) {
-        if (f(depth, leftI)) l -= depth
-        left.fillFound(ts, f, depth + 1, l)
-        if (f(depth, rightI)) l -= depth
-        right.fillFound(ts, f, depth + 1, l)
+        newDoms(depth) |= leftI
+        newDoms(depth) |= rightI
+        if (newDoms(depth).length == doms(depth).length) l -= depth
+        left.supported(ts, doms, newDoms, depth + 1, l)
+        right.supported(ts, doms, newDoms, depth + 1, l)
       }
     })
 
@@ -531,12 +536,11 @@ final class MDD2(
 
 final class MDDn(
     private val trie: Array[MDD],
-    private val indices: Array[Int],
-    private val nbIndices: Int) extends MDD {
+    private val indices: SparseSeq) extends MDD {
 
-  def copy(ts: Int) = cache(ts)(new MDDn(trie map (t => if (t eq null) null else t.copy(ts)), indices.clone, nbIndices))
+  def copy(ts: Int) = cache(ts)(new MDDn(trie.map(t => if (t eq null) null else t.copy(ts)), indices.clone))
 
-  def forSubtries(f: (Int, MDD) => Boolean) = forSubtries(f, nbIndices - 1)
+  def forSubtries(f: (Int, MDD) => Boolean) = forSubtries(f, indices.size - 1)
 
   @tailrec
   private def forSubtries(f: (Int, MDD) => Boolean, i: Int): Boolean = {
@@ -556,10 +560,9 @@ final class MDDn(
       val newTrie = trie.padTo(v + 1, null)
 
       if ((newTrie(v) eq null) || (newTrie(v) eq MDD0)) {
-        val ni = indices.padTo(nbIndices + 1, 0)
-        ni(nbIndices) = v
+        val ni = indices + v
         newTrie(v) = MDD0.addTrie(tuple, i + 1)
-        new MDDn(newTrie, ni, nbIndices + 1)
+        new MDDn(newTrie, ni)
       } else {
         val ntv = newTrie(v).addTrie(tuple, i + 1)
 
@@ -567,7 +570,7 @@ final class MDDn(
           this
         } else {
           newTrie(v) = ntv
-          new MDDn(newTrie, indices, nbIndices)
+          new MDDn(newTrie, indices)
         }
       }
 
@@ -585,66 +588,60 @@ final class MDDn(
     v < trie.length && (trie(v) ne null) && trie(v).contains(tuple, i + 1)
   }
 
-  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax): Unit = cache(ts, (), {
-    var i = nbIndices - 1
-    while (i >= 0 && depth <= l.max) {
-      val ti = indices(i)
-      if (f(depth, ti)) l -= depth
-      trie(ti).fillFound(ts, f, depth + 1, l)
-      i -= 1
+  def supported(ts: Int, doms: Array[Domain], newDomains: Array[IntDomain], depth: Int, l: SetWithMax): Unit = cache(ts, (), {
+
+    newDomains(depth) ++= indices
+
+    if (newDomains(depth).length == doms(depth).length) l -= depth
+
+    if (depth <= l.max) {
+      for (ti <- indices) {
+        trie(ti).supported(ts, doms, newDomains, depth + 1, l)
+      }
     }
   })
 
-  private def filteredTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): (Array[MDD], Int) = {
+  private def filteredTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): (Array[MDD], SparseSeq) = {
 
     val trie = this.trie
     val newTrie: Array[MDD] = new Array(trie.length)
-    var ii = nbIndices - 1
-    var nbNewIndices = nbIndices
+    var ii = indices.size - 1
+    var ind = indices
 
     while (ii >= 0) {
-      val i = indices(ii)
+      val i = ind(ii)
       if (doms(depth).present(i)) {
         val uT = trie(i).filterTrie(ts, doms, modified, depth + 1)
         if (uT eq MDD0) {
-          nbNewIndices = remIndex(ii, nbNewIndices)
+          ind = ind.removeIndex(ii)
         } else {
           newTrie(i) = uT
         }
       } else {
-        nbNewIndices = remIndex(ii, nbNewIndices)
+        ind = ind.removeIndex(ii)
       }
       ii -= 1
     }
-    (newTrie, nbNewIndices)
+    (newTrie, ind)
   }
 
-  private def remIndex(i: Int, nb: Int) = {
-    val nbNewIndices = nb - 1
-    val t = indices(nbNewIndices)
-    indices(nbNewIndices) = indices(i)
-    indices(i) = t
-    nbNewIndices
-
-  }
-
-  private def passedTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): (Array[MDD], Int) = {
+  private def passedTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): (Array[MDD], SparseSeq) = {
     val trie = this.trie
     val newTrie: Array[MDD] = new Array(trie.length)
-    var ii = nbIndices - 1
-    var nbNewIndices = nbIndices
+    var ii = indices.size - 1
+    var ind = indices
 
     while (ii >= 0) {
-      val i = indices(ii)
+      val i = ind(ii)
       val nT = trie(i).filterTrie(ts, doms, modified, depth)
       if (nT eq MDD0) {
-        nbNewIndices = remIndex(ii, nbNewIndices)
+        indices.removeIndex(ii)
       } else {
         newTrie(i) = nT
       }
       ii -= 1
     }
-    (newTrie, nbNewIndices)
+    (newTrie, ind)
   }
 
   def filterTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int = 0): MDD =
@@ -652,7 +649,7 @@ final class MDDn(
       this
     } else cache(ts) {
 
-      val (newTrie, nbNewIndices) =
+      val (newTrie, newIndices) =
         if (modified.head == depth) {
           // Some change at this level
           filteredTrie(ts, doms, modified.tail, depth)
@@ -661,18 +658,18 @@ final class MDDn(
           passedTrie(ts, doms, modified, depth + 1)
         }
 
-      if (nbNewIndices == 0) {
+      if (newIndices.isEmpty) {
         MDD0
-      } else if (same(newTrie, nbNewIndices, trie)) {
+      } else if (same(newTrie, newIndices.size, trie)) {
         this
       } else {
-        newNode(newTrie, nbNewIndices)
+        newNode(newTrie, newIndices)
       }
 
     }
 
-  private def newNode(t: Array[MDD], nbIndices: Int): MDD = {
-    nbIndices match {
+  private def newNode(t: Array[MDD], newIndices: SparseSeq): MDD = {
+    newIndices.size match {
       case 1 => {
         val i = indices(0)
         new MDD1(t(i), i)
@@ -682,16 +679,14 @@ final class MDDn(
         val j = indices(1)
         new MDD2(t(i), i, t(j), j)
       }
-      case _ => new MDDn(t, indices, nbIndices)
+      case _ => new MDDn(t, newIndices)
     }
 
   }
 
   private def same(t1: Array[MDD], newSize: Int, t2: Array[MDD]): Boolean = {
-    if (newSize != nbIndices) {
-      false
-    } else {
-      var i = nbIndices - 1
+    (newSize == indices.size) && {
+      var i = newSize - 1
       while (i >= 0 && (t1(indices(i)) eq t2(indices(i)))) {
         i -= 1
       }
@@ -699,12 +694,12 @@ final class MDDn(
     }
   }
 
-  def iterator = indices.iterator.take(nbIndices).map(i => (trie(i), i)) flatMap {
+  def iterator = indices.iterator.map(i => (trie(i), i)) flatMap {
     case (t, i) => t.iterator map (i +: _)
   }
 
   def edges(ts: Int): Int = cache(ts, 0,
-    nbIndices + indices.take(nbIndices).map(trie(_)).map(_.edges(ts)).sum)
+    indices.size + indices.map(trie(_)).map(_.edges(ts)).sum)
 
   override def isEmpty = false
 
@@ -719,8 +714,9 @@ final class MDDn(
           trie(i).findSupport(ts, scope, p, i, support, depth + 1)
         }
       } else {
+
         var s: Option[Array[Int]] = None
-        var j = nbIndices - 1
+        var j = indices.size - 1
         while (s.isEmpty && j >= 0) {
           val index = indices(j)
           if (scope(depth).present(index)) {

@@ -19,11 +19,10 @@
 
 package concrete.constraint.linear;
 
+import concrete.Contradiction
 import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Constraint
-import concrete.constraint.BC
-import concrete.Contradiction
 
 final class LeC(val v: Variable, val constant: Int) extends Constraint(Array(v)) {
   def init(ps: ProblemState) = ps

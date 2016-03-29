@@ -1,11 +1,10 @@
 package concrete.heuristic;
 
-import concrete.Variable
-import concrete.Problem
 import concrete.Domain
-import cspom.StatisticsManager
-import concrete.ProblemState
 import concrete.ParameterManager
+import concrete.Problem
+import concrete.ProblemState
+import concrete.Variable
 
 object Split {
   def splitAt(variable: Variable, med: Int, ps: ProblemState) = {

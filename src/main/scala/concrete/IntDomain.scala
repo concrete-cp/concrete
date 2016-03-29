@@ -124,6 +124,8 @@ abstract class IntDomain extends Domain {
 
   def |(value: Int): IntDomain
 
+  def ++(values: Traversable[Int]): IntDomain = values.foldLeft(this)(_ | _)
+
   def removeItv(from: Int, to: Int) = {
     val removed = removeFrom(from) | removeTo(to)
     if (removed.size == size) this else removed

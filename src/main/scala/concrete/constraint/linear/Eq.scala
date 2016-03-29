@@ -9,7 +9,7 @@ import concrete.constraint.BCCompanion
 import concrete.constraint.Constraint
 import concrete.constraint.Removals
 import concrete.Outcome
-import concrete.generator.constraint.ACBC
+import concrete.generator.ACBC
 import concrete.constraint.extension.BinaryExt
 
 object Eq {
@@ -48,11 +48,10 @@ final class EqACFast(val x: Variable, val b: Int, val y: Variable)
     val oldY = ps.dom(y)
     val newX = oldX & oldY.shift(-b)
 
-    
     ps.updateDom(x, newX)
       .andThen { ps =>
         val newY = newX.shift(b)
-        /**
+        /*
          * ProblemState does not detect NOP after two
          * complementary offset operations
          */

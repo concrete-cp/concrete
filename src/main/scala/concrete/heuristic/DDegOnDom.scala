@@ -1,11 +1,9 @@
 package concrete.heuristic;
 
-import concrete.constraint.Constraint
-import concrete.Problem
-import concrete.Variable
+import concrete.Domain
 import concrete.ParameterManager
 import concrete.ProblemState
-import concrete.Domain
+import concrete.Variable
 
 class DDegOnDom(params: ParameterManager, decisionVariables: Array[Variable]) extends ScoredVariableHeuristic(params, decisionVariables) {
 

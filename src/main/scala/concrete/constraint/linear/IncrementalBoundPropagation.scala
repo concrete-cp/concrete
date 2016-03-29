@@ -18,7 +18,6 @@ object IncrementalBoundPropagation {
 }
 
 trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[Domain], Interval, BitVector, Int)] {
-  import LinearLe._
   import IncrementalBoundPropagation._
 
   def is: Array[Int]
@@ -104,7 +103,7 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
     max: Int = 0): POutcome = {
 
     if (f.ub <= 0) {
-      /** Entailed */
+      /* Entailed */
       val rm = if (i < 0) max else math.max(max, is(i))
       //require(i < 0 || rm <= is(i))
       PFiltered(hasChanged, true, f, vars, rm)
@@ -114,7 +113,7 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
     } else if (i < 0) {
       PFiltered(hasChanged, false, f, vars, max)
     } else if (is(i) <= -f.lb) {
-      /** Short-circuit */
+      /* Short-circuit */
       val rm = math.max(max, is(i))
       //require(rm <= is(i), (max, rm, doms.toSeq, factors.toSeq, is.toSeq))
       PFiltered(hasChanged, false, f, vars, rm)

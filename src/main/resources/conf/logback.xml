@@ -10,7 +10,7 @@
 
 	</appender>
 
-	<logger name="concrete" level="info" />
+	<logger name="concrete" level="warn" />
 	<logger name="cspom" level="warn" />
 
 	<root level="warn">

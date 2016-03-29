@@ -125,6 +125,6 @@ class Occurrence(val result: Variable, val value: Variable,
 
   }
 
-  def simpleEvaluation: Int = ???
+  def simpleEvaluation: Int = 3
 
 }

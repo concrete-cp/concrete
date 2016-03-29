@@ -1,10 +1,9 @@
 package concrete.heuristic;
 
-import concrete.Variable
-import concrete.Problem
 import concrete.Domain
-import concrete.ProblemState
 import concrete.ParameterManager
+import concrete.Problem
+import concrete.Variable
 
 final class Lexico(pm: ParameterManager) extends ValueHeuristic {
 

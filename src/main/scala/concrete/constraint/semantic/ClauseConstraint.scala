@@ -1,15 +1,12 @@
 package concrete.constraint.semantic;
 
-import scala.annotation.tailrec
 import concrete.BooleanDomain
-import concrete.Domain
-import concrete.FALSE
-import concrete.TRUE
-import concrete.Variable
-import concrete.constraint.Constraint
 import concrete.Contradiction
-import concrete.ProblemState
+import concrete.FALSE
 import concrete.Outcome
+import concrete.ProblemState
+import concrete.TRUE
+import concrete.constraint.Constraint
 
 final class ClauseConstraint(clause: Clause) extends Constraint(clause.vars: _*) {
 

@@ -6,7 +6,7 @@ import concrete.constraint.linear.SumEQ
 import concrete.constraint.linear.SumLE
 import concrete.constraint.linear.SumLT
 import concrete.constraint.linear.SumNE
-import concrete.generator.constraint.SumGenerator
+import concrete.generator.SumGenerator
 import cspom.CSPOM
 import cspom.CSPOM.constant
 import cspom.CSPOM.constantSeq

@@ -9,18 +9,19 @@ import cspom.StatisticsManager
 
 class ConsoleWriter(val opts: Map[Symbol, Any], val stats: StatisticsManager) extends ConcreteWriter {
 
-  def parameters(params: NodeSeq) {
+  def parameters(params: NodeSeq,  it: Int) {
     for (p <- params \\ "p") {
 
       Console.println(s"% ${(p \ "@name").text} = ${p.text}")
 
     }
+    Console.println(s"% iteration $it")
 
   }
 
   def problem(problem: String) {
     if (opts.contains('stats))
-      Console.println("% " + problem)
+      Console.println(s"% $problem")
   }
 
   def solution(sol: String) {

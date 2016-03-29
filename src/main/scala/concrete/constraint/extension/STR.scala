@@ -1,10 +1,11 @@
 package concrete.constraint.extension
 
-import cspom.util.BitVector
 import java.util.Arrays
 import scala.annotation.tailrec
-import concrete.Variable
+import scala.math.BigInt.int2bigInt
 import concrete.Domain
+import concrete.IntDomain
+import concrete.EmptyIntDomain
 
 object STR extends RelationGenerator {
   def apply(data: Iterable[Seq[Int]]): STR = {
@@ -58,23 +59,23 @@ final class STR(arity: Int, val array: Array[Array[Int]], val bound: Int) extend
 
   private val pos: MutableList = new MutableList(arity)
 
-  def fillFound(f: (Int, Int) => Boolean, arity: Int) = {
+  def supported(domains: Array[Domain]): Array[IntDomain] = {
 
+    val newDomains = Array.fill[IntDomain](domains.length)(EmptyIntDomain)
     pos.refill()
 
     var i = bound - 1
     while (i >= 0) {
       val tuple = array(i)
-      pos.filter(p => !f(p, tuple(p)))
-      //      var pi = pos.size - 1
-      //      while (pi >= 0) {
-      //        val p = pos(pi)
-      //        if (f(p, tuple(p))) pos.remove(pi)
-      //        pi -= 1
-      //      }
+      pos.filter { p =>
+        ReduceableExt.fills += 1
+        newDomains(p) |= tuple(p)
+        newDomains(p).length != domains(p).length
+      }
       i -= 1
     }
-    pos.toSet
+
+    newDomains
   }
 
   override def toString = s"$bound of ${array.size} tuples:\n" + iterator.map(_.mkString(" ")).mkString("\n")

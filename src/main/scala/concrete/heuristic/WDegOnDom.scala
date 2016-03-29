@@ -31,5 +31,7 @@ class WDegOnDom(params: ParameterManager, decisionVariables: Array[Variable]) ex
   def score(variable: Variable, dom: Domain, state: ProblemState) = variable.getWDegEntailed(state).toDouble / dom.length
 
   override def toString = "max-wdeg/dom"
+  
+  override def shouldRestart = true
 
 }

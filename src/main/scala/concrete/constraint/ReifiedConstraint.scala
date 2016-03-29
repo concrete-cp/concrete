@@ -26,7 +26,7 @@ final class ReifiedConstraint(
    *  Only initializes constraint states as some constraints' init may remove values from domains
    */
   private def initCons(c: Constraint, ps: ProblemState): Outcome = {
-    /**
+    /*
      *  Keep state but restore domains. Probably won't work if constraint state depends on domain state :(
      */
     c.init(ps).andThen { consistent =>

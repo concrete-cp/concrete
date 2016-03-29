@@ -1,21 +1,22 @@
 package concrete.constraint.extension
 
+import java.lang.ref.WeakReference
+
 import scala.BigInt
+import scala.collection.mutable.WeakHashMap
+import scala.math.BigInt.int2bigInt
 import scala.util.Random
+
 import org.scalatest.FlatSpec
 import org.scalatest.Inspectors
 import org.scalatest.Matchers
+
 import concrete.Domain
 import concrete.IntDomain
 import concrete.Singleton
-import concrete.util.SetWithMax
-import concrete.generator.constraint.ExtensionGenerator
-import concrete.ParameterManager
-import scala.collection.mutable.HashMap
-import cspom.extension.IdMap
-import java.lang.ref.WeakReference
-import scala.collection.mutable.WeakHashMap
 import concrete.util.MDDGenerator
+import concrete.util.SetWithMax
+import cspom.extension.IdMap
 
 final class BDDRTest extends FlatSpec with Matchers with Inspectors {
 

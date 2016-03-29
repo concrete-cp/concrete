@@ -1,8 +1,6 @@
 package concrete.heuristic;
 
-import concrete.ParameterManager
 import concrete.ProblemState
-import concrete.Variable
 
 final class SeqHeuristic(heuristics: List[Heuristic]) extends Heuristic {
 

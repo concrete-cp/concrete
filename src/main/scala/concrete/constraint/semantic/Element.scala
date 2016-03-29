@@ -1,15 +1,11 @@
 package concrete.constraint.semantic
 
-import scala.collection.mutable.ArrayBuffer
 import concrete.Domain
+import concrete.Outcome
+import concrete.ProblemState
 import concrete.Variable
-import concrete.constraint.BCCompanion
 import concrete.constraint.Constraint
 import concrete.constraint.Removals
-import concrete.constraint.BC
-import concrete.ProblemState
-import concrete.Outcome
-import cspom.util.BitVector
 
 object Element {
   def apply(result: Variable, index: Variable, varsIdx: Seq[(Int, Variable)]) = {
@@ -70,7 +66,7 @@ class Element(val result: Variable,
 
   def revise(ps: ProblemState, modified: Seq[Int]): Outcome = {
     val resultDom = ps.dom(result)
-    /**
+    /*
      * Revise indices
      */
     ps.filterDom(this.index) { i =>
@@ -87,7 +83,7 @@ class Element(val result: Variable,
             .updateDom(selectedVar, intersect)
         } else {
 
-          /**
+          /*
            * Revise result
            */
           var union: Domain = null
@@ -95,12 +91,6 @@ class Element(val result: Variable,
             if (null == union) union = ps.dom(vars(i))
             else union |= ps.dom(vars(i))
           }
-//          val it = index.iterator
-//          var union = ps.dom(vars(it.next()))
-//          while (it.hasNext) {
-//            union |= ps.dom(vars(it.next()))
-//          }
-          //.map(i => ps.dom(vars(i))).reduce(_ | _) //reduceLeft((union, i) => union | ps.dom(vars(i)))
 
           ps.updateDom(result, resultDom & union)
 

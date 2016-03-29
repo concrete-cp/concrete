@@ -263,7 +263,7 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
 
   val RAND = new Random(0);
 
-  private def pickTabu[A](pool: Iterable[A], tabu: Map[A, Int], iteration: Int) = {
+  private def pickTabu[B](pool: Iterable[B], tabu: Map[B, Int], iteration: Int) = {
 
     randPick(pool.iterator.filter(v =>
       tabu.get(v).forall(_ < iteration))) match {

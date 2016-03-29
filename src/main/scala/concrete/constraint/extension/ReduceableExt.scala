@@ -20,17 +20,14 @@
 package concrete.constraint.extension;
 
 import com.typesafe.scalalogging.LazyLogging
+
 import concrete.Contradiction
-import concrete.EmptyIntDomain
-import concrete.Outcome
 import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.Removals
 import concrete.constraint.StatefulConstraint
 import cspom.Statistic
-import concrete.IntDomain
-import concrete.Domain
 
 object ReduceableExt {
   @Statistic

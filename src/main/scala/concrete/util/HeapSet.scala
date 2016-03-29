@@ -1,8 +1,5 @@
 package concrete.util
 
-import concrete.priorityqueues.Identified
-import cspom.util.BitVector
-
 object HeapSet {
   def empty(n: Int) = new HeapSet(EmptyHeap, Vector.fill(n)(-1))
 }

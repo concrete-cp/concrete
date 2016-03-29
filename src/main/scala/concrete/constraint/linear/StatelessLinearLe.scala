@@ -1,17 +1,12 @@
 package concrete.constraint.linear
 
-import concrete.ParameterManager
 import com.typesafe.scalalogging.LazyLogging
-import concrete.constraint.Removals
+
 import concrete.Contradiction
-import concrete.Variable
-import concrete.ProblemState
-import cspom.Statistic
 import concrete.Outcome
-import concrete.Domain
-import concrete.util.Interval
-import cspom.util.BitVector
-import concrete.util.Math
+import concrete.ParameterManager
+import concrete.ProblemState
+import concrete.Variable
 
 object StatelessLinearLe {
   def apply(constant: Int, factors: Array[Int], scope: Array[Variable], strict: Boolean, pm: ParameterManager) = {

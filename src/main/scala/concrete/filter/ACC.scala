@@ -1,5 +1,6 @@
 package concrete.filter;
 
+import scala.reflect.runtime.universe
 import com.typesafe.scalalogging.LazyLogging
 import concrete.Contradiction
 import concrete.Outcome
@@ -10,14 +11,13 @@ import concrete.Variable
 import concrete.constraint.Advisable
 import concrete.constraint.AdviseCount
 import concrete.constraint.Constraint
-import concrete.constraint.Removals
+import concrete.constraint.StatefulConstraint
 import concrete.heuristic.revision.Eval
 import concrete.priorityqueues.QuickFifos
 import cspom.Statistic
 import cspom.StatisticsManager
 import concrete.priorityqueues.PriorityQueue
 import concrete.heuristic.revision.Key
-import concrete.constraint.StatefulConstraint
 
 object ACC extends LazyLogging {
   def control(problem: Problem, state: ProblemState): Option[Constraint] = {
@@ -31,10 +31,10 @@ object ACC extends LazyLogging {
 final class ACC(val problem: Problem, params: ParameterManager) extends Filter with LazyLogging {
 
   private val queueType: Class[_ <: PriorityQueue[Constraint]] =
-    params.getOrElse("ac3c.queue", classOf[QuickFifos[Constraint]])
+    params.classInPackage("ac3c.queue", "concrete.priorityqueues", classOf[QuickFifos[Constraint]])
 
   private val keyType: Class[_ <: Key[Constraint]] =
-    params.getOrElse("ac3c.key", classOf[Eval])
+    params.classInPackage("ac3c.key", "concrete.heuristic.revision", classOf[Eval])
 
   private val key = keyType.getConstructor().newInstance()
 
@@ -127,7 +127,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
         -1
       }
 
-      logger.debug(s"Queueing ${c.id}. ${c.toString(states)}, positions = ${positions.mkString("[", ", ", "]")}, advise = $a")
+      logger.trace(s"Queueing ${c.id}. ${c.toString(states)}, positions = ${positions.mkString("[", ", ", "]")}, advise = $a")
       //logger.fine(c + ", " + modified.positionInConstraint(i) + " : " + a)
       if (a >= 0) queue.offer(c, key.getKey(c, states, a))
 

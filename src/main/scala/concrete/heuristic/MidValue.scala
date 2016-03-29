@@ -1,10 +1,9 @@
 package concrete.heuristic;
 
-import concrete.Variable
-import concrete.Problem
 import concrete.Domain
-import cspom.StatisticsManager
 import concrete.ParameterManager
+import concrete.Problem
+import concrete.Variable
 import cspom.UNSATException
 
 final class MidValue(pm: ParameterManager) extends ValueHeuristic {

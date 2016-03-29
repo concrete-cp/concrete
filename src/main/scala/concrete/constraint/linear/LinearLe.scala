@@ -32,7 +32,6 @@ final class LinearLe(
   val is: Array[Int]) extends Linear(constant, factors, scope, SumLE)
     with IncrementalBoundPropagation with Removals with LazyLogging {
 
-  import LinearLe._
   import IncrementalBoundPropagation._
 
   override def isConsistent(ps: ProblemState, mod: Seq[Int]) = {

@@ -16,10 +16,22 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
 import com.typesafe.config.ConfigFactory
 import java.io.File
+import scala.util.Try
+import java.sql.SQLException
+import scala.util.Failure
 
-sealed trait ErrorHandling
-case object ErrorInfinity extends ErrorHandling
-case object ErrorKeep extends ErrorHandling
+sealed trait ErrorHandling {
+  def toDouble(stat: Double): Double
+}
+case object ErrorInfinity extends ErrorHandling {
+  def toDouble(stat: Double) = Double.PositiveInfinity
+}
+case object ErrorKeep extends ErrorHandling {
+  def toDouble(stat: Double) = stat
+}
+case object ErrorZero extends ErrorHandling {
+  def toDouble(stat: Double) = 0.0
+}
 
 object Table extends App {
 
@@ -75,8 +87,24 @@ object Table extends App {
   case class Resultat[A](
       status: String,
       statistic: A) {
-    def solved = status.startsWith("Success")
+    def solved: Failure = {
+      if (status == "SAT" || status == "UNSAT") {
+        Success
+      } else if (status.contains("Timeout")) {
+        Timeout
+      } else if (status.contains("OutOfMemory") || status.contains("relation is too large")) {
+        OOM
+      } else {
+        UnknownError
+      }
+    }
   }
+
+  sealed trait Failure
+  case object Success extends Failure
+  case object Timeout extends Failure
+  case object OOM extends Failure
+  case object UnknownError extends Failure
 
   implicit val getProblemResult = GetResult(r => Problem(r.<<, r.<<, r.<<, r.<<, r.nextStringOption.map(_.split(",")).getOrElse(Array())))
 
@@ -126,7 +154,7 @@ object Table extends App {
     Array.fill(configs.size)(0)
   }
 
-  val errorHandling: ErrorHandling = statistic match {
+  val timeoutHandler: ErrorHandling = statistic match {
     case "rps"          => ErrorKeep
     case "nodes"        => ErrorInfinity
     case "time"         => ErrorInfinity
@@ -136,11 +164,24 @@ object Table extends App {
     case "nps"          => ErrorKeep
   }
 
-  val ignoreNaN = true
+  val oomHandler: ErrorHandling = statistic match {
+    case "rps"          => ErrorZero
+    case "nodes"        => ErrorInfinity
+    case "time"         => ErrorInfinity
+    case "revisions"    => ErrorInfinity
+    case "mem"          => ErrorInfinity
+    case "domainChecks" => ErrorInfinity
+    case "nps"          => ErrorZero
+  }
 
-  val aggregator = StatisticsManager.median[Double](_)
+  // val ignoreNaN = true
+
+  val aggregator = {
+    data: Seq[Double] => if (data.isEmpty) -1 else StatisticsManager.median[Double](data)
+  }
 
   for (Problem(problemId, problem, nbvars, nbcons, tags) <- problems) {
+
     val data = ListBuffer(s"$problem ($problemId)") //, nbvars, nbcons)
     //print("\\em %s & \\np{%d} & \\np{%d}".format(problem, nbvars, nbcons))
     //print("\\em %s ".format(problem))
@@ -207,7 +248,7 @@ object Table extends App {
 
       case "revisions" => sql"""
                                 SELECT "configId", status, solution, 
-                                  cast(stat('solver.filter.revisions', "executionId") as int)
+                                  cast(stat('solver.filter.revisions', "executionId") as bigint)
                                 FROM "Execution"
                                 WHERE (version, "problemId") = ($version, $problemId)"""
 
@@ -222,24 +263,39 @@ object Table extends App {
           .toMap
       }
 
-    val results = Await.result(resultsQ, Duration.Inf)
+    val trie = Try(Await.result(resultsQ, Duration.Inf))
+      .recoverWith {
+        case e: Exception =>
+          e.printStackTrace()
+          Failure(e)
+      }
 
+    print(s"$problem\t")
     for {
+      results <- trie
       i <- configs.indices
       j = results.getOrElse(configs(i).configId, Resultat("not started", Double.NaN))
-      tag <- tags
     } {
-      if (j.solved) {
-        nbSolved(tag)(i) += 1
-        totals((tag, i)) ::= j.statistic
-      } else {
-        println(s"$problemId. $problem, ${configs(i)}: $j")
-        totals((tag, i)) ::= (errorHandling match {
-          case ErrorInfinity => Double.PositiveInfinity
-          case ErrorKeep     => j.statistic
-        })
+      val stat = j.solved match {
+        case Success =>
+          for (tag <- tags)
+            nbSolved(tag)(i) += 1
+          j.statistic
+        case Timeout =>
+          // println(s"$problemId. $problem, ${configs(i)}: $j")
+          timeoutHandler.toDouble(j.statistic)
+        case OOM =>
+          oomHandler.toDouble(j.statistic)
+        case _ =>
+          //println(s"$problemId. $problem, ${configs(i)}: $j")
+          print(s"$j:")
+          Double.NaN
       }
+      print(s"$stat\t")
+      for (tag <- tags)
+        totals((tag, i)) ::= stat
     }
+    println()
 
     //    for (
     //      i <- configs.indices; j <- configs.indices if i != j;
@@ -304,9 +360,10 @@ object Table extends App {
     //println(s"$k: $t")
     val medians = configs.indices.map {
       i =>
-        if (ignoreNaN) {
-          aggregator(t(i).filterNot(_.isNaN))
-        } else if (t(i).exists(_.isNaN)) {
+        //if (ignoreNaN) {
+        //  aggregator(t(i).filterNot(_.isNaN))
+        //} else 
+        if (t(i).exists(_.isNaN)) {
           Double.NaN
         } else {
           try aggregator(t(i))

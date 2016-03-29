@@ -1,14 +1,13 @@
 package concrete.heuristic;
 
-import java.util.Comparator
-import concrete.Variable
-import concrete.Problem
-import scala.math.Ordering.DoubleOrdering
-import scala.util.Random
 import scala.annotation.tailrec
+import scala.reflect.runtime.universe
+import scala.util.Random
+
+import concrete.Domain
 import concrete.ParameterManager
 import concrete.ProblemState
-import concrete.Domain
+import concrete.Variable
 
 abstract class VariableHeuristic(params: ParameterManager, val decisionVariables: Array[Variable]) {
   protected val rand: Option[Random] = {
@@ -22,7 +21,7 @@ abstract class VariableHeuristic(params: ParameterManager, val decisionVariables
 
   final def select(state: ProblemState): Option[Variable] = {
     var i = decisionVariables.length - 1
-    while (i >= 0 && state.dom(decisionVariables(i)).length == 1) i -= 1
+    while (i >= 0 && state.dom(decisionVariables(i)).isAssigned) i -= 1
     if (i < 0) None else Some(select(i, state))
   }
 

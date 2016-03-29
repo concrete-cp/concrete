@@ -1,11 +1,14 @@
 package concrete
 package constraint.extension
 
+import scala.Iterator
 import scala.collection.mutable.HashMap
+import scala.math.BigInt.int2bigInt
+
+import concrete.Domain
+import concrete.IntDomain
 import concrete.util.TSCache
 import cspom.extension.IdMap
-import concrete.util.SetWithMax
-import scala.collection.mutable.ArrayBuffer
 
 object BDDM {
   def apply(t: Traversable[List[Int]]): BDDM = {

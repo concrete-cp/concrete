@@ -43,6 +43,10 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import com.typesafe.config.ConfigFactory
 import java.io.File
+import scala.util.Failure
+import scala.util.Success
+import java.io.StringWriter
+import java.io.PrintWriter
 
 object SQLWriter {
 
@@ -119,22 +123,23 @@ object SQLWriter {
 
   def findConfigByMD5 = configs.findBy(_.md5)
 
-  class Execution(tag: Tag) extends Table[(Int, String, Int, Int, Timestamp, Option[Timestamp], Option[String], String, Option[String])](tag, "Execution") {
+  class Execution(tag: Tag) extends Table[(Int, String, Int, Int, Int, Timestamp, Option[Timestamp], Option[String], String, Option[String])](tag, "Execution") {
     def executionId = column[Int]("executionId", O.PrimaryKey, O.AutoInc)
     def version = column[String]("version")
     def configId = column[Int]("configId")
     def problemId = column[Int]("problemId")
+    def iteration = column[Int]("iteration")
     def start = column[Timestamp]("start")
     def end = column[Option[Timestamp]]("end")
     def hostname = column[Option[String]]("hostname")
     def solution = column[Option[String]]("solution")
     def status = column[String]("status", O.Default("started"))
 
-    def * = (executionId, version, configId, problemId, start, end, hostname, status, solution)
+    def * = (executionId, version, configId, problemId, iteration, start, end, hostname, status, solution)
 
     def fkConfig = foreignKey("fkConfig", configId, configs)(_.configId, onDelete = ForeignKeyAction.Cascade)
     def fkProblem = foreignKey("fkProblem", problemId, problems)(_.problemId, onDelete = ForeignKeyAction.Cascade)
-    def idxVCP = index("idxVCP", (version, configId, problemId), unique = true)
+    def idxVCP = index("idxVCP", (version, configId, problemId, iteration), unique = true)
   }
 
   val executions = TableQuery[Execution]
@@ -199,7 +204,7 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
 
   private def version: String = concrete.Info.version
 
-  def parameters(params: NodeSeq) {
+  def parameters(params: NodeSeq, it: Int) {
 
     configId = initDB
       .recover {
@@ -218,7 +223,7 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
     val ef = for (
       c <- configId;
       p <- problemId;
-      e <- execution(p, c, version)
+      e <- execution(p, c, version, it)
     ) yield e
 
     executionId =
@@ -271,7 +276,7 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
 
   }
 
-  private def execution(p: Int, c: Int, version: String) = {
+  private def execution(p: Int, c: Int, version: String, it: Int) = {
 
     val executionId = db.run(
       executions.map(e =>
@@ -291,18 +296,35 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
   }
 
   def solution(solution: String) {
+    val currentSolution = executions.filter(_.executionId === executionId.get).map(_.solution)
     //require(executionId.nonEmpty, "Problem description or parameters were not defined")
-    db.run {
-      executions.filter(_.executionId === executionId.get).map(_.solution).update(Some(solution))
+    val f = db.run {
+      currentSolution.result.headOption
     }
+      .flatMap { old =>
+        val newSol = old.flatten.map(_ + "\n").getOrElse("") + solution
+        db.run(currentSolution.update(Some(newSol)))
+      }
+
+    Await.ready(f, Duration.Inf)
   }
 
   def error(thrown: Throwable) {
-    //println(e.toString)
-    thrown.printStackTrace()
+    val errors = {
+      val e = new StringWriter()
+      thrown.printStackTrace(new PrintWriter(e))
+      e.toString
+    }
+    System.err.println(errors)
+
     for (e <- executionId) {
       db.run {
-        executions.filter(_.executionId === e).map(_.solution).update(Some(thrown.getStackTrace.mkString("\n")))
+        executions
+          .filter(_.executionId === e)
+          .map(_.solution)
+          .update {
+            Some(errors)
+          }
       }
     }
   }
@@ -313,9 +335,19 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
 
         val dbexec = for (dbe <- executions if dbe.executionId === e) yield dbe
 
+        val result = status match {
+          case Success(true)  => "SAT"
+          case Success(false) => "UNSAT"
+          case Failure(e) =>
+            def causes(e: Throwable): Seq[Throwable] = {
+              Option(e).map(e => e +: causes(e.getCause)).getOrElse(Seq())
+            }
+            causes(e).mkString("\nCaused by: ")
+        }
+
         val r0 = db.run {
           dbexec.map(e => (e.end, e.status)).update(
-            (Some(SQLWriter.now), status.toString))
+            (Some(SQLWriter.now), result))
         }
 
         val r = for ((key, value) <- stats.digest) yield {

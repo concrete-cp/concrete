@@ -1,26 +1,24 @@
 package concrete.constraint.extension
 
+import scala.collection.mutable.BitSet
 import concrete.Contradiction
 import concrete.Domain
-import concrete.Outcome
+import concrete.EmptyIntDomain
+import concrete.IntDomain
 import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.Removals
 import concrete.constraint.StatefulConstraint
 import concrete.util.SparseSet
-import concrete.EmptyIntDomain
-import concrete.IntDomain
-import scala.collection.mutable.BitSet
-import cspom.util.BitVector
 
 /* MDDRelation comes with its own timestamp */
 class MDDCd(_scope: Array[Variable], val mdd: MDDRelation)
-    extends Constraint(_scope) with Removals with StatefulConstraint[BitSet] {
+    extends Constraint(_scope) with Removals with StatefulConstraint[SparseSet] {
 
   override def init(ps: ProblemState) = {
     val max = mdd.identify() + 1
-    ps.updateState(this, new BitSet(max)) //new SparseSet(max))
+    ps.updateState(this, new SparseSet(max)) //new SparseSet(max))
   }
 
   // Members declared in concrete.constraint.Constraint
@@ -44,7 +42,7 @@ class MDDCd(_scope: Array[Variable], val mdd: MDDRelation)
 
     var delta = arity
 
-    val gNo = ps(this).clone()
+    var gNo = ps(this)  //.clone()
 
     var gNoChange = false
 

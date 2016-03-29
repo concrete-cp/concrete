@@ -1,20 +1,15 @@
 package concrete.generator.cspompatterns
 
-import scala.collection.immutable.Queue
-import scala.collection.mutable.HashMap
 import cspom.CSPOM
+import cspom.CSPOM.SeqOperations
 import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.extension.MDD
 import cspom.extension.MDDNode
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
-import cspom.variable.CSPOMVariable
-import cspom.variable.IntExpression.implicits.iterable
-import cspom.compiler.Delta
-import cspom.variable.CSPOMExpression
-import cspom.variable.SimpleExpression
 import cspom.variable.IntExpression
+import cspom.variable.SimpleExpression
 
 final object Regular extends ConstraintCompilerNoData {
 
@@ -49,7 +44,7 @@ final object Regular extends ConstraintCompilerNoData {
 
     val regular = mdd(x.length, s, d, q0, f.toSet, collection.mutable.Map())
     //println(s"generated MDD for $constraint with ${regular.edges} edges")
-    replaceCtr(constraint, CSPOM.SeqOperations(x) in regular, problem)
+    replaceCtr(constraint, x in regular, problem)
   }
 
   def mdd(level: Int, s: Int, d: IndexedSeq[IndexedSeq[Int]], q0: Int, f: Set[Int],

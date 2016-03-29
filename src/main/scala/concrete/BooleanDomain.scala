@@ -238,7 +238,10 @@ sealed trait BooleanDomain extends Domain {
 
   def filterBounds(f: Int => Boolean) = filter(f)
 
-  def shift(o: Int) = throw new UnsupportedOperationException
+  def shift(o: Int) = {
+    require(o == 0)
+    this
+  }
 
   def removeItv(from: Int, to: Int) = {
     val r0 = if (from <= 0 && 0 <= to) remove(0) else this

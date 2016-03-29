@@ -2,14 +2,9 @@ package concrete.runner
 
 import java.net.URL
 import java.security.InvalidParameterException
-
-import scala.annotation.migration
 import scala.reflect.runtime.universe
-
 import org.scalameter.Quantity
-
 import com.typesafe.scalalogging.LazyLogging
-
 import concrete.CSPOMSolver
 import concrete.Variable
 import concrete.generator.cspompatterns.FZPatterns
@@ -32,7 +27,6 @@ import concrete.heuristic.SeqHeuristic
 import concrete.heuristic.SmallestValue
 import concrete.heuristic.Split
 import concrete.heuristic.VariableHeuristic
-import concrete.heuristic.WDegOnDom
 import cspom.CSPOM
 import cspom.CSPOM.seq2CSPOMSeq
 import cspom.CSPOMGoal
@@ -48,6 +42,7 @@ import cspom.flatzinc.FlatZincParser
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
+import concrete.Problem
 
 object FZConcrete extends CSPOMRunner with LazyLogging {
 
@@ -68,60 +63,59 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
     }
   }
 
-  private def parseGoalAnnotation(ann: FZAnnotation, variables: Map[CSPOMVariable[_], Variable]): Option[Heuristic] = {
-    PartialFunction.condOpt(ann) {
-      case a if a.predAnnId == "seq_search" =>
-        val Seq(strategies: FZArrayExpr[_]) = a.expr
-        new SeqHeuristic(
-          strategies.value
-            .flatMap {
-              case a: FZAnnotation => parseGoalAnnotation(a, variables)
-              case a               => sys.error(s"Annotation expected in $strategies, found $a")
-            }
-            .toList)
-      case a if a.predAnnId == "int_search" || a.predAnnId == "bool_search" =>
-        val Seq(p, vca, aa, strategyannotation) = a.expr
-        val CSPOMSeq(pool) = ann2expr(cspom, p)
-        val decisionVariables = pool.collect {
-          case v: CSPOMVariable[_] => variables(v)
+  private def parseGoalAnnotation(variables: Map[CSPOMVariable[_], Variable]): PartialFunction[FZAnnotation, Heuristic] = {
+    case a if a.predAnnId == "seq_search" =>
+      val Seq(strategies: FZArrayExpr[_]) = a.expr
+      new SeqHeuristic(
+        strategies.value.map {
+          case a: FZAnnotation => parseGoalAnnotation(variables)(a)
+          case a               => sys.error(s"Annotation expected in $strategies, found $a")
         }
-          .toArray
+          .toList)
+    case a if a.predAnnId == "int_search" || a.predAnnId == "bool_search" =>
+      val Seq(p, vca, aa, strategyannotation) = a.expr
+      val CSPOMSeq(pool) = ann2expr(cspom, p)
+      val decisionVariables = pool.collect {
+        case v: CSPOMVariable[_] => variables(v)
+      }
+        .toArray
 
-        val FZAnnotation(varchoiceannotation, _) = vca
+      val FZAnnotation(varchoiceannotation, _) = vca
 
-        val varh: VariableHeuristic = varchoiceannotation match {
-          case "input_order"      => new LexVar(pm, decisionVariables)
-          case "first_fail"       => new Dom(pm, decisionVariables)
-          case "antifirst_fail"   => new MaxDom(pm, decisionVariables)
-          case "smallest"         => new SmallestValue(pm, decisionVariables)
-          case "largest"          => new LargestValue(pm, decisionVariables)
-          case "occurrence"       => new DDeg(pm, decisionVariables)
-          case "most_constrained" => new Brelaz(pm, decisionVariables)
-          case "max_regret"       => new MaxRegret(pm, decisionVariables)
-          case h =>
-            logger.warn(s"Unsupported varchoice $h")
-            CrossHeuristic.defaultVar(pm, decisionVariables)
+      val varh: VariableHeuristic = varchoiceannotation match {
+        case "input_order"      => new LexVar(pm, decisionVariables)
+        case "first_fail"       => new Dom(pm, decisionVariables)
+        case "antifirst_fail"   => new MaxDom(pm, decisionVariables)
+        case "smallest"         => new SmallestValue(pm, decisionVariables)
+        case "largest"          => new LargestValue(pm, decisionVariables)
+        case "occurrence"       => new DDeg(pm, decisionVariables)
+        case "most_constrained" => new Brelaz(pm, decisionVariables)
+        case "max_regret"       => new MaxRegret(pm, decisionVariables)
+        case "free"             => CrossHeuristic.defaultVar(pm, decisionVariables)
+        case h =>
+          logger.warn(s"Unsupported varchoice $h")
+          CrossHeuristic.defaultVar(pm, decisionVariables)
 
-        }
+      }
 
-        val FZAnnotation(assignmentannotation, _) = aa
+      val FZAnnotation(assignmentannotation, _) = aa
 
-        val valh = assignmentannotation match {
-          case "indomain"               => new Lexico(pm)
-          case "indomain_min"           => new Lexico(pm)
-          case "indomain_max"           => new RevLexico(pm)
-          case "indomain_median"        => new MedValue(pm)
-          case "indomain_random"        => new RandomValue(pm)
-          case "indomain_split"         => new Split(pm)
-          case "indomain_reverse_split" => new RevSplit(pm)
-          case "indomain_interval"      => new IntervalBranch(pm)
-          case h =>
-            logger.warn(s"Unsupported assignment heuristic $h")
-            CrossHeuristic.defaultVal(pm)
-        }
+      val valh = assignmentannotation match {
+        case "indomain"               => new Lexico(pm)
+        case "indomain_min"           => new Lexico(pm)
+        case "indomain_max"           => new RevLexico(pm)
+        case "indomain_median"        => new MedValue(pm)
+        case "indomain_random"        => new RandomValue(pm)
+        case "indomain_split"         => new Split(pm)
+        case "indomain_reverse_split" => new RevSplit(pm)
+        case "indomain_interval"      => new IntervalBranch(pm)
+        case "indomain_free"          => CrossHeuristic.defaultVal(pm)
+        case h =>
+          logger.warn(s"Unsupported assignment heuristic $h")
+          CrossHeuristic.defaultVal(pm)
+      }
 
-        new CrossHeuristic(pm, varh, valh)
-    }
+      CrossHeuristic(varh, valh)
   }
 
   def parseGoal(goal: CSPOMGoal, freeSearch: Boolean, variables: Map[CSPOMVariable[_], Variable]): Seq[Heuristic] = {
@@ -130,8 +124,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
     } else {
       val ann: Seq[FZAnnotation] = goal.getSeqParam("fzSolve")
 
-      ann.flatMap(fzAnnotation =>
-        parseGoalAnnotation(fzAnnotation, variables))
+      ann.collect(parseGoalAnnotation(variables))
 
     }
   }
@@ -187,37 +180,38 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
 
   }
 
-  override def applyParametersPre(opt: Map[Symbol, Any]): Unit = {
+  override def applyParametersPre(problem: Problem, opt: Map[Symbol, Any]): Unit = {
 
     val heuristics = parseGoal(cspom.goal.get, opt.contains('free), variables)
-    val decisionVariables = heuristics
-      .collect {
+
+    val decisionVariables: Set[Variable] = heuristics
+      .flatMap {
         case c: CrossHeuristic => c.variableHeuristic.decisionVariables
+        case _: Heuristic      => Seq()
       }
-      .flatten.distinct
+      .toSet
+    //.flatten
 
-    val heuristic =
-      if (decisionVariables.size < variables.size) {
-        val remainingVariables = (variables.values.toSet -- decisionVariables).toArray
+    val completed = if (decisionVariables.size < variables.size) {
+      val remainingVariables = problem.variables.filterNot(decisionVariables)
 
-        val shouldRestart = heuristics.exists(_.shouldRestart)
-
-        val additional =
-          if (shouldRestart) {
-            CrossHeuristic(pm, remainingVariables)
-          } else {
-            new CrossHeuristic(pm, new WDegOnDom(pm, remainingVariables) { override def shouldRestart = false }, new Lexico(pm))
-          }
-        new SeqHeuristic(heuristics.toList :+ additional)
+      if (heuristics.isEmpty || heuristics.exists(_.shouldRestart)) {
+        heuristics :+ CrossHeuristic(pm, remainingVariables)
       } else {
-        heuristics match {
-          case Seq(h) => h
-          case m      => new SeqHeuristic(m.toList)
-        }
+        /* Avoid introducing restarts if all defined heuristics do not enforce it */
+        heuristics :+ CrossHeuristic(pm, remainingVariables).copy(shouldRestart = false)
       }
+    } else {
+      heuristics
+    }
+
+    val heuristic = completed match {
+      case Seq(h) => h
+      case m      => new SeqHeuristic(m.toList)
+    }
 
     logger.info(heuristic.toString + ", should restart: " + heuristic.shouldRestart)
-    // println(heuristic)
+
     pm("mac.heuristic") = heuristic
 
   }
@@ -306,7 +300,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
 
     sys.exit(
       if (status.isSuccess) 0 else 1)
-//    run(args)
+    //    run(args)
   }
 
 }

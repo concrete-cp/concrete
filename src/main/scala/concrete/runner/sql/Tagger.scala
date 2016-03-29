@@ -44,7 +44,9 @@ object Tagger extends App {
     
 
     val upd: Seq[DBIO[Int]] = problems.flatMap { p =>
+      
       val path = new URI(p.name).getPath.split('/')
+      println(path.toSeq)
       val name = path.last
       val cats = path.init
 
@@ -64,7 +66,9 @@ object Tagger extends App {
 
     val go = DB.run(DBIO.sequence(upd))
 
-    concurrent.Await.ready(go, Duration.Inf)
+    val r = concurrent.Await.result(go, Duration.Inf)
+    
+    println(r)
     //println(run.isCompleted)
   } finally {
 

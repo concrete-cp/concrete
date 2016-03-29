@@ -9,7 +9,7 @@ import cspom.variable.IntVariable
 import cspom.compiler.MergeEq
 import cspom.compiler.CSPOMCompiler
 import cspom.variable.CSPOMConstant
-import concrete.generator.constraint.SumGenerator
+import concrete.generator.SumGenerator
 
 class SumFactorsTest extends FlatSpec with Matchers {
   "SumFactors" should "canonize" in {

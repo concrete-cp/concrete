@@ -1,13 +1,9 @@
 package concrete.heuristic;
 
-import scala.collection.JavaConversions
-import concrete.constraint.Constraint
-import concrete.Problem
-import concrete.Variable
-import scala.annotation.tailrec
+import concrete.Domain
 import concrete.ParameterManager
 import concrete.ProblemState
-import concrete.Domain
+import concrete.Variable
 
 final class DDegFreeOnDom(params: ParameterManager, decisionVariables: Array[Variable]) extends ScoredVariableHeuristic(params, decisionVariables) {
 

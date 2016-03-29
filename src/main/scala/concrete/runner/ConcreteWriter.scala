@@ -9,7 +9,7 @@ trait ConcreteWriter {
 
   def stats: StatisticsManager
 
-  def parameters(params: NodeSeq): Unit
+  def parameters(params: NodeSeq, iteration: Int): Unit
   def problem(problem: String): Unit
 
   def solution(solution: String): Unit

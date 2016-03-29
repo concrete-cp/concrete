@@ -1,14 +1,13 @@
 package concrete.constraint.linear
 
 import com.typesafe.scalalogging.LazyLogging
-import concrete.constraint.Removals
+
 import concrete.Contradiction
-import concrete.Variable
-import concrete.ProblemState
-import cspom.util.BitVector
 import concrete.Outcome
-import concrete.Domain
+import concrete.ProblemState
+import concrete.Variable
 import concrete.util.Interval
+import cspom.util.BitVector
 
 object StatelessLinearEq {
   def apply(constant: Int, factors: Array[Int], scope: Array[Variable]) = {

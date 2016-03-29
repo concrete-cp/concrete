@@ -1,20 +1,11 @@
 package concrete.generator.cspompatterns
+
+import scala.reflect.runtime.universe
+
 import cspom.CSPOM
 import cspom.CSPOMConstraint
-import cspom.variable.CSPOMVariable
-import scala.util.Random
-import scala.util.control.Breaks._
-import com.typesafe.scalalogging.LazyLogging
-import cspom.compiler.ConstraintCompiler
-import cspom.variable.CSPOMConstant
-import cspom.compiler.Delta
-import cspom.variable.CSPOMSeq
-import scala.collection.mutable.WeakHashMap
-import cspom.variable.CSPOMExpression
 import cspom.compiler.ConstraintCompilerNoData
-import concrete.CSPOMDriver
-import CSPOMDriver._
-import cspom.variable.BoolVariable
+import cspom.variable.CSPOMConstant
 import cspom.variable.IntVariable
 import cspom.variable.SimpleExpression
 

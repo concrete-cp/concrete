@@ -24,7 +24,7 @@ object SumFactors extends ConstraintCompiler {
         val rparams = fparams.map(_ / gcd)
         val rresult = result / gcd
         if (rparams != coefs || rresult != result) {
-          Some(fargs, rparams, rresult)
+          Some((fargs, rparams, rresult))
         } else {
           None
         }

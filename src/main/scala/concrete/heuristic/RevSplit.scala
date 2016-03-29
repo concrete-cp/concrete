@@ -1,11 +1,10 @@
 package concrete.heuristic;
 
-import concrete.Variable
-import concrete.Problem
 import concrete.Domain
-import cspom.StatisticsManager
-import concrete.ProblemState
 import concrete.ParameterManager
+import concrete.Problem
+import concrete.ProblemState
+import concrete.Variable
 
 final class RevSplit(pm: ParameterManager) extends BranchHeuristic {
 

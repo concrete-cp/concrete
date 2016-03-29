@@ -43,6 +43,20 @@ final class ParameterManager {
     got
   }
 
+  def classInPackage[T](name: String, pack: String, default: => Class[T]): Class[T] = {
+    (parameters.get(name) match {
+      case Some(s: String) =>
+        try Class.forName(s)
+        catch {
+          case _: ClassNotFoundException => Class.forName(s"$pack.$s")
+        }
+      case Some(c) => c
+      case None    => default
+    })
+      .asInstanceOf[Class[T]]
+
+  }
+
   def contains(name: String) = {
     val c = parameters.contains(name)
     if (c) used += name

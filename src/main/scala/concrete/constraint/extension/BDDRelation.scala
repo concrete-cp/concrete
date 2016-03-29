@@ -94,8 +94,6 @@ final class BDDRelation(val bdd: BDD, val timestamp: Timestamp = new Timestamp()
     bdd.supported(timestamp.next(), doms)
 
   override def isEmpty = bdd.isEmpty
-  
-  override def fillFound(f: (Int, Int) => Boolean, arity: Int): Set[Int] = ???
 
   def universal(domains: IndexedSeq[Domain]) = bdd.universal(domains, timestamp.next())
 

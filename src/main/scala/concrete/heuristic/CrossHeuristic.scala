@@ -4,31 +4,43 @@ import concrete.ParameterManager
 import concrete.Problem
 import concrete.ProblemState
 import concrete.Variable
+import scala.util.Try
 
 object CrossHeuristic {
-  def apply(params: ParameterManager, decisionVariables: Array[Variable]) = {
-    new CrossHeuristic(params, defaultVar(params, decisionVariables), defaultVal(params))
+  def apply(params: ParameterManager, decisionVariables: Array[Variable]): CrossHeuristic = {
+    val varH = defaultVar(params, decisionVariables)
+    val valH = defaultVal(params)
+
+    CrossHeuristic(varH, valH)
   }
 
   def defaultVar(params: ParameterManager, decisionVariables: Array[Variable]) = {
     val variableHeuristicClass: Class[_ <: VariableHeuristic] =
-      params.getOrElse("heuristic.variable", classOf[WDegOnDom])
-    variableHeuristicClass.getConstructor(classOf[ParameterManager], classOf[Array[Variable]]).newInstance(params, decisionVariables)
+      params.classInPackage("heuristic.variable", "concrete.heuristic", classOf[WDegOnDom])
+
+    variableHeuristicClass
+      .getConstructor(classOf[ParameterManager], classOf[Array[Variable]])
+      .newInstance(params, decisionVariables)
   }
 
   def defaultVal(params: ParameterManager) = {
     val valueHeuristicClass: Class[_ <: BranchHeuristic] =
-      params.getOrElse("heuristic.value", classOf[BestValue])
+      params.classInPackage("heuristic.value", "concrete.heuristic", classOf[BestValue])
 
-    valueHeuristicClass.getConstructor(classOf[ParameterManager]).newInstance(params)
+    valueHeuristicClass
+      .getConstructor(classOf[ParameterManager])
+      .newInstance(params)
 
   }
+
+  def apply(varH: VariableHeuristic, valH: BranchHeuristic): CrossHeuristic =
+    CrossHeuristic(varH, valH, varH.shouldRestart || valH.shouldRestart)
 }
 
-final class CrossHeuristic(
-    params: ParameterManager,
+final case class CrossHeuristic(
     val variableHeuristic: VariableHeuristic,
-    val valueHeuristic: BranchHeuristic) extends Heuristic {
+    val valueHeuristic: BranchHeuristic,
+    val shouldRestart: Boolean) extends Heuristic {
 
   def branch(state: ProblemState) = {
     variableHeuristic.select(state).map { v =>
@@ -45,5 +57,4 @@ final class CrossHeuristic(
   override def toString =
     "Crossed (" + variableHeuristic + ", " + valueHeuristic + ")";
 
-  def shouldRestart = variableHeuristic.shouldRestart || valueHeuristic.shouldRestart
 }

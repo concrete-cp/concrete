@@ -11,7 +11,7 @@ import cspom.variable.CSPOMVariable
 
 import cspom.variable.IntExpression
 import concrete.CSPOMDriver
-import concrete.generator.constraint.SumGenerator
+import concrete.generator.SumGenerator
 import cspom.variable.BoolExpression
 import CSPOM._
 

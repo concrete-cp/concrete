@@ -1,11 +1,11 @@
 package concrete.constraint.extension
 
-import concrete.util.SetWithMax
-import concrete.Variable
-import scala.util.Random
-import concrete.util.Timestamp
-import concrete.Domain
 import com.typesafe.scalalogging.LazyLogging
+import concrete.Domain
+import concrete.util.SetWithMax
+import concrete.util.Timestamp
+import concrete.EmptyIntDomain
+import concrete.IntDomain
 
 object MDDRelation extends RelationGenerator {
   def apply(data: Iterable[Seq[Int]]): MDDRelation = new MDDRelation(MDD(data))
@@ -46,10 +46,11 @@ final class MDDRelation(val mdd: MDD, val timestamp: Timestamp = new Timestamp()
     }
   }
 
-  def fillFound(f: (Int, Int) => Boolean, arity: Int): Set[Int] = {
-    val l = new SetWithMax(arity)
-    mdd.fillFound(timestamp.next(), f, 0, l)
-    l.toSet
+  def supported(doms: Array[Domain]): Array[IntDomain] = {
+    val newDomains = Array.fill[IntDomain](doms.length)(EmptyIntDomain)
+    val l = new SetWithMax(doms.length)
+    mdd.supported(timestamp.next(), doms, newDomains, 0, l)
+    newDomains
   }
 
   override def isEmpty = mdd.isEmpty
