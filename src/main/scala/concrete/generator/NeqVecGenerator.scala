@@ -1,14 +1,8 @@
-package concrete.generator.constraint;
+package concrete.generator;
 
-import concrete.constraint.Constraint
-import concrete.constraint.semantic.Neq
-import concrete.constraint.ReifiedConstraint
-import concrete.generator.FailedGenerationException
-import concrete.Problem
-import concrete.Variable
-import cspom.CSPOMConstraint
+import Generator.cspom2concreteSeq
 import concrete.constraint.semantic.NeqVec
-import Generator._
+import cspom.CSPOMConstraint
 
 final object NeqVecGenerator extends Generator {
 

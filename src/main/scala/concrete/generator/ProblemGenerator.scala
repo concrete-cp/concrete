@@ -21,9 +21,6 @@ import concrete.constraint.semantic.Clause
 import concrete.constraint.semantic.ClauseConstraint
 import concrete.constraint.semantic.PseudoBoolean
 import concrete.constraint.semantic.SAT
-import concrete.generator.constraint.Generator
-import concrete.generator.constraint.GeneratorManager
-import concrete.generator.constraint.SumGenerator
 import cspom.CSPOM
 import cspom.Statistic
 import cspom.StatisticsManager

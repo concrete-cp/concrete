@@ -1,18 +1,15 @@
-package concrete.generator.constraint;
+package concrete.generator;
 
-import concrete.generator.FailedGenerationException
-import concrete.Problem
-import cspom.CSPOMConstraint
-import scala.collection.mutable.HashMap
-import concrete.constraint.Constraint
-import cspom.variable.CSPOMVariable
-import concrete.Variable
-import concrete.ParameterManager
-import cspom.CSPOM
-import cspom.VariableNames
-import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
+import scala.util.Try
+
+import concrete.ParameterManager
+import concrete.Variable
+import concrete.constraint.Constraint
+import cspom.CSPOMConstraint
+import cspom.VariableNames
+import cspom.variable.CSPOMVariable
 
 class GeneratorManager(pm: ParameterManager) {
 
@@ -41,7 +38,8 @@ class GeneratorManager(pm: ParameterManager) {
       'max -> MaxGenerator,
       'element -> ElementGenerator,
       'in -> SetInGenerator,
-      'circuit -> new CircuitGenerator(adg))
+      'circuit -> new CircuitGenerator(adg),
+      'xor -> XorGenerator)
   }
 
   def register(entry: (Symbol, Generator)) {

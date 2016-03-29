@@ -1,4 +1,4 @@
-package concrete.generator.constraint;
+package concrete.generator;
 
 import Generator.cspom2concreteVar
 import concrete.ParameterManager

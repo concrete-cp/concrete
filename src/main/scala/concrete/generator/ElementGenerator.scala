@@ -1,12 +1,9 @@
-package concrete.generator.constraint;
+package concrete.generator;
 
-import concrete.{ Variable, Problem }
-import cspom.CSPOMConstraint
-import concrete.constraint.semantic.{ AllDifferent2C, AllDifferentBC }
-import cspom.variable.CSPOMConstant
-import Generator._
-import concrete.constraint.semantic.Neq
+import Generator.cspom2concrete1D
+import Generator.cspom2concreteIndexedSeq
 import concrete.constraint.semantic.Element
+import cspom.CSPOMConstraint
 
 final object ElementGenerator extends Generator {
   override def genFunctional(constraint: CSPOMConstraint[_], r: C2Conc)(implicit varMap: VarMap) = {

@@ -1,7 +1,6 @@
-package concrete.generator.constraint;
+package concrete.generator;
 
-import Generator._
-import concrete.Variable
+import Generator.cspom2concrete1D
 import concrete.constraint.semantic.Max
 import concrete.constraint.semantic.Min
 import cspom.CSPOMConstraint

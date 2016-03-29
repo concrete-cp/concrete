@@ -1,11 +1,9 @@
-package concrete.generator.constraint;
+package concrete.generator;
 
-import concrete.Problem
-import concrete.Variable
+import Generator.cspom2concreteVar
 import concrete.constraint.semantic.Bounds
 import concrete.constraint.semantic.Gcc
 import cspom.CSPOMConstraint
-import Generator._
 
 final object GccGenerator extends Generator {
   override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {

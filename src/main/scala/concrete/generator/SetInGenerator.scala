@@ -1,11 +1,8 @@
-package concrete.generator.constraint;
+package concrete.generator;
 
-import Generator._
+import Generator.cspom2concrete1D
 import concrete.constraint.Constraint
-import concrete.constraint.semantic.SetIn
 import cspom.CSPOMConstraint
-import cspom.variable.CSPOMConstant
-import cspom.variable.CSPOMSeq
 import cspom.variable.IntExpression
 
 final object SetInGenerator extends Generator {

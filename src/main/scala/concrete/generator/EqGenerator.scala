@@ -1,4 +1,4 @@
-package concrete.generator.constraint;
+package concrete.generator;
 
 import scala.reflect.runtime.universe
 

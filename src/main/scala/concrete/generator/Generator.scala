@@ -1,17 +1,14 @@
-package concrete.generator.constraint;
+package concrete.generator;
 
+import concrete.BooleanDomain
 import concrete.IntDomain
-import concrete.Problem
 import concrete.Variable
 import concrete.constraint.Constraint
-import concrete.generator.FailedGenerationException
 import cspom.CSPOMConstraint
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
-import javax.crypto.AEADBadTagException
-import concrete.BooleanDomain
 
 sealed trait C2Conc {
   def asVariable: Variable

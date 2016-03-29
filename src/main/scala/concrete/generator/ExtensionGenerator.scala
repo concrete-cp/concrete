@@ -1,4 +1,4 @@
-package concrete.generator.constraint;
+package concrete.generator;
 
 import com.typesafe.scalalogging.LazyLogging
 import Generator.cspom2concrete1D
@@ -34,6 +34,7 @@ import concrete.constraint.extension.MDDLinkNode
 import concrete.constraint.extension.BDDRelation
 import scala.collection.mutable.HashMap
 import concrete.constraint.extension.MDDCLink
+import concrete.util.SparseSeq
 
 class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLogging {
 
@@ -78,17 +79,15 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
           case trieSeq =>
             val m = trieSeq.map(l => any2Int(l._1)).max
             val concreteTrie = new Array[concrete.constraint.extension.MDD](m + 1)
-            val indices = new Array[Int](trieSeq.size)
-            var j = 0
+            var indices = new SparseSeq(trieSeq.size)
+
             for ((v, t) <- trieSeq) {
               val i = any2Int(v)
               concreteTrie(i) = cspomMDDtoCspfjMDD(t, map)
-              indices(j) = i
-              j += 1
-
+              indices += i
             }
 
-            new MDDn(concreteTrie, indices, j)
+            new MDDn(concreteTrie, indices)
         }
       })
     }
@@ -133,11 +132,11 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
   }
 
   private def gen(relation: cspom.extension.Relation[_], init: Boolean, domains: List[Domain]): Matrix = {
-    if (relation.nonEmpty && relation.head.size == 2) {
+    if (relation.nonEmpty && relation.arity == 2) {
       val matrix = new Matrix2D(domains(0).span.size, domains(1).span.size,
         domains(0).head, domains(1).head, init)
       matrix.setAll(any2Int(relation), !init)
-    } else if (init || relation.head.size == 1) {
+    } else if (init || relation.arity == 1) {
       new TupleTrieSet(relation2MDD(relation), init)
     } else {
       new TupleTrieSet(

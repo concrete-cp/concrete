@@ -1,8 +1,6 @@
-package concrete.generator.constraint;
+package concrete.generator;
 
-import concrete.{ Variable, Problem }
 import cspom.CSPOMConstraint
-import concrete.constraint.semantic.LexLeq
 import Generator._
 import concrete.constraint.semantic.Circuit
 import cspom.variable.CSPOMSeq
