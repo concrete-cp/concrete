@@ -36,8 +36,8 @@ class SparseSeq(
 
   def removeIndex(i: Int): SparseSeq = {
     val newSize = size - 1
-    val t = values(size)
-    values(size) = values(i)
+    val t = values(newSize)
+    values(newSize) = values(i)
     values(i) = t
     new SparseSeq(values, newSize)
   }
