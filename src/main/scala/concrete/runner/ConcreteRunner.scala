@@ -117,15 +117,17 @@ trait ConcreteRunner extends LazyLogging {
         new ConsoleWriter(opt, statistics)
       }
 
-    val iteration = opt.get('iteration).map { case i: Int => i }.getOrElse(0)
-    
+    for (it <- opt.get('iteration)) {
+      pm("iteration") = it
+    }
+
     writer.problem(description(remaining))
 
     statistics.register("runner", this)
     statistics.register("CSPOMCompiler", CSPOMCompiler)
     //statistics.register("problemGenerator", ProblemGenerator)
 
-    writer.parameters(pm.toXML, iteration)
+    writer.parameters(pm)
 
     //val waker = new Timer()
     //try {

@@ -204,7 +204,7 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
 
   private def version: String = concrete.Info.version
 
-  def parameters(params: NodeSeq, it: Int) {
+  def parameters(params: ParameterManager) {
 
     configId = initDB
       .recover {
@@ -219,6 +219,8 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
         logger.error("Failed to obtain configId", pf)
         throw pf
     }
+
+    val it = params.getOrElse("iteration", 0)
 
     val ef = for (
       c <- configId;

@@ -12,7 +12,7 @@ import concrete.Variable
 abstract class VariableHeuristic(params: ParameterManager, val decisionVariables: Array[Variable]) {
   protected val rand: Option[Random] = {
     if (params.getOrElse("heuristic.variable.randomBreak", true)) {
-      val seed = params.getOrElse("randomBreak.seed", 0L)
+      val seed = params.getOrElse("randomBreak.seed", 0L) + params.getOrElse("iteration", 0)
       Some(new Random(seed))
     } else {
       None

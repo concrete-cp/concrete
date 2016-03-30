@@ -1,15 +1,15 @@
 package concrete.runner
 
 import scala.util.Try
-import scala.xml.NodeSeq
 
+import concrete.ParameterManager
 import cspom.StatisticsManager
 
 trait ConcreteWriter {
 
   def stats: StatisticsManager
 
-  def parameters(params: NodeSeq, iteration: Int): Unit
+  def parameters(params: ParameterManager): Unit
   def problem(problem: String): Unit
 
   def solution(solution: String): Unit

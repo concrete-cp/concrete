@@ -4,19 +4,17 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 import scala.xml.NodeSeq
-
 import cspom.StatisticsManager
+import concrete.ParameterManager
 
 class ConsoleWriter(val opts: Map[Symbol, Any], val stats: StatisticsManager) extends ConcreteWriter {
 
-  def parameters(params: NodeSeq,  it: Int) {
-    for (p <- params \\ "p") {
+  def parameters(params: ParameterManager) {
+    for ((k,v) <- params .parameters) {
 
-      Console.println(s"% ${(p \ "@name").text} = ${p.text}")
+      Console.println(s"% $k = $v")
 
     }
-    Console.println(s"% iteration $it")
-
   }
 
   def problem(problem: String) {

@@ -40,7 +40,7 @@ object MDD {
       case Seq((index, child))     => new MDD1(child, index)
       case Seq((i1, c1), (i2, c2)) => new MDD2(c1, i1, c2, i2)
       case e =>
-        val indices = SparseSeq(t.map(_._1).toArray)
+        val indices = SparseSeq(t.map(_._1).toSeq: _*)
         new MDDn(newTrie(e: _*), indices)
     }
   }
@@ -438,7 +438,7 @@ final class MDD2(
           }
         case v: Int =>
           val newArray = MDD.newTrie((leftI, left), (rightI, right), (v, MDD0.addTrie(t, i + 1)))
-          new MDDn(newArray, SparseSeq(Array(leftI, rightI, v)))
+          new MDDn(newArray, SparseSeq(leftI, rightI, v))
 
       }
     }
@@ -536,7 +536,7 @@ final class MDD2(
 
 final class MDDn(
     private val trie: Array[MDD],
-    private val indices: SparseSeq) extends MDD {
+    private val indices: SparseSeq[Int]) extends MDD {
 
   def copy(ts: Int) = cache(ts)(new MDDn(trie.map(t => if (t eq null) null else t.copy(ts)), indices.copy))
 
@@ -600,7 +600,7 @@ final class MDDn(
     }
   })
 
-  private def filteredTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): (Array[MDD], SparseSeq) = {
+  private def filteredTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): (Array[MDD], SparseSeq[Int]) = {
 
     val trie = this.trie
     val newTrie: Array[MDD] = new Array(trie.length)
@@ -619,7 +619,7 @@ final class MDDn(
     (newTrie, ind)
   }
 
-  private def passedTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): (Array[MDD], SparseSeq) = {
+  private def passedTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): (Array[MDD], SparseSeq[Int]) = {
     val trie = this.trie
     val newTrie: Array[MDD] = new Array(trie.length)
 
@@ -659,7 +659,7 @@ final class MDDn(
 
     }
 
-  private def newNode(t: Array[MDD], newIndices: SparseSeq): MDD = {
+  private def newNode(t: Array[MDD], newIndices: SparseSeq[Int]): MDD = {
     newIndices.size match {
       case 1 => {
         val i = indices(0)

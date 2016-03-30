@@ -1,18 +1,18 @@
 package concrete.util
 
-import java.util.Arrays
+import scala.collection.mutable.ArrayBuffer
 
 object SparseSeq {
-  def apply(a: Array[Int]) = new SparseSeq(a, a.length)
+  def apply[A](a: A*) = new SparseSeq(a.to[ArrayBuffer], a.length)
 }
 
-class SparseSeq(
-    val values: Array[Int],
-    override val size: Int) extends Iterable[Int] {
+class SparseSeq[A](
+    val values: ArrayBuffer[A],
+    override val size: Int) extends Iterable[A] {
 
-  def this(max: Int) = this(new Array(max), 0)
+  def this() = this(new ArrayBuffer, 0)
 
-  override def foreach[U](f: Int => U): Unit = {
+  override def foreach[U](f: A => U): Unit = {
     var i = size - 1
     while (i >= 0) {
       f(values(i))
@@ -20,27 +20,16 @@ class SparseSeq(
     }
   }
 
-  def apply(i: Int): Int = values(i)
-
-  def padTo(newSize: Int): SparseSeq = {
-    new SparseSeq(values.padTo(newSize, 0), size)
-  }
+  def apply(i: Int): A = values(i)
 
   def copy = new SparseSeq(values.clone, size)
 
-  def +(i: Int): SparseSeq = {
-    val nv = Arrays.copyOf(values, size + 1)
-    nv(size) = i
-    new SparseSeq(nv, size + 1)
+  def +(i: A): SparseSeq[A] = {
+    values += i
+    new SparseSeq(values, size + 1)
   }
 
-  def removeIndex(i: Int): SparseSeq = {
-    val newSize = size - 1
-
-    new SparseSeq(values, newSize)
-  }
-
-  override def filter(f: Int => Boolean): SparseSeq = {
+  override def filter(f: A => Boolean): SparseSeq[A] = {
 
     var newSize = size
     var i = newSize - 1

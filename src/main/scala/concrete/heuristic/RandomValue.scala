@@ -17,7 +17,7 @@ final class RandomValue(pm: ParameterManager) extends ValueHeuristic {
   }
 
   private val rand = {
-    val seed = pm.getOrElse("heuristic.value.seed", 0L)
+    val seed = pm.getOrElse("heuristic.value.seed", 0L) + pm.getOrElse("iteration", 0)
     new Random(seed)
   }
 

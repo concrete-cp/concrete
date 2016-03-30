@@ -79,7 +79,7 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
           case trieSeq =>
             val m = trieSeq.map(l => any2Int(l._1)).max
             val concreteTrie = new Array[concrete.constraint.extension.MDD](m + 1)
-            var indices = new SparseSeq(trieSeq.size)
+            var indices = new SparseSeq[Int]()
 
             for ((v, t) <- trieSeq) {
               val i = any2Int(v)
