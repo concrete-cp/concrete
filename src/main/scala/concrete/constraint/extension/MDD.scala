@@ -257,7 +257,7 @@ final object MDDLeaf extends MDD {
     //println("leaf at depth " + depth)
     l.clearFrom(depth)
   }
-  
+
   def addTrie(tuple: Array[Int], i: Int) = {
     require(i >= tuple.length)
     this //throw new UnsupportedOperationException
@@ -538,7 +538,7 @@ final class MDDn(
     private val trie: Array[MDD],
     private val indices: SparseSeq) extends MDD {
 
-  def copy(ts: Int) = cache(ts)(new MDDn(trie.map(t => if (t eq null) null else t.copy(ts)), indices.clone))
+  def copy(ts: Int) = cache(ts)(new MDDn(trie.map(t => if (t eq null) null else t.copy(ts)), indices.copy))
 
   def forSubtries(f: (Int, MDD) => Boolean) = forSubtries(f, indices.size - 1)
 
@@ -560,9 +560,8 @@ final class MDDn(
       val newTrie = trie.padTo(v + 1, null)
 
       if ((newTrie(v) eq null) || (newTrie(v) eq MDD0)) {
-        val ni = indices + v
         newTrie(v) = MDD0.addTrie(tuple, i + 1)
-        new MDDn(newTrie, ni)
+        new MDDn(newTrie, indices + v)
       } else {
         val ntv = newTrie(v).addTrie(tuple, i + 1)
 
@@ -605,22 +604,17 @@ final class MDDn(
 
     val trie = this.trie
     val newTrie: Array[MDD] = new Array(trie.length)
-    var ii = indices.size - 1
-    var ind = indices
 
-    while (ii >= 0) {
-      val i = ind(ii)
-      if (doms(depth).present(i)) {
+    val ind = indices.filter { i =>
+      doms(depth).present(i) && {
         val uT = trie(i).filterTrie(ts, doms, modified, depth + 1)
         if (uT eq MDD0) {
-          ind = ind.removeIndex(ii)
+          false
         } else {
           newTrie(i) = uT
+          true
         }
-      } else {
-        ind = ind.removeIndex(ii)
       }
-      ii -= 1
     }
     (newTrie, ind)
   }
@@ -628,18 +622,15 @@ final class MDDn(
   private def passedTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): (Array[MDD], SparseSeq) = {
     val trie = this.trie
     val newTrie: Array[MDD] = new Array(trie.length)
-    var ii = indices.size - 1
-    var ind = indices
 
-    while (ii >= 0) {
-      val i = ind(ii)
+    val ind = indices.filter { i =>
       val nT = trie(i).filterTrie(ts, doms, modified, depth)
       if (nT eq MDD0) {
-        indices.removeIndex(ii)
+        false
       } else {
         newTrie(i) = nT
+        true
       }
-      ii -= 1
     }
     (newTrie, ind)
   }

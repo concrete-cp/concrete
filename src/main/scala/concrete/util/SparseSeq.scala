@@ -26,7 +26,7 @@ class SparseSeq(
     new SparseSeq(values.padTo(newSize, 0), size)
   }
 
-  override def clone: SparseSeq = new SparseSeq(values.clone, size)
+  def copy = new SparseSeq(values.clone, size)
 
   def +(i: Int): SparseSeq = {
     val nv = Arrays.copyOf(values, size + 1)
@@ -36,9 +36,23 @@ class SparseSeq(
 
   def removeIndex(i: Int): SparseSeq = {
     val newSize = size - 1
-    val t = values(newSize)
-    values(newSize) = values(i)
-    values(i) = t
+
+    new SparseSeq(values, newSize)
+  }
+
+  override def filter(f: Int => Boolean): SparseSeq = {
+
+    var newSize = size
+    var i = newSize - 1
+    while (i >= 0) {
+      val v = values(i)
+      if (!f(v)) {
+        newSize -= 1
+        values(i) = values(newSize)
+        values(newSize) = v
+      }
+      i -= 1
+    }
     new SparseSeq(values, newSize)
   }
 
