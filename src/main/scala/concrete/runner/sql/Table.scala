@@ -180,9 +180,9 @@ object Table extends App {
     data: Seq[Double] => if (data.isEmpty) -1 else StatisticsManager.median[Double](data)
   }
 
-  for (Problem(problemId, problem, nbvars, nbcons, tags) <- problems) {
+  for (Problem(problemId, problem, nbvars, nbcons, tags) <- problems; it <- 0 until 2) {
 
-    val data = ListBuffer(s"$problem ($problemId)") //, nbvars, nbcons)
+    val data = ListBuffer(s"$problem ($problemId), it $it") //, nbvars, nbcons)
     //print("\\em %s & \\np{%d} & \\np{%d}".format(problem, nbvars, nbcons))
     //print("\\em %s ".format(problem))
 
@@ -216,41 +216,41 @@ object Table extends App {
       case "mem" => sql"""
                                 SELECT "configId", status, solution, cast(stat('solver.usedMem', "executionId") as real)/1048576.0
                                 FROM "Execution"
-                                WHERE (version, "problemId") = ($version, $problemId)
+                                WHERE (version, "problemId", iteration) = ($version, $problemId, $it)
                             """
 
       case "time" => sql"""
                                 SELECT "configId", status, solution, totalTime('{solver.searchCpu, solver.preproCpu}', "executionId")/1e3
                                 FROM "Execution"
-                                WHERE (version, "problemId") = ($version, $problemId)
+                                WHERE (version, "problemId", iteration) = ($version, $problemId, $it)
                             """
 
       case "nodes" => sql"""
                                 SELECT "configId", status, solution, cast(stat('solver.nbAssignments', "executionId") as real)
                                 FROM "Execution"
-                                WHERE (version, "problemId") = ($version, $problemId)
+                                WHERE (version, "problemId", iteration) = ($version, $problemId, $it)
                             """
       case "domainChecks" => sql"""
                                 SELECT "configId", status, solution, cast(stat('solver.domain.checks', "executionId") as real)
                                 FROM "Execution"
-                                WHERE (version, "problemId") = ($version, $problemId)
+                                WHERE (version, "problemId", iteration) = ($version, $problemId, $it)
                             """
       case "nps" => sql"""
                                 SELECT "configId", status, solution, 
                                   cast(stat('solver.nbAssignments', "executionId") as real)/totalTime('{solver.searchCpu, solver.preproCpu}', "executionId")*1e3
                                 FROM "Execution"
-                                WHERE (version, "problemId") = ($version, $problemId)"""
+                                WHERE (version, "problemId", iteration) = ($version, $problemId, $it)"""
       case "rps" => sql"""
                                 SELECT "configId", status, solution, 
                                   cast(stat('solver.filter.revisions', "executionId") as real)/totalTime('{solver.searchCpu, solver.preproCpu}', "executionId")*1e3
                                 FROM "Execution"
-                                WHERE (version, "problemId") = ($version, $problemId)"""
+                                WHERE (version, "problemId", iteration) = ($version, $problemId, $it)"""
 
       case "revisions" => sql"""
                                 SELECT "configId", status, solution, 
                                   cast(stat('solver.filter.revisions', "executionId") as bigint)
                                 FROM "Execution"
-                                WHERE (version, "problemId") = ($version, $problemId)"""
+                                WHERE (version, "problemId", iteration) = ($version, $problemId, $it)"""
 
     }
 
@@ -270,7 +270,7 @@ object Table extends App {
           Failure(e)
       }
 
-    print(s"$problem\t")
+    print(s"$problem $it\t")
     for {
       results <- trie
       i <- configs.indices

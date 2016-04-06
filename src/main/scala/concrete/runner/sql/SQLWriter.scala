@@ -168,6 +168,24 @@ object SQLWriter {
   }
 
   val statistic = TableQuery[Statistic]
+
+  def md5(data: String): String = {
+    val istr = new ByteArrayInputStream(data.getBytes)
+    val msgDigest = MessageDigest.getInstance("MD5");
+
+    def createDigest(buffer: Array[Byte]) {
+      val read = istr.read(buffer)
+      if (read > 0) {
+        msgDigest.update(buffer, 0, read)
+        createDigest(buffer)
+      }
+    }
+
+    createDigest(new Array[Byte](8192))
+
+    val sum = new BigInteger(1, msgDigest.digest).toString(16);
+    "".padTo(32 - sum.length, '0') + sum
+  }
 }
 
 final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
@@ -183,12 +201,23 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
           executions.schema ++
           problemTag.schema ++
           statistic.schema).create)
-        .flatMap {
-          case _ =>
-            db.run(
-              sqlu"""CREATE FUNCTION stat(field text, execution int) RETURNS text AS $$$$
-                 SELECT value FROM "Statistic" WHERE (name, "executionId") = ($$1, $$2);
+        .flatMap { _ =>
+          db.run(
+            sqlu"""CREATE OR REPLACE FUNCTION stat(field text, execution int) RETURNS text AS $$$$
+                 SELECT CASE value 
+                   WHEN 'None' THEN null 
+                   ELSE value 
+                 END 
+                 FROM "Statistic" 
+                 WHERE (name, "executionId") = ($$1, $$2);
                 $$$$ LANGUAGE sql""")
+        }
+        .flatMap { _ =>
+          db.run(
+            sqlu"""CREATE OR REPLACE FUNCTION totaltime(fields text[], executionid integer) RETURNS real AS $$$$
+	              SELECT sum(cast(split_part(stat(unnest, executionId), ' ', 1) as real)) 
+	              FROM unnest(fields)
+              $$$$ LANGUAGE sql""")
         }
 
     } else {
@@ -212,7 +241,7 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
           logger.warn("Table creation failed", e)
 
       }
-      .flatMap { case _ => config(params.toString) }
+      .flatMap { case _ => config(params) }
 
     configId.onFailure {
       case pf =>
@@ -248,30 +277,23 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
 
   }
 
-  private def config(options: String): Future[Int] = {
-    val istr = new ByteArrayInputStream(options.getBytes)
-    val msgDigest = MessageDigest.getInstance("MD5");
+  private def config(options: ParameterManager): Future[Int] = {
+    val cfg = options.parameters
+      .iterator
+      .filter { case (k, v) => k != "iteration" }
+      .map {
+        case (k, Unit) => k
+        case (k, v)    => s"$k = $v"
+      }.mkString(", ")
 
-    def createDigest(buffer: Array[Byte]) {
-      val read = istr.read(buffer)
-      if (read > 0) {
-        msgDigest.update(buffer, 0, read)
-        createDigest(buffer)
-      }
-    }
-
-    createDigest(new Array[Byte](8192))
-
-    val sum = new BigInteger(1, msgDigest.digest).toString(16);
-    val md5sum = "".padTo(32 - sum.length, '0') + sum
-
+    val md5sum = md5(cfg)
     val action = configs.filter(_.md5 === md5sum).map(_.configId).result.headOption
     val result = db.run(action)
 
     result.flatMap {
       case None =>
         db.run(
-          configs.map(c => (c.config, c.md5)) returning configs.map(_.configId) += ((options, md5sum)))
+          configs.map(c => (c.config, c.md5)) returning configs.map(_.configId) += ((cfg, md5sum)))
       case Some(c) => Future.successful(c)
 
     }
