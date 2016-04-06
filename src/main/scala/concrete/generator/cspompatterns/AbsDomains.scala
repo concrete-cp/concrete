@@ -16,7 +16,7 @@ object AbsDomains extends VariableCompiler('abs) {
     case CSPOMConstraint(r: SimpleExpression[_], _, Seq(i: SimpleExpression[_]), _) =>
       val ir = IntExpression.coerce(r)
       val ii = IntExpression.coerce(i)
-      Map(
+      Seq(
         r -> reduceDomain(ir, ii.abs),
         i -> reduceDomain(ii, ir ++ -ir))
   }

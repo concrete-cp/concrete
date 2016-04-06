@@ -47,9 +47,9 @@ object SumDomains extends VariableCompiler('sum) {
         args(i) -> reduceDomain(iargs(i), others / coef(i))
       }
 
-      (filt.toMap, args.size == 1)
+      (filt, args.size == 1)
 
-    case _ => (Map(), false)
+    case _ => (Seq(), false)
   }
 }
 
@@ -64,10 +64,10 @@ object NeDomains extends VariableCompiler('eq) {
       val nb = reduceDomain(b, initBound + IntExpression.implicits.ranges(a))
 
       (
-        Map(a -> na, b -> nb),
+        Seq(a -> na, b -> nb),
         na.searchSpace <= 1 || nb.searchSpace <= 1)
 
-    case _ => (Map(), false)
+    case _ => (Seq(), false)
   }
 }
 
@@ -108,7 +108,7 @@ object PseudoBoolDomains extends VariableCompiler('pseudoboolean) {
         }
       }: (CSPOMExpression[_], CSPOMExpression[_])
 
-      (filt.toMap, args.size == 1)
+      (filt, args.size == 1)
   }
 
 }

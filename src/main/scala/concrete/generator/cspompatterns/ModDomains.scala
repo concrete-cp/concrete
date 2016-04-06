@@ -23,12 +23,12 @@ object ModDomains extends VariableCompiler('mod) {
         val result: RangeSet[Infinitable] =
           if (ii0.headInterval.lb < 0) (ii1 ++ -ii1)
           else ii1
-        Map(
+        Seq(
           r -> reduceDomain(ir, result))
       } catch {
         case e: ArithmeticException =>
           logger.warn(s"$e when filtering $c")
-          Map()
+          Seq()
       }
   }
 }

@@ -157,7 +157,7 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
       case r => MDD(any2Int(r))
     }
 
-    new MDDRelation(mdd)
+    new MDDRelation(mdd.reduce())
   }
 
   private def relation2MDDLink(relation: cspom.extension.Relation[_]): BDDRelation = {

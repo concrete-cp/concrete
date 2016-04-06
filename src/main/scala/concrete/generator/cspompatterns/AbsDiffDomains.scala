@@ -17,7 +17,7 @@ object AbsDiffDomains extends VariableCompiler('absdiff) with LazyLogging {
       val i1 = IntExpression.coerce(ii1)
 
       if (r.fullyDefined && i0.fullyDefined && i1.fullyDefined) {
-        Map()
+        Seq()
       } else {
 
         val nr = ranges(r) & (arithmetics(i0) - i1).abs
@@ -27,7 +27,7 @@ object AbsDiffDomains extends VariableCompiler('absdiff) with LazyLogging {
         assert(nr == (nr & (ni0 - ni1).abs), s"$nr = |$ni0 - $ni1| still requires shaving (result is ${(ni0 - ni1).abs})")
         assert(ni0 == (ni0 & (ni1 + nr) ++ (ni1 - nr)), s"$ni0 still requires shaving")
 
-        Map(
+        Seq(
           ir -> applyDomain(r, nr),
           ii0 -> applyDomain(i0, ni0),
           ii1 -> applyDomain(i1, ni1))

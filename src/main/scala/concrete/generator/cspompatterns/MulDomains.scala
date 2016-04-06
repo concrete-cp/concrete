@@ -15,14 +15,14 @@ object MulDomains extends VariableCompiler('mul) {
       val ii0 = IntExpression.coerce(i0)
       val ii1 = IntExpression.coerce(i1)
       try {
-        Map(
+        Seq(
           r -> reduceDomain(ir, ii0 * ii1),
           i0 -> reduceDomain(ii0, ir / ii1),
           i1 -> reduceDomain(ii1, ir / ii0))
       } catch {
         case e: ArithmeticException =>
           logger.warn(s"$e when filtering $c")
-          Map()
+          Seq()
       }
   }
 }

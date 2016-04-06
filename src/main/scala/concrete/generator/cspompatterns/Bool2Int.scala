@@ -38,7 +38,7 @@ object Bool2IntDomains extends VariableCompiler('bool2int) {
           throw new AssertionError()
         }
 
-      Map(be -> bb, ie -> iii)
+      Seq(be -> bb, ie -> iii)
 
   }
 }
