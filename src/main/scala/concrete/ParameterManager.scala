@@ -6,6 +6,8 @@ import scala.collection.mutable.HashMap
 import scala.reflect.runtime.universe._
 import scala.xml.NodeSeq
 import scala.collection.mutable.HashSet
+import scala.collection.immutable.TreeMap
+import scala.collection.immutable.SortedMap
 
 /**
  * This class is intended to hold Concrete's various parameters.
@@ -15,7 +17,7 @@ import scala.collection.mutable.HashSet
  */
 final class ParameterManager {
 
-  private val _parameters: HashMap[String, Any] = new HashMap()
+  private var _parameters: SortedMap[String, Any] = new TreeMap()
 
   val used = new HashSet[String]()
 
@@ -26,7 +28,7 @@ final class ParameterManager {
    * @param value
    */
   def update(name: String, value: Any) {
-    _parameters(name) = value
+    _parameters += (name -> value)
   }
 
   def getOrElse[T: TypeTag](name: String, default: => T): T = {
@@ -83,16 +85,6 @@ final class ParameterManager {
   }
 
   /**
-   * Returns XML representation of the registered parameters.
-   *
-   * @return
-   */
-  def toXML = NodeSeq.fromSeq(parameters.iterator.map {
-    case (k, v) =>
-      <p name={ k }>{ v }</p>
-  }.toSeq)
-
-  /**
    * Returns String representation of the registered parameters.
    *
    * @return
@@ -102,12 +94,7 @@ final class ParameterManager {
     case (k, v)    => s"$k = $v"
   }.mkString(", ")
 
-  def parameters: collection.immutable.Map[String, Any] = _parameters.toMap
-  //  ++ pending.iterator.map {
-  //      case (k, v) => k -> v
-  //    } ++ pendingParse.iterator.map {
-  //      case (k, v) => k -> v
-  //    } toMap
+  def parameters: SortedMap[String, Any] = _parameters
 
   def parseProperties(line: Properties) {
     JavaConversions.mapAsScalaMap(line).foreach {
