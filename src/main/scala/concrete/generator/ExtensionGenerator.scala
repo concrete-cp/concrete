@@ -40,7 +40,7 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
 
   val consType = params.getOrElse("relationAlgorithm", "Reduce")
 
-  val ds = params.getOrElse("relationStructure", "MDD")
+  val ds = params.getOrElse("relationStructure", "MDDLink")
 
   val closeRelations = params.getOrElse("closeRelations", true)
 
