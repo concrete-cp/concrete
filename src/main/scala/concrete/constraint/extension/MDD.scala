@@ -182,6 +182,12 @@ trait MDD extends Identified with Iterable[Seq[Int]] with LazyLogging {
     }
   }
 
+  def depth(map: IdMap[MDD, Int]): Int = {
+    if (this eq MDD0) 0
+    else if (this eq MDDLeaf) 1
+    else map.getOrElseUpdate(this, 1 + traverseST.map { case (_, m) => m.depth(map) }.max)
+  }
+
   def forSubtries(f: (Int, MDD) => Boolean): Boolean
 
   override def isEmpty: Boolean

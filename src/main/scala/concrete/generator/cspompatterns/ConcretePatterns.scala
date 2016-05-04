@@ -1,7 +1,5 @@
 package concrete.generator.cspompatterns
 
-import scala.reflect.runtime.universe
-
 import concrete.ParameterManager
 import cspom.compiler.CSPOMTypes
 import cspom.compiler.ConstraintCompiler
@@ -22,7 +20,8 @@ object ConcretePatterns {
         AllDifferent, AllDiffConstant,
         // Clause does not support constants
         SimplClause, PBConstants,
-        Bool2IntDomains, DivDomains, ModDomains)
+        Bool2IntDomains, DivDomains, ModDomains,
+        Knapsack)
 
     val concreteImp = Seq(
       //AbsDiff, AbsDiffDomains,

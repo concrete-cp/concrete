@@ -1,7 +1,6 @@
 package concrete.util
 
 import scala.util.Random
-import cspom.extension.MDDNode
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
 import concrete.constraint.extension.MDD0

@@ -118,7 +118,7 @@ case class Interval(val lb: Int, val ub: Int) {
   }
 
   def /:(v: Int): Interval = {
-    /** v / this **/
+    // v / this 
     if (this.contains(0)) throw new ArithmeticException
     Interval(
       math.min(Math.ceilDiv(v, lb), Math.ceilDiv(v, ub)),
@@ -177,7 +177,8 @@ case class Interval(val lb: Int, val ub: Int) {
   }
 
   def intersects(i: Interval): Boolean = {
-    math.max(lb, i.lb) <= math.min(ub, i.ub)
+    lb <= i.ub && ub >= i.lb
+    //    math.max(lb, i.lb) <= math.min(ub, i.ub)
   }
 
   def connected(i: Interval): Boolean = {

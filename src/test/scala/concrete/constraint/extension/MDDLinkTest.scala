@@ -9,22 +9,20 @@ import org.scalatest.Inspectors
 import org.scalatest.Matchers
 
 import concrete.Domain
-import concrete.IntDomain
-import concrete.Singleton
 import concrete.util.MDDGenerator
 import concrete.util.SetWithMax
 import cspom.extension.IdMap
+import concrete.IntDomain
+import concrete.Singleton
 
-final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
+final class BDDTest extends FlatSpec with Matchers with Inspectors {
 
-  implicit def cache: BDD.Cache = null
+  private val ts: BDD = BDD(Seq(List(0, 0), List(0, 1), List(1, 0)))
 
-  private val ts: MDDLink = MDDLink(Seq(List(0, 0), List(0, 1), List(1, 0)))
+  val t = BDD0 + List(1, 2, 3) + List(1, 3, 4) + List(1, 2, 5) + List(2, 3, 5)
+  val s = BDD0 + List(1, 2, 5) + List(1, 3, 4) + List(1, 2, 3) + List(2, 3, 5)
 
-  val t = MDDLink0 + List(1, 2, 3) + List(1, 3, 4) + List(1, 2, 5) + List(2, 3, 5)
-  val s = MDDLink0 + List(1, 2, 5) + List(1, 3, 4) + List(1, 2, 3) + List(2, 3, 5)
-
-  val u = MDDLink(Seq(
+  val u = BDD(Seq(
     List(1, 2, 3),
     List(1, 3, 4),
     List(1, 2, 5),
@@ -56,7 +54,7 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
   }
 
   it should "reduce" in {
-    val m0 = MDDLink(Seq(
+    val m0 = BDD(Seq(
       List(2, 3, 2),
       List(1, 2, 1),
       List(1, 1, 1),
@@ -77,11 +75,11 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
 
   }
 
-  def mddl(d: Int, k: Int, i: Int = 0): MDDLink = {
-    if (i >= d) { MDDLink0 }
-    else if (k <= 0) { MDDLinkLeaf }
+  def mddl(d: Int, k: Int, i: Int = 0): BDD = {
+    if (i >= d) { BDD0 }
+    else if (k <= 0) { BDDLeaf }
     else {
-      new MDDLinkNode(i, mddl(d, k - 1), mddl(d, k, i + 1))
+      new BDDNode(i, mddl(d, k - 1), mddl(d, k, i + 1))
     }
   }
 
@@ -127,7 +125,7 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
   }
 
   it should "filter" in {
-    val m = MDDLink(Seq(
+    val m = BDD(Seq(
       List(2, 3, 2),
       List(1, 2, 1),
       List(1, 1, 1),
@@ -146,7 +144,7 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
       Singleton(1),
       IntDomain(1 to 3))
 
-    val n = m.filterTrie(2, doms, List(1), 0, cache)
+    val n = m.filterTrie(2, doms, List(1), 0)
 
     //println(n)
 
@@ -165,7 +163,7 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
     val rand = new Random(0)
     val mdd = MDDGenerator(15, 5, 600000, rand)
     val mddf = mdd.reduce()
-    val mddl = MDDLink(mdd.map(_.toList)).reduce()
+    val mddl = BDD(mdd.map(_.toList)).reduce()
     val ef = mddf.edges(5)
     val el = mddl.edges(5)
     ef should be >= el
@@ -179,7 +177,7 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
     val l = .28
     val lambda = (l * math.pow(d, k)).toInt
     var mddr = MDDGenerator(d, k, lambda, rand).reduce
-    var mddl = MDDLink(mddr)
+    var mddl = BDD(mddr)
 
     mddr.edges(-2) shouldBe mddl.edges(-1)
 
@@ -199,9 +197,9 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
         }
         doms(pos) = newd
       }
- 
+
       mddr = mddr.filterTrie(ts, doms, mod, 0)
-      mddl = mddl.filterTrie(ts, doms, mod, 0, cache)
+      mddl = mddl.filterTrie(ts, doms, mod, 0)
       ts += 1
     }
 
@@ -209,7 +207,7 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
     assert(mddl.isEmpty)
   }
 
-  it should "convert MDD to MDDLink" in {
+  it should "convert MDD to BDD" in {
     val m = MDD(Seq(
       Seq(2, 3, 2),
       Seq(1, 2, 1),
@@ -219,7 +217,7 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
       Seq(3, 1, 3)))
       .reduce()
 
-    val ml = MDDLink(m)
+    val ml = BDD(m)
 
     m.edges(5) shouldBe ml.edges(10)
     m.toSet shouldBe ml.toSet
@@ -229,7 +227,7 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
   }
 
   it should "have correct number of nodes" in {
-    val m = MDDLink(Seq(
+    val m = BDD(Seq(
       List(2, 3, 2),
       List(1, 2, 1),
       List(1, 1, 1),
@@ -242,7 +240,7 @@ final class MDDLinkTest extends FlatSpec with Matchers with Inspectors {
 
     map.size shouldBe 11
 
-    val m2 = m.filterTrie(5, Array(IntDomain(1 to 3), Singleton(1), IntDomain(1 to 3)), List(1), 0, cache)
+    val m2 = m.filterTrie(5, Array(IntDomain(1 to 3), Singleton(1), IntDomain(1 to 3)), List(1), 0)
 
     println(m2.toList)
 

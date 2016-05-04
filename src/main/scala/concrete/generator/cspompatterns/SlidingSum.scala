@@ -9,7 +9,6 @@ import cspom.extension.MDD
 import cspom.extension.MDDNode
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
-import cspom.variable.CSPOMVariable
 import cspom.variable.IntExpression.implicits.iterable
 import cspom.variable.SimpleExpression
 
@@ -55,7 +54,7 @@ final object SlidingSum extends ConstraintCompilerNoData {
           _._2.nonEmpty
         }
 
-        new MDDNode(children.toMap)
+        new MDDNode(children.toMap, true)
       })
     }
 

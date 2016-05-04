@@ -12,12 +12,16 @@ testOptions in Test <+= (target in Test) map {
 
 resolvers += Resolver.sonatypeRepo("snapshots")
 
+resolvers += "INGI Snapshots" at "http://artifactory.info.ucl.ac.be/artifactory/libs-snapshot-local/"
+
+
 libraryDependencies ++= Seq(
 	"fr.univ-valenciennes" %% "cspom" % "2.7-SNAPSHOT",
 	"org.postgresql" % "postgresql" % "9.4.1208",
 	//"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
 	"org.ow2.sat4j" % "org.ow2.sat4j.pb" % "2.3.5",
 	"com.typesafe.slick" %% "slick" % "3.1.1",
+	"com.github.tminglei" %% "slick-pg" % "0.12.2",
 	"com.typesafe" % "config" % "1.3.0",
 	"org.apache.commons" % "commons-math3" % "3.6",
 	//"org.jcp" % "jsr331" % "1.1.1",

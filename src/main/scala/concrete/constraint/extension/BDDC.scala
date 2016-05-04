@@ -1,6 +1,5 @@
 package concrete.constraint.extension
 
-import scala.collection.mutable.BitSet
 import concrete.Contradiction
 import concrete.EmptyIntDomain
 import concrete.IntDomain
@@ -12,23 +11,24 @@ import concrete.constraint.StatefulConstraint
 import concrete.util.SparseSet
 
 /* MDDRelation comes with its own timestamp */
-class MDDCLink(_scope: Array[Variable], val mdd: BDDRelation)
+class BDDC(_scope: Array[Variable], val bdd: BDDRelation)
     extends Constraint(_scope) with Removals with StatefulConstraint[SparseSet] {
 
   override def init(ps: ProblemState) = {
-    val max = mdd.identify() + 1
+    val max = bdd.identify() + 1
+    //println(s"********** $max **********")
     ps.updateState(this, new SparseSet(max))
   }
 
   // Members declared in concrete.constraint.Constraint
-  override def check(t: Array[Int]) = mdd.contains(t)
+  override def check(t: Array[Int]) = bdd.contains(t)
 
   def checkValues(tuple: Array[Int]): Boolean = throw new UnsupportedOperationException
 
   val simpleEvaluation: Int = math.min(Constraint.NP, scope.count(_.initDomain.length > 1))
 
   // Members declared in concrete.constraint.Removals
-  val prop = mdd.edges.toDouble / scope.map(_.initDomain.size.toDouble).product
+  val prop = bdd.edges.toDouble / scope.map(_.initDomain.size.toDouble).product
 
   def getEvaluation(ps: ProblemState) = (prop * doubleCardSize(ps)).toInt
 
@@ -44,19 +44,19 @@ class MDDCLink(_scope: Array[Variable], val mdd: BDDRelation)
 
     var gNo = oldGno //.clone()
 
-    val ts = mdd.timestamp.next
+    val ts = bdd.timestamp.next
 
     @inline
     def seekSupports(g: BDD, i: Int): Boolean = {
-      if (g eq MDDLinkLeaf) {
+      if (g eq BDDLeaf) {
         if (i < delta) {
           delta = i
         }
         true
-      } else if (g eq MDDLink0) {
+      } else if (g eq BDD0) {
         false
       } else {
-        val ng = g.asInstanceOf[MDDLinkNode]
+        val ng = g.asInstanceOf[BDDNode]
         if (ng.cache.timestamp == ts) {
           true
         } else if (gNo.contains(g.id)) {
@@ -80,7 +80,7 @@ class MDDCLink(_scope: Array[Variable], val mdd: BDDRelation)
       }
     }
 
-    val sat = seekSupports(mdd.bdd, 0)
+    val sat = seekSupports(bdd.bdd, 0)
     if (!sat) {
       Contradiction
     } else {
@@ -95,6 +95,6 @@ class MDDCLink(_scope: Array[Variable], val mdd: BDDRelation)
     }
   }
 
-  override def dataSize = mdd.edges
+  override def dataSize = bdd.edges
 
 }

@@ -48,7 +48,7 @@ import concrete.constraint.linear.Simplex
 final class SolverFactory(val params: ParameterManager) {
 
   val solverClass: Class[_ <: Solver] =
-    params.getOrElse("solver", classOf[MAC])
+    params.classInPackage("solver", "concrete", classOf[MAC])
 
   def apply(problem: Problem): Solver = {
     solverClass
@@ -78,7 +78,6 @@ object Solver {
   def apply(problem: Problem): Solver = apply(problem, new ParameterManager)
   def apply(problem: Problem, pm: ParameterManager): Solver = new SolverFactory(pm)(problem)
 }
-
 
 abstract class Solver(val problem: Problem, val params: ParameterManager) extends Iterator[Map[Variable, Any]] with LazyLogging {
 

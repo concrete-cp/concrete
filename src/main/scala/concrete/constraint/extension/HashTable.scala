@@ -89,5 +89,7 @@ final class HashTable(arity: Int, val table: ArraySet[Int]) extends Relation {
 
   override def size = table.size
   def lambda = table.size
+
+  def depth = arity
 }
 

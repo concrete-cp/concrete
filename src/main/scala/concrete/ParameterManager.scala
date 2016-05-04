@@ -2,9 +2,7 @@ package concrete;
 
 import java.util.Properties
 import scala.collection.JavaConversions
-import scala.collection.mutable.HashMap
 import scala.reflect.runtime.universe._
-import scala.xml.NodeSeq
 import scala.collection.mutable.HashSet
 import scala.collection.immutable.TreeMap
 import scala.collection.immutable.SortedMap
@@ -48,12 +46,15 @@ final class ParameterManager {
   def classInPackage[T](name: String, pack: String, default: => Class[T]): Class[T] = {
     (parameters.get(name) match {
       case Some(s: String) =>
+        used += name
         try Class.forName(s)
         catch {
           case _: ClassNotFoundException => Class.forName(s"$pack.$s")
         }
-      case Some(c) => c
-      case None    => default
+      case Some(c) =>
+        used += name
+        c
+      case None => default
     })
       .asInstanceOf[Class[T]]
 

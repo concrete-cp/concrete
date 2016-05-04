@@ -68,5 +68,6 @@ final class IndexedTable(val tables: Array[VecMap[ArraySet[Int]]]) extends Relat
 
   override def size = flattened.size
   def lambda = flattened.size
+  def depth = ???
 }
 

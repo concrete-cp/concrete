@@ -2,7 +2,6 @@ package concrete.generator;
 
 import com.typesafe.scalalogging.LazyLogging
 import Generator.cspom2concrete1D
-import concrete.Domain
 import concrete.ParameterManager
 import concrete.Variable
 import concrete.constraint.Constraint
@@ -13,7 +12,7 @@ import concrete.constraint.extension.MDD
 import concrete.constraint.extension.MDD0
 import concrete.constraint.extension.MDD1
 import concrete.constraint.extension.MDD2
-import concrete.constraint.extension.MDDCd
+import concrete.constraint.extension.MDDC
 import concrete.constraint.extension.MDDRelation
 import concrete.constraint.extension.MDDn
 import concrete.constraint.extension.Matrix
@@ -28,19 +27,18 @@ import cspom.UNSATException
 import cspom.extension.IdMap
 import concrete.constraint.extension.HashTable
 import concrete.constraint.extension.IndexedTable
-import concrete.constraint.extension.MDDLink
-import concrete.constraint.extension.MDDLink0
-import concrete.constraint.extension.MDDLinkNode
+import concrete.constraint.extension.BDD
+import concrete.constraint.extension.BDD0
+import concrete.constraint.extension.BDDNode
 import concrete.constraint.extension.BDDRelation
-import scala.collection.mutable.HashMap
-import concrete.constraint.extension.MDDCLink
+import concrete.constraint.extension.BDDC
 import concrete.util.SparseSeq
 
 class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLogging {
 
   val consType = params.getOrElse("relationAlgorithm", "Reduce")
 
-  val ds = params.getOrElse("relationStructure", "MDDLink")
+  val ds = params.getOrElse("relationStructure", "BDD")
 
   val closeRelations = params.getOrElse("closeRelations", true)
 
@@ -55,7 +53,7 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
 
   }
 
-  private def any2Int(relation: cspom.extension.Relation[_]): Set[Seq[Int]] =
+  private def any2Int(relation: cspom.extension.Relation[_]): Iterable[Seq[Int]] =
     relation.map(_.map(any2Int))
 
   private[concrete] def cspomMDDtoCspfjMDD(
@@ -93,16 +91,16 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
     }
   }
 
-  private[concrete] def cspomMDDtoMDDLink(
+  private[concrete] def cspomMDDtoBDD(
     relation: cspom.extension.MDD[Int],
-    map: IdMap[cspom.extension.MDD[Int], concrete.constraint.extension.MDDLink] = new IdMap()): MDDLink = {
+    map: IdMap[cspom.extension.MDD[Int], concrete.constraint.extension.BDD] = new IdMap()): BDD = {
     relation match {
-      case n if n eq cspom.extension.MDDLeaf => concrete.constraint.extension.MDDLinkLeaf
+      case n if n eq cspom.extension.MDDLeaf => concrete.constraint.extension.BDDLeaf
       case n: cspom.extension.MDDNode[Int] => map.getOrElseUpdate(n, {
-        n.trie.toSeq.sortBy(-_._1).foldLeft[MDDLink](MDDLink0) {
+        n.trie.toSeq.sortBy(-_._1).foldLeft[BDD](BDD0) {
           case (acc, (v, st)) =>
-            new MDDLinkNode(any2Int(v),
-              cspomMDDtoMDDLink(st, map),
+            new BDDNode(any2Int(v),
+              cspomMDDtoBDD(st, map),
               acc)
         }
 
@@ -110,28 +108,9 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
     }
   }
 
-  private case class Signature(domains: Seq[Domain], init: Boolean)
-
-  /**
-   * Used to cache value to indices conversion
-   */
-  private val vToICache = new IdMap[cspom.extension.Relation[_], collection.mutable.Map[Signature, Matrix]]()
-
   private def generateMatrix(variables: Seq[Variable], relation: cspom.extension.Relation[_], init: Boolean): Matrix = {
+    logger.info(s"Generating matrix for $relation, $variables")
     val domains = variables.map(_.initDomain).toList
-
-    val map = vToICache.getOrElseUpdate(relation, collection.mutable.Map[Signature, Matrix]())
-
-    val signature = Signature(domains, init)
-
-    map.getOrElseUpdate(signature, {
-      logger.debug(s"Generating $relation for $signature ($variables) not found in $map")
-      gen(relation, init, domains)
-    })
-
-  }
-
-  private def gen(relation: cspom.extension.Relation[_], init: Boolean, domains: List[Domain]): Matrix = {
     if (relation.nonEmpty && relation.arity == 2) {
       val matrix = new Matrix2D(domains(0).span.size, domains(1).span.size,
         domains(0).head, domains(1).head, init)
@@ -142,7 +121,7 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
       new TupleTrieSet(
         ds match {
           case "MDD"          => relation2MDD(relation)
-          case "MDDLink"      => relation2MDDLink(relation)
+          case "BDD"          => relation2BDD(relation)
           case "STR"          => new STR(domains.length) ++ any2Int(relation)
           case "HashTable"    => HashTable(any2Int(relation).toSeq)
           case "IndexedTable" => IndexedTable(any2Int(relation).toSeq)
@@ -160,14 +139,14 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
     new MDDRelation(mdd.reduce())
   }
 
-  private def relation2MDDLink(relation: cspom.extension.Relation[_]): BDDRelation = {
+  private def relation2BDD(relation: cspom.extension.Relation[_]): BDDRelation = {
     val mdd = relation match {
       case mdd: cspom.extension.MDD[Int] @unchecked =>
-        cspomMDDtoMDDLink(mdd)
-      case r => MDDLink(any2Int(r).map(_.toList))
+        cspomMDDtoBDD(mdd)
+      case r => BDD(any2Int(r).map(_.toList))
     }
 
-    new BDDRelation(bdd = mdd.reduce(), cache = null)
+    new BDDRelation(bdd = mdd.reduce())
   }
 
   override def gen(extensionConstraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] = {
@@ -191,16 +170,16 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
         }
         case m: TupleTrieSet if (m.initialContent == false) => {
           consType match {
-            case "MDDCd" =>
-              new MDDCd(scope, m.relation.asInstanceOf[MDDRelation])
+            case "MDDC" =>
+              new MDDC(scope, m.relation.asInstanceOf[MDDRelation])
 
-            case "MDDCnu" =>
-              new MDDCLink(scope, m.relation.asInstanceOf[BDDRelation])
+            case "BDDC" =>
+              new BDDC(scope, m.relation.asInstanceOf[BDDRelation])
 
             case "Reduce" =>
               val r: Relation = m.relation.copy
 
-              logger.info(s"Relation stats: ${scope.map(_.initDomain.size).max} ${scope.length} ${r.edges} ${r.lambda}")
+              logger.info(s"Relation stats: ${scope.map(_.initDomain.size).sum} ${scope.length} ${r.edges} ${r.lambda} ${r.depth}")
 
               new ReduceableExt(scope, r)
 

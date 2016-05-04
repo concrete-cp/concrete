@@ -13,7 +13,7 @@ import concrete.constraint.StatefulConstraint
 import concrete.util.SparseSet
 
 /* MDDRelation comes with its own timestamp */
-class MDDCd(_scope: Array[Variable], val mdd: MDDRelation)
+class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
     extends Constraint(_scope) with Removals with StatefulConstraint[SparseSet] {
 
   override def init(ps: ProblemState) = {

@@ -5,7 +5,6 @@ import scala.xml.Text
 import scala.xml.NodeSeq
 import scala.collection.mutable.ListBuffer
 import cspom.StatisticsManager
-import java.util.Locale
 import scala.collection.mutable.HashMap
 import scala.annotation.tailrec
 import scala.collection.SortedMap
@@ -17,7 +16,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import com.typesafe.config.ConfigFactory
 import java.io.File
 import scala.util.Try
-import java.sql.SQLException
 import scala.util.Failure
 
 sealed trait ErrorHandling {
@@ -31,6 +29,9 @@ case object ErrorKeep extends ErrorHandling {
 }
 case object ErrorZero extends ErrorHandling {
   def toDouble(stat: Double) = 0.0
+}
+case object ErrorNaN extends ErrorHandling {
+  def toDouble(stat: Double) = Double.NaN
 }
 
 object Table extends App {
@@ -180,7 +181,7 @@ object Table extends App {
     data: Seq[Double] => if (data.isEmpty) -1 else StatisticsManager.median[Double](data)
   }
 
-  for (Problem(problemId, problem, nbvars, nbcons, tags) <- problems; it <- 0 until 2) {
+  for (Problem(problemId, problem, nbvars, nbcons, tags) <- problems; it <- 0 until 5) {
 
     val data = ListBuffer(s"$problem ($problemId), it $it") //, nbvars, nbcons)
     //print("\\em %s & \\np{%d} & \\np{%d}".format(problem, nbvars, nbcons))

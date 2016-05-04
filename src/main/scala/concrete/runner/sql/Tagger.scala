@@ -26,6 +26,7 @@ object Tagger extends App {
         SELECT "problemId", name, display, string_agg("problemTag", ',') as tags
         FROM "Problem" LEFT JOIN "ProblemTag" USING ("problemId")
         GROUP BY "problemId", display, "nbVars", "nbCons"
+        HAVING string_agg("problemTag", ',') ~ 'xp-table'
         ORDER BY display
         """.as[Problem])
 
@@ -42,6 +43,7 @@ object Tagger extends App {
 
     val problems = concurrent.Await.result(run, Duration.Inf)
     
+    println(problems)
 
     val upd: Seq[DBIO[Int]] = problems.flatMap { p =>
       
@@ -50,17 +52,18 @@ object Tagger extends App {
       val name = path.last
       val cats = path.init
 
-      val display: Seq[DBIO[Int]] = if (p.display.isEmpty) {
-        Seq(sqlu"""UPDATE "Problem" SET display = $name WHERE "problemId" = ${p.problemId}""")
-      } else {
-        Seq()
-      }
+//      val display: Seq[DBIO[Int]] = if (p.display.isEmpty) {
+//        Seq(sqlu"""UPDATE "Problem" SET display = $name WHERE "problemId" = ${p.problemId}""")
+//      } else {
+//        Seq()
+//      }
 
       val tags: Seq[DBIO[Int]] = for (c <- cats if !p.tags.contains(c)) yield {
         sqlu"""INSERT INTO "ProblemTag" VALUES ($c, ${p.problemId})"""
       }
 
-      display ++: tags
+      //display ++: 
+      tags
 
     }
 

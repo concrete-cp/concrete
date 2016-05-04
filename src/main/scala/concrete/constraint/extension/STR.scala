@@ -113,6 +113,7 @@ final class STR(arity: Int, val array: Array[Array[Int]], val bound: Int) extend
 
   override def size = bound
   def lambda = bound
+  def depth = arity
 }
 
 final class MutableList(var nb: Int) extends Traversable[Int] {

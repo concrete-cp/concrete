@@ -516,7 +516,7 @@ object FZPatterns {
      * predicate table_int(array[int] of var int: x, array[int, int] of int: t)
      */
     case Ctr('table_int, Seq(IntExpression.simpleSeq(x), IntExpression.constSeq(t)), p) =>
-      x in t.grouped(x.size).toSeq
+      x in t.grouped(x.size).map(_.toList).toSeq
     //      CSPOMConstraint('extension, x, p ++ Map("init" -> false,
     //        "relation" -> new Table(t.map(CSPOMConstant(_)).grouped(x.size).toSet)))
 

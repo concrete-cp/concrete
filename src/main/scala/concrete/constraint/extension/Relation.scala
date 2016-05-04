@@ -46,5 +46,6 @@ trait Relation extends Iterable[Array[Int]] {
   def findSupport(scope: IndexedSeq[Domain], p: Int, i: Int): Option[Array[Int]]
   def lambda: BigInt
   def universal(scope: IndexedSeq[Domain]): Boolean
+  def depth: Int
 
 }

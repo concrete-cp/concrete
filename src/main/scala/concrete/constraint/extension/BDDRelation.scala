@@ -11,51 +11,7 @@ import cspom.extension.IdMap
 import concrete.IntDomain
 import concrete.EmptyIntDomain
 
-object BDD {
-
-  type Cache = collection.mutable.Map[BDDRNode, WeakReference[BDDRNode]]
-
-}
-
-trait BDD extends Iterable[Seq[Int]] {
-
-  final type Cache = BDD.Cache
-
-  def id: Int
-  def +(e: List[Int])(implicit cache: Cache): BDD
-  def lambda: BigInt = lambda(new IdMap())
-  protected[extension] def lambda(map: IdMap[BDD, BigInt]): BigInt
-  def contains(e: Seq[Int]): Boolean
-  def edges(ts: Int): Int
-  def filterTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int, cache: Cache): BDD
-
-  def supported(ts: Int, domains: Array[Domain]): Array[IntDomain] = {
-    val arity = domains.length
-    val newDomains = Array.fill[IntDomain](arity)(EmptyIntDomain)
-
-    def updNewDomains(depth: Int, i: Int) = {
-      ReduceableExt.fills += 1
-      newDomains(depth) |= i
-      newDomains(depth).length == domains(depth).length
-    }
-
-    fillFound(ts, updNewDomains, 0, new SetWithMax(arity))
-
-    newDomains
-  }
-
-  def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax): Unit
-
-  def findSupport(ts: Int, scope: IndexedSeq[Domain], p: Int, i: Int, support: Array[Int], depth: Int): Option[Array[Int]] = {
-    ???
-  }
-  def universal(scope: IndexedSeq[Domain], timestamp: Int): Boolean = ???
-
-  def nodes(map: IdMap[BDD, Unit]): IdMap[BDD, Unit]
-  def identify(): Int
-}
-
-final class BDDRelation(val bdd: BDD, val timestamp: Timestamp = new Timestamp(), implicit val cache: BDD.Cache) extends Relation with LazyLogging {
+final class BDDRelation(val bdd: BDD, val timestamp: Timestamp = new Timestamp()) extends Relation with LazyLogging {
   type Self2 = BDDRelation
 
   def findSupport(domains: IndexedSeq[Domain], p: Int, i: Int): Option[Array[Int]] = {
@@ -71,8 +27,10 @@ final class BDDRelation(val bdd: BDD, val timestamp: Timestamp = new Timestamp()
 
   def edges: Int = bdd.edges(timestamp.next())
 
+  def depth: Int = bdd.depth(new IdMap())
+
   def filterTrie(doms: Array[Domain], modified: List[Int]): BDDRelation = {
-    val m = bdd.filterTrie(timestamp.next(), doms, modified, 0, cache)
+    val m = bdd.filterTrie(timestamp.next(), doms, modified, 0)
 
     assert(m.forall { sup =>
       sup.zipWithIndex.forall {
@@ -86,7 +44,7 @@ final class BDDRelation(val bdd: BDD, val timestamp: Timestamp = new Timestamp()
     if (m eq bdd) {
       this
     } else {
-      new BDDRelation(m, timestamp, cache)
+      new BDDRelation(m, timestamp)
     }
   }
 
@@ -113,6 +71,6 @@ final class BDDRelation(val bdd: BDD, val timestamp: Timestamp = new Timestamp()
   def iterator = bdd.iterator.map(_.toArray)
 
   def -(t: Seq[Int]) = throw new UnsupportedOperationException
-  def +(t: Seq[Int]) = new BDDRelation(bdd + t.toList, timestamp, cache)
+  def +(t: Seq[Int]) = new BDDRelation(bdd + t.toList, timestamp)
   def contains(t: Array[Int]): Boolean = bdd.contains(t)
 }

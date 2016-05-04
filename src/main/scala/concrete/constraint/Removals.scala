@@ -1,10 +1,11 @@
 package concrete.constraint;
 
 import java.util.Arrays
-import concrete.Domain
-import concrete.ProblemState
-import concrete.Outcome
+
 import scala.collection.mutable.ArrayBuffer
+
+import concrete.Outcome
+import concrete.ProblemState
 
 trait Removals extends Constraint with AdviseCounts {
 

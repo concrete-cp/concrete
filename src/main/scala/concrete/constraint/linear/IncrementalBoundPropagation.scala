@@ -65,7 +65,7 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
   }
 
   def initData(ps: ProblemState) = {
-    val doms = Array.tabulate[Domain](arity)(p => IntDomain.ofInterval(-1000000, 1000000)) // ps.dom(scope(p)))
+    val doms = ps.doms(scope) //Array.tabulate[Domain](arity)(p => IntDomain.ofInterval(-1000000, 1000000)) // ps.dom(scope(p)))
     val f = (doms, factors).zipped.map(_.span * _).reduce(_ + _) - constant
     val maxI = size(doms.head, factors.head)
     val vars = BitVector.filled(arity).filter(p => !doms(p).isAssigned)

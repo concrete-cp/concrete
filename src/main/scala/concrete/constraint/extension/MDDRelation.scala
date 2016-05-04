@@ -6,6 +6,7 @@ import concrete.util.SetWithMax
 import concrete.util.Timestamp
 import concrete.EmptyIntDomain
 import concrete.IntDomain
+import cspom.extension.IdMap
 
 object MDDRelation extends RelationGenerator {
   def apply(data: Iterable[Seq[Int]]): MDDRelation = new MDDRelation(MDD(data))
@@ -62,6 +63,8 @@ final class MDDRelation(val mdd: MDD, val timestamp: Timestamp = new Timestamp()
   def copy: MDDRelation = new MDDRelation(mdd.copy(timestamp.next()))
 
   lazy val lambda = mdd.lambda
+  
+  def depth = mdd.depth(new IdMap())
 
   override def size = {
     val lambda = mdd.lambda

@@ -109,19 +109,16 @@ object SQLWriter {
 
   val problems = TableQuery[Problem]
 
-  class Config(tag: Tag) extends Table[(Int, String, String)](tag, "Config") {
+  class Config(tag: Tag) extends Table[(Int, String)](tag, "Config") {
     def configId = column[Int]("configId", O.PrimaryKey, O.AutoInc)
     def config = column[String]("config")
-    def md5 = column[String]("md5")
 
-    def * = (configId, config, md5)
+    def * = (configId, config)
 
-    def idxMd5 = index("idxMD5", md5, unique = true)
+    		 def idxMd5 = index("idxConfig", config, unique = true)
   }
 
   val configs = TableQuery[Config]
-
-  def findConfigByMD5 = configs.findBy(_.md5)
 
   class Execution(tag: Tag) extends Table[(Int, String, Int, Int, Int, Timestamp, Option[Timestamp], Option[String], String, Option[String])](tag, "Execution") {
     def executionId = column[Int]("executionId", O.PrimaryKey, O.AutoInc)
@@ -169,23 +166,6 @@ object SQLWriter {
 
   val statistic = TableQuery[Statistic]
 
-  def md5(data: String): String = {
-    val istr = new ByteArrayInputStream(data.getBytes)
-    val msgDigest = MessageDigest.getInstance("MD5");
-
-    def createDigest(buffer: Array[Byte]) {
-      val read = istr.read(buffer)
-      if (read > 0) {
-        msgDigest.update(buffer, 0, read)
-        createDigest(buffer)
-      }
-    }
-
-    createDigest(new Array[Byte](8192))
-
-    val sum = new BigInteger(1, msgDigest.digest).toString(16);
-    "".padTo(32 - sum.length, '0') + sum
-  }
 }
 
 final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
@@ -286,14 +266,13 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
         case (k, v)    => s"$k = $v"
       }.mkString(", ")
 
-    val md5sum = md5(cfg)
-    val action = configs.filter(_.md5 === md5sum).map(_.configId).result.headOption
+    val action = configs.filter(_.config === cfg).map(_.configId).result.headOption
     val result = db.run(action)
 
     result.flatMap {
       case None =>
         db.run(
-          configs.map(c => (c.config, c.md5)) returning configs.map(_.configId) += ((cfg, md5sum)))
+          configs.map(c => (c.config)) returning configs.map(_.configId) += ((cfg)))
       case Some(c) => Future.successful(c)
 
     }
@@ -304,15 +283,15 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
 
     val executionId = db.run(
       executions.map(e =>
-        (e.problemId, e.configId, e.version, e.start, e.hostname)) returning
+        (e.problemId, e.configId, e.version, e.start, e.hostname, e.iteration)) returning
         executions.map(_.executionId) += ((
           p, c, version, now,
-          Some(InetAddress.getLocalHost.getHostName))))
+          Some(InetAddress.getLocalHost.getHostName), it)))
 
     executionId.onSuccess {
       case e =>
 
-        print(s"Problem $p, config $c, version $version, execution $e")
+        print(s"Problem $p, config $c, version $version, iteration $it, execution $e")
     }
 
     executionId
