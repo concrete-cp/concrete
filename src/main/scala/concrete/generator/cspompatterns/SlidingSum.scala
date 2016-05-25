@@ -54,7 +54,7 @@ final object SlidingSum extends ConstraintCompilerNoData {
           _._2.nonEmpty
         }
 
-        new MDDNode(children.toMap, true)
+        new MDDNode(children.toMap)
       })
     }
 

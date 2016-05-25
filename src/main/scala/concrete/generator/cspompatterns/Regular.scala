@@ -62,7 +62,7 @@ final object Regular extends ConstraintCompilerNoData {
         val map = (1 to s).map { v =>
           v -> mdd(level - 1, s, d, d(q0 - 1)(v - 1), f, cache)
         }
-        MDDNode(map.filter(_._2.nonEmpty).toMap, true)
+        MDDNode(map.filter(_._2.nonEmpty).toMap)
       })
     }
   }

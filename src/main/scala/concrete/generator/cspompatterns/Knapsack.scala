@@ -101,8 +101,7 @@ final object Knapsack extends ConstraintCompilerNoData {
 
         MDD.node(doms(i).map { v =>
           v -> mdd(i + 1, rt + v * f)
-        },
-          true)
+        })
       })
 
     }
