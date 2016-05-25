@@ -69,7 +69,7 @@ final class MDDTest extends FlatSpec with Matchers with Inspectors with Timeouts
   it should "have same edges as CSPOM version" in {
     val mdd = MDDGenerator(5, 5, 1000, new Random(0)).reduce()
 
-    val cspomMdd = cspom.extension.MDD(mdd).reduce
+    val cspomMdd = cspom.extension.MDD(mdd.map(_.toList)).reduce
 
     mdd.lambda shouldBe cspomMdd.lambda
 

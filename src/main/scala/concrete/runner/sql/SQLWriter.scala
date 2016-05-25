@@ -19,14 +19,11 @@
 
 package concrete.runner.sql
 
-import java.io.ByteArrayInputStream
-import java.math.BigInteger
+
 import java.net.InetAddress
-import java.net.URI
-import java.security.InvalidParameterException
-import java.security.MessageDigest
+
 import java.sql.Timestamp
-import scala.xml.NodeSeq
+
 import MyPGDriver.api._
 import SQLWriter._
 import concrete.ParameterManager

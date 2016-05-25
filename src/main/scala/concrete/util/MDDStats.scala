@@ -17,23 +17,33 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package concrete;
+package concrete.util;
 
-import concrete.constraint.extension.BDDC
-import concrete.constraint.extension.MDDC
-import concrete.constraint.extension.ReduceableExt
+import com.typesafe.scalalogging.LazyLogging
+import concrete.runner.sql.MyPGDriver.api._
+import concrete.runner.sql.SQLWriter
+import concrete.generator.ExtensionGenerator
+import concrete.runner.sql.Table2
 import cspom.StatisticsManager
+import concrete.generator.cspompatterns.ConcretePatterns
+import concrete.generator.cspompatterns.XCSPPatterns
 import cspom.CSPOM
 import cspom.compiler.CSPOMCompiler
 import concrete.generator.cspompatterns.FZPatterns
-import concrete.generator.cspompatterns.ConcretePatterns
-
 import cspom.extension.MDD
-import concrete.generator.ExtensionGenerator
 import cspom.extension.Relation
-import concrete.generator.cspompatterns.XCSPPatterns
-import StatisticsManager._
-import com.typesafe.scalalogging.LazyLogging
+import cspom.StatisticsManager._
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+import concrete.ParameterManager
+import concrete.Problem
+import concrete.Solver
+import concrete.UNSAT
+import scala.math.BigInt.int2bigInt
+import scala.reflect.runtime.universe
+import concrete.constraint.extension.BDDC
+import concrete.constraint.extension.MDDC
+import concrete.constraint.extension.ReduceableExt
 
 object MDDStats extends App with LazyLogging {
   def apply(prob: Problem, params: ParameterManager): MDDStats =
@@ -49,11 +59,26 @@ object MDDStats extends App with LazyLogging {
   var ka = List[Double]()
   var da = List[Double]()
   var ba = List[Double]()
+  var nba = List[Double]()
 
-  for (a <- args) {
+  val query = Table2.DB
+    .run {
+      SQLWriter.problemTag
+        .filter(_.problemTag === "xp-table-bdd")
+        .join(SQLWriter.problems)
+        .on { (tag, problem) => tag.problemId === problem.problemId }
+        .map { case (_, problem) => problem.name }
+        .result
+    }
+
+  val problems = Await.result(query, Duration.Inf)
+
+  println(s"${problems.size} instances")
+
+  for (a <- problems) {
     logger.warn(s"Loading $a")
     //print(s"$a\t")
-    val cspom = CSPOM.load(a).get
+    val cspom = CSPOM.load(s"/home/vion/xp-table/$a").get
     if (a.contains("fzn")) {
       CSPOMCompiler.compile(cspom, FZPatterns())
     } else if (a.contains("xml")) {
@@ -68,6 +93,7 @@ object MDDStats extends App with LazyLogging {
     var ks = List[Int]()
     var ds = List[Double]()
     var bdds = List[Int]()
+
 
     for {
       c <- cspom.constraints
@@ -95,6 +121,9 @@ object MDDStats extends App with LazyLogging {
       ka ::= average(ks)
       print(s"${ka.head}\t")
 
+      nba ::= ds.size
+      print(s"${nba.head}\t")
+
       la ::= lambdas.sum / lambdas.size
       print(s"${la.head}\t")
 
@@ -110,7 +139,9 @@ object MDDStats extends App with LazyLogging {
   }
 
   println()
-  println(s"${geom(da)}\t${geom(ka)}\t${la.product}\t${geom(ea)}\t${geom(ba)}")
+  println(s"${average(da)}\t${average(ka)}\t${averageBigInt(la)}\t${average(ea)}\t${average(ba)}")
+  println(s"${stDev(da)}\t${stDev(ka)}\t${stDevBigInt(la)}\t${stDev(ea)}\t${stDev(ba)}")
+
 }
 
 final class MDDStats(prob: Problem, params: ParameterManager) extends Solver(prob, params) {

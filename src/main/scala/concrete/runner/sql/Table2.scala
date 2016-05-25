@@ -65,6 +65,8 @@ object Table2 extends App {
         Timeout
       } else if (status.contains("OutOfMemory") || status.contains("relation is too large")) {
         OOM
+      } else if ("started" == status) {
+        Stalled
       } else {
         UnknownError
       }
@@ -75,16 +77,17 @@ object Table2 extends App {
         case Success => statistic.toString
         case Timeout => s"${timeoutHandler.toDouble(statistic)} (TO)"
         case OOM     => s"${oomHandler.toDouble(statistic)} (OOM)"
+        case Stalled => s"${oomHandler.toDouble(statistic)} (Stalled)"
         case _       => s"${Double.NaN} ($status)"
       }
     }
 
     def toDouble(toHandler: ErrorHandling, oomHandler: ErrorHandling): Double = {
       solved match {
-        case Success => statistic
-        case Timeout => timeoutHandler.toDouble(statistic)
-        case OOM     => oomHandler.toDouble(statistic)
-        case _       => Double.NaN
+        case Success       => statistic
+        case Timeout       => timeoutHandler.toDouble(statistic)
+        case OOM | Stalled => oomHandler.toDouble(statistic)
+        case _             => Double.NaN
       }
     }
   }
@@ -107,6 +110,7 @@ object Table2 extends App {
   case object Success extends Failure
   case object Timeout extends Failure
   case object OOM extends Failure
+  case object Stalled extends Failure
   case object UnknownError extends Failure
 
   val configs = nature.map(_.toInt)
@@ -133,28 +137,28 @@ object Table2 extends App {
 
   val timeoutHandler: ErrorHandling = statistic match {
     case "rps"          => ErrorKeep
-    case "nodes"        => ErrorInfinity
+    case "nodes"        => ErrorCap(Double.PositiveInfinity)
     case "time"         => ErrorKeep
     case "revisions"    => ErrorKeep
     case "mem"          => ErrorKeep
-    case "domainChecks" => ErrorInfinity
+    case "domainChecks" => ErrorCap(Double.PositiveInfinity)
     case "nps"          => ErrorKeep
   }
 
   val oomHandler: ErrorHandling = statistic match {
-    case "rps"          => ErrorZero
-    case "nodes"        => ErrorInfinity
-    case "time"         => ErrorNaN
-    case "revisions"    => ErrorNaN
-    case "mem"          => ErrorInfinity
-    case "domainChecks" => ErrorInfinity
-    case "nps"          => ErrorZero
+    case "rps"          => ErrorCap(0)
+    case "nodes"        => ErrorCap(Double.PositiveInfinity)
+    case "time"         => ErrorCap(1200)
+    case "revisions"    => ErrorCap(0)
+    case "mem"          => ErrorCap(Double.PositiveInfinity)//4 * math.pow(2, 10))
+    case "domainChecks" => ErrorCap(Double.PositiveInfinity)
+    case "nps"          => ErrorCap(0)
   }
 
   // val ignoreNaN = true
 
   val aggregator = {
-    data: Seq[Double] => if (data.isEmpty) -1 else StatisticsManager.median[Double](data)
+    data: Seq[Double] => if (data.isEmpty) -1 else data.sum
   }
 
   val statQuery = statistic match {
@@ -232,7 +236,7 @@ object Table2 extends App {
     println(configs.map(c => stats.getOrElse(c, Resultat("not started", Double.NaN))).map(_.toString(timeoutHandler, oomHandler)).mkString("\t"))
   }
 
-  val ignoreNaN = true
+  val ignoreNaN = false
 
   for ((k, t) <- totals.toSeq.sortBy(_._1)) {
     //println(s"$k: $t")
@@ -253,7 +257,7 @@ object Table2 extends App {
     }
 
     println(s"$k\t" + medians.map { median =>
-      f"${median}%.1f"
+      f"${median}%f"
       //            val (v, m) = engineer(median)
       //
       //            (if (median < best * 1.1) "\\bf " else "") + (
