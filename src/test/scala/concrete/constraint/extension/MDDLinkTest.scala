@@ -62,7 +62,7 @@ final class BDDTest extends FlatSpec with Matchers with Inspectors {
       List(3, 1, 1),
       List(3, 1, 3)))
 
-    println(m0.edges(6))
+   // println(m0.edges(6))
 
     m0.lambda shouldBe BigInt(6)
 
@@ -135,7 +135,7 @@ final class BDDTest extends FlatSpec with Matchers with Inspectors {
       .reduce()
 
     val l1 = new SetWithMax(3)
-    m.fillFound(1, { case t => println(t); false }, 0, l1)
+    m.fillFound(1, { case t => false }, 0, l1)
 
     //println(l1)
 
@@ -242,7 +242,7 @@ final class BDDTest extends FlatSpec with Matchers with Inspectors {
 
     val m2 = m.filterTrie(5, Array(IntDomain(1 to 3), Singleton(1), IntDomain(1 to 3)), List(1), 0)
 
-    println(m2.toList)
+    //println(m2.toList)
 
     m2.nodes(map).size shouldBe 13
 
