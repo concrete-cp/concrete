@@ -16,7 +16,7 @@ resolvers += "INGI Snapshots" at "http://artifactory.info.ucl.ac.be/artifactory/
 
 
 libraryDependencies ++= Seq(
-	"fr.univ-valenciennes" %% "cspom" % "2.7-SNAPSHOT",
+	"fr.univ-valenciennes" %% "cspom" % "2.7",
 	"org.postgresql" % "postgresql" % "9.4.1208",
 	//"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
 	"org.ow2.sat4j" % "org.ow2.sat4j.pb" % "2.3.5",
