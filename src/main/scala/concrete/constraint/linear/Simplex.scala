@@ -120,12 +120,12 @@ class Simplex(
 
   def reviseBounds(
     ps: concrete.ProblemState,
-    mod: Seq[Int],
+    mod: BitVector,
     doms: Array[Domain],
     data: Unit): Outcome = {
     //println(s"% Revising $id due to $mod")
 
-    val queue = mod.map(graph).reduce(_ | _).filter(p => !doms(p).isAssigned)
+    val queue = mod.traversable.view.map(graph).reduce(_ | _).filter(p => !doms(p).isAssigned)
 
     for (p <- 0 until arity) {
       val dom = doms(p)

@@ -26,6 +26,7 @@ import concrete.ProblemState
 import cspom.UNSATException
 import concrete.Variable
 import concrete.constraint.Residues
+import cspom.util.BitVector
 
 final class ExtensionConstraintGeneral(
   var matrix: Matrix,
@@ -41,7 +42,7 @@ final class ExtensionConstraintGeneral(
 
   def removeTuples(base: Array[Int]) = ??? //tuples(base).count(removeTuple)
 
-  override def revise(ps: ProblemState, mod: Seq[Int]): Outcome = {
+  override def revise(ps: ProblemState, mod: BitVector): Outcome = {
 
     val skip = this.skip(mod)
     var cs = ps

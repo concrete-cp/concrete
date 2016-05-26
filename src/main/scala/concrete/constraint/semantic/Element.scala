@@ -6,6 +6,7 @@ import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.Removals
+import cspom.util.BitVector
 
 object Element {
   def apply(result: Variable, index: Variable, varsIdx: Seq[(Int, Variable)]) = {
@@ -64,7 +65,7 @@ class Element(val result: Variable,
     ps.shaveDom(index, 0, vars.length)
   }
 
-  def revise(ps: ProblemState, modified: Seq[Int]): Outcome = {
+  def revise(ps: ProblemState, modified: BitVector): Outcome = {
     val resultDom = ps.dom(result)
     /*
      * Revise indices

@@ -1,6 +1,5 @@
 package concrete.constraint.semantic
 
-import org.scalatest.Finders
 import org.scalatest.FlatSpec
 import org.scalatest.Inspectors
 import org.scalatest.Matchers
@@ -36,12 +35,14 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors with TryValu
     c.register(new AdviseCount())
     val pb = Problem(occ, value, v1, v2, v3, v4, v5)
     pb.addConstraint(c)
-    val ps = pb.initState.toState
 
-    val mod = c.revise(ps).toState
+    val mod = pb.initState.andThen { ps =>
+      c.adviseAll(ps)
+      c.revise(ps)
+    }.toState
 
     forAll(c.scope.drop(1)) {
-      case v => mod.dom(v) should be theSameInstanceAs ps.dom(v)
+      case v => mod.dom(v) should be theSameInstanceAs v.initDomain
     }
 
     mod.dom(occ) should contain theSameElementsAs Seq(1, 2)
@@ -64,9 +65,11 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors with TryValu
 
     val pb = Problem(occ, v1, v2, v3, v4, v5)
     pb.addConstraint(c)
-    val ps = pb.initState.toState
 
-    c.revise(ps) shouldBe Contradiction
+    pb.initState.andThen { ps =>
+      c.adviseAll(ps)
+      c.revise(ps)
+    } shouldBe Contradiction
 
   }
 

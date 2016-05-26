@@ -11,6 +11,7 @@ import concrete.constraint.Constraint
 import concrete.constraint.Removals
 import concrete.constraint.StatefulConstraint
 import concrete.util.SparseSet
+import cspom.util.BitVector
 
 /* MDDRelation comes with its own timestamp */
 class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
@@ -33,7 +34,7 @@ class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
 
   def getEvaluation(ps: ProblemState) = (prop * doubleCardSize(ps)).toInt
 
-  def revise(ps: ProblemState, modified: Seq[Int]) = {
+  def revise(ps: ProblemState, modified: BitVector) = {
 
     val domains = ps.doms(scope) //Array.tabulate(arity)(p => ps.dom(scope(p)))
     val supported = Array.fill[IntDomain](arity)(EmptyIntDomain)
@@ -42,7 +43,7 @@ class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
 
     var delta = arity
 
-    var gNo = ps(this)  //.clone()
+    var gNo = ps(this) //.clone()
 
     var gNoChange = false
 

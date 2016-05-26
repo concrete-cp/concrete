@@ -37,24 +37,25 @@ class Occurrence(val result: Variable, val value: Variable,
 
   override def toString(ps: ProblemState) = s"${result.toString(ps)} occurrences of ${value.toString(ps)} in (${vars.map(_.toString(ps)).mkString(", ")})"
 
-  private def updateState(ps: ProblemState, mod: Seq[Int], currentValues: Domain): (Map[Int, Int], Map[Int, BitVector]) = {
+  private def updateState(ps: ProblemState, mod: BitVector, currentValues: Domain): (Map[Int, Int], Map[Int, BitVector]) = {
     var (affected, canBeAffectedSet) = ps(this)
 
-    for (sm <- mod) {
+    var sm = mod.nextSetBit(2)
+    while (sm >= 0) {
       val m = sm - 2
-      if (m >= 0) {
-        for (v <- currentValues) {
-          if (canBeAffectedSet(v)(m)) {
-            val dom = ps.dom(vars(m))
-            if (!dom.present(v)) {
-              canBeAffectedSet = canBeAffectedSet.updated(v, canBeAffectedSet(v) - m)
-            } else if (dom.size == 1) {
-              canBeAffectedSet = canBeAffectedSet.updated(v, canBeAffectedSet(v) - m)
-              affected = affected.updated(v, affected(v) + 1)
-            }
+
+      for (v <- currentValues) {
+        if (canBeAffectedSet(v)(m)) {
+          val dom = ps.dom(vars(m))
+          if (!dom.present(v)) {
+            canBeAffectedSet = canBeAffectedSet.updated(v, canBeAffectedSet(v) - m)
+          } else if (dom.isAssigned) {
+            canBeAffectedSet = canBeAffectedSet.updated(v, canBeAffectedSet(v) - m)
+            affected = affected.updated(v, affected(v) + 1)
           }
         }
       }
+      sm = mod.nextSetBit(sm + 1)
     }
 
     (affected, canBeAffectedSet)
@@ -112,7 +113,7 @@ class Occurrence(val result: Variable, val value: Variable,
     }
   }
 
-  def revise(ps: ProblemState, mod: Seq[Int]): Outcome = {
+  def revise(ps: ProblemState, mod: BitVector): Outcome = {
     //println(toString(ps))
 
     val currentValues = ps.dom(value)

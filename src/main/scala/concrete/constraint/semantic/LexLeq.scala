@@ -78,10 +78,10 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
 
   }
 
-  def revise(ps: ProblemState, cmod: Seq[Int]): Outcome = {
-    val mod = cmod.foldLeft(BitVector.empty) {
-      case (bv, m) => if (m < n) bv + m else bv + (m - n)
-    }
+  def revise(ps: ProblemState, cmod: BitVector): Outcome = {
+    val mod = BitVector(cmod.traversable.view.map { m =>
+      if (m < n) m else (m - n)
+    })
 
     def reviseN(ps: ProblemState, i: Int): Outcome = {
       if (i < 0) ps

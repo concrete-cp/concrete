@@ -28,6 +28,7 @@ import concrete.constraint.Constraint
 import concrete.constraint.Removals
 import concrete.constraint.StatefulConstraint
 import cspom.Statistic
+import cspom.util.BitVector
 
 object ReduceableExt {
   @Statistic
@@ -36,7 +37,7 @@ object ReduceableExt {
 
 final class ReduceableExt(scope: Array[Variable], val relation: Relation)
     extends Constraint(scope) with LazyLogging with Removals with StatefulConstraint[Relation] {
-  
+
   require(scope.toSet.size == arity, "Variables must be distinct")
 
   override def init(ps: ProblemState) = ps.updateState(this, relation)
@@ -45,7 +46,7 @@ final class ReduceableExt(scope: Array[Variable], val relation: Relation)
 
   //private val newDomains = new Array[Domain](arity)
 
-  def revise(ps: ProblemState, mod: Seq[Int]) = {
+  def revise(ps: ProblemState, mod: BitVector) = {
     val domains = ps.doms(scope) //Array.tabulate(arity)(p => ps.dom(scope(p)))
 
     val trie = ps(this)
@@ -57,7 +58,7 @@ final class ReduceableExt(scope: Array[Variable], val relation: Relation)
 
     logger.trace("Filtering with " + scope.toSeq.map(_.toString(ps)))
 
-    val newTrie = trie.filterTrie(domains, mod.toList)
+    val newTrie = trie.filterTrie(domains, mod.traversable.toList)
 
     //println("filtered " + newTrie.size)
 

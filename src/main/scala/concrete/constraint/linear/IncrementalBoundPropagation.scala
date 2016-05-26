@@ -10,6 +10,7 @@ import concrete.constraint.StatefulConstraint
 import concrete.util.Interval
 import concrete.util.Math
 import cspom.util.BitVector
+import concrete.Outcome
 
 object IncrementalBoundPropagation {
   sealed trait POutcome
@@ -22,21 +23,17 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
 
   def is: Array[Int]
 
-  def updateF(ps: ProblemState, mod: Seq[Int]) = {
+  def updateF(ps: ProblemState, mod: BitVector) = {
     val (doms, f, vars, maxI) = ps(this)
 
     val newDoms = doms.clone
-
-    var i = mod.length - 1
 
     var boundchange = false
 
     var newF = f
     var newVars = vars
 
-    while (i >= 0) {
-      val p = mod(i)
-
+    for (p <- mod) {
       val nd = ps.dom(scope(p))
 
       newDoms(p) = nd
@@ -55,9 +52,6 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
           newVars -= p
         }
       }
-
-      i -= 1
-
     }
 
     (newDoms, newF, newVars, maxI, boundchange)
@@ -70,9 +64,13 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
     val maxI = size(doms.head, factors.head)
     val vars = BitVector.filled(arity).filter(p => !doms(p).isAssigned)
 
+    proceed(ps, doms, f, vars, maxI)
     // println(s"$mode, arity $arity, $f")
-    ps.updateState(this, (doms, f, vars, maxI))
+    //ps.updateState(this, (doms, f, vars, maxI§K))
   }
+
+  def proceed(ps: ProblemState, doms: Array[Domain], f: Interval, vars: BitVector, max: Int): Outcome
+
   //
   //  @annotation.tailrec
   //  final def realMax(i: Int, doms: Array[Domain], factors: Array[Int], vars: BitVector, max: Int): Int = {
@@ -85,7 +83,8 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
   //      math.max(max, size(doms(i), factors(i))))
   //
   //  }
-  //  
+  //
+
   def realMax(i: Int, doms: Array[Domain], factors: Array[Int], vars: BitVector, max: Int): Int = {
     if (i < 0) max else
       math.max(max, is(i))

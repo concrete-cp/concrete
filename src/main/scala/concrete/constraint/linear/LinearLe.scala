@@ -9,6 +9,9 @@ import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Removals
 import cspom.Statistic
+import cspom.util.BitVector
+import concrete.Domain
+import concrete.util.Interval
 
 object LinearLe {
   def apply(constant: Int, factors: Array[Int], scope: Array[Variable], strict: Boolean, pm: ParameterManager) = {
@@ -18,7 +21,6 @@ object LinearLe {
 
     new LinearLe(actualConstant, sf, ss, si)
   }
-
 
   @Statistic
   var shaves = 0l
@@ -34,7 +36,7 @@ final class LinearLe(
 
   import IncrementalBoundPropagation._
 
-  override def isConsistent(ps: ProblemState, mod: Seq[Int]) = {
+  override def isConsistent(ps: ProblemState, mod: BitVector) = {
     val (doms, f, vars, max, bc) = updateF(ps, mod)
     clearMod()
     if (!bc || f.lb <= 0) {
@@ -44,11 +46,18 @@ final class LinearLe(
     }
   }
 
-  override def revise(ps: ProblemState, mod: Seq[Int]): Outcome = {
+  override def revise(ps: ProblemState, mod: BitVector): Outcome = {
     val (doms, f, vars, max, bc) = updateF(ps, mod)
-    if (!bc) {
+    if (bc) {
+      proceed(ps, doms, f, vars, max)
+    } else {
       ps.updateState(this, (doms, f, vars, max))
-    } else if (f.ub <= 0) {
+    }
+
+  }
+
+  def proceed(ps: ProblemState, doms: Array[Domain], f: Interval, vars: BitVector, max: Int) = {
+    if (f.ub <= 0) {
       ps.entail(this)
     } else if (max <= -f.lb) {
       ps.updateState(this, (doms, f, vars, max))
@@ -65,7 +74,6 @@ final class LinearLe(
       }
 
     }
-
   }
 
   override def toString() = toString("<=BC")

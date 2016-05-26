@@ -3,6 +3,7 @@ package concrete.constraint;
 import concrete.Contradiction
 import concrete.Outcome
 import concrete.ProblemState
+import cspom.util.BitVector
 
 trait ResidueManager {
   def getResidue(position: Int, index: Int): Array[Int]
@@ -57,7 +58,7 @@ trait Residues extends Removals {
 
   }
 
-  def revise(state: ProblemState, modified: Seq[Int]): Outcome = // {
+  def revise(state: ProblemState, modified: BitVector): Outcome = // {
     revise(state, skip(modified)).entailIfFree(this)
   //    val skip = this.skip(modified)
   //    var cs = state

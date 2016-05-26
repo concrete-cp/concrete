@@ -5,10 +5,11 @@ import concrete.Domain
 import concrete.ProblemState
 import concrete.Outcome
 import scala.collection.mutable.ArrayBuffer
+import cspom.util.BitVector
 
 trait BoundRemovals[A] extends Constraint with Removals with StatefulConstraint[(Array[Domain], A)] with AdviseCounts {
 
-  def revise(problemState: ProblemState, mod: Seq[Int]): Outcome = {
+  def revise(problemState: ProblemState, mod: BitVector): Outcome = {
     val state = problemState(this)
     val lastDoms = state._1
 
@@ -47,6 +48,6 @@ trait BoundRemovals[A] extends Constraint with Removals with StatefulConstraint[
 
   }
 
-  def reviseBounds(problemState: ProblemState, modified: Seq[Int], doms: Array[Domain], data: A): Outcome
+  def reviseBounds(problemState: ProblemState, modified: BitVector, doms: Array[Domain], data: A): Outcome
 
 }

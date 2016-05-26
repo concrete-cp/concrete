@@ -10,6 +10,7 @@ import concrete.constraint.Removals
 import concrete.Contradiction
 import concrete.ProblemState
 import concrete.Outcome
+import cspom.util.BitVector
 
 final class SquareBC(val x: Variable, val y: Variable)
     extends Constraint(Array(x, y)) with BC {
@@ -66,7 +67,7 @@ final class SquareAC(val x: Variable, val y: Variable)
     math.abs(yValue) < Square.MAX_SQUARE && xDomain.present(yValue * yValue)
   }
 
-  def revise(ps: ProblemState, modified: Seq[Int]): Outcome = {
+  def revise(ps: ProblemState, modified: BitVector): Outcome = {
     val s = skip(modified)
 
     (if (s == 0) { ps } else {

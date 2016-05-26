@@ -9,6 +9,7 @@ import concrete.constraint.Constraint
 import concrete.constraint.Removals
 import concrete.constraint.StatefulConstraint
 import concrete.util.SparseSet
+import cspom.util.BitVector
 
 /* MDDRelation comes with its own timestamp */
 class BDDC(_scope: Array[Variable], val bdd: BDDRelation)
@@ -32,7 +33,7 @@ class BDDC(_scope: Array[Variable], val bdd: BDDRelation)
 
   def getEvaluation(ps: ProblemState) = (prop * doubleCardSize(ps)).toInt
 
-  def revise(ps: ProblemState, modified: Seq[Int]) = {
+  def revise(ps: ProblemState, modified: BitVector) = {
 
     val oldGno = ps(this)
     val domains = Array.tabulate(arity)(p => ps.dom(scope(p)))

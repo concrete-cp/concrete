@@ -32,7 +32,7 @@ final class LinearEq(
 
   private val negFactors = factors.map(-_)
 
-  override def isConsistent(ps: ProblemState, mod: Seq[Int]) = {
+  override def isConsistent(ps: ProblemState, mod: BitVector) = {
     val (doms, f, vars, max, bc) = updateF(ps, mod)
     clearMod()
     if (!bc || f.contains(0)) {
@@ -65,15 +65,18 @@ final class LinearEq(
 
   }
 
-  override def revise(ps: ProblemState, mod: Seq[Int]): Outcome = {
+  override def revise(ps: ProblemState, mod: BitVector): Outcome = {
     val (doms, f, vars, max, bc) = updateF(ps, mod)
 
     if (bc) {
-      altRevise(ps, doms, BitVector.empty, f, vars, false, false, max)
+      proceed(ps, doms, f, vars, max)
     } else {
       ps.updateState(this, (doms, f, vars, max))
     }
   }
+
+  def proceed(ps: ProblemState, doms: Array[Domain], f: Interval, vars: BitVector, max: Int) =
+    altRevise(ps, doms, BitVector.empty, f, vars, false, false, max)
 
   def end(ps: ProblemState, doms: Array[Domain], changed: BitVector, f: Interval, vars: BitVector, max: Int) = {
     filter(changed, doms, ps)

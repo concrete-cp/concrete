@@ -2,7 +2,7 @@ name := "concrete"
 
 organization := "fr.univ-valenciennes"
 
-version := "3.0-B4-SNAPSHOT"
+version := "3.0-B5-SNAPSHOT"
 
 scalaVersion := "2.11.8"
 
@@ -21,9 +21,9 @@ libraryDependencies ++= Seq(
 	//"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
 	"org.ow2.sat4j" % "org.ow2.sat4j.pb" % "2.3.5",
 	"com.typesafe.slick" %% "slick" % "3.1.1",
-	"com.github.tminglei" %% "slick-pg" % "0.12.2",
+	"com.github.tminglei" %% "slick-pg" % "0.14.0",
 	"com.typesafe" % "config" % "1.3.0",
-	"org.apache.commons" % "commons-math3" % "3.6",
+	"org.apache.commons" % "commons-math3" % "3.6.1",
 	//"org.jcp" % "jsr331" % "1.1.1",
 	"org.scalatest" %% "scalatest" % "2.2.6" % "test",
 	"org.scalacheck" %% "scalacheck" % "1.12.5" % "test",
@@ -33,7 +33,7 @@ libraryDependencies ++= Seq(
 
 scalacOptions ++= Seq(
   "-optimise"
-, "-Xdisable-assertions"
+//, "-Xdisable-assertions"
 //	"-deprecation", 
 //	"-unchecked", 
 ,	"-optimise"
@@ -111,4 +111,4 @@ mappings in Universal ++= Seq(
     (resourceDirectory in Compile).value / "conf"/"application.ini" -> "conf/application.ini"
    )
 
-scapegoatVersion := "1.2.0"
+scapegoatVersion := "1.2.1"

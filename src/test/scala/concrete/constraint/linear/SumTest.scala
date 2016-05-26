@@ -31,9 +31,16 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     val pb = Problem(x, y)
     pb.addConstraint(c)
     c.register(new AdviseCount)
-    val ps = pb.initState.toState
-    c.adviseAll(ps)
-    val mod = c.revise(ps).toState
+
+    val mod = pb.initState.andThen { ps =>
+      if (ps.isEntailed(c)) {
+        ps
+      } else {
+        c.adviseAll(ps)
+        c.revise(ps)
+      }
+    }.toState
+
     mod.dom(x) should contain theSameElementsAs Seq(1)
     mod.dom(y) should contain theSameElementsAs Seq(0, 1)
 
@@ -167,9 +174,10 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
       LinearEq(0, Array(1), Array(v0)))) { c =>
       Some(c).collect { case c: Removals => c.register(new AdviseCount) }
       pb.addConstraint(c)
-      val ps = pb.initState.toState
-      c.adviseAll(ps)
-      c.revise(ps) shouldBe Contradiction
+      pb.initState.andThen { ps =>
+        c.adviseAll(ps)
+        c.revise(ps)
+      } shouldBe Contradiction
     }
 
   }
@@ -251,11 +259,17 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     val pb = Problem(c.scope: _*)
     pb.addConstraint(c)
     c.register(new AdviseCount)
-    val ps = pb.initState.toState
-    c.adviseAll(ps)
-    val mod = c.revise(ps).toState
 
-    mod.domains shouldBe ps.domains
+    val mod = pb.initState.andThen { ps =>
+      if (ps.isEntailed(c)) {
+        ps
+      } else {
+        c.adviseAll(ps)
+        c.revise(ps)
+      }
+    }.toState
+
+    mod.domains shouldBe Vector(x, y, z).map(_.initDomain)
 
   }
 

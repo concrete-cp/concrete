@@ -11,6 +11,7 @@ import concrete.constraint.Removals
 import concrete.Outcome
 import concrete.generator.ACBC
 import concrete.constraint.extension.BinaryExt
+import cspom.util.BitVector
 
 object Eq {
   def apply(neg: Boolean, x: Variable, b: Int, y: Variable): ACBC =
@@ -108,7 +109,7 @@ final class EqACNeg private[linear] (
 
   }
 
-  def revise(ps: ProblemState, modified: Seq[Int]) = {
+  def revise(ps: ProblemState, modified: BitVector) = {
     val skip = this.skip(modified)
 
     {
