@@ -1,8 +1,5 @@
 package concrete.generator;
 
-import scala.annotation.elidable
-
-import scala.reflect.runtime.universe
 import scala.util.Try
 
 import org.scalameter.Quantity

@@ -1,133 +1,137 @@
 package concrete.longTest;
 
-import org.scalatest.FlatSpec
-import org.scalatest.Inspectors
-import org.scalatest.Matchers
-import com.typesafe.scalalogging.LazyLogging
-import concrete.ParameterManager
-import concrete.SlowTest
-import concrete.SolverFactory
-import concrete.heuristic.revision.DomCtr
-import concrete.runner.XCSPConcrete
-import cspom.CSPOM
 import scala.collection.mutable.LinkedHashMap
-import scala.util.Failure
-import org.scalatest.TryValues
-import concrete.Solver
-import concrete.generator.cspompatterns.FZPatterns
-import concrete.generator.cspompatterns.XCSPPatterns
-import cspom.compiler.CSPOMCompiler
-import cspom.xcsp.XCSPParser
-import cspom.flatzinc.FlatZincParser
-import concrete.runner.FZConcrete
-import cspom.flatzinc.FZSolve
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.duration._
-import concrete.generator.cspompatterns.Bool2IntIsEq
-import concrete.generator.ProblemGenerator
-import concrete.generator.cspompatterns.ConcretePatterns
+import scala.concurrent.duration.DurationInt
+import scala.util.Success
+
+import org.scalatest.FunSpec
+import org.scalatest.Inspectors
+import org.scalatest.Matchers
+
 import concrete.CSPOMSolver
+import concrete.ParameterManager
+import concrete.Solver
+import concrete.generator.ProblemGenerator
+import concrete.generator.cspompatterns.Bool2IntIsEq
+import concrete.generator.cspompatterns.ConcretePatterns
+import concrete.generator.cspompatterns.FZPatterns
+import concrete.generator.cspompatterns.XCSPPatterns
+import concrete.runner.FZConcrete
+import concrete.runner.XCSPConcrete
+import cspom.CSPOM
+import cspom.compiler.CSPOMCompiler
+import cspom.flatzinc.FlatZincParser
+import cspom.xcsp.XCSPParser
+
 //import SolvingTest._
 
-class SolvingTest extends FlatSpec with SolvingBehaviors {
+class SolvingTest extends FunSpec with SolvingBehaviors {
 
-  behavior of "default parameters"
+  val problemBank = LinkedHashMap[String, (AnyVal, Boolean)](
+    "testExtension1.xml.xz" -> ((8, false)),
+    "testExtension2.xml.xz" -> ((8, false)),
+    "testExtension3.xml.xz" -> ((0, false)),
+    "testPrimitive.xml.xz" -> ((2, false)),
+    "AllInterval-005.xml.xz" -> ((8, false)),
+    "testObjective1.xml.xz" -> ((11, false)),
+    "QuadraticAssignment-qap.xml.xz" -> ((4776, false)),
 
-  it should behave like test()
-}
+    "fapp01-0200-0.xml.xz" -> ((false, false)),
+    "1d_rubiks_cube.fzn.xz" -> ((12, false)),
+    "scen11-f12.xml.xz" -> ((0, true)),
 
-trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this: FlatSpec =>
+    "normalized-renault-mod-0_ext.xml.xz" -> ((true, true)),
 
-  val problemBank = LinkedHashMap[String, AnyVal](
-    //"1d_rubiks_cube.fzn" -> 12,
-    "normalized-renault-mod-0_ext.xml.bz2" -> true,
-    "scen11-f12.xml.bz2" -> 0,
-    "battleships10.fzn" -> 1,
-    "photo.fzn" -> 8,
+    "battleships10.fzn.xz" -> ((1, false)),
+    "photo.fzn.xz" -> ((8, false)),
 
-    "crossword-m1-debug-05-01.xml" -> 48,
-    "bigleq-50.xml" -> 1,
-    "battleships_2.fzn" -> 36,
-    "flat30-1.cnf" -> true,
-    "alpha.fzn" -> true,
-    "frb35-17-1_ext.xml.bz2" -> 2,
-    "queens-12_ext.xml" -> 14200,
+    "crossword-m1-debug-05-01.xml.xz" -> ((48, true)),
+    "bigleq-50.xml.xz" -> ((1, true)),
+    "battleships_2.fzn.xz" -> ((36, false)),
+    "flat30-1.cnf.xz" -> ((true, false)),
+    "alpha.fzn.xz" -> ((true, false)),
+    "frb35-17-1_ext.xml.xz" -> ((2, true)),
+    "queens-12_ext.xml.xz" -> ((14200, false)),
 
-    "zebra.xml" -> 1,
+    "zebra.xml.xz" -> ((1, true)),
 
-    "bqwh-18-141-47_glb.xml.bz2" -> 10,
+    "bqwh-18-141-47_glb.xml.xz" -> ((10, true)),
 
-    "crossword-m2-debug-05-01.xml" -> 48,
-    "queens-8.xml" -> 92,
+    "crossword-m2-debug-05-01.xml.xz" -> ((48, true)),
+    "queens-8.xml.xz" -> ((92, true)),
 
-    "scen11.xml.bz2" -> true,
-    "bqwh-15-106-0_ext.xml" -> 182,
-    "queensAllDiff-8.xml.bz2" -> 92,
+    "scen11.xml.xz" -> ((true, true)),
+    "bqwh-15-106-0_ext.xml.xz" -> ((182, true)),
+    "queensAllDiff-8.xml.xz" -> ((92, true)),
 
-    "langford-2-4-ext.xml" -> 2,
+    "langford-2-4-ext.xml.xz" -> ((2, true)),
 
-    "series-15.xml.bz2" -> true,
-    "e0ddr1-10-by-5-8.xml.bz2" -> true,
+    "series-15.xml.xz" -> ((true, true)),
+    "e0ddr1-10-by-5-8.xml.xz" -> ((true, true)),
 
-    "tsp-20-1_ext.xml.bz2" -> true,
+    "tsp-20-1_ext.xml.xz" -> ((true, true)),
 
-    "test.fzn" -> true,
+    "test.fzn.xz" -> ((true, false)),
 
-    "queens-12.xml" -> 14200)
+    "queens-12.xml.xz" -> ((14200, false)))
 
-  def test(parameters: Seq[(String, String)] = Nil): Unit = {
-    for ((p, r) <- problemBank) {
+  val parameters = Nil
 
-      val expected: Boolean = r match {
-        case e: Int     => e > 0
-        case b: Boolean => b
-        case _          => throw new IllegalArgumentException
-      }
+  for ((p, (r, test)) <- problemBank) {
 
-      it should "solve " + p taggedAs (SlowTest) in {
-        solve(p, expected, parameters)
-      }
+    val expected: Boolean = r match {
+      case e: Int     => e > 0
+      case b: Boolean => b
+      case _          => throw new IllegalArgumentException
+    }
+
+    describe(p) {
+
+      it should behave like
+        solve(p, expected, parameters, test)
+
       r match {
-        case e: Int if e > 0 => it should s"find $e solutions to $p" taggedAs (SlowTest) in {
-          count(p, e, parameters, false)
-        }
+        case e: Int if e > 0 =>
+          it should behave like
+            count(p, e, parameters, test)
+
         case _ =>
       }
 
     }
   }
 
-  def solve(name: String, expectedResult: Boolean, parameters: Seq[(String, String)]): Unit = {
+}
+trait SolvingBehaviors extends Matchers with Inspectors { this: FunSpec =>
 
-    val pm = new ParameterManager
-    parameters.foreach(s => pm.update(s._1, s._2))
+  def solve(name: String, expectedResult: Boolean, parameters: Seq[(String, String)], test: Boolean): Unit =
+    it(s"should have ${if (expectedResult) "a" else "no"} solution") {
+      val pm = new ParameterManager
+      parameters.foreach(s => pm.update(s._1, s._2))
 
-    val url = getClass.getResource(name)
+      val url = getClass.getResource(name)
 
-    require(url != null, "Could not find resource " + name)
+      require(url != null, "Could not find resource " + name)
 
-    val parser = CSPOM.autoParser(url).get
+      val parser = CSPOM.autoParser(url).get
 
-    var goal: Option[FZSolve] = None
+      CSPOM.load(url, parser)
+        .flatMap { cspomProblem =>
+          parser match {
+            case FlatZincParser =>
+              CSPOMCompiler.compile(cspomProblem, FZPatterns())
 
-    CSPOM.load(url, parser).flatMap { cspomProblem =>
-      val test = parser match {
-        case FlatZincParser =>
-          CSPOMCompiler.compile(cspomProblem, FZPatterns()).get
-          false
-        case XCSPParser =>
-          CSPOMCompiler.compile(cspomProblem, XCSPPatterns()).get
-          true
-        case _ =>
-          false
-      }
+            case XCSPParser =>
+              CSPOMCompiler.compile(cspomProblem, XCSPPatterns())
 
-      //logger.info(cspomProblem.toString)
-      CSPOMCompiler.compile(cspomProblem, ConcretePatterns(pm))
-        .flatMap { cspom =>
-          CSPOMCompiler.compile(cspom, Seq(Bool2IntIsEq))
+            case _ =>
+              Success(cspomProblem)
+          }
         }
+        .flatMap(CSPOMCompiler.compile(_, ConcretePatterns(pm)))
+        .flatMap(CSPOMCompiler.compile(_, Seq(Bool2IntIsEq)))
         .flatMap { cspom =>
           val pg = new ProblemGenerator(pm)
           for ((problem, variables) <- pg.generate(cspom)) yield {
@@ -156,8 +160,7 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
 
             if (test) {
               for (sol <- solvIt.headOption) {
-                val variables: Seq[String] =
-                  solver.cspom.goal.get.getSeqParam("variables")
+                val variables: Seq[String] = solver.cspom.goal.get.getSeqParam("variables")
                 val failed = XCSPConcrete.controlCSPOM(sol, variables, url)
                 withClue(sol) {
                   failed shouldBe 'empty
@@ -167,10 +170,10 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
           }
 
           concurrent.Await.result(f, 1000.seconds)
+
         }
+        .get
     }
-      .get
-  }
 
   def count(name: String, expectedResult: Int, parameters: Seq[(String, String)],
             test: Boolean): Unit = {
@@ -182,37 +185,44 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
     val pm = new ParameterManager
     parameters.foreach(s => pm.update(s._1, s._2))
 
-    CSPOM.load(url, parser).flatMap {
-      case cspomProblem =>
-        val test = parser match {
-          case FlatZincParser =>
-            CSPOMCompiler.compile(cspomProblem, FZPatterns()).get
-            false
-          case XCSPParser =>
-            CSPOMCompiler.compile(cspomProblem, XCSPPatterns()).get
-            true
-          case _ =>
-            false
+    it("should find solutions") {
+      CSPOM.load(url, parser)
+        .flatMap { cspomProblem =>
+          parser match {
+            case FlatZincParser =>
+              CSPOMCompiler.compile(cspomProblem, FZPatterns())
+
+            case XCSPParser =>
+              CSPOMCompiler.compile(cspomProblem, XCSPPatterns())
+
+            case _ =>
+              Success(cspomProblem)
+
+          }
         }
-
-        //logger.info(cspomProblem.toString)
-
-        CSPOMCompiler.compile(cspomProblem, ConcretePatterns(pm))
-          .flatMap { cspom =>
-            CSPOMCompiler.compile(cspom, Seq(Bool2IntIsEq))
+        .flatMap(
+          CSPOMCompiler.compile(_, ConcretePatterns(pm)))
+        .flatMap(
+          CSPOMCompiler.compile(_, Seq(Bool2IntIsEq)))
+        .flatMap { cspom =>
+          val pg = new ProblemGenerator(pm)
+          for ((problem, variables) <- pg.generate(cspom)) yield {
+            val solver = Solver(problem)
+            solver.statistics.register("compiler", CSPOMCompiler)
+            solver.statistics.register("generator", pg)
+            new CSPOMSolver(solver, cspom, variables)
           }
-          .flatMap { cspom =>
-            val pg = new ProblemGenerator(pm)
-            for ((problem, variables) <- pg.generate(cspom)) yield {
-              val solver = Solver(problem)
-              solver.statistics.register("compiler", CSPOMCompiler)
-              solver.statistics.register("generator", pg)
-              new CSPOMSolver(solver, cspom, variables)
-            }
-          }
-          .map { solver =>
+        }
+        .map { solver =>
 
-            FZConcrete.parseSearchMode(solver, false)
+          FZConcrete.parseSearchMode(solver, false)
+
+          val desc = solver.optimizes match {
+            case Some(v) => s"should find optimal value $expectedResult for $v"
+            case None    => s"should have $expectedResult solutions"
+          }
+
+          withClue(desc) {
 
             val f = Future {
               solver.optimizes match {
@@ -224,7 +234,7 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
                   val sols = solver.toStream.take(expectedResult + 1)
 
                   if (test) {
-                    forAll(sols.take(100)) { sol =>
+                    forAll(sols) { sol =>
                       val variables: Seq[String] =
                         solver.cspom.goal.get.getSeqParam("variables")
                       val failed = XCSPConcrete.controlCSPOM(sol, variables, url)
@@ -233,13 +243,16 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
                   }
 
                   sols should have size expectedResult
+
               }
 
             }
+
             concurrent.Await.result(f, 1000.seconds)
           }
+        }
+        .get
 
-    } should be a 'success
-
+    }
   }
 }

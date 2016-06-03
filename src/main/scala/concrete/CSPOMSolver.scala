@@ -17,15 +17,14 @@ class CSPOMSolver(
 
   def next() = new CSPOMSolution(cspom, variables, solver.next)
 
-  def maximize(v: String) = cspom.variable(v) match {
-    case Some(cv) => solver.maximize(variables(cv))
-    case _        => logger.warn(s"$v is not a variable, nothing to maximize")
-  }
+  def maximize(v: CSPOMVariable[_]) = solver.maximize(variables(v))
 
-  def minimize(v: String) = cspom.variable(v) match {
-    case Some(cv) => solver.minimize(variables(cv))
-    case _        => logger.warn(s"$v is not a variable, nothing to minimize")
-  }
+  def minimize(v: CSPOMVariable[_]) = solver.minimize(variables(v)) 
+  
+//  cspom.variable(v) match {
+//    case Some(cv) => solver.minimize(variables(cv))
+//    case _        => logger.warn(s"$v is not a variable, nothing to minimize")
+//  }
 
   //  def decisionVariables(dv: Seq[CSPOMExpression[_]]): Unit = {
   //    solver.decisionVariables(dv.collect {

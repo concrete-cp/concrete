@@ -4,37 +4,24 @@ import scala.collection.mutable.WeakHashMap
 import scala.util.Random
 import scala.util.control.Breaks.break
 import scala.util.control.Breaks.breakable
+
 import com.typesafe.scalalogging.LazyLogging
+
+import concrete.CSPOMDriver
 import cspom.CSPOM
 import cspom.CSPOMConstraint
 import cspom.VariableNames
 import cspom.compiler.ConstraintCompiler
 import cspom.compiler.Delta
-import cspom.variable.CSPOMExpression
-import cspom.variable.CSPOMVariable
-import cspom.compiler.VariableCompiler
-import cspom.variable.CSPOMConstant
-import cspom.variable.IntVariable
-import cspom.util.RangeSet
-import cspom.util.Interval
 import cspom.util.IntInterval
-import cspom.variable.IntExpression
-import cspom.compiler.ConstraintCompilerNoData
-import concrete.CSPOMDriver
-import cspom.variable.SimpleExpression
+import cspom.util.RangeSet
+import cspom.variable.CSPOMConstant
+import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
-
-/**
- *  XCSP 2.0 uses a different case for alldifferent…
- */
-object AllDifferent extends ConstraintCompilerNoData {
-  def matchBool(c: CSPOMConstraint[_], p: CSPOM) = c.function == 'allDifferent
-  def compile(c: CSPOMConstraint[_], p: CSPOM) = {
-    val IntExpression.simpleSeq(args) = c.arguments
-    replaceCtr(c, CSPOMDriver.allDifferent(args: _*) withParams c.params, p)
-  }
-  def selfPropagation = false
-}
+import cspom.variable.CSPOMVariable
+import cspom.variable.IntExpression
+import cspom.variable.IntVariable
+import cspom.variable.SimpleExpression
 
 /**
  * Removes constants from alldifferent constraints

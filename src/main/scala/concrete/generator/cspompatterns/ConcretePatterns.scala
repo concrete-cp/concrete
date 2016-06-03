@@ -13,11 +13,11 @@ object ConcretePatterns {
         OccurrenceDomains, BoolEq,
         MulDomains, AbsDomains,
         MulToSum,
-        SumDomains, NeDomains,
+        SumDomains,
         NegToCNF, Xor, ReifiedConj, ReifiedClause,
         NeqVec,
         SlidingSum, Regular, SetIn, CSPOMTypes,
-        AllDifferent, AllDiffConstant,
+        AllDiffConstant,
         // Clause does not support constants
         SimplClause, PBConstants,
         Bool2IntDomains, DivDomains, ModDomains,

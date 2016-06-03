@@ -2,8 +2,7 @@ package concrete.generator.cspompatterns
 
 import cspom.CSPOMConstraint
 import cspom.compiler.VariableCompiler
-import cspom.variable.IntExpression.implicits.arithmetics
-import cspom.variable.IntExpression.implicits.ranges
+import cspom.util.IntervalsArithmetic.Arithmetics
 import cspom.variable.IntExpression
 import cspom.variable.SimpleExpression
 
@@ -18,7 +17,7 @@ object DivDomains extends VariableCompiler('div) {
       val ii1 = IntExpression.coerce(i1)
       try {
         Seq(
-          r -> reduceDomain(ir, ii0 / ii1))
+          r -> reduceDomain(ir, IntExpression.span(ii0) / IntExpression.span(ii1)))
       } catch {
         case e: ArithmeticException =>
           logger.warn(s"$e when filtering $c")

@@ -4,8 +4,6 @@ import cspom.CSPOM
 import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompiler
 import cspom.variable.CSPOMConstant
-import cspom.variable.SimpleExpression
-import cspom.compiler.Delta
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMExpression
 

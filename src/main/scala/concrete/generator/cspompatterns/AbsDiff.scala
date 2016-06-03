@@ -1,7 +1,5 @@
 package concrete.generator.cspompatterns
 
-import scala.reflect.runtime.universe
-
 import cspom.CSPOM
 import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompiler
@@ -41,7 +39,7 @@ object AbsDiff extends ConstraintCompiler {
     val delta = addConstraints.foldLeft(Delta()) {
       case (acc, (addConstraint, other)) =>
 
-        /**
+        /*
          * We have  absConstraint.result = |absArg| and absArg = other
          *
          * so absConstraint.result = |other|
@@ -49,7 +47,7 @@ object AbsDiff extends ConstraintCompiler {
 
         val nc = CSPOMConstraint(absConstraint.result, 'absdiff, other)
         val delta = acc ++ addCtr(nc, problem) //acc.added(problem.ctr(nc))
-        /**
+        /*
          *  Remove addConstraint if absArg is not referenced
          */
         if (problem.namesOf(absArg).isEmpty) {

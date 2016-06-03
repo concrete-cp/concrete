@@ -43,6 +43,7 @@ import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
 import concrete.Problem
+import cspom.WithParam
 
 object FZConcrete extends CSPOMRunner with LazyLogging {
 
@@ -72,6 +73,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
           case a               => sys.error(s"Annotation expected in $strategies, found $a")
         }
           .toList)
+
     case a if a.predAnnId == "int_search" || a.predAnnId == "bool_search" =>
       val Seq(p, vca, aa, strategyannotation) = a.expr
       val CSPOMSeq(pool) = ann2expr(cspom, p)
@@ -118,7 +120,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
       CrossHeuristic(varh, valh)
   }
 
-  def parseGoal(goal: CSPOMGoal, freeSearch: Boolean, variables: Map[CSPOMVariable[_], Variable]): Seq[Heuristic] = {
+  def parseGoal(goal: WithParam[CSPOMGoal[_]], freeSearch: Boolean, variables: Map[CSPOMVariable[_], Variable]): Seq[Heuristic] = {
     if (freeSearch) {
       Seq()
     } else {
@@ -168,13 +170,13 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
 
   def parseSearchMode(solver: CSPOMSolver, freeSearch: Boolean): Unit = {
     val cspom = solver.cspom
-    val goal = cspom.goal.get
+    val goal = cspom.goal.get.obj
     goal match {
-      case CSPOMGoal.Satisfy(_) =>
-      case CSPOMGoal.Maximize(expr, _) =>
-        solver.maximize(cspom.namesOf(expr).head)
-      case CSPOMGoal.Minimize(expr, _) =>
-        solver.minimize(cspom.namesOf(expr).head)
+      case CSPOMGoal.Satisfy =>
+      case CSPOMGoal.Maximize(expr: CSPOMVariable[_]) =>
+        solver.maximize(expr)
+      case CSPOMGoal.Minimize(expr: CSPOMVariable[_]) =>
+        solver.minimize(expr)
       case _ => throw new InvalidParameterException("Cannot execute goal " + goal)
     }
 

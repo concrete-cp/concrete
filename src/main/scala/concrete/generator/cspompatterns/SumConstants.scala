@@ -1,15 +1,11 @@
 package concrete.generator.cspompatterns
 
-import cspom.compiler.ConstraintCompiler
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.CSPOM
 import cspom.CSPOMConstraint
 import cspom.variable.CSPOMConstant
 import concrete.constraint.linear.SumMode
-import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
-import cspom.variable.IntExpression
-import concrete.CSPOMDriver
 import concrete.generator.SumGenerator
 import cspom.variable.BoolExpression
 import CSPOM._

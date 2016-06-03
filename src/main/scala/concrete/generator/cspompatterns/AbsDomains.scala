@@ -6,9 +6,7 @@ import cspom.variable.IntExpression.implicits.arithmetics
 import cspom.variable.IntExpression.implicits.ranges
 import cspom.variable.IntExpression
 import cspom.variable.SimpleExpression
-import cspom.compiler.ConstraintCompiler
-import cspom.variable.CSPOMConstant
-import cspom.CSPOM
+
 
 object AbsDomains extends VariableCompiler('abs) {
 

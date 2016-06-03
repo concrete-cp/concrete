@@ -13,6 +13,8 @@ import cspom.xcsp.XCSPParser
 import cspom.CSPOMGoal
 import scala.util.Failure
 import scala.util.Success
+import org.apache.commons.compress.compressors.CompressorStreamFactory
+import cspom.WithParam
 
 object XCSPConcrete extends CSPOMRunner with App {
 
@@ -25,7 +27,7 @@ object XCSPConcrete extends CSPOMRunner with App {
     file = CSPOM.file2url(fn)
     loadCSPOMURL(file).flatMap { cspom =>
       declaredVariables = cspom.goal.get match {
-        case s: CSPOMGoal.Satisfy =>
+        case s @ WithParam(CSPOMGoal.Satisfy, _) =>
           s.getSeqParam("variables")
         case _ =>
           return Failure(new IllegalArgumentException("Variable sequence not available"))
@@ -80,12 +82,16 @@ object TryWith {
 
 class SolutionChecker(file: URL) {
 
-  val temp: File = File.createTempFile("xcsp", new File(file.getFile).getName)
+  val temp: File = File.createTempFile("xcsp", new File(file.getFile).getName + ".xml")
   temp.deleteOnExit()
 
-  val r = TryWith(file.openStream) { in =>
+  TryWith {
+    val in = file.openStream
+    new CompressorStreamFactory().createCompressorInputStream(in)
+  } { in =>
     Files.copy(in, temp.toPath, StandardCopyOption.REPLACE_EXISTING)
   }
+    .get
 
   //file.openStream()
 

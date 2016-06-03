@@ -1,7 +1,7 @@
 package concrete.generator.cspompatterns
 
 import cspom.compiler.VariableCompiler
-import cspom.variable.IntExpression.implicits._
+import cspom.util.IntervalsArithmetic.Arithmetics
 import cspom.variable.SimpleExpression
 import com.typesafe.scalalogging.LazyLogging
 import cspom.CSPOM
@@ -16,22 +16,14 @@ object AbsDiffDomains extends VariableCompiler('absdiff) with LazyLogging {
       val i0 = IntExpression.coerce(ii0)
       val i1 = IntExpression.coerce(ii1)
 
-      if (r.fullyDefined && i0.fullyDefined && i1.fullyDefined) {
-        Seq()
-      } else {
+      val rSpan = IntExpression.span(r)
+      val i0Span = IntExpression.span(i0)
+      val i1Span = IntExpression.span(i1)
 
-        val nr = ranges(r) & (arithmetics(i0) - i1).abs
-        val ni0 = ranges(i0) & ((i1 + nr) ++ (i1 - nr))
-        val ni1 = ranges(i1) & ((ni0 + nr) ++ (ni0 - nr))
-
-        assert(nr == (nr & (ni0 - ni1).abs), s"$nr = |$ni0 - $ni1| still requires shaving (result is ${(ni0 - ni1).abs})")
-        assert(ni0 == (ni0 & (ni1 + nr) ++ (ni1 - nr)), s"$ni0 still requires shaving")
-
-        Seq(
-          ir -> applyDomain(r, nr),
-          ii0 -> applyDomain(i0, ni0),
-          ii1 -> applyDomain(i1, ni1))
-      }
+      Seq(
+        ir -> reduceDomain(r, (i0Span - i1Span).abs),
+        ii0 -> reduceDomain(i0, (i1Span + rSpan) span (i1Span - rSpan)),
+        ii1 -> reduceDomain(i1, (i0Span + rSpan) span (i0Span - rSpan)))
 
     case _ => throw new IllegalArgumentException
   }
