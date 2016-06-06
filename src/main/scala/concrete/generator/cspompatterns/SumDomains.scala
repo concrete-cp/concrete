@@ -15,7 +15,10 @@ import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
 import cspom.variable.IntExpression
 import cspom.util.IntervalsArithmetic.Arithmetics
+import cspom.util.IntervalsArithmetic.RangeArithmetics
 import cspom.variable.IntVariable
+import cspom.util.RangeSet
+import cspom.util.Infinitable
 
 object SumDomains extends VariableCompiler('sum) {
 
@@ -28,16 +31,16 @@ object SumDomains extends VariableCompiler('sum) {
 
       val m: String = c.getParam("mode").get
 
-      val initBound = SumMode.withName(m)
+      val initBound: RangeSet[Infinitable] = SumMode.withName(m)
         .map {
-          case SumLE => IntInterval.atMost(result)
-          case SumLT => IntInterval.atMost(result - 1)
-          case SumEQ => IntInterval.singleton(result)
-          case SumNE => IntInterval.all // -- IntInterval.singleton(result)
+          case SumLE => RangeSet(IntInterval.atMost(result))
+          case SumLT => RangeSet(IntInterval.atMost(result - 1))
+          case SumEQ => RangeSet(IntInterval.singleton(result))
+          case SumNE => RangeSet.allInt -- IntInterval.singleton(result)
         }
         .get
 
-      val coefspan = (iargs, coef).zipped.map((a, c) => IntExpression.span(a) * IntInterval.singleton(c)).toIndexedSeq
+      val coefspan = (iargs, coef).zipped.map((a, c) => RangeSet(IntExpression.span(a) * IntInterval.singleton(c))).toIndexedSeq
 
       val filt = for (i <- args.indices) yield {
         val others = iargs.indices
@@ -47,7 +50,7 @@ object SumDomains extends VariableCompiler('sum) {
         args(i) -> reduceDomain(iargs(i), others / coef(i))
       }
 
-      val entailed = !SumMode.withName(m).contains(SumNE) && args.collect { case IntVariable(e) => e }.size == 1
+      val entailed = args.collect { case IntVariable(e) => e }.size == 1
 
       (filt, entailed)
 

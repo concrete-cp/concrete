@@ -6,24 +6,20 @@ import concrete.Contradiction
 import concrete.ParameterManager
 import concrete.ProblemState
 import concrete.filter.ACC
-import concrete.generator.FailedGenerationException
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
-import cspom.CSPOM
 import cspom.compiler.CSPOMCompiler
 import org.scalatest.TryValues
-import scala.util.Failure
-import scala.util.Success
 import concrete.runner.XCSPConcrete
 
 final class ProblemGeneratorTest extends FlatSpec with LazyLogging with TryValues {
 
   "ProblemGenerator" should "generate zebra" in {
-    generateTest("zebra.xml");
+    generateTest("zebra.xml.xz");
   }
 
   it should "generate queens-12" in {
-    generateTest("queens-12.xml");
+    generateTest("queens-12.xml.xz");
   }
 
   //  it should "generate scen11-f12" in {
@@ -31,11 +27,11 @@ final class ProblemGeneratorTest extends FlatSpec with LazyLogging with TryValue
   //  }
 
   it should "generate crosswordm2" in {
-    generateTest("crossword-m2-debug-05-01.xml");
+    generateTest("crossword-m2-debug-05-01.xml.xz");
   }
 
   it should "generate lexHerald" in {
-    generateTest("normalized-crossword-m1-lex-15-04.xml.bz2");
+    generateTest("normalized-crossword-m1-lex-15-04.xml.xz");
   }
 
   // @Test
