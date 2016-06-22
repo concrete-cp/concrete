@@ -8,11 +8,7 @@ import concrete.Problem
 import concrete.Contradiction
 import concrete.Singleton
 import org.scalatest.Inspectors
-import concrete.constraint.Residues
-import concrete.constraint.Constraint
-import concrete.constraint.TupleEnumerator
 import org.scalatest.prop.PropertyChecks
-import org.scalacheck.Gen
 
 /**
  * @author vion
