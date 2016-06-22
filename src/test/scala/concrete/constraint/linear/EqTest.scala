@@ -20,8 +20,8 @@ final class EqTest extends FlatSpec with Matchers {
     c.adviseAll(ps)
     val mod = c.revise(ps)
 
-    mod.dom(v0) should contain theSameElementsAs Seq(3)
-    mod.dom(v1) should contain theSameElementsAs Seq(2)
+    mod.dom(v0).view should contain theSameElementsAs Seq(3)
+    mod.dom(v1).view should contain theSameElementsAs Seq(2)
   }
 
   "EqACFast" should "filter" in {
@@ -35,7 +35,7 @@ final class EqTest extends FlatSpec with Matchers {
     c.adviseAll(ps)
     val mod = c.revise(ps)
 
-    mod.dom(v0) should contain theSameElementsAs Seq(3)
-    mod.dom(v1) should contain theSameElementsAs Seq(4)
+    mod.dom(v0).view should contain theSameElementsAs Seq(3)
+    mod.dom(v1).view should contain theSameElementsAs Seq(4)
   }
 }

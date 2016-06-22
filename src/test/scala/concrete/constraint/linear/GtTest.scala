@@ -1,6 +1,5 @@
 package concrete.constraint.linear;
 
-import org.scalatest.Finders
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 
@@ -22,8 +21,8 @@ final class GtTest extends FlatSpec with Matchers {
 
     val mod = c.revise(ps).toState;
 
-    mod.dom(v1) should contain theSameElementsAs Seq(4)
-    mod.dom(v2) should contain theSameElementsAs Seq(3)
+    mod.dom(v1).view should contain theSameElementsAs Seq(4)
+    mod.dom(v2).view should contain theSameElementsAs Seq(3)
   }
 
   "Gt" should "not strictly filter" in {
@@ -34,8 +33,8 @@ final class GtTest extends FlatSpec with Matchers {
 
     val mod = c.revise(ps).toState;
 
-    mod.dom(v1) should contain theSameElementsAs Seq(3, 4)
-    mod.dom(v2) should contain theSameElementsAs Seq(3, 4)
+    mod.dom(v1).view should contain theSameElementsAs Seq(3, 4)
+    mod.dom(v2).view should contain theSameElementsAs Seq(3, 4)
 
   }
 

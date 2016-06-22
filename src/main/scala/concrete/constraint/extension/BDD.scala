@@ -105,7 +105,7 @@ sealed trait BDD extends Iterable[Seq[Int]] {
     def updNewDomains(depth: Int, i: Int) = {
       ReduceableExt.fills += 1
       newDomains(depth) |= i
-      newDomains(depth).length == domains(depth).length
+      newDomains(depth).size == domains(depth).size
     }
 
     fillFound(ts, updNewDomains, 0, new SetWithMax(arity))
@@ -201,7 +201,7 @@ class BDDNode(val index: Int, val child: BDD, val sibling: BDD) extends BDD {
 
   def contains(e: Seq[Int]) = {
     val h +: t = e
-    if (h > index) {
+    if (h < index) {
       false
     } else if (index == h) {
       child.contains(t)

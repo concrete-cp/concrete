@@ -1,7 +1,5 @@
 package concrete.generator;
 
-import scala.reflect.runtime.universe
-
 import com.typesafe.scalalogging.LazyLogging
 
 import Generator.cspom2concrete1D
@@ -24,6 +22,8 @@ import cspom.CSPOMConstraint
 import cspom.variable.CSPOMConstant
 import cspom.variable.IntExpression
 import cspom.variable.SimpleExpression
+import concrete.constraint.linear.GeC
+import concrete.constraint.linear.GtC
 
 object SumGenerator {
   def readCSPOM(constraint: CSPOMConstraint[_]) = {
@@ -98,8 +98,10 @@ final class SumGenerator(pm: ParameterManager) extends Generator with LazyLoggin
       case 1 =>
         val Seq(x) = solverVariables
         (varParams, mode, constant) match {
-          case (Seq(1), SumLE, k) => ACBC.withBC(new LeC(x, k))
-          case (Seq(1), SumLT, k) => ACBC.withBC(new LtC(x, k))
+          case (Seq(1), SumLE, k)  => ACBC.withBC(new LeC(x, k))
+          case (Seq(1), SumLT, k)  => ACBC.withBC(new LtC(x, k))
+          case (Seq(-1), SumLE, k) => ACBC.withBC(new GeC(x, -k))
+          case (Seq(-1), SumLT, k) => ACBC.withBC(new GtC(x, -k))
           case _ =>
             logger.info(s"${(varParams, mode, constant)} is non-specialized unary linear constraint")
             general(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode)

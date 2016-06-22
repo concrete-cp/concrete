@@ -1,6 +1,5 @@
 package concrete.constraint.semantic;
 
-import concrete.Domain
 import concrete.Outcome
 import concrete.ProblemState
 import concrete.Variable

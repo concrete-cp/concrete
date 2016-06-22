@@ -14,7 +14,7 @@ object Singleton {
 
 final class Singleton private (val singleValue: Int) extends IntDomain with LazyLogging {
 
-  def length = 1
+  def size = 1
 
   override def head = singleValue
 
@@ -131,10 +131,6 @@ final class Singleton private (val singleValue: Int) extends IntDomain with Lazy
   //  override def intersects(bv: BitVector, part: Int) = bv(value)
   def convex = true
   override def isEmpty = false
-
-  override def assign(v: Int) = {
-    if (v == singleValue) this else EmptyIntDomain
-  }
 
   def iterator = Iterator.single(singleValue)
 

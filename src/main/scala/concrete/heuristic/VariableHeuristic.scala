@@ -1,7 +1,6 @@
 package concrete.heuristic;
 
 import scala.annotation.tailrec
-import scala.reflect.runtime.universe
 import scala.util.Random
 
 import concrete.Domain
@@ -32,7 +31,7 @@ abstract class VariableHeuristic(params: ParameterManager, val decisionVariables
     } else {
       val current = decisionVariables(i)
       val dom = state.dom(current)
-      if (dom.length == 1) {
+      if (dom.isAssigned) {
         select(i - 1, best, bestDomain, ties, state, rand)
       } else {
         val comp = compare(current, dom, best, bestDomain, state)
@@ -60,7 +59,7 @@ abstract class VariableHeuristic(params: ParameterManager, val decisionVariables
     } else {
       val current = decisionVariables(i)
       val dom = state.dom(current)
-      if (dom.length == 1) {
+      if (dom.isAssigned) {
         select(i - 1, best, bestDomain, state)
       } else {
         val comp = compare(current, dom, best, bestDomain, state) //score(current, dom, state).compareTo(score(best, dom, state))

@@ -11,10 +11,8 @@ import org.apache.commons.math3.optim.linear.LinearConstraintSet
 import org.apache.commons.math3.optim.nonlinear.scalar.GoalType
 import concrete.Contradiction
 import org.apache.commons.math3.optim.linear.NoFeasibleSolutionException
-import cspom.UNSATException
 import concrete.ProblemState
 import concrete.Outcome
-import org.apache.commons.math3.util.FastMath
 
 import concrete.ParameterManager
 import cspom.Statistic

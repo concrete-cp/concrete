@@ -1,6 +1,5 @@
 package concrete.filter;
 
-import scala.reflect.runtime.universe
 import com.typesafe.scalalogging.LazyLogging
 import concrete.Contradiction
 import concrete.Outcome
@@ -113,26 +112,31 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     // logger.debug(s"Modified $modified, queueing ${modified.constraints.map(_.toString(states)).mkString("{", ", ", "}")}, skipping ${skip.toString(states)}")
 
     val constraints = modified.constraints
+    val active = states.activeConstraints(modified)
 
-    for (i <- states.activeConstraints(modified)) {
+    var i = active.nextSetBit(0)
+    while (i >= 0) {
       val c = constraints(i)
-
       val positions = modified.positionInConstraint(i)
 
-      val a = if (positions.length > 1) {
-        c.adviseArray(states, positions)
+      if (positions.length > 1) {
+        val a = c.adviseArray(states, positions)
+        enqueue(c, a, states)
       } else if (c ne skip) {
-        c.advise(states, positions(0))
-      } else {
-        -1
+        val a = c.advise(states, positions(0))
+        enqueue(c, a, states)
       }
 
-      logger.trace(s"Queueing ${c.id}. ${c.toString(states)}, positions = ${positions.mkString("[", ", ", "]")}, advise = $a")
       //logger.fine(c + ", " + modified.positionInConstraint(i) + " : " + a)
-      if (a >= 0) queue.offer(c, key.getKey(c, states, a))
 
+      i = active.nextSetBit(i + 1)
     }
 
+  }
+
+  private def enqueue(c: Constraint, a: Int, states: ProblemState): Unit = {
+    logger.trace(s"Queueing ${c.id}. ${c.toString(states)}, advise = $a")
+    if (a >= 0) queue.offer(c, key.getKey(c, states, a))
   }
 
   @annotation.tailrec

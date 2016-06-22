@@ -19,20 +19,17 @@
 
 package concrete.constraint.extension;
 
-import concrete.Domain
 import concrete.Variable
 import cspom.util.BitVector
 import cspom.Statistic
 import concrete.constraint.Removals
-import concrete.Contradiction
 import concrete.ProblemState
 import concrete.Outcome
+import concrete.Contradiction
 
 object BinaryExt {
   @Statistic
-  var checks = 0;
-  @Statistic
-  var presenceChecks = 0
+  var checks = 0L;
 
   val MINIMUM_SIZE_FOR_LAST = 3 * java.lang.Long.SIZE;
 
@@ -50,13 +47,11 @@ object BinaryExt {
   }
 }
 
-abstract class BinaryExt(
-  scope: Array[Variable],
-  var matrix: Matrix2D)
+abstract class BinaryExt(scope: Array[Variable], val matrix: Matrix2D)
     extends ExtensionConstraint(scope) with ConflictCount with Removals {
 
-  private val x = scope(0)
-  private val y = scope(1)
+  protected val x = scope(0)
+  protected val y = scope(1)
 
   private var staticEvaluation: Int = _
 
@@ -72,21 +67,33 @@ abstract class BinaryExt(
   def revise(ps: ProblemState, mod: BitVector): Outcome = {
     val skip = this.skip(mod)
 
-    {
-      if (skip == 0 || supportCondition(ps, 0)) {
-        ps
-      } else {
-        ps.filterDom(x)(hasSupport(ps, 0, _))
+    val doms = Array(ps.dom(x), ps.dom(y))
+    var cs = ps
+    if (skip != 0 && !supportCondition(doms, 0)) {
+      val otherBV = doms(1).toBitVector(matrix.offsets(1))
+      val nd = doms(0).filter(hasSupport(0, _, otherBV))
+      if (nd.isEmpty) return Contradiction
+      if (nd ne doms(0)) {
+        doms(0) = nd
+        cs = cs.updateDomNonEmptyNoCheck(x, nd)
       }
     }
-      .andThen { ps0 =>
-        if (skip == 1 || supportCondition(ps0, 1)) {
-          ps0
-        } else {
-          ps0.filterDom(y)(hasSupport(ps0, 1, _))
-        }
+
+    if (skip != 1 && !supportCondition(doms, 1)) {
+      val otherBV = doms(0).toBitVector(matrix.offsets(0))
+      val nd = doms(1).filter(hasSupport(1, _, otherBV))
+      if (nd.isEmpty) return Contradiction
+      if (nd ne doms(1)) {
+        doms(1) = nd
+        cs = cs.updateDomNonEmptyNoCheck(y, nd)
       }
-      .entailIfFree(this)
+    }
+
+    if (doms(0).isAssigned || doms(1).isAssigned) {
+      cs.entail(this)
+    } else {
+      cs
+    }
   }
 
   def removeTuple(tuple: Array[Int]) = {
@@ -103,7 +110,7 @@ abstract class BinaryExt(
 
   }
 
-  def hasSupport(ps: ProblemState, variablePosition: Int, value: Int): Boolean
+  def hasSupport(variablePosition: Int, value: Int, otherBV: BitVector): Boolean
 
   override def check(t: Array[Int]) = matrix.check(t)
 
@@ -116,22 +123,23 @@ abstract class BinaryExt(
 }
 
 final class BinaryExtR(scope: Array[Variable], matrix2d: Matrix2D) extends BinaryExt(scope, matrix2d) {
-  private val offsets = Array(scope(0).initDomain.head, scope(1).initDomain.head)
+  private val offsets = Array(x.initDomain.head, y.initDomain.head)
 
   private val residues: Array[Array[Int]] =
     Array(
       new Array[Int](scope(0).initDomain.last - offsets(0) + 1),
       new Array[Int](scope(1).initDomain.last - offsets(1) + 1))
 
-  def hasSupport(ps: ProblemState, variablePosition: Int, value: Int) = {
+  def hasSupport(variablePosition: Int, value: Int, otherBV: BitVector) = {
     val matrixBV: BitVector = matrix2d.getBitVector(variablePosition, value)
-    val otherPosition = 1 - variablePosition
-    val otherDom = ps.dom(scope(otherPosition))
+
     val index = value - offsets(variablePosition)
     val part = residues(variablePosition)(index)
-    BinaryExt.presenceChecks += 1
-    (part >= 0 && otherDom.toBitVector(matrix2d.offsets(otherPosition)).intersects(matrixBV, part)) || {
-      val intersection = otherDom.toBitVector(matrix2d.offsets(otherPosition)).intersects(matrixBV)
+
+    BinaryExt.checks += 1
+
+    otherBV.intersects(matrixBV, part) || {
+      val intersection = otherBV.intersects(matrixBV)
 
       if (intersection >= 0) {
         BinaryExt.checks += 1 + intersection;
@@ -147,11 +155,12 @@ final class BinaryExtR(scope: Array[Variable], matrix2d: Matrix2D) extends Binar
 }
 
 final class BinaryExtNR(scope: Array[Variable], matrix2d: Matrix2D) extends BinaryExt(scope, matrix2d) {
-  def hasSupport(ps: ProblemState, variablePosition: Int, index: Int) = {
-    val matrixBV: BitVector = matrix2d.getBitVector(variablePosition, index);
-    val otherPosition = 1 - variablePosition
-    val intersection = ps.dom(scope(otherPosition)).toBitVector(matrix2d.offsets(otherPosition)).intersects(matrixBV)
+  def hasSupport(variablePosition: Int, index: Int, otherBV: BitVector) = {
 
+    val matrixBV: BitVector = matrix2d.getBitVector(variablePosition, index);
+    val intersection = otherBV.intersects(matrixBV)
+    //println(s"intersection of $otherBV with $matrixBV")
+    //println(s"support for $variablePosition, $index: $intersection")
     if (intersection >= 0) {
       BinaryExt.checks += 1 + intersection;
       true;

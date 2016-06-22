@@ -183,7 +183,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
         bc.revise(ps)
       } match {
         case Contradiction    => fail()
-        case ns: ProblemState => ns.dom(v0) should contain theSameElementsAs Seq(0)
+        case ns: ProblemState => ns.dom(v0).view should contain theSameElementsAs Seq(0)
       }
     }
   }

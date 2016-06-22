@@ -67,12 +67,14 @@ final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) w
         if (i != head) {
           val v = scope(i)
           val od = state.dom(v)
-          val nd = od.remove(value)
+          if (od.present(value)) {
+            val nd = od.remove(value)
 
-          if (od ne nd) {
-            if (nd.isEmpty) return Contradiction
-            state = state.updateDomNonEmpty(v, nd)
-            if (nd.isAssigned) q ::= i
+            if (od ne nd) {
+              if (nd.isEmpty) return Contradiction
+              state = state.updateDomNonEmpty(v, nd)
+              if (nd.isAssigned) q ::= i
+            }
           }
         }
         i -= 1

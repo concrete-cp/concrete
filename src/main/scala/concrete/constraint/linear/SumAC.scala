@@ -5,6 +5,7 @@ import concrete.constraint.BCCompanion
 import concrete.Variable
 import concrete.ProblemState
 import concrete.constraint.TupleEnumerator
+import concrete.Domain
 
 final class SumAC(
     constant: Int,
@@ -24,4 +25,7 @@ final class SumAC(
   override def toString() = toString(s"${mode}AC")
 
   override def toString(ps: ProblemState) = toString(ps, s"${mode}AC")
+
+  override def findSupport(doms: Array[Domain], position: Int, value: Int): Option[Array[Int]] =
+    super[TupleEnumerator].findSupport(doms, position, value)
 }

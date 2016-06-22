@@ -1,6 +1,5 @@
 package concrete.constraint.extension;
 
-import scala.annotation.tailrec
 
 final class TupleTrieSet(
   var relation: Relation,

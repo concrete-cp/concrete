@@ -15,7 +15,7 @@ class MidValueTest extends FlatSpec with Matchers {
     val j = IntDomain.ofSeq(9998, 10000)
     val d = i | j
 
-    d should contain theSameElementsInOrderAs Seq(0, 1, 9998, 10000)
+    d.view.toSeq should contain theSameElementsInOrderAs Seq(0, 1, 9998, 10000)
 
     val v = new Variable("v", d)
     val h = new concrete.heuristic.MidValue(new ParameterManager)

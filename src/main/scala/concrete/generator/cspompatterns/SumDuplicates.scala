@@ -1,6 +1,5 @@
 package concrete.generator.cspompatterns
 
-import scala.reflect.runtime.universe
 import scala.runtime.ZippedTraversable2.zippedTraversable2ToTraversable
 import concrete.constraint.linear.SumMode
 import cspom.CSPOM.constant

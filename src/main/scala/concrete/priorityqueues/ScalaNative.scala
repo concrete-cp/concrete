@@ -1,6 +1,4 @@
 package concrete.priorityqueues
-import java.util.AbstractQueue
-import scala.collection.JavaConversions
 
 final class ScalaNative[T <: PTag] extends PriorityQueue[T] {
 

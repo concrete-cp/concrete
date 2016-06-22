@@ -95,7 +95,7 @@ class MinMaxTest extends FlatSpec with Matchers with Inspectors with PropertyChe
     val state = problem.initState.toState
 
     val mod = constraint.revise(state)
-    mod.dom(r) should contain theSameElementsAs mod.dom(a(1))
+    mod.dom(r).view should contain theSameElementsAs mod.dom(a(1)).view
     mod.dom(a(0)) shouldBe state.dom(a(0))
 
     mod.toState(constraint) shouldBe 0
@@ -113,9 +113,9 @@ class MinMaxTest extends FlatSpec with Matchers with Inspectors with PropertyChe
     val state = problem.initState.toState
 
     val mod = constraint.revise(state)
-    mod.dom(vx) should contain theSameElementsAs Seq(0)
-    mod.dom(vy(0)) should contain theSameElementsAs Seq(1)
-    mod.dom(vy(1)) should contain theSameElementsAs Seq(0)
+    mod.dom(vx).view should contain theSameElementsAs Seq(0)
+    mod.dom(vy(0)).view should contain theSameElementsAs Seq(1)
+    mod.dom(vy(1)).view should contain theSameElementsAs Seq(0)
     assert(mod.isEntailed(constraint))
   }
 
@@ -131,9 +131,9 @@ class MinMaxTest extends FlatSpec with Matchers with Inspectors with PropertyChe
     val state = problem.initState.toState
 
     val mod = constraint.revise(state)
-    mod.dom(vx) should contain theSameElementsAs Seq(0)
-    mod.dom(vy(0)) should contain theSameElementsAs Seq(0)
-    mod.dom(vy(1)) should contain theSameElementsAs Seq(1)
+    mod.dom(vx).view should contain theSameElementsAs Seq(0)
+    mod.dom(vy(0)).view should contain theSameElementsAs Seq(0)
+    mod.dom(vy(1)).view should contain theSameElementsAs Seq(1)
     assert(mod.isEntailed(constraint))
   }
 

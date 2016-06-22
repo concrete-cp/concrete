@@ -22,7 +22,7 @@ final class Matrix2D(xSize: Int, ySize: Int, val xOffset: Int, val yOffset: Int,
     Array.fill(ySize)(bv)
   }
 
-  def size: Int = xMatrix.size * yMatrix.size
+  def size: Int = xMatrix.length * yMatrix.length
 
   private var empty = initialState
 
@@ -53,16 +53,22 @@ final class Matrix2D(xSize: Int, ySize: Int, val xOffset: Int, val yOffset: Int,
 
   }
 
-  def offsets(position: Int) = position match {
-    case 0 => xOffset
-    case 1 => yOffset
-    case _ => throw new IllegalArgumentException;
+  def offsets(position: Int) = {
+    assert(0 <= position && position < 2)
+    if (position == 0) {
+      xOffset
+    } else {
+      yOffset
+    }
   }
 
-  def getBitVector(position: Int, index: Int) = position match {
-    case 0 => xMatrix(index - xOffset);
-    case 1 => yMatrix(index - yOffset);
-    case _ => throw new IllegalArgumentException;
+  def getBitVector(position: Int, index: Int) = {
+    assert(0 <= position && position < 2)
+    if (position == 0) {
+      xMatrix(index - xOffset)
+    } else {
+      yMatrix(index - yOffset)
+    }
   }
 
   def copy = {

@@ -39,32 +39,16 @@ trait Removals extends Constraint with AdviseCounts {
     revise(ps, mod).andThen(_ => ps)
   }
 
-  // scope.iterator.zipWithIndex.zip(removals.iterator).filter(t => t._2 >= reviseCount).map(t => t._1)
-
-  // def modified: Seq[Int] = removals {
-  //    var i = 0
-  //    val mod = new ArrayBuffer[Int](arity)
-  //    while (i < arity) {
-  //      if (removals(i) == adviseCount) {
-  //        mod += i
-  //      }
-  //      i += 1
-  //    }
-  //    assert(mod.nonEmpty)
-  //    mod
-  //  }
-
   def getEvaluation(problemState: ProblemState): Int
 
   def skip(modified: BitVector) = {
-    if (modified.isEmpty) -1
-    else {
-      val head = modified.nextSetBit(0)
-      if (modified.nextSetBit(head + 1) < 0) {
-        head
-      } else {
-        -1
-      }
+    val head = modified.nextSetBit(0)
+    if (head < 0) {
+      -1
+    } else if (modified.nextSetBit(head + 1) < 0) {
+      head
+    } else {
+      -1
     }
   }
 

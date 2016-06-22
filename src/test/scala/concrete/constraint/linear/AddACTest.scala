@@ -35,7 +35,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     mod.dom(y) should be theSameInstanceAs ps.dom(y)
     mod.dom(z) should be theSameInstanceAs ps.dom(z)
 
-    mod.dom(x) should contain theSameElementsAs Seq(7)
+    mod.dom(x).view should contain theSameElementsAs Seq(7)
 
     assert(c.intervalsOnly(mod))
 
@@ -59,7 +59,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     mod.dom(y) should not be theSameInstanceAs(ps.dom(y))
     mod.dom(z) should be theSameInstanceAs ps.dom(z)
 
-    mod.dom(y) should contain theSameElementsAs Seq(5)
+    mod.dom(y).view should contain theSameElementsAs Seq(5)
 
     assert(c.intervalsOnly(mod))
   }
@@ -82,7 +82,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     mod.dom(y) should be theSameInstanceAs (ps.dom(y))
 
     mod.dom(z) should not be theSameInstanceAs(ps.dom(z))
-    mod.dom(z) should contain theSameElementsAs (-29 to -10)
+    mod.dom(z).view should contain theSameElementsAs (-29 to -10)
 
     assert(c.intervalsOnly(ps))
   }

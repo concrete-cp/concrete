@@ -1,6 +1,5 @@
 package concrete.constraint.extension
 
-import scala.collection.mutable.BitSet
 import concrete.Contradiction
 import concrete.Domain
 import concrete.EmptyIntDomain
@@ -27,7 +26,7 @@ class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
 
   def checkValues(tuple: Array[Int]): Boolean = throw new UnsupportedOperationException
 
-  val simpleEvaluation: Int = math.min(Constraint.NP, scope.count(_.initDomain.length > 1))
+  val simpleEvaluation: Int = math.min(Constraint.NP, scope.count(_.initDomain.size > 1))
 
   // Members declared in concrete.constraint.Removals
   val prop = mdd.edges.toDouble / scope.map(_.initDomain.size.toDouble).product
@@ -60,7 +59,7 @@ class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
           if (seekSupports(gk, i + 1)) {
             res = true
             supported(i) |= ak
-            if (i + 1 == delta && supported(i).length == domains(i).length) {
+            if (i + 1 == delta && supported(i).size == domains(i).size) {
               delta = i
               return true
             }
@@ -99,7 +98,7 @@ class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
       var cs: ProblemState =
         if (gNoChange) ps.updateState(this, gNo) else ps
       for (p <- 0 until delta) {
-        if (supported(p).length < domains(p).length) {
+        if (supported(p).size < domains(p).size) {
           cs = cs.updateDomNonEmptyNoCheck(scope(p), supported(p))
         }
       }

@@ -40,7 +40,6 @@ import concrete.Problem
 import concrete.Solver
 import concrete.UNSAT
 import scala.math.BigInt.int2bigInt
-import scala.reflect.runtime.universe
 import concrete.constraint.extension.BDDC
 import concrete.constraint.extension.MDDC
 import concrete.constraint.extension.ReduceableExt

@@ -14,7 +14,6 @@ import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
 import cspom.UNSATException
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import org.scalameter.Quantity

@@ -1,10 +1,6 @@
 package concrete.priorityqueues;
 
-import java.util.AbstractQueue
-
 import scala.annotation.tailrec
-
-import concrete.constraint.Constraint
 
 import cspom.Statistic
 
@@ -17,19 +13,13 @@ import cspom.Statistic
 final class QuickFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
 
   @Statistic
-  var nbOffer = 0
+  var nbOffer = 0L
   @Statistic
-  var nbUpdate = 0
+  var nbUpdate = 0L
   @Statistic
-  var nbPoll = 0
+  var nbPoll = 0L
   @Statistic
-  var nbClear = 0
-  @Statistic
-  var offerSize = 0L
-  @Statistic
-  var updateSize = 0L
-  @Statistic
-  var pollSize = 0L
+  var nbClear = 0L
 
   private val NB_LISTS = 8
 
@@ -64,11 +54,9 @@ final class QuickFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
           while (last >= 0 && queues(last).isEmpty) last -= 1
         }
         nbUpdate += 1
-        updateSize += size
       } else {
         size += 1
         nbOffer += 1
-        offerSize += size
       }
       //print(list + " ")
       if (list > last) last = list
@@ -84,7 +72,7 @@ final class QuickFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
 
   @tailrec
   private def poll(i: Int): T = {
-    assume(i <= last, i + " > " + last + "\n" + queues.map(n => n.isEmpty).mkString("\n"))
+    assume(i <= last, s"$i > $last\n" + queues.map(n => n.isEmpty).mkString("\n"))
     val q = queues(i)
     if (q.isEmpty) {
       poll(i + 1)
@@ -101,7 +89,6 @@ final class QuickFifos[T <: PTag with DLNode[T]] extends PriorityQueue[T] {
 
   def poll() = {
     nbPoll += 1
-    pollSize += size
     size -= 1
     val e = poll(0)
     presence.unsetPresent(e)

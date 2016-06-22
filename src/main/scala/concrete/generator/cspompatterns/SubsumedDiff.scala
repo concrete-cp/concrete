@@ -16,7 +16,7 @@ object SubsumedDiff extends ConstraintCompilerNoData {
   def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM) =
     AllDiff.ALLDIFF_CONSTRAINT(constraint).isDefined && haveSubsumingConstraint(constraint, problem)
 
-  def compile(constraint: CSPOMConstraint[_], problem: CSPOM) = {
+  def compile(constraint: CSPOMConstraint[_], problem: CSPOM) :Delta= {
     removeCtr(constraint, problem)
   }
 

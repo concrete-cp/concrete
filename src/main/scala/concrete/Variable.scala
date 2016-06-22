@@ -72,29 +72,20 @@ final class Variable(
 
   def getWDegEntailed(state: ProblemState) = {
 
-    //var i = constraints.length - 1
+    val ac = state.activeConstraints(this)
     var wDeg = 0
-    for (i <- state.activeConstraints(this)) {
+    var i = ac.nextSetBit(0)
+    while (i >= 0) {
       wDeg += constraints(i).weight
+      i = ac.nextSetBit(i + 1)
     }
-    //    while (i >= 0) {
-    //      val c = constraints(i)
-    //      if (!state.isEntailed(c)) wDeg += c.weight
-    //      i -= 1
-    //    }
     wDeg
   }
 
   //var dDeg = 0
 
   def getDDegEntailed(state: ProblemState) = {
-    var i = constraints.length - 1
-    var dDeg = 0
-    while (i >= 0) {
-      if (!state.isEntailed(constraints(i))) dDeg += 1
-      i -= 1
-    }
-    dDeg
+    state.activeConstraints(this).cardinality
   }
 
   def getDDegFree(state: ProblemState) = {

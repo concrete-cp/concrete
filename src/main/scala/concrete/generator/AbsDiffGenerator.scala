@@ -1,7 +1,6 @@
 package concrete.generator;
 
 import Generator._
-import concrete.constraint.Constraint
 import concrete.constraint.semantic.AbsDiffAC
 import concrete.constraint.semantic.AbsDiffBC
 import cspom.CSPOMConstraint

@@ -1,6 +1,5 @@
 package concrete.constraint.semantic
 
-import org.scalatest.Finders
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 import concrete.IntDomain
@@ -38,7 +37,7 @@ final class AbsIntTest extends FlatSpec with Matchers with Timeouts with Propert
     mod.dom(x) should not be theSameInstanceAs(ps.dom(x))
     mod.dom(y) should be theSameInstanceAs ps.dom(y)
 
-    mod.dom(x) should contain theSameElementsAs Seq(5)
+    mod.dom(x).view should contain theSameElementsAs Seq(5)
 
     assert(c.intervalsOnly(mod))
 
@@ -61,7 +60,7 @@ final class AbsIntTest extends FlatSpec with Matchers with Timeouts with Propert
     mod.dom(x) should be theSameInstanceAs ps.dom(x)
     mod.dom(y) should not be theSameInstanceAs(ps.dom(y))
 
-    mod.dom(y) should contain theSameElementsAs Seq(-7, 7)
+    mod.dom(y).view should contain theSameElementsAs Seq(-7, 7)
 
     assert(!c.intervalsOnly(mod))
     assert(mod.dom(x).convex)
@@ -80,7 +79,7 @@ final class AbsIntTest extends FlatSpec with Matchers with Timeouts with Propert
 
       val mod = c.revise(ps).toState
 
-      mod.dom(x) should contain theSameElementsAs Seq(224)
+      mod.dom(x).view should contain theSameElementsAs Seq(224)
       mod.dom(y) should be theSameInstanceAs ps.dom(y)
     }
 

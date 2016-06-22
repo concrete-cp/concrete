@@ -8,7 +8,7 @@ import concrete.constraint.Residues
 import concrete.ProblemState
 
 final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable, val skipIntervals: Boolean = false)
-  extends Constraint(Array(result, v0, v1)) with Residues with BCCompanion {
+    extends Constraint(Array(result, v0, v1)) with Residues with BCCompanion {
 
   def check(t: Array[Int]) = t(0) == math.abs(t(1) - t(2))
 
@@ -19,6 +19,8 @@ final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable, 
       case 2 => findValidTupleV1(value, ps.dom(result), ps.dom(v0));
       case _ => throw new IndexOutOfBoundsException;
     }
+
+  def findSupport(doms: Array[Domain], position: Int, value: Int) = ???
 
   def findValidTupleResult(val0: Int, dom1: Domain, dom2: Domain) = {
     if (val0 >= 0) {
@@ -33,24 +35,30 @@ final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable, 
 
   def findValidTupleV0(value: Int, result: Domain, dom: Domain): Option[Array[Int]] = {
 
-    dom.map { v =>
-      (v, math.abs(value - v))
-    } find {
-      case (_, res) => result.present(res)
-    } map {
-      case (v, res) => Array(res, value, v)
-    }
+    dom.view
+      .map { v =>
+        (v, math.abs(value - v))
+      }
+      .find {
+        case (_, res) => result.present(res)
+      }
+      .map {
+        case (v, res) => Array(res, value, v)
+      }
   }
 
   def findValidTupleV1(value: Int, result: Domain, dom: Domain): Option[Array[Int]] = {
 
-    dom.map { v =>
-      (v, math.abs(value - v))
-    } find {
-      case (_, res) => result.present(res)
-    } map {
-      case (v, res) => Array(res, v, value)
-    }
+    dom.view
+      .map { v =>
+        (v, math.abs(value - v))
+      }
+      .find {
+        case (_, res) => result.present(res)
+      }
+      .map {
+        case (v, res) => Array(res, v, value)
+      }
   }
 
   override def toString(ps: ProblemState) =

@@ -46,13 +46,29 @@ final class LinearNe(
 
     val (newVar, newCons) = totalSpan(ps, oldCons, oldVar)
 
-    newVar.cardinality match {
-      case 0 if (newCons == 0) => Contradiction
-      case 1 =>
-        val p = newVar.nextSetBit(0)
-        ps.remove(scope(p), newCons / factors(p)).entail(this)
-      case _ => ps.updateState(this, (newCons, newVar))
+    val first = newVar.nextSetBit(0)
+    if (first < 0) {
+      if (newCons == 0) {
+        Contradiction
+      } else {
+        ps.entail(this)
+      }
+    } else {
+      val second = newVar.nextSetBit(first + 1)
+      if (second < 0) {
+        ps.removeIfPresent(scope(first), newCons / factors(first)).entail(this)
+      } else {
+        ps.updateState(this, (newCons, newVar))
+      }
     }
+
+    //    newVar.cardinality match {
+    //      case 0 if (newCons == 0) => Contradiction
+    //      case 1 =>
+    //        val p = newVar.nextSetBit(0)
+    //        ps.removeIfPresent(scope(p), newCons / factors(p)).entail(this)
+    //      case _ => ps.updateState(this, (newCons, newVar))
+    //    }
   }
 
   override def toString() = toString("!=")

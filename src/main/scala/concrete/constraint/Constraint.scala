@@ -52,12 +52,14 @@ object Constraint {
 
 }
 
-trait StatefulConstraint[State] extends Constraint {
+trait StatefulConstraint[State <: AnyRef] extends Constraint {
   override def init(ps: ProblemState): Outcome
 
   override def toString(problemState: ProblemState) = s"${super.toString(problemState)} / ${problemState(this)}"
 
   def data(ps: ProblemState) = ps(this)
+
+  def updateState(ps: ProblemState, value: State) = ps.updateState(this, value)
 }
 
 abstract class Constraint(val scope: Array[Variable])
@@ -107,7 +109,7 @@ abstract class Constraint(val scope: Array[Variable])
 
   @tailrec
   final def controlTuplePresence(problemState: ProblemState, tuple: Array[Int], i: Int = arity - 1): Boolean = {
-    /** Need high optimization */
+    /* Need high optimization */
 
     i < 0 || (problemState.dom(scope(i)).present(tuple(i)) && controlTuplePresence(problemState, tuple, i - 1))
 
@@ -115,7 +117,7 @@ abstract class Constraint(val scope: Array[Variable])
 
   @tailrec
   final def controlTuplePresence(problemState: ProblemState, tuple: Array[Int], mod: List[Int]): Boolean = {
-    /** Need high optimization */
+    /* Need high optimization */
 
     if (mod eq Nil) {
       assert(controlTuplePresence(problemState, tuple), tuple.mkString("(", ", ", ")") +
@@ -140,8 +142,9 @@ abstract class Constraint(val scope: Array[Variable])
   //    super.weight = w
   //  }
 
-  def isConsistent(problemState: ProblemState): Outcome =
+  def isConsistent(problemState: ProblemState): Outcome = {
     revise(problemState).andThen(_ => problemState)
+  }
 
   def advise(problemState: ProblemState, pos: Int): Int
 
@@ -201,7 +204,7 @@ abstract class Constraint(val scope: Array[Variable])
     if (i < 0) {
       a
     } else {
-      a(i) = problemState.dom(scope(i)).size
+      a(i) = problemState.card(scope(i))
       sizes(problemState, a, i - 1)
     }
 
@@ -221,7 +224,7 @@ abstract class Constraint(val scope: Array[Variable])
     if (p < 0) {
       size
     } else {
-      val s = problemState.dom(scope(p)).size
+      val s = problemState.card(scope(p))
       if (size > Int.MaxValue / s) {
         -1
       } else {
@@ -233,7 +236,7 @@ abstract class Constraint(val scope: Array[Variable])
     var size = 0
     var p = arity - 1
     while (p >= 0) {
-      size += problemState.dom(scope(p)).length
+      size += problemState.card(scope(p))
       p -= 1
     }
     size
@@ -243,7 +246,7 @@ abstract class Constraint(val scope: Array[Variable])
     var size = 1.0
     var p = arity - 1
     while (p >= 0) {
-      size *= problemState.dom(scope(p)).size
+      size *= problemState.card(scope(p))
       p -= 1
     }
     size
@@ -256,7 +259,7 @@ abstract class Constraint(val scope: Array[Variable])
     var one = false
     var i = arity - 1
     while (i >= 0) {
-      if (problemState.dom(scope(i)).size > 1) {
+      if (!problemState.assigned(scope(i))) {
         if (one) {
           return false
         }
@@ -268,8 +271,8 @@ abstract class Constraint(val scope: Array[Variable])
   }
 
   def controlAssignment(problemState: ProblemState): Boolean = {
-    scope.exists(v => problemState.dom(v).size > 1) || check(scope.map(v => problemState.dom(v).head).toArray)
-
+    val doms = problemState.doms(scope)
+    !doms.forall(_.isAssigned) || check(doms.map(_.singleValue))
   }
 
   def controlRevision(ps: ProblemState): Boolean = {

@@ -4,7 +4,6 @@ import concrete.ParameterManager
 import concrete.Problem
 import concrete.ProblemState
 import concrete.Variable
-import scala.util.Try
 
 object CrossHeuristic {
   def apply(params: ParameterManager, decisionVariables: Array[Variable]): CrossHeuristic = {

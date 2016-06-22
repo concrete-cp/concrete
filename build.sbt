@@ -2,7 +2,7 @@ name := "concrete"
 
 organization := "fr.univ-valenciennes"
 
-version := "3.1-SNAPSHOT"
+version := "3.1"
 
 scalaVersion := "2.11.8"
 
@@ -12,16 +12,13 @@ testOptions in Test <+= (target in Test) map {
 
 resolvers += Resolver.sonatypeRepo("snapshots")
 
-resolvers += "INGI Snapshots" at "http://artifactory.info.ucl.ac.be/artifactory/libs-snapshot-local/"
-
-
 libraryDependencies ++= Seq(
-	"fr.univ-valenciennes" %% "cspom" % "2.8-SNAPSHOT",
+	"fr.univ-valenciennes" %% "cspom" % "2.8",
 	"org.postgresql" % "postgresql" % "9.4.1208",
 	//"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
 	"org.ow2.sat4j" % "org.ow2.sat4j.pb" % "2.3.5",
 	"com.typesafe.slick" %% "slick" % "3.1.1",
-	"com.github.tminglei" %% "slick-pg" % "0.14.0",
+	"com.github.tminglei" %% "slick-pg" % "0.14.1",
 	"com.typesafe" % "config" % "1.3.0",
 	"org.apache.commons" % "commons-math3" % "3.6.1",
 	//"org.jcp" % "jsr331" % "1.1.1",
@@ -33,10 +30,9 @@ libraryDependencies ++= Seq(
 
 scalacOptions ++= Seq(
   "-optimise"
-// , "-Xdisable-assertions"
+, "-Xdisable-assertions"
 //	"-deprecation", 
 //	"-unchecked", 
-,	"-optimise"
 ,	"-Xlint" 
 //	"-feature",
 , 	"-Ywarn-unused-import"

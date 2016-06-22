@@ -1,7 +1,5 @@
 package concrete.generator.cspompatterns
 
-import scala.reflect.runtime.universe
-
 import concrete.constraint.linear.SumEQ
 import concrete.constraint.linear.SumLE
 import concrete.constraint.linear.SumLT

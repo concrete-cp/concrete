@@ -19,19 +19,19 @@
 
 package concrete.heuristic;
 
-import concrete.Problem
-import concrete.Variable
+import concrete.Domain
 import concrete.ParameterManager
 import concrete.ProblemState
-import concrete.Domain
+import concrete.Variable
+
 class WDegOnDom(params: ParameterManager, decisionVariables: Array[Variable]) extends ScoredVariableHeuristic(params, decisionVariables) {
 
   for (v <- decisionVariables; c <- v.constraints) c.weight = 1
 
-  def score(variable: Variable, dom: Domain, state: ProblemState) = variable.getWDegEntailed(state).toDouble / dom.length
+  def score(variable: Variable, dom: Domain, state: ProblemState) = variable.getWDegEntailed(state).toDouble / dom.size
 
   override def toString = "max-wdeg/dom"
-  
+
   override def shouldRestart = true
 
 }

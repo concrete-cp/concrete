@@ -22,7 +22,6 @@ package concrete;
 import scala.collection.JavaConverters.asJavaIteratorConverter
 import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.collection.JavaConverters.seqAsJavaListConverter
-import scala.reflect.runtime.universe
 import scala.util.Try
 import org.scalameter.Quantity
 import com.typesafe.scalalogging.LazyLogging
@@ -39,11 +38,8 @@ import cspom.CSPOM
 import cspom.Statistic
 import cspom.StatisticsManager
 import cspom.compiler.CSPOMCompiler
-import cspom.variable.CSPOMConstant
-import cspom.variable.CSPOMExpression
-import cspom.variable.CSPOMSeq
-import cspom.variable.CSPOMVariable
 import concrete.constraint.linear.Simplex
+import concrete.constraint.extension.BinaryExt
 
 final class SolverFactory(val params: ParameterManager) {
 
@@ -120,6 +116,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   statistics.register("domain", Domain)
   statistics.register("linear", LinearLe)
   statistics.register("simplex", Simplex)
+  statistics.register("binary", BinaryExt)
 
   private var _next: SolverResult = UNKNOWNResult(None)
 

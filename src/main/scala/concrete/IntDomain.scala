@@ -1,15 +1,14 @@
 package concrete
 
-import cspom.util.BitVector
-import scala.collection.SortedSet
 import concrete.util.Interval
-import cspom.util.RangeSet
-import cspom.util.Infinitable
+import cspom.util.BitVector
 import cspom.util.Finite
 import cspom.util.FiniteIntInterval
+import cspom.util.Infinitable
+import cspom.util.RangeSet
 
 object EmptyIntDomain extends IntDomain {
-  def length = 0
+  def size = 0
   override def head = throw new NoSuchElementException
   override def last = throw new NoSuchElementException
   def next(i: Int) = throw new NoSuchElementException
@@ -30,7 +29,6 @@ object EmptyIntDomain extends IntDomain {
   override def toString = "[]"
   def convex = throw new IllegalStateException
   override def isEmpty = true
-  override def iterator = Iterator.empty
   def apply(i: Int) = throw new NoSuchElementException
   def toBitVector(offset: Int) = BitVector.empty
   def span = throw new NoSuchElementException
@@ -43,7 +41,7 @@ object EmptyIntDomain extends IntDomain {
   def isAssigned = throw new UnsupportedOperationException
   def shift(o: Int) = EmptyIntDomain
   def disjoint(d: Domain) = true
-
+  def foreach[S](f: Int => S): Unit = ()
 }
 
 object IntDomain {
@@ -117,9 +115,12 @@ object IntDomain {
 
 abstract class IntDomain extends Domain {
 
-  def assign(value: Int) = {
-    if (present(value)) Singleton(value)
-    else EmptyIntDomain
+  final def assign(value: Int): Singleton = {
+    assert(present(value))
+    assert(!isAssigned)
+    //if (present(value)) 
+    Singleton(value)
+    //else EmptyIntDomain
   }
 
   def |(value: Int): IntDomain

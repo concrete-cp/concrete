@@ -1,13 +1,11 @@
 package concrete.constraint;
 
-import java.util.Arrays
 import concrete.Domain
-import concrete.ProblemState
 import concrete.Outcome
-import scala.collection.mutable.ArrayBuffer
+import concrete.ProblemState
 import cspom.util.BitVector
 
-trait BoundRemovals[A] extends Constraint with Removals with StatefulConstraint[(Array[Domain], A)] with AdviseCounts {
+trait BoundRemovals[A] extends Constraint with Removals with StatefulConstraint[(Array[Domain], A)]  {
 
   def revise(problemState: ProblemState, mod: BitVector): Outcome = {
     val state = problemState(this)

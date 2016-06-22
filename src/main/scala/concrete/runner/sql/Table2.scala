@@ -4,7 +4,6 @@ import scala.xml.Node
 import scala.xml.Text
 import scala.xml.NodeSeq
 
-import cspom.StatisticsManager
 import scala.collection.mutable.HashMap
 import scala.annotation.tailrec
 import scala.collection.SortedMap

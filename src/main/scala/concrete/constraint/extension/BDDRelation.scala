@@ -1,15 +1,10 @@
 package concrete.constraint.extension
 
-import java.lang.ref.WeakReference
-import scala.annotation.elidable
-import scala.annotation.elidable.ASSERTION
 import com.typesafe.scalalogging.LazyLogging
 import concrete.Domain
-import concrete.util.SetWithMax
 import concrete.util.Timestamp
 import cspom.extension.IdMap
 import concrete.IntDomain
-import concrete.EmptyIntDomain
 
 final class BDDRelation(val bdd: BDD, val timestamp: Timestamp = new Timestamp()) extends Relation with LazyLogging {
   type Self2 = BDDRelation

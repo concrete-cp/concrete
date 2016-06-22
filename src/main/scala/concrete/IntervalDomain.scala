@@ -9,9 +9,9 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
 
   def this(lb: Int, ub: Int) = this(Interval(lb, ub))
 
-  val length = span.size
+  def size = span.size
 
-  require(size >= 2, "Intervals must have at least two elements, use Singleton instead")
+  assert(size >= 2, "Intervals must have at least two elements, use Singleton instead")
 
   def singleValue = throw new IllegalStateException
 
@@ -48,10 +48,11 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
   }
 
   def remove(index: Int) = {
+    assert(present(index))
     if (index == span.lb) { IntDomain.ofInterval(span.lb + 1, span.ub) }
     else if (index == span.ub) { IntDomain.ofInterval(span.lb, span.ub - 1) }
-    else if (present(index)) { toBVDomain.remove(index) }
-    else this
+    else { toBVDomain.remove(index) }
+
   }
 
   def removeFrom(lb: Int) =

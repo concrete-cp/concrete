@@ -49,26 +49,26 @@ class KnapsackTest extends FlatSpec with Matchers with Inspectors {
     val mdd1 = Knapsack.mddSum(weights, domains, W)
     val mdd2 = Knapsack.mddSum(profits, domains, P)
 
-    println(mdd1)
+    //println(mdd1)
     //mdd1.foreach(println)
-    println(mdd2)
-    mdd2.foreach(println)
+    //println(mdd2)
+    //mdd2.foreach(println)
 
     val mdd11 = mdd1.insertDim(weights.size, new ContiguousIntRangeSet(P).toSeq)
 
-    println(mdd11)
+    //println(mdd11)
     //mdd11.foreach(println)
 
     val mdd22 = mdd2.insertDim(weights.size + 1, new ContiguousIntRangeSet(W).toSeq)
 
-    println(mdd22)
+    //println(mdd22)
     //mdd22.foreach(println)
 
     val mddi = mdd22.intersect(mdd11)
-    println(mddi)
+    //println(mddi)
 
-    println(mddi.reduce)
-    mddi.foreach(println)
+    //println(mddi.reduce)
+    //mddi.foreach(println)
     //println(mdd11.intersect(mdd22))
 
     //    println(mdd1.reduce())

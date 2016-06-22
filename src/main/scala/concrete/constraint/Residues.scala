@@ -4,6 +4,8 @@ import concrete.Contradiction
 import concrete.Outcome
 import concrete.ProblemState
 import cspom.util.BitVector
+import concrete.Domain
+import scala.annotation.tailrec
 
 trait ResidueManager {
   def getResidue(position: Int, index: Int): Array[Int]
@@ -30,6 +32,30 @@ trait Residues extends Removals {
 
       ((residue ne null) && controlTuplePresence(state, residue)) ||
         (findSupport(state, position, value) match {
+          case Some(tuple) => {
+            assert(check(tuple))
+            residues.updateResidue(tuple)
+            true
+          }
+          case None => false
+        })
+    }
+  }
+
+  @tailrec
+  private def ctp(doms: Array[Domain], tuple: Array[Int], i: Int = arity - 1): Boolean = {
+    /* Need high optimization */
+
+    i < 0 || (doms(i).present(tuple(i)) && ctp(doms, tuple, i - 1))
+
+  }
+
+  def reviseDomain(doms: Array[Domain], position: Int) = {
+    doms(position).filter { value =>
+      val residue = residues.getResidue(position, value)
+
+      ((residue ne null) && ctp(doms, residue)) ||
+        (findSupport(doms, position, value) match {
           case Some(tuple) => {
             assert(check(tuple))
             residues.updateResidue(tuple)
@@ -76,5 +102,7 @@ trait Residues extends Removals {
   //  }
 
   def findSupport(state: ProblemState, position: Int, value: Int): Option[Array[Int]]
+
+  def findSupport(doms: Array[Domain], position: Int, value: Int): Option[Array[Int]]
 
 }

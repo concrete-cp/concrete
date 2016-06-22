@@ -2,7 +2,6 @@ package concrete.runner
 
 import java.net.URL
 import java.security.InvalidParameterException
-import scala.reflect.runtime.universe
 import org.scalameter.Quantity
 import com.typesafe.scalalogging.LazyLogging
 import concrete.CSPOMSolver

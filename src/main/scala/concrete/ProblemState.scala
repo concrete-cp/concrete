@@ -30,6 +30,7 @@ sealed trait Outcome {
   def entail(c: Constraint): Outcome
 
   def entailIfFree(c: Constraint): Outcome
+  def entailIfFree(c: Constraint, doms: Array[Domain]): Outcome
 
   def entailIf(c: Constraint, f: ProblemState => Boolean): Outcome
 
@@ -63,7 +64,7 @@ sealed trait Outcome {
 
   def dom(v: Variable): Domain
 
-  def card(v: Variable) = dom(v).length
+  def card(v: Variable) = dom(v).size
 
   def span(v: Variable): Interval = dom(v).span
 
@@ -79,7 +80,7 @@ sealed trait Outcome {
   def isEntailed(c: Constraint): Boolean
   def activeConstraints(v: Variable): BitVector
 
-  def apply[S](c: StatefulConstraint[S]): S
+  def apply[S <: AnyRef](c: StatefulConstraint[S]): S
 
   def isState = this ne Contradiction
 
@@ -91,6 +92,7 @@ case object Contradiction extends Outcome {
   def filterDom(v: Variable)(f: Int => Boolean): Outcome = Contradiction
   def shaveDom(v: Variable, lb: Int, ub: Int): Outcome = Contradiction
   def entailIfFree(c: Constraint): Outcome = Contradiction
+  def entailIfFree(c: Constraint, doms: Array[Domain]): Outcome = Contradiction
   def entailIf(c: Constraint, f: ProblemState => Boolean): Outcome = Contradiction
   def removeTo(v: Variable, ub: Int): Outcome = Contradiction
   def removeFrom(v: Variable, lb: Int): Outcome = Contradiction
@@ -102,12 +104,12 @@ case object Contradiction extends Outcome {
   def domainsOption: Option[IndexedSeq[Domain]] = None
   def toString(problem: Problem) = "Contradiction"
   def toState = throw new UNSATException("Tried to get state from a Contradiction")
-  def apply[S](c: StatefulConstraint[S]): S = throw new UNSATException("Tried to get state from a Contradiction")
+  def apply[S <: AnyRef](c: StatefulConstraint[S]): S = throw new UNSATException("Tried to get state from a Contradiction")
   def assign(v: Variable, value: Int): concrete.Outcome = Contradiction
   def entail(c: Constraint): concrete.Outcome = Contradiction
   def isEntailed(c: Constraint): Boolean = throw new UNSATException("Tried to get state from a Contradiction")
   def activeConstraints(v: Variable): BitVector = throw new UNSATException("Tried to get state from a Contradiction")
-  def updateState[S](c: StatefulConstraint[S], newState: S): concrete.Outcome = Contradiction
+  def updateState[S <: AnyRef](c: StatefulConstraint[S], newState: S): concrete.Outcome = Contradiction
 }
 
 object ProblemState {
@@ -122,6 +124,21 @@ object ProblemState {
       BitVector.empty)
       .padConstraints(problem.constraints, problem.maxCId)
   }
+
+  def isFree(doms: Array[Domain]): Boolean = {
+    var one = false
+    var i = doms.length - 1
+    while (i >= 0) {
+      if (!doms(i).isAssigned) {
+        if (one) {
+          return false
+        }
+        one = true
+      }
+      i -= 1
+    }
+    true
+  }
 }
 
 case class ProblemState(
@@ -135,7 +152,7 @@ case class ProblemState(
 
   def orElse(f: => Outcome) = this
 
-  def apply[S](c: StatefulConstraint[S]): S =
+  def apply[S <: AnyRef](c: StatefulConstraint[S]): S =
     constraintStates(c.id).asInstanceOf[S]
 
   def updateState[S <: AnyRef](c: StatefulConstraint[S], newState: S): ProblemState = {
@@ -263,12 +280,33 @@ case class ProblemState(
 
   def assigned(v: Variable): Boolean = dom(v).isAssigned
 
-  def assign(v: Variable, value: Int): Outcome = {
-    updateDom(v, dom(v).assign(value))
+  def assign(v: Variable, value: Int): ProblemState = {
+    val assigned = dom(v).assign(value)
+    assert(assigned.nonEmpty)
+    updateDomNonEmpty(v, dom(v).assign(value))
+  }
+
+  def tryAssign(v: Variable, value: Int): Outcome = {
+    val d = dom(v)
+    if (d.present(value)) {
+      updateDomNonEmpty(v, d.assign(value))
+    } else {
+      Contradiction
+    }
+
   }
 
   def remove(v: Variable, value: Int): Outcome = {
     updateDom(v, dom(v).remove(value))
+  }
+
+  def removeIfPresent(v: Variable, value: Int): Outcome = {
+    val d = dom(v)
+    if (d.present(value)) {
+      updateDom(v, d.remove(value))
+    } else {
+      this
+    }
   }
 
   def filterDom(v: Variable)(f: Int => Boolean) =
@@ -289,7 +327,9 @@ case class ProblemState(
   override def removeAfter(v: Variable, lb: Int): Outcome =
     updateDom(v, dom(v).removeAfter(lb))
 
-  def entailIfFree(c: Constraint) = entailIf(c, c.isFree)
+  def entailIfFree(c: Constraint) = if (c.isFree(this)) entail(c) else this
+
+  def entailIfFree(c: Constraint, doms: Array[Domain]) = if (ProblemState.isFree(doms)) entail(c) else this
 
   def entailIf(c: Constraint, f: ProblemState => Boolean) = {
     if (f(this)) entail(c) else this

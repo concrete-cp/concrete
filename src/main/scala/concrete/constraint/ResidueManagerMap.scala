@@ -1,6 +1,5 @@
 package concrete.constraint;
 
-import scala.annotation.tailrec
 import concrete.Variable
 
 final class ResidueManagerMap(scope: Array[Variable]) extends ResidueManager {

@@ -4,7 +4,6 @@ import concrete.constraint.Constraint
 import concrete.constraint.Residues
 import concrete.Domain
 import concrete.Variable
-import concrete.util.Interval
 import concrete.constraint.BCCompanion
 import concrete.ProblemState
 
@@ -28,6 +27,8 @@ final class MulAC(val result: Variable, val v0: Variable, val v1: Variable, val 
       case 2 => findValidTupleV(ps.dom(result), value, ps.dom(v0), 2);
       case _ => throw new IndexOutOfBoundsException()
     }
+
+  def findSupport(doms: Array[Domain], position: Int, value: Int) = ???
 
   private def findValidTupleResult(val0: Int, dom1: Domain, dom2: Domain): Option[Array[Int]] = {
     if (val0 == 0) {

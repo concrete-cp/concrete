@@ -1,14 +1,13 @@
 package concrete.constraint.semantic
 
-import org.scalatest.Finders
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
+import org.scalatest.prop.PropertyChecks
+
 import concrete.IntDomain
 import concrete.Problem
-import concrete.Variable
-import concrete.constraint.AdviseCount
-import org.scalatest.prop.PropertyChecks
 import concrete.Singleton
+import concrete.Variable
 
 final class NeqTest extends FlatSpec with Matchers with PropertyChecks {
 
@@ -50,7 +49,7 @@ final class NeqTest extends FlatSpec with Matchers with PropertyChecks {
       val ps = pb.initState.toState
       val mod = c.revise(ps)
 
-      (ps.dom(v0).toSet -- mod.dom(v0)) should contain theSameElementsAs Seq(-5 + k)
+      (ps.dom(v0).view.toSet -- mod.dom(v0).view) should contain theSameElementsAs Seq(-5 + k)
       assert(mod.isEntailed(c))
     }
 
@@ -62,7 +61,7 @@ final class NeqTest extends FlatSpec with Matchers with PropertyChecks {
       val ps = pb.initState.toState
       val mod = c.revise(ps)
 
-      (ps.dom(v0).toSet -- mod.dom(v0)) should contain theSameElementsAs Seq(-5 - k)
+      (ps.dom(v0).view.toSet -- mod.dom(v0).view) should contain theSameElementsAs Seq(-5 - k)
       assert(mod.isEntailed(c))
     }
 

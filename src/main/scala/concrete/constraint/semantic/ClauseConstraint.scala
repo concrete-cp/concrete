@@ -127,9 +127,9 @@ final class ClauseConstraint(clause: Clause) extends Constraint(clause.vars: _*)
 
   private def enforce(ps: ProblemState, position: Int): Outcome = {
     if (position < posLength) {
-      ps.assign(scope(position), 1)
+      ps.tryAssign(scope(position), 1)
     } else {
-      ps.assign(scope(position), 0)
+      ps.tryAssign(scope(position), 0)
     }
   }
 

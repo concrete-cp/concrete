@@ -10,7 +10,7 @@ object BitVectorDomain {
 
 }
 
-final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override val length: Int)
+final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override val size: Int)
     extends IntDomain with LazyLogging {
   assert(size >= 2, "BitVectorSets must have at least two elements")
   assert(Math.checkedAdd(offset, bitVector.lastSetBit) == offset + bitVector.lastSetBit)
@@ -25,11 +25,11 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
 
   override val head = offset + bitVector.nextSetBit(0)
 
-  assert(headOption.exists(_ >= offset))
+  assert(head >= offset)
 
   override val last = offset + bitVector.lastSetBit
 
-  assert(lastOption.exists(_ >= offset))
+  assert(last >= offset)
 
   override def next(i: Int) = {
     val b = math.max(0, i - offset + 1)
@@ -79,9 +79,10 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
   }
 
   def remove(index: Int) = {
-    if (present(index)) {
-      IntDomain.ofBitVector(offset, bitVector - (index - offset), size - 1)
-    } else { this }
+    assert(present(index))
+    //if (present(index)) {
+    IntDomain.ofBitVector(offset, bitVector - (index - offset), size - 1)
+    //} else { this }
   }
 
   def removeFrom(lb: Int) = {
@@ -100,27 +101,31 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
 
   def removeUntil(ub: Int) = {
     val b = ub - offset
-    if (b <= bitVector.nextSetBit(0)) {
+    val first = bitVector.nextSetBit(0)
+    if (b <= first) {
       this
     } else if (b > bitVector.lastSetBit) {
       EmptyIntDomain
     } else {
-      val nbitVector = bitVector.clearUntil(b)
-      IntDomain.ofBitVector(offset, nbitVector, nbitVector.cardinality)
+      val nbitVector = bitVector.shift(-b) //clearUntil(b)
+      IntDomain.ofBitVector(ub, nbitVector, nbitVector.cardinality)
     }
+
   }
 
   def &(lb: Int, ub: Int) = {
     val blb = lb - offset
     val bub = ub - offset + 1
 
-    val newBV = bitVector.clearUntil(blb).clearFrom(bub)
+    val newBV = bitVector.clearFrom(bub).shift(-blb)
 
-    if (newBV == bitVector) {
+    val card = newBV.cardinality
+
+    if (card == size) {
       this
     } else {
       assert(newBV.cardinality < size, s"$this (offset $offset) & ($lb, $ub) / $bitVector & ($blb, $bub) : no filtering but different instance $newBV")
-      IntDomain.ofBitVector(offset, newBV, newBV.cardinality)
+      IntDomain.ofBitVector(lb, newBV, card)
     }
   }
 
@@ -128,10 +133,10 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
 
   override def toString =
     if (size <= BitVectorDomain.DISPLAYED_VALUES) {
-      iterator.mkString("{", ", ", "}");
+      view.mkString("{", ", ", "}");
     } else {
-      iterator.take(BitVectorDomain.DISPLAYED_VALUES - 1)
-        .mkString("{", ", ", ", [" + (size - BitVectorDomain.DISPLAYED_VALUES) + "...], " + last + "}")
+      view.take(BitVectorDomain.DISPLAYED_VALUES - 1)
+        .mkString("{", ", ", s", [${size - BitVectorDomain.DISPLAYED_VALUES}...], $last}")
     }
 
   def subsetOf(d: IntDomain) = d match {
@@ -169,7 +174,7 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
   }
 
   def shift(o: Int) = if (o == 0) this else
-    new BitVectorDomain(offset + o, bitVector, length)
+    new BitVectorDomain(offset + o, bitVector, size)
 
   override def &(d: Domain) = d match {
     case id: IntervalDomain => this & id.span
@@ -184,9 +189,9 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
 
       val newCard = newBV.cardinality
 
-      if (newCard == length) {
+      if (newCard == size) {
         this
-      } else if (newCard == bd.length) {
+      } else if (newCard == bd.size) {
         bd
       } else {
         IntDomain.ofBitVector(newOffset, newBV, newBV.cardinality)

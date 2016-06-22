@@ -37,8 +37,8 @@ final class BooleanDomainTest extends FlatSpec with Matchers {
   }
 
   it should "list values" in {
-    domain should contain theSameElementsAs Seq(0, 1)
-    domain.remove(1) should contain theSameElementsAs Seq(0)
+    domain.view should contain theSameElementsAs Seq(0, 1)
+    domain.remove(1).view should contain theSameElementsAs Seq(0)
   }
 
   it should "find next value" in {

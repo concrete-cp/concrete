@@ -20,8 +20,6 @@ class GeneratorManager(pm: ParameterManager) {
       'abs -> AbsGenerator,
       'alldifferent -> adg,
       'eq -> EqGenerator,
-      //'gt -> GtGenerator,
-      //'ge -> GtGenerator,
       'mul -> MulGenerator,
       'absdiff -> AbsDiffGenerator,
       'gcc -> GccGenerator,

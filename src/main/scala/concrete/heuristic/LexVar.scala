@@ -19,11 +19,10 @@
 
 package concrete.heuristic;
 
+import concrete.Domain
 import concrete.ParameterManager
-import concrete.Problem
 import concrete.ProblemState
 import concrete.Variable
-import concrete.Domain
 
 final class LexVar(params: ParameterManager, dv: Array[Variable]) extends VariableHeuristic(params, dv.reverse) {
   

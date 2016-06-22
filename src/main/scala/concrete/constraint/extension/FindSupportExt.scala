@@ -21,9 +21,6 @@ package concrete.constraint.extension;
 
 import concrete.Variable
 import concrete.constraint.Residues
-import concrete.constraint.TupleEnumerator
-import cspom.UNSATException
-import concrete.constraint.Constraint
 import concrete.Domain
 import concrete.ProblemState
 
@@ -33,7 +30,11 @@ final class FindSupportExt(scope: Array[Variable], tts: Relation)
   var matrix: Matrix = new TupleTrieSet(tts, false)
 
   override def findSupport(ps: ProblemState, p: Int, i: Int) = {
-    val s = tts.findSupport(scope.map(ps.dom).toIndexedSeq, p, i)
+    findSupport(ps.doms(scope), p, i)
+  }
+
+  override def findSupport(doms: Array[Domain], p: Int, i: Int) = {
+    val s = tts.findSupport(doms, p, i)
 
     assert(s.forall(tts.contains))
 

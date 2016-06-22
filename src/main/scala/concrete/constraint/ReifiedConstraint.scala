@@ -3,6 +3,7 @@ package concrete.constraint
 import com.typesafe.scalalogging.LazyLogging
 
 import concrete.BooleanDomain
+import concrete.Contradiction
 import concrete.EMPTY
 import concrete.FALSE
 import concrete.Outcome
@@ -16,27 +17,35 @@ final class ReifiedConstraint(
   val positiveConstraint: Constraint,
   val negativeConstraint: Constraint)
     extends Constraint(controlVariable +: (positiveConstraint.scope ++ negativeConstraint.scope).distinct)
-    with Advisable with LazyLogging {
+    with LazyLogging with StatefulConstraint[java.lang.Boolean] with Advisable {
 
   require(controlVariable.initDomain.isInstanceOf[BooleanDomain], s"${controlVariable} init domain ${controlVariable.initDomain} is not boolean")
 
-  def init(ps: ProblemState) = initCons(positiveConstraint, ps).andThen(initCons(negativeConstraint, _))
-
-  /**
-   *  Only initializes constraint states as some constraints' init may remove values from domains
-   */
-  private def initCons(c: Constraint, ps: ProblemState): Outcome = {
-    /*
-     *  Keep state but restore domains. Probably won't work if constraint state depends on domain state :(
-     */
-    c.init(ps).andThen { consistent =>
-      c match {
-        case sc: StatefulConstraint[AnyRef] => ps.updateState(sc, consistent(sc))
-        case _                              => ps
-      }
-
+  def init(ps: ProblemState) = {
+    ps.dom(controlVariable) match {
+      case UNKNOWNBoolean => updateState(ps, false)
+      case TRUE           => positiveConstraint.init(ps).andThen(updateState(_, true))
+      case FALSE          => negativeConstraint.init(ps).andThen(updateState(_, true))
+      case EMPTY          => Contradiction //throw new UNSATException(msg = s"${controlVariable.toString(ps)} was empty during ${toString(ps)} init")
     }
+
   }
+  //
+  //  /**
+  //   *  Only initializes constraint states as some constraints' init may remove values from domains
+  //   */
+  //  private def initCons(c: Constraint, ps: ProblemState): Outcome = {
+  //    /*
+  //     *  Keep state but restore domains. Probably won't work if constraint state depends on domain state :(
+  //     */
+  //    c.init(ps).andThen { consistent =>
+  //      c match {
+  //        case sc: StatefulConstraint[AnyRef] => ps.updateState(sc, consistent(sc))
+  //        case _                              => ps
+  //      }
+  //
+  //    }
+  //  }
 
   override def identify(i: Int): Int = {
     negativeConstraint.identify(positiveConstraint.identify(super.identify(i)))
@@ -66,17 +75,37 @@ final class ReifiedConstraint(
     a
   }
 
+  private def init(c: Constraint, ps: ProblemState): Outcome = {
+    if (ps(this)) {
+      ps
+    } else {
+      c.init(ps).andThen(updateState(_, true))
+    }
+  }
+
   def revise(ps: ProblemState): Outcome = {
 
     ps.dom(controlVariable) match {
       case UNKNOWNBoolean =>
-        positiveConstraint
-          .isConsistent(ps)
-          .andThen { posCons =>
-            negativeConstraint
-              .isConsistent(posCons)
+        positiveConstraint.init(ps)
+          .andThen { psInitPos =>
+            if (positiveConstraint.isConsistent(psInitPos).isState) {
+              ps
+            } else {
+              Contradiction
+            }
+          }
+          .andThen { ps =>
+            negativeConstraint.init(ps)
+              .andThen { psInitNeg =>
+                if (negativeConstraint.isConsistent(psInitNeg).isState) {
+                  ps
+                } else {
+                  Contradiction
+                }
+              }
               .orElse {
-                posCons.updateDomNonEmpty(controlVariable, TRUE).entail(this)
+                ps.updateDomNonEmpty(controlVariable, TRUE).entail(this)
               }
           }
           .orElse {
@@ -84,10 +113,12 @@ final class ReifiedConstraint(
           }
 
       case TRUE =>
-        positiveConstraint.revise(ps)
+        init(positiveConstraint, ps)
+          .andThen(positiveConstraint.revise)
           .entailIf(this, mod => mod.isEntailed(positiveConstraint))
       case FALSE =>
-        negativeConstraint.revise(ps)
+        init(negativeConstraint, ps)
+          .andThen(negativeConstraint.revise)
           .entailIf(this, mod => mod.isEntailed(negativeConstraint))
 
       case EMPTY => throw new IllegalStateException
@@ -106,17 +137,24 @@ final class ReifiedConstraint(
   }
 
   override def toString(ps: ProblemState) =
-    s"${controlVariable.toString(ps)} == (${positiveConstraint.toString(ps)}) / != (${negativeConstraint.toString(ps)})";
+    s"${controlVariable.toString(ps)} <=> ${positiveConstraint.toString(ps)}${
+      Option(data(ps))
+        .map {
+          if (_) " (initialized)" else ""
+        }
+        .getOrElse(" (no data)")
+    }" // / != (${negativeConstraint.toString(ps)})";
 
-  override def toString =
-    s"${controlVariable} == (${positiveConstraint})"
+  override def toString = s"${controlVariable} <=> ${positiveConstraint}"
 
   //var controlRemovals = 0
 
-  def register(ac: AdviseCount): Unit = {
-    Seq(positiveConstraint, negativeConstraint).collect {
-      case c: Advisable => c.register(ac)
-    }
+  override def register(ac: AdviseCount): Unit = {
+    Seq(positiveConstraint, negativeConstraint)
+      .collect {
+        case c: Advisable => c
+      }
+      .foreach(_.register(ac))
   }
 
   def advise(ps: ProblemState, position: Int) = {

@@ -4,13 +4,8 @@ import concrete.CSPOMDriver
 import cspom.CSPOM
 import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompiler
-import cspom.compiler.ConstraintCompilerNoData
-import cspom.compiler.Delta
 import cspom.variable.BoolExpression
-import cspom.variable.BoolVariable
-import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
-import cspom.variable.CSPOMVariable
 import cspom.variable.SimpleExpression
 
 /**

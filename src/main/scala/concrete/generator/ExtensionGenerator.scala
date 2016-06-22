@@ -33,6 +33,7 @@ import concrete.constraint.extension.BDDNode
 import concrete.constraint.extension.BDDRelation
 import concrete.constraint.extension.BDDC
 import concrete.util.SparseSeq
+import concrete.constraint.extension.MatrixGeneral
 
 class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLogging {
 
@@ -108,7 +109,7 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
     }
   }
 
-  private def generateMatrix(variables: Seq[Variable], relation: cspom.extension.Relation[_], init: Boolean): Matrix = {
+  private[concrete] def generateMatrix(variables: Seq[Variable], relation: cspom.extension.Relation[_], init: Boolean): Matrix = {
     logger.info(s"Generating matrix for $relation, $variables")
     val domains = variables.map(_.initDomain).toList
     if (relation.nonEmpty && relation.arity == 2) {
@@ -117,6 +118,9 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
       matrix.setAll(any2Int(relation), !init)
     } else if (init || relation.arity == 1) {
       new TupleTrieSet(relation2MDD(relation), init)
+    } else if (ds == "Matrix") {
+      val matrix = new MatrixGeneral(domains.map(_.span.size).toArray, domains.map(_.head).toArray, init)
+      matrix.setAll(any2Int(relation), !init)
     } else {
       new TupleTrieSet(
         ds match {

@@ -1,7 +1,6 @@
 package concrete.util
 
 import scala.collection.AbstractSet
-import scala.collection.SetLike
 import scala.collection.mutable.WrappedArray
 
 object ArraySet {

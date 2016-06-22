@@ -7,7 +7,6 @@ import concrete.Contradiction
 import concrete.IntDomain
 import concrete.ParameterManager
 import concrete.Problem
-import concrete.ProblemState
 import concrete.Singleton
 import concrete.Solver
 import concrete.Variable
@@ -41,8 +40,8 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
       }
     }.toState
 
-    mod.dom(x) should contain theSameElementsAs Seq(1)
-    mod.dom(y) should contain theSameElementsAs Seq(0, 1)
+    mod.dom(x).view should contain theSameElementsAs Seq(1)
+    mod.dom(y).view should contain theSameElementsAs Seq(0, 1)
 
   }
 
@@ -78,7 +77,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     c.adviseAll(ps)
     val mod = c.revise(ps).toState
     withClue(c.toString(mod)) {
-      mod.dom(x52) should contain theSameElementsAs Seq(4)
+      mod.dom(x52).view should contain theSameElementsAs Seq(4)
     }
     // -1.Q[43] [0, 3] + -2.Q[44] [1] + -3.Q[45] [1, 2] + -4.Q[46] [0] + -5.Q[47] [0] + -6.Q[48] [0] eq -6 ()
   }
@@ -102,7 +101,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     val ps = pb.initState.toState
     c.adviseAll(ps)
     val mod = c.revise(ps).toState
-    mod.dom(q43) should contain theSameElementsAs Seq(1)
+    mod.dom(q43).view should contain theSameElementsAs Seq(1)
 
     // -1.Q[43] [0, 3] + -2.Q[44] [1] + -3.Q[45] [1, 2] + -4.Q[46] [0] + -5.Q[47] [0] + -6.Q[48] [0] eq -6 ()
   }
@@ -116,8 +115,8 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     c.adviseAll(ps)
     val mod = c.revise(ps).toState
 
-    mod.dom(v0) should contain theSameElementsAs (1 to 4)
-    mod.dom(v1) should contain theSameElementsAs (0 to 3)
+    mod.dom(v0).view should contain theSameElementsAs (1 to 4)
+    mod.dom(v1).view should contain theSameElementsAs (0 to 3)
   }
 
   it should "filter <= with positive and negative coefficients" in {
@@ -129,8 +128,8 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     c.adviseAll(ps)
     val mod = c.revise(ps).toState
 
-    mod.dom(v0) should contain theSameElementsAs Seq(1, 2, 3, 4)
-    mod.dom(v1) should contain theSameElementsAs (0 to 4)
+    mod.dom(v0).view should contain theSameElementsAs Seq(1, 2, 3, 4)
+    mod.dom(v1).view should contain theSameElementsAs (0 to 4)
   }
 
   it should "filter <= with positive coefficients" in {
@@ -141,8 +140,8 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     val ps = pb.initState.toState
     c.adviseAll(ps)
     val mod = c.revise(ps).toState
-    mod.dom(v0) should contain theSameElementsAs (1 to 3)
-    mod.dom(v1) should contain theSameElementsAs (0 to 2)
+    mod.dom(v0).view should contain theSameElementsAs (1 to 3)
+    mod.dom(v1).view should contain theSameElementsAs (0 to 2)
   }
 
   it should "filter <= with other negative coefficients and domains" in {
@@ -160,7 +159,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
 
     c.adviseAll(ps)
     val mod = c.revise(ps).toState
-    mod.dom(v2) should contain theSameElementsAs (0 to 1)
+    mod.dom(v2).view should contain theSameElementsAs (0 to 1)
 
   }
 
@@ -190,7 +189,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     val ps = pb.initState.toState
     c.adviseAll(ps)
     val mod = c.revise(ps).toState
-    mod.dom(v0) should contain theSameElementsAs (-10 to 10 filter (_ != 1))
+    mod.dom(v0).view should contain theSameElementsAs (-10 to 10 filter (_ != 1))
 
   }
 
@@ -220,7 +219,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     val ps = pb.initState.toState
     c.adviseAll(ps)
     val mod = c.revise(ps).toState
-    mod.dom(x985) should contain theSameElementsAs Seq(0)
+    mod.dom(x985).view should contain theSameElementsAs Seq(0)
 
     // -1.Q[43] [0, 3] + -2.Q[44] [1] + -3.Q[45] [1, 2] + -4.Q[46] [0] + -5.Q[47] [0] + -6.Q[48] [0] eq -6 ()
   }
@@ -239,12 +238,12 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     c.adviseAll(ps)
     val mod = c.revise(ps).toState
 
-    mod.dom(x238) should contain theSameElementsAs (-14 to 1)
+    mod.dom(x238).view should contain theSameElementsAs (-14 to 1)
 
     val ps2 = mod.removeAfter(x14, 14).toState
     c.advise(ps2, 1)
     val mod2 = c.revise(ps2).toState
-    mod2.dom(x238) should contain theSameElementsAs (-14 to -1)
+    mod2.dom(x238).view should contain theSameElementsAs (-14 to -1)
 
     //1.X_INTRODUCED_238||X_INTRODUCED_408[1] {-14, -13, -12, -11, [24...], 15} + -1.X_INTRODUCED_14||costas[15] [1, 14] + 1.X_INTRODUCED_0||costas[1] [15] =BC= 0
   }

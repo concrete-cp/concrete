@@ -30,6 +30,9 @@ import cspom.xcsp.XCSPParser
 class SolvingTest extends FunSpec with SolvingBehaviors {
 
   val problemBank = LinkedHashMap[String, (AnyVal, Boolean)](
+
+    "1d_rubiks_cube.small.fzn.xz" -> ((4, false)),
+    "1d_rubiks_cube.fzn.xz" -> ((12, false)),
     "testExtension1.xml.xz" -> ((8, false)),
     "testExtension2.xml.xz" -> ((8, false)),
     "testExtension3.xml.xz" -> ((0, false)),
@@ -39,7 +42,7 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
     "QuadraticAssignment-qap.xml.xz" -> ((4776, false)),
 
     "fapp01-0200-0.xml.xz" -> ((false, false)),
-    "1d_rubiks_cube.fzn.xz" -> ((12, false)),
+
     "scen11-f12.xml.xz" -> ((0, true)),
 
     "normalized-renault-mod-0_ext.xml.xz" -> ((true, true)),
@@ -75,7 +78,7 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
 
     "test.fzn.xz" -> ((true, false)),
 
-    "queens-12.xml.xz" -> ((14200, false)))
+    "queens-12.xml.xz" -> ((14200, false))).slice(27, 28)
 
   val parameters = Nil
 
@@ -169,7 +172,7 @@ trait SolvingBehaviors extends Matchers with Inspectors { this: FunSpec =>
             }
           }
 
-          concurrent.Await.result(f, 1000.seconds)
+          concurrent.Await.result(f, 120.seconds)
 
         }
         .get

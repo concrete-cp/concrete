@@ -17,10 +17,10 @@ final object AbsGenerator extends Generator with LazyLogging {
         require(r == math.abs(v))
         Seq()
       case (Const(r: Int), Var(v)) =>
-        require(v.initDomain.sameElements(Seq(-r, r)))
+        require(v.initDomain.view.toSet == Set(-r, r))
         Seq()
       case (Var(r), Const(v: Int)) =>
-        require(r.initDomain.sameElements(Seq(math.abs(v))))
+        require(r.initDomain.view.toSeq == Seq(math.abs(v)))
         Seq()
       case (Var(r), Var(v)) =>
         Seq(new AbsAC(r, v), new AbsBC(r, v))

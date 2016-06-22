@@ -1,12 +1,9 @@
 package concrete
 
-import scala.collection.AbstractSeq
-import scala.collection.IterableLike
-import scala.collection.mutable.Builder
-
 import concrete.util.Interval
 import cspom.Statistic
 import cspom.util.BitVector
+import scala.collection.TraversableView
 
 object Domain {
   @Statistic
@@ -17,8 +14,8 @@ object Domain {
   }
 }
 
-abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
-  override def newBuilder: Builder[Int, Domain] = ???
+abstract class Domain { //extends AbstractSeq[Int] with IterableLike[Int, Domain] {
+  //override def newBuilder: Builder[Int, Domain] = ???
 
   def next(i: Int): Int
 
@@ -32,15 +29,60 @@ abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
     if (i == head) None else Some(prev(i))
   }
 
+  def head: Int //= next(0)
+  def last: Int
+
+  def foreach[S](f: Int => S): Unit
+
+  def forall(p: Int => Boolean): Boolean = {
+    foreach { x =>
+      if (!p(x)) { return false }
+    }
+    true
+  }
+
+  def find(p: Int => Boolean): Option[Int] = {
+    foreach { x =>
+      if (p(x)) return Some(x)
+    }
+    None
+  }
+
+  def exists(p: Int => Boolean): Boolean = {
+    foreach { x =>
+      if (p(x)) return true
+    }
+    false
+  }
+
+  def filter(p: Int => Boolean): Domain
+
+  def isEmpty: Boolean
+
+  def nonEmpty: Boolean = !isEmpty
+
+  def view = new TraversableView[Int, Domain] {
+    protected lazy val underlying = Domain.this
+    override def foreach[U](f: Int => U) = Domain.this.foreach(f)
+  }
+
   def present(value: Int): Boolean
 
   def median: Int
 
-  override def contains[A >: Int](value: A) = present(value.asInstanceOf[Int])
-
-  override def indices = throw new AssertionError
+  //  override def contains[A >: Int](value: A) = present(value.asInstanceOf[Int])
+  //
+  //  override def indices = throw new AssertionError
 
   def remove(value: Int): Domain
+
+  def removeIfPresent(value: Int): Domain = {
+    if (present(value)) {
+      remove(value)
+    } else {
+      this
+    }
+  }
 
   def assign(value: Int): Domain
 
@@ -102,7 +144,7 @@ abstract class Domain extends AbstractSeq[Int] with IterableLike[Int, Domain] {
 
   def toBitVector(offset: Int): BitVector
 
-  override final def size = length
+  def size: Int
 
   override def equals(o: Any) = this eq o.asInstanceOf[AnyRef]
 

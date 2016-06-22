@@ -19,7 +19,6 @@
 
 package concrete.constraint.extension;
 
-import concrete.Domain
 import concrete.Variable
 import concrete.ProblemState
 

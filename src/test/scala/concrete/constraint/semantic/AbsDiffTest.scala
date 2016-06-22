@@ -3,7 +3,7 @@ package concrete.constraint.semantic;
 import scala.IndexedSeq
 import scala.util.Random
 import org.scalacheck.Gen
-import org.scalatest.Finders
+
 import org.scalatest.FlatSpec
 import org.scalatest.Inspectors
 import org.scalatest.Matchers
@@ -16,8 +16,7 @@ import concrete.constraint.AdviseCount
 import concrete.constraint.Constraint
 import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
-import concrete.Contradiction
-import concrete.Domain
+
 import concrete.constraint.ConstraintComparator
 
 final class AbsDiffTest extends FlatSpec with Matchers with Inspectors with PropertyChecks {
@@ -74,9 +73,9 @@ final class AbsDiffTest extends FlatSpec with Matchers with Inspectors with Prop
 
     val IndexedSeq(dx, dy, dz) = mod.domains
 
-    dx should contain theSameElementsAs Seq(5)
-    dy should contain theSameElementsAs Seq(4)
-    dz should contain theSameElementsAs Seq(9)
+    dx.view should contain theSameElementsAs Seq(5)
+    dy.view should contain theSameElementsAs Seq(4)
+    dz.view should contain theSameElementsAs Seq(9)
 
   }
 

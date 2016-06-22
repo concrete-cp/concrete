@@ -1,7 +1,5 @@
 package concrete.generator.cspompatterns
 
-import scala.reflect.runtime.universe
-
 import concrete.CSPOMDriver
 import cspom.CSPOM
 import cspom.CSPOMConstraint

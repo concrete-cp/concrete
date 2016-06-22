@@ -19,8 +19,6 @@
 
 package concrete;
 
-import java.lang.Override
-import scala.collection.JavaConversions
 import concrete.filter.ACC
 import concrete.filter.Filter
 import concrete.heuristic.CrossHeuristic
@@ -29,12 +27,12 @@ import com.typesafe.scalalogging.LazyLogging
 import cspom.Statistic
 import cspom.StatisticsManager
 import scala.annotation.tailrec
-import cspom.UNSATException
 import concrete.heuristic.Branch
 import org.scalameter.Quantity
 import org.scalameter.Key
 import org.scalameter.Warmer
 import java.util.concurrent.TimeoutException
+import scala.annotation.elidable
 
 object MAC {
   def apply(prob: Problem, params: ParameterManager): MAC = {
@@ -52,11 +50,7 @@ object MAC {
 }
 
 final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristic) extends Solver(prob, params) with LazyLogging {
-  //println(prob.toString(problem.initState.toState))
   val btGrowth: Double = params.getOrElse("mac.btGrowth", 1.5)
-
-  //  def addConstraint: LearnMethod = LearnMethod(
-  //    params.getOrElse("mac.addConstraint", "BIN"))
 
   val filterClass: Class[_ <: Filter] = params.getOrElse("mac.filter", classOf[ACC])
 
@@ -92,9 +86,8 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
       (UNKNOWNResult(new TimeoutException()), stack, stateStack, nbBacktracks, nbAssignments)
     } else {
 
-      val filtering = currentState andThen {
-        s => filter.reduceAfter(modifiedVariable, s)
-      }
+      val filtering = currentState
+        .andThen(s => filter.reduceAfter(modifiedVariable, s))
 
       filtering match {
 
@@ -114,33 +107,30 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
         case filteredState: ProblemState =>
           heuristic.branch(filteredState) match {
             case None =>
-              require(problem.variables.forall(v => filteredState.dom(v).size == 1),
+              require(problem.variables.forall(v => filteredState.assigned(v)),
                 s"Unassigned variables in:\n${problem.toString(filteredState)}")
 
-              assert {
-                for (c <- problem.constraints.find(c => !c.controlAssignment(filteredState))) {
-                  throw new AssertionError(s"solution does not satisfy ${c.toString(filteredState)}")
-                }
-                true
-              }
+              controlSolution(filteredState)
 
               (SAT(extractSolution(filteredState)), stack, filteredState :: stateStack, nbBacktracks, nbAssignments)
             case Some(branching) =>
-
               logger.info(s"${stack.length}: ${branching.b1Desc} ($nbBacktracks / $maxBacktracks)");
 
-              // val assignedState = filteredState.assign(pair)
-
               mac(branching.changed, branching :: stack, branching.b1, filteredState :: stateStack, nbBacktracks, maxBacktracks, nbAssignments + 1)
-
           }
       }
     }
 
   }
 
+  @elidable(elidable.ASSERTION)
+  private def controlSolution(ps: ProblemState): Unit = {
+    for (c <- problem.constraints.find(c => !c.controlAssignment(ps))) {
+      throw new AssertionError(s"solution does not satisfy ${c.toString(ps)}")
+    }
+  }
+
   def reset() {
-    //decisions = Nil
     restart = true
     maxBacktracks = initBT()
     nbBacktracks = 0
@@ -185,18 +175,12 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
     nbBacktracks = newBack
 
     if (sol == RESTART) {
-
-      //val modified = ngl.noGoods(newStack)
-
-      //      if (!filter.reduceAfter(modified)) {
-      //        (UNSAT, Nil)
-      //      } else {
       maxBacktracks = (maxBacktracks * btGrowth).toInt;
       nbBacktracks = 0
       nextSolution(Seq.empty, Nil, newStateStack.last, Nil)
-      //      }
-
-    } else { (sol, newStack, newStateStack) }
+    } else {
+      (sol, newStack, newStateStack)
+    }
   }
 
   var currentStack: List[Branch] = Nil
@@ -224,8 +208,6 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
       UNSAT
     } else {
       maxBacktracks = -1
-
-      // val nextState = currentStateStack.head.remove(currentStack.head)
 
       /* Contradiction will trigger a backtrack */
 

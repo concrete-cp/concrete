@@ -2,7 +2,6 @@ package concrete.constraint.semantic;
 
 import scala.annotation.tailrec
 import concrete.Contradiction
-import concrete.Domain
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.BC

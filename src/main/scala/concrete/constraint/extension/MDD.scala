@@ -6,7 +6,6 @@ import com.typesafe.scalalogging.LazyLogging
 import concrete.priorityqueues.Identified
 import concrete.util.SetWithMax
 import cspom.extension.IdMap
-import cspom.extension.IdSet
 import concrete.util.TSCache
 import concrete.Domain
 import scala.collection.mutable.HashMap
@@ -367,7 +366,7 @@ final class MDD1(private val child: MDD, private val index: Int) extends MDD {
     cache(ts, (), {
       if (depth <= l.max) {
         newDomains(depth) |= index
-        if (newDomains(depth).length == doms(depth).length) l -= depth
+        if (newDomains(depth).size == doms(depth).size) l -= depth
         child.supported(ts, doms, newDomains, depth + 1, l)
       }
     })
@@ -460,7 +459,7 @@ final class MDD2(
       if (depth <= l.max) {
         newDoms(depth) |= leftI
         newDoms(depth) |= rightI
-        if (newDoms(depth).length == doms(depth).length) l -= depth
+        if (newDoms(depth).size == doms(depth).size) l -= depth
         left.supported(ts, doms, newDoms, depth + 1, l)
         right.supported(ts, doms, newDoms, depth + 1, l)
       }
@@ -597,7 +596,7 @@ final class MDDn(
 
     newDomains(depth) ++= indices
 
-    if (newDomains(depth).length == doms(depth).length) l -= depth
+    if (newDomains(depth).size == doms(depth).size) l -= depth
 
     if (depth <= l.max) {
       for (ti <- indices) {

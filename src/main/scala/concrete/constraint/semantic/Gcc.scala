@@ -27,8 +27,8 @@ final class Gcc(scope: Array[Variable], bounds: Array[Bounds]) extends Constrain
 
   def bound(v: Int) = _bounds2(v - offset)
 
-  val counts = Array.ofDim[Int](1 + scope.map(_.initDomain.max).max)
-  val singles = Array.ofDim[Int](1 + scope.map(_.initDomain.max).max)
+  val counts = Array.ofDim[Int](1 + scope.map(_.initDomain.last).max)
+  val singles = Array.ofDim[Int](1 + scope.map(_.initDomain.last).max)
 
   def check(t: Array[Int]): Boolean = {
 

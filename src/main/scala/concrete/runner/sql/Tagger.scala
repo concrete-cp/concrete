@@ -3,9 +3,6 @@ package concrete.runner.sql
 import slick.driver.PostgresDriver.api._
 import slick.jdbc.GetResult
 import java.net.URI
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.Success
-import scala.util.Failure
 import scala.concurrent.duration.Duration
 
 object Tagger extends App {

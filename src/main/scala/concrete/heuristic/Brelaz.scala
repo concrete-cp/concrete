@@ -1,11 +1,9 @@
 package concrete.heuristic;
 
-import concrete.constraint.Constraint
-import concrete.Problem
-import concrete.Variable
+import concrete.Domain
 import concrete.ParameterManager
 import concrete.ProblemState
-import concrete.Domain
+import concrete.Variable
 
 final class Brelaz(params: ParameterManager, decisionVariables: Array[Variable]) extends VariableHeuristic(params, decisionVariables) {
 

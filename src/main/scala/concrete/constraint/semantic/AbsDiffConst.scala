@@ -32,6 +32,8 @@ final class AbsDiffConstAC(val result: Int, val v0: Variable, val v1: Variable)
 
   }
 
+  def findSupport(doms: Array[Domain], position: Int, value: Int) = ???
+
   def support(value: Int, v: Int, other: Domain, position: Int): Option[Array[Int]] = {
     if (other.present(v)) {
       val tuple = new Array[Int](2)

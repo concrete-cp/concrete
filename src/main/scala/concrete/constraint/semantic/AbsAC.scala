@@ -1,18 +1,13 @@
 package concrete.constraint.semantic;
 
-import concrete.Domain
 import concrete.Variable
-import concrete.constraint.BCCompanion
 import concrete.constraint.Constraint
 import concrete.ProblemState
 import concrete.Outcome
 
-final class AbsAC(val result: Variable, val v0: Variable) extends Constraint(Array(result, v0))
-    with BCCompanion {
+final class AbsAC(val result: Variable, val v0: Variable) extends Constraint(Array(result, v0)) {
 
   def init(ps: ProblemState) = ps
-
-  def skipIntervals = true
 
   //  val corresponding1 = result.dom.allValues map { v0.dom.index }
   //  val corresponding2 = result.dom.allValues map { v => v0.dom.index(-v) }
@@ -32,7 +27,13 @@ final class AbsAC(val result: Variable, val v0: Variable) extends Constraint(Arr
   override def toString(ps: ProblemState) =
     s"${result.toString(ps)} =AC= |${v0.toString(ps)}|";
 
-  def advise(ps: ProblemState, p: Int) = if (skip(ps)) -1 else ps.dom(result).size * 3 / 2 + ps.dom(v0).size
+  def advise(ps: ProblemState, p: Int) = {
+    val rSize = ps.card(result)
+    val vSize = ps.card(v0)
+    val eval = rSize * 3 / 2 + vSize
+    if (eval > 500) -1 else eval
+
+  }
 
   def simpleEvaluation = 1
 }

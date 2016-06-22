@@ -6,7 +6,6 @@ import scala.reflect.runtime.universe._
 import cspom.CSPOM
 import cspom.CSPOM._
 import cspom.CSPOMConstraint
-import cspom.variable.BoolVariable
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq

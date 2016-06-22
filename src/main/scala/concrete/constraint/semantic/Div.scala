@@ -5,6 +5,7 @@ import concrete.constraint.Constraint
 import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
 import concrete.util.Interval
+import concrete.Domain
 
 object Div {
   /**
@@ -76,4 +77,7 @@ class DivAC(v0: Variable, v1: Variable, result: Variable) extends Constraint(v0,
     t(0) / t(1) == t(2)
 
   }
+
+  override def findSupport(doms: Array[Domain], position: Int, value: Int): Option[Array[Int]] =
+    super[TupleEnumerator].findSupport(doms, position, value)
 }

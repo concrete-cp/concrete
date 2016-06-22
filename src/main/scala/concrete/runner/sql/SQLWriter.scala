@@ -29,7 +29,6 @@ import SQLWriter._
 import concrete.ParameterManager
 import concrete.runner.ConcreteWriter
 import cspom.StatisticsManager
-import slick.model.PrimaryKey
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import java.util.Date

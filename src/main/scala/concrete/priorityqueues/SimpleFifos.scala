@@ -1,10 +1,6 @@
 package concrete.priorityqueues;
 
-import java.util.AbstractQueue
-
 import scala.annotation.tailrec
-
-import concrete.constraint.Constraint
 
 /**
  *

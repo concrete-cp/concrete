@@ -29,10 +29,11 @@ final class Neq(v0: Variable, v1: Variable, c: Int = 0) extends Constraint(Array
   }
 
   private def revise(variable: Domain, otherVar: Domain, c: Int): Domain = {
-    if (otherVar.isAssigned)
-      variable.remove(otherVar.singleValue + c)
-    else
+    if (otherVar.isAssigned) {
+      variable.removeIfPresent(otherVar.singleValue + c)
+    } else {
       variable
+    }
   }
 
   override def isConsistent(ps: ProblemState) = {

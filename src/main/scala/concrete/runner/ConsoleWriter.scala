@@ -3,7 +3,6 @@ package concrete.runner
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-import scala.xml.NodeSeq
 import cspom.StatisticsManager
 import concrete.ParameterManager
 
@@ -11,9 +10,7 @@ class ConsoleWriter(val opts: Map[Symbol, Any], val stats: StatisticsManager) ex
 
   def parameters(params: ParameterManager) {
     for ((k,v) <- params .parameters) {
-
       Console.println(s"% $k = $v")
-
     }
   }
 
@@ -23,10 +20,7 @@ class ConsoleWriter(val opts: Map[Symbol, Any], val stats: StatisticsManager) ex
   }
 
   def solution(sol: String) {
-    if (opts.contains('stats))
-      for ((n, v) <- stats.digest.toSeq.sortBy(_._1)) {
-        Console.println(s"% $n = $v")
-      }
+    if (opts.contains('all)) writeStats()
     Console.println(sol)
   }
 
@@ -40,6 +34,8 @@ class ConsoleWriter(val opts: Map[Symbol, Any], val stats: StatisticsManager) ex
         Console.println(s"% $n = $v")
       }
   }
+  
+  
 
   def disconnect(status: Try[Boolean]) {
     writeStats()

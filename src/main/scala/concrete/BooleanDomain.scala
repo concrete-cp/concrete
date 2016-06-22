@@ -7,7 +7,7 @@ case object UNKNOWNBoolean extends BooleanDomain {
   val bitVector = BitVector.filled(2)
   def singleValue = throw new IllegalStateException
   override def toString = "[f, t]"
-  override def length = 2
+  override def size = 2
   override def head = 0
   override def last = 1
   def next(i: Int) = if (i == 0) 1 else if (i < 0) 0 else throw new NoSuchElementException
@@ -96,7 +96,7 @@ case object UNKNOWNBoolean extends BooleanDomain {
 case object TRUE extends BooleanDomain {
   val bitVector = BitVector.empty + 1
   override def toString = "[t]"
-  def length = 1
+  def size = 1
   def singleValue = 1
   override def head = 1
   override def last = 1
@@ -129,7 +129,7 @@ case object TRUE extends BooleanDomain {
 case object FALSE extends BooleanDomain {
   val bitVector = BitVector.empty + 0
   override val toString = "[f]"
-  def length = 1
+  def size = 1
   def singleValue = 0
   override def head = 0
   override def last = 0
@@ -162,7 +162,7 @@ case object FALSE extends BooleanDomain {
 case object EMPTY extends BooleanDomain {
   val bitVector = BitVector.empty
   override val toString = "[]"
-  def length = 0
+  def size = 0
   def singleValue = throw new NoSuchElementException
   override def head = throw new NoSuchElementException
   override def last = throw new NoSuchElementException
@@ -203,20 +203,15 @@ sealed trait BooleanDomain extends Domain {
   def as01: IntDomain
 
   def assign(value: Int) = {
-    if (present(value)) {
-      value match {
-        case 0 => FALSE
-        case 1 => TRUE
-        case _ => throw new IllegalArgumentException
-      }
+    assert(0 <= value && value < 2)
+    assert(present(value))
+    if (value == 0) {
+      FALSE
     } else {
-      EMPTY
+      TRUE
     }
+
   }
-
-  def iterator = as01.iterator
-
-  def apply(i: Int) = as01.apply(i)
 
   def bitVector: BitVector
 
@@ -227,7 +222,7 @@ sealed trait BooleanDomain extends Domain {
 
   def &(lb: Int, ub: Int) = removeUntil(lb).removeAfter(ub)
 
-  def &(d: Domain) = filter(i => d.contains(i))
+  def &(d: Domain) = filter(i => d.present(i))
 
   def union(bd: BooleanDomain): BooleanDomain
 
@@ -247,6 +242,10 @@ sealed trait BooleanDomain extends Domain {
     val r0 = if (from <= 0 && 0 <= to) remove(0) else this
     if (from <= 1 && 1 <= to) r0.remove(1) else r0
   }
+
+  def isEmpty = this eq EMPTY
+
+  def foreach[S](f: Int => S): Unit = as01.foreach(f)
 
 }
 

@@ -1,6 +1,5 @@
 package concrete.constraint.semantic;
 
-import scala.IndexedSeq
 import concrete.Domain
 import concrete.Variable
 import concrete.constraint.BCCompanion

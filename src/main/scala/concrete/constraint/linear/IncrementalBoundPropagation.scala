@@ -4,7 +4,6 @@ import IncrementalBoundPropagation.PFiltered
 import Linear.maxTimes
 import Linear.minTimes
 import concrete.Domain
-import concrete.IntDomain
 import concrete.ProblemState
 import concrete.constraint.StatefulConstraint
 import concrete.util.Interval

@@ -4,8 +4,6 @@ package semantic
 
 import cspom.util.BitVector
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.ArrayBuilder
-import cspom.util.VecMap
 
 object Circuit {
   def apply(scope: (Int, Variable)*): Circuit = apply(scope.toMap)

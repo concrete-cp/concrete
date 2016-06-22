@@ -22,7 +22,13 @@ final class RandomValue(pm: ParameterManager) extends ValueHeuristic {
   }
 
   override def selectIndex(variable: Variable, dom: Domain) = {
-    dom(rand.nextInt(dom.size))
+    var i = rand.nextInt(dom.size)
+    var v = dom.head
+    while (i > 0) {
+      i -= 1
+      v = dom.next(v)
+    }
+    v
   }
   def shouldRestart = true
 }

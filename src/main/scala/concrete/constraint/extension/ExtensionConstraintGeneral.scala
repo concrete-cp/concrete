@@ -20,10 +20,8 @@
 package concrete.constraint.extension;
 
 import concrete.Contradiction
-import concrete.Domain
 import concrete.Outcome
 import concrete.ProblemState
-import cspom.UNSATException
 import concrete.Variable
 import concrete.constraint.Residues
 import cspom.util.BitVector
@@ -32,7 +30,7 @@ final class ExtensionConstraintGeneral(
   var matrix: Matrix,
   shared: Boolean,
   scope: Array[Variable])
-    extends ExtensionConstraint(scope) with ConflictCount with Residues {
+    extends ExtensionConstraint(scope) with Residues with ConflictCount {
 
   def removeTuple(tuple: Array[Int]) = {
     ??? // disEntail();
@@ -45,16 +43,21 @@ final class ExtensionConstraintGeneral(
   override def revise(ps: ProblemState, mod: BitVector): Outcome = {
 
     val skip = this.skip(mod)
+    val doms = ps.doms(scope)
     var cs = ps
+
     for (position <- 0 until arity) {
-      if (position != skip && !supportCondition(cs, position)) {
-        cs.updateDom(scope(position), reviseDomain(cs, position)) match {
-          case Contradiction   => return Contradiction
-          case s: ProblemState => cs = s
+      if (position != skip && !supportCondition(doms, position)) {
+        val nd = reviseDomain(doms, position)
+        if (nd.isEmpty) {
+          return Contradiction
+        } else if (nd ne doms(position)) {
+          doms(position) = nd
+          cs = cs.updateDomNonEmptyNoCheck(scope(position), nd)
         }
       }
     }
-    cs.entailIfFree(this)
+    cs.entailIfFree(this, doms)
   }
   //  
   //  override def reviseVariable(ps:ProblemState, position: Int, mod: List[Int]) = {
@@ -70,4 +73,5 @@ final class ExtensionConstraintGeneral(
   }
 
   override def dataSize = matrix.size
+
 }

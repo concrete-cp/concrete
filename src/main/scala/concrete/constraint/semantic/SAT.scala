@@ -25,6 +25,7 @@ import concrete.constraint.linear.SumEQ
 import concrete.constraint.linear.SumLE
 import concrete.constraint.linear.SumMode
 import concrete.generator.LinearConstraint
+import concrete.Domain
 
 case class Clause(positive: Seq[Variable], negative: Seq[Variable]) extends Arc {
   require(vars.forall(v => v.initDomain.isInstanceOf[BooleanDomain]))
@@ -191,6 +192,8 @@ class SAT(vars: Array[Variable], clauses: Seq[Clause], pseudo: Seq[PseudoBoolean
 
     }
   }
+
+  def findSupport(doms: Array[Domain], position: Int, value: Int) = ???
 
   def simpleEvaluation: Int = 7
 }

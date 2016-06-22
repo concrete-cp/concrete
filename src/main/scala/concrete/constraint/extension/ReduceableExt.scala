@@ -79,7 +79,7 @@ final class ReduceableExt(scope: Array[Variable], val relation: Relation)
       var cs: ProblemState = ps.updateState(this, newTrie)
       for (p <- 0 until arity) {
         //println(s"$p: ${scope(p)}: ${domains(p)} -> ${newDomains(p)}")
-        if (newDomains(p).length < domains(p).length) {
+        if (newDomains(p).size < domains(p).size) {
 
           cs = cs.updateDomNonEmptyNoCheck(scope(p), newDomains(p)) //(!domains(p).present(_))
         }
@@ -89,7 +89,10 @@ final class ReduceableExt(scope: Array[Variable], val relation: Relation)
 
   }
 
-  override def check(t: Array[Int]) = relation.contains(t)
+  override def check(t: Array[Int]) = {
+
+    relation.contains(t)
+  }
 
   def removeTuples(base: Array[Int]) = {
     throw new UnsupportedOperationException

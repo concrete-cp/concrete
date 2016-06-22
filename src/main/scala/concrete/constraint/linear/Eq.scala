@@ -56,7 +56,7 @@ final class EqACFast(val x: Variable, val b: Int, val y: Variable)
          * ProblemState does not detect NOP after two
          * complementary offset operations
          */
-        if (newY.length < oldY.length) {
+        if (newY.size < oldY.size) {
           ps.updateDom(y, newY)
         } else {
           ps

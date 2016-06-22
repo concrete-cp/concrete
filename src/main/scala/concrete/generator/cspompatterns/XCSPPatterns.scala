@@ -3,17 +3,9 @@ package concrete.generator.cspompatterns
 import concrete.CSPOMDriver._
 import cspom.CSPOM
 import cspom.CSPOMConstraint
-import cspom.compiler.ConstraintCompiler
-import cspom.compiler.ConstraintCompilerNoData
-import cspom.compiler.Delta
 import cspom.compiler.GlobalCompiler
 import cspom.compiler.Types
-import cspom.compiler.VariableCompiler
-import cspom.variable.BoolVariable
-import cspom.variable.CSPOMSeq
 import cspom.variable.IntExpression
-import cspom.variable.CSPOMVariable
-import cspom.variable.CSPOMExpression
 import CSPOM._
 import cspom.variable.BoolExpression
 import cspom.variable.SimpleExpression

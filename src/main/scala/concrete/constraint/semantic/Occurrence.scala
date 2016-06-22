@@ -17,8 +17,8 @@ class Occurrence(val result: Variable, val value: Variable,
 
   override def init(ps: ProblemState) =
     ps.updateState(this, (
-      value.initDomain.map(i => i -> 0).toMap,
-      value.initDomain.map(i => i -> BitVector.filled(vars.length)).toMap))
+      value.initDomain.view.map(i => i -> 0).toMap,
+      value.initDomain.view.map(i => i -> BitVector.filled(vars.length)).toMap))
 
   def check(tuple: Array[Int]) = {
     tuple(0) == (2 until arity).count(i => tuple(i) == tuple(1))

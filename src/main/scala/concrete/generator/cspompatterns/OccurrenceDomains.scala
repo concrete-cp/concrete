@@ -2,11 +2,9 @@ package concrete.generator.cspompatterns
 
 import cspom.CSPOMConstraint
 import cspom.compiler.VariableCompiler
-import cspom.variable.CSPOMConstant
+import cspom.util.IntInterval
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
-import cspom.variable.SimpleExpression
-import cspom.util.IntInterval
 import cspom.variable.IntExpression
 
 /**

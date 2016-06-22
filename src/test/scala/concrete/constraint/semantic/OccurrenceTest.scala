@@ -45,7 +45,7 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors with TryValu
       case v => mod.dom(v) should be theSameInstanceAs v.initDomain
     }
 
-    mod.dom(occ) should contain theSameElementsAs Seq(1, 2)
+    mod.dom(occ).view should contain theSameElementsAs Seq(1, 2)
 
   }
 
@@ -101,7 +101,7 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors with TryValu
     val mod = new ACC(problem, new ParameterManager()).reduceAll(initState.toState)
 
     forAll(problem.variables) {
-      case `occ` => mod.dom(occ) should contain theSameElementsAs Seq(1, 2)
+      case `occ` => mod.dom(occ).view should contain theSameElementsAs Seq(1, 2)
       case v     => mod.dom(v) should be theSameInstanceAs initState.dom(v)
     }
 

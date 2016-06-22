@@ -26,7 +26,7 @@ class BDDC(_scope: Array[Variable], val bdd: BDDRelation)
 
   def checkValues(tuple: Array[Int]): Boolean = throw new UnsupportedOperationException
 
-  val simpleEvaluation: Int = math.min(Constraint.NP, scope.count(_.initDomain.length > 1))
+  val simpleEvaluation: Int = math.min(Constraint.NP, scope.count(_.initDomain.size > 1))
 
   // Members declared in concrete.constraint.Removals
   val prop = bdd.edges.toDouble / scope.map(_.initDomain.size.toDouble).product
@@ -64,7 +64,7 @@ class BDDC(_scope: Array[Variable], val bdd: BDDRelation)
           false
         } else if (domains(i).present(ng.index) && seekSupports(ng.child, i + 1)) {
           supported(i) |= ng.index
-          if (i + 1 == delta && supported(i).length == domains(i).length) {
+          if (i + 1 == delta && supported(i).size == domains(i).size) {
             delta = i
           } else {
             seekSupports(ng.sibling, i)
@@ -88,7 +88,7 @@ class BDDC(_scope: Array[Variable], val bdd: BDDRelation)
       var cs: ProblemState =
         if (gNo.size == oldGno.size) ps else ps.updateState(this, gNo)
       for (p <- 0 until delta) {
-        if (supported(p).length < domains(p).length) {
+        if (supported(p).size < domains(p).size) {
           cs = cs.updateDomNonEmptyNoCheck(scope(p), supported(p))
         }
       }

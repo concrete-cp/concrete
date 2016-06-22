@@ -70,7 +70,7 @@ final class STR(arity: Int, val array: Array[Array[Int]], val bound: Int) extend
       pos.filter { p =>
         ReduceableExt.fills += 1
         newDomains(p) |= tuple(p)
-        newDomains(p).length != domains(p).length
+        newDomains(p).size != domains(p).size
       }
       i -= 1
     }

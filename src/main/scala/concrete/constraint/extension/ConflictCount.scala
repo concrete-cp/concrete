@@ -4,7 +4,7 @@ import java.util.Arrays
 
 import scala.annotation.tailrec
 
-import concrete.ProblemState
+import concrete.Domain
 import concrete.constraint.TupleEnumerator
 
 trait ConflictCount
@@ -13,13 +13,13 @@ trait ConflictCount
   def matrix: Matrix
   //def matrix_=(m: Matrix): Unit
 
-  def supportCondition(ps: ProblemState, position: Int): Boolean = {
+  def supportCondition(doms: Array[Domain], position: Int): Boolean = {
     applicable && {
       if (nbMaxConflicts eq null) {
-        countConflicts(ps)
+        countConflicts(doms)
       }
 
-      getOtherSize(ps, position) > nbMaxConflicts(position)
+      getOtherSize(doms, position) > nbMaxConflicts(position)
     }
   }
 
@@ -31,8 +31,8 @@ trait ConflictCount
 
   private var applicable = true
 
-  private def countConflicts(ps: ProblemState) {
-    nbConflicts(ps) match {
+  private def countConflicts(doms: Array[Domain]) {
+    nbConflicts(doms) match {
       case Some((o, c)) =>
         nbInitConflicts = c
         offsets = o
@@ -50,27 +50,39 @@ trait ConflictCount
   }
 
   @tailrec
-  private def getOtherSizeR(ps: ProblemState, position: Int, i: Int, acc: Long): Long = {
+  private def getOtherSizeR(doms: Array[Domain], position: Int, i: Int, acc: Long): Long = {
     if (i < 0) { acc }
-    else if (i == position) { getOtherSizeR(ps, position, i - 1, acc) }
+    else if (i == position) { getOtherSizeR(doms, position, i - 1, acc) }
     else {
-      val dSize = ps.dom(scope(i)).size
+      val dSize = doms(i).size
       if (acc > Long.MaxValue / dSize) {
         -1
       } else {
-        getOtherSizeR(ps, position, i - 1, acc * dSize)
+        getOtherSizeR(doms, position, i - 1, acc * dSize)
       }
     }
   }
 
-  private def getOtherSize(ps: ProblemState, position: Int) = getOtherSizeR(ps, position, arity - 1, 1)
+  private def getOtherSize(doms: Array[Domain], position: Int) = getOtherSizeR(doms, position, arity - 1, 1)
 
-  private def nbConflicts(ps: ProblemState): Option[(Array[Int], Array[Array[Long]])] = {
-    val size = cardSize(ps)
+  @tailrec
+  private def card(doms: Array[Domain], p: Int = arity - 1, size: Int = 1): Int =
+    if (p < 0) {
+      size
+    } else {
+      val s = doms(p).size
+      if (size > Int.MaxValue / s) {
+        -1
+      } else {
+        card(doms, p - 1, size * s)
+      }
+    }
+
+  private def nbConflicts(doms: Array[Domain]): Option[(Array[Int], Array[Array[Long]])] = {
+    val size = card(doms)
     if (size < 0) {
       None
     } else {
-      val doms = ps.doms(scope)
       val offsets = doms.map(_.head)
 
       val nbInitConflicts = doms.map { d =>
@@ -84,21 +96,21 @@ trait ConflictCount
             for {
               tuple <- tupleSet.relation
               p <- tuple.indices
-              if (doms(p).contains(tuple(p)))
+              if (doms(p).present(tuple(p)))
             } {
               nbInitConflicts(p)(tuple(p) - offsets(p)) += 1
             }
 
           } else {
 
-            for (p <- nbInitConflicts.indices) Arrays.fill(nbInitConflicts(p), getOtherSize(ps, p))
+            for (p <- nbInitConflicts.indices) Arrays.fill(nbInitConflicts(p), getOtherSize(doms, p))
 
             for (tuple <- tupleSet.relation; p <- tuple.indices) nbInitConflicts(p)(tuple(p) - offsets(p)) -= 1
 
           }
 
         case _ =>
-          for (tuple <- tuples(ps) if (!check(tuple)); p <- tuple.indices) {
+          for (tuple <- tuples(doms) if (!check(tuple)); p <- tuple.indices) {
             nbInitConflicts(p)(tuple(p) - offsets(p)) += 1;
           }
       }

@@ -6,8 +6,6 @@ import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.StatefulConstraint
-import concrete.Domain
-import cspom.UNSATException
 import concrete.constraint.Removals
 import cspom.util.BitVector
 

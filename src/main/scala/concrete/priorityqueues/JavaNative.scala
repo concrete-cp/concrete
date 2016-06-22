@@ -1,5 +1,4 @@
 package concrete.priorityqueues
-import java.util.Comparator
 
 final class JavaNative[T <: PTag] extends PriorityQueue[T] {
 

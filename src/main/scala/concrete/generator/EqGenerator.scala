@@ -1,7 +1,5 @@
 package concrete.generator;
 
-import scala.reflect.runtime.universe
-
 import com.typesafe.scalalogging.LazyLogging
 
 import Generator.cspom2concrete1D

@@ -1,19 +1,13 @@
 package concrete.constraint.semantic
 
-import concrete.CSPOMDriver._
-import cspom.CSPOM
-import cspom.CSPOM._
-import cspom.variable.CSPOMConstant
-import org.scalatest.Matchers
 import org.scalatest.FlatSpec
-import concrete.Solver
-import cspom.variable.IntVariable
 import org.scalatest.Inspectors
+import org.scalatest.Matchers
+
 import concrete.IntDomain
-import concrete.Variable
+import concrete.Problem
 import concrete.Singleton
 import concrete.Variable
-import concrete.Problem
 import concrete.constraint.AdviseCount
 
 /**
@@ -38,7 +32,7 @@ class DivTest extends FlatSpec with Matchers with Inspectors {
         constraint.adviseAll(state)
         val mod = constraint.revise(state)
 
-        mod.dom(z) should contain theSameElementsAs Seq(zv)
+        mod.dom(z).view should contain theSameElementsAs Seq(zv)
     }
   }
 

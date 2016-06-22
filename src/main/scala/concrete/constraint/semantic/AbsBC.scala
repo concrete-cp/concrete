@@ -3,7 +3,6 @@ package concrete.constraint.semantic;
 import concrete.constraint.Constraint
 import concrete.Variable
 import concrete.constraint.BC
-import concrete.Domain
 import concrete.ProblemState
 import concrete.Outcome
 import concrete.util.Interval

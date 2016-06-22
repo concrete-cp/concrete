@@ -74,7 +74,7 @@ abstract class Linear(
   }
 
   def toString(ps: ProblemState, operator: String) = {
-    (scope zip factors).map { case (v, f) => f + "." + ps.dom(v) }.mkString(" + ") + s" $operator $constant"
+    (scope zip factors).map { case (v, f) => f + "." + v.toString(ps) }.mkString(" + ") + s" $operator $constant"
   }
 
   protected def size(dom: Domain, factor: Int): Int = {

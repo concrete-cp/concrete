@@ -26,8 +26,8 @@ class IntervalBranchTest extends FlatSpec with Matchers {
 
     val b = h.branch(v, d, ps)
 
-    b.b1.dom(v) should contain theSameElementsAs (0 to 1)
-    b.b2.dom(v) should contain theSameElementsAs (10 to 15)
+    b.b1.dom(v).view should contain theSameElementsAs (0 to 1)
+    b.b2.dom(v).view should contain theSameElementsAs (10 to 15)
 
   }
 
@@ -42,8 +42,8 @@ class IntervalBranchTest extends FlatSpec with Matchers {
 
     val b = h.branch(v, d, ps)
 
-    b.b1.dom(v) should contain theSameElementsAs (0 to 2)
-    b.b2.dom(v) should contain theSameElementsAs (3 to 5)
+    b.b1.dom(v).view should contain theSameElementsAs (0 to 2)
+    b.b2.dom(v).view should contain theSameElementsAs (3 to 5)
 
   }
 

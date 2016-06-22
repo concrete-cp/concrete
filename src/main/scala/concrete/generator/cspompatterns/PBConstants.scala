@@ -1,19 +1,15 @@
 package concrete.generator.cspompatterns
 
-import cspom.compiler.ConstraintCompiler
-import cspom.compiler.ConstraintCompilerNoData
-import cspom.CSPOM
-import cspom.CSPOMConstraint
-import cspom.variable.CSPOMConstant
-import concrete.constraint.linear.SumMode
-import cspom.variable.CSPOMSeq
-import cspom.variable.CSPOMVariable
-
-import cspom.variable.IntExpression
-import concrete.CSPOMDriver
 import concrete.generator.SumGenerator
+import cspom.CSPOM
+import cspom.CSPOM.constant
+import cspom.CSPOM.constantSeq
+import cspom.CSPOM.seq2CSPOMSeq
+import cspom.CSPOMConstraint
+import cspom.compiler.ConstraintCompilerNoData
 import cspom.variable.BoolExpression
-import CSPOM._
+import cspom.variable.CSPOMConstant
+import cspom.variable.CSPOMVariable
 
 /**
  *  Remove constants from linear constraints
