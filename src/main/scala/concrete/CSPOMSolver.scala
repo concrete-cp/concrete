@@ -6,6 +6,11 @@ import cspom.variable.CSPOMVariable
 import cspom.CSPOM
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
+import java.security.InvalidParameterException
+import cspom.CSPOMGoal
+import scala.util.Try
+import scala.util.Failure
+import scala.util.Success
 
 class CSPOMSolver(
   val solver: Solver,
@@ -17,14 +22,18 @@ class CSPOMSolver(
 
   def next() = new CSPOMSolution(cspom, variables, solver.next)
 
-  def maximize(v: CSPOMVariable[_]) = solver.maximize(variables(v))
+  def maximize(v: CSPOMVariable[_]): CSPOMSolver = {
+    new CSPOMSolver(solver.maximize(variables(v)), cspom, variables)
+  }
 
-  def minimize(v: CSPOMVariable[_]) = solver.minimize(variables(v)) 
-  
-//  cspom.variable(v) match {
-//    case Some(cv) => solver.minimize(variables(cv))
-//    case _        => logger.warn(s"$v is not a variable, nothing to minimize")
-//  }
+  def minimize(v: CSPOMVariable[_]): CSPOMSolver = {
+    new CSPOMSolver(solver.minimize(variables(v)), cspom, variables)
+  }
+
+  //  cspom.variable(v) match {
+  //    case Some(cv) => solver.minimize(variables(cv))
+  //    case _        => logger.warn(s"$v is not a variable, nothing to minimize")
+  //  }
 
   //  def decisionVariables(dv: Seq[CSPOMExpression[_]]): Unit = {
   //    solver.decisionVariables(dv.collect {
@@ -42,6 +51,17 @@ class CSPOMSolver(
 
   def solution(concreteSol: Map[Variable, Any]) = new CSPOMSolution(cspom, variables, concreteSol)
 
+  def applyGoal(): Try[CSPOMSolver] = {
+    cspom.goal.map(_.obj)
+      .map {
+        case CSPOMGoal.Satisfy => Success(this)
+        case CSPOMGoal.Maximize(expr: CSPOMVariable[_]) => Success(maximize(expr))
+        case CSPOMGoal.Minimize(expr: CSPOMVariable[_]) => Success(minimize(expr))
+        case g => Failure(new InvalidParameterException("Cannot execute goal " + g))
+      }
+      .getOrElse(Success(this))
+
+  }
 }
 
 class CSPOMSolution(private val cspom: CSPOM, private val variables: Map[CSPOMVariable[_], Variable], private val concreteSol: Map[Variable, Any])
@@ -68,7 +88,7 @@ class CSPOMSolution(private val cspom: CSPOM, private val variables: Map[CSPOMVa
           seq.withIndex.flatMap {
             case (v, i) => concrete2CspomSol(s"$name[$i]", v, sol)
           }
-      case const: CSPOMConstant[_]    => Seq(name -> const.value)
+      case const: CSPOMConstant[_] => Seq(name -> const.value)
       case variable: CSPOMVariable[_] => Seq(name -> sol(variables(variable)))
     }
   }

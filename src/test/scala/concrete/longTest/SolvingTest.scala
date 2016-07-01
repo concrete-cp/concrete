@@ -85,9 +85,9 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
   for ((p, (r, test)) <- problemBank) {
 
     val expected: Boolean = r match {
-      case e: Int     => e > 0
+      case e: Int => e > 0
       case b: Boolean => b
-      case _          => throw new IllegalArgumentException
+      case _ => throw new IllegalArgumentException
     }
 
     describe(p) {
@@ -137,15 +137,16 @@ trait SolvingBehaviors extends Matchers with Inspectors { this: FunSpec =>
         .flatMap(CSPOMCompiler.compile(_, Seq(Bool2IntIsEq)))
         .flatMap { cspom =>
           val pg = new ProblemGenerator(pm)
-          for ((problem, variables) <- pg.generate(cspom)) yield {
-            val solver = Solver(problem)
-            solver.statistics.register("compiler", CSPOMCompiler)
-            solver.statistics.register("generator", pg)
-            new CSPOMSolver(solver, cspom, variables)
+
+          pg.generate(cspom).flatMap {
+            case (problem, variables) =>
+              val solver = Solver(problem)
+              solver.statistics.register("compiler", CSPOMCompiler)
+              solver.statistics.register("generator", pg)
+              new CSPOMSolver(solver, cspom, variables).applyGoal()
           }
         }
         .map { solver =>
-          FZConcrete.parseSearchMode(solver, false)
 
           //    println(solver.concreteProblem)
 
@@ -179,7 +180,7 @@ trait SolvingBehaviors extends Matchers with Inspectors { this: FunSpec =>
     }
 
   def count(name: String, expectedResult: Int, parameters: Seq[(String, String)],
-            test: Boolean): Unit = {
+    test: Boolean): Unit = {
     val url = getClass.getResource(name)
 
     require(url != null, "Could not find resource " + name)
@@ -209,20 +210,19 @@ trait SolvingBehaviors extends Matchers with Inspectors { this: FunSpec =>
           CSPOMCompiler.compile(_, Seq(Bool2IntIsEq)))
         .flatMap { cspom =>
           val pg = new ProblemGenerator(pm)
-          for ((problem, variables) <- pg.generate(cspom)) yield {
-            val solver = Solver(problem)
-            solver.statistics.register("compiler", CSPOMCompiler)
-            solver.statistics.register("generator", pg)
-            new CSPOMSolver(solver, cspom, variables)
+          pg.generate(cspom).flatMap {
+            case (problem, variables) =>
+              val solver = Solver(problem)
+              solver.statistics.register("compiler", CSPOMCompiler)
+              solver.statistics.register("generator", pg)
+              new CSPOMSolver(solver, cspom, variables).applyGoal()
           }
         }
         .map { solver =>
 
-          FZConcrete.parseSearchMode(solver, false)
-
           val desc = solver.optimizes match {
             case Some(v) => s"should find optimal value $expectedResult for $v"
-            case None    => s"should have $expectedResult solutions"
+            case None => s"should have $expectedResult solutions"
           }
 
           withClue(desc) {

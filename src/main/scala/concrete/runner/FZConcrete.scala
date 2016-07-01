@@ -167,21 +167,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
       }
   }
 
-  def parseSearchMode(solver: CSPOMSolver, freeSearch: Boolean): Unit = {
-    val cspom = solver.cspom
-    val goal = cspom.goal.get.obj
-    goal match {
-      case CSPOMGoal.Satisfy =>
-      case CSPOMGoal.Maximize(expr: CSPOMVariable[_]) =>
-        solver.maximize(expr)
-      case CSPOMGoal.Minimize(expr: CSPOMVariable[_]) =>
-        solver.minimize(expr)
-      case _ => throw new InvalidParameterException("Cannot execute goal " + goal)
-    }
-
-  }
-
-  override def applyParametersPre(problem: Problem, opt: Map[Symbol, Any]): Unit = {
+   override def applyParametersPre(problem: Problem, opt: Map[Symbol, Any]): Unit = {
 
     val heuristics = parseGoal(cspom.goal.get, opt.contains('free), variables)
 
@@ -218,7 +204,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
   }
 
   override def applyParametersCSPOM(solver: CSPOMSolver, opt: Map[Symbol, Any]): Unit = {
-    parseSearchMode(solver, opt.contains('free))
+    solver.applyGoal().get
   }
 
   private def ann2expr(cspom: CSPOM, e: FZExpr[_]): CSPOMExpression[_] = e match {

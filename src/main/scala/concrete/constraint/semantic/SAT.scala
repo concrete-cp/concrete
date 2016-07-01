@@ -12,10 +12,8 @@ import com.typesafe.scalalogging.LazyLogging
 
 import concrete.BooleanDomain
 import concrete.Contradiction
-import concrete.FALSE
 import concrete.Outcome
 import concrete.ProblemState
-import concrete.TRUE
 import concrete.Variable
 import concrete.cluster.Arc
 import concrete.cluster.ConnectedComponents
@@ -26,6 +24,7 @@ import concrete.constraint.linear.SumLE
 import concrete.constraint.linear.SumMode
 import concrete.generator.LinearConstraint
 import concrete.Domain
+import BooleanDomain._
 
 case class Clause(positive: Seq[Variable], negative: Seq[Variable]) extends Arc {
   require(vars.forall(v => v.initDomain.isInstanceOf[BooleanDomain]))

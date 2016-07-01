@@ -5,7 +5,6 @@ import org.scalatest.FlatSpec
 import concrete.BooleanDomain
 import concrete.Variable
 import concrete.Problem
-import concrete.FALSE
 import concrete.Contradiction
 
 class XorTest extends FlatSpec with Matchers {
@@ -27,7 +26,7 @@ class XorTest extends FlatSpec with Matchers {
     c.advise(s2, 0) shouldBe 1
 
     val s2p = c.revise(s2)
-    s2p.dom(b2) shouldBe FALSE
+    s2p.dom(b2) shouldBe BooleanDomain.FALSE
 
     val s3 = s2.assign(b2, 1).toState
     c.advise(s3, 1) shouldBe 1

@@ -48,8 +48,10 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
   private def any2Int(v: Any) = {
     v match {
       case v: Int => v
-      case true   => 1
-      case false  => 0
+      case v: Long if v.isValidInt => v.toInt
+      case true => 1
+      case false => 0
+      case v => throw new AssertionError(s"value $v cannot be handled")
     }
 
   }
@@ -93,17 +95,22 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
   }
 
   private[concrete] def cspomMDDtoBDD(
-    relation: cspom.extension.MDD[Int],
-    map: IdMap[cspom.extension.MDD[Int], concrete.constraint.extension.BDD] = new IdMap()): BDD = {
+    relation: cspom.extension.MDD[_],
+    map: IdMap[cspom.extension.MDD[_], concrete.constraint.extension.BDD] = new IdMap()): BDD = {
     relation match {
       case n if n eq cspom.extension.MDDLeaf => concrete.constraint.extension.BDDLeaf
-      case n: cspom.extension.MDDNode[Int] => map.getOrElseUpdate(n, {
-        n.trie.toSeq.sortBy(-_._1).foldLeft[BDD](BDD0) {
-          case (acc, (v, st)) =>
-            new BDDNode(any2Int(v),
-              cspomMDDtoBDD(st, map),
-              acc)
-        }
+      case n: cspom.extension.MDDNode[_] => map.getOrElseUpdate(n, {
+        n.trie.toSeq
+          .map {
+            case (k, v) => any2Int(k) -> v
+          }
+          .sortBy(-_._1)
+          .foldLeft[BDD](BDD0) {
+            case (acc, (v, st)) =>
+              new BDDNode(v,
+                cspomMDDtoBDD(st, map),
+                acc)
+          }
 
       })
     }
@@ -124,10 +131,10 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
     } else {
       new TupleTrieSet(
         ds match {
-          case "MDD"          => relation2MDD(relation)
-          case "BDD"          => relation2BDD(relation)
-          case "STR"          => new STR(domains.length) ++ any2Int(relation)
-          case "HashTable"    => HashTable(any2Int(relation).toSeq)
+          case "MDD" => relation2MDD(relation)
+          case "BDD" => relation2BDD(relation)
+          case "STR" => new STR(domains.length) ++ any2Int(relation)
+          case "HashTable" => HashTable(any2Int(relation).toSeq)
           case "IndexedTable" => IndexedTable(any2Int(relation).toSeq)
         }, init)
     }

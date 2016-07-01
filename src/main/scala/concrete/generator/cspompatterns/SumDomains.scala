@@ -31,28 +31,30 @@ object SumDomains extends VariableCompiler('sum) {
 
       val m: String = c.getParam("mode").get
 
-      val initBound: RangeSet[Infinitable] = SumMode.withName(m)
+      SumMode.withName(m)
         .map {
           case SumLE => RangeSet(IntInterval.atMost(result))
           case SumLT => RangeSet(IntInterval.atMost(result - 1))
           case SumEQ => RangeSet(IntInterval.singleton(result))
           case SumNE => RangeSet.allInt -- IntInterval.singleton(result)
         }
-        .get
+        .map { initBound =>
 
-      val coefspan = (iargs, coef).zipped.map((a, c) => RangeSet(IntExpression.span(a) * IntInterval.singleton(c))).toIndexedSeq
+          val coefspan = (iargs, coef).zipped.map((a, c) => RangeSet(IntExpression.span(a) * IntInterval.singleton(c))).toIndexedSeq
 
-      val filt = for (i <- args.indices) yield {
-        val others = iargs.indices
-          .filter(_ != i)
-          .map(coefspan)
-          .foldLeft(initBound)(_ - _)
-        args(i) -> reduceDomain(iargs(i), others / coef(i))
-      }
+          val filt = for (i <- args.indices) yield {
+            val others = iargs.indices
+              .filter(_ != i)
+              .map(coefspan)
+              .foldLeft(initBound)(_ - _)
+            args(i) -> reduceDomain(iargs(i), others / coef(i))
+          }
 
-      val entailed = args.collect { case IntVariable(e) => e }.size == 1
+          val entailed = args.collect { case IntVariable(e) => e }.size == 1
 
-      (filt, entailed)
+          (filt, entailed)
+        }
+        .getOrElse((Seq(), false))
 
     case _ => (Seq(), false)
   }

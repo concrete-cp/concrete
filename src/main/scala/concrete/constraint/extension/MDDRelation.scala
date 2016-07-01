@@ -47,11 +47,11 @@ final class MDDRelation(val mdd: MDD, val timestamp: Timestamp = new Timestamp()
     }
   }
 
-  def supported(doms: Array[Domain]): Array[IntDomain] = {
+  def supported(doms: Array[Domain]): Array[Domain] = {
     val newDomains = Array.fill[IntDomain](doms.length)(EmptyIntDomain)
     val l = new SetWithMax(doms.length)
     mdd.supported(timestamp.next(), doms, newDomains, 0, l)
-    newDomains
+    newDomains.asInstanceOf[Array[Domain]]
   }
 
   override def isEmpty = mdd.isEmpty

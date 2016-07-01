@@ -36,7 +36,7 @@ final class IndexedTable(val tables: Array[VecMap[ArraySet[Int]]]) extends Relat
 
   def filterTrie(doms: Array[Domain], modified: List[Int]) = ???
 
-  def supported(domains: Array[Domain]): Array[IntDomain] = ???
+  def supported(domains: Array[Domain]): Array[Domain] = ???
 
   override def toString = s"indexed table"
 

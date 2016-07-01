@@ -1,9 +1,10 @@
 package concrete.constraint.semantic
 
-import scala.annotation.varargs
-import scala.reflect.runtime.universe
+import scala.util.Try
+
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
+
 import concrete.BooleanDomain
 import concrete.Contradiction
 import concrete.IntDomain
@@ -11,26 +12,18 @@ import concrete.Problem
 import concrete.ProblemState
 import concrete.Singleton
 import concrete.Solver
-import concrete.TRUE
-import concrete.UNKNOWNBoolean
 import concrete.Variable
 import concrete.constraint.AdviseCount
+import concrete.constraint.ReifiedConstraint
+import concrete.constraint.linear.EqACFast
+import concrete.constraint.linear.EqBC
+import concrete.constraint.linear.LinearNe
+import concrete.constraint.linear.StatelessLinearEq
 import cspom.CSPOM
 import cspom.CSPOM._
 import cspom.CSPOMConstraint
 import cspom.variable.BoolVariable
-import cspom.variable.CSPOMSeq
 import cspom.variable.IntVariable
-import concrete.constraint.linear.LinearNe
-import concrete.constraint.linear.LinearEq
-import concrete.constraint.linear.Eq
-import concrete.constraint.linear.EqACFast
-import concrete.constraint.linear.Eq
-import concrete.constraint.linear.EqBC
-import concrete.constraint.ReifiedConstraint
-import concrete.constraint.linear.StatelessLinearEq
-import scala.util.Try
-import scala.util.Success
 
 class ReifiedConstraintTest extends FlatSpec with Matchers {
 
@@ -64,10 +57,10 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
 
     val m1 = c1.revise(ps).toState
 
-    m2.dom(control2) shouldBe TRUE
+    m2.dom(control2) shouldBe BooleanDomain.TRUE
     assert(m2.isEntailed(c2))
 
-    m1.dom(control1) shouldBe TRUE
+    m1.dom(control1) shouldBe BooleanDomain.TRUE
     assert(m1.isEntailed(c1))
 
   }
@@ -85,8 +78,8 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
     val state = pb.initState.toState
     constraint.adviseAll(state)
     constraint.revise(state) match {
-      case Contradiction    => fail()
-      case ns: ProblemState => ns.dom(control) shouldBe UNKNOWNBoolean
+      case Contradiction => fail()
+      case ns: ProblemState => ns.dom(control) shouldBe BooleanDomain.UNKNOWNBoolean
     }
   }
 
@@ -125,8 +118,8 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
 
       bc.adviseAll(state)
       bc.revise(state) match {
-        case Contradiction    => fail()
-        case ns: ProblemState => ns.dom(r) shouldBe TRUE
+        case Contradiction => fail()
+        case ns: ProblemState => ns.dom(r) shouldBe BooleanDomain.TRUE
       }
     }
   }
@@ -182,7 +175,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
         bc.advise(ps, 0) should be >= 0
         bc.revise(ps)
       } match {
-        case Contradiction    => fail()
+        case Contradiction => fail()
         case ns: ProblemState => ns.dom(v0).view should contain theSameElementsAs Seq(0)
       }
     }

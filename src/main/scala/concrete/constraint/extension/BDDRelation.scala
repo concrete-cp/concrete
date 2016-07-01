@@ -43,7 +43,7 @@ final class BDDRelation(val bdd: BDD, val timestamp: Timestamp = new Timestamp()
     }
   }
 
-  override def supported(doms: Array[Domain]): Array[IntDomain] =
+  override def supported(doms: Array[Domain]): Array[Domain] =
     bdd.supported(timestamp.next(), doms)
 
   override def isEmpty = bdd.isEmpty

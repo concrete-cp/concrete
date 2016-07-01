@@ -2,10 +2,10 @@ package concrete.constraint.semantic;
 
 import concrete.BooleanDomain
 import concrete.Contradiction
-import concrete.FALSE
+
 import concrete.Outcome
 import concrete.ProblemState
-import concrete.TRUE
+import BooleanDomain._
 import concrete.constraint.Constraint
 
 final class ClauseConstraint(clause: Clause) extends Constraint(clause.vars: _*) {

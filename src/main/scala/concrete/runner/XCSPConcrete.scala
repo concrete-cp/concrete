@@ -15,6 +15,7 @@ import scala.util.Failure
 import scala.util.Success
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import cspom.WithParam
+import concrete.CSPOMSolver
 
 object XCSPConcrete extends CSPOMRunner with App {
 
@@ -27,7 +28,7 @@ object XCSPConcrete extends CSPOMRunner with App {
     file = CSPOM.file2url(fn)
     loadCSPOMURL(file).flatMap { cspom =>
       declaredVariables = cspom.goal.get match {
-        case s @ WithParam(CSPOMGoal.Satisfy, _) =>
+        case s @ WithParam(_: CSPOMGoal[_], _) =>
           s.getSeqParam("variables")
         case _ =>
           return Failure(new IllegalArgumentException("Variable sequence not available"))
@@ -43,10 +44,14 @@ object XCSPConcrete extends CSPOMRunner with App {
       }
   }
 
+  override def applyParametersCSPOM(solver: CSPOMSolver, opt: Map[Symbol, Any]): Unit = {
+    solver.applyGoal().get
+  }
+
   def description(args: List[String]) =
     args match {
       case List(fileName) => fileName
-      case _              => throw new IllegalArgumentException(args.toString)
+      case _ => throw new IllegalArgumentException(args.toString)
     }
 
   def controlCSPOM(solution: Map[String, Any]) = {
@@ -59,7 +64,7 @@ object XCSPConcrete extends CSPOMRunner with App {
   }
 
   override def outputCSPOM(solution: Map[String, Any]): String = {
-    declaredVariables.map(solution).mkString(" ")
+    declaredVariables.map(v => s"$v = ${solution(v)}").mkString("\n")
   }
 
   run(args)

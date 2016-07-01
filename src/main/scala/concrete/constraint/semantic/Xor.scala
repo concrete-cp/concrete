@@ -1,12 +1,11 @@
 package concrete.constraint.semantic;
 
-
-import concrete.TRUE
 import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.Contradiction
 import concrete.ProblemState
 import concrete.Outcome
+import concrete.BooleanDomain
 
 final class Xor(vars: Array[Variable]) extends Constraint(vars) {
 
@@ -44,7 +43,7 @@ final class Xor(vars: Array[Variable]) extends Constraint(vars) {
     var c = 0
     var i = arity - 1
     while (i >= 0) {
-      if (ps.dom(vars(i)) == TRUE) {
+      if (ps.dom(vars(i)) eq BooleanDomain.TRUE) {
         c += 1
       }
       i -= 1

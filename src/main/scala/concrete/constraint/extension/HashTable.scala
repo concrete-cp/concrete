@@ -52,7 +52,7 @@ final class HashTable(arity: Int, val table: ArraySet[Int]) extends Relation {
     modified.isEmpty || (doms(modified.head).present(t(modified.head)) && valid(modified.tail, doms, t))
   }
 
-  def supported(domains: Array[Domain]): Array[IntDomain] = {
+  def supported(domains: Array[Domain]): Array[Domain] = {
     val arity = domains.length
     val newDomains = Array.fill[IntDomain](arity)(EmptyIntDomain)
 
@@ -67,7 +67,7 @@ final class HashTable(arity: Int, val table: ArraySet[Int]) extends Relation {
       }
     }
 
-    newDomains
+    newDomains.asInstanceOf[Array[Domain]]
 
   }
 

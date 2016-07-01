@@ -10,6 +10,7 @@ import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
 import cspom.variable.IntExpression
 import cspom.variable.SimpleExpression
+import cspom.CSPOM
 
 object FZPatterns {
   def apply() = Seq(
@@ -527,6 +528,27 @@ object FZPatterns {
     case Ctr('all_different_int, Seq(IntExpression.simpleSeq(y)), p) =>
       allDifferent(y: _*)
 
+    case Ctr('regular, Seq(x,
+      CSPOMConstant(q: Int),
+      CSPOMConstant(s: Int),
+      IntExpression.constSeq(fd), //: CSPOMSeq[_],
+      q0,
+      f), p) =>
+
+      val CSPOMConstant(fseq: Seq[Int]) = f
+      CSPOMConstraint('regular)(x, q0, CSPOM.constantSeq(fseq)) withParams p + ("dfa" -> dfa(q, s, fd.toIndexedSeq))
+
+  }
+
+  private def dfa(Q: Int, S: Int, fd: IndexedSeq[Int]): Map[(Int, Int), Int] = {
+    var r = Map[(Int, Int), Int]()
+    for (q <- 1 to Q; s <- 1 to S) {
+      val t = fd((q - 1) * S + s - 1)
+      if (t > 0) {
+        r += (q, s) -> t
+      }
+    }
+    r
   }
 
 }

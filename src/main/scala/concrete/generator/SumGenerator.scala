@@ -32,11 +32,9 @@ object SumGenerator {
     // For bool2int optimization
     val constant = c match {
       case i: Int => i
-      case false  => 0
-      case true   => 1
+      case false => 0
+      case true => 1
     }
-
-    require(!constraint.params.contains("coefficients"), "coefficients parameter is deprecated")
 
     val mode = constraint.getParam[String]("mode")
       .flatMap(SumMode.withName)
@@ -98,8 +96,8 @@ final class SumGenerator(pm: ParameterManager) extends Generator with LazyLoggin
       case 1 =>
         val Seq(x) = solverVariables
         (varParams, mode, constant) match {
-          case (Seq(1), SumLE, k)  => ACBC.withBC(new LeC(x, k))
-          case (Seq(1), SumLT, k)  => ACBC.withBC(new LtC(x, k))
+          case (Seq(1), SumLE, k) => ACBC.withBC(new LeC(x, k))
+          case (Seq(1), SumLT, k) => ACBC.withBC(new LtC(x, k))
           case (Seq(-1), SumLE, k) => ACBC.withBC(new GeC(x, -k))
           case (Seq(-1), SumLT, k) => ACBC.withBC(new GtC(x, -k))
           case _ =>
@@ -109,16 +107,16 @@ final class SumGenerator(pm: ParameterManager) extends Generator with LazyLoggin
       case 2 =>
         val Seq(x, y) = solverVariables
         (varParams, mode, constant) match {
-          case (Seq(1, -1), SumLE, k)  => ACBC.withBC(new Gt(y, k, x, false))
-          case (Seq(1, -1), SumLT, k)  => ACBC.withBC(new Gt(y, k, x, true))
-          case (Seq(-1, 1), SumLE, k)  => ACBC.withBC(new Gt(x, k, y, false))
-          case (Seq(-1, 1), SumLT, k)  => ACBC.withBC(new Gt(x, k, y, true))
-          case (Seq(1, -1), SumNE, k)  => ACBC.withAC(new Neq(x, y, k))
-          case (Seq(-1, 1), SumNE, k)  => ACBC.withAC(new Neq(x, y, -k))
-          case (Seq(1, -1), SumEQ, k)  => eq(false, x, -k, y)
+          case (Seq(1, -1), SumLE, k) => ACBC.withBC(new Gt(y, k, x, false))
+          case (Seq(1, -1), SumLT, k) => ACBC.withBC(new Gt(y, k, x, true))
+          case (Seq(-1, 1), SumLE, k) => ACBC.withBC(new Gt(x, k, y, false))
+          case (Seq(-1, 1), SumLT, k) => ACBC.withBC(new Gt(x, k, y, true))
+          case (Seq(1, -1), SumNE, k) => ACBC.withAC(new Neq(x, y, k))
+          case (Seq(-1, 1), SumNE, k) => ACBC.withAC(new Neq(x, y, -k))
+          case (Seq(1, -1), SumEQ, k) => eq(false, x, -k, y)
           case (Seq(-1, -1), SumEQ, k) => eq(true, x, -k, y)
-          case (Seq(-1, 1), SumEQ, k)  => eq(false, x, k, y)
-          case (Seq(1, 1), SumEQ, k)   => eq(true, x, k, y)
+          case (Seq(-1, 1), SumEQ, k) => eq(false, x, k, y)
+          case (Seq(1, 1), SumEQ, k) => eq(true, x, k, y)
           case _ =>
             logger.info(s"${(varParams, mode, constant)} is non-specialized binary linear constraint")
             general(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode)

@@ -57,12 +57,16 @@ final class SolverFactory(val params: ParameterManager) {
     CSPOMCompiler.compile(cspom, ConcretePatterns(params))
       .flatMap { cspom =>
         val pg = new ProblemGenerator(params)
-        for ((problem, variables) <- pg.generate(cspom)) yield {
-          val solver = apply(problem)
-          solver.statistics.register("compiler", CSPOMCompiler)
-          solver.statistics.register("generator", pg)
-          new CSPOMSolver(solver, cspom, variables)
-        }
+        pg.generate(cspom)
+          .flatMap {
+            case (problem, variables) =>
+              val solver = apply(problem)
+              solver.statistics.register("compiler", CSPOMCompiler)
+              solver.statistics.register("generator", pg)
+
+              new CSPOMSolver(solver, cspom, variables)
+                .applyGoal()
+          }
       }
   }
 
@@ -122,13 +126,13 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
 
   private var _minimize: Option[Variable] = None
   private var _maximize: Option[Variable] = None
-  def minimize(v: Variable) {
+  def minimize(v: Variable): Solver = {
     _maximize = None; _minimize = Some(v)
-    //if (!problem.decisionVariables.contains(v)) problem.decisionVariables +:= v
+    this
   }
-  def maximize(v: Variable) {
+  def maximize(v: Variable): Solver = {
     _minimize = None; _maximize = Some(v)
-    // if (!problem.decisionVariables.contains(v)) problem.decisionVariables +:= v
+    this
   }
 
   def optimises: Option[Variable] = _maximize orElse _minimize
@@ -136,7 +140,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   var running = false
 
   def next(): Map[Variable, Any] = _next match {
-    case UNSAT               => Iterator.empty.next
+    case UNSAT => Iterator.empty.next
     case UNKNOWNResult(None) => if (hasNext) next() else Iterator.empty.next
     case SAT(sol) =>
       _next = UNKNOWNResult(None)
@@ -181,7 +185,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   protected def nextSolution(): SolverResult
 
   def hasNext = _next match {
-    case UNSAT  => false
+    case UNSAT => false
     case SAT(_) => true
     case UNKNOWNResult(None) =>
       _next = nextSolution(); hasNext
@@ -194,7 +198,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
 
   protected def extractSolution(state: ProblemState): Map[Variable, Any] = problem.variables
     .map(v => (v, state.dom(v))).map {
-      case (variable, dom: IntDomain)     => variable -> dom.head
+      case (variable, dom: IntDomain) => variable -> dom.head
       case (variable, dom: BooleanDomain) => variable -> dom.canBe(true)
     }
     .toMap

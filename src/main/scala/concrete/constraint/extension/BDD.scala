@@ -5,6 +5,7 @@ import scala.collection.mutable.HashMap
 import concrete.util.TSCache
 import cspom.extension.IdMap
 import concrete.util.SetWithMax
+import cspom.util.BitVector
 
 object BDD {
   def apply(t: Traversable[List[Int]]): BDD = {
@@ -98,19 +99,42 @@ sealed trait BDD extends Iterable[Seq[Int]] {
   def edges(ts: Int): Int
   def depth(map: IdMap[BDD, Int]): Int
 
-  def supported(ts: Int, domains: Array[Domain]): Array[IntDomain] = {
+  def supported(ts: Int, domains: Array[Domain]): Array[Domain] = {
     val arity = domains.length
-    val newDomains = Array.fill[IntDomain](arity)(EmptyIntDomain)
+    val newDomains = Array.fill[BitVector](arity)(BitVector.empty)
+    val sizes = Array.fill(arity)(0)
+    val offset = compOffset(domains)
 
     def updNewDomains(depth: Int, i: Int) = {
       ReduceableExt.fills += 1
-      newDomains(depth) |= i
-      newDomains(depth).size == domains(depth).size
+      val od = newDomains(depth)
+      val nd = od + (i - offset)
+      if (od != nd) {
+        newDomains(depth) = nd
+        sizes(depth) += 1
+      }
+      sizes(depth) == domains(depth).size
     }
 
     fillFound(ts, updNewDomains, 0, new SetWithMax(arity))
 
-    newDomains
+    Array.tabulate(arity) { i =>
+      if (sizes(i) == domains(i).size) {
+        domains(i)
+      } else {
+        IntDomain.ofBitVector(offset, newDomains(i), sizes(i))
+      }
+    }
+  }
+
+  private def compOffset(domains: Array[Domain]): Int = {
+    var i = domains.length - 1
+    var offset = Int.MaxValue
+    while (i >= 0) {
+      offset = math.min(offset, domains(i).head)
+      i -= 1
+    }
+    offset
   }
 
   def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax): Unit
@@ -128,7 +152,7 @@ object BDD0 extends BDD {
   id = 0
   def iterator = Iterator.empty
   def +(e: List[Int]): BDD = e match {
-    case Nil    => BDDLeaf
+    case Nil => BDDLeaf
     case h :: t => new BDDNode(h, BDD0 + t, BDD0)
   }
   def lambda(map: IdMap[BDD, BigInt]) = 0
@@ -214,7 +238,7 @@ class BDDNode(val index: Int, val child: BDD, val sibling: BDD) extends BDD {
 
   override def equals(o: Any) = o match {
     case n: BDDNode => (n.index == index) && (n.child eq child) && (n.sibling eq sibling)
-    case _          => false
+    case _ => false
   }
 
   def edges(ts: Int) = {

@@ -59,7 +59,7 @@ final class STR(arity: Int, val array: Array[Array[Int]], val bound: Int) extend
 
   private val pos: MutableList = new MutableList(arity)
 
-  def supported(domains: Array[Domain]): Array[IntDomain] = {
+  def supported(domains: Array[Domain]): Array[Domain] = {
 
     val newDomains = Array.fill[IntDomain](domains.length)(EmptyIntDomain)
     pos.refill()
@@ -75,7 +75,7 @@ final class STR(arity: Int, val array: Array[Array[Int]], val bound: Int) extend
       i -= 1
     }
 
-    newDomains
+    newDomains.asInstanceOf[Array[Domain]]
   }
 
   override def toString = s"$bound of ${array.size} tuples:\n" + iterator.map(_.mkString(" ")).mkString("\n")

@@ -141,7 +141,7 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
       case v: CSPOMVariable[_] =>
         require(v.fullyDefined, s"${vn.names(v)} has no bounds. Involved by ${cspom.deepConstraints(v)}")
         require(v.searchSpace > 0, s"${vn.names(v)} has empty domain. Involved by ${cspom.deepConstraints(v)}")
-        if (!cspom.isReferenced(v)) logger.warn(s"${vn.names(v)} ($v) is not referenced by constraints $cspom}")
+        if (!cspom.isReferenced(v)) logger.warn(s"${vn.names(v)} ($v) is not referenced by constraints")
         v -> new Variable(vn.names(v), generateDomain(v))
     }.toMap
   }

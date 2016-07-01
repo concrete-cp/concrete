@@ -7,8 +7,6 @@ import concrete.Problem
 import concrete.Variable
 import concrete.constraint.AdviseCount
 import concrete.BooleanDomain
-import concrete.TRUE
-
 
 class LexLeqTest extends FlatSpec with Matchers {
   "lexleq" should "update alpha" in {
@@ -28,14 +26,14 @@ class LexLeqTest extends FlatSpec with Matchers {
 
     val ps = problem.initState.toState
 
-    ps(c) shouldBe (0, 3)
+    ps(c) shouldBe ((0, 3))
 
     val ps2 = ps.assign(x(0), 1).toState
     c.advise(ps2, 0)
     val ps3 = c.revise(ps2).toState
 
-    ps3(c) shouldBe (1, 3)
-    ps3.dom(y(0)) shouldBe TRUE
+    ps3(c) shouldBe ((1, 3))
+    ps3.dom(y(0)) shouldBe BooleanDomain.TRUE
 
   }
 }

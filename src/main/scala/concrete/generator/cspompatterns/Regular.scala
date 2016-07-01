@@ -27,44 +27,41 @@ final object Regular extends ConstraintCompilerNoData {
 
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM) = {
     val Seq(
-      CSPOMSeq(x: Seq[SimpleExpression[Int]] @unchecked),
-      CSPOMConstant(q: Int),
-      CSPOMConstant(s: Int),
-      IntExpression.constSeq(fd), //: CSPOMSeq[_],
+      CSPOMSeq(x: Seq[SimpleExpression[Any]] @unchecked),
       CSPOMConstant(q0: Int),
-      CSPOMConstant(f: Seq[Int] @unchecked)) = constraint.arguments
+      CSPOMConstant.seq(f: Seq[Int] @unchecked)) = constraint.arguments
 
-    val d: IndexedSeq[IndexedSeq[Int]] =
-      fd.grouped(s)
-        .map { s => s.toIndexedSeq }
-        .toIndexedSeq
+    val Some(dfa) = constraint.getParam[Map[(Int, Any), Int]]("dfa")
 
-    require(d.size == q, "Invalid transition matrix for constraint " + constraint)
-    //println(d)
+    val values = dfa.keys.map(_._2).toSeq.distinct.to[collection.IndexedSeq] //x.map(IntExpression.implicits.iterable).toIndexedSeq
 
-    val regular = mdd(x.length, s, d, q0, f.toSet, collection.mutable.Map())
-    //println(s"generated MDD for $constraint with ${regular.edges} edges")
+    val regular = mdd(IndexedSeq.fill(x.length)(values), q0, f.toSet, dfa)
+    //
     replaceCtr(constraint, x in regular, problem)
   }
 
-  def mdd(level: Int, s: Int, d: IndexedSeq[IndexedSeq[Int]], q0: Int, f: Set[Int],
-          cache: collection.mutable.Map[(Int, Int), MDD[Int]]): MDD[Int] = {
-    //println(level)
-    if (q0 == 0) {
-      MDD.empty
-    } else if (level <= 0) {
-      if (f.contains(q0)) MDD.leaf else MDD.empty
-    } else {
-      cache.getOrElseUpdate((q0, level), {
-        //        if (f.contains(q0)) {
-        //          MDD.leaf
-        //        } else {
-        val map = (1 to s).map { v =>
-          v -> mdd(level - 1, s, d, d(q0 - 1)(v - 1), f, cache)
+  def mdd(v: IndexedSeq[Iterable[Any]], initState: Int, finalStates: Set[Int], dfa: Map[(Int, Any), Int]): MDD[Any] = {
+    val cache = collection.mutable.Map[(Int, Int), MDD[Any]]()
+
+    def parse(depth: Int, state: Int): MDD[Any] = cache.getOrElseUpdate((depth, state), {
+      if (depth >= v.length) {
+        if (finalStates(state)) {
+          MDD.leaf
+        } else {
+          MDD.empty
         }
-        MDDNode(map.filter(_._2.nonEmpty).toMap)
-      })
-    }
+      } else MDD.node {
+        v(depth)
+          .flatMap { value => dfa.get((state, value)).map(value -> _) }
+          .map {
+            case (value, nextState) =>
+              value -> parse(depth + 1, nextState)
+          }
+      }
+    })
+
+    parse(0, initState)
+
   }
 
   def selfPropagation = false

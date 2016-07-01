@@ -4,12 +4,8 @@ import com.typesafe.scalalogging.LazyLogging
 
 import concrete.BooleanDomain
 import concrete.Contradiction
-import concrete.EMPTY
-import concrete.FALSE
 import concrete.Outcome
 import concrete.ProblemState
-import concrete.TRUE
-import concrete.UNKNOWNBoolean
 import concrete.Variable
 
 final class ReifiedConstraint(
@@ -23,10 +19,10 @@ final class ReifiedConstraint(
 
   def init(ps: ProblemState) = {
     ps.dom(controlVariable) match {
-      case UNKNOWNBoolean => updateState(ps, false)
-      case TRUE           => positiveConstraint.init(ps).andThen(updateState(_, true))
-      case FALSE          => negativeConstraint.init(ps).andThen(updateState(_, true))
-      case EMPTY          => Contradiction //throw new UNSATException(msg = s"${controlVariable.toString(ps)} was empty during ${toString(ps)} init")
+      case BooleanDomain.UNKNOWNBoolean => updateState(ps, false)
+      case BooleanDomain.TRUE => positiveConstraint.init(ps).andThen(updateState(_, true))
+      case BooleanDomain.FALSE => negativeConstraint.init(ps).andThen(updateState(_, true))
+      case BooleanDomain.EMPTY => Contradiction //throw new UNSATException(msg = s"${controlVariable.toString(ps)} was empty during ${toString(ps)} init")
     }
 
   }
@@ -86,7 +82,7 @@ final class ReifiedConstraint(
   def revise(ps: ProblemState): Outcome = {
 
     ps.dom(controlVariable) match {
-      case UNKNOWNBoolean =>
+      case BooleanDomain.UNKNOWNBoolean =>
         positiveConstraint.init(ps)
           .andThen { psInitPos =>
             if (positiveConstraint.isConsistent(psInitPos).isState) {
@@ -105,23 +101,23 @@ final class ReifiedConstraint(
                 }
               }
               .orElse {
-                ps.updateDomNonEmpty(controlVariable, TRUE).entail(this)
+                ps.updateDomNonEmpty(controlVariable, BooleanDomain.TRUE).entail(this)
               }
           }
           .orElse {
-            ps.updateDomNonEmpty(controlVariable, FALSE).entail(this)
+            ps.updateDomNonEmpty(controlVariable, BooleanDomain.FALSE).entail(this)
           }
 
-      case TRUE =>
+      case BooleanDomain.TRUE =>
         init(positiveConstraint, ps)
           .andThen(positiveConstraint.revise)
           .entailIf(this, mod => mod.isEntailed(positiveConstraint))
-      case FALSE =>
+      case BooleanDomain.FALSE =>
         init(negativeConstraint, ps)
           .andThen(negativeConstraint.revise)
           .entailIf(this, mod => mod.isEntailed(negativeConstraint))
 
-      case EMPTY => throw new IllegalStateException
+      case BooleanDomain.EMPTY => throw new IllegalStateException
 
     }
 
@@ -161,14 +157,14 @@ final class ReifiedConstraint(
     //logger.debug(s"Advise ${toString(ps)} : $position")
     if (position == 0) {
       ps.dom(controlVariable) match {
-        case TRUE           => positiveConstraint.adviseAll(ps)
-        case FALSE          => negativeConstraint.adviseAll(ps)
-        case UNKNOWNBoolean => -1
-        case d              => throw new IllegalStateException(s"$d is not a valid boolean state")
+        case BooleanDomain.TRUE => positiveConstraint.adviseAll(ps)
+        case BooleanDomain.FALSE => negativeConstraint.adviseAll(ps)
+        case BooleanDomain.UNKNOWNBoolean => -1
+        case d => throw new IllegalStateException(s"$d is not a valid boolean state")
       }
     } else {
       ps.dom(controlVariable) match {
-        case UNKNOWNBoolean =>
+        case BooleanDomain.UNKNOWNBoolean =>
           val p = positiveConstraint.advise(ps, reifiedToPositivePositions(position))
           val n = negativeConstraint.advise(ps, reifiedToNegativePositions(position))
           if (p < 0) {
@@ -176,9 +172,9 @@ final class ReifiedConstraint(
           } else {
             if (n < 0) p else p + n
           }
-        case TRUE  => positiveConstraint.advise(ps, reifiedToPositivePositions(position))
-        case FALSE => negativeConstraint.advise(ps, reifiedToNegativePositions(position))
-        case EMPTY => throw new IllegalStateException
+        case BooleanDomain.TRUE => positiveConstraint.advise(ps, reifiedToPositivePositions(position))
+        case BooleanDomain.FALSE => negativeConstraint.advise(ps, reifiedToNegativePositions(position))
+        case BooleanDomain.EMPTY => throw new IllegalStateException
       }
     }
   }
