@@ -33,9 +33,6 @@ predicate cumulative(array[int] of var int: s,
                      [ r[i] | i in tasks ],
                      [ s[i] <= t /\ t < s[i] + d[i] | i in tasks ],
                      b  )
-%                  b >= sum( i in tasks ) (
-%                     bool2int( s[i] <= t /\ t < s[i] + d[i] ) * r[i]
-%                  )
                )
 			else
 				% Task decomposition
@@ -44,9 +41,6 @@ predicate cumulative(array[int] of var int: s,
 				    	[ r[j] | j in tasks where j != i ], 
 				    	[ s[j] <= s[i] /\ s[i] < s[j] + d[j] | j in tasks where j != i ],
 				    	b - r[i])
-%					b - r[i] >= sum(j in tasks where j != i)(
-%						bool2int(s[j] <= s[i] /\ s[i] < s[j] + d[j]) * r[j]
-%					)
 				)
 			endif
         )
