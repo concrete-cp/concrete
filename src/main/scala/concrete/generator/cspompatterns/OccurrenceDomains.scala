@@ -10,11 +10,17 @@ import cspom.variable.IntExpression
 /**
  * @author vion
  */
-object OccurrenceDomains extends VariableCompiler('occurrence) {
+object AtLeastDomains extends VariableCompiler('atLeast) {
   def compiler(c: CSPOMConstraint[_]): Seq[(CSPOMExpression[_], CSPOMExpression[_])] = {
-    val CSPOMConstraint(r, _, Seq(_, CSPOMSeq(args)), _) = c
-    val ir = IntExpression.coerce(r)
+    val r = c.arguments(0)
+    Seq(r -> reduceDomain(IntExpression.coerce(r), IntInterval.atLeast(0)))
+  }
+}
 
-    Seq(r -> reduceDomain(ir, IntInterval(0, args.size)))
+object AtMostDomains extends VariableCompiler('atMost) {
+  def compiler(c: CSPOMConstraint[_]): Seq[(CSPOMExpression[_], CSPOMExpression[_])] = {
+    val CSPOMConstraint(_, _, Seq(r, _, CSPOMSeq(args)), _) = c
+
+    Seq(r -> reduceDomain(IntExpression.coerce(r), IntInterval.atMost(args.size)))
   }
 }

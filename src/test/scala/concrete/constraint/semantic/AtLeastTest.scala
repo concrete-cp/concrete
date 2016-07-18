@@ -3,7 +3,7 @@ package concrete.constraint.semantic
 import org.scalatest.FlatSpec
 import org.scalatest.Inspectors
 import org.scalatest.Matchers
-import concrete.CSPOMDriver.occurrence
+import concrete.CSPOMDriver
 import concrete.Contradiction
 import concrete.IntDomain
 import concrete.Problem
@@ -18,9 +18,9 @@ import org.scalatest.TryValues
 import concrete.filter.ACC
 import concrete.ParameterManager
 
-class OccurrenceTest extends FlatSpec with Matchers with Inspectors with TryValues {
+class AtLeastTest extends FlatSpec with Matchers with Inspectors with TryValues {
 
-  "Occurrence" should "filter" in {
+  "AtLeast" should "filter" in {
     val v1 = new Variable("1", IntDomain.ofSeq(7))
     val v2 = new Variable("2", IntDomain.ofSeq(6))
     val v3 = new Variable("3", IntDomain.ofSeq(7, 9))
@@ -31,7 +31,7 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors with TryValu
 
     val value = new Variable("value", IntDomain.ofSeq(7))
 
-    val c = new Occurrence(occ, value, Array(v1, v2, v3, v4, v5))
+    val c = new AtLeast(occ, value, Array(v1, v2, v3, v4, v5))
     c.register(new AdviseCount())
     val pb = Problem(occ, value, v1, v2, v3, v4, v5)
     pb.addConstraint(c)
@@ -60,7 +60,7 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors with TryValu
 
     val value = new Variable("value", IntDomain.ofSeq(7))
 
-    val c = new Occurrence(occ, value, Array(v1, v2, v3, v4, v5))
+    val c = new AtLeast(occ, value, Array(v1, v2, v3, v4, v5))
     c.register(new AdviseCount())
 
     val pb = Problem(occ, v1, v2, v3, v4, v5)
@@ -84,14 +84,14 @@ class OccurrenceTest extends FlatSpec with Matchers with Inspectors with TryValu
 
       val occ = IntVariable(1 to 3) as "occ"
 
-      ctr(occ === occurrence(7)(v1, v2, v3, v4, v5))
+      ctr(CSPOMDriver.atLeast(occ, 7, v1, v2, v3, v4, v5))
     }
 
     val problem = Solver(cspom).get.concreteProblem
 
     val c = problem.constraints
       .collectFirst {
-        case c: Occurrence => c
+        case c: AtLeast => c
       }
       .get
 
