@@ -2,9 +2,15 @@ package concrete.runner
 
 import java.net.URL
 import java.security.InvalidParameterException
+
+import scala.reflect.runtime.universe
+
 import org.scalameter.Quantity
+
 import com.typesafe.scalalogging.LazyLogging
+
 import concrete.CSPOMSolver
+import concrete.Problem
 import concrete.Variable
 import concrete.generator.cspompatterns.FZPatterns
 import concrete.heuristic.Brelaz
@@ -31,6 +37,7 @@ import cspom.CSPOM.seq2CSPOMSeq
 import cspom.CSPOMGoal
 import cspom.Statistic
 import cspom.StatisticsManager
+import cspom.WithParam
 import cspom.compiler.CSPOMCompiler
 import cspom.flatzinc.FZAnnotation
 import cspom.flatzinc.FZArrayExpr
@@ -41,8 +48,7 @@ import cspom.flatzinc.FlatZincParser
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
-import concrete.Problem
-import cspom.WithParam
+import cspom.variable.IntExpression
 
 object FZConcrete extends CSPOMRunner with LazyLogging {
 
@@ -57,9 +63,9 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
 
   override def options(args: List[String], o: Map[Symbol, Any] = Map.empty, realArgs: List[String]): (Map[Symbol, Any], List[String]) = {
     args match {
-      case "-f" :: tail           => options(tail, o + ('free -> Unit), realArgs)
+      case "-f" :: tail => options(tail, o + ('free -> Unit), realArgs)
       case "-p" :: option :: tail => options(tail, o + ('par -> option.toInt), realArgs)
-      case e                      => super.options(e, o, realArgs)
+      case e => super.options(e, o, realArgs)
     }
   }
 
@@ -69,7 +75,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
       new SeqHeuristic(
         strategies.value.map {
           case a: FZAnnotation => parseGoalAnnotation(variables)(a)
-          case a               => sys.error(s"Annotation expected in $strategies, found $a")
+          case a => sys.error(s"Annotation expected in $strategies, found $a")
         }
           .toList)
 
@@ -84,15 +90,15 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
       val FZAnnotation(varchoiceannotation, _) = vca
 
       val varh: VariableHeuristic = varchoiceannotation match {
-        case "input_order"      => new LexVar(pm, decisionVariables)
-        case "first_fail"       => new Dom(pm, decisionVariables)
-        case "antifirst_fail"   => new MaxDom(pm, decisionVariables)
-        case "smallest"         => new SmallestValue(pm, decisionVariables)
-        case "largest"          => new LargestValue(pm, decisionVariables)
-        case "occurrence"       => new DDeg(pm, decisionVariables)
+        case "input_order" => new LexVar(pm, decisionVariables)
+        case "first_fail" => new Dom(pm, decisionVariables)
+        case "antifirst_fail" => new MaxDom(pm, decisionVariables)
+        case "smallest" => new SmallestValue(pm, decisionVariables)
+        case "largest" => new LargestValue(pm, decisionVariables)
+        case "occurrence" => new DDeg(pm, decisionVariables)
         case "most_constrained" => new Brelaz(pm, decisionVariables)
-        case "max_regret"       => new MaxRegret(pm, decisionVariables)
-        case "free"             => CrossHeuristic.defaultVar(pm, decisionVariables)
+        case "max_regret" => new MaxRegret(pm, decisionVariables)
+        case "free" => CrossHeuristic.defaultVar(pm, decisionVariables)
         case h =>
           logger.warn(s"Unsupported varchoice $h")
           CrossHeuristic.defaultVar(pm, decisionVariables)
@@ -102,15 +108,15 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
       val FZAnnotation(assignmentannotation, _) = aa
 
       val valh = assignmentannotation match {
-        case "indomain"               => new Lexico(pm)
-        case "indomain_min"           => new Lexico(pm)
-        case "indomain_max"           => new RevLexico(pm)
-        case "indomain_median"        => new MedValue(pm)
-        case "indomain_random"        => new RandomValue(pm)
-        case "indomain_split"         => new Split(pm)
+        case "indomain" => new Lexico(pm)
+        case "indomain_min" => new Lexico(pm)
+        case "indomain_max" => new RevLexico(pm)
+        case "indomain_median" => new MedValue(pm)
+        case "indomain_random" => new RandomValue(pm)
+        case "indomain_split" => new Split(pm)
         case "indomain_reverse_split" => new RevSplit(pm)
-        case "indomain_interval"      => new IntervalBranch(pm)
-        case "indomain_free"          => CrossHeuristic.defaultVal(pm)
+        case "indomain_interval" => new IntervalBranch(pm)
+        case "indomain_free" => CrossHeuristic.defaultVal(pm)
         case h =>
           logger.warn(s"Unsupported assignment heuristic $h")
           CrossHeuristic.defaultVal(pm)
@@ -143,7 +149,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
       outputVars = cspom.expressionsWithNames.collect {
         case (n, e) if cspom.getAnnotations(n).getSeqParam[FZAnnotation]("fzAnnotations").exists {
           case FZAnnotation("output_var", Seq()) => true
-          case _                                 => false
+          case _ => false
         } => n
       }.toSeq
 
@@ -154,7 +160,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
               val FZArrayExpr(array) = data
               val ranges = array.map {
                 case FZSetConst(range) => range
-                case _                 => throw new InvalidParameterException("An array of set constants is expected here: " + data)
+                case _ => throw new InvalidParameterException("An array of set constants is expected here: " + data)
               }
               n -> ranges
           }
@@ -167,14 +173,14 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
       }
   }
 
-   override def applyParametersPre(problem: Problem, opt: Map[Symbol, Any]): Unit = {
+  override def applyParametersPre(problem: Problem, opt: Map[Symbol, Any]): Unit = {
 
     val heuristics = parseGoal(cspom.goal.get, opt.contains('free), variables)
 
     val decisionVariables: Set[Variable] = heuristics
       .flatMap {
         case c: CrossHeuristic => c.variableHeuristic.decisionVariables
-        case _: Heuristic      => Seq()
+        case _: Heuristic => Seq()
       }
       .toSet
     //.flatten
@@ -194,7 +200,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
 
     val heuristic = completed match {
       case Seq(h) => h
-      case m      => new SeqHeuristic(m.toList)
+      case m => new SeqHeuristic(m.toList)
     }
 
     logger.info(heuristic.toString + ", should restart: " + heuristic.shouldRestart)
@@ -210,7 +216,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
   private def ann2expr(cspom: CSPOM, e: FZExpr[_]): CSPOMExpression[_] = e match {
     case FZAnnotation(vars, Seq()) => cspom.expression(vars).get
 
-    case FZArrayExpr(list)         => list.map(ann2expr(cspom, _))
+    case FZArrayExpr(list) => list.map(ann2expr(cspom, _))
 
     case FZArrayIdx(array, idx) => cspom.expression(array)
       .collect {
@@ -224,7 +230,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
   def description(args: List[String]) =
     args match {
       case List(fileName) => fileName
-      case _              => throw new IllegalArgumentException(args.toString)
+      case _ => throw new IllegalArgumentException(args.toString)
     }
 
   private def flattenArrayExpr(ranges: Seq[Seq[Int]], name: String, solution: Map[String, Int]): Seq[Int] = {
@@ -253,9 +259,19 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
   //    case n: String => getConstant(n).getOrElse(throw new MatchError(s"could not find $n in $solution or $cspom"))
   //  }
 
+  private def bool2int(n: String, sol: Map[String, Any]): String = {
+    val s = sol(n)
+    cspom.expression(n).map {
+      case IntExpression(e) if s == true => "1"
+      case IntExpression(e) if s == false => "0"
+      case _ => s.toString
+    }
+      .get
+  }
+
   override def outputCSPOM(sol: Map[String, Any]) = {
     val out: Iterable[String] = outputVars.map {
-      n => s"$n = ${sol(n)} ;"
+      n => s"$n = ${bool2int(n, sol)} ;"
     } ++ outputArrays.map {
       case (n, ranges) =>
         val seq =
@@ -264,10 +280,15 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
         val initRange = seq.asInstanceOf[CSPOMSeq[_]].definedIndices
 
         require(initRange.size == flattenedSize(ranges))
-        val solutions = initRange.map(i => sol(s"$n[$i]"))
+        val solutions = initRange.map(i => bool2int(s"$n[$i]", sol))
 
         s"$n = array${ranges.size}d(${
-          ranges.map(range => s"${range.head}..${range.last}, ").mkString
+          ranges.map { range =>
+            range.headOption
+              .flatMap(h => range.lastOption.map(l => s"$h..$l"))
+              .getOrElse("{}")
+          }
+            .mkString("", ", ", ", ")
         }${solutions.mkString("[", ", ", "]")});"
 
     }

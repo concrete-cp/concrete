@@ -9,7 +9,7 @@ import concrete.ParameterManager
 class ConsoleWriter(val opts: Map[Symbol, Any], val stats: StatisticsManager) extends ConcreteWriter {
 
   def parameters(params: ParameterManager) {
-    for ((k,v) <- params .parameters) {
+    for ((k, v) <- params.parameters) {
       Console.println(s"% $k = $v")
     }
   }
@@ -34,17 +34,17 @@ class ConsoleWriter(val opts: Map[Symbol, Any], val stats: StatisticsManager) ex
         Console.println(s"% $n = $v")
       }
   }
-  
-  
 
-  def disconnect(status: Try[Boolean]) {
+  def disconnect(status: Try[Result]) {
     writeStats()
-    status match {
-      case Success(true) => Console.println("==========")
-      case Success(false) =>
-        Console.println("=====UNSATISFIABLE=====")
-      case Failure(_) =>
-        Console.println("=====UNKNOWN=====")
+    Console.println {
+      status
+        .map {
+          case SatFinished => "=========="
+          case Unsat => "=====UNSATISFIABLE====="
+          case SatUnfinished => ""
+        }
+        .getOrElse("=====UNKNOWN=====")
     }
   }
 

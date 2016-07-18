@@ -43,8 +43,8 @@ trait ConcreteRunner extends LazyLogging {
         .map(_.split("="))
         .map {
           case Array(key, value) => (key, value)
-          case Array(tag)        => (tag, Unit)
-          case e                 => throw new InvalidParameterException(e.toString)
+          case Array(tag) => (tag, Unit)
+          case e => throw new InvalidParameterException(e.toString)
         }
         .toSeq
 
@@ -52,14 +52,14 @@ trait ConcreteRunner extends LazyLogging {
     }
     case "-sql" :: tail =>
       options(tail, o + ('SQL -> Unit), realArgs)
-    case "-control" :: tail             => options(tail, o + ('Control -> Unit), realArgs)
-    case "-time" :: t :: tail           => options(tail, o + ('Time -> t.toInt), realArgs)
-    case "-a" :: tail                   => options(tail, o + ('all -> Unit), realArgs)
-    case "-s" :: tail                   => options(tail, o + ('stats -> Unit), realArgs)
-    case "-it" :: it :: tail            => options(tail, o + ('iteration -> it.toInt), realArgs)
+    case "-control" :: tail => options(tail, o + ('Control -> Unit), realArgs)
+    case "-time" :: t :: tail => options(tail, o + ('Time -> t.toInt), realArgs)
+    case "-a" :: tail => options(tail, o + ('all -> Unit), realArgs)
+    case "-s" :: tail => options(tail, o + ('stats -> Unit), realArgs)
+    case "-it" :: it :: tail => options(tail, o + ('iteration -> it.toInt), realArgs)
     case u :: tail if u.startsWith("-") => options(tail, o + ('unknown -> u), realArgs)
     //    case "-cl" :: tail => options(tail, o + ('CL -> None))
-    case u :: tail                      => options(tail, o, u :: realArgs)
+    case u :: tail => options(tail, o, u :: realArgs)
   }
 
   def load(args: List[String], opt: Map[Symbol, Any]): Try[concrete.Problem]
@@ -79,7 +79,7 @@ trait ConcreteRunner extends LazyLogging {
   @Statistic
   var benchTime: Quantity[Double] = _
 
-  def run(args: Array[String]): Try[Boolean] = {
+  def run(args: Array[String]): Try[Result] = {
 
     //var status: RunnerStatus = Unknown
 
@@ -161,21 +161,24 @@ trait ConcreteRunner extends LazyLogging {
         }
           .map { solv =>
             solver = Some(solv)
-            val result = solv.nonEmpty
-            if (opt.contains('all)) {
+            if (solv.isEmpty) {
+              Unsat
+            } else if (opt.contains('all)) {
               for (s <- solv) {
                 solution(s, writer, opt)
               }
+              SatFinished
             } else if (solv.optimises.nonEmpty) {
               for (s <- solv.toIterable.lastOption) {
                 solution(s, writer, opt)
               }
+              SatFinished
             } else {
               for (s <- solv.toIterable.headOption) {
                 solution(s, writer, opt)
               }
+              SatUnfinished
             }
-            result
           }
       } catch {
         // Avoids hanging in case of fatal error
@@ -204,20 +207,18 @@ trait ConcreteRunner extends LazyLogging {
 
       }
 
-    val status = r.flatten
+    val status: Try[Result] = r.flatten
       .recoverWith {
         case e: UNSATException =>
           writer.error(e)
-          Success(false)
+          Success(Unsat)
         case e: Throwable =>
           writer.error(e)
           Failure(e)
       }
 
-    status.foreach { _ =>
-      for (s <- pm.unused) {
-        logger.warn(s"Unused parameter : $s")
-      }
+    for (_ <- status; s <- pm.unused) {
+      logger.warn(s"Unused parameter : $s")
     }
     writer.disconnect(status)
     status

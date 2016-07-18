@@ -15,5 +15,10 @@ trait ConcreteWriter {
   def solution(solution: String): Unit
   def error(e: Throwable): Unit
 
-  def disconnect(status: Try[Boolean]): Unit
+  def disconnect(status: Try[Result]): Unit
 }
+
+sealed trait Result
+case object SatFinished extends Result
+case object SatUnfinished extends Result
+case object Unsat extends Result

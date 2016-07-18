@@ -19,7 +19,6 @@
 
 package concrete.runner.sql
 
-
 import java.net.InetAddress
 
 import java.sql.Timestamp
@@ -43,6 +42,10 @@ import scala.util.Failure
 import scala.util.Success
 import java.io.StringWriter
 import java.io.PrintWriter
+import concrete.runner.SatFinished
+import concrete.runner.SatUnfinished
+import concrete.runner.Result
+import concrete.runner.Unsat
 
 object SQLWriter {
 
@@ -50,7 +53,7 @@ object SQLWriter {
 
   val systemConfig = Option(System.getProperty("concrete.config")) match {
     case Some(cfile) => ConfigFactory.parseFile(new File(cfile)).withFallback(baseConfig)
-    case None        => baseConfig
+    case None => baseConfig
   }
 
   def connection(createTables: Boolean): Database = {
@@ -111,7 +114,7 @@ object SQLWriter {
 
     def * = (configId, config)
 
-    		 def idxMd5 = index("idxConfig", config, unique = true)
+    def idxMd5 = index("idxConfig", config, unique = true)
   }
 
   val configs = TableQuery[Config]
@@ -242,7 +245,7 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
     problemId = db.run(problems.filter(_.name === name).map(_.problemId).result.headOption)
       .flatMap {
         case Some(c) => Future.successful(c)
-        case None    => db.run(problems.map(p => p.name) returning problems.map(_.problemId) += name)
+        case None => db.run(problems.map(p => p.name) returning problems.map(_.problemId) += name)
       }
 
     problemId.onFailure {
@@ -259,7 +262,7 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
       .filter { case (k, v) => k != "iteration" }
       .map {
         case (k, Unit) => k
-        case (k, v)    => s"$k = $v"
+        case (k, v) => s"$k = $v"
       }.mkString(", ")
 
     val action = configs.filter(_.config === cfg).map(_.configId).result.headOption
@@ -328,21 +331,26 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
     }
   }
 
-  def disconnect(status: Try[Boolean]) {
+  def disconnect(status: Try[Result]) {
     try {
       for (e <- executionId) {
 
         val dbexec = for (dbe <- executions if dbe.executionId === e) yield dbe
 
-        val result = status match {
-          case Success(true)  => "SAT"
-          case Success(false) => "UNSAT"
-          case Failure(e) =>
-            def causes(e: Throwable): Seq[Throwable] = {
-              Option(e).map(e => e +: causes(e.getCause)).getOrElse(Seq())
-            }
-            causes(e).mkString("\nCaused by: ")
-        }
+        val result = status
+          .map {
+            case SatFinished => "SAT*"
+            case SatUnfinished => "SAT1"
+            case Unsat => "UNSAT"
+          }
+          .recover {
+            case e =>
+              def causes(e: Throwable): Seq[Throwable] = {
+                Option(e).map(e => e +: causes(e.getCause)).getOrElse(Seq())
+              }
+              causes(e).mkString("\nCaused by: ")
+          }
+          .get
 
         val r0 = db.run {
           dbexec.map(e => (e.end, e.status)).update(
