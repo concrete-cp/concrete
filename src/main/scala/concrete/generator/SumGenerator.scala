@@ -70,8 +70,10 @@ case class ACBC(ac: Option[Constraint], bc: Option[Constraint]) {
 
 }
 
-final class SumGenerator(pm: ParameterManager) extends Generator with LazyLogging {
+final class SumGenerator(pg: ProblemGenerator) extends Generator with LazyLogging {
 
+  def pm = pg.pm
+  
   def eq(neg: Boolean, x: Variable, b: Int, y: Variable): ACBC =
     Eq(neg, x, b, y)
 
@@ -138,16 +140,16 @@ final class SumGenerator(pm: ParameterManager) extends Generator with LazyLoggin
 
   override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
     val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
-    val solverVariables = vars.map(cspom2concrete1D).map(_.asVariable)
+    val solverVariables = vars.map(cspom2concrete1D).map(_.asVariable(pg))
 
     withBinSpec(solverVariables, varParams, constant, mode).toSeq
   }
 
   override def genFunctional(constraint: CSPOMConstraint[_], result: C2Conc)(implicit variables: VarMap) = {
-    val r = result.asVariable
+    val r = result.asVariable(pg)
 
     val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
-    val solverVariables = vars.map(cspom2concrete1D).map(_.asVariable)
+    val solverVariables = vars.map(cspom2concrete1D).map(_.asVariable(pg))
     val positive = withBinSpec(solverVariables, varParams, constant, mode)
     val (negParams, negConstant, negMode) = reverse(varParams, constant, mode)
     val negative = withBinSpec(solverVariables, negParams, negConstant, negMode)

@@ -40,6 +40,8 @@ import cspom.StatisticsManager
 import cspom.compiler.CSPOMCompiler
 import concrete.constraint.linear.Simplex
 import concrete.constraint.extension.BinaryExt
+import concrete.constraint.Constraint
+import concrete.constraint.semantic.DiffN
 
 final class SolverFactory(val params: ParameterManager) {
 
@@ -121,6 +123,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   statistics.register("linear", LinearLe)
   statistics.register("simplex", Simplex)
   statistics.register("binary", BinaryExt)
+  statistics.register("diffn", DiffN)
 
   private var _next: SolverResult = UNKNOWNResult(None)
 
@@ -139,6 +142,18 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
 
   var running = false
 
+  var optimConstraint: Option[Constraint] = None
+
+  def obtainOptimConstraint[A <: Constraint](f: => A): A = optimConstraint
+    .map {
+      case c: A @unchecked => c
+    }.getOrElse {
+      val oc = f
+      optimConstraint = Some(oc)
+      problem.addConstraint(oc)
+      f
+    }
+
   def next(): Map[Variable, Any] = _next match {
     case UNSAT => Iterator.empty.next
     case UNKNOWNResult(None) => if (hasNext) next() else Iterator.empty.next
@@ -147,19 +162,21 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
       BestValue.newSolution(sol)
       for (v <- _maximize) {
         reset()
-        val opt = sol(v) match {
-          case i: Int =>
-            problem.addConstraint(new GtC(v, i))
-
+        sol(v) match {
+          case i: Int => obtainOptimConstraint(new GtC(v, i)).constant = i
           case o => throw new AssertionError(s"$v has value $o which is not an int")
         }
 
       }
       for (v <- _minimize) {
         reset()
-        problem.addConstraint(new LtC(v, sol(v).asInstanceOf[Int]))
-        require(problem.constraints.forall(_.positionInVariable.forall(_ >= 0)))
+        sol(v) match {
+          case i: Int => obtainOptimConstraint(new LtC(v, i)).constant = i
+          case o => throw new AssertionError(s"$v has value $o which is not an int")
+        }
+
       }
+      assert(problem.constraints.forall(_.positionInVariable.forall(_ >= 0)))
       sol
     case RESTART => throw new IllegalStateException()
   }

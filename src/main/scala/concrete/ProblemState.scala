@@ -13,6 +13,8 @@ sealed trait Outcome {
   def andThen(f: ProblemState => Outcome): Outcome
   def orElse(f: => Outcome): Outcome
 
+  def map[A](f: ProblemState => A): Option[A]
+
   def filterDom(v: Variable)(f: Int => Boolean): Outcome
 
   def shaveDom(v: Variable, lb: Int, ub: Int): Outcome
@@ -84,11 +86,24 @@ sealed trait Outcome {
 
   def isState = this ne Contradiction
 
+  def fold[A](s: Traversable[A])(f: (ProblemState, A) => Outcome): Outcome = {
+    var state = this
+    for (e <- s) {
+      if (state.isState) {
+        state = f(state.toState, e)
+      } else {
+        return state
+      }
+    }
+    state
+  }
+
 }
 
 case object Contradiction extends Outcome {
   def andThen(f: ProblemState => Outcome) = Contradiction
   def orElse(f: => Outcome) = f
+  def map[A](f: ProblemState => A) = None
   def filterDom(v: Variable)(f: Int => Boolean): Outcome = Contradiction
   def shaveDom(v: Variable, lb: Int, ub: Int): Outcome = Contradiction
   def entailIfFree(c: Constraint): Outcome = Contradiction
@@ -151,6 +166,8 @@ case class ProblemState(
   def andThen(f: ProblemState => Outcome) = f(this)
 
   def orElse(f: => Outcome) = this
+
+  def map[A](f: ProblemState => A) = Some(f(this))
 
   def apply[S <: AnyRef](c: StatefulConstraint[S]): S =
     constraintStates(c.id).asInstanceOf[S]
@@ -262,7 +279,7 @@ case class ProblemState(
   }
 
   def updateDomNonEmptyNoCheck(variable: Variable, newDomain: Domain): ProblemState = {
-    assert(newDomain.nonEmpty)
+    require(newDomain.nonEmpty)
     assert(dom(variable) ne newDomain)
     val id = variable.id
     assert(id >= 0 || (dom(variable) eq newDomain), s"$variable updated to $newDomain is not a problem variable")

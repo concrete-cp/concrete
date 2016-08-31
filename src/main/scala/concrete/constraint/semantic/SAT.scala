@@ -27,9 +27,11 @@ import concrete.Domain
 import BooleanDomain._
 
 case class Clause(positive: Seq[Variable], negative: Seq[Variable]) extends Arc {
-  require(vars.forall(v => v.initDomain.isInstanceOf[BooleanDomain]))
+  require(vars.forall(v => v.initDomain.isInstanceOf[BooleanDomain]), s"some of ${vars.map(v => s"$v ${v.initDomain}")} are not boolean")
   def size = positive.size + negative.size
   def vars = positive ++ negative
+
+  override def toString = s"Clause(${positive.mkString(", ")}${if (positive.nonEmpty && negative.nonEmpty) ", " else ""}${negative.map("-" + _).mkString(", ")})"
 }
 
 class PseudoBoolean(
@@ -38,18 +40,6 @@ class PseudoBoolean(
     extends LinearConstraint(vars, coefs, mode, constant)
 
 object SAT extends LazyLogging {
-
-  //  def apply(clauses: Seq[Clause], pb: Seq[PseudoBoolean], pm: ParameterManager): Seq[Constraint] = {
-  //    val useSAT: Boolean = pm.getOrElse("sat", false)
-  //
-  //    if (useSAT) {
-  //      genSAT(clauses, pb)
-  //    } else {
-  //      (for (c <- clauses) yield new ClauseConstraint(c)) ++
-  //        (for (p <- pb) yield Linear(p.constant, p.coefs.toArray, p.vars.toArray, p.mode, pm))
-  //
-  //    }
-  //  }
 
   def apply(clauses: Seq[Clause] = Seq.empty, pb: Seq[PseudoBoolean] = Seq.empty): Seq[Constraint] = {
     logger.info("Computing SAT components")
@@ -64,7 +54,7 @@ object SAT extends LazyLogging {
 
       (c, p) match {
         case (Seq(singleClause), Seq()) => new ClauseConstraint(singleClause)
-        case (clauses, pb)              => new SAT(clauses.flatMap(_.vars).distinct.toArray, clauses, pb)
+        case (clauses, pb) => new SAT(clauses.flatMap(_.vars).distinct.toArray, clauses, pb)
       }
     }
   }
@@ -127,9 +117,9 @@ class SAT(vars: Array[Variable], clauses: Seq[Clause], pseudo: Seq[PseudoBoolean
 
       for ((v, i) <- vars.zipWithIndex) {
         ps.dom(v) match {
-          case TRUE  => solver.addClause(new VecInt(Array(i + 1)))
+          case TRUE => solver.addClause(new VecInt(Array(i + 1)))
           case FALSE => solver.addClause(new VecInt(Array(-i - 1)))
-          case _     =>
+          case _ =>
         }
       }
 
@@ -159,9 +149,9 @@ class SAT(vars: Array[Variable], clauses: Seq[Clause], pseudo: Seq[PseudoBoolean
         }
       } else {
         ps.dom(scope(i)) match {
-          case TRUE  => state.push(i + 1)
+          case TRUE => state.push(i + 1)
           case FALSE => state.push(-i - 1)
-          case _     => assert(ps.dom(scope(i)).size > 1)
+          case _ => assert(ps.dom(scope(i)).size > 1)
         }
       }
     }

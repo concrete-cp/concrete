@@ -23,16 +23,6 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
 
   def prev(i: Int) = if (i <= span.lb) throw new NoSuchElementException else i - 1
 
-  def prevOrEq(i: Int): Int =
-    if (i < head) { -1 }
-    else if (i > last) { last }
-    else { i }
-
-  def nextOrEq(i: Int): Int =
-    if (i > last) { -1 }
-    else if (i < head) { head }
-    else { i }
-
   def copy = this
 
   def isAssigned = false

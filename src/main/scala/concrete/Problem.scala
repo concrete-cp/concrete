@@ -40,17 +40,15 @@ final class Problem(val variables: Array[Variable]) {
   val variableMap: Map[String, Variable] = variables.map(v => v.name -> v).toMap
   var constraints: Array[Constraint] = Array()
 
-  private var _maxArity = 0
   private var _nextCId = 0
 
-  def addConstraint(constraint: Constraint): Unit = addConstraints(Seq(constraint))
+  def addConstraint(constraint: Constraint): Problem = addConstraints(Seq(constraint))
 
-  def addConstraints(cs: Seq[Constraint]): Unit = {
+  def addConstraints(cs: Seq[Constraint]): Problem = {
     constraints ++= cs
 
     for (c <- cs) {
       _nextCId = c.identify(_nextCId)
-      _maxArity = math.max(_maxArity, c.arity)
       for (p <- 0 until c.arity) {
         val v = c.scope(p)
         val pc = v.addConstraint(c)
@@ -58,13 +56,8 @@ final class Problem(val variables: Array[Variable]) {
       }
     }
 
-//    for (c <- constraints) {
-//      require(c.id >= 0)
-//      for (v <- 0 until c.arity) {
-//        val cPos = c.positionInVariable(v)
-//        require(c.scope(v).constraints(cPos) eq c)
-//      }
-//    }
+    this
+
   }
 
   def initState = ProblemState(this)
@@ -88,8 +81,6 @@ final class Problem(val variables: Array[Variable]) {
   }
 
   //val maxDomainSize = variables.iterator.map(_.dom.size).max
-
-  def maxArity = _maxArity
 
   def maxCId = _nextCId - 1
   // def nd = variables.iterator.map(_.dom.size).sum

@@ -1,12 +1,9 @@
 package concrete.generator.cspompatterns
 
-import concrete.CSPOMDriver
 import cspom.CSPOM
 import cspom.CSPOMConstraint
-import cspom.compiler.ConstraintCompiler
-import cspom.variable.BoolExpression
+import cspom.compiler.ConstraintCompilerNoData
 import cspom.variable.CSPOMSeq
-import cspom.variable.SimpleExpression
 
 /**
  * Conjunction is converted to CNF :
@@ -17,27 +14,17 @@ import cspom.variable.SimpleExpression
  *
  * (a v -b v -c v -d...) ^ (-a v b) ^ (-a v c) ^ (-a v d) ^ ...
  */
-object ReifiedConj extends ConstraintCompiler {
+object ReifiedConj extends ConstraintCompilerNoData {
 
-  type A = (SimpleExpression[Boolean], Seq[SimpleExpression[Boolean]])
+  override def matchBool(c: CSPOMConstraint[_], p: CSPOM) = c.function == 'and
 
-  override def mtch(c: CSPOMConstraint[_], p: CSPOM) = PartialFunction.condOpt(c) {
-    case CSPOMConstraint(BoolExpression(res), 'and, a, _) =>
-      CSPOMSeq.collectAll(a.toIndexedSeq) {
-        case BoolExpression(e) => e
-      }
-        .map((res, _))
-  }
-    .flatten
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM) = {
 
-  def compile(fc: CSPOMConstraint[_], problem: CSPOM, data: A) = {
-    val (res, args) = data
-    val c1 = CSPOMDriver.clause(res)(args: _*)
-
-    val c2 = args.map(v => CSPOMDriver.clause(v)(res))
-
+    val res = fc.result
+    val args = fc.arguments
+    val c1 = CSPOMConstraint('clause)(CSPOMSeq(res), CSPOMSeq(args: _*))
+    val c2 = args.map(v => CSPOMConstraint('clause)(CSPOMSeq(v), CSPOMSeq(res)))
     replaceCtr(fc, c1 +: c2, problem)
-
   }
 
   def selfPropagation = false

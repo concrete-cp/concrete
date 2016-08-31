@@ -3,6 +3,7 @@ package concrete.util
 object Interval {
   def union(i0: Option[Interval], i1: Option[Interval]): Option[Interval] = {
     i0.map { i =>
+      assert(i.nonEmpty)
       i1.map { i1 => i span i1 }
         .getOrElse(i)
     }
@@ -30,6 +31,9 @@ case class Interval(val lb: Int, val ub: Int) {
   //assume(ub >= lb)
   val size: Int = math.max(0, ub - lb + 1)
   def contains(v: Int): Boolean = lb <= v && v <= ub
+  
+  def isEmpty = ub < lb
+  def nonEmpty = ub >= lb
 
   def allValues: Range = lb to ub
 

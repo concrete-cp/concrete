@@ -23,11 +23,12 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
   def is: Array[Int]
 
   def updateF(ps: ProblemState, mod: BitVector) = {
+    /*
+     *  TODO: reinvestigate the detection of modified bounds (was disabled for reification but may still be interesting)
+     */
     val (doms, f, vars, maxI) = ps(this)
 
     val newDoms = doms.clone
-
-    var boundchange = false
 
     var newF = f
     var newVars = vars
@@ -40,20 +41,16 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
       val oldspan = doms(p).span
       val newspan = nd.span
 
-      if (newspan != oldspan) {
-        boundchange = true
+      val factor = factors(p)
 
-        val factor = factors(p)
+      newF = newF.shrink(oldspan * factor) + (newspan * factor)
 
-        newF = newF.shrink(oldspan * factor) + (newspan * factor)
-
-        if (nd.size == 1) {
-          newVars -= p
-        }
+      if (nd.size == 1) {
+        newVars -= p
       }
     }
 
-    (newDoms, newF, newVars, maxI, boundchange)
+    (newDoms, newF, newVars, maxI)
 
   }
 
@@ -63,9 +60,9 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
     val maxI = size(doms.head, factors.head)
     val vars = BitVector.filled(arity).filter(p => !doms(p).isAssigned)
 
-    proceed(ps, doms, f, vars, maxI)
+    //proceed(ps, doms, f, vars, maxI)
     // println(s"$mode, arity $arity, $f")
-    //ps.updateState(this, (doms, f, vars, maxI§K))
+    ps.updateState(this, (doms, f, vars, maxI))
   }
 
   def proceed(ps: ProblemState, doms: Array[Domain], f: Interval, vars: BitVector, max: Int): Outcome

@@ -10,8 +10,8 @@ object ConcretePatterns {
   def apply(params: ParameterManager): Seq[ConstraintCompiler] = {
     val concreteDef =
       Seq(
-        OccurrenceDomains, BoolEq,
-        MulDomains, AbsDomains,
+        Occurrence, AtLeastDomains, AtMostDomains, BoolEq,
+        MulDomains, AbsDomains, Reversed, ClauseDomains,
         MulToSum,
         SumDomains,
         NegToCNF, Xor, ReifiedConj, ReifiedClause,
@@ -21,12 +21,12 @@ object ConcretePatterns {
         // Clause does not support constants
         SimplClause, PBConstants,
         Bool2IntDomains, DivDomains, ModDomains,
-        Knapsack)
+        Knapsack, Lex)
 
     val concreteImp = Seq(
       //AbsDiff, AbsDiffDomains,
       AllDiff, SubsumedDiff, Square, SumConstants, SumDuplicates, PseudoBool,
-      MergeNotDisj, UnaryClause, SumFactors, SumEq, SumFalse, MergeRelations) //, LexLeq2SAT)
+      MergeNotDisj, UnaryClause, SumFactors, SumEq) //, MergeRelations) //, LexLeq2SAT)
 
     val improveModel = params.getOrElse("improveModel", true)
 

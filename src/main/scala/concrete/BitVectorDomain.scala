@@ -43,10 +43,6 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
     if (n < 0) throw new NoSuchElementException else offset + n
   }
 
-  def prevOrEq(i: Int): Int = offset + bitVector.prevSetBit(i - offset + 1)
-
-  def nextOrEq(i: Int): Int = offset + bitVector.nextSetBit(i - offset)
-
   /**
    * @param index
    *            index to test
@@ -61,7 +57,7 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
   def isAssigned = false
 
   override def filter(f: Int => Boolean) = {
-    val newbitVector = bitVector.filter(i => f(i + offset))
+    val newbitVector = if (offset == 0) bitVector.filter(f) else bitVector.filter(i => f(i + offset))
     if (newbitVector == bitVector) {
       this
     } else {

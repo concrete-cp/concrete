@@ -5,10 +5,8 @@ import cspom.CSPOM.SeqOperations
 import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.extension.MDD
-import cspom.extension.MDDNode
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
-import cspom.variable.IntExpression
 import cspom.variable.SimpleExpression
 
 final object Regular extends ConstraintCompilerNoData {

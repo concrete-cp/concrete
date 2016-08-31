@@ -1,26 +1,36 @@
 package concrete.generator.cspompatterns
 
-import concrete.CSPOMDriver._
+import concrete.CSPOMDriver.linear
 import cspom.CSPOM
+import cspom.CSPOM.constant
+import cspom.CSPOM.constantSeq
+import cspom.CSPOM.seq2CSPOMSeq
 import cspom.CSPOMConstraint
+import cspom.compiler.ConstraintCompiler
+import cspom.compiler.ConstraintCompilerNoData
+import cspom.compiler.Delta
 import cspom.compiler.GlobalCompiler
-import cspom.compiler.Types
+import cspom.variable.BoolVariable
 import cspom.variable.IntExpression
-import CSPOM._
-import cspom.variable.BoolExpression
 import cspom.variable.SimpleExpression
+import cspom.variable.CSPOMSeq
+import cspom.variable.CSPOMExpression
+import javafx.beans.binding.BooleanExpression
+import cspom.variable.BoolExpression
 
 object XCSPPatterns {
   def apply() = Seq(
-    XCSPTypes,
+    Ordered, Lex,
     new GlobalCompiler(mtch) { def selfPropagation = true })
 
-  val mtch: PartialFunction[CSPOMConstraint[_], CSPOMConstraint[_]] = {
-    case CSPOMConstraint(IntExpression(a), 'sub, Seq(IntExpression(b), IntExpression(c)), p) =>
-      linear(Seq((-1, a), (1, b), (-1, c)), "eq", 0) withParams p
 
-    case CSPOMConstraint(IntExpression(a), 'add, Seq(IntExpression(b), IntExpression(c)), p) =>
-      linear(Seq((-1, a), (1, b), (1, c)), "eq", 0) withParams p
+  val mtch: PartialFunction[CSPOMConstraint[_], CSPOMConstraint[_]] = {
+    case CSPOMConstraint(a, 'sub, Seq(b, c), p) =>
+      CSPOMConstraint('sum)(Seq(-1, 1, -1), Seq(a, b, c), 0) withParams p + ("mode" -> "eq")
+    //      linear(Seq((-1, coerce(a)), (1, coerce(b)), (-1, coerce(c))), "eq", 0) withParams p
+
+    case CSPOMConstraint(a, 'add, Seq(b, c), p) =>
+      CSPOMConstraint('sum)(Seq(-1, 1, 1), Seq(a, b, c), 0) withParams p + ("mode" -> "eq")
 
     case CSPOMConstraint(r, 'ne, Seq(a, b), p) =>
       CSPOMConstraint(r)('sum)(Seq(1, -1), Seq(a, b), 0) withParams p + ("mode" -> "ne")
@@ -42,26 +52,23 @@ object XCSPPatterns {
 
     case CSPOMConstraint(r, 'allDifferent, a, p) =>
       CSPOMConstraint(r)('alldifferent)(a: _*) withParams p
+
   }
-}
 
-object XCSPTypes extends Types {
-
-  def types = {
-    case CSPOMConstraint(a, 'sub, Seq(b, c), _) => Map(
-      a -> IntExpression.coerce(a),
-      b -> IntExpression.coerce(b),
-      c -> IntExpression.coerce(c))
-
-    case CSPOMConstraint(a, 'add, Seq(b, c), _) => Map(
-      a -> IntExpression.coerce(a),
-      b -> IntExpression.coerce(b),
-      c -> IntExpression.coerce(c))
-
-    case CSPOMConstraint(r, 'and, a, _) => Map(
-      r -> BoolExpression.coerce(r)) ++
-      a.map(l => l -> BoolExpression.coerce(l))
+  object Ordered extends ConstraintCompilerNoData {
+    def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean = constraint.function == 'ordered
+    def compile(constraint: CSPOMConstraint[_], problem: CSPOM): Delta = {
+      val mode = Symbol(constraint.getParam[String]("mode").get.toLowerCase)
+      val slide = constraint.arguments.sliding(2)
+        .map { s =>
+          CSPOMConstraint(new BoolVariable())(mode)(s: _*)
+        }
+        .toSeq
+      val reif = CSPOMConstraint(constraint.result)('and)(slide.map(_.result): _*)
+      replaceCtr(constraint, reif +: slide, problem)
+    }
 
   }
 
 }
+

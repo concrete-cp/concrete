@@ -43,7 +43,7 @@ trait AllDiffChecker extends Constraint {
   }
 }
 
-final class AllDifferent2C(scope: Variable*) extends Constraint(scope.toArray) with AllDiffChecker with AdviseCounts {
+final class AllDifferent2C(scope: Array[Variable]) extends Constraint(scope) with AllDiffChecker with AdviseCounts {
 
   def init(ps: ProblemState) = ps
 

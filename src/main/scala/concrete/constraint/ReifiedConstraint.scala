@@ -13,15 +13,29 @@ final class ReifiedConstraint(
   val positiveConstraint: Constraint,
   val negativeConstraint: Constraint)
     extends Constraint(controlVariable +: (positiveConstraint.scope ++ negativeConstraint.scope).distinct)
-    with LazyLogging with StatefulConstraint[java.lang.Boolean] with Advisable {
+    with LazyLogging with Advisable {
 
   require(controlVariable.initDomain.isInstanceOf[BooleanDomain], s"${controlVariable} init domain ${controlVariable.initDomain} is not boolean")
 
   def init(ps: ProblemState) = {
+
     ps.dom(controlVariable) match {
-      case BooleanDomain.UNKNOWNBoolean => updateState(ps, false)
-      case BooleanDomain.TRUE => positiveConstraint.init(ps).andThen(updateState(_, true))
-      case BooleanDomain.FALSE => negativeConstraint.init(ps).andThen(updateState(_, true))
+      case BooleanDomain.UNKNOWNBoolean =>
+        val initialized = positiveConstraint
+          .init(ps)
+          .orElse(ps.updateDomNonEmpty(controlVariable, BooleanDomain.FALSE))
+          .andThen { initPos =>
+            negativeConstraint
+              .init(initPos)
+              .orElse(initPos.updateDomNonEmpty(controlVariable, BooleanDomain.TRUE))
+          }
+
+        require(initialized.domainsOption == ps.domainsOption, "ReifiedConstraint cannot update domains during init")
+
+        initialized
+
+      case BooleanDomain.TRUE => positiveConstraint.init(ps)
+      case BooleanDomain.FALSE => negativeConstraint.init(ps)
       case BooleanDomain.EMPTY => Contradiction //throw new UNSATException(msg = s"${controlVariable.toString(ps)} was empty during ${toString(ps)} init")
     }
 
@@ -71,35 +85,21 @@ final class ReifiedConstraint(
     a
   }
 
-  private def init(c: Constraint, ps: ProblemState): Outcome = {
-    if (ps(this)) {
-      ps
-    } else {
-      c.init(ps).andThen(updateState(_, true))
-    }
-  }
+  //  private def init(c: Constraint, ps: ProblemState): Outcome = {
+  //    if (ps(this)) {
+  //      ps
+  //    } else {
+  //      c.init(ps).andThen(updateState(_, true))
+  //    }
+  //  }
 
   def revise(ps: ProblemState): Outcome = {
 
     ps.dom(controlVariable) match {
       case BooleanDomain.UNKNOWNBoolean =>
-        positiveConstraint.init(ps)
-          .andThen { psInitPos =>
-            if (positiveConstraint.isConsistent(psInitPos).isState) {
-              ps
-            } else {
-              Contradiction
-            }
-          }
+        positiveConstraint.isConsistent(ps)
           .andThen { ps =>
-            negativeConstraint.init(ps)
-              .andThen { psInitNeg =>
-                if (negativeConstraint.isConsistent(psInitNeg).isState) {
-                  ps
-                } else {
-                  Contradiction
-                }
-              }
+            negativeConstraint.isConsistent(ps)
               .orElse {
                 ps.updateDomNonEmpty(controlVariable, BooleanDomain.TRUE).entail(this)
               }
@@ -109,12 +109,10 @@ final class ReifiedConstraint(
           }
 
       case BooleanDomain.TRUE =>
-        init(positiveConstraint, ps)
-          .andThen(positiveConstraint.revise)
+        positiveConstraint.revise(ps)
           .entailIf(this, mod => mod.isEntailed(positiveConstraint))
       case BooleanDomain.FALSE =>
-        init(negativeConstraint, ps)
-          .andThen(negativeConstraint.revise)
+        negativeConstraint.revise(ps)
           .entailIf(this, mod => mod.isEntailed(negativeConstraint))
 
       case BooleanDomain.EMPTY => throw new IllegalStateException
@@ -133,13 +131,7 @@ final class ReifiedConstraint(
   }
 
   override def toString(ps: ProblemState) =
-    s"${controlVariable.toString(ps)} <=> ${positiveConstraint.toString(ps)}${
-      Option(data(ps))
-        .map {
-          if (_) " (initialized)" else ""
-        }
-        .getOrElse(" (no data)")
-    }" // / != (${negativeConstraint.toString(ps)})";
+    s"${controlVariable.toString(ps)} <=> ${positiveConstraint.toString(ps)}" // / != (${negativeConstraint.toString(ps)})";
 
   override def toString = s"${controlVariable} <=> ${positiveConstraint}"
 

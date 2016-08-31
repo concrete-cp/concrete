@@ -12,6 +12,8 @@ import concrete.Outcome
 import concrete.generator.ACBC
 import concrete.constraint.extension.BinaryExt
 import cspom.util.BitVector
+import concrete.BooleanDomain.UNKNOWNBoolean
+import concrete.BooleanDomain
 
 object Eq {
   def apply(neg: Boolean, x: Variable, b: Int, y: Variable): ACBC =
@@ -23,6 +25,41 @@ object Eq {
       ACBC
         .withAC(new EqACFast(x, b, y))
     }
+}
+
+final class EqReif(val r: Variable, val x: Variable, val y: Variable) extends Constraint(Array(r, x, y)) {
+  def advise(problemState: ProblemState, pos: Int): Int = 3
+  def check(tuple: Array[Int]): Boolean = tuple(0) == (if (tuple(1) == tuple(2)) 1 else 0)
+  def init(ps: ProblemState): Outcome = ps
+  def revise(ps: ProblemState): Outcome = {
+    val dx = ps.dom(x)
+    val dy = ps.dom(y)
+    ps.dom(r) match {
+      case BooleanDomain.UNKNOWNBoolean =>
+        if (dx disjoint dy) {
+          ps.updateDomNonEmpty(r, BooleanDomain.FALSE).entail(this)
+        } else if (dx.isAssigned && dy.isAssigned) {
+          // Necessarily grounded to the same value since not disjoint
+          ps.updateDomNonEmpty(r, BooleanDomain.TRUE).entail(this)
+        } else {
+          ps
+        }
+
+      case BooleanDomain.TRUE =>
+        val d = dx & dy
+        ps.updateDom(x, d).updateDom(y, d)
+
+      case BooleanDomain.FALSE =>
+        (if (dx.isAssigned) ps.removeIfPresent(y, dx.head) else ps)
+          .andThen { ps =>
+            if (dy.isAssigned) ps.removeIfPresent(x, dy.head) else ps
+          }
+          .entailIf(this, ps =>
+            ps.dom(x) disjoint ps.dom(y))
+
+    }
+  }
+  def simpleEvaluation: Int = 1
 }
 
 /**
@@ -54,16 +91,25 @@ final class EqACFast(val x: Variable, val b: Int, val y: Variable)
         val newY = newX.shift(b)
         /*
          * ProblemState does not detect NOP after two
-         * complementary offset operations
+         * complementary offset operations, so do it by hand
          */
         if (newY.size < oldY.size) {
-          ps.updateDom(y, newY)
+          ps.updateDomNonEmptyNoCheck(y, newY)
         } else {
           ps
         }
       }
 
   }
+
+  override def isConsistent(ps: ProblemState): Outcome = {
+    if (ps.dom(x) disjoint ps.dom(y).shift(-b)) {
+      Contradiction
+    } else {
+      ps
+    }
+  }
+
   def simpleEvaluation: Int = 1
   override def toString(ps: ProblemState) = s"${x.toString(ps)}${
     if (b > 0) " + " + b else if (b < 0) " - " + (-b) else ""

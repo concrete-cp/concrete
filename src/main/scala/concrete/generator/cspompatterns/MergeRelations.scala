@@ -27,7 +27,11 @@ object MergeRelations extends ConstraintCompiler {
   }
 
   def compile(c: CSPOMConstraint[_], problem: CSPOM, data: A): Delta = {
+    // TODO : explodes. Disabled for now
     val (init, cons) = data
+    
+    println(s"merging ${cons.mkString("\n")}")
+    
     val relations = cons.map { c => c.getParam[MDD[Any]]("relation").get }
 
     val relation = if (init) relations.reduceLeft(_ union _) else relations.reduceLeft(_ intersect _)

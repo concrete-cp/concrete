@@ -37,22 +37,22 @@ class DivTest extends FlatSpec with Matchers with Inspectors {
   }
 
   // TODO
-  //  "DivBC" should "comply with MiniZinc specifications" in {
-  //
-  //    forAll(Seq((7, 4, 1), (-7, 4, -1), (7, -4, -1), (-7, -4, 1))) {
-  //      case (xv, yv, zv) =>
-  //        val x = new Variable("x", Singleton(xv))
-  //        val y = new Variable("y", Singleton(yv))
-  //        val z = new Variable("z", IntDomain.ofInterval(-1000, 1000))
-  //
-  //        val problem = Problem(x, y, z)
-  //        val constraint = new DivBC(x, y, z)
-  //        problem.addConstraint(constraint)
-  //        val state = problem.initState.toState
-  //        constraint.adviseAll(state)
-  //        val mod = constraint.revise(state)
-  //
-  //        mod.dom(z) should contain theSameElementsAs Seq(zv)
-  //    }
-  //  }
+    "DivBC" should "comply with MiniZinc specifications" in {
+  
+      forAll(Seq((7, 4, 1), (-7, 4, -1), (7, -4, -1), (-7, -4, 1))) {
+        case (xv, yv, zv) =>
+          val x = new Variable("x", Singleton(xv))
+          val y = new Variable("y", Singleton(yv))
+          val z = new Variable("z", IntDomain.ofInterval(-1000, 1000))
+  
+          val problem = Problem(x, y, z)
+          val constraint = new DivBC(x, y, z)
+          problem.addConstraint(constraint)
+          val state = problem.initState.toState
+          constraint.adviseAll(state)
+          val mod = constraint.revise(state)
+  
+          mod.dom(z).view should contain theSameElementsAs Seq(zv)
+      }
+    }
 }

@@ -12,12 +12,12 @@ final class CircuitGenerator(adg: AllDifferentGenerator) extends Generator {
     val Seq(s: CSPOMSeq[_]) = constraint.arguments
 
     val vars = s.withIndex.map {
-      case (v, i) => i -> cspom2concrete(v).asVariable
+      case (v, i) => i -> cspom2concrete(v).asVariable(adg.pg)
     }
 
     val c = Circuit(vars: _*)
 
-    Seq(c, new AllDifferent2C(c.scope: _*), new AllDifferentBC(c.scope: _*))
+    Seq(c, new AllDifferent2C(c.scope), new AllDifferentBC(c.scope: _*))
 
   }
 

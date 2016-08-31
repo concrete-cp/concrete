@@ -1,80 +1,8 @@
 % Predicate will be enabled when native Cumulative constraint will be ready
 
-%predicate cumulative(array[int] of var int: s,
-%                     array[int] of var int: d,
-%                     array[int] of var int: r, var int: b);
-
-
-%-----------------------------------------------------------------------------%
-% Requires that a set of tasks given by start times 's', durations 'd', and
-% resource requirements 'r', never require more than a global resource bound
-% 'b' at any one time.
-% Assumptions:
-% - forall i, d[i] >= 0 and r[i] >= 0
-%-----------------------------------------------------------------------------%
-predicate cumulative(array[int] of var int: s,
-                     array[int] of par int: d,
-                     array[int] of par int: r, par int: b) =
-    assert(index_set(s) == index_set(d) /\ index_set(s) == index_set(r),
-        "cumulative: the 3 array arguments must have identical index sets",
-        assert(lb_array(d) >= 0 /\ lb_array(r) >= 0,
-            "cumulative: durations and resource usages must be non-negative",
-            let { 
-               set of int: tasks = 
-                  {i | i in index_set(s) where ub(r[i]) > 0 /\ ub(d[i]) > 0 },
-               set of int: times =
-                  min([ lb(s[i]) | i in tasks ]) ..
-                  max([ ub(s[i]) + ub(d[i]) | i in tasks ]) 
-                } 
-            in if card(times) < 1000 then
-				% Time-indexed decomposition
-               forall( t in times ) (
-                  bool_lin_le(
-                     [ r[i] | i in tasks ],
-                     [ s[i] <= t /\ t < s[i] + d[i] | i in tasks ],
-                     b  )
-               )
-			else
-				% Task decomposition
-				forall(i in tasks)(
-				    bool_lin_le( 
-				    	[ r[j] | j in tasks where j != i ], 
-				    	[ s[j] <= s[i] /\ s[i] < s[j] + d[j] | j in tasks where j != i ],
-				    	b - r[i])
-				)
-			endif
-        )
-    );
-
 predicate cumulative(array[int] of var int: s,
                      array[int] of var int: d,
-                     array[int] of var int: r, var int: b) =
-    assert(index_set(s) == index_set(d) /\ index_set(s) == index_set(r),
-        "cumulative: the 3 array arguments must have identical index sets",
-        assert(lb_array(d) >= 0 /\ lb_array(r) >= 0,
-            "cumulative: durations and resource usages must be non-negative",
-            let { 
-               set of int: tasks = 
-                  {i | i in index_set(s) where ub(r[i]) > 0 /\ ub(d[i]) > 0 },
-               set of int: times =
-                  min([ lb(s[i]) | i in tasks ]) ..
-                  max([ ub(s[i]) + ub(d[i]) | i in tasks ]) 
-                } 
-            in if card(times) < 1000 then
-				% Time-indexed decomposition
-               forall( t in times ) (
-                  b >= sum( i in tasks ) (
-                     bool2int( s[i] <= t /\ t < s[i] + d[i] ) * r[i]
-                  )
-               )
-			else
-				% Task decomposition
-				forall(i in tasks)(
-					b - r[i] >= sum(j in tasks where j != i)(
-						bool2int(s[j] <= s[i] /\ s[i] < s[j] + d[j]) * r[j]
-					)
-				)
-			endif
-        )
-    );
+                     array[int] of var int: r, var int: b);
+
+
     

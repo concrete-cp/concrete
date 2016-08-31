@@ -55,17 +55,6 @@ object BooleanDomain {
         this
       }
 
-    def nextOrEq(value: Int) =
-      if (value <= 0) 0
-      else if (value <= 1) 1
-      else throw new NoSuchElementException
-
-    def prevOrEq(value: Int) = {
-      if (value >= 1) { 1 }
-      else if (value >= 0) { 0 }
-      else { throw new NoSuchElementException }
-    }
-
     def remove(value: Int) = value match {
       case 0 => TRUE
       case 1 => FALSE
@@ -113,8 +102,6 @@ object BooleanDomain {
     def removeAfter(lb: Int) = if (lb < 1) EMPTY else this
     def removeTo(ub: Int) = if (ub >= 1) EMPTY else this
     def removeUntil(ub: Int) = if (ub > 1) EMPTY else this
-    def nextOrEq(value: Int) = if (value > 1) throw new NoSuchElementException else 1;
-    def prevOrEq(value: Int) = if (value < 1) throw new NoSuchElementException else 1;
     def remove(value: Int) = if (value == 1) EMPTY else this
     val as01 = Singleton(1)
     override def filter(f: Int => Boolean) = if (f(1)) this else EMPTY
@@ -146,8 +133,6 @@ object BooleanDomain {
     def removeAfter(lb: Int) = if (lb < 0) EMPTY else this
     def removeTo(ub: Int) = if (ub >= 0) EMPTY else this
     def removeUntil(ub: Int) = if (ub > 0) EMPTY else this
-    def nextOrEq(value: Int) = if (value > 0) throw new NoSuchElementException else 0;
-    def prevOrEq(value: Int) = if (value < 0) throw new NoSuchElementException else 0;
     def remove(value: Int) = if (value == 0) EMPTY else this
     val as01 = Singleton(0)
     override def filter(f: Int => Boolean) = if (f(0)) this else EMPTY
@@ -179,8 +164,6 @@ object BooleanDomain {
     def removeAfter(lb: Int) = this
     def removeTo(ub: Int) = this
     def removeUntil(ub: Int) = this
-    def nextOrEq(value: Int) = throw new NoSuchElementException
-    def prevOrEq(value: Int) = throw new NoSuchElementException
     def remove(v: Int) = this
     val as01 = EmptyIntDomain
     override def filter(f: Int => Boolean) = this

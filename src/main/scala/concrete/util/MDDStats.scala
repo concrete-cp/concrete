@@ -43,6 +43,7 @@ import scala.math.BigInt.int2bigInt
 import concrete.constraint.extension.BDDC
 import concrete.constraint.extension.MDDC
 import concrete.constraint.extension.ReduceableExt
+import concrete.generator.ProblemGenerator
 
 object MDDStats extends App with LazyLogging {
   def apply(prob: Problem, params: ParameterManager): MDDStats =
@@ -50,8 +51,10 @@ object MDDStats extends App with LazyLogging {
 
   val pm = new ParameterManager
   pm("solver") = classOf[MDDStats]
+  
+  val pg = new ProblemGenerator(pm)
 
-  val eg = new ExtensionGenerator(pm)
+  val eg = pg.gm.known('extension).asInstanceOf[ExtensionGenerator]
 
   var ea = List[Double]()
   var la = List[BigInt]()

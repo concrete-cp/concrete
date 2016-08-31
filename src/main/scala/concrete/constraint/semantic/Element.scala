@@ -28,8 +28,8 @@ object Element {
 }
 
 class Element(val result: Variable,
-              val index: Variable,
-              val vars: Array[Variable])
+  val index: Variable,
+  val vars: Array[Variable])
     extends Constraint(result +: index +: vars.filter(_ ne null)) with Removals {
 
   protected val varsOption = vars.map(Option.apply)
@@ -51,7 +51,7 @@ class Element(val result: Variable,
     s"${result.toString(ps)} =$consistency= (${index.toString(ps)})th of ${
       vars.toSeq.map {
         case null => "{}"
-        case v    => v.toString(ps)
+        case v => v.toString(ps)
       }
     }"
   }
@@ -86,6 +86,7 @@ class Element(val result: Variable,
 
           /*
            * Revise result
+           * Do not use map/reduce, it is too slow
            */
           var union: Domain = null
           for (i <- index) {

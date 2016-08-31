@@ -22,20 +22,20 @@ class ModBC(x: Variable, y: Variable, z: Variable) extends Constraint(x, y, z) w
     val xSpan = ps0.span(x)
     val ySpan = ps0.span(y)
     val reminder = Div.reminder(xSpan, ySpan)
-    val result = Div.div(xSpan, ySpan)
-    val zSpan = result * ySpan
 
-    val ps1 = ps0.shaveDom(z, reminder)
+    ps0.shaveDom(z, reminder)
+      .andThen { ps1 =>
 
-    val ps2 = if (result.contains(0)) {
-      ps1
-    } else {
-      ps1.shaveDom(y, Div.div((xSpan - reminder), result))
-    }
+        val result = Div.div(xSpan, ySpan).get
+        val zSpan = result * ySpan
 
-    ps2.shaveDom(z, xSpan - zSpan)
-      .andThen { ps =>
-        ps.shaveDom(x, ps.dom(z).span + zSpan)
+        Div.div((xSpan - reminder), result)
+          .map(ps1.shaveDom(y, _))
+          .getOrElse(ps1)
+          .shaveDom(z, xSpan - zSpan)
+          .andThen { ps =>
+            ps.shaveDom(x, ps.dom(z).span + zSpan)
+          }
       }
 
   }

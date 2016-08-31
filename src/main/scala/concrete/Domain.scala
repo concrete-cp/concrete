@@ -20,13 +20,13 @@ abstract class Domain { //extends AbstractSeq[Int] with IterableLike[Int, Domain
   def next(i: Int): Int
 
   def nextOption(i: Int): Option[Int] = {
-    if (i == last) None else Some(next(i))
+    if (i >= last) None else Some(next(i))
   }
 
   def prev(i: Int): Int
 
   def prevOption(i: Int): Option[Int] = {
-    if (i == head) None else Some(prev(i))
+    if (i <= head) None else Some(prev(i))
   }
 
   def head: Int //= next(0)
@@ -104,19 +104,6 @@ abstract class Domain { //extends AbstractSeq[Int] with IterableLike[Int, Domain
   def removeUntil(ub: Int): Domain
 
   def removeItv(from: Int, to: Int): Domain
-
-  /**
-   * @param value
-   * @return the index of the closest value lower or equal to the given value.
-   */
-  def prevOrEq(value: Int): Int
-
-  /**
-   * @param value
-   * @return the index of the closest value greater or equal to the given
-   *         value.
-   */
-  def nextOrEq(value: Int): Int
 
   def span: Interval // = Interval(head, last)
 

@@ -1,6 +1,8 @@
 package concrete
 package cluster
 
+import scala.collection.mutable.Queue
+
 object ConnectedComponents extends Cluster {
   def apply[T <: Arc](arcs: Seq[T]): Seq[Seq[T]] = {
     val edges = nodes(arcs)
@@ -23,14 +25,22 @@ object ConnectedComponents extends Cluster {
     root: A,
     neighbours: Map[Variable, Seq[A]],
     visited: Set[A]): Set[A] = {
-    if (visited(root)) {
-      Set.empty
-    } else {
-      root.vars.flatMap(neighbours).foldLeft(visited + root) {
-        (visit, n) => visit ++ crawl(n, neighbours, visit)
-      }
 
+    var queue = new Queue[A]()
+    queue.enqueue(root)
+    var component = Set[A]()
+
+    while (queue.nonEmpty) {
+      val elem = queue.dequeue()
+
+      if (!visited(elem) && !component(elem)) {
+        component += elem
+
+        queue ++= elem.vars.flatMap(neighbours)
+      }
     }
+
+    component
   }
 }
 

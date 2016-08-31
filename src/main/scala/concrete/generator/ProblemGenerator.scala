@@ -37,12 +37,12 @@ case class LinearConstraint(
 
 }
 
-final class ProblemGenerator(private val pm: ParameterManager = new ParameterManager()) extends LazyLogging {
+final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) extends LazyLogging {
 
-  val intToBool = pm.getOrElse("generator.intToBool", false)
-  val generateLargeDomains = pm.getOrElse("generator.generateLargeDomains", false)
+  val intToBool = pm.getOrElse("generator.intToBool", true)
+  //val generateLargeDomains = pm.getOrElse("generator.generateLargeDomains", false)
 
-  private val gm = new GeneratorManager(pm)
+  val gm = new GeneratorManager(this)
 
   @Statistic
   var genTime: Quantity[Double] = _
@@ -63,9 +63,9 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
       val constraints = cspom.constraints.flatMap {
         case c if c.function == 'clause =>
           val Seq(pos: CSPOMSeq[_], neg: CSPOMSeq[_]) = c.arguments
-          if (!pos.contains(CSPOMConstant(true)) && !neg.contains(CSPOMConstant(false))) {
-            val posConc = pos.collect { case v: BoolVariable => Generator.cspom2concreteVar(v)(variables) }.toArray
-            val negConc = neg.collect { case v: BoolVariable => Generator.cspom2concreteVar(v)(variables) }.toArray
+          if (!pos.exists(_.isTrue) && !neg.exists(_.isFalse)) {
+            val posConc = pos.map { v => Generator.cspom2concreteVar(v)(variables) }.toArray
+            val negConc = neg.map { v => Generator.cspom2concreteVar(v)(variables) }.toArray
             clauses +:= Clause(posConc, negConc)
           }
           Seq()
@@ -96,29 +96,24 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
 
       if (pm.contains("sat4clauses")) {
         if (pm.contains("sat4pb")) {
-          problem.addConstraints(
-            SAT(clauses, pb))
+          problem.addConstraints(SAT(clauses, pb))
         } else {
           lin ++:= pb
-          problem.addConstraints(
-            SAT(clauses = clauses))
+          problem.addConstraints(SAT(clauses = clauses))
         }
       } else {
-        problem.addConstraints(
-          clauses.map(new ClauseConstraint(_)))
+        problem.addConstraints(clauses.map(new ClauseConstraint(_)))
         if (pm.contains("sat4pb")) {
-          problem.addConstraints(
-            SAT(pb = pb))
+          problem.addConstraints(SAT(pb = pb))
         } else {
           lin ++:= pb
         }
       }
 
       if (pm.contains("simplex")) {
-        problem.addConstraints(
-          Simplex(lin, pm))
+        problem.addConstraints(Simplex(lin, pm))
       } else {
-        val sg = new SumGenerator(pm)
+        val sg = new SumGenerator(this)
         problem.addConstraints(
           lin.flatMap(l =>
             sg.general(l.vars, l.factors, l.constant, l.mode).toSeq))
@@ -157,7 +152,7 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
             case (Finite(0), Finite(0)) if intToBool => concrete.BooleanDomain(false)
             case (Finite(1), Finite(1)) if intToBool => concrete.BooleanDomain(true)
             case (Finite(0), Finite(1)) if intToBool => concrete.BooleanDomain()
-            case (Finite(lb), Finite(ub))            => IntDomain.ofInterval(lb, ub)
+            case (Finite(lb), Finite(ub)) => IntDomain.ofInterval(lb, ub)
           }
         } else {
           IntDomain(v.domain)
@@ -167,7 +162,7 @@ final class ProblemGenerator(private val pm: ParameterManager = new ParameterMan
     }
 
     require(cspomVar.searchSpace == dom.size, s"$cspomVar -> $dom")
-    
+
     dom
   }
 }

@@ -18,6 +18,8 @@ object AbsDiff extends ConstraintCompiler {
 
   override def mtch(c: CSPOMConstraint[_], problem: CSPOM) = c match {
     case absConstraint @ CSPOMConstraint(_, 'abs, Seq(absArg), _) =>
+      
+      println(problem.deepConstraints(absArg))
 
       val addConstraints = problem.deepConstraints(absArg).collect {
         case addConstraint @ CSPOMConstraint(CSPOMConstant(true), 'sum, Seq(

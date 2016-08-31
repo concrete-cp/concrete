@@ -187,32 +187,37 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
   var currentStateStack: List[ProblemState] = List(problem.initState.toState)
 
   def nextSolution(): SolverResult = try {
-    // extends state stack for new constraints
-    currentStateStack = currentStateStack.map(s =>
-      s.padConstraints(problem.constraints, problem.maxCId).toState)
 
     if (restart) {
       logger.info("RESTART")
       restart = false
-      preprocess(filter, currentStateStack.last) match {
-        case Contradiction => UNSAT
-        case state: ProblemState =>
+
+      currentStateStack.last
+        .padConstraints(problem.constraints, problem.maxCId)
+        .andThen(preprocess(filter, _))
+        .map { state =>
           val (sol, stack, stateStack) = nextSolution(Seq.empty, Nil, state, Nil)
           currentStack = stack
           currentStateStack = stateStack
           logger.info(s"Search ended with $sol")
           sol
-      }
+        }
+        .getOrElse(UNSAT)
 
     } else if (currentStack.isEmpty) {
       UNSAT
     } else {
       maxBacktracks = -1
 
+      // backtrack once (.tail) and 
+      // extends state stack for new constraints
+      val extendedStack = currentStateStack.tail.map(s =>
+        s.padConstraints(problem.constraints, problem.maxCId).toState)
+
       /* Contradiction will trigger a backtrack */
 
       val (sol, stack, stateStack) =
-        nextSolution(Seq.empty, currentStack, Contradiction, currentStateStack.tail)
+        nextSolution(Seq.empty, currentStack, Contradiction, extendedStack)
       currentStack = stack
       currentStateStack = stateStack
       sol

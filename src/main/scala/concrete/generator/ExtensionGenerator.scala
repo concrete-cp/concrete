@@ -35,7 +35,9 @@ import concrete.constraint.extension.BDDC
 import concrete.util.SparseSeq
 import concrete.constraint.extension.MatrixGeneral
 
-class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLogging {
+class ExtensionGenerator(pg: ProblemGenerator) extends Generator with LazyLogging {
+
+  def params = pg.pm
 
   val consType = params.getOrElse("relationAlgorithm", "Reduce")
 
@@ -170,7 +172,7 @@ class ExtensionGenerator(params: ParameterManager) extends Generator with LazyLo
     if (relation.isEmpty) {
       if (init == true) { Seq() } else { throw new UNSATException("Empty relation " + extensionConstraint) }
     } else {
-      val scope = solverVariables.map(_.asVariable).toArray
+      val scope = solverVariables.map(_.asVariable(pg)).toArray
 
       val matrix = generateMatrix(scope, relation, init)
 

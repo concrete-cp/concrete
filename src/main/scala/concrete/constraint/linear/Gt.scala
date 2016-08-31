@@ -33,11 +33,11 @@ final class LeC(val v: Variable, val constant: Int) extends Constraint(Array(v))
   override def toString(ps: ProblemState) = s"${v.toString(ps)} <= $constant"
 }
 
-final class LtC(val v: Variable, val constant: Int) extends Constraint(Array(v)) {
+final class LtC(val v: Variable, var constant: Int) extends Constraint(Array(v)) {
   def init(ps: ProblemState) = ps
   def check(t: Array[Int]) = t(0) < constant
   def advise(ps: ProblemState, p: Int) = 1
-  def revise(ps: ProblemState) = ps.removeFrom(v, constant).entail(this)
+  def revise(ps: ProblemState) = ps.removeFrom(v, constant)//.entail(this)
   def simpleEvaluation = 1
   override def toString(ps: ProblemState) = s"${v.toString(ps)} < $constant"
 }
@@ -51,11 +51,11 @@ final class GeC(val v: Variable, val constant: Int) extends Constraint(Array(v))
   override def toString(ps: ProblemState) = s"${v.toString(ps)} >= $constant"
 }
 
-final class GtC(val v: Variable, val constant: Int) extends Constraint(Array(v)) {
+final class GtC(val v: Variable, var constant: Int) extends Constraint(Array(v)) {
   def init(ps: ProblemState) = ps
   def check(t: Array[Int]) = t(0) > constant
   def advise(ps: ProblemState, p: Int) = 1
-  def revise(ps: ProblemState) = ps.removeTo(v, constant).entail(this)
+  def revise(ps: ProblemState) = ps.removeTo(v, constant)//.entail(this)
   def simpleEvaluation = 1
   override def toString(ps: ProblemState) = s"${v.toString(ps)} > $constant"
 }

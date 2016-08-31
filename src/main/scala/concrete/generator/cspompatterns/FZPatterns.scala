@@ -16,15 +16,6 @@ object FZPatterns {
   def apply() = Seq(
     new GlobalCompiler(mtch) { def selfPropagation = false })
 
-  //  val debug = new PartialFunction[CSPOMConstraint[_], CSPOMConstraint[_]] {
-  //    def isDefinedAt(c: CSPOMConstraint[_]) = {
-  //      println(c)
-  //      false
-  //    }
-  //
-  //    def apply(c: CSPOMConstraint[_]) = sys.error("")
-  //  }
-
   val mtch: PartialFunction[CSPOMConstraint[_], CSPOMConstraint[_]] = {
     /*
      *  (∀ i ∈ 1..n : as[i]) ↔ r where n is the length of as

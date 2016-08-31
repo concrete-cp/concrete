@@ -25,7 +25,7 @@ class AllDiffTest extends FlatSpec with Matchers {
       }
     }
 
-    CSPOMCompiler.compile(cspom, Seq(MergeEq, NegToCNF, SimplClause, UnaryClause, SumFalse, AllDiff))
+    CSPOMCompiler.compile(cspom, Seq(MergeEq, NegToCNF, SimplClause, UnaryClause, Reversed, AllDiff))
 
     //println(cspom)
     withClue(cspom) {

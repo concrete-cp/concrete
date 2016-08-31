@@ -11,37 +11,37 @@ import cspom.CSPOMConstraint
 import cspom.VariableNames
 import cspom.variable.CSPOMVariable
 
-class GeneratorManager(pm: ParameterManager) {
+class GeneratorManager(pg: ProblemGenerator) {
 
-  private var known: Map[Symbol, Generator] = {
-    val sg = new SumGenerator(pm)
-    val adg = new AllDifferentGenerator(pm)
+  var known: Map[Symbol, Generator] = {
+    val sg = new SumGenerator(pg)
+    val adg = new AllDifferentGenerator(pg)
     Map(
       'abs -> AbsGenerator,
       'alldifferent -> adg,
       'eq -> EqGenerator,
-      'mul -> MulGenerator,
+      'mul -> new MulGenerator(pg),
       'absdiff -> AbsDiffGenerator,
       'gcc -> GccGenerator,
-      'div -> DivGenerator,
-      'mod -> ModGenerator,
-      'nevec -> NeqVecGenerator,
+      'div -> new DivGenerator(pg),
+      'mod -> new ModGenerator(pg),
+      'nevec -> new NeqVecGenerator(pg),
       'sum -> sg,
       'pseudoboolean -> sg,
-      'lexleq -> LexLeqGenerator,
-      'occurrence -> OccurrenceGenerator,
-      'extension -> new ExtensionGenerator(pm),
+      'lexleq -> new LexLeqGenerator(pg),
+      'atLeast -> new AtLeastGenerator(pg),
+      'atMost -> new AtMostGenerator(pg),
+      'extension -> new ExtensionGenerator(pg),
       'sq -> SquareGenerator,
-      'min -> MinGenerator,
-      'max -> MaxGenerator,
-      'element -> ElementGenerator,
-      'in -> SetInGenerator,
+      'min -> new MinGenerator(pg),
+      'max -> new MaxGenerator(pg),
+      'element -> new ElementGenerator(pg),
+      'in -> new SetInGenerator(pg),
       'circuit -> new CircuitGenerator(adg),
-      'xor -> XorGenerator)
-  }
-
-  def register(entry: (Symbol, Generator)) {
-    known += entry
+      'xor -> new XorGenerator(pg),
+      'inverse -> new InverseGenerator(pg, adg),
+      'cumulative -> new CumulativeGenerator(pg),
+      'diffn -> new DiffNGenerator(pg))
   }
 
   def generate[A](constraint: CSPOMConstraint[A], variables: Map[CSPOMVariable[_], Variable], vn: VariableNames): Try[Seq[Constraint]] = {
