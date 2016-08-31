@@ -2,7 +2,13 @@ name := "concrete"
 
 organization := "fr.univ-valenciennes"
 
-version := "3.1.1"
+maintainer := "Julien Vion <julien.vion@univ-valenciennes.fr>"
+
+packageSummary := "Concrete is a Scala CSP Solving API"
+
+packageDescription := "Concrete is a Scala CSP Solving API"
+
+version := "3.2-SNAPSHOT"
 
 scalaVersion := "2.11.8"
 
@@ -24,8 +30,8 @@ libraryDependencies ++= Seq(
 	//"org.jcp" % "jsr331" % "1.1.1",
 	"org.scalatest" %% "scalatest" % "2.2.6" % "test",
 	"org.scalacheck" %% "scalacheck" % "1.12.5" % "test",
-	"com.storm-enroute" %% "scalameter" % "0.7" % "test"
-	
+	"com.storm-enroute" %% "scalameter" % "0.7" % "test",
+	"com.github.davidmoten" % "rtree" % "0.7.5"
 	)
 
 scalacOptions ++= Seq(
@@ -39,6 +45,7 @@ scalacOptions ++= Seq(
 )
 
 enablePlugins(JavaAppPackaging)
+enablePlugins(DebianPlugin)
 
 mainClass in Compile := Some("concrete.runner.FZConcrete")
 
@@ -101,10 +108,11 @@ sourceGenerators in Scapegoat <+= (sourceManaged in Compile, version, name) map 
 
 excludeFilter in packageBin in unmanagedResources := "logback.xml" || "reference.conf"
 
-mappings in Universal ++= Seq(
-    (resourceDirectory in Compile).value / "conf"/"application.conf" -> "conf/application.conf",
-    (resourceDirectory in Compile).value / "conf"/"logback.xml" -> "conf/logback.xml",
-    (resourceDirectory in Compile).value / "conf"/"application.ini" -> "conf/application.ini"
-   )
+import NativePackagerHelper._
+
+mappings in Universal ++= directory((resourceDirectory in Compile).value / "conf")
+    
+mappings in Universal ++= directory((resourceDirectory in Compile).value / "mzn_lib")
+   
 
 scapegoatVersion := "1.2.1"
