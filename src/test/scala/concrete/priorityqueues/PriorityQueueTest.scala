@@ -49,33 +49,33 @@ final class PriorityQueueTest extends FlatSpec with Matchers with Timeouts with 
     //INTS.foreach(i => i.unsetPresent())
     forAll { data: Seq[Int] =>
       whenever(data.nonEmpty) {
-        failAfter(Span(5, Seconds)) {
+        //failAfter(Span(5, Seconds)) {
 
-          q.clear()
+        q.clear()
 
-          q shouldBe empty
+        q shouldBe empty
 
-          forAll(data) { i =>
-            val n = IntNode(i)
-            q.offer(n, n.v)
-          }
-
-          //assertEquals(j, q.size);
-          //println(j)
-          var i = 1
-          var last = q.poll().v;
-          while (!q.isEmpty) {
-            val current = q.poll().v;
-            i += 1
-            current should be >= last
-            last = current;
-          }
-
-          i shouldBe data.size
-
+        forAll(data) { i =>
+          val n = IntNode(i)
+          q.offer(n, n.v)
         }
-        //}
+
+        //assertEquals(j, q.size);
+        //println(j)
+        var i = 1
+        var last = q.poll().v;
+        while (!q.isEmpty) {
+          val current = q.poll().v;
+          i += 1
+          current should be >= last
+          last = current;
+        }
+
+        i shouldBe data.size
+
       }
+      //}
+      //}
     }
 
   }
