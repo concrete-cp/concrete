@@ -11,7 +11,7 @@ import cspom.UNSATException
 
 sealed trait Outcome {
   def andThen(f: ProblemState => Outcome): Outcome
-  def orElse(f: => Outcome): Outcome
+  def orElse[A >: ProblemState](f: => A): A
 
   def map[A](f: ProblemState => A): Option[A]
 
@@ -102,7 +102,7 @@ sealed trait Outcome {
 
 case object Contradiction extends Outcome {
   def andThen(f: ProblemState => Outcome) = Contradiction
-  def orElse(f: => Outcome) = f
+  def orElse[A >: ProblemState](f: => A) = f
   def map[A](f: ProblemState => A) = None
   def filterDom(v: Variable)(f: Int => Boolean): Outcome = Contradiction
   def shaveDom(v: Variable, lb: Int, ub: Int): Outcome = Contradiction
@@ -135,8 +135,7 @@ object ProblemState {
     ProblemState(
       Vector(problem.variables.map(_.initDomain): _*),
       Vector(),
-      Vector(problem.variables.map(v => BitVector.filled(v.constraints.length)): _*),
-      BitVector.empty)
+      new EntailmentManager(problem.variables))
       .padConstraints(problem.constraints, problem.maxCId)
   }
 
@@ -156,16 +155,66 @@ object ProblemState {
   }
 }
 
+class EntailmentManager(
+    val entailed: BitVector, 
+    val activeConstraints: Vector[BitVector]) {
+
+  def this(variables: Seq[Variable]) =
+    this(
+      BitVector.empty,
+      Vector(variables.map(v => BitVector.filled(v.constraints.length)): _*))
+
+  def addConstraints(constraints: Seq[Constraint]): EntailmentManager = {
+
+    var ac = activeConstraints
+    for (c <- constraints) {
+      require(!entailed(c.id))
+      for (i <- c.scope.indices) {
+        val vid = c.scope(i).id
+        /* Fake variables (constants) may appear in constraints */
+        if (vid >= 0) {
+          ac = ac.updated(vid, ac(vid) + c.positionInVariable(i))
+        }
+      }
+    }
+    new EntailmentManager(entailed, ac)
+  }
+
+  def apply(c: Constraint): Boolean = entailed(c.id)
+
+  def entail(c: Constraint): EntailmentManager = {
+    var ac = activeConstraints
+    var i = c.arity - 1
+    while (i >= 0) {
+      val vid = c.scope(i).id
+      /* Fake variables (constants) may appear in constraints */
+      if (vid >= 0) {
+        val pos = c.positionInVariable(i)
+        /* Reified constraints are not directly related to variables */
+        if (pos >= 0) {
+          ac = ac.updated(vid, ac(vid) - c.positionInVariable(i))
+        }
+      }
+      i -= 1
+    }
+    //    val id = c.id
+    //    if (id >= 0)
+    new EntailmentManager(entailed + c.id, ac)
+
+  }
+
+  def active(v: Variable): BitVector = activeConstraints(v.id)
+}
+
 case class ProblemState(
   val domains: Vector[Domain],
   val constraintStates: Vector[AnyRef],
-  val activeConstraints: Vector[BitVector],
-  val entailed: BitVector) extends Outcome
+  val entailed: EntailmentManager) extends Outcome
     with LazyLogging {
 
   def andThen(f: ProblemState => Outcome) = f(this)
 
-  def orElse(f: => Outcome) = this
+  def orElse[A >: ProblemState](f: => A) = this
 
   def map[A](f: ProblemState => A) = Some(f(this))
 
@@ -177,7 +226,7 @@ case class ProblemState(
     if (constraintStates(id) eq newState) {
       this
     } else {
-      new ProblemState(domains, constraintStates.updated(id, newState), activeConstraints, entailed)
+      new ProblemState(domains, constraintStates.updated(id, newState), entailed)
     }
   }
 
@@ -199,60 +248,40 @@ case class ProblemState(
       this
     } else {
       val padded = constraintStates.padTo(lastId + 1, null)
-      var ps = ProblemState(domains, padded, activeConstraints, entailed)
-      for (c <- constraints.view.drop(constraintStates.size)) {
-        c.init(ps) match {
-          case Contradiction => return Contradiction
-          case newState: ProblemState =>
-            if (ps ne newState) {
-              logger.debug(s"Initializing ${c.toString(ps)} -> ${c.toString(newState)}")
-            }
 
-            ps = newState
-        }
+      val newConstraints = constraints.view.drop(constraintStates.size)
 
-        if (!ps.isEntailed(c)) {
-          var ac = ps.activeConstraints
-          for (i <- c.scope.indices) {
-            val vid = c.scope(i).id
-            /* Fake variables (constants) may appear in constraints */
-            if (vid >= 0) {
-              ac = ac.updated(vid, ac(vid) + c.positionInVariable(i))
-            }
-          }
-
-          ps = ProblemState(ps.domains, ps.constraintStates, ac, ps.entailed)
-        }
+      newConstraints.foldLeft(ProblemState(domains, padded, entailed): Outcome) {
+        case (out, c) => out.andThen(c.init)
       }
-      ps
+        .andThen { newState =>
+          ProblemState(newState.domains, newState.constraintStates, entailed.addConstraints(newConstraints))
+        }
+      //
+      //      for (c <- newConstraints) {
+      //        c.init(ps) match {
+      //          case Contradiction => return Contradiction
+      //          case newState: ProblemState =>
+      //            if (ps ne newState) {
+      //              logger.debug(s"Initializing ${c.toString(ps)} -> ${c.toString(newState)}")
+      //            }
+      //
+      //            ps = ProblemState(newState.domains, newState.constraintStates, entailed.addConstraint(c))
+      //        }
+      //
+      //      }
+      //      ps
     }
   }
 
-  def isEntailed(c: Constraint): Boolean = entailed(c.id)
+  def isEntailed(c: Constraint): Boolean = entailed(c)
 
   def entail(c: Constraint): ProblemState = {
-    var ac = activeConstraints
-    var i = c.arity - 1
-    while (i >= 0) {
-      val vid = c.scope(i).id
-      /* Fake variables (constants) may appear in constraints */
-      if (vid >= 0) {
-        val pos = c.positionInVariable(i)
-        /* Reified constraints are not directly related to variables */
-        if (pos >= 0) {
-          ac = ac.updated(vid, ac(vid) - c.positionInVariable(i))
-        }
-      }
-      i -= 1
-    }
-    //    val id = c.id
-    //    if (id >= 0)
-    new ProblemState(domains, constraintStates, ac, entailed + c.id)
+    new ProblemState(domains, constraintStates, entailed.entail(c))
     //else this
   }
 
-  def activeConstraints(v: Variable): BitVector =
-    activeConstraints(v.id)
+  def activeConstraints(v: Variable): BitVector = entailed.active(v)
 
   //def isEntailed(c: Constraint): Boolean = entailed(c.id)
 
@@ -283,7 +312,7 @@ case class ProblemState(
     assert(dom(variable) ne newDomain)
     val id = variable.id
     assert(id >= 0 || (dom(variable) eq newDomain), s"$variable updated to $newDomain is not a problem variable")
-    new ProblemState(domains.updated(id, newDomain), constraintStates, activeConstraints, entailed)
+    new ProblemState(domains.updated(id, newDomain), constraintStates, entailed)
   }
 
   def shaveDomNonEmpty(variable: Variable, itv: Interval): ProblemState = {
