@@ -36,7 +36,7 @@ final class LinearLe(
 
   import IncrementalBoundPropagation._
 
-  override def isConsistent(ps: ProblemState, mod: BitVector) = {
+  override def consistent(ps: ProblemState, mod: BitVector) = {
     val (doms, f, vars, max) = updateF(ps, mod)
     clearMod()
     if (f.lb <= 0) {

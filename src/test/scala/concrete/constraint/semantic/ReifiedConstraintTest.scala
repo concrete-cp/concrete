@@ -24,6 +24,7 @@ import cspom.CSPOM._
 import cspom.CSPOMConstraint
 import cspom.variable.BoolVariable
 import cspom.variable.IntVariable
+import concrete.Assignment
 
 class ReifiedConstraintTest extends FlatSpec with Matchers {
 
@@ -51,7 +52,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
     val ps = pb.initState.assign(v0, 0).toState
 
     //c1.advise(ps, 2) should be >= 0
-    c2.advise(ps, 2) should be >= 0
+    c2.advise(ps, Assignment, 2) should be >= 0
 
     val m2 = c2.revise(ps).toState
 
@@ -172,7 +173,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
       }
 
       ns.assign(r, 1).andThen { ps =>
-        bc.advise(ps, 0) should be >= 0
+        bc.advise(ps, Assignment, 0) should be >= 0
         bc.revise(ps)
       } match {
         case Contradiction => fail()

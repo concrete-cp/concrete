@@ -6,6 +6,7 @@ import concrete.Contradiction
 import concrete.ProblemState
 import concrete.Outcome
 import concrete.BooleanDomain
+import concrete.Event
 
 final class Xor(vars: Array[Variable]) extends Constraint(vars) {
 
@@ -54,7 +55,7 @@ final class Xor(vars: Array[Variable]) extends Constraint(vars) {
 
   //if (isTrue(watch1) || isTrue(watch2)) entail()
 
-  def advise(ps: ProblemState, p: Int) =
+  def advise(ps: ProblemState, event: Event, p: Int) =
     if (p == watch1 || p == watch2) 1 else -1
 
   override def check(t: Array[Int]) = {

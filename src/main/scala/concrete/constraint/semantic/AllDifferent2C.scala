@@ -17,14 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package concrete.constraint.semantic;
-
-import concrete.Contradiction
-import concrete.Outcome
-import concrete.ProblemState
-import concrete.Variable
-import concrete.constraint.AdviseCounts
-import concrete.constraint.Constraint
+package concrete
+package constraint
+package semantic
 
 trait AllDiffChecker extends Constraint {
 
@@ -85,12 +80,14 @@ final class AllDifferent2C(scope: Array[Variable]) extends Constraint(scope) wit
 
   var lastAdvise = -1
 
-  def advise(ps: ProblemState, p: Int) = {
+  def advise(ps: ProblemState, event: Event, p: Int) = {
     if (lastAdvise != adviseCount) {
       q = Nil
       lastAdvise = adviseCount
     }
-    if (ps.assigned(scope(p))) {
+    // event is set to Assignment during initialization,
+    // so check for actual assignment
+    if (event <= Assignment && ps.assigned(scope(p))) {
       q ::= p
       arity
     } else {

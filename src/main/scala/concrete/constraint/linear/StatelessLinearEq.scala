@@ -1,4 +1,6 @@
-package concrete.constraint.linear
+package concrete
+package constraint
+package linear
 
 import com.typesafe.scalalogging.LazyLogging
 
@@ -30,13 +32,7 @@ final class StatelessLinearEq(
   private val negFactors = factors.map(-_)
 
   override def isConsistent(ps: ProblemState) = {
-    val f = updateF(ps)._1
-
-    if (f.contains(0)) {
-      ps
-    } else {
-      Contradiction
-    }
+    updateF(ps)._1.contains(0)
   }
 
   @annotation.tailrec
@@ -76,7 +72,7 @@ final class StatelessLinearEq(
 
   //def advise(ps: ProblemState, p: Int) = getEvaluation(ps)
 
-  def advise(ps: ProblemState, p: Int) = arity * 3
+  def advise(ps: ProblemState, event: Event, p: Int) = if (event <= BoundRemoval) arity * 3 else -1
 
   def simpleEvaluation: Int = 3
 

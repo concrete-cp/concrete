@@ -1,19 +1,12 @@
-package concrete.constraint.linear;
+package concrete
+package constraint
+package linear
 
 import com.typesafe.scalalogging.LazyLogging
-import concrete.Contradiction
-import concrete.ProblemState
-import concrete.Variable
-import concrete.constraint.BC
-import concrete.constraint.BCCompanion
-import concrete.constraint.Constraint
-import concrete.constraint.Removals
-import concrete.Outcome
+
 import concrete.generator.ACBC
 import concrete.constraint.extension.BinaryExt
 import cspom.util.BitVector
-import concrete.BooleanDomain.UNKNOWNBoolean
-import concrete.BooleanDomain
 
 object Eq {
   def apply(neg: Boolean, x: Variable, b: Int, y: Variable): ACBC =
@@ -28,7 +21,7 @@ object Eq {
 }
 
 final class EqReif(val r: Variable, val x: Variable, val y: Variable) extends Constraint(Array(r, x, y)) {
-  def advise(problemState: ProblemState, pos: Int): Int = 3
+  def advise(problemState: ProblemState, event: Event, pos: Int): Int = 3
   def check(tuple: Array[Int]): Boolean = tuple(0) == (if (tuple(1) == tuple(2)) 1 else 0)
   def init(ps: ProblemState): Outcome = ps
   def revise(ps: ProblemState): Outcome = {
@@ -47,7 +40,10 @@ final class EqReif(val r: Variable, val x: Variable, val y: Variable) extends Co
 
       case BooleanDomain.TRUE =>
         val d = dx & dy
-        ps.updateDom(x, d).updateDom(y, d)
+        ps.updateDom(x, d) 
+          .andThen { ps =>
+            if (d.size < dy.size) ps.updateDom(y, d) else ps
+          }
 
       case BooleanDomain.FALSE =>
         (if (dx.isAssigned) ps.removeIfPresent(y, dx.head) else ps)
@@ -72,7 +68,7 @@ final class EqACFast(val x: Variable, val b: Int, val y: Variable)
 
   var staticEvaluation: Int = _
 
-  def advise(problemState: ProblemState, pos: Int): Int = 2
+  def advise(problemState: ProblemState, event: Event, pos: Int): Int = 2
 
   def check(tuple: Array[Int]): Boolean = (tuple(0) + b == tuple(1))
 
@@ -102,13 +98,8 @@ final class EqACFast(val x: Variable, val b: Int, val y: Variable)
 
   }
 
-  override def isConsistent(ps: ProblemState): Outcome = {
-    if (ps.dom(x) disjoint ps.dom(y).shift(-b)) {
-      Contradiction
-    } else {
-      ps
-    }
-  }
+  override def isConsistent(ps: ProblemState) =
+    !(ps.dom(x) disjoint ps.dom(y).shift(-b))
 
   def simpleEvaluation: Int = 1
   override def toString(ps: ProblemState) = s"${x.toString(ps)}${
@@ -142,17 +133,14 @@ final class EqACNeg private[linear] (
   def getEvaluation(ps: ProblemState): Int =
     if (skip(ps)) -1 else ps.card(x) + ps.card(y)
 
-  override def isConsistent(ps: ProblemState) = {
+  override def isConsistent(ps: ProblemState, mod: BitVector) = {
     val xDom = ps.dom(x)
     val yDom = ps.dom(y)
-    val r = if (xDom.size < yDom.size) {
+    if (xDom.size < yDom.size) {
       xDom.exists(xv => yDom.present(b - xv))
     } else {
       yDom.exists(yv => xDom.present(b - yv))
     }
-
-    if (r) ps else Contradiction
-
   }
 
   def revise(ps: ProblemState, modified: BitVector) = {
@@ -204,7 +192,7 @@ final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
 
   def check(t: Array[Int]) = (if (neg) -t(0) else t(0)) + b == t(1);
 
-  def shave(ps: ProblemState) = {
+  override def shave(ps: ProblemState) = {
     if (neg) {
       // -x + b = y <=> x = -y + b 
       ps.shaveDom(x, -ps.span(y) + b)
@@ -224,7 +212,7 @@ final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
 
     val negX = if (neg) -xSpan else xSpan
 
-    if ((negX + b) intersects ps.span(y)) ps else Contradiction
+    (negX + b) intersects ps.span(y)
   }
 
   override def toString(ps: ProblemState) = s"${if (neg) "-" else ""}${x.toString(ps)}${

@@ -13,7 +13,8 @@ import java.util.Arrays
  * - forall i, d[i] >= 0 and r[i] >= 0
  */
 
-class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: Variable) extends Constraint(s ++ d ++ r :+ b) {
+class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: Variable) extends Constraint(s ++ d ++ r :+ b)
+    with BC {
 
   var begin: Int = _
   var end: Int = _
@@ -61,10 +62,12 @@ class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: 
     val dBound = state.dom(this.d(i)).head
     val rBound = state.dom(r(i)).head
 
+    // Remove current task from profile
     for (i <- sDom.last until (sDom.head + dBound)) {
       profile(i - begin) -= rBound
     }
 
+    // Sweep left
     var min = sDom.head
     var d = 0
     while (d < dBound) {
@@ -79,6 +82,7 @@ class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: 
       }
     }
 
+    // Sweep right
     var max = sDom.last + dBound - 1
     d = 0
     while (d < dBound) {
@@ -92,38 +96,46 @@ class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: 
 
     val filtered = sDom & (min, max - dBound + 1)
 
-    require(filtered.nonEmpty, (profile.slice(sDom.head, sDom.last + dBound).mkString, sDom, dBound, rBound, bound, min, max - dBound))
+    if (filtered.isEmpty) {
+      // Can happen if there are "holes" in the domains
+      Contradiction
+    } else {
 
-    for (i <- filtered.last until (filtered.head + dBound)) {
-      profile(i - begin) += rBound
-    }
+      //require(filtered.nonEmpty, (profile.slice(sDom.head, sDom.last + dBound).mkString, sDom, dBound, rBound, bound, min, max - dBound))
 
-    state.updateDomNonEmpty(s(i), filtered)
-  }
-
-  private def fixPoint(ps: ProblemState, bound: Int): Outcome = {
-    var lastModified = 0
-    var i = 0
-    var state = ps
-    do {
-      val ns = filter(state, bound, i)
-      if (ns eq Contradiction) {
-        return Contradiction
-      } else if (ns ne state) {
-        state = ns.toState
-        lastModified = i
+      for (i <- filtered.last until (filtered.head + dBound)) {
+        profile(i - begin) += rBound
       }
-      
-      i += 1
-      if (i >= s.length) i = 0
-    } while (i != lastModified)
-    state
+
+      state.updateDomNonEmpty(s(i), filtered)
+    }
   }
 
-  def revise(ps: ProblemState): Outcome = {
+  //  private def fixPoint(ps: ProblemState, bound: Int): Outcome = {
+  //    var lastModified = 0
+  //    var i = 0
+  //    var state = ps
+  //    do {
+  //      val ns = filter(state, bound, i)
+  //      if (ns eq Contradiction) {
+  //        return Contradiction
+  //      } else if (ns ne state) {
+  //        state = ns.toState
+  //        lastModified = i
+  //      }
+  //
+  //      i += 1
+  //      if (i >= s.length) i = 0
+  //    } while (i != lastModified)
+  //    state
+  //  }
+
+  override def revise(ps: ProblemState): Outcome = {
 
     buildProfile(ps)
-      .andThen(fixPoint(_, ps.dom(b).last))
+      .andThen { ps =>
+        fixPoint(ps, 0 until s.length, filter(_, ps.dom(b).last, _))
+      }
 
   }
 

@@ -1,13 +1,9 @@
 package concrete.priorityqueues
 
-import scala.util.Random
-import org.scalatest.Finders
 import org.scalatest.FlatSpec
 import org.scalatest.Inspectors
 import org.scalatest.Matchers
-import org.scalatest.concurrent.Timeouts
-import org.scalatest.time.Seconds
-import org.scalatest.time.Span
+import org.scalatest.concurrent.TimeLimits
 import org.scalatest.prop.PropertyChecks
 
 object IntNode {
@@ -19,7 +15,7 @@ case class IntNode(val v: Int) extends Identified with PTag {
   IntNode.id += 1
 }
 
-final class PriorityQueueTest extends FlatSpec with Matchers with Timeouts with Inspectors with PropertyChecks {
+final class PriorityQueueTest extends FlatSpec with Matchers with TimeLimits with PropertyChecks {
 
   //  private val RANDOM = new Random(0);
   //
@@ -55,7 +51,7 @@ final class PriorityQueueTest extends FlatSpec with Matchers with Timeouts with 
 
         q shouldBe empty
 
-        forAll(data) { i =>
+        Inspectors.forAll(data) { i =>
           val n = IntNode(i)
           q.offer(n, n.v)
         }

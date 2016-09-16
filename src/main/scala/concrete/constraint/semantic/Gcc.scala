@@ -9,6 +9,7 @@ import concrete.Outcome
 import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Constraint
+import concrete.Event
 
 final case class Bounds(val value: Int, val minCount: Int, val maxCount: Int) {
   override def toString = value + ": [" + minCount + ", " + maxCount + "]"
@@ -17,7 +18,7 @@ final case class Bounds(val value: Int, val minCount: Int, val maxCount: Int) {
 final class Gcc(scope: Array[Variable], bounds: Array[Bounds]) extends Constraint(scope) {
 
   def init(ps: ProblemState) = ps
-  
+
   val offset = bounds.map(_.value).min
 
   val _bounds2 = new Array[Bounds](bounds.map(_.value).max - offset + 1)
@@ -113,6 +114,6 @@ final class Gcc(scope: Array[Variable], bounds: Array[Bounds]) extends Constrain
 
   def revise(ps: ProblemState) = upper(ps) andThen lower
 
-  def advise(ps: ProblemState, p: Int) = arity * arity
+  def advise(ps: ProblemState, event: Event, p: Int) = arity * arity
   val simpleEvaluation = 3
 }

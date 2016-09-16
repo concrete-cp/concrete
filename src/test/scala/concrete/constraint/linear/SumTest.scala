@@ -17,6 +17,7 @@ import cspom.variable.BoolVariable
 import cspom.variable.IntVariable
 import concrete.constraint.AdviseCount
 import concrete.constraint.Removals
+import concrete.BoundRemoval
 
 final class SumTest extends FlatSpec with Matchers with Inspectors {
 
@@ -241,7 +242,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     mod.dom(x238).view should contain theSameElementsAs (-14 to 1)
 
     val ps2 = mod.removeAfter(x14, 14).toState
-    c.advise(ps2, 1)
+    c.advise(ps2, BoundRemoval, 1)
     val mod2 = c.revise(ps2).toState
     mod2.dom(x238).view should contain theSameElementsAs (-14 to -1)
 

@@ -167,6 +167,10 @@ object FZPatterns {
      */
     case Ctr('count_eq, Seq(x, y, c), p) =>
       CSPOMConstraint(c, 'occurrence, Seq(y, x), p)
+
+    case Ctr('count_le, Seq(x, y, c), p) =>
+      CSPOMConstraint('atMost)(c, y, x) withParams p
+
     /*
      * |a| = b
      * float_abs(var float: a, var float: b)
@@ -307,7 +311,7 @@ object FZPatterns {
      * |a| = b
      * int_abs(var int: a, var int: b)
      */
-    case Ctr('int_abs, Seq(a, b), p)    => CSPOMConstraint(b, 'abs, Seq(a), p)
+    case Ctr('int_abs, Seq(a, b), p) => CSPOMConstraint(b, 'abs, Seq(a), p)
     /*
      * a/b = c rounding towards zero.
      * int_div(var int: a, var int: b, var int: c)
@@ -317,7 +321,7 @@ object FZPatterns {
      * a = b
      * int_eq(var int: a, var int: b)
      */
-    case Ctr('int_eq, args, p)          => CSPOMConstraint('eq)(args: _*) withParams p
+    case Ctr('int_eq, args, p) => CSPOMConstraint('eq)(args: _*) withParams p
     /*
      * (a = b) ↔ r
      * int_eq_reif(var int: a, var int: b, var bool: r)
@@ -409,7 +413,7 @@ object FZPatterns {
      * a = b
      * int_ne(var int: a, var int: b)
      */
-    case Ctr('int_ne, Seq(a, b), p)         => CSPOMConstraint(CSPOMConstant(false), 'eq, Seq(a, b), p)
+    case Ctr('int_ne, Seq(a, b), p) => CSPOMConstraint(CSPOMConstant(false), 'eq, Seq(a, b), p)
     /*
      * (a = b) ↔ r
      * int_ne_reif(var int: a, var int: b, var bool: r)
@@ -505,13 +509,6 @@ object FZPatterns {
       x in t.grouped(x.size).map(_.toList).toSeq
     //      CSPOMConstraint('extension, x, p ++ Map("init" -> false,
     //        "relation" -> new Table(t.map(CSPOMConstant(_)).grouped(x.size).toSet)))
-
-    /*
-     *  Constrains 'c' to be the number of occurrences of 'y' in 'x'.
-     *  No support for variable y yet in Concrete…
-     */
-    case Ctr('count_eq, Seq(x, y, c), p) =>
-      CSPOMConstraint(c, 'occurrence, Seq(x, y), p)
 
     /*
      *  predicate all_different_int(array[int] of var int: x);

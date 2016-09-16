@@ -71,7 +71,7 @@ class DivBC(x: Variable, y: Variable, z: Variable) extends Constraint(x, y, z) w
 
   def init(ps: ProblemState): Outcome = ps.remove(y, 0)
 
-  def shave(ps: ProblemState) = {
+  override def shave(ps: ProblemState) = {
 
     val x = ps.span(this.x)
     val y = ps.span(this.y)

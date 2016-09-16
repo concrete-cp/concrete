@@ -1,11 +1,6 @@
-package concrete.constraint.linear
-
-import concrete.constraint.Residues
-import concrete.constraint.BCCompanion
-import concrete.Variable
-import concrete.ProblemState
-import concrete.constraint.TupleEnumerator
-import concrete.Domain
+package concrete
+package constraint
+package linear
 
 final class SumAC(
     constant: Int,
@@ -13,8 +8,8 @@ final class SumAC(
     scope: Array[Variable],
     mode: SumMode) extends Linear(constant, factors, scope, mode) with Residues with TupleEnumerator with BCCompanion {
 
-  override def advise(ps: ProblemState, i: Int) = {
-    val e = super.advise(ps, i)
+  override def advise(ps: ProblemState, event: Event, i: Int) = {
+    val e = super.advise(ps, event, i)
     if (skip(ps)) -1 else e
   }
 

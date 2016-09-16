@@ -40,7 +40,7 @@ class Circuit(
 
   private val startWith = scope2vars(0)
 
-  def advise(problemState: concrete.ProblemState, pos: Int): Int = arity
+  def advise(problemState: concrete.ProblemState, event: Event, pos: Int): Int = arity
   def check(tuple: Array[Int]): Boolean = {
     check(tuple, scope2vars(0), BitVector.empty, arity)
   }

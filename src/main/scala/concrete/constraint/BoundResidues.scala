@@ -33,19 +33,15 @@ trait BoundResidues extends BC {
   }
 
   //@annotation.tailrec
-  def shave(state: ProblemState): Outcome = {
-    var p = arity - 1
-    var current: Outcome = state
-    while (p >= 0) {
-      current = current.updateDom(scope(p), reviseDomain(state, p))
-      if (current == Contradiction) return Contradiction
-      p -= 1
-    }
-    current
-    //    if (p < 0) { state }
-    //    else if (p == skip) revise(state, skip, p - 1)
-    //    else state.updateDom(scope(p), reviseDomain(state, p)).andThen(ps => revise(ps, skip, p - 1))
+  override def revise(state: ProblemState): Outcome = {
+    fixPoint(state, 0 until arity, { (current, p) =>
+      current.updateDom(scope(p), reviseDomain(state, p))
 
+      //    if (p < 0) { state }
+      //    else if (p == skip) revise(state, skip, p - 1)
+      //    else state.updateDom(scope(p), reviseDomain(state, p)).andThen(ps => revise(ps, skip, p - 1))
+
+    })
   }
 
   def findSupport(state: ProblemState, position: Int, value: Int): Option[Array[Int]]

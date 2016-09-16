@@ -1,12 +1,10 @@
-package concrete.constraint.linear
+package concrete
+package constraint
+package linear
 
 import com.typesafe.scalalogging.LazyLogging
-import concrete.Contradiction
-import concrete.constraint.StatefulConstraint
-import concrete.Variable
-import concrete.ProblemState
+
 import cspom.util.BitVector
-import concrete.Outcome
 
 final class LinearNe(
     constant: Int,
@@ -17,7 +15,7 @@ final class LinearNe(
     var cons = constant
     val newVar = variables.filter { i =>
       val dom = ps.dom(scope(i))
-      if (dom.size == 1) {
+      if (dom.isAssigned) {
         cons -= dom.head * factors(i)
         false
       } else {
@@ -27,7 +25,7 @@ final class LinearNe(
     (newVar, cons)
   }
 
-  override def isConsistent(ps: ProblemState) = {
+  override def consistent(ps: ProblemState) = {
     val (oldCons, oldVar) = ps(this)
 
     val (newVar, newCons) = totalSpan(ps, oldCons, oldVar)
@@ -75,7 +73,7 @@ final class LinearNe(
 
   override def toString(ps: ProblemState) = toString(ps, "!=")
 
-  def advise(ps: ProblemState, p: Int) = arity * 2
+  def advise(ps: ProblemState, event: Event, p: Int) = arity * 2
 
   def simpleEvaluation: Int = 3
 

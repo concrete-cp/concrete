@@ -1,17 +1,10 @@
-package concrete.constraint.semantic
-
-import concrete.Contradiction
-import concrete.Domain
-import concrete.EmptyIntDomain
-import concrete.Outcome
-import concrete.ProblemState
-import concrete.Variable
-import concrete.constraint.Constraint
-import concrete.constraint.StatefulConstraint
+package concrete
+package constraint
+package semantic
 
 abstract class MinMax(protected val result: Variable, protected val vars: Array[Variable]) extends Constraint(result +: vars) {
 
-  def advise(ps: ProblemState, pos: Int): Int = arity
+  def advise(ps: ProblemState, event: Event, pos: Int): Int = arity
 
   def simpleEvaluation: Int = 2
 

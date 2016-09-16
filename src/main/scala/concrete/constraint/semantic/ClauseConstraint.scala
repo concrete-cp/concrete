@@ -1,17 +1,12 @@
-package concrete.constraint.semantic;
+package concrete
+package constraint
+package semantic
 
-import concrete.BooleanDomain
-import concrete.Contradiction
-
-import concrete.Outcome
-import concrete.ProblemState
 import BooleanDomain._
-import concrete.constraint.Constraint
 
-final class ClauseConstraint(clause: Clause) extends Constraint(clause.vars: _*) {
+final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable]) extends Constraint(positive ++ negative: _*) {
 
-  private val positive = clause.positive.toArray
-  private val negative = clause.negative.toArray
+  def this(clause: Clause) = this(clause.positive.toArray, clause.negative.toArray)
 
   private val posLength = positive.length
 
@@ -45,7 +40,7 @@ final class ClauseConstraint(clause: Clause) extends Constraint(clause.vars: _*)
 
   //if (isTrue(watch1) || isTrue(watch2)) entail()
 
-  def advise(ps: ProblemState, p: Int) = if (p == watch1 || p == watch2) 1 else -1
+  def advise(ps: ProblemState, event: Event, p: Int) = if (p == watch1 || p == watch2) 1 else -1
 
   override def check(t: Array[Int]) = {
     val (p, n) = t.view.splitAt(posLength)
@@ -154,9 +149,9 @@ final class ClauseConstraint(clause: Clause) extends Constraint(clause.vars: _*)
       ps.boolDom(scope(pos))
     } else {
       ps.boolDom(scope(pos)) match {
-        case TRUE  => FALSE
+        case TRUE => FALSE
         case FALSE => TRUE
-        case e     => e
+        case e => e
       }
     }
   }

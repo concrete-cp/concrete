@@ -17,6 +17,7 @@ import concrete.constraint.AdviseCount
 import org.scalatest.TryValues
 import concrete.filter.ACC
 import concrete.ParameterManager
+import concrete.BoundRemoval
 
 class AtMostTest extends FlatSpec with Matchers with Inspectors with TryValues {
 
@@ -52,7 +53,7 @@ class AtMostTest extends FlatSpec with Matchers with Inspectors with TryValues {
       .orElse { fail("Inconsistency") }
       .andThen(_.removeFrom(occ, 2))
       .andThen { ps =>
-        c.advise(ps, 0)
+        c.advise(ps, BoundRemoval, 0)
         c.revise(ps)
       }
       .andThen { ps =>

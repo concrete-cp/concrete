@@ -17,13 +17,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package concrete.filter;
+package concrete
+package filter
 
 import concrete.constraint.Constraint
-import concrete.Variable
-import concrete.Problem
-import concrete.ProblemState
-import concrete.Outcome
 
 /**
  * @author scand1sk
@@ -40,6 +37,6 @@ trait Filter {
 
   def reduceAfter(constraints: Iterable[Constraint], states: ProblemState): Outcome
 
-  def reduceAfter(variable: Seq[Variable], states: ProblemState): Outcome
+  def reduceAfter(modif: Seq[(Variable, Event)], states: ProblemState): Outcome
 
 }

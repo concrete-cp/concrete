@@ -59,8 +59,7 @@ object XCSPConcrete extends CSPOMRunner with App {
   }
 
   def controlCSPOM(solution: Map[String, Any], variables: Iterable[String], file: URL) = {
-    new SolutionChecker(file).checkSolution(
-      variables.map(solution).map { case i: Int => i }.toIndexedSeq)
+    new SolutionChecker(file).checkSolution(variables.map(solution).toIndexedSeq)
   }
 
   override def outputCSPOM(solution: Map[String, Any]): String = {
@@ -107,8 +106,12 @@ class SolutionChecker(file: URL) {
   private val command: Seq[String] =
     Seq("java", "-cp", jar, "abscon.instance.tools.SolutionChecker", temp.getPath)
 
-  def checkSolution(solution: IndexedSeq[Int]): Option[String] = {
-    val r = (command ++ solution.map(_.toString)).!!
+  def checkSolution(solution: IndexedSeq[Any]): Option[String] = {
+    val r = (command ++ solution.map {
+      case true => "1"
+      case false => "0"
+      case e => e.toString
+    }).!!
 
     if (r.contains("solutionCost 0")) {
       None

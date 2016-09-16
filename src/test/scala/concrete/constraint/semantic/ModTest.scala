@@ -1,20 +1,15 @@
-package concrete.constraint.semantic
+package concrete
+package constraint
+package semantic
 
 import org.scalatest.FlatSpec
 import org.scalatest.Inspectors
 import org.scalatest.Matchers
-import org.scalatest.prop.PropertyChecks
-
-import concrete.IntDomain
-import concrete.Problem
-import concrete.Singleton
-import concrete.Variable
-import concrete.constraint.AdviseCount
 
 /**
  * @author vion
  */
-class ModTest extends FlatSpec with Matchers with Inspectors with PropertyChecks {
+class ModTest extends FlatSpec with Matchers with Inspectors {
   "ModAC" should "comply with MiniZinc specifications" in {
 
     forAll(Seq((7, 4, 3), (-7, 4, -3), (7, -4, 3), (-7, -4, -3))) {

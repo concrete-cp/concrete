@@ -14,7 +14,7 @@ final class AbsDiffBC(val result: Variable, val v0: Variable, val v1: Variable)
 
   def check(t: Array[Int]) = t(0) == math.abs(t(1) - t(2))
 
-  def shave(ps: ProblemState) = {
+  override def shave(ps: ProblemState) = {
     val rspan = ps.span(result)
     val v1span = ps.span(v1)
     val v0span = ps.span(v0)

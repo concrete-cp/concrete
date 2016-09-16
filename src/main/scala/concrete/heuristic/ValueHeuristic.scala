@@ -1,21 +1,17 @@
-package concrete.heuristic;
-
-import concrete.Domain
-import concrete.Problem
-import concrete.ProblemState
-import concrete.Variable
+package concrete
+package heuristic;
 
 trait ValueHeuristic extends BranchHeuristic {
   def branch(variable: Variable, domain: Domain, ps: ProblemState): Branch = {
     val selected = selectIndex(variable, domain)
+    val dom = ps.dom(variable)
+    require(!dom.isAssigned && dom.present(selected))
+    val b1 = dom.assign(selected)
+    val b2 = dom.remove(selected)
+
     new Branch(
-      try { ps.assign(variable, selected).toState } catch {
-        case e: Exception => throw new IllegalStateException(s"${variable.toString(ps)} = $selected is inconsistent", e)
-      },
-      try { ps.remove(variable, selected).toState } catch {
-        case e: Exception => throw new IllegalStateException(s"${variable.toString(ps)} /= $selected is inconsistent", e)
-      },
-      Seq(variable),
+      ps.updateDomNonEmptyNoCheck(variable, b1), Seq((variable, Assignment)),
+      ps.updateDomNonEmptyNoCheck(variable, b2), Seq((variable, InsideRemoval(dom, b2))),
       s"${variable.toString(ps)} = $selected",
       s"${variable.toString(ps)} /= $selected")
   }

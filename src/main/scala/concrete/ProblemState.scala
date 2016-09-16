@@ -156,16 +156,17 @@ object ProblemState {
 }
 
 class EntailmentManager(
-    val entailed: BitVector, 
-    val activeConstraints: Vector[BitVector]) {
+    val entailed: BitVector,
+    var activeConstraints: Vector[BitVector],
+    var modified: BitVector) {
 
   def this(variables: Seq[Variable]) =
     this(
       BitVector.empty,
-      Vector(variables.map(v => BitVector.filled(v.constraints.length)): _*))
+      Vector(variables.map(v => BitVector.filled(v.constraints.length)): _*),
+      BitVector.empty)
 
   def addConstraints(constraints: Seq[Constraint]): EntailmentManager = {
-
     var ac = activeConstraints
     for (c <- constraints) {
       require(!entailed(c.id))
@@ -177,33 +178,49 @@ class EntailmentManager(
         }
       }
     }
-    new EntailmentManager(entailed, ac)
+    new EntailmentManager(entailed, ac, modified)
   }
 
   def apply(c: Constraint): Boolean = entailed(c.id)
 
   def entail(c: Constraint): EntailmentManager = {
-    var ac = activeConstraints
+    var mod = modified
+
     var i = c.arity - 1
     while (i >= 0) {
+
       val vid = c.scope(i).id
       /* Fake variables (constants) may appear in constraints */
       if (vid >= 0) {
-        val pos = c.positionInVariable(i)
-        /* Reified constraints are not directly related to variables */
-        if (pos >= 0) {
-          ac = ac.updated(vid, ac(vid) - c.positionInVariable(i))
-        }
+        mod += vid
       }
       i -= 1
     }
-    //    val id = c.id
-    //    if (id >= 0)
-    new EntailmentManager(entailed + c.id, ac)
+    new EntailmentManager(entailed + c.id, activeConstraints, mod)
 
   }
 
-  def active(v: Variable): BitVector = activeConstraints(v.id)
+  def active(v: Variable): BitVector = {
+    val vid = v.id
+    val active = activeConstraints(vid)
+    if (modified(vid)) {
+      val filtered = active.filter(p => !entailed(v.constraints(p).id))
+      activeConstraints = activeConstraints.updated(vid, filtered)
+      modified -= vid
+      filtered
+    } else {
+      active
+    }
+  }
+
+  def delazy(variables: Array[Variable]) = {
+    for (vid <- modified) {
+      val v = variables(vid)
+      val filtered = activeConstraints(vid).filter(p => !entailed(v.constraints(p).id))
+      activeConstraints = activeConstraints.updated(vid, filtered)
+    }
+    modified = BitVector.empty
+  }
 }
 
 case class ProblemState(
@@ -230,15 +247,6 @@ case class ProblemState(
     }
   }
 
-  //  def updateConstraints(f: (Int, Any) => Any) = {
-  //    var i = constraintStates.length - 1
-  //    val builder = constraintStates.genericBuilder[Any]
-  //    builder.sizeHint(constraintStates.length)
-  //    while (i < constraintStates.length) {
-  //      builder += f(i, constraintStates(i))
-  //    }
-  //    new ProblemState(domains, builder.result, entailed)
-  //  }
 
   def padConstraints(constraints: Seq[Constraint], lastId: Int): Outcome = {
     if (constraintStates.length > lastId) {
@@ -257,20 +265,7 @@ case class ProblemState(
         .andThen { newState =>
           ProblemState(newState.domains, newState.constraintStates, entailed.addConstraints(newConstraints))
         }
-      //
-      //      for (c <- newConstraints) {
-      //        c.init(ps) match {
-      //          case Contradiction => return Contradiction
-      //          case newState: ProblemState =>
-      //            if (ps ne newState) {
-      //              logger.debug(s"Initializing ${c.toString(ps)} -> ${c.toString(newState)}")
-      //            }
-      //
-      //            ps = ProblemState(newState.domains, newState.constraintStates, entailed.addConstraint(c))
-      //        }
-      //
-      //      }
-      //      ps
+ 
     }
   }
 
@@ -382,6 +377,8 @@ case class ProblemState(
   }
 
   def domainsOption = Some(domains)
+
+  def delazy(vars: Array[Variable]) = entailed.delazy(vars)
 
   def toString(problem: Problem) = problem.toString(this)
   def toState: ProblemState = this

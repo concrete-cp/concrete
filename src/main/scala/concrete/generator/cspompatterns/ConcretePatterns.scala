@@ -21,7 +21,7 @@ object ConcretePatterns {
         // Clause does not support constants
         SimplClause, PBConstants,
         Bool2IntDomains, DivDomains, ModDomains,
-        Knapsack, Lex)
+        Knapsack, Lex, NoOverlap)
 
     val concreteImp = Seq(
       //AbsDiff, AbsDiffDomains,

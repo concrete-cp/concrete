@@ -4,6 +4,7 @@ import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.ProblemState
 import concrete.Outcome
+import concrete.Event
 
 final class AbsAC(val result: Variable, val v0: Variable) extends Constraint(Array(result, v0)) {
 
@@ -27,11 +28,13 @@ final class AbsAC(val result: Variable, val v0: Variable) extends Constraint(Arr
   override def toString(ps: ProblemState) =
     s"${result.toString(ps)} =AC= |${v0.toString(ps)}|";
 
-  def advise(ps: ProblemState, p: Int) = {
-    val rSize = ps.card(result)
-    val vSize = ps.card(v0)
-    val eval = rSize * 3 / 2 + vSize
-    if (eval > 500) -1 else eval
+  def advise(ps: ProblemState, event: Event, p: Int) = {
+    val rSize = ps.card(result) * 3 / 2
+    if (rSize > 200) { -1 }
+    else {
+      val eval = rSize * ps.card(v0)
+      if (eval > 500) -1 else eval
+    }
 
   }
 

@@ -19,8 +19,9 @@ import cspom.util.IntervalsArithmetic.RangeArithmetics
 import cspom.variable.IntVariable
 import cspom.util.RangeSet
 import cspom.util.Infinitable
+import com.typesafe.scalalogging.LazyLogging
 
-object SumDomains extends VariableCompiler('sum) {
+object SumDomains extends VariableCompiler('sum) with LazyLogging {
 
   def compiler(c: CSPOMConstraint[_]) = throw new IllegalStateException
 
@@ -50,7 +51,9 @@ object SumDomains extends VariableCompiler('sum) {
             args(i) -> reduceDomain(iargs(i), others / coef(i))
           }
 
-          val entailed = args.collect { case IntVariable(e) => e }.size == 1
+          val entailed = filt.map(_._2).count(_.searchSpace > 1) <= 1
+
+          // logger.debug((filt, entailed).toString)
 
           (filt, entailed)
         }

@@ -1,12 +1,8 @@
-package concrete.constraint.semantic;
+package concrete
+package constraint
+package semantic;
 
-import concrete.constraint.Constraint
-import concrete.Variable
-import concrete.constraint.BC
-import concrete.ProblemState
-import concrete.Outcome
 import concrete.util.Interval
-import concrete.Contradiction
 
 final class AbsBC(val result: Variable, val v0: Variable) extends Constraint(Array(result, v0)) with BC {
   //  val corresponding1 = result.dom.allValues map { v0.dom.index }
@@ -17,7 +13,7 @@ final class AbsBC(val result: Variable, val v0: Variable) extends Constraint(Arr
 
   def check(t: Array[Int]) = t(0) == math.abs(t(1))
 
-  def shave(ps: ProblemState): Outcome = {
+  override def shave(ps: ProblemState): Outcome = {
 
     ps.shaveDom(result, ps.span(v0).abs)
       .andThen { ps =>
@@ -26,17 +22,16 @@ final class AbsBC(val result: Variable, val v0: Variable) extends Constraint(Arr
         val v0span = ps.span(v0)
 
         Interval.realUnion(v0span intersect ri, v0span intersect -ri) match {
-          case Seq(i, j) =>
+          case Some(Right((i, j))) =>
             val d0 = ps.dom(v0)
               .removeUntil(i.lb)
               .removeAfter(j.ub)
               .removeItv(i.ub + 1, j.lb - 1)
 
             ps.updateDom(v0, d0)
+          case Some(Left(i)) => ps.shaveDom(v0, i)
 
-          case Seq(i) => ps.shaveDom(v0, i)
-          case Seq()  => Contradiction
-          case _      => throw new AssertionError
+          case None => Contradiction
         }
 
       }

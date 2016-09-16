@@ -17,7 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package concrete.constraint;
+package concrete
+package constraint
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
@@ -25,10 +26,6 @@ import scala.collection.mutable.HashMap
 
 import com.typesafe.scalalogging.LazyLogging
 
-import concrete.Contradiction
-import concrete.Outcome
-import concrete.ProblemState
-import concrete.Variable
 import concrete.heuristic.Weighted
 import concrete.priorityqueues.DLNode
 import concrete.priorityqueues.Identified
@@ -142,30 +139,33 @@ abstract class Constraint(val scope: Array[Variable])
   //    super.weight = w
   //  }
 
-  def isConsistent(problemState: ProblemState): Outcome = {
-    revise(problemState).andThen(_ => problemState)
+  def consistent(problemState: ProblemState): Outcome = {
+    if (isConsistent(problemState)) problemState else Contradiction
   }
 
-  def advise(problemState: ProblemState, pos: Int): Int
+  def isConsistent(ps: ProblemState): Boolean = revise(ps).isState
 
-  def adviseArray(problemState: ProblemState, pos: Array[Int]): Int = {
+  def advise(problemState: ProblemState, event: Event, position: Int): Int
+
+  /**
+   * Same event for all positions
+   * Mostly used when a variable is several times in the scope
+   */
+  def adviseArray(problemState: ProblemState, event: Event, positions: Array[Int]): Int = {
     var max = -1
-    var i = pos.length - 1
+    var i = positions.length - 1
     while (i >= 0) {
-      max = math.max(max, advise(problemState, pos(i)))
+      max = math.max(max, advise(problemState, event, positions(i)))
       i -= 1
     }
     max
   }
 
-  def adviseVar(problemState: ProblemState, v: Variable): Int =
-    adviseArray(problemState, position(v))
-
   final def adviseAll(problemState: ProblemState): Int = {
     var max = -1
     var i = arity - 1
     while (i >= 0) {
-      max = math.max(max, advise(problemState, i))
+      max = math.max(max, advise(problemState, Assignment, i))
       i -= 1
     }
     max

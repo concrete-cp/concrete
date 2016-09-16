@@ -32,7 +32,7 @@ final class LinearEq(
 
   private val negFactors = factors.map(-_)
 
-  override def isConsistent(ps: ProblemState, mod: BitVector) = {
+  override def consistent(ps: ProblemState, mod: BitVector) = {
     val (doms, f, vars, max) = updateF(ps, mod)
     clearMod()
     if (f.contains(0)) {
@@ -41,6 +41,8 @@ final class LinearEq(
       Contradiction
     }
   }
+
+  override def isConsistent(ps: ProblemState, mod: BitVector) = throw new AssertionError
 
   @annotation.tailrec
   def altRevise(ps: ProblemState, doms: Array[Domain], changed: BitVector, f: Interval, vars: BitVector, neg: Boolean, looping: Boolean, currentMax: Int): Outcome = {

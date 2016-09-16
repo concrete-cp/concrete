@@ -8,8 +8,8 @@ import concrete.ParameterManager
 import concrete.Variable
 import concrete.constraint.Constraint
 import cspom.CSPOMConstraint
-import cspom.VariableNames
 import cspom.variable.CSPOMVariable
+import cspom.CSPOM
 
 class GeneratorManager(pg: ProblemGenerator) {
 
@@ -41,10 +41,11 @@ class GeneratorManager(pg: ProblemGenerator) {
       'xor -> new XorGenerator(pg),
       'inverse -> new InverseGenerator(pg, adg),
       'cumulative -> new CumulativeGenerator(pg),
-      'diffn -> new DiffNGenerator(pg))
+      'diffn -> new DiffNGenerator(pg),
+      'clause -> ClauseGenerator)
   }
 
-  def generate[A](constraint: CSPOMConstraint[A], variables: Map[CSPOMVariable[_], Variable], vn: VariableNames): Try[Seq[Constraint]] = {
+  def generate[A](constraint: CSPOMConstraint[A], variables: Map[CSPOMVariable[_], Variable], cspom: CSPOM): Try[Seq[Constraint]] = {
     known.get(constraint.function).map(Success(_))
       .getOrElse(Failure(new FailedGenerationException(s"No candidate constraint for $constraint")))
       .flatMap { candidate =>
@@ -53,7 +54,7 @@ class GeneratorManager(pg: ProblemGenerator) {
         }
           .recoverWith {
             case e =>
-              Failure(new FailedGenerationException("Failed to generate " + constraint.toString(vn), e))
+              Failure(new FailedGenerationException("Failed to generate " + constraint.toString(cspom.displayName), e))
           }
       }
   }

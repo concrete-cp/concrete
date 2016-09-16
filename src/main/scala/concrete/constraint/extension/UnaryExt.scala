@@ -17,18 +17,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package concrete.constraint.extension;
-
-import concrete.Variable
-import concrete.ProblemState
+package concrete
+package constraint
+package extension
 
 final class UnaryExt(scope: Variable, var matrix: Matrix)
     extends ExtensionConstraint(Array(scope)) {
 
-  def init(ps: ProblemState) = ps.filterDom(scope)(v => matrix.check(Array(v))).entail(this)
+  var allowed: Domain = _
+
+  def init(ps: ProblemState) = {
+    allowed = ps.dom(scope).filter { v => matrix.check(Array(v)) }
+    ps.updateDom(scope, allowed).entail(this)
+  }
+
+  override def isConsistent(ps: ProblemState) = ps.dom(scope).disjoint(allowed)
 
   def revise(ps: ProblemState) = {
-    assert(ps.isEntailed(this))
+    logger.debug(s"Revision of unary constraint ${toString(ps)}")
     ps
   }
 
@@ -51,7 +57,7 @@ final class UnaryExt(scope: Variable, var matrix: Matrix)
   override def check(tuple: Array[Int]) = matrix.check(tuple)
 
   def simpleEvaluation = 1
-  def advise(ps: ProblemState, p: Int) = ps.dom(scope).size
+  def advise(ps: ProblemState, event: Event, p: Int) = -1
   override def dataSize = matrix.size
 
 }

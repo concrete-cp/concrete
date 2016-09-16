@@ -22,7 +22,6 @@ import concrete.constraint.Residues
 import concrete.constraint.linear.SumEQ
 import concrete.constraint.linear.SumLE
 import concrete.constraint.linear.SumMode
-import concrete.generator.LinearConstraint
 import concrete.Domain
 import BooleanDomain._
 
@@ -34,10 +33,14 @@ case class Clause(positive: Seq[Variable], negative: Seq[Variable]) extends Arc 
   override def toString = s"Clause(${positive.mkString(", ")}${if (positive.nonEmpty && negative.nonEmpty) ", " else ""}${negative.map("-" + _).mkString(", ")})"
 }
 
-class PseudoBoolean(
-  vars: Seq[Variable], coefs: Seq[Int],
+case class PseudoBoolean(
+  vars: Seq[Variable], factors: Seq[Int],
   mode: SumMode, constant: Int)
-    extends LinearConstraint(vars, coefs, mode, constant)
+    extends Arc {
+
+  def size = vars.size
+
+}
 
 object SAT extends LazyLogging {
 

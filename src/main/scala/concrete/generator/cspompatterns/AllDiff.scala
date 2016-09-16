@@ -10,7 +10,6 @@ import com.typesafe.scalalogging.LazyLogging
 import concrete.CSPOMDriver
 import cspom.CSPOM
 import cspom.CSPOMConstraint
-import cspom.VariableNames
 import cspom.compiler.ConstraintCompiler
 import cspom.compiler.Delta
 import cspom.util.IntInterval
@@ -226,7 +225,7 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
     var delta = Delta()
 
     if (!scope.flatMap(problem.constraints).exists(c => isSubsumed(allDiff, c))) {
-      logger.debug("New alldiff: " + allDiff.toString(new VariableNames(problem)))
+      logger.debug("New alldiff: " + allDiff.toString(problem.displayName))
       delta ++= addCtr(allDiff, problem)
 
       var removed = 0

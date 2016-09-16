@@ -1,17 +1,23 @@
-package concrete.heuristic;
-
-import concrete.Domain
-import concrete.ParameterManager
-import concrete.Problem
-import concrete.ProblemState
-import concrete.Variable
+package concrete
+package heuristic
 
 object Split {
-  def splitAt(variable: Variable, med: Int, ps: ProblemState) = {
+  def splitAt(variable: Variable, med: Int, ps: ProblemState): Branch = {
+    val dom = ps.dom(variable)
+
+    splitAt(variable, med, dom.removeFrom(med), dom.removeUntil(med), ps)
+  }
+
+  def revSplitAt(variable: Variable, med: Int, ps: ProblemState): Branch = {
+    val dom = ps.dom(variable)
+
+    splitAt(variable, med, dom.removeUntil(med), dom.removeFrom(med), ps)
+  }
+
+  def splitAt(variable: Variable, med: Int, b1: Domain, b2: Domain, ps: ProblemState): Branch = {
     new Branch(
-      ps.removeFrom(variable, med).toState,
-      ps.removeUntil(variable, med).toState,
-      Seq(variable),
+      ps.updateDomNonEmptyNoCheck(variable, b1), Seq((variable, BoundRemoval(b1))),
+      ps.updateDomNonEmptyNoCheck(variable, b2), Seq((variable, BoundRemoval(b2))),
       s"${variable.toString(ps)} < $med", s"${variable.toString(ps)} >= $med")
   }
 }
@@ -25,8 +31,7 @@ final class Split(pm: ParameterManager) extends BranchHeuristic {
   }
 
   override def branch(variable: Variable, domain: Domain, ps: ProblemState) = {
-    val med = domain.median
-    Split.splitAt(variable, med, ps)
+    Split.splitAt(variable, domain.median, ps)
   }
 
   def shouldRestart = false

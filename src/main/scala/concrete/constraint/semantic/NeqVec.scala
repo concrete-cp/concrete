@@ -6,6 +6,8 @@ import concrete.Outcome
 import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Constraint
+import concrete.Event
+import concrete.Assignment
 
 final class NeqVec(x: Array[Variable], y: Array[Variable]) extends Constraint(x ++ y) {
 
@@ -41,7 +43,7 @@ final class NeqVec(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
 
     if (i >= arity) {
       single
-    } else if (ps.dom(scope(i)).size > 1) {
+    } else if (!ps.assigned(scope(i))) {
       if (single < 0) {
         singleFreeVariable(ps, i + 1, i)
       } else {
@@ -55,7 +57,7 @@ final class NeqVec(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
   override def toString(ps: ProblemState) =
     x.map(_.toString(ps)).mkString("(", ", ", ")") + " /= " + y.map(_.toString(ps)).mkString("(", ", ", ")")
 
-  def advise(ps: ProblemState, p: Int) = arity
+  def advise(ps: ProblemState, event: Event, p: Int) = if (event <= Assignment) arity else -1
 
   val simpleEvaluation = 2
 }

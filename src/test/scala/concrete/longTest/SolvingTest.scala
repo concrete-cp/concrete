@@ -24,6 +24,8 @@ import cspom.CSPOM
 import cspom.compiler.CSPOMCompiler
 import cspom.flatzinc.FlatZincParser
 import cspom.xcsp.XCSPParser
+import com.typesafe.scalalogging.LazyLogging
+import scala.concurrent.duration.Duration
 
 //import SolvingTest._
 
@@ -36,49 +38,41 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
     "testExtension1.xml.xz" -> ((8, false)),
     "testExtension2.xml.xz" -> ((8, false)),
     "testExtension3.xml.xz" -> ((0, false)),
+
     "testPrimitive.xml.xz" -> ((2, false)),
     "AllInterval-005.xml.xz" -> ((8, false)),
     "testObjective1.xml.xz" -> ((11, false)),
     "QuadraticAssignment-qap.xml.xz" -> ((4776, false)),
-
     "fapp01-0200-0.xml.xz" -> ((false, false)),
 
     "scen11-f12.xml.xz" -> ((0, true)),
-
     "normalized-renault-mod-0_ext.xml.xz" -> ((true, true)),
-
     "battleships10.fzn.xz" -> ((1, false)),
     "photo.fzn.xz" -> ((8, false)),
-
     "crossword-m1-debug-05-01.xml.xz" -> ((48, true)),
+
     "bigleq-50.xml.xz" -> ((1, true)),
     "battleships_2.fzn.xz" -> ((36, false)),
     "flat30-1.cnf.xz" -> ((true, false)),
     "alpha.fzn.xz" -> ((true, false)),
     "frb35-17-1_ext.xml.xz" -> ((2, true)),
+
     "queens-12_ext.xml.xz" -> ((14200, false)),
-
     "zebra.xml.xz" -> ((1, true)),
-
     "bqwh-18-141-47_glb.xml.xz" -> ((10, true)),
-
     "crossword-m2-debug-05-01.xml.xz" -> ((48, true)),
     "queens-8.xml.xz" -> ((92, true)),
 
     "scen11.xml.xz" -> ((true, true)),
     "bqwh-15-106-0_ext.xml.xz" -> ((182, true)),
     "queensAllDiff-8.xml.xz" -> ((92, true)),
-
     "langford-2-4-ext.xml.xz" -> ((2, true)),
-
     "series-15.xml.xz" -> ((true, true)),
+
     "e0ddr1-10-by-5-8.xml.xz" -> ((true, true)),
-
     "tsp-20-1_ext.xml.xz" -> ((true, true)),
-
     "test.fzn.xz" -> ((true, false)),
-
-    "queens-12.xml.xz" -> ((14200, false))).slice(27, 28)
+    "queens-12.xml.xz" -> ((14200, false))) //.slice(21, 22)
 
   val parameters = Nil
 
@@ -107,7 +101,7 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
   }
 
 }
-trait SolvingBehaviors extends Matchers with Inspectors { this: FunSpec =>
+trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this: FunSpec =>
 
   def solve(name: String, expectedResult: Boolean, parameters: Seq[(String, String)], test: Boolean): Unit =
     it(s"should have ${if (expectedResult) "a" else "no"} solution") {
@@ -120,8 +114,11 @@ trait SolvingBehaviors extends Matchers with Inspectors { this: FunSpec =>
 
       val parser = CSPOM.autoParser(url).get
 
+
       CSPOM.load(url, parser)
         .flatMap { cspomProblem =>
+   
+          logger.debug(cspomProblem.toString)
           parser match {
             case FlatZincParser =>
               CSPOMCompiler.compile(cspomProblem, FZPatterns())
@@ -136,6 +133,7 @@ trait SolvingBehaviors extends Matchers with Inspectors { this: FunSpec =>
         .flatMap(CSPOMCompiler.compile(_, ConcretePatterns(pm)))
         .flatMap(CSPOMCompiler.compile(_, Seq(Bool2IntIsEq)))
         .flatMap { cspom =>
+          logger.debug(cspom.toString)
           val pg = new ProblemGenerator(pm)
 
           pg.generate(cspom).flatMap {
@@ -173,7 +171,7 @@ trait SolvingBehaviors extends Matchers with Inspectors { this: FunSpec =>
             }
           }
 
-          concurrent.Await.result(f, 120.seconds)
+          concurrent.Await.result(f, 600.seconds)
 
         }
         .get

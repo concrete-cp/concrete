@@ -1,12 +1,8 @@
-package concrete.constraint.linear
+package concrete
+package constraint
+package linear
 
 import com.typesafe.scalalogging.LazyLogging
-
-import concrete.Contradiction
-import concrete.Outcome
-import concrete.ParameterManager
-import concrete.ProblemState
-import concrete.Variable
 
 object StatelessLinearLe {
   def apply(constant: Int, factors: Array[Int], scope: Array[Variable], strict: Boolean, pm: ParameterManager) = {
@@ -29,12 +25,7 @@ final class StatelessLinearLe(
   import StatelessBoundPropagation._
 
   override def isConsistent(ps: ProblemState) = {
-    val f = updateF(ps)._1
-    if (f.lb <= 0) {
-      ps
-    } else {
-      Contradiction
-    }
+    updateF(ps)._1.lb <= 0
   }
 
   override def revise(ps: ProblemState): Outcome = {
@@ -63,7 +54,7 @@ final class StatelessLinearLe(
 
   override def toString(ps: ProblemState) = toString(ps, "<=BC")
 
-  def advise(ps: ProblemState, p: Int) = arity * 2
+  def advise(ps: ProblemState, event: Event, p: Int) = if (event <= BoundRemoval) arity * 2 else -1
 
   def simpleEvaluation: Int = 3
 

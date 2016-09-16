@@ -18,7 +18,7 @@ final class MulBC(val result: Variable, val v0: Variable, val v1: Variable)
 
   def check(t: Array[Int]) = t(0) == (t(1) * t(2));
 
-  def shave(ps: ProblemState): Outcome = {
+  override def shave(ps: ProblemState): Outcome = {
 
     val rspan = ps.span(result)
     val v0span = ps.span(v0)

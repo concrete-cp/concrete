@@ -17,7 +17,7 @@ class ModBC(x: Variable, y: Variable, z: Variable) extends Constraint(x, y, z) w
   override def init(ps: ProblemState): Outcome = ps.remove(y, 0)
 
   // Members declared in concrete.constraint.BC
-  def shave(ps0: ProblemState): Outcome = {
+  override def shave(ps0: ProblemState): Outcome = {
     // Compute bounds for reminder 
     val xSpan = ps0.span(x)
     val ySpan = ps0.span(y)

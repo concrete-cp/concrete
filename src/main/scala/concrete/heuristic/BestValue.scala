@@ -15,7 +15,7 @@ final class BestValue(params: ParameterManager) extends ValueHeuristic {
 
   val fallback = {
     val valueHeuristicClass: Class[_ <: ValueHeuristic] =
-      params.getOrElse("bestvalue.fallback", classOf[RandomValue])
+      params.classInPackage("bestvalue.fallback", "concrete.heuristic", classOf[RandomBound])
 
     valueHeuristicClass.getConstructor(classOf[ParameterManager]).newInstance(params)
   }

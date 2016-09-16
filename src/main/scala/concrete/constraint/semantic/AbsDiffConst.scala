@@ -59,7 +59,7 @@ final class AbsDiffConstBC(val result: Int, val v0: Variable, val v1: Variable)
 
   def check(t: Array[Int]) = result == math.abs(t(0) - t(1))
 
-  def shave(ps: ProblemState): Outcome = {
+  override def shave(ps: ProblemState): Outcome = {
     val d0 = ps.dom(v0)
     val i0 = d0.span
     val d1 = ps.dom(v1)

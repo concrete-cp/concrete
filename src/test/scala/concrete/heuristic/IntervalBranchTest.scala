@@ -8,6 +8,7 @@ import concrete.ProblemState
 import cspom.util.BitVector
 import concrete.util.Vector
 import concrete.ParameterManager
+import concrete.EntailmentManager
 
 /**
  * @author vion
@@ -20,7 +21,7 @@ class IntervalBranchTest extends FlatSpec with Matchers {
 
     val v = new Variable("v", d)
     v.id = 0
-    val ps = new ProblemState(Vector(d), Vector(), Vector(), BitVector.empty)
+    val ps = new ProblemState(Vector(d), Vector(), new EntailmentManager(Seq(v)))
 
     val h = new concrete.heuristic.IntervalBranch(new ParameterManager)
 
@@ -36,7 +37,7 @@ class IntervalBranchTest extends FlatSpec with Matchers {
 
     val v = new Variable("v", d)
     v.id = 0
-    val ps = new ProblemState(Vector(d), Vector(), Vector(), BitVector.empty)
+    val ps = new ProblemState(Vector(d), Vector(), new EntailmentManager(Seq(v)))
 
     val h = new concrete.heuristic.IntervalBranch(new ParameterManager)
 

@@ -10,6 +10,8 @@ import concrete.Contradiction
 import concrete.ProblemState
 import concrete.Outcome
 import cspom.util.BitVector
+import concrete.Event
+import concrete.BoundRemoval
 
 final class SquareBC(val x: Variable, val y: Variable)
     extends Constraint(Array(x, y)) with BC {
@@ -24,7 +26,7 @@ final class SquareBC(val x: Variable, val y: Variable)
 
   def check(t: Array[Int]) = t(0) == t(1) * t(1)
 
-  def shave(ps: ProblemState) = {
+  override def shave(ps: ProblemState) = {
     ps.shaveDom(x, ps.span(y).sq)
       .shaveDom(y, ps.span(x).sqrt)
   }
@@ -85,10 +87,7 @@ final class SquareAC(val x: Variable, val y: Variable)
   override def isConsistent(ps: ProblemState) = {
     val domY = ps.dom(y)
     val domX = ps.dom(x)
-    if (domX.exists(v => consistentX(v, domY)) && domY.exists(v => consistentY(v, domX)))
-      ps
-    else
-      Contradiction
+    domX.exists(v => consistentX(v, domY)) && domY.exists(v => consistentY(v, domX))
   }
 
   override def toString(ps: ProblemState) = s"${x.toString(ps)} =AC= ${y.toString(ps)}²"

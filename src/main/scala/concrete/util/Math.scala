@@ -1,5 +1,8 @@
 package concrete.util
 
+import scala.util.Random
+import scala.collection.mutable.HashSet
+
 object Math {
   /**
    * Returns the product of {@code a} and {@code b}, provided it does not overflow.
@@ -87,5 +90,30 @@ object Math {
         roundedTowardsZeroQuotient;
       }
     }
+  }
+
+  /**
+   * Robert Floyd algorithm to pick M elements from 1..N
+   *
+   * initialize set S to empty
+   * for J := N-M + 1 to N do
+   *   T := RandInt(1, J)
+   *   if T is not in S then
+   *     insert T in S
+   *   else
+   *     insert J in S
+   */
+  def randSet(m: Int, n: Int, rand: Random): Set[Int] = {
+    var s = new HashSet[Int]
+    for (j <- (n - m) until n) {
+      val t = rand.nextInt(j)
+      if (s(t)) {
+        s += j
+      } else {
+        s += t
+      }
+    }
+    s.toSet
+
   }
 }

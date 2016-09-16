@@ -8,6 +8,7 @@ import concrete.Domain
 import concrete.ParameterManager
 import concrete.ProblemState
 import concrete.Variable
+import scala.util.Random
 
 abstract class ScoredVariableHeuristic(params: ParameterManager, decisionVariables: Array[Variable]) extends VariableHeuristic(params, decisionVariables)
     with LazyLogging {
@@ -15,7 +16,7 @@ abstract class ScoredVariableHeuristic(params: ParameterManager, decisionVariabl
   //def problem: Problem
 
   @tailrec
-  private def selectRand(i: Int, best: Variable, bestScore: Double, ties: Int, state: ProblemState, rand: Double): Variable = {
+  private def selectRand(i: Int, best: Variable, bestScore: Double, ties: Int, state: ProblemState, rand: Random): Variable = {
     if (i < 0) {
       logger.debug(s"$best: $bestScore")
       best
@@ -31,7 +32,7 @@ abstract class ScoredVariableHeuristic(params: ParameterManager, decisionVariabl
           selectRand(i - 1, current, s, 2, state, rand)
         } else if (s < bestScore) {
           selectRand(i - 1, best, bestScore, ties, state, rand)
-        } else if (rand * ties < 1) {
+        } else if (rand.nextDouble() * ties < 1) {
           selectRand(i - 1, current, s, ties + 1, state, rand)
         } else {
           selectRand(i - 1, best, bestScore, ties + 1, state, rand)
@@ -65,7 +66,7 @@ abstract class ScoredVariableHeuristic(params: ParameterManager, decisionVariabl
     val v = decisionVariables(i)
     rand
       .map { r =>
-        selectRand(i - 1, v, score(v, state.dom(v), state), 2, state, r.nextDouble())
+        selectRand(i - 1, v, score(v, state.dom(v), state), 2, state, r)
       }
       .getOrElse {
         selectFirst(i - 1, v, score(v, state.dom(v), state), state)

@@ -1,3 +1,5 @@
+predicate count_le(array[int] of var bool: x, par bool: y, var int: c);
+
 predicate count_eq(array[int] of var int: x, var int: y, var int: c);
 
 predicate count_eq_reif(array[int] of var int: x, var int: y, var int: c, var bool: r) = 

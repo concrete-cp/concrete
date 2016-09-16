@@ -6,6 +6,7 @@ import scala.reflect.runtime.universe._
 import scala.collection.mutable.HashSet
 import scala.collection.immutable.TreeMap
 import scala.collection.immutable.SortedMap
+import com.typesafe.scalalogging.LazyLogging
 
 /**
  * This class is intended to hold Concrete's various parameters.
@@ -13,7 +14,7 @@ import scala.collection.immutable.SortedMap
  * @author vion
  *
  */
-final class ParameterManager {
+final class ParameterManager extends LazyLogging {
 
   private var _parameters: SortedMap[String, Any] = new TreeMap()
 
@@ -37,9 +38,12 @@ final class ParameterManager {
     require(TypeTag.Nothing != typeTag[T], s"Please give a type for $name, was ${typeTag[T]}")
     val got = parameters.get(name).map {
       case s: String => parse(typeOf[T], s)
-      case v: Any    => v.asInstanceOf[T]
+      case v: Any => v.asInstanceOf[T]
     }
-    if (got.isDefined) used += name
+    if (got.isDefined) {
+      logger.info(s"$name = $got")
+      used += name
+    }
     got
   }
 
@@ -92,7 +96,7 @@ final class ParameterManager {
    */
   override def toString = _parameters.iterator.map {
     case (k, Unit) => k
-    case (k, v)    => s"$k = $v"
+    case (k, v) => s"$k = $v"
   }.mkString(", ")
 
   def parameters: SortedMap[String, Any] = _parameters

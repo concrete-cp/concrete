@@ -1,11 +1,6 @@
-package concrete.constraint.semantic;
-
-import concrete.Domain
-import concrete.Outcome
-import concrete.ProblemState
-import concrete.Variable
-import concrete.constraint.Constraint
-import concrete.Contradiction
+package concrete
+package constraint
+package semantic
 
 /**
  * v0 - v1 != c
@@ -38,12 +33,10 @@ final class Neq(v0: Variable, v1: Variable, c: Int = 0) extends Constraint(Array
 
   override def isConsistent(ps: ProblemState) = {
     val v0dom = ps.dom(v0)
-    val r = !v0dom.isAssigned || {
+    !v0dom.isAssigned || {
       val v1dom = ps.dom(v1)
       !v1dom.isAssigned || (v0dom.head - v1dom.head != c)
     }
-
-    if (r) ps else Contradiction
   }
 
   override def toString(ps: ProblemState) = s"${v0.toString(ps)} /= ${v1.toString(ps)}${
@@ -52,8 +45,11 @@ final class Neq(v0: Variable, v1: Variable, c: Int = 0) extends Constraint(Array
     else ""
   }"
 
-  def advise(ps: ProblemState, p: Int) =
-    if (ps.assigned(scope(p))) 2 else -1
+  def advise(ps: ProblemState, event: Event, p: Int) = {
+    // Entailment can be detected even if event is not an assigment
+    //if (event <= Assignment) 2 else -1
+    2
+  }
 
   val simpleEvaluation = 2
 }

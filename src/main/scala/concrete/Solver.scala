@@ -38,31 +38,20 @@ import cspom.CSPOM
 import cspom.Statistic
 import cspom.StatisticsManager
 import cspom.compiler.CSPOMCompiler
-import concrete.constraint.linear.Simplex
 import concrete.constraint.extension.BinaryExt
 import concrete.constraint.Constraint
 import concrete.constraint.semantic.DiffN
 
-final class SolverFactory(val params: ParameterManager) {
-
-  val solverClass: Class[_ <: Solver] =
-    params.classInPackage("solver", "concrete", classOf[MAC])
-
-  def apply(problem: Problem): Solver = {
-    solverClass
-      .getMethod("apply", classOf[Problem], classOf[ParameterManager])
-      .invoke(null, problem, params)
-      .asInstanceOf[Solver]
-  }
-
-  def apply(cspom: CSPOM): Try[CSPOMSolver] = {
-    CSPOMCompiler.compile(cspom, ConcretePatterns(params))
+object Solver {
+  def apply(cspom: CSPOM): Try[CSPOMSolver] = apply(cspom, new ParameterManager)
+  def apply(cspom: CSPOM, pm: ParameterManager): Try[CSPOMSolver] = {
+    CSPOMCompiler.compile(cspom, ConcretePatterns(pm))
       .flatMap { cspom =>
-        val pg = new ProblemGenerator(params)
+        val pg = new ProblemGenerator(pm)
         pg.generate(cspom)
           .flatMap {
             case (problem, variables) =>
-              val solver = apply(problem)
+              val solver = apply(problem, pm)
               solver.statistics.register("compiler", CSPOMCompiler)
               solver.statistics.register("generator", pg)
 
@@ -72,13 +61,15 @@ final class SolverFactory(val params: ParameterManager) {
       }
   }
 
-}
-
-object Solver {
-  def apply(cspom: CSPOM): Try[CSPOMSolver] = apply(cspom, new ParameterManager)
-  def apply(cspom: CSPOM, pm: ParameterManager): Try[CSPOMSolver] = new SolverFactory(pm)(cspom)
   def apply(problem: Problem): Solver = apply(problem, new ParameterManager)
-  def apply(problem: Problem, pm: ParameterManager): Solver = new SolverFactory(pm)(problem)
+  def apply(problem: Problem, pm: ParameterManager): Solver = {
+    val solverClass: Class[_ <: Solver] =
+      pm.classInPackage("solver", "concrete", classOf[MAC])
+    solverClass
+      .getMethod("apply", classOf[Problem], classOf[ParameterManager])
+      .invoke(null, problem, pm)
+      .asInstanceOf[Solver]
+  }
 }
 
 abstract class Solver(val problem: Problem, val params: ParameterManager) extends Iterator[Map[Variable, Any]] with LazyLogging {
@@ -121,7 +112,6 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   statistics.register("relation", ReduceableExt)
   statistics.register("domain", Domain)
   statistics.register("linear", LinearLe)
-  statistics.register("simplex", Simplex)
   statistics.register("binary", BinaryExt)
   statistics.register("diffn", DiffN)
 
@@ -160,6 +150,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
     case SAT(sol) =>
       _next = UNKNOWNResult(None)
       BestValue.newSolution(sol)
+
       for (v <- _maximize) {
         reset()
         sol(v) match {
@@ -256,8 +247,10 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
 sealed trait SolverResult {
   def isSat: Boolean
   def get: Map[Variable, Any]
-  def getNum: Map[Variable, Number] = get map {
-    case (s, i: Number) => (s, i: java.lang.Number)
+  def getInt: Map[Variable, Int] = get map {
+    case (s, false) => (s, 0)
+    case (s, true) => (s, 1)
+    case (s, i: Int) => (s, i)
   }
   def getInteger: java.util.Map[Variable, java.lang.Integer] =
     get.map {

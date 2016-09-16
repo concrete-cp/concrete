@@ -263,16 +263,18 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
 
   private val doms: Array[Interval] = new Array(arity)
 
-  def shave(ps: ProblemState) = {
+  override def revise(ps: ProblemState) = {
     var i = arity - 1
     while (i >= 0) {
       doms(i) = ps.span(scope(i))
       i -= 1
     }
 
-    sortIt(doms)
-    filterLower(ps, doms)
-      .andThen(ps => filterUpper(ps, doms))
+    fixPoint(ps, { ps =>
+      sortIt(doms)
+      filterLower(ps, doms)
+        .andThen(ps => filterUpper(ps, doms))
+    })
     //      .andThen { ps =>
     //        assert(
     //          scope.forall { v =>

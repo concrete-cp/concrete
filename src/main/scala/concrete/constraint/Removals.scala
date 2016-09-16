@@ -1,7 +1,6 @@
-package concrete.constraint;
+package concrete
+package constraint;
 
-import concrete.Outcome
-import concrete.ProblemState
 import cspom.util.BitVector
 
 trait Removals extends Constraint with AdviseCounts {
@@ -9,7 +8,7 @@ trait Removals extends Constraint with AdviseCounts {
   var modified = BitVector.empty
   var timestamp = -1
 
-  def advise(problemState: ProblemState, pos: Int): Int = {
+  def advise(problemState: ProblemState, event: Event, pos: Int): Int = {
     assert(adviseCount >= 0)
     //println(s"advising $this")
     if (timestamp != adviseCount) {
@@ -29,15 +28,21 @@ trait Removals extends Constraint with AdviseCounts {
 
   def revise(problemState: ProblemState, modified: BitVector): Outcome
 
-  override def isConsistent(problemState: ProblemState): Outcome = {
+  override def consistent(ps: ProblemState) = consistent(ps, modified)
+
+  override def isConsistent(problemState: ProblemState): Boolean = {
     isConsistent(problemState, modified)
   }
 
-  def clearMod(): Unit = modified = BitVector.empty // Arrays.fill(removals, -1)
-
-  def isConsistent(ps: ProblemState, mod: BitVector): Outcome = {
-    revise(ps, mod).andThen(_ => ps)
+  def consistent(ps: ProblemState, modified: BitVector): Outcome = {
+    if (isConsistent(ps, modified)) ps else Contradiction
   }
+
+  def isConsistent(ps: ProblemState, mod: BitVector): Boolean = {
+    revise(ps, mod).isState
+  }
+
+  def clearMod(): Unit = modified = BitVector.empty // Arrays.fill(removals, -1)
 
   def getEvaluation(problemState: ProblemState): Int
 

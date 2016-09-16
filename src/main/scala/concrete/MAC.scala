@@ -61,7 +61,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
   @Statistic
   var nbAssignments = 1;
 
-  private val filter: Filter = filterClass.getConstructor(classOf[Problem], classOf[ParameterManager]).newInstance(problem, params);
+  val filter: Filter = filterClass.getConstructor(classOf[Problem], classOf[ParameterManager]).newInstance(problem, params);
   statistics.register("filter", filter);
 
   var maxBacktracks: Int = initBT()
@@ -79,7 +79,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
 
   @tailrec
   def mac(
-    modifiedVariable: Seq[Variable], stack: List[Branch],
+    modified: Seq[(Variable, Event)], stack: List[Branch],
     currentState: Outcome, stateStack: List[ProblemState],
     nbBacktracks: Int, maxBacktracks: Int, nbAssignments: Int): (SolverResult, List[Branch], List[ProblemState], Int, Int) = {
     if (Thread.interrupted()) {
@@ -87,7 +87,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
     } else {
 
       val filtering = currentState
-        .andThen(s => filter.reduceAfter(modifiedVariable, s))
+        .andThen(s => filter.reduceAfter(modified, s))
 
       filtering match {
 
@@ -101,7 +101,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
 
             logger.info(s"${stack.length - 1}: ${lastBranch.b2Desc}")
 
-            mac(lastBranch.changed, stack.tail, lastBranch.b2, stateStack.tail, nbBacktracks + 1, maxBacktracks, nbAssignments)
+            mac(lastBranch.c2, stack.tail, lastBranch.b2, stateStack.tail, nbBacktracks + 1, maxBacktracks, nbAssignments)
           }
 
         case filteredState: ProblemState =>
@@ -116,7 +116,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
             case Some(branching) =>
               logger.info(s"${stack.length}: ${branching.b1Desc} ($nbBacktracks / $maxBacktracks)");
 
-              mac(branching.changed, branching :: stack, branching.b1, filteredState :: stateStack, nbBacktracks, maxBacktracks, nbAssignments + 1)
+              mac(branching.c1, branching :: stack, branching.b1, filteredState :: stateStack, nbBacktracks, maxBacktracks, nbAssignments + 1)
           }
       }
     }
@@ -143,20 +143,17 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
 
   var nbBacktracks = 0
 
-  @tailrec
-  private def nextSolution(
-    modifiedVar: Seq[Variable],
+  def oneRun(modified: Seq[(Variable, Event)],
     stack: List[Branch],
     currentState: Outcome,
     stateStack: List[ProblemState]): (SolverResult, List[Branch], List[ProblemState]) = {
-
     logger.info("MAC with " + maxBacktracks + " bt")
 
     running = true
 
     val (macResult, macTime) =
       StatisticsManager.measure(
-        mac(modifiedVar, stack, currentState, stateStack, nbBacktracks, maxBacktracks, nbAssignments),
+        mac(modified, stack, currentState, stateStack, nbBacktracks, maxBacktracks, nbAssignments),
         searchMeasurer.withWarmer(
           if (nbAssignments <= params.getOrElse("mac.warm", 0)) {
             new Warmer.Default
@@ -173,6 +170,18 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
 
     nbAssignments = newAss
     nbBacktracks = newBack
+
+    (sol, newStack, newStateStack)
+  }
+
+  @tailrec
+  def nextSolution(
+    modified: Seq[(Variable, Event)],
+    stack: List[Branch],
+    currentState: Outcome,
+    stateStack: List[ProblemState]): (SolverResult, List[Branch], List[ProblemState]) = {
+
+    val (sol, newStack, newStateStack) = oneRun(modified, stack, currentState, stateStack)
 
     if (sol == RESTART) {
       maxBacktracks = (maxBacktracks * btGrowth).toInt;
@@ -194,7 +203,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
 
       currentStateStack.last
         .padConstraints(problem.constraints, problem.maxCId)
-        .andThen(preprocess(filter, _))
+        .andThen(filter.reduceAll(_))
         .map { state =>
           val (sol, stack, stateStack) = nextSolution(Seq.empty, Nil, state, Nil)
           currentStack = stack

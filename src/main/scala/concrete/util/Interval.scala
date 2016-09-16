@@ -10,17 +10,17 @@ object Interval {
       .orElse(i1)
   }
 
-  def realUnion(i0: Option[Interval], i1: Option[Interval]): Seq[Interval] = {
+  def realUnion(i0: Option[Interval], i1: Option[Interval]): Option[Either[Interval, (Interval, Interval)]] = {
     i0 match {
       case Some(i0) =>
         i1 match {
           case Some(i1) =>
-            if (i1 intersects i0) Seq(i0 span i1)
-            else if (i0.lb < i1.lb) Seq(i0, i1)
-            else Seq(i1, i0)
-          case None => Seq(i0)
+            if (i1 connected i0) Some(Left(i0 span i1))
+            else if (i0.lb < i1.lb) Some(Right((i0, i1)))
+            else Some(Right((i1, i0)))
+          case None => Some(Left(i0))
         }
-      case None => i1.toSeq
+      case None => i1.map(Left(_))
     }
 
   }

@@ -7,6 +7,7 @@ import concrete.Contradiction
 import concrete.Outcome
 import concrete.ProblemState
 import concrete.Variable
+import concrete.Event
 
 final class ReifiedConstraint(
   controlVariable: Variable,
@@ -97,9 +98,9 @@ final class ReifiedConstraint(
 
     ps.dom(controlVariable) match {
       case BooleanDomain.UNKNOWNBoolean =>
-        positiveConstraint.isConsistent(ps)
+        positiveConstraint.consistent(ps)
           .andThen { ps =>
-            negativeConstraint.isConsistent(ps)
+            negativeConstraint.consistent(ps)
               .orElse {
                 ps.updateDomNonEmpty(controlVariable, BooleanDomain.TRUE).entail(this)
               }
@@ -145,7 +146,7 @@ final class ReifiedConstraint(
       .foreach(_.register(ac))
   }
 
-  def advise(ps: ProblemState, position: Int) = {
+  def advise(ps: ProblemState, event: Event, position: Int) = {
     //logger.debug(s"Advise ${toString(ps)} : $position")
     if (position == 0) {
       ps.dom(controlVariable) match {
@@ -155,17 +156,19 @@ final class ReifiedConstraint(
         case d => throw new IllegalStateException(s"$d is not a valid boolean state")
       }
     } else {
+
       ps.dom(controlVariable) match {
         case BooleanDomain.UNKNOWNBoolean =>
-          val p = positiveConstraint.advise(ps, reifiedToPositivePositions(position))
-          val n = negativeConstraint.advise(ps, reifiedToNegativePositions(position))
+
+          val p = positiveConstraint.advise(ps, event, reifiedToPositivePositions(position))
+          val n = negativeConstraint.advise(ps, event, reifiedToNegativePositions(position))
           if (p < 0) {
             if (n < 0) -1 else n
           } else {
             if (n < 0) p else p + n
           }
-        case BooleanDomain.TRUE => positiveConstraint.advise(ps, reifiedToPositivePositions(position))
-        case BooleanDomain.FALSE => negativeConstraint.advise(ps, reifiedToNegativePositions(position))
+        case BooleanDomain.TRUE => positiveConstraint.advise(ps, event, reifiedToPositivePositions(position))
+        case BooleanDomain.FALSE => negativeConstraint.advise(ps, event, reifiedToNegativePositions(position))
         case BooleanDomain.EMPTY => throw new IllegalStateException
       }
     }

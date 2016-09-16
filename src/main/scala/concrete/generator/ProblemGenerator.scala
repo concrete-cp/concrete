@@ -12,7 +12,6 @@ import concrete.ParameterManager
 import concrete.Problem
 import concrete.Variable
 import concrete.cluster.Arc
-import concrete.constraint.linear.Simplex
 import concrete.constraint.linear.SumMode
 import concrete.constraint.semantic.Clause
 import concrete.constraint.semantic.ClauseConstraint
@@ -21,21 +20,12 @@ import concrete.constraint.semantic.SAT
 import cspom.CSPOM
 import cspom.Statistic
 import cspom.StatisticsManager
-import cspom.VariableNames
 import cspom.util.Finite
 import cspom.variable.BoolVariable
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
 import cspom.variable.IntVariable
-
-case class LinearConstraint(
-    vars: Seq[Variable], factors: Seq[Int],
-    mode: SumMode, constant: Int) extends Arc {
-
-  def size = vars.size
-
-}
 
 final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) extends LazyLogging {
 
@@ -54,14 +44,11 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
 
       val problem = new Problem(variables.values.toArray.sortBy(_.name))
 
-      val vn = new VariableNames(cspom)
-
       var clauses: Seq[Clause] = Seq.empty
       var pb: Seq[PseudoBoolean] = Seq.empty
-      var lin: Seq[LinearConstraint] = Seq.empty
 
       val constraints = cspom.constraints.flatMap {
-        case c if c.function == 'clause =>
+        case c if c.function == 'clause && pm.contains("sat4clauses") =>
           val Seq(pos: CSPOMSeq[_], neg: CSPOMSeq[_]) = c.arguments
           if (!pos.exists(_.isTrue) && !neg.exists(_.isFalse)) {
             val posConc = pos.map { v => Generator.cspom2concreteVar(v)(variables) }.toArray
@@ -70,7 +57,7 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
           }
           Seq()
 
-        case constraint if constraint.function == 'pseudoboolean && constraint.nonReified =>
+        case constraint if constraint.function == 'pseudoboolean && constraint.nonReified && pm.contains("sat4pb") =>
           val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
 
           if (vars.nonEmpty) {
@@ -79,46 +66,12 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
           }
           Seq()
 
-        case constraint if constraint.function == 'sum && constraint.nonReified =>
-          val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
-
-          if (vars.nonEmpty) {
-            val solverVariables = vars.map(Generator.cspom2concreteVar(_)(variables))
-            lin +:= new LinearConstraint(solverVariables, varParams, mode, constant)
-          }
-          Seq()
-
         case c =>
-          gm.generate(c, variables, vn).get
+          gm.generate(c, variables, cspom).get
       }
 
       problem.addConstraints(constraints.toSeq)
-
-      if (pm.contains("sat4clauses")) {
-        if (pm.contains("sat4pb")) {
-          problem.addConstraints(SAT(clauses, pb))
-        } else {
-          lin ++:= pb
-          problem.addConstraints(SAT(clauses = clauses))
-        }
-      } else {
-        problem.addConstraints(clauses.map(new ClauseConstraint(_)))
-        if (pm.contains("sat4pb")) {
-          problem.addConstraints(SAT(pb = pb))
-        } else {
-          lin ++:= pb
-        }
-      }
-
-      if (pm.contains("simplex")) {
-        problem.addConstraints(Simplex(lin, pm))
-      } else {
-        val sg = new SumGenerator(this)
-        problem.addConstraints(
-          lin.flatMap(l =>
-            sg.general(l.vars, l.factors, l.constant, l.mode).toSeq))
-
-      }
+      problem.addConstraints(SAT(clauses, pb))
 
       logger.info(problem.toString(problem.initState.toState).split("\n").map(l => s"% $l").mkString("\n"))
 
@@ -130,14 +83,14 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
   }
 
   def generateVariables(cspom: CSPOM): Map[CSPOMVariable[_], Variable] = {
-    val vn = new VariableNames(cspom)
 
     cspom.referencedExpressions.flatMap(_.flatten).collect {
       case v: CSPOMVariable[_] =>
-        require(v.fullyDefined, s"${vn.names(v)} has no bounds. Involved by ${cspom.deepConstraints(v)}")
-        require(v.searchSpace > 0, s"${vn.names(v)} has empty domain. Involved by ${cspom.deepConstraints(v)}")
-        if (!cspom.isReferenced(v)) logger.warn(s"${vn.names(v)} ($v) is not referenced by constraints")
-        v -> new Variable(vn.names(v), generateDomain(v))
+        val dn = cspom.displayName(v)
+        require(v.fullyDefined, s"$dn has no bounds. Involved by ${cspom.deepConstraints(v)}")
+        require(v.searchSpace > 0, s"$dn has empty domain. Involved by ${cspom.deepConstraints(v)}")
+        if (!cspom.isReferenced(v)) logger.warn(s"$dn ($v) is not referenced by constraints")
+        v -> new Variable(dn, generateDomain(v))
     }.toMap
   }
 

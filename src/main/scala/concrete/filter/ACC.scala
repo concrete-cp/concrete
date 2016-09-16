@@ -17,6 +17,8 @@ import cspom.Statistic
 import cspom.StatisticsManager
 import concrete.priorityqueues.PriorityQueue
 import concrete.heuristic.revision.Key
+import concrete.Event
+import concrete.BoundRemoval
 
 object ACC extends LazyLogging {
   def control(problem: Problem, state: ProblemState): Option[Constraint] = {
@@ -74,7 +76,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     for (
       v <- problem.variables
     ) {
-      if (modVar(v.id) > cnt) updateQueue(v, null, states)
+      if (modVar(v.id) > cnt) updateQueue(v, BoundRemoval, null, states)
     }
 
     if (modCons != null) {
@@ -98,16 +100,16 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     }
   }
 
-  def reduceAfter(variables: Seq[Variable], states: ProblemState) = {
+  def reduceAfter(modif: Seq[(Variable, Event)], states: ProblemState) = {
     advises.clear()
     queue.clear();
-    for (v <- variables) {
-      updateQueue(v, null, states)
+    for ((v, e) <- modif) {
+      updateQueue(v, e, null, states)
     }
     reduce(states);
   }
 
-  private def updateQueue(modified: Variable, skip: Constraint, states: ProblemState): Unit = {
+  private def updateQueue(modified: Variable, event: Event, skip: Constraint, states: ProblemState): Unit = {
 
     // logger.debug(s"Modified $modified, queueing ${modified.constraints.map(_.toString(states)).mkString("{", ", ", "}")}, skipping ${skip.toString(states)}")
 
@@ -120,10 +122,10 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
       val positions = modified.positionInConstraint(i)
 
       if (positions.length > 1) {
-        val a = c.adviseArray(states, positions)
+        val a = c.adviseArray(states, event, positions)
         enqueue(c, a, states)
       } else if (c ne skip) {
-        val a = c.advise(states, positions(0))
+        val a = c.advise(states, event, positions(0))
         enqueue(c, a, states)
       }
 
@@ -175,11 +177,10 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
             while (p >= 0) {
               val v = scope(p)
 
-              if (newState.dom(v) ne s.dom(v)) {
-                assert(newState.dom(v).subsetOf(s.dom(v)))
-
-                updateQueue(v, constraint, newState)
+              for (e <- Event(s.dom(v), newState.dom(v))) {
+                updateQueue(v, e, constraint, newState)
               }
+
               p -= 1
             }
 
@@ -188,7 +189,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
             logger.debug(s"${constraint.id}.${constraint.weight}. ${constraint.toString(s)} -> ${
               constraint match {
                 case sc: StatefulConstraint[_] => s"new state: ${newState(sc)}"
-                case _                         => "NOP"
+                case _ => "NOP"
               }
             }${if (newState.isEntailed(constraint)) " - entailed" else ""}")
 

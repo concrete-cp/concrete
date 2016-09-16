@@ -9,7 +9,6 @@ import concrete.runner.sql.SQLWriter
 import cspom.Statistic
 import cspom.StatisticsManager
 import cspom.compiler.CSPOMCompiler
-import concrete.SolverFactory
 import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
@@ -144,7 +143,7 @@ trait ConcreteRunner extends LazyLogging {
 
           applyParametersPre(problem, opt)
 
-          val solver = new SolverFactory(pm)(problem)
+          val solver = Solver(problem, pm)
 
           statistics.register("solver", solver)
           applyParametersPost(solver, opt)

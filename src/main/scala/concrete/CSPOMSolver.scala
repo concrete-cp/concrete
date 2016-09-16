@@ -30,6 +30,18 @@ class CSPOMSolver(
     new CSPOMSolver(solver.minimize(variables(v)), cspom, variables)
   }
 
+  def minimize(n: String): CSPOMSolver =
+    cspom
+      .variable(n)
+      .map(minimize)
+      .getOrElse(throw new IllegalArgumentException(s"Could not find variable $n"))
+
+  def maximize(n: String): CSPOMSolver =
+    cspom
+      .variable(n)
+      .map(maximize)
+      .getOrElse(throw new IllegalArgumentException(s"Could not find variable $n"))
+
   //  cspom.variable(v) match {
   //    case Some(cv) => solver.minimize(variables(cv))
   //    case _        => logger.warn(s"$v is not a variable, nothing to minimize")
