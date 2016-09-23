@@ -30,6 +30,7 @@ sealed trait Outcome {
   def removeAfter(v: Variable, lb: Int): Outcome
 
   def entail(c: Constraint): Outcome
+  def entail(c: Constraint, i: Int): Outcome
 
   def entailIfFree(c: Constraint): Outcome
   def entailIfFree(c: Constraint, doms: Array[Domain]): Outcome
@@ -122,6 +123,7 @@ case object Contradiction extends Outcome {
   def apply[S <: AnyRef](c: StatefulConstraint[S]): S = throw new UNSATException("Tried to get state from a Contradiction")
   def assign(v: Variable, value: Int): concrete.Outcome = Contradiction
   def entail(c: Constraint): concrete.Outcome = Contradiction
+  def entail(c: Constraint, i: Int): concrete.Outcome = Contradiction
   def isEntailed(c: Constraint): Boolean = throw new UNSATException("Tried to get state from a Contradiction")
   def activeConstraints(v: Variable): BitVector = throw new UNSATException("Tried to get state from a Contradiction")
   def updateState[S <: AnyRef](c: StatefulConstraint[S], newState: S): concrete.Outcome = Contradiction
@@ -135,7 +137,7 @@ object ProblemState {
     ProblemState(
       Vector(problem.variables.map(_.initDomain): _*),
       Vector(),
-      new EntailmentManager(problem.variables))
+      EntailmentManagerLight(problem.variables))
       .padConstraints(problem.constraints, problem.maxCId)
   }
 
@@ -153,16 +155,122 @@ object ProblemState {
     }
     true
   }
+
+  def singleFree(doms: Array[Domain]): Option[Int] = {
+    var f = -1
+    var i = doms.length - 1
+    while (i >= 0) {
+      if (!doms(i).isAssigned) {
+        if (f >= 0) return None
+        f = i
+      }
+      i -= 1
+    }
+    if (f < 0) None else Some(f)
+
+  }
+
+}
+
+object EntailmentManagerLight {
+  def apply(variables: Seq[Variable]): EntailmentManagerLight =
+    new EntailmentManagerLight(
+      Vector(variables.map(v => BitVector.filled(v.constraints.length)): _*))
+}
+
+class EntailmentManagerLight(
+    val activeConstraints: Vector[BitVector]) extends AnyVal {
+
+  def addConstraints(constraints: Seq[Constraint]): EntailmentManagerLight = {
+    var ac = activeConstraints
+    for (c <- constraints) {
+      for (i <- c.scope.indices) {
+        val vid = c.scope(i).id
+        /* Fake variables (constants) may appear in constraints */
+        if (vid >= 0) {
+          ac = ac.updated(vid, ac(vid) + c.positionInVariable(i))
+        }
+      }
+    }
+    new EntailmentManagerLight(ac)
+  }
+
+  def entail(c: Constraint): EntailmentManagerLight = {
+    var ac = activeConstraints
+    var i = c.arity - 1
+    while (i >= 0) {
+
+      val vid = c.scope(i).id
+      /* Fake variables (constants) may appear in constraints */
+
+      if (vid >= 0) {
+        val pos = c.positionInVariable(i)
+
+        /* For reified constraints */
+        if (pos >= 0) {
+          ac = ac.updated(vid, ac(vid) - c.positionInVariable(i))
+        }
+
+      }
+      i -= 1
+    }
+    new EntailmentManagerLight(ac)
+
+  }
+
+  def entail(c: Constraint, i: Int): EntailmentManagerLight = {
+    val ac = activeConstraints
+
+    val vid = c.scope(i).id
+    /* Fake variables (constants) may appear in constraints */
+
+    if (vid >= 0) {
+      val pos = c.positionInVariable(i)
+
+      /* For reified constraints */
+      if (pos >= 0) {
+        new EntailmentManagerLight(
+          ac.updated(vid, ac(vid) - c.positionInVariable(i)))
+      } else {
+        this
+      }
+
+    } else {
+      this
+    }
+
+  }
+
+  def active(v: Variable): BitVector = {
+    val vid = v.id
+    activeConstraints(vid)
+
+  }
+
+  def apply(c: Constraint): Boolean = {
+    for (i <- 0 until c.arity) {
+      val v = c.scope(i)
+      if (v.id >= 0) {
+        val pos = c.positionInVariable(i)
+        if (pos >= 0) {
+          return activeConstraints(c.scope(i).id)(c.positionInVariable(i))
+        }
+      }
+    }
+    return false
+  }
+
+  // override def toString: String = modified.traversable.mkString("entailed: ", ", ", "")
 }
 
 class EntailmentManager(
-    val entailed: BitVector,
+    val entailed: Set[Int],
     var activeConstraints: Vector[BitVector],
     var modified: BitVector) {
 
   def this(variables: Seq[Variable]) =
     this(
-      BitVector.empty,
+      Set.empty,
       Vector(variables.map(v => BitVector.filled(v.constraints.length)): _*),
       BitVector.empty)
 
@@ -213,20 +321,13 @@ class EntailmentManager(
     }
   }
 
-  def delazy(variables: Array[Variable]) = {
-    for (vid <- modified) {
-      val v = variables(vid)
-      val filtered = activeConstraints(vid).filter(p => !entailed(v.constraints(p).id))
-      activeConstraints = activeConstraints.updated(vid, filtered)
-    }
-    modified = BitVector.empty
-  }
+  override def toString: String = modified.traversable.mkString("entailed: ", ", ", "")
 }
 
 case class ProblemState(
   val domains: Vector[Domain],
   val constraintStates: Vector[AnyRef],
-  val entailed: EntailmentManager) extends Outcome
+  val entailed: EntailmentManagerLight) extends Outcome
     with LazyLogging {
 
   def andThen(f: ProblemState => Outcome) = f(this)
@@ -247,7 +348,6 @@ case class ProblemState(
     }
   }
 
-
   def padConstraints(constraints: Seq[Constraint], lastId: Int): Outcome = {
     if (constraintStates.length > lastId) {
       require(lastId < 0 || constraintStates.isDefinedAt(lastId),
@@ -259,13 +359,13 @@ case class ProblemState(
 
       val newConstraints = constraints.view.drop(constraintStates.size)
 
-      newConstraints.foldLeft(ProblemState(domains, padded, entailed): Outcome) {
-        case (out, c) => out.andThen(c.init)
+      newConstraints.foldLeft(ProblemState(domains, padded, entailed.addConstraints(newConstraints)): Outcome) {
+        case (out, c) => out.andThen(c.init(_))
       }
-        .andThen { newState =>
-          ProblemState(newState.domains, newState.constraintStates, entailed.addConstraints(newConstraints))
-        }
- 
+      //        .andThen { newState =>
+      //          ProblemState(newState.domains, newState.constraintStates, entailed)
+      //        }
+
     }
   }
 
@@ -274,6 +374,10 @@ case class ProblemState(
   def entail(c: Constraint): ProblemState = {
     new ProblemState(domains, constraintStates, entailed.entail(c))
     //else this
+  }
+
+  def entail(c: Constraint, i: Int): ProblemState = {
+    new ProblemState(domains, constraintStates, entailed.entail(c, i))
   }
 
   def activeConstraints(v: Variable): BitVector = entailed.active(v)
@@ -368,17 +472,15 @@ case class ProblemState(
   override def removeAfter(v: Variable, lb: Int): Outcome =
     updateDom(v, dom(v).removeAfter(lb))
 
-  def entailIfFree(c: Constraint) = if (c.isFree(this)) entail(c) else this
+  def entailIfFree(c: Constraint) = c.singleFree(this).map(entail(c, _)).getOrElse(this)
 
-  def entailIfFree(c: Constraint, doms: Array[Domain]) = if (ProblemState.isFree(doms)) entail(c) else this
+  def entailIfFree(c: Constraint, doms: Array[Domain]) = ProblemState.singleFree(doms).map(entail(c, _)).getOrElse(this)
 
   def entailIf(c: Constraint, f: ProblemState => Boolean) = {
     if (f(this)) entail(c) else this
   }
 
   def domainsOption = Some(domains)
-
-  def delazy(vars: Array[Variable]) = entailed.delazy(vars)
 
   def toString(problem: Problem) = problem.toString(this)
   def toState: ProblemState = this
