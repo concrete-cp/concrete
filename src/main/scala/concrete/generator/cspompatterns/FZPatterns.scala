@@ -126,6 +126,13 @@ object FZPatterns {
      */
     case Ctr('bool_le_reif, Seq(a, b, r), p) =>
       new CSPOMConstraint(r, 'clause, Seq(Seq(b), Seq(a)), p)
+
+    /*
+     * (¬a /\ b) ↔ r
+     * bool_lt_reif(var bool: a, var bool: b, var bool: r)
+     */
+    case Ctr('bool_lt_reif, Seq(a, b, r), p) =>
+      CSPOMConstraint(r)('sum)(Seq(1, -1), Seq(a, b), CSPOMConstant(0)) withParams p + ("mode" -> "lt")
     /*
      * i ∈ 1..n : as[i].bs[i] = c where n is the common length of as and bs
      * bool_lin_eq(array [int] of int: as, array [int] of var bool: bs, var int: c)
@@ -526,6 +533,8 @@ object FZPatterns {
       val CSPOMConstant(fseq: Seq[Int]) = f
       CSPOMConstraint('regular)(x, q0, CSPOM.constantSeq(fseq)) withParams p + ("dfa" -> dfa(q, s, fd.toIndexedSeq))
 
+    case Ctr('lex_lesseq_bool, Seq(x, y), p) =>
+      CSPOMConstraint('lexleq)(x, y) withParams p
   }
 
   private def dfa(Q: Int, S: Int, fd: IndexedSeq[Int]): Map[(Int, Int), Int] = {

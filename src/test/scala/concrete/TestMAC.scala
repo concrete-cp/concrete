@@ -7,7 +7,7 @@ import org.scalatest.Matchers
 import org.scalatest.Tag
 import concrete.constraint.linear.Eq
 import concrete.constraint.semantic.AllDifferentBC
-import concrete.heuristic.MedValue
+import concrete.heuristic.value.MedValue
 import cspom.StatisticsManager
 import concrete.constraint.semantic.Neq
 import concrete.constraint.semantic.AllDifferent2C

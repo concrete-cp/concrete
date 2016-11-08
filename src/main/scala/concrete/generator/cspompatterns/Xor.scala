@@ -6,17 +6,25 @@ import cspom.variable.BoolVariable
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.variable.SimpleExpression
 import CSPOM._
+import concrete.generator.SumGenerator
+import cspom.variable.BoolExpression
+import cspom.variable.IntExpression
+import concrete.constraint.linear.SumMode
+import concrete.constraint.linear.SumEQ
+import cspom.compiler.ConstraintCompiler
+import cspom.variable.CSPOMExpression
+import cspom.variable.CSPOMSeq
 
 /**
- * Reified conjunction is converted to CNF :
+ * Reified XOR is converted to CNF :
  *
  * a = b (+) c
  *
  * <=>
  *
- * a
+ * a = (b \/ c) /\ (-b \/ -c)
  */
-object Xor extends ConstraintCompilerNoData {
+object ReifiedXor extends ConstraintCompilerNoData {
 
   override def matchBool(c: CSPOMConstraint[_], p: CSPOM) = {
     c.function == 'xor && !c.result.isTrue && c.arguments.length == 2

@@ -15,8 +15,9 @@ import org.scalacheck.Gen
 import concrete.constraint.Constraint
 import concrete.constraint.TupleEnumerator
 import concrete.constraint.ConstraintComparator
+import org.scalatest.concurrent.TimeLimits
 
-final class AbsIntTest extends FlatSpec with Matchers with Timeouts with PropertyChecks {
+final class AbsIntTest extends FlatSpec with Matchers with TimeLimits with PropertyChecks {
 
   "AbsInt" should "filter X" in {
 

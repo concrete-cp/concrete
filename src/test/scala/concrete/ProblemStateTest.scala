@@ -1,12 +1,37 @@
 package concrete
 
-import org.scalatest.Matchers
 import org.scalatest.FlatSpec
-import concrete.constraint.Constraint
+import org.scalatest.Matchers
+
+import concrete.constraint.semantic.ClauseConstraint
 
 /**
  * @author vion
  */
 class ProblemStateTest extends FlatSpec with Matchers {
+  "entailment manager" should "compute entailed constraint" in {
+    val v1 = new Variable("v1", BooleanDomain())
+    val v2 = new Variable("v2", BooleanDomain())
+
+    val c = new ClauseConstraint(Array(v1, v2), Array())
+
+    val problem = Problem(v1, v2)
+    problem.addConstraint(c)
+    val state = problem.initState
+    
+    assert(!state.isEntailed(c))
+    
+    state.activeConstraints(v1).traversable should contain theSameElementsAs Seq(0)
+    state.activeConstraints(v2).traversable should contain theSameElementsAs Seq(0)
+    
+    val ent = state.entail(c)
+    assert(ent.isEntailed(c))
+    
+    assert(ent.activeConstraints(v1).isEmpty)
+    assert(ent.activeConstraints(v2).isEmpty)
+    
+    
+
+  }
 
 }

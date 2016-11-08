@@ -16,16 +16,15 @@ import java.util.Arrays
 class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: Variable) extends Constraint(s ++ d ++ r :+ b)
     with BC {
 
-  var begin: Int = _
-  var end: Int = _
-  var profile: Array[Int] = _
+  private var begin: Int = _
+  private var profile: Array[Int] = _
 
   def advise(problemState: ProblemState, pos: Int): Int = arity * arity
   def check(tuple: Array[Int]): Boolean = ???
   def init(ps: ProblemState): Outcome = {
     val startDomains = ps.doms(s)
     begin = startDomains.map(_.head).min
-    end = (startDomains, ps.doms(d)).zipped.map((s, d) => s.last + d.last).max
+    val end = (startDomains, ps.doms(d)).zipped.map((s, d) => s.last + d.last).max
     profile = new Array[Int](end - begin + 1)
     ps
   }
@@ -57,7 +56,7 @@ class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: 
     state
   }
 
-  def filter(state: ProblemState, bound: Int, i: Int): Outcome = {
+  private def filter(state: ProblemState, bound: Int, i: Int): Outcome = {
     val sDom = state.dom(s(i))
     val dBound = state.dom(this.d(i)).head
     val rBound = state.dom(r(i)).head
@@ -66,6 +65,8 @@ class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: 
     for (i <- sDom.last until (sDom.head + dBound)) {
       profile(i - begin) -= rBound
     }
+
+    //println(profile.mkString(" ") + " <= " + bound)
 
     // Sweep left
     var min = sDom.head
@@ -111,30 +112,11 @@ class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: 
     }
   }
 
-  //  private def fixPoint(ps: ProblemState, bound: Int): Outcome = {
-  //    var lastModified = 0
-  //    var i = 0
-  //    var state = ps
-  //    do {
-  //      val ns = filter(state, bound, i)
-  //      if (ns eq Contradiction) {
-  //        return Contradiction
-  //      } else if (ns ne state) {
-  //        state = ns.toState
-  //        lastModified = i
-  //      }
-  //
-  //      i += 1
-  //      if (i >= s.length) i = 0
-  //    } while (i != lastModified)
-  //    state
-  //  }
-
   override def revise(ps: ProblemState): Outcome = {
 
     buildProfile(ps)
       .andThen { ps =>
-        fixPoint(ps, 0 until s.length, filter(_, ps.dom(b).last, _))
+        fixPoint(ps, 0 until s.length, { (ps, i) => filter(ps, ps.dom(b).last, i) })
       }
 
   }

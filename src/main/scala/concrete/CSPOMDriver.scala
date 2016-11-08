@@ -12,6 +12,7 @@ import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
 import cspom.variable.IntVariable
 import cspom.variable.SimpleExpression
+import cspom.variable.FreeVariable
 
 object CSPOMDriver {
 
@@ -90,15 +91,21 @@ object CSPOMDriver {
     clause()(vars: _*)
   }
 
+  def cumulative(starts: CSPOMSeq[Int], durations: CSPOMSeq[Int], resources: CSPOMSeq[Int], bound: SimpleExpression[Int]): CSPOMConstraint[Boolean] = {
+    CSPOMConstraint('cumulative)(starts, durations, resources, bound)
+  }
+
   implicit class CSPOMSeqOperations[+A](e: CSPOMSeq[A]) {
     def apply(idx: CSPOMVariable[Int])(implicit problem: CSPOM) =
       problem.defineFree(r => CSPOMConstraint(r)('element)(e, idx))
 
     def min(implicit problem: CSPOM) =
-      problem.defineFree(r => CSPOMConstraint(r)('min)(e: _*))
+      problem.define(new FreeVariable().asInstanceOf[SimpleExpression[A]])(
+        r => CSPOMConstraint(r)('min)(e: _*))
 
     def max(implicit problem: CSPOM) =
-      problem.defineFree(r => CSPOMConstraint(r)('max)(e: _*))
+      problem.define(new FreeVariable().asInstanceOf[SimpleExpression[A]])(
+        r => CSPOMConstraint(r)('max)(e: _*))
 
     def <=[B >: A](that: CSPOMSeq[B])(implicit problem: CSPOM) = {
       require(e.size == that.size)

@@ -7,8 +7,9 @@ import concrete.Variable
 import concrete.Singleton
 import scala.util.Random
 import concrete.Problem
+import org.scalatest.prop.PropertyChecks
 
-class CumulativeTest extends FlatSpec with Matchers {
+class CumulativeTest extends FlatSpec with Matchers with PropertyChecks {
   "cumulative" should "build profile" in {
     val r = new Random(0)
     val starts = Array.tabulate(5)(s => new Variable(s"s$s", IntDomain(0 until 25)))
@@ -50,6 +51,20 @@ class CumulativeTest extends FlatSpec with Matchers {
 
     mod.dom(starts(2)).view should contain theSameElementsAs Seq(1)
     mod.dom(limit).view should contain theSameElementsAs Seq(1)
+
+  }
+
+  "strange division" should "behave like integer division" in {
+    forAll { (i: Int, j: Int) =>
+      whenever(j != 0 && i > Int.MinValue) {
+        math.floor((i / j.toDouble) + 0.01).toInt shouldBe concrete.util.Math.floorDiv(i, j)
+      }
+    }
+    forAll { (i: Int, j: Int) =>
+      whenever(j != 0) {
+        Math.ceil(i / j - 0.01).toInt shouldBe i/j //concrete.util.Math.ceilDiv(i, j)
+      }
+    }
 
   }
 }

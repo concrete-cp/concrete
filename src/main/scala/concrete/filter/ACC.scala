@@ -19,6 +19,7 @@ import concrete.priorityqueues.PriorityQueue
 import concrete.heuristic.revision.Key
 import concrete.Event
 import concrete.BoundRemoval
+import concrete.InsideRemoval
 
 object ACC extends LazyLogging {
   def control(problem: Problem, state: ProblemState): Option[Constraint] = {
@@ -42,6 +43,8 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
   private val queue = queueType.getConstructor().newInstance()
 
   private val advises = new AdviseCount()
+
+  //  var active = Set[Int]()
 
   problem.constraints.iterator
     .collect {
@@ -122,6 +125,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
       val positions = modified.positionInConstraint(i)
 
       if (positions.length > 1) {
+        //println(s"$modified at ${positions.toSeq}: enqueuing ${c.toString(states)}")
         val a = c.adviseArray(states, event, positions)
         enqueue(c, a, states)
       } else if (c ne skip) {
@@ -170,14 +174,20 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
             assert(constraint.controlAssignment(newState), s"${constraint.toString(newState)} assignement is inconsistent")
 
-            assert(constraint.controlRevision(newState), s"Revision control failed for ${constraint.toString(s)}")
+            // Do not control revision now, as multiple instances of a variable in a scope max require
+            // to reach a fixpoint beforehand
+            //assert(constraint.controlRevision(newState), s"Revision control failed for ${constraint.toString(s)}")
 
             var p = constraint.arity - 1
             val scope = constraint.scope
             while (p >= 0) {
               val v = scope(p)
 
-              for (e <- Event(s.dom(v), newState.dom(v))) {
+              val before = s.dom(v)
+              val after = newState.dom(v)
+
+              if (before ne after) {
+                val e = InsideRemoval(before, after)
                 updateQueue(v, e, constraint, newState)
               }
 
@@ -193,7 +203,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
               }
             }${if (newState.isEntailed(constraint)) " - entailed" else ""}")
 
-            assert(constraint.controlRevision(newState))
+            //assert(constraint.controlRevision(newState))
 
           } else {
             logger.debug(

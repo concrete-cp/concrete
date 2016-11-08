@@ -32,32 +32,37 @@ object SumDomains extends VariableCompiler('sum) with LazyLogging {
 
       val m: String = c.getParam("mode").get
 
-      SumMode.withName(m)
-        .map {
-          case SumLE => RangeSet(IntInterval.atMost(result))
-          case SumLT => RangeSet(IntInterval.atMost(result - 1))
-          case SumEQ => RangeSet(IntInterval.singleton(result))
-          case SumNE => RangeSet.allInt -- IntInterval.singleton(result)
-        }
-        .map { initBound =>
+      if (iargs.forall(_.fullyDefined)) {
+        (Seq(), false)
+      } else {
 
-          val coefspan = (iargs, coef).zipped.map((a, c) => RangeSet(IntExpression.span(a) * IntInterval.singleton(c))).toIndexedSeq
+        SumMode.withName(m)
+          .map {
+            case SumLE => RangeSet(IntInterval.atMost(result))
+            case SumLT => RangeSet(IntInterval.atMost(result - 1))
+            case SumEQ => RangeSet(IntInterval.singleton(result))
+            case SumNE => RangeSet.allInt -- IntInterval.singleton(result)
+           }
+          .map { initBound =>
 
-          val filt = for (i <- args.indices) yield {
-            val others = iargs.indices
-              .filter(_ != i)
-              .map(coefspan)
-              .foldLeft(initBound)(_ - _)
-            args(i) -> reduceDomain(iargs(i), others / coef(i))
+            val coefspan = (iargs, coef).zipped.map((a, c) => RangeSet(IntExpression.span(a) * IntInterval.singleton(c))).toIndexedSeq
+
+            val filt = for (i <- args.indices) yield {
+              val others = iargs.indices
+                .filter(_ != i)
+                .map(coefspan)
+                .foldLeft(initBound)(_ - _)
+              args(i) -> reduceDomain(iargs(i), others / coef(i))
+            }
+
+            val entailed = filt.map(_._2).count(_.searchSpace > 1) <= 1
+
+            // logger.debug((filt, entailed).toString)
+
+            (filt, entailed)
           }
-
-          val entailed = filt.map(_._2).count(_.searchSpace > 1) <= 1
-
-          // logger.debug((filt, entailed).toString)
-
-          (filt, entailed)
-        }
-        .getOrElse((Seq(), false))
+          .getOrElse((Seq(), false))
+      }
 
     case _ => (Seq(), false)
   }

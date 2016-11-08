@@ -23,7 +23,6 @@ object XCSPPatterns {
     Ordered, Lex,
     new GlobalCompiler(mtch) { def selfPropagation = true })
 
-
   val mtch: PartialFunction[CSPOMConstraint[_], CSPOMConstraint[_]] = {
     case CSPOMConstraint(a, 'sub, Seq(b, c), p) =>
       CSPOMConstraint('sum)(Seq(-1, 1, -1), Seq(a, b, c), 0) withParams p + ("mode" -> "eq")
@@ -49,6 +48,9 @@ object XCSPPatterns {
 
     case CSPOMConstraint(r, 'or, a, p) =>
       CSPOMConstraint(r)('clause)(a, Seq[SimpleExpression[Boolean]]()) withParams p
+
+    case CSPOMConstraint(r, 'dist, a, p) =>
+      CSPOMConstraint(r)('absdiff)(a: _*) withParams p
 
     case CSPOMConstraint(r, 'allDifferent, a, p) =>
       CSPOMConstraint(r)('alldifferent)(a: _*) withParams p

@@ -24,13 +24,13 @@ import scala.util.Random
 import com.typesafe.scalalogging.LazyLogging
 
 import concrete.generator.cspompatterns.XCSPPatterns
-import concrete.heuristic.Lexico
+import concrete.heuristic.value.Lexico
 import cspom.CSPOM
 import cspom.Statistic
 import cspom.StatisticsManager
 import cspom.compiler.CSPOMCompiler
 import org.scalameter.Quantity
-import concrete.heuristic.ScoredVariableHeuristic
+import concrete.heuristic.variable.ScoredVariableHeuristic
 
 object LNS extends App {
   def apply(prob: Problem, params: ParameterManager): LNS = {
@@ -189,7 +189,7 @@ final class LNS(prob: Problem, params: ParameterManager, val mac: MAC) extends S
       //print(currentFragment.dom(optimises.get))
 
       nbIterations += 1
-      mac.maxBacktracks = limit
+      // TODO mac.maxBacktracks = limit
       val (result, _, stack) = mac.oneRun(Seq(), List(), currentFragment, List())
 
       //println(result)

@@ -64,6 +64,7 @@ abstract class Domain { //extends AbstractSeq[Int] with IterableLike[Int, Domain
   def view = new TraversableView[Int, Domain] {
     protected lazy val underlying = Domain.this
     override def foreach[U](f: Int => U) = Domain.this.foreach(f)
+    override def isEmpty = Domain.this.isEmpty
   }
 
   def present(value: Int): Boolean

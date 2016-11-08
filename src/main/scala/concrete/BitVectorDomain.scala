@@ -157,7 +157,7 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
       //    } else {
 
       bvOffset(offset, {
-        logger.info(s"generating BV from offset ${this.offset} to $offset by ${Thread.currentThread().getStackTrace.toSeq}")
+        logger.trace(s"generating BV from offset ${this.offset} to $offset by ${Thread.currentThread().getStackTrace.toSeq}")
         // requestedOffset = offset
         bitVector.shift(this.offset - offset)
         //        BitVector(this.view.map(_ - offset))

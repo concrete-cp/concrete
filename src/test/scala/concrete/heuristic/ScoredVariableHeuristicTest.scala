@@ -7,6 +7,7 @@ import cspom.variable.IntVariable
 import concrete.Variable
 import concrete.IntDomain
 import concrete.Problem
+import concrete.heuristic.variable.Dom
 
 /**
  * @author vion

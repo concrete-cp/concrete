@@ -5,7 +5,7 @@ import concrete.constraint.semantic.MulAC
 import concrete.constraint.semantic.MulBC
 import cspom.CSPOMConstraint
 
-final class MulGenerator (pg:ProblemGenerator) extends Generator {
+final class MulGenerator(pg: ProblemGenerator) extends Generator {
 
   override def genFunctional(constraint: CSPOMConstraint[_], r: C2Conc)(implicit variables: VarMap) = {
     val rr = r.asInstanceOf[C21D]
@@ -16,7 +16,12 @@ final class MulGenerator (pg:ProblemGenerator) extends Generator {
     val v1 = vv1.asVariable(pg)
 
     val bc = Seq(new MulBC(result, v0, v1))
-    if (result.initDomain.size + v0.initDomain.size + v1.initDomain.size < 1000) {
+
+    val a = result.initDomain.size
+    val b = v0.initDomain.size
+    val c = v1.initDomain.size
+
+    if (a * b + a * c + b * c < 10000) {
       new MulAC(result, v0, v1, true) +: bc
     } else {
       bc

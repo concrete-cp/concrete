@@ -24,6 +24,7 @@ import cspom.variable.IntExpression
 import cspom.variable.SimpleExpression
 import concrete.constraint.linear.GeC
 import concrete.constraint.linear.GtC
+import concrete.constraint.semantic.NeqC
 
 object SumGenerator {
   def readCSPOM(constraint: CSPOMConstraint[_]) = {
@@ -102,6 +103,7 @@ final class SumGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
           case (Seq(1), SumLT, k) => ACBC.withBC(new LtC(x, k))
           case (Seq(-1), SumLE, k) => ACBC.withBC(new GeC(x, -k))
           case (Seq(-1), SumLT, k) => ACBC.withBC(new GtC(x, -k))
+          case (Seq(1), SumNE, k) => ACBC.withBC(new NeqC(x, k))
           case _ =>
             logger.info(s"${(varParams, mode, constant)} is non-specialized unary linear constraint")
             general(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode)

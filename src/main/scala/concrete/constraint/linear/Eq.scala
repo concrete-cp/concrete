@@ -20,6 +20,43 @@ object Eq {
     }
 }
 
+final class EqCReif(val r: Variable, val x: Variable, val y: Int) extends Constraint(Array(r, x)) {
+
+  def advise(problemState: ProblemState, event: Event, pos: Int): Int = 2
+  def check(tuple: Array[Int]): Boolean = tuple(0) == (if (tuple(1) == y) 1 else 0)
+  def init(ps: ProblemState): Outcome = {
+    //println(toString(ps))
+    ps
+  }
+  def revise(ps: ProblemState): Outcome = {
+    val dx = ps.dom(x)
+
+    ps.dom(r) match {
+      case BooleanDomain.UNKNOWNBoolean =>
+        if (dx.present(y)) {
+          if (dx.isAssigned) {
+            // Necessarily grounded to the same value since not disjoint
+            ps.updateDomNonEmpty(r, BooleanDomain.TRUE)
+          } else {
+            ps
+          }
+        } else {
+          ps.updateDomNonEmpty(r, BooleanDomain.FALSE).entail(this)
+
+        }
+
+      case BooleanDomain.TRUE => ps.tryAssign(x, y)
+
+      case BooleanDomain.FALSE => ps.removeIfPresent(x, y).entail(this)
+
+    }
+  }
+  def simpleEvaluation: Int = 1
+
+  override def toString(ps: ProblemState) =
+    s"${r.toString(ps)} <=> ${x.toString(ps)} = $y"
+}
+
 final class EqReif(val r: Variable, val x: Variable, val y: Variable) extends Constraint(Array(r, x, y)) {
   def advise(problemState: ProblemState, event: Event, pos: Int): Int = 3
   def check(tuple: Array[Int]): Boolean = tuple(0) == (if (tuple(1) == tuple(2)) 1 else 0)
@@ -40,7 +77,7 @@ final class EqReif(val r: Variable, val x: Variable, val y: Variable) extends Co
 
       case BooleanDomain.TRUE =>
         val d = dx & dy
-        ps.updateDom(x, d) 
+        ps.updateDom(x, d)
           .andThen { ps =>
             if (d.size < dy.size) ps.updateDom(y, d) else ps
           }
@@ -78,18 +115,17 @@ final class EqACFast(val x: Variable, val b: Int, val y: Variable)
   }
 
   def revise(ps: concrete.ProblemState): Outcome = {
-    val oldX = ps.dom(x)
     val oldY = ps.dom(y)
-    val newX = oldX & oldY.shift(-b)
+    val newX = ps.dom(x) & oldY.shift(-b)
 
     ps.updateDom(x, newX)
       .andThen { ps =>
-        val newY = newX.shift(b)
         /*
          * ProblemState does not detect NOP after two
          * complementary offset operations, so do it by hand
          */
-        if (newY.size < oldY.size) {
+        if (newX.size < oldY.size) {
+          val newY = newX.shift(b)
           ps.updateDomNonEmptyNoCheck(y, newY)
         } else {
           ps
@@ -122,7 +158,10 @@ final class EqACNeg private[linear] (
   val skipIntervals: Boolean = true)
     extends Constraint(Array(x, y)) with Removals with BCCompanion {
 
-  def init(ps: ProblemState) = ps
+  def init(ps: ProblemState) = {
+    //println(toString(ps))
+    ps
+  }
 
   def this(x: Variable, y: Variable) = this(x, y, 0, true)
 
@@ -136,11 +175,12 @@ final class EqACNeg private[linear] (
   override def isConsistent(ps: ProblemState, mod: BitVector) = {
     val xDom = ps.dom(x)
     val yDom = ps.dom(y)
-    if (xDom.size < yDom.size) {
-      xDom.exists(xv => yDom.present(b - xv))
-    } else {
-      yDom.exists(yv => xDom.present(b - yv))
-    }
+    (xDom.span + yDom.span).contains(b) && (
+      if (xDom.size < yDom.size) {
+        xDom.exists(xv => yDom.present(b - xv))
+      } else {
+        yDom.exists(yv => xDom.present(b - yv))
+      })
   }
 
   def revise(ps: ProblemState, modified: BitVector) = {
@@ -169,17 +209,17 @@ final class EqACNeg private[linear] (
   override def toString(ps: ProblemState) = s"${x.toString(ps)} + ${y.toString(ps)} =AC= $b"
 }
 
+/**
+ * if (neg)
+ *  constraint x + y = b
+ * else
+ *  constraint y - x = b
+ */
+
 final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
     extends Constraint(Array(x, y)) with BC with LazyLogging {
 
   def init(ps: ProblemState) = ps
-
-  //  val corresponding = Array(
-  //    x.dom.allValues map { v => y.dom.index(a * v + b) },
-  //    y.dom.allValues map { v =>
-  //      val r = v - b
-  //      if (r % a == 0) x.dom.index(r / a) else -1
-  //    })
 
   /**
    * public

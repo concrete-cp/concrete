@@ -20,6 +20,10 @@ final class Neq(v0: Variable, v1: Variable, c: Int = 0) extends Constraint(Array
     ps
       .updateDom(v0, revise(d0, d1, c))
       .updateDom(v1, revise(d1, d0, -c))
+//      .andThen { ch =>
+//        println(ch.dom(v0) disjoint ch.dom(v1).shift(c))
+//        ch
+//      }
       .entailIf(this, ch => ch.dom(v0) disjoint ch.dom(v1).shift(c))
   }
 
@@ -52,4 +56,21 @@ final class Neq(v0: Variable, v1: Variable, c: Int = 0) extends Constraint(Array
   }
 
   val simpleEvaluation = 2
+}
+
+class NeqC(x: Variable, y: Int) extends Constraint(x) {
+  def advise(problemState: ProblemState, event: Event, pos: Int): Int = 2
+  def init(ps: ProblemState) = ps
+
+  def check(t: Array[Int]) = t(0) != y
+
+  override def isConsistent(ps: ProblemState) = {
+    val d = ps.dom(x)
+    !d.isAssigned || d.singleValue != y
+  }
+
+  def revise(ps: ProblemState): Outcome = {
+    ps.removeIfPresent(x, y).entail(this)
+  }
+  def simpleEvaluation: Int = 1
 }

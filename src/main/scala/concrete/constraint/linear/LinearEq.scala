@@ -103,6 +103,4 @@ final class LinearEq(
 
   override def init(ps: ProblemState) = initData(ps)
 
-  override def entailable = false
-
 }

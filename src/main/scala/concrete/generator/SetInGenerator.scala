@@ -5,7 +5,7 @@ import concrete.constraint.Constraint
 import cspom.CSPOMConstraint
 import cspom.variable.IntExpression
 
-final class SetInGenerator(pg:ProblemGenerator) extends Generator {
+final class SetInGenerator(pg: ProblemGenerator) extends Generator {
 
   override def genFunctional(funcConstraint: CSPOMConstraint[_], r: C2Conc)(implicit variables: VarMap): Seq[Constraint] = {
     val result = r.asVariable(pg)
@@ -13,7 +13,7 @@ final class SetInGenerator(pg:ProblemGenerator) extends Generator {
 
     val variable = cspom2concrete1D(a).asVariable(pg)
 
-    Seq(new concrete.constraint.semantic.SetIn(result, variable, constants.toSet))
+    Seq(concrete.constraint.semantic.SetIn(result, variable, constants))
 
   }
 

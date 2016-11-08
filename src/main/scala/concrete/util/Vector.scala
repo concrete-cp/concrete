@@ -413,6 +413,7 @@ private object VectorCases {
       a((i >>> 5) & 0x01f)
     }
 
+    @inline
     def update(i: Int, obj: AnyRef) = {
       val trie2a = copy3(trie, new Array[Array[Array[AnyRef]]](trie.length))
 

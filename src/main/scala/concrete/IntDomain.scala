@@ -116,8 +116,8 @@ object IntDomain {
 abstract class IntDomain extends Domain {
 
   final def assign(value: Int): Singleton = {
-    assert(present(value))
-    assert(!isAssigned)
+    assert(present(value), s"tried to assign to $value which is not presnt")
+    assert(!isAssigned, s"domain is already assigned to $value")
     //if (present(value)) 
     Singleton(value)
     //else EmptyIntDomain

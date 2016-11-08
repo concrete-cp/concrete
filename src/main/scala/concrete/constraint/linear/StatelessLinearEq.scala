@@ -64,9 +64,9 @@ final class StatelessLinearEq(
     altRevise(ps, BitVector.empty, f, false, false, max)
   }
 
-  override def toString() = toString("=BC=")
+  override def toString: String = toString("=BC=")
 
-  override def toString(ps: ProblemState) = {
+  override def toString(ps: ProblemState): String = {
     toString(ps, "=BC=")
   }
 
@@ -77,7 +77,5 @@ final class StatelessLinearEq(
   def simpleEvaluation: Int = 3
 
   override def init(ps: ProblemState) = ps
-
-  override def entailable = false
 
 }

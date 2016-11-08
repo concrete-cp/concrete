@@ -32,6 +32,7 @@ case object BoundRemoval extends Event {
  * Bounds are unchanged
  */
 case object InsideRemoval extends Event {
+  @inline
   def apply(before: Domain, after: Domain) =
     if (before.head != after.head || before.last != after.last) BoundRemoval(after)
     else InsideRemoval

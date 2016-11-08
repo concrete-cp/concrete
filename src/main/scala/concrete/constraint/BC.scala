@@ -1,10 +1,6 @@
-package concrete.constraint
+package concrete
+package constraint
 
-import concrete.Contradiction
-import concrete.Outcome
-import concrete.ProblemState
-import concrete.Event
-import concrete.BoundRemoval
 import cspom.util.BitVector
 
 trait BC extends Constraint {
@@ -30,35 +26,56 @@ trait BC extends Constraint {
     }
   }
 
+  def fixPointM(ps: ProblemState, shavers: IndexedSeq[ProblemState => Outcome]): Outcome = {
+    fixPoint(ps, shavers.indices, (ps, i) => shavers(i)(ps))
+  }
+
   def fixPoint(ps: ProblemState, range: Range, shave: (ProblemState, Int) => Outcome): Outcome = {
+    //println("start")
+    if (range.isEmpty) ps
+    else {
+      val it = Iterator.continually(range).flatten
+      var i = it.next()
+      var lastModified = i
+      var state = shave(ps, i)
 
-    var it = Iterator.continually(range).flatten
-
-    @annotation.tailrec
-    def loop(state: ProblemState, i: Int, lastModified: Int): Outcome = {
-      if (i == lastModified) {
-        state
-      } else {
-        shave(state, i) match {
-          case Contradiction => Contradiction
-          case ns: ProblemState =>
-            if (ns ne state) {
-              loop(ns, it.next, i)
-            } else {
-              loop(ns, it.next, lastModified)
-            }
+      i = it.next()
+      while (i != lastModified && state.isState) {
+        val ns = shave(state.toState, i)
+        if (ns ne state) {
+          lastModified = i
+          state = ns
         }
+        i = it.next()
       }
+      //println("contradiction")
+      state
     }
-
-    if (it.hasNext) {
-      val first = it.next
-      shave(ps, first).andThen { ps =>
-        loop(ps, it.next, first)
-      }
-    } else {
-      ps
-    }
+    //    @annotation.tailrec
+    //    def loop(state: ProblemState, i: Int, lastModified: Int): Outcome = {
+    //      if (i == lastModified) {
+    //        state
+    //      } else {
+    //        shave(state, i) match {
+    //          case Contradiction => Contradiction
+    //          case ns: ProblemState =>
+    //            if (ns ne state) {
+    //              loop(ns, it.next, i)
+    //            } else {
+    //              loop(ns, it.next, lastModified)
+    //            }
+    //        }
+    //      }
+    //    }
+    //
+    //    if (it.hasNext) {
+    //      val first = it.next
+    //      shave(ps, first).andThen { ps =>
+    //        loop(ps, it.next, first)
+    //      }
+    //    } else {
+    //      ps
+    //    }
 
   }
 

@@ -13,16 +13,16 @@ object Interval {
   def realUnion(i0: Option[Interval], i1: Option[Interval]): Option[Either[Interval, (Interval, Interval)]] = {
     i0 match {
       case Some(i0) =>
-        i1 match {
-          case Some(i1) =>
-            if (i1 connected i0) Some(Left(i0 span i1))
-            else if (i0.lb < i1.lb) Some(Right((i0, i1)))
-            else Some(Right((i1, i0)))
-          case None => Some(Left(i0))
-        }
+        i1.map(realUnion(i0, _)).orElse(Some(Left(i0)))
       case None => i1.map(Left(_))
     }
 
+  }
+
+  def realUnion(i0: Interval, i1: Interval): Either[Interval, (Interval, Interval)] = {
+    if (i1 connected i0) Left(i0 span i1)
+    else if (i0.lb < i1.lb) Right((i0, i1))
+    else Right((i1, i0))
   }
 
 }
@@ -31,7 +31,7 @@ case class Interval(val lb: Int, val ub: Int) {
   //assume(ub >= lb)
   val size: Int = math.max(0, ub - lb + 1)
   def contains(v: Int): Boolean = lb <= v && v <= ub
-  
+
   def isEmpty = ub < lb
   def nonEmpty = ub >= lb
 
@@ -127,6 +127,10 @@ case class Interval(val lb: Int, val ub: Int) {
     Interval(
       math.min(Math.ceilDiv(v, lb), Math.ceilDiv(v, ub)),
       math.max(Math.floorDiv(v, lb), Math.floorDiv(v, ub)))
+  }
+
+  def fastIntersect(ilb: Int, iub: Int): Interval = {
+    Interval(math.max(lb, ilb), math.min(ub, iub))
   }
 
   def intersect(i: Interval): Option[Interval] = {

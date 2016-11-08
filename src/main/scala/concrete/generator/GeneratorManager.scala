@@ -18,10 +18,10 @@ class GeneratorManager(pg: ProblemGenerator) {
     val adg = new AllDifferentGenerator(pg)
     Map(
       'abs -> AbsGenerator,
+      'absdiff -> new AbsDiffGenerator(pg),
       'alldifferent -> adg,
-      'eq -> EqGenerator,
+      'eq -> new EqGenerator(pg.pm),
       'mul -> new MulGenerator(pg),
-      'absdiff -> AbsDiffGenerator,
       'gcc -> GccGenerator,
       'div -> new DivGenerator(pg),
       'mod -> new ModGenerator(pg),
@@ -42,7 +42,8 @@ class GeneratorManager(pg: ProblemGenerator) {
       'inverse -> new InverseGenerator(pg, adg),
       'cumulative -> new CumulativeGenerator(pg),
       'diffn -> new DiffNGenerator(pg),
-      'clause -> ClauseGenerator)
+      'clause -> ClauseGenerator,
+      'bin_packing_load -> new BinPackingGenerator(pg))
   }
 
   def generate[A](constraint: CSPOMConstraint[A], variables: Map[CSPOMVariable[_], Variable], cspom: CSPOM): Try[Seq[Constraint]] = {

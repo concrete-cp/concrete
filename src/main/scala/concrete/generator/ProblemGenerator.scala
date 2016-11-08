@@ -12,6 +12,7 @@ import concrete.ParameterManager
 import concrete.Problem
 import concrete.Variable
 import concrete.cluster.Arc
+import concrete.constraint.ReifiedConstraint
 import concrete.constraint.linear.SumMode
 import concrete.constraint.semantic.Clause
 import concrete.constraint.semantic.ClauseConstraint
@@ -22,10 +23,13 @@ import cspom.Statistic
 import cspom.StatisticsManager
 import cspom.util.Finite
 import cspom.variable.BoolVariable
-import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
 import cspom.variable.IntVariable
+import cspom.CSPOMConstraint
+import cspom.variable.BoolExpression
+import concrete.constraint.linear.SumEQ
+import concrete.constraint.linear.SumLE
 
 final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) extends LazyLogging {
 
@@ -36,6 +40,23 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
 
   @Statistic
   var genTime: Quantity[Double] = _
+
+  def isBoolean(constraint: CSPOMConstraint[_]) = {
+    //    if (constraint.function == 'sum) {
+    //      val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
+    //      println(vars)
+    //    }
+
+    constraint.nonReified && (constraint.function == 'pseudoboolean || constraint.function == 'sum && {
+      val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
+      (mode == SumLE || mode == SumEQ) &&
+        vars.forall {
+          case BoolExpression(_) => true
+          case e if BoolExpression.is01(e) => true
+          case _ => false
+        }
+    })
+  }
 
   def generate(cspom: CSPOM): Try[(Problem, Map[CSPOMVariable[_], Variable])] = {
     val (result, time) = StatisticsManager.measure {
@@ -57,7 +78,7 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
           }
           Seq()
 
-        case constraint if constraint.function == 'pseudoboolean && constraint.nonReified && pm.contains("sat4pb") =>
+        case constraint if isBoolean(constraint) && constraint.nonReified && pm.contains("sat4pb") =>
           val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
 
           if (vars.nonEmpty) {
@@ -71,9 +92,16 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
       }
 
       problem.addConstraints(constraints.toSeq)
-      problem.addConstraints(SAT(clauses, pb))
+      problem.addConstraints(SAT(clauses, pb, pm))
 
       logger.info(problem.toString(problem.initState.toState).split("\n").map(l => s"% $l").mkString("\n"))
+
+      logger.info(problem.constraints
+        .groupBy {
+          case c: ReifiedConstraint => (classOf[ReifiedConstraint], c.positiveConstraint.getClass)
+          case c => c.getClass
+        }
+        .map { case (k, v) => s"$k: ${v.length}" }.mkString("\n"))
 
       (problem, variables)
     }

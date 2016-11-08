@@ -61,7 +61,8 @@ class AtMost(val result: Variable, val value: Variable,
   }
 
   private def filterResult(ps: ProblemState, currentValues: Domain, affected: Map[Int, BitVector]) = {
-    val min = currentValues.view.map(affected(_).cardinality).min
+    var min = Int.MaxValue
+    currentValues.foreach(value => min = math.min(min, affected(value).cardinality))
     ps.removeUntil(result, min)
   }
 

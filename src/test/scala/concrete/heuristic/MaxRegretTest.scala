@@ -7,6 +7,7 @@ import org.scalatest.FlatSpec
 import concrete.ParameterManager
 import concrete.Problem
 import org.scalatest.OptionValues
+import concrete.heuristic.variable.MaxRegret
 
 /**
  * @author vion

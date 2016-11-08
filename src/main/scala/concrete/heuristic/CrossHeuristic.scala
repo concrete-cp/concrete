@@ -4,6 +4,8 @@ import concrete.ParameterManager
 import concrete.Problem
 import concrete.ProblemState
 import concrete.Variable
+import concrete.heuristic.variable.VariableHeuristic
+import concrete.heuristic.value.BranchHeuristic
 
 object CrossHeuristic {
   def apply(params: ParameterManager, decisionVariables: Array[Variable]): CrossHeuristic = {
@@ -15,7 +17,7 @@ object CrossHeuristic {
 
   def defaultVar(params: ParameterManager, decisionVariables: Array[Variable]) = {
     val variableHeuristicClass: Class[_ <: VariableHeuristic] =
-      params.classInPackage("heuristic.variable", "concrete.heuristic", classOf[WDegOnDom])
+      params.classInPackage("heuristic.variable", "concrete.heuristic.variable", classOf[WDegOnDom])
 
     variableHeuristicClass
       .getConstructor(classOf[ParameterManager], classOf[Array[Variable]])
@@ -24,7 +26,7 @@ object CrossHeuristic {
 
   def defaultVal(params: ParameterManager) = {
     val valueHeuristicClass: Class[_ <: BranchHeuristic] =
-      params.classInPackage("heuristic.value", "concrete.heuristic", classOf[BestValue])
+      params.classInPackage("heuristic.value", "concrete.heuristic.value", classOf[BestValue])
 
     valueHeuristicClass
       .getConstructor(classOf[ParameterManager])
@@ -43,7 +45,7 @@ final case class CrossHeuristic(
 
   def branch(state: ProblemState) = {
     variableHeuristic.select(state).map { v =>
-      require(state.dom(v).size > 1, s"$variableHeuristic selected a singleton variable ${v.toString(state)}")
+      assert(state.dom(v).size > 1, s"$variableHeuristic selected a singleton variable ${v.toString(state)}")
       valueHeuristic.branch(v, state.dom(v), state)
     }
   }
@@ -56,4 +58,5 @@ final case class CrossHeuristic(
   override def toString =
     "Crossed (" + variableHeuristic + ", " + valueHeuristic + ")";
 
+  def decisionVariables = variableHeuristic.decisionVariables
 }

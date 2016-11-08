@@ -12,6 +12,8 @@ final class SeqHeuristic(heuristics: List[Heuristic]) extends Heuristic {
 
   override def toString = heuristics.toString
 
-  def shouldRestart = heuristics.exists(_.shouldRestart)
+  def shouldRestart = heuristics.head.shouldRestart
+  
+  def decisionVariables = heuristics.flatMap(_.decisionVariables).distinct
 
 }

@@ -11,19 +11,22 @@ import org.sat4j.specs.ContradictionException
 import com.typesafe.scalalogging.LazyLogging
 
 import concrete.BooleanDomain
+import concrete.BooleanDomain.FALSE
+import concrete.BooleanDomain.TRUE
 import concrete.Contradiction
+import concrete.Domain
+import concrete.Event
 import concrete.Outcome
+import concrete.ParameterManager
 import concrete.ProblemState
 import concrete.Variable
 import concrete.cluster.Arc
 import concrete.cluster.ConnectedComponents
 import concrete.constraint.Constraint
-import concrete.constraint.Residues
+import concrete.constraint.linear.Linear
 import concrete.constraint.linear.SumEQ
 import concrete.constraint.linear.SumLE
 import concrete.constraint.linear.SumMode
-import concrete.Domain
-import BooleanDomain._
 
 case class Clause(positive: Seq[Variable], negative: Seq[Variable]) extends Arc {
   require(vars.forall(v => v.initDomain.isInstanceOf[BooleanDomain]), s"some of ${vars.map(v => s"$v ${v.initDomain}")} are not boolean")
@@ -44,27 +47,31 @@ case class PseudoBoolean(
 
 object SAT extends LazyLogging {
 
-  def apply(clauses: Seq[Clause] = Seq.empty, pb: Seq[PseudoBoolean] = Seq.empty): Seq[Constraint] = {
+  def apply(clauses: Seq[Clause] = Seq.empty, pb: Seq[PseudoBoolean] = Seq.empty, pm: ParameterManager): Seq[Constraint] = {
     logger.info("Computing SAT components")
 
     val comp = ConnectedComponents(clauses ++ pb)
 
-    for (arcs <- comp) yield {
+    comp.flatMap { arcs =>
       val c = arcs.collect { case c: Clause => c }
       val p = arcs.collect { case pb: PseudoBoolean => pb }
 
       assert(c.size + p.size == arcs.size)
 
       (c, p) match {
-        case (Seq(singleClause), Seq()) => new ClauseConstraint(singleClause)
-        case (clauses, pb) => new SAT(clauses.flatMap(_.vars).distinct.toArray, clauses, pb)
+        case (Seq(singleClause), Seq()) => Seq(new ClauseConstraint(singleClause))
+        case (Seq(), Seq(pb)) => Seq(Linear(pb.constant, pb.factors.toArray, pb.vars.toArray, pb.mode, pm))
+        case (clauses, pb) =>
+          new SAT((clauses.flatMap(_.vars) ++ pb.flatMap(_.vars)).distinct.toArray, clauses, pb) +:
+            clauses.map(new ClauseConstraint(_))
       }
     }
+
   }
 
 }
 
-class SAT(vars: Array[Variable], clauses: Seq[Clause], pseudo: Seq[PseudoBoolean]) extends Constraint(vars) with Residues with LazyLogging {
+class SAT(vars: Array[Variable], clauses: Seq[Clause], pseudo: Seq[PseudoBoolean]) extends Constraint(vars) with LazyLogging {
   private var solver: org.sat4j.specs.ISolverService with org.sat4j.specs.ISolver = _
 
   logger.info(s"SAT constraint with ${vars.size} vars, ${clauses.size} clauses and ${pseudo.size} pseudo-boolean constraints")
@@ -78,6 +85,8 @@ class SAT(vars: Array[Variable], clauses: Seq[Clause], pseudo: Seq[PseudoBoolean
         solver = org.sat4j.minisat.SolverFactory.newMiniLearningHeap()
         solver.newVar(vars.size)
         solver.setExpectedNumberOfClauses(clauses.size)
+
+        //println(toString(ps))
       } else {
         val solver = org.sat4j.pb.SolverFactory.newCompetPBResMixedConstraintsObjectiveExpSimp()
         solver.newVar(vars.size)
@@ -109,6 +118,7 @@ class SAT(vars: Array[Variable], clauses: Seq[Clause], pseudo: Seq[PseudoBoolean
         this.solver = solver
       }
 
+      solver.setTimeoutOnConflicts(Int.MaxValue)
       solver.setKeepSolverHot(true)
 
       for (c <- clauses) {
@@ -133,13 +143,46 @@ class SAT(vars: Array[Variable], clauses: Seq[Clause], pseudo: Seq[PseudoBoolean
 
   }
 
-  def getEvaluation(problemState: concrete.ProblemState): Int = vars.size * vars.size
+  def advise(ps: ProblemState, event: Event, pos: Int): Int = if (vars.size > 30) Int.MaxValue else 0x1 << vars.size
 
   def check(tuple: Array[Int]): Boolean = {
     clauses.forall { c =>
       c.positive.exists(v => tuple(position(v).head) == 1) || c.negative.exists(v => tuple(position(v).head) == 0)
     }
   }
+
+  def revise(ps: ProblemState): Outcome = {
+    val state = new VecInt()
+
+    for (i <- 0 until arity) {
+      ps.dom(scope(i)) match {
+        case TRUE => state.push(i + 1)
+        case FALSE => state.push(-i - 1)
+        case _ => assert(ps.dom(scope(i)).size > 1)
+      }
+    }
+
+    //solver.setSearchListener(new TextOutputTracing(null))
+    //println(state)
+
+    val model = solver.findModel(state)
+
+    //println(Option(model).toSeq.flatMap(_.toSeq))
+
+    if (model eq null) Contradiction else {
+      //      ps.fold(solver.getLiteralsPropagatedAt(0)) { (ps, p) =>
+      //        println(p)
+      //        ps
+      //      }
+      ps
+      //      ps.fold(solver.getLearnedConstraints.iterator.asScala.toTraversable) { (ps, p) =>
+      //        println(p)
+      //        ps
+      //      }
+    }
+
+  }
+
   def findSupport(ps: ProblemState, pos: Int, value: Int): Option[Array[Int]] = {
     val state = new VecInt()
 

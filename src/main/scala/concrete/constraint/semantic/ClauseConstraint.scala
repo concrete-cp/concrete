@@ -17,20 +17,21 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
   private var watch2: Int = _
 
   override def init(ps: ProblemState): Outcome = {
+
     seekEntailment(ps)
       .map { i =>
         assert { watch1 = i; watch1 >= 0 }
         ps.entail(this)
       }
       .getOrElse {
-        watch1 = seekWatch(ps, -1)
+        watch1 = seekWatch(ps, 0)
 
         if (watch1 < 0) {
           Contradiction
         } else {
-          watch2 = seekWatch(ps, watch1)
+          watch2 = seekWatch(ps, watch1 + 1)
           if (watch2 < 0) {
-            enforce(ps, watch1).entail(this)
+            enforce(ps, watch1) //.entail(this)
           } else {
             ps
           }
@@ -50,60 +51,49 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
   override def toString(ps: ProblemState) =
     "\\/" + (positive.map(_.toString(ps)) ++ negative.map(v => "-" + v.toString(ps))).mkString("(", ", ", ")")
 
-  def reviseW2(ps: ProblemState): Outcome = {
+  private def reviseW2(ps: ProblemState): Outcome = {
     reversed(ps, watch2) match {
-      case TRUE => ps.entail(this)
+      case TRUE => ps
       case FALSE =>
-        val w = seekWatch(ps, watch1)
+        val w = seekWatch(ps, 0)
         if (w < 0) {
-          enforce(ps, watch1).entail(this)
+          Contradiction
+        } else if (w == watch1) {
+          // Watch1 is still valid, no need to check!
+          val w2 = seekWatch(ps, w + 1)
+          if (w2 < 0) {
+            enforce(ps, watch1)
+          } else {
+            watch2 = w2
+            ps
+          }
+        } else if (isTrue(ps, w)) {
+          ps
         } else {
           watch2 = w
-          if (isTrue(ps, w)) {
-            ps.entail(this)
-          } else {
-            reviseW1From(ps, w + 1)
-          }
+          // At this point, watch1 is not valid, seek for another one
+          reviseW1(ps, w + 1)
         }
-      case _ => reviseW1(ps)
+
+      case _ => reviseW1(ps, 0)
     }
   }
 
-  def reviseW1(ps: ProblemState): Outcome = {
-    reversed(ps, watch1) match {
-      case TRUE => ps.entail(this)
-      case FALSE =>
-        val w = seekWatch(ps, watch2)
-        if (w < 0) {
-          enforce(ps, watch2).entail(this)
-        } else {
-          watch1 = w
-          if (isTrue(ps, w)) {
-            ps.entail(this)
-          } else {
-            ps
-          }
-        }
-      case _ => ps
-    }
-  }
+  private def reviseW1(ps: ProblemState, start: Int): Outcome = {
+    if (isFalse(ps, watch1)) {
+      var w = seekWatch(ps, start)
+      if (w == watch2) {
+        w = seekWatch(ps, w + 1)
+      }
 
-  def reviseW1From(ps: ProblemState, startAt: Int): Outcome = {
-    reversed(ps, watch1) match {
-      case TRUE => ps.entail(this)
-      case FALSE =>
-        val w = seekWatchFrom(ps, startAt)
-        if (w < 0) {
-          enforce(ps, watch2).entail(this)
-        } else {
-          watch1 = w
-          if (isTrue(ps, w)) {
-            ps.entail(this)
-          } else {
-            ps
-          }
-        }
-      case _ => ps
+      if (w < 0) {
+        enforce(ps, watch2) //.entail(this)
+      } else {
+        watch1 = w
+        ps
+      }
+    } else {
+      ps
     }
   }
 
@@ -112,11 +102,12 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
   }
 
   override def controlRevision(ps: ProblemState): Boolean = {
-
-    require(watch1 >= 0)
-    require(canBeTrue(ps, watch1) || canBeTrue(ps, watch2), s"${this.toString(ps)}: $watch1 and $watch2 are inconsistent")
-    require(watch2 >= 0 || isTrue(ps, watch1))
-    require(!ps.isEntailed(this) || (0 until arity).exists(isTrue(ps, _)), s"entailment: ${ps.isEntailed(this)}, watches $watch1, $watch2, ${this.toString(ps)}")
+    if (seekEntailment(ps).isEmpty) {
+      require(watch1 >= 0)
+      require(canBeTrue(ps, watch1) || canBeTrue(ps, watch2), s"${this.toString(ps)}: $watch1 and $watch2 are inconsistent")
+      require(watch2 >= 0 || isTrue(ps, watch1))
+      require(!ps.isEntailed(this) || (0 until arity).exists(isTrue(ps, _)), s"entailment: ${ps.isEntailed(this)}, watches $watch1, $watch2, ${this.toString(ps)}")
+    }
     true
   }
 
@@ -145,6 +136,7 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
   }
 
   private def reversed(ps: ProblemState, pos: Int): BooleanDomain = {
+    assert(pos >= 0, this.toString(ps) + " " + watch1 + " " + watch2 + " " + ps.isEntailed(this))
     if (pos < posLength) {
       ps.boolDom(scope(pos))
     } else {
@@ -160,25 +152,8 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
     ps.boolDom(scope(p)).canBe(p < posLength)
   }
 
-  private def seekWatch(ps: ProblemState, excluding: Int): Int = {
-    var i = 0
-    while (i < posLength) {
-      if (i != excluding && ps.boolDom(scope(i)).canBe(true)) {
-        return i
-      }
-      i += 1
-    }
-    while (i < arity) {
-      if (i != excluding && ps.boolDom(scope(i)).canBe(false)) {
-        return i
-      }
-      i += 1
-    }
-    -1
-  }
-
-  private def seekWatchFrom(ps: ProblemState, startAt: Int): Int = {
-    var i = startAt
+  private def seekWatch(ps: ProblemState, from: Int): Int = {
+    var i = from
     while (i < posLength) {
       if (ps.boolDom(scope(i)).canBe(true)) {
         return i
@@ -196,10 +171,10 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
 
   private def seekEntailment(ps: ProblemState): Option[Int] = {
     (0 until posLength)
-      .find(i => ps.dom(scope(i)) == TRUE)
+      .find(i => ps.boolDom(scope(i)) == TRUE)
       .orElse {
         (posLength until arity)
-          .find(i => ps.dom(scope(i)) == FALSE)
+          .find(i => ps.boolDom(scope(i)) == FALSE)
       }
     //    var i = 0
     //    while (i < posLength) {

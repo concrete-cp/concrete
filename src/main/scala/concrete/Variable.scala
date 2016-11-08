@@ -44,31 +44,24 @@ final class Variable(
   def constraints = _constraints
 
   def addConstraint(newConstraint: Constraint): Int = {
-    val position = _constraints.length
-    _constraints :+= newConstraint
+    val existing = _constraints.indexOf(newConstraint)
+    if (existing < 0) {
 
-    if (newConstraint.isInstanceOf[ExtensionConstraint]) {
-      _extensionConstraints ::= newConstraint.asInstanceOf[ExtensionConstraint]
+      val position = _constraints.length
+      _constraints :+= newConstraint
+
+      if (newConstraint.isInstanceOf[ExtensionConstraint]) {
+        _extensionConstraints ::= newConstraint.asInstanceOf[ExtensionConstraint]
+      }
+      _positionInConstraint :+= newConstraint.position(this)
+      position
+    } else {
+      existing
     }
-    _positionInConstraint :+= newConstraint.position(this)
-    position
   }
 
   def dynamicConstraints = _extensionConstraints
   def positionInConstraint(constraintPosition: Int) = _positionInConstraint(constraintPosition)
-
-  // var wDeg = 0
-
-  def getWDegFree(state: ProblemState) = {
-    var i = constraints.length - 1
-    var wDeg = 0
-    while (i >= 0) {
-      val c = constraints(i)
-      if (!c.isFree(state)) wDeg += c.weight
-      i -= 1
-    }
-    wDeg
-  }
 
   def getWDegEntailed(state: ProblemState) = {
 
@@ -86,16 +79,6 @@ final class Variable(
 
   def getDDegEntailed(state: ProblemState) = {
     state.activeConstraints(this).cardinality
-  }
-
-  def getDDegFree(state: ProblemState) = {
-    var i = constraints.length - 1
-    var dDeg = 0
-    while (i >= 0) {
-      if (!constraints(i).isFree(state)) dDeg += 1
-      i -= 1
-    }
-    dDeg
   }
 
 }

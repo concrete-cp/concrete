@@ -43,7 +43,7 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
     "AllInterval-005.xml.xz" -> ((8, false)),
     "testObjective1.xml.xz" -> ((11, false)),
     "QuadraticAssignment-qap.xml.xz" -> ((4776, false)),
-    "fapp01-0200-0.xml.xz" -> ((false, false)),
+    //"fapp01-0200-0.xml.xz" -> ((false, false)),
 
     "scen11-f12.xml.xz" -> ((0, true)),
     "normalized-renault-mod-0_ext.xml.xz" -> ((true, true)),
@@ -72,7 +72,7 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
     "e0ddr1-10-by-5-8.xml.xz" -> ((true, true)),
     "tsp-20-1_ext.xml.xz" -> ((true, true)),
     "test.fzn.xz" -> ((true, false)),
-    "queens-12.xml.xz" -> ((14200, false))) //.slice(21, 22)
+    "queens-12.xml.xz" -> ((14200, false))).slice(18, 22)
 
   val parameters = Nil
 
@@ -114,10 +114,9 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
 
       val parser = CSPOM.autoParser(url).get
 
-
       CSPOM.load(url, parser)
         .flatMap { cspomProblem =>
-   
+
           logger.debug(cspomProblem.toString)
           parser match {
             case FlatZincParser =>

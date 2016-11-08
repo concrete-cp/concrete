@@ -6,4 +6,9 @@
 predicate diffn(array[int] of var int: x,
                 array[int] of var int: y,
                 array[int] of var int: dx,
-                array[int] of var int: dy);
+                array[int] of var int: dy) = diffn_cumulative(x,y,dx,dy);
+                
+predicate diffn_cumulative(array[int] of var int: x,
+                array[int] of var int: y,
+                array[int] of var int: dx,
+                array[int] of var int: dy)

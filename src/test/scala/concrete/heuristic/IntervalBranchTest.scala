@@ -2,13 +2,13 @@ package concrete.heuristic
 
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
+
+import concrete.EntailmentManagerLight
 import concrete.IntDomain
-import concrete.Variable
-import concrete.ProblemState
-import cspom.util.BitVector
-import concrete.util.Vector
 import concrete.ParameterManager
-import concrete.EntailmentManager
+import concrete.ProblemState
+import concrete.Variable
+import concrete.util.Vector
 
 /**
  * @author vion
@@ -21,9 +21,9 @@ class IntervalBranchTest extends FlatSpec with Matchers {
 
     val v = new Variable("v", d)
     v.id = 0
-    val ps = new ProblemState(Vector(d), Vector(), new EntailmentManager(Seq(v)))
+    val ps = new ProblemState(Vector(d), Vector(), EntailmentManagerLight(Seq(v)))
 
-    val h = new concrete.heuristic.IntervalBranch(new ParameterManager)
+    val h = new concrete.heuristic.value.IntervalBranch(new ParameterManager)
 
     val b = h.branch(v, d, ps)
 
@@ -37,9 +37,9 @@ class IntervalBranchTest extends FlatSpec with Matchers {
 
     val v = new Variable("v", d)
     v.id = 0
-    val ps = new ProblemState(Vector(d), Vector(), new EntailmentManager(Seq(v)))
+    val ps = new ProblemState(Vector(d), Vector(), EntailmentManagerLight(Seq(v)))
 
-    val h = new concrete.heuristic.IntervalBranch(new ParameterManager)
+    val h = new concrete.heuristic.value.IntervalBranch(new ParameterManager)
 
     val b = h.branch(v, d, ps)
 

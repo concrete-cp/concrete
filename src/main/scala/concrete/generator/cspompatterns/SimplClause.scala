@@ -6,6 +6,7 @@ import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMSeq
+import cspom.UNSATException
 
 /**
  * Removes constants from clauses
@@ -28,6 +29,7 @@ object SimplClause extends ConstraintCompilerNoData {
     } else {
       val newP = positive.filterNot(_.isFalse)
       val newN = negative.filterNot(_.isTrue)
+      if (newP.isEmpty && newN.isEmpty) throw new UNSATException("Empty clause created during compilation")
       replaceCtr(fc, CSPOMConstraint(fc.result, 'clause, Seq(newP, newN), fc.params), problem)
     }
 

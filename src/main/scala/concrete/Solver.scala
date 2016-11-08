@@ -202,7 +202,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
 
   private var _maxBacktracks = -1
 
-  def reset()
+  def reset(): Unit
 
   protected def extractSolution(state: ProblemState): Map[Variable, Any] = problem.variables
     .map(v => (v, state.dom(v))).map {

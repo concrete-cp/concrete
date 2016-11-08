@@ -49,7 +49,7 @@ final class Gcc(scope: Array[Variable], bounds: Array[Bounds]) extends Constrain
       val d = ps.dom(v)
       if (d.size > 1) {
         val nd = d.remove(value)
-        if (nd.size == 1) q.enqueue(v)
+        if (nd.isAssigned) q.enqueue(v)
         ps.updateDomNonEmpty(v, d)
       } else ps
     }

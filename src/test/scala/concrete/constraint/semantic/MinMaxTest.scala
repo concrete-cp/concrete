@@ -112,7 +112,6 @@ class MinMaxTest extends FlatSpec with Matchers with Inspectors with PropertyChe
     mod.dom(vx).view should contain theSameElementsAs Seq(0)
     mod.dom(vy(0)).view should contain theSameElementsAs Seq(1)
     mod.dom(vy(1)).view should contain theSameElementsAs Seq(0)
-    assert(mod.isEntailed(constraint))
   }
 
   it should "handle test case" in {
@@ -130,7 +129,6 @@ class MinMaxTest extends FlatSpec with Matchers with Inspectors with PropertyChe
     mod.dom(vx).view should contain theSameElementsAs Seq(0)
     mod.dom(vy(0)).view should contain theSameElementsAs Seq(0)
     mod.dom(vy(1)).view should contain theSameElementsAs Seq(1)
-    assert(mod.isEntailed(constraint))
   }
 
   it should "not have a contradiction" in {

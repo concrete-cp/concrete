@@ -33,28 +33,20 @@ import org.scalameter.Key
 import org.scalameter.Warmer
 import java.util.concurrent.TimeoutException
 import scala.annotation.elidable
+import concrete.heuristic.restart.Geometric
+import concrete.heuristic.restart.NoRestarts
+import concrete.heuristic.restart.RestartStrategy
 
 object MAC {
   def apply(prob: Problem, params: ParameterManager): MAC = {
-    val heuristic: Heuristic = params.get[Any]("mac.heuristic").getOrElse(classOf[CrossHeuristic]) match {
-      case heuristicClass: Class[_] =>
-        heuristicClass
-          .getMethod("apply", classOf[ParameterManager], classOf[Array[Variable]])
-          .invoke(null, params, prob.variables.toArray)
-          .asInstanceOf[Heuristic]
-      case heuristic: Heuristic => heuristic
-    }
 
-    new MAC(prob, params, heuristic)
+    new MAC(prob, params, Heuristic.default(params, prob.variables.toArray))
   }
 }
 
 final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristic) extends Solver(prob, params) with LazyLogging {
-  val btGrowth: Double = params.getOrElse("mac.btGrowth", 1.5)
 
   val filterClass: Class[_ <: Filter] = params.getOrElse("mac.filter", classOf[ACC])
-
-  val restartLevel = params.getOrElse("mac.restartLevel", if (heuristic.shouldRestart) 0 else -1)
 
   val measureMem: Boolean = params.getOrElse("mac.measureMem", false)
 
@@ -64,26 +56,24 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
   val filter: Filter = filterClass.getConstructor(classOf[Problem], classOf[ParameterManager]).newInstance(problem, params);
   statistics.register("filter", filter);
 
-  var maxBacktracks: Int = initBT()
+  val rsClass: Class[_ <: RestartStrategy] = params.classInPackage("mac.restart", "concrete.heuristic.restart", classOf[Geometric])
 
-  private def initBT(): Int =
-    if (restartLevel == 0) {
-      if (problem.variables.isEmpty) 10
-      else
-        math.max(10, math.log(problem.variables.map(_.initDomain.size).max).toInt)
-    } else {
-      restartLevel
-    }
+  val resetOnRestart: Boolean = params.contains("mac.resetOnRestart")
+
+  var restartStrategy = if (heuristic.shouldRestart) {
+    rsClass.getConstructor(classOf[ParameterManager], classOf[Problem]).newInstance(params, problem)
+  } else { new NoRestarts(params, problem) }
 
   private var restart = true
+  private var firstRun = true
 
   @tailrec
   def mac(
     modified: Seq[(Variable, Event)], stack: List[Branch],
     currentState: Outcome, stateStack: List[ProblemState],
-    nbBacktracks: Int, maxBacktracks: Int, nbAssignments: Int): (SolverResult, List[Branch], List[ProblemState], Int, Int) = {
+    maxBacktracks: Int, nbAssignments: Int): (SolverResult, List[Branch], List[ProblemState], Int) = {
     if (Thread.interrupted()) {
-      (UNKNOWNResult(new TimeoutException()), stack, stateStack, nbBacktracks, nbAssignments)
+      (UNKNOWNResult(new TimeoutException()), stack, stateStack, nbAssignments)
     } else {
 
       val filtering = currentState
@@ -93,15 +83,15 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
 
         case Contradiction =>
           if (stack.isEmpty) {
-            (UNSAT, Nil, Nil, nbBacktracks, nbAssignments)
-          } else if (maxBacktracks >= 0 && nbBacktracks >= maxBacktracks) {
-            (RESTART, stack, stateStack, nbBacktracks, nbAssignments)
+            (UNSAT, Nil, Nil, nbAssignments)
+          } else if (maxBacktracks == 0) {
+            (RESTART, stack, stateStack, nbAssignments)
           } else {
             val lastBranch = stack.head
 
             logger.info(s"${stack.length - 1}: ${lastBranch.b2Desc}")
 
-            mac(lastBranch.c2, stack.tail, lastBranch.b2, stateStack.tail, nbBacktracks + 1, maxBacktracks, nbAssignments)
+            mac(lastBranch.c2, stack.tail, lastBranch.b2, stateStack.tail, maxBacktracks - 1, nbAssignments)
           }
 
         case filteredState: ProblemState =>
@@ -112,11 +102,14 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
 
               controlSolution(filteredState)
 
-              (SAT(extractSolution(filteredState)), stack, filteredState :: stateStack, nbBacktracks, nbAssignments)
+              (SAT(extractSolution(filteredState)), stack, filteredState :: stateStack, nbAssignments)
             case Some(branching) =>
-              logger.info(s"${stack.length}: ${branching.b1Desc} ($nbBacktracks / $maxBacktracks)");
 
-              mac(branching.c1, branching :: stack, branching.b1, filteredState :: stateStack, nbBacktracks, maxBacktracks, nbAssignments + 1)
+              if (nbAssignments % 1000 == 0) logger.info(s"$nbAssignments assignments")
+
+              logger.info(s"${stack.length}: ${branching.b1Desc} ($maxBacktracks bt left)");
+
+              mac(branching.c1, branching :: stack, branching.b1, filteredState :: stateStack, maxBacktracks, nbAssignments + 1)
           }
       }
     }
@@ -132,8 +125,8 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
 
   def reset() {
     restart = true
-    maxBacktracks = initBT()
-    nbBacktracks = 0
+    if (resetOnRestart)
+      restartStrategy.reset()
   }
 
   val searchMeasurer = org.scalameter.`package`
@@ -141,19 +134,18 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
       Key.exec.benchRuns -> params.getOrElse("mac.benchRuns", 1),
       Key.verbose -> false)
 
-  var nbBacktracks = 0
-
   def oneRun(modified: Seq[(Variable, Event)],
     stack: List[Branch],
     currentState: Outcome,
     stateStack: List[ProblemState]): (SolverResult, List[Branch], List[ProblemState]) = {
-    logger.info("MAC with " + maxBacktracks + " bt")
+    val maxBacktracks = restartStrategy.nextRun()
+    logger.info(s"MAC with $maxBacktracks bt")
 
     running = true
 
     val (macResult, macTime) =
       StatisticsManager.measure(
-        mac(modified, stack, currentState, stateStack, nbBacktracks, maxBacktracks, nbAssignments),
+        mac(modified, stack, currentState, stateStack, maxBacktracks, nbAssignments),
         searchMeasurer.withWarmer(
           if (nbAssignments <= params.getOrElse("mac.warm", 0)) {
             new Warmer.Default
@@ -164,13 +156,11 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
     searchCpu += macTime
     running = false
 
-    val (sol, newStack, newStateStack, newBack, newAss) = macResult.get
+    val (sol, newStack, newStateStack, newAss) = macResult.get
 
     logger.info(s"Took $macTime (${(newAss - nbAssignments) * 1000 / macTime.value}  aps)");
 
     nbAssignments = newAss
-    nbBacktracks = newBack
-
     (sol, newStack, newStateStack)
   }
 
@@ -184,8 +174,6 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
     val (sol, newStack, newStateStack) = oneRun(modified, stack, currentState, stateStack)
 
     if (sol == RESTART) {
-      maxBacktracks = (maxBacktracks * btGrowth).toInt;
-      nbBacktracks = 0
       nextSolution(Seq.empty, Nil, newStateStack.last, Nil)
     } else {
       (sol, newStack, newStateStack)
@@ -197,13 +185,20 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
 
   def nextSolution(): SolverResult = try {
 
+    logger.info(heuristic.toString)
+
     if (restart) {
       logger.info("RESTART")
       restart = false
 
       currentStateStack.last
         .padConstraints(problem.constraints, problem.maxCId)
-        .andThen(filter.reduceAll(_))
+        .andThen { ps =>
+          if (firstRun) {
+            firstRun = false
+            preprocess(filter, ps)
+          } else filter.reduceAll(ps)
+        }
         .map { state =>
           val (sol, stack, stateStack) = nextSolution(Seq.empty, Nil, state, Nil)
           currentStack = stack
@@ -216,7 +211,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
     } else if (currentStack.isEmpty) {
       UNSAT
     } else {
-      maxBacktracks = -1
+      restartStrategy = new NoRestarts(params, problem)
 
       // backtrack once (.tail) and 
       // extends state stack for new constraints

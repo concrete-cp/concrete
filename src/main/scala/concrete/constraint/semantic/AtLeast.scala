@@ -56,7 +56,8 @@ class AtLeast(val result: Variable, val value: Variable,
   }
 
   private def filterResult(ps: ProblemState, currentValues: Domain, canBeAffectedSet: Map[Int, BitVector]) = {
-    val max = currentValues.view.map(value => canBeAffectedSet(value).cardinality).max
+    var max = 0
+    currentValues.foreach(value => max = math.max(max, canBeAffectedSet(value).cardinality))
     ps.removeAfter(result, max)
   }
 

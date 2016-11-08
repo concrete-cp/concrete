@@ -15,14 +15,14 @@ object Linear {
         case SumLE => StatelessLinearLe(constant, factors, scope, false, pm)
         case SumLT => StatelessLinearLe(constant, factors, scope, true, pm)
         case SumEQ => StatelessLinearEq(constant, factors, scope)
-        case SumNE => new LinearNe(constant, factors, scope)
+        case SumNE => new LinearNe2(constant, factors, scope)
       }
     } else {
       mode match {
         case SumLE => LinearLe(constant, factors, scope, false, pm)
         case SumLT => LinearLe(constant, factors, scope, true, pm)
         case SumEQ => LinearEq(constant, factors, scope)
-        case SumNE => new LinearNe(constant, factors, scope)
+        case SumNE => new LinearNe2(constant, factors, scope)
       }
     }
   }

@@ -42,6 +42,7 @@ final class LtC(val v: Variable, var constant: Int) extends Constraint(Array(v))
   def advise(ps: ProblemState, event: Event, p: Int) = 1
   def revise(ps: ProblemState) = ps.removeFrom(v, constant) //.entail(this)
   def simpleEvaluation = 1
+  override def isConsistent(ps: ProblemState) = ps.dom(v).head < constant
   override def toString(ps: ProblemState) = s"${v.toString(ps)} < $constant"
 }
 
@@ -51,6 +52,7 @@ final class GeC(val v: Variable, val constant: Int) extends Constraint(Array(v))
   def advise(ps: ProblemState, event: Event, p: Int) = 1
   def revise(ps: ProblemState) = ps.removeUntil(v, constant).entail(this)
   def simpleEvaluation = 1
+  override def isConsistent(ps: ProblemState) = ps.dom(v).last >= constant
   override def toString(ps: ProblemState) = s"${v.toString(ps)} >= $constant"
 }
 
@@ -60,6 +62,7 @@ final class GtC(val v: Variable, var constant: Int) extends Constraint(Array(v))
   def advise(ps: ProblemState, event: Event, p: Int) = 1
   def revise(ps: ProblemState) = ps.removeTo(v, constant) //.entail(this)
   def simpleEvaluation = 1
+  override def isConsistent(ps: ProblemState) = ps.dom(v).last > constant
   override def toString(ps: ProblemState) = s"${v.toString(ps)} > $constant"
 }
 

@@ -17,7 +17,6 @@ import concrete.constraint.AdviseCount
 import concrete.constraint.ReifiedConstraint
 import concrete.constraint.linear.EqACFast
 import concrete.constraint.linear.EqBC
-import concrete.constraint.linear.LinearNe
 import concrete.constraint.linear.StatelessLinearEq
 import cspom.CSPOM
 import cspom.CSPOM._
@@ -25,6 +24,7 @@ import cspom.CSPOMConstraint
 import cspom.variable.BoolVariable
 import cspom.variable.IntVariable
 import concrete.Assignment
+import concrete.constraint.linear.LinearNe2
 
 class ReifiedConstraintTest extends FlatSpec with Matchers {
 
@@ -73,7 +73,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
     val constraint = new ReifiedConstraint(
       control,
       new EqBC(false, v0, -1, v1),
-      new LinearNe(1, Array(1, -1), Array(v0, v1)))
+      new LinearNe2(1, Array(1, -1), Array(v0, v1)))
     val pb = Problem(v0, v1, control)
     pb.addConstraint(constraint)
     val state = pb.initState.toState

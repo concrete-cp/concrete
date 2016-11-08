@@ -51,12 +51,12 @@ trait StatelessBoundPropagation extends Linear {
     hasChanged: BitVector = BitVector.empty): POutcome = {
 
     if (f.ub <= 0) {
-      /** Entailed */
+      /* Entailed */
       PFiltered(hasChanged, true, f)
     } else if (f.lb > 0) {
       PContradiction
     } else if (p >= arity || is(p) <= -f.lb) {
-      /** End or Short-circuit */
+      /* End or Short-circuit */
       PFiltered(hasChanged, false, f)
     } else {
       val dom = doms(p)

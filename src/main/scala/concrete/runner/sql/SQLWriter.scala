@@ -49,12 +49,12 @@ import concrete.runner.Unsat
 
 object SQLWriter {
 
-  lazy val baseConfig = ConfigFactory.load //defaults from src/resources
-
-  val systemConfig = Option(System.getProperty("concrete.config")) match {
-    case Some(cfile) => ConfigFactory.parseFile(new File(cfile)).withFallback(baseConfig)
-    case None => baseConfig
-  }
+  lazy val systemConfig = ConfigFactory.load //defaults from src/resources
+  //
+  //  val systemConfig = Option(System.getProperty("concrete.config")) match {
+  //    case Some(cfile) => ConfigFactory.parseFile(new File(cfile)).withFallback(baseConfig)
+  //    case None => baseConfig
+  //  }
 
   def connection(createTables: Boolean): Database = {
     val db = Database.forConfig("database", systemConfig)
@@ -298,7 +298,11 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
   }
 
   def solution(solution: String) {
-    val currentSolution = executions.filter(_.executionId === executionId.get).map(_.solution)
+    addSolution(solution, executionId.get)
+  }
+
+  private def addSolution(solution: String, executionId: Int) = {
+    val currentSolution = executions.filter(_.executionId === executionId).map(_.solution)
     //require(executionId.nonEmpty, "Problem description or parameters were not defined")
     val f = db.run {
       currentSolution.result.headOption
@@ -312,23 +316,28 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
   }
 
   def error(thrown: Throwable) {
-    val errors = {
-      val e = new StringWriter()
-      thrown.printStackTrace(new PrintWriter(e))
-      e.toString
-    }
+
+    val errors = toString(thrown)
+
     System.err.println(errors)
 
     for (e <- executionId) {
-      db.run {
-        executions
-          .filter(_.executionId === e)
-          .map(_.solution)
-          .update {
-            Some(errors)
-          }
-      }
+
+      addSolution(errors, e)
+      //        executions
+      //          .filter(_.executionId === e)
+      //          .map(_.solution)
+      //          .update {
+      //            Some(errors)
+      //          }
+
     }
+  }
+
+  private def toString(t: Throwable) = {
+    val e = new StringWriter()
+    t.printStackTrace(new PrintWriter(e))
+    e.toString
   }
 
   def disconnect(status: Try[Result]) {

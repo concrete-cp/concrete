@@ -13,25 +13,9 @@ import concrete.CSPOMSolver
 import concrete.Problem
 import concrete.Variable
 import concrete.generator.cspompatterns.FZPatterns
-import concrete.heuristic.Brelaz
-import concrete.heuristic.CrossHeuristic
-import concrete.heuristic.DDeg
-import concrete.heuristic.Dom
-import concrete.heuristic.Heuristic
-import concrete.heuristic.IntervalBranch
-import concrete.heuristic.LargestValue
-import concrete.heuristic.LexVar
-import concrete.heuristic.Lexico
-import concrete.heuristic.MaxDom
-import concrete.heuristic.MaxRegret
-import concrete.heuristic.MedValue
-import concrete.heuristic.RandomValue
-import concrete.heuristic.RevLexico
-import concrete.heuristic.RevSplit
-import concrete.heuristic.SeqHeuristic
-import concrete.heuristic.SmallestValue
-import concrete.heuristic.Split
-import concrete.heuristic.VariableHeuristic
+import concrete.heuristic._
+import concrete.heuristic.value._
+import concrete.heuristic.variable._
 import cspom.CSPOM
 import cspom.CSPOM.seq2CSPOMSeq
 import cspom.CSPOMGoal
@@ -64,6 +48,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
   override def options(args: List[String], o: Map[Symbol, Any] = Map.empty, realArgs: List[String]): (Map[Symbol, Any], List[String]) = {
     args match {
       case "-f" :: tail => options(tail, o + ('free -> Unit), realArgs)
+      case "-ff" :: tail => options(tail, o + ('totalFree -> Unit), realArgs)
       case "-p" :: option :: tail => options(tail, o + ('par -> option.toInt), realArgs)
       case e => super.options(e, o, realArgs)
     }
@@ -125,15 +110,9 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
       CrossHeuristic(varh, valh)
   }
 
-  def parseGoal(goal: WithParam[CSPOMGoal[_]], freeSearch: Boolean, variables: Map[CSPOMVariable[_], Variable]): Seq[Heuristic] = {
-    if (freeSearch) {
-      Seq()
-    } else {
-      val ann: Seq[FZAnnotation] = goal.getSeqParam("fzSolve")
-
-      ann.collect(parseGoalAnnotation(variables))
-
-    }
+  def parseGoal(goal: WithParam[CSPOMGoal[_]], variables: Map[CSPOMVariable[_], Variable]): Seq[Heuristic] = {
+    goal.getSeqParam[FZAnnotation]("fzSolve")
+      .collect(parseGoalAnnotation(variables))
   }
 
   override def loadCSPOM(args: List[String], opt: Map[Symbol, Any]) = {
@@ -174,14 +153,26 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
   }
 
   override def applyParametersPre(problem: Problem, opt: Map[Symbol, Any]): Unit = {
+    if (opt.contains('free)) {
+      pm("free") = Unit
+    } else if (opt.contains('totalFree)) {
+      pm("totalFree") = Unit
+    }
 
-    val heuristics = parseGoal(cspom.goal.get, opt.contains('free), variables)
+    val heuristics = if (pm.contains("totalFree")) {
+      Seq()
+    } else {
+      val parsed = parseGoal(cspom.goal.get, variables)
+      if (pm.contains("free")) {
+        val decision = parsed.flatMap(_.decisionVariables).distinct
+        Seq(Heuristic.default(pm, decision.toArray))
+      } else {
+        parsed
+      }
+    }
 
     val decisionVariables: Set[Variable] = heuristics
-      .flatMap {
-        case c: CrossHeuristic => c.variableHeuristic.decisionVariables
-        case _: Heuristic => Seq()
-      }
+      .flatMap(_.decisionVariables)
       .toSet
     //.flatten
 
@@ -205,7 +196,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
 
     logger.info(heuristic.toString + ", should restart: " + heuristic.shouldRestart)
 
-    pm("mac.heuristic") = heuristic
+    pm("heuristic") = heuristic
 
   }
 

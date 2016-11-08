@@ -170,7 +170,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
 
     forAll(Seq(
       LinearLe(0, Array(1), Array(v0), false, pm),
-      new LinearNe(1, Array(1), Array(v0)),
+      new LinearNe2(1, Array(1), Array(v0)),
       LinearEq(0, Array(1), Array(v0)))) { c =>
       Some(c).collect { case c: Removals => c.register(new AdviseCount) }
       pb.addConstraint(c)
@@ -185,7 +185,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
   it should "filter /=" in {
     val v0 = new Variable("v0", IntDomain(-10 to 10))
     val pb = Problem(v0)
-    val c = new LinearNe(2, Array(2), Array(v0))
+    val c = new LinearNe2(2, Array(2), Array(v0))
     pb.addConstraint(c)
     val ps = pb.initState.toState
     c.adviseAll(ps)
@@ -198,7 +198,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     val v0 = new Variable("v0", IntDomain(-10 to 10))
     val v1 = new Variable("v1", IntDomain(-1 to 1))
     val pb = Problem(v0, v1)
-    val c = new LinearNe(0, Array(1, 1), Array(v0, v1))
+    val c = new LinearNe2(0, Array(1, 1), Array(v0, v1))
     pb.addConstraint(c)
     val ps = pb.initState.toState
     c.adviseAll(ps)

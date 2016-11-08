@@ -36,10 +36,14 @@ final class ParameterManager extends LazyLogging {
 
   def get[T: TypeTag](name: String): Option[T] = {
     require(TypeTag.Nothing != typeTag[T], s"Please give a type for $name, was ${typeTag[T]}")
-    val got = parameters.get(name).map {
+    getRaw(name).map {
       case s: String => parse(typeOf[T], s)
       case v: Any => v.asInstanceOf[T]
     }
+  }
+
+  def getRaw(name: String): Option[Any] = {
+    val got = parameters.get(name)
     if (got.isDefined) {
       logger.info(s"$name = $got")
       used += name
@@ -47,14 +51,11 @@ final class ParameterManager extends LazyLogging {
     got
   }
 
-  def classInPackage[T](name: String, pack: String, default: => Class[T]): Class[T] = {
+  def classInPackage[T](name: String, pack: String, default: => Class[_ <: T]): Class[T] = {
     (parameters.get(name) match {
       case Some(s: String) =>
         used += name
-        try Class.forName(s)
-        catch {
-          case _: ClassNotFoundException => Class.forName(s"$pack.$s")
-        }
+        classInPackage(s, pack)
       case Some(c) =>
         used += name
         c
@@ -62,6 +63,13 @@ final class ParameterManager extends LazyLogging {
     })
       .asInstanceOf[Class[T]]
 
+  }
+
+  def classInPackage(name: String, pack: String): Class[_] = {
+    try Class.forName(name)
+    catch {
+      case _: ClassNotFoundException => Class.forName(s"$pack.$name")
+    }
   }
 
   def contains(name: String) = {

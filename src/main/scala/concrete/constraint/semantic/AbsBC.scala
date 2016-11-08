@@ -13,28 +13,46 @@ final class AbsBC(val result: Variable, val v0: Variable) extends Constraint(Arr
 
   def check(t: Array[Int]) = t(0) == math.abs(t(1))
 
-  override def shave(ps: ProblemState): Outcome = {
+  private val shavers: Array[ProblemState => Outcome] = Array(
+    { ps =>
+      val dv0 = ps.dom(v0)
 
-    ps.shaveDom(result, ps.span(v0).abs)
-      .andThen { ps =>
+      //if (dv0.present(0)) {
+      ps.shaveDom(result, dv0.span.abs)
+      //      } else {
+      //
+      //        val pos = dv0.nextOption(-1).map(lb => Interval(lb, dv0.last))
+      //        val neg = dv0.prevOption(1).map(ub => Interval(-ub, -dv0.head))
+      //
+      //        Interval.union(pos, neg).map(
+      //          ps.shaveDom(result, _)).getOrElse(Contradiction)
+      //      }
 
-        val ri = ps.span(result)
-        val v0span = ps.span(v0)
+      //      val abs = dv0.removeFrom(dv0.next(-1)) | dv0.removeTo(dv0.prev(1))
+      //
+      //      ps.intersectDom(result, abs)
+    },
+    { ps: ProblemState =>
 
-        Interval.realUnion(v0span intersect ri, v0span intersect -ri) match {
-          case Some(Right((i, j))) =>
-            val d0 = ps.dom(v0)
-              .removeUntil(i.lb)
-              .removeAfter(j.ub)
-              .removeItv(i.ub + 1, j.lb - 1)
+      val ri = ps.span(result)
+      val v0span = ps.span(v0)
 
-            ps.updateDom(v0, d0)
-          case Some(Left(i)) => ps.shaveDom(v0, i)
+      Interval.realUnion(ri, -ri) match {
+        case Right((i, j)) =>
+          val d0 = ps.dom(v0)
+            .removeUntil(i.lb)
+            .removeAfter(j.ub)
+            .removeItv(i.ub + 1, j.lb - 1)
 
-          case None => Contradiction
-        }
+          ps.updateDom(v0, d0)
+        case Left(i) => ps.shaveDom(v0, i)
 
       }
+
+    })
+
+  override def revise(ps: ProblemState): Outcome = {
+    fixPointM(ps, shavers)
   }
 
   override def toString(ps: ProblemState) = s"${result.toString(ps)} =BC= |${v0.toString(ps)}|";
