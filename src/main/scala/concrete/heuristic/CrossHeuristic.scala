@@ -6,6 +6,7 @@ import concrete.ProblemState
 import concrete.Variable
 import concrete.heuristic.variable.VariableHeuristic
 import concrete.heuristic.value.BranchHeuristic
+import concrete.heuristic.value.BestValue
 
 object CrossHeuristic {
   def apply(params: ParameterManager, decisionVariables: Array[Variable]): CrossHeuristic = {

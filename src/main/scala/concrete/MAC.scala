@@ -58,8 +58,6 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
 
   val rsClass: Class[_ <: RestartStrategy] = params.classInPackage("mac.restart", "concrete.heuristic.restart", classOf[Geometric])
 
-  val resetOnRestart: Boolean = params.contains("mac.resetOnRestart")
-
   var restartStrategy = if (heuristic.shouldRestart) {
     rsClass.getConstructor(classOf[ParameterManager], classOf[Problem]).newInstance(params, problem)
   } else { new NoRestarts(params, problem) }
@@ -125,8 +123,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
 
   def reset() {
     restart = true
-    if (resetOnRestart)
-      restartStrategy.reset()
+    restartStrategy.reset()
   }
 
   val searchMeasurer = org.scalameter.`package`

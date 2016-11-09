@@ -33,7 +33,7 @@ import concrete.constraint.linear.LtC
 import concrete.filter.Filter
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
-import concrete.heuristic.BestValue
+import concrete.heuristic.value.BestValue
 import cspom.CSPOM
 import cspom.Statistic
 import cspom.StatisticsManager

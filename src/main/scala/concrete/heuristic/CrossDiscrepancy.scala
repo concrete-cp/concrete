@@ -5,6 +5,7 @@ import scala.util.Random
 import concrete.ParameterManager
 import concrete.Variable
 import concrete.heuristic.variable.RandomVar
+import concrete.heuristic.value.RandomBound
 
 object CrossDiscrepancy {
   def apply(pm: ParameterManager, decisionVariables: Array[Variable]): CrossDiscrepancy = {

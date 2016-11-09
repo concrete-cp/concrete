@@ -1,4 +1,4 @@
-package concrete.heuristic;
+package concrete.heuristic.value;
 
 import concrete.Variable
 import concrete.Problem

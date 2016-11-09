@@ -5,22 +5,15 @@ import concrete.Problem
 import concrete.Domain
 import concrete.ParameterManager
 import concrete.heuristic.value.ValueHeuristic
+import scala.collection.mutable.HashMap
 
-object BestValue {
-  var newSolution: Map[Variable, Any] => Unit = null
-}
+final class PhaseSaving(heuristic: ValueHeuristic) extends ValueHeuristic {
 
-final class BestValue(params: ParameterManager) extends ValueHeuristic {
+  private val previous = new HashMap[Variable, Int]
 
-  private var best: Map[Variable, Any] = Map.empty
-
-  require(BestValue.newSolution == null)
-  BestValue.newSolution = { sol => best = sol }
-
-  val fallback = {
+  def this(params: ParameterManager) = this{
     val valueHeuristicClass: Class[_ <: ValueHeuristic] =
-      params.classInPackage("bestvalue.fallback", "concrete.heuristic.value", classOf[RandomBound])
-
+      params.classInPackage("phasesaving.heuristic", "concrete.heuristic.value", classOf[RandomBound])
     valueHeuristicClass.getConstructor(classOf[ParameterManager]).newInstance(params)
   }
 
@@ -31,7 +24,11 @@ final class BestValue(params: ParameterManager) extends ValueHeuristic {
   }
 
   override def selectIndex(variable: Variable, domain: Domain) = {
-    best.get(variable).collect { case i: Int if domain.present(i) => i }.getOrElse(fallback.selectIndex(variable, domain))
+    previous.get(variable).filter(domain.present).getOrElse {
+      val selected = heuristic.selectIndex(variable, domain)
+      previous(variable) = selected
+      selected
+    }
   }
 
   def shouldRestart = false

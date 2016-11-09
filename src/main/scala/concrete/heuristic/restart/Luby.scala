@@ -5,16 +5,16 @@ import concrete.Problem
 
 class Luby(params: ParameterManager, problem: Problem) extends RestartStrategy {
 
-  val scaleFactor = 100
-  val geometricalFactor = 2
+  val scaleFactor = params.getOrElse("luby.base", 100)
+  val geometricalFactor = params.getOrElse("luby.growth", 2.0)
 
   var nbRestart = 0
 
-  private def geometricalSum(value: Int, exponent: Int): BigInt = {
-    (BigInt(value).pow(exponent) - 1) / (value - 1);
+  private def geometricalSum(value: Double, exponent: Int): Double = {
+    (math.pow(value, exponent) - 1) / (value - 1);
   }
 
-  private def checkedIntValue(i: BigInt) = {
+  private def checkedIntValue(i: Double) = {
     require(i <= Int.MaxValue)
     i.intValue
   }
@@ -23,7 +23,7 @@ class Luby(params: ParameterManager, problem: Problem) extends RestartStrategy {
     val log = Math.log(i * (geometricalFactor - 1) + 1) / Math.log(geometricalFactor)
     val k = Math.floor(log).toInt;
     if (log == k) {
-      checkedIntValue(BigInt(geometricalFactor).pow(k - 1))
+      checkedIntValue(math.pow(geometricalFactor, k - 1))
     } else {
       //recursion
       getLasVegasCoef(i - checkedIntValue(geometricalSum(geometricalFactor, k)));

@@ -4,16 +4,13 @@ import concrete.ParameterManager
 import concrete.Problem
 
 class Geometric(params: ParameterManager, problem: Problem) extends RestartStrategy {
-  val btGrowth: Double = params.getOrElse("geometric.btGrowth", 1.5)
+  val btGrowth: Double = params.getOrElse("geometric.growth", 1.2)
 
-  var maxBacktracks: Int = initBT()
+  val base: Int = params.getOrElse("geometric.base", 100)
 
-  private def initBT(): Int =
-    if (problem.variables.isEmpty) 10
-    else
-      math.max(10, math.log(problem.variables.map(_.initDomain.size).max).toInt)
+  var maxBacktracks: Int = base
 
-  def reset() = maxBacktracks = initBT()
+  def reset() = maxBacktracks = base
 
   def nextRun() = {
     val bt = maxBacktracks
