@@ -5,19 +5,27 @@ import concrete.Problem
 import concrete.Domain
 import concrete.ParameterManager
 import concrete.heuristic.value.ValueHeuristic
+import scala.collection.mutable.HashMap
+import scala.collection.mutable.ListBuffer
 
 object BestValue {
-  var newSolution: Map[Variable, Any] => Unit = null
+
+  val best = new HashMap[Variable, ListBuffer[Int]]
+
+  def newSolution(sol: Map[Variable, Any]): Unit = {
+    for ((variable, value: Int) <- sol) {
+      val order = best.getOrElseUpdate(variable, new ListBuffer())
+
+      order -= value
+      value +=: order
+    }
+  }
+
 }
 
-final class BestValue(params: ParameterManager) extends ValueHeuristic {
+final class BestValue(fallback: ValueHeuristic) extends ValueHeuristic {
 
-  private var best: Map[Variable, Any] = Map.empty
-
-  require(BestValue.newSolution == null)
-  BestValue.newSolution = { sol => best = sol }
-
-  val fallback = {
+  def this(params: ParameterManager) = this{
     val valueHeuristicClass: Class[_ <: ValueHeuristic] =
       params.classInPackage("bestvalue.fallback", "concrete.heuristic.value", classOf[RandomBound])
 
@@ -31,7 +39,10 @@ final class BestValue(params: ParameterManager) extends ValueHeuristic {
   }
 
   override def selectIndex(variable: Variable, domain: Domain) = {
-    best.get(variable).collect { case i: Int if domain.present(i) => i }.getOrElse(fallback.selectIndex(variable, domain))
+    BestValue.best.getOrElse(variable, Nil)
+      .headOption
+      .filter(domain.present)
+      .getOrElse(fallback.selectIndex(variable, domain))
   }
 
   def shouldRestart = false

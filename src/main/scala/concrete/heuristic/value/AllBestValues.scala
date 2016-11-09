@@ -16,21 +16,9 @@ import scala.collection.mutable.SetLike
 import scala.collection.mutable.HashTable
 import scala.collection.mutable.ListBuffer
 
-class AllBestValues(params: ParameterManager) extends ValueHeuristic {
+class AllBestValues(fallback: ValueHeuristic) extends ValueHeuristic {
 
-  private val best = new HashMap[Variable, ListBuffer[Int]]
-
-  require(BestValue.newSolution == null)
-  BestValue.newSolution = { sol: Map[Variable, Any] =>
-    for ((variable, value: Int) <- sol) {
-      val order = best.getOrElseUpdate(variable, new ListBuffer())
-
-      order -= value
-      value +=: order
-    }
-  }
-
-  val fallback = {
+  def this(params: ParameterManager) = this{
     val valueHeuristicClass: Class[_ <: ValueHeuristic] =
       params.classInPackage("bestvalue.fallback", "concrete.heuristic.value", classOf[RandomBound])
 
@@ -44,7 +32,7 @@ class AllBestValues(params: ParameterManager) extends ValueHeuristic {
   }
 
   override def selectIndex(variable: Variable, domain: Domain) = {
-    best.getOrElse(variable, Nil).find(domain.present).getOrElse(fallback.selectIndex(variable, domain))
+    BestValue.best.getOrElse(variable, Nil).find(domain.present).getOrElse(fallback.selectIndex(variable, domain))
   }
 
   def shouldRestart = false
