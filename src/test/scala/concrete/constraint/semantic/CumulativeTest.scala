@@ -54,17 +54,4 @@ class CumulativeTest extends FlatSpec with Matchers with PropertyChecks {
 
   }
 
-  "strange division" should "behave like integer division" in {
-    forAll { (i: Int, j: Int) =>
-      whenever(j != 0 && i > Int.MinValue) {
-        math.floor((i / j.toDouble) + 0.01).toInt shouldBe concrete.util.Math.floorDiv(i, j)
-      }
-    }
-    forAll { (i: Int, j: Int) =>
-      whenever(j != 0) {
-        Math.ceil(i / j - 0.01).toInt shouldBe i/j //concrete.util.Math.ceilDiv(i, j)
-      }
-    }
-
-  }
 }
