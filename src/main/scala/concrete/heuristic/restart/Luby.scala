@@ -6,6 +6,7 @@ import concrete.Problem
 class Luby(params: ParameterManager, problem: Problem) extends RestartStrategy {
 
   val scaleFactor = params.getOrElse("luby.base", 100)
+    
   val geometricalFactor = params.getOrElse("luby.growth", 2.0)
 
   var nbRestart = 0
