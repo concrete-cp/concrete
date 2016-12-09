@@ -17,7 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package concrete.heuristic;
+package concrete
+package heuristic
+package variable
 
 import concrete.Domain
 import concrete.ParameterManager
@@ -25,7 +27,7 @@ import concrete.ProblemState
 import concrete.Variable
 import concrete.heuristic.variable.ScoredVariableHeuristic
 
-class WDegOnDom(params: ParameterManager, decisionVariables: Array[Variable]) extends ScoredVariableHeuristic(params, decisionVariables) {
+class WDegOnDom(params: ParameterManager, decisionVariables: Array[Variable]) extends ScoredVariableHeuristic(params, decisionVariables) with ConstraintWeighting {
 
   for (v <- decisionVariables; c <- v.constraints) c.weight = 1
 

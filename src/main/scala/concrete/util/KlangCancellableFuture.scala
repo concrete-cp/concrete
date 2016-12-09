@@ -6,29 +6,21 @@ import scala.concurrent._
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Try}
 
-trait CancellableFuture[T] extends Future[T] {
-  def future(): Future[T]
-
-  def cancel(): Unit
-
-  def isCancelled: Boolean
-}
-
 // original from https://gist.github.com/viktorklang/5409467
-object KlangCancellableFuture {
-  def apply[T](work: => T)(implicit executor: ExecutionContext): KlangCancellableFuture[T] = {
-    new KlangCancellableFuture(work)
+object CancellableFuture {
+  def apply[T](work: => T)(implicit executor: ExecutionContext): CancellableFuture[T] = {
+    new CancellableFuture(work)
   }
 }
 
-class KlangCancellableFuture[T](work: => T)(implicit executor: ExecutionContext) extends CancellableFuture[T] {
+class CancellableFuture[T](work: => T)(implicit executor: ExecutionContext) extends Future[T] {
   private val p = Promise[T]()
   private val lock = new Object
   private var currentThread: Thread = null
   @volatile
   private var cancelled: Boolean = false
 
-  override val future = p.future
+  val future = p.future
 
   run()
 
@@ -62,14 +54,14 @@ class KlangCancellableFuture[T](work: => T)(implicit executor: ExecutionContext)
     old
   }
 
-  override def cancel(): Unit = {
+  def cancel(): Unit = {
     lock.synchronized {
       Option(updateCurrentThread(null)).foreach(_.interrupt())
       cancelled |= p.tryFailure(new CancellationException)
     }
   }
 
-  override def isCancelled: Boolean = future.value match {
+  def isCancelled: Boolean = future.value match {
     case _@Some(Failure(t:CancellationException)) => true
     case _ => false
   }
@@ -87,12 +79,14 @@ class KlangCancellableFuture[T](work: => T)(implicit executor: ExecutionContext)
   @throws[TimeoutException](classOf[TimeoutException])
   override def ready(atMost: Duration)(implicit permit: CanAwait) = ???
   
+  def transform[S](f: Try[T] => Try[S])(implicit executor: ExecutionContext): Future[S] = ???
+  def transformWith[S](f: Try[T] => Future[S])(implicit executor: ExecutionContext): Future[S] = ???
 //  CancellableFutureImpl.this.type = {
 //    new CancellableFutureImpl(Await.result(future, atMost))
 //  }
 }
 
-object KlangCancellableFutureTestApp extends App {
+object CancellableFutureTestApp extends App {
   def blockCall(name: String, sec: Int) = {
     println(s"$name: start")
     try {
@@ -111,7 +105,7 @@ object KlangCancellableFutureTestApp extends App {
   implicit val ctx = ExecutionContext.fromExecutor(pool)
 
   val cancellableFutures = for {i <- 1 to 200} yield {
-    KlangCancellableFuture(blockCall(s"task-$i", 5))
+    CancellableFuture(blockCall(s"task-$i", 5))
   }
 
   Thread.sleep(3000)

@@ -91,7 +91,7 @@ class DivBC(x: Variable, y: Variable, z: Variable) extends Constraint(x, y, z) w
 
         ((x - xBounds) intersect reminder)
           .map(r => ps.shaveDom(this.x, xBounds + r))
-          .getOrElse(Contradiction)
+          .getOrElse(Contradiction(this.x))
         //
         //        if (reminderMin > rMin) rMin = reminderMin
         //        if (reminderMax < rMax) rMax = reminderMax

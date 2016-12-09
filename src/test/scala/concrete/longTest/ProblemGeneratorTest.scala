@@ -62,7 +62,7 @@ final class ProblemGeneratorTest extends FlatSpec with LazyLogging with TryValue
     logger.info(problem + "\n" + problem.variables.size + " vars, " + problem.constraints.size + " cons")
 
     new ACC(problem, pm).reduceAll(problem.initState.toState) match {
-      case Contradiction          => logger.info("UNSAT")
+      case _: Contradiction => logger.info("UNSAT")
       case newState: ProblemState => logger.info(problem.toString(newState));
     }
 

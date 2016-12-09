@@ -66,7 +66,7 @@ final class AllDifferent2C(scope: Array[Variable]) extends Constraint(scope) wit
             val nd = od.remove(value)
 
             if (od ne nd) {
-              if (nd.isEmpty) return Contradiction
+              if (nd.isEmpty) return Contradiction(v)
               state = state.updateDomNonEmpty(v, nd)
               if (nd.isAssigned) q ::= i
             }

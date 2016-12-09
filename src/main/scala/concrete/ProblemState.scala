@@ -39,27 +39,6 @@ sealed trait Outcome {
 
   def updateDom(v: Variable, d: Domain): Outcome
 
-  def updateAll(vars: Iterable[Variable])(f: Domain => Domain): Outcome = updateAll(vars.iterator)(f)
-  def updateAll(vars: Iterator[Variable])(f: Domain => Domain): Outcome = {
-    var ch = this
-    while (vars.hasNext) {
-      if (ch eq Contradiction) return Contradiction
-      val v = vars.next
-      ch = ch.updateDom(v, f(dom(v)))
-    }
-    ch
-  }
-
-  def updateDomains(v: Array[Variable], newDomains: IndexedSeq[Domain]): Outcome = {
-    var i = v.length - 1
-    var ps = this
-    while (i >= 0) {
-      ps = ps.updateDom(v(i), newDomains(i))
-      i -= 1
-    }
-    ps
-  }
-
   def assign(v: Variable, value: Int): Outcome
   def remove(v: Variable, value: Int): Outcome
 
@@ -85,7 +64,7 @@ sealed trait Outcome {
 
   def apply[S <: AnyRef](c: StatefulConstraint[S]): S
 
-  def isState = this ne Contradiction
+  def isState: Boolean
 
   def fold[A](s: Traversable[A])(f: (ProblemState, A) => Outcome): Outcome = {
     var state = this
@@ -99,34 +78,43 @@ sealed trait Outcome {
     state
   }
 
+  def dueTo(from: Seq[Variable]): Outcome
+
 }
 
-case object Contradiction extends Outcome {
-  def andThen(f: ProblemState => Outcome) = Contradiction
+object Contradiction {
+  def apply(to: Variable):Contradiction = Contradiction(Seq(to))
+  def apply(to: Seq[Variable]): Contradiction = Contradiction(Seq.empty, to)
+}
+
+case class Contradiction(from: Seq[Variable], to: Seq[Variable]) extends Outcome {
+  def andThen(f: ProblemState => Outcome) = this
   def orElse[A >: ProblemState](f: => A) = f
   def map[A](f: ProblemState => A) = None
-  def filterDom(v: Variable)(f: Int => Boolean): Outcome = Contradiction
-  def shaveDom(v: Variable, lb: Int, ub: Int): Outcome = Contradiction
-  def entailIfFree(c: Constraint): Outcome = Contradiction
-  def entailIfFree(c: Constraint, doms: Array[Domain]): Outcome = Contradiction
-  def entailIf(c: Constraint, f: ProblemState => Boolean): Outcome = Contradiction
-  def removeTo(v: Variable, ub: Int): Outcome = Contradiction
-  def removeFrom(v: Variable, lb: Int): Outcome = Contradiction
-  def removeUntil(v: Variable, ub: Int): Outcome = Contradiction
-  def removeAfter(v: Variable, lb: Int): Outcome = Contradiction
-  def updateDom(v: Variable, d: Domain): Outcome = Contradiction
-  def remove(v: Variable, value: Int): Outcome = Contradiction
+  def filterDom(v: Variable)(f: Int => Boolean): Outcome = this
+  def shaveDom(v: Variable, lb: Int, ub: Int): Outcome = this
+  def entailIfFree(c: Constraint): Outcome = this
+  def entailIfFree(c: Constraint, doms: Array[Domain]): Outcome = this
+  def entailIf(c: Constraint, f: ProblemState => Boolean): Outcome = this
+  def removeTo(v: Variable, ub: Int): Outcome = this
+  def removeFrom(v: Variable, lb: Int): Outcome = this
+  def removeUntil(v: Variable, ub: Int): Outcome = this
+  def removeAfter(v: Variable, lb: Int): Outcome = this
+  def updateDom(v: Variable, d: Domain): Outcome = this
+  def remove(v: Variable, value: Int): Outcome = this
   def dom(v: Variable): Domain = throw new UNSATException("Tried to get a domain from a Contradiction")
   def domainsOption: Option[IndexedSeq[Domain]] = None
   def toString(problem: Problem) = "Contradiction"
   def toState = throw new UNSATException("Tried to get state from a Contradiction")
   def apply[S <: AnyRef](c: StatefulConstraint[S]): S = throw new UNSATException("Tried to get state from a Contradiction")
-  def assign(v: Variable, value: Int): concrete.Outcome = Contradiction
-  def entail(c: Constraint): concrete.Outcome = Contradiction
-  def entail(c: Constraint, i: Int): concrete.Outcome = Contradiction
+  def assign(v: Variable, value: Int): concrete.Outcome = this
+  def entail(c: Constraint): concrete.Outcome = this
+  def entail(c: Constraint, i: Int): concrete.Outcome = this
   def isEntailed(c: Constraint): Boolean = throw new UNSATException("Tried to get state from a Contradiction")
   def activeConstraints(v: Variable): BitVector = throw new UNSATException("Tried to get state from a Contradiction")
-  def updateState[S <: AnyRef](c: StatefulConstraint[S], newState: S): concrete.Outcome = Contradiction
+  def updateState[S <: AnyRef](c: StatefulConstraint[S], newState: S): Outcome = this
+  def isState = false
+  def dueTo(from: Seq[Variable]) = Contradiction(this.from ++ from, to)
 }
 
 object ProblemState {
@@ -172,102 +160,13 @@ object ProblemState {
 
 }
 
-object EntailmentManagerLight {
-  def apply(variables: Seq[Variable]): EntailmentManagerLight =
-    new EntailmentManagerLight(
-      Vector(variables.map(v => BitVector.filled(v.constraints.length)): _*))
-}
-
-final class EntailmentManagerLight(
-    val activeConstraints: Vector[BitVector]) extends AnyVal {
-
-  def addConstraints(constraints: Seq[Constraint]): EntailmentManagerLight = {
-    var ac = activeConstraints
-    for (c <- constraints) {
-      for (i <- c.scope.indices) {
-        val vid = c.scope(i).id
-        /* Fake variables (constants) may appear in constraints */
-        if (vid >= 0) {
-          ac = ac.updated(vid, ac(vid) + c.positionInVariable(i))
-        }
-      }
-    }
-    new EntailmentManagerLight(ac)
-  }
-
-  def entail(c: Constraint, ps: ProblemState): EntailmentManagerLight = {
-    var ac = activeConstraints
-    var i = c.arity - 1
-    while (i >= 0) {
-      val v = c.scope(i)
-      val vid = v.id
-      /* Fake variables (constants) may appear in constraints */
-
-      if (vid >= 0) {
-        val pos = c.positionInVariable(i)
-
-        /* pos >= 0 is for reified constraints */
-        if (pos >= 0 && !ps.assigned(v)) {
-          ac = ac.updated(vid, ac(vid) - c.positionInVariable(i))
-        }
-
-      }
-      i -= 1
-    }
-    new EntailmentManagerLight(ac)
-
-  }
-
-  def entail(c: Constraint, i: Int): EntailmentManagerLight = {
-    val ac = activeConstraints
-
-    val vid = c.scope(i).id
-    /* Fake variables (constants) may appear in constraints */
-
-    if (vid >= 0) {
-      val pos = c.positionInVariable(i)
-
-      /* For reified constraints */
-      if (pos >= 0) {
-        new EntailmentManagerLight(
-          ac.updated(vid, ac(vid) - c.positionInVariable(i)))
-      } else {
-        this
-      }
-
-    } else {
-      this
-    }
-
-  }
-
-  def active(v: Variable): BitVector = {
-    val vid = v.id
-    activeConstraints(vid)
-
-  }
-
-  def apply(c: Constraint): Boolean = {
-    (0 until c.arity).exists { i =>
-
-      val v = c.scope(i)
-      v.id >= 0 && {
-        val pos = c.positionInVariable(i)
-        pos >= 0 && !activeConstraints(c.scope(i).id)(c.positionInVariable(i))
-      }
-
-    }
-
-  }
-
-  // override def toString: String = modified.traversable.mkString("entailed: ", ", ", "")
-}
-
 case class ProblemState(
   val domains: Vector[Domain],
   val constraintStates: Vector[AnyRef],
   val entailed: EntailmentManagerLight) extends Outcome
     with LazyLogging {
+
+  def isState = true
 
   def andThen(f: ProblemState => Outcome) = f(this)
 
@@ -327,7 +226,7 @@ case class ProblemState(
 
   def updateDom(v: Variable, newDomain: Domain): Outcome = {
     if (newDomain.isEmpty) {
-      Contradiction
+      Contradiction(Seq(), Seq(v))
     } else {
       updateDomNonEmpty(v, newDomain)
     }
@@ -381,7 +280,7 @@ case class ProblemState(
         updateDomNonEmptyNoCheck(v, d.assign(value))
       }
     } else {
-      Contradiction
+      Contradiction(Seq(), Seq(v))
     }
 
   }
@@ -429,5 +328,7 @@ case class ProblemState(
 
   def toString(problem: Problem) = problem.toString(this)
   def toState: ProblemState = this
+
+  def dueTo(from: Seq[Variable]) = this
 
 }

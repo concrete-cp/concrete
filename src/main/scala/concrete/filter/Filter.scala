@@ -39,4 +39,5 @@ trait Filter {
 
   def reduceAfter(modif: Seq[(Variable, Event)], states: ProblemState): Outcome
 
+  var contradictionListener: Option[Contradiction => Unit] = None
 }

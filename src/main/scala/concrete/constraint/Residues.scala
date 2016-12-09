@@ -73,7 +73,7 @@ trait Residues extends Removals {
     while (p >= 0) {
       if (p != skip) {
         current = current.updateDom(scope(p), reviseDomain(state, p))
-        if (current == Contradiction) return Contradiction
+        if (!current.isState) return current
       }
       p -= 1
     }

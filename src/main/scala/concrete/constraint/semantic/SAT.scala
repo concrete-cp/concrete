@@ -138,7 +138,7 @@ class SAT(vars: Array[Variable], clauses: Seq[Clause], pseudo: Seq[PseudoBoolean
 
       ps
     } catch {
-      case _: ContradictionException => Contradiction
+      case _: ContradictionException => Contradiction(scope)
     }
 
   }
@@ -169,7 +169,7 @@ class SAT(vars: Array[Variable], clauses: Seq[Clause], pseudo: Seq[PseudoBoolean
 
     //println(Option(model).toSeq.flatMap(_.toSeq))
 
-    if (model eq null) Contradiction else {
+    if (model eq null) Contradiction(scope) else {
       //      ps.fold(solver.getLiteralsPropagatedAt(0)) { (ps, p) =>
       //        println(p)
       //        ps

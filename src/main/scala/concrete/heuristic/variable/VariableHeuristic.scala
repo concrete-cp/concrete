@@ -7,6 +7,8 @@ import concrete.ParameterManager
 import concrete.ProblemState
 import concrete.Variable
 import scala.reflect.runtime.universe
+import concrete.Solver
+import concrete.MAC
 
 abstract class VariableHeuristic(params: ParameterManager, val decisionVariables: Array[Variable]) {
   protected val rand: Option[Random] = {
@@ -87,5 +89,7 @@ abstract class VariableHeuristic(params: ParameterManager, val decisionVariables
   def compare(v1: Variable, d1: Domain, v2: Variable, d2: Domain, state: ProblemState): Int
 
   def shouldRestart = rand.isDefined
+
+  def applyListeners(s: MAC): Unit = ()
 
 }

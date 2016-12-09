@@ -83,7 +83,7 @@ class BDDC(_scope: Array[Variable], val bdd: BDDRelation)
 
     val sat = seekSupports(bdd.bdd, 0)
     if (!sat) {
-      Contradiction
+      Contradiction(scope)
     } else {
       var cs: ProblemState =
         if (gNo.size == oldGno.size) ps else ps.updateState(this, gNo)

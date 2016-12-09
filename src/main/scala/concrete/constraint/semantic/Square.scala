@@ -84,10 +84,14 @@ final class SquareAC(val x: Variable, val y: Variable)
       .entailIfFree(this)
   }
 
-  override def isConsistent(ps: ProblemState) = {
+  override def consistent(ps: ProblemState) = {
     val domY = ps.dom(y)
     val domX = ps.dom(x)
-    domX.exists(v => consistentX(v, domY)) && domY.exists(v => consistentY(v, domX))
+    if (domX.exists(v => consistentX(v, domY)) && domY.exists(v => consistentY(v, domX))) {
+      ps 
+    } else {
+      Contradiction(scope)
+    }
   }
 
   override def toString(ps: ProblemState) = s"${x.toString(ps)} =AC= ${y.toString(ps)}²"

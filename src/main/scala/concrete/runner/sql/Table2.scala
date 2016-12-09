@@ -7,7 +7,7 @@ import scala.xml.NodeSeq
 import scala.collection.mutable.HashMap
 import scala.annotation.tailrec
 import scala.collection.SortedMap
-import MyPGDriver.api._
+import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.GetResult
 
 import scala.concurrent.Await
@@ -96,7 +96,9 @@ object Table2 extends App {
     problem: String,
     nbVars: Int,
     nbCons: Int,
-    tags: Seq[String])
+    _tags: String) {
+    lazy val tags = _tags.split(",")
+  }
 
   case class Execution(
     problemId: Int,
@@ -130,7 +132,7 @@ object Table2 extends App {
   //    println("\t" + configDisplay.mkString("\t"))
   //  }
 
-  implicit val getProblemResult = GetResult(r => Problem(r.<<, r.<<, r.<<, r.<<, r.<<?[Seq[String]].getOrElse(Seq())))
+  implicit val getProblemResult = GetResult(r => Problem(r.<<, r.<<, r.<<, r.<<, r.<<))
 
   //var d = Array.ofDim[Int](configs.size, configs.size)
 
@@ -173,7 +175,7 @@ object Table2 extends App {
   implicit val getExecutionResult = GetResult(r => Execution(r.<<, r.<<, r.<<, r.<<, r.<<))
 
   val pe = DB.run(sql"""
-        SELECT "problemId", display, "nbVars", "nbCons", array_agg("problemTag") as tags
+        SELECT "problemId", display, "nbVars", "nbCons", string_agg("problemTag", ',') as tags
         FROM "Problem" NATURAL LEFT JOIN "ProblemTag"
         WHERE "problemId" IN (
           SELECT "problemId" 

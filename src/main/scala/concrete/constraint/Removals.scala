@@ -30,16 +30,11 @@ trait Removals extends Constraint with AdviseCounts {
 
   override def consistent(ps: ProblemState) = consistent(ps, modified)
 
-  override def isConsistent(problemState: ProblemState): Boolean = {
-    isConsistent(problemState, modified)
-  }
-
   def consistent(ps: ProblemState, modified: BitVector): Outcome = {
-    if (isConsistent(ps, modified)) ps else Contradiction
-  }
-
-  def isConsistent(ps: ProblemState, mod: BitVector): Boolean = {
-    revise(ps, mod).isState
+    revise(ps, modified) match {
+      case _: ProblemState => ps
+      case c: Contradiction => c
+    }
   }
 
   def clearMod(): Unit = modified = BitVector.empty // Arrays.fill(removals, -1)
@@ -56,6 +51,8 @@ trait Removals extends Constraint with AdviseCounts {
       -1
     }
   }
+
+  def modVars(modified: BitVector) = modified.traversable.map(scope).toSeq
 
   //scope.iterator.zip(removals.iterator).filter(t => t._2 >= reviseCount).map(t => t._1)
 

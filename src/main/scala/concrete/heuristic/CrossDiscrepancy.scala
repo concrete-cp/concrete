@@ -6,6 +6,8 @@ import concrete.ParameterManager
 import concrete.Variable
 import concrete.heuristic.variable.RandomVar
 import concrete.heuristic.value.RandomBound
+import concrete.Problem
+import concrete.MAC
 
 object CrossDiscrepancy {
   def apply(pm: ParameterManager, decisionVariables: Array[Variable]): CrossDiscrepancy = {
@@ -53,5 +55,10 @@ class CrossDiscrepancy(pm: ParameterManager, heuristic: CrossHeuristic, varProb:
     }
   }
 
+  def compute(p: Problem) = heuristic.compute(p)
+
   def shouldRestart = varProb > 0 || valProb > 0
+
+  def applyListeners(s: MAC): Unit = heuristic.applyListeners(s)
+
 }

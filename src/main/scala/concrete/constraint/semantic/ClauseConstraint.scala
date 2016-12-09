@@ -27,7 +27,7 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
         watch1 = seekWatch(ps, 0)
 
         if (watch1 < 0) {
-          Contradiction
+          Contradiction(scope)
         } else {
           watch2 = seekWatch(ps, watch1 + 1)
           if (watch2 < 0) {
@@ -57,7 +57,7 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
       case FALSE =>
         val w = seekWatch(ps, 0)
         if (w < 0) {
-          Contradiction
+          Contradiction(scope)
         } else if (w == watch1) {
           // Watch1 is still valid, no need to check!
           val w2 = seekWatch(ps, w + 1)

@@ -32,6 +32,8 @@ abstract class Domain { //extends AbstractSeq[Int] with IterableLike[Int, Domain
   def head: Int //= next(0)
   def last: Int
 
+  def headOption: Option[Int] = if (isEmpty) None else Some(head)
+
   def foreach[S](f: Int => S): Unit
 
   def forall(p: Int => Boolean): Boolean = {

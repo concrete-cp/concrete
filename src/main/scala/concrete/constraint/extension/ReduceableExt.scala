@@ -67,7 +67,7 @@ final class ReduceableExt(scope: Array[Variable], val relation: Relation)
     // val newSize = newTrie.size
 
     if (newTrie.isEmpty) {
-      Contradiction
+      Contradiction(scope)
     } else {
 
       //assert(newSize <= oldSize)

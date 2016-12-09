@@ -113,7 +113,7 @@ class Circuit(
     if (visit(startWith) && T.cardinality == arity) {
       ps
     } else {
-      Contradiction
+      Contradiction(scope)
     }
 
   }

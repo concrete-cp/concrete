@@ -69,7 +69,7 @@ final class Min private (result: Variable, _vars: Array[Variable])
     }
 
     if (first == vars.length) {
-      Contradiction
+      Contradiction(result)
     } else {
 
       /*
@@ -91,13 +91,13 @@ final class Min private (result: Variable, _vars: Array[Variable])
           /*
            * Filter variables
            */
-          while ((state ne Contradiction) && i < vars.length) {
+          while (state.isState && i < vars.length) {
             val v = vars(i)
             val d = ps.dom(v)
             val f = d.removeUntil(minDom.head)
 
             if (f.isEmpty) {
-              state = Contradiction
+              state = Contradiction(v)
             } else {
               state = state.asInstanceOf[ProblemState].updateDomNonEmpty(v, f)
               if (f.head > minDom.last) {
@@ -111,7 +111,7 @@ final class Min private (result: Variable, _vars: Array[Variable])
           /*
            * Handle case where only one variable can be the minimum
            */
-          if ((state ne Contradiction) && (first until vars.length).iterator.filter(p => (state.dom(vars(p)) & minDom).nonEmpty).take(2).size == 1) {
+          if (state.isState && Iterator.range(first, vars.length).filterNot(p => state.dom(vars(p)) disjoint minDom).take(2).size == 1) {
 
             val v = vars(first)
             val intersection = minDom & state.dom(v)
@@ -186,7 +186,7 @@ final class Max private (result: Variable, _vars: Array[Variable])
     }
 
     if (first == vars.length) {
-      Contradiction
+      Contradiction(result)
     } else {
 
       /*
@@ -208,13 +208,13 @@ final class Max private (result: Variable, _vars: Array[Variable])
           /*
            * Filter variables
            */
-          while ((state ne Contradiction) && i < vars.length) {
+          while (state.isState && i < vars.length) {
             val v = vars(i)
             val d = ps.dom(v)
             val f = d.removeAfter(maxDom.last)
 
             if (f.isEmpty) {
-              state = Contradiction
+              state = Contradiction(v)
             } else {
               state = state.asInstanceOf[ProblemState].updateDomNonEmpty(v, f)
               if (f.last < maxDom.head) {
@@ -228,7 +228,7 @@ final class Max private (result: Variable, _vars: Array[Variable])
           /*
            * Handle case where only one variable can be the minimum
            */
-          if ((state ne Contradiction) && (first until vars.length).iterator.filter(p => (state.dom(vars(p)) & maxDom).nonEmpty).take(2).size == 1) {
+          if (state.isState && Iterator.range(first, vars.length).filterNot(p => state.dom(vars(p)) disjoint maxDom).take(2).size == 1) {
 
             val v = vars(first)
             val intersection = maxDom & state.dom(v)

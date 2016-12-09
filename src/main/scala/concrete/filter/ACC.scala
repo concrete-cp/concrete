@@ -160,10 +160,10 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
       revisions += 1;
 
       constraint.revise(s) match {
-        case Contradiction =>
+        case c: Contradiction =>
           logger.debug(s"${constraint.id}.${constraint.weight}. ${constraint.toString(s)} -> Contradiction")
-          constraint.weight += 1
-          Contradiction
+          for (l <- contradictionListener) l(c)
+          c
 
         case newState: ProblemState =>
           if (newState.domains ne s.domains) {

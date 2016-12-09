@@ -12,7 +12,7 @@ final class LinearNe2(
     factors: Array[Int],
     scope: Array[Variable]) extends Linear(constant, factors, scope, SumNE) with LazyLogging {
 
-  override def isConsistent(ps: ProblemState): Boolean = {
+  override def consistent(ps: ProblemState): Outcome = {
     var const = constant
     var i = arity - 1
     while (i >= 0) {
@@ -20,11 +20,11 @@ final class LinearNe2(
       if (d.isAssigned) {
         const -= d.singleValue * factors(i)
       } else {
-        return true
+        return ps
       }
       i -= 1
     }
-    const != 0
+    if (const == 0) Contradiction(scope) else ps
   }
 
   override def revise(ps: ProblemState): Outcome = {
@@ -46,7 +46,7 @@ final class LinearNe2(
 
     if (free < 0) {
       if (const == 0) {
-        Contradiction
+        Contradiction(scope)
       } else {
         ps
       }

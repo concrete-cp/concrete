@@ -35,12 +35,13 @@ final class Neq(v0: Variable, v1: Variable, c: Int = 0) extends Constraint(Array
     }
   }
 
-  override def isConsistent(ps: ProblemState) = {
+  override def consistent(ps: ProblemState) = {
     val v0dom = ps.dom(v0)
-    !v0dom.isAssigned || {
+    val r = !v0dom.isAssigned || {
       val v1dom = ps.dom(v1)
       !v1dom.isAssigned || (v0dom.head - v1dom.head != c)
     }
+    if (r) ps else Contradiction(scope)
   }
 
   override def toString(ps: ProblemState) = s"${v0.toString(ps)} /= ${v1.toString(ps)}${
@@ -64,9 +65,9 @@ class NeqC(x: Variable, y: Int) extends Constraint(x) {
 
   def check(t: Array[Int]) = t(0) != y
 
-  override def isConsistent(ps: ProblemState) = {
+  override def consistent(ps: ProblemState) = {
     val d = ps.dom(x)
-    !d.isAssigned || d.singleValue != y
+    if (!d.isAssigned || d.singleValue != y) ps else Contradiction(scope)
   }
 
   def revise(ps: ProblemState): Outcome = {

@@ -31,7 +31,7 @@ final class UnaryExt(scope: Variable, var matrix: Matrix)
     ps.updateDom(scope, allowed).entail(this)
   }
 
-  override def isConsistent(ps: ProblemState) = ps.dom(scope).disjoint(allowed)
+  override def consistent(ps: ProblemState) = if (ps.dom(scope).disjoint(allowed)) ps else Contradiction(Nil)
 
   def revise(ps: ProblemState) = {
     logger.debug(s"Revision of unary constraint ${toString(ps)}")

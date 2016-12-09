@@ -72,7 +72,7 @@ abstract class BinaryExt(scope: Array[Variable], val matrix: Matrix2D)
     if (skip != 0 && !supportCondition(doms, 0)) {
       val otherBV = doms(1).toBitVector(matrix.offsets(1))
       val nd = doms(0).filter(hasSupport(0, _, otherBV))
-      if (nd.isEmpty) return Contradiction
+      if (nd.isEmpty) return Contradiction(Seq(scope(0)))
       if (nd ne doms(0)) {
         doms(0) = nd
         cs = cs.updateDomNonEmptyNoCheck(x, nd)
@@ -82,7 +82,7 @@ abstract class BinaryExt(scope: Array[Variable], val matrix: Matrix2D)
     if (skip != 1 && !supportCondition(doms, 1)) {
       val otherBV = doms(0).toBitVector(matrix.offsets(0))
       val nd = doms(1).filter(hasSupport(1, _, otherBV))
-      if (nd.isEmpty) return Contradiction
+      if (nd.isEmpty) return Contradiction(Seq(scope(1)))
       if (nd ne doms(1)) {
         doms(1) = nd
         cs = cs.updateDomNonEmptyNoCheck(y, nd)

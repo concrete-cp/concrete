@@ -24,8 +24,8 @@ final class StatelessLinearLe(
 
   import StatelessBoundPropagation._
 
-  override def isConsistent(ps: ProblemState) = {
-    updateF(ps)._1.lb <= 0
+  override def consistent(ps: ProblemState) = {
+    if (updateF(ps)._1.lb <= 0) ps else Contradiction(scope)
   }
 
   override def revise(ps: ProblemState): Outcome = {
@@ -36,7 +36,7 @@ final class StatelessLinearLe(
       ps
     } else {
       processUB(0, f, factors, ps) match {
-        case PContradiction => Contradiction
+        case PContradiction => Contradiction(scope)
         case PFiltered(changed, entailed, newF) =>
           val out = filter(changed, doms, ps)
           if (entailed) {

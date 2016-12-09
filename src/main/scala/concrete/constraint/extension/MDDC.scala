@@ -104,7 +104,7 @@ class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
       }
       cs.entailIfFree(this)
     } else {
-      Contradiction
+      Contradiction(scope)
     }
   }
 

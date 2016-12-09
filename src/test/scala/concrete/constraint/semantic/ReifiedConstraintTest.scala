@@ -79,7 +79,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
     val state = pb.initState.toState
     constraint.adviseAll(state)
     constraint.revise(state) match {
-      case Contradiction => fail()
+      case _: Contradiction => fail()
       case ns: ProblemState => ns.dom(control) shouldBe BooleanDomain.UNKNOWNBoolean
     }
   }
@@ -119,7 +119,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
 
       bc.adviseAll(state)
       bc.revise(state) match {
-        case Contradiction => fail()
+        case _: Contradiction => fail()
         case ns: ProblemState => ns.dom(r) shouldBe BooleanDomain.TRUE
       }
     }
@@ -166,7 +166,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
 
       bc.adviseAll(state)
       val ns = bc.revise(state) match {
-        case Contradiction => fail()
+        case _: Contradiction => fail()
         case ns: ProblemState =>
           ns.domains shouldBe state.domains
           ns
@@ -176,7 +176,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
         bc.advise(ps, Assignment, 0) should be >= 0
         bc.revise(ps)
       } match {
-        case Contradiction => fail()
+        case _: Contradiction => fail()
         case ns: ProblemState => ns.dom(v0).view should contain theSameElementsAs Seq(0)
       }
     }
@@ -199,7 +199,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
 
     bc.adviseAll(state)
     val ns = bc.revise(state) match {
-      case Contradiction => fail()
+      case _: Contradiction => fail()
       case ns: ProblemState =>
         ns.domains shouldBe state.domains
         ns

@@ -38,11 +38,9 @@ final class LinearEq(
     if (f.contains(0)) {
       ps.updateState(this, (doms, f, vars, max))
     } else {
-      Contradiction
+      Contradiction(scope)
     }
   }
-
-  override def isConsistent(ps: ProblemState, mod: BitVector) = throw new AssertionError
 
   @annotation.tailrec
   def altRevise(ps: ProblemState, doms: Array[Domain], changed: BitVector, f: Interval, vars: BitVector, neg: Boolean, looping: Boolean, currentMax: Int): Outcome = {
@@ -54,7 +52,7 @@ final class LinearEq(
       }
     } else {
       processUB(vars.nextSetBit(0), vars, doms, f, if (neg) negFactors else factors, ps) match {
-        case PContradiction => Contradiction
+        case PContradiction => Contradiction(scope)
         case PFiltered(newChanged, entailed, newF, newVars, max) =>
           require(newF != f || newChanged.isEmpty)
           if (newChanged.isEmpty && looping) {

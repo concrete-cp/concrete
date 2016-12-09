@@ -31,11 +31,11 @@ final class AbsDiffBC(val result: Variable, val v0: Variable, val v1: Variable)
                 v1span.intersect(v0span - rspan),
                 v1span.intersect(v0span + rspan))
                 .map(g => ps.shaveDom(v1, g))
-                .getOrElse(Contradiction)
+                .getOrElse(Contradiction(Seq(v1)))
             }
 
           }
-          .getOrElse(Contradiction)
+          .getOrElse(Contradiction(Seq(v0)))
       }
 
   }

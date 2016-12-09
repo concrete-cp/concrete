@@ -68,7 +68,7 @@ final class AbsDiffConstBC(val result: Int, val v0: Variable, val v1: Variable)
     val diff = i0 - i1
 
     if (!diff.abs.contains(result)) {
-      Contradiction
+      Contradiction(scope)
     } else if (diff.lb >= 0) {
       ps.updateDom(v0, d0 & (i1 + result))
         .updateDom(v1, d1 & (i0 - result))

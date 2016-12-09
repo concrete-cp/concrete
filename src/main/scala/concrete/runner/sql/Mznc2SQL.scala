@@ -1,13 +1,12 @@
 package concrete.runner.sql
 
 import com.typesafe.config.ConfigFactory
-import MyPGDriver.api._
+import slick.jdbc.PostgresProfile.api._
 import scala.io.Source
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.concurrent.Future
-import scala.util.Success
 
 object Mznc2SQL extends App {
 
@@ -16,8 +15,8 @@ object Mznc2SQL extends App {
   lazy val DB = Database.forConfig("database", systemConfig)
 
   for (
-    problemLine :: results <- Source.fromFile("/home/vion/expes/mznc2016").getLines.grouped(4)
-
+    problemLine :: results <- Source.fromFile("/home/vion/expes/mznc2016").getLines.grouped(4);
+    iteration <- 0 to 2
   ) {
     val problem = problemLine.split("\t")(1)
 
@@ -39,7 +38,7 @@ object Mznc2SQL extends App {
         case "UNK" => "UNK"
       }
 
-      val t = if (status == "UNK") 1.2e6d else time.toDouble
+      val t = (if (status == "UNK") 1.2e6d else time.toDouble) / 1.2
 
       problemInfo.flatMap {
         case (p, nature) =>
@@ -50,8 +49,8 @@ object Mznc2SQL extends App {
           }
 
           DB.run(
-            sql"""INSERT INTO "Execution" ("configId", "version", "problemId", "iteration", "start", "status", "solution") 
-                  VALUES ($configId, 'MZNC2016', $p, 0, now(), $sqlStatus, $solution) RETURNING "executionId"""".as[Int])
+            sql"""INSERT INTO "Execution" ("configId", "problemId", "iteration", "start", "status", "solution") 
+                  VALUES ($configId, $p, $iteration, now(), $sqlStatus, $solution) RETURNING "executionId"""".as[Int])
 
       }.flatMap {
         case Seq(e) =>

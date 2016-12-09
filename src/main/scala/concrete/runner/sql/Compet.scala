@@ -2,20 +2,15 @@ package concrete.runner.sql
 
 import scala.xml.Node
 import scala.xml.Text
-import scala.xml.NodeSeq
 
 import scala.collection.mutable.HashMap
-import scala.annotation.tailrec
-import scala.collection.SortedMap
-import MyPGDriver.api._
+import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.GetResult
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
 import com.typesafe.config.ConfigFactory
-import java.io.File
-import concrete.Variable
 
 object Compet extends App {
 
@@ -39,7 +34,8 @@ object Compet extends App {
       nbVars: Int,
       nbCons: Int,
       nature: String,
-      tags: Seq[String]) {
+      _tags: String) {
+    lazy val tags: Seq[String] = _tags.split(",")
     lazy val nat = Nature(nature)
   }
 
@@ -187,7 +183,7 @@ object Compet extends App {
   //    println("\t" + configDisplay.mkString("\t"))
   //  }
 
-  implicit val getProblemResult = GetResult(r => Problem(r.<<, r.<<, r.<<, r.<<, r.<<, r.<<?[Seq[String]].getOrElse(Seq())))
+  implicit val getProblemResult = GetResult(r => Problem(r.<<, r.<<, r.<<, r.<<, r.<<, r.<<))
 
   //var d = Array.ofDim[Int](configs.size, configs.size)
 
@@ -198,7 +194,7 @@ object Compet extends App {
   implicit val getConfigResult = GetResult(r => Config(r.<<, r.<<, r.<<))
 
   val problemQuery = sql"""
-        SELECT "problemId", display, "nbVars", "nbCons", nature, array_agg("problemTag") as tags
+        SELECT "problemId", display, "nbVars", "nbCons", nature, string_agg("problemTag", ',') as tags
         FROM "Problem" LEFT JOIN "ProblemTag" USING ("problemId")
         WHERE "problemId" IN (
           SELECT "problemId" 
@@ -209,7 +205,7 @@ object Compet extends App {
         """.as[Problem]
 
   val executionQuery = sql"""
-    SELECT "problemId", "configId", iteration, status, solution, totalTime('{solver.searchCpu, solver.preproCpu}', "executionId")/1e3 
+    SELECT "problemId", "configId", iteration, status, solution, totalTime('{solver.searchCpu, solver.preproCpu, runner.loadTime}', "executionId")/1e3 
     FROM "Execution"
     WHERE "configId" IN (#${nature.mkString(", ")})
     """.as[Execution]
@@ -267,7 +263,7 @@ object Compet extends App {
 
       }
 
-      for (e <- executions.sortBy(_.configId)) {
+      for (e <- executions.sortBy(e => probScores(e.configId))) {
         println(f"${cfgs(e.configId)}\t${e.statistic.getOrElse(Double.NaN)}%.3f\t${e.toString(problem.nat)}\t${probScores(e.configId)}%.2f")
       }
 

@@ -214,7 +214,7 @@ final class LNS(prob: Problem, params: ParameterManager, val mac: MAC) extends S
         case ps: ProblemState =>
           init = ps
           nextSolution(null, 0)
-        case Contradiction => UNSAT
+        case _: Contradiction => UNSAT
       }
 
   }

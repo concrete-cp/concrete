@@ -9,7 +9,7 @@ import scala.collection.mutable.HashMap
 
 final class PhaseSaving(heuristic: ValueHeuristic) extends ValueHeuristic {
 
-  private val previous = new HashMap[Variable, Int]
+  private var previous: Array[Int] = _
 
   def this(params: ParameterManager) = this{
     val valueHeuristicClass: Class[_ <: ValueHeuristic] =
@@ -20,13 +20,17 @@ final class PhaseSaving(heuristic: ValueHeuristic) extends ValueHeuristic {
   override def toString = "best";
 
   def compute(p: Problem) {
+    previous = p.variables.map(v => heuristic.selectIndex(v, v.initDomain))
     // Nothing to compute
   }
 
   override def selectIndex(variable: Variable, domain: Domain) = {
-    previous.get(variable).filter(domain.present).getOrElse {
+    val value = previous(variable.id)
+    if (domain.present(value)) {
+      value
+    } else {
       val selected = heuristic.selectIndex(variable, domain)
-      previous(variable) = selected
+      previous(variable.id) = selected
       selected
     }
   }

@@ -68,7 +68,7 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
       }
 
       if (alpha == beta) {
-        Contradiction
+        Contradiction(scope)
       } else {
         reEstablishGAC(alpha, ps.updateState(this, (alpha, beta)))
       }
@@ -156,7 +156,7 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
     if (alpha == n) {
       ps.updateState(this, (alpha, beta))
     } else if (alpha == beta) {
-      Contradiction
+      Contradiction(scope)
     } else if (groundEq(x(alpha), y(alpha), ps)) {
       updateAlpha(alpha + 1, beta, ps)
     } else {
@@ -167,7 +167,7 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
   private def updateBeta(i: Int, alpha: Int, ps: ProblemState): Outcome = {
     val beta = i + 1
     if (alpha == beta) {
-      Contradiction
+      Contradiction(scope)
     } else if (min(x(i), ps) < max(y(i), ps)) {
       if (i == alpha) {
         establishAC(x(i), y(i), true, ps.updateState(this, (alpha, beta)))

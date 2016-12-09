@@ -1,6 +1,9 @@
 package concrete.heuristic;
 
 import concrete.ProblemState
+import concrete.Problem
+import concrete.Solver
+import concrete.MAC
 
 final class SeqHeuristic(heuristics: List[Heuristic]) extends Heuristic {
 
@@ -13,7 +16,11 @@ final class SeqHeuristic(heuristics: List[Heuristic]) extends Heuristic {
   override def toString = heuristics.toString
 
   def shouldRestart = heuristics.head.shouldRestart
-  
+
   def decisionVariables = heuristics.flatMap(_.decisionVariables).distinct
+
+  def compute(p: Problem) = heuristics.foreach(_.compute(p))
+
+  def applyListeners(s: MAC): Unit = heuristics.foreach(_.applyListeners(s))
 
 }

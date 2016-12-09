@@ -55,40 +55,56 @@ class IntRectangle(
   lazy val asRectangle: Rectangle = Rectangle.create(x1, y1, x2, y2)
 }
 
+case class RectangleBounds(minDx: Int, minDy: Int, minX: Int, maxX: Int, minY: Int, maxY: Int) extends Ordered[RectangleBounds] {
+  def minSurface = minDx * minDy
+  
+  def xSpan = Interval(minX, maxX)
+  def ySpan = Interval(minY, maxY)
+  
+  def availableSurface = (maxX - minX) * (maxY - minY)
+  val coef = minSurface.toDouble / availableSurface
+
+  def compare(t: RectangleBounds) = java.lang.Double.compare(coef, t.coef)
+}
+
 class DiffNSpaceChecker(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys: Array[Variable]) extends Constraint(xs ++ ys ++ dxs ++ dys) {
   def advise(ps: ProblemState, event: Event, pos: Int) = if (event <= BoundRemoval) xs.length + ys.length else -1
   def check(tuple: Array[Int]): Boolean = ???
   def init(ps: ProblemState): Outcome = ps
   def revise(ps: ProblemState): Outcome = {
-    val domX0 = ps.dom(xs(0))
-    val domY0 = ps.dom(ys(0))
-    val dx0 = ps.dom(dxs(0)).head
-    val dy0 = ps.dom(dys(0)).head
-    var xSpan = Interval(domX0.head, domX0.last + dx0)
-    var ySpan = Interval(domY0.head, domY0.last + dy0)
-
-    var minArea = dx0 * dy0
-
-    for (i <- 1 until xs.length) {
+    val rectangles = Array.tabulate(xs.length) { i =>
       val domX = ps.dom(xs(i))
       val domY = ps.dom(ys(i))
-      val dx = ps.dom(dxs(i)).head
-      val dy = ps.dom(dys(i)).head
-
-      xSpan = xSpan span Interval(domX.head, domX.last + dx)
-      ySpan = ySpan span Interval(domY.head, domY.last + dy)
-      minArea += dx * dy
+      val dx = ps.dom(dxs(i))
+      val dy = ps.dom(dys(i))
+      RectangleBounds(dx.head, dy.head, domX.head, domX.last + dx.last, domY.head, domY.last + dy.last)
     }
 
-    // Do not use interval size as it counts discrete elements, not
-    // interval length
-    val availableArea = (xSpan.ub - xSpan.lb) * (ySpan.ub - ySpan.lb)
+    scala.util.Sorting.quickSort(rectangles)
 
-    if (availableArea < minArea) {
-      Contradiction
-    } else {
-      ps
+    
+    var xSpan = rectangles(0).xSpan
+    var ySpan = rectangles(0).ySpan
+
+    var minArea = rectangles(0).minSurface
+
+    for (i <- 1 until xs.length) {
+      val r = rectangles(i)
+
+      xSpan = xSpan span r.xSpan
+      ySpan = ySpan span r.ySpan
+      minArea += r.minSurface
+
+      // Do not use interval size as it counts discrete elements, not
+      // interval length
+      val availableArea = (xSpan.ub - xSpan.lb) * (ySpan.ub - ySpan.lb)
+
+      if (availableArea < minArea) {
+        return Contradiction(scope)
+      }
     }
+
+    ps
 
   }
   def simpleEvaluation: Int = 2
@@ -106,7 +122,7 @@ class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys:
       case (t, (r, i)) =>
         r.foldLeft(t) { (t, r) =>
           if (!t.search(r.geometry.asRectangle).isEmpty.toBlocking.single) {
-            return Contradiction
+            return Contradiction(scope)
           }
           t.add(r)
         }
@@ -135,7 +151,7 @@ class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys:
           for (r <- map(i)) tree = tree.delete(r)
 
           if (!tree.search(nr.asRectangle).isEmpty.toBlocking.single) {
-            return Contradiction
+            return Contradiction(scope)
           }
 
           val entry = Entry.entry(i, nr)
@@ -167,7 +183,7 @@ class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys:
       } yield (Interval(xlb, xub), Interval(ylb, yub))
 
       shrink match {
-        case None => Contradiction
+        case None => Contradiction(scope)
         case Some((newX, newY)) =>
 
           val ns = state
@@ -179,7 +195,7 @@ class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys:
               case Some(nr) =>
                 DiffN.treeQueries += 1
                 if (!treeWoutMe.search(nr.asRectangle).isEmpty.toBlocking.single) {
-                  return Contradiction
+                  return Contradiction(scope)
                 }
 
                 val entry = Entry.entry(j, nr)

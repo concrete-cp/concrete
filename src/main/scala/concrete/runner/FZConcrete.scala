@@ -3,8 +3,6 @@ package concrete.runner
 import java.net.URL
 import java.security.InvalidParameterException
 
-import scala.reflect.runtime.universe
-
 import org.scalameter.Quantity
 
 import com.typesafe.scalalogging.LazyLogging
@@ -12,7 +10,6 @@ import com.typesafe.scalalogging.LazyLogging
 import concrete.CSPOMSolver
 import concrete.Problem
 import concrete.Variable
-import concrete.generator.cspompatterns.FZPatterns
 import concrete.heuristic._
 import concrete.heuristic.value._
 import concrete.heuristic.variable._
@@ -22,17 +19,18 @@ import cspom.CSPOMGoal
 import cspom.Statistic
 import cspom.StatisticsManager
 import cspom.WithParam
-import cspom.compiler.CSPOMCompiler
 import cspom.flatzinc.FZAnnotation
 import cspom.flatzinc.FZArrayExpr
 import cspom.flatzinc.FZArrayIdx
 import cspom.flatzinc.FZExpr
-import cspom.flatzinc.FZSetConst
-import cspom.flatzinc.FlatZincParser
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
 import cspom.variable.IntExpression
+import cspom.flatzinc.FlatZincFastParser
+import concrete.generator.cspompatterns.FZPatterns
+import cspom.flatzinc.FZSetConst
+import cspom.compiler.CSPOMCompiler
 
 object FZConcrete extends CSPOMRunner with LazyLogging {
 
@@ -119,7 +117,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
     val List(fn) = args
     file = CSPOM.file2url(fn.replace(" ", "%20"))
 
-    val (tryLoad, time) = StatisticsManager.measureTry(CSPOM.load(file, FlatZincParser))
+    val (tryLoad, time) = StatisticsManager.measureTry(CSPOM.load(file, FlatZincFastParser))
 
     parseTime = time
 

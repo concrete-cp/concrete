@@ -21,6 +21,7 @@ import cspom.variable.CSPOMVariable
 import cspom.variable.IntExpression
 import cspom.variable.IntVariable
 import cspom.variable.SimpleExpression
+import scala.collection.mutable.HashSet
 
 /**
  * Removes constants from alldifferent constraints
@@ -82,31 +83,50 @@ object AllDiffConstant extends ConstraintCompiler {
 object AllDiff extends ConstraintCompiler with LazyLogging {
   type A = Set[CSPOMVariable[Int]]
 
+  private val neCoefs1 = Seq(CSPOMConstant(-1), CSPOMConstant(1))
+  private val neCoefs2 = Seq(CSPOMConstant(1), CSPOMConstant(-1))
+
   def DIFF_CONSTRAINT(constraint: CSPOMConstraint[_]): Option[Seq[CSPOMExpression[_]]] =
-    PartialFunction.condOpt(constraint) {
-      case CSPOMConstraint(
-        CSPOMConstant(true),
-        'sum,
-        Seq(IntExpression.constSeq(coefs), CSPOMSeq(args), CSPOMConstant(constant: Int)),
-        p) if (p.get("mode").contains("lt")) &&
-        { coefs == Seq(-1, 1) || coefs == Seq(1, -1) } &&
-        constant == 0 => args
+    ALLDIFF_CONSTRAINT(constraint).orElse {
+      if (constraint.function == 'sum && constraint.result.isTrue && constraint.params.get("mode").contains("lt")) {
+        val Seq(CSPOMSeq(coefs), CSPOMSeq(args), CSPOMConstant(constant: Int)) = constraint.arguments
+
+        if (constant == 0 && (coefs == neCoefs1 || coefs == neCoefs2)) {
+          Some(args)
+        } else {
+          None
+        }
+      } else None
     }
-      .orElse(ALLDIFF_CONSTRAINT(constraint))
 
   //  (constraint.result.isTrue &&
   //    Set('gt, 'lt)(constraint.function)) ||
   //    (constraint.result.isFalse && Set('ge, 'le)(constraint.function)) ||
   //    ALLDIFF_CONSTRAINT(constraint)
 
-  def ALLDIFF_CONSTRAINT(constraint: CSPOMConstraint[_]): Option[Seq[CSPOMExpression[_]]] = PartialFunction.condOpt(constraint) {
-    case CSPOMConstraint(CSPOMConstant(true), 'alldifferent, args, _) => args
-    case CSPOMConstraint(CSPOMConstant(true), 'sum,
-      Seq(IntExpression.constSeq(coefs), CSPOMSeq(args), CSPOMConstant(constant: Int)),
-      p) if p.get("mode").contains("ne") &&
-      constant == 0 && (coefs == Seq(-1, 1) || coefs == Seq(1, -1)) => args
-    case CSPOMConstraint(CSPOMConstant(false), 'eq, args, _) => args
+  def ALLDIFF_CONSTRAINT(constraint: CSPOMConstraint[_]): Option[Seq[CSPOMExpression[_]]] = {
+    if (constraint.function == 'alldifferent && constraint.result.isTrue) {
+      Some(constraint.arguments)
+    } else if (constraint.function == 'eq && constraint.result.isFalse) {
+      Some(constraint.arguments)
+    } else if (constraint.function == 'sum && constraint.result.isTrue && constraint.params.get("mode").contains("ne")) {
+      val Seq(CSPOMSeq(coefs), CSPOMSeq(args), CSPOMConstant(constant: Int)) = constraint.arguments
+
+      if (constant == 0 && (coefs == neCoefs1 || coefs == neCoefs2)) {
+        Some(args)
+      } else {
+        None
+      }
+    } else None
   }
+  //          
+  //    case CSPOMConstraint(CSPOMConstant(true), 'alldifferent, args, _) => args
+  //    case CSPOMConstraint(CSPOMConstant(true), 'sum,
+  //      Seq(IntExpression.constSeq(coefs), CSPOMSeq(args), CSPOMConstant(constant: Int)),
+  //      p) if p.get("mode").contains("ne") &&
+  //      constant == 0 &&  => args
+  //    case CSPOMConstraint(CSPOMConstant(false), 'eq, args, _) => args
+  //  }
 
   val ITER = 750;
 
@@ -114,6 +134,7 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
 
   override def mtch(constraint: CSPOMConstraint[_], problem: CSPOM) = {
     DIFF_CONSTRAINT(constraint).flatMap { args =>
+      // println(constraint.toString(problem.displayName))
       val clique = expand(args.collect { case v: IntVariable => v }.toSet, problem)
       if (clique.size > args.size) {
         Some(clique)
@@ -132,26 +153,45 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
    */
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM, clique: Set[CSPOMVariable[Int]]) = {
 
-    val delta =
-      if (ALLDIFF_CONSTRAINT(constraint).isDefined) {
-        removeCtr(constraint, problem)
-      } else {
-        Delta()
-      }
-
-    delta ++ newAllDiff(clique.toSeq, problem)
+    //    val vars = clique.toArray
+    //
+    //    val remove = for {
+    //      i <- 0 until vars.length
+    //      j <- i + 1 until vars.length
+    //      c <- problem.deepConstraints(vars(i))
+    //      if (ALLDIFF_CONSTRAINT(c) match {
+    //        case Some(args) => args.length == 2 && args.contains(vars(j))
+    //        case None => false
+    //      })
+    //
+    //    } yield c
+    //    
+    //    println(s"removing ${.size} constraints")
+    //
+    //    removeCtr(remove, problem) ++ 
+    //    
+    newAllDiff(clique.toSeq, problem)
 
   }
 
   //private val neighborsCache = new WeakHashMap[CSPOMVariable[_], Set[CSPOMVariable[_]]]
 
   def neighbors(v: CSPOMVariable[Int], problem: CSPOM,
-                cache: WeakHashMap[CSPOMVariable[Int], Set[CSPOMVariable[Int]]]): Set[CSPOMVariable[Int]] = {
+    cache: WeakHashMap[CSPOMVariable[Int], Set[CSPOMVariable[Int]]]): Set[CSPOMVariable[Int]] = {
 
-    cache.getOrElseUpdate(v,
-      problem.deepConstraints(v).flatMap(DIFF_CONSTRAINT).flatten.collect {
-        case v: IntVariable => v
-      }.toSet - v)
+    cache.getOrElseUpdate(v, {
+      val s = Set.newBuilder[CSPOMVariable[Int]]
+      for (c <- problem.deepConstraints(v); args <- DIFF_CONSTRAINT(c); a <- args) {
+        a match {
+          case v: IntVariable => s += v
+          case _ =>
+        }
+      }
+      s.result - v
+    })
+    //      problem.deepConstraints(v).flatMap(DIFF_CONSTRAINT).flatten.collect {
+    //        case v: IntVariable => v
+    //      }.toSet - v)
 
   }
 
@@ -159,7 +199,7 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
    * The pool contains all variables that can expand the base clique
    */
   private def populate(base: Set[CSPOMVariable[Int]], problem: CSPOM,
-                       cache: WeakHashMap[CSPOMVariable[Int], Set[CSPOMVariable[Int]]]): Set[CSPOMVariable[Int]] = {
+    cache: WeakHashMap[CSPOMVariable[Int], Set[CSPOMVariable[Int]]]): Set[CSPOMVariable[Int]] = {
     val nb = base.iterator.map(neighbors(_, problem, cache))
 
     if (nb.isEmpty) {
@@ -170,6 +210,8 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
   }
 
   private def expand(base: Set[CSPOMVariable[Int]], problem: CSPOM) = {
+
+    //println(s"expanding ${base.map(_.toString(problem.displayName))}")
 
     val cache = new WeakHashMap[CSPOMVariable[Int], Set[CSPOMVariable[Int]]]
 
@@ -182,30 +224,38 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
 
     var tabu: Map[CSPOMVariable[Int], Int] = Map.empty
 
-    breakable {
-      for (i <- 1 to ITER) {
-        val (newVar, newTabu) = pickTabu(pool, tabu, i);
-        tabu = newTabu
-        newVar match {
-          case None => {
-            /* Could not expand the clique, removing a variable (not from the base) */
-            clique -= randPick((clique -- base).iterator).getOrElse(
-              /*BREAK*/ break /*BREAK*/ )
-            pool = populate(clique, problem, cache)
+    @annotation.tailrec
+    def iterate(i: Int): Unit = if (i > 0) {
+      val (newVar, newTabu) = pickTabu(pool, tabu, i);
+      tabu = newTabu
+      newVar match {
+        case None => {
+          /* Could not expand the clique, removing a variable (not from the base) */
+          randPick((clique -- base).iterator) match {
+            case Some(v) =>
+              clique -= v
+              pool = populate(clique, problem, cache)
+              iterate(i - 1)
+            case None =>
           }
-          case Some(variable) => {
-            clique += variable
-            if (clique.size > largest.size) {
-              largest = clique
-            }
 
-            pool &= neighbors(variable, problem, cache)
-
-          }
         }
-        //println(System.currentTimeMillis + " : " + clique.size)
+        case Some(variable) => {
+          clique += variable
+          if (clique.size > largest.size) {
+            largest = clique
+          }
+
+          pool &= neighbors(variable, problem, cache)
+          iterate(i - 1)
+        }
       }
+      //println(System.currentTimeMillis + " : " + clique.size)
     }
+
+    iterate(ITER)
+
+    //println(s"done: ${largest.size}")
 
     largest
   }
@@ -233,7 +283,7 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
 
       for (
         v <- scope;
-        c <- problem.constraints(v) if isSubsumed(c, allDiff)
+        c <- problem.deepConstraints(v) if isSubsumed(c, allDiff)
       ) {
         removed += 1
         delta ++= removeCtr(c, problem)
@@ -244,7 +294,12 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
   }
 
   private def isSubsumed(c: CSPOMConstraint[_], by: CSPOMConstraint[_]): Boolean = {
-    (by ne c) && DIFF_CONSTRAINT(by).isDefined && ALLDIFF_CONSTRAINT(c).exists(_.forall(by.arguments.contains))
+    (by ne c) && DIFF_CONSTRAINT(by).isDefined && {
+
+      ALLDIFF_CONSTRAINT(c).exists { a =>
+        a.forall(by.arguments.contains)
+      }
+    }
   }
 
   val RAND = new Random(0);

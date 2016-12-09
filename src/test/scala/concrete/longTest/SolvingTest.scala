@@ -22,7 +22,7 @@ import concrete.runner.FZConcrete
 import concrete.runner.XCSPConcrete
 import cspom.CSPOM
 import cspom.compiler.CSPOMCompiler
-import cspom.flatzinc.FlatZincParser
+import cspom.flatzinc.FlatZincFastParser
 import cspom.xcsp.XCSPParser
 import com.typesafe.scalalogging.LazyLogging
 import scala.concurrent.duration.Duration
@@ -119,7 +119,7 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
 
           logger.debug(cspomProblem.toString)
           parser match {
-            case FlatZincParser =>
+            case FlatZincFastParser =>
               CSPOMCompiler.compile(cspomProblem, FZPatterns())
 
             case XCSPParser =>
@@ -190,7 +190,7 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
       CSPOM.load(url, parser)
         .flatMap { cspomProblem =>
           parser match {
-            case FlatZincParser =>
+            case FlatZincFastParser =>
               CSPOMCompiler.compile(cspomProblem, FZPatterns())
 
             case XCSPParser =>

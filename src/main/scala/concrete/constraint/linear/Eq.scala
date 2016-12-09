@@ -134,8 +134,8 @@ final class EqACFast(val x: Variable, val b: Int, val y: Variable)
 
   }
 
-  override def isConsistent(ps: ProblemState) =
-    !(ps.dom(x) disjoint ps.dom(y).shift(-b))
+  override def consistent(ps: ProblemState) =
+    if (!(ps.dom(x) disjoint ps.dom(y).shift(-b))) ps else Contradiction(scope)
 
   def simpleEvaluation: Int = 1
   override def toString(ps: ProblemState) = s"${x.toString(ps)}${
@@ -172,15 +172,17 @@ final class EqACNeg private[linear] (
   def getEvaluation(ps: ProblemState): Int =
     if (skip(ps)) -1 else ps.card(x) + ps.card(y)
 
-  override def isConsistent(ps: ProblemState, mod: BitVector) = {
+  override def consistent(ps: ProblemState, mod: BitVector) = {
     val xDom = ps.dom(x)
     val yDom = ps.dom(y)
-    (xDom.span + yDom.span).contains(b) && (
+    val r = (xDom.span + yDom.span).contains(b) && (
       if (xDom.size < yDom.size) {
         xDom.exists(xv => yDom.present(b - xv))
       } else {
         yDom.exists(yv => xDom.present(b - yv))
       })
+
+    if (r) ps else Contradiction(scope)
   }
 
   def revise(ps: ProblemState, modified: BitVector) = {
@@ -247,12 +249,12 @@ final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
 
   }
 
-  override def isConsistent(ps: ProblemState) = {
+  override def consistent(ps: ProblemState) = {
     val xSpan = ps.span(x)
 
     val negX = if (neg) -xSpan else xSpan
 
-    (negX + b) intersects ps.span(y)
+    if ((negX + b) intersects ps.span(y)) ps else Contradiction(scope)
   }
 
   override def toString(ps: ProblemState) = s"${if (neg) "-" else ""}${x.toString(ps)}${

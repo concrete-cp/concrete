@@ -46,8 +46,8 @@ class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: 
         if (profile(i - begin) > bound) {
           bound = profile(i - begin)
           state.removeUntil(b, bound) match {
-            case Contradiction => return Contradiction
-            case ns => state = ns.toState
+            case c: Contradiction => return c
+            case ns: ProblemState => state = ns
           }
         }
       }
@@ -75,7 +75,7 @@ class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: 
       if (profile(min + d - begin) + rBound > bound) {
         min += d + 1
         if (min > sDom.last) {
-          return Contradiction
+          return Contradiction(s(i))
         }
         d = 0
       } else {
@@ -99,7 +99,7 @@ class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: 
 
     if (filtered.isEmpty) {
       // Can happen if there are "holes" in the domains
-      Contradiction
+      Contradiction(s(i))
     } else {
 
       //require(filtered.nonEmpty, (profile.slice(sDom.head, sDom.last + dBound).mkString, sDom, dBound, rBound, bound, min, max - dBound))

@@ -140,10 +140,11 @@ abstract class Constraint(val scope: Array[Variable])
   //  }
 
   def consistent(problemState: ProblemState): Outcome = {
-    if (isConsistent(problemState)) problemState else Contradiction
+    revise(problemState) match {
+      case _: ProblemState => problemState
+      case c: Contradiction => c
+    }
   }
-
-  def isConsistent(ps: ProblemState): Boolean = revise(ps).isState
 
   def advise(problemState: ProblemState, event: Event, position: Int): Int
 
@@ -255,20 +256,20 @@ abstract class Constraint(val scope: Array[Variable])
   /**
    * A GAC constraint is entailed if it has zero or only one variable with domain size > 1
    */
-//  def isFree(problemState: ProblemState): Boolean = {
-//    var one = false
-//    var i = arity - 1
-//    while (i >= 0) {
-//      if (!problemState.assigned(scope(i))) {
-//        if (one) {
-//          return false
-//        }
-//        one = true
-//      }
-//      i -= 1
-//    }
-//    true
-//  }
+  //  def isFree(problemState: ProblemState): Boolean = {
+  //    var one = false
+  //    var i = arity - 1
+  //    while (i >= 0) {
+  //      if (!problemState.assigned(scope(i))) {
+  //        if (one) {
+  //          return false
+  //        }
+  //        one = true
+  //      }
+  //      i -= 1
+  //    }
+  //    true
+  //  }
 
   def singleFree(ps: ProblemState): Option[Int] = {
     var f = -1
@@ -295,8 +296,8 @@ abstract class Constraint(val scope: Array[Variable])
       false
     } else {
       revise(ps) match {
-        case Contradiction =>
-          logger.error(s"${toString(ps)} is not consistent")
+        case Contradiction(mod, cause) =>
+          logger.error(s"${toString(ps)} is not consistent, $mod lead to $cause")
           false
         case finalState: ProblemState =>
           if (!scope.forall(v => ps.dom(v) eq finalState.dom(v))) {

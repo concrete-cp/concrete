@@ -20,7 +20,7 @@
 package concrete.util;
 
 import com.typesafe.scalalogging.LazyLogging
-import concrete.runner.sql.MyPGDriver.api._
+import slick.driver.PostgresDriver.api._
 import concrete.runner.sql.SQLWriter
 import concrete.generator.ExtensionGenerator
 import concrete.runner.sql.Table2

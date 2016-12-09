@@ -50,7 +50,7 @@ final class ExtensionConstraintGeneral(
       if (position != skip && !supportCondition(doms, position)) {
         val nd = reviseDomain(doms, position)
         if (nd.isEmpty) {
-          return Contradiction
+          return Contradiction(Seq(scope(position)))
         } else if (nd ne doms(position)) {
           doms(position) = nd
           cs = cs.updateDomNonEmptyNoCheck(scope(position), nd)

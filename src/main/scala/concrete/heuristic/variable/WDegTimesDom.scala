@@ -21,7 +21,7 @@ package concrete
 package heuristic
 package variable
 
-class WDegTimesDom(params: ParameterManager, decisionVariables: Array[Variable]) extends ScoredVariableHeuristic(params, decisionVariables) {
+class WDegTimesDom(params: ParameterManager, decisionVariables: Array[Variable]) extends ScoredVariableHeuristic(params, decisionVariables) with ConstraintWeighting {
 
   def score(variable: Variable, dom: Domain, state: ProblemState) = variable.getWDegEntailed(state) * dom.size
 

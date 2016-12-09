@@ -21,7 +21,6 @@ package concrete;
 
 import concrete.filter.ACC
 import concrete.filter.Filter
-import concrete.heuristic.CrossHeuristic
 import concrete.heuristic.Heuristic
 import com.typesafe.scalalogging.LazyLogging
 import cspom.Statistic
@@ -45,6 +44,8 @@ object MAC {
 }
 
 final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristic) extends Solver(prob, params) with LazyLogging {
+
+  heuristic.compute(prob)
 
   val filterClass: Class[_ <: Filter] = params.getOrElse("mac.filter", classOf[ACC])
 
@@ -79,7 +80,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
 
       filtering match {
 
-        case Contradiction =>
+        case _: Contradiction =>
           if (stack.isEmpty) {
             (UNSAT, Nil, Nil, nbAssignments)
           } else if (maxBacktracks == 0) {
@@ -218,7 +219,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
       /* Contradiction will trigger a backtrack */
 
       val (sol, stack, stateStack) =
-        nextSolution(Seq.empty, currentStack, Contradiction, extendedStack)
+        nextSolution(Seq.empty, currentStack, Contradiction(Seq(), Seq()), extendedStack)
       currentStack = stack
       currentStateStack = stateStack
       sol

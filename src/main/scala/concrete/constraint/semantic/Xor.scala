@@ -23,7 +23,7 @@ final class Xor(vars: Array[Variable]) extends Constraint(vars) {
       if (isOdd(ps)) {
         ps.entail(this)
       } else {
-        Contradiction
+        Contradiction(scope)
       }
     } else {
       watch2 = seekWatch(ps, watch1)
@@ -81,7 +81,7 @@ final class Xor(vars: Array[Variable]) extends Constraint(vars) {
         if (isOdd(ps)) {
           ps.entail(this)
         } else {
-          Contradiction
+          Contradiction(scope)
         }
       } else {
         assignSingle(ps, w2)

@@ -31,7 +31,7 @@ object ConstraintComparator extends Matchers with Inspectors {
     val r2 = c2.revise(ps)
 
     (r1, r2) match {
-      case (Contradiction, Contradiction) =>
+      case (_: Contradiction, _: Contradiction) =>
       case (s1: ProblemState, s2: ProblemState) =>
         forAll(s1.domains zip s2.domains) {
           case (d1: Domain, d2: Domain) => d1.view should contain theSameElementsAs d2.view

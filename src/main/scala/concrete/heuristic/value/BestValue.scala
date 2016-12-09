@@ -10,14 +10,11 @@ import scala.collection.mutable.ListBuffer
 
 object BestValue {
 
-  val best = new HashMap[Variable, ListBuffer[Int]]
+  var best: Array[Int] = _ // = new HashMap[Variable, Int]
 
   def newSolution(sol: Map[Variable, Any]): Unit = {
-    for ((variable, value: Int) <- sol) {
-      val order = best.getOrElseUpdate(variable, new ListBuffer())
-
-      order -= value
-      value +=: order
+    for (best <- Option(this.best); (variable, value: Int) <- sol) {
+      best(variable.id) = value
     }
   }
 
@@ -35,14 +32,17 @@ final class BestValue(fallback: ValueHeuristic) extends ValueHeuristic {
   override def toString = "best";
 
   def compute(p: Problem) {
+    BestValue.best = p.variables.map(v => fallback.selectIndex(v, v.initDomain))
     // Nothing to compute
   }
 
   override def selectIndex(variable: Variable, domain: Domain) = {
-    BestValue.best.getOrElse(variable, Nil)
-      .headOption
-      .filter(domain.present)
-      .getOrElse(fallback.selectIndex(variable, domain))
+    val value = BestValue.best(variable.id)
+    if (domain.present(value)) {
+      value
+    } else {
+      fallback.selectIndex(variable, domain)
+    }
   }
 
   def shouldRestart = false

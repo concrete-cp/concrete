@@ -39,8 +39,8 @@ class CumulativeEnergy(s: Array[Variable], d: Array[Variable], h: Array[Variable
   val tasks = new Array[Task](s.length)
 
   override def shave(ps: ProblemState) = {
-    for (i <- 0 until tasks.length) {
-      tasks(i) = Task(ps, s(i), d(i), h(i))
+    val tasks = Array.tabulate(s.length) { i =>
+      Task(ps, s(i), d(i), h(i))
     }
 
     scala.util.Sorting.quickSort(tasks) //stableSort(order, (i: Int, j: Int) => tasks(i).coef < tasks(j).coef)
@@ -58,7 +58,7 @@ class CumulativeEnergy(s: Array[Variable], d: Array[Variable], h: Array[Variable
         val availSurf = (xDiff * camax - surface)
         surface += t.dlb * t.hlb
         if (surface > xDiff * camax) {
-          Contradiction
+          Contradiction(scope)
         } else {
           var state: Outcome = ps
           if (t.dlb > 0) state = state.removeAfter(t.h, concrete.util.Math.floorDiv(availSurf, t.dlb))

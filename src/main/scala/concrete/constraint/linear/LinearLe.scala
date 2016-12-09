@@ -42,7 +42,7 @@ final class LinearLe(
     if (f.lb <= 0) {
       ps.updateState(this, (doms, f, vars, max))
     } else {
-      Contradiction
+      Contradiction(scope)
     }
   }
 
@@ -63,7 +63,7 @@ final class LinearLe(
       ps.updateState(this, (doms, f, vars, max))
     } else {
       processUB(vars.nextSetBit(0), vars, doms, f, factors, ps) match {
-        case PContradiction => Contradiction
+        case PContradiction => Contradiction(scope)
         case PFiltered(changed, entailed, newF, newVars, newMax) =>
           val out = filter(changed, doms, ps)
           if (entailed) {

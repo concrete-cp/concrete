@@ -17,35 +17,30 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package concrete.runner.sql
+package concrete
+package runner
+package sql
 
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.net.InetAddress
-
+import java.sql.SQLException
 import java.sql.Timestamp
+import java.util.Date
 
-import MyPGDriver.api._
-import SQLWriter._
-import concrete.ParameterManager
-import concrete.runner.ConcreteWriter
-import cspom.StatisticsManager
+import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import java.util.Date
-import scala.util.Try
-import com.typesafe.scalalogging.LazyLogging
-import java.sql.SQLException
-import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scala.util.Try
+
 import com.typesafe.config.ConfigFactory
-import java.io.File
-import scala.util.Failure
-import scala.util.Success
-import java.io.StringWriter
-import java.io.PrintWriter
-import concrete.runner.SatFinished
-import concrete.runner.SatUnfinished
-import concrete.runner.Result
-import concrete.runner.Unsat
+import com.typesafe.scalalogging.LazyLogging
+
+import cspom.StatisticsManager
+import slick.jdbc.PostgresProfile.api._
+
+
 
 object SQLWriter {
 
@@ -119,9 +114,8 @@ object SQLWriter {
 
   val configs = TableQuery[Config]
 
-  class Execution(tag: Tag) extends Table[(Int, String, Int, Int, Int, Timestamp, Option[Timestamp], Option[String], String, Option[String])](tag, "Execution") {
+  class Execution(tag: Tag) extends Table[(Int, Int, Int, Int, Timestamp, Option[Timestamp], Option[String], String, Option[String])](tag, "Execution") {
     def executionId = column[Int]("executionId", O.PrimaryKey, O.AutoInc)
-    def version = column[String]("version")
     def configId = column[Int]("configId")
     def problemId = column[Int]("problemId")
     def iteration = column[Int]("iteration")
@@ -131,11 +125,11 @@ object SQLWriter {
     def solution = column[Option[String]]("solution")
     def status = column[String]("status", O.Default("started"))
 
-    def * = (executionId, version, configId, problemId, iteration, start, end, hostname, status, solution)
+    def * = (executionId, configId, problemId, iteration, start, end, hostname, status, solution)
 
     def fkConfig = foreignKey("fkConfig", configId, configs)(_.configId, onDelete = ForeignKeyAction.Cascade)
     def fkProblem = foreignKey("fkProblem", problemId, problems)(_.problemId, onDelete = ForeignKeyAction.Cascade)
-    def idxVCP = index("idxVCP", (version, configId, problemId, iteration), unique = true)
+    def idxVCP = index("idxVCP", (configId, problemId, iteration), unique = true)
   }
 
   val executions = TableQuery[Execution]
@@ -169,6 +163,8 @@ object SQLWriter {
 
 final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
     extends ConcreteWriter with LazyLogging {
+  
+  import SQLWriter._
 
   private lazy val db = Database.forConfig("database")
 
@@ -210,8 +206,6 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
 
   private var problemId: Future[Int] = _
 
-  private def version: String = concrete.Info.version
-
   def parameters(params: ParameterManager) {
 
     configId = initDB
@@ -222,10 +216,9 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
       }
       .flatMap { case _ => config(params) }
 
-    configId.onFailure {
-      case pf =>
-        logger.error("Failed to obtain configId", pf)
-        throw pf
+    configId.failed.foreach { pf =>
+      logger.error("Failed to obtain configId", pf)
+      throw pf
     }
 
     val it = params.getOrElse("iteration", 0)
@@ -233,7 +226,7 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
     val ef = for (
       c <- configId;
       p <- problemId;
-      e <- execution(p, c, version, it)
+      e <- execution(p, c, it)
     ) yield e
 
     executionId =
@@ -248,10 +241,9 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
         case None => db.run(problems.map(p => p.name) returning problems.map(_.problemId) += name)
       }
 
-    problemId.onFailure {
-      case pf =>
-        logger.error("Failed to obtain problemId", pf)
-        throw pf
+    problemId.failed.foreach { pf =>
+      logger.error("Failed to obtain problemId", pf)
+      throw pf
     }
 
   }
@@ -278,19 +270,17 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
 
   }
 
-  private def execution(p: Int, c: Int, version: String, it: Int) = {
+  private def execution(p: Int, c: Int, it: Int) = {
 
     val executionId = db.run(
       executions.map(e =>
-        (e.problemId, e.configId, e.version, e.start, e.hostname, e.iteration)) returning
+        (e.problemId, e.configId, e.start, e.hostname, e.iteration)) returning
         executions.map(_.executionId) += ((
-          p, c, version, now,
+          p, c, now,
           Some(InetAddress.getLocalHost.getHostName), it)))
 
-    executionId.onSuccess {
-      case e =>
-
-        print(s"Problem $p, config $c, version $version, iteration $it, execution $e")
+    executionId.foreach { e =>
+      print(s"Problem $p, config $c, iteration $it, execution $e")
     }
 
     executionId

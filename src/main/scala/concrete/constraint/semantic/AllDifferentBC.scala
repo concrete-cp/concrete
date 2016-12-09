@@ -190,7 +190,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
       pathset(t, x + 1, z, z)
 
       if (d(z) < bounds(z) - bounds(y)) {
-        return Contradiction
+        return Contradiction(Seq(scope(i)))
       }
 
       if (h(x) > x) {
@@ -237,7 +237,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
       pathset(t, x - 1, z, z)
 
       if (d(z) < bounds(y) - bounds(z)) {
-        return Contradiction
+        return Contradiction(Seq(scope(i)))
       }
 
       if (h(x) < x) {
@@ -245,7 +245,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
         val p = minsorted(i).p
         val dom = mod.dom(scope(p)).removeFrom(bounds(w))
         if (dom.isEmpty) {
-          return Contradiction
+          return Contradiction(Seq(scope(i)))
         } else {
           doms(p) = dom.span
           mod = mod.updateDomNonEmpty(scope(p), dom)

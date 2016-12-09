@@ -16,7 +16,7 @@ import cspom.UNSATException
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import org.scalameter.Quantity
-import concrete.util.KlangCancellableFuture
+import concrete.util.CancellableFuture
 import java.util.concurrent.TimeoutException
 import concrete.Problem
 
@@ -132,7 +132,7 @@ trait ConcreteRunner extends LazyLogging {
 
     var solver: Option[Solver] = None
 
-    val f = KlangCancellableFuture {
+    val f = CancellableFuture {
       try {
         val (tryLoad, lT) = StatisticsManager.measureTry {
           load(remaining, opt)

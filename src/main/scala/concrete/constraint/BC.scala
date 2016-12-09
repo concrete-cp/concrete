@@ -14,7 +14,7 @@ trait BC extends Constraint {
   @annotation.tailrec
   final def fixPoint(ps: ProblemState, shave: ProblemState => Outcome): Outcome = {
     shave(ps) match {
-      case Contradiction => Contradiction
+      case c: Contradiction => c
       case ns: ProblemState =>
         if (ns eq ps) {
           ns
@@ -112,16 +112,11 @@ trait BCRemovals extends Constraint with AdviseCounts with BC {
 
   override def consistent(ps: ProblemState) = consistent(ps, modified)
 
-  override def isConsistent(problemState: ProblemState): Boolean = {
-    isConsistent(problemState, modified)
-  }
-
   def consistent(ps: ProblemState, modified: BitVector): Outcome = {
-    if (isConsistent(ps, modified)) ps else Contradiction
-  }
-
-  def isConsistent(ps: ProblemState, mod: BitVector): Boolean = {
-    revise(ps, mod).isState
+    revise(ps) match {
+      case _: ProblemState => ps
+      case c: Contradiction => c
+    }
   }
 
   def clearMod(): Unit = modified = BitVector.empty // Arrays.fill(removals, -1)

@@ -31,8 +31,8 @@ final class StatelessLinearEq(
 
   private val negFactors = factors.map(-_)
 
-  override def isConsistent(ps: ProblemState) = {
-    updateF(ps)._1.contains(0)
+  override def consistent(ps: ProblemState) = {
+    if (updateF(ps)._1.contains(0)) ps else Contradiction(scope)
   }
 
   @annotation.tailrec
@@ -45,7 +45,7 @@ final class StatelessLinearEq(
       }
     } else {
       processUB(0, f, if (neg) negFactors else factors, ps) match {
-        case PContradiction => Contradiction
+        case PContradiction => Contradiction(scope)
         case PFiltered(newChanged, entailed, newF) =>
           require(newF != f || newChanged.isEmpty)
           if (newChanged.isEmpty && looping) {

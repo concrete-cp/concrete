@@ -44,7 +44,7 @@ class BinPacking private (load: Array[Variable], offset: Int, assignments: Array
         // 3. Single item elimination
         .filter { j => assigned(j - offset) + weight(i) <= bounds(j - offset).ub }
 
-      if (commitment.isEmpty) Contradiction
+      if (commitment.isEmpty) Contradiction(scope)
       else if (commitment eq dom) {
         ps
       } else {
@@ -108,7 +108,7 @@ class BinPacking private (load: Array[Variable], offset: Int, assignments: Array
 
     if (noSum(candidates, dom.head - assigned(bin), dom.last - assigned(bin)).isDefined) {
       // println(s"candidates: ${candidates.toSeq}, bounds: ${(dom.head - assigned(j), dom.last - assigned(j))}")
-      Contradiction
+      Contradiction(scope(bin))
     } else {
       val d1 = noSum(candidates, dom.head - assigned(bin), dom.head - assigned(bin)) match {
         case Some((_, b)) => dom.removeUntil(assigned(bin) + b)
@@ -179,7 +179,7 @@ class BinPacking private (load: Array[Variable], offset: Int, assignments: Array
         // List of unassigned items
         val u = Iterator.range(0, assignments.length).filter(i => !ps.assigned(assignments(i))).map(weight).toArray
 
-        if (l2(merge(a, u), C) > load.length) Contradiction else ps
+        if (l2(merge(a, u), C) > load.length) Contradiction(scope) else ps
       }
   }
 

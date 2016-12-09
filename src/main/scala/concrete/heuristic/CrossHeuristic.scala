@@ -1,4 +1,5 @@
-package concrete.heuristic;
+package concrete
+package heuristic;
 
 import concrete.ParameterManager
 import concrete.Problem
@@ -7,6 +8,7 @@ import concrete.Variable
 import concrete.heuristic.variable.VariableHeuristic
 import concrete.heuristic.value.BranchHeuristic
 import concrete.heuristic.value.BestValue
+import concrete.MAC
 
 object CrossHeuristic {
   def apply(params: ParameterManager, decisionVariables: Array[Variable]): CrossHeuristic = {
@@ -18,7 +20,7 @@ object CrossHeuristic {
 
   def defaultVar(params: ParameterManager, decisionVariables: Array[Variable]) = {
     val variableHeuristicClass: Class[_ <: VariableHeuristic] =
-      params.classInPackage("heuristic.variable", "concrete.heuristic.variable", classOf[WDegOnDom])
+      params.classInPackage("heuristic.variable", "concrete.heuristic.variable", classOf[variable.WDegOnDom])
 
     variableHeuristicClass
       .getConstructor(classOf[ParameterManager], classOf[Array[Variable]])
@@ -60,4 +62,6 @@ final case class CrossHeuristic(
     "Crossed (" + variableHeuristic + ", " + valueHeuristic + ")";
 
   def decisionVariables = variableHeuristic.decisionVariables
+
+  def applyListeners(s: MAC) = variableHeuristic.applyListeners(s)
 }

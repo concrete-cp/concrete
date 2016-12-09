@@ -26,6 +26,8 @@ trait Heuristic {
   def branch(state: ProblemState): Option[Branch]
   def shouldRestart: Boolean
   def decisionVariables: Seq[Variable]
+  def compute(p: Problem): Unit
+  def applyListeners(s: MAC): Unit
 }
 
 class Branch(
