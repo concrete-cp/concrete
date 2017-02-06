@@ -1,10 +1,6 @@
-package concrete.heuristic.variable
-
-import concrete.Domain
-import concrete.ParameterManager
-import concrete.ProblemState
-import concrete.Variable
-import concrete.heuristic.variable.ScoredVariableHeuristic
+package concrete
+package heuristic
+package variable
 
 final class DDeg(params: ParameterManager, decisionVariables: Array[Variable]) extends ScoredVariableHeuristic(params, decisionVariables) {
 

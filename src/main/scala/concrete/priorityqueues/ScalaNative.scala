@@ -6,7 +6,7 @@ final class ScalaNative[T <: PTag] extends PriorityQueue[T] {
     .by { e: E => e.eval }
     .reverse
 
-  private final case class E(elt: T, eval: Int)
+  private case class E(elt: T, eval: Int)
 
   private val queue = new collection.mutable.PriorityQueue[E]()(EOrdering)
 

@@ -8,12 +8,11 @@ import cspom.extension.IdMap
 import concrete.IntDomain
 import concrete.Singleton
 import concrete.util.MDDGenerator
-import org.scalatest.concurrent.Timeouts
 import org.scalatest.time.Seconds
 import org.scalatest.time.Span
-import org.scalatest.concurrent.Interruptor
+import org.scalatest.concurrent.TimeLimits
 
-final class MDDTest extends FlatSpec with Matchers with Inspectors with Timeouts {
+final class MDDTest extends FlatSpec with Matchers with Inspectors with TimeLimits {
 
   private val ts: MDD = MDD(Seq(Seq(0, 0), Seq(0, 1), Seq(1, 0)))
 
@@ -117,11 +116,7 @@ final class MDDTest extends FlatSpec with Matchers with Inspectors with Timeouts
     mdd.lambda shouldBe BigInt(d).pow(k)
     mdd.edges(10) shouldBe d * k
 
-    def canceller: Interruptor = new Interruptor {
-      def apply(thread: Thread) = thread.stop()
-    }
-
-    failAfter(Span(5, Seconds))(mdd.reduce())(canceller)
+    failAfter(Span(5, Seconds))(mdd.reduce)
 
   }
 }

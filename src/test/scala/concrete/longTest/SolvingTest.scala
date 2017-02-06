@@ -72,7 +72,7 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
     "e0ddr1-10-by-5-8.xml.xz" -> ((true, true)),
     "tsp-20-1_ext.xml.xz" -> ((true, true)),
     "test.fzn.xz" -> ((true, false)),
-    "queens-12.xml.xz" -> ((14200, false))).slice(18, 22)
+    "queens-12.xml.xz" -> ((14200, false))) .slice(5, 6)
 
   val parameters = Nil
 

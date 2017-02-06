@@ -2,7 +2,6 @@ package concrete
 
 import cspom.util.BitVector
 import concrete.util.Interval
-import concrete.IntervalDomain
 
 object BooleanDomain {
 

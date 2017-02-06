@@ -1,9 +1,5 @@
-package concrete.heuristic;
-
-import concrete.ProblemState
-import concrete.Problem
-import concrete.Solver
-import concrete.MAC
+package concrete
+package heuristic;
 
 final class SeqHeuristic(heuristics: List[Heuristic]) extends Heuristic {
 

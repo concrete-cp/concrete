@@ -6,7 +6,6 @@ import concrete.util.Interval
 import scala.collection.mutable.ArrayBuffer
 import concrete.util.Math
 import java.util.Arrays
-import java.util.Collections
 
 object BinPacking {
   def apply(load: Seq[Variable], offset: Int, bin: Seq[Variable], weight: Seq[Int]) = {

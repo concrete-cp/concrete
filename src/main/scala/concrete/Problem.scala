@@ -20,7 +20,7 @@
 package concrete
 
 import scala.annotation.varargs
-import scala.collection.JavaConversions
+import scala.collection.JavaConverters._
 
 import concrete.constraint.Constraint
 
@@ -86,6 +86,6 @@ final class Problem(val variables: Array[Variable]) {
   // def nd = variables.iterator.map(_.dom.size).sum
   def variable(name: String) = variableMap(name)
 
-  def getVariables = JavaConversions.seqAsJavaList(variables)
+  def getVariables = variables.toSeq.asJava
 
 }

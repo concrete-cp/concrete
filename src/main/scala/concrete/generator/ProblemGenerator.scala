@@ -1,4 +1,5 @@
-package concrete.generator;
+package concrete
+package generator;
 
 import scala.util.Try
 
@@ -6,16 +7,8 @@ import org.scalameter.Quantity
 
 import com.typesafe.scalalogging.LazyLogging
 
-import concrete.Domain
-import concrete.IntDomain
-import concrete.ParameterManager
-import concrete.Problem
-import concrete.Variable
-import concrete.cluster.Arc
 import concrete.constraint.ReifiedConstraint
-import concrete.constraint.linear.SumMode
 import concrete.constraint.semantic.Clause
-import concrete.constraint.semantic.ClauseConstraint
 import concrete.constraint.semantic.PseudoBoolean
 import concrete.constraint.semantic.SAT
 import cspom.CSPOM

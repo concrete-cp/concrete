@@ -24,6 +24,7 @@ trait ValueHeuristic extends BranchHeuristic {
   }
 
   def selectIndex(variable: Variable, domain: Domain): Int
+
 }
 
 trait BranchHeuristic {
@@ -32,4 +33,6 @@ trait BranchHeuristic {
   def compute(problem: Problem): Unit
 
   def shouldRestart: Boolean
+
+  def applyListeners(s: MAC): Unit = ()
 }

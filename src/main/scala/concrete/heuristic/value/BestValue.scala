@@ -1,24 +1,6 @@
-package concrete.heuristic.value;
-
-import concrete.Variable
-import concrete.Problem
-import concrete.Domain
-import concrete.ParameterManager
-import concrete.heuristic.value.ValueHeuristic
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.ListBuffer
-
-object BestValue {
-
-  var best: Array[Int] = _ // = new HashMap[Variable, Int]
-
-  def newSolution(sol: Map[Variable, Any]): Unit = {
-    for (best <- Option(this.best); (variable, value: Int) <- sol) {
-      best(variable.id) = value
-    }
-  }
-
-}
+package concrete
+package heuristic
+package value
 
 final class BestValue(fallback: ValueHeuristic) extends ValueHeuristic {
 
@@ -31,13 +13,18 @@ final class BestValue(fallback: ValueHeuristic) extends ValueHeuristic {
 
   override def toString = "best";
 
+  var best: Array[Int] = _
+
   def compute(p: Problem) {
-    BestValue.best = p.variables.map(v => fallback.selectIndex(v, v.initDomain))
+    require(p.variables.zipWithIndex.forall { case (v, i) => v.id == i })
+
+    best =
+      p.variables.map(v => fallback.selectIndex(v, v.initDomain))
     // Nothing to compute
   }
 
   override def selectIndex(variable: Variable, domain: Domain) = {
-    val value = BestValue.best(variable.id)
+    val value = best(variable.id)
     if (domain.present(value)) {
       value
     } else {
@@ -46,4 +33,11 @@ final class BestValue(fallback: ValueHeuristic) extends ValueHeuristic {
   }
 
   def shouldRestart = false
+
+  override def applyListeners(s: MAC): Unit = s.solutionListener = Some { sol: Map[Variable, Any] =>
+    for ((variable, value: Int) <- sol) {
+      best(variable.id) = value
+    }
+  }
+
 }

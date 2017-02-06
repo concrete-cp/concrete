@@ -41,7 +41,7 @@ final class ReifiedConstraint(
 
       case BooleanDomain.TRUE => positiveConstraint.init(ps)
       case BooleanDomain.FALSE => negativeConstraint.init(ps)
-      case BooleanDomain.EMPTY => Contradiction(scope, Seq(controlVariable)) //throw new UNSATException(msg = s"${controlVariable.toString(ps)} was empty during ${toString(ps)} init")
+      case BooleanDomain.EMPTY => Contradiction(controlVariable) //throw new UNSATException(msg = s"${controlVariable.toString(ps)} was empty during ${toString(ps)} init")
     }
 
   }

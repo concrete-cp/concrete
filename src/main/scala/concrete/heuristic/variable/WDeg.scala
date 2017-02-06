@@ -21,8 +21,6 @@ package concrete
 package heuristic
 package variable
 
-import concrete.constraint.Constraint
-
 final class WDeg(params: ParameterManager, decisionVariables: Array[Variable]) extends ScoredVariableHeuristic(params, decisionVariables)
     with ConstraintWeighting {
 
@@ -36,7 +34,6 @@ final class WDeg(params: ParameterManager, decisionVariables: Array[Variable]) e
 
 trait ConstraintWeighting extends VariableHeuristic {
   override def applyListeners(s: MAC) = s.filter.contradictionListener = Some({
-    case (ctr: Constraint, cause: Option[Variable]) =>
-      ctr.weight += 1
+    c: Contradiction => c.cause.get.weight += 1
   })
 }

@@ -30,7 +30,7 @@ import cspom.Statistic
 import cspom.StatisticsManager
 import cspom.compiler.CSPOMCompiler
 import org.scalameter.Quantity
-import concrete.heuristic.variable.ScoredVariableHeuristic
+
 
 object LNS extends App {
   def apply(prob: Problem, params: ParameterManager): LNS = {

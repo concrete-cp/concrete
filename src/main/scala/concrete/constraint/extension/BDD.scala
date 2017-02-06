@@ -96,7 +96,11 @@ sealed trait BDD extends Iterable[Seq[Int]] {
   def lambda: BigInt = lambda(new IdMap())
   protected[extension] def lambda(map: IdMap[BDD, BigInt]): BigInt
   def contains(e: Seq[Int]): Boolean
-  def edges(ts: Int): Int
+
+  def vertices(map: IdMap[BDD, Unit]): Int
+
+  def edges(map: IdMap[BDD, Unit]): Int
+
   def depth(map: IdMap[BDD, Int]): Int
 
   def supported(ts: Int, domains: Array[Domain]): Array[Domain] = {
@@ -143,9 +147,6 @@ sealed trait BDD extends Iterable[Seq[Int]] {
     ???
   }
   def universal(scope: IndexedSeq[Domain], timestamp: Int): Boolean = ???
-
-  def nodes(map: IdMap[BDD, Unit]): IdMap[BDD, Unit]
-
 }
 
 object BDD0 extends BDD {
@@ -158,7 +159,6 @@ object BDD0 extends BDD {
   def lambda(map: IdMap[BDD, BigInt]) = 0
   def contains(e: Seq[Int]) = false
   def reduce(cache: collection.mutable.Map[BDD, BDD]) = BDD0
-  def edges(ts: Int) = 0
 
   def filterTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): BDD =
     this
@@ -170,9 +170,16 @@ object BDD0 extends BDD {
   def fillFound(ts: Int, f: (Int, Int) => Boolean, depth: Int, l: SetWithMax): Unit = ()
   def identify(i: Int) = id
 
-  def nodes(map: IdMap[BDD, Unit]) = map
-
   def depth(map: IdMap[BDD, Int]) = 0
+
+  def vertices(map: IdMap[BDD, Unit]) =
+    if (map.contains(this)) 0
+    else {
+      map += (this -> Unit)
+      1
+    }
+
+  def edges(map: IdMap[BDD, Unit]) = 0
 }
 
 object BDDLeaf extends BDD {
@@ -185,7 +192,7 @@ object BDDLeaf extends BDD {
   def lambda(map: IdMap[BDD, BigInt]) = 1
   def contains(e: Seq[Int]) = true
   def reduce(cache: collection.mutable.Map[BDD, BDD]) = BDDLeaf
-  def edges(ts: Int) = 0
+
   def filterTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): BDD = {
     this
   }
@@ -198,8 +205,17 @@ object BDDLeaf extends BDD {
   }
 
   override def isEmpty = false
-  def nodes(map: IdMap[BDD, Unit]) = map
+
   def depth(map: IdMap[BDD, Int]) = 1
+
+  def vertices(map: IdMap[BDD, Unit]) =
+    if (map.contains(this)) 0
+    else {
+      map += (this -> Unit)
+      1
+    }
+
+  def edges(map: IdMap[BDD, Unit]) = 0
 }
 
 class BDDNode(val index: Int, val child: BDD, val sibling: BDD) extends BDD {
@@ -241,14 +257,23 @@ class BDDNode(val index: Int, val child: BDD, val sibling: BDD) extends BDD {
     case _ => false
   }
 
-  def edges(ts: Int) = {
-    cache(ts, 0,
-      1 + child.edges(ts) + sibling.edges(ts))
-  }
-
   def depth(map: IdMap[BDD, Int]) = {
     map.getOrElseUpdate(this, 1 + math.max(child.depth(map), sibling.depth(map)))
   }
+
+  def vertices(map: IdMap[BDD, Unit]) =
+    if (map.contains(this)) 0
+    else {
+      map += (this -> Unit)
+      1 + child.vertices(map) + sibling.vertices(map)
+    }
+
+  def edges(map: IdMap[BDD, Unit]) =
+    if (map.contains(this)) 0
+    else {
+      map += (this -> Unit)
+      2 + child.edges(map) + sibling.edges(map)
+    }
 
   def filterTrie(ts: Int, doms: Array[Domain], modified: List[Int], depth: Int): BDD = {
     if (modified.isEmpty) {
@@ -306,13 +331,5 @@ class BDDNode(val index: Int, val child: BDD, val sibling: BDD) extends BDD {
   }
 
   override def isEmpty = false
-
-  def nodes(map: IdMap[BDD, Unit]) = {
-    if (map.contains(this)) {
-      map
-    } else {
-      sibling.nodes(child.nodes(map += ((this, ()))))
-    }
-  }
 
 }

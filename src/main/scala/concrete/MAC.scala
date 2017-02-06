@@ -144,12 +144,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
     val (macResult, macTime) =
       StatisticsManager.measure(
         mac(modified, stack, currentState, stateStack, maxBacktracks, nbAssignments),
-        searchMeasurer.withWarmer(
-          if (nbAssignments <= params.getOrElse("mac.warm", 0)) {
-            new Warmer.Default
-          } else {
-            Warmer.Zero
-          }))
+        searchMeasurer)
 
     searchCpu += macTime
     running = false
@@ -219,7 +214,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
       /* Contradiction will trigger a backtrack */
 
       val (sol, stack, stateStack) =
-        nextSolution(Seq.empty, currentStack, Contradiction(Seq(), Seq()), extendedStack)
+        nextSolution(Seq.empty, currentStack, Contradiction(Seq()), extendedStack)
       currentStack = stack
       currentStateStack = stateStack
       sol

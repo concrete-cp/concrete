@@ -1,7 +1,7 @@
 package concrete;
 
 import java.util.Properties
-import scala.collection.JavaConversions
+import scala.collection.JavaConverters._
 import scala.reflect.runtime.universe._
 import scala.collection.mutable.HashSet
 import scala.collection.immutable.TreeMap
@@ -110,7 +110,7 @@ final class ParameterManager extends LazyLogging {
   def parameters: SortedMap[String, Any] = _parameters
 
   def parseProperties(line: Properties) {
-    JavaConversions.mapAsScalaMap(line).foreach {
+    line.asScala.foreach {
       case (k, v) => update(k.toString, v.toString)
     }
   }

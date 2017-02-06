@@ -32,6 +32,6 @@ class XorTest extends FlatSpec with Matchers {
     val s3 = s2.assign(b2, 1).toState
     c.advise(s3, Assignment, 1) shouldBe 1
 
-    c.revise(s3) shouldBe Contradiction
+    assert(!c.revise(s3).isState)
   }
 }

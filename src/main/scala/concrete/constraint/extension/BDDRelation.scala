@@ -1,10 +1,11 @@
-package concrete.constraint.extension
+package concrete
+package constraint
+package extension
 
 import com.typesafe.scalalogging.LazyLogging
-import concrete.Domain
+
 import concrete.util.Timestamp
 import cspom.extension.IdMap
-import concrete.IntDomain
 
 final class BDDRelation(val bdd: BDD, val timestamp: Timestamp = new Timestamp()) extends Relation with LazyLogging {
   type Self2 = BDDRelation
@@ -20,7 +21,9 @@ final class BDDRelation(val bdd: BDD, val timestamp: Timestamp = new Timestamp()
     s
   }
 
-  def edges: Int = bdd.edges(timestamp.next())
+  def edges: Int = bdd.edges(new IdMap())
+
+  def vertices: Int = bdd.vertices(new IdMap())
 
   def depth: Int = bdd.depth(new IdMap())
 

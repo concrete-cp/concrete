@@ -1,20 +1,12 @@
-package concrete.constraint.semantic
+package concrete
+package constraint
+package semantic
 
 import scala.util.Try
 
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 
-import concrete.BooleanDomain
-import concrete.Contradiction
-import concrete.IntDomain
-import concrete.Problem
-import concrete.ProblemState
-import concrete.Singleton
-import concrete.Solver
-import concrete.Variable
-import concrete.constraint.AdviseCount
-import concrete.constraint.ReifiedConstraint
 import concrete.constraint.linear.EqACFast
 import concrete.constraint.linear.EqBC
 import concrete.constraint.linear.StatelessLinearEq
@@ -23,8 +15,7 @@ import cspom.CSPOM._
 import cspom.CSPOMConstraint
 import cspom.variable.BoolVariable
 import cspom.variable.IntVariable
-import concrete.Assignment
-import concrete.constraint.linear.LinearNe2
+import concrete.constraint.linear.LinearNe
 
 class ReifiedConstraintTest extends FlatSpec with Matchers {
 
@@ -73,7 +64,7 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
     val constraint = new ReifiedConstraint(
       control,
       new EqBC(false, v0, -1, v1),
-      new LinearNe2(1, Array(1, -1), Array(v0, v1)))
+      new LinearNe(1, Array(1, -1), Array(v0, v1)))
     val pb = Problem(v0, v1, control)
     pb.addConstraint(constraint)
     val state = pb.initState.toState

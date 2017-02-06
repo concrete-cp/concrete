@@ -1,11 +1,8 @@
-package concrete.heuristic.value;
+package concrete
+package heuristic
+package value;
 
-import concrete.Variable
-import concrete.Problem
 import scala.util.Random
-import concrete.Domain
-import concrete.ParameterManager
-import concrete.heuristic.value.ValueHeuristic
 
 final class RandomBound(pm: ParameterManager) extends ValueHeuristic {
 

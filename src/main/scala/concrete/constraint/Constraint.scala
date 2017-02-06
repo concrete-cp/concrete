@@ -296,8 +296,8 @@ abstract class Constraint(val scope: Array[Variable])
       false
     } else {
       revise(ps) match {
-        case Contradiction(mod, cause) =>
-          logger.error(s"${toString(ps)} is not consistent, $mod lead to $cause")
+        case Contradiction(cause, from, to) =>
+          logger.error(s"${toString(ps)} is not consistent, $cause ($from) lead to $to")
           false
         case finalState: ProblemState =>
           if (!scope.forall(v => ps.dom(v) eq finalState.dom(v))) {

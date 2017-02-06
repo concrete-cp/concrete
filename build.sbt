@@ -34,13 +34,12 @@ libraryDependencies ++= Seq(
 	)
 
 scalacOptions ++= Seq(
-  "-optimise"
-, "-Xdisable-assertions"
-//	"-deprecation", 
+//    "-Xdisable-assertions",
+	"-deprecation", 
 //	"-unchecked", 
-,	"-Xlint" 
+	"-Xlint", 
 //	"-feature",
-, 	"-Ywarn-unused-import"
+ 	"-Ywarn-unused-import"
 )
 
 enablePlugins(JavaAppPackaging)

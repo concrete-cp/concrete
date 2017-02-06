@@ -4,10 +4,7 @@ package linear
 
 import com.typesafe.scalalogging.LazyLogging
 
-import cspom.util.BitVector
-import concrete.util.Interval
-
-final class LinearNe2(
+final class LinearNe(
     constant: Int,
     factors: Array[Int],
     scope: Array[Variable]) extends Linear(constant, factors, scope, SumNE) with LazyLogging {

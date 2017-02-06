@@ -17,13 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package concrete.heuristic.variable
-
-import concrete.Domain
-import concrete.ParameterManager
-import concrete.ProblemState
-import concrete.Variable
-import concrete.heuristic.variable.ScoredVariableHeuristic
+package concrete
+package heuristic
+package variable
 
 final class LargestValue(params: ParameterManager, decisionVariables: Array[Variable]) extends ScoredVariableHeuristic(params, decisionVariables) {
 

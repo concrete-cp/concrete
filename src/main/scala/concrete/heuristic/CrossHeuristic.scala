@@ -63,5 +63,8 @@ final case class CrossHeuristic(
 
   def decisionVariables = variableHeuristic.decisionVariables
 
-  def applyListeners(s: MAC) = variableHeuristic.applyListeners(s)
+  def applyListeners(s: MAC) = {
+    variableHeuristic.applyListeners(s)
+    valueHeuristic.applyListeners(s)
+  }
 }

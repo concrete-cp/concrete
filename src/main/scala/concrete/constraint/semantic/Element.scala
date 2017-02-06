@@ -3,7 +3,6 @@ package constraint
 package semantic
 
 import scala.collection.mutable.HashMap
-import java.util.Arrays
 import cspom.util.BitVector
 
 object Element {

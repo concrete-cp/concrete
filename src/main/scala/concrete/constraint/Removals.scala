@@ -23,7 +23,7 @@ trait Removals extends Constraint with AdviseCounts {
   def revise(problemState: ProblemState): Outcome = {
     val r = revise(problemState, modified)
     clearMod()
-    r
+    r dueTo ((this, modVars(modified)))
   }
 
   def revise(problemState: ProblemState, modified: BitVector): Outcome

@@ -19,31 +19,41 @@
 
 package concrete.util;
 
-import com.typesafe.scalalogging.LazyLogging
-import slick.driver.PostgresDriver.api._
-import concrete.runner.sql.SQLWriter
-import concrete.generator.ExtensionGenerator
-import concrete.runner.sql.Table2
-import cspom.StatisticsManager
-import concrete.generator.cspompatterns.ConcretePatterns
-import concrete.generator.cspompatterns.XCSPPatterns
-import cspom.CSPOM
-import cspom.compiler.CSPOMCompiler
-import concrete.generator.cspompatterns.FZPatterns
-import cspom.extension.MDD
-import cspom.extension.Relation
-import cspom.StatisticsManager._
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scala.math.BigInt.int2bigInt
+
+import com.typesafe.scalalogging.LazyLogging
+
 import concrete.ParameterManager
 import concrete.Problem
 import concrete.Solver
 import concrete.UNSAT
-import scala.math.BigInt.int2bigInt
 import concrete.constraint.extension.BDDC
 import concrete.constraint.extension.MDDC
 import concrete.constraint.extension.ReduceableExt
+import concrete.generator.ExtensionGenerator
 import concrete.generator.ProblemGenerator
+import concrete.generator.cspompatterns.ConcretePatterns
+import concrete.generator.cspompatterns.FZPatterns
+import concrete.generator.cspompatterns.XCSPPatterns
+import concrete.runner.sql.SQLWriter
+import concrete.runner.sql.Table2
+import cspom.CSPOM
+import cspom.StatisticsManager
+import cspom.StatisticsManager.average
+import cspom.StatisticsManager.averageBigInt
+import cspom.StatisticsManager.stDev
+import cspom.StatisticsManager.stDevBigInt
+import cspom.compiler.CSPOMCompiler
+import cspom.extension.IdMap
+import cspom.extension.MDD
+import cspom.extension.Relation
+import slick.jdbc.PostgresProfile.api.columnExtensionMethods
+import slick.jdbc.PostgresProfile.api.intColumnType
+import slick.jdbc.PostgresProfile.api.streamableQueryActionExtensionMethods
+import slick.jdbc.PostgresProfile.api.stringColumnType
+import slick.jdbc.PostgresProfile.api.valueToConstColumn
 
 object MDDStats extends App with LazyLogging {
   def apply(prob: Problem, params: ParameterManager): MDDStats =
@@ -51,7 +61,7 @@ object MDDStats extends App with LazyLogging {
 
   val pm = new ParameterManager
   pm("solver") = classOf[MDDStats]
-  
+
   val pg = new ProblemGenerator(pm)
 
   val eg = pg.gm.known('extension).asInstanceOf[ExtensionGenerator]
@@ -96,7 +106,6 @@ object MDDStats extends App with LazyLogging {
     var ds = List[Double]()
     var bdds = List[Int]()
 
-
     for {
       c <- cspom.constraints
       if (c.function == 'extension && c.arguments.size > 2)
@@ -112,7 +121,7 @@ object MDDStats extends App with LazyLogging {
       ds :::= c.arguments.map(_.searchSpace).toList
 
       val bdd = eg.cspomMDDtoBDD(r)
-      bdds ::= bdd.reduce().edges(10)
+      bdds ::= bdd.reduce().edges(new IdMap())
     }
 
     if (ds.nonEmpty) {
@@ -154,29 +163,29 @@ final class MDDStats(prob: Problem, params: ParameterManager) extends Solver(pro
     val edges =
       prob.constraints.collect {
         case c: ReduceableExt => state(c).edges
-        case c: MDDC          => c.mdd.edges
-        case c: BDDC          => c.bdd.edges
+        case c: MDDC => c.mdd.edges
+        case c: BDDC => c.bdd.edges
       }
 
     val lambdas =
       prob.constraints.collect {
         case c: ReduceableExt => state(c).lambda
-        case c: MDDC          => c.mdd.lambda
-        case c: BDDC          => c.bdd.lambda
+        case c: MDDC => c.mdd.lambda
+        case c: BDDC => c.bdd.lambda
       }
 
     val ks =
       prob.constraints.collect {
         case c: ReduceableExt => c.arity
-        case c: MDDC          => c.arity
-        case c: BDDC          => c.arity
+        case c: MDDC => c.arity
+        case c: BDDC => c.arity
       }
 
     val ds =
       prob.constraints.collect {
         case c: ReduceableExt => state.doms(c.scope)
-        case c: MDDC          => state.doms(c.scope)
-        case c: BDDC          => state.doms(c.scope)
+        case c: MDDC => state.doms(c.scope)
+        case c: BDDC => state.doms(c.scope)
       }
         .flatten
         .map(_.size)

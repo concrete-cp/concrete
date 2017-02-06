@@ -76,7 +76,7 @@ class MinMaxTest extends FlatSpec with Matchers with Inspectors with PropertyChe
     problem.addConstraint(constraint)
     val state = problem.initState.toState
 
-    constraint.revise(state) shouldBe Contradiction
+    assert(!constraint.revise(state).isState)
   }
 
   it should "not promote interval" in {

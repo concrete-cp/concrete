@@ -1,6 +1,6 @@
 package concrete.runner.sql
 
-import slick.driver.PostgresDriver.api._
+import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.GetResult
 import java.net.URI
 import scala.concurrent.duration.Duration

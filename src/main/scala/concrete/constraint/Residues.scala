@@ -1,10 +1,7 @@
-package concrete.constraint;
+package concrete
+package constraint;
 
-import concrete.Contradiction
-import concrete.Outcome
-import concrete.ProblemState
 import cspom.util.BitVector
-import concrete.Domain
 import scala.annotation.tailrec
 
 trait ResidueManager {

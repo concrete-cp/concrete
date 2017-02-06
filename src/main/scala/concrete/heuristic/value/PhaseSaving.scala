@@ -1,11 +1,6 @@
-package concrete.heuristic.value;
-
-import concrete.Variable
-import concrete.Problem
-import concrete.Domain
-import concrete.ParameterManager
-import concrete.heuristic.value.ValueHeuristic
-import scala.collection.mutable.HashMap
+package concrete
+package heuristic
+package value;
 
 final class PhaseSaving(heuristic: ValueHeuristic) extends ValueHeuristic {
 

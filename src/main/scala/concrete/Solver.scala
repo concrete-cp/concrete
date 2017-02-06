@@ -19,9 +19,7 @@
 
 package concrete;
 
-import scala.collection.JavaConverters.asJavaIteratorConverter
-import scala.collection.JavaConverters.mapAsJavaMapConverter
-import scala.collection.JavaConverters.seqAsJavaListConverter
+import scala.collection.JavaConverters._
 import scala.util.Try
 import org.scalameter.Quantity
 import com.typesafe.scalalogging.LazyLogging
@@ -33,7 +31,6 @@ import concrete.constraint.linear.LtC
 import concrete.filter.Filter
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
-import concrete.heuristic.value.BestValue
 import cspom.CSPOM
 import cspom.Statistic
 import cspom.StatisticsManager
@@ -73,6 +70,8 @@ object Solver {
 }
 
 abstract class Solver(val problem: Problem, val params: ParameterManager) extends Iterator[Map[Variable, Any]] with LazyLogging {
+
+  var solutionListener: Option[Map[Variable, Any] => Unit] = None
 
   @Statistic
   var preproRemoved: Long = -1L
@@ -149,7 +148,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
     case UNKNOWNResult(None) => if (hasNext) next() else Iterator.empty.next
     case SAT(sol) =>
       _next = UNKNOWNResult(None)
-      BestValue.newSolution(sol)
+      for (l <- solutionListener) l(sol)
 
       for (v <- _maximize) {
         reset()
@@ -170,11 +169,13 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
       assert(problem.constraints.forall(_.positionInVariable.forall(_ >= 0)))
       sol
     case RESTART => throw new IllegalStateException()
+    case UNKNOWNResult(Some(e)) => throw e
   }
 
   def nextJava(): java.util.Map[Variable, java.lang.Integer] = next()
     .map {
       case (v, i: Int) => (v, i: java.lang.Integer)
+      case (v, i) => throw new NumberFormatException(s"$v = $i : should be an integer")
     }
     .asJava
 
@@ -182,6 +183,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
     s =>
       s.map {
         case (v, i: Int) => (v, i: java.lang.Integer)
+        case (v, i) => throw new NumberFormatException(s"$v = $i : should be an integer")
       }
         .asJava
   }
@@ -197,6 +199,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
     case SAT(_) => true
     case UNKNOWNResult(None) =>
       _next = nextSolution(); hasNext
+    case UNKNOWNResult(Some(e)) => throw e
     case RESTART => throw new IllegalStateException
   }
 
@@ -208,6 +211,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
     .map(v => (v, state.dom(v))).map {
       case (variable, dom: IntDomain) => variable -> dom.head
       case (variable, dom: BooleanDomain) => variable -> dom.canBe(true)
+      case (variable, dom) => throw new NumberFormatException(s"$variable = $dom : $dom should contain integer or boolean values")
     }
     .toMap
 
@@ -251,10 +255,12 @@ sealed trait SolverResult {
     case (s, false) => (s, 0)
     case (s, true) => (s, 1)
     case (s, i: Int) => (s, i)
+    case (s, i) => throw new NumberFormatException(s"$s = $i : $i should be an integer or boolean value")
   }
   def getInteger: java.util.Map[Variable, java.lang.Integer] =
     get.map {
       case (s, i: Int) => (s, i: java.lang.Integer)
+      case (s, i) => throw new NumberFormatException(s"$s = $i : $i should be an integer value")
     }
       .asJava
 }

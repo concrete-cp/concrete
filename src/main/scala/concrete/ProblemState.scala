@@ -78,16 +78,16 @@ sealed trait Outcome {
     state
   }
 
-  def dueTo(from: Seq[Variable]): Outcome
+  def dueTo(cause: => (Constraint, Seq[Variable])): Outcome
 
 }
 
 object Contradiction {
-  def apply(to: Variable):Contradiction = Contradiction(Seq(to))
-  def apply(to: Seq[Variable]): Contradiction = Contradiction(Seq.empty, to)
+  def apply(to: Variable): Contradiction = Contradiction(Seq(to))
+  def apply(to: Seq[Variable]): Contradiction = Contradiction(None, Seq.empty, to)
 }
 
-case class Contradiction(from: Seq[Variable], to: Seq[Variable]) extends Outcome {
+case class Contradiction(cause: Option[Constraint], from: Seq[Variable], to: Seq[Variable]) extends Outcome {
   def andThen(f: ProblemState => Outcome) = this
   def orElse[A >: ProblemState](f: => A) = f
   def map[A](f: ProblemState => A) = None
@@ -114,7 +114,8 @@ case class Contradiction(from: Seq[Variable], to: Seq[Variable]) extends Outcome
   def activeConstraints(v: Variable): BitVector = throw new UNSATException("Tried to get state from a Contradiction")
   def updateState[S <: AnyRef](c: StatefulConstraint[S], newState: S): Outcome = this
   def isState = false
-  def dueTo(from: Seq[Variable]) = Contradiction(this.from ++ from, to)
+  def dueTo(cause: => (Constraint, Seq[Variable])) = Contradiction(Some(cause._1), this.from ++ cause._2, to)
+
 }
 
 object ProblemState {
@@ -226,7 +227,7 @@ case class ProblemState(
 
   def updateDom(v: Variable, newDomain: Domain): Outcome = {
     if (newDomain.isEmpty) {
-      Contradiction(Seq(), Seq(v))
+      Contradiction(v)
     } else {
       updateDomNonEmpty(v, newDomain)
     }
@@ -280,7 +281,7 @@ case class ProblemState(
         updateDomNonEmptyNoCheck(v, d.assign(value))
       }
     } else {
-      Contradiction(Seq(), Seq(v))
+      Contradiction(v)
     }
 
   }
@@ -329,6 +330,6 @@ case class ProblemState(
   def toString(problem: Problem) = problem.toString(this)
   def toState: ProblemState = this
 
-  def dueTo(from: Seq[Variable]) = this
+  def dueTo(cause: => (Constraint, Seq[Variable])) = this
 
 }

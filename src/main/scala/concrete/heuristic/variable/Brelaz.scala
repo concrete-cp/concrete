@@ -1,10 +1,6 @@
-package concrete.heuristic.variable
-
-import concrete.Domain
-import concrete.ParameterManager
-import concrete.ProblemState
-import concrete.Variable
-import concrete.heuristic.variable.VariableHeuristic
+package concrete
+package heuristic
+package variable
 
 final class Brelaz(params: ParameterManager, decisionVariables: Array[Variable]) extends VariableHeuristic(params, decisionVariables) {
 

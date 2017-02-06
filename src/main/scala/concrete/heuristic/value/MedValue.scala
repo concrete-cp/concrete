@@ -1,10 +1,6 @@
-package concrete.heuristic.value
-
-import concrete.Domain
-import concrete.ParameterManager
-import concrete.Problem
-import concrete.Variable
-import concrete.heuristic.value.ValueHeuristic
+package concrete
+package heuristic
+package value
 
 final class MedValue(pm: ParameterManager) extends ValueHeuristic {
 

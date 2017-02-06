@@ -18,13 +18,8 @@
  */
 
 package concrete
-package heuristic.variable
-
-import concrete.Domain
-import concrete.ParameterManager
-import concrete.ProblemState
-import concrete.Variable
-import concrete.heuristic.variable.ScoredVariableHeuristic
+package heuristic
+package variable
 
 final class RandomVar(params: ParameterManager, dv: Array[Variable]) extends ScoredVariableHeuristic(params, dv) {
 

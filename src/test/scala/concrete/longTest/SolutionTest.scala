@@ -71,8 +71,9 @@ deltaY = array3d(0..3, 0..3, 0..3, [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
     } yield {
       val (pb, vars) = prob
 
-      var state = pb.initState.toState //.assign(pb.variable("X"), 0)
-      val filter = new ACC(pb, pm)
+      val solver = MAC(pb, pm)
+
+      var state = solver.preprocess(solver.filter, pb.initState.toState).toState
       //      println(state)
 
       val decisions = Seq.tabulate(80) { i =>
@@ -95,8 +96,6 @@ deltaY = array3d(0..3, 0..3, 0..3, [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
         state = state.assign(variable, deltaY(i)).toState
         variable
       }
-
-      val solver = MAC(pb, pm)
 
       assert(solver.oneRun(decisions.map((_, Assignment)), List(), state, List())._1.isSat)
 

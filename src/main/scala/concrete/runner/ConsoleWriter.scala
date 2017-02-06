@@ -1,7 +1,5 @@
 package concrete.runner
 
-import scala.util.Failure
-import scala.util.Success
 import scala.util.Try
 import cspom.StatisticsManager
 import concrete.ParameterManager

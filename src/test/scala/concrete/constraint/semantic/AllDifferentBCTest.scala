@@ -20,7 +20,7 @@ class AllDifferentBCTest extends FlatSpec with Matchers {
     val ps = Problem(v1, v2, v3, v4, v5).initState.toState
     val c = new AllDifferentBC(v1, v2, v3, v4, v5)
 
-    c.revise(ps) shouldBe Contradiction
+    assert(!c.revise(ps).isState)
   }
 
 }

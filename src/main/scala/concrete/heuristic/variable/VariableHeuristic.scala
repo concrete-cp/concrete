@@ -1,14 +1,9 @@
-package concrete.heuristic.variable
+package concrete
+package heuristic
+package variable
 
 import scala.annotation.tailrec
 import scala.util.Random
-import concrete.Domain
-import concrete.ParameterManager
-import concrete.ProblemState
-import concrete.Variable
-import scala.reflect.runtime.universe
-import concrete.Solver
-import concrete.MAC
 
 abstract class VariableHeuristic(params: ParameterManager, val decisionVariables: Array[Variable]) {
   protected val rand: Option[Random] = {

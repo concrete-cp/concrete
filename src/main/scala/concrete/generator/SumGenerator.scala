@@ -1,10 +1,9 @@
-package concrete.generator;
+package concrete
+package generator;
 
 import com.typesafe.scalalogging.LazyLogging
 
 import Generator.cspom2concrete1D
-import concrete.ParameterManager
-import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.ReifiedConstraint
 import concrete.constraint.linear.Eq

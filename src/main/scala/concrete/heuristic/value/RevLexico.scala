@@ -1,10 +1,6 @@
-package concrete.heuristic.value
-
-import concrete.Variable
-import concrete.Problem
-import concrete.Domain
-import concrete.ParameterManager
-import concrete.heuristic.value.ValueHeuristic
+package concrete
+package heuristic
+package value
 
 final class RevLexico(pm: ParameterManager) extends ValueHeuristic {
 

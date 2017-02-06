@@ -2,8 +2,6 @@ package concrete.generator.cspompatterns
 
 import scala.collection.mutable.WeakHashMap
 import scala.util.Random
-import scala.util.control.Breaks.break
-import scala.util.control.Breaks.breakable
 
 import com.typesafe.scalalogging.LazyLogging
 
@@ -18,10 +16,8 @@ import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
 import cspom.variable.CSPOMVariable
-import cspom.variable.IntExpression
 import cspom.variable.IntVariable
 import cspom.variable.SimpleExpression
-import scala.collection.mutable.HashSet
 
 /**
  * Removes constants from alldifferent constraints

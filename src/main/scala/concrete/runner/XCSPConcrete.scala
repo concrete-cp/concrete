@@ -71,7 +71,7 @@ object XCSPConcrete extends CSPOMRunner with App {
 }
 
 object TryWith {
-  def apply[T <: AutoCloseable, Result](resGen: => T)(r: T => Result): Try[Result] = {
+  def apply[T <: AutoCloseable, R](resGen: => T)(r: T => R): Try[R] = {
 
     Try(resGen).flatMap { closeable =>
 

@@ -17,16 +17,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package concrete.heuristic.variable
-
-import concrete.Domain
-import concrete.ParameterManager
-import concrete.ProblemState
-import concrete.Variable
-import concrete.heuristic.variable.VariableHeuristic
+package concrete
+package heuristic
+package variable
 
 final class LexVar(params: ParameterManager, dv: Array[Variable]) extends VariableHeuristic(params, dv.reverse) {
-  
+
   override final val rand = None
 
   override def select(i: Int, state: ProblemState): Variable = {

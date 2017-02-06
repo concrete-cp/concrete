@@ -81,10 +81,12 @@ class AtMostTest extends FlatSpec with Matchers with Inspectors with TryValues {
     val pb = Problem(occ, v1, v2, v3, v4, v5)
     pb.addConstraint(c)
 
-    pb.initState.andThen { ps =>
+    val r = pb.initState.andThen { ps =>
       c.adviseAll(ps)
       c.revise(ps)
-    } shouldBe Contradiction
+    }
+
+    assert(!r.isState)
 
   }
 

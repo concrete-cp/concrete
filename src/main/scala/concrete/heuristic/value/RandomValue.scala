@@ -1,12 +1,8 @@
-package concrete.heuristic.value
+package concrete
+package heuristic
+package value
 
-import concrete.Variable
-import concrete.Problem
 import scala.util.Random
-import concrete.Domain
-import concrete.ParameterManager
-import concrete.heuristic.value.ValueHeuristic
-import scala.reflect.runtime.universe
 
 final class RandomValue(pm: ParameterManager) extends ValueHeuristic {
 

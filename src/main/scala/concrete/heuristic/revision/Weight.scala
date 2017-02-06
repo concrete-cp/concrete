@@ -1,9 +1,7 @@
-package concrete.heuristic.revision
+package concrete
+package heuristic
+package revision
 
-import concrete.ProblemState
-import concrete.Variable
-import concrete.constraint.Constraint
-
-final class Weight extends Key[Constraint] {
-  def getKey(c: Constraint, s: ProblemState) = c.weight
+final class Weight extends Key[Weighted] {
+  def getKey(c: Weighted, s: ProblemState) = c.weight
 }

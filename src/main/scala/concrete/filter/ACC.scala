@@ -23,7 +23,7 @@ import concrete.InsideRemoval
 
 object ACC extends LazyLogging {
   def control(problem: Problem, state: ProblemState): Option[Constraint] = {
-    logger.info("Control !")
+    logger.warn("Control !")
 
     problem.constraints.find(c => !c.controlRevision(state))
   }
@@ -63,8 +63,12 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     advises.clear()
     queue.clear()
 
+    println("reduce all")
+    
     for (c <- problem.constraints) {
+      if (c.scope.exists(_.name == "X_INTRODUCED_1192")) println(c + " " + states.isEntailed(c))
       if (!states.isEntailed(c)) {
+
         adviseAndEnqueue(c, states)
       }
     }
@@ -162,6 +166,13 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
       constraint.revise(s) match {
         case c: Contradiction =>
           logger.debug(s"${constraint.id}.${constraint.weight}. ${constraint.toString(s)} -> Contradiction")
+
+          val nc = if (c.from.isEmpty) {
+            c dueTo ((constraint, constraint.scope))
+          } else {
+            c
+          }
+
           for (l <- contradictionListener) l(c)
           c
 

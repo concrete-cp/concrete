@@ -1,23 +1,16 @@
-package concrete.constraint.linear;
+package concrete
+package constraint
+package linear;
 
 import org.scalatest.FlatSpec
 import org.scalatest.Inspectors
 import org.scalatest.Matchers
-import concrete.Contradiction
-import concrete.IntDomain
-import concrete.ParameterManager
-import concrete.Problem
-import concrete.Singleton
-import concrete.Solver
-import concrete.Variable
+
 import cspom.CSPOM
 import cspom.CSPOM._
 import cspom.CSPOMConstraint
 import cspom.variable.BoolVariable
 import cspom.variable.IntVariable
-import concrete.constraint.AdviseCount
-import concrete.constraint.Removals
-import concrete.BoundRemoval
 
 final class SumTest extends FlatSpec with Matchers with Inspectors {
 
@@ -170,14 +163,16 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
 
     forAll(Seq(
       LinearLe(0, Array(1), Array(v0), false, pm),
-      new LinearNe2(1, Array(1), Array(v0)),
+      new LinearNe(1, Array(1), Array(v0)),
       LinearEq(0, Array(1), Array(v0)))) { c =>
       Some(c).collect { case c: Removals => c.register(new AdviseCount) }
       pb.addConstraint(c)
-      pb.initState.andThen { ps =>
+      val r = pb.initState.andThen { ps =>
         c.adviseAll(ps)
         c.revise(ps)
-      } shouldBe Contradiction
+      }
+
+      assert(!r.isState)
     }
 
   }
@@ -185,7 +180,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
   it should "filter /=" in {
     val v0 = new Variable("v0", IntDomain(-10 to 10))
     val pb = Problem(v0)
-    val c = new LinearNe2(2, Array(2), Array(v0))
+    val c = new LinearNe(2, Array(2), Array(v0))
     pb.addConstraint(c)
     val ps = pb.initState.toState
     c.adviseAll(ps)
@@ -198,7 +193,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     val v0 = new Variable("v0", IntDomain(-10 to 10))
     val v1 = new Variable("v1", IntDomain(-1 to 1))
     val pb = Problem(v0, v1)
-    val c = new LinearNe2(0, Array(1, 1), Array(v0, v1))
+    val c = new LinearNe(0, Array(1, 1), Array(v0, v1))
     pb.addConstraint(c)
     val ps = pb.initState.toState
     c.adviseAll(ps)
@@ -295,7 +290,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     val Array(bc) = problem.constraints
 
     bc.adviseAll(state)
-    bc.revise(state) shouldBe Contradiction
+    assert(!bc.revise(state).isState)
   }
 
 }

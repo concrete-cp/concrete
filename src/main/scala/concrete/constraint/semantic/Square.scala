@@ -1,17 +1,8 @@
-package concrete.constraint.semantic;
+package concrete
+package constraint
+package semantic;
 
-import concrete.Domain
-import concrete.Variable
-import concrete.constraint.BCCompanion
-import concrete.constraint.Constraint
-import concrete.constraint.BC
-import concrete.constraint.Removals
-import concrete.Contradiction
-import concrete.ProblemState
-import concrete.Outcome
 import cspom.util.BitVector
-import concrete.Event
-import concrete.BoundRemoval
 
 final class SquareBC(val x: Variable, val y: Variable)
     extends Constraint(Array(x, y)) with BC {
@@ -88,7 +79,7 @@ final class SquareAC(val x: Variable, val y: Variable)
     val domY = ps.dom(y)
     val domX = ps.dom(x)
     if (domX.exists(v => consistentX(v, domY)) && domY.exists(v => consistentY(v, domX))) {
-      ps 
+      ps
     } else {
       Contradiction(scope)
     }

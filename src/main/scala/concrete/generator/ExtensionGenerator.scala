@@ -82,15 +82,13 @@ class ExtensionGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
           case trieSeq =>
             val m = trieSeq.map(l => any2Int(l._1)).max
             val concreteTrie = new Array[concrete.constraint.extension.MDD](m + 1)
-            var indices = new SparseSeq[Int]()
 
             for ((v, t) <- trieSeq) {
               val i = any2Int(v)
               concreteTrie(i) = cspomMDDtoCspfjMDD(t, map)
-              indices += i
             }
 
-            new MDDn(concreteTrie, indices)
+            new MDDn(concreteTrie)
         }
       })
     }

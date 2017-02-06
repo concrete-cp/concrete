@@ -21,12 +21,6 @@ package concrete
 package heuristic
 package variable
 
-import concrete.Domain
-import concrete.ParameterManager
-import concrete.ProblemState
-import concrete.Variable
-import concrete.heuristic.variable.ScoredVariableHeuristic
-
 class WDegOnDom(params: ParameterManager, decisionVariables: Array[Variable]) extends ScoredVariableHeuristic(params, decisionVariables) with ConstraintWeighting {
 
   for (v <- decisionVariables; c <- v.constraints) c.weight = 1

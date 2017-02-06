@@ -1,10 +1,11 @@
-package concrete.constraint.extension
+package concrete
+package constraint
+package extension
 
 import scala.math.BigInt.int2bigInt
-import concrete.Domain
+
 import concrete.util.ArraySet
 import cspom.util.VecMap
-import concrete.IntDomain
 
 object IndexedTable extends RelationGenerator {
   def apply(data: Iterable[Seq[Int]]): IndexedTable = {

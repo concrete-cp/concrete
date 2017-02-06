@@ -18,7 +18,6 @@ import cspom.StatisticsManager
 import com.github.davidmoten.rtree.Entry
 import concrete.util.Interval
 import cspom.Statistic
-import scala.collection.mutable.HashMap
 
 class IntRectangle(
     val x1: Int,

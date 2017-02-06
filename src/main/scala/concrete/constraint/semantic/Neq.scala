@@ -74,4 +74,6 @@ class NeqC(x: Variable, y: Int) extends Constraint(x) {
     ps.removeIfPresent(x, y).entail(this)
   }
   def simpleEvaluation: Int = 1
+  
+  override def toString(ps:ProblemState) = s"${x.toString(ps)} /= $y"
 }

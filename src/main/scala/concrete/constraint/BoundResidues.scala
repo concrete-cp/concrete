@@ -1,9 +1,5 @@
-package concrete.constraint;
-
-import concrete.Contradiction
-import concrete.Outcome
-import concrete.ProblemState
-import concrete.Domain
+package concrete
+package constraint;
 
 trait BoundResidues extends BC {
 
