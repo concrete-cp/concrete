@@ -1,7 +1,7 @@
 package concrete
 package constraint
 
-import cspom.util.BitVector
+import bitvectors.BitVector
 
 trait BC extends Constraint {
   def shave(state: ProblemState): Outcome = ???

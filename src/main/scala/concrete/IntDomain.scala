@@ -1,7 +1,7 @@
 package concrete
 
 import concrete.util.Interval
-import cspom.util.BitVector
+import bitvectors.BitVector
 import cspom.util.Finite
 import cspom.util.FiniteIntInterval
 import cspom.util.Infinitable

@@ -28,7 +28,7 @@ import concrete.constraint.Constraint
 import concrete.constraint.Removals
 import concrete.constraint.StatefulConstraint
 import cspom.Statistic
-import cspom.util.BitVector
+import bitvectors.BitVector
 
 object ReduceableExt {
   @Statistic

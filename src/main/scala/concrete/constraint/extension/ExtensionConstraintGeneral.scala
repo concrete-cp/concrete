@@ -24,7 +24,7 @@ import concrete.Outcome
 import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Residues
-import cspom.util.BitVector
+import bitvectors.BitVector
 
 final class ExtensionConstraintGeneral(
   var matrix: Matrix,

@@ -6,7 +6,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 import concrete.generator.ACBC
 import concrete.constraint.extension.BinaryExt
-import cspom.util.BitVector
+import bitvectors.BitVector
 
 object Eq {
   def apply(neg: Boolean, x: Variable, b: Int, y: Variable): ACBC =

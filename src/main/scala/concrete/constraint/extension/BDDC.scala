@@ -9,7 +9,7 @@ import concrete.constraint.Constraint
 import concrete.constraint.Removals
 import concrete.constraint.StatefulConstraint
 import concrete.util.SparseSet
-import cspom.util.BitVector
+import bitvectors.BitVector
 
 /* MDDRelation comes with its own timestamp */
 class BDDC(_scope: Array[Variable], val bdd: BDDRelation)

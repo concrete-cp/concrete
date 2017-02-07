@@ -1,6 +1,6 @@
 package concrete.util
 
-import cspom.util.BitVector
+import bitvectors.BitVector
 
 final class SetWithMax(length: Int) extends collection.mutable.Set[Int] {
   var max = length - 1

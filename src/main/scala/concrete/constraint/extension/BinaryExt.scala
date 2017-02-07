@@ -20,7 +20,7 @@
 package concrete.constraint.extension;
 
 import concrete.Variable
-import cspom.util.BitVector
+import bitvectors.BitVector
 import cspom.Statistic
 import concrete.constraint.Removals
 import concrete.ProblemState

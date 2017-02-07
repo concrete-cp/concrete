@@ -1,6 +1,6 @@
 package concrete
 
-import cspom.util.BitVector
+import bitvectors.BitVector
 import concrete.util.Interval
 import com.typesafe.scalalogging.LazyLogging
 import concrete.util.CacheOne

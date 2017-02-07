@@ -1,7 +1,7 @@
 package concrete
 package constraint;
 
-import cspom.util.BitVector
+import bitvectors.BitVector
 
 trait Removals extends Constraint with AdviseCounts {
 

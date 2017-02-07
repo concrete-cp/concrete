@@ -8,7 +8,7 @@ import concrete.ProblemState
 import concrete.constraint.StatefulConstraint
 import concrete.util.Interval
 import concrete.util.Math
-import cspom.util.BitVector
+import bitvectors.BitVector
 import concrete.Outcome
 
 object IncrementalBoundPropagation {

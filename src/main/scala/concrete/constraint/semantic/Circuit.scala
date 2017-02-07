@@ -2,7 +2,7 @@ package concrete
 package constraint
 package semantic
 
-import cspom.util.BitVector
+import bitvectors.BitVector
 import scala.collection.mutable.ArrayBuffer
 
 object Circuit {

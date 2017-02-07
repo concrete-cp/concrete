@@ -7,7 +7,7 @@ import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.StatefulConstraint
 import concrete.constraint.Removals
-import cspom.util.BitVector
+import bitvectors.BitVector
 
 final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x ++ y)
     with StatefulConstraint[(Int, Int)] with Removals {

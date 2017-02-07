@@ -1,6 +1,6 @@
 package concrete.constraint.extension;
 
-import cspom.util.BitVector;
+import bitvectors.BitVector;
 import com.typesafe.scalalogging.LazyLogging
 
 final class Matrix2D(xSize: Int, ySize: Int, val xOffset: Int, val yOffset: Int, initialState: Boolean) extends Matrix with LazyLogging {

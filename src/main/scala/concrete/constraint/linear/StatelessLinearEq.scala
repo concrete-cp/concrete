@@ -9,7 +9,7 @@ import concrete.Outcome
 import concrete.ProblemState
 import concrete.Variable
 import concrete.util.Interval
-import cspom.util.BitVector
+import bitvectors.BitVector
 
 object StatelessLinearEq {
   def apply(constant: Int, factors: Array[Int], scope: Array[Variable]) = {

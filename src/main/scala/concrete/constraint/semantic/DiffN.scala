@@ -9,7 +9,7 @@ import com.github.davidmoten.rtree.geometry.Geometry
 import com.github.davidmoten.rtree.geometry.Rectangle
 
 import concrete.heuristic.value.Lexico
-import cspom.util.BitVector
+import bitvectors.BitVector
 import cspom.CSPOM
 import cspom.variable.IntVariable
 import cspom.CSPOMConstraint

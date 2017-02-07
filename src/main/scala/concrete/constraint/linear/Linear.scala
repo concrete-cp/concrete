@@ -5,7 +5,7 @@ import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.ProblemState
 import concrete.Domain
-import cspom.util.BitVector
+import bitvectors.BitVector
 import concrete.Outcome
 
 object Linear {

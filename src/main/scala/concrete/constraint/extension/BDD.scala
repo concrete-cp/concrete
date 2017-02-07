@@ -5,7 +5,7 @@ import scala.collection.mutable.HashMap
 import concrete.util.TSCache
 import cspom.extension.IdMap
 import concrete.util.SetWithMax
-import cspom.util.BitVector
+import bitvectors.BitVector
 
 object BDD {
   def apply(t: Traversable[List[Int]]): BDD = {

@@ -5,7 +5,7 @@ import concrete.constraint.Constraint
 import concrete.ProblemState
 import concrete.Outcome
 import concrete.constraint.StatefulConstraint
-import cspom.util.BitVector
+import bitvectors.BitVector
 import concrete.constraint.Removals
 
 case class Boxed[A](bv: A)

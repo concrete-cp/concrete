@@ -2,7 +2,7 @@ package concrete
 
 import concrete.util.Interval
 import cspom.Statistic
-import cspom.util.BitVector
+import bitvectors.BitVector
 import scala.collection.TraversableView
 
 object Domain {

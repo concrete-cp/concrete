@@ -5,7 +5,7 @@ import concrete.constraint.Removals
 import concrete.Contradiction
 import concrete.Variable
 import concrete.ProblemState
-import cspom.util.BitVector
+import bitvectors.BitVector
 import concrete.Outcome
 import concrete.Domain
 import concrete.util.Interval

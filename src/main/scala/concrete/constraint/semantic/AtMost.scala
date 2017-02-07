@@ -9,7 +9,7 @@ import concrete.Variable
 import concrete.constraint.Constraint
 import concrete.constraint.Removals
 import concrete.constraint.StatefulConstraint
-import cspom.util.BitVector
+import bitvectors.BitVector
 
 class AtMost(val result: Variable, val value: Variable,
   val vars: Array[Variable])

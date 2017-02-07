@@ -2,7 +2,7 @@ package concrete
 
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
-import cspom.util.BitVector
+import bitvectors.BitVector
 
 class BitVectorDomainTest extends FlatSpec with Matchers {
 

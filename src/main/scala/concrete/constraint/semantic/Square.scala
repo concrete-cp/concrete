@@ -2,7 +2,7 @@ package concrete
 package constraint
 package semantic;
 
-import cspom.util.BitVector
+import bitvectors.BitVector
 
 final class SquareBC(val x: Variable, val y: Variable)
     extends Constraint(Array(x, y)) with BC {

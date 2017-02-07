@@ -3,7 +3,7 @@ package constraint
 package semantic
 
 import scala.collection.mutable.HashMap
-import cspom.util.BitVector
+import bitvectors.BitVector
 
 object Element {
   def apply(result: Variable, index: Variable, varsIdx: Seq[(Int, Variable)]) = {

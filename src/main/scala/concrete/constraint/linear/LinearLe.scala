@@ -9,7 +9,7 @@ import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.Removals
 import cspom.Statistic
-import cspom.util.BitVector
+import bitvectors.BitVector
 import concrete.Domain
 import concrete.util.Interval
 

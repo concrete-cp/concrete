@@ -3,7 +3,7 @@ package concrete.constraint.linear
 import concrete.util.Interval
 import concrete.Domain
 import concrete.ProblemState
-import cspom.util.BitVector
+import bitvectors.BitVector
 import Linear.maxTimes
 import Linear.minTimes
 import concrete.util.Math

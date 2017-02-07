@@ -1,7 +1,7 @@
 package concrete
 package constraint;
 
-import cspom.util.BitVector
+import bitvectors.BitVector
 import scala.annotation.tailrec
 
 trait ResidueManager {

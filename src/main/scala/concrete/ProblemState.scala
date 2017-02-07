@@ -4,7 +4,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 import concrete.constraint.Constraint
 import concrete.constraint.StatefulConstraint
-import cspom.util.BitVector
+import bitvectors.BitVector
 import concrete.util.Interval
 import concrete.util.Vector
 import cspom.UNSATException

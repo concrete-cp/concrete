@@ -1,7 +1,7 @@
 package concrete
 
 import concrete.constraint.Constraint
-import cspom.util.BitVector
+import bitvectors.BitVector
 
 
 object EntailmentManagerLight {
