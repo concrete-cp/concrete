@@ -385,7 +385,7 @@ class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys:
 }
 
 object DiffN extends App {
-
+ // TODO: put this in tests
   @Statistic
   var treeQueries = 0L
 

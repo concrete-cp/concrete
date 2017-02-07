@@ -12,10 +12,6 @@ version := "3.2-SNAPSHOT"
 
 scalaVersion := "2.12.1"
 
-testOptions in Test <+= (target in Test) map {
-  t => Tests.Argument(TestFrameworks.ScalaTest, "-u", s"${t / "test-reports"}")
-}
-
 resolvers += Resolver.sonatypeRepo("snapshots")
 
 libraryDependencies ++= Seq(
@@ -27,9 +23,7 @@ libraryDependencies ++= Seq(
 	"com.typesafe" % "config" % "1.3.1",
 	//"org.apache.commons" % "commons-math3" % "3.6.1",
 	//"org.jcp" % "jsr331" % "1.1.1",
-	"org.scalatest" %% "scalatest" % "3.0.1" % "test",
-	"org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
-	"com.storm-enroute" %% "scalameter" % "0.8.2" % "test",
+
 	"com.github.davidmoten" % "rtree" % "0.7.6"
 	)
 
@@ -89,4 +83,15 @@ mappings in Universal ++= directory((resourceDirectory in Compile).value / "conf
 mappings in Universal ++= directory((resourceDirectory in Compile).value / "mzn_lib")
    
 
-// scapegoatVersion := "1.2.1"
+lazy val root = (project in file(".")).
+  configs(IntegrationTest).
+//  settings(commonSettings: _*).
+  settings(Defaults.itSettings: _*).
+  settings(
+    libraryDependencies ++= Seq(
+      "org.scalatest" %% "scalatest" % "3.0.1" % "it,test",
+	  "org.scalacheck" %% "scalacheck" % "1.13.4" % "it,test",
+	  "com.storm-enroute" %% "scalameter" % "0.8.2" % "it,test")
+    
+  )
+ 

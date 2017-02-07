@@ -31,7 +31,7 @@ class BitVectorDomainTest extends FlatSpec with Matchers {
     bv2.removeTo(20).view should contain theSameElementsAs Seq(60, 80, 110)
 
     val bv3 = IntDomain.ofBitVector(10, BitVector(Seq(0, 10, 20, 30)), 4)
-    println(bv3)
+    //println(bv3)
     val cleared = bv3.removeTo(20)
     cleared.view should contain theSameElementsAs Seq(30, 40)
 

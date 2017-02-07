@@ -1,31 +1,24 @@
-package concrete.longTest;
+package concrete
 
 import scala.collection.mutable.LinkedHashMap
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 import scala.util.Success
-
 import org.scalatest.FunSpec
 import org.scalatest.Inspectors
 import org.scalatest.Matchers
-
-import concrete.CSPOMSolver
-import concrete.ParameterManager
-import concrete.Solver
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.Bool2IntIsEq
 import concrete.generator.cspompatterns.ConcretePatterns
 import concrete.generator.cspompatterns.FZPatterns
 import concrete.generator.cspompatterns.XCSPPatterns
-import concrete.runner.FZConcrete
 import concrete.runner.XCSPConcrete
 import cspom.CSPOM
 import cspom.compiler.CSPOMCompiler
 import cspom.flatzinc.FlatZincFastParser
 import cspom.xcsp.XCSPParser
 import com.typesafe.scalalogging.LazyLogging
-import scala.concurrent.duration.Duration
 
 //import SolvingTest._
 
@@ -72,7 +65,7 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
     "e0ddr1-10-by-5-8.xml.xz" -> ((true, true)),
     "tsp-20-1_ext.xml.xz" -> ((true, true)),
     "test.fzn.xz" -> ((true, false)),
-    "queens-12.xml.xz" -> ((14200, false))) .slice(5, 6)
+    "queens-12.xml.xz" -> ((14200, false))) // .slice(5, 6)
 
   val parameters = Nil
 

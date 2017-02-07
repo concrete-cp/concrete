@@ -1,10 +1,7 @@
-package concrete.longTest;
+package concrete
 
 import org.scalatest.FlatSpec
 import com.typesafe.scalalogging.LazyLogging
-import concrete.Contradiction
-import concrete.ParameterManager
-import concrete.ProblemState
 import concrete.filter.ACC
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns

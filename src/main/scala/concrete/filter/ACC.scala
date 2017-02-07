@@ -23,7 +23,7 @@ import concrete.InsideRemoval
 
 object ACC extends LazyLogging {
   def control(problem: Problem, state: ProblemState): Option[Constraint] = {
-    logger.warn("Control !")
+    logger.info("Control !")
 
     problem.constraints.find(c => !c.controlRevision(state))
   }
@@ -63,10 +63,9 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     advises.clear()
     queue.clear()
 
-    println("reduce all")
+    //println("reduce all")
     
     for (c <- problem.constraints) {
-      if (c.scope.exists(_.name == "X_INTRODUCED_1192")) println(c + " " + states.isEntailed(c))
       if (!states.isEntailed(c)) {
 
         adviseAndEnqueue(c, states)

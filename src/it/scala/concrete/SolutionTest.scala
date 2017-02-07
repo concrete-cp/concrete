@@ -1,27 +1,14 @@
-package concrete.longTest
+package concrete
 
 import org.scalatest.FlatSpec
-
-import concrete.ParameterManager
-import concrete.ProblemState
-import concrete.constraint.Constraint
-import concrete.filter.ACC
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.Bool2IntIsEq
 import concrete.generator.cspompatterns.ConcretePatterns
 import concrete.generator.cspompatterns.FZPatterns
-
 import cspom.CSPOM
 import cspom.compiler.CSPOMCompiler
 import scala.util.Random
-import cspom.xcsp.XCSP3Parser
-import concrete.generator.cspompatterns.XCSPPatterns
-import cspom.variable.IntVariable
-
-import CSPOM.ctr
-import concrete.Solver
-import concrete.MAC
-import concrete.Assignment
+import concrete.constraint.Constraint
 
 class SolutionTest extends FlatSpec {
 

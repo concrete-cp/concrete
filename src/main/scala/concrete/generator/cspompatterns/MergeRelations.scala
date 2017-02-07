@@ -30,7 +30,7 @@ object MergeRelations extends ConstraintCompiler {
     // TODO : explodes. Disabled for now
     val (init, cons) = data
     
-    println(s"merging ${cons.mkString("\n")}")
+    //println(s"merging ${cons.mkString("\n")}")
     
     val relations = cons.map { c => c.getParam[MDD[Any]]("relation").get }
 

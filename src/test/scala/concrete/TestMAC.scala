@@ -1,16 +1,14 @@
 package concrete
 
-import scala.annotation.varargs
-import scala.runtime.ZippedTraversable3.zippedTraversable3ToTraversable
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 import org.scalatest.Tag
+
 import concrete.constraint.linear.Eq
 import concrete.constraint.semantic.AllDifferentBC
+import concrete.constraint.semantic.Neq
 import concrete.heuristic.value.MedValue
 import cspom.StatisticsManager
-import concrete.constraint.semantic.Neq
-import concrete.constraint.semantic.AllDifferent2C
 
 object SlowTest extends Tag("concrete.SlowTest")
 

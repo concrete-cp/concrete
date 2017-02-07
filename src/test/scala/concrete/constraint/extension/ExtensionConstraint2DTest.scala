@@ -10,7 +10,6 @@ import concrete.constraint.AdviseCount
 import cspom.xcsp.ConstraintParser
 import concrete.generator.ExtensionGenerator
 import concrete.generator.ExtensionGenerator
-import concrete.ParameterManager
 import org.scalatest.Inspectors
 import concrete.generator.ProblemGenerator
 
@@ -97,7 +96,7 @@ final class ExtensionConstraint2DTest extends FlatSpec with Inspectors {
 
     constraint.adviseAll(ps)
     val mod = constraint.revise(ps)
-    println(mod.dom(v0))
+    //println(mod.dom(v0))
     forAll(mod.dom(v0).view) { v => assert(cspomRel.contains(Seq(v, a))) }
 
   }
