@@ -1,22 +1,15 @@
 package concrete.generator.cspompatterns
 
-import concrete.CSPOMDriver.linear
 import cspom.CSPOM
 import cspom.CSPOM.constant
 import cspom.CSPOM.constantSeq
 import cspom.CSPOM.seq2CSPOMSeq
 import cspom.CSPOMConstraint
-import cspom.compiler.ConstraintCompiler
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.compiler.Delta
 import cspom.compiler.GlobalCompiler
 import cspom.variable.BoolVariable
-import cspom.variable.IntExpression
 import cspom.variable.SimpleExpression
-import cspom.variable.CSPOMSeq
-import cspom.variable.CSPOMExpression
-import javafx.beans.binding.BooleanExpression
-import cspom.variable.BoolExpression
 
 object XCSPPatterns {
   def apply() = Seq(

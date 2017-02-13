@@ -30,10 +30,10 @@ final class AbsAC(val result: Variable, val v0: Variable) extends Constraint(Arr
 
   def advise(ps: ProblemState, event: Event, p: Int) = {
     val rSize = ps.card(result) * 3 / 2
-    if (rSize > 200) { -1 }
+    if (rSize > 200) { -2 }
     else {
       val eval = rSize * ps.card(v0)
-      if (eval > 500) -1 else eval
+      if (eval > 500) -2 else eval
     }
 
   }

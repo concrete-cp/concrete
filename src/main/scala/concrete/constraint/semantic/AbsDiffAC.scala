@@ -68,7 +68,12 @@ final class AbsDiffAC(val result: Variable, val v0: Variable, val v1: Variable, 
     val d0 = ps.dom(result).size
     val d1 = ps.dom(v0).size
     val d2 = ps.dom(v1).size
-    d0 * d1 + d0 * d2 + d1 * d2;
+    val eval = d0 * d1 + d0 * d2 + d1 * d2
+    if (skip(ps, eval)) {
+      -2
+    } else {
+      eval
+    }
   }
 
   def simpleEvaluation = 2

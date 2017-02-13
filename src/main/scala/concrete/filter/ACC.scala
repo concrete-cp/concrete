@@ -64,7 +64,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     queue.clear()
 
     //println("reduce all")
-    
+
     for (c <- problem.constraints) {
       if (!states.isEntailed(c)) {
 
@@ -127,6 +127,8 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
       val c = constraints(i)
       val positions = modified.positionInConstraint(i)
 
+      logger.trace(s"$modified at [${positions.mkString(", ")}]: enqueuing ${c.id}. ${c.toString(states)}")
+
       if (positions.length > 1) {
         //println(s"$modified at ${positions.toSeq}: enqueuing ${c.toString(states)}")
         val a = c.adviseArray(states, event, positions)
@@ -153,7 +155,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     if (queue.isEmpty) {
       assert {
         val errors = ACC.control(problem, s)
-        errors.foreach(c => logger.error(s"ACC control failed on ${c.toString(s)}"))
+        errors.foreach(c => logger.error(s"ACC control failed on ${c.id}. ${c.toString(s)}"))
         errors.isEmpty
       }
       s
@@ -172,8 +174,8 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
             c
           }
 
-          for (l <- contradictionListener) l(c)
-          c
+          for (l <- contradictionListener) l(nc)
+          nc
 
         case newState: ProblemState =>
           if (newState.domains ne s.domains) {

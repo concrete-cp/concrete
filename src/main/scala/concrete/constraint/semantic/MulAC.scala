@@ -1,11 +1,11 @@
 package concrete.constraint.semantic;
 
-import concrete.constraint.Constraint
-import concrete.constraint.Residues
 import concrete.Domain
+import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.BCCompanion
-import concrete.ProblemState
+import concrete.constraint.Constraint
+import concrete.constraint.Residues
 
 /**
  * Contrainte V0 = V1 * V2.
@@ -73,7 +73,7 @@ final class MulAC(val result: Variable, val v0: Variable, val v1: Variable, val 
     val d1 = ps.card(v0)
     val d2 = ps.card(v1)
     val e = d0 * d1 + d0 * d2 + d1 * d2
-    if (skip(ps, e)) -1 else e
+    if (skip(ps, e)) -2 else e
   }
 
   val simpleEvaluation = 2

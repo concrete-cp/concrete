@@ -28,11 +28,11 @@ case class Task(d: Variable, h: Variable, slb: Int, dlb: Int, eub: Int, hlb: Int
  */
 
 class CumulativeEnergy(s: Array[Variable], d: Array[Variable], h: Array[Variable], b: Variable) extends Constraint(s ++ d ++ h :+ b)
-    with BC {
+    with BC with CumulativeChecker {
 
+  def nbTasks = s.length
+  
   def advise(problemState: ProblemState, pos: Int): Int = arity * arity
-
-  def check(tuple: Array[Int]): Boolean = ???
 
   def init(ps: ProblemState): Outcome = ps
 

@@ -236,19 +236,20 @@ case class ProblemState(
   def updateDomNonEmpty(variable: Variable, newDomain: Domain): ProblemState = {
 
     val oldDomain = dom(variable)
-    if (oldDomain eq newDomain) {
+    assert(newDomain subsetOf oldDomain, s"replacing $oldDomain with $newDomain: not a subset!")
+    if (oldDomain.size == newDomain.size) {
+      assert(oldDomain.subsetOf(newDomain), s"replacing $oldDomain with $newDomain: same size but not equal")
       this
     } else {
-      assert(newDomain.size < oldDomain.size, s"replacing $oldDomain with $newDomain, same size but different instance")
-      assert(newDomain subsetOf oldDomain)
-      assert(!oldDomain.isInstanceOf[BooleanDomain] || newDomain.isInstanceOf[BooleanDomain])
-      assert(!oldDomain.isInstanceOf[IntDomain] || newDomain.isInstanceOf[IntDomain])
+      assert(newDomain.size < oldDomain.size, s"replacing $oldDomain with $newDomain: domain size seems to have increased")
+      assert(!oldDomain.isInstanceOf[BooleanDomain] || newDomain.isInstanceOf[BooleanDomain], s"replaced $oldDomain with $newDomain: type changed")
+      //assert(!oldDomain.isInstanceOf[IntDomain] || newDomain.isInstanceOf[IntDomain], s"replaced $oldDomain with $newDomain: type changed")
       updateDomNonEmptyNoCheck(variable, newDomain)
     }
   }
 
   def updateDomNonEmptyNoCheck(variable: Variable, newDomain: Domain): ProblemState = {
-    require(newDomain.nonEmpty)
+    assert(newDomain.nonEmpty)
     assert(dom(variable) ne newDomain)
     val id = variable.id
     assert(id >= 0 || (dom(variable) eq newDomain), s"$variable updated to $newDomain is not a problem variable")

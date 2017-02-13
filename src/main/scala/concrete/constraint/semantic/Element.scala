@@ -69,7 +69,7 @@ class ElementWatch(val result: Variable,
   /**
    * For each value v in result, contains an index i for which vars(i) may contain v
    */
-  private val resultWatches = new HashMap[Int, Int]
+  private[semantic] val resultWatches = new HashMap[Int, Int]
 
   /**
    * For each index i, contains a value "v" for which result and vars(i) may contain v
@@ -79,12 +79,25 @@ class ElementWatch(val result: Variable,
   /**
    * For each variable in vars, counts the number of current resultWatches
    */
-  private val watched = Array.fill(vars.length)(0)
+  private[semantic] val watched = Array.fill(vars.length)(0)
 
-  private val pos2vars = {
-    val varsIndices = vars.zipWithIndex.toMap
-    Array.tabulate(arity)(i => varsIndices.getOrElse(scope(i), -1))
+  private val pos2vars = Array.fill(arity)(-1) //new Array[Int](arity)
+
+  fillPos2Vars(2, 0)
+
+  private def fillPos2Vars(scopeI: Int, varsI: Int): Unit = {
+    if (scopeI < arity) {
+      if (vars(varsI) eq null) {
+        fillPos2Vars(scopeI, varsI + 1)
+      } else {
+        assert(scope(scopeI) == vars(varsI))
+        pos2vars(scopeI) = varsI
+        fillPos2Vars(scopeI + 1, varsI + 1)
+      }
+    }
   }
+
+  assert((0 until arity).forall(i => pos2vars(i) < 0 || scope(i) == vars(pos2vars(i))))
 
   private lazy val vars2pos = {
     val scopeIndices = scope.zipWithIndex.drop(2).toMap
@@ -99,13 +112,22 @@ class ElementWatch(val result: Variable,
   }
 
   def toString(ps: ProblemState, consistency: String): String = {
-    s"${result.toString(ps)} =$consistency= (${index.toString(ps)})th of ${
+    s"${result.toString(ps)} =$consistency= ${index.toString(ps)}th of ${
       vars.toSeq.map {
         case null => "{}"
         case v => v.toString(ps)
       }
     }"
   }
+
+  //  def toString(ps: ProblemState, consistency: String): String = {
+  //    s"${ps.dom(result)} =$consistency= ${ps.dom(index)}th of ${
+  //      vars.toSeq.map {
+  //        case null => "{}"
+  //        case v => ps.dom(v)
+  //      }
+  //    }"
+  //  }
 
   def getEvaluation(ps: ProblemState): Int = {
     card * ps.card(index)
@@ -129,22 +151,16 @@ class ElementWatch(val result: Variable,
     }
   }
 
-  private def reviseAssignedIndex(ps: ProblemState, index: Int, resultDom: Domain): Outcome = {
+  private def reviseAssignedIndex(ps: ProblemState, index: Int): Outcome = {
     val selectedVar = vars(index)
     //println(selectedVar.toString(ps))
-    val intersect = ps.dom(selectedVar) & resultDom
+    val intersect = ps.dom(selectedVar) & ps.dom(result)
 
-    //println(s"${ps.dom(selectedVar)} & $resultDom = $intersect")
+    // println(s"${ps.dom(selectedVar)} & $resultDom = $intersect")
 
     ps
       .updateDom(selectedVar, intersect)
-      .andThen { ps =>
-        if (intersect.size < resultDom.size) {
-          ps.updateDom(result, intersect)
-        } else {
-          ps
-        }
-      }
+      .updateDom(result, intersect)
   }
 
   private def reviseResult(ps: ProblemState, index: Domain): Outcome = {
@@ -189,8 +205,11 @@ class ElementWatch(val result: Variable,
 
   def revise(ps: ProblemState, mod: BitVector): Outcome = {
 
+    //println(s"revising ${toString(ps)}")
+    //println(s"constraint $id has mod $mod, watches $resultWatches and [${watched.mkString(", ")}]")
+
     var m = mod.nextSetBit(0)
-    require(m >= 0)
+    assert(m >= 0)
     var rResult = false
     var rIndex = false
 
@@ -216,10 +235,11 @@ class ElementWatch(val result: Variable,
       ps
     }).andThen { ps =>
 
+      // Fetch new result domain in case it is the same variable as index 
       val index = ps.dom(this.index)
 
       if (index.isAssigned) {
-        reviseAssignedIndex(ps, index.singleValue, resultDom)
+        reviseAssignedIndex(ps, index.singleValue)
       } else if (rResult) {
         reviseResult(ps, index)
       } else {

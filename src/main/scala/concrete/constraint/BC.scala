@@ -3,7 +3,7 @@ package constraint
 
 import bitvectors.BitVector
 
-trait BC extends Constraint {
+trait BC extends Constraint with FixPoint {
   def shave(state: ProblemState): Outcome = ???
 
   def revise(state: ProblemState): Outcome = {
@@ -11,73 +11,7 @@ trait BC extends Constraint {
 
   }
 
-  @annotation.tailrec
-  final def fixPoint(ps: ProblemState, shave: ProblemState => Outcome): Outcome = {
-    shave(ps) match {
-      case c: Contradiction => c
-      case ns: ProblemState =>
-        if (ns eq ps) {
-          ns
-          // TODO       } else if (ns.isEntailed(this)) {
-          //          ns
-        } else {
-          fixPoint(ns, shave)
-        }
-    }
-  }
 
-  def fixPointM(ps: ProblemState, shavers: IndexedSeq[ProblemState => Outcome]): Outcome = {
-    fixPoint(ps, shavers.indices, (ps, i) => shavers(i)(ps))
-  }
-
-  def fixPoint(ps: ProblemState, range: Range, shave: (ProblemState, Int) => Outcome): Outcome = {
-    //println("start")
-    if (range.isEmpty) ps
-    else {
-      val it = Iterator.continually(range).flatten
-      var i = it.next()
-      var lastModified = i
-      var state = shave(ps, i)
-
-      i = it.next()
-      while (i != lastModified && state.isState) {
-        val ns = shave(state.toState, i)
-        if (ns ne state) {
-          lastModified = i
-          state = ns
-        }
-        i = it.next()
-      }
-      //println("contradiction")
-      state
-    }
-    //    @annotation.tailrec
-    //    def loop(state: ProblemState, i: Int, lastModified: Int): Outcome = {
-    //      if (i == lastModified) {
-    //        state
-    //      } else {
-    //        shave(state, i) match {
-    //          case Contradiction => Contradiction
-    //          case ns: ProblemState =>
-    //            if (ns ne state) {
-    //              loop(ns, it.next, i)
-    //            } else {
-    //              loop(ns, it.next, lastModified)
-    //            }
-    //        }
-    //      }
-    //    }
-    //
-    //    if (it.hasNext) {
-    //      val first = it.next
-    //      shave(ps, first).andThen { ps =>
-    //        loop(ps, it.next, first)
-    //      }
-    //    } else {
-    //      ps
-    //    }
-
-  }
 
   def advise(ps: ProblemState, event: Event, pos: Int) = if (event <= BoundRemoval) advise(ps, pos) else -1
   def advise(ps: ProblemState, pos: Int): Int

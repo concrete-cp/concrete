@@ -56,22 +56,42 @@ class IntRectangle(
 
 case class RectangleBounds(minDx: Int, minDy: Int, minX: Int, maxX: Int, minY: Int, maxY: Int) extends Ordered[RectangleBounds] {
   def minSurface = minDx * minDy
-  
+
   def xSpan = Interval(minX, maxX)
   def ySpan = Interval(minY, maxY)
-  
+
   def availableSurface = (maxX - minX) * (maxY - minY)
   val coef = minSurface.toDouble / availableSurface
 
   def compare(t: RectangleBounds) = java.lang.Double.compare(coef, t.coef)
 }
 
-class DiffNSpaceChecker(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys: Array[Variable]) extends Constraint(xs ++ ys ++ dxs ++ dys) {
-  def advise(ps: ProblemState, event: Event, pos: Int) = if (event <= BoundRemoval) xs.length + ys.length else -1
-  def check(tuple: Array[Int]): Boolean = ???
+trait DiffNChecker {
+
+  def nbRectangles: Int
+
+  def check(tuple: Array[Int]) = {
+    val Seq(x, y, dx, dy) = tuple.grouped(nbRectangles).toSeq
+
+    (0 until nbRectangles).combinations(2).forall {
+      case Seq(i, j) =>
+        x(i) + dx(i) <= x(j) || y(i) + dy(i) <= y(j) ||
+          x(j) + dx(j) <= x(i) || y(j) + dy(j) <= y(i)
+    }
+  }
+
+}
+
+class DiffNSpaceChecker(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys: Array[Variable]) extends Constraint(xs ++ ys ++ dxs ++ dys)
+    with DiffNChecker {
+
+  assert(ys.length == nbRectangles && dxs.length == nbRectangles && dys.length == nbRectangles)
+
+  def advise(ps: ProblemState, event: Event, pos: Int) = if (event <= BoundRemoval) nbRectangles else -1
+  def nbRectangles = xs.length
   def init(ps: ProblemState): Outcome = ps
   def revise(ps: ProblemState): Outcome = {
-    val rectangles = Array.tabulate(xs.length) { i =>
+    val rectangles = Array.tabulate(nbRectangles) { i =>
       val domX = ps.dom(xs(i))
       val domY = ps.dom(ys(i))
       val dx = ps.dom(dxs(i))
@@ -81,7 +101,6 @@ class DiffNSpaceChecker(xs: Array[Variable], ys: Array[Variable], dxs: Array[Var
 
     scala.util.Sorting.quickSort(rectangles)
 
-    
     var xSpan = rectangles(0).xSpan
     var ySpan = rectangles(0).ySpan
 
@@ -111,9 +130,10 @@ class DiffNSpaceChecker(xs: Array[Variable], ys: Array[Variable], dxs: Array[Var
 }
 
 class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys: Array[Variable]) extends Constraint(xs ++ ys ++ dxs ++ dys)
-    with StatefulConstraint[(RTree[Int, IntRectangle], Vector[Option[Entry[Int, IntRectangle]]])] with BCRemovals {
-  def getEvaluation(problemState: ProblemState): Int = xs.length * xs.length + ys.length * ys.length
-  def check(tuple: Array[Int]): Boolean = ???
+    with StatefulConstraint[(RTree[Int, IntRectangle], Vector[Option[Entry[Int, IntRectangle]]])] with BCRemovals with DiffNChecker {
+  assert(ys.length == nbRectangles && dxs.length == nbRectangles && dys.length == nbRectangles)
+  def getEvaluation(problemState: ProblemState): Int = nbRectangles
+  def nbRectangles = xs.length
 
   def init(ps: ProblemState): concrete.Outcome = {
     val map = Vector.tabulate(xs.length)(i => mandatory(ps, i).map(Entry.entry(i, _)))
@@ -137,8 +157,8 @@ class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys:
 
     {
       // Update RTree
-      val xyRect = mod | mod.shift(-2 * xs.length)
-      val modRectangles = xyRect | xyRect.shift(-xs.length)
+      val xyRect = mod | mod.shift(-2 * nbRectangles)
+      val modRectangles = xyRect | xyRect.shift(-nbRectangles)
       //println(s"modified $mod, so rectangles $modRectangles")
 
       var i = modRectangles.nextSetBit(0)
@@ -385,7 +405,7 @@ class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys:
 }
 
 object DiffN extends App {
- // TODO: put this in tests
+  // TODO: put this in tests
   @Statistic
   var treeQueries = 0L
 

@@ -163,7 +163,7 @@ abstract class Constraint(val scope: Array[Variable])
   }
 
   final def adviseAll(problemState: ProblemState): Int = {
-    var max = -1
+    var max = Int.MinValue
     var i = arity - 1
     while (i >= 0) {
       max = math.max(max, advise(problemState, Assignment, i))
@@ -290,12 +290,13 @@ abstract class Constraint(val scope: Array[Variable])
   }
 
   def controlRevision(ps: ProblemState): Boolean = {
-    val adv = adviseAll(ps)
+
     if (!controlAssignment(ps)) {
       logger.error(s"Assignment of ${toString(ps)} is inconsistent")
       false
     } else {
-      revise(ps) match {
+      val adv = adviseAll(ps)
+      adv == -2 || (revise(ps) match {
         case Contradiction(cause, from, to) =>
           logger.error(s"${toString(ps)} is not consistent, $cause ($from) lead to $to")
           false
@@ -309,9 +310,9 @@ abstract class Constraint(val scope: Array[Variable])
           } else {
             true
           }
-      }
-    }
+      })
 
+    }
   }
 
   //def entailable: Boolean = true

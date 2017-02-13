@@ -2,12 +2,10 @@ package concrete.generator.cspompatterns
 
 import cspom.CSPOMConstraint
 import cspom.compiler.VariableCompiler
-import cspom.variable.IntExpression.implicits.arithmetics
-import cspom.variable.IntExpression.implicits.ranges
+
 import cspom.variable.IntExpression
 import cspom.variable.SimpleExpression
 import cspom.util.IntInterval
-import cspom.variable.CSPOMSeq
 
 object MinDomains extends VariableCompiler('min) {
 

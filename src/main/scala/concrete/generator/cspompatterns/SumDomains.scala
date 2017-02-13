@@ -16,9 +16,7 @@ import cspom.variable.CSPOMSeq
 import cspom.variable.IntExpression
 import cspom.util.IntervalsArithmetic.Arithmetics
 import cspom.util.IntervalsArithmetic.RangeArithmetics
-import cspom.variable.IntVariable
 import cspom.util.RangeSet
-import cspom.util.Infinitable
 import com.typesafe.scalalogging.LazyLogging
 
 object SumDomains extends VariableCompiler('sum) with LazyLogging {

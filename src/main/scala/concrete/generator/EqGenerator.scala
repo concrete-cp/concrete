@@ -5,19 +5,10 @@ import com.typesafe.scalalogging.LazyLogging
 
 import Generator.cspom2concrete1D
 import concrete.constraint.Constraint
-import concrete.constraint.ReifiedConstraint
-import concrete.constraint.linear.Eq
-import concrete.constraint.linear.EqACFast
-import concrete.constraint.linear.LinearEq
+import concrete.constraint.linear.EqCReif
+import concrete.constraint.linear.EqReif
 import concrete.constraint.semantic.Neq
 import cspom.CSPOMConstraint
-import cspom.UNSATException
-import concrete.constraint.linear.EqReif
-import concrete.constraint.linear.SumMode
-import concrete.constraint.linear.SumEQ
-import concrete.constraint.linear.Linear
-import concrete.constraint.linear.SumNE
-import concrete.constraint.linear.EqCReif
 
 final class EqGenerator(pm: ParameterManager) extends Generator with LazyLogging {
 

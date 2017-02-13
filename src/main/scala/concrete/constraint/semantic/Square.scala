@@ -89,8 +89,12 @@ final class SquareAC(val x: Variable, val y: Variable)
 
   def getEvaluation(ps: ProblemState) = {
     val e = ps.card(x) + ps.card(y)
-    if (skip(ps, e)) -1 else e
+
+    if (skip(ps, e)) {
+      -2
+    } else { e }
   }
+
   val simpleEvaluation = 2
 }
 

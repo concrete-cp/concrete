@@ -29,7 +29,6 @@ import scala.annotation.tailrec
 import concrete.heuristic.Branch
 import org.scalameter.Quantity
 import org.scalameter.Key
-import org.scalameter.Warmer
 import java.util.concurrent.TimeoutException
 import scala.annotation.elidable
 import concrete.heuristic.restart.Geometric
@@ -38,7 +37,6 @@ import concrete.heuristic.restart.RestartStrategy
 
 object MAC {
   def apply(prob: Problem, params: ParameterManager): MAC = {
-
     new MAC(prob, params, Heuristic.default(params, prob.variables.toArray))
   }
 }
@@ -65,6 +63,8 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
 
   private var restart = true
   private var firstRun = true
+
+  heuristic.applyListeners(this)
 
   @tailrec
   def mac(

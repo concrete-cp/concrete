@@ -7,7 +7,6 @@ import cspom.variable.CSPOMSeq
 import cspom.variable.BoolVariable
 import cspom.compiler.ConstraintCompiler
 import cspom.CSPOMConstraint
-import scala.reflect.runtime.universe
 
 object Lex extends ConstraintCompiler {
 

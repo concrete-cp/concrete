@@ -15,9 +15,37 @@ object BinPacking {
 }
 
 class BinPacking private (load: Array[Variable], offset: Int, assignments: Array[Variable], weight: Array[Int]) extends Constraint(load ++ assignments)
-    with BC {
-  def advise(ps: concrete.ProblemState, position: Int): Int = load.length + assignments.length
-  def check(tuple: Array[Int]): Boolean = ???
+    with FixPoint {
+
+  override def toString(ps: ProblemState): String = {
+    s"BinPacking(load = [${load.map(_.toString(ps)).mkString(", ")}], offset = $offset, assignments = [${assignments.map(_.toString(ps)).mkString(", ")}], weight = [${weight.mkString(", ")}])"
+  }
+
+  def advise(ps: concrete.ProblemState, event: Event, position: Int): Int = {
+    if (event <= BoundRemoval || position >= load.length) {
+      load.length + assignments.length
+    } else {
+      -1
+    }
+  }
+
+  def check(tuple: Array[Int]): Boolean = {
+    val (load, bin) = tuple.splitAt(this.load.length)
+    //val bin = tuple.slice(load.length, load.length + assignments.length)
+
+    assert(bin.length == assignments.length)
+
+    load.sum == weight.sum &&
+      (0 until bin.length).forall { i =>
+        offset <= bin(i) && bin(i) < load.length + offset
+      } &&
+      (0 until load.length).forall { b =>
+        val sum = Iterator.tabulate(bin.length) { i => if (bin(i) == b + offset) weight(i) else 0 }.sum
+        //println(s"$b: ${load(b)} = $sum")
+        load(b) == sum
+      }
+
+  }
 
   def init(ps: concrete.ProblemState): Outcome = {
     //    val c = ps.doms(load).map(_.last).max
@@ -124,7 +152,11 @@ class BinPacking private (load: Array[Variable], offset: Int, assignments: Array
     }
   }
 
-  override def shave(ps: ProblemState): Outcome = {
+  override def revise(ps: ProblemState): Outcome = {
+    fixPoint(ps, rev)
+  }
+
+  private def rev(ps: ProblemState): Outcome = {
     val (assigned, sumCandidates) = computeState(ps)
 
     // 1. Load Maintenance

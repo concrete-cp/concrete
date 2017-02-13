@@ -6,12 +6,10 @@ import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompiler
 import cspom.variable.BoolExpression
 import cspom.variable.SimpleExpression
-import cspom.variable.IntExpression
-import cspom.variable.BoolVariable
+
 import concrete.constraint.linear.SumEQ
 import concrete.generator.SumGenerator
 import cspom.variable.CSPOMSeq
-import concrete.constraint.linear.SumMode
 import CSPOM._
 
 /**

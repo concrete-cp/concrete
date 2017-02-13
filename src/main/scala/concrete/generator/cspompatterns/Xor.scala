@@ -6,14 +6,6 @@ import cspom.variable.BoolVariable
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.variable.SimpleExpression
 import CSPOM._
-import concrete.generator.SumGenerator
-import cspom.variable.BoolExpression
-import cspom.variable.IntExpression
-import concrete.constraint.linear.SumMode
-import concrete.constraint.linear.SumEQ
-import cspom.compiler.ConstraintCompiler
-import cspom.variable.CSPOMExpression
-import cspom.variable.CSPOMSeq
 
 /**
  * Reified XOR is converted to CNF :

@@ -33,7 +33,9 @@ final class WDeg(params: ParameterManager, decisionVariables: Array[Variable]) e
 }
 
 trait ConstraintWeighting extends VariableHeuristic {
-  override def applyListeners(s: MAC) = s.filter.contradictionListener = Some({
-    c: Contradiction => c.cause.get.weight += 1
-  })
+  override def applyListeners(s: MAC): Unit = {
+    s.filter.contradictionListener = Some({
+      c: Contradiction => c.cause.get.weight += 1
+    })
+  }
 }

@@ -3,6 +3,30 @@ package constraint
 package semantic
 
 import java.util.Arrays
+import com.typesafe.scalalogging.LazyLogging
+
+trait CumulativeChecker extends Constraint with LazyLogging {
+  def nbTasks: Int
+  def check(tuple: Array[Int]): Boolean = {
+
+    val s = tuple.slice(0, nbTasks)
+    val d = tuple.slice(nbTasks, 2 * nbTasks)
+    val r = tuple.slice(2 * nbTasks, 3 * nbTasks)
+    val b = tuple(3 * nbTasks)
+
+    // logger.warn(id + ". " + Seq(s, d, r).map(_.mkString("[", ", ", "]")).toString + " " + b);
+
+    val tasks = (0 until s.length).filter(i => r(i) > 0 && d(i) > 0)
+    tasks.isEmpty || {
+      val early = tasks.minBy(s)
+      val late = tasks.maxBy(i => s(i) + d(i))
+
+      (early to late).forall { t =>
+        b >= tasks.map(i => if (s(i) <= t && t < s(i) + d(i)) r(i) else 0).sum
+      }
+    }
+  }
+}
 
 /**
  * Requires that a set of tasks given by start times s, durations d, and
@@ -14,13 +38,19 @@ import java.util.Arrays
  */
 
 class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: Variable) extends Constraint(s ++ d ++ r :+ b)
-    with BC {
+    with BC with CumulativeChecker {
+
+  def nbTasks = s.length
 
   private var begin: Int = _
   private var profile: Array[Int] = _
 
+  override def toString(ps: ProblemState) = {
+    s"Cumulative(start = [${s.map(ps.dom).mkString(", ")}], dur = [${d.map(ps.dom).mkString(", ")}], res = [${r.map(ps.dom).mkString(", ")}], bound = ${ps.dom(b)})"
+  }
+
   def advise(problemState: ProblemState, pos: Int): Int = arity * arity
-  def check(tuple: Array[Int]): Boolean = ???
+
   def init(ps: ProblemState): Outcome = {
     val startDomains = ps.doms(s)
     begin = startDomains.map(_.head).min
@@ -73,9 +103,9 @@ class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: 
     var d = 0
     while (d < dBound) {
       if (profile(min + d - begin) + rBound > bound) {
-        min += d + 1
-        if (min > sDom.last) {
-          return Contradiction(s(i))
+        sDom.nextOption(min + d) match {
+          case Some(v) => min = v
+          case None => return Contradiction(s(i))
         }
         d = 0
       } else {
@@ -88,7 +118,7 @@ class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: 
     d = 0
     while (d < dBound) {
       if (profile(max - d - begin) + rBound > bound) {
-        max -= d + 1
+        max = sDom.prev(max - d - dBound + 1) + dBound - 1
         d = 0
       } else {
         d += 1
@@ -97,23 +127,23 @@ class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: 
 
     val filtered = sDom & (min, max - dBound + 1)
 
-    if (filtered.isEmpty) {
-      // Can happen if there are "holes" in the domains
-      Contradiction(s(i))
-    } else {
+    // Should no longer happen even if there are "holes" in the domains
+    assert(filtered.nonEmpty)
+    var minBound = state.dom(b).head
 
-      //require(filtered.nonEmpty, (profile.slice(sDom.head, sDom.last + dBound).mkString, sDom, dBound, rBound, bound, min, max - dBound))
-
-      for (i <- filtered.last until (filtered.head + dBound)) {
+    state.updateDomNonEmpty(s(i), filtered)
+      .fold(filtered.last until (filtered.head + dBound)) { (state, i) =>
         profile(i - begin) += rBound
+        if (profile(i - begin) > minBound) {
+          minBound = profile(i - begin)
+          state.removeUntil(b, profile(i - begin))
+        } else {
+          state
+        }
       }
-
-      state.updateDomNonEmpty(s(i), filtered)
-    }
   }
 
   override def revise(ps: ProblemState): Outcome = {
-
     buildProfile(ps)
       .andThen { ps =>
         fixPoint(ps, 0 until s.length, { (ps, i) => filter(ps, ps.dom(b).last, i) })

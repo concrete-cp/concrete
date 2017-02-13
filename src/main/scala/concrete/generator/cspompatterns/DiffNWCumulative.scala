@@ -6,9 +6,8 @@ import cspom.CSPOM._
 import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.compiler.Delta
-import cspom.variable.CSPOMSeq
 import cspom.variable.IntExpression
-import cspom.variable.SimpleExpression
+
 
 object DiffNWCumulative extends ConstraintCompilerNoData {
 
