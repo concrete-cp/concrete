@@ -17,15 +17,15 @@ class ProblemStateTest extends FlatSpec with Matchers {
 
     val problem = Problem(v1, v2)
     problem.addConstraint(c)
-    val state = problem.initState
+    val state = problem.initState.toState
     
-    assert(!state.isEntailed(c))
+    assert(!state.entailed.hasInactiveVar(c))
     
     state.activeConstraints(v1).traversable should contain theSameElementsAs Seq(0)
     state.activeConstraints(v2).traversable should contain theSameElementsAs Seq(0)
     
     val ent = state.entail(c)
-    assert(ent.isEntailed(c))
+    assert(ent.entailed.hasInactiveVar(c))
     
     assert(ent.activeConstraints(v1).isEmpty)
     assert(ent.activeConstraints(v2).isEmpty)

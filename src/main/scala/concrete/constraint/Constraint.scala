@@ -97,8 +97,7 @@ abstract class Constraint(val scope: Array[Variable])
 
   }
 
-  val positionInVariable: Array[Int] =
-    Array.fill(arity)(-1)
+  val positionInVariable: Array[Int] = Array.fill(arity)(-1)
 
   override def equals(o: Any) = o.asInstanceOf[Constraint].id == id
 
@@ -304,7 +303,7 @@ abstract class Constraint(val scope: Array[Variable])
           if (!scope.forall(v => ps.dom(v) eq finalState.dom(v))) {
             logger.error(s"${toString(ps)}} was revised (-> ${toString(finalState)})")
             false
-          } else if (!(adv < 0 || ps.isEntailed(this) == finalState.isEntailed(this))) {
+          } else if (!(adv < 0 || ps.entailed.hasInactiveVar(this) == finalState.entailed.hasInactiveVar(this))) {
             logger.error(s"${toString(ps)}: entailment detected")
             false
           } else {

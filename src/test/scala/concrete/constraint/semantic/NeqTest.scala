@@ -25,7 +25,7 @@ final class NeqTest extends FlatSpec with Matchers with PropertyChecks {
       revised.domainsOption shouldBe ps.domainsOption
 
       whenever(k > 0 || k < -4) {
-        assert(revised.isEntailed(c))
+        assert(revised.toState.entailed.hasInactiveVar(c))
       }
       //
       //      mod.dom(v0) should contain theSameElementsAs Seq(3)
@@ -50,7 +50,7 @@ final class NeqTest extends FlatSpec with Matchers with PropertyChecks {
       val mod = c.revise(ps)
 
       (ps.dom(v0).view.toSet -- mod.dom(v0).view) should contain theSameElementsAs Seq(-5 + k)
-      assert(mod.isEntailed(c))
+      assert(mod.toState.entailed.hasInactiveVar(c))
     }
 
     {
@@ -62,7 +62,7 @@ final class NeqTest extends FlatSpec with Matchers with PropertyChecks {
       val mod = c.revise(ps)
 
       (ps.dom(v0).view.toSet -- mod.dom(v0).view) should contain theSameElementsAs Seq(-5 - k)
-      assert(mod.isEntailed(c))
+      assert(mod.toState.entailed.hasInactiveVar(c))
     }
 
   }

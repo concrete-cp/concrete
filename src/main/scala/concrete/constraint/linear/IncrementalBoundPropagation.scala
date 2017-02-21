@@ -1,15 +1,14 @@
 package concrete.constraint.linear
 
-import IncrementalBoundPropagation.PFiltered
 import Linear.maxTimes
 import Linear.minTimes
+import bitvectors.BitVector
 import concrete.Domain
+import concrete.Outcome
 import concrete.ProblemState
 import concrete.constraint.StatefulConstraint
 import concrete.util.Interval
 import concrete.util.Math
-import bitvectors.BitVector
-import concrete.Outcome
 
 object IncrementalBoundPropagation {
   sealed trait POutcome

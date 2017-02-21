@@ -47,12 +47,25 @@ final class LinearLe(
   }
 
   override def revise(ps: ProblemState, mod: BitVector): Outcome = {
+
     val (doms, f, vars, max) = updateF(ps, mod)
     //if (bc) {
-      proceed(ps, doms, f, vars, max)
-//    } else {
-//      ps.updateState(this, (doms, f, vars, max))
-//    }
+    val s = proceed(ps, doms, f, vars, max)
+
+    assert {
+      s.andThen { s =>
+        assert(f.ub > 0 || scope.forall(ps.assigned) || s.entailed.hasInactiveVar(this) || s.entailed.entailedReif(this), s"entailment was not correctly marked for ${toString(s)}")
+        assert(scope.forall(s.assigned) || s.entailed.hasInactiveVar(this) || s.entailed.entailedReif(this) || (0 until arity).forall(i => s.dom(scope(i)) == s(this)._1(i)),
+          s"doms were not updated correctly: ${toString(ps)} -> ${toString(s)} with $mod")
+        s
+      }
+      true
+    }
+
+    s
+    //    } else {
+    //      ps.updateState(this, (doms, f, vars, max))
+    //    }
 
   }
 
@@ -78,7 +91,10 @@ final class LinearLe(
 
   override def toString() = toString("<=BC")
 
-  override def toString(ps: ProblemState) = toString(ps, "<=BC")
+  override def toString(ps: ProblemState) = {
+    val (dom, f, vars, maxI) = ps(this)
+    toString(ps, "<=BC") + " with " + ((dom.toSeq, f, vars, maxI))
+  }
 
   def getEvaluation(ps: ProblemState) = arity * 2
 

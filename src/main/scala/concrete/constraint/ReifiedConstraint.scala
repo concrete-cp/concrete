@@ -18,9 +18,9 @@ final class ReifiedConstraint(
 
   require(controlVariable.initDomain.isInstanceOf[BooleanDomain], s"${controlVariable} init domain ${controlVariable.initDomain} is not boolean")
 
-//  if (scope.forall(_.initDomain.isInstanceOf[BooleanDomain])) {
-//    throw new AssertionError(this.toString)
-//  }
+  //  if (scope.forall(_.initDomain.isInstanceOf[BooleanDomain])) {
+  //    throw new AssertionError(this.toString)
+  //  }
 
   def init(ps: ProblemState) = {
 
@@ -104,10 +104,14 @@ final class ReifiedConstraint(
       case BooleanDomain.UNKNOWNBoolean =>
         positiveConstraint.consistent(ps)
           .andThen { ps =>
-            negativeConstraint.consistent(ps)
-              .orElse {
-                ps.updateDomNonEmpty(controlVariable, BooleanDomain.TRUE).entail(this) //entailIf(this, _ => arity >= 4)
-              }
+            if (ps.entailed.entailedReif(positiveConstraint)) {
+              ps.updateDomNonEmpty(controlVariable, BooleanDomain.TRUE).entail(this)
+            } else {
+              negativeConstraint.consistent(ps)
+                .orElse {
+                  ps.updateDomNonEmpty(controlVariable, BooleanDomain.TRUE).entail(this) //entailIf(this, _ => arity >= 4)
+                }
+            }
           }
           .orElse {
             ps.updateDomNonEmpty(controlVariable, BooleanDomain.FALSE).entail(this) //If(this, _ => arity >= 4)
@@ -115,10 +119,10 @@ final class ReifiedConstraint(
 
       case BooleanDomain.TRUE =>
         positiveConstraint.revise(ps)
-      //.entailIf(this, mod => mod.isEntailed(positiveConstraint))
+          .entailIf(this, mod => mod.entailed.entailedReif(positiveConstraint))
       case BooleanDomain.FALSE =>
         negativeConstraint.revise(ps)
-      //.entailIf(this, mod => mod.isEntailed(negativeConstraint))
+          .entailIf(this, mod => mod.entailed.entailedReif(negativeConstraint))
 
       case BooleanDomain.EMPTY => throw new IllegalStateException
 

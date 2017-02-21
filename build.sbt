@@ -28,7 +28,7 @@ libraryDependencies ++= Seq(
 	)
 
 scalacOptions ++= Seq(
-//    "-Xdisable-assertions",
+    "-Xdisable-assertions",
 	"-deprecation", 
 //	"-unchecked", 
 	"-Xlint", 
@@ -40,6 +40,8 @@ enablePlugins(JavaAppPackaging)
 enablePlugins(DebianPlugin)
 
 mainClass in Compile := Some("concrete.runner.FZConcrete")
+
+//EclipseKeys.withBundledScalaContainers := false
 
 testOptions in Test += Tests.Argument("-oDF")
 

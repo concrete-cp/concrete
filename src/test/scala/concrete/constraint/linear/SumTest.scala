@@ -26,7 +26,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     c.register(new AdviseCount)
 
     val mod = pb.initState.andThen { ps =>
-      if (ps.isEntailed(c)) {
+      if (ps.entailed.hasInactiveVar(c)) {
         ps
       } else {
         c.adviseAll(ps)
@@ -256,7 +256,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     c.register(new AdviseCount)
 
     val mod = pb.initState.andThen { ps =>
-      if (ps.isEntailed(c)) {
+      if (ps.entailed.hasInactiveVar(c)) {
         ps
       } else {
         c.adviseAll(ps)

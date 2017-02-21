@@ -153,7 +153,9 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
       for (v <- _maximize) {
         reset()
         sol(v) match {
-          case i: Int => obtainOptimConstraint(new GtC(v, i)).constant = i
+          case i: Int =>
+            obtainOptimConstraint(new GtC(v, i)).constant = i
+            logger.info(s"new best value $i")
           case o => throw new AssertionError(s"$v has value $o which is not an int")
         }
 
@@ -161,7 +163,9 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
       for (v <- _minimize) {
         reset()
         sol(v) match {
-          case i: Int => obtainOptimConstraint(new LtC(v, i)).constant = i
+          case i: Int =>
+            obtainOptimConstraint(new LtC(v, i)).constant = i
+            logger.info(s"new best value $i")
           case o => throw new AssertionError(s"$v has value $o which is not an int")
         }
 

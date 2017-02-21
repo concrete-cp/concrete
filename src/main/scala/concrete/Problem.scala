@@ -67,7 +67,7 @@ final class Problem(val variables: Array[Variable]) {
       constraints.iterator
       .map { c =>
         c.id + ". " + (
-          if (state.isEntailed(c)) c.toString(state) + " [entailed]" else c.toString(state))
+          if (state.entailed.hasInactiveVar(c)) c.toString(state) + " [entailed]" else c.toString(state))
       }
       .mkString("\n") + "\n" + stats(state)
   }

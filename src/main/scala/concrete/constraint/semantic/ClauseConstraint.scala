@@ -106,7 +106,7 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
       require(watch1 >= 0)
       require(canBeTrue(ps, watch1) || canBeTrue(ps, watch2), s"${this.toString(ps)}: $watch1 and $watch2 are inconsistent")
       require(watch2 >= 0 || isTrue(ps, watch1))
-      require(!ps.isEntailed(this) || (0 until arity).exists(isTrue(ps, _)), s"entailment: ${ps.isEntailed(this)}, watches $watch1, $watch2, ${this.toString(ps)}")
+      require(!ps.entailed.hasInactiveVar(this) || (0 until arity).exists(isTrue(ps, _)), s"entailment: ${ps.entailed.hasInactiveVar(this)}, watches $watch1, $watch2, ${this.toString(ps)}")
     }
     true
   }
@@ -136,7 +136,7 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
   }
 
   private def reversed(ps: ProblemState, pos: Int): BooleanDomain = {
-    assert(pos >= 0, this.toString(ps) + " " + watch1 + " " + watch2 + " " + ps.isEntailed(this))
+    assert(pos >= 0, this.toString(ps) + " " + watch1 + " " + watch2 + " " + ps.entailed.hasInactiveVar(this))
     if (pos < posLength) {
       ps.boolDom(scope(pos))
     } else {

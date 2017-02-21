@@ -59,7 +59,7 @@ sealed trait Outcome {
   def toString(problem: Problem): String
   def toState: ProblemState
 
-  def isEntailed(c: Constraint): Boolean
+  //def isEntailed(c: Constraint): Boolean
   def activeConstraints(v: Variable): BitVector
 
   def apply[S <: AnyRef](c: StatefulConstraint[S]): S
@@ -210,7 +210,7 @@ case class ProblemState(
     }
   }
 
-  def isEntailed(c: Constraint): Boolean = entailed(c)
+  //def isEntailed(c: Constraint): Boolean = entailed(c)
 
   def entail(c: Constraint): ProblemState = {
     new ProblemState(domains, constraintStates, entailed.entail(c, this))

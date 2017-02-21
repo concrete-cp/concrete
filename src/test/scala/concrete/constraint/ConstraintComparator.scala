@@ -36,7 +36,7 @@ object ConstraintComparator extends Matchers with Inspectors {
         forAll(s1.domains zip s2.domains) {
           case (d1: Domain, d2: Domain) => d1.view should contain theSameElementsAs d2.view
         }
-        assert(!s2.isEntailed(c2) || s1.isEntailed(c1))
+        assert(!s2.entailed.hasInactiveVar(c2) || s1.entailed.hasInactiveVar(c1))
       case _ => fail()
     }
 

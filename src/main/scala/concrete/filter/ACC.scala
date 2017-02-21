@@ -66,7 +66,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     //println("reduce all")
 
     for (c <- problem.constraints) {
-      if (!states.isEntailed(c)) {
+      if (!states.entailed.hasInactiveVar(c)) {
 
         adviseAndEnqueue(c, states)
       }
@@ -88,7 +88,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     if (modCons != null) {
       for (i <- 0 until problem.constraints.length) {
         val c = problem.constraints(i)
-        if (modCons(i) > cnt && !states.isEntailed(c)) {
+        if (modCons(i) > cnt && !states.entailed.hasInactiveVar(c)) {
           adviseAndEnqueue(c, states)
         }
       }
@@ -164,8 +164,11 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
       revisions += 1;
 
+      //println(constraint.id)
+
       constraint.revise(s) match {
         case c: Contradiction =>
+
           logger.debug(s"${constraint.id}.${constraint.weight}. ${constraint.toString(s)} -> Contradiction")
 
           val nc = if (c.from.isEmpty) {
@@ -178,9 +181,10 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
           nc
 
         case newState: ProblemState =>
+
           if (newState.domains ne s.domains) {
             logger.debug(
-              s"${constraint.id}.${constraint.weight}. ${constraint.toString(s)} -> ${constraint.toString(newState)}${if (newState.isEntailed(constraint)) " - entailed" else ""}")
+              s"${constraint.id}.${constraint.weight}. ${constraint.toString(s)} -> ${constraint.toString(newState)}${if (newState.entailed.hasInactiveVar(constraint)) " - entailed" else ""}")
 
             assert(constraint.scope.forall(v => newState.dom(v).nonEmpty))
 
@@ -213,7 +217,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
                 case sc: StatefulConstraint[_] => s"new state: ${newState(sc)}"
                 case _ => "NOP"
               }
-            }${if (newState.isEntailed(constraint)) " - entailed" else ""}")
+            }${if (newState.entailed.hasInactiveVar(constraint)) " - entailed" else ""}")
 
             //assert(constraint.controlRevision(newState))
 
@@ -239,7 +243,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     queue.clear();
 
     for (c <- constraints) {
-      if (!states.isEntailed(c)) {
+      if (!states.entailed.hasInactiveVar(c)) {
         adviseAndEnqueue(c, states)
       }
     }
