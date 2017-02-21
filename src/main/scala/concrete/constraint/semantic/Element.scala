@@ -14,7 +14,9 @@ object Element {
       vars(i) = v
     }
 
-    if (vars.forall(v => (v eq null) || v.initDomain.isAssigned)) {
+    if (result eq index) {
+      Seq(new ElementRI(result, vars))
+    } else if (vars.forall(v => (v eq null) || v.initDomain.isAssigned)) {
       val values = vars.map(Option(_).map(_.initDomain.singleValue))
       Seq(new ElementVal(result, index, values))
     } else {
@@ -59,10 +61,63 @@ class ElementVal(val result: Variable, val index: Variable, val valuesOpt: Array
   def simpleEvaluation: Int = ???
 }
 
+class ElementRI(val resultIndex: Variable, val vars: Array[Variable]) extends Constraint(resultIndex +: vars.filter(_ ne null)) {
+  def advise(problemState: ProblemState, event: Event, position: Int): Int = arity
+
+  lazy val vars2pos = {
+    val scopeIndices = scope.zipWithIndex.drop(1).toMap
+    Array.tabulate(vars.length)(i => if (vars(i) eq null) -1 else scopeIndices(vars(i)))
+  }
+
+  def check(tuple: Array[Int]): Boolean = {
+    tuple(0) < vars.length &&
+      (vars(tuple(0)) ne null) &&
+      (tuple(0) == tuple(vars2pos(tuple(0))))
+  }
+
+  def init(ps: ProblemState): Outcome = ps
+  def revise(ps: ProblemState): Outcome = {
+    ps.filterDom(resultIndex) { i =>
+      ps.dom(vars(i)).present(i)
+    }.andThen { ps =>
+      if (ps.assigned(resultIndex)) {
+        val value = ps.dom(resultIndex).singleValue
+        ps.tryAssign(vars(value), value)
+      } else {
+        ps
+      }
+    }
+  }
+  def simpleEvaluation: Int = 2
+}
+
 class ElementWatch(val result: Variable,
   val index: Variable,
   val vars: Array[Variable])
     extends Constraint(result +: index +: vars.filter(_ ne null)) with Removals {
+
+  require(result ne index)
+
+  lazy val vars2pos = {
+    val scopeIndices = scope.zipWithIndex.drop(2).toMap
+    Array.tabulate(vars.length)(i => if (vars(i) eq null) -1 else scopeIndices(vars(i)))
+  }
+
+  val pos2vars = Array.fill(arity)(-1) //new Array[Int](arity)
+
+  fillPos2Vars(2, 0)
+
+  private def fillPos2Vars(scopeI: Int, varsI: Int): Unit = {
+    if (scopeI < arity) {
+      if (vars(varsI) eq null) {
+        fillPos2Vars(scopeI, varsI + 1)
+      } else {
+        assert(scope(scopeI) == vars(varsI))
+        pos2vars(scopeI) = varsI
+        fillPos2Vars(scopeI + 1, varsI + 1)
+      }
+    }
+  }
 
   private var card: Int = _
 
@@ -80,30 +135,6 @@ class ElementWatch(val result: Variable,
    * For each variable in vars, counts the number of current resultWatches
    */
   private[semantic] val watched = Array.fill(vars.length)(0)
-
-  private val pos2vars = Array.fill(arity)(-1) //new Array[Int](arity)
-
-  fillPos2Vars(2, 0)
-
-  private def fillPos2Vars(scopeI: Int, varsI: Int): Unit = {
-    if (scopeI < arity) {
-      if (vars(varsI) eq null) {
-        fillPos2Vars(scopeI, varsI + 1)
-      } else {
-        assert(scope(scopeI) == vars(varsI))
-        pos2vars(scopeI) = varsI
-        fillPos2Vars(scopeI + 1, varsI + 1)
-      }
-    }
-  }
-
-  assert((0 until arity).forall(i => pos2vars(i) < 0 || scope(i) == vars(pos2vars(i))))
-
-  private lazy val vars2pos = {
-    val scopeIndices = scope.zipWithIndex.drop(2).toMap
-    Array.tabulate(vars.length)(i => if (vars(i) eq null) -1 else scopeIndices(vars(i)))
-
-  }
 
   def check(tuple: Array[Int]): Boolean = {
     tuple(1) < vars.length &&
@@ -151,10 +182,10 @@ class ElementWatch(val result: Variable,
     }
   }
 
-  private def reviseAssignedIndex(ps: ProblemState, index: Int): Outcome = {
+  private def reviseAssignedIndex(ps: ProblemState, index: Int, resultDom: Domain): Outcome = {
     val selectedVar = vars(index)
     //println(selectedVar.toString(ps))
-    val intersect = ps.dom(selectedVar) & ps.dom(result)
+    val intersect = ps.dom(selectedVar) & resultDom
 
     // println(s"${ps.dom(selectedVar)} & $resultDom = $intersect")
 
@@ -205,8 +236,8 @@ class ElementWatch(val result: Variable,
 
   def revise(ps: ProblemState, mod: BitVector): Outcome = {
 
-    //println(s"revising ${toString(ps)}")
-    //println(s"constraint $id has mod $mod, watches $resultWatches and [${watched.mkString(", ")}]")
+    //    println(s"revising ${toString(ps)}")
+    //    println(s"constraint $id has mod $mod, watches $resultWatches and [${watched.mkString(", ")}]")
 
     var m = mod.nextSetBit(0)
     assert(m >= 0)
@@ -235,105 +266,16 @@ class ElementWatch(val result: Variable,
       ps
     }).andThen { ps =>
 
-      // Fetch new result domain in case it is the same variable as index 
       val index = ps.dom(this.index)
 
       if (index.isAssigned) {
-        reviseAssignedIndex(ps, index.singleValue)
+        reviseAssignedIndex(ps, index.singleValue, resultDom)
       } else if (rResult) {
         reviseResult(ps, index)
       } else {
         ps
       }
     }
-  }
-
-  def simpleEvaluation: Int = 3
-
-  override def toString(ps: ProblemState) = toString(ps, "AC")
-}
-
-class Element(val result: Variable,
-  val index: Variable,
-  val vars: Array[Variable])
-    extends Constraint(result +: index +: vars.filter(_ ne null)) {
-
-  private var card: Int = _
-
-  lazy val map: Map[Int, Int] = {
-    val scopeIndices = scope.zipWithIndex.toMap
-    vars.indices.flatMap(i =>
-      Option(vars(i)).map(i -> scopeIndices(_))).toMap
-  }
-
-  def check(tuple: Array[Int]): Boolean = {
-    tuple(1) < vars.length &&
-      (vars(tuple(1)) ne null) &&
-      (tuple(0) == tuple(map(tuple(1))))
-  }
-
-  def toString(ps: ProblemState, consistency: String): String = {
-    s"${result.toString(ps)} =$consistency= (${index.toString(ps)})th of ${
-      vars.toSeq.map {
-        case null => "{}"
-        case v => v.toString(ps)
-      }
-    }"
-  }
-
-  def advise(ps: ProblemState, event: Event, pos: Int): Int = {
-    card * ps.card(index)
-  }
-
-  override def init(ps: ProblemState) = {
-    val notnull = ps.dom(index).filter(i => i >= 0 && i < vars.length && (vars(i) ne null))
-    card = notnull.view.map(i => ps.card(vars(i))).max
-    ps.updateDom(index, notnull)
-  }
-
-  def revise(ps: ProblemState): Outcome = {
-    val resultDom = ps.dom(result)
-    /*
-     * Revise indices
-     */
-    ps.filterDom(this.index) { i =>
-      !resultDom.disjoint(ps.dom(vars(i)))
-    }
-      .andThen { ps =>
-        val index = ps.dom(this.index)
-
-        if (index.isAssigned) {
-          val selectedVar = vars(index.singleValue)
-          //println(selectedVar.toString(ps))
-          val intersect = ps.dom(selectedVar) & resultDom
-
-          //println(s"${ps.dom(selectedVar)} & $resultDom = $intersect")
-
-          ps
-            .updateDom(selectedVar, intersect)
-            .andThen { ps =>
-              if (intersect.size < resultDom.size) {
-                ps.updateDom(result, intersect)
-              } else {
-                ps
-              }
-            }
-        } else {
-
-          /*
-           * Revise result
-           * Do not use map/reduce, it is too slow
-           */
-          var union: Domain = null
-          for (i <- index) {
-            if (null == union) union = ps.dom(vars(i))
-            else union |= ps.dom(vars(i))
-          }
-
-          ps.updateDom(result, resultDom & union)
-
-        }
-      }
   }
 
   def simpleEvaluation: Int = 3
