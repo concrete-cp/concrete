@@ -50,10 +50,10 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
     val m1 = c1.revise(ps).toState
 
     m2.dom(control2) shouldBe BooleanDomain.TRUE
-    assert(m2.isEntailed(c2))
+    assert(m2.entailed.hasInactiveVar(c2))
 
     m1.dom(control1) shouldBe BooleanDomain.TRUE
-    assert(m1.isEntailed(c1))
+    assert(m1.entailed.hasInactiveVar(c1))
 
   }
 

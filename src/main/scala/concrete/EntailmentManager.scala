@@ -1,20 +1,22 @@
 package concrete
 
-import concrete.constraint.Constraint
 import bitvectors.BitVector
-
+import concrete.constraint.Constraint
 
 object EntailmentManagerLight {
   def apply(variables: Seq[Variable]): EntailmentManagerLight =
     new EntailmentManagerLight(
-      Vector(variables.map(v => BitVector.filled(v.constraints.length)): _*))
+      Vector(variables.map(v => BitVector.filled(v.constraints.length)): _*),
+      Set())
 }
 
 final class EntailmentManagerLight(
-    val activeConstraints: Vector[BitVector]) extends AnyVal {
+    val activeConstraints: Vector[BitVector],
+    val entailedReified: Set[Int]) {
 
   def addConstraints(constraints: Seq[Constraint]): EntailmentManagerLight = {
     var ac = activeConstraints
+    var er = entailedReified
     for (c <- constraints) {
       for (i <- c.scope.indices) {
         val vid = c.scope(i).id
@@ -24,12 +26,15 @@ final class EntailmentManagerLight(
         }
       }
     }
-    new EntailmentManagerLight(ac)
+    new EntailmentManagerLight(ac, er)
   }
 
   def entail(c: Constraint, ps: ProblemState): EntailmentManagerLight = {
+
     var ac = activeConstraints
+
     var i = c.arity - 1
+
     while (i >= 0) {
       val v = c.scope(i)
       val vid = v.id
@@ -38,15 +43,18 @@ final class EntailmentManagerLight(
       if (vid >= 0) {
         val pos = c.positionInVariable(i)
 
-        /* pos >= 0 is for reified constraints */
-        if (pos >= 0 && !ps.assigned(v)) {
+        if (pos < 0) {
+          /* case of reified constraints */
+          assert(ac eq activeConstraints, "one variable is not registered")
+          return new EntailmentManagerLight(ac, entailedReified + c.id)
+        } else if (!ps.assigned(v)) {
           ac = ac.updated(vid, ac(vid) - c.positionInVariable(i))
         }
 
       }
       i -= 1
     }
-    new EntailmentManagerLight(ac)
+    new EntailmentManagerLight(ac, entailedReified)
 
   }
 
@@ -60,11 +68,11 @@ final class EntailmentManagerLight(
       val pos = c.positionInVariable(i)
 
       /* For reified constraints */
-      if (pos >= 0) {
-        new EntailmentManagerLight(
-          ac.updated(vid, ac(vid) - c.positionInVariable(i)))
+      if (pos < 0) {
+        new EntailmentManagerLight(ac, entailedReified + c.id)
       } else {
-        this
+        new EntailmentManagerLight(
+          ac.updated(vid, ac(vid) - c.positionInVariable(i)), entailedReified)
       }
 
     } else {
@@ -76,16 +84,17 @@ final class EntailmentManagerLight(
   def active(v: Variable): BitVector = {
     val vid = v.id
     activeConstraints(vid)
-
   }
 
-  def apply(c: Constraint): Boolean = {
+  def entailedReif(c: Constraint) = entailedReified(c.id)
+
+  def hasInactiveVar(c: Constraint) = {
     (0 until c.arity).exists { i =>
 
       val v = c.scope(i)
       v.id >= 0 && {
         val pos = c.positionInVariable(i)
-        pos >= 0 && !activeConstraints(c.scope(i).id)(c.positionInVariable(i))
+        pos >= 0 && !activeConstraints(v.id)(pos)
       }
 
     }
