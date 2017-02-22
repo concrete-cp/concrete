@@ -56,11 +56,12 @@ class TestMAC extends FlatSpec with Matchers {
   val sols = List(
     4 -> 2,
     8 -> 92,
-    12 -> 14200,
-    13 -> 73712 //,
+    9 -> 352,
+    10 -> 724 //12 -> 14200,
+    //13 -> 73712 //,
     // 14 -> 365596)
     )
-    
+
   val pm = new ParameterManager
   pm("heuristic.value") = classOf[MedValue]
 
