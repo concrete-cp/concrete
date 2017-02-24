@@ -87,7 +87,7 @@ final class AllDifferent2C(scope: Array[Variable]) extends Constraint(scope) wit
     }
     // event is set to Assignment during initialization,
     // so check for actual assignment
-    if (event <= Assignment && ps.assigned(scope(p))) {
+    if (event <= Assignment && ps.dom(scope(p)).isAssigned) {
       q ::= p
       arity
     } else {

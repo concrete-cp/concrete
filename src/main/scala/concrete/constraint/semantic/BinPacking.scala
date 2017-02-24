@@ -208,7 +208,7 @@ class BinPacking private (load: Array[Variable], offset: Int, assignments: Array
         reverse(a)
 
         // List of unassigned items
-        val u = Iterator.range(0, assignments.length).filter(i => !ps.assigned(assignments(i))).map(weight).toArray
+        val u = Iterator.range(0, assignments.length).filter(i => !ps.dom(assignments(i)).isAssigned).map(weight).toArray
 
         if (l2(merge(a, u), C) > load.length) Contradiction(scope) else ps
       }

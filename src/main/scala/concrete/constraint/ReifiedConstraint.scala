@@ -35,7 +35,7 @@ final class ReifiedConstraint(
               .orElse(initPos.updateDomNonEmpty(controlVariable, BooleanDomain.TRUE))
           }
 
-        require(initialized.domainsOption == ps.domainsOption, "ReifiedConstraint cannot update domains during init")
+        require(initialized.toState.domains == ps.domains, "ReifiedConstraint cannot update domains during init")
 
         initialized
 

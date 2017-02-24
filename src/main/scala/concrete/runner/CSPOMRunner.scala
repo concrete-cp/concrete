@@ -59,7 +59,7 @@ trait CSPOMRunner extends ConcreteRunner {
         case (problem, vars) =>
           //println(problem)
           variables = vars
-          logger.info(problem.initState.toString(problem).lines.map("% " + _).mkString("\n"))
+          logger.info(problem.initState.map(problem.toString).getOrElse("Contradiction").lines.map("% " + _).mkString("\n"))
           problem
       }
   }

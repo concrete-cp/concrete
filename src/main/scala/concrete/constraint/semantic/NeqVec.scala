@@ -43,7 +43,7 @@ final class NeqVec(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
 
     if (i >= arity) {
       single
-    } else if (!ps.assigned(scope(i))) {
+    } else if (!ps.dom(scope(i)).isAssigned) {
       if (single < 0) {
         singleFreeVariable(ps, i + 1, i)
       } else {

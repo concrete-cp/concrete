@@ -274,7 +274,7 @@ abstract class Constraint(val scope: Array[Variable])
     var f = -1
     var i = arity - 1
     while (i >= 0) {
-      if (!ps.assigned(scope(i))) {
+      if (!ps.dom(scope(i)).isAssigned) {
         if (f >= 0) return None
         f = i
       }
@@ -284,8 +284,7 @@ abstract class Constraint(val scope: Array[Variable])
   }
 
   def controlAssignment(problemState: ProblemState): Boolean = {
-    val doms = problemState.doms(scope)
-    !doms.forall(_.isAssigned) || check(doms.map(_.singleValue))
+    !scope.forall(problemState.dom(_).isAssigned) || check(scope.map(problemState.dom(_).singleValue))
   }
 
   def controlRevision(ps: ProblemState): Boolean = {

@@ -183,9 +183,9 @@ final class MDDStats(prob: Problem, params: ParameterManager) extends Solver(pro
 
     val ds =
       prob.constraints.collect {
-        case c: ReduceableExt => state.doms(c.scope)
-        case c: MDDC => state.doms(c.scope)
-        case c: BDDC => state.doms(c.scope)
+        case c: ReduceableExt => c.scope.map(state.dom)
+        case c: MDDC => c.scope.map(state.dom)
+        case c: BDDC => c.scope.map(state.dom)
       }
         .flatten
         .map(_.size)

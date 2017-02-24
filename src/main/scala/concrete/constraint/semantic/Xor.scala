@@ -66,12 +66,12 @@ final class Xor(vars: Array[Variable]) extends Constraint(vars) {
     s"(+)(${vars.map(_.toString(ps)).mkString(", ")})"
 
   def revise(ps: ProblemState): Outcome = {
-    val w1 = if (ps.assigned(vars(watch1))) {
+    val w1 = if (ps.dom(vars(watch1)).isAssigned) {
       seekWatch(ps, watch2)
     } else {
       watch1
     }
-    val w2 = if (ps.assigned(vars(watch2))) {
+    val w2 = if (ps.dom(vars(watch2)).isAssigned) {
       seekWatch(ps, w1)
     } else {
       watch2
@@ -107,7 +107,7 @@ final class Xor(vars: Array[Variable]) extends Constraint(vars) {
   private def seekWatch(ps: ProblemState, excluding: Int): Int = {
     var i = arity - 1
     while (i >= 0) {
-      if (i != excluding && !ps.assigned(scope(i))) {
+      if (i != excluding && !ps.dom(scope(i)).isAssigned) {
         return i
       }
       i -= 1

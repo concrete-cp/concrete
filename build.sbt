@@ -15,7 +15,7 @@ scalaVersion := "2.12.1"
 resolvers += Resolver.sonatypeRepo("snapshots")
 
 libraryDependencies ++= Seq(
-	"fr.univ-valenciennes" %% "cspom" % "2.11",
+	"fr.univ-valenciennes" %% "cspom" % "2.12",
 	"org.postgresql" % "postgresql" % "9.4.1212",
 	//"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
 	"org.ow2.sat4j" % "org.ow2.sat4j.pb" % "2.3.5",

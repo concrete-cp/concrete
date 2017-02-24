@@ -6,8 +6,8 @@ import concrete.constraint.Constraint
 import concrete.constraint.StatefulConstraint
 import bitvectors.BitVector
 import concrete.util.Interval
-import concrete.util.Vector
 import cspom.UNSATException
+import util.Vector
 
 sealed trait Outcome {
   def andThen(f: ProblemState => Outcome): Outcome
@@ -50,13 +50,13 @@ sealed trait Outcome {
 
   def span(v: Variable): Interval = dom(v).span
 
-  def boolDom(v: Variable): BooleanDomain = dom(v).asInstanceOf[BooleanDomain]
+  //def boolDom(v: Variable): BooleanDomain = dom(v).asInstanceOf[BooleanDomain]
 
   def updateState[S <: AnyRef](c: StatefulConstraint[S], newState: S): Outcome
 
-  def domainsOption: Option[IndexedSeq[Domain]]
+  //def domainsOption: Option[IndexedSeq[Domain]]
 
-  def toString(problem: Problem): String
+  //def toString(problem: Problem): String
   def toState: ProblemState
 
   //def isEntailed(c: Constraint): Boolean
@@ -103,14 +103,11 @@ case class Contradiction(cause: Option[Constraint], from: Seq[Variable], to: Seq
   def updateDom(v: Variable, d: Domain): Outcome = this
   def remove(v: Variable, value: Int): Outcome = this
   def dom(v: Variable): Domain = throw new UNSATException("Tried to get a domain from a Contradiction")
-  def domainsOption: Option[IndexedSeq[Domain]] = None
-  def toString(problem: Problem) = "Contradiction"
   def toState = throw new UNSATException("Tried to get state from a Contradiction")
   def apply[S <: AnyRef](c: StatefulConstraint[S]): S = throw new UNSATException("Tried to get state from a Contradiction")
   def assign(v: Variable, value: Int): concrete.Outcome = this
   def entail(c: Constraint): concrete.Outcome = this
   def entail(c: Constraint, i: Int): concrete.Outcome = this
-  def isEntailed(c: Constraint): Boolean = throw new UNSATException("Tried to get state from a Contradiction")
   def activeConstraints(v: Variable): BitVector = throw new UNSATException("Tried to get state from a Contradiction")
   def updateState[S <: AnyRef](c: StatefulConstraint[S], newState: S): Outcome = this
   def isState = false
@@ -265,8 +262,6 @@ case class ProblemState(
     if (id < 0) v.initDomain else domains(id)
   }
 
-  def assigned(v: Variable): Boolean = dom(v).isAssigned
-
   def assign(v: Variable, value: Int): ProblemState = {
     val assigned = dom(v).assign(value)
     assert(assigned.nonEmpty)
@@ -326,9 +321,6 @@ case class ProblemState(
     if (f(this)) entail(c) else this
   }
 
-  def domainsOption = Some(domains)
-
-  def toString(problem: Problem) = problem.toString(this)
   def toState: ProblemState = this
 
   def dueTo(cause: => (Constraint, Seq[Variable])) = this

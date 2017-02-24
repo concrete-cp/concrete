@@ -54,8 +54,8 @@ final class LinearLe(
 
     assert {
       s.andThen { s =>
-        assert(f.ub > 0 || scope.forall(ps.assigned) || s.entailed.hasInactiveVar(this) || s.entailed.entailedReif(this), s"entailment was not correctly marked for ${toString(s)}")
-        assert(scope.forall(s.assigned) || s.entailed.hasInactiveVar(this) || s.entailed.entailedReif(this) || (0 until arity).forall(i => s.dom(scope(i)) == s(this)._1(i)),
+        assert(f.ub > 0 || scope.forall(s.dom(_).isAssigned) || s.entailed.hasInactiveVar(this) || s.entailed.entailedReif(this), s"entailment was not correctly marked for ${toString(s)}")
+        assert(scope.forall(s.dom(_).isAssigned) || s.entailed.hasInactiveVar(this) || s.entailed.entailedReif(this) || (0 until arity).forall(i => s.dom(scope(i)) == s(this)._1(i)),
           s"doms were not updated correctly: ${toString(ps)} -> ${toString(s)} with $mod")
         s
       }
