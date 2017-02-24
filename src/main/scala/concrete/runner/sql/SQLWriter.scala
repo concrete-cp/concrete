@@ -87,15 +87,16 @@ object SQLWriter {
   def now = new Timestamp(new Date().getTime)
 
   class Problem(tag: Tag)
-      extends Table[(Int, String, Option[Int], Option[Int], Option[String])](
+      extends Table[(Int, String, Option[Int], Option[Int], Option[String], Option[String])](
         tag, "Problem") {
     def problemId = column[Int]("problemId", O.PrimaryKey, O.AutoInc)
     def name = column[String]("name")
     def nbVars = column[Option[Int]]("nbVars")
     def nbCons = column[Option[Int]]("nbCons")
     def display = column[Option[String]]("display")
+    def nature = column[Option[String]]("nature")
 
-    def * = (problemId, name, nbVars, nbCons, display)
+    def * = (problemId, name, nbVars, nbCons, display, nature)
 
     def idxName = index("idxName", name, unique = true)
     def idxDisplay = index("idxDisplay", display, unique = true)
@@ -103,11 +104,12 @@ object SQLWriter {
 
   val problems = TableQuery[Problem]
 
-  class Config(tag: Tag) extends Table[(Int, String)](tag, "Config") {
+  class Config(tag: Tag) extends Table[(Int, String, Option[String])](tag, "Config") {
     def configId = column[Int]("configId", O.PrimaryKey, O.AutoInc)
     def config = column[String]("config")
+    def description = column[Option[String]]("description")
 
-    def * = (configId, config)
+    def * = (configId, config, description)
 
     def idxMd5 = index("idxConfig", config, unique = true)
   }

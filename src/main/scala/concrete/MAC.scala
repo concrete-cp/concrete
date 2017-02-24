@@ -96,7 +96,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
         case filteredState: ProblemState =>
           heuristic.branch(filteredState) match {
             case None =>
-              require(problem.variables.forall(v => filteredState.assigned(v)),
+              require(problem.variables.forall(v => filteredState.dom(v).isAssigned),
                 s"Unassigned variables in:\n${problem.toString(filteredState)}")
 
               controlSolution(filteredState)

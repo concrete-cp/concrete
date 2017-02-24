@@ -114,7 +114,7 @@ final class LNS(prob: Problem, params: ParameterManager, val mac: MAC) extends S
     }
   }
 
-  lazy val initPool = problem.variables.iterator.filter(!init.assigned(_)).toSet - optimises.get
+  lazy val initPool = problem.variables.iterator.filter(!init.dom(_).isAssigned).toSet - optimises.get
 
   private def assignFragment(init: ProblemState, best: Map[Variable, Int], fragSize: Int): ProblemState = {
     var pool = initPool
@@ -122,7 +122,7 @@ final class LNS(prob: Problem, params: ParameterManager, val mac: MAC) extends S
     var ps = init
 
     def score(variable: Variable) = {
-      if (ps.assigned(variable)) {
+      if (ps.dom(variable).isAssigned) {
         pool -= variable
         -2
       } else {

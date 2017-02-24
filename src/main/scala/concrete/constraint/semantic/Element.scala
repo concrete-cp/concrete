@@ -80,7 +80,7 @@ class ElementRI(val resultIndex: Variable, val vars: Array[Variable]) extends Co
     ps.filterDom(resultIndex) { i =>
       ps.dom(vars(i)).present(i)
     }.andThen { ps =>
-      if (ps.assigned(resultIndex)) {
+      if (ps.dom(resultIndex).isAssigned) {
         val value = ps.dom(resultIndex).singleValue
         ps.tryAssign(vars(value), value)
       } else {

@@ -22,7 +22,7 @@ final class NeqTest extends FlatSpec with Matchers with PropertyChecks {
       val ps = pb.initState.toState
       c.adviseAll(ps)
       val revised = c.revise(ps)
-      revised.domainsOption shouldBe ps.domainsOption
+      revised.toState.domains shouldBe ps.domains
 
       whenever(k > 0 || k < -4) {
         assert(revised.toState.entailed.hasInactiveVar(c))

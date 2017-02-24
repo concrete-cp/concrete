@@ -135,12 +135,12 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
     }
   }
 
-  private def reversed(ps: ProblemState, pos: Int): BooleanDomain = {
+  private def reversed(ps: ProblemState, pos: Int): Domain = {
     assert(pos >= 0, this.toString(ps) + " " + watch1 + " " + watch2 + " " + ps.entailed.hasInactiveVar(this))
     if (pos < posLength) {
-      ps.boolDom(scope(pos))
+      ps.dom(scope(pos))
     } else {
-      ps.boolDom(scope(pos)) match {
+      ps.dom(scope(pos)) match {
         case TRUE => FALSE
         case FALSE => TRUE
         case e => e
@@ -149,19 +149,23 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
   }
 
   private def canBeTrue(ps: ProblemState, p: Int) = {
-    ps.boolDom(scope(p)).canBe(p < posLength)
+    if (p < posLength) {
+      ps.dom(scope(p)).present(1)
+    } else {
+      ps.dom(scope(p)).present(0)
+    }
   }
 
   private def seekWatch(ps: ProblemState, from: Int): Int = {
     var i = from
     while (i < posLength) {
-      if (ps.boolDom(scope(i)).canBe(true)) {
+      if (ps.dom(scope(i)).present(1)) {
         return i
       }
       i += 1
     }
     while (i < arity) {
-      if (ps.boolDom(scope(i)).canBe(false)) {
+      if (ps.dom(scope(i)).present(0)) {
         return i
       }
       i += 1
@@ -171,10 +175,10 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
 
   private def seekEntailment(ps: ProblemState): Option[Int] = {
     (0 until posLength)
-      .find(i => ps.boolDom(scope(i)) == TRUE)
+      .find(i => ps.dom(scope(i)) == TRUE)
       .orElse {
         (posLength until arity)
-          .find(i => ps.boolDom(scope(i)) == FALSE)
+          .find(i => ps.dom(scope(i)) == FALSE)
       }
     //    var i = 0
     //    while (i < posLength) {

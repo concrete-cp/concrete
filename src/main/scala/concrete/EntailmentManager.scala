@@ -47,7 +47,7 @@ final class EntailmentManagerLight(
           /* case of reified constraints */
           assert(ac eq activeConstraints, "one variable is not registered")
           return new EntailmentManagerLight(ac, entailedReified + c.id)
-        } else if (!ps.assigned(v)) {
+        } else if (!ps.dom(v).isAssigned) {
           ac = ac.updated(vid, ac(vid) - c.positionInVariable(i))
         }
 
