@@ -425,7 +425,7 @@ object FZPatterns {
      * (a = b) ↔ r
      * int_ne_reif(var int: a, var int: b, var bool: r)
      */
-    case Ctr('int_ne_reif, Seq(a, b, r), p) => CSPOMConstraint(r)('sum)(Seq(-1, 1), Seq(a, b), 0) withParams p + ("mode" -> "ne")
+    case Ctr('int_ne_reif, Seq(a, b, r), p) => CSPOMConstraint(r, 'ne, Seq(a, b), p)
     /*
      * a+b = c
      * int_plus(var int: a, var int: b, var int: c)

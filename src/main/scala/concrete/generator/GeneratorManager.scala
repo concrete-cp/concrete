@@ -21,6 +21,7 @@ class GeneratorManager(pg: ProblemGenerator) {
       'absdiff -> new AbsDiffGenerator(pg),
       'alldifferent -> adg,
       'eq -> new EqGenerator(pg.pm),
+      'ne -> new NeGenerator(pg),
       'mul -> new MulGenerator(pg),
       'div -> new DivGenerator(pg),
       'mod -> new ModGenerator(pg),
