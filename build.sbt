@@ -8,40 +8,45 @@ packageSummary := "Concrete is a Scala CSP Solving API"
 
 packageDescription := "Concrete is a Scala CSP Solving API"
 
-version := "3.2"
+version := "3.2-SNAPSHOT"
 
-scalaVersion := "2.12.1"
+scalaVersion := "2.12.2"
+
+testOptions in Test <+= (target in Test) map {
+  t => Tests.Argument(TestFrameworks.ScalaTest, "-u", s"${t / "test-reports"}")
+}
 
 resolvers += Resolver.sonatypeRepo("snapshots")
 
 libraryDependencies ++= Seq(
-	"fr.univ-valenciennes" %% "cspom" % "2.12",
-	"org.postgresql" % "postgresql" % "9.4.1212",
+	"fr.univ-valenciennes" %% "cspom" % "2.13-SNAPSHOT",
+	"org.postgresql" % "postgresql" % "42.0.0",
 	//"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
 	"org.ow2.sat4j" % "org.ow2.sat4j.pb" % "2.3.5",
-	"com.typesafe.slick" %% "slick" % "3.2.0-RC1",
+	"com.typesafe.slick" %% "slick" % "3.2.0",
 	"com.typesafe" % "config" % "1.3.1",
 	//"org.apache.commons" % "commons-math3" % "3.6.1",
 	//"org.jcp" % "jsr331" % "1.1.1",
-
+	"org.scalatest" %% "scalatest" % "3.0.3" % "test",
+	"org.scalacheck" %% "scalacheck" % "1.13.5" % "test",
+	"com.storm-enroute" %% "scalameter" % "0.8.2" % "test",
 	"com.github.davidmoten" % "rtree" % "0.7.6"
 	)
 
 scalacOptions ++= Seq(
-    "-Xdisable-assertions",
-	"-deprecation", 
+  "-optimise"
+, "-Xdisable-assertions"
+//	"-deprecation", 
 //	"-unchecked", 
-	"-Xlint", 
+,	"-Xlint" 
 //	"-feature",
- 	"-Ywarn-unused-import"
+, 	"-Ywarn-unused-import"
 )
 
 enablePlugins(JavaAppPackaging)
 enablePlugins(DebianPlugin)
 
 mainClass in Compile := Some("concrete.runner.FZConcrete")
-
-//EclipseKeys.withBundledScalaContainers := false
 
 testOptions in Test += Tests.Argument("-oDF")
 
@@ -85,15 +90,4 @@ mappings in Universal ++= directory((resourceDirectory in Compile).value / "conf
 mappings in Universal ++= directory((resourceDirectory in Compile).value / "mzn_lib")
    
 
-lazy val root = (project in file(".")).
-  configs(IntegrationTest).
-//  settings(commonSettings: _*).
-  settings(Defaults.itSettings: _*).
-  settings(
-    libraryDependencies ++= Seq(
-      "org.scalatest" %% "scalatest" % "3.0.1" % "it,test",
-	  "org.scalacheck" %% "scalacheck" % "1.13.4" % "it,test",
-	  "com.storm-enroute" %% "scalameter" % "0.8.2" % "it,test")
-    
-  )
- 
+// scapegoatVersion := "1.2.1"
