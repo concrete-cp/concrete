@@ -46,8 +46,8 @@ class ElementVal(val result: Variable, val index: Variable, val valuesOpt: Array
 
   def revise(ps: ProblemState): Outcome = {
     val res = ps.dom(result)
-    val ind = ps.dom(index)
-    ps.updateDom(index, ind.filter(i => res.present(values(i))))
+    
+    ps.filterDom(index)(i => res.present(values(i)))
       .andThen { ps =>
         var bv: IntDomain = EmptyIntDomain
         for (i <- ps.dom(index)) {
@@ -124,7 +124,7 @@ class ElementWatch(val result: Variable,
   /**
    * For each value v in result, contains an index i for which vars(i) may contain v
    */
-  private[semantic] val resultWatches = new HashMap[Int, Int]
+  private[semantic] val resultWatches = new java.util.HashMap[Int, Int]
 
   /**
    * For each index i, contains a value "v" for which result and vars(i) may contain v
@@ -196,12 +196,12 @@ class ElementWatch(val result: Variable,
 
   private def reviseResult(ps: ProblemState, index: Domain): Outcome = {
     ps.filterDom(result) { i =>
-      val oldWatch = resultWatches.get(i)
+      val oldWatch = Option(resultWatches.get(i))
       oldWatch.exists(v => index.present(v) && ps.dom(vars(v)).present(i)) || {
         val support = index.find(j => ps.dom(vars(j)).present(i))
         support.foreach { s =>
           oldWatch.foreach(v => watched(v) -= 1)
-          resultWatches(i) = s
+          resultWatches.put(i, s)
           watched(s) += 1
         }
         support.isDefined

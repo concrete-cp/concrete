@@ -59,7 +59,7 @@ trait CSPOMRunner extends ConcreteRunner {
         case (problem, vars) =>
           //println(problem)
           variables = vars
-          logger.info(problem.initState.map(problem.toString).getOrElse("Contradiction").lines.map("% " + _).mkString("\n"))
+          // logger.info(problem.initState.map(problem.toString).getOrElse("Contradiction").lines.map("% " + _).mkString("\n"))
           problem
       }
   }
@@ -74,7 +74,7 @@ trait CSPOMRunner extends ConcreteRunner {
   def loadCSPOM(args: List[String], opt: Map[Symbol, Any]): Try[CSPOM]
 
   def outputCSPOM(solution: Map[String, Any]): String = {
-    solution.map {
+    solution.iterator.map {
       case (variable, value) => s"${variable} = $value"
     }.mkString("\n")
   }

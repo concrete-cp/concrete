@@ -40,7 +40,7 @@ import com.typesafe.scalalogging.LazyLogging
 import cspom.StatisticsManager
 import slick.jdbc.PostgresProfile.api._
 
-
+import SQLWriter._
 
 object SQLWriter {
 
@@ -165,8 +165,6 @@ object SQLWriter {
 
 final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
     extends ConcreteWriter with LazyLogging {
-  
-  import SQLWriter._
 
   private lazy val db = Database.forConfig("database")
 

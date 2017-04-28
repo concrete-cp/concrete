@@ -7,7 +7,6 @@ import concrete.constraint.StatefulConstraint
 import bitvectors.BitVector
 import concrete.util.Interval
 import cspom.UNSATException
-import util.Vector
 
 sealed trait Outcome {
   def andThen(f: ProblemState => Outcome): Outcome
@@ -121,7 +120,7 @@ object ProblemState {
 
   def apply(problem: Problem): Outcome = {
     ProblemState(
-      Vector(problem.variables.map(_.initDomain): _*),
+      scala.collection.immutable.Vector(problem.variables.map(_.initDomain): _*),
       Vector(),
       EntailmentManagerLight(problem.variables))
       .padConstraints(problem.constraints, problem.maxCId)
@@ -159,7 +158,7 @@ object ProblemState {
 }
 
 case class ProblemState(
-  val domains: Vector[Domain],
+  val domains: scala.collection.immutable.Vector[Domain],
   val constraintStates: Vector[AnyRef],
   val entailed: EntailmentManagerLight) extends Outcome
     with LazyLogging {

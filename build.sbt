@@ -8,14 +8,14 @@ packageSummary := "Concrete is a Scala CSP Solving API"
 
 packageDescription := "Concrete is a Scala CSP Solving API"
 
-version := "3.2"
+version := "3.3-SNAPSHOT"
 
 scalaVersion := "2.12.1"
 
 resolvers += Resolver.sonatypeRepo("snapshots")
 
 libraryDependencies ++= Seq(
-	"fr.univ-valenciennes" %% "cspom" % "2.12",
+	"fr.univ-valenciennes" %% "cspom" % "2.13-SNAPSHOT",
 	"org.postgresql" % "postgresql" % "9.4.1212",
 	//"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
 	"org.ow2.sat4j" % "org.ow2.sat4j.pb" % "2.3.5",
@@ -24,7 +24,8 @@ libraryDependencies ++= Seq(
 	//"org.apache.commons" % "commons-math3" % "3.6.1",
 	//"org.jcp" % "jsr331" % "1.1.1",
 
-	"com.github.davidmoten" % "rtree" % "0.7.6"
+	"com.github.davidmoten" % "rtree" % "0.7.6",
+	"io.javaslang" % "javaslang" % "2.1.0-alpha"
 	)
 
 scalacOptions ++= Seq(

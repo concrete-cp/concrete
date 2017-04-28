@@ -21,7 +21,7 @@ package concrete
 package heuristic
 package variable
 
-final class Dom(params: ParameterManager, decisionVariables: Array[Variable]) extends ScoredVariableHeuristic(params, decisionVariables) {
+final class Dom(params: ParameterManager, decisionVariables: Array[Variable]) extends VariableHeuristic(params, decisionVariables) {
 
   def score(variable: Variable, dom: Domain, state: ProblemState) = -dom.size
 

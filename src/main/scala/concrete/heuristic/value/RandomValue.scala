@@ -20,13 +20,10 @@ final class RandomValue(pm: ParameterManager) extends ValueHeuristic {
   }
 
   override def selectIndex(variable: Variable, dom: Domain) = {
-    var i = rand.nextInt(dom.size)
-    var v = dom.head
-    while (i > 0) {
-      i -= 1
-      v = dom.next(v)
-    }
-    v
+    @annotation.tailrec
+    def apply(i: Int, v: Int): Int = if (i <= 0) { v } else { apply(i - 1, dom.next(v)) }
+
+    apply(rand.nextInt(dom.size), dom.head)
   }
   def shouldRestart = true
 }

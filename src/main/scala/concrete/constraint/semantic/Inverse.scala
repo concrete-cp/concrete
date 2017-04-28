@@ -46,7 +46,7 @@ final class Inverse(x: Array[Variable], y: Array[Variable], xOffset: Int, yOffse
     var fx = problemState(this).bv
 
     // Check whether variables have been assigned
-    val r = problemState.fold(mod.traversable.filter(_ < x.length)) { (ps, xPos) =>
+    problemState.fold(mod.traversable.filter(_ < x.length)) { (ps, xPos) =>
       val dom = ps.dom(x(xPos))
       if (dom.isAssigned) {
         fx -= xPos
@@ -66,14 +66,6 @@ final class Inverse(x: Array[Variable], y: Array[Variable], xOffset: Int, yOffse
         ps.filterDom(x(xPos))(v => ps.dom(y(v - yOffset)).present(xPos + xOffset))
       }
       .updateState(this, Boxed(fx))
-//    if (r ne problemState) {
-//      r.andThen { r =>
-//        println(toString(r))
-//        r
-//      }.orElse(println("Contradiction"))
-//    }
-//    println("---")
-    r
 
   }
 

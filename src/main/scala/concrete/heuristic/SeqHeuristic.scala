@@ -1,6 +1,8 @@
 package concrete
 package heuristic;
 
+import java.util.EventObject
+
 final class SeqHeuristic(heuristics: List[Heuristic]) extends Heuristic {
 
   def branch(state: ProblemState) = {
@@ -17,6 +19,6 @@ final class SeqHeuristic(heuristics: List[Heuristic]) extends Heuristic {
 
   def compute(p: Problem) = heuristics.foreach(_.compute(p))
 
-  def applyListeners(s: MAC): Unit = heuristics.foreach(_.applyListeners(s))
+  def event(event: EventObject): Unit = heuristics.foreach(_.event(event))
 
 }

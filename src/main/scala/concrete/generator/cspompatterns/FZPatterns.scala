@@ -535,6 +535,9 @@ object FZPatterns {
 
     case Ctr('lex_lesseq_bool, Seq(x, y), p) =>
       CSPOMConstraint('lexleq)(x, y) withParams p
+
+    case Ctr('member_int, Seq(s, x), p) =>
+      CSPOMConstraint('member)(s, x) withParams p
   }
 
   private def dfa(Q: Int, S: Int, fd: IndexedSeq[Int]): Map[(Int, Int), Int] = {

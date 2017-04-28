@@ -15,7 +15,7 @@
 
 	</appender>
 
-	<logger name="concrete" level="warn" />
+	<logger name="concrete" level="debug" />
 	<logger name="cspom" level="warn" />
 
 	<root level="warn">

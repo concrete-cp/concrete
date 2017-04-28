@@ -7,6 +7,7 @@ import concrete.Problem
 import concrete.ProblemState
 import concrete.Variable
 import concrete.heuristic.Branch
+import java.util.EventObject
 
 trait ValueHeuristic extends BranchHeuristic {
   def branch(variable: Variable, domain: Domain, ps: ProblemState): Branch = {
@@ -34,5 +35,5 @@ trait BranchHeuristic {
 
   def shouldRestart: Boolean
 
-  def applyListeners(s: MAC): Unit = ()
+  def event(e: EventObject): Unit = ()
 }

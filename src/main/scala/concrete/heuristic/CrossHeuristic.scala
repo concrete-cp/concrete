@@ -9,6 +9,7 @@ import concrete.heuristic.variable.VariableHeuristic
 import concrete.heuristic.value.BranchHeuristic
 import concrete.heuristic.value.BestValue
 import concrete.MAC
+import java.util.EventObject
 
 object CrossHeuristic {
   def apply(params: ParameterManager, decisionVariables: Array[Variable]): CrossHeuristic = {
@@ -63,8 +64,8 @@ final case class CrossHeuristic(
 
   def decisionVariables = variableHeuristic.decisionVariables
 
-  def applyListeners(s: MAC) = {
-    variableHeuristic.applyListeners(s)
-    valueHeuristic.applyListeners(s)
+  def event(event: EventObject) = {
+    variableHeuristic.event(event)
+    valueHeuristic.event(event)
   }
 }

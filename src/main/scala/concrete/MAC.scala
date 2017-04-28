@@ -34,6 +34,7 @@ import scala.annotation.elidable
 import concrete.heuristic.restart.Geometric
 import concrete.heuristic.restart.NoRestarts
 import concrete.heuristic.restart.RestartStrategy
+import concrete.heuristic.NewSolutionEvent
 
 object MAC {
   def apply(prob: Problem, params: ParameterManager): MAC = {
@@ -54,6 +55,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
 
   val filter: Filter = filterClass.getConstructor(classOf[Problem], classOf[ParameterManager]).newInstance(problem, params);
   statistics.register("filter", filter);
+  filter.contradictionListeners +:= heuristic
 
   val rsClass: Class[_ <: RestartStrategy] = params.classInPackage("mac.restart", "concrete.heuristic.restart", classOf[Geometric])
 
@@ -63,8 +65,6 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
 
   private var restart = true
   private var firstRun = true
-
-  heuristic.applyListeners(this)
 
   @tailrec
   def mac(
@@ -104,7 +104,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
               (SAT(extractSolution(filteredState)), stack, filteredState :: stateStack, nbAssignments)
             case Some(branching) =>
 
-              if (nbAssignments % 1000 == 0) logger.info(s"$nbAssignments assignments")
+              if (nbAssignments % 10000 == 0) println(s"$nbAssignments assignments")
 
               logger.info(s"${stack.length}: ${branching.b1Desc} ($maxBacktracks bt left)");
 
@@ -180,7 +180,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
 
     logger.info(heuristic.toString)
 
-    if (restart) {
+    val sol = if (restart) {
       logger.info("RESTART")
       restart = false
 
@@ -219,7 +219,8 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
       currentStateStack = stateStack
       sol
     }
-
+    for (s <- sol.getInt) heuristic.event(NewSolutionEvent(s))
+    sol
   } finally {
     if (measureMem || usedMem == 0L) {
       val runtime = Runtime.getRuntime()

@@ -2,42 +2,43 @@ package concrete
 package heuristic
 package value
 
-final class BestValue(fallback: ValueHeuristic) extends ValueHeuristic {
+import java.util.EventObject
+
+import com.typesafe.scalalogging.LazyLogging
+
+final class BestValue(fallback: ValueHeuristic) extends ValueHeuristic with LazyLogging {
 
   def this(params: ParameterManager) = this{
     val valueHeuristicClass: Class[_ <: ValueHeuristic] =
-      params.classInPackage("bestvalue.fallback", "concrete.heuristic.value", classOf[RandomBound])
+      params.classInPackage("bestvalue.fallback", "concrete.heuristic.value", classOf[Lexico])
 
     valueHeuristicClass.getConstructor(classOf[ParameterManager]).newInstance(params)
   }
 
   override def toString = "best";
 
-  var best: Array[Int] = _
+  private var best: Map[Variable, Int] = Map()
 
   def compute(p: Problem) {
     require(p.variables.zipWithIndex.forall { case (v, i) => v.id == i })
-
-    best =
-      p.variables.map(v => fallback.selectIndex(v, v.initDomain))
     // Nothing to compute
   }
 
   override def selectIndex(variable: Variable, domain: Domain) = {
-    val value = best(variable.id)
-    if (domain.present(value)) {
-      value
-    } else {
-      fallback.selectIndex(variable, domain)
-    }
+    best.get(variable).filter(domain.present)
+      .getOrElse {
+        logger.debug(s"not present in $variable $domain, fallback")
+        fallback.selectIndex(variable, domain)
+      }
   }
 
   def shouldRestart = false
 
-  override def applyListeners(s: MAC): Unit = s.solutionListener = Some { sol: Map[Variable, Any] =>
-    for ((variable, value: Int) <- sol) {
-      best(variable.id) = value
-    }
+  override def event(event: EventObject): Unit = event match {
+    case NewSolutionEvent(sol) =>
+      logger.info(s"New solution")
+      best = sol
+    case _ =>
   }
 
 }

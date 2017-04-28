@@ -35,6 +35,7 @@ class GeneratorManager(pg: ProblemGenerator) {
       'sq -> SquareGenerator,
       'min -> new MinGenerator(pg),
       'max -> new MaxGenerator(pg),
+      'member -> new MemberGenerator(pg),
       'element -> new ElementGenerator(pg),
       'in -> new SetInGenerator(pg),
       'circuit -> new CircuitGenerator(adg),

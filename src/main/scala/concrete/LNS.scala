@@ -31,7 +31,6 @@ import cspom.StatisticsManager
 import cspom.compiler.CSPOMCompiler
 import org.scalameter.Quantity
 
-
 object LNS extends App {
   def apply(prob: Problem, params: ParameterManager): LNS = {
     val mac = MAC(prob, params)
@@ -198,8 +197,7 @@ final class LNS(prob: Problem, params: ParameterManager, val mac: MAC) extends S
 
       result match {
         case s: SAT =>
-          val sol = s.getInt
-          best = Some(sol)
+          best = s.getInt
           s
         case UNSAT | RESTART => nextSolution(currentFragment, nbCall - 1)
         case e => e
