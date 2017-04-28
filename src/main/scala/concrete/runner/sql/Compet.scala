@@ -194,23 +194,24 @@ object Compet extends App {
   implicit val getConfigResult = GetResult(r => Config(r.<<, r.<<, r.<<))
 
   val problemQuery = sql"""
-        SELECT "problemId", display, "nbVars", "nbCons", nature, string_agg("problemTag", ',') as tags
+        SELECT "problemId", display, "nbVars", "nbCons", nature, coalesce(string_agg("problemTag", ','), '') as tags
         FROM "Problem" LEFT JOIN "ProblemTag" USING ("problemId")
-        WHERE "problemId" IN (
-          SELECT "problemId" 
-          FROM "Execution"
-          WHERE "configId" in (#${configs.mkString(",")}))
-          -- AND "problemTag" = 'modifiedRenault'
+        --WHERE "problemId" IN (
+        --  SELECT "problemId" 
+        --  FROM "Execution"
+        --  -- WHERE "configId" in (#${configs.mkString(",")})
+        --  -- AND "problemTag" = 'modifiedRenault'
+        --  )
         GROUP BY "problemId"
         """.as[Problem]
 
   val executionQuery = sql"""
     SELECT "problemId", "configId", iteration, status, solution, totalTime('{solver.searchCpu, solver.preproCpu, runner.loadTime}', "executionId")/1e3 
     FROM "Execution"
-    WHERE "configId" IN (#${nature.mkString(", ")})
+    WHERE "configId"  >= 0  AND "problemId" < 300 -- AND "problemId" < 976
     """.as[Execution]
 
-  val configQuery = sql"""SELECT "configId", config, description FROM "Config" WHERE "configId" IN (#${nature.mkString(", ")})"""
+  val configQuery = sql"""SELECT "configId", config, description FROM "Config" -- WHERE "configId" IN (#${nature.mkString(", ")})"""
     .as[Config]
 
   val groupedExecutions = for {
@@ -228,6 +229,8 @@ object Compet extends App {
       .sortBy { case ((prob, iter), _) => (prob.problem, iter) }
 
   }
+
+  val order = Array(56, 60, 58, 55, 59, 57, 62, 66, 64, 61, 65, 63)
 
   val fut = for (
     pe <- groupedExecutions; cfgsSeq <- DB.run(configQuery);
@@ -249,8 +252,8 @@ object Compet extends App {
         if (c > 0) probScores(e1.configId) += 1
         else if (c < 0) probScores(e2.configId) += 1
         else {
-          val s1 = e1.statistic.getOrElse(1200.0)
-          val s2 = e2.statistic.getOrElse(1200.0)
+          val s1 = e1.statistic.getOrElse(1000.0)
+          val s2 = e2.statistic.getOrElse(1000.0)
           val score = s2 / (s1 + s2)
 
           if (e1.solved) {
@@ -279,22 +282,30 @@ object Compet extends App {
     }
 
     for ((cat, scores) <- catScores.toSeq.sortBy(_._1)) {
-      println()
-      println(cat)
-      for ((conf, score) <- scores.toSeq.sortBy(_._2)) {
-        println(f"${cfgs(conf)}: $score%.2f")
-      }
+      // println()
+      print(cat + " & ")
+      //      for ((conf, score) <- scores.toSeq.sortBy(_._2)) {
+      //        println(f"${cfgs(conf)}: $score%.2f")
+      //      }
+
+      val best = scores.toSeq.map(_._2).sorted.reverse.drop(2).headOption.getOrElse(0.0) * .95
+      //println(scores)
+      //println(s"best = ${scores.toSeq.map(_._2).sorted.reverse}")
+
+      println(order.map(c => f"${if (scores(c) > best) "\\bf " else ""} ${scores(c)}%.0f").mkString(" & ") + " \\\\")
     }
 
-    scores.map { case (k, v) => cfgs(k) -> v }
+    (cfgs, scores) //.map { case (k, v) => s"$k. ${cfgs(k)}" -> v }
 
   }
 
-  val scores = Await.result(fut, Duration.Inf)
+  val (cfgs, scores) = Await.result(fut, Duration.Inf)
 
   println()
 
   for ((c, v) <- scores.toSeq.sortBy(_._2)) {
-    println(f"$c: $v%.2f")
+    println(f"$c. ${cfgs(c)}: $v%.2f")
   }
+
+  println(order.map(c => f"${scores(c)}%.0f").mkString(" & "))
 }

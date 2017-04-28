@@ -20,10 +20,7 @@ final class Neq(v0: Variable, v1: Variable, c: Int = 0) extends Constraint(Array
     ps
       .updateDom(v0, revise(d0, d1, c))
       .updateDom(v1, revise(d1, d0, -c))
-//      .andThen { ch =>
-//        println(ch.dom(v0) disjoint ch.dom(v1).shift(c))
-//        ch
-//      }
+      //.entailIfFree(this)
       .entailIf(this, ch => ch.dom(v0) disjoint ch.dom(v1).shift(c))
   }
 

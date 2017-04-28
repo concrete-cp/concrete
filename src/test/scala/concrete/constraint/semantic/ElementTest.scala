@@ -29,7 +29,8 @@ class ElementTest extends FlatSpec with Matchers {
     val v13 = new Variable("v13", IntDomain.ofSeq(59, 65))
     val c = new ElementWatch(r, i, Array(null, null, null, null, null, null, null, null, null, null, v10, null, null, v13, v13))
 
-    c.resultWatches ++= Map(59 -> 13, 65 -> 10, 47 -> 13)
+    Seq(59 -> 13, 65 -> 10, 47 -> 13).foreach(e => c.resultWatches.put(e._1, e._2))
+
     c.watched(10) = 1
     c.watched(13) = 2
 

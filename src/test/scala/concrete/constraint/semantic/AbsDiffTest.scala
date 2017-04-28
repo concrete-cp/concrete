@@ -16,6 +16,7 @@ import concrete.constraint.AdviseCount
 import concrete.constraint.Constraint
 import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
+import scala.collection.JavaConverters._
 
 import concrete.constraint.ConstraintComparator
 
@@ -71,7 +72,7 @@ final class AbsDiffTest extends FlatSpec with Matchers with Inspectors with Prop
     val ps = pb.initState.toState
     val mod = c.revise(ps).asInstanceOf[ProblemState]
 
-    val IndexedSeq(dx, dy, dz) = mod.domains
+    val Seq(dx, dy, dz) = mod.domains
 
     dx.view should contain theSameElementsAs Seq(5)
     dy.view should contain theSameElementsAs Seq(4)

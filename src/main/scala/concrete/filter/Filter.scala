@@ -21,6 +21,8 @@ package concrete
 package filter
 
 import concrete.constraint.Constraint
+import java.util.EventListener
+import concrete.heuristic.HeuristicListener
 
 /**
  * @author scand1sk
@@ -39,5 +41,5 @@ trait Filter {
 
   def reduceAfter(modif: Seq[(Variable, Event)], states: ProblemState): Outcome
 
-  var contradictionListener: Option[Contradiction => Unit] = None
+  var contradictionListeners: Seq[HeuristicListener] = Seq()
 }

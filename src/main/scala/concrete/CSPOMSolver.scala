@@ -122,7 +122,9 @@ class CSPOMSolution(private val cspom: CSPOM, private val variables: Map[CSPOMVa
 
   def +[B1 >: Any](kv: (String, B1)): Map[String, B1] = throw new UnsupportedOperationException
   def -(key: String): Map[String, Any] = throw new UnsupportedOperationException
-  def get(key: String): Option[Any] = apply.get(key)
+  def get(key: String): Option[Any] = {
+    cspom.expression(key).flatMap(e => get(e))
+  }
   def iterator: Iterator[(String, Any)] = apply.iterator
 
 }

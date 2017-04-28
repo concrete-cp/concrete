@@ -8,7 +8,7 @@ final class PhaseSaving(heuristic: ValueHeuristic) extends ValueHeuristic {
 
   def this(params: ParameterManager) = this{
     val valueHeuristicClass: Class[_ <: ValueHeuristic] =
-      params.classInPackage("phasesaving.heuristic", "concrete.heuristic.value", classOf[RandomBound])
+      params.classInPackage("phasesaving.heuristic", "concrete.heuristic.value", classOf[Lexico])
     valueHeuristicClass.getConstructor(classOf[ParameterManager]).newInstance(params)
   }
 

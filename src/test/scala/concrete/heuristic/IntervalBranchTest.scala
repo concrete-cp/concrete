@@ -8,7 +8,7 @@ import concrete.IntDomain
 import concrete.ParameterManager
 import concrete.ProblemState
 import concrete.Variable
-import concrete.util.Vector
+import concrete.Domain
 
 /**
  * @author vion
@@ -21,7 +21,7 @@ class IntervalBranchTest extends FlatSpec with Matchers {
 
     val v = new Variable("v", d)
     v.id = 0
-    val ps = new ProblemState(Vector(d), Vector(), EntailmentManagerLight(Seq(v)))
+    val ps = new ProblemState(Vector[Domain](d), Vector(), EntailmentManagerLight(Seq(v)))
 
     val h = new concrete.heuristic.value.IntervalBranch(new ParameterManager)
 
@@ -37,7 +37,7 @@ class IntervalBranchTest extends FlatSpec with Matchers {
 
     val v = new Variable("v", d)
     v.id = 0
-    val ps = new ProblemState(Vector(d), Vector(), EntailmentManagerLight(Seq(v)))
+    val ps = new ProblemState(Vector[Domain](d), Vector(), EntailmentManagerLight(Seq(v)))
 
     val h = new concrete.heuristic.value.IntervalBranch(new ParameterManager)
 

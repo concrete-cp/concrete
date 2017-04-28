@@ -21,16 +21,14 @@ package concrete
 package heuristic
 package variable
 
-final class LexVar(params: ParameterManager, dv: Array[Variable]) extends VariableHeuristic(params, dv.reverse) {
-
-  override final val rand = None
+final class LexVar(params: ParameterManager, dv: Array[Variable]) extends VariableHeuristic(params, dv) {
 
   override def select(i: Int, state: ProblemState): Variable = {
-    decisionVariables(i)
+    dv(i)
   }
 
   override def toString = "lex-var"
 
-  def compare(v1: Variable, d1: Domain, v2: Variable, d2: Domain, state: ProblemState): Int = ???
+  def score(variable: Variable, dom: Domain, state: ProblemState) = ???
 
 }

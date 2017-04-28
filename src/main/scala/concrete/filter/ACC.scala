@@ -20,6 +20,7 @@ import concrete.heuristic.revision.Key
 import concrete.Event
 import concrete.BoundRemoval
 import concrete.InsideRemoval
+import concrete.heuristic.ContradictionEvent
 
 object ACC extends LazyLogging {
   def control(problem: Problem, state: ProblemState): Option[Constraint] = {
@@ -146,7 +147,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
   }
 
   private def enqueue(c: Constraint, a: Int, states: ProblemState): Unit = {
-    logger.trace(s"Queueing ${c.id}. ${c.toString(states)}, advise = $a")
+    //logger.trace(s"Queueing ${c.id}. ${c.toString(states)}, advise = $a")
     if (a >= 0) queue.offer(c, key.getKey(c, states, a))
   }
 
@@ -177,7 +178,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
             c
           }
 
-          for (l <- contradictionListener) l(nc)
+          for (l <- contradictionListeners) l.event(ContradictionEvent(nc))
           nc
 
         case newState: ProblemState =>

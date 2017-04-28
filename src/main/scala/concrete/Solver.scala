@@ -38,6 +38,7 @@ import cspom.compiler.CSPOMCompiler
 import concrete.constraint.extension.BinaryExt
 import concrete.constraint.Constraint
 import concrete.constraint.semantic.DiffN
+import java.util.Optional
 
 object Solver {
   def apply(cspom: CSPOM): Try[CSPOMSolver] = apply(cspom, new ParameterManager)
@@ -70,8 +71,6 @@ object Solver {
 }
 
 abstract class Solver(val problem: Problem, val params: ParameterManager) extends Iterator[Map[Variable, Any]] with LazyLogging {
-
-  var solutionListener: Option[Map[Variable, Any] => Unit] = None
 
   @Statistic
   var preproRemoved: Long = -1L
@@ -148,14 +147,12 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
     case UNKNOWNResult(None) => if (hasNext) next() else Iterator.empty.next
     case SAT(sol) =>
       _next = UNKNOWNResult(None)
-      for (l <- solutionListener) l(sol)
-
       for (v <- _maximize) {
         reset()
         sol(v) match {
           case i: Int =>
             obtainOptimConstraint(new GtC(v, i)).constant = i
-            logger.info(s"new best value $i")
+            logger.warn(s"new best value $i")
           case o => throw new AssertionError(s"$v has value $o which is not an int")
         }
 
@@ -165,7 +162,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
         sol(v) match {
           case i: Int =>
             obtainOptimConstraint(new LtC(v, i)).constant = i
-            logger.info(s"new best value $i")
+            logger.warn(s"new best value $i")
           case o => throw new AssertionError(s"$v has value $o which is not an int")
         }
 
@@ -254,29 +251,30 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
 
 sealed trait SolverResult {
   def isSat: Boolean
-  def get: Map[Variable, Any]
-  def getInt: Map[Variable, Int] = get map {
-    case (s, false) => (s, 0)
-    case (s, true) => (s, 1)
-    case (s, i: Int) => (s, i)
-    case (s, i) => throw new NumberFormatException(s"$s = $i : $i should be an integer or boolean value")
-  }
-  def getInteger: java.util.Map[Variable, java.lang.Integer] =
-    get.map {
-      case (s, i: Int) => (s, i: java.lang.Integer)
-      case (s, i) => throw new NumberFormatException(s"$s = $i : $i should be an integer value")
+  def get: Option[Map[Variable, Any]]
+  def getInt: Option[Map[Variable, Int]] = get.map { s =>
+    s.mapValues {
+      case false => 0
+      case true => 1
+      case i: Int => i
+      case i => throw new NumberFormatException(s"$i should be an integer or boolean value")
     }
-      .asJava
+  }
+  def getInteger: java.util.Optional[java.util.Map[Variable, java.lang.Integer]] = {
+    val o = getInt.map { _.mapValues(i => i: java.lang.Integer).asJava }
+
+    Optional.ofNullable(o.orNull)
+  }
 }
 
 case class SAT(val solution: Map[Variable, Any]) extends SolverResult {
   def isSat = true
-  def get = solution
-  override def toString = "SAT: " + solution.toString
+  def get = Some(solution)
+  override def toString = "SAT: " + (if (solution.size > 10) solution.take(10).toString + "..." else solution.toString)
 }
 case object UNSAT extends SolverResult {
   def isSat = false
-  def get = throw new NoSuchElementException
+  def get = None
   override def toString = "UNSAT"
 }
 object UNKNOWNResult {
@@ -285,11 +283,11 @@ object UNKNOWNResult {
 
 case class UNKNOWNResult(cause: Option[Throwable]) extends SolverResult {
   def isSat = false
-  def get = throw new NoSuchElementException
-  override def toString = "UNKNOWN"
+  def get = None
+  override def toString = "UNKNOWN" + cause
 }
 case object RESTART extends SolverResult {
   def isSat = false
-  def get = throw new NoSuchElementException
+  def get = None
   override def toString = "RESTART"
 }

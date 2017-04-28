@@ -371,10 +371,7 @@ object Table2 extends App {
   }
 
   def className(n: NodeSeq) = {
-    n.headOption match {
-      case Some(conf) => conf.text.split('.').last
-      case None       => "?"
-    }
+    n.headOption.flatMap(_.text.split('.').lastOption).getOrElse("?")
   }
 
   def engineer(value: Double): (Double, Option[Char]) = {

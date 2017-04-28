@@ -8,7 +8,7 @@ packageSummary := "Concrete is a Scala CSP Solving API"
 
 packageDescription := "Concrete is a Scala CSP Solving API"
 
-version := "3.2-SNAPSHOT"
+version := "3.3-SNAPSHOT"
 
 scalaVersion := "2.12.2"
 

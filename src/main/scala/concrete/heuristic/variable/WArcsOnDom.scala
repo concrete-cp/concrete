@@ -2,7 +2,9 @@ package concrete
 package heuristic
 package variable
 
-class WArcsOnDom(params: ParameterManager, decisionVariables: Array[Variable]) extends ScoredVariableHeuristic(params, decisionVariables) {
+import java.util.EventObject
+
+class WArcsOnDom(params: ParameterManager, decisionVariables: Array[Variable]) extends VariableHeuristic(params, decisionVariables) {
 
   val arcs: Array[Array[Int]] = {
     val max = decisionVariables.map(_.id).max + 1
@@ -26,8 +28,8 @@ class WArcsOnDom(params: ParameterManager, decisionVariables: Array[Variable]) e
     score.toDouble / dom.size
   }
 
-  override def applyListeners(s: MAC) = s.filter.contradictionListener = Some({
-    c: Contradiction =>
+  override def event(e: EventObject) = e match {
+    case ContradictionEvent(c) =>
       for (v1 <- c.from) {
         val id1 = v1.id
         for (v2 <- c.to if v1 ne v2) {
@@ -41,6 +43,6 @@ class WArcsOnDom(params: ParameterManager, decisionVariables: Array[Variable]) e
 
         }
       }
-  })
+  }
 
 }

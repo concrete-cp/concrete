@@ -4,6 +4,7 @@ import concrete.ParameterManager
 import cspom.compiler.CSPOMTypes
 import cspom.compiler.ConstraintCompiler
 import cspom.compiler.StandardCompilers
+import concrete.generator.cspompatterns.GlobalCardinalityClosed
 
 object ConcretePatterns {
 

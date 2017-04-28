@@ -23,7 +23,7 @@ object Tagger extends App {
         SELECT "problemId", name, display, string_agg("problemTag", ',') as tags
         FROM "Problem" LEFT JOIN "ProblemTag" USING ("problemId")
         GROUP BY "problemId", display, "nbVars", "nbCons"
-        HAVING string_agg("problemTag", ',') ~ 'xp-table'
+        -- HAVING string_agg("problemTag", ',') ~ 'xp-table'
         ORDER BY display
         """.as[Problem])
 
@@ -57,6 +57,7 @@ object Tagger extends App {
 
       val tags: Seq[DBIO[Int]] = for (c <- cats if !p.tags.contains(c)) yield {
         sqlu"""INSERT INTO "ProblemTag" VALUES ($c, ${p.problemId})"""
+        //null
       }
 
       //display ++: 

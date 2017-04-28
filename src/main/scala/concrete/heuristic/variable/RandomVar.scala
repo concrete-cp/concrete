@@ -21,10 +21,12 @@ package concrete
 package heuristic
 package variable
 
-final class RandomVar(params: ParameterManager, dv: Array[Variable]) extends ScoredVariableHeuristic(params, dv) {
+import scala.util.Random
+
+final class RandomVar(params: ParameterManager, dv: Array[Variable]) extends VariableHeuristic(params, dv) {
+
 
   override def toString = "random-var"
 
-  def score(v1: Variable, d1: Domain, state: ProblemState): Double = 0
-
+  def score(v1: Variable, d1: Domain, state: ProblemState): Double = rand.nextDouble()
 }

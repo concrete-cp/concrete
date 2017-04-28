@@ -21,7 +21,9 @@ package concrete
 package heuristic
 package variable
 
-final class WDeg(params: ParameterManager, decisionVariables: Array[Variable]) extends ScoredVariableHeuristic(params, decisionVariables)
+import java.util.EventObject
+
+final class WDeg(params: ParameterManager, decisionVariables: Array[Variable]) extends VariableHeuristic(params, decisionVariables)
     with ConstraintWeighting {
 
   def score(variable: Variable, dom: Domain, state: ProblemState) = variable.getWDegEntailed(state)
@@ -33,9 +35,8 @@ final class WDeg(params: ParameterManager, decisionVariables: Array[Variable]) e
 }
 
 trait ConstraintWeighting extends VariableHeuristic {
-  override def applyListeners(s: MAC): Unit = {
-    s.filter.contradictionListener = Some({
-      c: Contradiction => c.cause.get.weight += 1
-    })
+  override def event(e: EventObject): Unit = e match {
+    case ContradictionEvent(c) => c.cause.get.weight += 1
+    case _ =>
   }
 }

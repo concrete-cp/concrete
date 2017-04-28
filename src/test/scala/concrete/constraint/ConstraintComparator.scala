@@ -1,13 +1,15 @@
 package concrete.constraint
 
+import scala.collection.JavaConverters._
+
 import org.scalatest.Inspectors
 import org.scalatest.Matchers
 
 import concrete.Contradiction
-import concrete.Domain
 import concrete.Problem
 import concrete.ProblemState
 import concrete.Variable
+import concrete.Domain
 
 /**
  * @author vion
@@ -30,11 +32,16 @@ object ConstraintComparator extends Matchers with Inspectors {
     val r1 = c1.revise(ps)
     val r2 = c2.revise(ps)
 
+    r1.andThen { r1 =>
+      println(s"${c1.toString(ps)} -> ${c1.toString(r1)}")
+      r1
+    }
+
     (r1, r2) match {
       case (_: Contradiction, _: Contradiction) =>
       case (s1: ProblemState, s2: ProblemState) =>
-        forAll(s1.domains zip s2.domains) {
-          case (d1: Domain, d2: Domain) => d1.view should contain theSameElementsAs d2.view
+        forAll(s1.domains.zip(s2.domains)) {
+          case t: Tuple2[Domain, Domain] => val d1 = t._1; val d2 = t._2; d1.view should contain theSameElementsAs d2.view
         }
         assert(!s2.entailed.hasInactiveVar(c2) || s1.entailed.hasInactiveVar(c1))
       case _ => fail()

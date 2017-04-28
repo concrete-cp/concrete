@@ -46,7 +46,7 @@ object Bool2IntIsEq extends ConstraintCompilerNoData {
     c.function == 'bool2int
   def compile(c: CSPOMConstraint[_], p: CSPOM) = {
     val Seq(b, i) = c.arguments.map(_.asInstanceOf[SimpleExpression[_]])
-    logger.info(s"$b = $i")
+    //logger.info(s"$b = $i")
     //(0).asInstanceOf[SimpleExpression[_]]
     // val i = c.arguments(1).asInstanceOf[SimpleExpression[_]]
     require(b.searchSpace == i.searchSpace &&

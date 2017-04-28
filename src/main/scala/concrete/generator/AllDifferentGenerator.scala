@@ -10,12 +10,9 @@ import concrete.Variable
 import concrete.constraint.Constraint
 
 final class AllDifferentGenerator(val pg: ProblemGenerator) extends Generator {
+  
   override def gen(constraint: CSPOMConstraint[Boolean])(implicit varMap: VarMap) = {
-    generate(constraint.arguments.map(cspom2concreteVar))
-  }
-
-  def generate(vars: Seq[Variable]): Seq[Constraint] = {
-    vars match {
+    constraint.arguments.map(cspom2concreteVar) match {
       case Seq() | Seq(_) => Seq()
       case Seq(v0, v1) => Seq(new Neq(v0, v1))
       case v => {
