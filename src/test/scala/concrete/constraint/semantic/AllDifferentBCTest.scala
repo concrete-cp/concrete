@@ -1,9 +1,7 @@
 package concrete.constraint.semantic
 
-import scala.annotation.tailrec
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
-import concrete.Contradiction
 import concrete.IntDomain
 import concrete.Variable
 import concrete.Problem

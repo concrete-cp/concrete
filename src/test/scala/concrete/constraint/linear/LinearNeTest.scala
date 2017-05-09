@@ -1,12 +1,9 @@
 package concrete.constraint.linear
 
-import scala.annotation.varargs
-
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 
 import concrete.BooleanDomain
-import concrete.IntDomain
 import concrete.Problem
 import concrete.Variable
 

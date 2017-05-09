@@ -1,8 +1,5 @@
 package concrete.generator.constraint
 
-import scala.reflect.runtime.universe
-
-import org.scalatest.Finders
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 
@@ -25,12 +22,12 @@ class SumGeneratorTest extends FlatSpec with Matchers {
 
   "SumDomains" should "filter" in {
     val cspom = CSPOM { implicit problem =>
-      val r = sumProd((1, IntVariable(0 to 5)), (2, IntVariable(10 to 15)), (3, CSPOMConstant(20))) as "test"
+      sumProd((1, IntVariable(0 to 5)), (2, IntVariable(10 to 15)), (3, CSPOMConstant(20))) as "test"
     }
 
     CSPOMCompiler.compile(cspom, Seq(SumDomains, SumConstants))
 
-    var problem = new ProblemGenerator().generate(cspom).get._1
+    val problem = new ProblemGenerator().generate(cspom).get._1
 
     problem.variable("test").initDomain.span shouldBe Interval(80, 95)
 
@@ -43,7 +40,7 @@ class SumGeneratorTest extends FlatSpec with Matchers {
 
     CSPOMCompiler.compile(cspom, Seq(SumDomains, SumConstants, MergeEq))
 
-    var problem = new ProblemGenerator().generate(cspom).get._1
+    val problem = new ProblemGenerator().generate(cspom).get._1
 
     problem.variable("test").initDomain.span shouldBe Interval(-30, -28)
   }
@@ -52,7 +49,7 @@ class SumGeneratorTest extends FlatSpec with Matchers {
     val cspom = CSPOM { implicit problem =>
       val v0 = IntVariable(0 to 10)
       val v1 = IntVariable(0 to 10)
-      val r = problem.defineBool { r => CSPOMConstraint(r)('sum)(Seq(1, 1), Seq(v0, v1), CSPOMConstant(0)) withParam ("mode" -> "eq") } as "r"
+      problem.defineBool { r => CSPOMConstraint(r)('sum)(Seq(1, 1), Seq(v0, v1), CSPOMConstant(0)) withParam ("mode" -> "eq") } as "r"
     }
 
     CSPOMCompiler.compile(cspom, Seq(MergeEq)).get

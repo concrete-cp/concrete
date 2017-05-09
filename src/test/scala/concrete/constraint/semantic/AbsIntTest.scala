@@ -6,7 +6,6 @@ import concrete.IntDomain
 import concrete.Problem
 import concrete.ProblemState
 import concrete.Variable
-import org.scalatest.concurrent.Timeouts
 import org.scalatest.time.Second
 import org.scalatest.time.Span
 import org.scalatest.prop.PropertyChecks

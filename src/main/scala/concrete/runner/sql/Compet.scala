@@ -237,20 +237,20 @@ object Compet extends App {
     cfgs = cfgsSeq.map(c => c.configId -> c.desc).toMap
   ) yield {
 
-    var scores = new HashMap[Int, Double].withDefaultValue(0)
+    val scores = new HashMap[Int, Double].withDefaultValue(0)
 
-    var catScores = new HashMap[String, collection.mutable.Map[Int, Double]]
+    val catScores = new HashMap[String, collection.mutable.Map[Int, Double]]
 
     for (((problem, iteration), executions) <- pe) {
       println()
       println(s"${problem.problem}-$iteration ${problem.nat}")
 
-      var probScores = new HashMap[Int, Double].withDefaultValue(0)
+      val probScores = new HashMap[Int, Double].withDefaultValue(0)
 
       for (Seq(e1, e2) <- executions.combinations(2)) {
         val c = e1.compareTo(e2, problem.nat)
-        if (c > 0) probScores(e1.configId) += 1
-        else if (c < 0) probScores(e2.configId) += 1
+        if (c > 0) { probScores(e1.configId) += 1 }
+        else if (c < 0) { probScores(e2.configId) += 1 }
         else {
           val s1 = e1.statistic.getOrElse(1000.0)
           val s2 = e2.statistic.getOrElse(1000.0)

@@ -1,22 +1,12 @@
 package concrete.constraint.semantic
 
-import org.scalatest.FlatSpec
-import org.scalatest.Inspectors
-import org.scalatest.Matchers
-import concrete.CSPOMDriver
-import concrete.Contradiction
-import concrete.IntDomain
-import concrete.Problem
-import concrete.Solver
-import concrete.Variable
-import cspom.CSPOM
-import cspom.CSPOM.constant
-import cspom.CSPOM.ctr
-import cspom.variable.IntVariable
+import concrete._
 import concrete.constraint.AdviseCount
-import org.scalatest.TryValues
 import concrete.filter.ACC
-import concrete.ParameterManager
+import cspom.CSPOM
+import cspom.CSPOM.{constant, ctr}
+import cspom.variable.IntVariable
+import org.scalatest.{FlatSpec, Inspectors, Matchers, TryValues}
 
 class AtLeastTest extends FlatSpec with Matchers with Inspectors with TryValues {
 
@@ -90,11 +80,7 @@ class AtLeastTest extends FlatSpec with Matchers with Inspectors with TryValues 
 
     val problem = Solver(cspom).get.concreteProblem
 
-    val c = problem.constraints
-      .collectFirst {
-        case c: AtLeast => c
-      }
-      .get
+    exactly (1, problem.constraints) shouldBe a [AtLeast]
 
     val occ = problem.variable("occ")
     val initState = problem.initState

@@ -1,14 +1,12 @@
 package concrete.constraint.extension
 
-import scala.collection.SortedSet
-import org.scalacheck.Arbitrary
+
 import org.scalacheck.Gen
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
 import concrete.IntDomain
 import concrete.Variable
-import org.scalatest.Inspectors
 import org.scalatest.OptionValues
 
 class MDDRelationTest extends FlatSpec with Matchers with PropertyChecks with OptionValues {

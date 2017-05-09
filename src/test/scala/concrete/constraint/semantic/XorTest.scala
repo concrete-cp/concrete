@@ -5,7 +5,6 @@ import org.scalatest.FlatSpec
 import concrete.BooleanDomain
 import concrete.Variable
 import concrete.Problem
-import concrete.Contradiction
 import concrete.Assignment
 
 class XorTest extends FlatSpec with Matchers {

@@ -1,7 +1,5 @@
 package concrete.util
 
-import java.util.concurrent.Executors
-
 import scala.concurrent._
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Try}

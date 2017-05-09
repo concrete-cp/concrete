@@ -9,7 +9,6 @@ import bitvectors.BitVector
 
 object BDD {
   def apply(t: Traversable[List[Int]]): BDD = {
-    implicit def cache = null
     t.foldLeft[BDD](BDD0)(_ + _)
   }
 

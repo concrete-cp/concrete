@@ -1,6 +1,5 @@
 package concrete.generator
 
-import Generator.cspom2concreteSeq
 import cspom.CSPOMConstraint
 
 import concrete.constraint.semantic.ClauseConstraint

@@ -104,7 +104,7 @@ object Math {
    *     insert J in S
    */
   def randSet(m: Int, n: Int, rand: Random): Set[Int] = {
-    var s = new HashSet[Int]
+    val s = new HashSet[Int]
     for (j <- (n - m) until n) {
       val t = rand.nextInt(j)
       if (s(t)) {

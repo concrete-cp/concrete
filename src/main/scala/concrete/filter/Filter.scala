@@ -21,7 +21,6 @@ package concrete
 package filter
 
 import concrete.constraint.Constraint
-import java.util.EventListener
 import concrete.heuristic.HeuristicListener
 
 /**

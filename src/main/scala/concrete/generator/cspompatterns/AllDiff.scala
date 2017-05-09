@@ -266,8 +266,6 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
 
     val allDiff = CSPOMDriver.allDifferent(scope: _*)
 
-    val scopeSet = scope.toSet
-
     var delta = Delta()
 
     if (!scope.flatMap(problem.constraints).exists(c => isSubsumed(allDiff, c))) {

@@ -26,7 +26,7 @@ object ConnectedComponents extends Cluster {
     neighbours: Map[Variable, Seq[A]],
     visited: Set[A]): Set[A] = {
 
-    var queue = new Queue[A]()
+    val queue = new Queue[A]()
     queue.enqueue(root)
     var component = Set[A]()
 

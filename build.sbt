@@ -81,13 +81,18 @@ pomExtra in Global := {
   </developers>
 }
 
-excludeFilter in packageBin in unmanagedResources := "logback.xml" || "reference.conf"
+// excludeFilter in packageBin in unmanagedResources := "conf/logback.xml"
 
 import NativePackagerHelper._
 
-mappings in Universal ++= directory((resourceDirectory in Compile).value / "conf")
+mappings in Universal ++= directory((baseDirectory in Compile).value / "conf")
     
-mappings in Universal ++= directory((resourceDirectory in Compile).value / "mzn_lib")
+mappings in Universal ++= directory((baseDirectory in Compile).value / "mzn_lib")
    
+//mappings in Universal <+= (packageBin in Compile, baseDirectory ) map { (_, base) =>
+//     val conf = base / "conf"
+//     conf -> "conf"
+//}
+
 
 // scapegoatVersion := "1.2.1"

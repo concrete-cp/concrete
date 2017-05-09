@@ -5,7 +5,6 @@ import org.scalatest.FlatSpec
 import concrete.IntDomain
 import concrete.Variable
 import concrete.Problem
-import concrete.Contradiction
 import concrete.Singleton
 import org.scalatest.Inspectors
 import org.scalatest.prop.PropertyChecks

@@ -52,7 +52,6 @@ class SumDomainsTest extends FlatSpec with Matchers {
     CSPOMCompiler.compile(cspom, Seq(MergeEq, SumDomains, SumConstants)).get
 
     import scala.language.implicitConversions
-    implicit def singleton(v: Int) = IntInterval.singleton(v)
 
     val Some(v0: IntVariable) = cspom.variable("V0")
     withClue(cspom) {

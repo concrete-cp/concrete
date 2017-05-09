@@ -8,7 +8,6 @@ import cspom.CSPOM._
 import cspom.variable.IntVariable
 import cspom.compiler.MergeEq
 import cspom.compiler.CSPOMCompiler
-import cspom.variable.CSPOMConstant
 import concrete.generator.SumGenerator
 
 class SumFactorsTest extends FlatSpec with Matchers {

@@ -25,7 +25,7 @@ object SumDuplicates extends ConstraintCompiler {
     case CSPOMConstraint(r, 'sum, Seq(IntExpression.constSeq(coefs), CSPOMSeq(vars), CSPOMConstant(const: Int)), p) =>
 
       var duplicates = false
-      var factors = collection.mutable.Map[CSPOMExpression[_], Int]()
+      val factors = collection.mutable.Map[CSPOMExpression[_], Int]()
       for ((v, c) <- (vars, coefs).zipped) {
         factors.get(v) match {
           case Some(i) =>

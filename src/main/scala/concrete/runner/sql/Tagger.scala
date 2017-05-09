@@ -46,7 +46,6 @@ object Tagger extends App {
       
       val path = new URI(p.name).getPath.split('/')
       println(path.toSeq)
-      val name = path.last
       val cats = path.init
 
 //      val display: Seq[DBIO[Int]] = if (p.display.isEmpty) {

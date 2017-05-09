@@ -69,7 +69,7 @@ final class SquareAC(val x: Variable, val y: Variable)
       .andThen { ps0 =>
         if (s == 1) { ps0 } else {
           val domX = ps0.dom(x)
-          ps0.filterDom(y)(v => consistentY(v, ps0.dom(x)))
+          ps0.filterDom(y)(v => consistentY(v, domX))
         }
       }
       .entailIfFree(this)

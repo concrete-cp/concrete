@@ -4,7 +4,6 @@ import concrete.constraint.Constraint
 import scala.util.Random
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
-import concrete.Domain
 import concrete.ProblemState
 import concrete.Variable
 import concrete.IntDomain
@@ -32,7 +31,7 @@ class QuickFifosTest extends FlatSpec with Matchers {
 
     for (i <- 0 until 10) {
       assert(!q.isEmpty)
-      val c = q.poll()
+      q.poll()
     }
     assert(q.isEmpty)
 

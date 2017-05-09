@@ -24,7 +24,7 @@ class CumulativeTest extends FlatSpec with Matchers with PropertyChecks {
 
     val ps = problem.initState.toState
 
-    val mod = cumulative.revise(ps)
+    cumulative.revise(ps)
 
   }
 

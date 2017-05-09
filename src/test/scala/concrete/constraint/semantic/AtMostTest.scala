@@ -4,7 +4,6 @@ import org.scalatest.FlatSpec
 import org.scalatest.Inspectors
 import org.scalatest.Matchers
 import concrete.CSPOMDriver
-import concrete.Contradiction
 import concrete.IntDomain
 import concrete.Problem
 import concrete.Solver
@@ -106,11 +105,7 @@ class AtMostTest extends FlatSpec with Matchers with Inspectors with TryValues {
 
     val problem = Solver(cspom).get.concreteProblem
 
-    val c = problem.constraints
-      .collectFirst {
-        case c: AtMost => c
-      }
-      .get
+    exactly (1, problem.constraints) shouldBe a [AtMost]
 
     val occ = problem.variable("occ")
     val initState = problem.initState

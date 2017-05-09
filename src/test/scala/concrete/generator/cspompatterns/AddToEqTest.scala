@@ -5,11 +5,9 @@ import org.scalatest.Matchers
 import concrete.CSPOMDriver._
 import cspom.CSPOM
 import cspom.CSPOM._
-import cspom.variable.CSPOMVariable
 import cspom.variable.IntVariable
 import cspom.compiler.CSPOMCompiler
 import concrete.ParameterManager
-import concrete.Solver
 
 class AddToEqTest extends FlatSpec with Matchers {
 

@@ -55,11 +55,11 @@ object CSPOMDriver {
     problem.defineInt(r => CSPOMConstraint(r)('occurrence)(value, seq2CSPOMSeq(variables)))
   }
 
-  def atLeast[A: TypeTag](count: SimpleExpression[Int], value: SimpleExpression[A], variables: SimpleExpression[A]*)(implicit problem: CSPOM): CSPOMConstraint[Boolean] = {
+  def atLeast[A: TypeTag](count: SimpleExpression[Int], value: SimpleExpression[A], variables: SimpleExpression[A]*): CSPOMConstraint[Boolean] = {
     CSPOMConstraint('atLeast)(count, value, seq2CSPOMSeq(variables))
   }
 
-  def atMost[A: TypeTag](count: SimpleExpression[Int], value: SimpleExpression[A], variables: SimpleExpression[A]*)(implicit problem: CSPOM): CSPOMConstraint[Boolean] = {
+  def atMost[A: TypeTag](count: SimpleExpression[Int], value: SimpleExpression[A], variables: SimpleExpression[A]*): CSPOMConstraint[Boolean] = {
     CSPOMConstraint('atMost)(count, value, seq2CSPOMSeq(variables))
   }
 

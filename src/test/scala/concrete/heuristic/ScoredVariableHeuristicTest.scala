@@ -3,7 +3,6 @@ package concrete.heuristic
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 import concrete.ParameterManager
-import cspom.variable.IntVariable
 import concrete.Variable
 import concrete.IntDomain
 import concrete.Problem

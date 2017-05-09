@@ -189,11 +189,9 @@ class ReifiedConstraintTest extends FlatSpec with Matchers {
     val Seq(bc) = problem.constraints.toSeq
 
     bc.adviseAll(state)
-    val ns = bc.revise(state) match {
+    bc.revise(state) match {
       case _: Contradiction => fail()
-      case ns: ProblemState =>
-        ns.domains shouldBe state.domains
-        ns
+      case ns: ProblemState => ns.domains shouldBe state.domains
     }
 
   }

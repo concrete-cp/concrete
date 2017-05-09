@@ -21,8 +21,6 @@ package concrete
 package heuristic
 package variable
 
-import scala.util.Random
-
 final class RandomVar(params: ParameterManager, dv: Array[Variable]) extends VariableHeuristic(params, dv) {
 
 

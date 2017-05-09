@@ -22,7 +22,7 @@ class AbsDiffCompilerTest extends FlatSpec with Matchers {
 
       val r = v0 - v1
 
-      val r2 = abs(r) as "r2"
+      abs(r) as "r2"
 
     }
 

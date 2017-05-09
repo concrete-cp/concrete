@@ -1,14 +1,9 @@
 package concrete
 package heuristic;
 
-import concrete.ParameterManager
-import concrete.Problem
-import concrete.ProblemState
-import concrete.Variable
 import concrete.heuristic.variable.VariableHeuristic
 import concrete.heuristic.value.BranchHeuristic
 import concrete.heuristic.value.BestValue
-import concrete.MAC
 import java.util.EventObject
 
 object CrossHeuristic {

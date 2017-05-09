@@ -1,30 +1,23 @@
 package concrete.runner
 
 import java.security.InvalidParameterException
+import java.util.concurrent.TimeoutException
+
 import com.typesafe.scalalogging.LazyLogging
-import concrete.ParameterManager
-import concrete.Solver
-import concrete.Variable
+import concrete.{ParameterManager, Problem, Solver, Variable}
 import concrete.runner.sql.SQLWriter
-import cspom.Statistic
-import cspom.StatisticsManager
+import concrete.util.CancellableFuture
+import cspom.{Statistic, StatisticsManager, UNSATException}
 import cspom.compiler.CSPOMCompiler
-import scala.util.Try
-import scala.util.Failure
-import scala.util.Success
-import cspom.UNSATException
+import org.scalameter.Quantity
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
-import org.scalameter.Quantity
-import concrete.util.CancellableFuture
-import java.util.concurrent.TimeoutException
-import concrete.Problem
+import scala.util.{Failure, Success, Try}
 
 trait ConcreteRunner extends LazyLogging {
 
-  def help = """
-    Usage : Concrete file
-    """
+  val pm = new ParameterManager
 
   //def isSwitch(s: String) = (s(0) == '-')
   'SQL
@@ -34,6 +27,16 @@ trait ConcreteRunner extends LazyLogging {
   'iteration
 
   //logger.addHandler(new MsLogHandler)
+  val statistics = new StatisticsManager()
+  @Statistic
+  var loadTime: Quantity[Double] = _
+  @Statistic
+  var benchTime: Quantity[Double] = _
+
+  def help =
+    """
+    Usage : Concrete file
+    """
 
   def options(args: List[String], o: Map[Symbol, Any] = Map.empty, realArgs: List[String]): (Map[Symbol, Any], List[String]) = args match {
     case Nil => (o, realArgs.reverse)
@@ -69,15 +72,6 @@ trait ConcreteRunner extends LazyLogging {
 
   def description(args: List[String]): String
 
-  @Statistic
-  var loadTime: Quantity[Double] = _
-
-  val pm = new ParameterManager
-  val statistics = new StatisticsManager()
-
-  @Statistic
-  var benchTime: Quantity[Double] = _
-
   def run(args: Array[String]): Try[Result] = {
 
     //var status: RunnerStatus = Unknown
@@ -99,7 +93,9 @@ trait ConcreteRunner extends LazyLogging {
 
     opt.get('D).map {
       case p: Seq[_] =>
-        for ((option, value) <- p.map { _.asInstanceOf[(String, Any)] }) {
+        for ((option, value) <- p.map {
+          _.asInstanceOf[(String, Any)]
+        }) {
           pm(option) = value
         }
     }

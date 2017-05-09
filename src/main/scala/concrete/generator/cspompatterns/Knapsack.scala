@@ -1,22 +1,15 @@
 package concrete.generator.cspompatterns
 
-import scala.collection.mutable.HashMap
-
-import cspom.CSPOM
 import cspom.CSPOM.SeqOperations
-import cspom.CSPOMConstraint
+import cspom.{CSPOM, CSPOMConstraint}
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.extension.MDD
-import cspom.util.Infinitable
-import cspom.util.RangeSet
-import cspom.variable.CSPOMSeq
-import cspom.variable.IntExpression
+import cspom.util.{ContiguousIntRangeSet, FiniteIntInterval, Infinitable, RangeSet}
 import cspom.variable.IntExpression.implicits.iterable
-import cspom.variable.SimpleExpression
+import cspom.variable.{CSPOMSeq, IntExpression, SimpleExpression}
 
-import cspom.util.ContiguousIntRangeSet
-
-import cspom.util.FiniteIntInterval
+import scala.collection.mutable.HashMap
+import scala.util.Try
 
 final object Knapsack extends ConstraintCompilerNoData {
 
@@ -47,21 +40,29 @@ final object Knapsack extends ConstraintCompilerNoData {
     val xd = x.map(IntExpression.implicits.ranges)
 
     val wMDD = mddSum(weights, xd, W)
-    logger.info(wMDD.toString)
+    // logger.info(wMDD.toString)
     val pMDD = mddSum(profits, xd, P)
-    logger.info(pMDD.toString)
+  //  logger.info(pMDD.toString)
 
-    logger.info("Computing intersection")
-    val wpMDD1 = wMDD.insertDim(x.size, P.toSeq)
-    val wpMDD2 = pMDD.insertDim(x.size - 1, W.toSeq)
+  //  logger.info("Computing intersection")
+    val wpMDD1 = wMDD.insertDim(x.size + 1, P.toSeq)
+
+//    logger.info(wpMDD1.toString)
+
+    val wpMDD2 = pMDD.insertDim(x.size, W.toSeq)
+
+//    logger.info(wpMDD2.toString)
+
+    logger.warn(s"Intersection of $wpMDD1 and $wpMDD2...")
+
     wpMDD1.boundIntersect(wpMDD2, 1000000)
       .map { its =>
-        logger.info(s"Success ! $its")
+        logger.warn(s"Success ! $its")
         Seq((W +: P +: x) in its)
       }
       .recover {
         case _: IndexOutOfBoundsException =>
-          logger.info("Too large, posting two constraints")
+          logger.warn("Too large, posting two constraints")
           Seq(
             (x :+ W) in wMDD,
             (x :+ P) in pMDD)

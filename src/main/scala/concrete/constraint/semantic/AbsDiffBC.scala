@@ -15,14 +15,13 @@ final class AbsDiffBC(val result: Variable, val v0: Variable, val v1: Variable)
   def check(t: Array[Int]) = t(0) == math.abs(t(1) - t(2))
 
   override def shave(ps: ProblemState) = {
-    val rspan = ps.span(result)
     val v1span = ps.span(v1)
     val v0span = ps.span(v0)
 
     ps.shaveDom(result, (v0span - v1span).abs)
       .andThen { ps =>
 
-        val rspan = ps.dom(result).span
+        val rspan = ps.span(result)
 
         Interval.union(v0span.intersect(v1span - rspan), v0span.intersect(v1span + rspan))
           .map { v0span =>

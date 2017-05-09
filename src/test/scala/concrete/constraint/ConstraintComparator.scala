@@ -1,7 +1,5 @@
 package concrete.constraint
 
-import scala.collection.JavaConverters._
-
 import org.scalatest.Inspectors
 import org.scalatest.Matchers
 

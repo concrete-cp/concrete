@@ -16,7 +16,6 @@ final class EntailmentManagerLight(
 
   def addConstraints(constraints: Seq[Constraint]): EntailmentManagerLight = {
     var ac = activeConstraints
-    var er = entailedReified
     for (c <- constraints) {
       for (i <- c.scope.indices) {
         val vid = c.scope(i).id
@@ -26,7 +25,7 @@ final class EntailmentManagerLight(
         }
       }
     }
-    new EntailmentManagerLight(ac, er)
+    new EntailmentManagerLight(ac, entailedReified)
   }
 
   def entail(c: Constraint, ps: ProblemState): EntailmentManagerLight = {

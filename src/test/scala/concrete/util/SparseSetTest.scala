@@ -4,7 +4,6 @@ import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
 import org.scalacheck.Gen
-import org.scalatest.Inspectors
 
 class SparseSetTest extends FlatSpec with Matchers with PropertyChecks {
 

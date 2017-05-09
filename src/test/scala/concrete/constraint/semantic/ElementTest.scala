@@ -16,13 +16,7 @@ import concrete.Assignment
  */
 class ElementTest extends FlatSpec with Matchers {
 
-  "Element constraint" should "not create new domains when NOP" in {
-    val r = new Variable("r", IntDomain.ofInterval(6, 14))
-    val i = new Variable("i", IntDomain.ofSeq(2, 4, 15))
-    val a2 = new Variable("a2", IntDomain.ofSeq(3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14))
-  }
-
-  it should "filter correctly test case" in {
+  "Element constraint" should "filter correctly test case" in {
     val r = new Variable("r", IntDomain.ofSeq(47, 59, 65))
     val i = new Variable("i", IntDomain.ofSeq(10, 13))
     val v10 = new Variable("v10", IntDomain.ofSeq(65))

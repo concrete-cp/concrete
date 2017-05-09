@@ -1,12 +1,9 @@
 package concrete.generator.cspompatterns
 
-import org.scalatest.Matchers
-import org.scalatest.FlatSpec
-import org.scalatest.Inspectors
+import cspom.extension.Relation
+import cspom.util.{ContiguousIntRangeSet, IntInterval, RangeSet}
 import cspom.variable.IntVariable
-import cspom.util.RangeSet
-import cspom.util.IntInterval
-import cspom.util.ContiguousIntRangeSet
+import org.scalatest.{FlatSpec, Inspectors, Matchers}
 
 class KnapsackTest extends FlatSpec with Matchers with Inspectors {
 
@@ -18,16 +15,19 @@ class KnapsackTest extends FlatSpec with Matchers with Inspectors {
     val W = IntVariable(0 to 50)
     val P = IntVariable(0 to 30)
 
-    val mdd = Knapsack.mdd(weights, profits, domains, W, P) //.reduce()
+    val constraints = Knapsack.mdd(weights, profits, domains, W, P) //.reduce()
 
-    //    mdd.edges shouldBe 38
-    //    mdd.lambda shouldBe 12
-    //
-    //    forAll(mdd.toTraversable) { t: Seq[Int] =>
-    //      val w +: p +: quantities = t
-    //      (quantities, weights).zipped.map(_ * _).sum shouldBe w
-    //      (quantities, profits).zipped.map(_ * _).sum shouldBe p
-    //    }
+    constraints match {
+      case Seq(c) =>
+        val mdd: Iterable[Seq[Int]] = c.getParam[Relation[Int]]("relation").get
+
+        forAll(mdd) { t: Seq[Int] =>
+          val quantities :+ w :+ p  = t
+          (quantities, weights).zipped.map(_ * _).sum shouldBe w
+          (quantities, profits).zipped.map(_ * _).sum shouldBe p
+        }
+    }
+
 
   }
 
@@ -64,7 +64,7 @@ class KnapsackTest extends FlatSpec with Matchers with Inspectors {
     //println(mdd22)
     //mdd22.foreach(println)
 
-    val mddi = mdd22.intersect(mdd11)
+    mdd22.intersect(mdd11)
     //println(mddi)
 
     //println(mddi.reduce)

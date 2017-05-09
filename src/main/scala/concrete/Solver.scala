@@ -204,8 +204,6 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
     case RESTART => throw new IllegalStateException
   }
 
-  private var _maxBacktracks = -1
-
   def reset(): Unit
 
   protected def extractSolution(state: ProblemState): Map[Variable, Any] = problem.variables

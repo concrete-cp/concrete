@@ -35,7 +35,6 @@ final class AbsBC(val result: Variable, val v0: Variable) extends Constraint(Arr
     { ps: ProblemState =>
 
       val ri = ps.span(result)
-      val v0span = ps.span(v0)
 
       Interval.realUnion(ri, -ri) match {
         case Right((i, j)) =>

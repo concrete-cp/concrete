@@ -1,7 +1,6 @@
 package concrete.generator.constraint
 
 import concrete.generator.ProblemGenerator
-import concrete.Problem
 import cspom.CSPOM
 import cspom.CSPOMConstraint
 import cspom.CSPOM._

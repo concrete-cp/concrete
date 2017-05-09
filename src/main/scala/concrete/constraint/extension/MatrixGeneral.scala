@@ -1,4 +1,6 @@
-package concrete.constraint.extension;
+package concrete.constraint.extension
+
+;
 
 import com.typesafe.scalalogging.LazyLogging
 
@@ -9,19 +11,31 @@ final class MatrixGeneral(sizes: Array[Int], offsets: Array[Int], initialState: 
     require(nbValues.isValidInt)
     nbValues.toInt
   }
-
+  private val skip = new Array[Int](sizes.length - 1)
   private var matrix = {
     Array.fill(size)(initialState)
   }
-
-  private val skip = new Array[Int](sizes.length - 1)
 
   skip(0) = sizes(0)
   for (i <- 1 until skip.length) {
     skip(i) = skip(i - 1) * sizes(i)
   }
+  private var cardinality: Int = if (initialState) size else 0
 
-  private var empty = !initialState
+  override def check(tuple: Array[Int]) = matrix(matrixIndex(tuple))
+
+  override def set(tuple: Seq[Int], status: Boolean): Unit = {
+    val index = matrixIndex(tuple.toArray)
+    val oldStatus = matrix(index)
+    if (oldStatus != status) {
+      matrix(index)
+      if (status) {
+        cardinality += 1
+      } else {
+        cardinality -= 1
+      }
+    }
+  }
 
   private def matrixIndex(tuple: Array[Int]): Int = {
     var index = tuple(0) - offsets(0)
@@ -29,12 +43,6 @@ final class MatrixGeneral(sizes: Array[Int], offsets: Array[Int], initialState: 
       index += skip(i) * (tuple(i + 1) - offsets(i + 1))
     }
     index
-  }
-
-  override def check(tuple: Array[Int]) = matrix(matrixIndex(tuple))
-
-  override def set(tuple: Seq[Int], status: Boolean): Unit = {
-    matrix(matrixIndex(tuple.toArray)) = status
   }
 
   def copy = {
@@ -46,7 +54,7 @@ final class MatrixGeneral(sizes: Array[Int], offsets: Array[Int], initialState: 
   override def toString =
     s"sizes: ${sizes.mkString("[", ", ", "]")}, offsets: ${offsets.mkString("[", ", ", "]")}"
 
-  def isEmpty = empty
+  def isEmpty = cardinality == 0
 
   def allowed: Iterator[Array[Int]] = {
     ???

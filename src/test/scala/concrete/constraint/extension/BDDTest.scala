@@ -100,9 +100,9 @@ final class BDDTest extends FlatSpec with Matchers with Inspectors {
     m1.lambda shouldBe BigInt(d).pow(k)
     m1.vertices(new IdMap()) shouldBe (1 - BigInt(d).pow(k + 1)) / (1 - d) + 1
 
-    val t = System.nanoTime()
+    //val t = System.nanoTime()
     val m = m1.reduce()
-    val e = System.nanoTime()
+    //val e = System.nanoTime()
 
     //println((e - t) / 1e9)
 
@@ -113,9 +113,9 @@ final class BDDTest extends FlatSpec with Matchers with Inspectors {
     m2.lambda shouldBe BigInt(d).pow(k)
     m2.edges(1) shouldBe (1 - BigInt(d).pow(k + 1)) / (1 - d) - 1
 
-    val t2 = System.nanoTime()
+    //val t2 = System.nanoTime()
     val m3 = m2.reduce()
-    val e2 = System.nanoTime()
+    //val e2 = System.nanoTime()
 
     //println((e2 - t2) / 1e9)
 
@@ -189,7 +189,7 @@ final class BDDTest extends FlatSpec with Matchers with Inspectors {
       mddr.edges(ts) should be >= mddl.vertices(new IdMap()) - 2
       mddr should contain theSameElementsAs mddl
       ts += 1
-      var mod = List.tabulate(k)(i => i).filter(_ => rand.nextDouble() < .5)
+      val mod = List.tabulate(k)(i => i).filter(_ => rand.nextDouble() < .5)
       for (pos <- mod) {
         var newd = doms(pos)
         while (newd eq doms(pos)) {

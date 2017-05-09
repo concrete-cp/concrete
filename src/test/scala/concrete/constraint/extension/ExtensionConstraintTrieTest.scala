@@ -1,12 +1,10 @@
 package concrete.constraint.extension;
 
-import org.scalatest.Finders
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 
 import concrete.IntDomain
 import concrete.Problem
-import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.AdviseCount
 

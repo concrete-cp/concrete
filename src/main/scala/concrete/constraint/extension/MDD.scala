@@ -9,7 +9,6 @@ import concrete.util.TSCache
 import concrete.Domain
 import scala.collection.mutable.HashMap
 import concrete.IntDomain
-import concrete.util.SparseSeq
 
 object MDD {
   def apply(data: Traversable[Seq[Int]]): MDD = {
@@ -37,9 +36,7 @@ object MDD {
       case Seq() => MDD0
       case Seq((index, child)) => new MDD1(child, index)
       case Seq((i1, c1), (i2, c2)) => new MDD2(c1, i1, c2, i2)
-      case e =>
-        val indices = SparseSeq(t.map(_._1).toSeq: _*)
-        new MDDn(newTrie(e: _*))
+      case e: Any => new MDDn(newTrie(e: _*))
     }
   }
 
@@ -716,8 +713,6 @@ final class MDDn(
   private def isEmpty(t: MDD) = t eq null
 
   private def same(t1: Array[MDD], t2: Array[MDD]): Boolean = {
-    var i = math.max(t1.length, t2.length)
-
     def empty(t: Array[MDD], i: Int) = {
       i >= t.length || isEmpty(t(i))
     }

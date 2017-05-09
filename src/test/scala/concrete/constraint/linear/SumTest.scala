@@ -51,7 +51,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     c.register(new AdviseCount)
     val ps = pb.initState.assign(y, 9).toState
     c.adviseAll(ps)
-    val mod = c.revise(ps).toState
+    c.revise(ps).toState
     //    withClue(c.toString(mod)) {
     //      mod.dom(x52) should contain theSameElementsAs Seq(4)
     //    }

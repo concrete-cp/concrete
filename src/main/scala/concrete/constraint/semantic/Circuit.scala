@@ -9,7 +9,7 @@ object Circuit {
   def apply(scope: (Int, Variable)*): Circuit = apply(scope.toMap)
   def apply(scope: Map[Int, Variable]): Circuit = {
     val offset = scope.keys.min
-    val max = scope.keys.max - offset
+    //val max = scope.keys.max - offset
 
     val array: Array[Variable] = Array.fill(scope.keys.max - offset + 1)(null)
 

@@ -1,6 +1,6 @@
 package concrete.constraint.semantic;
 
-import scala.IndexedSeq
+
 import scala.util.Random
 import org.scalacheck.Gen
 
@@ -16,7 +16,6 @@ import concrete.constraint.AdviseCount
 import concrete.constraint.Constraint
 import concrete.constraint.Residues
 import concrete.constraint.TupleEnumerator
-import scala.collection.JavaConverters._
 
 import concrete.constraint.ConstraintComparator
 
@@ -26,7 +25,6 @@ final class AbsDiffTest extends FlatSpec with Matchers with Inspectors with Prop
 
   "AbsDiff" should "behave the same as extensional constraint" in {
     forAll(dom, dom, dom) { (x: Seq[Int], y: Seq[Int], z: Seq[Int]) =>
-      val RAND = new Random
       val vx: Variable = new Variable("x", IntDomain.ofSeq(x: _*));
       val vy: Variable = new Variable("y", IntDomain.ofSeq(y: _*));
       val vz: Variable = new Variable("z", IntDomain.ofSeq(z: _*));

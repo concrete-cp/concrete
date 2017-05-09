@@ -9,7 +9,6 @@ final class SetWithMax(length: Int) extends collection.mutable.Set[Int] {
   def +=(i: Int) = ???
 
   def -=(i: Int) = {
-    val oldC = candidates
     candidates -= i
 
     if (i == max) {

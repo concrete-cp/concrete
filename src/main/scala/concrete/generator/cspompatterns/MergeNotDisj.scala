@@ -10,30 +10,26 @@ import cspom.variable.CSPOMSeq
  * Transforms x = !a, x \/ c \/ ... into !a \/ b \/ c \/ ...
  */
 object MergeNotDisj extends ConstraintCompiler {
-  type A = CSPOMConstraint[_]
+  type A = Seq[CSPOMConstraint[_]]
 
-  override def mtch(fc: CSPOMConstraint[_], problem: CSPOM) =
+  override def mtch(fc: CSPOMConstraint[_], problem: CSPOM): Option[A] =
     PartialFunction.condOpt(fc) {
-      case CSPOMConstraint(v: CSPOMExpression[_], 'not, Seq(a: CSPOMExpression[_]), _) =>
+      case CSPOMConstraint(v: CSPOMExpression[_], 'not, _, _) =>
         problem.constraints(v).toSeq.collect {
           case c: CSPOMConstraint[_] if c.function == 'clause => c
         }
     }
-      .collect {
-        case Seq(orConstraint) => orConstraint
-      }
 
-  def compile(fc: CSPOMConstraint[_], problem: CSPOM, clause: A) = {
+
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM, clauses: A) = {
     val Seq(a: CSPOMExpression[_]) = fc.arguments
-    val r = fc.result
 
-    val Seq(positive: CSPOMSeq[_], negative: CSPOMSeq[_]) = clause.arguments
-
-    val newConstraint =
+    val newConstraints = for (clause <- clauses) yield {
+      val Seq(positive: CSPOMSeq[_], negative: CSPOMSeq[_]) = clause.arguments
       new CSPOMConstraint(clause.result, 'clause, Seq(positive, a +: negative))
+    }
 
-    replaceCtr(Seq(fc, clause), newConstraint, problem)
-
+    replaceCtr(fc +: clauses, newConstraints, problem)
   }
 
   def selfPropagation = true

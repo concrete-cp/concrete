@@ -424,7 +424,7 @@ object DiffN extends App {
     val maxY = IntVariable(0 until 100) as "maxY"
 
     ctr(maxX === maxY)
-    val obj = (maxX * maxY) as "obj"
+    // val obj = (maxX * maxY) as "obj"
 
     val xs = Seq.tabulate(n)(i => IntVariable(0 until 100) as s"x$i")
     val ys = Seq.tabulate(n)(i => IntVariable(0 until 100) as s"y$i")

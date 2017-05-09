@@ -5,7 +5,6 @@ import org.scalatest.FlatSpec
 import concrete.IntDomain
 import concrete.Variable
 import concrete.Singleton
-import scala.util.Random
 import concrete.Problem
 
 class DiffNTest extends FlatSpec with Matchers {

@@ -1,6 +1,5 @@
 package concrete
 
-import org.scalatest.Matchers
 import org.scalatest.FlatSpec
 
 class EventTest extends FlatSpec {

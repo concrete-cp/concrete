@@ -1,11 +1,10 @@
-package concrete.generator;
+package concrete
+package generator
 
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
-import concrete.ParameterManager
-import concrete.Variable
 import concrete.constraint.Constraint
 import cspom.CSPOMConstraint
 import cspom.variable.CSPOMVariable

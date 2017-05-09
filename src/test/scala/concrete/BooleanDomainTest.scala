@@ -25,7 +25,7 @@ final class BooleanDomainTest extends FlatSpec with Matchers {
     val d2 = domain.remove(1)
     assert(!d2.present(1))
     assert(domain.present(1))
-    val d3 = domain.remove(1)
+    domain.remove(1)
     assert(domain.present(1))
   }
 

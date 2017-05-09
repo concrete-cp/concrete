@@ -6,7 +6,6 @@ import concrete.IntDomain
 import concrete.Variable
 import concrete.ParameterManager
 import concrete.Problem
-import concrete.BoundRemoval
 import concrete.constraint.AdviseCount
 import concrete.Assignment
 
