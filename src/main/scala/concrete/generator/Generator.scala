@@ -68,7 +68,7 @@ object Generator {
     case seq: CSPOMSeq[A] => Sequence(seq.values map cspom2concrete, seq.definedIndices)
     case CSPOMConstant(b: Boolean) => Const(b)
     case CSPOMConstant(i: Int) => Const(i)
-    case _ => fail(s"$variable is unexpected")
+    case _ => fail(s"$variable (${variable.getClass}) is unexpected")
   }
 
   final def cspom2concrete1D[A](variable: CSPOMExpression[A])(

@@ -2,32 +2,27 @@ package concrete
 package constraint
 package semantic
 
+import bitvectors.BitVector
+import com.github.davidmoten.rtree.RTree
+import com.github.davidmoten.rtree.geometry.{Geometries, Geometry, Rectangle}
+import concrete.heuristic.value.Lexico
+import concrete.util.Interval
+import cspom._
+import cspom.variable.IntVariable
+
 import scala.util.Random
 
-import com.github.davidmoten.rtree.RTree
-import com.github.davidmoten.rtree.geometry.Geometry
-import com.github.davidmoten.rtree.geometry.Rectangle
-
-import concrete.heuristic.value.Lexico
-import bitvectors.BitVector
-import cspom.CSPOM
-import cspom.variable.IntVariable
-import cspom.CSPOMConstraint
-import cspom.CSPOMGoal
-import cspom.StatisticsManager
-import com.github.davidmoten.rtree.Entry
-import concrete.util.Interval
-import cspom.Statistic
-
 class IntRectangle(
-    val x1: Int,
-    val y1: Int,
-    val x2: Int,
-    val y2: Int) extends Geometry {
+                    val x1: Int,
+                    val y1: Int,
+                    val x2: Int,
+                    val y2: Int) extends Geometry {
 
   assert(x2 >= x1)
 
   assert(y2 >= y1)
+
+  lazy val asRectangle: Rectangle = Geometries.rectangle(x1, y1, x2, y2)
 
   override def intersects(r: com.github.davidmoten.rtree.geometry.Rectangle): Boolean = {
     r.x2 > x1 && r.x1 < x2 && r.y2 > y1 && r.y1 < y2
@@ -50,18 +45,18 @@ class IntRectangle(
   }
 
   def mbr = asRectangle
-
-  lazy val asRectangle: Rectangle = Rectangle.create(x1, y1, x2, y2)
 }
 
 case class RectangleBounds(minDx: Int, minDy: Int, minX: Int, maxX: Int, minY: Int, maxY: Int) extends Ordered[RectangleBounds] {
+  val coef = minSurface.toDouble / availableSurface
+
   def minSurface = minDx * minDy
 
   def xSpan = Interval(minX, maxX)
+
   def ySpan = Interval(minY, maxY)
 
   def availableSurface = (maxX - minX) * (maxY - minY)
-  val coef = minSurface.toDouble / availableSurface
 
   def compare(t: RectangleBounds) = java.lang.Double.compare(coef, t.coef)
 }
@@ -83,13 +78,16 @@ trait DiffNChecker {
 }
 
 class DiffNSpaceChecker(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys: Array[Variable]) extends Constraint(xs ++ ys ++ dxs ++ dys)
-    with DiffNChecker {
+  with DiffNChecker {
 
   assert(ys.length == nbRectangles && dxs.length == nbRectangles && dys.length == nbRectangles)
 
   def advise(ps: ProblemState, event: Event, pos: Int) = if (event <= BoundRemoval) nbRectangles else -1
+
   def nbRectangles = xs.length
+
   def init(ps: ProblemState): Outcome = ps
+
   def revise(ps: ProblemState): Outcome = {
     val rectangles = Array.tabulate(nbRectangles) { i =>
       val domX = ps.dom(xs(i))
@@ -125,30 +123,46 @@ class DiffNSpaceChecker(xs: Array[Variable], ys: Array[Variable], dxs: Array[Var
     ps
 
   }
+
   def simpleEvaluation: Int = 2
 
 }
 
 class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys: Array[Variable]) extends Constraint(xs ++ ys ++ dxs ++ dys)
-    with StatefulConstraint[(RTree[Int, IntRectangle], Vector[Option[Entry[Int, IntRectangle]]])] with BCRemovals with DiffNChecker {
+  with StatefulConstraint[(RTree[Int, IntRectangle], Vector[Option[(Int, IntRectangle)]])] with BCRemovals with DiffNChecker {
   assert(ys.length == nbRectangles && dxs.length == nbRectangles && dys.length == nbRectangles)
+
   def getEvaluation(problemState: ProblemState): Int = nbRectangles
-  def nbRectangles = xs.length
 
   def init(ps: ProblemState): concrete.Outcome = {
-    val map = Vector.tabulate(xs.length)(i => mandatory(ps, i).map(Entry.entry(i, _)))
-    val tree = map.zipWithIndex.foldLeft(RTree.create[Int, IntRectangle]) {
-      case (t, (r, i)) =>
-        r.foldLeft(t) { (t, r) =>
-          if (!t.search(r.geometry.asRectangle).isEmpty.toBlocking.single) {
-            return Contradiction(scope)
-          }
-          t.add(r)
+    val map: Vector[Option[(Int, IntRectangle)]] = Vector.tabulate(xs.length)(i => mandatory(ps, i).map((i, _)))
+    val tree = map.foldLeft(RTree.create[Int, IntRectangle]) { (t, or) =>
+      or.foldLeft(t) { case (t, (i, r)) =>
+        if (!t.search(r.asRectangle).isEmpty.toBlocking.single) {
+          return Contradiction(scope)
         }
-
+        t.add(i, r)
+      }
     }
 
     ps.updateState(this, (tree, map))
+
+  }
+
+  private def mandatory(ps: ProblemState, i: Int): Option[IntRectangle] =
+    mandatory(ps.dom(xs(i)), ps.dom(ys(i)), ps.dom(dxs(i)).head, ps.dom(dys(i)).head)
+
+  private def mandatory(x: Domain, y: Domain, dx: Int, dy: Int): Option[IntRectangle] = {
+    for (xc <- mandatory(x, dx); yc <- mandatory(y, dy)) yield {
+      new IntRectangle(xc._1, yc._1, xc._2, yc._2)
+    }
+  }
+
+  private def mandatory(x: Domain, dx: Int) = {
+    val left = x.last
+    val right = x.head + dx
+    if (left <= right) Some((left, right))
+    else None
 
   }
 
@@ -167,15 +181,14 @@ class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys:
         for (
           nr <- mandatory(ps, i) if !map(i).contains(nr)
         ) {
-          for (r <- map(i)) tree = tree.delete(r)
+          for (r <- map(i)) tree = tree.delete(r._1, r._2)
 
           if (!tree.search(nr.asRectangle).isEmpty.toBlocking.single) {
             return Contradiction(scope)
           }
 
-          val entry = Entry.entry(i, nr)
-          map = map.updated(i, Some(entry))
-          tree = tree.add(entry)
+          map = map.updated(i, Some((i, nr)))
+          tree = tree.add(i, nr)
 
         }
         i = modRectangles.nextSetBit(i + 1)
@@ -187,7 +200,7 @@ class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys:
 
     fixPoint(ps, 0 until xs.length, { (state: ProblemState, j: Int) =>
 
-      val treeWoutMe = map(j).foldLeft(tree)(_ delete _)
+      val treeWoutMe = map(j).foldLeft(tree)((t, e) => t.delete(e._1, e._2))
 
       val domX = ps.dom(xs(j))
       val domY = ps.dom(ys(j))
@@ -217,10 +230,8 @@ class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys:
                   return Contradiction(scope)
                 }
 
-                val entry = Entry.entry(j, nr)
-
-                tree = treeWoutMe.add(entry)
-                map = map.updated(j, Some(entry))
+                tree = treeWoutMe.add(j, nr)
+                map = map.updated(j, Some((j, nr)))
 
               case None =>
                 require(map(j).isEmpty)
@@ -235,6 +246,8 @@ class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys:
       .updateState(this, (tree, map))
 
   }
+
+  def nbRectangles = xs.length
 
   //private val leftResidue = new HashMap[Int, Int]()
   private def filterXLeft(id: Int, domX: Domain, domY: Domain, dx: Int, dy: Int, tree: RTree[Int, IntRectangle]): Option[Int] = {
@@ -252,6 +265,60 @@ class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys:
     }
 
     throw new AssertionError
+  }
+
+  //  val xResidue = new HashMap[(Int, Int), Int]
+  //
+  //  private def checkXResidue(x: Int, id: Int, dx: Int, dy: Int, dom: Domain, tree: RTree[Int, IntRectangle]): Boolean = {
+  //    xResidue.get((x, id)) match {
+  //      case Some(y) => dom.present(y) && tree.search(Rectangle.create(x, y, x + dx, y + dy)).isEmpty.toBlocking.single
+  //      case None => false
+  //    }
+  //  }
+  //
+  //  val yResidue = new HashMap[(Int, Int), Int]
+  //
+  //  private def checkYResidue(y: Int, id: Int, dx: Int, dy: Int, dom: Domain, tree: RTree[Int, IntRectangle]): Boolean = {
+  //    xResidue.get((y, id)) match {
+  //      case Some(x) => dom.present(x) && tree.search(Rectangle.create(x, y, x + dx, y + dy)).isEmpty.toBlocking.single
+  //      case None => false
+  //    }
+  //  }
+
+  /**
+    * Renvoie :
+    *  - Some((min, max)) s'il n'y a pas de place, avec la plus petite limite droite et la plus grande limite gauche
+    *  - None s'il y a une place
+    */
+  private def findInColumn(x: Int, id: Int, dx: Int, dy: Int, dom: Domain, tree: RTree[Int, IntRectangle]): Option[(Int, Int)] = {
+
+    //if (checkXResidue(x, id, dx, dy, dom, tree)) return None
+
+    var minX = Int.MaxValue
+    var maxX = Int.MinValue
+    var y: Option[Int] = Some(dom.head)
+    while (y.isDefined) {
+      // Recherche si la place est libre en (x, y)
+      DiffN.treeQueries += 1
+      val boxes = tree.search(Geometries.rectangle(x, y.get, x + dx, y.get + dy)).toBlocking.getIterator
+      if (!boxes.hasNext) {
+        //xResidue((x, id)) = y.get
+        return None
+      } else {
+        // Pas de place, on poursuit la recherche au delà du dernier rectangle
+        var maxY: Int = Int.MinValue
+        do {
+          val next = boxes.next
+          maxY = math.max(maxY, next.geometry.y2)
+          minX = math.min(minX, next.geometry.x2)
+          maxX = math.max(maxX, next.geometry.x1)
+        } while (boxes.hasNext)
+
+        y = dom.nextOption(maxY - 1)
+
+      }
+    }
+    Some((minX, maxX))
   }
 
   private def filterXRight(id: Int, domX: Domain, domY: Domain, dx: Int, dy: Int, tree: RTree[Int, IntRectangle]): Option[Int] = {
@@ -284,6 +351,7 @@ class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys:
     }
     throw new AssertionError
   }
+
   private def filterYUp(id: Int, domX: Domain, domY: Domain, dx: Int, dy: Int, tree: RTree[Int, IntRectangle]): Option[Int] = {
     var n = domY.last
 
@@ -300,60 +368,6 @@ class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys:
     throw new AssertionError
   }
 
-  //  val xResidue = new HashMap[(Int, Int), Int]
-  //
-  //  private def checkXResidue(x: Int, id: Int, dx: Int, dy: Int, dom: Domain, tree: RTree[Int, IntRectangle]): Boolean = {
-  //    xResidue.get((x, id)) match {
-  //      case Some(y) => dom.present(y) && tree.search(Rectangle.create(x, y, x + dx, y + dy)).isEmpty.toBlocking.single
-  //      case None => false
-  //    }
-  //  }
-  //
-  //  val yResidue = new HashMap[(Int, Int), Int]
-  //
-  //  private def checkYResidue(y: Int, id: Int, dx: Int, dy: Int, dom: Domain, tree: RTree[Int, IntRectangle]): Boolean = {
-  //    xResidue.get((y, id)) match {
-  //      case Some(x) => dom.present(x) && tree.search(Rectangle.create(x, y, x + dx, y + dy)).isEmpty.toBlocking.single
-  //      case None => false
-  //    }
-  //  }
-
-  /**
-   *  Renvoie :
-   *  - Some((min, max)) s'il n'y a pas de place, avec la plus petite limite droite et la plus grande limite gauche
-   *  - None s'il y a une place
-   */
-  private def findInColumn(x: Int, id: Int, dx: Int, dy: Int, dom: Domain, tree: RTree[Int, IntRectangle]): Option[(Int, Int)] = {
-
-    //if (checkXResidue(x, id, dx, dy, dom, tree)) return None
-
-    var minX = Int.MaxValue
-    var maxX = Int.MinValue
-    var y: Option[Int] = Some(dom.head)
-    while (y.isDefined) {
-      // Recherche si la place est libre en (x, y)
-      DiffN.treeQueries += 1
-      val boxes = tree.search(Rectangle.create(x, y.get, x + dx, y.get + dy)).toBlocking.getIterator
-      if (!boxes.hasNext) {
-        //xResidue((x, id)) = y.get
-        return None
-      } else {
-        // Pas de place, on poursuit la recherche au delà du dernier rectangle
-        var maxY: Int = Int.MinValue
-        do {
-          val next = boxes.next
-          maxY = math.max(maxY, next.geometry.y2)
-          minX = math.min(minX, next.geometry.x2)
-          maxX = math.max(maxX, next.geometry.x1)
-        } while (boxes.hasNext)
-
-        y = dom.nextOption(maxY - 1)
-
-      }
-    }
-    Some((minX, maxX))
-  }
-
   private def findInRow(y: Int, id: Int, dx: Int, dy: Int, dom: Domain, tree: RTree[Int, IntRectangle]): Option[(Int, Int)] = {
 
     // if (checkYResidue(y, id, dx, dy, dom, tree)) return None
@@ -363,7 +377,7 @@ class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys:
     var x: Option[Int] = Some(dom.head)
     while (x.isDefined) {
       DiffN.treeQueries += 1
-      val boxes = tree.search(Rectangle.create(x.get, y, x.get + dx, y + dy)).toBlocking.getIterator
+      val boxes = tree.search(Geometries.rectangle(x.get, y, x.get + dx, y + dy)).toBlocking.getIterator
       if (!boxes.hasNext) {
         //yResidue((y, id)) = x.get
         return None
@@ -385,39 +399,17 @@ class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys:
 
   def simpleEvaluation: Int = ???
 
-  private def mandatory(ps: ProblemState, i: Int): Option[IntRectangle] =
-    mandatory(ps.dom(xs(i)), ps.dom(ys(i)), ps.dom(dxs(i)).head, ps.dom(dys(i)).head)
-
-  private def mandatory(x: Domain, y: Domain, dx: Int, dy: Int): Option[IntRectangle] = {
-    for (xc <- mandatory(x, dx); yc <- mandatory(y, dy)) yield {
-      new IntRectangle(xc._1, yc._1, xc._2, yc._2)
-    }
-  }
-
-  private def mandatory(x: Domain, dx: Int) = {
-    val left = x.last
-    val right = x.head + dx
-    if (left <= right) Some((left, right))
-    else None
-
-  }
-
 }
 
 object DiffN extends App {
-  // TODO: put this in tests
-  @Statistic
-  var treeQueries = 0L
+  val r = new Random(0)
 
   import CSPOM._
   import CSPOMDriver._
-  val r = new Random(0)
 
   val n = 20
-
   val dxs = IndexedSeq.fill(n)(1 + r.nextInt(5))
   val dys = IndexedSeq.fill(n)(1 + r.nextInt(5))
-
   val cspom = CSPOM { implicit problem =>
 
     val maxX = IntVariable(0 until 100) as "maxX"
@@ -438,19 +430,19 @@ object DiffN extends App {
 
     goal(CSPOMGoal.Minimize(maxX))
   }
-
   val pm = new ParameterManager
-  pm("heuristic.value") = classOf[Lexico]
-
   val solver = Solver(cspom, pm).get
+  pm("heuristic.value") = classOf[Lexico]
+  val stats = new StatisticsManager
 
   for (sol <- solver.toIterable) {
     for (i <- 0 until n) println((sol.get(s"x$i").get, sol.get(s"y$i").get, dxs(i), dys(i)))
     println(sol.get("maxX"))
     println("------")
   }
-
-  val stats = new StatisticsManager
+  // TODO: put this in tests
+  @Statistic
+  var treeQueries = 0L
   stats.register("solver", solver.solver)
   println(stats)
 

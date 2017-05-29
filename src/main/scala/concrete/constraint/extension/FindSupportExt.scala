@@ -20,12 +20,12 @@
 package concrete.constraint.extension;
 
 import concrete.Variable
-import concrete.constraint.Residues
+import concrete.constraint.ResiduesRemovals
 import concrete.Domain
 import concrete.ProblemState
 
 final class FindSupportExt(scope: Array[Variable], tts: Relation)
-    extends ExtensionConstraint(scope) with ConflictCount with Residues {
+    extends ExtensionConstraint(scope) with ConflictCount with ResiduesRemovals {
 
   var matrix: Matrix = new TupleTrieSet(tts, false)
 

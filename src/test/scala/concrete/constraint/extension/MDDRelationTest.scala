@@ -7,6 +7,7 @@ import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
 import concrete.IntDomain
 import concrete.Variable
+import mdd.MDD0
 import org.scalatest.OptionValues
 
 class MDDRelationTest extends FlatSpec with Matchers with PropertyChecks with OptionValues {
@@ -61,7 +62,7 @@ class MDDRelationTest extends FlatSpec with Matchers with PropertyChecks with Op
     val v59 = new Variable("V59", IntDomain.ofSeq(160))
     val v60 = new Variable("V60", IntDomain.ofSeq(0))
 
-    val vars = IndexedSeq(v58, v59, v60)
+    val vars = Array(v58, v59, v60)
 
     val scope = vars.map(_.initDomain)
 

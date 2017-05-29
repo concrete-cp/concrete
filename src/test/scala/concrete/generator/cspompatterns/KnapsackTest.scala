@@ -15,18 +15,16 @@ class KnapsackTest extends FlatSpec with Matchers with Inspectors {
     val W = IntVariable(0 to 50)
     val P = IntVariable(0 to 30)
 
-    val constraints = Knapsack.mdd(weights, profits, domains, W, P) //.reduce()
-
-    constraints match {
-      case Seq(c) =>
+    Knapsack.mdd(weights, profits, domains, W, P)
+      .map { c =>
         val mdd: Iterable[Seq[Int]] = c.getParam[Relation[Int]]("relation").get
 
         forAll(mdd) { t: Seq[Int] =>
-          val quantities :+ w :+ p  = t
+          val p +: w +: quantities = t
           (quantities, weights).zipped.map(_ * _).sum shouldBe w
           (quantities, profits).zipped.map(_ * _).sum shouldBe p
         }
-    }
+      }
 
 
   }

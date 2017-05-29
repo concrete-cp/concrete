@@ -17,7 +17,7 @@ class SumDuplicatesTest extends FlatSpec with Matchers {
     val problem: CSPOM = CSPOM { implicit p =>
       val Seq(x, y) = Seq.fill(2) { IntVariable.free() }
 
-      ctr(linear(Seq((4, x), (-4, y), (2, x)), "le", -2))
+      ctr(linear("le",-2,(4, x), (-4, y), (2, x)))
     }
 
     CSPOMCompiler.compile(problem, Seq(SumDuplicates, MergeEq))

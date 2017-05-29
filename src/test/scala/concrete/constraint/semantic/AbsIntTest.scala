@@ -9,7 +9,7 @@ import concrete.Variable
 import org.scalatest.time.Second
 import org.scalatest.time.Span
 import org.scalatest.prop.PropertyChecks
-import concrete.constraint.Residues
+import concrete.constraint.ResiduesRemovals
 import org.scalacheck.Gen
 import concrete.constraint.Constraint
 import concrete.constraint.TupleEnumerator
@@ -96,7 +96,7 @@ final class AbsIntTest extends FlatSpec with Matchers with TimeLimits with Prope
       ConstraintComparator.compare(
         Array(vx, vy),
         new AbsAC(vx, vy),
-        new Constraint(Array(vx, vy)) with Residues with TupleEnumerator {
+        new Constraint(Array(vx, vy)) with ResiduesRemovals with TupleEnumerator {
           def check(t: Array[Int]) = t(0) == math.abs(t(1))
         })
 

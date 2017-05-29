@@ -1,4 +1,7 @@
-package concrete.constraint.extension;
+package concrete.constraint.extension
+
+import mdd.MDD0
+;
 
 
 final class TupleTrieSet(
@@ -8,7 +11,7 @@ final class TupleTrieSet(
 
   def this(initialContent: Boolean) = this(new MDDRelation(MDD0), initialContent)
 
-  def copy = new TupleTrieSet(relation.copy, initialContent)
+  // def copy = new TupleTrieSet(relation.copy, initialContent)
 
   def check(tuple: Array[Int]) =
     relation.contains(tuple) ^ initialContent;

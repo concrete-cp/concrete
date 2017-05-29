@@ -1,24 +1,19 @@
-package concrete.constraint.semantic;
+package concrete.constraint.semantic
 
-import concrete.Contradiction
-import concrete.Domain
-import concrete.Variable
-import concrete.constraint.BCCompanion
-import concrete.constraint.Constraint
-import concrete.constraint.Residues
-import concrete.constraint.BC
-import concrete.ProblemState
-import concrete.Outcome
+;
+
+import concrete._
+import concrete.constraint._
 
 final class AbsDiffConstAC(val result: Int, val v0: Variable, val v1: Variable)
-    extends Constraint(Array(v0, v1)) with BCCompanion with Residues {
+  extends Constraint(Array(v0, v1)) with BCCompanion with Residues {
 
   def skipIntervals = false
 
   def check(t: Array[Int]) = result == math.abs(t(0) - t(1))
 
-  override def findSupport(ps: ProblemState, position: Int, value: Int) = {
-    val other = ps.dom(scope(1 - position))
+  override def findSupport(doms: Array[Domain], position: Int, value: Int) = {
+    val other = doms(1 - position)
 
     support(value, value + result, other, position) orElse support(value, value - result, other, position)
     //    Seq(value + result, value - result).find(
@@ -31,8 +26,6 @@ final class AbsDiffConstAC(val result: Int, val v0: Variable, val v1: Variable)
     //      }
 
   }
-
-  def findSupport(doms: Array[Domain], position: Int, value: Int) = ???
 
   def support(value: Int, v: Int, other: Domain, position: Int): Option[Array[Int]] = {
     if (other.present(v)) {
@@ -47,13 +40,13 @@ final class AbsDiffConstAC(val result: Int, val v0: Variable, val v1: Variable)
 
   override def toString(ps: ProblemState) = s"$result =AC= |${v0.toString(ps)} - ${v1.toString(ps)}|";
 
-  def getEvaluation(ps: ProblemState) = if (skip(ps)) -1 else ps.dom(v0).size + ps.dom(v1).size
+  def advise(ps: ProblemState, event: Event, pos: Int) = if (skip(ps)) -1 else ps.dom(v0).size + ps.dom(v1).size
 
   def simpleEvaluation = 2
 }
 
 final class AbsDiffConstBC(val result: Int, val v0: Variable, val v1: Variable)
-    extends Constraint(Array(v0, v1)) with BC {
+  extends Constraint(Array(v0, v1)) with BC {
 
   def init(ps: ProblemState) = ps
 

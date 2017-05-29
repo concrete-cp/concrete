@@ -1,4 +1,8 @@
-package concrete.util
+package concrete
+package util
+
+import java.lang.Math.floorDiv
+import Math.ceilDiv
 
 object Interval {
   def union(i0: Option[Interval], i1: Option[Interval]): Option[Interval] = {
@@ -103,19 +107,19 @@ case class Interval(val lb: Int, val ub: Int) {
     val Interval(c, d) = i
 
     val l = math.min(
-      Math.ceilDiv(lb, c), math.min(Math.ceilDiv(lb, d), math.min(Math.ceilDiv(ub, c), Math.ceilDiv(ub, d))))
+      ceilDiv(lb, c), math.min(ceilDiv(lb, d), math.min(ceilDiv(ub, c), ceilDiv(ub, d))))
 
     val u = math.max(
-      Math.floorDiv(lb, c), math.max(Math.floorDiv(lb, d), math.max(Math.floorDiv(ub, c), Math.floorDiv(ub, d))))
+      floorDiv(lb, c), math.max(floorDiv(lb, d), math.max(floorDiv(ub, c), floorDiv(ub, d))))
 
     Interval(l, u)
   }
 
   def /(v: Int): Interval = {
     if (v >= 0) {
-      Interval(Math.ceilDiv(lb, v), Math.floorDiv(ub, v))
+      Interval(ceilDiv(lb, v), floorDiv(ub, v))
     } else {
-      Interval(Math.ceilDiv(ub, v), Math.floorDiv(lb, v))
+      Interval(ceilDiv(ub, v), floorDiv(lb, v))
     }
 
     //    if (l < u) Interval(l, u) else Interval(u, l)
@@ -125,8 +129,8 @@ case class Interval(val lb: Int, val ub: Int) {
     // v / this 
     if (this.contains(0)) throw new ArithmeticException
     Interval(
-      math.min(Math.ceilDiv(v, lb), Math.ceilDiv(v, ub)),
-      math.max(Math.floorDiv(v, lb), Math.floorDiv(v, ub)))
+      math.min(ceilDiv(v, lb), ceilDiv(v, ub)),
+      math.max(floorDiv(v, lb), floorDiv(v, ub)))
   }
 
   def fastIntersect(ilb: Int, iub: Int): Interval = {

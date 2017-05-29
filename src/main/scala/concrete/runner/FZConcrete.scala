@@ -3,34 +3,18 @@ package concrete.runner
 import java.net.URL
 import java.security.InvalidParameterException
 
-import org.scalameter.Quantity
-
 import com.typesafe.scalalogging.LazyLogging
-
-import concrete.CSPOMSolver
-import concrete.Problem
-import concrete.Variable
+import concrete.generator.cspompatterns.FZPatterns
 import concrete.heuristic._
 import concrete.heuristic.value._
 import concrete.heuristic.variable._
-import cspom.CSPOM
+import concrete.{CSPOMSolver, Problem, Variable}
 import cspom.CSPOM.seq2CSPOMSeq
-import cspom.CSPOMGoal
-import cspom.Statistic
-import cspom.StatisticsManager
-import cspom.WithParam
-import cspom.flatzinc.FZAnnotation
-import cspom.flatzinc.FZArrayExpr
-import cspom.flatzinc.FZArrayIdx
-import cspom.flatzinc.FZExpr
-import cspom.variable.CSPOMExpression
-import cspom.variable.CSPOMSeq
-import cspom.variable.CSPOMVariable
-import cspom.variable.IntExpression
-import cspom.flatzinc.FlatZincFastParser
-import concrete.generator.cspompatterns.FZPatterns
-import cspom.flatzinc.FZSetConst
+import cspom._
 import cspom.compiler.CSPOMCompiler
+import cspom.flatzinc._
+import cspom.variable.{CSPOMExpression, CSPOMSeq, CSPOMVariable, IntExpression}
+import org.scalameter.Quantity
 
 object FZConcrete extends CSPOMRunner with LazyLogging {
 
@@ -50,62 +34,6 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
       case "-p" :: option :: tail => options(tail, o + ('par -> option.toInt), realArgs)
       case e => super.options(e, o, realArgs)
     }
-  }
-
-  private def parseGoalAnnotation(variables: Map[CSPOMVariable[_], Variable]): PartialFunction[FZAnnotation, Heuristic] = {
-    case a if a.predAnnId == "seq_search" =>
-      val Seq(strategies: FZArrayExpr[_]) = a.expr
-      new SeqHeuristic(
-        strategies.value.map {
-          case a: FZAnnotation => parseGoalAnnotation(variables)(a)
-          case a => sys.error(s"Annotation expected in $strategies, found $a")
-        }
-          .toList)
-
-    case a if a.predAnnId == "int_search" || a.predAnnId == "bool_search" =>
-      val Seq(p, vca, aa, strategyannotation) = a.expr
-      val CSPOMSeq(pool) = ann2expr(cspom, p)
-      val decisionVariables = pool.collect {
-        case v: CSPOMVariable[_] => variables(v)
-      }
-        .toArray
-
-      val FZAnnotation(varchoiceannotation, _) = vca
-
-      val varh: VariableHeuristic = varchoiceannotation match {
-        case "input_order" => new LexVar(pm, decisionVariables)
-        case "first_fail" => new Dom(pm, decisionVariables)
-        case "antifirst_fail" => new MaxDom(pm, decisionVariables)
-        case "smallest" => new SmallestValue(pm, decisionVariables)
-        case "largest" => new LargestValue(pm, decisionVariables)
-        case "occurrence" => new DDeg(pm, decisionVariables)
-        case "most_constrained" => new Brelaz(pm, decisionVariables)
-        case "max_regret" => new MaxRegret(pm, decisionVariables)
-        case "free" => CrossHeuristic.defaultVar(pm, decisionVariables)
-        case h =>
-          logger.warn(s"Unsupported varchoice $h")
-          CrossHeuristic.defaultVar(pm, decisionVariables)
-
-      }
-
-      val FZAnnotation(assignmentannotation, _) = aa
-
-      val valh = assignmentannotation match {
-        case "indomain" => new Lexico(pm)
-        case "indomain_min" => new Lexico(pm)
-        case "indomain_max" => new RevLexico(pm)
-        case "indomain_median" => new MedValue(pm)
-        case "indomain_random" => new RandomValue(pm)
-        case "indomain_split" => new Split(pm)
-        case "indomain_reverse_split" => new RevSplit(pm)
-        case "indomain_interval" => new IntervalBranch(pm)
-        case "indomain_free" => CrossHeuristic.defaultVal(pm)
-        case h =>
-          logger.warn(s"Unsupported assignment heuristic $h")
-          CrossHeuristic.defaultVal(pm)
-      }
-
-      CrossHeuristic(varh, valh)
   }
 
   def parseGoal(goal: WithParam[CSPOMGoal[_]], variables: Map[CSPOMVariable[_], Variable]): Seq[Heuristic] = {
@@ -202,63 +130,13 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
     solver.applyGoal().get
   }
 
-  private def ann2expr(cspom: CSPOM, e: FZExpr[_]): CSPOMExpression[_] = e match {
-    case FZAnnotation(vars, Seq()) => cspom.expression(vars).get
-
-    case FZArrayExpr(list) => list.map(ann2expr(cspom, _))
-
-    case FZArrayIdx(array, idx) => cspom.expression(array)
-      .collect {
-        case s: CSPOMSeq[_] => s(idx)
-      }
-      .get
-
-    case e => throw new InvalidParameterException("Cannot read search variable list in " + e)
-  }
-
   def description(args: List[String]) =
     args match {
       case List(fileName) => fileName
       case _ => throw new IllegalArgumentException(args.toString)
     }
 
-  private def flattenArrayExpr(ranges: Seq[Seq[Int]], name: String, solution: Map[String, Int]): Seq[Int] = {
-    if (ranges.isEmpty) {
-      Seq(solution(name))
-    } else {
-      ranges.head.flatMap(
-        i => flattenArrayExpr(ranges.tail, s"$name[$i]", solution))
-    }
-  }
-
-  private def flattenedSize(ranges: Seq[Seq[Int]]): Int =
-    if (ranges.isEmpty) {
-      1
-    } else {
-      ranges.head.size * flattenedSize(ranges.tail)
-    }
-
-  //  private def getConstant(n: String): Option[Any] = {
-  //    cspom.expression(n).collect {
-  //      case CSPOMConstant(v) => v
-  //    }
-  //  }
-
-  //  def constantOrErr(solution: Map[Variable, Any]): PartialFunction[String, Any] = {
-  //    case n: String => getConstant(n).getOrElse(throw new MatchError(s"could not find $n in $solution or $cspom"))
-  //  }
-
-  private def bool2int(n: String, sol: Map[String, Any]): String = {
-    val s = sol(n)
-    cspom.expression(n).map {
-      case IntExpression(e) if s == true => "1"
-      case IntExpression(e) if s == false => "0"
-      case _ => s.toString
-    }
-      .get
-  }
-
-  override def outputCSPOM(sol: Map[String, Any]) = {
+  override def outputCSPOM(sol: Map[String, Any], obj: Option[Any]) = {
     val out: Iterable[String] = outputVars.map {
       n => s"$n = ${bool2int(n, sol)} ;"
     } ++ outputArrays.map {
@@ -290,14 +168,124 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
     //flatSolution(solution, variables).mkString(" ")
   }
 
-  def controlCSPOM(solution: Map[String, Any]) = ???
+  def controlCSPOM(solution: Map[String, Any], obj: Option[Any]) = ???
 
   def main(args: Array[String]): Unit = {
     val status = run(args)
 
-    sys.exit(
-      if (status.isSuccess) 0 else 1)
+    val exit = status match {
+      case Unfinished(e) if e.isDefined => 1
+      case _ => 0
+    }
+
+    sys.exit(exit)
     //    run(args)
+  }
+
+  private def parseGoalAnnotation(variables: Map[CSPOMVariable[_], Variable]): PartialFunction[FZAnnotation, Heuristic] = {
+    case a if a.predAnnId == "seq_search" =>
+      val Seq(strategies: FZArrayExpr[_]) = a.expr
+      new SeqHeuristic(
+        strategies.value.map {
+          case a: FZAnnotation => parseGoalAnnotation(variables)(a)
+          case a => sys.error(s"Annotation expected in $strategies, found $a")
+        }
+          .toList)
+
+    case a if a.predAnnId == "int_search" || a.predAnnId == "bool_search" =>
+      val Seq(p, vca, aa, strategyannotation) = a.expr
+      val CSPOMSeq(pool) = ann2expr(cspom, p)
+      val decisionVariables = pool.collect {
+        case v: CSPOMVariable[_] => variables(v)
+      }
+        .toArray
+
+      val FZAnnotation(varchoiceannotation, _) = vca
+
+      val varh: VariableHeuristic = varchoiceannotation match {
+        case "input_order" => new LexVar(pm, decisionVariables)
+        case "first_fail" => new Dom(pm, decisionVariables)
+        case "antifirst_fail" => new MaxDom(pm, decisionVariables)
+        case "smallest" => new SmallestValue(pm, decisionVariables)
+        case "largest" => new LargestValue(pm, decisionVariables)
+        case "occurrence" => new DDeg(pm, decisionVariables)
+        case "most_constrained" => new Brelaz(pm, decisionVariables)
+        case "max_regret" => new MaxRegret(pm, decisionVariables)
+        case "free" => CrossHeuristic.defaultVar(pm, decisionVariables)
+        case h =>
+          logger.warn(s"Unsupported varchoice $h")
+          CrossHeuristic.defaultVar(pm, decisionVariables)
+
+      }
+
+      val FZAnnotation(assignmentannotation, _) = aa
+
+      val valh = assignmentannotation match {
+        case "indomain" => new Lexico(pm)
+        case "indomain_min" => new Lexico(pm)
+        case "indomain_max" => new RevLexico(pm)
+        case "indomain_median" => new MedValue(pm)
+        case "indomain_random" => new RandomValue(pm)
+        case "indomain_split" => new Split(pm)
+        case "indomain_reverse_split" => new RevSplit(pm)
+        case "indomain_interval" => new IntervalBranch(pm)
+        case "indomain_free" => CrossHeuristic.defaultVal(pm)
+        case h =>
+          logger.warn(s"Unsupported assignment heuristic $h")
+          CrossHeuristic.defaultVal(pm)
+      }
+
+      CrossHeuristic(varh, valh)
+  }
+
+  //  private def getConstant(n: String): Option[Any] = {
+  //    cspom.expression(n).collect {
+  //      case CSPOMConstant(v) => v
+  //    }
+  //  }
+
+  //  def constantOrErr(solution: Map[Variable, Any]): PartialFunction[String, Any] = {
+  //    case n: String => getConstant(n).getOrElse(throw new MatchError(s"could not find $n in $solution or $cspom"))
+  //  }
+
+  private def ann2expr(cspom: CSPOM, e: FZExpr[_]): CSPOMExpression[_] = e match {
+    case FZAnnotation(vars, Seq()) => cspom.expression(vars).get
+
+    case FZArrayExpr(list) => list.map(ann2expr(cspom, _))
+
+    case FZArrayIdx(array, idx) => cspom.expression(array)
+      .collect {
+        case s: CSPOMSeq[_] => s(idx)
+      }
+      .get
+
+    case e => throw new InvalidParameterException("Cannot read search variable list in " + e)
+  }
+
+  private def flattenArrayExpr(ranges: Seq[Seq[Int]], name: String, solution: Map[String, Int]): Seq[Int] = {
+    if (ranges.isEmpty) {
+      Seq(solution(name))
+    } else {
+      ranges.head.flatMap(
+        i => flattenArrayExpr(ranges.tail, s"$name[$i]", solution))
+    }
+  }
+
+  private def flattenedSize(ranges: Seq[Seq[Int]]): Int =
+    if (ranges.isEmpty) {
+      1
+    } else {
+      ranges.head.size * flattenedSize(ranges.tail)
+    }
+
+  private def bool2int(n: String, sol: Map[String, Any]): String = {
+    val s = sol(n)
+    cspom.expression(n).map {
+      case IntExpression(e) if s == true => "1"
+      case IntExpression(e) if s == false => "0"
+      case _ => s.toString
+    }
+      .get
   }
 
 }

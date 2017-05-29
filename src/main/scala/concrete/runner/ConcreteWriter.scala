@@ -1,24 +1,29 @@
 package concrete.runner
 
-import scala.util.Try
-
 import concrete.ParameterManager
 import cspom.StatisticsManager
 
 trait ConcreteWriter {
+  var end: Result = Unfinished()
+
+  var lastSolution: Option[String] = None
 
   def stats: StatisticsManager
 
   def parameters(params: ParameterManager): Unit
+
   def problem(problem: String): Unit
 
-  def solution(solution: String): Unit
+  def solution(solution: String, obj: Option[Any]): Unit = {
+    lastSolution = Some(solution)
+    printSolution(solution, obj)
+  }
+
+  def printSolution(solution: String, obj: Option[Any]): Unit
+
   def error(e: Throwable): Unit
 
-  def disconnect(status: Try[Result]): Unit
-}
+  def disconnect(): Unit = disconnect(end)
 
-sealed trait Result
-case object SatFinished extends Result
-case object SatUnfinished extends Result
-case object Unsat extends Result
+  def disconnect(status: Result): Unit
+}

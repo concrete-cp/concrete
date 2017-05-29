@@ -1,17 +1,10 @@
-package concrete.constraint.linear
+package concrete
+package constraint
+package linear
 
 import org.scalacheck.Gen
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
-import concrete.IntDomain
-import concrete.Problem
-import concrete.Variable
-import concrete.constraint.AdviseCount
-import concrete.constraint.Constraint
-import concrete.constraint.Residues
-import concrete.constraint.TupleEnumerator
-import concrete.constraint.ConstraintComparator
+import org.scalatest.{FlatSpec, Matchers}
 
 final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
 
@@ -26,7 +19,6 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     val ps = pb.initState.toState
     pb.addConstraint(c)
 
-    c.register(new AdviseCount)
     c.adviseAll(ps)
     assert(c.intervalsOnly(ps))
     val mod = c.revise(ps).toState
@@ -51,7 +43,6 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     val ps = pb.initState.toState
     pb.addConstraint(c)
 
-    c.register(new AdviseCount)
     c.adviseAll(ps)
     assert(c.intervalsOnly(ps))
     val mod = c.revise(ps).toState
@@ -74,7 +65,6 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
     val ps = pb.initState.toState
     pb.addConstraint(c)
 
-    c.register(new AdviseCount)
     c.adviseAll(ps)
     assert(c.intervalsOnly(ps))
     val mod = c.revise(ps)
@@ -98,7 +88,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
       ConstraintComparator.compare(
         Array(vx, vy, vz),
         new SumAC(0, Array(-1, 1, 1), Array(vx, vy, vz), SumEQ),
-        new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
+        new Constraint(Array(vx, vy, vz)) with ResiduesRemovals with TupleEnumerator {
           def check(t: Array[Int]) = t(0) == t(1) + t(2);
         })
 
@@ -112,7 +102,7 @@ final class AddACTest extends FlatSpec with Matchers with PropertyChecks {
       ConstraintComparator.compare(
         Array(vx, vy, vz),
         new SumAC(0, Array(-1, 1, 1), Array(vx, vy, vz), SumEQ),
-        new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
+        new Constraint(Array(vx, vy, vz)) with ResiduesRemovals with TupleEnumerator {
           def check(t: Array[Int]) = t(0) == t(1) + t(2);
         })
 

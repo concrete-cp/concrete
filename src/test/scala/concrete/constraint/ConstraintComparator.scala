@@ -30,10 +30,11 @@ object ConstraintComparator extends Matchers with Inspectors {
     val r1 = c1.revise(ps)
     val r2 = c2.revise(ps)
 
-    r1.andThen { r1 =>
-      println(s"${c1.toString(ps)} -> ${c1.toString(r1)}")
-      r1
-    }
+//    r1
+//      .andThen { r1 =>
+//      println(s"${c1.toString(ps)} -> ${c1.toString(r1)}")
+//      r1
+//    }
 
     (r1, r2) match {
       case (_: Contradiction, _: Contradiction) =>

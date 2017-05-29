@@ -4,7 +4,7 @@ import cspom.CSPOM
 import cspom.CSPOMConstraint
 import cspom.compiler.ConstraintCompiler
 import cspom.compiler.Delta
-import cspom.extension.MDD
+import cspom.extension.MDDRelation
 import cspom.variable.SimpleExpression
 
 object MergeRelations extends ConstraintCompiler {
@@ -32,15 +32,19 @@ object MergeRelations extends ConstraintCompiler {
     
     //println(s"merging ${cons.mkString("\n")}")
     
-    val relations = cons.map { c => c.getParam[MDD[Any]]("relation").get }
+    val relations = cons.map { c => c.getParam[MDDRelation]("relation").get }.map(_.mdd)
 
     val relation = if (init) relations.reduceLeft(_ union _) else relations.reduceLeft(_ intersect _)
 
     val args = c.arguments.map {
-      case e: SimpleExpression[_] => e
+      case e: SimpleExpression[Int] => e
     }
 
-    val nc = if (init) { CSPOM.SeqOperations(args) notIn relation } else { CSPOM.SeqOperations(args) in relation }
+    val nc = if (init) {
+      CSPOM.IntSeqOperations(args) notIn new MDDRelation(relation)
+    } else {
+      CSPOM.IntSeqOperations(args) in new MDDRelation(relation)
+    }
 
     replaceCtr(cons, nc, problem)
   }

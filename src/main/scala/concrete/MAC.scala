@@ -104,7 +104,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
               (SAT(extractSolution(filteredState)), stack, filteredState :: stateStack, nbAssignments)
             case Some(branching) =>
 
-              if (nbAssignments % 10000 == 0) println(s"$nbAssignments assignments")
+              // if (nbAssignments % 10000 == 0) println(s"$nbAssignments assignments")
 
               logger.info(s"${stack.length}: ${branching.b1Desc} ($maxBacktracks bt left)");
 

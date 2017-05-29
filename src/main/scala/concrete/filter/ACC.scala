@@ -108,6 +108,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
   }
 
   def reduceAfter(modif: Seq[(Variable, Event)], states: ProblemState) = {
+    logger.info(problem.constraints(4611).toString(states))
     advises.clear()
     queue.clear();
     for ((v, e) <- modif) {

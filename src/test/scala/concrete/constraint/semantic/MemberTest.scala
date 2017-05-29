@@ -39,7 +39,7 @@ class MemberTest extends FlatSpec with Matchers with PropertyChecks {
       ConstraintComparator.compare(
         Array(vx, vy, vz),
         new Member(vx, Array(vy, vz)),
-        new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
+        new Constraint(Array(vx, vy, vz)) with ResiduesRemovals with TupleEnumerator {
           def check(t: Array[Int]) = t.tail.contains(t(0))
         })
     }

@@ -2,7 +2,6 @@ package concrete
 
 import bitvectors.BitVector
 import concrete.util.Interval
-import concrete.util.Math
 import com.typesafe.scalalogging.LazyLogging
 import concrete.util.CacheOne
 object BitVectorDomain {
@@ -13,7 +12,7 @@ object BitVectorDomain {
 final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override val size: Int)
     extends IntDomain with LazyLogging {
   assert(size >= 2, "BitVectorSets must have at least two elements")
-  assert(Math.checkedAdd(offset, bitVector.lastSetBit) == offset + bitVector.lastSetBit)
+  assert(Math.addExact(offset, bitVector.lastSetBit) == offset + bitVector.lastSetBit)
 
   assert(bitVector.cardinality == size, bitVector + " : " + bitVector.cardinality + " != " + size)
 
@@ -44,9 +43,8 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
   }
 
   /**
-   * @param index
-   *            index to test
-   * @return true iff index is present
+   * @param value to test
+   * @return true iff value is present
    */
   def present(value: Int) = {
     Domain.checks += 1

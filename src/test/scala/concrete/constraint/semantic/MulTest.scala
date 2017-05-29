@@ -9,7 +9,7 @@ import concrete.BooleanDomain
 import concrete.IntDomain
 import concrete.Variable
 import concrete.constraint.Constraint
-import concrete.constraint.Residues
+import concrete.constraint.ResiduesRemovals
 import concrete.constraint.TupleEnumerator
 import concrete.Problem
 import concrete.constraint.ConstraintComparator
@@ -28,7 +28,7 @@ final class MulTest extends FlatSpec with Matchers with PropertyChecks with Insp
       ConstraintComparator.compare(
         Array(vx, vy, vz),
         new MulAC(vx, vy, vz),
-        new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
+        new Constraint(Array(vx, vy, vz)) with ResiduesRemovals with TupleEnumerator {
           def check(t: Array[Int]) = t(0) == t(1) * t(2);
         })
       //      
@@ -48,7 +48,7 @@ final class MulTest extends FlatSpec with Matchers with PropertyChecks with Insp
     pb.addConstraint(c)
     val state = pb.initState.toState
 
-    val tuple = c.findSupport(state, 0, 2).get
+    val tuple = c.findSupport(c.scope.map(state.dom), 0, 2).get
     
     tuple(2) should be <= 1
 

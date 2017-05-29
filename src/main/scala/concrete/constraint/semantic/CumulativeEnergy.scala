@@ -61,9 +61,9 @@ class CumulativeEnergy(s: Array[Variable], d: Array[Variable], h: Array[Variable
           Contradiction(scope)
         } else {
           var state: Outcome = ps
-          if (t.dlb > 0) state = state.removeAfter(t.h, concrete.util.Math.floorDiv(availSurf, t.dlb))
-          if (t.hlb > 0) state = state.removeAfter(t.d, concrete.util.Math.floorDiv(availSurf, t.hlb))
-          if (xDiff > 0) state = state.removeUntil(b, concrete.util.Math.ceilDiv(surface, xDiff))
+          if (t.dlb > 0) state = state.removeAfter(t.h, Math.floorDiv(availSurf, t.dlb))
+          if (t.hlb > 0) state = state.removeAfter(t.d, Math.floorDiv(availSurf, t.hlb))
+          if (xDiff > 0) state = state.removeUntil(b, util.Math.ceilDiv(surface, xDiff))
           state
         }
       } else {

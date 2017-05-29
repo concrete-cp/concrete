@@ -1,11 +1,11 @@
 package concrete.util
 
 class SparseSet(
-    val dense: Array[Int],
+    private val dense: Array[Int],
     private val sparse: Array[Int],
     private val members: Int) extends Set[Int] {
 
-  def this(s: Int) = this(new Array[Int](s), new Array[Int](s), 0)
+  def this(capacity: Int) = this(new Array[Int](capacity), new Array[Int](capacity), 0)
 
   def contains(k: Int) = {
     val a = sparse(k)
@@ -24,6 +24,8 @@ class SparseSet(
     }
   }
 
+
+  def capacity = sparse.length
   
   def iterator: Iterator[Int] = dense.iterator.take(members)
 

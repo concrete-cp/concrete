@@ -3,32 +3,24 @@ package constraint
 package extension
 
 import com.typesafe.scalalogging.LazyLogging
+import mdd.{BDD, IdMap, MiniSet}
 
-import concrete.util.Timestamp
-import cspom.extension.IdMap
-
-final class BDDRelation(val bdd: BDD, val timestamp: Timestamp = new Timestamp()) extends Relation with LazyLogging {
+final class BDDRelation(val bdd: BDD) extends Relation with LazyLogging {
   type Self2 = BDDRelation
+  lazy val lambda = bdd.lambda()
 
-  def findSupport(domains: IndexedSeq[Domain], p: Int, i: Int): Option[Array[Int]] = {
-    assert(domains(p).present(i))
-    val support = new Array[Int](domains.length)
-    val s = bdd.findSupport(timestamp.next(), domains, p, i, support, 0)
-    assert(s.forall(contains))
-    assert(s.forall { sup =>
-      (sup zip domains).forall(a => a._2.present(a._1))
-    })
-    s
+  def findSupport(domains: Array[Domain], p: Int, i: Int): Option[Array[Int]] = {
+    ???
   }
 
-  def edges: Int = bdd.edges(new IdMap())
+  def contains(t: Array[Int]): Boolean = bdd.contains(t)
 
-  def vertices: Int = bdd.vertices(new IdMap())
+  def vertices: Int = bdd.vertices()
 
   def depth: Int = bdd.depth(new IdMap())
 
   def filterTrie(doms: Array[Domain], modified: List[Int]): BDDRelation = {
-    val m = bdd.filterTrie(timestamp.next(), doms, modified, 0)
+    val m = bdd.filterTrie(doms.asInstanceOf[Array[MiniSet]], modified)
 
     assert(m.forall { sup =>
       sup.zipWithIndex.forall {
@@ -42,33 +34,31 @@ final class BDDRelation(val bdd: BDD, val timestamp: Timestamp = new Timestamp()
     if (m eq bdd) {
       this
     } else {
-      new BDDRelation(m, timestamp)
+      new BDDRelation(m)
     }
   }
 
-  override def supported(doms: Array[Domain]): Array[Domain] =
-    bdd.supported(timestamp.next(), doms)
+  override def supported(doms: Array[Domain]): Array[Domain] = {
+    val (supp, offset) = bdd.supported(doms.asInstanceOf[Array[MiniSet]])
+    supp.map(bv => IntDomain.ofBitVector(offset, bv, bv.cardinality))
+  }
 
   override def isEmpty = bdd.isEmpty
 
-  def universal(domains: IndexedSeq[Domain]) = bdd.universal(domains, timestamp.next())
-
   override def toString = s"link, $edges e for $lambda t"
 
-  def copy: BDDRelation = this
+  def edges: Int = bdd.edges()
 
-  lazy val lambda = bdd.lambda
+  // def copy: BDDRelation = this
 
   override def size = {
     require(lambda.isValidInt)
     lambda.toInt
   }
 
-  def identify(): Int = bdd.identify()
-
   def iterator = bdd.iterator.map(_.toArray)
 
   def -(t: Seq[Int]) = throw new UnsupportedOperationException
-  def +(t: Seq[Int]) = new BDDRelation(bdd + t.toList, timestamp)
-  def contains(t: Array[Int]): Boolean = bdd.contains(t)
+
+  def +(t: Seq[Int]) = new BDDRelation(bdd + t.toList)
 }

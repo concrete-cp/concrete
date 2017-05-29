@@ -46,12 +46,10 @@ class SumDomainsTest extends FlatSpec with Matchers {
     val cspom = CSPOM { implicit p =>
       val v0 = IntVariable(IntInterval.atLeast(0)) as "V0"
       val v1 = CSPOMConstant(0)
-      ctr(linear(Seq((1, v0), (1, v1)), "ne", 0))
+      ctr(linear("ne", 0, (1, v0), (1, v1)))
     }
 
     CSPOMCompiler.compile(cspom, Seq(MergeEq, SumDomains, SumConstants)).get
-
-    import scala.language.implicitConversions
 
     val Some(v0: IntVariable) = cspom.variable("V0")
     withClue(cspom) {

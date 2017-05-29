@@ -5,7 +5,6 @@ import concrete.Variable
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
 import concrete.Problem
-import org.scalatest.Inspectors
 import org.scalatest.prop.PropertyChecks
 import org.scalacheck.Gen
 import org.scalacheck.Prop.forAllNoShrink

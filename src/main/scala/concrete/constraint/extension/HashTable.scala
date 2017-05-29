@@ -76,7 +76,7 @@ final class HashTable(arity: Int, val table: ArraySet[Int]) extends Relation {
   def edges = arity * table.size
 
   def find(f: (Int, Int) => Boolean) = throw new UnsupportedOperationException
-  def findSupport(scope: IndexedSeq[Domain], p: Int, i: Int) = {
+  def findSupport(scope: Array[Domain], p: Int, i: Int) = {
     table.find(t =>
       t(p) == i && (0 until arity).forall(i => scope(i).present(t(i))))
   }

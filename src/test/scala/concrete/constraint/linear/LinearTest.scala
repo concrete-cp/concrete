@@ -26,7 +26,7 @@ class LinearTest extends FlatSpec with Matchers {
     val s1 = problem.initState.toState
     val m1 = constraint.revise(s1).toState
 
-    println(constraint.toString(m1))
+    //println(constraint.toString(m1))
 
     val m2 = m1.assign(variables(0), 6)
       .toState
@@ -37,9 +37,9 @@ class LinearTest extends FlatSpec with Matchers {
 
     val m3 = constraint.revise(m2).toState
 
-    println(constraint.toString(m3))
+    //println(constraint.toString(m3))
     
-    println(m3.entailed.hasInactiveVar(constraint))
+    //println(m3.entailed.hasInactiveVar(constraint))
 
   }
 }

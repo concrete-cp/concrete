@@ -1,23 +1,23 @@
-package concrete.constraint.semantic;
+package concrete.constraint.semantic
+
+;
+
+import concrete._
+import concrete.constraint.Constraint
 
 import scala.annotation.tailrec
-
-import concrete.Outcome
-import concrete.ProblemState
-import concrete.Variable
-import concrete.constraint.Constraint
-import concrete.Event
-import concrete.Assignment
 
 final class NeqVec(x: Array[Variable], y: Array[Variable]) extends Constraint(x ++ y) {
 
   require(x.length == y.length)
 
-  def init(ps: ProblemState) = ps
-
   val zip = x.zip(y)
-
   val size = arity / 2
+  val simpleEvaluation = 2
+  private val NONE = -2
+  private val TWOP = -1
+
+  def init(ps: ProblemState) = ps
 
   def check(t: Array[Int]) = {
     t.view.splitAt(size).zipped.exists(_ != _)
@@ -26,31 +26,18 @@ final class NeqVec(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
   def revise(ps: ProblemState): Outcome = {
     val p = singleFreeVariable(ps)
 
-    if (p < 0) {
+    if (p == TWOP) {
       ps
-    } else if (p < size) {
-      ps.remove(scope(p), ps.dom(scope(p + size)).head)
-    } else {
-      ps.remove(scope(p), ps.dom(scope(p - size)).head)
-    }
-  }
-
-  @tailrec
-  private def singleFreeVariable(
-    ps: ProblemState,
-    i: Int = 0,
-    single: Int = -1): Int = {
-
-    if (i >= arity) {
-      single
-    } else if (!ps.dom(scope(i)).isAssigned) {
-      if (single < 0) {
-        singleFreeVariable(ps, i + 1, i)
+    } else if (p == NONE) {
+      if ((0 until size).forall(p => ps.dom(scope(p)).singleValue == ps.dom(scope(p + size)).singleValue)) {
+        Contradiction(scope)
       } else {
-        -1
+        ps.entail(this)
       }
+    } else if (p < size) {
+      ps.removeIfPresent(scope(p), ps.dom(scope(p + size)).head)
     } else {
-      singleFreeVariable(ps, i + 1, single)
+      ps.removeIfPresent(scope(p), ps.dom(scope(p - size)).head)
     }
   }
 
@@ -59,5 +46,22 @@ final class NeqVec(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
 
   def advise(ps: ProblemState, event: Event, p: Int) = if (event <= Assignment) arity else -1
 
-  val simpleEvaluation = 2
+  @tailrec
+  private def singleFreeVariable(
+                                  ps: ProblemState,
+                                  i: Int = 0,
+                                  single: Int = NONE): Int = {
+
+    if (i >= arity) {
+      single
+    } else if (!ps.dom(scope(i)).isAssigned) {
+      if (single < 0) {
+        singleFreeVariable(ps, i + 1, i)
+      } else {
+        TWOP
+      }
+    } else {
+      singleFreeVariable(ps, i + 1, single)
+    }
+  }
 }

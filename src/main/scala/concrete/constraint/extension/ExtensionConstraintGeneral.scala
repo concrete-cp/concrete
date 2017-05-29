@@ -23,14 +23,14 @@ import concrete.Contradiction
 import concrete.Outcome
 import concrete.ProblemState
 import concrete.Variable
-import concrete.constraint.Residues
+import concrete.constraint.ResiduesRemovals
 import bitvectors.BitVector
 
 final class ExtensionConstraintGeneral(
   var matrix: Matrix,
   shared: Boolean,
   scope: Array[Variable])
-    extends ExtensionConstraint(scope) with Residues with ConflictCount {
+    extends ExtensionConstraint(scope) with ResiduesRemovals with ConflictCount {
 
   def removeTuple(tuple: Array[Int]) = {
     ??? // disEntail();

@@ -16,7 +16,7 @@ trait Matrix {
 
   def check(tuple: Array[Int]): Boolean
 
-  def copy: Matrix
+  // def copy: Matrix
 
   def isEmpty: Boolean
 

@@ -1,12 +1,12 @@
-package concrete.constraint.linear
+package concrete
+package constraint
+package linear
 
 import concrete.util.Interval
-import concrete.Domain
-import concrete.ProblemState
 import bitvectors.BitVector
 import Linear.maxTimes
 import Linear.minTimes
-import concrete.util.Math
+
 
 object StatelessBoundPropagation {
   sealed trait POutcome
@@ -71,7 +71,7 @@ trait StatelessBoundPropagation extends Linear {
 
         val thisBounds = f.lb - minTimes(dom, fact)
 
-        val newDom = if (fact < 0) dom.removeUntil(Math.ceilDiv(thisBounds, -fact)) else dom.removeAfter(Math.floorDiv(thisBounds, -fact))
+        val newDom = if (fact < 0) dom.removeUntil(util.Math.ceilDiv(thisBounds, -fact)) else dom.removeAfter(Math.floorDiv(thisBounds, -fact))
         LinearLe.shaves += 1
 
         doms(p) = newDom //val newDoms = doms.updated(i, newDom)

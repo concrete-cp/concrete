@@ -44,7 +44,7 @@ final class IndexedTable(val tables: Array[VecMap[ArraySet[Int]]]) extends Relat
   lazy val edges = size * tables.length + tables.map(_.size).sum
 
   def find(f: (Int, Int) => Boolean) = throw new UnsupportedOperationException
-  def findSupport(scope: IndexedSeq[Domain], p: Int, i: Int) = {
+  def findSupport(scope: Array[Domain], p: Int, i: Int) = {
     tables(p).get(i).flatMap { m =>
       m.find(t =>
         (0 until tables.length).forall(q => q == p || scope(q).present(t(q))))

@@ -22,16 +22,12 @@ package concrete.util;
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.math.BigInt.int2bigInt
-
 import com.typesafe.scalalogging.LazyLogging
-
 import concrete.ParameterManager
 import concrete.Problem
 import concrete.Solver
 import concrete.UNSAT
-import concrete.constraint.extension.BDDC
-import concrete.constraint.extension.MDDC
-import concrete.constraint.extension.ReduceableExt
+import concrete.constraint.extension.{BDDC, MDDC, ReduceableExt}
 import concrete.generator.ExtensionGenerator
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
@@ -46,9 +42,8 @@ import cspom.StatisticsManager.averageBigInt
 import cspom.StatisticsManager.stDev
 import cspom.StatisticsManager.stDevBigInt
 import cspom.compiler.CSPOMCompiler
-import cspom.extension.IdMap
-import cspom.extension.MDD
-import cspom.extension.Relation
+import cspom.extension.MDDRelation
+import mdd.BDD
 import slick.jdbc.PostgresProfile.api.columnExtensionMethods
 import slick.jdbc.PostgresProfile.api.intColumnType
 import slick.jdbc.PostgresProfile.api.streamableQueryActionExtensionMethods
@@ -109,19 +104,17 @@ object MDDStats extends App with LazyLogging {
     for {
       c <- cspom.constraints
       if (c.function == 'extension && c.arguments.size > 2)
-      g <- c.getParam[Relation[Int]]("relation")
+      g <- c.getParam[MDDRelation]("relation")
 
     } {
-      val r = g match {
-        case m: MDD[Int] => m.reduce()
-      }
-      edges ::= r.edges
-      lambdas ::= r.lambda
+      val r = g.mdd.reduce()
+      edges ::= r.edges()
+      lambdas ::= r.lambda()
       ks ::= c.arguments.size
       ds :::= c.arguments.map(_.searchSpace).toList
 
-      val bdd = eg.cspomMDDtoBDD(r)
-      bdds ::= bdd.reduce().edges(new IdMap())
+      val bdd = BDD(r)
+      bdds ::= bdd.reduce().edges()
     }
 
     if (ds.nonEmpty) {

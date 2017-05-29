@@ -3,6 +3,8 @@ package concrete
 import concrete.util.Interval
 import cspom.Statistic
 import bitvectors.BitVector
+import mdd.MiniSet
+
 import scala.collection.TraversableView
 
 object Domain {
@@ -14,7 +16,7 @@ object Domain {
   }
 }
 
-abstract class Domain { //extends AbstractSeq[Int] with IterableLike[Int, Domain] {
+abstract class Domain extends MiniSet { //extends AbstractSeq[Int] with IterableLike[Int, Domain] {
   //override def newBuilder: Builder[Int, Domain] = ???
 
   def next(i: Int): Int

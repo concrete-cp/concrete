@@ -5,7 +5,7 @@ import concrete.ProblemState
 import concrete.Variable
 import concrete.constraint.BC
 import concrete.constraint.Constraint
-import concrete.constraint.Residues
+import concrete.constraint.ResiduesRemovals
 import concrete.constraint.TupleEnumerator
 import concrete.Domain
 
@@ -46,7 +46,7 @@ class ModBC(x: Variable, y: Variable, z: Variable) extends Constraint(x, y, z) w
   def simpleEvaluation: Int = 1
 }
 
-class ModAC(v0: Variable, v1: Variable, result: Variable) extends Constraint(v0, v1, result) with Residues with TupleEnumerator {
+class ModAC(v0: Variable, v1: Variable, result: Variable) extends Constraint(v0, v1, result) with ResiduesRemovals with TupleEnumerator {
   def check(t: Array[Int]) = {
     t(0) % t(1) == t(2)
 

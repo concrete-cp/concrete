@@ -1,18 +1,16 @@
 package concrete
 
-import org.scalatest.FlatSpec
 import com.typesafe.scalalogging.LazyLogging
 import concrete.filter.ACC
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
+import concrete.runner.XCSP3Concrete
 import cspom.compiler.CSPOMCompiler
-import org.scalatest.TryValues
-import concrete.runner.XCSPConcrete
 
 final class ProblemGeneratorTest extends FlatSpec with LazyLogging with TryValues {
 
   "ProblemGenerator" should "generate zebra" in {
-    generateTest("zebra.xml.xz");
+    generateTest("Zebra.xml.xz");
   }
 
   it should "generate queens-12" in {
@@ -40,7 +38,7 @@ final class ProblemGeneratorTest extends FlatSpec with LazyLogging with TryValue
   private def generateTest(file: String): Unit = {
 
     val pm = new ParameterManager()
-    val cspom = XCSPConcrete
+    val cspom = XCSP3Concrete
       .loadCSPOMURL(classOf[ProblemGeneratorTest].getResource(file))
       .get
 

@@ -1,22 +1,16 @@
 package concrete.runner
 
 import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-import java.nio.file.Paths
+import java.nio.file.{Files, Paths}
 
-import scala.util.Try
-
-import concrete.CSPOMSolver
-import concrete.Problem
-import concrete.Solver
-import concrete.Variable
 import concrete.generator.ProblemGenerator
-import concrete.generator.cspompatterns.Bool2IntIsEq
-import concrete.generator.cspompatterns.ConcretePatterns
-import cspom.CSPOM
-import cspom.GML
+import concrete.generator.cspompatterns.{Bool2IntIsEq, ConcretePatterns}
+import concrete.{CSPOMSolver, Problem, Solver, Variable}
 import cspom.compiler.CSPOMCompiler
 import cspom.variable.CSPOMVariable
+import cspom.{CSPOM, GML}
+
+import scala.util.Try
 
 trait CSPOMRunner extends ConcreteRunner {
 
@@ -26,10 +20,29 @@ trait CSPOMRunner extends ConcreteRunner {
 
   var cspomSolver: CSPOMSolver = _
 
+  override final def applyParametersPost(s: Solver, opt: Map[Symbol, Any]) = {
+    cspomSolver = new CSPOMSolver(s, cspom, variables)
+    applyParametersCSPOM(cspomSolver, opt)
+  }
+
+  def applyParametersCSPOM(s: CSPOMSolver, opt: Map[Symbol, Any]): Unit = {}
+
+  override final def output(sol: Map[Variable, Any], obj: Option[Any]) =
+    outputCSPOM(cspomSolver.solution(sol), obj)
+
+  def outputCSPOM(solution: Map[String, Any], obj: Option[Any]): String = {
+    solution.iterator.map {
+      case (variable, value) => s"${variable} = $value"
+    }.mkString("\n")
+  }
+
+  override final def control(sol: Map[Variable, Any], obj: Option[Any]) =
+    controlCSPOM(cspomSolver.solution(sol), obj)
+
   override def options(args: List[String], o: Map[Symbol, Any] = Map.empty, realArgs: List[String]): (Map[Symbol, Any], List[String]) =
     args match {
       case "-gml" :: t :: tail => options(tail, o + ('gml -> t), realArgs)
-      case _                   => super.options(args, o, realArgs)
+      case _ => super.options(args, o, realArgs)
     }
 
   final def load(args: List[String], opt: Map[Symbol, Any]): Try[Problem] = {
@@ -64,27 +77,8 @@ trait CSPOMRunner extends ConcreteRunner {
       }
   }
 
-  override final def applyParametersPost(s: Solver, opt: Map[Symbol, Any]) = {
-    cspomSolver = new CSPOMSolver(s, cspom, variables)
-    applyParametersCSPOM(cspomSolver, opt)
-  }
-
-  def applyParametersCSPOM(s: CSPOMSolver, opt: Map[Symbol, Any]): Unit = {}
-
   def loadCSPOM(args: List[String], opt: Map[Symbol, Any]): Try[CSPOM]
 
-  def outputCSPOM(solution: Map[String, Any]): String = {
-    solution.iterator.map {
-      case (variable, value) => s"${variable} = $value"
-    }.mkString("\n")
-  }
-
-  override final def output(sol: Map[Variable, Any]) =
-    outputCSPOM(cspomSolver.solution(sol))
-
-  def controlCSPOM(solution: Map[String, Any]): Option[String]
-
-  override final def control(sol: Map[Variable, Any]) =
-    controlCSPOM(cspomSolver.solution(sol))
+  def controlCSPOM(solution: Map[String, Any], obj: Option[Any]): Option[String]
 
 }

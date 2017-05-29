@@ -152,7 +152,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
         sol(v) match {
           case i: Int =>
             obtainOptimConstraint(new GtC(v, i)).constant = i
-            logger.warn(s"new best value $i")
+            logger.info(s"new best value $i")
           case o => throw new AssertionError(s"$v has value $o which is not an int")
         }
 
@@ -162,7 +162,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
         sol(v) match {
           case i: Int =>
             obtainOptimConstraint(new LtC(v, i)).constant = i
-            logger.warn(s"new best value $i")
+            logger.info(s"new best value $i")
           case o => throw new AssertionError(s"$v has value $o which is not an int")
         }
 
@@ -251,12 +251,7 @@ sealed trait SolverResult {
   def isSat: Boolean
   def get: Option[Map[Variable, Any]]
   def getInt: Option[Map[Variable, Int]] = get.map { s =>
-    s.mapValues {
-      case false => 0
-      case true => 1
-      case i: Int => i
-      case i => throw new NumberFormatException(s"$i should be an integer or boolean value")
-    }
+    s.mapValues(util.Math.any2Int)
   }
   def getInteger: java.util.Optional[java.util.Map[Variable, java.lang.Integer]] = {
     val o = getInt.map { _.mapValues(i => i: java.lang.Integer).asJava }

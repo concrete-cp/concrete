@@ -1,23 +1,11 @@
-package concrete.constraint.semantic;
+package concrete
+package constraint
+package semantic
 
 
-import scala.util.Random
 import org.scalacheck.Gen
-
-import org.scalatest.FlatSpec
-import org.scalatest.Inspectors
-import org.scalatest.Matchers
+import org.scalatest.{FlatSpec, Inspectors, Matchers}
 import org.scalatest.prop.PropertyChecks
-import concrete.IntDomain
-import concrete.Problem
-import concrete.ProblemState
-import concrete.Variable
-import concrete.constraint.AdviseCount
-import concrete.constraint.Constraint
-import concrete.constraint.Residues
-import concrete.constraint.TupleEnumerator
-
-import concrete.constraint.ConstraintComparator
 
 final class AbsDiffTest extends FlatSpec with Matchers with Inspectors with PropertyChecks {
 
@@ -32,7 +20,7 @@ final class AbsDiffTest extends FlatSpec with Matchers with Inspectors with Prop
       ConstraintComparator.compare(
         Array(vx, vy, vz),
         new AbsDiffAC(vx, vy, vz),
-        new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
+        new Constraint(Array(vx, vy, vz)) with ResiduesRemovals with TupleEnumerator {
           def check(t: Array[Int]) = t(0) == math.abs(t(1) - t(2));
         })
 
@@ -49,7 +37,6 @@ final class AbsDiffTest extends FlatSpec with Matchers with Inspectors with Prop
     val pb = Problem(vx, vy, vz)
     pb.addConstraint(c)
     val ps = pb.initState.toState
-    c.register(new AdviseCount)
     c.adviseAll(ps)
     val mod = c.revise(ps).asInstanceOf[ProblemState]
 

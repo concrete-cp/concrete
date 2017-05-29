@@ -3,10 +3,8 @@ package constraint
 package linear
 
 import com.typesafe.scalalogging.LazyLogging
-
-import concrete.generator.ACBC
 import concrete.constraint.extension.BinaryExt
-import bitvectors.BitVector
+import concrete.generator.ACBC
 
 object Eq {
   def apply(neg: Boolean, x: Variable, b: Int, y: Variable): ACBC =
@@ -23,11 +21,14 @@ object Eq {
 final class EqCReif(val r: Variable, val x: Variable, val y: Int) extends Constraint(Array(r, x)) {
 
   def advise(problemState: ProblemState, event: Event, pos: Int): Int = 2
+
   def check(tuple: Array[Int]): Boolean = tuple(0) == (if (tuple(1) == y) 1 else 0)
+
   def init(ps: ProblemState): Outcome = {
     //println(toString(ps))
     ps
   }
+
   def revise(ps: ProblemState): Outcome = {
     val dx = ps.dom(x)
 
@@ -51,6 +52,7 @@ final class EqCReif(val r: Variable, val x: Variable, val y: Int) extends Constr
 
     }
   }
+
   def simpleEvaluation: Int = 1
 
   override def toString(ps: ProblemState) =
@@ -59,8 +61,11 @@ final class EqCReif(val r: Variable, val x: Variable, val y: Int) extends Constr
 
 final class EqReif(val r: Variable, val x: Variable, val y: Variable) extends Constraint(Array(r, x, y)) {
   def advise(problemState: ProblemState, event: Event, pos: Int): Int = 3
+
   def check(tuple: Array[Int]): Boolean = tuple(0) == (if (tuple(1) == tuple(2)) 1 else 0)
+
   def init(ps: ProblemState): Outcome = ps
+
   def revise(ps: ProblemState): Outcome = {
     val dx = ps.dom(x)
     val dy = ps.dom(y)
@@ -92,13 +97,17 @@ final class EqReif(val r: Variable, val x: Variable, val y: Variable) extends Co
 
     }
   }
+
   def simpleEvaluation: Int = 1
 }
 
 final class NeqReif(val r: Variable, val x: Variable, val y: Variable) extends Constraint(Array(r, x, y)) {
   def advise(problemState: ProblemState, event: Event, pos: Int): Int = 3
+
   def check(tuple: Array[Int]): Boolean = tuple(0) == (if (tuple(1) == tuple(2)) 1 else 0)
+
   def init(ps: ProblemState): Outcome = ps
+
   def revise(ps: ProblemState): Outcome = {
     val dx = ps.dom(x)
     val dy = ps.dom(y)
@@ -130,18 +139,19 @@ final class NeqReif(val r: Variable, val x: Variable, val y: Variable) extends C
 
     }
   }
+
   def simpleEvaluation: Int = 1
 }
 
 /**
- * Constraint x + b = y
- */
+  * Constraint x + b = y
+  */
 final class EqACFast(val x: Variable, val b: Int, val y: Variable)
-    extends Constraint(Array(x, y)) {
-
-  def this(x: Variable, y: Variable) = this(x, 0, y)
+  extends Constraint(Array(x, y)) {
 
   var staticEvaluation: Int = _
+
+  def this(x: Variable, y: Variable) = this(x, 0, y)
 
   def advise(problemState: ProblemState, event: Event, pos: Int): Int = 2
 
@@ -172,29 +182,30 @@ final class EqACFast(val x: Variable, val b: Int, val y: Variable)
 
   }
 
-  override def consistent(ps: ProblemState) =
+  override def consistent(ps: ProblemState): Outcome =
     if (!(ps.dom(x) disjoint ps.dom(y).shift(-b))) ps else Contradiction(scope)
 
   def simpleEvaluation: Int = 1
+
   override def toString(ps: ProblemState) = s"${x.toString(ps)}${
     if (b > 0) " + " + b else if (b < 0) " - " + (-b) else ""
   } =FAC= ${y.toString(ps)}"
 }
 
 /**
- * Constraint x + y = b
- *
- * @param a
- * @param x
- * @param b
- * @param y
- */
-final class EqACNeg private[linear] (
-  val x: Variable,
-  val y: Variable,
-  val b: Int,
-  val skipIntervals: Boolean = true)
-    extends Constraint(Array(x, y)) with Removals with BCCompanion {
+  * Constraint x + y = b
+  *
+  * @param x
+  * @param y
+  * @param b
+  *
+  */
+final class EqACNeg private[linear](
+                                     val x: Variable,
+                                     val y: Variable,
+                                     val b: Int,
+                                     val skipIntervals: Boolean = true)
+  extends Constraint(Array(x, y)) with BCCompanion {
 
   def init(ps: ProblemState) = {
     //println(toString(ps))
@@ -207,10 +218,10 @@ final class EqACNeg private[linear] (
 
   def simpleEvaluation: Int = 2
 
-  def getEvaluation(ps: ProblemState): Int =
+  def advise(ps: ProblemState, event: Event, pos: Int): Int =
     if (skip(ps)) -1 else ps.card(x) + ps.card(y)
 
-  override def consistent(ps: ProblemState, mod: BitVector) = {
+  override def consistent(ps: ProblemState) = {
     val xDom = ps.dom(x)
     val yDom = ps.dom(y)
     val r = (xDom.span + yDom.span).contains(b) && (
@@ -223,25 +234,12 @@ final class EqACNeg private[linear] (
     if (r) ps else Contradiction(scope)
   }
 
-  def revise(ps: ProblemState, modified: BitVector) = {
-    val skip = this.skip(modified)
-
-    {
-      if (skip == 0) {
-        ps
-      } else {
-        val domY = ps.dom(y)
-        ps.filterDom(x)(xv => domY.present(b - xv))
-      }
-    }
+  def revise(ps: ProblemState) = {
+    val domY = ps.dom(y)
+    ps.filterDom(x)(xv => domY.present(b - xv))
       .andThen { ps =>
-        if (skip == 1) {
-          ps
-        } else {
-          val domX = ps.dom(x)
-          ps.filterDom(y)(yv => domX.present(b - yv))
-        }
-
+        val domX = ps.dom(x)
+        ps.filterDom(y)(yv => domX.present(b - yv))
       }
 
   }
@@ -250,31 +248,33 @@ final class EqACNeg private[linear] (
 }
 
 /**
- * if (neg)
- *  constraint x + y = b
- * else
- *  constraint y - x = b
- */
+  * if (neg)
+  * constraint x + y = b
+  * else
+  * constraint y - x = b
+  */
 
 final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
-    extends Constraint(Array(x, y)) with BC with LazyLogging {
+  extends Constraint(Array(x, y)) with BC with LazyLogging {
+
+  val simpleEvaluation = 2
 
   def init(ps: ProblemState) = ps
 
   /**
-   * public
-   * Constraint x = y.
-   *
-   * @param x
-   * @param y
-   */
+    * public
+    * Constraint x = y.
+    *
+    * @param x
+    * @param y
+    */
   def this(x: Variable, y: Variable) = this(false, x, 0, y);
 
   def check(t: Array[Int]) = (if (neg) -t(0) else t(0)) + b == t(1);
 
   override def shave(ps: ProblemState) = {
     if (neg) {
-      // -x + b = y <=> x = -y + b 
+      // -x + b = y <=> x = -y + b
       ps.shaveDom(x, -ps.span(y) + b)
         .shaveDom(y, -ps.span(x) + b)
 
@@ -300,5 +300,4 @@ final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
   } =BC= ${y.toString(ps)}"
 
   def advise(ps: ProblemState, p: Int) = 3
-  val simpleEvaluation = 2
 }

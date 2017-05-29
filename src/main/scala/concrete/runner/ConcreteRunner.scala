@@ -1,19 +1,16 @@
 package concrete.runner
 
 import java.security.InvalidParameterException
-import java.util.concurrent.TimeoutException
+import java.util.Timer
 
 import com.typesafe.scalalogging.LazyLogging
-import concrete.{ParameterManager, Problem, Solver, Variable}
 import concrete.runner.sql.SQLWriter
-import concrete.util.CancellableFuture
-import cspom.{Statistic, StatisticsManager, UNSATException}
+import concrete.{ParameterManager, Problem, Solver, Variable}
 import cspom.compiler.CSPOMCompiler
+import cspom.{Statistic, StatisticsManager, UNSATException}
 import org.scalameter.Quantity
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 trait ConcreteRunner extends LazyLogging {
 
@@ -72,7 +69,9 @@ trait ConcreteRunner extends LazyLogging {
 
   def description(args: List[String]): String
 
-  def run(args: Array[String]): Try[Result] = {
+  def defaultWriter(opt: Map[Symbol, Any], sm: StatisticsManager): ConcreteWriter = new FZWriter(opt, statistics)
+
+  def run(args: Array[String]): Result = {
 
     //var status: RunnerStatus = Unknown
 
@@ -108,8 +107,18 @@ trait ConcreteRunner extends LazyLogging {
       if (opt.contains('SQL)) {
         new SQLWriter(pm, statistics)
       } else {
-        new ConsoleWriter(opt, statistics)
+        defaultWriter(opt, statistics)
       }
+
+    Runtime.getRuntime().addShutdownHook(new Finisher(Thread.currentThread(), writer))
+
+    val timer = opt.get('Time)
+      .map { case time: Int =>
+        val t = new Timer()
+        t.schedule(new Killer(Runtime.getRuntime), time * 1000)
+        t
+      }
+
 
     for (it <- opt.get('iteration)) {
       pm("iteration") = it
@@ -128,114 +137,108 @@ trait ConcreteRunner extends LazyLogging {
 
     var solver: Option[Solver] = None
 
-    val f = CancellableFuture {
-      try {
-        val (tryLoad, lT) = StatisticsManager.measureTry {
-          load(remaining, opt)
-        }
-        loadTime = lT
-
-        tryLoad.map { problem =>
-
-          applyParametersPre(problem, opt)
-
-          val solver = Solver(problem, pm)
-
-          statistics.register("solver", solver)
-          applyParametersPost(solver, opt)
-
-          optimize match {
-            case "sat" =>
-            case "min" =>
-              solver.minimize(solver.problem.variable(optimizeVar.get))
-            case "max" =>
-              solver.maximize(solver.problem.variable(optimizeVar.get))
-          }
-
-          solver
-        }
-          .map { solv =>
-            solver = Some(solv)
-            if (solv.isEmpty) {
-              Unsat
-            } else if (opt.contains('all)) {
-              for (s <- solv) {
-                solution(s, writer, opt)
-              }
-              SatFinished
-            } else if (solv.optimises.nonEmpty) {
-              for (s <- solv.toIterable.lastOption) {
-                solution(s, writer, opt)
-              }
-              SatFinished
-            } else {
-              for (s <- solv.toIterable.headOption) {
-                solution(s, writer, opt)
-              }
-              SatUnfinished
-            }
-          }
-      } catch {
-        // Avoids hanging in case of fatal error
-        case any: Throwable => Failure(any)
-      }
+    val (tryLoad, lT) = StatisticsManager.measureTry[Problem, Unit, Double] {
+      load(remaining, opt)
     }
+    loadTime = lT
 
-    val timeout = opt.get('Time).map(_.asInstanceOf[Int].seconds).getOrElse(Duration.Inf)
+    val r = tryLoad.map { problem =>
 
-    val r = Try(concurrent.Await.result(f, timeout))
-      .recoverWith {
-        case e: TimeoutException =>
-          logger.info("Cancelling")
-          f.cancel()
-          var tries = 100
-          while (tries > 0 && solver.exists(_.running)) {
-            logger.info("Waiting for interruption")
-            Thread.sleep(100)
-            tries -= 1
-          }
-          if (tries >= 0) {
-            Failure(e)
-          } else {
-            Failure(new IllegalStateException("Could not interrupt search process", e))
-          }
+      applyParametersPre(problem, opt)
 
+      val solver = Solver(problem, pm)
+
+      statistics.register("solver", solver)
+      applyParametersPost(solver, opt)
+
+      optimize match {
+        case "sat" =>
+        case "min" =>
+          solver.minimize(solver.problem.variable(optimizeVar.get))
+        case "max" =>
+          solver.maximize(solver.problem.variable(optimizeVar.get))
       }
 
-    val status: Try[Result] = r.flatten
-      .recoverWith {
-        case e: UNSATException =>
-          writer.error(e)
-          Success(Unsat)
-        case e: Throwable =>
-          writer.error(e)
-          Failure(e)
+      solver
+    }
+      .map { solv =>
+        solver = Some(solv)
+        if (opt.contains('all) || solv.optimises.nonEmpty) {
+          for (s <- solv.toIterable) {
+            solution(solv, s, writer, opt)
+          }
+          FullExplore
+        } else {
+          solv.toIterable.headOption match {
+            case None => FullExplore
+            case Some(s) =>
+              solution(solv, s, writer, opt)
+              Unfinished(None)
+          }
+        }
       }
 
-    for (_ <- status; s <- pm.unused) {
+
+    //    val timeout = opt.get('Time).map(_.asInstanceOf[Int].seconds).getOrElse(Duration.Inf)
+    //
+    //    val r = Try(concurrent.Await.result(f, timeout))
+    //      .recoverWith {
+    //        case e: TimeoutException =>
+    //          logger.info("Cancelling")
+    //          f.cancel()
+    //          var tries = 100
+    //          while (tries > 0 && solver.exists(_.running)) {
+    //            logger.info("Waiting for interruption")
+    //            Thread.sleep(100)
+    //            tries -= 1
+    //          }
+    //          if (tries >= 0) {
+    //            Failure(e)
+    //          } else {
+    //            Failure(new IllegalStateException("Could not interrupt search process", e))
+    //          }
+    //
+    //      }
+
+    val status: Result = r.recover {
+      case e: UNSATException =>
+        writer.error(e)
+        FullExplore
+      case e: Throwable =>
+        writer.error(e)
+        Error(e)
+    }
+      .get
+
+    for (s <- pm.unused) {
       logger.warn(s"Unused parameter : $s")
     }
-    writer.disconnect(status)
+    for (t: Timer <- timer) {
+      t.cancel()
+    }
+    writer.end = status
     status
   }
 
-  final def solution(sol: Map[Variable, Any], writer: ConcreteWriter, opt: Map[Symbol, Any]): Unit = {
-    writer.solution(output(sol))
+  final def solution(solver: Solver, sol: Map[Variable, Any], writer: ConcreteWriter, opt: Map[Symbol, Any]): Unit = {
+    val objective = solver.optimises.map(sol)
+
+    writer.solution(output(sol, objective), objective)
     if (opt.contains('Control)) {
-      for (failed <- control(sol)) {
-        throw new IllegalStateException("Falsified constraints : " + failed)
+      for (failed <- control(sol, objective)) {
+        throw new IllegalStateException("Control error: " + failed)
       }
     }
   }
 
-  def output(solution: Map[Variable, Any]): String = {
+  def output(solution: Map[Variable, Any], obj: Option[Any]): String = {
     solution.map {
       case (variable, value) => s"${variable.name} = $value"
     }.mkString("\n")
 
   }
 
-  def control(solution: Map[Variable, Any]): Option[String]
+  def control(solution: Map[Variable, Any], obj: Option[Any]): Option[String]
 
 }
 

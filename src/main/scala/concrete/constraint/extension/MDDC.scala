@@ -11,6 +11,7 @@ import concrete.constraint.Removals
 import concrete.constraint.StatefulConstraint
 import concrete.util.SparseSet
 import bitvectors.BitVector
+import mdd.{MDD, MDD0, MDDLeaf}
 
 /* MDDRelation comes with its own timestamp */
 class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
@@ -46,7 +47,7 @@ class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
 
     var gNoChange = false
 
-    val ts = mdd.timestamp.next
+    var gYes = new SparseSet(gNo.capacity)
 
     def seekSupports(g: MDD, i: Int): Boolean = {
 
@@ -78,12 +79,12 @@ class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
         true
       } else if (g eq MDD0) {
         false
-      } else if (g.cache.timestamp == ts) {
+      } else if (gYes(g.id)) {
         true
       } else if (gNo.contains(g.id)) {
         false
       } else if (loop(domains(i))) {
-        g.cache.timestamp = ts
+        gYes += g.id
         true
       } else {
         gNo += g.id

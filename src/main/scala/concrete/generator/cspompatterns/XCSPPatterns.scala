@@ -1,21 +1,11 @@
 package concrete.generator.cspompatterns
 
-import cspom.CSPOM
-import cspom.CSPOM.constant
-import cspom.CSPOM.constantSeq
-import cspom.CSPOM.seq2CSPOMSeq
-import cspom.CSPOMConstraint
-import cspom.compiler.ConstraintCompilerNoData
-import cspom.compiler.Delta
-import cspom.compiler.GlobalCompiler
-import cspom.variable.BoolVariable
-import cspom.variable.SimpleExpression
+import cspom.CSPOM.{constant, constantSeq, seq2CSPOMSeq}
+import cspom.{CSPOM, CSPOMConstraint}
+import cspom.compiler.{ConstraintCompilerNoData, Delta, GlobalCompiler}
+import cspom.variable.{BoolVariable, SimpleExpression}
 
 object XCSPPatterns {
-  def apply() = Seq(
-    Ordered, Lex,
-    new GlobalCompiler(mtch) { def selfPropagation = true })
-
   val mtch: PartialFunction[CSPOMConstraint[_], CSPOMConstraint[_]] = {
     case CSPOMConstraint(a, 'sub, Seq(b, c), p) =>
       CSPOMConstraint('sum)(Seq(-1, 1, -1), Seq(a, b, c), 0) withParams p + ("mode" -> "eq")
@@ -48,10 +38,23 @@ object XCSPPatterns {
     case CSPOMConstraint(r, 'allDifferent, a, p) =>
       CSPOMConstraint(r)('alldifferent)(a: _*) withParams p
 
+    case CSPOMConstraint(r, 'set, vars, p) =>
+      CSPOMConstraint('member)(vars, r) withParams p
+
+    /** Semantics of "in" in XCSP3 and Concrete differ */
+    case CSPOMConstraint(r, 'in, Seq(x, y: SimpleExpression[_]), p) =>
+      CSPOMConstraint(r)('eq)(x, y) withParams p
   }
+
+  def apply() = Seq(
+    Ordered, Lex,
+    new GlobalCompiler(mtch) {
+      def selfPropagation = true
+    })
 
   object Ordered extends ConstraintCompilerNoData {
     def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM): Boolean = constraint.function == 'ordered
+
     def compile(constraint: CSPOMConstraint[_], problem: CSPOM): Delta = {
       val mode = Symbol(constraint.getParam[String]("mode").get.toLowerCase)
       val slide = constraint.arguments.sliding(2)

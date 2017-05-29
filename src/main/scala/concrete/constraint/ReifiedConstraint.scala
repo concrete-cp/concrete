@@ -1,13 +1,13 @@
 package concrete.constraint
 
 import com.typesafe.scalalogging.LazyLogging
-
 import concrete.BooleanDomain
 import concrete.Contradiction
 import concrete.Outcome
 import concrete.ProblemState
 import concrete.Variable
 import concrete.Event
+import concrete.constraint.linear.EqACFast
 
 final class ReifiedConstraint(
   controlVariable: Variable,
@@ -17,7 +17,6 @@ final class ReifiedConstraint(
     with LazyLogging with Advisable {
 
   require(controlVariable.initDomain.isInstanceOf[BooleanDomain], s"${controlVariable} init domain ${controlVariable.initDomain} is not boolean")
-
   //  if (scope.forall(_.initDomain.isInstanceOf[BooleanDomain])) {
   //    throw new AssertionError(this.toString)
   //  }

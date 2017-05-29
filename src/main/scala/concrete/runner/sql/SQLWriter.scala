@@ -33,9 +33,8 @@ import cspom.StatisticsManager
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
-import scala.util.Try
+import scala.concurrent.{Await, Future}
 
 object SQLWriter {
 
@@ -99,13 +98,13 @@ object SQLWriter {
 
     def nature = column[Option[String]]("nature")
 
+    def display = column[Option[String]]("display")
+
     def idxName = index("idxName", name, unique = true)
 
     def name = column[String]("name")
 
     def idxDisplay = index("idxDisplay", display, unique = true)
-
-    def display = column[Option[String]]("display")
   }
 
   class Config(tag: Tag) extends Table[(Int, String, Option[String])](tag, "Config") {
@@ -113,23 +112,17 @@ object SQLWriter {
 
     def configId = column[Int]("configId", O.PrimaryKey, O.AutoInc)
 
-    def config = column[String]("config")
-
     def description = column[Option[String]]("description")
 
     def idxMd5 = index("idxConfig", config, unique = true)
+
+    def config = column[String]("config")
   }
 
   class Execution(tag: Tag) extends Table[(Int, Int, Int, Int, Timestamp, Option[Timestamp], Option[String], String, Option[String])](tag, "Execution") {
     def * = (executionId, configId, problemId, iteration, start, end, hostname, status, solution)
 
     def executionId = column[Int]("executionId", O.PrimaryKey, O.AutoInc)
-
-    def configId = column[Int]("configId")
-
-    def problemId = column[Int]("problemId")
-
-    def iteration = column[Int]("iteration")
 
     def start = column[Timestamp]("start")
 
@@ -141,7 +134,13 @@ object SQLWriter {
 
     def status = column[String]("status", O.Default("started"))
 
+    def problemId = column[Int]("problemId")
+
+    def iteration = column[Int]("iteration")
+
     def fkConfig = foreignKey("fkConfig", configId, configs)(_.configId, onDelete = ForeignKeyAction.Cascade)
+
+    def configId = column[Int]("configId")
 
     def fkProblem = foreignKey("fkProblem", problemId, problems)(_.problemId, onDelete = ForeignKeyAction.Cascade)
 
@@ -163,13 +162,13 @@ object SQLWriter {
   class Statistic(tag: Tag) extends Table[(String, Int, String)](tag, "Statistic") {
     def * = (name, executionId, value)
 
-    def name = column[String]("name")
-
-    def executionId = column[Int]("executionId")
-
     def value = column[String]("value")
 
+    def name = column[String]("name")
+
     def fkExecution = foreignKey("fkExecution", executionId, executions)(_.executionId, onDelete = ForeignKeyAction.Cascade)
+
+    def executionId = column[Int]("executionId")
 
     def pk = primaryKey("pkS", (name, executionId))
   }
@@ -300,7 +299,7 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
 
   }
 
-  def solution(solution: String) {
+  def printSolution(solution: String, obj: Option[Any]) {
     addSolution(solution, executionId.get)
   }
 
@@ -343,27 +342,20 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
     e.toString
   }
 
-  def disconnect(status: Try[Result]) {
+  def disconnect(status: Result) {
     try {
       for (e <- executionId) {
 
         val dbexec = for (dbe <- executions if dbe.executionId === e) yield dbe
 
-        val result = status
-          .map {
-            case SatFinished => "SAT*"
-            case SatUnfinished => "SAT1"
-            case Unsat => "UNSAT"
-          }
-          .recover {
-            case e =>
-              def causes(e: Throwable): Seq[Throwable] = {
-                Option(e).map(e => e +: causes(e.getCause)).getOrElse(Seq())
-              }
+        val result = status match {
+          case FullExplore if lastSolution.isDefined => "SAT*"
+          case FullExplore => "UNSAT"
+          case Unfinished(Some(e)) => causes(e).mkString("\nCaused by: ")
+          case Unfinished(_) if lastSolution.isDefined => "SAT1"
+          case _ => "Unfinished"
+        }
 
-              causes(e).mkString("\nCaused by: ")
-          }
-          .get
 
         val r0 = db.run {
           dbexec.map(e => (e.end, e.status)).update(
@@ -382,6 +374,10 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
       db.close()
     }
 
+  }
+
+  private def causes(e: Throwable): Seq[Throwable] = {
+    Option(e).map(e => e +: causes(e.getCause)).getOrElse(Seq())
   }
 
 }

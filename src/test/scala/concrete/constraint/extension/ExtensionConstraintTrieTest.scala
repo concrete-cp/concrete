@@ -2,11 +2,11 @@ package concrete.constraint.extension;
 
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
-
 import concrete.IntDomain
 import concrete.Problem
 import concrete.Variable
 import concrete.constraint.AdviseCount
+import mdd.MDD0
 
 final class ExtensionConstraintTrieTest extends FlatSpec with Matchers {
 

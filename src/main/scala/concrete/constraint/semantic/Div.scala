@@ -2,7 +2,7 @@ package concrete.constraint.semantic
 
 import concrete.Variable
 import concrete.constraint.Constraint
-import concrete.constraint.Residues
+import concrete.constraint.ResiduesRemovals
 import concrete.constraint.TupleEnumerator
 import concrete.util.Interval
 import concrete.Domain
@@ -105,7 +105,7 @@ class DivBC(x: Variable, y: Variable, z: Variable) extends Constraint(x, y, z) w
   def simpleEvaluation: Int = 1
 }
 
-class DivAC(v0: Variable, v1: Variable, result: Variable) extends Constraint(v0, v1, result) with Residues with TupleEnumerator
+class DivAC(v0: Variable, v1: Variable, result: Variable) extends Constraint(v0, v1, result) with ResiduesRemovals with TupleEnumerator
     with BCCompanion {
   def skipIntervals = true
   def check(t: Array[Int]) = {

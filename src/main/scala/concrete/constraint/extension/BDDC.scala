@@ -1,22 +1,21 @@
 package concrete.constraint.extension
 
-import concrete.Contradiction
-import concrete.EmptyIntDomain
-import concrete.IntDomain
-import concrete.ProblemState
-import concrete.Variable
-import concrete.constraint.Constraint
-import concrete.constraint.Removals
-import concrete.constraint.StatefulConstraint
-import concrete.util.SparseSet
 import bitvectors.BitVector
+import concrete._
+import concrete.constraint.{Constraint, Removals, StatefulConstraint}
+import concrete.util.SparseSet
+import mdd.{BDD, BDD0, BDDLeaf, BDDNode}
 
 /* MDDRelation comes with its own timestamp */
 class BDDC(_scope: Array[Variable], val bdd: BDDRelation)
-    extends Constraint(_scope) with Removals with StatefulConstraint[SparseSet] {
+  extends Constraint(_scope) with Removals with StatefulConstraint[SparseSet] {
+
+  val simpleEvaluation: Int = math.min(Constraint.NP, scope.count(_.initDomain.size > 1))
+  // Members declared in concrete.constraint.Removals
+  val prop = bdd.edges.toDouble / scope.map(_.initDomain.size.toDouble).product
 
   override def init(ps: ProblemState) = {
-    val max = bdd.identify() + 1
+    val max = bdd.bdd.identify() + 1
     //println(s"********** $max **********")
     ps.updateState(this, new SparseSet(max))
   }
@@ -25,11 +24,6 @@ class BDDC(_scope: Array[Variable], val bdd: BDDRelation)
   override def check(t: Array[Int]) = bdd.contains(t)
 
   def checkValues(tuple: Array[Int]): Boolean = throw new UnsupportedOperationException
-
-  val simpleEvaluation: Int = math.min(Constraint.NP, scope.count(_.initDomain.size > 1))
-
-  // Members declared in concrete.constraint.Removals
-  val prop = bdd.edges.toDouble / scope.map(_.initDomain.size.toDouble).product
 
   def getEvaluation(ps: ProblemState) = (prop * doubleCardSize(ps)).toInt
 
@@ -45,39 +39,39 @@ class BDDC(_scope: Array[Variable], val bdd: BDDRelation)
 
     var gNo = oldGno //.clone()
 
-    val ts = bdd.timestamp.next
+    var gYes = new SparseSet(gNo.capacity)
 
     @inline
     def seekSupports(g: BDD, i: Int): Boolean = {
-      if (g eq BDDLeaf) {
-        if (i < delta) {
-          delta = i
-        }
-        true
-      } else if (g eq BDD0) {
-        false
-      } else {
-        val ng = g.asInstanceOf[BDDNode]
-        if (ng.cache.timestamp == ts) {
-          true
-        } else if (gNo.contains(g.id)) {
-          false
-        } else if (domains(i).present(ng.index) && seekSupports(ng.child, i + 1)) {
-          supported(i) |= ng.index
-          if (i + 1 == delta && supported(i).size == domains(i).size) {
+      g match {
+        case BDDLeaf =>
+          if (i < delta) {
             delta = i
-          } else {
-            seekSupports(ng.sibling, i)
           }
-          ng.cache.timestamp = ts
           true
-        } else if (seekSupports(ng.sibling, i)) {
-          ng.cache.timestamp = ts
-          true
-        } else {
-          gNo += g.id
-          false
-        }
+        case BDD0 => false
+        case ng: BDDNode =>
+
+          if (gYes.contains(ng.id)) {
+            true
+          } else if (gNo.contains(ng.id)) {
+            false
+          } else if (domains(i).present(ng.index) && seekSupports(ng.child, i + 1)) {
+            supported(i) |= ng.index
+            if (i + 1 == delta && supported(i).size == domains(i).size) {
+              delta = i
+            } else {
+              seekSupports(ng.sibling, i)
+            }
+            gYes += g.id
+            true
+          } else if (seekSupports(ng.sibling, i)) {
+            gYes += g.id
+            true
+          } else {
+            gNo += g.id
+            false
+          }
       }
     }
 

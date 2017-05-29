@@ -1,15 +1,14 @@
 package concrete.generator.cspompatterns
 
+import concrete.CSPOMDriver
 import cspom.CSPOM.SeqOperations
-import cspom.{CSPOM, CSPOMConstraint}
 import cspom.compiler.ConstraintCompilerNoData
-import cspom.extension.MDD
+import cspom.extension.MDDRelation
 import cspom.util.{ContiguousIntRangeSet, FiniteIntInterval, Infinitable, RangeSet}
 import cspom.variable.IntExpression.implicits.iterable
 import cspom.variable.{CSPOMSeq, IntExpression, SimpleExpression}
-
-import scala.collection.mutable.HashMap
-import scala.util.Try
+import cspom.{CSPOM, CSPOMConstraint}
+import mdd._
 
 final object Knapsack extends ConstraintCompilerNoData {
 
@@ -27,6 +26,14 @@ final object Knapsack extends ConstraintCompilerNoData {
     logger.info(s"Generating MDD for knapsack $constraint")
 
     val newConstraints = mdd(w.toIndexedSeq, p.toIndexedSeq, vars.toIndexedSeq, tw, tp)
+      .map(Seq(_))
+      .getOrElse {
+        logger.info("Too large, posting two constraints")
+        Seq(
+          CSPOMDriver.linear(tw +: vars, -1 +: w, "eq", 0),
+          CSPOMDriver.linear(tp +: vars, -1 +: p, "eq", 0))
+      }
+
 
     replaceCtr(constraint,
       newConstraints,
@@ -35,51 +42,40 @@ final object Knapsack extends ConstraintCompilerNoData {
 
   def mdd(weights: IndexedSeq[Int], profits: IndexedSeq[Int],
           x: IndexedSeq[SimpleExpression[Int]],
-          W: SimpleExpression[Int], P: SimpleExpression[Int]): Seq[CSPOMConstraint[Boolean]] = {
+          W: SimpleExpression[Int], P: SimpleExpression[Int]): Option[CSPOMConstraint[Boolean]] = {
     import IntExpression.implicits.ranges
     val xd = x.map(IntExpression.implicits.ranges)
 
     val wMDD = mddSum(weights, xd, W)
     // logger.info(wMDD.toString)
     val pMDD = mddSum(profits, xd, P)
-  //  logger.info(pMDD.toString)
+    //  logger.info(pMDD.toString)
 
-  //  logger.info("Computing intersection")
-    val wpMDD1 = wMDD.insertDim(x.size + 1, P.toSeq)
+    //  logger.info("Computing intersection")
+    val wpMDD1 = wMDD.insertDim(0, P.toSeq)
+    val wpMDD2 = pMDD.insertDim(1, W.toSeq)
 
-//    logger.info(wpMDD1.toString)
+    logger.info(s"Intersection of $wpMDD1 and $wpMDD2...")
+    if (wpMDD1.vertices().toDouble * wpMDD2.vertices() < 2e10) {
+      val its = wpMDD1.intersect(wpMDD2)
+      logger.info(s"Success ! $its")
+      Some((P +: W +: x) in new MDDRelation(its))
+    } else {
+      None
+    }
 
-    val wpMDD2 = pMDD.insertDim(x.size, W.toSeq)
-
-//    logger.info(wpMDD2.toString)
-
-    logger.warn(s"Intersection of $wpMDD1 and $wpMDD2...")
-
-    wpMDD1.boundIntersect(wpMDD2, 1000000)
-      .map { its =>
-        logger.warn(s"Success ! $its")
-        Seq((W +: P +: x) in its)
-      }
-      .recover {
-        case _: IndexOutOfBoundsException =>
-          logger.warn("Too large, posting two constraints")
-          Seq(
-            (x :+ W) in wMDD,
-            (x :+ P) in pMDD)
-      }
-      .get
 
   }
 
-  def mddSum(factors: IndexedSeq[Int], x: IndexedSeq[RangeSet[Infinitable]], t: RangeSet[Infinitable]) = {
-    zero(factors :+ -1, x :+ t)
+  def mddSum(factors: IndexedSeq[Int], x: IndexedSeq[RangeSet[Infinitable]], t: RangeSet[Infinitable]): MDD = {
+    zero(-1 +: factors, t +: x)
   }
 
-  def zero(factors: IndexedSeq[Int], x: IndexedSeq[RangeSet[Infinitable]]): MDD[Int] = {
+  def zero(factors: IndexedSeq[Int], x: IndexedSeq[RangeSet[Infinitable]]): MDD = {
 
     //val span = (x, factors).zipped.map { (x, f) => x.span * Finite(f) }.reduce(_ + _)
 
-    val nodes = new HashMap[(Int, concrete.util.Interval), MDD[Int]]()
+    val nodes = new JavaMap[(Int, concrete.util.Interval), MDD]()
     val doms = x.map(new ContiguousIntRangeSet(_).toSeq)
     val spans = x.map(_.span).map {
       case FiniteIntInterval(l, u) => concrete.util.Interval(l, u)
@@ -89,20 +85,23 @@ final object Knapsack extends ConstraintCompilerNoData {
 
     val span = spans.reduce(_ + _)
 
-    def mdd(i: Int, span: concrete.util.Interval): MDD[Int] = {
+    def mdd(i: Int, span: concrete.util.Interval): MDD = {
       if (!span.contains(0)) {
-        MDD.empty
+        MDD0
       } else if (i >= x.size) {
-        MDD.leaf
+        MDDLeaf
       } else nodes.getOrElseUpdate((i, span), {
 
         val f = factors(i)
 
         val rt = span.shrink(spans(i))
 
-        MDD.node(doms(i).map { v =>
-          v -> mdd(i + 1, rt + v * f)
-        })
+        MDD(
+          doms(i)
+            .map { v =>
+              v -> mdd(i + 1, rt + v * f)
+            }
+            .filter(_._2.nonEmpty))
       })
 
     }

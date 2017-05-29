@@ -1,14 +1,11 @@
-package concrete.constraint.linear
+package concrete
+package constraint
+package linear
 
 import Linear.maxTimes
 import Linear.minTimes
 import bitvectors.BitVector
-import concrete.Domain
-import concrete.Outcome
-import concrete.ProblemState
-import concrete.constraint.StatefulConstraint
 import concrete.util.Interval
-import concrete.util.Math
 
 object IncrementalBoundPropagation {
   sealed trait POutcome
@@ -125,7 +122,7 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
 
         val thisBounds = f.lb - minTimes(dom, fact)
 
-        val newDom = if (fact < 0) dom.removeUntil(Math.ceilDiv(thisBounds, -fact)) else dom.removeAfter(Math.floorDiv(thisBounds, -fact))
+        val newDom = if (fact < 0) dom.removeUntil(util.Math.ceilDiv(thisBounds, -fact)) else dom.removeAfter(Math.floorDiv(thisBounds, -fact))
         LinearLe.shaves += 1
 
         val newMax = math.max(max, this.size(newDom, fact))

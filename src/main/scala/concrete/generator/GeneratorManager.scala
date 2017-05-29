@@ -40,6 +40,7 @@ class GeneratorManager(pg: ProblemGenerator) {
       'circuit -> new CircuitGenerator(adg),
       'xor -> new XorGenerator(pg),
       'inverse -> new InverseGenerator(pg, adg),
+      'channel -> new ChannelGenerator(pg, adg),
       'cumulative -> new CumulativeGenerator(pg),
       'diffn -> new DiffNGenerator(pg),
       'clause -> ClauseGenerator,

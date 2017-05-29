@@ -15,7 +15,7 @@ class SumFactorsTest extends FlatSpec with Matchers {
     val problem = CSPOM { implicit p =>
       val Seq(x, y, z) = Seq.fill(3) { IntVariable.free() }
 
-      ctr(linear(Seq((4, x), (-4, y), (2, z)), "le", -2))
+      ctr(linear("le",-2,(4, x), (-4, y), (2, z)))
     }
 
     CSPOMCompiler.compile(problem, Seq(SumFactors, MergeEq))

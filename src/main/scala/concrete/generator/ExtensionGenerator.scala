@@ -5,8 +5,8 @@ import com.typesafe.scalalogging.LazyLogging
 import concrete.constraint.Constraint
 import concrete.constraint.extension._
 import concrete.generator.Generator.cspom2concrete1D
-import cspom.extension.IdMap
 import cspom.{CSPOMConstraint, UNSATException}
+import mdd._
 
 class ExtensionGenerator(pg: ProblemGenerator) extends Generator with LazyLogging {
 
@@ -46,7 +46,7 @@ class ExtensionGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
               new BDDC(scope, m.relation.asInstanceOf[BDDRelation])
 
             case "Reduce" =>
-              val r: Relation = m.relation.copy
+              val r: Relation = m.relation //.copy
 
               logger.info(s"Relation stats: ${scope.map(_.initDomain.size).sum} ${scope.length} ${r.edges} ${r.lambda} ${r.depth}")
 
@@ -68,74 +68,8 @@ class ExtensionGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
     }
   }
 
-  private def any2Int(v: Any) = {
-    v match {
-      case v: Int => v
-      case v: Long if v.isValidInt => v.toInt
-      case true => 1
-      case false => 0
-      case v: Any => throw new AssertionError(s"value $v cannot be handled")
-    }
-
-  }
-
   private def any2Int(relation: cspom.extension.Relation[_]): Iterable[Seq[Int]] =
-    relation.map(_.map(any2Int))
-
-  private[concrete] def cspomMDDtoCspfjMDD(
-                                            relation: cspom.extension.MDD[Int],
-                                            map: collection.mutable.Map[cspom.extension.MDD[Int], concrete.constraint.extension.MDD] = new IdMap()): MDD = {
-    relation match {
-      case n: Any if n eq cspom.extension.MDDLeaf => concrete.constraint.extension.MDDLeaf
-      case n: cspom.extension.MDDNode[Int] => map.getOrElseUpdate(n, {
-        val trie = n.trie
-
-        trie.toSeq match {
-          case Seq() => MDD0
-          case Seq((v, t)) =>
-            new MDD1(cspomMDDtoCspfjMDD(t, map), any2Int(v))
-
-          case Seq((v1, t1), (v2, t2)) =>
-            new MDD2(
-              cspomMDDtoCspfjMDD(t1, map), any2Int(v1),
-              cspomMDDtoCspfjMDD(t2, map), any2Int(v2))
-
-          case trieSeq: Any =>
-            val m = trieSeq.map(l => any2Int(l._1)).max
-            val concreteTrie = new Array[concrete.constraint.extension.MDD](m + 1)
-
-            for ((v, t) <- trieSeq) {
-              val i = any2Int(v)
-              concreteTrie(i) = cspomMDDtoCspfjMDD(t, map)
-            }
-
-            new MDDn(concreteTrie)
-        }
-      })
-    }
-  }
-
-  private[concrete] def cspomMDDtoBDD(
-                                       relation: cspom.extension.MDD[_],
-                                       map: IdMap[cspom.extension.MDD[_], concrete.constraint.extension.BDD] = new IdMap()): BDD = {
-    relation match {
-      case n: Any if n eq cspom.extension.MDDLeaf => concrete.constraint.extension.BDDLeaf
-      case n: cspom.extension.MDDNode[_] => map.getOrElseUpdate(n, {
-        n.trie.toSeq
-          .map {
-            case (k, v) => any2Int(k) -> v
-          }
-          .sortBy(-_._1)
-          .foldLeft[BDD](BDD0) {
-          case (acc, (v, st)) =>
-            new BDDNode(v,
-              cspomMDDtoBDD(st, map),
-              acc)
-        }
-
-      })
-    }
-  }
+    relation.map(_.map(util.Math.any2Int))
 
   private[concrete] def generateMatrix(variables: Seq[Variable], relation: cspom.extension.Relation[_], init: Boolean): Matrix = {
     logger.info(s"Generating matrix for $relation, $variables")
@@ -145,7 +79,7 @@ class ExtensionGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
         domains(0).head, domains(1).head, init)
       matrix.setAll(any2Int(relation), !init)
     } else if (init || relation.arity == 1) {
-      new TupleTrieSet(relation2MDD(relation), init)
+      new TupleTrieSet(new MDDRelation(relation2MDD(relation)), init)
     } else if (ds == "Matrix") {
       val matrix = new MatrixGeneral(domains.map(_.span.size).toArray, domains.map(_.head).toArray, init)
       matrix.setAll(any2Int(relation), !init)
@@ -156,32 +90,23 @@ class ExtensionGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
 
   private def generateRelation(arity: Int, relation: cspom.extension.Relation[_]): Relation = {
     ds match {
-      case "MDD" => relation2MDD(relation)
-      case "BDD" => relation2BDD(relation)
+      case "MDD" => new MDDRelation(relation2MDD(relation).reduce())
+      case "BDD" => new BDDRelation(relation2BDD(relation).reduce())
       case "STR" => new STR(arity) ++ any2Int(relation)
       case "HashTable" => HashTable(any2Int(relation).toSeq)
       case "IndexedTable" => IndexedTable(any2Int(relation).toSeq)
     }
   }
 
-  private def relation2MDD(relation: cspom.extension.Relation[_]): MDDRelation = {
-    val mdd = relation match {
-      case mdd: cspom.extension.MDD[Int]@unchecked =>
-        cspomMDDtoCspfjMDD(mdd)
+  private def relation2MDD(relation: cspom.extension.Relation[_]): MDD = {
+    relation match {
+      case mdd: cspom.extension.MDDRelation => mdd.mdd
       case r => MDD(any2Int(r))
     }
-
-    new MDDRelation(mdd.reduce())
   }
 
-  private def relation2BDD(relation: cspom.extension.Relation[_]): BDDRelation = {
-    val mdd = relation match {
-      case mdd: cspom.extension.MDD[Int]@unchecked =>
-        cspomMDDtoBDD(mdd)
-      case r => BDD(any2Int(r).map(_.toList))
-    }
-
-    new BDDRelation(bdd = mdd.reduce())
+  private def relation2BDD(relation: cspom.extension.Relation[_]): BDD = {
+    BDD(relation2MDD(relation))
   }
 }
 

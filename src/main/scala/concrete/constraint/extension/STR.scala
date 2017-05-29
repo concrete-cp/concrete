@@ -84,7 +84,7 @@ final class STR(arity: Int, val array: Array[Array[Int]], val bound: Int) extend
 
   def find(f: (Int, Int) => Boolean) = throw new UnsupportedOperationException
 
-  def findSupport(scope: IndexedSeq[Domain], p: Int, i: Int) =
+  def findSupport(scope: Array[Domain], p: Int, i: Int) =
     iterator.find(t => t(p) == i && (0 until arity).forall(p => scope(p).present(t(p))))
 
   def iterator = array.iterator.take(bound)

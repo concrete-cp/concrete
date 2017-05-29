@@ -7,8 +7,9 @@ import concrete.Outcome
 import concrete.constraint.StatefulConstraint
 import bitvectors.BitVector
 import concrete.constraint.Removals
+import concrete.util.Boxed
 
-case class Boxed[A](bv: A)
+
 
 /**
  *  Constraint x(i) = j => y(j) = i

@@ -1,71 +1,62 @@
-package concrete
+package concrete.longTest
+
+;
+
+import com.typesafe.scalalogging.LazyLogging
+import concrete.generator.ProblemGenerator
+import concrete.generator.cspompatterns.{Bool2IntIsEq, ConcretePatterns, FZPatterns, XCSPPatterns}
+import concrete.runner.XCSP3Concrete
+import concrete.{CSPOMSolver, ParameterManager, Solver}
+import cspom.CSPOM
+import cspom.compiler.CSPOMCompiler
+import cspom.flatzinc.FlatZincFastParser
+import cspom.xcsp.XCSPParser
+import org.scalatest.{FunSpec, Inspectors, Matchers}
 
 import scala.collection.mutable.LinkedHashMap
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 import scala.util.Success
-import org.scalatest.FunSpec
-import org.scalatest.Inspectors
-import org.scalatest.Matchers
-import concrete.generator.ProblemGenerator
-import concrete.generator.cspompatterns.Bool2IntIsEq
-import concrete.generator.cspompatterns.ConcretePatterns
-import concrete.generator.cspompatterns.FZPatterns
-import concrete.generator.cspompatterns.XCSPPatterns
-import concrete.runner.XCSPConcrete
-import cspom.CSPOM
-import cspom.compiler.CSPOMCompiler
-import cspom.flatzinc.FlatZincFastParser
-import cspom.xcsp.XCSPParser
-import com.typesafe.scalalogging.LazyLogging
-
-//import SolvingTest._
 
 class SolvingTest extends FunSpec with SolvingBehaviors {
 
   val problemBank = LinkedHashMap[String, (AnyVal, Boolean)](
+    "CoveringArray-3-04-2-08.xml.xz" -> ((true, true)),
 
     "1d_rubiks_cube.small.fzn.xz" -> ((4, false)),
     "1d_rubiks_cube.fzn.xz" -> ((12, false)),
-    "testExtension1.xml.xz" -> ((8, false)),
-    "testExtension2.xml.xz" -> ((8, false)),
-    "testExtension3.xml.xz" -> ((0, false)),
+    "testExtension1.xml.xz" -> ((8, true)),
+    "testExtension2.xml.xz" -> ((8, true)),
+    "testExtension3.xml.xz" -> ((0, true)),
 
-    "testPrimitive.xml.xz" -> ((2, false)),
-    "AllInterval-005.xml.xz" -> ((8, false)),
-    "testObjective1.xml.xz" -> ((11, false)),
-    "QuadraticAssignment-qap.xml.xz" -> ((4776, false)),
-    //"fapp01-0200-0.xml.xz" -> ((false, false)),
+    "testPrimitive.xml.xz" -> ((2, true)),
+    "AllInterval-005.xml.xz" -> ((8, true)),
+    "testObjective1.xml.xz" -> ((11, true)),
+    "QuadraticAssignment-qap.xml.xz" -> ((4776, true)),
+    "Rlfap-scen-11-f12.xml.xz" -> ((0, true)),
 
-    "scen11-f12.xml.xz" -> ((0, true)),
-    "normalized-renault-mod-0_ext.xml.xz" -> ((true, true)),
+    "RenaultMod-00.xml.xz" -> ((true, true)),
     "battleships10.fzn.xz" -> ((1, false)),
     "photo.fzn.xz" -> ((8, false)),
-    "crossword-m1-debug-05-01.xml.xz" -> ((48, true)),
-
+    "crossword-m1-debug-05-01.xml.xz" -> ((27, true)),
     "bigleq-50.xml.xz" -> ((1, true)),
+
     "battleships_2.fzn.xz" -> ((36, false)),
     "flat30-1.cnf.xz" -> ((true, false)),
     "alpha.fzn.xz" -> ((true, false)),
-    "frb35-17-1_ext.xml.xz" -> ((2, true)),
+    "rand-2-30-15-306-230f-01.xml.xz" -> ((12, true)),
 
-    "queens-12_ext.xml.xz" -> ((14200, false)),
-    "zebra.xml.xz" -> ((1, true)),
-    "bqwh-18-141-47_glb.xml.xz" -> ((10, true)),
-    "crossword-m2-debug-05-01.xml.xz" -> ((48, true)),
-    "queens-8.xml.xz" -> ((92, true)),
+    "Zebra.xml.xz" -> ((48, true)),
+    "Blackhole-04-3-00.xml.xz" -> ((true, true)),
+    "Queens-0008-m1.xml.xz" -> ((92, true)),
+    "Rlfap-scen-11.xml.xz" -> ((true, true)),
+    "Langford-2-04.xml.xz" -> ((2, true)),
 
-    "scen11.xml.xz" -> ((true, true)),
-    "bqwh-15-106-0_ext.xml.xz" -> ((182, true)),
-    "queensAllDiff-8.xml.xz" -> ((92, true)),
-    "langford-2-4-ext.xml.xz" -> ((2, true)),
-    "series-15.xml.xz" -> ((true, true)),
-
-    "e0ddr1-10-by-5-8.xml.xz" -> ((true, true)),
-    "tsp-20-1_ext.xml.xz" -> ((true, true)),
+    "Sadeh-e0ddr1-10-by-5-8.xml.xz" -> ((true, true)),
+    "TravellingSalesman-20-30-00.xml.xz" -> ((true, true)),
     "test.fzn.xz" -> ((true, false)),
-    "queens-12.xml.xz" -> ((14200, false))) // .slice(5, 6)
+    "Queens-0012-m1.xml.xz" -> ((14200, true)))
 
   val parameters = Nil
 
@@ -94,7 +85,9 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
   }
 
 }
-trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this: FunSpec =>
+
+trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging {
+  this: FunSpec =>
 
   def solve(name: String, expectedResult: Boolean, parameters: Seq[(String, String)], test: Boolean): Unit =
     it(s"should have ${if (expectedResult) "a" else "no"} solution") {
@@ -155,7 +148,8 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
             if (test) {
               for (sol <- solvIt.headOption) {
                 val variables: Seq[String] = solver.cspom.goal.get.getSeqParam("variables")
-                val failed = XCSPConcrete.controlCSPOM(sol, variables, url)
+                val obj = solver.optimizes.map(v => sol(v))
+                val failed = XCSP3Concrete.controlCSPOM(sol, obj, variables, url)
                 withClue(sol) {
                   failed shouldBe 'empty
                 }
@@ -170,7 +164,7 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
     }
 
   def count(name: String, expectedResult: Int, parameters: Seq[(String, String)],
-    test: Boolean): Unit = {
+            test: Boolean): Unit = {
     val url = getClass.getResource(name)
 
     require(url != null, "Could not find resource " + name)
@@ -228,9 +222,9 @@ trait SolvingBehaviors extends Matchers with Inspectors with LazyLogging { this:
 
                   if (test) {
                     forAll(sols) { sol =>
-                      val variables: Seq[String] =
-                        solver.cspom.goal.get.getSeqParam("variables")
-                      val failed = XCSPConcrete.controlCSPOM(sol, variables, url)
+                      val variables: Seq[String] = solver.cspom.goal.get.getSeqParam("variables")
+                      val obj = solver.optimizes.map(v => sol(v.toString()))
+                      val failed = XCSP3Concrete.controlCSPOM(sol, obj, variables, url)
                       failed shouldBe 'empty
                     }
                   }

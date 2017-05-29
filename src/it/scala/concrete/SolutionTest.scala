@@ -1,14 +1,20 @@
-package concrete
+package concrete.longTest
 
 import org.scalatest.FlatSpec
+
+import concrete.ParameterManager
+import concrete.constraint.Constraint
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.Bool2IntIsEq
 import concrete.generator.cspompatterns.ConcretePatterns
 import concrete.generator.cspompatterns.FZPatterns
+
 import cspom.CSPOM
 import cspom.compiler.CSPOMCompiler
 import scala.util.Random
-import concrete.constraint.Constraint
+
+import concrete.MAC
+import concrete.Assignment
 
 class SolutionTest extends FlatSpec {
 
@@ -58,9 +64,8 @@ deltaY = array3d(0..3, 0..3, 0..3, [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
     } yield {
       val (pb, vars) = prob
 
-      val solver = MAC(pb, pm)
-
-      var state = solver.preprocess(solver.filter, pb.initState.toState).toState
+      var state = pb.initState.toState //.assign(pb.variable("X"), 0)
+      // val filter = new ACC(pb, pm)
       //      println(state)
 
       val decisions = Seq.tabulate(80) { i =>
@@ -83,6 +88,8 @@ deltaY = array3d(0..3, 0..3, 0..3, [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
         state = state.assign(variable, deltaY(i)).toState
         variable
       }
+
+      val solver = MAC(pb, pm)
 
       assert(solver.oneRun(decisions.map((_, Assignment)), List(), state, List())._1.isSat)
 

@@ -2,20 +2,12 @@ package concrete.generator.cspompatterns
 
 import concrete.CSPOMDriver._
 import cspom.CSPOM._
-import cspom.CSPOMConstraint
-import cspom.compiler.Ctr
-import cspom.compiler.GlobalCompiler
-import cspom.variable.BoolExpression
-import cspom.variable.CSPOMConstant
-import cspom.variable.CSPOMSeq
-import cspom.variable.IntExpression
-import cspom.variable.SimpleExpression
-import cspom.CSPOM
+import cspom.{CSPOM, CSPOMConstraint}
+import cspom.compiler.{Ctr, GlobalCompiler}
+import cspom.extension.MDDRelation
+import cspom.variable._
 
 object FZPatterns {
-  def apply() = Seq(
-    new GlobalCompiler(mtch) { def selfPropagation = false })
-
   val mtch: PartialFunction[CSPOMConstraint[_], CSPOMConstraint[_]] = {
     /*
      *  (∀ i ∈ 1..n : as[i]) ↔ r where n is the length of as
@@ -340,7 +332,7 @@ object FZPatterns {
      * int_le(var int: a, var int: b)
      */
     case Ctr('int_le, Seq(IntExpression(a), IntExpression(b)), p) =>
-      linear(Seq((1, a), (-1, b)), "le", 0) withParams p
+      linear("le", 0, (1, a), (-1, b)) withParams p
     /*
      * (a ≤ b) ↔ r
      * int_le_reif(var int: a, var int: b, var bool: r)
@@ -393,7 +385,7 @@ object FZPatterns {
      * int_lt(var int: a, var int: b)
      */
     case Ctr('int_lt, Seq(IntExpression(a), IntExpression(b)), p) =>
-      linear(Seq((1, a), (-1, b)), "lt", 0) withParams p
+      linear("lt", 0, (1, a), (-1, b)) withParams p
     /*
      * (a < b) ↔ r
      * int_lt_reif(var int: a, var int: b, var bool: r)
@@ -431,7 +423,7 @@ object FZPatterns {
      * int_plus(var int: a, var int: b, var int: c)
      */
     case Ctr('int_plus, Seq(IntExpression(a), IntExpression(b), IntExpression(c)), p) =>
-      linear(Seq((1, a), (1, b), (-1, c)), "eq", 0) withParams p
+      linear("eq", 0, (1, a), (1, b), (-1, c)) withParams p
 
     /*
      * a×b = c
@@ -513,7 +505,7 @@ object FZPatterns {
      * predicate table_int(array[int] of var int: x, array[int, int] of int: t)
      */
     case Ctr('table_int, Seq(IntExpression.simpleSeq(x), IntExpression.constSeq(t)), p) =>
-      x in t.grouped(x.size).map(_.toList).toSeq
+      x in MDDRelation(t.grouped(x.size).toTraversable)
     //      CSPOMConstraint('extension, x, p ++ Map("init" -> false,
     //        "relation" -> new Table(t.map(CSPOMConstant(_)).grouped(x.size).toSet)))
 
@@ -524,11 +516,11 @@ object FZPatterns {
       allDifferent(y: _*)
 
     case Ctr('regular, Seq(x,
-      CSPOMConstant(q: Int),
-      CSPOMConstant(s: Int),
-      IntExpression.constSeq(fd), //: CSPOMSeq[_],
-      q0,
-      f), p) =>
+    CSPOMConstant(q: Int),
+    CSPOMConstant(s: Int),
+    IntExpression.constSeq(fd), //: CSPOMSeq[_],
+    q0,
+    f), p) =>
 
       val CSPOMConstant(fseq: Seq[Int]) = f
       CSPOMConstraint('regular)(x, q0, CSPOM.constantSeq(fseq)) withParams p + ("dfa" -> dfa(q, s, fd.toIndexedSeq))
@@ -539,6 +531,11 @@ object FZPatterns {
     case Ctr('member_int, Seq(s, x), p) =>
       CSPOMConstraint('member)(s, x) withParams p
   }
+
+  def apply() = Seq(
+    new GlobalCompiler(mtch) {
+      def selfPropagation = false
+    })
 
   private def dfa(Q: Int, S: Int, fd: IndexedSeq[Int]): Map[(Int, Int), Int] = {
     var r = Map[(Int, Int), Int]()

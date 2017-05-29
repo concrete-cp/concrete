@@ -1,23 +1,35 @@
 package concrete.generator
 
+import concrete.constraint.semantic.{AllDifferent2C, Inverse}
 import cspom.CSPOMConstraint
-import concrete.constraint.semantic.Inverse
-import Generator.cspom2concreteSeq
-import concrete.constraint.semantic.AllDifferent2C
+
 
 final class InverseGenerator(pg: ProblemGenerator, adg: AllDifferentGenerator) extends Generator {
 
   override def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap) = {
-    val Seq(x, y) = constraint.arguments.map(cspom2concreteSeq).map(_.toArray)
+    val Seq(x, y) = constraint.arguments.map(Generator.cspom2concreteIndexedSeq(_))
 
-    val xvars = x.map(_.asVariable(pg))
-    val yvars = y.map(_.asVariable(pg))
-    
-//    println(xvars.toSeq)
-//    println(yvars.toSeq)
+
+    val xvars = x.map(_._2.asVariable(pg)).toArray
+    val yvars = y.map(_._2.asVariable(pg)).toArray
+
+    val xRange = x.map(_._1)
+    val yRange = y.map(_._1)
+
+    require(xRange == (xRange.head to xRange.last))
+    require(yRange == (yRange.head to yRange.last))
+
+    val xOffset = xRange.head
+    val yOffset = yRange.head
+
+    //    println(xvars.toSeq)
+    //    println(yvars.toSeq)
 
     Seq(
-      new Inverse(xvars, yvars, 1, 1), new Inverse(yvars, xvars, 1, 1), new AllDifferent2C(xvars), new AllDifferent2C(yvars)) // ++ adg.generate(xvars) ++ adg.generate(yvars)
+      new Inverse(xvars, yvars, xOffset, yOffset),
+      new Inverse(yvars, xvars, yOffset, xOffset),
+      new AllDifferent2C(xvars),
+      new AllDifferent2C(yvars))
 
   }
 

@@ -20,7 +20,7 @@ resolvers += Resolver.sonatypeRepo("snapshots")
 
 libraryDependencies ++= Seq(
 	"fr.univ-valenciennes" %% "cspom" % "2.13-SNAPSHOT",
-	"org.postgresql" % "postgresql" % "42.0.0",
+	"org.postgresql" % "postgresql" % "42.1.1",
 	//"org.ow2.sat4j" % "org.ow2.sat4j.core" % "2.3.5",
 	"org.ow2.sat4j" % "org.ow2.sat4j.pb" % "2.3.5",
 	"com.typesafe.slick" %% "slick" % "3.2.0",
@@ -30,13 +30,12 @@ libraryDependencies ++= Seq(
 	"org.scalatest" %% "scalatest" % "3.0.3" % "test",
 	"org.scalacheck" %% "scalacheck" % "1.13.5" % "test",
 	"com.storm-enroute" %% "scalameter" % "0.8.2" % "test",
-	"com.github.davidmoten" % "rtree" % "0.7.6"
+	"com.github.davidmoten" % "rtree" % "0.8.0.1"
 	)
 
 scalacOptions ++= Seq(
-  "-optimise"
-, "-Xdisable-assertions"
-//	"-deprecation", 
+//  "-Xdisable-assertions",
+	"-deprecation"
 //	"-unchecked", 
 ,	"-Xlint" 
 //	"-feature",
