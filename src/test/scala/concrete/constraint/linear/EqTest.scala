@@ -4,9 +4,9 @@ import concrete._
 import cspom.CSPOM
 import cspom.variable.IntVariable
 import org.scalatest.prop.PropertyChecks
-import org.scalatest.{FlatSpec, Inspectors, Matchers}
+import org.scalatest.{FlatSpec, Matchers}
 
-final class EqTest extends FlatSpec with Matchers with PropertyChecks with Inspectors {
+final class EqTest extends FlatSpec with Matchers with PropertyChecks {
 
   "EqBC" should "filter" in {
     val v0 = new Variable("v0", IntDomain.ofInterval(2, 3))
@@ -48,7 +48,7 @@ final class EqTest extends FlatSpec with Matchers with PropertyChecks with Inspe
       c.adviseAll(ps)
 
       val r = c.consistent(ps)
-      if (0 < b && b < 20) {
+      if (0 <= b && b <= 20) {
         assert(r.isState)
       } else {
         assert(!r.isState)
@@ -74,7 +74,8 @@ final class EqTest extends FlatSpec with Matchers with PropertyChecks with Inspe
     solutions should have size 11
 
     for (s <- solutions) {
-      s("result") shouldBe (false)
+      val v = s("result")
+      assert(v == false)
     }
 
   }

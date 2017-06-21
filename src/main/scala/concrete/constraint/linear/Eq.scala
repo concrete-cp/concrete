@@ -101,47 +101,6 @@ final class EqReif(val r: Variable, val x: Variable, val y: Variable) extends Co
   def simpleEvaluation: Int = 1
 }
 
-final class NeqReif(val r: Variable, val x: Variable, val y: Variable) extends Constraint(Array(r, x, y)) {
-  def advise(problemState: ProblemState, event: Event, pos: Int): Int = 3
-
-  def check(tuple: Array[Int]): Boolean = tuple(0) == (if (tuple(1) == tuple(2)) 1 else 0)
-
-  def init(ps: ProblemState): Outcome = ps
-
-  def revise(ps: ProblemState): Outcome = {
-    val dx = ps.dom(x)
-    val dy = ps.dom(y)
-    ps.dom(r) match {
-      case BooleanDomain.UNKNOWNBoolean =>
-        if (dx disjoint dy) {
-          ps.updateDomNonEmpty(r, BooleanDomain.TRUE).entail(this)
-        } else if (dx.isAssigned && dy.isAssigned) {
-          // Necessarily grounded to the same value since not disjoint
-          ps.updateDomNonEmpty(r, BooleanDomain.FALSE).entail(this)
-        } else {
-          ps
-        }
-
-      case BooleanDomain.FALSE =>
-        val d = dx & dy
-        ps.updateDom(x, d)
-          .andThen { ps =>
-            if (d.size < dy.size) ps.updateDom(y, d) else ps
-          }
-
-      case BooleanDomain.TRUE =>
-        (if (dx.isAssigned) ps.removeIfPresent(y, dx.head) else ps)
-          .andThen { ps =>
-            if (dy.isAssigned) ps.removeIfPresent(x, dy.head) else ps
-          }
-          .entailIf(this, ps =>
-            ps.dom(x) disjoint ps.dom(y))
-
-    }
-  }
-
-  def simpleEvaluation: Int = 1
-}
 
 /**
   * Constraint x + b = y
@@ -183,7 +142,7 @@ final class EqACFast(val x: Variable, val b: Int, val y: Variable)
   }
 
   override def consistent(ps: ProblemState): Outcome =
-    if (!(ps.dom(x) disjoint ps.dom(y).shift(-b))) ps else Contradiction(scope)
+    if (ps.dom(x).shift(b) disjoint ps.dom(y)) Contradiction(scope) else ps
 
   def simpleEvaluation: Int = 1
 

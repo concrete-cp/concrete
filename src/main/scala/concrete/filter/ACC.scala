@@ -64,8 +64,6 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     advises.clear()
     queue.clear()
 
-    //println("reduce all")
-
     for (c <- problem.constraints) {
       if (!states.entailed.hasInactiveVar(c)) {
 
@@ -77,7 +75,6 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
   }
 
   def reduceFrom(modVar: Array[Int], modCons: Array[Int], cnt: Int, states: ProblemState): Outcome = {
-    //Removals.clear()
     queue.clear();
 
     for (
@@ -95,7 +92,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
       }
     }
 
-    reduce(states);
+    reduce(states)
   }
 
   private def adviseAndEnqueue(c: Constraint, state: ProblemState): Unit = {
@@ -108,13 +105,12 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
   }
 
   def reduceAfter(modif: Seq[(Variable, Event)], states: ProblemState) = {
-    logger.info(problem.constraints(4611).toString(states))
     advises.clear()
-    queue.clear();
+    queue.clear()
     for ((v, e) <- modif) {
       updateQueue(v, e, null, states)
     }
-    reduce(states);
+    reduce(states)
   }
 
   private def updateQueue(modified: Variable, event: Event, skip: Constraint, states: ProblemState): Unit = {

@@ -11,7 +11,9 @@ final class ModGenerator(pg:ProblemGenerator) extends Generator {
     val result = r.asVariable(pg)
     val Seq(v0, v1) = constraint.arguments.map(c => cspom2concrete1D(c).asVariable(pg))
 
-    Seq(new ModBC(v0, v1, result), new ModAC(v0, v1, result))
+    Seq(
+      new ModBC(v0, v1, result),
+      new ModAC(v0, v1, result))
   }
 
 }

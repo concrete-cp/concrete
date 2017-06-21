@@ -10,7 +10,7 @@ import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.postgresql.util.ReaderInputStream
 
 import scala.collection.JavaConverters._
-import scala.xml.Elem
+
 
 class XCSP3SolutionChecker(file: URL) extends LazyLogging {
 
@@ -29,8 +29,9 @@ class XCSP3SolutionChecker(file: URL) extends LazyLogging {
 
   //Resource.fromURL(file).copyDataTo(tmpPath.outputStream())
 
-
-  def checkSolution(solution: Elem): Option[String] = {
+  def checkSolution(sol: Map[String, Any], obj: Option[Any], variables: Seq[String]): Option[String] = {
+    val solution = XCSP3Concrete.xmlSolution(variables, sol, obj)
+    logger.info(solution.toString)
     val sc = new org.xcsp.checker.SolutionChecker(
       temp.getPath,
       new ReaderInputStream(new StringReader(s""""$solution"""")))

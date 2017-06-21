@@ -1,18 +1,12 @@
-package concrete.constraint.semantic;
+package concrete.constraint.semantic
 
+;
+
+import concrete.constraint.{Constraint, ConstraintComparator, ResiduesRemovals, TupleEnumerator}
+import concrete.{BooleanDomain, IntDomain, Problem, Variable}
 import org.scalacheck.Gen
-import org.scalatest.FlatSpec
-import org.scalatest.Inspectors
-import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
-import concrete.BooleanDomain
-import concrete.IntDomain
-import concrete.Variable
-import concrete.constraint.Constraint
-import concrete.constraint.ResiduesRemovals
-import concrete.constraint.TupleEnumerator
-import concrete.Problem
-import concrete.constraint.ConstraintComparator
+import org.scalatest.{FlatSpec, Inspectors, Matchers}
 
 final class MulTest extends FlatSpec with Matchers with PropertyChecks with Inspectors {
 
@@ -38,6 +32,7 @@ final class MulTest extends FlatSpec with Matchers with PropertyChecks with Insp
     }
   }
 
+
   it should "find allowed tuple" in {
     val r = new Variable("r", IntDomain.ofInterval(0, 3))
     val x = new Variable("x", IntDomain.ofInterval(0, 3))
@@ -49,7 +44,7 @@ final class MulTest extends FlatSpec with Matchers with PropertyChecks with Insp
     val state = pb.initState.toState
 
     val tuple = c.findSupport(c.scope.map(state.dom), 0, 2).get
-    
+
     tuple(2) should be <= 1
 
   }

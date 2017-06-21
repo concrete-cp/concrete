@@ -4,16 +4,20 @@ package runner
 import java.net.URL
 
 import concrete.generator.cspompatterns.XCSPPatterns
+import concrete.heuristic.{CrossHeuristic, Heuristic, SeqHeuristic}
 import cspom.compiler.CSPOMCompiler
+import cspom.variable.CSPOMVariable
 import cspom.xcsp.XCSP3Parser
 import cspom.{CSPOM, CSPOMGoal, StatisticsManager, WithParam}
 
+import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 import scala.xml.Elem
 
 object XCSP3Concrete extends CSPOMRunner with App {
+  lazy val cache = new mutable.HashMap[URL, XCSP3SolutionChecker]
+  lazy val solutionChecker = new XCSP3SolutionChecker(file)
   var file: URL = _
-
   var declaredVariables: Seq[String] = _
 
   override def defaultWriter(opt: Map[Symbol, Any], sm: StatisticsManager): ConcreteWriter = {
@@ -41,6 +45,47 @@ object XCSP3Concrete extends CSPOMRunner with App {
       }
   }
 
+  override def applyParametersPre(p: Problem, opt: Map[Symbol, Any]): Unit = {
+    val heuristics = if (pm.contains("totalFree")) {
+      Seq()
+    } else {
+      val dv = declaredVariables
+        .flatMap(cspom.expression(_))
+        .collect {
+          case v: CSPOMVariable[_] => variables(v)
+        }
+
+      Seq(Heuristic.default(pm, dv.toArray))
+    }
+
+    val decisionVariables: Set[Variable] = heuristics
+      .flatMap(_.decisionVariables)
+      .toSet
+
+    val completed = if (decisionVariables.size < variables.size) {
+      val remainingVariables = p.variables.filterNot(decisionVariables)
+
+      if (heuristics.isEmpty || heuristics.exists(_.shouldRestart)) {
+        heuristics :+ CrossHeuristic(pm, remainingVariables)
+      } else {
+        /* Avoid introducing restarts if all defined heuristics do not enforce it */
+        heuristics :+ CrossHeuristic(pm, remainingVariables).copy(shouldRestart = false)
+      }
+    } else {
+      heuristics
+    }
+
+    val heuristic = completed match {
+      case Seq(h) => h
+      case m => new SeqHeuristic(m.toList)
+    }
+
+    logger.info(heuristic.toString + ", should restart: " + heuristic.shouldRestart)
+
+    pm("heuristic") = heuristic
+
+  }
+
   override def applyParametersCSPOM(solver: CSPOMSolver, opt: Map[Symbol, Any]): Unit = {
     solver.applyGoal().get
   }
@@ -52,19 +97,16 @@ object XCSP3Concrete extends CSPOMRunner with App {
     }
 
   def controlCSPOM(solution: Map[String, Any], obj: Option[Any]) = {
-    controlCSPOM(solution, obj, declaredVariables, file)
-  }
-
-  def controlCSPOM(sol: Map[String, Any], obj: Option[Any], variables: Seq[String], url: URL) = {
-    new XCSP3SolutionChecker(url).checkSolution(xmlSolution(variables, sol, obj))
+    solutionChecker.checkSolution(solution, obj, declaredVariables)
   }
 
   override def outputCSPOM(solution: Map[String, Any], obj: Option[Any]): String = {
     xmlSolution(declaredVariables, solution, obj).toString
   }
 
+
   def xmlSolution(variables: Seq[String], solution: Map[String, Any], obj: Option[Any]): Elem = {
-    val i = <instantiation cost={obj.map(o => xml.Text(util.Math.any2Int(o).toString))}>
+    <instantiation cost={obj.map(o => xml.Text(util.Math.any2Int(o).toString))}>
       <list>
         {variables.mkString(" ")}
       </list>
@@ -72,10 +114,6 @@ object XCSP3Concrete extends CSPOMRunner with App {
         {variables.map(v => util.Math.any2Int(solution(v))).mkString(" ")}
       </values>
     </instantiation>
-
-    println(i)
-
-    i
   }
 
   run(args)

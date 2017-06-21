@@ -1,16 +1,13 @@
 package concrete.generator.cspompatterns
 
-import cspom.CSPOM
 import cspom.CSPOM.seq2CSPOMSeq
-import cspom.CSPOMConstraint
+import cspom.{CSPOM, CSPOMConstraint, UNSATException}
 import cspom.compiler.ConstraintCompilerNoData
-import cspom.variable.CSPOMConstant
-import cspom.variable.CSPOMSeq
-import cspom.UNSATException
+import cspom.variable.{BoolExpression, CSPOMConstant, CSPOMSeq}
 
 /**
- * Removes constants from clauses
- */
+  * Removes constants from clauses
+  */
 object SimplClause extends ConstraintCompilerNoData {
 
   def matchBool(fc: CSPOMConstraint[_], problem: CSPOM) = fc match {
@@ -25,7 +22,13 @@ object SimplClause extends ConstraintCompilerNoData {
     val Seq(positive: CSPOMSeq[_], negative: CSPOMSeq[_]) = fc.arguments
 
     if (positive.exists(_.isTrue) || negative.exists(_.isFalse)) {
-      replaceCtr(fc, Seq(), problem)
+      val r = BoolExpression.coerce(fc.result)
+      replaceCtr(fc, Seq(), problem) ++
+        replace(fc.result, reduceDomain(r, true), problem)
+    } else if (positive.forall(_.isFalse) && negative.forall(_.isTrue)) {
+      val r = BoolExpression.coerce(fc.result)
+      replaceCtr(fc, Seq(), problem) ++
+        replace(fc.result, reduceDomain(r, false), problem)
     } else {
       val newP = positive.filterNot(_.isFalse)
       val newN = negative.filterNot(_.isTrue)

@@ -31,7 +31,7 @@ class GeneratorManager(pg: ProblemGenerator) {
       'atLeast -> new AtLeastGenerator(pg),
       'atMost -> new AtMostGenerator(pg),
       'extension -> new ExtensionGenerator(pg),
-      'sq -> SquareGenerator,
+      'sq -> new SquareGenerator(pg),
       'min -> new MinGenerator(pg),
       'max -> new MaxGenerator(pg),
       'member -> new MemberGenerator(pg),

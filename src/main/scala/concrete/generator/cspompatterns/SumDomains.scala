@@ -9,11 +9,7 @@ import cspom.CSPOMConstraint
 import cspom.UNSATException
 import cspom.compiler.VariableCompiler
 import cspom.util.IntInterval
-import cspom.variable.BoolExpression
-import cspom.variable.CSPOMConstant
-import cspom.variable.CSPOMExpression
-import cspom.variable.CSPOMSeq
-import cspom.variable.IntExpression
+import cspom.variable._
 import cspom.util.IntervalsArithmetic.Arithmetics
 import cspom.util.IntervalsArithmetic.RangeArithmetics
 import cspom.util.RangeSet
@@ -24,9 +20,9 @@ object SumDomains extends VariableCompiler('sum) with LazyLogging {
   def compiler(c: CSPOMConstraint[_]) = throw new IllegalStateException
 
   override def compilerWEntail(c: CSPOMConstraint[_]) = c match {
-    case CSPOMConstraint(CSPOMConstant(true), _, Seq(IntExpression.constSeq(coef), CSPOMSeq(args), CSPOMConstant(result: Int)), _) =>
+    case CSPOMConstraint(CSPOMConstant(true), _, Seq(IntExpression.constSeq(coef), SimpleExpression.simpleSeq(iargs), CSPOMConstant(result: Int)), _) =>
 
-      val iargs = args.map(IntExpression.coerce(_)).toIndexedSeq
+     // val iargs = args //.map(IntExpression.coerce(_)).toIndexedSeq
 
       val m: String = c.getParam("mode").get
 
@@ -45,12 +41,12 @@ object SumDomains extends VariableCompiler('sum) with LazyLogging {
 
             val coefspan = (iargs, coef).zipped.map((a, c) => RangeSet(IntExpression.span(a) * IntInterval.singleton(c))).toIndexedSeq
 
-            val filt = for (i <- args.indices) yield {
+            val filt = for (i <- iargs.indices) yield {
               val others = iargs.indices
                 .filter(_ != i)
                 .map(coefspan)
                 .foldLeft(initBound)(_ - _)
-              args(i) -> reduceDomain(iargs(i), others / coef(i))
+              iargs(i) -> reduceDomain(iargs(i), others / coef(i))
             }
 
             val entailed = filt.map(_._2).count(_.searchSpace > 1) <= 1
@@ -62,7 +58,11 @@ object SumDomains extends VariableCompiler('sum) with LazyLogging {
           .getOrElse((Seq(), false))
       }
 
-    case _ => (Seq(), false)
+    case CSPOMConstraint(r, _, _, _) => {
+      (Seq(r -> BoolExpression.coerce(r)), false)
+    }
+
+    // case _ => (Seq(), false)
   }
 }
 

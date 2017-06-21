@@ -1,43 +1,40 @@
 package concrete.generator.cspompatterns
 
 import concrete.CSPOMDriver
-import cspom.CSPOM
-import cspom.CSPOMConstraint
-import cspom.compiler.ConstraintCompiler
-import cspom.variable.BoolExpression
-import cspom.variable.SimpleExpression
+import cspom.{CSPOM, CSPOMConstraint}
+import cspom.compiler.ConstraintCompilerNoData
+import cspom.variable.{CSPOMSeq, SimpleExpression}
 
 /**
- * Negation is converted to CNF :
- *
- * a = -b <=> (a v b) ^ (-a v -b)
- */
+  * Negation is converted to CNF :
+  *
+  * a = -b <=> (a v b) ^ (-a v -b)
+  **/
 //  private def generateNeg(result: Variable, arg: Variable) {
 //
 //    addConstraint(new Disjunction(result, arg));
 //    addConstraint(new Disjunction(Array(result, arg), Array(true, true)));
 //
 //  }
-object NegToCNF extends ConstraintCompiler {
+object NegToCNF extends ConstraintCompilerNoData {
 
-  type A = (SimpleExpression[Boolean], SimpleExpression[Boolean])
 
-  override def constraintMatcher = {
-    case CSPOMConstraint(BoolExpression(res), 'not, Seq(BoolExpression(arg)), params) =>
-      (res, arg)
-
+  override def matchBool(c: CSPOMConstraint[_], p: CSPOM) = {
+    c.function == 'not
   }
 
-  def compile(fc: CSPOMConstraint[_], problem: CSPOM, data: A) = {
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM) = {
 
-    val (res, arg) = data
+    val res = fc.result
+    val Seq(arg) = fc.arguments
 
     val newConstraints = Seq(
-      CSPOMDriver.clause(res, arg)(),
-      CSPOMDriver.clause()(res, arg))
+      CSPOMDriver.clause(CSPOMSeq(res, arg), CSPOMSeq()),
+      CSPOMDriver.clause(CSPOMSeq(), CSPOMSeq(res, arg)))
 
     replaceCtr(fc, newConstraints, problem)
 
   }
+
   def selfPropagation = false
 }

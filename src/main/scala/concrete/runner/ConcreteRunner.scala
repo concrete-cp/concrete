@@ -43,21 +43,19 @@ trait ConcreteRunner extends LazyLogging {
         .map {
           case Array(key, value) => (key, value)
           case Array(tag) => (tag, Unit)
-          case e => throw new InvalidParameterException(e.toString)
+          case e => throw new InvalidParameterException(e.mkString("[", ", ", "]"))
         }
         .toSeq
 
       options(tail, o + ('D -> p), realArgs)
     }
-    case "-sql" :: tail =>
-      options(tail, o + ('SQL -> Unit), realArgs)
+    case "-sql" :: tail => options(tail, o + ('SQL -> Unit), realArgs)
     case "-control" :: tail => options(tail, o + ('Control -> Unit), realArgs)
     case "-time" :: t :: tail => options(tail, o + ('Time -> t.toInt), realArgs)
     case "-a" :: tail => options(tail, o + ('all -> Unit), realArgs)
     case "-s" :: tail => options(tail, o + ('stats -> Unit), realArgs)
     case "-it" :: it :: tail => options(tail, o + ('iteration -> it.toInt), realArgs)
     case u :: tail if u.startsWith("-") => options(tail, o + ('unknown -> u), realArgs)
-    //    case "-cl" :: tail => options(tail, o + ('CL -> None))
     case u :: tail => options(tail, o, u :: realArgs)
   }
 
@@ -72,9 +70,6 @@ trait ConcreteRunner extends LazyLogging {
   def defaultWriter(opt: Map[Symbol, Any], sm: StatisticsManager): ConcreteWriter = new FZWriter(opt, statistics)
 
   def run(args: Array[String]): Result = {
-
-    //var status: RunnerStatus = Unknown
-
     val (opt, remaining) = try {
       options(args.toList, realArgs = Nil)
     } catch {
@@ -90,13 +85,8 @@ trait ConcreteRunner extends LazyLogging {
       logger.warn("Unknown options: " + u)
     }
 
-    opt.get('D).map {
-      case p: Seq[_] =>
-        for ((option, value) <- p.map {
-          _.asInstanceOf[(String, Any)]
-        }) {
-          pm(option) = value
-        }
+    for (p <- opt.get('D); (option, value) <- p.asInstanceOf[Seq[(String, _)]]) {
+      pm(option) = value
     }
 
     val optimize: String = pm.getOrElse("optimize", "sat")
@@ -110,7 +100,7 @@ trait ConcreteRunner extends LazyLogging {
         defaultWriter(opt, statistics)
       }
 
-    Runtime.getRuntime().addShutdownHook(new Finisher(Thread.currentThread(), writer))
+    Runtime.getRuntime.addShutdownHook(new Finisher(Thread.currentThread(), writer))
 
     val timer = opt.get('Time)
       .map { case time: Int =>
@@ -178,28 +168,6 @@ trait ConcreteRunner extends LazyLogging {
         }
       }
 
-
-    //    val timeout = opt.get('Time).map(_.asInstanceOf[Int].seconds).getOrElse(Duration.Inf)
-    //
-    //    val r = Try(concurrent.Await.result(f, timeout))
-    //      .recoverWith {
-    //        case e: TimeoutException =>
-    //          logger.info("Cancelling")
-    //          f.cancel()
-    //          var tries = 100
-    //          while (tries > 0 && solver.exists(_.running)) {
-    //            logger.info("Waiting for interruption")
-    //            Thread.sleep(100)
-    //            tries -= 1
-    //          }
-    //          if (tries >= 0) {
-    //            Failure(e)
-    //          } else {
-    //            Failure(new IllegalStateException("Could not interrupt search process", e))
-    //          }
-    //
-    //      }
-
     val status: Result = r.recover {
       case e: UNSATException =>
         writer.error(e)
@@ -213,9 +181,11 @@ trait ConcreteRunner extends LazyLogging {
     for (s <- pm.unused) {
       logger.warn(s"Unused parameter : $s")
     }
+
     for (t: Timer <- timer) {
       t.cancel()
     }
+
     writer.end = status
     status
   }

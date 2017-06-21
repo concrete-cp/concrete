@@ -7,6 +7,27 @@ import cspom.{CSPOM, CSPOMConstraint}
 import scala.annotation.varargs
 import scala.reflect.runtime.universe._
 
+object SumBuilder {
+  def apply(v: SimpleExpression[Int]) = new SumBuilder(Seq(v), Seq(1))
+  def apply(coef: Int, v: SimpleExpression[Int]) = new SumBuilder(Seq(v), Seq(coef))
+}
+
+class SumBuilder(val variables: Seq[SimpleExpression[Int]], val coefs: Seq[Int]) {
+  def <(i: Int): CSPOMConstraint[Boolean] = CSPOMDriver.linear(variables, coefs, "lt", i)
+
+  def ===(i: Int): CSPOMConstraint[Boolean] = CSPOMDriver.linear(variables, coefs, "eq", i)
+
+  def <=(i: Int): CSPOMConstraint[Boolean] = CSPOMDriver.linear(variables, coefs, "le", i)
+
+  def >=(i: Int): CSPOMConstraint[Boolean] = CSPOMDriver.linear(variables, coefs.map(-_), "le", i)
+
+  def >(i: Int): CSPOMConstraint[Boolean] = CSPOMDriver.linear(variables, coefs.map(-_), "lt", i)
+
+  def !==(i: Int): CSPOMConstraint[Boolean] = CSPOMDriver.linear(variables, coefs, "ne", i)
+
+  def +(sb: SumBuilder) = new SumBuilder(variables ++ sb.variables, coefs ++ sb.coefs)
+}
+
 object CSPOMDriver {
 
   def sum(variables: SimpleExpression[Int]*)(implicit problem: CSPOM): SimpleExpression[Int] = {
@@ -20,11 +41,6 @@ object CSPOMDriver {
 
   def linear(vars: Seq[SimpleExpression[Int]], coefs: Seq[Int], mode: String, constant: Int): CSPOMConstraint[Boolean] =
     CSPOMConstraint('sum)(coefs, vars, CSPOMConstant(constant)) withParam ("mode" -> mode)
-
-  def linear(mode: String, constant: Int, scalar: (Int, SimpleExpression[Int])*): CSPOMConstraint[Boolean] = {
-    val (coefs, vars) = scalar.unzip
-    linear(vars, coefs, mode, constant)
-  }
 
   def linearReif(mode: String, constant: Int, scalar: (Int, SimpleExpression[Int])*)(implicit problem: CSPOM): SimpleExpression[Boolean] = {
     val (coefs, vars) = scalar.unzip
@@ -75,11 +91,11 @@ object CSPOMDriver {
     r
   }
 
-  def clause(positive: SimpleExpression[Boolean]*)(negative: SimpleExpression[Boolean]*): CSPOMConstraint[Boolean] = {
-    clause(positive, negative)
+  def clause(positive: CSPOMExpression[_]*)(negative: CSPOMExpression[_]*): CSPOMConstraint[Boolean] = {
+    clause(CSPOMSeq(positive: _*), CSPOMSeq(negative: _*))
   }
 
-  def clause(positive: CSPOMSeq[Boolean], negative: CSPOMSeq[Boolean]): CSPOMConstraint[Boolean] = {
+  def clause(positive: CSPOMSeq[_], negative: CSPOMSeq[_]): CSPOMConstraint[Boolean] = {
     CSPOMConstraint('clause)(positive, negative)
   }
 
@@ -155,6 +171,8 @@ object CSPOMDriver {
 
     def %(other: SimpleExpression[Int])(implicit problem: CSPOM): SimpleExpression[Int] =
       problem.defineInt(result => CSPOMConstraint(result)('mod)(e, other))
+
+    def *:(i: Int) = new SumBuilder(Seq(e), Seq(i))
   }
 
   implicit class CSPOMBoolExpressionOperations(e: SimpleExpression[Boolean]) {

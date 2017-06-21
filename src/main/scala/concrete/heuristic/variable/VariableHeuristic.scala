@@ -17,7 +17,7 @@ abstract class VariableHeuristic(params: ParameterManager, val decisionVariables
 
   val randomBreak = params.getOrElse("heuristic.variable.randomBreak", true)
 
-  val randomDiv = params.getOrElse("heuristic.variable.randomDiv", 0.0)
+  val randomDiv = params.getOrElse("heuristic.variable.randomDiv", 0.2)
 
   final def select(state: ProblemState): Option[Variable] = {
     var i = 0

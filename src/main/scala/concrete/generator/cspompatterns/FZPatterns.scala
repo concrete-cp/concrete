@@ -2,10 +2,10 @@ package concrete.generator.cspompatterns
 
 import concrete.CSPOMDriver._
 import cspom.CSPOM._
-import cspom.{CSPOM, CSPOMConstraint}
 import cspom.compiler.{Ctr, GlobalCompiler}
 import cspom.extension.MDDRelation
 import cspom.variable._
+import cspom.{CSPOM, CSPOMConstraint}
 
 object FZPatterns {
   val mtch: PartialFunction[CSPOMConstraint[_], CSPOMConstraint[_]] = {
@@ -332,7 +332,7 @@ object FZPatterns {
      * int_le(var int: a, var int: b)
      */
     case Ctr('int_le, Seq(IntExpression(a), IntExpression(b)), p) =>
-      linear("le", 0, (1, a), (-1, b)) withParams p
+      1 *: a + -1 *: b <= 0 withParams p
     /*
      * (a ≤ b) ↔ r
      * int_le_reif(var int: a, var int: b, var bool: r)
@@ -385,7 +385,7 @@ object FZPatterns {
      * int_lt(var int: a, var int: b)
      */
     case Ctr('int_lt, Seq(IntExpression(a), IntExpression(b)), p) =>
-      linear("lt", 0, (1, a), (-1, b)) withParams p
+      1 *: a + -1 *: b < 0 withParams p
     /*
      * (a < b) ↔ r
      * int_lt_reif(var int: a, var int: b, var bool: r)
@@ -423,7 +423,7 @@ object FZPatterns {
      * int_plus(var int: a, var int: b, var int: c)
      */
     case Ctr('int_plus, Seq(IntExpression(a), IntExpression(b), IntExpression(c)), p) =>
-      linear("eq", 0, (1, a), (1, b), (-1, c)) withParams p
+      1 *: a + 1 *: b + -1 *: c === 0 withParams p
 
     /*
      * a×b = c
@@ -513,7 +513,7 @@ object FZPatterns {
      *  predicate all_different_int(array[int] of var int: x);
      */
     case Ctr('all_different_int, Seq(IntExpression.simpleSeq(y)), p) =>
-      allDifferent(y: _*)
+      allDifferent(y: _*) withParams p
 
     case Ctr('regular, Seq(x,
     CSPOMConstant(q: Int),
@@ -521,7 +521,6 @@ object FZPatterns {
     IntExpression.constSeq(fd), //: CSPOMSeq[_],
     q0,
     f), p) =>
-
       val CSPOMConstant(fseq: Seq[Int]) = f
       CSPOMConstraint('regular)(x, q0, CSPOM.constantSeq(fseq)) withParams p + ("dfa" -> dfa(q, s, fd.toIndexedSeq))
 
@@ -530,6 +529,9 @@ object FZPatterns {
 
     case Ctr('member_int, Seq(s, x), p) =>
       CSPOMConstraint('member)(s, x) withParams p
+
+    case Ctr('alldifferent_except_0, Seq(IntExpression.simpleSeq(y)), p) =>
+      allDifferent(y: _*) withParams (p + ("except" -> Seq(0)))
   }
 
   def apply() = Seq(

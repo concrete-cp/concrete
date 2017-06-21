@@ -10,18 +10,18 @@ final class BestValue(fallback: ValueHeuristic) extends ValueHeuristic with Lazy
 
   def this(params: ParameterManager) = this{
     val valueHeuristicClass: Class[_ <: ValueHeuristic] =
-      params.classInPackage("bestvalue.fallback", "concrete.heuristic.value", classOf[Lexico])
+      params.classInPackage("bestvalue.fallback", "concrete.heuristic.value", classOf[RevLexico])
 
     valueHeuristicClass.getConstructor(classOf[ParameterManager]).newInstance(params)
   }
 
-  override def toString = "best";
+  override def toString = "best"
 
   private var best: Map[Variable, Int] = Map()
 
   def compute(p: Problem) {
     require(p.variables.zipWithIndex.forall { case (v, i) => v.id == i })
-    // Nothing to compute
+    fallback.compute(p)
   }
 
   override def selectIndex(variable: Variable, domain: Domain) = {

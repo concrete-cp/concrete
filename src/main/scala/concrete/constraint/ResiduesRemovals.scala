@@ -17,11 +17,9 @@ trait ResiduesRemovals extends Residues with Removals {
     var current: Outcome = state
     while (p >= 0) {
       if (p != skip) {
-        val nd = reviseDomain(doms, p)
-        if (nd.isEmpty) {
-          Contradiction(scope(p))
-        } else {
-          current = current.updateDom(scope(p), nd)
+        current = current.updateDom(scope(p), reviseDomain(doms, p))
+        if (!current.isState) {
+          return current
         }
       }
       p -= 1

@@ -44,14 +44,19 @@ class ModBC(x: Variable, y: Variable, z: Variable) extends Constraint(x, y, z) w
   def advise(problemState: ProblemState, pos: Int): Int = 3
   def check(tuple: Array[Int]): Boolean = tuple(0) % tuple(1) == tuple(2)
   def simpleEvaluation: Int = 1
+
+  override def toString(ps:ProblemState) = {
+    s"${z.toString(ps)} =BC= ${x.toString(ps)} % ${y.toString(ps)}"
+  }
 }
 
 class ModAC(v0: Variable, v1: Variable, result: Variable) extends Constraint(v0, v1, result) with ResiduesRemovals with TupleEnumerator {
-  def check(t: Array[Int]) = {
-    t(0) % t(1) == t(2)
-
-  }
+  def check(t: Array[Int]) = t(0) % t(1) == t(2)
 
   override def findSupport(doms: Array[Domain], position: Int, value: Int): Option[Array[Int]] =
     super[TupleEnumerator].findSupport(doms, position, value)
+
+  override def toString(ps:ProblemState) = {
+    s"${result.toString(ps)} =AC= ${v0.toString(ps)} % ${v1.toString(ps)}"
+  }
 }

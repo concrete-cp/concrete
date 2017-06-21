@@ -1,22 +1,15 @@
 package concrete.generator.cspompatterns
 
-import cspom.compiler.ConstraintCompilerNoData
-import cspom.CSPOM
-import cspom.CSPOMConstraint
-import cspom.variable.CSPOMConstant
-import concrete.constraint.linear.SumMode
-import cspom.variable.CSPOMVariable
+import concrete.constraint.linear._
 import concrete.generator.SumGenerator
-import cspom.variable.BoolExpression
-import CSPOM._
-import concrete.constraint.linear.SumEQ
-import concrete.constraint.linear.SumLT
-import concrete.constraint.linear.SumLE
-import concrete.constraint.linear.SumNE
+import cspom.CSPOM._
+import cspom.{CSPOM, CSPOMConstraint}
+import cspom.compiler.ConstraintCompilerNoData
+import cspom.variable.{BoolExpression, CSPOMConstant}
 
 /**
- *  Remove constants from linear constraints
- */
+  * Remove constants from linear constraints
+  */
 object SumConstants extends ConstraintCompilerNoData {
 
   def matchBool(c: CSPOMConstraint[_], p: CSPOM) = {
@@ -30,33 +23,25 @@ object SumConstants extends ConstraintCompilerNoData {
     }
   }
 
-  def checkConstant(constant: Int, mode: SumMode): Boolean = {
-    mode match {
-      case SumEQ => 0 == constant
-      case SumLT => 0 < constant
-      case SumLE => 0 <= constant
-      case SumNE => 0 != constant
-    }
-  }
-
   def compile(constraint: CSPOMConstraint[_], p: CSPOM) = {
     val (expr, coefs, originalConst, mode) = SumGenerator.readCSPOM(constraint)
 
     val (vars, varCoefs) = expr.zip(coefs)
       .collect {
-        case (v: CSPOMVariable[_], p) => (v, p)
+        case (v, p) if v.searchSpace > 1 => (v, p)
       }
       .unzip
 
     val const = originalConst - expr.zip(coefs)
       .collect {
-        case (CSPOMConstant(c: Int), p) => c * p
+        case (c: CSPOMConstant[_], p) => c.intValue * p
       }
       .sum
 
     vars match {
       case Seq() =>
-
+        //        println(constraint)
+        //        println(const, mode)
         //logger.warn(s"Linear constraint with no variables: $constraint, entailed to $truth")
         val nr = reduceDomain(BoolExpression.coerce(constraint.result), checkConstant(const, mode))
         removeCtr(constraint, p) ++ replace(constraint.result, nr, p)
@@ -70,6 +55,15 @@ object SumConstants extends ConstraintCompilerNoData {
         replaceCtr(constraint, newConstraint, p)
     }
 
+  }
+
+  def checkConstant(constant: Int, mode: SumMode): Boolean = {
+    mode match {
+      case SumEQ => 0 == constant
+      case SumLT => 0 < constant
+      case SumLE => 0 <= constant
+      case SumNE => 0 != constant
+    }
   }
 
   def selfPropagation = false

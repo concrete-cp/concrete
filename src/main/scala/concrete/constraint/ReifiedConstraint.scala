@@ -7,7 +7,6 @@ import concrete.Outcome
 import concrete.ProblemState
 import concrete.Variable
 import concrete.Event
-import concrete.constraint.linear.EqACFast
 
 final class ReifiedConstraint(
   controlVariable: Variable,

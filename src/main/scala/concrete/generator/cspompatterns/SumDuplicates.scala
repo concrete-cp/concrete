@@ -1,28 +1,22 @@
 package concrete.generator.cspompatterns
 
-import scala.runtime.ZippedTraversable2.zippedTraversable2ToTraversable
 import concrete.constraint.linear.SumMode
-import cspom.CSPOM.constant
-import cspom.CSPOM.constantSeq
-import cspom.CSPOM.seq2CSPOMSeq
-import cspom.CSPOMConstraint
+import concrete.generator.SumGenerator
+import cspom.CSPOM.{constant, constantSeq, seq2CSPOMSeq}
 import cspom.compiler.ConstraintCompiler
-import cspom.variable.BoolExpression
-import cspom.variable.CSPOMConstant
-import cspom.variable.CSPOMExpression
-import cspom.variable.CSPOMSeq
-import cspom.variable.IntExpression
-import cspom.CSPOM
+import cspom.variable.{BoolExpression, CSPOMExpression}
+import cspom.{CSPOM, CSPOMConstraint}
 
 /**
- *  Merge duplicates in linear constraints (x + x = 0 -> 2.x = 0). Also remove variables with factor = 0.
- */
+  * Merge duplicates in linear constraints (x + x = 0 -> 2.x = 0). Also remove variables with factor = 0.
+  */
 object SumDuplicates extends ConstraintCompiler {
 
   type A = (CSPOMExpression[_], collection.Map[CSPOMExpression[Any], Int], Int)
 
-  override def mtch(c: CSPOMConstraint[_], p: CSPOM) = PartialFunction.condOpt(c) {
-    case CSPOMConstraint(r, 'sum, Seq(IntExpression.constSeq(coefs), CSPOMSeq(vars), CSPOMConstant(const: Int)), p) =>
+  override def mtch(c: CSPOMConstraint[_], p: CSPOM) = {
+    if (c.function == 'sum) {
+      val (vars, coefs, const, mode) = SumGenerator.readCSPOM(c)
 
       var duplicates = false
       val factors = collection.mutable.Map[CSPOMExpression[_], Int]()
@@ -32,19 +26,21 @@ object SumDuplicates extends ConstraintCompiler {
             duplicates = true
             factors(v) = i + c
           case None =>
-            duplicates |= (c == 0)
             factors(v) = c
         }
       }
 
-      if (duplicates || coefs.contains(0)) {
-        Some((r, factors, const))
+      if (duplicates || factors.values.exists(_ == 0)) {
+        Some((c.result, factors, const))
       } else {
         None
       }
 
+    } else {
+      None
+    }
   }
-    .flatten
+
 
   def compile(constraint: CSPOMConstraint[_], p: CSPOM, data: A) = {
     val (r, args, const) = data

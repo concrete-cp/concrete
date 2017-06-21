@@ -1,34 +1,32 @@
 package concrete.generator.cspompatterns
 
 import concrete.CSPOMDriver
-import cspom.CSPOM
-import cspom.CSPOMConstraint
+import cspom.{CSPOM, CSPOMConstraint}
 import cspom.compiler.ConstraintCompiler
-import cspom.variable.BoolExpression
-import cspom.variable.SimpleExpression
+import cspom.variable.{CSPOMExpression, CSPOMSeq}
 
 /**
- * Reified disjunction is converted to CNF :
- *
- * a = b v c v d...
- *
- * <=>
- *
- * (-a v b v c v d...) ^ (a v -b) ^ (a v -c) ^ (a v -d) ^ ...
- */
+  * Reified disjunction is converted to CNF :
+  *
+  * a = b v c v d...
+  *
+  * <=>
+  *
+  * (-a v b v c v d...) ^ (a v -b) ^ (a v -c) ^ (a v -d) ^ ...
+  */
 object ReifiedClause extends ConstraintCompiler {
 
-  type A = (SimpleExpression[Boolean], Seq[SimpleExpression[Boolean]], Seq[SimpleExpression[Boolean]])
+  type A = (CSPOMExpression[_], CSPOMSeq[_], Seq[CSPOMExpression[_]])
 
   override def constraintMatcher = {
-    case CSPOMConstraint(BoolExpression(res), 'clause, Seq(BoolExpression.simpleSeq(p), BoolExpression.simpleSeq(n)), params) if (!res.isTrue) =>
+    case CSPOMConstraint(res, 'clause, Seq(p: CSPOMSeq[_], CSPOMSeq(n)), params) if (!res.isTrue) =>
       (res, p, n)
   }
 
   def compile(fc: CSPOMConstraint[_], problem: CSPOM, data: A) = {
     val (res, positive, negative) = data
 
-    val c1 = CSPOMDriver.clause(positive: _*)(res +: negative: _*)
+    val c1 = CSPOMDriver.clause(positive, CSPOMSeq(res +: negative: _*))
     val c2 = positive.map {
       case v => CSPOMDriver.clause(res)(v)
     }

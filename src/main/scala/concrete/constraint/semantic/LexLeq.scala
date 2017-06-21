@@ -32,7 +32,7 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
     }
   }
   override def toString(ps: ProblemState) = {
-    s"$id: ${x.map(ps.dom).mkString("[", ", ", "]")} <= ${y.map(ps.dom).mkString("[", ", ", "]")} / " +
+    s"$id: ${x.map(_.toString(ps)).mkString("[", ", ", "]")} <= ${y.map(_.toString(ps)).mkString("[", ", ", "]")} / " +
       (Option(ps(this))
         .map {
           case (alpha, beta) => s"alpha = $alpha, beta = $beta"

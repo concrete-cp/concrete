@@ -2,23 +2,26 @@ package concrete
 package generator
 
 import com.typesafe.scalalogging.LazyLogging
-import concrete.constraint.{Constraint, ReifiedConstraint}
 import concrete.constraint.linear._
 import concrete.constraint.semantic.{Neq, NeqC}
+import concrete.constraint.{Constraint, ReifiedConstraint}
 import concrete.generator.Generator.cspom2concrete1D
 import cspom.CSPOMConstraint
 import cspom.variable.{CSPOMConstant, IntExpression, SimpleExpression}
 
 object SumGenerator {
   def readCSPOM(constraint: CSPOMConstraint[_]) = {
-    val Seq(IntExpression.constSeq(coefs), SimpleExpression.simpleSeq(vars), CSPOMConstant(c)) = constraint.arguments //map cspom2concreteVar
+    require(constraint.arguments.size == 3)
+    val IntExpression.constSeq(coefs) = constraint.arguments(0)
+    val SimpleExpression.simpleSeq(vars) = constraint.arguments(1)
+    val CSPOMConstant(c) = constraint.arguments(2) //map cspom2concreteVar
 
     // For bool2int optimization
     val constant = util.Math.any2Int(c)
 
     val mode = constraint.getParam[String]("mode")
-      .flatMap(SumMode.withName)
-      .get
+      .map(m => SumMode.withName(m).getOrElse(throw new IllegalArgumentException("Unknown mode " + m)))
+      .getOrElse(throw new IllegalArgumentException("Constraint " + constraint + " has no valid mode"))
 
     (vars, coefs, constant, mode)
 

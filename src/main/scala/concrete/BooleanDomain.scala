@@ -205,8 +205,7 @@ sealed trait BooleanDomain extends Domain {
   def bitVector: BitVector
 
   def toBitVector(offset: Int) = {
-    require(offset == 0)
-    bitVector
+    bitVector.shift(-offset)
   }
 
   def &(lb: Int, ub: Int) = removeUntil(lb).removeAfter(ub)

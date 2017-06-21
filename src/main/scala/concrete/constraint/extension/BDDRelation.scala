@@ -22,14 +22,14 @@ final class BDDRelation(val bdd: BDD) extends Relation with LazyLogging {
   def filterTrie(doms: Array[Domain], modified: List[Int]): BDDRelation = {
     val m = bdd.filterTrie(doms.asInstanceOf[Array[MiniSet]], modified)
 
-    assert(m.forall { sup =>
-      sup.zipWithIndex.forall {
-        case (i, p) =>
-          val r = doms(p).present(i)
-          if (!r) logger.warn(s"($p, $i) should have been filtered")
-          r
-      }
-    }, modified + "\n" + m)
+//    assert(m.forall { sup =>
+//      sup.zipWithIndex.forall {
+//        case (i, p) =>
+//          val r = doms(p).present(i)
+//          if (!r) logger.warn(s"($p, $i) should have been filtered")
+//          r
+//      }
+//    }, modified + "\n" + m)
 
     if (m eq bdd) {
       this

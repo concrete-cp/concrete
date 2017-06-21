@@ -1,21 +1,21 @@
 package concrete.generator.cspompatterns
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
 import concrete.CSPOMDriver._
+import concrete.generator.SumGenerator
 import cspom.CSPOM
 import cspom.CSPOM._
+import cspom.compiler.{CSPOMCompiler, MergeEq}
 import cspom.variable.IntVariable
-import cspom.compiler.MergeEq
-import cspom.compiler.CSPOMCompiler
-import concrete.generator.SumGenerator
+import org.scalatest.{FlatSpec, Matchers}
 
 class SumFactorsTest extends FlatSpec with Matchers {
   "SumFactors" should "canonize" in {
     val problem = CSPOM { implicit p =>
-      val Seq(x, y, z) = Seq.fill(3) { IntVariable.free() }
+      val Seq(x, y, z) = Seq.fill(3) {
+        IntVariable.free()
+      }
 
-      ctr(linear("le",-2,(4, x), (-4, y), (2, z)))
+      ctr(4 *: x + -4 *: y + 2 *: z <= -2)
     }
 
     CSPOMCompiler.compile(problem, Seq(SumFactors, MergeEq))

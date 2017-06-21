@@ -16,6 +16,7 @@
 
 	<logger name="concrete" level="warn" />
 	<logger name="cspom" level="warn" />
+	<logger name="org.xcsp.parser" level="warn" />
 
 	<root level="warn">
 		<appender-ref ref="STDOUT" />

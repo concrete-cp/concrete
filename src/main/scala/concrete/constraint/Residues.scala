@@ -1,6 +1,6 @@
 package concrete.constraint
 
-import concrete.{Contradiction, Domain, Outcome, ProblemState}
+import concrete.{Domain, Outcome, ProblemState}
 
 import scala.annotation.tailrec
 
@@ -42,12 +42,11 @@ trait Residues extends Constraint {
     var p = arity - 1
     var current: Outcome = state
     while (p >= 0) {
-      val nd = reviseDomain(doms, p)
-      if (nd.isEmpty) {
-        Contradiction(scope(p))
-      } else {
-        current = current.updateDom(scope(p), nd)
+      current = current.updateDom(scope(p), reviseDomain(doms, p))
+      if (!current.isState) {
+        return current
       }
+
       p -= 1
     }
     current

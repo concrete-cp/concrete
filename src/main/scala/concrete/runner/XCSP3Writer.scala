@@ -47,6 +47,7 @@ class XCSP3Writer(val opts: Map[Symbol, Any], val stats: StatisticsManager) exte
         case FullExplore if lastSolution.isDefined => "s OPTIMUM FOUND"
         case FullExplore => "s UNSATISFIABLE"
         case Unfinished(_) if lastSolution.isDefined => "s SATISFIABLE"
+        case Unfinished(Some(_: UnsupportedOperationException)) => "s UNSUPPORTED"
         case _ => "s UNKNOWN"
 
 

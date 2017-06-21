@@ -3,10 +3,9 @@ package concrete.generator.cspompatterns
 import concrete.CSPOMDriver
 import cspom.CSPOM
 import cspom.CSPOMConstraint
-import cspom.compiler.ConstraintCompiler
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData}
 import cspom.variable.BoolExpression
 import cspom.variable.SimpleExpression
-
 import concrete.constraint.linear.SumEQ
 import concrete.generator.SumGenerator
 import cspom.variable.CSPOMSeq
@@ -25,26 +24,24 @@ import CSPOM._
  */
 object BoolEq extends ConstraintCompiler {
 
-  type A = (SimpleExpression[_], SimpleExpression[_])
+  type A = Seq[SimpleExpression[_]]
 
   override def mtch(c: CSPOMConstraint[_], p: CSPOM) = c match {
     case CSPOMConstraint(
       r, 'eq,
       Seq(BoolExpression.bool01(a), BoolExpression.bool01(b)), _) =>
-      Some((a, b))
+      Some(Seq(a, b))
     case _ => None
   }
 
   def compile(c: CSPOMConstraint[_], problem: CSPOM, data: A) = {
 
-    val (ia, ib) = data
+    val Seq(a, b) = data.map(BoolExpression.coerce(_))
 
     val nr = BoolExpression.coerce(c.result)
 
-    val (Seq(a, b), bool2int) = intOrBoolToBool(Seq(ia, ib))
-
     replace(c.result, nr, problem) ++
-      replaceCtr(c, bool2int ++: Seq(
+      replaceCtr(c, Seq(
         CSPOMDriver.clause(b)(nr, a),
         CSPOMDriver.clause(a)(nr, b),
         CSPOMDriver.clause(nr, a, b)(),
@@ -65,15 +62,15 @@ object BoolSum extends ConstraintCompiler {
       val (vars, coefs, constant, mode) = SumGenerator.readCSPOM(c)
       // val cond = vars.size == 1 && coefs.forall(c => c == 1) && (constant == 1 || constant == 0)
 
-      if (vars.forall(BoolExpression.bool01.unapply(_).isDefined)) {
-        val (boolVars, bool2Int) = intOrBoolToBool(vars)
+      if (vars.forall(BoolExpression.is01)) {
+        //val (boolVars, bool2Int) = intOrBoolToBool(vars)
 
         PartialFunction.condOpt((coefs, constant, mode)) {
-          case (Seq(1), 1, SumEQ) => Seq(CSPOMConstraint(c.result)('clause)(boolVars, CSPOMSeq()))
-          case (Seq(1), 0, SumEQ) => Seq(CSPOMConstraint(c.result)('clause)(CSPOMSeq(), boolVars))
-          case (Seq(1, 1), 1, SumEQ) => Seq(CSPOMConstraint(c.result)('xor)(boolVars: _*))
+          case (Seq(1), 1, SumEQ) => Seq(CSPOMConstraint(c.result)('clause)(vars, CSPOMSeq()))
+          case (Seq(1), 0, SumEQ) => Seq(CSPOMConstraint(c.result)('clause)(CSPOMSeq(), vars))
+          case (Seq(1, 1), 1, SumEQ) => Seq(CSPOMConstraint(c.result)('xor)(vars: _*))
         }
-          .map(_ ++: bool2Int)
+
 
       } else {
         None
@@ -84,6 +81,21 @@ object BoolSum extends ConstraintCompiler {
   def compile(fc: CSPOMConstraint[_], problem: CSPOM, data: A) = {
 
     replaceCtr(fc, data, problem)
+
+  }
+}
+
+object BoolProd extends ConstraintCompilerNoData {
+
+  override def matchBool(c: CSPOMConstraint[_], p: CSPOM) = {
+    c.function == 'mul && c.arguments.forall(BoolExpression.is01)
+  }
+
+  def compile(fc: CSPOMConstraint[_], problem: CSPOM) = {
+
+    val c = CSPOMConstraint(fc.result)('and)(fc.arguments:_*)
+
+    replaceCtr(fc, c, problem)
 
   }
 }

@@ -9,21 +9,9 @@ import concrete.ProblemState
 import concrete.Outcome
 import concrete.util.Interval
 
-final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) with BC {
+final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) with BC with AllDiffChecker {
 
-  private val offset = scope.iterator.map(_.initDomain.head).min
-
-  def check(t: Array[Int]): Boolean = {
-    //println(t.toSeq)
-    val union = collection.mutable.BitSet.empty
-
-    !t.exists { v =>
-      union(v - offset) || {
-        union += (v - offset)
-        false
-      }
-    }
-  }
+  def except = Set()
 
   case class HInterval(val p: Int) {
     var minrank: Int = 0

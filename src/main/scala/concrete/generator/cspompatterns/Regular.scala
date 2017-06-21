@@ -24,10 +24,10 @@ final object Regular extends ConstraintCompilerNoData {
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM) = {
     val Seq(
     CSPOMSeq(x: Seq[SimpleExpression[Int]]@unchecked),
-    CSPOMConstant(q0: Int),
-    CSPOMConstant.seq(f: Seq[Int]@unchecked)) = constraint.arguments
+    CSPOMConstant(q0),
+    CSPOMConstant.seq(f: Seq[_])) = constraint.arguments
 
-    val Some(dfa) = constraint.getParam[Map[(Int, Int), Int]]("dfa")
+    val Some(dfa) = constraint.getParam[Map[(Any, Any), Any]]("dfa")
 
     val values = dfa.keys.map(_._2).toSeq.distinct.to[collection.IndexedSeq] //x.map(IntExpression.implicits.iterable).toIndexedSeq
 
@@ -36,10 +36,10 @@ final object Regular extends ConstraintCompilerNoData {
     replaceCtr(constraint, x in new MDDRelation(regular), problem)
   }
 
-  def mdd(v: IndexedSeq[Seq[Int]], initState: Int, finalStates: Set[Int], dfa: Map[(Int, Int), Int]): MDD = {
-    val cache = new JavaMap[(Int, Int), MDD]()
+  def mdd[T](v: IndexedSeq[Seq[T]], initState: T, finalStates: Set[T], dfa: Map[(T, T), T]): MDD = {
+    val cache = new JavaMap[(Int, T), MDD]()
 
-    def parse(depth: Int, state: Int): MDD = cache.getOrElseUpdate((depth, state), {
+    def parse(depth: Int, state: T): MDD = cache.getOrElseUpdate((depth, state), {
       if (depth >= v.length) {
         if (finalStates(state)) {
           MDDLeaf
@@ -47,13 +47,15 @@ final object Regular extends ConstraintCompilerNoData {
           MDD0
         }
       } else {
-        MDD(v(depth)
-          .flatMap { value => dfa.get((state, value)).map(value -> _) }
-          .map {
-            case (value, nextState) =>
-              value -> parse(depth + 1, nextState)
-          }
-          .filter(_._2.nonEmpty))
+
+        val trie = for {value <- v(depth)
+                        nextState <- dfa.get((state, value))
+                        subMDD: MDD = parse(depth + 1, nextState)
+                        if (subMDD.nonEmpty)} yield {
+          concrete.util.Math.any2Int(value) -> subMDD
+        }
+
+        MDD(trie)
       }
     })
 

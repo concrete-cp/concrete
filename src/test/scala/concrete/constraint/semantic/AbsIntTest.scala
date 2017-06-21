@@ -1,20 +1,12 @@
 package concrete.constraint.semantic
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
-import concrete.IntDomain
-import concrete.Problem
-import concrete.ProblemState
-import concrete.Variable
-import org.scalatest.time.Second
-import org.scalatest.time.Span
-import org.scalatest.prop.PropertyChecks
-import concrete.constraint.ResiduesRemovals
+import concrete.{IntDomain, Problem, ProblemState, Variable}
+import concrete.constraint.{Constraint, ConstraintComparator, ResiduesRemovals, TupleEnumerator}
 import org.scalacheck.Gen
-import concrete.constraint.Constraint
-import concrete.constraint.TupleEnumerator
-import concrete.constraint.ConstraintComparator
+import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.concurrent.TimeLimits
+import org.scalatest.prop.PropertyChecks
+import org.scalatest.time.{Second, Span}
 
 final class AbsIntTest extends FlatSpec with Matchers with TimeLimits with PropertyChecks {
 
@@ -84,6 +76,31 @@ final class AbsIntTest extends FlatSpec with Matchers with TimeLimits with Prope
     }
 
   }
+
+  it should "filter the same as enumerator, {0} = |{-1}|" in {
+
+
+    val vx = new Variable("x", IntDomain.ofSeq(0))
+    val vy = new Variable("y", IntDomain.ofSeq(-1))
+
+    val problem = Problem(vx,vy)
+    val c = new AbsAC(vx, vy)
+    problem.addConstraint(c)
+    val ps = problem.initState.toState
+    c.adviseAll(ps)
+
+    assert(!c.revise(ps).isState)
+
+    ConstraintComparator.compare(
+      Array(vx, vy),
+      new AbsAC(vx, vy),
+      new Constraint(Array(vx, vy)) with ResiduesRemovals with TupleEnumerator {
+        def check(t: Array[Int]) = t(0) == math.abs(t(1))
+      })
+
+
+  }
+
 
   val dom = Gen.nonEmptyListOf(Gen.choose(-1000, 1000))
 

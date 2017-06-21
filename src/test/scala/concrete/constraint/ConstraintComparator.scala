@@ -27,6 +27,9 @@ object ConstraintComparator extends Matchers with Inspectors {
 
     val ps = problem.initState.toState
 
+    c1.adviseAll(ps)
+    c2.adviseAll(ps)
+
     val r1 = c1.revise(ps)
     val r2 = c2.revise(ps)
 
@@ -43,7 +46,7 @@ object ConstraintComparator extends Matchers with Inspectors {
           case t: Tuple2[Domain, Domain] => val d1 = t._1; val d2 = t._2; d1.view should contain theSameElementsAs d2.view
         }
         assert(!s2.entailed.hasInactiveVar(c2) || s1.entailed.hasInactiveVar(c1))
-      case _ => fail()
+      case (s1, s2) => fail(s"$s1 and $s2 were not the same")
     }
 
   }

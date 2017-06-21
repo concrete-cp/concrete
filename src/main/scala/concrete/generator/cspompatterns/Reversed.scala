@@ -1,20 +1,12 @@
 package concrete.generator.cspompatterns
 
 import concrete.CSPOMDriver
-import concrete.constraint.linear.SumEQ
-import concrete.constraint.linear.SumLE
-import concrete.constraint.linear.SumLT
-import concrete.constraint.linear.SumNE
+import concrete.constraint.linear.{SumEQ, SumLE, SumLT, SumNE}
 import concrete.generator.SumGenerator
-import cspom.CSPOM
-import cspom.CSPOM.constant
-import cspom.CSPOM.constantSeq
-import cspom.CSPOM.seq2CSPOMSeq
-import cspom.CSPOMConstraint
-import cspom.compiler.ConstraintCompiler
-import cspom.variable.CSPOMConstant
-import cspom.variable.IntExpression
-import cspom.compiler.Delta
+import cspom.CSPOM.{constant, constantSeq, seq2CSPOMSeq}
+import cspom.{CSPOM, CSPOMConstraint}
+import cspom.compiler.{ConstraintCompiler, Delta}
+import cspom.variable.{BoolVariable, CSPOMConstant, CSPOMSeq, IntExpression}
 
 object Reversed extends ConstraintCompiler {
 
@@ -27,12 +19,17 @@ object Reversed extends ConstraintCompiler {
   def compile(c: CSPOMConstraint[_], p: CSPOM, data: A) = {
     PartialFunction.condOpt(data) {
       case 'eq =>
-        require(c.arguments.size == 2)
+        val bools = (for (Seq(a, b) <- c.arguments.sliding(2)) yield {
+          CSPOMConstraint(new BoolVariable())('ne)(a, b)
+        }).toSeq
 
-        val args = c.arguments.map { case IntExpression(e) => e }
-        CSPOMDriver.linear(args, Seq(1, -1), "ne", 0)
+        CSPOMDriver.clause(bools.map(_.result): _*)() +: bools
+//
+//        val args = c.arguments.map { case IntExpression(e) => e }
+//        CSPOMDriver.linear(args, Seq(1, -1), "ne", 0)
       case 'ne =>
-        CSPOMConstraint('eq)(c.arguments: _*)
+        require(c.arguments.size == 2)
+        Seq(CSPOMConstraint('eq)(c.arguments: _*))
 
       case 'sum =>
         val (vars, coefs, const, mode) = SumGenerator.readCSPOM(c)
@@ -43,10 +40,10 @@ object Reversed extends ConstraintCompiler {
           case SumLT => (coefs.map(-_), -const, SumLE)
           case SumLE => (coefs.map(-_), -const, SumLT)
         }
-        CSPOMConstraint('sum)(revCoefs, vars, revConstant) withParams c.params + ("mode" -> revMode.toString)
+        Seq(CSPOMConstraint('sum)(revCoefs, vars, revConstant) withParam "mode" -> revMode.toString)
 
     }
-      .map(nc => replaceCtr(c, nc withParams c.params, p))
+      .map(nc => replaceCtr(c, nc, p))
       .getOrElse(Delta.empty)
   }
 

@@ -22,14 +22,16 @@ object ConcretePatterns {
         // Clause does not support constants
         SimplClause, PBConstants,
         Bool2IntDomains, DivDomains, ModDomains,
-        Knapsack, Lex, NoOverlap, MinDomains, MaxDomains, DiffNWCumulative)
+        Knapsack, Lex, NoOverlap, MinDomains, MaxDomains, DiffNWCumulative,
+        GCC)
 
     require(concreteDef.distinct.size == concreteDef.size)
 
     val concreteImp = Seq(
       //AbsDiff, AbsDiffDomains,
       AllDiff, SubsumedDiff, Square, SumConstants, SumDuplicates, PseudoBool,
-      MergeNotDisj, UnaryClause, SumFactors, SumEq, BoolSum) //, MergeRelations) //, LexLeq2SAT)
+      //MergeNotDisj,
+      UnaryClause, SumFactors, SumEq, BoolSum, BoolProd) //, MergeRelations) //, LexLeq2SAT)
 
     val improveModel = params.getOrElse("improveModel", true)
 

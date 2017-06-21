@@ -1,23 +1,20 @@
 package concrete.generator.cspompatterns
 
-import org.scalatest.Matchers
-import org.scalatest.FlatSpec
-import cspom.CSPOM
-import cspom.variable.IntVariable
 import concrete.CSPOMDriver._
-import CSPOM._
-import cspom.compiler.CSPOMCompiler
-import cspom.compiler.MergeEq
-import cspom.variable.CSPOMConstant
-import cspom.variable.CSPOMSeq
-import cspom.variable.IntExpression
+import cspom.CSPOM
+import cspom.CSPOM._
+import cspom.compiler.{CSPOMCompiler, MergeEq}
+import cspom.variable.{CSPOMConstant, CSPOMSeq, IntExpression, IntVariable}
+import org.scalatest.{FlatSpec, Matchers}
 
 class SumDuplicatesTest extends FlatSpec with Matchers {
   "SumDuplicates" should "merge" in {
     val problem: CSPOM = CSPOM { implicit p =>
-      val Seq(x, y) = Seq.fill(2) { IntVariable.free() }
+      val Seq(x, y) = Seq.fill(2) {
+        IntVariable.free()
+      }
 
-      ctr(linear("le",-2,(4, x), (-4, y), (2, x)))
+      ctr(4 *: x + -4 *: y + 2 *: x <= -2)
     }
 
     CSPOMCompiler.compile(problem, Seq(SumDuplicates, MergeEq))

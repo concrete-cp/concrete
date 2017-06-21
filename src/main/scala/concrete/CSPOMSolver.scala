@@ -69,6 +69,8 @@ class CSPOMSolver(
         case CSPOMGoal.Satisfy => Success(this)
         case CSPOMGoal.Maximize(expr: CSPOMVariable[_]) => Success(maximize(expr))
         case CSPOMGoal.Minimize(expr: CSPOMVariable[_]) => Success(minimize(expr))
+        case CSPOMGoal.Maximize(_: CSPOMConstant[_]) => Success(this)
+        case CSPOMGoal.Minimize(_: CSPOMConstant[_]) => Success(this)
         case g => Failure(new InvalidParameterException("Cannot execute goal " + g))
       }
       .getOrElse(Success(this))

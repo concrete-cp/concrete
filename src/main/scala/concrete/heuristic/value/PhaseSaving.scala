@@ -15,8 +15,8 @@ final class PhaseSaving(heuristic: ValueHeuristic) extends ValueHeuristic {
   override def toString = "best";
 
   def compute(p: Problem) {
+    heuristic.compute(p)
     previous = p.variables.map(v => heuristic.selectIndex(v, v.initDomain))
-    // Nothing to compute
   }
 
   override def selectIndex(variable: Variable, domain: Domain) = {
