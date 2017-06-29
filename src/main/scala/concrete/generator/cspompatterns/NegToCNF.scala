@@ -3,7 +3,7 @@ package concrete.generator.cspompatterns
 import concrete.CSPOMDriver
 import cspom.{CSPOM, CSPOMConstraint}
 import cspom.compiler.ConstraintCompilerNoData
-import cspom.variable.{CSPOMSeq, SimpleExpression}
+import cspom.variable.CSPOMSeq
 
 /**
   * Negation is converted to CNF :

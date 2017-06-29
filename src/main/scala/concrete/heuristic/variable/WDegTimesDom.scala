@@ -23,7 +23,7 @@ package variable
 
 class WDegTimesDom(params: ParameterManager, decisionVariables: Array[Variable]) extends VariableHeuristic(params, decisionVariables) with ConstraintWeighting {
 
-  def score(variable: Variable, dom: Domain, state: ProblemState) = variable.getWDegEntailed(state) * dom.size
+  def score(variable: Variable, dom: Domain, state: ProblemState) = state.wDeg(variable) * dom.size
 
   override def toString = "max-wdeg*dom"
 

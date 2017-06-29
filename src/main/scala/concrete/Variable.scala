@@ -21,13 +21,14 @@ package concrete
 
 import concrete.constraint.Constraint
 import concrete.constraint.extension.ExtensionConstraint
+import concrete.heuristic.Weighted
 import concrete.priorityqueues.DLNode
 import concrete.priorityqueues.Identified
 import concrete.priorityqueues.PTag
 
 final class Variable(
     val name: String,
-    val initDomain: Domain) extends Identified with PTag with DLNode[Variable] {
+    val initDomain: Domain) extends Identified with PTag with DLNode[Variable] with Weighted {
 
   var id = -1
 
@@ -63,17 +64,17 @@ final class Variable(
   def dynamicConstraints = _extensionConstraints
   def positionInConstraint(constraintPosition: Int) = _positionInConstraint(constraintPosition)
 
-  def getWDegEntailed(state: ProblemState) = {
-
-    val ac = state.activeConstraints(this)
-    var wDeg = 0
-    var i = ac.nextSetBit(0)
-    while (i >= 0) {
-      wDeg += constraints(i).weight
-      i = ac.nextSetBit(i + 1)
-    }
-    wDeg
-  }
+//  def getWDegEntailed(state: ProblemState) = {
+//
+//    val ac = state.activeConstraints(this)
+//    var wDeg = 0
+//    var i = ac.nextSetBit(0)
+//    while (i >= 0) {
+//      wDeg += constraints(i).weight
+//      i = ac.nextSetBit(i + 1)
+//    }
+//    wDeg
+//  }
 
   //var dDeg = 0
 

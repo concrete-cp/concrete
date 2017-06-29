@@ -8,9 +8,9 @@ import concrete.IntDomain
 import concrete.EmptyIntDomain
 
 object STR extends RelationGenerator {
-  def apply(data: Iterable[Seq[Int]]): STR = {
+  def apply(data: Traversable[IndexedSeq[Int]]): STR = {
     val d = data.map(_.toArray).toArray
-    new STR(d.headOption.getOrElse(Array()).size, d, d.length)
+    new STR(d.headOption.map(_.size).getOrElse(0), d, d.length)
   }
 }
 

@@ -1,5 +1,5 @@
 package concrete.constraint.extension
 
 trait RelationGenerator {
-  def apply(data: Iterable[Seq[Int]]): Relation
+  def apply(data: Traversable[IndexedSeq[Int]]): Relation
 }

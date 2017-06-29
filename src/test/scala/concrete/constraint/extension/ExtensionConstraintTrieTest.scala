@@ -6,14 +6,12 @@ import concrete.IntDomain
 import concrete.Problem
 import concrete.Variable
 import concrete.constraint.AdviseCount
-import mdd.MDD0
 
 final class ExtensionConstraintTrieTest extends FlatSpec with Matchers {
 
-  val ta = new TupleTrieSet(new MDDRelation(MDD0), false);
-  ta.set(Array(0, 0), true);
-  ta.set(Array(1, 1), true);
-  ta.set(Array(2, 2), true);
+  val mdd = MDDRelation(Seq(Array(0,0),Array(1,1),Array(2,2)))
+
+  val ta = new TupleTrieSet(mdd, false)
 
   val v0 = new Variable("V0", IntDomain(0 to 1))
   val v1 = new Variable("V1", IntDomain(0 to 2))

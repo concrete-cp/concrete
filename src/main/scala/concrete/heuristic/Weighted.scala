@@ -1,7 +1,10 @@
 package concrete.heuristic
 
 trait Weighted {
-  var _weight = 1
-  def weight = _weight
-  def weight_=(w: Int) { _weight = w }
+  var weight = 1
+
+  def incrementWeight(): Unit = {
+    //println(s"$this ${weight.Internal.downStream}")
+    weight += 1
+  }
 }

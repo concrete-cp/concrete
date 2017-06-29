@@ -93,15 +93,15 @@ class ExtensionGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
       case "MDD" => new MDDRelation(relation2MDD(relation).reduce())
       case "BDD" => new BDDRelation(relation2BDD(relation).reduce())
       case "STR" => new STR(arity) ++ any2Int(relation)
-      case "HashTable" => HashTable(any2Int(relation).toSeq)
-      case "IndexedTable" => IndexedTable(any2Int(relation).toSeq)
+      case "HashTable" => HashTable(any2Int(relation).map(_.toIndexedSeq).toSeq)
+      case "IndexedTable" => IndexedTable(any2Int(relation).map(_.toIndexedSeq).toSeq)
     }
   }
 
   private def relation2MDD(relation: cspom.extension.Relation[_]): MDD = {
     relation match {
       case mdd: cspom.extension.MDDRelation => mdd.mdd
-      case r => MDD(any2Int(r))
+      case r => MDD.fromTraversable(any2Int(r).map(_.toIndexedSeq))
     }
   }
 

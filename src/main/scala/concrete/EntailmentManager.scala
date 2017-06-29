@@ -7,12 +7,15 @@ object EntailmentManagerLight {
   def apply(variables: Seq[Variable]): EntailmentManagerLight =
     new EntailmentManagerLight(
       Vector(variables.map(v => BitVector.filled(v.constraints.length)): _*),
-      Set())
+      Set(),
+      Vector.fill(variables.length)(0)
+    )
 }
 
 final class EntailmentManagerLight(
-    val activeConstraints: Vector[BitVector],
-    val entailedReified: Set[Int]) {
+                                    val activeConstraints: Vector[BitVector],
+                                    val entailedReified: Set[Int],
+                                    val wDegsMinus: Vector[Int]) {
 
   def addConstraints(constraints: Seq[Constraint]): EntailmentManagerLight = {
     var ac = activeConstraints
@@ -25,12 +28,15 @@ final class EntailmentManagerLight(
         }
       }
     }
-    new EntailmentManagerLight(ac, entailedReified)
+    new EntailmentManagerLight(ac, entailedReified, wDegsMinus)
   }
+
+  def wDeg(v: Variable): Int = v.weight - wDegsMinus(v.id)
 
   def entail(c: Constraint, ps: ProblemState): EntailmentManagerLight = {
 
     var ac = activeConstraints
+    var wd = wDegsMinus
 
     var i = c.arity - 1
 
@@ -45,21 +51,20 @@ final class EntailmentManagerLight(
         if (pos < 0) {
           /* case of reified constraints */
           assert(ac eq activeConstraints, "one variable is not registered")
-          return new EntailmentManagerLight(ac, entailedReified + c.id)
+          return new EntailmentManagerLight(ac, entailedReified + c.id, wd)
         } else if (!ps.dom(v).isAssigned) {
           ac = ac.updated(vid, ac(vid) - c.positionInVariable(i))
+          wd = wd.updated(vid, wDegsMinus(vid) + c.weight)
         }
 
       }
       i -= 1
     }
-    new EntailmentManagerLight(ac, entailedReified)
+    new EntailmentManagerLight(ac, entailedReified, wd)
 
   }
 
   def entail(c: Constraint, i: Int): EntailmentManagerLight = {
-    val ac = activeConstraints
-
     val vid = c.scope(i).id
     /* Fake variables (constants) may appear in constraints */
 
@@ -68,10 +73,13 @@ final class EntailmentManagerLight(
 
       /* For reified constraints */
       if (pos < 0) {
-        new EntailmentManagerLight(ac, entailedReified + c.id)
+        new EntailmentManagerLight(activeConstraints, entailedReified + c.id, wDegsMinus)
       } else {
         new EntailmentManagerLight(
-          ac.updated(vid, ac(vid) - c.positionInVariable(i)), entailedReified)
+          activeConstraints.updated(vid, activeConstraints(vid) - c.positionInVariable(i)),
+          entailedReified,
+          wDegsMinus.updated(vid, wDegsMinus(vid) + c.weight)
+        )
       }
 
     } else {

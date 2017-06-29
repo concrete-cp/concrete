@@ -55,7 +55,7 @@ final object Regular extends ConstraintCompilerNoData {
           concrete.util.Math.any2Int(value) -> subMDD
         }
 
-        MDD(trie)
+        MDD.fromTrie(trie)
       }
     })
 

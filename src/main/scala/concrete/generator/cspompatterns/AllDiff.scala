@@ -191,6 +191,8 @@ object AllDiff extends ConstraintCompiler with LazyLogging {
       Some(constraint.arguments)
     } else if (constraint.function == 'eq && constraint.result.isFalse) {
       Some(constraint.arguments)
+    } else if (constraint.function == 'ne && constraint.result.isTrue) {
+      Some(constraint.arguments)
     } else if (constraint.function == 'sum && constraint.result.isTrue && constraint.params.get("mode").contains("ne")) {
       val Seq(CSPOMSeq(coefs), CSPOMSeq(args), CSPOMConstant(constant: Int)) = constraint.arguments
 

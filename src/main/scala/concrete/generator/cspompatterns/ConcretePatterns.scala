@@ -21,7 +21,7 @@ object ConcretePatterns {
         AllDiffConstant,
         // Clause does not support constants
         SimplClause, PBConstants,
-        Bool2IntDomains, DivDomains, ModDomains,
+        DivDomains, ModDomains,
         Knapsack, Lex, NoOverlap, MinDomains, MaxDomains, DiffNWCumulative,
         GCC)
 

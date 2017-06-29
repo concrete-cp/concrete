@@ -1,5 +1,5 @@
 package concrete
-package heuristic;
+package heuristic
 
 import java.util.EventObject
 
@@ -17,7 +17,8 @@ final class SeqHeuristic(heuristics: List[Heuristic]) extends Heuristic {
 
   def decisionVariables = heuristics.flatMap(_.decisionVariables).distinct
 
-  def compute(p: Problem) = heuristics.foreach(_.compute(p))
+  def compute(p: Problem, state: ProblemState): ProblemState =
+    heuristics.foldLeft(state) { case (s, h) => h.compute(p, s) }
 
   def event(event: EventObject): Unit = heuristics.foreach(_.event(event))
 

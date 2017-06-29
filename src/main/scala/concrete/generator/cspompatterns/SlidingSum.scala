@@ -49,7 +49,7 @@ final object SlidingSum extends ConstraintCompilerNoData {
           .map(i => i -> mdd(low, up, seq, domains, k + 1, nextQueue.enqueue(i), nodes))
           .filter(_._2.nonEmpty)
 
-        MDD(children)
+        MDD.fromTrie(children)
       })
     }
 

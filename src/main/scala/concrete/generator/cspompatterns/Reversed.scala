@@ -6,7 +6,7 @@ import concrete.generator.SumGenerator
 import cspom.CSPOM.{constant, constantSeq, seq2CSPOMSeq}
 import cspom.{CSPOM, CSPOMConstraint}
 import cspom.compiler.{ConstraintCompiler, Delta}
-import cspom.variable.{BoolVariable, CSPOMConstant, CSPOMSeq, IntExpression}
+import cspom.variable.{BoolVariable, CSPOMConstant}
 
 object Reversed extends ConstraintCompiler {
 

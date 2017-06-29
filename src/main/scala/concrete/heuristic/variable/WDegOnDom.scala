@@ -26,7 +26,8 @@ class WDegOnDom(params: ParameterManager, decisionVariables: Array[Variable]) ex
   for (v <- decisionVariables; c <- v.constraints) c.weight = 1
 
   def score(variable: Variable, dom: Domain, state: ProblemState) = {
-    variable.getWDegEntailed(state).toDouble / dom.size
+    //variable.getWDegEntailed(state).toDouble / dom.size
+    state.wDeg(variable).toDouble / dom.size
   }
 
   override def toString = "max-wdeg/dom"

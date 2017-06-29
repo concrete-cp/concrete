@@ -1,8 +1,7 @@
 package concrete
 package heuristic
-import concrete.Event
-import java.util.EventObject
-import java.util.EventListener
+
+import java.util.{EventListener, EventObject}
 
 object Heuristic {
   def default(pm: ParameterManager, decision: Array[Variable]): Heuristic = {
@@ -25,11 +24,13 @@ object Heuristic {
 }
 
 trait Heuristic extends HeuristicListener {
-  def branch(state: ProblemState): Option[Branch]
-  def shouldRestart: Boolean
-  def decisionVariables: Seq[Variable]
-  def compute(p: Problem): Unit
+  def branch(state: ProblemState): Option[(Branch, ProblemState)]
 
+  def shouldRestart: Boolean
+
+  def decisionVariables: Seq[Variable]
+
+  def compute(p: Problem, state: ProblemState): ProblemState
 }
 
 trait HeuristicListener extends EventListener {
@@ -37,14 +38,15 @@ trait HeuristicListener extends EventListener {
 }
 
 class Branch(
-    val b1: ProblemState,
-    val c1: Seq[(Variable, Event)],
-    val b2: ProblemState,
-    val c2: Seq[(Variable, Event)],
-    _b1Desc: => String, _b2Desc: => String) {
+              val b1: ProblemState,
+              val c1: Seq[(Variable, Event)],
+              val b2: ProblemState,
+              val c2: Seq[(Variable, Event)],
+              _b1Desc: => String, _b2Desc: => String) {
   lazy val b1Desc = _b1Desc
   lazy val b2Desc = _b2Desc
 }
 
 case class NewSolutionEvent(sol: Map[Variable, Int]) extends EventObject(sol)
+
 case class ContradictionEvent(c: Contradiction) extends EventObject(c)

@@ -26,7 +26,8 @@ import java.util.EventObject
 final class WDeg(params: ParameterManager, decisionVariables: Array[Variable]) extends VariableHeuristic(params, decisionVariables)
     with ConstraintWeighting {
 
-  def score(variable: Variable, dom: Domain, state: ProblemState) = variable.getWDegEntailed(state)
+  def score(variable: Variable, dom: Domain, state: ProblemState) =
+    state.wDeg(variable) //.getWDegEntailed(state)
 
   override def toString = "max-wdeg"
 
@@ -36,7 +37,7 @@ final class WDeg(params: ParameterManager, decisionVariables: Array[Variable]) e
 
 trait ConstraintWeighting extends VariableHeuristic {
   override def event(e: EventObject): Unit = e match {
-    case ContradictionEvent(c) => c.cause.get.weight += 1
+    case ContradictionEvent(c) => c.cause.get.incrementWeight
     case _ =>
   }
 }

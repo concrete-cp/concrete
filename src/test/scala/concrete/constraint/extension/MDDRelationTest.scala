@@ -1,18 +1,14 @@
 package concrete.constraint.extension
 
 
+import concrete.{IntDomain, Variable}
 import org.scalacheck.Gen
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
+import org.scalatest.{FlatSpec, Matchers, OptionValues}
 import org.scalatest.prop.PropertyChecks
-import concrete.IntDomain
-import concrete.Variable
-import mdd.MDD0
-import org.scalatest.OptionValues
 
 class MDDRelationTest extends FlatSpec with Matchers with PropertyChecks with OptionValues {
 
-  val mdd = new MDDRelation(MDD0 + Array(1, 2, 3) + Array(1, 3, 4) + Array(1, 2, 5) + Array(2, 3, 5))
+  val mdd = MDDRelation(Seq(Array(1, 2, 3), Array(1, 3, 4), Array(1, 2, 5), Array(2, 3, 5)))
 
   it should "have correct sizes" in {
     mdd should have size 4
@@ -28,18 +24,18 @@ class MDDRelationTest extends FlatSpec with Matchers with PropertyChecks with Op
     val scope = Array(v0.initDomain, v1.initDomain, v2.initDomain)
 
     mdd.findSupport(scope, 0, 0) shouldBe None
-    mdd.findSupport(scope, 0, 1) should contain oneOf (Array(1, 2, 3), Array(1, 3, 4), Array(1, 2, 5))
+    mdd.findSupport(scope, 0, 1) should contain oneOf(Array(1, 2, 3), Array(1, 3, 4), Array(1, 2, 5))
     mdd.findSupport(scope, 0, 2).value shouldBe Array(2, 3, 5)
     mdd.findSupport(scope, 1, 0) shouldBe None
     mdd.findSupport(scope, 1, 1) shouldBe None
-    mdd.findSupport(scope, 1, 2) should contain oneOf (Array(1, 2, 3), Array(1, 2, 5))
-    mdd.findSupport(scope, 1, 3) should contain oneOf (Array(1, 3, 4), Array(2, 3, 5))
+    mdd.findSupport(scope, 1, 2) should contain oneOf(Array(1, 2, 3), Array(1, 2, 5))
+    mdd.findSupport(scope, 1, 3) should contain oneOf(Array(1, 3, 4), Array(2, 3, 5))
     mdd.findSupport(scope, 2, 0) shouldBe None
     mdd.findSupport(scope, 2, 1) shouldBe None
     mdd.findSupport(scope, 2, 2) shouldBe None
     mdd.findSupport(scope, 2, 3).value shouldBe Array(1, 2, 3)
     mdd.findSupport(scope, 2, 4).value shouldBe Array(1, 3, 4)
-    mdd.findSupport(scope, 2, 5) should contain oneOf (Array(1, 2, 5), Array(2, 3, 5))
+    mdd.findSupport(scope, 2, 5) should contain oneOf(Array(1, 2, 5), Array(2, 3, 5))
 
     scope(1) = scope(1).remove(2)
 
@@ -48,7 +44,7 @@ class MDDRelationTest extends FlatSpec with Matchers with PropertyChecks with Op
     mdd.findSupport(scope, 0, 2).value shouldBe Array(2, 3, 5)
     mdd.findSupport(scope, 1, 0) shouldBe None
     mdd.findSupport(scope, 1, 1) shouldBe None
-    mdd.findSupport(scope, 1, 3) should contain oneOf (Array(1, 3, 4), Array(2, 3, 5))
+    mdd.findSupport(scope, 1, 3) should contain oneOf(Array(1, 3, 4), Array(2, 3, 5))
     mdd.findSupport(scope, 2, 0) shouldBe None
     mdd.findSupport(scope, 2, 1) shouldBe None
     mdd.findSupport(scope, 2, 2) shouldBe None

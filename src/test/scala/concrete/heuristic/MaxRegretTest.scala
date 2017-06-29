@@ -18,9 +18,9 @@ class MaxRegretTest extends FlatSpec with Matchers with OptionValues {
     val v2 = new Variable("v2", IntDomain.ofSeq(1, 3, 6))
 
     val p = Problem(v1, v2)
-    val ps = p.initState.toState
-    val h = new MaxRegret(new ParameterManager, p.variables.toArray)
 
-    h.select(ps).value shouldBe v1
+    val h = new MaxRegret(new ParameterManager, p.variables.toArray)
+    val ps = h.compute(p.initState.toState)
+    h.select(ps).value._1 shouldBe v1
   }
 }

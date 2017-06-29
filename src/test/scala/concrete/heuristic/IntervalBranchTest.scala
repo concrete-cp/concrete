@@ -2,7 +2,6 @@ package concrete.heuristic
 
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
-
 import concrete.EntailmentManagerLight
 import concrete.IntDomain
 import concrete.ParameterManager

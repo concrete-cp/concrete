@@ -6,7 +6,8 @@ import concrete.{Domain, IntDomain}
 import mdd.{MDD, MiniSet, SetWithMax}
 
 object MDDRelation extends RelationGenerator {
-  def apply(data: Iterable[Seq[Int]]): MDDRelation = new MDDRelation(MDD(data))
+  def apply(data: Traversable[IndexedSeq[Int]]): MDDRelation =
+    new MDDRelation(MDD.fromTraversable(data))
 }
 
 final class MDDRelation(val mdd: MDD) extends Relation with LazyLogging {
@@ -73,5 +74,5 @@ final class MDDRelation(val mdd: MDD) extends Relation with LazyLogging {
 
   def -(t: Seq[Int]) = throw new UnsupportedOperationException
 
-  def +(t: Seq[Int]) = new MDDRelation(mdd + t)
+  def +(t: Seq[Int]) = throw new UnsupportedOperationException //new MDDRelation(mdd + t)
 }

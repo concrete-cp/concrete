@@ -8,9 +8,9 @@ import concrete.util.ArraySet
 import cspom.util.VecMap
 
 object IndexedTable extends RelationGenerator {
-  def apply(data: Iterable[Seq[Int]]): IndexedTable = {
+  def apply(data: Traversable[IndexedSeq[Int]]): IndexedTable = {
     val arity = data.headOption.getOrElse(Set()).size
-    new IndexedTable(arity) ++ data
+    new IndexedTable(arity) ++ data.toIterable
   }
 }
 

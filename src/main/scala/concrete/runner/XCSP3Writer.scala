@@ -5,6 +5,8 @@ import cspom.StatisticsManager
 
 class XCSP3Writer(val opts: Map[Symbol, Any], val stats: StatisticsManager) extends ConcreteWriter {
 
+  Console.println(s"c Concrete v3.4 running")
+
   def parameters(params: ParameterManager) {
     for ((k, v) <- params.parameters) {
       Console.println(s"c $k = $v")

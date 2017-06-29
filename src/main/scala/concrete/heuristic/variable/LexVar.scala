@@ -23,8 +23,8 @@ package variable
 
 final class LexVar(params: ParameterManager, dv: Array[Variable]) extends VariableHeuristic(params, dv) {
 
-  override def select(i: Int, state: ProblemState): Variable = {
-    dv(i)
+  override def select(i: Traversable[Variable], state: ProblemState): Variable = {
+    i.head
   }
 
   override def toString = "lex-var"

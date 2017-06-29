@@ -8,7 +8,6 @@ import cspom.CSPOM
 import cspom.CSPOMConstraint
 import cspom.compiler.CSPOMCompiler
 import cspom.variable.IntVariable
-import cspom.xcsp.XCSPParser
 import concrete.ParameterManager
 
 class AbsDiffCompilerTest extends FlatSpec with Matchers {
@@ -43,54 +42,4 @@ class AbsDiffCompilerTest extends FlatSpec with Matchers {
     }
   }
 
-  it should "compile XCSP" in {
-
-    val miniScen =
-      <instance>
-        <presentation maxConstraintArity="2" format="XCSP 2.1"/>
-        <domains nbDomains="5">
-          <domain name="D0" nbValues="32">16 30 44 58 72 86 100 114 128 142 156 254 268 282 296 310 324 338 352 366 380 394 414 428 442 456 470 484 498 512 526 540</domain>
-        </domains>
-        <variables nbVariables="2">
-          <variable name="V0" domain="D0"/>
-          <variable name="V1" domain="D0"/>
-          <variable name="V78" domain="D0"/>
-        </variables>
-        <predicates nbPredicates="2">
-          <predicate name="P0">
-            <parameters>int X0 int X1 int X2</parameters>
-            <expression>
-              <functional>gt(abs(sub(X0,X1)),X2)</functional>
-            </expression>
-          </predicate>
-          <predicate name="P1">
-            <parameters>int X0 int X1 int X2</parameters>
-            <expression>
-              <functional>eq(abs(sub(X0,X1)),X2)</functional>
-            </expression>
-          </predicate>
-        </predicates>
-        <constraints nbConstraints="2">
-          <constraint name="C0" arity="2" scope="V0 V1" reference="P1">
-            <parameters>V0 V1 238</parameters>
-          </constraint>
-          <constraint name="C1" arity="2" scope="V0 V78" reference="P0">
-            <parameters>V0 V78 8</parameters>
-          </constraint>
-        </constraints>
-      </instance>
-
-    val p4 = for {
-      p1 <- XCSPParser(miniScen)
-      p2 <- CSPOMCompiler.compile(p1, XCSPPatterns())
-      p3 <- CSPOMCompiler.compile(p2, ConcretePatterns(new ParameterManager()) :+ AbsDiff)
-    } yield p3
-
-    val problem = p4.get
-    withClue(problem) {
-      problem.getPostponed shouldBe empty
-      problem.constraints.toSeq should have size 2
-    }
-
-  }
 }

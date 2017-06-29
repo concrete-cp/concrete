@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
 
 import concrete.generator.ProblemGenerator
-import concrete.generator.cspompatterns.{Bool2IntIsEq, ConcretePatterns}
+import concrete.generator.cspompatterns.ConcretePatterns
 import concrete.{CSPOMSolver, Problem, Solver, Variable}
 import cspom.compiler.CSPOMCompiler
 import cspom.variable.CSPOMVariable
@@ -52,10 +52,10 @@ trait CSPOMRunner extends ConcreteRunner {
         // println(cspom)
         CSPOMCompiler.compile(cspom, ConcretePatterns(pm))
       }
-      .flatMap { cspom =>
-        // println("BOOL2INTISEQ")
-        CSPOMCompiler.compile(cspom, Seq(Bool2IntIsEq))
-      }
+//      .flatMap { cspom =>
+//        // println("BOOL2INTISEQ")
+//        CSPOMCompiler.compile(cspom, Seq(Bool2IntIsEq))
+//      }
       .flatMap { cspom =>
 
         for (f <- opt.get('gml)) {

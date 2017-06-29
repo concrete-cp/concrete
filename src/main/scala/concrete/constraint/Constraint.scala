@@ -126,18 +126,6 @@ abstract class Constraint(val scope: Array[Variable])
 
   }
 
-  //def inCN = id >= 0
-
-  //  override def weight_=(w: Int) {
-  //    //assert(!isEntailed)
-  //    assert(inCN)
-  //    val inc = w - weight
-  //    for (v <- scope) {
-  //      v.wDeg += inc
-  //    }
-  //    super.weight = w
-  //  }
-
   def consistent(problemState: ProblemState): Outcome = {
     revise(problemState) match {
       case _: ProblemState => problemState
@@ -252,24 +240,6 @@ abstract class Constraint(val scope: Array[Variable])
     size
   }
 
-  /**
-   * A GAC constraint is entailed if it has zero or only one variable with domain size > 1
-   */
-  //  def isFree(problemState: ProblemState): Boolean = {
-  //    var one = false
-  //    var i = arity - 1
-  //    while (i >= 0) {
-  //      if (!problemState.assigned(scope(i))) {
-  //        if (one) {
-  //          return false
-  //        }
-  //        one = true
-  //      }
-  //      i -= 1
-  //    }
-  //    true
-  //  }
-
   def singleFree(ps: ProblemState): Option[Int] = {
     var f = -1
     var i = arity - 1
@@ -311,6 +281,11 @@ abstract class Constraint(val scope: Array[Variable])
       })
 
     }
+  }
+
+  override def incrementWeight(): Unit = {
+    super.incrementWeight()
+    for (v <- scope) v.incrementWeight()
   }
 
   //def entailable: Boolean = true

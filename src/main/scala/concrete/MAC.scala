@@ -44,7 +44,6 @@ object MAC {
 
 final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristic) extends Solver(prob, params) with LazyLogging {
 
-  heuristic.compute(prob)
 
   val filterClass: Class[_ <: Filter] = params.getOrElse("mac.filter", classOf[ACC])
 
@@ -102,13 +101,13 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
               controlSolution(filteredState)
 
               (SAT(extractSolution(filteredState)), stack, filteredState :: stateStack, nbAssignments)
-            case Some(branching) =>
+            case Some((branching, ns)) =>
 
               // if (nbAssignments % 10000 == 0) println(s"$nbAssignments assignments")
 
               logger.info(s"${stack.length}: ${branching.b1Desc} ($maxBacktracks bt left)");
 
-              mac(branching.c1, branching :: stack, branching.b1, filteredState :: stateStack, maxBacktracks, nbAssignments + 1)
+              mac(branching.c1, branching :: stack, branching.b1, ns :: stateStack, maxBacktracks, nbAssignments + 1)
           }
       }
     }
@@ -174,7 +173,8 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
   }
 
   var currentStack: List[Branch] = Nil
-  var currentStateStack: List[ProblemState] = List(problem.initState.toState)
+  var currentStateStack: List[ProblemState] =
+    List(heuristic.compute(problem, problem.initState.toState))
 
   def nextSolution(): SolverResult = try {
 

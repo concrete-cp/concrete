@@ -43,15 +43,16 @@ final case class CrossHeuristic(
     val shouldRestart: Boolean) extends Heuristic {
 
   def branch(state: ProblemState) = {
-    variableHeuristic.select(state).map { v =>
+    variableHeuristic.select(state).map { case (v, ns) =>
       assert(state.dom(v).size > 1, s"$variableHeuristic selected a singleton variable ${v.toString(state)}")
-      valueHeuristic.branch(v, state.dom(v), state)
+      (valueHeuristic.branch(v, state.dom(v), state), ns)
     }
   }
 
-  def compute(problem: Problem) {
+  def compute(problem: Problem, state:ProblemState): ProblemState = {
     // logger.fine("Initializing heuristics");
-    valueHeuristic.compute(problem: Problem);
+    valueHeuristic.compute(problem: Problem)
+    variableHeuristic.compute(state)
   }
 
   override def toString =

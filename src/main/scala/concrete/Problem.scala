@@ -60,7 +60,9 @@ final class Problem(val variables: Array[Variable]) {
 
   }
 
-  def initState = ProblemState(this)
+  def initState(): Outcome = initState(variables.toSet)
+
+  def initState(decisionVariables: Set[Variable]): Outcome = ProblemState(this, decisionVariables)
 
   def toString(state: ProblemState) = {
     variables.map(_.toString(state)).mkString("\n") + "\n" +

@@ -79,8 +79,7 @@ object FZPatterns {
      * (a ↔ b = 1) ∧ (¬a ↔ b = 0)
      * bool2int(var bool: a, var int: b)
      */
-    //    case Ctr('bool2int, Seq(a: CSPOMExpression[Boolean], b: CSPOMExpression[Int]), p) =>
-    //      CSPOMConstraint('eq, Seq(a, b), p)
+        case Ctr('bool2int, args, p) => CSPOMConstraint('eq)(args:_*) withParams p
     /*
      * (a ∧ b) ↔ r
      * bool_and(var bool: a, var bool: b, var bool: r)
@@ -505,9 +504,7 @@ object FZPatterns {
      * predicate table_int(array[int] of var int: x, array[int, int] of int: t)
      */
     case Ctr('table_int, Seq(IntExpression.simpleSeq(x), IntExpression.constSeq(t)), p) =>
-      x in MDDRelation(t.grouped(x.size).toTraversable)
-    //      CSPOMConstraint('extension, x, p ++ Map("init" -> false,
-    //        "relation" -> new Table(t.map(CSPOMConstant(_)).grouped(x.size).toSet)))
+      x in MDDRelation(t.grouped(x.size).map(_.toIndexedSeq).toTraversable)
 
     /*
      *  predicate all_different_int(array[int] of var int: x);

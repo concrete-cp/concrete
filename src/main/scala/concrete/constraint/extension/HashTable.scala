@@ -8,7 +8,7 @@ import concrete.EmptyIntDomain
 import concrete.IntDomain
 
 object HashTable extends RelationGenerator {
-  def apply(data: Iterable[Seq[Int]]): HashTable = {
+  def apply(data: Traversable[IndexedSeq[Int]]): HashTable = {
     val d = data.foldLeft(ArraySet.empty[Int])(_ + _.toArray)
     new HashTable(data.headOption.getOrElse(Seq()).size, d)
   }
