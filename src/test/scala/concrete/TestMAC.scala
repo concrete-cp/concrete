@@ -3,7 +3,6 @@ package concrete
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 import org.scalatest.Tag
-
 import concrete.constraint.linear.Eq
 import concrete.constraint.semantic.AllDifferentBC
 import concrete.constraint.semantic.Neq
@@ -14,7 +13,7 @@ object SlowTest extends Tag("concrete.SlowTest")
 
 class TestMAC extends FlatSpec with Matchers {
 
-  def qp(size: Int) = {
+  def qp(size: Int): Problem = {
 
     val queens = (0 until size)
       .map(q => new Variable("q" + q, IntDomain(0 until size)))
@@ -32,8 +31,8 @@ class TestMAC extends FlatSpec with Matchers {
     for (
       ((q, q1, q2), i) <- (queens, qd1, qd2).zipped.toIterable.zipWithIndex
     ) {
-      Eq(false, q, -i, q1).foreach(problem.addConstraint)
-      Eq(false, q, i, q2).foreach(problem.addConstraint)
+      Eq(neg = false, q, -i, q1).foreach(problem.addConstraint)
+      Eq(neg = false, q, i, q2).foreach(problem.addConstraint)
     }
 
     allDiff(problem, queens)
@@ -50,14 +49,15 @@ class TestMAC extends FlatSpec with Matchers {
     //    p.addConstraint(new AllDifferent2C(q: _*))
   }
 
-  def view(queens: Seq[Variable], solution: Map[String, Int]) =
+  def view(queens: Seq[Variable], solution: Map[String, Int]): String =
     queens.map(q => q.name + " = " + solution.get(q.name)).mkString(", ")
 
   val sols = List(
     4 -> 2,
-   // 8 -> 92,
-   // 9 -> 352,
-   // 10 -> 724 //12 -> 14200,
+    8 -> 92,
+    9 -> 352,
+    10 -> 724,
+    12 -> 14200
     //13 -> 73712 //,
     // 14 -> 365596)
     )
@@ -68,7 +68,7 @@ class TestMAC extends FlatSpec with Matchers {
   behavior of "MAC"
 
   for ((size, nb) <- sols) {
-    it should s"solve queens-$size" taggedAs (SlowTest) in {
+    it should s"solve queens-$size" taggedAs SlowTest in {
       val problem = qp(size)
 
       val solver = MAC(problem, pm)
