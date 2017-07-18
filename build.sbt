@@ -8,7 +8,7 @@ packageSummary := "Concrete is a Scala CSP Solving API"
 
 packageDescription := "Concrete is a Scala CSP Solving API"
 
-version := "3.4"
+version := "3.5"
 
 scalaVersion := "2.12.2"
 
@@ -19,7 +19,7 @@ testOptions in Test <+= (target in Test) map {
 resolvers += Resolver.sonatypeRepo("snapshots")
 
 libraryDependencies ++= Seq(
-	"fr.univ-valenciennes" %% "cspom" % "2.15",
+	"fr.univ-valenciennes" %% "cspom" % "2.17",
 	"org.postgresql" % "postgresql" % "42.1.1",
 	"org.ow2.sat4j" % "org.ow2.sat4j.pb" % "2.3.5",
 	"com.typesafe.slick" %% "slick" % "3.2.0",

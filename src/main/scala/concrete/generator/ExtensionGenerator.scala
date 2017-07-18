@@ -8,6 +8,8 @@ import concrete.generator.Generator.cspom2concrete1D
 import cspom.{CSPOMConstraint, UNSATException}
 import mdd._
 
+import scala.collection.mutable
+
 class ExtensionGenerator(pg: ProblemGenerator) extends Generator with LazyLogging {
 
   private val consType = params.getOrElse("relationAlgorithm", "Reduce")
@@ -68,8 +70,8 @@ class ExtensionGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
     }
   }
 
-  private def any2Int(relation: cspom.extension.Relation[_]): Iterable[Seq[Int]] =
-    relation.map(_.map(util.Math.any2Int))
+  private def any2Int(relation: cspom.extension.Relation[_]): Seq[Seq[Int]] =
+    relation.map(_.map(util.Math.any2Int)).toSeq
 
   private[concrete] def generateMatrix(variables: Seq[Variable], relation: cspom.extension.Relation[_], init: Boolean): Matrix = {
     logger.info(s"Generating matrix for $relation, $variables")
@@ -90,23 +92,23 @@ class ExtensionGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
 
   private def generateRelation(arity: Int, relation: cspom.extension.Relation[_]): Relation = {
     ds match {
-      case "MDD" => new MDDRelation(relation2MDD(relation).reduce())
-      case "BDD" => new BDDRelation(relation2BDD(relation).reduce())
-      case "STR" => new STR(arity) ++ any2Int(relation)
-      case "HashTable" => HashTable(any2Int(relation).map(_.toIndexedSeq).toSeq)
-      case "IndexedTable" => IndexedTable(any2Int(relation).map(_.toIndexedSeq).toSeq)
+      case "MDD" => new MDDRelation(relation2MDD(relation))
+      case "BDD" => new BDDRelation(relation2BDD(relation))
+      case "STR" => STR(any2Int(relation).map(l => l.toArray))
+      case "HashTable" => HashTable(any2Int(relation).map(l => l.toArray))
+      case "IndexedTable" => IndexedTable(any2Int(relation).map(l => l.toArray))
     }
   }
 
   private def relation2MDD(relation: cspom.extension.Relation[_]): MDD = {
     relation match {
       case mdd: cspom.extension.MDDRelation => mdd.mdd
-      case r => MDD.fromTraversable(any2Int(r).map(_.toIndexedSeq))
+      case r => MDD.fromSeq(any2Int(r).map(_.toIndexedSeq))
     }
   }
 
   private def relation2BDD(relation: cspom.extension.Relation[_]): BDD = {
-    BDD(relation2MDD(relation))
+    BDD(relation2MDD(relation)).reduce()
   }
 }
 

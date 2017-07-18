@@ -14,7 +14,6 @@ import cspom.xcsp.XCSP3Parser
 import cspom.{CSPOM, UNSATException}
 import org.scalatest.{FunSpec, Inspectors, Matchers, OptionValues}
 
-import scala.collection.mutable.LinkedHashMap
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
@@ -22,7 +21,7 @@ import scala.util.{Random, Success}
 
 class SolvingTest extends FunSpec with SolvingBehaviors {
 
-  val lecoutrePB = LinkedHashMap[String, (AnyVal, Double)](
+  val lecoutrePB = Seq[(String, (AnyVal, Double))](
     "Alpha.xml.xz" -> ((1, 1.0)),
     "Dominoes-grid1.xml.xz" -> ((128, 1.0)),
     "LabeledDice.xml.xz" -> ((48, 1.0)),
@@ -176,98 +175,26 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
     //"Tpp-3-3-20-1.xml.xz" -> ((126, 1.0)),
   ) // .slice(108, 109)
 
-  val problemBank = LinkedHashMap[String, (AnyVal, Boolean)](
-    "PrizeCollecting-15-3-5-0.xml.xz" -> ((20, true)),
-    "BusScheduling-cnt-t1.xml.xz" -> ((7, true)),
-    "Bibd-sum-03-03-01.xml.xz" -> ((4, true)),
-    "Bibd-sc-03-03-01.xml.xz" -> ((4, true)),
-    "Steiner3-07.xml.xz" -> ((true, true)),
-
-    "Rack-r1.xml.xz" -> ((550, true)),
-    "NumberPartitioning-008.xml.xz" -> ((1, true)),
-    "GolombRuler-05-a3.xml.xz" -> ((11, true)),
-    "GolombRuler-05-a4.xml.xz" -> ((11, true)),
-    "Fastfood-ff01.xml.xz" -> ((3050, true)),
-    "DiamondFree-008.xml.xz" -> ((17, true)),
-    "ProgressivePartyReader-rally-red05.xml.xz" -> ((4, true)),
-    "Cutstock-small.xml.xz" -> ((4, true)),
-    "Domino-100-100.xml.xz" -> ((1, true)),
-    "QuasiGroup-3-04.xml.xz" -> ((2, true)),
-    "Ortholatin-003.xml.xz" -> ((2, true)),
-
-    "latinSquare-4x4.xml.xz" -> ((576, true)),
-    "CarSequencing-dingbas.xml.xz" -> ((6, true)),
-    "DeBruijnSequence-02-02.xml.xz" -> ((1, true)),
-    "MagicSequence-004-ca.xml.xz" -> ((2, true)),
-    "SocialGolfers-2-2-3-cp.xml.xz" -> ((2, true)),
-
-    "SportsScheduling-06.xml.xz" -> ((10, true)),
-    "Alpha.xml.xz" -> ((1, true)),
-    "Change-82-100.xml.xz" -> ((5, true)),
-    "Dominoes-grid1.xml.xz" -> ((0, true)),
-    "LabeledDice.xml.xz" -> ((48, true)),
-
-    "Recipe.xml.xz" -> ((1700, true)),
-    "MagicSquare-3-mdd.xml.xz" -> ((8, true)),
-    "Nonogram-001-regular.xml.xz" -> ((1, true)),
-    "CoveringArray-3-04-2-08.xml.xz" -> ((true, true)),
-
+  val problemBank = Seq[(String, (AnyVal, Boolean))](
     "1d_rubiks_cube.small.fzn.xz" -> ((4, false)),
     "1d_rubiks_cube.fzn.xz" -> ((12, false)),
-    "testExtension1.xml.xz" -> ((8, true)),
-    "testExtension2.xml.xz" -> ((8, true)),
-    "testExtension3.xml.xz" -> ((0, true)),
-
-    "testPrimitive.xml.xz" -> ((2, true)),
-    "AllInterval-005.xml.xz" -> ((8, true)),
-    "testObjective1.xml.xz" -> ((11, true)),
-    "QuadraticAssignment-qap.xml.xz" -> ((4776, true)),
-    "Rlfap-scen-11-f12.xml.xz" -> ((0, true)),
-
-    "RenaultMod-00.xml.xz" -> ((true, true)),
     "battleships10.fzn.xz" -> ((1, false)),
     "photo.fzn.xz" -> ((8, false)),
-    "crossword-m1-debug-05-01.xml.xz" -> ((27, true)),
     "bigleq-50.xml.xz" -> ((1, true)),
-
     "battleships_2.fzn.xz" -> ((36, false)),
     "flat30-1.cnf.xz" -> ((true, false)),
     "alpha.fzn.xz" -> ((true, false)),
-    "rand-2-30-15-306-230f-01.xml.xz" -> ((12, true)),
-
-    "Zebra.xml.xz" -> ((48, true)),
-    "Blackhole-04-3-00.xml.xz" -> ((47232, true)),
-    "Queens-0008-m1.xml.xz" -> ((92, true)),
-    "Rlfap-scen-11.xml.xz" -> ((true, true)),
-    "Langford-2-04.xml.xz" -> ((2, true)),
-
-    "Sadeh-e0ddr1-10-by-5-8.xml.xz" -> ((true, true)),
-    "TravellingSalesman-20-30-00.xml.xz" -> ((true, true)),
-    "test.fzn.xz" -> ((true, false)),
-    "Queens-0012-m1.xml.xz" -> ((14200, true)))
+    "test.fzn.xz" -> ((true, false)))
+    .map { case (pb, (nbsol, test)) => (pb, (nbsol, 0.0)) }
 
   val parameters = Nil
 
-  for ((p, (r, test)) <- lecoutrePB) {
-
-    val expected: Boolean = r match {
-      case e: Int => e > 0
-      case b: Boolean => b
-      case _ => throw new IllegalArgumentException(s"Problem $p has $r solutions?")
-    }
+  for ((p, (r, test)) <- problemBank ++ lecoutrePB) {
 
     describe(p) {
 
-      //      it should behave like
-      //        solve(p, expected, parameters, test > 0)
-
-      r match {
-        case e: Int =>
-          it should behave like
-            count(p, e, parameters, test)
-
-        case _ =>
-      }
+      it should behave like
+        count(p, r, parameters, test)
 
     }
   }
@@ -276,106 +203,79 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
 
 trait SolvingBehaviors extends Matchers with Inspectors with OptionValues with LazyLogging {
   this: FunSpec =>
-//
-//  def solve(name: String, expectedResult: Boolean, parameters: Seq[(String, String)], test: Boolean): Unit =
-//    it(s"should have ${if (expectedResult) "a" else "no"} solution") {
-//      val pm = new ParameterManager
-//      parameters.foreach(s => pm.update(s._1, s._2))
-//
-//      val url = getClass.getResource(name)
-//
-//      require(url != null, "Could not find resource " + name)
-//
-//      val parser = CSPOM.autoParser(url).get
-//
-//      CSPOM.load(url, parser)
-//        .flatMap { cspomProblem =>
-//          logger.debug(cspomProblem.toString)
-//          parser match {
-//            case FlatZincFastParser =>
-//              CSPOMCompiler.compile(cspomProblem, FZPatterns())
-//
-//            case XCSPParser =>
-//              CSPOMCompiler.compile(cspomProblem, XCSPPatterns())
-//
-//            case _ =>
-//              Success(cspomProblem)
-//          }
-//        }
-//        .flatMap(CSPOMCompiler.compile(_, ConcretePatterns(pm)))
-//        .flatMap(CSPOMCompiler.compile(_, Seq(Bool2IntIsEq)))
-//        .flatMap { cspom =>
-//          // println(cspom.toString)
-//          logger.debug(cspom.toString)
-//          val pg = new ProblemGenerator(pm)
-//
-//          pg.generate(cspom).flatMap {
-//            case (problem, variables) =>
-//              val solver = Solver(problem)
-//              solver.statistics.register("compiler", CSPOMCompiler)
-//              solver.statistics.register("generator", pg)
-//              new CSPOMSolver(solver, cspom, variables).applyGoal()
-//          }
-//        }
-//        .map { solver =>
-//
-//          //    println(solver.concreteProblem)
-//
-//          val f = Future {
-//
-//
-//            val (nbSol, sol) = check(url, solver.take(1), solver, if (test) 1.0 else 0.0)
-//            withClue {
-//              val variables: Seq[String] = solver.cspom.goal.get.getSeqParam("variables")
-//              sol.map(XCSP3Concrete.xmlSolution(variables, _, None))
-//            } {
-//              if (expectedResult) {
-//                nbSol should be > 0
-//              } else {
-//                nbSol shouldBe 0
-//              }
-//            }
-//          }
-//
-//          concurrent.Await.result(f, 600.seconds)
-//
-//        }
-//        .recover {
-//          case e: UNSATException if !expectedResult =>
-//            logger.warn("UNSAT: " + e)
-//            Success(())
-//        }
-//        .get
-//    }
+  //
+  //  def solve(name: String, expectedResult: Boolean, parameters: Seq[(String, String)], test: Boolean): Unit =
+  //    it(s"should have ${if (expectedResult) "a" else "no"} solution") {
+  //      val pm = new ParameterManager
+  //      parameters.foreach(s => pm.update(s._1, s._2))
+  //
+  //      val url = getClass.getResource(name)
+  //
+  //      require(url != null, "Could not find resource " + name)
+  //
+  //      val parser = CSPOM.autoParser(url).get
+  //
+  //      CSPOM.load(url, parser)
+  //        .flatMap { cspomProblem =>
+  //          logger.debug(cspomProblem.toString)
+  //          parser match {
+  //            case FlatZincFastParser =>
+  //              CSPOMCompiler.compile(cspomProblem, FZPatterns())
+  //
+  //            case XCSPParser =>
+  //              CSPOMCompiler.compile(cspomProblem, XCSPPatterns())
+  //
+  //            case _ =>
+  //              Success(cspomProblem)
+  //          }
+  //        }
+  //        .flatMap(CSPOMCompiler.compile(_, ConcretePatterns(pm)))
+  //        .flatMap(CSPOMCompiler.compile(_, Seq(Bool2IntIsEq)))
+  //        .flatMap { cspom =>
+  //          // println(cspom.toString)
+  //          logger.debug(cspom.toString)
+  //          val pg = new ProblemGenerator(pm)
+  //
+  //          pg.generate(cspom).flatMap {
+  //            case (problem, variables) =>
+  //              val solver = Solver(problem)
+  //              solver.statistics.register("compiler", CSPOMCompiler)
+  //              solver.statistics.register("generator", pg)
+  //              new CSPOMSolver(solver, cspom, variables).applyGoal()
+  //          }
+  //        }
+  //        .map { solver =>
+  //
+  //          //    println(solver.concreteProblem)
+  //
+  //          val f = Future {
+  //
+  //
+  //            val (nbSol, sol) = check(url, solver.take(1), solver, if (test) 1.0 else 0.0)
+  //            withClue {
+  //              val variables: Seq[String] = solver.cspom.goal.get.getSeqParam("variables")
+  //              sol.map(XCSP3Concrete.xmlSolution(variables, _, None))
+  //            } {
+  //              if (expectedResult) {
+  //                nbSol should be > 0
+  //              } else {
+  //                nbSol shouldBe 0
+  //              }
+  //            }
+  //          }
+  //
+  //          concurrent.Await.result(f, 600.seconds)
+  //
+  //        }
+  //        .recover {
+  //          case e: UNSATException if !expectedResult =>
+  //            logger.warn("UNSAT: " + e)
+  //            Success(())
+  //        }
+  //        .get
+  //    }
 
-  private def check(url: URL, sols: Iterator[CSPOMSolution], solver: CSPOMSolver, prob: Double): (Int, Option[CSPOMSolution]) = {
-    val rand = new Random()
-    val checker = new XCSP3SolutionChecker(url)
-    var nbSol = 0
-    var lastSol: Option[CSPOMSolution] = None
-    for (sol <- sols) {
-      if (rand.nextDouble() < prob) {
-        val variables: Seq[String] = solver.cspom.goal.get.getSeqParam("variables")
-        val obj = solver.optimizes.map(v => sol(v))
-        try {
-          val failed = checker.checkSolution(sol, obj, variables)
-          withClue ( XCSP3Concrete.xmlSolution(variables, sol, obj)) {
-            failed shouldBe 'empty
-          }
-        } catch {
-          case e: UnsupportedOperationException =>
-            logger.error(
-              XCSP3Concrete.xmlSolution(variables, sol, obj) +
-              "Error in SolutionChecker:", e)
-        }
-      }
-      lastSol = Some(sol)
-      nbSol += 1
-    }
-    (nbSol, lastSol)
-  }
-
-  def count(name: String, expectedResult: Int, parameters: Seq[(String, String)],
+  def count(name: String, expectedResult: AnyVal, parameters: Seq[(String, String)],
             test: Double): Unit = {
     val url = getClass.getResource(name)
 
@@ -403,18 +303,18 @@ trait SolvingBehaviors extends Matchers with Inspectors with OptionValues with L
       }
         .flatMap(
           CSPOMCompiler.compile(_, ConcretePatterns(pm)))
-//        .flatMap(
-//          CSPOMCompiler.compile(_, Seq(Bool2IntIsEq)))
+        //        .flatMap(
+        //          CSPOMCompiler.compile(_, Seq(Bool2IntIsEq)))
         .flatMap { cspom =>
-          val pg = new ProblemGenerator(pm)
-          pg.generate(cspom).flatMap {
-            case (problem, variables) =>
-              val solver = Solver(problem)
-              solver.statistics.register("compiler", CSPOMCompiler)
-              solver.statistics.register("generator", pg)
-              new CSPOMSolver(solver, cspom, variables).applyGoal()
-          }
+        val pg = new ProblemGenerator(pm)
+        pg.generate(cspom).flatMap {
+          case (problem, variables) =>
+            val solver = Solver(problem)
+            solver.statistics.register("compiler", CSPOMCompiler)
+            solver.statistics.register("generator", pg)
+            new CSPOMSolver(solver, cspom, variables).applyGoal()
         }
+      }
         .map { solver =>
 
           val desc = solver.optimizes match {
@@ -431,9 +331,17 @@ trait SolvingBehaviors extends Matchers with Inspectors with OptionValues with L
                   val (_, last) = check(url, solver, solver, test)
                   last.map(_ (v)) should contain(expectedResult)
                 case None =>
-                  val solsCut = solver //.take(expectedResult + 1)
-                val (nbSols, _) = check(url, solsCut, solver, test)
-                  nbSols shouldBe expectedResult
+                  expectedResult match {
+                    case b: Boolean =>
+                      val solsCut = solver.take(1)
+                      val (nbSols, _) = check(url, solsCut, solver, test)
+                      nbSols > 0 shouldBe b
+                    case i: Int =>
+                      val solsCut = solver.take(i + 1)
+                      val (nbSols, _) = check(url, solsCut, solver, test)
+                      nbSols shouldBe expectedResult
+                  }
+
               }
             }
 
@@ -449,5 +357,32 @@ trait SolvingBehaviors extends Matchers with Inspectors with OptionValues with L
         .get
 
     }
+  }
+
+  private def check(url: URL, sols: Iterator[CSPOMSolution], solver: CSPOMSolver, prob: Double): (Int, Option[CSPOMSolution]) = {
+    val rand = new Random()
+    val checker = new XCSP3SolutionChecker(url)
+    var nbSol = 0
+    var lastSol: Option[CSPOMSolution] = None
+    for (sol <- sols) {
+      if (rand.nextDouble() < prob) {
+        val variables: Seq[String] = solver.cspom.goal.get.getSeqParam("variables")
+        val obj = solver.optimizes.map(v => sol(v))
+        try {
+          val failed = checker.checkSolution(sol, obj, variables)
+          withClue(XCSP3Concrete.xmlSolution(variables, sol, obj)) {
+            failed shouldBe 'empty
+          }
+        } catch {
+          case e: UnsupportedOperationException =>
+            logger.error(
+              XCSP3Concrete.xmlSolution(variables, sol, obj) +
+                "Error in SolutionChecker:", e)
+        }
+      }
+      lastSol = Some(sol)
+      nbSol += 1
+    }
+    (nbSol, lastSol)
   }
 }

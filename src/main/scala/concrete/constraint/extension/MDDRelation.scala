@@ -5,9 +5,9 @@ import com.typesafe.scalalogging.LazyLogging
 import concrete.{Domain, IntDomain}
 import mdd.{MDD, MiniSet, SetWithMax}
 
-object MDDRelation extends RelationGenerator {
-  def apply(data: Traversable[IndexedSeq[Int]]): MDDRelation =
-    new MDDRelation(MDD.fromTraversable(data))
+object MDDRelation {
+  def apply(data: Seq[IndexedSeq[Int]]): MDDRelation =
+    new MDDRelation(MDD.fromSeq(data))
 }
 
 final class MDDRelation(val mdd: MDD) extends Relation with LazyLogging {

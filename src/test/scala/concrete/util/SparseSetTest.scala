@@ -5,11 +5,11 @@ import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
 import org.scalacheck.Gen
 
-class SparseSetTest extends FlatSpec with Matchers with PropertyChecks {
+class SparseSetBufferTest extends FlatSpec with Matchers with PropertyChecks {
 
-  "SparseSet" should "detect containment" in {
+  "SparseSetBuffer" should "detect containment" in {
 
-    val map = new SparseSet(10) + 7
+    val map = new SparseSetBuffer() + 7
 
     val map2 = map + 6
 
@@ -20,44 +20,53 @@ class SparseSetTest extends FlatSpec with Matchers with PropertyChecks {
 
   }
 
+  it should "be empty by default" in {
+    var s = new SparseSetBuffer()
+    s should not contain(0)
+
+    s += 3
+    s should not contain (0)
+
+  }
+
   it should "have a Set behavior, test case" in {
     val g = Seq((549, true), (1, true), (1, false), (549, false))
 
     var set = Set.empty[Int]
-    var sparseSet = new SparseSet(math.max(g.size, 1001))
+    var SparseSetBuffer = new SparseSetBuffer()
 
     for ((n, b) <- g) {
       if (b) {
         set += n
-        sparseSet += n
+        SparseSetBuffer += n
       } else {
         set -= n
-        sparseSet -= n
+        SparseSetBuffer -= n
       }
-      sparseSet should contain theSameElementsAs set
+      SparseSetBuffer should contain theSameElementsAs set
     }
 
   }
 
   it should "have a Set behavior" in {
 
-    new SparseSet(10) + 0 should contain theSameElementsAs Seq(0)
+    new SparseSetBuffer() + 0 should contain theSameElementsAs Seq(0)
 
-    (new SparseSet(1000) + 154 + 995 - 154 + 995) should contain theSameElementsAs Set(995)
+    (new SparseSetBuffer() + 154 + 995 - 154 + 995) should contain theSameElementsAs Set(995)
 
     forAll(Gen.nonEmptyListOf(Gen.zip(Gen.choose(0, 1000), Gen.oneOf(true, false)))) { g =>
       var set = Set.empty[Int]
-      var sparseSet = new SparseSet(math.max(g.size, 1001))
+      var SparseSetBuffer = new SparseSetBuffer()
 
       for ((n, b) <- g) {
         if (b) {
           set += n
-          sparseSet += n
+          SparseSetBuffer += n
         } else {
           set -= n
-          sparseSet -= n
+          SparseSetBuffer -= n
         }
-        sparseSet should contain theSameElementsAs set
+        SparseSetBuffer should contain theSameElementsAs set
       }
     }
   }

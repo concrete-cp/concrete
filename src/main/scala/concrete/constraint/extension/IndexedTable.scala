@@ -7,10 +7,10 @@ import scala.math.BigInt.int2bigInt
 import concrete.util.ArraySet
 import cspom.util.VecMap
 
-object IndexedTable extends RelationGenerator {
-  def apply(data: Traversable[IndexedSeq[Int]]): IndexedTable = {
-    val arity = data.headOption.getOrElse(Set()).size
-    new IndexedTable(arity) ++ data.toIterable
+object IndexedTable {
+  def apply(data: Seq[Array[Int]]): IndexedTable = {
+    val arity = data.headOption.map(_.length).getOrElse(0)
+    new IndexedTable(arity) ++ data.map(_.toSeq)
   }
 }
 

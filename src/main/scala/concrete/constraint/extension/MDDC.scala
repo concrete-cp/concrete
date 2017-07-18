@@ -1,40 +1,29 @@
 package concrete.constraint.extension
 
-import concrete.Contradiction
-import concrete.Domain
-import concrete.EmptyIntDomain
-import concrete.IntDomain
-import concrete.ProblemState
-import concrete.Variable
-import concrete.constraint.Constraint
-import concrete.constraint.Removals
-import concrete.constraint.StatefulConstraint
+import concrete._
+import concrete.constraint.{Constraint, StatefulConstraint}
 import concrete.util.SparseSet
-import bitvectors.BitVector
-import mdd.{MDD, MDD0, MDDLeaf}
+import mdd.{MDD, MDD0, MDDLeaf, TSSet}
 
 /* MDDRelation comes with its own timestamp */
 class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
-    extends Constraint(_scope) with Removals with StatefulConstraint[SparseSet] {
+  extends Constraint(_scope) with StatefulConstraint[SparseSet] {
+
+  val simpleEvaluation: Int = math.min(Constraint.NP, scope.count(_.initDomain.size > 1))
+  // Members declared in concrete.constraint.Removals
+  val prop = mdd.edges.toDouble / scope.map(_.initDomain.size.toDouble).product
 
   override def init(ps: ProblemState) = {
-    val max = mdd.identify() + 1
+    val max = mdd.mdd.fastIdentify() + 1
     ps.updateState(this, new SparseSet(max)) //new SparseSet(max))
   }
 
   // Members declared in concrete.constraint.Constraint
   override def check(t: Array[Int]) = mdd.contains(t)
 
-  def checkValues(tuple: Array[Int]): Boolean = throw new UnsupportedOperationException
+  def advise(ps: ProblemState, event: Event, pos: Int) = (prop * doubleCardSize(ps)).toInt
 
-  val simpleEvaluation: Int = math.min(Constraint.NP, scope.count(_.initDomain.size > 1))
-
-  // Members declared in concrete.constraint.Removals
-  val prop = mdd.edges.toDouble / scope.map(_.initDomain.size.toDouble).product
-
-  def getEvaluation(ps: ProblemState) = (prop * doubleCardSize(ps)).toInt
-
-  def revise(ps: ProblemState, modified: BitVector) = {
+  def revise(ps: ProblemState) = {
 
     val domains = ps.doms(scope) //Array.tabulate(arity)(p => ps.dom(scope(p)))
     val supported = Array.fill[IntDomain](arity)(EmptyIntDomain)
@@ -47,7 +36,11 @@ class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
 
     var gNoChange = false
 
-    var gYes = new SparseSet(gNo.capacity)
+    val gYes = new TSSet[MDD]()
+
+//    if (mdd.lambda < 50) {
+//      mdd.map(_.mkString(", ")).foreach(println)
+//    }
 
     def seekSupports(g: MDD, i: Int): Boolean = {
 
@@ -55,6 +48,7 @@ class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
       def loop(dom: Domain): Boolean = {
         var res = false
         for (ak <- dom) {
+
           val gk = g.subMDD(ak)
 
           if (seekSupports(gk, i + 1)) {
@@ -79,12 +73,12 @@ class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
         true
       } else if (g eq MDD0) {
         false
-      } else if (gYes(g.id)) {
+      } else if (gYes.contains(g)) {
         true
       } else if (gNo.contains(g.id)) {
         false
       } else if (loop(domains(i))) {
-        gYes += g.id
+        gYes .put( g)
         true
       } else {
         gNo += g.id

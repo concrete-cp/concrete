@@ -504,7 +504,7 @@ object FZPatterns {
      * predicate table_int(array[int] of var int: x, array[int, int] of int: t)
      */
     case Ctr('table_int, Seq(IntExpression.simpleSeq(x), IntExpression.constSeq(t)), p) =>
-      x in MDDRelation(t.grouped(x.size).map(_.toIndexedSeq).toTraversable)
+      x in MDDRelation(t.grouped(x.size).map(_.toIndexedSeq).toSeq)
 
     /*
      *  predicate all_different_int(array[int] of var int: x);

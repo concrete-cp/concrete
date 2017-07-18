@@ -24,7 +24,7 @@ package sql
 import java.io.{PrintWriter, StringWriter}
 import java.net.InetAddress
 import java.sql.{SQLException, Timestamp}
-import java.util.Date
+import java.time.LocalDateTime
 
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
@@ -83,8 +83,6 @@ object SQLWriter {
 
   }
 
-  def now = new Timestamp(new Date().getTime)
-
   class Problem(tag: Tag)
     extends Table[(Int, String, Option[Int], Option[Int], Option[String], Option[String])](
       tag, "Problem") {
@@ -95,6 +93,14 @@ object SQLWriter {
     def nbVars = column[Option[Int]]("nbVars")
 
     def nbCons = column[Option[Int]]("nbCons")
+
+    def d = column[Option[Double]]("d")
+    def k = column[Option[Double]]("k")
+    def lambda = column[Option[Double]]("lambda")
+    def looseness = column[Option[Double]]("looseness")
+    def mddEdges = column[Option[Double]]("mddEdges")
+    def mddVertices = column[Option[Double]]("mddVertices")
+    def bddVertices = column[Option[Double]]("bddVertices")
 
     def nature = column[Option[String]]("nature")
 
@@ -119,14 +125,19 @@ object SQLWriter {
     def config = column[String]("config")
   }
 
-  class Execution(tag: Tag) extends Table[(Int, Int, Int, Int, Timestamp, Option[Timestamp], Option[String], String, Option[String])](tag, "Execution") {
+  implicit val localDateToDate = MappedColumnType.base[LocalDateTime, Timestamp](
+    l => Timestamp.valueOf(l),
+    d => d.toLocalDateTime
+  )
+
+  class Execution(tag: Tag) extends Table[(Int, Int, Int, Int, LocalDateTime, Option[LocalDateTime], Option[String], String, Option[String])](tag, "Execution") {
     def * = (executionId, configId, problemId, iteration, start, end, hostname, status, solution)
 
     def executionId = column[Int]("executionId", O.PrimaryKey, O.AutoInc)
 
-    def start = column[Timestamp]("start")
+    def start = column[LocalDateTime]("start")
 
-    def end = column[Option[Timestamp]]("end")
+    def end = column[Option[LocalDateTime]]("end")
 
     def hostname = column[Option[String]]("hostname")
 
@@ -273,7 +284,7 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
       executions.map(e =>
         (e.problemId, e.configId, e.start, e.hostname, e.iteration)) returning
         executions.map(_.executionId) += ((
-        p, c, now,
+        p, c, LocalDateTime.now(),
         Some(InetAddress.getLocalHost.getHostName), it)))
 
     executionId.foreach { e =>
@@ -359,7 +370,7 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
 
         val r0 = db.run {
           dbexec.map(e => (e.end, e.status)).update(
-            (Some(SQLWriter.now), result))
+            (Some(LocalDateTime.now()), result))
         }
 
         val r = for ((key, value) <- stats.digest) yield {

@@ -4,11 +4,9 @@ package generator
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
 import concrete.constraint.Constraint
-import cspom.CSPOMConstraint
+import cspom.{CSPOM, CSPOMConstraint, UNSATException}
 import cspom.variable.CSPOMVariable
-import cspom.CSPOM
 
 class GeneratorManager(pg: ProblemGenerator) {
 
@@ -55,6 +53,7 @@ class GeneratorManager(pg: ProblemGenerator) {
           candidate.generate(constraint, variables: Map[CSPOMVariable[_], Variable])
         }
           .recoverWith {
+            case e: UNSATException => Failure(e)
             case e =>
               Failure(new FailedGenerationException("Failed to generate " + constraint.toString(cspom.displayName), e))
           }

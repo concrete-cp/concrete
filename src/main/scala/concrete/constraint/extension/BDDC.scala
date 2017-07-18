@@ -4,7 +4,7 @@ import bitvectors.BitVector
 import concrete._
 import concrete.constraint.{Constraint, Removals, StatefulConstraint}
 import concrete.util.SparseSet
-import mdd.{BDD, BDD0, BDDLeaf, BDDNode}
+import mdd._
 
 /* MDDRelation comes with its own timestamp */
 class BDDC(_scope: Array[Variable], val bdd: BDDRelation)
@@ -15,7 +15,7 @@ class BDDC(_scope: Array[Variable], val bdd: BDDRelation)
   val prop = bdd.edges.toDouble / scope.map(_.initDomain.size.toDouble).product
 
   override def init(ps: ProblemState) = {
-    val max = bdd.bdd.identify() + 1
+    val max = bdd.bdd.fastIdentify() + 1
     //println(s"********** $max **********")
     ps.updateState(this, new SparseSet(max))
   }
@@ -39,40 +39,38 @@ class BDDC(_scope: Array[Variable], val bdd: BDDRelation)
 
     var gNo = oldGno //.clone()
 
-    var gYes = new SparseSet(gNo.capacity)
+    val gYes = new TSSet[BDD] // SparseSet()
 
     @inline
     def seekSupports(g: BDD, i: Int): Boolean = {
-      g match {
-        case BDDLeaf =>
-          if (i < delta) {
-            delta = i
-          }
-          true
-        case BDD0 => false
-        case ng: BDDNode =>
-
-          if (gYes.contains(ng.id)) {
-            true
-          } else if (gNo.contains(ng.id)) {
-            false
-          } else if (domains(i).present(ng.index) && seekSupports(ng.child, i + 1)) {
-            supported(i) |= ng.index
-            if (i + 1 == delta && supported(i).size == domains(i).size) {
-              delta = i
-            } else {
-              seekSupports(ng.sibling, i)
-            }
-            gYes += g.id
-            true
-          } else if (seekSupports(ng.sibling, i)) {
-            gYes += g.id
-            true
-          } else {
-            gNo += g.id
-            false
-          }
+      if (g eq BDDLeaf) {
+        if (i < delta) {
+          delta = i
+        }
+        true
+      } else if (g eq BDD0) {
+        false
+      } else if (gYes.contains(g)) {
+        true
+      } else if (gNo.contains(g.id)) {
+        false
+      } else if (domains(i).present(g.index) && seekSupports(g.child, i + 1)) {
+        supported(i) |= g.index
+        if (i + 1 == delta && supported(i).size == domains(i).size) {
+          delta = i
+        } else {
+          seekSupports(g.sibling, i)
+        }
+        gYes.put(g)
+        true
+      } else if (seekSupports(g.sibling, i)) {
+        gYes.put(g)
+        true
+      } else {
+        gNo += g.id
+        false
       }
+
     }
 
     val sat = seekSupports(bdd.bdd, 0)

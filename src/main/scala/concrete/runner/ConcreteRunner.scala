@@ -125,7 +125,7 @@ trait ConcreteRunner extends LazyLogging {
     //val waker = new Timer()
     //try {
 
-    var solver: Option[Solver] = None
+    //var solver: Option[Solver] = None
 
     val (tryLoad, lT) = StatisticsManager.measureTry[Problem, Unit, Double] {
       load(remaining, opt)
@@ -152,7 +152,7 @@ trait ConcreteRunner extends LazyLogging {
       solver
     }
       .map { solv =>
-        solver = Some(solv)
+        // solver = Some(solv)
         if (opt.contains('all) || solv.optimises.nonEmpty) {
           for (s <- solv.toIterable) {
             solution(solv, s, writer, opt)

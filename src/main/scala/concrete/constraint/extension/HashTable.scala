@@ -7,28 +7,27 @@ import concrete.util.ArraySet
 import concrete.EmptyIntDomain
 import concrete.IntDomain
 
-object HashTable extends RelationGenerator {
-  def apply(data: Traversable[IndexedSeq[Int]]): HashTable = {
-    val d = data.foldLeft(ArraySet.empty[Int])(_ + _.toArray)
-    new HashTable(data.headOption.getOrElse(Seq()).size, d)
+object HashTable {
+  def apply(data: Seq[Array[Int]]): HashTable = {
+    val d = ArraySet.empty[Int] ++ data
+    new HashTable(d)
   }
 }
 
-final class HashTable(arity: Int, val table: ArraySet[Int]) extends Relation {
+final class HashTable(val table: ArraySet[Int]) extends Relation {
   type Self2 = HashTable
 
-  def this(arity: Int) = this(arity, ArraySet.empty)
 
   def copy = this
 
   def +(t: Seq[Int]) = {
-    require(t.length == arity)
-    new HashTable(arity, table + t.toArray)
+    assert(t.length == depth)
+    new HashTable(table + t.toArray)
   }
 
   override def ++(t: Iterable[Seq[Int]]) = {
-    require(t.forall(_.length == arity))
-    new HashTable(arity, t.foldLeft(table)(_ + _.toArray))
+    assert(t.forall(_.length == depth))
+    new HashTable(t.foldLeft(table)(_ + _.toArray))
   }
 
   def -(t: Seq[Int]) = throw new UnsupportedOperationException
@@ -43,7 +42,7 @@ final class HashTable(arity: Int, val table: ArraySet[Int]) extends Relation {
     if (nt.size == table.size) {
       this
     } else {
-      new HashTable(arity, nt)
+      new HashTable(nt)
     }
   }
 
@@ -73,15 +72,15 @@ final class HashTable(arity: Int, val table: ArraySet[Int]) extends Relation {
 
   override def toString = s"${table.size} tuples"
 
-  def edges = arity * table.size
+  def edges = depth * table.size
 
   def find(f: (Int, Int) => Boolean) = throw new UnsupportedOperationException
   def findSupport(scope: Array[Domain], p: Int, i: Int) = {
     table.find(t =>
-      t(p) == i && (0 until arity).forall(i => scope(i).present(t(i))))
+      t(p) == i && t.indices.forall(i => scope(i).present(t(i))))
   }
 
-  def iterator = table.iterator.map(_.toArray)
+  def iterator = table.iterator
 
   def contains(t: Array[Int]): Boolean = table(t)
 
@@ -90,6 +89,6 @@ final class HashTable(arity: Int, val table: ArraySet[Int]) extends Relation {
   override def size = table.size
   def lambda = table.size
 
-  def depth = arity
+  def depth = table.headOption.map(_.size).getOrElse(0)
 }
 

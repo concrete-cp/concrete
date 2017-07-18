@@ -7,28 +7,26 @@ import concrete.Domain
 import concrete.IntDomain
 import concrete.EmptyIntDomain
 
-object STR extends RelationGenerator {
-  def apply(data: Traversable[IndexedSeq[Int]]): STR = {
-    val d = data.map(_.toArray).toArray
-    new STR(d.headOption.map(_.size).getOrElse(0), d, d.length)
+object STR  {
+  def apply(data: Seq[Array[Int]]): STR = {
+    val d = data.toArray
+    new STR(d, d.length)
   }
 }
 
-final class STR(arity: Int, val array: Array[Array[Int]], val bound: Int) extends Relation {
+final class STR(val array: Array[Array[Int]], val bound: Int) extends Relation {
   type Self2 = STR
 
-  def this(arity: Int) = this(arity, Array(), 0)
-
-  def copy = new STR(arity, array.clone, bound)
+  def copy = new STR(array.clone, bound)
 
   def +(t: Seq[Int]) = {
-    require(t.length == arity)
-    new STR(arity, t.toArray +: array, bound + 1)
+    assert(t.length == depth)
+    new STR(t.toArray +: array, bound + 1)
   }
 
   override def ++(t: Iterable[Seq[Int]]) = {
-    require(t.forall(_.length == arity))
-    new STR(arity, t.map(_.toArray) ++: array, bound + t.size)
+    assert(t.forall(_.length == depth))
+    new STR(t.map(_.toArray) ++: array, bound + t.size)
   }
 
   def -(t: Seq[Int]) = throw new UnsupportedOperationException
@@ -48,7 +46,7 @@ final class STR(arity: Int, val array: Array[Array[Int]], val bound: Int) extend
     if (b == bound) {
       this
     } else {
-      new STR(arity, array, b)
+      new STR(array, b)
     }
   }
 
@@ -57,7 +55,7 @@ final class STR(arity: Int, val array: Array[Array[Int]], val bound: Int) extend
     modified.isEmpty || (doms(modified.head).present(t(modified.head)) && valid(modified.tail, doms, t))
   }
 
-  private val pos: MutableList = new MutableList(arity)
+  private val pos: MutableList = new MutableList(depth)
 
   def supported(domains: Array[Domain]): Array[Domain] = {
 
@@ -85,7 +83,7 @@ final class STR(arity: Int, val array: Array[Array[Int]], val bound: Int) extend
   def find(f: (Int, Int) => Boolean) = throw new UnsupportedOperationException
 
   def findSupport(scope: Array[Domain], p: Int, i: Int) =
-    iterator.find(t => t(p) == i && (0 until arity).forall(p => scope(p).present(t(p))))
+    iterator.find(t => t(p) == i && t.indices.forall(p => scope(p).present(t(p))))
 
   def iterator = array.iterator.take(bound)
 
@@ -113,7 +111,7 @@ final class STR(arity: Int, val array: Array[Array[Int]], val bound: Int) extend
 
   override def size = bound
   def lambda = bound
-  def depth = arity
+  def depth: Int = array.headOption.map(_.length).getOrElse(0)
 }
 
 final class MutableList(var nb: Int) extends Traversable[Int] {
