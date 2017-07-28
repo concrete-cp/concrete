@@ -21,7 +21,7 @@ final object Pow extends ConstraintCompilerNoData {
     import IntExpression.implicits.iterable
 
     val mdd = pow(x.toSeq, y.toSeq, r.head, r.last)
-    //
+    
     replaceCtr(constraint, args in new MDDRelation(mdd), problem)
   }
 
@@ -47,7 +47,4 @@ final object Pow extends ConstraintCompilerNoData {
     }
     MDD.fromTrie(trie)
   }
-
-  def selfPropagation = false
-
 }
