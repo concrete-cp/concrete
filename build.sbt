@@ -17,6 +17,7 @@ testOptions in Test <+= (target in Test) map {
 }
 
 resolvers += Resolver.sonatypeRepo("snapshots")
+resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
 
 libraryDependencies ++= Seq(
 	"fr.univ-valenciennes" %% "cspom" % "2.18",
@@ -44,6 +45,7 @@ enablePlugins(DebianPlugin)
 
 mainClass in Compile := Some("concrete.runner.XCSP3Concrete")
 
+logBuffered in Test := false
 testOptions in Test += Tests.Argument("-oDF")
 
 publishTo :=  {
@@ -77,18 +79,8 @@ pomExtra in Global := {
   </developers>
 }
 
-// excludeFilter in packageBin in unmanagedResources := "conf/logback.xml"
-
 import NativePackagerHelper._
 
 mappings in Universal ++= directory((baseDirectory in Compile).value / "conf")
     
 mappings in Universal ++= directory((baseDirectory in Compile).value / "mzn_lib")
-   
-//mappings in Universal <+= (packageBin in Compile, baseDirectory ) map { (_, base) =>
-//     val conf = base / "conf"
-//     conf -> "conf"
-//}
-
-
-// scapegoatVersion := "1.2.1"
