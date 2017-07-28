@@ -3,11 +3,24 @@ package constraint
 package extension
 
 import com.typesafe.scalalogging.LazyLogging
-import mdd.{BDD, IdMap, MiniSet}
+import mdd._
 
 final class BDDRelation(val bdd: BDD) extends Relation with LazyLogging {
   type Self2 = BDDRelation
   lazy val lambda = bdd.lambda()
+
+  val offset = {
+    def min(bdd: BDD, m: Int = Integer.MAX_VALUE, cache: TSSet[BDD] = new TSSet()): Int = {
+      bdd match {
+        case n: BDDNode =>
+          cache.onceOrElse(n, {
+            min(n.sibling, min(n.child, math.min(n.index, m), cache), cache)
+          }, m)
+        case _ => m
+      }
+    }
+    min(bdd)
+  }
 
   def findSupport(domains: Array[Domain], p: Int, i: Int): Option[Array[Int]] = {
     ???
@@ -22,14 +35,14 @@ final class BDDRelation(val bdd: BDD) extends Relation with LazyLogging {
   def filterTrie(doms: Array[Domain], modified: List[Int]): BDDRelation = {
     val m = bdd.filterTrie(doms.asInstanceOf[Array[MiniSet]], modified)
 
-//    assert(m.forall { sup =>
-//      sup.zipWithIndex.forall {
-//        case (i, p) =>
-//          val r = doms(p).present(i)
-//          if (!r) logger.warn(s"($p, $i) should have been filtered")
-//          r
-//      }
-//    }, modified + "\n" + m)
+    //    assert(m.forall { sup =>
+    //      sup.zipWithIndex.forall {
+    //        case (i, p) =>
+    //          val r = doms(p).present(i)
+    //          if (!r) logger.warn(s"($p, $i) should have been filtered")
+    //          r
+    //      }
+    //    }, modified + "\n" + m)
 
     if (m eq bdd) {
       this
@@ -39,7 +52,7 @@ final class BDDRelation(val bdd: BDD) extends Relation with LazyLogging {
   }
 
   override def supported(doms: Array[Domain]): Array[Domain] = {
-    val (supp, offset) = bdd.supported(doms.asInstanceOf[Array[MiniSet]])
+    val supp = bdd.supported(doms.asInstanceOf[Array[MiniSet]], offset)
     supp.map(bv => IntDomain.ofBitVector(offset, bv, bv.cardinality))
   }
 

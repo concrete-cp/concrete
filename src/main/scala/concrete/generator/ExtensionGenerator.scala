@@ -8,12 +8,11 @@ import concrete.generator.Generator.cspom2concrete1D
 import cspom.{CSPOMConstraint, UNSATException}
 import mdd._
 
-import scala.collection.mutable
-
 class ExtensionGenerator(pg: ProblemGenerator) extends Generator with LazyLogging {
 
-  private val consType = params.getOrElse("relationAlgorithm", "Reduce")
+  private val consType = params.getOrElse("relationAlgorithm", "BDDC")
   private val ds = params.getOrElse("relationStructure", "BDD")
+  private val relationCache = new IdMap[MDD, Relation]()
 
   def params: ParameterManager = pg.pm
 
@@ -21,7 +20,7 @@ class ExtensionGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
 
     val solverVariables = extensionConstraint.arguments.map(cspom2concrete1D(_)).toList
 
-    val Some(relation: cspom.extension.Relation[_]) = extensionConstraint.params.get("relation")
+    val Some(relation: cspom.extension.MDDRelation) = extensionConstraint.params.get("relation")
     val Some(init: Boolean) = extensionConstraint.params.get("init")
 
     if (relation.isEmpty) {
@@ -33,7 +32,7 @@ class ExtensionGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
     } else {
       val scope = solverVariables.map(_.asVariable(pg)).toArray
 
-      val matrix = generateMatrix(scope, relation, init)
+      val matrix = generateMatrix(scope, relation.mdd, init)
 
       val constraint = matrix match {
         case m: Matrix2D => BinaryExt(scope, m)
@@ -70,45 +69,36 @@ class ExtensionGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
     }
   }
 
-  private def any2Int(relation: cspom.extension.Relation[_]): Seq[Seq[Int]] =
-    relation.map(_.map(util.Math.any2Int)).toSeq
-
-  private[concrete] def generateMatrix(variables: Seq[Variable], relation: cspom.extension.Relation[_], init: Boolean): Matrix = {
+  private[concrete] def generateMatrix(variables: Seq[Variable], relation: MDD, init: Boolean): Matrix = {
     logger.info(s"Generating matrix for $relation, $variables")
     val domains = variables.map(_.initDomain).toList
-    if (relation.nonEmpty && relation.arity == 2) {
-      val matrix = new Matrix2D(domains(0).span.size, domains(1).span.size,
-        domains(0).head, domains(1).head, init)
-      matrix.setAll(any2Int(relation), !init)
-    } else if (init || relation.arity == 1) {
-      new TupleTrieSet(new MDDRelation(relation2MDD(relation)), init)
-    } else if (ds == "Matrix") {
-      val matrix = new MatrixGeneral(domains.map(_.span.size).toArray, domains.map(_.head).toArray, init)
-      matrix.setAll(any2Int(relation), !init)
-    } else {
-      new TupleTrieSet(generateRelation(domains.length, relation), init)
+    relation.depth().collect {
+      case 2 =>
+        val matrix = new Matrix2D(domains(0).span.size, domains(1).span.size,
+          domains(0).head, domains(1).head, init)
+        matrix.setAll(relation, !init)
+      case 1 if init =>
+        new TupleTrieSet(new MDDRelation(relation), init)
+      case _ if ds == "Matrix" =>
+        val matrix = new MatrixGeneral(domains.map(_.span.size).toArray, domains.map(_.head).toArray, init)
+        matrix.setAll(relation, !init)
+      //      case _ =>
+      //        new TupleTrieSet(generateRelation(domains.length, relation), init)
     }
+      .getOrElse {
+        new TupleTrieSet(generateRelation(relation), init)
+      }
   }
 
-  private def generateRelation(arity: Int, relation: cspom.extension.Relation[_]): Relation = {
+  private def generateRelation(relation: MDD): Relation = {
     ds match {
-      case "MDD" => new MDDRelation(relation2MDD(relation))
-      case "BDD" => new BDDRelation(relation2BDD(relation))
-      case "STR" => STR(any2Int(relation).map(l => l.toArray))
-      case "HashTable" => HashTable(any2Int(relation).map(l => l.toArray))
-      case "IndexedTable" => IndexedTable(any2Int(relation).map(l => l.toArray))
+      case "MDD" => relationCache.getOrElseUpdate(relation, new MDDRelation(relation))
+      case "BDD" => relationCache.getOrElseUpdate(relation, new BDDRelation(BDD(relation).reduce()))
+      case "STR" => relationCache.getOrElseUpdate(relation, STR(relation.toArrayArray)).asInstanceOf[STR].copy
+      case "HashTable" => HashTable(relation.toArrayArray)
+      case "IndexedTable" => IndexedTable(relation.toArrayArray)
     }
   }
 
-  private def relation2MDD(relation: cspom.extension.Relation[_]): MDD = {
-    relation match {
-      case mdd: cspom.extension.MDDRelation => mdd.mdd
-      case r => MDD.fromSeq(any2Int(r).map(_.toIndexedSeq))
-    }
-  }
-
-  private def relation2BDD(relation: cspom.extension.Relation[_]): BDD = {
-    BDD(relation2MDD(relation)).reduce()
-  }
 }
 

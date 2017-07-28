@@ -116,6 +116,9 @@ object XCSP3Concrete extends CSPOMRunner with App {
     </instantiation>
   }
 
-  run(args)
+  run(args) match {
+    case Unfinished(Some(e)) => throw e
+    case _ =>
+  }
 
 }

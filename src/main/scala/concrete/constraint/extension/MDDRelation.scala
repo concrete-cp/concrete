@@ -6,7 +6,7 @@ import concrete.{Domain, IntDomain}
 import mdd.{MDD, MiniSet, SetWithMax}
 
 object MDDRelation {
-  def apply(data: Seq[IndexedSeq[Int]]): MDDRelation =
+  def apply(data: Seq[Array[Int]]): MDDRelation =
     new MDDRelation(MDD.fromSeq(data))
 }
 

@@ -1,7 +1,6 @@
 package concrete.runner
 
 import java.security.InvalidParameterException
-import java.util.Timer
 
 import com.typesafe.scalalogging.LazyLogging
 import concrete.runner.sql.SQLWriter
@@ -20,15 +19,12 @@ trait ConcreteRunner extends LazyLogging {
   'SQL
   'D
   'Control
-  'Time
   'iteration
 
   //logger.addHandler(new MsLogHandler)
   val statistics = new StatisticsManager()
   @Statistic
   var loadTime: Quantity[Double] = _
-  @Statistic
-  var benchTime: Quantity[Double] = _
 
   def help =
     """
@@ -51,7 +47,6 @@ trait ConcreteRunner extends LazyLogging {
     }
     case "-sql" :: tail => options(tail, o + ('SQL -> Unit), realArgs)
     case "-control" :: tail => options(tail, o + ('Control -> Unit), realArgs)
-    case "-time" :: t :: tail => options(tail, o + ('Time -> t.toInt), realArgs)
     case "-a" :: tail => options(tail, o + ('all -> Unit), realArgs)
     case "-s" :: tail => options(tail, o + ('stats -> Unit), realArgs)
     case "-it" :: it :: tail => options(tail, o + ('iteration -> it.toInt), realArgs)
@@ -102,14 +97,6 @@ trait ConcreteRunner extends LazyLogging {
 
     Runtime.getRuntime.addShutdownHook(new Finisher(Thread.currentThread(), writer))
 
-    val timer = opt.get('Time)
-      .map { case time: Int =>
-        val t = new Timer()
-        t.schedule(new Killer(Runtime.getRuntime), time * 1000)
-        t
-      }
-
-
     for (it <- opt.get('iteration)) {
       pm("iteration") = it
     }
@@ -122,53 +109,50 @@ trait ConcreteRunner extends LazyLogging {
 
     writer.parameters(pm)
 
-    //val waker = new Timer()
-    //try {
-
-    //var solver: Option[Solver] = None
-
-    val (tryLoad, lT) = StatisticsManager.measureTry[Problem, Unit, Double] {
-      load(remaining, opt)
-    }
-    loadTime = lT
-
-    val r = tryLoad.map { problem =>
-
-      applyParametersPre(problem, opt)
-
-      val solver = Solver(problem, pm)
-
-      statistics.register("solver", solver)
-      applyParametersPost(solver, opt)
-
-      optimize match {
-        case "sat" =>
-        case "min" =>
-          solver.minimize(solver.problem.variable(optimizeVar.get))
-        case "max" =>
-          solver.maximize(solver.problem.variable(optimizeVar.get))
+    // Regular try/catch required to catch OutOfMemoryErrors
+    val status = try {
+      val (tryLoad, lT) = StatisticsManager.measureTry[Problem, Unit, Double] {
+        load(remaining, opt)
       }
+      loadTime = lT
 
-      solver
-    }
-      .map { solv =>
-        // solver = Some(solv)
-        if (opt.contains('all) || solv.optimises.nonEmpty) {
-          for (s <- solv.toIterable) {
-            solution(solv, s, writer, opt)
-          }
-          FullExplore
-        } else {
-          solv.toIterable.headOption match {
-            case None => FullExplore
-            case Some(s) =>
+      tryLoad.map { problem =>
+
+        applyParametersPre(problem, opt)
+
+        val solver = Solver(problem, pm)
+
+        statistics.register("solver", solver)
+        applyParametersPost(solver, opt)
+
+        optimize match {
+          case "sat" =>
+          case "min" =>
+            solver.minimize(solver.problem.variable(optimizeVar.get))
+          case "max" =>
+            solver.maximize(solver.problem.variable(optimizeVar.get))
+        }
+
+        solver
+      }
+        .map { solv =>
+          // solver = Some(solv)
+          if (opt.contains('all) || solv.optimises.nonEmpty) {
+            for (s <- solv.toIterable) {
               solution(solv, s, writer, opt)
-              Unfinished(None)
+            }
+            FullExplore
+          } else {
+            solv.toIterable.headOption match {
+              case None => FullExplore
+              case Some(s) =>
+                solution(solv, s, writer, opt)
+                Unfinished(None)
+            }
           }
         }
-      }
-
-    val status: Result = r.recover {
+        .get
+    } catch {
       case e: UNSATException =>
         writer.error(e)
         FullExplore
@@ -176,14 +160,9 @@ trait ConcreteRunner extends LazyLogging {
         writer.error(e)
         Error(e)
     }
-      .get
 
     for (s <- pm.unused) {
       logger.warn(s"Unused parameter : $s")
-    }
-
-    for (t: Timer <- timer) {
-      t.cancel()
     }
 
     writer.end = status

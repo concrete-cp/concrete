@@ -4,9 +4,9 @@ import java.net.URL
 
 import concrete.CSPOMSolver
 import concrete.generator.cspompatterns.XCSPPatterns
-import cspom.{CSPOM, CSPOMGoal, WithParam}
 import cspom.compiler.CSPOMCompiler
 import cspom.xcsp.XCSPParser
+import cspom.{CSPOM, CSPOMGoal, WithParam}
 
 import scala.util.{Failure, Success, Try}
 
@@ -51,7 +51,10 @@ object XCSPConcrete extends CSPOMRunner with App {
     declaredVariables.map(v => s"$v = ${solution(v)}").mkString("\n")
   }
 
-  run(args)
+  run(args) match {
+    case Unfinished(Some(e)) => throw e
+    case _ =>
+  }
 
   def controlCSPOM(solution: Map[String, Any], obj: Option[Any]) = ???
 }

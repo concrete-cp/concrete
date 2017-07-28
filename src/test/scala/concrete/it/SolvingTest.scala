@@ -176,6 +176,7 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
   ) // .slice(108, 109)
 
   val problemBank = Seq[(String, (AnyVal, Boolean))](
+  //  "celar-CELAR6-SUB2.fzn.xz" -> ((true, false)),
     "1d_rubiks_cube.small.fzn.xz" -> ((4, false)),
     "1d_rubiks_cube.fzn.xz" -> ((12, false)),
     "battleships10.fzn.xz" -> ((1, false)),
@@ -189,7 +190,7 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
 
   val parameters = Nil
 
-  for ((p, (r, test)) <- problemBank ++ lecoutrePB) {
+  for ((p, (r, test)) <- (problemBank ++ lecoutrePB)) {
 
     describe(p) {
 
@@ -319,6 +320,7 @@ trait SolvingBehaviors extends Matchers with Inspectors with OptionValues with L
 
           val desc = solver.optimizes match {
             case Some(v) => s"should find optimal value $expectedResult for $v"
+            case None if expectedResult == true => s"should be satisfiable"
             case None => s"should have $expectedResult solutions"
           }
 

@@ -14,7 +14,7 @@ class GeneratorManager(pg: ProblemGenerator) {
     val sg = new SumGenerator(pg)
     val adg = new AllDifferentGenerator(pg)
     Map(
-      'abs -> AbsGenerator,
+      'abs -> new AbsGenerator(pg),
       'absdiff -> new AbsDiffGenerator(pg),
       'alldifferent -> adg,
       'eq -> new EqGenerator(pg.pm),

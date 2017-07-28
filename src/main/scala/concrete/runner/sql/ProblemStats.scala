@@ -36,7 +36,7 @@ object ProblemStats extends App {
 
   val query = DB.run {
     SQLWriter.problems
-      .filter(_.nbVars.isEmpty)
+      .filter(_.d.isEmpty)
       //.filter(_.problemId === 3599)
       .result
   }
@@ -91,70 +91,41 @@ object ProblemStats extends App {
     val extensions = for {c <- cspom.constraints
                           if c.getParam("init").contains(false)
                           rel <- c.getParam[MDDRelation]("relation")
-                          if (rel.arity > 2)
+                          if rel.arity > 2
     } yield rel
 
     var d = 0
     var k = 0
-    var lambda = BigInt(0)
+    var lambda = 0.0d
     var l = 0.0d
     var bddV = 0l
     var mddE = 0l
     var mddV = 0l
-
-    var dt = 0
-    var kt = 0
-    var lambdat = BigInt(0)
-    var lt = 0.0d
-    var bddVt = 0l
-    var mddEt = 0l
-    var mddVt = 0l
 
     var count = 0
 
     for (ext <- extensions) {
       count += 1
       val mddEdges = ext.mdd.edges()
-      val bddVertices = BDD(ext.mdd).reduce().vertices()
+      if (mddEdges > mddE) {
+        bddV = BDD(ext.mdd).reduce().vertices()
 
 
-      // println(ext.hashCode())
-      val arity = ext.arity
-      val domains = Array.fill(arity)(BitVector.empty)
+        // println(ext.hashCode())
+        k = ext.arity
+        val domains = Array.fill(k)(BitVector.empty)
 
-      ext.mdd.supported(Array.fill(arity)(UniversalSet), domains, 0, new SetWithMax(arity))
-
-
-      val ds = domains.map(_.cardinality).max
-
-      d = math.max(d, ds)
-      dt += ds * mddEdges
+        ext.mdd.supported(Array.fill(k)(UniversalSet), domains, 0, new SetWithMax(k))
 
 
-      k = math.max(k, domains.size)
-      kt += domains.size * mddEdges
-
-      val lambd = ext.mdd.lambda()
-      lambda = lambda max lambd
-      lambdat += lambd * mddEdges
-
-      // println(domains)
-
-      //    println(s"k, e = ${domains.size}, $edges")
-
-      val space = domains.map(dom => BigInt(dom.cardinality)).reduce(_ * _)
-      val loose = lambd.doubleValue() / space.doubleValue()
-      l = math.max(l, loose)
-      lt += loose * mddEdges
-      //      println(s"l = ${lambd.doubleValue} / ${space.doubleValue} = ${loose}")
-
-      mddE = math.max(mddE, mddEdges)
-      mddEt += mddEdges
-      bddV = math.max(bddV, bddVertices)
-      bddVt += bddVertices
-      val mddVertices = ext.mdd.vertices()
-      mddV = math.max(mddV, mddVertices)
-      mddVt += mddVertices
+        d = domains.map(_.cardinality).max
+        k = domains.length
+        lambda = concrete.util.Math.logBigInteger(ext.mdd.lambda())
+        val space = domains.map(dom => BigInt(dom.cardinality)).product
+        l = Math.exp(lambda - concrete.util.Math.logBigInteger(space))
+        mddE = mddEdges
+        mddV = ext.mdd.vertices()
+      }
     }
 
     //    println(s"d = $d")
@@ -169,14 +140,14 @@ object ProblemStats extends App {
     //    println(s"lm = ${lt / et}")
 
     Map(
-      'n -> cspom.referencedExpressions.count(_.searchSpace > 1),
       'd -> d,
-      'k -> kt.toDouble / mddEt,
-      'lambda -> lambdat.doubleValue() / mddEt,
-      'l -> lt / mddEt,
-      'mddEdges -> mddEt.toDouble / count,
-      'bddVertices -> bddVt.toDouble / count,
-      'mddVertices -> mddVt.toDouble / count
+      'k -> k,
+      'lambda -> lambda.doubleValue(),
+      'l -> l,
+      'mddEdges -> mddE,
+      'bddVertices -> bddV,
+      'mddVertices -> mddV
     )
   }
+
 }

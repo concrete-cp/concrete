@@ -10,7 +10,7 @@ packageDescription := "Concrete is a Scala CSP Solving API"
 
 version := "3.5"
 
-scalaVersion := "2.12.2"
+scalaVersion := "2.12.3"
 
 testOptions in Test <+= (target in Test) map {
   t => Tests.Argument(TestFrameworks.ScalaTest, "-u", s"${t / "test-reports"}")
@@ -19,10 +19,10 @@ testOptions in Test <+= (target in Test) map {
 resolvers += Resolver.sonatypeRepo("snapshots")
 
 libraryDependencies ++= Seq(
-	"fr.univ-valenciennes" %% "cspom" % "2.17",
-	"org.postgresql" % "postgresql" % "42.1.1",
+	"fr.univ-valenciennes" %% "cspom" % "2.18",
+	"org.postgresql" % "postgresql" % "42.1.3",
 	"org.ow2.sat4j" % "org.ow2.sat4j.pb" % "2.3.5",
-	"com.typesafe.slick" %% "slick" % "3.2.0",
+	"com.typesafe.slick" %% "slick" % "3.2.1",
 	"com.typesafe" % "config" % "1.3.1",
   "org.scalatest" %% "scalatest" % "3.0.3" % "test",
 	"org.scalacheck" %% "scalacheck" % "1.13.5" % "test",

@@ -25,7 +25,7 @@ class FZWriter(val opts: Map[Symbol, Any], val stats: StatisticsManager) extends
   }
 
   def error(e: Throwable) {
-    e.printStackTrace(Console.err)
+    // e.printStackTrace(Console.err)
   }
 
   def disconnect(status: Result) {

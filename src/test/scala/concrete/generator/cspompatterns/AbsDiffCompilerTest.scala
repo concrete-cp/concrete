@@ -8,7 +8,6 @@ import cspom.CSPOM
 import cspom.CSPOMConstraint
 import cspom.compiler.CSPOMCompiler
 import cspom.variable.IntVariable
-import concrete.ParameterManager
 
 class AbsDiffCompilerTest extends FlatSpec with Matchers {
 

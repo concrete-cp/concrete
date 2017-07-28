@@ -94,23 +94,29 @@ object SQLWriter {
 
     def nbCons = column[Option[Int]]("nbCons")
 
-    def d = column[Option[Double]]("d")
-    def k = column[Option[Double]]("k")
-    def lambda = column[Option[Double]]("lambda")
-    def looseness = column[Option[Double]]("looseness")
-    def mddEdges = column[Option[Double]]("mddEdges")
-    def mddVertices = column[Option[Double]]("mddVertices")
-    def bddVertices = column[Option[Double]]("bddVertices")
-
     def nature = column[Option[String]]("nature")
 
-    def display = column[Option[String]]("display")
+    def d = column[Option[Double]]("d")
+
+    def k = column[Option[Double]]("k")
+
+    def lambda = column[Option[Double]]("lambda")
+
+    def looseness = column[Option[Double]]("looseness")
+
+    def mddEdges = column[Option[Double]]("mddEdges")
+
+    def mddVertices = column[Option[Double]]("mddVertices")
+
+    def bddVertices = column[Option[Double]]("bddVertices")
 
     def idxName = index("idxName", name, unique = true)
 
     def name = column[String]("name")
 
     def idxDisplay = index("idxDisplay", display, unique = true)
+
+    def display = column[Option[String]]("display")
   }
 
   class Config(tag: Tag) extends Table[(Int, String, Option[String])](tag, "Config") {
@@ -163,23 +169,23 @@ object SQLWriter {
 
     def fkProblem = foreignKey("fkProblem", problemId, problems)(_.problemId, onDelete = ForeignKeyAction.Cascade)
 
-    def problemId = column[Int]("problemId")
-
     def pkPT = primaryKey("pkPT", (problemTag, problemId))
+
+    def problemId = column[Int]("problemId")
 
     def problemTag = column[String]("problemTag")
   }
 
-  class Statistic(tag: Tag) extends Table[(String, Int, String)](tag, "Statistic") {
+  class Statistic(tag: Tag) extends Table[(String, Int, Option[String])](tag, "Statistic") {
     def * = (name, executionId, value)
 
-    def value = column[String]("value")
+    def value = column[Option[String]]("value")
 
     def name = column[String]("name")
 
-    def fkExecution = foreignKey("fkExecution", executionId, executions)(_.executionId, onDelete = ForeignKeyAction.Cascade)
-
     def executionId = column[Int]("executionId")
+
+    def fkExecution = foreignKey("fkExecution", executionId, executions)(_.executionId, onDelete = ForeignKeyAction.Cascade)
 
     def pk = primaryKey("pkS", (name, executionId))
   }
@@ -314,6 +320,20 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
     addSolution(solution, executionId.get)
   }
 
+  private def addSolution(solution: String, executionId: Int) = {
+    val currentSolution = executions.filter(_.executionId === executionId).map(_.solution)
+    //require(executionId.nonEmpty, "Problem description or parameters were not defined")
+    val f = db.run {
+      currentSolution.result.headOption
+    }
+      .flatMap { old =>
+        val newSol = old.flatten.map(_ + "\n").getOrElse("") + solution
+        db.run(currentSolution.update(Some(newSol)))
+      }
+
+    Await.ready(f, Duration.Inf)
+  }
+
   def error(thrown: Throwable) {
 
     val errors = toString(thrown)
@@ -333,20 +353,6 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
     }
   }
 
-  private def addSolution(solution: String, executionId: Int) = {
-    val currentSolution = executions.filter(_.executionId === executionId).map(_.solution)
-    //require(executionId.nonEmpty, "Problem description or parameters were not defined")
-    val f = db.run {
-      currentSolution.result.headOption
-    }
-      .flatMap { old =>
-        val newSol = old.flatten.map(_ + "\n").getOrElse("") + solution
-        db.run(currentSolution.update(Some(newSol)))
-      }
-
-    Await.ready(f, Duration.Inf)
-  }
-
   private def toString(t: Throwable) = {
     val e = new StringWriter()
     t.printStackTrace(new PrintWriter(e))
@@ -354,6 +360,7 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
   }
 
   def disconnect(status: Result) {
+    // logger.warn("Disconnecting")
     try {
       for (e <- executionId) {
 
@@ -362,24 +369,22 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
         val result = status match {
           case FullExplore if lastSolution.isDefined => "SAT*"
           case FullExplore => "UNSAT"
-          case Unfinished(Some(e)) => causes(e).mkString("\nCaused by: ")
+          case Unfinished(Some(e)) => causes(e).map(_.toString.take(100)).mkString("\nCaused by: ")
           case Unfinished(_) if lastSolution.isDefined => "SAT1"
           case _ => "Unfinished"
         }
 
 
-        val r0 = db.run {
-          dbexec.map(e => (e.end, e.status)).update(
-            (Some(LocalDateTime.now()), result))
-        }
-
-        val r = for ((key, value) <- stats.digest) yield {
+        Await.ready(
           db.run {
-            statistic += ((key, e, Option(value).map(_.toString).getOrElse("None")))
+            dbexec.map(e => (e.end, e.status)).update(
+              (Some(LocalDateTime.now()), result))
           }
-        }
-
-        Await.ready(Future.sequence(r0 +: r.toSeq), Duration.Inf)
+            .flatMap { _ =>
+              db.run {
+                statistic ++= stats.digest.map { case (key, value) => (key, e, Option(value).map(_.toString)) }
+              }
+            }, Duration.Inf)
       }
     } finally {
       db.close()

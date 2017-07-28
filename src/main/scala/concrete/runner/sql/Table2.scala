@@ -3,7 +3,6 @@ package concrete.runner.sql
 import scala.xml.Node
 import scala.xml.Text
 import scala.xml.NodeSeq
-
 import scala.collection.mutable.HashMap
 import scala.annotation.tailrec
 import scala.collection.SortedMap
@@ -15,6 +14,8 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
 import com.typesafe.config.ConfigFactory
 import java.io.File
+
+import cspom.StatisticsManager
 
 object Table2 extends App {
 
@@ -49,20 +50,20 @@ object Table2 extends App {
   lazy val DB =
     Database.forConfig("database", systemConfig)
 
-  val statistic :: version :: nature = args.toList
+  val statistic :: nature = args.toList
 
   // Set display :
   // update "Problem" set display = substring(name from '%/#"[^/]+#".xml.bz2' for '#')
 
   case class Resultat(
       status: String,
-      statistic: Double) {
+      statistic: Option[Double]) {
     def solved: Failure = {
-      if (status == "SAT" || status == "UNSAT") {
+      if (status == "SAT1" || status == "UNSAT" || status == "SAT*") {
         Success
       } else if (status.contains("Timeout")) {
         Timeout
-      } else if (status.contains("OutOfMemory") || status.contains("relation is too large")) {
+      } else if (status.contains("OutOfMemory") || status.contains("Cannot build an array")) {
         OOM
       } else if ("started" == status) {
         Stalled
@@ -76,14 +77,14 @@ object Table2 extends App {
         case Success => statistic.toString
         case Timeout => s"${timeoutHandler.toDouble(statistic)} (TO)"
         case OOM     => s"${oomHandler.toDouble(statistic)} (OOM)"
-        case Stalled => s"${oomHandler.toDouble(statistic)} (Stalled)"
-        case _       => s"${Double.NaN} ($status)"
+        case Stalled => s"${statistic.getOrElse("None")} (Stalled)"
+        case _       => s"${statistic.getOrElse("None")} ($status)"
       }
     }
 
     def toDouble(toHandler: ErrorHandling, oomHandler: ErrorHandling): Double = {
       solved match {
-        case Success       => statistic
+        case Success       => statistic.get
         case Timeout       => timeoutHandler.toDouble(statistic)
         case OOM | Stalled => oomHandler.toDouble(statistic)
         case _             => Double.NaN
@@ -94,8 +95,6 @@ object Table2 extends App {
   case class Problem(
     problemId: Int,
     problem: String,
-    nbVars: Int,
-    nbCons: Int,
     _tags: String) {
     lazy val tags = _tags.split(",")
   }
@@ -132,7 +131,7 @@ object Table2 extends App {
   //    println("\t" + configDisplay.mkString("\t"))
   //  }
 
-  implicit val getProblemResult = GetResult(r => Problem(r.<<, r.<<, r.<<, r.<<, r.<<))
+  implicit val getProblemResult = GetResult(r => Problem(r.<<, r.<<, r.<<))
 
   //var d = Array.ofDim[Int](configs.size, configs.size)
 
@@ -151,7 +150,7 @@ object Table2 extends App {
     case "nodes"        => ErrorCap(Double.PositiveInfinity)
     case "time"         => ErrorCap(1200)
     case "revisions"    => ErrorCap(0)
-    case "mem"          => ErrorCap(Double.PositiveInfinity)//4 * math.pow(2, 10))
+    case "mem"          => ErrorCap(Double.PositiveInfinity) // 4 * math.pow(2, 10))
     case "domainChecks" => ErrorCap(Double.PositiveInfinity)
     case "nps"          => ErrorCap(0)
   }
@@ -159,7 +158,7 @@ object Table2 extends App {
   // val ignoreNaN = true
 
   val aggregator = {
-    data: Seq[Double] => if (data.isEmpty) -1 else data.sum
+    data: Seq[Double] => if (data.isEmpty) -1 else StatisticsManager.average(data)
   }
 
   val statQuery = statistic match {
@@ -175,13 +174,12 @@ object Table2 extends App {
   implicit val getExecutionResult = GetResult(r => Execution(r.<<, r.<<, r.<<, r.<<, r.<<))
 
   val pe = DB.run(sql"""
-        SELECT "problemId", display, "nbVars", "nbCons", string_agg("problemTag", ',') as tags
+        SELECT "problemId", coalesce(display, name), string_agg("problemTag", ',') as tags
         FROM "Problem" NATURAL LEFT JOIN "ProblemTag"
         WHERE "problemId" IN (
           SELECT "problemId" 
           FROM "Execution"
-          WHERE version = $version and "configId" in (#${nature.mkString(",")}))
-          -- AND "problemTag" = 'modifiedRenault'
+          WHERE "configId" in (#${nature.mkString(",")}))
         GROUP BY "problemId"
         """.as[Problem])
     .map { p =>
@@ -195,7 +193,7 @@ object Table2 extends App {
         DB.run(sql"""
     SELECT "problemId", "configId", iteration, status, #$statQuery 
     FROM "Execution"
-    WHERE version = $version AND "configId" IN (#${nature.mkString(", ")})
+    WHERE iteration <= 1 and "configId" IN (#${nature.mkString(", ")})
     """.as[Execution])
           .map {
             e => (p, e)
@@ -212,7 +210,7 @@ object Table2 extends App {
 
     val results = e.foldLeft(eresults) {
       case (res, Execution(problemId, configId, iteration, status, statistic)) =>
-        val r: Resultat = Resultat(status, statistic.getOrElse(Double.NaN))
+        val r: Resultat = Resultat(status, statistic)
         val oldRes = res((problemId, iteration))
         res.updated((problemId, iteration), oldRes + (configId -> r))
     }
@@ -234,7 +232,7 @@ object Table2 extends App {
 
   for (((problemId, iteration), stats) <- results.toSeq.sortBy { p => (pbs(p._1._1).problem, p._1._2) }) {
     print(s"${problemId}. ${pbs(problemId).problem} $iteration\t")
-    println(configs.map(c => stats.getOrElse(c, Resultat("not started", Double.NaN))).map(_.toString(timeoutHandler, oomHandler)).mkString("\t"))
+    println(configs.map(c => stats.getOrElse(c, Resultat("not started", None))).map(_.toString(timeoutHandler, oomHandler)).mkString("\t"))
   }
 
   val ignoreNaN = false
@@ -252,13 +250,15 @@ object Table2 extends App {
             aggregator(l)
           }
         } catch {
-          case e: NoSuchElementException => Double.NaN
+          case _: NoSuchElementException => Double.NaN
         }
 
     }
 
-    println(s"$k\t" + medians.map { median =>
-      f"${median}%f"
+    val best = medians.min
+
+    println(s"$k &\t" + medians.map { median =>
+      f"${if (median < best * 1.1) "\\bf " else ""} ${median}%.0f"
       //            val (v, m) = engineer(median)
       //
       //            (if (median < best * 1.1) "\\bf " else "") + (
@@ -266,7 +266,7 @@ object Table2 extends App {
       //                case Some(m) => f"\\np[$m%s]{$v%.1f}"
       //                case None => f"\\np{$v%.1f}"
       //              })
-    }.mkString("\t")) // + " \\\\")
+    }.mkString(" &\t") + " \\\\")
 
   }
 

@@ -171,15 +171,10 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
   def controlCSPOM(solution: Map[String, Any], obj: Option[Any]) = ???
 
   def main(args: Array[String]): Unit = {
-    val status = run(args)
-
-    val exit = status match {
-      case Unfinished(e) if e.isDefined => 1
-      case _ => 0
+    run(args) match {
+      case Unfinished(e) => e.foreach(throw _)
+      case _ =>
     }
-
-    sys.exit(exit)
-    //    run(args)
   }
 
   private def parseGoalAnnotation(variables: Map[CSPOMVariable[_], Variable]): PartialFunction[FZAnnotation, Heuristic] = {
@@ -237,16 +232,6 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
 
       CrossHeuristic(varh, valh)
   }
-
-  //  private def getConstant(n: String): Option[Any] = {
-  //    cspom.expression(n).collect {
-  //      case CSPOMConstant(v) => v
-  //    }
-  //  }
-
-  //  def constantOrErr(solution: Map[Variable, Any]): PartialFunction[String, Any] = {
-  //    case n: String => getConstant(n).getOrElse(throw new MatchError(s"could not find $n in $solution or $cspom"))
-  //  }
 
   private def ann2expr(cspom: CSPOM, e: FZExpr[_]): CSPOMExpression[_] = e match {
     case FZAnnotation(vars, Seq()) => cspom.expression(vars).get

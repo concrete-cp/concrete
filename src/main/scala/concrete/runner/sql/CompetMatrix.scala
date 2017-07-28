@@ -23,16 +23,19 @@ object CompetMatrix extends App {
 
   implicit val getConfigResult = GetResult(r => Config(r.<<, r.<<, r.<<))
   val problemQuery = sql"""
-        WITH Counts AS (
-        SELECT "problemTag", count(*) FROM "ProblemTag" GROUP BY "problemTag")
+        WITH Selection AS (
+          SELECT "problemId" FROM "Problem" NATURAL JOIN "ProblemTag"
+          WHERE looseness < .1),
+        Counts AS (
+          SELECT "problemTag", count(*) FROM "ProblemTag" NATURAL JOIN Selection GROUP BY "problemTag")
 
         SELECT "problemId", display, "nbVars", Counts.count
-        FROM "Problem" JOIN "ProblemTag" USING ("problemId") JOIN Counts USING ("problemTag")
+        FROM Selection JOIN "Problem" USING ("problemId") JOIN "ProblemTag" USING ("problemId") JOIN Counts USING ("problemTag")
         """.as[Problem]
   val executionQuery = sql"""
 
     SELECT "problemId", "configId", iteration, status, solution,
-    cast(stat('solver.filter.revisions', "executionId") as real)/nullif(totalTime('{solver.searchCpu, solver.preproCpu, problemGenerator.genTime}', "executionId"), 0.0)
+    cast(stat('solver.filter.revisions', "executionId") as real)/nullif(totalTime('{solver.searchCpu, solver.preproCpu}', "executionId"), 0.0)
     -- totalTime('{solver.searchCpu, solver.preproCpu, runner.loadTime}', "executionId")/1e3
     FROM "Execution"
     WHERE iteration = 0 and status != 'started'
@@ -57,7 +60,7 @@ object CompetMatrix extends App {
     //.sortBy { case ((prob, iter), _) => (prob.problem, iter) }
 
   }
-  val order = Array(42, 45, 41, 44)
+  val order = Array(41, 45, 42, 44)
   val matrixIndex = order.zipWithIndex.toMap
   val fut = for (
     pe <- groupedExecutions; cfgsSeq <- DB.run(configQuery);
@@ -90,8 +93,11 @@ object CompetMatrix extends App {
       //        println(s"${problem.problemId}")
       //        println(s"${e1.configId} ${e2.configId}: ${e1.scoreAgainst(e2)}")
       //      }
-      println(s"${p1.problemId} ${p1.problem} ${p1.factor} ${e1.configId} ${e2.configId} ${e1.statistic} ${e2.statistic} ${e1.scoreAgainst(e2)}")
-      matrix(e1c)(e2c) += e1.scoreAgainst(e2).get / p1.factor
+      val score = e1.scoreAgainst(e2).get
+      //if (e1.configId ==  45    && e2.configId==41 && score > 0 ) {
+        println(s"${p1.problemId} ${p1.problem} ${p1.factor} ${e1.configId} ${e2.configId} ${e1.status.take(30)} ${e1.statistic} ${e2.status.take(30)} ${e2.statistic} $score")
+      //}
+      matrix(e1c)(e2c) += score  / p1.factor
     }
 
 
@@ -101,7 +107,7 @@ object CompetMatrix extends App {
 
     for (i <- 0 until order.length) {
       for (j <- 0 until order.length) {
-        print(f"${matrix(i)(j) * 100 / 22}%2.0f" + " ")
+        print(f"${matrix(i)(j) * 100 / 8}%2.0f" + " ")
       }
       println()
     }
@@ -113,10 +119,9 @@ object CompetMatrix extends App {
   Await.result(fut, Duration.Inf)
 
   def doubleCompare(d1: Double, d2: Double, delta: Double) = {
-    val ref = Math.max(Math.abs(d1), Math.abs(d2))
-    if ((d1 - d2) / ref > delta) {
+    if ((d1 - d2) / d2 > delta) {
       1
-    } else if ((d2 - d1) / ref > delta) {
+    } else if ((d2 - d1) / d1 > delta) {
       -1
     } else {
       0
@@ -162,16 +167,22 @@ object CompetMatrix extends App {
     }
 
     def scoreAgainst(e: Execution): Option[Double] = {
-      for (s1 <- statistic; s2 <- e.statistic) yield {
-        if (doubleCompare(s1, s2, .05) > 0) {
+      if (memError) {
+        Some(0)
+      } else if (e.memError) {
+        Some(1)
+      } else for (s1 <- statistic; s2 <- e.statistic) yield {
+        if (doubleCompare(s1, s2, .1) > 0) {
           1
         } else {
           0
         }
-
       }
 
+
     }
+
+    def memError: Boolean = status.contains("Out")
 
 
   }

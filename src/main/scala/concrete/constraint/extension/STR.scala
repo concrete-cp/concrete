@@ -8,9 +8,9 @@ import concrete.IntDomain
 import concrete.EmptyIntDomain
 
 object STR  {
-  def apply(data: Seq[Array[Int]]): STR = {
-    val d = data.toArray
-    new STR(d, d.length)
+  def apply(data: Array[Array[Int]]): STR = {
+    // val d = data.toArray
+    new STR(data, data.length)
   }
 }
 
