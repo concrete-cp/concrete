@@ -11,7 +11,7 @@ object Domain {
   @Statistic
   var checks = 0L
 
-  def searchSpace(s: Seq[Domain]) = {
+  def searchSpace(s: Seq[Domain]): Double = {
     s.foldLeft(1.0)(_ * _.size)
   }
 }
@@ -117,9 +117,11 @@ abstract class Domain extends MiniSet { //extends AbstractSeq[Int] with Iterable
   def &(a: Int, b: Int): Domain // = removeUntil(a).removeAfter(b)
   def &(i: Interval): Domain = this & (i.lb, i.ub)
   def &(d: Domain): Domain
+
   def |(d: Domain): Domain
 
   def disjoint(d: Domain): Boolean // = (this & d).isEmpty
+
 
   //  = {
   //    last < d.head || head > d.last || forall(v => !d.present(v))
@@ -138,7 +140,7 @@ abstract class Domain extends MiniSet { //extends AbstractSeq[Int] with Iterable
 
   def size: Int
 
-  override def equals(o: Any) = this eq o.asInstanceOf[AnyRef]
+  override def equals(o: Any): Boolean = this eq o.asInstanceOf[AnyRef]
 
   def filterBounds(f: Int => Boolean): Domain
 

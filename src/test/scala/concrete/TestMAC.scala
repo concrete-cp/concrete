@@ -62,8 +62,7 @@ class TestMAC extends FlatSpec with Matchers {
     // 14 -> 365596)
     )
 
-  val pm = new ParameterManager
-  pm("heuristic.value") = classOf[MedValue]
+  val pm = new ParameterManager().updated("heuristic.value", classOf[MedValue])
 
   behavior of "MAC"
 

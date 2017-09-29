@@ -3,23 +3,22 @@ package concrete.runner
 import concrete.ParameterManager
 import cspom.StatisticsManager
 
-class XCSP3Writer(val opts: Map[Symbol, Any], val stats: StatisticsManager) extends ConcreteWriter {
+class XCSP3Writer(val pm:ParameterManager, problem:String, val stats: StatisticsManager) extends ConcreteWriter {
 
-  Console.println(s"c Concrete v3.4 running")
 
-  def parameters(params: ParameterManager) {
-    for ((k, v) <- params.parameters) {
+
+  Console.println(s"c Concrete v3.5 running")
+
+  if (pm.contains("s")) {
+    for (l <- problem.toString.split("\n")) {
+      Console.println("c " + l)
+    }
+
+    for ((k, v) <- pm.parameters) {
       Console.println(s"c $k = $v")
     }
   }
 
-  def problem(problem: String) {
-    if (opts.contains('stats)) {
-      for (l <- problem.toString.split("\n")) {
-        Console.println("c " + l)
-      }
-    }
-  }
 
   def printSolution(sol: String, obj: Option[Any]) {
     writeStats()
@@ -29,7 +28,7 @@ class XCSP3Writer(val opts: Map[Symbol, Any], val stats: StatisticsManager) exte
   }
 
   private def writeStats(): Unit = {
-    if (opts.contains('stats))
+    if (pm.contains("s"))
       for ((n, v) <- stats.digest.toSeq.sortBy(_._1)) {
         Console.println(s"c $n = $v")
       }
@@ -51,8 +50,6 @@ class XCSP3Writer(val opts: Map[Symbol, Any], val stats: StatisticsManager) exte
         case Unfinished(_) if lastSolution.isDefined => "s SATISFIABLE"
         case Unfinished(Some(_: UnsupportedOperationException)) => "s UNSUPPORTED"
         case _ => "s UNKNOWN"
-
-
       }
     }
   }

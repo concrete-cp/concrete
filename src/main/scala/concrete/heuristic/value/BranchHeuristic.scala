@@ -1,18 +1,21 @@
 package concrete
-package heuristic.value;
+package heuristic.value
 
-import concrete.Assignment
-import concrete.Domain
-import concrete.Problem
-import concrete.ProblemState
-import concrete.Variable
-import concrete.heuristic.Branch
 import java.util.EventObject
+
+import concrete.heuristic.Branch
 
 trait ValueHeuristic extends BranchHeuristic {
   def branch(variable: Variable, domain: Domain, ps: ProblemState): Branch = {
-    val selected = selectIndex(variable, domain)
-    val dom = ps.dom(variable)
+    assignBranch(ps, variable, domain, selectIndex(variable, domain))
+  }
+
+  def selectIndex(variable: Variable, domain: Domain): Int
+
+}
+
+trait BranchHeuristic {
+  def assignBranch(ps: ProblemState, variable: Variable, dom: Domain, selected: Int): Branch = {
     require(!dom.isAssigned && dom.present(selected))
     val b1 = dom.assign(selected)
     val b2 = dom.remove(selected)
@@ -24,14 +27,9 @@ trait ValueHeuristic extends BranchHeuristic {
       s"${variable.toString(ps)} /= $selected")
   }
 
-  def selectIndex(variable: Variable, domain: Domain): Int
-
-}
-
-trait BranchHeuristic {
   def branch(variable: Variable, domain: Domain, ps: ProblemState): Branch
 
-  def compute(problem: Problem): Unit
+  def compute(solver: MAC, ps: ProblemState): ProblemState
 
   def shouldRestart: Boolean
 

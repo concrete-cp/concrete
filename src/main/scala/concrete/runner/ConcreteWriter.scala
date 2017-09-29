@@ -1,6 +1,5 @@
 package concrete.runner
 
-import concrete.ParameterManager
 import cspom.StatisticsManager
 
 trait ConcreteWriter {
@@ -9,10 +8,6 @@ trait ConcreteWriter {
   var lastSolution: Option[String] = None
 
   def stats: StatisticsManager
-
-  def parameters(params: ParameterManager): Unit
-
-  def problem(problem: String): Unit
 
   def solution(solution: String, obj: Option[Any]): Unit = {
     lastSolution = Some(solution)

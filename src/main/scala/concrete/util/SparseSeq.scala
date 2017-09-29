@@ -8,15 +8,15 @@ object SparseSeq {
 
 class SparseSeq[A](
     val values: ArrayBuffer[A],
-    override val size: Int) extends Iterable[A] {
+    override val length: Int) extends Seq[A] {
 
   def this() = this(new ArrayBuffer, 0)
 
   override def foreach[U](f: A => U): Unit = {
-    var i = size - 1
-    while (i >= 0) {
+    var i = 0
+    while (i < size) {
       f(values(i))
-      i -= 1
+      i += 1
     }
   }
 
@@ -45,8 +45,8 @@ class SparseSeq[A](
     new SparseSeq(values, newSize)
   }
 
-  override def isEmpty = size == 0
+  override def isEmpty: Boolean = length == 0
 
-  def iterator = values.iterator.take(size)
+  def iterator: Iterator[A] = values.iterator.take(size)
 
 }

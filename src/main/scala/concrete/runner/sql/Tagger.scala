@@ -22,7 +22,9 @@ object Tagger extends App {
     val run = DB.run(sql"""
         SELECT "problemId", name, display, string_agg("problemTag", ',') as tags
         FROM "Problem" LEFT JOIN "ProblemTag" USING ("problemId")
+        WHERE name ~ '^instances/mznc'
         GROUP BY "problemId", display, "nbVars", "nbCons"
+
         -- HAVING string_agg("problemTag", ',') ~ 'xp-table'
         ORDER BY display
         """.as[Problem])

@@ -19,17 +19,15 @@
 
 package concrete
 
-import scala.annotation.varargs
 import scala.collection.JavaConverters._
 
 import concrete.constraint.Constraint
 
 object Problem {
-  @varargs
-  def apply(vars: Variable*) = new Problem(vars.toArray)
+  def apply(variables: Variable*) = new Problem(variables.toArray)
 }
 
-final class Problem(val variables: Array[Variable]) {
+final class Problem(val variables: Array[Variable], val goal: Goal = Satisfy) {
   //require(variables.nonEmpty, "A problem with no variables makes no sense")
   require(variables.map(_.name).distinct.size == variables.size, "Duplicates in variable names")
 
@@ -60,7 +58,7 @@ final class Problem(val variables: Array[Variable]) {
 
   }
 
-  def initState(): Outcome = initState(variables.toSet)
+  def initState: Outcome = initState(variables.toSet)
 
   def initState(decisionVariables: Set[Variable]): Outcome = ProblemState(this, decisionVariables)
 

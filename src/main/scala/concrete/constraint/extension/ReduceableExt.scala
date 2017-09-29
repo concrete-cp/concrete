@@ -80,8 +80,7 @@ final class ReduceableExt(scope: Array[Variable], val relation: Relation)
       for (p <- 0 until arity) {
         //println(s"$p: ${scope(p)}: ${domains(p)} -> ${newDomains(p)}")
         if (newDomains(p).size < domains(p).size) {
-
-          cs = cs.updateDomNonEmptyNoCheck(scope(p), newDomains(p)) //(!domains(p).present(_))
+          cs = cs.updateDomNonEmptyNoCheck(scope(p), domains(p).filter(newDomains(p).contains)) //(!domains(p).present(_))
         }
       }
       cs.entailIfFree(this)

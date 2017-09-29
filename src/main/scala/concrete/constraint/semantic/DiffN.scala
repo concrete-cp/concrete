@@ -430,9 +430,10 @@ object DiffN extends App {
 
     goal(CSPOMGoal.Minimize(maxX))
   }
-  val pm = new ParameterManager
+  val pm = new ParameterManager()
+    .updated("heuristic.value", classOf[Lexico])
   val solver = Solver(cspom, pm).get
-  pm("heuristic.value") = classOf[Lexico]
+
   val stats = new StatisticsManager
 
   for (sol <- solver.toIterable) {

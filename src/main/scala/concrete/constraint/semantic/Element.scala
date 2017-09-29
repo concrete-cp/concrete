@@ -216,11 +216,16 @@ class ElementWatch(val result: Variable,
 
   private def reviseResult(ps: ProblemState, index: Domain): Outcome = {
     ps.filterDom(result) { i =>
-      val oldWatch = Option(resultWatches.get(i))
-      oldWatch.exists(v => index.present(v) && ps.dom(vars(v)).present(i)) || {
+      val oldWatch: Integer = resultWatches.get(i)
+
+      if (oldWatch != null && index.present(oldWatch) && ps.dom(vars(oldWatch)).present(i)) {
+        true
+      } else {
         val support = index.find(j => ps.dom(vars(j)).present(i))
         support.foreach { s =>
-          oldWatch.foreach(v => watched(v) -= 1)
+          if (oldWatch != null) {
+            watched(oldWatch) -= 1
+          }
           resultWatches.put(i, s)
           watched(s) += 1
         }

@@ -31,13 +31,13 @@ object Interval {
 
 }
 
-case class Interval(val lb: Int, val ub: Int) {
+case class Interval(lb: Int, ub: Int) {
   //assume(ub >= lb)
   val size: Int = math.max(0, ub - lb + 1)
   def contains(v: Int): Boolean = lb <= v && v <= ub
 
-  def isEmpty = ub < lb
-  def nonEmpty = ub >= lb
+  def isEmpty: Boolean = ub < lb
+  def nonEmpty: Boolean = ub >= lb
 
   def allValues: Range = lb to ub
 

@@ -4,23 +4,24 @@ package extension
 
 import com.typesafe.scalalogging.LazyLogging
 import mdd._
+import java.util
 
 final class BDDRelation(val bdd: BDD) extends Relation with LazyLogging {
   type Self2 = BDDRelation
-  lazy val lambda = bdd.lambda()
+  lazy val lambda: BigInt = bdd.lambda()
 
-  val offset = {
-    def min(bdd: BDD, m: Int = Integer.MAX_VALUE, cache: TSSet[BDD] = new TSSet()): Int = {
-      bdd match {
-        case n: BDDNode =>
-          cache.onceOrElse(n, {
-            min(n.sibling, min(n.child, math.min(n.index, m), cache), cache)
-          }, m)
-        case _ => m
-      }
-    }
-    min(bdd)
-  }
+//  val offset : Int = {
+//    def min(bdd: BDD, m: Int = Integer.MAX_VALUE, cache: TSSet[BDD] = new TSSet()): Int = {
+//      bdd match {
+//        case n: BDDNode =>
+//          cache.onceOrElse(n, {
+//            min(n.sibling, min(n.child, math.min(n.index, m), cache), cache)
+//          }, m)
+//        case _ => m
+//      }
+//    }
+//    min(bdd)
+//  }
 
   def findSupport(domains: Array[Domain], p: Int, i: Int): Option[Array[Int]] = {
     ???
@@ -51,9 +52,8 @@ final class BDDRelation(val bdd: BDD) extends Relation with LazyLogging {
     }
   }
 
-  override def supported(doms: Array[Domain]): Array[Domain] = {
-    val supp = bdd.supported(doms.asInstanceOf[Array[MiniSet]], offset)
-    supp.map(bv => IntDomain.ofBitVector(offset, bv, bv.cardinality))
+  override def supported(doms: Array[Domain]): Array[util.HashSet[Int]] = {
+    bdd.supported(doms.asInstanceOf[Array[MiniSet]])
   }
 
   override def isEmpty = bdd.isEmpty

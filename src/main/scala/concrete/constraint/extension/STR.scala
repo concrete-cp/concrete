@@ -1,13 +1,14 @@
 package concrete.constraint.extension
 
+import java.util
 import java.util.Arrays
+
+import concrete.Domain
+
 import scala.annotation.tailrec
 import scala.math.BigInt.int2bigInt
-import concrete.Domain
-import concrete.IntDomain
-import concrete.EmptyIntDomain
 
-object STR  {
+object STR {
   def apply(data: Array[Array[Int]]): STR = {
     // val d = data.toArray
     new STR(data, data.length)
@@ -16,6 +17,8 @@ object STR  {
 
 final class STR(val array: Array[Array[Int]], val bound: Int) extends Relation {
   type Self2 = STR
+
+  private val pos: MutableList = new MutableList(depth)
 
   def copy = new STR(array.clone, bound)
 
@@ -28,6 +31,8 @@ final class STR(val array: Array[Array[Int]], val bound: Int) extends Relation {
     assert(t.forall(_.length == depth))
     new STR(t.map(_.toArray) ++: array, bound + t.size)
   }
+
+  def depth: Int = array.headOption.map(_.length).getOrElse(0)
 
   def -(t: Seq[Int]) = throw new UnsupportedOperationException
 
@@ -50,16 +55,9 @@ final class STR(val array: Array[Array[Int]], val bound: Int) extends Relation {
     }
   }
 
-  @tailrec
-  private def valid(modified: List[Int], doms: Array[Domain], t: Array[Int]): Boolean = {
-    modified.isEmpty || (doms(modified.head).present(t(modified.head)) && valid(modified.tail, doms, t))
-  }
+  def supported(domains: Array[Domain]): Array[util.HashSet[Int]] = {
 
-  private val pos: MutableList = new MutableList(depth)
-
-  def supported(domains: Array[Domain]): Array[Domain] = {
-
-    val newDomains = Array.fill[IntDomain](domains.length)(EmptyIntDomain)
+    val newDomains = Array.fill(domains.length)(new util.HashSet[Int]())
     pos.refill()
 
     var i = bound - 1
@@ -67,16 +65,18 @@ final class STR(val array: Array[Array[Int]], val bound: Int) extends Relation {
       val tuple = array(i)
       pos.filter { p =>
         ReduceableExt.fills += 1
-        newDomains(p) |= tuple(p)
+        newDomains(p).add(tuple(p))
         newDomains(p).size != domains(p).size
       }
       i -= 1
     }
 
-    newDomains.asInstanceOf[Array[Domain]]
+    newDomains
   }
 
   override def toString = s"$bound of ${array.size} tuples:\n" + iterator.map(_.mkString(" ")).mkString("\n")
+
+  def iterator = array.iterator.take(bound)
 
   def edges = if (array.isEmpty) 0 else bound * array(0).length
 
@@ -84,8 +84,6 @@ final class STR(val array: Array[Array[Int]], val bound: Int) extends Relation {
 
   def findSupport(scope: Array[Domain], p: Int, i: Int) =
     iterator.find(t => t(p) == i && t.indices.forall(p => scope(p).present(t(p))))
-
-  def iterator = array.iterator.take(bound)
 
   def contains(t: Array[Int]): Boolean = {
     var i = bound - 1
@@ -110,14 +108,17 @@ final class STR(val array: Array[Array[Int]], val bound: Int) extends Relation {
   }
 
   override def size = bound
+
   def lambda = bound
-  def depth: Int = array.headOption.map(_.length).getOrElse(0)
+
+  @tailrec
+  private def valid(modified: List[Int], doms: Array[Domain], t: Array[Int]): Boolean = {
+    modified.isEmpty || (doms(modified.head).present(t(modified.head)) && valid(modified.tail, doms, t))
+  }
 }
 
 final class MutableList(var nb: Int) extends Traversable[Int] {
   private val data = new Array[Int](size)
-
-  override def size = nb
 
   def refill() {
     nb = data.length
@@ -128,12 +129,9 @@ final class MutableList(var nb: Int) extends Traversable[Int] {
     }
   }
 
-  def apply(index: Int) = data(index)
+  override def size = nb
 
-  def remove(index: Int) {
-    nb -= 1
-    data(index) = data(size)
-  }
+  def apply(index: Int) = data(index)
 
   def foreach[U](f: Int => U) {
     var i = size - 1
@@ -153,6 +151,11 @@ final class MutableList(var nb: Int) extends Traversable[Int] {
       }
     }
     this
+  }
+
+  def remove(index: Int) {
+    nb -= 1
+    data(index) = data(size)
   }
 
   def sorted = {

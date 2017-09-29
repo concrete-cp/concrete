@@ -14,14 +14,14 @@ final class Neq(v0: Variable, v1: Variable, c: Int = 0) extends Constraint(Array
 
   def init(ps: ProblemState) = ps
 
-  def check(t: Array[Int]) = (t(0) - t(1) != c)
+  def check(t: Array[Int]): Boolean = t(0) - t(1) != c
 
   def revise(ps: ProblemState): Outcome = {
     revise(ps, v0, ps.dom(v1), c)
       .andThen { ps0: ProblemState =>
         revise(ps0, v1, ps0.dom(v0), -c)
       }
-      .entailIf(this, ch => ch.dom(v0) disjoint ch.dom(v1).shift(c))
+      .entailIf(this, ch => !ch.dom(v0).span.intersects(ch.dom(v1).span + c))
   }
 
   private def revise(ps: ProblemState, variable: Variable, otherVar: Domain, c: Int): Outcome = {

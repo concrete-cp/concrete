@@ -3,25 +3,31 @@ package concrete.runner
 import concrete.ParameterManager
 import cspom.StatisticsManager
 
-class FZWriter(val opts: Map[Symbol, Any], val stats: StatisticsManager) extends ConcreteWriter {
+class FZWriter(val params: ParameterManager, val problem: String, val stats: StatisticsManager) extends ConcreteWriter {
 
-  def parameters(params: ParameterManager) {
-    for ((k, v) <- params.parameters) {
-      Console.println(s"% $k = $v")
-    }
+  if (params.contains("s"))
+    Console.println(s"% $problem")
+
+  for ((k, v) <- params.parameters) {
+    Console.println(s"% $k = $v")
   }
 
-  def problem(problem: String) {
-    if (opts.contains('stats))
-      Console.println(s"% $problem")
-  }
+
+
 
   def printSolution(sol: String, obj: Option[Any]) {
-    if (opts.contains('all)) writeStats()
     Console.println(sol)
     for (o <- obj) {
       Console.println("% objective = " + o)
     }
+    if (params.contains("a")) writeStats()
+  }
+
+  private def writeStats(): Unit = {
+    if (params.contains("s"))
+      for ((n, v) <- stats.digest.toSeq.sortBy(_._1)) {
+        Console.println(s"% $n = $v")
+      }
   }
 
   def error(e: Throwable) {
@@ -38,13 +44,6 @@ class FZWriter(val opts: Map[Symbol, Any], val stats: StatisticsManager) extends
         case _ => "=====UNKNOWN====="
       }
     }
-  }
-
-  private def writeStats(): Unit = {
-    if (opts.contains('stats))
-      for ((n, v) <- stats.digest.toSeq.sortBy(_._1)) {
-        Console.println(s"% $n = $v")
-      }
   }
 
 }

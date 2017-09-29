@@ -19,6 +19,8 @@
 
 package concrete.constraint.extension;
 
+import java.util
+
 import concrete.Variable
 import bitvectors.BitVector
 import cspom.Statistic
@@ -123,18 +125,21 @@ abstract class BinaryExt(scope: Array[Variable], val matrix: Matrix2D)
 }
 
 final class BinaryExtR(scope: Array[Variable], matrix2d: Matrix2D) extends BinaryExt(scope, matrix2d) {
-  private val offsets = Array(x.initDomain.head, y.initDomain.head)
+  //private val offsets = Array(x.initDomain.head, y.initDomain.head)
 
-  private val residues: Array[Array[Int]] =
-    Array(
-      new Array[Int](scope(0).initDomain.last - offsets(0) + 1),
-      new Array[Int](scope(1).initDomain.last - offsets(1) + 1))
+  private val residues: util.HashMap[(Int, Int), Int] = new util.HashMap()
+
+
+//  Array[Array[Int]] =
+//    Array(
+//      new Array[Int](scope(0).initDomain.last - offsets(0) + 1),
+//      new Array[Int](scope(1).initDomain.last - offsets(1) + 1))
 
   def hasSupport(variablePosition: Int, value: Int, otherBV: BitVector) = {
     val matrixBV: BitVector = matrix2d.getBitVector(variablePosition, value)
 
-    val index = value - offsets(variablePosition)
-    val part = residues(variablePosition)(index)
+    //val index = value - offsets(variablePosition)
+    val part = residues.get((variablePosition, value))
 
     BinaryExt.checks += 1
 
@@ -143,7 +148,7 @@ final class BinaryExtR(scope: Array[Variable], matrix2d: Matrix2D) extends Binar
 
       if (intersection >= 0) {
         BinaryExt.checks += 1 + intersection;
-        residues(variablePosition)(index) = intersection;
+        residues.put((variablePosition, value), intersection)
         true;
       } else {
         BinaryExt.checks += matrixBV.nbWords;

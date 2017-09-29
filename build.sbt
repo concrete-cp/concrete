@@ -8,7 +8,7 @@ packageSummary := "Concrete is a Scala CSP Solving API"
 
 packageDescription := "Concrete is a Scala CSP Solving API"
 
-version := "3.5"
+version := "3.6-SNAPSHOT"
 
 scalaVersion := "2.12.3"
 
@@ -20,12 +20,12 @@ resolvers += Resolver.sonatypeRepo("snapshots")
 resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
 
 libraryDependencies ++= Seq(
-	"fr.univ-valenciennes" %% "cspom" % "2.18",
-	"org.postgresql" % "postgresql" % "42.1.3",
+	"fr.univ-valenciennes" %% "cspom" % "2.19-SNAPSHOT",
+	"org.postgresql" % "postgresql" % "42.1.4",
 	"org.ow2.sat4j" % "org.ow2.sat4j.pb" % "2.3.5",
 	"com.typesafe.slick" %% "slick" % "3.2.1",
 	"com.typesafe" % "config" % "1.3.1",
-  "org.scalatest" %% "scalatest" % "3.0.3" % "test",
+  "org.scalatest" %% "scalatest" % "3.0.4" % "test",
 	"org.scalacheck" %% "scalacheck" % "1.13.5" % "test",
 	"com.storm-enroute" %% "scalameter" % "0.8.2" % "test",
 	"com.github.davidmoten" % "rtree" % "0.8.0.1"

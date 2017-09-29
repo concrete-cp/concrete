@@ -21,10 +21,13 @@ package concrete
 package heuristic
 package variable
 
-final class Dom(params: ParameterManager, decisionVariables: Array[Variable]) extends VariableHeuristic(params, decisionVariables) {
+final class Dom(val pool: Seq[Variable], tieBreaker: VariableHeuristic, val trustCandidates: Boolean = true)
+  extends ScoredVariableHeuristic(tieBreaker) {
 
   def score(variable: Variable, dom: Domain, state: ProblemState) = -dom.size
 
-  override def toString = "min-dom"
+  override def toString = s"min-dom then $tieBreaker"
+
+  override def shouldRestart: Boolean = tieBreaker.shouldRestart
 
 }

@@ -2,11 +2,11 @@ package concrete.runner.sql
 
 import com.typesafe.config.ConfigFactory
 import slick.jdbc.PostgresProfile.api._
-import scala.io.Source
+
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
+import scala.io.Source
 
 object Mznc2SQL extends App {
 
@@ -15,40 +15,40 @@ object Mznc2SQL extends App {
   lazy val DB = Database.forConfig("database", systemConfig)
 
   val configs = Map(
-    "Concrete-free" -> -1,
-    "Choco-free" -> -2,
-    "HaifaCSP-free" -> -3,
-    "Chuffed-free" -> -4,
-    "G12FD-free" -> -5,
-    "Gecode-free" -> -6,
-    "JaCoP-fd" -> -7,
-    "LCG-Glucose-UC-free" -> -8,
-    "LCG-Glucose-free" -> -9,
-    "MZN/Cbc-free" -> -10,
-    "MZN/CPLEX-free" -> -11,
-    "MZN/Gurobi-free" -> -12,
-    "MZN/SCIP-free" -> -13,
-    "MinisatID-free" -> -14,
-    "Mistral-free" -> -15,
-    "OR-Tools-free" -> -16,
-    "OscaR/CBLS-free" -> -17,
-    "Picat CP-fd" -> -18,
-    "Picat SAT-free" -> -19,
-    "SICStus Prolog-fd" -> -20,
-    "Yuck-free" -> -21,
-    "iZplus-free" -> -22)
+    "choco4-free" -> -1,
+    "choco5-free" -> -2,
+    "chuffed-free" -> -3,
+    "concrete-free" -> -4,
+    "g12fd-free" -> -5,
+    "gecode-fd" -> -6,
+    "haifacsp-free" -> -7,
+    "izplus-free" -> -8,
+    "jacop-fd" -> -9,
+    "lcg-glucose-free" -> -10,
+    "mistral-free" -> -11,
+    "mzn-cbc-free" -> -12,
+    "mzn-gurobi-free" -> -13,
+    "or-tools-cp-free" -> -14,
+    "or-tools-lcg-core-free" -> -15,
+    "or-tools-lcg-free" -> -16,
+    "oscar-free" -> -17,
+    "picat-cp-fd" -> -18,
+    "picat-sat-free" -> -19,
+    "sicstus-fd" -> -20,
+    "yuck-free" -> -21)
 
   val initF = Future.sequence {
     configs.map {
       case (config, id) =>
-        DB.run(sqlu"""INSERT INTO "Config"
+        DB.run(
+          sqlu"""INSERT INTO "Config"
          SELECT $id, $config, $config WHERE $id NOT IN (
            SELECT "configId" FROM "Config")""")
     }
   }
-    .flatMap(_ => DB.run(sqlu"""DELETE FROM "Execution" WHERE "configId" < 0"""))
+  // .flatMap(_ => DB.run(sqlu"""DELETE FROM "Execution" WHERE "configId" < 0"""))
 
-  val processF = Source.fromFile("/home/vion/expes/mznc2016").getLines.grouped(23).flatMap {
+  val processF = Source.fromFile("/home/vion/expes/mznc-2017").getLines.grouped(1 + configs.size).flatMap {
     case problemLine :: results =>
 
       val pd = problemLine.split("\t").map(_.trim)
@@ -58,16 +58,16 @@ object Mznc2SQL extends App {
       val problemInfo = DB.run(sql"""SELECT "problemId", nature FROM "Problem" WHERE display ~ $problem""".as[(Int, String)])
         .map {
           case Seq(p) => p
-          case _ => throw new IllegalArgumentException("Error with problem " + problem)
+          case e => throw new IllegalArgumentException("Error with problem " + problem + " : " + e)
         }
 
       Seq.tabulate(3) { i => (problemInfo, i, results) }
   }
     .flatMap {
       case (problemInfo, iteration, results) =>
-
+        println(s"$problemInfo $iteration")
         for (resultLine <- results) yield {
-          val solver +: status +: time +: sol +: _ = resultLine.split("\t").toList.map(_.trim)
+          val solver :: status :: time :: sol :: _ = resultLine.split("\t").toList.map(_.trim)
 
           val configId = configs(solver)
 
@@ -75,30 +75,48 @@ object Mznc2SQL extends App {
             case "S" => "SAT1"
             case "SC" => "SAT*"
             case "C" => "UNSAT"
-            case "UNK" => "UNK"
+            case e => e
           }
 
-          val t = (if (status == "UNK") 1.2e6d else time.toDouble) / 1.2
+          val t: Option[Double] = if (sqlStatus.contains("SAT")) Some(time.toDouble / 1.2) else None
+
+          println(s"$solver $sqlStatus ${t.getOrElse(Double.NaN)}")
 
           problemInfo
             .flatMap {
               case (p, nature) =>
                 val solution = nature.split(" ").toSeq match {
-                  case Seq("minimize", objective) if (status.contains("S")) => s"$objective = $sol;\n----------"
-                  case Seq("maximize", objective) if (status.contains("S")) => s"$objective = $sol;\n----------"
+                  case Seq("minimize", objective) if status.contains("S") => s"$objective = $sol;\n----------"
+                  case Seq("maximize", objective) if status.contains("S") => s"$objective = $sol;\n----------"
                   case _ => ""
                 }
 
-                DB.run(
-                  sql"""INSERT INTO "Execution" ("configId", "problemId", "iteration", "start", "status", "solution") 
-                  VALUES ($configId, $p, $iteration, now(), $sqlStatus, $solution) 
-                  RETURNING "executionId"""".as[Int])
+                val query =
+                  sql"""
+                       |INSERT INTO "Execution" ("configId", "problemId", "iteration", "start", "status", "solution")
+                       |VALUES ($configId, $p, $iteration, now(), $sqlStatus, $solution)
+                       |ON CONFLICT ON CONSTRAINT "Execution_configId_problemId_iteration_key" DO UPDATE
+                       |  SET status = EXCLUDED.status, solution = EXCLUDED.solution
+                       |RETURNING "executionId"
+                  """.stripMargin
+
+
+                DB.run(query.as[Int])
 
             }.flatMap {
-              case Seq(e) =>
+            case Seq(e) =>
+              t.map { t =>
                 DB.run(
-                  sqlu"""INSERT INTO "Statistic" VALUES ('solver.searchCpu', $e, $t), ('solver.preproCpu', $e, 0)""")
-            }
+                  sql"""
+                       |INSERT INTO "Statistic" VALUES ('solver.searchCpu', $e, $t), ('solver.preproCpu', $e, 0)
+                       |ON CONFLICT ON CONSTRAINT "pkS" DO UPDATE
+                       |  SET value = EXCLUDED.value
+                        """.stripMargin.asUpdate)
+              }
+                .getOrElse {
+                  Future.successful(())
+                }
+          }
 
         }
     }

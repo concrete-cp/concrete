@@ -47,11 +47,19 @@ sealed trait Outcome {
 
   def remove(v: Variable, value: Int): Outcome
 
-  def doms(vs: Array[Variable]) = vs.map(dom(_))
+  def doms(vs: Array[Variable]): Array[Domain] = {
+    val d = new Array[Domain](vs.length)
+    var i = vs.length - 1
+    while (i >= 0) {
+      d(i) = dom(vs(i))
+      i -= 1
+    }
+    d
+  }
 
   def dom(v: Variable): Domain
 
-  def card(v: Variable) = dom(v).size
+  def card(v: Variable): Int = dom(v).size
 
   def span(v: Variable): Interval = dom(v).span
 
@@ -83,7 +91,7 @@ sealed trait Outcome {
     state
   }
 
-  def dueTo(cause: => (Constraint, Seq[Variable])): Outcome
+  def dueTo(cause: => (Constraint, Iterable[Variable])): Outcome
 }
 
 object Contradiction {
@@ -93,11 +101,11 @@ object Contradiction {
 }
 
 case class Contradiction(cause: Option[Constraint], from: Seq[Variable], to: Seq[Variable]) extends Outcome {
-  def andThen(f: ProblemState => Outcome) = this
+  def andThen(f: ProblemState => Outcome): Outcome = this
 
-  def orElse[A >: ProblemState](f: => A) = f
+  def orElse[A >: ProblemState](f: => A): A = f
 
-  def map[A](f: ProblemState => A) = None
+  def map[A](f: ProblemState => A): Option[A] = None
 
   def filterDom(v: Variable)(f: Int => Boolean): Outcome = this
 
@@ -139,7 +147,7 @@ case class Contradiction(cause: Option[Constraint], from: Seq[Variable], to: Seq
 
   def isState = false
 
-  def dueTo(cause: => (Constraint, Seq[Variable])) = Contradiction(Some(cause._1), this.from ++ cause._2, to)
+  def dueTo(cause: => (Constraint, Iterable[Variable])) = Contradiction(Some(cause._1), this.from ++ cause._2, to)
 }
 
 object ProblemState {
@@ -186,19 +194,21 @@ object ProblemState {
 }
 
 case class ProblemState(
-                         val domains: scala.collection.immutable.Vector[Domain],
-                         val constraintStates: Vector[AnyRef],
-                         val entailed: EntailmentManagerLight,
-                         val data: IdentityMap[Any, Any] = IdentityMap()) extends Outcome
+                         domains: scala.collection.immutable.Vector[Domain],
+                         constraintStates: Vector[AnyRef],
+                         entailed: EntailmentManagerLight,
+                         data: IdentityMap[Any, Any] = IdentityMap()) extends Outcome
   with LazyLogging {
 
-  def wDeg(v: Variable) = entailed.wDeg(v)
+
+
+  def wDeg(v: Variable): Int = entailed.wDeg(v)
 
   def isState = true
 
   def andThen(f: ProblemState => Outcome) = f(this)
 
-  def orElse[A >: ProblemState](f: => A) = this
+  def orElse[A >: ProblemState](f: => A): A = this
 
   def map[A](f: ProblemState => A) = Some(f(this))
 
@@ -228,7 +238,7 @@ case class ProblemState(
       //println(newConstraints.toList)
 
       newConstraints.foldLeft(ProblemState(domains, padded, entailed.addConstraints(newConstraints), data): Outcome) {
-        case (out, c) => out.andThen(c.init(_))
+        case (out, c) => out.andThen(c.init)
       }
       //        .andThen { newState =>
       //          ProblemState(newState.domains, newState.constraintStates, entailed)
@@ -280,14 +290,11 @@ case class ProblemState(
     }
   }
 
-  def filterDom(v: Variable)(f: Int => Boolean) =
+  def filterDom(v: Variable)(f: Int => Boolean): Outcome =
     updateDom(v, dom(v).filter(f))
 
   def shaveDom(v: Variable, lb: Int, ub: Int): Outcome =
     updateDom(v, dom(v) & (lb, ub))
-
-  def removeTo(v: Variable, ub: Int): Outcome =
-    updateDom(v, dom(v).removeTo(ub))
 
   def updateDom(v: Variable, newDomain: Domain): Outcome = {
     if (newDomain.isEmpty) {
@@ -317,6 +324,7 @@ case class ProblemState(
     assert(dom(variable) ne newDomain)
     val id = variable.id
     assert(id >= 0 || (dom(variable) eq newDomain), s"$variable updated to $newDomain is not a problem variable")
+    assert(!newDomain.isInstanceOf[BitVectorDomain] || (newDomain.size <= newDomain.last - newDomain.head))
     new ProblemState(domains.updated(id, newDomain), constraintStates, entailed, data)
   }
 
@@ -324,6 +332,9 @@ case class ProblemState(
     val id = v.id
     if (id < 0) v.initDomain else domains(id)
   }
+
+  def removeTo(v: Variable, ub: Int): Outcome =
+    updateDom(v, dom(v).removeTo(ub))
 
   override def removeFrom(v: Variable, lb: Int): Outcome =
     updateDom(v, dom(v).removeFrom(lb))
@@ -334,15 +345,15 @@ case class ProblemState(
   override def removeAfter(v: Variable, lb: Int): Outcome =
     updateDom(v, dom(v).removeAfter(lb))
 
-  def entailIfFree(c: Constraint) = c.singleFree(this).map(entail(c, _)).getOrElse(this)
-
-  def entailIfFree(c: Constraint, doms: Array[Domain]) = ProblemState.singleFree(doms).map(entail(c, _)).getOrElse(this)
+  def entailIfFree(c: Constraint): ProblemState = c.singleFree(this).map(entail(c, _)).getOrElse(this)
 
   def entail(c: Constraint, i: Int): ProblemState = {
     new ProblemState(domains, constraintStates, entailed.entail(c, i), data)
   }
 
-  def entailIf(c: Constraint, f: ProblemState => Boolean) = {
+  def entailIfFree(c: Constraint, doms: Array[Domain]): ProblemState = ProblemState.singleFree(doms).map(entail(c, _)).getOrElse(this)
+
+  def entailIf(c: Constraint, f: ProblemState => Boolean): ProblemState = {
     if (f(this)) entail(c) else this
   }
 
@@ -353,10 +364,10 @@ case class ProblemState(
 
   def toState: ProblemState = this
 
-  def dueTo(cause: => (Constraint, Seq[Variable])) = this
+  def dueTo(cause: => (Constraint, Iterable[Variable])): ProblemState = this
 
   def updateData(key: Any, value: Any) =
-    new ProblemState(domains, constraintStates, entailed, data + ((key, value)))
+    new ProblemState(domains, constraintStates, entailed, data + (key -> value))
 
-  def getData[A](key: Any) = data(key).asInstanceOf[A]
+  def getData[A](key: Any): A = data(key).asInstanceOf[A]
 }

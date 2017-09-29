@@ -1,65 +1,62 @@
 /**
- * CSPFJ - CSP solving API for Java
- * Copyright (C) 2006 Julien VION
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- */
+  * CSPFJ - CSP solving API for Java
+  * Copyright (C) 2006 Julien VION
+  *
+  * This library is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Lesser General Public
+  * License as published by the Free Software Foundation; either
+  * version 2.1 of the License, or (at your option) any later version.
+  *
+  * This library is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  * Lesser General Public License for more details.
+  *
+  * You should have received a copy of the GNU Lesser General Public
+  * License along with this library; if not, write to the Free Software
+  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+  */
 
-package concrete;
+package concrete
 
-import scala.collection.JavaConverters._
-import scala.util.Try
-import org.scalameter.Quantity
+import java.util.Optional
+
 import com.typesafe.scalalogging.LazyLogging
-import concrete.constraint.TupleEnumerator
-import concrete.constraint.extension.ReduceableExt
-import concrete.constraint.linear.LinearLe
-import concrete.constraint.linear.GtC
-import concrete.constraint.linear.LtC
+import concrete.constraint.{Constraint, TupleEnumerator}
+import concrete.constraint.extension.{BinaryExt, ReduceableExt}
+import concrete.constraint.linear.{GtC, LinearLe, LtC}
+import concrete.constraint.semantic.DiffN
 import concrete.filter.Filter
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
-import cspom.CSPOM
-import cspom.Statistic
-import cspom.StatisticsManager
+import cspom.{CSPOM, Statistic, StatisticsManager}
 import cspom.compiler.CSPOMCompiler
-import concrete.constraint.extension.BinaryExt
-import concrete.constraint.Constraint
-import concrete.constraint.semantic.DiffN
-import java.util.Optional
+import org.scalameter.Quantity
+
+import scala.collection.JavaConverters._
+import scala.util.Try
 
 object Solver {
   def apply(cspom: CSPOM): Try[CSPOMSolver] = apply(cspom, new ParameterManager)
+
   def apply(cspom: CSPOM, pm: ParameterManager): Try[CSPOMSolver] = {
     CSPOMCompiler.compile(cspom, ConcretePatterns(pm))
       .flatMap { cspom =>
         val pg = new ProblemGenerator(pm)
         pg.generate(cspom)
-          .flatMap {
+          .map {
             case (problem, variables) =>
               val solver = apply(problem, pm)
               solver.statistics.register("compiler", CSPOMCompiler)
               solver.statistics.register("generator", pg)
 
-              new CSPOMSolver(solver, cspom, variables)
-                .applyGoal()
+              new CSPOMSolver(solver, cspom.expressionMap, variables)
           }
       }
   }
 
   def apply(problem: Problem): Solver = apply(problem, new ParameterManager)
+
   def apply(problem: Problem, pm: ParameterManager): Solver = {
     val solverClass: Class[_ <: Solver] =
       pm.classInPackage("solver", "concrete", classOf[MAC])
@@ -73,7 +70,7 @@ object Solver {
 abstract class Solver(val problem: Problem, val params: ParameterManager) extends Iterator[Map[Variable, Any]] with LazyLogging {
 
   @Statistic
-  var preproRemoved: Long = -1L
+  val nbConstraints: Int = problem.constraints.length
 
   implicit class QuantityMath[T](quantity: Quantity[T])(implicit num: Numeric[T]) {
     def +(q: Quantity[T]): Quantity[T] = {
@@ -81,18 +78,14 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
       Quantity(num.plus(q.value, quantity.value), q.units)
     }
   }
-
   @Statistic
-  var preproCpu: Quantity[Double] = _
-
-  @Statistic
-  val nbConstraints = problem.constraints.size
-
-  @Statistic
-  val nbVariables = problem.variables.size
-
+  val nbVariables: Int = problem.variables.length
   val preprocessorClass: Option[Class[_ <: Filter]] =
     params.get[Class[_ <: Filter]]("preprocessor")
+  @Statistic
+  val statistics = new StatisticsManager
+  @Statistic
+  var preproRemoved: Long = -1L
 
   //  def decisionVariables(dv: Seq[Variable]): Unit = {
   //    logger.info(s"Decision variables: $dv")
@@ -101,9 +94,8 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   //      if (!problem.decisionVariables.contains(v)) problem.decisionVariables +:= v
   //    }
   //  }
-
   @Statistic
-  val statistics = new StatisticsManager
+  var preproCpu: Quantity[Double] = _
   //statistics.register("solver", this)
   //statistics.register("domains", IntDomain)
   statistics.register("enumerator", TupleEnumerator)
@@ -112,60 +104,51 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   statistics.register("linear", LinearLe)
   statistics.register("binary", BinaryExt)
   statistics.register("diffn", DiffN)
-
+  var running = false
+  var optimConstraint: Option[Constraint] = None
   private var _next: SolverResult = UNKNOWNResult(None)
 
-  private var _minimize: Option[Variable] = None
-  private var _maximize: Option[Variable] = None
-  def minimize(v: Variable): Solver = {
-    _maximize = None; _minimize = Some(v)
-    this
-  }
-  def maximize(v: Variable): Solver = {
-    _minimize = None; _maximize = Some(v)
-    this
-  }
-
-  def optimises: Option[Variable] = _maximize orElse _minimize
-
-  var running = false
-
-  var optimConstraint: Option[Constraint] = None
+  def optimises: Option[Variable] = problem.goal.optimizes
 
   def obtainOptimConstraint[A <: Constraint](f: => A): A = optimConstraint
     .map {
-      case c: A @unchecked => c
+      case c: A@unchecked => c
     }.getOrElse {
-      val oc = f
-      optimConstraint = Some(oc)
-      problem.addConstraint(oc)
-      f
-    }
+    val oc = f
+    optimConstraint = Some(oc)
+    problem.addConstraint(oc)
+    f
+  }
+
+  @Statistic
+  var nbSolutions = 0
 
   def next(): Map[Variable, Any] = _next match {
     case UNSAT => Iterator.empty.next
     case UNKNOWNResult(None) => if (hasNext) next() else Iterator.empty.next
     case SAT(sol) =>
+      nbSolutions += 1
       _next = UNKNOWNResult(None)
-      for (v <- _maximize) {
-        reset()
-        sol(v) match {
-          case i: Int =>
-            obtainOptimConstraint(new GtC(v, i)).constant = i
-            logger.info(s"new best value $i")
-          case o => throw new AssertionError(s"$v has value $o which is not an int")
-        }
+      problem.goal match {
+        case Maximize(v) =>
+          reset()
+          sol(v) match {
+            case i: Int =>
+              obtainOptimConstraint(new GtC(v, i)).constant = i
+              logger.info(s"new best value $i")
+            case o => throw new AssertionError(s"$v has value $o which is not an int")
+          }
 
-      }
-      for (v <- _minimize) {
-        reset()
-        sol(v) match {
-          case i: Int =>
-            obtainOptimConstraint(new LtC(v, i)).constant = i
-            logger.info(s"new best value $i")
-          case o => throw new AssertionError(s"$v has value $o which is not an int")
-        }
+        case Minimize(v) =>
+          reset()
+          sol(v) match {
+            case i: Int =>
+              obtainOptimConstraint(new LtC(v, i)).constant = i
+              logger.info(s"new best value $i")
+            case o => throw new AssertionError(s"$v has value $o which is not an int")
+          }
 
+        case Satisfy =>
       }
       assert(problem.constraints.forall(_.positionInVariable.forall(_ >= 0)))
       sol
@@ -180,6 +163,10 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
     }
     .asJava
 
+  def javaIterator: java.util.Iterator[java.util.Map[Variable, java.lang.Integer]] = integerIterator.asJava
+
+  def javaCollection: java.util.List[java.util.Map[Variable, java.lang.Integer]] = integerIterator.toSeq.asJava
+
   def integerIterator: Iterator[java.util.Map[Variable, java.lang.Integer]] = this.map {
     s =>
       s.map {
@@ -188,12 +175,6 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
       }
         .asJava
   }
-
-  def javaIterator: java.util.Iterator[java.util.Map[Variable, java.lang.Integer]] = integerIterator.asJava
-
-  def javaCollection: java.util.List[java.util.Map[Variable, java.lang.Integer]] = integerIterator.toSeq.asJava
-
-  protected def nextSolution(): SolverResult
 
   def hasNext = _next match {
     case UNSAT => false
@@ -205,14 +186,6 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   }
 
   def reset(): Unit
-
-  protected def extractSolution(state: ProblemState): Map[Variable, Any] = problem.variables
-    .map(v => (v, state.dom(v))).map {
-      case (variable, dom: IntDomain) => variable -> dom.head
-      case (variable, dom: BooleanDomain) => variable -> dom.canBe(true)
-      case (variable, dom) => throw new NumberFormatException(s"$variable = $dom : $dom should contain integer or boolean values")
-    }
-    .toMap
 
   final def preprocess(filter: Filter, state: ProblemState): Outcome = {
 
@@ -229,9 +202,9 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
         filter
       }
 
-    val (r, t) = StatisticsManager.measure(preprocessor.reduceAll(state));
+    val (r, t) = StatisticsManager.measure[Outcome, Unit, Double](preprocessor.reduceAll(state))
 
-    this.preproCpu = t;
+    this.preproCpu = t
     //println(Thread.currentThread().getStackTrace.toSeq)
 
     r.get.andThen { newState =>
@@ -245,42 +218,68 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
 
   }
 
+  protected def nextSolution(): SolverResult
+
+  protected def extractSolution(state: ProblemState): Map[Variable, Any] = problem.variables
+    .map(v => (v, state.dom(v))).map {
+    case (variable, dom: IntDomain) => variable -> dom.head
+    case (variable, dom: BooleanDomain) => variable -> dom.canBe(true)
+    case (variable, dom) => throw new NumberFormatException(s"$variable = $dom : $dom should contain integer or boolean values")
+  }
+    .toMap
+
 }
 
 sealed trait SolverResult {
   def isSat: Boolean
+
   def get: Option[Map[Variable, Any]]
-  def getInt: Option[Map[Variable, Int]] = get.map { s =>
-    s.mapValues(util.Math.any2Int)
-  }
+
   def getInteger: java.util.Optional[java.util.Map[Variable, java.lang.Integer]] = {
-    val o = getInt.map { _.mapValues(i => i: java.lang.Integer).asJava }
+    val o = getInt.map {
+      _.mapValues(i => i: java.lang.Integer).asJava
+    }
 
     Optional.ofNullable(o.orNull)
+  }
+
+  def getInt: Option[Map[Variable, Int]] = get.map { s =>
+    s.mapValues(util.Math.any2Int)
   }
 }
 
 case class SAT(val solution: Map[Variable, Any]) extends SolverResult {
   def isSat = true
+
   def get = Some(solution)
+
   override def toString = "SAT: " + (if (solution.size > 10) solution.take(10).toString + "..." else solution.toString)
 }
+
 case object UNSAT extends SolverResult {
   def isSat = false
+
   def get = None
+
   override def toString = "UNSAT"
 }
+
 object UNKNOWNResult {
   def apply(cause: Throwable): UNKNOWNResult = UNKNOWNResult(Some(cause))
 }
 
 case class UNKNOWNResult(cause: Option[Throwable]) extends SolverResult {
   def isSat = false
+
   def get = None
+
   override def toString = "UNKNOWN" + cause
 }
+
 case object RESTART extends SolverResult {
   def isSat = false
+
   def get = None
+
   override def toString = "RESTART"
 }

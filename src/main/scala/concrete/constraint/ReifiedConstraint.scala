@@ -20,7 +20,7 @@ final class ReifiedConstraint(
   //    throw new AssertionError(this.toString)
   //  }
 
-  def init(ps: ProblemState) = {
+  def init(ps: ProblemState): Outcome = {
 
     ps.dom(controlVariable) match {
       case BooleanDomain.UNKNOWNBoolean =>
@@ -33,7 +33,7 @@ final class ReifiedConstraint(
               .orElse(initPos.updateDomNonEmpty(controlVariable, BooleanDomain.TRUE))
           }
 
-        require(initialized.toState.domains == ps.domains, "ReifiedConstraint cannot update domains during init")
+        assert(initialized.toState.domains == ps.domains, "ReifiedConstraint cannot update domains during init")
 
         initialized
 

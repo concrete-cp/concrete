@@ -8,11 +8,9 @@ final class MedValue(pm: ParameterManager) extends ValueHeuristic {
 
   override def toString = "median";
 
-  def compute(p: Problem) {
-    // Nothing to compute
-  }
+  def compute(s: MAC, ps: ProblemState): ProblemState = ps
 
-  override def selectIndex(variable: Variable, domain: Domain) = domain.median
+  override def selectIndex(variable: Variable, domain: Domain): Int = domain.median
 
   def shouldRestart = false
 }

@@ -41,14 +41,14 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
 
   //if (isTrue(watch1) || isTrue(watch2)) entail()
 
-  def advise(ps: ProblemState, event: Event, p: Int) = if (p == watch1 || p == watch2) 1 else -1
+  def advise(ps: ProblemState, event: Event, p: Int):Int = if (p == watch1 || p == watch2) 1 else -1
 
-  override def check(t: Array[Int]) = {
+  override def check(t: Array[Int]):Boolean = {
     val (p, n) = t.view.splitAt(posLength)
     p.contains(1) || n.contains(0)
   }
 
-  override def toString(ps: ProblemState) =
+  override def toString(ps: ProblemState): String =
     "\\/" + (positive.map(_.toString(ps)) ++ negative.map(v => "-" + v.toString(ps))).mkString("(", ", ", ")")
 
   private def reviseW2(ps: ProblemState): Outcome = {

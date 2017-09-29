@@ -1,34 +1,43 @@
 package concrete
-package constraint;
+package constraint
 
 import bitvectors.BitVector
 
 trait Removals extends Constraint with AdviseCounts {
 
-  var modified = BitVector.empty
-  var timestamp = -1
+  private var modified = BitVector.empty
+  private var timestamp = -1
 
-  def advise(problemState: ProblemState, event: Event, pos: Int): Int = {
+  final def advise(problemState: ProblemState, event: Event, pos: Int): Int = {
     assert(adviseCount >= 0)
-    //println(s"advising $this")
-    if (timestamp != adviseCount) {
-      clearMod()
-      timestamp = adviseCount
+
+    val eval = getEvaluation(problemState)
+
+    if (eval > 0) {
+      //println(s"advising $this")
+      if (timestamp != adviseCount) {
+        clearMod()
+        timestamp = adviseCount
+      }
+
+      modified += pos
     }
-    modified += pos
-    //removals(pos) = adviseCount
-    getEvaluation(problemState)
+    eval
   }
 
-  def revise(problemState: ProblemState): Outcome = {
-    val r = revise(problemState, modified)
+  def clearMod(): Unit = modified = BitVector.empty // Arrays.fill(removals, -1)
+
+  final def revise(problemState: ProblemState): Outcome = {
+    val r = revise(problemState, modified).dueTo((this, modVars(modified)))
     clearMod()
-    r dueTo ((this, modVars(modified)))
+    r
   }
+
+  def modVars(modified: BitVector): Seq[Variable] = modified.traversable.map(scope).toSeq
 
   def revise(problemState: ProblemState, modified: BitVector): Outcome
 
-  override def consistent(ps: ProblemState) = consistent(ps, modified)
+  override def consistent(ps: ProblemState): Outcome = consistent(ps, modified)
 
   def consistent(ps: ProblemState, modified: BitVector): Outcome = {
     revise(ps, modified) match {
@@ -37,11 +46,9 @@ trait Removals extends Constraint with AdviseCounts {
     }
   }
 
-  def clearMod(): Unit = modified = BitVector.empty // Arrays.fill(removals, -1)
-
   def getEvaluation(problemState: ProblemState): Int
 
-  def skip(modified: BitVector) = {
+  def skip(modified: BitVector): Int = {
     val head = modified.nextSetBit(0)
     if (head < 0) {
       -1
@@ -51,8 +58,6 @@ trait Removals extends Constraint with AdviseCounts {
       -1
     }
   }
-
-  def modVars(modified: BitVector) = modified.traversable.map(scope).toSeq
 
   //scope.iterator.zip(removals.iterator).filter(t => t._2 >= reviseCount).map(t => t._1)
 

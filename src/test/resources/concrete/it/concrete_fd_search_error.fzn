@@ -1,0 +1,9 @@
+predicate all_different_int(array [int] of var int: x);
+var 1..5: X_INTRODUCED_0_;
+var 1..5: X_INTRODUCED_1_;
+var 1..5: X_INTRODUCED_2_;
+var 1..5: X_INTRODUCED_3_;
+var 1..5: X_INTRODUCED_4_;
+array [1..5] of var int: x:: output_array([1..5]) = [X_INTRODUCED_0_,X_INTRODUCED_1_,X_INTRODUCED_2_,X_INTRODUCED_3_,X_INTRODUCED_4_];
+constraint all_different_int(x);
+solve :: int_search(x,input_order,indomain_min,complete) satisfy;

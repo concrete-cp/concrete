@@ -3,11 +3,12 @@ package concrete.generator.cspompatterns
 import cspom.CSPOM.SeqOperations
 import cspom.compiler.ConstraintCompilerNoData
 import cspom.extension.MDDRelation
+import cspom.util.{Infinitable, IntInterval, RangeSet}
 import cspom.variable.IntExpression
 import cspom.{CSPOM, CSPOMConstraint}
 import mdd.MDD
 
-final object Pow extends ConstraintCompilerNoData {
+object Pow extends ConstraintCompilerNoData {
 
   override def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM) = {
     constraint.function == 'int_pow && constraint.result.isTrue
@@ -20,22 +21,38 @@ final object Pow extends ConstraintCompilerNoData {
 
     import IntExpression.implicits.iterable
 
-    val mdd = pow(x.toSeq, y.toSeq, r.head, r.last)
+    val mdd = try pow(x.toSeq, y.toSeq, r.r)
+    catch {
+      case e: ArithmeticException => throw new IllegalStateException(s"Could not handle $r = $x ^ $y", e)
+    }
 
-    replaceCtr(constraint, args in new MDDRelation(mdd), problem)
+    //    println(constraint)
+    //    println(mdd)
+
+    val rDom = RangeSet(mdd.projectOne(2).map { case i => IntInterval.singleton(i) })
+
+    //    println(constraint)
+    //    mdd.foreach(println)
+    //    println(rDom)
+
+
+    replaceCtr(constraint, args in new MDDRelation(mdd), problem) ++ replace(r, reduceDomain(r, rDom), problem)
   }
 
-  def pow(xs: Seq[Int], ys: Seq[Int], rmin: Int, rmax: Int): MDD = {
+  def pow(xs: Seq[Int], ys: Seq[Int], rSpan: RangeSet[Infinitable]): MDD = {
+    val lb = rSpan.span.lb
+    val ub = rSpan.span.ub
+
     val trie = xs.map { x =>
       val xb = BigInt(x)
 
       val trie = ys.flatMap { y =>
         val rb = xb.pow(y)
-        if (rmin <= rb && rb <= rmax) {
+        if (lb <= rb && ub >= rb) {
           if (rb.isValidInt) {
             Some(y -> MDD(Array(rb.intValue())))
           } else {
-            throw new ArithmeticException("integer overflow")
+            throw new ArithmeticException(s"$rb: integer overflow")
           }
         } else {
           None

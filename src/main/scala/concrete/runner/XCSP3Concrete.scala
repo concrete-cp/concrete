@@ -5,10 +5,10 @@ import java.net.URL
 
 import concrete.generator.cspompatterns.XCSPPatterns
 import concrete.heuristic.{CrossHeuristic, Heuristic, SeqHeuristic}
+import cspom._
 import cspom.compiler.CSPOMCompiler
 import cspom.variable.CSPOMVariable
 import cspom.xcsp.XCSP3Parser
-import cspom.{CSPOM, CSPOMGoal, StatisticsManager, WithParam}
 
 import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
@@ -20,13 +20,14 @@ object XCSP3Concrete extends CSPOMRunner with App {
   var file: URL = _
   var declaredVariables: Seq[String] = _
 
-  override def defaultWriter(opt: Map[Symbol, Any], sm: StatisticsManager): ConcreteWriter = {
-    new XCSP3Writer(opt, sm)
+  override def defaultWriter(pm: ParameterManager, problem:String, sm: StatisticsManager): ConcreteWriter = {
+    new XCSP3Writer(pm, problem, sm)
   }
 
-  def loadCSPOM(args: List[String], opt: Map[Symbol, Any]): Try[CSPOM] = {
+  def loadCSPOM(pm: ParameterManager, args: Seq[String]): Try[CSPOM] = {
     val List(fn) = args
     file = CSPOM.file2url(fn)
+
     loadCSPOMURL(file).flatMap { cspom =>
       cspom.goal.get match {
         case s@WithParam(_: CSPOMGoal[_], _) =>
@@ -36,6 +37,12 @@ object XCSP3Concrete extends CSPOMRunner with App {
           Failure(new IllegalArgumentException("Variable sequence not available"))
       }
     }
+
+  }
+
+  def buildSolver(pm: ParameterManager, problem: Problem, goal: WithParam[CSPOMGoal[_]], cspom: ExpressionMap) = {
+    val heuristic = readHeuristic(pm, cspom)
+    Solver(problem, pm.updated("heuristic", heuristic))
   }
 
   def loadCSPOMURL(file: URL): Try[CSPOM] = {
@@ -45,17 +52,17 @@ object XCSP3Concrete extends CSPOMRunner with App {
       }
   }
 
-  override def applyParametersPre(p: Problem, opt: Map[Symbol, Any]): Unit = {
-    val heuristics = if (pm.contains("totalFree")) {
+  private def readHeuristic(pm: ParameterManager, cspom: ExpressionMap): ParameterManager = {
+    val heuristics = if (pm.contains("ff")) {
       Seq()
     } else {
       val dv = declaredVariables
-        .flatMap(cspom.expression(_))
+        .flatMap(cspom.expression)
         .collect {
           case v: CSPOMVariable[_] => variables(v)
         }
 
-      Seq(Heuristic.default(pm, dv.toArray))
+      Seq(Heuristic.default(pm, dv))
     }
 
     val decisionVariables: Set[Variable] = heuristics
@@ -63,7 +70,7 @@ object XCSP3Concrete extends CSPOMRunner with App {
       .toSet
 
     val completed = if (decisionVariables.size < variables.size) {
-      val remainingVariables = p.variables.filterNot(decisionVariables)
+      val remainingVariables = variables.values.iterator.filterNot(decisionVariables).toArray
 
       if (heuristics.isEmpty || heuristics.exists(_.shouldRestart)) {
         heuristics :+ CrossHeuristic(pm, remainingVariables)
@@ -82,17 +89,13 @@ object XCSP3Concrete extends CSPOMRunner with App {
 
     logger.info(heuristic.toString + ", should restart: " + heuristic.shouldRestart)
 
-    pm("heuristic") = heuristic
+    pm.updated("heuristic", heuristic)
 
   }
 
-  override def applyParametersCSPOM(solver: CSPOMSolver, opt: Map[Symbol, Any]): Unit = {
-    solver.applyGoal().get
-  }
-
-  def description(args: List[String]) =
+  def description(args: Seq[String]) =
     args match {
-      case List(fileName) => fileName
+      case Seq(fileName) => fileName
       case _ => throw new IllegalArgumentException(args.toString)
     }
 
@@ -100,18 +103,18 @@ object XCSP3Concrete extends CSPOMRunner with App {
     solutionChecker.checkSolution(solution, obj, declaredVariables)
   }
 
-  override def outputCSPOM(solution: Map[String, Any], obj: Option[Any]): String = {
+  override def outputCSPOM(cspom: ExpressionMap, solution: Map[String, Any], obj: Option[Any]): String = {
     xmlSolution(declaredVariables, solution, obj).toString
   }
 
 
   def xmlSolution(variables: Seq[String], solution: Map[String, Any], obj: Option[Any]): Elem = {
-    <instantiation cost={obj.map(o => xml.Text(util.Math.any2Int(o).toString))}>
+    <instantiation cost={obj.map(o => xml.Text(concrete.util.Math.any2Int(o).toString))}>
       <list>
         {variables.mkString(" ")}
       </list>
       <values>
-        {variables.map(v => util.Math.any2Int(solution(v))).mkString(" ")}
+        {variables.map(v => concrete.util.Math.any2Int(solution(v))).mkString(" ")}
       </values>
     </instantiation>
   }

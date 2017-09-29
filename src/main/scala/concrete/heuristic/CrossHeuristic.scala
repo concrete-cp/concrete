@@ -1,36 +1,64 @@
 package concrete
-package heuristic;
+package heuristic
 
-import concrete.heuristic.variable.VariableHeuristic
-import concrete.heuristic.value.BranchHeuristic
-import concrete.heuristic.value.BestValue
 import java.util.EventObject
 
+import concrete.heuristic.value.{BestValue, BranchHeuristic}
+import concrete.heuristic.variable._
+
 object CrossHeuristic {
-  def apply(params: ParameterManager, decisionVariables: Array[Variable]): CrossHeuristic = {
+  def apply(params: ParameterManager, decisionVariables: Seq[Variable]): CrossHeuristic = {
     val varH = defaultVar(params, decisionVariables)
     val valH = defaultVal(params)
 
     CrossHeuristic(varH, valH)
   }
 
-  def defaultVar(params: ParameterManager, decisionVariables: Array[Variable]) = {
+  def defaultVar(params: ParameterManager, decisionVariables: Seq[Variable]): VariableHeuristic = {
+
+    val tieBreaker = params.getRaw("heuristic.variable.tieBreaker").map {
+      case h: VariableHeuristic => h
+      case "rand" => new RandomVar(Seq(), params)
+      case "lex" => new LexVar(Seq())
+    }.getOrElse(new RandomVar(Seq(), params))
+
+
     val variableHeuristicClass: Class[_ <: VariableHeuristic] =
       params.classInPackage("heuristic.variable", "concrete.heuristic.variable", classOf[variable.WDegOnDom])
 
-    variableHeuristicClass
-      .getConstructor(classOf[ParameterManager], classOf[Array[Variable]])
-      .newInstance(params, decisionVariables)
+    val vh: VariableHeuristic =
+      if (classOf[ScoredVariableHeuristic].isAssignableFrom(variableHeuristicClass)) {
+
+        variableHeuristicClass.getConstructor(classOf[Seq[Variable]], classOf[VariableHeuristic], classOf[Boolean])
+          .newInstance(decisionVariables, tieBreaker, Boolean.box(false))
+
+      } else {
+        try {
+          variableHeuristicClass.getConstructor(classOf[Seq[Variable]], classOf[ParameterManager])
+            .newInstance(decisionVariables, params)
+        } catch {
+          case _: NoSuchMethodException =>
+            variableHeuristicClass.getConstructor(classOf[Seq[Variable]]).newInstance(decisionVariables)
+        }
+      }
+
+
+    val randomDiv = params.getOrElse("heuristic.variable.randomDiv", 0.2)
+
+    if (randomDiv > 0) {
+      new RandomDiv(params, vh, randomDiv)
+    } else {
+      vh
+    }
   }
 
-  def defaultVal(params: ParameterManager) = {
+  def defaultVal(params: ParameterManager): BranchHeuristic = {
     val valueHeuristicClass: Class[_ <: BranchHeuristic] =
       params.classInPackage("heuristic.value", "concrete.heuristic.value", classOf[BestValue])
 
     valueHeuristicClass
       .getConstructor(classOf[ParameterManager])
       .newInstance(params)
-
   }
 
   def apply(varH: VariableHeuristic, valH: BranchHeuristic): CrossHeuristic =
@@ -38,29 +66,28 @@ object CrossHeuristic {
 }
 
 final case class CrossHeuristic(
-    val variableHeuristic: VariableHeuristic,
-    val valueHeuristic: BranchHeuristic,
-    val shouldRestart: Boolean) extends Heuristic {
+                                 variableHeuristic: VariableHeuristic,
+                                 valueHeuristic: BranchHeuristic,
+                                 shouldRestart: Boolean) extends Heuristic {
 
-  def branch(state: ProblemState) = {
-    variableHeuristic.select(state).map { case (v, ns) =>
+  def branch(state: ProblemState, candidates: Seq[Variable]): Option[Branch] = {
+    variableHeuristic.select(state, candidates).map { v =>
       assert(state.dom(v).size > 1, s"$variableHeuristic selected a singleton variable ${v.toString(state)}")
-      (valueHeuristic.branch(v, state.dom(v), state), ns)
+      valueHeuristic.branch(v, state.dom(v), state)
     }
   }
 
-  def compute(problem: Problem, state:ProblemState): ProblemState = {
+  def compute(solver: MAC, state: ProblemState): ProblemState = {
     // logger.fine("Initializing heuristics");
-    valueHeuristic.compute(problem: Problem)
-    variableHeuristic.compute(state)
+    val ps = variableHeuristic.compute(solver, state)
+    valueHeuristic.compute(solver, ps)
   }
 
-  override def toString =
-    "Crossed (" + variableHeuristic + ", " + valueHeuristic + ")";
+  override def toString = s"Crossed ($variableHeuristic, $valueHeuristic)"
 
-  def decisionVariables = variableHeuristic.decisionVariables
+  def decisionVariables: Seq[Variable] = variableHeuristic.pool
 
-  def event(event: EventObject) = {
+  def event(event: EventObject): Unit = {
     variableHeuristic.event(event)
     valueHeuristic.event(event)
   }

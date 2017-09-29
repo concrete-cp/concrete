@@ -1,32 +1,23 @@
 package concrete
-package generator;
+package generator
+
+;
+
+import java.security.InvalidParameterException
+
+import com.typesafe.scalalogging.LazyLogging
+import concrete.constraint.ReifiedConstraint
+import concrete.constraint.linear.{SumEQ, SumLE}
+import concrete.constraint.semantic.{Clause, PseudoBoolean, SAT}
+import cspom._
+import cspom.util.Finite
+import cspom.variable._
+import org.scalameter.Quantity
 
 import scala.util.Try
 
-import org.scalameter.Quantity
-
-import com.typesafe.scalalogging.LazyLogging
-
-import concrete.constraint.ReifiedConstraint
-import concrete.constraint.semantic.Clause
-import concrete.constraint.semantic.PseudoBoolean
-import concrete.constraint.semantic.SAT
-import cspom.CSPOM
-import cspom.Statistic
-import cspom.StatisticsManager
-import cspom.util.Finite
-import cspom.variable.BoolVariable
-import cspom.variable.CSPOMSeq
-import cspom.variable.CSPOMVariable
-import cspom.variable.IntVariable
-import cspom.CSPOMConstraint
-import cspom.variable.BoolExpression
-import concrete.constraint.linear.SumEQ
-import concrete.constraint.linear.SumLE
-
 final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) extends LazyLogging {
 
-  val intToBool = pm.getOrElse("generator.intToBool", true)
   //val generateLargeDomains = pm.getOrElse("generator.generateLargeDomains", false)
 
   val gm = new GeneratorManager(this)
@@ -34,29 +25,12 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
   @Statistic
   var genTime: Quantity[Double] = _
 
-  def isBoolean(constraint: CSPOMConstraint[_]) = {
-    //    if (constraint.function == 'sum) {
-    //      val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
-    //      println(vars)
-    //    }
-
-    constraint.nonReified && (constraint.function == 'pseudoboolean || constraint.function == 'sum && {
-      val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
-      (mode == SumLE || mode == SumEQ) &&
-        vars.forall {
-          case BoolExpression(_) => true
-          case e if BoolExpression.is01(e) => true
-          case _ => false
-        }
-    })
-  }
-
   def generate(cspom: CSPOM): Try[(Problem, Map[CSPOMVariable[_], Variable])] = {
     val (result, time) = StatisticsManager.measure {
 
       val variables = generateVariables(cspom)
 
-      val problem = new Problem(variables.values.toArray.sortBy(_.name))
+      val problem = new Problem(variables.values.toArray.sortBy(_.name), goal(cspom.goal, variables))
 
       var clauses: Seq[Clause] = Seq.empty
       var pb: Seq[PseudoBoolean] = Seq.empty
@@ -103,6 +77,23 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
     result
   }
 
+  def isBoolean(constraint: CSPOMConstraint[_]) = {
+    //    if (constraint.function == 'sum) {
+    //      val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
+    //      println(vars)
+    //    }
+
+    constraint.nonReified && (constraint.function == 'pseudoboolean || constraint.function == 'sum && {
+      val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
+      (mode == SumLE || mode == SumEQ) &&
+        vars.forall {
+          case BoolExpression(_) => true
+          case e if BoolExpression.is01(e) => true
+          case _ => false
+        }
+    })
+  }
+
   def generateVariables(cspom: CSPOM): Map[CSPOMVariable[_], Variable] = {
 
     cspom.referencedExpressions.flatMap(_.flatten).collect {
@@ -118,15 +109,18 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
   def generateDomain[T](cspomVar: CSPOMVariable[_]): Domain = {
 
     val dom = cspomVar match {
-      case bD: BoolVariable => concrete.BooleanDomain()
+      case _: BoolVariable => concrete.BooleanDomain()
 
       case v: IntVariable =>
         if (v.isConvex) {
-          (v.domain.lowerBound, v.domain.upperBound) match {
-            case (Finite(0), Finite(0)) if intToBool => concrete.BooleanDomain(false)
-            case (Finite(1), Finite(1)) if intToBool => concrete.BooleanDomain(true)
-            case (Finite(0), Finite(1)) if intToBool => concrete.BooleanDomain()
-            case (Finite(lb), Finite(ub)) => IntDomain.ofInterval(lb, ub)
+          val Finite(l) = v.domain.lowerBound
+          val Finite(u) = v.domain.upperBound
+
+          (l,u) match {
+            case (0, 0) => concrete.BooleanDomain(false)
+            case (1, 1) => concrete.BooleanDomain(true)
+            case (0, 1) => concrete.BooleanDomain()
+            case (lb, ub) => IntDomain.ofInterval(lb, ub)
           }
         } else {
           IntDomain(v.domain)
@@ -138,5 +132,23 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
     require(cspomVar.searchSpace == dom.size, s"$cspomVar -> $dom")
 
     dom
+  }
+
+  private def goal(goal: Option[WithParam[CSPOMGoal[_]]], variables:Map[CSPOMVariable[_], Variable]): Goal = {
+
+    def obtain(expr: CSPOMVariable[_]): Variable =
+      variables.getOrElse(expr, throw new IllegalArgumentException(s"Could not find variable $expr"))
+
+    goal
+      .map(_.obj)
+      .map {
+        case CSPOMGoal.Satisfy => Satisfy
+        case CSPOMGoal.Maximize(expr: CSPOMVariable[_]) => Maximize(obtain(expr))
+        case CSPOMGoal.Minimize(expr: CSPOMVariable[_]) => Minimize(obtain(expr))
+        case CSPOMGoal.Maximize(_: CSPOMConstant[_]) => Satisfy
+        case CSPOMGoal.Minimize(_: CSPOMConstant[_]) => Satisfy
+        case g => throw new InvalidParameterException("Cannot execute goal " + g)
+      }
+      .getOrElse(Satisfy)
   }
 }

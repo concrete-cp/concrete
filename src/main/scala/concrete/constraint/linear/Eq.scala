@@ -127,10 +127,6 @@ final class EqACFast(val x: Variable, val b: Int, val y: Variable)
 
     ps.updateDom(x, newX)
       .andThen { ps =>
-        /*
-         * ProblemState does not detect NOP after two
-         * complementary offset operations, so do it by hand
-         */
         if (newX.size < oldY.size) {
           val newY = newX.shift(b)
           ps.updateDomNonEmptyNoCheck(y, newY)

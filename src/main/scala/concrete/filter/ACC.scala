@@ -33,6 +33,8 @@ object ACC extends LazyLogging {
 
 final class ACC(val problem: Problem, params: ParameterManager) extends Filter with LazyLogging {
 
+  type Cause = Set[Variable]
+
   private val queueType: Class[_ <: PriorityQueue[Constraint]] =
     params.classInPackage("ac3c.queue", "concrete.priorityqueues", classOf[QuickFifos[Constraint]])
 
@@ -55,10 +57,10 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
   @Statistic
   val substats = new StatisticsManager
-  substats.register("queue", queue);
+  substats.register("queue", queue)
 
   @Statistic
-  var revisions = 0L;
+  var revisions = 0L
 
   def reduceAll(states: ProblemState): Outcome = {
     advises.clear()
@@ -75,7 +77,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
   }
 
   def reduceFrom(modVar: Array[Int], modCons: Array[Int], cnt: Int, states: ProblemState): Outcome = {
-    queue.clear();
+    queue.clear()
 
     for (
       v <- problem.variables
@@ -84,7 +86,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     }
 
     if (modCons != null) {
-      for (i <- 0 until problem.constraints.length) {
+      for (i <- problem.constraints.indices) {
         val c = problem.constraints(i)
         if (modCons(i) > cnt && !states.entailed.hasInactiveVar(c)) {
           adviseAndEnqueue(c, states)
@@ -104,7 +106,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     }
   }
 
-  def reduceAfter(modif: Seq[(Variable, Event)], states: ProblemState) = {
+  def reduceAfter(modif: Seq[(Variable, Event)], states: ProblemState): Outcome = {
     advises.clear()
     queue.clear()
     for ((v, e) <- modif) {
@@ -160,7 +162,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
     } else {
       val constraint = queue.poll()
 
-      revisions += 1;
+      revisions += 1
 
       //println(constraint.id)
 
@@ -234,11 +236,11 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
 
   }
 
-  override def toString = "AC-cons+" + queue.getClass().getSimpleName();
+  override def toString: String = "AC-cons+" + queue.getClass.getSimpleName
 
-  def reduceAfter(constraints: Iterable[Constraint], states: ProblemState) = {
+  def reduceAfter(constraints: Iterable[Constraint], states: ProblemState): Outcome = {
     advises.clear()
-    queue.clear();
+    queue.clear()
 
     for (c <- constraints) {
       if (!states.entailed.hasInactiveVar(c)) {
@@ -246,7 +248,7 @@ final class ACC(val problem: Problem, params: ParameterManager) extends Filter w
       }
     }
 
-    reduce(states);
+    reduce(states)
   }
 
 }

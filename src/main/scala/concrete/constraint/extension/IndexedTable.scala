@@ -2,8 +2,9 @@ package concrete
 package constraint
 package extension
 
-import scala.math.BigInt.int2bigInt
+import java.util
 
+import scala.math.BigInt.int2bigInt
 import concrete.util.ArraySet
 import cspom.util.VecMap
 
@@ -23,7 +24,7 @@ final class IndexedTable(val tables: Array[VecMap[ArraySet[Int]]]) extends Relat
 
   def +(t: Seq[Int]) = {
     require(t.length == tables.length)
-    for (p <- 0 until t.length) {
+    for (p <- t.indices) {
       tables(p)(t(p)) = tables(p).getOrElse(t(p), ArraySet.empty) + t.toArray
     }
     this
@@ -37,17 +38,17 @@ final class IndexedTable(val tables: Array[VecMap[ArraySet[Int]]]) extends Relat
 
   def filterTrie(doms: Array[Domain], modified: List[Int]) = ???
 
-  def supported(domains: Array[Domain]): Array[Domain] = ???
+  def supported(domains: Array[Domain]): Array[util.HashSet[Int]] = ???
 
   override def toString = s"indexed table"
 
-  lazy val edges = size * tables.length + tables.map(_.size).sum
+  lazy val edges:Int = size * tables.length + tables.map(_.size).sum
 
   def find(f: (Int, Int) => Boolean) = throw new UnsupportedOperationException
   def findSupport(scope: Array[Domain], p: Int, i: Int) = {
     tables(p).get(i).flatMap { m =>
       m.find(t =>
-        (0 until tables.length).forall(q => q == p || scope(q).present(t(q))))
+        tables.indices.forall(q => q == p || scope(q).present(t(q))))
     }
   }
 

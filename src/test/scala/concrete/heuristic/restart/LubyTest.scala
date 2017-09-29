@@ -6,8 +6,7 @@ import concrete.ParameterManager
 
 class LubyTest extends FlatSpec with Matchers {
   "Luby" should "generate test sequence" in {
-    val pm = new ParameterManager()
-    pm("luby.base") = 1
+    val pm = new ParameterManager().updated("luby.base", 1)
     
     val luby = new Luby(pm, null)
 

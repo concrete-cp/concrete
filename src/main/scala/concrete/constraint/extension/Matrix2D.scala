@@ -1,6 +1,6 @@
-package concrete.constraint.extension;
+package concrete.constraint.extension
 
-import bitvectors.BitVector;
+import bitvectors.BitVector
 import com.typesafe.scalalogging.LazyLogging
 
 final class Matrix2D(xSize: Int, ySize: Int, val xOffset: Int, val yOffset: Int, initialState: Boolean) extends Matrix with LazyLogging {
@@ -22,11 +22,9 @@ final class Matrix2D(xSize: Int, ySize: Int, val xOffset: Int, val yOffset: Int,
     Array.fill(ySize)(bv)
   }
 
-  def size: Int = xMatrix.length * yMatrix.length
-
   private var empty = initialState
 
-  override def check(tuple: Array[Int]) = xMatrix(tuple(0) - xOffset)(tuple(1) - yOffset)
+  def size: Int = xMatrix.length * yMatrix.length
 
   override def set(tuple: Seq[Int], status: Boolean): Unit = {
     val Seq(rx, ry) = tuple
@@ -38,22 +36,26 @@ final class Matrix2D(xSize: Int, ySize: Int, val xOffset: Int, val yOffset: Int,
     val y = ry - yOffset
     require(x >= 0)
     require(y >= 0)
-    if (x < xMatrix.length && y < yMatrix.length) {
-      if (status) {
-        xMatrix(x) += y
-        yMatrix(y) += x
-      } else {
-        xMatrix(x) -= y
-        yMatrix(y) -= x
-      }
-      empty = false;
+    require(x < xMatrix.length, s"Tuple ($rx, $ry) is out of the scope of matrix $this")
+    require(y < yMatrix.length, s"Tuple ($rx, $ry) is out of the scope of matrix $this")
+    //if (x < xMatrix.length && y < yMatrix.length) {
+    if (status) {
+      xMatrix(x) += y
+      yMatrix(y) += x
     } else {
-      logger.info(s"Tuple ($rx, $ry) is out of the scope of matrix $this")
+      xMatrix(x) -= y
+      yMatrix(y) -= x
     }
+    empty = false
+    //}
+
+    //    else {
+    //      logger.info(s"Tuple ($rx, $ry) is out of the scope of matrix $this")
+    //    }
 
   }
 
-  def offsets(position: Int) = {
+  def offsets(position: Int):Int = {
     assert(0 <= position && position < 2)
     if (position == 0) {
       xOffset
@@ -62,7 +64,7 @@ final class Matrix2D(xSize: Int, ySize: Int, val xOffset: Int, val yOffset: Int,
     }
   }
 
-  def getBitVector(position: Int, index: Int) = {
+  def getBitVector(position: Int, index: Int): BitVector = {
     assert(0 <= position && position < 2)
     if (position == 0) {
       xMatrix(index - xOffset)
@@ -71,19 +73,19 @@ final class Matrix2D(xSize: Int, ySize: Int, val xOffset: Int, val yOffset: Int,
     }
   }
 
-  def copy = {
+  def copy: Matrix2D = {
     val matrix2d = new Matrix2D(xSize, ySize, xOffset, yOffset, initialState)
     matrix2d.xMatrix = xMatrix.clone
     matrix2d.yMatrix = yMatrix.clone
-    matrix2d;
+    matrix2d
   }
 
-  override def toString = {
-    val stb = new StringBuilder;
+  override def toString: String = {
+    val stb = new StringBuilder
     stb.append(s"x offset: $xOffset, y offset: $yOffset\n")
-    for (i <- 0 until xMatrix.length) {
-      for (j <- 0 until yMatrix.length) {
-        if (check(Array(i, j))) {
+    for (i <- xMatrix.indices) {
+      for (j <- yMatrix.indices) {
+        if (xMatrix(i)(j)) {
           stb.append(1)
         } else {
           stb.append(0)
@@ -94,7 +96,9 @@ final class Matrix2D(xSize: Int, ySize: Int, val xOffset: Int, val yOffset: Int,
     stb.toString
   }
 
-  def isEmpty = empty
+  override def check(tuple: Array[Int]):Boolean = xMatrix(tuple(0) - xOffset)(tuple(1) - yOffset)
+
+  def isEmpty: Boolean = empty
 
   def allowed: Iterator[Array[Int]] = {
     for {

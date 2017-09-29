@@ -1,17 +1,12 @@
 package concrete.heuristic
 
-import concrete.IntDomain
-import concrete.Variable
-import org.scalatest.Matchers
-import org.scalatest.FlatSpec
-import concrete.ParameterManager
-import concrete.Problem
-import org.scalatest.OptionValues
-import concrete.heuristic.variable.MaxRegret
+import concrete.{IntDomain, Problem, Variable}
+import concrete.heuristic.variable.{LexVar, MaxRegret}
+import org.scalatest.{FlatSpec, Matchers, OptionValues}
 
 /**
- * @author vion
- */
+  * @author vion
+  */
 class MaxRegretTest extends FlatSpec with Matchers with OptionValues {
   "MaxRegret" should "select correct variable" in {
     val v1 = new Variable("v1", IntDomain.ofSeq(1, 5, 6))
@@ -19,8 +14,8 @@ class MaxRegretTest extends FlatSpec with Matchers with OptionValues {
 
     val p = Problem(v1, v2)
 
-    val h = new MaxRegret(new ParameterManager, p.variables.toArray)
-    val ps = h.compute(p.initState.toState)
-    h.select(ps).value._1 shouldBe v1
+    val h = new MaxRegret(p.variables, new LexVar(p.variables))
+    val ps = h.compute(null, p.initState.toState)
+    h.select(ps, p.variables) shouldBe v1
   }
 }

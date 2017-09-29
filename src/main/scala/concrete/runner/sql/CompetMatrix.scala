@@ -24,8 +24,10 @@ object CompetMatrix extends App {
   implicit val getConfigResult = GetResult(r => Config(r.<<, r.<<, r.<<))
   val problemQuery = sql"""
         WITH Selection AS (
-          SELECT "problemId" FROM "Problem" NATURAL JOIN "ProblemTag"
-          WHERE looseness < .1),
+          SELECT DISTINCT "problemId" FROM "Problem" NATURAL JOIN "Execution"
+          WHERE 0 <= totalTime('{solver.searchCpu, solver.preproCpu}', "executionId")
+            OR status ~ 'Out'
+        ),
         Counts AS (
           SELECT "problemTag", count(*) FROM "ProblemTag" NATURAL JOIN Selection GROUP BY "problemTag")
 
@@ -38,8 +40,7 @@ object CompetMatrix extends App {
     cast(stat('solver.filter.revisions', "executionId") as real)/nullif(totalTime('{solver.searchCpu, solver.preproCpu}', "executionId"), 0.0)
     -- totalTime('{solver.searchCpu, solver.preproCpu, runner.loadTime}', "executionId")/1e3
     FROM "Execution"
-    WHERE iteration = 0 and status != 'started'
-    -- WHERE "configId"  >= 0  AND "problemId" < 300 -- AND "problemId" < 976"""
+    WHERE iteration <= 1 and status != 'started'"""
     .as[Execution]
 
   val configQuery = sql"""SELECT "configId", config, description FROM "Config""""
@@ -66,7 +67,7 @@ object CompetMatrix extends App {
     pe <- groupedExecutions; cfgsSeq <- DB.run(configQuery);
     cfgs = cfgsSeq.map(c => c.configId -> c.desc).toMap
   ) yield {
-    println(order.map(cfgs).mkString(" "))
+
     val matrix = Array.ofDim[Double](order.length, order.length)
 
     for {
@@ -100,16 +101,14 @@ object CompetMatrix extends App {
       matrix(e1c)(e2c) += score  / p1.factor
     }
 
+    println(order.map(cfgs).mkString(" "))
 
     println()
     matrix.foreach(r => println(r.map(d => f"$d%.2f").mkString(" ")))
     println()
 
     for (i <- 0 until order.length) {
-      for (j <- 0 until order.length) {
-        print(f"${matrix(i)(j) * 100 / 8}%2.0f" + " ")
-      }
-      println()
+      println(matrix(i).map(c => f"${c*50/10}%2.0f").mkString(" & ")+ " \\\\")
     }
 
     println(pe.size)
@@ -172,7 +171,7 @@ object CompetMatrix extends App {
       } else if (e.memError) {
         Some(1)
       } else for (s1 <- statistic; s2 <- e.statistic) yield {
-        if (doubleCompare(s1, s2, .1) > 0) {
+        if ((s1-s2)/s2 > .10) {
           1
         } else {
           0

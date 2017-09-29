@@ -1,25 +1,25 @@
 package concrete
 package heuristic
-package value;
+package value
 
 final class PhaseSaving(heuristic: ValueHeuristic) extends ValueHeuristic {
 
   private var previous: Array[Int] = _
 
-  def this(params: ParameterManager) = this{
+  def this(params: ParameterManager) = this {
     val valueHeuristicClass: Class[_ <: ValueHeuristic] =
       params.classInPackage("phasesaving.heuristic", "concrete.heuristic.value", classOf[Lexico])
     valueHeuristicClass.getConstructor(classOf[ParameterManager]).newInstance(params)
   }
 
-  override def toString = "best";
+  override def toString = "phase-saving"
 
-  def compute(p: Problem) {
-    heuristic.compute(p)
-    previous = p.variables.map(v => heuristic.selectIndex(v, v.initDomain))
+  def compute(s: MAC, ps: ProblemState): ProblemState = {
+    previous = s.problem.variables.map(v => heuristic.selectIndex(v, v.initDomain))
+    heuristic.compute(s, ps)
   }
 
-  override def selectIndex(variable: Variable, domain: Domain) = {
+  override def selectIndex(variable: Variable, domain: Domain): Int = {
     val value = previous(variable.id)
     if (domain.present(value)) {
       value

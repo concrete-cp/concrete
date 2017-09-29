@@ -2,8 +2,6 @@ package concrete.runner.sql
 
 import scala.xml.Node
 import scala.xml.Text
-
-import scala.collection.mutable.HashMap
 import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.GetResult
 
@@ -12,10 +10,12 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
 import com.typesafe.config.ConfigFactory
 
+import scala.collection.mutable
+
 object Compet extends App {
 
-  def attributeEquals(name: String, value: String)(node: Node) = {
-    node.attribute(name).get.exists(_ == Text(value))
+  def attributeEquals(name: String, value: String)(node: Node): Boolean = {
+    node.attribute(name).get.contains(Text(value))
   }
 
   lazy val systemConfig = ConfigFactory.load //defaults from src/resources
@@ -24,9 +24,6 @@ object Compet extends App {
     Database.forConfig("database", systemConfig)
 
   val nature = args.toList
-
-  // Set display :
-  // update "Problem" set display = substring(name from '%/#"[^/]+#".xml.bz2' for '#')
 
   case class Problem(
       problemId: Int,
@@ -105,8 +102,8 @@ object Compet extends App {
       }
     }
 
-    def latestResult(variable: String): Result = {
-      val result = solution.flatMap(_.split("\n").filter(_.startsWith(variable)).lastOption).map(_.split("=|;")(1).trim.toInt)
+    def latestResult(variable: Seq[String]): Result = {
+      val result = solution.flatMap(_.split("\n").filter(s => variable.exists(s.startsWith)).lastOption).map(_.split("=|;")(1).trim.toInt)
       //require(!solved || result.nonEmpty, s"$status but empty result $result")
       if (complete) {
         Complete(result)
@@ -136,7 +133,7 @@ object Compet extends App {
   val configsMap = configs.zipWithIndex.toMap
 
   object Nature {
-    def apply(nature: String) = {
+    def apply(nature: String): Nature = {
       nature.split(" ") match {
         case Array("satisfy") => Satisfy
         case Array("minimize", obj) => Minimize(obj)
@@ -146,7 +143,9 @@ object Compet extends App {
   }
   sealed trait Nature
   case object Satisfy extends Nature
-  sealed abstract class Optimize(val variable: String) extends Nature
+  sealed abstract class Optimize(_variable: String) extends Nature {
+    def variable: Seq[String] = _variable.split("\\|\\|")
+  }
 
   case class Minimize(v: String) extends Optimize(v)
   case class Maximize(v: String) extends Optimize(v)
@@ -157,13 +156,13 @@ object Compet extends App {
     def result: Option[Int]
   }
   case class Incomplete(result: Option[Int]) extends Result {
-    override def toString = result.map(_.toString).getOrElse("UNK")
-    def solved = result.isDefined
+    override def toString: String = result.map(_.toString).getOrElse("UNK")
+    def solved: Boolean = result.isDefined
     def optimal = false
 
   }
   case class Complete(result: Option[Int]) extends Result {
-    override def toString = result.map(_ + "*").getOrElse("UNSAT")
+    override def toString: String = result.map(_ + "*").getOrElse("UNSAT")
     def solved = true
     def optimal = true
   }
@@ -196,19 +195,13 @@ object Compet extends App {
   val problemQuery = sql"""
         SELECT "problemId", display, "nbVars", "nbCons", nature, coalesce(string_agg("problemTag", ','), '') as tags
         FROM "Problem" LEFT JOIN "ProblemTag" USING ("problemId")
-        --WHERE "problemId" IN (
-        --  SELECT "problemId" 
-        --  FROM "Execution"
-        --  -- WHERE "configId" in (#${configs.mkString(",")})
-        --  -- AND "problemTag" = 'modifiedRenault'
-        --  )
+        WHERE name ~ '^instances/mznc'
         GROUP BY "problemId"
         """.as[Problem]
 
   val executionQuery = sql"""
     SELECT "problemId", "configId", iteration, status, solution, totalTime('{solver.searchCpu, solver.preproCpu, runner.loadTime}', "executionId")/1e3 
-    FROM "Execution"
-    WHERE "configId"  >= 0  AND "problemId" < 300 -- AND "problemId" < 976
+    FROM "Execution" -- where iteration=0 and "configId" not in(0)
     """.as[Execution]
 
   val configQuery = sql"""SELECT "configId", config, description FROM "Config" -- WHERE "configId" IN (#${nature.mkString(", ")})"""
@@ -219,33 +212,32 @@ object Compet extends App {
     p = problems.map(q => q.problemId -> q).toMap
     executions <- DB.run(executionQuery)
   } yield {
-    executions.map { e =>
-      val problem = p(e.problemId)
-      (problem, e)
+    executions.flatMap { e =>
+      p.get(e.problemId).map { problem => (problem, e) }
     }
       .groupBy { case (prob, exec) => (prob, exec.iteration) }
       .mapValues(_.map(_._2))
       .toSeq
       .sortBy { case ((prob, iter), _) => (prob.problem, iter) }
-
   }
 
-  val order = Array(56, 60, 58, 55, 59, 57, 62, 66, 64, 61, 65, 63)
+  val order = // (-1 to -21 by -1) ++
+    Array(55, 54, 61, 66, 67)
 
   val fut = for (
     pe <- groupedExecutions; cfgsSeq <- DB.run(configQuery);
     cfgs = cfgsSeq.map(c => c.configId -> c.desc).toMap
   ) yield {
 
-    val scores = new HashMap[Int, Double].withDefaultValue(0)
+    val scores = new mutable.HashMap[Int, Double].withDefaultValue(0)
 
-    val catScores = new HashMap[String, collection.mutable.Map[Int, Double]]
+    val catScores = new mutable.HashMap[String, collection.mutable.Map[Int, Double]]
 
     for (((problem, iteration), executions) <- pe) {
       println()
       println(s"${problem.problem}-$iteration ${problem.nat}")
 
-      val probScores = new HashMap[Int, Double].withDefaultValue(0)
+      val probScores = new mutable.HashMap[Int, Double].withDefaultValue(0)
 
       for (Seq(e1, e2) <- executions.combinations(2)) {
         val c = e1.compareTo(e2, problem.nat)
@@ -275,12 +267,13 @@ object Compet extends App {
       }
 
       for ((c, s) <- probScores; tag <- problem.tags) {
-        val scores = catScores.getOrElseUpdate(tag, new HashMap[Int, Double].withDefaultValue(0))
+        val scores = catScores.getOrElseUpdate(tag, new mutable.HashMap[Int, Double].withDefaultValue(0))
         scores(c) += s
       }
 
     }
 
+    println()
     for ((cat, scores) <- catScores.toSeq.sortBy(_._1)) {
       // println()
       print(cat + " & ")

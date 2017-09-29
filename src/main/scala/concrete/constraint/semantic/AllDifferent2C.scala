@@ -49,6 +49,7 @@ final class AllDifferent2C(scope: Array[Variable], val except: Set[Int] = Set())
   def init(ps: ProblemState) = ps
 
   def revise(ps: ProblemState): Outcome = {
+    // val queue = scope.indices.filter(i=>ps.dom(scope(i)).isAssigned).toList
     val out = revise(ps, q).entailIfFree(this)
     q = Nil
     out

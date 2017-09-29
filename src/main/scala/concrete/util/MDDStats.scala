@@ -54,8 +54,7 @@ object MDDStats extends App with LazyLogging {
   def apply(prob: Problem, params: ParameterManager): MDDStats =
     new MDDStats(prob, params)
 
-  val pm = new ParameterManager
-  pm("solver") = classOf[MDDStats]
+  val pm = new ParameterManager().updated("solver", classOf[MDDStats])
 
   val pg = new ProblemGenerator(pm)
 

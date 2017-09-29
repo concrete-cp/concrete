@@ -1,11 +1,12 @@
 package concrete.constraint.extension
 
-import scala.annotation.tailrec
-import scala.math.BigInt.int2bigInt
+import java.util
+
 import concrete.Domain
 import concrete.util.ArraySet
-import concrete.EmptyIntDomain
-import concrete.IntDomain
+
+import scala.annotation.tailrec
+import scala.math.BigInt.int2bigInt
 
 object HashTable {
   def apply(data: Seq[Array[Int]]): HashTable = {
@@ -46,14 +47,9 @@ final class HashTable(val table: ArraySet[Int]) extends Relation {
     }
   }
 
-  @tailrec
-  private def valid(modified: List[Int], doms: Array[Domain], t: Array[Int]): Boolean = {
-    modified.isEmpty || (doms(modified.head).present(t(modified.head)) && valid(modified.tail, doms, t))
-  }
-
-  def supported(domains: Array[Domain]): Array[Domain] = {
+  def supported(domains: Array[Domain]): Array[util.HashSet[Int]] = {
     val arity = domains.length
-    val newDomains = Array.fill[IntDomain](arity)(EmptyIntDomain)
+    val newDomains = Array.fill(arity)(new util.HashSet[Int])
 
     val pos = new MutableList(arity)
     pos.refill()
@@ -61,12 +57,12 @@ final class HashTable(val table: ArraySet[Int]) extends Relation {
     for (tuple <- table) {
       pos.filter { p =>
         ReduceableExt.fills += 1
-        newDomains(p) |= tuple(p)
+        newDomains(p).add(tuple(p))
         newDomains(p).size != domains(p).size
       }
     }
 
-    newDomains.asInstanceOf[Array[Domain]]
+    newDomains
 
   }
 
@@ -74,7 +70,10 @@ final class HashTable(val table: ArraySet[Int]) extends Relation {
 
   def edges = depth * table.size
 
+  def depth = table.headOption.map(_.size).getOrElse(0)
+
   def find(f: (Int, Int) => Boolean) = throw new UnsupportedOperationException
+
   def findSupport(scope: Array[Domain], p: Int, i: Int) = {
     table.find(t =>
       t(p) == i && t.indices.forall(i => scope(i).present(t(i))))
@@ -87,8 +86,12 @@ final class HashTable(val table: ArraySet[Int]) extends Relation {
   def universal(scope: IndexedSeq[Domain]): Boolean = ???
 
   override def size = table.size
+
   def lambda = table.size
 
-  def depth = table.headOption.map(_.size).getOrElse(0)
+  @tailrec
+  private def valid(modified: List[Int], doms: Array[Domain], t: Array[Int]): Boolean = {
+    modified.isEmpty || (doms(modified.head).present(t(modified.head)) && valid(modified.tail, doms, t))
+  }
 }
 

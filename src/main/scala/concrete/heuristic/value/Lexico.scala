@@ -4,13 +4,11 @@ package value
 
 final class Lexico(pm: ParameterManager) extends ValueHeuristic {
 
-  override def toString = "lexico";
+  override def toString = "lexico"
 
-  def compute(p: Problem) {
-    // Nothing to compute
-  }
+  def compute(s: MAC, ps: ProblemState): ProblemState = ps
 
-  override def selectIndex(variable: Variable, dom: Domain) = dom.head
+  override def selectIndex(variable: Variable, dom: Domain): Int = dom.head
 
   def shouldRestart = false
 

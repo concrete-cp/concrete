@@ -2,11 +2,14 @@ package concrete
 package heuristic
 package variable
 
-class DDegOnDom(params: ParameterManager, decisionVariables: Array[Variable]) extends VariableHeuristic(params, decisionVariables) {
+class DDegOnDom(val pool: Seq[Variable], tieBreaker: VariableHeuristic, val trustCandidates: Boolean = true)
+  extends ScoredVariableHeuristic(tieBreaker) {
 
   def score(variable: Variable, dom: Domain, state: ProblemState) =
     variable.getDDegEntailed(state).toDouble / dom.size
 
-  override def toString = "max-ddeg/dom"
+  override def toString = s"max-ddeg/dom then $tieBreaker"
+
+  override def shouldRestart: Boolean = tieBreaker.shouldRestart
 
 }

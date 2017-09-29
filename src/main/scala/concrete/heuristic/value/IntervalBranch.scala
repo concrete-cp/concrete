@@ -1,17 +1,17 @@
 package concrete
 package heuristic.value
 
+import concrete.heuristic.Branch
+
 final class IntervalBranch(pm: ParameterManager) extends BranchHeuristic {
-
-  override def toString = "split";
-
-  def compute(p: Problem) {
-    // Nothing to compute
-  }
 
   private val split = new Split(pm)
 
-  override def branch(variable: Variable, domain: Domain, ps: ProblemState) = {
+  override def toString = "split"
+
+  def compute(s: MAC, ps: ProblemState): ProblemState = ps
+
+  override def branch(variable: Variable, domain: Domain, ps: ProblemState): Branch = {
     if (domain.convex) {
       split.branch(variable, domain, ps)
     } else {
@@ -21,7 +21,7 @@ final class IntervalBranch(pm: ParameterManager) extends BranchHeuristic {
         i = j
         j = domain.next(i)
       }
-      Split.splitAt(variable, j, ps)
+      Split.splitAt(variable, domain, j, ps)
     }
   }
 

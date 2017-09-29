@@ -1,9 +1,10 @@
-package concrete;
+package concrete
+
+;
 
 import java.math.BigInteger
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
+import org.scalatest.{FlatSpec, Matchers}
 
 class ParameterManagerTester(private val pm: ParameterManager) {
   val classTest: Class[_] = pm.getOrElse("classTest", classOf[Int])
@@ -13,21 +14,22 @@ class ParameterManagerTester(private val pm: ParameterManager) {
 
 final class ParameterManagerTest extends FlatSpec with Matchers {
 
-  val pm = new ParameterManager
 
   "A ParameterManager" should "handle classes" in {
+    var pm = new ParameterManager
     new ParameterManagerTester(pm).classTest shouldBe classOf[Int]
-    pm("classTest") = classOf[Double]
+    pm = pm.updated("classTest", classOf[Double])
     new ParameterManagerTester(pm).classTest shouldBe classOf[Double]
-    pm("classTest") = "java.math.BigInteger"
+    pm = pm.updated("classTest", "java.math.BigInteger")
     new ParameterManagerTester(pm).classTest shouldBe classOf[BigInteger]
   }
 
   it should "handle ints" in {
+    var pm = new ParameterManager
     new ParameterManagerTester(pm).intTest shouldBe 12
-    pm("intTest") = 32
+    pm = pm.updated("intTest", 32)
     new ParameterManagerTester(pm).intTest shouldBe 32
-    pm("intTest") = "64"
+    pm = pm.updated("intTest", "64")
     new ParameterManagerTester(pm).intTest shouldBe 64
   }
 

@@ -1,41 +1,44 @@
-package concrete.generator;
+package concrete.generator
 
-import concrete.BooleanDomain
-import concrete.IntDomain
-import concrete.Variable
+;
+
+import concrete.{BooleanDomain, IntDomain, Variable}
 import concrete.constraint.Constraint
 import cspom.CSPOMConstraint
-import cspom.variable.CSPOMConstant
-import cspom.variable.CSPOMExpression
-import cspom.variable.CSPOMSeq
-import cspom.variable.CSPOMVariable
+import cspom.variable.{CSPOMConstant, CSPOMExpression, CSPOMSeq, CSPOMVariable}
 
 sealed trait C2Conc {
   def asVariable(pg: ProblemGenerator): Variable
 }
+
 sealed trait C21D extends C2Conc {
   // def values: Seq[Int]
   def is(o: Any): Boolean
 }
+
 final case class Var(v: Variable) extends C21D {
   //def values = v.dom.values.toSeq
-  def is(o: Any) = o match {
+  def is(o: Any): Boolean = o match {
     case o: Variable => o eq v
     case _ => false
   }
-  def asVariable(pg: ProblemGenerator) = v
+
+  def asVariable(pg: ProblemGenerator): Variable = v
 }
+
 final case class Const[T <: AnyVal](i: T) extends C21D {
   //def values = Seq(i)
-  def is(o: Any) = o == i
-  def asVariable(pg: ProblemGenerator) = i match {
-    case i if i == 0 && pg.intToBool => new Variable("false", BooleanDomain(false))
-    case i if i == 1 && pg.intToBool => new Variable("true", BooleanDomain(true))
+  def is(o: Any): Boolean = o == i
+
+  def asVariable(pg: ProblemGenerator): Variable = i match {
+    case 0 => new Variable("false", BooleanDomain(false))
+    case 1 => new Variable("true", BooleanDomain(true))
     case i: Int => new Variable(i.toString, IntDomain.ofSeq(i))
     case b: Boolean => new Variable(b.toString, BooleanDomain(b))
     case o => throw new IllegalArgumentException(s"Type of $o is not supported")
   }
 }
+
 final case class Sequence(s: Seq[C2Conc], i: Seq[Int]) extends C2Conc {
   def asVariable(pg: ProblemGenerator) = throw new AssertionError
 }
@@ -44,14 +47,6 @@ trait Generator {
 
   type VarMap = Map[CSPOMVariable[_], Variable]
 
-  def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] =
-    genFunctional(constraint, Generator.cspom2concrete(constraint.result))
-
-  def genReversed(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] =
-    genFunctional(constraint, Generator.cspom2concrete(constraint.result))
-
-  def genFunctional(constraint: CSPOMConstraint[_], result: C2Conc)(implicit variables: VarMap): Seq[Constraint] = ???
-
   final def generate[A](constraint: CSPOMConstraint[A], variables: VarMap): Seq[Constraint] = {
     constraint.result match {
       case CSPOMConstant(true) => gen(constraint.asInstanceOf[CSPOMConstraint[Boolean]])(variables)
@@ -59,6 +54,14 @@ trait Generator {
       case v => genFunctional(constraint, Generator.cspom2concrete(v)(variables))(variables)
     }
   }
+
+  def gen(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] =
+    genFunctional(constraint, Generator.cspom2concrete(constraint.result))
+
+  def genFunctional(constraint: CSPOMConstraint[_], result: C2Conc)(implicit variables: VarMap): Seq[Constraint] = ???
+
+  def genReversed(constraint: CSPOMConstraint[Boolean])(implicit variables: VarMap): Seq[Constraint] =
+    genFunctional(constraint, Generator.cspom2concrete(constraint.result))
 }
 
 object Generator {

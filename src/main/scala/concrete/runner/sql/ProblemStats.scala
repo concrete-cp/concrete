@@ -1,11 +1,12 @@
 package concrete.runner.sql
 
 import java.net.URL
+import java.util
 
-import bitvectors.BitVector
 import concrete.ParameterManager
 import concrete.generator.cspompatterns.{ConcretePatterns, FZPatterns, XCSPPatterns}
 import cspom.CSPOM
+import cspom.CSPOMGoal._
 import cspom.compiler.CSPOMCompiler
 import cspom.extension.MDDRelation
 import cspom.flatzinc.FlatZincFastParser
@@ -16,7 +17,7 @@ import slick.jdbc.PostgresProfile.api._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
-import scala.util.Failure
+import scala.util.{Failure, Success, Try}
 
 object UniversalSet extends MiniSet {
   override def present(i: Int): Boolean = true
@@ -45,17 +46,24 @@ object ProblemStats extends App {
   val updates = query.flatMap { r =>
     Future.sequence {
       r.par.map { p =>
-        println(p)
-        val stats = data(new URL(s"file:///home/vion/xp-table/${p._2}"))
 
-        println(stats)
 
-        val q = for (u <- SQLWriter.problems if u.problemId === p._1)
-          yield (u.nbVars, u.d, u.k, u.lambda, u.looseness, u.mddEdges, u.mddVertices, u.bddVertices)
-        val action = q.update((stats.get('n).map(_.toInt), stats.get('d).map(_.toInt), stats.get('k),
-          stats.get('lambda), stats.get('l), stats.get('mddEdges), stats.get('mddVertices),
-          stats.get('bddVertices)))
-        DB.run(action)
+        data(new URL(s"file:///home/vion/${p._2}")) match {
+          case Success((nature: String, stats: Map[Symbol, Double])) =>
+            println(p)
+            println(nature)
+            println(stats)
+
+            val q = for (u <- SQLWriter.problems if u.problemId === p._1)
+              yield (u.nature, u.nbVars, u.d, u.k, u.lambda, u.looseness, u.mddEdges, u.mddVertices, u.bddVertices)
+            val action = q.update((Some(nature), stats.get('n).map(_.toInt), stats.get('d).map(_.toInt), stats.get('k),
+              stats.get('lambda), stats.get('l), stats.get('mddEdges), stats.get('mddVertices),
+              stats.get('bddVertices)))
+            DB.run(action)
+
+          case Failure(e) => System.err.println(e)
+            Future.successful(())
+        }
       }
         .toList
     }
@@ -64,14 +72,15 @@ object ProblemStats extends App {
   val r = Await.result(updates, Duration.Inf)
   println(r)
 
-  def data(file: URL): Map[Symbol, Double] = {
+  def data(file: URL): Try[(String, Map[Symbol, Double])] = {
 
     def parser = file.getFile match {
       case f if f.contains(".xml") => XCSPParser
       case f if f.contains(".fzn") => FlatZincFastParser
     }
 
-    val cspom = CSPOM.load(file, parser)
+
+    CSPOM.load(file, parser)
       .flatMap { cspomProblem =>
         parser match {
           case FlatZincFastParser =>
@@ -84,70 +93,79 @@ object ProblemStats extends App {
 
         }
       }
-      .flatMap(
-        CSPOMCompiler.compile(_, ConcretePatterns(pm)))
-      .get
-
-    val extensions = for {c <- cspom.constraints
-                          if c.getParam("init").contains(false)
-                          rel <- c.getParam[MDDRelation]("relation")
-                          if rel.arity > 2
-    } yield rel
-
-    var d = 0
-    var k = 0
-    var lambda = 0.0d
-    var l = 0.0d
-    var bddV = 0l
-    var mddE = 0l
-    var mddV = 0l
-
-    var count = 0
-
-    for (ext <- extensions) {
-      count += 1
-      val mddEdges = ext.mdd.edges()
-      if (mddEdges > mddE) {
-        bddV = BDD(ext.mdd).reduce().vertices()
-
-
-        // println(ext.hashCode())
-        k = ext.arity
-        val domains = Array.fill(k)(BitVector.empty)
-
-        ext.mdd.supported(Array.fill(k)(UniversalSet), domains, 0, new SetWithMax(k))
-
-
-        d = domains.map(_.cardinality).max
-        k = domains.length
-        lambda = concrete.util.Math.logBigInteger(ext.mdd.lambda())
-        val space = domains.map(dom => BigInt(dom.cardinality)).product
-        l = Math.exp(lambda - concrete.util.Math.logBigInteger(space))
-        mddE = mddEdges
-        mddV = ext.mdd.vertices()
+      .flatMap { cspom =>
+        val nature = cspom.goal.get.obj match {
+          case Satisfy => "satisfy"
+          case Maximize(e) => s"maximize ${cspom.displayName(e)}"
+          case Minimize(e) => s"minimize ${cspom.displayName(e)}"
+        }
+        CSPOMCompiler.compile(cspom, ConcretePatterns(pm)).map((nature, _))
       }
-    }
+      .map { case (nature, cspom) =>
 
-    //    println(s"d = $d")
-    //    println(s"k = $k")
-    //    println(s"lambda = $lambda")
-    //    println(s"l = $l")
-    //    println(s"e = $e")
-    //
-    //    println(s"dm = ${dt.toDouble / et}")
-    //    println(s"km = ${kt.toDouble / et}")
-    //    println(s"lambdam = ${lambdat.doubleValue() / et}")
-    //    println(s"lm = ${lt / et}")
 
-    Map(
-      'd -> d,
-      'k -> k,
-      'lambda -> lambda.doubleValue(),
-      'l -> l,
-      'mddEdges -> mddE,
-      'bddVertices -> bddV,
-      'mddVertices -> mddV
-    )
+        val extensions = for {c <- cspom.constraints
+                              if c.getParam("init").contains(false)
+                              rel <- c.getParam[MDDRelation]("relation")
+                              if rel.arity > 2
+        } yield rel
+
+        var d = 0
+        var k = 0
+        var lambda = 0.0d
+        var l = 0.0d
+        var bddV = 0l
+        var mddE = 0l
+        var mddV = 0l
+
+        var count = 0
+
+        for (ext <- extensions) {
+          count += 1
+          val mddEdges = ext.mdd.edges()
+          if (mddEdges > mddE) {
+            bddV = BDD(ext.mdd).reduce().vertices()
+
+
+            // println(ext.hashCode())
+            k = ext.arity
+            val domains = Array.fill(k)(new util.HashSet[Int])
+
+            ext.mdd.supported(Array.fill(k)(UniversalSet), domains, 0, new SetWithMax(k))
+
+
+            d = domains.map(_.size).max
+            k = domains.length
+            lambda = concrete.util.Math.logBigInteger(ext.mdd.lambda())
+            val space = domains.map(dom => BigInt(dom.size)).product
+            l = Math.exp(lambda - concrete.util.Math.logBigInteger(space))
+            mddE = mddEdges
+            mddV = ext.mdd.vertices()
+          }
+        }
+
+
+        //    println(s"d = $d")
+        //    println(s"k = $k")
+        //    println(s"lambda = $lambda")
+        //    println(s"l = $l")
+        //    println(s"e = $e")
+        //
+        //    println(s"dm = ${dt.toDouble / et}")
+        //    println(s"km = ${kt.toDouble / et}")
+        //    println(s"lambdam = ${lambdat.doubleValue() / et}")
+        //    println(s"lm = ${lt / et}")
+
+        (nature, Map(
+          'd -> d,
+          'k -> k,
+          'lambda -> lambda.doubleValue(),
+          'l -> l,
+          'mddEdges -> mddE,
+          'bddVertices -> bddV,
+          'mddVertices -> mddV
+        ))
+      }
   }
 
 }

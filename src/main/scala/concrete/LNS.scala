@@ -38,9 +38,9 @@ object LNS extends App {
   }
 
   val prob = CSPOM.load("/home/vion/xcsp3series/Scheduling/Scheduling-os-taillard/Taillard-os-05-05-0.xml.lzma").get
-  val params = new ParameterManager
-  params("solver") = classOf[LNS]
-  params("heuristic.value") = classOf[Lexico]
+  val params = new ParameterManager()
+    .updated("solver", classOf[LNS])
+    .updated("heuristic.value", classOf[Lexico])
 
   CSPOMCompiler.compile(prob, XCSPPatterns()).get
 

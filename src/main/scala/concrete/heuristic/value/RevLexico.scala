@@ -4,14 +4,12 @@ package value
 
 final class RevLexico(pm: ParameterManager) extends ValueHeuristic {
 
-  def score(variable: Variable, dom: Domain, value: Int) = value
 
-  override def toString = "lexico";
+  override def toString: String = "rev-lexico"
 
-  def compute(p: Problem) {
-    // Nothing to compute
-  }
+  def compute(s: MAC, ps: ProblemState): ProblemState = ps
 
-  override def selectIndex(variable: Variable, dom: Domain) = dom.last
+  override def selectIndex(variable: Variable, dom: Domain): Int = dom.last
+
   def shouldRestart = false
 }

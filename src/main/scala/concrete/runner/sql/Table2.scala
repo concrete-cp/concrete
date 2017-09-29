@@ -74,7 +74,7 @@ object Table2 extends App {
 
     def toString(toHandler: ErrorHandling, oomHandler: ErrorHandling): String = {
       solved match {
-        case Success => statistic.toString
+        case Success => statistic.get.toString
         case Timeout => s"${timeoutHandler.toDouble(statistic)} (TO)"
         case OOM     => s"${oomHandler.toDouble(statistic)} (OOM)"
         case Stalled => s"${statistic.getOrElse("None")} (Stalled)"
@@ -150,7 +150,7 @@ object Table2 extends App {
     case "nodes"        => ErrorCap(Double.PositiveInfinity)
     case "time"         => ErrorCap(1200)
     case "revisions"    => ErrorCap(0)
-    case "mem"          => ErrorCap(Double.PositiveInfinity) // 4 * math.pow(2, 10))
+    case "mem"          => ErrorCap(4 * math.pow(2, 10))
     case "domainChecks" => ErrorCap(Double.PositiveInfinity)
     case "nps"          => ErrorCap(0)
   }
@@ -174,14 +174,22 @@ object Table2 extends App {
   implicit val getExecutionResult = GetResult(r => Execution(r.<<, r.<<, r.<<, r.<<, r.<<))
 
   val pe = DB.run(sql"""
-        SELECT "problemId", coalesce(display, name), string_agg("problemTag", ',') as tags
-        FROM "Problem" NATURAL LEFT JOIN "ProblemTag"
-        WHERE "problemId" IN (
-          SELECT "problemId" 
-          FROM "Execution"
-          WHERE "configId" in (#${nature.mkString(",")}))
-        GROUP BY "problemId"
-        """.as[Problem])
+        |SELECT "problemId", coalesce(display, name), string_agg("problemTag", ',') as tags
+        |FROM "Problem" NATURAL LEFT JOIN "ProblemTag"
+        |WHERE "problemId" IN (
+        |  SELECT "problemId"
+        |  FROM "Execution"
+        |  WHERE "configId" in (#${nature.mkString(",")}))
+        |  AND 500000 <= ANY (
+        |    SELECT totalTime('{solver.searchCpu, solver.preproCpu}', "executionId")
+        |    FROM "Execution"
+        |    WHERE "Execution"."problemId" = "Problem"."problemId")
+        |  OR EXISTS (
+        |    SELECT 1 FROM "Execution"
+        |    WHERE "Execution"."problemId" = "Problem"."problemId"
+        |    AND status !~ 'SAT')
+        |GROUP BY "problemId"
+        """.stripMargin.as[Problem])
     .map { p =>
       p.map(q => q.problemId -> q).toMap
     }
@@ -209,16 +217,19 @@ object Table2 extends App {
     val eresults = Map[(Int, Int), Map[Int, Resultat]]().withDefaultValue(Map())
 
     val results = e.foldLeft(eresults) {
-      case (res, Execution(problemId, configId, iteration, status, statistic)) =>
+      case (res, Execution(problemId, configId, iteration, status, statistic))
+        if p.get(problemId).isDefined =>
         val r: Resultat = Resultat(status, statistic)
         val oldRes = res((problemId, iteration))
         res.updated((problemId, iteration), oldRes + (configId -> r))
+      case (res, _) => res
     }
 
     for {
       ((problemId, iteration), stats) <- results
       if !stats.forall(_._2.toDouble(timeoutHandler, oomHandler).isNaN)
-      tag <- p(problemId).tags
+      problem <- p.get(problemId)
+      tag <- problem.tags
       (conf, result) <- stats
     } {
       val old = totals(tag)(conf)
@@ -255,10 +266,10 @@ object Table2 extends App {
 
     }
 
-    val best = medians.min
+    val best = medians.max
 
     println(s"$k &\t" + medians.map { median =>
-      f"${if (median < best * 1.1) "\\bf " else ""} ${median}%.0f"
+      f"${if (median > best / 1.1) "\\bf " else ""} ${median}%.0f"
       //            val (v, m) = engineer(median)
       //
       //            (if (median < best * 1.1) "\\bf " else "") + (

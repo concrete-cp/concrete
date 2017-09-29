@@ -7,9 +7,11 @@ import java.net.URL
 import com.typesafe.scalalogging.LazyLogging
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.{ConcretePatterns, FZPatterns, XCSPPatterns}
+import concrete.heuristic.value.BestCost
 import concrete.runner.{XCSP3Concrete, XCSP3SolutionChecker}
 import cspom.compiler.CSPOMCompiler
 import cspom.flatzinc.FlatZincFastParser
+import cspom.variable.CSPOMVariable
 import cspom.xcsp.XCSP3Parser
 import cspom.{CSPOM, UNSATException}
 import org.scalatest.{FunSpec, Inspectors, Matchers, OptionValues}
@@ -21,7 +23,10 @@ import scala.util.{Random, Success}
 
 class SolvingTest extends FunSpec with SolvingBehaviors {
 
-  val lecoutrePB = Seq[(String, (AnyVal, Double))](
+  private val lecoutrePB = Seq[(String, (AnyVal, Double))](
+    "RadarSurveillance-8-24-3-2-01.xml.xz" -> ((0, 1.0)),
+    "qwh-10-57-0_X2.xml.xz" -> ((37, 1.0)),
+
     "Alpha.xml.xz" -> ((1, 1.0)),
     "Dominoes-grid1.xml.xz" -> ((128, 1.0)),
     "LabeledDice.xml.xz" -> ((48, 1.0)),
@@ -37,10 +42,7 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
     "ColouredQueens-03.xml.xz" -> ((0, 1.0)),
     "ColouredQueens-05.xml.xz" -> ((240, 1.0)),
     "CostasArray-10.xml.xz" -> ((2160, 1.0)),
-    "Crossword-lex-vg-4-6.xml.xz" -> ((4749, 0.1)),
-    "Crossword-lex-vg-4-7.xml.xz" -> ((125, 1.0)),
 
-    "Crossword-lex-vg-4-8.xml.xz" -> ((1, 1.0)),
     "CryptoPuzzle-send-more-money.xml.xz" -> ((1, 1.0)),
     "DistinctVectors-05-100-02.xml.xz" -> ((true, 1.0)),
     "Domino-100-100.xml.xz" -> ((1, 1.0)),
@@ -60,9 +62,10 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
     "Langford-2-05.xml.xz" -> ((0, 1.0)),
 
     "LangfordBin-05.xml.xz" -> ((0, 1.0)),
+
     "qwh-o005-h10.xml.xz" -> ((1, 1.0)),
     "bqwh-15-106-00_X2.xml.xz" -> ((182, 1.0)),
-    "qwh-10-57-0_X2.xml.xz" -> ((37, 1.0)),
+
     "MagicSequence-003-ca.xml.xz" -> ((0, 1.0)),
 
     "MagicSequence-004-ca.xml.xz" -> ((2, 1.0)),
@@ -72,7 +75,6 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
     "MagicSquare-3-sum.xml.xz" -> ((8, 1.0)),
 
     "MagicSquare-3-table.xml.xz" -> ((8, 1.0)),
-    "MarketSplit-01.xml.xz" -> ((true, 1.0)),
     "MultiKnapsack-1-01.xml.xz" -> ((1, 1.0)),
     "MultiKnapsack-1-0_X2.xml.xz" -> ((1, 1.0)),
     "Nonogram-001-regular.xml.xz" -> ((1, 1.0)),
@@ -84,19 +86,18 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
     "Primes-10-20-2-1.xml.xz" -> ((113680, .001)),
 
     // 50
-    "bdd-15-21-2-2713-79-01.xml.xz" -> ((0, 1.0)),
     "composed-25-01-02-0.xml.xz" -> ((0, 1.0)),
     "ehi-85-297-00.xml.xz" -> ((0, 1.0)),
     "QuasiGroup-3-04.xml.xz" -> ((2, 1.0)),
     "QuasiGroup-4-04.xml.xz" -> ((0, 1.0)),
 
     "QueenAttacking-04_X2.xml.xz" -> ((0, 1.0)),
-    "QueenAttacking-05_X2.xml.xz" -> ((400, 1.0)),
+
     "Queens-0012-m1.xml.xz" -> ((14200, .01)),
     "QueensKnights-008-05-add.xml.xz" -> ((0, 1.0)),
     "QueensKnights-008-05-mul.xml.xz" -> ((0, 1.0)),
 
-    "RadarSurveillance-8-24-3-2-01.xml.xz" -> ((0, 1.0)),
+
     "RenaultMod-01.xml.xz" -> ((0, 1.0)),
     "Rlfap-scen-06.xml.xz" -> ((0, 1.0)),
     "RoomMate-magic-10-50-int.xml.xz" -> ((0, 1.0)),
@@ -111,7 +112,6 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
     "SportsScheduling-04.xml.xz" -> ((0, 1.0)),
     "SportsScheduling-06.xml.xz" -> ((10, 1.0)),
     "Steiner3-05.xml.xz" -> ((0, 1.0)),
-    "Steiner3-07.xml.xz" -> ((151200, .001)),
     "Subisomorphism-A-01.xml.xz" -> ((1, 1.0)),
 
     //75
@@ -119,7 +119,6 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
     "Sudoku-s01a-table.xml.xz" -> ((1, 1.0)),
     "SuperQueens-01.xml.xz" -> ((0, 1.0)),
     "TravellingSalesman-25-003_X2.xml.xz" -> ((5, 1.0)),
-    "CoveringArray-3-04-2-08.xml.xz" -> ((80640, 1.0)),
 
     "DeBruijnSequence-02-02.xml.xz" -> ((1, 1.0)),
     "DeBruijnSequence-02-04.xml.xz" -> ((16, 1.0)),
@@ -156,7 +155,7 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
     "PrizeCollecting-15-3-5-0.xml.xz" -> ((20, 1.0)),
     "Pb-mps-v2-20-10-bm23.xml.xz" -> ((34, 1.0)),
     "QuadraticAssignment-chr12a.xml.xz" -> ((4776, .1)),
-    "QueenAttacking-05.xml.xz" -> ((0, 1.0)),
+
     "Ramsey-08.xml.xz" -> ((2, 1.0)),
 
     "Taillard-os-04-04-0.xml.xz" -> ((193, 1.0)),
@@ -169,14 +168,28 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
     "OpenStacks-m1-pb-10-10-1.xml.xz" -> ((5, 1.0)),
     "OpenStacks-m2-tiny.xml.xz" -> ((3, 1.0)),
     "OpenStacks-m2-pb-10-10-1.xml.xz" -> ((5, 1.0)),
-    "Rack-r1.xml.xz" -> ((550, 1.0))
+    "Rack-r1.xml.xz" -> ((550, 1.0)),
 
+
+    // Long
+
+    "Crossword-lex-vg-4-6.xml.xz" -> ((4749, 0.1)),
+    "Crossword-lex-vg-4-7.xml.xz" -> ((125, 1.0)),
+
+    "Crossword-lex-vg-4-8.xml.xz" -> ((1, 1.0)),
+    "CoveringArray-3-04-2-08.xml.xz" -> ((80640, 1.0)),
+
+    "bdd-15-21-2-2713-79-01.xml.xz" -> ((0, 1.0)),
+    "MarketSplit-01.xml.xz" -> ((true, 1.0)),
+    "QueenAttacking-05.xml.xz" -> ((0, 1.0)),
+    "QueenAttacking-05_X2.xml.xz" -> ((400, 1.0)),
+    "Steiner3-07.xml.xz" -> ((151200, .001))
     // "Mario-easy-2.xml.xz" -> ((628, 1.0)),
     //"Tpp-3-3-20-1.xml.xz" -> ((126, 1.0)),
   ) // .slice(108, 109)
 
-  val problemBank = Seq[(String, (AnyVal, Boolean))](
-  //  "celar-CELAR6-SUB2.fzn.xz" -> ((true, false)),
+  private val problemBank = Seq[(String, (AnyVal, Boolean))](
+    //  "celar-CELAR6-SUB2.fzn.xz" -> ((true, false)),
     "1d_rubiks_cube.small.fzn.xz" -> ((4, false)),
     "1d_rubiks_cube.fzn.xz" -> ((12, false)),
     "battleships10.fzn.xz" -> ((1, false)),
@@ -188,9 +201,11 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
     "test.fzn.xz" -> ((true, false)))
     .map { case (pb, (nbsol, test)) => (pb, (nbsol, 0.0)) }
 
-  val parameters = Nil
+  private val parameters = new ParameterManager().updated("f", Unit).updated("heuristic.value", classOf[BestCost])
 
-  for ((p, (r, test)) <- (problemBank ++ lecoutrePB)) {
+  for ((p, (r, test)) <-  problemBank  ++
+     lecoutrePB //.slice(11,12)
+  ) {
 
     describe(p) {
 
@@ -204,87 +219,13 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
 
 trait SolvingBehaviors extends Matchers with Inspectors with OptionValues with LazyLogging {
   this: FunSpec =>
-  //
-  //  def solve(name: String, expectedResult: Boolean, parameters: Seq[(String, String)], test: Boolean): Unit =
-  //    it(s"should have ${if (expectedResult) "a" else "no"} solution") {
-  //      val pm = new ParameterManager
-  //      parameters.foreach(s => pm.update(s._1, s._2))
-  //
-  //      val url = getClass.getResource(name)
-  //
-  //      require(url != null, "Could not find resource " + name)
-  //
-  //      val parser = CSPOM.autoParser(url).get
-  //
-  //      CSPOM.load(url, parser)
-  //        .flatMap { cspomProblem =>
-  //          logger.debug(cspomProblem.toString)
-  //          parser match {
-  //            case FlatZincFastParser =>
-  //              CSPOMCompiler.compile(cspomProblem, FZPatterns())
-  //
-  //            case XCSPParser =>
-  //              CSPOMCompiler.compile(cspomProblem, XCSPPatterns())
-  //
-  //            case _ =>
-  //              Success(cspomProblem)
-  //          }
-  //        }
-  //        .flatMap(CSPOMCompiler.compile(_, ConcretePatterns(pm)))
-  //        .flatMap(CSPOMCompiler.compile(_, Seq(Bool2IntIsEq)))
-  //        .flatMap { cspom =>
-  //          // println(cspom.toString)
-  //          logger.debug(cspom.toString)
-  //          val pg = new ProblemGenerator(pm)
-  //
-  //          pg.generate(cspom).flatMap {
-  //            case (problem, variables) =>
-  //              val solver = Solver(problem)
-  //              solver.statistics.register("compiler", CSPOMCompiler)
-  //              solver.statistics.register("generator", pg)
-  //              new CSPOMSolver(solver, cspom, variables).applyGoal()
-  //          }
-  //        }
-  //        .map { solver =>
-  //
-  //          //    println(solver.concreteProblem)
-  //
-  //          val f = Future {
-  //
-  //
-  //            val (nbSol, sol) = check(url, solver.take(1), solver, if (test) 1.0 else 0.0)
-  //            withClue {
-  //              val variables: Seq[String] = solver.cspom.goal.get.getSeqParam("variables")
-  //              sol.map(XCSP3Concrete.xmlSolution(variables, _, None))
-  //            } {
-  //              if (expectedResult) {
-  //                nbSol should be > 0
-  //              } else {
-  //                nbSol shouldBe 0
-  //              }
-  //            }
-  //          }
-  //
-  //          concurrent.Await.result(f, 600.seconds)
-  //
-  //        }
-  //        .recover {
-  //          case e: UNSATException if !expectedResult =>
-  //            logger.warn("UNSAT: " + e)
-  //            Success(())
-  //        }
-  //        .get
-  //    }
 
-  def count(name: String, expectedResult: AnyVal, parameters: Seq[(String, String)],
+  def count(name: String, expectedResult: AnyVal, pm: ParameterManager,
             test: Double): Unit = {
     val url = getClass.getResource(name)
 
     require(url != null, "Could not find resource " + name)
     val parser = CSPOM.autoParser(url).get
-
-    val pm = new ParameterManager
-    parameters.foreach(s => pm.update(s._1, s._2))
 
     it("should find solutions") {
       val cspom = CSPOM.load(url, parser)
@@ -302,21 +243,18 @@ trait SolvingBehaviors extends Matchers with Inspectors with OptionValues with L
 
         }
       }
-        .flatMap(
-          CSPOMCompiler.compile(_, ConcretePatterns(pm)))
-        //        .flatMap(
-        //          CSPOMCompiler.compile(_, Seq(Bool2IntIsEq)))
+        .flatMap(CSPOMCompiler.compile(_, ConcretePatterns(pm)))
         .flatMap { cspom =>
-        val pg = new ProblemGenerator(pm)
-        pg.generate(cspom).flatMap {
-          case (problem, variables) =>
-            val solver = Solver(problem)
-            solver.statistics.register("compiler", CSPOMCompiler)
-            solver.statistics.register("generator", pg)
-            new CSPOMSolver(solver, cspom, variables).applyGoal()
+          val pg = new ProblemGenerator(pm)
+          pg.generate(cspom).map {
+            case (problem, variables) =>
+              val solver = Solver(problem, pm)
+              solver.statistics.register("compiler", CSPOMCompiler)
+              solver.statistics.register("generator", pg)
+              (new CSPOMSolver(solver, cspom.expressionMap, variables), cspom.goal.get.getSeqParam("variables"))
+          }
         }
-      }
-        .map { solver =>
+        .map { case (solver, declared) =>
 
           val desc = solver.optimizes match {
             case Some(v) => s"should find optimal value $expectedResult for $v"
@@ -330,17 +268,17 @@ trait SolvingBehaviors extends Matchers with Inspectors with OptionValues with L
 
               solver.optimizes match {
                 case Some(v) =>
-                  val (_, last) = check(url, solver, solver, test)
+                  val (_, last) = check(url, solver, declared, solver.optimizes, test)
                   last.map(_ (v)) should contain(expectedResult)
                 case None =>
                   expectedResult match {
                     case b: Boolean =>
                       val solsCut = solver.take(1)
-                      val (nbSols, _) = check(url, solsCut, solver, test)
+                      val (nbSols, _) = check(url, solsCut, declared, solver.optimizes, test)
                       nbSols > 0 shouldBe b
                     case i: Int =>
                       val solsCut = solver.take(i + 1)
-                      val (nbSols, _) = check(url, solsCut, solver, test)
+                      val (nbSols, _) = check(url, solsCut, declared, solver.optimizes, test)
                       nbSols shouldBe expectedResult
                   }
 
@@ -352,7 +290,7 @@ trait SolvingBehaviors extends Matchers with Inspectors with OptionValues with L
 
         }
         .recover {
-          case e: UNSATException =>
+          case _: UNSATException =>
 
         }
 
@@ -361,15 +299,14 @@ trait SolvingBehaviors extends Matchers with Inspectors with OptionValues with L
     }
   }
 
-  private def check(url: URL, sols: Iterator[CSPOMSolution], solver: CSPOMSolver, prob: Double): (Int, Option[CSPOMSolution]) = {
+  private def check(url: URL, sols: Iterator[CSPOMSolution], variables: Seq[String], opt: Option[CSPOMVariable[_]], prob: Double): (Int, Option[CSPOMSolution]) = {
     val rand = new Random()
     val checker = new XCSP3SolutionChecker(url)
     var nbSol = 0
     var lastSol: Option[CSPOMSolution] = None
     for (sol <- sols) {
       if (rand.nextDouble() < prob) {
-        val variables: Seq[String] = solver.cspom.goal.get.getSeqParam("variables")
-        val obj = solver.optimizes.map(v => sol(v))
+        val obj = opt.map(v => sol(v))
         try {
           val failed = checker.checkSolution(sol, obj, variables)
           withClue(XCSP3Concrete.xmlSolution(variables, sol, obj)) {

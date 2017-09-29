@@ -33,8 +33,8 @@ deltaY = array3d(0..3, 0..3, 0..3, [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
   "concrete" should "validate solution" in {
 
     val pm = new ParameterManager()
-    pm("ac3c.key") = classOf[concrete.heuristic.revision.Weight]
-    pm("ac3c.queue") = classOf[concrete.priorityqueues.ScalaBinomialHeap[Constraint]]
+      .updated("ac3c.key", classOf[concrete.heuristic.revision.Weight])
+      .updated("ac3c.queue", classOf[concrete.priorityqueues.ScalaBinomialHeap[Constraint]])
     //pm("improveModel") = false
 
     //    val cspom = CSPOM { implicit problem =>
@@ -61,7 +61,7 @@ deltaY = array3d(0..3, 0..3, 0..3, [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
 
       val solver = MAC(pb, pm)
 
-      var state = solver.heuristic.compute(pb, pb.initState.toState) //.assign(pb.variable("X"), 0)
+      var state = solver.heuristic.compute(solver, pb.initState.toState) //.assign(pb.variable("X"), 0)
       // val filter = new ACC(pb, pm)
       //      println(state)
 

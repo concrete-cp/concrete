@@ -86,7 +86,9 @@ object Math {
     require(!b.isNaN && !b.isInfinite, "Infinite or negative values not accepted: " + b)
     // e^b = e^(b2+c) = e^b2 2^t with e^c = 2^t
     val bc = 680.0
-    if (b < bc) { BigDecimal.valueOf(math.exp(b)).setScale(0, RoundingMode.HALF_EVEN).toBigInt }
+    if (b < bc) {
+      BigDecimal.valueOf(math.exp(b)).setScale(0, RoundingMode.HALF_EVEN).toBigInt
+    }
     else {
       val t = math.ceil((b - bc) / LOG2).toInt
       val b2 = b - t * LOG2
@@ -114,7 +116,20 @@ object Math {
   def logSumOfExponentials(xs: Seq[Double]): Double = {
     if (xs.length == 1) return xs.head
     val max = xs.max
-    val sum = xs.filterNot(_.isNegInfinity).map(x => math.exp(x-max)).sum
+    val sum = xs.filterNot(_.isNegInfinity).map(x => math.exp(x - max)).sum
     max + math.log(sum)
   }
+
+  def paretoMin[T](uv: Seq[T])(implicit ordering: PartialOrdering[T]): Seq[T] = {
+    uv.filterNot { v => uv.exists(w => ordering.gt(v, w)) }
+  }
+
+  implicit def partialOrderingVector[T](implicit ordering: Ordering[T]): PartialOrdering[Seq[T]] =
+    new PartialOrdering[Seq[T]] {
+      def tryCompare(x: Seq[T], y: Seq[T]): Option[Int] = ???
+
+      def lteq(i: Seq[T], j: Seq[T]): Boolean =
+        (i, j).zipped.forall { case (i, j) => ordering.lteq(i, j) }
+    }
+
 }

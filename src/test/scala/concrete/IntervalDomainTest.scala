@@ -14,4 +14,14 @@ class IntervalDomainTest extends FlatSpec with Matchers {
     dom.removeFrom(14).last shouldBe 13
     dom.removeTo(13).head shouldBe 14
   }
+
+  it should "remove values" in {
+    val dom = IntDomain.ofInterval(0, 224).remove(223)
+    dom.view should not contain 223
+
+    val d2 = dom.removeAfter(224)
+    assert(d2 subsetOf dom)
+    assert(d2.head == 0)
+    assert(dom.head == 0)
+  }
 }

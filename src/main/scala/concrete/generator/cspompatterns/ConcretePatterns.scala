@@ -18,7 +18,7 @@ object ConcretePatterns {
         NegToCNF, ReifiedXor, ReifiedConj, ReifiedClause,
         NeqVec,
         SlidingSum, Regular, SetIn, CSPOMTypes,
-        AllDiffConstant, Pow,
+        AllDiffConstant, PowDomains, Pow,
         // Clause does not support constants
         SimplClause, PBConstants,
         DivDomains, ModDomains,

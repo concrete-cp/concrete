@@ -1,8 +1,9 @@
 package concrete.constraint.extension
 
-import bitvectors.BitVector
+import java.util
+
 import com.typesafe.scalalogging.LazyLogging
-import concrete.{Domain, IntDomain}
+import concrete.Domain
 import mdd.{MDD, MiniSet, SetWithMax}
 
 object MDDRelation {
@@ -31,14 +32,14 @@ final class MDDRelation(val mdd: MDD) extends Relation with LazyLogging {
   def filterTrie(doms: Array[Domain], modified: List[Int]): MDDRelation = {
     val m = mdd.filterTrie(doms.asInstanceOf[Array[MiniSet]], modified)
 
-//    assert(m.forall { sup =>
-//      sup.zipWithIndex.forall {
-//        case (i, p) =>
-//          val r = doms(p).present(i)
-//          if (!r) logger.warn(s"($p, $i) should have been filtered")
-//          r
-//      }
-//    }, modified + "\n" + m)
+    //    assert(m.forall { sup =>
+    //      sup.zipWithIndex.forall {
+    //        case (i, p) =>
+    //          val r = doms(p).present(i)
+    //          if (!r) logger.warn(s"($p, $i) should have been filtered")
+    //          r
+    //      }
+    //    }, modified + "\n" + m)
 
     if (m eq mdd) {
       this
@@ -47,11 +48,11 @@ final class MDDRelation(val mdd: MDD) extends Relation with LazyLogging {
     }
   }
 
-  def supported(doms: Array[Domain]): Array[Domain] = {
-    val newDomains = Array.fill[BitVector](doms.length)(BitVector.empty)
+  def supported(doms: Array[Domain]): Array[util.HashSet[Int]] = {
+    val newDomains = Array.fill(doms.length)(new util.HashSet[Int]())
     val l = new SetWithMax(doms.length)
     mdd.supported(doms.asInstanceOf[Array[MiniSet]], newDomains, 0, l)
-    newDomains.map(bv => IntDomain.ofBitVector(0, bv, bv.cardinality))
+    newDomains
   }
 
   override def isEmpty = mdd.isEmpty

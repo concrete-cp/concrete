@@ -6,15 +6,11 @@ import cspom.UNSATException
 
 final class MidValue(pm: ParameterManager) extends ValueHeuristic {
 
-  def score(variable: Variable, domain: Domain, value: Int) = ((domain.head + domain.last) / 2) - value
+  override def toString = "median"
 
-  override def toString = "median";
+  def compute(s: MAC, ps: ProblemState): ProblemState = ps
 
-  def compute(p: Problem) {
-    // Nothing to compute
-  }
-
-  override def selectIndex(variable: Variable, domain: Domain) = {
+  override def selectIndex(variable: Variable, domain: Domain): Int = {
     val middle = (domain.head + domain.last) / 2
     (domain.prevOption(middle), domain.nextOption(middle)) match {
       case (None, None)    => throw new UNSATException(s"$domain is empty")

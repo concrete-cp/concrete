@@ -72,11 +72,16 @@ class ExtensionGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
   private[concrete] def generateMatrix(variables: Seq[Variable], relation: MDD, init: Boolean): Matrix = {
     logger.info(s"Generating matrix for $relation, $variables")
     val domains = variables.map(_.initDomain).toList
+
+    val density = domains.foldLeft(relation.lambda().toDouble)(_ / _.span.size)
+
     relation.depth().collect {
-      case 2 =>
+      case 2 if density > .01 =>
         val matrix = new Matrix2D(domains(0).span.size, domains(1).span.size,
           domains(0).head, domains(1).head, init)
         matrix.setAll(relation, !init)
+
+
       case 1 if init =>
         new TupleTrieSet(new MDDRelation(relation), init)
       case _ if ds == "Matrix" =>

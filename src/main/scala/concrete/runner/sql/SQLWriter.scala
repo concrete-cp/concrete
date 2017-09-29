@@ -38,7 +38,7 @@ import scala.concurrent.{Await, Future}
 
 object SQLWriter {
 
-  lazy val systemConfig = ConfigFactory.load //defaults from src/resources
+  private lazy val systemConfig = ConfigFactory.load //defaults from src/resources
   //
   //  val systemConfig = Option(System.getProperty("concrete.config")) match {
   //    case Some(cfile) => ConfigFactory.parseFile(new File(cfile)).withFallback(baseConfig)
@@ -96,6 +96,8 @@ object SQLWriter {
 
     def nature = column[Option[String]]("nature")
 
+    def display = column[Option[String]]("display")
+
     def d = column[Option[Double]]("d")
 
     def k = column[Option[Double]]("k")
@@ -115,8 +117,6 @@ object SQLWriter {
     def name = column[String]("name")
 
     def idxDisplay = index("idxDisplay", display, unique = true)
-
-    def display = column[Option[String]]("display")
   }
 
   class Config(tag: Tag) extends Table[(Int, String, Option[String])](tag, "Config") {
@@ -126,12 +126,12 @@ object SQLWriter {
 
     def description = column[Option[String]]("description")
 
-    def idxMd5 = index("idxConfig", config, unique = true)
-
     def config = column[String]("config")
+
+    def idxMd5 = index("idxConfig", config, unique = true)
   }
 
-  implicit val localDateToDate = MappedColumnType.base[LocalDateTime, Timestamp](
+  implicit val localDateToDate: BaseColumnType[LocalDateTime] = MappedColumnType.base[LocalDateTime, Timestamp](
     l => Timestamp.valueOf(l),
     d => d.toLocalDateTime
   )
@@ -155,9 +155,9 @@ object SQLWriter {
 
     def iteration = column[Int]("iteration")
 
-    def fkConfig = foreignKey("fkConfig", configId, configs)(_.configId, onDelete = ForeignKeyAction.Cascade)
-
     def configId = column[Int]("configId")
+
+    def fkConfig = foreignKey("fkConfig", configId, configs)(_.configId, onDelete = ForeignKeyAction.Cascade)
 
     def fkProblem = foreignKey("fkProblem", problemId, problems)(_.problemId, onDelete = ForeignKeyAction.Cascade)
 
@@ -167,13 +167,13 @@ object SQLWriter {
   class ProblemTag(tag: Tag) extends Table[(String, Int)](tag, "ProblemTag") {
     def * = (problemTag, problemId)
 
-    def fkProblem = foreignKey("fkProblem", problemId, problems)(_.problemId, onDelete = ForeignKeyAction.Cascade)
-
-    def pkPT = primaryKey("pkPT", (problemTag, problemId))
-
     def problemId = column[Int]("problemId")
 
     def problemTag = column[String]("problemTag")
+
+    def fkProblem = foreignKey("fkProblem", problemId, problems)(_.problemId, onDelete = ForeignKeyAction.Cascade)
+
+    def pkPT = primaryKey("pkPT", (problemTag, problemId))
   }
 
   class Statistic(tag: Tag) extends Table[(String, Int, Option[String])](tag, "Statistic") {
@@ -181,22 +181,23 @@ object SQLWriter {
 
     def value = column[Option[String]]("value")
 
-    def name = column[String]("name")
-
-    def executionId = column[Int]("executionId")
-
     def fkExecution = foreignKey("fkExecution", executionId, executions)(_.executionId, onDelete = ForeignKeyAction.Cascade)
 
     def pk = primaryKey("pkS", (name, executionId))
+
+    def executionId = column[Int]("executionId")
+
+    def name = column[String]("name")
   }
 
 }
 
-final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
+final class SQLWriter(params: ParameterManager, problem: String, val stats: StatisticsManager)
   extends ConcreteWriter with LazyLogging {
 
   private lazy val db = Database.forConfig("database")
 
+  private val it: Int = params.getOrElse("it", 0)
   private val initDB: Future[Any] = {
     if (params.contains("sql.createTables")) {
       db.run(
@@ -208,18 +209,18 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
         .flatMap { _ =>
           db.run(
             sqlu"""CREATE OR REPLACE FUNCTION stat(field text, execution int) RETURNS text AS $$$$
-                 SELECT CASE value 
-                   WHEN 'None' THEN null 
-                   ELSE value 
-                 END 
-                 FROM "Statistic" 
+                 SELECT CASE value
+                   WHEN 'None' THEN null
+                   ELSE value
+                 END
+                 FROM "Statistic"
                  WHERE (name, "executionId") = ($$1, $$2);
                 $$$$ LANGUAGE sql""")
         }
         .flatMap { _ =>
           db.run(
             sqlu"""CREATE OR REPLACE FUNCTION totaltime(fields text[], executionid integer) RETURNS real AS $$$$
-	              SELECT sum(cast(split_part(stat(unnest, executionId), ' ', 1) as real)) 
+	              SELECT sum(cast(split_part(stat(unnest, executionId), ' ', 1) as real))
 	              FROM unnest(fields)
               $$$$ LANGUAGE sql""")
         }
@@ -229,95 +230,42 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
     }
   }
 
-  private var executionId: Option[Int] = None
+  private val configId: Future[Int] = initDB
+    .recover {
+      case e: SQLException =>
+        logger.warn("Table creation failed", e)
 
-  private var configId: Future[Int] = _
-
-  private var problemId: Future[Int] = _
-
-  def parameters(params: ParameterManager) {
-
-    configId = initDB
-      .recover {
-        case e: SQLException =>
-          logger.warn("Table creation failed", e)
-
-      }
-      .flatMap { case _ => config(params) }
-
-    configId.failed.foreach { pf =>
-      logger.error("Failed to obtain configId", pf)
-      throw pf
+    }
+    .flatMap { case _ => config(params) }
+    .recover {
+      case e =>
+        logger.error("Failed to obtain configId", e)
+        throw e
     }
 
-    val it = params.getOrElse("iteration", 0)
+  private val problemId: Future[Int] = db.run(problems.filter(_.name === problem).map(_.problemId).result.headOption)
+    .flatMap {
+      case Some(c) => Future.successful(c)
+      case None => db.run(problems.map(p => p.name) returning problems.map(_.problemId) += problem)
+    }
+    .recover {
+      case e =>
+        logger.error("Failed to obtain problemId", e)
+        throw e
+    }
 
+  private val executionId: Int = {
     val ef = for (
       c <- configId;
       p <- problemId;
       e <- execution(p, c, it)
     ) yield e
-
-    executionId =
-      Some(Await.result(ef, Duration.Inf))
+    Await.result(ef, Duration.Inf)
   }
 
-  private def config(options: ParameterManager): Future[Int] = {
-    val cfg = options.parameters
-      .iterator
-      .filter { case (k, v) => k != "iteration" }
-      .map {
-        case (k, Unit) => k
-        case (k, v) => s"$k = $v"
-      }.mkString(", ")
-
-    val action = configs.filter(_.config === cfg).map(_.configId).result.headOption
-    val result = db.run(action)
-
-    result.flatMap {
-      case None =>
-        db.run(
-          configs.map(c => (c.config)) returning configs.map(_.configId) += ((cfg)))
-      case Some(c) => Future.successful(c)
-
-    }
-
-  }
-
-  private def execution(p: Int, c: Int, it: Int) = {
-
-    val executionId = db.run(
-      executions.map(e =>
-        (e.problemId, e.configId, e.start, e.hostname, e.iteration)) returning
-        executions.map(_.executionId) += ((
-        p, c, LocalDateTime.now(),
-        Some(InetAddress.getLocalHost.getHostName), it)))
-
-    executionId.foreach { e =>
-      print(s"Problem $p, config $c, iteration $it, execution $e")
-    }
-
-    executionId
-
-  }
-
-  def problem(name: String) {
-
-    problemId = db.run(problems.filter(_.name === name).map(_.problemId).result.headOption)
-      .flatMap {
-        case Some(c) => Future.successful(c)
-        case None => db.run(problems.map(p => p.name) returning problems.map(_.problemId) += name)
-      }
-
-    problemId.failed.foreach { pf =>
-      logger.error("Failed to obtain problemId", pf)
-      throw pf
-    }
-
-  }
 
   def printSolution(solution: String, obj: Option[Any]) {
-    addSolution(solution, executionId.get)
+    addSolution(solution, executionId)
   }
 
   private def addSolution(solution: String, executionId: Int) = {
@@ -340,17 +288,8 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
 
     System.err.println(errors)
 
-    for (e <- executionId) {
+    addSolution(errors, executionId)
 
-      addSolution(errors, e)
-      //        executions
-      //          .filter(_.executionId === e)
-      //          .map(_.solution)
-      //          .update {
-      //            Some(errors)
-      //          }
-
-    }
   }
 
   private def toString(t: Throwable) = {
@@ -362,33 +301,72 @@ final class SQLWriter(params: ParameterManager, val stats: StatisticsManager)
   def disconnect(status: Result) {
     // logger.warn("Disconnecting")
     try {
-      for (e <- executionId) {
-
-        val dbexec = for (dbe <- executions if dbe.executionId === e) yield dbe
-
-        val result = status match {
-          case FullExplore if lastSolution.isDefined => "SAT*"
-          case FullExplore => "UNSAT"
-          case Unfinished(Some(e)) => causes(e).map(_.toString.take(100)).mkString("\nCaused by: ")
-          case Unfinished(_) if lastSolution.isDefined => "SAT1"
-          case _ => "Unfinished"
-        }
 
 
-        Await.ready(
-          db.run {
-            dbexec.map(e => (e.end, e.status)).update(
-              (Some(LocalDateTime.now()), result))
-          }
-            .flatMap { _ =>
-              db.run {
-                statistic ++= stats.digest.map { case (key, value) => (key, e, Option(value).map(_.toString)) }
-              }
-            }, Duration.Inf)
+      val dbexec = for (dbe <- executions if dbe.executionId === executionId) yield dbe
+
+      val result = status match {
+        case FullExplore if lastSolution.isDefined => "SAT*"
+        case FullExplore => "UNSAT"
+        case Unfinished(_) if lastSolution.isDefined => "SAT1"
+        case Unfinished(Some(e)) => causes(e).map(_.toString.take(100)).mkString("\nCaused by: ")
+        case _ => "Unfinished"
       }
+
+
+      Await.ready(
+        db.run {
+          dbexec.map(e => (e.end, e.status)).update(
+            (Some(LocalDateTime.now()), result))
+        }
+          .flatMap { _ =>
+            db.run {
+              statistic ++= stats.digest.map { case (key, value) => (key, executionId, Option(value).map(_.toString)) }
+            }
+          }, Duration.Inf)
+
     } finally {
       db.close()
     }
+
+  }
+
+  private def config(options: ParameterManager): Future[Int] = {
+    val cfg = options.parameters
+      .iterator
+      .filter { case (k, v) => k != "it" && k != "sql" }
+      .map {
+        case (k, Unit) => s"-$k"
+        case (k, v) => s"-$k=$v"
+      }.mkString(" ")
+
+    val action = configs.filter(_.config === cfg).map(_.configId).result.headOption
+    val result = db.run(action)
+
+    result.flatMap {
+      case None =>
+        db.run(
+          configs.map(c => c.config) returning configs.map(_.configId) += cfg)
+      case Some(c) => Future.successful(c)
+
+    }
+
+  }
+
+  private def execution(p: Int, c: Int, it: Int) = {
+
+    val executionId = db.run(
+      executions.map(e =>
+        (e.problemId, e.configId, e.start, e.hostname, e.iteration)) returning
+        executions.map(_.executionId) += ((
+        p, c, LocalDateTime.now(),
+        Some(InetAddress.getLocalHost.getHostName), it)))
+
+    executionId.foreach { e =>
+      print(s"Problem $p, config $c, iteration $it, execution $e")
+    }
+
+    executionId
 
   }
 

@@ -83,7 +83,7 @@ object PseudoBoolDomains extends VariableCompiler('pseudoboolean) {
         }
         .get
 
-      val coefspan = (iargs, coef).zipped.map((a, c) => BoolExpression.span(a) * IntInterval.singleton(c)).toIndexedSeq
+      val coefspan = (iargs, coef).zipped.map((a, c) => BoolExpression.span(a) * IntInterval.singleton(c))
 
       val filt = for (i <- args.indices) yield {
         val result = iargs.indices

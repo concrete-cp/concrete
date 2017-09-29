@@ -79,7 +79,7 @@ object FZPatterns {
      * (a ↔ b = 1) ∧ (¬a ↔ b = 0)
      * bool2int(var bool: a, var int: b)
      */
-        case Ctr('bool2int, args, p) => CSPOMConstraint('eq)(args:_*) withParams p
+    case Ctr('bool2int, args, p) => CSPOMConstraint('eq)(args: _*) withParams p
     /*
      * (a ∧ b) ↔ r
      * bool_and(var bool: a, var bool: b, var bool: r)
@@ -403,6 +403,18 @@ object FZPatterns {
      */
     case Ctr('int_min, Seq(a: SimpleExpression[_], b: SimpleExpression[_], c: SimpleExpression[_]), p) =>
       CSPOMConstraint(c, 'min, Seq(a, b), p)
+
+    /**
+      * predicate array_int_minimum(var int: m, array[int] of var int: x)
+      */
+    case Ctr('array_int_minimum, Seq(m, x: CSPOMSeq[_]), p) =>
+      CSPOMConstraint(m, 'min, x.values, p)
+
+    /**
+      * predicate array_int_maximum(var int: m, array[int] of var int: x)
+      */
+    case Ctr('array_int_maximum, Seq(m, x: CSPOMSeq[_]), p) =>
+      CSPOMConstraint(m, 'max, x.values, p)
     /*
      * a − x.b = c where x = a/b rounding towards zero.
      * int_mod(var int: a, var int: b, var int: c)
@@ -526,6 +538,9 @@ object FZPatterns {
 
     case Ctr('member_int, Seq(s, x), p) =>
       CSPOMConstraint('member)(s, x) withParams p
+
+    case Ctr('member_int_reif, Seq(s, x, b), p) =>
+      CSPOMConstraint(b)('member)(s, x) withParams p
 
     case Ctr('alldifferent_except_0, Seq(IntExpression.simpleSeq(y)), p) =>
       allDifferent(y: _*) withParams (p + ("except" -> Seq(0)))

@@ -33,11 +33,11 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
   }
   override def toString(ps: ProblemState) = {
     s"$id: ${x.map(_.toString(ps)).mkString("[", ", ", "]")} <= ${y.map(_.toString(ps)).mkString("[", ", ", "]")} / " +
-      (Option(ps(this))
+      Option(ps(this))
         .map {
           case (alpha, beta) => s"alpha = $alpha, beta = $beta"
         }
-        .getOrElse("uninitalized"))
+        .getOrElse("uninitalized")
 
   }
 
@@ -78,7 +78,7 @@ final class LexLeq(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
 
   def revise(ps: ProblemState, cmod: BitVector): Outcome = {
     val mod = BitVector(cmod.traversable.view.map { m =>
-      if (m < n) m else (m - n)
+      if (m < n) m else m - n
     })
 
     def reviseN(ps: ProblemState, i: Int): Outcome = {

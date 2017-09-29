@@ -1,35 +1,32 @@
 /**
- * CSPFJ - CSP solving API for Java
- * Copyright (C) 2006 Julien VION
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- */
+  * CSPFJ - CSP solving API for Java
+  * Copyright (C) 2006 Julien VION
+  *
+  * This library is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Lesser General Public
+  * License as published by the Free Software Foundation; either
+  * version 2.1 of the License, or (at your option) any later version.
+  *
+  * This library is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  * Lesser General Public License for more details.
+  *
+  * You should have received a copy of the GNU Lesser General Public
+  * License along with this library; if not, write to the Free Software
+  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+  */
 
 package concrete
 package constraint
 
-import scala.annotation.tailrec
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-
 import com.typesafe.scalalogging.LazyLogging
-
 import concrete.heuristic.Weighted
-import concrete.priorityqueues.DLNode
-import concrete.priorityqueues.Identified
-import concrete.priorityqueues.PTag
+import concrete.priorityqueues.{DLNode, Identified, PTag}
+
+import scala.annotation.tailrec
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 
 object Constraint {
 
@@ -56,52 +53,47 @@ trait StatefulConstraint[State <: AnyRef] extends Constraint {
 
   def data(ps: ProblemState) = ps(this)
 
-  def updateState(ps: ProblemState, value: State) = ps.updateState(this, value)
+  def updateState(ps: ProblemState, value: State): ProblemState = ps.updateState(this, value)
 }
 
 abstract class Constraint(val scope: Array[Variable])
-    extends DLNode[Constraint] with Weighted with Identified with PTag with LazyLogging {
+  extends DLNode[Constraint] with Weighted with Identified with PTag with LazyLogging { //with Removals {
 
   require(scope.nonEmpty)
 
-  if (!scope.distinct.sameElements(scope)) {
-    logger.info(s"$this has duplicates in its scope")
-  }
-
-  def this(scope: Variable*) = this(scope.toArray)
-
-  private var _id: Int = -1
-
-  def id: Int = _id
-  def identify(i: Int): Int = {
-    _id = i
-    i + 1
-  }
-
   /**
-   * arity is the number of variables involved by the constraint
-   */
-  val arity = scope.size
-
-  /**
-   * @return a map containing the positions of variables in the scope of the constraint.
-   */
+    * @return a map containing the positions of variables in the scope of the constraint.
+    */
   val position: Map[Variable, Array[Int]] = {
-    val pos = new HashMap[Variable, ArrayBuffer[Int]]()
+    val pos = new mutable.HashMap[Variable, ArrayBuffer[Int]]()
 
     for ((v, p) <- scope.zipWithIndex) {
       pos.getOrElseUpdate(v, new ArrayBuffer()) += p
     }
 
-    pos.toMap.map { case (k, v) => k -> v.toArray }
+    pos.mapValues(_.toArray).toMap //case (k, v) => k -> v.toArray }
 
   }
 
   val positionInVariable: Array[Int] = Array.fill(arity)(-1)
+  private var _id: Int = -1
 
-  override def equals(o: Any) = o.asInstanceOf[Constraint].id == id
+  if (logger.underlying.isWarnEnabled & !scope.distinct.sameElements(scope)) {
+    logger.warn(s"$this has duplicates in its scope")
+  }
 
-  override def hashCode = id
+  def this(scope: Variable*) = this(scope.toArray)
+
+  def identify(i: Int): Int = {
+    _id = i
+    i + 1
+  }
+
+  override def equals(o: Any): Boolean = o.asInstanceOf[Constraint].id == id
+
+  override def hashCode: Int = id
+
+  def id: Int = _id
 
   @tailrec
   final def controlTuplePresence(problemState: ProblemState, tuple: Array[Int], i: Int = arity - 1): Boolean = {
@@ -136,9 +128,9 @@ abstract class Constraint(val scope: Array[Variable])
   def advise(problemState: ProblemState, event: Event, position: Int): Int
 
   /**
-   * Same event for all positions
-   * Mostly used when a variable is several times in the scope
-   */
+    * Same event for all positions
+    * Mostly used when a variable is several times in the scope
+    */
   def adviseArray(problemState: ProblemState, event: Event, positions: Array[Int]): Int = {
     var max = -1
     var i = positions.length - 1
@@ -149,52 +141,23 @@ abstract class Constraint(val scope: Array[Variable])
     max
   }
 
-  final def adviseAll(problemState: ProblemState): Int = {
-    var max = Int.MinValue
-    var i = arity - 1
-    while (i >= 0) {
-      max = math.max(max, advise(problemState, Assignment, i))
-      i -= 1
-    }
-    max
-  }
-
-  def init(ps: ProblemState): Outcome // = ps  
+  def init(ps: ProblemState): Outcome // = ps
 
   /**
-   * The constraint propagator.
-   */
+    * The constraint propagator.
+    */
   def revise(problemState: ProblemState): Outcome
 
   def dataSize: Int = ???
 
   /**
-   * @return true iff the constraint is satisfied by the given tuple
-   */
+    * @return true iff the constraint is satisfied by the given tuple
+    */
   def check(tuple: Array[Int]): Boolean
 
   def simpleEvaluation: Int
 
-  override def toString = this.getClass.getSimpleName + scope.mkString("(", ", ", ")")
-
-  def toString(problemState: ProblemState) = s"${this.getClass.getSimpleName}${
-    scope.map(v => s"$v ${problemState.dom(v)}").mkString("(", ", ", ")")
-  }"
-
-  /**
-   * @param variable
-   * @return true iff the given variable is involved by the constraint
-   */
-  final def isInvolved(variable: Variable) = position.contains(variable)
-
-  @tailrec
-  final def sizes(problemState: ProblemState, a: Array[Int] = new Array[Int](arity), i: Int = arity - 1): Array[Int] =
-    if (i < 0) {
-      a
-    } else {
-      a(i) = problemState.card(scope(i))
-      sizes(problemState, a, i - 1)
-    }
+  override def toString: String = this.getClass.getSimpleName + scope.mkString("(", ", ", ")")
 
   def intervalsOnly(problemState: ProblemState): Boolean = {
     var i = arity - 1
@@ -230,6 +193,11 @@ abstract class Constraint(val scope: Array[Variable])
     size
   }
 
+  /**
+    * arity is the number of variables involved by the constraint
+    */
+  def arity: Int = scope.length
+
   final def doubleCardSize(problemState: ProblemState): Double = {
     var size = 1.0
     var p = arity - 1
@@ -251,10 +219,6 @@ abstract class Constraint(val scope: Array[Variable])
       i -= 1
     }
     if (f < 0) None else Some(f)
-  }
-
-  def controlAssignment(problemState: ProblemState): Boolean = {
-    !scope.forall(problemState.dom(_).isAssigned) || check(scope.map(problemState.dom(_).singleValue))
   }
 
   def controlRevision(ps: ProblemState): Boolean = {
@@ -281,6 +245,24 @@ abstract class Constraint(val scope: Array[Variable])
       })
 
     }
+  }
+
+  final def adviseAll(problemState: ProblemState): Int = {
+    var max = Int.MinValue
+    var i = arity - 1
+    while (i >= 0) {
+      max = math.max(max, advise(problemState, Assignment, i))
+      i -= 1
+    }
+    max
+  }
+
+  def toString(problemState: ProblemState) = s"${this.getClass.getSimpleName}${
+    scope.map(v => s"$v ${problemState.dom(v)}").mkString("(", ", ", ")")
+  }"
+
+  def controlAssignment(problemState: ProblemState): Boolean = {
+    !scope.forall(problemState.dom(_).isAssigned) || check(scope.map(problemState.dom(_).singleValue))
   }
 
   override def incrementWeight(): Unit = {

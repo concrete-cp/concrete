@@ -1,5 +1,7 @@
 package concrete.constraint.extension
 
+import java.util
+
 import concrete._
 import concrete.constraint.{Constraint, StatefulConstraint}
 import concrete.util.SparseSet
@@ -26,7 +28,7 @@ class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
   def revise(ps: ProblemState) = {
 
     val domains = ps.doms(scope) //Array.tabulate(arity)(p => ps.dom(scope(p)))
-    val supported = Array.fill[IntDomain](arity)(EmptyIntDomain)
+    val supported = Array.fill(arity)(new util.HashSet[Int]())
 
     // val unsupported = domains.map(_.to[collection.mutable.Set])
 
@@ -38,9 +40,9 @@ class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
 
     val gYes = new TSSet[MDD]()
 
-//    if (mdd.lambda < 50) {
-//      mdd.map(_.mkString(", ")).foreach(println)
-//    }
+    //    if (mdd.lambda < 50) {
+    //      mdd.map(_.mkString(", ")).foreach(println)
+    //    }
 
     def seekSupports(g: MDD, i: Int): Boolean = {
 
@@ -53,7 +55,7 @@ class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
 
           if (seekSupports(gk, i + 1)) {
             res = true
-            supported(i) |= ak
+            supported(i).add(ak)
             if (i + 1 == delta && supported(i).size == domains(i).size) {
               delta = i
               return true
@@ -78,7 +80,7 @@ class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
       } else if (gNo.contains(g.id)) {
         false
       } else if (loop(domains(i))) {
-        gYes .put( g)
+        gYes.put(g)
         true
       } else {
         gNo += g.id
@@ -94,7 +96,7 @@ class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
         if (gNoChange) ps.updateState(this, gNo) else ps
       for (p <- 0 until delta) {
         if (supported(p).size < domains(p).size) {
-          cs = cs.updateDomNonEmptyNoCheck(scope(p), supported(p))
+          cs = cs.updateDomNonEmptyNoCheck(scope(p), domains(p).filter(supported(p).contains))
         }
       }
       cs.entailIfFree(this)
