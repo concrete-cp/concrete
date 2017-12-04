@@ -21,8 +21,8 @@ class ProblemStateTest extends FlatSpec with Matchers {
     
     assert(!state.entailed.hasInactiveVar(c))
     
-    state.activeConstraints(v1).traversable should contain theSameElementsAs Seq(0)
-    state.activeConstraints(v2).traversable should contain theSameElementsAs Seq(0)
+    state.activeConstraints(v1) should contain theSameElementsAs Seq(0)
+    state.activeConstraints(v2) should contain theSameElementsAs Seq(0)
     
     val ent = state.entail(c)
     assert(ent.entailed.hasInactiveVar(c))

@@ -2,14 +2,15 @@ package concrete
 package constraint
 package linear
 
+import bitvectors.BitVector
 import com.typesafe.scalalogging.LazyLogging
 
 final class LinearNe(
-    constant: Int,
-    factors: Array[Int],
-    scope: Array[Variable]) extends Linear(constant, factors, scope, SumNE) with LazyLogging {
+                      constant: Int,
+                      factors: Array[Int],
+                      scope: Array[Variable]) extends Linear(constant, factors, scope, SumNE) with LazyLogging {
 
-  override def consistent(ps: ProblemState): Outcome = {
+  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {
     var const = constant
     var i = arity - 1
     while (i >= 0) {
@@ -24,7 +25,7 @@ final class LinearNe(
     if (const == 0) Contradiction(scope) else ps
   }
 
-  override def revise(ps: ProblemState): Outcome = {
+  override def revise(ps: ProblemState, mod: BitVector): Outcome = {
 
     var const = constant
     var free = -1
@@ -58,14 +59,14 @@ final class LinearNe(
 
   }
 
-  override def toString() = toString("!=")
+  override def toString: String = toString("!=")
 
-  override def toString(ps: ProblemState) = toString(ps, "!=")
+  override def toString(ps: ProblemState): String = toString(ps, "!=")
 
-  def advise(ps: ProblemState, event: Event, p: Int) = if (event <= Assignment) arity * 2 else -1
+  def advise(ps: ProblemState, event: Event, p: Int): Int = if (event <= Assignment) arity * 2 else -1
 
   def simpleEvaluation: Int = 3
 
-  override def init(ps: ProblemState) = ps
+  override def init(ps: ProblemState): ProblemState = ps
 }
 

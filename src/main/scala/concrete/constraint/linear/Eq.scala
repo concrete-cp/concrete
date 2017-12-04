@@ -2,6 +2,7 @@ package concrete
 package constraint
 package linear
 
+import bitvectors.BitVector
 import com.typesafe.scalalogging.LazyLogging
 import concrete.constraint.extension.BinaryExt
 import concrete.generator.ACBC
@@ -29,7 +30,7 @@ final class EqCReif(val r: Variable, val x: Variable, val y: Int) extends Constr
     ps
   }
 
-  def revise(ps: ProblemState): Outcome = {
+  def revise(ps: ProblemState, mod:BitVector): Outcome = {
     val dx = ps.dom(x)
 
     ps.dom(r) match {
@@ -66,7 +67,7 @@ final class EqReif(val r: Variable, val x: Variable, val y: Variable) extends Co
 
   def init(ps: ProblemState): Outcome = ps
 
-  def revise(ps: ProblemState): Outcome = {
+  def revise(ps: ProblemState, mod:BitVector): Outcome = {
     val dx = ps.dom(x)
     val dy = ps.dom(y)
     ps.dom(r) match {
@@ -114,14 +115,14 @@ final class EqACFast(val x: Variable, val b: Int, val y: Variable)
 
   def advise(problemState: ProblemState, event: Event, pos: Int): Int = 2
 
-  def check(tuple: Array[Int]): Boolean = (tuple(0) + b == tuple(1))
+  def check(tuple: Array[Int]): Boolean = tuple(0) + b == tuple(1)
 
   def init(ps: ProblemState): Outcome = {
     staticEvaluation = (ps.card(x) + ps.card(y)) / BinaryExt.GAIN_OVER_GENERAL
     ps
   }
 
-  def revise(ps: concrete.ProblemState): Outcome = {
+  def revise(ps: concrete.ProblemState, mod:BitVector): Outcome = {
     val oldY = ps.dom(y)
     val newX = ps.dom(x) & oldY.shift(-b)
 
@@ -137,12 +138,12 @@ final class EqACFast(val x: Variable, val b: Int, val y: Variable)
 
   }
 
-  override def consistent(ps: ProblemState): Outcome =
+  override def consistent(ps: ProblemState, mod:Traversable[Int]): Outcome =
     if (ps.dom(x).shift(b) disjoint ps.dom(y)) Contradiction(scope) else ps
 
   def simpleEvaluation: Int = 1
 
-  override def toString(ps: ProblemState) = s"${x.toString(ps)}${
+  override def toString(ps: ProblemState): String = s"${x.toString(ps)}${
     if (b > 0) " + " + b else if (b < 0) " - " + (-b) else ""
   } =FAC= ${y.toString(ps)}"
 }
@@ -162,21 +163,21 @@ final class EqACNeg private[linear](
                                      val skipIntervals: Boolean = true)
   extends Constraint(Array(x, y)) with BCCompanion {
 
-  def init(ps: ProblemState) = {
+  def init(ps: ProblemState): ProblemState = {
     //println(toString(ps))
     ps
   }
 
   def this(x: Variable, y: Variable) = this(x, y, 0, true)
 
-  def check(t: Array[Int]) = t(0) + t(1) == b
+  def check(t: Array[Int]): Boolean = t(0) + t(1) == b
 
   def simpleEvaluation: Int = 2
 
   def advise(ps: ProblemState, event: Event, pos: Int): Int =
     if (skip(ps)) -1 else ps.card(x) + ps.card(y)
 
-  override def consistent(ps: ProblemState) = {
+  override def consistent(ps: ProblemState, mod:Traversable[Int]): Outcome = {
     val xDom = ps.dom(x)
     val yDom = ps.dom(y)
     val r = (xDom.span + yDom.span).contains(b) && (
@@ -189,7 +190,7 @@ final class EqACNeg private[linear](
     if (r) ps else Contradiction(scope)
   }
 
-  def revise(ps: ProblemState) = {
+  def revise(ps: ProblemState, mod:BitVector): Outcome = {
     val domY = ps.dom(y)
     ps.filterDom(x)(xv => domY.present(b - xv))
       .andThen { ps =>
@@ -214,7 +215,7 @@ final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
 
   val simpleEvaluation = 2
 
-  def init(ps: ProblemState) = ps
+  def init(ps: ProblemState): ProblemState = ps
 
   /**
     * public
@@ -223,11 +224,11 @@ final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
     * @param x
     * @param y
     */
-  def this(x: Variable, y: Variable) = this(false, x, 0, y);
+  def this(x: Variable, y: Variable) = this(false, x, 0, y)
 
-  def check(t: Array[Int]) = (if (neg) -t(0) else t(0)) + b == t(1);
+  def check(t: Array[Int]): Boolean = (if (neg) -t(0) else t(0)) + b == t(1)
 
-  override def shave(ps: ProblemState) = {
+  override def shave(ps: ProblemState): Outcome = {
     if (neg) {
       // -x + b = y <=> x = -y + b
       ps.shaveDom(x, -ps.span(y) + b)
@@ -242,7 +243,7 @@ final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
 
   }
 
-  override def consistent(ps: ProblemState) = {
+  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {
     val xSpan = ps.span(x)
 
     val negX = if (neg) -xSpan else xSpan

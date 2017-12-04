@@ -4,9 +4,9 @@ package value
 
 import cspom.UNSATException
 
-final class MidValue(pm: ParameterManager) extends ValueHeuristic {
+final class MidValue() extends ValueHeuristic {
 
-  override def toString = "median"
+  override def toString = "middle"
 
   def compute(s: MAC, ps: ProblemState): ProblemState = ps
 

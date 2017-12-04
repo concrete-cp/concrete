@@ -1,19 +1,17 @@
-package concrete.constraint.semantic;
+package concrete.constraint.semantic
 
-import concrete.Variable
+;
+
+import bitvectors.BitVector
+import concrete._
 import concrete.constraint.Constraint
-import concrete.Contradiction
-import concrete.ProblemState
-import concrete.Outcome
-import concrete.BooleanDomain
-import concrete.Event
 
 final class Xor(vars: Array[Variable]) extends Constraint(vars) {
 
   //require(reverses.size == scope.size, "reverses must cover all variables")
 
+  val simpleEvaluation = 1
   private var watch1: Int = _
-
   private var watch2: Int = _
 
   override def init(ps: ProblemState): Outcome = {
@@ -36,36 +34,19 @@ final class Xor(vars: Array[Variable]) extends Constraint(vars) {
 
   }
 
-  private def isOdd(ps: ProblemState) = {
-    parity(ps) % 2 == 1
-  }
-
-  private def parity(ps: ProblemState) = {
-    var c = 0
-    var i = arity - 1
-    while (i >= 0) {
-      if (ps.dom(vars(i)) eq BooleanDomain.TRUE) {
-        c += 1
-      }
-      i -= 1
-    }
-    c
-
-  }
+  def advise(ps: ProblemState, event: Event, p: Int): Int =
+    if (p == watch1 || p == watch2) 1 else -1
 
   //if (isTrue(watch1) || isTrue(watch2)) entail()
 
-  def advise(ps: ProblemState, event: Event, p: Int) =
-    if (p == watch1 || p == watch2) 1 else -1
-
-  override def check(t: Array[Int]) = {
+  override def check(t: Array[Int]): Boolean = {
     t.count(_ == 1) % 2 == 1
   }
 
   override def toString(ps: ProblemState) =
     s"(+)(${vars.map(_.toString(ps)).mkString(", ")})"
 
-  def revise(ps: ProblemState): Outcome = {
+  def revise(ps: ProblemState, mod: BitVector): Outcome = {
     val w1 = if (ps.dom(vars(watch1)).isAssigned) {
       seekWatch(ps, watch2)
     } else {
@@ -104,6 +85,23 @@ final class Xor(vars: Array[Variable]) extends Constraint(vars) {
     }
   }
 
+  private def isOdd(ps: ProblemState) = {
+    parity(ps) % 2 == 1
+  }
+
+  private def parity(ps: ProblemState) = {
+    var c = 0
+    var i = arity - 1
+    while (i >= 0) {
+      if (ps.dom(vars(i)) eq BooleanDomain.TRUE) {
+        c += 1
+      }
+      i -= 1
+    }
+    c
+
+  }
+
   private def seekWatch(ps: ProblemState, excluding: Int): Int = {
     var i = arity - 1
     while (i >= 0) {
@@ -114,6 +112,4 @@ final class Xor(vars: Array[Variable]) extends Constraint(vars) {
     }
     -1
   }
-
-  val simpleEvaluation = 1
 }

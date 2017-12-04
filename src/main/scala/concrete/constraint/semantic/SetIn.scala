@@ -2,6 +2,8 @@ package concrete
 package constraint
 package semantic
 
+import bitvectors.BitVector
+
 object SetIn {
   def apply(r: Variable, v: Variable, c: Seq[Int]): SetIn =
     new SetIn(r, v, IntDomain.ofSeq(c: _*))
@@ -13,13 +15,13 @@ class SetIn(val r: Variable, val v: Variable, val c: Domain)
   def init(ps: concrete.ProblemState): Outcome = ps
   def simpleEvaluation: Int = 1
 
-  def check(t: Array[Int]) = t(0) match {
+  def check(t: Array[Int]): Boolean = t(0) match {
     case 1 => c.present(t(1))
     case 0 => !c.present(t(1))
     case _ => sys.error(s"${t(0)} must be boolean")
   }
 
-  def revise(ps: ProblemState): Outcome = {
+  def revise(ps: ProblemState, mod:BitVector): Outcome = {
     ps.dom(r) match {
       case BooleanDomain.UNKNOWNBoolean =>
         val vd = ps.dom(v)

@@ -2,9 +2,8 @@ package concrete.heuristic
 
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
-import concrete.EntailmentManagerLight
+import concrete.EntailmentManager
 import concrete.IntDomain
-import concrete.ParameterManager
 import concrete.ProblemState
 import concrete.Variable
 import concrete.Domain
@@ -20,14 +19,14 @@ class IntervalBranchTest extends FlatSpec with Matchers {
 
     val v = new Variable("v", d)
     v.id = 0
-    val ps = new ProblemState(Vector[Domain](d), Vector(), EntailmentManagerLight(Seq(v)))
+    val ps = new ProblemState(Vector[Domain](d), Vector(), EntailmentManager(Seq(v)))
 
-    val h = new concrete.heuristic.value.IntervalBranch(new ParameterManager)
+    val h = new concrete.heuristic.value.IntervalBranch()
 
-    val b = h.branch(v, d, ps)
+    val (b1, b2) = h.branch(v, d, ps)
 
-    b.b1.dom(v).view should contain theSameElementsAs (0 to 1)
-    b.b2.dom(v).view should contain theSameElementsAs (10 to 15)
+    b1(ps)._1.dom(v).view should contain theSameElementsAs (0 to 1)
+    b2(ps)._1.dom(v).view should contain theSameElementsAs (10 to 15)
 
   }
 
@@ -36,14 +35,14 @@ class IntervalBranchTest extends FlatSpec with Matchers {
 
     val v = new Variable("v", d)
     v.id = 0
-    val ps = new ProblemState(Vector[Domain](d), Vector(), EntailmentManagerLight(Seq(v)))
+    val ps = new ProblemState(Vector[Domain](d), Vector(), EntailmentManager(Seq(v)))
 
-    val h = new concrete.heuristic.value.IntervalBranch(new ParameterManager)
+    val h = new concrete.heuristic.value.IntervalBranch()
 
-    val b = h.branch(v, d, ps)
+    val (b1, b2) = h.branch(v, d, ps)
 
-    b.b1.dom(v).view should contain theSameElementsAs (0 to 2)
-    b.b2.dom(v).view should contain theSameElementsAs (3 to 5)
+    b1(ps)._1.dom(v).view should contain theSameElementsAs (0 to 2)
+    b2(ps)._1.dom(v).view should contain theSameElementsAs (3 to 5)
 
   }
 

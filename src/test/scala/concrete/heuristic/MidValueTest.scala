@@ -4,7 +4,7 @@ import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 import concrete.IntDomain
 import concrete.Variable
-import concrete.ParameterManager
+
 
 /**
  * @author vion
@@ -18,9 +18,9 @@ class MidValueTest extends FlatSpec with Matchers {
     d.view.toSeq should contain theSameElementsInOrderAs Seq(0, 1, 9998, 10000)
 
     val v = new Variable("v", d)
-    val h = new concrete.heuristic.value.MidValue(new ParameterManager)
+    val h = new concrete.heuristic.value.MidValue()
 
-    h.selectIndex(v, d) shouldBe (9998)
+    h.selectIndex(v, d) shouldBe 9998
   }
 
 }

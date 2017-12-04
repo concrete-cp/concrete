@@ -24,4 +24,9 @@ class IntervalDomainTest extends FlatSpec with Matchers {
     assert(d2.head == 0)
     assert(dom.head == 0)
   }
+
+  it should "not remove inexistent values" in {
+    val dom = IntDomain.ofInterval(4, 6).remove(4)
+    dom.removeIfPresent(4) shouldBe dom
+  }
 }

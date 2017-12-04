@@ -1,21 +1,13 @@
 package concrete.constraint.semantic
 
-import concrete.Variable
-import concrete.constraint.Constraint
-import concrete.constraint.ResiduesRemovals
-import concrete.constraint.TupleEnumerator
+import concrete._
+import concrete.constraint._
 import concrete.util.Interval
-import concrete.Domain
-import concrete.ProblemState
-import concrete.Outcome
-import concrete.constraint.BC
-import concrete.Contradiction
-import concrete.constraint.BCCompanion
 
 object Div {
   /**
-   * Must use another division rules than one defined in Interval
-   */
+    * Must use another division rules than one defined in Interval
+    */
   def div(i0: Interval, i1: Interval): Option[Interval] = {
 
     if (i1.contains(0) && i0.lb <= 0 && i0.ub >= 0) {
@@ -57,13 +49,14 @@ object Div {
     }
   }
 }
+
 ///**
 // * @author vion
 // * x / y = z
 // * x = z * y + x % y
 // */
 class DivBC(x: Variable, y: Variable, z: Variable) extends Constraint(x, y, z) with BC {
-  def check(t: Array[Int]) = {
+  def check(t: Array[Int]): Boolean = {
     t(0) / t(1) == t(2)
   }
 
@@ -71,7 +64,7 @@ class DivBC(x: Variable, y: Variable, z: Variable) extends Constraint(x, y, z) w
 
   def init(ps: ProblemState): Outcome = ps.remove(y, 0)
 
-  override def shave(ps: ProblemState) = {
+  override def shave(ps: ProblemState): Outcome = {
 
     val x = ps.span(this.x)
     val y = ps.span(this.y)
@@ -105,20 +98,61 @@ class DivBC(x: Variable, y: Variable, z: Variable) extends Constraint(x, y, z) w
   def simpleEvaluation: Int = 1
 }
 
-class DivAC(v0: Variable, v1: Variable, result: Variable) extends Constraint(v0, v1, result) with ResiduesRemovals with TupleEnumerator
-    with BCCompanion {
-  def skipIntervals = true
-  def check(t: Array[Int]) = {
-    t(0) / t(1) == t(2)
 
+/**
+  * v0 / v1 = result
+  *
+  * @param v0
+  * @param v1
+  * @param result
+  */
+class DivAC(v0: Variable, v1: Variable, result: Variable, val skipIntervals: Boolean = true) extends Constraint(v0, v1, result) with Residues with TupleEnumerator
+  with BCCompanion {
+
+  def check(t: Array[Int]): Boolean = {
+    t(1) != 0 && t(0) / t(1) == t(2)
+  }
+
+//  override def revise(state: ProblemState, modified: BitVector): Outcome = {
+//    super.revise(state, modified)
+//      .andThen { r =>
+//        if (intervalsOnly(state) && !intervalsOnly(r)) {
+//          println(diff(state, r))
+//        }
+//        r
+//      }
+//
+//  }
+
+
+  override def advise(ps: ProblemState, event: Event, pos: Int): Int = {
+    val d0 = ps.card(result)
+    val d1 = ps.card(v0)
+    val d2 = ps.card(v1)
+    val e = d0 * d1 + d0 * d2 + d1 * d2
+    if (skip(ps, e)) -2 else e
   }
 
   override def findSupport(doms: Array[Domain], position: Int, value: Int): Option[Array[Int]] = {
     position match {
-      case 0 => doms(1).find(y => doms(2).present(value / y)).map(y => Array(value, y, value / y))
-      case 1 => doms(0).find(x => doms(2).present(x / value)).map(x => Array(x, value, x / value))
-      case 2 => super[TupleEnumerator].findSupport(doms, position, value)
+      case 0 => doms(1).find(y => y != 0 && doms(2).present(value / y)).map(y => Array(value, y, value / y))
+      case 1 => if (value == 0) None else doms(0).find(x => doms(2).present(x / value)).map(x => Array(x, value, x / value))
+      case 2 =>
+        //println(s"Searching for a support of result = $value")
+        for (b <- doms(1).view) {
+          for (r <- if (signum(value) == signum(b)) 0 until math.abs(b) else 0 until -math.abs(b) by -1) {
+            val a = b * value + r
+            if (doms(0).present(a)) {
+              //println(s"Found $a = $b * $value + $r")
+              return Some(Array(a, b, value))
+            }
+          }
+        }
+        None
+      // super[TupleEnumerator].findSupport(doms, position, value)
     }
   }
+
+  private def signum(x: Int): Int = if (x < 0) -1 else 1
 
 }

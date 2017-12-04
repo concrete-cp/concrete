@@ -18,7 +18,7 @@ class ChannelTest extends FlatSpec with Matchers with Inspectors {
 
     prob.addConstraint(c)
 
-    val solv = Solver(prob)
+    val solv = Solver(prob).get
 
     forAll(solv.toTraversable) { s: Map[Variable, Any] =>
       forAll(2 until 6) { p: Int =>

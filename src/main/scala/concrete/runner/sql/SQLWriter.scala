@@ -62,19 +62,15 @@ object SQLWriter {
           executions.schema ++
           problemTag.schema ++
           statistic.schema).create,
-        sqlu"""CREATE FUNCTION stat(field text, execution int) RETURNS text AS ${"$$"}
-                 SELECT value FROM "Statistic" WHERE (name, "executionId") = (${"$"}1, ${"$"}2);
-                ${"$$"} LANGUAGE sql""",
+        sql"""
+             |CREATE FUNCTION stat(field text, execution int) RETURNS text AS $$$$
+             |  SELECT value FROM "Statistic" WHERE (name, "executionId") = ($$1, $$2);
+             |$$$$ LANGUAGE sql""".stripMargin.asUpdate,
 
-        sqlu"""CREATE FUNCTION totalTime(fields text[], executionId int) RETURNS real AS ${"$$"}
-	               SELECT sum(cast(split_part(stat(unnest, executionId), ' ', 1) AS real)) FROM unnest(fields)
-                ${"$$"} language sql;""")
-
-      //          ,
-      //        sqlu"""
-      //          CREATE FUNCTION stat(field text, execution int) RETURNS text AS $$
-      //            SELECT value FROM "Statistic" WHERE (name, "executionId") = ($1, $2);
-      //          $$ LANGUAGE sql"""
+        sql"""
+             |CREATE FUNCTION totalTime(fields text[], executionId int) RETURNS real AS $$$$
+             |  SELECT sum(cast(split_part(stat(unnest, executionId), ' ', 1) AS real)) FROM unnest(fields)
+             |$$$$ LANGUAGE sql""".stripMargin.asUpdate)
 
       Await.ready(db.run(setup), Duration(10, SECONDS))
     }
@@ -96,7 +92,7 @@ object SQLWriter {
 
     def nature = column[Option[String]]("nature")
 
-    def display = column[Option[String]]("display")
+    def name = column[String]("name")
 
     def d = column[Option[Double]]("d")
 
@@ -114,9 +110,9 @@ object SQLWriter {
 
     def idxName = index("idxName", name, unique = true)
 
-    def name = column[String]("name")
-
     def idxDisplay = index("idxDisplay", display, unique = true)
+
+    def display = column[Option[String]]("display")
   }
 
   class Config(tag: Tag) extends Table[(Int, String, Option[String])](tag, "Config") {
@@ -136,8 +132,10 @@ object SQLWriter {
     d => d.toLocalDateTime
   )
 
-  class Execution(tag: Tag) extends Table[(Int, Int, Int, Int, LocalDateTime, Option[LocalDateTime], Option[String], String, Option[String])](tag, "Execution") {
-    def * = (executionId, configId, problemId, iteration, start, end, hostname, status, solution)
+  class Execution(tag: Tag) extends Table[(Int, Int, Int, Int, String, LocalDateTime, Option[LocalDateTime], Option[String], String, Option[String])](tag, "Execution") {
+    def * = (executionId, configId, problemId, iteration, version, start, end, hostname, status, solution)
+
+    def version = column[String]("version")
 
     def executionId = column[Int]("executionId", O.PrimaryKey, O.AutoInc)
 
@@ -151,27 +149,27 @@ object SQLWriter {
 
     def status = column[String]("status", O.Default("started"))
 
+    def fkConfig = foreignKey("fkConfig", configId, configs)(_.configId, onDelete = ForeignKeyAction.Cascade)
+
+    def fkProblem = foreignKey("fkProblem", problemId, problems)(_.problemId, onDelete = ForeignKeyAction.Cascade)
+
+    def idxVCP = index("idxVCP", (configId, problemId, iteration, version), unique = true)
+
     def problemId = column[Int]("problemId")
 
     def iteration = column[Int]("iteration")
 
     def configId = column[Int]("configId")
-
-    def fkConfig = foreignKey("fkConfig", configId, configs)(_.configId, onDelete = ForeignKeyAction.Cascade)
-
-    def fkProblem = foreignKey("fkProblem", problemId, problems)(_.problemId, onDelete = ForeignKeyAction.Cascade)
-
-    def idxVCP = index("idxVCP", (configId, problemId, iteration), unique = true)
   }
 
   class ProblemTag(tag: Tag) extends Table[(String, Int)](tag, "ProblemTag") {
     def * = (problemTag, problemId)
 
-    def problemId = column[Int]("problemId")
-
     def problemTag = column[String]("problemTag")
 
     def fkProblem = foreignKey("fkProblem", problemId, problems)(_.problemId, onDelete = ForeignKeyAction.Cascade)
+
+    def problemId = column[Int]("problemId")
 
     def pkPT = primaryKey("pkPT", (problemTag, problemId))
   }
@@ -197,7 +195,7 @@ final class SQLWriter(params: ParameterManager, problem: String, val stats: Stat
 
   private lazy val db = Database.forConfig("database")
 
-  private val it: Int = params.getOrElse("it", 0)
+  private val it: Int = params.getOrElse("iteration", 0)
   private val initDB: Future[Any] = {
     if (params.contains("sql.createTables")) {
       db.run(
@@ -208,21 +206,23 @@ final class SQLWriter(params: ParameterManager, problem: String, val stats: Stat
           statistic.schema).create)
         .flatMap { _ =>
           db.run(
-            sqlu"""CREATE OR REPLACE FUNCTION stat(field text, execution int) RETURNS text AS $$$$
-                 SELECT CASE value
-                   WHEN 'None' THEN null
-                   ELSE value
-                 END
-                 FROM "Statistic"
-                 WHERE (name, "executionId") = ($$1, $$2);
-                $$$$ LANGUAGE sql""")
+            sql"""
+                 |CREATE OR REPLACE FUNCTION stat(field text, execution int) RETURNS text AS $$$$
+                 |SELECT CASE value
+                 |  WHEN 'None' THEN null
+                 |  ELSE value
+                 |END
+                 |FROM "Statistic"
+                 |WHERE (name, "executionId") = ($$1, $$2);
+                 |$$$$ LANGUAGE sql""".stripMargin.asUpdate)
         }
         .flatMap { _ =>
           db.run(
-            sqlu"""CREATE OR REPLACE FUNCTION totaltime(fields text[], executionid integer) RETURNS real AS $$$$
-	              SELECT sum(cast(split_part(stat(unnest, executionId), ' ', 1) as real))
-	              FROM unnest(fields)
-              $$$$ LANGUAGE sql""")
+            sql"""
+                 |CREATE OR REPLACE FUNCTION totaltime(fields text[], executionid integer) RETURNS real AS $$$$
+                 |SELECT sum(cast(split_part(stat(unnest, executionId), ' ', 1) as real))
+                 |FROM unnest(fields)
+                 |$$$$ LANGUAGE sql""".stripMargin.asUpdate)
         }
 
     } else {
@@ -234,9 +234,8 @@ final class SQLWriter(params: ParameterManager, problem: String, val stats: Stat
     .recover {
       case e: SQLException =>
         logger.warn("Table creation failed", e)
-
     }
-    .flatMap { case _ => config(params) }
+    .flatMap { _ => config(params) }
     .recover {
       case e =>
         logger.error("Failed to obtain configId", e)
@@ -268,6 +267,16 @@ final class SQLWriter(params: ParameterManager, problem: String, val stats: Stat
     addSolution(solution, executionId)
   }
 
+  def error(thrown: Throwable) {
+
+    val errors = toString(thrown)
+
+    System.err.println(errors)
+
+    addSolution(errors, executionId)
+
+  }
+
   private def addSolution(solution: String, executionId: Int) = {
     val currentSolution = executions.filter(_.executionId === executionId).map(_.solution)
     //require(executionId.nonEmpty, "Problem description or parameters were not defined")
@@ -280,16 +289,6 @@ final class SQLWriter(params: ParameterManager, problem: String, val stats: Stat
       }
 
     Await.ready(f, Duration.Inf)
-  }
-
-  def error(thrown: Throwable) {
-
-    val errors = toString(thrown)
-
-    System.err.println(errors)
-
-    addSolution(errors, executionId)
-
   }
 
   private def toString(t: Throwable) = {
@@ -334,7 +333,7 @@ final class SQLWriter(params: ParameterManager, problem: String, val stats: Stat
   private def config(options: ParameterManager): Future[Int] = {
     val cfg = options.parameters
       .iterator
-      .filter { case (k, v) => k != "it" && k != "sql" }
+      .filter { case (k, _) => k != "iteration" && k != "sql" }
       .map {
         case (k, Unit) => s"-$k"
         case (k, v) => s"-$k=$v"
@@ -357,13 +356,13 @@ final class SQLWriter(params: ParameterManager, problem: String, val stats: Stat
 
     val executionId = db.run(
       executions.map(e =>
-        (e.problemId, e.configId, e.start, e.hostname, e.iteration)) returning
+        (e.problemId, e.configId, e.version, e.start, e.hostname, e.iteration)) returning
         executions.map(_.executionId) += ((
-        p, c, LocalDateTime.now(),
+        p, c, version, LocalDateTime.now(),
         Some(InetAddress.getLocalHost.getHostName), it)))
 
     executionId.foreach { e =>
-      print(s"Problem $p, config $c, iteration $it, execution $e")
+      print(s"Problem $p, config $c, iteration $it, version $version, execution $e")
     }
 
     executionId

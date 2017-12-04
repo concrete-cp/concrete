@@ -25,7 +25,7 @@ class ModTest extends FlatSpec with Matchers with Inspectors {
         val state = problem.initState.toState
         val advisor = new AdviseCount
         constraint.register(advisor)
-        constraint.adviseAll(state)
+        constraint.eventAll(state)
         val mod = constraint.revise(state)
 
         mod.dom(z).view should contain theSameElementsAs Seq(zv)
@@ -43,8 +43,9 @@ class ModTest extends FlatSpec with Matchers with Inspectors {
         val problem = Problem(x, y, z)
         val constraint = new ModBC(x, y, z)
         problem.addConstraint(constraint)
+        constraint.register(new AdviseCount)
         val state = problem.initState.toState
-        constraint.adviseAll(state)
+        constraint.eventAll(state)
         val mod = constraint.revise(state)
 
         mod.dom(z).view should contain theSameElementsAs Seq(zv)

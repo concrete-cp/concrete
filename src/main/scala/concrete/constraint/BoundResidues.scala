@@ -1,5 +1,9 @@
 package concrete
-package constraint;
+package constraint
+
+import bitvectors.BitVector
+
+;
 
 trait BoundResidues extends BC {
 
@@ -12,24 +16,8 @@ trait BoundResidues extends BC {
 
   }
 
-  def reviseDomain(state: ProblemState, position: Int): Domain = {
-    state.dom(scope(position)).filterBounds { value =>
-      val residue = residues.getResidue(position, value)
-
-      ((residue ne null) && controlTuplePresence(state, residue)) ||
-        (findSupport(state, position, value) match {
-          case Some(tuple) => {
-            assert(check(tuple))
-            residues.updateResidue(tuple)
-            true
-          }
-          case None => false
-        })
-    }
-  }
-
   //@annotation.tailrec
-  override def revise(state: ProblemState): Outcome = {
+  override def revise(state: ProblemState, mod: BitVector): Outcome = {
     fixPoint(state, 0 until arity, { (current, p) =>
       current.updateDom(scope(p), reviseDomain(state, p))
 
@@ -38,6 +26,22 @@ trait BoundResidues extends BC {
       //    else state.updateDom(scope(p), reviseDomain(state, p)).andThen(ps => revise(ps, skip, p - 1))
 
     })
+  }
+
+  def reviseDomain(state: ProblemState, position: Int): Domain = {
+    state.dom(scope(position)).filterBounds { value =>
+      val residue = residues.getResidue(position, value)
+
+      ((residue ne null) && controlTuplePresence(state, residue)) ||
+        (findSupport(state, position, value) match {
+          case Some(tuple) =>
+            assert(check(tuple))
+            residues.updateResidue(tuple)
+            true
+
+          case None => false
+        })
+    }
   }
 
   def findSupport(state: ProblemState, position: Int, value: Int): Option[Array[Int]]

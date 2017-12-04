@@ -1,16 +1,15 @@
 package concrete.constraint.semantic
 
-;
 
-import concrete.constraint.{Constraint, ConstraintComparator, ResiduesRemovals, TupleEnumerator}
+import concrete.constraint.{Constraint, ConstraintComparator, Residues, TupleEnumerator}
 import concrete.{BooleanDomain, IntDomain, Problem, Variable}
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
-import org.scalatest.{FlatSpec, Inspectors, Matchers}
+import org.scalatest.{FlatSpec, Matchers}
 
-final class MulTest extends FlatSpec with Matchers with PropertyChecks with Inspectors {
+final class MulTest extends FlatSpec with Matchers with PropertyChecks {
 
-  val dom = Gen.nonEmptyListOf(Gen.choose(-1000, 1000))
+  private val dom = Gen.nonEmptyListOf(Gen.choose(-1000, 1000))
 
   "Mul" should "filter the same as enumerators" in {
 
@@ -22,8 +21,8 @@ final class MulTest extends FlatSpec with Matchers with PropertyChecks with Insp
       ConstraintComparator.compare(
         Array(vx, vy, vz),
         new MulAC(vx, vy, vz),
-        new Constraint(Array(vx, vy, vz)) with ResiduesRemovals with TupleEnumerator {
-          def check(t: Array[Int]) = t(0) == t(1) * t(2);
+        new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
+          def check(t: Array[Int]): Boolean = t(0) == t(1) * t(2)
         })
       //      
       //      val Revised(mod2, _, _) = c2.revise(mod)

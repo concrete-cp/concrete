@@ -1,5 +1,6 @@
 package concrete.constraint.semantic
 
+import bitvectors.BitVector
 import concrete.Assignment
 import concrete.Event
 import concrete.Outcome
@@ -12,9 +13,9 @@ class NotMember(variable: Variable, set: Array[Variable]) extends Constraint(var
   def check(tuple: Array[Int]): Boolean = {
     !tuple.tail.contains(tuple(0))
   }
-  def init(ps: ProblemState) = ps
+  def init(ps: ProblemState): ProblemState = ps
   def simpleEvaluation: Int = 2
-  def revise(ps: ProblemState): Outcome = {
+  def revise(ps: ProblemState, mod: BitVector): Outcome = {
     ps.fold(1 until arity) { (ps, i) =>
       val dom = ps.dom(scope(i))
       if (dom.isAssigned) {
@@ -62,7 +63,7 @@ class Member(variable: Variable, set: Array[Variable]) extends Constraint(variab
     tuple.tail.contains(tuple(0))
   }
   def init(ps: ProblemState): Outcome = ps
-  def revise(ps: ProblemState): Outcome = {
+  def revise(ps: ProblemState, mod: BitVector): Outcome = {
     def findNewSupport(i: Int) = {
       (1 until arity).find(j => ps.dom(scope(j)).present(i)) match {
         case Some(s) =>

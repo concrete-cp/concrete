@@ -1,47 +1,36 @@
 package concrete.heuristic.value
 
+import java.util.concurrent.TimeoutException
+
 import com.typesafe.scalalogging.LazyLogging
 import concrete._
 import concrete.filter.Filter
-import concrete.heuristic.Branch
+import concrete.heuristic.{DeadEnd, Decision}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
-class BestCost(pm: ParameterManager) extends BranchHeuristic with LazyLogging {
+class BestCost(pm: ParameterManager, rand: Random) extends BranchHeuristic with LazyLogging {
   private val boundsOnly = pm.getOrElse("bestcost.boundsOnly", 100)
-  private val rand = new Random(pm.getOrElse("random.seed", 0))
   private var objective: Goal = _
   private var filter: Filter = _
 
   override def toString: String = "best-cost"
 
-  def branch(variable: Variable, domain: Domain, ps: ProblemState): Branch = {
+  def branch(variable: Variable, domain: Domain, ps: ProblemState): (Decision, Decision) = {
     var bestScore = Int.MaxValue
-    var bestValues = new ArrayBuffer[Int]()
+    val bestValues = new ArrayBuffer[Int]()
 
 
-    val candidates = if (domain.size >= boundsOnly) {
-      Seq(domain.head, domain.last)
-    } else {
-      domain.view
-    }
+    def checkValue(v: Int) = {
+      if (Thread.interrupted()) throw new TimeoutException("Timeout while computing best cost")
+      val test = ps.assign(variable, v)
 
-    for (v <- candidates) {
-      filter.reduceAfter(Seq((variable, Assignment)), ps.assign(variable, v)) match {
-        case c: Contradiction =>
-          val followingBranch = domain.remove(v)
-          return new Branch(
-            ps.updateDomNonEmptyNoCheck(variable, followingBranch), Seq((variable, InsideRemoval(domain, followingBranch))),
-            c, Seq(),
-            s"bestCost found ${variable.toString(ps)} /= $v",
-            s"bestCost found ${variable.toString(ps)} /= $v, contradiction"
-          )
+      filter.reduceAfter(Seq((variable, Assignment)), test) match {
+        case _: Contradiction => false
+
         case filteredState: ProblemState =>
-          val s = objective match {
-            case Satisfy => return assignBranch(ps, variable, domain, v)
-            case _ => score(filteredState)
-          }
+          val s = score(filteredState)
 
           logger.info(s"score of $variable <- $v: $s")
           if (s <= bestScore) {
@@ -52,16 +41,31 @@ class BestCost(pm: ParameterManager) extends BranchHeuristic with LazyLogging {
 
             bestValues += v
           }
-
+          true
       }
     }
 
-    /**
-      * TODO: best state must be recomputed, improving this would require all data structures
-      * to be fully persistent
-      */
-    val bestValue = bestValues(rand.nextInt(bestValues.size))
-    assignBranch(ps, variable, domain, bestValue)
+    val newDomain = if (domain.size >= boundsOnly) {
+      domain.filterBounds(checkValue)
+    } else {
+      domain.filter(checkValue)
+    }
+
+    if (domain ne newDomain) {
+      logger.info(s"Bestcost filtered ${variable.toString(ps)} to $newDomain")
+    }
+
+    if (newDomain.isEmpty) {
+      (DeadEnd(variable), DeadEnd())
+    } else {
+
+      /**
+        * TODO: best state must be recomputed, improving this would require all data structures
+        * to be fully persistent
+        */
+      val bestValue = bestValues(rand.nextInt(bestValues.size))
+      assignBranch(ps.updateDomNonEmpty(variable, newDomain), variable, bestValue)
+    }
 
     //
     //    val b2 = domain.remove(bestValue)
@@ -78,6 +82,7 @@ class BestCost(pm: ParameterManager) extends BranchHeuristic with LazyLogging {
     objective match {
       case Minimize(obj) => ps.dom(obj).head
       case Maximize(obj) => -ps.dom(obj).last
+      case Satisfy => 0
     }
   }
 

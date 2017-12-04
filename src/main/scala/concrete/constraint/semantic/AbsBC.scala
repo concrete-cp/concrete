@@ -2,6 +2,7 @@ package concrete
 package constraint
 package semantic;
 
+import bitvectors.BitVector
 import concrete.util.Interval
 
 final class AbsBC(val result: Variable, val v0: Variable) extends Constraint(Array(result, v0)) with BC {
@@ -9,28 +10,14 @@ final class AbsBC(val result: Variable, val v0: Variable) extends Constraint(Arr
   //  val corresponding2 = result.dom.allValues map { v => v0.dom.index(-v) }
   //  val correspondingR = v0.dom.allValues map { v => result.dom.index(math.abs(v)) }
 
-  def init(ps: ProblemState) = ps
+  def init(ps: ProblemState): ProblemState = ps
 
-  def check(t: Array[Int]) = t(0) == math.abs(t(1))
+  def check(t: Array[Int]): Boolean = t(0) == math.abs(t(1))
 
   private val shavers: Array[ProblemState => Outcome] = Array(
     { ps =>
       val dv0 = ps.dom(v0)
-
-      //if (dv0.present(0)) {
       ps.shaveDom(result, dv0.span.abs)
-      //      } else {
-      //
-      //        val pos = dv0.nextOption(-1).map(lb => Interval(lb, dv0.last))
-      //        val neg = dv0.prevOption(1).map(ub => Interval(-ub, -dv0.head))
-      //
-      //        Interval.union(pos, neg).map(
-      //          ps.shaveDom(result, _)).getOrElse(Contradiction)
-      //      }
-
-      //      val abs = dv0.removeFrom(dv0.next(-1)) | dv0.removeTo(dv0.prev(1))
-      //
-      //      ps.intersectDom(result, abs)
     },
     { ps: ProblemState =>
 
@@ -50,7 +37,9 @@ final class AbsBC(val result: Variable, val v0: Variable) extends Constraint(Arr
 
     })
 
-  override def revise(ps: ProblemState): Outcome = {
+  override def shave(state: ProblemState): Outcome = throw new IllegalStateException()
+
+  override def revise(ps: ProblemState, mod: BitVector): Outcome = {
     fixPointM(ps, shavers)
   }
 

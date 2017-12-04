@@ -63,7 +63,7 @@ class Circuit(
   }
 
   def init(ps: concrete.ProblemState): Outcome = ps
-  def revise(ps: concrete.ProblemState): Outcome = {
+  def revise(ps: concrete.ProblemState, mod: BitVector): Outcome = {
     //println(toString(ps))
     var N = 0
     var L: List[Int] = Nil

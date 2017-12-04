@@ -2,10 +2,8 @@ package concrete.constraint.semantic
 
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
-import concrete.IntDomain
-import concrete.Variable
-import concrete.Problem
-import concrete.Singleton
+import concrete._
+import concrete.constraint.AdviseCount
 import org.scalatest.Inspectors
 import org.scalatest.prop.PropertyChecks
 
@@ -23,7 +21,8 @@ class MinMaxTest extends FlatSpec with Matchers with Inspectors with PropertyChe
     val constraint = Min(r, a)
     problem.addConstraint(constraint)
     val state = problem.initState.toState
-
+    constraint.register(new AdviseCount)
+    constraint.eventAll(state, Assignment)
     val mod = constraint.revise(state)
 
     mod.dom(a(1)) shouldBe Singleton(121)
@@ -40,7 +39,8 @@ class MinMaxTest extends FlatSpec with Matchers with Inspectors with PropertyChe
     val constraint = Min(r, a)
     problem.addConstraint(constraint)
     val state = problem.initState.toState
-
+    constraint.register(new AdviseCount)
+    constraint.eventAll(state, Assignment)
     val mod = constraint.revise(state)
 
     withClue(constraint.toString(mod.toState)) {
@@ -58,7 +58,8 @@ class MinMaxTest extends FlatSpec with Matchers with Inspectors with PropertyChe
     val constraint = Min(r, a)
     problem.addConstraint(constraint)
     val state = problem.initState.toState
-
+    constraint.register(new AdviseCount)
+    constraint.eventAll(state, Assignment)
     val mod = constraint.revise(state)
 
     forAll(a)(v => mod.dom(v).head should be >= 121)
@@ -74,7 +75,8 @@ class MinMaxTest extends FlatSpec with Matchers with Inspectors with PropertyChe
     val constraint = Min(r, a)
     problem.addConstraint(constraint)
     val state = problem.initState.toState
-
+    constraint.register(new AdviseCount)
+    constraint.eventAll(state, Assignment)
     assert(!constraint.revise(state).isState)
   }
 
@@ -88,12 +90,13 @@ class MinMaxTest extends FlatSpec with Matchers with Inspectors with PropertyChe
     val constraint = Min(r, a)
     problem.addConstraint(constraint)
     val state = problem.initState.toState
-
+    constraint.register(new AdviseCount)
+    constraint.eventAll(state, Assignment)
     val mod = constraint.revise(state)
     mod.dom(r).view should contain theSameElementsAs mod.dom(a(1)).view
     mod.dom(a(0)) shouldBe state.dom(a(0))
 
-    mod.toState(constraint) shouldBe 0
+    mod.toState(constraint) shouldBe a
   }
 
   it should "handle variables with no intersection with result" in {
@@ -106,7 +109,8 @@ class MinMaxTest extends FlatSpec with Matchers with Inspectors with PropertyChe
     val problem = Problem(vx +: vy: _*)
     problem.addConstraint(constraint)
     val state = problem.initState.toState
-
+    constraint.register(new AdviseCount)
+    constraint.eventAll(state, Assignment)
     val mod = constraint.revise(state)
     mod.dom(vx).view should contain theSameElementsAs Seq(0)
     mod.dom(vy(0)).view should contain theSameElementsAs Seq(1)
@@ -123,7 +127,8 @@ class MinMaxTest extends FlatSpec with Matchers with Inspectors with PropertyChe
     val problem = Problem(vx +: vy: _*)
     problem.addConstraint(constraint)
     val state = problem.initState.toState
-
+    constraint.register(new AdviseCount)
+    constraint.eventAll(state, Assignment)
     val mod = constraint.revise(state)
     mod.dom(vx).view should contain theSameElementsAs Seq(0)
     mod.dom(vy(0)).view should contain theSameElementsAs Seq(0)
@@ -140,7 +145,8 @@ class MinMaxTest extends FlatSpec with Matchers with Inspectors with PropertyChe
     val problem = Problem(vx +: vy: _*)
     problem.addConstraint(constraint)
     val state = problem.initState.toState
-
+    constraint.register(new AdviseCount)
+    constraint.eventAll(state, Assignment)
     val mod = constraint.revise(state)
     mod shouldBe state
 
@@ -221,6 +227,8 @@ class MinMaxTest extends FlatSpec with Matchers with Inspectors with PropertyChe
     val constraint = Max(r, a)
     problem.addConstraint(constraint)
     val state = problem.initState.toState
+    constraint.register(new AdviseCount)
+    constraint.eventAll(state, Assignment)
 
     val mod = constraint.revise(state)
 
@@ -238,6 +246,9 @@ class MinMaxTest extends FlatSpec with Matchers with Inspectors with PropertyChe
     val constraint = Max(r, a)
     problem.addConstraint(constraint)
     val state = problem.initState.toState
+    constraint.register(new AdviseCount)
+    constraint.eventAll(state, Assignment)
+
 
     val mod = constraint.revise(state)
 
@@ -255,7 +266,8 @@ class MinMaxTest extends FlatSpec with Matchers with Inspectors with PropertyChe
     val constraint = Max(r, a)
     problem.addConstraint(constraint)
     val state = problem.initState.toState
-
+    constraint.register(new AdviseCount)
+    constraint.eventAll(state, Assignment)
     val mod = constraint.revise(state)
 
     forAll(a)(v => mod.dom(v).last should be <= 121)

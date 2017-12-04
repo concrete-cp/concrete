@@ -1,16 +1,13 @@
 package concrete
 package constraint
-package linear;
+package linear
 
-import org.scalatest.FlatSpec
-import org.scalatest.Inspectors
-import org.scalatest.Matchers
+;
 
-import cspom.CSPOM
 import cspom.CSPOM._
-import cspom.CSPOMConstraint
-import cspom.variable.BoolVariable
-import cspom.variable.IntVariable
+import cspom.variable.{BoolVariable, IntVariable}
+import cspom.{CSPOM, CSPOMConstraint}
+import org.scalatest.{FlatSpec, Inspectors, Matchers}
 
 final class SumTest extends FlatSpec with Matchers with Inspectors {
 
@@ -29,7 +26,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
       if (ps.entailed.hasInactiveVar(c)) {
         ps
       } else {
-        c.adviseAll(ps)
+        c.eventAll(ps)
         c.revise(ps)
       }
     }.toState
@@ -50,7 +47,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     pb.addConstraint(c)
     c.register(new AdviseCount)
     val ps = pb.initState.assign(y, 9).toState
-    c.adviseAll(ps)
+    c.eventAll(ps)
     c.revise(ps).toState
     //    withClue(c.toString(mod)) {
     //      mod.dom(x52) should contain theSameElementsAs Seq(4)
@@ -68,7 +65,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     pb.addConstraint(c)
     c.register(new AdviseCount)
     val ps = pb.initState.toState
-    c.adviseAll(ps)
+    c.eventAll(ps)
     val mod = c.revise(ps).toState
     withClue(c.toString(mod)) {
       mod.dom(x52).view should contain theSameElementsAs Seq(4)
@@ -93,7 +90,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     pb.addConstraint(c)
     c.register(new AdviseCount)
     val ps = pb.initState.toState
-    c.adviseAll(ps)
+    c.eventAll(ps)
     val mod = c.revise(ps).toState
     mod.dom(q43).view should contain theSameElementsAs Seq(1)
 
@@ -106,7 +103,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     pb.addConstraint(c)
     c.register(new AdviseCount)
     val ps = pb.initState.toState
-    c.adviseAll(ps)
+    c.eventAll(ps)
     val mod = c.revise(ps).toState
 
     mod.dom(v0).view should contain theSameElementsAs (1 to 4)
@@ -119,7 +116,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     pb.addConstraint(c)
     c.register(new AdviseCount)
     val ps = pb.initState.toState
-    c.adviseAll(ps)
+    c.eventAll(ps)
     val mod = c.revise(ps).toState
 
     mod.dom(v0).view should contain theSameElementsAs Seq(1, 2, 3, 4)
@@ -132,7 +129,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     pb.addConstraint(c)
     c.register(new AdviseCount)
     val ps = pb.initState.toState
-    c.adviseAll(ps)
+    c.eventAll(ps)
     val mod = c.revise(ps).toState
     mod.dom(v0).view should contain theSameElementsAs (1 to 3)
     mod.dom(v1).view should contain theSameElementsAs (0 to 2)
@@ -144,14 +141,14 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     val c = LinearLe(-3, Array(-1, -1, -6), Array(
       new Variable("v0", IntDomain(0 to 1)),
       new Variable("v1", IntDomain(1 to 5)),
-      v2), false, pm)
+      v2), strict = false, pm)
 
     val pb = Problem(c.scope: _*)
     pb.addConstraint(c)
     c.register(new AdviseCount)
     val ps = pb.initState.toState
 
-    c.adviseAll(ps)
+    c.eventAll(ps)
     val mod = c.revise(ps).toState
     mod.dom(v2).view should contain theSameElementsAs (0 to 1)
 
@@ -162,13 +159,14 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     val pb = Problem(v0)
 
     forAll(Seq(
-      LinearLe(0, Array(1), Array(v0), false, pm),
+      LinearLe(0, Array(1), Array(v0), strict = false, pm),
       new LinearNe(1, Array(1), Array(v0)),
-      LinearEq(0, Array(1), Array(v0)))) { c =>
-      Some(c).collect { case c: Removals => c.register(new AdviseCount) }
+      LinearEq(0, Array(1), Array(v0)))
+    ) { c =>
+      c.register(new AdviseCount)
       pb.addConstraint(c)
       val r = pb.initState.andThen { ps =>
-        c.adviseAll(ps)
+        c.eventAll(ps)
         c.revise(ps)
       }
 
@@ -182,9 +180,11 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     val pb = Problem(v0)
     val c = new LinearNe(2, Array(2), Array(v0))
     pb.addConstraint(c)
-    val ps = pb.initState.toState
-    c.adviseAll(ps)
-    val mod = c.revise(ps).toState
+    c.register(new AdviseCount)
+    val mod = pb.initState.andThen { ps =>
+      c.eventAll(ps)
+      c.revise(ps)
+    }
     mod.dom(v0).view should contain theSameElementsAs (-10 to 10 filter (_ != 1))
 
   }
@@ -195,9 +195,12 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     val pb = Problem(v0, v1)
     val c = new LinearNe(0, Array(1, 1), Array(v0, v1))
     pb.addConstraint(c)
-    val ps = pb.initState.toState
-    c.adviseAll(ps)
-    val mod = c.revise(ps).toState
+    c.register(new AdviseCount)
+    val ps = pb.initState
+    val mod = ps.andThen { ps =>
+      c.eventAll(ps)
+      c.revise(ps)
+    }
     mod shouldBe ps
 
   }
@@ -212,9 +215,10 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     val pb = Problem(c.scope: _*)
     pb.addConstraint(c)
     c.register(new AdviseCount)
-    val ps = pb.initState.toState
-    c.adviseAll(ps)
-    val mod = c.revise(ps).toState
+    val mod = pb.initState.andThen { ps =>
+      c.eventAll(ps)
+      c.revise(ps)
+    }
     mod.dom(x985).view should contain theSameElementsAs Seq(0)
 
     // -1.Q[43] [0, 3] + -2.Q[44] [1] + -3.Q[45] [1, 2] + -4.Q[46] [0] + -5.Q[47] [0] + -6.Q[48] [0] eq -6 ()
@@ -231,13 +235,13 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
     pb.addConstraint(c)
     c.register(new AdviseCount)
     val ps = pb.initState.toState
-    c.adviseAll(ps)
+    c.eventAll(ps)
     val mod = c.revise(ps).toState
 
     mod.dom(x238).view should contain theSameElementsAs (-14 to 1)
 
     val ps2 = mod.removeAfter(x14, 14).toState
-    c.advise(ps2, BoundRemoval, 1)
+    c.event(ps2, BoundRemoval, 1)
     val mod2 = c.revise(ps2).toState
     mod2.dom(x238).view should contain theSameElementsAs (-14 to -1)
 
@@ -259,7 +263,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
       if (ps.entailed.hasInactiveVar(c)) {
         ps
       } else {
-        c.adviseAll(ps)
+        c.eventAll(ps)
         c.revise(ps)
       }
     }.toState
@@ -289,7 +293,7 @@ final class SumTest extends FlatSpec with Matchers with Inspectors {
 
     val Array(bc) = problem.constraints
 
-    bc.adviseAll(state)
+    bc.eventAll(state)
     assert(!bc.revise(state).isState)
   }
 

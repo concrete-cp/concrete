@@ -3,62 +3,55 @@ package heuristic
 
 import java.util.EventObject
 
-import concrete.heuristic.value.{BestValue, BranchHeuristic}
+import concrete.heuristic.value.{BranchHeuristic, RandomValHeuristic, RandomValue}
 import concrete.heuristic.variable._
 
+import scala.util.{Random, Try}
+
 object CrossHeuristic {
-  def apply(params: ParameterManager, decisionVariables: Seq[Variable]): CrossHeuristic = {
-    val varH = defaultVar(params, decisionVariables)
-    val valH = defaultVal(params)
-
-    CrossHeuristic(varH, valH)
-  }
-
-  def defaultVar(params: ParameterManager, decisionVariables: Seq[Variable]): VariableHeuristic = {
-
-    val tieBreaker = params.getRaw("heuristic.variable.tieBreaker").map {
-      case h: VariableHeuristic => h
-      case "rand" => new RandomVar(Seq(), params)
-      case "lex" => new LexVar(Seq())
-    }.getOrElse(new RandomVar(Seq(), params))
-
-
-    val variableHeuristicClass: Class[_ <: VariableHeuristic] =
-      params.classInPackage("heuristic.variable", "concrete.heuristic.variable", classOf[variable.WDegOnDom])
-
-    val vh: VariableHeuristic =
-      if (classOf[ScoredVariableHeuristic].isAssignableFrom(variableHeuristicClass)) {
-
-        variableHeuristicClass.getConstructor(classOf[Seq[Variable]], classOf[VariableHeuristic], classOf[Boolean])
-          .newInstance(decisionVariables, tieBreaker, Boolean.box(false))
-
-      } else {
-        try {
-          variableHeuristicClass.getConstructor(classOf[Seq[Variable]], classOf[ParameterManager])
-            .newInstance(decisionVariables, params)
-        } catch {
-          case _: NoSuchMethodException =>
-            variableHeuristicClass.getConstructor(classOf[Seq[Variable]]).newInstance(decisionVariables)
-        }
-      }
-
-
-    val randomDiv = params.getOrElse("heuristic.variable.randomDiv", 0.2)
-
-    if (randomDiv > 0) {
-      new RandomDiv(params, vh, randomDiv)
-    } else {
-      vh
+  def apply(params: ParameterManager, decisionVariables: Seq[Variable], rand: Random): Try[CrossHeuristic] = {
+    for (varH <- defaultVar(params, decisionVariables, rand); valH <- defaultVal(params, rand)) yield {
+      CrossHeuristic(varH, valH)
     }
   }
 
-  def defaultVal(params: ParameterManager): BranchHeuristic = {
-    val valueHeuristicClass: Class[_ <: BranchHeuristic] =
-      params.classInPackage("heuristic.value", "concrete.heuristic.value", classOf[BestValue])
+  def defaultVar(params: ParameterManager, decisionVariables: Seq[Variable], rand: Random): Try[VariableHeuristic] = {
 
-    valueHeuristicClass
-      .getConstructor(classOf[ParameterManager])
-      .newInstance(params)
+    for {
+      tieBreaker <- Try {
+        params.getRaw("heuristic.variable.tieBreaker").map {
+          case h: VariableHeuristic => h
+          case "rand" => new RandomVar(decisionVariables, rand)
+          case "lex" => new LexVar(decisionVariables)
+        }.getOrElse(new RandomVar(decisionVariables, rand))
+      }
+
+
+      variableHeuristicClass <- Try(
+        params.classInPackage("heuristic.variable", "concrete.heuristic.variable", classOf[variable.WDegOnDom]))
+
+      vh <- VariableHeuristic(variableHeuristicClass, tieBreaker, decisionVariables, rand)
+    } yield {
+      val randomDiv = params.getOrElse("heuristic.variable.randomDiv", 0.0)
+
+      if (randomDiv > 0) {
+        new RandomDiv(vh, randomDiv, rand)
+      } else {
+        vh
+      }
+    }
+  }
+
+  def defaultVal(params: ParameterManager, rand: Random): Try[BranchHeuristic] = {
+    for (heuristic <- BranchHeuristic(params, rand)) yield {
+      val randomDiv = params.getOrElse("heuristic.value.randomDiv", 0.0)
+
+      if (randomDiv > 0) {
+        new RandomValHeuristic(Seq(heuristic, new RandomValue(rand)), Seq(1 - randomDiv, randomDiv), rand)
+      } else {
+        heuristic
+      }
+    }
   }
 
   def apply(varH: VariableHeuristic, valH: BranchHeuristic): CrossHeuristic =
@@ -70,7 +63,7 @@ final case class CrossHeuristic(
                                  valueHeuristic: BranchHeuristic,
                                  shouldRestart: Boolean) extends Heuristic {
 
-  def branch(state: ProblemState, candidates: Seq[Variable]): Option[Branch] = {
+  def branch(state: ProblemState, candidates: Seq[Variable]): Option[(Decision, Decision)] = {
     variableHeuristic.select(state, candidates).map { v =>
       assert(state.dom(v).size > 1, s"$variableHeuristic selected a singleton variable ${v.toString(state)}")
       valueHeuristic.branch(v, state.dom(v), state)
@@ -87,8 +80,7 @@ final case class CrossHeuristic(
 
   def decisionVariables: Seq[Variable] = variableHeuristic.pool
 
-  def event(event: EventObject): Unit = {
-    variableHeuristic.event(event)
-    valueHeuristic.event(event)
+  def event[S <: Outcome](event: EventObject, ps: S): S = {
+    valueHeuristic.event(event, variableHeuristic.event(event, ps))
   }
 }

@@ -24,8 +24,8 @@ case object Assignment extends Event {
  * AT LEAST a bound was removed. Other values may have been removed as well
  */
 case object BoundRemoval extends Event {
-  def apply(after: Domain) = if (after.isAssigned) Assignment else BoundRemoval
-  def <=(e: Event) = (e eq this) || InsideRemoval <= e
+  def apply(after: Domain): Event = if (after.isAssigned) Assignment else BoundRemoval
+  def <=(e: Event): Boolean = (e eq this) || InsideRemoval <= e
 }
 
 /**
@@ -33,10 +33,10 @@ case object BoundRemoval extends Event {
  */
 case object InsideRemoval extends Event {
   @inline
-  def apply(before: Domain, after: Domain) =
+  def apply(before: Domain, after: Domain): Event =
     if (before.head != after.head || before.last != after.last) BoundRemoval(after)
     else InsideRemoval
 
-  def <=(e: Event) = e eq this
+  def <=(e: Event): Boolean = e eq this
 }
 

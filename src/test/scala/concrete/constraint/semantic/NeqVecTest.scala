@@ -1,6 +1,7 @@
 package concrete.constraint.semantic
 
 import concrete._
+import concrete.constraint.AdviseCount
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{FlatSpec, Inspectors, Matchers}
@@ -39,9 +40,13 @@ final class NeqVecTest extends FlatSpec with Matchers with PropertyChecks with I
 
         val pb = new Problem(x ++ y)
         pb.addConstraint(c)
-        val ps = pb.initState.toState
-        c.adviseAll(ps)
-        val revised = c.revise(ps)
+        c.register(new AdviseCount)
+
+        val ps = pb.initState
+        val revised = ps.andThen { ps =>
+          c.eventAll(ps)
+          c.revise(ps)
+        }
 
         if (dx.forall(_.size == 1)) {
           if (dy.forall(_.size == 1)) {
@@ -56,7 +61,7 @@ final class NeqVecTest extends FlatSpec with Matchers with PropertyChecks with I
             forAtLeast(1, revised.dom(v).view)(_ != d.head)
           }
         } else {
-          revised.toState.domains shouldBe ps.domains
+          revised.toState.domains shouldBe ps.toState.domains
         }
       }
 
@@ -72,9 +77,11 @@ final class NeqVecTest extends FlatSpec with Matchers with PropertyChecks with I
 
     val pb = new Problem(x ++ y)
     pb.addConstraint(c)
-    val ps = pb.initState.toState
-    c.adviseAll(ps)
-    val revised = c.revise(ps)
+    c.register(new AdviseCount)
+    val revised = pb.initState.andThen { ps =>
+      c.eventAll(ps)
+      c.revise(ps)
+    }
 
     assert(!revised.isState)
   }

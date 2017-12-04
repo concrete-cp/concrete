@@ -12,6 +12,8 @@ class FZWriter(val params: ParameterManager, val problem: String, val stats: Sta
     Console.println(s"% $k = $v")
   }
 
+  Console.println(s"% Concrete v$version running")
+
 
 
 

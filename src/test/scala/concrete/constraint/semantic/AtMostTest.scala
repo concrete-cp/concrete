@@ -1,22 +1,12 @@
 package concrete.constraint.semantic
 
-import org.scalatest.FlatSpec
-import org.scalatest.Inspectors
-import org.scalatest.Matchers
-import concrete.CSPOMDriver
-import concrete.IntDomain
-import concrete.Problem
-import concrete.Solver
-import concrete.Variable
-import cspom.CSPOM
-import cspom.CSPOM.constant
-import cspom.CSPOM.ctr
-import cspom.variable.IntVariable
+import concrete._
 import concrete.constraint.AdviseCount
-import org.scalatest.TryValues
 import concrete.filter.ACC
-import concrete.ParameterManager
-import concrete.BoundRemoval
+import cspom.CSPOM
+import cspom.CSPOM.{constant, ctr}
+import cspom.variable.IntVariable
+import org.scalatest.{FlatSpec, Inspectors, Matchers, TryValues}
 
 class AtMostTest extends FlatSpec with Matchers with Inspectors with TryValues {
 
@@ -33,33 +23,37 @@ class AtMostTest extends FlatSpec with Matchers with Inspectors with TryValues {
 
     val c = new AtMost(occ, value, Array(v1, v2, v3, v4, v5))
     c.register(new AdviseCount())
-    val ps = Problem(occ, value, v1, v2, v3, v4, v5)
+
+    Problem(occ, value, v1, v2, v3, v4, v5)
       .addConstraint(c)
       .initState
-
-    ps.andThen { ps =>
-      c.adviseAll(ps)
-      c.revise(ps)
-    }
+      .andThen { ps =>
+        c.eventAll(ps)
+        c.revise(ps)
+      }
       .andThen { mod =>
-        forAll(c.scope.drop(1)) {
-          case v => mod.dom(v) should be theSameInstanceAs v.initDomain
+        forAll(c.scope.drop(1)) { v =>
+          mod.dom(v) should be theSameInstanceAs v.initDomain
         }
 
         mod.dom(occ).view should contain theSameElementsAs Seq(1, 2, 3)
         mod
       }
-      .orElse { fail("Inconsistency") }
+      .orElse {
+        fail("Inconsistency")
+      }
       .andThen(_.removeFrom(occ, 2))
       .andThen { ps =>
-        c.advise(ps, BoundRemoval, 0)
+        c.event(ps, BoundRemoval, 0)
         c.revise(ps)
       }
       .andThen { ps =>
         ps.dom(v3).view should contain theSameElementsAs Seq(9)
         ps
       }
-      .orElse { fail("Inconsistency") }
+      .orElse {
+        fail("Inconsistency")
+      }
 
   }
 
@@ -81,7 +75,7 @@ class AtMostTest extends FlatSpec with Matchers with Inspectors with TryValues {
     pb.addConstraint(c)
 
     val r = pb.initState.andThen { ps =>
-      c.adviseAll(ps)
+      c.eventAll(ps)
       c.revise(ps)
     }
 
@@ -105,7 +99,7 @@ class AtMostTest extends FlatSpec with Matchers with Inspectors with TryValues {
 
     val problem = Solver(cspom).get.concreteProblem
 
-    exactly (1, problem.constraints) shouldBe a [AtMost]
+    exactly(1, problem.constraints) shouldBe a[AtMost]
 
     val occ = problem.variable("occ")
     val initState = problem.initState

@@ -1,38 +1,51 @@
-package concrete.constraint.semantic;
+package concrete.constraint.semantic
 
-import scala.annotation.tailrec
-import concrete.Contradiction
-import concrete.Variable
-import concrete.constraint.Constraint
-import concrete.constraint.BC
-import concrete.ProblemState
-import concrete.Outcome
+;
+
+import bitvectors.BitVector
+import concrete.{Contradiction, Outcome, ProblemState, Variable}
+import concrete.constraint.{BC, Constraint}
 import concrete.util.Interval
 
+import scala.annotation.tailrec
+
 final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) with BC with AllDiffChecker {
-
-  def except = Set()
-
-  case class HInterval(val p: Int) {
-    var minrank: Int = 0
-    var maxrank: Int = 0
-    def variable = scope(p)
-    def lb(doms: Array[Interval]) = doms(p).lb
-    def ub(doms: Array[Interval]) = doms(p).ub
-  }
-
-  def init(ps: ProblemState) = ps
 
   val t = new Array[Int](2 * arity + 2) // Tree links
   val d = new Array[Int](2 * arity + 2) // Diffs between critical capacities
   val h = new Array[Int](2 * arity + 2) // Hall interval links
   val bounds = new Array[Int](2 * arity + 2)
-
+  private val intervals = (0 until arity).map(p => HInterval(p)).toArray
+  private val minsorted = intervals.clone
+  private val maxsorted = intervals.clone
+  val simpleEvaluation = 3
+  private val doms: Array[Interval] = new Array(arity)
+  private val eval: Int = {
+    (31 - Integer.numberOfLeadingZeros(arity)) * arity
+  }
   var nbBounds = 0
 
-  val intervals = (0 until arity).map(p => new HInterval(p)).toArray
-  val minsorted = intervals.clone
-  val maxsorted = intervals.clone
+  def except = Set()
+
+  def init(ps: ProblemState): ProblemState = ps
+
+  override def shave(state: ProblemState): Outcome = throw new IllegalStateException()
+
+  override def revise(ps: ProblemState, mod: BitVector): Outcome = {
+    var i = arity - 1
+    while (i >= 0) {
+      doms(i) = ps.span(scope(i))
+      i -= 1
+    }
+
+    fixPoint(ps, { ps =>
+      sortIt(doms)
+      filterLower(ps, doms)
+        .andThen(ps => filterUpper(ps, doms))
+    })
+  }
+
+  def advise(ps: ProblemState, p: Int): Int = eval
 
   private def swap(array: Array[HInterval], i: Int, j: Int) {
     val tmp = array(i)
@@ -105,7 +118,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
           last = min
           bounds(nb) = min
         }
-        minsorted(i).minrank = nb;
+        minsorted(i).minrank = nb
 
         if (i < arity - 1) proceed(minsorted(i + 1).lb(doms), max, i + 1, j)
         else proceed(min, max, i + 1, j)
@@ -115,7 +128,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
           last = max
           bounds(nb) = max
         }
-        maxsorted(j).maxrank = nb;
+        maxsorted(j).maxrank = nb
 
         if (j < arity - 1) {
           proceed(min, maxsorted(j + 1).ub(doms) + 1, i, j + 1)
@@ -125,8 +138,8 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
 
     proceed(min, maxsorted(0).ub(doms) + 1, 0, 0)
 
-    this.nbBounds = nb;
-    bounds(nb + 1) = bounds(nb) + 2;
+    this.nbBounds = nb
+    bounds(nb + 1) = bounds(nb) + 2
   }
 
   @tailrec
@@ -219,7 +232,7 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
       if (d(z) == 0) {
         t(z) = z - 1
         z = pathmin(t, t(z))
-        t(z) = j;
+        t(z) = j
       }
 
       pathset(t, x - 1, z, z)
@@ -249,42 +262,14 @@ final class AllDifferentBC(vars: Variable*) extends Constraint(vars.toArray) wit
     mod
   }
 
-  private val doms: Array[Interval] = new Array(arity)
+  case class HInterval(p: Int) {
+    var minrank: Int = 0
+    var maxrank: Int = 0
 
-  override def revise(ps: ProblemState) = {
-    var i = arity - 1
-    while (i >= 0) {
-      doms(i) = ps.span(scope(i))
-      i -= 1
-    }
+    def variable = scope(p)
 
-    fixPoint(ps, { ps =>
-      sortIt(doms)
-      filterLower(ps, doms)
-        .andThen(ps => filterUpper(ps, doms))
-    })
-    //      .andThen { ps =>
-    //        assert(
-    //          scope.forall { v =>
-    //            val d = ps.dom(v)
-    //            !d.isAssigned || {
-    //              val s = d.singleValue
-    //              scope.forall { w =>
-    //                (v eq w) || (ps.dom(w).head != s && ps.dom(w).last != s)
-    //              }
-    //            }
-    //
-    //          },
-    //          toString(ps) + " -> " + toString(ps))
-    //        ps
-    //      }
+    def lb(doms: Array[Interval]): Int = doms(p).lb
+
+    def ub(doms: Array[Interval]): Int = doms(p).ub
   }
-
-  private val eval: Int = {
-    (31 - Integer.numberOfLeadingZeros(arity)) * arity
-  }
-
-  def advise(ps: ProblemState, p: Int) = eval
-
-  val simpleEvaluation = 3
 }

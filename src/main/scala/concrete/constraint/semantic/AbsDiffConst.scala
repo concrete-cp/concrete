@@ -1,18 +1,17 @@
 package concrete.constraint.semantic
 
-;
-
 import concrete._
 import concrete.constraint._
+
 
 final class AbsDiffConstAC(val result: Int, val v0: Variable, val v1: Variable)
   extends Constraint(Array(v0, v1)) with BCCompanion with Residues {
 
   def skipIntervals = false
 
-  def check(t: Array[Int]) = result == math.abs(t(0) - t(1))
+  def check(t: Array[Int]): Boolean = result == math.abs(t(0) - t(1))
 
-  override def findSupport(doms: Array[Domain], position: Int, value: Int) = {
+  override def findSupport(doms: Array[Domain], position: Int, value: Int): Option[Array[Int]] = {
     val other = doms(1 - position)
 
     support(value, value + result, other, position) orElse support(value, value - result, other, position)
@@ -40,7 +39,7 @@ final class AbsDiffConstAC(val result: Int, val v0: Variable, val v1: Variable)
 
   override def toString(ps: ProblemState) = s"$result =AC= |${v0.toString(ps)} - ${v1.toString(ps)}|";
 
-  def advise(ps: ProblemState, event: Event, pos: Int) = if (skip(ps)) -1 else ps.dom(v0).size + ps.dom(v1).size
+  def advise(ps: ProblemState, event: Event, pos: Int): Int = if (skip(ps)) -1 else ps.dom(v0).size + ps.dom(v1).size
 
   def simpleEvaluation = 2
 }
@@ -48,9 +47,9 @@ final class AbsDiffConstAC(val result: Int, val v0: Variable, val v1: Variable)
 final class AbsDiffConstBC(val result: Int, val v0: Variable, val v1: Variable)
   extends Constraint(Array(v0, v1)) with BC {
 
-  def init(ps: ProblemState) = ps
+  def init(ps: ProblemState): Outcome = ps
 
-  def check(t: Array[Int]) = result == math.abs(t(0) - t(1))
+  def check(t: Array[Int]): Boolean = result == math.abs(t(0) - t(1))
 
   override def shave(ps: ProblemState): Outcome = {
     val d0 = ps.dom(v0)

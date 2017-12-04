@@ -13,32 +13,32 @@ object Task {
 case class Task(d: Variable, h: Variable, slb: Int, dlb: Int, eub: Int, hlb: Int) extends Ordered[Task] {
   assert(eub > slb)
 
-  val coef = (dlb * hlb).toDouble / (eub - slb)
+  private val coef = (dlb * hlb).toDouble / (eub - slb)
 
-  def compare(t: Task) = java.lang.Double.compare(coef, t.coef)
+  def compare(t: Task): Int = java.lang.Double.compare(coef, t.coef)
 }
 
 /**
- * Requires that a set of tasks given by start times s, durations d, and
- * resource requirements r, never require more than a global resource bound
- * b at any one time.
- *
- * Assumptions:
- * - forall i, d[i] >= 0 and r[i] >= 0
- */
+  * Requires that a set of tasks given by start times s, durations d, and
+  * resource requirements r, never require more than a global resource bound
+  * b at any one time.
+  *
+  * Assumptions:
+  * - forall i, d[i] >= 0 and r[i] >= 0
+  */
 
 class CumulativeEnergy(s: Array[Variable], d: Array[Variable], h: Array[Variable], b: Variable) extends Constraint(s ++ d ++ h :+ b)
-    with BC with CumulativeChecker {
+  with BC with CumulativeChecker {
 
-  def nbTasks = s.length
-  
+  val tasks = new Array[Task](s.length)
+
+  def nbTasks: Int = s.length
+
   def advise(problemState: ProblemState, pos: Int): Int = arity * arity
 
   def init(ps: ProblemState): Outcome = ps
 
-  val tasks = new Array[Task](s.length)
-
-  override def shave(ps: ProblemState) = {
+  override def shave(ps: ProblemState): Outcome = {
     val tasks = Array.tabulate(s.length) { i =>
       Task(ps, s(i), d(i), h(i))
     }
@@ -55,7 +55,7 @@ class CumulativeEnergy(s: Array[Variable], d: Array[Variable], h: Array[Variable
       xMin = Math.min(xMin, t.slb)
       val xDiff = xMax - xMin
       if (xDiff >= 0) {
-        val availSurf = (xDiff * camax - surface)
+        val availSurf: Int = xDiff * camax - surface
         surface += t.dlb * t.hlb
         if (surface > xDiff * camax) {
           Contradiction(scope)

@@ -3,11 +3,51 @@ package heuristic.value
 
 import java.util.EventObject
 
-import concrete.heuristic.Branch
+import concrete.heuristic.{Assign, Decision, Remove}
+
+import scala.util.{Random, Try}
+
+object BranchHeuristic {
+  def apply(pm: ParameterManager, rand: Random): Try[BranchHeuristic] = {
+    Try(
+      pm.classInPackage("heuristic.value", "concrete.heuristic.value", classOf[BestValue])
+    )
+      .flatMap { valueHeuristicClass: Class[_ <: BranchHeuristic] =>
+        apply(valueHeuristicClass, pm, rand)
+      }
+  }
+
+  def apply(valueHeuristicClass: Class[_ <: BranchHeuristic], pm: ParameterManager, rand: Random): Try[BranchHeuristic] = {
+    Try(
+      valueHeuristicClass.getConstructor().newInstance()
+    )
+      .recover {
+        case _: NoSuchMethodException =>
+          valueHeuristicClass.getConstructor(classOf[ParameterManager])
+            .newInstance(pm)
+      }
+      .recover {
+        case _: NoSuchMethodException =>
+          valueHeuristicClass.getConstructor(classOf[Random])
+            .newInstance(rand)
+      }
+      .recover {
+        case _: NoSuchMethodException =>
+          valueHeuristicClass.getConstructor(classOf[ParameterManager], classOf[Random])
+            .newInstance(pm, rand)
+      }
+      .recover {
+        case _: NoSuchMethodException =>
+          valueHeuristicClass.getMethod("apply", classOf[ParameterManager], classOf[Random])
+            .invoke(null, pm, rand)
+            .asInstanceOf[BranchHeuristic]
+      }
+  }
+}
 
 trait ValueHeuristic extends BranchHeuristic {
-  def branch(variable: Variable, domain: Domain, ps: ProblemState): Branch = {
-    assignBranch(ps, variable, domain, selectIndex(variable, domain))
+  def branch(variable: Variable, domain: Domain, ps: ProblemState): (Decision, Decision) = {
+    assignBranch(ps, variable, selectIndex(variable, domain))
   }
 
   def selectIndex(variable: Variable, domain: Domain): Int
@@ -15,23 +55,15 @@ trait ValueHeuristic extends BranchHeuristic {
 }
 
 trait BranchHeuristic {
-  def assignBranch(ps: ProblemState, variable: Variable, dom: Domain, selected: Int): Branch = {
-    require(!dom.isAssigned && dom.present(selected))
-    val b1 = dom.assign(selected)
-    val b2 = dom.remove(selected)
-
-    new Branch(
-      ps.updateDomNonEmptyNoCheck(variable, b1), Seq((variable, Assignment)),
-      ps.updateDomNonEmptyNoCheck(variable, b2), Seq((variable, InsideRemoval(dom, b2))),
-      s"${variable.toString(ps)} = $selected",
-      s"${variable.toString(ps)} /= $selected")
+  def assignBranch(ps: ProblemState, variable: Variable, selected: Int): (Decision, Decision) = {
+    (Assign(variable, selected), Remove(variable, selected))
   }
 
-  def branch(variable: Variable, domain: Domain, ps: ProblemState): Branch
+  def branch(variable: Variable, domain: Domain, ps: ProblemState): (Decision, Decision)
 
   def compute(solver: MAC, ps: ProblemState): ProblemState
 
   def shouldRestart: Boolean
 
-  def event(e: EventObject): Unit = ()
+  def event[S <: Outcome](e: EventObject, ps: S): S = ps
 }

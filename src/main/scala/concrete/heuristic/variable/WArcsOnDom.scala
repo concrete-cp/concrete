@@ -16,26 +16,56 @@ object Arc {
   }
 }
 
+object ArcsScores {
+  def apply(max: Int): ArcsScores = if (max < 10000) new ArrayArcsScores(max) else new MapArcsScores(max)
+}
 
-class WArcsOnDom(val pool: Seq[Variable], tieBreaker: VariableHeuristic, val trustCandidates: Boolean = true)
+trait ArcsScores {
+  def apply(i: Int, j: Int): Int
+
+  def increment(i: Int, j: Int): Unit
+}
+
+class ArrayArcsScores(max: Int) extends ArcsScores {
+  private val arcs = Array.ofDim[Int](max, max)
+
+  def apply(i: Int, j: Int): Int = arcs(i)(j) + arcs(j)(i)
+
+  def increment(i: Int, j: Int): Unit = arcs(i)(j) += 1
+}
+
+class MapArcsScores(max: Int) extends ArcsScores {
+  private val arcs = Array.fill(max)(new mutable.HashMap[Int, Int]().withDefaultValue(0))
+
+  def apply(i: Int, j: Int): Int = arcs(i)(j) + arcs(j)(i)
+
+  def increment(i: Int, j: Int): Unit = arcs(i)(j) += 1
+}
+
+class WArcsOnDom(val pool: Seq[Variable], tieBreaker: VariableHeuristic)
   extends ScoredVariableHeuristic(tieBreaker) {
 
-  private var arcs: Array[mutable.Map[Int, Int]] = _ // = new mutable.HashMap[(Int, Int), Int]().withDefaultValue(0)
+  private var arcs: ArcsScores = _ // = new mutable.HashMap[(Int, Int), Int]().withDefaultValue(0)
 
   private var neighbors: immutable.Map[Int, Seq[Int]] = _
 
   override def compute(s: MAC, ps: ProblemState): ProblemState = {
     val max = s.problem.nbVariables + 1
-    arcs = Array.fill(max)(new mutable.HashMap[Int, Int]().withDefaultValue(0))
+    arcs = ArcsScores(max)
 
-    val neighb = new mutable.HashMap[Int, Set[Int]].withDefaultValue(Set())
+    val neighb = new mutable.HashMap[Int, mutable.Set[Int]] //.withDefaultValue(new mutable.HashSet())
     for {
       c <- s.problem.constraints
-      Seq(v1, v2) <- c.scope.view.filterNot(ps.dom(_).isAssigned).map(_.id).combinations(2)
+      scope = c.scope.filterNot(ps.dom(_).isAssigned).map(_.id)
+      i <- scope.indices
     } {
-      neighb(v1) += v2
-      neighb(v2) += v1
-        arcs(v1)(v2) += 1
+      val v1 = scope(i)
+      for (j <- i + 1 until scope.length) {
+        val v2 = scope(j)
+        neighb.getOrElseUpdate(v1, new mutable.HashSet()) += v2
+        neighb.getOrElseUpdate(v2, new mutable.HashSet()) += v1
+        arcs.increment(v1, v2)
+      }
     }
     neighbors = neighb.mapValues(_.toSeq).toMap
     super.compute(s, ps)
@@ -46,41 +76,28 @@ class WArcsOnDom(val pool: Seq[Variable], tieBreaker: VariableHeuristic, val tru
     var score = 0
     for (i <- neighbors(id)) {
       if (!state.domains(i).isAssigned) {
-        score += arcs(i)(id) + arcs(id)(i) //Arc(i, id))
+        score += arcs(i, id)
       }
     }
     score.toDouble / dom.size
   }
 
-  override def event(e: EventObject): Unit = {
-    e match {
-      case ContradictionEvent(c) =>
-        for (v1 <- c.from) {
-          val id1 = v1.id
-          if (id1 >= 0) {
-            for (v2 <- c.to if v1 ne v2) {
-              val id2 = v2.id
-              if (id2 >= 0) {
-                arcs(id1)(id2) += 1
-              }
+  override def event[S <: Outcome](e: EventObject, ps: S): S = {
+    if (e == ContradictionEvent) {
+      val c = ps.asInstanceOf[Contradiction]
+      for (v1 <- c.from) {
+        val id1 = v1.id
+        if (id1 >= 0) {
+          for (v2 <- c.to if v1 ne v2) {
+            val id2 = v2.id
+            if (id2 >= 0) {
+              arcs.increment(id1, id2)
             }
           }
         }
-      case _ =>
+      }
     }
-    //    for {
-    //      c <- PartialFunction.condOpt(e) {
-    //        case ContradictionEvent(c) => c
-    //      }
-    //      v1 <- c.from
-    //      id1 = v1.id
-    //      if id1 >= 0
-    //      v2 <- c.to if v1 ne v2
-    //      id2 = v2.id
-    //      if id2 >= 0
-    //    } {
-    //
-    //    }
+    ps
   }
 
 

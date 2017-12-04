@@ -10,11 +10,11 @@ packageDescription := "Concrete is a Scala CSP Solving API"
 
 version := "3.6-SNAPSHOT"
 
-scalaVersion := "2.12.3"
+scalaVersion := "2.12.4"
 
-testOptions in Test <+= (target in Test) map {
-  t => Tests.Argument(TestFrameworks.ScalaTest, "-u", s"${t / "test-reports"}")
-}
+javaOptions in ThisBuild += "-Xss16M"
+
+testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-u", s"${(target in Test).value / "test-reports"}")
 
 resolvers += Resolver.sonatypeRepo("snapshots")
 resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
@@ -24,11 +24,11 @@ libraryDependencies ++= Seq(
 	"org.postgresql" % "postgresql" % "42.1.4",
 	"org.ow2.sat4j" % "org.ow2.sat4j.pb" % "2.3.5",
 	"com.typesafe.slick" %% "slick" % "3.2.1",
-	"com.typesafe" % "config" % "1.3.1",
-  "org.scalatest" %% "scalatest" % "3.0.4" % "test",
+	"com.typesafe" % "config" % "1.3.2",
+    "org.scalatest" %% "scalatest" % "3.0.4" % "test",
 	"org.scalacheck" %% "scalacheck" % "1.13.5" % "test",
 	"com.storm-enroute" %% "scalameter" % "0.8.2" % "test",
-	"com.github.davidmoten" % "rtree" % "0.8.0.1"
+	"com.github.davidmoten" % "rtree" % "0.8.0.2"
 	)
 
 scalacOptions ++= Seq(
@@ -47,6 +47,7 @@ mainClass in Compile := Some("concrete.runner.XCSP3Concrete")
 
 logBuffered in Test := false
 testOptions in Test += Tests.Argument("-oDF")
+fork in Test := true
 
 publishTo :=  {
   val nexus = "https://oss.sonatype.org/"
@@ -84,3 +85,13 @@ import NativePackagerHelper._
 mappings in Universal ++= directory((baseDirectory in Compile).value / "conf")
     
 mappings in Universal ++= directory((baseDirectory in Compile).value / "mzn_lib")
+
+lazy val root = (project in file(".")).
+  enablePlugins(BuildInfoPlugin).
+  settings(
+    buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion,
+      BuildInfoKey.action("buildTime") {
+        System.currentTimeMillis
+    }),
+    buildInfoPackage := "concrete"
+  )

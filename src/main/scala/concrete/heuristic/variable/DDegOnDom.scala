@@ -2,7 +2,7 @@ package concrete
 package heuristic
 package variable
 
-class DDegOnDom(val pool: Seq[Variable], tieBreaker: VariableHeuristic, val trustCandidates: Boolean = true)
+class DDegOnDom(val pool: Seq[Variable], tieBreaker: VariableHeuristic)
   extends ScoredVariableHeuristic(tieBreaker) {
 
   def score(variable: Variable, dom: Domain, state: ProblemState) =

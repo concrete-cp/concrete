@@ -7,27 +7,27 @@ import concrete.util.Interval
 import scala.collection.mutable.HashMap
 
 object Singleton {
-  val cache = new HashMap[Int, Singleton]
+  private val cache = new HashMap[Int, Singleton]
 
-  def apply(v: Int) = cache.getOrElseUpdate(v, new Singleton(v))
+  def apply(v: Int): Singleton = cache.getOrElseUpdate(v, new Singleton(v))
 }
 
 final class Singleton private(val singleValue: Int) extends IntDomain with LazyLogging {
 
-  lazy val bitVector = BitVector.empty + singleValue
+  lazy val bitVector: BitVector = BitVector.empty + singleValue
   val span = Interval(singleValue, singleValue)
   var requestedOffset: Int = _
   var requestedBV: BitVector = _
 
   def size = 1
 
-  override def head = singleValue
+  override def head: Int = singleValue
 
-  override def last = singleValue
+  override def last: Int = singleValue
 
-  def next(i: Int) = if (i < singleValue) singleValue else throw new NoSuchElementException
+  def next(i: Int): Int = if (i < singleValue) singleValue else throw new NoSuchElementException
 
-  def prev(i: Int) = if (i > singleValue) singleValue else throw new NoSuchElementException
+  def prev(i: Int): Int = if (i > singleValue) singleValue else throw new NoSuchElementException
 
   def prevOrEq(i: Int): Int =
     if (i >= singleValue) {
@@ -50,13 +50,13 @@ final class Singleton private(val singleValue: Int) extends IntDomain with LazyL
     * index to test
     * @return true iff index is present
     */
-  def present(i: Int) = i == singleValue
+  def present(i: Int): Boolean = i == singleValue
 
-  def remove(i: Int) = {
+  def remove(i: Int): IntDomain = {
     if (singleValue == i) EmptyIntDomain else this
   }
 
-  def removeFrom(lb: Int) =
+  def removeFrom(lb: Int): IntDomain =
     if (lb > singleValue) {
       this
     }
@@ -64,7 +64,7 @@ final class Singleton private(val singleValue: Int) extends IntDomain with LazyL
       EmptyIntDomain
     }
 
-  def removeAfter(lb: Int) = {
+  def removeAfter(lb: Int): IntDomain = {
     if (lb >= singleValue) {
       this
     }
@@ -73,7 +73,7 @@ final class Singleton private(val singleValue: Int) extends IntDomain with LazyL
     }
   }
 
-  def removeTo(ub: Int) =
+  def removeTo(ub: Int): IntDomain =
     if (ub < singleValue) {
       this
     }
@@ -81,7 +81,7 @@ final class Singleton private(val singleValue: Int) extends IntDomain with LazyL
       EmptyIntDomain
     }
 
-  def removeUntil(ub: Int) = {
+  def removeUntil(ub: Int): IntDomain = {
     if (ub <= singleValue) {
       this
     }
@@ -90,13 +90,12 @@ final class Singleton private(val singleValue: Int) extends IntDomain with LazyL
     }
   }
 
-  def filterBounds(f: Int => Boolean) = filter(f)
+  def filterBounds(f: Int => Boolean): IntDomain = filter(f)
 
-  override def filter(f: Int => Boolean) =
+  override def filter(f: Int => Boolean): IntDomain =
     if (f(singleValue)) {
       this
-    }
-    else {
+    } else {
       EmptyIntDomain
     }
 
@@ -105,9 +104,7 @@ final class Singleton private(val singleValue: Int) extends IntDomain with LazyL
   //    if (bv(value)) part else -1
   //  }
 
-  override def toString() = s"[$singleValue]"
-
-  def subsetOf(d: IntDomain) = d.present(singleValue)
+  override def toString: String = s"[$singleValue]"
 
   def isAssigned = true
 
@@ -127,7 +124,7 @@ final class Singleton private(val singleValue: Int) extends IntDomain with LazyL
     case d: IntDomain => d | singleValue
   }
 
-  def |(v: Int) = {
+  def |(v: Int): IntDomain = {
     if (v == singleValue) {
       this
     } else {
@@ -137,7 +134,7 @@ final class Singleton private(val singleValue: Int) extends IntDomain with LazyL
     }
   }
 
-  def toBitVector(offset: Int) =
+  def toBitVector(offset: Int): BitVector =
     if (offset == 0)
       bitVector
     else if (requestedBV != null && offset == requestedOffset) {
@@ -148,7 +145,7 @@ final class Singleton private(val singleValue: Int) extends IntDomain with LazyL
       requestedBV
     }
 
-  def apply(i: Int) = if (i == 0) singleValue else throw new IndexOutOfBoundsException
+  def apply(i: Int): Int = if (i == 0) singleValue else throw new IndexOutOfBoundsException
 
   //
   //  override def intersects(bv: BitVector, part: Int) = bv(value)
@@ -156,14 +153,16 @@ final class Singleton private(val singleValue: Int) extends IntDomain with LazyL
 
   override def isEmpty = false
 
-  def iterator = Iterator.single(singleValue)
+  def iterator: Iterator[Int] = Iterator.single(singleValue)
 
   override def foreach[U](f: Int => U): Unit = f(singleValue)
 
-  def median = singleValue
+  def median: Int = singleValue
 
-  def shift(o: Int) = if (o == 0) this else
+  def shift(o: Int): Singleton = if (o == 0) this else
     Singleton(singleValue + o)
 
-  def disjoint(d: Domain) = !d.present(singleValue)
+  def disjoint(d: Domain): Boolean = !d.present(singleValue)
+
+  def subsetOf(d: Domain): Boolean = d.present(singleValue)
 }

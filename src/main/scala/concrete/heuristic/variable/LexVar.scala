@@ -25,7 +25,7 @@ import java.util.EventObject
 
 import com.typesafe.scalalogging.LazyLogging
 
-final class LexVar(val pool: Seq[Variable], val trustCandidates: Boolean = true) extends VariableHeuristic with LazyLogging {
+final class LexVar(val pool: Seq[Variable]) extends VariableHeuristic with LazyLogging {
 
   private val order = pool.zipWithIndex.toMap
 
@@ -50,5 +50,5 @@ final class LexVar(val pool: Seq[Variable], val trustCandidates: Boolean = true)
 
   override def shouldRestart = false
 
-  def event(e: EventObject): Unit = ()
+  def event[S <: Outcome](e: EventObject, ps: S): S = ps
 }

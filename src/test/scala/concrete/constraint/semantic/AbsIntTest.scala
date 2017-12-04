@@ -1,12 +1,12 @@
 package concrete.constraint.semantic
 
-import concrete.{IntDomain, Problem, ProblemState, Variable}
-import concrete.constraint.{Constraint, ConstraintComparator, ResiduesRemovals, TupleEnumerator}
+import concrete.constraint._
+import concrete.{Contradiction, IntDomain, Problem, Variable}
 import org.scalacheck.Gen
-import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.concurrent.TimeLimits
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.time.{Second, Span}
+import org.scalatest.{FlatSpec, Matchers}
 
 final class AbsIntTest extends FlatSpec with Matchers with TimeLimits with PropertyChecks {
 
@@ -19,12 +19,18 @@ final class AbsIntTest extends FlatSpec with Matchers with TimeLimits with Prope
 
     val pb = Problem(x, y)
     pb.addConstraint(c)
-    val ps = pb.initState.toState
-    c.adviseAll(ps)
 
-    assert(c.intervalsOnly(ps))
+    c.register(new AdviseCount)
 
-    val mod: ProblemState = c.revise(ps).toState
+    val ps = pb.initState
+
+    val mod = ps
+      .andThen { ps =>
+        c.eventAll(ps)
+        assert(c.intervalsOnly(ps))
+        c.revise(ps)
+      }
+      .toState
 
     mod.dom(x) should not be theSameInstanceAs(ps.dom(x))
     mod.dom(y) should be theSameInstanceAs ps.dom(y)
@@ -44,17 +50,22 @@ final class AbsIntTest extends FlatSpec with Matchers with TimeLimits with Prope
 
     val pb = Problem(x, y)
     pb.addConstraint(c)
-    val ps = pb.initState.toState
-    c.adviseAll(ps)
-    assert(c.intervalsOnly(ps))
-    val mod = c.revise(ps).toState
+    c.register(new AdviseCount)
+
+    val ps = pb.initState
+
+    val mod = ps.andThen { ps =>
+      c.eventAll(ps)
+      assert(c.intervalsOnly(ps))
+      c.revise(ps)
+    }
 
     mod.dom(x) should be theSameInstanceAs ps.dom(x)
     mod.dom(y) should not be theSameInstanceAs(ps.dom(y))
 
     mod.dom(y).view should contain theSameElementsAs Seq(-7, 7)
 
-    assert(!c.intervalsOnly(mod))
+    assert(!c.intervalsOnly(mod.toState))
     assert(mod.dom(x).convex)
   }
 
@@ -65,11 +76,15 @@ final class AbsIntTest extends FlatSpec with Matchers with TimeLimits with Prope
     val c = new AbsBC(x, y)
     val pb = Problem(x, y)
     pb.addConstraint(c)
+    c.register(new AdviseCount)
 
     failAfter(Span(1, Second)) {
-      val ps = pb.initState.toState
+      val ps = pb.initState
+      val mod = ps.andThen { ps =>
+        c.eventAll(ps)
+        c.revise(ps)
+      }
 
-      val mod = c.revise(ps).toState
 
       mod.dom(x).view should contain theSameElementsAs Seq(224)
       mod.dom(y) should be theSameInstanceAs ps.dom(y)
@@ -83,26 +98,30 @@ final class AbsIntTest extends FlatSpec with Matchers with TimeLimits with Prope
     val vx = new Variable("x", IntDomain.ofSeq(0))
     val vy = new Variable("y", IntDomain.ofSeq(-1))
 
-    val problem = Problem(vx,vy)
+    val problem = Problem(vx, vy)
     val c = new AbsAC(vx, vy)
     problem.addConstraint(c)
-    val ps = problem.initState.toState
-    c.adviseAll(ps)
+    c.register(new AdviseCount)
 
-    assert(!c.revise(ps).isState)
+    problem.initState
+      .andThen { ps =>
+        c.eventAll(ps)
+        c.revise(ps)
+      } shouldBe a[Contradiction]
+
 
     ConstraintComparator.compare(
       Array(vx, vy),
       new AbsAC(vx, vy),
-      new Constraint(Array(vx, vy)) with ResiduesRemovals with TupleEnumerator {
-        def check(t: Array[Int]) = t(0) == math.abs(t(1))
+      new Constraint(Array(vx, vy)) with Residues with TupleEnumerator {
+        def check(t: Array[Int]): Boolean = t(0) == math.abs(t(1))
       })
 
 
   }
 
 
-  val dom = Gen.nonEmptyListOf(Gen.choose(-1000, 1000))
+  private val dom = Gen.nonEmptyListOf(Gen.choose(-1000, 1000))
 
   it should "filter the same as enumerator" in {
 
@@ -112,9 +131,9 @@ final class AbsIntTest extends FlatSpec with Matchers with TimeLimits with Prope
 
       ConstraintComparator.compare(
         Array(vx, vy),
-        new AbsAC(vx, vy),
-        new Constraint(Array(vx, vy)) with ResiduesRemovals with TupleEnumerator {
-          def check(t: Array[Int]) = t(0) == math.abs(t(1))
+        new AbsAC(vx, vy, skipLarge = false),
+        new Constraint(Array(vx, vy)) with Residues with TupleEnumerator {
+          def check(t: Array[Int]): Boolean = t(0) == math.abs(t(1))
         })
 
     }

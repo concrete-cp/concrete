@@ -5,9 +5,7 @@ import cspom.StatisticsManager
 
 class XCSP3Writer(val pm:ParameterManager, problem:String, val stats: StatisticsManager) extends ConcreteWriter {
 
-
-
-  Console.println(s"c Concrete v3.5 running")
+  Console.println(s"c Concrete v$version running")
 
   if (pm.contains("s")) {
     for (l <- problem.toString.split("\n")) {

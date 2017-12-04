@@ -4,13 +4,13 @@ import java.util
 
 import bitvectors.BitVector
 import concrete._
-import concrete.constraint.{Constraint, Removals, StatefulConstraint}
+import concrete.constraint.{Constraint, StatefulConstraint}
 import concrete.util.SparseSet
 import mdd._
 
 /* MDDRelation comes with its own timestamp */
 class BDDC(_scope: Array[Variable], val bdd: BDDRelation)
-  extends Constraint(_scope) with Removals with StatefulConstraint[SparseSet] {
+  extends Constraint(_scope) with StatefulConstraint[SparseSet] {
 
   val simpleEvaluation: Int = math.min(Constraint.NP, scope.count(_.initDomain.size > 1))
   // Members declared in concrete.constraint.Removals
@@ -27,7 +27,7 @@ class BDDC(_scope: Array[Variable], val bdd: BDDRelation)
 
   def checkValues(tuple: Array[Int]): Boolean = throw new UnsupportedOperationException
 
-  def getEvaluation(ps: ProblemState): Int = (prop * doubleCardSize(ps)).toInt
+  def advise(ps: ProblemState, event: Event, pos: Int): Int = (prop * doubleCardSize(ps)).toInt
 
   def revise(ps: ProblemState, modified: BitVector): Outcome = {
 

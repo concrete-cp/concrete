@@ -25,7 +25,7 @@ final class ExtensionConstraintTrieTest extends FlatSpec with Matchers {
     val problem = Problem(v0, v1)
     problem.addConstraint(mmd)
     val state = problem.initState.toState
-    mmd.adviseAll(state)
+    mmd.eventAll(state)
 
     val mod = mmd.revise(state).toState
 

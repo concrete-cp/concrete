@@ -2,7 +2,7 @@ package concrete.heuristic.variable
 
 import java.util.EventObject
 
-import concrete.{MAC, ProblemState, Variable}
+import concrete.{MAC, Outcome, ProblemState, Variable}
 
 object SeqVariableHeuristic {
   def apply(hs: Seq[VariableHeuristic]): VariableHeuristic = hs match {
@@ -28,7 +28,9 @@ class SeqVariableHeuristic(
 
   def shouldRestart: Boolean = heuristics.exists(_.shouldRestart)
 
-  override def event(event: EventObject): Unit = heuristics.foreach(_.event(event))
+  override def event[S <: Outcome](event: EventObject, ps: S): S = heuristics.foldLeft(ps) {
+    case (s, h) => h.event(event, s)
+  }
 
-  override def toString = heuristics.mkString("SeqVH(", ", ", ")")
+  override def toString: String = heuristics.mkString("SeqVH(", ", ", ")")
 }

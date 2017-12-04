@@ -21,6 +21,8 @@ package concrete
 package constraint
 package semantic
 
+import bitvectors.BitVector
+
 trait AllDiffChecker extends Constraint {
 
   private val offset = scope.iterator.map(_.initDomain.head).min
@@ -44,11 +46,11 @@ final class AllDifferent2C(scope: Array[Variable], val except: Set[Int] = Set())
 
   val simpleEvaluation = 3
   var q: List[Int] = Nil
-  var lastAdvise = -1
+  private var lastAdvise = -1
 
-  def init(ps: ProblemState) = ps
+  def init(ps: ProblemState): ProblemState = ps
 
-  def revise(ps: ProblemState): Outcome = {
+  def revise(ps: ProblemState, mod: BitVector): Outcome = {
     // val queue = scope.indices.filter(i=>ps.dom(scope(i)).isAssigned).toList
     val out = revise(ps, q).entailIfFree(this)
     q = Nil
@@ -84,7 +86,7 @@ final class AllDifferent2C(scope: Array[Variable], val except: Set[Int] = Set())
       revise(state, q)
   }
 
-  def advise(ps: ProblemState, event: Event, p: Int) = {
+  def advise(ps: ProblemState, event: Event, p: Int): Int = {
     if (lastAdvise != adviseCount) {
       q = Nil
       lastAdvise = adviseCount

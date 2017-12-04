@@ -2,6 +2,8 @@ package concrete
 package constraint
 package semantic
 
+import bitvectors.BitVector
+
 final class SquareBC(val x: Variable, val y: Variable)
   extends Constraint(Array(x, y)) with BC {
 
@@ -14,11 +16,11 @@ final class SquareBC(val x: Variable, val y: Variable)
   //      if (r % a == 0) x.dom.index(r / a) else -1
   //    })
 
-  def init(ps: ProblemState) = ps
+  def init(ps: ProblemState): ProblemState = ps
 
-  def check(t: Array[Int]) = t(0) == t(1) * t(1)
+  def check(t: Array[Int]): Boolean = t(0) == t(1) * t(1)
 
-  override def shave(ps: ProblemState) = {
+  override def shave(ps: ProblemState): Outcome = {
     ps.shaveDom(x, ps.span(y).sq)
       .shaveDom(y, ps.span(x).sqrt)
   }
@@ -38,7 +40,7 @@ final class SquareAC(val x: Variable, val y: Variable)
   extends Constraint(Array(x, y)) with BCCompanion {
   val simpleEvaluation = 2
 
-  def init(ps: ProblemState) = ps.removeUntil(x, 0)
+  def init(ps: ProblemState): Outcome = ps.removeUntil(x, 0)
 
   //  val corresponding = Array(
   //    x.dom.allValues map { v => y.dom.index(a * v + b) },
@@ -49,9 +51,9 @@ final class SquareAC(val x: Variable, val y: Variable)
 
   def skipIntervals = false
 
-  def check(t: Array[Int]) = t(0) == t(1) * t(1)
+  def check(t: Array[Int]): Boolean = t(0) == t(1) * t(1)
 
-  def revise(ps: ProblemState): Outcome = {
+  def revise(ps: ProblemState, mod: BitVector): Outcome = {
     val domY = ps.dom(y)
     ps.filterDom(x)(v => consistentX(v, domY))
       .andThen { ps0 =>
@@ -71,7 +73,7 @@ final class SquareAC(val x: Variable, val y: Variable)
     math.abs(yValue) < Square.MAX_SQUARE && xDomain.present(yValue * yValue)
   }
 
-  override def consistent(ps: ProblemState) = {
+  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {
     val domY = ps.dom(y)
     val domX = ps.dom(x)
     if (domX.exists(v => consistentX(v, domY)) && domY.exists(v => consistentY(v, domX))) {
@@ -83,7 +85,7 @@ final class SquareAC(val x: Variable, val y: Variable)
 
   override def toString(ps: ProblemState) = s"${x.toString(ps)} =AC= ${y.toString(ps)}²"
 
-  def advise(ps: ProblemState, event: Event, pos: Int) = {
+  def advise(ps: ProblemState, event: Event, pos: Int): Int = {
     val e = ps.card(x) + ps.card(y)
 
     if (skip(ps, e)) {

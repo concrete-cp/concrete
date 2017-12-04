@@ -2,6 +2,7 @@ package concrete
 package constraint
 package linear
 
+import bitvectors.BitVector
 import com.typesafe.scalalogging.LazyLogging
 
 object StatelessLinearLe {
@@ -24,11 +25,11 @@ final class StatelessLinearLe(
 
   import StatelessBoundPropagation._
 
-  override def consistent(ps: ProblemState) = {
+  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {
     if (updateF(ps)._1.lb <= 0) ps else Contradiction(scope)
   }
 
-  override def revise(ps: ProblemState): Outcome = {
+  override def revise(ps: ProblemState, mod: BitVector): Outcome = {
     val (f, max) = updateF(ps)
     if (f.ub <= 0) {
       ps.entail(this)
@@ -50,13 +51,13 @@ final class StatelessLinearLe(
 
   }
 
-  override def toString() = toString("<=BC")
+  override def toString: String = toString("<=BC")
 
-  override def toString(ps: ProblemState) = toString(ps, "<=BC")
+  override def toString(ps: ProblemState): String = toString(ps, "<=BC")
 
-  def advise(ps: ProblemState, event: Event, p: Int) = if (event <= BoundRemoval) arity * 2 else -1
+  def advise(ps: ProblemState, event: Event, p: Int): Int = if (event <= BoundRemoval) arity * 2 else -1
 
   def simpleEvaluation: Int = 3
 
-  override def init(ps: ProblemState) = ps
+  override def init(ps: ProblemState): Outcome = ps
 }

@@ -1,10 +1,7 @@
 package concrete.constraint.extension;
 
 import org.scalatest.FlatSpec
-import concrete.IntDomain
-import concrete.Problem
-import concrete.ProblemState
-import concrete.Variable
+import concrete._
 import concrete.constraint.AdviseCount
 import concrete.generator.ExtensionGenerator
 import org.scalatest.Inspectors
@@ -62,11 +59,11 @@ final class ExtensionConstraint2DTest extends FlatSpec with Inspectors {
     val c2 = new BinaryExtNR(Array(v8, v16), matrix2)
 
     c2.register(ac)
-    c2.adviseAll(ps)
+    c2.eventAll(ps, Assignment)
 
     val mod = c2.revise(ps).asInstanceOf[ProblemState]
 
-    c2.adviseAll(mod)
+    c2.eventAll(mod, Assignment)
     c2.revise(mod)
     //    c.advise(domains, 0)
     //    println(c.revise(mod, Unit))
@@ -93,7 +90,7 @@ final class ExtensionConstraint2DTest extends FlatSpec with Inspectors {
     val a = 102
     val ps = problem.initState.assign(v7, a).toState
 
-    constraint.adviseAll(ps)
+    constraint.eventAll(ps)
     val mod = constraint.revise(ps)
     //println(mod.dom(v0))
     forAll(mod.dom(v0).view) { v => assert(cspomRel.contains(Array(v, a))) }

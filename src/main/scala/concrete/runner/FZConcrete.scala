@@ -16,7 +16,7 @@ import cspom.flatzinc._
 import cspom.variable.{CSPOMExpression, CSPOMSeq, CSPOMVariable, IntExpression}
 import org.scalameter.Quantity
 
-import scala.util.Try
+import scala.util.{Random, Try}
 
 object FZConcrete extends CSPOMRunner with LazyLogging {
 
@@ -71,8 +71,9 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
 
   def buildSolver(pm: ParameterManager, problem: Problem,
                   goal: WithParam[CSPOMGoal[_]], expressions: ExpressionMap): Solver = {
+
     val heuristic = readHeuristic(pm, goal, expressions)
-    Solver(problem, pm.updated("heuristic", heuristic))
+    Solver(problem, pm.updated("heuristic", heuristic)).get
   }
 
   def description(args: Seq[String]): String =
@@ -124,29 +125,34 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
     }
   }
 
-  private def parseGoal(pm: ParameterManager, goal: Seq[FZAnnotation], expressions: ExpressionMap): Seq[Heuristic] = {
-    goal
-      .collect(parseGoalAnnotation(pm, expressions, variables))
+  private def parseGoal(pm: ParameterManager, goal: Seq[FZAnnotation], expressions: ExpressionMap, rand: Random): Seq[Heuristic] = {
+    goal.collect(parseGoalAnnotation(pm, expressions, variables, rand))
   }
 
-  private def useDefault(pm0: ParameterManager, h: Heuristic): Heuristic = {
+  private def useDefault(pm0: ParameterManager, h: Heuristic, rand: Random): Heuristic = {
     h match {
-      case hs: SeqHeuristic => SeqHeuristic(hs.heuristics.map(useDefault(pm0, _)))
+      case hs: SeqHeuristic => SeqHeuristic(hs.heuristics.map(useDefault(pm0, _, rand)))
       case _ =>
         val pm1 = pm0.updated("heuristic.variable.tieBreaker",
           SeqVariableHeuristic(SeqHeuristic.extractVariableHeuristics(Seq(h))))
-        Heuristic.default(pm1, h.decisionVariables)
+        Heuristic.default(pm1, h.decisionVariables, rand).get
     }
   }
 
   private def readHeuristic(pm0: ParameterManager, goal: WithParam[CSPOMGoal[_]], cspom: ExpressionMap): Heuristic = {
+
+    val rand = {
+      val seed = pm0.getOrElse("randomseed", 0L) + pm0.getOrElse("iteration", 0)
+      new scala.util.Random(seed)
+    }
+
     val heuristic = if (pm0.contains("ff")) {
-      Heuristic.default(pm0, variables.values.toSeq)
+      Heuristic.default(pm0, variables.values.toSeq, rand).get
     } else {
-      val parsed = SeqHeuristic(parseGoal(pm0, goal.getSeqParam[FZAnnotation]("fzSolve"), cspom))
+      val parsed = SeqHeuristic(parseGoal(pm0, goal.getSeqParam[FZAnnotation]("fzSolve"), cspom, rand))
       if (pm0.contains("f")) {
         if (pm0.contains("fKeepSeq")) {
-          useDefault(pm0, parsed)
+          useDefault(pm0, parsed, rand)
         } else {
           val decision = parsed.decisionVariables.distinct
 
@@ -158,7 +164,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
               pm0.updated("heuristic.variable.tieBreaker", SeqVariableHeuristic(variableHeuristics))
             }
           }
-          Heuristic.default(pm1, decision)
+          Heuristic.default(pm1, decision, rand).get
         }
       } else {
         parsed
@@ -174,12 +180,14 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
   }
 
   private def parseGoalAnnotation(pm: ParameterManager, cspom: ExpressionMap,
-                                  variables: Map[CSPOMVariable[_], Variable]): PartialFunction[FZAnnotation, Heuristic] = {
+                                  variables: Map[CSPOMVariable[_], Variable],
+                                  rand: Random
+                                 ): PartialFunction[FZAnnotation, Heuristic] = {
     case a if a.predAnnId == "seq_search" =>
       val Seq(strategies: FZArrayExpr[_]) = a.expr
       new SeqHeuristic(
         strategies.value.map {
-          case a: FZAnnotation => parseGoalAnnotation(pm, cspom, variables)(a)
+          case a: FZAnnotation => parseGoalAnnotation(pm, cspom, variables, rand)(a)
           case a: Any => sys.error(s"Annotation expected in $strategies, found $a")
         }
           .toList)
@@ -191,41 +199,42 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
         case v: CSPOMVariable[_] => variables(v)
       }
 
-      val tieBreaker = new LexVar(decisionVariables)
+      def tieBreaker = new LexVar(decisionVariables)
+
+
 
       val FZAnnotation(varchoiceannotation, _) = vca
 
       val varh: VariableHeuristic = varchoiceannotation match {
-        case "input_order" => new LexVar(decisionVariables, false)
-        case "first_fail" => new Dom(decisionVariables, tieBreaker, false)
-        case "antifirst_fail" => new MaxDom(decisionVariables, tieBreaker, false)
-        case "smallest" => new SmallestValue(decisionVariables, tieBreaker, false)
-        case "largest" => new LargestValue(decisionVariables, tieBreaker, false)
-        case "occurrence" => new DDeg(decisionVariables, tieBreaker, false)
-        case "most_constrained" => new DDeg(decisionVariables, new Dom(Seq(), tieBreaker), false)
-        case "max_regret" => new MaxRegret(decisionVariables, tieBreaker, false)
-        case "free" => CrossHeuristic.defaultVar(pm, decisionVariables)
+        case "input_order" => tieBreaker
+        case "first_fail" => new Dom(decisionVariables, tieBreaker)
+        case "antifirst_fail" => new MaxDom(decisionVariables, tieBreaker)
+        case "smallest" => new SmallestValue(decisionVariables, tieBreaker)
+        case "largest" => new LargestValue(decisionVariables, tieBreaker)
+        case "occurrence" => new DDeg(decisionVariables, tieBreaker)
+        case "most_constrained" => new DDeg(decisionVariables, new Dom(decisionVariables, tieBreaker))
+        case "max_regret" => new MaxRegret(decisionVariables, tieBreaker)
+        case "free" => CrossHeuristic.defaultVar(pm, decisionVariables, rand).get
         case h =>
           logger.warn(s"Unsupported varchoice $h")
-          CrossHeuristic.defaultVar(pm, decisionVariables)
-
+          CrossHeuristic.defaultVar(pm, decisionVariables, rand).get
       }
 
       val FZAnnotation(assignmentannotation, _) = aa
 
-      val valh = assignmentannotation match {
-        case "indomain" => new Lexico(pm)
-        case "indomain_min" => new Lexico(pm)
-        case "indomain_max" => new RevLexico(pm)
-        case "indomain_median" => new MedValue(pm)
-        case "indomain_random" => new RandomValue(pm)
-        case "indomain_split" => new Split(pm)
-        case "indomain_reverse_split" => new RevSplit(pm)
-        case "indomain_interval" => new IntervalBranch(pm)
-        case "indomain_free" => CrossHeuristic.defaultVal(pm)
+      val valh: BranchHeuristic = assignmentannotation match {
+        case "indomain" => new Lexico()
+        case "indomain_min" => new Lexico()
+        case "indomain_max" => new RevLexico()
+        case "indomain_median" => new MedValue()
+        case "indomain_random" => new RandomValue(rand)
+        case "indomain_split" => new Split()
+        case "indomain_reverse_split" => new RevSplit()
+        case "indomain_interval" => new IntervalBranch()
+        case "indomain_free" => CrossHeuristic.defaultVal(pm, rand).get
         case h =>
           logger.warn(s"Unsupported assignment heuristic $h")
-          CrossHeuristic.defaultVal(pm)
+          CrossHeuristic.defaultVal(pm, rand).get
       }
 
       CrossHeuristic(varh, valh)

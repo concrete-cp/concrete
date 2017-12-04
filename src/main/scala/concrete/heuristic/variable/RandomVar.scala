@@ -27,13 +27,9 @@ import com.typesafe.scalalogging.LazyLogging
 
 import scala.util.Random
 
-final class RandomVar(val pool: Seq[Variable], params: ParameterManager, val trustCandidates: Boolean = true)
+final class RandomVar(val pool: Seq[Variable], rand: Random)
   extends VariableHeuristic with LazyLogging {
 
-  val rand: Random = {
-    val seed = params.getOrElse("randomseed", 0L) + params.getOrElse("iteration", 0)
-    new Random(seed)
-  }
   private val poolSet = pool.toSet
 
   def compute(s: MAC, ps: ProblemState): ProblemState = ps
@@ -41,11 +37,7 @@ final class RandomVar(val pool: Seq[Variable], params: ParameterManager, val tru
   override def toString = "random-var"
 
   def select(state: ProblemState, i: Seq[Variable]): Option[Variable] = {
-    val s = if (trustCandidates) {
-      i
-    } else {
-      i.filter(poolSet)
-    }
+    val s = i.filter(poolSet)
 
     if (s.isEmpty) {
       None
@@ -58,5 +50,5 @@ final class RandomVar(val pool: Seq[Variable], params: ParameterManager, val tru
 
   override def shouldRestart: Boolean = true
 
-  def event(e: EventObject): Unit = ()
+  def event[S](e: EventObject, ps: S): S = ps
 }

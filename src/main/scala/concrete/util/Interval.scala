@@ -82,7 +82,7 @@ case class Interval(lb: Int, ub: Int) {
     }
   }
 
-  def sq(): Interval = {
+  def sq: Interval = {
     val lb2 = lb * lb
     val ub2 = ub * ub
     if (contains(0)) {
@@ -96,7 +96,7 @@ case class Interval(lb: Int, ub: Int) {
     }
   }
 
-  def sqrt(): Interval = {
+  def sqrt: Interval = {
     require(lb >= 0)
     val root = math.sqrt(ub).toInt
     Interval(-root, root)

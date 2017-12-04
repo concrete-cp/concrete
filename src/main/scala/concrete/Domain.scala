@@ -1,8 +1,8 @@
 package concrete
 
+import bitvectors.BitVector
 import concrete.util.Interval
 import cspom.Statistic
-import bitvectors.BitVector
 import mdd.MiniSet
 
 import scala.collection.TraversableView
@@ -40,7 +40,9 @@ abstract class Domain extends MiniSet { //extends AbstractSeq[Int] with Iterable
 
   def forall(p: Int => Boolean): Boolean = {
     foreach { x =>
-      if (!p(x)) { return false }
+      if (!p(x)) {
+        return false
+      }
     }
     true
   }
@@ -65,10 +67,12 @@ abstract class Domain extends MiniSet { //extends AbstractSeq[Int] with Iterable
 
   def nonEmpty: Boolean = !isEmpty
 
-  def view = new TraversableView[Int, Domain] {
-    protected lazy val underlying = Domain.this
-    override def foreach[U](f: Int => U) = Domain.this.foreach(f)
-    override def isEmpty = Domain.this.isEmpty
+  def view: Traversable[Int] = new TraversableView[Int, Domain] {
+    protected def underlying: Domain = Domain.this
+
+    override def foreach[U](f: Int => U): Unit = Domain.this.foreach(f)
+
+    override def isEmpty: Boolean = Domain.this.isEmpty
   }
 
   def present(value: Int): Boolean
@@ -94,16 +98,17 @@ abstract class Domain extends MiniSet { //extends AbstractSeq[Int] with Iterable
   def isAssigned: Boolean
 
   /**
-   * @param lb
-   * @return Removes all indexes starting from given lower bound.
-   */
+    * @param lb
+    * @return Removes all indexes starting from given lower bound.
+    */
   def removeFrom(lb: Int): Domain
 
   def removeAfter(lb: Int): Domain
+
   /**
-   * @param ub
-   * @return Removes all indexes up to given upper bound.
-   */
+    * @param ub
+    * @return Removes all indexes up to given upper bound.
+    */
   def removeTo(ub: Int): Domain
 
   def removeUntil(ub: Int): Domain
@@ -116,9 +121,18 @@ abstract class Domain extends MiniSet { //extends AbstractSeq[Int] with Iterable
 
   def &(a: Int, b: Int): Domain // = removeUntil(a).removeAfter(b)
   def &(i: Interval): Domain = this & (i.lb, i.ub)
+
   def &(d: Domain): Domain
 
   def |(d: Domain): Domain
+
+  def --(d: Domain): Domain = d match {
+    case EmptyIntDomain | BooleanDomain.EMPTY => this
+    case s@(_: Singleton | BooleanDomain.TRUE | BooleanDomain.FALSE) => removeIfPresent(s.singleValue)
+    case i: IntervalDomain => removeItv(i.head, i.last)
+    case _ if this disjoint d => this
+    case _ => filter(!d.present(_))
+  }
 
   def disjoint(d: Domain): Boolean // = (this & d).isEmpty
 
@@ -127,9 +141,7 @@ abstract class Domain extends MiniSet { //extends AbstractSeq[Int] with Iterable
   //    last < d.head || head > d.last || forall(v => !d.present(v))
   //  }
 
-  def subsetOf(d: Domain): Boolean = {
-    (this | d).size == d.size //head >= d.head && last <= d.last && (d.convex || forall(d.present))
-  }
+  def subsetOf(d: Domain): Boolean
 
   //def intersects(bv: BitVector): Int = bv.intersects(toBitVector)
   //def intersects(bv: BitVector, part: Int): Boolean = bv.intersects(toBitVector, part)

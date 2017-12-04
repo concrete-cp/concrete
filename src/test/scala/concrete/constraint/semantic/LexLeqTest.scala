@@ -31,7 +31,7 @@ class LexLeqTest extends FlatSpec with Matchers {
     ps(c) shouldBe ((0, 3))
 
     val ps2 = ps.assign(x(0), 1).toState
-    c.advise(ps2, Assignment, 0)
+    c.event(ps2, Assignment, 0)
     val ps3 = c.revise(ps2).toState
 
     ps3(c) shouldBe ((1, 3))

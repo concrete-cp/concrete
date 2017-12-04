@@ -2,7 +2,7 @@ package concrete
 package heuristic
 package value
 
-final class RevLexico(pm: ParameterManager) extends ValueHeuristic {
+final class RevLexico() extends ValueHeuristic {
 
 
   override def toString: String = "rev-lexico"

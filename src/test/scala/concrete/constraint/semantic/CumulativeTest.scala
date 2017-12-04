@@ -5,8 +5,10 @@ import org.scalatest.FlatSpec
 import concrete.IntDomain
 import concrete.Variable
 import concrete.Singleton
+
 import scala.util.Random
 import concrete.Problem
+import concrete.constraint.AdviseCount
 import org.scalatest.prop.PropertyChecks
 
 class CumulativeTest extends FlatSpec with Matchers with PropertyChecks {
@@ -21,10 +23,12 @@ class CumulativeTest extends FlatSpec with Matchers with PropertyChecks {
     val cumulative = new Cumulative(starts, durations, resources, limit)
 
     problem.addConstraint(cumulative)
+    cumulative.register(new AdviseCount)
 
-    val ps = problem.initState.toState
-
-    cumulative.revise(ps)
+    problem.initState.andThen { ps =>
+      cumulative.eventAll(ps)
+      cumulative.revise(ps)
+    }
 
   }
 
@@ -44,10 +48,12 @@ class CumulativeTest extends FlatSpec with Matchers with PropertyChecks {
     val cumulative = new Cumulative(starts, durations, resources, limit)
 
     problem.addConstraint(cumulative)
+    cumulative.register(new AdviseCount)
 
-    val ps = problem.initState.toState
-
-    val mod = cumulative.revise(ps)
+    val mod = problem.initState.andThen { ps =>
+      cumulative.eventAll(ps)
+      cumulative.revise(ps)
+    }
 
     mod.dom(starts(2)).view should contain theSameElementsAs Seq(1)
     mod.dom(limit).view should contain theSameElementsAs Seq(1)
@@ -77,10 +83,13 @@ class CumulativeTest extends FlatSpec with Matchers with PropertyChecks {
     val cumulative = new Cumulative(starts, dur, res, bound)
 
     problem.addConstraint(cumulative)
+    cumulative.register(new AdviseCount)
 
-    val ps = problem.initState.toState
-
-    val mod = cumulative.revise(ps) //.andThen(cumulative.revise)
+    val mod = problem.initState
+       .andThen { ps =>
+         cumulative.eventAll(ps)
+         cumulative.revise(ps) //.andThen(cumulative.revise)
+       }
 
     mod.dom(starts(4)).head shouldBe 14
     mod.dom(starts(4)).last shouldBe 18
@@ -113,11 +122,12 @@ class CumulativeTest extends FlatSpec with Matchers with PropertyChecks {
     val cumulative = new Cumulative(starts, dur, res, bound)
 
     problem.addConstraint(cumulative)
+    cumulative.register(new AdviseCount)
 
-    val ps = problem.initState.toState
-
-    val mod = cumulative.revise(ps) //.andThen(cumulative.revise)
-
+    val mod = problem.initState.andThen { ps =>
+      cumulative.eventAll(ps)
+      cumulative.revise(ps)
+    }
     mod.dom(bound).head shouldBe 975
   }
 

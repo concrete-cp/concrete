@@ -22,15 +22,15 @@ package concrete
 import java.util.Optional
 
 import com.typesafe.scalalogging.LazyLogging
-import concrete.constraint.{Constraint, TupleEnumerator}
 import concrete.constraint.extension.{BinaryExt, ReduceableExt}
-import concrete.constraint.linear.{GtC, LinearLe, LtC}
+import concrete.constraint.linear.LinearLe
 import concrete.constraint.semantic.DiffN
+import concrete.constraint.{Constraint, TupleEnumerator}
 import concrete.filter.Filter
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
-import cspom.{CSPOM, Statistic, StatisticsManager}
 import cspom.compiler.CSPOMCompiler
+import cspom.{CSPOM, Statistic, StatisticsManager}
 import org.scalameter.Quantity
 
 import scala.collection.JavaConverters._
@@ -40,31 +40,30 @@ object Solver {
   def apply(cspom: CSPOM): Try[CSPOMSolver] = apply(cspom, new ParameterManager)
 
   def apply(cspom: CSPOM, pm: ParameterManager): Try[CSPOMSolver] = {
-    CSPOMCompiler.compile(cspom, ConcretePatterns(pm))
-      .flatMap { cspom =>
-        val pg = new ProblemGenerator(pm)
-        pg.generate(cspom)
-          .map {
-            case (problem, variables) =>
-              val solver = apply(problem, pm)
-              solver.statistics.register("compiler", CSPOMCompiler)
-              solver.statistics.register("generator", pg)
+    for {
+      cspom <- CSPOMCompiler.compile(cspom, ConcretePatterns(pm))
+      pg = new ProblemGenerator(pm)
+      (problem, variables) <- pg.generate(cspom)
+      solver <- apply(problem, pm)
+    } yield {
+      solver.statistics.register("compiler", CSPOMCompiler)
+      solver.statistics.register("generator", pg)
 
-              new CSPOMSolver(solver, cspom.expressionMap, variables)
-          }
-      }
+      new CSPOMSolver(solver, cspom.expressionMap, variables)
+    }
   }
 
-  def apply(problem: Problem): Solver = apply(problem, new ParameterManager)
-
-  def apply(problem: Problem, pm: ParameterManager): Solver = {
+  def apply(problem: Problem, pm: ParameterManager): Try[Solver] = {
     val solverClass: Class[_ <: Solver] =
       pm.classInPackage("solver", "concrete", classOf[MAC])
+
     solverClass
       .getMethod("apply", classOf[Problem], classOf[ParameterManager])
       .invoke(null, problem, pm)
-      .asInstanceOf[Solver]
+      .asInstanceOf[Try[Solver]]
   }
+
+  def apply(problem: Problem): Try[Solver] = apply(problem, new ParameterManager)
 }
 
 abstract class Solver(val problem: Problem, val params: ParameterManager) extends Iterator[Map[Variable, Any]] with LazyLogging {
@@ -78,6 +77,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
       Quantity(num.plus(q.value, quantity.value), q.units)
     }
   }
+
   @Statistic
   val nbVariables: Int = problem.variables.length
   val preprocessorClass: Option[Class[_ <: Filter]] =
@@ -106,22 +106,28 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
   statistics.register("diffn", DiffN)
   var running = false
   var optimConstraint: Option[Constraint] = None
+  @Statistic
+  var nbSolutions = 0
   private var _next: SolverResult = UNKNOWNResult(None)
 
   def optimises: Option[Variable] = problem.goal.optimizes
 
-  def obtainOptimConstraint[A <: Constraint](f: => A): A = optimConstraint
-    .map {
-      case c: A@unchecked => c
-    }.getOrElse {
-    val oc = f
-    optimConstraint = Some(oc)
-    problem.addConstraint(oc)
-    f
+  def obtainOptimConstraint[A <: Constraint](f: => A): A = {
+    optimConstraint
+      .map {
+        case c: A@unchecked => c
+      }
+      .getOrElse {
+        val oc = f
+        optimConstraint = Some(oc)
+        addConstraint(oc)
+      }
   }
 
-  @Statistic
-  var nbSolutions = 0
+  def addConstraint[A <: Constraint](c: A): A = {
+    problem.addConstraint(c)
+    c
+  }
 
   def next(): Map[Variable, Any] = _next match {
     case UNSAT => Iterator.empty.next
@@ -129,28 +135,6 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
     case SAT(sol) =>
       nbSolutions += 1
       _next = UNKNOWNResult(None)
-      problem.goal match {
-        case Maximize(v) =>
-          reset()
-          sol(v) match {
-            case i: Int =>
-              obtainOptimConstraint(new GtC(v, i)).constant = i
-              logger.info(s"new best value $i")
-            case o => throw new AssertionError(s"$v has value $o which is not an int")
-          }
-
-        case Minimize(v) =>
-          reset()
-          sol(v) match {
-            case i: Int =>
-              obtainOptimConstraint(new LtC(v, i)).constant = i
-              logger.info(s"new best value $i")
-            case o => throw new AssertionError(s"$v has value $o which is not an int")
-          }
-
-        case Satisfy =>
-      }
-      assert(problem.constraints.forall(_.positionInVariable.forall(_ >= 0)))
       sol
     case RESTART => throw new IllegalStateException()
     case UNKNOWNResult(Some(e)) => throw e
@@ -176,7 +160,7 @@ abstract class Solver(val problem: Problem, val params: ParameterManager) extend
         .asJava
   }
 
-  def hasNext = _next match {
+  def hasNext: Boolean = _next match {
     case UNSAT => false
     case SAT(_) => true
     case UNKNOWNResult(None) =>
@@ -248,12 +232,12 @@ sealed trait SolverResult {
   }
 }
 
-case class SAT(val solution: Map[Variable, Any]) extends SolverResult {
+case class SAT(solution: Map[Variable, Any]) extends SolverResult {
   def isSat = true
 
   def get = Some(solution)
 
-  override def toString = "SAT: " + (if (solution.size > 10) solution.take(10).toString + "..." else solution.toString)
+  override def toString: String = "SAT: " + (if (solution.size > 10) solution.take(10).toString + "..." else solution.toString)
 }
 
 case object UNSAT extends SolverResult {
@@ -273,7 +257,7 @@ case class UNKNOWNResult(cause: Option[Throwable]) extends SolverResult {
 
   def get = None
 
-  override def toString = "UNKNOWN" + cause
+  override def toString: String = "UNKNOWN" + cause
 }
 
 case object RESTART extends SolverResult {

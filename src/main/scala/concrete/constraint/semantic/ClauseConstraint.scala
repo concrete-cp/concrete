@@ -2,12 +2,12 @@ package concrete
 package constraint
 package semantic
 
-import BooleanDomain._
+import bitvectors.BitVector
+import concrete.BooleanDomain._
 
 final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable]) extends Constraint(positive ++ negative: _*) {
 
-  def this(clause: Clause) = this(clause.positive.toArray, clause.negative.toArray)
-
+  val simpleEvaluation = 1
   private val posLength = positive.length
 
   //require(reverses.size == scope.size, "reverses must cover all variables")
@@ -16,11 +16,17 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
 
   private var watch2: Int = _
 
+  def this(clause: Clause) = this(clause.positive.toArray, clause.negative.toArray)
+
+  //if (isTrue(watch1) || isTrue(watch2)) entail()
+
   override def init(ps: ProblemState): Outcome = {
 
     seekEntailment(ps)
       .map { i =>
-        assert { watch1 = i; watch1 >= 0 }
+        assert {
+          watch1 = i; watch1 >= 0
+        }
         ps.entail(this)
       }
       .getOrElse {
@@ -39,17 +45,16 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
       }
   }
 
-  //if (isTrue(watch1) || isTrue(watch2)) entail()
+  def advise(ps: ProblemState, event: Event, p: Int): Int = if (p == watch1 || p == watch2) 1 else -1
 
-  def advise(ps: ProblemState, event: Event, p: Int):Int = if (p == watch1 || p == watch2) 1 else -1
-
-  override def check(t: Array[Int]):Boolean = {
+  override def check(t: Array[Int]): Boolean = {
     val (p, n) = t.view.splitAt(posLength)
     p.contains(1) || n.contains(0)
   }
 
-  override def toString(ps: ProblemState): String =
-    "\\/" + (positive.map(_.toString(ps)) ++ negative.map(v => "-" + v.toString(ps))).mkString("(", ", ", ")")
+  def revise(ps: ProblemState, mod: BitVector): Outcome = {
+    reviseW2(ps)
+  }
 
   private def reviseW2(ps: ProblemState): Outcome = {
     reversed(ps, watch2) match {
@@ -97,20 +102,6 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
     }
   }
 
-  def revise(ps: ProblemState): Outcome = {
-    reviseW2(ps)
-  }
-
-  override def controlRevision(ps: ProblemState): Boolean = {
-    if (seekEntailment(ps).isEmpty) {
-      require(watch1 >= 0)
-      require(canBeTrue(ps, watch1) || canBeTrue(ps, watch2), s"${this.toString(ps)}: $watch1 and $watch2 are inconsistent")
-      require(watch2 >= 0 || isTrue(ps, watch1))
-      require(!ps.entailed.hasInactiveVar(this) || (0 until arity).exists(isTrue(ps, _)), s"entailment: ${ps.entailed.hasInactiveVar(this)}, watches $watch1, $watch2, ${this.toString(ps)}")
-    }
-    true
-  }
-
   private def enforce(ps: ProblemState, position: Int): Outcome = {
     if (position < posLength) {
       ps.tryAssign(scope(position), 1)
@@ -119,40 +110,11 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
     }
   }
 
-  private def isTrue(ps: ProblemState, pos: Int): Boolean = {
-    if (pos < posLength) {
-      ps.dom(scope(pos)) == TRUE
-    } else {
-      ps.dom(scope(pos)) == FALSE
-    }
-  }
-
   private def isFalse(ps: ProblemState, pos: Int): Boolean = {
     if (pos < posLength) {
       ps.dom(scope(pos)) == FALSE
     } else {
       ps.dom(scope(pos)) == TRUE
-    }
-  }
-
-  private def reversed(ps: ProblemState, pos: Int): Domain = {
-    assert(pos >= 0, this.toString(ps) + " " + watch1 + " " + watch2 + " " + ps.entailed.hasInactiveVar(this))
-    if (pos < posLength) {
-      ps.dom(scope(pos))
-    } else {
-      ps.dom(scope(pos)) match {
-        case TRUE => FALSE
-        case FALSE => TRUE
-        case e => e
-      }
-    }
-  }
-
-  private def canBeTrue(ps: ProblemState, p: Int) = {
-    if (p < posLength) {
-      ps.dom(scope(p)).present(1)
-    } else {
-      ps.dom(scope(p)).present(0)
     }
   }
 
@@ -171,6 +133,48 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
       i += 1
     }
     -1
+  }
+
+  private def isTrue(ps: ProblemState, pos: Int): Boolean = {
+    if (pos < posLength) {
+      ps.dom(scope(pos)) == TRUE
+    } else {
+      ps.dom(scope(pos)) == FALSE
+    }
+  }
+
+  private def reversed(ps: ProblemState, pos: Int): Domain = {
+    assert(pos >= 0, this.toString(ps) + " " + watch1 + " " + watch2 + " " + ps.entailed.hasInactiveVar(this))
+    if (pos < posLength) {
+      ps.dom(scope(pos))
+    } else {
+      ps.dom(scope(pos)) match {
+        case TRUE => FALSE
+        case FALSE => TRUE
+        case e => e
+      }
+    }
+  }
+
+  override def toString(ps: ProblemState): String =
+    "\\/" + (positive.map(_.toString(ps)) ++ negative.map(v => "-" + v.toString(ps))).mkString("(", ", ", ")")
+
+  override def controlRevision(ps: ProblemState): Boolean = {
+    if (seekEntailment(ps).isEmpty) {
+      require(watch1 >= 0)
+      require(canBeTrue(ps, watch1) || canBeTrue(ps, watch2), s"${this.toString(ps)}: $watch1 and $watch2 are inconsistent")
+      require(watch2 >= 0 || isTrue(ps, watch1))
+      require(!ps.entailed.hasInactiveVar(this) || (0 until arity).exists(isTrue(ps, _)), s"entailment: ${ps.entailed.hasInactiveVar(this)}, watches $watch1, $watch2, ${this.toString(ps)}")
+    }
+    true
+  }
+
+  private def canBeTrue(ps: ProblemState, p: Int) = {
+    if (p < posLength) {
+      ps.dom(scope(p)).present(1)
+    } else {
+      ps.dom(scope(p)).present(0)
+    }
   }
 
   private def seekEntailment(ps: ProblemState): Option[Int] = {
@@ -195,6 +199,4 @@ final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable
     //    }
     //    None
   }
-
-  val simpleEvaluation = 1
 }

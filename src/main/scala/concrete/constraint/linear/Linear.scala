@@ -69,12 +69,12 @@ abstract class Linear(
     checkSum(constant - sum)
   }
 
-  def toString(operator: String) = {
+  def toString(operator: String): String = {
     (scope zip factors).map { case (v, f) => f + "." + v }.mkString(" + ") + s" $operator $constant"
   }
 
-  def toString(ps: ProblemState, operator: String) = {
-    id + ". " + (scope zip factors).map { case (v, f) => f + "." + ps.dom(v) }.mkString(" + ") + s" $operator $constant"
+  def toString(ps: ProblemState, operator: String): String = {
+    (scope zip factors).map { case (v, f) => f + "." + v.toString(ps) }.mkString(" + ") + s" $operator $constant"
   }
 
   protected def size(dom: Domain, factor: Int): Int = {

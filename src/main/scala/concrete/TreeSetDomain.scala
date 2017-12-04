@@ -96,6 +96,8 @@ final class TreeSetDomain(val set: TreeSet[Int])
   //  var requestedOffset: Int = _
   //  var requestedBV: BitVector = _
 
+  override def size: Int = set.size
+
   def subsetOf(d: IntDomain): Boolean =
     head >= d.head && last <= d.last && {
       d match {
@@ -106,15 +108,6 @@ final class TreeSetDomain(val set: TreeSet[Int])
 
   def shift(o: Int): IntDomain = {
     new TreeSetDomain(set.map(_ + o))
-  }
-
-  override def &(d: Domain): Domain = d match {
-    case id: IntervalDomain => this & id.span
-    case s: Singleton => if (present(s.singleValue)) s else EmptyIntDomain
-    case bd: BitVectorDomain => bd.filter(set)
-    case EmptyIntDomain => EmptyIntDomain
-    case b: BooleanDomain => b & this
-    case ts: TreeSetDomain => IntDomain.ofTreeSet(set & ts.set)
   }
 
 
@@ -176,6 +169,24 @@ final class TreeSetDomain(val set: TreeSet[Int])
 
   }
 
+  def subsetOf(d: Domain): Boolean = {
+    d match {
+      case EmptyIntDomain | BooleanDomain.EMPTY | _: Singleton => assert(size > 1); false
+      case d: BooleanDomain => head >= d.head && last <= d.last
+      case id: IntervalDomain => (this & id.span).size == size
+      case _ => last <= d.last && set.forall(d.present)
+    }
+  }
+
+  override def &(d: Domain): Domain = d match {
+    case id: IntervalDomain => this & id.span
+    case s: Singleton => if (present(s.singleValue)) s else EmptyIntDomain
+    case bd: BitVectorDomain => bd.filter(set)
+    case EmptyIntDomain => EmptyIntDomain
+    case b: BooleanDomain => b & this
+    case ts: TreeSetDomain => IntDomain.ofTreeSet(set & ts.set)
+  }
+
   //  def intersects(that: BitVector) = bitVector.intersects(that)
   //  def intersects(that: BitVector, part: Int) = bitVector.intersects(that, part)
   def convex = false
@@ -187,7 +198,5 @@ final class TreeSetDomain(val set: TreeSet[Int])
   def median: Int = iterator.drop(size / 2).next
 
   def iterator: Iterator[Int] = set.iterator
-
-  override def size: Int = set.size
 
 }

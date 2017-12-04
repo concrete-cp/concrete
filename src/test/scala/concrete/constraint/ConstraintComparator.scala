@@ -2,12 +2,7 @@ package concrete.constraint
 
 import org.scalatest.Inspectors
 import org.scalatest.Matchers
-
-import concrete.Contradiction
-import concrete.Problem
-import concrete.ProblemState
-import concrete.Variable
-import concrete.Domain
+import concrete._
 
 /**
  * @author vion
@@ -27,8 +22,8 @@ object ConstraintComparator extends Matchers with Inspectors {
 
     val ps = problem.initState.toState
 
-    c1.adviseAll(ps)
-    c2.adviseAll(ps)
+    c1.eventAll(ps, Assignment)
+    c2.eventAll(ps, Assignment)
 
     val r1 = c1.revise(ps)
     val r2 = c2.revise(ps)

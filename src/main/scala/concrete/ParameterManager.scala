@@ -8,8 +8,9 @@ import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.{SortedMap, TreeMap}
-import scala.collection.mutable.HashSet
+import scala.collection.mutable
 import scala.reflect.runtime.universe._
+
 
 /**
   * This class is intended to hold Concrete's various parameters.
@@ -19,9 +20,22 @@ import scala.reflect.runtime.universe._
   */
 final class ParameterManager(
                               val parameters: SortedMap[String, Any] = new TreeMap(),
-                              used: HashSet[String] = new HashSet()) extends LazyLogging {
+                              used: mutable.HashSet[String] = new mutable.HashSet()) extends LazyLogging {
 
-  def +(name: String) = updated(name, Unit)
+
+  def +(name: String): ParameterManager = updated(name, Unit)
+
+  /**
+    * Updates some parameter, overriding default or previous value.
+    *
+    * @param name
+    * @param value
+    */
+  def updated(name: String, value: Any): ParameterManager = {
+    new ParameterManager(
+      parameters + (name -> value),
+      used)
+  }
 
   def getOrElse[T: TypeTag](name: String, default: => T): T = {
     get[T](name).getOrElse(default)
@@ -82,20 +96,20 @@ final class ParameterManager(
     }
   }
 
-  def contains(name: String) = {
+  def contains(name: String): Boolean = {
     val c = parameters.contains(name)
     if (c) used += name
     c
   }
 
-  def unused = parameters.keySet -- used
+  def unused: Set[String] = parameters.keySet -- used
 
   /**
     * Returns String representation of the registered parameters.
     *
     * @return
     */
-  override def toString = parameters.iterator.map {
+  override def toString: String = parameters.iterator.map {
     case (k, Unit) => k
     case (k, v) => s"$k = $v"
   }.mkString(", ")
@@ -104,18 +118,6 @@ final class ParameterManager(
     line.asScala.foldLeft(this) {
       case (acc, (k, v)) => acc.updated(k.toString, v.toString)
     }
-  }
-
-  /**
-    * Updates some parameter, overriding default or previous value.
-    *
-    * @param name
-    * @param value
-    */
-  def updated(name: String, value: Any): ParameterManager = {
-    new ParameterManager(
-      parameters + (name -> value),
-      used)
   }
 
 }

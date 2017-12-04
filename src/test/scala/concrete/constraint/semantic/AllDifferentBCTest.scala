@@ -5,6 +5,7 @@ import org.scalatest.Matchers
 import concrete.IntDomain
 import concrete.Variable
 import concrete.Problem
+import concrete.constraint.AdviseCount
 
 class AllDifferentBCTest extends FlatSpec with Matchers {
 
@@ -15,10 +16,16 @@ class AllDifferentBCTest extends FlatSpec with Matchers {
     val v4 = new Variable("4", IntDomain.ofSeq(8))
     val v5 = new Variable("5", IntDomain.ofSeq(8, 9))
 
-    val ps = Problem(v1, v2, v3, v4, v5).initState.toState
+    val problem = Problem(v1, v2, v3, v4, v5)
     val c = new AllDifferentBC(v1, v2, v3, v4, v5)
+    c.register(new AdviseCount)
+    problem.addConstraint(c)
 
-    assert(!c.revise(ps).isState)
+    val mod = problem.initState.andThen { ps =>
+      c.eventAll(ps)
+      c.revise(ps)
+    }
+    assert(!mod.isState)
   }
 
 }

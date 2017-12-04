@@ -2,7 +2,9 @@ package concrete
 package constraint
 package semantic
 
-import java.util.Arrays
+import java.util
+
+import bitvectors.BitVector
 import com.typesafe.scalalogging.LazyLogging
 
 trait CumulativeChecker extends Constraint with LazyLogging {
@@ -16,7 +18,7 @@ trait CumulativeChecker extends Constraint with LazyLogging {
 
     // logger.warn(id + ". " + Seq(s, d, r).map(_.mkString("[", ", ", "]")).toString + " " + b);
 
-    val tasks = (0 until s.length).filter(i => r(i) > 0 && d(i) > 0)
+    val tasks = s.indices.filter(i => r(i) > 0 && d(i) > 0)
     tasks.isEmpty || {
       val early = tasks.minBy(s)
       val late = tasks.maxBy(i => s(i) + d(i))
@@ -40,12 +42,12 @@ trait CumulativeChecker extends Constraint with LazyLogging {
 class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: Variable) extends Constraint(s ++ d ++ r :+ b)
     with BC with CumulativeChecker {
 
-  def nbTasks = s.length
+  def nbTasks: Int = s.length
 
   private var begin: Int = _
   private var profile: Array[Int] = _
 
-  override def toString(ps: ProblemState) = {
+  override def toString(ps: ProblemState): String = {
     s"Cumulative(start = [${s.map(ps.dom).mkString(", ")}], dur = [${d.map(ps.dom).mkString(", ")}], res = [${r.map(ps.dom).mkString(", ")}], bound = ${ps.dom(b)})"
   }
 
@@ -60,7 +62,7 @@ class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: 
   }
 
   private def buildProfile(ps: ProblemState): Outcome = {
-    Arrays.fill(profile, 0)
+    util.Arrays.fill(profile, 0)
     var i = s.length - 1
     var state = ps
     var bound = state.dom(b).head
@@ -143,13 +145,14 @@ class Cumulative(s: Array[Variable], d: Array[Variable], r: Array[Variable], b: 
       }
   }
 
-  override def revise(ps: ProblemState): Outcome = {
+  override def revise(ps: ProblemState, mod:BitVector): Outcome = {
     buildProfile(ps)
       .andThen { ps =>
-        fixPoint(ps, 0 until s.length, { (ps, i) => filter(ps, ps.dom(b).last, i) })
+        fixPoint(ps, s.indices, { (ps, i) => filter(ps, ps.dom(b).last, i) })
       }
-
   }
+
+  override def shave(state: ProblemState): Outcome = throw new IllegalStateException()
 
   def simpleEvaluation: Int = 3
 

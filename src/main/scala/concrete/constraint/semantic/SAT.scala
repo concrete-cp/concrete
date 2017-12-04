@@ -2,46 +2,34 @@ package concrete.constraint.semantic
 
 import java.math.BigInteger
 
-import scala.collection.mutable.ArrayBuffer
-
-import org.sat4j.core.Vec
-import org.sat4j.core.VecInt
+import bitvectors.BitVector
+import com.typesafe.scalalogging.LazyLogging
+import concrete.BooleanDomain.{FALSE, TRUE}
+import concrete._
+import concrete.cluster.{Arc, ConnectedComponents}
+import concrete.constraint.Constraint
+import concrete.constraint.linear.{Linear, SumEQ, SumLE, SumMode}
+import org.sat4j.core.{Vec, VecInt}
 import org.sat4j.specs.ContradictionException
 
-import com.typesafe.scalalogging.LazyLogging
-
-import concrete.BooleanDomain
-import concrete.BooleanDomain.FALSE
-import concrete.BooleanDomain.TRUE
-import concrete.Contradiction
-import concrete.Domain
-import concrete.Event
-import concrete.Outcome
-import concrete.ParameterManager
-import concrete.ProblemState
-import concrete.Variable
-import concrete.cluster.Arc
-import concrete.cluster.ConnectedComponents
-import concrete.constraint.Constraint
-import concrete.constraint.linear.Linear
-import concrete.constraint.linear.SumEQ
-import concrete.constraint.linear.SumLE
-import concrete.constraint.linear.SumMode
+import scala.collection.mutable.ArrayBuffer
 
 case class Clause(positive: Seq[Variable], negative: Seq[Variable]) extends Arc {
   require(vars.forall(v => v.initDomain.isInstanceOf[BooleanDomain]), s"some of ${vars.map(v => s"$v ${v.initDomain}")} are not boolean")
-  def size = positive.size + negative.size
-  def vars = positive ++ negative
+
+  def size: Int = positive.size + negative.size
+
+  def vars: Seq[Variable] = positive ++ negative
 
   override def toString = s"Clause(${positive.mkString(", ")}${if (positive.nonEmpty && negative.nonEmpty) ", " else ""}${negative.map("-" + _).mkString(", ")})"
 }
 
 case class PseudoBoolean(
-  vars: Seq[Variable], factors: Seq[Int],
-  mode: SumMode, constant: Int)
-    extends Arc {
+                          vars: Seq[Variable], factors: Seq[Int],
+                          mode: SumMode, constant: Int)
+  extends Arc {
 
-  def size = vars.size
+  def size: Int = vars.size
 
 }
 
@@ -74,7 +62,7 @@ object SAT extends LazyLogging {
 class SAT(vars: Array[Variable], clauses: Seq[Clause], pseudo: Seq[PseudoBoolean]) extends Constraint(vars) with LazyLogging {
   private var solver: org.sat4j.specs.ISolverService with org.sat4j.specs.ISolver = _
 
-  logger.info(s"SAT constraint with ${vars.size} vars, ${clauses.size} clauses and ${pseudo.size} pseudo-boolean constraints")
+  logger.info(s"SAT constraint with ${vars.length} vars, ${clauses.size} clauses and ${pseudo.size} pseudo-boolean constraints")
 
   //solver.setTimeout(0)
 
@@ -83,13 +71,13 @@ class SAT(vars: Array[Variable], clauses: Seq[Clause], pseudo: Seq[PseudoBoolean
     try {
       if (pseudo.isEmpty) {
         solver = org.sat4j.minisat.SolverFactory.newMiniLearningHeap()
-        solver.newVar(vars.size)
+        solver.newVar(vars.length)
         solver.setExpectedNumberOfClauses(clauses.size)
 
         //println(toString(ps))
       } else {
         val solver = org.sat4j.pb.SolverFactory.newCompetPBResMixedConstraintsObjectiveExpSimp()
-        solver.newVar(vars.size)
+        solver.newVar(vars.length)
         solver.setExpectedNumberOfClauses(clauses.size + pseudo.size)
         for (p <- pseudo) {
           p.mode match {
@@ -143,7 +131,7 @@ class SAT(vars: Array[Variable], clauses: Seq[Clause], pseudo: Seq[PseudoBoolean
 
   }
 
-  def advise(ps: ProblemState, event: Event, pos: Int): Int = if (vars.size > 30) Int.MaxValue else 0x1 << vars.size
+  def advise(ps: ProblemState, event: Event, pos: Int): Int = if (vars.length > 30) Int.MaxValue else 0x1 << vars.length
 
   def check(tuple: Array[Int]): Boolean = {
     clauses.forall { c =>
@@ -151,7 +139,7 @@ class SAT(vars: Array[Variable], clauses: Seq[Clause], pseudo: Seq[PseudoBoolean
     }
   }
 
-  def revise(ps: ProblemState): Outcome = {
+  def revise(ps: ProblemState, mod: BitVector): Outcome = {
     val state = new VecInt()
 
     for (i <- 0 until arity) {
@@ -228,7 +216,7 @@ class SAT(vars: Array[Variable], clauses: Seq[Clause], pseudo: Seq[PseudoBoolean
     }
   }
 
-  def findSupport(doms: Array[Domain], position: Int, value: Int) = ???
+  def findSupport(doms: Array[Domain], position: Int, value: Int): Option[Array[Int]] = ???
 
   def simpleEvaluation: Int = 7
 }

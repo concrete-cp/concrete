@@ -1,6 +1,7 @@
 package concrete.constraint.linear
 
 import concrete._
+import concrete.constraint.AdviseCount
 import cspom.CSPOM
 import cspom.variable.IntVariable
 import org.scalatest.prop.PropertyChecks
@@ -14,8 +15,9 @@ final class EqTest extends FlatSpec with Matchers with PropertyChecks {
     val c = new EqBC(false, v0, -1, v1)
     val pb = Problem(v0, v1)
     pb.addConstraint(c)
+    c.register(new AdviseCount)
     val ps = pb.initState.toState
-    c.adviseAll(ps)
+    c.eventAll(ps)
     val mod = c.revise(ps)
 
     mod.dom(v0).view should contain theSameElementsAs Seq(3)
@@ -29,8 +31,9 @@ final class EqTest extends FlatSpec with Matchers with PropertyChecks {
     // c.register(new AdviseCount())
     val pb = Problem(v0, v1)
     pb.addConstraint(c)
+    c.register(new AdviseCount)
     val ps = pb.initState.toState
-    c.adviseAll(ps)
+    c.eventAll(ps)
     val mod = c.revise(ps)
 
     mod.dom(v0).view should contain theSameElementsAs Seq(3)
@@ -44,8 +47,9 @@ final class EqTest extends FlatSpec with Matchers with PropertyChecks {
       val c = new EqACFast(v0, b, v1)
       val pb = Problem(v0, v1)
       pb.addConstraint(c)
+      c.register(new AdviseCount)
       val ps = pb.initState.toState
-      c.adviseAll(ps)
+      c.eventAll(ps)
 
       val r = c.consistent(ps)
       if (0 <= b && b <= 20) {

@@ -3,7 +3,7 @@ package concrete.heuristic.variable
 import java.util.EventObject
 
 import com.typesafe.scalalogging.LazyLogging
-import concrete.{Domain, MAC, ProblemState, Variable}
+import concrete._
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -46,5 +46,5 @@ abstract class ScoredVariableHeuristic(val tieBreaker: VariableHeuristic) extend
 
   def score(variable: Variable, domain: Domain, state: ProblemState): Double
 
-  def event(e: EventObject): Unit = ()
+  def event[S <: Outcome](e: EventObject, ps: S): S = ps
 }

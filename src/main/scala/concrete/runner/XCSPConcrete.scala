@@ -47,7 +47,7 @@ object XCSPConcrete extends CSPOMRunner with App {
 
 
   def buildSolver(pm: ParameterManager, problem: Problem, goal: WithParam[CSPOMGoal[_]], expressions: ExpressionMap): Solver = {
-    Solver(problem, pm)
+    Solver(problem, pm).get
   }
 
 

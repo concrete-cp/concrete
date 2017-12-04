@@ -1,11 +1,8 @@
 package concrete.constraint.semantic
 
-import org.scalatest.Matchers
-import org.scalatest.FlatSpec
-import concrete.IntDomain
-import concrete.Variable
-import concrete.Singleton
-import concrete.Problem
+import concrete.{IntDomain, Problem, Singleton, Variable}
+import concrete.constraint.AdviseCount
+import org.scalatest.{FlatSpec, Matchers}
 
 class DiffNTest extends FlatSpec with Matchers {
   "diffN" should "filter" in {
@@ -29,12 +26,17 @@ class DiffNTest extends FlatSpec with Matchers {
     val diffn = new DiffN(xs.reverse, ys.reverse, dxs.reverse, dys.reverse)
 
     problem.addConstraint(diffn)
+    diffn.register(new AdviseCount)
 
-    val ps = problem.initState.toState
 
-    val mod = diffn.revise(ps).toState
+    val mod = problem.initState
+      .andThen { ps =>
+        diffn.eventAll(ps)
+        diffn.revise(ps)
+      }
+      .toState
 
     mod.dom(xs(2)).head shouldBe 3
-    
+
   }
 }

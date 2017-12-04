@@ -40,6 +40,16 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
 
   }
 
+  /**
+    * @param index
+    * index to test
+    * @return true iff index is present
+    */
+  def present(index: Int): Boolean = {
+    Domain.checks += 1
+    span.contains(index)
+  }
+
   def removeFrom(lb: Int): IntDomain =
     if (lb > span.ub) {
       this
@@ -97,11 +107,11 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
     }
   }
 
-  override def toString: String = s"[$head, $last]"
-
   override def head: Int = span.lb
 
   override def last: Int = span.ub
+
+  override def toString: String = s"[$head, $last]"
 
   def subsetOf(d: IntDomain): Boolean = d match {
     case d: BitVectorDomain => (head to last).forall(d.present)
@@ -113,7 +123,7 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
       bitVector0
     } else {
       offsetBV(offset, {
-        logger.info(s"generating BV for $this offset $offset")
+        logger.info(s"generating BV for $this offset $offset from ${Thread.currentThread.getStackTrace.mkString(", ")}")
         BitVector.empty.set(head - offset, last - offset + 1)
       })
     }
@@ -135,18 +145,6 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
         domain
       }
   }
-
-  /**
-    * @param index
-    * index to test
-    * @return true iff index is present
-    */
-  def present(index: Int): Boolean = {
-    Domain.checks += 1
-    span.contains(index)
-  }
-
-  def size: Int = span.size
 
   def disjoint(d: Domain): Boolean = last < d.head || head > d.last
 
@@ -200,6 +198,18 @@ final class IntervalDomain(val span: Interval) extends IntDomain with LazyLoggin
       }
     }
   }
+
+  def subsetOf(d: Domain): Boolean = {
+    d match {
+      case EmptyIntDomain | BooleanDomain.EMPTY | _: Singleton => assert(size > 1); false
+      case d@(_: IntervalDomain | _: BooleanDomain) => head >= d.head && last <= d.last
+      case _ => (d & span).size == size
+    }
+  }
+
+
+
+  def size: Int = span.size
 
   def convex = true
 

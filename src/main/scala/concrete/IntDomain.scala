@@ -7,72 +7,6 @@ import cspom.util._
 import scala.collection.immutable.TreeSet
 
 
-object EmptyIntDomain extends IntDomain {
-  def size = 0
-
-  override def head = throw new NoSuchElementException
-
-  override def last = throw new NoSuchElementException
-
-  def next(i: Int) = throw new NoSuchElementException
-
-  def prev(i: Int) = throw new NoSuchElementException
-
-  def prevOrEq(i: Int) = throw new NoSuchElementException
-
-  def nextOrEq(i: Int) = throw new NoSuchElementException
-
-  def present(i: Int) = {
-    Domain.checks += 1
-    false
-  }
-
-  def remove(i: Int) = this
-
-  def removeFrom(lb: Int) = this
-
-  override def removeAfter(lb: Int) = this
-
-  def removeTo(ub: Int) = this
-
-  override def removeUntil(ub: Int) = this
-
-  override def filter(f: Int => Boolean) = this
-
-  def filterBounds(f: Int => Boolean) = this
-
-  override def toString = "[]"
-
-  def convex = throw new IllegalStateException
-
-  override def isEmpty = true
-
-  def apply(i: Int) = throw new NoSuchElementException
-
-  def toBitVector(offset: Int) = BitVector.empty
-
-  def span = throw new NoSuchElementException
-
-  def singleValue = throw new NoSuchElementException
-
-  def &(d: Domain): Domain = EmptyIntDomain
-
-  def |(d: Domain): Domain = d
-
-  def |(v: Int): IntDomain = Singleton(v)
-
-  def &(lb: Int, ub: Int): Domain = EmptyIntDomain
-
-  def median = throw new NoSuchElementException
-
-  def isAssigned = throw new UnsupportedOperationException
-
-  def shift(o: Int) = EmptyIntDomain
-
-  def disjoint(d: Domain) = true
-
-  def foreach[S](f: Int => S): Unit = ()
-}
 
 object IntDomain {
   val DISPLAYED_VALUES = 5
@@ -174,7 +108,7 @@ object IntDomain {
         val ub = set.last
 
         val span = ub - lb + 1
-        if (span == s - 1) {
+        if (span == s) {
           new IntervalDomain(lb, ub)
         } else if (s.toDouble / span < TREE_SET_THRESHOLD) {
           new TreeSetDomain(set)

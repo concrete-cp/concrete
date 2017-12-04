@@ -1,20 +1,16 @@
 package concrete.constraint.linear
 
-import com.typesafe.scalalogging.LazyLogging
-
-import concrete.Contradiction
-import concrete.Outcome
-import concrete.ParameterManager
-import concrete.ProblemState
-import concrete.Variable
-import concrete.constraint.Removals
-import cspom.Statistic
 import bitvectors.BitVector
-import concrete.Domain
+import com.typesafe.scalalogging.LazyLogging
+import concrete._
 import concrete.util.Interval
+import cspom.Statistic
 
 object LinearLe {
-  def apply(constant: Int, factors: Array[Int], scope: Array[Variable], strict: Boolean, pm: ParameterManager) = {
+  @Statistic
+  var shaves: Long = 0l
+
+  def apply(constant: Int, factors: Array[Int], scope: Array[Variable], strict: Boolean, pm: ParameterManager): LinearLe = {
     val actualConstant = if (strict) constant - 1 else constant
 
     val (sf, ss, si) = Linear.sortIntervals(factors, scope)
@@ -22,21 +18,18 @@ object LinearLe {
     new LinearLe(actualConstant, sf, ss, si)
   }
 
-  @Statistic
-  var shaves = 0l
-
 }
 
 final class LinearLe(
-  constant: Int,
-  factors: Array[Int],
-  scope: Array[Variable],
-  val is: Array[Int]) extends Linear(constant, factors, scope, SumLE)
-    with IncrementalBoundPropagation with Removals with LazyLogging {
+                      constant: Int,
+                      factors: Array[Int],
+                      scope: Array[Variable],
+                      val is: Array[Int]) extends Linear(constant, factors, scope, SumLE)
+  with IncrementalBoundPropagation with LazyLogging {
 
   import IncrementalBoundPropagation._
 
-  override def consistent(ps: ProblemState, mod: BitVector) = {
+  override def consistent(ps: ProblemState, mod: Traversable[Int]) = {
     val (doms, f, vars, max) = updateF(ps, mod)
     clearMod()
     if (f.lb <= 0) {
@@ -69,7 +62,7 @@ final class LinearLe(
 
   }
 
-  def proceed(ps: ProblemState, doms: Array[Domain], f: Interval, vars: BitVector, max: Int) = {
+  protected def proceed(ps: ProblemState, doms: Array[Domain], f: Interval, vars: BitVector, max: Int): Outcome = {
     if (f.ub <= 0) {
       ps.entail(this)
     } else if (max <= -f.lb) {
@@ -89,17 +82,17 @@ final class LinearLe(
     }
   }
 
-  override def toString() = toString("<=BC")
-
-  override def toString(ps: ProblemState) = {
+  override def toString(ps: ProblemState): String = {
     val (dom, f, vars, maxI) = ps(this)
     toString(ps, "<=BC") + " with " + ((dom.toSeq, f, vars, maxI))
   }
 
-  def getEvaluation(ps: ProblemState) = arity * 2
+  override def toString: String = toString("<=BC")
+
+  def advise(ps: ProblemState, event: Event, pos: Int): Int = arity * 2
 
   def simpleEvaluation: Int = 3
 
-  override def init(ps: ProblemState) = initData(ps)
+  override def init(ps: ProblemState): ProblemState = initData(ps)
 
 }

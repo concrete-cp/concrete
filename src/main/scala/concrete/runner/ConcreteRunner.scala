@@ -70,7 +70,7 @@ trait ConcreteRunner extends LazyLogging {
         statistics.register("solver", solv)
         // solver = Some(solv)
         val r = if (pm.contains("a") || solv.optimises.nonEmpty) {
-          for (s <- solv.toIterable) {
+          for (s <- solv) {
             solution(solv, s, writer, pm)
           }
           FullExplore

@@ -2,6 +2,7 @@ package concrete.constraint.semantic
 
 ;
 
+import bitvectors.BitVector
 import concrete._
 import concrete.constraint.Constraint
 
@@ -19,49 +20,38 @@ final class NeqVec(x: Array[Variable], y: Array[Variable]) extends Constraint(x 
 
   require(x.length == y.length)
 
-  val zip = x.zip(y)
-  val size = arity / 2
   val simpleEvaluation = 2
 
+  private val size = arity / 2
 
-  def init(ps: ProblemState) = ps
+  def init(ps: ProblemState): ProblemState = ps
 
-  def check(t: Array[Int]) = {
+  def check(t: Array[Int]): Boolean = {
     t.view.splitAt(size).zipped.exists(_ != _)
   }
 
-  def revise(ps: ProblemState): Outcome = {
+  def revise(ps: ProblemState, mod: BitVector): Outcome = {
     singleFreeVariable(ps) match {
       case DISJ => ps.entail(this)
       case TWOP => ps
-      case NONE =>
-        // if ((0 until size).forall(p => ps.dom(scope(p)).singleValue == ps.dom(scope(p + size)).singleValue)) {
-        Contradiction(scope)
-      // } else {
-      //   ps.entail(this)
-      // }
+      case NONE => Contradiction(scope)
       case p if p < size =>
-        ps.removeIfPresent(scope(p), ps.dom(scope(p + size)).head)
+        ps.removeIfPresent(scope(p), ps.dom(scope(p + size)).head).entail(this)
       case p =>
-        ps.removeIfPresent(scope(p), ps.dom(scope(p - size)).head)
+        ps.removeIfPresent(scope(p), ps.dom(scope(p - size)).head).entail(this)
     }
 
   }
 
-  def toStringDom(ps: ProblemState) =
-    x.map(ps.dom).mkString("(", ", ", ")") + " /= " + y.map(ps.dom).mkString("(", ", ", ")")
-
-
-  override def toString(ps: ProblemState) =
+  override def toString(ps: ProblemState): String =
     x.map(_.toString(ps)).mkString("(", ", ", ")") + " /= " + y.map(_.toString(ps)).mkString("(", ", ", ")")
 
-  def advise(ps: ProblemState, event: Event, p: Int) = arity //if (event <= Assignment) arity else -1
+  def advise(ps: ProblemState, event: Event, p: Int): Int = arity //if (event <= Assignment) arity else -1
 
   @tailrec
   private def singleFreeVariable(ps: ProblemState,
                                  i: Int = 0,
                                  single: Int = NONE): Int = {
-
     if (i >= arity) {
       single
     } else {

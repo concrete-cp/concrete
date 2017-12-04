@@ -23,19 +23,19 @@ import concrete.Contradiction
 import concrete.Outcome
 import concrete.ProblemState
 import concrete.Variable
-import concrete.constraint.ResiduesRemovals
 import bitvectors.BitVector
+import concrete.constraint.Residues
 
 final class ExtensionConstraintGeneral(
   var matrix: Matrix,
   shared: Boolean,
   scope: Array[Variable])
-    extends ExtensionConstraint(scope) with ResiduesRemovals with ConflictCount {
+    extends ExtensionConstraint(scope) with Residues with ConflictCount {
 
-  def removeTuple(tuple: Array[Int]) = {
+  def removeTuple(tuple: Array[Int]): Boolean = {
     ??? // disEntail();
-    residues.remove(tuple);
-    set(tuple, false)
+    residues.remove(tuple)
+    set(tuple, status = false)
   }
 
   def removeTuples(base: Array[Int]) = ??? //tuples(base).count(removeTuple)
@@ -68,10 +68,10 @@ final class ExtensionConstraintGeneral(
   //      super.reviseVariable(domains, position, mod);
   //  }
 
-  override def check(tuple: Array[Int]) = {
+  override def check(tuple: Array[Int]): Boolean = {
     matrix.check(tuple)
   }
 
-  override def dataSize = matrix.size
+  override def dataSize: Int = matrix.size
 
 }

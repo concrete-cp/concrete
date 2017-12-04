@@ -2,7 +2,7 @@ package concrete
 package constraint
 package semantic
 
-import scala.annotation.tailrec
+import bitvectors.BitVector
 
 abstract class MinMax(protected val result: Variable, protected val vars: Array[Variable]) extends Constraint(result +: vars) {
 
@@ -13,11 +13,6 @@ abstract class MinMax(protected val result: Variable, protected val vars: Array[
   override def toString(ps: ProblemState) =
     s"${result.toString(ps)} = ${this.getClass.getSimpleName}${vars.map(_.toString(ps)).mkString("(", ", ", ")")}"
 
-  def swap[T](a: Array[T], i: Int, j: Int): Unit = {
-    val t = a(i)
-    a(i) = a(j)
-    a(j) = t
-  }
 
   def doms(ps: ProblemState, from: Int, until: Int): Array[Domain] = {
     val d = new Array[Domain](vars.length)
@@ -33,28 +28,22 @@ object Min {
 }
 
 final class Min private(result: Variable, vars: Array[Variable])
-  extends MinMax(result, vars) with StatefulConstraint[Integer] {
+  extends MinMax(result, vars) with StatefulConstraint[Seq[Variable]] {
 
   override def init(ps: ProblemState): Outcome = {
-    var first = 0
     val ub = ps.dom(result).last
-    for (i <- vars.indices) {
-      if (ps.dom(vars(i)).head > ub) {
-        swap(vars, i, first)
-        first += 1
-      }
-    }
-    ps.updateState(this, Int.box(first))
+    val list = vars.filter(v => ps.dom(v).head <= ub).toSeq
+    ps.updateState(this, list)
   }
 
 
-  def revise(ps: ProblemState): Outcome = {
+  def revise(ps: ProblemState, mod: BitVector): Outcome = {
 
     /*
      * Vars before "first" are strictly higher than minimum variable
      * (i.e., var.head > result.last)
      */
-    var first: Int = ps(this)
+    var list: Seq[Variable] = ps(this)
 
     val resultDom = ps.dom(result)
 
@@ -62,79 +51,53 @@ final class Min private(result: Variable, vars: Array[Variable])
      * Compute lb, ub
      */
     var lb = resultDom.last + 1
-    var ub = Int.MaxValue
+    var ub = resultDom.last
 
-    for (p <- first until vars.length) {
-      val dom = ps.dom(vars(p))
+    list = list.filter { v =>
+      val dom = ps.dom(v)
       lb = math.min(lb, dom.head)
       ub = math.min(ub, dom.last)
-      if (dom.head > ub) {
-        swap(vars, p, first)
-        first += 1
-      }
-
+      dom.head <= ub
     }
 
-    if (first == vars.length) {
+    if (list.isEmpty) {
       Contradiction(result)
     } else {
-
       /*
        * Result must take values in variables' domain
        */
-      var union: Domain = EmptyIntDomain
-      for (v <- first until vars.length) {
-        union |= ps.dom(vars(v)) & (lb, ub)
-      }
+      val union = list.view.map(v => ps.dom(v) & (lb, ub)).reduce(_ | _) //foldLeft(EmptyIntDomain: Domain) { (u, v) => u | (ps.dom(vars(v)) & (lb, ub)) }
 
       val minDom = resultDom & union
 
-
-      @tailrec
-      def filterVariables(ps: ProblemState, i: Int): Outcome = {
-        if (i >= vars.length) {
-          ps
-        } else {
-
-          val f = ps.dom(vars(i)).removeUntil(minDom.head)
-
-          if (f.isEmpty) {
-            Contradiction(vars(i))
-          } else {
-            val updated = ps.updateDomNonEmpty(vars(i), f)
-            if (f.head > minDom.last) {
-              swap(vars, i, first)
-              first += 1
-            }
-            filterVariables(updated, i + 1)
-          }
-        }
-      }
-
       ps.updateDom(result, minDom)
-        .andThen(filterVariables(_, first))
+        .andThen { ps =>
+          var updated = ps
+          list = list.filter { v =>
+            val f = updated.dom(v).removeUntil(minDom.head)
+            assert(f.nonEmpty)
+            updated = updated.updateDomNonEmpty(v, f)
+            f.head <= minDom.last
+          }
+          updated
+        }
         .andThen { state =>
 
-          val singletonTest1 = Iterator.range(first, vars.length).filterNot(p => ps.dom(vars(p)) disjoint minDom).take(2).size == 1
-          val singletonTest2 = first == vars.length - 1
-
-          assert(singletonTest1 == singletonTest2)
-          /**
-            * Handle case where only one variable can be the minimum
-            */
-          if (singletonTest1) {
-
-            val intersection = minDom & ps.dom(vars(first)) //state.dom(v)
-            state
-              .updateDom(result, intersection)
-              .updateDom(vars(first), intersection)
-          } else {
-            state
+          list match {
+            case Seq(single) =>
+              /**
+                * Handle case where only one variable can be the minimum
+                */
+              val intersection = minDom & ps.dom(single) //state.dom(v)
+              state
+                .updateDom(result, intersection)
+                .updateDom(single, intersection)
+            case _ => state
           }
         }
 
     }
-      .updateState(this, Int.box(first))
+      .updateState(this, list)
       .entailIfFree(this)
 
 
@@ -151,104 +114,78 @@ object Max {
 }
 
 final class Max private(result: Variable, vars: Array[Variable])
-  extends MinMax(result, vars) with StatefulConstraint[Integer] {
+  extends MinMax(result, vars) with StatefulConstraint[Seq[Variable]] {
 
   override def init(ps: ProblemState): Outcome = {
-    var first = 0
     val lb = ps.dom(result).head
-    for (i <- vars.indices) {
-      if (ps.dom(vars(i)).last < lb) {
-        swap(vars, i, first)
-        first += 1
-      }
-    }
-    ps.updateState(this, Int.box(first))
+    val list = vars.filter(v => ps.dom(v).last >= lb).toSeq
+    ps.updateState(this, list)
   }
 
-  def revise(ps: ProblemState): Outcome = {
+  def revise(ps: ProblemState, mod: BitVector): Outcome = {
     /*
-     * Vars before "first" are strictly lower than maximum variable
-     * (i.e., var.last < result.head)
+     * "list" contains variable positions that may be higher than result
+     * (i.e., var.last >= result.head)
      */
-    var first: Int = ps(this)
+    var list: Seq[Variable] = ps(this)
 
     val resultDom = ps.dom(result)
 
     /*
      * Compute lb, ub
      */
-    var lb = Int.MinValue
+    var lb = resultDom.head
     var ub = resultDom.head - 1
-
-    for (p <- first until vars.length) {
-      val dom = ps.dom(vars(p))
+    list = list.filter { v =>
+      val dom = ps.dom(v)
       ub = math.max(ub, dom.last)
       lb = math.max(lb, dom.head)
 
-      if (dom.last < lb) {
-        swap(vars, p, first)
-        first += 1
-      }
+      dom.last >= lb
     }
 
-    if (first == vars.length) {
+    if (list.isEmpty) {
       Contradiction(result)
     } else {
 
       /*
        * Result must take values in variables' domain
        */
-      var union: Domain = EmptyIntDomain
-      for (v <- first until vars.length) {
-        union |= ps.dom(vars(v)) & (lb, ub)
-      }
+      val union: Domain = list.view.map(v => ps.dom(v) & (lb, ub)).reduce(_ | _)
+//      for (v <- list) {
+//        union |= ps.dom(v) & (lb, ub)
+//      }
 
       val maxDom = resultDom & union
 
 
-
-      def filterVariables(ps: ProblemState, i: Int): Outcome = {
-        if (i >= vars.length) {
-          ps
-        } else {
-
-          val f = ps.dom(vars(i)).removeAfter(maxDom.last)
-
-          if (f.isEmpty) {
-            Contradiction(vars(i))
-          } else {
-            val updated = ps.updateDomNonEmpty(vars(i), f)
-            if (f.last < maxDom.head) {
-              swap(vars, i, first)
-              first += 1
-            }
-            filterVariables(updated, i + 1)
-          }
-        }
-      }
-
       ps.updateDom(result, maxDom)
-        .andThen(filterVariables(_, first))
+        .andThen { ps =>
+          var updated = ps
+          list = list.filter { v =>
+            val f = ps.dom(v).removeAfter(maxDom.last)
+            assert(f.nonEmpty)
+            updated = updated.updateDomNonEmpty(v, f)
+            f.last >= maxDom.head
+          }
+          updated
+        }
         .andThen { state =>
 
-          val singletonTest1 = Iterator.range(first, vars.length).filterNot(p => ps.dom(vars(p)) disjoint maxDom).take(2).size == 1
-          val singletonTest2 = first == vars.length - 1
-
-          assert(singletonTest1 == singletonTest2)
           /**
             * Handle case where only one variable can be the minimum
             */
-          if (singletonTest1) {
-            val intersection = maxDom & ps.dom(vars(first))
-            state
-              .updateDom(result, intersection)
-              .updateDom(vars(first), intersection)
-          } else {
-            state
+          list match {
+            case Seq(single) =>
+              val intersection = maxDom & ps.dom(single)
+              state
+                .updateDom(result, intersection)
+                .updateDom(single, intersection)
+            case _ => state
           }
 
         }
-        .updateState(this, Int.box(first))
+        .updateState(this, list)
         .entailIfFree(this)
     }
 

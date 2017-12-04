@@ -2,20 +2,25 @@ package concrete
 package constraint
 package semantic
 
-import concrete.util.Interval
+import java.util
+
+import bitvectors.BitVector
+import concrete.util.{Interval, Math}
+
 import scala.collection.mutable.ArrayBuffer
-import concrete.util.Math
-import java.util.Arrays
 
 object BinPacking {
-  def apply(load: Seq[Variable], offset: Int, bin: Seq[Variable], weight: Seq[Int]) = {
+  def apply(load: Seq[Variable], offset: Int, bin: Seq[Variable], weight: Seq[Int]): BinPacking = {
     val (sBin, sW) = (bin zip weight).sortBy(-_._2).unzip
     new BinPacking(load.toArray, offset, sBin.toArray, sW.toArray)
   }
 }
 
-class BinPacking private (load: Array[Variable], offset: Int, assignments: Array[Variable], weight: Array[Int]) extends Constraint(load ++ assignments)
-    with FixPoint {
+class BinPacking private(load: Array[Variable], offset: Int, assignments: Array[Variable],
+                         weight: Array[Int]) extends Constraint(load ++ assignments)
+  with FixPoint {
+
+  private val totalWeights = weight.sum
 
   override def toString(ps: ProblemState): String = {
     s"BinPacking(load = [${load.map(_.toString(ps)).mkString(", ")}], offset = $offset, assignments = [${assignments.map(_.toString(ps)).mkString(", ")}], weight = [${weight.mkString(", ")}])"
@@ -36,10 +41,10 @@ class BinPacking private (load: Array[Variable], offset: Int, assignments: Array
     assert(bin.length == assignments.length)
 
     load.sum == weight.sum &&
-      (0 until bin.length).forall { i =>
-        offset <= bin(i) && bin(i) < load.length + offset
+      bin.forall { b =>
+        offset <= b && b < load.length + offset
       } &&
-      (0 until load.length).forall { b =>
+      load.indices.forall { b =>
         val sum = Iterator.tabulate(bin.length) { i => if (bin(i) == b + offset) weight(i) else 0 }.sum
         //println(s"$b: ${load(b)} = $sum")
         load(b) == sum
@@ -50,12 +55,72 @@ class BinPacking private (load: Array[Variable], offset: Int, assignments: Array
   def init(ps: concrete.ProblemState): Outcome = {
     //    val c = ps.doms(load).map(_.last).max
     //    println(l2(weight, c))
-    ps.fold(0 until assignments.length) { (ps, i) =>
+    ps.fold(assignments.indices) { (ps, i) =>
       ps.shaveDom(assignments(i), offset, load.length + offset - 1)
     }
   }
 
-  private val totalWeights = weight.sum
+  override def revise(ps: ProblemState, mod: BitVector): Outcome = {
+    fixPoint(ps, rev)
+  }
+
+  private def rev(ps: ProblemState): Outcome = {
+    val (assigned, sumCandidates) = computeState(ps)
+
+    // 1. Load Maintenance
+    val bounds = new Array[Interval](load.length)
+
+    var sumLB = 0
+    var sumUB = 0
+
+    for (j <- load.indices) {
+      bounds(j) = ps.span(load(j)).fastIntersect(assigned(j), sumCandidates(j))
+      sumLB += bounds(j).lb
+      sumUB += bounds(j).ub
+    }
+
+    // 2. Load and size coherence
+    for (j <- load.indices) {
+      val b = bounds(j)
+      sumLB -= b.lb
+      sumUB -= b.ub
+
+      bounds(j) = b.fastIntersect(totalWeights - sumUB, totalWeights - sumLB)
+      sumLB += bounds(j).lb
+      sumUB += bounds(j).ub
+    }
+
+    ps.fold(load.indices) { (ps, i) => ps.shaveDom(load(i), bounds(i)) }
+      .fold(assignments.indices)((ps, i) => elimAndCommit(ps, i, sumCandidates, assigned, bounds))
+      .andThen { ps =>
+        val candidates = compCandidates(ps)
+        ps.fold(load.indices)((ps, j) => checkFeasibility(ps, j, candidates(j), assigned))
+      }
+      .andThen { ps =>
+        // Use a lower bound on the number of required bins with partial solutions
+
+        // Compute maximum load
+        var C = 0
+        for (j <- load.indices) {
+          C = math.max(C, ps.dom(load(j)).last)
+        }
+
+        // Fake items to take into account assigned items and reduced capacity wrt C
+        val a = new Array[Int](load.length)
+
+        for (j <- load.indices) {
+          a(j) = assigned(j) + C - ps.dom(load(j)).last
+        }
+
+        util.Arrays.sort(a)
+        reverse(a)
+
+        // List of unassigned items
+        val u = Iterator.range(0, assignments.length).filter(i => !ps.dom(assignments(i)).isAssigned).map(weight).toArray
+
+        if (l2(merge(a, u), C) > load.length) Contradiction(scope) else ps
+      }
+  }
 
   private def elimAndCommit(ps: ProblemState, i: Int, sumCandidates: Array[Int], assigned: Array[Int], bounds: Array[Interval]): Outcome = {
     val dom = ps.dom(assignments(i))
@@ -76,7 +141,9 @@ class BinPacking private (load: Array[Variable], offset: Int, assignments: Array
         ps
       } else {
 
-        for (k <- dom) { sumCandidates(k - offset) -= weight(i) }
+        for (k <- dom) {
+          sumCandidates(k - offset) -= weight(i)
+        }
         if (commitment.isAssigned) {
           val j = commitment.singleValue
           assigned(j - offset) += weight(i)
@@ -94,7 +161,7 @@ class BinPacking private (load: Array[Variable], offset: Int, assignments: Array
     val assigned = new Array[Int](load.length)
     val sumCandidates = new Array[Int](load.length)
 
-    for (b <- 0 until assignments.length) {
+    for (b <- assignments.indices) {
 
       val dom = ps.dom(assignments(b))
       //println(dom)
@@ -114,9 +181,7 @@ class BinPacking private (load: Array[Variable], offset: Int, assignments: Array
   private def compCandidates(ps: ProblemState): Array[ArrayBuffer[Int]] = {
     val candidates = Array.fill(load.length)(new ArrayBuffer[Int](assignments.length))
 
-    for (
-      b <- 0 until assignments.length
-    ) {
+    for (b <- assignments.indices) {
       val dom = ps.dom(assignments(b))
 
       if (!dom.isAssigned) {
@@ -152,97 +217,6 @@ class BinPacking private (load: Array[Variable], offset: Int, assignments: Array
     }
   }
 
-  override def revise(ps: ProblemState): Outcome = {
-    fixPoint(ps, rev)
-  }
-
-  private def rev(ps: ProblemState): Outcome = {
-    val (assigned, sumCandidates) = computeState(ps)
-
-    // 1. Load Maintenance
-    val bounds = new Array[Interval](load.length)
-
-    var sumLB = 0
-    var sumUB = 0
-
-    for (j <- 0 until load.length) {
-      bounds(j) = ps.span(load(j)).fastIntersect(assigned(j), sumCandidates(j))
-      sumLB += bounds(j).lb
-      sumUB += bounds(j).ub
-    }
-
-    // 2. Load and size coherence
-    for (j <- 0 until load.length) {
-      val b = bounds(j)
-      sumLB -= b.lb
-      sumUB -= b.ub
-
-      bounds(j) = b.fastIntersect(totalWeights - sumUB, totalWeights - sumLB)
-      sumLB += bounds(j).lb
-      sumUB += bounds(j).ub
-    }
-
-    ps.fold(0 until load.length) { (ps, i) => ps.shaveDom(load(i), bounds(i)) }
-      .fold(0 until assignments.length)((ps, i) => elimAndCommit(ps, i, sumCandidates, assigned, bounds))
-      .andThen { ps =>
-        val candidates = compCandidates(ps)
-        ps.fold(0 until load.length)((ps, j) => checkFeasibility(ps, j, candidates(j), assigned))
-      }
-      .andThen { ps =>
-        // Use a lower bound on the number of required bins with partial solutions
-
-        // Compute maximum load
-        var C = 0
-        for (j <- 0 until load.length) {
-          C = math.max(C, ps.dom(load(j)).last)
-        }
-
-        // Fake items to take into account assigned items and reduced capacity wrt C
-        val a = new Array[Int](load.length)
-
-        for (j <- 0 until load.length) {
-          a(j) = assigned(j) + C - ps.dom(load(j)).last
-        }
-
-        Arrays.sort(a)
-        reverse(a)
-
-        // List of unassigned items
-        val u = Iterator.range(0, assignments.length).filter(i => !ps.dom(assignments(i)).isAssigned).map(weight).toArray
-
-        if (l2(merge(a, u), C) > load.length) Contradiction(scope) else ps
-      }
-  }
-
-  private def reverse(a: Array[Int]): Unit = {
-    for (i <- 0 until a.length / 2) {
-      val t = a(i)
-      a(i) = a(a.length - i - 1)
-      a(a.length - i - 1) = t
-    }
-  }
-
-  private def merge(a: Array[Int], b: Array[Int]): Array[Int] = {
-    val dest = new Array[Int](a.length + b.length)
-    var i, j, k = 0
-    while (i < a.length && j < b.length) {
-      if (a(i) > b(j)) {
-        dest(k) = a(i)
-        i += 1
-      } else {
-        dest(k) = b(j)
-        j += 1
-      }
-      k += 1
-    }
-
-    System.arraycopy(b, j, dest, k, b.length - j)
-    System.arraycopy(a, i, dest, k, a.length - i)
-
-    dest
-
-  }
-
   private def noSum(X: IndexedSeq[Int], α: Int, β: Int): Option[(Int, Int)] = {
     if (α <= 0 || β >= X.sum) None
     else {
@@ -274,13 +248,42 @@ class BinPacking private (load: Array[Variable], offset: Int, assignments: Array
     }
   }
 
+  private def reverse(a: Array[Int]): Unit = {
+    for (i <- 0 until a.length / 2) {
+      val t = a(i)
+      a(i) = a(a.length - i - 1)
+      a(a.length - i - 1) = t
+    }
+  }
+
+  private def merge(a: Array[Int], b: Array[Int]): Array[Int] = {
+    val dest = new Array[Int](a.length + b.length)
+    var i, j, k = 0
+    while (i < a.length && j < b.length) {
+      if (a(i) > b(j)) {
+        dest(k) = a(i)
+        i += 1
+      } else {
+        dest(k) = b(j)
+        j += 1
+      }
+      k += 1
+    }
+
+    System.arraycopy(b, j, dest, k, b.length - j)
+    System.arraycopy(a, i, dest, k, a.length - i)
+
+    dest
+
+  }
+
   /**
-   * Computes a lower bound on the number of required bins of capacity C to store items X (sorted non-incrementally)
-   *
-   * S. Martello and P. Toth.
-   * Lower bounds and reduction procedures for the bin packing problem.
-   * Discrete and Applied Mathematics, 28(1):59–70, 1990.
-   */
+    * Computes a lower bound on the number of required bins of capacity C to store items X (sorted non-incrementally)
+    *
+    * S. Martello and P. Toth.
+    * Lower bounds and reduction procedures for the bin packing problem.
+    * Discrete and Applied Mathematics, 28(1):59–70, 1990.
+    */
   private def l2(X: Array[Int], C: Int): Int = {
 
     if (X.last > C / 2) X.length
@@ -314,5 +317,6 @@ class BinPacking private (load: Array[Variable], offset: Int, assignments: Array
       best
     }
   }
+
   def simpleEvaluation: Int = ???
 }

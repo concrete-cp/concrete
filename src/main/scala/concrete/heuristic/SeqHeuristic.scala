@@ -22,7 +22,7 @@ object SeqHeuristic {
 
 final class SeqHeuristic(val heuristics: Seq[Heuristic]) extends Heuristic {
 
-  def branch(state: ProblemState, candidates: Seq[Variable]): Option[Branch] = {
+  def branch(state: ProblemState, candidates: Seq[Variable]): Option[(Decision, Decision)] = {
     heuristics.iterator.map { h =>
       h.branch(state, candidates)
     }.collectFirst {
@@ -39,6 +39,7 @@ final class SeqHeuristic(val heuristics: Seq[Heuristic]) extends Heuristic {
   def compute(s: MAC, state: ProblemState): ProblemState =
     heuristics.foldLeft(state) { case (ps, h) => h.compute(s, ps) }
 
-  def event(event: EventObject): Unit = heuristics.foreach(_.event(event))
+  def event[S <: Outcome](event: EventObject, ps: S): S =
+    heuristics.foldLeft(ps) { case (p, h) => h.event(event, p) }
 
 }

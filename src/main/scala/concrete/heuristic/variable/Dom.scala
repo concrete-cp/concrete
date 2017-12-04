@@ -21,10 +21,10 @@ package concrete
 package heuristic
 package variable
 
-final class Dom(val pool: Seq[Variable], tieBreaker: VariableHeuristic, val trustCandidates: Boolean = true)
+final class Dom(val pool: Seq[Variable], tieBreaker: VariableHeuristic)
   extends ScoredVariableHeuristic(tieBreaker) {
 
-  def score(variable: Variable, dom: Domain, state: ProblemState) = -dom.size
+  def score(variable: Variable, dom: Domain, state: ProblemState): Double = -dom.size
 
   override def toString = s"min-dom then $tieBreaker"
 

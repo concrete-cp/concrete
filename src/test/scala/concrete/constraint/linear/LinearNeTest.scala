@@ -1,11 +1,8 @@
 package concrete.constraint.linear
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
-
-import concrete.BooleanDomain
-import concrete.Problem
-import concrete.Variable
+import concrete.constraint.AdviseCount
+import concrete.{Assignment, BooleanDomain, Problem, Variable}
+import org.scalatest.{FlatSpec, Matchers}
 
 class LinearNeTest extends FlatSpec with Matchers {
   "LinearNe" should "not filter" in {
@@ -17,12 +14,19 @@ class LinearNeTest extends FlatSpec with Matchers {
 
     val pb = Problem(x_2095, x_2055)
     pb.addConstraint(ctr)
+    ctr.register(new AdviseCount)
 
     val res = pb.initState
-      .andThen { ps => ctr.revise(ps) }
+      .andThen { ps =>
+        ctr.eventAll(ps)
+        ctr.revise(ps)
+      }
       .andThen(_.assign(x_2055, 1))
-      .andThen { ps => ctr.revise(ps) }
-      .toState
+      .andThen { ps =>
+        ctr.event(ps, Assignment, 1)
+        ctr.revise(ps)
+      }
+
 
     res.dom(x_2095) shouldBe BooleanDomain.UNKNOWNBoolean
 
@@ -37,11 +41,16 @@ class LinearNeTest extends FlatSpec with Matchers {
 
     val pb = Problem(x_2095, x_2055)
     pb.addConstraint(ctr)
+    ctr.register(new AdviseCount)
 
     val res = pb.initState
-      .andThen { ps => ctr.revise(ps) }
+      .andThen { ps =>
+        ctr.eventAll(ps)
+        ctr.revise(ps) }
       .andThen(_.assign(x_2055, 0))
-      .andThen { ps => ctr.revise(ps) }
+      .andThen { ps =>
+        ctr.event(ps, Assignment, 1)
+        ctr.revise(ps) }
       .toState
 
     res.dom(x_2095) shouldBe BooleanDomain.FALSE

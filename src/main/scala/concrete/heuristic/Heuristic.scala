@@ -3,28 +3,31 @@ package heuristic
 
 import java.util.{EventListener, EventObject}
 
+import scala.util.{Failure, Random, Success, Try}
+
 object Heuristic {
-  def default(pm: ParameterManager, decision: Seq[Variable]): Heuristic = {
+  def default(pm: ParameterManager, decision: Seq[Variable], rand: Random): Try[Heuristic] = {
     pm.getRaw("heuristic").getOrElse(classOf[CrossHeuristic]) match {
       case heuristicName: String =>
-        instantiate(pm.classInPackage(heuristicName, "concrete.heuristic"), pm, decision)
+        instantiate(pm.classInPackage(heuristicName, "concrete.heuristic"), pm, decision, rand)
       case heuristicClass: Class[_] =>
-        instantiate(heuristicClass, pm, decision)
+        instantiate(heuristicClass, pm, decision, rand)
       case heuristic: Heuristic =>
-        heuristic
+        Success(heuristic)
+      case other => Failure(new IllegalArgumentException(s"Heuristic $other cannot be used or instantiated"))
     }
   }
 
-  private def instantiate(heuristicClass: Class[_], pm: ParameterManager, decision: Seq[Variable]) = {
+  private def instantiate(heuristicClass: Class[_], pm: ParameterManager, decision: Seq[Variable], rand: Random): Try[Heuristic] = {
     heuristicClass
-      .getMethod("apply", classOf[ParameterManager], classOf[Seq[Variable]])
-      .invoke(null, pm, decision)
-      .asInstanceOf[Heuristic]
+      .getMethod("apply", classOf[ParameterManager], classOf[Seq[Variable]], classOf[Random])
+      .invoke(null, pm, decision, rand)
+      .asInstanceOf[Try[Heuristic]]
   }
 }
 
 trait Heuristic extends HeuristicListener {
-  def branch(state: ProblemState, candidates: Seq[Variable]): Option[Branch]
+  def branch(state: ProblemState, candidates: Seq[Variable]): Option[(Decision, Decision)]
 
   def shouldRestart: Boolean
 
@@ -34,19 +37,11 @@ trait Heuristic extends HeuristicListener {
 }
 
 trait HeuristicListener extends EventListener {
-  def event(e: EventObject): Unit
-}
-
-class Branch(
-              val b1: ProblemState,
-              val c1: Seq[(Variable, Event)],
-              val b2: Outcome,
-              val c2: Seq[(Variable, Event)],
-              _b1Desc: => String, _b2Desc: => String) {
-  lazy val b1Desc: String = _b1Desc
-  lazy val b2Desc: String = _b2Desc
+  def event[S <: Outcome](e: EventObject, ps: S): S
 }
 
 case class NewSolutionEvent(sol: Map[Variable, Int]) extends EventObject(sol)
 
-case class ContradictionEvent(c: Contradiction) extends EventObject(c)
+case object ContradictionEvent extends EventObject(None)
+
+case class AssignmentEvent(variable: Variable) extends EventObject(variable)

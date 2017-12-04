@@ -2,10 +2,9 @@ package concrete
 package constraint
 package semantic
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
-import org.scalatest.prop.PropertyChecks
 import org.scalacheck.Gen
+import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.prop.PropertyChecks
 
 class MemberTest extends FlatSpec with Matchers with PropertyChecks {
   "Member constraint" should "filter" in {
@@ -16,15 +15,19 @@ class MemberTest extends FlatSpec with Matchers with PropertyChecks {
     val problem = Problem(x, y, z)
     val constraint = new Member(x, Array(y, z))
     problem.addConstraint(constraint)
-    val ps = problem.initState.toState
+    constraint.register(new AdviseCount)
+    val mod = problem.initState
+      .andThen { ps =>
+        constraint.eventAll(ps)
+        constraint.revise(ps)
+      }
 
-    val mod = constraint.revise(ps).toState
     mod.dom(x).view should contain theSameElementsAs Seq(1)
     mod.dom(y).view should contain theSameElementsAs Seq(1)
     mod.dom(z).view should contain theSameElementsAs (2 to 10)
   }
 
-  val dom = Gen.nonEmptyListOf(Gen.choose(-10, 10))
+  private val dom = Gen.nonEmptyListOf(Gen.choose(-10, 10))
 
   it should "filter the same as enumerator" in {
 
@@ -34,13 +37,12 @@ class MemberTest extends FlatSpec with Matchers with PropertyChecks {
       val vy = new Variable(s"y", IntDomain.ofSeq(y: _*))
       val vz = new Variable(s"z", IntDomain.ofSeq(z: _*))
 
-     
 
       ConstraintComparator.compare(
         Array(vx, vy, vz),
         new Member(vx, Array(vy, vz)),
-        new Constraint(Array(vx, vy, vz)) with ResiduesRemovals with TupleEnumerator {
-          def check(t: Array[Int]) = t.tail.contains(t(0))
+        new Constraint(Array(vx, vy, vz)) with Residues with TupleEnumerator {
+          def check(t: Array[Int]): Boolean = t.tail.contains(t(0))
         })
     }
 

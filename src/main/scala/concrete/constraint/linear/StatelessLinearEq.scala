@@ -2,28 +2,23 @@ package concrete
 package constraint
 package linear
 
-import com.typesafe.scalalogging.LazyLogging
-
-import concrete.Contradiction
-import concrete.Outcome
-import concrete.ProblemState
-import concrete.Variable
-import concrete.util.Interval
 import bitvectors.BitVector
+import com.typesafe.scalalogging.LazyLogging
+import concrete.util.Interval
 
 object StatelessLinearEq {
-  def apply(constant: Int, factors: Array[Int], scope: Array[Variable]) = {
+  def apply(constant: Int, factors: Array[Int], scope: Array[Variable]): StatelessLinearEq = {
     val (sf, ss, si) = Linear.sortIntervals(factors, scope)
     new StatelessLinearEq(constant, sf, ss, si)
   }
 }
 
 final class StatelessLinearEq(
-  constant: Int,
-  factors: Array[Int],
-  scope: Array[Variable],
-  val is: Array[Int])
-    extends Linear(constant, factors, scope, SumEQ)
+                               constant: Int,
+                               factors: Array[Int],
+                               scope: Array[Variable],
+                               val is: Array[Int])
+  extends Linear(constant, factors, scope, SumEQ)
     with StatelessBoundPropagation
     with LazyLogging {
 
@@ -31,7 +26,7 @@ final class StatelessLinearEq(
 
   private val negFactors = factors.map(-_)
 
-  override def consistent(ps: ProblemState) = {
+  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {
     if (updateF(ps)._1.contains(0)) ps else Contradiction(scope)
   }
 
@@ -41,27 +36,27 @@ final class StatelessLinearEq(
       if (looping) {
         filter(changed, doms, ps)
       } else {
-        altRevise(ps, changed, -f, !neg, true, max)
+        altRevise(ps, changed, -f, !neg, looping = true, max)
       }
     } else {
       processUB(0, f, if (neg) negFactors else factors, ps) match {
         case PContradiction => Contradiction(scope)
-        case PFiltered(newChanged, entailed, newF) =>
+        case PFiltered(newChanged, _, newF) =>
           require(newF != f || newChanged.isEmpty)
           if (newChanged.isEmpty && looping) {
             filter(changed, doms, ps)
           } else {
-            altRevise(ps, newChanged | changed, -newF, !neg, true, max)
+            altRevise(ps, newChanged | changed, -newF, !neg, looping = true, max)
           }
       }
     }
 
   }
 
-  override def revise(ps: ProblemState): Outcome = {
+  override def revise(ps: ProblemState, mod: BitVector): Outcome = {
     val (f, max) = updateF(ps)
 
-    altRevise(ps, BitVector.empty, f, false, false, max)
+    altRevise(ps, BitVector.empty, f, neg = false, looping = false, max)
   }
 
   override def toString: String = toString("=BC=")
@@ -72,10 +67,10 @@ final class StatelessLinearEq(
 
   //def advise(ps: ProblemState, p: Int) = getEvaluation(ps)
 
-  def advise(ps: ProblemState, event: Event, p: Int) = if (event <= BoundRemoval) arity * 3 else -1
+  def advise(ps: ProblemState, event: Event, p: Int): Int = if (event <= BoundRemoval) arity * 3 else -1
 
   def simpleEvaluation: Int = 3
 
-  override def init(ps: ProblemState) = ps
+  override def init(ps: ProblemState): ProblemState = ps
 
 }

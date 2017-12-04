@@ -18,7 +18,7 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
 
   def is: Array[Int]
 
-  def updateF(ps: ProblemState, mod: BitVector) = {
+  protected def updateF(ps: ProblemState, mod: Traversable[Int]) = {
     /*
      *  TODO: reinvestigate the detection of modified bounds (was disabled for reification but may still be interesting)
      */
@@ -51,7 +51,7 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
   }
 
   def initData(ps: ProblemState) = {
-    val doms = ps.doms(scope) //Array.tabulate[Domain](arity)(p => IntDomain.ofInterval(-1000000, 1000000)) // ps.dom(scope(p)))
+    val doms = ps.doms(scope)
     val f = (doms, factors).zipped.map(_.span * _).reduce(_ + _) - constant
     val maxI = size(doms.head, factors.head)
     val vars = BitVector.filled(arity).filter(p => !doms(p).isAssigned)
@@ -61,21 +61,7 @@ trait IncrementalBoundPropagation extends Linear with StatefulConstraint[(Array[
     ps.updateState(this, (doms, f, vars, maxI))
   }
 
-  def proceed(ps: ProblemState, doms: Array[Domain], f: Interval, vars: BitVector, max: Int): Outcome
-
-  //
-  //  @annotation.tailrec
-  //  final def realMax(i: Int, doms: Array[Domain], factors: Array[Int], vars: BitVector, max: Int): Int = {
-  //    if (i < 0 || is(i) <= max) max
-  //    else realMax(
-  //      vars.nextSetBit(i + 1),
-  //      doms,
-  //      factors,
-  //      vars,
-  //      math.max(max, size(doms(i), factors(i))))
-  //
-  //  }
-  //
+  protected def proceed(ps: ProblemState, doms: Array[Domain], f: Interval, vars: BitVector, max: Int): Outcome
 
   def realMax(i: Int, doms: Array[Domain], factors: Array[Int], vars: BitVector, max: Int): Int = {
     if (i < 0) max else

@@ -55,14 +55,14 @@ class TestMAC extends FlatSpec with Matchers {
   val sols = List(
     4 -> 2,
     8 -> 92,
-    9 -> 352,
-    10 -> 724,
+//    9 -> 352,
+//    10 -> 724,
     12 -> 14200
     //13 -> 73712 //,
     // 14 -> 365596)
     )
 
-  val pm = new ParameterManager().updated("heuristic.value", classOf[MedValue])
+  private val pm = new ParameterManager().updated("heuristic.value", classOf[MedValue])
 
   behavior of "MAC"
 
@@ -70,7 +70,7 @@ class TestMAC extends FlatSpec with Matchers {
     it should s"solve queens-$size" taggedAs SlowTest in {
       val problem = qp(size)
 
-      val solver = MAC(problem, pm)
+      val solver = MAC(problem, pm).get
 
       val stats = new StatisticsManager
       stats.register("mac", solver)

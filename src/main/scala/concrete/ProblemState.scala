@@ -15,6 +15,8 @@ sealed trait Outcome {
 
   def filterDom(v: Variable)(f: Int => Boolean): Outcome
 
+  def filterBounds(v: Variable)(f: Int => Boolean): Outcome
+
   def shaveDom(v: Variable, lb: Int, ub: Int): Outcome
 
   def shaveDom(v: Variable, itv: Interval): Outcome = shaveDom(v, itv.lb, itv.ub)
@@ -91,7 +93,7 @@ sealed trait Outcome {
     state
   }
 
-  def dueTo(cause: => (Constraint, Iterable[Variable])): Outcome
+  def dueTo(cause: => (Constraint, Traversable[Variable])): Outcome
 }
 
 object Contradiction {
@@ -108,6 +110,8 @@ case class Contradiction(cause: Option[Constraint], from: Seq[Variable], to: Seq
   def map[A](f: ProblemState => A): Option[A] = None
 
   def filterDom(v: Variable)(f: Int => Boolean): Outcome = this
+
+  def filterBounds(v: Variable)(f: Int=>Boolean): Outcome = this
 
   def shaveDom(v: Variable, lb: Int, ub: Int): Outcome = this
 
@@ -147,7 +151,7 @@ case class Contradiction(cause: Option[Constraint], from: Seq[Variable], to: Seq
 
   def isState = false
 
-  def dueTo(cause: => (Constraint, Iterable[Variable])) = Contradiction(Some(cause._1), this.from ++ cause._2, to)
+  def dueTo(cause: => (Constraint, Traversable[Variable])) = Contradiction(Some(cause._1), this.from ++ cause._2, to)
 }
 
 object ProblemState {
@@ -158,7 +162,7 @@ object ProblemState {
     ProblemState(
       doms,
       Vector(),
-      EntailmentManagerLight(problem.variables))
+      EntailmentManager(problem.variables))
       .padConstraints(problem.constraints, problem.maxCId)
   }
 
@@ -196,7 +200,7 @@ object ProblemState {
 case class ProblemState(
                          domains: scala.collection.immutable.Vector[Domain],
                          constraintStates: Vector[AnyRef],
-                         entailed: EntailmentManagerLight,
+                         entailed: EntailmentManager,
                          data: IdentityMap[Any, Any] = IdentityMap()) extends Outcome
   with LazyLogging {
 
@@ -293,6 +297,9 @@ case class ProblemState(
   def filterDom(v: Variable)(f: Int => Boolean): Outcome =
     updateDom(v, dom(v).filter(f))
 
+  def filterBounds(v: Variable)(f: Int => Boolean): Outcome =
+    updateDom(v, dom(v).filterBounds(f))
+
   def shaveDom(v: Variable, lb: Int, ub: Int): Outcome =
     updateDom(v, dom(v) & (lb, ub))
 
@@ -364,7 +371,7 @@ case class ProblemState(
 
   def toState: ProblemState = this
 
-  def dueTo(cause: => (Constraint, Iterable[Variable])): ProblemState = this
+  def dueTo(cause: => (Constraint, Traversable[Variable])): ProblemState = this
 
   def updateData(key: Any, value: Any) =
     new ProblemState(domains, constraintStates, entailed, data + (key -> value))

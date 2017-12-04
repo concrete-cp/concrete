@@ -21,7 +21,7 @@ package concrete
 package heuristic
 package variable
 
-class WDegOnDom(val pool: Seq[Variable], tieBreaker: VariableHeuristic, val trustCandidates: Boolean = true)
+class WDegOnDom(val pool: Seq[Variable], tieBreaker: VariableHeuristic)
   extends ScoredVariableHeuristic(tieBreaker) with ConstraintWeighting {
 
   def score(variable: Variable, dom: Domain, state: ProblemState): Double = {

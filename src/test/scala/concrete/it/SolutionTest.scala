@@ -59,11 +59,9 @@ deltaY = array3d(0..3, 0..3, 0..3, [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
       val (pb, vars) = prob
 
 
-      val solver = MAC(pb, pm)
+      val solver = MAC(pb, pm).get
 
-      var state = solver.heuristic.compute(solver, pb.initState.toState) //.assign(pb.variable("X"), 0)
-      // val filter = new ACC(pb, pm)
-      //      println(state)
+      var state = pb.initState.andThen(solver.init)
 
       val decisions = Seq.tabulate(80) { i =>
         val variable = cspom.variable(s"deltaK[${i + 1}]").map(vars).get
@@ -87,7 +85,7 @@ deltaY = array3d(0..3, 0..3, 0..3, [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
       }
 
 
-      assert(solver.oneRun(decisions.map((_, Assignment)), List(), state, List())._1.isSat)
+      assert(solver.oneRun(decisions.map((_, Assignment)), state, Nil, Nil, List(Seq()), -1)._1.isSat)
 
     }
 

@@ -11,7 +11,7 @@ import cspom.variable.CSPOMVariable
 import cspom.xcsp.XCSP3Parser
 
 import scala.collection.mutable
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Random, Success, Try}
 import scala.xml.Elem
 
 object XCSP3Concrete extends CSPOMRunner with App {
@@ -42,7 +42,7 @@ object XCSP3Concrete extends CSPOMRunner with App {
 
   def buildSolver(pm: ParameterManager, problem: Problem, goal: WithParam[CSPOMGoal[_]], cspom: ExpressionMap) = {
     val heuristic = readHeuristic(pm, cspom)
-    Solver(problem, pm.updated("heuristic", heuristic))
+    Solver(problem, pm.updated("heuristic", heuristic)).get
   }
 
   def loadCSPOMURL(file: URL): Try[CSPOM] = {
@@ -53,6 +53,12 @@ object XCSP3Concrete extends CSPOMRunner with App {
   }
 
   private def readHeuristic(pm: ParameterManager, cspom: ExpressionMap): ParameterManager = {
+    val rand = {
+      val seed = pm.getOrElse("randomseed", 0L) + pm.getOrElse("iteration", 0)
+      new Random(seed)
+    }
+
+
     val heuristics = if (pm.contains("ff")) {
       Seq()
     } else {
@@ -62,7 +68,7 @@ object XCSP3Concrete extends CSPOMRunner with App {
           case v: CSPOMVariable[_] => variables(v)
         }
 
-      Seq(Heuristic.default(pm, dv))
+      Seq(Heuristic.default(pm, dv, rand).get)
     }
 
     val decisionVariables: Set[Variable] = heuristics
@@ -72,11 +78,16 @@ object XCSP3Concrete extends CSPOMRunner with App {
     val completed = if (decisionVariables.size < variables.size) {
       val remainingVariables = variables.values.iterator.filterNot(decisionVariables).toArray
 
+       lazy val rand = {
+        val seed = pm.getOrElse("randomseed", 0L) + pm.getOrElse("iteration", 0)
+        new Random(seed)
+      }
+
       if (heuristics.isEmpty || heuristics.exists(_.shouldRestart)) {
-        heuristics :+ CrossHeuristic(pm, remainingVariables)
+        heuristics :+ CrossHeuristic(pm, remainingVariables, rand).get
       } else {
         /* Avoid introducing restarts if all defined heuristics do not enforce it */
-        heuristics :+ CrossHeuristic(pm, remainingVariables).copy(shouldRestart = false)
+        heuristics :+ CrossHeuristic(pm, remainingVariables, rand).get.copy(shouldRestart = false)
       }
     } else {
       heuristics

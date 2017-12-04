@@ -1,27 +1,27 @@
 /**
- * CSPFJ - CSP solving API for Java
- * Copyright (C) 2006 Julien VION
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- */
+  * CSPFJ - CSP solving API for Java
+  * Copyright (C) 2006 Julien VION
+  *
+  * This library is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Lesser General Public
+  * License as published by the Free Software Foundation; either
+  * version 2.1 of the License, or (at your option) any later version.
+  *
+  * This library is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  * Lesser General Public License for more details.
+  *
+  * You should have received a copy of the GNU Lesser General Public
+  * License along with this library; if not, write to the Free Software
+  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+  */
 
 package concrete
 
-import scala.collection.JavaConverters._
-
 import concrete.constraint.Constraint
+
+import scala.collection.JavaConverters._
 
 object Problem {
   def apply(variables: Variable*) = new Problem(variables.toArray)
@@ -29,9 +29,9 @@ object Problem {
 
 final class Problem(val variables: Array[Variable], val goal: Goal = Satisfy) {
   //require(variables.nonEmpty, "A problem with no variables makes no sense")
-  require(variables.map(_.name).distinct.size == variables.size, "Duplicates in variable names")
+  require(variables.map(_.name).distinct.length == variables.length, "Duplicates in variable names")
 
-  val nbVariables = variables.foldLeft(0) {
+  val nbVariables: Int = variables.foldLeft(0) {
     (acc, v) => v.id = acc; acc + 1
   }
 
@@ -58,6 +58,8 @@ final class Problem(val variables: Array[Variable], val goal: Goal = Satisfy) {
 
   }
 
+  override def toString: String = toString(initState.toState)
+
   def initState: Outcome = initState(variables.toSet)
 
   def initState(decisionVariables: Set[Variable]): Outcome = ProblemState(this, decisionVariables)
@@ -65,14 +67,12 @@ final class Problem(val variables: Array[Variable], val goal: Goal = Satisfy) {
   def toString(state: ProblemState) = {
     variables.map(_.toString(state)).mkString("\n") + "\n" +
       constraints.iterator
-      .map { c =>
-        c.id + ". " + (
-          if (state.entailed.hasInactiveVar(c)) c.toString(state) + " [entailed]" else c.toString(state))
-      }
-      .mkString("\n") + "\n" + stats(state)
+        .map { c =>
+          c.id + ". " + (
+            if (state.entailed.hasInactiveVar(c)) c.toString(state) + " [entailed]" else c.toString(state))
+        }
+        .mkString("\n") + "\n" + stats(state)
   }
-
-  override def toString = toString(initState.toState)
 
   def stats(state: ProblemState) = {
     val entailed = -1 //state.entailed.cardinality
@@ -83,9 +83,11 @@ final class Problem(val variables: Array[Variable], val goal: Goal = Satisfy) {
   //val maxDomainSize = variables.iterator.map(_.dom.size).max
 
   def maxCId = _nextCId - 1
+
   // def nd = variables.iterator.map(_.dom.size).sum
   def variable(name: String) = variableMap(name)
 
-  def getVariables = variables.toSeq.asJava
+  def getVariables: java.util.List[Variable] = variables.toSeq.asJava
+
 
 }

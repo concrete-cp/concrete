@@ -1,19 +1,12 @@
 package concrete.constraint.semantic
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
-
-import concrete.InsideRemoval
-import concrete.IntDomain
-import concrete.Problem
-import concrete.Singleton
-import concrete.Variable
+import concrete._
 import concrete.constraint.AdviseCount
-import concrete.Assignment
+import org.scalatest.{FlatSpec, Matchers}
 
 /**
- * @author vion
- */
+  * @author vion
+  */
 class ElementTest extends FlatSpec with Matchers {
 
   "Element constraint" should "filter correctly test case" in {
@@ -23,10 +16,11 @@ class ElementTest extends FlatSpec with Matchers {
     val v13 = new Variable("v13", IntDomain.ofSeq(59, 65))
     val c = new ElementWatch(r, i, Array(null, null, null, null, null, null, null, null, null, null, v10, null, null, v13, v13))
 
-    Seq(59 -> 13, 65 -> 10, 47 -> 13).foreach(e => c.resultWatches.put(e._1, e._2))
+    Seq(59 -> 13, 65 -> 10, 47 -> 13).foreach(e => c.resultWatches(e._2) ::= e._1)
 
-    c.watched(10) = 1
-    c.watched(13) = 2
+    c.indexWatches(10) = 65
+    c.indexWatches(13) = 59
+    c.indexWatches(14) = 59
 
     val problem = Problem(r, i, v10, v13)
     problem.addConstraint(c)
@@ -34,7 +28,7 @@ class ElementTest extends FlatSpec with Matchers {
 
     val state = problem.initState.toState
 
-    c.adviseArray(state, InsideRemoval, Array(3, 4))
+    c.eventArray(state, InsideRemoval, Array(3, 4))
     val mod = c.revise(state)
     mod.dom(r).view should contain theSameElementsAs Seq(59, 65)
     //th of ArrayBuffer({}, [47], [59], [65], [65], [65], [65], [65], [65], [65], [65], [65], [65], {59, 65}, {59, 65}, {47, 59, 65}) -> NOP
@@ -54,10 +48,14 @@ class ElementTest extends FlatSpec with Matchers {
 
     val problem = new Problem(x234 +: array)
     problem.addConstraint(c)
-    val state = problem.initState.toState
-    c.advise(state, Assignment, 18)
-    c.revise(state)
+    c.register(new AdviseCount)
+    problem.initState
+      .andThen { state =>
+        c.event(state, Assignment, 18)
+        c.revise(state)
+      }
       .andThen { mod =>
+        // This case should be a Contradiction
         fail(c.toString(mod))
       }
 

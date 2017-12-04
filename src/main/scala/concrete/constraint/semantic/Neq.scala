@@ -2,6 +2,8 @@ package concrete
 package constraint
 package semantic
 
+import bitvectors.BitVector
+
 /**
   * v0 - v1 != c
   *
@@ -12,11 +14,11 @@ package semantic
 final class Neq(v0: Variable, v1: Variable, c: Int = 0) extends Constraint(Array(v0, v1)) {
   val simpleEvaluation = 2
 
-  def init(ps: ProblemState) = ps
+  def init(ps: ProblemState): ProblemState = ps
 
   def check(t: Array[Int]): Boolean = t(0) - t(1) != c
 
-  def revise(ps: ProblemState): Outcome = {
+  def revise(ps: ProblemState, mod: BitVector): Outcome = {
     revise(ps, v0, ps.dom(v1), c)
       .andThen { ps0: ProblemState =>
         revise(ps0, v1, ps0.dom(v0), -c)
@@ -32,7 +34,7 @@ final class Neq(v0: Variable, v1: Variable, c: Int = 0) extends Constraint(Array
     }
   }
 
-  override def consistent(ps: ProblemState) = {
+  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {
     val v0dom = ps.dom(v0)
     val r = !v0dom.isAssigned || {
       val v1dom = ps.dom(v1)
@@ -47,7 +49,7 @@ final class Neq(v0: Variable, v1: Variable, c: Int = 0) extends Constraint(Array
     else ""
   }"
 
-  def advise(ps: ProblemState, event: Event, p: Int) = {
+  def advise(ps: ProblemState, event: Event, p: Int): Int = {
     // Entailment can be detected even if event is not an assigment
     //if (event <= Assignment) 2 else -1
     2
@@ -57,16 +59,16 @@ final class Neq(v0: Variable, v1: Variable, c: Int = 0) extends Constraint(Array
 class NeqC(x: Variable, y: Int) extends Constraint(x) {
   def advise(problemState: ProblemState, event: Event, pos: Int): Int = 2
 
-  def init(ps: ProblemState) = ps
+  def init(ps: ProblemState): ProblemState = ps
 
-  def check(t: Array[Int]) = t(0) != y
+  def check(t: Array[Int]): Boolean = t(0) != y
 
-  override def consistent(ps: ProblemState) = {
+  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {
     val d = ps.dom(x)
     if (!d.isAssigned || d.singleValue != y) ps else Contradiction(scope)
   }
 
-  def revise(ps: ProblemState): Outcome = {
+  def revise(ps: ProblemState, mod: BitVector): Outcome = {
     ps.removeIfPresent(x, y).entail(this)
   }
 
@@ -83,7 +85,7 @@ final class NeqReif(val r: Variable, val x: Variable, val y: Variable) extends C
 
   def init(ps: ProblemState): Outcome = ps
 
-  def revise(ps: ProblemState): Outcome = {
+  def revise(ps: ProblemState, mod: BitVector): Outcome = {
     val dx = ps.dom(x)
     val dy = ps.dom(y)
     ps.dom(r) match {

@@ -2,6 +2,7 @@ package concrete.constraint.extension
 
 import java.util
 
+import bitvectors.BitVector
 import concrete._
 import concrete.constraint.{Constraint, StatefulConstraint}
 import concrete.util.SparseSet
@@ -12,10 +13,10 @@ class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
   extends Constraint(_scope) with StatefulConstraint[SparseSet] {
 
   val simpleEvaluation: Int = math.min(Constraint.NP, scope.count(_.initDomain.size > 1))
-  // Members declared in concrete.constraint.Removals
-  val prop = mdd.edges.toDouble / scope.map(_.initDomain.size.toDouble).product
 
-  override def init(ps: ProblemState) = {
+  private val prop = mdd.edges.toDouble / scope.map(_.initDomain.size.toDouble).product
+
+  override def init(ps: ProblemState): ProblemState = {
     val max = mdd.mdd.fastIdentify() + 1
     ps.updateState(this, new SparseSet(max)) //new SparseSet(max))
   }
@@ -23,9 +24,9 @@ class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
   // Members declared in concrete.constraint.Constraint
   override def check(t: Array[Int]) = mdd.contains(t)
 
-  def advise(ps: ProblemState, event: Event, pos: Int) = (prop * doubleCardSize(ps)).toInt
+  def advise(ps: ProblemState, event: Event, pos: Int): Int = (prop * doubleCardSize(ps)).toInt
 
-  def revise(ps: ProblemState) = {
+  def revise(ps: ProblemState, mod: BitVector): Outcome = {
 
     val domains = ps.doms(scope) //Array.tabulate(arity)(p => ps.dom(scope(p)))
     val supported = Array.fill(arity)(new util.HashSet[Int]())
@@ -105,6 +106,6 @@ class MDDC(_scope: Array[Variable], val mdd: MDDRelation)
     }
   }
 
-  override def dataSize = mdd.edges
+  override def dataSize: Int = mdd.edges
 
 }

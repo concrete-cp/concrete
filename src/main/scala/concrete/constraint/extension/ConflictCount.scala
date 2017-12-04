@@ -1,17 +1,23 @@
 package concrete.constraint.extension
 
-import java.util.Arrays
-
-import scala.annotation.tailrec
+import java.util
 
 import concrete.Domain
 import concrete.constraint.TupleEnumerator
 
+import scala.annotation.tailrec
+
 trait ConflictCount
-    extends ExtensionConstraint with TupleEnumerator {
+  extends ExtensionConstraint with TupleEnumerator {
+
+  private var nbInitConflicts: Array[Array[Long]] = _
+
+  //def matrix_=(m: Matrix): Unit
+  private var offsets: Array[Int] = _
+  private var nbMaxConflicts: Array[Long] = _
+  private var applicable = true
 
   def matrix: Matrix
-  //def matrix_=(m: Matrix): Unit
 
   def supportCondition(doms: Array[Domain], position: Int): Boolean = {
     applicable && {
@@ -23,13 +29,28 @@ trait ConflictCount
     }
   }
 
-  private var nbInitConflicts: Array[Array[Long]] = _
+  final def set(tuple: Array[Int], status: Boolean): Boolean =
+    if (matrix.check(tuple) == status) {
+      false
+    }
+    else {
+      matrix.set(tuple, status)
+      if (!status) {
+        addConflict(tuple)
+      }
+      true
+    }
 
-  private var offsets: Array[Int] = _
-
-  private var nbMaxConflicts: Array[Long] = _
-
-  private var applicable = true
+  final def addConflict(tuple: Array[Int]) {
+    if (nbInitConflicts != null) {
+      for (p <- tuple.indices) {
+        nbInitConflicts(p)(tuple(p) - offsets(p)) += 1
+        if (nbInitConflicts(p)(tuple(p) - offsets(p)) > nbMaxConflicts(p)) {
+          nbMaxConflicts(p) += 1
+        }
+      }
+    }
+  }
 
   private def countConflicts(doms: Array[Domain]) {
     nbConflicts(doms) match {
@@ -51,8 +72,12 @@ trait ConflictCount
 
   @tailrec
   private def getOtherSizeR(doms: Array[Domain], position: Int, i: Int, acc: Long): Long = {
-    if (i < 0) { acc }
-    else if (i == position) { getOtherSizeR(doms, position, i - 1, acc) }
+    if (i < 0) {
+      acc
+    }
+    else if (i == position) {
+      getOtherSizeR(doms, position, i - 1, acc)
+    }
     else {
       val dSize = doms(i).size
       if (acc > Long.MaxValue / dSize) {
@@ -96,21 +121,21 @@ trait ConflictCount
             for {
               tuple <- tupleSet.relation
               p <- tuple.indices
-              if (doms(p).present(tuple(p)))
+              if doms(p).present(tuple(p))
             } {
               nbInitConflicts(p)(tuple(p) - offsets(p)) += 1
             }
 
           } else {
 
-            for (p <- nbInitConflicts.indices) Arrays.fill(nbInitConflicts(p), getOtherSize(doms, p))
+            for (p <- nbInitConflicts.indices) util.Arrays.fill(nbInitConflicts(p), getOtherSize(doms, p))
 
             for (tuple <- tupleSet.relation; p <- tuple.indices) nbInitConflicts(p)(tuple(p) - offsets(p)) -= 1
 
           }
 
         case _ =>
-          for (tuple <- tuples(doms) if (!check(tuple)); p <- tuple.indices) {
+          for (tuple <- tuples(doms) if !check(tuple); p <- tuple.indices) {
             nbInitConflicts(p)(tuple(p) - offsets(p)) += 1;
           }
       }
@@ -118,26 +143,5 @@ trait ConflictCount
       Some((offsets, nbInitConflicts))
     }
   }
-
-  final def addConflict(tuple: Array[Int]) {
-    if (nbInitConflicts != null) {
-      for (p <- tuple.indices) {
-        nbInitConflicts(p)(tuple(p) - offsets(p)) += 1
-        if (nbInitConflicts(p)(tuple(p) - offsets(p)) > nbMaxConflicts(p)) {
-          nbMaxConflicts(p) += 1
-        }
-      }
-    }
-  }
-
-  final def set(tuple: Array[Int], status: Boolean) =
-    if (matrix.check(tuple) == status) { false }
-    else {
-      matrix.set(tuple, status);
-      if (!status) {
-        addConflict(tuple);
-      }
-      true;
-    }
 
 }

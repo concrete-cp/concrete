@@ -27,12 +27,12 @@ class AtLeastTest extends FlatSpec with Matchers with Inspectors with TryValues 
     pb.addConstraint(c)
 
     val mod = pb.initState.andThen { ps =>
-      c.adviseAll(ps)
+      c.eventAll(ps)
       c.revise(ps)
     }.toState
 
     forAll(c.scope.drop(1)) {
-      case v => mod.dom(v) should be theSameInstanceAs v.initDomain
+      v => mod.dom(v) should be theSameInstanceAs v.initDomain
     }
 
     mod.dom(occ).view should contain theSameElementsAs Seq(1, 2)
@@ -57,7 +57,7 @@ class AtLeastTest extends FlatSpec with Matchers with Inspectors with TryValues 
     pb.addConstraint(c)
 
     val r = pb.initState.andThen { ps =>
-      c.adviseAll(ps)
+      c.eventAll(ps)
       c.revise(ps)
     }
     assert(!r.isState)

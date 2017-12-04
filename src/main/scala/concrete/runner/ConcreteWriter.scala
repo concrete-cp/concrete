@@ -1,5 +1,6 @@
 package concrete.runner
 
+import concrete.BuildInfo
 import cspom.StatisticsManager
 
 trait ConcreteWriter {
@@ -21,4 +22,6 @@ trait ConcreteWriter {
   def disconnect(): Unit = disconnect(end)
 
   def disconnect(status: Result): Unit
+
+  def version: String = s"${BuildInfo.version}.${BuildInfo.buildTime}"
 }

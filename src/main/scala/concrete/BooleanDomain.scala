@@ -84,6 +84,7 @@ object BooleanDomain {
     def disjoint(d: Domain) = !(d.present(0) || d.present(1))
 
     def shift(o: Int) = new IntervalDomain(o, o + 1)
+    def subsetOf(d: Domain): Boolean = d.present(0) && d.present(1)
   }
 
   case object TRUE extends BooleanDomain {
@@ -116,6 +117,7 @@ object BooleanDomain {
     def isAssigned = true
     def disjoint(d: Domain) = !d.present(1)
     def shift(o: Int) = Singleton(o + 1)
+    def subsetOf(d:Domain) = d.present(1)
   }
 
   case object FALSE extends BooleanDomain {
@@ -148,6 +150,7 @@ object BooleanDomain {
     def isAssigned = true
     def disjoint(d: Domain) = !d.present(0)
     def shift(o: Int) = Singleton(o)
+    def subsetOf(d: Domain): Boolean = d.present(0)
   }
 
   case object EMPTY extends BooleanDomain {
@@ -177,10 +180,12 @@ object BooleanDomain {
     def isAssigned = throw new UnsupportedOperationException
     def disjoint(d: Domain): Boolean = true
     def shift(o: Int) = this
+    def subsetOf(d: Domain) = true
   }
 
   def apply(constant: Boolean): BooleanDomain = if (constant) TRUE else FALSE
   def apply(): BooleanDomain = UNKNOWNBoolean
+
 }
 
 sealed trait BooleanDomain extends Domain {

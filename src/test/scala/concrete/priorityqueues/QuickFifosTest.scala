@@ -1,20 +1,19 @@
 package concrete.priorityqueues
 
+import bitvectors.BitVector
 import concrete.constraint.Constraint
+
 import scala.util.Random
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
-import concrete.ProblemState
-import concrete.Variable
-import concrete.IntDomain
-import concrete.Event
+import concrete._
 
 class QuickFifosTest extends FlatSpec with Matchers {
 
   class TestConstraint(val eval: Int, val variable: Variable) extends Constraint(variable) {
-    def init(ps: ProblemState) = ps
-    def advise(ps: ProblemState, event: Event, p: Int) = eval
-    def revise(ps: ProblemState) = ps
+    def init(ps: ProblemState): ProblemState = ps
+    def advise(ps: ProblemState, event: Event, p: Int): Int = eval
+    def revise(ps: ProblemState, mod: BitVector): Outcome = ps
     def simpleEvaluation = 1
     def check(t: Array[Int]) = true
   }

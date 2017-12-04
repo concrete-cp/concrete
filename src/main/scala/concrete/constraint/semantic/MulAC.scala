@@ -15,9 +15,9 @@ final class MulAC(val result: Variable, val v0: Variable, val v1: Variable, val 
 
   val simpleEvaluation = 2
 
-  def check(t: Array[Int]) = t(0) == (t(1) * t(2));
+  def check(t: Array[Int]): Boolean = t(0) == (t(1) * t(2))
 
-  def findSupport(doms:Array[Domain], position: Int, value: Int) =
+  def findSupport(doms:Array[Domain], position: Int, value: Int): Option[Array[Int]] =
     position match {
       case 0 => findValidTupleResult(value, doms(1), doms(2));
       case 1 => findValidTupleV(doms(0), value, doms(2), 1);
@@ -42,7 +42,7 @@ final class MulAC(val result: Variable, val v0: Variable, val v1: Variable, val 
 
   }
 
-  def findValidTupleV(result: Domain, value: Int, dom: Domain, of: Int) = {
+  def findValidTupleV(result: Domain, value: Int, dom: Domain, of: Int): Option[Array[Int]] = {
     dom
       .find { v => result.present(value * v) }
       .map { v =>
@@ -63,7 +63,7 @@ final class MulAC(val result: Variable, val v0: Variable, val v1: Variable, val 
   override def toString(ps: ProblemState) =
     s"${result.toString(ps)} =AC= ${v0.toString(ps)} * ${v1.toString(ps)}"
 
-  def advise(ps: ProblemState, event: Event, pos: Int) = {
+  def advise(ps: ProblemState, event: Event, pos: Int): Int = {
     val d0 = ps.card(result)
     val d1 = ps.card(v0)
     val d2 = ps.card(v1)

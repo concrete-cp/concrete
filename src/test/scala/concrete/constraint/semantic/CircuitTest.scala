@@ -1,14 +1,12 @@
 package concrete.constraint.semantic
 
-import concrete.IntDomain
-import concrete.Variable
-import org.scalatest.Matchers
-import org.scalatest.FlatSpec
-import concrete.Problem
-import org.scalatest.prop.PropertyChecks
+import concrete.{IntDomain, Problem, Variable}
+import concrete.constraint.AdviseCount
 import org.scalacheck.Gen
 import org.scalacheck.Prop.forAllNoShrink
+import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.prop.Checkers.check
+import org.scalatest.prop.PropertyChecks
 
 class CircuitTest extends FlatSpec with Matchers with PropertyChecks {
 
@@ -41,6 +39,7 @@ class CircuitTest extends FlatSpec with Matchers with PropertyChecks {
 
     val p = Problem(v5, v10, v15)
     p.addConstraint(c3)
+    c3.register(new AdviseCount)
     val ps = p.initState
 
     val gen = for (i <- Gen.listOfN(3, Gen.oneOf(5, 10, 15))) yield i
@@ -55,9 +54,11 @@ class CircuitTest extends FlatSpec with Matchers with PropertyChecks {
     val state = ps.assign(v5, 15)
       .assign(v10, 15)
       .assign(v15, 5)
-      .toState
-
-    assert(!c3.revise(state).isState)
+      .andThen { state =>
+        c3.eventAll(state)
+        c3.revise(state)
+      }
+    assert(!state.isState)
 
     check {
       forAllNoShrink(gen) {
@@ -66,7 +67,7 @@ class CircuitTest extends FlatSpec with Matchers with PropertyChecks {
             .assign(v10, j)
             .assign(v15, k)
             .toState
-
+          c3.eventAll(state)
           c3.revise(state).isState == Set((10, 15, 5), (15, 5, 10)).contains((i, j, k))
       }
 

@@ -128,26 +128,29 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
   override def &(d: Domain): Domain = d match {
     case id: IntervalDomain => this & id.span
     case s: Singleton => if (present(s.singleValue)) s else EmptyIntDomain
-    case bd: BitVectorDomain =>
-      val newOffset = math.min(offset, bd.offset)
-
-      val thisBV = toBitVector(newOffset)
-      val bdBV = bd.toBitVector(newOffset)
-
-      val newBV = thisBV & bdBV
-
-      val newCard = newBV.cardinality
-
-      if (newCard == size) {
-        this
-      } else if (newCard == bd.size) {
-        bd
-      } else {
-        IntDomain.ofBitVector(newOffset, newBV, newBV.cardinality)
-      }
+    case bd: BitVectorDomain => intersectBVD(bd)
     case EmptyIntDomain => EmptyIntDomain
     case b: BooleanDomain => b & this
     case _ => filter(d.present)
+  }
+
+  private def intersectBVD(bd: BitVectorDomain): IntDomain = {
+    val newOffset = math.min(offset, bd.offset)
+
+    val thisBV = toBitVector(newOffset)
+    val bdBV = bd.toBitVector(newOffset)
+
+    val newBV = thisBV & bdBV
+
+    val newCard = newBV.cardinality
+
+    if (newCard == size) {
+      this
+    } else if (newCard == bd.size) {
+      bd
+    } else {
+      IntDomain.ofBitVector(newOffset, newBV, newBV.cardinality)
+    }
   }
 
   /**
@@ -215,7 +218,7 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
         val union = toBitVector(newOffset) | bv.toBitVector(newOffset)
         IntDomain.ofBitVector(newOffset, union, union.cardinality)
 
-      case EmptyIntDomain => this
+      case EmptyIntDomain | BooleanDomain.EMPTY => this
 
       case b: BooleanDomain => this | b.span
     }
@@ -236,6 +239,16 @@ final class BitVectorDomain(val offset: Int, val bitVector: BitVector, override 
     val bv = toBitVector(offset)
     val union = bv.set(lb - offset, span.ub - offset + 1)
     IntDomain.ofBitVector(offset, union, union.cardinality)
+  }
+
+  def subsetOf(d: Domain): Boolean = {
+    d match {
+      case EmptyIntDomain | BooleanDomain.EMPTY | _:Singleton => assert(size > 1); false
+      case d: BooleanDomain => head >= d.head && last <= d.last
+      case id: IntervalDomain => (this & id.span).size == size
+      case bd: BitVectorDomain => this.intersectBVD(bd).size == size
+      case t: TreeSetDomain => last <= t.last && iterator.forall(t.present)
+    }
   }
 
   //  def intersects(that: BitVector) = bitVector.intersects(that)

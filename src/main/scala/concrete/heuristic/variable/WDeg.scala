@@ -23,7 +23,7 @@ package variable
 
 import java.util.EventObject
 
-final class WDeg(val pool: Seq[Variable], tieBreaker: VariableHeuristic, val trustCandidates: Boolean = true) extends ScoredVariableHeuristic(tieBreaker)
+final class WDeg(val pool: Seq[Variable], tieBreaker: VariableHeuristic) extends ScoredVariableHeuristic(tieBreaker)
   with ConstraintWeighting {
 
   def score(variable: Variable, dom: Domain, state: ProblemState): Double =
@@ -48,8 +48,11 @@ trait ConstraintWeighting extends ScoredVariableHeuristic {
   }
 
 
-  override def event(e: EventObject): Unit = e match {
-    case ContradictionEvent(c) => c.cause.get.incrementWeight()
-    case _ =>
+  override def event[S <: Outcome](e: EventObject, ps: S): S = {
+    if (e == ContradictionEvent) {
+      val c = ps.asInstanceOf[Contradiction]
+      c.cause.get.incrementWeight()
+    }
+    ps
   }
 }
