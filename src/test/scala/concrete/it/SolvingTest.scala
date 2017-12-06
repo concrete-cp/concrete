@@ -14,12 +14,13 @@ import cspom.flatzinc.FlatZincFastParser
 import cspom.variable.CSPOMVariable
 import cspom.xcsp.XCSP3Parser
 import cspom.{CSPOM, UNSATException}
-import org.scalatest.{FunSpec, Inspectors, Matchers, OptionValues}
+import org.scalatest._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
+import scala.concurrent.{Await, Future}
 import scala.util.{Random, Success, Try}
+
 
 class SolvingTest extends FunSpec with SolvingBehaviors {
 
@@ -181,6 +182,7 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
     //"Tpp-3-3-20-1.xml.xz" -> ((126, 1.0))
   ) // .slice(108, 109)
 
+
   private val problemBank = Seq[(String, (AnyVal, Boolean))](
     //  "celar-CELAR6-SUB2.fzn.xz" -> ((true, false)),
     "1d_rubiks_cube.small.fzn.xz" -> ((4, false)),
@@ -213,13 +215,31 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
 trait SolvingBehaviors extends Matchers with Inspectors with OptionValues with LazyLogging {
   this: FunSpec =>
 
+
+  val slow = Set(
+    "CostasArray-10.xml.xz",
+    "driverlogw-01c.xml.xz",
+    "Hanoi-04.xml.xz",
+    "Queens-0012-m1.xml.xz",
+    "OpenStacks-m1-pb-10-10-1.xml.xz",
+    "Crossword-lex-vg-4-6.xml.xz",
+    "Crossword-lex-vg-4-7.xml.xz",
+    "Crossword-lex-vg-4-8.xml.xz",
+    "CoveringArray-3-04-2-08.xml.xz",
+
+    "bdd-15-21-2-2713-79-01.xml.xz",
+    "MarketSplit-01.xml.xz",
+    "QueenAttacking-05.xml.xz",
+    "QueenAttacking-05_X2.xml.xz",
+    "Steiner3-07.xml.xz")
+
   def count(name: String, expectedResult: AnyVal, pm: ParameterManager,
             test: Double): Unit = {
     val url = getClass.getResource(name)
 
     require(url != null, "Could not find resource " + name)
 
-    it("should find solutions") {
+    it("should find solutions", Seq(SlowTest).filter(_ => slow(name)): _*) {
 
       val result: Try[_] = for {
         parser <- Try(CSPOM.autoParser(url).get)
@@ -263,7 +283,7 @@ trait SolvingBehaviors extends Matchers with Inspectors with OptionValues with L
             }
           }
 
-          concurrent.Await.result(f, 1000.seconds)
+          Await.result(f, 1000.seconds)
         }
 
       }

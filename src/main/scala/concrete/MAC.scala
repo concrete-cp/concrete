@@ -271,7 +271,7 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
       case RESTART =>
         learnNoGoods(newDH, newLS)
         val maxBT = restartStrategy.nextRun()
-        nextSolution(Seq.empty, newLS.lastOption.getOrElse(Contradiction(Seq())), Nil, Nil, List(Seq()), maxBT)
+        nextSolution(Seq.empty, newLS.lastOption.getOrElse(newCurrent), Nil, Nil, List(Seq()), maxBT)
       case SAT(sol) =>
         problem.goal match {
           case Maximize(v) =>

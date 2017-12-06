@@ -17,7 +17,7 @@ final class RandomBound(rand: Random) extends ValueHeuristic with LazyLogging {
     } else {
       dom.last
     }
-    logger.info("Random bound is $r")
+    logger.info(s"Random bound is $r")
     r
   }
 

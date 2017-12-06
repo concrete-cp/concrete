@@ -18,7 +18,8 @@ class MathTest extends FlatSpec with Matchers {
       Seq(-3, -6)
     )
 
-    println(Math.paretoMin(v))
+    Math.paretoMin(v) shouldBe Seq(Seq(-1, -7), Seq(-4, -3), Seq(-3, -6))
+
   }
 
 

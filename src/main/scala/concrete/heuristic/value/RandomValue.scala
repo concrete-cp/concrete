@@ -16,7 +16,7 @@ final class RandomValue(rand: Random) extends ValueHeuristic with LazyLogging {
     @annotation.tailrec
     def apply(i: Int, v: Int): Int = if (i <= 0) { v } else { apply(i - 1, dom.next(v)) }
     val r = apply(rand.nextInt(dom.size), dom.head)
-    logger.info("Random value is $r")
+    logger.info(s"Random value is $r")
     r
   }
 

@@ -1,9 +1,10 @@
 language: scala
 scala: 
-  - 2.12.3
+  - 2.12.4
 
 jdk:
   - oraclejdk8
 
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION coverage test coverageReport coverageAggregate codacyCoverage
+  - sbt ++$TRAVIS_SCALA_VERSION coverage "testOnly concrete.* -- -l concrete.SlowTest -oDF" coverageReport coverageAggregate codacyCoverage
+  

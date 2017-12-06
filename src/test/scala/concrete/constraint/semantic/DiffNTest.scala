@@ -1,10 +1,16 @@
 package concrete.constraint.semantic
 
-import concrete.{IntDomain, Problem, Singleton, Variable}
+import com.typesafe.scalalogging.LazyLogging
+import concrete._
 import concrete.constraint.AdviseCount
-import org.scalatest.{FlatSpec, Matchers}
+import concrete.heuristic.value.Lexico
+import cspom._
+import cspom.variable.IntVariable
+import org.scalatest.{FlatSpec, Matchers, OptionValues}
 
-class DiffNTest extends FlatSpec with Matchers {
+import scala.util.Random
+
+class DiffNTest extends FlatSpec with Matchers with OptionValues with LazyLogging {
   "diffN" should "filter" in {
     val xs = Array(Singleton(1), Singleton(2), IntDomain(0 until 15)).zipWithIndex.map {
       case (d, i) => new Variable(s"x$i", d)
@@ -37,6 +43,54 @@ class DiffNTest extends FlatSpec with Matchers {
       .toState
 
     mod.dom(xs(2)).head shouldBe 3
+
+  }
+
+  it should "run" in {
+
+    val r = new Random(0)
+
+    import CSPOM._
+    import CSPOMDriver._
+
+    val n = 20
+    val dxs = IndexedSeq.fill(n)(1 + r.nextInt(5))
+    val dys = IndexedSeq.fill(n)(1 + r.nextInt(5))
+    val cspom = CSPOM { implicit problem =>
+
+      val maxX = IntVariable(0 until 100) as "maxX"
+      val maxY = IntVariable(0 until 100) as "maxY"
+
+      ctr(maxX === maxY)
+      // val obj = (maxX * maxY) as "obj"
+
+      val xs = Seq.tabulate(n)(i => IntVariable(0 until 100) as s"x$i")
+      val ys = Seq.tabulate(n)(i => IntVariable(0 until 100) as s"y$i")
+
+      for (i <- 0 until n) {
+        ctr(xs(i) + dxs(i) <= maxX)
+        ctr(ys(i) + dys(i) <= maxY)
+      }
+
+      ctr(CSPOMConstraint('diffn_cumulative)(xs, ys, dxs, dys))
+
+      goal(CSPOMGoal.Minimize(maxX))
+    }
+    val pm = new ParameterManager().updated("heuristic.value", classOf[Lexico])
+    val solver = Solver(cspom, pm).get
+
+    val stats = new StatisticsManager
+    stats.register("solver", solver.solver)
+
+    //      for (sol <- solver.toIterable) {
+    //        for (i <- 0 until n) println((sol.get(s"x$i").get, sol.get(s"y$i").get, dxs(i), dys(i)))
+    //        println(sol.get("maxX"))
+    //        println("------")
+    //      }
+    solver.toTraversable.lastOption.value("maxX") shouldBe 14
+
+    logger.info(stats.toString)
+
 
   }
 }

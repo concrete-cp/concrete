@@ -128,8 +128,8 @@ object Math {
     new PartialOrdering[Seq[T]] {
       def tryCompare(x: Seq[T], y: Seq[T]): Option[Int] = ???
 
-      def lteq(i: Seq[T], j: Seq[T]): Boolean =
-        (i, j).zipped.forall { case (i, j) => ordering.lteq(i, j) }
+      def lteq(is: Seq[T], js: Seq[T]): Boolean =
+        (is, js).zipped.forall { case (i, j) => ordering.lteq(i, j) }
     }
 
 }
