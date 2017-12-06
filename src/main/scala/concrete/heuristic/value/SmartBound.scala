@@ -12,7 +12,7 @@ final class SmartBound() extends ValueHeuristic with LazyLogging {
   override def selectIndex(variable: Variable, dom: Domain): Int = {
 
     val r = if (dom.isInstanceOf[BooleanDomain]) dom.last else dom.head
-    logger.info("Smart bound is $r")
+    logger.info(s"Smart bound is $r")
     r
   }
 

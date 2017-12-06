@@ -2,14 +2,11 @@ package concrete
 
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
-import org.scalatest.Tag
 import concrete.constraint.linear.Eq
 import concrete.constraint.semantic.AllDifferentBC
 import concrete.constraint.semantic.Neq
 import concrete.heuristic.value.MedValue
 import cspom.StatisticsManager
-
-object SlowTest extends Tag("concrete.SlowTest")
 
 class TestMAC extends FlatSpec with Matchers {
 
@@ -55,8 +52,8 @@ class TestMAC extends FlatSpec with Matchers {
   val sols = List(
     4 -> 2,
     8 -> 92,
-//    9 -> 352,
-//    10 -> 724,
+    9 -> 352,
+    10 -> 724,
     12 -> 14200
     //13 -> 73712 //,
     // 14 -> 365596)

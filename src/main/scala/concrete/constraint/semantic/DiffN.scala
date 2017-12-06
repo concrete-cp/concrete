@@ -5,12 +5,8 @@ package semantic
 import bitvectors.BitVector
 import com.github.davidmoten.rtree.RTree
 import com.github.davidmoten.rtree.geometry.{Geometries, Geometry, Rectangle}
-import concrete.heuristic.value.Lexico
 import concrete.util.Interval
 import cspom._
-import cspom.variable.IntVariable
-
-import scala.util.Random
 
 class IntRectangle(
                     val x1: Int,
@@ -61,6 +57,11 @@ case class RectangleBounds(minDx: Int, minDy: Int, minX: Int, maxX: Int, minY: I
   def compare(t: RectangleBounds): Int = java.lang.Double.compare(coef, t.coef)
 }
 
+object DiffN {
+  @Statistic
+  var treeQueries: Long = 0L
+}
+
 trait DiffNChecker {
 
   def nbRectangles: Int
@@ -84,6 +85,8 @@ class DiffNSpaceChecker(xs: Array[Variable], ys: Array[Variable], dxs: Array[Var
   assert(ys.length == nbRectangles && dxs.length == nbRectangles && dys.length == nbRectangles)
 
   def advise(ps: ProblemState, event: Event, pos: Int): Int = if (event <= BoundRemoval) nbRectangles else -1
+
+  def nbRectangles: Int = xs.length
 
   def init(ps: ProblemState): Outcome = ps
 
@@ -122,8 +125,6 @@ class DiffNSpaceChecker(xs: Array[Variable], ys: Array[Variable], dxs: Array[Var
     ps
 
   }
-
-  def nbRectangles: Int = xs.length
 
   def simpleEvaluation: Int = 2
 
@@ -401,53 +402,5 @@ class DiffN(xs: Array[Variable], ys: Array[Variable], dxs: Array[Variable], dys:
   }
 
   def simpleEvaluation: Int = ???
-
-}
-
-object DiffN extends App {
-  val r = new Random(0)
-
-  import CSPOM._
-  import CSPOMDriver._
-
-  val n = 20
-  val dxs = IndexedSeq.fill(n)(1 + r.nextInt(5))
-  val dys = IndexedSeq.fill(n)(1 + r.nextInt(5))
-  val cspom = CSPOM { implicit problem =>
-
-    val maxX = IntVariable(0 until 100) as "maxX"
-    val maxY = IntVariable(0 until 100) as "maxY"
-
-    ctr(maxX === maxY)
-    // val obj = (maxX * maxY) as "obj"
-
-    val xs = Seq.tabulate(n)(i => IntVariable(0 until 100) as s"x$i")
-    val ys = Seq.tabulate(n)(i => IntVariable(0 until 100) as s"y$i")
-
-    for (i <- 0 until n) {
-      ctr(xs(i) + dxs(i) <= maxX)
-      ctr(ys(i) + dys(i) <= maxY)
-    }
-
-    ctr(CSPOMConstraint('diffn_cumulative)(xs, ys, dxs, dys))
-
-    goal(CSPOMGoal.Minimize(maxX))
-  }
-  val pm = new ParameterManager()
-    .updated("heuristic.value", classOf[Lexico])
-  val solver = Solver(cspom, pm).get
-
-  val stats = new StatisticsManager
-
-  for (sol <- solver.toIterable) {
-    for (i <- 0 until n) println((sol.get(s"x$i").get, sol.get(s"y$i").get, dxs(i), dys(i)))
-    println(sol.get("maxX"))
-    println("------")
-  }
-  // TODO: put this in tests
-  @Statistic
-  var treeQueries: Long = 0L
-  stats.register("solver", solver.solver)
-  println(stats)
 
 }

@@ -43,10 +43,10 @@ scalacOptions ++= Seq(
 enablePlugins(JavaAppPackaging)
 enablePlugins(DebianPlugin)
 
-mainClass in Compile := Some("concrete.runner.XCSP3Concrete")
+cancelable in Global := true
 
 logBuffered in Test := false
-testOptions in Test += Tests.Argument("-oDF")
+// testOptions in Test += Tests.Argument("-oDF")
 fork in Test := true
 
 publishTo :=  {

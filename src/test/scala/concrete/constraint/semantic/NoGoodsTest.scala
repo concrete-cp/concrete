@@ -25,7 +25,7 @@ class NoGoodsTest extends FlatSpec with Matchers {
     constraint.event(state, Assignment, 1)
     val m2 = constraint.revise(state.assign(v2, 1))
 
-    println(m2)
+    // println(m2)
 
     assert(!m2.dom(v1).present(1))
 
