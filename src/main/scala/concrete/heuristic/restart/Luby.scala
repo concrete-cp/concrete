@@ -33,8 +33,8 @@ class Luby(params: ParameterManager, problem: Problem) extends RestartStrategy {
 
   def reset(): Unit = { nbRestart = 0 }
 
-  def nextRun(): Int = {
+  def nextRun(): Option[Int] = {
     nbRestart += 1
-    getLasVegasCoef(nbRestart) * scaleFactor
+    Some(getLasVegasCoef(nbRestart) * scaleFactor)
   }
 }

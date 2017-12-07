@@ -51,8 +51,8 @@ final class ParameterManager(
 
   def getRaw(name: String): Option[Any] = {
     val got = parameters.get(name)
-    if (got.isDefined) {
-      logger.info(s"$name = $got")
+    for (g <- got) {
+      logger.info(s"$name = $g")
       used += name
     }
     got

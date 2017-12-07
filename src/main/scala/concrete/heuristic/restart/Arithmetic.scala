@@ -10,12 +10,12 @@ class Arithmetic(params: ParameterManager, problem: Problem) extends RestartStra
 
   var maxBacktracks: Int = base
 
-  def reset() = maxBacktracks = base
+  def reset(): Unit = maxBacktracks = base
 
-  def nextRun() = {
+  def nextRun(): Option[Int] = {
     val bt = maxBacktracks
     maxBacktracks += growth
-    bt
+    Some(bt)
   }
 
 }

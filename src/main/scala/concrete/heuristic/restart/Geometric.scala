@@ -10,12 +10,12 @@ class Geometric(params: ParameterManager, problem: Problem) extends RestartStrat
 
   var maxBacktracks: Int = base
 
-  def reset() = maxBacktracks = base
+  def reset(): Unit = maxBacktracks = base
 
-  def nextRun() = {
+  def nextRun(): Option[Int] = {
     val bt = maxBacktracks
     maxBacktracks = (maxBacktracks * btGrowth).toInt
-    bt
+    Some(bt)
   }
 
 }

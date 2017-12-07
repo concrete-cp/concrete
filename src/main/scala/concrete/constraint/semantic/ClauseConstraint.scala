@@ -4,6 +4,17 @@ package semantic
 
 import bitvectors.BitVector
 import concrete.BooleanDomain._
+import concrete.cluster.Arc
+
+case class Clause(positive: Seq[Variable], negative: Seq[Variable]) extends Arc {
+  require(vars.forall(v => v.initDomain.isInstanceOf[BooleanDomain]), s"some of ${vars.map(v => s"$v ${v.initDomain}")} are not boolean")
+
+  def size: Int = positive.size + negative.size
+
+  def vars: Seq[Variable] = positive ++ negative
+
+  override def toString = s"Clause(${positive.mkString(", ")}${if (positive.nonEmpty && negative.nonEmpty) ", " else ""}${negative.map("-" + _).mkString(", ")})"
+}
 
 final class ClauseConstraint(positive: Array[Variable], negative: Array[Variable]) extends Constraint(positive ++ negative: _*) {
 

@@ -66,7 +66,6 @@ class NoGoods(scope: Array[Variable]) extends Constraint(scope) {
     }
 
     for (ng <- uninitialized) {
-      assert(nogoods(ng))
       ng.findWatch(state) match {
         case None =>
           logger.warn(s"Unsat nogood ${ng.toString(state)}")

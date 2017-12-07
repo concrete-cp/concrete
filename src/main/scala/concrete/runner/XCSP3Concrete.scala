@@ -25,7 +25,7 @@ object XCSP3Concrete extends CSPOMRunner with App {
   }
 
   def loadCSPOM(pm: ParameterManager, args: Seq[String]): Try[CSPOM] = {
-    val List(fn) = args
+    val Seq(fn) = args
     file = CSPOM.file2url(fn)
 
     loadCSPOMURL(file).flatMap { cspom =>
@@ -52,7 +52,7 @@ object XCSP3Concrete extends CSPOMRunner with App {
       }
   }
 
-  private def readHeuristic(pm: ParameterManager, cspom: ExpressionMap): ParameterManager = {
+  private def readHeuristic(pm: ParameterManager, cspom: ExpressionMap): Heuristic = {
     val rand = {
       val seed = pm.getOrElse("randomseed", 0L) + pm.getOrElse("iteration", 0)
       new Random(seed)
@@ -95,13 +95,12 @@ object XCSP3Concrete extends CSPOMRunner with App {
 
     val heuristic = completed match {
       case Seq(h) => h
-      case m => new SeqHeuristic(m.toList)
+      case m => new SeqHeuristic(m)
     }
 
     logger.info(heuristic.toString + ", should restart: " + heuristic.shouldRestart)
 
-    pm.updated("heuristic", heuristic)
-
+    heuristic
   }
 
   def description(args: Seq[String]) =

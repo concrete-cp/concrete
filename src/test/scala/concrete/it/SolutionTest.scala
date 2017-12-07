@@ -85,7 +85,7 @@ deltaY = array3d(0..3, 0..3, 0..3, [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
       }
 
 
-      assert(solver.oneRun(decisions.map((_, Assignment)), state, Nil, Nil, List(Seq()), -1)._1.isSat)
+      assert(solver.oneRun(decisions.map((_, Assignment)), Stack(state), None)._1.isSat)
 
     }
 

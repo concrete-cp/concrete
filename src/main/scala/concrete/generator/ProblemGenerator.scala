@@ -8,7 +8,7 @@ import java.security.InvalidParameterException
 import com.typesafe.scalalogging.LazyLogging
 import concrete.constraint.ReifiedConstraint
 import concrete.constraint.linear.{SumEQ, SumLE}
-import concrete.constraint.semantic.{Clause, PseudoBoolean, SAT}
+import concrete.constraint.semantic.{Clause}
 import cspom._
 import cspom.util.Finite
 import cspom.variable._
@@ -32,34 +32,11 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
 
       val problem = new Problem(variables.values.toArray.sortBy(_.name), goal(cspom.goal, variables))
 
-      var clauses: Seq[Clause] = Seq.empty
-      var pb: Seq[PseudoBoolean] = Seq.empty
-
       val constraints = cspom.constraints.flatMap {
-        case c if c.function == 'clause && pm.contains("sat4clauses") =>
-          val Seq(pos: CSPOMSeq[_], neg: CSPOMSeq[_]) = c.arguments
-          if (!pos.exists(_.isTrue) && !neg.exists(_.isFalse)) {
-            val posConc = pos.map { v => Generator.cspom2concreteVar(v)(variables) }.toArray
-            val negConc = neg.map { v => Generator.cspom2concreteVar(v)(variables) }.toArray
-            clauses +:= Clause(posConc, negConc)
-          }
-          Seq()
-
-        case constraint if isBoolean(constraint) && constraint.nonReified && pm.contains("sat4pb") =>
-          val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
-
-          if (vars.nonEmpty) {
-            val solverVariables = vars.map(Generator.cspom2concreteVar(_)(variables))
-            pb +:= new PseudoBoolean(solverVariables, varParams, mode, constant)
-          }
-          Seq()
-
-        case c =>
-          gm.generate(c, variables, cspom).get
+        c => gm.generate(c, variables, cspom).get
       }
 
       problem.addConstraints(constraints.toSeq)
-      problem.addConstraints(SAT(clauses, pb, pm))
 
       logger.info(problem.toString(problem.initState.toState).split("\n").map(l => s"% $l").mkString("\n"))
 
@@ -77,7 +54,7 @@ final class ProblemGenerator(val pm: ParameterManager = new ParameterManager()) 
     result
   }
 
-  def isBoolean(constraint: CSPOMConstraint[_]) = {
+  def isBoolean(constraint: CSPOMConstraint[_]): Boolean = {
     //    if (constraint.function == 'sum) {
     //      val (vars, varParams, constant, mode) = SumGenerator.readCSPOM(constraint)
     //      println(vars)

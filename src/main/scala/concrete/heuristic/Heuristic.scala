@@ -44,4 +44,4 @@ case class NewSolutionEvent(sol: Map[Variable, Int]) extends EventObject(sol)
 
 case object ContradictionEvent extends EventObject(None)
 
-case class AssignmentEvent(variable: Variable) extends EventObject(variable)
+case class AssignmentEvent(variable: Variable*) extends EventObject(variable)

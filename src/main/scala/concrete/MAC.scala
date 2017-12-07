@@ -79,11 +79,8 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
   }
   @Statistic
   var nbRuns = 0
-  var currentLeftStack: List[ProblemState] = Nil
-  var currentRightStack: List[Decision] = Nil
-  var currentDecisionHistory: List[Seq[Decision]] = List(Seq())
-  var currentHeadState: Outcome = problem.initState.andThen(init)
-  var currentBTLeft: Int = _
+  var currentStack: Stack = Stack(problem.initState.andThen(init))
+  var currentBTLeft: Option[Int] = None
 
   @Statistic
   var searchCpu: Quantity[Double] = Quantity(0.0, "ms")
@@ -154,69 +151,67 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
   @tailrec
   def mac(
            modified: Seq[(Variable, Event)],
-           current: Outcome,
-           leftStack: List[ProblemState],
-           rightStack: List[Decision],
-           decisionHistory: List[Seq[Decision]],
-           maxBacktracks: Int, nbAssignments: Int): (SolverResult, Outcome, List[ProblemState], List[Decision], List[Seq[Decision]], Int, Int) = {
+           stack: Stack,
+           maxBacktracks: Option[Int], nbAssignments: Int): (SolverResult, Stack, Option[Int], Int) = {
 
-    if (Thread.interrupted()) {
-      (UNKNOWNResult(new TimeoutException()), current, leftStack, rightStack, decisionHistory, maxBacktracks, nbAssignments)
-    } else if (maxBacktracks == 0) {
-      (RESTART, current, leftStack, rightStack, decisionHistory, maxBacktracks, nbAssignments)
-    } else {
 
-      val filtering = current.andThen(s => filter.reduceAfter(modified, optimConstraint, s))
+    val filtering = stack.current.andThen(s => filter.reduceAfter(modified, optimConstraint, s))
 
-      filtering match {
+    filtering match {
 
-        case c: Contradiction =>
-          if (rightStack.isEmpty) {
-            (UNSAT, c, Nil, Nil, Nil, maxBacktracks, nbAssignments)
-          } else {
-            val (updated, modified, newLS, newRS, history) = backtrack(leftStack, rightStack, decisionHistory)
-            logger.info(s"$maxBacktracks bt left")
+      case c: Contradiction =>
+        if (stack.noRightStack) {
+          (UNSAT, Stack(c), maxBacktracks, nbAssignments)
+        } else {
 
-            // rightStack state replaces head state
-            mac(modified, updated, newLS, newRS, history, maxBacktracks - 1, nbAssignments)
-          }
+          val (newStack, modified) = stack.backtrackAndApplyRightDecision
 
-        case fs: ProblemState =>
-          val futureVariables = fs.getData[Seq[Variable]](this)
+          logger.info(s"${newStack.size}: ${stack.rightStack.head.toString(stack.leftStack.head)}")
 
-          val (assigned, candidates) = futureVariables.partition(v => fs.dom(v).isAssigned)
+          logger.info(s"$maxBacktracks bt left")
 
-          val filteredState = assigned.foldLeft(fs.updateData(this, candidates)) {
-            case (s, v) => heuristic.event(AssignmentEvent(v), s)
-          }
+          // rightStack state replaces head state
+          mac(modified, newStack, maxBacktracks.map(_ - 1), nbAssignments)
+        }
 
-          heuristic.branch(filteredState, candidates)
-            .orElse {
-              // Find unassigned variables
+      case fs if Thread.interrupted() => (UNKNOWNResult(new TimeoutException()), stack.copy(current = fs), maxBacktracks, nbAssignments)
 
-              problem.variables.find(v => !filteredState.dom(v).isAssigned)
-                .map { v =>
-                  logger.info(s"Assigning unassigned variable $v")
-                  finishAssignments.branch(v, filteredState.dom(v), filteredState)
-                }
-            } match {
-            case None =>
-              require(problem.variables.forall(v => filteredState.dom(v).isAssigned),
-                s"Unassigned variables in:\n${problem.toString(filteredState)}")
+      case fs if maxBacktracks.exists(_ <= 0) =>
+        (RESTART, stack.copy(current = fs), maxBacktracks, nbAssignments)
 
-              controlSolution(filteredState)
+      case fs: ProblemState =>
+        val futureVariables = fs.getData[Seq[Variable]](this)
 
-              (SAT(extractSolution(filteredState)), filteredState, leftStack, rightStack, decisionHistory, maxBacktracks, nbAssignments)
-            case Some((b1, b2)) =>
-              logger.info(s"${leftStack.length}: ${b1.toString(filteredState)}")
+        val (assigned, candidates) = futureVariables.partition(v => fs.dom(v).isAssigned)
 
-              val history = Seq(b1) :: decisionHistory
+        val filteredState =
+          heuristic.event(AssignmentEvent(assigned: _*), fs).updateData(this, candidates)
 
-              val (updated, modified) = b1(filteredState)
+        heuristic.branch(filteredState, candidates)
+          .orElse {
+            // Find unassigned variables
 
-              mac(modified, updated, filteredState :: leftStack, b2 :: rightStack, history, maxBacktracks, nbAssignments + 1)
-          }
-      }
+            problem.variables.find(v => !filteredState.dom(v).isAssigned)
+              .map { v =>
+                logger.info(s"Assigning unassigned variable $v")
+                finishAssignments.branch(v, filteredState.dom(v), filteredState)
+              }
+          } match {
+          case None =>
+            require(problem.variables.forall(v => filteredState.dom(v).isAssigned),
+              s"Unassigned variables in:\n${problem.toString(filteredState)}")
+
+            controlSolution(filteredState)
+
+            (SAT(extractSolution(filteredState)), stack.copy(current = filteredState), maxBacktracks, nbAssignments)
+          case Some((b1, b2)) =>
+            logger.info(s"${stack.size}: ${b1.toString(filteredState)}")
+
+            val (newStack, modified) = stack.push(filteredState, b1, b2)
+            mac(modified, newStack, maxBacktracks, nbAssignments + 1)
+        }
+
+      
     }
   }
 
@@ -227,12 +222,9 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
   }
 
   def oneRun(modified: Seq[(Variable, Event)],
-             current: Outcome,
-             leftStack: List[ProblemState],
-             rightStack: List[Decision],
-             decisionHistory: List[Seq[Decision]],
-             maxBacktracks: Int
-            ): (SolverResult, Outcome, List[ProblemState], List[Decision], List[Seq[Decision]], Int) = {
+             stack: Stack,
+             maxBacktracks: Option[Int]
+            ): (SolverResult, Stack, Option[Int]) = {
     nbRuns += 1
 
     logger.info(s"MAC with $maxBacktracks bt")
@@ -241,37 +233,33 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
 
     val (macResult, macTime) =
       StatisticsManager.measure(
-        mac(modified, current, leftStack, rightStack, decisionHistory, maxBacktracks, nbAssignments),
+        mac(modified, stack, maxBacktracks, nbAssignments),
         searchMeasurer)
 
     searchCpu += macTime
     running = false
 
-    val (sol, newHS, newLS, newRS, newDH, btLeft, newAss) = macResult.get
-
+    val (sol, newStack, btLeft, newAss) = macResult.get
 
     logger.info(s"Took $macTime (${(newAss - nbAssignments) * 1000 / macTime.value}  aps)")
 
     nbAssignments = newAss
-    (sol, newHS, newLS, newRS, newDH, btLeft)
+    (sol, newStack, btLeft)
   }
 
   @tailrec
   def nextSolution(
                     modified: Seq[(Variable, Event)],
-                    current: Outcome,
-                    leftStack: List[ProblemState],
-                    rightStack: List[Decision],
-                    decisionHistory: List[Seq[Decision]],
-                    maxBacktracks: Int): (SolverResult, Outcome, List[ProblemState], List[Decision], List[Seq[Decision]], Int) = {
+                    stack: Stack,
+                    maxBacktracks: Option[Int]): (SolverResult, Stack, Option[Int]) = {
 
-    val (result, newCurrent, newLS, newRS, newDH, btLeft) = oneRun(modified, current, leftStack, rightStack, decisionHistory, maxBacktracks)
+    val (result, newStack, btLeft) = oneRun(modified, stack, maxBacktracks)
 
     result match {
       case RESTART =>
-        learnNoGoods(newDH, newLS)
+        learnNoGoods(newStack.decisionHistory, newStack.leftStack)
         val maxBT = restartStrategy.nextRun()
-        nextSolution(Seq.empty, newLS.lastOption.getOrElse(newCurrent), Nil, Nil, List(Seq()), maxBT)
+        nextSolution(Seq.empty, newStack.last, maxBT)
       case SAT(sol) =>
         problem.goal match {
           case Maximize(v) =>
@@ -298,9 +286,9 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
         assert(problem.constraints.forall(_.positionInVariable.forall(_ >= 0)))
 
         // Change current state to Contradiction so that next run will begin by a backtrack
-        (result, Contradiction(Seq()), newLS, newRS, newDH, btLeft)
+        (result, newStack.copy(current = Contradiction(Seq())), btLeft)
       case _ =>
-        (result, newCurrent, newLS, newRS, newDH, btLeft)
+        (result, newStack, btLeft)
     }
   }
 
@@ -311,52 +299,40 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
     val sol = if (restart) {
       logger.info("RESTART")
       restart = false
-      currentLeftStack.lastOption.getOrElse(currentHeadState)
-        .andThen(ps => ps.padConstraints(problem.constraints, problem.maxCId))
+      currentStack.last.padConstraints(problem).current
         .andThen { ps =>
           if (firstRun) {
             firstRun = false
             preprocess(filter, ps)
           } else {
-            filter.reduceAll(ps)
+            assert(ps eq filter.reduceAll(ps))
+            ps
           }
         }
         .map { state =>
           val bt = restartStrategy.nextRun()
-          val (sol, headState, leftStack, rightStack, decisionHistory, btLeft) = nextSolution(Seq.empty, state, Nil, Nil, List(Seq()), bt)
+          val (sol, stack, btLeft) = nextSolution(Seq.empty, Stack(state), bt)
           currentBTLeft = btLeft
-          currentLeftStack = leftStack
-          currentRightStack = rightStack
-          currentDecisionHistory = decisionHistory
-          currentHeadState = headState
+          currentStack = stack
           logger.info(s"Search ended with $sol")
           sol
         }
         .getOrElse(UNSAT)
 
-    } else if (currentLeftStack.isEmpty) {
+    } else if (currentStack.noRightStack) {
       UNSAT
     } else {
       if (problem.goal == Satisfy) {
-        // restartStrategy = new NoRestarts(params, problem)
-        currentBTLeft = -1
+        // Stop restarts to enumerate solutions
+        currentBTLeft = None
       }
-
 
       // extends state stack for new constraints
-      val extendedStack: List[ProblemState] = currentLeftStack.map { s: ProblemState =>
-        s.padConstraints(problem.constraints, problem.maxCId).toState
-      }
+      val extendedStack = currentStack.padConstraints(problem)
 
-      /* Contradiction will trigger a backtrack */
-
-      val (sol, headState, leftStack, rightStack, decisionHistory, btLeft) =
-        nextSolution(Seq.empty, currentHeadState, extendedStack, currentRightStack, currentDecisionHistory, currentBTLeft)
+      val (sol, stack, btLeft) = nextSolution(Seq.empty, extendedStack, currentBTLeft)
       currentBTLeft = btLeft
-      currentLeftStack = leftStack
-      currentRightStack = rightStack
-      currentDecisionHistory = decisionHistory
-      currentHeadState = headState
+      currentStack = stack
       sol
     }
     for (s <- sol.getInt) heuristic.event(NewSolutionEvent(s), null)
@@ -380,22 +356,6 @@ final class MAC(prob: Problem, params: ParameterManager, val heuristic: Heuristi
       .andThen(heuristic.compute(this, _))
   }
 
-  private def backtrack(leftStack: List[ProblemState], rightStack: List[Decision], decisionHistory: List[Seq[Decision]]) = {
-
-    val backtrackTo = rightStack.head
-
-    val stateThen :: remainingStack = leftStack
-
-    val decisionsThen :: remainingDecisions = decisionHistory.tail
-
-    val history = (backtrackTo +: decisionsThen) :: remainingDecisions
-
-    val (updated, modified) = backtrackTo(stateThen)
-
-    logger.info(s"${rightStack.tail.length}: ${backtrackTo.toString(stateThen)}")
-
-    (updated, modified, remainingStack, rightStack.tail, history)
-  }
 
   @elidable(elidable.ASSERTION)
   private def controlSolution(ps: ProblemState): Unit = {

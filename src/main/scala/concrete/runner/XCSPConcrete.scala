@@ -17,7 +17,7 @@ object XCSPConcrete extends CSPOMRunner with App {
   var declaredVariables: Seq[String] = _
 
   def loadCSPOM(pm: ParameterManager, args: Seq[String]): Try[CSPOM] = {
-    val List(fn) = args
+    val Seq(fn) = args
     file = CSPOM.file2url(fn)
     CSPOM.load(file, XCSPParser)
       .flatMap { cspom =>

@@ -1,6 +1,6 @@
 package concrete.heuristic.restart
 
 trait RestartStrategy {
-  def nextRun(): Int
+  def nextRun(): Option[Int]
   def reset(): Unit
 }
