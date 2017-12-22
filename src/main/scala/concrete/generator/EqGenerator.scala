@@ -2,12 +2,11 @@ package concrete
 package generator;
 
 import com.typesafe.scalalogging.LazyLogging
-
 import Generator.cspom2concrete1D
 import concrete.constraint.Constraint
 import concrete.constraint.linear.EqCReif
 import concrete.constraint.linear.EqReif
-import concrete.constraint.semantic.Neq
+import concrete.constraint.semantic.{ClauseConstraint, Neq}
 import cspom.CSPOMConstraint
 
 final class EqGenerator(pm: ParameterManager) extends Generator with LazyLogging {
@@ -30,8 +29,14 @@ final class EqGenerator(pm: ParameterManager) extends Generator with LazyLogging
 
     (a, b) match {
       case (Const(a: Int), Const(b: Int)) =>
-        require(result.initDomain == BooleanDomain(a == b), s"$funcConstraint is inconsistent")
-        Seq()
+
+        if (result.initDomain == BooleanDomain(a == b)) {
+          Seq()
+        } else if (a == b) {
+          Seq(new ClauseConstraint(Array(result), Array()))
+        } else {
+          Seq(new ClauseConstraint(Array(), Array(result)))
+        }
       case (Const(a: Int), Var(b)) => Seq(new EqCReif(result, b, a))
       case (Var(a), Const(b: Int)) => Seq(new EqCReif(result, a, b))
       case (Var(a), Var(b)) => Seq(new EqReif(result, a, b))

@@ -10,7 +10,7 @@ import concrete.runner.FZConcrete
 import cspom.CSPOM
 import cspom.compiler.CSPOMCompiler
 
-import scala.util.Random
+import scala.util.{Random, Success}
 
 class SolutionTest extends FlatSpec {
 
@@ -50,13 +50,14 @@ deltaY = array3d(0..3, 0..3, 0..3, [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
     //    };
 
     val status = for {
-      cspom <- FZConcrete.loadCSPOMURL(pm, classOf[SolutionTest].getResource("step1_aes-kb128_n5_obj16.fzn.xz"))
+      cspom0 <- FZConcrete.loadCSPOMURL(pm, classOf[SolutionTest].getResource("step1_aes-kb128_n5_obj16.fzn.xz"))
+      cspom <- CSPOMCompiler.compile(cspom0, ConcretePatterns(pm))
       prob <- new ProblemGenerator(pm).generate(cspom)
     } yield {
       val (pb, vars) = prob
 
 
-      val solver = MAC(pb, pm).get
+      val solver: MAC = MAC(pb, pm).get
 
       var state = pb.initState.andThen(solver.init)
 
