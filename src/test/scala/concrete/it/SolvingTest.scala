@@ -236,7 +236,9 @@ trait SolvingBehaviors extends Matchers with Inspectors with OptionValues with L
     "SocialGolfers-5-4-3-cp.xml.xz",
     "PrizeCollecting-15-3-5-0.xml.xz",
     "OpenStacks-m2-pb-10-10-1.xml.xz",
-    "Cabinet-5561_X2.xml.xz")
+    "Cabinet-5561_X2.xml.xz",
+    "Pb-mps-v2-20-10-bm23.xml.xz"
+  )
 
   def count(name: String, expectedResult: AnyVal, pm: ParameterManager,
             test: Double): Unit = {
