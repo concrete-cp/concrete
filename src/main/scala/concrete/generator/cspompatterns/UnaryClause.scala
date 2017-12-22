@@ -1,15 +1,13 @@
 package concrete.generator.cspompatterns
 
-import cspom.CSPOM
-import cspom.CSPOMConstraint
+import cspom.{CSPOM, CSPOMConstraint}
 import cspom.compiler.ConstraintCompiler
-import cspom.variable.CSPOMConstant
-import cspom.variable.CSPOMSeq
-import cspom.variable.CSPOMExpression
+import cspom.compiler.ConstraintCompiler._
+import cspom.variable.{CSPOMConstant, CSPOMExpression, CSPOMSeq}
 
 /**
- * Unary disjunction transformed to equality
- */
+  * Unary disjunction transformed to equality
+  */
 object UnaryClause extends ConstraintCompiler {
 
   type A = (Boolean, CSPOMExpression[_])

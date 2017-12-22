@@ -8,7 +8,7 @@ import cspom.variable.CSPOMConstant
 import cspom.variable.CSPOMExpression
 import cspom.variable.CSPOMSeq
 import cspom.variable.IntExpression
-
+import ConstraintCompiler._
 /**
  * If constraint is the sub() constraint, converts a=sub(y,z), x=abs(a) to
  * x=absdiff(y,z). No other constraint may imply the auxiliary constraint a.

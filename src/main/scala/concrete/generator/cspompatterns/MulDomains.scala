@@ -1,11 +1,12 @@
 package concrete.generator.cspompatterns
 
 import cspom.CSPOMConstraint
-import cspom.compiler.VariableCompiler
+import cspom.compiler.{ConstraintCompiler, VariableCompiler}
 import cspom.util.IntervalsArithmetic.Arithmetics
 import cspom.variable.IntExpression.implicits.ranges
 import cspom.variable.IntExpression
 import cspom.variable.SimpleExpression
+import ConstraintCompiler._
 
 object MulDomains extends VariableCompiler('mul) {
 

@@ -1,7 +1,7 @@
 package concrete.generator.cspompatterns
 
 import concrete.SumBuilder
-import cspom.compiler.{ConstraintCompilerNoData, Delta}
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta}
 import cspom.variable.{CSPOMConstant, CSPOMExpression, CSPOMSeq, IntExpression}
 import cspom.{CSPOM, CSPOMConstraint}
 
@@ -31,7 +31,7 @@ object GCC extends ConstraintCompilerNoData {
           Seq(implied)
         }
 
-        replaceCtr(c, constraints ++ closedCons, p)
+        ConstraintCompiler.replaceCtr(c, constraints ++ closedCons, p)
 
       case 'gccMinMax =>
         val CSPOMConstraint(_, _, Seq(vars: CSPOMSeq[_], CSPOMConstant(closed: Boolean), values: CSPOMSeq[_], IntExpression.simpleSeq(occMin), IntExpression.simpleSeq(occMax)), params) = c
@@ -54,7 +54,7 @@ object GCC extends ConstraintCompilerNoData {
           Seq()
         }
 
-        replaceCtr(c, constraints ++ closedCons, p)
+        ConstraintCompiler.replaceCtr(c, constraints ++ closedCons, p)
     }
 
   }

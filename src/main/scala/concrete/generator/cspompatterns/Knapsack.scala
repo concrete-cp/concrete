@@ -2,7 +2,7 @@ package concrete.generator.cspompatterns
 
 import concrete.CSPOMDriver
 import cspom.CSPOM.SeqOperations
-import cspom.compiler.ConstraintCompilerNoData
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData}
 import cspom.extension.MDDRelation
 import cspom.util.{ContiguousIntRangeSet, FiniteIntInterval, Infinitable, RangeSet}
 import cspom.variable.IntExpression.implicits.iterable
@@ -35,7 +35,7 @@ final object Knapsack extends ConstraintCompilerNoData {
       }
 
 
-    replaceCtr(constraint,
+    ConstraintCompiler.replaceCtr(constraint,
       newConstraints,
       problem)
   }

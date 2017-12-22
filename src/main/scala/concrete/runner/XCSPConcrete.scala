@@ -2,8 +2,8 @@ package concrete.runner
 
 import java.net.URL
 
+import concrete.ParameterManager
 import concrete.generator.cspompatterns.XCSPPatterns
-import concrete.{ParameterManager, Problem, Solver}
 import cspom.compiler.CSPOMCompiler
 import cspom.xcsp.XCSPParser
 import cspom.{CSPOM, CSPOMGoal, ExpressionMap, WithParam}
@@ -46,8 +46,8 @@ object XCSPConcrete extends CSPOMRunner with App {
   }
 
 
-  def buildSolver(pm: ParameterManager, problem: Problem, goal: WithParam[CSPOMGoal[_]], expressions: ExpressionMap): Solver = {
-    Solver(problem, pm).get
+  def updateParams(pm: ParameterManager, cspom: CSPOM): ParameterManager = {
+    pm
   }
 
 

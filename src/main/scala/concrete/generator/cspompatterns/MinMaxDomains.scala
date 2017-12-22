@@ -1,8 +1,7 @@
 package concrete.generator.cspompatterns
 
 import cspom.CSPOMConstraint
-import cspom.compiler.VariableCompiler
-
+import cspom.compiler.{ConstraintCompiler, VariableCompiler}
 import cspom.variable.IntExpression
 import cspom.variable.SimpleExpression
 import cspom.util.IntInterval
@@ -18,7 +17,7 @@ object MinDomains extends VariableCompiler('min) {
         val itv = a.map(IntExpression.span)
 
         Seq(
-          r -> reduceDomain(ir, IntInterval(itv.map(_.lb).min, itv.map(_.ub).min)))
+          r -> ConstraintCompiler.reduceDomain(ir, IntInterval(itv.map(_.lb).min, itv.map(_.ub).min)))
     }
   }
 }
@@ -32,6 +31,6 @@ object MaxDomains extends VariableCompiler('max) {
       val itv = a.map(IntExpression.span)
 
       Seq(
-        r -> reduceDomain(ir, IntInterval(itv.map(_.lb).max, itv.map(_.ub).max)))
+        r -> ConstraintCompiler.reduceDomain(ir, IntInterval(itv.map(_.lb).max, itv.map(_.ub).max)))
   }
 }

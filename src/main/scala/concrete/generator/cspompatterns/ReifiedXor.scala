@@ -3,7 +3,7 @@ package concrete.generator.cspompatterns
 import cspom.CSPOM
 import cspom.CSPOMConstraint
 import cspom.variable.BoolVariable
-import cspom.compiler.ConstraintCompilerNoData
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData}
 import cspom.variable.SimpleExpression
 import CSPOM._
 
@@ -31,7 +31,7 @@ object ReifiedXor extends ConstraintCompilerNoData {
     val alt2 = CSPOMConstraint(new BoolVariable())('clause)(Seq[SimpleExpression[Boolean]](), Seq(a, b))
     val conj = CSPOMConstraint(res)('and)(alt1.result, alt2.result)
 
-    replaceCtr(fc, Seq(alt1, alt2, conj), problem)
+    ConstraintCompiler.replaceCtr(fc, Seq(alt1, alt2, conj), problem)
 
   }
 

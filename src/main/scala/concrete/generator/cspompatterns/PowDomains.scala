@@ -1,11 +1,12 @@
 package concrete.generator.cspompatterns
 
 import cspom.CSPOMConstraint
-import cspom.compiler.VariableCompiler
+import cspom.compiler.{ConstraintCompiler, VariableCompiler}
 import cspom.util._
 import cspom.util.IntervalsArithmetic.Arithmetics
 import cspom.variable.IntExpression.implicits.ranges
 import cspom.variable.{IntExpression, SimpleExpression}
+import ConstraintCompiler._
 
 object PowDomains extends VariableCompiler('int_pow_deactivated) {
 

@@ -1,9 +1,8 @@
 package concrete.generator.cspompatterns
 
-import cspom.compiler.ConstraintCompilerNoData
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta}
 import cspom.CSPOMConstraint
 import cspom.CSPOM
-import cspom.compiler.Delta
 
 /**
  * If the given constraint is an all-different or neq constraint, remove it
@@ -17,7 +16,7 @@ object SubsumedDiff extends ConstraintCompilerNoData {
     AllDiff.ALLDIFF_CONSTRAINT(constraint).isDefined && haveSubsumingConstraint(constraint, problem)
 
   def compile(constraint: CSPOMConstraint[_], problem: CSPOM) :Delta= {
-    removeCtr(constraint, problem)
+    ConstraintCompiler.removeCtr(constraint, problem)
   }
 
   private def haveSubsumingConstraint(

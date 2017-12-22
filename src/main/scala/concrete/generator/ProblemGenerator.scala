@@ -1,14 +1,11 @@
 package concrete
 package generator
 
-;
-
 import java.security.InvalidParameterException
 
 import com.typesafe.scalalogging.LazyLogging
 import concrete.constraint.ReifiedConstraint
 import concrete.constraint.linear.{SumEQ, SumLE}
-import concrete.constraint.semantic.{Clause}
 import cspom._
 import cspom.util.Finite
 import cspom.variable._

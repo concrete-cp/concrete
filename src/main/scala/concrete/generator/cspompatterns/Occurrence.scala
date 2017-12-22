@@ -2,8 +2,7 @@ package concrete.generator.cspompatterns
 
 import cspom.CSPOM
 import cspom.CSPOMConstraint
-import cspom.compiler.ConstraintCompilerNoData
-import cspom.compiler.Delta
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta}
 
 /**
  * @author vion
@@ -18,7 +17,7 @@ object Occurrence extends ConstraintCompilerNoData {
     val atMost = CSPOMConstraint('atMost)(r, v, args) withParams params
     val atLeast = CSPOMConstraint('atLeast)(r, v, args) withParams params
 
-    replaceCtr(c, Seq(atMost, atLeast), p)
+    ConstraintCompiler.replaceCtr(c, Seq(atMost, atLeast), p)
 
   }
 }

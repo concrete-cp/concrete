@@ -42,7 +42,7 @@ object NeqVec extends ConstraintCompiler {
 
     val newC = problem.ctr(CSPOMConstraint('nevec)(x, y))
 
-    replaceCtr(orConstraint +: neConstraints.toSeq, newC, problem)
+    ConstraintCompiler.replaceCtr(orConstraint +: neConstraints.toSeq, newC, problem)
 
   }
 

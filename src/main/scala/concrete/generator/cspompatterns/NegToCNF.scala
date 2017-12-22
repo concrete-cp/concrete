@@ -2,7 +2,7 @@ package concrete.generator.cspompatterns
 
 import concrete.CSPOMDriver
 import cspom.{CSPOM, CSPOMConstraint}
-import cspom.compiler.ConstraintCompilerNoData
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData}
 import cspom.variable.CSPOMSeq
 
 /**
@@ -32,7 +32,7 @@ object NegToCNF extends ConstraintCompilerNoData {
       CSPOMDriver.clause(CSPOMSeq(res, arg), CSPOMSeq()),
       CSPOMDriver.clause(CSPOMSeq(), CSPOMSeq(res, arg)))
 
-    replaceCtr(fc, newConstraints, problem)
+    ConstraintCompiler.replaceCtr(fc, newConstraints, problem)
 
   }
 

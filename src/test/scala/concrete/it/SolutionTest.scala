@@ -2,14 +2,14 @@ package concrete
 package it
 
 import org.scalatest.FlatSpec
-
 import concrete.constraint.Constraint
 import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
 import concrete.generator.cspompatterns.FZPatterns
-
+import concrete.runner.FZConcrete
 import cspom.CSPOM
 import cspom.compiler.CSPOMCompiler
+
 import scala.util.Random
 
 class SolutionTest extends FlatSpec {
@@ -50,11 +50,8 @@ deltaY = array3d(0..3, 0..3, 0..3, [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
     //    };
 
     val status = for {
-      cspom <- CSPOM.load(classOf[SolutionTest].getResource("step1_aes-kb128_n5_obj16.fzn.xz"))
-      fz <- CSPOMCompiler.compile(cspom, FZPatterns())
-      conc <- CSPOMCompiler.compile(fz, ConcretePatterns(pm))
-      //b2i <- CSPOMCompiler.compile(conc, Seq(Bool2IntIsEq))
-      prob <- new ProblemGenerator(pm).generate(conc)
+      cspom <- FZConcrete.loadCSPOMURL(pm, classOf[SolutionTest].getResource("step1_aes-kb128_n5_obj16.fzn.xz"))
+      prob <- new ProblemGenerator(pm).generate(cspom)
     } yield {
       val (pb, vars) = prob
 

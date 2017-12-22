@@ -46,7 +46,7 @@ object MergeRelations extends ConstraintCompiler {
       CSPOM.IntSeqOperations(args) in new MDDRelation(relation)
     }
 
-    replaceCtr(cons, nc, problem)
+    ConstraintCompiler.replaceCtr(cons, nc, problem)
   }
 
   def selfPropagation = false

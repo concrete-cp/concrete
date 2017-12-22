@@ -19,7 +19,7 @@ object ReifiedClause extends ConstraintCompiler {
   type A = (CSPOMExpression[_], CSPOMSeq[_], Seq[CSPOMExpression[_]])
 
   override def constraintMatcher = {
-    case CSPOMConstraint(res, 'clause, Seq(p: CSPOMSeq[_], CSPOMSeq(n)), params) if (!res.isTrue) =>
+    case CSPOMConstraint(res, 'clause, Seq(p: CSPOMSeq[_], CSPOMSeq(n)), params) if !res.isTrue =>
       (res, p, n)
   }
 
@@ -28,13 +28,13 @@ object ReifiedClause extends ConstraintCompiler {
 
     val c1 = CSPOMDriver.clause(positive, CSPOMSeq(res +: negative: _*))
     val c2 = positive.map {
-      case v => CSPOMDriver.clause(res)(v)
+      v => CSPOMDriver.clause(res)(v)
     }
     val c3 = negative.map {
-      case v => CSPOMDriver.clause(res, v)()
+      v => CSPOMDriver.clause(res, v)()
     }
 
-    replaceCtr(fc, c1 +: (c2 ++ c3), problem)
+    ConstraintCompiler.replaceCtr(fc, c1 +: (c2 ++ c3), problem)
 
   }
 

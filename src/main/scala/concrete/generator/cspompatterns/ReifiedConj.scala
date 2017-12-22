@@ -2,7 +2,7 @@ package concrete.generator.cspompatterns
 
 import cspom.CSPOM
 import cspom.CSPOMConstraint
-import cspom.compiler.ConstraintCompilerNoData
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData}
 import cspom.variable.CSPOMSeq
 
 /**
@@ -24,7 +24,7 @@ object ReifiedConj extends ConstraintCompilerNoData {
     val args = fc.arguments
     val c1 = CSPOMConstraint('clause)(CSPOMSeq(res), CSPOMSeq(args: _*))
     val c2 = args.map(v => CSPOMConstraint('clause)(CSPOMSeq(v), CSPOMSeq(res)))
-    replaceCtr(fc, c1 +: c2, problem)
+    ConstraintCompiler.replaceCtr(fc, c1 +: c2, problem)
   }
 
   def selfPropagation = false

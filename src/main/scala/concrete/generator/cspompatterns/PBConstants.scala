@@ -1,19 +1,15 @@
 package concrete.generator.cspompatterns
 
 import concrete.generator.SumGenerator
-import cspom.CSPOM
-import cspom.CSPOM.constant
-import cspom.CSPOM.constantSeq
-import cspom.CSPOM.seq2CSPOMSeq
-import cspom.CSPOMConstraint
+import cspom.CSPOM.{constant, constantSeq, seq2CSPOMSeq}
+import cspom.compiler.ConstraintCompiler._
 import cspom.compiler.ConstraintCompilerNoData
-import cspom.variable.BoolExpression
-import cspom.variable.CSPOMConstant
-import cspom.variable.CSPOMVariable
+import cspom.variable.{BoolExpression, CSPOMConstant, CSPOMVariable}
+import cspom.{CSPOM, CSPOMConstraint}
 
 /**
- *  Remove constants from linear constraints
- */
+  * Remove constants from linear constraints
+  */
 object PBConstants extends ConstraintCompilerNoData {
 
   def matchBool(c: CSPOMConstraint[_], p: CSPOM) = {

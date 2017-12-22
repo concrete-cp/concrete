@@ -32,7 +32,7 @@ object Compet extends App {
   val problemQuery = sql"""
         SELECT "problemId", display, "nbVars", "nbCons", nature, coalesce(string_agg("problemTag", ','), '') as tags
         FROM "Problem" LEFT JOIN "ProblemTag" USING ("problemId")
-        WHERE name ~ '^instances/mznc2017'
+        -- WHERE name ~ '^instances/mznc2017'
         GROUP BY "problemId"
         """.as[Problem]
   val executionQuery = sql"""

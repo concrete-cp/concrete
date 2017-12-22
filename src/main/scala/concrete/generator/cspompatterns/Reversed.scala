@@ -43,7 +43,7 @@ object Reversed extends ConstraintCompiler {
         Seq(CSPOMConstraint('sum)(revCoefs, vars, revConstant) withParam "mode" -> revMode.toString)
 
     }
-      .map(nc => replaceCtr(c, nc, p))
+      .map(nc => ConstraintCompiler.replaceCtr(c, nc, p))
       .getOrElse(Delta.empty)
   }
 

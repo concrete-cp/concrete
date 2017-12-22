@@ -4,8 +4,8 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
 
 import concrete._
+import concrete.generator.ProblemGenerator
 import concrete.generator.cspompatterns.ConcretePatterns
-import concrete.generator.{FailedGenerationException, ProblemGenerator}
 import cspom._
 import cspom.compiler.CSPOMCompiler
 import cspom.variable.CSPOMVariable
@@ -17,16 +17,16 @@ trait CSPOMRunner extends ConcreteRunner {
 
   var cspomSolver: CSPOMSolver = _
 
-  override final def output(sol: Map[Variable, Any], obj: Option[Any]) =
+  override final def output(sol: Map[Variable, Any], obj: Option[Any]): String =
     outputCSPOM(cspomSolver.cspom, cspomSolver.solution(sol), obj)
 
   def outputCSPOM(cspom: ExpressionMap, solution: Map[String, Any], obj: Option[Any]): String = {
     solution.iterator.map {
-      case (variable, value) => s"${variable} = $value"
+      case (variable, value) => s"$variable = $value"
     }.mkString("\n")
   }
 
-  override final def control(sol: Map[Variable, Any], obj: Option[Any]) =
+  override final def control(sol: Map[Variable, Any], obj: Option[Any]): Option[String] =
     controlCSPOM(cspomSolver.solution(sol), obj)
 
   final def load(pm0: ParameterManager, args: Seq[String]): Try[Solver] = {
@@ -36,14 +36,10 @@ trait CSPOMRunner extends ConcreteRunner {
   def load(pm: ParameterManager, cspom: CSPOM): Try[Solver] = {
     for {
       cspom2 <- CSPOMCompiler.compile(cspom, ConcretePatterns(pm))
-      (problem, vars) <- generate(pm, cspom2)
+      problem <- generate(pm, cspom2)
+      solver <- Solver(problem, updateParams(pm, cspom2))
     } yield {
-      //println(problem)
-      variables = vars
-      // logger.info(problem.initState.map(problem.toString).getOrElse("Contradiction").lines.map("% " + _).mkString("\n"))
-      val solver = buildSolver(pm, problem,
-        cspom2.goal.getOrElse(throw new FailedGenerationException("Goal is not defined")), cspom2.expressionMap)
-      cspomSolver = new CSPOMSolver(solver, cspom2.expressionMap, vars)
+      cspomSolver = new CSPOMSolver(solver, cspom2.expressionMap, variables)
       solver
     }
   }
@@ -57,12 +53,15 @@ trait CSPOMRunner extends ConcreteRunner {
 
     val pg = new ProblemGenerator(pm)
     statistics.register("problemGenerator", pg)
-    pg.generate(cspom)
+    for ((problem, variables) <- pg.generate(cspom)) yield {
+      this.variables = variables
+      problem
+    }
   }
 
   def loadCSPOM(pm: ParameterManager, args: Seq[String]): Try[CSPOM]
 
-  def buildSolver(pm: ParameterManager, problem: Problem, goal: WithParam[CSPOMGoal[_]], expressions: ExpressionMap): Solver
+  def updateParams(pm: ParameterManager, cspom: CSPOM): ParameterManager
 
   def controlCSPOM(solution: Map[String, Any], obj: Option[Any]): Option[String]
 

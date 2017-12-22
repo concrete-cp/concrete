@@ -1,12 +1,13 @@
 package concrete.generator.cspompatterns
 
 import cspom.CSPOM.SeqOperations
-import cspom.compiler.ConstraintCompilerNoData
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData}
 import cspom.extension.MDDRelation
 import cspom.util.{Infinitable, IntInterval, RangeSet}
 import cspom.variable.IntExpression
 import cspom.{CSPOM, CSPOMConstraint}
 import mdd.MDD
+import ConstraintCompiler._
 
 object Pow extends ConstraintCompilerNoData {
 

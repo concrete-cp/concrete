@@ -11,18 +11,17 @@ import scala.util.Random
 class RandomValHeuristic(heuristics: Seq[BranchHeuristic], factors: Seq[Double], rand: Random)
   extends BranchHeuristic with LazyLogging {
 
-  require(factors.sum >= 1.0)
-
   def branch(v: Variable, dom: Domain, ps: ProblemState): (Decision, Decision) = {
     var totalFact: Double = 0.0
     val r = rand.nextDouble()
-    for ((h, f) <- (heuristics, factors).zipped) {
+
+    for ((h, f) <- (heuristics.dropRight(1), factors).zipped) {
       totalFact += f
       if (r < totalFact) {
         return h.branch(v, dom, ps)
       }
     }
-    throw new IllegalStateException(s"$r, $heuristics, $factors")
+    heuristics.last.branch(v, dom, ps)
   }
 
   override def compute(s: MAC, state: ProblemState): ProblemState = {

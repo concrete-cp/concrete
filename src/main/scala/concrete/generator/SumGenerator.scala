@@ -10,7 +10,7 @@ import cspom.CSPOMConstraint
 import cspom.variable.{CSPOMConstant, IntExpression, SimpleExpression}
 
 object SumGenerator {
-  def readCSPOM(constraint: CSPOMConstraint[_]) = {
+  def readCSPOM(constraint: CSPOMConstraint[_]): (IndexedSeq[SimpleExpression[Any]], Seq[Int], Int, SumMode) = {
     require(constraint.arguments.size == 3)
     val IntExpression.constSeq(coefs) = constraint.arguments(0)
     val SimpleExpression.simpleSeq(vars) = constraint.arguments(1)
@@ -19,8 +19,11 @@ object SumGenerator {
     // For bool2int optimization
     val constant = util.Math.any2Int(c)
 
-    val mode = constraint.getParam[String]("mode")
-      .map(m => SumMode.withName(m).getOrElse(throw new IllegalArgumentException("Unknown mode " + m)))
+    val mode = constraint.getParam[Any]("mode")
+      .flatMap {
+        case m: SumMode => Some(m)
+        case m: String => SumMode.withName(m) //.getOrElse(throw new IllegalArgumentException("Unknown mode " + m))
+      }
       .getOrElse(throw new IllegalArgumentException("Constraint " + constraint + " has no valid mode"))
 
     (vars, coefs, constant, mode)
@@ -53,7 +56,6 @@ case class ACBC(ac: Option[Constraint], bc: Option[Constraint]) {
     ac.foreach(f)
     bc.foreach(f)
   }
-
 }
 
 final class SumGenerator(pg: ProblemGenerator) extends Generator with LazyLogging {
@@ -114,8 +116,10 @@ final class SumGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
           case (Seq(-1), SumLT, k) => ACBC.withBC(new GtC(x, -k))
           case (Seq(1), SumNE, k) => ACBC.withBC(new NeqC(x, k))
           case _ =>
-            logger.info(s"${(varParams, mode, constant)} is non-specialized unary linear constraint")
-            general(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode)
+
+            val c = general(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode)
+            logger.info(s"${c} is non-specialized unary linear constraint")
+            c
         }
       case 2 =>
         val Seq(x, y) = solverVariables
@@ -126,10 +130,10 @@ final class SumGenerator(pg: ProblemGenerator) extends Generator with LazyLoggin
           case (Seq(-1, 1), SumLT, k) => ACBC.withBC(new Gt(x, k, y, true))
           case (Seq(1, -1), SumNE, k) => ACBC.withAC(new Neq(x, y, k))
           case (Seq(-1, 1), SumNE, k) => ACBC.withAC(new Neq(x, y, -k))
-          case (Seq(1, -1), SumEQ, k) => Eq(false, x, -k, y)
-          case (Seq(-1, -1), SumEQ, k) => Eq(true, x, -k, y)
-          case (Seq(-1, 1), SumEQ, k) => Eq(false, x, k, y)
-          case (Seq(1, 1), SumEQ, k) => Eq(true, x, k, y)
+          case (Seq(1, -1), SumEQ, k) => Eq(neg = false, x, -k, y)
+          case (Seq(-1, -1), SumEQ, k) => Eq(neg = true, x, -k, y)
+          case (Seq(-1, 1), SumEQ, k) => Eq(neg = false, x, k, y)
+          case (Seq(1, 1), SumEQ, k) => Eq(neg = true, x, k, y)
           case _ =>
             logger.info(s"${(varParams, mode, constant)} is non-specialized binary linear constraint")
             general(solverVariables: Seq[Variable], varParams: Seq[Int], constant: Int, mode: SumMode)

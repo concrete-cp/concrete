@@ -2,7 +2,7 @@ package concrete
 
 import cspom.CSPOM._
 import cspom.variable._
-import cspom.{CSPOM, CSPOMConstraint}
+import cspom.{CSPOM, CSPOMConstraint, CSPOMGoal}
 
 import scala.annotation.varargs
 import scala.reflect.runtime.universe._
@@ -26,6 +26,8 @@ class SumBuilder(val variables: Seq[SimpleExpression[Int]], val coefs: Seq[Int])
   def !==(i: Int): CSPOMConstraint[Boolean] = CSPOMDriver.linear(variables, coefs, "ne", i)
 
   def +(sb: SumBuilder) = new SumBuilder(variables ++ sb.variables, coefs ++ sb.coefs)
+
+  def +(se: SimpleExpression[Int]) = new SumBuilder(variables :+ se, coefs :+ 1)
 }
 
 object CSPOMDriver {
@@ -39,7 +41,7 @@ object CSPOMDriver {
     problem.defineInt(result => linear(result +: vars, -1 +: coefs, "eq", 0))
   }
 
-  def linear(vars: Seq[SimpleExpression[Int]], coefs: Seq[Int], mode: String, constant: Int): CSPOMConstraint[Boolean] =
+  def linear[A: TypeTag](vars: Seq[SimpleExpression[A]], coefs: Seq[Int], mode: String, constant: Int): CSPOMConstraint[Boolean] =
     CSPOMConstraint('sum)(coefs, vars, CSPOMConstant(constant)) withParam ("mode" -> mode)
 
   def linearReif(mode: String, constant: Int, scalar: (Int, SimpleExpression[Int])*)(implicit problem: CSPOM): SimpleExpression[Boolean] = {
@@ -67,8 +69,8 @@ object CSPOMDriver {
     CSPOMConstraint('alldifferent)(v: _*)
   }
 
-  def gcc(cardinalities: Seq[(Int, Int, Int)], v: SimpleExpression[Int]*): CSPOMConstraint[Boolean] = {
-    CSPOMConstraint('gcc)(v: _*) withParam ("gcc" -> cardinalities)
+  def gccExact(v: Seq[SimpleExpression[Int]], closed: Boolean, values: Seq[Int], occurrences: Seq[Int]): CSPOMConstraint[Boolean] = {
+    CSPOMConstraint('gccExact)(v, closed, values, occurrences)
   }
 
   def occurrence[A: TypeTag](value: SimpleExpression[A])(variables: SimpleExpression[A]*)(implicit problem: CSPOM): SimpleExpression[Int] = {
@@ -119,11 +121,11 @@ object CSPOMDriver {
     def apply(idx: CSPOMVariable[Int])(implicit problem: CSPOM) =
       problem.defineFree(r => CSPOMConstraint(r)('element)(e, idx))
 
-    def min(implicit problem: CSPOM) =
+    def cmin(implicit problem: CSPOM): SimpleExpression[A] =
       problem.define(new FreeVariable().asInstanceOf[SimpleExpression[A]])(
         r => CSPOMConstraint(r)('min)(e: _*))
 
-    def max(implicit problem: CSPOM) =
+    def cmax(implicit problem: CSPOM): SimpleExpression[A] =
       problem.define(new FreeVariable().asInstanceOf[SimpleExpression[A]])(
         r => CSPOMConstraint(r)('max)(e: _*))
 
@@ -212,6 +214,9 @@ final class JCSPOMDriver extends CSPOM {
   def seq(v: Array[CSPOMExpression[Int]]): CSPOMSeq[Int] = {
     seq2CSPOMSeq(v)
   }
+
+  def minimize(e: CSPOMExpression[Int]): Unit = setGoal(CSPOMGoal.Minimize(e))
+  def maximize(e: CSPOMExpression[Int]): Unit = setGoal(CSPOMGoal.Maximize(e))
 
   //def nameArray(v: Array[CSPOMExpression[Any]], name:String) = problem.nameExpression(e, n)
 }

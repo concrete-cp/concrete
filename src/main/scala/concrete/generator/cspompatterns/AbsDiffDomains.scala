@@ -1,12 +1,11 @@
 package concrete.generator.cspompatterns
 
+import com.typesafe.scalalogging.LazyLogging
+import cspom.compiler.ConstraintCompiler._
 import cspom.compiler.VariableCompiler
 import cspom.util.IntervalsArithmetic.Arithmetics
-import cspom.variable.SimpleExpression
-import com.typesafe.scalalogging.LazyLogging
-import cspom.CSPOM
-import cspom.CSPOMConstraint
-import cspom.variable.IntExpression
+import cspom.variable.{IntExpression, SimpleExpression}
+import cspom.{CSPOM, CSPOMConstraint}
 
 object AbsDiffDomains extends VariableCompiler('absdiff) with LazyLogging {
 

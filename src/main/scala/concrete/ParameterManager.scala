@@ -19,9 +19,10 @@ import scala.reflect.runtime.universe._
   *
   */
 final class ParameterManager(
-                              val parameters: SortedMap[String, Any] = new TreeMap(),
-                              used: mutable.HashSet[String] = new mutable.HashSet()) extends LazyLogging {
+                              val parameters: SortedMap[String, Any],
+                              used: mutable.HashSet[String]) extends LazyLogging {
 
+  def this() = this(new TreeMap(), new mutable.HashSet[String]())
 
   def +(name: String): ParameterManager = updated(name, Unit)
 

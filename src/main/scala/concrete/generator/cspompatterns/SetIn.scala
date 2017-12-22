@@ -6,6 +6,7 @@ import cspom.compiler.ConstraintCompilerNoData
 import cspom.variable.CSPOMConstant
 import cspom.variable.IntVariable
 import cspom.variable.SimpleExpression
+import cspom.compiler.ConstraintCompiler._
 
 object SetIn extends ConstraintCompilerNoData {
 

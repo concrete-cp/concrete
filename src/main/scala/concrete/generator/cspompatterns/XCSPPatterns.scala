@@ -1,6 +1,7 @@
 package concrete.generator.cspompatterns
 
 import cspom.CSPOM.{constant, constantSeq, seq2CSPOMSeq}
+import cspom.compiler.ConstraintCompiler._
 import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta, GlobalCompiler}
 import cspom.variable._
 import cspom.{CSPOM, CSPOMConstraint}
@@ -14,8 +15,8 @@ object XCSPPatterns {
     case CSPOMConstraint(a, 'add, args, p) =>
       CSPOMConstraint('sum)(-1 +: Seq.fill(args.size)(1), a +: args, 0) withParams p + ("mode" -> "eq")
 
-    case CSPOMConstraint(r, 'ne, Seq(a, b), p) =>
-      CSPOMConstraint(r)('sum)(Seq(1, -1), Seq(a, b), 0) withParams p + ("mode" -> "ne")
+//    case CSPOMConstraint(r, 'ne, Seq(a, b), p) =>
+//      CSPOMConstraint(r)('sum)(Seq(1, -1), Seq(a, b), 0) withParams p + ("mode" -> "ne")
 
     case CSPOMConstraint(r, 'lt, Seq(a, b), p) =>
       CSPOMConstraint(r)('sum)(Seq(1, -1), Seq(a, b), 0) withParams p + ("mode" -> "lt")

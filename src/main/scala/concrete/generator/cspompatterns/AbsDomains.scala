@@ -1,10 +1,10 @@
 package concrete.generator.cspompatterns
 
 import cspom.CSPOMConstraint
+import cspom.compiler.ConstraintCompiler._
 import cspom.compiler.VariableCompiler
 import cspom.variable.IntExpression.implicits.{arithmetics, ranges}
 import cspom.variable.{IntExpression, SimpleExpression}
-
 
 object AbsDomains extends VariableCompiler('abs) {
 

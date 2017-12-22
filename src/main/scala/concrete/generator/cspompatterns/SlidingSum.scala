@@ -1,6 +1,6 @@
 package concrete.generator.cspompatterns
 
-import cspom.compiler.ConstraintCompilerNoData
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData}
 import cspom.extension.MDDRelation
 import cspom.variable.IntExpression.implicits.iterable
 import cspom.variable.{CSPOMConstant, CSPOMSeq, SimpleExpression}
@@ -9,7 +9,7 @@ import mdd.{JavaMap, MDD, MDD0, MDDLeaf}
 
 import scala.collection.immutable.Queue
 
-final object SlidingSum extends ConstraintCompilerNoData {
+object SlidingSum extends ConstraintCompilerNoData {
 
   override def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM) = {
     constraint.function == 'slidingSum && constraint.result.isTrue && constraint.arguments.forall(_.fullyDefined)
@@ -22,7 +22,7 @@ final object SlidingSum extends ConstraintCompilerNoData {
 
     //println(s"sizeR ${b.apply.lambda} ${b.apply.edges}")
 
-    replaceCtr(constraint,
+    ConstraintCompiler.replaceCtr(constraint,
       CSPOM.IntSeqOperations(vars) in new MDDRelation(mdd(low, up, seq, vars.map(iterable(_).toSeq).toIndexedSeq)),
       problem)
   }

@@ -4,6 +4,7 @@ import concrete.constraint.linear.SumMode
 import concrete.generator.SumGenerator
 import cspom.CSPOM.{constant, constantSeq, seq2CSPOMSeq}
 import cspom.compiler.ConstraintCompiler
+import cspom.compiler.ConstraintCompiler._
 import cspom.variable.{BoolExpression, CSPOMExpression}
 import cspom.{CSPOM, CSPOMConstraint}
 
@@ -30,7 +31,7 @@ object SumDuplicates extends ConstraintCompiler {
         }
       }
 
-      if (duplicates || factors.values.exists(_ == 0)) {
+      if (duplicates || factors.values.contains(0)) {
         Some((c.result, factors, const))
       } else {
         None

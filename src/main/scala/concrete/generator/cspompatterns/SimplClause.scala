@@ -1,9 +1,11 @@
 package concrete.generator.cspompatterns
 
 import cspom.CSPOM.seq2CSPOMSeq
-import cspom.{CSPOM, CSPOMConstraint, UNSATException}
-import cspom.compiler.ConstraintCompilerNoData
+import cspom.compiler.ConstraintCompiler._
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData}
 import cspom.variable.{BoolExpression, CSPOMConstant, CSPOMSeq}
+import cspom.{CSPOM, CSPOMConstraint, UNSATException}
+import ConstraintCompiler._
 
 /**
   * Removes constants from clauses

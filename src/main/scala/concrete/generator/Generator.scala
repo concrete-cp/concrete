@@ -74,7 +74,7 @@ object Generator {
     case _ => fail(s"$variable (${variable.getClass}) is unexpected")
   }
 
-  final def cspom2concrete1D[A](variable: CSPOMExpression[A])(
+  final def cspom2concrete1D(variable: CSPOMExpression[_])(
     implicit variables: Map[CSPOMVariable[_], Variable]): C21D =
     cspom2concrete(variable) match {
       case v: Var => v

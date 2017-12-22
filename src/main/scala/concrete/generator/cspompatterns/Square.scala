@@ -20,7 +20,7 @@ object Square extends ConstraintCompiler {
 
     val (r, a) = data
 
-    replaceCtr(fc, CSPOMConstraint(r, 'sq, Seq(a), fc.params), problem)
+    ConstraintCompiler.replaceCtr(fc, CSPOMConstraint(r, 'sq, Seq(a), fc.params), problem)
 
   }
 

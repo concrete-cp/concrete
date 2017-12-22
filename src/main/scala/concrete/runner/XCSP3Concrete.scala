@@ -2,6 +2,7 @@ package concrete
 package runner
 
 import java.net.URL
+import java.security.InvalidParameterException
 
 import concrete.generator.cspompatterns.XCSPPatterns
 import concrete.heuristic.{CrossHeuristic, Heuristic, SeqHeuristic}
@@ -20,36 +21,41 @@ object XCSP3Concrete extends CSPOMRunner with App {
   var file: URL = _
   var declaredVariables: Seq[String] = _
 
-  override def defaultWriter(pm: ParameterManager, problem:String, sm: StatisticsManager): ConcreteWriter = {
+  override def defaultWriter(pm: ParameterManager, problem: String, sm: StatisticsManager): ConcreteWriter = {
     new XCSP3Writer(pm, problem, sm)
   }
 
   def loadCSPOM(pm: ParameterManager, args: Seq[String]): Try[CSPOM] = {
-    val Seq(fn) = args
-    file = CSPOM.file2url(fn)
-
-    loadCSPOMURL(file).flatMap { cspom =>
-      cspom.goal.get match {
-        case s@WithParam(_: CSPOMGoal[_], _) =>
-          declaredVariables = s.getSeqParam("variables")
-          Success(cspom)
-        case _ =>
-          Failure(new IllegalArgumentException("Variable sequence not available"))
-      }
+    Try {
+      val Seq(fn) = args
+      fn
     }
-
-  }
-
-  def buildSolver(pm: ParameterManager, problem: Problem, goal: WithParam[CSPOMGoal[_]], cspom: ExpressionMap) = {
-    val heuristic = readHeuristic(pm, cspom)
-    Solver(problem, pm.updated("heuristic", heuristic)).get
+      .recoverWith {
+        case _: MatchError =>
+          Failure(new InvalidParameterException("Please give exactly one file as argument when running XCSP3Concrete"))
+      }
+      .flatMap(file => loadCSPOMURL(CSPOM.file2url(file)))
   }
 
   def loadCSPOMURL(file: URL): Try[CSPOM] = {
+    this.file = file
     CSPOM.load(file, XCSP3Parser)
       .flatMap { cspom =>
         CSPOMCompiler.compile(cspom, XCSPPatterns())
       }
+      .flatMap { cspom =>
+        cspom.goal.get match {
+          case s@WithParam(_: CSPOMGoal[_], _) =>
+            declaredVariables = s.getSeqParam("variables")
+            Success(cspom)
+          case _ =>
+            Failure(new IllegalArgumentException("Variable sequence not available"))
+        }
+      }
+  }
+
+  def updateParams(pm: ParameterManager, cspom: CSPOM): ParameterManager = {
+    pm.updated("heuristic", readHeuristic(pm, cspom.expressionMap))
   }
 
   private def readHeuristic(pm: ParameterManager, cspom: ExpressionMap): Heuristic = {
@@ -78,7 +84,7 @@ object XCSP3Concrete extends CSPOMRunner with App {
     val completed = if (decisionVariables.size < variables.size) {
       val remainingVariables = variables.values.iterator.filterNot(decisionVariables).toArray
 
-       lazy val rand = {
+      lazy val rand = {
         val seed = pm.getOrElse("randomseed", 0L) + pm.getOrElse("iteration", 0)
         new Random(seed)
       }

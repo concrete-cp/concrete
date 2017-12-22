@@ -1,61 +1,52 @@
 package concrete.generator.cspompatterns
 
-import concrete.constraint.linear.SumEQ
-import concrete.constraint.linear.SumLE
-import concrete.constraint.linear.SumLT
-import concrete.constraint.linear.SumMode
-import concrete.constraint.linear.SumNE
-import cspom.CSPOMConstraint
-import cspom.UNSATException
-import cspom.compiler.VariableCompiler
-import cspom.util.IntInterval
-import cspom.variable._
-import cspom.util.IntervalsArithmetic.Arithmetics
-import cspom.util.IntervalsArithmetic.RangeArithmetics
-import cspom.util.RangeSet
 import com.typesafe.scalalogging.LazyLogging
+import concrete.constraint.linear._
+import concrete.generator.SumGenerator
+import cspom.compiler.ConstraintCompiler._
+import cspom.compiler.VariableCompiler
+import cspom.util.IntervalsArithmetic.{Arithmetics, RangeArithmetics}
+import cspom.util.{IntInterval, RangeSet}
+import cspom.variable._
+import cspom.{CSPOMConstraint, UNSATException}
 
 object SumDomains extends VariableCompiler('sum) with LazyLogging {
 
   def compiler(c: CSPOMConstraint[_]) = throw new IllegalStateException
 
   override def compilerWEntail(c: CSPOMConstraint[_]) = c match {
-    case CSPOMConstraint(CSPOMConstant(true), _, Seq(IntExpression.constSeq(coef), SimpleExpression.simpleSeq(iargs), CSPOMConstant(result: Int)), _) =>
+    case CSPOMConstraint(CSPOMConstant(true), _, _, _) =>
 
-     // val iargs = args //.map(IntExpression.coerce(_)).toIndexedSeq
-
-      val m: String = c.getParam("mode").get
+      val (iargs, coef, result, mode) = SumGenerator.readCSPOM(c)
 
       if (iargs.forall(_.fullyDefined)) {
         (Seq(), false)
       } else {
 
-        SumMode.withName(m)
-          .map {
-            case SumLE => RangeSet(IntInterval.atMost(result))
-            case SumLT => RangeSet(IntInterval.atMost(result - 1))
-            case SumEQ => RangeSet(IntInterval.singleton(result))
-            case SumNE => RangeSet.allInt -- IntInterval.singleton(result)
-           }
-          .map { initBound =>
+        val initBound = mode match {
+          case SumLE => RangeSet(IntInterval.atMost(result))
+          case SumLT => RangeSet(IntInterval.atMost(result - 1))
+          case SumEQ => RangeSet(IntInterval.singleton(result))
+          case SumNE => RangeSet.allInt -- IntInterval.singleton(result)
+        }
 
-            val coefspan = (iargs, coef).zipped.map((a, c) => RangeSet(IntExpression.span(a) * IntInterval.singleton(c))).toIndexedSeq
 
-            val filt = for (i <- iargs.indices) yield {
-              val others = iargs.indices
-                .filter(_ != i)
-                .map(coefspan)
-                .foldLeft(initBound)(_ - _)
-              iargs(i) -> reduceDomain(iargs(i), others / coef(i))
-            }
+        val coefspan = (iargs, coef).zipped.map((a, c) => RangeSet(IntExpression.span(a) * IntInterval.singleton(c))).toIndexedSeq
 
-            val entailed = filt.map(_._2).count(_.searchSpace > 1) <= 1
+        val filt = for (i <- iargs.indices) yield {
+          val others = iargs.indices
+            .filter(_ != i)
+            .map(coefspan)
+            .foldLeft(initBound)(_ - _)
+          iargs(i) -> reduceDomain(iargs(i), others / coef(i))
+        }
 
-            // logger.debug((filt, entailed).toString)
+        val entailed = filt.map(_._2).count(_.searchSpace > 1) <= 1
 
-            (filt, entailed)
-          }
-          .getOrElse((Seq(), false))
+        // logger.debug((filt, entailed).toString)
+
+        (filt, entailed)
+
       }
 
     case CSPOMConstraint(r, _, _, _) => {
@@ -70,7 +61,7 @@ object PseudoBoolDomains extends VariableCompiler('pseudoboolean) {
   def compiler(c: CSPOMConstraint[_]) = c match {
     case CSPOMConstraint(CSPOMConstant(true), _, Seq(IntExpression.constSeq(coef), CSPOMSeq(args), CSPOMConstant(result: Int)), _) =>
 
-      val iargs = args.map(BoolExpression.coerce(_)).toIndexedSeq
+      val iargs = args.map(BoolExpression.coerce).toIndexedSeq
 
       val m: String = c.getParam("mode").get
 
@@ -94,9 +85,9 @@ object PseudoBoolDomains extends VariableCompiler('pseudoboolean) {
         if (result.lb > 1 || result.ub < 0) {
           throw new UNSATException()
         } else if (result.lb > 0) {
-          args(i) -> reduceDomain(iargs(i), true)
+          args(i) -> reduceDomain(iargs(i), d = true)
         } else if (result.ub < 1) {
-          args(i) -> reduceDomain(iargs(i), false)
+          args(i) -> reduceDomain(iargs(i), d = false)
         } else {
           args(i) -> args(i)
         }

@@ -33,7 +33,7 @@ class FZWriter(val params: ParameterManager, val problem: String, val stats: Sta
   }
 
   def error(e: Throwable) {
-    // e.printStackTrace(Console.err)
+    e.printStackTrace(Console.err)
   }
 
   def disconnect(status: Result) {

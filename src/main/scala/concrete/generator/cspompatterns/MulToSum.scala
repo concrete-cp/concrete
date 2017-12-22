@@ -2,7 +2,7 @@ package concrete.generator.cspompatterns
 
 import concrete.CSPOMDriver.CSPOMIntExpressionOperations
 import cspom.{CSPOM, CSPOMConstraint}
-import cspom.compiler.{ConstraintCompilerNoData, Delta}
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData, Delta}
 import cspom.variable.{CSPOMConstant, IntExpression}
 
 object MulToSum extends ConstraintCompilerNoData {
@@ -16,10 +16,10 @@ object MulToSum extends ConstraintCompilerNoData {
 
     (c.result, v0, v1) match {
       case (IntExpression(r), CSPOMConstant(v0: Int), IntExpression(v1)) =>
-        replaceCtr(c, -1 *: r + v0 *: v1 === 0, in)
+        ConstraintCompiler.replaceCtr(c, -1 *: r + v0 *: v1 === 0, in)
 
       case (IntExpression(r), IntExpression(v0), CSPOMConstant(v1: Int)) =>
-        replaceCtr(c, -1 *: r + v1 *: v0 === 0, in)
+        ConstraintCompiler.replaceCtr(c, -1 *: r + v1 *: v0 === 0, in)
 
       case _ => Delta()
     }

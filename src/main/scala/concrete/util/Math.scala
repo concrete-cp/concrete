@@ -1,5 +1,6 @@
 package concrete.util
 
+import scala.collection.mutable
 import scala.collection.mutable.HashSet
 import scala.math.BigDecimal.RoundingMode
 import scala.util.Random
@@ -37,7 +38,7 @@ object Math {
     a * (0x1 << d)
   }
 
-  def even(a: Int) = (a & 0x1) == 0
+  def even(a: Int): Boolean = (a & 0x1) == 0
 
   /**
     * Robert Floyd algorithm to pick M elements from 1..N
@@ -51,7 +52,7 @@ object Math {
     * insert J in S
     */
   def randSet(m: Int, n: Int, rand: Random): Set[Int] = {
-    val s = new HashSet[Int]
+    val s = new mutable.HashSet[Int]
     for (j <- (n - m) until n) {
       val t = rand.nextInt(j)
       if (s(t)) {
@@ -64,7 +65,7 @@ object Math {
 
   }
 
-  def any2Int(v: Any) = {
+  def any2Int(v: Any): Int = {
     v match {
       case v: Int => v
       case v: Long if v.isValidInt => v.toInt

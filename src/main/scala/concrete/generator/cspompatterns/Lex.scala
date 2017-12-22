@@ -40,7 +40,7 @@ object Lex extends ConstraintCompiler {
     }
 
     val reif = CSPOMConstraint(constraint.result)('and)(constraints.map(_.result): _*)
-    replaceCtr(constraint, reif +: constraints, problem)
+    ConstraintCompiler.replaceCtr(constraint, reif +: constraints, problem)
   }
 
   private def lexlist(list: Seq[CSPOMExpression[_]], strict: Boolean): Seq[CSPOMConstraint[_]] = {

@@ -3,12 +3,12 @@ package generator
 package cspompatterns
 
 import cspom.compiler.CSPOMTypes
-import cspom.compiler.ConstraintCompiler
+import cspom.compiler.Compiler
 import cspom.compiler.StandardCompilers
 
 object ConcretePatterns {
 
-  def apply(params: ParameterManager): Seq[ConstraintCompiler] = {
+  def apply(params: ParameterManager): Seq[Compiler] = {
     val concreteDef =
       Seq(
         Occurrence, AtLeastDomains, AtMostDomains, BoolEq,
@@ -31,7 +31,9 @@ object ConcretePatterns {
       //AbsDiff, AbsDiffDomains,
       AllDiff, SubsumedDiff, Square, SumConstants, SumDuplicates, PseudoBool,
       //MergeNotDisj,
-      UnaryClause, SumFactors, SumEq, BoolSum, BoolProd) //, MergeRelations) //, LexLeq2SAT)
+      UnaryClause, SumFactors, SumEq, BoolSum, BoolProd, MergeSameCommutative
+      , SumSE, ClauseSE, MinMaxSE
+    ) //, MergeRelations) //, LexLeq2SAT)
 
     val improveModel = params.getOrElse("improveModel", true)
 

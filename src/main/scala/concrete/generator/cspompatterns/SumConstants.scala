@@ -4,8 +4,9 @@ import concrete.constraint.linear._
 import concrete.generator.SumGenerator
 import cspom.CSPOM._
 import cspom.{CSPOM, CSPOMConstraint}
-import cspom.compiler.ConstraintCompilerNoData
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData}
 import cspom.variable.{BoolExpression, CSPOMConstant}
+import ConstraintCompiler._
 
 /**
   * Remove constants from linear constraints

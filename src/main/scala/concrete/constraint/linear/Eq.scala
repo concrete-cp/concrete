@@ -25,12 +25,9 @@ final class EqCReif(val r: Variable, val x: Variable, val y: Int) extends Constr
 
   def check(tuple: Array[Int]): Boolean = tuple(0) == (if (tuple(1) == y) 1 else 0)
 
-  def init(ps: ProblemState): Outcome = {
-    //println(toString(ps))
-    ps
-  }
+  def init(ps: ProblemState): Outcome = ps
 
-  def revise(ps: ProblemState, mod:BitVector): Outcome = {
+  def revise(ps: ProblemState, mod: BitVector): Outcome = {
     val dx = ps.dom(x)
 
     ps.dom(r) match {
@@ -67,7 +64,7 @@ final class EqReif(val r: Variable, val x: Variable, val y: Variable) extends Co
 
   def init(ps: ProblemState): Outcome = ps
 
-  def revise(ps: ProblemState, mod:BitVector): Outcome = {
+  def revise(ps: ProblemState, mod: BitVector): Outcome = {
     val dx = ps.dom(x)
     val dy = ps.dom(y)
     ps.dom(r) match {
@@ -122,7 +119,7 @@ final class EqACFast(val x: Variable, val b: Int, val y: Variable)
     ps
   }
 
-  def revise(ps: concrete.ProblemState, mod:BitVector): Outcome = {
+  def revise(ps: concrete.ProblemState, mod: BitVector): Outcome = {
     val oldY = ps.dom(y)
     val newX = ps.dom(x) & oldY.shift(-b)
 
@@ -138,14 +135,18 @@ final class EqACFast(val x: Variable, val b: Int, val y: Variable)
 
   }
 
-  override def consistent(ps: ProblemState, mod:Traversable[Int]): Outcome =
+  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome =
     if (ps.dom(x).shift(b) disjoint ps.dom(y)) Contradiction(scope) else ps
 
   def simpleEvaluation: Int = 1
 
   override def toString(ps: ProblemState): String = s"${x.toString(ps)}${
-    if (b > 0) " + " + b else if (b < 0) " - " + (-b) else ""
+    if (b > 0) s" + $b" else if (b < 0) s" − ${-b}" else ""
   } =FAC= ${y.toString(ps)}"
+
+  override def toString: String = s"$x${
+    if (b > 0) s" + $b" else if (b < 0) s" − ${-b}" else ""
+  } =FAC= $y"
 }
 
 /**
@@ -163,10 +164,7 @@ final class EqACNeg private[linear](
                                      val skipIntervals: Boolean = true)
   extends Constraint(Array(x, y)) with BCCompanion {
 
-  def init(ps: ProblemState): ProblemState = {
-    //println(toString(ps))
-    ps
-  }
+  def init(ps: ProblemState): ProblemState = ps
 
   def this(x: Variable, y: Variable) = this(x, y, 0, true)
 
@@ -177,7 +175,7 @@ final class EqACNeg private[linear](
   def advise(ps: ProblemState, event: Event, pos: Int): Int =
     if (skip(ps)) -1 else ps.card(x) + ps.card(y)
 
-  override def consistent(ps: ProblemState, mod:Traversable[Int]): Outcome = {
+  override def consistent(ps: ProblemState, mod: Traversable[Int]): Outcome = {
     val xDom = ps.dom(x)
     val yDom = ps.dom(y)
     val r = (xDom.span + yDom.span).contains(b) && (
@@ -190,7 +188,7 @@ final class EqACNeg private[linear](
     if (r) ps else Contradiction(scope)
   }
 
-  def revise(ps: ProblemState, mod:BitVector): Outcome = {
+  def revise(ps: ProblemState, mod: BitVector): Outcome = {
     val domY = ps.dom(y)
     ps.filterDom(x)(xv => domY.present(b - xv))
       .andThen { ps =>
@@ -251,8 +249,8 @@ final class EqBC(val neg: Boolean, val x: Variable, val b: Int, val y: Variable)
     if ((negX + b) intersects ps.span(y)) ps else Contradiction(scope)
   }
 
-  override def toString(ps: ProblemState) = s"${if (neg) "-" else ""}${x.toString(ps)}${
-    if (b > 0) " + " + b else if (b < 0) " - " + (-b) else ""
+  override def toString(ps: ProblemState) = s"${if (neg) "−" else ""}${x.toString(ps)}${
+    if (b > 0) s" + $b" else if (b < 0) s" − ${-b}" else ""
   } =BC= ${y.toString(ps)}"
 
   def advise(ps: ProblemState, p: Int) = 3

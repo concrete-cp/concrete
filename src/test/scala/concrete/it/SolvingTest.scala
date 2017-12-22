@@ -180,7 +180,7 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
     //Uses unimplemented circuit constraint
     //"Mario-easy-2.xml.xz" -> ((628, 1.0)),
     //"Tpp-3-3-20-1.xml.xz" -> ((126, 1.0))
-  ) // .slice(108, 109)
+  )
 
 
   private val problemBank = Seq[(String, (AnyVal, Boolean))](
@@ -199,7 +199,8 @@ class SolvingTest extends FunSpec with SolvingBehaviors {
   private val parameters = new ParameterManager() //.updated("f", Unit).updated("heuristic.value", classOf[BestCost])
 
   for ((p, (r, test)) <-
-       lecoutrePB ++ problemBank
+       lecoutrePB ++
+         problemBank
   ) {
 
     describe(p) {

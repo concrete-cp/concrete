@@ -29,7 +29,7 @@ object MergeNotDisj extends ConstraintCompiler {
       new CSPOMConstraint(clause.result, 'clause, Seq(positive, a +: negative))
     }
 
-    replaceCtr(fc +: clauses, newConstraints, problem)
+    ConstraintCompiler.replaceCtr(fc +: clauses, newConstraints, problem)
   }
 
   def selfPropagation = true

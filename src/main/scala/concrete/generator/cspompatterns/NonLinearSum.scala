@@ -1,7 +1,7 @@
 package concrete.generator.cspompatterns
 
 import concrete.{SumBuilder, util}
-import cspom.compiler.ConstraintCompilerNoData
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData}
 import cspom.variable._
 import cspom.{CSPOM, CSPOMConstraint}
 
@@ -44,7 +44,7 @@ object NonLinearSum extends ConstraintCompilerNoData {
 
 
     val linear = arguments.reduce(_ + _) === k withParam "mode" -> revMode
-    replaceCtr(constraint, linear +: muls, p)
+    ConstraintCompiler.replaceCtr(constraint, linear +: muls, p)
   }
 
   private def readCSPOM(constraint: CSPOMConstraint[_]) = {

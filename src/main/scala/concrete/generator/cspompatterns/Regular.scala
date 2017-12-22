@@ -1,13 +1,14 @@
 package concrete.generator.cspompatterns
 
 import cspom.CSPOM.SeqOperations
-import cspom.compiler.ConstraintCompilerNoData
+import cspom.compiler.{ConstraintCompiler, ConstraintCompilerNoData}
 import cspom.extension.MDDRelation
 import cspom.variable.{CSPOMConstant, CSPOMSeq, SimpleExpression}
 import cspom.{CSPOM, CSPOMConstraint}
 import mdd.{JavaMap, MDD, MDD0, MDDLeaf}
+import ConstraintCompiler._
 
-final object Regular extends ConstraintCompilerNoData {
+object Regular extends ConstraintCompilerNoData {
 
   override def matchBool(constraint: CSPOMConstraint[_], problem: CSPOM) = {
     constraint.function == 'regular && constraint.result.isTrue

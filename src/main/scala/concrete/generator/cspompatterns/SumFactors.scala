@@ -36,7 +36,7 @@ object SumFactors extends ConstraintCompiler {
   def compile(c: CSPOMConstraint[_], p: CSPOM, data: A) = {
     val (args, coefs, result) = data
 
-    replaceCtr(c,
+    ConstraintCompiler.replaceCtr(c,
       CSPOMConstraint(c.result)('sum)(coefs, args, result) withParams c.params,
       p)
   }

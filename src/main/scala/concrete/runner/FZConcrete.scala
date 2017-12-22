@@ -5,6 +5,7 @@ import java.security.InvalidParameterException
 
 import com.typesafe.scalalogging.LazyLogging
 import concrete._
+import concrete.generator.FailedGenerationException
 import concrete.generator.cspompatterns.FZPatterns
 import concrete.heuristic._
 import concrete.heuristic.value._
@@ -16,7 +17,7 @@ import cspom.flatzinc._
 import cspom.variable.{CSPOMExpression, CSPOMSeq, CSPOMVariable, IntExpression}
 import org.scalameter.Quantity
 
-import scala.util.{Random, Try}
+import scala.util.{Failure, Random, Try}
 
 object FZConcrete extends CSPOMRunner with LazyLogging {
 
@@ -29,10 +30,19 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
   @Statistic
   var parseTime: Quantity[Double] = _
 
-  override def loadCSPOM(pm: ParameterManager, args: Seq[String]): Try[CSPOM] = {
-    val Seq(fn) = args
-    file = CSPOM.file2url(fn.replace(" ", "%20"))
+  def loadCSPOM(pm: ParameterManager, args: Seq[String]): Try[CSPOM] = {
+    Try {
+      val Seq(fn) = args
+      fn
+    }
+      .recoverWith {
+        case _: MatchError =>
+          Failure(new InvalidParameterException("Please give exactly one file as argument when running FZConcrete"))
+      }
+      .flatMap(file => loadCSPOMURL(pm, CSPOM.file2url(file)))
+  }
 
+  def loadCSPOMURL(pm: ParameterManager, file: URL): Try[CSPOM] = {
     val (tryLoad, time) = StatisticsManager.measureTry[CSPOM, Unit, Double](CSPOM.load(file, FlatZincFastParser))
 
     parseTime = time
@@ -69,11 +79,10 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
       }
   }
 
-  def buildSolver(pm: ParameterManager, problem: Problem,
-                  goal: WithParam[CSPOMGoal[_]], expressions: ExpressionMap): Solver = {
-
-    val heuristic = readHeuristic(pm, goal, expressions)
-    Solver(problem, pm.updated("heuristic", heuristic)).get
+  def updateParams(pm: ParameterManager, cspom: CSPOM): ParameterManager = {
+    val goal = cspom.goal.getOrElse(throw new FailedGenerationException("Goal is not defined"))
+    val expressions = cspom.expressionMap
+    pm.updated("heuristic", readHeuristic(pm, goal, expressions, variables))
   }
 
   def description(args: Seq[String]): String =
@@ -125,7 +134,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
     }
   }
 
-  private def parseGoal(pm: ParameterManager, goal: Seq[FZAnnotation], expressions: ExpressionMap, rand: Random): Seq[Heuristic] = {
+  private def parseGoal(pm: ParameterManager, goal: Seq[FZAnnotation], expressions: ExpressionMap, variables: Map[CSPOMVariable[_], Variable], rand: Random): Seq[Heuristic] = {
     goal.collect(parseGoalAnnotation(pm, expressions, variables, rand))
   }
 
@@ -139,7 +148,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
     }
   }
 
-  private def readHeuristic(pm0: ParameterManager, goal: WithParam[CSPOMGoal[_]], cspom: ExpressionMap): Heuristic = {
+  private def readHeuristic(pm0: ParameterManager, goal: WithParam[CSPOMGoal[_]], cspom: ExpressionMap, variables: Map[CSPOMVariable[_], Variable]): Heuristic = {
 
     val rand = {
       val seed = pm0.getOrElse("randomseed", 0L) + pm0.getOrElse("iteration", 0)
@@ -149,7 +158,7 @@ object FZConcrete extends CSPOMRunner with LazyLogging {
     val heuristic = if (pm0.contains("ff")) {
       Heuristic.default(pm0, variables.values.toSeq, rand).get
     } else {
-      val parsed = SeqHeuristic(parseGoal(pm0, goal.getSeqParam[FZAnnotation]("fzSolve"), cspom, rand))
+      val parsed = SeqHeuristic(parseGoal(pm0, goal.getSeqParam[FZAnnotation]("fzSolve"), cspom, variables, rand))
       if (pm0.contains("f")) {
         if (pm0.contains("fKeepSeq")) {
           useDefault(pm0, parsed, rand)

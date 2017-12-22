@@ -2,13 +2,14 @@ package concrete.generator.cspompatterns
 
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
-
 import cspom.CSPOM
 import cspom.CSPOM._
 import cspom.compiler.CSPOMCompiler
 import cspom.compiler.MergeEq
 import cspom.variable.IntVariable
 import concrete.CSPOMDriver._
+import concrete.{ParameterManager, Solver}
+import cspom.CSPOMGoal.Minimize
 
 class AllDiffTest extends FlatSpec with Matchers {
 
@@ -35,5 +36,8 @@ class AllDiffTest extends FlatSpec with Matchers {
       })
     }
   }
+
+
+
 
 }
