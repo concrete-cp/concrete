@@ -136,48 +136,78 @@ the solving process and generate a `TimeoutException`.
 
 # Features
 
+Concrete is a CSP constraint solver written in Scala 2.12. We always try
+to use up-to-date dependencies. Concrete is a pretty standard CP solver,
+which solves CSP instances using depth-first search and variants of AC
+for propagation. The two main specific aspects of Concrete 
+are:
+ 
+ * the use of [persistent data structures](http://www.cambridge.org/fr/academic/subjects/computer-science/programming-languages-and-applied-logic/purely-functional-data-structures#.WkwN5g-GREM.mailto)
+for managing domain states and some constraint states. For many constraint states, semi-persistent
+data structures (sparse sets)
+ or backtrack-stable data (watched literals or residues) are preferred. 
+ * the use of the 
+companion project [CSPOM](http://github.com/concrete-cp/cspom), a
+solver-independent modeling assistant able to perform automatic
+reformulation such as constraint aggregation or common subexpression elimination.
+CSPOM is able to parse problems written in [FlatZinc](http://www.minizinc.org),
+[XCSP3](http://www.xcsp.org), the legacy XCSP2 format or its own Scala
+DSL (yet to be documented).
+
 Concrete supports models defined with signed 32-bit integers. Beware
-that 32-bit overflowing may occur, especially for
-quadratic constraints, and can lead to incorrect or missing solutions. You should
+that overflows may occur, especially for
+quadratic constraints. Domain width must also be strictly less than 2³¹. 
+Most overflows should raise exceptions, but
+they also can lead to incorrect or missing solutions (please report bugs!). You should
  avoid using values exceeding ±2³⁰ (roughly ±10⁹). Excessively
-  large domains may also raise memory issues. Domains
+  large domains may also raise memory issues unless they can
+  be represented using a single interval thorough the search.
+ Domains
 are internally represented using either intervals, bit vectors or hash tries depending on the 
 domain density. Set variables are currently not supported.
 
 Concrete natively supports the following constraints:
 
 - Extension (list of allowed or forbidden tuples). 
-  An optimized algorithm should be automatically selected for binary constraints, positive tables or MDD.
+  An optimized algorithm should be automatically selected for
+  binary constraints (AC3-bit+rm), positive tables or MDD.
   
-- Linear (a·x + b·y + … {=/</≤/≠} k). Bound consistency or domain consistency for ternary constraints.
+- Linear (a·x + b·y + … {=/</≤/≠} k). 
+  Bound consistency (except for ≠) or domain consistency for ternary constraints (using residues).
 
-- Absolute value (x = |y|). Bound or domain consistency.
+- Absolute value (x = |y|). Bound or domain consistency (using residues).
 
-- Distance (x = |y - z|). Bound or domain consistency.
+- Distance (x = |y - z|). Bound or domain consistency (using residues).
 
-- All-different. 2-consistency or bound consistency.
+- All-different with 2-consistency or bound consistency.
 
-- AtLeast/AtMost
+- Cardinality (AtLeast/AtMost)
 
 - Bin-packing 
 
 - Channel (x(i) = j ↔ x(j) = i)
 
-- Boolean clauses and XOR
+- Boolean clauses and XOR (using watched literals)
 
-- Cumulative 1D and 2D (DiffN) (profile and energetic reasoning)
+- Generalized nogoods (using watched literals and residues)
 
-- Integer division and modulo
+- Cumulative using profile and energetic reasoning
 
-- Element / Member
+- Rectangle packing (diffN) using quad-trees and energetic reasoning
+
+- Integer division and modulo. Bound or domain consistency (using residues)
+
+- Element / Member (using watched literals and residues)
 
 - Inverse (x(i) = j → y(j) = i) 
 
-- Lex-Leq / Lex-Neq
+- Lex-Leq 
+
+- Lex-Neq
 
 - Min/Max
 
-- Quadratic (x = y · z, x = y²). Bound or domain consistency.
+- Quadratic (x = y · z, x = y²). Bound or domain consistency (using residues).
 
 
 All other documented MiniZinc constraints are supported via decomposition or reformulation.
@@ -191,6 +221,10 @@ Concrete solves CSP/COP using a depth-first tree search. When solving XCSP3 inst
  enforced, the default variable ordering heuristic is _dom/wdeg_. 
 The default value heuristic chooses the best known value first, then a random bound randomly. 
 Search is restarted periodically to reduce long tails of search time.
+
+Propagation queue is managed using a coarse-grained constraint-oriented propagation scheme
+with dynamic and constraint-specific propagation ordering heuristic. Constraint
+entailment is managed when it can be detected easily.
 
 # License
 
