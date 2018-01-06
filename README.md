@@ -6,7 +6,26 @@ concrete
 [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/a1a0df7c57e24040a76ed7d5a7e609be)](https://www.codacy.com/app/scand1sk/concrete?utm_source=github.com&utm_medium=referral&utm_content=concrete-cp/concrete&utm_campaign=Badge_Coverage)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/fr.univ-valenciennes/concrete_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/fr.univ-valenciennes/concrete_2.12)
 
-A CSP solving software & API
+Concrete is a CSP constraint solver written in Scala
+2.12. We always try to use up-to-date
+dependencies. Concrete is a pretty standard CP solver, which solves
+CSP instances using depth-first search and AC or weaker variants for
+propagation. The two main specific aspects of Concrete are:
+ 
+
+- the use of persistent data
+  structures for managing
+  domain states and some constraint states. We use bit vectors copied
+  on-the fly, hash tries, trees with a high branching factor, and
+  red-black trees. For the state of many constraints, semi-persistent
+  data structures (mainly sparse sets) or
+  backtrack-stable data (watched literals or
+  residues) are preferred.
+- the use of the companion project [CSPOM](http://github.com/concrete-cp/cspom), a
+  solver-independent modeling assistant able to perform automatic
+  reformulation such as constraint aggregation. CSPOM is able to parse
+  problems written in FlatZinc, XCSP3, the legacy XCSP2 format or its own Java and Scala DSL
+  (yet to be documented).
 
 # Installation
 
@@ -136,24 +155,6 @@ the solving process and generate a `TimeoutException`.
 
 # Features
 
-Concrete is a CSP constraint solver written in Scala 2.12. We always try
-to use up-to-date dependencies. Concrete is a pretty standard CP solver,
-which solves CSP instances using depth-first search and variants of AC
-for propagation. The two main specific aspects of Concrete 
-are:
- 
- * the use of [persistent data structures](http://www.cambridge.org/fr/academic/subjects/computer-science/programming-languages-and-applied-logic/purely-functional-data-structures#.WkwN5g-GREM.mailto)
-for managing domain states and some constraint states. For many constraint states, semi-persistent
-data structures (sparse sets)
- or backtrack-stable data (watched literals or residues) are preferred. 
- * the use of the 
-companion project [CSPOM](http://github.com/concrete-cp/cspom), a
-solver-independent modeling assistant able to perform automatic
-reformulation such as constraint aggregation or common subexpression elimination.
-CSPOM is able to parse problems written in [FlatZinc](http://www.minizinc.org),
-[XCSP3](http://www.xcsp.org), the legacy XCSP2 format or its own Scala
-DSL (yet to be documented).
-
 Concrete supports models defined with signed 32-bit integers. Beware
 that overflows may occur, especially for
 quadratic constraints. Domain width must also be strictly less than 2³¹. 
@@ -163,8 +164,14 @@ they also can lead to incorrect or missing solutions (please report bugs!). You 
   large domains may also raise memory issues unless they can
   be represented using a single interval thorough the search.
  Domains
-are internally represented using either intervals, bit vectors or hash tries depending on the 
-domain density. Set variables are currently not supported.
+are internally represented using either intervals, bit vectors or red-black trees
+depending on the domain density. Set variables are currently not supported.
+
+The main loop of Concrete is a tail-recursive DFS. It allows to
+enumerate solutions or to search for an optimal solution. If used
+correctly, it is able to add constraints dynamically between
+solutions.
+
 
 Concrete natively supports the following constraints:
 
@@ -172,12 +179,12 @@ Concrete natively supports the following constraints:
   An optimized algorithm should be automatically selected for
   binary constraints (AC3-bit+rm), positive tables or MDD.
   
-- Linear (a·x + b·y + … {=/</≤/≠} k). 
+- Linear (_a·x + b·y + … {=/</≤/≠} k_). 
   Bound consistency (except for ≠) or domain consistency for ternary constraints (using residues).
 
-- Absolute value (x = |y|). Bound or domain consistency (using residues).
+- Absolute value (_x = |y|_). Bound or domain consistency (using residues).
 
-- Distance (x = |y - z|). Bound or domain consistency (using residues).
+- Distance (_x = |y - z|_). Bound or domain consistency (using residues).
 
 - All-different with 2-consistency or bound consistency.
 
@@ -185,7 +192,7 @@ Concrete natively supports the following constraints:
 
 - Bin-packing 
 
-- Channel (x(i) = j ↔ x(j) = i)
+- Channel (_x(i) = j ↔ x(j) = i_)
 
 - Boolean clauses and XOR (using watched literals)
 
@@ -199,7 +206,7 @@ Concrete natively supports the following constraints:
 
 - Element / Member (using watched literals and residues)
 
-- Inverse (x(i) = j → y(j) = i) 
+- Inverse (_x(i) = j → y(j) = i_) 
 
 - Lex-Leq 
 
@@ -207,8 +214,10 @@ Concrete natively supports the following constraints:
 
 - Min/Max
 
-- Quadratic (x = y · z, x = y²). Bound or domain consistency (using residues).
+- Quadratic (_x = y · z_, _x = y²_). Bound or domain consistency (using residues).
 
+- Generic reification (for any constraint _C_, a boolean variable
+  _b_ can be defined s.t. _b → C_)
 
 All other documented MiniZinc constraints are supported via decomposition or reformulation.
 
@@ -218,9 +227,14 @@ Some XCSP3 constraints are not supported.
 # Search strategies
 
 Concrete solves CSP/COP using a depth-first tree search. When solving XCSP3 instances or if the `-f` option is
- enforced, the default variable ordering heuristic is _dom/wdeg_. 
-The default value heuristic chooses the best known value first, then a random bound randomly. 
-Search is restarted periodically to reduce long tails of search time.
+ enforced, the default variable ordering heuristic is _dom/wdeg_ with
+ incremental computation and random tiebreaking. 
+The default value heuristic chooses the best known value first, then a random bound. 
+Search is restarted periodically (with a geometric growth) to reduce long tails of search time.
+
+Although still under development and undocumented, Concrete allows the user
+to define new heuristics or combinations of them easily. Generation of nogoods 
+when a restart occurs is available but still disabled by default.
 
 Propagation queue is managed using a coarse-grained constraint-oriented propagation scheme
 with dynamic and constraint-specific propagation ordering heuristic. Constraint
